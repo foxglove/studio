@@ -7,8 +7,7 @@
     "build:prod": "yarn run webpack --mode production",
     "build:dev": "yarn run webpack --mode development",
     "serve:dev": "yarn run webpack serve --mode development",
-    "lint": "yarn run eslint .",
-    "fix": "yarn run lint --fix"
+    "lint": "yarn run eslint . --fix"
   },
   "workspaces": {
     "packages": [
