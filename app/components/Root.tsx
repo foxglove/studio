@@ -6,7 +6,7 @@
 //  You may not use this file except in compliance with the License.
 import cx from "classnames";
 import { ConnectedRouter } from "connected-react-router";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { hot } from "react-hot-loader/root";
 import { setConfig } from "react-hot-loader";
 import { connect, Provider } from "react-redux";
@@ -32,6 +32,7 @@ import { State } from "@foxglove-studio/app/reducers";
 import getGlobalStore from "@foxglove-studio/app/store/getGlobalStore";
 import browserHistory from "@foxglove-studio/app/util/history";
 import inAutomatedRunMode from "@foxglove-studio/app/util/inAutomatedRunMode";
+import useDocumentTitle from "@foxglove-studio/app/hooks/useDocumentTitle";
 
 setConfig({
   // react-hot-loader re-writes hooks with a wrapper function that is designed
@@ -72,18 +73,7 @@ function App({
     (window as any).setPanelLayout = (payload: any) => importPanelLayoutProp(payload);
   }, [importPanelLayoutProp]);
 
-  const [windowTitle, setWindowTitle] = useState(document.title || APP_NAME);
-  useEffect(() => {
-    // Basic observation of window title changes -- does not handle if the <title> element is removed or replaced.
-    const title = document.querySelector("title");
-    if (!title) {
-      return;
-    }
-    const observer = new MutationObserver(() => setWindowTitle(document.title || APP_NAME));
-    observer.observe(title, { subtree: true, characterData: true, childList: true });
-    return () => observer.disconnect();
-  }, []);
-
+  const windowTitle = useDocumentTitle(APP_NAME);
   return (
     <div
       ref={containerRef}
