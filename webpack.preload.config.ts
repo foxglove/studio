@@ -34,13 +34,7 @@ export default (_: never, argv: { mode?: string }): Configuration => {
       ],
     },
 
-    plugins: [
-      new ForkTsCheckerWebpackPlugin({
-        typescript: {
-          configFile: "tsconfig.preload.json",
-        },
-      }),
-    ],
+    plugins: [new ForkTsCheckerWebpackPlugin()],
 
     resolve: {
       extensions: [".js", ".ts", ".tsx", ".json"],
