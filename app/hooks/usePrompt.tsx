@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import styled from "styled-components";
 
 import Modal from "@foxglove-studio/app/components/Modal";
@@ -48,7 +48,11 @@ function ModalPrompt({
   );
 }
 
-export function runModalPrompt(initialValue: string): Promise<string | undefined> {
+type PromptHandle = {
+  runPrompt(initialValue: string): Promise<string | undefined>;
+};
+
+function runPrompt(initialValue: string): Promise<string | undefined> {
   return new Promise((resolve) => {
     const modal = renderToBody(
       <ModalPrompt
@@ -60,4 +64,8 @@ export function runModalPrompt(initialValue: string): Promise<string | undefined
       />,
     );
   });
+}
+
+export function usePrompt(): PromptHandle {
+  return useMemo(() => ({ runPrompt }), []);
 }

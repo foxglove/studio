@@ -4,12 +4,13 @@ import { FileContext } from "@foxglove-studio/app/components/FileContext";
 import Root from "@foxglove-studio/app/components/Root";
 import { ROSBRIDGE_WEBSOCKET_URL_QUERY_KEY } from "@foxglove-studio/app/util/globalConstants";
 
-import { runModalPrompt } from "@foxglove-studio/app/components/runModalPrompt";
 import { OsContextSingleton } from "@foxglove-studio/app/OsContext";
+import { usePrompt } from "@foxglove-studio/app/hooks/usePrompt";
 
 function App() {
   const [bagFile, setBagFile] = useState<File | undefined>();
   const [isFullScreen, setFullScreen] = useState(false);
+  const { runPrompt } = usePrompt();
 
   useEffect(() => {
     OsContextSingleton?.addWindowEventListener("enter-full-screen", () => setFullScreen(true));
@@ -38,7 +39,7 @@ function App() {
         input.click();
       },
       "file.open-websocket-url": async () => {
-        const result = await runModalPrompt("ws://localhost:9090");
+        const result = await runPrompt("ws://localhost:9090");
 
         // Note(roman): Architecturally we should move the param handling out of nested components
         // like PlayerManager and feed in the data providers via context or up-tree components
@@ -51,7 +52,7 @@ function App() {
         }
       },
     });
-  }, []);
+  }, [runPrompt]);
 
   return (
     <>
