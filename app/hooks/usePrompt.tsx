@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useState } from "react";
 import styled from "styled-components";
 
 import Modal from "@foxglove-studio/app/components/Modal";
@@ -48,10 +48,6 @@ function ModalPrompt({
   );
 }
 
-type PromptHandle = {
-  runPrompt(initialValue: string): Promise<string | undefined>;
-};
-
 function runPrompt(initialValue: string): Promise<string | undefined> {
   return new Promise((resolve) => {
     const modal = renderToBody(
@@ -66,6 +62,8 @@ function runPrompt(initialValue: string): Promise<string | undefined> {
   });
 }
 
-export function usePrompt(): PromptHandle {
-  return useMemo(() => ({ runPrompt }), []);
+// Returns a function that can be used similarly to the DOM prompt(), but
+// backed by a React element rather than a native modal, and asynchronous.
+export function usePrompt(): (initialValue: string) => Promise<string | undefined> {
+  return runPrompt;
 }
