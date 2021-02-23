@@ -52,7 +52,7 @@ function App() {
         }
       },
     });
-  }, [runPrompt]);
+  }, [prompt]);
 
   return (
     <>
