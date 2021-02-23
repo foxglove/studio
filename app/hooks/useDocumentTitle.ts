@@ -25,10 +25,10 @@ export default function useDocumentTitle(defaultTitle: string): string {
   }, []);
 
   // Once we have a title element, observe it for changes.
-  const [title, setTitle] = useState(document.title || defaultTitle);
+  const [title, setTitle] = useState(document.title ?? defaultTitle);
   useEffect(() => {
     if (titleElement) {
-      const update = () => setTitle(document.title || defaultTitle);
+      const update = () => setTitle(document.title ?? defaultTitle);
       const observer = new MutationObserver(update);
       observer.observe(titleElement, { subtree: true, characterData: true, childList: true });
       update();
