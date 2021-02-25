@@ -24,7 +24,7 @@ import { definitions } from "@foxglove-studio/app/util/binaryObjects/messageDefi
 
 describe("parsedMessageCache", () => {
   it("does some basic caching of messages", async () => {
-    const file = `${__dirname}/../../public/fixtures/example.bag`;
+    const file = `${__dirname}/../test/fixtures/example.bag`;
     const provider = new BagDataProvider({ bagPath: { type: "file", file } }, []);
     const { messageDefinitions } = await provider.initialize({
       progressCallback: () => {
