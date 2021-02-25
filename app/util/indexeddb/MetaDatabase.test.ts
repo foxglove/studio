@@ -14,8 +14,8 @@
 import idb from "idb";
 
 import Database from "./Database";
-import { getDatabasesInTests } from "./getDatabasesInTests";
 import { updateMetaDatabases, doesDatabaseExist } from "./MetaDatabase";
+import { getDatabasesInTests } from "./getDatabasesInTests";
 
 describe("MetaDatabase", () => {
   const MAX = 3;

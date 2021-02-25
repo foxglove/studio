@@ -11,9 +11,9 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { $Shape } from "utility-types";
 import cx from "classnames";
 import * as React from "react";
+import { $Shape } from "utility-types";
 
 import styles from "./icon.module.scss";
 import Tooltip from "@foxglove-studio/app/components/Tooltip";

@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 import * as Sentry from "@sentry/browser";
 import CBOR from "cbor-js";
+import { create as JsonDiffCreate } from "jsondiffpatch";
 import { compact, cloneDeep, flatMap, isEmpty, xor, uniq } from "lodash";
 import {
   createRemoveUpdate,
@@ -22,11 +23,10 @@ import {
   MosaicUpdate,
 } from "react-mosaic-component";
 import zlib from "zlib";
-import { create as JsonDiffCreate } from "jsondiffpatch";
 
 import { isInIFrame } from "./iframeUtils";
-import { getLayoutNameAndVersion } from "@foxglove-studio/app/shared/layout";
 import { PanelsState } from "@foxglove-studio/app/reducers/panels";
+import { getLayoutNameAndVersion } from "@foxglove-studio/app/shared/layout";
 import { TabLocation, TabPanelConfig } from "@foxglove-studio/app/types/layouts";
 import {
   ConfigsPayload,

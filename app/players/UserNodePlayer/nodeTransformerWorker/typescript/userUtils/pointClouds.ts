@@ -1,6 +1,6 @@
+import { FieldReader, getReader } from "./readers";
 import { Point, Header, RGBA } from "./types";
 import { rotate } from "./vectors";
-import { FieldReader, getReader } from "./readers";
 
 interface sensor_msgs__PointField {
   name: string;

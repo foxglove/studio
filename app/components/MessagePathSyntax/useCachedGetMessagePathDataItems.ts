@@ -16,6 +16,7 @@ import { useCallback, useMemo, useRef } from "react";
 
 import { MessagePathFilter } from "./constants";
 import { messagePathStructures } from "./messagePathsForDatatype";
+import * as PanelAPI from "@foxglove-studio/app/PanelAPI";
 import {
   MessagePathStructureItem,
   RosPath,
@@ -23,7 +24,6 @@ import {
 import { isTypicalFilterName } from "@foxglove-studio/app/components/MessagePathSyntax/isTypicalFilterName";
 import parseRosPath from "@foxglove-studio/app/components/MessagePathSyntax/parseRosPath";
 import useGlobalVariables, { GlobalVariables } from "@foxglove-studio/app/hooks/useGlobalVariables";
-import * as PanelAPI from "@foxglove-studio/app/PanelAPI";
 import { ReflectiveMessage, Topic } from "@foxglove-studio/app/players/types";
 import { RosDatatypes } from "@foxglove-studio/app/types/RosDatatypes";
 import { fieldNames, getField, getIndex } from "@foxglove-studio/app/util/binaryObjects";

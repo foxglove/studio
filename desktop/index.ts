@@ -13,14 +13,14 @@ import {
   BrowserWindowConstructorOptions,
   systemPreferences,
 } from "electron";
-import path from "path";
 import installExtension, {
   REACT_DEVELOPER_TOOLS,
   REDUX_DEVTOOLS,
 } from "electron-devtools-installer";
-import colors from "@foxglove-studio/app/styles/colors.module.scss";
+import path from "path";
 
 import type { OsContextWindowEvent } from "@foxglove-studio/app/OsContext";
+import colors from "@foxglove-studio/app/styles/colors.module.scss";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 
