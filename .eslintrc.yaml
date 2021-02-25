@@ -71,8 +71,6 @@ rules:
       newlines-between: always
       groups: [[builtin, external], [internal, parent, sibling, index]]
 
-  # TODO(JP): Fix this instead of disabling it:
-  # "import/no-named-as-default": "off"
   prefer-arrow-callback: [error, { allowNamedFunctions: true }]
   "@typescript-eslint/no-shadow": error
   no-restricted-syntax:
