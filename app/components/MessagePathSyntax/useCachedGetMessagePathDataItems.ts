@@ -14,13 +14,9 @@
 import { isEqual } from "lodash";
 import { useCallback, useMemo, useRef } from "react";
 
-import { MessagePathFilter } from "./constants";
+import { MessagePathFilter, MessagePathStructureItem, RosPath } from "./constants";
 import { messagePathStructures } from "./messagePathsForDatatype";
 import * as PanelAPI from "@foxglove-studio/app/PanelAPI";
-import {
-  MessagePathStructureItem,
-  RosPath,
-} from "@foxglove-studio/app/components/MessagePathSyntax/constants";
 import { isTypicalFilterName } from "@foxglove-studio/app/components/MessagePathSyntax/isTypicalFilterName";
 import parseRosPath from "@foxglove-studio/app/components/MessagePathSyntax/parseRosPath";
 import useGlobalVariables, { GlobalVariables } from "@foxglove-studio/app/hooks/useGlobalVariables";

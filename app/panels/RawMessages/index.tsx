@@ -297,7 +297,7 @@ function RawMessages(props: Props) {
                   <Icon
                     fade
                     className={styles.icon}
-                    // eslint-disable-next-line no-console
+                    // eslint-disable-next-line no-restricted-syntax
                     onClick={() => console.log(itemValue)}
                     tooltip="Log data to browser console"
                   >

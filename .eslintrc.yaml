@@ -81,5 +81,6 @@ rules:
       message: "Property getters are not allowed; prefer function syntax instead."
     - selector: "MethodDefinition[kind='set'], Property[kind='set']"
       message: "Property setters are not allowed; prefer function syntax instead."
+    # We disable console methods here rather than using no-console so that it doesn't prohibit overrides such as "console.info = ..."
     - selector: "CallExpression[callee.object.name='console'][callee.property.name!=/^(warn|error|debug|assert)$/]"
       message: "Unexpected property on console object was called"
