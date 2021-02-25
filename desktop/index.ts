@@ -183,8 +183,10 @@ const createWindow = (): void => {
         systemPreferences.getUserDefault("AppleActionOnDoubleClick", "string") || "Maximize";
       if (action === "Minimize") {
         mainWindow.minimize();
-      } else {
+      } else if (action === "Maximize") {
         mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize();
+      } else {
+        // "None"
       }
     }
   });
