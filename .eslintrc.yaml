@@ -31,9 +31,10 @@ parserOptions:
 settings:
   react:
     version: detect
-  import/internal-regex: ^@foxglove-studio/
+  import/internal-regex: "^@foxglove-studio/"
 
 rules:
+  no-console: off # configured in no-restricted-syntax
   "@typescript-eslint/ban-ts-comment": off # TODO: remove once we fix all TS issues
   # It's sometimes useful to explicitly name to guard against future changes
   "@typescript-eslint/no-inferrable-types": off
@@ -52,7 +53,6 @@ rules:
       template: null
 
   curly: error
-  no-console: [error, { allow: [warn, error, debug] }]
   "@typescript-eslint/no-unused-vars":
     [error, { vars: all, args: after-used, varsIgnorePattern: "^_", argsIgnorePattern: "^_" }]
   no-underscore-dangle: [error, { allowAfterThis: true }]
@@ -81,3 +81,5 @@ rules:
       message: "Property getters are not allowed; prefer function syntax instead."
     - selector: "MethodDefinition[kind='set'], Property[kind='set']"
       message: "Property setters are not allowed; prefer function syntax instead."
+    - selector: "CallExpression[callee.object.name='console'][callee.property.name!=/^(warn|error|debug|assert)$/]"
+      message: "Unexpected property on console object was called"

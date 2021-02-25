@@ -704,7 +704,6 @@ export default function Layout({
   const { isHovered } = useContext(PanelContext) || {};
   const isDemoMode = useExperimentalFeature("demoMode");
   const isHidden = isDemoMode && !isHovered;
-  const DemoModeComponent = getGlobalHooks().getDemoModeComponent();
 
   const { MapComponent, videoRecordingStyle } = useMemo(
     () => ({

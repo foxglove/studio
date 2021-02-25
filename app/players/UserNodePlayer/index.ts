@@ -13,11 +13,8 @@
 import { isEqual, groupBy, partition } from "lodash";
 import microMemoize from "micro-memoize";
 import { TimeUtil, Time } from "rosbag";
-import uuid from "uuid";
-
 // Filename of nodeTransformerWorker is recognized by the server, and given a special header to
 // ensure user-supplied code cannot make network requests.
-
 import NodeDataWorker from "sharedworker-loader?name=nodeTransformerWorker-[hash].[ext]!@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker"; // eslint-disable-line
 import {
   SetUserNodeDiagnostics,

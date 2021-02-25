@@ -43,7 +43,7 @@ describe("state.layoutHistory", () => {
   });
 
   it("stores initial empty history", () => {
-    const { store, checkState } = getStore();
+    const { checkState } = getStore();
     checkState(({ layoutHistory }) => {
       expect(layoutHistory).toEqual({ lastTimestamp: 0, redoStates: [], undoStates: [] });
     });

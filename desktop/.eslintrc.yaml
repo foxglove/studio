@@ -1,2 +1,6 @@
 parserOptions:
   project: desktop/tsconfig.json
+settings:
+  import/resolver:
+    webpack:
+      config: ./webpack.main.config.ts

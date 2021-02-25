@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { useRef, useCallback, useMemo, useState, useEffect, useContext } from "react";
-import { $Shape } from "utility-types";
 import uuid from "uuid";
 
 import {

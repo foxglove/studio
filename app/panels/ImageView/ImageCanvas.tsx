@@ -22,7 +22,6 @@ import ReactResizeDetector from "react-resize-detector";
 import shallowequal from "shallowequal";
 import styled from "styled-components";
 import uuid from "uuid";
-import ImageCanvasWorker from "worker-loader!./ImageCanvas.worker";
 
 import styles from "./ImageCanvas.module.scss";
 // eslint-disable-next-line import/no-unresolved
@@ -41,6 +40,7 @@ import WebWorkerManager from "@foxglove-studio/app/util/WebWorkerManager";
 import debouncePromise from "@foxglove-studio/app/util/debouncePromise";
 import sendNotification from "@foxglove-studio/app/util/sendNotification";
 import supportsOffscreenCanvas from "@foxglove-studio/app/util/supportsOffscreenCanvas";
+import ImageCanvasWorker from "worker-loader!./ImageCanvas.worker";
 
 type OnFinishRenderImage = () => void;
 type Props = {

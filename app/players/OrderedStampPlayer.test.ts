@@ -293,8 +293,8 @@ describe("OrderedStampPlayer", () => {
     const { player, fakePlayer } = makePlayers("receiveTime");
 
     const state = await new Promise<PlayerState>((resolve) => {
-      player.setListener(async (state) => {
-        resolve(state);
+      player.setListener(async (playerState) => {
+        resolve(playerState);
       });
     });
     jest.spyOn(fakePlayer, "seekPlayback");

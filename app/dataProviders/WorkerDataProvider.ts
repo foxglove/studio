@@ -12,19 +12,20 @@
 //   You may not use this file except in compliance with the License.
 
 import { Time } from "rosbag";
-import WorkerDataProviderWorker from "worker-loader!@foxglove-studio/app/dataProviders/WorkerDataProvider.worker";
 
-import { DataProvider, InitializationResult } from "./types";
-import RpcDataProvider from "@foxglove-studio/app/dataProviders/RpcDataProvider";
 import {
+  DataProvider,
+  InitializationResult,
   DataProviderDescriptor,
   ExtensionPoint,
   GetMessagesResult,
   GetMessagesTopics,
-} from "@foxglove-studio/app/dataProviders/types";
+} from "./types";
+import RpcDataProvider from "@foxglove-studio/app/dataProviders/RpcDataProvider";
 import { getGlobalHooks } from "@foxglove-studio/app/loadWebviz";
 import Rpc from "@foxglove-studio/app/util/Rpc";
-// eslint-disable-next-line import/no-unresolved
+// eslint-disable-next-line import/default
+import WorkerDataProviderWorker from "worker-loader!@foxglove-studio/app/dataProviders/WorkerDataProvider.worker";
 
 const params = new URLSearchParams(window.location.search);
 const secondSourceUrlParams = getGlobalHooks().getSecondSourceUrlParams();

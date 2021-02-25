@@ -24,7 +24,6 @@
 import Hammer from "hammerjs";
 import React from "react";
 import uuid from "uuid";
-import ChartJSWorker from "worker-loader!./ChartJSWorker.worker.ts";
 
 import { ScaleOptions as ManagerScaleOptions } from "./ChartJSManager";
 // eslint-disable-next-line import/no-unresolved
@@ -33,6 +32,8 @@ import { objectValues } from "@foxglove-studio/app/util";
 import { getFakeRpcs, RpcLike } from "@foxglove-studio/app/util/FakeRpc";
 import WebWorkerManager from "@foxglove-studio/app/util/WebWorkerManager";
 import supportsOffscreenCanvas from "@foxglove-studio/app/util/supportsOffscreenCanvas";
+// eslint-disable-next-line import/default
+import ChartJSWorker from "worker-loader!./ChartJSWorker.worker.ts";
 
 const getMainThreadChartJSWorker = () =>
   import(

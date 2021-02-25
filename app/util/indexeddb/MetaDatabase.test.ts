@@ -67,22 +67,18 @@ describe("MetaDatabase", () => {
     });
 
     it("does not throw when database deletion throws an error", async () => {
-      const spy = jest
-        .spyOn(global.indexedDB, "deleteDatabase")
-        .mockImplementation((name: string) => {
-          throw new Error("failed to delete");
-        });
+      const spy = jest.spyOn(global.indexedDB, "deleteDatabase").mockImplementation(() => {
+        throw new Error("failed to delete");
+      });
       await updateMetaDatabases("foo", 1, METADATABASE_NAME);
       await updateMetaDatabases("bar", 1, METADATABASE_NAME);
       spy.mockRestore();
     });
 
     it("does not delete databases which never fire onblocked calls", async () => {
-      const spy = jest
-        .spyOn(global.indexedDB, "deleteDatabase")
-        .mockImplementation((name: string) => {
-          return new IDBOpenDBRequest();
-        });
+      const spy = jest.spyOn(global.indexedDB, "deleteDatabase").mockImplementation(() => {
+        return new IDBOpenDBRequest();
+      });
       await updateMetaDatabases("foo", 1, METADATABASE_NAME);
       await updateMetaDatabases("bar", 1, METADATABASE_NAME);
       spy.mockRestore();

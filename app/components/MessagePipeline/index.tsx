@@ -13,7 +13,7 @@
 
 import { debounce, flatten, groupBy, isEqual } from "lodash";
 import * as React from "react";
-import { ReactElement, ReactNode } from "react";
+import { ReactElement } from "react";
 import { Time, TimeUtil } from "rosbag";
 import { $Shape } from "utility-types";
 

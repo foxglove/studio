@@ -84,6 +84,7 @@ export type Store = { dispatch: Dispatch<unknown>; getState: () => State };
 // Fix the type definitions for connected-react-router
 // The connectRouter function allows for omitting state and action
 declare module "connected-react-router" {
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   export function connectRouter(
     history: History,
   ): (state?: RouterState, action?: LocationChangeAction) => RouterState;

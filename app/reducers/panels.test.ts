@@ -65,7 +65,7 @@ describe("state.persistedState", () => {
   });
 
   it("stores initial panel layout in local storage", () => {
-    const { store, checkState } = getStore();
+    const { checkState } = getStore();
     checkState(({ persistedState }) => {
       const globalState = storage.getItem(GLOBAL_STATE_STORAGE_KEY) || {};
       expect(globalState).toEqual(persistedState);
@@ -73,7 +73,7 @@ describe("state.persistedState", () => {
   });
 
   it("stores default settings in local storage", () => {
-    const { store, checkState } = getStore();
+    const { checkState } = getStore();
     checkState(({ persistedState: { panels } }) => {
       expect(panels.layout).toEqual(defaultPersistedState.panels.layout);
       expect(panels.savedProps).toEqual({});

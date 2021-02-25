@@ -278,7 +278,7 @@ export default class BagDataProvider implements DataProvider {
       endTime: end,
       noParse: true,
       decompress: {
-        bz2: (buffer: Buffer, size: number) => {
+        bz2: (buffer: Buffer, _size: number) => {
           try {
             return Buffer.from(Bzip2.decompressFile(buffer));
           } catch (error) {
