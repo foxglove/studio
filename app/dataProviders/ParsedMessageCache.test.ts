@@ -20,7 +20,7 @@ import ParsedMessageCache, {
 import { cast, NotifyPlayerManagerReplyData } from "@foxglove-studio/app/players/types";
 import { BinaryHeader } from "@foxglove-studio/app/types/BinaryMessages";
 import { getObject, wrapJsObject } from "@foxglove-studio/app/util/binaryObjects";
-import { definitions } from "@foxglove-studio/app/util/binaryObjects/messageDefinitionUtils.test";
+import { definitions } from "@foxglove-studio/app/util/binaryObjects/messageDefinitionTestTypes";
 
 describe("parsedMessageCache", () => {
   it("does some basic caching of messages", async () => {
