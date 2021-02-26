@@ -22,7 +22,6 @@ import installExtension, {
 } from "electron-devtools-installer";
 import path from "path";
 
-import type { OsContextWindowEvent } from "@foxglove-studio/app/OsContext";
 import colors from "@foxglove-studio/app/styles/colors.module.scss";
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
@@ -71,16 +70,6 @@ async function createWindow(): Promise<void> {
     windowOptions.titleBarStyle = "hiddenInset";
   }
   const mainWindow = new BrowserWindow(windowOptions);
-
-  // Forward full screen events to the renderer
-  const forwardWindowEvent = (name: OsContextWindowEvent) => {
-    // @ts-ignore https://github.com/microsoft/TypeScript/issues/14107
-    mainWindow.addListener(name, () => {
-      mainWindow.webContents.send(name);
-    });
-  };
-  forwardWindowEvent("enter-full-screen");
-  forwardWindowEvent("leave-full-screen");
 
   const appMenuTemplate: MenuItemConstructorOptions[] = [];
 

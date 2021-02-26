@@ -12,13 +12,7 @@ import { ROSBRIDGE_WEBSOCKET_URL_QUERY_KEY } from "@foxglove-studio/app/util/glo
 
 function App() {
   const [bagFile, setBagFile] = useState<File | undefined>();
-  const [isFullScreen, setFullScreen] = useState(false);
   const prompt = usePrompt();
-
-  useEffect(() => {
-    OsContextSingleton?.addWindowEventListener("enter-full-screen", () => setFullScreen(true));
-    OsContextSingleton?.addWindowEventListener("leave-full-screen", () => setFullScreen(false));
-  }, []);
 
   useEffect(() => {
     OsContextSingleton?.installMenuHandlers({
@@ -60,10 +54,7 @@ function App() {
   return (
     <>
       <FileContext.Provider value={bagFile}>
-        <Root
-          onToolbarDoubleClick={OsContextSingleton?.handleToolbarDoubleClick}
-          isFullScreen={isFullScreen}
-        />
+        <Root onToolbarDoubleClick={OsContextSingleton?.handleToolbarDoubleClick} />
       </FileContext.Provider>
     </>
   );

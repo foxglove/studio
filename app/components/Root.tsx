@@ -47,7 +47,6 @@ setConfig({
 });
 
 type Props = {
-  isFullScreen: boolean;
   onToolbarDoubleClick?: () => void;
 };
 
@@ -60,11 +59,7 @@ type InternalProps = Props & {
   undoLayoutChange: () => void;
 };
 
-function App({
-  importPanelLayout: importPanelLayoutProp,
-  isFullScreen,
-  onToolbarDoubleClick,
-}: InternalProps) {
+function App({ importPanelLayout: importPanelLayoutProp, onToolbarDoubleClick }: InternalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     // Focus on page load to enable keyboard interaction.
