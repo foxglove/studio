@@ -14,7 +14,6 @@ import {
   MenuItemConstructorOptions,
   BrowserWindowConstructorOptions,
   systemPreferences,
-  nativeImage,
 } from "electron";
 import installExtension, {
   REACT_DEVELOPER_TOOLS,
@@ -33,28 +32,9 @@ if (require("electron-squirrel-startup")) {
 
 const isMac: boolean = process.platform === "darwin";
 
-// In development, we run with the pre-packaged Electron binary, so we need to manually set the Dock icon.
-async function setDevelopmentAppIcon() {
-  const { Icns } = await import("@fiahfy/icns");
-  const { promisify } = await import("util");
-  const fs = await import("fs");
-  const buf = await promisify(fs.readFile)("resources/icon/icon.icns");
-  const image = Icns.from(buf).images.find((img) => img.osType === "ic10" /*1024x1024*/);
-  if (image) {
-    const native = nativeImage.createFromBuffer(image.image);
-    if (native) {
-      app.dock.setIcon(native);
-    }
-  }
-}
-
 async function createWindow(): Promise<void> {
   const preloadPath = path.join(app.getAppPath(), "main", "preload.js");
   const rendererPath = MAIN_WINDOW_WEBPACK_ENTRY;
-
-  if (process.env.NODE_ENV !== "production") {
-    await setDevelopmentAppIcon().catch(console.error);
-  }
 
   const windowOptions: BrowserWindowConstructorOptions = {
     height: 800,

@@ -1925,23 +1925,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fiahfy/icns@npm:0.0.7":
-  version: 0.0.7
-  resolution: "@fiahfy/icns@npm:0.0.7"
-  dependencies:
-    "@fiahfy/packbits": ^0.0.6
-    pngjs: ^6.0.0
-  checksum: 79e9674f38fb05aacaf9e1382b6512d4c838c2129958665b13e290130f7d31784fe8d1de06cb0518e2cc3350d9ff8bbdd8ed47ad1289a7bba27813c1fcac4307
-  languageName: node
-  linkType: hard
-
-"@fiahfy/packbits@npm:^0.0.6":
-  version: 0.0.6
-  resolution: "@fiahfy/packbits@npm:0.0.6"
-  checksum: 69bd0906625c0f163d202b7e7685a8929c4b5484a6cc34b86bbee33b78bf53a9a24ddf14317e86b59f163ef64b807edc325c6e859093f7385a3d670c34e501fb
-  languageName: node
-  linkType: hard
-
 "@foxglove-studio/app@workspace:app":
   version: 0.0.0-use.local
   resolution: "@foxglove-studio/app@workspace:app"
@@ -10631,7 +10614,6 @@ __metadata:
     "@electron-forge/cli": 6.0.0-beta.54
     "@electron-forge/maker-deb": 6.0.0-beta.54
     "@electron-forge/maker-dmg": 6.0.0-beta.54
-    "@fiahfy/icns": 0.0.7
     "@jest/types": 26.6.2
     "@mapbox/rehype-prism": 0.5.0
     "@mdx-js/loader": 1.6.22
@@ -16845,13 +16827,6 @@ fsevents@^1.2.7:
     xmlbuilder: ^9.0.7
     xmldom: 0.1.x
   checksum: 61274fedface8f218f8a5c95f786a3b6b8a8f0b5f637e809fb9a831aafc019111499cc15796ad63c37c9570d6e2029a579077c458fb2af01091373514a9a8ffa
-  languageName: node
-  linkType: hard
-
-"pngjs@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "pngjs@npm:6.0.0"
-  checksum: b90cbd7d96e73a35427a08d1c583f58f0c63a34b7e8920dc228f3f3c5f3ed7ad359c5abafee78210d62453896300b280dd7cc3b5c2cb0f9291efcc86c35885ab
   languageName: node
   linkType: hard
 
