@@ -31,7 +31,8 @@
     "forge": {
       "packagerConfig": {
         "dir": ".webpack",
-        "asar": true
+        "asar": true,
+        "icon": "resources/icon/icon.icns"
       },
       "makers": [
         {
