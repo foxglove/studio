@@ -62,9 +62,6 @@ function App() {
       <FileContext.Provider value={bagFile}>
         <Root
           onToolbarDoubleClick={OsContextSingleton?.handleToolbarDoubleClick}
-          windowStyle={
-            OsContextSingleton?.platform === "darwin" ? "standaloneWithTopLeftButtons" : "normal"
-          }
           isFullScreen={isFullScreen}
         />
       </FileContext.Provider>
