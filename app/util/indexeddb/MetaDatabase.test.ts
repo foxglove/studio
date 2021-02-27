@@ -70,12 +70,14 @@ describe("MetaDatabase", () => {
       const spy = jest.spyOn(global.indexedDB, "deleteDatabase").mockImplementation(() => {
         const result: IDBOpenDBRequest = ({
           // This gets overridden by caller. Only coded for throwing error to satisfy flow & lint.
-          onerror: (ev: Event) => {
+          onerror: (_: Event) => {
             throw new Error("failed to delete");
           },
         } as any) as IDBOpenDBRequest;
         setTimeout(() => {
-          if (result.onerror) result.onerror(new Event(""));
+          if (result.onerror) {
+            result.onerror(new Event(""));
+          }
         }, 10);
         return result;
       });
