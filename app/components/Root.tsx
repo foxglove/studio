@@ -81,7 +81,6 @@ function App({
     (window as any).setPanelLayout = (payload: any) => importPanelLayoutProp(payload);
   }, [importPanelLayoutProp]);
 
-  const windowTitle = useDocumentTitle(APP_NAME);
   return (
     <div
       ref={containerRef}
@@ -96,12 +95,7 @@ function App({
         {({ inputDescription }: any) => (
           <>
             <Toolbar onDoubleClick={onToolbarDoubleClick}>
-              <div className={styles.logoWrapper}>
-                <a href={windowStyle === "normal" ? "/" : "#"}>
-                  <Logo width={LOGO_SIZE} height={LOGO_SIZE} />
-                </a>
-                {windowTitle}
-              </div>
+              <div className={styles.logoWrapper} />
 
               <div className={styles.toolbarItem} style={{ marginRight: 5 }}>
                 {!inAutomatedRunMode() && <NotificationDisplay />}
