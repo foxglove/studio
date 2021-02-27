@@ -203,6 +203,9 @@ app.on("ready", async () => {
     clearTimeout(timeout);
     console.log("Finished:", results);
     console.groupEnd();
+
+    // In development, we run with the pre-packaged Electron binary, so we need to manually set the Dock icon.
+    app.dock.setIcon("resources/icon/icon.png");
   }
 
   createWindow();
