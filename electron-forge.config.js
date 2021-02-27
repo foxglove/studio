@@ -8,6 +8,8 @@ module.exports = {
     asar: true,
     icon: "resources/icon/icon.png",
     name: "Foxglove Studio",
+    executableName: "foxglove-studio",
+    appBundleId: "dev.foxglove.studio",
   },
   makers: [
     {
