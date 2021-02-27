@@ -16,6 +16,7 @@ module.exports = {
       name: "@electron-forge/maker-deb",
       platforms: ["linux"],
       config: {
+        icon: "resources/icon/icon.png",
         scripts: {
           postinst: "resources/linux/deb/postinst",
         },
