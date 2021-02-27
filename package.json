@@ -28,32 +28,7 @@
     "make": "electron-forge make"
   },
   "config": {
-    "forge": {
-      "packagerConfig": {
-        "dir": ".webpack",
-        "asar": true,
-        "icon": "resources/icon/icon.icns"
-      },
-      "makers": [
-        {
-          "name": "@electron-forge/maker-deb",
-          "platforms": [
-            "linux"
-          ],
-          "config": {
-            "scripts": {
-              "postinst": "resources/linux/deb/postinst"
-            }
-          }
-        },
-        {
-          "name": "@electron-forge/maker-dmg",
-          "platforms": [
-            "darwin"
-          ]
-        }
-      ]
-    }
+    "forge": "electron-forge.config.js"
   },
   "workspaces": {
     "packages": [
