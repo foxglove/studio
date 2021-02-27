@@ -68,12 +68,12 @@ describe("MetaDatabase", () => {
 
     it("does not throw when database deletion throws an error", async () => {
       const spy = jest.spyOn(global.indexedDB, "deleteDatabase").mockImplementation(() => {
-        const result: IDBOpenDBRequest = ({
-          // This gets overridden by caller. Only coded for throwing error to satisfy flow & lint.
+        const result = <IDBOpenDBRequest>(<unknown>{
+          // This gets overridden by caller
           onerror: (_: Event) => {
             throw new Error("failed to delete");
           },
-        } as any) as IDBOpenDBRequest;
+        });
         setTimeout(() => {
           if (result.onerror) {
             result.onerror(new Event(""));
