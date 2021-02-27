@@ -1,6 +1,4 @@
 *.bag filter=lfs diff=lfs merge=lfs -text
-resources/icon/icon.afdesign filter=lfs diff=lfs merge=lfs -text
-resources/icon/icon.icns filter=lfs diff=lfs merge=lfs -text
-resources/dmg-background/background.png filter=lfs diff=lfs merge=lfs -text
-resources/dmg-background/background@2x.png filter=lfs diff=lfs merge=lfs -text
-resources/dmg-background/background.afdesign filter=lfs diff=lfs merge=lfs -text
+resources/**/*.afdesign filter=lfs diff=lfs merge=lfs -text
+resources/**/*.png filter=lfs diff=lfs merge=lfs -text
+resources/**/*.icns filter=lfs diff=lfs merge=lfs -text

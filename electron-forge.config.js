@@ -6,7 +6,7 @@ module.exports = {
   packagerConfig: {
     dir: ".webpack",
     asar: true,
-    icon: "resources/icon/icon.icns",
+    icon: "resources/icon/icon.png",
     name: "Foxglove Studio",
   },
   makers: [
