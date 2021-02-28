@@ -99,22 +99,32 @@ class MockRosTopic {
   }
 }
 
-const MockROSLIB = {
-  Ros: MockRosClient,
-  Topic: MockRosTopic,
-};
+jest.mock("roslib/src/RosLib", () => {
+  // Jest (babel) will re-write this file to hoist the mocks to the top.
+  // This causes MockRosClient and MocRosTopic classes to be uninitialized before they are returned
+  // in the mock factory. Remember that es6 classes are actually "function" variables -
+  // think old school js function.prototype.
+  //
+  // To work around these variables (our classes) being uninitialized when this mock factory function
+  // is called, we wrap them in closures that call the constructors.
+  // By the time the closure is called, the MocRosClient and MocRosTopic are initialized.
+  function MockRosClientConstruct() {
+    return new MockRosClient();
+  }
+  function MockRosTopicConstruct(args: unknown) {
+    return new MockRosTopic(args);
+  }
 
-// Mock ROSLIB with a custom implementation for tests.
-// Also, assign it to the window object so it can be used correctly
-// from RosbridgePlayer.
-jest.mock("roslib/build/roslib", () => {
-  return function () {
-    return MockROSLIB;
+  return {
+    __esModule: true,
+    default: {
+      Ros: MockRosClientConstruct,
+      Topic: MockRosTopicConstruct,
+    },
   };
 });
-(window as any).ROSLIB = MockROSLIB;
 
-describe.skip("RosbridgePlayer", () => {
+describe("RosbridgePlayer", () => {
   let player: RosbridgePlayer;
 
   beforeEach(() => {

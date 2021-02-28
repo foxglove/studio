@@ -13,7 +13,7 @@
 
 import { isEqual, sortBy, partition } from "lodash";
 import { MessageReader, Time, parseMessageDefinition } from "rosbag";
-import ROSLIB from "roslib/build/roslib";
+import roslib from "roslib/src/RosLib";
 import uuid from "uuid";
 
 import WssErrorModal from "@foxglove-studio/app/components/WssErrorModal";
@@ -49,7 +49,7 @@ const NO_WARNINGS = Object.freeze({});
 // unmarshalls into plain JS objects.
 export default class RosbridgePlayer implements Player {
   _url: string; // WebSocket URL.
-  _rosClient: ROSLIB.Ros | null | undefined; // The roslibjs client when we're connected.
+  _rosClient: roslib.Ros | null | undefined; // The roslibjs client when we're connected.
   _id: string = uuid.v4(); // Unique ID for this player.
   _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
   _closed: boolean = false; // Whether the player has been completely closed using close().
@@ -60,7 +60,7 @@ export default class RosbridgePlayer implements Player {
   } = {};
   _start: Time | null | undefined; // The time at which we started playing.
   _topicSubscriptions: {
-    [topicName: string]: ROSLIB.Topic;
+    [topicName: string]: roslib.Topic;
   } = {}; // Active subscriptions.
   _requestedSubscriptions: SubscribePayload[] = []; // Requested subscriptions by setSubscriptions()
   _parsedMessages: Message[] = []; // Queue of messages that we'll send in next _emitState() call.
@@ -68,7 +68,7 @@ export default class RosbridgePlayer implements Player {
   _messageOrder: TimestampMethod = "receiveTime";
   _requestTopicsTimeout: ReturnType<typeof setTimeout> | null | undefined; // setTimeout() handle for _requestTopics().
   _topicPublishers: {
-    [topicName: string]: ROSLIB.Topic;
+    [topicName: string]: roslib.Topic;
   } = {};
   _parsedMessageDefinitionsByTopic: ParsedMessageDefinitionsByTopic = {};
   _bobjectTopics: Set<string> = new Set();
@@ -100,7 +100,7 @@ export default class RosbridgePlayer implements Player {
     }
 
     // `workersocket` will open the actual WebSocket connection in a WebWorker.
-    const rosClient = new ROSLIB.Ros({ url: this._url, transportLibrary: "workersocket" });
+    const rosClient = new roslib.Ros({ url: this._url, transportLibrary: "workersocket" });
 
     rosClient.on("connection", () => {
       if (this._closed) {
@@ -142,7 +142,9 @@ export default class RosbridgePlayer implements Player {
     }
 
     try {
-      const result = await new Promise(rosClient.getTopicsAndRawTypes);
+      const result = await new Promise<any>((resolve, reject) =>
+        rosClient.getTopicsAndRawTypes(resolve, reject),
+      );
 
       const topicsMissingDatatypes: string[] = [];
       const topics = [];
@@ -291,7 +293,7 @@ export default class RosbridgePlayer implements Player {
     // Subscribe to all topics that we aren't subscribed to yet.
     for (const topicName of topicNames) {
       if (!this._topicSubscriptions[topicName]) {
-        this._topicSubscriptions[topicName] = new ROSLIB.Topic({
+        this._topicSubscriptions[topicName] = new roslib.Topic({
           ros: this._rosClient,
           name: topicName,
           compression: "cbor-raw",
@@ -342,13 +344,13 @@ export default class RosbridgePlayer implements Player {
     }
 
     // Since `setPublishers` is rarely called, we can get away with just throwing away the old
-    // ROSLIB.Topic objects and creating new ones.
+    // Roslib.Topic objects and creating new ones.
     for (const publisher of objectValues(this._topicPublishers)) {
       publisher.unadvertise();
     }
     this._topicPublishers = {};
     for (const { topic, datatype } of publishers) {
-      this._topicPublishers[topic] = new ROSLIB.Topic({
+      this._topicPublishers[topic] = new roslib.Topic({
         ros: this._rosClient,
         name: topic,
         messageType: datatype,
