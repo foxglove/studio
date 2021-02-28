@@ -82,7 +82,7 @@ async function createWindow(): Promise<void> {
     submenu: [
       {
         label: "Open Bag",
-        click: async () => {
+        click: async (): Promise<void> => {
           // <input> elements can only be opened on user interaction
           // We fake a uesr interaction which allows us to invoke input.click() in renderer thread
           // This is a trick which allows us to then handle file opening completely in the browser
@@ -105,7 +105,7 @@ async function createWindow(): Promise<void> {
       },
       {
         label: "Open Websocket Url",
-        click: async () => {
+        click: async (): Promise<void> => {
           mainWindow.webContents.send("menu.file.open-websocket-url");
         },
       },
@@ -158,7 +158,7 @@ async function createWindow(): Promise<void> {
     submenu: [
       {
         label: "Learn More",
-        click: async () => {
+        click: async (): Promise<void> => {
           await shell.openExternal("https://electronjs.org");
         },
       },

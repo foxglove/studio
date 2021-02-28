@@ -25,7 +25,7 @@ if (!rootEl) {
   throw new Error("missing #root element");
 }
 
-async function main() {
+async function main(): Promise<void> {
   // consider moving waitForFonts into App to display an app loading screen
   await waitForFonts();
 

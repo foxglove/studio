@@ -42,10 +42,12 @@ rules:
     - smart
   no-console: off # configured in no-restricted-syntax
   "@typescript-eslint/ban-ts-comment": off # TODO: remove once we fix all TS issues
+  "@typescript-eslint/explicit-function-return-type": warn
   # It's sometimes useful to explicitly name to guard against future changes
   "@typescript-eslint/no-inferrable-types": off
   "@typescript-eslint/no-empty-function": off
   "@typescript-eslint/prefer-nullish-coalescing": warn
+
   react/react-in-jsx-scope: off
   react/prop-types: warn
   react-hooks/rules-of-hooks: error

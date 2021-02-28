@@ -112,11 +112,11 @@ const defaultHooks = {
             },
           ],
         }),
-        getStaticallyAvailableNamespacesByTopic: () => ({}),
+        getStaticallyAvailableNamespacesByTopic: (): Record<string, any> => ({}),
       },
     };
   },
-  load: async () => {
+  load: async (): Promise<void> => {
     // Due to some top level uses of getGlobalConfig() inside panels sources
     // We need to set the panelCategories after we set perPanelHooks
     // So we move this import here and set perPanelHooks above via top level imports
@@ -125,7 +125,7 @@ const defaultHooks = {
 
     initializeLogEvent(() => undefined, {}, {});
   },
-  getAdditionalDataProviders: () => {
+  getAdditionalDataProviders: (): void => {
     // do nothing
   },
   experimentalFeaturesList() {
@@ -146,7 +146,7 @@ const defaultHooks = {
       },
     };
   },
-  linkMessagePathSyntaxToHelpPage: () => true,
+  linkMessagePathSyntaxToHelpPage: (): boolean => true,
   getSecondSourceUrlParams() {
     return [REMOTE_BAG_URL_2_QUERY_KEY];
   },

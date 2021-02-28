@@ -18,12 +18,11 @@ declare const visit: any;
 // https://github.com/mdx-js/mdx/blob/ad58be384c07672dc415b3d9d9f45dcebbfd2eb8/docs/advanced/retext-plugins.md
 const smartypantsProcessor = retext().use(retextSmartypants);
 function remarkSmartypants() {
-  function transformer(tree: unknown) {
+  return function transformer(tree: unknown): void {
     visit(tree, "text", (node: { value: string }) => {
       node.value = String(smartypantsProcessor.processSync(node.value));
     });
-  }
-  return transformer;
+  };
 }
 
 export default (_: never, argv: WebpackArgv): Configuration => {
