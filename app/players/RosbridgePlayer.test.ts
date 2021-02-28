@@ -31,7 +31,7 @@ const textMessage = ({ text }: any) => {
   return { bytes };
 };
 
-let workerInstance: MockRosClient; // eslint-disable-line no-use-before-define
+let workerInstance: MockRosClient;
 class MockRosClient {
   constructor() {
     workerInstance = this;

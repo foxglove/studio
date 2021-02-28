@@ -81,7 +81,7 @@ export default class RosbridgePlayer implements Player {
     this._open();
   }
 
-  _open = () => {
+  _open = (): void => {
     if (this._closed) {
       return;
     }
@@ -132,7 +132,7 @@ export default class RosbridgePlayer implements Player {
     });
   };
 
-  _requestTopics = async () => {
+  _requestTopics = async (): Promise<void> => {
     if (this._requestTopicsTimeout) {
       clearTimeout(this._requestTopicsTimeout);
     }
@@ -258,19 +258,19 @@ export default class RosbridgePlayer implements Player {
     });
   });
 
-  setListener(listener: (arg0: PlayerState) => Promise<void>) {
+  setListener(listener: (arg0: PlayerState) => Promise<void>): void {
     this._listener = listener;
     this._emitState();
   }
 
-  close() {
+  close(): void {
     this._closed = true;
     if (this._rosClient) {
       this._rosClient.close();
     }
   }
 
-  setSubscriptions(subscriptions: SubscribePayload[]) {
+  setSubscriptions(subscriptions: SubscribePayload[]): void {
     this._requestedSubscriptions = subscriptions;
 
     if (!this._rosClient || this._closed) {
@@ -338,7 +338,7 @@ export default class RosbridgePlayer implements Player {
     }
   }
 
-  setPublishers(publishers: AdvertisePayload[]) {
+  setPublishers(publishers: AdvertisePayload[]): void {
     if (!this._rosClient) {
       throw new Error("RosbridgePlayer not connected");
     }
@@ -359,7 +359,7 @@ export default class RosbridgePlayer implements Player {
     }
   }
 
-  publish({ topic, msg }: PublishPayload) {
+  publish({ topic, msg }: PublishPayload): void {
     if (!this._topicPublishers[topic]) {
       sendNotification(
         "Invalid publish call",
@@ -373,22 +373,22 @@ export default class RosbridgePlayer implements Player {
   }
 
   // Bunch of unsupported stuff. Just don't do anything for these.
-  startPlayback() {
+  startPlayback(): void {
     // no-op
   }
-  pausePlayback() {
+  pausePlayback(): void {
     // no-op
   }
-  seekPlayback(_time: Time) {
+  seekPlayback(_time: Time): void {
     // no-op
   }
-  setPlaybackSpeed(_speedFraction: number) {
+  setPlaybackSpeed(_speedFraction: number): void {
     // no-op
   }
-  requestBackfill() {
+  requestBackfill(): void {
     // no-op
   }
-  setGlobalVariables() {
+  setGlobalVariables(): void {
     // no-op
   }
 }
