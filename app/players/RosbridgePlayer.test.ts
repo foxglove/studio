@@ -40,7 +40,7 @@ class MockRosClient {
   _topics: string[] = [];
   _types: string[] = [];
   _typedefs_full_text: string[] = [];
-  _connectCallback: any | null | undefined;
+  _connectCallback?: any;
   _messages: any[] = [];
 
   setup({
@@ -74,7 +74,7 @@ class MockRosClient {
     // no-op
   }
 
-  getTopicsAndRawTypes(callback: any) {
+  getTopicsAndRawTypes(callback: (...args: unknown[]) => void) {
     callback({
       topics: this._topics,
       types: this._types,
@@ -82,44 +82,29 @@ class MockRosClient {
     });
   }
 
-  getMessagesByTopicName(topicName: string): any[] {
+  getMessagesByTopicName(topicName: string): { message: unknown }[] {
     return this._messages.filter(({ topic }) => topic === topicName);
   }
 }
 
 class MockRosTopic {
-  _name = "";
+  #name: string = "";
 
-  constructor({ name }: any) {
-    this._name = name;
+  constructor({ name }: { name: string }) {
+    this.#name = name;
   }
 
-  subscribe(callback: any) {
-    workerInstance.getMessagesByTopicName(this._name).forEach(({ message }) => callback(message));
+  subscribe(callback: (arg: unknown) => void) {
+    workerInstance.getMessagesByTopicName(this.#name).forEach(({ message }) => callback(message));
   }
 }
 
 jest.mock("roslib/src/RosLib", () => {
-  // Jest (babel) will re-write this file to hoist the mocks to the top.
-  // This causes MockRosClient and MocRosTopic classes to be uninitialized before they are returned
-  // in the mock factory. Remember that es6 classes are actually "function" variables -
-  // think old school js function.prototype.
-  //
-  // To work around these variables (our classes) being uninitialized when this mock factory function
-  // is called, we wrap them in closures that call the constructors.
-  // By the time the closure is called, the MocRosClient and MocRosTopic are initialized.
-  function MockRosClientConstruct() {
-    return new MockRosClient();
-  }
-  function MockRosTopicConstruct(args: unknown) {
-    return new MockRosTopic(args);
-  }
-
   return {
     __esModule: true,
     default: {
-      Ros: MockRosClientConstruct,
-      Topic: MockRosTopicConstruct,
+      Ros: jest.fn(() => new MockRosClient()),
+      Topic: jest.fn((arg) => new MockRosTopic(arg)),
     },
   };
 });
@@ -152,7 +137,7 @@ describe("RosbridgePlayer", () => {
 
     player.setSubscriptions([{ topic: "/topic/A", format: "parsedMessages" }]);
     player.setListener(async ({ activeData }) => {
-      const { topics } = activeData || {};
+      const { topics } = activeData ?? {};
       if (!topics) {
         return Promise.resolve();
       }
@@ -201,7 +186,7 @@ describe("RosbridgePlayer", () => {
       player.setSubscriptions([{ topic: "/topic/A", format: "bobjects" }]);
 
       player.setListener(async ({ activeData }) => {
-        const { messages, bobjects } = activeData || {};
+        const { messages, bobjects } = activeData ?? {};
         if (!messages || !bobjects) {
           return Promise.resolve();
         }
@@ -227,7 +212,7 @@ describe("RosbridgePlayer", () => {
       player.setSubscriptions([{ topic: "/topic/B", format: "bobjects" }]);
 
       player.setListener(async ({ activeData }) => {
-        const { messages, bobjects } = activeData || {};
+        const { messages, bobjects } = activeData ?? {};
         if (!messages || !bobjects) {
           return Promise.resolve();
         }
@@ -249,7 +234,7 @@ describe("RosbridgePlayer", () => {
       player.setSubscriptions([{ topic: "/topic/A", format: "parsedMessages" }]);
 
       player.setListener(async ({ activeData }) => {
-        const { messages, bobjects } = activeData || {};
+        const { messages, bobjects } = activeData ?? {};
         if (!messages || !bobjects) {
           return Promise.resolve();
         }
@@ -275,7 +260,7 @@ describe("RosbridgePlayer", () => {
       player.setSubscriptions([{ topic: "/topic/B", format: "parsedMessages" }]);
 
       player.setListener(async ({ activeData }) => {
-        const { messages, bobjects } = activeData || {};
+        const { messages, bobjects } = activeData ?? {};
         if (!messages || !bobjects) {
           return Promise.resolve();
         }
@@ -300,7 +285,7 @@ describe("RosbridgePlayer", () => {
       ]);
 
       player.setListener(async ({ activeData }) => {
-        const { messages, bobjects } = activeData || {};
+        const { messages, bobjects } = activeData ?? {};
         if (!messages || !bobjects) {
           return Promise.resolve();
         }
@@ -333,7 +318,7 @@ describe("RosbridgePlayer", () => {
       ]);
 
       player.setListener(async ({ activeData }) => {
-        const { messages, bobjects } = activeData || {};
+        const { messages, bobjects } = activeData ?? {};
         if (!messages || !bobjects) {
           return Promise.resolve();
         }
