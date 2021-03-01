@@ -25,7 +25,7 @@
     "lodash": "4.17.20",
     "memoize-weak": "1.0.2",
     "micro-memoize": "3.0.1",
-    "moment": "2.24.0",
+    "moment": "2.29.1",
     "moment-duration-format": "2.2.2",
     "moment-timezone": "0.5.33",
     "monaco-editor": "0.22.3",
