@@ -28,7 +28,7 @@ export default function debouncePromise<Args extends unknown[]>(
   // If another call is in progress, store the latest args and wait for current call to finish
   let callPending: Args | undefined;
 
-  const debouncedFn: DebouncedFn<Args> = (...args: Args) => {
+  const debouncedFn: DebouncedFn<Args> = async (...args: Args) => {
     // if we are already in a call, prepare args for the next call
     if (callPending) {
       callPending = args;
@@ -37,29 +37,27 @@ export default function debouncePromise<Args extends unknown[]>(
 
     callPending = args;
 
-    (async function () {
-      // keep going while there are pending calls
-      while (callPending) {
-        // grab call args to compare if we need to call again after our call is done
-        const callArgs = callPending;
+    // keep going while there are pending calls
+    while (callPending) {
+      // grab call args to compare if we need to call again after our call is done
+      const callArgs = callPending;
 
-        debouncedFn.currentPromise = fn(...callArgs).finally(() => {
-          // if the original call args remained unchanged, we have no further calls
-          if (callPending === callArgs) {
-            callPending = undefined;
-          }
-          debouncedFn.currentPromise = undefined;
-        });
-
-        // suppress any rejections from currentPromise and move on to next call
-        // The user can still attach their own .catch handlers to currentPromise directly
-        try {
-          await debouncedFn.currentPromise;
-        } catch (err) {
-          // no-op
+      debouncedFn.currentPromise = fn(...callArgs).finally(() => {
+        // if the original call args remained unchanged, we have no further calls
+        if (callPending === callArgs) {
+          callPending = undefined;
         }
+        debouncedFn.currentPromise = undefined;
+      });
+
+      // suppress any rejections from currentPromise and move on to next call
+      // The user can still attach their own .catch handlers to currentPromise directly
+      try {
+        await debouncedFn.currentPromise;
+      } catch (err) {
+        // no-op
       }
-    })();
+    }
 
     return;
   };
