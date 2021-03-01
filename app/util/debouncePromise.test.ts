@@ -12,77 +12,67 @@
 //   You may not use this file except in compliance with the License.
 
 import debouncePromise from "./debouncePromise";
-import signal from "@foxglove-studio/app/shared/signal";
 
 describe("debouncePromise", () => {
-  it.skip("debounces with resolved and rejected promises", async () => {
-    const promises = [Promise.resolve(), Promise.reject(), Promise.reject(), Promise.resolve()];
+  it("should debounce consecutive calls", async () => {
+    const promises: Promise<void>[] = [];
 
     let calls = 0;
     const debouncedFn = debouncePromise(() => {
       ++calls;
-      return promises.shift()!;
+      const promise = promises.shift();
+      if (!promise) {
+        throw new Error("No more promises :'(");
+      }
+      return promise;
     });
 
     expect(calls).toBe(0);
 
-    debouncedFn();
-    debouncedFn();
+    promises.push(Promise.resolve());
     debouncedFn();
     debouncedFn();
     expect(calls).toBe(1);
 
-    await Promise.resolve();
+    promises.push(Promise.resolve());
+
+    // wait for first promise to finish
+    await debouncedFn.currentPromise;
     expect(calls).toBe(2);
-    expect(debouncedFn.currentPromise).toBeUndefined();
 
-    debouncedFn();
-    expect(calls).toBe(3);
-    expect(debouncedFn.currentPromise).toBeDefined();
-
-    debouncedFn();
-    expect(calls).toBe(3);
-    await Promise.resolve();
-    expect(calls).toBe(4);
+    // wait for second promise to finish
+    await debouncedFn.currentPromise;
     expect(debouncedFn.currentPromise).toBeUndefined();
-    expect(promises).toHaveLength(0);
   });
 
-  it("provides currentPromise to wait on the current call", async () => {
-    expect.assertions(5);
+  it("should debounce with resolved and rejected promises", async () => {
+    const promises: Promise<void>[] = [];
 
-    const sig = signal();
     let calls = 0;
     const debouncedFn = debouncePromise(() => {
       ++calls;
-      return sig;
+      const promise = promises.shift();
+      if (!promise) {
+        throw new Error("No more promises :'(");
+      }
+      return promise;
     });
 
     expect(calls).toBe(0);
 
+    promises.push(Promise.resolve());
+    debouncedFn();
     debouncedFn();
     expect(calls).toBe(1);
 
-    // the original function should not be called until the signal is resolved
-    debouncedFn();
-    debouncedFn();
-    await Promise.resolve();
-    expect(calls).toBe(1);
+    promises.push(Promise.reject(new Error("lazy panda")));
 
-    // once the first promise is resolved, the second call should start
-    let promise = debouncedFn.currentPromise;
-    if (!promise) {
-      throw new Error("currentPromise should be defined");
-    }
-    promise = promise.then(() => {
-      expect(calls).toBe(2);
-    });
+    // wait for first promise to finish
+    await debouncedFn.currentPromise;
+    expect(calls).toBe(2);
 
-    sig.resolve();
-
-    await promise;
-
-    // after pending calls are finished, there is no more currentPromise
+    // wait for second promise to fully complete and throw its error
+    await expect(debouncedFn.currentPromise).rejects.toThrow(new Error("lazy panda"));
     expect(debouncedFn.currentPromise).toBeUndefined();
   });
 
@@ -100,7 +90,8 @@ describe("debouncePromise", () => {
 
     debouncedFn();
     expect(calls).toBe(1);
-    await Promise.resolve();
+
+    await debouncedFn.currentPromise;
     expect(calls).toBe(2);
   });
 });

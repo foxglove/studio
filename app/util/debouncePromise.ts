@@ -11,34 +11,58 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-type DebouncedFn = ((...args: any) => void) & { currentPromise?: Promise<void> | null | undefined };
+type DebouncedFn<Args extends unknown[]> = ((...args: Args) => void) & {
+  // the currently executing promise - if any
+  currentPromise?: Promise<void> | null;
+};
 
-export default function debouncePromise(fn: (...args: any) => Promise<void>): DebouncedFn {
-  // Whether we are currently waiting for a promise returned by `fn` to resolve.
-  let calling = false;
-  // Whether another call to the debounced function was made while a call was in progress.
-  let callPending: any[] | null | undefined;
+// debouncePromise returns a function which wraps calls to `fn`.
+// The returned debounceFn ensures that only one `fn` call is executing at a time.
+// If debounceFn is called while `fn` is still executing, it will queue the call until the
+// current invocation is complete.
+// If debounceFn is called multiple times while `fn` is still executing, then only the last
+// call's arguments will be saved for te next execution of `fn`
+export default function debouncePromise<Args extends unknown[]>(
+  fn: (...args: unknown[]) => Promise<void>,
+): DebouncedFn<Args> {
+  // If another call is in progress, store the latest args and wait for current call to finish
+  let callPending: Args | undefined;
 
-  const debouncedFn: DebouncedFn = (...args: any) => {
-    if (calling) {
+  const debouncedFn: DebouncedFn<Args> = (...args: Args) => {
+    // if we are already in a call, prepare args for the next call
+    if (callPending) {
       callPending = args;
-    } else {
-      start(args);
+      return;
     }
-  };
 
-  function start(args: any[]) {
-    calling = true;
-    callPending = undefined;
+    callPending = args;
 
-    debouncedFn.currentPromise = fn(...args).finally(() => {
-      calling = false;
-      debouncedFn.currentPromise = undefined;
-      if (callPending) {
-        start(callPending);
+    (async function () {
+      // keep going while there are pending calls
+      while (callPending) {
+        // grab call args to compare if we need to call again after our call is done
+        const callArgs = callPending;
+
+        debouncedFn.currentPromise = fn(...callArgs).finally(() => {
+          // if the original call args remained unchanged, we have no further calls
+          if (callPending === callArgs) {
+            callPending = undefined;
+          }
+          debouncedFn.currentPromise = undefined;
+        });
+
+        // suppress any rejections from currentPromise and move on to next call
+        // The user can still attach their own .catch handlers to currentPromise directly
+        try {
+          await debouncedFn.currentPromise;
+        } catch (err) {
+          // no-op
+        }
       }
-    });
-  }
+    })();
+
+    return;
+  };
 
   return debouncedFn;
 }
