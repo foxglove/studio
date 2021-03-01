@@ -257,8 +257,7 @@ export default class IdbCacheWriterDataProvider implements DataProvider {
     }
 
     // Just loop infinitely, but break if the connection is not current any more.
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
+    for (;;) {
       const currentConnection = this._currentConnection;
       if (!currentConnection || !isCurrent()) {
         return;

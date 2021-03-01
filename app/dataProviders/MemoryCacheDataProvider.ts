@@ -492,7 +492,7 @@ export default class MemoryCacheDataProvider implements DataProvider {
   }
 
   async _maybeRunNewConnections() {
-    while (true) {
+    for (;;) {
       const newConnection = this._getNewConnection();
 
       if (!newConnection) {
@@ -543,7 +543,7 @@ export default class MemoryCacheDataProvider implements DataProvider {
       return this._currentConnection && this._currentConnection.id === id;
     }; // Just loop infinitely, but break if the connection is not current any more.
 
-    while (true) {
+    for (;;) {
       const currentConnection = this._currentConnection;
 
       if (!currentConnection || !isCurrent()) {
