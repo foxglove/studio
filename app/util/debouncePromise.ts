@@ -23,7 +23,7 @@ type DebouncedFn<Args extends unknown[]> = ((...args: Args) => void) & {
 // If debounceFn is called multiple times while `fn` is still executing, then only the last
 // call's arguments will be saved for the next execution of `fn`.
 export default function debouncePromise<Args extends unknown[]>(
-  fn: (...args: unknown[]) => Promise<void>,
+  fn: (...args: Args) => Promise<void>,
 ): DebouncedFn<Args> {
   // If another call is in progress, store the latest args and wait for current call to finish
   let callPending: Args | undefined;
