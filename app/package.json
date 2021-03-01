@@ -43,7 +43,7 @@
     "react-dnd": "10.0.2",
     "react-dnd-html5-backend": "10.0.2",
     "react-document-events": "davidswinegar/react-document-events#d7003228d8cd57535ee8b30fac9811aa237526b8",
-    "react-dom": "16.10.2",
+    "react-dom": "17.0.1",
     "react-highlight-words": "0.17.0",
     "react-hot-loader": "4.13.0",
     "react-hover-observer": "2.1.1",
