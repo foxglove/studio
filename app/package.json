@@ -22,7 +22,7 @@
     "intervals-fn": "3.0.3",
     "js-yaml": "4.0.0",
     "jsondiffpatch": "0.4.1",
-    "lodash": "4.17.20",
+    "lodash": "4.17.21",
     "memoize-weak": "1.0.2",
     "micro-memoize": "3.0.1",
     "moment": "2.24.0",
