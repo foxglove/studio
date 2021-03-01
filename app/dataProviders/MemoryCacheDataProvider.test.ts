@@ -72,10 +72,11 @@ function generateMessagesForLongInput(): BobjectMessage[] {
   ]);
 }
 
-function getProvider(bobjects: BobjectMessage[]) {
+function getProvider(bobjects: BobjectMessage[], unlimitedCache: boolean = false) {
   const messages = { parsedMessages: undefined, bobjects, rosBinaryMessages: undefined };
   const memoryDataProvider = new MemoryDataProvider({
     messages,
+    unlimitedCache,
     providesParsedMessages: false,
   });
   return {
@@ -253,7 +254,7 @@ describe("MemoryCacheDataProvider", () => {
     ]);
   });
 
-  it.skip("prefetches after the last request", async () => {
+  it.only("prefetches after the last request", async () => {
     const { provider } = getProvider(generateLargeMessages());
     // Fit four 600 byte messages into our memory budget. (getBlocksToKeep leaves the cache over-full
     // and will evict blocks until five messages are present.)
