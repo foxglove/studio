@@ -38,7 +38,7 @@
     "rc-color-picker": "1.2.6",
     "rc-tabs": "11.7.3",
     "rc-tree": "3.9.5",
-    "react": "16.10.2",
+    "react": "17.0.1",
     "react-autocomplete": "janpaul123/react-autocomplete#bc8737070b5744069719c8fcd4e0a197192b0d48",
     "react-dnd": "10.0.2",
     "react-dnd-html5-backend": "10.0.2",
