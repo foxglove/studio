@@ -79,7 +79,7 @@
     "text-width": "1.2.0",
     "tinycolor2": "1.4.2",
     "typescript": "3.5.3",
-    "use-debounce": "3.3.0",
+    "use-debounce": "5.2.1",
     "utility-types": "3.10.0",
     "uuid": "3.3.2",
     "wasm-lz4": "1.0.0"
