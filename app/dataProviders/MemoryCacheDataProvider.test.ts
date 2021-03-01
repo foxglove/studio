@@ -279,7 +279,7 @@ describe("MemoryCacheDataProvider", () => {
     expect(loadedRanges[0].start).toBe(0);
     expect(loadedRanges[0].end).toBeGreaterThanOrEqual(10 / 201);
     expect(loadedRanges[1].start).toBe(100 / 201);
-    expect(loadedRanges[1].end).toBeGreaterThanOrEqual(161 / 201);
+    expect(loadedRanges[1].end).toBe(161 / 201);
     expect(progress.messageCache).toEqual({
       startTime: { sec: 0, nsec: 0 },
       blocks: expect.arrayContaining([]),
