@@ -101,7 +101,7 @@
     "@types/moment-duration-format": "2.2.2",
     "@types/prettier": "2.2.1",
     "@types/promise-queue": "2.2.0",
-    "@types/react": "16.9.56",
+    "@types/react": "17.0.2",
     "@types/react-autocomplete": "1.8.5",
     "@types/react-dom": "16.9.9",
     "@types/react-highlight-words": "0.16.1",
