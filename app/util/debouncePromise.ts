@@ -21,7 +21,7 @@ type DebouncedFn<Args extends unknown[]> = ((...args: Args) => void) & {
 // If debounceFn is called while `fn` is still executing, it will queue the call until the
 // current invocation is complete.
 // If debounceFn is called multiple times while `fn` is still executing, then only the last
-// call's arguments will be saved for te next execution of `fn`
+// call's arguments will be saved for the next execution of `fn`.
 export default function debouncePromise<Args extends unknown[]>(
   fn: (...args: unknown[]) => Promise<void>,
 ): DebouncedFn<Args> {
