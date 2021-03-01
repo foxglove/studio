@@ -11,15 +11,24 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-type DebouncedFn = ((...args: any) => void) & { currentPromise?: Promise<void> | null | undefined };
+type DebouncedFn = ((...args: unknown[]) => void) & {
+  // the currently executing promise, if any
+  currentPromise?: Promise<void> | null | undefined;
+};
 
-export default function debouncePromise(fn: (...args: any) => Promise<void>): DebouncedFn {
+// debouncePromise returns a function which wraps calls to `fn`.
+// The returned debounceFn ensures that only one `fn` call is executing at a time.
+// If debounceFn is called while `fn` is still executing, it will queue the call until the
+// current invocation is complete.
+// If debounceFn is called multiple times while `fn` is still executing, then only the last
+// call's arguments will be saved for the next execution of `fn`.
+export default function debouncePromise(fn: (...args: unknown[]) => Promise<void>): DebouncedFn {
   // Whether we are currently waiting for a promise returned by `fn` to resolve.
   let calling = false;
   // Whether another call to the debounced function was made while a call was in progress.
-  let callPending: any[] | null | undefined;
+  let callPending: unknown[] | null | undefined;
 
-  const debouncedFn: DebouncedFn = (...args: any) => {
+  const debouncedFn: DebouncedFn = (...args: unknown[]) => {
     if (calling) {
       callPending = args;
     } else {
@@ -27,7 +36,7 @@ export default function debouncePromise(fn: (...args: any) => Promise<void>): De
     }
   };
 
-  function start(args: any[]) {
+  function start(args: unknown[]) {
     calling = true;
     callPending = undefined;
 
