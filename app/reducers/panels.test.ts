@@ -241,7 +241,7 @@ describe("state.persistedState", () => {
     const { store, checkState } = getStore();
     const globalVariables = { some_global_data_var: 1 };
     const payload = { globalData: globalVariables, layout: "foo!baz" };
-    store.dispatch(importPanelLayout(payload, { isFromUrl: true }));
+    store.dispatch(importPanelLayout(payload, {}));
     checkState(() => {
       const globalState = GetGlobalState();
       expect(globalState.panels.globalVariables).toEqual(globalVariables);
@@ -252,7 +252,7 @@ describe("state.persistedState", () => {
     const { store, checkState } = getStore();
     const globalVariables = { some_global_data_var: 1 };
     const payload = { globalData: { some_var: 2 }, globalVariables, layout: "foo!baz" };
-    store.dispatch(importPanelLayout(payload, { isFromUrl: true }));
+    store.dispatch(importPanelLayout(payload, {}));
     checkState(() => {
       const globalState = GetGlobalState();
       expect(globalState.panels.globalData).toBe(undefined);
@@ -605,7 +605,7 @@ describe("state.persistedState", () => {
     checkState(({ router }) => {
       expect(router.location.search).toEqual("?layout=foo&name=bar");
     });
-    store.dispatch(importPanelLayout({ layout: null, savedProps: {} }, { isFromUrl: true }));
+    store.dispatch(importPanelLayout({ layout: null, savedProps: {} }, {}));
     checkState(({ router }) => {
       expect(router.location.search).toEqual("?layout=foo&name=bar");
     });
@@ -732,7 +732,7 @@ describe("state.persistedState", () => {
   it("will set local storage when importing a panel layout, if reducer is not told to skipSettingLocalStorage", () => {
     const { store, checkState } = getStore();
 
-    const x = importPanelLayout({ layout: "myNewLayout", savedProps: {} }, { isFromUrl: true });
+    const x = importPanelLayout({ layout: "myNewLayout", savedProps: {} }, {});
     store.dispatch(x);
     checkState(() => {
       const globalState = GetGlobalState();
@@ -744,10 +744,7 @@ describe("state.persistedState", () => {
     const { store, checkState } = getStore();
 
     store.dispatch(
-      importPanelLayout(
-        { layout: null, savedProps: {} },
-        { isFromUrl: true, skipSettingLocalStorage: true },
-      ),
+      importPanelLayout({ layout: null, savedProps: {} }, { skipSettingLocalStorage: true }),
     );
     checkState(({ persistedState: { panels } }) => {
       const globalState = GetGlobalState();
@@ -802,9 +799,7 @@ describe("state.persistedState", () => {
     } as CreateTabPanelPayload;
 
     it("will group selected panels into a Tab panel", () => {
-      store.dispatch(
-        importPanelLayout(regularLayoutPayload, { isFromUrl: true, skipSettingLocalStorage: true }),
-      );
+      store.dispatch(importPanelLayout(regularLayoutPayload, { skipSettingLocalStorage: true }));
       store.dispatch(createTabPanel({ ...createTabPanelPayload, singleTab: true }));
 
       checkState(
@@ -833,9 +828,7 @@ describe("state.persistedState", () => {
     });
 
     it("will group selected panels into a Tab panel, even when a selected panel is nested", () => {
-      store.dispatch(
-        importPanelLayout(nestedLayoutPayload, { isFromUrl: true, skipSettingLocalStorage: true }),
-      );
+      store.dispatch(importPanelLayout(nestedLayoutPayload, { skipSettingLocalStorage: true }));
       store.dispatch(createTabPanel({ ...nestedCreateTabPanelPayload, singleTab: true }));
 
       checkState(
@@ -865,9 +858,7 @@ describe("state.persistedState", () => {
     });
 
     it("will create individual tabs for selected panels in a new Tab panel", () => {
-      store.dispatch(
-        importPanelLayout(regularLayoutPayload, { isFromUrl: true, skipSettingLocalStorage: true }),
-      );
+      store.dispatch(importPanelLayout(regularLayoutPayload, { skipSettingLocalStorage: true }));
       store.dispatch(createTabPanel({ ...createTabPanelPayload, singleTab: false }));
 
       checkState(
@@ -894,9 +885,7 @@ describe("state.persistedState", () => {
     });
 
     it("will create individual tabs for selected panels in a new Tab panel, even when a selected panel is nested", () => {
-      store.dispatch(
-        importPanelLayout(nestedLayoutPayload, { isFromUrl: true, skipSettingLocalStorage: true }),
-      );
+      store.dispatch(importPanelLayout(nestedLayoutPayload, { skipSettingLocalStorage: true }));
       store.dispatch(createTabPanel({ ...nestedCreateTabPanelPayload, singleTab: false }));
 
       checkState(
