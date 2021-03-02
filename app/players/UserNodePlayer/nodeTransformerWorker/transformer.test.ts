@@ -26,7 +26,7 @@ import {
 } from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/transformer";
 import generateRosLib from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typegen";
 import baseDatatypes from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/baseDatatypes";
-import userUtilsLibs from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils";
+import rawUserUtils from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/rawUserUtils";
 import {
   DiagnosticSeverity,
   ErrorCodes,
@@ -356,7 +356,7 @@ describe("pipeline", () => {
       `,
     ])("produces transpiled code", (sourceCode) => {
       const { projectCode, diagnostics, transpiledCode } = compile({ ...baseNodeData, sourceCode });
-      expect(projectCode?.size).toEqual(userUtilsLibs.length);
+      expect(projectCode?.size).toEqual(rawUserUtils.length);
       expect(typeof transpiledCode).toEqual("string");
       expect(diagnostics).toEqual([]);
     });

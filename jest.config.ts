@@ -2,11 +2,13 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-module.exports = {
+// Shared configuration used by all jest projects
+export const sharedConfig = {
+  rootDir: ".",
   preset: "ts-jest",
   globals: {
     "ts-jest": {
-      tsconfig: "app/tsconfig.json",
+      tsconfig: "<rootDir>/app/tsconfig.json",
     },
   },
   setupFiles: [
@@ -20,20 +22,34 @@ module.exports = {
     "\\.ne$": "<rootDir>/app/test/transformers/neTransformer.js",
     "\\.(bin|template|wasm)$": "<rootDir>/app/test/transformers/rawTransformer.js",
   },
-  testPathIgnorePatterns: [
-    "/node_modules/",
-
-    // These need to import template files as actual code -- disable them for now
-    "<rootDir>/app/players/UserNodePlayer/nodeTransformerWorker/typescript/",
-  ],
   moduleNameMapper: {
     "worker-loader.*!.*/UserNodePlayer/.+Worker":
       "<rootDir>/app/players/UserNodePlayer/worker.mock.ts",
     "worker-loader.*!.*": "<rootDir>/app/test/mocks/MockWorker.ts",
+    "(.*)\\?raw$": "$1",
     "\\.svg$": "<rootDir>/app/test/mocks/MockSvg.tsx",
     "react-monaco-editor": "<rootDir>/app/test/stubs/MonacoEditor.tsx",
     "\\.(glb|md|png)$": "<rootDir>/app/test/mocks/fileMock.ts",
     "\\.(css|scss)$": "<rootDir>/app/test/mocks/styleMock.ts",
   },
   modulePathIgnorePatterns: ["<rootDir>/.webpack"],
+};
+
+// Configuration used by root jest project only
+export default {
+  ...sharedConfig,
+  projects: [
+    "<rootDir>",
+    "<rootDir>/app/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils",
+  ],
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    // Ignore userUtils tests - they are run in the nested jest project
+    "\\/nodeTransformerWorker\\/typescript\\/userUtils\\/",
+  ],
+  transform: {
+    ...sharedConfig.transform,
+    "\\/nodeTransformerWorker\\/typescript\\/userUtils\\/.+\\.ts":
+      "<rootDir>/app/test/transformers/rawTransformer.js",
+  },
 };
