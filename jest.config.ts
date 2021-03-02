@@ -3,8 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 // Shared configuration used by all jest projects
-export const sharedConfig = {
-  rootDir: ".",
+const sharedConfig = {
   preset: "ts-jest",
   globals: {
     "ts-jest": {
@@ -35,21 +34,31 @@ export const sharedConfig = {
   modulePathIgnorePatterns: ["<rootDir>/.webpack"],
 };
 
-// Configuration used by root jest project only
 export default {
-  ...sharedConfig,
   projects: [
-    "<rootDir>",
-    "<rootDir>/app/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils",
+    // Configuration used by root jest project only
+    {
+      ...sharedConfig,
+      displayName: "tests",
+      transform: {
+        ...sharedConfig.transform,
+        "\\/nodeTransformerWorker\\/typescript\\/userUtils\\/.+\\.ts":
+          "<rootDir>/app/test/transformers/rawTransformer.js",
+      },
+      testPathIgnorePatterns: [
+        "/node_modules/",
+        // Ignore userUtils tests - they are run in the nested jest project
+        "\\/nodeTransformerWorker\\/typescript\\/userUtils\\/",
+      ],
+    },
+
+    // Custom config to support running userUtils tests, which import typescript files
+    // as ordinary modules (in all other tests they are imported as strings).
+    // Outside of jest, webpack handles this for us using "?raw" in the module name.
+    {
+      ...sharedConfig,
+      displayName: "Node Playground userUtils tests",
+      testRegex: "\\/nodeTransformerWorker\\/typescript\\/userUtils\\/.+\\.test\\.tsx?$",
+    },
   ],
-  testPathIgnorePatterns: [
-    "/node_modules/",
-    // Ignore userUtils tests - they are run in the nested jest project
-    "\\/nodeTransformerWorker\\/typescript\\/userUtils\\/",
-  ],
-  transform: {
-    ...sharedConfig.transform,
-    "\\/nodeTransformerWorker\\/typescript\\/userUtils\\/.+\\.ts":
-      "<rootDir>/app/test/transformers/rawTransformer.js",
-  },
 };
