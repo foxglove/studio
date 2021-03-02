@@ -11,14 +11,12 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-/*
-Note(roman): I haven't figure out the intent here so commenting out for now
-import markers from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/markers";
-import pointClouds from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/pointClouds";
-import readers from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/readers";
-import time from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/time";
-import types from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/types";
-import vectors from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/vectors";
+import markers from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/markers.ts.template";
+import pointClouds from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/pointClouds.ts.template";
+import readers from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/readers.ts.template";
+import time from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/time.ts.template";
+import types from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/types.ts.template";
+import vectors from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/vectors.ts.template";
 
 export default [
   { fileName: "pointClouds.ts", sourceCode: pointClouds },
@@ -28,6 +26,3 @@ export default [
   { fileName: "vectors.ts", sourceCode: vectors },
   { fileName: "markers.ts", sourceCode: markers },
 ];
-*/
-
-export default [];

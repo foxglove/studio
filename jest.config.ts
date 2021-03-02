@@ -20,6 +20,12 @@ module.exports = {
     "\\.ne$": "<rootDir>/app/test/transformers/neTransformer.js",
     "\\.(bin|template|wasm)$": "<rootDir>/app/test/transformers/rawTransformer.js",
   },
+  testPathIgnorePatterns: [
+    "/node_modules/",
+
+    // These need to import template files as actual code -- disable them for now
+    "<rootDir>/app/players/UserNodePlayer/nodeTransformerWorker/typescript/",
+  ],
   moduleNameMapper: {
     "worker-loader.*!.*/UserNodePlayer/.+Worker":
       "<rootDir>/app/players/UserNodePlayer/worker.mock.ts",
