@@ -107,11 +107,21 @@ export const createTabPanel = (payload: CreateTabPanelPayload): CREATE_TAB_PANEL
 type IMPORT_PANEL_LAYOUT = { type: "IMPORT_PANEL_LAYOUT"; payload: ImportPanelLayoutPayload };
 export const importPanelLayout = (
   payload: ImportPanelLayoutPayload,
-  { skipSettingLocalStorage = false }: { skipSettingLocalStorage?: boolean } = {},
+  {
+    skipSettingLocalStorage = false,
+    isFromUrl = false,
+  }: { skipSettingLocalStorage?: boolean; isFromUrl?: boolean } = {},
 ): Dispatcher<IMPORT_PANEL_LAYOUT> => (dispatch) => {
+  const newPayload = { ...payload };
+  if (skipSettingLocalStorage) {
+    newPayload.skipSettingLocalStorage = true;
+  }
+  if (isFromUrl) {
+    newPayload.isFromUrl = true;
+  }
   return dispatch({
     type: PANELS_ACTION_TYPES.IMPORT_PANEL_LAYOUT,
-    payload: skipSettingLocalStorage ? { ...payload, skipSettingLocalStorage } : payload,
+    payload: newPayload,
   });
 };
 

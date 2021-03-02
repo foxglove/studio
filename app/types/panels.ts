@@ -91,6 +91,7 @@ export type ImportPanelLayoutPayload = {
   userNodes?: UserNodes;
   linkedGlobalVariables?: LinkedGlobalVariables;
   skipSettingLocalStorage?: boolean;
+  isFromUrl?: boolean;
 };
 
 export type LayoutFetchResult = {
