@@ -11,8 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-
 import fetchMock from "fetch-mock";
 import { getLeaves, MosaicParent } from "react-mosaic-component";
 
@@ -262,7 +260,7 @@ describe("state.persistedState", () => {
   const testLayoutKeptInUrl = (desc: string, actionCreator: () => Dispatcher<ActionTypes>) => {
     it(desc, () => {
       const { store, checkState } = getStore();
-      store.push!("/?layout=foo");
+      store.push?.("/?layout=foo");
       checkState(({ router }) => {
         expect(router.location.search).toEqual("?layout=foo");
       });
@@ -271,13 +269,13 @@ describe("state.persistedState", () => {
         expect(router.location.search).toEqual("?layout=foo");
       });
 
-      store.push!("/?layout=foo&name=bar");
+      store.push?.("/?layout=foo&name=bar");
       store.dispatch(actionCreator());
       checkState(({ router }) => {
         expect(router.location.search).toEqual("?layout=foo&name=bar");
       });
 
-      store.push!("/?laYOut=zug&layout=foo&name=bar");
+      store.push?.("/?laYOut=zug&layout=foo&name=bar");
       store.dispatch(actionCreator());
       checkState(({ router }) => {
         expect(router.location.search).toEqual("?laYOut=zug&layout=foo&name=bar");
@@ -601,7 +599,7 @@ describe("state.persistedState", () => {
 
   it("does not remove layout if layout is imported from url", () => {
     const { store, checkState } = getStore();
-    store.push!("/?layout=foo&name=bar");
+    store.push?.("/?layout=foo&name=bar");
     checkState(({ router }) => {
       expect(router.location.search).toEqual("?layout=foo&name=bar");
     });
@@ -674,6 +672,7 @@ describe("state.persistedState", () => {
     await delay(500);
     checkState(({ persistedState: { panels, fetchedLayout } }) => {
       expect(panels.layout).toEqual({ foo: "bar" });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((fetchedLayout.data as any).layout).toEqual({ foo: "bar" });
       expect(fetchedLayout.isLoading).toEqual(false);
     });
@@ -701,7 +700,7 @@ describe("state.persistedState", () => {
       expect(panels.layout).toEqual(defaultPersistedState.panels.layout);
       // fetchedLayout should be down loading, but have no data.
       expect(fetchedLayout.isLoading).toBe(false);
-      expect(fetchedLayout.error!.message).toMatch("Failed to fetch layout from URL");
+      expect(fetchedLayout.error?.message).toMatch("Failed to fetch layout from URL");
     });
   });
 
@@ -821,7 +820,7 @@ describe("state.persistedState", () => {
             ],
           });
           expect(savedProps[layout.second as string]).toEqual(
-            regularLayoutPayload.savedProps![layout.second as string],
+            regularLayoutPayload.savedProps?.[layout.second as string],
           );
         },
       );
@@ -878,7 +877,7 @@ describe("state.persistedState", () => {
             ],
           });
           expect(savedProps[layout.second as string]).toEqual(
-            regularLayoutPayload.savedProps![layout.second as string],
+            regularLayoutPayload.savedProps?.[layout.second as string],
           );
         },
       );
@@ -916,7 +915,7 @@ describe("state.persistedState", () => {
   it("does not remove layout if config are saved silently", () => {
     const { store, checkState } = getStore();
     store.dispatch(changePanelLayout({ layout: "foo" }));
-    store.push!("/?layout=foo&name=bar");
+    store.push?.("/?layout=foo&name=bar");
     checkState(({ router }) => {
       expect(router.location.search).toEqual("?layout=foo&name=bar");
     });
