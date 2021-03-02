@@ -39,7 +39,6 @@ export default {
     // Configuration used by root jest project only
     {
       ...sharedConfig,
-      displayName: "tests",
       transform: {
         ...sharedConfig.transform,
         "\\/nodeTransformerWorker\\/typescript\\/userUtils\\/.+\\.ts":
