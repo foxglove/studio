@@ -549,13 +549,7 @@ export default class MemoryCacheDataProvider implements DataProvider {
     }; // Just loop infinitely, but break if the connection is not current any more.
 
     for (;;) {
-      const currentConnection:
-        | {
-            id: string;
-            topics: string[];
-            remainingBlockRange: Range;
-          }
-        | undefined = this._currentConnection;
+      const currentConnection = this._currentConnection;
       if (!currentConnection || !isCurrent()) {
         return false;
       }
