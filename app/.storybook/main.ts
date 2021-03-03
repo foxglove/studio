@@ -5,6 +5,7 @@ const path = require("path");
 module.exports = {
   stories: ["../components/**/Modal.stories.tsx"],
   //   stories: ["../components/**/*.stories.@(ts|tsx)"],
+  addons: ["@storybook/addon-essentials"],
   //   addons: ["@storybook/preset-typescript"],
 
   core: {
@@ -138,12 +139,12 @@ module.exports = {
       module: {
         ...config.module,
         rules: [
-          ...config.module.rules.filter((r: any) => !r.sideEffects),
+          //...config.module.rules.filter((r: any) => !r.sideEffects),
           ...rendererConfig.module.rules,
         ],
       },
       //   module: { ...config.module, rules: rendererConfig.module.rules },
-      plugins: [new CleanWebpackPlugin(), ...config.plugins, ...rendererConfig.plugins],
+      plugins: [...config.plugins, ...rendererConfig.plugins],
       //   context: path.resolve(__dirname, ".."),
     };
     // return {

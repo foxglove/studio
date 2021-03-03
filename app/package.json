@@ -86,6 +86,7 @@
   },
   "devDependencies": {
     "@storybook/addon-actions": "6.2.0-beta.5",
+    "@storybook/addon-essentials": "6.2.0-beta.5",
     "@storybook/builder-webpack5": "next",
     "@storybook/preset-typescript": "3.0.0",
     "@storybook/react": "6.2.0-beta.5",

@@ -73,6 +73,7 @@ function ContentStory({ showChildToggle }: { showChildToggle?: boolean }) {
     </Modal>
   );
 }
+
 storiesOf("<Modal>", module)
   .add("basic", () => (
     <Modal onRequestClose={() => action("close")}>
