@@ -17126,7 +17126,7 @@ fsevents@^1.2.7:
   peerDependencies:
     react: ">0.14"
     react-dom: ">0.14"
-  checksum: afc16574088496ed9f22ba8f2648ccef894c357fa44ea559b2f73994c28e34cd630d89a273ea92bec82a911f4665fb9d8f55c57e1719adb0ce19338064e12362
+  checksum: 72572f0b159300e2e29c0fa35978185f0c82673acb99b30b312abdb9f0cbe454e26d8e9f3db74d217291fa4c2643c33813ecca94e59ca836c2a3b89e511e0069
   languageName: node
   linkType: hard
 
@@ -18521,7 +18521,7 @@ fsevents@^1.2.7:
     buffer: 6.0.3
     heap: 0.2.6
     int53: 1.0.0
-  checksum: cb76c04d0366d7d375576200390aad65f0f4e3642baf6df60d18842343f66e91e1133916adb3c5dafded91712dd3fb4bac3ca60b7443d62666bb5fed776aca93
+  checksum: 8cbb13a4eb1ca43593d86f1d407ad5cee3f95c69dd6a92070bff7892a41b0604c4373e924ea23deb22a249047e4009dfaa83fae8e159053990819decf8530cc8
   languageName: node
   linkType: hard
 
