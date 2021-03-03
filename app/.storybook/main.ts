@@ -20,7 +20,7 @@ module.exports = {
       ...config,
       resolve: rendererConfig.resolve,
       module: rendererConfig.module,
-      plugins: [...(config.plugins ?? []), ...(rendererConfig.plugins || [])],
+      plugins: [...(config.plugins ?? []), ...(rendererConfig.plugins ?? [])],
     };
   },
 };
