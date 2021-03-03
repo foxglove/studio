@@ -14,7 +14,8 @@
 import * as monacoApi from "monaco-editor/esm/vs/editor/editor.api";
 // @ts-expect-error why doesn't this import the base monaco?
 import { StaticServices } from "monaco-editor/esm/vs/editor/standalone/browser/standaloneServices";
-// import { initVimMode } from "monaco-vim";
+// @ts-expect-error no types for monaco-vim, probably remove vim editing mode
+import { initVimMode } from "monaco-vim";
 import * as React from "react";
 import MonacoEditor from "react-monaco-editor";
 
@@ -88,10 +89,10 @@ const Editor = ({
   React.useEffect(() => {
     if (editorRef.current) {
       if (vimMode) {
-        // vimModeRef.current = initVimMode(editorRef.current);
+        vimModeRef.current = initVimMode(editorRef.current);
       } else if (vimModeRef.current) {
         // Turn off VimMode.
-        // (vimModeRef.current as any).dispose();
+        (vimModeRef.current as any).dispose();
       }
     }
   }, [vimMode]);
@@ -250,7 +251,7 @@ const Editor = ({
     (editor) => {
       editorRef.current = editor;
       if (vimMode) {
-        // vimModeRef.current = initVimMode(editorRef.current);
+        vimModeRef.current = initVimMode(editorRef.current);
       }
       editor.addAction({
         id: "ctrl-s",
