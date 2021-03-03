@@ -74,13 +74,8 @@ function ContentStory({ showChildToggle }: { showChildToggle?: boolean }) {
   );
 }
 
-export default {
-  title: "Modal",
-  component: Modal,
-};
-
-export const Basic = () => {
-  return (
+storiesOf("<Modal>", module)
+  .add("basic", () => (
     <Modal onRequestClose={() => action("close")}>
       <div style={{ padding: 20 }}>
         <TextContent>
@@ -92,13 +87,6 @@ export const Basic = () => {
         </TextContent>
       </div>
     </Modal>
-  );
-};
-
-export const WithChildToggle = ({ showChildToggle }: { showChildToggle: boolean }) => {
-  return <ContentStory showChildToggle={showChildToggle} />;
-};
-
-WithChildToggle.args = {
-  showChildToggle: true,
-};
+  ))
+  .add("with ChildToggle content", () => <ContentStory showChildToggle />)
+  .add("with DropDown content", () => <ContentStory />);
