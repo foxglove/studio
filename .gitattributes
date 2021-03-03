@@ -1,4 +1,10 @@
+* text=auto eol=lf
+
+*.afdesign filter=lfs diff=lfs merge=lfs -text
 *.bag filter=lfs diff=lfs merge=lfs -text
-resources/**/*.afdesign filter=lfs diff=lfs merge=lfs -text
-resources/**/*.png filter=lfs diff=lfs merge=lfs -text
-resources/**/*.icns filter=lfs diff=lfs merge=lfs -text
+*.bin filter=lfs diff=lfs merge=lfs -text
+*.glb filter=lfs diff=lfs merge=lfs -text
+*.icns filter=lfs diff=lfs merge=lfs -text
+*.jpg filter=lfs diff=lfs merge=lfs -text
+*.png filter=lfs diff=lfs merge=lfs -text
+*.woff2 filter=lfs diff=lfs merge=lfs -text

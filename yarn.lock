@@ -1789,7 +1789,7 @@ __metadata:
     redux-thunk: 2.3.0
     regl-worldview: 0.16.0
     reselect: 4.0.0
-    rosbag: "github:foxglove/rosbag.js#06f41a828659b16340e9c19ca68b2acf950b1b83"
+    rosbag: "github:foxglove/rosbag.js#13d921b946fa355df32a07f245594102a622ccb7"
     roslib: "github:foxglove/roslibjs#57c9a4712d61691f132367fd8ef8af950b010872"
     sanitize-html: 1.20.0
     seedrandom: 2.4.4
@@ -17126,7 +17126,7 @@ fsevents@^1.2.7:
   peerDependencies:
     react: ">0.14"
     react-dom: ">0.14"
-  checksum: 72572f0b159300e2e29c0fa35978185f0c82673acb99b30b312abdb9f0cbe454e26d8e9f3db74d217291fa4c2643c33813ecca94e59ca836c2a3b89e511e0069
+  checksum: afc16574088496ed9f22ba8f2648ccef894c357fa44ea559b2f73994c28e34cd630d89a273ea92bec82a911f4665fb9d8f55c57e1719adb0ce19338064e12362
   languageName: node
   linkType: hard
 
@@ -18514,14 +18514,14 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"rosbag@github:foxglove/rosbag.js#06f41a828659b16340e9c19ca68b2acf950b1b83":
+"rosbag@github:foxglove/rosbag.js#13d921b946fa355df32a07f245594102a622ccb7":
   version: 2.6.3
-  resolution: "rosbag@https://github.com/foxglove/rosbag.js.git#commit=06f41a828659b16340e9c19ca68b2acf950b1b83"
+  resolution: "rosbag@https://github.com/foxglove/rosbag.js.git#commit=13d921b946fa355df32a07f245594102a622ccb7"
   dependencies:
     buffer: 6.0.3
     heap: 0.2.6
     int53: 1.0.0
-  checksum: a185ebab88e2632efafea7a106b229d262f983d5d107175e5dc0ecd105977417d072e2aac5dd0c83bd7531369c6026852b7a499938fd351df6938cc574ae3f58
+  checksum: cb76c04d0366d7d375576200390aad65f0f4e3642baf6df60d18842343f66e91e1133916adb3c5dafded91712dd3fb4bac3ca60b7443d62666bb5fed776aca93
   languageName: node
   linkType: hard
 
