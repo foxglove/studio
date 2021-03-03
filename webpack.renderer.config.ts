@@ -225,7 +225,7 @@ export default (_: never, argv: WebpackArgv): Configuration => {
               return false;
             }
 
-            const repoPath = path.relative(__dirname, issue.file).replace(/\\/g, "x");
+            const repoPath = path.relative(__dirname, issue.file).replace(/\\/g, "/");
             return uncheckedIndexAccessFiles.includes(repoPath);
           },
         },
