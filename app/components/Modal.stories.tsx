@@ -76,7 +76,7 @@ function ContentStory({ showChildToggle }: { showChildToggle?: boolean }) {
 
 storiesOf("<Modal>", module)
   .add("basic", () => (
-    <Modal onRequestClose={() => action("close")}>
+    <Modal onRequestClose={() => action("close")()}>
       <div style={{ padding: 20 }}>
         <TextContent>
           <a href="https://google.com" target="_blank" rel="noopener noreferrer">
