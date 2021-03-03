@@ -8,5 +8,5 @@
   "typeAcquisition": {
     "exclude": ["node"]
   },
-  "include": ["**/*", "../typings/*.d.ts"]
+  "include": ["**/*", "../typings/*.d.ts", ".storybook/*"]
 }

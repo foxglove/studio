@@ -1,24 +1,27 @@
+import { Configuration } from "webpack";
 import { makeConfig } from "../../webpack.renderer.config";
 
 module.exports = {
-  stories: ["../components/**/Modal.stories.tsx"],
-  //stories: ["../components/**/*.stories.@(ts|tsx)"],
+  // stories: ["../components/**/Modal.stories.tsx"],
+  stories: ["../components/**/*.stories.@(ts|tsx)"],
   addons: ["@storybook/addon-essentials", "@storybook/addon-actions"],
 
   core: {
     builder: "webpack5",
   },
 
-  webpackFinal: (config: any) => {
+  // Carefully merge our main webpack config with the Storybook default config.
+  // For the most part, our webpack config has already been designed to handle
+  // all the imports and edge cases we need to support. However, at least some of
+  // Storybook's config is required, for instance the HtmlWebpackPlugin that they
+  // use to generate the main iframe page.
+  webpackFinal: (config: Configuration): Configuration => {
     const rendererConfig = makeConfig(null, { mode: "development" });
     return {
       ...config,
-      resolve: { ...rendererConfig.resolve },
-      module: {
-        ...config.module,
-        ...rendererConfig.module,
-      },
-      plugins: [...config.plugins, ...(rendererConfig.plugins as unknown[])],
+      resolve: rendererConfig.resolve,
+      module: rendererConfig.module,
+      plugins: [...(config.plugins ?? []), ...(rendererConfig.plugins || [])],
     };
   },
 };
