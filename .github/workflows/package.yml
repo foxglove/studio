@@ -42,12 +42,15 @@ jobs:
             ${{ runner.os }}-yarn-
 
       # Work around yarn checksum mismatches for git repo dependencies on Windows
-      - name: YARN_CHECKSUM_BEHAVIOR=ignore
+      - name: YARN_CHECKSUM_BEHAVIOR=ignore yarn install --immutable
+        run: yarn install --immutable
         if: matrix.os == 'windows-latest'
         env:
           YARN_CHECKSUM_BEHAVIOR: ignore
 
       - run: yarn install --immutable
+        if: matrix.os != 'windows-latest'
+
       - run: yarn run build:prod
 
       - name: Build Package
