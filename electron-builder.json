@@ -17,7 +17,7 @@
     ]
   },
   "win": {
-    "target": ["nsis"],
+    "target": ["nsis", "appx"],
     "rfc3161TimeStampServer": "http://timestamp.comodoca.com"
   },
   "mac": {
@@ -27,6 +27,9 @@
     },
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
     "category": "public.app-category.developer-tools"
+  },
+  "appx": {
+    "backgroundColor": "#f7def6"
   },
   "dmg": {
     "background": "resources/dmg-background/background.png",
