@@ -187,6 +187,41 @@ export function makeConfig(_: unknown, argv: WebpackArgv): Configuration {
         resourceRegExp: /^\.[\\/]locale$/,
         contextRegExp: /moment$/,
       }),
+      // We use two ForkTsCheckers to ignore known files which fail noUncheckedIndexedAccess
+      // The first checker disables the compiler option and is used for all files
+      // The second checker enables the option but excludes any errors from the uncheckedIndexAccessFiles array
+      // This creates an overlap where the first checker ensures these files pass all the other checks
+      // And the second checker ensures all the _other_ files pass noUncheckedIndexAccess
+      //
+      // To fix a file, remove it from the UncheckedIndexAccess.json file and fix the errors
+      new ForkTsCheckerWebpackPlugin({
+        typescript: {
+          configOverwrite: {
+            compilerOptions: {
+              noUncheckedIndexedAccess: false,
+            },
+          },
+        },
+      }),
+      new ForkTsCheckerWebpackPlugin({
+        typescript: {
+          configOverwrite: {
+            compilerOptions: {
+              noUncheckedIndexedAccess: true,
+            },
+          },
+        },
+        issue: {
+          exclude: (issue) => {
+            if (issue.file === undefined) {
+              return false;
+            }
+
+            const repoPath = path.relative(__dirname, issue.file);
+            return uncheckedIndexAccessFiles.includes(repoPath);
+          },
+        },
+      }),
     ],
     node: {
       __dirname: true,
@@ -207,41 +242,6 @@ export default (env: unknown, argv: WebpackArgv): Configuration => {
           </body>
         </html>
       `,
-    }),
-    // We use two ForkTsCheckers to ignore known files which fail noUncheckedIndexedAccess
-    // The first checker disables the compiler option and is used for all files
-    // The second checker enables the option but excludes any errors from the uncheckedIndexAccessFiles array
-    // This creates an overlap where the first checker ensures these files pass all the other checks
-    // And the second checker ensures all the _other_ files pass noUncheckedIndexAccess
-    //
-    // To fix a file, remove it from the UncheckedIndexAccess.json file and fix the errors
-    new ForkTsCheckerWebpackPlugin({
-      typescript: {
-        configOverwrite: {
-          compilerOptions: {
-            noUncheckedIndexedAccess: false,
-          },
-        },
-      },
-    }),
-    new ForkTsCheckerWebpackPlugin({
-      typescript: {
-        configOverwrite: {
-          compilerOptions: {
-            noUncheckedIndexedAccess: true,
-          },
-        },
-      },
-      issue: {
-        exclude: (issue) => {
-          if (issue.file === undefined) {
-            return false;
-          }
-
-          const repoPath = path.relative(__dirname, issue.file);
-          return uncheckedIndexAccessFiles.includes(repoPath);
-        },
-      },
     }),
   );
   return config;

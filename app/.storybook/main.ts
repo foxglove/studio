@@ -2,8 +2,12 @@ import { Configuration } from "webpack";
 import { makeConfig } from "../../webpack.renderer.config";
 
 module.exports = {
-  // stories: ["../components/**/Modal.stories.tsx"],
-  stories: ["../components/**/*.stories.@(ts|tsx)"],
+  stories: [
+    "../components/**/Modal.stories.tsx",
+    "../components/**/Slider.stories.tsx",
+    "../components/**/ChildToggle/index.stories.tsx",
+  ],
+  // stories: ["../components/**/*.stories.@(ts|tsx)"],
   addons: ["@storybook/addon-essentials", "@storybook/addon-actions"],
 
   core: {
