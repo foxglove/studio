@@ -1258,7 +1258,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-transform-typescript@npm:^7.13.0, @babel/plugin-transform-typescript@npm:^7.3.2":
+"@babel/plugin-transform-typescript@npm:^7.13.0":
   version: 7.13.0
   resolution: "@babel/plugin-transform-typescript@npm:7.13.0"
   dependencies:
@@ -1414,7 +1414,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/preset-typescript@npm:^7.12.7, @babel/preset-typescript@npm:^7.3.3, @babel/preset-typescript@npm:^7.8.3":
+"@babel/preset-typescript@npm:^7.12.7":
   version: 7.13.0
   resolution: "@babel/preset-typescript@npm:7.13.0"
   dependencies:
@@ -1716,7 +1716,6 @@ __metadata:
     "@storybook/addon-actions": 6.2.0-beta.5
     "@storybook/addon-essentials": 6.2.0-beta.5
     "@storybook/builder-webpack5": next
-    "@storybook/preset-typescript": 3.0.0
     "@storybook/react": 6.2.0-beta.5
     "@testing-library/react-hooks": 5.1.0
     "@types/chart.js": 2.9.31
@@ -3197,41 +3196,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@storybook/node-logger@npm:^5.3.17":
-  version: 5.3.21
-  resolution: "@storybook/node-logger@npm:5.3.21"
-  dependencies:
-    "@types/npmlog": ^4.1.2
-    chalk: ^3.0.0
-    core-js: ^3.0.1
-    npmlog: ^4.1.2
-    pretty-hrtime: ^1.0.3
-    regenerator-runtime: ^0.13.3
-  checksum: 43bef68265bbbdedf2a2f8f0768cb43337c8ca499a042c632c37909f57b508dbdac16d6390e9f1b74352580c185c55f2d077b5c3b42f4037ce26d537f487e0e8
-  languageName: node
-  linkType: hard
-
 "@storybook/postinstall@npm:6.2.0-beta.5":
   version: 6.2.0-beta.5
   resolution: "@storybook/postinstall@npm:6.2.0-beta.5"
   dependencies:
     core-js: ^3.8.2
   checksum: 62b660e536596b889acee51cbb369526889e2bc70784683f85d9e00226d8393b0405cdfb6f54feea6a8ee52e13936a06ced06f3d6102911ac8e15387820da56a
-  languageName: node
-  linkType: hard
-
-"@storybook/preset-typescript@npm:3.0.0":
-  version: 3.0.0
-  resolution: "@storybook/preset-typescript@npm:3.0.0"
-  dependencies:
-    "@babel/preset-typescript": ^7.8.3
-    "@storybook/node-logger": ^5.3.17
-    "@types/babel__core": ^7.1.6
-    babel-preset-typescript-vue: ^1.0.3
-    fork-ts-checker-webpack-plugin: ^4.1.0
-  peerDependencies:
-    typescript: ">=3.4"
-  checksum: f518f632f240a2fb779038cb47cc3c9165edf8cd2e2cb1318224a66ab3d61c7829d0d02f68ee04f8e9210baa926430f9a8f3befa8a35c7d352d10039fe6282aa
   languageName: node
   linkType: hard
 
@@ -3435,7 +3405,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/babel__core@npm:^7.0.0, @types/babel__core@npm:^7.1.6, @types/babel__core@npm:^7.1.7":
+"@types/babel__core@npm:^7.0.0, @types/babel__core@npm:^7.1.7":
   version: 7.1.12
   resolution: "@types/babel__core@npm:7.1.12"
   dependencies:
@@ -5943,20 +5913,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"babel-preset-typescript-vue@npm:^1.0.3":
-  version: 1.1.1
-  resolution: "babel-preset-typescript-vue@npm:1.1.1"
-  dependencies:
-    "@babel/helper-plugin-utils": ^7.0.0
-    "@babel/plugin-transform-typescript": ^7.3.2
-    "@babel/preset-typescript": ^7.3.3
-    vue-template-compiler: ^2.6.11
-  peerDependencies:
-    "@babel/core": ^7.0.0-0
-  checksum: 0ba79c64ed696feeebd52724ce6fcbb960e1f7ad0c70330ae9f635cdfa52bdc57c2cef0a4e7c0514bb11c7ac2ab84b9da08549c48827fc9e176ecac851599c6c
-  languageName: node
-  linkType: hard
-
 "babel-runtime@npm:6.x, babel-runtime@npm:6.x.x, babel-runtime@npm:^6.11.6, babel-runtime@npm:^6.26.0":
   version: 6.26.0
   resolution: "babel-runtime@npm:6.26.0"
@@ -7688,7 +7644,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"core-js@npm:^3.0.0, core-js@npm:^3.0.1, core-js@npm:^3.0.4, core-js@npm:^3.6.5":
+"core-js@npm:^3.0.0, core-js@npm:^3.0.4, core-js@npm:^3.6.5":
   version: 3.9.0
   resolution: "core-js@npm:3.9.0"
   checksum: c1711d5f60db480a561bba6a8ce02a0e8f4400c14b3c0eb728133be2ae30d74eb0bd20cd8154c3b0910ecc01bd07efa1efb04596f2c9432109dcbef268ef332d
@@ -8180,13 +8136,6 @@ __metadata:
     whatwg-mimetype: ^2.3.0
     whatwg-url: ^8.0.0
   checksum: 42239927c6a202e2d02b7f41c94ca53e3cea036898b97b8bf6120ed1b25e0dd11c48ec7aa5c84cf807c2cb9f3a637df9fb50f3ca25a52863186a4ac46254726b
-  languageName: node
-  linkType: hard
-
-"de-indent@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "de-indent@npm:1.0.2"
-  checksum: a1933a4328d053d9b0db447668521a6d0360b509c115dc5340420fd645be556c00b82e491d6b862249981ed22fbf2016080b222ad23c25038aba72cb8e3120ea
   languageName: node
   linkType: hard
 
@@ -10551,7 +10500,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fork-ts-checker-webpack-plugin@npm:4.1.6, fork-ts-checker-webpack-plugin@npm:^4.1.0, fork-ts-checker-webpack-plugin@npm:^4.1.6":
+"fork-ts-checker-webpack-plugin@npm:4.1.6, fork-ts-checker-webpack-plugin@npm:^4.1.6":
   version: 4.1.6
   resolution: "fork-ts-checker-webpack-plugin@npm:4.1.6"
   dependencies:
@@ -11578,7 +11527,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"he@npm:^1.1.0, he@npm:^1.2.0":
+"he@npm:^1.2.0":
   version: 1.2.0
   resolution: "he@npm:1.2.0"
   bin:
@@ -18403,7 +18352,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"regenerator-runtime@npm:^0.13.3, regenerator-runtime@npm:^0.13.4, regenerator-runtime@npm:^0.13.7":
+"regenerator-runtime@npm:^0.13.4, regenerator-runtime@npm:^0.13.7":
   version: 0.13.7
   resolution: "regenerator-runtime@npm:0.13.7"
   checksum: 6ef567c662088b1b292214920cbd72443059298d477f72e1a37e0a113bafbfac9057cbfe35ae617284effc4b423493326a78561bbff7b04162c7949bdb9624e8
@@ -22035,16 +21984,6 @@ typescript@4.2.2:
   version: 1.1.2
   resolution: "vm-browserify@npm:1.1.2"
   checksum: fc571a62d2cf797ae8773ebb3cb0d2bea50ed02059e128dd9087975929fce4c80a6485ce1aaf7d44ef69db99dfdcde50b6be5d5eb73b296660d761c32fb544fe
-  languageName: node
-  linkType: hard
-
-"vue-template-compiler@npm:^2.6.11":
-  version: 2.6.12
-  resolution: "vue-template-compiler@npm:2.6.12"
-  dependencies:
-    de-indent: ^1.0.2
-    he: ^1.1.0
-  checksum: 5b05dda398cc1df7ba244316ddfb8f6463dbaafb4d23a4ac7e1cb8914e813a464f4ac055e41ac6e60feeadd4cccdeec1111fac592f2bb4eeb320889846a18912
   languageName: node
   linkType: hard
 
