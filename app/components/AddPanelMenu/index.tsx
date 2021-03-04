@@ -28,7 +28,7 @@ type Props = {
 };
 
 function AddPanelMenu(props: Props) {
-  const [isOpen, setIsOpen] = useState<boolean>(props.defaultIsOpen || false);
+  const [isOpen, setIsOpen] = useState<boolean>(props.defaultIsOpen ?? false);
   const onToggle = useCallback(() => setIsOpen((open) => !open), []);
   const dispatch = useDispatch();
 
