@@ -63,7 +63,7 @@ async function createWindow(): Promise<void> {
     applicationName: packageJson.productName,
     applicationVersion: packageJson.version,
     version: process.platform,
-    copyright: `Copyright © ${new Date().getFullYear()} ${packageJson.author.name}`,
+    copyright: undefined,
     website: packageJson.homepage,
     iconPath: undefined,
   });
