@@ -64,7 +64,7 @@ async function createWindow(): Promise<void> {
     applicationVersion: packageJson.version,
     version: process.platform,
     copyright: "Copyright © 2021 Foxglove Technologies",
-    website: "https://foxglove.dev/",
+    website: packageJson.homepage,
     iconPath: undefined,
   });
 
