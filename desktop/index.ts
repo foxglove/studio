@@ -229,7 +229,7 @@ app.on("ready", async () => {
     "default-src": "'self'",
     "script-src": `'self' 'unsafe-inline'`,
     "style-src": "'self' 'unsafe-inline'",
-    "connect-src": "'self' ws: wss:", // Required for rosbridge connections
+    "connect-src": "'self' ws: wss: http: https:", // Required for rosbridge connections
     "font-src": "'self' data:",
   };
   if (!isProduction) {

@@ -2,15 +2,27 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { ConnectedRouter } from "connected-react-router";
 import { ReactElement, useEffect, useMemo, useState } from "react";
+import { setConfig } from "react-hot-loader";
+import { Provider } from "react-redux";
 
 import { OsContextSingleton } from "@foxglove-studio/app/OsContext";
+import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
 import { NativeFileMenuPlayerSelection } from "@foxglove-studio/app/components/NativeFileMenuPlayerSelection";
+import PlayerManager from "@foxglove-studio/app/components/PlayerManager";
 import Root from "@foxglove-studio/app/components/Root";
-import {
-  PlayerSelectionDefinition,
-  PlayerSelectionProvider,
-} from "@foxglove-studio/app/context/PlayerSelection";
+import { PlayerSourceDefinition } from "@foxglove-studio/app/context/PlayerSelectionContext";
+import getGlobalStore from "@foxglove-studio/app/store/getGlobalStore";
+import browserHistory from "@foxglove-studio/app/util/history";
+
+setConfig({
+  // react-hot-loader re-writes hooks with a wrapper function that is designed
+  // to be re-invoked on module updates. While good in some cases, reloading
+  // hooks in webviz causes havoc on our internal state since we depend on a
+  // hooks to initilialize playback.
+  reloadHooks: false,
+});
 
 export function App(): ReactElement {
   const [isFullScreen, setFullScreen] = useState(false);
@@ -27,26 +39,34 @@ export function App(): ReactElement {
     return OsContextSingleton?.platform === "darwin" && !isFullScreen;
   }, [isFullScreen]);
 
-  const playerSources: PlayerSelectionDefinition[] = [
+  const playerSources: PlayerSourceDefinition[] = [
     {
       name: "Bag File",
       type: "file",
     },
     {
       name: "WebSocket",
-      type: "url",
+      type: "ws",
+    },
+    {
+      name: "Http",
+      type: "http",
     },
   ];
 
   return (
-    <>
-      <PlayerSelectionProvider items={playerSources}>
-        <NativeFileMenuPlayerSelection />
-        <Root
-          insetWindowControls={insetWindowControls}
-          onToolbarDoubleClick={OsContextSingleton?.handleToolbarDoubleClick}
-        />
-      </PlayerSelectionProvider>
-    </>
+    <Provider store={getGlobalStore()}>
+      <ConnectedRouter history={browserHistory}>
+        <ErrorBoundary>
+          <PlayerManager playerSources={playerSources}>
+            <NativeFileMenuPlayerSelection />
+            <Root
+              insetWindowControls={insetWindowControls}
+              onToolbarDoubleClick={OsContextSingleton?.handleToolbarDoubleClick}
+            />
+          </PlayerManager>
+        </ErrorBoundary>
+      </ConnectedRouter>
+    </Provider>
   );
 }

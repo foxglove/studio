@@ -166,7 +166,6 @@ overrides:
       - "app/components/PlaybackControls/index.tsx"
       - "app/components/PlaybackControls/sharedHelpers.ts"
       - "app/components/PlaybackSpeedControls.tsx"
-      - "app/components/PlayerManager.tsx"
       - "app/components/Progress.tsx"
       - "app/components/ReactChartjs/ChartJSManager.ts"
       - "app/components/ReactChartjs/ChartJSWorker.ts"

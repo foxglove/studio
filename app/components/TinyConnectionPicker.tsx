@@ -21,9 +21,9 @@ import ChildToggle from "@foxglove-studio/app/components/ChildToggle";
 import { WrappedIcon } from "@foxglove-studio/app/components/Icon";
 import Menu, { Item } from "@foxglove-studio/app/components/Menu";
 import {
-  PlayerSelectionDefinition,
+  PlayerSourceDefinition,
   usePlayerSelection,
-} from "@foxglove-studio/app/context/PlayerSelection";
+} from "@foxglove-studio/app/context/PlayerSelectionContext";
 
 type TinyConnectionPickerProps = {
   defaultIsOpen?: boolean;
@@ -33,14 +33,14 @@ export default function TinyConnectionPicker({
   defaultIsOpen = false,
 }: TinyConnectionPickerProps): ReactElement {
   const [isOpen, setIsOpen] = useState<boolean>(defaultIsOpen);
-  const { select, items } = usePlayerSelection();
+  const { selectSource, availableSources } = usePlayerSelection();
 
   const selectItem = useCallback(
-    (item: PlayerSelectionDefinition) => {
+    (item: PlayerSourceDefinition) => {
       setIsOpen(false);
-      select(item);
+      selectSource(item);
     },
-    [select],
+    [selectSource],
   );
 
   return (
@@ -55,14 +55,17 @@ export default function TinyConnectionPicker({
         <DatabaseIcon />
       </WrappedIcon>
       <Menu>
-        {items.map((item) => {
+        {availableSources.map((item) => {
           let icon = <ChartDonut />;
 
           switch (item.type) {
             case "file":
               icon = <FileIcon />;
               break;
-            case "url":
+            case "ws":
+              icon = <TransitConnectionIcon />;
+              break;
+            case "http":
               icon = <TransitConnectionIcon />;
               break;
           }
