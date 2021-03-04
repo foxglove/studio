@@ -13,7 +13,7 @@
 
 import LinkVariantOffIcon from "@mdi/svg/svg/link-variant-off.svg";
 import LinkVariantIcon from "@mdi/svg/svg/link-variant.svg";
-import React, { useState, useCallback, ReactNode, useRef } from "react";
+import React, { useState, ReactNode } from "react";
 import styled from "styled-components";
 
 import { LinkedGlobalVariable } from "../useLinkedGlobalVariables";

@@ -13,7 +13,7 @@
 
 import DotsVerticalIcon from "@mdi/svg/svg/dots-vertical.svg";
 import UndoVariantIcon from "@mdi/svg/svg/undo-variant.svg";
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 
 import { ROW_HEIGHT, SDotMenuPlaceholder } from "./TreeNodeRow";

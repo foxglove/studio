@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import DotsVerticalIcon from "@mdi/svg/svg/dots-vertical.svg";
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 
 import { ROW_HEIGHT } from "./TreeNodeRow";
