@@ -1,6 +1,9 @@
 {
   "name": "@foxglove-studio/app",
   "private": true,
+  "scripts": {
+    "build:storybook": "yarn run build-storybook"
+  },
   "dependencies": {
     "@mdi/svg": "5.9.55",
     "cbor-js": "0.1.0",
@@ -124,6 +127,7 @@
     "@types/url-search-params": "1.1.0",
     "@types/uuid": "8.3.0",
     "@types/ws": "7.4.0",
+    "chromatic": "github:amacneil/chromatic-cli#detectyarn",
     "dom-to-image-more-scroll-fix": "2.9.0",
     "enzyme": "3.11.0",
     "enzyme-adapter-react-16": "1.15.6",

@@ -23,8 +23,8 @@ jobs:
             command: build:prod
           - name: test
             command: test --maxWorkers=100%
-          - name: build storybook
-            command: build:storybook
+          - name: stories
+            command: chromatic
 
     name: ${{ matrix.config.name }}
 
@@ -32,6 +32,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           lfs: true
+          fetch-depth: 0
       - name: Configure Node.js
         uses: actions/setup-node@v2.1.5
         with:
@@ -47,3 +48,5 @@ jobs:
             ${{ runner.os }}-yarn-
       - run: yarn install --immutable
       - run: yarn run ${{ matrix.config.command }}
+        env:
+          CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}

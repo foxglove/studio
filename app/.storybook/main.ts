@@ -2,7 +2,7 @@ import { Configuration } from "webpack";
 import { makeConfig } from "../../webpack.renderer.config";
 
 module.exports = {
-  stories: ["../**/*.stories.@(ts|tsx)"],
+  stories: ["../components/Tooltip.stories.tsx"], // FIXME testing
   addons: ["@storybook/addon-essentials", "@storybook/addon-actions"],
 
   core: {
