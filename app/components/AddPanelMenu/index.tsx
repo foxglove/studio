@@ -28,7 +28,7 @@ type Props = {
 };
 
 function AddPanelMenu(props: Props) {
-  const [isOpen, setIsOpen] = useState<boolean>(props.defaultIsOpen || false);
+  const [isOpen, setIsOpen] = useState<boolean>(props.defaultIsOpen ?? false);
   const dispatch = useDispatch();
 
   const layout = useSelector((state: ReduxState) => state.persistedState.panels.layout);
