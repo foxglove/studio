@@ -27,9 +27,8 @@ type Props = {
   defaultIsOpen?: boolean; // just for testing
 };
 
-function AppMenu(props: Props) {
+function AddPanelMenu(props: Props) {
   const [isOpen, setIsOpen] = useState<boolean>(props.defaultIsOpen || false);
-  const onToggle = useCallback(() => setIsOpen((open) => !open), []);
   const dispatch = useDispatch();
 
   const layout = useSelector((state: ReduxState) => state.persistedState.panels.layout);
@@ -42,7 +41,7 @@ function AppMenu(props: Props) {
   );
 
   return (
-    <ChildToggle position="below" onToggle={onToggle} isOpen={isOpen}>
+    <ChildToggle position="below" onToggle={setIsOpen} isOpen={isOpen}>
       <WrappedIcon medium fade active={isOpen} tooltip="Add Panel">
         <PlusCircleOutlineIcon />
       </WrappedIcon>
@@ -53,4 +52,4 @@ function AppMenu(props: Props) {
   );
 }
 
-export default AppMenu;
+export default AddPanelMenu;

@@ -22,8 +22,9 @@ import styles from "./Root.module.scss";
 import SettingsMenu from "./SettingsMenu";
 import { redoLayoutChange, undoLayoutChange } from "@foxglove-studio/app/actions/layoutHistory";
 import { importPanelLayout } from "@foxglove-studio/app/actions/panels";
-import AppMenu from "@foxglove-studio/app/components/AppMenu";
+import AddPanelMenu from "@foxglove-studio/app/components/AddPanelMenu";
 import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
+import GlobalVariablesMenu from "@foxglove-studio/app/components/GlobalVariablesMenu";
 import LayoutMenu from "@foxglove-studio/app/components/LayoutMenu";
 import NotificationDisplay from "@foxglove-studio/app/components/NotificationDisplay";
 import PanelLayout from "@foxglove-studio/app/components/PanelLayout";
@@ -84,7 +85,10 @@ function App({ importPanelLayout: importPanelLayoutProp, onToolbarDoubleClick }:
                 <LayoutMenu />
               </div>
               <div className={styles.toolbarItem}>
-                <AppMenu />
+                <AddPanelMenu />
+              </div>
+              <div className={styles.toolbarItem}>
+                <GlobalVariablesMenu />
               </div>
               <div className={styles.toolbarItem}>
                 <TinyConnectionPicker inputDescription={inputDescription} />

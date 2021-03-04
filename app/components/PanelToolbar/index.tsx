@@ -302,7 +302,7 @@ export default React.memo<Props>(function PanelToolbar(props: Props) {
     showHiddenControlsOnHover,
     isUnknownPanel,
   } = props;
-  const { isHovered } = useContext(PanelContext) || {};
+  const { isHovered = false } = useContext(PanelContext) || {};
   const [isDragging, setIsDragging] = useState(false);
   const onDragStart = useCallback(() => setIsDragging(true), []);
   const onDragEnd = useCallback(() => setIsDragging(false), []);
@@ -322,7 +322,6 @@ export default React.memo<Props>(function PanelToolbar(props: Props) {
                 className={cx(styles.panelToolbarContainer, {
                   [styles.floating]: floating,
                   [styles.floatingShow]: floating && isRendered,
-                  [styles.containsOpen]: containsOpen,
                   [styles.hasChildren]: !!children,
                 })}
               >

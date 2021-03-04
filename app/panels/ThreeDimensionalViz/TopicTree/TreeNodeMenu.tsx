@@ -63,7 +63,6 @@ export default function TreeNodeMenu({
     TopicTreeContext,
     "TopicTreeContext",
   );
-  const onToggle = useCallback(() => setIsOpen((prevIsOpen) => !prevIsOpen), []);
 
   // Don't render the dot menu if the datasources are unavailable and the node is group node (topic node has option to copy topicName).
   if (!providerAvailable && !topicName) {
@@ -73,13 +72,12 @@ export default function TreeNodeMenu({
     <ChildToggle
       position="below"
       isOpen={isOpen}
-      onToggle={onToggle}
+      onToggle={setIsOpen}
       dataTest={`topic-row-menu-${topicName}`}
     >
       <Icon
         small
         fade
-        onClick={onToggle}
         style={{
           padding: "4px 0px",
           height: ROW_HEIGHT,
