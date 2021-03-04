@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 import cx from "classnames";
 import { ConnectedRouter } from "connected-react-router";
-import { useEffect, useRef } from "react";
+import { CSSProperties, useEffect, useMemo, useRef } from "react";
 import { setConfig } from "react-hot-loader";
 import { hot } from "react-hot-loader/root";
 import { connect, Provider } from "react-redux";
@@ -30,7 +30,7 @@ import PanelLayout from "@foxglove-studio/app/components/PanelLayout";
 import PlaybackControls from "@foxglove-studio/app/components/PlaybackControls";
 import PlayerManager from "@foxglove-studio/app/components/PlayerManager";
 import ShortcutsModal from "@foxglove-studio/app/components/ShortcutsModal";
-import { TinyConnectionPicker } from "@foxglove-studio/app/components/TinyConnectionPicker";
+import TinyConnectionPicker from "@foxglove-studio/app/components/TinyConnectionPicker";
 import Toolbar from "@foxglove-studio/app/components/Toolbar";
 import withDragDropContext from "@foxglove-studio/app/components/withDragDropContext";
 import { State } from "@foxglove-studio/app/reducers";
@@ -47,6 +47,7 @@ setConfig({
 });
 
 type Props = {
+  insetWindowControls?: boolean;
   onToolbarDoubleClick?: () => void;
 };
 
@@ -59,7 +60,11 @@ type InternalProps = Props & {
   undoLayoutChange: () => void;
 };
 
-function App({ importPanelLayout: importPanelLayoutProp, onToolbarDoubleClick }: InternalProps) {
+function App({
+  importPanelLayout: importPanelLayoutProp,
+  onToolbarDoubleClick,
+  insetWindowControls = false,
+}: InternalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     // Focus on page load to enable keyboard interaction.
@@ -70,13 +75,26 @@ function App({ importPanelLayout: importPanelLayoutProp, onToolbarDoubleClick }:
     (window as any).setPanelLayout = (payload: any) => importPanelLayoutProp(payload);
   }, [importPanelLayoutProp]);
 
+  const toolbarStyle = useMemo<CSSProperties | undefined>(() => {
+    if (insetWindowControls) {
+      return { marginLeft: "78px", borderLeft: "2px groove #29292f" };
+    }
+  }, [insetWindowControls]);
+
   return (
     <div ref={containerRef} className="app-container" tabIndex={0}>
       <Route path="/shortcuts" component={ShortcutsModal} />
       <PlayerManager>
         {({ inputDescription }: any) => (
           <>
-            <Toolbar onDoubleClick={onToolbarDoubleClick}>
+            <Toolbar style={toolbarStyle} onDoubleClick={onToolbarDoubleClick}>
+              <div className={styles.toolbarItem}>
+                <TinyConnectionPicker />
+              </div>
+              <div>
+                {inputDescription === "No input selected." ? "Select an input" : inputDescription}
+              </div>
+              <div style={{ flexGrow: 1 }}></div>
               <div className={styles.toolbarItem} style={{ marginRight: 5 }}>
                 {!inAutomatedRunMode() && <NotificationDisplay />}
               </div>
@@ -88,9 +106,6 @@ function App({ importPanelLayout: importPanelLayoutProp, onToolbarDoubleClick }:
               </div>
               <div className={styles.toolbarItem}>
                 <GlobalVariablesMenu />
-              </div>
-              <div className={styles.toolbarItem}>
-                <TinyConnectionPicker inputDescription={inputDescription} />
               </div>
             </Toolbar>
             <div className={cx(styles.layout, "PanelLayout-root")}>

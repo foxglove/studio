@@ -11,35 +11,37 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import ChartDonut from "@mdi/svg/svg/chart-donut.svg";
 import DatabaseIcon from "@mdi/svg/svg/database.svg";
-import * as React from "react";
-import styled from "styled-components";
+import FileIcon from "@mdi/svg/svg/file.svg";
+import TransitConnectionIcon from "@mdi/svg/svg/transit-connection-variant.svg";
+import { ReactElement, useCallback, useState } from "react";
 
 import ChildToggle from "@foxglove-studio/app/components/ChildToggle";
 import { WrappedIcon } from "@foxglove-studio/app/components/Icon";
-import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipeline";
-import SpinningLoadingIcon from "@foxglove-studio/app/components/SpinningLoadingIcon";
-import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
+import Menu, { Item } from "@foxglove-studio/app/components/Menu";
+import {
+  PlayerSelectionDefinition,
+  usePlayerSelection,
+} from "@foxglove-studio/app/context/PlayerSelection";
 
-const SConnectionPicker = styled.div`
-  padding: 1em;
-  background: ${colors.GRAY2};
-  pointer-events: auto;
-  border-radius: 4px;
-  line-height: 1.4;
-`;
-
-export function TinyConnectionPicker({
-  inputDescription,
-  defaultIsOpen = false,
-}: {
-  inputDescription: React.ReactNode;
+type TinyConnectionPickerProps = {
   defaultIsOpen?: boolean;
-}) {
-  const showSpinner = useMessagePipeline(
-    React.useCallback(({ playerState }) => playerState.showSpinner, []),
+};
+
+export default function TinyConnectionPicker({
+  defaultIsOpen = false,
+}: TinyConnectionPickerProps): ReactElement {
+  const [isOpen, setIsOpen] = useState<boolean>(defaultIsOpen);
+  const { select, items } = usePlayerSelection();
+
+  const selectItem = useCallback(
+    (item: PlayerSelectionDefinition) => {
+      setIsOpen(false);
+      select(item);
+    },
+    [select],
   );
-  const [isOpen, setIsOpen] = React.useState<boolean>(defaultIsOpen);
 
   return (
     <ChildToggle
@@ -47,12 +49,30 @@ export function TinyConnectionPicker({
       isOpen={isOpen}
       onToggle={setIsOpen}
       dataTest="open-connection-picker"
-      style={{ height: 18 }}
+      style={{ height: 18, cursor: "pointer" }}
     >
-      <WrappedIcon tooltip="Sources" medium fade active={isOpen}>
-        {showSpinner ? <SpinningLoadingIcon /> : <DatabaseIcon />}
+      <WrappedIcon medium fade active={isOpen}>
+        <DatabaseIcon />
       </WrappedIcon>
-      <SConnectionPicker>{inputDescription}</SConnectionPicker>
+      <Menu>
+        {items.map((item) => {
+          let icon = <ChartDonut />;
+
+          switch (item.type) {
+            case "file":
+              icon = <FileIcon />;
+              break;
+            case "url":
+              icon = <TransitConnectionIcon />;
+              break;
+          }
+          return (
+            <Item key={item.name} icon={icon} onClick={() => selectItem(item)}>
+              {item.name}
+            </Item>
+          );
+        })}
+      </Menu>
     </ChildToggle>
   );
 }

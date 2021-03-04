@@ -15,21 +15,31 @@ import { storiesOf } from "@storybook/react";
 import * as React from "react";
 
 import { MockMessagePipelineProvider } from "@foxglove-studio/app/components/MessagePipeline";
-import { TinyConnectionPicker } from "@foxglove-studio/app/components/TinyConnectionPicker";
+import TinyConnectionPicker from "@foxglove-studio/app/components/TinyConnectionPicker";
+import {
+  PlayerSelectionDefinition,
+  PlayerSelectionProvider,
+} from "@foxglove-studio/app/context/PlayerSelection";
 
 storiesOf("<TinyConnectionPicker>", module).add("default", () => {
+  const playerSources: PlayerSelectionDefinition[] = [
+    {
+      name: "Bag File",
+      type: "file",
+    },
+    {
+      name: "Websocket",
+      type: "url",
+    },
+  ];
+
   return (
-    <MockMessagePipelineProvider>
-      <div style={{ padding: 8, textAlign: "right", width: "100%" }}>
-        <TinyConnectionPicker
-          defaultIsOpen
-          inputDescription={
-            <>
-              Using local bag file <code>only-a-cube.bag</code>.
-            </>
-          }
-        />
-      </div>
-    </MockMessagePipelineProvider>
+    <PlayerSelectionProvider items={playerSources}>
+      <MockMessagePipelineProvider>
+        <div style={{ padding: 8, textAlign: "right", width: "100%" }}>
+          <TinyConnectionPicker defaultIsOpen />
+        </div>
+      </MockMessagePipelineProvider>
+    </PlayerSelectionProvider>
   );
 });
