@@ -29,7 +29,8 @@ import KeyListener from "@foxglove-studio/app/components/KeyListener";
 import useEventListener from "@foxglove-studio/app/hooks/useEventListener";
 
 type ContainsOpenProps = {
-  children: (containsOpen: boolean) => React.ReactNode;
+  onChange: (containsOpen: boolean) => void;
+  children: React.ReactNode;
 };
 
 const Context = React.createContext((_opening: boolean) => {});
@@ -37,16 +38,20 @@ const Context = React.createContext((_opening: boolean) => {});
 // Component for detecting if any child component is opened or not. Handy for
 // not hiding things when there is a dropdown open or so.
 // Use as <ChildToggle.ContainsOpen>
-function ChildToggleContainsOpen({ children }: ContainsOpenProps): ReactElement {
-  const [openNumber, setOpenNumber] = useState(0);
-  const tellAncestorAboutToggledChild = useCallback((opening: boolean) => {
-    setOpenNumber((value) => value + (opening ? 1 : -1));
-  }, []);
-  return (
-    <Context.Provider value={tellAncestorAboutToggledChild}>
-      {children(openNumber > 0)}
-    </Context.Provider>
+function ChildToggleContainsOpen({ onChange, children }: ContainsOpenProps): ReactElement {
+  const openNumber = useRef(0);
+  const tellAncestorAboutToggledChild = useCallback(
+    (opening: boolean) => {
+      const newValue = openNumber.current + (opening ? 1 : -1);
+      console.assert(newValue >= 0);
+      if (openNumber.current > 0 !== newValue > 0) {
+        onChange(newValue > 0);
+      }
+      openNumber.current = newValue;
+    },
+    [onChange],
   );
+  return <Context.Provider value={tellAncestorAboutToggledChild}>{children}</Context.Provider>;
 }
 
 type Props = {

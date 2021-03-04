@@ -28,6 +28,8 @@ const MARGIN = 50;
 function ChildToggleStory() {
   const [isOpen, setIsOpen] = useState(true);
   const icon = isOpen ? <MinusCircleIcon /> : <PlusCircleIcon />;
+  const [containsOpen1, setContainsOpen1] = useState(false);
+  const [containsOpen2, setContainsOpen2] = useState(false);
   return (
     <Flex
       col
@@ -68,29 +70,25 @@ function ChildToggleStory() {
         </ChildToggle>
       </div>
       <div style={{ margin: MARGIN, border: "1px solid gray" }}>
-        <ChildToggle.ContainsOpen>
-          {(containsOpen) => (
-            <div>
-              Contains an open child toggle: {JSON.stringify(containsOpen)}
-              <ChildToggle position="below" onToggle={setIsOpen} isOpen={isOpen}>
-                <Icon>{icon}</Icon>
-                <Block>this opens below</Block>
-              </ChildToggle>
-            </div>
-          )}
+        <ChildToggle.ContainsOpen onChange={setContainsOpen1}>
+          <div>
+            Contains an open child toggle: {JSON.stringify(containsOpen1)}
+            <ChildToggle position="below" onToggle={setIsOpen} isOpen={isOpen}>
+              <Icon>{icon}</Icon>
+              <Block>this opens below</Block>
+            </ChildToggle>
+          </div>
         </ChildToggle.ContainsOpen>
       </div>
       <div style={{ margin: MARGIN, border: "1px solid gray" }}>
-        <ChildToggle.ContainsOpen>
-          {(containsOpen) => (
-            <div>
-              Contains an open child toggle: {JSON.stringify(containsOpen)}
-              <ChildToggle position="below">
-                <Icon>{icon}</Icon>
-                <Block>this should never be visible</Block>
-              </ChildToggle>
-            </div>
-          )}
+        <ChildToggle.ContainsOpen onChange={setContainsOpen2}>
+          <div>
+            Contains an open child toggle: {JSON.stringify(containsOpen2)}
+            <ChildToggle position="below">
+              <Icon>{icon}</Icon>
+              <Block>this should never be visible</Block>
+            </ChildToggle>
+          </div>
         </ChildToggle.ContainsOpen>
       </div>
     </Flex>
@@ -98,7 +96,7 @@ function ChildToggleStory() {
 }
 
 function UncontrolledChildToggleStory({ defaultIsOpen }: { defaultIsOpen?: boolean }) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(defaultIsOpen ?? false);
   const icon = isOpen ? <MinusCircleIcon /> : <PlusCircleIcon />;
   return (
     <div style={{ margin: MARGIN, border: "1px solid gray" }}>
