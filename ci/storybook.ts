@@ -18,7 +18,7 @@ const publishArgs: string[] = [];
 const prBranch = process.env.GITHUB_HEAD_REF ?? "";
 if (prBranch.length > 0) {
   await exec("git", ["fetch", "origin", prBranch]);
-  await exec("git", ["checkout", `refs/remotes/origin/${prBranch}`]);
+  await exec("git", ["checkout", "-B", prBranch, `refs/remotes/origin/${prBranch}`]);
   // Only set GitHub status checks on PR branches, not main branch
   publishArgs.push("-n");
 }
