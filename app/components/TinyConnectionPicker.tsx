@@ -50,9 +50,8 @@ export default function TinyConnectionPicker({
       isOpen={isOpen}
       onToggle={setIsOpen}
       dataTest="open-connection-picker"
-      style={{ height: 18, cursor: "pointer" }}
     >
-      <WrappedIcon medium fade active={isOpen}>
+      <WrappedIcon medium fade active={isOpen} style={{ marginRight: "10px" }}>
         <DatabaseIcon />
       </WrappedIcon>
       <Menu>

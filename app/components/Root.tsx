@@ -79,7 +79,7 @@ function App({
         <div className={styles.toolbarItem}>
           <TinyConnectionPicker />
         </div>
-        <div>{currentSourceName === undefined ? "Select a data source" : currentSourceName}</div>
+        <div className={styles.toolbarItem}>{currentSourceName ?? "Select a data source"}</div>
         <div style={{ flexGrow: 1 }}></div>
         <div className={styles.toolbarItem} style={{ marginRight: 5 }}>
           {!inAutomatedRunMode() && <NotificationDisplay />}
