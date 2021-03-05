@@ -10,7 +10,7 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import React, { useCallback, useMemo, useState, forwardRef, ElementRef } from "react";
+import React, { useCallback, useMemo, forwardRef, ElementRef } from "react";
 import {
   MosaicWithoutDragDropContext,
   MosaicWindow,
@@ -42,7 +42,6 @@ type Props = {
   onChange: (panels: any) => void;
   setMosaicId: (mosaicId: string) => void;
   savePanelConfigs: (arg0: SaveConfigsPayload) => Dispatcher<SAVE_PANEL_CONFIGS>;
-  importHooks: boolean;
   forwardedRef?: ElementRef<any>;
   mosaicId?: string;
   tabId?: string;
@@ -68,7 +67,6 @@ class MosaicRoot extends MosaicWithoutDragDropContext {
 
 export function UnconnectedPanelLayout(props: Props) {
   const {
-    importHooks,
     layout,
     onChange,
     savePanelConfigs: saveConfigs,
@@ -159,7 +157,7 @@ export function UnconnectedPanelLayout(props: Props) {
   return <ErrorBoundary ref={props.forwardedRef as any}>{bodyToRender}</ErrorBoundary>;
 }
 
-const ConnectedPanelLayout = ({ importHooks = true }: { importHooks?: boolean }, ref: any) => {
+const ConnectedPanelLayout = (_: any, ref: any) => {
   const layout = useSelector((state: State) => state.persistedState.panels.layout);
   const dispatch = useDispatch();
   const actions = React.useMemo(
@@ -175,7 +173,6 @@ const ConnectedPanelLayout = ({ importHooks = true }: { importHooks?: boolean },
   return (
     <UnconnectedPanelLayout
       forwardedRef={ref}
-      importHooks={importHooks}
       layout={layout}
       onChange={onChange}
       savePanelConfigs={actions.savePanelConfigs}
@@ -183,6 +180,6 @@ const ConnectedPanelLayout = ({ importHooks = true }: { importHooks?: boolean },
     />
   );
 };
-export default forwardRef<{ importHooks?: boolean }, any>(function PanelLayout(props, ref) {
+export default forwardRef(function PanelLayout(props, ref) {
   return ConnectedPanelLayout(props, ref);
 });
