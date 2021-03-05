@@ -5,5 +5,5 @@ import execa, { ExecaChildProcess } from "execa";
 
 export default function exec(program: string, args: string[]): ExecaChildProcess {
   console.log("$", program, args); // eslint-disable-line no-restricted-syntax
-  return execa(program, args, { stdout: "inherit", stderr: "inherit" });
+  return execa(program, args, { stdio: "inherit" });
 }
