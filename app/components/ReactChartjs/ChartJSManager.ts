@@ -39,7 +39,7 @@ type EventElement = {
 };
 
 type ChartInstance = Chart & {
-  // Define a method we use but doesn't have TypeScript documentation for until a newer version of chart.js
+  // Define a method we use but doesn't have TypeScript documentation until a newer version of chart.js
   getElementsAtEventForMode(
     e: Event,
     mode: string,
