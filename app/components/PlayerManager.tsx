@@ -210,7 +210,9 @@ function PlayerManager({
           break;
         }
         case "ws": {
-          const result = await prompt("ws://localhost:9090");
+          const result = await prompt("ws://localhost:9090", {
+            selectionRange: { start: 5, end: 19 },
+          });
           if (result === undefined) {
             return;
           }
@@ -222,7 +224,9 @@ function PlayerManager({
           break;
         }
         case "http": {
-          const result = await prompt("https://...");
+          const result = await prompt("https://...", {
+            selectionRange: { start: 8, end: 11 },
+          });
           if (result === undefined) {
             return;
           }

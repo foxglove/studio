@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 
 import Button from "@foxglove-studio/app/components/Button";
@@ -21,20 +21,38 @@ const ModalActions = styled.div`
   text-align: right;
 `;
 
+type PromptOptions = {
+  // Range of text to select when the prompt first opens.
+  selectionRange?: { start: number; end: number };
+};
+
 function ModalPrompt({
   initialValue,
   onComplete,
+  options,
 }: {
   initialValue: string;
   onComplete: (value: string | undefined) => void;
+  options?: PromptOptions;
 }) {
   const [value, setValue] = useState(initialValue);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus the input element and select its contents when the modal appears.
+  const selectionRange = useRef(options?.selectionRange);
+  useEffect(() => {
+    inputRef.current?.focus();
+    if (selectionRange.current) {
+      inputRef.current?.setSelectionRange(selectionRange.current.start, selectionRange.current.end);
+    }
+  }, []);
 
   return (
     <Modal onRequestClose={() => onComplete(undefined)}>
       <ModalContent>
         <div>
           <input
+            ref={inputRef}
             style={{ width: "100%" }}
             type="text"
             value={value}
@@ -52,10 +70,11 @@ function ModalPrompt({
   );
 }
 
-function runPrompt(initialValue: string): Promise<string | undefined> {
+function runPrompt(initialValue: string, options?: PromptOptions): Promise<string | undefined> {
   return new Promise((resolve) => {
     const modal = renderToBody(
       <ModalPrompt
+        options={options}
         initialValue={initialValue}
         onComplete={(value) => {
           modal.remove();
@@ -68,6 +87,6 @@ function runPrompt(initialValue: string): Promise<string | undefined> {
 
 // Returns a function that can be used similarly to the DOM prompt(), but
 // backed by a React element rather than a native modal, and asynchronous.
-export function usePrompt(): (initialValue: string) => Promise<string | undefined> {
+export function usePrompt(): typeof runPrompt {
   return runPrompt;
 }

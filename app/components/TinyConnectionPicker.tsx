@@ -15,6 +15,7 @@ import ChartDonut from "@mdi/svg/svg/chart-donut.svg";
 import DatabaseIcon from "@mdi/svg/svg/database.svg";
 import FileIcon from "@mdi/svg/svg/file.svg";
 import TransitConnectionIcon from "@mdi/svg/svg/transit-connection-variant.svg";
+import WanIcon from "@mdi/svg/svg/wan.svg";
 import { ReactElement, useCallback, useState } from "react";
 
 import ChildToggle from "@foxglove-studio/app/components/ChildToggle";
@@ -66,7 +67,7 @@ export default function TinyConnectionPicker({
               icon = <TransitConnectionIcon />;
               break;
             case "http":
-              icon = <TransitConnectionIcon />;
+              icon = <WanIcon />;
               break;
           }
           return (

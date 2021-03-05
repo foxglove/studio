@@ -49,7 +49,7 @@ export function App(): ReactElement {
       type: "ws",
     },
     {
-      name: "Http",
+      name: "HTTP",
       type: "http",
     },
   ];
