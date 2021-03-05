@@ -40,6 +40,8 @@
     ]
   },
   "devDependencies": {
+    "@actions/core": "1.2.6",
+    "@actions/exec": "1.0.4",
     "@jest/types": "26.6.2",
     "@mapbox/rehype-prism": "0.5.0",
     "@mdx-js/loader": "1.6.22",
@@ -71,7 +73,6 @@
     "eslint-plugin-prettier": "3.3.1",
     "eslint-plugin-react": "7.22.0",
     "eslint-plugin-react-hooks": "4.2.0",
-    "execa": "5.0.0",
     "fake-indexeddb": "3.1.2",
     "fork-ts-checker-webpack-plugin": "6.1.0",
     "html-webpack-plugin": "5.2.0",
