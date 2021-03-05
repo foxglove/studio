@@ -70,18 +70,6 @@ export function installMenuInterface(): void {
       menuItem.visible = false;
     }
 
-    /*
-    const idx = fileMenu?.submenu?.items.findIndex((item) => {
-      return item.id === name;
-    });
-
-    console.log("idx", idx);
-
-    if (idx !== undefined && idx >= 0) {
-      fileMenu?.submenu?.items.splice(idx, 1);
-    }
-    */
-
     Menu.setApplicationMenu(appMenu);
   });
 }
