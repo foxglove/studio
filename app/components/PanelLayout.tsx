@@ -30,16 +30,12 @@ import {
 } from "@foxglove-studio/app/actions/panels";
 import { useExperimentalFeature } from "@foxglove-studio/app/components/ExperimentalFeatures";
 import Flex from "@foxglove-studio/app/components/Flex";
-import Icon from "@foxglove-studio/app/components/Icon";
 import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
-import SpinningLoadingIcon from "@foxglove-studio/app/components/SpinningLoadingIcon";
-import { getGlobalHooks } from "@foxglove-studio/app/loadWebviz";
 import PanelList from "@foxglove-studio/app/panels/PanelList";
 import { EmptyDropTarget } from "@foxglove-studio/app/panels/Tab/EmptyDropTarget";
 import { State, Dispatcher } from "@foxglove-studio/app/reducers";
 import { MosaicNode, SaveConfigsPayload } from "@foxglove-studio/app/types/panels";
 import { getPanelIdForType, getPanelTypeFromId } from "@foxglove-studio/app/util/layout";
-import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
 
 type Props = {
   layout: MosaicNode | null | undefined;
@@ -80,20 +76,6 @@ export function UnconnectedPanelLayout(props: Props) {
     removeRootDropTarget,
     mosaicId,
   } = props;
-  const [hooksImported, setHooksImported] = useState(getGlobalHooks().areHooksImported());
-
-  if (importHooks && !hooksImported) {
-    const globalHooks = getGlobalHooks();
-    globalHooks
-      .importHooksAsync()
-      .then(() => {
-        setHooksImported({ hooksImported: true });
-      })
-      .catch((reason) => {
-        console.error(`Import failed ${reason}`);
-      });
-  }
-
   const createTile = useCallback(
     (config: any) => {
       const defaultPanelType = "RosOut";
@@ -114,8 +96,22 @@ export function UnconnectedPanelLayout(props: Props) {
         return;
       }
       const type = getPanelTypeFromId(id);
-      const MosaicWindowComponent: any = type === "Tab" ? MosaicDumbWindow : MosaicWindow;
 
+      const PanelComponent = PanelList.getComponentForType(type);
+      const panel = PanelComponent ? (
+        <PanelComponent childId={id} tabId={tabId} />
+      ) : (
+        // If we haven't found a panel of the given type, render the panel selector
+        // @ts-ignore typings say title is required property?
+        <MosaicWindow path={path} createNode={createTile} renderPreview={() => null}>
+          <Flex col center>
+            <PanelToolbar floating isUnknownPanel />
+            Unknown panel type: {type}.
+          </Flex>
+        </MosaicWindow>
+      );
+
+      const MosaicWindowComponent: any = type === "Tab" ? MosaicDumbWindow : MosaicWindow;
       return (
         <MosaicWindowComponent
           key={path}
@@ -124,55 +120,11 @@ export function UnconnectedPanelLayout(props: Props) {
           renderPreview={() => null}
           tabId={tabId}
         >
-          {(() => {
-            if (!hooksImported) {
-              return null;
-            }
-            // If we haven't found a panel of the given type, render the panel selector
-            const PanelComponent = PanelList.getComponentForType(type);
-            if (!PanelComponent) {
-              return (
-                // @ts-ignore typings say title is required property?
-                <MosaicWindow
-                  path={path}
-                  createNode={createTile}
-                  renderPreview={() => {
-                    return <></>;
-                  }}
-                >
-                  <Flex col center>
-                    <PanelToolbar floating isUnknownPanel />
-                    Unknown panel type: {type}.
-                  </Flex>
-                </MosaicWindow>
-              );
-            }
-            return <PanelComponent childId={id} tabId={tabId} />;
-          })()}
-          <div
-            style={{
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              position: "absolute",
-              background: colors.DARK2,
-              opacity: hooksImported ? 0 : 1,
-              pointerEvents: "none",
-              zIndex: 1,
-              transition: `all ${0.35}s ease-out ${Math.random() + 0.25}s`,
-            }}
-          >
-            <Flex center style={{ width: "100%", height: "100%" }}>
-              <Icon large>
-                <SpinningLoadingIcon />
-              </Icon>
-            </Flex>
-          </div>
+          {panel}
         </MosaicWindowComponent>
       );
     },
-    [createTile, hooksImported, tabId],
+    [createTile, tabId],
   );
   const isDemoMode = useExperimentalFeature("demoMode");
   const bodyToRender = useMemo(
