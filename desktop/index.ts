@@ -6,7 +6,7 @@
 /* eslint-disable no-restricted-syntax */
 
 import "colors";
-import { init as initSentry } from "@sentry/electron";
+import { captureException, init as initSentry } from "@sentry/electron";
 import {
   app,
   BrowserWindow,
@@ -189,7 +189,7 @@ async function createWindow(): Promise<void> {
 // Some APIs can only be used after this event occurs.
 app.on("ready", async () => {
   autoUpdater.checkForUpdatesAndNotify().catch((err) => {
-    console.error(err);
+    captureException(err);
   });
 
   if (!isProduction) {
