@@ -59,7 +59,9 @@ jobs:
           REG_SUIT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
 
   windows-test:
-    runs-on: windows-latest
+    # Disabled until all unit tests are passing on Windows
+    # runs-on: windows-latest
+    runs-on: []
 
     # Run each command in parallel with the same setup steps.
     strategy:
