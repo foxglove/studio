@@ -115,6 +115,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
 
-      - run: git config --global core.autocrlf input
+      - run: git config --global core.eol lf
+      - run: git config --global core.autocrlf false
       - run: yarn install --immutable
       - run: yarn test:integration
