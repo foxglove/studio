@@ -15,6 +15,10 @@ import { flatten } from "lodash";
 
 // Joins arrays of topics with proper slashes similar to node's path.join
 export const joinTopics = (...topics: string[]): string => {
+  // We can't use path.join() here because it uses OS-specific path delimiters
+  // and we always want "/"". This trims leading and trailing forward slashes off
+  // each topic component (so "/a/b/c/" becomes "a/b/c") then joins all topics
+  // together with "/"
   const parts = [...topics].map((t) => t.replace(/^\/+|\/+$/g, ""));
   const joinedTopics = parts.join("/");
   return joinedTopics.startsWith("/") ? joinedTopics : `/${joinedTopics}`;
