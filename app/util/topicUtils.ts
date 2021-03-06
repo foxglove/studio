@@ -13,9 +13,8 @@
 
 import { flatten } from "lodash";
 
-// This trims leading and trailing forward slashes off
-// each topic component (so "/a/b/c/" becomes "a/b/c") then joins all topics
-// together with "/"
+// This trims leading and trailing forward slashes off each topic component
+// (so "/a/b/c/" becomes "a/b/c") then joins all topics together with "/"
 export const joinTopics = (...topics: string[]): string => {
   return "/" + topics.map((t) => t.replace(/^\/+|\/+$/g, "")).join("/");
 };
