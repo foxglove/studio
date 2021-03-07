@@ -5,7 +5,7 @@
 import path from "path";
 import { Application } from "spectron";
 
-jest.setTimeout(20000);
+jest.setTimeout(10000);
 
 const electronPath = path.join(__dirname, "..", "node_modules", ".bin", "electron");
 const appPath = path.join(__dirname, "..", ".webpack");

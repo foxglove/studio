@@ -59,7 +59,7 @@ jobs:
           REG_SUIT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
 
   integration:
-    runs-on: windows-latest
+    runs-on: macos-latest
 
     # Run each command in parallel with the same setup steps.
     strategy:
