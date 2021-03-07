@@ -19,8 +19,6 @@ jobs:
           # required checks don't need to change if we ever change the commands used.
           - name: lint
             command: lint:nofix
-          - name: build
-            command: build:prod
           - name: test
             command: test --maxWorkers=100%
           - name: storybook
@@ -35,7 +33,7 @@ jobs:
       - name: Configure Node.js
         uses: actions/setup-node@v2.1.5
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 15.x
       - name: Restore cache
         uses: actions/cache@v2.1.4
         with:
@@ -58,9 +56,9 @@ jobs:
           REG_SUIT_HEAD_SHA: ${{ github.sha }}
           REG_SUIT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
 
-  integration:
-    runs-on: ubuntu-20.04
-    name: integration
+  build:
+    runs-on: windows-latest
+    name: build
 
     steps:
       - uses: actions/checkout@v2
@@ -69,7 +67,7 @@ jobs:
       - name: Configure Node.js
         uses: actions/setup-node@v2.1.5
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 15.x
       - name: Restore cache
         uses: actions/cache@v2.1.4
         with:
@@ -80,8 +78,32 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
       - run: yarn install --immutable
-      - name: test:integration
-        uses: GabrielBB/xvfb-action@v1
-        with:
-          working-directory: ./
-          run: yarn run test:integration
+      - run: yarn run build:prod
+
+  # integration:
+  #   runs-on: ubuntu-20.04
+  #   name: integration
+
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         lfs: true
+  #     - name: Configure Node.js
+  #       uses: actions/setup-node@v2.1.5
+  #       with:
+  #         node-version: 15.x
+  #     - name: Restore cache
+  #       uses: actions/cache@v2.1.4
+  #       with:
+  #         path: |
+  #           .yarn/cache
+  #           **/node_modules
+  #         key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-yarn-
+  #     - run: yarn install --immutable
+  #     - name: test:integration
+  #       uses: GabrielBB/xvfb-action@v1
+  #       with:
+  #         working-directory: ./
+  #         run: yarn run test:integration
