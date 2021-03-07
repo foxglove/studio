@@ -58,7 +58,7 @@ jobs:
           REG_SUIT_HEAD_SHA: ${{ github.sha }}
           REG_SUIT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
 
-  windows-test:
+  integration:
     runs-on: windows-latest
 
     # Run each command in parallel with the same setup steps.
@@ -66,10 +66,8 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - name: windows-test
-            # Disabled until all unit tests are passing on Windows
-            # command: test --maxWorkers=100%
-            command: build:prod
+          - name: integration
+            command: test:integration
 
     name: ${{ matrix.config.name }}
 
