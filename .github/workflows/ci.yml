@@ -59,17 +59,8 @@ jobs:
           REG_SUIT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
 
   integration:
-    runs-on: macos-latest
-
-    # Run each command in parallel with the same setup steps.
-    strategy:
-      fail-fast: false
-      matrix:
-        config:
-          - name: integration
-            command: test:integration
-
-    name: ${{ matrix.config.name }}
+    runs-on: ubuntu-20.04
+    name: integration
 
     steps:
       - uses: actions/checkout@v2
@@ -89,4 +80,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
       - run: yarn install --immutable
-      - run: yarn run ${{ matrix.config.command }}
+      - name: test:integration
+        uses: GabrielBB/xvfb-action@v1
+        with:
+          working-directory: ./
+          run: yarn run test:integration
