@@ -11592,7 +11592,7 @@ __metadata:
     sass: 1.32.8
     sass-loader: 11.0.1
     sharedworker-loader: 2.1.1
-    spectron: "https://github.com/foxglove/spectron.git#commit=89b3a4a32f964ad0c844279095a99a391eaecc0f"
+    spectron: "https://github.com/foxglove/spectron.git#commit=4598813b40dc76680c195defa9adac5813330f97"
     stream-browserify: 3.0.0
     string-replace-loader: 3.0.1
     style-loader: 2.0.0
@@ -21664,9 +21664,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"spectron@https://github.com/foxglove/spectron.git#commit=89b3a4a32f964ad0c844279095a99a391eaecc0f":
+"spectron@https://github.com/foxglove/spectron.git#commit=4598813b40dc76680c195defa9adac5813330f97":
   version: 14.0.0
-  resolution: "spectron@https://github.com/foxglove/spectron.git#commit=89b3a4a32f964ad0c844279095a99a391eaecc0f"
+  resolution: "spectron@https://github.com/foxglove/spectron.git#commit=4598813b40dc76680c195defa9adac5813330f97"
   dependencies:
     "@electron/remote": ^1.0.4
     dev-null: ^0.1.1
@@ -21674,7 +21674,7 @@ __metadata:
     got: ^11.8.0
     split: ^1.0.1
     webdriverio: ^6.9.1
-  checksum: 099cde98507988040ecc1b330a9137856a077860749d54840ef88f496ff05cdb470e2c9ddef4bdd909bb538d1d84e47265f7a3083fd27740c51950c099b33d5e
+  checksum: e1d6d3f11ef23e3b782b6b73d4565736ba391b2a40db5aceb20fd431a8b1aea00f75e72e3345a8e7410e42601fbf79e351000a1cf34d1980f2eb775a292a9b70
   languageName: node
   linkType: hard
 
