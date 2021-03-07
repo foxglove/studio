@@ -90,7 +90,7 @@
     "sass": "1.32.8",
     "sass-loader": "11.0.1",
     "sharedworker-loader": "2.1.1",
-    "spectron": "https://github.com/foxglove/spectron.git#commit=695b87333469db805f86233dd6d3fc07e2cb8164",
+    "spectron": "https://github.com/foxglove/spectron.git#commit=56fc3788481384391bea6e6f442047c010b71e2d",
     "stream-browserify": "3.0.0",
     "string-replace-loader": "3.0.1",
     "style-loader": "2.0.0",
