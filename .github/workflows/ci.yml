@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-20.04
 
     # Run each command in parallel with the same setup steps.
