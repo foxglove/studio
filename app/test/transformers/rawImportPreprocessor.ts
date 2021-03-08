@@ -3,11 +3,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import fs from "fs";
-import tsjest from "ts-jest";
+import { createTransformer } from "ts-jest";
 import type { Config } from "@jest/types";
 import type { CacheKeyOptions, TransformOptions } from "@jest/transform";
 
-const transformer = tsjest.createTransformer();
+const transformer = createTransformer();
 
 // look for `?raw` import statements
 // re-write these into `const variable = "string source";`;
