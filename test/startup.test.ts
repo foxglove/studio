@@ -29,6 +29,10 @@ afterAll(async () => {
 });
 
 async function waitForAppMounted(appInstance: Application) {
+  if (appInstance.client === undefined) {
+    throw new Error("App did not start");
+  }
+
   for (;;) {
     const logs = await appInstance.client.getRenderProcessLogs();
     for (const log of logs as { level: "INFO" | "SEVERE" | "WARNING"; message?: string }[]) {
