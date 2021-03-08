@@ -1731,7 +1731,7 @@ __metadata:
     "@types/chartjs-plugin-annotation": 0.5.1
     "@types/classnames": 2.2.11
     "@types/css-font-loading-module": 0.0.4
-    "@types/enzyme": 3.10.8
+    "@types/enzyme": ^3
     "@types/enzyme-adapter-react-16": 1.0.6
     "@types/gl-matrix": 3.2.0
     "@types/hammerjs": 2.0.39
@@ -1762,6 +1762,7 @@ __metadata:
     "@types/url-search-params": 1.1.0
     "@types/uuid": 8.3.0
     "@types/ws": 7.4.0
+    "@wojtekmaj/enzyme-adapter-react-17": 0.4.1
     cbor-js: 0.1.0
     chart.js: "davidswinegar/Chart.js#0785c29a4c57b3e1b4243f8163df7950a00b2a80"
     chartjs-plugin-annotation: 0.5.7
@@ -1771,7 +1772,6 @@ __metadata:
     connected-react-router: 6.9.1
     dom-to-image-more-scroll-fix: 2.9.0
     enzyme: 3.11.0
-    enzyme-adapter-react-16: 1.15.6
     fetch-mock: 9.11.0
     fuzzysort: 1.1.4
     gl-matrix: 2.8.1
@@ -1802,12 +1802,12 @@ __metadata:
     rc-color-picker: 1.2.6
     rc-tabs: 11.7.3
     rc-tree: 3.11.0
-    react: 16.10.2
+    react: 17.0.1
     react-autocomplete: "janpaul123/react-autocomplete#bc8737070b5744069719c8fcd4e0a197192b0d48"
     react-dnd: 10.0.2
     react-dnd-html5-backend: 10.0.2
     react-document-events: 1.5.1
-    react-dom: 16.10.2
+    react-dom: 17.0.1
     react-highlight-words: 0.17.0
     react-hot-loader: 4.13.0
     react-hover-observer: 2.1.1
@@ -3755,7 +3755,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/enzyme@npm:*, @types/enzyme@npm:3.10.8":
+"@types/enzyme@npm:*, @types/enzyme@npm:^3":
   version: 3.10.8
   resolution: "@types/enzyme@npm:3.10.8"
   dependencies:
@@ -5237,6 +5237,27 @@ __metadata:
     webpack-dev-server:
       optional: true
   checksum: ce97bd9db98663375d62edbcd5711e057291e890c9e89254e4333fb9e6192252afca743b8a0fa087be00c6222db1c2e1d4da67707c6a679e1d9e1d7a3d001381
+  languageName: node
+  linkType: hard
+
+"@wojtekmaj/enzyme-adapter-react-17@npm:0.4.1":
+  version: 0.4.1
+  resolution: "@wojtekmaj/enzyme-adapter-react-17@npm:0.4.1"
+  dependencies:
+    enzyme-adapter-utils: ^1.14.0
+    enzyme-shallow-equal: ^1.0.4
+    has: ^1.0.3
+    object.assign: ^4.1.0
+    object.values: ^1.1.1
+    prop-types: ^15.7.2
+    react-is: ^17.0.0
+    react-test-renderer: ^17.0.0
+    semver: ^5.7.0
+  peerDependencies:
+    enzyme: ^3.0.0
+    react: ^17.0.0-0
+    react-dom: ^17.0.0-0
+  checksum: 8b735856af7109efdcb646c2297c22fde746302df51df10dbb0f33b04d5d99de35c663ec8bdd6f84015ebd0e4e99516faf1d38243ee870ea0415da8aa2ed9392
   languageName: node
   linkType: hard
 
@@ -10101,27 +10122,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"enzyme-adapter-react-16@npm:1.15.6":
-  version: 1.15.6
-  resolution: "enzyme-adapter-react-16@npm:1.15.6"
-  dependencies:
-    enzyme-adapter-utils: ^1.14.0
-    enzyme-shallow-equal: ^1.0.4
-    has: ^1.0.3
-    object.assign: ^4.1.2
-    object.values: ^1.1.2
-    prop-types: ^15.7.2
-    react-is: ^16.13.1
-    react-test-renderer: ^16.0.0-0
-    semver: ^5.7.0
-  peerDependencies:
-    enzyme: ^3.0.0
-    react: ^16.0.0-0
-    react-dom: ^16.0.0-0
-  checksum: d584a49ec8f315dbda7bdf43771f4a8b60de686ba59333265ad0a3f85dc7e901bfe1a869ea59f326cfaa3b2636d635f0794e2bb6aa8cfc2f134adcce7b833e66
-  languageName: node
-  linkType: hard
-
 "enzyme-adapter-utils@npm:^1.14.0":
   version: 1.14.0
   resolution: "enzyme-adapter-utils@npm:1.14.0"
@@ -12866,14 +12866,14 @@ __metadata:
   linkType: hard
 
 "htmlparser2@npm:^6.0.0":
-  version: 6.0.0
-  resolution: "htmlparser2@npm:6.0.0"
+  version: 6.0.1
+  resolution: "htmlparser2@npm:6.0.1"
   dependencies:
     domelementtype: ^2.0.1
     domhandler: ^4.0.0
     domutils: ^2.4.4
     entities: ^2.0.0
-  checksum: 03819682d894316d1f8d1a11c9212bdf9c8b2e7a2adc0e19262ac8105d0a4d0577caa1f40bf52ac4876961720342e9f12b86dbf2488f0a8263cf278c03129833
+  checksum: 434d948a21a69cede1daca2d9ad28c81c66ef87eab39a692ce6109a85f0f1a46f675c7395a6e09e89cab181355787debf3008a3d552a9154f053cbf499ffb76c
   languageName: node
   linkType: hard
 
@@ -17039,7 +17039,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"object.values@npm:^1.1.0, object.values@npm:^1.1.1, object.values@npm:^1.1.2":
+"object.values@npm:^1.1.0, object.values@npm:^1.1.1":
   version: 1.1.3
   resolution: "object.values@npm:1.1.3"
   dependencies:
@@ -19132,17 +19132,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dom@npm:16.10.2":
-  version: 16.10.2
-  resolution: "react-dom@npm:16.10.2"
+"react-dom@npm:17.0.1":
+  version: 17.0.1
+  resolution: "react-dom@npm:17.0.1"
   dependencies:
     loose-envify: ^1.1.0
     object-assign: ^4.1.1
-    prop-types: ^15.6.2
-    scheduler: ^0.16.2
+    scheduler: ^0.20.1
   peerDependencies:
-    react: ^16.0.0
-  checksum: 6ed819be0235a6999f8a045beeeed71bc809df205be4dc2c576477122626f1de350ebe52029156f5559e5c63a2545e3fd428cf71fa1ed915899b565ca87b6989
+    react: 17.0.1
+  checksum: 6a70028fbe3c95e0056c5e8ce065b4a9b8d4ff3bffde9b016454072bde5e4b012af7668ca45b7235ace428267d5be5237b68ea87ce8c296e54e81a8d678a4355
   languageName: node
   linkType: hard
 
@@ -19283,14 +19282,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-is@npm:^16.12.0 || ^17.0.0, react-is@npm:^17.0.1":
+"react-is@npm:^16.12.0 || ^17.0.0, react-is@npm:^17.0.0, react-is@npm:^17.0.1":
   version: 17.0.1
   resolution: "react-is@npm:17.0.1"
   checksum: 5a83dfc78e7adcb93d632bf367b0733db650e3abd2e9c57c33b87e50d201212c1884b0d7bcf13e692f1556189fa1b87f9f3e0ba10fe858fd6aebe83ed4fcd1ea
   languageName: node
   linkType: hard
 
-"react-is@npm:^16.12.0, react-is@npm:^16.13.1, react-is@npm:^16.7.0, react-is@npm:^16.8.1, react-is@npm:^16.8.6":
+"react-is@npm:^16.12.0, react-is@npm:^16.13.1, react-is@npm:^16.7.0, react-is@npm:^16.8.1":
   version: 16.13.1
   resolution: "react-is@npm:16.13.1"
   checksum: 11bcf1267a314a522615f626f3ce3727a3a24cdbf61c4d452add3550a7875326669631326cfb1ba3e92b6f72244c32ffecf93ad21c0cad8455d3e169d0e3f060
@@ -19619,7 +19618,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-test-renderer@npm:17.0.1":
+"react-test-renderer@npm:17.0.1, react-test-renderer@npm:^17.0.0":
   version: 17.0.1
   resolution: "react-test-renderer@npm:17.0.1"
   dependencies:
@@ -19630,20 +19629,6 @@ __metadata:
   peerDependencies:
     react: 17.0.1
   checksum: 6ec269430beea4356180d90868a9959399781a03ae8de6a29f2edc29d6ca41432653d4103991467ebcc47be5bd2d9197789411e913da66369c2aa2f13311105f
-  languageName: node
-  linkType: hard
-
-"react-test-renderer@npm:^16.0.0-0":
-  version: 16.14.0
-  resolution: "react-test-renderer@npm:16.14.0"
-  dependencies:
-    object-assign: ^4.1.1
-    prop-types: ^15.6.2
-    react-is: ^16.8.6
-    scheduler: ^0.19.1
-  peerDependencies:
-    react: ^16.14.0
-  checksum: 0905787bfd68865098743ca2d18d874ef09929b80730131c017ced55bcf7082e84f66ec76685799a759812d376de6db718f6d643a2705779a491003d01d45956
   languageName: node
   linkType: hard
 
@@ -19692,14 +19677,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:16.10.2":
-  version: 16.10.2
-  resolution: "react@npm:16.10.2"
+"react@npm:17.0.1":
+  version: 17.0.1
+  resolution: "react@npm:17.0.1"
   dependencies:
     loose-envify: ^1.1.0
     object-assign: ^4.1.1
-    prop-types: ^15.6.2
-  checksum: 6d3c05ec2ff961874a4eaf2e2a6a850a97f2a05686d05a841829d42d8b9c2216bbbcbf4eee2552a2bc95ebafa5f9e9bd046b713d69a43bd1b8f9fbc99db3c0d5
+  checksum: a76d86ec973eb4b25a46071ac7f974adfd66ed89ad1db63043be1d976ec25417520a210e6d724b0ad937422b706afcf9962cedda9e92125992a8c0e8a95f2051
   languageName: node
   linkType: hard
 
@@ -20926,26 +20910,6 @@ __metadata:
   dependencies:
     xmlchars: ^2.2.0
   checksum: 6ad14be68da9b84af0fa3de346fd78bd3a8e8a73a462e2852279a1fff1e2619988919294001abe3ecef3783f9498962a0619d960ccca4ec2ca914526fde1acc2
-  languageName: node
-  linkType: hard
-
-"scheduler@npm:^0.16.2":
-  version: 0.16.2
-  resolution: "scheduler@npm:0.16.2"
-  dependencies:
-    loose-envify: ^1.1.0
-    object-assign: ^4.1.1
-  checksum: ed49c5378868a4026a2f38f9ed43ae5e268827b1cfd81f0a81663014a56f0a2c3bcd40a31c5c538ce80215c09d514835159cea30d6cb645ac440b50571e79418
-  languageName: node
-  linkType: hard
-
-"scheduler@npm:^0.19.1":
-  version: 0.19.1
-  resolution: "scheduler@npm:0.19.1"
-  dependencies:
-    loose-envify: ^1.1.0
-    object-assign: ^4.1.1
-  checksum: 804f990b9f370cca6d42b65f3cba2cc2bfed4973ee5623bed1ea36a6627842db8c891e2e5ac003f06f9ee892d1d3396921e27fa077346caf0213af05776e8dee
   languageName: node
   linkType: hard
 

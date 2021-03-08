@@ -13,6 +13,7 @@
 
 import { renderHook } from "@testing-library/react-hooks";
 import { mount } from "enzyme";
+import hoistNonReactStatics from "hoist-non-react-statics";
 import React from "react";
 
 import {
@@ -220,7 +221,7 @@ describe("createSelectableContext/useContextSelector", () => {
     }
     Consumer.selectorFn = jest.fn().mockImplementation(selector);
     Consumer.renderFn = jest.fn().mockImplementation(() => null);
-    return Consumer;
+    return hoistNonReactStatics(React.memo(Consumer), Consumer);
   }
 
   it("throws when selector is used outside a provider", () => {
@@ -359,13 +360,17 @@ describe("createSelectableContext/useContextSelector", () => {
     expect(Consumer.selectorFn.mock.calls).toEqual([[{ num: 1 }]]);
     expect(Consumer.renderFn.mock.calls).toEqual([[1]]);
 
+    root.setProps({ value: { num: 2 } });
+    expect(Consumer.selectorFn.mock.calls).toEqual([[{ num: 1 }], [{ num: 2 }]]);
+    expect(Consumer.renderFn.mock.calls).toEqual([[1], [2]]);
+
     root.setProps({ children: null, value: { num: 2 } });
     expect(Consumer.selectorFn.mock.calls).toEqual([[{ num: 1 }], [{ num: 2 }]]);
-    expect(Consumer.renderFn.mock.calls).toEqual([[1]]);
+    expect(Consumer.renderFn.mock.calls).toEqual([[1], [2]]);
 
     root.setProps({ value: { num: 3 } });
     expect(Consumer.selectorFn.mock.calls).toEqual([[{ num: 1 }], [{ num: 2 }]]);
-    expect(Consumer.renderFn.mock.calls).toEqual([[1]]);
+    expect(Consumer.renderFn.mock.calls).toEqual([[1], [2]]);
 
     root.unmount();
   });
