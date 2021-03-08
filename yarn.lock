@@ -11592,7 +11592,7 @@ __metadata:
     sass: 1.32.8
     sass-loader: 11.0.1
     sharedworker-loader: 2.1.1
-    spectron: "https://github.com/foxglove/spectron.git#commit=1cf5953c300919c4016a4a31f213737335f8d6ee"
+    spectron: "https://github.com/foxglove/spectron.git#commit=6c2c170d56c2761a67259360a281a1f2eef277e8"
     stream-browserify: 3.0.0
     string-replace-loader: 3.0.1
     style-loader: 2.0.0
@@ -21664,9 +21664,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"spectron@https://github.com/foxglove/spectron.git#commit=1cf5953c300919c4016a4a31f213737335f8d6ee":
+"spectron@https://github.com/foxglove/spectron.git#commit=6c2c170d56c2761a67259360a281a1f2eef277e8":
   version: 14.0.0
-  resolution: "spectron@https://github.com/foxglove/spectron.git#commit=1cf5953c300919c4016a4a31f213737335f8d6ee"
+  resolution: "spectron@https://github.com/foxglove/spectron.git#commit=6c2c170d56c2761a67259360a281a1f2eef277e8"
   dependencies:
     "@electron/remote": ^1.0.4
     dev-null: ^0.1.1
@@ -21677,7 +21677,7 @@ __metadata:
   bin:
     spectron-launcher.bat: ./bin/spectron-launcher.bat
     spectron-launcher.js: ./bin/spectron-launcher.js
-  checksum: 97c7750c45b0ddd8b224fe863692d5c2302d5670aba09b36f000aa23c52fe3f0b5c7dadbf8feda4cdae1460eab32501bf42196588b9decf3e6b552d8954c7f3b
+  checksum: 62d06b4ea3b781a939c7058aea0384b7bbefbbd2a39fea3822f2e8346b3bee47a806aa5aaf8716f0f6de2f9355728348485d716d93b42a27aa01d67444934a58
   languageName: node
   linkType: hard
 
