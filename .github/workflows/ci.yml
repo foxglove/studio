@@ -19,8 +19,6 @@ jobs:
           # required checks don't need to change if we ever change the commands used.
           - name: lint
             command: lint:nofix
-          - name: build
-            command: build:prod
           - name: test
             command: test --maxWorkers=100%
           - name: storybook
