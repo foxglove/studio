@@ -2,10 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { createTransformer } from "ts-jest";
-import type { Config } from "@jest/types";
 import type { CacheKeyOptions, TransformOptions } from "@jest/transform";
+import type { Config } from "@jest/types";
 import fs from "fs";
+import { createTransformer } from "ts-jest";
 
 const transformer = createTransformer();
 
