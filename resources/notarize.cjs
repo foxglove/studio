@@ -1,7 +1,7 @@
 const { notarize } = require("electron-notarize");
 const builderUtil = require("builder-util");
 
-exports.default = async function notarizing(context) {
+exports.default = async function notarize(context) {
   const { electronPlatformName, appOutDir } = context;
   if (electronPlatformName !== "darwin") {
     return;
