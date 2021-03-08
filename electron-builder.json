@@ -7,7 +7,7 @@
     "app": ".webpack",
     "buildResources": "resources"
   },
-  "afterSign": "resources/notarize.cjs",
+  "afterSign": "resources/notarize.ts",
   "linux": {
     "target": [
       {
