@@ -4,16 +4,18 @@
 import webpack from "webpack";
 
 import { WebpackArgv } from "../WebpackArgv";
-import mainConfig from "../webpack.main.config";
-import preloadConfig from "../webpack.preload.config";
-import renderConfig from "../webpack.renderer.config";
+import webpackConfig from "../webpack.config";
 
 const webpackArgs: WebpackArgv = { mode: "production" };
-const compiler = webpack([
-  mainConfig(undefined, webpackArgs),
-  preloadConfig(undefined, webpackArgs),
-  renderConfig(undefined, webpackArgs),
-]);
+const compiler = webpack(
+  webpackConfig.map((config) => {
+    if (typeof config === "function") {
+      return config(undefined, webpackArgs);
+    }
+
+    return config;
+  }),
+);
 
 // global jest test setup builds the webpack build before running any integration tests
 export default async (): Promise<void> => {
