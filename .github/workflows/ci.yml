@@ -132,7 +132,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
       - run: yarn install --immutable
-      - run: yarn tun test:integration
+      - run: yarn run test:integration
 
   integration-macos:
     runs-on: macos-latest
@@ -156,4 +156,4 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
       - run: yarn install --immutable
-      - run: yarn tun test:integration
+      - run: yarn run test:integration
