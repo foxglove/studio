@@ -1,9 +1,7 @@
 name: Package
 
 on:
-  push:
-    tags:
-      - v[0-9]+.[0-9]+.[0-9]+*
+  workflow_dispatch:
 
 jobs:
   build:
@@ -41,7 +39,7 @@ jobs:
       - run: yarn run build:prod
 
       - name: Build Package
-        run: yarn package
+        run: yarn package --publish never
 
       - name: Upload package artifact
         uses: actions/upload-artifact@v2
