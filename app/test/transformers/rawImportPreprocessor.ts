@@ -2,30 +2,36 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-/* eslint-disable @typescript-eslint/no-var-requires */
-const fs = require("fs");
-const tsjest = require("ts-jest");
+import fs from "fs";
+import tsjest from "ts-jest";
+import type { Config } from "@jest/types";
+import type { CacheKeyOptions, TransformOptions } from "@jest/transform";
 
 const transformer = tsjest.createTransformer();
 
 // look for `?raw` import statements
 // re-write these into `const variable = "string source";`;
 const importRegEx = /^import (.*) from "(.*)\?raw";$/gm;
-const importReplacer = (_, p1, p2) => {
+const importReplacer = (_: unknown, p1: string, p2: string) => {
   const resolved = require.resolve(p2);
   const rawFile = fs.readFileSync(resolved, { encoding: "utf-8" });
   return `const ${p1} = ${JSON.stringify(rawFile.toString())};`;
 };
 
-function rewriteSource(source) {
-  return importRegEx[Symbol.replace](source, importReplacer);
+function rewriteSource(source: string) {
+  return source.replace(importRegEx, importReplacer);
 }
 
 module.exports = {
-  process(source, filePath, config, options) {
+  process(
+    source: string,
+    filePath: string,
+    config: Config.ProjectConfig,
+    options?: TransformOptions,
+  ) {
     return transformer.process(rewriteSource(source), filePath, config, options);
   },
-  getCacheKey(source, filePath, config, options) {
+  getCacheKey(source: string, filePath: string, config: string, options: CacheKeyOptions) {
     return transformer.getCacheKey(rewriteSource(source), filePath, config, options);
   },
 };

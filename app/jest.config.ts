@@ -5,7 +5,7 @@
 export default {
   preset: "ts-jest",
   transform: {
-    "\\.tsx?$": "<rootDir>/test/transformers/webpacker",
+    "\\.tsx?$": "<rootDir>/test/transformers/rawImportPreprocessor.ts",
     "\\.ne$": "<rootDir>/test/transformers/neTransformer.js",
     "\\.(bin|template|wasm)$": "<rootDir>/test/transformers/rawTransformer.js",
   },
