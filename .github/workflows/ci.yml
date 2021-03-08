@@ -58,54 +58,39 @@ jobs:
           REG_SUIT_HEAD_SHA: ${{ github.sha }}
           REG_SUIT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
 
-  # windows-build:
-  #   runs-on: windows-latest
-  #   name: windows-build
+  integration:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04]
 
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #       with:
-  #         lfs: true
-  #     - name: Configure Node.js
-  #       uses: actions/setup-node@v2.1.5
-  #       with:
-  #         node-version: 15.x
-  #     - name: Restore cache
-  #       uses: actions/cache@v2.1.4
-  #       with:
-  #         path: |
-  #           .yarn/cache
-  #           **/node_modules
-  #         key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-yarn-
-  #     - run: yarn install --immutable
-  #     - run: yarn run build:prod
+    name: integration-${{ matrix.os }}
 
-  # integration:
-  #   runs-on: ubuntu-20.04
-  #   name: integration
-
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #       with:
-  #         lfs: true
-  #     - name: Configure Node.js
-  #       uses: actions/setup-node@v2.1.5
-  #       with:
-  #         node-version: 15.x
-  #     - name: Restore cache
-  #       uses: actions/cache@v2.1.4
-  #       with:
-  #         path: |
-  #           .yarn/cache
-  #           **/node_modules
-  #         key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-yarn-
-  #     - run: yarn install --immutable
-  #     - name: test:integration
-  #       uses: GabrielBB/xvfb-action@v1
-  #       with:
-  #         working-directory: ./
-  #         run: yarn run test:integration
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          lfs: true
+      - name: Configure Node.js
+        uses: actions/setup-node@v2.1.5
+        with:
+          node-version: 15.x
+      - name: Restore cache
+        uses: actions/cache@v2.1.4
+        with:
+          path: |
+            .yarn/cache
+            **/node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - run: yarn install --immutable
+      - name: test:integration
+        if: matrix.os == 'ubuntu-20.04'
+        uses: GabrielBB/xvfb-action@v1
+        with:
+          working-directory: ./
+          run: yarn run test:integration
+      - name: test:integration
+        if: matrix.os != 'ubuntu-20.04'
+        run: yarn run test:integration
