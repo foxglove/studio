@@ -22,7 +22,7 @@ describe("Publish panel", () => {
     const spy = jest.spyOn(console, "warn").mockImplementation((msg: string, ...args) => {
       // Ignore console warning for now which come from React Autocomplete -- these would normally fail the test
       if (
-        msg.includes("Warning: componentWillMount has been renamed") ||
+        msg.includes("componentWillMount has been renamed") ||
         msg.includes("componentWillReceiveProps has been renamed")
       ) {
         return;
