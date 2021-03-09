@@ -2,7 +2,7 @@
   "name": "ros1",
   "version": "0.0.1",
   "description": "TypeScript library for interfacing with ROS1",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "private": true,
   "repository": {
     "type": "git",
@@ -39,8 +39,12 @@
     "semi": true
   },
   "devDependencies": {
+    "@types/jest": "26.0.20",
     "tsdx": "0.14.1",
     "tslib": "2.1.0",
     "typescript": "4.2.2"
+  },
+  "dependencies": {
+    "xmlrpc-rosnodejs": "1.4.1"
   }
 }
