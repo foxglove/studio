@@ -63,3 +63,19 @@ jobs:
       - run: yarn install --immutable
       - run: yarn run build:prod
       - run: yarn package --publish onTagOrDraft
+
+      # electron-builder will publish artifacts for draft releases
+      # We might want to test packaging an arbitrary commit so we publish the artifacts as well
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ runner.os }}
+          if-no-files-found: error
+          path: |
+            dist/*.AppImage
+            dist/*.appx
+            dist/*.deb
+            dist/*.dmg
+            dist/*.exe
+            dist/*.rpm
+            dist/*.snap
