@@ -37,7 +37,8 @@
   },
   "workspaces": {
     "packages": [
-      "app"
+      "app",
+      "packages/ros1"
     ]
   },
   "devDependencies": {
