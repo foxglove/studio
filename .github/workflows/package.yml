@@ -5,27 +5,28 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-  # workflow_dispatch:
-  #   inputs:
-  #     certPassword:
-  #       description: "Apple Cert Password"
-  #     appleId:
-  #       description: "Apple ID for notarization"
-  #     applePassword:
-  #       description: "Apple app-specific password for notarization"
+  workflow_dispatch:
+    inputs:
+      certPassword:
+        description: "Apple Cert Password"
+      appleId:
+        description: "Apple ID for notarization"
+      applePassword:
+        description: "Apple app-specific password for notarization"
 
 jobs:
   package:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.platform.os }}
     strategy:
       fail-fast: false
       matrix:
-        - os: macos-latest
-          env:
-            CSC_LINK: ${{ secrets.APPLE_CERT_BASE64 }}
-            CSC_PASSWORD: ${{ github.event.inputs.certPassword }}
-        - os: ubuntu-latest
-        - os: windows-latest
+        platform:
+          - os: macos-latest
+            env:
+              CSC_LINK: ${{ secrets.APPLE_CERT_BASE64 }}
+              CSC_PASSWORD: ${{ github.event.inputs.certPassword }}
+          - os: ubuntu-latest
+          - os: windows-latest
 
     env:
       # We use a secret to avoid forks accidentally injecting our production sentry endpoint
@@ -37,8 +38,8 @@ jobs:
       APPLE_PASSWORD: ${{ github.event.inputs.applePassword }}
 
       # Signing key depends on the os platform we are on
-      CSC_LINK: ${{ matrix.env.CSC_LINK }}
-      CSC_PASSWORD: ${{ matrix.env.CSC_PASSWORD }}
+      CSC_LINK: ${{ matrix.platform.env.CSC_LINK }}
+      CSC_PASSWORD: ${{ matrix.platform.env.CSC_PASSWORD }}
 
     name: ${{ runner.os }}
 
