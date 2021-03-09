@@ -54,7 +54,7 @@
     "react-json-tree": "0.13.0",
     "react-markdown": "4.0.4",
     "react-monaco-editor": "0.42.0",
-    "react-mosaic-component": "troygibb/react-mosaic#860c8d70ba3c723be07bc6208f0d05e2c3f2915f",
+    "react-mosaic-component": "troygibb/react-mosaic#41291e45deebb9b956429e231be4167dcd621a57",
     "react-outside-click-handler": "1.3.0",
     "react-popper": "1.0.0",
     "react-redux": "7.2.2",
