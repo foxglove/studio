@@ -22,9 +22,8 @@ jobs:
       matrix:
         platform:
           - os: macos-latest
-            env:
-              CSC_LINK: ${{ secrets.APPLE_CERT_BASE64 }}
-              CSC_PASSWORD: ${{ github.event.inputs.certPassword }}
+            config:
+              certSecret: APPLE_CERT_BASE64
           - os: ubuntu-latest
           - os: windows-latest
 
@@ -38,10 +37,10 @@ jobs:
       APPLE_PASSWORD: ${{ github.event.inputs.applePassword }}
 
       # Signing key depends on the os platform we are on
-      CSC_LINK: ${{ matrix.platform.env.CSC_LINK }}
-      CSC_PASSWORD: ${{ matrix.platform.env.CSC_PASSWORD }}
+      CSC_LINK: ${{ secrets[matrix.platform.config.certSecret] }}
+      CSC_PASSWORD: ${{ github.event.inputs.certPassword }}
 
-    name: ${{ runner.os }}
+    name: ${{ matrix.platform.os }}
 
     steps:
       - uses: actions/checkout@v2
