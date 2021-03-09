@@ -37,7 +37,7 @@ jobs:
       APPLE_PASSWORD: ${{ github.event.inputs.applePassword }}
 
       # Signing key depends on the os platform we are on
-      CSC_LINK: ${{ secrets[matrix.platform.config.certSecret] }}
+      CSC_LINK: ${{ github.event.inputs.certPassword && secrets[matrix.platform.config.certSecret] || "" }}
       CSC_PASSWORD: ${{ github.event.inputs.certPassword }}
 
     name: ${{ matrix.platform.os }}
