@@ -13,7 +13,6 @@
 
 import { renderHook } from "@testing-library/react-hooks";
 import { mount } from "enzyme";
-import hoistNonReactStatics from "hoist-non-react-statics";
 import React from "react";
 
 import {
@@ -221,7 +220,7 @@ describe("createSelectableContext/useContextSelector", () => {
     }
     Consumer.selectorFn = jest.fn().mockImplementation(selector);
     Consumer.renderFn = jest.fn().mockImplementation(() => null);
-    return hoistNonReactStatics(React.memo(Consumer), Consumer);
+    return Consumer;
   }
 
   it("throws when selector is used outside a provider", () => {
