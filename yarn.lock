@@ -9107,7 +9107,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"core-js-pure@npm:^3.8.1, core-js-pure@npm:^3.8.2":
+"core-js-pure@npm:^3.0.0, core-js-pure@npm:^3.8.1, core-js-pure@npm:^3.8.2":
   version: 3.9.1
   resolution: "core-js-pure@npm:3.9.1"
   checksum: 9cbb38523f6360c068991af52bb91a55cfdc3dd3cda0964b8e232caa795b95c08523d2fb1c80b76ffd2a8446e4822a6ba960f3bd762353ad0f8470f2fd3c652e
