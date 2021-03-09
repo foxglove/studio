@@ -5,42 +5,26 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-  workflow_dispatch:
-    inputs:
-      certPassword:
-        description: "Apple Cert Password"
-      appleId:
-        description: "Apple ID for notarization"
-      applePassword:
-        description: "Apple app-specific password for notarization"
 
 jobs:
   package:
-    runs-on: ${{ matrix.platform.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          - os: macos-latest
-            config:
-              certSecret: APPLE_CERT_BASE64
-          - os: ubuntu-latest
-          - os: windows-latest
+        - os: macos-latest
+          name: mac
+        - os: ubuntu-20.04
+          name: linux
+        - os: windows-latest
+          name: windows
 
     env:
       # We use a secret to avoid forks accidentally injecting our production sentry endpoint
       # This DSN isn't actually a "secret" since it is available in the generated client source
       SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
 
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      APPLE_ID: ${{ github.event.inputs.appleId }}
-      APPLE_PASSWORD: ${{ github.event.inputs.applePassword }}
-
-      # Signing key depends on the os platform we are on
-      CSC_LINK: ${{ github.event.inputs.certPassword && secrets[matrix.platform.config.certSecret] || "" }}
-      CSC_PASSWORD: ${{ github.event.inputs.certPassword }}
-
-    name: ${{ matrix.platform.os }}
+    name: ${{ matrix.name }}
 
     steps:
       - uses: actions/checkout@v2
@@ -62,10 +46,8 @@ jobs:
 
       - run: yarn install --immutable
       - run: yarn run build:prod
-      - run: yarn package --publish onTagOrDraft
+      - run: yarn package --publish never
 
-      # electron-builder will publish artifacts for draft releases
-      # We might want to test packaging an arbitrary commit so we publish the artifacts as well
       - name: Upload package artifact
         uses: actions/upload-artifact@v2
         with:
@@ -79,3 +61,4 @@ jobs:
             dist/*.exe
             dist/*.rpm
             dist/*.snap
+            dist/*.yml
