@@ -87,6 +87,12 @@ const fixture = {
 };
 
 storiesOf("<StateTransitions>", module)
+  .addParameters({
+    screenshot: {
+      // Wait for chart workers to render
+      delay: 300,
+    },
+  })
   .add("one path", () => {
     return (
       <PanelSetup fixture={fixture}>

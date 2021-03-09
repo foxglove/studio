@@ -1,4 +1,5 @@
 import "@foxglove-studio/app/styles/global.scss";
+import "./styles.scss";
 import { getGlobalConfig } from "@foxglove-studio/app/GlobalConfig";
 import waitForFonts from "@foxglove-studio/app/util/waitForFonts";
 import { withScreenshot } from "storycap";
@@ -22,4 +23,9 @@ export const decorators = [withScreenshot];
 export const parameters = {
   // Disable default padding around the page body
   layout: "fullscreen",
+
+  screenshot: {
+    // We've seen flaky screenshot sizes like 800x601.
+    viewport: { width: 800, height: 600 },
+  },
 };
