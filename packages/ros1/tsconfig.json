@@ -2,8 +2,8 @@
   // see https://www.typescriptlang.org/tsconfig to better understand tsconfigs
   "include": ["src"],
   "compilerOptions": {
-    "module": "es2020",
-    "lib": ["es2020"],
+    "module": "esnext",
+    "lib": ["esnext"],
     "importHelpers": true,
     // output .d.ts declaration files for consumers
     "declaration": true,
