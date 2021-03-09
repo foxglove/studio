@@ -5,14 +5,14 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
-  workflow_dispatch:
-    inputs:
-      certPassword:
-        description: "Apple Cert Password"
-      appleId:
-        description: "Apple ID for notarization"
-      applePassword:
-        description: "Apple app-specific password for notarization"
+  # workflow_dispatch:
+  #   inputs:
+  #     certPassword:
+  #       description: "Apple Cert Password"
+  #     appleId:
+  #       description: "Apple ID for notarization"
+  #     applePassword:
+  #       description: "Apple app-specific password for notarization"
 
 jobs:
   package:
