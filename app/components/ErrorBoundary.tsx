@@ -83,7 +83,9 @@ export default class ErrorBoundary extends React.Component<
             <Heading>Component stack:</Heading>
             <pre>
               {this.props.hideSourceLocations ?? false
-                ? errorInfo?.componentStack.replace(/\s+\(.+\)$/gm, "")
+                ? errorInfo?.componentStack
+                    .replace(/\s+\(.+\)$/gm, "")
+                    .replace(/\s+https?:\/\/.+$/gm, "")
                 : errorInfo?.componentStack}
             </pre>
           </Flex>
