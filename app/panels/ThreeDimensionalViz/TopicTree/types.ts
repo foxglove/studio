@@ -14,8 +14,6 @@ import { Color } from "regl-worldview";
 
 import { Save3DConfig } from "../index";
 import { TopicDisplayMode as DisplayMode } from "./TopicViewModeSelector";
-import SceneBuilder from "@foxglove-studio/app/panels/ThreeDimensionalViz/SceneBuilder/index";
-import Transforms from "@foxglove-studio/app/panels/ThreeDimensionalViz/Transforms";
 import { Topic } from "@foxglove-studio/app/players/types";
 import { Namespace } from "@foxglove-studio/app/types/Messages";
 
