@@ -10,6 +10,7 @@ import exec from "./exec";
 
 const local = process.argv.includes("--local");
 const headless = !process.argv.includes("--headful");
+const verbose = process.argv.includes("verbose");
 
 if (process.argv.includes("build")) {
   await exec("yarn", ["workspace", "@foxglove-studio/app", "run", "build-storybook"]);
@@ -23,10 +24,7 @@ if (process.argv.includes("capture")) {
     "storycap",
     "http://localhost:9001",
 
-    "--verbose",
-
-    "--include",
-    "**/*bayer*",
+    ...(verbose ? ["--verbose"] : []),
 
     // Use http-server instead of start-storybook since any build errors would be raised during
     // the build above, rather than waiting several minutes for it to build inside the storycap command
