@@ -15,10 +15,15 @@ await exec("yarn", [
   "run",
   "storycap",
   "http://localhost:9001",
+
+  // Use http-server instead of start-storybook since any build errors would be raised during
+  // the build above, rather than waiting several minutes for it to build inside the storycap command
   "--serverCmd",
   "yarn http-server storybook-static -p 9001",
+
   "--outDir",
   "storybook-screenshots",
+
   "--puppeteerLaunchConfig",
   JSON.stringify({
     args: [
