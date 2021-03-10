@@ -8,8 +8,27 @@ import exec from "./exec";
 //  2. capture screenshots (via storycap)
 //  3. upload & compare screenshots (via reg-suit)
 
-await exec("yarn", ["run", "storybook:build"]);
-await exec("yarn", ["run", "storybook:storycap"]);
+await exec("yarn", ["workspace", "@foxglove-studio/app", "run", "build-storybook"]);
+await exec("yarn", [
+  "workspace",
+  "@foxglove-studio/app",
+  "run",
+  "storycap",
+  "http://localhost:9001",
+  "--serverCmd",
+  "yarn http-server storybook-static -p 9001",
+  "--outDir",
+  "storybook-screenshots",
+  "--puppeteerLaunchConfig",
+  JSON.stringify({
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--user-agent=PuppeteerTestingChrome/88.",
+    ],
+  }),
+]);
 
 const publishArgs: string[] = [];
 

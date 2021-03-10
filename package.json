@@ -31,8 +31,6 @@
     "package:linux": "yarn package --linux",
     "package": "NODE_OPTIONS='-r ts-node/register' electron-builder",
     "storybook": "yarn workspace @foxglove-studio/app run start-storybook",
-    "storybook:build": "yarn workspace @foxglove-studio/app run build-storybook",
-    "storybook:storycap": "yarn workspace @foxglove-studio/app run storycap http://localhost:9001 --serverCmd \"yarn http-server storybook-static -p 9001\" --outDir \"storybook-screenshots\"",
     "storybook:ci": "cd ci && node --loader ts-node/esm --experimental-specifier-resolution=node storybook.ts"
   },
   "workspaces": {
