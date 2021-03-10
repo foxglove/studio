@@ -69,6 +69,7 @@
     "electron-notarize": "1.0.0",
     "electron-squirrel-startup": "1.0.0",
     "electron-updater": "4.3.8",
+    "esbuild-loader": "2.9.2",
     "eslint": "7.21.0",
     "eslint-config-prettier": "8.1.0",
     "eslint-import-resolver-webpack": "0.13.0",

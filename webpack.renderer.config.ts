@@ -5,6 +5,7 @@
 import rehypePrism from "@mapbox/rehype-prism";
 import ReactRefreshPlugin from "@pmmmwh/react-refresh-webpack-plugin";
 import CircularDependencyPlugin from "circular-dependency-plugin";
+import { ESBuildMinifyPlugin, ESBuildPlugin } from "esbuild-loader";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import MonacoWebpackPlugin from "monaco-editor-webpack-plugin";
@@ -43,7 +44,7 @@ export function makeConfig(_: unknown, argv: WebpackArgv): Configuration {
   const plugins: WebpackPluginInstance[] = [];
   const ruleUse: RuleSetUseItem[] = [];
 
-  if (isDev) {
+  if (isServe) {
     plugins.push(new ReactRefreshPlugin());
     ruleUse.push({
       loader: "babel-loader",
@@ -61,7 +62,11 @@ export function makeConfig(_: unknown, argv: WebpackArgv): Configuration {
     devtool: isDev ? "eval-cheap-module-source-map" : "nosources-source-map",
 
     optimization: {
-      minimize: false,
+      minimizer: [
+        new ESBuildMinifyPlugin({
+          target: "es2020",
+        }),
+      ],
     },
 
     output: {
@@ -189,6 +194,7 @@ export function makeConfig(_: unknown, argv: WebpackArgv): Configuration {
     },
     plugins: [
       ...plugins,
+      new ESBuildPlugin(),
       new CircularDependencyPlugin({
         exclude: /node_modules/,
         onDetected({ paths, compilation }) {
