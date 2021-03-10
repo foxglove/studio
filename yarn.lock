@@ -1727,6 +1727,7 @@ __metadata:
     "@storybook/builder-webpack5": 6.2.0-beta.9
     "@storybook/react": 6.2.0-beta.9
     "@testing-library/react-hooks": 5.1.0
+    "@types/argparse": ^2
     "@types/chart.js": 2.9.31
     "@types/chartjs-plugin-annotation": 0.5.1
     "@types/classnames": 2.2.11
@@ -1763,6 +1764,7 @@ __metadata:
     "@types/uuid": 8.3.0
     "@types/ws": 7.4.0
     "@wojtekmaj/enzyme-adapter-react-17": 0.4.1
+    argparse: 2.0.1
     cbor-js: 0.1.0
     chart.js: "davidswinegar/Chart.js#0785c29a4c57b3e1b4243f8163df7950a00b2a80"
     chartjs-plugin-annotation: 0.5.7
@@ -3583,6 +3585,13 @@ __metadata:
   version: 1.3.1
   resolution: "@types/anymatch@npm:1.3.1"
   checksum: 1647865e528a168f66f57a077e9651c10a4c172b656cc3686fddf176555d42ca0a1647bfc626ea2fceb68fc7701426ab708224be1762b4a5216fe8368ffdba3c
+  languageName: node
+  linkType: hard
+
+"@types/argparse@npm:^2":
+  version: 2.0.5
+  resolution: "@types/argparse@npm:2.0.5"
+  checksum: aad8f449dacea75bb6c993d784e85af8152d0991270f17f7acf53871c03097d4b77f55b83ba17354ac0f50dfe6adc6a404ba3672a6cdfb4ff25e6eeab679754f
   languageName: node
   linkType: hard
 
@@ -5780,19 +5789,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"argparse@npm:2.0.1, argparse@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "argparse@npm:2.0.1"
+  checksum: 160b7a25d2a7097fd5fdf25eb8a99e037340078f70e6c7cfdef305837ed14d54570b2b13261bcae26c8cd44ad6e9a7136a0110d815ac65a7891c69c7bf2f4afd
+  languageName: node
+  linkType: hard
+
 "argparse@npm:^1.0.7":
   version: 1.0.10
   resolution: "argparse@npm:1.0.10"
   dependencies:
     sprintf-js: ~1.0.2
   checksum: 435adaef5f6671c3ef1478a22be6fd54bdb99fdbbce8f5561b9cbbb05068ccce87b7df3b9f3322ff52a6ebb9cab2b427cbedac47a07611690a9beaa5184093e2
-  languageName: node
-  linkType: hard
-
-"argparse@npm:^2.0.1":
-  version: 2.0.1
-  resolution: "argparse@npm:2.0.1"
-  checksum: 160b7a25d2a7097fd5fdf25eb8a99e037340078f70e6c7cfdef305837ed14d54570b2b13261bcae26c8cd44ad6e9a7136a0110d815ac65a7891c69c7bf2f4afd
   languageName: node
   linkType: hard
 
