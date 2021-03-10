@@ -94,7 +94,7 @@ type Props = {
   topics: Topic[];
 };
 
-function RosoutPanel({ config, saveConfig, topics }: Props) {
+const RosoutPanel = React.memo(({ config, saveConfig, topics }: Props) => {
   const onNodeFilterChange = (selectedOptions: Option[]) => {
     saveConfig({
       ...config,
@@ -221,8 +221,11 @@ function RosoutPanel({ config, saveConfig, topics }: Props) {
       </div>
     </Flex>
   );
-}
-RosoutPanel.defaultConfig = { searchTerms: [], minLogLevel: 1, topicToRender: ROSOUT_TOPIC };
-RosoutPanel.panelType = "RosOut";
+});
 
-export default Panel<Config>(RosoutPanel as any);
+export default Panel<Config>(
+  Object.assign(RosoutPanel, {
+    defaultConfig: { searchTerms: [], minLogLevel: 1, topicToRender: ROSOUT_TOPIC },
+    panelType: "RosOut",
+  }) as any,
+);
