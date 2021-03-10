@@ -206,7 +206,7 @@ function RosoutPanel({ config, saveConfig, topics }: Props) {
 
   return (
     <Flex col>
-      <PanelToolbar helpContent={helpContent} additionalIcons={topicToRenderMenu}>
+      <PanelToolbar floating helpContent={helpContent} additionalIcons={topicToRenderMenu}>
         {renderFiltersBar(seenNodeNames, messages)}
       </PanelToolbar>
       <div className={styles.content}>
