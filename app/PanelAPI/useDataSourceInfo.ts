@@ -27,7 +27,7 @@ export type DataSourceInfo = {
   topics: ReadonlyArray<Topic>;
   datatypes: RosDatatypes;
   capabilities: string[];
-  startTime: Time | undefined; // Only `startTime`, since `endTime` can change rapidly when connected to a live system.
+  startTime?: Time; // Only `startTime`, since `endTime` can change rapidly when connected to a live system.
   playerId: string;
 };
 
