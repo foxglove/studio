@@ -18,6 +18,8 @@ export interface OsContext {
   // Manage file menu input source menu items
   menuAddInputSource(name: string, handler: () => void): Promise<void>;
   menuRemoveInputSource(name: string): Promise<void>;
+
+  attachOpenFileInput(inputId: string): Promise<void>;
 }
 
 type GlobalWithCtx = typeof global & {

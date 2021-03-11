@@ -7,6 +7,13 @@
     "app": ".webpack",
     "buildResources": "resources"
   },
+  "fileAssociations": [
+    {
+      "ext": "bag",
+      "name": "ROS Bag File",
+      "role": "Viewer"
+    }
+  ],
   "artifactName": "${name}-${version}-${os}-${arch}.${ext}",
   "afterSign": "resources/notarize.ts",
   "linux": {

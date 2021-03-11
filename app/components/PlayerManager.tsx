@@ -239,6 +239,34 @@ function PlayerManager({
     [buildPlayer, prompt],
   );
 
+  useEffect(() => {
+    const input = document.querySelector<HTMLInputElement>("#open-file-input");
+    if (!input) {
+      return;
+    }
+
+    // if the input has any files waiting for us
+    if (input.files) {
+      const file = input?.files?.[0];
+      if (file) {
+        usedFiles.current = [file];
+        buildPlayer(buildPlayerFromFiles(usedFiles.current));
+      }
+    }
+
+    // new inputs
+    input.onchange = () => {
+      const file = input?.files?.[0];
+      if (file) {
+        usedFiles.current = [file];
+        buildPlayer(buildPlayerFromFiles(usedFiles.current));
+      }
+    };
+    return () => {
+      input.onchange = null;
+    };
+  }, [buildPlayer]);
+
   const value: PlayerSelection = {
     selectSource,
     availableSources: playerSources,

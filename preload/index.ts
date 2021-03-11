@@ -46,6 +46,9 @@ const ctx: OsContext = {
     ipcRenderer.off("menu.click-input-source", listener);
     ipcRenderer.invoke("menu.remove-input-source", name);
   },
+  async attachOpenFileInput(inputId: string) {
+    await ipcRenderer.invoke("attach-open-file-input", inputId);
+  },
 };
 
 // NOTE: Context Bridge imposes a number of limitations around how objects move between the context

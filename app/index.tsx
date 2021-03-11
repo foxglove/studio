@@ -9,6 +9,7 @@ import "@foxglove-studio/app/styles/global.scss";
 
 import { App } from "@foxglove-studio/app/App";
 import { getGlobalConfig } from "@foxglove-studio/app/GlobalConfig";
+import { OsContextSingleton } from "@foxglove-studio/app/OsContext";
 import installDevtoolsFormatters from "@foxglove-studio/app/util/installDevtoolsFormatters";
 import overwriteFetch from "@foxglove-studio/app/util/overwriteFetch";
 import waitForFonts from "@foxglove-studio/app/util/waitForFonts";
@@ -32,11 +33,20 @@ async function main() {
   // This should live within App and become part of startup
   await getGlobalConfig().load();
 
+  OsContextSingleton?.attachOpenFileInput("open-file-input");
+
   ReactDOM.render(<App />, rootEl, () => {
     // Integration tests look for this console log to indicate the app has rendered once
     // eslint-disable-next-line no-restricted-syntax
     console.log("App rendered");
   });
 }
+
+// this input element receives events from main thread to inject File objects
+const input = document.createElement("input");
+input.setAttribute("hidden", "true");
+input.setAttribute("type", "file");
+input.setAttribute("id", "open-file-input");
+document.body.append(input);
 
 main();

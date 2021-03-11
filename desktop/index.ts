@@ -11,6 +11,7 @@ import {
   app,
   BrowserWindow,
   BrowserWindowConstructorOptions,
+  ipcMain,
   Menu,
   MenuItemConstructorOptions,
   session,
@@ -39,6 +40,12 @@ declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 if (require("electron-squirrel-startup")) {
   app.quit();
 }
+
+// handle any open-file calls before our app loaded
+const filesToOpen: string[] = [];
+app.on("open-file", (ev, filePath) => {
+  filesToOpen.push(filePath);
+});
 
 const isMac = process.platform === "darwin";
 const isProduction = process.env.NODE_ENV === "production";
@@ -181,6 +188,64 @@ async function createWindow(): Promise<void> {
         // "None"
       }
     }
+  });
+
+  let inputElementId: string | undefined;
+  async function loadFile(filePath: string) {
+    if (inputElementId === undefined) {
+      return;
+    }
+
+    const debug = mainWindow.webContents.debugger;
+    try {
+      debug.attach("1.1");
+    } catch (err) {
+      // debugger may already be attached
+    }
+
+    try {
+      const documentRes = await debug.sendCommand("DOM.getDocument");
+      const queryRes = await debug.sendCommand("DOM.querySelector", {
+        nodeId: documentRes.root.nodeId,
+        selector: `#${inputElementId}`,
+      });
+
+      await debug.sendCommand("DOM.setFileInputFiles", {
+        nodeId: queryRes.nodeId,
+        files: [filePath],
+      });
+    } finally {
+      debug.detach();
+    }
+  }
+
+  app.on("open-file", async (ev, filePath) => {
+    // if we don't yet have our element id, queue up the file to open
+    if (inputElementId === undefined) {
+      filesToOpen.push(filePath);
+    } else {
+      await loadFile(filePath);
+
+      // clear files to open, we don't want to keep building up more files
+      filesToOpen.splice(0, filesToOpen.length);
+    }
+  });
+
+  // store the input element id for injecting os native files to open
+  ipcMain.handle("attach-open-file-input", async (ev: unknown, inputId?: unknown) => {
+    if (typeof inputId !== "string") {
+      throw new Error("attach-open-file-input called with incorrect inputId type");
+    }
+    inputElementId = inputId;
+
+    // if there is already a file to load, load it
+    const maybeFile = filesToOpen.pop();
+    if (maybeFile !== undefined) {
+      await loadFile(maybeFile);
+    }
+
+    // clear any remaining files to open
+    filesToOpen.splice(0, filesToOpen.length);
   });
 }
 
