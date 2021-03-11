@@ -66,10 +66,7 @@ function makeMessagePipelineWrapper() {
 }
 
 // eslint-disable-next-line react-hooks/rules-of-hooks
-const callback = ({ paths, historySize }: TestProps) => {
-  debugger;
-  return useMessagesByPath(paths, historySize);
-};
+const callback = ({ paths, historySize }: TestProps) => useMessagesByPath(paths, historySize);
 
 describe("<MessageHistoryDEPRECATED />", () => {
   it("(un)subscribes based on `topics`", () => {
