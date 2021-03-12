@@ -13,6 +13,7 @@
 
 import CloseIcon from "@mdi/svg/svg/close.svg";
 import { CSSProperties, PropsWithChildren } from "react";
+import { createPortal } from "react-dom";
 import styled from "styled-components";
 
 import Icon from "@foxglove-studio/app/components/Icon";
@@ -29,12 +30,12 @@ export const Title = styled.h3`
 `;
 
 const Container = styled.div`
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   bottom: 0;
   right: 0;
-  z-index: 1000;
+  z-index: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -64,7 +65,7 @@ type Props = {
 
 // Generic modal that renders a semi-transparent backdrop and close icon.
 export default function Modal(props: PropsWithChildren<Props>) {
-  return (
+  return createPortal(
     <Container>
       <Backdrop onClick={props.onRequestClose} />
       <StyledContent
@@ -86,6 +87,7 @@ export default function Modal(props: PropsWithChildren<Props>) {
         </Icon>
         {props.children}
       </StyledContent>
-    </Container>
+    </Container>,
+    document.body,
   );
 }

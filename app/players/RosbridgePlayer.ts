@@ -300,12 +300,11 @@ export default class RosbridgePlayer implements Player {
           return;
         }
 
-        const topic = topicName;
         const receiveTime = fromMillis(Date.now());
         const innerMessage = messageReader.readMessage(Buffer.from(message.bytes));
         if (this._bobjectTopics.has(topicName) && this._providerDatatypes) {
           this._bobjects.push({
-            topic,
+            topic: topicName,
             receiveTime,
             message: wrapJsObject(this._providerDatatypes, datatype, innerMessage),
           });
@@ -313,7 +312,7 @@ export default class RosbridgePlayer implements Player {
 
         if (this._parsedTopics.has(topicName)) {
           this._parsedMessages.push({
-            topic,
+            topic: topicName,
             receiveTime,
             message: innerMessage as any,
           });
