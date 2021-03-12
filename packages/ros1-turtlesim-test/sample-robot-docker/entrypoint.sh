@@ -8,4 +8,4 @@ source ~/catkin_ws/devel/setup.bash
 
 roscore &
 
-rosrun turtlesim turtlesim_node
+xvfb-run --auto-servernum rosrun turtlesim turtlesim_node
