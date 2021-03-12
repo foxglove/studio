@@ -3,8 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { useRef, useState } from "react";
-import styled from "styled-components";
 import { render, unmountComponentAtNode } from "react-dom";
+import styled from "styled-components";
 
 import Button from "@foxglove-studio/app/components/Button";
 import Modal from "@foxglove-studio/app/components/Modal";
