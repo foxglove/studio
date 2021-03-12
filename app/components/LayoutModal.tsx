@@ -24,7 +24,7 @@ type Props = {
 };
 
 function LayoutModal({ onRequestClose }: Props) {
-  const { panels } = useSelector((state: State) => ({ panels: state.persistedState.panels }));
+  const panels = useSelector((state: State) => state.persistedState.panels);
   const dispatch = useDispatch();
 
   const onChange = useCallback((layoutPayload: PanelsState) => {
@@ -33,7 +33,6 @@ function LayoutModal({ onRequestClose }: Props) {
 
   return (
     <ShareJsonModal
-      history={history}
       onRequestClose={onRequestClose}
       value={panels}
       onChange={onChange}

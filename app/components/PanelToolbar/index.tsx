@@ -145,7 +145,7 @@ function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknow
       return null;
     }
 
-    const panelConfigById = store.getState().persistedState.panels.savedProps;
+    const panelConfigById = savedProps;
     return (
       <ShareJsonModal
         onRequestClose={() => setShowShareModal(false)}
@@ -156,7 +156,7 @@ function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknow
         noun="panel configuration"
       />
     );
-  }, [store, panelContext, actions]);
+  }, [savedProps, panelContext, actions]);
 
   const type = getPanelType();
   if (!type) {

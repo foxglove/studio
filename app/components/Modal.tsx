@@ -29,18 +29,18 @@ export const Title = styled.h3`
 `;
 
 const Container = styled.div`
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   bottom: 0;
   right: 0;
-  z-index: 0;
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
 `;
 
-const StyledMask = styled.div`
+const Backdrop = styled.div`
   position: absolute;
   top: 0;
   left: 0;
@@ -66,7 +66,7 @@ type Props = {
 export default function Modal(props: PropsWithChildren<Props>) {
   return (
     <Container>
-      <StyledMask onClick={props.onRequestClose} />
+      <Backdrop onClick={props.onRequestClose} />
       <StyledContent
         style={{
           borderRadius: 6,

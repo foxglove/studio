@@ -19,6 +19,7 @@ import ClearBagCacheMenuItem from "@foxglove-studio/app/components/ClearBagCache
 import Flex from "@foxglove-studio/app/components/Flex";
 import { WrappedIcon } from "@foxglove-studio/app/components/Icon";
 import Menu, { Item } from "@foxglove-studio/app/components/Menu";
+import LayoutModal from "@foxglove-studio/app/components/LayoutModal";
 
 export default function LayoutMenu() {
   const [isOpen, setIsOpen] = useState(false);
