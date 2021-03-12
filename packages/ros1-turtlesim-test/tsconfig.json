@@ -1,8 +1,8 @@
 {
-  "include": ["src"],
+  "include": ["src/**/*.ts"],
   "compilerOptions": {
     "outDir": "dist",
-    "module": "esnext",
+    "module": "commonjs",
     "lib": ["esnext"],
     "importHelpers": true,
     "downlevelIteration": true,

@@ -4,7 +4,6 @@
   "description": "Example @foxglove/ros1 client that interacts with turtlesim",
   "license": "Apache-2.0",
   "private": true,
-  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/foxglove/studio.git"
@@ -22,9 +21,7 @@
     "node": ">=12"
   },
   "scripts": {
-    "start": "node dist/index.js",
-    "build": "tsc",
-    "prepare": "yarn build"
+    "start": "ts-node src/index.ts"
   },
   "prettier": {
     "arrowParens": "always",
