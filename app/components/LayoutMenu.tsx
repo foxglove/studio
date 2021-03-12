@@ -11,15 +11,15 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import CodeJsonIcon from "@mdi/svg/svg/code-json.svg";
-import React, { useState } from "react";
+import { useState } from "react";
 
 import LayoutIcon from "@foxglove-studio/app/assets/layout.svg";
 import ChildToggle from "@foxglove-studio/app/components/ChildToggle";
 import ClearBagCacheMenuItem from "@foxglove-studio/app/components/ClearBagCacheMenuItem";
 import Flex from "@foxglove-studio/app/components/Flex";
 import { WrappedIcon } from "@foxglove-studio/app/components/Icon";
-import Menu, { Item } from "@foxglove-studio/app/components/Menu";
 import LayoutModal from "@foxglove-studio/app/components/LayoutModal";
+import Menu, { Item } from "@foxglove-studio/app/components/Menu";
 
 export default function LayoutMenu() {
   const [isOpen, setIsOpen] = useState(false);

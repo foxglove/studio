@@ -12,13 +12,13 @@
 //   You may not use this file except in compliance with the License.
 
 import CloseIcon from "@mdi/svg/svg/close.svg";
+import { CSSProperties, PropsWithChildren } from "react";
 import styled from "styled-components";
 
 import Icon from "@foxglove-studio/app/components/Icon";
 import KeyListener from "@foxglove-studio/app/components/KeyListener";
 import colors from "@foxglove-studio/app/styles/colors.module.scss";
 import { colors as sharedColors } from "@foxglove-studio/app/util/sharedStyleConstants";
-import { CSSProperties, PropsWithChildren } from "react";
 
 export const Title = styled.h3`
   padding: 18px 24px;

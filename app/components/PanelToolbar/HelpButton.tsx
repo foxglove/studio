@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import HelpCircleOutlineIcon from "@mdi/svg/svg/help-circle-outline.svg";
-import { CSSProperties, PropsWithChildren, ReactNode, useState } from "react";
+import { CSSProperties, PropsWithChildren, useState } from "react";
 
 import styles from "./index.module.scss";
 import HelpModal from "@foxglove-studio/app/components/HelpModal";

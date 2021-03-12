@@ -27,9 +27,12 @@ function LayoutModal({ onRequestClose }: Props) {
   const panels = useSelector((state: State) => state.persistedState.panels);
   const dispatch = useDispatch();
 
-  const onChange = useCallback((layoutPayload: PanelsState) => {
-    dispatch(loadLayout(layoutPayload));
-  }, []);
+  const onChange = useCallback(
+    (layoutPayload: PanelsState) => {
+      dispatch(loadLayout(layoutPayload));
+    },
+    [dispatch],
+  );
 
   return (
     <ShareJsonModal
