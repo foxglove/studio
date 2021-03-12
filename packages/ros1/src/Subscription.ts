@@ -12,9 +12,9 @@ type PublisherStats = [number, number, number, number, 0];
 type PublisherInfo = [number, string, "i", string, string, number, string];
 
 export class Subscription {
-  name: string;
-  md5sum: string;
-  dataType: string;
+  readonly name: string;
+  readonly md5sum: string;
+  readonly dataType: string;
   publishers: PublisherLink[] = [];
 
   constructor(name: string, md5sum: string, dataType: string) {

@@ -3,12 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { TcpConnection } from "./TcpConnection";
-import { TcpServer } from "./TcpTypes";
+import { TcpAddress, TcpServer } from "./TcpTypes";
 
 export class ConnectionManager {
   private _connectionIdCounter = 0;
   private _tcpServer?: TcpServer;
-  private _tcpConnections = new Map<string, TcpConnection>();
+  private _tcpConnections: TcpConnection[] = [];
 
   constructor(options: { tcpServer?: TcpServer }) {
     this._tcpServer = options.tcpServer;
@@ -16,11 +16,8 @@ export class ConnectionManager {
 
   close(): void {
     this._tcpServer?.close();
-
-    for (const conn of this._tcpConnections.values()) {
-      conn.close();
-    }
-    this._tcpConnections.clear();
+    this._tcpConnections.forEach((conn) => conn.close());
+    this._tcpConnections = [];
   }
 
   newConnectionId(): number {
@@ -28,24 +25,24 @@ export class ConnectionManager {
   }
 
   addTcpConnection(connection: TcpConnection): boolean {
-    const addr = connection.remoteAddress();
-    if (addr === undefined) {
+    const idx = this._tcpConnections.indexOf(connection);
+    if (idx > -1) {
       return false;
     }
-
-    const { address, port } = addr;
-    const key = `${address}:${port}`;
-    this._tcpConnections.set(key, connection);
+    this._tcpConnections.push(connection);
     return true;
   }
 
-  removeTcpConnection(address: string, port: number): boolean {
-    const key = `${address}:${port}`;
-    return this._tcpConnections.delete(key);
+  removeTcpConnection(connection: TcpConnection): boolean {
+    const idx = this._tcpConnections.indexOf(connection);
+    if (idx > -1) {
+      this._tcpConnections.splice(idx, 1);
+      return true;
+    }
+    return false;
   }
 
-  getTcpConnection(address: string, port: number): TcpConnection | undefined {
-    const key = `${address}:${port}`;
-    return this._tcpConnections.get(key);
+  tcpServerAddress(): TcpAddress | undefined {
+    return this._tcpServer?.address();
   }
 }

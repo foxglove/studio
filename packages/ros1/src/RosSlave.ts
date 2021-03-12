@@ -13,12 +13,23 @@ function CheckArguments(args: XmlRpcValue[], expected: string[]): Error | undefi
   }
 
   for (let i = 0; i < args.length; i++) {
-    if (typeof args[i] !== expected[i]) {
+    if (expected[i] !== "*" && typeof args[i] !== expected[i]) {
       return new Error(`Expected "${expected[i]}" for arg ${i}, got "${typeof args[i]}"`);
     }
   }
 
   return undefined;
+}
+
+function TcpRequested(protocols: XmlRpcValue[]): boolean {
+  for (const proto of protocols) {
+    if (Array.isArray(proto) && proto.length > 0) {
+      if (proto[0] === "TCPROS") {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 export class RosSlave {
@@ -35,7 +46,6 @@ export class RosSlave {
 
     this._server.addMethod("getBusStats", this.getBusStats);
     this._server.addMethod("getBusInfo", this.getBusInfo);
-    this._server.addMethod("getMasterUri", this.getMasterUri);
     this._server.addMethod("shutdown", this.shutdown);
     this._server.addMethod("getPid", this.getPid);
     this._server.addMethod("getSubscriptions", this.getSubscriptions);
@@ -83,16 +93,6 @@ export class RosSlave {
     return Promise.resolve([1, "", ""]);
   };
 
-  getMasterUri = (args: XmlRpcValue[]): Promise<XmlRpcResponse> => {
-    const err = CheckArguments(args, ["string"]);
-    if (err) {
-      return Promise.reject(err);
-    }
-
-    const url = this._rosNode.rosMasterClient.url.toString();
-    return Promise.resolve([1, url, url]);
-  };
-
   shutdown = (args: XmlRpcValue[]): Promise<XmlRpcResponse> => {
     if (args.length !== 1 && args.length !== 2) {
       return Promise.reject(new Error(`Expected 1-2 arguments, got ${args.length}`));
@@ -126,7 +126,9 @@ export class RosSlave {
       return Promise.reject(err);
     }
 
-    return Promise.reject(new Error("Not implemented"));
+    const subs: [string, string][] = [];
+    this._rosNode.subscriptions.forEach((sub) => subs.push([sub.name, sub.dataType]));
+    return Promise.resolve([1, "subscriptions", subs]);
   };
 
   getPublications = (args: XmlRpcValue[]): Promise<XmlRpcResponse> => {
@@ -135,33 +137,49 @@ export class RosSlave {
       return Promise.reject(err);
     }
 
-    return Promise.reject(new Error("Not implemented"));
+    const pubs: [string, string][] = [];
+    this._rosNode.publications.forEach((pub) => pubs.push([pub.name, pub.dataType]));
+    return Promise.resolve([1, "publications", pubs]);
   };
 
   paramUpdate = (args: XmlRpcValue[]): Promise<XmlRpcResponse> => {
-    const err = CheckArguments(args, ["string"]);
+    const err = CheckArguments(args, ["string", "string", "*"]);
     if (err) {
       return Promise.reject(err);
     }
 
+    // TODO
     return Promise.reject(new Error("Not implemented"));
   };
 
   publisherUpdate = (args: XmlRpcValue[]): Promise<XmlRpcResponse> => {
-    const err = CheckArguments(args, ["string"]);
+    const err = CheckArguments(args, ["string", "string", "*"]);
     if (err) {
       return Promise.reject(err);
     }
 
+    // TODO
     return Promise.reject(new Error("Not implemented"));
   };
 
   requestTopic = (args: XmlRpcValue[]): Promise<XmlRpcResponse> => {
-    const err = CheckArguments(args, ["string"]);
+    const err = CheckArguments(args, ["string", "string", "*"]);
     if (err) {
       return Promise.reject(err);
     }
 
-    return Promise.reject(new Error("Not implemented"));
+    // const topic = args[1] as string;
+    const protocols = args[2];
+    if (!Array.isArray(protocols) || !TcpRequested(protocols)) {
+      return Promise.resolve([0, "unsupported protocol", []]);
+    }
+
+    const addr = this._rosNode.connectionManager.tcpServerAddress();
+    if (!addr) {
+      return Promise.resolve([0, "cannot receive incoming connections", []]);
+    }
+
+    const tcp = ["TCPROS", addr.address, addr.port];
+    return Promise.resolve([1, "", tcp]);
   };
 }

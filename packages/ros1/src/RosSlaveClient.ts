@@ -27,16 +27,12 @@ export class RosSlaveClient {
     return this._client.methodCall("getBusInfo", [callerId]);
   }
 
-  getMasterUri(callerId: string): Promise<XmlRpcResponse> {
-    return this._client.methodCall("getMasterUri", [callerId]);
-  }
-
   shutdown(callerId: string, msg = ""): Promise<XmlRpcResponse> {
     return this._client.methodCall("shutdown", [callerId, msg]);
   }
 
   async getPid(callerId: string): Promise<XmlRpcResponse> {
-    return this._client.methodCall("getMasterUri", [callerId]);
+    return this._client.methodCall("getPid", [callerId]);
   }
 
   getSubscriptions(callerId: string): Promise<XmlRpcResponse> {

@@ -139,18 +139,13 @@ export class RosNode {
         // Call requestTopic on this publisher to register ourselves as a subscriber
         const { address, port } = await RosNode.RequestTopic(this.name, topic, rosSlaveClient);
 
-        // Check if we already have a TCP connection to this publisher
-        let connection = this.connectionManager.getTcpConnection(address, port);
+        // TODO: Don't wait for the TCP connection to connect here. Initiate the connection but
+        // allow it to complete later, or fail/timeout and go into a retry loop
 
-        if (connection === undefined) {
-          // TODO: Don't wait for the TCP connection to connect here. Initiate the connection but
-          // allow it to complete later, or fail/timeout and go into a retry loop
-
-          // Establish a TCP connection to this publisher
-          const socket = await this._tcpConnect({ host: address, port });
-          connection = new TcpConnection(socket);
-          this.connectionManager.addTcpConnection(connection);
-        }
+        // Establish a TCP connection to this publisher
+        const socket = await this._tcpConnect({ host: address, port });
+        const connection = new TcpConnection(socket);
+        this.connectionManager.addTcpConnection(connection);
 
         // Write the initial connection header to the TCP socket
         const header: [string, string][] = [

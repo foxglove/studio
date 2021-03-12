@@ -111,7 +111,9 @@ export class XmlRpcClientMock implements XmlRpcClient {
       }
       case "registerPublisher":
       case "registerService":
+        return Promise.resolve([-1, "not implemented", ""]);
       case "registerSubscriber":
+        return Promise.resolve([1, "", ["http://localhost:39211/"]]);
       case "unregisterPublisher":
       case "unregisterService":
       case "unregisterSubscriber":

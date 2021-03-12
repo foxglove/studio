@@ -13,10 +13,14 @@ type SubscriberInfo = [number, string, "o", string, string, number, string];
 
 export class Publication {
   readonly name: string;
+  readonly md5sum: string;
+  readonly dataType: string;
   subscribers: SubscriberLink[] = [];
 
-  constructor(name: string) {
+  constructor(name: string, md5sum: string, dataType: string) {
     this.name = name;
+    this.md5sum = md5sum;
+    this.dataType = dataType;
   }
 
   getInfo(): SubscriberInfo[] {
