@@ -119,7 +119,6 @@ rules:
 
 overrides:
   - files:
-      - "app/App.tsx"
       - "app/GlobalConfig.ts"
       - "app/PanelAPI/useBlockMessageByTopicWithFallback.ts"
       - "app/PanelAPI/useBlocksByTopic.ts"

@@ -11,70 +11,93 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import { mount } from "enzyme";
-import * as React from "react";
 
 import {
   EXPERIMENTAL_FEATURES_STORAGE_KEY,
   ExperimentalFeaturesModal,
   useExperimentalFeature,
+  ExperimentalFeaturesLocalStorageProvider,
 } from "@foxglove-studio/app/components/ExperimentalFeatures";
-import {
-  dummyExperimentalFeaturesList,
-  dummyExperimentalFeaturesStorage,
-} from "@foxglove-studio/app/components/ExperimentalFeatures.fixture";
-import { resetHooksToDefault, setHooks } from "@foxglove-studio/app/loadWebviz";
 import Storage from "@foxglove-studio/app/util/Storage";
+
+const features = {
+  feat1: {
+    name: "Feature 1",
+    description: "Description 1",
+    developmentDefault: true,
+    productionDefault: false,
+  },
+  feat2: {
+    name: "Feature 2",
+    description: "Description 2",
+    developmentDefault: true,
+    productionDefault: false,
+  },
+  feat3: {
+    name: "Feature 3",
+    description: "Description 3",
+    developmentDefault: true,
+    productionDefault: false,
+  },
+  feat4: {
+    name: "Feature 4",
+    description: "Description 4",
+    developmentDefault: true,
+    productionDefault: false,
+  },
+};
 
 describe("ExperimentalFeatures", () => {
   it("exposes experimental features using useExperimentalFeature", async () => {
-    setHooks({
-      experimentalFeaturesList() {
-        return dummyExperimentalFeaturesList;
-      },
+    new Storage().setItem(EXPERIMENTAL_FEATURES_STORAGE_KEY, {
+      feat1: "alwaysOn",
+      feat2: "alwaysOff",
+      feat3: "invalid value",
     });
-    new Storage().setItem(EXPERIMENTAL_FEATURES_STORAGE_KEY, dummyExperimentalFeaturesStorage);
 
-    const renderedSettings: any = {};
+    const renderedSettings: { [key in keyof typeof features]?: boolean } = {};
     let renderCount = 0;
     function RenderExperimentalFeatures() {
       renderCount++;
-      renderedSettings.topicTree = useExperimentalFeature("topicTree");
-      renderedSettings.topicTree2 = useExperimentalFeature("topicTree2");
-      renderedSettings.topicTree3 = useExperimentalFeature("topicTree3");
-      renderedSettings.topicTree4 = useExperimentalFeature("topicTree4");
+      renderedSettings.feat1 = useExperimentalFeature("feat1");
+      renderedSettings.feat2 = useExperimentalFeature("feat2");
+      renderedSettings.feat3 = useExperimentalFeature("feat3");
+      renderedSettings.feat4 = useExperimentalFeature("feat4");
       return null;
     }
 
-    mount(<RenderExperimentalFeatures />);
+    const container = mount(
+      <ExperimentalFeaturesLocalStorageProvider features={features}>
+        <RenderExperimentalFeatures />
+        <div data-modalcontainer>
+          <ExperimentalFeaturesModal />
+        </div>
+      </ExperimentalFeaturesLocalStorageProvider>,
+    );
     expect(renderCount).toEqual(1);
     expect(renderedSettings).toEqual({
-      topicTree: true,
-      topicTree2: true,
-      topicTree3: true,
-      topicTree4: false,
+      feat1: true,
+      feat2: false,
+      feat3: true,
+      feat4: true,
     });
 
     // Clicking on an item in the modal should trigger a rerender of all components that use
     // `useExperimentalFeature`, and so the `renderedSettings` should be updated with the new value.
-    const modal = mount(
-      <div data-modalcontainer="true">
-        <ExperimentalFeaturesModal />
-      </div>,
-    );
-    modal.find("[data-test='alwaysOff']").first().simulate("click");
+    container.find("[data-test='alwaysOff']").first().simulate("click");
     expect(renderCount).toEqual(2);
     expect(renderedSettings).toEqual({
-      topicTree: false,
-      topicTree2: true,
-      topicTree3: true,
-      topicTree4: false,
+      feat1: false,
+      feat2: false,
+      feat3: true,
+      feat4: true,
     });
     expect(new Storage().getItem(EXPERIMENTAL_FEATURES_STORAGE_KEY)).toEqual({
-      ...dummyExperimentalFeaturesStorage,
-      topicTree: "alwaysOff",
+      feat1: "alwaysOff",
+      feat2: "alwaysOff",
+      feat3: "invalid value",
     });
 
     new Storage().removeItem(EXPERIMENTAL_FEATURES_STORAGE_KEY);
-    resetHooksToDefault();
   });
 });
