@@ -1,6 +1,6 @@
 {
   "name": "foxglove-studio",
-  "version": "0.1.1-dev",
+  "version": "0.1.2-dev",
   "description": "Integrated robotics visualization and debugging.",
   "productName": "Foxglove Studio",
   "license": "MPL-2.0",
@@ -24,6 +24,7 @@
     "lint": "TIMING=1 eslint --fix .",
     "lint:nofix": "TIMING=1 eslint .",
     "test": "yarn workspace @foxglove-studio/app test",
+    "test:debug": "yarn workspace @foxglove-studio/app test:debug",
     "test:watch": "yarn workspace @foxglove-studio/app test:watch",
     "test:integration": "jest --config jest.spectron.ts --rootDir test",
     "package:win": "yarn package --win",
@@ -31,9 +32,9 @@
     "package:linux": "yarn package --linux",
     "package": "NODE_OPTIONS='-r ts-node/register' electron-builder",
     "storybook": "yarn workspace @foxglove-studio/app run start-storybook",
-    "storybook:build": "yarn workspace @foxglove-studio/app run build-storybook",
-    "storybook:storycap": "yarn workspace @foxglove-studio/app run storycap http://localhost:9001 --serverCmd \"yarn http-server storybook-static -p 9001\" --outDir \"storybook-screenshots\"",
-    "storybook:ci": "cd ci && node --loader ts-node/esm --experimental-specifier-resolution=node storybook.ts"
+    "storybook-script": "cd ci && node --loader ts-node/esm --experimental-specifier-resolution=node storybook.ts",
+    "storybook:ci": "yarn storybook-script build capture publish",
+    "storybook:local-capture": "yarn storybook-script capture"
   },
   "workspaces": {
     "packages": [
@@ -41,12 +42,13 @@
       "packages/**"
     ]
   },
+  "resolutions": {
+    "puppeteer-core": "8.0.0"
+  },
   "devDependencies": {
     "@actions/core": "1.2.6",
     "@actions/exec": "1.0.4",
     "@jest/types": "26.6.2",
-    "@mapbox/rehype-prism": "0.5.0",
-    "@mdx-js/loader": "1.6.22",
     "@pmmmwh/react-refresh-webpack-plugin": "0.5.0-beta.1",
     "@sentry/electron": "2.4.0",
     "@types/case-sensitive-paths-webpack-plugin": "2.1.4",
@@ -73,6 +75,7 @@
     "eslint": "7.21.0",
     "eslint-config-prettier": "8.1.0",
     "eslint-import-resolver-webpack": "0.13.0",
+    "eslint-plugin-file-progress": "1.1.1",
     "eslint-plugin-header": "github:amacneil/eslint-plugin-header#notemplate",
     "eslint-plugin-import": "2.22.1",
     "eslint-plugin-prettier": "3.3.1",
@@ -83,6 +86,7 @@
     "html-webpack-plugin": "5.2.0",
     "jest": "26.6.3",
     "jest-canvas-mock": "2.3.1",
+    "jest-circus": "26.6.3",
     "monaco-editor-webpack-plugin": "3.0.0",
     "nearley": "2.20.1",
     "nearley-loader": "2.0.0",
@@ -90,11 +94,8 @@
     "prettier": "2.2.1",
     "react-svg-loader": "3.0.3",
     "react-test-renderer": "17.0.1",
-    "retext": "7.0.1",
-    "retext-smartypants": "4.0.0",
     "sass": "1.32.8",
     "sass-loader": "11.0.1",
-    "sharedworker-loader": "2.1.1",
     "spectron": "https://github.com/foxglove/spectron.git#commit=7f88e8fe148ee14b3efc14c3646c08c4ed0a6747",
     "stream-browserify": "3.0.0",
     "string-replace-loader": "3.0.1",

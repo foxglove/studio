@@ -22,6 +22,7 @@ import installExtension, {
   REDUX_DEVTOOLS,
 } from "electron-devtools-installer";
 import { autoUpdater } from "electron-updater";
+import fs from "fs";
 import path from "path";
 
 import packageJson from "../package.json";
@@ -39,6 +40,22 @@ declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 if (require("electron-squirrel-startup")) {
   app.quit();
 }
+
+// files our app should open - either from user double-click on a supported fileAssociation
+// or command line arguments. For now limit to .bag file arguments
+// Note: in dev we launch electron with `electron .webpack` so we need to filter out things that are not files
+const filesToOpen: string[] = process.argv.slice(1).filter((item) => {
+  // Anything that isn't a file or directory will throw, we filter those out too
+  try {
+    return fs.statSync(item).isFile();
+  } catch (err) {
+    // ignore
+  }
+  return false;
+});
+app.on("open-file", (_ev, filePath) => {
+  filesToOpen.push(filePath);
+});
 
 const isMac = process.platform === "darwin";
 const isProduction = process.env.NODE_ENV === "production";
@@ -181,6 +198,53 @@ async function createWindow(): Promise<void> {
         // "None"
       }
     }
+  });
+
+  // Our app has support for working with _File_ instances in the renderer. This avoids extra copies
+  // while reading files and lets the renderer seek/read as necessary using all the browser
+  // primavites for _File_ instances.
+  //
+  // Unfortunately Electron does not provide a way to create or send _File_ instances to the renderer.
+  // To avoid sending the data over our context bridge, we use a _hack_.
+  // Via the debugger we _inject_ a DOM event to set the files of an <input> element.
+  const inputElementId = "electron-open-file-input";
+  async function loadFilesToOpen() {
+    const debug = mainWindow.webContents.debugger;
+    try {
+      debug.attach("1.1");
+    } catch (err) {
+      // debugger may already be attached
+    }
+
+    try {
+      const documentRes = await debug.sendCommand("DOM.getDocument");
+      const queryRes = await debug.sendCommand("DOM.querySelector", {
+        nodeId: documentRes.root.nodeId,
+        selector: `#${inputElementId}`,
+      });
+      await debug.sendCommand("DOM.setFileInputFiles", {
+        nodeId: queryRes.nodeId,
+        files: filesToOpen,
+      });
+
+      // clear the files once we've opened them
+      filesToOpen.splice(0, filesToOpen.length);
+    } finally {
+      debug.detach();
+    }
+  }
+
+  // This handles user dropping files on the doc icon or double clicking a file when the app
+  // is already open.
+  //
+  // The open-file handler registered earlier will handle adding the file to filesToOpen
+  app.on("open-file", async (_ev) => {
+    await loadFilesToOpen();
+  });
+
+  // When the window content has loaded, the input is available, we can open our files now
+  mainWindow.webContents.on("did-finish-load", () => {
+    loadFilesToOpen();
   });
 }
 
