@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 
 // Hook to get any files the main thread has told us to open
 // See the comments in main thread implementation on how the files are injected into this input
-export default function useElectronFilesToOpen() {
+export default function useElectronFilesToOpen(): FileList | undefined {
   const [files, setFiles] = useState<FileList>();
 
   useEffect(() => {
