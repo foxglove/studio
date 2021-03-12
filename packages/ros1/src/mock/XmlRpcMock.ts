@@ -2,7 +2,16 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import type { XmlRpcClient, XmlRpcValue, XmlRpcResponse } from "../IXmlRpc";
+import EventEmitter from "eventemitter3";
+import { URL } from "whatwg-url";
+
+import type {
+  XmlRpcClient,
+  XmlRpcValue,
+  XmlRpcResponse,
+  XmlRpcServer,
+  HttpAddress,
+} from "../XmlRpcTypes";
 
 const TURTLESIM_SERVICES = new Set([
   "/turtlesim/get_loggers",
@@ -19,6 +28,12 @@ const TURTLESIM_SERVICES = new Set([
 ]);
 
 export class XmlRpcClientMock implements XmlRpcClient {
+  readonly serverUrl: URL;
+
+  constructor(serverUrl: URL) {
+    this.serverUrl = serverUrl;
+  }
+
   methodCall(method: string, args: XmlRpcValue[]): Promise<XmlRpcResponse> {
     switch (method) {
       case "getPublishedTopics":
@@ -77,14 +92,14 @@ export class XmlRpcClientMock implements XmlRpcClient {
       case "getUri":
         return Promise.resolve([1, "", "http://localhost:11311/"]);
       case "lookupNode": {
-        const [_, nodeName] = args;
+        const nodeName = args[1];
         if (nodeName === "/turtlesim") {
-          return Promise.resolve([1, "node api", "http://ubuntu:39211/"]);
+          return Promise.resolve([1, "node api", "http://localhost:39211/"]);
         }
         return Promise.resolve([-1, `unknown node [${nodeName}]`, ""]);
       }
       case "lookupService": {
-        const [_, serviceName] = args;
+        const serviceName = args[1];
         if (TURTLESIM_SERVICES.has(serviceName as string)) {
           return Promise.resolve([
             1,
@@ -107,10 +122,44 @@ export class XmlRpcClientMock implements XmlRpcClient {
   }
 }
 
-export function XmlRpcCreateClientMock(_options: {
+export class XmlRpcServerMock extends EventEmitter implements XmlRpcServer {
+  private _address?: HttpAddress;
+
+  constructor() {
+    super();
+    this._address = { hostname: "localhost", port: 39211, secure: false };
+  }
+
+  address(): HttpAddress | undefined {
+    return this._address;
+  }
+
+  close(): void {
+    this._address = undefined;
+  }
+
+  addMethod(method: string, handler: (args: XmlRpcValue[]) => Promise<XmlRpcResponse>): this {
+    this.on(method, (params) => {
+      if (!Array.isArray(params)) {
+        params = [params];
+      }
+
+      handler(params).catch((err) => {
+        this.emit("error", err);
+      });
+    });
+
+    return this;
+  }
+}
+
+export function XmlRpcCreateClient(options: { url: URL }): Promise<XmlRpcClient> {
+  return Promise.resolve(new XmlRpcClientMock(options.url));
+}
+
+export function XmlRpcCreateServer(_options: {
   host: string;
   port: number;
-  path: string;
-}): XmlRpcClient {
-  return new XmlRpcClientMock();
+}): Promise<XmlRpcServer> {
+  return Promise.resolve(new XmlRpcServerMock());
 }

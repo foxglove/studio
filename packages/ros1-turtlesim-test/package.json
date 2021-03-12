@@ -1,9 +1,10 @@
 {
-  "name": "@foxglove/ros1",
+  "name": "@foxglove/ros1-turtlesim-test",
   "version": "0.0.1",
-  "description": "TypeScript library for interfacing with ROS1",
+  "description": "Example @foxglove/ros1 client that interacts with turtlesim",
   "license": "Apache-2.0",
   "private": true,
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/foxglove/studio.git"
@@ -14,21 +15,16 @@
   },
   "homepage": "https://github.com/foxglove/studio",
   "main": "dist/index.js",
-  "module": "dist/ros1.esm.js",
-  "typings": "dist/index.d.ts",
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "engines": {
     "node": ">=12"
   },
   "scripts": {
-    "start": "tsdx watch",
-    "build": "tsdx build",
-    "test": "tsdx test",
-    "lint": "tsdx lint",
-    "prepare": "tsdx build"
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "prepare": "yarn build"
   },
   "prettier": {
     "arrowParens": "always",
@@ -38,15 +34,10 @@
     "semi": true
   },
   "devDependencies": {
-    "@types/jest": "26.0.20",
-    "@types/whatwg-url": "^8",
-    "tsdx": "0.14.1",
     "tslib": "2.1.0",
     "typescript": "4.2.2"
   },
   "dependencies": {
-    "eventemitter3": "4.0.7",
-    "web-encoding": "1.1.0",
-    "whatwg-url": "8.4.0"
+    "@foxglove/ros1-node": "workspace:packages/ros1-node"
   }
 }

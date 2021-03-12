@@ -1,4 +1,4 @@
-# node-ros1
+# @foxglove/ros1
 
 node.js TypeScript library for interfacing with ROS1.
 

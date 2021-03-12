@@ -4,29 +4,32 @@
 
 export type TcpAddress = {
   port: number;
-  family: "IPv4" | "IPv6";
+  family: string;
   address: string;
 };
 
 export interface TcpSocket {
-  address(): TcpAddress | undefined;
+  remoteAddress(): TcpAddress | undefined;
   localAddress(): TcpAddress | undefined;
+  fd(): number | undefined;
+  connected(): boolean;
   close(): void;
+  write(data: Uint8Array): Promise<void>;
 
-  on(event: "close", listener: () => void): this;
-  on(event: "data", listener: (data: Uint8Array) => void): this;
-  on(event: "end", listener: () => void): this;
-  on(event: "timeout", listener: () => void): this;
-  on(event: "error", listener: (err: Error) => void): this;
+  on(eventName: "close", listener: () => void): this;
+  on(eventName: "data", listener: (data: Uint8Array) => void): this;
+  on(eventName: "end", listener: () => void): this;
+  on(eventName: "timeout", listener: () => void): this;
+  on(eventName: "error", listener: (err: Error) => void): this;
 }
 
 export interface TcpServer {
   address(): TcpAddress | undefined;
   close(): void;
 
-  on(event: "close", listener: () => void): this;
-  on(event: "connection", listener: (socket: TcpSocket) => void): this;
-  on(event: "error", listener: (err: Error) => void): this;
+  on(eventName: "close", listener: () => void): this;
+  on(eventName: "connection", listener: (socket: TcpSocket) => void): this;
+  on(eventName: "error", listener: (err: Error) => void): this;
 }
 
 export interface TcpListen {

@@ -2,32 +2,19 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { URL } from "url";
+import { URL } from "whatwg-url";
 
-import { XmlRpcCreateClient, XmlRpcClient, XmlRpcResponse } from "./IXmlRpc";
+import { XmlRpcClient, XmlRpcResponse } from "./XmlRpcTypes";
 
-export default class RosMaster {
+export class RosMasterClient {
   private _client: XmlRpcClient;
 
-  constructor(options: {
-    xmlRpcCreateClient: XmlRpcCreateClient;
-    uri?: URL;
-    host?: string;
-    port?: number;
-    path?: string;
-  }) {
-    const host = options.host ?? options.uri?.hostname ?? "localhost";
-    const port = options.port ?? Number(options.uri?.port ?? 11311);
-    const path = options.path ?? options.uri?.pathname ?? "/";
+  constructor(options: { xmlRpcClient: XmlRpcClient }) {
+    this._client = options.xmlRpcClient;
+  }
 
-    if (host.length === 0) {
-      throw new Error("Invalid host");
-    }
-    if (isNaN(port) || port <= 0 || port > 65535) {
-      throw new Error("Invalid port");
-    }
-
-    this._client = options.xmlRpcCreateClient({ host, port, path });
+  url(): URL {
+    return this._client.serverUrl;
   }
 
   registerService(
