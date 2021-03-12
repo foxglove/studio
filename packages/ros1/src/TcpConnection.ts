@@ -2,7 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { TextEncoder } from "web-encoding";
+import { MessageReader, parseMessageDefinition, RosMsgDefinition } from "rosbag";
+import { TextDecoder, TextEncoder } from "web-encoding";
 
 import { Connection } from "./Connection";
 import { TcpAddress, TcpSocket } from "./TcpTypes";
@@ -11,12 +12,17 @@ type Header = [string, string][];
 
 export class TcpConnection implements Connection {
   _socket: TcpSocket;
+  _readingHeader = true;
+  _md5sum: string | undefined;
+  _msgDefinition: RosMsgDefinition[] = [];
+  _msgReader: MessageReader | undefined;
+  _latching = false;
 
   constructor(socket: TcpSocket) {
     this._socket = socket;
 
     socket.on("close", this._handleClose);
-    socket.on("data", this._handleData);
+    socket.on("message", this._handleMessage);
   }
 
   transportType(): string {
@@ -56,9 +62,28 @@ export class TcpConnection implements Connection {
     // TODO: Enter a reconnect loop
   };
 
-  private _handleData = (data: Uint8Array) => {
-    // eslint-disable-next-line no-restricted-syntax
-    console.log(`[RECEIVED] ${data}`);
+  private _handleMessage = (data: Uint8Array) => {
+    if (this._readingHeader) {
+      this._readingHeader = false;
+
+      const header = TcpConnection.ParseHeader(data);
+
+      this._md5sum = header.get("md5sum");
+      this._latching = header.get("latching") === "1";
+      this._msgDefinition = parseMessageDefinition(header.get("message_definition") ?? "");
+      this._msgReader = new MessageReader(this._msgDefinition);
+
+      // eslint-disable-next-line no-restricted-syntax
+      console.dir(header);
+    } else {
+      if (this._msgReader) {
+        const msg = this._msgReader.readMessage(
+          Buffer.from(data.buffer, data.byteOffset, data.length),
+        );
+        // eslint-disable-next-line no-restricted-syntax
+        console.log(`[MSG] ${JSON.stringify(msg)}`);
+      }
+    }
   };
 
   static SerializeHeader(header: Header): Uint8Array {
@@ -81,5 +106,23 @@ export class TcpConnection implements Connection {
     });
 
     return new Uint8Array(buffer);
+  }
+
+  static ParseHeader(data: Uint8Array): Map<string, string> {
+    const decoder = new TextDecoder();
+    const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+    const result = new Map<string, string>();
+
+    let idx = 0;
+    while (idx + 4 < data.length) {
+      const len = Math.min(view.getUint32(idx, true), data.length - idx - 4);
+      idx += 4;
+      const str = decoder.decode(new Uint8Array(data.buffer, data.byteOffset + idx, len)) as string;
+      const parts = str.split("=", 2);
+      result.set(parts[0], parts[1] ?? "");
+      idx += len;
+    }
+
+    return result;
   }
 }

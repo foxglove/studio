@@ -6,6 +6,8 @@ import { TcpAddress, TcpServer, TcpSocket } from "@foxglove/ros1";
 import EventEmitter from "eventemitter3";
 import * as net from "net";
 
+import { TcpMessageStream } from "./TcpMessageStream";
+
 type MaybeHasFd = {
   _handle:
     | {
@@ -16,16 +18,19 @@ type MaybeHasFd = {
 
 export class TcpSocketNode extends EventEmitter implements TcpSocket {
   private _socket: net.Socket;
+  private _transformer = new TcpMessageStream();
 
   constructor(socket: net.Socket) {
     super();
     this._socket = socket;
+    this._socket.pipe(this._transformer);
 
     socket.on("close", () => this.emit("close"));
-    socket.on("data", (data) => this.emit("data", new Uint8Array(data.buffer)));
     socket.on("end", () => this.emit("end"));
     socket.on("timeout", () => this.emit("timeout"));
     socket.on("error", (err) => this.emit("error", err));
+
+    this._transformer.on("message", (data: Uint8Array) => this.emit("message", data));
   }
 
   remoteAddress(): TcpAddress | undefined {

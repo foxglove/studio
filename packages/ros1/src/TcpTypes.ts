@@ -17,7 +17,7 @@ export interface TcpSocket {
   write(data: Uint8Array): Promise<void>;
 
   on(eventName: "close", listener: () => void): this;
-  on(eventName: "data", listener: (data: Uint8Array) => void): this;
+  on(eventName: "message", listener: (message: Uint8Array) => void): this;
   on(eventName: "end", listener: () => void): this;
   on(eventName: "timeout", listener: () => void): this;
   on(eventName: "error", listener: (err: Error) => void): this;
