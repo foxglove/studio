@@ -11,7 +11,6 @@ import {
   app,
   BrowserWindow,
   BrowserWindowConstructorOptions,
-  ipcMain,
   Menu,
   MenuItemConstructorOptions,
   session,
@@ -41,9 +40,10 @@ if (require("electron-squirrel-startup")) {
   app.quit();
 }
 
-// handle any open-file calls before our app loaded
-const filesToOpen: string[] = [];
-app.on("open-file", (ev, filePath) => {
+// files our app should open - either from user double-click on a supported fileAssociation
+// or command line arguments
+const filesToOpen: string[] = []; //"/Users/roman/Downloads/demo.bag"];
+app.on("open-file", (_ev, filePath) => {
   filesToOpen.push(filePath);
 });
 
@@ -190,12 +190,15 @@ async function createWindow(): Promise<void> {
     }
   });
 
-  let inputElementId: string | undefined;
-  async function loadFile(filePath: string) {
-    if (inputElementId === undefined) {
-      return;
-    }
-
+  // Our app has support for working with _File_ instances in the renderer. This avoids extra copies
+  // while reading files and lets the renderer seek/read as necessary using all the browser
+  // primavites for _File_ instances.
+  //
+  // Unfortunately Electron does not provide a way to create or send _File_ instances to the renderer.
+  // To avoid sending the data over our context bridge, we use a _hack_.
+  // Via the debugger we _inject_ a DOM event to set the files of an <input> element.
+  const inputElementId = "electron-open-file-input";
+  async function loadFilesToOpen() {
     const debug = mainWindow.webContents.debugger;
     try {
       debug.attach("1.1");
@@ -209,43 +212,29 @@ async function createWindow(): Promise<void> {
         nodeId: documentRes.root.nodeId,
         selector: `#${inputElementId}`,
       });
-
       await debug.sendCommand("DOM.setFileInputFiles", {
         nodeId: queryRes.nodeId,
-        files: [filePath],
+        files: filesToOpen,
       });
+
+      // clear the files once we've opened them
+      filesToOpen.splice(0, filesToOpen.length);
     } finally {
       debug.detach();
     }
   }
 
-  app.on("open-file", async (ev, filePath) => {
-    // if we don't yet have our element id, queue up the file to open
-    if (inputElementId === undefined) {
-      filesToOpen.push(filePath);
-    } else {
-      await loadFile(filePath);
-
-      // clear files to open, we don't want to keep building up more files
-      filesToOpen.splice(0, filesToOpen.length);
-    }
+  // This handles user dropping files on the doc icon or double clicking a file when the app
+  // is already open.
+  //
+  // The open-file handler registered earlier will handle adding the file to filesToOpen
+  app.on("open-file", async (_ev) => {
+    await loadFilesToOpen();
   });
 
-  // store the input element id for injecting os native files to open
-  ipcMain.handle("attach-open-file-input", async (ev: unknown, inputId?: unknown) => {
-    if (typeof inputId !== "string") {
-      throw new Error("attach-open-file-input called with incorrect inputId type");
-    }
-    inputElementId = inputId;
-
-    // if there is already a file to load, load it
-    const maybeFile = filesToOpen.pop();
-    if (maybeFile !== undefined) {
-      await loadFile(maybeFile);
-    }
-
-    // clear any remaining files to open
-    filesToOpen.splice(0, filesToOpen.length);
+  // When the window content has loaded, the input is available, we can open our files now
+  mainWindow.webContents.on("did-finish-load", () => {
+    loadFilesToOpen();
   });
 }
 

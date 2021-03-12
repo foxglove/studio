@@ -32,6 +32,7 @@ import {
   getLocalBagDescriptor,
   getRemoteBagDescriptor,
 } from "@foxglove-studio/app/dataProviders/standardDataProviderDescriptors";
+import useElectronFilesToOpen from "@foxglove-studio/app/hooks/useElectronFilesToOpen";
 import { GlobalVariables } from "@foxglove-studio/app/hooks/useGlobalVariables";
 import { usePrompt } from "@foxglove-studio/app/hooks/usePrompt";
 import useUserNodes from "@foxglove-studio/app/hooks/useUserNodes";
@@ -239,33 +240,17 @@ function PlayerManager({
     [buildPlayer, prompt],
   );
 
+  // files the main thread told us to open
+  const filesToOpen = useElectronFilesToOpen();
   useEffect(() => {
-    const input = document.querySelector<HTMLInputElement>("#open-file-input");
-    if (!input) {
+    const file = filesToOpen?.[0];
+    if (!file) {
       return;
     }
 
-    // if the input has any files waiting for us
-    if (input.files) {
-      const file = input?.files?.[0];
-      if (file) {
-        usedFiles.current = [file];
-        buildPlayer(buildPlayerFromFiles(usedFiles.current));
-      }
-    }
-
-    // new inputs
-    input.onchange = () => {
-      const file = input?.files?.[0];
-      if (file) {
-        usedFiles.current = [file];
-        buildPlayer(buildPlayerFromFiles(usedFiles.current));
-      }
-    };
-    return () => {
-      input.onchange = null;
-    };
-  }, [buildPlayer]);
+    usedFiles.current = [file];
+    buildPlayer(buildPlayerFromFiles(usedFiles.current));
+  }, [buildPlayer, filesToOpen]);
 
   const value: PlayerSelection = {
     selectSource,
