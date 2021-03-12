@@ -9,6 +9,7 @@
   },
   "artifactName": "${name}-${version}-${os}-${arch}.${ext}",
   "afterSign": "resources/notarize.ts",
+  "icon": "resources/icon/icon.icns",
   "linux": {
     "target": [
       {
@@ -16,11 +17,11 @@
         "arch": ["x64", "arm64"]
       }
     ],
-    "icon": "resources/icon/icon.png",
     "fileAssociations": [
       {
         "ext": "bag",
-        "name": "ROS Bag File"
+        "name": "ROS Bag File",
+        "mimeType": "application/octet-stream"
       }
     ]
   },
