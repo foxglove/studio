@@ -12,8 +12,5 @@ docker run \
   --rm \
   --net=host \
   -v $HOME/.ros:/home/rosuser/.ros \
-  -v /tmp/.X11-unix:/tmp/.X11-unix \
-  --user $(id -u):$(id -g) \
-  -e DISPLAY=$DISPLAY \
   --name sample-robot \
   sample-robot
