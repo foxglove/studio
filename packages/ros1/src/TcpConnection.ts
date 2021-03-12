@@ -118,8 +118,13 @@ export class TcpConnection implements Connection {
       const len = Math.min(view.getUint32(idx, true), data.length - idx - 4);
       idx += 4;
       const str = decoder.decode(new Uint8Array(data.buffer, data.byteOffset + idx, len)) as string;
-      const parts = str.split("=", 2);
-      result.set(parts[0], parts[1] ?? "");
+      let equalIdx = str.indexOf("=");
+      if (equalIdx < 0) {
+        equalIdx = str.length;
+      }
+      const key = str.substr(0, equalIdx);
+      const value = str.substr(equalIdx + 1);
+      result.set(key, value);
       idx += len;
     }
 
