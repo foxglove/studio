@@ -42,7 +42,7 @@ if (require("electron-squirrel-startup")) {
 
 // files our app should open - either from user double-click on a supported fileAssociation
 // or command line arguments
-const filesToOpen: string[] = []; //"/Users/roman/Downloads/demo.bag"];
+const filesToOpen: string[] = [];
 app.on("open-file", (_ev, filePath) => {
   filesToOpen.push(filePath);
 });
