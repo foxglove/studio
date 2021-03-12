@@ -25,7 +25,7 @@ import Modal, { Title } from "@foxglove-studio/app/components/Modal";
 import Radio from "@foxglove-studio/app/components/Radio";
 import TextContent from "@foxglove-studio/app/components/TextContent";
 import Tooltip from "@foxglove-studio/app/components/Tooltip";
-import { RenderToBodyComponent } from "@foxglove-studio/app/components/renderToBody";
+import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToBodyComponent";
 import { getGlobalHooks } from "@foxglove-studio/app/loadWebviz";
 import colors from "@foxglove-studio/app/styles/colors.module.scss";
 import Storage from "@foxglove-studio/app/util/Storage";

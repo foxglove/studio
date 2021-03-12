@@ -2,12 +2,12 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
+import { render, unmountComponentAtNode } from "react-dom";
 
 import Button from "@foxglove-studio/app/components/Button";
 import Modal from "@foxglove-studio/app/components/Modal";
-import renderToBody from "@foxglove-studio/app/components/renderToBody";
 
 const ModalContent = styled.div`
   overflow-y: auto;
@@ -60,14 +60,18 @@ function ModalPrompt({ onComplete, placeholder }: ModalPromptProps) {
 
 function runPrompt(options?: PromptOptions): Promise<string | undefined> {
   return new Promise((resolve) => {
-    const modal = renderToBody(
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+
+    render(
       <ModalPrompt
         placeholder={options?.placeholder}
         onComplete={(value) => {
-          modal.remove();
+          unmountComponentAtNode(container);
           resolve(value);
         }}
       />,
+      container,
     );
   });
 }

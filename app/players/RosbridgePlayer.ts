@@ -16,8 +16,6 @@ import { MessageReader, Time, parseMessageDefinition } from "rosbag";
 import roslib from "roslib";
 import { v4 as uuidv4 } from "uuid";
 
-import WssErrorModal from "@foxglove-studio/app/components/WssErrorModal";
-import renderToBody from "@foxglove-studio/app/components/renderToBody";
 import {
   AdvertisePayload,
   BobjectMessage,
@@ -93,7 +91,8 @@ export default class RosbridgePlayer implements Player {
       tempSocket.close();
     } catch (error) {
       if (error && error.name === "SecurityError") {
-        const modal = renderToBody(<WssErrorModal onRequestClose={() => modal.remove()} />);
+        // how to handle?
+        throw error;
         return;
       }
       console.error("Unknown WebSocket error", error);

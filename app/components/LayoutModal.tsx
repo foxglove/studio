@@ -13,12 +13,11 @@
 
 // @ts-expect-error BrowserHistory is not in @types/history v4 declarations
 import { BrowserHistory } from "history";
-import React, { useCallback } from "react";
+import { useCallback } from "react";
 import { connect } from "react-redux";
 
 import { loadLayout } from "@foxglove-studio/app/actions/panels";
 import ShareJsonModal from "@foxglove-studio/app/components/ShareJsonModal";
-import renderToBody from "@foxglove-studio/app/components/renderToBody";
 import { State } from "@foxglove-studio/app/reducers";
 import { PanelsState } from "@foxglove-studio/app/reducers/panels";
 

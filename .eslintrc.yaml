@@ -192,7 +192,6 @@ overrides:
       - "app/components/Tree/index.tsx"
       - "app/components/ValidatedInput.tsx"
       - "app/components/input/JSONInput.tsx"
-      - "app/components/renderToBody.tsx"
       - "app/dataProviders/ApiCheckerDataProvider.ts"
       - "app/dataProviders/BagDataProvider.ts"
       - "app/dataProviders/BrowserHttpReader.ts"

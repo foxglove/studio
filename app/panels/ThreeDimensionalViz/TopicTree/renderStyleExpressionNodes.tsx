@@ -25,7 +25,7 @@ import Icon from "@foxglove-studio/app/components/Icon";
 import Menu, { Item } from "@foxglove-studio/app/components/Menu";
 import Modal from "@foxglove-studio/app/components/Modal";
 import Tooltip from "@foxglove-studio/app/components/Tooltip";
-import { RenderToBodyComponent } from "@foxglove-studio/app/components/renderToBody";
+import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToBodyComponent";
 import useGlobalVariables from "@foxglove-studio/app/hooks/useGlobalVariables";
 import { getDefaultColorOverrideBySourceIdx } from "@foxglove-studio/app/panels/ThreeDimensionalViz/GlobalVariableStyles";
 import { ThreeDimensionalVizContext } from "@foxglove-studio/app/panels/ThreeDimensionalViz/ThreeDimensionalVizContext";
