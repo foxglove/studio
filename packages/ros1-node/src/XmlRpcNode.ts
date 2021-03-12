@@ -2,9 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import EventEmitter from "eventemitter3";
-import { URL } from "whatwg-url";
-import { default as xmlrpc } from "xmlrpc-rosnodejs";
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference
+/// <reference path="xmlrpc-rosnodejs.d.ts" />
 
 import type {
   XmlRpcClient,
@@ -13,6 +12,9 @@ import type {
   XmlRpcServer,
   HttpAddress,
 } from "@foxglove/ros1";
+import EventEmitter from "eventemitter3";
+import { URL } from "whatwg-url";
+import { default as xmlrpc } from "xmlrpc-rosnodejs";
 
 export class XmlRpcClientNode implements XmlRpcClient {
   readonly serverUrl: URL;
