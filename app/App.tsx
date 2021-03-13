@@ -13,12 +13,13 @@
 import CogIcon from "@mdi/svg/svg/cog.svg";
 import { ConnectedRouter } from "connected-react-router";
 import { ReactElement, useState, CSSProperties, useEffect, useMemo, useRef } from "react";
-import { Provider, connect, ConnectedProps } from "react-redux";
+import { DndProvider } from "react-dnd";
+import HTML5Backend from "react-dnd-html5-backend";
+import { Provider, useDispatch } from "react-redux";
 import { Route } from "react-router";
 import styled from "styled-components";
 
 import { OsContextSingleton } from "@foxglove-studio/app/OsContext";
-import { redoLayoutChange, undoLayoutChange } from "@foxglove-studio/app/actions/layoutHistory";
 import { importPanelLayout } from "@foxglove-studio/app/actions/panels";
 import AddPanelMenu from "@foxglove-studio/app/components/AddPanelMenu";
 import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
@@ -37,14 +38,12 @@ import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToB
 import ShortcutsModal from "@foxglove-studio/app/components/ShortcutsModal";
 import TinyConnectionPicker from "@foxglove-studio/app/components/TinyConnectionPicker";
 import Toolbar from "@foxglove-studio/app/components/Toolbar";
-import withDragDropContext from "@foxglove-studio/app/components/withDragDropContext";
 import ExperimentalFeaturesLocalStorageProvider from "@foxglove-studio/app/context/ExperimentalFeaturesLocalStorageProvider";
 import {
   PlayerSourceDefinition,
   usePlayerSelection,
 } from "@foxglove-studio/app/context/PlayerSelectionContext";
 import experimentalFeatures from "@foxglove-studio/app/experimentalFeatures";
-import { State } from "@foxglove-studio/app/reducers";
 import getGlobalStore from "@foxglove-studio/app/store/getGlobalStore";
 import browserHistory from "@foxglove-studio/app/util/history";
 import inAutomatedRunMode from "@foxglove-studio/app/util/inAutomatedRunMode";
@@ -63,25 +62,17 @@ const SToolbarItem = styled.div`
   // Allow interacting with buttons in the title bar without dragging the window
   -webkit-app-region: no-drag;
 `;
-
-const connector = connect(
-  ({ layoutHistory: { redoStates, undoStates } }: State) => ({
-    redoStateCount: redoStates.length,
-    undoStateCount: undoStates.length,
-  }),
-  { importPanelLayout, redoLayoutChange, undoLayoutChange },
-);
-
-function Root({ importPanelLayout: importPanelLayoutProp }: ConnectedProps<typeof connector>) {
+function Root() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const dispatch = useDispatch();
   useEffect(() => {
     // Focus on page load to enable keyboard interaction.
     if (containerRef.current) {
       containerRef.current.focus();
     }
     // Add a hook for integration tests.
-    (window as any).setPanelLayout = (payload: any) => importPanelLayoutProp(payload);
-  }, [importPanelLayoutProp]);
+    (window as any).setPanelLayout = (payload: any) => dispatch(importPanelLayout(payload));
+  }, [dispatch]);
 
   const { currentSourceName } = usePlayerSelection();
 
@@ -154,8 +145,6 @@ function Root({ importPanelLayout: importPanelLayoutProp }: ConnectedProps<typeo
   );
 }
 
-const ConnectedRoot = connector(withDragDropContext(Root));
-
 export default function App(): ReactElement {
   const playerSources: PlayerSourceDefinition[] = [
     {
@@ -180,7 +169,9 @@ export default function App(): ReactElement {
             <PlayerManager playerSources={playerSources}>
               <NativeFileMenuPlayerSelection />
               <Route path="/">
-                <ConnectedRoot />
+                <DndProvider backend={HTML5Backend}>
+                  <Root />
+                </DndProvider>
               </Route>
             </PlayerManager>
           </ErrorBoundary>
