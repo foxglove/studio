@@ -29,7 +29,7 @@ import {
 } from "@foxglove-studio/app/util/hooks";
 
 type MessageReducer<T> = (arg0: T, message: Message) => T;
-type MessagesReducer<T> = (arg0: T, messages: Message[]) => T;
+type MessagesReducer<T> = (arg0: T, messages: readonly Message[]) => T;
 export type RequestedTopic = string | { topic: string; imageScale: number };
 
 // Apply changes in topics or messages to the reduced value.
@@ -39,7 +39,7 @@ function useReducedValue<T>(
   addMessages?: MessagesReducer<T>,
   addBobjects?: MessagesReducer<T>,
   lastSeekTime?: number,
-  messages?: Message[],
+  messages?: readonly Message[],
 ): T {
   const reducedValueRef = useRef<T | null | undefined>();
 
@@ -116,7 +116,7 @@ function useSubscriptions({
   }, [preloadingFallback, format, panelType, requestedTopics]);
 }
 
-const NO_MESSAGES: any[] = [];
+const NO_MESSAGES = Object.freeze([]);
 
 type Props<T> = {
   topics: ReadonlyArray<RequestedTopic>;
@@ -124,7 +124,7 @@ type Props<T> = {
   // Functions called when the reducers change and for each newly received message.
   // The object is assumed to be immutable, so in order to trigger a re-render, the reducers must
   // return a new object.
-  restore: (arg0: T | null | undefined) => T;
+  restore: (arg0: T | undefined) => T;
   addMessage?: MessageReducer<T>;
   addMessages?: MessagesReducer<T>;
   addBobjects?: MessagesReducer<T>;
@@ -135,12 +135,12 @@ type Props<T> = {
   // TODO(steel): Eventually we should deprecate these multiple ways of getting data, and we should
   // always have blocks available. Then `useMessageReducer` should just become a wrapper around
   // `useBlocksByTopic` for backwards compatibility.
-  preloadingFallback?: boolean | null | undefined;
+  preloadingFallback?: boolean | undefined;
 };
 
 export function useMessageReducer<T>(props: Props<T>): T {
   const [id] = useState(() => uuidv4());
-  const { type: panelType = undefined } = useContext(PanelContext) || {};
+  const { type: panelType = undefined } = useContext(PanelContext) ?? {};
 
   // only one of the add message callbacks should be provided
   if ([props.addMessage, props.addMessages, props.addBobjects].filter(Boolean).length !== 1) {
@@ -205,12 +205,12 @@ export function useMessageReducer<T>(props: Props<T>): T {
 
   // Keep a reference to the last messages we processed to ensure we never process them more than once.
   // If the topics we care about change, the player should send us new messages soon anyway (via backfill if paused).
-  const lastProcessedMessagesRef = useRef<ReadonlyArray<Message> | null | undefined>();
+  const lastProcessedMessagesRef = useRef<ReadonlyArray<Message> | undefined>();
   // Keep a ref to the latest requested topics we were rendered with, because the useMessagePipeline
   // selector's dependencies aren't allowed to change.
   const latestRequestedTopicsRef = useRef(requestedTopicsSet);
   latestRequestedTopicsRef.current = requestedTopicsSet;
-  const messages = useMessagePipeline<Message[]>(
+  const messages = useMessagePipeline<readonly Message[]>(
     useCallback(
       ({ playerState: { activeData } }: MessagePipelineContext) => {
         if (!activeData) {
