@@ -11,93 +11,15 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { mapValues, noop } from "lodash";
-import { createContext, PropsWithChildren, useContext, useMemo, useState } from "react";
+import { noop } from "lodash";
+import { useContext } from "react";
 
 import Modal, { Title } from "@foxglove-studio/app/components/Modal";
 import SegmentedControl from "@foxglove-studio/app/components/SegmentedControl";
 import TextContent from "@foxglove-studio/app/components/TextContent";
-import Storage from "@foxglove-studio/app/util/Storage";
-import logEvent, { getEventNames } from "@foxglove-studio/app/util/logEvent";
-
-type ExperimentalFeaturesBackend = {
-  features: FeatureDescriptions;
-  settings: FeatureSettings;
-  changeFeature(id: string, value: FeatureValue): void;
-};
-const ExperimentalFeaturesContext = createContext<ExperimentalFeaturesBackend>({
-  features: {},
-  settings: {},
-  changeFeature: () => {},
-});
-export const ExperimentalFeaturesProvider = ExperimentalFeaturesContext.Provider;
-
-export type FeatureDescriptions = {
-  [id: string]: {
-    name: string;
-    description: string | React.ReactNode;
-    developmentDefault: boolean;
-    productionDefault: boolean;
-  };
-};
-
-export type FeatureValue = "default" | "alwaysOn" | "alwaysOff";
-export type FeatureStorage = {
-  [id: string]: "alwaysOn" | "alwaysOff";
-};
-export type FeatureSettings = {
-  [id: string]: { enabled: boolean; manuallySet: boolean };
-};
-export const EXPERIMENTAL_FEATURES_STORAGE_KEY = "experimentalFeaturesSettings";
-
-function getDefaultKey(): "productionDefault" | "developmentDefault" {
-  return process.env.NODE_ENV === "production" ? "productionDefault" : "developmentDefault";
-}
-
-export function ExperimentalFeaturesLocalStorageProvider({
-  children,
-  features,
-}: PropsWithChildren<{ features: FeatureDescriptions }>): React.ReactElement {
-  const [featureStorage, setFeatureStorage] = useState(
-    () => new Storage().getItem<FeatureStorage>(EXPERIMENTAL_FEATURES_STORAGE_KEY) || {},
-  );
-
-  const settings = useMemo(
-    () =>
-      mapValues(features, (description, id) =>
-        featureStorage[id] === "alwaysOn" || featureStorage[id] === "alwaysOff"
-          ? { enabled: featureStorage[id] === "alwaysOn", manuallySet: true }
-          : { enabled: description[getDefaultKey()], manuallySet: false },
-      ),
-    [features, featureStorage],
-  );
-
-  const backend: ExperimentalFeaturesBackend = {
-    settings,
-    features,
-    changeFeature(id, value) {
-      const storage = new Storage();
-      const newStorage: FeatureStorage = { ...storage.getItem(EXPERIMENTAL_FEATURES_STORAGE_KEY) };
-
-      // @ts-ignore Event logging is not currently well typed
-      logEvent({ name: getEventNames().CHANGE_EXPERIMENTAL_FEATURE, tags: { feature: id, value } });
-
-      if (value === "default") {
-        delete newStorage[id];
-      } else {
-        newStorage[id] = value;
-      }
-      storage.setItem(EXPERIMENTAL_FEATURES_STORAGE_KEY, newStorage);
-      setFeatureStorage(newStorage);
-    },
-  };
-  return <ExperimentalFeaturesProvider value={backend}>{children}</ExperimentalFeaturesProvider>;
-}
-
-export function useExperimentalFeature(id: string): boolean {
-  const { settings } = useContext(ExperimentalFeaturesContext);
-  return settings[id]?.enabled ?? false;
-}
+import ExperimentalFeaturesContext, {
+  getDefaultKey,
+} from "@foxglove-studio/app/context/ExperimentalFeaturesContext";
 
 export function ExperimentalFeaturesModal(props: {
   onRequestClose?: () => void;
@@ -123,6 +45,7 @@ export function ExperimentalFeaturesModal(props: {
           <table style={{ marginTop: 12 }}>
             <tbody>
               {Object.entries(features).map(([id, feature]) => {
+                const { enabled = false, manuallySet = false } = settings[id] ?? {};
                 return (
                   <tr key={id}>
                     <td style={{ width: "100%", padding: 4 }}>
@@ -135,13 +58,7 @@ export function ExperimentalFeaturesModal(props: {
                     </td>
                     <td style={{ verticalAlign: "middle" }}>
                       <SegmentedControl
-                        selectedId={
-                          settings[id]?.manuallySet
-                            ? settings[id]?.enabled
-                              ? "alwaysOn"
-                              : "alwaysOff"
-                            : "default"
-                        }
+                        selectedId={manuallySet ? (enabled ? "alwaysOn" : "alwaysOff") : "default"}
                         onChange={(value) => {
                           if (
                             value !== "default" &&

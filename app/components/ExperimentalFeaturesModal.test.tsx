@@ -12,12 +12,11 @@
 //   You may not use this file except in compliance with the License.
 import { mount } from "enzyme";
 
-import {
+import { ExperimentalFeaturesModal } from "@foxglove-studio/app/components/ExperimentalFeaturesModal";
+import { useExperimentalFeature } from "@foxglove-studio/app/context/ExperimentalFeaturesContext";
+import ExperimentalFeaturesLocalStorageProvider, {
   EXPERIMENTAL_FEATURES_STORAGE_KEY,
-  ExperimentalFeaturesModal,
-  useExperimentalFeature,
-  ExperimentalFeaturesLocalStorageProvider,
-} from "@foxglove-studio/app/components/ExperimentalFeatures";
+} from "@foxglove-studio/app/context/ExperimentalFeaturesLocalStorageProvider";
 import Storage from "@foxglove-studio/app/util/Storage";
 
 const features = {

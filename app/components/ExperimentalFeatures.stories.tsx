@@ -14,12 +14,11 @@
 import { action } from "@storybook/addon-actions";
 import { ReactElement } from "react";
 
-import {
-  ExperimentalFeaturesModal,
-  ExperimentalFeaturesProvider,
+import { ExperimentalFeaturesModal } from "@foxglove-studio/app/components/ExperimentalFeaturesModal";
+import ExperimentalFeaturesContext, {
   FeatureDescriptions,
   FeatureSettings,
-} from "@foxglove-studio/app/components/ExperimentalFeatures";
+} from "@foxglove-studio/app/context/ExperimentalFeaturesContext";
 
 export default {
   title: "<ExperimentalFeaturesModal>",
@@ -67,17 +66,17 @@ const dummySettings: FeatureSettings = {
 
 export function EmptyList(): ReactElement {
   return (
-    <ExperimentalFeaturesProvider
+    <ExperimentalFeaturesContext.Provider
       value={{ features: {}, settings: {}, changeFeature: action("changeFeature") }}
     >
       <ExperimentalFeaturesModal onRequestClose={action("onRequestClose")} />
-    </ExperimentalFeaturesProvider>
+    </ExperimentalFeaturesContext.Provider>
   );
 }
 
 export function BasicFixture(): ReactElement {
   return (
-    <ExperimentalFeaturesProvider
+    <ExperimentalFeaturesContext.Provider
       value={{
         features: dummyFeatures,
         settings: dummySettings,
@@ -85,6 +84,6 @@ export function BasicFixture(): ReactElement {
       }}
     >
       <ExperimentalFeaturesModal onRequestClose={action("onRequestClose")} />
-    </ExperimentalFeaturesProvider>
+    </ExperimentalFeaturesContext.Provider>
   );
 }

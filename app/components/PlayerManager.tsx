@@ -21,8 +21,8 @@ import {
 } from "@foxglove-studio/app/actions/userNodes";
 import DocumentDropListener from "@foxglove-studio/app/components/DocumentDropListener";
 import DropOverlay from "@foxglove-studio/app/components/DropOverlay";
-import { useExperimentalFeature } from "@foxglove-studio/app/components/ExperimentalFeatures";
 import { MessagePipelineProvider } from "@foxglove-studio/app/components/MessagePipeline";
+import { useExperimentalFeature } from "@foxglove-studio/app/context/ExperimentalFeaturesContext";
 import PlayerSelectionContext, {
   PlayerSelection,
   PlayerSourceDefinition,

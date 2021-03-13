@@ -22,10 +22,7 @@ import { redoLayoutChange, undoLayoutChange } from "@foxglove-studio/app/actions
 import { importPanelLayout } from "@foxglove-studio/app/actions/panels";
 import AddPanelMenu from "@foxglove-studio/app/components/AddPanelMenu";
 import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
-import {
-  ExperimentalFeaturesLocalStorageProvider,
-  ExperimentalFeaturesModal,
-} from "@foxglove-studio/app/components/ExperimentalFeatures";
+import { ExperimentalFeaturesModal } from "@foxglove-studio/app/components/ExperimentalFeaturesModal";
 import Flex from "@foxglove-studio/app/components/Flex";
 import GlobalKeyListener from "@foxglove-studio/app/components/GlobalKeyListener";
 import GlobalVariablesMenu from "@foxglove-studio/app/components/GlobalVariablesMenu";
@@ -36,11 +33,12 @@ import NotificationDisplay from "@foxglove-studio/app/components/NotificationDis
 import PanelLayout from "@foxglove-studio/app/components/PanelLayout";
 import PlaybackControls from "@foxglove-studio/app/components/PlaybackControls";
 import PlayerManager from "@foxglove-studio/app/components/PlayerManager";
+import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToBodyComponent";
 import ShortcutsModal from "@foxglove-studio/app/components/ShortcutsModal";
 import TinyConnectionPicker from "@foxglove-studio/app/components/TinyConnectionPicker";
 import Toolbar from "@foxglove-studio/app/components/Toolbar";
-import { RenderToBodyComponent } from "@foxglove-studio/app/components/renderToBody";
 import withDragDropContext from "@foxglove-studio/app/components/withDragDropContext";
+import ExperimentalFeaturesLocalStorageProvider from "@foxglove-studio/app/context/ExperimentalFeaturesLocalStorageProvider";
 import {
   PlayerSourceDefinition,
   usePlayerSelection,
