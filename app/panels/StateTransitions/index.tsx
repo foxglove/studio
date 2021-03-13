@@ -202,10 +202,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     saveConfig({ paths: newPaths });
   };
 
-  const onInputTimestampMethodChange = (
-    value: TimestampMethod,
-    index: number | null | undefined,
-  ) => {
+  const onInputTimestampMethodChange = (value: TimestampMethod, index: number | undefined) => {
     if (index == null) {
       throw new Error("index not set");
     }

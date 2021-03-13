@@ -132,10 +132,7 @@ export const clearLayoutUrlReplacedByDefault = (): Dispatcher<CLEAR_LAYOUT_URL_R
   return dispatch({ type: PANELS_ACTION_TYPES.CLEAR_LAYOUT_URL_REPLACED_BY_DEFAULT });
 };
 
-export function applyPatchToLayout(
-  patch: string | null | undefined,
-  layout: PanelsState,
-): PanelsState {
+export function applyPatchToLayout(patch: string | undefined, layout: PanelsState): PanelsState {
   if (!patch) {
     return layout;
   }

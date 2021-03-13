@@ -50,7 +50,7 @@ export default class KeyListener extends React.Component<Props> {
     }
   }
 
-  callHandlers(handlers: KeyHandlers | null | undefined, event: KeyboardEvent) {
+  callHandlers(handlers: KeyHandlers | undefined, event: KeyboardEvent) {
     if (!handlers) {
       return;
     }

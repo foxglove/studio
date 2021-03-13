@@ -71,7 +71,7 @@ type FixtureExampleProps = {
   data?: FixtureExampleData;
   loadData?: Promise<FixtureExampleData>;
   futureTime?: boolean;
-  onMount?: (arg0: HTMLDivElement | null | undefined, store?: Store) => void;
+  onMount?: (arg0: HTMLDivElement | undefined, store?: Store) => void;
 };
 
 type FixtureExampleState = {

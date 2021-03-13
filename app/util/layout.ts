@@ -310,7 +310,7 @@ export const removePanelFromTabPanel = (
 };
 
 export const createAddUpdates = (
-  tree: MosaicNode | null | undefined,
+  tree: MosaicNode | undefined,
   panelId: string,
   newPath: MosaicPath,
   position: MosaicDropTargetPosition,
@@ -328,9 +328,9 @@ export const createAddUpdates = (
 
 export const addPanelToTab = (
   insertedPanelId: string,
-  destinationPath: MosaicPath | null | undefined,
-  destinationPosition: MosaicDropTargetPosition | null | undefined,
-  tabConfig: PanelConfig | null | undefined,
+  destinationPath: MosaicPath | undefined,
+  destinationPosition: MosaicDropTargetPosition | undefined,
+  tabConfig: PanelConfig | undefined,
   tabId: string,
 ): SaveConfigsPayload => {
   const safeTabConfig = validateTabPanelConfig(tabConfig)
@@ -483,8 +483,8 @@ export const replaceAndRemovePanels = (
 };
 
 export function getConfigsForNestedPanelsInsideTab(
-  panelIdToReplace: string | null | undefined,
-  tabPanelId: string | null | undefined,
+  panelIdToReplace: string | undefined,
+  tabPanelId: string | undefined,
   panelIdsToRemove: string[],
   savedProps: SavedProps,
 ): ConfigsPayload[] {
@@ -506,8 +506,8 @@ export function getConfigsForNestedPanelsInsideTab(
 }
 
 export function getLayoutPatch(
-  baseState: PanelsState | null | undefined,
-  newState: PanelsState | null | undefined,
+  baseState: PanelsState | undefined,
+  newState: PanelsState | undefined,
 ): string {
   const delta = jsondiffpatch.diff(baseState, newState);
   return delta ? JSON.stringify(delta) : "";

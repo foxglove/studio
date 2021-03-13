@@ -176,7 +176,7 @@ export function getBlocksToKeep({
 
 function getBlocksToKeepDirection(
   blockRange: Range,
-  badEvictionLocation: number | null | undefined,
+  badEvictionLocation: number | undefined,
 ): {
   startIndex: number;
   endIndex: number;

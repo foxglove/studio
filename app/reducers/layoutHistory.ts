@@ -89,7 +89,7 @@ const undoLayoutChange = (
 };
 
 const pushLayoutChange = (
-  oldPersistedState: PersistedState | null | undefined,
+  oldPersistedState: PersistedState | undefined,
   newPersistedState: PersistedState,
   layoutHistory: LayoutHistory,
   action: any,

@@ -414,7 +414,7 @@ export function getScaleBounds(chartInstance: ChartInstance): ScaleBounds[] {
 }
 
 export function getChartValue(
-  bounds: ScaleBounds | null | undefined,
+  bounds: ScaleBounds | undefined,
   canvasPx: number,
 ): number | null | undefined {
   if (bounds == null) {
@@ -426,7 +426,7 @@ export function getChartValue(
 }
 
 export function getChartPx(
-  bounds: ScaleBounds | null | undefined,
+  bounds: ScaleBounds | undefined,
   value: number,
 ): number | null | undefined {
   if (bounds == null) {

@@ -170,8 +170,8 @@ const screenCoord = (value: number, valuePerPixel?: number) =>
   !valuePerPixel ? value : Math.trunc(value / valuePerPixel);
 const datumStringPixel = (
   { x, y }: Point,
-  xScale: number | null | undefined,
-  yScale: number | null | undefined,
+  xScale: number | undefined,
+  yScale: number | undefined,
 ): string => `${screenCoord(x, xScale)},${typeof y === "string" ? y : screenCoord(y, yScale)}`;
 
 // Exported for tests
@@ -442,7 +442,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     (
       currentChartComponent: ChartComponent,
       canvas: HTMLCanvasElement,
-      tooltipItem: HoveredElement | null | undefined,
+      tooltipItem: HoveredElement | undefined,
     ) => {
       // This is an async callback, so it can fire after this component is unmounted. Make sure that we remove the
       // tooltip if this fires after unmount.
@@ -558,7 +558,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
 
   const xScaleOptions = followPlaybackState && xBounds ? stepSize(xBounds) : undefined;
 
-  const getChartjsOptions = (minX: number | null | undefined, maxX?: number) => {
+  const getChartjsOptions = (minX: number | undefined, maxX?: number) => {
     const { currentTime } = props;
     const plugins = props.plugins ?? {};
     const annotations = [...(props.annotations ?? [])];

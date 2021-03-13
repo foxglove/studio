@@ -107,7 +107,7 @@ const missingTransformMessage = (
   rootTransformId: string,
   error: ErrorDetails,
   transforms: Transforms,
-  skipTransform: SkipTransformSpec | null | undefined,
+  skipTransform: SkipTransformSpec | undefined,
 ): string => {
   if (skipTransform != null && error.frameIds.has(skipTransform.frameId)) {
     return `missing transform. Is ${skipTransform.sourceTopic} present?`;
@@ -123,7 +123,7 @@ const missingTransformMessage = (
 export function getSceneErrorsByTopic(
   sceneErrors: SceneErrors,
   transforms: Transforms,
-  skipTransform: SkipTransformSpec | null | undefined,
+  skipTransform: SkipTransformSpec | undefined,
 ): {
   [topicName: string]: string[];
 } {

@@ -96,7 +96,7 @@ function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknow
   }, [actions, getPanelType, mosaicActions, mosaicWindowActions, tabId]);
 
   const split = useCallback(
-    (store, id: string | null | undefined, direction: "row" | "column") => {
+    (store, id: string | undefined, direction: "row" | "column") => {
       const type = getPanelType();
       if (!id || !type) {
         throw new Error("Trying to split unknown panel!");

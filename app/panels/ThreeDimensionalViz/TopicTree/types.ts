@@ -132,7 +132,7 @@ export type DerivedCustomSettingsByKey = {
   [key: string]: DerivedCustomSettings;
 };
 export type OnNamespaceOverrideColorChange = (
-  newRbgaColor: Color | null | undefined,
+  newRbgaColor: Color | undefined,
   prefixedNamespaceKey: string,
 ) => void;
 export type VisibleTopicsCountByKey = {

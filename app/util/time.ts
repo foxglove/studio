@@ -363,7 +363,7 @@ type MaybeStampedBobject = Readonly<{
 }>;
 
 export const maybeGetBobjectHeaderStamp = (
-  message: Bobject | null | undefined,
+  message: Bobject | undefined,
 ): Time | null | undefined => {
   if (message == null) {
     return;

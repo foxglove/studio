@@ -225,7 +225,7 @@ function RawMessages(props: Props) {
 
   const valueRenderer = useCallback(
     (
-      structureItem: MessagePathStructureItem | null | undefined,
+      structureItem: MessagePathStructureItem | undefined,
       data: unknown[],
       queriedData: MessagePathDataItem[],
       label: string,

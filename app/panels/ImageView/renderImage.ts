@@ -82,7 +82,7 @@ function toRGBA(color: Color) {
 
 // Note: Return type is inexact -- may contain z.
 function maybeUnrectifyPoint(
-  cameraModel: CameraModel | null | undefined,
+  cameraModel: CameraModel | undefined,
   point: Point,
 ): Readonly<{ x: number; y: number }> {
   if (cameraModel) {
@@ -205,7 +205,7 @@ function paintBitmap(
 function paintMarkers(
   ctx: CanvasRenderingContext2D,
   messages: Message[],
-  cameraModel: CameraModel | null | undefined,
+  cameraModel: CameraModel | undefined,
 ) {
   for (const { message } of messages) {
     ctx.save();
@@ -227,7 +227,7 @@ function paintMarkers(
 function paintMarker(
   ctx: CanvasRenderingContext2D,
   marker: ImageMarker,
-  cameraModel: CameraModel | null | undefined,
+  cameraModel: CameraModel | undefined,
 ) {
   switch (marker.type) {
     case 0: {
@@ -345,7 +345,7 @@ function paintMarker(
   }
 }
 
-function resizeCanvas(canvas: HTMLCanvasElement | null | undefined, width: number, height: number) {
+function resizeCanvas(canvas: HTMLCanvasElement | undefined, width: number, height: number) {
   if (canvas && (canvas.width !== width || canvas.height !== height)) {
     canvas.width = width;
     canvas.height = height;

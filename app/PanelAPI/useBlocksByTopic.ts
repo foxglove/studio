@@ -60,7 +60,7 @@ type BlocksForTopics = {
 // That said, MessageBlock identity will change when the set of topics changes, so consumers should
 // prefer to use the identity of topic-block message arrays where possible.
 const filterBlockByTopics = memoizeWeak(
-  (block: MemoryCacheBlock | null | undefined, topics: readonly string[]): MessageBlock => {
+  (block: MemoryCacheBlock | undefined, topics: readonly string[]): MessageBlock => {
     if (!block) {
       // For our purposes, a missing MemoryCacheBlock just means "no topics have been cached for
       // this block". This is semantically different to an empty array per topic, but not different

@@ -60,8 +60,8 @@ const memoizedMergedBlock = memoizeWeak((block1?: MemoryCacheBlock, block2?: Mem
 
 // Exported for tests
 export const mergedBlocks = (
-  cache1: BlockCache | null | undefined,
-  cache2: BlockCache | null | undefined,
+  cache1: BlockCache | undefined,
+  cache2: BlockCache | undefined,
 ): BlockCache | null | undefined => {
   if (cache1 == null) {
     return cache2;

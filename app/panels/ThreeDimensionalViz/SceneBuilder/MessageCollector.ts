@@ -30,11 +30,7 @@ class MessageWithLifetime {
   // If absent, the marker is removed from the collector using explicit "flush" actions.
   lifetime?: Time;
 
-  constructor(
-    message: ObjectWithInteractionData,
-    receiveTime: Time,
-    lifetime: Time | null | undefined,
-  ) {
+  constructor(message: ObjectWithInteractionData, receiveTime: Time, lifetime: Time | undefined) {
     this.message = message;
     this.receiveTime = receiveTime;
     this.lifetime = lifetime;
