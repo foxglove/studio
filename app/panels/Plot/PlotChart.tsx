@@ -399,7 +399,7 @@ type PlotChartProps = {
   datasets: DataSet[];
   tooltips: TimeBasedChartTooltipData[];
   xAxisVal: PlotXAxisVal;
-  currentTime?: number | null | undefined;
+  currentTime?: number;
   defaultView: ChartDefaultView;
   onClick?: (
     arg0: React.MouseEvent<HTMLCanvasElement>,

@@ -78,9 +78,9 @@ export type TimeBasedChartTooltipData = {
   item: TooltipItem;
   path: string;
   value: number | boolean | string;
-  constantName?: string | null | undefined;
+  constantName?: string;
   startTime: Time;
-  source?: number | null | undefined;
+  source?: number;
 };
 
 export type DataPoint = {
@@ -180,8 +180,8 @@ export const filterDatasets = (
   linesToHide: {
     [key: string]: boolean;
   },
-  xScalePerPixel?: number | null,
-  yScalePerPixel?: number | null,
+  xScalePerPixel?: number,
+  yScalePerPixel?: number,
 ): DataSet[] =>
   datasets // Only draw enabled lines. Needed for correctness.
     .filter(({ label }) => !linesToHide[label]) // Remove redundant points to make drawing the chart more efficient.
@@ -233,8 +233,8 @@ export type Props = {
   // Note, this setting should not be used for other time values.
   xAxisIsPlaybackTime: boolean;
   plugins?: Chart.ChartPluginsOptions;
-  scaleOptions?: ScaleOptions | null | undefined;
-  currentTime?: number | null | undefined;
+  scaleOptions?: ScaleOptions;
+  currentTime?: number;
   defaultView?: ChartDefaultView;
 };
 

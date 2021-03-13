@@ -38,7 +38,7 @@ import { fromMillis, subtractTimes } from "@foxglove-studio/app/util/time";
 
 type BagPath = { type: "file"; file: File | string } | { type: "remoteBagUrl"; url: string };
 
-type Options = { bagPath: BagPath; cacheSizeInBytes?: number | null | undefined };
+type Options = { bagPath: BagPath; cacheSizeInBytes?: number };
 
 const log = new Logger(__filename);
 

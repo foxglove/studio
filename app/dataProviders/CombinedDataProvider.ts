@@ -45,20 +45,18 @@ const emptyGetMessagesResult = {
   parsedMessages: undefined,
 };
 
-const memoizedMergedBlock = memoizeWeak(
-  (block1?: MemoryCacheBlock | null, block2?: MemoryCacheBlock | null) => {
-    if (block1 == null) {
-      return block2;
-    }
-    if (block2 == null) {
-      return block1;
-    }
-    return {
-      messagesByTopic: { ...block1.messagesByTopic, ...block2.messagesByTopic },
-      sizeInBytes: block1.sizeInBytes + block2.sizeInBytes,
-    };
-  },
-);
+const memoizedMergedBlock = memoizeWeak((block1?: MemoryCacheBlock, block2?: MemoryCacheBlock) => {
+  if (block1 == null) {
+    return block2;
+  }
+  if (block2 == null) {
+    return block1;
+  }
+  return {
+    messagesByTopic: { ...block1.messagesByTopic, ...block2.messagesByTopic },
+    sizeInBytes: block1.sizeInBytes + block2.sizeInBytes,
+  };
+});
 
 // Exported for tests
 export const mergedBlocks = (

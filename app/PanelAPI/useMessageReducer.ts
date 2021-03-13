@@ -135,7 +135,7 @@ type Props<T> = {
   // TODO(steel): Eventually we should deprecate these multiple ways of getting data, and we should
   // always have blocks available. Then `useMessageReducer` should just become a wrapper around
   // `useBlocksByTopic` for backwards compatibility.
-  preloadingFallback?: boolean | undefined;
+  preloadingFallback?: boolean;
 };
 
 export function useMessageReducer<T>(props: Props<T>): T {

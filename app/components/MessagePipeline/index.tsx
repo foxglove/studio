@@ -91,7 +91,7 @@ function defaultPlayerState(): PlayerState {
 
 type ProviderProps = {
   children: React.ReactNode;
-  player?: Player | null | undefined;
+  player?: Player;
   globalVariables?: GlobalVariables;
 };
 export function MessagePipelineProvider({ children, player, globalVariables = {} }: ProviderProps) {
@@ -349,7 +349,7 @@ const NO_DATATYPES = Object.freeze({});
 // TODO(Audrey): put messages under activeData, add ability to mock seeking
 export function MockMessagePipelineProvider(props: {
   children: React.ReactNode;
-  isPresent?: boolean | null | undefined;
+  isPresent?: boolean;
   topics?: Topic[];
   datatypes?: RosDatatypes;
   messages?: Message[];
@@ -357,7 +357,7 @@ export function MockMessagePipelineProvider(props: {
   setSubscriptions?: (arg0: string, arg1: SubscribePayload[]) => void;
   noActiveData?: boolean;
   showInitializing?: boolean;
-  activeData?: Partial<PlayerStateActiveData> | null | undefined;
+  activeData?: Partial<PlayerStateActiveData>;
   capabilities?: string[];
   store?: any;
   startPlayback?: () => void | null | undefined;
@@ -366,7 +366,7 @@ export function MockMessagePipelineProvider(props: {
   currentTime?: Time;
   startTime?: Time;
   endTime?: Time;
-  isPlaying?: boolean | null | undefined;
+  isPlaying?: boolean;
   pauseFrame?: (arg0: string) => ResumeFrame;
   playerId?: string;
   requestBackfill?: () => void;

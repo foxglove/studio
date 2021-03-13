@@ -65,7 +65,7 @@ export interface Player {
   // Basic playback controls.
   startPlayback(): void;
   pausePlayback(): void;
-  seekPlayback(time: Time, backfillDuration?: Time | null): void;
+  seekPlayback(time: Time, backfillDuration?: Time): void;
   // Seek to a particular time. Might trigger backfilling.
   // If the Player supports non-real-time speeds (i.e. PlayerState#capabilities contains
   // PlayerCapabilities.setSpeed), set that speed. E.g. 1.0 is real time, 0.2 is 20% of real time.
@@ -270,7 +270,7 @@ export type SubscribePayload = {
   encoding?: string;
 
   // Currently only used for images. Used for compressing the image.
-  scale?: number | null | undefined;
+  scale?: number;
 
   // Optionally, where the request came from. Used in the "Internals" panel to improve debugging.
   requester?: { type: "panel" | "node" | "other"; name: string };

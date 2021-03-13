@@ -78,8 +78,8 @@ export default class MemoryDataProvider implements DataProvider {
     messages: GetMessagesResult;
     topics?: Topic[];
     datatypes?: RosDatatypes;
-    messageDefinitionsByTopic?: MessageDefinitionsByTopic | null | undefined;
-    parsedMessageDefinitionsByTopic?: ParsedMessageDefinitionsByTopic | null | undefined;
+    messageDefinitionsByTopic?: MessageDefinitionsByTopic;
+    parsedMessageDefinitionsByTopic?: ParsedMessageDefinitionsByTopic;
     initiallyLoaded?: boolean;
     providesParsedMessages?: boolean;
   }) {

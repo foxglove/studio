@@ -163,7 +163,7 @@ type MessagePathInputBaseProps = {
 type MessagePathInputProps = MessagePathInputBaseProps & {
   topics: readonly Topic[];
   datatypes: RosDatatypes;
-  prioritizedDatatype?: string | null | undefined;
+  prioritizedDatatype?: string;
   globalVariables: GlobalVariables;
   setGlobalVariables: (arg0: GlobalVariables) => void;
 };

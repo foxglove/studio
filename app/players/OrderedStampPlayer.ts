@@ -173,7 +173,7 @@ export default class OrderedStampPlayer implements Player {
   startPlayback = () => this._player.startPlayback();
   pausePlayback = () => this._player.pausePlayback();
   setPlaybackSpeed = (speed: number) => this._player.setPlaybackSpeed(speed);
-  seekPlayback = (time: Time, backfillDuration?: Time | null) => {
+  seekPlayback = (time: Time, backfillDuration?: Time) => {
     // Add a second to the backfill duration requested downstream, to give us extra data to reorder.
     if (this._messageOrder === "receiveTime") {
       return this._player.seekPlayback(time, backfillDuration);

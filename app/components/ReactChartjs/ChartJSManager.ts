@@ -57,12 +57,12 @@ type OffscreenCanvas = HTMLCanvasElement;
 // config because they can only be set using a callback function, which we can't pass across worker boundaries.
 export type ScaleOptions = {
   // Sets y-axis labels to a fixed width, so that vertically-aligned charts can be directly compared.
-  fixedYAxisWidth?: number | null | undefined;
+  fixedYAxisWidth?: number;
   // We might want to hide just the first and last because they can overlap with other labels or have long decimal
   // points.
   yAxisTicks?: "show" | "hide" | "hideFirstAndLast";
   // Display the x-axes with a seconds unit, eg "1 s"
-  xAxisTicks?: XAxisTicks | null | undefined;
+  xAxisTicks?: XAxisTicks;
 };
 
 function hideAllTicksScaleCallback() {

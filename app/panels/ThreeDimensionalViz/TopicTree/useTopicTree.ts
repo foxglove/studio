@@ -35,9 +35,9 @@ export function generateNodeKey({
   namespace,
   isFeatureColumn,
 }: {
-  topicName?: string | null | undefined;
-  name?: string | null | undefined;
-  namespace?: string | null | undefined;
+  topicName?: string;
+  name?: string;
+  namespace?: string;
   isFeatureColumn?: boolean;
 }): string {
   const prefixedTopicName = topicName

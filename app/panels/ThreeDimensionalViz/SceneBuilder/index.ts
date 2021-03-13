@@ -783,7 +783,7 @@ export default class SceneBuilder implements MarkerProvider {
     topic: string,
     drawData: StampedMessage,
     type: number,
-    originalMessage?: any | null,
+    originalMessage?: any,
   ): void => {
     const sourcePose = emptyPose();
     const pose = this.transforms?.apply(

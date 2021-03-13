@@ -106,7 +106,7 @@ export type LayoutUrl = {
   patch: string | null | undefined;
 };
 export type InitialLayoutFetchResult = {
-  layoutUrlReplacedByDefault?: LayoutUrl | null | undefined;
+  layoutUrlReplacedByDefault?: LayoutUrl;
   // The layoutFetchResult will be null if there is no layout to load in the URL.
   layoutFetchResult: LayoutFetchResult | null | undefined;
 };
@@ -116,7 +116,7 @@ export type SetFetchedLayoutPayload = {
   data?: LayoutFetchResult;
   isFromLayoutUrlParam?: boolean;
   isInitializedFromLocalStorage?: boolean;
-  layoutUrlReplacedByDefault?: LayoutUrl | null | undefined;
+  layoutUrlReplacedByDefault?: LayoutUrl;
 };
 
 export type SaveConfig<Config> = (

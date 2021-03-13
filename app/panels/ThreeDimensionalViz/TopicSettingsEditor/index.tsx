@@ -43,8 +43,8 @@ export function CommonPointSettings({
   defaultPointSize: number;
   defaultPointShape?: string;
   settings: {
-    pointSize?: number | null | undefined;
-    pointShape?: string | null | undefined;
+    pointSize?: number;
+    pointShape?: string;
   };
   onFieldChange: (name: string, value: any) => void;
 }) {
@@ -91,7 +91,7 @@ export function CommonDecaySettings({
   settings,
   onFieldChange,
 }: {
-  settings: { decayTime?: number | null | undefined };
+  settings: { decayTime?: number };
   onFieldChange: (name: string, value: any) => any;
 }) {
   const decayTime = settings.decayTime;

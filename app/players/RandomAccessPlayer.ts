@@ -607,7 +607,7 @@ export default class RandomAccessPlayer implements Player {
     }
   });
 
-  seekPlayback(time: Time, backfillDuration?: Time | null): void {
+  seekPlayback(time: Time, backfillDuration?: Time): void {
     // Only seek when the provider initialization is done.
     if (!this._initialized) {
       return;

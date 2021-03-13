@@ -552,7 +552,7 @@ export default class UserNodePlayer implements Player {
   startPlayback = () => this._player.startPlayback();
   pausePlayback = () => this._player.pausePlayback();
   setPlaybackSpeed = (speed: number) => this._player.setPlaybackSpeed(speed);
-  seekPlayback = (time: Time, backfillDuration?: Time | null) =>
+  seekPlayback = (time: Time, backfillDuration?: Time) =>
     this._player.seekPlayback(time, backfillDuration);
   requestBackfill = () => this._player.requestBackfill();
 }

@@ -61,8 +61,8 @@ type Props = {
     arg0: React.MouseEvent<HTMLCanvasElement>,
     datalabel: ScaleBounds[] | null | undefined,
   ) => void;
-  forceDisableWorkerRendering?: boolean | null | undefined;
-  scaleOptions?: ScaleOptions | null | undefined;
+  forceDisableWorkerRendering?: boolean;
+  scaleOptions?: ScaleOptions;
   onChartUpdate?: () => OnEndChartUpdate;
 };
 

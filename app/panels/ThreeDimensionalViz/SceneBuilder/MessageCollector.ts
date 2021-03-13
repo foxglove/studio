@@ -132,7 +132,7 @@ export default class MessageCollector {
     this.markers.clear();
   }
 
-  addNonMarker(topic: string, message: ObjectWithInteractionData, lifetime?: Time | null) {
+  addNonMarker(topic: string, message: ObjectWithInteractionData, lifetime?: Time) {
     // Non-marker data is removed in two ways:
     //  - Messages with lifetimes expire only at the end of their lifetime. Multiple messages on the
     //    same topic are added and expired independently.

@@ -242,7 +242,7 @@ export function getAllPanelIds(layout: MosaicNode, savedProps: SavedProps): stri
   return [...layoutPanelIds, ...tabPanelIds];
 }
 
-export const validateTabPanelConfig = (config?: PanelConfig | null) => {
+export const validateTabPanelConfig = (config?: PanelConfig) => {
   if (!config) {
     return false;
   }
@@ -449,8 +449,8 @@ export const moveTabBetweenTabPanels = ({
 
 export const replaceAndRemovePanels = (
   panelArgs: {
-    originalId?: string | null | undefined;
-    newId?: string | null | undefined;
+    originalId?: string;
+    newId?: string;
     idsToRemove?: string[];
   },
   layout: MosaicNode,

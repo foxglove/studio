@@ -54,7 +54,7 @@ export type Fixture = {
   progress?: Progress;
   datatypes?: RosDatatypes;
   globalVariables?: GlobalVariables;
-  layout?: MosaicNode | null | undefined;
+  layout?: MosaicNode;
   linkedGlobalVariables?: LinkedGlobalVariables;
   userNodes?: UserNodes;
   userNodeDiagnostics?: UserNodeDiagnostics;

@@ -98,7 +98,7 @@ export function messagePathStructures(
 }
 
 export function validTerminatingStructureItem(
-  structureItem?: MessagePathStructureItem | null,
+  structureItem?: MessagePathStructureItem,
   validTypes?: string[] | null,
 ): boolean {
   return (
@@ -116,7 +116,7 @@ export function messagePathsForDatatype(
   datatype: string,
   datatypes: RosDatatypes,
   validTypes?: string[] | null,
-  noMultiSlices?: boolean | null,
+  noMultiSlices?: boolean,
   messagePath: MessagePathPart[] = [],
 ): string[] {
   let clonedMessagePath = [...messagePath];

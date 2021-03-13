@@ -16,7 +16,7 @@ import { VertexBuffer, MemoizedVertexBuffer } from "./types";
 
 function reglBuffer(data: Float32Array) {
   const buffer: {
-    data?: Float32Array | null | undefined;
+    data?: Float32Array;
   } = {
     data,
   };

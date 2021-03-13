@@ -29,7 +29,7 @@ const SEmpty = styled.div`
 type Props = {
   children: React.ReactNode;
   // specify text specifically if the value is not a string
-  text?: string | null | undefined;
+  text?: string;
   value: any;
   icon: React.ReactNode;
   onChange: (value: any) => void;

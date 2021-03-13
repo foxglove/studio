@@ -119,7 +119,7 @@ const pushLayoutChange = (
 export default function (
   state: State,
   action: ActionTypes,
-  oldPersistedState?: PersistedState | null | undefined,
+  oldPersistedState?: PersistedState,
 ): State {
   switch (action.type) {
     case "UNDO_LAYOUT_CHANGE": {

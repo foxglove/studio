@@ -88,7 +88,7 @@ export default class CachedFilelike implements Filelike {
 
   constructor(options: {
     fileReader: FileReader;
-    cacheSizeInBytes?: number | null | undefined;
+    cacheSizeInBytes?: number;
     logFn?: (arg0: string) => void;
     keepReconnectingCallback?: (reconnecting: boolean) => void;
   }) {
