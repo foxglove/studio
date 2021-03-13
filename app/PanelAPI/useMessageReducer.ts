@@ -86,7 +86,7 @@ function useSubscriptions({
   format,
 }: {
   requestedTopics: readonly RequestedTopic[];
-  panelType: string | null | undefined;
+  panelType?: string;
   preloadingFallback: boolean;
   format: MessageFormat;
 }): SubscribePayload[] {

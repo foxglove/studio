@@ -59,9 +59,9 @@ function filterMessages(
 export default class MemoryDataProvider implements DataProvider {
   messages: GetMessagesResult;
   topics: Topic[] | null | undefined;
-  datatypes: RosDatatypes | null | undefined;
+  datatypes?: RosDatatypes;
   messageDefinitionsByTopic: MessageDefinitionsByTopic;
-  parsedMessageDefinitionsByTopic: ParsedMessageDefinitionsByTopic | null | undefined;
+  parsedMessageDefinitionsByTopic?: ParsedMessageDefinitionsByTopic;
   extensionPoint?: ExtensionPoint;
   initiallyLoaded: boolean;
   providesParsedMessages: boolean;

@@ -78,7 +78,7 @@ export function generateTreeNode(
     datatypesByTopic: {
       [topicName: string]: string;
     };
-    parentKey: string | null | undefined;
+    parentKey?: string;
     hasFeatureColumn: boolean;
   },
 ): TreeNode {

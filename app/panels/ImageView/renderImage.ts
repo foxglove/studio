@@ -42,8 +42,8 @@ export async function renderImage({
   rawMarkerData,
 }: {
   canvas: (HTMLCanvasElement | OffscreenCanvas) | null | undefined;
-  imageMessage: Message | null | undefined;
-  imageMessageDatatype: string | null | undefined;
+  imageMessage?: Message;
+  imageMessageDatatype?: string;
   rawMarkerData: RawMarkerData;
 }): Promise<Dimensions | null | undefined> {
   if (!canvas) {
@@ -153,7 +153,7 @@ async function decodeMessageToBitmap(msg: Message, datatype: string): Promise<Im
   return self.createImageBitmap(image);
 }
 
-function clearCanvas(canvas: HTMLCanvasElement | null | undefined) {
+function clearCanvas(canvas?: HTMLCanvasElement) {
   if (canvas) {
     canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
   }

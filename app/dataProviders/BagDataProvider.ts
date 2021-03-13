@@ -109,8 +109,8 @@ class LogMetricsReader {
 export default class BagDataProvider implements DataProvider {
   _options: Options;
   _bag?: Bag;
-  _lastPerformanceStatsToLog: TimedDataThroughput | null | undefined;
-  _extensionPoint: ExtensionPoint | null | undefined;
+  _lastPerformanceStatsToLog?: TimedDataThroughput;
+  _extensionPoint?: ExtensionPoint;
 
   constructor(options: Options, children: DataProviderDescriptor[]) {
     if (children.length > 0) {

@@ -395,7 +395,7 @@ type PlotChartProps = {
   paths: PlotPath[];
   minYValue: number;
   maxYValue: number;
-  saveCurrentView: (minY: number, maxY: number, width: number | null | undefined) => void;
+  saveCurrentView: (minY: number, maxY: number, width?: number) => void;
   datasets: DataSet[];
   tooltips: TimeBasedChartTooltipData[];
   xAxisVal: PlotXAxisVal;

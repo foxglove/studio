@@ -24,7 +24,7 @@ type LaserScanSettings = {
   pointSize?: number;
   pointShape?: string;
   decayTime?: number;
-  overrideColor: Color | null | undefined;
+  overrideColor?: Color;
 };
 
 export default function LaserScanSettingsEditor(

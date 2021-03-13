@@ -181,8 +181,8 @@ export function messagePathsForDatatype(
 
 export type StructureTraversalResult = {
   valid: boolean;
-  msgPathPart: MessagePathPart | null | undefined;
-  structureItem: MessagePathStructureItem | null | undefined;
+  msgPathPart?: MessagePathPart;
+  structureItem?: MessagePathStructureItem;
 };
 
 // Traverse down the structure given a `messagePath`. Return if the path

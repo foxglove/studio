@@ -48,7 +48,7 @@ import { useDeepChangeDetector } from "@foxglove-studio/app/util/hooks";
 import { defaultGetHeaderStamp } from "@foxglove-studio/app/util/synchronizeMessages";
 import { maybeGetBobjectHeaderStamp } from "@foxglove-studio/app/util/time";
 
-type Bounds = { minX: number | null | undefined; maxX: number | null | undefined };
+type Bounds = { minX?: number; maxX?: number };
 const SyncTimeAxis = createSyncingComponent<Bounds, Bounds>(
   "SyncTimeAxis",
   (dataItems: Bounds[]) => ({
@@ -60,7 +60,7 @@ const SyncTimeAxis = createSyncingComponent<Bounds, Bounds>(
 export type TooltipItem = {
   queriedData: MessagePathDataItem[];
   receiveTime: Time;
-  headerStamp: Time | null | undefined;
+  headerStamp?: Time;
 };
 
 export const getTooltipItemForMessageHistoryItem = (item: MessageAndData): TooltipItem => {
@@ -164,9 +164,9 @@ type DataSet = Readonly<{
   showLine?: boolean;
 }>;
 
-const scalePerPixel = (bounds: ScaleBounds | null | undefined): number | null | undefined =>
+const scalePerPixel = (bounds?: ScaleBounds): number | null | undefined =>
   bounds && Math.abs(bounds.max - bounds.min) / Math.abs(bounds.maxAlongAxis - bounds.minAlongAxis);
-const screenCoord = (value: number, valuePerPixel: number | null | undefined) =>
+const screenCoord = (value: number, valuePerPixel?: number) =>
   !valuePerPixel ? value : Math.trunc(value / valuePerPixel);
 const datumStringPixel = (
   { x, y }: Point,
@@ -228,7 +228,7 @@ export type Props = {
       [axis: string]: number;
     },
   ) => void | null | undefined;
-  saveCurrentView?: (minY: number, maxY: number, width: number | null | undefined) => void;
+  saveCurrentView?: (minY: number, maxY: number, width?: number) => void;
   // If the x axis represents playback time ("timestamp"), the hover cursor will be synced.
   // Note, this setting should not be used for other time values.
   xAxisIsPlaybackTime: boolean;
@@ -558,7 +558,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
 
   const xScaleOptions = followPlaybackState && xBounds ? stepSize(xBounds) : undefined;
 
-  const getChartjsOptions = (minX: number | null | undefined, maxX: number | null | undefined) => {
+  const getChartjsOptions = (minX: number | null | undefined, maxX?: number) => {
     const { currentTime } = props;
     const plugins = props.plugins ?? {};
     const annotations = [...(props.annotations ?? [])];

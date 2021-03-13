@@ -683,10 +683,10 @@ const dragToTabFromMain = (
     originalLayout: MosaicNode;
     panelId: string;
     targetTabId: string;
-    position: MosaicDropTargetPosition | null | undefined;
-    destinationPath: MosaicPath | null | undefined;
+    position?: MosaicDropTargetPosition;
+    destinationPath?: MosaicPath;
     ownPath: MosaicPath;
-    targetTabConfig: TabPanelConfig | null | undefined;
+    targetTabConfig?: TabPanelConfig;
     sourceTabChildConfigs: ConfigsPayload[];
   },
 ): PanelsState => {
@@ -726,10 +726,10 @@ const dragToTabFromTab = (
     panelId: string;
     sourceTabId: string;
     targetTabId: string;
-    position: MosaicDropTargetPosition | null | undefined;
-    destinationPath: MosaicPath | null | undefined;
+    position?: MosaicDropTargetPosition;
+    destinationPath?: MosaicPath;
     ownPath: MosaicPath;
-    targetTabConfig: TabPanelConfig | null | undefined;
+    targetTabConfig?: TabPanelConfig;
     sourceTabConfig: TabPanelConfig;
     sourceTabChildConfigs: ConfigsPayload[];
   },

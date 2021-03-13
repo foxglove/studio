@@ -201,7 +201,7 @@ export const getSaveConfigsPayloadForAddedPanel = ({
 }: {
   id: string;
   config: PanelConfig;
-  relatedConfigs: SavedProps | null | undefined;
+  relatedConfigs?: SavedProps;
 }): SaveConfigsPayload => {
   if (!relatedConfigs) {
     return { configs: [{ id, config }] };

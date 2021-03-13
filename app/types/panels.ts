@@ -77,7 +77,7 @@ export type SavedProps = {
 };
 
 export type CreateTabPanelPayload = {
-  idToReplace: string | null | undefined;
+  idToReplace?: string;
   layout: MosaicNode;
   idsToRemove: string[];
   singleTab: boolean;
@@ -85,7 +85,7 @@ export type CreateTabPanelPayload = {
 
 export type ImportPanelLayoutPayload = {
   // layout is the object passed to react-mosaic
-  layout: MosaicNode | null | undefined;
+  layout?: MosaicNode;
   savedProps?: SavedProps;
   globalVariables?: GlobalVariables;
   userNodes?: UserNodes;
@@ -101,14 +101,14 @@ export type LayoutFetchResult = {
   fileSuffix?: string;
 };
 export type LayoutUrl = {
-  layoutId: string | null | undefined;
-  layoutUrl: string | null | undefined;
-  patch: string | null | undefined;
+  layoutId?: string;
+  layoutUrl?: string;
+  patch?: string;
 };
 export type InitialLayoutFetchResult = {
   layoutUrlReplacedByDefault?: LayoutUrl;
   // The layoutFetchResult will be null if there is no layout to load in the URL.
-  layoutFetchResult: LayoutFetchResult | null | undefined;
+  layoutFetchResult?: LayoutFetchResult;
 };
 export type SetFetchedLayoutPayload = {
   isLoading: boolean;

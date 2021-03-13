@@ -390,10 +390,10 @@ export const getValidatedTimeAndMethodFromString = ({
   date,
   timezone,
 }: {
-  text: string | null | undefined;
+  text?: string;
   date: string;
-  timezone: string | null | undefined;
-}): { time: Time | null | undefined; method: "ROS" | "TOD" } | null | undefined => {
+  timezone?: string;
+}): { time?: Time; method: "ROS" | "TOD" } | null | undefined => {
   if (!text) {
     return;
   }

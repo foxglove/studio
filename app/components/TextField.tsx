@@ -43,7 +43,7 @@ type Props = {
   label?: string;
   onBlur: () => void;
   onChange: (value: string) => void;
-  onError?: (error: string | null | undefined) => void;
+  onError?: (error?: string) => void;
   placeholder?: string;
   style: {
     [key: string]: string | number;

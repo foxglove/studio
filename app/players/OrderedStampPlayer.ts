@@ -60,10 +60,10 @@ export default class OrderedStampPlayer implements Player {
   _messageBuffer: Message[] = [];
   _bobjectBuffer: BobjectMessage[] = [];
   // Used to invalidate the cache. (Also signals subscription changes etc).
-  _lastSeekId: number | null | undefined = undefined;
+  _lastSeekId?: number = undefined;
   // Our best guess of "now" in case we need to force a backfill.
-  _currentTime: Time | null | undefined = undefined;
-  _previousUpstreamWarnings: PlayerWarnings | null | undefined = undefined;
+  _currentTime?: Time = undefined;
+  _previousUpstreamWarnings?: PlayerWarnings = undefined;
   _warnings: PlayerWarnings = Object.freeze({});
   _topicsWithoutHeadersSinceSeek = new Set<string>();
 

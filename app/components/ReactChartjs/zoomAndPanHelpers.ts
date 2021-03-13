@@ -439,7 +439,7 @@ export function getChartPx(
   return minAlongAxis + valuePercent * (maxAlongAxis - minAlongAxis);
 }
 
-export function inBounds(position: number, bounds: ScaleBounds | null | undefined): boolean {
+export function inBounds(position: number, bounds?: ScaleBounds): boolean {
   if (bounds == null) {
     return false;
   }

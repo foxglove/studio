@@ -117,7 +117,7 @@ export function CommonDecaySettings({
 }
 
 export type TopicSettingsEditorProps<Msg, Settings> = {
-  message: Msg | null | undefined;
+  message?: Msg;
   settings: Settings;
   onFieldChange: (name: string, value: any) => void;
   onSettingsChange: (arg0: any | ((arg0: any) => any)) => void;
@@ -150,7 +150,7 @@ export function canEditNamespaceOverrideColorDatatype(datatype: string): boolean
 type Props = {
   topic: Topic;
   message: any;
-  settings: any | null | undefined;
+  settings?: any;
   onSettingsChange: (arg0: any) => void;
 };
 

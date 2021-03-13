@@ -51,7 +51,7 @@ export type PointCloudSettings = {
   pointSize?: number;
   pointShape?: string;
   decayTime?: number;
-  colorMode: ColorMode | null | undefined;
+  colorMode?: ColorMode;
 };
 
 const SValueRangeInput = styled(SInput).attrs({ type: "number", placeholder: "auto" })`
@@ -92,7 +92,7 @@ export default function PointCloudSettingsEditor(
     (
       newValue:
         | (ColorMode | null | undefined)
-        | ((arg0: ColorMode | null | undefined) => ColorMode | null | undefined),
+        | ((arg0?: ColorMode) => ColorMode | null | undefined),
     ) => {
       onSettingsChange((newSettings: any) => ({
         ...newSettings,

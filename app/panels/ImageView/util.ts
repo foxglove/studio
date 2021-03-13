@@ -32,15 +32,15 @@ export type RawMarkerData = {
   markers: Message[];
   scale: number;
   transformMarkers: boolean;
-  cameraInfo: CameraInfo | null | undefined;
+  cameraInfo?: CameraInfo;
 };
 
 export type MarkerData =
   | {
       markers: Message[];
-      originalWidth: number | null | undefined; // null means no scaling is needed (use the image's size)
-      originalHeight: number | null | undefined; // null means no scaling is needed (use the image's size)
-      cameraModel: CameraModel | null | undefined; // null means no transformation is needed
+      originalWidth?: number; // null means no scaling is needed (use the image's size)
+      originalHeight?: number; // null means no scaling is needed (use the image's size)
+      cameraModel?: CameraModel; // null means no transformation is needed
     }
   | null
   | undefined;

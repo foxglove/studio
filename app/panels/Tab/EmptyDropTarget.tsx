@@ -56,8 +56,8 @@ const SPickAPanelText = styled.div`
 `;
 
 type Props = {
-  mosaicId: string | null | undefined;
-  tabId: string | null | undefined;
+  mosaicId?: string;
+  tabId?: string;
 };
 
 export const EmptyDropTarget = ({ mosaicId, tabId }: Props) => {

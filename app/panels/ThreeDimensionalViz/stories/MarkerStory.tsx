@@ -56,7 +56,7 @@ export function MarkerStory(
     data?: FixtureExampleData;
     initialConfigOverride?: Partial<ThreeDimensionalVizConfig>;
     overrideColor?: Color;
-    onMount?: (arg0: HTMLDivElement | null | undefined) => void;
+    onMount?: (arg0?: HTMLDivElement) => void;
   } = {},
 ) {
   const { data, overrideColor, onMount, initialConfigOverride } = props;

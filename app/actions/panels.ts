@@ -306,8 +306,8 @@ export const moveTab = (payload: MoveTabPayload): MOVE_TAB => ({
 
 export type AddPanelPayload = {
   type: string;
-  layout: MosaicNode | null | undefined;
-  tabId: string | null | undefined;
+  layout?: MosaicNode;
+  tabId?: string;
   config?: PanelConfig;
   relatedConfigs?: SavedProps;
 };
@@ -322,8 +322,8 @@ export type DropPanelPayload = {
   destinationPath: MosaicPath;
   position: "top" | "bottom" | "left" | "right";
   tabId?: string;
-  config: PanelConfig | null | undefined;
-  relatedConfigs: SavedProps | null | undefined;
+  config?: PanelConfig;
+  relatedConfigs?: SavedProps;
 };
 type DROP_PANEL = { type: "DROP_PANEL"; payload: DropPanelPayload };
 export const dropPanel = (payload: DropPanelPayload): DROP_PANEL => ({
@@ -333,7 +333,7 @@ export const dropPanel = (payload: DropPanelPayload): DROP_PANEL => ({
 
 export type StartDragPayload = {
   path: MosaicPath;
-  sourceTabId: string | null | undefined;
+  sourceTabId?: string;
 };
 type START_DRAG = { type: "START_DRAG"; payload: StartDragPayload };
 export const startDrag = (payload: StartDragPayload): START_DRAG => ({
@@ -345,8 +345,8 @@ export type EndDragPayload = {
   originalLayout: MosaicNode;
   originalSavedProps: SavedProps;
   panelId: string;
-  sourceTabId: string | null | undefined;
-  targetTabId: string | null | undefined;
+  sourceTabId?: string;
+  targetTabId?: string;
   position: MosaicDropTargetPosition;
   destinationPath: MosaicPath;
   ownPath: MosaicPath;

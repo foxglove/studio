@@ -75,7 +75,7 @@ type FixtureExampleProps = {
 };
 
 type FixtureExampleState = {
-  fixture: Fixture | null | undefined;
+  fixture?: Fixture;
   config: Partial<ThreeDimensionalVizConfig>;
 };
 

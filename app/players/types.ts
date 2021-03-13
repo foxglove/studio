@@ -108,7 +108,7 @@ export type PlayerState = {
 
   // The actual data to render panels with. Can be empty during initialization, until all this data
   // is known. See `type PlayerStateActiveData` for more details.
-  activeData: PlayerStateActiveData | null | undefined;
+  activeData?: PlayerStateActiveData;
 };
 
 export type PlayerWarnings = Readonly<{

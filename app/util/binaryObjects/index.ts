@@ -102,12 +102,11 @@ export const getObjects = (
 };
 
 // True for "object bobjects" and array views.
-export const isBobject = (object: any | null | undefined): boolean =>
-  object?.[deepParseSymbol] != null;
+export const isBobject = (object?: any): boolean => object?.[deepParseSymbol] != null;
 export const isArrayView = (object: any): boolean =>
   isBobject(object) && object[Symbol.iterator] != null;
 
-export const deepParse = (object: any | null | undefined): any => {
+export const deepParse = (object?: any): any => {
   if (object == null) {
     // Missing submessage fields are unfortunately common for constructed markers. This is not
     // principled, but it is pragmatic.

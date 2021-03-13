@@ -49,7 +49,7 @@ export type PerformanceStats = {
   benchmarkPlaybackScore: number;
   playbackTimeMs: number;
   // Players may not mark their preload times.
-  preloadTimeMs: number | null | undefined;
+  preloadTimeMs?: number;
   averageRenderMs: number;
   averageFrameTimeMs: number;
   frameTimePercentiles: { percentile: number; frameTimeMs: number }[];
@@ -86,15 +86,15 @@ class PerformanceMeasuringClient {
 
   speed = speed;
   msPerFrame = msPerFrame;
-  bagLengthMs: number | null | undefined;
+  bagLengthMs?: number;
 
-  startTime: number | null | undefined;
+  startTime?: number;
   startedMeasuringPerformance = false;
-  frameRenderStart: number | null | undefined;
+  frameRenderStart?: number;
   frameRenderTimes: number[] = [];
-  preloadStart: number | null | undefined;
-  preloadTimeMs: number | null | undefined;
-  totalFrameMs: number | null | undefined;
+  preloadStart?: number;
+  preloadTimeMs?: number;
+  totalFrameMs?: number;
   totalFrameTimes: number[] = [];
 
   start({ bagLengthMs }: { bagLengthMs: number }) {

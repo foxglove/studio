@@ -44,7 +44,7 @@ export default class Select extends React.Component<Props, State> {
     icon: <MenuDownIcon />,
   };
 
-  el: HTMLDivElement | null | undefined;
+  el?: HTMLDivElement;
 
   state = {
     isOpen: false,

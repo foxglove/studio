@@ -55,8 +55,8 @@ type Props = {
 type PanelState = {
   cachedProps: Partial<Props>;
   datatypeNames: string[];
-  parsedObject: any | null | undefined;
-  error: string | null | undefined;
+  parsedObject?: any;
+  error?: string;
 };
 
 const STextArea = styled.textarea`

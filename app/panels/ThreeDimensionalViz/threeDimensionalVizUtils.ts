@@ -69,7 +69,7 @@ export function useTransformedCameraState({
   followTf?: string | false;
   followOrientation?: boolean;
   transforms: Transforms;
-}): { transformedCameraState: CameraState; targetPose: TargetPose | null | undefined } {
+}): { transformedCameraState: CameraState; targetPose?: TargetPose } {
   let transformedCameraState = { ...configCameraState };
   const targetPose = getTargetPose(followTf as any, transforms);
   // Store last seen target pose because the target may become available/unavailable over time as
@@ -174,11 +174,11 @@ export function getNewCameraStateOnFollowChange({
   newFollowOrientation,
 }: {
   prevCameraState: CameraState;
-  prevTargetPose: TargetPose | null | undefined;
+  prevTargetPose?: TargetPose;
   prevFollowTf: (string | false) | null | undefined;
-  prevFollowOrientation: boolean | null | undefined;
+  prevFollowOrientation?: boolean;
   newFollowTf: (string | false) | null | undefined;
-  newFollowOrientation: boolean | null | undefined;
+  newFollowOrientation?: boolean;
 }): CameraState {
   const newCameraState = { ...prevCameraState };
   if (newFollowTf) {

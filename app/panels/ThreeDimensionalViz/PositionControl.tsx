@@ -19,7 +19,7 @@ import { cameraStateSelectors, CameraState, Vec3 } from "regl-worldview";
 import styles from "@foxglove-studio/app/panels/ThreeDimensionalViz/PositionControl.module.scss";
 
 type Props = {
-  cameraState: CameraState | null | undefined;
+  cameraState?: CameraState;
   onCameraStateChange: (arg0: CameraState) => void;
 };
 
@@ -45,7 +45,7 @@ export function parsePosition(input: string): Vec3 | null | undefined {
 }
 
 export default class PositionControl extends Component<Props> {
-  lastValue: string | null | undefined;
+  lastValue?: string;
   _ref = createRef<HTMLDivElement>();
 
   onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {

@@ -79,7 +79,7 @@ export type Config = DefaultConfig & {
   panelHooks?: ImageViewPanelHooks;
   transformMarkers: boolean;
   mode: "fit" | "fill" | "other" | null;
-  zoomPercentage: number | null | undefined;
+  zoomPercentage?: number;
   offset: number[] | null | undefined;
   saveStoryConfig?: () => void;
 };

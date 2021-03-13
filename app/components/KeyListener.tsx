@@ -24,7 +24,7 @@ type Props = {
 };
 
 export default class KeyListener extends React.Component<Props> {
-  el: HTMLDivElement | null | undefined;
+  el?: HTMLDivElement;
 
   static defaultProps = {
     global: false,

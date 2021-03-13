@@ -193,7 +193,7 @@ type Props = {
 const StateTransitions = React.memo(function StateTransitions(props: Props) {
   const { config, saveConfig, isHovered } = props;
 
-  const onInputChange = (value: string, index: number | null | undefined) => {
+  const onInputChange = (value: string, index?: number) => {
     if (index == null) {
       throw new Error("index not set");
     }

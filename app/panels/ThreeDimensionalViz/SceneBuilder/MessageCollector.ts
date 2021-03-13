@@ -28,7 +28,7 @@ class MessageWithLifetime {
   // than receiveTime + lifetime.
   // If lifetime is zero, the marker remains until deleted by name.
   // If absent, the marker is removed from the collector using explicit "flush" actions.
-  lifetime: Time | null | undefined;
+  lifetime?: Time;
 
   constructor(
     message: ObjectWithInteractionData,
@@ -43,7 +43,7 @@ class MessageWithLifetime {
   // support in place update w/ mutation to avoid allocating
   // a MarkerWithLifetime wrapper for every marker on every tick
   // only allocate on new markers
-  update(message: ObjectWithInteractionData, receiveTime: Time, lifetime: Time | null | undefined) {
+  update(message: ObjectWithInteractionData, receiveTime: Time, lifetime?: Time) {
     this.message = message;
     this.receiveTime = receiveTime;
     this.lifetime = lifetime;

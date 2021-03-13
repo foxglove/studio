@@ -76,7 +76,7 @@ export default class Slider extends React.Component<Props> {
   // called very quickly before the state update is applied.
   mouseDown: boolean = false;
 
-  el: HTMLDivElement | null | undefined;
+  el?: HTMLDivElement;
 
   shouldComponentUpdate(nextProps: Props) {
     const { value, min, max, draggable } = this.props;

@@ -71,8 +71,8 @@ const devicePixelRatio = window.devicePixelRatio || 1;
 const webWorkerManager = new WebWorkerManager(ChartJSWorker, 4);
 
 class ChartComponent extends React.PureComponent<Props> {
-  canvas: HTMLCanvasElement | null | undefined;
-  _chartRpc: RpcLike | null | undefined;
+  canvas?: HTMLCanvasElement;
+  _chartRpc?: RpcLike;
   _node?: OffscreenCanvas;
   _id = uuidv4();
   _scaleBoundsByScaleId = {};
@@ -198,7 +198,7 @@ class ChartComponent extends React.PureComponent<Props> {
     }
   }
 
-  _ref = (element: HTMLCanvasElement | null | undefined): void => {
+  _ref = (element?: HTMLCanvasElement): void => {
     this.canvas = element;
   };
 

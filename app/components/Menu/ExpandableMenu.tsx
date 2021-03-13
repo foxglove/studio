@@ -30,7 +30,7 @@ type Props = {
   isOpen: boolean;
   setIsOpen: (arg0: boolean) => void;
   children: ReactNode[];
-  disableOpenClose: boolean | null | undefined;
+  disableOpenClose?: boolean;
   dataTest?: string;
 };
 

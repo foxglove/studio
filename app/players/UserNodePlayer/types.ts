@@ -95,8 +95,8 @@ export type NodeData = {
   datatypes: RosDatatypes;
   // Should be ts.SourceFile and ts.TypeChecker. Not strongly typing here since we want to keep
   // Typescript out of the main bundle.
-  sourceFile: SourceFile | null | undefined;
-  typeChecker: TypeChecker | null | undefined;
+  sourceFile?: SourceFile;
+  typeChecker?: TypeChecker;
   rosLib: string;
   // An array of globalVariable names
   globalVariables: readonly string[];

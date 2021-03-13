@@ -74,7 +74,7 @@ const rpcFromNewSharedWorker = (worker: any) => {
 const getBobjectMessage = async (
   datatypes: RosDatatypes,
   datatype: string,
-  messagePromise: Promise<Message | null | undefined>,
+  messagePromise?: Promise<Message>,
 ): Promise<BobjectMessage | null | undefined> => {
   const msg = await messagePromise;
   if (!msg) {
@@ -102,14 +102,14 @@ export default class UserNodePlayer implements Player {
   // TODO: FUTURE - Terminate unused workers (some sort of timeout, for whole array or per rpc)
   // Not sure if there is perf issue with unused workers (may just go idle) - requires more research
   _unusedNodeRuntimeWorkers: Rpc[] = [];
-  _lastPlayerStateActiveData: PlayerStateActiveData | null | undefined;
+  _lastPlayerStateActiveData?: PlayerStateActiveData;
   _setUserNodeDiagnostics: (nodeId: string, diagnostics: Diagnostic[]) => void;
   _addUserNodeLogs: (nodeId: string, logs: UserNodeLog[]) => void;
   _setRosLib: (rosLib: string) => void;
-  _nodeTransformRpc: Rpc | null | undefined = null;
-  _rosLib: string | null | undefined;
+  _nodeTransformRpc?: Rpc = null;
+  _rosLib?: string;
   _globalVariables: GlobalVariables = {};
-  _pendingResetWorkers: Promise<void> | null | undefined;
+  _pendingResetWorkers?: Promise<void>;
 
   constructor(player: Player, userNodeActions: UserNodeActions) {
     this._player = player;

@@ -99,7 +99,7 @@ const datasetKeyProvider = (d: Chart.ChartDataSets) => d.label ?? "";
 export default class ChartJSManager {
   id: string;
   _node: OffscreenCanvas;
-  _chartInstance: ChartInstance | null | undefined;
+  _chartInstance?: ChartInstance;
 
   constructor({
     id,
@@ -115,7 +115,7 @@ export default class ChartJSManager {
     type?: Chart.ChartType | string;
     data?: Chart.ChartData;
     options: Chart.ChartConfiguration;
-    scaleOptions: ScaleOptions | null | undefined;
+    scaleOptions?: ScaleOptions;
     devicePixelRatio: number;
   }) {
     this.id = id;
@@ -205,7 +205,7 @@ export default class ChartJSManager {
   }: {
     data: Chart.ChartData;
     options: Chart.ChartConfiguration;
-    scaleOptions: ScaleOptions | null | undefined;
+    scaleOptions?: ScaleOptions;
   }): ScaleBounds[] | undefined {
     const chartInstance = this._chartInstance;
 
@@ -345,7 +345,7 @@ export default class ChartJSManager {
     }
   }
 
-  _addFunctionsToConfig(config: any, scaleOptions: ScaleOptions | null | undefined): typeof config {
+  _addFunctionsToConfig(config: any, scaleOptions?: ScaleOptions): typeof config {
     if (config && config.plugins.datalabels) {
       // This controls which datalabels are displayed. Only display labels for datapoints that include a "label"
       // property.

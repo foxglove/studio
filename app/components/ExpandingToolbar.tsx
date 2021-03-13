@@ -50,8 +50,8 @@ type Props<T extends string> = {
   children: React.ReactElement<typeof ToolGroup>[] | React.ReactElement<typeof ToolGroup>;
   className?: string;
   icon: React.ReactNode;
-  onSelectTab: (name: T | null | undefined) => void;
-  selectedTab: T | null | undefined; // collapse the toolbar if selectedTab is null
+  onSelectTab: (name?: T) => void;
+  selectedTab?: T; // collapse the toolbar if selectedTab is null
   tooltip: string;
   style?: React.CSSProperties;
 };

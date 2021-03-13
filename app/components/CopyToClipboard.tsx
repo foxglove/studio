@@ -43,7 +43,7 @@ type Props = {
 };
 
 class CopyToClipboardComponent extends React.Component<Props> {
-  wrapper: HTMLDivElement | null | undefined;
+  wrapper?: HTMLDivElement;
   copy = () => {
     if (this.wrapper) {
       const copyValue =

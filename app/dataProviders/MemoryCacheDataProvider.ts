@@ -89,7 +89,7 @@ export function getBlocksToKeep({
   // The maximum cache size in bytes.
   maxCacheSizeInBytes: number;
   // A block index to avoid evicting blocks from near.
-  badEvictionRange: Range | null | undefined;
+  badEvictionRange?: Range;
 }): {
   blockIndexesToKeep: Set<number>;
   newRecentRanges: Range[];
@@ -269,7 +269,7 @@ export default class MemoryCacheDataProvider implements DataProvider {
 
   // The end time of the last callback that we've resolved. This is useful for preloading new data
   // around this time.
-  _lastResolvedCallbackEnd: number | null | undefined;
+  _lastResolvedCallbackEnd?: number;
 
   // When we log a "block too large" error, we only want to do that once, to prevent
   // spamming errors.

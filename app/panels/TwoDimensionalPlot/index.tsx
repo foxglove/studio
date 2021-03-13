@@ -148,7 +148,7 @@ type Position = { x: number; y: number };
 
 type HoverBarProps = {
   children?: React.ReactNode;
-  mousePosition: Position | null | undefined;
+  mousePosition?: Position;
 };
 
 function hideBar(wrapper: any) {
@@ -186,8 +186,8 @@ const HoverBar = React.memo<HoverBarProps>(function HoverBar({
 
 type TooltipProps = {
   datapoints: { datapoint: Position; label: string; backgroundColor?: string }[];
-  xAxisLabel: string | null | undefined;
-  tooltipElement: HoveredElement | null | undefined;
+  xAxisLabel?: string;
+  tooltipElement?: HoveredElement;
 };
 
 const TwoDimensionalTooltip = ({ datapoints, xAxisLabel, tooltipElement }: TooltipProps) => {

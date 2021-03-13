@@ -120,7 +120,7 @@ function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknow
   );
 
   const swap = useCallback(
-    (id: string | null | undefined) => ({ type, config, relatedConfigs }: PanelSelection) => {
+    (id?: string) => ({ type, config, relatedConfigs }: PanelSelection) => {
       actions.swapPanel({
         tabId,
         originalId: id as any,
