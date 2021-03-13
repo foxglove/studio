@@ -164,7 +164,7 @@ type DataSet = Readonly<{
   showLine?: boolean;
 }>;
 
-const scalePerPixel = (bounds?: ScaleBounds): number | null | undefined =>
+const scalePerPixel = (bounds?: ScaleBounds): number | undefined =>
   bounds && Math.abs(bounds.max - bounds.min) / Math.abs(bounds.maxAlongAxis - bounds.minAlongAxis);
 const screenCoord = (value: number, valuePerPixel?: number) =>
   !valuePerPixel ? value : Math.trunc(value / valuePerPixel);
@@ -286,7 +286,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
   }, [pauseFrame]);
 
   const { saveCurrentView, yAxes } = props;
-  const scaleBounds = useRef<readonly ScaleBounds[] | null | undefined>();
+  const scaleBounds = useRef<readonly ScaleBounds[] | undefined>();
   const hoverBar = useRef<HTMLDivElement | null>(null);
   const onScaleBoundsUpdate = useCallback(
     (scales: ScaleBounds[]) => {

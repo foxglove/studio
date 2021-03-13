@@ -209,13 +209,13 @@ export default class SceneBuilder implements MarkerProvider {
     topicsWithBadFrameIds: new Set(),
   };
   maps = [];
-  flattenedZHeightPose?: Pose = null;
+  flattenedZHeightPose?: Pose;
   scene = {};
   collectors: {
     [key: string]: MessageCollector;
   } = {};
   _clock?: Time;
-  _playerId?: string = null;
+  _playerId?: string;
   _settingsByKey: TopicSettingsCollection = {};
   _onForceUpdate?: () => void;
 

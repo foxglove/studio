@@ -23,7 +23,7 @@ function reglBuffer(data: Float32Array) {
   return {
     buffer,
     destroy: () => {
-      buffer.data = null;
+      buffer.data = undefined;
     },
   };
 }

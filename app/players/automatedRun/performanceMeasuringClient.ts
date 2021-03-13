@@ -131,7 +131,7 @@ class PerformanceMeasuringClient {
     }
     const frameTimeMs = performance.now() - frameRenderStart;
     this.frameRenderTimes.push(round(frameTimeMs));
-    this.frameRenderStart = null;
+    this.frameRenderStart = undefined;
     return frameTimeMs;
   }
 
@@ -153,7 +153,7 @@ class PerformanceMeasuringClient {
     }
     const preloadTimeMs = performance.now() - preloadStart;
     this.preloadTimeMs = round(performance.now() - preloadStart);
-    this.preloadStart = null;
+    this.preloadStart = undefined;
     return preloadTimeMs;
   }
 
@@ -167,7 +167,7 @@ class PerformanceMeasuringClient {
       throw new Error("Called markTotalFrameEnd without calling markTotalFrameStart");
     }
     this.totalFrameTimes.push(round(performance.now() - totalFrameMs));
-    this.totalFrameMs = null;
+    this.totalFrameMs = undefined;
   }
 
   onError(e: Error) {

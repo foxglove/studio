@@ -32,12 +32,10 @@ type BatchTimestamp = {
 
 export type TimestampMethod = "receiveTime" | "headerStamp";
 
-// Unfortunately, using %checks on this function doesn't actually allow Flow to conclude that the object is a Time.
-// Related: https://github.com/facebook/flow/issues/3614
-export function isTime(obj?: Record<string, unknown>): boolean {
+export function isTime(obj?: unknown): obj is Time {
   return (
-    !!obj &&
     typeof obj === "object" &&
+    !!obj &&
     "sec" in obj &&
     "nsec" in obj &&
     Object.getOwnPropertyNames(obj).length === 2
@@ -362,9 +360,7 @@ type MaybeStampedBobject = Readonly<{
   header?: () => Readonly<{ stamp?: () => unknown }>;
 }>;
 
-export const maybeGetBobjectHeaderStamp = (
-  message: Bobject | undefined,
-): Time | null | undefined => {
+export const maybeGetBobjectHeaderStamp = (message: Bobject | undefined): Time | undefined => {
   if (message == null) {
     return;
   }

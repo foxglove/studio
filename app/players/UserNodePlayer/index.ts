@@ -74,11 +74,11 @@ const rpcFromNewSharedWorker = (worker: any) => {
 const getBobjectMessage = async (
   datatypes: RosDatatypes,
   datatype: string,
-  messagePromise?: Promise<Message>,
-): Promise<BobjectMessage | null | undefined> => {
+  messagePromise: Promise<Message | undefined>,
+): Promise<BobjectMessage | undefined> => {
   const msg = await messagePromise;
   if (!msg) {
-    return null;
+    return undefined;
   }
   return {
     topic: msg.topic,
@@ -106,7 +106,7 @@ export default class UserNodePlayer implements Player {
   _setUserNodeDiagnostics: (nodeId: string, diagnostics: Diagnostic[]) => void;
   _addUserNodeLogs: (nodeId: string, logs: UserNodeLog[]) => void;
   _setRosLib: (rosLib: string) => void;
-  _nodeTransformRpc?: Rpc = null;
+  _nodeTransformRpc?: Rpc;
   _rosLib?: string;
   _globalVariables: GlobalVariables = {};
   _pendingResetWorkers?: Promise<void>;
@@ -368,7 +368,7 @@ export default class UserNodePlayer implements Player {
     // downstream caches. (i.e. `this._getTopics`)
     if (!this._nodeRegistrations.length && !Object.entries(this._userNodes).length) {
       pending.resolve();
-      this._pendingResetWorkers = null;
+      this._pendingResetWorkers = undefined;
       return;
     }
 
@@ -414,7 +414,7 @@ export default class UserNodePlayer implements Player {
     this._nodeRegistrations = validNodeRegistrations;
     this._nodeRegistrations.forEach(({ nodeId }) => this._setUserNodeDiagnostics(nodeId, []));
 
-    this._pendingResetWorkers = null;
+    this._pendingResetWorkers = undefined;
     pending.resolve();
   }
 

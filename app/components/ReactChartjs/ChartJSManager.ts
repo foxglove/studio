@@ -286,7 +286,7 @@ export default class ChartJSManager {
     if (chartInstance) {
       chartInstance.destroy();
     }
-    this._chartInstance = null;
+    this._chartInstance = undefined;
   }
 
   // Get the closest element at the same x-axis value as the cursor.

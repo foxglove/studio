@@ -86,7 +86,7 @@ export default function createRootReducer(history: any, args?: { testAuth?: any 
     persistedState,
     mosaic: { mosaicId: "", selectedPanelIds: [] },
     auth: Object.freeze(args?.testAuth || { username: undefined }),
-    hoverValue: null,
+    hoverValue: undefined,
     userNodes: {
       userNodeDiagnostics: {
         diagnostics: [],

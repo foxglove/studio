@@ -58,7 +58,7 @@ export type MemoryCacheBlock = {
   readonly sizeInBytes: number;
 };
 export type BlockCache = {
-  blocks: readonly (MemoryCacheBlock | null | undefined)[];
+  blocks: readonly (MemoryCacheBlock | undefined)[];
   startTime: Time;
 };
 const EMPTY_BLOCK: MemoryCacheBlock = {
@@ -233,7 +233,7 @@ export default class MemoryCacheDataProvider implements DataProvider {
   // The actual blocks that contain the messages. Blocks have a set "width" in terms of nanoseconds
   // since the start time of the bag. If a block has some messages for a topic, then by definition
   // it has *all* messages for that topic and timespan.
-  _blocks: readonly (MemoryCacheBlock | null | undefined)[] = [];
+  _blocks: readonly (MemoryCacheBlock | undefined)[] = [];
 
   // The start time of the bag. Used for computing from and to nanoseconds since the start.
   _startTime: Time = { sec: 0, nsec: 0 };

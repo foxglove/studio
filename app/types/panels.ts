@@ -56,7 +56,7 @@ export type ConfigsPayload = {
   defaultConfig?: PanelConfig;
 };
 export type ChangePanelLayoutPayload = {
-  layout: MosaicNode | null;
+  layout?: MosaicNode;
   trimSavedProps?: boolean;
   historyOptions?: EditHistoryOptions;
 };
@@ -121,7 +121,7 @@ export type SetFetchedLayoutPayload = {
 
 export type SaveConfig<Config> = (
   arg0: Partial<Config>,
-  arg1?: { historyOptions?: EditHistoryOptions } | null,
+  arg1?: { historyOptions?: EditHistoryOptions },
 ) => void;
 
 export type UpdatePanelConfig<Config> = (

@@ -87,6 +87,6 @@ export default class KeyListener extends React.Component<Props> {
   };
 
   render() {
-    return <div style={{ display: "none" }} ref={(el) => (this.el = el)} />;
+    return <div style={{ display: "none" }} ref={(el) => (this.el = el ?? undefined)} />;
   }
 }

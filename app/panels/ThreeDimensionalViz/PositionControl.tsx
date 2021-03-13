@@ -27,11 +27,11 @@ const TEMP_VEC3: vec3 = [0, 0, 0];
 const ZERO_VEC3: ReadonlyVec3 = [0, 0, 0];
 
 // make a best-effort attempt to x and y position out of the input
-export function parsePosition(input: string): Vec3 | null | undefined {
+export function parsePosition(input: string): Vec3 | undefined {
   const parts = input.split(/\s*[,\n{}[\]]+\s*/).filter((part) => part !== "");
   const parseMatch = (val: string) => {
     const match = val.match(/-?\d+(\.\d+)?/);
-    return match ? Number.parseFloat(match[0]) : null;
+    return match ? Number.parseFloat(match[0]) : undefined;
   };
   // allow length 3 to ignore z value
   if (parts.length === 2 || parts.length === 3) {
@@ -41,7 +41,7 @@ export function parsePosition(input: string): Vec3 | null | undefined {
       return [x, y, 0];
     }
   }
-  return null;
+  return undefined;
 }
 
 export default class PositionControl extends Component<Props> {
@@ -134,7 +134,7 @@ export default class PositionControl extends Component<Props> {
       vec3.rotateZ(TEMP_VEC3, targetOffset, ZERO_VEC3, -targetHeading),
     );
 
-    this.lastValue = null;
+    this.lastValue = undefined;
     el.innerHTML =
       `<b>x:</b> <span class="${styles.value}">${x}</span><br />` +
       `<b>y:</b> <span class="${styles.value}">${y}</span>`;

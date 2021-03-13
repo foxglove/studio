@@ -128,7 +128,7 @@ function LayoutToolbar({
         </div>
         <MainToolbar
           measureInfo={measureInfo}
-          measuringTool={measuringElRef.current}
+          measuringTool={measuringElRef.current ?? undefined}
           perspective={cameraState.perspective}
           debug={debug}
           onToggleCameraMode={onToggleCameraMode}

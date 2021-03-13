@@ -37,7 +37,7 @@ function decode(value: string) {
   }
 }
 
-function selectText(element?: HTMLTextAreaElement): void {
+function selectText(element?: HTMLTextAreaElement | null): void {
   if (element) {
     element.focus();
     element.select();

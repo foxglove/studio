@@ -136,12 +136,12 @@ export function checkOutOfBounds(
   ];
 }
 
-export function buildMarkerData(rawMarkerData: RawMarkerData): MarkerData | null | undefined {
+export function buildMarkerData(rawMarkerData: RawMarkerData): MarkerData | undefined {
   const { markers, scale, transformMarkers, cameraInfo } = rawMarkerData;
   if (markers.length === 0) {
     return {
       markers,
-      cameraModel: null,
+      cameraModel: undefined,
       originalHeight: undefined,
       originalWidth: undefined,
     };
@@ -149,7 +149,7 @@ export function buildMarkerData(rawMarkerData: RawMarkerData): MarkerData | null
   let cameraModel;
   if (transformMarkers) {
     if (!cameraInfo) {
-      return null;
+      return undefined;
     }
     cameraModel = new CameraModel(cameraInfo);
   }
@@ -166,7 +166,7 @@ export function buildMarkerData(rawMarkerData: RawMarkerData): MarkerData | null
     originalWidth = undefined;
     originalHeight = undefined;
   } else {
-    return null;
+    return undefined;
   }
 
   return {

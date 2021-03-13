@@ -234,7 +234,10 @@ export function getPanelIdsInsideTabPanels(panelIds: string[], savedProps: Saved
   return flatMap(tabLayouts, getLeaves);
 }
 
-export const DEFAULT_TAB_PANEL_CONFIG = { activeTabIdx: 0, tabs: [{ title: "1", layout: null }] };
+export const DEFAULT_TAB_PANEL_CONFIG = {
+  activeTabIdx: 0,
+  tabs: [{ title: "1", layout: undefined }],
+};
 // Returns all panelIds for a given layout (including layouts stored in Tab panels)
 export function getAllPanelIds(layout: MosaicNode, savedProps: SavedProps): string[] {
   const layoutPanelIds = getLeaves(layout);
@@ -265,7 +268,7 @@ export const validateTabPanelConfig = (config?: PanelConfig) => {
 };
 
 export const updateTabPanelLayout = (
-  layout: MosaicNode | null,
+  layout: MosaicNode | undefined,
   tabPanelConfig: TabPanelConfig,
 ): TabPanelConfig => {
   const updatedTabs = tabPanelConfig.tabs.map((tab, i) => {
@@ -295,11 +298,11 @@ export const removePanelFromTabPanel = (
   }
 
   const currentTabLayout = config.tabs[config.activeTabIdx].layout;
-  let newTree: MosaicNode | null;
+  let newTree: MosaicNode | undefined;
   if (!path.length) {
-    newTree = null;
+    newTree = undefined;
   } else {
-    const update = createRemoveUpdate(currentTabLayout, path);
+    const update = createRemoveUpdate(currentTabLayout ?? null, path);
     newTree = updateTree<string>(currentTabLayout!, [update]);
   }
 
@@ -454,8 +457,8 @@ export const replaceAndRemovePanels = (
     idsToRemove?: string[];
   },
   layout: MosaicNode,
-): MosaicNode | null => {
-  const { originalId = null, newId = null, idsToRemove = [] } = panelArgs;
+): MosaicNode | undefined => {
+  const { originalId, newId, idsToRemove = [] } = panelArgs;
   const panelIds = getLeaves(layout);
   if (xor(panelIds, idsToRemove).length === 0) {
     return newId;
@@ -468,7 +471,7 @@ export const replaceAndRemovePanels = (
       } else if (currentLayout === originalId) {
         return newId;
       } else if (!currentLayout || currentLayout === panelIdToRemove) {
-        return null;
+        return undefined;
       }
 
       const pathToNode = getPathFromNode(panelIdToRemove, currentLayout);

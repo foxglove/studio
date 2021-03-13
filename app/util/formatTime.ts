@@ -57,15 +57,15 @@ export function formatDuration(stamp: Time) {
     .format("h:mm:ss.SSS", { trim: false });
 }
 
-export function parseTimeStr(str: string, timezone?: string): Time | null | undefined {
+export function parseTimeStr(str: string, timezone?: string): Time | undefined {
   const newMomentTimeObj = timezone
     ? moment.tz(str, "YYYY-MM-DD h:mm:ss.SSS A z", timezone)
     : moment(str, "YYYY-MM-DD h:mm:ss.SSS A z");
   const date = newMomentTimeObj.toDate();
-  const result = (newMomentTimeObj.isValid() && fromDate(date)) || null;
+  const result = (newMomentTimeObj.isValid() && fromDate(date)) || undefined;
 
   if (!result || result.sec <= 0 || result.nsec < 0) {
-    return null;
+    return undefined;
   }
   return result;
 }

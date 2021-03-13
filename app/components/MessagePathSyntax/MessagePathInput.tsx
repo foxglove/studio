@@ -89,7 +89,7 @@ export function getFirstInvalidVariableFromRosPath(
   rosPath: RosPath,
   globalVariables: GlobalVariables,
   setGlobalVariables: (arg0: GlobalVariables) => void,
-): { variableName: string; loc: number } | null | undefined {
+): { variableName: string; loc: number } | undefined {
   const { messagePath } = rosPath;
   const globalVars = Object.keys(globalVariables);
   return flatMap(messagePath, (path) => {
@@ -201,7 +201,7 @@ class MessagePathInputUnconnected extends React.PureComponent<
   _onSelect = (
     value: string,
     autocomplete: Autocomplete,
-    autocompleteType: ("topicName" | "messagePath" | "globalVariables") | null | undefined,
+    autocompleteType: ("topicName" | "messagePath" | "globalVariables") | undefined,
     autocompleteRange: { start: number; end: number },
   ) => {
     // If we're dealing with a topic name, and we cannot validly end in a message type,
@@ -249,9 +249,9 @@ class MessagePathInputUnconnected extends React.PureComponent<
     } = this.props;
 
     const rosPath = parseRosPath(path);
-    let autocompleteType: ("topicName" | "messagePath" | "globalVariables") | null | undefined;
-    let topic: Topic | null | undefined;
-    let structureTraversalResult: StructureTraversalResult | null | undefined;
+    let autocompleteType: ("topicName" | "messagePath" | "globalVariables") | undefined;
+    let topic: Topic | undefined;
+    let structureTraversalResult: StructureTraversalResult | undefined;
     if (rosPath) {
       const { topicName } = rosPath;
       topic = topics.find(({ name }) => name === topicName);

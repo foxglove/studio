@@ -153,7 +153,7 @@ describe("CachedFilelike", () => {
       });
 
       const readerPromise = new Promise<Buffer>((resolve, reject) => {
-        cachedFileReader.read(1, 2, (error: any, data?: Buffer) => {
+        cachedFileReader.read(1, 2, (error: any, data?: Buffer | null) => {
           if (data) {
             resolve(data);
           } else {
@@ -184,7 +184,7 @@ describe("CachedFilelike", () => {
           // no-op
         },
       });
-      cachedFileReader.read(1, 0, (error: any, data?: Buffer) => {
+      cachedFileReader.read(1, 0, (error: any, data?: Buffer | null) => {
         if (!data) {
           throw new Error("Missing `data`");
         }

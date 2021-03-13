@@ -117,7 +117,11 @@ export default class Select extends React.Component<Props, State> {
     const { isOpen } = this.state;
     const { text, value, icon } = this.props;
     return (
-      <div ref={(el) => (this.el = el)} className={styles.container} onClick={this.open}>
+      <div
+        ref={(el) => (this.el = el ?? undefined)}
+        className={styles.container}
+        onClick={this.open}
+      >
         <div className={styles.select}>
           <span className={styles.value}>{text || value}</span>
           <span className={styles.icon}>

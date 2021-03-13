@@ -62,7 +62,7 @@ const memoizedMergedBlock = memoizeWeak((block1?: MemoryCacheBlock, block2?: Mem
 export const mergedBlocks = (
   cache1: BlockCache | undefined,
   cache2: BlockCache | undefined,
-): BlockCache | null | undefined => {
+): BlockCache | undefined => {
   if (cache1 == null) {
     return cache2;
   }
@@ -83,8 +83,8 @@ export const mergedBlocks = (
 };
 
 const merge = (
-  messages1: readonly Message[] | null | undefined,
-  messages2: readonly Message[] | null | undefined,
+  messages1: readonly Message[] | undefined,
+  messages2: readonly Message[] | undefined,
 ) => {
   if (messages1 == null) {
     return messages2;
@@ -201,7 +201,7 @@ function intersectProgress(progresses: Progress[]): Progress {
     return { fullyLoadedFractionRanges: [] };
   }
 
-  let messageCache: BlockCache | null | undefined;
+  let messageCache: BlockCache | undefined;
   for (const progress of progresses) {
     messageCache = mergedBlocks(messageCache, progress.messageCache);
   }
@@ -231,8 +231,8 @@ type ProcessedInitializationResult = Readonly<{
 export default class CombinedDataProvider implements DataProvider {
   _providers: DataProvider[];
   // Initialization result will be null for providers that don't successfully initialize.
-  _initializationResultsPerProvider: (ProcessedInitializationResult | null | undefined)[] = [];
-  _progressPerProvider: (Progress | null)[];
+  _initializationResultsPerProvider: (ProcessedInitializationResult | undefined)[] = [];
+  _progressPerProvider: (Progress | undefined)[];
   _extensionPoint?: ExtensionPoint;
 
   constructor(_: any, children: DataProviderDescriptor[], getDataProvider: GetDataProvider) {
@@ -242,7 +242,7 @@ export default class CombinedDataProvider implements DataProvider {
         : getDataProvider(descriptor),
     );
     // initialize progress to an empty range for each provider
-    this._progressPerProvider = children.map((__) => null);
+    this._progressPerProvider = children.map((__) => undefined);
   }
 
   async initialize(extensionPoint: ExtensionPoint): Promise<InitializationResult> {
@@ -266,7 +266,7 @@ export default class CombinedDataProvider implements DataProvider {
         return { start, end, topicSet: new Set(topics.map((t: any) => t.name)) };
       }
       sendNotification("Data unavailable", outcome.reason, "user", "warn");
-      return null;
+      return undefined;
     });
     if (initializeOutcomes.every(({ status }) => status === "rejected")) {
       return new Promise(() => {

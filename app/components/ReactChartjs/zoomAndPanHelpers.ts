@@ -425,10 +425,7 @@ export function getChartValue(
   return min + (chartOffsetPx * (max - min)) / (maxAlongAxis - minAlongAxis);
 }
 
-export function getChartPx(
-  bounds: ScaleBounds | undefined,
-  value: number,
-): number | null | undefined {
+export function getChartPx(bounds: ScaleBounds | undefined, value: number): number | undefined {
   if (bounds == null) {
     return;
   }

@@ -103,7 +103,7 @@ function getBlocksFromPlayerState({
   playerState,
 }: {
   playerState: PlayerState;
-}): readonly (MemoryCacheBlock | null | undefined)[] | null | undefined {
+}): readonly (MemoryCacheBlock | undefined)[] | undefined {
   return playerState.progress.messageCache?.blocks;
 }
 
@@ -129,9 +129,9 @@ export function useBlocksByTopic(topics: readonly string[]): BlocksForTopics {
   );
 
   // Get blocks for the topics
-  const allBlocks = useMessagePipeline<
-    readonly (MemoryCacheBlock | null | undefined)[] | null | undefined
-  >(getBlocksFromPlayerState);
+  const allBlocks = useMessagePipeline<readonly (MemoryCacheBlock | undefined)[] | undefined>(
+    getBlocksFromPlayerState,
+  );
 
   const exposeBlockData = !!allBlocks; // The websocket player does not expose blocks.
 

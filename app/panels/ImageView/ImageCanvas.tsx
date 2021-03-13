@@ -126,7 +126,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
     throw new Error("_getRpcWorker can only be called with canvasRenderer type rpc");
   };
 
-  _setCanvasRef = (canvas?: HTMLCanvasElement) => {
+  _setCanvasRef = (canvas?: HTMLCanvasElement | null): void => {
     if (canvas) {
       this.loadZoomFromConfig();
       if (this._canvasRenderer.type === "rpc") {
@@ -269,7 +269,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
     if (canvasRenderer.type === "rpc") {
       // Unset the PRC worker so that we can destroy the worker if it's no longer necessary.
       webWorkerManager.unregisterWorkerListener(this._id);
-      canvasRenderer.worker = null;
+      canvasRenderer.worker = undefined;
     }
     document.removeEventListener("visibilitychange", this._onVisibilityChange);
   }

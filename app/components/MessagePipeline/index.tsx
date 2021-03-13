@@ -95,10 +95,10 @@ type ProviderProps = {
   globalVariables?: GlobalVariables;
 };
 export function MessagePipelineProvider({ children, player, globalVariables = {} }: ProviderProps) {
-  const currentPlayer = useRef<Player | null | undefined>(undefined);
+  const currentPlayer = useRef<Player | undefined>(undefined);
   const [playerState, setPlayerState] = useState<PlayerState>(defaultPlayerState);
-  const lastActiveData = useRef<PlayerStateActiveData | null | undefined>(playerState.activeData);
-  const lastTimeWhenActiveDataBecameSet = useRef<number | null | undefined>();
+  const lastActiveData = useRef<PlayerStateActiveData | undefined>(playerState.activeData);
+  const lastTimeWhenActiveDataBecameSet = useRef<number | undefined>();
   const [subscriptionsById, setAllSubscriptions] = useState<{
     [key: string]: SubscribePayload[];
   }>({});
@@ -107,7 +107,7 @@ export function MessagePipelineProvider({ children, player, globalVariables = {}
   // This state is tied to the player, and should be replaced whenever the player changes.
   const playerTickState = useRef<{
     // Call this to resolve the current tick. If this doesn't exist, there isn't a tick currently rendering.
-    resolveFn?: () => void | null | undefined;
+    resolveFn?: () => void;
     // Promises to halt the current tick for.
     promisesToWaitFor: FramePromise[];
     waitingForPromises: boolean;

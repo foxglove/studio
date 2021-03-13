@@ -88,7 +88,7 @@ export const WorldviewContainer = (props: { children: React.ReactNode }) => {
 };
 
 export class FixtureExample extends React.Component<FixtureExampleProps, FixtureExampleState> {
-  state: FixtureExampleState = { fixture: null, config: this.props.initialConfig };
+  state: FixtureExampleState = { fixture: undefined, config: this.props.initialConfig };
 
   componentDidMount() {
     const { data, loadData } = this.props;

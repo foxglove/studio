@@ -168,7 +168,7 @@ export default class Slider extends React.Component<Props> {
     return (
       <StyledSlider
         disabled={disabled}
-        ref={(el) => (this.el = el)}
+        ref={(el) => (this.el = el ?? undefined)}
         onClick={this._onClick}
         onMouseDown={this._onMouseDown}
       >

@@ -128,7 +128,7 @@ class Publish extends React.PureComponent<Props, PanelState> {
   state = {
     cachedProps: {},
     datatypeNames: [],
-    error: null,
+    error: undefined,
     parsedObject: undefined,
   };
 
