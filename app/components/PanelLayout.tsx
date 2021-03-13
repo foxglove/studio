@@ -100,7 +100,7 @@ export function UnconnectedPanelLayout(props: Props) {
         <PanelComponent childId={id} tabId={tabId} />
       ) : (
         // If we haven't found a panel of the given type, render the panel selector
-        // @ts-ignore typings say title is required property?
+        // @ts-expect-error typings say title is required property?
         <MosaicWindow path={path} createNode={createTile} renderPreview={() => null}>
           <Flex col center>
             <PanelToolbar floating isUnknownPanel />

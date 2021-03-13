@@ -44,7 +44,7 @@ export default function ExperimentalFeaturesLocalStorageProvider({
       const newStorage: FeatureStorage = { ...storage.getItem(EXPERIMENTAL_FEATURES_STORAGE_KEY) };
 
       logEvent({
-        // @ts-ignore Event logging is not currently well typed
+        // @ts-expect-error Event logging is not currently well typed
         name: getEventNames().CHANGE_EXPERIMENTAL_FEATURE,
         tags: { feature: id, value },
       });
