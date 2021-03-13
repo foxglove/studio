@@ -13,7 +13,6 @@
 
 import { groupBy } from "lodash";
 import { useCallback } from "react";
-import { $ReadOnly } from "utility-types";
 
 import { useMessageReducer } from "./useMessageReducer";
 import { TypedMessage, MessageFormat } from "@foxglove-studio/app/players/types";
@@ -52,18 +51,11 @@ export function useMessagesByTopic<T = any>({
 } {
   const requestedTopics = useDeepMemo(topics);
 
-  const addMessages: (
-    arg0: $ReadOnly<{
-      [key: string]: readonly TypedMessage<T>[];
-    }>,
-    arg1: readonly TypedMessage<T>[],
-  ) => $ReadOnly<{
-    [key: string]: readonly TypedMessage<T>[];
-  }> = useCallback(
+  const addMessages = useCallback(
     (
-      prevMessagesByTopic: $ReadOnly<{
-        [key: string]: readonly TypedMessage<T>[];
-      }>,
+      prevMessagesByTopic: {
+        readonly [key: string]: readonly TypedMessage<T>[];
+      },
       messages: readonly TypedMessage<T>[],
     ) => {
       const newMessagesByTopic = groupBy(messages, "topic");
@@ -79,14 +71,12 @@ export function useMessagesByTopic<T = any>({
   const restore = useCallback(
     (
       prevMessagesByTopic:
-        | $ReadOnly<{
-            [key: string]: readonly TypedMessage<T>[];
-          }>
+        | { readonly [key: string]: readonly TypedMessage<T>[] }
         | null
         | undefined,
-    ): $ReadOnly<{
-      [key: string]: readonly TypedMessage<T>[];
-    }> => {
+    ): {
+      readonly [key: string]: readonly TypedMessage<T>[];
+    } => {
       const newMessagesByTopic: {
         [topic: string]: TypedMessage<T>[];
       } = {};

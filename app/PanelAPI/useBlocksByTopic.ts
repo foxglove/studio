@@ -14,7 +14,6 @@
 import memoizeWeak from "memoize-weak";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { MessageReader } from "rosbag";
-import { $ReadOnly } from "utility-types";
 import { v4 as uuidv4 } from "uuid";
 
 import {
@@ -41,9 +40,9 @@ export const blockMessageCache = new ParsedMessageCache();
 // anyone who asks for binary data probably wants to parse it and cache it somehow, so give the
 // user a parser and the messages in a block-format useful for caching.
 
-type MessageBlock = $ReadOnly<{
-  [topicName: string]: readonly TypedMessage<ArrayBuffer>[];
-}>;
+type MessageBlock = {
+  readonly [topicName: string]: readonly TypedMessage<ArrayBuffer>[];
+};
 
 type BlocksForTopics = {
   // TODO(jp/steel): Figure out whether it's better to return message definitions here. It's

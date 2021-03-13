@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import type { SourceFile, TypeChecker } from "typescript";
-import { $Values } from "utility-types";
 
 import { GlobalVariables } from "@foxglove-studio/app/hooks/useGlobalVariables";
 import { Topic, Message } from "@foxglove-studio/app/players/types";
@@ -74,9 +73,9 @@ export const ErrorCodes = {
 };
 
 export type Diagnostic = {
-  severity: $Values<typeof DiagnosticSeverity>;
+  severity: typeof DiagnosticSeverity[keyof typeof DiagnosticSeverity];
   message: string;
-  source: $Values<typeof Sources>;
+  source: typeof Sources[keyof typeof Sources];
   startLineNumber?: number;
   startColumn?: number;
   endLineNumber?: number;

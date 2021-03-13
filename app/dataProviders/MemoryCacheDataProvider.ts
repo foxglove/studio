@@ -14,7 +14,6 @@
 import { simplify } from "intervals-fn";
 import { isEqual, sum, uniq } from "lodash";
 import { TimeUtil, Time } from "rosbag";
-import { $ReadOnly } from "utility-types";
 import { v4 as uuidv4 } from "uuid";
 
 import {
@@ -52,12 +51,12 @@ export const MAX_BLOCK_SIZE_BYTES = 50e6; // Number of bytes in a block before w
 
 // For each memory block we store the actual messages (grouped by topic), and a total byte size of
 // the underlying ArrayBuffers.
-export type MemoryCacheBlock = $ReadOnly<{
-  messagesByTopic: $ReadOnly<{
-    [topic: string]: readonly BobjectMessage[];
-  }>;
-  sizeInBytes: number;
-}>;
+export type MemoryCacheBlock = {
+  readonly messagesByTopic: {
+    readonly [topic: string]: readonly BobjectMessage[];
+  };
+  readonly sizeInBytes: number;
+};
 export type BlockCache = {
   blocks: readonly (MemoryCacheBlock | null | undefined)[];
   startTime: Time;

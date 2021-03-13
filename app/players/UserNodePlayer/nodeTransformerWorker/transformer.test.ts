@@ -11,8 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { $Values } from "utility-types";
-
 import exampleDatatypes from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/fixtures/example-datatypes.json";
 import {
   getOutputTopic,

@@ -11,8 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { $Values } from "utility-types";
-
 import { Point, CameraInfo } from "@foxglove-studio/app/types/Messages";
 
 const DISTORTION_STATE = {
@@ -20,7 +18,7 @@ const DISTORTION_STATE = {
   CALIBRATED: "CALIBRATED",
 };
 
-type DistortionState = $Values<typeof DISTORTION_STATE>;
+type DistortionState = typeof DISTORTION_STATE[keyof typeof DISTORTION_STATE];
 
 // Essentially a copy of ROSPinholeCameraModel
 // but only the relevant methods, i.e.

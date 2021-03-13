@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { Time, RosMsgDefinition } from "rosbag";
-import { $Values } from "utility-types";
 
 import { BlockCache } from "@foxglove-studio/app/dataProviders/MemoryCacheDataProvider";
 import {
@@ -101,7 +100,7 @@ export type PlayerState = {
 
   // Capabilities of this particular `Player`, which are not shared across all players.
   // See `const PlayerCapabilities` for more details.
-  capabilities: $Values<typeof PlayerCapabilities>[];
+  capabilities: typeof PlayerCapabilities[keyof typeof PlayerCapabilities][];
 
   // A unique id for this player (typically a UUID generated on construction). This is used to clear
   // out any data when switching to a new player.
