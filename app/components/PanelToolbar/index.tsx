@@ -149,7 +149,7 @@ function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknow
     return (
       <ShareJsonModal
         onRequestClose={() => setShowShareModal(false)}
-        value={panelConfigById[id] || {}}
+        value={panelConfigById[id] ?? {}}
         onChange={(config) =>
           actions.savePanelConfigs({ configs: [{ id, config, override: true }] })
         }
