@@ -135,7 +135,7 @@ function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknow
     [actions, mosaicActions, mosaicWindowActions, tabId],
   );
 
-  const store = useContext(ReactReduxContext);
+  const { store } = useContext(ReactReduxContext);
   const panelContext = usePanelContext();
   const [showShareModal, setShowShareModal] = useState<boolean>(false);
 
@@ -145,7 +145,7 @@ function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknow
       return null;
     }
 
-    const panelConfigById = savedProps;
+    const panelConfigById = store.getState().persistedState.panels.savedProps;
     return (
       <ShareJsonModal
         onRequestClose={() => setShowShareModal(false)}

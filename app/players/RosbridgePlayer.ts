@@ -356,8 +356,8 @@ export default class RosbridgePlayer implements Player {
   }
 
   publish({ topic, msg }: PublishPayload): void {
-    const pubSub = this._topicSubscriptions.get(topic);
-    if (!pubSub) {
+    const subscription = this._topicSubscriptions.get(topic);
+    if (!subscription) {
       sendNotification(
         "Invalid publish call",
         `Tried to publish on a topic that is not registered as a publisher: ${topic}`,
@@ -366,7 +366,7 @@ export default class RosbridgePlayer implements Player {
       );
       return;
     }
-    pubSub.publish(msg);
+    subscription.publish(msg);
   }
 
   // Bunch of unsupported stuff. Just don't do anything for these.

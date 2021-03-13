@@ -27,6 +27,7 @@ export default function LayoutMenu() {
 
   return (
     <>
+      {showLayoutModal && <LayoutModal onRequestClose={() => setShowLayoutModal(false)} />}
       <ChildToggle position="below" onToggle={setIsOpen} isOpen={isOpen}>
         <Flex>
           <WrappedIcon medium fade active={isOpen} tooltip="Config">
@@ -46,7 +47,6 @@ export default function LayoutMenu() {
           <ClearBagCacheMenuItem />
         </Menu>
       </ChildToggle>
-      {showLayoutModal && <LayoutModal onRequestClose={() => setShowLayoutModal(false)} />}
     </>
   );
 }
