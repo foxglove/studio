@@ -88,7 +88,7 @@ function mapTemplateIdsToNewIds(templateIds: string[]): PanelIdMap {
 function getLayoutWithNewPanelIds(
   layout: MosaicNode,
   panelIdMap: PanelIdMap,
-): MosaicNode | null | undefined {
+): MosaicNode | undefined {
   if (typeof layout === "string") {
     // return corresponding ID if it exists in panelIdMap
     // (e.g. for Tab panel presets with 1 panel in active layout)
@@ -96,7 +96,7 @@ function getLayoutWithNewPanelIds(
   }
 
   if (!layout) {
-    return null;
+    return undefined;
   }
   const newLayout: Record<string, any> = {};
   for (const key in layout) {

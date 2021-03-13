@@ -89,7 +89,7 @@ describe("layout", () => {
       expect(getPanelTypeFromId(inputLayout!)).toEqual(getPanelTypeFromId(outputLayout));
       expect(inputLayout).not.toEqual(outputLayout);
     });
-    it("works with null tab layouts", () => {
+    it("works with undefined tab layouts", () => {
       const originalConfig = {
         id: "Tab!abc",
         config: { tabs: [{ title: "First tab", layout: undefined }] },
@@ -429,7 +429,7 @@ describe("layout", () => {
             },
           },
         ),
-      ).toEqual(null);
+      ).toEqual(undefined);
     });
 
     it("will just remove specified panels if no panel is specified as replacement", () => {
@@ -463,7 +463,7 @@ describe("layout", () => {
             },
           },
         ),
-      ).toEqual(null);
+      ).toEqual(undefined);
     });
     it("will not modify layouts that don't contain panelIdsToRemove", () => {
       const originalLayout: MosaicNode<string> = {
@@ -479,7 +479,7 @@ describe("layout", () => {
         replaceAndRemovePanels({ idsToRemove: ["Missing!a", "Missing!b"] }, originalLayout),
       ).toEqual(originalLayout);
     });
-    it("will return null if all panels are replaced", () => {
+    it("will return undefined if all panels are replaced", () => {
       expect(
         replaceAndRemovePanels(
           { originalId: "OldId!y", idsToRemove: ["Remove!a", "Remove!b"] },
@@ -489,7 +489,7 @@ describe("layout", () => {
             second: "Remove!b",
           },
         ),
-      ).toEqual(null);
+      ).toEqual(undefined);
     });
   });
 

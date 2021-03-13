@@ -38,11 +38,10 @@ export type RawMarkerData = {
 export type MarkerData =
   | {
       markers: Message[];
-      originalWidth?: number; // null means no scaling is needed (use the image's size)
-      originalHeight?: number; // null means no scaling is needed (use the image's size)
-      cameraModel?: CameraModel; // null means no transformation is needed
+      originalWidth?: number; // undefined means no scaling is needed (use the image's size)
+      originalHeight?: number; // undefined means no scaling is needed (use the image's size)
+      cameraModel?: CameraModel; // undefined means no transformation is needed
     }
-  | null
   | undefined;
 
 export function getMarkerOptions(
@@ -80,23 +79,23 @@ export function getRelatedMarkerTopics(
 }
 
 // get the sensor_msgs/CameraInfo topic associated with an image topic
-export function getCameraInfoTopic(imageTopic: string): string | null | undefined {
+export function getCameraInfoTopic(imageTopic: string): string | undefined {
   const cameraNamespace = getCameraNamespace(imageTopic);
   if (cameraNamespace) {
     return `${cameraNamespace}/camera_info`;
   }
-  return null;
+  return undefined;
 }
 
-export function getCameraNamespace(topicName: string): string | null | undefined {
+export function getCameraNamespace(topicName: string): string | undefined {
   let splitTopic = topicName.split("/");
   // Remove the last part of the selected topic to get the camera namespace.
   splitTopic.pop();
   splitTopic = splitTopic.filter((topicPart) => topicPart !== "old");
 
   // Since there is a leading slash in the topicName, splitTopic will always have at least one empty string to start.
-  // If we can't find the namespace, return null.
-  return splitTopic.length > 1 ? splitTopic.join("/") : null;
+  // If we can't find the namespace, return undefined.
+  return splitTopic.length > 1 ? splitTopic.join("/") : undefined;
 }
 
 // group topics by the first component of their name

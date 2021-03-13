@@ -598,7 +598,7 @@ describe("state.persistedState", () => {
           panels: { layout, savedProps },
         },
       }) => {
-        expect(layout).toEqual(null);
+        expect(layout).toEqual(undefined);
         expect(savedProps).toEqual({});
       },
     );

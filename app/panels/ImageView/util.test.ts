@@ -102,13 +102,13 @@ describe("ImageView", () => {
         "/webviz_source_2/camera_back_left",
       );
     });
-    it("Returns null when encountering a single level topic", () => {
-      expect(getCameraNamespace("/camera_back_left")).toEqual(null);
+    it("Returns undefined when encountering a single level topic", () => {
+      expect(getCameraNamespace("/camera_back_left")).toEqual(undefined);
     });
   });
 
   describe("groupTopics", () => {
-    const topic = (name: any) => ({ name, datatype: "dummy" });
+    const topic = (name: string) => ({ name, datatype: "dummy" });
 
     it("groups by camera name", () => {
       expect(
@@ -203,7 +203,7 @@ describe("ImageView", () => {
         markers: [],
         originalHeight: undefined,
         originalWidth: undefined,
-        cameraModel: null,
+        cameraModel: undefined,
       });
     });
 
@@ -229,7 +229,7 @@ describe("ImageView", () => {
           transformMarkers: true,
           cameraInfo: undefined,
         }),
-      ).toEqual(null);
+      ).toEqual(undefined);
     });
 
     it("requires either cameraInfo or scale==1", () => {
@@ -253,7 +253,7 @@ describe("ImageView", () => {
           transformMarkers: false,
           cameraInfo: undefined,
         }),
-      ).toEqual(null);
+      ).toEqual(undefined);
     });
   });
 });
