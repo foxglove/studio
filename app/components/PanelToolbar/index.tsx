@@ -156,7 +156,7 @@ function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknow
         noun="panel configuration"
       />
     );
-  }, [panelContext?.id, showShareModal, savedProps, actions]);
+  }, [panelContext?.id, showShareModal, store, actions]);
 
   const type = getPanelType();
   if (!type) {
