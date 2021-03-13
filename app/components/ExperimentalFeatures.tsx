@@ -11,17 +11,12 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import AccountIcon from "@mdi/svg/svg/account.svg";
-import CheckIcon from "@mdi/svg/svg/check.svg";
-import CloseIcon from "@mdi/svg/svg/close.svg";
 import { mapValues, noop } from "lodash";
 import { createContext, PropsWithChildren, useContext, useMemo, useState } from "react";
 
 import Modal, { Title } from "@foxglove-studio/app/components/Modal";
-import Radio from "@foxglove-studio/app/components/Radio";
+import SegmentedControl from "@foxglove-studio/app/components/SegmentedControl";
 import TextContent from "@foxglove-studio/app/components/TextContent";
-import Tooltip from "@foxglove-studio/app/components/Tooltip";
-import colors from "@foxglove-studio/app/styles/colors.module.scss";
 import Storage from "@foxglove-studio/app/util/Storage";
 import logEvent, { getEventNames } from "@foxglove-studio/app/util/logEvent";
 
@@ -104,36 +99,6 @@ export function useExperimentalFeature(id: string): boolean {
   return settings[id]?.enabled ?? false;
 }
 
-function IconOn() {
-  return (
-    <Tooltip contents="on" placement="top">
-      <span>
-        <CheckIcon style={{ fill: colors.green, verticalAlign: "-6px" }} />
-      </span>
-    </Tooltip>
-  );
-}
-
-function IconOff() {
-  return (
-    <Tooltip contents="off" placement="top">
-      <span>
-        <CloseIcon style={{ fill: colors.red, verticalAlign: "-6px" }} />
-      </span>
-    </Tooltip>
-  );
-}
-
-function IconManuallySet() {
-  return (
-    <Tooltip contents="manually set" placement="top">
-      <span>
-        <AccountIcon style={{ fill: colors.orange, verticalAlign: "-6px" }} />
-      </span>
-    </Tooltip>
-  );
-}
-
 export function ExperimentalFeaturesModal(props: {
   onRequestClose?: () => void;
 }): React.ReactElement {
@@ -155,47 +120,53 @@ export function ExperimentalFeaturesModal(props: {
               </p>
             )}
           </TextContent>
-          {Object.entries(features).map(([id, feature]) => {
-            return (
-              <div key={id} style={{ marginTop: 24 }}>
-                <TextContent>
-                  <h2>
-                    {feature.name} <code style={{ fontSize: 12 }}>{id}</code>{" "}
-                    <span style={{ whiteSpace: "nowrap" }}>
-                      {settings[id]?.enabled ? <IconOn /> : <IconOff />}
-                      {settings[id]?.manuallySet ? <IconManuallySet /> : undefined}
-                    </span>
-                  </h2>
-                  {feature.description}
-                </TextContent>
-                <div style={{ marginTop: 8 }}>
-                  <Radio
-                    selectedId={
-                      settings[id]?.manuallySet
-                        ? settings[id]?.enabled
-                          ? "alwaysOn"
-                          : "alwaysOff"
-                        : "default"
-                    }
-                    onChange={(value) => {
-                      if (value !== "default" && value !== "alwaysOn" && value !== "alwaysOff") {
-                        throw new Error(`Invalid value for radio button: ${value}`);
-                      }
-                      changeFeature(id, value);
-                    }}
-                    options={[
-                      {
-                        id: "default",
-                        label: `Default (${feature[getDefaultKey()] ? "on" : "off"})`,
-                      },
-                      { id: "alwaysOn", label: "Always on" },
-                      { id: "alwaysOff", label: "Always off" },
-                    ]}
-                  />
-                </div>
-              </div>
-            );
-          })}
+          <table style={{ marginTop: 12 }}>
+            <tbody>
+              {Object.entries(features).map(([id, feature]) => {
+                return (
+                  <tr key={id}>
+                    <td style={{ width: "100%", padding: 4 }}>
+                      <TextContent>
+                        <h2>
+                          {feature.name} <code style={{ fontSize: 12 }}>{id}</code>
+                        </h2>
+                        {feature.description}
+                      </TextContent>
+                    </td>
+                    <td style={{ verticalAlign: "middle" }}>
+                      <SegmentedControl
+                        selectedId={
+                          settings[id]?.manuallySet
+                            ? settings[id]?.enabled
+                              ? "alwaysOn"
+                              : "alwaysOff"
+                            : "default"
+                        }
+                        onChange={(value) => {
+                          if (
+                            value !== "default" &&
+                            value !== "alwaysOn" &&
+                            value !== "alwaysOff"
+                          ) {
+                            throw new Error(`Invalid value for radio button: ${value}`);
+                          }
+                          changeFeature(id, value);
+                        }}
+                        options={[
+                          {
+                            id: "default",
+                            label: `Default (${feature[getDefaultKey()] ? "on" : "off"})`,
+                          },
+                          { id: "alwaysOn", label: "On" },
+                          { id: "alwaysOff", label: "Off" },
+                        ]}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
     </Modal>
