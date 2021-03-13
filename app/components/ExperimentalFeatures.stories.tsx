@@ -41,8 +41,8 @@ const dummyFeatures: FeatureDescriptions = {
   feat2: {
     name: "Feature 2",
     description: "Example description 2",
-    developmentDefault: true,
-    productionDefault: false,
+    developmentDefault: false,
+    productionDefault: true,
   },
   feat3: {
     name: "Feature 3",
