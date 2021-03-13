@@ -26,11 +26,7 @@ export default function HelpButton(props: PropsWithChildren<Props>) {
   const [showHelp, setShowHelp] = useState<boolean>(false);
 
   return (
-    <Icon
-      tooltip="Help"
-      fade
-      onClick={() => setShowHelp(true)}
-    >
+    <Icon tooltip="Help" fade onClick={() => setShowHelp(true)}>
       {showHelp && (
         <HelpModal onRequestClose={() => setShowHelp(false)}>{props.children}</HelpModal>
       )}
