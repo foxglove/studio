@@ -34,14 +34,14 @@ export type RequestedTopic = string | { topic: string; imageScale: number };
 
 // Apply changes in topics or messages to the reduced value.
 function useReducedValue<T>(
-  restore: (arg0: T | null | undefined) => T,
+  restore: (arg0?: T) => T,
   addMessage?: MessageReducer<T>,
   addMessages?: MessagesReducer<T>,
   addBobjects?: MessagesReducer<T>,
   lastSeekTime?: number,
   messages?: readonly Message[],
 ): T {
-  const reducedValueRef = useRef<T | null | undefined>();
+  const reducedValueRef = useRef<T | undefined>();
 
   const shouldClear = useChangeDetector([lastSeekTime], false);
   const reducersChanged = useChangeDetector([restore, addBobjects, addMessage, addMessages], false);

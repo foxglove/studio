@@ -44,7 +44,7 @@ export function useMessagesByTopic<T = any>({
 }: {
   topics: readonly string[];
   historySize: number;
-  preloadingFallback?: boolean | null | undefined;
+  preloadingFallback?: boolean;
   format?: MessageFormat;
 }): {
   [topic: string]: readonly TypedMessage<T>[];

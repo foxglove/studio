@@ -114,7 +114,7 @@ export default function Panel<Config extends PanelConfig>(
   PanelComponent: (
     | ComponentType
     | ComponentType<
-        $Shape<{
+        Partial<{
           config: Config;
           saveConfig: SaveConfig<Config>;
           openSiblingPanel: (arg0: string, cb: (arg0: PanelConfig) => PanelConfig) => void;

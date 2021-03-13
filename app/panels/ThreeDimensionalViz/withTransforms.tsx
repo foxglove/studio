@@ -25,7 +25,7 @@ type State = { transforms: Transforms };
 
 function withTransforms<Props extends any>(ChildComponent: React.ComponentType<Props>) {
   class Component extends React.PureComponent<
-    $Shape<{ frame: Frame; cleared: boolean; forwardedRef: any }>,
+    Partial<{ frame: Frame; cleared: boolean; forwardedRef: any }>,
     State
   > {
     static displayName = `withTransforms(${
