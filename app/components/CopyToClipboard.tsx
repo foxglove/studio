@@ -61,7 +61,7 @@ class CopyToClipboardComponent extends React.Component<Props> {
         style={this.props.styles}
         onClick={this.copy}
         ref={(wrapper) => {
-          this.wrapper = wrapper;
+          this.wrapper = wrapper ?? undefined;
         }}
       >
         {this.props.children}

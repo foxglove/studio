@@ -252,7 +252,7 @@ export default class Autocomplete extends PureComponent<AutocompleteProps, Autoc
       items,
       placeholder,
       selectedItem,
-      value = this.state.value ?? (selectedItem ? getItemText(selectedItem) : null),
+      value = this.state.value ?? (selectedItem ? getItemText(selectedItem) : undefined),
       filterText = value,
       sortWhenFiltering,
       minWidth,

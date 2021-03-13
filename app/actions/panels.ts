@@ -169,7 +169,7 @@ export const fetchLayout = (
 ): Dispatcher<SET_FETCHED_LAYOUT | SET_FETCH_LAYOUT_FAILED | LOAD_LAYOUT> => (dispatch) => {
   const params = new URLSearchParams(search);
   const hasLayoutUrl = params.get(LAYOUT_URL_QUERY_KEY);
-  const patch = params.get(PATCH_QUERY_KEY);
+  const patch = params.get(PATCH_QUERY_KEY) ?? undefined;
   dispatch({ type: PANELS_ACTION_TYPES.SET_FETCHED_LAYOUT, payload: { isLoading: true } });
   return getGlobalHooks()
     .getLayoutFromUrl(search)
