@@ -110,6 +110,7 @@ export function makeConfig(_: unknown, argv: WebpackArgv): Configuration {
           test: /\.svg$/,
           loader: "react-svg-loader",
           options: {
+            jsx: true,
             svgo: {
               plugins: [{ removeViewBox: false }, { removeDimensions: false }],
             },
