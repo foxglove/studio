@@ -17,7 +17,6 @@ import { Time, TimeUtil } from "rosbag";
 import { cast, Bobject, Message } from "@foxglove-studio/app/players/types";
 import { BinaryTime } from "@foxglove-studio/app/types/BinaryMessages";
 import { deepParse } from "@foxglove-studio/app/util/binaryObjects";
-import { parseTimeStr } from "@foxglove-studio/app/util/formatTime";
 import {
   SEEK_TO_FRACTION_QUERY_KEY,
   SEEK_TO_RELATIVE_MS_QUERY_KEY,
