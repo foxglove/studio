@@ -28,10 +28,10 @@ type DistortionState = $Values<typeof DISTORTION_STATE>;
 // http://docs.ros.org/diamondback/api/image_geometry/html/c++/pinhole__camera__model_8cpp_source.html
 export default class PinholeCameraModel {
   _distortionState: DistortionState = DISTORTION_STATE.NONE;
-  D: ReadonlyArray<number> = [];
-  K: ReadonlyArray<number> = [];
-  P: ReadonlyArray<number> = [];
-  R: ReadonlyArray<number> = [];
+  D: readonly number[] = [];
+  K: readonly number[] = [];
+  P: readonly number[] = [];
+  R: readonly number[] = [];
 
   // Mostly copied from `fromCameraInfo`
   // http://docs.ros.org/diamondback/api/image_geometry/html/c++/pinhole__camera__model_8cpp_source.html#l00062

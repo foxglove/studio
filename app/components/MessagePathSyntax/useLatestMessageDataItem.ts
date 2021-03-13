@@ -34,7 +34,7 @@ export function useLatestMessageDataItem(
   const cachedGetMessagePathDataItems = useCachedGetMessagePathDataItems([path]);
 
   const addMessages = useCallback(
-    (prevMessageAndData: MessageAndData | undefined, messages: ReadonlyArray<Message>) => {
+    (prevMessageAndData: MessageAndData | undefined, messages: readonly Message[]) => {
       // Iterate in reverse so we can early-return and not process all messages.
       for (let i = messages.length - 1; i >= 0; --i) {
         const message = messages[i];

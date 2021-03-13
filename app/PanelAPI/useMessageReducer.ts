@@ -85,7 +85,7 @@ function useSubscriptions({
   preloadingFallback,
   format,
 }: {
-  requestedTopics: ReadonlyArray<RequestedTopic>;
+  requestedTopics: readonly RequestedTopic[];
   panelType: string | null | undefined;
   preloadingFallback: boolean;
   format: MessageFormat;
@@ -119,7 +119,7 @@ function useSubscriptions({
 const NO_MESSAGES = Object.freeze([]);
 
 type Props<T> = {
-  topics: ReadonlyArray<RequestedTopic>;
+  topics: readonly RequestedTopic[];
 
   // Functions called when the reducers change and for each newly received message.
   // The object is assumed to be immutable, so in order to trigger a re-render, the reducers must
@@ -205,7 +205,7 @@ export function useMessageReducer<T>(props: Props<T>): T {
 
   // Keep a reference to the last messages we processed to ensure we never process them more than once.
   // If the topics we care about change, the player should send us new messages soon anyway (via backfill if paused).
-  const lastProcessedMessagesRef = useRef<ReadonlyArray<Message> | undefined>();
+  const lastProcessedMessagesRef = useRef<readonly Message[] | undefined>();
   // Keep a ref to the latest requested topics we were rendered with, because the useMessagePipeline
   // selector's dependencies aren't allowed to change.
   const latestRequestedTopicsRef = useRef(requestedTopicsSet);

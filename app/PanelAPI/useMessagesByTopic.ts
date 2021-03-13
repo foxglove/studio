@@ -22,8 +22,8 @@ import { useDeepMemo } from "@foxglove-studio/app/util/hooks";
 // Exported for tests
 // Equivalent to array1.concat(array2).slice(-limit), but somewhat faster. Also works with limit=0.
 export const concatAndTruncate = <T>(
-  array1: ReadonlyArray<T>,
-  array2: ReadonlyArray<T>,
+  array1: readonly T[],
+  array2: readonly T[],
   limit: number,
 ): T[] => {
   const toTakeFromArray1 = limit - array2.length;
@@ -43,7 +43,7 @@ export function useMessagesByTopic<T = any>({
   preloadingFallback,
   format = "parsedMessages",
 }: {
-  topics: ReadonlyArray<string>;
+  topics: readonly string[];
   historySize: number;
   preloadingFallback?: boolean | null | undefined;
   format?: MessageFormat;
@@ -54,17 +54,17 @@ export function useMessagesByTopic<T = any>({
 
   const addMessages: (
     arg0: $ReadOnly<{
-      [key: string]: ReadonlyArray<TypedMessage<T>>;
+      [key: string]: readonly TypedMessage<T>[];
     }>,
-    arg1: ReadonlyArray<TypedMessage<T>>,
+    arg1: readonly TypedMessage<T>[],
   ) => $ReadOnly<{
-    [key: string]: ReadonlyArray<TypedMessage<T>>;
+    [key: string]: readonly TypedMessage<T>[];
   }> = useCallback(
     (
       prevMessagesByTopic: $ReadOnly<{
-        [key: string]: ReadonlyArray<TypedMessage<T>>;
+        [key: string]: readonly TypedMessage<T>[];
       }>,
-      messages: ReadonlyArray<TypedMessage<T>>,
+      messages: readonly TypedMessage<T>[],
     ) => {
       const newMessagesByTopic = groupBy(messages, "topic");
       const ret = { ...prevMessagesByTopic };
@@ -80,12 +80,12 @@ export function useMessagesByTopic<T = any>({
     (
       prevMessagesByTopic:
         | $ReadOnly<{
-            [key: string]: ReadonlyArray<TypedMessage<T>>;
+            [key: string]: readonly TypedMessage<T>[];
           }>
         | null
         | undefined,
     ): $ReadOnly<{
-      [key: string]: ReadonlyArray<TypedMessage<T>>;
+      [key: string]: readonly TypedMessage<T>[];
     }> => {
       const newMessagesByTopic: {
         [topic: string]: TypedMessage<T>[];

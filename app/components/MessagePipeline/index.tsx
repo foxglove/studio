@@ -233,7 +233,7 @@ export function MessagePipelineProvider({ children, player, globalVariables = {}
     );
   });
 
-  const messages: ReadonlyArray<Message> | null | undefined = playerState.activeData?.messages;
+  const messages: readonly Message[] | null | undefined = playerState.activeData?.messages;
   const frame = useMemo(() => groupBy(messages || [], "topic"), [messages]);
   const sortedTopics = useMemo(() => (topics || []).sort(), [topics]);
   const datatypes: RosDatatypes = useMemo(() => unmemoizedDatatypes ?? {}, [unmemoizedDatatypes]);

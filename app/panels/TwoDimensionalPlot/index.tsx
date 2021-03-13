@@ -459,7 +459,7 @@ function TwoDimensionalPlot(props: Props) {
     }
   }, []);
 
-  const scaleBounds = React.useRef<ReadonlyArray<ScaleBounds> | null | undefined>();
+  const scaleBounds = React.useRef<readonly ScaleBounds[] | null | undefined>();
   const hoverBar = React.useRef<HTMLDivElement | null>(null);
 
   const onScaleBoundsUpdate = React.useCallback(

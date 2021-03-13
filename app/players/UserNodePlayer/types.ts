@@ -89,8 +89,8 @@ export type NodeData = {
   sourceCode: string;
   transpiledCode: string;
   projectCode: Map<string, string> | null | undefined;
-  diagnostics: ReadonlyArray<Diagnostic>;
-  inputTopics: ReadonlyArray<string>;
+  diagnostics: readonly Diagnostic[];
+  inputTopics: readonly string[];
   outputTopic: string;
   outputDatatype: string;
   datatypes: RosDatatypes;
@@ -100,13 +100,13 @@ export type NodeData = {
   typeChecker: TypeChecker | null | undefined;
   rosLib: string;
   // An array of globalVariable names
-  globalVariables: ReadonlyArray<string>;
+  globalVariables: readonly string[];
 };
 
 export type NodeRegistration = {
   nodeId: string;
   nodeData: NodeData;
-  inputs: ReadonlyArray<string>;
+  inputs: readonly string[];
   output: Topic;
   processMessage: (arg0: Message, arg1: GlobalVariables) => Promise<Message | null | undefined>;
   terminate: () => void;
