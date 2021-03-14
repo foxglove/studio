@@ -53,7 +53,7 @@ export async function renderImage({
     clearCanvas(canvas);
     return null;
   }
-  let markerData = null;
+  let markerData = undefined;
   try {
     markerData = buildMarkerData(rawMarkerData);
   } catch (error) {
