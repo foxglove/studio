@@ -60,7 +60,7 @@ export function canEditNamespaceOverrideColorDatatype(datatype: string): boolean
 type Props = {
   topic: Topic;
   message: any;
-  settings: any | null | undefined;
+  settings?: any;
   onSettingsChange: (arg0: any) => void;
 };
 

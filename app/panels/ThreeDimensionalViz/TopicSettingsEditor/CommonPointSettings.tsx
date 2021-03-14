@@ -26,8 +26,8 @@ export default function CommonPointSettings({
   defaultPointSize: number;
   defaultPointShape?: string;
   settings: {
-    pointSize?: number | null | undefined;
-    pointShape?: string | null | undefined;
+    pointSize?: number;
+    pointShape?: string;
   };
   onFieldChange: (name: string, value: any) => void;
 }) {
