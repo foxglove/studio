@@ -76,7 +76,7 @@ export function perPanelHooks() {
       canTransformMarkersByTopic: (topic: string) => !topic.includes("rect"),
     },
     GlobalVariableSlider: {
-      getVariableSpecificOutput: () => null,
+      getVariableSpecificOutput: () => undefined,
     },
     StateTransitions: { defaultConfig: { paths: [] }, customStateTransitionColors: {} },
     ThreeDimensionalViz: {
@@ -141,7 +141,7 @@ export function perPanelHooks() {
       rootTransformFrame: "map",
       defaultFollowTransformFrame: undefined,
       useWorldspacePointSize: () => true,
-      createPointCloudPositionBuffer: () => null,
+      createPointCloudPositionBuffer: () => undefined,
     },
     RawMessages: {
       docLinkFunction: (filename: string) => `https://www.google.com/search?q=${filename}`,
