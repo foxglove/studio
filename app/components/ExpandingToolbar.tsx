@@ -51,7 +51,7 @@ type Props<T extends string> = {
   className?: string;
   icon: React.ReactNode;
   onSelectTab: (name: T | undefined) => void;
-  selectedTab?: T; // collapse the toolbar if selectedTab is null
+  selectedTab?: T; // collapse the toolbar if selectedTab is undefined
   tooltip: string;
   style?: React.CSSProperties;
 };

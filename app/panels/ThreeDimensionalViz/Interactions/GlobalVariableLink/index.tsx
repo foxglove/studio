@@ -101,7 +101,7 @@ export default function GlobalVariableLink({
   style = { marginLeft: 4 },
   topic,
   unlinkTooltip,
-  variableValue = null,
+  variableValue,
 }: Props) {
   const { linkedGlobalVariables } = useLinkedGlobalVariables();
   let linkedGlobalVariableLocal: LinkedGlobalVariable | undefined = linkedGlobalVariable;
@@ -116,7 +116,7 @@ export default function GlobalVariableLink({
   const isArrayBuffer = ArrayBuffer.isView(variableValue);
   const renderUnlink = !!linkedGlobalVariableLocal;
   const addToLinkedGlobalVariable =
-    topic && markerKeyPath ? { topic, markerKeyPath, variableValue } : null;
+    topic && markerKeyPath ? { topic, markerKeyPath, variableValue } : undefined;
   const renderAddLink = !renderUnlink && !isArrayBuffer && addToLinkedGlobalVariable;
   if (!(renderUnlink || renderAddLink)) {
     return null;

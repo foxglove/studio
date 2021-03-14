@@ -93,7 +93,7 @@ function getTopicName(topic: Topic): string {
 
 function parseInput(value: string): Partial<PanelState> {
   let parsedObject;
-  let error = null;
+  let error = undefined;
   try {
     const parsedAny = JSON.parse(value);
     if (Array.isArray(parsedAny)) {
@@ -157,13 +157,13 @@ class Publish extends React.PureComponent<Props, PanelState> {
     ) {
       const sampleMessage = buildSampleMessage(props.datatypes, props.config.datatype);
       if (sampleMessage) {
-        const stringifiedSampleMessage = JSON.stringify(sampleMessage, null, 2);
+        const stringifiedSampleMessage = JSON.stringify(sampleMessage, undefined, 2);
         props.saveConfig({ value: stringifiedSampleMessage });
         changed = true;
       }
     }
 
-    return changed ? newState : null;
+    return changed ? newState : undefined;
   }
 
   _onChangeTopic = (event: any, topicName: string) => {

@@ -337,7 +337,7 @@ storiesOf("<NodePlayground>", module)
             setScriptOverride={() => {
               // no-op
             }}
-            script={null}
+            script={undefined}
             addNewNode={() => {
               // no-op
             }}

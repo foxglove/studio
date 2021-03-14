@@ -133,12 +133,7 @@ type ReducedValue = {
   messagesByTopic: {
     [topic: string]: Message[];
   };
-  synchronizedMessages:
-    | {
-        [topic: string]: Message;
-      }
-    | null
-    | undefined;
+  synchronizedMessages?: { [topic: string]: Message };
 };
 
 function getSynchronizedState(
@@ -173,7 +168,7 @@ export function getSynchronizingReducers(topics: readonly string[]) {
       for (const topic of topics) {
         messagesByTopic[topic] = (previousValue && previousValue.messagesByTopic[topic]) || [];
       }
-      return getSynchronizedState(topics, { messagesByTopic, synchronizedMessages: null });
+      return getSynchronizedState(topics, { messagesByTopic });
     },
     addMessage({ messagesByTopic, synchronizedMessages }: ReducedValue, newMessage: Message) {
       return getSynchronizedState(topics, {

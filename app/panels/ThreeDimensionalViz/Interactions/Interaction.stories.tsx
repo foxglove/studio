@@ -79,7 +79,7 @@ const interactiveMarkerObject = {
   ...markerObject,
   interactionData: { topic: "/foo/bar", originalMessage: markerObject },
 };
-const selectedObject = { object: interactiveMarkerObject, instanceIndex: null };
+const selectedObject = { object: interactiveMarkerObject, instanceIndex: undefined };
 
 const sharedProps = {
   selectedObject,
@@ -203,7 +203,7 @@ storiesOf("<Interaction>", module)
         <PanelSetupWithData title="Link Tab">
           <Interactions
             {...(sharedProps as any)}
-            selectedObject={null}
+            selectedObject={undefined}
             interactionsTabType={LINKED_VARIABLES_TAB_TYPE}
           />
         </PanelSetupWithData>
@@ -465,7 +465,7 @@ storiesOf("<Interaction> / open-close behavior", module)
       </ScreenshotSizedContainer>
     );
   })
-  .add("auto closes the object details when selectedObject becomes null", () => {
+  .add("auto closes the object details when selectedObject becomes undefined", () => {
     return (
       <ScreenshotSizedContainer>
         <MarkerStory
