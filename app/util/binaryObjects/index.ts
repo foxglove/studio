@@ -184,7 +184,7 @@ export const merge = <T extends any>(
 };
 
 // For accessing fields that might be in bobjects and might be in JS objects.
-export const getField = (obj: any | null | undefined, field: string): any => {
+export const getField = (obj: any | undefined, field: string): any => {
   if (!obj) {
     return;
   }
