@@ -34,7 +34,7 @@ export default function CommonPointSettings({
   const pointSizeVal = settings.pointSize === undefined ? "" : settings.pointSize;
 
   const pointShape = settings.pointShape;
-  const pointShapeVal = pointShape ? pointShape : defaultPointShape;
+  const pointShapeVal = pointShape ?? defaultPointShape;
   const pointShapeOpts = ["circle", "square"].map((field) => (
     <Option key={field} value={field}>
       {upperFirst(field)}
