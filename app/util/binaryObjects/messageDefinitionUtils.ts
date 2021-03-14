@@ -101,11 +101,11 @@ export const getDatatypes = (cls: any): [RosDatatypes, string] | null | undefine
 export const isComplex = (typeName: string) => !primitiveList.has(typeName);
 
 // True for "object bobjects" and array views.
-export const isBobject = (object: any | null | undefined): boolean => {
+export const isBobject = (object?: any): boolean => {
   return object?.[deepParseSymbol] != null;
 };
 
-export const deepParse = (object: any | null | undefined): any => {
+export const deepParse = (object?: any): any => {
   if (object == null) {
     // Missing submessage fields are unfortunately common for constructed markers. This is not
     // principled, but it is pragmatic.
