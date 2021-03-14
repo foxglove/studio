@@ -34,7 +34,6 @@ import { HoverValue } from "@foxglove-studio/app/types/hoverValue";
 import { MosaicKey, SetFetchedLayoutPayload } from "@foxglove-studio/app/types/panels";
 
 const getReducers = () => [
-  (state: State) => ({ ...state }),
   panels,
   mosaic,
   hoverValue,
