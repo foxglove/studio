@@ -41,7 +41,7 @@ export async function renderImage({
   imageMessageDatatype,
   rawMarkerData,
 }: {
-  canvas: (HTMLCanvasElement | OffscreenCanvas) | undefined;
+  canvas?: HTMLCanvasElement | OffscreenCanvas;
   imageMessage?: Message;
   imageMessageDatatype?: string;
   rawMarkerData: RawMarkerData;

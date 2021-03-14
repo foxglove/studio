@@ -58,7 +58,7 @@ function filterMessages(
 // In-memory data provider, for in tests.
 export default class MemoryDataProvider implements DataProvider {
   messages: GetMessagesResult;
-  topics: Topic[] | undefined;
+  topics?: Topic[];
   datatypes?: RosDatatypes;
   messageDefinitionsByTopic: MessageDefinitionsByTopic;
   parsedMessageDefinitionsByTopic?: ParsedMessageDefinitionsByTopic;
