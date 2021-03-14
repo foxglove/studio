@@ -44,7 +44,6 @@ export default function LayoutMenu() {
           >
             Import/export layout
           </Item>
-          <ClearBagCacheMenuItem />
         </Menu>
       </ChildToggle>
     </>
