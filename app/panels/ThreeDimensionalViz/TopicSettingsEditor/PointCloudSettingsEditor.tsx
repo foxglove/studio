@@ -89,11 +89,7 @@ export default function PointCloudSettingsEditor(
   const { message, settings = {}, onFieldChange, onSettingsChange } = props;
 
   const onColorModeChange = useCallback(
-    (
-      newValue:
-        | (ColorMode | null | undefined)
-        | ((arg0?: ColorMode) => ColorMode | null | undefined),
-    ) => {
+    (newValue: (ColorMode | undefined) | ((arg0?: ColorMode) => ColorMode | undefined)) => {
       onSettingsChange((newSettings: any) => ({
         ...newSettings,
         colorMode: typeof newValue === "function" ? newValue(newSettings.colorMode) : newValue,
@@ -137,7 +133,7 @@ export default function PointCloudSettingsEditor(
                 }
                 return defaultColorField
                   ? { mode: "rainbow", colorField: defaultColorField }
-                  : null;
+                  : undefined;
               })
             }
             options={[

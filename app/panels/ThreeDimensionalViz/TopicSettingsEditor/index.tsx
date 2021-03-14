@@ -125,7 +125,7 @@ export type TopicSettingsEditorProps<Msg, Settings> = {
 
 export function topicSettingsEditorForDatatype(
   datatype: string,
-): ComponentType<TopicSettingsEditorProps<any, any>> | null | undefined {
+): ComponentType<TopicSettingsEditorProps<any, any>> | undefined {
   const editors = {
     [POINT_CLOUD_DATATYPE]: PointCloudSettingsEditor,
     [POSE_STAMPED_DATATYPE]: PoseSettingsEditor,

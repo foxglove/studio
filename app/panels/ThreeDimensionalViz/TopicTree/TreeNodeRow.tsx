@@ -111,8 +111,8 @@ type Props = {
   isXSWidth: boolean;
   node: TreeNode;
   nodeVisibleInScene: boolean;
-  visibleByColumn: (boolean | null | undefined)[];
-  sceneErrors: string[] | null | undefined;
+  visibleByColumn: (boolean | undefined)[];
+  sceneErrors: string[] | undefined;
   setCurrentEditingTopic: SetCurrentEditingTopic;
   derivedCustomSettings?: DerivedCustomSettings;
   width: number;
