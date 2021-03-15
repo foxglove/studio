@@ -32,7 +32,7 @@ function TcpRequested(protocols: XmlRpcValue[]): boolean {
   return false;
 }
 
-export class RosSlave {
+export class RosFollower {
   #server?: XmlRpcServer;
   #rosNode: RosNode;
 

@@ -5,21 +5,21 @@
 import { URL } from "whatwg-url";
 
 import { Connection } from "./Connection";
-import { RosSlaveClient } from "./RosSlaveClient";
+import { RosFollowerClient } from "./RosFollowerClient";
 
 // Handles a connection to a single publisher on a given topic.
 export class PublisherLink {
   readonly connectionId: number;
-  readonly rosSlaveClient: RosSlaveClient;
+  readonly rosFollowerClient: RosFollowerClient;
   readonly connection: Connection;
 
-  constructor(connectionId: number, rosSlaveClient: RosSlaveClient, connection: Connection) {
+  constructor(connectionId: number, rosFollowerClient: RosFollowerClient, connection: Connection) {
     this.connectionId = connectionId;
-    this.rosSlaveClient = rosSlaveClient;
+    this.rosFollowerClient = rosFollowerClient;
     this.connection = connection;
   }
 
   publisherXmlRpcUrl(): URL {
-    return this.rosSlaveClient.url();
+    return this.rosFollowerClient.url();
   }
 }

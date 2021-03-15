@@ -8,7 +8,7 @@ import { XmlRpcClient, XmlRpcResponse, XmlRpcValue } from "./XmlRpcTypes";
 
 export type ProtocolParams = [string, ...XmlRpcValue[]];
 
-export class RosSlaveClient {
+export class RosFollowerClient {
   #client: XmlRpcClient;
 
   constructor(options: { xmlRpcClient: XmlRpcClient }) {

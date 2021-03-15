@@ -8,9 +8,9 @@ import { ConnectionManager } from "./ConnectionManager";
 import { GetHostname, GetPid } from "./PlatformTypes";
 import { Publication } from "./Publication";
 import { PublisherLink } from "./PublisherLink";
+import { RosFollower } from "./RosFollower";
+import { RosFollowerClient } from "./RosFollowerClient";
 import { RosMasterClient } from "./RosMasterClient";
-import { RosSlave } from "./RosSlave";
-import { RosSlaveClient } from "./RosSlaveClient";
 import { Subscription } from "./Subscription";
 import { TcpConnection } from "./TcpConnection";
 import { TcpConnect, TcpServer } from "./TcpTypes";
@@ -39,7 +39,7 @@ export class RosNode {
 
   connectionManager: ConnectionManager;
   rosMasterClient: RosMasterClient;
-  rosSlave: RosSlave;
+  rosFollower: RosFollower;
   subscriptions = new Map<string, Subscription>();
   publications = new Map<string, Publication>();
 
@@ -63,7 +63,7 @@ export class RosNode {
     this.name = options.name;
     this.connectionManager = new ConnectionManager(options);
     this.rosMasterClient = new RosMasterClient(options);
-    this.rosSlave = new RosSlave(this);
+    this.rosFollower = new RosFollower(this);
     this.xmlRpcCreateServer = options.xmlRpcCreateServer;
     this.#xmlRpcCreateClient = options.xmlRpcCreateClient;
     this.#tcpConnect = options.tcpConnect;
@@ -85,18 +85,18 @@ export class RosNode {
   }
 
   async start(port?: number): Promise<void> {
-    return this.rosSlave.start(port);
+    return this.rosFollower.start(port);
   }
 
   shutdown(_msg?: string): void {
-    this.rosSlave.close();
+    this.rosFollower.close();
     this.subscriptions.clear();
     this.publications.clear();
     this.connectionManager.close();
   }
 
   async subscribe(options: SubscribeOpts): Promise<Subscription> {
-    const localApiUrl = this.rosSlave.url();
+    const localApiUrl = this.rosFollower.url();
     if (localApiUrl === undefined) {
       throw new Error("Local XMLRPC server is not running");
     }
@@ -134,10 +134,10 @@ export class RosNode {
 
         // Create an XMLRPC client to talk to this publisher
         const xmlRpcClient = await this.#xmlRpcCreateClient({ url });
-        const rosSlaveClient = new RosSlaveClient({ xmlRpcClient });
+        const rosFollowerClient = new RosFollowerClient({ xmlRpcClient });
 
         // Call requestTopic on this publisher to register ourselves as a subscriber
-        const { address, port } = await RosNode.RequestTopic(this.name, topic, rosSlaveClient);
+        const { address, port } = await RosNode.RequestTopic(this.name, topic, rosFollowerClient);
 
         // TODO: Don't wait for the TCP connection to connect here. Initiate the connection but
         // allow it to complete later, or fail/timeout and go into a retry loop
@@ -161,7 +161,9 @@ export class RosNode {
 
         // Hold a reference to this publisher
         const connectionId = this.connectionManager.newConnectionId();
-        subscription.publishers.push(new PublisherLink(connectionId, rosSlaveClient, connection));
+        subscription.publishers.push(
+          new PublisherLink(connectionId, rosFollowerClient, connection),
+        );
       }),
     );
 
@@ -171,7 +173,7 @@ export class RosNode {
   static async RequestTopic(
     name: string,
     topic: string,
-    apiClient: RosSlaveClient,
+    apiClient: RosFollowerClient,
   ): Promise<{ address: string; port: number }> {
     const [status, msg, protocol] = await apiClient.requestTopic(name, topic, [["TCPROS"]]);
 
