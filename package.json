@@ -23,7 +23,7 @@
     "serve": "webpack serve --mode development --progress",
     "lint": "TIMING=1 eslint --fix .",
     "lint:nofix": "TIMING=1 eslint .",
-    "test": "NODE_OPTIONS='-r ts-node/register' yarn jest",
+    "test": "NODE_OPTIONS='-r ts-node/register' jest",
     "test:debug": "NODE_OPTIONS='-r ts-node/register' --inspect-brk' jest",
     "test:watch": "NODE_OPTIONS='-r ts-node/register' jest --watch",
     "test:integration": "jest --projects test",
