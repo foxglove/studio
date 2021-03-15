@@ -451,7 +451,7 @@ function TwoDimensionalPlot(props: Props) {
     if (tooltip.current && tooltip.current.parentNode) {
       // Satisfy flow.
       tooltip.current.parentNode.removeChild(tooltip.current);
-      tooltip.current = null;
+      tooltip.current = ReactNull;
     }
   }, []);
 

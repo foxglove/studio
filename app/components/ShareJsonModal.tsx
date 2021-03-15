@@ -37,7 +37,7 @@ function decode(value: string) {
   }
 }
 
-function selectText(element?: HTMLTextAreaElement | null): void {
+function selectText(element?: HTMLTextAreaElement | ReactNull): void {
   if (element) {
     element.focus();
     element.select();

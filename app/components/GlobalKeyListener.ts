@@ -19,6 +19,7 @@ import { redoLayoutChange, undoLayoutChange } from "@foxglove-studio/app/actions
 
 const inNativeUndoRedoElement = (eventTarget: EventTarget) => {
   if (eventTarget instanceof HTMLTextAreaElement) {
+    // eslint-disable-next-line no-restricted-syntax
     let element: Element | null | undefined = eventTarget;
     // It's not always convenient to set the data property on the textarea itself, but we can set
     // it on a nearby ancestor.

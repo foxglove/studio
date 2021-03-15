@@ -59,7 +59,7 @@ export default function TreeNodeMenu({
 }: Props) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const { toggleCheckAllAncestors, toggleCheckAllDescendants }: any = useGuaranteedContext(
+  const { toggleCheckAllAncestors, toggleCheckAllDescendants } = useGuaranteedContext(
     TopicTreeContext,
     "TopicTreeContext",
   );

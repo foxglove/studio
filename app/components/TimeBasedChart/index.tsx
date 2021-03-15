@@ -421,9 +421,8 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
       ReactDOM.unmountComponentAtNode(tooltip.current);
     }
     if (tooltip.current && tooltip.current.parentNode) {
-      // Satisfy flow.
       tooltip.current.parentNode.removeChild(tooltip.current);
-      tooltip.current = null;
+      tooltip.current = ReactNull;
     }
   }, []);
   // Always clean up tooltips when unmounting.

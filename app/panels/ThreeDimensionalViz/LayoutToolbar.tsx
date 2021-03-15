@@ -91,7 +91,9 @@ function LayoutToolbar({
   toggleSearchTextOpen,
   transforms,
 }: Props) {
-  return isHidden ? null : (
+  return isHidden ? (
+    ReactNull
+  ) : (
     <>
       <MeasuringTool
         ref={measuringElRef}

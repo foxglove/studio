@@ -211,6 +211,7 @@ export type RosValue =
   | Uint8Array
   | Int8Array
   | undefined
+  // eslint-disable-next-line no-restricted-syntax
   | null;
 export type RosObject = Readonly<{
   [property: string]: RosValue;

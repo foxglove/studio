@@ -259,7 +259,7 @@ class DiagnosticStatus extends React.Component<Props, any> {
       // We need both `hardware_id` and `name`; one of them is not enough. That's also how we identify
       // what to show in this very panel; see `selectedHardwareId` AND `selectedName` in the config.
       const valuePath = `${topicToRender}.status[:]{hardware_id=="${info.status.hardware_id}"}{name=="${info.status.name}"}.values[:]{key=="${key}"}.value`;
-      let openPlotPanelIconElem = null;
+      let openPlotPanelIconElem = undefined;
       if (value && value.length > 0) {
         openPlotPanelIconElem = !isNaN(Number(value)) ? (
           <Icon

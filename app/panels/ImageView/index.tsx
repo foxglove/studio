@@ -116,7 +116,7 @@ const TopicTimestamp = ({
   style?: {
     [key: string]: string;
   };
-}) => (text === "" ? null : <TopicTimestampSpan style={styleObj}>{text}</TopicTimestampSpan>);
+}) => (text === "" ? ReactNull : <TopicTimestampSpan style={styleObj}>{text}</TopicTimestampSpan>);
 
 const BottomBar = ({ children }: { children?: React.ReactNode }) => (
   <div

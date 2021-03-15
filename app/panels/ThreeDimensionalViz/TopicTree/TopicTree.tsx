@@ -392,6 +392,7 @@ function TopicTree({
             itemHeight={ROW_HEIGHT}
             // Disable motion because it seems to cause a bug in the `rc-tree` (used under the hood by `antd` for
             // the tree). This bug would result in nodes no longer being rendered after a search.
+            // eslint-disable-next-line no-restricted-syntax
             motion={null}
             selectable={false}
             onExpand={(newExpandedKeys) => {

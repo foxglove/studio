@@ -210,7 +210,7 @@ export default class TreeNode extends Component<Props> {
 
     // Wrap in a fragment to avoid missing key warnings
     const tooltipContents =
-      !tooltip || tooltip.length === 0 ? null : React.createElement(React.Fragment, {}, ...tooltip);
+      tooltip && tooltip.length > 0 && React.createElement(React.Fragment, {}, ...tooltip);
 
     return (
       <div style={filtered ? { display: "none" } : {}}>

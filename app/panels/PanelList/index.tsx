@@ -322,7 +322,7 @@ function PanelList(props: Props) {
   ]);
 
   const highlightedPanel = React.useMemo(
-    () => (highlightedPanelIdx != undefined ? filteredItems[highlightedPanelIdx] : null),
+    () => (highlightedPanelIdx != undefined ? filteredItems[highlightedPanelIdx] : undefined),
     [filteredItems, highlightedPanelIdx],
   );
 
