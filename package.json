@@ -79,7 +79,6 @@
     "eslint-plugin-file-progress": "1.1.1",
     "eslint-plugin-header": "github:amacneil/eslint-plugin-header#notemplate",
     "eslint-plugin-import": "2.22.1",
-    "eslint-plugin-no-null": "1.0.2",
     "eslint-plugin-prettier": "3.3.1",
     "eslint-plugin-react": "7.22.0",
     "eslint-plugin-react-hooks": "4.2.0",

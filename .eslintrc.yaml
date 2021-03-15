@@ -15,7 +15,6 @@ plugins:
   - "@typescript-eslint"
   - header
   - file-progress
-  - no-null
 
 extends:
   - eslint:recommended
