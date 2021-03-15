@@ -69,6 +69,7 @@ export const EmptyDropTarget = ({ mosaicId, tabId }: Props) => {
       if (monitor.getItem().mosaicId === mosaicId) {
         return { tabId };
       }
+      return undefined;
     },
     collect: (monitor) => ({
       isOver: monitor.isOver(),
