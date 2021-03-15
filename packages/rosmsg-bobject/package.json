@@ -1,5 +1,5 @@
 {
-  "name": "@foxglove/bobject",
+  "name": "@foxglove/rosmsg-bobject",
   "version": "0.0.0",
   "private": true,
   "main": "./src/index.ts"

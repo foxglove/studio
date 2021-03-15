@@ -1908,9 +1908,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foxglove/bobject@workspace:packages/bobject":
+"@foxglove/rosmsg-bobject@workspace:packages/rosmsg-bobject":
   version: 0.0.0-use.local
-  resolution: "@foxglove/bobject@workspace:packages/bobject"
+  resolution: "@foxglove/rosmsg-bobject@workspace:packages/rosmsg-bobject"
   languageName: unknown
   linkType: soft
 
