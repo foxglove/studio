@@ -12,12 +12,13 @@
 //   You may not use this file except in compliance with the License.
 import NukeIcon from "@mdi/svg/svg/nuke.svg";
 
-import { Item } from "@foxglove-studio/app/components/Menu";
+import Button from "@foxglove-studio/app/components/Button";
+import Icon from "@foxglove-studio/app/components/Icon";
 import useConfirm from "@foxglove-studio/app/components/useConfirm";
-import { useExperimentalFeature } from "@foxglove-studio/app/context/ExperimentalFeaturesContext";
 import { clearIndexedDbWithoutConfirmation } from "@foxglove-studio/app/util/indexeddb/clearIndexedDb";
 
-export default function ClearBagCacheMenuItem(): React.ReactElement | null {
+// Clears cache associated with the "diskBagCache" experimental feature.
+export default function ClearBagCacheButton(): React.ReactElement | null {
   const { modal, open } = useConfirm({
     prompt:
       "This will clear out all locally cached bag data from IndexedDB.\n\nUse this if you're having consistency or performance issues (but then please still report them to us!).\n\nThis will only work if you've closed all Webviz windows, since we cannot delete active databases.",
@@ -31,13 +32,13 @@ export default function ClearBagCacheMenuItem(): React.ReactElement | null {
       }
     },
   });
-  if (!useExperimentalFeature("diskBagCaching")) {
-    return null;
-  }
   return (
-    <Item icon={<NukeIcon />} onClick={open}>
+    <Button onClick={open}>
       {modal}
+      <Icon medium>
+        <NukeIcon />
+      </Icon>{" "}
       Clear bag cache
-    </Item>
+    </Button>
   );
 }
