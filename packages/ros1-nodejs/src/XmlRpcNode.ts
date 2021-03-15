@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
-/// <reference path="xmlrpc-rosnodejs.d.ts" />
+/// <reference path="../typings/xmlrpc-rosnodejs.d.ts" />
 
 import type {
   XmlRpcClient,
