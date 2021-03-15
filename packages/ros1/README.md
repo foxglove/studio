@@ -1,6 +1,6 @@
 # @foxglove/ros1
 
-node.js TypeScript library for interfacing with ROS1.
+TypeScript library for interfacing with ROS1 with pluggable backends.
 
 ### Usage
 
@@ -12,4 +12,4 @@ TODO
 
 ### License
 
-node-ros1 is licensed under [Apache 2.0](https://opensource.org/licenses/Apache-2.0).
+@foxglove/ros1 is licensed under [Mozilla Public License, v2.0](https://opensource.org/licenses/MPL-2.0).

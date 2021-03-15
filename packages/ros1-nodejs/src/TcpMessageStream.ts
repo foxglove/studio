@@ -45,7 +45,7 @@ export class TcpMessageStream extends Transform {
   }
 
   static ConcatData(chunks: Uint8Array[]): Uint8Array {
-    if (chunks.length === 1) {
+    if (chunks.length === 1 && chunks[0]) {
       return chunks[0];
     }
 

@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { RosNode } from "@foxglove/ros1";
-import { PlatformNode, TcpNode, XmlRpcNode } from "@foxglove/ros1-node";
+import { PlatformNode, TcpNode, XmlRpcNode } from "@foxglove/ros1-nodejs";
 
 async function main() {
   const name = "/testclient";
