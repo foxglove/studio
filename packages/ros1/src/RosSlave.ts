@@ -33,35 +33,35 @@ function TcpRequested(protocols: XmlRpcValue[]): boolean {
 }
 
 export class RosSlave {
-  private _server?: XmlRpcServer;
-  private _rosNode: RosNode;
+  #server?: XmlRpcServer;
+  #rosNode: RosNode;
 
   constructor(rosNode: RosNode) {
-    this._rosNode = rosNode;
+    this.#rosNode = rosNode;
   }
 
   async start(port?: number): Promise<void> {
-    const hostname = await this._rosNode.hostname();
-    this._server = await this._rosNode.xmlRpcCreateServer({ hostname, port });
+    const hostname = await this.#rosNode.hostname();
+    this.#server = await this.#rosNode.xmlRpcCreateServer({ hostname, port });
 
-    this._server.addMethod("getBusStats", this.getBusStats);
-    this._server.addMethod("getBusInfo", this.getBusInfo);
-    this._server.addMethod("shutdown", this.shutdown);
-    this._server.addMethod("getPid", this.getPid);
-    this._server.addMethod("getSubscriptions", this.getSubscriptions);
-    this._server.addMethod("getPublications", this.getPublications);
-    this._server.addMethod("paramUpdate", this.paramUpdate);
-    this._server.addMethod("publisherUpdate", this.publisherUpdate);
-    this._server.addMethod("requestTopic", this.requestTopic);
+    this.#server.addMethod("getBusStats", this.getBusStats);
+    this.#server.addMethod("getBusInfo", this.getBusInfo);
+    this.#server.addMethod("shutdown", this.shutdown);
+    this.#server.addMethod("getPid", this.getPid);
+    this.#server.addMethod("getSubscriptions", this.getSubscriptions);
+    this.#server.addMethod("getPublications", this.getPublications);
+    this.#server.addMethod("paramUpdate", this.paramUpdate);
+    this.#server.addMethod("publisherUpdate", this.publisherUpdate);
+    this.#server.addMethod("requestTopic", this.requestTopic);
   }
 
   close(): void {
-    this._server?.close();
-    this._server = undefined;
+    this.#server?.close();
+    this.#server = undefined;
   }
 
   url(): URL | undefined {
-    const addr = this._server?.address();
+    const addr = this.#server?.address();
     if (addr === undefined) {
       return undefined;
     }
@@ -74,8 +74,8 @@ export class RosSlave {
       return Promise.reject(err);
     }
 
-    const publications = this._rosNode.publications.values();
-    const subscriptions = this._rosNode.subscriptions.values();
+    const publications = this.#rosNode.publications.values();
+    const subscriptions = this.#rosNode.subscriptions.values();
 
     const publishStats: XmlRpcValue[] = Array.from(publications, (pub, _) => pub.getStats());
     const subscribeStats: XmlRpcValue[] = Array.from(subscriptions, (sub, _) => sub.getStats());
@@ -105,7 +105,7 @@ export class RosSlave {
     }
 
     const msg = args[1] as string | undefined;
-    this._rosNode.shutdown(msg);
+    this.#rosNode.shutdown(msg);
 
     return Promise.resolve([1, "", 0]);
   };
@@ -116,7 +116,7 @@ export class RosSlave {
       return Promise.reject(err);
     }
 
-    const pid = await this._rosNode.pid();
+    const pid = await this.#rosNode.pid();
     return [1, "", pid];
   };
 
@@ -127,7 +127,7 @@ export class RosSlave {
     }
 
     const subs: [string, string][] = [];
-    this._rosNode.subscriptions.forEach((sub) => subs.push([sub.name, sub.dataType]));
+    this.#rosNode.subscriptions.forEach((sub) => subs.push([sub.name, sub.dataType]));
     return Promise.resolve([1, "subscriptions", subs]);
   };
 
@@ -138,7 +138,7 @@ export class RosSlave {
     }
 
     const pubs: [string, string][] = [];
-    this._rosNode.publications.forEach((pub) => pubs.push([pub.name, pub.dataType]));
+    this.#rosNode.publications.forEach((pub) => pubs.push([pub.name, pub.dataType]));
     return Promise.resolve([1, "publications", pubs]);
   };
 
@@ -174,7 +174,7 @@ export class RosSlave {
       return Promise.resolve([0, "unsupported protocol", []]);
     }
 
-    const addr = this._rosNode.connectionManager.tcpServerAddress();
+    const addr = this.#rosNode.connectionManager.tcpServerAddress();
     if (!addr) {
       return Promise.resolve([0, "cannot receive incoming connections", []]);
     }

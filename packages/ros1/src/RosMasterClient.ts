@@ -7,14 +7,14 @@ import { URL } from "whatwg-url";
 import { XmlRpcClient, XmlRpcResponse } from "./XmlRpcTypes";
 
 export class RosMasterClient {
-  private _client: XmlRpcClient;
+  #client: XmlRpcClient;
 
   constructor(options: { xmlRpcClient: XmlRpcClient }) {
-    this._client = options.xmlRpcClient;
+    this.#client = options.xmlRpcClient;
   }
 
   url(): URL {
-    return this._client.serverUrl;
+    return this.#client.serverUrl;
   }
 
   registerService(
@@ -23,7 +23,7 @@ export class RosMasterClient {
     serviceApi: string,
     callerApi: string,
   ): Promise<XmlRpcResponse> {
-    return this._client.methodCall("registerService", [callerId, service, serviceApi, callerApi]);
+    return this.#client.methodCall("registerService", [callerId, service, serviceApi, callerApi]);
   }
 
   unregisterService(
@@ -31,7 +31,7 @@ export class RosMasterClient {
     service: string,
     serviceApi: string,
   ): Promise<XmlRpcResponse> {
-    return this._client.methodCall("unregisterService", [callerId, service, serviceApi]);
+    return this.#client.methodCall("unregisterService", [callerId, service, serviceApi]);
   }
 
   registerSubscriber(
@@ -40,7 +40,7 @@ export class RosMasterClient {
     topicType: string,
     callerApi: string,
   ): Promise<XmlRpcResponse> {
-    return this._client.methodCall("registerSubscriber", [callerId, topic, topicType, callerApi]);
+    return this.#client.methodCall("registerSubscriber", [callerId, topic, topicType, callerApi]);
   }
 
   unregisterSubscriber(
@@ -48,7 +48,7 @@ export class RosMasterClient {
     topic: string,
     callerApi: string,
   ): Promise<XmlRpcResponse> {
-    return this._client.methodCall("unregisterSubscriber", [callerId, topic, callerApi]);
+    return this.#client.methodCall("unregisterSubscriber", [callerId, topic, callerApi]);
   }
 
   registerPublisher(
@@ -57,34 +57,34 @@ export class RosMasterClient {
     topicType: string,
     callerApi: string,
   ): Promise<XmlRpcResponse> {
-    return this._client.methodCall("registerPublisher", [callerId, topic, topicType, callerApi]);
+    return this.#client.methodCall("registerPublisher", [callerId, topic, topicType, callerApi]);
   }
 
   unregisterPublisher(callerId: string, topic: string, callerApi: string): Promise<XmlRpcResponse> {
-    return this._client.methodCall("unregisterPublisher", [callerId, topic, callerApi]);
+    return this.#client.methodCall("unregisterPublisher", [callerId, topic, callerApi]);
   }
 
   lookupNode(callerId: string, nodeName: string): Promise<XmlRpcResponse> {
-    return this._client.methodCall("lookupNode", [callerId, nodeName]);
+    return this.#client.methodCall("lookupNode", [callerId, nodeName]);
   }
 
   getPublishedTopics(callerId: string, subgraph: string = ""): Promise<XmlRpcResponse> {
-    return this._client.methodCall("getPublishedTopics", [callerId, subgraph]);
+    return this.#client.methodCall("getPublishedTopics", [callerId, subgraph]);
   }
 
   getTopicTypes(callerId: string): Promise<XmlRpcResponse> {
-    return this._client.methodCall("getTopicTypes", [callerId]);
+    return this.#client.methodCall("getTopicTypes", [callerId]);
   }
 
   getSystemState(callerId: string): Promise<XmlRpcResponse> {
-    return this._client.methodCall("getSystemState", [callerId]);
+    return this.#client.methodCall("getSystemState", [callerId]);
   }
 
   getUri(callerId: string): Promise<XmlRpcResponse> {
-    return this._client.methodCall("getUri", [callerId]);
+    return this.#client.methodCall("getUri", [callerId]);
   }
 
   lookupService(callerId: string, service: string): Promise<XmlRpcResponse> {
-    return this._client.methodCall("lookupService", [callerId, service]);
+    return this.#client.methodCall("lookupService", [callerId, service]);
   }
 }

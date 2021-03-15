@@ -19,16 +19,16 @@ import { default as xmlrpc } from "xmlrpc-rosnodejs";
 export class XmlRpcClientNode implements XmlRpcClient {
   readonly serverUrl: URL;
 
-  private _client: xmlrpc.Client;
+  #client: xmlrpc.Client;
 
   constructor(serverUrl: URL) {
     this.serverUrl = serverUrl;
-    this._client = xmlrpc.createClient({ url: serverUrl.toString() });
+    this.#client = xmlrpc.createClient({ url: serverUrl.toString() });
   }
 
   methodCall(method: string, args: XmlRpcValue[]): Promise<XmlRpcResponse> {
     return new Promise((resolve, reject) => {
-      this._client.methodCall(method, args, (error: Error | undefined, value: XmlRpcResponse) => {
+      this.#client.methodCall(method, args, (error: Error | undefined, value: XmlRpcResponse) => {
         if (error) {
           reject(error);
           return;
@@ -41,26 +41,26 @@ export class XmlRpcClientNode implements XmlRpcClient {
 }
 
 export class XmlRpcServerNode extends EventEmitter implements XmlRpcServer {
-  private _server: xmlrpc.Server;
-  private _address?: HttpAddress;
+  #server: xmlrpc.Server;
+  #address?: HttpAddress;
 
   constructor(server: xmlrpc.Server, address: HttpAddress) {
     super();
-    this._server = server;
-    this._address = address;
+    this.#server = server;
+    this.#address = address;
   }
 
   address(): HttpAddress | undefined {
-    return this._address;
+    return this.#address;
   }
 
   close(): void {
-    this._server.httpServer.close();
-    this._address = undefined;
+    this.#server.httpServer.close();
+    this.#address = undefined;
   }
 
   addMethod(method: string, handler: (args: XmlRpcValue[]) => Promise<XmlRpcResponse>): this {
-    this._server.on(method, (err, params, callback) => {
+    this.#server.on(method, (err, params, callback) => {
       if (err) {
         callback(err, undefined);
         return;

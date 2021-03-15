@@ -9,38 +9,38 @@ import { XmlRpcClient, XmlRpcResponse, XmlRpcValue } from "./XmlRpcTypes";
 export type ProtocolParams = [string, ...XmlRpcValue[]];
 
 export class RosSlaveClient {
-  private _client: XmlRpcClient;
+  #client: XmlRpcClient;
 
   constructor(options: { xmlRpcClient: XmlRpcClient }) {
-    this._client = options.xmlRpcClient;
+    this.#client = options.xmlRpcClient;
   }
 
   url(): URL {
-    return this._client.serverUrl;
+    return this.#client.serverUrl;
   }
 
   getBusStats(callerId: string): Promise<XmlRpcResponse> {
-    return this._client.methodCall("getBusStats", [callerId]);
+    return this.#client.methodCall("getBusStats", [callerId]);
   }
 
   getBusInfo(callerId: string): Promise<XmlRpcResponse> {
-    return this._client.methodCall("getBusInfo", [callerId]);
+    return this.#client.methodCall("getBusInfo", [callerId]);
   }
 
   shutdown(callerId: string, msg = ""): Promise<XmlRpcResponse> {
-    return this._client.methodCall("shutdown", [callerId, msg]);
+    return this.#client.methodCall("shutdown", [callerId, msg]);
   }
 
   async getPid(callerId: string): Promise<XmlRpcResponse> {
-    return this._client.methodCall("getPid", [callerId]);
+    return this.#client.methodCall("getPid", [callerId]);
   }
 
   getSubscriptions(callerId: string): Promise<XmlRpcResponse> {
-    return this._client.methodCall("getSubscriptions", [callerId]);
+    return this.#client.methodCall("getSubscriptions", [callerId]);
   }
 
   getPublications(callerId: string): Promise<XmlRpcResponse> {
-    return this._client.methodCall("getPublications", [callerId]);
+    return this.#client.methodCall("getPublications", [callerId]);
   }
 
   paramUpdate(
@@ -48,11 +48,11 @@ export class RosSlaveClient {
     parameterKey: string,
     parameterValue: XmlRpcValue,
   ): Promise<XmlRpcResponse> {
-    return this._client.methodCall("paramUpdate", [callerId, parameterKey, parameterValue]);
+    return this.#client.methodCall("paramUpdate", [callerId, parameterKey, parameterValue]);
   }
 
   publisherUpdate(callerId: string, topic: string, publishers: string[]): Promise<XmlRpcResponse> {
-    return this._client.methodCall("publisherUpdate", [callerId, topic, publishers]);
+    return this.#client.methodCall("publisherUpdate", [callerId, topic, publishers]);
   }
 
   requestTopic(
@@ -60,6 +60,6 @@ export class RosSlaveClient {
     topic: string,
     protocols: ProtocolParams[],
   ): Promise<XmlRpcResponse> {
-    return this._client.methodCall("requestTopic", [callerId, topic, protocols]);
+    return this.#client.methodCall("requestTopic", [callerId, topic, protocols]);
   }
 }

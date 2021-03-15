@@ -21,8 +21,8 @@ export class TcpConnection implements Connection {
   constructor(socket: TcpSocket) {
     this._socket = socket;
 
-    socket.on("close", this._handleClose);
-    socket.on("message", this._handleMessage);
+    socket.on("close", this.#handleClose);
+    socket.on("message", this.#handleMessage);
   }
 
   transportType(): string {
@@ -58,11 +58,11 @@ export class TcpConnection implements Connection {
     return `TCPROS not connected [socket ${fd}]`;
   }
 
-  private _handleClose = () => {
+  #handleClose = (): void => {
     // TODO: Enter a reconnect loop
   };
 
-  private _handleMessage = (data: Uint8Array) => {
+  #handleMessage = (data: Uint8Array): void => {
     if (this._readingHeader) {
       this._readingHeader = false;
 

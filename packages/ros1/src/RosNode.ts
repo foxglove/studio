@@ -43,11 +43,11 @@ export class RosNode {
   subscriptions = new Map<string, Subscription>();
   publications = new Map<string, Publication>();
 
-  private _xmlRpcCreateClient: XmlRpcCreateClient;
-  private _tcpConnect: TcpConnect;
-  private _getPid: GetPid;
-  private _getHostname: GetHostname;
-  private _hostname: string | undefined;
+  #xmlRpcCreateClient: XmlRpcCreateClient;
+  #tcpConnect: TcpConnect;
+  #getPid: GetPid;
+  #getHostname: GetHostname;
+  #hostname: string | undefined;
 
   constructor(options: {
     name: string;
@@ -65,23 +65,23 @@ export class RosNode {
     this.rosMasterClient = new RosMasterClient(options);
     this.rosSlave = new RosSlave(this);
     this.xmlRpcCreateServer = options.xmlRpcCreateServer;
-    this._xmlRpcCreateClient = options.xmlRpcCreateClient;
-    this._tcpConnect = options.tcpConnect;
-    this._getPid = options.getPid;
-    this._getHostname = options.getHostname;
-    this._hostname = options.hostname;
+    this.#xmlRpcCreateClient = options.xmlRpcCreateClient;
+    this.#tcpConnect = options.tcpConnect;
+    this.#getPid = options.getPid;
+    this.#getHostname = options.getHostname;
+    this.#hostname = options.hostname;
   }
 
   pid(): Promise<number> {
-    return this._getPid();
+    return this.#getPid();
   }
 
   async hostname(): Promise<string> {
-    if (this._hostname !== undefined) {
-      return this._hostname;
+    if (this.#hostname !== undefined) {
+      return this.#hostname;
     }
-    this._hostname = await this._getHostname();
-    return this._hostname;
+    this.#hostname = await this.#getHostname();
+    return this.#hostname;
   }
 
   async start(port?: number): Promise<void> {
@@ -133,7 +133,7 @@ export class RosNode {
         }
 
         // Create an XMLRPC client to talk to this publisher
-        const xmlRpcClient = await this._xmlRpcCreateClient({ url });
+        const xmlRpcClient = await this.#xmlRpcCreateClient({ url });
         const rosSlaveClient = new RosSlaveClient({ xmlRpcClient });
 
         // Call requestTopic on this publisher to register ourselves as a subscriber
@@ -143,7 +143,7 @@ export class RosNode {
         // allow it to complete later, or fail/timeout and go into a retry loop
 
         // Establish a TCP connection to this publisher
-        const socket = await this._tcpConnect({ host: address, port });
+        const socket = await this.#tcpConnect({ host: address, port });
         const connection = new TcpConnection(socket);
         this.connectionManager.addTcpConnection(connection);
 

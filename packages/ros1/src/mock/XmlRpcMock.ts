@@ -125,19 +125,19 @@ export class XmlRpcClientMock implements XmlRpcClient {
 }
 
 export class XmlRpcServerMock extends EventEmitter implements XmlRpcServer {
-  private _address?: HttpAddress;
+  #address?: HttpAddress;
 
   constructor() {
     super();
-    this._address = { hostname: "localhost", port: 39211, secure: false };
+    this.#address = { hostname: "localhost", port: 39211, secure: false };
   }
 
   address(): HttpAddress | undefined {
-    return this._address;
+    return this.#address;
   }
 
   close(): void {
-    this._address = undefined;
+    this.#address = undefined;
   }
 
   addMethod(method: string, handler: (args: XmlRpcValue[]) => Promise<XmlRpcResponse>): this {

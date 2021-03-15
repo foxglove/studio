@@ -1,8 +1,10 @@
 {
   "include": ["src"],
   "compilerOptions": {
-    "module": "esnext",
-    "lib": ["esnext"],
+    "target": "es2020",
+    "module": "es2020",
+    "lib": ["es2020"],
+    "newLine": "lf",
     "importHelpers": true,
     "downlevelIteration": true,
     // output .d.ts declaration files for consumers
@@ -14,9 +16,10 @@
     // stricter type-checking for stronger correctness. Recommended by TS
     "strict": true,
     // linter checks for common issues
+    "noImplicitAny": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    // noUnused* overlap with @typescript-eslint/no-unused-vars, can disable if duplicative
+    "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     // use Node's module resolution algorithm, instead of the legacy TS one

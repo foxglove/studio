@@ -7,18 +7,18 @@ import { EventEmitter } from "eventemitter3";
 import { TcpAddress, TcpServer, TcpSocket } from "../TcpTypes";
 
 export class TcpSocketMock extends EventEmitter implements TcpSocket {
-  private _connected = true;
+  #connected = true;
 
   constructor() {
     super();
   }
 
   remoteAddress(): TcpAddress | undefined {
-    return this._connected ? { address: "192.168.1.2", port: 40000, family: "IPv4" } : undefined;
+    return this.#connected ? { address: "192.168.1.2", port: 40000, family: "IPv4" } : undefined;
   }
 
   localAddress(): TcpAddress | undefined {
-    return this._connected ? { address: "127.0.0.1", port: 30000, family: "IPv4" } : undefined;
+    return this.#connected ? { address: "127.0.0.1", port: 30000, family: "IPv4" } : undefined;
   }
 
   fd(): number | undefined {
@@ -26,11 +26,11 @@ export class TcpSocketMock extends EventEmitter implements TcpSocket {
   }
 
   connected(): boolean {
-    return this._connected;
+    return this.#connected;
   }
 
   close(): void {
-    this._connected = false;
+    this.#connected = false;
   }
 
   write(_data: Uint8Array): Promise<void> {

@@ -6,43 +6,43 @@ import { TcpConnection } from "./TcpConnection";
 import { TcpAddress, TcpServer } from "./TcpTypes";
 
 export class ConnectionManager {
-  private _connectionIdCounter = 0;
-  private _tcpServer?: TcpServer;
-  private _tcpConnections: TcpConnection[] = [];
+  #connectionIdCounter = 0;
+  #tcpServer?: TcpServer;
+  #tcpConnections: TcpConnection[] = [];
 
   constructor(options: { tcpServer?: TcpServer }) {
-    this._tcpServer = options.tcpServer;
+    this.#tcpServer = options.tcpServer;
   }
 
   close(): void {
-    this._tcpServer?.close();
-    this._tcpConnections.forEach((conn) => conn.close());
-    this._tcpConnections = [];
+    this.#tcpServer?.close();
+    this.#tcpConnections.forEach((conn) => conn.close());
+    this.#tcpConnections = [];
   }
 
   newConnectionId(): number {
-    return this._connectionIdCounter++;
+    return this.#connectionIdCounter++;
   }
 
   addTcpConnection(connection: TcpConnection): boolean {
-    const idx = this._tcpConnections.indexOf(connection);
+    const idx = this.#tcpConnections.indexOf(connection);
     if (idx > -1) {
       return false;
     }
-    this._tcpConnections.push(connection);
+    this.#tcpConnections.push(connection);
     return true;
   }
 
   removeTcpConnection(connection: TcpConnection): boolean {
-    const idx = this._tcpConnections.indexOf(connection);
+    const idx = this.#tcpConnections.indexOf(connection);
     if (idx > -1) {
-      this._tcpConnections.splice(idx, 1);
+      this.#tcpConnections.splice(idx, 1);
       return true;
     }
     return false;
   }
 
   tcpServerAddress(): TcpAddress | undefined {
-    return this._tcpServer?.address();
+    return this.#tcpServer?.address();
   }
 }

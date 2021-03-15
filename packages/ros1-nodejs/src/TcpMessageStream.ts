@@ -5,40 +5,40 @@
 import { Transform, TransformCallback } from "stream";
 
 export class TcpMessageStream extends Transform {
-  private _inMessage = false;
-  private _bytesNeeded = 4;
-  private _chunks: Uint8Array[] = [];
+  #inMessage = false;
+  #bytesNeeded = 4;
+  #chunks: Uint8Array[] = [];
 
   _transform(chunk: Uint8Array, _encoding: BufferEncoding, callback: TransformCallback): void {
     let idx = 0;
     while (idx < chunk.length) {
-      if (chunk.length - idx < this._bytesNeeded) {
+      if (chunk.length - idx < this.#bytesNeeded) {
         // If we didn't receive enough bytes to complete the current message or
         // message length field, store this chunk and continue on
-        this._chunks.push(new Uint8Array(chunk.buffer, chunk.byteOffset + idx));
-        this._bytesNeeded -= chunk.length - idx;
+        this.#chunks.push(new Uint8Array(chunk.buffer, chunk.byteOffset + idx));
+        this.#bytesNeeded -= chunk.length - idx;
         return callback();
       }
 
       // Store the final chunk needed to complete the current message or message
       // length field
-      this._chunks.push(new Uint8Array(chunk.buffer, chunk.byteOffset + idx, this._bytesNeeded));
-      idx += this._bytesNeeded;
+      this.#chunks.push(new Uint8Array(chunk.buffer, chunk.byteOffset + idx, this.#bytesNeeded));
+      idx += this.#bytesNeeded;
 
-      const payload = TcpMessageStream.ConcatData(this._chunks);
+      const payload = TcpMessageStream.ConcatData(this.#chunks);
 
-      if (this._inMessage) {
+      if (this.#inMessage) {
         // Produce a Uint8Array representing a single message and transition to
         // reading a message length field
-        this._bytesNeeded = 4;
+        this.#bytesNeeded = 4;
         this.emit("message", payload);
       } else {
         // Decoded the message length field and transition to reading a message
-        this._bytesNeeded = new DataView(payload.buffer).getUint32(0, true);
+        this.#bytesNeeded = new DataView(payload.buffer).getUint32(0, true);
       }
 
-      this._inMessage = !this._inMessage;
-      this._chunks = [];
+      this.#inMessage = !this.#inMessage;
+      this.#chunks = [];
     }
 
     callback();

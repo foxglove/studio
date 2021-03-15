@@ -17,42 +17,42 @@ type MaybeHasFd = {
 };
 
 export class TcpSocketNode extends EventEmitter implements TcpSocket {
-  private _socket: net.Socket;
-  private _transformer = new TcpMessageStream();
+  #socket: net.Socket;
+  #transformer = new TcpMessageStream();
 
   constructor(socket: net.Socket) {
     super();
-    this._socket = socket;
-    this._socket.pipe(this._transformer);
+    this.#socket = socket;
+    this.#socket.pipe(this.#transformer);
 
     socket.on("close", () => this.emit("close"));
     socket.on("end", () => this.emit("end"));
     socket.on("timeout", () => this.emit("timeout"));
     socket.on("error", (err) => this.emit("error", err));
 
-    this._transformer.on("message", (data: Uint8Array) => this.emit("message", data));
+    this.#transformer.on("message", (data: Uint8Array) => this.emit("message", data));
   }
 
   remoteAddress(): TcpAddress | undefined {
-    if (this._socket.destroyed) {
+    if (this.#socket.destroyed) {
       return undefined;
     }
 
-    const port = this._socket.remotePort;
-    const family = this._socket.remoteFamily;
-    const address = this._socket.remoteAddress;
+    const port = this.#socket.remotePort;
+    const family = this.#socket.remoteFamily;
+    const address = this.#socket.remoteAddress;
     return port !== undefined && family !== undefined && address !== undefined
       ? { port, family, address }
       : undefined;
   }
 
   localAddress(): TcpAddress | undefined {
-    if (this._socket.destroyed) {
+    if (this.#socket.destroyed) {
       return undefined;
     }
-    const port = this._socket.localPort;
-    const family = this._socket.remoteFamily; // There is no localFamily
-    const address = this._socket.localAddress;
+    const port = this.#socket.localPort;
+    const family = this.#socket.remoteFamily; // There is no localFamily
+    const address = this.#socket.localAddress;
     return port !== undefined && family !== undefined && address !== undefined
       ? { port, family, address }
       : undefined;
@@ -60,20 +60,20 @@ export class TcpSocketNode extends EventEmitter implements TcpSocket {
 
   fd(): number | undefined {
     // eslint-disable-next-line no-underscore-dangle
-    return ((this._socket as unknown) as MaybeHasFd)._handle?.fd;
+    return ((this.#socket as unknown) as MaybeHasFd)._handle?.fd;
   }
 
   connected(): boolean {
-    return !this._socket.destroyed && this._socket.remoteAddress !== undefined;
+    return !this.#socket.destroyed && this.#socket.remoteAddress !== undefined;
   }
 
   close(): void {
-    this._socket.destroy();
+    this.#socket.destroy();
   }
 
   write(data: Uint8Array): Promise<void> {
     return new Promise((resolve, reject) => {
-      this._socket.write(data, (err) => {
+      this.#socket.write(data, (err) => {
         if (err) {
           reject(err);
           return;
@@ -85,11 +85,11 @@ export class TcpSocketNode extends EventEmitter implements TcpSocket {
 }
 
 export class TcpServerNode extends EventEmitter implements TcpServer {
-  private _server: net.Server;
+  #server: net.Server;
 
   constructor(server: net.Server) {
     super();
-    this._server = server;
+    this.#server = server;
 
     server.on("close", () => this.emit("close"));
     server.on("connection", (socket) => this.emit("connection", new TcpSocketNode(socket)));
@@ -97,7 +97,7 @@ export class TcpServerNode extends EventEmitter implements TcpServer {
   }
 
   address(): TcpAddress | undefined {
-    const addr = this._server.address();
+    const addr = this.#server.address();
     if (addr === null || typeof addr === "string") {
       // Address will only be a string for an IPC (named pipe) server, which
       // should never happen in TcpServerNode
@@ -107,7 +107,7 @@ export class TcpServerNode extends EventEmitter implements TcpServer {
   }
 
   close(): void {
-    this._server.close();
+    this.#server.close();
   }
 }
 
