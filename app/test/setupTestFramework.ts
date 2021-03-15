@@ -104,6 +104,8 @@ expect.extend({
 
   // Passes if the given value is null or undefined. Helps encourage avoiding the use of
   // null, while treating them both as representing invalid/absent values.
+  // This custom matcher is necessary because the standard `toEqual()` does not behave
+  // like ==, and considers null/undefined to be unequal.
   toBeNullOrUndefined(received: unknown) {
     const pass = received == null;
     return {
