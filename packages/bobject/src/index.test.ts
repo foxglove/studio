@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { BinaryMessageWriter } from "./";
+import { BinaryMessageWriter } from ".";
 import { definitions } from "../test/definitions";
 
 // C++ module will output missing fields and types to the console
@@ -203,7 +203,7 @@ describe("definitions", () => {
         "fake_msgs/HasByteArray",
         definitions["fake_msgs/HasByteArray"],
       );
-      expect(definition).not.toBeNullOrUndefined();
+      expect(definition).toBeTruthy();
       expect(definition.getSize()).toBe(8);
     });
 
@@ -224,7 +224,7 @@ describe("definitions", () => {
         "std_msgs/Header",
         definitions["std_msgs/Header"],
       );
-      expect(definition).not.toBeNullOrUndefined();
+      expect(definition).toBeTruthy();
       expect(definition.getSize()).toBe(20);
     });
 
@@ -234,7 +234,7 @@ describe("definitions", () => {
         "fake_msgs/HasComplexAndArray",
         definitions["fake_msgs/HasComplexAndArray"],
       );
-      expect(definition).not.toBeNullOrUndefined();
+      expect(definition).toBeTruthy();
       expect(definition.getSize()).toBe(28);
     });
 
@@ -243,7 +243,7 @@ describe("definitions", () => {
         "fake_msgs/HasByteArray",
         definitions["fake_msgs/HasByteArray"],
       );
-      expect(definition).not.toBeNullOrUndefined();
+      expect(definition).toBeTruthy();
       expect(definition.getSize()).toBe(8);
     });
 
@@ -257,7 +257,7 @@ describe("definitions", () => {
         "fake_msgs/HasComplexArray",
         definitions["fake_msgs/HasComplexArray"],
       );
-      expect(definition).not.toBeNullOrUndefined();
+      expect(definition).toBeTruthy();
       expect(definition.getSize()).toBe(8);
     });
 

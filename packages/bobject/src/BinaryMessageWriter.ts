@@ -13,7 +13,6 @@
 
 import { sumBy, maxBy } from "lodash";
 
-// @ts-expect-error emscripten support library
 import ModuleFactory from "../bin/translator";
 import { BinaryDefinition, BinaryObjects, Message, RosDatatype, RosDatatypes } from "./types";
 
