@@ -718,7 +718,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-syntax-import-meta@npm:^7.8.3":
+"@babel/plugin-syntax-import-meta@npm:^7.2.0, @babel/plugin-syntax-import-meta@npm:^7.8.3":
   version: 7.10.4
   resolution: "@babel/plugin-syntax-import-meta@npm:7.10.4"
   dependencies:
@@ -1476,7 +1476,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/template@npm:^7.12.13, @babel/template@npm:^7.12.7, @babel/template@npm:^7.3.3":
+"@babel/template@npm:^7.12.13, @babel/template@npm:^7.12.7, @babel/template@npm:^7.3.3, @babel/template@npm:^7.4.4":
   version: 7.12.13
   resolution: "@babel/template@npm:7.12.13"
   dependencies:
@@ -1847,7 +1847,6 @@ __metadata:
     moment-duration-format: 2.3.2
     moment-timezone: 0.5.33
     monaco-editor: 0.22.3
-    monaco-vim: 0.1.12
     natsort: 2.0.2
     panzoom: 8.7.5
     prettier: 2.2.1
@@ -1944,6 +1943,12 @@ __metadata:
     typescript: 4.2.2
     web-encoding: 1.1.0
     whatwg-url: 8.4.0
+  languageName: unknown
+  linkType: soft
+
+"@foxglove/rosmsg-bobject@workspace:packages/rosmsg-bobject":
+  version: 0.0.0-use.local
+  resolution: "@foxglove/rosmsg-bobject@workspace:packages/rosmsg-bobject"
   languageName: unknown
   linkType: soft
 
@@ -6694,6 +6699,18 @@ __metadata:
   version: 6.18.0
   resolution: "babel-plugin-syntax-jsx@npm:6.18.0"
   checksum: a5c8174ad6165d5f541f9f31cf4b6338ccfb7d586cec111537fa567f13b5fbdcf54f7928db44429d4610aa1be9d07bb03d017b22ba521ff819a6a2090b694797
+  languageName: node
+  linkType: hard
+
+"babel-plugin-transform-import-meta@npm:1.0.1":
+  version: 1.0.1
+  resolution: "babel-plugin-transform-import-meta@npm:1.0.1"
+  dependencies:
+    "@babel/plugin-syntax-import-meta": ^7.2.0
+    "@babel/template": ^7.4.4
+  peerDependencies:
+    "@babel/core": ^7.0.0-0
+  checksum: 15a70daafa0e0e655539043501e1263b01306bfa71913d2be9e13a764e7d5267062b1b6a3b07bb6ebd4343ea5d8d6a9a51b56d9493b8740aa293c6c8c93f5125
   languageName: node
   linkType: hard
 
@@ -12126,6 +12143,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": 4.16.1
     "@typescript-eslint/parser": 4.16.1
     babel-loader: 8.2.2
+    babel-plugin-transform-import-meta: 1.0.1
     browserify-zlib: 0.2.0
     circular-dependency-plugin: 5.2.2
     clean-webpack-plugin: 3.0.0
@@ -17165,15 +17183,6 @@ __metadata:
   version: 0.22.3
   resolution: "monaco-editor@npm:0.22.3"
   checksum: 1f5a65aee9cb2edb3aa8b82448e36d78e26a9aff2b76561b34f2dcd5d0077ff719d187bc6f439557c4059df8631eb73b7ba33ed90f0d6e1e606bc7cd04023909
-  languageName: node
-  linkType: hard
-
-"monaco-vim@npm:0.1.12":
-  version: 0.1.12
-  resolution: "monaco-vim@npm:0.1.12"
-  peerDependencies:
-    monaco-editor: ^0.14.0 || ^0.15.0 || ^0.16.0 || ^0.17.0 || ^0.18.0 || ^0.19.0 || ^0.20.0 || ^0.21.0 || ^0.22.0
-  checksum: 0cc80f92f05609a68b714c1132659883bd99594b5b559bb1acc648c944b5673566a07b30fc3b9579f8557b45e90d447a337a2f4de9d5005b7c8bac2a7c3c84a5
   languageName: node
   linkType: hard
 
