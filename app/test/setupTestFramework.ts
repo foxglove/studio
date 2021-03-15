@@ -16,7 +16,7 @@ import { isEqual } from "lodash";
 
 import {
   mockSendNotification,
-  setNotificationHandler as mockSetNotificationHandler,
+  mockSetNotificationHandler,
 } from "@foxglove-studio/app/test/MockSendNotification";
 
 // Mock out sendNotification for all tests
