@@ -262,10 +262,10 @@ function TopicTree({
   visibleTopicsCountByKey,
 }: BaseProps) {
   const renderTopicTree = pinTopics || showTopicTree;
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(ReactNull);
   const checkedKeysSet = useMemo(() => new Set(checkedKeys), [checkedKeys]);
 
-  const filterTextFieldRef = useRef<HTMLInputElement | null>(null);
+  const filterTextFieldRef = useRef<HTMLInputElement>(ReactNull);
 
   // HACK: rc-tree does not auto expand dynamic tree nodes. Create a copy of expandedNodes
   // to ensure newly added nodes such as `uncategorized` are properly expanded:

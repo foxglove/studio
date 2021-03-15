@@ -245,7 +245,7 @@ class DiagnosticStatus extends React.Component<Props, any> {
         );
       } else if (inCollapsedSection) {
         if (ellipsisShown) {
-          return null;
+          return ReactNull;
         }
         ellipsisShown = true;
         return (

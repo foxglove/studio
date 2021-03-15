@@ -106,7 +106,7 @@ export default function ShareJsonModal(props: Props) {
 
   const renderError = useMemo(() => {
     if (!error) {
-      return null;
+      return ReactNull;
     }
     return <div className="notification is-danger">The input you provided is invalid.</div>;
   }, [error]);

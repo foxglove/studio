@@ -93,5 +93,5 @@ export default function Dimensions(props: Props): React.ReactElement | null {
   if ("children" in props && typeof props.children === "function") {
     return props.children(dimensions);
   }
-  return null;
+  return ReactNull;
 }

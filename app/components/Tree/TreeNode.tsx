@@ -89,7 +89,7 @@ export default class TreeNode extends Component<Props> {
       onToggleVisibility,
     } = this.props;
     if (!node.expanded || !node.children) {
-      return null;
+      return ReactNull;
     }
     return node.children.map((child) => {
       return (

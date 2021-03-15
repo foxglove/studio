@@ -66,7 +66,7 @@ export default function TreeNodeMenu({
 
   // Don't render the dot menu if the datasources are unavailable and the node is group node (topic node has option to copy topicName).
   if (!providerAvailable && !topicName) {
-    return null;
+    return ReactNull;
   }
   return (
     <ChildToggle

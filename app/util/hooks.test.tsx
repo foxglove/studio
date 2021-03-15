@@ -189,7 +189,7 @@ describe("createSelectableContext/useContextSelector", () => {
     function Consumer() {
       const value = useContextSelector(ctx, Consumer.selectorFn);
       Consumer.renderFn(value);
-      return null;
+      return ReactNull;
     }
     Consumer.selectorFn = jest.fn().mockImplementation(selector);
     Consumer.renderFn = jest.fn();
@@ -368,7 +368,7 @@ describe("createSelectableContext/useContextSelector", () => {
       const y = useContextSelector(C, selector2);
       const z = useContextSelector(C, selector3);
       renderFn([x, y, z]);
-      return null;
+      return ReactNull;
     }
 
     const root = mount(

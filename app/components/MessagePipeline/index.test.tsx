@@ -138,7 +138,7 @@ describe("MessagePipelineProvider/MessagePipelineConsumer", () => {
           {(context) => {
             pauseFrame = context.pauseFrame;
             promise.resolve();
-            return null;
+            return ReactNull;
           }}
         </MessagePipelineConsumer>
       </MessagePipelineProvider>,
@@ -211,7 +211,7 @@ describe("MessagePipelineProvider/MessagePipelineConsumer", () => {
               expect(context.subscriptions).toBe(lastSubscriptions);
               done();
             }
-            return null;
+            return ReactNull;
           }}
         </MessagePipelineConsumer>
       </MessagePipelineProvider>,
@@ -260,7 +260,7 @@ describe("MessagePipelineProvider/MessagePipelineConsumer", () => {
               expect(context.publishers).toBe(lastPublishers);
               done();
             }
-            return null;
+            return ReactNull;
           }}
         </MessagePipelineConsumer>
       </MessagePipelineProvider>,
@@ -279,7 +279,7 @@ describe("MessagePipelineProvider/MessagePipelineConsumer", () => {
             callCount++;
             if (callCount > 3) {
               done();
-              return null;
+              return ReactNull;
             }
             // cause the player to emit a frame outside the render loop to trigger another render
             setImmediate(() => {
@@ -291,7 +291,7 @@ describe("MessagePipelineProvider/MessagePipelineConsumer", () => {
             });
             // we don't have a last context yet
             if (callCount === 1) {
-              return null;
+              return ReactNull;
             }
             lastContext = context;
             for (const key in context) {
@@ -300,7 +300,7 @@ describe("MessagePipelineProvider/MessagePipelineConsumer", () => {
                 expect(lastContext[key]).toBe(context[key]);
               }
             }
-            return null;
+            return ReactNull;
           }}
         </MessagePipelineConsumer>
       </MessagePipelineProvider>,
@@ -351,7 +351,7 @@ describe("MessagePipelineProvider/MessagePipelineConsumer", () => {
               expect(player.setPlaybackSpeed).toHaveBeenCalledWith(0.5);
               expect(player.seekPlayback).toHaveBeenCalledWith({ sec: 1, nsec: 0 });
             }
-            return null;
+            return ReactNull;
           }}
         </MessagePipelineConsumer>
       </MessagePipelineProvider>,
@@ -363,7 +363,7 @@ describe("MessagePipelineProvider/MessagePipelineConsumer", () => {
     jest.spyOn(player, "close");
     const el = mount(
       <MessagePipelineProvider player={player}>
-        <MessagePipelineConsumer>{() => null}</MessagePipelineConsumer>
+        <MessagePipelineConsumer>{() => ReactNull}</MessagePipelineConsumer>
       </MessagePipelineProvider>,
     );
 
@@ -436,7 +436,7 @@ describe("MessagePipelineProvider/MessagePipelineConsumer", () => {
             context.setPlaybackSpeed(1);
             context.seekPlayback({ sec: 1, nsec: 0 });
             context.publish({ topic: "/foo", msg: {} });
-            return null;
+            return ReactNull;
           }}
         </MessagePipelineConsumer>
       </MessagePipelineProvider>,
@@ -472,7 +472,7 @@ describe("MessagePipelineProvider/MessagePipelineConsumer", () => {
                 wait.resolve();
               });
             }
-            return null;
+            return ReactNull;
           }}
         </MessagePipelineConsumer>
       </MessagePipelineProvider>,
@@ -604,7 +604,7 @@ describe("MessagePipelineProvider/MessagePipelineConsumer", () => {
           <MessagePipelineConsumer>
             {(context) => {
               pauseFrame = context.pauseFrame;
-              return null;
+              return ReactNull;
             }}
           </MessagePipelineConsumer>
         </MessagePipelineProvider>,

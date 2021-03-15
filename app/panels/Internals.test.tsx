@@ -25,7 +25,7 @@ jest.mock("@foxglove-studio/app/util");
 
 function Subscriber({ topic }: { topic: string }) {
   useMessagesByTopic({ topics: [topic], historySize: 1 });
-  return null;
+  return ReactNull;
 }
 
 describe("<Internals>", () => {

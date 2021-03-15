@@ -105,5 +105,5 @@ export default function GlobalKeyListener({
     return () => document.removeEventListener("keydown", keyDownHandler, { capture: true });
   }, [keyDownHandler]);
 
-  return null;
+  return ReactNull;
 }

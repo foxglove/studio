@@ -137,7 +137,7 @@ export const useSearchText = (): SearchTextProps => {
   const [searchText, setSearchText] = useState<string>("");
   const [searchTextMatches, setSearchTextMatches] = useState<GLTextMarker[]>([]);
   const [selectedMatchIndex, setSelectedMatchIndex] = useState(0);
-  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(ReactNull);
 
   return {
     searchTextOpen,

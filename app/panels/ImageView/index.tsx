@@ -365,7 +365,7 @@ function ImageView(props: Props) {
     const items = [...imageTopicsByNamespace.keys()].sort().map((group) => {
       const imageTopics = imageTopicsByNamespace.get(group);
       if (!imageTopics) {
-        return null;
+        return ReactNull;
       } // satisfy flow
       imageTopics.sort(naturalSort("name"));
 

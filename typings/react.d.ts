@@ -6,7 +6,16 @@
 /// <reference types="react" />
 
 declare global {
-  namespace React {}
+  namespace React {
+    // Add an extra overload so that call sites can use `useRef<T>(ReactNull)` instead of
+    // `useRef<T | ReactNull>(ReactNull)`.
+    declare function useRef<T>(_: ReactNull): MutableRefObject<T | ReactNull>;
+  }
+
+  // These aliases are used so that we can prevent null in most places, but still use it
+  // where required for React (such as refs and returning from render).
+  declare type ReactNull = null;
+  declare const ReactNull = null;
 }
 
 export {};
