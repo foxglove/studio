@@ -45,14 +45,14 @@ const isArrayElement = (value: any, pathItem: any, structureItem: any): boolean 
 // a bunch of paths for that navigated down value.
 export function getValueActionForValue(
   rootValue: unknown,
-  rootStructureItem: MessagePathStructureItem | null | undefined,
+  rootStructureItem: MessagePathStructureItem | undefined,
   keyPath: (number | string)[],
-): ValueAction | null | undefined {
+): ValueAction | undefined {
   let singleSlicePath = "";
   let multiSlicePath = "";
   let pivotPath = "";
   let value: unknown = rootValue;
-  let structureItem: MessagePathStructureItem | null | undefined = rootStructureItem;
+  let structureItem: MessagePathStructureItem | undefined = rootStructureItem;
   // Walk down the keyPath, while updating `value` and `structureItem`
   for (const pathItem of keyPath) {
     if (structureItem == null || value == null) {
@@ -123,9 +123,9 @@ export function getValueActionForValue(
 // Using comma-joined path to allow memoization of this function
 export const getStructureItemForPath = memoizeWeak(
   (
-    rootStructureItem: MessagePathStructureItem | null | undefined,
+    rootStructureItem: MessagePathStructureItem | undefined,
     keyPathJoined: string,
-  ): MessagePathStructureItem | null | undefined => {
+  ): MessagePathStructureItem | undefined => {
     // split the path and parse into numbers and strings
     const keyPath: (number | string)[] = [];
     for (const part of keyPathJoined.split(",")) {
@@ -135,7 +135,7 @@ export const getStructureItemForPath = memoizeWeak(
         keyPath.push(part);
       }
     }
-    let structureItem: MessagePathStructureItem | null | undefined = rootStructureItem;
+    let structureItem: MessagePathStructureItem | undefined = rootStructureItem;
     // Walk down the keyPath, while updating `value` and `structureItem`
     for (const pathItem of keyPath) {
       if (structureItem == null) {

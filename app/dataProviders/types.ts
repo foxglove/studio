@@ -57,17 +57,15 @@ import { RosDatatypes } from "@foxglove-studio/app/types/RosDatatypes";
 // MeasureDataProvider.
 
 export type GetMessagesTopics = Readonly<{
-  parsedMessages?: ReadonlyArray<string> | null | undefined;
-  rosBinaryMessages?: ReadonlyArray<string> | null | undefined;
-  bobjects?: ReadonlyArray<string> | null | undefined;
-
-  [key: string]: ReadonlyArray<string> | null | undefined;
+  parsedMessages?: readonly string[];
+  rosBinaryMessages?: readonly string[];
+  bobjects?: readonly string[];
 }>;
 
 export type GetMessagesResult = Readonly<{
-  parsedMessages: ReadonlyArray<Message> | null | undefined;
-  rosBinaryMessages: ReadonlyArray<TypedMessage<ArrayBuffer>> | null | undefined;
-  bobjects: ReadonlyArray<BobjectMessage> | null | undefined;
+  parsedMessages?: readonly Message[];
+  rosBinaryMessages?: readonly TypedMessage<ArrayBuffer>[];
+  bobjects?: readonly BobjectMessage[];
 }>;
 
 export type ParsedMessageDefinitions = Readonly<{
@@ -162,7 +160,7 @@ export type AverageThroughput = Readonly<{
   numberOfMessages: number;
   requestedRangeDuration: Time;
   receivedRangeDuration: Time; // Connections could be canceled on seeks.
-  topics: ReadonlyArray<string>;
+  topics: readonly string[];
   totalTransferTime: Time;
 }>;
 

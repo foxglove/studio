@@ -11,8 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import * as React from "react";
-
 import {
   SaveConfig,
   PanelConfig,
@@ -40,9 +38,7 @@ export type PanelContextType<T> = {
   isFocused: boolean;
 };
 // Context used for components to know which panel they are inside
-const PanelContext = React.createContext<PanelContextType<PanelConfig> | null | undefined>(
-  undefined,
-);
+const PanelContext = React.createContext<PanelContextType<PanelConfig> | undefined>(undefined);
 
 export function usePanelContext(): PanelContextType<PanelConfig> {
   const context = React.useContext(PanelContext);

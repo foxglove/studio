@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { clamp } from "lodash";
-import * as React from "react";
 import DocumentEvents from "react-document-events";
 import styled from "styled-components";
 
@@ -76,7 +75,7 @@ export default class Slider extends React.Component<Props> {
   // called very quickly before the state update is applied.
   mouseDown: boolean = false;
 
-  el: HTMLDivElement | null | undefined;
+  el?: HTMLDivElement;
 
   shouldComponentUpdate(nextProps: Props) {
     const { value, min, max, draggable } = this.props;
@@ -91,7 +90,7 @@ export default class Slider extends React.Component<Props> {
   getValueAtMouse(e: React.MouseEvent<HTMLDivElement>): number {
     const { min, max, step } = this.props;
     // this should never happen since you can't interact with an unmounted component
-    // but to appease flow we need to check if the ref is null
+    // but to appease TypeScript we need to check if the ref is defined
     if (!this.el) {
       console.warn("No dom ref available for click handler");
       return 0;
@@ -168,7 +167,7 @@ export default class Slider extends React.Component<Props> {
     return (
       <StyledSlider
         disabled={disabled}
-        ref={(el) => (this.el = el)}
+        ref={(el) => (this.el = el ?? undefined)}
         onClick={this._onClick}
         onMouseDown={this._onMouseDown}
       >

@@ -48,7 +48,7 @@ import { useDeepChangeDetector } from "@foxglove-studio/app/util/hooks";
 import { defaultGetHeaderStamp } from "@foxglove-studio/app/util/synchronizeMessages";
 import { maybeGetBobjectHeaderStamp } from "@foxglove-studio/app/util/time";
 
-type Bounds = { minX: number | null | undefined; maxX: number | null | undefined };
+type Bounds = { minX?: number; maxX?: number };
 const SyncTimeAxis = createSyncingComponent<Bounds, Bounds>(
   "SyncTimeAxis",
   (dataItems: Bounds[]) => ({
@@ -60,7 +60,7 @@ const SyncTimeAxis = createSyncingComponent<Bounds, Bounds>(
 export type TooltipItem = {
   queriedData: MessagePathDataItem[];
   receiveTime: Time;
-  headerStamp: Time | null | undefined;
+  headerStamp?: Time;
 };
 
 export const getTooltipItemForMessageHistoryItem = (item: MessageAndData): TooltipItem => {
@@ -78,9 +78,9 @@ export type TimeBasedChartTooltipData = {
   item: TooltipItem;
   path: string;
   value: number | boolean | string;
-  constantName?: string | null | undefined;
+  constantName?: string;
   startTime: Time;
-  source?: number | null | undefined;
+  source?: number;
 };
 
 export type DataPoint = {
@@ -134,11 +134,11 @@ const FOLLOW_PLAYBACK_PAN_THRESHOLD_MS = 100;
 
 const MemoizedTooltips = memo(function Tooltips() {
   return (
-    <React.Fragment>
+    <>
       <Tooltip contents={<div>Hold v to zoom vertically, or b to zoom both axes</div>} delay={0}>
         <div style={{ position: "absolute", left: 0, top: 0, width: 30, bottom: 0 }} />
       </Tooltip>
-    </React.Fragment>
+    </>
   );
 });
 
@@ -157,31 +157,31 @@ type FollowPlaybackState = Readonly<{
 type Point = Readonly<{ x: number; y: number | string }>;
 
 type DataSet = Readonly<{
-  data: ReadonlyArray<Point>;
+  data: readonly Point[];
   label: string;
-  borderDash?: ReadonlyArray<number>;
+  borderDash?: readonly number[];
   color?: string;
   showLine?: boolean;
 }>;
 
-const scalePerPixel = (bounds: ScaleBounds | null | undefined): number | null | undefined =>
+const scalePerPixel = (bounds?: ScaleBounds): number | undefined =>
   bounds && Math.abs(bounds.max - bounds.min) / Math.abs(bounds.maxAlongAxis - bounds.minAlongAxis);
-const screenCoord = (value: number, valuePerPixel: number | null | undefined) =>
+const screenCoord = (value: number, valuePerPixel?: number) =>
   !valuePerPixel ? value : Math.trunc(value / valuePerPixel);
 const datumStringPixel = (
   { x, y }: Point,
-  xScale: number | null | undefined,
-  yScale: number | null | undefined,
+  xScale: number | undefined,
+  yScale: number | undefined,
 ): string => `${screenCoord(x, xScale)},${typeof y === "string" ? y : screenCoord(y, yScale)}`;
 
 // Exported for tests
 export const filterDatasets = (
-  datasets: ReadonlyArray<DataSet>,
+  datasets: readonly DataSet[],
   linesToHide: {
     [key: string]: boolean;
   },
-  xScalePerPixel?: number | null,
-  yScalePerPixel?: number | null,
+  xScalePerPixel?: number,
+  yScalePerPixel?: number,
 ): DataSet[] =>
   datasets // Only draw enabled lines. Needed for correctness.
     .filter(({ label }) => !linesToHide[label]) // Remove redundant points to make drawing the chart more efficient.
@@ -208,7 +208,7 @@ export type Props = {
   width: number;
   height: number;
   zoom: boolean;
-  data: { datasets: ReadonlyArray<DataSet>; yLabels?: ReadonlyArray<string>; minIsZero?: boolean };
+  data: { datasets: readonly DataSet[]; yLabels?: readonly string[]; minIsZero?: boolean };
   tooltips?: TimeBasedChartTooltipData[];
   xAxes?: Chart.ChartXAxe[];
   yAxes: Chart.ChartYAxe[];
@@ -223,18 +223,18 @@ export type Props = {
   datasetId?: string;
   onClick?: (
     arg0: React.MouseEvent<HTMLCanvasElement>,
-    datalabel: ScaleBounds[] | null | undefined,
+    datalabel: ScaleBounds[] | undefined,
     values: {
       [axis: string]: number;
     },
-  ) => void | null | undefined;
-  saveCurrentView?: (minY: number, maxY: number, width: number | null | undefined) => void;
+  ) => void;
+  saveCurrentView?: (minY: number, maxY: number, width?: number) => void;
   // If the x axis represents playback time ("timestamp"), the hover cursor will be synced.
   // Note, this setting should not be used for other time values.
   xAxisIsPlaybackTime: boolean;
   plugins?: Chart.ChartPluginsOptions;
-  scaleOptions?: ScaleOptions | null | undefined;
-  currentTime?: number | null | undefined;
+  scaleOptions?: ScaleOptions;
+  currentTime?: number;
   defaultView?: ChartDefaultView;
 };
 
@@ -248,9 +248,9 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
   const hasUnmounted = useRef<boolean>(false);
 
   const [hasUserPannedOrZoomed, setHasUserPannedOrZoomed] = useState<boolean>(false);
-  const [followPlaybackState, setFollowPlaybackState] = useState<
-    FollowPlaybackState | null | undefined
-  >(null);
+  const [followPlaybackState, setFollowPlaybackState] = useState<FollowPlaybackState | undefined>(
+    undefined,
+  );
   const [, forceUpdate] = useState(0);
 
   const onVisibilityChange = useCallback(() => {
@@ -286,7 +286,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
   }, [pauseFrame]);
 
   const { saveCurrentView, yAxes } = props;
-  const scaleBounds = useRef<ReadonlyArray<ScaleBounds> | null | undefined>();
+  const scaleBounds = useRef<readonly ScaleBounds[] | undefined>();
   const hoverBar = useRef<HTMLDivElement | null>(null);
   const onScaleBoundsUpdate = useCallback(
     (scales: ScaleBounds[]) => {
@@ -314,16 +314,16 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
   );
 
   const { onClick } = props;
-  const lastPanTime = useRef<Date | null | undefined>();
+  const lastPanTime = useRef<Date | undefined>();
 
   const onClickAddingValues = useCallback(
-    (ev: React.MouseEvent<HTMLCanvasElement>, datalabel: ScaleBounds[] | null | undefined) => {
+    (ev: React.MouseEvent<HTMLCanvasElement>, datalabel: ScaleBounds[] | undefined) => {
       if (!onClick) {
         return;
       }
       if (
         lastPanTime.current &&
-        // @ts-ignore while valid js we should fix this arithmatic operation on dates
+        // @ts-expect-error while valid js we should fix this arithmatic operation on dates
         new Date() - lastPanTime.current < PAN_CLICK_SUPPRESS_THRESHOLD_MS
       ) {
         // Ignore clicks that happen too soon after a pan. Sometimes clicks get fired at the end of
@@ -348,7 +348,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
   );
 
   // Keep a ref to props.currentTime so onPanZoom can have stable identity
-  const currentTimeRef = useRef<number | null | undefined>();
+  const currentTimeRef = useRef<number | undefined>();
   currentTimeRef.current = props.currentTime;
   const onPanZoom = useCallback(
     (newScaleBounds: ScaleBounds[]) => {
@@ -380,7 +380,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
       chartComponent.current.resetZoom();
       setHasUserPannedOrZoomed(false);
     }
-    setFollowPlaybackState(null);
+    setFollowPlaybackState(undefined);
   }, [setHasUserPannedOrZoomed, setFollowPlaybackState]);
 
   if (useDeepChangeDetector([props.defaultView], false)) {
@@ -389,7 +389,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
       setHasUserPannedOrZoomed(false);
     }
     if (followPlaybackState != null) {
-      setFollowPlaybackState(null);
+      setFollowPlaybackState(undefined);
     }
   }
 
@@ -442,7 +442,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     (
       currentChartComponent: ChartComponent,
       canvas: HTMLCanvasElement,
-      tooltipItem: HoveredElement | null | undefined,
+      tooltipItem: HoveredElement | undefined,
     ) => {
       // This is an async callback, so it can fire after this component is unmounted. Make sure that we remove the
       // tooltip if this fires after unmount.
@@ -558,7 +558,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
 
   const xScaleOptions = followPlaybackState && xBounds ? stepSize(xBounds) : undefined;
 
-  const getChartjsOptions = (minX: number | null | undefined, maxX: number | null | undefined) => {
+  const getChartjsOptions = (minX: number | undefined, maxX?: number) => {
     const { currentTime } = props;
     const plugins = props.plugins ?? {};
     const annotations = [...(props.annotations ?? [])];
@@ -650,7 +650,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
         if (
           currentTime != null &&
           (lastPanTime.current == null ||
-            // @ts-ignore while valid js we should fix this arithmatic operation on dates
+            // @ts-expect-error while valid js we should fix this arithmatic operation on dates
             new Date() - lastPanTime.current > FOLLOW_PLAYBACK_PAN_THRESHOLD_MS)
         ) {
           firstXAxisTicks.min = currentTime + followPlaybackState.xOffsetMin;

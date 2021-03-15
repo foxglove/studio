@@ -32,16 +32,15 @@ import {
 } from "regl-worldview";
 import { Time } from "rosbag";
 import { useDebouncedCallback } from "use-debounce";
-import { $Shape } from "utility-types";
 
 import useTopicTree, { TopicTreeContext } from "./useTopicTree";
 import useDataSourceInfo from "@foxglove-studio/app/PanelAPI/useDataSourceInfo";
 import Dimensions from "@foxglove-studio/app/components/Dimensions";
-import { useExperimentalFeature } from "@foxglove-studio/app/components/ExperimentalFeatures";
 import KeyListener from "@foxglove-studio/app/components/KeyListener";
 import Modal from "@foxglove-studio/app/components/Modal";
 import PanelContext from "@foxglove-studio/app/components/PanelContext";
-import { RenderToBodyComponent } from "@foxglove-studio/app/components/renderToBody";
+import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToBodyComponent";
+import { useExperimentalFeature } from "@foxglove-studio/app/context/ExperimentalFeaturesContext";
 import useGlobalVariables from "@foxglove-studio/app/hooks/useGlobalVariables";
 import { getGlobalHooks } from "@foxglove-studio/app/loadWebviz";
 import {
@@ -101,14 +100,14 @@ type EventName = "onDoubleClick" | "onMouseMove" | "onMouseDown" | "onMouseUp";
 export type ClickedPosition = { clientX: number; clientY: number };
 
 export type LayoutToolbarSharedProps = {
-  cameraState: $Shape<CameraState>;
+  cameraState: Partial<CameraState>;
   followOrientation: boolean;
   followTf?: string | false;
   onAlignXYAxis: () => void;
   onCameraStateChange: (arg0: CameraState) => void;
   onFollowChange: (followTf?: string | false, followOrientation?: boolean) => void;
   saveConfig: Save3DConfig;
-  targetPose: TargetPose | null | undefined;
+  targetPose?: TargetPose;
   transforms: Transforms;
   isPlaying?: boolean;
 };
@@ -140,7 +139,7 @@ export type UserSelectionState = {
   // The x,y position used to position the context menu
   clickedPosition: ClickedPosition;
   // The object shown in the Interactions menu; also used to update global variables
-  selectedObject: MouseEventObject | null;
+  selectedObject?: MouseEventObject;
 };
 
 export type EditTopicState = { tooltipPosX: number; topic: Topic };
@@ -198,15 +197,12 @@ export default function Layout({
     measureState: "idle",
     measurePoints: { start: undefined, end: undefined },
   });
-  const [currentEditingTopic, setCurrentEditingTopic] = useState<Topic | null | undefined>(
-    undefined,
-  );
+  const [currentEditingTopic, setCurrentEditingTopic] = useState<Topic | undefined>(undefined);
   const [editingNamespace, setEditingNamespace] = useState<
     | {
         namespaceKey: string;
-        namespaceColor: string | null | undefined;
+        namespaceColor?: string;
       }
-    | null
     | undefined
   >();
 
@@ -221,17 +217,15 @@ export default function Layout({
   // used for updating DrawPolygon during mouse move and scenebuilder namespace change.
   const [_, forceUpdate] = useReducer((x) => x + 1, 0);
   const measuringElRef = useRef<MeasuringTool>(null);
-  const [drawingTabType, setDrawingTabType] = useState<DrawingTabType | null | undefined>(
-    undefined,
-  );
-  const [interactionsTabType, setInteractionsTabType] = useState<DrawingTabType | null | undefined>(
+  const [drawingTabType, setDrawingTabType] = useState<DrawingTabType | undefined>(undefined);
+  const [interactionsTabType, setInteractionsTabType] = useState<DrawingTabType | undefined>(
     undefined,
   );
 
   const [selectionState, setSelectionState] = useState<UserSelectionState>({
     clickedObjects: [],
     clickedPosition: { clientX: 0, clientY: 0 },
-    selectedObject: null,
+    selectedObject: undefined,
   });
   const { selectedObject, clickedObjects, clickedPosition } = selectionState;
 
@@ -467,7 +461,7 @@ export default function Layout({
   ]);
 
   const handleDrawPolygons = useCallback(
-    (eventName: EventName, ev: MouseEvent, args: ReglClickInfo | null | undefined) => {
+    (eventName: EventName, ev: MouseEvent, args?: ReglClickInfo) => {
       (polygonBuilder as any)[eventName](ev, args);
       forceUpdate();
     },
@@ -509,25 +503,22 @@ export default function Layout({
     [],
   );
 
-  const handleEvent = useCallback(
-    (eventName: EventName, ev: MouseEvent, args: ReglClickInfo | null | undefined) => {
-      if (!args) {
-        return;
-      }
-      const {
-        drawingTabType: currentDrawingTabType,
-        handleDrawPolygons: currentHandleDrawPolygons,
-      } = callbackInputsRef.current;
-      const measuringHandler = measuringElRef.current && (measuringElRef.current as any)[eventName];
-      const measureActive = measuringElRef.current && measuringElRef.current.measureActive;
-      if (measuringHandler && measureActive) {
-        return measuringHandler(ev, args);
-      } else if (currentDrawingTabType === POLYGON_TAB_TYPE) {
-        currentHandleDrawPolygons(eventName, ev, args);
-      }
-    },
-    [],
-  );
+  const handleEvent = useCallback((eventName: EventName, ev: MouseEvent, args?: ReglClickInfo) => {
+    if (!args) {
+      return;
+    }
+    const {
+      drawingTabType: currentDrawingTabType,
+      handleDrawPolygons: currentHandleDrawPolygons,
+    } = callbackInputsRef.current;
+    const measuringHandler = measuringElRef.current && (measuringElRef.current as any)[eventName];
+    const measureActive = measuringElRef.current && measuringElRef.current.measureActive;
+    if (measuringHandler && measureActive) {
+      return measuringHandler(ev, args);
+    } else if (currentDrawingTabType === POLYGON_TAB_TYPE) {
+      currentHandleDrawPolygons(eventName, ev, args);
+    }
+  }, []);
 
   const updateGlobalVariablesFromSelection = useCallback(
     (newSelectedObject: MouseEventObject) => {
@@ -547,17 +538,17 @@ export default function Layout({
   // Auto open/close the tab when the selectedObject changes as long as
   // we aren't drawing or the disableAutoOpenClickedObject setting is enabled.
   const updateInteractionsTabVisibility = useCallback(
-    (newSelectedObject: MouseEventObject | null | undefined) => {
+    (newSelectedObject?: MouseEventObject) => {
       if (!isDrawing) {
         const shouldBeOpen = newSelectedObject && !disableAutoOpenClickedObject;
-        setInteractionsTabType(shouldBeOpen ? (OBJECT_TAB_TYPE as any) : null);
+        setInteractionsTabType(shouldBeOpen ? (OBJECT_TAB_TYPE as any) : undefined);
       }
     },
     [disableAutoOpenClickedObject, isDrawing],
   );
 
   const selectObject = useCallback(
-    (newSelectedObject: MouseEventObject | null | undefined) => {
+    (newSelectedObject?: MouseEventObject) => {
       setSelectionState({
         ...callbackInputsRef.current.selectionState,
         selectedObject: newSelectedObject,
@@ -581,14 +572,14 @@ export default function Layout({
     toggleDebug,
   } = useMemo(() => {
     return {
-      onClick: (ev: MouseEvent, args: ReglClickInfo | null | undefined) => {
+      onClick: (ev: MouseEvent, args?: ReglClickInfo) => {
         // Don't set any clicked objects when measuring distance or drawing polygons.
         if (callbackInputsRef.current.isDrawing) {
           return;
         }
         const newClickedObjects = (args && (args as any).objects) || [];
         const newClickedPosition = { clientX: ev.clientX, clientY: ev.clientY };
-        const newSelectedObject = newClickedObjects.length === 1 ? newClickedObjects[0] : null;
+        const newSelectedObject = newClickedObjects.length === 1 ? newClickedObjects[0] : undefined;
 
         // Select the object directly if there is only one or open up context menu if there are many.
         setSelectionState({
@@ -608,19 +599,16 @@ export default function Layout({
           setShowTopicTree(false);
         }
       },
-      onDoubleClick: (ev: MouseEvent, args: ReglClickInfo | null | undefined) =>
+      onDoubleClick: (ev: MouseEvent, args?: ReglClickInfo) =>
         handleEvent("onDoubleClick", ev, args),
       onExitTopicTreeFocus: () => {
         if (containerRef.current) {
           containerRef.current.focus();
         }
       },
-      onMouseDown: (ev: MouseEvent, args: ReglClickInfo | null | undefined) =>
-        handleEvent("onMouseDown", ev, args),
-      onMouseMove: (ev: MouseEvent, args: ReglClickInfo | null | undefined) =>
-        handleEvent("onMouseMove", ev, args),
-      onMouseUp: (ev: MouseEvent, args: ReglClickInfo | null | undefined) =>
-        handleEvent("onMouseUp", ev, args),
+      onMouseDown: (ev: MouseEvent, args?: ReglClickInfo) => handleEvent("onMouseDown", ev, args),
+      onMouseMove: (ev: MouseEvent, args?: ReglClickInfo) => handleEvent("onMouseMove", ev, args),
+      onMouseUp: (ev: MouseEvent, args?: ReglClickInfo) => handleEvent("onMouseUp", ev, args),
       onSetPolygons: (polygons: Polygon[]) => setPolygonBuilder(new PolygonBuilder(polygons)),
       toggleDebug: () => setDebug(!callbackInputsRef.current.debug),
       toggleCameraMode: () => {
@@ -639,7 +627,7 @@ export default function Layout({
   }, [handleEvent, selectObject]);
 
   // When the TopicTree is hidden, focus the <World> again so keyboard controls continue to work
-  const worldRef = useRef<typeof Worldview | null | undefined>(null);
+  const worldRef = useRef<typeof Worldview | undefined>(null);
   useEffect(() => {
     if (!showTopicTree && worldRef.current) {
       worldRef.current.focus();
@@ -656,7 +644,7 @@ export default function Layout({
       Escape: (e) => {
         e.preventDefault();
         setShowTopicTree(false);
-        setDrawingTabType(null);
+        setDrawingTabType(undefined);
         searchTextProps.toggleSearchTextOpen(false);
         if (document.activeElement && document.activeElement === containerRef.current) {
           (document.activeElement as any).blur();

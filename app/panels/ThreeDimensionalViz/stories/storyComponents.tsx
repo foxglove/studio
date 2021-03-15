@@ -13,9 +13,7 @@
 
 import { createMemoryHistory } from "history";
 import { uniq } from "lodash";
-import * as React from "react";
 import { Worldview } from "regl-worldview";
-import { $Shape } from "utility-types";
 
 import { selectAllPanelIds } from "@foxglove-studio/app/actions/mosaic";
 import Flex from "@foxglove-studio/app/components/Flex";
@@ -68,16 +66,16 @@ function bobjectify(fixture: FixtureExampleData): FixtureExampleData {
 }
 
 type FixtureExampleProps = {
-  initialConfig: $Shape<ThreeDimensionalVizConfig>;
+  initialConfig: Partial<ThreeDimensionalVizConfig>;
   data?: FixtureExampleData;
   loadData?: Promise<FixtureExampleData>;
   futureTime?: boolean;
-  onMount?: (arg0: HTMLDivElement | null | undefined, store?: Store) => void;
+  onMount?: (arg0: HTMLDivElement | undefined, store?: Store) => void;
 };
 
 type FixtureExampleState = {
-  fixture: Fixture | null | undefined;
-  config: $Shape<ThreeDimensionalVizConfig>;
+  fixture?: Fixture;
+  config: Partial<ThreeDimensionalVizConfig>;
 };
 
 export const WorldviewContainer = (props: { children: React.ReactNode }) => {
@@ -89,7 +87,7 @@ export const WorldviewContainer = (props: { children: React.ReactNode }) => {
 };
 
 export class FixtureExample extends React.Component<FixtureExampleProps, FixtureExampleState> {
-  state: FixtureExampleState = { fixture: null, config: this.props.initialConfig };
+  state: FixtureExampleState = { fixture: undefined, config: this.props.initialConfig };
 
   componentDidMount() {
     const { data, loadData } = this.props;
@@ -170,7 +168,7 @@ export const ThreeDimPanelSetupWithBag = ({
   globalVariables = {},
   bag,
 }: {
-  threeDimensionalConfig: $Shape<ThreeDimensionalVizConfig>;
+  threeDimensionalConfig: Partial<ThreeDimensionalVizConfig>;
   globalVariables: any;
   bag: string;
 }) => {

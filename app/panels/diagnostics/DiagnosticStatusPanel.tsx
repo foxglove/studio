@@ -12,8 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { sortBy } from "lodash";
-import * as React from "react";
-import { $Shape } from "utility-types";
 
 import DiagnosticStatus from "./DiagnosticStatus";
 import helpContent from "./DiagnosticStatusPanel.help.md";
@@ -30,8 +28,8 @@ import { PanelConfig } from "@foxglove-studio/app/types/panels";
 import { DIAGNOSTIC_TOPIC } from "@foxglove-studio/app/util/globalConstants";
 
 export type Config = {
-  selectedHardwareId?: string | null | undefined;
-  selectedName?: string | null | undefined;
+  selectedHardwareId?: string;
+  selectedName?: string;
   splitFraction?: number;
   topicToRender: string;
   collapsedSections: { name: string; section: string }[];
@@ -39,7 +37,7 @@ export type Config = {
 
 type Props = {
   config: Config;
-  saveConfig: (arg0: $Shape<Config>) => void;
+  saveConfig: (arg0: Partial<Config>) => void;
   topics: Topic[];
   openSiblingPanel: (arg0: string, cb: (arg0: PanelConfig) => PanelConfig) => void;
 };
@@ -87,7 +85,9 @@ class DiagnosticStatusPanel extends React.Component<Props> {
     } = config;
 
     const selectedDisplayName =
-      selectedHardwareId != null ? getDisplayName(selectedHardwareId, selectedName || "") : null;
+      selectedHardwareId != null
+        ? getDisplayName(selectedHardwareId, selectedName || "")
+        : undefined;
     return (
       <Flex scroll scrollX col>
         <DiagnosticsHistory topic={topicToRender}>

@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { storiesOf } from "@storybook/react";
-import * as React from "react";
 import { DEFAULT_CAMERA_STATE } from "regl-worldview";
 
 import ValidatedInput, { EDIT_FORMAT, EditFormat } from "./ValidatedInput";
@@ -30,7 +29,7 @@ const INPUT_OBJ1 = { id: 2, name: "bar" };
 const json = EDIT_FORMAT.JSON;
 const yaml = EDIT_FORMAT.YAML;
 
-function myValidator(data: any = {}): ValidationResult | null | undefined {
+function myValidator(data: any = {}): ValidationResult | undefined {
   const rules = { id: [isNumber] };
   const validator = createValidator(rules);
   const result = validator(data);
@@ -154,7 +153,7 @@ storiesOf("<ValidatedInput>", module)
             setImmediate(() => {
               // scroll to the top and start editing
               input.scrollTop = 0;
-              triggerInputChange(input, JSON.stringify(changedObj, null, 2));
+              triggerInputChange(input, JSON.stringify(changedObj, undefined, 2));
             });
           }}
         />

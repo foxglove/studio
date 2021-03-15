@@ -13,7 +13,6 @@
 
 import { renderHook } from "@testing-library/react-hooks";
 import { mount } from "enzyme";
-import React from "react";
 
 import {
   useChangeDetector,
@@ -24,7 +23,6 @@ import {
   createSelectableContext,
   useContextSelector,
   SelectableContext,
-  useReducedValue,
   useDeepMemo,
 } from "./hooks";
 
@@ -131,7 +129,7 @@ describe("useShallowMemo", () => {
 
 describe("useDeepMemo", () => {
   it("returns original object when deep equal", () => {
-    let obj: any = { x: 1 };
+    let obj: unknown = { x: 1 };
     const { result, rerender } = renderHook((val) => useDeepMemo(val), { initialProps: obj });
     expect(result.current).toBe(obj);
     rerender({ x: 1 });
@@ -165,32 +163,6 @@ describe("useMustNotChange", () => {
   });
 });
 
-describe("useReducedValue", () => {
-  it("returns a new state only when the input values have changed (deep comparison)", () => {
-    const initialState = { name: "some name" };
-    const mockFn = jest.fn();
-    const input = ["foo", { name: "some other name" }];
-
-    function reducer(prevState: any, currentInput: any) {
-      const newState = currentInput.length ? { name: currentInput[0] } : prevState;
-      mockFn(newState);
-      return newState;
-    }
-
-    const { result, rerender } = renderHook((val) => useReducedValue(initialState, val, reducer), {
-      initialProps: input,
-    });
-    rerender(input);
-    expect(result.current).toEqual({ name: "some name" });
-    rerender(["foo", { name: "some other name" }]);
-    expect(result.current).toEqual({ name: "some name" });
-    expect(mockFn).toHaveBeenCalledTimes(0);
-    rerender(["bar", { name: "some other name" }]);
-    expect(result.current).toEqual({ name: "bar" });
-    expect(mockFn).toHaveBeenCalledTimes(1);
-  });
-});
-
 describe("useShouldNotChangeOften", () => {
   it("logs when value changes twice in a row", () => {
     const warn = jest.fn();
@@ -216,10 +188,11 @@ describe("createSelectableContext/useContextSelector", () => {
   function createTestConsumer<T, U>(ctx: SelectableContext<T>, selector: (arg0: T) => U) {
     function Consumer() {
       const value = useContextSelector(ctx, Consumer.selectorFn);
-      return Consumer.renderFn(value);
+      Consumer.renderFn(value);
+      return null;
     }
     Consumer.selectorFn = jest.fn().mockImplementation(selector);
-    Consumer.renderFn = jest.fn().mockImplementation(() => null);
+    Consumer.renderFn = jest.fn();
     return Consumer;
   }
 
@@ -267,8 +240,8 @@ describe("createSelectableContext/useContextSelector", () => {
   });
 
   it("re-renders when selector returns new value that isn't BAILOUT", () => {
-    const C = createSelectableContext();
-    const Consumer = createTestConsumer(C, ({ num }: any) =>
+    const C = createSelectableContext<{ num: number }>();
+    const Consumer = createTestConsumer(C, ({ num }) =>
       num === 3 ? useContextSelector.BAILOUT : num,
     );
 
@@ -313,9 +286,9 @@ describe("createSelectableContext/useContextSelector", () => {
   });
 
   it("propagates value to multiple consumers", () => {
-    const C = createSelectableContext();
-    const Consumer1 = createTestConsumer(C, ({ one }: any) => one);
-    const Consumer2 = createTestConsumer(C, ({ two }: any) => two);
+    const C = createSelectableContext<{ one: number; two: number }>();
+    const Consumer1 = createTestConsumer(C, ({ one }) => one);
+    const Consumer2 = createTestConsumer(C, ({ two }) => two);
 
     const root = mount(
       <C.Provider value={{ one: 1, two: 2 }}>
@@ -347,8 +320,8 @@ describe("createSelectableContext/useContextSelector", () => {
   });
 
   it("doesn't call selector after unmount", () => {
-    const C = createSelectableContext();
-    const Consumer = createTestConsumer(C, ({ num }: any) => num);
+    const C = createSelectableContext<{ num: number }>();
+    const Consumer = createTestConsumer(C, ({ num }) => num);
 
     const root = mount(
       <C.Provider value={{ num: 1 }}>
@@ -381,7 +354,7 @@ describe("createSelectableContext/useContextSelector", () => {
     const selector2 = jest.fn().mockImplementation(({ y }) => y);
     const selector3 = jest.fn().mockImplementation(({ z }) => z);
 
-    const renderFn = jest.fn().mockImplementation(() => null);
+    const renderFn = jest.fn();
 
     function clearMocks() {
       selector1.mockClear();
@@ -394,7 +367,8 @@ describe("createSelectableContext/useContextSelector", () => {
       const x = useContextSelector(C, selector1);
       const y = useContextSelector(C, selector2);
       const z = useContextSelector(C, selector3);
-      return renderFn([x, y, z]);
+      renderFn([x, y, z]);
+      return null;
     }
 
     const root = mount(

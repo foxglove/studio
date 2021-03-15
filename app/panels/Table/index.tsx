@@ -14,7 +14,6 @@
 import MinusIcon from "@mdi/svg/svg/minus-box-outline.svg";
 import PlusIcon from "@mdi/svg/svg/plus-box-outline.svg";
 import _ from "lodash";
-import * as React from "react";
 import { useTable, usePagination, useExpanded, useSortBy } from "react-table";
 import styled from "styled-components";
 
@@ -321,7 +320,7 @@ function TablePanel({ config, saveConfig }: Props) {
     [saveConfig],
   );
 
-  const topicRosPath: RosPath | null | undefined = React.useMemo(() => parseRosPath(topicPath), [
+  const topicRosPath: RosPath | undefined = React.useMemo(() => parseRosPath(topicPath), [
     topicPath,
   ]);
   const topicName = topicRosPath?.topicName || "";

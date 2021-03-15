@@ -13,7 +13,6 @@
 
 import hoistNonReactStatics from "hoist-non-react-statics";
 import { uniq } from "lodash";
-import * as React from "react";
 
 import * as PanelAPI from "@foxglove-studio/app/PanelAPI";
 import { Message, Topic } from "@foxglove-studio/app/players/types";
@@ -24,7 +23,7 @@ const useFrame = (
 ): {
   cleared: boolean;
   frame: {
-    [topic: string]: ReadonlyArray<Message>;
+    [topic: string]: readonly Message[];
   };
 } => {
   // NOTE(JP): This is a huge abuse of the `useMessageReducer` API. Never use `useMessageReducer`
@@ -38,7 +37,7 @@ const useFrame = (
       return Date.now();
     }, [frame]),
     addBobjects: React.useCallback(
-      (time, messages: ReadonlyArray<Message>) => {
+      (time, messages: readonly Message[]) => {
         for (const message of messages) {
           frame.current[message.topic] = frame.current[message.topic] || [];
           frame.current[message.topic].push(message);

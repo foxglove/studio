@@ -12,12 +12,10 @@
 //   You may not use this file except in compliance with the License.
 
 import { uniq } from "lodash";
-import * as React from "react";
 import { useMemo } from "react";
 import stringHash from "string-hash";
 import styled, { css } from "styled-components";
 import tinycolor from "tinycolor2";
-import { $Shape } from "utility-types";
 
 import helpContent from "./index.help.md";
 import * as PanelAPI from "@foxglove-studio/app/PanelAPI";
@@ -187,14 +185,14 @@ export function openSiblingStateTransitionsPanel(
 
 type Props = {
   config: StateTransitionConfig;
-  saveConfig: (arg0: $Shape<StateTransitionConfig>) => void;
+  saveConfig: (arg0: Partial<StateTransitionConfig>) => void;
   isHovered: boolean;
 };
 
 const StateTransitions = React.memo(function StateTransitions(props: Props) {
   const { config, saveConfig, isHovered } = props;
 
-  const onInputChange = (value: string, index: number | null | undefined) => {
+  const onInputChange = (value: string, index?: number) => {
     if (index == null) {
       throw new Error("index not set");
     }
@@ -203,10 +201,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     saveConfig({ paths: newPaths });
   };
 
-  const onInputTimestampMethodChange = (
-    value: TimestampMethod,
-    index: number | null | undefined,
-  ) => {
+  const onInputTimestampMethodChange = (value: TimestampMethod, index: number | undefined) => {
     if (index == null) {
       throw new Error("index not set");
     }

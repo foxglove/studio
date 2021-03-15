@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import React from "react";
 import { Color } from "regl-worldview";
 
 import { TopicSettingsEditorProps } from ".";
@@ -23,8 +22,8 @@ import { Marker, MarkerArray } from "@foxglove-studio/app/types/Messages";
 import { LINED_CONVEX_HULL_RENDERING_SETTING } from "@foxglove-studio/app/util/globalConstants";
 
 type MarkerSettings = {
-  overrideColor?: Color | null | undefined;
-  overrideCommand?: string | null | undefined;
+  overrideColor?: Color;
+  overrideCommand?: string;
 };
 
 export default function MarkerSettingsEditor(
@@ -54,7 +53,10 @@ export default function MarkerSettingsEditor(
         checked={settings.overrideCommand === LINED_CONVEX_HULL_RENDERING_SETTING}
         label="Allow clicking inside line markers that form polygons"
         onChange={(checked) =>
-          onFieldChange("overrideCommand", checked ? LINED_CONVEX_HULL_RENDERING_SETTING : null)
+          onFieldChange(
+            "overrideCommand",
+            checked ? LINED_CONVEX_HULL_RENDERING_SETTING : undefined,
+          )
         }
         style={{ marginBottom: 12 }}
         labelStyle={{ lineHeight: 1.2 }}

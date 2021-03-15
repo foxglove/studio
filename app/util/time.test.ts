@@ -189,8 +189,8 @@ describe("time.findClosestTimestampIndex", () => {
 
 describe("time.getNextFrame", () => {
   const timestamps = ["4.049839000", "4.249933000", "4.449961000", "5.650058000"];
-  it("returns null for empty timestamps", async () => {
-    expect(time.getNextFrame({ sec: 3, nsec: 0 }, [])).toEqual(null);
+  it("returns undefined for empty timestamps", async () => {
+    expect(time.getNextFrame({ sec: 3, nsec: 0 }, [])).toEqual(undefined);
   });
 
   it("returns the next frame ", async () => {
@@ -250,10 +250,10 @@ describe("time.isTimeInRangeInclusive", () => {
 });
 
 describe("time.parseRosTimeStr", () => {
-  it("returns null if the input string is formatted incorrectly", () => {
-    expect(time.parseRosTimeStr("")).toEqual(null);
-    expect(time.parseRosTimeStr(".12121")).toEqual(null);
-    expect(time.parseRosTimeStr(".")).toEqual(null);
+  it("returns undefined if the input string is formatted incorrectly", () => {
+    expect(time.parseRosTimeStr("")).toEqual(undefined);
+    expect(time.parseRosTimeStr(".12121")).toEqual(undefined);
+    expect(time.parseRosTimeStr(".")).toEqual(undefined);
   });
 
   it("returns the correct time", () => {
@@ -409,32 +409,5 @@ describe("time.getRosTimeFromString", () => {
     expect(time.getRosTimeFromString("123456.000000000")).toEqual({ sec: 123456, nsec: 0 });
     expect(time.getRosTimeFromString("123456.100000000")).toEqual({ sec: 123456, nsec: 100000000 });
     expect(time.getRosTimeFromString("123456.123456789")).toEqual({ sec: 123456, nsec: 123456789 });
-  });
-});
-
-describe("time.getValidatedTimeAndMethodFromString", () => {
-  const commonArgs = { date: "2020-01-01", timezone: "America/Los_Angeles" };
-  it("takes a string and gets a validated ROS or TOD time", () => {
-    expect(time.getValidatedTimeAndMethodFromString({ ...commonArgs, text: "" })).toEqual(
-      undefined,
-    );
-    expect(time.getValidatedTimeAndMethodFromString({ ...commonArgs, text: "abc" })).toEqual(
-      undefined,
-    );
-    expect(time.getValidatedTimeAndMethodFromString({ ...commonArgs, text: "123abc" })).toEqual(
-      undefined,
-    );
-    expect(
-      time.getValidatedTimeAndMethodFromString({ ...commonArgs, text: "1598635994.000000000" }),
-    ).toEqual({
-      time: { nsec: 0, sec: 1598635994 },
-      method: "ROS",
-    });
-    expect(
-      time.getValidatedTimeAndMethodFromString({ ...commonArgs, text: "1:30:10.000 PM PST" }),
-    ).toEqual({
-      time: { nsec: 0, sec: 1577914210 },
-      method: "TOD",
-    });
   });
 });

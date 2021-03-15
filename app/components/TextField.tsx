@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import * as React from "react";
 import styled from "styled-components";
 
 import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
@@ -43,13 +42,13 @@ type Props = {
   label?: string;
   onBlur: () => void;
   onChange: (value: string) => void;
-  onError?: (error: string | null | undefined) => void;
+  onError?: (error?: string) => void;
   placeholder?: string;
   style: {
     [key: string]: string | number;
   };
   validateOnBlur?: boolean;
-  validator: (value: any) => string | null | undefined;
+  validator: (value: any) => string | undefined;
   value?: string;
 };
 
@@ -69,7 +68,7 @@ export default function TextField({
   value,
   ...rest
 }: Props) {
-  const [error, setError] = useState<string | null | undefined>();
+  const [error, setError] = useState<string | undefined>();
   const [inputStr, setInputStr] = useState<string>(value || defaultValue || "");
 
   const prevIncomingVal = useRef<string | undefined>("");
@@ -79,7 +78,7 @@ export default function TextField({
     // only compare if it's a controlled component
     if (!defaultValue && !validateOnBlur && prevIncomingVal.current !== value) {
       const validationResult = validator(value);
-      setError(validationResult || null);
+      setError(validationResult || undefined);
       setInputStr(value || "");
     }
     prevIncomingVal.current = value;
@@ -103,7 +102,7 @@ export default function TextField({
       if (validationResult) {
         setError(validationResult);
       } else {
-        setError(null);
+        setError(undefined);
         onChange(val);
       }
     },

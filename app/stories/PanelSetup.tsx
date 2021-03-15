@@ -13,11 +13,9 @@
 
 import { createMemoryHistory } from "history";
 import { flatten, partition } from "lodash";
-import * as React from "react";
 import { DndProvider } from "react-dnd";
 import HTML5Backend from "react-dnd-html5-backend";
 import { Mosaic, MosaicWindow } from "react-mosaic-component";
-import { $Shape } from "utility-types";
 
 import {
   changePanelLayout,
@@ -51,11 +49,11 @@ export type Fixture = {
   frame: Frame;
   topics: Topic[];
   capabilities?: string[];
-  activeData?: $Shape<PlayerStateActiveData>;
+  activeData?: Partial<PlayerStateActiveData>;
   progress?: Progress;
   datatypes?: RosDatatypes;
   globalVariables?: GlobalVariables;
-  layout?: MosaicNode | null | undefined;
+  layout?: MosaicNode;
   linkedGlobalVariables?: LinkedGlobalVariables;
   userNodes?: UserNodes;
   userNodeDiagnostics?: UserNodeDiagnostics;
@@ -213,7 +211,7 @@ export default class PanelSetup extends React.PureComponent<Props, State> {
     return (
       <div
         style={{ width: "100%", height: "100%", display: "flex", ...this.props.style }}
-        ref={(el: HTMLDivElement | null | undefined) => {
+        ref={(el?: HTMLDivElement | null) => {
           const { onFirstMount, onMount } = this.props;
           if (el && onFirstMount && !this._hasMounted) {
             this._hasMounted = true;

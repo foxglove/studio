@@ -32,7 +32,7 @@ export type ClickedInfo = {
   clickedPoint: number[];
   clickedPointColor?: number[];
   additionalFieldValues?: {
-    [name: string]: number | null | undefined;
+    [name: string]: number | undefined;
   };
 };
 
@@ -43,8 +43,8 @@ export function toRgba(rgba: Color) {
 // extract clicked point's position, color and additional field values to display in the UI
 export function getClickedInfo(
   maybeFullyDecodedMarker: MouseEventObject,
-  instanceIndex: number | null | undefined,
-): ClickedInfo | null | undefined {
+  instanceIndex: number | undefined,
+): ClickedInfo | undefined {
   const { positionBuffer, colorBuffer, fields, settings, is_bigendian } = maybeFullyDecodedMarker;
   if (
     isEmpty(positionBuffer) ||
@@ -103,7 +103,7 @@ export function getClickedInfo(
     }
   }
 
-  let additionalFieldValues: { [name: string]: number | null | undefined } | undefined;
+  let additionalFieldValues: { [name: string]: number | undefined } | undefined;
   const additionalField = getAdditionalFieldNames(fields);
   if (additionalField.length) {
     additionalFieldValues = additionalField.reduce((memo: any, fieldName) => {
@@ -135,7 +135,7 @@ export function getAllPoints(maybeFullyDecodedMarker: MouseEventObject): number[
   return ret;
 }
 
-export function getAdditionalFieldNames(fields: ReadonlyArray<PointField>): string[] {
+export function getAdditionalFieldNames(fields: readonly PointField[]): string[] {
   const allFields = fields.map((field) => field.name);
   return difference(allFields, ["rgb", "x", "y", "z"]);
 }

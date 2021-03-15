@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import PencilIcon from "@mdi/svg/svg/pencil.svg";
-import * as React from "react";
 import { PolygonBuilder, Polygon } from "regl-worldview";
 
 import Polygons from "./Polygons";
@@ -28,7 +27,7 @@ type Props = {
   onSetPolygons: (polygons: Polygon[]) => void;
   polygonBuilder: PolygonBuilder;
   selectedPolygonEditFormat: EditFormat;
-  onSetDrawingTabType: (arg0: DrawingTabType | null | undefined) => void;
+  onSetDrawingTabType: (arg0?: DrawingTabType) => void;
   defaultSelectedTab?: DrawingTabType; // for UI testing
 };
 
@@ -40,7 +39,7 @@ function DrawingTools({
   polygonBuilder,
   selectedPolygonEditFormat,
 }: Props) {
-  const [selectedTab, setSelectedTab] = React.useState<DrawingTabType | null | undefined>(
+  const [selectedTab, setSelectedTab] = React.useState<DrawingTabType | undefined>(
     defaultSelectedTab,
   );
 

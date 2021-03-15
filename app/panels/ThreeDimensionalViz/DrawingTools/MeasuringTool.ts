@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { isEqual } from "lodash";
-import * as React from "react";
 import { ReglClickInfo } from "regl-worldview";
 
 import { Point } from "@foxglove-studio/app/types/Messages";
@@ -22,7 +21,7 @@ export type MeasureState = "idle" | "place-start" | "place-finish";
 
 export type MeasureInfo = {
   measureState: MeasureState;
-  measurePoints: { start: Point | null | undefined; end: Point | null | undefined };
+  measurePoints: { start?: Point; end?: Point };
 };
 
 type Props = MeasureInfo & {
@@ -97,25 +96,25 @@ export default class MeasuringTool extends React.Component<Props> {
     }
   };
 
-  get onMouseMove(): ((arg0: MouseEvent, arg1: ReglClickInfo) => void) | null | undefined {
+  get onMouseMove(): ((arg0: MouseEvent, arg1: ReglClickInfo) => void) | undefined {
     if (!this.measureActive) {
-      return null;
+      return undefined;
     }
 
     return this._canvasMouseMoveHandler;
   }
 
-  get onMouseUp(): ((arg0: MouseEvent, arg1: ReglClickInfo) => void) | null | undefined {
+  get onMouseUp(): ((arg0: MouseEvent, arg1: ReglClickInfo) => void) | undefined {
     if (!this.measureActive) {
-      return null;
+      return undefined;
     }
 
     return this._canvasMouseUpHandler;
   }
 
-  get onMouseDown(): ((arg0: MouseEvent, arg1: ReglClickInfo) => void) | null | undefined {
+  get onMouseDown(): ((arg0: MouseEvent, arg1: ReglClickInfo) => void) | undefined {
     if (!this.measureActive) {
-      return null;
+      return undefined;
     }
 
     return this._canvasMouseDownHandler;

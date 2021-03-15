@@ -36,14 +36,14 @@ describe("<PointClouds />", () => {
         POINT_CLOUD_WITH_ADDITIONAL_FIELDS as any,
       ) as any) as PointCloud2;
       const fullyDecodedMarker = decodeAdditionalFields(partiallyDecodedMarker);
-      expect(getClickedInfo(fullyDecodedMarker, null)).toEqual(undefined);
+      expect(getClickedInfo(fullyDecodedMarker, undefined)).toEqual(undefined);
       expect(getClickedInfo(fullyDecodedMarker, 1000)).toEqual(undefined);
     });
 
     it("returns selected point positions and colors", () => {
       const marker = decodeMarker(POINT_CLOUD_MESSAGE as any);
       const clickInfo = getClickedInfo(marker, 1);
-      expect(clickInfo).not.toBeNull();
+      expect(clickInfo).not.toBeNullOrUndefined();
       expect((clickInfo?.clickedPoint || []).map((v) => Math.floor(v))).toStrictEqual([
         -2239,
         -706,
@@ -61,7 +61,7 @@ describe("<PointClouds />", () => {
     it("returns selected point positions and colors when instanceIndex is zero", () => {
       const marker = decodeMarker(POINT_CLOUD_MESSAGE as any);
       const clickInfo = getClickedInfo(marker, 0);
-      expect(clickInfo).not.toBeNull();
+      expect(clickInfo).not.toBeNullOrUndefined();
       expect((clickInfo?.clickedPoint || []).map((v) => Math.floor(v))).toStrictEqual([
         -2239,
         -706,
@@ -83,7 +83,7 @@ describe("<PointClouds />", () => {
         is_bigendian: true,
       } as any);
       const clickInfo = getClickedInfo(marker, 1);
-      expect(clickInfo).not.toBeNull();
+      expect(clickInfo).not.toBeNullOrUndefined();
       expect((clickInfo?.clickedPoint || []).map((v) => Math.floor(v))).toStrictEqual([
         -2239,
         -706,
@@ -105,7 +105,7 @@ describe("<PointClouds />", () => {
       };
       const marker = decodeMarker(input as any);
       const clickInfo = getClickedInfo(marker, 1);
-      expect(clickInfo).not.toBeNull();
+      expect(clickInfo).not.toBeNullOrUndefined();
       expect((clickInfo?.clickedPoint || []).map((v) => Math.floor(v))).toStrictEqual([
         -2239,
         -706,
@@ -134,7 +134,7 @@ describe("<PointClouds />", () => {
       };
       const marker = decodeMarker(input as any);
       const clickInfo = getClickedInfo(marker, 1);
-      expect(clickInfo).not.toBeNull();
+      expect(clickInfo).not.toBeNullOrUndefined();
       expect((clickInfo?.clickedPoint || []).map((v) => Math.floor(v))).toStrictEqual([0, 1, 2]);
       expect((clickInfo?.clickedPointColor || []).map((v) => Math.floor(v))).toStrictEqual([
         0,
@@ -152,7 +152,7 @@ describe("<PointClouds />", () => {
       };
       const marker = decodeMarker(input as any);
       const clickInfo = getClickedInfo(decodeAdditionalFields(marker), 1);
-      expect(clickInfo).not.toBeNull();
+      expect(clickInfo).not.toBeNullOrUndefined();
       expect((clickInfo?.clickedPoint || []).map((v) => Math.floor(v))).toStrictEqual([0, 1, 2]);
       expect((clickInfo?.clickedPointColor || []).map((v) => Math.floor(v))).toStrictEqual([
         255,

@@ -15,14 +15,16 @@ import React, { useCallback } from "react";
 import { Color } from "regl-worldview";
 import styled from "styled-components";
 
-import { CommonPointSettings, CommonDecaySettings, TopicSettingsEditorProps } from ".";
 import ColorPickerForTopicSettings from "./ColorPickerForTopicSettings";
+import CommonDecaySettings from "./CommonDecaySettings";
 import { SLabel, SInput } from "./common";
 import Flex from "@foxglove-studio/app/components/Flex";
 import GradientPicker from "@foxglove-studio/app/components/GradientPicker";
 import Radio from "@foxglove-studio/app/components/Radio";
 import SegmentedControl from "@foxglove-studio/app/components/SegmentedControl";
 import { Select, Option } from "@foxglove-studio/app/components/Select";
+import CommonPointSettings from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicSettingsEditor/CommonPointSettings";
+import { TopicSettingsEditorProps } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicSettingsEditor/types";
 import { PointCloud2 } from "@foxglove-studio/app/types/Messages";
 
 export type ColorMode =
@@ -48,10 +50,10 @@ export const DEFAULT_MIN_COLOR = { r: 0, g: 0, b: 1, a: 1 };
 export const DEFAULT_MAX_COLOR = { r: 1, g: 0, b: 0, a: 1 };
 
 export type PointCloudSettings = {
-  pointSize?: number | null | undefined;
-  pointShape?: string | null | undefined;
-  decayTime?: number | null | undefined;
-  colorMode: ColorMode | null | undefined;
+  pointSize?: number;
+  pointShape?: string;
+  decayTime?: number;
+  colorMode?: ColorMode;
 };
 
 const SValueRangeInput = styled(SInput).attrs({ type: "number", placeholder: "auto" })`
@@ -89,11 +91,7 @@ export default function PointCloudSettingsEditor(
   const { message, settings = {}, onFieldChange, onSettingsChange } = props;
 
   const onColorModeChange = useCallback(
-    (
-      newValue:
-        | (ColorMode | null | undefined)
-        | ((arg0: ColorMode | null | undefined) => ColorMode | null | undefined),
-    ) => {
+    (newValue: (ColorMode | undefined) | ((arg0?: ColorMode) => ColorMode | undefined)) => {
       onSettingsChange((newSettings: any) => ({
         ...newSettings,
         colorMode: typeof newValue === "function" ? newValue(newSettings.colorMode) : newValue,
@@ -137,7 +135,7 @@ export default function PointCloudSettingsEditor(
                 }
                 return defaultColorField
                   ? { mode: "rainbow", colorField: defaultColorField }
-                  : null;
+                  : undefined;
               })
             }
             options={[
@@ -196,7 +194,7 @@ export default function PointCloudSettingsEditor(
                 onChange={({ target: { value } }) =>
                   onColorModeChange((newColorMode: any) => ({
                     ...newColorMode,
-                    minValue: value === "" ? null : +value,
+                    minValue: value === "" ? undefined : +value,
                   }))
                 }
               />
@@ -208,7 +206,7 @@ export default function PointCloudSettingsEditor(
                 onChange={({ target: { value } }) =>
                   onColorModeChange((newColorMode: any) => ({
                     ...newColorMode,
-                    maxValue: value === "" ? null : +value,
+                    maxValue: value === "" ? undefined : +value,
                   }))
                 }
               />

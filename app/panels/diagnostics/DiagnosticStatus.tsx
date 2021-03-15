@@ -17,11 +17,9 @@ import ChevronDownIcon from "@mdi/svg/svg/unfold-less-horizontal.svg";
 import ChevronUpIcon from "@mdi/svg/svg/unfold-more-horizontal.svg";
 import cx from "classnames";
 import { clamp } from "lodash";
-import * as React from "react";
 import { createSelector } from "reselect";
 import sanitizeHtml from "sanitize-html";
 import styled from "styled-components";
-import { $Shape } from "utility-types";
 
 import style from "./DiagnosticStatus.module.scss";
 import { LEVEL_NAMES, DiagnosticInfo, KeyValue, DiagnosticStatusMessage } from "./util";
@@ -39,11 +37,11 @@ const MIN_SPLIT_FRACTION = 0.1;
 type Props = {
   info: DiagnosticInfo;
   splitFraction: number;
-  onChangeSplitFraction: (arg0: number) => void | null | undefined;
+  onChangeSplitFraction: (arg0: number) => void;
   topicToRender: string;
   openSiblingPanel: (arg0: string, cb: (arg0: PanelConfig) => PanelConfig) => void;
   collapsedSections: { name: string; section: string }[];
-  saveConfig: (arg0: $Shape<Config>) => void;
+  saveConfig: (arg0: Partial<Config>) => void;
 };
 
 const ResizeHandle = styled.div.attrs<{ splitFraction: number }>(({ splitFraction }) => ({
@@ -96,9 +94,9 @@ const KeyValueTable = styled.table`
 
 type FormattedKeyValue = {
   key: string;
-  keyHtml: { __html: string } | null | undefined;
+  keyHtml: { __html: string } | undefined;
   value: string;
-  valueHtml: { __html: string } | null | undefined;
+  valueHtml: { __html: string } | undefined;
 };
 
 const allowedTags = [
@@ -208,7 +206,7 @@ class DiagnosticStatus extends React.Component<Props, any> {
 
   _renderKeyValueCell(
     cls: string,
-    html: { __html: string } | null | undefined,
+    html: { __html: string } | undefined,
     str: string,
     openPlotPanelIconElem?: React.ReactNode,
   ) {

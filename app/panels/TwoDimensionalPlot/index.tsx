@@ -12,11 +12,9 @@
 //   You may not use this file except in compliance with the License.
 
 import { flatten, pick, round, uniq } from "lodash";
-import * as React from "react";
 import DocumentEvents from "react-document-events";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
-import { $Shape } from "utility-types";
 
 import helpContent from "./index.help.md";
 import Button from "@foxglove-studio/app/components/Button";
@@ -95,7 +93,7 @@ type Config = {
   maxYVal?: string;
   pointRadiusOverride?: string;
 };
-type Props = { config: Config; saveConfig: (arg0: $Shape<Config>) => void };
+type Props = { config: Config; saveConfig: (arg0: Partial<Config>) => void };
 export type Line = {
   order?: number;
   label: string;
@@ -149,7 +147,7 @@ type Position = { x: number; y: number };
 
 type HoverBarProps = {
   children?: React.ReactNode;
-  mousePosition: Position | null | undefined;
+  mousePosition?: Position;
 };
 
 function hideBar(wrapper: any) {
@@ -187,8 +185,8 @@ const HoverBar = React.memo<HoverBarProps>(function HoverBar({
 
 type TooltipProps = {
   datapoints: { datapoint: Position; label: string; backgroundColor?: string }[];
-  xAxisLabel: string | null | undefined;
-  tooltipElement: HoveredElement | null | undefined;
+  xAxisLabel?: string;
+  tooltipElement?: HoveredElement;
 };
 
 const TwoDimensionalTooltip = ({ datapoints, xAxisLabel, tooltipElement }: TooltipProps) => {
@@ -250,7 +248,7 @@ export type PlotMessage = {
 
 type MenuContentProps = {
   config: Config;
-  saveConfig: (arg0: $Shape<Config>) => void;
+  saveConfig: (arg0: Partial<Config>) => void;
 };
 function MenuContent({ config, saveConfig }: MenuContentProps) {
   const { pointRadiusOverride, minXVal, maxXVal, minYVal, maxYVal } = config;
@@ -326,13 +324,11 @@ function TwoDimensionalPlot(props: Props) {
   const tooltip = React.useRef<HTMLDivElement | null>(null);
   const chartComponent = React.useRef<ChartComponent | null>(null);
 
-  const [mousePosition, updateMousePosition] = React.useState<
-    { x: number; y: number } | null | undefined
-  >(null);
+  const [mousePosition, setMousePosition] = React.useState<{ x: number; y: number } | undefined>();
 
   const maybeBobject: unknown = useLatestMessageDataItem(path.value, "bobjects")?.queriedData[0]
     ?.value;
-  const message: PlotMessage | null | undefined = isBobject(maybeBobject)
+  const message: PlotMessage | undefined = isBobject(maybeBobject)
     ? deepParse(maybeBobject)
     : cast<PlotMessage>(maybeBobject);
   const { title, yAxisLabel, xAxisLabel, gridColor, lines = [], points = [], polygons = [] } =
@@ -459,7 +455,7 @@ function TwoDimensionalPlot(props: Props) {
     }
   }, []);
 
-  const scaleBounds = React.useRef<ReadonlyArray<ScaleBounds> | null | undefined>();
+  const scaleBounds = React.useRef<readonly ScaleBounds[] | undefined>();
   const hoverBar = React.useRef<HTMLDivElement | null>(null);
 
   const onScaleBoundsUpdate = React.useCallback(
@@ -498,12 +494,12 @@ function TwoDimensionalPlot(props: Props) {
         !isTargetingCanvas
       ) {
         removeTooltip();
-        updateMousePosition(null);
+        setMousePosition(undefined);
         return;
       }
 
       const newMousePosition = { x: xMousePosition, y: yMousePosition };
-      updateMousePosition(newMousePosition);
+      setMousePosition(newMousePosition);
 
       const tooltipElement = await currentChartComponent.getElementAtXAxis(event);
       if (!tooltipElement) {

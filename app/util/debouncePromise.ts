@@ -13,7 +13,7 @@
 
 type DebouncedFn<Args extends unknown[]> = ((...args: Args) => void) & {
   // the currently executing promise, if any
-  currentPromise?: Promise<void> | null | undefined;
+  currentPromise?: Promise<void>;
 };
 
 // debouncePromise returns a function which wraps calls to `fn`.
@@ -28,7 +28,7 @@ export default function debouncePromise<Args extends unknown[]>(
   // Whether we are currently waiting for a promise returned by `fn` to resolve.
   let calling = false;
   // Whether another call to the debounced function was made while a call was in progress.
-  let callPending: Args | null | undefined;
+  let callPending: Args | undefined;
 
   const debouncedFn: DebouncedFn<Args> = (...args: Args) => {
     if (calling) {

@@ -89,13 +89,13 @@ const undoLayoutChange = (
 };
 
 const pushLayoutChange = (
-  oldPersistedState: PersistedState | null | undefined,
+  oldPersistedState: PersistedState | undefined,
   newPersistedState: PersistedState,
   layoutHistory: LayoutHistory,
   action: any,
 ): LayoutHistory => {
   const time = Date.now();
-  const historyOptions: EditHistoryOptions | null | undefined = action.payload?.historyOptions;
+  const historyOptions: EditHistoryOptions | undefined = action.payload?.historyOptions;
   if (
     historyOptions === "SUPPRESS_HISTORY_ENTRY" ||
     isEqual(oldPersistedState, newPersistedState)
@@ -119,7 +119,7 @@ const pushLayoutChange = (
 export default function (
   state: State,
   action: ActionTypes,
-  oldPersistedState?: PersistedState | null | undefined,
+  oldPersistedState?: PersistedState,
 ): State {
   switch (action.type) {
     case "UNDO_LAYOUT_CHANGE": {

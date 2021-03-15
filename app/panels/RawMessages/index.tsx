@@ -22,7 +22,6 @@ import { first, isEqual, get, last } from "lodash";
 import React, { useState, useCallback, useMemo } from "react";
 import ReactHoverObserver from "react-hover-observer";
 import Tree from "react-json-tree";
-import { $Shape } from "utility-types";
 
 import { HighlightedValue, SDiffSpan, MaybeCollapsedValue } from "./Diff";
 import Metadata from "./Metadata";
@@ -91,7 +90,7 @@ export type RawMessagesConfig = {
 
 type Props = {
   config: RawMessagesConfig;
-  saveConfig: (arg0: $Shape<RawMessagesConfig>) => void;
+  saveConfig: (arg0: Partial<RawMessagesConfig>) => void;
   openSiblingPanel: (arg0: string, cb: (arg0: PanelConfig) => PanelConfig) => void;
 };
 
@@ -134,14 +133,12 @@ function RawMessages(props: Props) {
   const { topicPath, diffMethod, diffTopicPath, diffEnabled, showFullMessageForDiff } = config;
   const { topics, datatypes } = useDataSourceInfo();
 
-  const topicRosPath: RosPath | null | undefined = useMemo(() => parseRosPath(topicPath), [
-    topicPath,
-  ]);
-  const topic: Topic | null | undefined = useMemo(
+  const topicRosPath: RosPath | undefined = useMemo(() => parseRosPath(topicPath), [topicPath]);
+  const topic: Topic | undefined = useMemo(
     () => topicRosPath && topics.find(({ name }) => name === topicRosPath.topicName),
     [topicRosPath, topics],
   );
-  const rootStructureItem: MessagePathStructureItem | null | undefined = useMemo(() => {
+  const rootStructureItem: MessagePathStructureItem | undefined = useMemo(() => {
     if (!topic || !topicRosPath) {
       return;
     }
@@ -152,7 +149,7 @@ function RawMessages(props: Props) {
   }, [datatypes, topic, topicRosPath]);
 
   // When expandAll is unset, we'll use expandedFields to get expanded info
-  const [expandAll, setExpandAll] = useState(false);
+  const [expandAll, setExpandAll] = useState<boolean | undefined>(false);
   const [expandedFields, setExpandedFields] = useState(() => new Set());
 
   const topicName = topicRosPath?.topicName || "";
@@ -219,14 +216,14 @@ function RawMessages(props: Props) {
         expandedFieldsCopy.add(key);
         setExpandedFields(expandedFieldsCopy);
       }
-      setExpandAll(null as any);
+      setExpandAll(undefined);
     },
     [expandedFields],
   );
 
   const valueRenderer = useCallback(
     (
-      structureItem: MessagePathStructureItem | null | undefined,
+      structureItem: MessagePathStructureItem | undefined,
       data: unknown[],
       queriedData: MessagePathDataItem[],
       label: string,
@@ -236,7 +233,7 @@ function RawMessages(props: Props) {
       <ReactHoverObserver className={styles.iconWrapper}>
         {({ isHovering }: any) => {
           const lastKeyPath: number = last(keyPath) as any;
-          let valueAction: ValueAction | null | undefined;
+          let valueAction: ValueAction | undefined;
           if (isHovering && structureItem) {
             valueAction = getValueActionForValue(
               data[lastKeyPath],
@@ -245,7 +242,7 @@ function RawMessages(props: Props) {
             );
           }
 
-          let constantName: string | null | undefined;
+          let constantName: string | undefined;
           if (structureItem) {
             const childStructureItem = getStructureItemForPath(
               structureItem,
@@ -321,7 +318,7 @@ function RawMessages(props: Props) {
 
   const renderSingleTopicOrDiffOutput = useCallback(() => {
     let shouldExpandNode;
-    if (expandAll !== null) {
+    if (expandAll != null) {
       shouldExpandNode = () => expandAll;
     } else {
       shouldExpandNode = (keypath: any) => {
@@ -360,7 +357,7 @@ function RawMessages(props: Props) {
       diffItem && dataWithoutWrappingArray(diffItem.queriedData.map(({ value }) => value as any));
     const diff =
       diffEnabled &&
-      getDiff(maybeDeepParse(data), maybeDeepParse(diffData), null, showFullMessageForDiff);
+      getDiff(maybeDeepParse(data), maybeDeepParse(diffData), undefined, showFullMessageForDiff);
     const diffLabelTexts = objectValues(diffLabels).map(({ labelText }) => labelText);
 
     const CheckboxComponent = showFullMessageForDiff
@@ -405,7 +402,7 @@ function RawMessages(props: Props) {
               getItemString={diffEnabled ? (getItemStringForDiff as any) : (getItemString as any)}
               valueRenderer={(...args) => {
                 if (diffEnabled) {
-                  return valueRenderer(null, diff, diff, ...args);
+                  return valueRenderer(undefined, diff, diff, ...args);
                 }
                 if (hideWrappingArray) {
                   // When the wrapping array is hidden, put it back here.
@@ -568,12 +565,9 @@ function RawMessages(props: Props) {
                   path={diffTopicPath}
                   onChange={onDiffTopicPathChange}
                   inputStyle={{ height: "100%" }}
-                  {
-                    /* @ts-ignore-error MessagePathInput is not properly passing props through? */
-                    ...{ prioritizedDatatype: topic?.datatype }
-                  }
+                  {...{ prioritizedDatatype: topic?.datatype }}
                 />
-              ) : null}
+              ) : undefined}
             </Flex>
           )}
         </div>

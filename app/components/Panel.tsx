@@ -34,7 +34,6 @@ import {
 } from "react-mosaic-component";
 import { useSelector, useDispatch } from "react-redux";
 import { bindActionCreators } from "redux";
-import { $Shape } from "utility-types";
 
 import styles from "./Panel.module.scss";
 import * as PanelAPI from "@foxglove-studio/app/PanelAPI";
@@ -52,12 +51,12 @@ import {
 } from "@foxglove-studio/app/actions/panels";
 import Button from "@foxglove-studio/app/components/Button";
 import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
-import { useExperimentalFeature } from "@foxglove-studio/app/components/ExperimentalFeatures";
 import Flex from "@foxglove-studio/app/components/Flex";
 import Icon from "@foxglove-studio/app/components/Icon";
 import KeyListener from "@foxglove-studio/app/components/KeyListener";
 import PanelContext from "@foxglove-studio/app/components/PanelContext";
 import MosaicDragHandle from "@foxglove-studio/app/components/PanelToolbar/MosaicDragHandle";
+import { useExperimentalFeature } from "@foxglove-studio/app/context/ExperimentalFeaturesContext";
 import PanelList, { getPanelsByType } from "@foxglove-studio/app/panels/PanelList";
 import { Topic } from "@foxglove-studio/app/players/types";
 import { RosDatatypes } from "@foxglove-studio/app/types/RosDatatypes";
@@ -115,7 +114,7 @@ export default function Panel<Config extends PanelConfig>(
   PanelComponent: (
     | ComponentType
     | ComponentType<
-        $Shape<{
+        Partial<{
           config: Config;
           saveConfig: SaveConfig<Config>;
           openSiblingPanel: (arg0: string, cb: (arg0: PanelConfig) => PanelConfig) => void;
@@ -184,8 +183,8 @@ export default function Panel<Config extends PanelConfig>(
     // Mix partial config with current config or `defaultConfig`
     const saveCompleteConfig = useCallback(
       (
-        configToSave: $Shape<Config>,
-        options: { historyOptions?: EditHistoryOptions } | null | undefined,
+        configToSave: Partial<Config>,
+        options: { historyOptions?: EditHistoryOptions } | undefined,
       ) => {
         if (saveConfig) {
           saveConfig(configToSave as any);

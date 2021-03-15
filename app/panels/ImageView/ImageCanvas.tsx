@@ -16,7 +16,6 @@ import cx from "classnames";
 import isEqual from "lodash/isEqual";
 import omit from "lodash/omit";
 import panzoom from "panzoom";
-import React from "react";
 import OutsideClickHandler from "react-outside-click-handler";
 import ReactResizeDetector from "react-resize-detector";
 import shallowequal from "shallowequal";
@@ -44,13 +43,13 @@ import ImageCanvasWorker from "worker-loader!./ImageCanvas.worker";
 
 type OnFinishRenderImage = () => void;
 type Props = {
-  topic: Topic | null | undefined;
-  image: Message | null | undefined;
+  topic?: Topic;
+  image?: Message;
   rawMarkerData: {
     markers: Message[];
     scale: number;
     transformMarkers: boolean;
-    cameraInfo: CameraInfo | null | undefined;
+    cameraInfo?: CameraInfo;
   };
   panelHooks?: ImageViewPanelHooks;
   config: Config;
@@ -60,7 +59,7 @@ type Props = {
 };
 
 type State = {
-  error: Error | null | undefined;
+  error?: Error;
   openZoomChart: boolean;
 };
 
@@ -85,7 +84,7 @@ type CanvasRenderer =
   | {
       type: "rpc";
       // This is nullable because we destroy the worker whenever we unmount and recreate it if we remount.
-      worker: Rpc | null | undefined;
+      worker?: Rpc;
     }
   | {
       type: "mainThread";
@@ -126,7 +125,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
     throw new Error("_getRpcWorker can only be called with canvasRenderer type rpc");
   };
 
-  _setCanvasRef = (canvas: HTMLCanvasElement | null | undefined) => {
+  _setCanvasRef = (canvas?: HTMLCanvasElement | null): void => {
     if (canvas) {
       this.loadZoomFromConfig();
       if (this._canvasRenderer.type === "rpc") {
@@ -142,7 +141,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
     }
   };
 
-  panZoomCanvas: any = null;
+  panZoomCanvas: any = undefined;
   bitmapDimensions: Dimensions = { width: 0, height: 0 };
 
   keepInBounds = (div: HTMLElement) => {
@@ -269,7 +268,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
     if (canvasRenderer.type === "rpc") {
       // Unset the PRC worker so that we can destroy the worker if it's no longer necessary.
       webWorkerManager.unregisterWorkerListener(this._id);
-      canvasRenderer.worker = null;
+      canvasRenderer.worker = undefined;
     }
     document.removeEventListener("visibilitychange", this._onVisibilityChange);
   }
@@ -376,7 +375,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
       const canvasRenderer = this._canvasRenderer;
       if (canvasRenderer.type === "rpc") {
         const worker = this._getRpcWorker();
-        dimensions = await worker.send<Dimensions | null | undefined>("renderImage", {
+        dimensions = await worker.send<Dimensions | undefined>("renderImage", {
           id: this._id,
           imageMessage: image,
           imageMessageDatatype: topic.datatype,
@@ -384,7 +383,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
         });
       } else {
         dimensions = await renderImage({
-          canvas: this._canvasRef.current,
+          canvas: this._canvasRef.current ?? undefined,
           imageMessage: image,
           imageMessageDatatype: topic.datatype,
           rawMarkerData,

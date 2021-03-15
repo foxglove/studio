@@ -15,11 +15,10 @@ import AlertCircleIcon from "@mdi/svg/svg/alert-circle.svg";
 import MenuIcon from "@mdi/svg/svg/menu.svg";
 import cx from "classnames";
 import { last } from "lodash";
-import React, { useCallback, useMemo } from "react";
-import { $Shape } from "utility-types";
+import React, { Fragment, useCallback, useMemo } from "react";
 
 import styles from "./PlotLegend.module.scss";
-import { plotableRosTypes, PlotConfig, PlotXAxisVal } from "./index";
+import { plotableRosTypes, PlotConfig, PlotXAxisVal } from "./types";
 import Dropdown from "@foxglove-studio/app/components/Dropdown";
 import DropdownItem from "@foxglove-studio/app/components/Dropdown/DropdownItem";
 import Icon from "@foxglove-studio/app/components/Icon";
@@ -35,7 +34,7 @@ import { TimestampMethod } from "@foxglove-studio/app/util/time";
 
 type PlotLegendProps = {
   paths: PlotPath[];
-  saveConfig: (arg0: $Shape<PlotConfig>) => void;
+  saveConfig: (arg0: Partial<PlotConfig>) => void;
   showLegend: boolean;
   xAxisVal: PlotXAxisVal;
   xAxisPath?: BasePlotPath;
@@ -71,7 +70,7 @@ export default function PlotLegend(props: PlotLegendProps) {
   const lastPath = last(paths);
 
   const onInputChange = useCallback(
-    (value: string, index: number | null | undefined) => {
+    (value: string, index?: number) => {
       if (index == null) {
         throw new Error("index not set");
       }
@@ -83,7 +82,7 @@ export default function PlotLegend(props: PlotLegendProps) {
   );
 
   const onInputTimestampMethodChange = useCallback(
-    (value: TimestampMethod, index: number | null | undefined) => {
+    (value: TimestampMethod, index?: number) => {
       if (index == null) {
         throw new Error("index not set");
       }
@@ -178,7 +177,7 @@ export default function PlotLegend(props: PlotLegendProps) {
         const hasMismatchedDataLength = pathsWithMismatchedDataLengths.includes(path.value);
 
         return (
-          <React.Fragment key={index}>
+          <Fragment key={index}>
             <div className={styles.item}>
               y:
               <div
@@ -210,7 +209,7 @@ export default function PlotLegend(props: PlotLegendProps) {
                   index={index}
                   autoSize
                   disableAutocomplete={isReferenceLinePlotPath}
-                  {...(xAxisVal === "timestamp" ? { timestampMethod } : null)}
+                  {...(xAxisVal === "timestamp" ? { timestampMethod } : undefined)}
                 />
                 {hasMismatchedDataLength && (
                   <Icon
@@ -235,7 +234,7 @@ export default function PlotLegend(props: PlotLegendProps) {
                 ✕
               </div>
             </div>
-          </React.Fragment>
+          </Fragment>
         );
       })}
       <div

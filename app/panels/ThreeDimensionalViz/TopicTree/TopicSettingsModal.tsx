@@ -20,7 +20,7 @@ import { Save3DConfig } from "../index";
 import Button from "@foxglove-studio/app/components/Button";
 import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
 import Modal from "@foxglove-studio/app/components/Modal";
-import { RenderToBodyComponent } from "@foxglove-studio/app/components/renderToBody";
+import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToBodyComponent";
 import { getGlobalHooks } from "@foxglove-studio/app/loadWebviz";
 import { topicSettingsEditorForDatatype } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicSettingsEditor";
 import { Topic } from "@foxglove-studio/app/players/types";
@@ -72,7 +72,7 @@ const STabWrapper = styled.div`
 function getSettingsByColumnWithDefaults(
   topicName: string,
   settingsByColumn?: any[] | null,
-): { settingsByColumn: any[] } | null | undefined {
+): { settingsByColumn: any[] } | undefined {
   const defaultTopicSettingsByColumn = getGlobalHooks()
     .startupPerPanelHooks()
     .ThreeDimensionalViz.getDefaultTopicSettingsByColumn();
@@ -150,7 +150,7 @@ type Props = {
   hasFeatureColumn: boolean;
   saveConfig: Save3DConfig;
   sceneBuilderMessage: any;
-  setCurrentEditingTopic: (arg0: Topic | null | undefined) => void;
+  setCurrentEditingTopic: (arg0?: Topic) => void;
   settingsByKey: {
     [topic: string]: any;
   };

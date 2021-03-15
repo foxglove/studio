@@ -10,7 +10,6 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import * as React from "react";
 
 type KeyHandlers = {
   [key: string]: (event: KeyboardEvent) => void;
@@ -24,7 +23,7 @@ type Props = {
 };
 
 export default class KeyListener extends React.Component<Props> {
-  el: HTMLDivElement | null | undefined;
+  el?: HTMLDivElement;
 
   static defaultProps = {
     global: false,
@@ -50,7 +49,7 @@ export default class KeyListener extends React.Component<Props> {
     }
   }
 
-  callHandlers(handlers: KeyHandlers | null | undefined, event: KeyboardEvent) {
+  callHandlers(handlers: KeyHandlers | undefined, event: KeyboardEvent) {
     if (!handlers) {
       return;
     }
@@ -87,6 +86,6 @@ export default class KeyListener extends React.Component<Props> {
   };
 
   render() {
-    return <div style={{ display: "none" }} ref={(el) => (this.el = el)} />;
+    return <div style={{ display: "none" }} ref={(el) => (this.el = el ?? undefined)} />;
   }
 }

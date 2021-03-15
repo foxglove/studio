@@ -14,11 +14,9 @@
 // No time functions that require `moment` should live in this file.
 import { Time, TimeUtil } from "rosbag";
 
-import { MIN_MEM_CACHE_BLOCK_SIZE_NS } from "@foxglove-studio/app/dataProviders/MemoryCacheDataProvider";
 import { cast, Bobject, Message } from "@foxglove-studio/app/players/types";
 import { BinaryTime } from "@foxglove-studio/app/types/BinaryMessages";
 import { deepParse } from "@foxglove-studio/app/util/binaryObjects";
-import { parseTimeStr } from "@foxglove-studio/app/util/formatTime";
 import {
   SEEK_TO_FRACTION_QUERY_KEY,
   SEEK_TO_RELATIVE_MS_QUERY_KEY,
@@ -32,12 +30,10 @@ type BatchTimestamp = {
 
 export type TimestampMethod = "receiveTime" | "headerStamp";
 
-// Unfortunately, using %checks on this function doesn't actually allow Flow to conclude that the object is a Time.
-// Related: https://github.com/facebook/flow/issues/3614
-export function isTime(obj?: Record<string, unknown>): boolean {
+export function isTime(obj?: unknown): obj is Time {
   return (
-    !!obj &&
     typeof obj === "object" &&
+    !!obj &&
     "sec" in obj &&
     "nsec" in obj &&
     Object.getOwnPropertyNames(obj).length === 2
@@ -205,13 +201,13 @@ export function getNextFrame(
   currentTime: Time,
   timestamps: string[] = [],
   goLeft?: boolean,
-): Time | null | undefined {
+): Time | undefined {
   if (!timestamps.length) {
-    return null;
+    return undefined;
   }
   const effectiveIdx = findClosestTimestampIndex(currentTime, timestamps);
   if (effectiveIdx === -1) {
-    return null;
+    return undefined;
   }
   let nextIdx = 0;
   const maxIdx = timestamps.length - 1;
@@ -254,18 +250,18 @@ export const isTimeInRangeInclusive = (time: Time, start: Time, end: Time) => {
   return true;
 };
 
-export function parseRosTimeStr(str: string): Time | null | undefined {
+export function parseRosTimeStr(str: string): Time | undefined {
   if (/^\d+\.?$/.test(str)) {
     // Whole number with optional "." at the end.
     return { sec: parseInt(str, 10) || 0, nsec: 0 };
   }
   if (!/^\d+\.\d+$/.test(str)) {
     // Not digits.digits -- invalid.
-    return null;
+    return undefined;
   }
   const partials = str.split(".");
   if (partials.length === 0) {
-    return null;
+    return undefined;
   }
   // There can be 9 digits of nanoseconds. If the fractional part is "1", we need to add eight
   // zeros. Also, make sure we round to an integer if we need to _remove_ digits.
@@ -290,15 +286,7 @@ export type SeekToTimeSpec = AbsoluteSeekToTime | RelativeSeekToTime | SeekFract
 // something useful on the screen. Ideally this is less than BLOCK_SIZE_NS from
 // MemoryCacheDataProvider so we still stay within the first block when fetching
 // initial data.
-export const SEEK_ON_START_NS =
-  99 *
-  /* ms */
-  1e6;
-if (SEEK_ON_START_NS >= MIN_MEM_CACHE_BLOCK_SIZE_NS) {
-  throw new Error(
-    "SEEK_ON_START_NS should be less than MIN_MEM_CACHE_BLOCK_SIZE_NS (to keep initial backfill within one block)",
-  );
-}
+export const SEEK_ON_START_NS = 99 * 1e6; /* ms */
 
 export function getSeekToTime(): SeekToTimeSpec {
   const params = new URLSearchParams(window.location.search);
@@ -343,7 +331,7 @@ export function getSeekTimeFromSpec(spec: SeekToTimeSpec, start: Time, end: Time
 export function getTimestampForMessage(
   message: Message,
   timestampMethod?: TimestampMethod,
-): Time | null | undefined {
+): Time | undefined {
   if (timestampMethod === "headerStamp") {
     if (message.message.header?.stamp?.sec != null && message.message.header?.stamp?.nsec != null) {
       return message.message.header.stamp;
@@ -362,9 +350,7 @@ type MaybeStampedBobject = Readonly<{
   header?: () => Readonly<{ stamp?: () => unknown }>;
 }>;
 
-export const maybeGetBobjectHeaderStamp = (
-  message: Bobject | null | undefined,
-): Time | null | undefined => {
+export const maybeGetBobjectHeaderStamp = (message: Bobject | undefined): Time | undefined => {
   if (message == null) {
     return;
   }
@@ -382,34 +368,4 @@ export const getRosTimeFromString = (text: string) => {
   }
   const textAsNum = Number(text);
   return { sec: Math.floor(textAsNum), nsec: textAsNum * 1e9 - Math.floor(textAsNum) * 1e9 };
-};
-
-const todTimeRegex = /^\d+:\d+:\d+.\d+\s[PpAa][Mm]\s[A-Za-z$]+/;
-export const getValidatedTimeAndMethodFromString = ({
-  text,
-  date,
-  timezone,
-}: {
-  text: string | null | undefined;
-  date: string;
-  timezone: string | null | undefined;
-}): { time: Time | null | undefined; method: "ROS" | "TOD" } | null | undefined => {
-  if (!text) {
-    return;
-  }
-  const isInvalidRosTime = isNaN(+text);
-  const isInvalidTodTime = !(
-    todTimeRegex.test(text || "") && parseTimeStr(`${date} ${text || ""}`, timezone)
-  );
-
-  if (isInvalidRosTime && isInvalidTodTime) {
-    return;
-  }
-
-  return {
-    time: !isInvalidRosTime
-      ? getRosTimeFromString(text || "")
-      : parseTimeStr(`${date} ${text || ""}`, timezone),
-    method: isInvalidRosTime ? "TOD" : "ROS",
-  };
 };

@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { storiesOf } from "@storybook/react";
-import React from "react";
 
 import InteractionContextMenu from "./InteractionContextMenu";
 
@@ -57,14 +56,14 @@ const sharedProps = {
       instanceIndex: undefined,
     },
     {
-      object: { ...selectedObject, interactionData: { topic: "/foo1/bar" }, id: null },
+      object: { ...selectedObject, interactionData: { topic: "/foo1/bar" }, id: undefined },
       instanceIndex: undefined,
     },
     { object: { ...selectedObject, interactionData: { topic: "/abc/xyz" } }, instanceIndex: 10 },
     {
       object: {
         ...selectedObject,
-        id: null,
+        id: undefined,
         interactionData: { topic: "/some_topic_name/nested_name/with_very_very_very_longer_name/" },
       },
       instanceIndex: 10,

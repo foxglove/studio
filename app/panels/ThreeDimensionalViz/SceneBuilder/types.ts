@@ -11,20 +11,18 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { $ReadOnly } from "utility-types";
-
 import { Frame } from "@foxglove-studio/app/players/types";
 import { Color, Pose } from "@foxglove-studio/app/types/Messages";
 
-export type SkipTransformSpec = $ReadOnly<{ frameId: string; sourceTopic: string }>;
+export type SkipTransformSpec = { readonly frameId: string; readonly sourceTopic: string };
 
-export type ThreeDimensionalVizHooks = $ReadOnly<{
+export type ThreeDimensionalVizHooks = Readonly<{
   getSelectionState: (arg0: { [key: string]: any }) => any; // arg is globalVariables
   getTopicsToRender: (arg0: any, arg1: any) => Set<string>; // args are selection states
-  skipTransformFrame: SkipTransformSpec | null | undefined;
+  skipTransformFrame?: SkipTransformSpec;
   getMarkerColor: (arg0: string, arg1: Color) => Color;
   getOccupancyGridValues: (arg0: string) => [number, string]; // arg is topic, return value is [alpha, map].
-  getFlattenedPose: (arg0: Frame) => Pose | null | undefined;
+  getFlattenedPose: (arg0: Frame) => Pose | undefined;
   getSyntheticArrowMarkerColor: (arg0: string) => Color; // arg is topic
   consumeBobject: (arg0: string, arg1: string, arg2: any, arg3: any, arg4: any) => void; // topic, datatype, message, consumeFns, misc
   addMarkerToCollector: (arg0: any, arg1: any) => boolean; // marker collector, marker

@@ -74,11 +74,11 @@ const rpcFromNewSharedWorker = (worker: any) => {
 const getBobjectMessage = async (
   datatypes: RosDatatypes,
   datatype: string,
-  messagePromise: Promise<Message | null | undefined>,
-): Promise<BobjectMessage | null | undefined> => {
+  messagePromise: Promise<Message | undefined>,
+): Promise<BobjectMessage | undefined> => {
   const msg = await messagePromise;
   if (!msg) {
-    return null;
+    return undefined;
   }
   return {
     topic: msg.topic,
@@ -102,14 +102,14 @@ export default class UserNodePlayer implements Player {
   // TODO: FUTURE - Terminate unused workers (some sort of timeout, for whole array or per rpc)
   // Not sure if there is perf issue with unused workers (may just go idle) - requires more research
   _unusedNodeRuntimeWorkers: Rpc[] = [];
-  _lastPlayerStateActiveData: PlayerStateActiveData | null | undefined;
+  _lastPlayerStateActiveData?: PlayerStateActiveData;
   _setUserNodeDiagnostics: (nodeId: string, diagnostics: Diagnostic[]) => void;
   _addUserNodeLogs: (nodeId: string, logs: UserNodeLog[]) => void;
   _setRosLib: (rosLib: string) => void;
-  _nodeTransformRpc: Rpc | null | undefined = null;
-  _rosLib: string | null | undefined;
+  _nodeTransformRpc?: Rpc;
+  _rosLib?: string;
   _globalVariables: GlobalVariables = {};
-  _pendingResetWorkers: Promise<void> | null | undefined;
+  _pendingResetWorkers?: Promise<void>;
 
   constructor(player: Player, userNodeActions: UserNodeActions) {
     this._player = player;
@@ -163,8 +163,8 @@ export default class UserNodePlayer implements Player {
       globalVariables: GlobalVariables,
       nodeRegistrations: NodeRegistration[],
     ): Promise<{
-      parsedMessages: ReadonlyArray<Message>;
-      bobjects: ReadonlyArray<BobjectMessage>;
+      parsedMessages: readonly Message[];
+      bobjects: readonly BobjectMessage[];
     }> => {
       const parsedMessagesPromises = [];
       const bobjectPromises = [];
@@ -226,7 +226,7 @@ export default class UserNodePlayer implements Player {
     // TODO: Only reset workers once
     return this._resetWorkers().then(() => {
       this.setSubscriptions(this._subscriptions);
-      const { currentTime = null, isPlaying = false } = this._lastPlayerStateActiveData || {};
+      const { currentTime, isPlaying = false } = this._lastPlayerStateActiveData || {};
       if (currentTime && !isPlaying) {
         this._player.seekPlayback(currentTime);
       }
@@ -247,8 +247,8 @@ export default class UserNodePlayer implements Player {
     const nodeData = await transformWorker.send<NodeData>("transform", transformMessage);
     const { inputTopics, outputTopic, transpiledCode, projectCode, outputDatatype } = nodeData;
 
-    let bobjectSender: any;
-    let rpc: any;
+    let bobjectSender: BobjectRpcSender | undefined;
+    let rpc: Rpc | undefined;
     let terminateSignal = signal<void>();
     return {
       nodeId,
@@ -265,7 +265,6 @@ export default class UserNodePlayer implements Player {
             this._unusedNodeRuntimeWorkers.pop() ||
             rpcFromNewSharedWorker(new UserNodePlayerWorker());
           bobjectSender = new BobjectRpcSender(rpc);
-          // @ts-expect-error we don't know the type of rpc, once we fix that the send will accept a generic
           const { error, userNodeDiagnostics, userNodeLogs } = await rpc.send<RegistrationOutput>(
             "registerNode",
             {
@@ -289,7 +288,6 @@ export default class UserNodePlayer implements Player {
         }
 
         const result = await Promise.race([
-          // @ts-expect-error we don't know the type of rpc, once we fix that the send will accept a generic
           bobjectSender.send<ProcessMessageOutput>(
             "processMessage",
             message,
@@ -330,7 +328,7 @@ export default class UserNodePlayer implements Player {
         terminateSignal.resolve();
         if (rpc) {
           this._unusedNodeRuntimeWorkers.push(rpc);
-          rpc = null;
+          rpc = undefined;
         }
       },
     };
@@ -368,7 +366,7 @@ export default class UserNodePlayer implements Player {
     // downstream caches. (i.e. `this._getTopics`)
     if (!this._nodeRegistrations.length && !Object.entries(this._userNodes).length) {
       pending.resolve();
-      this._pendingResetWorkers = null;
+      this._pendingResetWorkers = undefined;
       return;
     }
 
@@ -414,7 +412,7 @@ export default class UserNodePlayer implements Player {
     this._nodeRegistrations = validNodeRegistrations;
     this._nodeRegistrations.forEach(({ nodeId }) => this._setUserNodeDiagnostics(nodeId, []));
 
-    this._pendingResetWorkers = null;
+    this._pendingResetWorkers = undefined;
     pending.resolve();
   }
 
@@ -552,7 +550,7 @@ export default class UserNodePlayer implements Player {
   startPlayback = () => this._player.startPlayback();
   pausePlayback = () => this._player.pausePlayback();
   setPlaybackSpeed = (speed: number) => this._player.setPlaybackSpeed(speed);
-  seekPlayback = (time: Time, backfillDuration?: Time | null) =>
+  seekPlayback = (time: Time, backfillDuration?: Time) =>
     this._player.seekPlayback(time, backfillDuration);
   requestBackfill = () => this._player.requestBackfill();
 }

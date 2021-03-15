@@ -13,7 +13,6 @@
 
 import { storiesOf } from "@storybook/react";
 import { createBrowserHistory } from "history";
-import React from "react";
 import TestUtils from "react-dom/test-utils";
 
 import Tab from "./index";
@@ -31,7 +30,7 @@ const rootReducer = createRootReducer(createBrowserHistory());
 const fixture = { topics: [], datatypes: {}, frame: {}, layout: "Tab!a" };
 const manyTabs = new Array(25)
   .fill(1)
-  .map((elem, idx) => ({ title: `Tab #${idx + 1}`, layout: null }));
+  .map((elem, idx) => ({ title: `Tab #${idx + 1}`, layout: undefined }));
 const DEFAULT_TIMEOUT = 200;
 storiesOf("<Tab>", module)
   .addParameters({
@@ -90,7 +89,7 @@ storiesOf("<Tab>", module)
           savedProps: {
             "Tab!a": {
               activeTabIdx: 0,
-              tabs: [{ title: "First tab", layout: null }],
+              tabs: [{ title: "First tab", layout: undefined }],
             },
           },
         }}
@@ -116,7 +115,7 @@ storiesOf("<Tab>", module)
           savedProps: {
             "Tab!a": {
               activeTabIdx: 0,
-              tabs: [{ title: "First tab", layout: null }],
+              tabs: [{ title: "First tab", layout: undefined }],
             },
           },
         }}
@@ -175,7 +174,7 @@ storiesOf("<Tab>", module)
           tabs: [
             {
               title: "Tab A",
-              layout: null,
+              layout: undefined,
             },
             {
               title: "Tab B",
@@ -197,7 +196,7 @@ storiesOf("<Tab>", module)
             },
             {
               title: "Tab C",
-              layout: null,
+              layout: undefined,
             },
           ],
         }}
@@ -224,7 +223,7 @@ storiesOf("<Tab>", module)
         fixture={{
           ...fixture,
           savedProps: {
-            "Tab!a": { activeTabIdx: 0, tabs: [{ title: "Tab A", layout: null }] },
+            "Tab!a": { activeTabIdx: 0, tabs: [{ title: "Tab A", layout: undefined }] },
           },
         }}
         style={{ width: "100%" }}
@@ -411,11 +410,15 @@ storiesOf("<Tab>", module)
               '[data-test~="Tab!Left"] [data-test="add-tab"]',
             )[0] as any).click();
 
-            const dragHandle = document.querySelector(
-              '[data-test~="Tab!RightInner"] [data-test="mosaic-drag-handle"]',
-            );
-            dragAndDrop(dragHandle, () =>
-              document.querySelector('[data-test~="Tab!Left"] [data-test="empty-drop-target"]'),
+            const dragHandle =
+              document.querySelector(
+                '[data-test~="Tab!RightInner"] [data-test="mosaic-drag-handle"]',
+              ) ?? undefined;
+            dragAndDrop(
+              dragHandle,
+              () =>
+                document.querySelector('[data-test~="Tab!Left"] [data-test="empty-drop-target"]') ??
+                undefined,
             );
           }, DEFAULT_TIMEOUT);
         }}

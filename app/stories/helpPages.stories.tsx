@@ -12,8 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { storiesOf } from "@storybook/react";
-import React from "react";
-import { MemoryRouter } from "react-router";
 
 import HelpModal from "@foxglove-studio/app/components/HelpModal";
 
@@ -24,11 +22,9 @@ export function makeHelpPageStories(req: any) {
 
   helpData.forEach(({ name, data }: any) => {
     stories.add(name, () => (
-      <MemoryRouter>
-        <HelpModal onRequestClose={() => {}}>
-          {data.default ? React.createElement(data.default) : data}
-        </HelpModal>
-      </MemoryRouter>
+      <HelpModal onRequestClose={() => {}}>
+        {data.default ? React.createElement(data.default) : data}
+      </HelpModal>
     ));
   });
 }

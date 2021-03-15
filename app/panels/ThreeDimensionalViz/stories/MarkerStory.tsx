@@ -12,9 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { cloneDeep } from "lodash";
-import React from "react";
 import { Color } from "regl-worldview";
-import { $Shape } from "utility-types";
 
 import { ThreeDimensionalVizConfig } from "@foxglove-studio/app/panels/ThreeDimensionalViz";
 import {
@@ -55,9 +53,9 @@ Object.keys(markerProps).forEach((markerType, idx) => {
 export function MarkerStory(
   props: {
     data?: FixtureExampleData;
-    initialConfigOverride?: $Shape<ThreeDimensionalVizConfig>;
-    overrideColor?: Color | null | undefined;
-    onMount?: (arg0: HTMLDivElement | null | undefined) => void;
+    initialConfigOverride?: Partial<ThreeDimensionalVizConfig>;
+    overrideColor?: Color;
+    onMount?: (arg0?: HTMLDivElement) => void;
   } = {},
 ) {
   const { data, overrideColor, onMount, initialConfigOverride } = props;

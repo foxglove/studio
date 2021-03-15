@@ -13,7 +13,6 @@
 
 import ArrowCollapseIcon from "@mdi/svg/svg/arrow-collapse.svg";
 import cx from "classnames";
-import * as React from "react";
 import styled from "styled-components";
 
 import styles from "./ExpandingToolbar.module.scss";
@@ -50,8 +49,8 @@ type Props<T extends string> = {
   children: React.ReactElement<typeof ToolGroup>[] | React.ReactElement<typeof ToolGroup>;
   className?: string;
   icon: React.ReactNode;
-  onSelectTab: (name: T | null | undefined) => void;
-  selectedTab: T | null | undefined; // collapse the toolbar if selectedTab is null
+  onSelectTab: (name: T | undefined) => void;
+  selectedTab?: T; // collapse the toolbar if selectedTab is undefined
   tooltip: string;
   style?: React.CSSProperties;
 };
@@ -104,7 +103,7 @@ export default function ExpandingToolbar<T extends string>({
           );
         })}
         <div className={styles.spaceSeparator} />
-        <Button onClick={() => onSelectTab(null)}>
+        <Button onClick={() => onSelectTab(undefined)}>
           <Icon>
             <ArrowCollapseIcon />
           </Icon>

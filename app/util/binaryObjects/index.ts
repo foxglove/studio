@@ -22,6 +22,7 @@ import {
   associateDatatypes,
   deepParseSymbol,
   getDatatypes,
+  isBobject,
   primitiveList,
 } from "@foxglove-studio/app/util/binaryObjects/messageDefinitionUtils";
 
@@ -50,7 +51,7 @@ type BinaryBobjectData = Readonly<{
   approximateSize: number;
 }>;
 const binaryData = new WeakMap<any, BinaryBobjectData>();
-export const getBinaryData = (bobject: any): BinaryBobjectData | null | undefined =>
+export const getBinaryData = (bobject: any): BinaryBobjectData | undefined =>
   binaryData.get(bobject);
 const reverseWrappedBobjects = new WeakSet<any>();
 
@@ -81,8 +82,8 @@ export const getObjects = (
   datatype: string,
   buffer: ArrayBuffer,
   bigString: string,
-  offsets: ReadonlyArray<number>,
-): ReadonlyArray<Bobject> => {
+  offsets: readonly number[],
+): readonly Bobject[] => {
   const Class = getGetClassForView(typesByName, datatype)(
     context,
     new DataView(buffer),
@@ -101,24 +102,10 @@ export const getObjects = (
   return ret;
 };
 
-// True for "object bobjects" and array views.
-export const isBobject = (object: any | null | undefined): boolean =>
-  object?.[deepParseSymbol] != null;
-export const isArrayView = (object: any): boolean =>
-  isBobject(object) && object[Symbol.iterator] != null;
+export { deepParse, isBobject } from "./messageDefinitionUtils";
 
-export const deepParse = (object: any | null | undefined): any => {
-  if (object == null) {
-    // Missing submessage fields are unfortunately common for constructed markers. This is not
-    // principled, but it is pragmatic.
-    return object;
-  }
-  if (!isBobject(object)) {
-    // This is typically a typing mistake -- the user thinks they have a bobject but have a
-    // primitive or a parsed message.
-    throw new Error("Argument to deepParse is not a bobject");
-  }
-  return object[deepParseSymbol]();
+export const isArrayView = (object: any): boolean => {
+  return isBobject(object) && object[Symbol.iterator] != null;
 };
 
 export const wrapJsObject = <T>(typesByName: RosDatatypes, typeName: string, object: any): T => {
@@ -197,7 +184,7 @@ export const merge = <T extends any>(
 };
 
 // For accessing fields that might be in bobjects and might be in JS objects.
-export const getField = (obj: any | null | undefined, field: string): any => {
+export const getField = (obj: any | undefined, field: string): any => {
   if (!obj) {
     return;
   }
@@ -207,7 +194,7 @@ export const getField = (obj: any | null | undefined, field: string): any => {
   return obj[field];
 };
 
-export const getIndex = (obj: any, i: number): any | null | undefined => {
+export const getIndex = (obj: any, i: number): any | undefined => {
   if (!obj) {
     return;
   }

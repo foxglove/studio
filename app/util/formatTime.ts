@@ -15,7 +15,7 @@ import momentDurationFormatSetup from "moment-duration-format";
 import moment from "moment-timezone";
 import { Time } from "rosbag";
 
-import { toDate, fromDate } from "./time";
+import { toDate, fromDate, getRosTimeFromString } from "./time";
 
 // All time functions that require `moment` should live in this file.
 
@@ -27,7 +27,7 @@ export function format(stamp: Time) {
   return `${formatDate(stamp)} ${formatTime(stamp)}`;
 }
 
-export function formatDate(stamp: Time, timezone?: string | null | undefined) {
+export function formatDate(stamp: Time, timezone?: string) {
   if (stamp.sec < 0 || stamp.nsec < 0) {
     console.error("Times are not allowed to be negative");
     return "(invalid negative time)";
@@ -35,7 +35,7 @@ export function formatDate(stamp: Time, timezone?: string | null | undefined) {
   return moment.tz(toDate(stamp), timezone || moment.tz.guess()).format("YYYY-MM-DD");
 }
 
-export function formatTime(stamp: Time, timezone?: string | null | undefined) {
+export function formatTime(stamp: Time, timezone?: string) {
   if (stamp.sec < 0 || stamp.nsec < 0) {
     console.error("Times are not allowed to be negative");
     return "(invalid negative time)";
@@ -57,18 +57,45 @@ export function formatDuration(stamp: Time) {
     .format("h:mm:ss.SSS", { trim: false });
 }
 
-export function parseTimeStr(
-  str: string,
-  timezone?: string | null | undefined,
-): Time | null | undefined {
+export function parseTimeStr(str: string, timezone?: string): Time | undefined {
   const newMomentTimeObj = timezone
     ? moment.tz(str, "YYYY-MM-DD h:mm:ss.SSS A z", timezone)
     : moment(str, "YYYY-MM-DD h:mm:ss.SSS A z");
   const date = newMomentTimeObj.toDate();
-  const result = (newMomentTimeObj.isValid() && fromDate(date)) || null;
+  const result = (newMomentTimeObj.isValid() && fromDate(date)) || undefined;
 
   if (!result || result.sec <= 0 || result.nsec < 0) {
-    return null;
+    return undefined;
   }
   return result;
 }
+
+const todTimeRegex = /^\d+:\d+:\d+.\d+\s[PpAa][Mm]\s[A-Za-z$]+/;
+export const getValidatedTimeAndMethodFromString = ({
+  text,
+  date,
+  timezone,
+}: {
+  text?: string;
+  date: string;
+  timezone?: string;
+}): { time?: Time; method: "ROS" | "TOD" } | undefined => {
+  if (!text) {
+    return;
+  }
+  const isInvalidRosTime = isNaN(+text);
+  const isInvalidTodTime = !(
+    todTimeRegex.test(text || "") && parseTimeStr(`${date} ${text || ""}`, timezone)
+  );
+
+  if (isInvalidRosTime && isInvalidTodTime) {
+    return;
+  }
+
+  return {
+    time: !isInvalidRosTime
+      ? getRosTimeFromString(text || "")
+      : parseTimeStr(`${date} ${text || ""}`, timezone),
+    method: isInvalidRosTime ? "TOD" : "ROS",
+  };
+};

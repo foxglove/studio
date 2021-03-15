@@ -30,7 +30,7 @@ const noop = () => {
   // no-op
 };
 
-const getBagDescriptor = async (url: string | null | undefined) => {
+const getBagDescriptor = async (url?: string) => {
   if (!url) {
     throw new Error("No bag url provided.");
   }
@@ -85,9 +85,7 @@ export default class StoryPlayer implements Player {
           reportMetadataCallback: () => {
             // no-op
           },
-          notifyPlayerManager: async (): Promise<
-            NotifyPlayerManagerReplyData | null | undefined
-          > => {
+          notifyPlayerManager: async (): Promise<NotifyPlayerManagerReplyData | undefined> => {
             // no-op
             return;
           },

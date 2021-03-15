@@ -13,7 +13,6 @@
 
 import { storiesOf } from "@storybook/react";
 import { createMemoryHistory } from "history";
-import * as React from "react";
 import { DndProvider } from "react-dnd";
 import HTML5Backend from "react-dnd-html5-backend";
 import TestUtils from "react-dom/test-utils";
@@ -34,7 +33,7 @@ const PanelListWithInteractions = ({
     style={{ margin: 50, height: 480 }}
     ref={(el) => {
       if (el) {
-        const input: HTMLInputElement | null | undefined = el.querySelector("input") as any;
+        const input: HTMLInputElement | undefined = el.querySelector("input") as any;
         if (input) {
           input.focus();
           if (inputValue) {

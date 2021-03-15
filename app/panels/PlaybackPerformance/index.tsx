@@ -12,9 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { last, sumBy } from "lodash";
-import * as React from "react";
 import { ReactElement } from "react";
-import { $ReadOnly } from "utility-types";
 
 import helpContent from "./index.help.md";
 import Flex from "@foxglove-studio/app/components/Flex";
@@ -55,10 +53,10 @@ function PlaybackPerformanceItem(props: PlaybackPerformanceItemProps): ReactElem
   );
 }
 
-export type UnconnectedPlaybackPerformanceProps = $ReadOnly<{
-  timestamp: number;
-  activeData: PlayerStateActiveData | null | undefined;
-}>;
+export type UnconnectedPlaybackPerformanceProps = {
+  readonly timestamp: number;
+  readonly activeData?: PlayerStateActiveData;
+};
 
 // Exported for stories
 export function UnconnectedPlaybackPerformance({
@@ -66,7 +64,7 @@ export function UnconnectedPlaybackPerformance({
   activeData,
 }: UnconnectedPlaybackPerformanceProps) {
   const playbackInfo = React.useRef<
-    { timestamp: number; activeData: PlayerStateActiveData } | null | undefined
+    { timestamp: number; activeData: PlayerStateActiveData } | undefined
   >();
   const lastPlaybackInfo = playbackInfo.current;
   if (activeData && (!playbackInfo.current || playbackInfo.current.activeData !== activeData)) {

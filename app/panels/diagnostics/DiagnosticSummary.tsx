@@ -16,9 +16,7 @@ import CheckboxMarkedIcon from "@mdi/svg/svg/checkbox-marked.svg";
 import PinIcon from "@mdi/svg/svg/pin.svg";
 import cx from "classnames";
 import { compact } from "lodash";
-import * as React from "react";
 import { List, AutoSizer } from "react-virtualized";
-import { $Shape } from "utility-types";
 
 import { Config as DiagnosticStatusConfig } from "./DiagnosticStatusPanel";
 import helpContent from "./DiagnosticSummary.help.md";
@@ -67,7 +65,7 @@ class NodeRow extends React.PureComponent<NodeRowProps> {
 
     return (
       <div
-        className={cx(levelName ? styles[levelName] : null, styles.nodeRow)}
+        className={cx(levelName ? styles[levelName] : undefined, styles.nodeRow)}
         onClick={this.onClick}
         data-test-diagnostic-row
       >
@@ -93,7 +91,7 @@ type Config = {
 };
 type Props = {
   config: Config;
-  saveConfig: (arg0: $Shape<Config>) => void;
+  saveConfig: (arg0: Partial<Config>) => void;
   openSiblingPanel: (arg0: string, cb: (arg0: PanelConfig) => PanelConfig) => void;
   topics: Topic[];
 };

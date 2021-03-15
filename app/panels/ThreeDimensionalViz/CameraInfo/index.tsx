@@ -14,10 +14,8 @@
 import CameraControlIcon from "@mdi/svg/svg/camera-control.svg";
 import { vec3 } from "gl-matrix";
 import { isEqual } from "lodash";
-import * as React from "react";
 import { CameraState, cameraStateSelectors } from "regl-worldview";
 import styled from "styled-components";
-import { $Shape } from "utility-types";
 
 import Button from "@foxglove-studio/app/components/Button";
 import ExpandingToolbar, { ToolGroup } from "@foxglove-studio/app/components/ExpandingToolbar";
@@ -60,7 +58,7 @@ const SRow = styled.div`
 `;
 
 type CameraStateInfoProps = {
-  cameraState: $Shape<CameraState>;
+  cameraState: Partial<CameraState>;
   onAlignXYAxis: () => void;
 };
 
@@ -76,8 +74,8 @@ export type CameraInfoPropsWithoutCameraState = {
 };
 
 type CameraInfoProps = {
-  cameraState: $Shape<CameraState>;
-  targetPose: TargetPose | null | undefined;
+  cameraState: Partial<CameraState>;
+  targetPose?: TargetPose;
 } & CameraInfoPropsWithoutCameraState;
 
 function CameraStateInfo({ cameraState, onAlignXYAxis }: CameraStateInfoProps) {
@@ -173,7 +171,7 @@ export default function CameraInfo({
               tooltip="Copy cameraState"
               small
               onClick={() => {
-                clipboard.copy(JSON.stringify(cameraState, null, 2));
+                clipboard.copy(JSON.stringify(cameraState, undefined, 2));
               }}
             >
               Copy

@@ -414,9 +414,9 @@ export function getScaleBounds(chartInstance: ChartInstance): ScaleBounds[] {
 }
 
 export function getChartValue(
-  bounds: ScaleBounds | null | undefined,
+  bounds: ScaleBounds | undefined,
   canvasPx: number,
-): number | null | undefined {
+): number | undefined {
   if (bounds == null) {
     return;
   }
@@ -425,10 +425,7 @@ export function getChartValue(
   return min + (chartOffsetPx * (max - min)) / (maxAlongAxis - minAlongAxis);
 }
 
-export function getChartPx(
-  bounds: ScaleBounds | null | undefined,
-  value: number,
-): number | null | undefined {
+export function getChartPx(bounds: ScaleBounds | undefined, value: number): number | undefined {
   if (bounds == null) {
     return;
   }
@@ -439,7 +436,7 @@ export function getChartPx(
   return minAlongAxis + valuePercent * (maxAlongAxis - minAlongAxis);
 }
 
-export function inBounds(position: number, bounds: ScaleBounds | null | undefined): boolean {
+export function inBounds(position: number, bounds?: ScaleBounds): boolean {
   if (bounds == null) {
     return false;
   }

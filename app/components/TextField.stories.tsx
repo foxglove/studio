@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { storiesOf } from "@storybook/react";
-import * as React from "react";
 
 import TextField from "./TextField";
 import Flex from "@foxglove-studio/app/components/Flex";
@@ -31,7 +30,7 @@ function Box({ children, title }: any) {
 }
 
 function ErrorExample() {
-  const [error, setError] = React.useState<string | null | undefined>();
+  const [error, setError] = React.useState<string | undefined>();
   return (
     <>
       <TextField value="foo" validator={validator} onError={setError} hideInlineError />

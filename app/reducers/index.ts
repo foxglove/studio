@@ -10,7 +10,6 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { connectRouter } from "connected-react-router";
 
 import { ActionTypes } from "@foxglove-studio/app/actions";
 import { ros_lib_dts } from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/ros";
@@ -34,8 +33,7 @@ import { Dispatch, GetState } from "@foxglove-studio/app/types/Store";
 import { HoverValue } from "@foxglove-studio/app/types/hoverValue";
 import { MosaicKey, SetFetchedLayoutPayload } from "@foxglove-studio/app/types/panels";
 
-const getReducers = (history: any) => [
-  (state: State) => ({ ...state, router: connectRouter(history)() }),
+const getReducers = () => [
   panels,
   mosaic,
   hoverValue,
@@ -57,9 +55,8 @@ export type State = {
   persistedState: PersistedState;
   mosaic: { mosaicId: string; selectedPanelIds: MosaicKey[] };
   auth: AuthState;
-  hoverValue: HoverValue | null | undefined;
+  hoverValue?: HoverValue;
   userNodes: { userNodeDiagnostics: UserNodeDiagnostics; rosLib: string };
-  router: { location: { pathname: string; search: string } };
   layoutHistory: LayoutHistory;
   commenting: {
     fetchedCommentsBase: Comment[];
@@ -70,15 +67,6 @@ export type State = {
 
 export type Store = { dispatch: Dispatch<unknown>; getState: () => State };
 
-// Fix the type definitions for connected-react-router
-// The connectRouter function allows for omitting state and action
-declare module "connected-react-router" {
-  // eslint-disable-next-line @typescript-eslint/no-shadow
-  export function connectRouter(
-    history: History,
-  ): (state?: RouterState, action?: LocationChangeAction) => RouterState;
-}
-
 export default function createRootReducer(history: any, args?: { testAuth?: any }) {
   const persistedState = getInitialPersistedStateAndMaybeUpdateLocalStorageAndURL(history);
   maybeStoreNewRecentLayout(persistedState);
@@ -86,7 +74,7 @@ export default function createRootReducer(history: any, args?: { testAuth?: any 
     persistedState,
     mosaic: { mosaicId: "", selectedPanelIds: [] },
     auth: Object.freeze(args?.testAuth || { username: undefined }),
-    hoverValue: null,
+    hoverValue: undefined,
     userNodes: {
       userNodeDiagnostics: {
         diagnostics: [],
@@ -94,15 +82,14 @@ export default function createRootReducer(history: any, args?: { testAuth?: any 
       },
       rosLib: ros_lib_dts,
     },
-    router: connectRouter(history)(),
     layoutHistory: initialLayoutHistoryState,
     commenting: { fetchedCommentsBase: [], fetchedCommentsFeature: [], sourceToShow: "Both" },
   };
   return (state: State, action: ActionTypes): State => {
-    const oldPersistedState: PersistedState | null | undefined = state?.persistedState;
+    const oldPersistedState: PersistedState | undefined = state?.persistedState;
     const reducers: Array<
-      (arg0: State, arg1: ActionTypes, arg2: PersistedState | null | undefined) => State
-    > = getReducers(history) as any;
+      (arg0: State, arg1: ActionTypes, arg2?: PersistedState) => State
+    > = getReducers() as any;
     return reducers.reduce(
       (builtState, reducer) => reducer(builtState, action, oldPersistedState),
       {

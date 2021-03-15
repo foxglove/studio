@@ -13,7 +13,6 @@
 import MagnifyIcon from "@mdi/svg/svg/magnify.svg";
 import fuzzySort from "fuzzysort";
 import { flatten, flatMap, isEqual } from "lodash";
-import * as React from "react";
 import { useDrag } from "react-dnd";
 import { MosaicDragType } from "react-mosaic-component";
 import { useDispatch, useSelector } from "react-redux";
@@ -134,8 +133,8 @@ export function getPanelsByType(): {
 
 type DropDescription = {
   type: string;
-  config: PanelConfig | null | undefined;
-  relatedConfigs: SavedProps | null | undefined;
+  config?: PanelConfig;
+  relatedConfigs?: SavedProps;
   position: MosaicDropTargetPosition;
   path: MosaicPath;
   tabId?: string;
@@ -144,8 +143,8 @@ type PanelItemProps = {
   panel: {
     type: string;
     title: string;
-    config: PanelConfig | null | undefined;
-    relatedConfigs: SavedProps | null | undefined;
+    config?: PanelConfig;
+    relatedConfigs?: SavedProps;
   };
   searchQuery: string;
   checked?: boolean;
@@ -264,9 +263,7 @@ function verifyPanels() {
 
 function PanelList(props: Props) {
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [highlightedPanelIdx, setHighlightedPanelIdx] = React.useState<number | null | undefined>(
-    null,
-  );
+  const [highlightedPanelIdx, setHighlightedPanelIdx] = React.useState<number | undefined>();
   const { onPanelSelect, selectedPanelTitle } = props;
 
   const dispatch = useDispatch();
@@ -402,12 +399,8 @@ function PanelList(props: Props) {
               value={searchQuery}
               onChange={handleSearchChange}
               onKeyDown={onKeyDown}
-              onBlur={() => {
-                setHighlightedPanelIdx(null);
-              }}
-              onFocus={() => {
-                setHighlightedPanelIdx(0);
-              }}
+              onBlur={() => setHighlightedPanelIdx(undefined)}
+              onFocus={() => setHighlightedPanelIdx(0)}
               autoFocus
             />
           </SSearchInputContainer>

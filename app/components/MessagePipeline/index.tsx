@@ -12,10 +12,8 @@
 //   You may not use this file except in compliance with the License.
 
 import { debounce, flatten, groupBy, isEqual } from "lodash";
-import * as React from "react";
 import { ReactElement } from "react";
 import { Time, TimeUtil } from "rosbag";
-import { $Shape } from "utility-types";
 
 import { pauseFrameForPromises, FramePromise } from "./pauseFrameForPromise";
 import warnOnOutOfSyncMessages from "./warnOnOutOfSyncMessages";
@@ -92,14 +90,14 @@ function defaultPlayerState(): PlayerState {
 
 type ProviderProps = {
   children: React.ReactNode;
-  player?: Player | null | undefined;
+  player?: Player;
   globalVariables?: GlobalVariables;
 };
 export function MessagePipelineProvider({ children, player, globalVariables = {} }: ProviderProps) {
-  const currentPlayer = useRef<Player | null | undefined>(undefined);
+  const currentPlayer = useRef<Player | undefined>(undefined);
   const [playerState, setPlayerState] = useState<PlayerState>(defaultPlayerState);
-  const lastActiveData = useRef<PlayerStateActiveData | null | undefined>(playerState.activeData);
-  const lastTimeWhenActiveDataBecameSet = useRef<number | null | undefined>();
+  const lastActiveData = useRef<PlayerStateActiveData | undefined>(playerState.activeData);
+  const lastTimeWhenActiveDataBecameSet = useRef<number | undefined>();
   const [subscriptionsById, setAllSubscriptions] = useState<{
     [key: string]: SubscribePayload[];
   }>({});
@@ -108,7 +106,7 @@ export function MessagePipelineProvider({ children, player, globalVariables = {}
   // This state is tied to the player, and should be replaced whenever the player changes.
   const playerTickState = useRef<{
     // Call this to resolve the current tick. If this doesn't exist, there isn't a tick currently rendering.
-    resolveFn?: () => void | null | undefined;
+    resolveFn?: () => void;
     // Promises to halt the current tick for.
     promisesToWaitFor: FramePromise[];
     waitingForPromises: boolean;
@@ -213,7 +211,7 @@ export function MessagePipelineProvider({ children, player, globalVariables = {}
     };
   }, [player]);
 
-  const topics: Topic[] | null | undefined = playerState.activeData?.topics;
+  const topics: Topic[] | undefined = playerState.activeData?.topics;
   useShouldNotChangeOften(topics, () => {
     sendNotification(
       "Provider topics should not change often",
@@ -223,7 +221,7 @@ export function MessagePipelineProvider({ children, player, globalVariables = {}
     );
   });
 
-  const unmemoizedDatatypes: RosDatatypes | null | undefined = playerState.activeData?.datatypes;
+  const unmemoizedDatatypes: RosDatatypes | undefined = playerState.activeData?.datatypes;
   useShouldNotChangeOften(unmemoizedDatatypes, () => {
     sendNotification(
       "Provider datatypes should not change often",
@@ -233,7 +231,7 @@ export function MessagePipelineProvider({ children, player, globalVariables = {}
     );
   });
 
-  const messages: ReadonlyArray<Message> | null | undefined = playerState.activeData?.messages;
+  const messages: readonly Message[] | undefined = playerState.activeData?.messages;
   const frame = useMemo(() => groupBy(messages || [], "topic"), [messages]);
   const sortedTopics = useMemo(() => (topics || []).sort(), [topics]);
   const datatypes: RosDatatypes = useMemo(() => unmemoizedDatatypes ?? {}, [unmemoizedDatatypes]);
@@ -350,7 +348,7 @@ const NO_DATATYPES = Object.freeze({});
 // TODO(Audrey): put messages under activeData, add ability to mock seeking
 export function MockMessagePipelineProvider(props: {
   children: React.ReactNode;
-  isPresent?: boolean | null | undefined;
+  isPresent?: boolean;
   topics?: Topic[];
   datatypes?: RosDatatypes;
   messages?: Message[];
@@ -358,16 +356,16 @@ export function MockMessagePipelineProvider(props: {
   setSubscriptions?: (arg0: string, arg1: SubscribePayload[]) => void;
   noActiveData?: boolean;
   showInitializing?: boolean;
-  activeData?: $Shape<PlayerStateActiveData> | null | undefined;
+  activeData?: Partial<PlayerStateActiveData>;
   capabilities?: string[];
   store?: any;
-  startPlayback?: () => void | null | undefined;
-  pausePlayback?: () => void | null | undefined;
-  seekPlayback?: (arg0: Time) => void | null | undefined;
+  startPlayback?: () => void;
+  pausePlayback?: () => void;
+  seekPlayback?: (arg0: Time) => void;
   currentTime?: Time;
   startTime?: Time;
   endTime?: Time;
-  isPlaying?: boolean | null | undefined;
+  isPlaying?: boolean;
   pauseFrame?: (arg0: string) => ResumeFrame;
   playerId?: string;
   requestBackfill?: () => void;

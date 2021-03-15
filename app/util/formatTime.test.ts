@@ -73,10 +73,10 @@ describe("formatTime.parseTimeStr", () => {
     return `${formatTime.formatDate(timestamp)} ${formatTime.formatTime(timestamp)}`;
   }
 
-  it("returns null if the input string is formatted incorrectly", () => {
-    expect(formatTime.parseTimeStr("")).toEqual(null);
-    expect(formatTime.parseTimeStr("018-07")).toEqual(null);
-    expect(formatTime.parseTimeStr("0")).toEqual(null);
+  it("returns undefined if the input string is formatted incorrectly", () => {
+    expect(formatTime.parseTimeStr("")).toEqual(undefined);
+    expect(formatTime.parseTimeStr("018-07")).toEqual(undefined);
+    expect(formatTime.parseTimeStr("0")).toEqual(undefined);
   });
 
   it("returns the correct time", () => {
@@ -93,5 +93,35 @@ describe("formatTime.parseTimeStr", () => {
     // Get numeric sec value that is not equal to originalTime's sec value
     expect(timeObjInDifferentTimezone?.sec).not.toBeNaN();
     expect(timeObjInDifferentTimezone?.sec).not.toEqual(originalTime.sec);
+  });
+});
+
+describe("formatTime.getValidatedTimeAndMethodFromString", () => {
+  const commonArgs = { date: "2020-01-01", timezone: "America/Los_Angeles" };
+  it("takes a string and gets a validated ROS or TOD time", () => {
+    expect(formatTime.getValidatedTimeAndMethodFromString({ ...commonArgs, text: "" })).toEqual(
+      undefined,
+    );
+    expect(formatTime.getValidatedTimeAndMethodFromString({ ...commonArgs, text: "abc" })).toEqual(
+      undefined,
+    );
+    expect(
+      formatTime.getValidatedTimeAndMethodFromString({ ...commonArgs, text: "123abc" }),
+    ).toEqual(undefined);
+    expect(
+      formatTime.getValidatedTimeAndMethodFromString({
+        ...commonArgs,
+        text: "1598635994.000000000",
+      }),
+    ).toEqual({
+      time: { nsec: 0, sec: 1598635994 },
+      method: "ROS",
+    });
+    expect(
+      formatTime.getValidatedTimeAndMethodFromString({ ...commonArgs, text: "1:30:10.000 PM PST" }),
+    ).toEqual({
+      time: { nsec: 0, sec: 1577914210 },
+      method: "TOD",
+    });
   });
 });

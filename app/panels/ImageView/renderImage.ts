@@ -11,8 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { $ReadOnly } from "utility-types";
-
 import CameraModel from "./CameraModel";
 import {
   decodeYUV,
@@ -43,19 +41,19 @@ export async function renderImage({
   imageMessageDatatype,
   rawMarkerData,
 }: {
-  canvas: (HTMLCanvasElement | OffscreenCanvas) | null | undefined;
-  imageMessage: Message | null | undefined;
-  imageMessageDatatype: string | null | undefined;
+  canvas?: HTMLCanvasElement | OffscreenCanvas;
+  imageMessage?: Message;
+  imageMessageDatatype?: string;
   rawMarkerData: RawMarkerData;
-}): Promise<Dimensions | null | undefined> {
+}): Promise<Dimensions | undefined> {
   if (!canvas) {
-    return null;
+    return undefined;
   }
   if (!imageMessage || !imageMessageDatatype) {
     clearCanvas(canvas);
-    return null;
+    return undefined;
   }
-  let markerData = null;
+  let markerData = undefined;
   try {
     markerData = buildMarkerData(rawMarkerData);
   } catch (error) {
@@ -84,9 +82,9 @@ function toRGBA(color: Color) {
 
 // Note: Return type is inexact -- may contain z.
 function maybeUnrectifyPoint(
-  cameraModel: CameraModel | null | undefined,
+  cameraModel: CameraModel | undefined,
   point: Point,
-): $ReadOnly<{ x: number; y: number }> {
+): Readonly<{ x: number; y: number }> {
   if (cameraModel) {
     return cameraModel.unrectifyPoint(point);
   }
@@ -155,7 +153,7 @@ async function decodeMessageToBitmap(msg: Message, datatype: string): Promise<Im
   return self.createImageBitmap(image);
 }
 
-function clearCanvas(canvas: HTMLCanvasElement | null | undefined) {
+function clearCanvas(canvas?: HTMLCanvasElement) {
   if (canvas) {
     canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
   }
@@ -165,7 +163,7 @@ function paintBitmap(
   canvas: HTMLCanvasElement,
   bitmap: ImageBitmap,
   markerData: MarkerData,
-): Dimensions | null | undefined {
+): Dimensions | undefined {
   let bitmapDimensions = { width: bitmap.width, height: bitmap.height };
   const ctx = canvas.getContext("2d");
   if (!ctx) {
@@ -207,7 +205,7 @@ function paintBitmap(
 function paintMarkers(
   ctx: CanvasRenderingContext2D,
   messages: Message[],
-  cameraModel: CameraModel | null | undefined,
+  cameraModel: CameraModel | undefined,
 ) {
   for (const { message } of messages) {
     ctx.save();
@@ -229,7 +227,7 @@ function paintMarkers(
 function paintMarker(
   ctx: CanvasRenderingContext2D,
   marker: ImageMarker,
-  cameraModel: CameraModel | null | undefined,
+  cameraModel: CameraModel | undefined,
 ) {
   switch (marker.type) {
     case 0: {
@@ -347,7 +345,7 @@ function paintMarker(
   }
 }
 
-function resizeCanvas(canvas: HTMLCanvasElement | null | undefined, width: number, height: number) {
+function resizeCanvas(canvas: HTMLCanvasElement | undefined, width: number, height: number) {
   if (canvas && (canvas.width !== width || canvas.height !== height)) {
     canvas.width = width;
     canvas.height = height;

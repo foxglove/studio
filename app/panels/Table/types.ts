@@ -11,8 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import * as React from "react";
-
 // Since flow-types do not exist for react-table, this is a rough approximation
 // of what the types react-table gives us, which is pulled from
 // https://react-table.tanstack.com/docs/api/overview.
@@ -92,7 +90,7 @@ type ColumnInstance = {
 };
 
 export type ColumnOptions = {
-  Header?: string | (() => React.ReactElement<any> | null | undefined);
+  Header?: string | (() => React.ReactElement<any> | undefined);
   accessor?: string;
   columns?: ColumnOptions[];
   Cell?: (props: CellProps<ColumnInstance, Row>) => any;
@@ -124,8 +122,8 @@ export type TableInstance<HookInstances, HookState> = HookInstances & {
   prepareRow(row: Row): void;
   flatRows: Row[];
   totalColumnsWidth: number;
-  toggleHideColumn(columnId: string, value: boolean | null | undefined): void;
+  toggleHideColumn(columnId: string, value?: boolean): void;
   setHiddenColumns(columnIds: string[]): void;
-  toggleHideAllColumns(val: boolean | null | undefined): void;
+  toggleHideAllColumns(val?: boolean): void;
   getToggleHideAllColumnsProps(userProps: any): any;
 };

@@ -18,12 +18,10 @@ import { ColorMode } from "@foxglove-studio/app/panels/ThreeDimensionalViz/Topic
 import { PointField } from "@foxglove-studio/app/types/Messages";
 
 export type FieldOffsetsAndReaders = {
-  [name: string]: { datatype: string; offset: number; reader: FieldReader | null | undefined };
+  [name: string]: { datatype: string; offset: number; reader?: FieldReader };
 };
 
-export function getFieldOffsetsAndReaders(
-  fields: ReadonlyArray<PointField>,
-): FieldOffsetsAndReaders {
+export function getFieldOffsetsAndReaders(fields: readonly PointField[]): FieldOffsetsAndReaders {
   const result: any = {};
   for (const { name, datatype, offset = 0 } of fields) {
     result[name] = { datatype, offset, reader: getReader(datatype, offset) };
@@ -96,7 +94,7 @@ function extractValues({
   stride,
 }: {
   data: Uint8Array;
-  readers: (FieldReader | null | undefined)[];
+  readers: (FieldReader | undefined)[];
   pointCount: number;
   stride: number;
 }): VertexBuffer {
@@ -184,11 +182,11 @@ export function createColorBuffer({
   colorMode: ColorMode;
   pointCount: number;
   stride: number;
-}): VertexBuffer | null | undefined {
+}): VertexBuffer | undefined {
   if (colorMode.mode === "flat") {
     // If color mode is "flat", we don't need a color buffer since
     // we'll be using a constant value
-    return null;
+    return undefined;
   }
 
   if (colorMode.mode === "rgb") {

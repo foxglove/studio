@@ -31,7 +31,7 @@ function stripLeadingSlash(name: string) {
 export class Transform {
   id: string;
   matrix: mat4 = mat4.create();
-  parent: Transform | null | undefined;
+  parent?: Transform;
   _hasValidMatrix: boolean = false;
 
   constructor(id: string) {
@@ -66,10 +66,10 @@ export class Transform {
     return this.parent.rootTransform();
   }
 
-  apply(output: MutablePose, input: Pose, rootId: string): MutablePose | null | undefined {
+  apply(output: MutablePose, input: Pose, rootId: string): MutablePose | undefined {
     rootId = stripLeadingSlash(rootId);
     if (!this.isValid(rootId)) {
-      return null;
+      return undefined;
     }
 
     if (this.id === rootId) {
@@ -85,7 +85,7 @@ export class Transform {
 
     // Can't apply if this transform doesn't map to the root transform.
     if (!this.isChildOfTransform(rootId)) {
-      return null;
+      return undefined;
     }
 
     const { position, orientation } = input;
@@ -169,14 +169,14 @@ export default class Transforms {
   // This allows the caller to decide if they want to update the pose by reference
   // (by reference by supplying it as both the first and second arguments)
   // or return a new one by calling with apply({ position: { }, orientation: {} }, original).
-  // Returns the output pose, or the input pose if no transform was needed, or null if the transform
+  // Returns the output pose, or the input pose if no transform was needed, or undefined if the transform
   // is not available -- the return value must not be ignored.
   apply(
     output: MutablePose,
     original: Pose,
     frameId: string,
     rootId: string,
-  ): MutablePose | null | undefined {
+  ): MutablePose | undefined {
     const tf = this.storage.get(frameId);
     return tf.apply(output, original, rootId);
   }

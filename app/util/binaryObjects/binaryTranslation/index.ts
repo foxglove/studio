@@ -13,9 +13,8 @@
 
 import { sumBy, maxBy } from "lodash";
 
-// @ts-expect-error
+// @ts-expect-error emscripten support library
 import ModuleFactory from "./bin/translator";
-// @ts-expect-error
 import ModuleWasm from "./bin/translator.wasm";
 import { Message } from "@foxglove-studio/app/players/types";
 import { RosDatatype, RosDatatypes } from "@foxglove-studio/app/types/RosDatatypes";
@@ -48,7 +47,7 @@ export interface BinaryDefinition {
 
 export type BinaryObjects = Readonly<{
   dataType: string;
-  offsets: ReadonlyArray<number>;
+  offsets: readonly number[];
   buffer: ArrayBuffer;
   bigString: string;
 }>;
@@ -62,8 +61,8 @@ export const DefinitionCommand = {
 };
 
 export default class BinaryMessageWriter {
-  _bridgeInstance: any = null;
-  _definitionRegistry: any = null;
+  _bridgeInstance?: any;
+  _definitionRegistry?: any;
 
   async initialize() {
     this._bridgeInstance = await getModuleFactory();

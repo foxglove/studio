@@ -107,7 +107,7 @@ const missingTransformMessage = (
   rootTransformId: string,
   error: ErrorDetails,
   transforms: Transforms,
-  skipTransform: SkipTransformSpec | null | undefined,
+  skipTransform: SkipTransformSpec | undefined,
 ): string => {
   if (skipTransform != null && error.frameIds.has(skipTransform.frameId)) {
     return `missing transform. Is ${skipTransform.sourceTopic} present?`;
@@ -123,7 +123,7 @@ const missingTransformMessage = (
 export function getSceneErrorsByTopic(
   sceneErrors: SceneErrors,
   transforms: Transforms,
-  skipTransform: SkipTransformSpec | null | undefined,
+  skipTransform: SkipTransformSpec | undefined,
 ): {
   [topicName: string]: string[];
 } {
@@ -209,13 +209,13 @@ export default class SceneBuilder implements MarkerProvider {
     topicsWithBadFrameIds: new Set(),
   };
   maps = [];
-  flattenedZHeightPose: Pose | null | undefined = null;
+  flattenedZHeightPose?: Pose;
   scene = {};
   collectors: {
     [key: string]: MessageCollector;
   } = {};
   _clock?: Time;
-  _playerId: string | null | undefined = null;
+  _playerId?: string;
   _settingsByKey: TopicSettingsCollection = {};
   _onForceUpdate?: () => void;
 
@@ -230,12 +230,7 @@ export default class SceneBuilder implements MarkerProvider {
   allNamespaces: Namespace[] = [];
   // TODO(Audrey): remove enabledNamespaces once we release topic groups
   enabledNamespaces: Namespace[] = [];
-  selectedNamespacesByTopic:
-    | {
-        [topicName: string]: Set<string>;
-      }
-    | null
-    | undefined;
+  selectedNamespacesByTopic?: { [topicName: string]: Set<string> };
   flatten: boolean = false;
   bounds: Bounds = new Bounds();
 
@@ -478,13 +473,13 @@ export default class SceneBuilder implements MarkerProvider {
   _transformMarkerPose = (
     topic: string,
     marker: BinaryMarker | BinaryInstancedMarker,
-  ): MutablePose | null | undefined => {
+  ): MutablePose | undefined => {
     const frame_id = marker.header().frame_id();
 
     if (!frame_id) {
       const error = this._addError(this.errors.topicsMissingFrameIds, topic);
       error.namespaces.add(marker.ns());
-      return null;
+      return undefined;
     }
 
     if (frame_id === this.rootTransformID) {
@@ -783,7 +778,7 @@ export default class SceneBuilder implements MarkerProvider {
     topic: string,
     drawData: StampedMessage,
     type: number,
-    originalMessage?: any | null,
+    originalMessage?: any,
   ): void => {
     const sourcePose = emptyPose();
     const pose = this.transforms?.apply(

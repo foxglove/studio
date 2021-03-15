@@ -15,10 +15,9 @@ import ArrowLeftIcon from "@mdi/svg/svg/arrow-left.svg";
 import CheckboxBlankOutlineIcon from "@mdi/svg/svg/checkbox-blank-outline.svg";
 import CheckboxMarkedIcon from "@mdi/svg/svg/checkbox-marked.svg";
 import PlusIcon from "@mdi/svg/svg/plus.svg";
-import * as React from "react";
+import { Suspense } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import styled from "styled-components";
-import { $Shape } from "utility-types";
 import { v4 as uuidv4 } from "uuid";
 
 import { Script } from "./script";
@@ -57,7 +56,7 @@ const publisher = (message: Input<>, globalVars: GlobalVariables): Output => {
 export default publisher;`;
 
 type Config = {
-  selectedNodeId: string | null | undefined;
+  selectedNodeId?: string;
   // Used only for storybook screenshot testing.
   editorForStorybook?: React.ReactNode;
   // Used only for storybook screenshot testing.
@@ -68,7 +67,7 @@ type Config = {
 
 type Props = {
   config: Config;
-  saveConfig: (arg0: $Shape<Config>) => void;
+  saveConfig: (arg0: Partial<Config>) => void;
 };
 
 const UnsavedDot = styled.div`
@@ -114,7 +113,7 @@ const SWelcomeScreen = styled.div`
   }
 `;
 
-export type Explorer = null | "docs" | "nodes" | "utils" | "templates";
+export type Explorer = undefined | "docs" | "nodes" | "utils" | "templates";
 
 const WelcomeScreen = ({
   addNewNode,
@@ -153,7 +152,7 @@ function NodePlayground(props: Props) {
   const { config, saveConfig } = props;
   const { autoFormatOnSave, selectedNodeId, editorForStorybook, vimMode } = config;
 
-  const [explorer, updateExplorer] = React.useState<Explorer>(null);
+  const [explorer, updateExplorer] = React.useState<Explorer>(undefined);
 
   const userNodes = useSelector((state: any) => state.persistedState.panels.userNodes);
   const userNodeDiagnostics = useSelector((state: any) => state.userNodes.userNodeDiagnostics);
@@ -173,7 +172,7 @@ function NodePlayground(props: Props) {
   const [scriptBackStack, setScriptBackStack] = React.useState<Script[]>([]);
   // Holds the currently active script
   const currentScript =
-    scriptBackStack.length > 0 ? scriptBackStack[scriptBackStack.length - 1] : null;
+    scriptBackStack.length > 0 ? scriptBackStack[scriptBackStack.length - 1] : undefined;
   const isCurrentScriptSelectedNode =
     !!selectedNode && !!currentScript && currentScript.filePath === selectedNode.name;
   const isNodeSaved =
@@ -353,7 +352,7 @@ function NodePlayground(props: Props) {
                     /* Ensures the monaco-editor starts loading before the user opens it */
                   }}
                 >
-                  <React.Suspense
+                  <Suspense
                     fallback={
                       <Flex center style={{ width: "100%", height: "100%" }}>
                         <Icon large>
@@ -376,7 +375,7 @@ function NodePlayground(props: Props) {
                         save={saveNode}
                       />
                     )}
-                  </React.Suspense>
+                  </Suspense>
                 </div>
                 <BottomBar
                   nodeId={selectedNodeId}

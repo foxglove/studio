@@ -12,13 +12,12 @@
 //   You may not use this file except in compliance with the License.
 
 import BlockHelperIcon from "@mdi/svg/svg/block-helper.svg";
-import React, { useCallback } from "react";
+import { useCallback } from "react";
 import { Color } from "regl-worldview";
 import styled from "styled-components";
 import tinyColor from "tinycolor2";
-import { $Keys } from "utility-types";
 
-import { ROW_HEIGHT } from "./TreeNodeRow";
+import { ROW_HEIGHT } from "./constants";
 import Icon from "@foxglove-studio/app/components/Icon";
 import { getHexFromColorSettingWithDefault } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicSettingsEditor/ColorPickerForTopicSettings";
 import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
@@ -59,7 +58,7 @@ const SSpan = styled.span`
   }
 `;
 
-export type Size = $Keys<typeof TOGGLE_SIZE_CONFIG>;
+export type Size = keyof typeof TOGGLE_SIZE_CONFIG;
 type Props = {
   available: boolean;
   checked: boolean;
@@ -69,8 +68,8 @@ type Props = {
   onToggle: () => void;
   onMouseEnter?: (arg0: MouseEvent) => void;
   onMouseLeave?: (arg0: MouseEvent) => void;
-  overrideColor?: Color | null | undefined;
-  size?: Size | null | undefined;
+  overrideColor?: Color;
+  size?: Size;
   unavailableTooltip?: string;
   visibleInScene: boolean;
   diffModeEnabled: boolean;
@@ -101,8 +100,8 @@ function getStyles({
 }: {
   checked: boolean;
   visibleInScene: boolean;
-  overrideColor: Color | null | undefined;
-  size: Size | null | undefined;
+  overrideColor?: Color;
+  size?: Size;
   diffModeEnabled: boolean;
   columnIndex: number;
 }): any {

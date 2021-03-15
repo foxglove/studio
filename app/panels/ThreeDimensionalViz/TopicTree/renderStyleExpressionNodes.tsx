@@ -14,18 +14,18 @@
 import DotsVerticalIcon from "@mdi/svg/svg/dots-vertical.svg";
 import EarthIcon from "@mdi/svg/svg/earth.svg";
 import { groupBy, defaults } from "lodash";
-import React, { useCallback, useContext, useMemo, useState } from "react";
+import { useCallback, useContext, useMemo, useState } from "react";
 import styled from "styled-components";
 
-import { TREE_SPACING } from "./TopicTree";
-import { ROW_HEIGHT, SLeft, SRightActions, SToggles, STreeNodeRow } from "./TreeNodeRow";
+import { SLeft, SRightActions, SToggles, STreeNodeRow } from "./TreeNodeRow";
 import VisibilityToggle from "./VisibilityToggle";
+import { TREE_SPACING, ROW_HEIGHT } from "./constants";
 import ChildToggle from "@foxglove-studio/app/components/ChildToggle";
 import Icon from "@foxglove-studio/app/components/Icon";
 import Menu, { Item } from "@foxglove-studio/app/components/Menu";
 import Modal from "@foxglove-studio/app/components/Modal";
+import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToBodyComponent";
 import Tooltip from "@foxglove-studio/app/components/Tooltip";
-import { RenderToBodyComponent } from "@foxglove-studio/app/components/renderToBody";
 import useGlobalVariables from "@foxglove-studio/app/hooks/useGlobalVariables";
 import { getDefaultColorOverrideBySourceIdx } from "@foxglove-studio/app/panels/ThreeDimensionalViz/GlobalVariableStyles";
 import { ThreeDimensionalVizContext } from "@foxglove-studio/app/panels/ThreeDimensionalViz/ThreeDimensionalVizContext";
@@ -34,6 +34,7 @@ import {
   PICKER_SIZE,
   getHexFromColorSettingWithDefault,
 } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicSettingsEditor/ColorPickerForTopicSettings";
+import { ColorOverride } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/Layout";
 import {
   TreeUINode,
   TooltipRow,
@@ -119,7 +120,7 @@ function StyleExpressionNode(props: any) {
   const { markerKeyPath, name } = linkedGlobalVariables[0];
 
   const value = globalVariables[name];
-  const colorOverridesByColumnIdx = defaults(
+  const colorOverridesByColumnIdx: (ColorOverride | undefined)[] = defaults(
     [],
     colorOverrideBySourceIdxByVariable[name],
     getDefaultColorOverrideBySourceIdx(rowIndex),
@@ -200,7 +201,7 @@ function StyleExpressionNode(props: any) {
               if (!hasFeatureColumn && sourceIdx === 1) {
                 return null;
               }
-              const { active, color } = override || { active: false, color: null };
+              const { active, color } = override ?? { active: false };
               return (
                 <VisibilityToggle
                   available={true}
@@ -208,10 +209,18 @@ function StyleExpressionNode(props: any) {
                   dataTest={`visibility-toggle T:${topic} ${name} ${sourceIdx}`}
                   key={sourceIdx}
                   onAltToggle={() =>
-                    updateSettingsForGlobalVariable(name, { active: !active, color }, sourceIdx)
+                    updateSettingsForGlobalVariable(
+                      name,
+                      { active: !active, color } as any,
+                      sourceIdx,
+                    )
                   }
                   onToggle={() =>
-                    updateSettingsForGlobalVariable(name, { active: !active, color }, sourceIdx)
+                    updateSettingsForGlobalVariable(
+                      name,
+                      { active: !active, color } as any,
+                      sourceIdx,
+                    )
                   }
                   overrideColor={color}
                   size="SMALL"
@@ -253,7 +262,7 @@ function StyleExpressionNode(props: any) {
                     )}
                   />
                 </SColorPickerWrapper>
-                {/* @ts-ignore-error fix comparison operator */}
+                {/* @ts-expect-error-error fix comparison operator */}
                 {editingColorForSourceIdx === 0 && (
                   <ColorPickerOverlay
                     color={(colorOverridesByColumnIdx[0] as any).color}
@@ -283,7 +292,7 @@ function StyleExpressionNode(props: any) {
                       )}
                     />
                   </SColorPickerWrapper>
-                  {/* @ts-ignore-error fix comparison operator */}
+                  {/* @ts-expect-error-error fix comparison operator */}
                   {editingColorForSourceIdx === 1 && (
                     <ColorPickerOverlay
                       color={(colorOverridesByColumnIdx[1] as any).color}

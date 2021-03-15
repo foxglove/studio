@@ -33,8 +33,8 @@ import { RosDatatypes } from "@foxglove-studio/app/types/RosDatatypes";
 function filterMessages(
   start: Time,
   end: Time,
-  topics: ReadonlyArray<string>,
-  messages: ReadonlyArray<Message> | null | undefined,
+  topics: readonly string[],
+  messages: readonly Message[] | undefined,
 ) {
   if (messages == null) {
     return undefined;
@@ -58,10 +58,10 @@ function filterMessages(
 // In-memory data provider, for in tests.
 export default class MemoryDataProvider implements DataProvider {
   messages: GetMessagesResult;
-  topics: Topic[] | null | undefined;
-  datatypes: RosDatatypes | null | undefined;
+  topics?: Topic[];
+  datatypes?: RosDatatypes;
   messageDefinitionsByTopic: MessageDefinitionsByTopic;
-  parsedMessageDefinitionsByTopic: ParsedMessageDefinitionsByTopic | null | undefined;
+  parsedMessageDefinitionsByTopic?: ParsedMessageDefinitionsByTopic;
   extensionPoint?: ExtensionPoint;
   initiallyLoaded: boolean;
   providesParsedMessages: boolean;
@@ -78,8 +78,8 @@ export default class MemoryDataProvider implements DataProvider {
     messages: GetMessagesResult;
     topics?: Topic[];
     datatypes?: RosDatatypes;
-    messageDefinitionsByTopic?: MessageDefinitionsByTopic | null | undefined;
-    parsedMessageDefinitionsByTopic?: ParsedMessageDefinitionsByTopic | null | undefined;
+    messageDefinitionsByTopic?: MessageDefinitionsByTopic;
+    parsedMessageDefinitionsByTopic?: ParsedMessageDefinitionsByTopic;
     initiallyLoaded?: boolean;
     providesParsedMessages?: boolean;
   }) {

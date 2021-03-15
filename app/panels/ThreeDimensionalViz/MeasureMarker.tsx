@@ -11,11 +11,10 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import React from "react";
 import { Lines, Spheres, Point } from "regl-worldview";
 
 type Props = {
-  measurePoints: { start: Point | null | undefined; end: Point | null | undefined };
+  measurePoints: { start?: Point; end?: Point };
 };
 
 const sphereSize: number = 0.3;

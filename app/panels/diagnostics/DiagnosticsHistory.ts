@@ -25,7 +25,7 @@ import * as PanelAPI from "@foxglove-studio/app/PanelAPI";
 import { Message } from "@foxglove-studio/app/players/types";
 
 export type DiagnosticAutocompleteEntry = {
-  name: string | null | undefined; // Null for "combined hardware_id" entries for showing diagnostics with any name.
+  name?: string; // undefined for "combined hardware_id" entries for showing diagnostics with any name.
   hardware_id: string;
   id: DiagnosticId;
   displayName: string;
@@ -105,7 +105,7 @@ function maybeAddMessageToBuffer(buffer: DiagnosticsBuffer, message: Message): b
 // Exported for tests
 export function addMessages(
   buffer: DiagnosticsBuffer,
-  messages: ReadonlyArray<Message>,
+  messages: readonly Message[],
 ): DiagnosticsBuffer {
   // maybeAddMessageToBuffer mutates the buffer instead of doing an immutable update for performance
   // reasons. There are large numbers of diagnostics messages, and often many diagnostics panels in

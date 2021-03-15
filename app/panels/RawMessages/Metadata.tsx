@@ -32,9 +32,9 @@ type Props = {
   data: any;
   diffData: any;
   diff: any;
-  datatype: string | null | undefined;
+  datatype?: string;
   message: Message;
-  diffMessage: Message | null | undefined;
+  diffMessage?: Message;
 };
 
 function CopyMessageButton({ text, onClick }: any) {
@@ -59,7 +59,7 @@ export default function Metadata({ data, diffData, diff, datatype, message, diff
           return "<buffer>";
         }
       });
-      clipboard.copy(JSON.stringify(dataWithoutLargeArrays, null, 2) || "");
+      clipboard.copy(JSON.stringify(dataWithoutLargeArrays, undefined, 2) || "");
     },
     [],
   );

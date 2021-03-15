@@ -11,8 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { $Values } from "utility-types";
-
 import {
   PlayerCapabilities,
   PlayerStateActiveData,
@@ -26,8 +24,8 @@ export default class FakePlayer implements Player {
   listener?: (arg0: PlayerState) => Promise<void>;
   playerId: string = "test";
   subscriptions: SubscribePayload[] = [];
-  publishers: AdvertisePayload[] | null | undefined;
-  _capabilities: $Values<typeof PlayerCapabilities>[] = [];
+  publishers: AdvertisePayload[] | undefined;
+  _capabilities: typeof PlayerCapabilities[keyof typeof PlayerCapabilities][] = [];
 
   setListener(listener: (arg0: PlayerState) => Promise<void>): void {
     this.listener = listener;
@@ -67,7 +65,7 @@ export default class FakePlayer implements Player {
   setSubscriptions(subs: SubscribePayload[]) {
     this.subscriptions = subs;
   }
-  setCapabilities(capabilities: $Values<typeof PlayerCapabilities>[]) {
+  setCapabilities(capabilities: typeof PlayerCapabilities[keyof typeof PlayerCapabilities][]) {
     this._capabilities = capabilities;
   }
   startPlayback() {

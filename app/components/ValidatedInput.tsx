@@ -12,9 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { isEqual } from "lodash";
-import * as React from "react";
 import styled from "styled-components";
-import { $Values } from "utility-types";
 
 import Dropdown from "@foxglove-studio/app/components/Dropdown";
 import Flex from "@foxglove-studio/app/components/Flex";
@@ -56,9 +54,9 @@ type ParseAndStringifyFn = {
   stringify: (obj: any) => string;
   parse: (val: string) => any;
 };
-export type EditFormat = $Values<typeof EDIT_FORMAT>;
+export type EditFormat = typeof EDIT_FORMAT[keyof typeof EDIT_FORMAT];
 export type BaseProps = {
-  dataValidator?: (data: any) => ValidationResult | null | undefined;
+  dataValidator?: (data: any) => ValidationResult | undefined;
   inputStyle?: {
     [attr: string]: string | number;
   };
@@ -199,7 +197,7 @@ export function ValidatedInputBase({
 
 function JsonInput(props: BaseProps) {
   function stringify(val: any) {
-    return JSON.stringify(val, null, 2);
+    return JSON.stringify(val, undefined, 2);
   }
   return <ValidatedInputBase parse={JSON.parse} stringify={stringify} {...props} />;
 }

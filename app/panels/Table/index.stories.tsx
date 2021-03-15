@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { storiesOf } from "@storybook/react";
-import React from "react";
 
 import Table from "@foxglove-studio/app/panels/Table";
 import PanelSetup from "@foxglove-studio/app/stories/PanelSetup";
@@ -24,6 +23,7 @@ const makeArrayData = (length = 50, nestArray = true): any => {
       bool: true,
       str: `${i}-abcd-edfg`,
       n: null,
+      u: undefined,
       obj: {
         date: new Date(`2020-01-${i}`),
       },

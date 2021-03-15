@@ -5,6 +5,9 @@ env:
 
 ignorePatterns:
   - storybook-static
+  # This file triggers an eslint bug because of our {fs: false} setting in webpack config.
+  # But for some reason it only happens locally, not in CI.
+  - app/test/transformers/rawImportPreprocessor.ts
 
 plugins:
   - react
@@ -46,7 +49,13 @@ rules:
     - error
     - smart
   no-console: off # configured in no-restricted-syntax
-  "@typescript-eslint/ban-ts-comment": off # TODO: remove once we fix all TS issues
+  "@typescript-eslint/ban-ts-comment":
+    - error
+    # TODO: remove once we fix all TS issues
+    - ts-expect-error: allow-with-description
+      ts-ignore: true
+      ts-nocheck: false
+      ts-check: true
   # It's sometimes useful to explicitly name to guard against future changes
   "@typescript-eslint/no-inferrable-types": off
   "@typescript-eslint/no-empty-function": off
@@ -119,7 +128,6 @@ rules:
 
 overrides:
   - files:
-      - "app/App.tsx"
       - "app/GlobalConfig.ts"
       - "app/PanelAPI/useBlockMessageByTopicWithFallback.ts"
       - "app/PanelAPI/useBlocksByTopic.ts"
@@ -192,7 +200,6 @@ overrides:
       - "app/components/Tree/index.tsx"
       - "app/components/ValidatedInput.tsx"
       - "app/components/input/JSONInput.tsx"
-      - "app/components/renderToBody.tsx"
       - "app/dataProviders/ApiCheckerDataProvider.ts"
       - "app/dataProviders/BagDataProvider.ts"
       - "app/dataProviders/BrowserHttpReader.ts"
@@ -312,7 +319,6 @@ overrides:
       - "app/players/OrderedStampPlayer.ts"
       - "app/players/RandomAccessPlayer.test.ts"
       - "app/players/RandomAccessPlayer.ts"
-      - "app/players/RosbridgePlayer.tsx"
       - "app/players/StoryPlayer.ts"
       - "app/players/UserNodePlayer/index.ts"
       - "app/players/UserNodePlayer/nodeTransformerWorker/transformer.test.ts"

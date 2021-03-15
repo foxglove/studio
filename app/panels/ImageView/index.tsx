@@ -37,13 +37,13 @@ import Dropdown from "@foxglove-studio/app/components/Dropdown";
 import DropdownItem from "@foxglove-studio/app/components/Dropdown/DropdownItem";
 import dropDownStyles from "@foxglove-studio/app/components/Dropdown/index.module.scss";
 import EmptyState from "@foxglove-studio/app/components/EmptyState";
-import { useExperimentalFeature } from "@foxglove-studio/app/components/ExperimentalFeatures";
 import Flex from "@foxglove-studio/app/components/Flex";
 import Icon from "@foxglove-studio/app/components/Icon";
 import { Item, SubMenu } from "@foxglove-studio/app/components/Menu";
 import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipeline";
 import Panel from "@foxglove-studio/app/components/Panel";
 import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
+import { useExperimentalFeature } from "@foxglove-studio/app/context/ExperimentalFeaturesContext";
 import { getGlobalHooks } from "@foxglove-studio/app/loadWebviz";
 import { Message, TypedMessage } from "@foxglove-studio/app/players/types";
 import inScreenshotTests from "@foxglove-studio/app/stories/inScreenshotTests";
@@ -78,9 +78,9 @@ const DEFAULT_PANEL_HOOKS = { imageMarkerDatatypes: [] };
 export type Config = DefaultConfig & {
   panelHooks?: ImageViewPanelHooks;
   transformMarkers: boolean;
-  mode: "fit" | "fill" | "other" | null;
-  zoomPercentage: number | null | undefined;
-  offset: number[] | null | undefined;
+  mode?: "fit" | "fill" | "other";
+  zoomPercentage?: number;
+  offset?: number[];
   saveStoryConfig?: () => void;
 };
 
@@ -208,7 +208,7 @@ function renderEmptyState(
 
 function useOptionallySynchronizedMessages(
   shouldSynchronize: boolean,
-  topics: ReadonlyArray<PanelAPI.RequestedTopic>,
+  topics: readonly PanelAPI.RequestedTopic[],
 ) {
   const memoizedTopics = useDeepMemo(topics);
   const reducers = useMemo(
@@ -222,11 +222,11 @@ function useOptionallySynchronizedMessages(
         : {
             restore: (previousValue) => ({
               messagesByTopic: previousValue ? previousValue.messagesByTopic : {},
-              synchronizedMessages: null,
+              synchronizedMessages: undefined,
             }),
             addMessage: ({ messagesByTopic }, newMessage) => ({
               messagesByTopic: { ...messagesByTopic, [newMessage.topic]: [newMessage] },
-              synchronizedMessages: null,
+              synchronizedMessages: undefined,
             }),
           },
     [shouldSynchronize, memoizedTopics],
@@ -403,7 +403,7 @@ function ImageView(props: Props) {
   }, [cameraTopic, imageTopicsByNamespace, onChangeCameraTopic]);
 
   const cameraInfoTopic = getCameraInfoTopic(cameraTopic);
-  const cameraInfo: CameraInfo | null | undefined = PanelAPI.useMessageReducer({
+  const cameraInfo: CameraInfo | undefined = PanelAPI.useMessageReducer({
     topics: cameraInfoTopic ? [cameraInfoTopic] : [],
     restore: useCallback((value: any) => value, []) as any,
     addMessage: useCallback((value, { message }: TypedMessage<CameraInfo>) => message, []),
@@ -583,7 +583,7 @@ function ImageView(props: Props) {
     markers: markersToRender,
     scale,
     transformMarkers,
-    cameraInfo: markersToRender.length > 0 ? cameraInfo : null,
+    cameraInfo: markersToRender.length > 0 ? cameraInfo : undefined,
   };
 
   const toolbar = useMemo(() => {

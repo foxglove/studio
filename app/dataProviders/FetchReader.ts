@@ -21,7 +21,7 @@ export default class FetchReader extends Readable {
   _aborted: boolean = false;
   _url: string;
 
-  constructor(url: string, options: RequestInit | null | undefined) {
+  constructor(url: string, options?: RequestInit) {
     super();
     this._url = url;
     this._controller = new AbortController();
@@ -30,7 +30,7 @@ export default class FetchReader extends Readable {
 
   // you can only call getReader once on a response body
   // so keep a local copy of the reader and return it after the first call to get a reader
-  async _getReader(): Promise<ReadableStreamReader<Uint8Array> | null | undefined> {
+  async _getReader(): Promise<ReadableStreamReader<Uint8Array> | undefined> {
     if (this._reader) {
       return this._reader;
     }

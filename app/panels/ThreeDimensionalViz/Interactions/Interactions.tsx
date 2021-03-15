@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import CursorDefault from "@mdi/svg/svg/cursor-default.svg";
-import * as React from "react";
 import { MouseEventObject } from "regl-worldview";
 
 import LinkedGlobalVariableList from "./LinkedGlobalVariableList";
@@ -38,9 +37,9 @@ export const LINKED_VARIABLES_TAB_TYPE = "Linked variables";
 export type TabType = typeof OBJECT_TAB_TYPE | typeof LINKED_VARIABLES_TAB_TYPE;
 
 type Props = {
-  interactionsTabType: TabType | null | undefined;
-  setInteractionsTabType: (arg0: TabType | null | undefined) => void;
-  selectedObject: MouseEventObject | null | undefined;
+  interactionsTabType?: TabType;
+  setInteractionsTabType: (arg0?: TabType) => void;
+  selectedObject?: MouseEventObject;
 };
 
 type PropsWithConfig = Props & {

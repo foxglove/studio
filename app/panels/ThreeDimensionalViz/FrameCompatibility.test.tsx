@@ -13,7 +13,6 @@
 
 import { mount } from "enzyme";
 import { last } from "lodash";
-import * as React from "react";
 import { act } from "react-dom/test-utils";
 
 import { FrameCompatibilityDEPRECATED } from "./FrameCompatibility";
@@ -40,7 +39,7 @@ describe("FrameCompatibilityDEPRECATED", () => {
       message: { index: 0 },
     };
 
-    const childFn = jest.fn().mockReturnValue(null);
+    const childFn = jest.fn().mockReturnValue(undefined);
     class MyComponent extends React.Component<any> {
       render() {
         childFn(this.props);

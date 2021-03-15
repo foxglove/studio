@@ -95,7 +95,7 @@ export const SEEK_START_DELAY_MS = 100;
 const capabilities = [PlayerCapabilities.setSpeed];
 
 export type RandomAccessPlayerOptions = {
-  metricsCollector: PlayerMetricsCollectorInterface | null | undefined;
+  metricsCollector?: PlayerMetricsCollectorInterface;
   seekToTime: SeekToTimeSpec;
   notifyPlayerManager: NotifyPlayerManager;
 };
@@ -112,7 +112,7 @@ export default class RandomAccessPlayer implements Player {
   // _currentTime is defined as the end of the last range that we emitted messages for.
   // In other words, we may emit messages that <= currentTime, but not after currentTime.
   _currentTime: Time = { sec: 0, nsec: 0 };
-  _lastTickMillis: number | null | undefined;
+  _lastTickMillis?: number;
   // The last time a "seek" was started. This is used to cancel async operations, such as seeks or ticks, when a seek
   // happens while they are ocurring.
   _lastSeekStartTime: number = Date.now();
@@ -133,14 +133,14 @@ export default class RandomAccessPlayer implements Player {
   _progress: Progress = Object.freeze({});
   _id: string = uuidv4();
   _messages: Message[] = [];
-  _bobjects: ReadonlyArray<BobjectMessage> = [];
+  _bobjects: readonly BobjectMessage[] = [];
   _receivedBytes: number = 0;
   _messageOrder: TimestampMethod = "receiveTime";
   _hasError = false;
   _closed = false;
   _seekToTime: SeekToTimeSpec;
   _notifyPlayerManager: NotifyPlayerManager;
-  _lastRangeMillis: number | null | undefined;
+  _lastRangeMillis?: number;
   _parsedMessageDefinitionsByTopic: ParsedMessageDefinitionsByTopic = {};
 
   constructor(
@@ -443,7 +443,7 @@ export default class RandomAccessPlayer implements Player {
   async _getMessages(
     start: Time,
     end: Time,
-  ): Promise<{ parsedMessages: Message[]; bobjects: ReadonlyArray<BobjectMessage> }> {
+  ): Promise<{ parsedMessages: Message[]; bobjects: readonly BobjectMessage[] }> {
     const parsedTopics = getSanitizedTopics(this._parsedSubscribedTopics, this._providerTopics);
     const bobjectTopics = getSanitizedTopics(this._bobjectSubscribedTopics, this._providerTopics);
     if (parsedTopics.length + bobjectTopics.length === 0) {
@@ -489,9 +489,7 @@ export default class RandomAccessPlayer implements Player {
           );
           return undefined;
         }
-        const topic: Topic | null | undefined = this._providerTopics.find(
-          (t) => t.name === message.topic,
-        );
+        const topic: Topic | undefined = this._providerTopics.find((t) => t.name === message.topic);
         if (!topic) {
           sendNotification(
             `Could not find topic for message ${message.topic}; skipped message`,
@@ -564,7 +562,7 @@ export default class RandomAccessPlayer implements Player {
     this._currentTime = clampTime(time, this._start, this._end);
   }
 
-  _seekPlaybackInternal = debouncePromise(async (backfillDuration: Time | null | undefined) => {
+  _seekPlaybackInternal = debouncePromise(async (backfillDuration?: Time) => {
     const seekTime = Date.now();
     this._lastSeekStartTime = seekTime;
     this._cancelSeekBackfill = false;
@@ -607,7 +605,7 @@ export default class RandomAccessPlayer implements Player {
     }
   });
 
-  seekPlayback(time: Time, backfillDuration?: Time | null): void {
+  seekPlayback(time: Time, backfillDuration?: Time): void {
     // Only seek when the provider initialization is done.
     if (!this._initialized) {
       return;

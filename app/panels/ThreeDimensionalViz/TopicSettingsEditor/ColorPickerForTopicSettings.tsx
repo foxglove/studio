@@ -12,18 +12,16 @@
 //   You may not use this file except in compliance with the License.
 
 import ColorPicker, { Panel as ColorPickerPanel } from "rc-color-picker";
-import React from "react";
 import { Color } from "regl-worldview";
 import styled from "styled-components";
 import tinyColor from "tinycolor2";
-import { $Keys } from "utility-types";
 
 export const PICKER_SIZE = {
   NORMAL: { name: "NORMAL", size: 24 },
   SMALL: { name: "SMALL", size: 16 },
 };
 
-export type Size = $Keys<typeof PICKER_SIZE>;
+export type Size = keyof typeof PICKER_SIZE;
 type Placement = "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
 
 const SWrapper = styled.span<any>`
@@ -42,19 +40,19 @@ const SWrapper = styled.span<any>`
 
 const DEFAULT_OVERRIDE_COLOR = "rgba(255,255,255,1)";
 
-export function getHexFromColorSettingWithDefault(color: Color | null | undefined): string {
+export function getHexFromColorSettingWithDefault(color?: Color): string {
   return color ? tinyColor.fromRatio(color).toRgbString() : DEFAULT_OVERRIDE_COLOR;
 }
 
 type Props = {
-  color: Color | null | undefined;
+  color?: Color;
   onChange: (newColor: Color) => void;
   placement?: Placement;
-  size?: Size | null | undefined;
+  size?: Size;
   useModal?: boolean;
 };
 type ColorPickerSettingsPanelProps = {
-  color: Color | null | undefined;
+  color?: Color;
   onChange: (newColor: Color) => void;
 };
 

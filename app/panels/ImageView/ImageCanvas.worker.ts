@@ -40,10 +40,10 @@ export default class ImageCanvasWorker {
         rawMarkerData,
       }: {
         id: string;
-        imageMessage: Message | null | undefined;
-        imageMessageDatatype: string | null | undefined;
+        imageMessage?: Message;
+        imageMessageDatatype?: string;
         rawMarkerData: RawMarkerData;
-      }): Promise<Dimensions | null | undefined> => {
+      }): Promise<Dimensions | undefined> => {
         const canvas = this._idToCanvas[id];
         return renderImage({ canvas, imageMessage, imageMessageDatatype, rawMarkerData });
       },

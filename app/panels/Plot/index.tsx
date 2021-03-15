@@ -13,11 +13,11 @@
 
 import { compact, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
-import React, { useEffect, useCallback, useMemo, useRef } from "react";
+import { useEffect, useCallback, useMemo, useRef } from "react";
 import { Time, TimeUtil } from "rosbag";
-import { $Shape } from "utility-types";
 
 import helpContent from "./index.help.md";
+import { PlotConfig } from "./types";
 import {
   useBlocksByTopic,
   useDataSourceInfo,
@@ -42,45 +42,12 @@ import PlotChart, {
 } from "@foxglove-studio/app/panels/Plot/PlotChart";
 import PlotLegend from "@foxglove-studio/app/panels/Plot/PlotLegend";
 import PlotMenu from "@foxglove-studio/app/panels/Plot/PlotMenu";
-import { BasePlotPath, PlotPath } from "@foxglove-studio/app/panels/Plot/internalTypes";
 import { PanelConfig } from "@foxglove-studio/app/types/panels";
 import { useShallowMemo } from "@foxglove-studio/app/util/hooks";
 import { fromSec, subtractTimes, toSec } from "@foxglove-studio/app/util/time";
 
-export const plotableRosTypes = [
-  "bool",
-  "int8",
-  "uint8",
-  "int16",
-  "uint16",
-  "int32",
-  "uint32",
-  "int64",
-  "uint64",
-  "float32",
-  "float64",
-  "time",
-  "duration",
-  "string",
-  "json",
-];
-
-// X-axis values:
-export type PlotXAxisVal =
-  | "timestamp" // Message playback time. Preloaded.
-  | "index" // Message-path value index. One "current" message at playback time.
-  | "custom" // Message path data. Preloaded.
-  | "currentCustom"; // Message path data. One "current" message at playback time.
-
-export type PlotConfig = {
-  paths: PlotPath[];
-  minYValue: string;
-  maxYValue: string;
-  showLegend: boolean;
-  xAxisVal: PlotXAxisVal;
-  xAxisPath?: BasePlotPath;
-  followingViewWidth?: string;
-};
+export { plotableRosTypes } from "./types";
+export type { PlotConfig, PlotXAxisVal } from "./types";
 
 export function openSiblingPlotPanel(
   openSiblingPanel: (arg0: string, cb: (arg0: PanelConfig) => PanelConfig) => void,
@@ -98,7 +65,7 @@ export function openSiblingPlotPanel(
 
 type Props = {
   config: PlotConfig;
-  saveConfig: (arg0: $Shape<PlotConfig>) => void;
+  saveConfig: (arg0: Partial<PlotConfig>) => void;
 };
 
 // messagePathItems contains the whole parsed message, and we don't need to cache all of that.
@@ -262,7 +229,7 @@ function Plot(props: Props) {
   // Min/max x-values and playback position indicator are only used for preloaded plots. In non-
   // preloaded plots min x-value is always the last seek time, and the max x-value is the current
   // playback time.
-  const timeToXValueForPreloading = (t: Time | null | undefined): number | null | undefined => {
+  const timeToXValueForPreloading = (t?: Time): number | undefined => {
     if (xAxisVal === "timestamp" && t && startTime) {
       return toSec(subtractTimes(t, startTime));
     }

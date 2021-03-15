@@ -13,9 +13,7 @@
 
 import CheckboxBlankOutlineIcon from "@mdi/svg/svg/checkbox-blank-outline.svg";
 import CheckboxMarkedIcon from "@mdi/svg/svg/checkbox-marked.svg";
-import * as React from "react";
 import styled from "styled-components";
-import { $Shape } from "utility-types";
 
 import buildSampleMessage from "./buildSampleMessage";
 import Autocomplete from "@foxglove-studio/app/components/Autocomplete";
@@ -45,7 +43,7 @@ type Config = {
 
 type Props = {
   config: Config;
-  saveConfig: (arg0: $Shape<Config>) => void;
+  saveConfig: (arg0: Partial<Config>) => void;
 
   // player state
   capabilities: string[];
@@ -54,10 +52,10 @@ type Props = {
 };
 
 type PanelState = {
-  cachedProps: $Shape<Props>;
+  cachedProps: Partial<Props>;
   datatypeNames: string[];
-  parsedObject: any | null | undefined;
-  error: string | null | undefined;
+  parsedObject?: any;
+  error?: string;
 };
 
 const STextArea = styled.textarea`
@@ -92,9 +90,9 @@ function getTopicName(topic: Topic): string {
   return topic.name;
 }
 
-function parseInput(value: string): $Shape<PanelState> {
+function parseInput(value: string): Partial<PanelState> {
   let parsedObject;
-  let error = null;
+  let error = undefined;
   try {
     const parsedAny = JSON.parse(value);
     if (Array.isArray(parsedAny)) {
@@ -129,12 +127,12 @@ class Publish extends React.PureComponent<Props, PanelState> {
   state = {
     cachedProps: {},
     datatypeNames: [],
-    error: null,
+    error: undefined,
     parsedObject: undefined,
   };
 
   static getDerivedStateFromProps(props: Props, state: PanelState) {
-    const newState: $Shape<PanelState> = parseInput(props.config.value);
+    const newState: Partial<PanelState> = parseInput(props.config.value);
     let changed = false;
 
     if (props !== state.cachedProps) {
@@ -158,13 +156,13 @@ class Publish extends React.PureComponent<Props, PanelState> {
     ) {
       const sampleMessage = buildSampleMessage(props.datatypes, props.config.datatype);
       if (sampleMessage) {
-        const stringifiedSampleMessage = JSON.stringify(sampleMessage, null, 2);
+        const stringifiedSampleMessage = JSON.stringify(sampleMessage, undefined, 2);
         props.saveConfig({ value: stringifiedSampleMessage });
         changed = true;
       }
     }
 
-    return changed ? newState : null;
+    return changed ? newState : undefined;
   }
 
   _onChangeTopic = (event: any, topicName: string) => {

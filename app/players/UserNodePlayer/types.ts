@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import type { SourceFile, TypeChecker } from "typescript";
-import { $Values } from "utility-types";
 
 import { GlobalVariables } from "@foxglove-studio/app/hooks/useGlobalVariables";
 import { Topic, Message } from "@foxglove-studio/app/players/types";
@@ -74,9 +73,9 @@ export const ErrorCodes = {
 };
 
 export type Diagnostic = {
-  severity: $Values<typeof DiagnosticSeverity>;
+  severity: typeof DiagnosticSeverity[keyof typeof DiagnosticSeverity];
   message: string;
-  source: $Values<typeof Sources>;
+  source: typeof Sources[keyof typeof Sources];
   startLineNumber?: number;
   startColumn?: number;
   endLineNumber?: number;
@@ -88,27 +87,27 @@ export type NodeData = {
   name: string;
   sourceCode: string;
   transpiledCode: string;
-  projectCode: Map<string, string> | null | undefined;
-  diagnostics: ReadonlyArray<Diagnostic>;
-  inputTopics: ReadonlyArray<string>;
+  projectCode: Map<string, string> | undefined;
+  diagnostics: readonly Diagnostic[];
+  inputTopics: readonly string[];
   outputTopic: string;
   outputDatatype: string;
   datatypes: RosDatatypes;
   // Should be ts.SourceFile and ts.TypeChecker. Not strongly typing here since we want to keep
   // Typescript out of the main bundle.
-  sourceFile: SourceFile | null | undefined;
-  typeChecker: TypeChecker | null | undefined;
+  sourceFile?: SourceFile;
+  typeChecker?: TypeChecker;
   rosLib: string;
   // An array of globalVariable names
-  globalVariables: ReadonlyArray<string>;
+  globalVariables: readonly string[];
 };
 
 export type NodeRegistration = {
   nodeId: string;
   nodeData: NodeData;
-  inputs: ReadonlyArray<string>;
+  inputs: readonly string[];
   output: Topic;
-  processMessage: (arg0: Message, arg1: GlobalVariables) => Promise<Message | null | undefined>;
+  processMessage: (arg0: Message, arg1: GlobalVariables) => Promise<Message | undefined>;
   terminate: () => void;
 };
 
@@ -127,14 +126,14 @@ export type UserNodeLogs = {
 };
 
 export type RegistrationOutput = {
-  error: null | string;
+  error?: string;
   userNodeLogs: UserNodeLog[];
   userNodeDiagnostics: Diagnostic[];
 };
 
 export type ProcessMessageOutput = {
-  message: Record<string, unknown> | null | undefined;
-  error: null | string;
+  message: Record<string, unknown> | undefined;
+  error?: string;
   userNodeLogs: UserNodeLog[];
   userNodeDiagnostics: Diagnostic[];
 };

@@ -15,7 +15,6 @@ import ArrowLeftBoldIcon from "@mdi/svg/svg/arrow-left-bold.svg";
 import DeleteIcon from "@mdi/svg/svg/delete.svg";
 import FileMultipleIcon from "@mdi/svg/svg/file-multiple.svg";
 import HelpCircleIcon from "@mdi/svg/svg/help-circle.svg";
-import React from "react";
 import styled from "styled-components";
 
 import Flex from "@foxglove-studio/app/components/Flex";
@@ -106,7 +105,7 @@ type NodesListProps = {
   selectNode: (id: string) => void;
   deleteNode: (id: string) => void;
   collapse: () => void;
-  selectedNodeId: string | null | undefined;
+  selectedNodeId?: string;
   userNodeDiagnostics: {
     [guid: string]: UserNodeDiagnostics;
   };
@@ -138,7 +137,7 @@ type Props = {
   selectNode: (nodeId: string) => void;
   deleteNode: (nodeId: string) => void;
   userNodes: UserNodes;
-  selectedNodeId: string | null | undefined;
+  selectedNodeId?: string;
   otherMarkdownDocsForTest?: string;
   userNodeDiagnostics: {
     [guid: string]: UserNodeDiagnostics;
@@ -146,7 +145,7 @@ type Props = {
   explorer: Explorer;
   updateExplorer: (explorer: Explorer) => void;
   setScriptOverride: (script: Script, maxDepth?: number) => void;
-  script: Script | null;
+  script?: Script;
   addNewNode: (_: any, sourceCode?: string) => void;
 };
 
@@ -226,14 +225,14 @@ const Sidebar = ({
           nodes={userNodes}
           selectNode={selectNode}
           deleteNode={deleteNode}
-          collapse={() => updateExplorer(null)}
+          collapse={() => updateExplorer(undefined)}
           selectedNodeId={selectedNodeId}
           userNodeDiagnostics={userNodeDiagnostics}
         />
       ),
       docs: (
         <SFlex>
-          <SidebarTitle title={"docs"} collapse={() => updateExplorer(null)} />
+          <SidebarTitle title={"docs"} collapse={() => updateExplorer(undefined)} />
           <TextContent style={{ backgroundColor: "transparent" }} linkTarget="_blank">
             {otherMarkdownDocsForTest || nodePlaygroundDocs}
           </TextContent>
@@ -247,14 +246,14 @@ const Sidebar = ({
       utils: (
         <Flex col style={{ position: "relative" }}>
           <SidebarTitle
-            collapse={() => updateExplorer(null)}
+            collapse={() => updateExplorer(undefined)}
             title={"utilities"}
             tooltip={`You can import any of these modules into your node using the following syntax: 'import { .. } from "./pointClouds.ts".\n\nWant to contribute? Scroll to the bottom of the docs for details!`}
           />
           {utilityFiles.map(({ fileName, filePath }) => (
             <ListItem
               key={filePath}
-              onClick={gotoUtils.bind(null, filePath)}
+              onClick={gotoUtils.bind(undefined, filePath)}
               selected={script ? filePath === script.filePath : false}
             >
               {fileName}
@@ -268,10 +267,13 @@ const Sidebar = ({
           <SidebarTitle
             title={"templates"}
             tooltip={"Create nodes from these templates"}
-            collapse={() => updateExplorer(null)}
+            collapse={() => updateExplorer(undefined)}
           />
           {templates.map(({ name, description, template }, i) => (
-            <TemplateItem key={`${name}-${i}`} onClick={addNewNode.bind(null, undefined, template)}>
+            <TemplateItem
+              key={`${name}-${i}`}
+              onClick={addNewNode.bind(undefined, undefined, template)}
+            >
               <span style={{ fontWeight: "bold" }}>{name}</span>
               <span>{description}</span>
             </TemplateItem>
@@ -298,7 +300,7 @@ const Sidebar = ({
       <MenuWrapper>
         <Icon
           dataTest="node-explorer"
-          onClick={() => updateExplorer(nodesSelected ? null : "nodes")}
+          onClick={() => updateExplorer(nodesSelected ? undefined : "nodes")}
           large
           tooltip={"nodes"}
           style={{ color: nodesSelected ? "inherit" : colors.DARK9, position: "relative" }}
@@ -307,7 +309,7 @@ const Sidebar = ({
         </Icon>
         <Icon
           dataTest="utils-explorer"
-          onClick={() => updateExplorer(utilsSelected ? null : "utils")}
+          onClick={() => updateExplorer(utilsSelected ? undefined : "utils")}
           large
           tooltip={"utilities"}
           style={{ color: utilsSelected ? "inherit" : colors.DARK9 }}
@@ -316,7 +318,7 @@ const Sidebar = ({
         </Icon>
         <Icon
           dataTest="templates-explorer"
-          onClick={() => updateExplorer(templatesSelected ? null : "templates")}
+          onClick={() => updateExplorer(templatesSelected ? undefined : "templates")}
           large
           tooltip={"templates"}
           style={{ color: templatesSelected ? "inherit" : colors.DARK9 }}
@@ -325,7 +327,7 @@ const Sidebar = ({
         </Icon>
         <Icon
           dataTest="docs-explorer"
-          onClick={() => updateExplorer(docsSelected ? null : "docs")}
+          onClick={() => updateExplorer(docsSelected ? undefined : "docs")}
           large
           tooltip={"docs"}
           style={{ color: docsSelected ? "inherit" : colors.DARK9 }}

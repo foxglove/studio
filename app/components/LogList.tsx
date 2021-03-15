@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import * as React from "react";
 import { List, AutoSizer, CellMeasurer, CellMeasurerCache } from "react-virtualized";
 import { v4 as uuidv4 } from "uuid";
 
@@ -24,10 +23,10 @@ type RowRendererParams = {
   columns: any[];
   index: number;
   isScrolling: boolean;
-  onRowClick: () => void | null | undefined;
-  onRowDoubleClick: () => void | null | undefined;
-  onRowMouseOver: () => void | null | undefined;
-  onRowMouseOut: () => void | null | undefined;
+  onRowClick: () => void;
+  onRowDoubleClick: () => void;
+  onRowMouseOver: () => void;
+  onRowMouseOut: () => void;
   rowData: any;
   style: React.CSSProperties;
   parent?: any;
@@ -46,7 +45,7 @@ function LogList<Item>({
   items,
   renderRow,
 }: {
-  items: ReadonlyArray<Item>;
+  items: readonly Item[];
   renderRow: RenderRow<Item>;
 }) {
   // Automatically scrolling to the bottom by default.
@@ -63,7 +62,7 @@ function LogList<Item>({
   const lastWidth = React.useRef<number>(-1);
 
   // Keep track of the last items that we rendered to see if we need to clear the cache.
-  const lastItems = React.useRef<ReadonlyArray<Item>>([]);
+  const lastItems = React.useRef<readonly Item[]>([]);
 
   // Last time we rendered; used in `onScroll`.
   const lastRenderTime = React.useRef<number>(0);

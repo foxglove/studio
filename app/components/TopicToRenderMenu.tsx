@@ -13,7 +13,6 @@
 import CheckIcon from "@mdi/svg/svg/check.svg";
 import DatabaseIcon from "@mdi/svg/svg/database.svg";
 import { uniq } from "lodash";
-import React from "react";
 import styled from "styled-components";
 
 import Dropdown from "@foxglove-studio/app/components/Dropdown";
@@ -30,7 +29,7 @@ export type TopicGroup = {
 type Props = {
   onChange: (topic: string) => void;
   topicToRender: string;
-  topics: ReadonlyArray<Topic>;
+  topics: readonly Topic[];
   // Use either one of these:
   // singleTopicDatatype only supports a single datatype (search and select based on datatype)
   // topicsGroups selects the "parent" path of a group of topics (if either of the group topics suffixes+datatypes match)

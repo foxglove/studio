@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import * as React from "react";
 import { Command, withPose, pointToVec3, defaultBlend, CommonCommandProps } from "regl-worldview";
 
 import { getGlobalHooks } from "@foxglove-studio/app/loadWebviz";
@@ -139,5 +138,5 @@ type Props = CommonCommandProps & {
 
 export default function OccupancyGrids(props: Props) {
   // We can click through OccupancyGrids.
-  return <Command getChildrenForHitmap={null} {...props} reglCommand={occupancyGrids} />;
+  return <Command getChildrenForHitmap={undefined} {...props} reglCommand={occupancyGrids} />;
 }

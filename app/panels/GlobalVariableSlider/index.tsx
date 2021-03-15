@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import React, { ReactNode, useCallback, useMemo } from "react";
-import { $Shape } from "utility-types";
 
 import GlobalVariableSlider from "@foxglove-studio/app/components/GlobalVariableSlider";
 import Item from "@foxglove-studio/app/components/Menu/Item";
@@ -30,16 +29,17 @@ export type GlobalVariableSliderConfig = {
 
 type Props = {
   config: GlobalVariableSliderConfig;
-  saveConfig: (arg0: $Shape<GlobalVariableSliderConfig>) => void;
+  saveConfig: (arg0: Partial<GlobalVariableSliderConfig>) => void;
 };
 
 type MenuProps = {
   config: GlobalVariableSliderConfig;
-  updateConfig: (config: $Shape<GlobalVariableSliderConfig>) => void;
+  updateConfig: (config: Partial<GlobalVariableSliderConfig>) => void;
 };
 
 // Validation helper functions for the SliderSettingsMenu
-const minMaxValidatorFn = (str: string) => (isNaN(parseFloat(str)) ? "Must be valid number" : null);
+const minMaxValidatorFn = (str: string) =>
+  isNaN(parseFloat(str)) ? "Must be valid number" : undefined;
 const stepValidatorFn = (str: string) => {
   const result = minMaxValidatorFn(str);
   if (result) {
@@ -49,7 +49,7 @@ const stepValidatorFn = (str: string) => {
   if (number <= 0) {
     return "Must be >= 0";
   }
-  return null;
+  return undefined;
 };
 
 function SliderSettingsMenu(props: MenuProps) {
@@ -57,7 +57,7 @@ function SliderSettingsMenu(props: MenuProps) {
   const { sliderProps, globalVariableName } = config;
 
   const updateSliderProps = useCallback(
-    (partial: $Shape<SliderProps>) => {
+    (partial: Partial<SliderProps>) => {
       updateConfig({
         ...config,
         sliderProps: { ...sliderProps, ...partial },

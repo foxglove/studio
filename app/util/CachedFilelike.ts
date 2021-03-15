@@ -75,20 +75,20 @@ export default class CachedFilelike implements Filelike {
 
   // The current active connection, if there is one. `remainingRange.start` gets updated whenever
   // we receive new data, so it truly is the remaining range that it is going to download.
-  _currentConnection: { stream: FileStream; remainingRange: Range } | null | undefined;
+  _currentConnection: { stream: FileStream; remainingRange: Range } | undefined;
 
   // A list of read requests and associated ranges for all read requests, in order.
   _readRequests: { range: Range; callback: Callback<Buffer>; requestTime: number }[] = [];
 
   // The range.end of the last read request that we resolved. Useful for reading ahead a bit.
-  _lastResolvedCallbackEnd: number | null | undefined;
+  _lastResolvedCallbackEnd?: number;
 
   // The last time we've encountered an error;
-  _lastErrorTime: number | null | undefined;
+  _lastErrorTime?: number;
 
   constructor(options: {
     fileReader: FileReader;
-    cacheSizeInBytes?: number | null | undefined;
+    cacheSizeInBytes?: number;
     logFn?: (arg0: string) => void;
     keepReconnectingCallback?: (reconnecting: boolean) => void;
   }) {
@@ -133,7 +133,7 @@ export default class CachedFilelike implements Filelike {
   // Read a certain byte range, and get back a `Buffer` in `callback`.
   read(offset: number, length: number, callback: Callback<Buffer>) {
     if (length === 0) {
-      callback(null, Buffer.allocUnsafe(0));
+      callback(undefined, Buffer.allocUnsafe(0));
       return;
     }
 
@@ -184,7 +184,7 @@ export default class CachedFilelike implements Filelike {
       if (process.env.READ_DELAY && process.env.NODE_ENV !== "production") {
         delay = parseInt(process.env.READ_DELAY) || 1000;
       }
-      setTimeout(() => callback(null, buffer), delay);
+      setTimeout(() => callback(undefined, buffer), delay);
 
       return false;
     });

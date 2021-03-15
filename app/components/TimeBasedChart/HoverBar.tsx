@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import * as React from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 
@@ -35,7 +34,7 @@ type Props = {
   componentId: string;
   // We don't need to (and shouldn't) rerender when the scale-bounds changes under the cursor -- the
   // bar should stay under the mouse. Only rerender when the mouse moves (using useSelector).
-  scaleBounds: { current: ReadonlyArray<ScaleBounds> | null | undefined };
+  scaleBounds: { current?: readonly ScaleBounds[] };
   isTimestampScale: boolean;
 };
 

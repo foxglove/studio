@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import ClipboardOutlineIcon from "@mdi/svg/svg/clipboard-outline.svg";
-import * as React from "react";
 import styled from "styled-components";
 
 import Icon from "@foxglove-studio/app/components/Icon";
@@ -43,7 +42,7 @@ type Props = {
 };
 
 class CopyToClipboardComponent extends React.Component<Props> {
-  wrapper: HTMLDivElement | null | undefined;
+  wrapper?: HTMLDivElement;
   copy = () => {
     if (this.wrapper) {
       const copyValue =
@@ -61,7 +60,7 @@ class CopyToClipboardComponent extends React.Component<Props> {
         style={this.props.styles}
         onClick={this.copy}
         ref={(wrapper) => {
-          this.wrapper = wrapper;
+          this.wrapper = wrapper ?? undefined;
         }}
       >
         {this.props.children}

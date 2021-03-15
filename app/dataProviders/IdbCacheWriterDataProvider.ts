@@ -51,7 +51,7 @@ const BLOCK_SIZE_MILLISECONDS = 100;
 export const BLOCK_SIZE_NS = BLOCK_SIZE_MILLISECONDS * 1e6;
 const CONTINUE_DOWNLOADING_THRESHOLD = 3 * BLOCK_SIZE_NS;
 
-function getNormalizedTopics(topics: ReadonlyArray<string>): string[] {
+function getNormalizedTopics(topics: readonly string[]): string[] {
   return uniq(topics).sort();
 }
 
@@ -84,7 +84,7 @@ export default class IdbCacheWriterDataProvider implements DataProvider {
   } = {};
 
   // The current "connection", which represents the range that we're downloading.
-  _currentConnection: { id: string; topics: string[]; remainingRange: Range } | null | undefined;
+  _currentConnection: { id: string; topics: string[]; remainingRange: Range } | undefined;
 
   // The read requests we've received via `getMessages`.
   _readRequests: {
@@ -95,7 +95,7 @@ export default class IdbCacheWriterDataProvider implements DataProvider {
 
   // The end time of the last callback that we've resolved. This is useful for preloading new data
   // around this time.
-  _lastResolvedCallbackEnd: number | null | undefined;
+  _lastResolvedCallbackEnd?: number;
 
   _extensionPoint?: ExtensionPoint;
 

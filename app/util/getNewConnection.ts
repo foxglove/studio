@@ -17,14 +17,14 @@ import { Range, isRangeCoveredByRanges, missingRanges } from "./ranges";
 // Based on a number of properties this function determines if a new connection should be opened or
 // not. It can be used for any type of ranges, be it bytes, timestamps, or something else.
 export function getNewConnection(options: {
-  currentRemainingRange: Range | null | undefined; // The remaining range that the current connection (if any) is going to download.
-  readRequestRange: Range | null | undefined; // The range of the read request that we're trying to satisfy.
+  currentRemainingRange?: Range; // The remaining range that the current connection (if any) is going to download.
+  readRequestRange?: Range; // The range of the read request that we're trying to satisfy.
   downloadedRanges: Range[]; // Array of ranges that have been downloaded already.
-  lastResolvedCallbackEnd: number | null | undefined; // The range.end of the last read request that we resolved. Useful for reading ahead a bit.
+  lastResolvedCallbackEnd?: number; // The range.end of the last read request that we resolved. Useful for reading ahead a bit.
   cacheSize: number; // The cache size. If equal to or larger than `fileSize` we will attempt to download the whole file.
   fileSize: number; // Size of the file.
   continueDownloadingThreshold: number; // Amount we're willing to wait downloading before opening a new connection.
-}): Range | null | undefined {
+}): Range | undefined {
   const { readRequestRange, currentRemainingRange, ...otherOptions } = options;
   if (readRequestRange) {
     return getNewConnectionWithExistingReadRequest({
@@ -45,14 +45,14 @@ function getNewConnectionWithExistingReadRequest({
   fileSize,
   continueDownloadingThreshold,
 }: {
-  currentRemainingRange: Range | null | undefined;
+  currentRemainingRange?: Range;
   readRequestRange: Range;
   downloadedRanges: Range[];
-  lastResolvedCallbackEnd: number | null | undefined;
+  lastResolvedCallbackEnd?: number;
   cacheSize: number;
   fileSize: number;
   continueDownloadingThreshold: number;
-}): Range | null | undefined {
+}): Range | undefined {
   // We have a requested range that we're trying to download.
   if (readRequestRange.end - readRequestRange.start > cacheSize) {
     // This should have been caught way earlier, but just as a sanity check.
@@ -107,13 +107,13 @@ function getNewConnectionWithoutExistingConnection({
   fileSize,
 }: {
   downloadedRanges: Range[];
-  lastResolvedCallbackEnd: number | null | undefined;
+  lastResolvedCallbackEnd?: number;
   cacheSize: number;
   fileSize: number;
-}): Range | null | undefined {
+}): Range | undefined {
   // If we don't have any read requests, and we also don't have an active connection, then start
   // reading ahead as much data as we can!
-  let readAheadRange: Range | null | undefined;
+  let readAheadRange: Range | undefined;
   if (cacheSize >= fileSize) {
     // If we have an unlimited cache, we want to read the entire file, but still prefer downloading
     // first near where the last request happened.

@@ -89,8 +89,8 @@ export default class AutomatedRunPlayer implements Player {
   _speed: number;
   _msPerFrame: number;
   _client: AutomatedRunClient;
-  _error: Error | null | undefined;
-  _waitToReportErrorPromise: Promise<void> | null | undefined;
+  _error?: Error;
+  _waitToReportErrorPromise?: Promise<void>;
   _startCalled: boolean = false;
   _receivedBytes: number = 0;
   // Calls to this._listener must not happen concurrently, and we want them to happen
@@ -140,7 +140,7 @@ export default class AutomatedRunPlayer implements Player {
   async _getMessages(
     start: Time,
     end: Time,
-  ): Promise<{ parsedMessages: ReadonlyArray<Message>; bobjects: ReadonlyArray<BobjectMessage> }> {
+  ): Promise<{ parsedMessages: readonly Message[]; bobjects: readonly BobjectMessage[] }> {
     if (!this._providerResult) {
       throw new Error("AutomatedRunPlayer not initialized");
     }
@@ -167,7 +167,7 @@ export default class AutomatedRunPlayer implements Player {
 
     const filterMessages = (msgs: any) =>
       msgs.map((message: any) => {
-        const topic: Topic | null | undefined = providerResult.topics.find(
+        const topic: Topic | undefined = providerResult.topics.find(
           (t) => t.name === message.topic,
         );
         if (!topic) {
@@ -187,8 +187,8 @@ export default class AutomatedRunPlayer implements Player {
   }
 
   _emitState(
-    messages: ReadonlyArray<Message>,
-    bobjects: ReadonlyArray<BobjectMessage>,
+    messages: readonly Message[],
+    bobjects: readonly BobjectMessage[],
     currentTime: Time,
   ): Promise<void> {
     return this._emitStateQueue.add(async () => {
@@ -285,7 +285,7 @@ export default class AutomatedRunPlayer implements Player {
             break;
         }
       },
-      notifyPlayerManager: async (): Promise<NotifyPlayerManagerReplyData | null | undefined> => {
+      notifyPlayerManager: async (): Promise<NotifyPlayerManagerReplyData | undefined> => {
         // no-op
         return;
       },

@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { storiesOf } from "@storybook/react";
-import React from "react";
 
 import { setUserNodes } from "@foxglove-studio/app/actions/panels";
 import NodePlayground, {
@@ -325,7 +324,7 @@ storiesOf("<NodePlayground>", module)
             userNodeDiagnostics={{}}
             explorer={explorer}
             updateExplorer={updateExplorer}
-            selectedNodeId={null}
+            selectedNodeId={undefined}
             userNodes={userNodes}
             deleteNode={() => {
               // no-op
@@ -337,7 +336,6 @@ storiesOf("<NodePlayground>", module)
             setScriptOverride={() => {
               // no-op
             }}
-            script={null}
             addNewNode={() => {
               // no-op
             }}

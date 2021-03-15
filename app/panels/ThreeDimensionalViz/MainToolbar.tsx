@@ -14,7 +14,6 @@
 import BugIcon from "@mdi/svg/svg/bug.svg";
 import RulerIcon from "@mdi/svg/svg/ruler.svg";
 import Video3dIcon from "@mdi/svg/svg/video-3d.svg";
-import * as React from "react";
 
 import Button from "@foxglove-studio/app/components/Button";
 import Icon from "@foxglove-studio/app/components/Icon";
@@ -25,7 +24,7 @@ import styles from "@foxglove-studio/app/panels/ThreeDimensionalViz/Layout.modul
 import colors from "@foxglove-studio/app/styles/colors.module.scss";
 
 type Props = {
-  measuringTool: MeasuringTool | null | undefined;
+  measuringTool?: MeasuringTool;
   measureInfo: MeasureInfo;
   perspective: boolean;
   debug: boolean;

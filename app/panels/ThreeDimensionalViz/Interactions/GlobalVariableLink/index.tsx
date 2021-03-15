@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import * as React from "react";
 import styled from "styled-components";
 
 import GlobalVariableName from "../GlobalVariableName";
@@ -79,7 +78,7 @@ type Props = {
   hasNestedValue?: boolean;
   highlight?: boolean;
   label?: string;
-  linkedGlobalVariable?: LinkedGlobalVariable | null | undefined;
+  linkedGlobalVariable?: LinkedGlobalVariable;
   markerKeyPath?: string[];
   nestedValueStyle?: any;
   onlyRenderAddLink?: boolean;
@@ -101,10 +100,10 @@ export default function GlobalVariableLink({
   style = { marginLeft: 4 },
   topic,
   unlinkTooltip,
-  variableValue = null,
+  variableValue,
 }: Props) {
   const { linkedGlobalVariables } = useLinkedGlobalVariables();
-  let linkedGlobalVariableLocal: LinkedGlobalVariable | null | undefined = linkedGlobalVariable;
+  let linkedGlobalVariableLocal: LinkedGlobalVariable | undefined = linkedGlobalVariable;
   if (!linkedGlobalVariableLocal && topic && markerKeyPath) {
     linkedGlobalVariableLocal = getLinkedGlobalVariable({
       topic,
@@ -116,7 +115,7 @@ export default function GlobalVariableLink({
   const isArrayBuffer = ArrayBuffer.isView(variableValue);
   const renderUnlink = !!linkedGlobalVariableLocal;
   const addToLinkedGlobalVariable =
-    topic && markerKeyPath ? { topic, markerKeyPath, variableValue } : null;
+    topic && markerKeyPath ? { topic, markerKeyPath, variableValue } : undefined;
   const renderAddLink = !renderUnlink && !isArrayBuffer && addToLinkedGlobalVariable;
   if (!(renderUnlink || renderAddLink)) {
     return null;

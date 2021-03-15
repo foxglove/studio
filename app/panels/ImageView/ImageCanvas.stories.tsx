@@ -13,7 +13,6 @@
 
 import { storiesOf } from "@storybook/react";
 import { range, noop } from "lodash";
-import * as React from "react";
 
 import { getGlobalHooks } from "@foxglove-studio/app/loadWebviz";
 import ImageCanvas from "@foxglove-studio/app/panels/ImageView/ImageCanvas";
@@ -40,7 +39,7 @@ const cameraInfo = {
 const imageFormat = "image/png";
 // Image data has to be loaded asynchronously, so use this component to load it for stories.
 function LoadImageMessage({ children }: any) {
-  const [imageData, setImageData] = React.useState(null);
+  const [imageData, setImageData] = React.useState(undefined);
   React.useEffect(() => {
     const canvas = document.createElement("canvas");
     canvas.width = 400;
@@ -221,7 +220,7 @@ const markers = [
 
 const noMarkersMarkerData = {
   markers: [],
-  cameraInfo: null,
+  cameraInfo: undefined,
   scale: 1,
   transformMarkers: false,
 };
@@ -379,7 +378,7 @@ storiesOf("<ImageCanvas>", module)
             image={imageMessage}
             rawMarkerData={{
               markers,
-              cameraInfo: null,
+              cameraInfo: undefined,
               scale: 1,
               transformMarkers: false,
             }}
@@ -430,7 +429,7 @@ storiesOf("<ImageCanvas>", module)
             image={imageMessage}
             rawMarkerData={{
               markers,
-              cameraInfo: null,
+              cameraInfo: undefined,
               scale: 1,
               transformMarkers: false,
             }}
@@ -501,7 +500,7 @@ storiesOf("<ImageCanvas>", module)
                 image={imageMessage}
                 rawMarkerData={{
                   markers,
-                  cameraInfo: null,
+                  cameraInfo: undefined,
                   scale: 1,
                   transformMarkers: false,
                 }}

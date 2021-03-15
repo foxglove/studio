@@ -18,8 +18,8 @@ import { cast, Message, RosObject } from "@foxglove-studio/app/players/types";
 import { StampedMessage } from "@foxglove-studio/app/types/Messages";
 
 export const defaultGetHeaderStamp = (
-  message: Readonly<RosObject> | null | undefined,
-): Time | null | undefined => {
+  message: Readonly<RosObject> | undefined,
+): Time | undefined => {
   if (message != null && message.header != null) {
     return cast<StampedMessage>(message).header.stamp;
   }
@@ -27,9 +27,9 @@ export const defaultGetHeaderStamp = (
 
 function allMessageStampsNewestFirst(
   messagesByTopic: Readonly<{
-    [topic: string]: ReadonlyArray<Message>;
+    [topic: string]: readonly Message[];
   }>,
-  getHeaderStamp?: (itemMessage: Message) => Time | null | undefined,
+  getHeaderStamp?: (itemMessage: Message) => Time | undefined,
 ) {
   const stamps = [];
   for (const topic in messagesByTopic) {
@@ -49,14 +49,13 @@ function allMessageStampsNewestFirst(
 function messagesMatchingStamp(
   stamp: Time,
   messagesByTopic: Readonly<{
-    [topic: string]: ReadonlyArray<Message>;
+    [topic: string]: readonly Message[];
   }>,
-  getHeaderStamp?: (itemMessage: Message) => Time | null | undefined,
+  getHeaderStamp?: (itemMessage: Message) => Time | undefined,
 ):
   | Readonly<{
-      [topic: string]: ReadonlyArray<Message>;
+      [topic: string]: readonly Message[];
     }>
-  | null
   | undefined {
   const synchronizedMessagesByTopic: Record<string, any> = {};
   for (const topic in messagesByTopic) {
@@ -69,7 +68,7 @@ function messagesMatchingStamp(
     if (synchronizedMessage != null) {
       synchronizedMessagesByTopic[topic] = [synchronizedMessage];
     } else {
-      return null;
+      return undefined;
     }
   }
   return synchronizedMessagesByTopic;
@@ -81,14 +80,13 @@ function messagesMatchingStamp(
 // returned.
 export default function synchronizeMessages(
   messagesByTopic: Readonly<{
-    [topic: string]: ReadonlyArray<Message>;
+    [topic: string]: readonly Message[];
   }>,
-  getHeaderStamp?: (itemMessage: Message) => Time | null | undefined,
+  getHeaderStamp?: (itemMessage: Message) => Time | undefined,
 ):
   | Readonly<{
-      [topic: string]: ReadonlyArray<Message>;
+      [topic: string]: readonly Message[];
     }>
-  | null
   | undefined {
   for (const stamp of allMessageStampsNewestFirst(messagesByTopic, getHeaderStamp)) {
     const synchronizedMessagesByTopic = messagesMatchingStamp(
@@ -100,12 +98,11 @@ export default function synchronizeMessages(
       return synchronizedMessagesByTopic;
     }
   }
-  return null;
 }
 
 function getSynchronizedMessages(
   stamp: Time,
-  topics: ReadonlyArray<string>,
+  topics: readonly string[],
   messages: {
     [topic: string]: Message[];
   },
@@ -113,7 +110,6 @@ function getSynchronizedMessages(
   | {
       [topic: string]: Message;
     }
-  | null
   | undefined {
   const synchronizedMessages: Record<string, any> = {};
   for (const topic of topics) {
@@ -122,7 +118,7 @@ function getSynchronizedMessages(
       return thisStamp && TimeUtil.areSame(stamp, thisStamp);
     });
     if (!matchingMessage) {
-      return null;
+      return undefined;
     }
     synchronizedMessages[topic] = matchingMessage;
   }
@@ -133,16 +129,11 @@ type ReducedValue = {
   messagesByTopic: {
     [topic: string]: Message[];
   };
-  synchronizedMessages:
-    | {
-        [topic: string]: Message;
-      }
-    | null
-    | undefined;
+  synchronizedMessages?: { [topic: string]: Message };
 };
 
 function getSynchronizedState(
-  topics: ReadonlyArray<string>,
+  topics: readonly string[],
   { messagesByTopic, synchronizedMessages }: ReducedValue,
 ): ReducedValue {
   let newMessagesByTopic = messagesByTopic;
@@ -166,14 +157,14 @@ function getSynchronizedState(
 }
 
 // Returns reducers for use with PanelAPI.useMessageReducer
-export function getSynchronizingReducers(topics: ReadonlyArray<string>) {
+export function getSynchronizingReducers(topics: readonly string[]) {
   return {
-    restore(previousValue: ReducedValue | null | undefined) {
+    restore(previousValue?: ReducedValue) {
       const messagesByTopic: Record<string, any> = {};
       for (const topic of topics) {
         messagesByTopic[topic] = (previousValue && previousValue.messagesByTopic[topic]) || [];
       }
-      return getSynchronizedState(topics, { messagesByTopic, synchronizedMessages: null });
+      return getSynchronizedState(topics, { messagesByTopic });
     },
     addMessage({ messagesByTopic, synchronizedMessages }: ReducedValue, newMessage: Message) {
       return getSynchronizedState(topics, {

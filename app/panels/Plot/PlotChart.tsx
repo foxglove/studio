@@ -70,7 +70,7 @@ export type DataSet = {
 };
 
 export type PlotDataByPath = {
-  [path: string]: ReadonlyArray<ReadonlyArray<TooltipItem>>;
+  [path: string]: readonly (readonly TooltipItem[])[];
 };
 
 type PointsAndTooltips = {
@@ -88,9 +88,9 @@ function getXForPoint(
   xAxisVal: PlotXAxisVal,
   timestamp: number,
   innerIdx: number,
-  xAxisRanges: ReadonlyArray<ReadonlyArray<TooltipItem>> | null | undefined,
-  xItem: TooltipItem | null | undefined,
-  xAxisPath: BasePlotPath | null | undefined,
+  xAxisRanges: readonly (readonly TooltipItem[])[] | undefined,
+  xItem: TooltipItem | undefined,
+  xAxisPath: BasePlotPath | undefined,
 ): number {
   if (isCustomScale(xAxisVal) && xAxisPath) {
     if (isReferenceLinePlotPathType(xAxisPath)) {
@@ -117,12 +117,12 @@ const scaleOptions: ScaleOptions = {
 
 function getPointsAndTooltipsForMessagePathItem(
   yItem: TooltipItem,
-  xItem: TooltipItem | null | undefined,
+  xItem: TooltipItem | undefined,
   startTime: Time,
   timestampMethod: TimestampMethod,
   xAxisVal: PlotXAxisVal,
   xAxisPath?: BasePlotPath,
-  xAxisRanges?: ReadonlyArray<ReadonlyArray<TooltipItem>> | null,
+  xAxisRanges?: readonly (readonly TooltipItem[])[],
   datasetKey?: string,
 ): PointsAndTooltips {
   const points: PlotChartPoint[] = [];
@@ -181,11 +181,11 @@ function getPointsAndTooltipsForMessagePathItem(
 
 function getDatasetAndTooltipsFromMessagePlotPath(
   path: PlotPath,
-  yAxisRanges: ReadonlyArray<ReadonlyArray<TooltipItem>>,
+  yAxisRanges: readonly (readonly TooltipItem[])[],
   index: number,
   startTime: Time,
   xAxisVal: PlotXAxisVal,
-  xAxisRanges: ReadonlyArray<ReadonlyArray<TooltipItem>> | null | undefined,
+  xAxisRanges: readonly (readonly TooltipItem[])[] | undefined,
   xAxisPath?: BasePlotPath,
 ): {
   dataset: DataSet;
@@ -204,11 +204,11 @@ function getDatasetAndTooltipsFromMessagePlotPath(
   let rangesOfTooltips: TimeBasedChartTooltipData[][] = [];
   let rangesOfPoints: PlotChartPoint[][] = [];
   for (const [rangeIdx, range] of yAxisRanges.entries()) {
-    const xRange: ReadonlyArray<TooltipItem> | null | undefined = xAxisRanges?.[rangeIdx];
+    const xRange: readonly TooltipItem[] | undefined = xAxisRanges?.[rangeIdx];
     const rangeTooltips = [];
     const rangePoints = [];
     for (const [outerIdx, item] of range.entries()) {
-      const xItem: TooltipItem | null | undefined = xRange?.[outerIdx];
+      const xItem: TooltipItem | undefined = xRange?.[outerIdx];
       const {
         points: itemPoints,
         tooltips: itemTooltips,
@@ -331,7 +331,7 @@ export function getDatasetsAndTooltips(
     const yRanges = itemsByPath[path.value] ?? [];
     const xRanges = xAxisPath && itemsByPath[xAxisPath.value];
     if (!path.enabled) {
-      return null;
+      return undefined;
     } else if (!isReferenceLinePlotPathType(path)) {
       return getDatasetAndTooltipsFromMessagePlotPath(
         path,
@@ -343,7 +343,7 @@ export function getDatasetsAndTooltips(
         xAxisPath,
       );
     }
-    return null;
+    return undefined;
   });
 
   return {
@@ -358,11 +358,11 @@ export function getDatasetsAndTooltips(
 function getAnnotations(paths: PlotPath[]) {
   return filterMap(paths, (path: PlotPath, index: number) => {
     if (!path.enabled) {
-      return null;
+      return undefined;
     } else if (isReferenceLinePlotPathType(path)) {
       return getAnnotationFromReferenceLine(path, index);
     }
-    return null;
+    return undefined;
   });
 }
 
@@ -395,11 +395,11 @@ type PlotChartProps = {
   paths: PlotPath[];
   minYValue: number;
   maxYValue: number;
-  saveCurrentView: (minY: number, maxY: number, width: number | null | undefined) => void;
+  saveCurrentView: (minY: number, maxY: number, width?: number) => void;
   datasets: DataSet[];
   tooltips: TimeBasedChartTooltipData[];
   xAxisVal: PlotXAxisVal;
-  currentTime?: number | null | undefined;
+  currentTime?: number;
   defaultView: ChartDefaultView;
   onClick?: (
     arg0: React.MouseEvent<HTMLCanvasElement>,
@@ -407,7 +407,7 @@ type PlotChartProps = {
     arg2: {
       [scaleId: string]: number;
     },
-  ) => void | null | undefined;
+  ) => void;
 };
 export default memo<PlotChartProps>(function PlotChart(props: PlotChartProps) {
   const {
