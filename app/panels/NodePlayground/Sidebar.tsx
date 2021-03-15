@@ -146,7 +146,7 @@ type Props = {
   explorer: Explorer;
   updateExplorer: (explorer: Explorer) => void;
   setScriptOverride: (script: Script, maxDepth?: number) => void;
-  script: Script | null;
+  script?: Script;
   addNewNode: (_: any, sourceCode?: string) => void;
 };
 

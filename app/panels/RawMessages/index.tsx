@@ -318,7 +318,7 @@ function RawMessages(props: Props) {
 
   const renderSingleTopicOrDiffOutput = useCallback(() => {
     let shouldExpandNode;
-    if (expandAll !== null) {
+    if (expandAll != null) {
       shouldExpandNode = () => expandAll;
     } else {
       shouldExpandNode = (keypath: any) => {

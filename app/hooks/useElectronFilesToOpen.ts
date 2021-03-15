@@ -29,7 +29,7 @@ export default function useElectronFilesToOpen(): FileList | undefined {
 
     update();
     return () => {
-      input.onchange = undefined;
+      input.onchange = null;
     };
   }, []);
 

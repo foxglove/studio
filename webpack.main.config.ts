@@ -76,7 +76,7 @@ export default (_: unknown, argv: WebpackArgv): Configuration => {
         APP_NAME: JSON.stringify("Foxglove Studio"),
       }),
       new EnvironmentPlugin({
-        SENTRY_DSN: process.env.SENTRY_DSN,
+        SENTRY_DSN: process.env.SENTRY_DSN ?? null,
       }),
       new ForkTsCheckerWebpackPlugin(),
     ],

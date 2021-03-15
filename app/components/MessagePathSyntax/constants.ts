@@ -35,7 +35,7 @@ export const rosPrimitives: string[] = Object.keys(RosPrimitives);
 export type MessagePathFilter = {
   type: "filter";
   path: string[];
-  value: void | number | string | { variableName: string; startLoc: number };
+  value?: number | string | { variableName: string; startLoc: number };
   nameLoc: number;
   valueLoc: number;
   repr: string; // the original string representation of the filter

@@ -30,7 +30,7 @@ const VS_WEBVIZ_THEME = "vs-webviz";
 const codeEditorService = StaticServices.codeEditorService.get();
 
 type Props = {
-  script: Script | null;
+  script?: Script;
   setScriptCode: (code: string) => void;
   vimMode: boolean;
   autoFormatOnSave: boolean;

@@ -68,7 +68,7 @@ describe("synchronizeMessages", () => {
         "/foo": [message("/foo", { sec: 1, nsec: 0 })],
         "/bar": [message("/bar", { sec: 2, nsec: 0 })],
       }),
-    ).toBeNull();
+    ).toBeNullOrUndefined();
 
     expect(
       synchronizeMessages({
@@ -76,7 +76,7 @@ describe("synchronizeMessages", () => {
         "/bar": [message("/bar", { sec: 1, nsec: 0 })],
         "/baz": [],
       }),
-    ).toBeNull();
+    ).toBeNullOrUndefined();
   });
 
   it("returns latest of multiple matches regardless of order", () => {

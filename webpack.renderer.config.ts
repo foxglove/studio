@@ -182,7 +182,7 @@ export function makeConfig(_: unknown, argv: WebpackArgv): Configuration {
         setImmediate: ["@foxglove-studio/app/shared/setImmediate", "default"],
       }),
       new EnvironmentPlugin({
-        SENTRY_DSN: process.env.SENTRY_DSN,
+        SENTRY_DSN: process.env.SENTRY_DSN ?? null,
       }),
       new webpack.DefinePlugin({
         // Should match webpack-defines.d.ts
