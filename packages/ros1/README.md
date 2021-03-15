@@ -2,10 +2,6 @@
 
 TypeScript library for interfacing with ROS1 with pluggable backends.
 
-### Usage
-
-TODO
-
 ### Test
 
 `yarn test`

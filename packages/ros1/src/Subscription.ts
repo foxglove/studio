@@ -42,7 +42,14 @@ export class Subscription {
   getStats(): [string, PublisherStats[]] {
     const pubStats = this.publishers.map(
       (pub): PublisherStats => {
-        return [pub.connectionId, pub.bytesReceived, pub.messagesReceived, pub.dropEstimate, 0];
+        const stats = pub.connection.stats();
+        return [
+          pub.connectionId,
+          stats.bytesReceived,
+          stats.messagesReceived,
+          stats.dropEstimate,
+          0,
+        ];
       },
     );
     return [this.name, pubStats];

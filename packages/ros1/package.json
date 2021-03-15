@@ -12,23 +12,13 @@
     "name": "Foxglove Technologies",
     "email": "support@foxglove.dev"
   },
-  "homepage": "https://github.com/foxglove/studio",
+  "homepage": "https://foxglove.dev/",
   "main": "src/index.ts",
   "module": "src/index.ts",
   "files": [
     "src"
   ],
-  "engines": {
-    "node": ">=12"
-  },
   "scripts": {},
-  "prettier": {
-    "arrowParens": "always",
-    "printWidth": 100,
-    "trailingComma": "all",
-    "tabWidth": 2,
-    "semi": true
-  },
   "devDependencies": {
     "@jest/types": "26.6.2",
     "@types/whatwg-url": "8",

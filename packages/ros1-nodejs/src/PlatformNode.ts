@@ -5,7 +5,7 @@
 import os from "os";
 import { URL } from "whatwg-url";
 
-function IsPrivateIP(ip: string): boolean {
+function isPrivateIP(ip: string): boolean {
   // Logic based on isPrivateIP() in ros_comm network.cpp
   return ip.startsWith("192.168") || ip.startsWith("10.") || ip.startsWith("169.254");
 }
@@ -61,7 +61,7 @@ export function GetHostname(): Promise<string> {
         if (bestAddr === undefined) {
           // Use the first non-internal interface we find
           bestAddr = info;
-        } else if (IsPrivateIP(bestAddr.address) && !IsPrivateIP(info.address)) {
+        } else if (isPrivateIP(bestAddr.address) && !isPrivateIP(info.address)) {
           // Prefer public IPs over private
           bestAddr = info;
         } else if (bestAddr.family !== "IPv6" && info.family === "IPv6") {

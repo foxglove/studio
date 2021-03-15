@@ -2,10 +2,6 @@
 
 node.js implementation for the @foxglove/ros1 library.
 
-### Usage
-
-TODO
-
 ### Test
 
 `yarn test`

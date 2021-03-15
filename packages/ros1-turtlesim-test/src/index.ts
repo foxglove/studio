@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { RosNode } from "@foxglove/ros1";
-import { PlatformNode, TcpNode, XmlRpcNode } from "@foxglove/ros1-nodejs";
+import { PlatformNode, TcpSocketNode, XmlRpcNode } from "@foxglove/ros1-nodejs";
 
 async function main() {
   const name = "/testclient";
@@ -17,7 +17,7 @@ async function main() {
       xmlRpcClient,
       xmlRpcCreateClient: XmlRpcNode.XmlRpcCreateClient,
       xmlRpcCreateServer: XmlRpcNode.XmlRpcCreateServer,
-      tcpConnect: TcpNode.TcpConnect,
+      tcpConnect: TcpSocketNode.Connect,
       getPid: PlatformNode.GetPid,
       getHostname: PlatformNode.GetHostname,
     });

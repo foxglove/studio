@@ -9,17 +9,12 @@ import { RosSlaveClient } from "./RosSlaveClient";
 
 // Handles a connection to a single publisher on a given topic.
 export class PublisherLink {
-  connectionId = 0;
-  rosSlaveClient: RosSlaveClient;
-  connection: Connection;
-  latched = false;
-  header = new Map<string, string>();
-  connected = false;
-  messagesReceived = 0;
-  bytesReceived = 0;
-  dropEstimate = -1;
+  readonly connectionId: number;
+  readonly rosSlaveClient: RosSlaveClient;
+  readonly connection: Connection;
 
-  constructor(rosSlaveClient: RosSlaveClient, connection: Connection) {
+  constructor(connectionId: number, rosSlaveClient: RosSlaveClient, connection: Connection) {
+    this.connectionId = connectionId;
     this.rosSlaveClient = rosSlaveClient;
     this.connection = connection;
   }

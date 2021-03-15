@@ -8,8 +8,6 @@ export class SubscriberLink {
   readonly connectionId: number;
   destinationCallerId: string;
   connection: Connection;
-  messagesSent = 0;
-  bytesSent = 0;
 
   constructor(connectionId: number, destinationCallerId: string, connection: Connection) {
     this.connectionId = connectionId;

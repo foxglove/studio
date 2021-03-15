@@ -5,21 +5,27 @@
 import { MessageReader, parseMessageDefinition, RosMsgDefinition } from "rosbag";
 import { TextDecoder, TextEncoder } from "web-encoding";
 
-import { Connection } from "./Connection";
+import { Connection, ConnectionStats } from "./Connection";
 import { TcpAddress, TcpSocket } from "./TcpTypes";
 
 type Header = [string, string][];
 
 export class TcpConnection implements Connection {
-  _socket: TcpSocket;
-  _readingHeader = true;
-  _md5sum: string | undefined;
-  _msgDefinition: RosMsgDefinition[] = [];
-  _msgReader: MessageReader | undefined;
-  _latching = false;
+  #socket: TcpSocket;
+  #readingHeader = true;
+  #header = new Map<string, string>();
+  #stats = {
+    bytesSent: 0,
+    bytesReceived: 0,
+    messagesSent: 0,
+    messagesReceived: 0,
+    dropEstimate: -1,
+  };
+  #msgDefinition: RosMsgDefinition[] = [];
+  #msgReader: MessageReader | undefined;
 
   constructor(socket: TcpSocket) {
-    this._socket = socket;
+    this.#socket = socket;
 
     socket.on("close", this.#handleClose);
     socket.on("message", this.#handleMessage);
@@ -30,27 +36,36 @@ export class TcpConnection implements Connection {
   }
 
   remoteAddress(): TcpAddress | undefined {
-    return this._socket.remoteAddress();
+    return this.#socket.remoteAddress();
   }
 
   connected(): boolean {
-    return this._socket.connected();
+    return this.#socket.connected();
+  }
+
+  header(): Map<string, string> {
+    return this.#header;
+  }
+
+  stats(): ConnectionStats {
+    return this.#stats;
   }
 
   close(): void {
-    this._socket.close();
+    this.#socket.close();
   }
 
   async writeHeader(header: Header): Promise<void> {
     const data = TcpConnection.SerializeHeader(header);
-    return this._socket.write(data);
+    this.#stats.bytesSent += data.byteLength;
+    return this.#socket.write(data);
   }
 
   // e.g. "TCPROS connection on port 59746 to [host:34318 on socket 11]"
   getTransportInfo(): string {
-    const localPort = this._socket.localAddress()?.port ?? -1;
-    const addr = this._socket.remoteAddress();
-    const fd = this._socket.fd() ?? -1;
+    const localPort = this.#socket.localAddress()?.port ?? -1;
+    const addr = this.#socket.remoteAddress();
+    const fd = this.#socket.fd() ?? -1;
     if (addr) {
       const { address, port } = addr;
       return `TCPROS connection on port ${localPort} to [${address}:${port} on socket ${fd}]`;
@@ -63,21 +78,19 @@ export class TcpConnection implements Connection {
   };
 
   #handleMessage = (data: Uint8Array): void => {
-    if (this._readingHeader) {
-      this._readingHeader = false;
+    this.#stats.bytesReceived += data.byteLength;
 
-      const header = TcpConnection.ParseHeader(data);
+    if (this.#readingHeader) {
+      this.#readingHeader = false;
 
-      this._md5sum = header.get("md5sum");
-      this._latching = header.get("latching") === "1";
-      this._msgDefinition = parseMessageDefinition(header.get("message_definition") ?? "");
-      this._msgReader = new MessageReader(this._msgDefinition);
-
-      // eslint-disable-next-line no-restricted-syntax
-      console.dir(header);
+      this.#header = TcpConnection.ParseHeader(data);
+      this.#msgDefinition = parseMessageDefinition(this.#header.get("message_definition") ?? "");
+      this.#msgReader = new MessageReader(this.#msgDefinition);
     } else {
-      if (this._msgReader) {
-        const msg = this._msgReader.readMessage(
+      this.#stats.messagesReceived++;
+
+      if (this.#msgReader) {
+        const msg = this.#msgReader.readMessage(
           Buffer.from(data.buffer, data.byteOffset, data.length),
         );
         // eslint-disable-next-line no-restricted-syntax
@@ -127,6 +140,8 @@ export class TcpConnection implements Connection {
       result.set(key, value);
       idx += len;
     }
+
+    // TODO: Warn if there are leftover bytes
 
     return result;
   }

@@ -4,6 +4,8 @@
 
 import { Transform, TransformCallback } from "stream";
 
+import { concatData } from "./concatData";
+
 export class TcpMessageStream extends Transform {
   #inMessage = false;
   #bytesNeeded = 4;
@@ -25,7 +27,7 @@ export class TcpMessageStream extends Transform {
       this.#chunks.push(new Uint8Array(chunk.buffer, chunk.byteOffset + idx, this.#bytesNeeded));
       idx += this.#bytesNeeded;
 
-      const payload = TcpMessageStream.ConcatData(this.#chunks);
+      const payload = concatData(this.#chunks);
 
       if (this.#inMessage) {
         // Produce a Uint8Array representing a single message and transition to
@@ -42,24 +44,5 @@ export class TcpMessageStream extends Transform {
     }
 
     callback();
-  }
-
-  static ConcatData(chunks: Uint8Array[]): Uint8Array {
-    if (chunks.length === 1 && chunks[0]) {
-      return chunks[0];
-    }
-
-    const totalLength = chunks.reduce((len, chunk) => len + chunk.length, 0);
-    if (totalLength === 0) {
-      return new Uint8Array();
-    }
-
-    const result = new Uint8Array(totalLength);
-    let idx = 0;
-    chunks.forEach((chunk) => {
-      result.set(chunk, idx);
-      idx += chunk.length;
-    });
-    return result;
   }
 }

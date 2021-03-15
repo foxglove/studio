@@ -1,31 +1,19 @@
 {
+  "extends": "../../tsconfig.json",
   "include": ["src/**/*.ts"],
   "compilerOptions": {
     "outDir": "dist",
     "target": "es2020",
     "module": "commonjs",
     "lib": ["es2020"],
-    "newLine": "lf",
     "importHelpers": true,
     "downlevelIteration": true,
-    // match output dir to input dir. e.g. dist/index instead of dist/src/index
+    "declaration": true,
     "rootDir": "./src",
-    // stricter type-checking for stronger correctness. Recommended by TS
-    "strict": true,
-    // linter checks for common issues
-    "noImplicitAny": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    // use Node's module resolution algorithm, instead of the legacy TS one
-    "moduleResolution": "node",
-    // interop between ESM and CJS modules. Recommended by TS
-    "esModuleInterop": true,
-    // significant perf increase by skipping checking .d.ts files, particularly those in node_modules. Recommended by TS
-    "skipLibCheck": true,
-    // error out if import and file system have a casing mismatch. Recommended by TS
-    "forceConsistentCasingInFileNames": true
+    "noEmit": true
   }
 }

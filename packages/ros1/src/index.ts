@@ -16,8 +16,3 @@ export * from "./Subscription";
 export * from "./TcpConnection";
 export * from "./TcpTypes";
 export * from "./XmlRpcTypes";
-
-// Mock backend
-export * as PlatformMock from "./mock/PlatformMock";
-export * as TcpMock from "./mock/TcpMock";
-export * as XmlRpcMock from "./mock/XmlRpcMock";

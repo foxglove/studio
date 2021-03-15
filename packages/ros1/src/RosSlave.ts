@@ -81,7 +81,7 @@ export class RosSlave {
     const subscribeStats: XmlRpcValue[] = Array.from(subscriptions, (sub, _) => sub.getStats());
     const serviceStats: XmlRpcValue[] = [];
 
-    return Promise.resolve([1, "test", [publishStats, subscribeStats, serviceStats]]);
+    return Promise.resolve([1, "", [publishStats, subscribeStats, serviceStats]]);
   };
 
   getBusInfo = (args: XmlRpcValue[]): Promise<XmlRpcResponse> => {

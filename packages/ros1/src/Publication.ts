@@ -42,7 +42,8 @@ export class Publication {
   getStats(): [string, SubscriberStats[]] {
     const subStats = this.subscribers.map(
       (sub): SubscriberStats => {
-        return [sub.connectionId, sub.bytesSent, sub.bytesSent, sub.messagesSent, 0];
+        const stats = sub.connection.stats();
+        return [sub.connectionId, stats.bytesSent, stats.bytesSent, stats.messagesSent, 0];
       },
     );
     return [this.name, subStats];

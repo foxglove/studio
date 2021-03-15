@@ -160,7 +160,8 @@ export class RosNode {
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         // Hold a reference to this publisher
-        subscription.publishers.push(new PublisherLink(rosSlaveClient, connection));
+        const connectionId = this.connectionManager.newConnectionId();
+        subscription.publishers.push(new PublisherLink(connectionId, rosSlaveClient, connection));
       }),
     );
 

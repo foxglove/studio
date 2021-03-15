@@ -2,18 +2,16 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { TcpAddress, TcpServer, TcpSocket } from "@foxglove/ros1";
+import { TcpAddress, TcpSocket } from "@foxglove/ros1";
 import EventEmitter from "eventemitter3";
-import * as net from "net";
+import net from "net";
 
 import { TcpMessageStream } from "./TcpMessageStream";
 
 type MaybeHasFd = {
-  _handle:
-    | {
-        fd: number | undefined;
-      }
-    | undefined;
+  _handle?: {
+    fd?: number;
+  };
 };
 
 export class TcpSocketNode extends EventEmitter implements TcpSocket {
@@ -59,6 +57,10 @@ export class TcpSocketNode extends EventEmitter implements TcpSocket {
   }
 
   fd(): number | undefined {
+    // There is no public node.js API for retrieving the file descriptor for a
+    // socket. This is the only way of retrieving it from pure JS, on platforms
+    // where sockets have file descriptors. See
+    // <https://github.com/nodejs/help/issues/1312>
     // eslint-disable-next-line no-underscore-dangle
     return ((this.#socket as unknown) as MaybeHasFd)._handle?.fd;
   }
@@ -82,68 +84,26 @@ export class TcpSocketNode extends EventEmitter implements TcpSocket {
       });
     });
   }
-}
 
-export class TcpServerNode extends EventEmitter implements TcpServer {
-  #server: net.Server;
+  static Connect(options: { host: string; port: number }): Promise<TcpSocket> {
+    return new Promise((resolve, reject) => {
+      const TIMEOUT_MS = 5000;
+      const KEEPALIVE_MS = 60 * 1000;
 
-  constructor(server: net.Server) {
-    super();
-    this.#server = server;
-
-    server.on("close", () => this.emit("close"));
-    server.on("connection", (socket) => this.emit("connection", new TcpSocketNode(socket)));
-    server.on("error", (err) => this.emit("error", err));
-  }
-
-  address(): TcpAddress | undefined {
-    const addr = this.#server.address();
-    if (addr === null || typeof addr === "string") {
-      // Address will only be a string for an IPC (named pipe) server, which
-      // should never happen in TcpServerNode
-      return undefined;
-    }
-    return addr;
-  }
-
-  close(): void {
-    this.#server.close();
-  }
-}
-
-export function TcpListen(options: {
-  host?: string;
-  port?: number;
-  backlog?: number;
-}): Promise<TcpServerNode> {
-  return new Promise((resolve, reject) => {
-    const server = net.createServer();
-    server.on("error", reject);
-    server.listen(options.port, options.host, options.backlog, () => {
-      server.removeListener("error", reject);
-      resolve(new TcpServerNode(server));
+      const socket: net.Socket = net
+        .createConnection(
+          {
+            timeout: TIMEOUT_MS,
+            port: options.port,
+            host: options.host,
+          },
+          () => {
+            socket.removeListener("error", reject);
+            socket.setKeepAlive(true, KEEPALIVE_MS);
+            resolve(new TcpSocketNode(socket));
+          },
+        )
+        .on("error", reject);
     });
-  });
-}
-
-export function TcpConnect(options: { host: string; port: number }): Promise<TcpSocket> {
-  return new Promise((resolve, reject) => {
-    const TIMEOUT_MS = 5000;
-    const KEEPALIVE_MS = 60 * 1000;
-
-    const socket: net.Socket = net
-      .createConnection(
-        {
-          timeout: TIMEOUT_MS,
-          port: options.port,
-          host: options.host,
-        },
-        () => {
-          socket.removeListener("error", reject);
-          socket.setKeepAlive(true, KEEPALIVE_MS);
-          resolve(new TcpSocketNode(socket));
-        },
-      )
-      .on("error", reject);
-  });
+  }
 }

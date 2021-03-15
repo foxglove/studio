@@ -4,5 +4,6 @@
 
 // Node.js backend
 export * as PlatformNode from "./PlatformNode";
-export * as TcpNode from "./TcpNode";
+export { TcpServerNode } from "./TcpServerNode";
+export { TcpSocketNode } from "./TcpSocketNode";
 export * as XmlRpcNode from "./XmlRpcNode";
