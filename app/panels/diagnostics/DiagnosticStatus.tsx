@@ -376,7 +376,7 @@ class DiagnosticStatus extends React.Component<Props, any> {
                       <DotsHorizontalIcon />
                     </Icon>
                   </div>
-                  {this._getSectionsThatCanBeCollapsed().length && (
+                  {this._getSectionsThatCanBeCollapsed().length > 0 && (
                     <div
                       style={{ color: "white", cursor: "pointer" }}
                       onClick={this._toggleSections}

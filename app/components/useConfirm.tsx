@@ -42,7 +42,9 @@ type Props = {
 // shows a confirmation modal to the user with an ok and a cancel button
 // returns a promise which resolves with true if the user confirmed the modal
 // or false if the user closed the modal with escape or clicked the cancel button
-export default function useConfirm(props: Props): { modal?: React.ReactElement; open: () => void } {
+export default function useConfirm(
+  props: Props,
+): { modal?: React.ReactElement | ReactNull; open: () => void } {
   const [isOpen, setIsOpen] = useState(false);
   const open = useCallback(() => setIsOpen(true), []);
 
@@ -51,7 +53,9 @@ export default function useConfirm(props: Props): { modal?: React.ReactElement; 
     props.action(ok);
   }
   const confirmStyle = props.confirmStyle ?? "danger";
-  const modal = !isOpen ? undefined : (
+  const modal = !isOpen ? (
+    ReactNull
+  ) : (
     <RenderToBodyComponent>
       <Modal onRequestClose={() => close(false)}>
         <div className={styles.container}>

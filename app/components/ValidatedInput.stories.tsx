@@ -49,7 +49,7 @@ function Example({
   format?: EditFormat;
   obj?: any;
   changedObj?: any;
-  onMount?: (arg0: HTMLInputElement) => void;
+  onMount?: (arg0: HTMLTextAreaElement) => void;
 }) {
   const [value, setValue] = React.useState(obj);
 
@@ -64,8 +64,8 @@ function Example({
       <div
         ref={(el) => {
           if (el && onMount) {
-            const input = document.querySelector<HTMLInputElement>(
-              "input[data-test='validated-input']",
+            const input = document.querySelector<HTMLTextAreaElement>(
+              "textarea[data-test='validated-input']",
             );
             if (input) {
               onMount(input);
