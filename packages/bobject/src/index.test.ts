@@ -11,8 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import BinaryMessageWriter from "@foxglove-studio/app/util/binaryObjects/binaryTranslation";
-import { definitions } from "@foxglove-studio/app/util/binaryObjects/messageDefinitionTestTypes";
+import { BinaryMessageWriter } from "./";
+import { definitions } from "../test/definitions";
 
 // C++ module will output missing fields and types to the console
 // but the tests will fail in that case (and we don't always want that);

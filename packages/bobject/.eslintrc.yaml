@@ -1,0 +1,2 @@
+parserOptions:
+  project: packages/bobject/tsconfig.json
