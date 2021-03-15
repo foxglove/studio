@@ -129,7 +129,7 @@ function filterMatches(filter: MessagePathFilter, value: any) {
   let currentValue = value;
   for (const name of filter.path) {
     currentValue = getField(currentValue, name);
-    if (currentValue == null) {
+    if (currentValue == undefined) {
       return false;
     }
   }
@@ -283,7 +283,7 @@ export function getMessagePathDataItems(
       for (let i = startIdx; i <= Math.min(endIdx, arrayLength - 1); i++) {
         const index = i >= 0 ? i : arrayLength + i;
         const arrayElement = getIndex(value, index);
-        if (arrayElement == null) {
+        if (arrayElement == undefined) {
           continue;
         }
         // Ideally show something like `/topic.object[:]{some_id=123}` for the path, but fall
