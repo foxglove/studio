@@ -44,7 +44,7 @@ export default function GlobalKeyListener({
   openSaveLayoutModal,
   openShortcutsModal,
   history,
-}: Props): null {
+}: Props): ReactNull {
   const dispatch = useDispatch();
   const actions = useMemo(
     () => bindActionCreators({ redoLayoutChange, undoLayoutChange }, dispatch),

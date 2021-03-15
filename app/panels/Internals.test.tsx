@@ -30,7 +30,7 @@ function Subscriber({ topic }: { topic: string }) {
 
 describe("<Internals>", () => {
   it("displays panel subscribers", () => {
-    const contextFn = jest.fn().mockReturnValue(null);
+    const contextFn = jest.fn().mockReturnValue(ReactNull);
     const wrapper = mount(
       <PanelSetup
         fixture={{
@@ -46,7 +46,7 @@ describe("<Internals>", () => {
     expect(contextFn.mock.calls).toEqual([[expect.objectContaining({ subscriptions: [] })]]);
     wrapper.unmount();
 
-    const anotherContextFn = jest.fn().mockReturnValue(null);
+    const anotherContextFn = jest.fn().mockReturnValue(ReactNull);
     const wrapperWithSubscriber = mount(
       <PanelSetup
         fixture={{

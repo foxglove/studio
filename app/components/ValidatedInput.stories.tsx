@@ -64,9 +64,9 @@ function Example({
       <div
         ref={(el) => {
           if (el && onMount) {
-            const input = (document.querySelector(
-              "[data-test='validated-input']",
-            ) as any) as HTMLInputElement | null;
+            const input = document.querySelector<HTMLInputElement>(
+              "input[data-test='validated-input']",
+            );
             if (input) {
               onMount(input);
             }

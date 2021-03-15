@@ -210,7 +210,7 @@ export type RosValue =
   | readonly RosSingularField[]
   | Uint8Array
   | Int8Array
-  | void
+  | undefined
   | null;
 export type RosObject = Readonly<{
   [property: string]: RosValue;

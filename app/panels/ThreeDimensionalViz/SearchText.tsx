@@ -48,7 +48,7 @@ export type SearchTextProps = WorldSearchTextProps & {
   toggleSearchTextOpen: (bool: boolean) => void;
   setSearchText: (searchText: string) => void;
   setSelectedMatchIndex: (index: number) => void;
-  searchInputRef: { current: HTMLInputElement | null };
+  searchInputRef: { current: HTMLInputElement | ReactNull };
 };
 
 export const getHighlightedIndices = (text: string, searchText: string): number[] => {

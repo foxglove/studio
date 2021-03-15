@@ -187,6 +187,7 @@ export function makeConfig(_: unknown, argv: WebpackArgv): Configuration {
       new webpack.DefinePlugin({
         // Should match webpack-defines.d.ts
         APP_NAME: JSON.stringify("Foxglove Studio"),
+        ReactNull: null,
       }),
       // https://webpack.js.org/plugins/ignore-plugin/#example-of-ignoring-moment-locales
       new webpack.IgnorePlugin({

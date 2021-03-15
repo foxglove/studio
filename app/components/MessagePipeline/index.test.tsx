@@ -32,7 +32,7 @@ jest.setTimeout(MAX_PROMISE_TIMEOUT_TIME_MS * 3);
 
 describe("MessagePipelineProvider/MessagePipelineConsumer", () => {
   it("returns empty data when no player is given", () => {
-    const callback = jest.fn().mockReturnValue(null);
+    const callback = jest.fn().mockReturnValue(ReactNull);
     mount(
       <MessagePipelineProvider>
         <MessagePipelineConsumer>{callback}</MessagePipelineConsumer>
@@ -71,7 +71,7 @@ describe("MessagePipelineProvider/MessagePipelineConsumer", () => {
 
   it("updates when the player emits a new state", async () => {
     const player = new FakePlayer();
-    const callback = jest.fn().mockReturnValue(null);
+    const callback = jest.fn().mockReturnValue(ReactNull);
     mount(
       <MessagePipelineProvider player={player}>
         <MessagePipelineConsumer>{callback}</MessagePipelineConsumer>
@@ -112,7 +112,7 @@ describe("MessagePipelineProvider/MessagePipelineConsumer", () => {
 
   it("throws an error when the player emits before the previous emit has been resolved", () => {
     const player = new FakePlayer();
-    const callback = jest.fn().mockReturnValue(null);
+    const callback = jest.fn().mockReturnValue(ReactNull);
     mount(
       <MessagePipelineProvider player={player}>
         <MessagePipelineConsumer>{callback}</MessagePipelineConsumer>
@@ -309,7 +309,7 @@ describe("MessagePipelineProvider/MessagePipelineConsumer", () => {
 
   it("resolves listener promise after each render", async () => {
     const player = new FakePlayer();
-    const callback = jest.fn().mockReturnValue(null);
+    const callback = jest.fn().mockReturnValue(ReactNull);
     mount(
       <MessagePipelineProvider player={player}>
         <MessagePipelineConsumer>{callback}</MessagePipelineConsumer>
@@ -381,7 +381,7 @@ describe("MessagePipelineProvider/MessagePipelineConsumer", () => {
       player = new FakePlayer();
       player.playerId = "fake player 1";
       jest.spyOn(player, "close");
-      fn = jest.fn().mockReturnValue(null);
+      fn = jest.fn().mockReturnValue(ReactNull);
       const el = mount(
         <MessagePipelineProvider player={player}>
           <MessagePipelineConsumer>{fn}</MessagePipelineConsumer>
@@ -489,7 +489,7 @@ describe("MessagePipelineProvider/MessagePipelineConsumer", () => {
 
   it("keeps activeData when closing a player", async () => {
     const player = new FakePlayer();
-    const fn = jest.fn().mockReturnValue(null);
+    const fn = jest.fn().mockReturnValue(ReactNull);
     const el = mount(
       <MessagePipelineProvider player={player}>
         <MessagePipelineConsumer>{fn}</MessagePipelineConsumer>
@@ -530,7 +530,7 @@ describe("MessagePipelineProvider/MessagePipelineConsumer", () => {
   it("logs a warning if a panel subscribes just after activeData becomes available", async () => {
     jest.spyOn(console, "warn").mockReturnValue();
     const player = new FakePlayer();
-    const fn = jest.fn().mockReturnValue(null);
+    const fn = jest.fn().mockReturnValue(ReactNull);
     mount(
       <MessagePipelineProvider player={player}>
         <MessagePipelineConsumer>{fn}</MessagePipelineConsumer>

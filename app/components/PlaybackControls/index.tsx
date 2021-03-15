@@ -229,7 +229,7 @@ export const UnconnectedPlaybackControls = memo<PlaybackControlProps>(
               value={value}
               draggable
               onChange={onChange}
-              renderSlider={(val) => (val == undefined ? null : <StyledMarker width={val} />)}
+              renderSlider={(val) => (val == undefined ? undefined : <StyledMarker width={val} />)}
             />
           </div>
           <PlaybackBarHoverTicks componentId={hoverComponentId} />

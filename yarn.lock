@@ -11024,6 +11024,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"eslint-plugin-no-null@npm:1.0.2":
+  version: 1.0.2
+  resolution: "eslint-plugin-no-null@npm:1.0.2"
+  peerDependencies:
+    eslint: ">=3.0.0"
+  checksum: 6f864ef862908ef02d27fb3e7630a3c89156ed0f678e1a049f7722b55b5b946d9803c3362d6776910754a5224759850495b16ae9eb7330032a6e82e42812c81f
+  languageName: node
+  linkType: hard
+
 "eslint-plugin-prettier@npm:3.3.1":
   version: 3.3.1
   resolution: "eslint-plugin-prettier@npm:3.3.1"
@@ -12162,6 +12171,7 @@ __metadata:
     eslint-plugin-file-progress: 1.1.1
     eslint-plugin-header: "github:amacneil/eslint-plugin-header#notemplate"
     eslint-plugin-import: 2.22.1
+    eslint-plugin-no-null: 1.0.2
     eslint-plugin-prettier: 3.3.1
     eslint-plugin-react: 7.22.0
     eslint-plugin-react-hooks: 4.2.0

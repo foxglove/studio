@@ -39,7 +39,7 @@ type Props = LayoutToolbarSharedProps &
     debug: boolean;
     interactionsTabType?: TabType;
     measureInfo: MeasureInfo;
-    measuringElRef: { current: MeasuringTool | null };
+    measuringElRef: { current: MeasuringTool | ReactNull };
     onSetDrawingTabType: (arg0?: DrawingTabType) => void;
     onSetPolygons: (polygons: Polygon[]) => void;
     onToggleCameraMode: () => void;
