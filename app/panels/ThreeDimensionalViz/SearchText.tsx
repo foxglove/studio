@@ -153,7 +153,6 @@ export const useSearchText = (): SearchTextProps => {
 };
 type SearchTextComponentProps = SearchTextProps & {
   onCameraStateChange: (arg0: CameraState) => void;
-  onFollowChange: (newFollowTf?: string | false, newFollowOrientation?: boolean) => void;
   cameraState: CameraState;
   rootTf?: string;
   transforms: Transforms;
