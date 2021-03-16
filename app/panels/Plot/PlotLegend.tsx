@@ -15,7 +15,7 @@ import AlertCircleIcon from "@mdi/svg/svg/alert-circle.svg";
 import MenuIcon from "@mdi/svg/svg/menu.svg";
 import cx from "classnames";
 import { last } from "lodash";
-import React, { Fragment, useCallback, useMemo } from "react";
+import { Fragment, useCallback, useMemo } from "react";
 
 import styles from "./PlotLegend.module.scss";
 import { plotableRosTypes, PlotConfig, PlotXAxisVal } from "./types";
@@ -71,7 +71,7 @@ export default function PlotLegend(props: PlotLegendProps) {
 
   const onInputChange = useCallback(
     (value: string, index?: number) => {
-      if (index == null) {
+      if (index == undefined) {
         throw new Error("index not set");
       }
       const newPaths = paths.slice();
@@ -83,7 +83,7 @@ export default function PlotLegend(props: PlotLegendProps) {
 
   const onInputTimestampMethodChange = useCallback(
     (value: TimestampMethod, index?: number) => {
-      if (index == null) {
+      if (index == undefined) {
         throw new Error("index not set");
       }
       const newPaths = paths.slice();
@@ -150,7 +150,7 @@ export default function PlotLegend(props: PlotLegendProps) {
             [styles.itemInputDisabled]: !xAxisPath?.enabled,
           })}
         >
-          {xAxisVal === "custom" || xAxisVal === "currentCustom" ? (
+          {(xAxisVal === "custom" || xAxisVal === "currentCustom") && (
             <MessagePathInput
               path={xAxisPath?.value || "/"}
               onChange={(newXAxisPath) =>
@@ -163,7 +163,7 @@ export default function PlotLegend(props: PlotLegendProps) {
               disableAutocomplete={xAxisPath && isReferenceLinePlotPathType(xAxisPath)}
               autoSize
             />
-          ) : null}
+          )}
         </div>
       </div>
       {paths.map((path: PlotPath, index: number) => {
@@ -209,7 +209,7 @@ export default function PlotLegend(props: PlotLegendProps) {
                   index={index}
                   autoSize
                   disableAutocomplete={isReferenceLinePlotPath}
-                  {...(xAxisVal === "timestamp" ? { timestampMethod } : null)}
+                  {...(xAxisVal === "timestamp" ? { timestampMethod } : undefined)}
                 />
                 {hasMismatchedDataLength && (
                   <Icon

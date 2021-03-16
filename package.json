@@ -1,6 +1,6 @@
 {
   "name": "foxglove-studio",
-  "version": "0.1.2-dev",
+  "version": "0.1.3-dev",
   "description": "Integrated robotics visualization and debugging.",
   "productName": "Foxglove Studio",
   "license": "MPL-2.0",
@@ -21,24 +21,25 @@
     "build:prod": "webpack --mode production --progress",
     "build:dev": "webpack --mode development --progress",
     "serve": "webpack serve --mode development --progress",
-    "lint": "TIMING=1 eslint --fix .",
-    "lint:nofix": "TIMING=1 eslint .",
-    "test": "yarn workspace @foxglove-studio/app test",
-    "test:debug": "yarn workspace @foxglove-studio/app test:debug",
-    "test:watch": "yarn workspace @foxglove-studio/app test:watch",
-    "test:integration": "jest --config jest.spectron.ts --rootDir test",
+    "lint": "TIMING=1 NODE_OPTIONS='--max-old-space-size=4096' eslint --report-unused-disable-directives --fix .",
+    "lint:nofix": "TIMING=1 NODE_OPTIONS='--max-old-space-size=4096' eslint --report-unused-disable-directives .",
+    "test": "NODE_OPTIONS='-r ts-node/register' jest",
+    "test:debug": "NODE_OPTIONS='-r ts-node/register' --inspect-brk jest",
+    "test:watch": "NODE_OPTIONS='-r ts-node/register' jest --watch",
+    "test:integration": "jest --projects test",
     "package:win": "yarn package --win",
     "package:darwin": "yarn package --mac",
     "package:linux": "yarn package --linux",
     "package": "NODE_OPTIONS='-r ts-node/register' electron-builder",
-    "storybook": "yarn workspace @foxglove-studio/app run start-storybook",
+    "storybook": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' yarn workspace @foxglove-studio/app run start-storybook",
     "storybook-script": "cd ci && node --loader ts-node/esm --experimental-specifier-resolution=node storybook.ts",
     "storybook:ci": "yarn storybook-script build capture publish",
     "storybook:local-capture": "yarn storybook-script capture"
   },
   "workspaces": {
     "packages": [
-      "app"
+      "app",
+      "packages/**"
     ]
   },
   "resolutions": {
@@ -59,6 +60,7 @@
     "@typescript-eslint/eslint-plugin": "4.16.1",
     "@typescript-eslint/parser": "4.16.1",
     "babel-loader": "8.2.2",
+    "babel-plugin-transform-import-meta": "1.0.1",
     "browserify-zlib": "0.2.0",
     "circular-dependency-plugin": "5.2.2",
     "clean-webpack-plugin": "3.0.0",

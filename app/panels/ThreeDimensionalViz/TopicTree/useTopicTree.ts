@@ -437,6 +437,7 @@ export default function useTree({
         const [_, topicName, namespace] = item.split(":");
         return { topicName, namespace };
       }
+      return undefined;
     });
     return keyBy(checkedNamespaces, "topicName");
   }, [checkedKeys]);
@@ -684,12 +685,12 @@ export default function useTree({
         return false;
       } else if (node.type === "group") {
         // Group node
-        return node.name != null && node.name.toLowerCase().includes(searchText);
+        return node.name != undefined && node.name.toLowerCase().includes(searchText);
       }
       // Topic node, without namespace
       return (
         node.topicName.toLowerCase().includes(searchText) ||
-        (node.name != null && node.name.toLowerCase().includes(searchText)) ||
+        (node.name != undefined && node.name.toLowerCase().includes(searchText)) ||
         (hasFeatureColumn &&
           `${SECOND_SOURCE_PREFIX}${node.topicName}`.toLowerCase().includes(searchText))
       );
@@ -796,4 +797,4 @@ export default function useTree({
   };
 }
 
-export const TopicTreeContext = createContext<UseTreeOutput | null>(null);
+export const TopicTreeContext = createContext<UseTreeOutput | undefined>(undefined);

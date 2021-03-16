@@ -16,14 +16,14 @@
 // 'global' within them.
 export interface Channel {
   postMessage(data: any, transfer?: any[]): void;
-  onmessage: null | ((ev: MessageEvent) => unknown);
+  onmessage?: ((ev: MessageEvent) => unknown) | null; // eslint-disable-line no-restricted-syntax
 }
 
 // Flow complains when some variables are declared with the above interface type, but
 // not when given this non-interface type...
 export type ChannelImpl = {
   postMessage(data: any, transfer?: any[]): void;
-  onmessage: null | ((ev: MessageEvent) => unknown);
+  onmessage?: ((ev: MessageEvent) => unknown) | null; // eslint-disable-line no-restricted-syntax
   terminate: () => void;
 };
 
@@ -33,13 +33,12 @@ const ERROR = "$$ERROR";
 // helper function to create linked channels for testing
 export function createLinkedChannels(): { local: Channel; remote: Channel } {
   const local: ChannelImpl = {
-    onmessage: null,
+    onmessage: undefined,
 
     postMessage(data: any, _transfer?: Array<ArrayBuffer>) {
       const ev = new MessageEvent("message", { data });
-      // eslint-disable-next-line no-use-before-define
       if (remote.onmessage) {
-        remote.onmessage(ev); // eslint-disable-line no-use-before-define
+        remote.onmessage(ev);
       }
     },
     terminate: () => {
@@ -48,7 +47,7 @@ export function createLinkedChannels(): { local: Channel; remote: Channel } {
   };
 
   const remote: ChannelImpl = {
-    onmessage: null,
+    onmessage: undefined,
 
     postMessage(data: any, _transfer?: Array<ArrayBuffer>) {
       const ev = new MessageEvent("message", { data });

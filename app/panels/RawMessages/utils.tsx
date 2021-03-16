@@ -46,7 +46,7 @@ export function getItemString(type: string, data: any, itemType: string, itemStr
   const keys = Object.keys(data);
   if (keys.length === 2) {
     const { sec, nsec } = data;
-    if (sec != null && nsec != null) {
+    if (sec != undefined && nsec != undefined) {
       // Values "too small" to be absolute epoch-based times are probably relative durations.
       return sec < DURATION_20_YEARS_SEC ? formatDuration(data) : <span>{format(data)}</span>;
     }
@@ -55,7 +55,7 @@ export function getItemString(type: string, data: any, itemType: string, itemStr
   // for vectors/points display length
   if (keys.length === 2) {
     const { x, y } = data;
-    if (x != null && y != null) {
+    if (x != undefined && y != undefined) {
       const length = Math.sqrt(x * x + y * y);
       return (
         <span>
@@ -67,7 +67,7 @@ export function getItemString(type: string, data: any, itemType: string, itemStr
 
   if (keys.length === 3) {
     const { x, y, z } = data;
-    if (x != null && y != null && z != null) {
+    if (x != undefined && y != undefined && z != undefined) {
       const length = Math.sqrt(x * x + y * y + z * z);
       return (
         <span>
@@ -108,7 +108,7 @@ export const getItemStringForDiff = (type: string, data: any, itemType: string) 
     ? Object.keys(id)
         .map((key) => `${key}: ${id[key]}`)
         .join(", ")
-    : null;
+    : undefined;
   const startingCounts = { [ADDED.labelText]: 0, [CHANGED.labelText]: 0, [DELETED.labelText]: 0 };
   const counts = getChangeCounts(data, startingCounts);
   return (
@@ -117,7 +117,7 @@ export const getItemStringForDiff = (type: string, data: any, itemType: string) 
         <span>
           {itemType} {idLabel}
         </span>
-      ) : null}
+      ) : undefined}
       <span style={{ float: "right", color: CHANGED.color }}>
         {counts[ADDED.labelText] || counts[DELETED.labelText] ? (
           <span
@@ -133,15 +133,15 @@ export const getItemStringForDiff = (type: string, data: any, itemType: string) 
             <span style={{ color: colors.GREEN }}>
               {counts[ADDED.labelText]
                 ? `${diffLabels.ADDED.indicator}${counts[ADDED.labelText]} `
-                : null}
+                : undefined}
             </span>
             <span style={{ color: colors.RED }}>
               {counts[DELETED.labelText]
                 ? `${diffLabels.DELETED.indicator}${counts[DELETED.labelText]}`
-                : null}
+                : undefined}
             </span>
           </span>
-        ) : null}
+        ) : undefined}
         {counts[CHANGED.labelText] ? (
           <span
             style={{
@@ -153,9 +153,9 @@ export const getItemStringForDiff = (type: string, data: any, itemType: string) 
               marginRight: 5,
             }}
           >
-            {counts[CHANGED.labelText] ? " " : null}
+            {counts[CHANGED.labelText] ? " " : undefined}
           </span>
-        ) : null}
+        ) : undefined}
       </span>
     </>
   );

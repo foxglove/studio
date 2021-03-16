@@ -16,7 +16,7 @@ import { isEqual } from "lodash";
 
 import {
   mockSendNotification,
-  setNotificationHandler,
+  mockSetNotificationHandler,
 } from "@foxglove-studio/app/test/MockSendNotification";
 
 // Mock out sendNotification for all tests
@@ -24,7 +24,7 @@ jest.mock("@foxglove-studio/app/util/sendNotification", () => {
   return {
     __esModule: true,
     default: mockSendNotification,
-    setNotificationHandler,
+    setNotificationHandler: mockSetNotificationHandler,
   };
 });
 
@@ -35,7 +35,7 @@ afterEach(async () => {
     const calls = mockSendNotification.mock.calls;
     mockSendNotification.mockClear();
     // Reset the error handler to the default (no error handler).
-    setNotificationHandler();
+    mockSetNotificationHandler();
     fail(
       `sendNotification has been called during this test (call sendNotification.expectCalledDuringTest(); at the end of your test if you expect this): ${JSON.stringify(
         calls,
@@ -51,6 +51,7 @@ declare global {
   namespace jest {
     interface Matchers<R> {
       toContainOnly(expected: unknown[]): R;
+      toBeNullOrUndefined(): R;
     }
   }
 }
@@ -97,6 +98,27 @@ expect.extend({
         )}\nReceived:\n  ${this.utils.printReceived(
           receivedArray,
         )}\n\nDifference:\n\n${diffString}`;
+      },
+    };
+  },
+
+  // Passes if the given value is null or undefined. Helps encourage avoiding the use of
+  // null, while treating them both as representing invalid/absent values.
+  // This custom matcher is necessary because the standard `toEqual()` does not behave
+  // like ==, and considers null/undefined to be unequal.
+  toBeNullOrUndefined(received: unknown) {
+    const pass = received == undefined;
+    return {
+      pass,
+      actual: received,
+      message: () => {
+        return `${this.utils.matcherHint(
+          pass ? ".not.toBeNullOrUndefined" : ".toBeNullOrUndefined",
+          undefined,
+          "",
+        )}\n\nExpected value${
+          pass ? " not" : ""
+        } to be null or undefined\nReceived: ${this.utils.printReceived(received)}`;
       },
     };
   },

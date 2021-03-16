@@ -32,7 +32,7 @@ const DEFAULT_TOPICS = Object.freeze({ topicsWithoutHeaderStamps: [], topics: []
 const COLOR_THRESHOLD = 5; // show the icon yellow when too many headers are missing
 
 function getTopics({ playerState: { activeData } }: any) {
-  if (activeData == null) {
+  if (activeData == undefined) {
     return DEFAULT_TOPICS;
   }
   const {
@@ -57,7 +57,7 @@ export default function NoHeaderTopicsButton() {
   const [showingModal, setShowingModal] = useState(false);
   return useMemo(() => {
     if (!topicsWithoutHeaders.length) {
-      return null;
+      return ReactNull;
     }
     const rows = topicsWithoutHeaders.sort().map(({ topic, datatype }: any) => (
       <tr key={topic}>

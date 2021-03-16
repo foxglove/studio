@@ -35,12 +35,12 @@ export default function buildSampleMessage(
   datatype: string,
 ): any | undefined {
   const builtin = (builtinSampleValues as any)[datatype];
-  if (builtin != null) {
+  if (builtin != undefined) {
     return builtin;
   }
   const fields = datatypes[datatype].fields;
   if (!fields) {
-    return null;
+    return ReactNull;
   }
   const obj: any = {};
   for (const field of fields) {
@@ -49,7 +49,7 @@ export default function buildSampleMessage(
     }
     const sample = buildSampleMessage(datatypes, field.type);
     if (field.isArray) {
-      if (field.arrayLength != null) {
+      if (field.arrayLength != undefined) {
         obj[field.name] = new Array(field.arrayLength).fill(sample);
       } else {
         obj[field.name] = [sample];

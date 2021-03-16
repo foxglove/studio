@@ -10,8 +10,12 @@ export default {
     "\\.(bin|template|wasm)$": "<rootDir>/test/transformers/rawTransformer.js",
   },
   globals: {
+    ReactNull: null, // eslint-disable-line no-restricted-syntax
     "ts-jest": {
       tsconfig: "<rootDir>/tsconfig.jest.json",
+      babelConfig: {
+        plugins: ["babel-plugin-transform-import-meta", "@babel/plugin-transform-modules-commonjs"],
+      },
     },
   },
   setupFiles: ["<rootDir>/test/setup.ts", "<rootDir>/test/setupEnzyme.ts", "jest-canvas-mock"],

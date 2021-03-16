@@ -109,7 +109,7 @@ const missingTransformMessage = (
   transforms: Transforms,
   skipTransform: SkipTransformSpec | undefined,
 ): string => {
-  if (skipTransform != null && error.frameIds.has(skipTransform.frameId)) {
+  if (skipTransform != undefined && error.frameIds.has(skipTransform.frameId)) {
     return `missing transform. Is ${skipTransform.sourceTopic} present?`;
   }
   if (transforms.empty) {
@@ -230,12 +230,7 @@ export default class SceneBuilder implements MarkerProvider {
   allNamespaces: Namespace[] = [];
   // TODO(Audrey): remove enabledNamespaces once we release topic groups
   enabledNamespaces: Namespace[] = [];
-  selectedNamespacesByTopic:
-    | {
-        [topicName: string]: Set<string>;
-      }
-    | null
-    | undefined;
+  selectedNamespacesByTopic?: { [topicName: string]: Set<string> };
   flatten: boolean = false;
   bounds: Bounds = new Bounds();
 
@@ -457,7 +452,7 @@ export default class SceneBuilder implements MarkerProvider {
       return (
         (this.selectedNamespacesByTopic[topic] &&
           this.selectedNamespacesByTopic[topic].has(name)) ||
-        this.selectedNamespacesByTopic[topic] == null
+        this.selectedNamespacesByTopic[topic] == undefined
       );
     }
     return some(this.enabledNamespaces, (ns) => ns.topic === topic && ns.name === name);

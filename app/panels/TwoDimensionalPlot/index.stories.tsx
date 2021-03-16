@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import { storiesOf } from "@storybook/react";
-import React, { useState } from "react";
+import { useState } from "react";
 
 import TwoDimensionalPlot from "./index";
 import PanelSetup, { triggerWheel } from "@foxglove-studio/app/stories/PanelSetup";
@@ -234,19 +234,23 @@ storiesOf("<TwoDimensionalPlot>", module)
       <TwoDimensionalPlot config={{ path: { value: "/plot_a.versions[0]" } }} />
     </PanelSetup>
   ))
-  .add("resets zoom", () => (
-    <PanelSetup
-      fixture={fixture}
-      onMount={(el: any) => {
-        setTimeout(zoomOut, 200);
-        setTimeout(() => {
-          const resetZoomBtn = el.querySelector("button");
-          if (resetZoomBtn) {
-            resetZoomBtn.click();
-          }
-        }, 400);
-      }}
-    >
-      <TwoDimensionalPlot config={{ path: { value: "/plot_a.versions[0]" } }} />
-    </PanelSetup>
-  ));
+  .add(
+    "resets zoom",
+    () => (
+      <PanelSetup
+        fixture={fixture}
+        onMount={(el: any) => {
+          setTimeout(zoomOut, 200);
+          setTimeout(() => {
+            const resetZoomBtn = el.querySelector("button");
+            if (resetZoomBtn) {
+              resetZoomBtn.click();
+            }
+          }, 400);
+        }}
+      >
+        <TwoDimensionalPlot config={{ path: { value: "/plot_a.versions[0]" } }} />
+      </PanelSetup>
+    ),
+    { screenshot: { delay: 4000 } },
+  );

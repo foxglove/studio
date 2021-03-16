@@ -99,7 +99,7 @@ export function messagePathStructures(
 
 export function validTerminatingStructureItem(
   structureItem?: MessagePathStructureItem,
-  validTypes?: string[] | null,
+  validTypes?: string[],
 ): boolean {
   return (
     !!structureItem &&
@@ -115,7 +115,7 @@ export function validTerminatingStructureItem(
 export function messagePathsForDatatype(
   datatype: string,
   datatypes: RosDatatypes,
-  validTypes?: string[] | null,
+  validTypes?: string[],
   noMultiSlices?: boolean,
   messagePath: MessagePathPart[] = [],
 ): string[] {
@@ -233,7 +233,7 @@ export const traverseStructure = memoizeWeak(
         if (
           structureItem.structureType !== "message" ||
           msgPathPart.path.length === 0 ||
-          msgPathPart.value == null
+          msgPathPart.value == undefined
         ) {
           return { valid: false, msgPathPart, structureItem };
         }
@@ -243,7 +243,7 @@ export const traverseStructure = memoizeWeak(
             return { valid: false, msgPathPart, structureItem };
           }
           currentItem = currentItem.nextByName[name];
-          if (currentItem == null) {
+          if (currentItem == undefined) {
             return { valid: false, msgPathPart, structureItem };
           }
         }

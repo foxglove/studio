@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 import { storiesOf } from "@storybook/react";
 import cloneDeep from "lodash/cloneDeep";
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import TestUtils from "react-dom/test-utils";
 
 import ChartComponent from ".";
@@ -122,7 +122,7 @@ function DatalabelUpdateExample({
 }
 
 function DatalabelClickExample() {
-  const [clickedDatalabel, setClickedDatalabel] = useState<any>(null);
+  const [clickedDatalabel, setClickedDatalabel] = useState<any>(undefined);
   const refFn = useCallback(() => {
     setTimeout(() => {
       if (!clickedDatalabel) {
@@ -142,7 +142,7 @@ function DatalabelClickExample() {
       <ChartComponent
         {...propsWithDatalabels}
         onClick={(_, datalabel) => {
-          setClickedDatalabel(datalabel);
+          setClickedDatalabel(datalabel ?? undefined);
         }}
       />
     </div>

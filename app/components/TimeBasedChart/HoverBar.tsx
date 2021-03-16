@@ -50,7 +50,7 @@ function showBar(wrapper: any, position: any) {
 }
 
 function shouldShowBar(hoverValue: any, componentId: any, isTimestampScale: boolean) {
-  if (hoverValue == null) {
+  if (hoverValue == undefined) {
     return false;
   }
   if (hoverValue.type === "PLAYBACK_SECONDS" && isTimestampScale) {
@@ -67,7 +67,7 @@ export default React.memo<Props>(function HoverBar({
   isTimestampScale,
   scaleBounds,
 }: Props) {
-  const wrapper = React.useRef<HTMLDivElement | null>(null);
+  const wrapper = React.useRef<HTMLDivElement>(ReactNull);
   const hoverValue = useSelector((state: any) => state.hoverValue);
 
   const xBounds = scaleBounds.current && scaleBounds.current.find(({ axes }) => axes === "xAxes");
@@ -75,14 +75,14 @@ export default React.memo<Props>(function HoverBar({
   // We avoid putting the visibility and transforms into react state to try to keep updates snappy.
   // Mouse interactions are frequent, and adding/removing the bar from the DOM would slow things
   // down a lot more than mutating the style props does.
-  if (wrapper.current != null) {
+  if (wrapper.current != undefined) {
     const { current } = wrapper;
-    if (xBounds == null || hoverValue == null) {
+    if (xBounds == undefined || hoverValue == undefined) {
       hideBar(current);
     }
     if (shouldShowBar(hoverValue, componentId, isTimestampScale)) {
       const position = getChartPx(xBounds, hoverValue.value);
-      if (position == null) {
+      if (position == undefined) {
         hideBar(current);
       } else {
         showBar(current, position);

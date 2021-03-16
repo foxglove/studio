@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import React, { ReactNode, useCallback } from "react";
+import { ReactNode, useCallback } from "react";
 import styled from "styled-components";
 
 import EmptyState from "@foxglove-studio/app/components/EmptyState";
@@ -146,7 +146,7 @@ function SourceInfo(): ReactNode {
               >
                 {t.datatype}
               </SCell>
-              {t.numMessages != null ? (
+              {t.numMessages != undefined ? (
                 <SCell>
                   {t.numMessages} msgs ({(t.numMessages / toSec(duration)).toFixed(2)} Hz)
                 </SCell>

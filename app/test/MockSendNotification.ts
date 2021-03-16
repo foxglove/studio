@@ -32,7 +32,7 @@ const mockSendNotification = jest.fn<
   }
 });
 
-const setNotificationHandler = (handler?: NotificationHandler): void => {
+const mockSetNotificationHandler = (handler?: NotificationHandler): void => {
   currentHandler = handler;
 };
 
@@ -41,11 +41,11 @@ const setNotificationHandler = (handler?: NotificationHandler): void => {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (mockSendNotification as any).expectCalledDuringTest = () => {
   if (mockSendNotification.mock.calls.length === 0) {
-    fail("Expected sendNotification to have been called during the test, but it was never called!"); // eslint-disable-line
+    fail("Expected sendNotification to have been called during the test, but it was never called!");
   }
   mockSendNotification.mockClear();
   // Reset the error handler to the default (no error handler).
-  setNotificationHandler();
+  mockSetNotificationHandler();
 };
 
-export { mockSendNotification, setNotificationHandler };
+export { mockSendNotification, mockSetNotificationHandler };

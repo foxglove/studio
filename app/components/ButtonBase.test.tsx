@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { mount } from "enzyme";
-import React, { SyntheticEvent } from "react";
+import { SyntheticEvent } from "react";
 
 import Button from "./ButtonBase";
 
@@ -88,7 +88,7 @@ describe("<Button />", () => {
       clicked = true;
       expect(e).toBeTruthy();
       done();
-      el.unmount(); // eslint-disable-line no-use-before-define
+      el.unmount();
     };
     const el = mount(
       <Button delay={10} onClick={onClick} progressClassName="foo">
@@ -101,7 +101,7 @@ describe("<Button />", () => {
 
   it("can control mousedown via external calls", (done: any) => {
     const onClick = () => {
-      el.unmount(); // eslint-disable-line no-use-before-define
+      el.unmount();
       done();
     };
     const el = mount<Button>(

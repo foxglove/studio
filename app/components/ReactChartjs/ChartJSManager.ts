@@ -237,6 +237,7 @@ export default class ChartJSManager {
           if (next.data) {
             const currentData = current.data;
             next.data.forEach(
+              // eslint-disable-next-line no-restricted-syntax
               (value: number | number[] | Chart.ChartPoint | null | undefined, pid: number) => {
                 currentData[pid] = value;
               },
@@ -330,6 +331,7 @@ export default class ChartJSManager {
         return mapChartElementToEventElement(chartInstance, firstXAxisElement);
       }
     }
+    return undefined;
   }
 
   getDatalabelAtEvent({ event }: { event: Event }): unknown {
@@ -343,6 +345,7 @@ export default class ChartJSManager {
         return context.dataset.data[context.dataIndex];
       }
     }
+    return undefined;
   }
 
   _addFunctionsToConfig(config: any, scaleOptions?: ScaleOptions): typeof config {
@@ -353,7 +356,8 @@ export default class ChartJSManager {
         const label = value?.label;
         // We have to return "null" if we don't want this label to be displayed. Returning "undefined" falls back to the
         // default formatting.
-        return label != null ? label : null;
+        // eslint-disable-next-line no-restricted-syntax
+        return label != undefined ? label : null;
       };
       // Override color so that it can be set per-dataset.
       const staticColor = config.plugins.datalabels.color || "white";
@@ -365,7 +369,7 @@ export default class ChartJSManager {
 
     if (scaleOptions) {
       for (const scale of config.scales.yAxes) {
-        if (scaleOptions.fixedYAxisWidth != null) {
+        if (scaleOptions.fixedYAxisWidth != undefined) {
           scale.afterFit = (scaleInstance: any) => {
             scaleInstance.width = scaleOptions.fixedYAxisWidth;
           };

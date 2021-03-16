@@ -90,7 +90,7 @@ export function ValidatedInputBase({
   const [error, setError] = useState<string>("");
   const [inputStr, setInputStr] = useState<string>("");
   const prevIncomingVal = useRef("");
-  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(ReactNull);
   const [isEditing, setIsEditing] = useState<boolean>(false);
 
   // validate the input string, and setError or call onChange if needed
@@ -197,7 +197,7 @@ export function ValidatedInputBase({
 
 function JsonInput(props: BaseProps) {
   function stringify(val: any) {
-    return JSON.stringify(val, null, 2);
+    return JSON.stringify(val, undefined, 2);
   }
   return <ValidatedInputBase parse={JSON.parse} stringify={stringify} {...props} />;
 }

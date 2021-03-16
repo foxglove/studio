@@ -34,11 +34,10 @@ import {
   PICKER_SIZE,
   getHexFromColorSettingWithDefault,
 } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicSettingsEditor/ColorPickerForTopicSettings";
-import {
-  TreeUINode,
-  TooltipRow,
-  TooltipTable,
-} from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/renderTreeNodes";
+import { ColorOverride } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/Layout";
+import TooltipRow from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/TooltipRow";
+import TooltipTable from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/TooltipTable";
+import { TreeUINode } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/types";
 import { Color } from "@foxglove-studio/app/types/Messages";
 import filterMap from "@foxglove-studio/app/util/filterMap";
 import { SECOND_SOURCE_PREFIX } from "@foxglove-studio/app/util/globalConstants";
@@ -119,7 +118,7 @@ function StyleExpressionNode(props: any) {
   const { markerKeyPath, name } = linkedGlobalVariables[0];
 
   const value = globalVariables[name];
-  const colorOverridesByColumnIdx = defaults(
+  const colorOverridesByColumnIdx: (ColorOverride | undefined)[] = defaults(
     [],
     colorOverrideBySourceIdxByVariable[name],
     getDefaultColorOverrideBySourceIdx(rowIndex),
@@ -198,9 +197,9 @@ function StyleExpressionNode(props: any) {
           <SToggles>
             {filterMap(colorOverridesByColumnIdx, (override, sourceIdx) => {
               if (!hasFeatureColumn && sourceIdx === 1) {
-                return null;
+                return ReactNull;
               }
-              const { active, color } = override || { active: false, color: null };
+              const { active, color } = override ?? { active: false };
               return (
                 <VisibilityToggle
                   available={true}
@@ -208,10 +207,18 @@ function StyleExpressionNode(props: any) {
                   dataTest={`visibility-toggle T:${topic} ${name} ${sourceIdx}`}
                   key={sourceIdx}
                   onAltToggle={() =>
-                    updateSettingsForGlobalVariable(name, { active: !active, color }, sourceIdx)
+                    updateSettingsForGlobalVariable(
+                      name,
+                      { active: !active, color } as any,
+                      sourceIdx,
+                    )
                   }
                   onToggle={() =>
-                    updateSettingsForGlobalVariable(name, { active: !active, color }, sourceIdx)
+                    updateSettingsForGlobalVariable(
+                      name,
+                      { active: !active, color } as any,
+                      sourceIdx,
+                    )
                   }
                   overrideColor={color}
                   size="SMALL"

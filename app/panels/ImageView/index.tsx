@@ -116,7 +116,7 @@ const TopicTimestamp = ({
   style?: {
     [key: string]: string;
   };
-}) => (text === "" ? null : <TopicTimestampSpan style={styleObj}>{text}</TopicTimestampSpan>);
+}) => (text === "" ? ReactNull : <TopicTimestampSpan style={styleObj}>{text}</TopicTimestampSpan>);
 
 const BottomBar = ({ children }: { children?: React.ReactNode }) => (
   <div
@@ -222,11 +222,11 @@ function useOptionallySynchronizedMessages(
         : {
             restore: (previousValue) => ({
               messagesByTopic: previousValue ? previousValue.messagesByTopic : {},
-              synchronizedMessages: null,
+              synchronizedMessages: undefined,
             }),
             addMessage: ({ messagesByTopic }, newMessage) => ({
               messagesByTopic: { ...messagesByTopic, [newMessage.topic]: [newMessage] },
-              synchronizedMessages: null,
+              synchronizedMessages: undefined,
             }),
           },
     [shouldSynchronize, memoizedTopics],
@@ -365,7 +365,7 @@ function ImageView(props: Props) {
     const items = [...imageTopicsByNamespace.keys()].sort().map((group) => {
       const imageTopics = imageTopicsByNamespace.get(group);
       if (!imageTopics) {
-        return null;
+        return ReactNull;
       } // satisfy flow
       imageTopics.sort(naturalSort("name"));
 

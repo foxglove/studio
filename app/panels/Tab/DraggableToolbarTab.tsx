@@ -10,7 +10,7 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import React, { useRef } from "react";
+import { useRef } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { useDispatch } from "react-redux";
 
@@ -35,7 +35,7 @@ type Props = {
 export function DraggableToolbarTab(props: Props) {
   const { isActive, tabCount, actions, panelId, tabTitle, tabIndex } = props;
 
-  const ref = useRef(null);
+  const ref = useRef(ReactNull);
   const dispatch = useDispatch();
   const [{ isDragging }, dragRef] = useDrag({
     item: { type: TAB_DRAG_TYPE, panelId, tabIndex },

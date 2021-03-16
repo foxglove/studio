@@ -18,7 +18,6 @@ import { Frame, Message, Topic, TypedMessage } from "@foxglove-studio/app/player
 import { RosDatatypes } from "@foxglove-studio/app/types/RosDatatypes";
 import { wrapJsObject } from "@foxglove-studio/app/util/binaryObjects";
 
-// eslint-disable-next-line no-use-before-define
 type InferredObject = {
   [field: string]: FieldType;
 };
@@ -37,10 +36,10 @@ const maybeInferJsonFieldType = (value: any, fieldName: string): FieldType | und
   // to make this pluggable in the future.
   // "Markers" sometimes have some missing fields, but these ones always seem to be present:
   const hasMarkerFields = ["header", "ns", "id", "type", "action", "pose"].every(
-    (field) => value[field] != null,
+    (field) => value[field] != undefined,
   );
   if (!hasMarkerFields) {
-    return;
+    return undefined;
   }
   if (fieldName === "metadata" || fieldName === "metadataByIndex") {
     return { type: "json", isArray: false };
@@ -48,6 +47,7 @@ const maybeInferJsonFieldType = (value: any, fieldName: string): FieldType | und
   if (fieldName.toLowerCase().includes("json")) {
     return { type: "json", isArray: false };
   }
+  return undefined;
 };
 
 export const inferDatatypes = (fieldType: FieldType, value: any): FieldType => {
@@ -72,7 +72,7 @@ export const inferDatatypes = (fieldType: FieldType, value: any): FieldType => {
     return { isArray: fieldType.isArray, type: "bool" };
   } else if (ArrayBuffer.isView(value)) {
     return { isArray: true, type: "float64" };
-  } else if (value == null) {
+  } else if (value == undefined) {
     // Shouldn't happen, but we should be robust against it. Keep whatever information we have.
     return fieldType;
   } else if (value instanceof Array) {
@@ -90,7 +90,7 @@ export const inferDatatypes = (fieldType: FieldType, value: any): FieldType => {
   const inferredObject: any = ret.object;
   Object.keys(value).forEach((fieldName) => {
     const fieldValue = value[fieldName];
-    if (inferredObject[fieldName] == null) {
+    if (inferredObject[fieldName] == undefined) {
       const jsonFieldType = maybeInferJsonFieldType(value, fieldName);
       inferredObject[fieldName] = jsonFieldType ?? {
         type: "unknown",
@@ -143,7 +143,7 @@ export const createRosDatatypesFromFrame = (
   const ret = {};
   topics.forEach(({ name, datatype }) => {
     const messages = frame[name];
-    if (messages == null) {
+    if (messages == undefined) {
       return;
     }
     // We run type inference on every message because some messages may contain empty arrays,

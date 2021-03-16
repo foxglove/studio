@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { clamp } from "lodash";
-import React, { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Arrows,
   Cubes,
@@ -258,11 +258,11 @@ export default function WorldMarkers({
       <Overlay
         renderItem={({ item, coordinates, index, dimension: { width, height } }: any) => {
           if (!coordinates) {
-            return null;
+            return ReactNull;
           }
           const [left, top] = coordinates;
           if (left < -10 || top < -10 || left > width + 10 || top > height + 10) {
-            return null; // Don't render anything that's too far outside of the canvas
+            return ReactNull; // Don't render anything that's too far outside of the canvas
           }
           const originalMsg = item.interactionData?.originalMessage || {};
           const parsedMsg = isBobject(originalMsg) ? deepParse(originalMsg) : originalMsg;

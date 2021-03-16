@@ -20,7 +20,7 @@ type Rules = {
 const layoutNameRegex = /[@%]/; // Don't allow these characters in layoutName.
 
 function isEmpty(value: any) {
-  return value == null;
+  return value == undefined;
 }
 
 export const isEmail = (value?: unknown): boolean => {
@@ -29,7 +29,7 @@ export const isEmail = (value?: unknown): boolean => {
 };
 
 export const isRequired = (value: any): string | undefined =>
-  value == null ? "is required" : undefined;
+  value == undefined ? "is required" : undefined;
 
 export const isNumber = (value: any): string | undefined =>
   !isEmpty(value) && typeof value !== "number" ? "must be a number" : undefined;
@@ -48,6 +48,7 @@ export const isNumberArray = (expectArrLen = 0) => (value: unknown): string | un
       }
     }
   }
+  return undefined;
 };
 
 export const isOrientation = (value: unknown): string | undefined => {
@@ -62,6 +63,7 @@ export const isOrientation = (value: unknown): string | undefined => {
       return "must be valid quaternion";
     }
   }
+  return undefined;
 };
 
 export const isString = (value: any): string | undefined =>
@@ -77,6 +79,7 @@ export const minLen = (minLength = 0) => (value: any): string | undefined => {
       ? `must contain at least ${minLength} ${minLength === 1 ? "character" : "characters"}`
       : undefined;
   }
+  return undefined;
 };
 
 export const maxLen = (maxLength = 0) => (value: any): string | undefined => {
@@ -85,6 +88,7 @@ export const maxLen = (maxLength = 0) => (value: any): string | undefined => {
   } else if (typeof value === "string") {
     return value.length > maxLength ? `must contain at most ${maxLength} characters` : undefined;
   }
+  return undefined;
 };
 
 export const hasLen = (len = 0) => (value: string | any[]): string | undefined => {
@@ -97,6 +101,7 @@ export const hasLen = (len = 0) => (value: string | any[]): string | undefined =
       ? `must contain ${len} characters (current count: ${value.length})`
       : undefined;
   }
+  return undefined;
 };
 
 export const isNotPrivate = (value: any): string | undefined =>
@@ -114,6 +119,7 @@ export const isWebsocketUrl = (value: string): string | undefined => {
   if (!pattern.test(value)) {
     return getWebsocketUrlError(value);
   }
+  return undefined;
 };
 
 export const createValidator = (rules: Rules) => {
@@ -143,6 +149,7 @@ export const createPrimitiveValidator = (rules: Rule[]) => {
         return error;
       }
     }
+    return undefined;
   };
 };
 
@@ -179,13 +186,14 @@ export const cameraStateValidator = (jsonData: any): ValidationResult | undefine
 const isXYPointArray = (value: any): string | undefined => {
   if (Array.isArray(value)) {
     for (const item of value) {
-      if (!item || item.x == null || item.y == null) {
+      if (!item || item.x == undefined || item.y == undefined) {
         return `must contain x and y points`;
       }
       if (typeof item.x !== "number" || typeof item.y !== "number") {
         return `x and y points must be numbers`;
       }
     }
+    return undefined;
   } else {
     return "must be an array of x and y points";
   }
@@ -199,6 +207,7 @@ const isPolygons = (value: any): string | undefined => {
         return error;
       }
     }
+    return undefined;
   } else {
     return "must be an array of nested x and y points";
   }
@@ -231,6 +240,7 @@ const isLayoutName = (value: string): string | undefined => {
   if (pattern.test(value)) {
     return getLayoutNameError(value);
   }
+  return undefined;
 };
 
 export const layoutNameValidator = createPrimitiveValidator([minLen(1), maxLen(120), isLayoutName]);

@@ -25,7 +25,7 @@ import * as PanelAPI from "@foxglove-studio/app/PanelAPI";
 import { Message } from "@foxglove-studio/app/players/types";
 
 export type DiagnosticAutocompleteEntry = {
-  name?: string; // Null for "combined hardware_id" entries for showing diagnostics with any name.
+  name?: string; // undefined for "combined hardware_id" entries for showing diagnostics with any name.
   hardware_id: string;
   id: DiagnosticId;
   displayName: string;
@@ -57,7 +57,7 @@ function maybeAddMessageToBuffer(buffer: DiagnosticsBuffer, message: Message): b
     const hardwareDiagnosticsByName = buffer.diagnosticsByNameByTrimmedHardwareId.get(
       trimmedHardwareId,
     );
-    if (hardwareDiagnosticsByName == null) {
+    if (hardwareDiagnosticsByName == undefined) {
       newHardwareId = true;
       newDiagnostic = true;
       buffer.diagnosticsByNameByTrimmedHardwareId.set(

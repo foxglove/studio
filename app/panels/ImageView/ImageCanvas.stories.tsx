@@ -39,7 +39,7 @@ const cameraInfo = {
 const imageFormat = "image/png";
 // Image data has to be loaded asynchronously, so use this component to load it for stories.
 function LoadImageMessage({ children }: any) {
-  const [imageData, setImageData] = React.useState(null);
+  const [imageData, setImageData] = React.useState(undefined);
   React.useEffect(() => {
     const canvas = document.createElement("canvas");
     canvas.width = 400;
@@ -71,7 +71,7 @@ function LoadImageMessage({ children }: any) {
   if (imageData) {
     return children(imageMessage);
   }
-  return null;
+  return ReactNull;
 }
 
 function marker(type: number, props: any = {}) {

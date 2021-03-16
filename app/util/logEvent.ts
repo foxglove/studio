@@ -19,18 +19,8 @@ export type Tags = {
   readonly [key: string]: (string | boolean | number | string[] | number[]) | undefined;
 };
 
-let eventNames:
-  | {
-      readonly [key: string]: string;
-    }
-  | null
-  | undefined;
-let eventTags:
-  | {
-      readonly [key: string]: string;
-    }
-  | null
-  | undefined;
+let eventNames: { readonly [key: string]: string } | undefined;
+let eventTags: { readonly [key: string]: string } | undefined;
 
 // We can't set the event names/tags in a web worker because that would require creating a different worker for every
 // proprietary / open source worker. Just throw an error in a worker.
@@ -38,7 +28,7 @@ let eventTags:
 export function getEventNames(): {
   readonly [key: string]: string;
 } {
-  if (eventNames == null) {
+  if (eventNames == undefined) {
     throw new Error(
       "Tried to get event names before they were set or tried to get event names in a web worker",
     );
@@ -48,7 +38,7 @@ export function getEventNames(): {
 export function getEventTags(): {
   readonly [key: string]: string;
 } {
-  if (eventTags == null) {
+  if (eventTags == undefined) {
     throw new Error(
       "Tried to get event tags before they were set or tried to get event tags in a web worker",
     );

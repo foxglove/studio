@@ -15,14 +15,16 @@ import { useCallback, useContext, useMemo } from "react";
 
 import NamespaceMenu from "./NamespaceMenu";
 import NodeName from "./NodeName";
+import TooltipRow from "./TooltipRow";
+import TooltipTable from "./TooltipTable";
 import { SToggles, STreeNodeRow, SLeft, SRightActions, ICON_SIZE } from "./TreeNodeRow";
 import VisibilityToggle, { TOGGLE_WRAPPER_SIZE } from "./VisibilityToggle";
-import { TooltipRow, TooltipTable, TreeUINode } from "./renderTreeNodes";
 import {
   GetIsTreeNodeVisibleInTree,
   OnNamespaceOverrideColorChange,
   SetEditingNamespace,
   TreeTopicNode,
+  TreeUINode,
 } from "./types";
 import { ThreeDimensionalVizContext } from "@foxglove-studio/app/panels/ThreeDimensionalViz/ThreeDimensionalVizContext";
 import { TREE_SPACING } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/constants";
@@ -102,7 +104,7 @@ function NamespaceNodeRow({
   const nodeVisibleInScene = !!(visibleInSceneByColumn[0] || visibleInSceneByColumn[1]);
 
   const { setHoveredMarkerMatchers } = useContext(ThreeDimensionalVizContext);
-  const { toggleCheckAllAncestors, toggleNamespaceChecked }: any = useGuaranteedContext(
+  const { toggleCheckAllAncestors, toggleNamespaceChecked } = useGuaranteedContext(
     TopicTreeContext,
     "TopicTreeContext",
   );

@@ -58,8 +58,8 @@ export const StyledRange = styled.div.attrs<{ width: number }>(({ width }) => ({
 `;
 
 function defaultRenderSlider(value: number | undefined): React.ReactNode {
-  if (value == null || isNaN(value)) {
-    return null;
+  if (value == undefined || isNaN(value)) {
+    return ReactNull;
   }
   return <StyledRange width={value} />;
 }
@@ -90,7 +90,7 @@ export default class Slider extends React.Component<Props> {
   getValueAtMouse(e: React.MouseEvent<HTMLDivElement>): number {
     const { min, max, step } = this.props;
     // this should never happen since you can't interact with an unmounted component
-    // but to appease flow we need to check if the ref is null
+    // but to appease TypeScript we need to check if the ref is defined
     if (!this.el) {
       console.warn("No dom ref available for click handler");
       return 0;
@@ -182,7 +182,7 @@ export default class Slider extends React.Component<Props> {
           enabled={mouseDown && draggable}
           onMouseUp={this._onMouseUp}
         />
-        {renderSlider(value != null && min !== max ? (value - min) / (max - min) : undefined)}
+        {renderSlider(value != undefined && min !== max ? (value - min) / (max - min) : undefined)}
       </StyledSlider>
     );
   }

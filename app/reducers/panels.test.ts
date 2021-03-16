@@ -1097,6 +1097,7 @@ describe("state.persistedState", () => {
       const { store, checkState } = getStore();
       store.dispatch(changePanelLayout({ layout: panelState.layout }));
       checkState(({ persistedState: { panels } }) => {
+        // eslint-disable-next-line no-restricted-syntax
         const leaves = getLeaves(panelState.layout ?? null);
         expect(leaves).toHaveLength(4);
         expect(leaves).toContain("FirstPanel!34otwwt");
@@ -1166,6 +1167,7 @@ describe("state.persistedState", () => {
       const { store, checkState } = getStore();
       store.dispatch(changePanelLayout({ layout: tabPanelState.layout }));
       checkState(({ persistedState: { panels } }) => {
+        // eslint-disable-next-line no-restricted-syntax
         const leaves = getLeaves(tabPanelState.layout ?? null);
         expect(leaves).toHaveLength(4);
         expect(leaves).toContain("FirstPanel!34otwwt");
@@ -1655,7 +1657,7 @@ describe("state.persistedState", () => {
           panelId: "Audio!a",
           sourceTabId: undefined,
           targetTabId: undefined,
-          position: (<unknown>null) as MosaicDropTargetPosition,
+          position: (<unknown>undefined) as MosaicDropTargetPosition,
           destinationPath: ["second"],
           ownPath: ["first"],
         }),

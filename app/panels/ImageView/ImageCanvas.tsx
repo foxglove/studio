@@ -23,7 +23,6 @@ import styled from "styled-components";
 import { v4 as uuidv4 } from "uuid";
 
 import styles from "./ImageCanvas.module.scss";
-// eslint-disable-next-line import/no-unresolved
 import { ImageViewPanelHooks, Config, SaveImagePanelConfig } from "./index";
 import { renderImage } from "./renderImage";
 import { checkOutOfBounds, Dimensions } from "./util";
@@ -125,7 +124,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
     throw new Error("_getRpcWorker can only be called with canvasRenderer type rpc");
   };
 
-  _setCanvasRef = (canvas?: HTMLCanvasElement | null): void => {
+  _setCanvasRef = (canvas?: HTMLCanvasElement | ReactNull): void => {
     if (canvas) {
       this.loadZoomFromConfig();
       if (this._canvasRenderer.type === "rpc") {
@@ -141,7 +140,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
     }
   };
 
-  panZoomCanvas: any = null;
+  panZoomCanvas: any = undefined;
   bitmapDimensions: Dimensions = { width: 0, height: 0 };
 
   keepInBounds = (div: HTMLElement) => {
@@ -274,9 +273,9 @@ export default class ImageCanvas extends React.Component<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props) {
-    const imageChanged = !shallowequal(prevProps, this.props, (a, b, key) => {
+    const imageChanged = !shallowequal(prevProps, this.props, (a, b, key): boolean | void => {
       if (key === "rawMarkerData") {
-        return shallowequal(a, b, (innerA, innerB, innerKey) => {
+        return shallowequal(a, b, (innerA, innerB, innerKey): boolean | void => {
           if (innerKey === "markers") {
             return shallowequal(innerA, innerB);
           } else if (innerKey === "cameraInfo") {
@@ -407,7 +406,10 @@ export default class ImageCanvas extends React.Component<Props, State> {
   });
 
   renderZoomChart = () => {
-    return this.state.openZoomChart ? (
+    if (!this.state.openZoomChart) {
+      return ReactNull;
+    }
+    return (
       <div className={styles.zoomChart} data-zoom-menu>
         <div className={cx(styles.menuItem, styles.notInteractive)}>
           Use mousewheel or buttons to zoom
@@ -435,7 +437,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
           Zoom to fill
         </Item>
       </div>
-    ) : null;
+    );
   };
 
   applyPanZoom = () => {
@@ -564,9 +566,9 @@ export default class ImageCanvas extends React.Component<Props, State> {
             {this.renderZoomChart()}
             <button className={styles.magnify} onClick={this.clickMagnify} data-magnify-icon>
               <MagnifyIcon />{" "}
-              {mode === "other" ? (
+              {mode === "other" && (
                 <span>{zoomPercentage ? `${zoomPercentage.toFixed(1)}%` : "null"}</span>
-              ) : null}
+              )}
             </button>
           </OutsideClickHandler>
         </div>

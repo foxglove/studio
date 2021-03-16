@@ -20,9 +20,8 @@ import Flex from "@foxglove-studio/app/components/Flex";
 import PanelLayout from "@foxglove-studio/app/components/PanelLayout";
 import { getGlobalHooks } from "@foxglove-studio/app/loadWebviz";
 import GlobalVariableSliderPanel from "@foxglove-studio/app/panels/GlobalVariableSlider";
-import ThreeDimensionalViz, {
-  ThreeDimensionalVizConfig,
-} from "@foxglove-studio/app/panels/ThreeDimensionalViz";
+import ThreeDimensionalViz from "@foxglove-studio/app/panels/ThreeDimensionalViz";
+import { ThreeDimensionalVizConfig } from "@foxglove-studio/app/panels/ThreeDimensionalViz/types";
 import { Frame, Topic } from "@foxglove-studio/app/players/types";
 import createRootReducer from "@foxglove-studio/app/reducers";
 import delay from "@foxglove-studio/app/shared/delay";
@@ -138,7 +137,7 @@ export class FixtureExample extends React.Component<FixtureExampleProps, Fixture
   render() {
     const { fixture } = this.state;
     if (!fixture) {
-      return null;
+      return ReactNull;
     }
     return (
       <PanelSetup fixture={fixture} onMount={this.props.onMount}>
@@ -147,7 +146,7 @@ export class FixtureExample extends React.Component<FixtureExampleProps, Fixture
             config={this.state.config as any}
             saveConfig={(config) => this.setState({ config: { ...this.state.config, ...config } })}
           />
-          {this.props.futureTime != null && (
+          {this.props.futureTime != undefined && (
             <div style={{ height: "100px" }}>
               <GlobalVariableSliderPanel
                 config={{

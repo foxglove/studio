@@ -65,7 +65,7 @@ class NodeRow extends React.PureComponent<NodeRowProps> {
 
     return (
       <div
-        className={cx(levelName ? styles[levelName] : null, styles.nodeRow)}
+        className={cx(levelName ? styles[levelName] : undefined, styles.nodeRow)}
         onClick={this.onClick}
         data-test-diagnostic-row
       >
@@ -207,7 +207,7 @@ class DiagnosticSummary extends React.Component<Props> {
                 const diagnosticsByName = buffer.diagnosticsByNameByTrimmedHardwareId.get(
                   trimmedHardwareId,
                 );
-                if (diagnosticsByName == null) {
+                if (diagnosticsByName == undefined) {
                   return;
                 }
                 return diagnosticsByName.get(name);
@@ -232,7 +232,9 @@ class DiagnosticSummary extends React.Component<Props> {
                   );
 
               const nodes: DiagnosticInfo[] = [...compact(pinnedNodes), ...sortedNodes];
-              return !nodes.length ? null : (
+              return !nodes.length ? (
+                ReactNull
+              ) : (
                 <AutoSizer>
                   {({ height, width }) => (
                     <List

@@ -92,12 +92,12 @@ function getTopicName(topic: Topic): string {
 
 function parseInput(value: string): Partial<PanelState> {
   let parsedObject;
-  let error = null;
+  let error = undefined;
   try {
     const parsedAny = JSON.parse(value);
     if (Array.isArray(parsedAny)) {
       error = "Message content must be an object, not an array";
-    } else if (parsedAny === null) {
+    } else if (parsedAny === null /* eslint-disable-line no-restricted-syntax */) {
       error = "Message content must be an object, not null";
     } else if (typeof parsedAny !== "object") {
       error = `Message content must be an object, not ‘${typeof parsedAny}’`;
@@ -150,19 +150,19 @@ class Publish extends React.PureComponent<Props, PanelState> {
     // the user's message just because state.cachedProps.config hasn't been initialized.
     if (
       props.config.datatype &&
-      state.cachedProps?.config?.datatype != null &&
+      state.cachedProps?.config?.datatype != undefined &&
       props.config.datatype !== state.cachedProps?.config?.datatype &&
-      props.datatypes[props.config.datatype] != null
+      props.datatypes[props.config.datatype] != undefined
     ) {
       const sampleMessage = buildSampleMessage(props.datatypes, props.config.datatype);
       if (sampleMessage) {
-        const stringifiedSampleMessage = JSON.stringify(sampleMessage, null, 2);
+        const stringifiedSampleMessage = JSON.stringify(sampleMessage, undefined, 2);
         props.saveConfig({ value: stringifiedSampleMessage });
         changed = true;
       }
     }
 
-    return changed ? newState : null;
+    return changed ? newState : undefined;
   }
 
   _onChangeTopic = (event: any, topicName: string) => {

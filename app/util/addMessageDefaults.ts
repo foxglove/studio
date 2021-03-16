@@ -11,12 +11,14 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { rosPrimitiveTypes } from "rosbag";
+import { rosPrimitiveTypes, Time } from "rosbag";
 
 import { RosDatatypes } from "@foxglove-studio/app/types/RosDatatypes";
 import { isComplex } from "@foxglove-studio/app/util/binaryObjects/messageDefinitionUtils";
 
-function getPrimitiveDefault(type: string) {
+function getPrimitiveDefault(
+  type: string,
+): string | boolean | number | Time | Record<string, unknown> | undefined {
   if (type === "string") {
     return "";
   } else if (type === "bool") {
@@ -39,6 +41,7 @@ function getPrimitiveDefault(type: string) {
   } else if (type === "json") {
     return {};
   }
+  return undefined;
 }
 
 // Provides (nested, recursive) defaults for a message of a given datatype. Modifies messages in-place for performance.
@@ -46,13 +49,13 @@ export default function addMessageDefaults(
   datatypes: RosDatatypes,
   datatypeName: string,
   object: any,
-) {
+): void {
   if (!datatypes[datatypeName]) {
     throw new Error(`addMessageDefaults: datatype "${datatypeName}" missing from datatypes`);
   }
   for (const { name, type, isConstant, isArray } of datatypes[datatypeName].fields) {
     // Don't set any constant fields - they are not written anyways.
-    if (!isConstant && object[name] == null) {
+    if (!isConstant && object[name] == undefined) {
       if (isArray) {
         object[name] = [];
       } else if (rosPrimitiveTypes.has(type)) {
@@ -75,7 +78,7 @@ export default function addMessageDefaults(
       }
     } else if (!isConstant && isArray) {
       for (const index in object[name]) {
-        if (object[name][index] == null) {
+        if (object[name][index] == undefined) {
           object[name][index] = getPrimitiveDefault(type);
         }
       }

@@ -26,11 +26,11 @@ describe("errors", () => {
       expect(err.extraInfo).toEqual(extraInfo);
     });
     it("uses 'details' as the message if it is a string", () => {
-      const { message } = new AppError("internal error", null);
+      const { message } = new AppError("internal error");
       expect(message).toEqual("internal error");
     });
     it("returns 'Unknown Error' if the details object is a React Node", () => {
-      const { message } = new AppError(React.createElement(""), null);
+      const { message } = new AppError(React.createElement(""));
       expect(message).toEqual("Unknown Error");
     });
     it("stringifies extraInfo when possible", () => {
@@ -39,14 +39,14 @@ describe("errors", () => {
     });
     it("catches cyclic object values in extraInfo", () => {
       const obj: {
-        [key: string]: any;
-      } = { foo: null };
+        [key: string]: unknown;
+      } = {};
       obj.foo = obj;
       const { message } = new AppError("internal error", obj);
       expect(message.includes("[ Either cyclic object or object with BigInt(s) ]")).toBeTruthy();
     });
     it("catches BigInt values in extraInfo", () => {
-      const { message } = new AppError("internal error", { val: BigInt(10) }); // eslint-disable-line no-undef
+      const { message } = new AppError("internal error", { val: BigInt(10) });
       expect(message.includes("[ Either cyclic object or object with BigInt(s) ]")).toBeTruthy();
     });
   });

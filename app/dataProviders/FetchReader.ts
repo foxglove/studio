@@ -88,7 +88,7 @@ export default class FetchReader extends Readable {
     return this._reader;
   }
 
-  _read() {
+  _read(): void {
     this._getReader().then((reader) => {
       // if no reader is returned then we've encountered an error
       if (!reader) {
@@ -99,17 +99,23 @@ export default class FetchReader extends Readable {
         .then(({ done, value }) => {
           // no more to read, signal stream is finished
           if (done) {
-            return this.push(null);
+            // Null has a special meaning for streams
+            // eslint-disable-next-line no-restricted-syntax
+            this.push(null);
+            return;
           }
-          // Flow doesn't know that value is only undefined when value done is true.
-          if (value != null) {
+          // TypeScript doesn't know that value is only undefined when value done is true
+          if (value != undefined) {
             this.push(Buffer.from(value.buffer));
           }
         })
         .catch((err) => {
           // canceling the xhr request causes the promise to reject
           if (this._aborted) {
-            return this.push(null);
+            // Null has a special meaning for streams
+            // eslint-disable-next-line no-restricted-syntax
+            this.push(null);
+            return;
           }
           this.emit("error", err);
         });
@@ -117,7 +123,7 @@ export default class FetchReader extends Readable {
   }
 
   // aborts the xhr request if user calls stream.destroy()
-  _destroy() {
+  _destroy(): void {
     this._aborted = true;
     this._controller.abort();
   }

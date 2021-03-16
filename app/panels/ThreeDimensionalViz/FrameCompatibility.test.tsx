@@ -39,11 +39,11 @@ describe("FrameCompatibilityDEPRECATED", () => {
       message: { index: 0 },
     };
 
-    const childFn = jest.fn().mockReturnValue(null);
+    const childFn = jest.fn().mockReturnValue(undefined);
     class MyComponent extends React.Component<any> {
       render() {
         childFn(this.props);
-        return null;
+        return ReactNull;
       }
 
       setSubscriptions(topics: string[]) {

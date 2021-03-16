@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 import { storiesOf } from "@storybook/react";
 import cloneDeep from "lodash/cloneDeep";
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 
 import TimeBasedChart from "./index";
 import type { Props } from "./index";
@@ -276,7 +276,9 @@ storiesOf("<TimeBasedChart>", module)
       </div>
     );
   })
-  .add("can zoom and then update with new data without resetting the zoom", () => <ZoomExample />)
+  .add("can zoom and then update with new data without resetting the zoom", () => <ZoomExample />, {
+    screenshot: { delay: 3000 },
+  })
   .add("cleans up the tooltip when removing the panel", () => <CleansUpTooltipExample />)
   .add("should call pauseFrame twice", () => <PauseFrameExample {...commonProps} />)
   .add(

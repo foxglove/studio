@@ -109,7 +109,7 @@ storiesOf("<NotificationDisplay>", module)
     return <Wrapper />;
   })
   .add("expanded with 4 messages", () => {
-    const el = useRef<HTMLDivElement>(null);
+    const el = useRef<HTMLDivElement>(ReactNull);
     React.useLayoutEffect(() => {
       sendNotification(
         "Something bad happened 1",
@@ -240,7 +240,7 @@ storiesOf("<NotificationDisplay>", module)
         notification={{
           id: "1",
           message: "Error 1",
-          details: null,
+          details: undefined,
           read: false,
           created: new Date(),
           severity: "error",

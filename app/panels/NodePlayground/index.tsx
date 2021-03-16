@@ -61,7 +61,6 @@ type Config = {
   editorForStorybook?: React.ReactNode;
   // Used only for storybook screenshot testing.
   additionalBackStackItems?: Script[];
-  vimMode: boolean;
   autoFormatOnSave?: boolean;
 };
 
@@ -91,12 +90,6 @@ export const NodePlaygroundSettings = ({ config, saveConfig }: Props) => (
     >
       <span>Auto-format on save</span>
     </Item>
-    <Item
-      icon={config.vimMode ? <CheckboxMarkedIcon /> : <CheckboxBlankOutlineIcon />}
-      onClick={() => saveConfig({ vimMode: !config.vimMode })}
-    >
-      <span>Vim Mode</span>
-    </Item>
   </>
 );
 
@@ -113,7 +106,7 @@ const SWelcomeScreen = styled.div`
   }
 `;
 
-export type Explorer = null | "docs" | "nodes" | "utils" | "templates";
+export type Explorer = undefined | "docs" | "nodes" | "utils" | "templates";
 
 const WelcomeScreen = ({
   addNewNode,
@@ -150,9 +143,9 @@ const WelcomeScreen = ({
 
 function NodePlayground(props: Props) {
   const { config, saveConfig } = props;
-  const { autoFormatOnSave, selectedNodeId, editorForStorybook, vimMode } = config;
+  const { autoFormatOnSave, selectedNodeId, editorForStorybook } = config;
 
-  const [explorer, updateExplorer] = React.useState<Explorer>(null);
+  const [explorer, updateExplorer] = React.useState<Explorer>(undefined);
 
   const userNodes = useSelector((state: any) => state.persistedState.panels.userNodes);
   const userNodeDiagnostics = useSelector((state: any) => state.userNodes.userNodeDiagnostics);
@@ -367,7 +360,6 @@ function NodePlayground(props: Props) {
                         script={currentScript}
                         setScriptCode={setScriptCode}
                         setScriptOverride={setScriptOverride}
-                        vimMode={vimMode}
                         rosLib={rosLib}
                         resizeKey={`${width}-${height}-${explorer || "none"}-${
                           selectedNodeId || "none"
@@ -396,7 +388,6 @@ function NodePlayground(props: Props) {
 NodePlayground.panelType = "NodePlayground";
 NodePlayground.defaultConfig = {
   selectedNodeId: undefined,
-  vimMode: false,
   autoFormatOnSave: true,
 };
 

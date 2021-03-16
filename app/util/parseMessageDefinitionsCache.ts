@@ -88,7 +88,7 @@ class ParseMessageDefinitionCache {
     // What if we already have this message definition stored?
     if (md5Sum) {
       const storedDefinition = this.getStoredDefinition(md5Sum);
-      if (storedDefinition != null) {
+      if (storedDefinition != undefined) {
         return storedDefinition;
       }
     }
@@ -129,6 +129,7 @@ class ParseMessageDefinitionCache {
       this._hashesToParsedDefinitions[md5Sum] = parsedDefinition;
       return parsedDefinition;
     }
+    return undefined;
   }
 
   getMd5sForStoredDefinitions(): string[] {

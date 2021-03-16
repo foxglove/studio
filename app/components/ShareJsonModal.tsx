@@ -37,7 +37,7 @@ function decode(value: string) {
   }
 }
 
-function selectText(element?: HTMLTextAreaElement | null): void {
+function selectText(element?: HTMLTextAreaElement | ReactNull): void {
   if (element) {
     element.focus();
     element.select();
@@ -51,7 +51,7 @@ export default function ShareJsonModal(props: Props) {
     if (typeof props.value === "string") {
       return props.value;
     }
-    return JSON.stringify(props.value, null, 2);
+    return JSON.stringify(props.value, undefined, 2);
   });
   const [error, setError] = useState<Error>();
 
@@ -63,7 +63,7 @@ export default function ShareJsonModal(props: Props) {
         setValue(newVal);
         decode(newVal);
       } else {
-        setValue(JSON.stringify(newVal, null, 2));
+        setValue(JSON.stringify(newVal, undefined, 2));
       }
     } catch (err) {
       setError(err);
@@ -106,7 +106,7 @@ export default function ShareJsonModal(props: Props) {
 
   const renderError = useMemo(() => {
     if (!error) {
-      return null;
+      return ReactNull;
     }
     return <div className="notification is-danger">The input you provided is invalid.</div>;
   }, [error]);

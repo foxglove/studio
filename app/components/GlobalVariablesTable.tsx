@@ -13,7 +13,7 @@
 import CloseIcon from "@mdi/svg/svg/close.svg";
 import DotsVerticalIcon from "@mdi/svg/svg/dots-vertical.svg";
 import { partition, pick, union, without } from "lodash";
-import React, { useEffect, useMemo, useCallback, useRef, useState, ReactElement } from "react";
+import { useEffect, useMemo, useCallback, useRef, useState, ReactElement } from "react";
 import styled, { css, keyframes } from "styled-components";
 
 import { usePreviousValue } from "../util/hooks";
@@ -215,7 +215,7 @@ function LinkedGlobalVariableRow({ name }: { name: string }): ReactElement {
                       </div>
                     ))}
                   </>
-                ) : null
+                ) : undefined
               }
             >
               <SLinkedTopicsSpan>
@@ -352,7 +352,7 @@ function GlobalVariablesTable(): ReactElement {
       </table>
       <Flex style={{ margin: "20px 16px 16px", justifyContent: "flex-end" }}>
         <button
-          disabled={globalVariables[""] != null}
+          disabled={globalVariables[""] != undefined}
           onClick={() => setGlobalVariables({ "": "" })}
           data-test="add-variable-btn"
         >

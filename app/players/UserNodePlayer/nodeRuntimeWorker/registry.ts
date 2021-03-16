@@ -36,7 +36,7 @@ export const containsFuncDeclaration = (args: any[]) => {
   for (const arg of args) {
     if (typeof arg === "function") {
       return true;
-    } else if (arg != null && typeof arg === "object") {
+    } else if (arg != undefined && typeof arg === "object") {
       for (const value of Object.values(arg)) {
         if (containsFuncDeclaration([value])) {
           return true;
@@ -50,7 +50,7 @@ export const containsFuncDeclaration = (args: any[]) => {
 export const stringifyFuncsInObject = (arg: any) => {
   if (typeof arg === "function") {
     return `${arg}`;
-  } else if (arg != null && typeof arg === "object") {
+  } else if (arg != undefined && typeof arg === "object") {
     const newArg = { ...arg };
     for (const [key, value] of Object.entries(arg)) {
       newArg[key] = stringifyFuncsInObject(value);
@@ -73,8 +73,8 @@ export const requireImplementation = (id: string, projectCode: Map<string, strin
     if (requestedFile.endsWith(file)) {
       const sourceExports = {};
       const require = (reqId: string) => requireImplementation(reqId, projectCode);
+      // eslint-disable-next-line no-new-func
       new Function("exports", "require", source)(sourceExports, require);
-      /* eslint-disable-line no-new-func */
       return sourceExports;
     }
   }
@@ -109,11 +109,11 @@ export const registerNode = ({
     const require = (id: string) => requireImplementation(id, projectCode);
 
     // Using new Function in order to execute user-input text in Node Playground as code
+    // eslint-disable-next-line no-new-func
     new Function("exports", "require", nodeCode)(nodeExports, require);
-    /* eslint-disable-line no-new-func */
     nodeCallback = nodeExports.default;
     return {
-      error: null,
+      error: undefined,
       userNodeLogs,
       userNodeDiagnostics,
     };
@@ -150,7 +150,7 @@ export const processMessage = ({
   };
   try {
     const newMessage = nodeCallback(message, globalVariables);
-    return { message: newMessage, error: null, userNodeLogs, userNodeDiagnostics };
+    return { message: newMessage, error: undefined, userNodeLogs, userNodeDiagnostics };
   } catch (e) {
     // TODO: Be able to map line numbers from errors.
     const error = e.toString();

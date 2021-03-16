@@ -35,6 +35,7 @@ export function getNewConnection(options: {
   } else if (!currentRemainingRange) {
     return getNewConnectionWithoutExistingConnection(otherOptions);
   }
+  return undefined;
 }
 
 function getNewConnectionWithExistingReadRequest({
@@ -123,7 +124,7 @@ function getNewConnectionWithoutExistingConnection({
     } else {
       readAheadRange = { start: 0, end: fileSize };
     }
-  } else if (lastResolvedCallbackEnd != null) {
+  } else if (lastResolvedCallbackEnd != undefined) {
     // Otherwise, if we have a limited cache, we want to read the data right after the last
     // read request, because usually read requests are sequential without gaps.
     readAheadRange = {
@@ -136,4 +137,5 @@ function getNewConnectionWithoutExistingConnection({
     // within it that has not already been downloaded.
     return missingRanges(readAheadRange, downloadedRanges)[0];
   }
+  return undefined;
 }

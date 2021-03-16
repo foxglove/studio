@@ -49,7 +49,7 @@ function Example({
   format?: EditFormat;
   obj?: any;
   changedObj?: any;
-  onMount?: (arg0: HTMLInputElement) => void;
+  onMount?: (arg0: HTMLTextAreaElement) => void;
 }) {
   const [value, setValue] = React.useState(obj);
 
@@ -64,9 +64,9 @@ function Example({
       <div
         ref={(el) => {
           if (el && onMount) {
-            const input = (document.querySelector(
-              "[data-test='validated-input']",
-            ) as any) as HTMLInputElement | null;
+            const input = document.querySelector<HTMLTextAreaElement>(
+              "textarea[data-test='validated-input']",
+            );
             if (input) {
               onMount(input);
             }
@@ -153,7 +153,7 @@ storiesOf("<ValidatedInput>", module)
             setImmediate(() => {
               // scroll to the top and start editing
               input.scrollTop = 0;
-              triggerInputChange(input, JSON.stringify(changedObj, null, 2));
+              triggerInputChange(input, JSON.stringify(changedObj, undefined, 2));
             });
           }}
         />

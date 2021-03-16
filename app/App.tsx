@@ -17,7 +17,7 @@ import HTML5Backend from "react-dnd-html5-backend";
 import { Provider, useDispatch } from "react-redux";
 import styled from "styled-components";
 
-import { OsContextSingleton } from "@foxglove-studio/app/OsContext";
+import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
 import { importPanelLayout } from "@foxglove-studio/app/actions/panels";
 import AddPanelMenu from "@foxglove-studio/app/components/AddPanelMenu";
 import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
@@ -61,7 +61,7 @@ const SToolbarItem = styled.div`
   -webkit-app-region: no-drag;
 `;
 function Root() {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(ReactNull);
   const dispatch = useDispatch();
   useEffect(() => {
     // Focus on page load to enable keyboard interaction.
@@ -96,6 +96,7 @@ function Root() {
     if (insetWindowControls) {
       return { marginLeft: "78px", borderLeft: "2px groove #29292f" };
     }
+    return undefined;
   }, [isFullScreen]);
 
   return (

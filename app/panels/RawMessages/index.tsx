@@ -19,7 +19,7 @@ import LessIcon from "@mdi/svg/svg/unfold-less-horizontal.svg";
 import MoreIcon from "@mdi/svg/svg/unfold-more-horizontal.svg";
 // eslint-disable-next-line no-restricted-imports
 import { first, isEqual, get, last } from "lodash";
-import React, { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import ReactHoverObserver from "react-hover-observer";
 import Tree from "react-json-tree";
 
@@ -99,7 +99,7 @@ const isSingleElemArray = (obj: any) => {
     return false;
   }
   const arr = isArrayView(obj) ? cast<ArrayView<any>>(obj).toArray() : cast<any[]>(obj);
-  return arr.filter((a) => a != null).length === 1;
+  return arr.filter((a) => a != undefined).length === 1;
 };
 const dataWithoutWrappingArray = (data: any) => {
   return isSingleElemArray(data) && typeof getIndex(data, 0) === "object"
@@ -149,7 +149,7 @@ function RawMessages(props: Props) {
   }, [datatypes, topic, topicRosPath]);
 
   // When expandAll is unset, we'll use expandedFields to get expanded info
-  const [expandAll, setExpandAll] = useState(false);
+  const [expandAll, setExpandAll] = useState<boolean | undefined>(false);
   const [expandedFields, setExpandedFields] = useState(() => new Set());
 
   const topicName = topicRosPath?.topicName || "";
@@ -216,7 +216,7 @@ function RawMessages(props: Props) {
         expandedFieldsCopy.add(key);
         setExpandedFields(expandedFieldsCopy);
       }
-      setExpandAll(null as any);
+      setExpandAll(undefined);
     },
     [expandedFields],
   );
@@ -318,7 +318,7 @@ function RawMessages(props: Props) {
 
   const renderSingleTopicOrDiffOutput = useCallback(() => {
     let shouldExpandNode;
-    if (expandAll !== null) {
+    if (expandAll != undefined) {
       shouldExpandNode = () => expandAll;
     } else {
       shouldExpandNode = (keypath: any) => {
@@ -349,7 +349,7 @@ function RawMessages(props: Props) {
     const shouldDisplaySingleVal =
       (data !== undefined && typeof data !== "object") ||
       (isSingleElemArray(data) &&
-        getIndex(data, 0) != null &&
+        getIndex(data, 0) != undefined &&
         typeof getIndex(data, 0) !== "object");
     const singleVal = isSingleElemArray(data) ? getIndex(data, 0) : data;
 
@@ -413,7 +413,7 @@ function RawMessages(props: Props) {
               postprocessValue={(rawVal: unknown) => {
                 const val = maybeShallowParse(rawVal);
                 if (
-                  val != null &&
+                  val != undefined &&
                   typeof val === "object" &&
                   Object.keys(val as any).length === 1 &&
                   diffLabelTexts.includes(Object.keys(val as any)[0])
@@ -565,9 +565,9 @@ function RawMessages(props: Props) {
                   path={diffTopicPath}
                   onChange={onDiffTopicPathChange}
                   inputStyle={{ height: "100%" }}
-                  {...{ prioritizedDatatype: topic?.datatype }}
+                  prioritizedDatatype={topic?.datatype}
                 />
-              ) : null}
+              ) : undefined}
             </Flex>
           )}
         </div>

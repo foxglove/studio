@@ -29,10 +29,6 @@ import {
 } from "@foxglove-studio/app/components/ValidatedInput";
 import { getGlobalHooks } from "@foxglove-studio/app/loadWebviz";
 import {
-  Renderer,
-  ThreeDimensionalVizConfig,
-} from "@foxglove-studio/app/panels/ThreeDimensionalViz";
-import {
   SValue,
   SLabel,
 } from "@foxglove-studio/app/panels/ThreeDimensionalViz/Interactions/styling";
@@ -41,6 +37,7 @@ import {
   getNewCameraStateOnFollowChange,
   TargetPose,
 } from "@foxglove-studio/app/panels/ThreeDimensionalViz/threeDimensionalVizUtils";
+import { ThreeDimensionalVizConfig } from "@foxglove-studio/app/panels/ThreeDimensionalViz/types";
 import { point2DValidator, cameraStateValidator } from "@foxglove-studio/app/shared/validators";
 import colors from "@foxglove-studio/app/styles/colors.module.scss";
 import clipboard from "@foxglove-studio/app/util/clipboard";
@@ -138,7 +135,7 @@ export default function CameraInfo({
   const camPos2DTrimmed = camPos2D.map((num: any) => +num.toFixed(2));
 
   const syncCameraState = () => {
-    updatePanelConfig(Renderer.panelType, (config: ThreeDimensionalVizConfig) => {
+    updatePanelConfig("3D Panel", (config: ThreeDimensionalVizConfig) => {
       // Transform the camera state by whichever TF or orientation the other panels are following.
       const newCameraState = getNewCameraStateOnFollowChange({
         prevCameraState: cameraState,
@@ -171,7 +168,7 @@ export default function CameraInfo({
               tooltip="Copy cameraState"
               small
               onClick={() => {
-                clipboard.copy(JSON.stringify(cameraState, null, 2));
+                clipboard.copy(JSON.stringify(cameraState, undefined, 2));
               }}
             >
               Copy
@@ -214,7 +211,7 @@ export default function CameraInfo({
                       type="checkbox"
                       checked={autoSyncCameraState}
                       onChange={() =>
-                        updatePanelConfig(Renderer.panelType, (config: any) => ({
+                        updatePanelConfig("3D Panel", (config: any) => ({
                           ...config,
                           cameraState,
                           autoSyncCameraState: !autoSyncCameraState,

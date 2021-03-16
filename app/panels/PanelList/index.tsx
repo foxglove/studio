@@ -153,8 +153,8 @@ type PanelItemProps = {
   // the props here are actually used in the dragSource
   // beginDrag and endDrag callbacks - the props are passed via react-dnd
   // so keep the flow defs here so those functions can have access to some type info
-  mosaicId: string; //eslint-disable-line react/no-unused-prop-types
-  onDrop: (arg0: DropDescription) => void; //eslint-disable-line react/no-unused-prop-types
+  mosaicId: string;
+  onDrop: (arg0: DropDescription) => void;
 };
 
 function DraggablePanelItem({
@@ -166,7 +166,7 @@ function DraggablePanelItem({
   highlighted,
   mosaicId,
 }: PanelItemProps) {
-  const scrollRef = React.useRef<HTMLDivElement | null>(null);
+  const scrollRef = React.useRef<HTMLDivElement>(ReactNull);
   const [__, drag] = useDrag({
     item: { type: MosaicDragType.WINDOW },
     begin: (_monitor) => ({ mosaicId } as any),
@@ -322,15 +322,15 @@ function PanelList(props: Props) {
   ]);
 
   const highlightedPanel = React.useMemo(
-    () => (highlightedPanelIdx != null ? filteredItems[highlightedPanelIdx] : null),
+    () => (highlightedPanelIdx != undefined ? filteredItems[highlightedPanelIdx] : undefined),
     [filteredItems, highlightedPanelIdx],
   );
 
   const onKeyDown = React.useCallback(
     (e) => {
-      if (e.key === "ArrowDown" && highlightedPanelIdx != null) {
+      if (e.key === "ArrowDown" && highlightedPanelIdx != undefined) {
         setHighlightedPanelIdx((highlightedPanelIdx + 1) % filteredItems.length);
-      } else if (e.key === "ArrowUp" && highlightedPanelIdx != null) {
+      } else if (e.key === "ArrowUp" && highlightedPanelIdx != undefined) {
         const newIdx = (highlightedPanelIdx - 1) % (filteredItems.length - 1);
         setHighlightedPanelIdx(newIdx >= 0 ? newIdx : filteredItems.length + newIdx);
       } else if (e.key === "Enter" && highlightedPanel) {
@@ -411,7 +411,7 @@ function PanelList(props: Props) {
         {panelCategories.map(({ label }, categoryIdx) => {
           const prevItems = flatMap(filteredItemsByCategoryIdx.slice(0, categoryIdx));
           if (!filteredItemsByCategoryIdx[categoryIdx].length) {
-            return null;
+            return ReactNull;
           }
           return (
             <div key={label} style={{ paddingTop: "8px" }}>
