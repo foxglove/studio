@@ -106,6 +106,7 @@ type NodesListProps = {
   deleteNode: (id: string) => void;
   collapse: () => void;
   selectedNodeId?: string;
+  // eslint-disable-next-line react/no-unused-prop-types
   userNodeDiagnostics: {
     [guid: string]: UserNodeDiagnostics;
   };
