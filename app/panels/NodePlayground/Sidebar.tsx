@@ -187,7 +187,7 @@ const Sidebar = ({
   setScriptOverride,
   script,
   addNewNode,
-}: Props) => {
+}: Props): React.ReactElement => {
   const nodesSelected = explorer === "nodes";
   const docsSelected = explorer === "docs";
   const utilsSelected = explorer === "utils";

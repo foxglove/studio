@@ -174,7 +174,7 @@ export const useSearchMatches = ({
   rootTf?: string;
   searchTextOpen: boolean;
   transforms: Transforms;
-}) => {
+}): void => {
   const hasCurrentMatchChanged = useDeepChangeDetector([currentMatch], true);
   React.useEffect(() => {
     if (!currentMatch || !searchTextOpen || !rootTf || !hasCurrentMatchChanged) {
