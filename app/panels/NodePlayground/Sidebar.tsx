@@ -118,7 +118,7 @@ const NodesList = ({ nodes, selectNode, deleteNode, collapse, selectedNodeId }: 
             selected={selectedNodeId === nodeId}
             onClick={() => selectNode(nodeId)}
           >
-            {nodes[nodeId].name}
+            {nodes[nodeId]?.name}
             <Icon onClick={() => deleteNode(nodeId)} medium>
               <DeleteIcon />
             </Icon>
@@ -225,7 +225,7 @@ const Sidebar = ({
         <SFlex>
           <SidebarTitle title={"docs"} collapse={() => updateExplorer(undefined)} />
           <TextContent style={{ backgroundColor: "transparent" }} linkTarget="_blank">
-            {otherMarkdownDocsForTest || nodePlaygroundDocs}
+            {otherMarkdownDocsForTest ?? nodePlaygroundDocs}
           </TextContent>
           <br />
           <br />
