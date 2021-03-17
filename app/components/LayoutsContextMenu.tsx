@@ -27,12 +27,18 @@ type LayoutsContextMenuProps = {
   onRenameAction?: (layout: Layout) => void;
 };
 
+// Wrap Item with styled so we can reference it in ShowHoverParent
 const HoverItem = styled(Item)``;
 
+// ShowsHoverParent shows its content when the user hovers over HoverItem
+// We use it to display the rename/delete icons on item hover
+// Use visibility so the icons occupy their space while hidden
+// This avoids the menu width jumping changing when icons are shown on hover
 const ShowHoverParent = styled.div`
-  display: none;
+  display: flex;
+  visibility: hidden;
   ${HoverItem}:hover & {
-    display: flex;
+    visibility: visible;
   }
 `;
 

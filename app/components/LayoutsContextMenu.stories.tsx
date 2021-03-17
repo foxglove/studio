@@ -45,11 +45,13 @@ export function Empty(): JSX.Element {
   const store = useMemo(() => configureStore(createRootReducer(createMemoryHistory())), []);
 
   return (
-    <Provider store={store}>
-      <LayoutStorageContext.Provider value={storage}>
-        <LayoutsContextMenu />
-      </LayoutStorageContext.Provider>
-    </Provider>
+    <div style={{ display: "flex" }}>
+      <Provider store={store}>
+        <LayoutStorageContext.Provider value={storage}>
+          <LayoutsContextMenu />
+        </LayoutStorageContext.Provider>
+      </Provider>
+    </div>
   );
 }
 
@@ -86,10 +88,12 @@ export function LayoutList(): JSX.Element {
   }, []);
 
   return (
-    <Provider store={store}>
-      <LayoutStorageContext.Provider value={storage}>
-        <LayoutsContextMenu />
-      </LayoutStorageContext.Provider>
-    </Provider>
+    <div style={{ display: "flex" }}>
+      <Provider store={store}>
+        <LayoutStorageContext.Provider value={storage}>
+          <LayoutsContextMenu />
+        </LayoutStorageContext.Provider>
+      </Provider>
+    </div>
   );
 }
