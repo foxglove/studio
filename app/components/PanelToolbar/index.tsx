@@ -68,11 +68,11 @@ type Props = {
 function StandardMenuItems({
   tabId,
   isUnknownPanel,
-  setShowShareModal,
+  onEditPanelConfig,
 }: {
   tabId?: string;
   isUnknownPanel: boolean;
-  setShowShareModal: (_: boolean) => void;
+  onEditPanelConfig: () => void;
 }) {
   const { mosaicActions } = useContext(MosaicContext);
   const { mosaicWindowActions } = useContext(MosaicWindowContext);
@@ -203,7 +203,7 @@ function StandardMenuItems({
       {!isUnknownPanel && (
         <Item
           icon={<CodeJsonIcon />}
-          onClick={() => setShowShareModal(true)}
+          onClick={onEditPanelConfig}
           disabled={type === TAB_PANEL_TYPE}
           dataTest="panel-settings-config"
         >
@@ -220,7 +220,7 @@ type PanelToolbarControlsProps = Props & {
   onDragEnd: () => void;
   showPanelName?: boolean;
   isUnknownPanel: boolean;
-  setShowShareModal: (_: boolean) => void;
+  onEditPanelConfig: () => void;
 };
 
 // Keep controls, which don't change often, in a pure component in order to avoid re-rendering the
@@ -236,7 +236,7 @@ const PanelToolbarControls = React.memo(function PanelToolbarControls({
   onDragStart,
   showHiddenControlsOnHover,
   showPanelName,
-  setShowShareModal,
+  onEditPanelConfig,
 }: PanelToolbarControlsProps) {
   const panelData = useContext(PanelContext);
 
@@ -259,7 +259,7 @@ const PanelToolbarControls = React.memo(function PanelToolbarControls({
         <StandardMenuItems
           tabId={panelData?.tabId}
           isUnknownPanel={isUnknownPanel}
-          setShowShareModal={setShowShareModal}
+          onEditPanelConfig={onEditPanelConfig}
         />
         {menuContent && <hr />}
         {menuContent}
@@ -347,7 +347,7 @@ export default React.memo<Props>(function PanelToolbar({
                 onDragStart={onDragStart}
                 onDragEnd={onDragEnd}
                 isUnknownPanel={!!isUnknownPanel}
-                setShowShareModal={setShowShareModal}
+                onEditPanelConfig={() => setShowShareModal(true)}
               />
             )}
           </div>
