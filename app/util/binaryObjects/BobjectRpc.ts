@@ -177,17 +177,19 @@ export class BobjectRpcReceiver {
       throw new Error(`BobjectRpc: invariant violation - no datatype for index ${datatypesIndex}`);
     }
 
-    const buffer = this._buffersByTopic[topic];
-    if (!buffer) {
-      throw new Error(`BobjectRpc: invariant violation - no buffer for topic ${topic}`);
+    let bobject: unknown;
+    if (transferData.type === "parsed") {
+      bobject = wrapJsObject(datatypes, datatype, transferData.message);
+    } else {
+      const buffer = this._buffersByTopic[topic];
+      if (!buffer) {
+        throw new Error(`BobjectRpc: invariant violation - no buffer for topic ${topic}`);
+      }
+      bobject = getObjects(datatypes, datatype, buffer.buffer, buffer.bigString, [
+        transferData.offset,
+      ])[0];
     }
 
-    const bobject =
-      transferData.type === "parsed"
-        ? wrapJsObject(datatypes, datatype, transferData.message)
-        : getObjects(datatypes, datatype, buffer.buffer, buffer.bigString, [
-            transferData.offset,
-          ])[0];
     return format === "parsed" ? deepParse(bobject) : bobject;
   }
 }
