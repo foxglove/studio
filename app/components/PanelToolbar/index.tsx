@@ -299,9 +299,9 @@ export default React.memo<Props>(function PanelToolbar({
   const [showShareModal, setShowShareModal] = useState(false);
   const dispatch = useDispatch();
 
-  const { store } = useContext(ReactReduxContext);
+  const { store } = useContext(ReactReduxContext) ?? {};
   const shareModal = useMemo(() => {
-    if (!id || !showShareModal) {
+    if (!id || !showShareModal || !store) {
       return ReactNull;
     }
     const panelConfigById = store.getState().persistedState.panels.savedProps;
