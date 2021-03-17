@@ -124,7 +124,6 @@
   "app/players/nodes.ts",
   "app/reducers/panels.test.ts",
   "app/reducers/panels.ts",
-  "app/shared/validators.ts",
   "app/test/datatypes.ts",
   "app/util/FakeRpc.ts",
   "app/util/Rpc.ts",
