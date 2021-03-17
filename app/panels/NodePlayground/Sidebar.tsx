@@ -28,7 +28,6 @@ import { Script } from "@foxglove-studio/app/panels/NodePlayground/script";
 import { getNodeProjectConfig } from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/projectConfig";
 import templates from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/templates";
 import userUtilsReadMe from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/README.md";
-import { UserNodeDiagnostics } from "@foxglove-studio/app/reducers/userNodes";
 import { UserNodes } from "@foxglove-studio/app/types/panels";
 import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
 
@@ -106,10 +105,6 @@ type NodesListProps = {
   deleteNode: (id: string) => void;
   collapse: () => void;
   selectedNodeId?: string;
-  // eslint-disable-next-line react/no-unused-prop-types
-  userNodeDiagnostics: {
-    [guid: string]: UserNodeDiagnostics;
-  };
 };
 
 const NodesList = ({ nodes, selectNode, deleteNode, collapse, selectedNodeId }: NodesListProps) => {
@@ -140,9 +135,6 @@ type Props = {
   userNodes: UserNodes;
   selectedNodeId?: string;
   otherMarkdownDocsForTest?: string;
-  userNodeDiagnostics: {
-    [guid: string]: UserNodeDiagnostics;
-  };
   explorer: Explorer;
   updateExplorer: (explorer: Explorer) => void;
   setScriptOverride: (script: Script, maxDepth?: number) => void;
@@ -182,7 +174,6 @@ const Sidebar = ({
   deleteNode,
   selectedNodeId,
   otherMarkdownDocsForTest,
-  userNodeDiagnostics,
   explorer,
   updateExplorer,
   setScriptOverride,
@@ -228,7 +219,6 @@ const Sidebar = ({
           deleteNode={deleteNode}
           collapse={() => updateExplorer(undefined)}
           selectedNodeId={selectedNodeId}
-          userNodeDiagnostics={userNodeDiagnostics}
         />
       ),
       docs: (
@@ -291,7 +281,6 @@ const Sidebar = ({
       selectNode,
       selectedNodeId,
       updateExplorer,
-      userNodeDiagnostics,
       userNodes,
     ],
   );

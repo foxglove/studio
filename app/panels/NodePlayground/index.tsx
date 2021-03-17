@@ -276,7 +276,6 @@ function NodePlayground(props: Props) {
               }}
               selectedNodeId={selectedNodeId}
               userNodes={userNodes}
-              userNodeDiagnostics={userNodeDiagnostics}
               script={currentScript}
               setScriptOverride={setScriptOverride}
               addNewNode={addNewNode}
