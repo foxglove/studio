@@ -54,10 +54,10 @@ export function panelsByCategory() {
     { title: "Node Playground", component: NodePlayground },
     { title: "Tab", component: Tab },
     { title: "Data Source Info", component: SourceInfo },
-    { title: "Studio Internals", component: Internals },
   ];
 
   const debugging = [
+    { title: "Studio Internals", component: Internals },
     { title: "Number of Renders", component: NumberOfRenders },
     { title: "Playback Performance", component: PlaybackPerformance },
     { title: "Subscribe to List", component: SubscribeToList },
