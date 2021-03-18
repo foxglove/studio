@@ -10,7 +10,7 @@ let primaryPort: MessagePort | undefined;
 const callbacks = new Map<number, (args: Cloneable[], ports?: readonly MessagePort[]) => void>();
 let nextCallId = 0;
 
-export async function initRendererSocket(channel: string = "__electron_socket"): Promise<void> {
+export function initRendererSocket(channel: string = "__electron_socket"): void {
   window.onmessage = (windowEv: MessageEvent<string>) => {
     if (windowEv.target !== window || windowEv.data !== channel) {
       return;
