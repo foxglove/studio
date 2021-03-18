@@ -10,13 +10,13 @@ export default class OsContextAppConfiguration implements AppConfiguration {
   static STORE_NAME = "settings";
   static STORE_KEY = "settings.json";
 
-  readonly #ctx: OsContext;
+  readonly #ctx: Pick<OsContext, "storage">;
 
   // Protect access to currentValue to avoid read-modify-write races between multiple set() calls.
   #mutex = new Mutex();
   #currentValue: unknown;
 
-  constructor(ctx: OsContext) {
+  constructor(ctx: Pick<OsContext, "storage">) {
     this.#ctx = ctx;
     this.#mutex.runExclusive(async () => {
       const value = await this.#ctx.storage.get(

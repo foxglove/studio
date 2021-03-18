@@ -12,16 +12,11 @@ type MockStorage = {
     Parameters<OsContext["storage"][K]>
   >;
 };
-function makeMockContext(): OsContext & { storage: MockStorage } {
+function makeMockContext(): Pick<OsContext, "storage"> & { storage: MockStorage } {
   function raise(name: string) {
     throw new Error(`Unexpected call to ${name}`);
   }
   return {
-    platform: "dummy",
-    handleToolbarDoubleClick() {},
-    addIpcEventListener() {},
-    async menuAddInputSource() {},
-    async menuRemoveInputSource() {},
     storage: {
       list: jest.fn().mockImplementation(() => raise("list")),
       all: jest.fn().mockImplementation(() => raise("all")),
