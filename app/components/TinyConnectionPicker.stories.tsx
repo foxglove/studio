@@ -34,6 +34,7 @@ storiesOf("<TinyConnectionPicker>", module).add("default", () => {
 
   const value: PlayerSelection = {
     selectSource: () => {},
+    setPlayerFromBagURL: async () => {},
     availableSources: playerSources,
   };
 

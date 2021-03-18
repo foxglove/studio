@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import WelcomePanel from "@foxglove-studio/app/onboarding/WelcomePanel";
 import GlobalVariableSlider from "@foxglove-studio/app/panels/GlobalVariableSlider";
 import GlobalVariables from "@foxglove-studio/app/panels/GlobalVariables";
 import ImageViewPanel from "@foxglove-studio/app/panels/ImageView";
@@ -63,5 +64,8 @@ export function panelsByCategory() {
     { title: "Subscribe to List", component: SubscribeToList },
   ];
 
-  return { ros, utilities, debugging };
+  // These panels are hidden from the menu because getGlobalHooks().panelCategories() doesn't include "hidden".
+  const hidden = [{ title: "Welcome", component: WelcomePanel }];
+
+  return { ros, utilities, debugging, hidden };
 }

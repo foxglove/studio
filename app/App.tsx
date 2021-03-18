@@ -15,10 +15,11 @@ import { ReactElement, useState, CSSProperties, useEffect, useMemo, useRef } fro
 import { DndProvider } from "react-dnd";
 import HTML5Backend from "react-dnd-html5-backend";
 import { Provider, useDispatch } from "react-redux";
+import { useEffectOnce } from "react-use";
 import styled from "styled-components";
 
 import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
-import { importPanelLayout } from "@foxglove-studio/app/actions/panels";
+import { importPanelLayout, loadLayout } from "@foxglove-studio/app/actions/panels";
 import AddPanelMenu from "@foxglove-studio/app/components/AddPanelMenu";
 import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
 import { ExperimentalFeaturesModal } from "@foxglove-studio/app/components/ExperimentalFeaturesModal";
@@ -37,6 +38,7 @@ import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToB
 import ShortcutsModal from "@foxglove-studio/app/components/ShortcutsModal";
 import TinyConnectionPicker from "@foxglove-studio/app/components/TinyConnectionPicker";
 import Toolbar from "@foxglove-studio/app/components/Toolbar";
+import { useAppConfiguration } from "@foxglove-studio/app/context/AppConfigurationContext";
 import ExperimentalFeaturesLocalStorageProvider from "@foxglove-studio/app/context/ExperimentalFeaturesLocalStorageProvider";
 import OsContextAppConfigurationProvider from "@foxglove-studio/app/context/OsContextAppConfigurationProvider";
 import OsContextLayoutStorageProvider from "@foxglove-studio/app/context/OsContextLayoutStorageProvider";
@@ -45,6 +47,7 @@ import {
   usePlayerSelection,
 } from "@foxglove-studio/app/context/PlayerSelectionContext";
 import experimentalFeatures from "@foxglove-studio/app/experimentalFeatures";
+import welcomeLayout from "@foxglove-studio/app/onboarding/welcomeLayout";
 import getGlobalStore from "@foxglove-studio/app/store/getGlobalStore";
 import browserHistory from "@foxglove-studio/app/util/history";
 import inAutomatedRunMode from "@foxglove-studio/app/util/inAutomatedRunMode";
@@ -75,7 +78,7 @@ function Root() {
     (window as any).setPanelLayout = (payload: any) => dispatch(importPanelLayout(payload));
   }, [dispatch]);
 
-  const { currentSourceName } = usePlayerSelection();
+  const { currentSourceName, setPlayerFromBagURL } = usePlayerSelection();
 
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
@@ -101,6 +104,20 @@ function Root() {
     }
     return undefined;
   }, [isFullScreen]);
+
+  const appConfiguration = useAppConfiguration();
+
+  // Show welcome layout on first run
+  useEffectOnce(() => {
+    (async () => {
+      const welcomeLayoutShown = await appConfiguration.get("onboarding.welcome-layout.shown");
+      if (!welcomeLayoutShown) {
+        dispatch(loadLayout(welcomeLayout));
+        setPlayerFromBagURL("https://open-source-webviz-ui.s3.amazonaws.com/demo.bag");
+        appConfiguration.set("onboarding.welcome-layout.shown", true);
+      }
+    })();
+  });
 
   return (
     <div ref={containerRef} className="app-container" tabIndex={0}>

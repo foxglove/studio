@@ -276,6 +276,8 @@ function PlayerManager({
 
   const value: PlayerSelection = {
     selectSource,
+    setPlayerFromBagURL: async (url) =>
+      buildPlayer(await buildPlayerFromBagURLs([url], buildPlayerOptions)),
     availableSources: playerSources,
     currentSourceName,
     currentPlayer: player,
