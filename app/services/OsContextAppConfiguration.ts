@@ -1,6 +1,8 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
+import { Mutex } from "async-mutex";
+
 import { OsContext } from "@foxglove-studio/app/OsContext";
 import { AppConfiguration } from "@foxglove-studio/app/context/AppConfigurationContext";
 
@@ -8,25 +10,32 @@ export default class OsContextAppConfiguration implements AppConfiguration {
   static STORE_NAME = "settings";
   static STORE_KEY = "settings.json";
 
-  readonly #ctx: OsContext;
-  #currentPromise: Promise<unknown>;
+  readonly #ctx: Pick<OsContext, "storage">;
 
-  constructor(ctx: OsContext) {
+  // Protect access to currentValue to avoid read-modify-write races between multiple set() calls.
+  #mutex = new Mutex();
+  #currentValue: unknown;
+
+  constructor(ctx: Pick<OsContext, "storage">) {
     this.#ctx = ctx;
-    this.#currentPromise = this.#ctx.storage
-      .get(OsContextAppConfiguration.STORE_NAME, OsContextAppConfiguration.STORE_KEY, {
-        encoding: "utf8",
-      })
-      .then((value) => JSON.parse(value ?? "{}"));
+    this.#mutex.runExclusive(async () => {
+      const value = await this.#ctx.storage.get(
+        OsContextAppConfiguration.STORE_NAME,
+        OsContextAppConfiguration.STORE_KEY,
+        { encoding: "utf8" },
+      );
+      this.#currentValue = JSON.parse(value ?? "{}");
+    });
   }
 
   async get(key: string): Promise<unknown> {
-    return ((await this.#currentPromise) as Record<string, unknown>)[key];
+    return await this.#mutex.runExclusive(
+      () => (this.#currentValue as Record<string, unknown>)[key],
+    );
   }
 
   async set(key: string, value: unknown): Promise<void> {
-    // Immediately set a new currentPromise so any future calls will wait for this one to complete.
-    this.#currentPromise = this.#currentPromise.finally(async () => {
+    await this.#mutex.runExclusive(async () => {
       const currentConfig = await this.#ctx.storage.get(
         OsContextAppConfiguration.STORE_NAME,
         OsContextAppConfiguration.STORE_KEY,
@@ -40,9 +49,7 @@ export default class OsContextAppConfiguration implements AppConfiguration {
         OsContextAppConfiguration.STORE_KEY,
         JSON.stringify(newConfig),
       );
-      return newConfig;
+      this.#currentValue = newConfig;
     });
-
-    await this.#currentPromise;
   }
 }
