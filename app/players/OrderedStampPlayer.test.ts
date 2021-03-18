@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import assert from "assert";
 import { TimeUtil } from "rosbag";
 
 import FakePlayer from "@foxglove-studio/app/components/MessagePipeline/FakePlayer";
@@ -94,7 +95,6 @@ function getState(hasHeaderStamp?: any): PlayerStateActiveData {
 function makePlayers(
   initialOrder: TimestampMethod,
 ): { player: OrderedStampPlayer; fakePlayer: FakePlayer } {
-  // Need to put a UserNodePlayer in between to satisfy flow.
   const fakePlayer = new FakePlayer();
   fakePlayer.setCapabilities([PlayerCapabilities.setSpeed]);
   return {
@@ -169,12 +169,9 @@ describe("OrderedStampPlayer", () => {
       currentTime: fromSec(10),
       bobjects: upstreamBobjects,
     });
-    const bobjects = states[0].activeData?.bobjects;
-    const topics = states[0].activeData?.topics;
-
-    if (bobjects == undefined) {
-      throw new Error("Satisfy flow.");
-    }
+    const bobjects = states[0]?.activeData?.bobjects;
+    const topics = states[0]?.activeData?.topics;
+    assert(bobjects);
     expect(
       bobjects.map(({ receiveTime, message, topic }) => ({
         topic,
@@ -377,7 +374,6 @@ describe("OrderedStampPlayer", () => {
         this.emit({ ...getState(), currentTime, messages: upstreamMessages });
       }
     }
-    // Need to put a UserNodePlayer in between to satisfy flow.
     const fakePlayer = new ModifiedFakePlayer();
     fakePlayer.setCapabilities([PlayerCapabilities.setSpeed]);
     const player = new OrderedStampPlayer(
