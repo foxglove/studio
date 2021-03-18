@@ -133,7 +133,7 @@
     "http-server": "0.12.3",
     "reg-notify-github-plugin": "0.10.14",
     "reg-publish-gcs-plugin": "0.10.10",
-    "reg-simple-keygen-plugin": "0.10.10",
+    "reg-simple-keygen-plugin": "0.10.15",
     "reg-suit": "0.10.14",
     "storycap": "3.0.3",
     "url-search-params": "1.1.0",
