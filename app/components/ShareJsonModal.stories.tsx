@@ -40,11 +40,11 @@ storiesOf("<ShareJsonModal>", module)
       data-modalcontainer="true"
       ref={(el) => {
         if (el) {
-          const textarea: any = el.querySelector("textarea");
+          const textarea: any = document.querySelector("textarea");
           textarea.value = "{";
           TestUtils.Simulate.change(textarea);
           setTimeout(() => {
-            (el as any).querySelector(".test-apply").click();
+            document.querySelector<HTMLElement>(".test-apply")?.click();
           }, 10);
         }
       }}
