@@ -94,7 +94,7 @@ export class TcpSocketRenderer extends EventEmitter {
     this.#callbacks.clear();
   }
 
-  async write(data: Uint8Array): Promise<void> {
+  async write(data: Uint8Array, transfer = true): Promise<void> {
     return new Promise((resolve) => {
       const callId = this.#nextCallId++;
       this.#callbacks.set(callId, () => {
@@ -102,7 +102,11 @@ export class TcpSocketRenderer extends EventEmitter {
         resolve();
       });
       const msg: RpcCall = ["write", callId, data];
-      this.#messagePort.postMessage(msg, [data]);
+      if (transfer) {
+        this.#messagePort.postMessage(msg, [data]);
+      } else {
+        this.#messagePort.postMessage(msg);
+      }
     });
   }
 
