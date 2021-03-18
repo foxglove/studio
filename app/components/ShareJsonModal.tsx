@@ -28,7 +28,7 @@ type Props = {
   onChange?: (value: any) => void;
   // the panel state from redux
   // this will be serialized to json & displayed
-  value: any; // eslint-disable-line react/no-unused-prop-types
+  value: any;
   noun: string;
 };
 
@@ -102,7 +102,7 @@ export default class ShareJsonModal extends Component<Props, State> {
   renderError() {
     const { error } = this.state;
     if (!error) {
-      return null;
+      return ReactNull;
     }
     return <div className="notification is-danger">The input you provided is invalid.</div>;
   }
