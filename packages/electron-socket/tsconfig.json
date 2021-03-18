@@ -1,6 +1,6 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["electron/*.ts", "renderer/*.ts", "shared/*.ts"],
+  "include": ["preloader/*.ts", "renderer/*.ts", "shared/*.ts"],
   "compilerOptions": {
     "target": "es2020",
     "module": "es2020",

@@ -12,7 +12,7 @@ import { getGlobalConfig } from "@foxglove-studio/app/GlobalConfig";
 import installDevtoolsFormatters from "@foxglove-studio/app/util/installDevtoolsFormatters";
 import overwriteFetch from "@foxglove-studio/app/util/overwriteFetch";
 import waitForFonts from "@foxglove-studio/app/util/waitForFonts";
-import { initRendererSocket } from "@foxglove/electron-socket/renderer";
+import { Sockets } from "@foxglove/electron-socket/renderer";
 
 if (typeof process.env.SENTRY_DSN === "string") {
   initSentry({ dsn: process.env.SENTRY_DSN });
@@ -30,7 +30,7 @@ async function main() {
   // Initialize the RPC channel for electron-socket. This method is called first
   // since the window.onmessage handler needs to be installed before
   // window.onload fires
-  await initRendererSocket();
+  await Sockets.Create();
 
   // consider moving waitForFonts into App to display an app loading screen
   await waitForFonts();

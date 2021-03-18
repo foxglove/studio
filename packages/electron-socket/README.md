@@ -10,25 +10,25 @@ Raw sockets are not supported in browser contexts, even in Electron apps. To ove
 
 ```ts
 // preload.ts ////////////////////////////////////////////////////////////////
-import { initElectronSocket } from "@foxglove/electron-socket/electron";
+import { PreloaderSockets } from "@foxglove/electron-socket/preloader";
 
-initElectronSocket();
+PreloaderSockets.Create();
 ```
 
 ```ts
 // renderer.ts ///////////////////////////////////////////////////////////////
-import { initRendererSocket, createServer, createSocket } from "@foxglove/electron-socket/renderer";
+import { Sockets } from "@foxglove/electron-socket/renderer";
 
 async function main() {
-  await initRendererSocket();
+  const net = await Sockets.Create();
 
-  const server = await createServer();
+  const server = await net.createServer();
   server.on("connection", (client) => {
     client.write(new Uint8Array([42]));
   });
   server.listen(9000);
 
-  const socket = await createSocket();
+  const socket = await net.createSocket();
   socket.on("data", (data: Uint8Array) => console.log(`Server sent ${data}`));
   socket.connect({ port: 9000, host: "localhost" });
 }
