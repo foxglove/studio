@@ -20,16 +20,16 @@ export class TcpSocketElectron {
   #messagePort: MessagePort;
   #transform?: Transform;
   #api = new Map<string, RpcHandler>([
-    ["remoteAddress", (callId) => this.#apiResponse([callId, this.remoteAddress()])],
-    ["localAddress", (callId) => this.#apiResponse([callId, this.localAddress()])],
-    ["fd", (callId) => this.#apiResponse([callId, this.fd()])],
+    ["remoteAddress", (callId) => this.#apiResponse(callId, this.remoteAddress())],
+    ["localAddress", (callId) => this.#apiResponse(callId, this.localAddress())],
+    ["fd", (callId) => this.#apiResponse(callId, this.fd())],
     [
       "setKeepAlive",
       (callId, args) => {
         const enable = args[0] as boolean | undefined;
         const initialDelay = args[1] as number | undefined;
         this.setKeepAlive(enable, initialDelay);
-        this.#apiResponse([callId]);
+        this.#apiResponse(callId);
       },
     ],
     [
@@ -37,7 +37,7 @@ export class TcpSocketElectron {
       (callId, args) => {
         const timeout = args[0] as number;
         this.setTimeout(timeout);
-        this.#apiResponse([callId]);
+        this.#apiResponse(callId);
       },
     ],
     [
@@ -45,28 +45,28 @@ export class TcpSocketElectron {
       (callId, args) => {
         const noDelay = args[0] as boolean | undefined;
         this.setNoDelay(noDelay);
-        this.#apiResponse([callId]);
+        this.#apiResponse(callId);
       },
     ],
-    ["connected", (callId) => this.#apiResponse([callId, this.connected()])],
+    ["connected", (callId) => this.#apiResponse(callId, this.connected())],
     [
       "connect",
       (callId, args) => {
         const options = args[0] as { port: number; host?: string };
         this.connect(options)
-          .then(() => this.#apiResponse([callId, undefined]))
-          .catch((err) => this.#apiResponse([callId, String(err.stack ?? err)]));
+          .then(() => this.#apiResponse(callId, undefined))
+          .catch((err) => this.#apiResponse(callId, String(err.stack ?? err)));
       },
     ],
-    ["close", (callId) => this.#apiResponse([callId, this.close()])],
-    ["dispose", (callId) => this.#apiResponse([callId, this.dispose()])],
+    ["close", (callId) => this.#apiResponse(callId, this.close())],
+    ["dispose", (callId) => this.#apiResponse(callId, this.dispose())],
     [
       "write",
       (callId, args) => {
         const data = args[0] as Uint8Array;
         this.write(data)
-          .then(() => this.#apiResponse([callId, undefined]))
-          .catch((err) => this.#apiResponse([callId, String(err.stack ?? err)]));
+          .then(() => this.#apiResponse(callId, undefined))
+          .catch((err) => this.#apiResponse(callId, String(err.stack ?? err)));
       },
     ],
   ]);
@@ -175,12 +175,9 @@ export class TcpSocketElectron {
     });
   }
 
-  #apiResponse = (message: RpcResponse, transfer?: Transferable[]): void => {
-    if (transfer != undefined) {
-      this.#messagePort.postMessage(message, transfer);
-    } else {
-      this.#messagePort.postMessage(message);
-    }
+  #apiResponse = (callId: number, ...args: Cloneable[]): void => {
+    const msg: RpcResponse = [callId, ...args];
+    this.#messagePort.postMessage(msg);
   };
 
   #emit = (eventName: string, ...args: Cloneable[]): void => {
@@ -190,6 +187,6 @@ export class TcpSocketElectron {
 
   #handleData = (data: Uint8Array): void => {
     const msg: Cloneable[] = ["data", data];
-    this.#messagePort.postMessage(msg, [data]);
+    this.#messagePort.postMessage(msg, [data.buffer]);
   };
 }

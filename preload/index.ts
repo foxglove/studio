@@ -6,6 +6,7 @@ import { init as initSentry } from "@sentry/electron";
 import { contextBridge, ipcRenderer } from "electron";
 
 import type { OsContext, OsContextForwardedEvent } from "@foxglove-studio/app/OsContext";
+import { initElectronSocket } from "@foxglove/electron-socket/electron";
 
 import LocalFileStorage from "./LocalFileStorage";
 
@@ -15,6 +16,9 @@ if (typeof process.env.SENTRY_DSN === "string") {
 
 type IpcListener = (ev: unknown, ...args: unknown[]) => void;
 const menuClickListeners = new Map<string, IpcListener>();
+
+// Initialize the RPC channel for electron-socket
+initElectronSocket();
 
 window.addEventListener("DOMContentLoaded", () => {
   // This input element receives generated dom events from main thread to inject File objects

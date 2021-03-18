@@ -8,30 +8,32 @@ Raw sockets are not supported in browser contexts, even in Electron apps. To ove
 
 ### Usage
 
-```
-// preload.js ////////////////////////////////////////////////////////////////
+```ts
+// preload.ts ////////////////////////////////////////////////////////////////
 import { initElectronSocket } from "@foxglove/electron-socket/electron";
 
 initElectronSocket();
 ```
 
-```
-<!-- index.html ------------------------------------------------------------->
-<script>
+```ts
+// renderer.ts ///////////////////////////////////////////////////////////////
 import { initRendererSocket, createServer, createSocket } from "@foxglove/electron-socket/renderer";
 
-initRendererSocket();
+async function main() {
+  await initRendererSocket();
 
-const server = createServer();
-server.on("connection", (client) => {
-  client.write(new Uint8Array([42]));
-});
-server.listen(9000);
+  const server = await createServer();
+  server.on("connection", (client) => {
+    client.write(new Uint8Array([42]));
+  });
+  server.listen(9000);
 
-const socket = createSocket();
-socket.on("data", (data) => console.log(`Server sent ${data}`));
-socket.connect(9000);
-</script>
+  const socket = await createSocket();
+  socket.on("data", (data: Uint8Array) => console.log(`Server sent ${data}`));
+  socket.connect({ port: 9000, host: "localhost" });
+}
+
+main();
 ```
 
 ### License

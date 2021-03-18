@@ -103,7 +103,7 @@ export class TcpSocketRenderer extends EventEmitter {
       });
       const msg: RpcCall = ["write", callId, data];
       if (transfer) {
-        this.#messagePort.postMessage(msg, [data]);
+        this.#messagePort.postMessage(msg, [data.buffer]);
       } else {
         this.#messagePort.postMessage(msg);
       }

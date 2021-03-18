@@ -14,8 +14,8 @@
   },
   "homepage": "https://foxglove.dev/",
   "exports": {
-    "./electron": "./src/electron/index.ts",
-    "./renderer": "./src/renderer/index.ts"
+    "./electron": "./electron/index.ts",
+    "./renderer": "./renderer/index.ts"
   },
   "files": [
     "src"

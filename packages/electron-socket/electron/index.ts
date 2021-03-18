@@ -24,7 +24,7 @@ const functionHandlers = new Map<string, (callId: number, args: Cloneable[]) => 
     (callId, args) => {
       const transformName = args[0] as string | undefined;
       const port = createSocket(transformName);
-      primaryChannel?.port2.postMessage(callId, [port]);
+      primaryChannel?.port2.postMessage([callId], [port]);
     },
   ],
   [
@@ -32,18 +32,22 @@ const functionHandlers = new Map<string, (callId: number, args: Cloneable[]) => 
     (callId, args) => {
       const transformName = args[0] as string | undefined;
       const port = createServer(transformName);
-      primaryChannel?.port2.postMessage(callId, [port]);
+      primaryChannel?.port2.postMessage([callId], [port]);
     },
   ],
 ]);
 
 export async function initElectronSocket(channel: string = "__electron_socket"): Promise<void> {
-  const windowLoaded = new Promise((resolve) => {
+  const windowLoaded = new Promise<void>((resolve) => {
     if (document.readyState === "complete") {
-      resolve(undefined);
+      resolve();
       return;
     }
-    window.onload = resolve;
+    const loaded = () => {
+      window.removeEventListener("load", loaded);
+      resolve();
+    };
+    window.addEventListener("load", loaded);
   });
 
   await windowLoaded;
