@@ -78,7 +78,7 @@ function Root() {
     (window as any).setPanelLayout = (payload: any) => dispatch(importPanelLayout(payload));
   }, [dispatch]);
 
-  const { currentSourceName, setPlayerFromBagURL } = usePlayerSelection();
+  const { currentSourceName, setPlayerFromDemoBag } = usePlayerSelection();
 
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
@@ -113,7 +113,7 @@ function Root() {
       const welcomeLayoutShown = await appConfiguration.get("onboarding.welcome-layout.shown");
       if (!welcomeLayoutShown) {
         dispatch(loadLayout(welcomeLayout));
-        setPlayerFromBagURL("https://open-source-webviz-ui.s3.amazonaws.com/demo.bag");
+        await setPlayerFromDemoBag();
         appConfiguration.set("onboarding.welcome-layout.shown", true);
       }
     })();

@@ -37,6 +37,7 @@ import useElectronFilesToOpen from "@foxglove-studio/app/hooks/useElectronFilesT
 import { GlobalVariables } from "@foxglove-studio/app/hooks/useGlobalVariables";
 import { usePrompt } from "@foxglove-studio/app/hooks/usePrompt";
 import useUserNodes from "@foxglove-studio/app/hooks/useUserNodes";
+import { DEMO_BAG_URL } from "@foxglove-studio/app/onboarding/welcomeLayout";
 import OrderedStampPlayer from "@foxglove-studio/app/players/OrderedStampPlayer";
 import RosbridgePlayer from "@foxglove-studio/app/players/RosbridgePlayer";
 import UserNodePlayer from "@foxglove-studio/app/players/UserNodePlayer";
@@ -276,8 +277,8 @@ function PlayerManager({
 
   const value: PlayerSelection = {
     selectSource,
-    setPlayerFromBagURL: async (url) =>
-      buildPlayer(await buildPlayerFromBagURLs([url], buildPlayerOptions)),
+    setPlayerFromDemoBag: async () =>
+      buildPlayer(await buildPlayerFromBagURLs([DEMO_BAG_URL], buildPlayerOptions)),
     availableSources: playerSources,
     currentSourceName,
     currentPlayer: player,

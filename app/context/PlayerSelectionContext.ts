@@ -14,7 +14,7 @@ export type PlayerSourceDefinition = {
 // PlayerSelection provides the user with a select function and the items to select
 export interface PlayerSelection {
   selectSource: (definition: PlayerSourceDefinition) => void;
-  setPlayerFromBagURL: (url: string) => Promise<void>;
+  setPlayerFromDemoBag: () => Promise<void>;
   availableSources: PlayerSourceDefinition[];
   currentSourceName?: string;
   currentPlayer?: OrderedStampPlayer;
@@ -22,7 +22,7 @@ export interface PlayerSelection {
 
 const PlayerSelectionContext = createContext<PlayerSelection>({
   selectSource: () => {},
-  setPlayerFromBagURL: async () => {},
+  setPlayerFromDemoBag: async () => {},
   availableSources: [],
 });
 
