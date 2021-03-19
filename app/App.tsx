@@ -15,7 +15,6 @@ import { ReactElement, useState, CSSProperties, useEffect, useMemo, useRef } fro
 import { DndProvider } from "react-dnd";
 import HTML5Backend from "react-dnd-html5-backend";
 import { Provider, useDispatch } from "react-redux";
-import { useEffectOnce } from "react-use";
 import styled from "styled-components";
 
 import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
@@ -108,16 +107,16 @@ function Root() {
   const appConfiguration = useAppConfiguration();
 
   // Show welcome layout on first run
-  useEffectOnce(() => {
+  useEffect(() => {
     (async () => {
       const welcomeLayoutShown = await appConfiguration.get("onboarding.welcome-layout.shown");
       if (!welcomeLayoutShown) {
         dispatch(loadLayout(welcomeLayout));
         await setPlayerFromDemoBag();
-        appConfiguration.set("onboarding.welcome-layout.shown", true);
+        await appConfiguration.set("onboarding.welcome-layout.shown", true);
       }
     })();
-  });
+  }, [appConfiguration, dispatch, setPlayerFromDemoBag]);
 
   return (
     <div ref={containerRef} className="app-container" tabIndex={0}>
