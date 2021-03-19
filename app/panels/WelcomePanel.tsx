@@ -50,11 +50,6 @@ function WelcomePanel() {
         body: JSON.stringify({ email: emailValue }),
       });
       if (response.status !== 200) {
-        const json = await response.json();
-        if (/already.+subscribed/.test(json.error?.email ?? "")) {
-          throw new Error("You are already subscribed!");
-        }
-        console.error("Signup failed:", json);
         throw new Error("We were unable to process your signup request. Sorry!");
       }
     }
