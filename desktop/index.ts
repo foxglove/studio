@@ -181,6 +181,7 @@ async function createWindow(): Promise<void> {
     submenu: [
       {
         label: "Keyboard Shortcuts",
+        accelerator: "CommandOrControl+/",
         click: () => mainWindow.webContents.send("open-keyboard-shortcuts"),
       },
       {
@@ -210,6 +211,8 @@ async function createWindow(): Promise<void> {
       } else {
         // "None"
       }
+    } else if (channel === "onboarding.join-slack-clicked") {
+      shell.openExternal("https://foxglove.dev/join-slack");
     }
   });
 

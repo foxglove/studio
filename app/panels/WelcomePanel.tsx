@@ -25,8 +25,6 @@ const Term = styled.span`
   font-weight: bold;
 `;
 
-const SIGNUP_API_URL = "http://localhost:3000/api/signup";
-
 function validateEmail(str: string): string | undefined {
   return isEmail(str) ? undefined : "Enter a valid e-mail address";
 }
@@ -38,13 +36,14 @@ function WelcomePanel() {
   const [subscribeChecked, setSubscribeChecked] = useState(true);
   const [slackInviteChecked, setSlackInviteChecked] = useState(true);
   const [emailValue, setEmailValue] = useState("");
+  const [emailError, setEmailError] = useState<string | undefined>();
 
   const [submitState, submit] = useAsyncFn(async () => {
     if (slackInviteChecked) {
       OsContextSingleton?.handleJoinSlackClick();
     }
-    if (subscribeChecked) {
-      const response = await fetch(SIGNUP_API_URL, {
+    if (subscribeChecked && process.env.SIGNUP_API_URL != undefined) {
+      const response = await fetch(process.env.SIGNUP_API_URL, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email: emailValue }),
@@ -61,7 +60,10 @@ function WelcomePanel() {
   const subscribed = subscribedState.value ?? false;
 
   const submitEnabled =
-    (subscribeChecked || slackInviteChecked) && emailValue.length > 0 && !loading;
+    (subscribeChecked || slackInviteChecked) &&
+    emailValue.length > 0 &&
+    emailError == undefined &&
+    !loading;
 
   return (
     <Flex col scroll>
@@ -97,6 +99,7 @@ function WelcomePanel() {
           placeholder="me@example.com"
           value={emailValue}
           onChange={setEmailValue}
+          onError={setEmailError}
           validator={validateEmail}
         />
         <Checkbox

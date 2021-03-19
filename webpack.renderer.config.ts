@@ -184,6 +184,7 @@ export function makeConfig(_: unknown, argv: WebpackArgv): Configuration {
       }),
       new EnvironmentPlugin({
         SENTRY_DSN: process.env.SENTRY_DSN ?? null, // eslint-disable-line no-restricted-syntax
+        SIGNUP_API_URL: "http://localhost:3000/api/signup",
       }),
       new webpack.DefinePlugin({
         // Should match webpack-defines.d.ts
