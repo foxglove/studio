@@ -36,6 +36,7 @@ export interface OsContext {
   platform: string;
 
   handleToolbarDoubleClick(): void;
+  handleJoinSlackClick(): void;
 
   // Events from the native window are available in the main process but not the renderer, so we forward them through the bridge.
   addIpcEventListener(eventName: OsContextForwardedEvent, handler: () => void): void;

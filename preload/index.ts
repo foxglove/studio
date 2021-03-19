@@ -33,6 +33,9 @@ const ctx: OsContext = {
   handleToolbarDoubleClick() {
     ipcRenderer.send("window.toolbar-double-clicked");
   },
+  handleJoinSlackClick() {
+    ipcRenderer.send("onboarding.join-slack-clicked");
+  },
   addIpcEventListener(eventName: OsContextForwardedEvent, handler: () => void) {
     ipcRenderer.on(eventName, () => handler());
   },
