@@ -3,8 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 import { PanelsState } from "@foxglove-studio/app/reducers/panels";
 
-export const DEMO_BAG_URL = "https://open-source-webviz-ui.s3.amazonaws.com/demo.bag";
-
 const state: PanelsState = {
   layout: {
     first: {

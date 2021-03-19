@@ -47,7 +47,7 @@ import {
   usePlayerSelection,
 } from "@foxglove-studio/app/context/PlayerSelectionContext";
 import experimentalFeatures from "@foxglove-studio/app/experimentalFeatures";
-import welcomeLayout from "@foxglove-studio/app/onboarding/welcomeLayout";
+import welcomeLayout from "@foxglove-studio/app/layouts/welcomeLayout";
 import getGlobalStore from "@foxglove-studio/app/store/getGlobalStore";
 import browserHistory from "@foxglove-studio/app/util/history";
 import inAutomatedRunMode from "@foxglove-studio/app/util/inAutomatedRunMode";

@@ -37,7 +37,6 @@ import useElectronFilesToOpen from "@foxglove-studio/app/hooks/useElectronFilesT
 import { GlobalVariables } from "@foxglove-studio/app/hooks/useGlobalVariables";
 import { usePrompt } from "@foxglove-studio/app/hooks/usePrompt";
 import useUserNodes from "@foxglove-studio/app/hooks/useUserNodes";
-import { DEMO_BAG_URL } from "@foxglove-studio/app/onboarding/welcomeLayout";
 import OrderedStampPlayer from "@foxglove-studio/app/players/OrderedStampPlayer";
 import RosbridgePlayer from "@foxglove-studio/app/players/RosbridgePlayer";
 import UserNodePlayer from "@foxglove-studio/app/players/UserNodePlayer";
@@ -49,6 +48,8 @@ import { Player } from "@foxglove-studio/app/players/types";
 import { State } from "@foxglove-studio/app/reducers";
 import { SECOND_SOURCE_PREFIX } from "@foxglove-studio/app/util/globalConstants";
 import { useShallowMemo } from "@foxglove-studio/app/util/hooks";
+
+export const DEMO_BAG_URL = "https://open-source-webviz-ui.s3.amazonaws.com/demo.bag";
 
 type BuiltPlayer = {
   player: Player;

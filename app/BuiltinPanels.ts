@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import WelcomePanel from "@foxglove-studio/app/onboarding/WelcomePanel";
 import GlobalVariableSlider from "@foxglove-studio/app/panels/GlobalVariableSlider";
 import GlobalVariables from "@foxglove-studio/app/panels/GlobalVariables";
 import ImageViewPanel from "@foxglove-studio/app/panels/ImageView";
@@ -30,6 +29,7 @@ import Tab from "@foxglove-studio/app/panels/Tab";
 import Table from "@foxglove-studio/app/panels/Table";
 import ThreeDimensionalViz from "@foxglove-studio/app/panels/ThreeDimensionalViz";
 import TwoDimensionalPlot from "@foxglove-studio/app/panels/TwoDimensionalPlot";
+import WelcomePanel from "@foxglove-studio/app/panels/WelcomePanel";
 import DiagnosticStatusPanel from "@foxglove-studio/app/panels/diagnostics/DiagnosticStatusPanel";
 import DiagnosticSummary from "@foxglove-studio/app/panels/diagnostics/DiagnosticSummary";
 import { ndash } from "@foxglove-studio/app/util/entities";

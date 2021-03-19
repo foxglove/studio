@@ -12,21 +12,16 @@ import Icon from "@foxglove-studio/app/components/Icon";
 import Panel from "@foxglove-studio/app/components/Panel";
 import TextContent from "@foxglove-studio/app/components/TextContent";
 import TextField from "@foxglove-studio/app/components/TextField";
+import { isEmail } from "@foxglove-studio/app/shared/validators";
 import colors from "@foxglove-studio/app/styles/colors.module.scss";
 
-const STerm = styled.span`
+const Term = styled.span`
   color: ${colors.accent};
   font-weight: bold;
 `;
 
 function validateEmail(str: string): string | undefined {
-  if (str.length === 0) {
-    return undefined; // don't show an error when nothing has been entered
-  }
-  if (/^.+@.+\..+$/.test(str)) {
-    return undefined;
-  }
-  return "Enter a valid e-mail address";
+  return isEmail(str) ? undefined : "Enter a valid e-mail address";
 }
 
 function WelcomePanel() {
@@ -46,15 +41,15 @@ function WelcomePanel() {
       </p>
       <p>
         The configuration of views and graphs you’re looking at now is called the{" "}
-        <STerm>layout</STerm>. Each view is a <STerm>panel</STerm>. Click the{" "}
+        <Term>layout</Term>. Each view is a <Term>panel</Term>. Click the{" "}
         <Icon clickable={false}>
           <PlusCircleOutlineIcon />
         </Icon>{" "}
         icon above and try adding a new panel.
       </p>
       <p>
-        Want to view data from your own <STerm>bag file</STerm>? Double-click the bag file to open
-        it with {APP_NAME}, or just drag &amp; drop it here. Click{" "}
+        Want to view data from your own <Term>bag file</Term>? Double-click the bag file to open it
+        with {APP_NAME}, or just drag &amp; drop it here. Click{" "}
         <Icon clickable={false}>
           <DatabaseIcon />
         </Icon>{" "}
