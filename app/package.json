@@ -86,7 +86,7 @@
   },
   "devDependencies": {
     "@storybook/addon-actions": "6.2.0-rc.3",
-    "@storybook/addon-essentials": "6.2.0-rc.3",
+    "@storybook/addon-essentials": "6.2.0-rc.4",
     "@storybook/builder-webpack5": "6.2.0-rc.3",
     "@storybook/react": "6.2.0-rc.3",
     "@testing-library/react": "11.2.5",
