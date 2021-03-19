@@ -34,7 +34,7 @@
     "moment-timezone": "0.5.33",
     "monaco-editor": "0.22.3",
     "natsort": "2.0.2",
-    "panzoom": "8.7.5",
+    "panzoom": "9.4.1",
     "prettier": "2.2.1",
     "promise-queue": "2.2.5",
     "puppeteer-core": "8.0.0",
@@ -87,7 +87,7 @@
   "devDependencies": {
     "@storybook/addon-actions": "6.2.0-rc.3",
     "@storybook/addon-essentials": "6.2.0-rc.3",
-    "@storybook/builder-webpack5": "6.2.0-rc.3",
+    "@storybook/builder-webpack5": "6.2.0-rc.4",
     "@storybook/react": "6.2.0-rc.3",
     "@testing-library/react": "11.2.5",
     "@testing-library/react-hooks": "5.1.0",
