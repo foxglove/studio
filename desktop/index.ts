@@ -211,8 +211,11 @@ async function createWindow(): Promise<void> {
       } else {
         // "None"
       }
-    } else if (channel === "onboarding.join-slack-clicked") {
-      shell.openExternal("https://foxglove.dev/join-slack");
+    } else if (
+      channel === "onboarding.join-slack-clicked" &&
+      process.env.SLACK_INVITE_URL != undefined
+    ) {
+      shell.openExternal(process.env.SLACK_INVITE_URL);
     }
   });
 

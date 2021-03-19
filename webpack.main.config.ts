@@ -74,6 +74,7 @@ export default (_: unknown, argv: WebpackArgv): Configuration => {
         MAIN_WINDOW_WEBPACK_ENTRY: rendererEntry,
         // Should match webpack-defines.d.ts
         APP_NAME: JSON.stringify("Foxglove Studio"),
+        SLACK_INVITE_URL: "https://foxglove.dev/join-slack",
       }),
       new EnvironmentPlugin({
         SENTRY_DSN: process.env.SENTRY_DSN ?? null, // eslint-disable-line no-restricted-syntax
