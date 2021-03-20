@@ -9,7 +9,7 @@ import {
   getPid,
   HttpServerNode,
   TcpSocketNode,
-} from "@foxglove/ros1-nodejs";
+} from "@foxglove/ros1/src/nodejs";
 
 async function main() {
   const name = "/testclient";

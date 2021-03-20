@@ -4,7 +4,7 @@
 
 import { Transform, TransformCallback } from "stream";
 
-import { concatData } from "./concatData";
+import { concatData } from "../concatData";
 
 export class TcpMessageStream extends Transform {
   #inMessage = false;
