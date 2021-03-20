@@ -5,5 +5,6 @@
 // Node.js backend
 export * from "./HttpServerNode";
 export * from "./platform";
+export * from "./RosTcpMessageStream";
 export * from "./TcpServerNode";
 export * from "./TcpSocketNode";

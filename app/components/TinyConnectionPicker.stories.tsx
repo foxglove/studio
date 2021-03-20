@@ -27,6 +27,10 @@ storiesOf("<TinyConnectionPicker>", module).add("default", () => {
       type: "file",
     },
     {
+      name: "ROS",
+      type: "ros1-core",
+    },
+    {
       name: "Websocket",
       type: "ws",
     },

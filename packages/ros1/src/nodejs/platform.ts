@@ -8,12 +8,8 @@ export function getPid(): number {
   return process.pid;
 }
 
-export function getDefaultRosMasterUri(): string {
-  const url = process.env["ROS_MASTER_URI"];
-  if (url !== undefined && url.length > 0) {
-    return url;
-  }
-  return "http://localhost:11311/";
+export function getDefaultRosMasterUri(): string | undefined {
+  return process.env["ROS_MASTER_URI"];
 }
 
 export function getHostname(): string {

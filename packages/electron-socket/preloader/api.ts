@@ -7,7 +7,7 @@ import { Socket } from "net";
 import { HttpServerElectron } from "./HttpServerElectron";
 import { TcpServerElectron } from "./TcpServerElectron";
 import { TcpSocketElectron } from "./TcpSocketElectron";
-import { getTransform, nextId, registerEntity } from "./registry";
+import { createTransform, nextId, registerEntity } from "./registry";
 
 export { registerTransform } from "./registry";
 
@@ -19,18 +19,28 @@ export function createHttpServer(): MessagePort {
   return channel.port1;
 }
 
-export function createSocket(transformName?: string): MessagePort {
+export function createSocket(
+  host: string,
+  port: number,
+  transformName?: string,
+): MessagePort | undefined {
   const channel = new MessageChannel();
-  const transform = transformName != undefined ? getTransform(transformName) : undefined;
+  const transform = transformName != undefined ? createTransform(transformName) : undefined;
+  if (transformName != undefined && transform == undefined) {
+    return undefined;
+  }
   const id = nextId();
-  const socket = new TcpSocketElectron(id, channel.port2, new Socket(), transform);
+  const socket = new TcpSocketElectron(id, channel.port2, host, port, new Socket(), transform);
   registerEntity(id, socket);
   return channel.port1;
 }
 
-export function createServer(transformName?: string): MessagePort {
+export function createServer(transformName?: string): MessagePort | undefined {
   const channel = new MessageChannel();
-  const transform = transformName != undefined ? getTransform(transformName) : undefined;
+  const transform = transformName != undefined ? createTransform(transformName) : undefined;
+  if (transformName != undefined && transform == undefined) {
+    return undefined;
+  }
   const id = nextId();
   const server = new TcpServerElectron(id, channel.port2, transform);
   registerEntity(id, server);

@@ -16,6 +16,8 @@ type MaybeHasFd = {
 
 export class TcpSocketElectron {
   readonly id: number;
+  readonly host: string;
+  readonly port: number;
   #socket: net.Socket;
   #messagePort: MessagePort;
   #transform?: Transform;
@@ -51,9 +53,8 @@ export class TcpSocketElectron {
     ["connected", (callId) => this.#apiResponse(callId, this.connected())],
     [
       "connect",
-      (callId, args) => {
-        const options = args[0] as { port: number; host?: string };
-        this.connect(options)
+      (callId, _) => {
+        this.connect()
           .then(() => this.#apiResponse(callId, undefined))
           .catch((err) => this.#apiResponse(callId, String(err.stack ?? err)));
       },
@@ -71,8 +72,17 @@ export class TcpSocketElectron {
     ],
   ]);
 
-  constructor(id: number, messagePort: MessagePort, socket: net.Socket, transform?: Transform) {
+  constructor(
+    id: number,
+    messagePort: MessagePort,
+    host: string,
+    port: number,
+    socket: net.Socket,
+    transform?: Transform,
+  ) {
     this.id = id;
+    this.host = host;
+    this.port = port;
     this.#socket = socket;
     this.#messagePort = messagePort;
     this.#transform = transform;
@@ -140,12 +150,13 @@ export class TcpSocketElectron {
     return !this.#socket.destroyed && this.#socket.localAddress !== undefined;
   }
 
-  connect(options: { port: number; host?: string }): Promise<void> {
+  connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       this.#socket
-        .connect(options, () => {
+        .connect({ host: this.host, port: this.port }, () => {
           this.#socket.removeListener("error", reject);
           resolve();
+          this.#emit("connect");
         })
         .on("error", reject);
     });

@@ -18,7 +18,7 @@ async function main() {
   try {
     rosNode = new RosNode({
       name,
-      rosMasterUri: getDefaultRosMasterUri(),
+      rosMasterUri: getDefaultRosMasterUri() ?? "http://localhost:11311/",
       hostname: getHostname(),
       pid: getPid(),
       httpServer: new HttpServerNode(),

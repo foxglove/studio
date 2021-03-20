@@ -13,6 +13,8 @@ export class TcpConnection extends EventEmitter implements Connection {
   retries = 0;
 
   #socket: TcpSocket;
+  #connected = false;
+  #transportInfo = "TCPROS not connected [socket -1]";
   #readingHeader = true;
   #requestHeader: Map<string, string>;
   #header = new Map<string, string>();
@@ -34,19 +36,19 @@ export class TcpConnection extends EventEmitter implements Connection {
     socket.on("connect", this.#handleConnect);
     socket.on("close", this.#handleClose);
     socket.on("error", this.#handleError);
-    socket.on("message", this.#handleMessage);
+    socket.on("data", this.#handleMessage);
   }
 
   transportType(): string {
     return "TCPROS";
   }
 
-  remoteAddress(): TcpAddress | undefined {
+  remoteAddress(): Promise<TcpAddress | undefined> {
     return this.#socket.remoteAddress();
   }
 
   connected(): boolean {
-    return this.#socket.connected();
+    return this.#connected;
   }
 
   header(): Map<string, string> {
@@ -55,6 +57,14 @@ export class TcpConnection extends EventEmitter implements Connection {
 
   stats(): ConnectionStats {
     return this.#stats;
+  }
+
+  messageDefinition(): RosMsgDefinition[] {
+    return this.#msgDefinition;
+  }
+
+  messageReader(): MessageReader | undefined {
+    return this.#msgReader;
   }
 
   close(): void {
@@ -70,32 +80,41 @@ export class TcpConnection extends EventEmitter implements Connection {
 
   // e.g. "TCPROS connection on port 59746 to [host:34318 on socket 11]"
   getTransportInfo(): string {
-    const localPort = this.#socket.localAddress()?.port ?? -1;
-    const addr = this.#socket.remoteAddress();
-    const fd = this.#socket.fd() ?? -1;
+    return this.#transportInfo;
+  }
+
+  #getTransportInfo = async (): Promise<string> => {
+    const localPort = (await this.#socket.localAddress())?.port ?? -1;
+    const addr = await this.#socket.remoteAddress();
+    const fd = (await this.#socket.fd()) ?? -1;
     if (addr) {
       const { address, port } = addr;
       return `TCPROS connection on port ${localPort} to [${address}:${port} on socket ${fd}]`;
     }
     return `TCPROS not connected [socket ${fd}]`;
-  }
+  };
 
-  #handleConnect = (): void => {
+  #handleConnect = async (): Promise<void> => {
+    this.#connected = true;
     this.retries = 0;
+    this.#transportInfo = await this.#getTransportInfo();
     // Write the initial request header. This prompts the publisher to respond
     // with its own header then start streaming messages
     this.writeHeader();
   };
 
   #handleClose = (): void => {
+    this.#connected = false;
     // TODO: Enter a reconnect loop
   };
 
   #handleError = (): void => {
-    // TOOD: Enter a reconnect loop
+    this.#connected = false;
+    // TODO: Enter a reconnect loop
   };
 
   #handleMessage = (data: Uint8Array): void => {
+    this.#connected = true;
     this.#stats.bytesReceived += data.byteLength;
 
     if (this.#readingHeader) {

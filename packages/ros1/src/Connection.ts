@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { MessageReader, RosMsgDefinition } from "rosbag";
+
 export interface ConnectionStats {
   bytesSent: number;
   bytesReceived: number;
@@ -20,6 +22,10 @@ export interface Connection {
   header(): Map<string, string>;
 
   stats(): ConnectionStats;
+
+  messageDefinition(): RosMsgDefinition[];
+
+  messageReader(): MessageReader | undefined;
 
   close(): void;
 

@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { URL } from "whatwg-url";
+import { EventEmitter } from "eventemitter3";
 
 import { HttpServer } from "@foxglove/xmlrpc";
 
@@ -22,15 +22,7 @@ export type SubscribeOpts = {
   tcpNoDelay?: boolean;
 };
 
-function ToUrl(url: string): URL | undefined {
-  try {
-    return new URL(url);
-  } catch {
-    return undefined;
-  }
-}
-
-export class RosNode {
+export class RosNode extends EventEmitter {
   readonly name: string;
   readonly hostname: string;
   readonly pid: number;
@@ -54,6 +46,7 @@ export class RosNode {
     tcpSocketCreate: TcpSocketCreate;
     tcpServer?: TcpServer;
   }) {
+    super();
     this.name = options.name;
     this.hostname = options.hostname;
     this.pid = options.pid;
@@ -165,7 +158,7 @@ export class RosNode {
       this.name,
       subscription.name,
       subscription.dataType,
-      localApiUrl.toString(),
+      localApiUrl,
     );
 
     if (status !== 1) {
@@ -201,18 +194,13 @@ export class RosNode {
 
     // Register with each publisher
     await Promise.all(
-      publishers.map(async (pubUrlStr) => {
-        const url = ToUrl(pubUrlStr as string);
-        if (url === undefined) {
-          return;
-        }
-
+      publishers.map(async (pubUrl) => {
         if (!this.#running) {
           return;
         }
 
         // Create an XMLRPC client to talk to this publisher
-        const rosFollowerClient = new RosFollowerClient(String(url));
+        const rosFollowerClient = new RosFollowerClient(pubUrl);
 
         if (!this.#running) {
           return;

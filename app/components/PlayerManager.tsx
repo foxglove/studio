@@ -14,6 +14,7 @@
 import { PropsWithChildren, useCallback, useEffect, useRef, useState } from "react";
 import { connect, ConnectedProps } from "react-redux";
 
+import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
 import {
   setUserNodeDiagnostics,
   addUserNodeLogs,
@@ -38,6 +39,7 @@ import { GlobalVariables } from "@foxglove-studio/app/hooks/useGlobalVariables";
 import { usePrompt } from "@foxglove-studio/app/hooks/usePrompt";
 import useUserNodes from "@foxglove-studio/app/hooks/useUserNodes";
 import OrderedStampPlayer from "@foxglove-studio/app/players/OrderedStampPlayer";
+import Ros1Player from "@foxglove-studio/app/players/Ros1Player";
 import RosbridgePlayer from "@foxglove-studio/app/players/RosbridgePlayer";
 import UserNodePlayer from "@foxglove-studio/app/players/UserNodePlayer";
 import {
@@ -232,11 +234,26 @@ function PlayerManager({
 
           break;
         }
+        case "ros1-core": {
+          const result = await prompt({
+            placeholder: "http://localhost:11311",
+            value: OsContextSingleton?.getDefaultRosMasterUri(),
+          });
+          if (result == undefined || result.length === 0) {
+            return;
+          }
+
+          buildPlayer({
+            player: new Ros1Player(result),
+            sources: [result],
+          });
+          break;
+        }
         case "ws": {
           const result = await prompt({
             placeholder: "ws://localhost:9090",
           });
-          if (result === undefined || result.length === 0) {
+          if (result == undefined || result.length === 0) {
             return;
           }
 
@@ -250,12 +267,13 @@ function PlayerManager({
           const result = await prompt({
             placeholder: "http://example.com/file.bag",
           });
-          if (result === undefined || result.length === 0) {
+          if (result == undefined || result.length === 0) {
             return;
           }
 
           const builtPlayer = await buildPlayerFromBagURLs([result], buildPlayerOptions);
           buildPlayer(builtPlayer);
+          break;
         }
       }
     },

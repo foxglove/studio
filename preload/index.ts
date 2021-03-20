@@ -6,7 +6,12 @@ import { init as initSentry } from "@sentry/electron";
 import { contextBridge, ipcRenderer } from "electron";
 
 import type { OsContext, OsContextForwardedEvent } from "@foxglove-studio/app/OsContext";
-import { PreloaderSockets } from "@foxglove/electron-socket/preloader";
+import { PreloaderSockets, registerTransform } from "@foxglove/electron-socket/preloader";
+import {
+  getDefaultRosMasterUri,
+  getHostname as getHostnameForRos,
+  RosTcpMessageStream,
+} from "@foxglove/ros1/src/nodejs";
 
 import LocalFileStorage from "./LocalFileStorage";
 
@@ -19,6 +24,9 @@ const menuClickListeners = new Map<string, IpcListener>();
 
 // Initialize the RPC channel for electron-socket
 PreloaderSockets.Create();
+
+// Register the native stream transform for TCPROS messages
+registerTransform("RosTcpMessageStream", () => new RosTcpMessageStream());
 
 window.addEventListener("DOMContentLoaded", () => {
   // This input element receives generated dom events from main thread to inject File objects
@@ -34,6 +42,7 @@ const localFileStorage = new LocalFileStorage();
 
 const ctx: OsContext = {
   platform: process.platform,
+  pid: process.pid,
   handleToolbarDoubleClick() {
     ipcRenderer.send("window.toolbar-double-clicked");
   },
@@ -64,6 +73,10 @@ const ctx: OsContext = {
     ipcRenderer.off("menu.click-input-source", listener);
     ipcRenderer.invoke("menu.remove-input-source", name);
   },
+
+  // Environment queries for ROS
+  getDefaultRosMasterUri,
+  getHostnameForRos,
 
   // Context bridge cannot expose "classes" only exposes functions
   // We use .bind to attach the localFileStorage instance as _this_ to the function

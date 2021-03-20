@@ -94,9 +94,12 @@ export class TcpServerElectron {
   };
 
   #emitConnection = (socket: net.Socket): void => {
-    const channel = new MessageChannel();
     const id = nextId();
-    const electronSocket = new TcpSocketElectron(id, channel.port2, socket, this.#transform);
+    const channel = new MessageChannel();
+    const host = socket.remoteAddress as string;
+    const port = socket.remotePort as number;
+    const transform = this.#transform;
+    const electronSocket = new TcpSocketElectron(id, channel.port2, host, port, socket, transform);
     registerEntity(id, electronSocket);
     this.#messagePort.postMessage(["connection"], [channel.port1]);
   };

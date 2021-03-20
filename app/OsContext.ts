@@ -35,6 +35,9 @@ export interface OsContext {
   // See Node.js process.platform
   platform: string;
 
+  // The process id of this application
+  pid: number;
+
   handleToolbarDoubleClick(): void;
 
   // Events from the native window are available in the main process but not the renderer, so we forward them through the bridge.
@@ -43,6 +46,12 @@ export interface OsContext {
   // Manage file menu input source menu items
   menuAddInputSource(name: string, handler: () => void): Promise<void>;
   menuRemoveInputSource(name: string): Promise<void>;
+
+  // Retrieve ROS_MASTER_URI
+  getDefaultRosMasterUri(): string | undefined;
+  // Get the hostname by querying ROS_HOSTNAME, ROS_IP, then system hostname,
+  // then a heuristic search through network interface IP addresses
+  getHostnameForRos(): string;
 
   // file backed key/value storage
   storage: Storage;

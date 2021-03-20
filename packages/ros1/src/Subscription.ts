@@ -48,12 +48,16 @@ export class Subscription {
     this.#publishers.clear();
   }
 
+  publishers(): Readonly<Map<number, PublisherLink>> {
+    return this.#publishers;
+  }
+
   addPublisher(
     connectionId: number,
     rosFollowerClient: RosFollowerClient,
     connection: Connection,
   ): void {
-    const publisher = new PublisherLink(connectionId, rosFollowerClient, connection);
+    const publisher = new PublisherLink(connectionId, this, rosFollowerClient, connection);
     this.#publishers.set(connectionId, publisher);
 
     connection.on("message", (msg, data) => this.#emitter.emit("message", msg, data, publisher));

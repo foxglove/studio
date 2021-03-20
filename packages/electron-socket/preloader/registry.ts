@@ -4,6 +4,8 @@
 
 import { Transform } from "stream";
 
+export type CreateTransform = () => Transform;
+
 interface Disposable {
   dispose(): void;
 }
@@ -15,7 +17,7 @@ let curId = 0;
 // A registry of node.js Transform classes that can be applied to sockets. This
 // allows for incoming socket data to be transformed before it is sent to the
 // renderer process
-const transforms = new Map<string, Transform>();
+const transforms = new Map<string, CreateTransform>();
 
 // Return an incrementing unique integer identifier
 export function nextId(): number {
@@ -29,10 +31,10 @@ export function registerEntity(id: number, entity: Disposable): void {
 
 // Register a node.js Transform class that can later be applied to newly created
 // sockets
-export function registerTransform(name: string, transform: Transform): void {
+export function registerTransform(name: string, transform: CreateTransform): void {
   transforms.set(name, transform);
 }
 
-export function getTransform(name: string): Transform | undefined {
-  return transforms.get(name);
+export function createTransform(name: string): Transform | undefined {
+  return transforms.get(name)?.();
 }

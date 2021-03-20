@@ -7,7 +7,7 @@ import net from "net";
 
 import { TcpAddress, TcpSocket } from "@foxglove/ros1";
 
-import { TcpMessageStream } from "./TcpMessageStream";
+import { RosTcpMessageStream } from "./RosTcpMessageStream";
 
 type MaybeHasFd = {
   _handle?: {
@@ -19,7 +19,7 @@ export class TcpSocketNode extends EventEmitter implements TcpSocket {
   #host: string;
   #port: number;
   #socket: net.Socket;
-  #transformer = new TcpMessageStream();
+  #transformer = new RosTcpMessageStream();
 
   constructor(host: string, port: number, socket: net.Socket) {
     super();
@@ -34,40 +34,42 @@ export class TcpSocketNode extends EventEmitter implements TcpSocket {
     socket.on("timeout", () => this.emit("timeout"));
     socket.on("error", (err) => this.emit("error", err));
 
-    this.#transformer.on("message", (data: Uint8Array) => this.emit("message", data));
+    this.#transformer.on("data", (data: Uint8Array) => this.emit("data", data));
   }
 
-  remoteAddress(): TcpAddress | undefined {
-    return {
+  remoteAddress(): Promise<TcpAddress | undefined> {
+    return Promise.resolve({
       port: this.#port,
       family: this.#socket.remoteFamily,
       address: this.#host,
-    };
+    });
   }
 
-  localAddress(): TcpAddress | undefined {
+  localAddress(): Promise<TcpAddress | undefined> {
     if (this.#socket.destroyed) {
-      return undefined;
+      return Promise.resolve(undefined);
     }
     const port = this.#socket.localPort;
     const family = this.#socket.remoteFamily; // There is no localFamily
     const address = this.#socket.localAddress;
-    return port !== undefined && family !== undefined && address !== undefined
-      ? { port, family, address }
-      : undefined;
+    return Promise.resolve(
+      port !== undefined && family !== undefined && address !== undefined
+        ? { port, family, address }
+        : undefined,
+    );
   }
 
-  fd(): number | undefined {
+  fd(): Promise<number | undefined> {
     // There is no public node.js API for retrieving the file descriptor for a
     // socket. This is the only way of retrieving it from pure JS, on platforms
     // where sockets have file descriptors. See
     // <https://github.com/nodejs/help/issues/1312>
     // eslint-disable-next-line no-underscore-dangle
-    return ((this.#socket as unknown) as MaybeHasFd)._handle?.fd;
+    return Promise.resolve(((this.#socket as unknown) as MaybeHasFd)._handle?.fd);
   }
 
-  connected(): boolean {
-    return !this.#socket.destroyed && this.#socket.localAddress !== undefined;
+  connected(): Promise<boolean> {
+    return Promise.resolve(!this.#socket.destroyed && this.#socket.localAddress !== undefined);
   }
 
   connect(): Promise<void> {
@@ -82,8 +84,9 @@ export class TcpSocketNode extends EventEmitter implements TcpSocket {
     });
   }
 
-  close(): void {
+  close(): Promise<void> {
     this.#socket.destroy();
+    return Promise.resolve();
   }
 
   write(data: Uint8Array): Promise<void> {

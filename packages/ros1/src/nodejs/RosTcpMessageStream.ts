@@ -6,7 +6,7 @@ import { Transform, TransformCallback } from "stream";
 
 import { concatData } from "../concatData";
 
-export class TcpMessageStream extends Transform {
+export class RosTcpMessageStream extends Transform {
   #inMessage = false;
   #bytesNeeded = 4;
   #chunks: Uint8Array[] = [];
@@ -33,7 +33,7 @@ export class TcpMessageStream extends Transform {
         // Produce a Uint8Array representing a single message and transition to
         // reading a message length field
         this.#bytesNeeded = 4;
-        this.emit("message", payload);
+        this.emit("data", payload);
       } else {
         // Decoded the message length field and transition to reading a message
         this.#bytesNeeded = new DataView(payload.buffer).getUint32(0, true);

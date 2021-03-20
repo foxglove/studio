@@ -62,6 +62,10 @@ export default function TinyConnectionPicker({
             case "file":
               icon = <FileIcon />;
               break;
+            case "ros1-core":
+              // TODO: Get the nine dot SVG in here
+              icon = <TransitConnectionIcon />;
+              break;
             case "ws":
               icon = <TransitConnectionIcon />;
               break;
