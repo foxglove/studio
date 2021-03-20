@@ -16,7 +16,7 @@ import Panel from "@foxglove-studio/app/components/Panel";
 import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
 import TextContent from "@foxglove-studio/app/components/TextContent";
 import TextField from "@foxglove-studio/app/components/TextField";
-import { useAsyncAppConfigurationValue } from "@foxglove-studio/app/context/AppConfigurationContext";
+import { useAsyncAppConfigurationValue } from "@foxglove-studio/app/hooks/useAsyncAppConfigurationValue";
 import { isEmail } from "@foxglove-studio/app/shared/validators";
 import colors from "@foxglove-studio/app/styles/colors.module.scss";
 
