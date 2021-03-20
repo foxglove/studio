@@ -18,7 +18,15 @@ module.exports = {
     const rendererConfig = makeConfig(undefined, { mode: config.mode });
     return {
       ...config,
-      resolve: rendererConfig.resolve,
+      resolve: {
+        ...rendererConfig.resolve,
+        alias: {
+          ...rendererConfig.resolve?.alias,
+          "@foxglove-studio/app/panels/WelcomePanel/subscribeToNewsletter": require.resolve(
+            "./__mocks__/subscribeToNewsletter",
+          ),
+        },
+      },
       module: rendererConfig.module,
       plugins: [...(config.plugins ?? []), ...(rendererConfig.plugins ?? [])],
     };

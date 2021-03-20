@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useAsyncFn } from "react-use";
 import styled from "styled-components";
 
-import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
+// import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
 import Button from "@foxglove-studio/app/components/Button";
 import Checkbox from "@foxglove-studio/app/components/Checkbox";
 import Flex from "@foxglove-studio/app/components/Flex";
@@ -17,6 +17,7 @@ import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
 import TextContent from "@foxglove-studio/app/components/TextContent";
 import TextField from "@foxglove-studio/app/components/TextField";
 import { useAsyncAppConfigurationValue } from "@foxglove-studio/app/hooks/useAsyncAppConfigurationValue";
+import subscribeToNewsletter from "@foxglove-studio/app/panels/WelcomePanel/subscribeToNewsletter";
 import { isEmail } from "@foxglove-studio/app/shared/validators";
 import colors from "@foxglove-studio/app/styles/colors.module.scss";
 
@@ -40,17 +41,10 @@ function WelcomePanel() {
 
   const [submitState, submit] = useAsyncFn(async () => {
     if (slackInviteChecked) {
-      OsContextSingleton?.handleJoinSlackClick();
+      // OsContextSingleton?.handleJoinSlackClick();
     }
-    if (subscribeChecked && process.env.SIGNUP_API_URL != undefined) {
-      const response = await fetch(process.env.SIGNUP_API_URL, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email: emailValue }),
-      });
-      if (response.status !== 200) {
-        throw new Error("We were unable to process your signup request. Sorry!");
-      }
+    if (subscribeChecked) {
+      await subscribeToNewsletter(emailValue);
     }
     await setSubscribed(true);
   }, [slackInviteChecked, subscribeChecked, setSubscribed, emailValue]);
@@ -66,7 +60,7 @@ function WelcomePanel() {
     !loading;
 
   return (
-    <Flex col scroll>
+    <Flex col scroll dataTest="welcome-content">
       <PanelToolbar floating />
       <TextContent style={{ padding: 12 }}>
         <h1>Welcome to {APP_NAME}</h1>
