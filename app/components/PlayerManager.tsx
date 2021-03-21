@@ -50,6 +50,7 @@ import { Player } from "@foxglove-studio/app/players/types";
 import { State } from "@foxglove-studio/app/reducers";
 import { SECOND_SOURCE_PREFIX } from "@foxglove-studio/app/util/globalConstants";
 import { useShallowMemo } from "@foxglove-studio/app/util/hooks";
+import { parseInputUrl } from "@foxglove-studio/app/util/url";
 
 type BuiltPlayer = {
   player: Player;
@@ -235,17 +236,20 @@ function PlayerManager({
           break;
         }
         case "ros1-core": {
-          const result = await prompt({
-            placeholder: "http://localhost:11311",
-            value: OsContextSingleton?.getDefaultRosMasterUri(),
-          });
-          if (result == undefined || result.length === 0) {
+          const result = parseInputUrl(
+            await prompt({
+              value:
+                OsContextSingleton?.getDefaultRosMasterUri()?.toString() ??
+                "http://localhost:11311/",
+            }),
+          );
+          if (result == undefined) {
             return;
           }
-
+          const urlStr = String(result);
           buildPlayer({
-            player: new Ros1Player(result),
-            sources: [result],
+            player: new Ros1Player(urlStr),
+            sources: [urlStr],
           });
           break;
         }

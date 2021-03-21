@@ -3,13 +3,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import os from "os";
+import { URL } from "whatwg-url";
+
+import { parseInputUrl } from "@foxglove-studio/app/util/url";
 
 export function getPid(): number {
   return process.pid;
 }
 
-export function getDefaultRosMasterUri(): string | undefined {
-  return process.env["ROS_MASTER_URI"];
+export function getDefaultRosMasterUri(): URL | undefined {
+  return parseInputUrl(process.env["ROS_MASTER_URI"]);
 }
 
 export function getHostname(): string {

@@ -53,6 +53,7 @@
     "@types/nearley": "2.11.1",
     "@types/sass": "^1",
     "@types/webpack-dev-server": "3.11.1",
+    "@types/whatwg-url": "^8",
     "@typescript-eslint/eslint-plugin": "4.16.1",
     "@typescript-eslint/parser": "4.16.1",
     "babel-loader": "8.2.2",
@@ -104,6 +105,7 @@
     "webpack": "5.26.3",
     "webpack-cli": "4.5.0",
     "webpack-dev-server": "3.11.2",
-    "webpack-hot-middleware": "2.25.0"
+    "webpack-hot-middleware": "2.25.0",
+    "whatwg-url": "8.4.0"
   }
 }
