@@ -14,18 +14,16 @@ describe("util/url", () => {
     });
 
     it("accepts fully formed URL input", () => {
-      expect(String(parseInputUrl("http://server.com:11311/"))).toEqual("http://server.com:11311/");
-      expect(String(parseInputUrl("https://server.com:11311/"))).toEqual(
-        "https://server.com:11311/",
-      );
+      expect(parseInputUrl("http://server.com:11311/")).toEqual("http://server.com:11311/");
+      expect(parseInputUrl("https://server.com:11311/")).toEqual("https://server.com:11311/");
     });
 
     it("accepts shorthand URL inputs", () => {
-      expect(String(parseInputUrl("http://localhost:11311"))).toEqual("http://localhost:11311/");
-      expect(String(parseInputUrl("http://localhost"))).toEqual("http://localhost/");
-      expect(String(parseInputUrl("https://localhost"))).toEqual("https://localhost/");
-      expect(String(parseInputUrl("localhost:11311"))).toEqual("http://localhost:11311/");
-      expect(String(parseInputUrl("localhost"))).toEqual("http://localhost/");
+      expect(parseInputUrl("http://localhost:11311")).toEqual("http://localhost:11311/");
+      expect(parseInputUrl("http://localhost")).toEqual("http://localhost/");
+      expect(parseInputUrl("https://localhost")).toEqual("https://localhost/");
+      expect(parseInputUrl("localhost:11311")).toEqual("http://localhost:11311/");
+      expect(parseInputUrl("localhost")).toEqual("http://localhost/");
     });
   });
 });

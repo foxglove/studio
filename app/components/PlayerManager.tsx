@@ -236,20 +236,16 @@ function PlayerManager({
           break;
         }
         case "ros1-core": {
-          const result = parseInputUrl(
-            await prompt({
-              value:
-                OsContextSingleton?.getDefaultRosMasterUri()?.toString() ??
-                "http://localhost:11311/",
-            }),
-          );
-          if (result == undefined) {
+          const result = await prompt({
+            value: OsContextSingleton?.getDefaultRosMasterUri() ?? "http://localhost:11311/",
+          });
+          const url = parseInputUrl(result);
+          if (url == undefined) {
             return;
           }
-          const urlStr = String(result);
           buildPlayer({
-            player: new Ros1Player(urlStr),
-            sources: [urlStr],
+            player: new Ros1Player(url),
+            sources: [url],
           });
           break;
         }

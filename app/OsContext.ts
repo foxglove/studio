@@ -48,7 +48,7 @@ export interface OsContext {
   menuRemoveInputSource(name: string): Promise<void>;
 
   // Retrieve ROS_MASTER_URI
-  getDefaultRosMasterUri(): URL | undefined;
+  getDefaultRosMasterUri(): string | undefined;
   // Get the hostname by querying ROS_HOSTNAME, ROS_IP, then system hostname,
   // then a heuristic search through network interface IP addresses
   getHostnameForRos(): string;
