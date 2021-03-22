@@ -7,9 +7,9 @@ import {
   getDefaultRosMasterUri,
   getHostname,
   getPid,
-  HttpServerNode,
   TcpSocketNode,
 } from "@foxglove/ros1/src/nodejs";
+import { HttpServerNodejs } from "@foxglove/xmlrpc/src/HttpServerNodejs";
 
 async function main() {
   const name = "/testclient";
@@ -21,7 +21,7 @@ async function main() {
       rosMasterUri: String(getDefaultRosMasterUri() ?? "http://localhost:11311/"),
       hostname: getHostname(),
       pid: getPid(),
-      httpServer: new HttpServerNode(),
+      httpServer: new HttpServerNodejs(),
       tcpSocketCreate: TcpSocketNode.Create,
     });
 
