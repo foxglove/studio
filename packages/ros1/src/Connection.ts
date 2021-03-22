@@ -13,6 +13,14 @@ export interface ConnectionStats {
 }
 
 export interface Connection {
+  on(
+    eventName: "header",
+    listener: (
+      header: Map<string, string>,
+      msgDef: RosMsgDefinition[],
+      msgReader: MessageReader,
+    ) => void,
+  ): this;
   on(eventName: "message", listener: (msg: unknown, data: Uint8Array) => void): this;
 
   transportType(): string;

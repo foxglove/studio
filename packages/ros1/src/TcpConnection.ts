@@ -138,6 +138,7 @@ export class TcpConnection extends EventEmitter implements Connection {
       this.#header = TcpConnection.ParseHeader(data);
       this.#msgDefinition = parseMessageDefinition(this.#header.get("message_definition") ?? "");
       this.#msgReader = new MessageReader(this.#msgDefinition);
+      this.emit("header", this.#header, this.#msgDefinition, this.#msgReader);
     } else {
       this.#stats.messagesReceived++;
 

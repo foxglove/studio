@@ -40,6 +40,7 @@ export default class Ros1Player implements Player {
   #listener?: (arg0: PlayerState) => Promise<void>; // Listener for #emitState().
   #closed: boolean = false; // Whether the player has been completely closed using close().
   #providerTopics?: Topic[]; // Topics as advertised by rosmaster.
+  #providerDatatypes: RosDatatypes = {}; // All ROS message definitions received from subscriptions.
   #start?: Time; // The time at which we started playing.
   #requestedSubscriptions: SubscribePayload[] = []; // Requested subscriptions by setSubscriptions()
   #parsedMessages: Message[] = []; // Queue of messages that we'll send in next #emitState() call.
@@ -161,7 +162,7 @@ export default class Ros1Player implements Player {
         // that we don't accidentally hit falsy checks.
         lastSeekTime: 1,
         topics: providerTopics,
-        datatypes: this.#getAllRosDatatypes(),
+        datatypes: this.#providerDatatypes,
         parsedMessageDefinitionsByTopic: {},
         playerWarnings: NO_WARNINGS,
       },
@@ -209,19 +210,25 @@ export default class Ros1Player implements Player {
 
       const { datatype } = availTopic;
       const subscription = this.#rosNode.subscribe({ topic: topicName, type: datatype });
-      subscription.on("message", (message, _data, publisher) => {
+      subscription.on("header", (_header, msgdef, _reader) => {
+        // We have to create a new object instead of just updating #providerDatatypes because it is
+        // later fed into a memoize() call
+        const typesByName: RosDatatypes = {};
+        Object.assign(typesByName, this.#providerDatatypes);
+        Object.assign(typesByName, this.#getRosDatatypes(datatype, msgdef));
+        this.#providerDatatypes = typesByName;
+      });
+      subscription.on("message", (message, _data, _publisher) => {
         if (this.#providerTopics == undefined) {
           return;
         }
 
         const receiveTime = fromMillis(Date.now());
         if (this.#bobjectTopics.has(topicName)) {
-          const msgdef = publisher.connection.messageDefinition();
-          const typesByName = this.#getRosDatatypes(datatype, msgdef);
           this.#bobjects.push({
             topic: topicName,
             receiveTime,
-            message: wrapJsObject(typesByName, datatype, message),
+            message: wrapJsObject(this.#providerDatatypes, datatype, message),
           });
         }
 
@@ -307,20 +314,6 @@ export default class Ros1Player implements Player {
         typesByName[name] = { fields: definitions };
       }
     });
-    return typesByName;
-  };
-
-  #getAllRosDatatypes = (): RosDatatypes => {
-    const typesByName: RosDatatypes = {};
-    if (this.#rosNode == undefined) {
-      return typesByName;
-    }
-    for (const sub of this.#rosNode.subscriptions.values()) {
-      for (const pub of sub.publishers().values()) {
-        const msgdef = pub.connection.messageDefinition();
-        Object.assign(typesByName, this.#getRosDatatypes(sub.dataType, msgdef));
-      }
-    }
     return typesByName;
   };
 }
