@@ -18,6 +18,16 @@ import webpack, {
 import uncheckedIndexAccessFiles from "./UncheckedIndexAccess.json";
 import { WebpackArgv } from "./WebpackArgv";
 
+function optionalEnvVars(keys: string[]) {
+  // Null has a special meaning for EnvironmentPlugin: the variables are optional.
+  // If we passed undefined there would be a build error if they were missing.
+  const values: Record<string, string | null> = {}; // eslint-disable-line no-restricted-syntax
+  for (const key of keys) {
+    values[key] = process.env[key] ?? null; // eslint-disable-line no-restricted-syntax
+  }
+  return new EnvironmentPlugin(values);
+}
+
 // Common configuration shared by Storybook and the main Webpack build
 export function makeConfig(_: unknown, argv: WebpackArgv): Configuration {
   const isDev = argv.mode === "development";
@@ -182,11 +192,7 @@ export function makeConfig(_: unknown, argv: WebpackArgv): Configuration {
         process: "process/browser",
         setImmediate: ["@foxglove-studio/app/shared/setImmediate", "default"],
       }),
-      new EnvironmentPlugin({
-        SENTRY_DSN: process.env.SENTRY_DSN ?? null, // eslint-disable-line no-restricted-syntax
-        SIGNUP_API_URL: "https://foxglove.dev/api/signup",
-        SLACK_INVITE_URL: "https://foxglove.dev/join-slack",
-      }),
+      optionalEnvVars(["SENTRY_DSN", "SIGNUP_API_URL", "SLACK_INVITE_URL"]),
       new webpack.DefinePlugin({
         // Should match webpack-defines.d.ts
         APP_NAME: JSON.stringify("Foxglove Studio"),

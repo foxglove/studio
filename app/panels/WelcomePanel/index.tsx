@@ -103,12 +103,15 @@ function WelcomePanel() {
         />
         <Checkbox
           dataTest="slack-invite"
+          disabled={process.env.SLACK_INVITE_URL == undefined}
           label={`Invite me to the Slack workspace`}
-          checked={slackInviteChecked}
+          checked={slackInviteChecked && process.env.SLACK_INVITE_URL != undefined}
           onChange={setSlackInviteChecked}
         />
         <Button
-          isPrimary={subscribedState.value === false}
+          isPrimary={
+            !subscribedState.loading && !subscribedState.error && subscribedState.value !== true
+          }
           disabled={!submitEnabled}
           onClick={submit}
         >

@@ -1,4 +1,4 @@
-import { Configuration } from "webpack";
+import { Configuration, EnvironmentPlugin } from "webpack";
 import { makeConfig } from "../../webpack.renderer.config";
 
 module.exports = {
@@ -22,13 +22,20 @@ module.exports = {
         ...rendererConfig.resolve,
         alias: {
           ...rendererConfig.resolve?.alias,
+          // Modules to replace with mock equivalents in the storybook build:
           "@foxglove-studio/app/panels/WelcomePanel/subscribeToNewsletter": require.resolve(
             "./__mocks__/subscribeToNewsletter",
           ),
         },
       },
       module: rendererConfig.module,
-      plugins: [...(config.plugins ?? []), ...(rendererConfig.plugins ?? [])],
+      plugins: [
+        ...(config.plugins ?? []),
+        new EnvironmentPlugin({
+          SLACK_INVITE_URL: "https://example.com/",
+        }),
+        ...(rendererConfig.plugins ?? []),
+      ],
     };
   },
 };
