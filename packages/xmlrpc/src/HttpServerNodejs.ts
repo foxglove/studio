@@ -19,11 +19,9 @@ export class HttpServerNodejs implements HttpServer {
       req.on("end", () => {
         const body = Buffer.concat(chunks).toString();
         const input = { ...req, body };
-        console.log(`body is ${body}`);
 
         // Handle this request
         this.handler(input).then((out) => {
-          console.log(`out.body is ${out.body}`);
           // Write the HTTP response
           res.shouldKeepAlive = out.shouldKeepAlive ?? res.shouldKeepAlive;
           res.writeHead(out.statusCode, out.statusMessage, out.headers);
