@@ -34,29 +34,29 @@ const NO_WARNINGS = Object.freeze({});
 // Connects to `rosmaster` instance using `@foxglove/ros1`. Currently doesn't support seeking or
 // showing simulated time, so current time from Date.now() is always used instead.
 export default class Ros1Player implements Player {
-  _url: string; // rosmaster URL.
-  _rosNode?: RosNode; // Our ROS node when we're connected.
-  _id: string = uuidv4(); // Unique ID for this player.
-  _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
-  _closed: boolean = false; // Whether the player has been completely closed using close().
-  _providerTopics?: Topic[]; // Topics as advertised by rosmaster.
-  _start?: Time; // The time at which we started playing.
-  _requestedSubscriptions: SubscribePayload[] = []; // Requested subscriptions by setSubscriptions()
-  _parsedMessages: Message[] = []; // Queue of messages that we'll send in next _emitState() call.
-  _bobjects: BobjectMessage[] = []; // Queue of bobjects that we'll send in next _emitState() call.
-  _messageOrder: TimestampMethod = "receiveTime";
-  _requestTopicsTimeout?: ReturnType<typeof setTimeout>; // setTimeout() handle for _requestTopics().
-  _bobjectTopics: Set<string> = new Set();
-  _parsedTopics: Set<string> = new Set();
+  #url: string; // rosmaster URL.
+  #rosNode?: RosNode; // Our ROS node when we're connected.
+  #id: string = uuidv4(); // Unique ID for this player.
+  #listener?: (arg0: PlayerState) => Promise<void>; // Listener for #emitState().
+  #closed: boolean = false; // Whether the player has been completely closed using close().
+  #providerTopics?: Topic[]; // Topics as advertised by rosmaster.
+  #start?: Time; // The time at which we started playing.
+  #requestedSubscriptions: SubscribePayload[] = []; // Requested subscriptions by setSubscriptions()
+  #parsedMessages: Message[] = []; // Queue of messages that we'll send in next #emitState() call.
+  #bobjects: BobjectMessage[] = []; // Queue of bobjects that we'll send in next #emitState() call.
+  #messageOrder: TimestampMethod = "receiveTime";
+  #requestTopicsTimeout?: ReturnType<typeof setTimeout>; // setTimeout() handle for #requestTopics().
+  #bobjectTopics: Set<string> = new Set();
+  #parsedTopics: Set<string> = new Set();
 
   constructor(url: string) {
-    this._url = url;
-    this._start = fromMillis(Date.now());
-    this._open();
+    this.#url = url;
+    this.#start = fromMillis(Date.now());
+    this.#open();
   }
 
-  _open = async (): Promise<void> => {
-    if (this._closed || OsContextSingleton == undefined) {
+  #open = async (): Promise<void> => {
+    if (this.#closed || OsContextSingleton == undefined) {
       return;
     }
 
@@ -66,27 +66,27 @@ export default class Ros1Player implements Player {
       return net.createSocket(options.host, options.port, "RosTcpMessageStream");
     };
 
-    if (this._rosNode == undefined) {
-      this._rosNode = new RosNode({
+    if (this.#rosNode == undefined) {
+      this.#rosNode = new RosNode({
         name: "/foxglovestudio",
         hostname: OsContextSingleton.getHostnameForRos(),
         pid: OsContextSingleton.pid,
-        rosMasterUri: this._url,
+        rosMasterUri: this.#url,
         httpServer: (httpServer as unknown) as HttpServer,
         tcpSocketCreate,
       });
     }
 
-    await this._rosNode.start();
-    this._requestTopics();
+    await this.#rosNode.start();
+    this.#requestTopics();
   };
 
-  _requestTopics = async (): Promise<void> => {
-    if (this._requestTopicsTimeout) {
-      clearTimeout(this._requestTopicsTimeout);
+  #requestTopics = async (): Promise<void> => {
+    if (this.#requestTopicsTimeout) {
+      clearTimeout(this.#requestTopicsTimeout);
     }
-    const rosNode = this._rosNode;
-    if (!rosNode || this._closed) {
+    const rosNode = this.#rosNode;
+    if (!rosNode || this.#closed) {
       return;
     }
 
@@ -95,63 +95,64 @@ export default class Ros1Player implements Player {
       const topics = topicArrays.map(([name, datatype]) => ({ name, datatype }));
       // Sort them for easy comparison. If nothing has changed here, bail out
       const sortedTopics: Topic[] = sortBy(topics, "name");
-      if (isEqual(sortedTopics, this._providerTopics)) {
+      if (isEqual(sortedTopics, this.#providerTopics)) {
         return;
       }
 
-      this._providerTopics = sortedTopics;
+      this.#providerTopics = sortedTopics;
 
       // Try subscribing again, since we might now be able to subscribe to some new topics.
-      this.setSubscriptions(this._requestedSubscriptions);
-      this._emitState();
+      this.setSubscriptions(this.#requestedSubscriptions);
+      this.#emitState();
     } catch (error) {
       sendNotification("Error in fetching topics and datatypes", error, "app", "error");
     } finally {
       // Regardless of what happens, request topics again in a little bit.
-      this._requestTopicsTimeout = setTimeout(this._requestTopics, 3000);
+      this.#requestTopicsTimeout = setTimeout(this.#requestTopics, 3000);
     }
   };
 
-  _emitState = debouncePromise(() => {
-    if (!this._listener || this._closed) {
+  #emitState = debouncePromise(() => {
+    if (!this.#listener || this.#closed) {
       return Promise.resolve();
     }
 
-    const { _providerTopics, _start } = this;
-    if (!_providerTopics || !_start) {
-      return this._listener({
+    const providerTopics = this.#providerTopics;
+    const start = this.#start;
+    if (!providerTopics || !start) {
+      return this.#listener({
         isPresent: true,
         showSpinner: true,
-        showInitializing: !!this._rosNode,
+        showInitializing: !!this.#rosNode,
         progress: {},
         capabilities,
-        playerId: this._id,
+        playerId: this.#id,
         activeData: undefined,
       });
     }
 
     // Time is always moving forward even if we don't get messages from the server.
-    setTimeout(this._emitState, 100);
+    setTimeout(this.#emitState, 100);
 
     const currentTime = fromMillis(Date.now());
-    const messages = this._parsedMessages;
-    this._parsedMessages = [];
-    const bobjects = this._bobjects;
-    this._bobjects = [];
-    return this._listener({
+    const messages = this.#parsedMessages;
+    this.#parsedMessages = [];
+    const bobjects = this.#bobjects;
+    this.#bobjects = [];
+    return this.#listener({
       isPresent: true,
-      showSpinner: !this._rosNode,
+      showSpinner: !this.#rosNode,
       showInitializing: false,
       progress: {},
       capabilities,
-      playerId: this._id,
+      playerId: this.#id,
 
       activeData: {
         messages,
         bobjects,
-        totalBytesReceived: this._rosNode?.receivedBytes() ?? 0,
-        messageOrder: this._messageOrder,
-        startTime: _start,
+        totalBytesReceived: this.#rosNode?.receivedBytes() ?? 0,
+        messageOrder: this.#messageOrder,
+        startTime: start,
         endTime: currentTime,
         currentTime,
         isPlaying: true,
@@ -159,7 +160,7 @@ export default class Ros1Player implements Player {
         // We don't support seeking, so we need to set this to any fixed value. Just avoid 0 so
         // that we don't accidentally hit falsy checks.
         lastSeekTime: 1,
-        topics: _providerTopics,
+        topics: providerTopics,
         datatypes: this.#getAllRosDatatypes(),
         parsedMessageDefinitionsByTopic: {},
         playerWarnings: NO_WARNINGS,
@@ -168,21 +169,21 @@ export default class Ros1Player implements Player {
   });
 
   setListener(listener: (arg0: PlayerState) => Promise<void>): void {
-    this._listener = listener;
-    this._emitState();
+    this.#listener = listener;
+    this.#emitState();
   }
 
   close(): void {
-    this._closed = true;
-    if (this._rosNode) {
-      this._rosNode.shutdown();
+    this.#closed = true;
+    if (this.#rosNode) {
+      this.#rosNode.shutdown();
     }
   }
 
   setSubscriptions(subscriptions: SubscribePayload[]): void {
-    this._requestedSubscriptions = subscriptions;
+    this.#requestedSubscriptions = subscriptions;
 
-    if (!this._rosNode || this._closed) {
+    if (!this.#rosNode || this.#closed) {
       return;
     }
 
@@ -190,11 +191,11 @@ export default class Ros1Player implements Player {
       subscriptions,
       ({ format }) => format === "bobjects",
     );
-    this._bobjectTopics = new Set(bobjectSubscriptions.map(({ topic }) => topic));
-    this._parsedTopics = new Set(parsedSubscriptions.map(({ topic }) => topic));
+    this.#bobjectTopics = new Set(bobjectSubscriptions.map(({ topic }) => topic));
+    this.#parsedTopics = new Set(parsedSubscriptions.map(({ topic }) => topic));
 
     // See what topics we actually can subscribe to.
-    const availableTopicsByTopicName = getTopicsByTopicName(this._providerTopics ?? []);
+    const availableTopicsByTopicName = getTopicsByTopicName(this.#providerTopics ?? []);
     const topicNames = subscriptions
       .map(({ topic }) => topic)
       .filter((topicName) => availableTopicsByTopicName[topicName]);
@@ -202,45 +203,45 @@ export default class Ros1Player implements Player {
     // Subscribe to all topics that we aren't subscribed to yet.
     for (const topicName of topicNames) {
       const availTopic = availableTopicsByTopicName[topicName];
-      if (!availTopic || this._rosNode.subscriptions.has(topicName)) {
+      if (!availTopic || this.#rosNode.subscriptions.has(topicName)) {
         continue;
       }
 
       const { datatype } = availTopic;
-      const subscription = this._rosNode.subscribe({ topic: topicName, type: datatype });
+      const subscription = this.#rosNode.subscribe({ topic: topicName, type: datatype });
       subscription.on("message", (message, _data, publisher) => {
-        if (this._providerTopics == undefined) {
+        if (this.#providerTopics == undefined) {
           return;
         }
 
         const receiveTime = fromMillis(Date.now());
-        if (this._bobjectTopics.has(topicName)) {
+        if (this.#bobjectTopics.has(topicName)) {
           const msgdef = publisher.connection.messageDefinition();
           const typesByName = this.#getRosDatatypes(datatype, msgdef);
-          this._bobjects.push({
+          this.#bobjects.push({
             topic: topicName,
             receiveTime,
             message: wrapJsObject(typesByName, datatype, message),
           });
         }
 
-        if (this._parsedTopics.has(topicName)) {
-          this._parsedMessages.push({
+        if (this.#parsedTopics.has(topicName)) {
+          this.#parsedMessages.push({
             topic: topicName,
             receiveTime,
             message: message as never,
           });
         }
 
-        this._emitState();
+        this.#emitState();
       });
     }
 
     // Unsubscribe from topics that we are subscribed to but shouldn't be.
-    for (const topicName of this._rosNode.subscriptions.keys()) {
+    for (const topicName of this.#rosNode.subscriptions.keys()) {
       if (!topicNames.includes(topicName)) {
         {
-          this._rosNode.unsubscribe(topicName);
+          this.#rosNode.unsubscribe(topicName);
         }
       }
     }
@@ -260,7 +261,7 @@ export default class Ros1Player implements Player {
   }
 
   publish({ topic, msg }: PublishPayload): void {
-    const publication = this._rosNode?.publications.get(topic);
+    const publication = this.#rosNode?.publications.get(topic);
     if (publication == undefined) {
       sendNotification(
         "Invalid publish call",
@@ -311,10 +312,10 @@ export default class Ros1Player implements Player {
 
   #getAllRosDatatypes = (): RosDatatypes => {
     const typesByName: RosDatatypes = {};
-    if (this._rosNode == undefined) {
+    if (this.#rosNode == undefined) {
       return typesByName;
     }
-    for (const sub of this._rosNode.subscriptions.values()) {
+    for (const sub of this.#rosNode.subscriptions.values()) {
       for (const pub of sub.publishers().values()) {
         const msgdef = pub.connection.messageDefinition();
         Object.assign(typesByName, this.#getRosDatatypes(sub.dataType, msgdef));
