@@ -9,6 +9,13 @@ import { TextDecoder, TextEncoder } from "web-encoding";
 import { Connection, ConnectionStats } from "./Connection";
 import { TcpAddress, TcpSocket } from "./TcpTypes";
 
+// Implements a subscriber for the TCPROS transport. The actual TCP transport is
+// implemented in the passed in `socket` (TcpSocket), and it is assumed a
+// transform stream is attached to that socket for parsing the TCPROS message
+// format (4 byte length followed by message payload) so the emitted "data"
+// events represent one full message each without the length prefix. A node.js
+// transform stream that meets this requirements is implemented in
+// `RosTcpMessageStream`.
 export class TcpConnection extends EventEmitter implements Connection {
   retries = 0;
 
@@ -74,7 +81,15 @@ export class TcpConnection extends EventEmitter implements Connection {
 
   async writeHeader(): Promise<void> {
     const data = TcpConnection.SerializeHeader(this.#requestHeader);
-    this.#stats.bytesSent += data.byteLength;
+    this.#stats.bytesSent += 4 + data.byteLength;
+
+    // Write the 4-byte length
+    const lenBuffer = new ArrayBuffer(4);
+    const view = new DataView(lenBuffer);
+    view.setUint32(0, data.byteLength, true);
+    this.#socket.write(new Uint8Array(lenBuffer));
+
+    // Write the serialized header payload
     return this.#socket.write(data);
   }
 
@@ -141,14 +156,11 @@ export class TcpConnection extends EventEmitter implements Connection {
       encoder.encode(`${key}=${value}`),
     ) as Uint8Array[];
     const payloadLen = encoded.reduce((sum, str) => sum + str.length + 4, 0);
-    const buffer = new ArrayBuffer(payloadLen + 4);
+    const buffer = new ArrayBuffer(payloadLen);
     const array = new Uint8Array(buffer);
     const view = new DataView(buffer);
 
     let idx = 0;
-    view.setUint32(idx, payloadLen, true);
-    idx += 4;
-
     encoded.forEach((strData) => {
       view.setUint32(idx, strData.length, true);
       idx += 4;

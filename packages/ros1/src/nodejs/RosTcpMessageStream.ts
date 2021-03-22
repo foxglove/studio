@@ -6,6 +6,9 @@ import { Transform, TransformCallback } from "stream";
 
 import { concatData } from "../concatData";
 
+// A node.js transform stream that takes a raw TCPROS data stream and parses the
+// TCPROS format of 4 byte length prefixes followed by message payloads into one
+// complete message per "data" event, discarding the length prefix
 export class RosTcpMessageStream extends Transform {
   #inMessage = false;
   #bytesNeeded = 4;
@@ -28,6 +31,7 @@ export class RosTcpMessageStream extends Transform {
       idx += this.#bytesNeeded;
 
       const payload = concatData(this.#chunks);
+      this.#chunks = [];
 
       if (this.#inMessage) {
         // Produce a Uint8Array representing a single message and transition to
@@ -36,11 +40,14 @@ export class RosTcpMessageStream extends Transform {
         this.emit("data", payload);
       } else {
         // Decoded the message length field and transition to reading a message
-        this.#bytesNeeded = new DataView(payload.buffer).getUint32(0, true);
+        this.#bytesNeeded = new DataView(
+          payload.buffer,
+          payload.byteOffset,
+          payload.byteLength,
+        ).getUint32(0, true);
       }
 
       this.#inMessage = !this.#inMessage;
-      this.#chunks = [];
     }
 
     callback();
