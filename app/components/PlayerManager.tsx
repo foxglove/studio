@@ -296,9 +296,14 @@ function PlayerManager({
     buildPlayer(buildPlayerFromFiles(usedFiles.current, buildPlayerOptions));
   }, [buildPlayer, filesToOpen, buildPlayerOptions]);
 
+  let availableSources = playerSources;
+  if (!useExperimentalFeature("ros1Native")) {
+    availableSources = availableSources.filter((src) => src.type !== "ros1-core");
+  }
+
   const value: PlayerSelection = {
     selectSource,
-    availableSources: playerSources,
+    availableSources,
     currentSourceName,
     currentPlayer: player,
   };

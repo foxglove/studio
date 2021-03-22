@@ -34,6 +34,10 @@ storiesOf("<TinyConnectionPicker>", module).add("default", () => {
       name: "Websocket",
       type: "ws",
     },
+    {
+      name: "HTTP",
+      type: "http",
+    },
   ];
 
   const value: PlayerSelection = {
