@@ -103,9 +103,8 @@ function WelcomePanel() {
         />
         <Checkbox
           dataTest="slack-invite"
-          disabled={process.env.SLACK_INVITE_URL == undefined}
           label={`Invite me to the Slack workspace`}
-          checked={slackInviteChecked && process.env.SLACK_INVITE_URL != undefined}
+          checked={slackInviteChecked}
           onChange={setSlackInviteChecked}
         />
         <Button

@@ -180,6 +180,10 @@ async function createWindow(): Promise<void> {
     role: "help",
     submenu: [
       {
+        label: `Welcome to ${APP_NAME}`,
+        click: () => mainWindow.webContents.send("open-welcome-layout"),
+      },
+      {
         label: "Keyboard Shortcuts",
         accelerator: "CommandOrControl+/",
         click: () => mainWindow.webContents.send("open-keyboard-shortcuts"),
@@ -201,9 +205,11 @@ async function createWindow(): Promise<void> {
   }
 
   // Open all new windows in an external browser
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url);
-    return { action: "deny" };
+  // Note: this API is supposed to be superseded by webContents.setWindowOpenHandler,
+  // but using that causes the app to freeze when a new window is opened.
+  mainWindow.webContents.on("new-window", (event, url) => {
+    event.preventDefault();
+    shell.openExternal(url);
   });
 
   mainWindow.webContents.on("ipc-message", (_event: unknown, channel: string) => {

@@ -11,10 +11,19 @@
 //   You may not use this file except in compliance with the License.
 
 import CogIcon from "@mdi/svg/svg/cog.svg";
-import { ReactElement, useState, CSSProperties, useEffect, useMemo, useRef } from "react";
+import {
+  ReactElement,
+  useState,
+  CSSProperties,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
 import { DndProvider } from "react-dnd";
 import HTML5Backend from "react-dnd-html5-backend";
 import { Provider, useDispatch } from "react-redux";
+import { useMountedState } from "react-use";
 import styled from "styled-components";
 
 import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
@@ -82,6 +91,15 @@ function Root() {
   const [preferencesOpen, setPreferencesOpen] = useState(false);
   const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
 
+  const isMounted = useMountedState();
+
+  const openWelcomeLayout = useCallback(async () => {
+    if (isMounted()) {
+      dispatch(loadLayout(welcomeLayout));
+      await setPlayerFromDemoBag();
+    }
+  }, [dispatch, setPlayerFromDemoBag, isMounted]);
+
   // On MacOS we use inset window controls, when the window is full-screen these controls are not present
   // We detect the full screen state and adjust our rendering accordingly
   // Note: this does not removed the handlers so should be done at the highest component level
@@ -94,7 +112,8 @@ function Root() {
     OsContextSingleton?.addIpcEventListener("open-keyboard-shortcuts", () =>
       setShortcutsModalOpen(true),
     );
-  }, []);
+    OsContextSingleton?.addIpcEventListener("open-welcome-layout", () => openWelcomeLayout());
+  }, [openWelcomeLayout]);
 
   const toolbarStyle = useMemo<CSSProperties | undefined>(() => {
     const insetWindowControls = OsContextSingleton?.platform === "darwin" && !isFullScreen;
@@ -111,12 +130,11 @@ function Root() {
     (async () => {
       const welcomeLayoutShown = await appConfiguration.get("onboarding.welcome-layout.shown");
       if (!welcomeLayoutShown) {
-        dispatch(loadLayout(welcomeLayout));
-        await setPlayerFromDemoBag();
+        await openWelcomeLayout();
         await appConfiguration.set("onboarding.welcome-layout.shown", true);
       }
     })();
-  }, [appConfiguration, dispatch, setPlayerFromDemoBag]);
+  }, [appConfiguration, openWelcomeLayout]);
 
   return (
     <div ref={containerRef} className="app-container" tabIndex={0}>

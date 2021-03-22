@@ -1,4 +1,4 @@
-import { Configuration, EnvironmentPlugin } from "webpack";
+import { Configuration } from "webpack";
 import { makeConfig } from "../../webpack.renderer.config";
 
 module.exports = {
@@ -29,13 +29,7 @@ module.exports = {
         },
       },
       module: rendererConfig.module,
-      plugins: [
-        ...(config.plugins ?? []),
-        new EnvironmentPlugin({
-          SLACK_INVITE_URL: "https://example.com/",
-        }),
-        ...(rendererConfig.plugins ?? []),
-      ],
+      plugins: [...(config.plugins ?? []), ...(rendererConfig.plugins ?? [])],
     };
   },
 };
