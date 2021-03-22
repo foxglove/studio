@@ -58,15 +58,25 @@ export function LoadingGet(): React.ReactElement {
   );
 }
 
-export function LoadingSet(): React.ReactElement {
-  const [config] = useState(() => ({ ...makeConfiguration(), set: () => signal() }));
+function Example({ mockSetConfig }: { mockSetConfig?: () => Promise<void> }): React.ReactElement {
+  const [config] = useState(() => {
+    const configuration = makeConfiguration();
+    if (mockSetConfig) {
+      configuration.set = mockSetConfig;
+    }
+    return configuration;
+  });
   const wrapper = useRef<HTMLDivElement>(ReactNull);
   useEffect(() => {
     const input = wrapper.current?.querySelector("input");
     const button = wrapper.current?.querySelector("[data-test='welcome-content'] button");
-    if (!input || !button) {
-      throw new Error("could not find input or button");
+    const inviteCheckbox = wrapper.current?.querySelector("[data-test='slack-invite']");
+    if (!input || !button || !inviteCheckbox) {
+      throw new Error("missing required elements");
     }
+
+    // Uncheck invite to slack so submitting doesn't open a new window
+    ReactTestUtils.Simulate.click(inviteCheckbox);
 
     input.value = "test@example.com";
     ReactTestUtils.Simulate.change(input);
@@ -84,6 +94,19 @@ export function LoadingSet(): React.ReactElement {
     </div>
   );
 }
-LoadingSet.parameters = {
-  mockSubscribeToNewsletter: action("subscribeToNewsletter"),
+
+export const LoadingSet = (): React.ReactElement => <Example mockSetConfig={() => signal()} />;
+LoadingSet.parameters = { mockSubscribeToNewsletter: action("subscribeToNewsletter") };
+
+export const SetFailed = (): React.ReactElement => (
+  <Example mockSetConfig={() => Promise.reject("Example set error")} />
+);
+SetFailed.parameters = { mockSubscribeToNewsletter: action("subscribeToNewsletter") };
+
+export const SubscribeFailed = (): React.ReactElement => <Example />;
+SubscribeFailed.parameters = {
+  mockSubscribeToNewsletter: () => Promise.reject("Example subscribe error"),
 };
+
+export const Success = (): React.ReactElement => <Example />;
+Success.parameters = { mockSubscribeToNewsletter: () => Promise.resolve() };

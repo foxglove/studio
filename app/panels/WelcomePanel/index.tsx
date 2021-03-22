@@ -102,6 +102,7 @@ function WelcomePanel() {
           onChange={setSubscribeChecked}
         />
         <Checkbox
+          dataTest="slack-invite"
           label={`Invite me to the Slack workspace`}
           checked={slackInviteChecked}
           onChange={setSlackInviteChecked}
