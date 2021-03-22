@@ -40,8 +40,8 @@ function WelcomePanel() {
   const [emailError, setEmailError] = useState<string | undefined>();
 
   const [submitState, submit] = useAsyncFn(async () => {
-    if (slackInviteChecked) {
-      // OsContextSingleton?.handleJoinSlackClick();
+    if (slackInviteChecked && process.env.SLACK_INVITE_URL != undefined) {
+      open(process.env.SLACK_INVITE_URL, "_blank");
     }
     if (subscribeChecked) {
       await subscribeToNewsletter(emailValue);

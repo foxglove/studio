@@ -200,6 +200,12 @@ async function createWindow(): Promise<void> {
     mainWindow.webContents.openDevTools();
   }
 
+  // Open all new windows in an external browser
+  mainWindow.webContents.setWindowOpenHandler((details) => {
+    shell.openExternal(details.url);
+    return { action: "deny" };
+  });
+
   mainWindow.webContents.on("ipc-message", (_event: unknown, channel: string) => {
     if (channel === "window.toolbar-double-clicked") {
       const action: string =
@@ -211,11 +217,6 @@ async function createWindow(): Promise<void> {
       } else {
         // "None"
       }
-    } else if (
-      channel === "onboarding.join-slack-clicked" &&
-      process.env.SLACK_INVITE_URL != undefined
-    ) {
-      shell.openExternal(process.env.SLACK_INVITE_URL);
     }
   });
 

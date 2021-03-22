@@ -77,7 +77,6 @@ export default (_: unknown, argv: WebpackArgv): Configuration => {
       }),
       new EnvironmentPlugin({
         SENTRY_DSN: process.env.SENTRY_DSN ?? null, // eslint-disable-line no-restricted-syntax
-        SLACK_INVITE_URL: "https://foxglove.dev/join-slack",
       }),
       new ForkTsCheckerWebpackPlugin(),
     ],

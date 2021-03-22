@@ -3,7 +3,7 @@ import "./styles.scss";
 import { getGlobalConfig } from "@foxglove-studio/app/GlobalConfig";
 import waitForFonts from "@foxglove-studio/app/util/waitForFonts";
 import { withScreenshot } from "storycap";
-import { decorator as withMockSubscribeToNewsletter } from "./__mocks__/subscribeToNewsletter";
+import { withMockSubscribeToNewsletter } from "./__mocks__/subscribeToNewsletter";
 
 let loaded = false;
 
