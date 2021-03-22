@@ -9,8 +9,6 @@ describe("util/url", () => {
     it("accepts undefined, empty, and malformed input", () => {
       expect(parseInputUrl()).toBeUndefined();
       expect(parseInputUrl("")).toBeUndefined();
-      expect(parseInputUrl("://")).toBeUndefined();
-      expect(parseInputUrl("://test:100")).toBeUndefined();
     });
 
     it("accepts fully formed URL input", () => {
