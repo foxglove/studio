@@ -1,13 +1,16 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
+import CogIcon from "@mdi/svg/svg/cog.svg";
 import DatabaseIcon from "@mdi/svg/svg/database.svg";
+import DragIcon from "@mdi/svg/svg/drag.svg";
 import PlusCircleOutlineIcon from "@mdi/svg/svg/plus-circle-outline.svg";
 import { useState } from "react";
 import { useAsyncFn } from "react-use";
 import styled from "styled-components";
 
 // import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
+import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
 import Button from "@foxglove-studio/app/components/Button";
 import Checkbox from "@foxglove-studio/app/components/Checkbox";
 import Flex from "@foxglove-studio/app/components/Flex";
@@ -16,13 +19,13 @@ import Panel from "@foxglove-studio/app/components/Panel";
 import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
 import TextContent from "@foxglove-studio/app/components/TextContent";
 import TextField from "@foxglove-studio/app/components/TextField";
+import { usePlayerSelection } from "@foxglove-studio/app/context/PlayerSelectionContext";
 import { useAsyncAppConfigurationValue } from "@foxglove-studio/app/hooks/useAsyncAppConfigurationValue";
 import subscribeToNewsletter from "@foxglove-studio/app/panels/WelcomePanel/subscribeToNewsletter";
 import { isEmail } from "@foxglove-studio/app/shared/validators";
 import colors from "@foxglove-studio/app/styles/colors.module.scss";
 
 const Term = styled.span`
-  color: ${colors.accent};
   font-weight: bold;
 `;
 
@@ -49,6 +52,8 @@ function WelcomePanel() {
     await setSubscribed(true);
   }, [slackInviteChecked, subscribeChecked, setSubscribed, emailValue]);
 
+  const { setPlayerFromDemoBag } = usePlayerSelection();
+
   const loading = subscribedState.loading || submitState.loading;
   const error = submitState.error ?? subscribedState.error;
   const subscribed = subscribedState.value ?? false;
@@ -71,11 +76,23 @@ function WelcomePanel() {
         </p>
         <p>
           The configuration of views and graphs you’re looking at now is called the{" "}
-          <Term>layout</Term>. Each view is a <Term>panel</Term>. Click the{" "}
+          <Term>layout</Term>. Each view is a <Term>panel</Term>. You can rearrange panels to your
+          liking: hover over them and drag the{" "}
+          <Icon clickable={false}>
+            <DragIcon />
+          </Icon>{" "}
+          icon. Click the{" "}
           <Icon clickable={false}>
             <PlusCircleOutlineIcon />
           </Icon>{" "}
-          icon above and try adding a new panel.
+          icon above and try adding a new panel. Don’t worry if you make a mistake—you can press{" "}
+          <code>{OsContextSingleton?.platform === "darwin" ? "⌘" : "^"}Z</code> to undo your
+          changes. (This introduction is also a panel! When you’re done reading, hover over it and
+          click the{" "}
+          <Icon clickable={false}>
+            <CogIcon />
+          </Icon>{" "}
+          icon to close it.)
         </p>
         <p>
           Want to view data from your own <Term>ROS bag file</Term>? Double-click a bag file to open
@@ -83,7 +100,11 @@ function WelcomePanel() {
           <Icon clickable={false}>
             <DatabaseIcon />
           </Icon>{" "}
-          in the upper left to select another data source.
+          in the upper left to select another data source, or try out an{" "}
+          <a href="#" onClick={setPlayerFromDemoBag}>
+            example bag file
+          </a>
+          .
         </p>
         <p>
           To get in touch with us and learn more tips &amp; tricks, join our Slack workspace and
