@@ -108,7 +108,7 @@ function WelcomePanel() {
           </a>
           .
         </p>
-        <p>
+        <p style={{ marginTop: "3em" }}>
           To get in touch with us and learn more tips &amp; tricks, join our Slack workspace and
           subscribe to our mailing list:
         </p>
