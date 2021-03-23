@@ -12,7 +12,7 @@ import { RosFollowerClient } from "./RosFollowerClient";
 import { RosMasterClient } from "./RosMasterClient";
 import { Subscription } from "./Subscription";
 import { TcpConnection } from "./TcpConnection";
-import { TcpSocketCreate, TcpServer, TcpAddress } from "./TcpTypes";
+import { TcpSocketCreate, TcpServer, TcpAddress, NetworkInterface } from "./TcpTypes";
 
 export type SubscribeOpts = {
   topic: string;
@@ -241,4 +241,61 @@ export class RosNode extends EventEmitter {
       }),
     );
   };
+
+  static GetRosHostname(
+    getEnvVar: (envVar: string) => string | undefined,
+    getHostname: () => string | undefined,
+    getNetworkInterfaces: () => NetworkInterface[],
+  ): string {
+    // Prefer ROS_HOSTNAME, then ROS_IP env vars
+    let hostname = getEnvVar("ROS_HOSTNAME") ?? getEnvVar("ROS_IP");
+    if (hostname !== undefined && hostname.length > 0) {
+      return hostname;
+    }
+
+    // Try to get the operating system hostname
+    hostname = getHostname();
+    if (hostname !== undefined && hostname.length > 0) {
+      return hostname;
+    }
+
+    // Fall back to iterating network interfaces looking for an IP address
+    let bestAddr: NetworkInterface | undefined;
+    const ifaces = getNetworkInterfaces();
+    for (const name in ifaces) {
+      const iface = ifaces[name];
+      if (iface == undefined) {
+        continue;
+      }
+      if (
+        (iface.family !== "IPv4" && iface.family !== "IPv6") ||
+        iface.internal ||
+        iface.address.length === 0
+      ) {
+        continue;
+      }
+
+      if (bestAddr === undefined) {
+        // Use the first non-internal interface we find
+        bestAddr = iface;
+      } else if (RosNode.IsPrivateIP(bestAddr.address) && !RosNode.IsPrivateIP(iface.address)) {
+        // Prefer public IPs over private
+        bestAddr = iface;
+      } else if (bestAddr.family !== "IPv6" && iface.family === "IPv6") {
+        // Prefer IPv6
+        bestAddr = iface;
+      }
+    }
+    if (bestAddr !== undefined) {
+      return bestAddr.address;
+    }
+
+    // Last resort, return IPv4 loopback
+    return "127.0.0.1";
+  }
+
+  static IsPrivateIP(ip: string): boolean {
+    // Logic based on isPrivateIP() in ros_comm network.cpp
+    return ip.startsWith("192.168") || ip.startsWith("10.") || ip.startsWith("169.254");
+  }
 }

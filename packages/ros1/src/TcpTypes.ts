@@ -8,6 +8,16 @@ export type TcpAddress = {
   address: string;
 };
 
+export interface NetworkInterface {
+  name: string;
+  family: "IPv4" | "IPv6";
+  internal: boolean;
+  address: string;
+  cidr?: string;
+  mac: string;
+  netmask: string;
+}
+
 export interface TcpSocket {
   remoteAddress(): Promise<TcpAddress | undefined>;
   localAddress(): Promise<TcpAddress | undefined>;

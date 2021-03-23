@@ -60,7 +60,7 @@ type BuiltPlayer = {
 function buildPlayerFromFiles(files: File[], options: BuildPlayerOptions): BuiltPlayer {
   if (files.length === 1) {
     return {
-      player: buildPlayerFromDescriptor(getLocalBagDescriptor(files[0]!), options),
+      player: buildPlayerFromDescriptor(getLocalBagDescriptor(files[0] as File), options),
       sources: files.map((file) => String(file.name)),
     };
   } else if (files.length === 2) {
@@ -70,11 +70,11 @@ function buildPlayerFromFiles(files: File[], options: BuildPlayerOptions): Built
           name: CoreDataProviders.CombinedDataProvider,
           args: {},
           children: [
-            getLocalBagDescriptor(files[0]!),
+            getLocalBagDescriptor(files[0] as File),
             {
               name: CoreDataProviders.RenameDataProvider,
               args: { prefix: SECOND_SOURCE_PREFIX },
-              children: [getLocalBagDescriptor(files[1]!)],
+              children: [getLocalBagDescriptor(files[1] as File)],
             },
           ],
         },
@@ -95,7 +95,7 @@ async function buildPlayerFromBagURLs(
   if (urls.length === 1) {
     return {
       player: buildPlayerFromDescriptor(
-        getRemoteBagDescriptor(urls[0]!, guids[0], options),
+        getRemoteBagDescriptor(urls[0] as string, guids[0], options),
         options,
       ),
       sources: urls.map((url) => url.toString()),
@@ -107,11 +107,11 @@ async function buildPlayerFromBagURLs(
           name: CoreDataProviders.CombinedDataProvider,
           args: {},
           children: [
-            getRemoteBagDescriptor(urls[0]!, guids[0], options),
+            getRemoteBagDescriptor(urls[0] as string, guids[0], options),
             {
               name: CoreDataProviders.RenameDataProvider,
               args: { prefix: SECOND_SOURCE_PREFIX },
-              children: [getRemoteBagDescriptor(urls[1]!, guids[1], options)],
+              children: [getRemoteBagDescriptor(urls[1] as string, guids[1], options)],
             },
           ],
         },
@@ -237,7 +237,7 @@ function PlayerManager({
         }
         case "ros1-core": {
           const result = await prompt({
-            value: OsContextSingleton?.getDefaultRosMasterUri() ?? "http://localhost:11311/",
+            value: OsContextSingleton?.getEnvVar("ROS_MASTER_URI") ?? "http://localhost:11311/",
           });
           const url = parseInputUrl(result);
           if (url == undefined) {

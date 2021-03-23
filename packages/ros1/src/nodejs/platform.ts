@@ -4,66 +4,31 @@
 
 import os from "os";
 
-import { parseInputUrl } from "@foxglove-studio/app/util/url";
+import { NetworkInterface } from "../TcpTypes";
 
 export function getPid(): number {
   return process.pid;
 }
 
-export function getDefaultRosMasterUri(): string | undefined {
-  return parseInputUrl(process.env["ROS_MASTER_URI"]);
+export function getEnvVar(envVar: string): string | undefined {
+  return process.env[envVar];
 }
 
-export function getHostname(): string {
-  // Prefer ROS_HOSTNAME, then ROS_IP env vars
-  let hostname = process.env["ROS_HOSTNAME"] ?? process.env["ROS_IP"];
-  if (hostname !== undefined && hostname.length > 0) {
-    return hostname;
-  }
+export function getHostname(): string | undefined {
+  return os.hostname();
+}
 
-  // Try to get the operating system hostname
-  hostname = os.hostname();
-  if (hostname !== undefined && hostname.length > 0) {
-    return hostname;
-  }
-
-  // Fall back to iterating network interfaces looking for an IP address
-  let bestAddr: os.NetworkInterfaceInfo | undefined;
+export function getNetworkInterfaces(): NetworkInterface[] {
+  const output: NetworkInterface[] = [];
   const ifaces = os.networkInterfaces();
   for (const name in ifaces) {
     const iface = ifaces[name];
-    if (iface !== undefined) {
-      for (const info of iface) {
-        if (
-          (info.family !== "IPv4" && info.family !== "IPv6") ||
-          info.internal ||
-          info.address.length === 0
-        ) {
-          continue;
-        }
-
-        if (bestAddr === undefined) {
-          // Use the first non-internal interface we find
-          bestAddr = info;
-        } else if (isPrivateIP(bestAddr.address) && !isPrivateIP(info.address)) {
-          // Prefer public IPs over private
-          bestAddr = info;
-        } else if (bestAddr.family !== "IPv6" && info.family === "IPv6") {
-          // Prefer IPv6
-          bestAddr = info;
-        }
-      }
+    if (iface == undefined) {
+      continue;
+    }
+    for (const info of iface) {
+      output.push({ name, ...info, cidr: info.cidr ?? undefined });
     }
   }
-  if (bestAddr !== undefined) {
-    return bestAddr.address;
-  }
-
-  // Last resort, return IPv4 loopback
-  return "127.0.0.1";
-}
-
-function isPrivateIP(ip: string): boolean {
-  // Logic based on isPrivateIP() in ros_comm network.cpp
-  return ip.startsWith("192.168") || ip.startsWith("10.") || ip.startsWith("169.254");
+  return output;
 }

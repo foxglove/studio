@@ -4,8 +4,9 @@
 
 import { RosNode } from "@foxglove/ros1";
 import {
-  getDefaultRosMasterUri,
+  getEnvVar,
   getHostname,
+  getNetworkInterfaces,
   getPid,
   TcpSocketNode,
 } from "@foxglove/ros1/src/nodejs";
@@ -18,8 +19,8 @@ async function main() {
   try {
     rosNode = new RosNode({
       name,
-      rosMasterUri: getDefaultRosMasterUri() ?? "http://localhost:11311/",
-      hostname: getHostname(),
+      rosMasterUri: getEnvVar("ROS_MASTER_URI") ?? "http://localhost:11311/",
+      hostname: RosNode.GetRosHostname(getEnvVar, getHostname, getNetworkInterfaces),
       pid: getPid(),
       httpServer: new HttpServerNodejs(),
       tcpSocketCreate: TcpSocketNode.Create,

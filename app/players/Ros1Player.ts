@@ -57,7 +57,8 @@ export default class Ros1Player implements Player {
   }
 
   #open = async (): Promise<void> => {
-    if (this.#closed || OsContextSingleton == undefined) {
+    const os = OsContextSingleton;
+    if (this.#closed || os == undefined) {
       return;
     }
 
@@ -70,8 +71,8 @@ export default class Ros1Player implements Player {
     if (this.#rosNode == undefined) {
       this.#rosNode = new RosNode({
         name: "/foxglovestudio",
-        hostname: OsContextSingleton.getHostnameForRos(),
-        pid: OsContextSingleton.pid,
+        hostname: RosNode.GetRosHostname(os.getEnvVar, os.getHostname, os.getNetworkInterfaces),
+        pid: os.pid,
         rosMasterUri: this.#url,
         httpServer: (httpServer as unknown) as HttpServer,
         tcpSocketCreate,

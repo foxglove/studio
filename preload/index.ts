@@ -4,13 +4,11 @@
 
 import { init as initSentry } from "@sentry/electron";
 import { contextBridge, ipcRenderer } from "electron";
+import os from "os";
 
 import type { OsContext, OsContextForwardedEvent } from "@foxglove-studio/app/OsContext";
+import { NetworkInterface } from "@foxglove-studio/app/OsContext";
 import { PreloaderSockets } from "@foxglove/electron-socket/preloader";
-import {
-  getDefaultRosMasterUri,
-  getHostname as getHostnameForRos,
-} from "@foxglove/ros1/src/nodejs";
 
 import LocalFileStorage from "./LocalFileStorage";
 
@@ -70,9 +68,23 @@ const ctx: OsContext = {
     ipcRenderer.invoke("menu.remove-input-source", name);
   },
 
-  // Environment queries for ROS
-  getDefaultRosMasterUri,
-  getHostnameForRos,
+  // Environment queries
+  getEnvVar: (envVar: string) => process.env[envVar],
+  getHostname: os.hostname,
+  getNetworkInterfaces: (): NetworkInterface[] => {
+    const output: NetworkInterface[] = [];
+    const ifaces = os.networkInterfaces();
+    for (const name in ifaces) {
+      const iface = ifaces[name];
+      if (iface == undefined) {
+        continue;
+      }
+      for (const info of iface) {
+        output.push({ name, ...info, cidr: info.cidr ?? undefined });
+      }
+    }
+    return output;
+  },
 
   // Context bridge cannot expose "classes" only exposes functions
   // We use .bind to attach the localFileStorage instance as _this_ to the function
