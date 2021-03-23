@@ -16,7 +16,8 @@ export function parseInputUrl(str?: string, defaultProtocol = "https:"): string 
   try {
     const url = new URL(str);
     return url.toString();
-  } catch (e) {
+  } catch {
+    // The input still couldn't be parsed as a valid URL, reject it
     return undefined;
   }
 }
