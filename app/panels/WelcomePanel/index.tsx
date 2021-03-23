@@ -26,6 +26,7 @@ import colors from "@foxglove-studio/app/styles/colors.module.scss";
 
 const Term = styled.span`
   font-weight: bold;
+  font-style: italic;
 `;
 
 function validateEmail(str: string): string | undefined {
@@ -71,7 +72,7 @@ function WelcomePanel() {
     <Flex col scroll dataTest="welcome-content">
       <PanelToolbar floating />
       <TextContent style={{ padding: 12 }}>
-        <h1>Welcome to {APP_NAME}</h1>
+        <h2 style={{ fontSize: "1.5em", marginBottom: "0.8em" }}>Welcome</h2>
         <p>
           {APP_NAME} is an integrated visualization and debugging tool for robotics. It allows you
           to quickly and easily understand what’s happening in real-time, and provides a unique
@@ -97,12 +98,12 @@ function WelcomePanel() {
           icon to remove it.)
         </p>
         <p>
-          Want to view data from your own <Term>ROS bag file</Term>? Double-click a bag file to open
-          it with {APP_NAME}, or just drag &amp; drop it here. Click{" "}
+          Want to view data from your own ROS bag file? Double-click a bag file to open it with{" "}
+          {APP_NAME}, or just drag &amp; drop it into the app. Click{" "}
           <Icon clickable={false}>
             <DatabaseIcon />
           </Icon>{" "}
-          in the upper left to select another data source, or try out an{" "}
+          in the upper left to select another data source, or try loading our{" "}
           <a href="#" onClick={setPlayerFromDemoBag}>
             example bag file
           </a>
@@ -130,20 +131,23 @@ function WelcomePanel() {
           checked={slackInviteChecked}
           onChange={setSlackInviteChecked}
         />
-        <Button
-          isPrimary={
-            !subscribedState.loading && !subscribedState.error && subscribedState.value !== true
-          }
-          disabled={!submitEnabled}
-          onClick={submit}
-        >
-          {loading ? "Loading…" : "Sign Up"}
-        </Button>{" "}
-        {error ? (
-          <span style={{ color: colors.red }}>{error.toString()}</span>
-        ) : subscribed ? (
-          <span style={{ color: colors.green }}>Thanks for signing up!</span>
-        ) : undefined}
+        <div style={{ marginTop: "0.5em" }}>
+          <Button
+            isPrimary={
+              !subscribedState.loading && !subscribedState.error && subscribedState.value !== true
+            }
+            disabled={!submitEnabled}
+            onClick={submit}
+          >
+            {loading ? "Loading…" : "Sign Up"}
+          </Button>
+          &nbsp;
+          {error ? (
+            <span style={{ color: colors.red }}>{error.toString()}</span>
+          ) : subscribed ? (
+            <span style={{ color: colors.green }}>Thanks for signing up!</span>
+          ) : undefined}
+        </div>
       </TextContent>
     </Flex>
   );
