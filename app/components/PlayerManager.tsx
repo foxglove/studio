@@ -52,6 +52,8 @@ import { SECOND_SOURCE_PREFIX } from "@foxglove-studio/app/util/globalConstants"
 import { useShallowMemo } from "@foxglove-studio/app/util/hooks";
 import { parseInputUrl } from "@foxglove-studio/app/util/url";
 
+const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
+
 type BuiltPlayer = {
   player: Player;
   sources: string[];
@@ -299,6 +301,12 @@ function PlayerManager({
 
   const value: PlayerSelection = {
     selectSource,
+    // Expose a simple way to load a demo bag for first launch onboarding.
+    // In the future we may want to replace this limited API with something more cohesive
+    // that exposes the different buildPlayerFromX methods above. At the same time,
+    // the prompt() responsibilities could be moved out of the PlayerManager.
+    setPlayerFromDemoBag: async () =>
+      buildPlayer(await buildPlayerFromBagURLs([DEMO_BAG_URL], buildPlayerOptions)),
     availableSources,
     currentSourceName,
     currentPlayer: player,
