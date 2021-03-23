@@ -52,13 +52,11 @@ import MosaicDragHandle from "./MosaicDragHandle";
 import styles from "./index.module.scss";
 
 type Props = {
-  // eslint-disable-next-line react/no-unused-prop-types
   children?: React.ReactNode;
   floating?: boolean;
   helpContent?: React.ReactNode;
   menuContent?: React.ReactNode;
   additionalIcons?: React.ReactNode;
-  // eslint-disable-next-line react/no-unused-prop-types
   hideToolbars?: boolean;
   showHiddenControlsOnHover?: boolean;
   isUnknownPanel?: boolean;
@@ -234,7 +232,10 @@ function StandardMenuItems({
   );
 }
 
-type PanelToolbarControlsProps = Props & {
+type PanelToolbarControlsProps = Pick<
+  Props,
+  "additionalIcons" | "floating" | "menuContent" | "showHiddenControlsOnHover"
+> & {
   isRendered: boolean;
   onDragStart: () => void;
   onDragEnd: () => void;
