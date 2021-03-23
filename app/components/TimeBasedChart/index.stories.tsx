@@ -22,7 +22,7 @@ import type { Props } from "./index";
 
 const dataX = 0.000057603000000000004;
 const dataY = 5.544444561004639;
-const path = "/turtle1/pose.x";
+// fixme - this should not be _any_
 const tooltipData: any = {
   x: dataX,
   y: dataY,
@@ -37,59 +37,53 @@ const tooltipData: any = {
   startTime: { sec: 1396293889, nsec: 156763 },
 };
 
-const commonProps: any = {
+const commonProps: Props = {
   isSynced: true,
   zoom: true,
-  width: 867.272705078125,
-  height: 1139.1051025390625,
+  width: 800,
+  height: 600,
   data: {
     datasets: [
       {
         borderColor: "#4e98e2",
         label: "/turtle1/pose.x",
-        key: "0",
         showLine: true,
-        fill: false,
         borderWidth: 1,
         pointRadius: 1.5,
         pointHoverRadius: 3,
         pointBackgroundColor: "#74beff",
         pointBorderColor: "transparent",
-        path,
         data: [
           {
             x: dataX,
             y: dataY,
-            tooltip: tooltipData,
           },
         ],
       },
       {
         borderColor: "#f5774d",
         label: "a42771fb-b547-4c61-bbaa-9059dec68e49",
-        key: "1",
         showLine: true,
-        fill: false,
         borderWidth: 1,
         pointRadius: 1.5,
         pointHoverRadius: 3,
         pointBackgroundColor: "#ff9d73",
         pointBorderColor: "transparent",
         data: [],
-        path: "",
       },
     ],
   },
   tooltips: [tooltipData],
   annotations: [],
   type: "scatter",
-  yAxes: [
-    {
-      id: "Y_AXIS_ID",
-      ticks: { precision: 3 },
-      gridLines: { color: "rgba(255, 255, 255, 0.2)", zeroLineColor: "rgba(255, 255, 255, 0.2)" },
-    },
-  ],
+  xAxes: {
+    ticks: { precision: 3 },
+    grid: { color: "rgba(255, 255, 255, 0.2)" },
+  },
+  yAxes: {
+    ticks: { precision: 3 },
+    grid: { color: "rgba(255, 255, 255, 0.2)" },
+  },
   xAxisIsPlaybackTime: true,
 };
 
@@ -113,37 +107,6 @@ function CleansUpTooltipExample() {
     <div style={{ width: "100%", height: "100%", background: "black" }} ref={refFn}>
       <MockMessagePipelineProvider>
         {!hasRenderedOnce && <TimeBasedChart {...commonProps} />}
-      </MockMessagePipelineProvider>
-    </div>
-  );
-}
-
-function ZoomExample() {
-  const [, forceUpdate] = useState(0);
-  const newProps = cloneDeep(commonProps);
-  const newDataPoint = cloneDeep(newProps.data.datasets[0].data[0]);
-  newDataPoint.x = 20;
-  newProps.data.datasets[0].data[1] = newDataPoint;
-
-  const refFn = useCallback(() => {
-    setTimeout(() => {
-      const canvasEl = document.querySelector("canvas");
-      // Zoom is a continuous event, so we need to simulate wheel multiple times
-      if (canvasEl) {
-        for (let i = 0; i < 5; i++) {
-          triggerWheel(canvasEl, 1);
-        }
-        setTimeout(() => {
-          forceUpdate((old) => ++old);
-        }, 10);
-      }
-    }, 200);
-  }, []);
-
-  return (
-    <div style={{ width: 800, height: 800, background: "black" }} ref={refFn}>
-      <MockMessagePipelineProvider>
-        <TimeBasedChart {...newProps} width={800} height={800} />
       </MockMessagePipelineProvider>
     </div>
   );
@@ -277,9 +240,46 @@ storiesOf("<TimeBasedChart>", module)
       </div>
     );
   })
-  .add("can zoom and then update with new data without resetting the zoom", () => <ZoomExample />, {
-    screenshot: { delay: 3000 },
-  })
+  // fixme - put this on a better waitFor rather htan delay
+  // use CSF as well
+  .add(
+    "can zoom and then update with new data without resetting the zoom",
+    function ZoomExample() {
+      const [chartProps, setChartProps] = useState(cloneDeep(commonProps));
+
+      const refFn = useCallback(() => {
+        setTimeout(() => {
+          const canvasEl = document.querySelector("canvas");
+          // Zoom is a continuous event, so we need to simulate wheel multiple times
+          if (canvasEl) {
+            for (let i = 0; i < 5; i++) {
+              triggerWheel(canvasEl, 1);
+            }
+            setTimeout(() => {
+              setChartProps((oldProps) => {
+                const newProps = cloneDeep(oldProps);
+                const newDataPoint = cloneDeep(newProps.data.datasets[0]!.data[0]!);
+                newDataPoint.x = 20;
+                newProps.data.datasets[0]!.data[1] = newDataPoint;
+                return newProps;
+              });
+            }, 50);
+          }
+        }, 200);
+      }, []);
+
+      return (
+        <div style={{ width: 800, height: 800, background: "black" }} ref={refFn}>
+          <MockMessagePipelineProvider>
+            <TimeBasedChart {...chartProps} width={800} height={800} />
+          </MockMessagePipelineProvider>
+        </div>
+      );
+    },
+    {
+      screenshot: { delay: 3000 },
+    },
+  )
   .add("cleans up the tooltip when removing the panel", () => <CleansUpTooltipExample />)
   .add("should call pauseFrame twice", () => <PauseFrameExample {...commonProps} />)
   .add(

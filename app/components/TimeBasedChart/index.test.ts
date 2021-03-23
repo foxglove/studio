@@ -24,26 +24,6 @@ describe("filterDatasets", () => {
     expect(filterDatasets(datasets, linesToHide).map(({ label }) => label)).toEqual(["a", "c"]);
   });
 
-  it("leaves string values alone", () => {
-    const datasets = [
-      {
-        data: [
-          { x: 0, y: "1" },
-          { x: 0, y: "1" },
-          { x: 0, y: "2" },
-          { x: 0, y: "3" },
-        ],
-        label: "1",
-      },
-    ];
-    const linesToHide = {};
-    expect(filterDatasets(datasets, linesToHide, 100, 100)[0]?.data.map(({ y }) => y)).toEqual([
-      "1",
-      "2",
-      "3",
-    ]);
-  });
-
   it("filters out points that are too close to each other", () => {
     const data = new Array(101).fill(0).map((_, x) => ({ y: 0, x }));
     expect(data[0]).toEqual({ y: 0, x: 0 });
