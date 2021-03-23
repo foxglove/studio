@@ -12,36 +12,79 @@ describe("RosMasterClient", () => {
     const server = http
       .createServer((_, res) => {
         res.writeHead(200, { "Content-Type": "text/xml" });
-        const data =
-          "<?xml version='1.0'?>" +
-          "<methodResponse>" +
-          "<params>" +
-          "<param>" +
-          "<value><array><data>" +
-          "<value><int>1</int></value>" +
-          "<value><string>current topics</string></value>" +
-          "<value><array><data>" +
-          "<value><array><data>" +
-          "<value><string>/rosout</string></value>" +
-          "<value><string>rosgraph_msgs/Log</string></value>" +
-          "</data></array></value>" +
-          "<value><array><data>" +
-          "<value><string>/turtle1/pose</string></value>" +
-          "<value><string>turtlesim/Pose</string></value>" +
-          "</data></array></value>" +
-          "<value><array><data>" +
-          "<value><string>/turtle1/color_sensor</string></value>" +
-          "<value><string>turtlesim/Color</string></value>" +
-          "</data></array></value>" +
-          "<value><array><data>" +
-          "<value><string>/rosout_agg</string></value>" +
-          "<value><string>rosgraph_msgs/Log</string></value>" +
-          "</data></array></value>" +
-          "</data></array></value>" +
-          "</data></array></value>" +
-          "</param>" +
-          "</params>" +
-          "</methodResponse>";
+        const data = `<?xml version="1.0" encoding="UTF-8"?>
+<methodResponse>
+  <params>
+    <param>
+      <value>
+        <array>
+          <data>
+            <value>
+              <int>1</int>
+            </value>
+            <value>
+              <string>current topics</string>
+            </value>
+            <value>
+              <array>
+                <data>
+                  <value>
+                    <array>
+                      <data>
+                        <value>
+                          <string>/rosout</string>
+                        </value>
+                        <value>
+                          <string>rosgraph_msgs/Log</string>
+                        </value>
+                      </data>
+                    </array>
+                  </value>
+                  <value>
+                    <array>
+                      <data>
+                        <value>
+                          <string>/turtle1/pose</string>
+                        </value>
+                        <value>
+                          <string>turtlesim/Pose</string>
+                        </value>
+                      </data>
+                    </array>
+                  </value>
+                  <value>
+                    <array>
+                      <data>
+                        <value>
+                          <string>/turtle1/color_sensor</string>
+                        </value>
+                        <value>
+                          <string>turtlesim/Color</string>
+                        </value>
+                      </data>
+                    </array>
+                  </value>
+                  <value>
+                    <array>
+                      <data>
+                        <value>
+                          <string>/rosout_agg</string>
+                        </value>
+                        <value>
+                          <string>rosgraph_msgs/Log</string>
+                        </value>
+                      </data>
+                    </array>
+                  </value>
+                </data>
+              </array>
+            </value>
+          </data>
+        </array>
+      </value>
+    </param>
+  </params>
+</methodResponse>`;
         res.write(data);
         res.end();
       })

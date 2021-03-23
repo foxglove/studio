@@ -4,8 +4,8 @@
 
 import { backoffTime } from "./backoff";
 
-describe("backoff", () => {
-  it("backoffTime works", () => {
+describe("backoffTime", () => {
+  it("works", () => {
     expect(backoffTime(0, 60, 100, () => 0.5)).toEqual(51);
     expect(backoffTime(1, 60, 100, () => 0.5)).toEqual(52);
     expect(backoffTime(2, 60, 100, () => 0.5)).toEqual(54);
