@@ -1,11 +1,12 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
+
 import { PanelsState } from "@foxglove-studio/app/reducers/panels";
 
 const state: PanelsState = {
   id: "eb73965c-7fce-4dcc-9666-efc543c068ee",
-  name: `Welcome to ${APP_NAME}`,
+  name: "Welcome Layout",
   layout: {
     first: {
       first: {
