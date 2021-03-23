@@ -7,8 +7,6 @@ import net from "net";
 
 import { TcpAddress, TcpSocket } from "@foxglove/ros1";
 
-import { RosTcpMessageStream } from "./RosTcpMessageStream";
-
 type MaybeHasFd = {
   _handle?: {
     fd?: number;
@@ -19,22 +17,19 @@ export class TcpSocketNode extends EventEmitter implements TcpSocket {
   #host: string;
   #port: number;
   #socket: net.Socket;
-  #transformer = new RosTcpMessageStream();
 
   constructor(host: string, port: number, socket: net.Socket) {
     super();
     this.#host = host;
     this.#port = port;
     this.#socket = socket;
-    this.#socket.pipe(this.#transformer);
 
     socket.on("connect", () => this.emit("connect"));
     socket.on("close", () => this.emit("close"));
+    socket.on("data", (chunk) => this.emit("data", chunk));
     socket.on("end", () => this.emit("end"));
     socket.on("timeout", () => this.emit("timeout"));
     socket.on("error", (err) => this.emit("error", err));
-
-    this.#transformer.on("data", (data: Uint8Array) => this.emit("data", data));
   }
 
   remoteAddress(): Promise<TcpAddress | undefined> {

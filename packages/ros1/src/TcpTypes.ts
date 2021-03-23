@@ -20,7 +20,7 @@ export interface TcpSocket {
 
   on(eventName: "connect", listener: () => void): this;
   on(eventName: "close", listener: () => void): this;
-  on(eventName: "data", listener: (message: Uint8Array) => void): this;
+  on(eventName: "data", listener: (data: Uint8Array) => void): this;
   on(eventName: "end", listener: () => void): this;
   on(eventName: "timeout", listener: () => void): this;
   on(eventName: "error", listener: (err: Error) => void): this;

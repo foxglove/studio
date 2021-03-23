@@ -64,7 +64,7 @@ export default class Ros1Player implements Player {
     const net = await Sockets.Create();
     const httpServer = await net.createHttpServer();
     const tcpSocketCreate = (options: { host: string; port: number }): Promise<TcpSocket> => {
-      return net.createSocket(options.host, options.port, "RosTcpMessageStream");
+      return net.createSocket(options.host, options.port);
     };
 
     if (this.#rosNode == undefined) {

@@ -25,13 +25,9 @@ export class PreloaderSockets {
       (callId, args) => {
         const host = args[0] as string;
         const port = args[1] as number;
-        const transformName = args[2] as string | undefined;
-        const msgPort = createSocket(host, port, transformName);
+        const msgPort = createSocket(host, port);
         if (msgPort == undefined) {
-          this.#messagePort.postMessage([
-            callId,
-            `createSocket(${host}, ${port}, ${transformName}) failed`,
-          ]);
+          this.#messagePort.postMessage([callId, `createSocket(${host}, ${port}) failed`]);
         } else {
           this.#messagePort.postMessage([callId], [msgPort]);
         }
@@ -39,13 +35,12 @@ export class PreloaderSockets {
     ],
     [
       "createServer",
-      (callId, args) => {
-        const transformName = args[0] as string | undefined;
-        const port = createServer(transformName);
-        if (port == undefined) {
-          this.#messagePort.postMessage([callId, `createServer(${transformName ?? ""}) failed`]);
+      (callId, _args) => {
+        const msgPort = createServer();
+        if (msgPort == undefined) {
+          this.#messagePort.postMessage([callId, `createServer() failed`]);
         } else {
-          this.#messagePort.postMessage([callId], [port]);
+          this.#messagePort.postMessage([callId], [msgPort]);
         }
       },
     ],

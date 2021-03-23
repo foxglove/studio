@@ -53,7 +53,7 @@ export class Sockets {
     });
   }
 
-  createSocket(host: string, port: number, transformName?: string): Promise<TcpSocketRenderer> {
+  createSocket(host: string, port: number): Promise<TcpSocketRenderer> {
     return new Promise((resolve, reject) => {
       const callId = this.#nextCallId++;
       this.#callbacks.set(callId, (args, ports) => {
@@ -66,12 +66,12 @@ export class Sockets {
         resolve(new TcpSocketRenderer(msgPort));
       });
 
-      const msg: RpcCall = ["createSocket", callId, host, port, transformName];
+      const msg: RpcCall = ["createSocket", callId, host, port];
       this.#messagePort.postMessage(msg);
     });
   }
 
-  createServer(transformName?: string): Promise<TcpServerRenderer> {
+  createServer(): Promise<TcpServerRenderer> {
     return new Promise((resolve, reject) => {
       const callId = this.#nextCallId++;
       this.#callbacks.set(callId, (args, ports) => {
@@ -84,7 +84,7 @@ export class Sockets {
         resolve(new TcpServerRenderer(port));
       });
 
-      const msg: RpcCall = ["createServer", callId, transformName];
+      const msg: RpcCall = ["createServer", callId];
       this.#messagePort.postMessage(msg);
     });
   }

@@ -6,11 +6,10 @@ import { init as initSentry } from "@sentry/electron";
 import { contextBridge, ipcRenderer } from "electron";
 
 import type { OsContext, OsContextForwardedEvent } from "@foxglove-studio/app/OsContext";
-import { PreloaderSockets, registerTransform } from "@foxglove/electron-socket/preloader";
+import { PreloaderSockets } from "@foxglove/electron-socket/preloader";
 import {
   getDefaultRosMasterUri,
   getHostname as getHostnameForRos,
-  RosTcpMessageStream,
 } from "@foxglove/ros1/src/nodejs";
 
 import LocalFileStorage from "./LocalFileStorage";
@@ -24,9 +23,6 @@ const menuClickListeners = new Map<string, IpcListener>();
 
 // Initialize the RPC channel for electron-socket
 PreloaderSockets.Create();
-
-// Register the native stream transform for TCPROS messages
-registerTransform("RosTcpMessageStream", () => new RosTcpMessageStream());
 
 window.addEventListener("DOMContentLoaded", () => {
   // This input element receives generated dom events from main thread to inject File objects

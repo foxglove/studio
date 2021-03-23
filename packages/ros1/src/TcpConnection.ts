@@ -7,15 +7,15 @@ import { MessageReader, parseMessageDefinition, RosMsgDefinition } from "rosbag"
 import { TextDecoder, TextEncoder } from "web-encoding";
 
 import { Connection, ConnectionStats } from "./Connection";
+import { RosTcpMessageStream } from "./RosTcpMessageStream";
 import { TcpAddress, TcpSocket } from "./TcpTypes";
 
 // Implements a subscriber for the TCPROS transport. The actual TCP transport is
-// implemented in the passed in `socket` (TcpSocket), and it is assumed a
-// transform stream is attached to that socket for parsing the TCPROS message
-// format (4 byte length followed by message payload) so the emitted "data"
-// events represent one full message each without the length prefix. A node.js
-// transform stream that meets this requirements is implemented in
-// `RosTcpMessageStream`.
+// implemented in the passed in `socket` (TcpSocket). A transform stream is used
+// internally for parsing the TCPROS message format (4 byte length followed by
+// message payload) so "message" events represent one full message each without
+// the length prefix. A transform class that meets this requirements is
+// implemented in `RosTcpMessageStream`.
 export class TcpConnection extends EventEmitter implements Connection {
   retries = 0;
 
@@ -32,6 +32,7 @@ export class TcpConnection extends EventEmitter implements Connection {
     messagesReceived: 0,
     dropEstimate: -1,
   };
+  #transformer = new RosTcpMessageStream();
   #msgDefinition: RosMsgDefinition[] = [];
   #msgReader: MessageReader | undefined;
 
@@ -43,7 +44,9 @@ export class TcpConnection extends EventEmitter implements Connection {
     socket.on("connect", this.#handleConnect);
     socket.on("close", this.#handleClose);
     socket.on("error", this.#handleError);
-    socket.on("data", this.#handleMessage);
+    socket.on("data", (chunk) => this.#transformer.addData(chunk));
+
+    this.#transformer.on("message", this.#handleMessage);
   }
 
   transportType(): string {
@@ -128,14 +131,14 @@ export class TcpConnection extends EventEmitter implements Connection {
     // TODO: Enter a reconnect loop
   };
 
-  #handleMessage = (data: Uint8Array): void => {
+  #handleMessage = (msgData: Uint8Array): void => {
     this.#connected = true;
-    this.#stats.bytesReceived += data.byteLength;
+    this.#stats.bytesReceived += msgData.byteLength;
 
     if (this.#readingHeader) {
       this.#readingHeader = false;
 
-      this.#header = TcpConnection.ParseHeader(data);
+      this.#header = TcpConnection.ParseHeader(msgData);
       this.#msgDefinition = parseMessageDefinition(this.#header.get("message_definition") ?? "");
       this.#msgReader = new MessageReader(this.#msgDefinition);
       this.emit("header", this.#header, this.#msgDefinition, this.#msgReader);
@@ -144,9 +147,9 @@ export class TcpConnection extends EventEmitter implements Connection {
 
       if (this.#msgReader) {
         const msg = this.#msgReader.readMessage(
-          Buffer.from(data.buffer, data.byteOffset, data.length),
+          Buffer.from(msgData.buffer, msgData.byteOffset, msgData.length),
         );
-        this.emit("message", msg, data);
+        this.emit("message", msg, msgData);
       }
     }
   };
