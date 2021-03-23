@@ -92,7 +92,7 @@ function WelcomePanel() {
           <Icon clickable={false}>
             <CogIcon />
           </Icon>{" "}
-          icon to close it.)
+          icon to remove it.)
         </p>
         <p>
           Want to view data from your own <Term>ROS bag file</Term>? Double-click a bag file to open
