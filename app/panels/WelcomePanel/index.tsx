@@ -9,7 +9,6 @@ import { useState } from "react";
 import { useAsyncFn } from "react-use";
 import styled from "styled-components";
 
-// import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
 import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
 import Button from "@foxglove-studio/app/components/Button";
 import Checkbox from "@foxglove-studio/app/components/Checkbox";
@@ -64,6 +63,10 @@ function WelcomePanel() {
     emailError == undefined &&
     !loading;
 
+  // TODO: optional chaining is compiled out (for storybook) if used here; may be a webpack bug
+  const commandOrControl =
+    (OsContextSingleton && OsContextSingleton.platform === "darwin" && "⌘") ?? "^";
+
   return (
     <Flex col scroll dataTest="welcome-content">
       <PanelToolbar floating />
@@ -86,9 +89,8 @@ function WelcomePanel() {
             <PlusCircleOutlineIcon />
           </Icon>{" "}
           icon above and try adding a new panel. Don’t worry if you make a mistake—you can press{" "}
-          <code>{OsContextSingleton?.platform === "darwin" ? "⌘" : "^"}Z</code> to undo your
-          changes. (This introduction is also a panel! When you’re done reading, hover over it and
-          click the{" "}
+          <code>{commandOrControl}Z</code> to undo your changes. (This introduction is also a panel!
+          When you’re done reading, hover over it and click the{" "}
           <Icon clickable={false}>
             <CogIcon />
           </Icon>{" "}
