@@ -49,7 +49,7 @@ import { State } from "@foxglove-studio/app/reducers";
 import { SECOND_SOURCE_PREFIX } from "@foxglove-studio/app/util/globalConstants";
 import { useShallowMemo } from "@foxglove-studio/app/util/hooks";
 
-export const DEMO_BAG_URL = "https://open-source-webviz-ui.s3.amazonaws.com/demo.bag";
+const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
 
 type BuiltPlayer = {
   player: Player;

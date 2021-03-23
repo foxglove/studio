@@ -4,38 +4,121 @@
 import { PanelsState } from "@foxglove-studio/app/reducers/panels";
 
 const state: PanelsState = {
+  id: "eb73965c-7fce-4dcc-9666-efc543c068ee",
+  name: `Welcome to ${APP_NAME}`,
   layout: {
     first: {
       first: {
-        first: "Plot!2srxf7j",
+        first: "ImageViewPanel!4evmpi6",
         second: {
-          first: "StateTransitions!3v5kkkn",
-          second: "3D Panel!3vhcz8n",
           direction: "column",
-          splitPercentage: 29.709659628112195,
+          second: "3D Panel!1ltsiud",
+          first: "3D Panel!3vhcz8n",
+          splitPercentage: 65.0190114068441,
         },
         direction: "column",
-        splitPercentage: 22.05128205128205,
+        splitPercentage: 23.878437047756872,
       },
       second: {
-        first: "ImageViewPanel!4evmpi6",
+        first: {
+          first: "Plot!2srxf7j",
+          second: "StateTransitions!3v5kkkn",
+          direction: "column",
+          splitPercentage: 35.91836734693877,
+        },
         second: {
           first: "DiagnosticSummary!2ttktu0",
           second: "DiagnosticStatusPanel!2yh7rts",
           direction: "column",
-          splitPercentage: 35.6573705179283,
+          splitPercentage: 38.13953488372094,
         },
         direction: "column",
-        splitPercentage: 25.748502994011975,
+        splitPercentage: 39.436619718309856,
       },
       direction: "row",
-      splitPercentage: 52.86975717439294,
+      splitPercentage: 54.556650246305416,
     },
     second: "onboarding.welcome!31b1ehz",
     direction: "row",
-    splitPercentage: 66.03498542274052,
+    splitPercentage: 64.34231378763867,
   },
   savedProps: {
+    "ImageViewPanel!4evmpi6": {
+      cameraTopic: "/image_color/compressed",
+      enabledMarkerTopics: [],
+      customMarkerTopicOptions: [],
+      scale: 0.2,
+      transformMarkers: true,
+      synchronize: false,
+      mode: "fit",
+      zoomPercentage: 31.5,
+      offset: [0, 3.3599999999999994],
+    },
+    "3D Panel!3vhcz8n": {
+      checkedKeys: ["name:Topics", "t:/velodyne_points"],
+      expandedKeys: ["name:Topics", "t:/tf"],
+      followTf: "velodyne",
+      cameraState: {
+        targetOffset: [9.800968915027243, -0.39746626592445156, 0],
+        thetaOffset: 1.5747779692579127,
+        distance: 28.670626445812008,
+        perspective: true,
+        phi: 1.2421052631578948,
+        fovy: 0.7853981633974483,
+        near: 0.01,
+        far: 5000,
+        target: [0, 0, 0],
+        targetOrientation: [0, 0, 0, 1],
+      },
+      modifiedNamespaceTopics: [],
+      pinTopics: false,
+      settingsByKey: {
+        "t:/velodyne_points": {
+          colorMode: {
+            mode: "rainbow",
+            colorField: "intensity",
+          },
+          pointShape: "circle",
+          pointSize: 2,
+        },
+      },
+      autoSyncCameraState: false,
+      autoTextBackgroundColor: true,
+    },
+    "3D Panel!1ltsiud": {
+      checkedKeys: ["t:/radar/points", "name:Topics"],
+      expandedKeys: ["name:Topics"],
+      followTf: "radar",
+      cameraState: {
+        targetOffset: [67.15015727440768, -0.347169127881074, 0],
+        thetaOffset: 1.3309876595224308,
+        distance: 180.38377740872997,
+        perspective: false,
+        phi: 1.1425294663062144,
+        fovy: 0.7853981633974483,
+        near: 0.01,
+        far: 5000,
+      },
+      modifiedNamespaceTopics: [],
+      pinTopics: false,
+      settingsByKey: {
+        "t:/radar/points": {
+          pointSize: 4,
+          pointShape: "square",
+          colorMode: {
+            mode: "flat",
+            flatColor: {
+              r: 0.2196078431372549,
+              g: 1,
+              b: 0,
+              a: 1,
+            },
+          },
+        },
+      },
+      autoSyncCameraState: false,
+      autoTextBackgroundColor: true,
+    },
     "Plot!2srxf7j": {
       paths: [
         {
@@ -66,46 +149,6 @@ const state: PanelsState = {
         },
       ],
     },
-    "3D Panel!3vhcz8n": {
-      checkedKeys: ["name:Topics", "t:/velodyne_points", "t:/radar/points"],
-      expandedKeys: ["name:Topics", "t:/tf"],
-      followTf: "velodyne",
-      cameraState: {
-        targetOffset: [0, 0, 0],
-        thetaOffset: 1.6227449919298258,
-        distance: 51.57407475453429,
-        perspective: true,
-        phi: 1.044534412955465,
-        fovy: 0.7853981633974483,
-        near: 0.01,
-        far: 5000,
-      },
-      modifiedNamespaceTopics: [],
-      pinTopics: false,
-      settingsByKey: {
-        "t:/velodyne_points": {
-          colorMode: {
-            mode: "rainbow",
-            colorField: "intensity",
-          },
-          pointShape: "circle",
-          pointSize: 2,
-        },
-      },
-      autoSyncCameraState: false,
-      autoTextBackgroundColor: true,
-    },
-    "ImageViewPanel!4evmpi6": {
-      cameraTopic: "/image_raw",
-      enabledMarkerTopics: [],
-      customMarkerTopicOptions: [],
-      scale: 0.2,
-      transformMarkers: true,
-      synchronize: false,
-      mode: "other",
-      zoomPercentage: 27.500000000000004,
-      offset: [0, 0],
-    },
     "DiagnosticStatusPanel!2yh7rts": {
       topicToRender: "/diagnostics",
       collapsedSections: [],
@@ -115,7 +158,7 @@ const state: PanelsState = {
     },
   },
   globalVariables: {
-    track_id: 25,
+    track_id: 34,
   },
   userNodes: {},
   linkedGlobalVariables: [],
