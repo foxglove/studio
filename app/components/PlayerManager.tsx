@@ -239,7 +239,7 @@ function PlayerManager({
           const result = await prompt({
             value: OsContextSingleton?.getEnvVar("ROS_MASTER_URI") ?? "http://localhost:11311/",
           });
-          const url = parseInputUrl(result);
+          const url = parseInputUrl(result, "http:");
           if (url == undefined) {
             return;
           }

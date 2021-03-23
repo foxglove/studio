@@ -20,8 +20,10 @@ describe("util/url", () => {
       expect(parseInputUrl("http://localhost:11311")).toEqual("http://localhost:11311/");
       expect(parseInputUrl("http://localhost")).toEqual("http://localhost/");
       expect(parseInputUrl("https://localhost")).toEqual("https://localhost/");
-      expect(parseInputUrl("localhost:11311")).toEqual("http://localhost:11311/");
-      expect(parseInputUrl("localhost")).toEqual("http://localhost/");
+      expect(parseInputUrl("localhost:11311")).toEqual("https://localhost:11311/");
+      expect(parseInputUrl("localhost")).toEqual("https://localhost/");
+      expect(parseInputUrl("localhost:11311", "http:")).toEqual("http://localhost:11311/");
+      expect(parseInputUrl("localhost", "http:")).toEqual("http://localhost/");
     });
   });
 });

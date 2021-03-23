@@ -4,12 +4,14 @@
 
 import URL from "url-parse";
 
-export function parseInputUrl(str?: string): string | undefined {
+// Parse a user-input string as a URL using a forgiving parser that interprets
+// bare server names or server/port combos using an assumed default protocol
+export function parseInputUrl(str?: string, defaultProtocol = "https:"): string | undefined {
   if (str == undefined || str.length === 0) {
     return undefined;
   }
   if (str.indexOf("://") === -1) {
-    str = `http://${str}`;
+    str = `${defaultProtocol}//${str}`;
   }
   try {
     const url = new URL(str);
