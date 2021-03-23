@@ -180,7 +180,7 @@ async function createWindow(): Promise<void> {
     role: "help",
     submenu: [
       {
-        label: `Welcome to ${APP_NAME}`,
+        label: "Welcome",
         click: () => mainWindow.webContents.send("open-welcome-layout"),
       },
       {
