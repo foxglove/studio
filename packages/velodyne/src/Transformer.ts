@@ -86,16 +86,16 @@ export class Transformer {
     switch (raw.factoryId) {
       case FactoryId.VLP16:
       case FactoryId.VLP16HiRes:
-        return this.#unpackVLP16(raw, scanStamp, packetStamp, output);
+        return this._unpackVLP16(raw, scanStamp, packetStamp, output);
       case FactoryId.VLS128:
       case FactoryId.VLS128Old:
-        return this.#unpackVLS128(raw, scanStamp, packetStamp, output);
+        return this._unpackVLS128(raw, scanStamp, packetStamp, output);
       default:
-        return this.#unpackGeneric(raw, scanStamp, packetStamp, output);
+        return this._unpackGeneric(raw, scanStamp, packetStamp, output);
     }
   }
 
-  #unpackGeneric = (
+  private _unpackGeneric = (
     raw: RawPacket,
     _scanStamp: number,
     _packetStam: number,
@@ -208,14 +208,14 @@ export class Transformer {
     }
   };
 
-  #unpackVLS128 = (
+  private _unpackVLS128 = (
     _raw: RawPacket,
     _scanStamp: number,
     _packetStamp: number,
     _output: PointCloud,
   ): void => {};
 
-  #unpackVLP16 = (
+  private _unpackVLP16 = (
     _raw: RawPacket,
     _scanStamp: number,
     _packetStamp: number,
