@@ -97,11 +97,11 @@ export class Transformer {
 
   private _unpackGeneric = (
     raw: RawPacket,
-    _scanStamp: number,
-    _packetStam: number,
+    scanStamp: number,
+    packetStamp: number,
     output: PointCloud,
   ): void => {
-    // const timeDiffStartToThisPacket = packetStamp - scanStamp;
+    const timeDiffStartToThisPacket = packetStamp - scanStamp;
 
     for (let i = 0; i < RawPacket.BLOCKS_PER_PACKET; i++) {
       const block = raw.blocks[i] as RawBlock;
@@ -116,7 +116,7 @@ export class Transformer {
 
         const laserNumber = j + bankOrigin;
         const corrections = this.calibration.laserCorrections[laserNumber] as LaserCorrection;
-        // const time = timeDiffStartToThisPacket + (this.calibration.timingOffsets[i]?.[j] ?? 0);
+        const offsetSec = timeDiffStartToThisPacket + (this.calibration.timingOffsets[i]?.[j] ?? 0);
 
         const rawDistance = block.distance(j);
         const distance =
@@ -203,6 +203,7 @@ export class Transformer {
           intensity,
           corrections.laserId,
           block.rotation,
+          offsetSec * 1e9,
         );
       }
     }

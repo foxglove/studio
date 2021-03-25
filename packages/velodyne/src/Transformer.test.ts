@@ -29,11 +29,11 @@ describe("Transformer", () => {
     expect(count).toEqual(382);
 
     const cloud = new PointCloud({ stamp: 42, count });
-    transform.unpack(raw, 52, 62, cloud);
+    transform.unpack(raw, 42, 42.1, cloud);
 
     expect(cloud.height).toEqual(1);
     expect(cloud.width).toEqual(count);
-    expect(cloud.data.byteLength).toEqual(count * 24);
+    expect(cloud.data.byteLength).toEqual(count * PointCloud.POINT_STEP);
 
     const view = new DataView(cloud.data.buffer, cloud.data.byteOffset, cloud.data.byteLength);
     expect(view.getFloat32(0, true)).toEqual(-1.5504857301712036); // x
@@ -43,6 +43,7 @@ describe("Transformer", () => {
     expect(view.getFloat32(16, true)).toEqual(9); // intensity
     expect(view.getUint16(20, true)).toEqual(0); // ring
     expect(view.getUint16(22, true)).toEqual(22288); // azimuth
+    expect(view.getUint32(24, true)).toEqual(1e8); // deltaNs
 
     for (let i = 0; i < cloud.width; i++) {
       const p = cloud.point(i);
@@ -55,6 +56,8 @@ describe("Transformer", () => {
       expect(p.intensity).toBeLessThanOrEqual(255);
       expect(p.ring).toBeGreaterThanOrEqual(0);
       expect(p.ring).toBeLessThanOrEqual(31);
+      expect(p.deltaNs).toBeGreaterThanOrEqual(0);
+      expect(p.deltaNs).toBeLessThanOrEqual(2e8);
     }
   });
 

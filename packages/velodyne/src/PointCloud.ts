@@ -28,6 +28,7 @@ export type Point = {
   intensity: number;
   ring: number;
   azimuth: number;
+  deltaNs: number;
 };
 
 export type PointCloudOptions = {
@@ -36,7 +37,7 @@ export type PointCloudOptions = {
 };
 
 export class PointCloud {
-  static POINT_STEP = 24;
+  static POINT_STEP = 28;
 
   stamp: number;
   fields: PointField[];
@@ -61,6 +62,7 @@ export class PointCloud {
       { name: "intensity", offset: 16, datatype: PointFieldDataType.FLOAT32, count: 1 },
       { name: "ring", offset: 20, datatype: PointFieldDataType.UINT16, count: 1 },
       { name: "azimuth", offset: 22, datatype: PointFieldDataType.UINT16, count: 1 },
+      { name: "delta_ns", offset: 24, datatype: PointFieldDataType.UINT32, count: 1 },
     ];
     this.height = 1;
     this.width = count;
@@ -81,6 +83,7 @@ export class PointCloud {
     intensity: number,
     ring: number,
     azimuth: number,
+    deltaNs: number, // [ns] Time when this laser was fired relative to the start of the scan
   ): void {
     const offset = this._index * PointCloud.POINT_STEP;
     this._view.setFloat32(offset + 0, x, true);
@@ -90,6 +93,7 @@ export class PointCloud {
     this._view.setFloat32(offset + 16, intensity, true);
     this._view.setUint16(offset + 20, ring, true);
     this._view.setUint16(offset + 22, azimuth, true);
+    this._view.setUint32(offset + 24, deltaNs, true);
     this._index++;
   }
 
@@ -103,6 +107,7 @@ export class PointCloud {
       intensity: this._view.getFloat32(offset + 16, true),
       ring: this._view.getUint16(offset + 20, true),
       azimuth: this._view.getUint16(offset + 22, true),
+      deltaNs: this._view.getUint32(offset + 24, true),
     };
   }
 }
