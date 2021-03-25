@@ -1,6 +1,6 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src/**/*.ts", "src/**/*.json", "jest.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.json", "fixtures/**/*", "jest.config.ts"],
   "compilerOptions": {
     "target": "es2020",
     "module": "es2020",

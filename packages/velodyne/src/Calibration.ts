@@ -23,6 +23,7 @@ export class Calibration {
   static VLP16_DSR_TOFFSET = 2.304; // [µs]
   static VLP16_FIRING_TOFFSET = 55.296; // [µs]
 
+  readonly model: Model;
   readonly laserCorrections: LaserCorrection[];
   readonly distanceResolution: number; // [m]
   readonly timingOffsets: number[][];
@@ -31,6 +32,7 @@ export class Calibration {
   readonly vls128LaserAzimuthCache: number[];
 
   constructor(model: Model) {
+    this.model = model;
     const data = Calibration.Data(model);
     this.laserCorrections = data.lasers.map((v) => {
       return {

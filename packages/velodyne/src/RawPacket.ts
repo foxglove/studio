@@ -4,9 +4,6 @@
 
 import { BlockId, FactoryId, ReturnMode } from "./VelodyneTypes";
 
-// 24 bytes, uint16 distance + uint8 intensity
-export type LaserReturn = [distance: number, intensity: number];
-
 export class RawBlock {
   view: DataView;
   blockId: BlockId;
@@ -22,10 +19,17 @@ export class RawBlock {
     return this.blockId === BlockId.Block_32_To_63;
   }
 
-  laserReturn(index: number): LaserReturn {
-    // assert(index < SCANS_PER_BLOCK);
+  isValid(index: number): boolean {
     const offset = 4 + 3 * index;
-    return [this.view.getUint16(offset, true), this.data[offset + 2] as number];
+    return this.data[offset] !== 0 || this.data[offset + 1] !== 0;
+  }
+
+  distance(index: number): number {
+    return this.view.getUint16(4 + 3 * index, true);
+  }
+
+  intensity(index: number): number {
+    return this.data[4 + 3 * index + 2] as number;
   }
 }
 
@@ -44,6 +48,10 @@ export class RawPacket {
   factoryId?: FactoryId;
 
   constructor(public data: Uint8Array) {
+    if (data.length !== 1206) {
+      throw new Error(`data has invalid length ${data.length}, expected 1206`);
+    }
+
     this.blocks = [];
     for (let i = 0; i < RawPacket.BLOCKS_PER_PACKET; i++) {
       const blockSize = RawPacket.BLOCK_SIZE;

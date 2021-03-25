@@ -8,6 +8,7 @@ import { Model } from "./VelodyneTypes";
 describe("Calibration", () => {
   it("does nothing", () => {
     const cal = new Calibration(Model.VLP16);
+    expect(cal.model).toEqual(Model.VLP16);
     expect(cal.laserCorrections).toHaveLength(16);
   });
 });
