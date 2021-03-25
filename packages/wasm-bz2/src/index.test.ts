@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 import { TextDecoder } from "util";
 
-import Bzip2 from "../src";
+import Bzip2 from ".";
 
 describe("wasm-bz2", () => {
   it("decodes simple example and reports errors", async () => {

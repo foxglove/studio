@@ -52,6 +52,6 @@ run_emcc -c "$WORK_DIR"/vendor/bzip2/{bzlib,decompress,huffman,randtable,crctabl
 run_emcc \
     -isystem $WORK_DIR/vendor \
     -std=c++17 \
-    "$WORK_DIR/src/module.cpp" \
+    "$WORK_DIR/cpp/module.cpp" \
     "$WORK_DIR"/build/{bzlib,decompress,huffman,randtable,crctable}.o \
     -o "$WORK_DIR"/dist/module.js
