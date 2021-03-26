@@ -3,7 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { HDL32E_PACKET1 } from "../fixtures/packets";
-import { RawBlock, RawPacket } from "./RawPacket";
+import { RawBlock } from "./RawBlock";
+import { RawPacket } from "./RawPacket";
 import { BlockId, FactoryId, ReturnMode } from "./VelodyneTypes";
 
 describe("RawPacket", () => {
