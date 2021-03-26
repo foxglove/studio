@@ -165,8 +165,10 @@ function Root() {
     (async () => {
       const welcomeLayoutShown = await appConfiguration.get("onboarding.welcome-layout.shown");
       if (!welcomeLayoutShown) {
-        await openWelcomeLayout();
+        // Set configuration *before* opening the layout to avoid infinite recursion when the player
+        // loading state causes us to re-render.
         await appConfiguration.set("onboarding.welcome-layout.shown", true);
+        await openWelcomeLayout();
       }
     })();
   }, [appConfiguration, openWelcomeLayout]);
