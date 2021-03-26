@@ -107,7 +107,7 @@ const HistoryRecorder = React.memo(function HistoryRecorder({
 });
 
 // Display internal state for debugging and viewing topic dependencies.
-function Internals(): React.ReactNode {
+function Internals() {
   const { topics } = PanelAPI.useDataSourceInfo();
   const topicsByName = React.useMemo(() => getTopicsByTopicName(topics), [topics]);
   const subscriptions = useMessagePipeline(
@@ -137,9 +137,8 @@ function Internals(): React.ReactNode {
                 <li key={i}>
                   <code>
                     {sub.topic}
-                    {topicsByName[sub.topic] &&
-                      topicsByName[sub.topic].originalTopic &&
-                      ` (original topic: ${topicsByName[sub.topic].originalTopic})`}
+                    {topicsByName[sub.topic]?.originalTopic &&
+                      ` (original topic: ${topicsByName[sub.topic]?.originalTopic})`}
                   </code>
                 </li>
               ))}
@@ -183,7 +182,7 @@ function Internals(): React.ReactNode {
       return;
     }
     const recordSubs =
-      recordGroup === RECORD_ALL ? subscriptions : groupedSubscriptions[recordGroup];
+      recordGroup === RECORD_ALL ? subscriptions : groupedSubscriptions[recordGroup] ?? [];
     setRecordingTopics(recordSubs.map((sub) => sub.topic));
   }
 
@@ -247,4 +246,4 @@ function Internals(): React.ReactNode {
 Internals.panelType = "Internals";
 Internals.defaultConfig = {};
 
-export default Panel(Internals as any);
+export default Panel(Internals);

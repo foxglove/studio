@@ -4,20 +4,33 @@
 
 export type TcpAddress = {
   port: number;
-  family: string;
+  family?: string;
   address: string;
 };
 
+export interface NetworkInterface {
+  name: string;
+  family: "IPv4" | "IPv6";
+  internal: boolean;
+  address: string;
+  cidr?: string;
+  mac: string;
+  netmask: string;
+}
+
 export interface TcpSocket {
-  remoteAddress(): TcpAddress | undefined;
-  localAddress(): TcpAddress | undefined;
-  fd(): number | undefined;
-  connected(): boolean;
-  close(): void;
+  remoteAddress(): Promise<TcpAddress | undefined>;
+  localAddress(): Promise<TcpAddress | undefined>;
+  fd(): Promise<number | undefined>;
+  connected(): Promise<boolean>;
+
+  connect(): Promise<void>;
+  close(): Promise<void>;
   write(data: Uint8Array): Promise<void>;
 
+  on(eventName: "connect", listener: () => void): this;
   on(eventName: "close", listener: () => void): this;
-  on(eventName: "message", listener: (message: Uint8Array) => void): this;
+  on(eventName: "data", listener: (data: Uint8Array) => void): this;
   on(eventName: "end", listener: () => void): this;
   on(eventName: "timeout", listener: () => void): this;
   on(eventName: "error", listener: (err: Error) => void): this;
@@ -36,6 +49,6 @@ export interface TcpListen {
   (options: { host?: string; port?: number; backlog?: number }): Promise<TcpServer>;
 }
 
-export interface TcpConnect {
+export interface TcpSocketCreate {
   (options: { host: string; port: number }): Promise<TcpSocket>;
 }

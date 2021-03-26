@@ -13,7 +13,7 @@
 
 import { storiesOf } from "@storybook/react";
 
-import { MockMessagePipelineProvider } from "@foxglove-studio/app/components/MessagePipeline";
+import MockMessagePipelineProvider from "@foxglove-studio/app/components/MessagePipeline/MockMessagePipelineProvider";
 import TinyConnectionPicker from "@foxglove-studio/app/components/TinyConnectionPicker";
 import PlayerSelectionContext, {
   PlayerSelection,
@@ -27,13 +27,22 @@ storiesOf("<TinyConnectionPicker>", module).add("default", () => {
       type: "file",
     },
     {
+      name: "ROS",
+      type: "ros1-core",
+    },
+    {
       name: "Websocket",
       type: "ws",
+    },
+    {
+      name: "HTTP",
+      type: "http",
     },
   ];
 
   const value: PlayerSelection = {
     selectSource: () => {},
+    setPlayerFromDemoBag: async () => {},
     availableSources: playerSources,
   };
 

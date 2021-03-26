@@ -29,6 +29,7 @@ import DropdownItem from "@foxglove-studio/app/components/Dropdown/DropdownItem"
 import EmptyState from "@foxglove-studio/app/components/EmptyState";
 import Flex from "@foxglove-studio/app/components/Flex";
 import Icon from "@foxglove-studio/app/components/Icon";
+import { getItemString } from "@foxglove-studio/app/components/JsonTree/getItemString";
 import MessagePathInput from "@foxglove-studio/app/components/MessagePathSyntax/MessagePathInput";
 import {
   RosPath,
@@ -76,7 +77,7 @@ import {
 } from "./getValueActionForValue";
 import helpContent from "./index.help.md";
 import styles from "./index.module.scss";
-import { DATA_ARRAY_PREVIEW_LIMIT, getItemString, getItemStringForDiff } from "./utils";
+import { DATA_ARRAY_PREVIEW_LIMIT, getItemStringForDiff } from "./utils";
 
 export const CUSTOM_METHOD = "custom";
 export const PREV_MSG_METHOD = "previous message";
@@ -153,18 +154,18 @@ function RawMessages(props: Props) {
   const [expandAll, setExpandAll] = useState<boolean | undefined>(false);
   const [expandedFields, setExpandedFields] = useState(() => new Set());
 
-  const topicName = topicRosPath?.topicName || "";
+  const topicName = topicRosPath?.topicName ?? "";
   const consecutiveMsgs = useMessagesByTopic({
     topics: [topicName],
     historySize: 2,
     format: "bobjects",
   })[topicName];
   const cachedGetMessagePathDataItems = useCachedGetMessagePathDataItems([topicPath]);
-  const prevTickMsg = consecutiveMsgs[consecutiveMsgs.length - 2];
+  const prevTickMsg = consecutiveMsgs?.[consecutiveMsgs.length - 2];
   const [prevTickObj, currTickObj] = [
     prevTickMsg && {
       message: prevTickMsg,
-      queriedData: cachedGetMessagePathDataItems(topicPath, prevTickMsg) || [],
+      queriedData: cachedGetMessagePathDataItems(topicPath, prevTickMsg) ?? [],
     },
     useLatestMessageDataItem(topicPath, "bobjects"),
   ];
@@ -264,7 +265,7 @@ function RawMessages(props: Props) {
               }
             }
           }
-          const basePath: string = queriedData[lastKeyPath] && queriedData[lastKeyPath].path;
+          const basePath = queriedData[lastKeyPath]?.path ?? "";
           let itemLabel = label;
           // output preview for the first x items if the data is in binary format
           // sample output: Int8Array(331776) [-4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, ...]
@@ -346,7 +347,7 @@ function RawMessages(props: Props) {
 
     const data = dataWithoutWrappingArray(baseItem.queriedData.map(({ value }) => value as any));
     const hideWrappingArray =
-      baseItem.queriedData.length === 1 && typeof baseItem.queriedData[0].value === "object";
+      baseItem.queriedData.length === 1 && typeof baseItem.queriedData[0]?.value === "object";
     const shouldDisplaySingleVal =
       (data !== undefined && typeof data !== "object") ||
       (isSingleElemArray(data) &&
@@ -400,7 +401,7 @@ function RawMessages(props: Props) {
               shouldExpandNode={shouldExpandNode}
               hideRoot
               invertTheme={false}
-              getItemString={diffEnabled ? (getItemStringForDiff as any) : (getItemString as any)}
+              getItemString={diffEnabled ? getItemStringForDiff : getItemString}
               valueRenderer={(...args) => {
                 if (diffEnabled) {
                   return valueRenderer(undefined, diff, diff, ...args);
@@ -417,7 +418,7 @@ function RawMessages(props: Props) {
                   val != undefined &&
                   typeof val === "object" &&
                   Object.keys(val as any).length === 1 &&
-                  diffLabelTexts.includes(Object.keys(val as any)[0])
+                  diffLabelTexts.includes(Object.keys(val as any)[0]!)
                 ) {
                   if (Object.keys(val as any)[0] !== diffLabels.ID.labelText) {
                     return objectValues(val as any)[0];
@@ -448,7 +449,7 @@ function RawMessages(props: Props) {
                   }
                   const nestedObj = get(diff, keyPath.slice().reverse(), {});
                   const nestedObjKey = Object.keys(nestedObj)[0];
-                  if (diffLabelsByLabelText[nestedObjKey]) {
+                  if (nestedObjKey && diffLabelsByLabelText[nestedObjKey]) {
                     // @ts-expect-error backgroundColor is not a property?
                     backgroundColor = diffLabelsByLabelText[nestedObjKey].backgroundColor;
                     textDecoration =
@@ -458,7 +459,7 @@ function RawMessages(props: Props) {
                     style: {
                       ...baseStyle,
                       backgroundColor,
-                      textDecoration: textDecoration || "inherit",
+                      textDecoration: textDecoration ?? "inherit",
                     },
                   };
                 },
@@ -477,7 +478,7 @@ function RawMessages(props: Props) {
                   let textDecoration;
                   const nestedObj = get(diff, keyPath.slice().reverse(), {});
                   const nestedObjKey = Object.keys(nestedObj)[0];
-                  if (diffLabelsByLabelText[nestedObjKey]) {
+                  if (nestedObjKey && diffLabelsByLabelText[nestedObjKey]) {
                     // @ts-expect-error backgroundColor is not a property?
                     backgroundColor = diffLabelsByLabelText[nestedObjKey].backgroundColor;
                     textDecoration =
@@ -581,10 +582,10 @@ function RawMessages(props: Props) {
 RawMessages.defaultConfig = {
   topicPath: "",
   diffTopicPath: "",
-  diffMethod: CUSTOM_METHOD,
+  diffMethod: CUSTOM_METHOD as typeof CUSTOM_METHOD,
   diffEnabled: false,
   showFullMessageForDiff: false,
 };
 RawMessages.panelType = "RawMessages";
 
-export default Panel<RawMessagesConfig>(RawMessages as any);
+export default Panel(RawMessages);

@@ -3,31 +3,47 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { RosNode } from "@foxglove/ros1";
-import { PlatformNode, TcpSocketNode, XmlRpcNode } from "@foxglove/ros1-nodejs";
+import {
+  getEnvVar,
+  getHostname,
+  getNetworkInterfaces,
+  getPid,
+  TcpSocketNode,
+} from "@foxglove/ros1/src/nodejs";
+import { HttpServerNodejs } from "@foxglove/xmlrpc/src/HttpServerNodejs";
 
 async function main() {
   const name = "/testclient";
   let rosNode: RosNode | undefined;
 
   try {
-    const url = await PlatformNode.GetDefaultRosMasterUri();
-    const xmlRpcClient = await XmlRpcNode.XmlRpcCreateClient({ url });
     rosNode = new RosNode({
       name,
-      xmlRpcClient,
-      xmlRpcCreateClient: XmlRpcNode.XmlRpcCreateClient,
-      xmlRpcCreateServer: XmlRpcNode.XmlRpcCreateServer,
-      tcpConnect: TcpSocketNode.Connect,
-      getPid: PlatformNode.GetPid,
-      getHostname: PlatformNode.GetHostname,
+      rosMasterUri: getEnvVar("ROS_MASTER_URI") ?? "http://localhost:11311/",
+      hostname: RosNode.GetRosHostname(getEnvVar, getHostname, getNetworkInterfaces),
+      pid: getPid(),
+      httpServer: new HttpServerNodejs(),
+      tcpSocketCreate: TcpSocketNode.Create,
     });
 
     await rosNode.start();
 
-    const sub = await rosNode.subscribe({
+    const sub = rosNode.subscribe({
       topic: "/turtle1/color_sensor",
       type: "turtlesim/Color",
     });
+
+    sub.on("message", (msg, data, pub) => {
+      // eslint-disable-next-line no-restricted-syntax
+      console.log(
+        `[MSG] ${JSON.stringify(msg)} (${
+          data.byteLength
+        } bytes from ${pub.connection.getTransportInfo()})`,
+      );
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     // eslint-disable-next-line no-restricted-syntax
     console.dir(sub.getStats());
   } catch (err) {

@@ -17,6 +17,7 @@ import {
   session,
   shell,
   systemPreferences,
+  nativeTheme,
 } from "electron";
 import installExtension, {
   REACT_DEVELOPER_TOOLS,
@@ -78,6 +79,11 @@ async function createWindow(): Promise<void> {
       contextIsolation: true,
       preload: preloadPath,
       nodeIntegration: false,
+      // Disable webSecurity in development so we can make XML-RPC calls, load
+      // remote data, etc. In production, the app is served from file:// URLs so
+      // the Origin header is not sent, disabling the CORS
+      // Access-Control-Allow-Origin check
+      webSecurity: process.env.NODE_ENV === "production",
     },
     backgroundColor: colors.background,
   };
@@ -140,8 +146,16 @@ async function createWindow(): Promise<void> {
     role: "editMenu",
     label: "Edit",
     submenu: [
-      { role: "undo" },
-      { role: "redo" },
+      {
+        label: "Undo",
+        accelerator: "CommandOrControl+Z",
+        click: () => mainWindow.webContents.send("undo"),
+      },
+      {
+        label: "Redo",
+        accelerator: "CommandOrControl+Shift+Z",
+        click: () => mainWindow.webContents.send("redo"),
+      },
       { type: "separator" },
       { role: "cut" },
       { role: "copy" },
@@ -180,7 +194,16 @@ async function createWindow(): Promise<void> {
     role: "help",
     submenu: [
       {
+        label: "Welcome",
+        click: () => mainWindow.webContents.send("open-welcome-layout"),
+      },
+      {
+        label: "Message Path Syntax",
+        click: () => mainWindow.webContents.send("open-message-path-syntax-help"),
+      },
+      {
         label: "Keyboard Shortcuts",
+        accelerator: "CommandOrControl+/",
         click: () => mainWindow.webContents.send("open-keyboard-shortcuts"),
       },
       {
@@ -198,6 +221,14 @@ async function createWindow(): Promise<void> {
   if (!isProduction) {
     mainWindow.webContents.openDevTools();
   }
+
+  // Open all new windows in an external browser
+  // Note: this API is supposed to be superseded by webContents.setWindowOpenHandler,
+  // but using that causes the app to freeze when a new window is opened.
+  mainWindow.webContents.on("new-window", (event, url) => {
+    event.preventDefault();
+    shell.openExternal(url);
+  });
 
   mainWindow.webContents.on("ipc-message", (_event: unknown, channel: string) => {
     if (channel === "window.toolbar-double-clicked") {
@@ -265,6 +296,8 @@ async function createWindow(): Promise<void> {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", async () => {
+  nativeTheme.themeSource = "dark";
+
   autoUpdater.checkForUpdatesAndNotify().catch((err) => {
     captureException(err);
   });
@@ -350,7 +383,11 @@ app.on("ready", async () => {
   });
 });
 
-// Quit when all windows are closed
+// Quit when all windows are closed, except on macOS. There, it's common
+// for applications and their menu bar to stay active until the user quits
+// explicitly with Cmd + Q.
 app.on("window-all-closed", () => {
-  app.quit();
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
 });

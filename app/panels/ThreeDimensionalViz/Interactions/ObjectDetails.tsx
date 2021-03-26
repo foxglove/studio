@@ -18,6 +18,7 @@ import styled from "styled-components";
 
 import Dropdown from "@foxglove-studio/app/components/Dropdown";
 import DropdownItem from "@foxglove-studio/app/components/Dropdown/DropdownItem";
+import { getItemString } from "@foxglove-studio/app/components/JsonTree/getItemString";
 import { getInstanceObj } from "@foxglove-studio/app/panels/ThreeDimensionalViz/threeDimensionalVizUtils";
 import { deepParse, isBobject } from "@foxglove-studio/app/util/binaryObjects";
 import { jsonTreeTheme } from "@foxglove-studio/app/util/globalConstants";
@@ -66,7 +67,9 @@ function ObjectDetailsWrapper({
   const updateShowInstance = (shouldShowInstance: any) => {
     setShowInstance(shouldShowInstance);
     logEvent({
+      // @ts-expect-error Event logging is not currently well typed
       name: getEventNames()["3D_PANEL.OBJECT_DETAILS_SHOW_INSTANCE"],
+      // @ts-expect-error Event logging is not currently well typed
       tags: { [getEventTags().PANEL_TYPE]: "3D Panel" },
     });
   };
@@ -132,7 +135,7 @@ function ObjectDetails({ interactionData, objectToDisplay }: Props) {
         invertTheme={false}
         theme={{ ...jsonTreeTheme, tree: { margin: 0 } }}
         hideRoot
-        getItemString={(type, data, itemType, itemString) => <span>{itemString}</span>}
+        getItemString={getItemString}
         labelRenderer={(markerKeyPath, p1, p2, hasChildren) => {
           const label = first(markerKeyPath);
           if (!hasChildren) {
@@ -141,7 +144,7 @@ function ObjectDetails({ interactionData, objectToDisplay }: Props) {
 
           let objectForPath = sortedDataObject;
           for (let i = markerKeyPath.length - 1; i >= 0; i--) {
-            objectForPath = objectForPath[markerKeyPath[i]];
+            objectForPath = objectForPath[markerKeyPath[i]!];
             if (!objectForPath) {
               break;
             }
