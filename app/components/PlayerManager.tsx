@@ -133,6 +133,10 @@ async function buildPlayerFromBagURLs(
 // operations so the player manager can delay clearing out the old player and entering the
 // "constructing" state until the user selection has completed. Returns undefined if the user
 // cancels the operation.
+//
+// TODO(jacob): can we reduce the indirection here by making it so we can always immediately
+// construct a player, remove maybePlayer and remove CONSTRUCTING from the enum? This would require
+// changes to the GUID fetching in buildPlayerFromBagURLs.
 async function getPlayerBuilderFromUserSelection(
   definition: PlayerSourceDefinition,
   usedFiles: { current: File[] },
