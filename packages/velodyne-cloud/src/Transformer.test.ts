@@ -74,7 +74,7 @@ describe("Transformer", () => {
         }
         cloud.trim();
       },
-      { iterations: 10, meanUnder: 10 },
+      { iterations: 10, meanUnder: 15 },
     );
 
     // eslint-disable-next-line no-restricted-syntax

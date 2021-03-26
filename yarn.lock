@@ -1923,9 +1923,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foxglove/velodyne@workspace:packages/velodyne":
+"@foxglove/velodyne-cloud@workspace:packages/velodyne-cloud":
   version: 0.0.0-use.local
-  resolution: "@foxglove/velodyne@workspace:packages/velodyne"
+  resolution: "@foxglove/velodyne-cloud@workspace:packages/velodyne-cloud"
   dependencies:
     "@jest/types": 26.6.2
     jest: 26.6.3
