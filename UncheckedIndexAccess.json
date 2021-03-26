@@ -1,15 +1,4 @@
 [
-  "app/panels/RawMessages/index.tsx",
-  "app/panels/Rosout/index.stories.tsx",
-  "app/panels/Rosout/index.tsx",
-  "app/panels/StateTransitions/index.stories.tsx",
-  "app/panels/StateTransitions/index.tsx",
-  "app/panels/Tab/EmptyDropTarget.tsx",
-  "app/panels/Tab/ToolbarTab.stories.tsx",
-  "app/panels/Tab/ToolbarTab.tsx",
-  "app/panels/Tab/index.stories.tsx",
-  "app/panels/Tab/index.tsx",
-  "app/panels/Table/index.tsx",
   "app/panels/ThreeDimensionalViz/FollowTFControl.tsx",
   "app/panels/ThreeDimensionalViz/FrameCompatibility.test.tsx",
   "app/panels/ThreeDimensionalViz/GlobalVariableStyles.tsx",
@@ -35,8 +24,5 @@
   "app/panels/ThreeDimensionalViz/stories/MarkerStory.tsx",
   "app/panels/ThreeDimensionalViz/stories/storyComponents.tsx",
   "app/panels/ThreeDimensionalViz/utils/drawToolUtils.ts",
-  "app/panels/ThreeDimensionalViz/utils/groupingUtils.ts",
-  "app/panels/TwoDimensionalPlot/index.stories.tsx",
-  "app/panels/diagnostics/DiagnosticStatus.tsx",
-  "app/panels/diagnostics/DiagnosticSummary.tsx"
+  "app/panels/ThreeDimensionalViz/utils/groupingUtils.ts"
 ]
