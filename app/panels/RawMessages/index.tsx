@@ -29,6 +29,7 @@ import DropdownItem from "@foxglove-studio/app/components/Dropdown/DropdownItem"
 import EmptyState from "@foxglove-studio/app/components/EmptyState";
 import Flex from "@foxglove-studio/app/components/Flex";
 import Icon from "@foxglove-studio/app/components/Icon";
+import { getItemString } from "@foxglove-studio/app/components/JsonTree/getItemString";
 import MessagePathInput from "@foxglove-studio/app/components/MessagePathSyntax/MessagePathInput";
 import {
   RosPath,
@@ -76,7 +77,7 @@ import {
 } from "./getValueActionForValue";
 import helpContent from "./index.help.md";
 import styles from "./index.module.scss";
-import { DATA_ARRAY_PREVIEW_LIMIT, getItemString, getItemStringForDiff } from "./utils";
+import { DATA_ARRAY_PREVIEW_LIMIT, getItemStringForDiff } from "./utils";
 
 export const CUSTOM_METHOD = "custom";
 export const PREV_MSG_METHOD = "previous message";
@@ -400,7 +401,7 @@ function RawMessages(props: Props) {
               shouldExpandNode={shouldExpandNode}
               hideRoot
               invertTheme={false}
-              getItemString={diffEnabled ? (getItemStringForDiff as any) : (getItemString as any)}
+              getItemString={diffEnabled ? getItemStringForDiff : getItemString}
               valueRenderer={(...args) => {
                 if (diffEnabled) {
                   return valueRenderer(undefined, diff, diff, ...args);
@@ -581,10 +582,10 @@ function RawMessages(props: Props) {
 RawMessages.defaultConfig = {
   topicPath: "",
   diffTopicPath: "",
-  diffMethod: CUSTOM_METHOD,
+  diffMethod: CUSTOM_METHOD as typeof CUSTOM_METHOD,
   diffEnabled: false,
   showFullMessageForDiff: false,
 };
 RawMessages.panelType = "RawMessages";
 
-export default Panel<RawMessagesConfig>(RawMessages as any);
+export default Panel(RawMessages);

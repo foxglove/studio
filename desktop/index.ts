@@ -17,6 +17,7 @@ import {
   session,
   shell,
   systemPreferences,
+  nativeTheme,
 } from "electron";
 import installExtension, {
   REACT_DEVELOPER_TOOLS,
@@ -145,8 +146,16 @@ async function createWindow(): Promise<void> {
     role: "editMenu",
     label: "Edit",
     submenu: [
-      { role: "undo" },
-      { role: "redo" },
+      {
+        label: "Undo",
+        accelerator: "CommandOrControl+Z",
+        click: () => mainWindow.webContents.send("undo"),
+      },
+      {
+        label: "Redo",
+        accelerator: "CommandOrControl+Shift+Z",
+        click: () => mainWindow.webContents.send("redo"),
+      },
       { type: "separator" },
       { role: "cut" },
       { role: "copy" },
@@ -187,6 +196,10 @@ async function createWindow(): Promise<void> {
       {
         label: "Welcome",
         click: () => mainWindow.webContents.send("open-welcome-layout"),
+      },
+      {
+        label: "Message Path Syntax",
+        click: () => mainWindow.webContents.send("open-message-path-syntax-help"),
       },
       {
         label: "Keyboard Shortcuts",
@@ -283,6 +296,8 @@ async function createWindow(): Promise<void> {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", async () => {
+  nativeTheme.themeSource = "dark";
+
   autoUpdater.checkForUpdatesAndNotify().catch((err) => {
     captureException(err);
   });
