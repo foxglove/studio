@@ -230,15 +230,15 @@ export default function useTree({
 
       const node = nodesByKey[baseKey];
       const featureKey = node?.featureKey || baseKey;
-      let result = isSelectedMemo[isFeatureColumn ? featureKey : baseKey];
-      if (!isFeatureColumn && result === undefined) {
-        result = isSelectedMemo[baseKey] =
+      let result: boolean;
+      if (!isFeatureColumn) {
+        result = isSelectedMemo[baseKey] ??=
           checkedKeysSet.has(baseKey) &&
           (node
             ? isSelected(node.parentKey, isFeatureColumn)
             : checkedKeysSet.has(`name:${uncategorizedGroupName}`));
-      } else if (result === undefined) {
-        result = isSelectedMemo[featureKey] =
+      } else {
+        result = isSelectedMemo[featureKey] ??=
           checkedKeysSet.has(featureKey) &&
           (node
             ? isSelected(node.parentKey, isFeatureColumn)
