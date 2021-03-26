@@ -22,7 +22,10 @@ import {
 } from "@foxglove-studio/app/actions/userNodes";
 import DocumentDropListener from "@foxglove-studio/app/components/DocumentDropListener";
 import DropOverlay from "@foxglove-studio/app/components/DropOverlay";
-import { MessagePipelineProvider } from "@foxglove-studio/app/components/MessagePipeline";
+import {
+  MaybePlayer,
+  MessagePipelineProvider,
+} from "@foxglove-studio/app/components/MessagePipeline";
 import { useExperimentalFeature } from "@foxglove-studio/app/context/ExperimentalFeaturesContext";
 import PlayerSelectionContext, {
   PlayerSelection,
@@ -37,7 +40,6 @@ import {
 import useElectronFilesToOpen from "@foxglove-studio/app/hooks/useElectronFilesToOpen";
 import { GlobalVariables } from "@foxglove-studio/app/hooks/useGlobalVariables";
 import { usePrompt } from "@foxglove-studio/app/hooks/usePrompt";
-import useUserNodes from "@foxglove-studio/app/hooks/useUserNodes";
 import OrderedStampPlayer from "@foxglove-studio/app/players/OrderedStampPlayer";
 import Ros1Player from "@foxglove-studio/app/players/Ros1Player";
 import RosbridgePlayer from "@foxglove-studio/app/players/RosbridgePlayer";
@@ -125,6 +127,70 @@ async function buildPlayerFromBagURLs(
   throw new Error(`Unsupported number of urls: ${urls.length}`);
 }
 
+// Based on a source type, prompt the user for additional input and build the requested player.
+// Returns undefined if the user cancels the operation.
+async function buildPlayerFromUserSelection(
+  definition: PlayerSourceDefinition,
+  usedFiles: { current: File[] },
+  prompt: ReturnType<typeof usePrompt>,
+  options: BuildPlayerOptions,
+): Promise<BuiltPlayer | undefined> {
+  switch (definition.type) {
+    case "file": {
+      let file: File;
+      try {
+        const [fileHandle] = await showOpenFilePicker({
+          types: [{ accept: { "application/octet-stream": [".bag"] } }],
+        });
+        file = await fileHandle.getFile();
+      } catch (error) {
+        if (error.name === "AbortError") {
+          return undefined;
+        }
+        throw error;
+      }
+      usedFiles.current = [file];
+      return buildPlayerFromFiles(usedFiles.current, options);
+    }
+    case "ros1-core": {
+      const result = await prompt({
+        value: OsContextSingleton?.getEnvVar("ROS_MASTER_URI") ?? "http://localhost:11311/",
+      });
+      const url = parseInputUrl(result, "http:");
+      if (url == undefined) {
+        return;
+      }
+      return {
+        player: new Ros1Player(url),
+        sources: [url],
+      };
+    }
+    case "ws": {
+      const result = await prompt({
+        placeholder: "ws://localhost:9090",
+      });
+      if (result == undefined || result.length === 0) {
+        return;
+      }
+
+      return {
+        player: new RosbridgePlayer(result),
+        sources: [result],
+      };
+    }
+    case "http": {
+      const result = await prompt({
+        placeholder: "http://example.com/file.bag",
+      });
+      if (result == undefined || result.length === 0) {
+        return;
+      }
+
+      return await buildPlayerFromBagURLs([result], options);
+    }
+  }
+}
+
 const connector = connect(
   (state: State, _ownProps: OwnProps) => ({
     messageOrder: state.persistedState.panels.playbackConfig.messageOrder,
@@ -158,7 +224,7 @@ function PlayerManager({
 }: Props) {
   const usedFiles = useRef<File[]>([]);
   const globalVariablesRef = useRef<GlobalVariables>(globalVariables);
-  const [player, setPlayerInternal] = useState<OrderedStampPlayer | undefined>();
+  const [maybePlayer, setMaybePlayer] = useState<MaybePlayer<OrderedStampPlayer>>({});
   const [currentSourceName, setCurrentSourceName] = useState<string | undefined>(undefined);
   const prompt = usePrompt();
 
@@ -166,18 +232,31 @@ function PlayerManager({
   // initialize it with the right order, so make a variable for its initial value we can use in the
   // dependency array below to defeat the linter.
   const [initialMessageOrder] = useState(messageOrder);
-  const buildPlayer = useCallback(
-    (playerDefinition: BuiltPlayer) => {
-      setCurrentSourceName(playerDefinition.sources.join(","));
 
-      const userNodePlayer = new UserNodePlayer(playerDefinition.player, {
-        setUserNodeDiagnostics: setDiagnostics,
-        addUserNodeLogs: setLogs,
-        setUserNodeRosLib: setRosLib,
-      });
-      const headerStampPlayer = new OrderedStampPlayer(userNodePlayer, initialMessageOrder);
-      headerStampPlayer.setGlobalVariables(globalVariablesRef.current);
-      setPlayerInternal(headerStampPlayer);
+  // Load a new player using the given definition -- passed as a function so that the asynchronous
+  // operation can be included as part of the "loading" state we pass in to MessagePipelineProvider.
+  const setPlayer = useCallback(
+    async (buildPlayer: () => Promise<BuiltPlayer | undefined>) => {
+      setMaybePlayer({ loading: true });
+      try {
+        const builtPlayer = await buildPlayer();
+        if (!builtPlayer) {
+          setMaybePlayer({ player: undefined });
+          return;
+        }
+        setCurrentSourceName(builtPlayer.sources.join(","));
+
+        const userNodePlayer = new UserNodePlayer(builtPlayer.player, {
+          setUserNodeDiagnostics: setDiagnostics,
+          addUserNodeLogs: setLogs,
+          setUserNodeRosLib: setRosLib,
+        });
+        const headerStampPlayer = new OrderedStampPlayer(userNodePlayer, initialMessageOrder);
+        headerStampPlayer.setGlobalVariables(globalVariablesRef.current);
+        setMaybePlayer({ player: headerStampPlayer });
+      } catch (error) {
+        setMaybePlayer({ error: error.toString() });
+      }
     },
     [setDiagnostics, setLogs, setRosLib, initialMessageOrder],
   );
@@ -188,12 +267,11 @@ function PlayerManager({
   });
 
   useEffect(() => {
-    if (player) {
-      player.setMessageOrder(messageOrder);
-    }
-  }, [messageOrder, player]);
-
-  useUserNodes({ nodePlayer: player, userNodes });
+    maybePlayer.player?.setMessageOrder(messageOrder);
+  }, [messageOrder, maybePlayer]);
+  useEffect(() => {
+    maybePlayer.player?.setUserNodes(userNodes);
+  }, [userNodes, maybePlayer]);
 
   const dropHandler = useCallback(
     ({ files, shiftPressed }: { files: FileList | File[]; shiftPressed: boolean }) => {
@@ -206,80 +284,18 @@ function PlayerManager({
       } else {
         usedFiles.current = [...files];
       }
-      buildPlayer(buildPlayerFromFiles(usedFiles.current, buildPlayerOptions));
+      setPlayer(async () => buildPlayerFromFiles(usedFiles.current, buildPlayerOptions));
     },
-    [buildPlayer, buildPlayerOptions],
+    [setPlayer, buildPlayerOptions],
   );
 
   const selectSource = useCallback(
-    async (definition: PlayerSourceDefinition) => {
-      switch (definition.type) {
-        case "file": {
-          // The main thread simulated a mouse click for us which allows us to invoke input.click();
-          // The idea is to move handling of opening the file to the renderer thread
-          const input = document.createElement("input");
-          input.setAttribute("type", "file");
-          input.setAttribute("accept", ".bag");
-
-          input.addEventListener(
-            "input",
-            () => {
-              const file = input?.files?.[0];
-              if (file) {
-                usedFiles.current = [file];
-                buildPlayer(buildPlayerFromFiles(usedFiles.current, buildPlayerOptions));
-              }
-            },
-            { once: true },
-          );
-
-          input.click();
-
-          break;
-        }
-        case "ros1-core": {
-          const result = await prompt({
-            value: OsContextSingleton?.getEnvVar("ROS_MASTER_URI") ?? "http://localhost:11311/",
-          });
-          const url = parseInputUrl(result, "http:");
-          if (url == undefined) {
-            return;
-          }
-          buildPlayer({
-            player: new Ros1Player(url),
-            sources: [url],
-          });
-          break;
-        }
-        case "ws": {
-          const result = await prompt({
-            placeholder: "ws://localhost:9090",
-          });
-          if (result == undefined || result.length === 0) {
-            return;
-          }
-
-          buildPlayer({
-            player: new RosbridgePlayer(result),
-            sources: [result],
-          });
-          break;
-        }
-        case "http": {
-          const result = await prompt({
-            placeholder: "http://example.com/file.bag",
-          });
-          if (result == undefined || result.length === 0) {
-            return;
-          }
-
-          const builtPlayer = await buildPlayerFromBagURLs([result], buildPlayerOptions);
-          buildPlayer(builtPlayer);
-          break;
-        }
-      }
+    (definition: PlayerSourceDefinition) => {
+      setPlayer(() =>
+        buildPlayerFromUserSelection(definition, usedFiles, prompt, buildPlayerOptions),
+      );
     },
-    [buildPlayer, prompt, buildPlayerOptions],
+    [setPlayer, prompt, buildPlayerOptions],
   );
 
   // files the main thread told us to open
@@ -291,8 +307,8 @@ function PlayerManager({
     }
 
     usedFiles.current = [file];
-    buildPlayer(buildPlayerFromFiles(usedFiles.current, buildPlayerOptions));
-  }, [buildPlayer, filesToOpen, buildPlayerOptions]);
+    setPlayer(async () => buildPlayerFromFiles(usedFiles.current, buildPlayerOptions));
+  }, [setPlayer, filesToOpen, buildPlayerOptions]);
 
   let availableSources = playerSources;
   if (!useExperimentalFeature("ros1Native")) {
@@ -305,11 +321,10 @@ function PlayerManager({
     // In the future we may want to replace this limited API with something more cohesive
     // that exposes the different buildPlayerFromX methods above. At the same time,
     // the prompt() responsibilities could be moved out of the PlayerManager.
-    setPlayerFromDemoBag: async () =>
-      buildPlayer(await buildPlayerFromBagURLs([DEMO_BAG_URL], buildPlayerOptions)),
+    setPlayerFromDemoBag: () =>
+      setPlayer(() => buildPlayerFromBagURLs([DEMO_BAG_URL], buildPlayerOptions)),
     availableSources,
     currentSourceName,
-    currentPlayer: player,
   };
 
   return (
@@ -325,7 +340,7 @@ function PlayerManager({
         </DropOverlay>
       </DocumentDropListener>
       <PlayerSelectionContext.Provider value={value}>
-        <MessagePipelineProvider player={player} globalVariables={globalVariables}>
+        <MessagePipelineProvider maybePlayer={maybePlayer} globalVariables={globalVariables}>
           {children}
         </MessagePipelineProvider>
       </PlayerSelectionContext.Provider>
