@@ -41,23 +41,6 @@ export class Transformer {
     this.maxAngle = maxAngle ?? 35999;
   }
 
-  // Count the number of valid laser scans (non-zero return and angle is within
-  // [minAngle..maxAngle]) in this raw packet
-  validPoints(raw: RawPacket): number {
-    const minAngle = this.minAngle;
-    const maxAngle = this.maxAngle;
-
-    let valid = 0;
-    for (const block of raw.blocks) {
-      for (let j = 0; j < RawPacket.SCANS_PER_BLOCK; j++) {
-        if (block.isValid(j) && angleInRange(block.rotation, minAngle, maxAngle)) {
-          valid++;
-        }
-      }
-    }
-    return valid;
-  }
-
   unpack(raw: RawPacket, scanStamp: number, packetStamp: number, output: PointCloud): void {
     switch (raw.factoryId) {
       case FactoryId.VLP16:
@@ -140,13 +123,14 @@ export class Transformer {
   ): void {
     const timeDiffStartToThisPacket = packetStamp - scanStamp;
     const dualReturn = raw.returnMode === ReturnMode.DualReturn ? 1 : 0;
+    const blockCount = RawPacket.BLOCKS_PER_PACKET - 4 * dualReturn;
     let azimuth = 0;
     let azimuthNext = 0;
     let azimuthDiff = 0;
     let lastAzimuthDiff = 0;
     const xyz: Point = [0, 0, 0];
 
-    for (let i = 0; i < RawPacket.BLOCKS_PER_PACKET - 4 * dualReturn; i++) {
+    for (let i = 0; i < blockCount; i++) {
       const block = raw.blocks[i] as RawBlock;
       const rawRotation = block.rotation;
       const timingOffsetsRow = this.calibration.timingOffsets[~~(i / 4)] ?? [];

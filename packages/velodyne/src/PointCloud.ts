@@ -33,26 +33,25 @@ export type Point = {
 
 export type PointCloudOptions = {
   stamp: number;
-  count: number;
+  maxPoints: number;
 };
 
 export class PointCloud {
   static POINT_STEP = 28;
 
-  stamp: number;
-  fields: PointField[];
-  height: number;
+  readonly stamp: number;
+  readonly fields: PointField[];
+  readonly height: number;
   width: number;
-  is_bigendian: boolean;
-  point_step: number;
+  readonly is_bigendian: boolean;
+  readonly point_step: number;
   row_step: number;
   data: Uint8Array;
-  is_dense: boolean;
+  readonly is_dense: boolean;
 
-  private _index = 0;
   private _view: DataView;
 
-  constructor({ stamp, count }: PointCloudOptions) {
+  constructor({ stamp, maxPoints }: PointCloudOptions) {
     this.stamp = stamp;
     this.fields = [
       { name: "x", offset: 0, datatype: PointFieldDataType.FLOAT32, count: 1 },
@@ -65,16 +64,17 @@ export class PointCloud {
       { name: "delta_ns", offset: 24, datatype: PointFieldDataType.UINT32, count: 1 },
     ];
     this.height = 1;
-    this.width = count;
+    this.width = 0;
     this.is_bigendian = false;
     this.point_step = PointCloud.POINT_STEP;
-    this.row_step = count * PointCloud.POINT_STEP;
-    this.data = new Uint8Array(this.row_step);
+    this.row_step = 0;
+    this.data = new Uint8Array(maxPoints * PointCloud.POINT_STEP);
     this.is_dense = true;
 
     this._view = new DataView(this.data.buffer, this.data.byteOffset, this.data.byteLength);
   }
 
+  // Add a 3D point to the point cloud and increment the internal data pointer
   addPoint(
     x: number,
     y: number,
@@ -85,7 +85,7 @@ export class PointCloud {
     azimuth: number,
     deltaNs: number, // [ns] Time when this laser was fired relative to the start of the scan
   ): void {
-    const offset = this._index * PointCloud.POINT_STEP;
+    const offset = this.width * PointCloud.POINT_STEP;
     this._view.setFloat32(offset + 0, x, true);
     this._view.setFloat32(offset + 4, y, true);
     this._view.setFloat32(offset + 8, z, true);
@@ -94,9 +94,11 @@ export class PointCloud {
     this._view.setUint16(offset + 20, ring, true);
     this._view.setUint16(offset + 22, azimuth, true);
     this._view.setUint32(offset + 24, deltaNs, true);
-    this._index++;
+    this.width++;
+    this.row_step = this.width * PointCloud.POINT_STEP;
   }
 
+  // Retrieve a 3D point from this point cloud
   point(index: number): Point {
     const offset = index * PointCloud.POINT_STEP;
     return {
@@ -109,5 +111,10 @@ export class PointCloud {
       azimuth: this._view.getUint16(offset + 22, true),
       deltaNs: this._view.getUint32(offset + 24, true),
     };
+  }
+
+  // Truncate `data` down to the number of points that have been written so far
+  trim(): void {
+    this.data = new Uint8Array(this.data.buffer, this.data.byteOffset, this.row_step);
   }
 }

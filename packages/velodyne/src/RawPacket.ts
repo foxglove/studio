@@ -39,6 +39,7 @@ export class RawPacket {
   static BLOCK_DATA_SIZE = RawPacket.SCANS_PER_BLOCK * RawPacket.RAW_SCAN_SIZE;
   static BLOCK_SIZE = RawPacket.BLOCK_DATA_SIZE + 4;
   static BLOCKS_PER_PACKET = 12;
+  static MAX_POINTS_PER_PACKET = RawPacket.BLOCKS_PER_PACKET * RawPacket.SCANS_PER_BLOCK;
 
   blocks: RawBlock[];
   gpsTimestamp: number; // microseconds since the top of the hour

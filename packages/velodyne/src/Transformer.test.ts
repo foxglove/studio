@@ -25,15 +25,13 @@ describe("Transformer", () => {
     expect(transform.maxRange).toEqual(100);
 
     const raw = new RawPacket(HDL32E_PACKET1);
-    const count = transform.validPoints(raw);
-    expect(count).toEqual(382);
-
-    const cloud = new PointCloud({ stamp: 42, count });
+    const cloud = new PointCloud({ stamp: 42, maxPoints: RawPacket.MAX_POINTS_PER_PACKET });
     transform.unpack(raw, 42, 42.1, cloud);
+    cloud.trim();
 
     expect(cloud.height).toEqual(1);
-    expect(cloud.width).toEqual(count);
-    expect(cloud.data.byteLength).toEqual(count * PointCloud.POINT_STEP);
+    expect(cloud.width).toEqual(382);
+    expect(cloud.data.byteLength).toEqual(382 * PointCloud.POINT_STEP);
 
     const view = new DataView(cloud.data.buffer, cloud.data.byteOffset, cloud.data.byteLength);
     expect(view.getFloat32(0, true)).toEqual(-1.5504857301712036); // x
@@ -64,16 +62,17 @@ describe("Transformer", () => {
   it("has expected performance", async () => {
     const calibration = new Calibration(Model.HDL32E);
     const transform = new Transformer(calibration);
+    const maxPoints = RawPacket.MAX_POINTS_PER_PACKET * 100;
 
     await benchmark.record(
       ["Transformer", "HDL-32E"],
       () => {
         const raw = new RawPacket(HDL32E_PACKET1);
-        const count = transform.validPoints(raw);
-        const cloud = new PointCloud({ stamp: 0, count: count * 100 });
+        const cloud = new PointCloud({ stamp: 0, maxPoints });
         for (let i = 0; i < 100; i++) {
           transform.unpack(raw, 0, 0, cloud);
         }
+        cloud.trim();
       },
       { iterations: 10, meanUnder: 10 },
     );
