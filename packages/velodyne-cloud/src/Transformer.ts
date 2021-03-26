@@ -4,7 +4,8 @@
 
 import { Calibration } from "./Calibration";
 import { PointCloud } from "./PointCloud";
-import { RawBlock, RawPacket } from "./RawPacket";
+import { RawBlock } from "./RawBlock";
+import { RawPacket } from "./RawPacket";
 import { BlockId, FactoryId, LaserCorrection, Model, ReturnMode } from "./VelodyneTypes";
 
 const VLP16_SCANS_PER_FIRING = 16;

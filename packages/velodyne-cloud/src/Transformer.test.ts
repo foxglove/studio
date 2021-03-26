@@ -12,7 +12,7 @@ import { Transformer } from "./Transformer";
 import { Model } from "./VelodyneTypes";
 
 function norm(x: number, y: number, z: number): number {
-  return Math.sqrt(x * x + y * y + z * z);
+  return Math.hypot(x, y, z);
 }
 
 describe("Transformer", () => {
