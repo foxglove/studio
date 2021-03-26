@@ -253,10 +253,6 @@ export default function App(): ReactElement {
 
   const playerSources: PlayerSourceDefinition[] = [
     {
-      name: "Bag File (local)",
-      type: "file",
-    },
-    {
       name: "ROS",
       type: "ros1-core",
     },
@@ -267,6 +263,10 @@ export default function App(): ReactElement {
     {
       name: "Bag File (HTTP)",
       type: "http",
+    },
+    {
+      name: "Bag File (local)",
+      type: "file",
     },
   ];
 

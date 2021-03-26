@@ -13,6 +13,7 @@
 
 import { PropsWithChildren, useCallback, useEffect, useRef, useState } from "react";
 import { connect, ConnectedProps } from "react-redux";
+import { useMountedState } from "react-use";
 
 import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
 import {
@@ -127,14 +128,17 @@ async function buildPlayerFromBagURLs(
   throw new Error(`Unsupported number of urls: ${urls.length}`);
 }
 
-// Based on a source type, prompt the user for additional input and build the requested player.
-// Returns undefined if the user cancels the operation.
-async function buildPlayerFromUserSelection(
+// Based on a source type, prompt the user for additional input and return a function to build the
+// requested player. The user input and actual building of the player are in separate async
+// operations so the player manager can delay clearing out the old player and entering the
+// "constructing" state until the user selection has completed. Returns undefined if the user
+// cancels the operation.
+async function getPlayerBuilderFromUserSelection(
   definition: PlayerSourceDefinition,
   usedFiles: { current: File[] },
   prompt: ReturnType<typeof usePrompt>,
   options: BuildPlayerOptions,
-): Promise<BuiltPlayer | undefined> {
+): Promise<(() => Promise<BuiltPlayer>) | undefined> {
   switch (definition.type) {
     case "file": {
       let file: File;
@@ -149,8 +153,10 @@ async function buildPlayerFromUserSelection(
         }
         throw error;
       }
-      usedFiles.current = [file];
-      return buildPlayerFromFiles(usedFiles.current, options);
+      return async () => {
+        usedFiles.current = [file];
+        return buildPlayerFromFiles(usedFiles.current, options);
+      };
     }
     case "ros1-core": {
       const result = await prompt({
@@ -160,10 +166,10 @@ async function buildPlayerFromUserSelection(
       if (url == undefined) {
         return;
       }
-      return {
+      return async () => ({
         player: new Ros1Player(url),
         sources: [url],
-      };
+      });
     }
     case "ws": {
       const result = await prompt({
@@ -173,10 +179,10 @@ async function buildPlayerFromUserSelection(
         return;
       }
 
-      return {
+      return async () => ({
         player: new RosbridgePlayer(result),
         sources: [result],
-      };
+      });
     }
     case "http": {
       const result = await prompt({
@@ -186,7 +192,7 @@ async function buildPlayerFromUserSelection(
         return;
       }
 
-      return await buildPlayerFromBagURLs([result], options);
+      return () => buildPlayerFromBagURLs([result], options);
     }
   }
 }
@@ -227,6 +233,7 @@ function PlayerManager({
   const [maybePlayer, setMaybePlayer] = useState<MaybePlayer<OrderedStampPlayer>>({});
   const [currentSourceName, setCurrentSourceName] = useState<string | undefined>(undefined);
   const prompt = usePrompt();
+  const isMounted = useMountedState();
 
   // We don't want to recreate the player when the message order changes, but we do want to
   // initialize it with the right order, so make a variable for its initial value we can use in the
@@ -290,12 +297,18 @@ function PlayerManager({
   );
 
   const selectSource = useCallback(
-    (definition: PlayerSourceDefinition) => {
-      setPlayer(() =>
-        buildPlayerFromUserSelection(definition, usedFiles, prompt, buildPlayerOptions),
+    async (definition: PlayerSourceDefinition) => {
+      const builder = await getPlayerBuilderFromUserSelection(
+        definition,
+        usedFiles,
+        prompt,
+        buildPlayerOptions,
       );
+      if (builder && isMounted()) {
+        setPlayer(builder);
+      }
     },
-    [setPlayer, prompt, buildPlayerOptions],
+    [setPlayer, prompt, buildPlayerOptions, isMounted],
   );
 
   // files the main thread told us to open
