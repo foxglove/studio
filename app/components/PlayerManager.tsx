@@ -338,8 +338,10 @@ function PlayerManager({
     // In the future we may want to replace this limited API with something more cohesive
     // that exposes the different buildPlayerFromX methods above. At the same time,
     // the prompt() responsibilities could be moved out of the PlayerManager.
-    setPlayerFromDemoBag: () =>
-      setPlayer(() => buildPlayerFromBagURLs([DEMO_BAG_URL], buildPlayerOptions)),
+    setPlayerFromDemoBag: useCallback(
+      () => setPlayer(() => buildPlayerFromBagURLs([DEMO_BAG_URL], buildPlayerOptions)),
+      [setPlayer, buildPlayerOptions],
+    ),
     availableSources,
     currentSourceName,
   };
