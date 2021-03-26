@@ -1,7 +1,7 @@
 {
-  "name": "@foxglove/velodyne",
+  "name": "@foxglove/velodyne-cloud",
   "version": "0.0.1",
-  "description": "TypeScript library for parsing and converting Velodyne LIDAR packet data",
+  "description": "TypeScript library for converting Velodyne LIDAR packet data to point clouds",
   "license": "MPL-2.0",
   "private": true,
   "repository": {
