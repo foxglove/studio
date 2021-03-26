@@ -261,12 +261,12 @@ export default function App(): ReactElement {
       type: "ws",
     },
     {
-      name: "Bag File (HTTP)",
-      type: "http",
-    },
-    {
       name: "Bag File (local)",
       type: "file",
+    },
+    {
+      name: "Bag File (HTTP)",
+      type: "http",
     },
   ];
 
