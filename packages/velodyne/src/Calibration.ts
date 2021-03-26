@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { LaserCorrection, Model } from "./VelodyneTypes";
-import { deg2rad } from "./angles";
 import HDL32E_json from "./data/calibration/32db.json";
 import HDL64E_S21_json from "./data/calibration/64e_s2.1-sztaki.json";
 import HDL64E_S3_json from "./data/calibration/64e_s3-xiesc.json";
@@ -169,3 +168,7 @@ type CalibrationData = {
   lasers: LaserEntry[];
   distance_resolution: number;
 };
+
+function deg2rad(degrees: number): number {
+  return degrees * (Math.PI / 180);
+}
