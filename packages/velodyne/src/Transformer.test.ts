@@ -75,7 +75,7 @@ describe("Transformer", () => {
           transform.unpack(raw, 0, 0, cloud);
         }
       },
-      { iterations: 10, meanUnder: 20 },
+      { iterations: 10, meanUnder: 10 },
     );
 
     // eslint-disable-next-line no-restricted-syntax
