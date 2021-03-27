@@ -164,7 +164,7 @@ async function getPlayerBuilderFromUserSelection(
     }
     case "ros1-core": {
       const result = await prompt({
-        value: OsContextSingleton?.getEnvVar("ROS_MASTER_URI") ?? "http://localhost:11311/",
+        value: OsContextSingleton?.getEnvVar("ROS_MASTER_URI") ?? "localhost:11311",
       });
       const url = parseInputUrl(result, "ros:", {
         "http:": { defaultPort: 80 },
