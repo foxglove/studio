@@ -166,8 +166,13 @@ async function getPlayerBuilderFromUserSelection(
       const result = await prompt({
         value: OsContextSingleton?.getEnvVar("ROS_MASTER_URI") ?? "http://localhost:11311/",
       });
-      const url = parseInputUrl(result, "http:");
+      const url = parseInputUrl(result, "ros:", {
+        "http:": { defaultPort: 80 },
+        "https:": { defaultPort: 443 },
+        "ros:": { protocol: "http:", defaultPort: 11311 },
+      });
       if (url == undefined) {
+        // FIXME: Surface an error to the user somehow
         return;
       }
       return async () => ({
@@ -179,24 +184,38 @@ async function getPlayerBuilderFromUserSelection(
       const result = await prompt({
         placeholder: "ws://localhost:9090",
       });
-      if (result == undefined || result.length === 0) {
+      const url = parseInputUrl(result, "http:", {
+        "http:": { protocol: "ws:", defaultPort: 80 },
+        "https:": { protocol: "wss:", defaultPort: 443 },
+        "ws:": { defaultPort: 9090 },
+        "wss:": { defaultPort: 9090 },
+        "ros:": { protocol: "ws:", defaultPort: 9090 },
+      });
+      if (url == undefined) {
+        // FIXME: Surface an error to the user somehow
         return;
       }
 
       return async () => ({
-        player: new RosbridgePlayer(result),
-        sources: [result],
+        player: new RosbridgePlayer(url),
+        sources: [url],
       });
     }
     case "http": {
       const result = await prompt({
-        placeholder: "http://example.com/file.bag",
+        placeholder: "https://example.com/file.bag",
       });
-      if (result == undefined || result.length === 0) {
+      const url = parseInputUrl(result, "https:", {
+        "http:": { defaultPort: 80 },
+        "https:": { defaultPort: 443 },
+        "ftp:": { defaultPort: 21 },
+      });
+      if (url == undefined) {
+        // FIXME: Surface an error to the user somehow
         return;
       }
 
-      return () => buildPlayerFromBagURLs([result], options);
+      return () => buildPlayerFromBagURLs([url], options);
     }
   }
 }
