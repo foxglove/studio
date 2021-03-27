@@ -51,6 +51,7 @@ import {
 } from "@foxglove-studio/app/players/buildPlayer";
 import { Player } from "@foxglove-studio/app/players/types";
 import { State } from "@foxglove-studio/app/reducers";
+import { AppError } from "@foxglove-studio/app/util/errors";
 import { SECOND_SOURCE_PREFIX } from "@foxglove-studio/app/util/globalConstants";
 import { useShallowMemo } from "@foxglove-studio/app/util/hooks";
 import { parseInputUrl } from "@foxglove-studio/app/util/url";
@@ -172,8 +173,9 @@ async function getPlayerBuilderFromUserSelection(
         "ros:": { protocol: "http:", defaultPort: 11311 },
       });
       if (url == undefined) {
-        // FIXME: Surface an error to the user somehow
-        return;
+        throw new AppError(
+          "Invalid ROS URL. See the ROS_MASTER_URI at http://wiki.ros.org/ROS/EnvironmentVariables for more info.",
+        );
       }
       return async () => ({
         player: new Ros1Player(url),
@@ -192,8 +194,7 @@ async function getPlayerBuilderFromUserSelection(
         "ros:": { protocol: "ws:", defaultPort: 9090 },
       });
       if (url == undefined) {
-        // FIXME: Surface an error to the user somehow
-        return;
+        throw new AppError("Invalid rosbridge WebSocket URL. Use the ws:// or wss:// protocol.");
       }
 
       return async () => ({
@@ -211,8 +212,9 @@ async function getPlayerBuilderFromUserSelection(
         "ftp:": { defaultPort: 21 },
       });
       if (url == undefined) {
-        // FIXME: Surface an error to the user somehow
-        return;
+        throw new AppError(
+          "Invalid rosbag URL. Use a http:// or https:// URL of a web hosted bag file.",
+        );
       }
 
       return () => buildPlayerFromBagURLs([url], options);
