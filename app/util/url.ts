@@ -5,10 +5,10 @@
 import { URL } from "universal-url";
 
 const DEFAULT_PROTOS = {
-  "http:": { defaultPort: 80 },
-  "https:": { defaultPort: 443 },
-  "ws:": { defaultPort: 80 },
-  "wss:": { defaultPort: 443 },
+  "http:": { port: 80 },
+  "https:": { port: 443 },
+  "ws:": { port: 80 },
+  "wss:": { port: 443 },
 };
 
 // Parse a user-input string as a URL using a forgiving parser that interprets
@@ -18,7 +18,7 @@ const DEFAULT_PROTOS = {
 export function parseInputUrl(
   str: string | undefined,
   defaultProtocol = "https:",
-  protocols: { [proto: string]: { protocol?: string; defaultPort: number } } = DEFAULT_PROTOS,
+  protocols: { [proto: string]: { protocol?: string; port: number } } = DEFAULT_PROTOS,
 ): string | undefined {
   if (str == undefined || str.length === 0) {
     return undefined;
@@ -42,7 +42,7 @@ export function parseInputUrl(
     }
 
     if (url.port.length === 0) {
-      url.port = String(proto.defaultPort);
+      url.port = String(proto.port);
     }
 
     return url.toString();

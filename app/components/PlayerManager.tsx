@@ -168,9 +168,9 @@ async function getPlayerBuilderFromUserSelection(
         value: OsContextSingleton?.getEnvVar("ROS_MASTER_URI") ?? "localhost:11311",
       });
       const url = parseInputUrl(result, "ros:", {
-        "http:": { defaultPort: 80 },
-        "https:": { defaultPort: 443 },
-        "ros:": { protocol: "http:", defaultPort: 11311 },
+        "http:": { port: 80 },
+        "https:": { port: 443 },
+        "ros:": { protocol: "http:", port: 11311 },
       });
       if (url == undefined) {
         throw new AppError(
@@ -187,11 +187,11 @@ async function getPlayerBuilderFromUserSelection(
         placeholder: "ws://localhost:9090",
       });
       const url = parseInputUrl(result, "http:", {
-        "http:": { protocol: "ws:", defaultPort: 80 },
-        "https:": { protocol: "wss:", defaultPort: 443 },
-        "ws:": { defaultPort: 9090 },
-        "wss:": { defaultPort: 9090 },
-        "ros:": { protocol: "ws:", defaultPort: 9090 },
+        "http:": { protocol: "ws:", port: 80 },
+        "https:": { protocol: "wss:", port: 443 },
+        "ws:": { port: 9090 },
+        "wss:": { port: 9090 },
+        "ros:": { protocol: "ws:", port: 9090 },
       });
       if (url == undefined) {
         throw new AppError("Invalid rosbridge WebSocket URL. Use the ws:// or wss:// protocol.");
@@ -207,9 +207,9 @@ async function getPlayerBuilderFromUserSelection(
         placeholder: "https://example.com/file.bag",
       });
       const url = parseInputUrl(result, "https:", {
-        "http:": { defaultPort: 80 },
-        "https:": { defaultPort: 443 },
-        "ftp:": { defaultPort: 21 },
+        "http:": { port: 80 },
+        "https:": { port: 443 },
+        "ftp:": { port: 21 },
       });
       if (url == undefined) {
         throw new AppError(

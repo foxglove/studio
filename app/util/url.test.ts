@@ -5,12 +5,12 @@
 import { parseInputUrl } from "@foxglove-studio/app/util/url";
 
 const DEFAULT_PROTOS = {
-  "http:": { defaultPort: 80 },
-  "https:": { defaultPort: 443 },
-  "ws:": { defaultPort: 9090 },
-  "wss:": { defaultPort: 9090 },
-  "ros:": { protocol: "http:", defaultPort: 11311 },
-  "custom:": { protocol: "custom2:", defaultPort: 9000 },
+  "http:": { port: 80 },
+  "https:": { port: 443 },
+  "ws:": { port: 9090 },
+  "wss:": { port: 9090 },
+  "ros:": { protocol: "http:", port: 11311 },
+  "custom:": { protocol: "custom2:", port: 9000 },
 };
 
 describe("util/url", () => {
