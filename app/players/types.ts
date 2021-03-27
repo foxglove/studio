@@ -36,13 +36,14 @@ export type ParsedMessageDefinitionsByTopic = {
 // current time, which topics and datatypes are available, and so on.
 // For more details, see the types below.
 
+export type PlayerError = {
+  message: string;
+  details: string | Error;
+  type: "app" | "user";
+  severity: "error" | "warn";
+};
 export interface PlayerEvents {
-  error: (
-    message: string,
-    details: string | Error,
-    errorType: "app" | "user",
-    severity: "error" | "warn",
-  ) => void;
+  error: (error: PlayerError) => void;
 }
 
 export interface Player {

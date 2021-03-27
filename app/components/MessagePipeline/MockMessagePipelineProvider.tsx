@@ -18,6 +18,7 @@ import { Time, TimeUtil } from "rosbag";
 import {
   AdvertisePayload,
   Message,
+  PlayerError,
   PlayerPresence,
   PlayerStateActiveData,
   Progress,
@@ -42,7 +43,7 @@ function noop() {}
 export default function MockMessagePipelineProvider(props: {
   children: React.ReactNode;
   presence?: PlayerPresence;
-  error?: string;
+  error?: PlayerError;
   topics?: Topic[];
   datatypes?: RosDatatypes;
   messages?: Message[];

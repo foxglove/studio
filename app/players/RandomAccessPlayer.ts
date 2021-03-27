@@ -176,13 +176,13 @@ export default class RandomAccessPlayer implements Player {
     }
   };
 
-  _setError(message: string, details: string | Error, errorType: "app" | "user"): void {
+  _setError(message: string, details: string | Error, type: "app" | "user"): void {
     this._hasError = true;
     this._isPlaying = false;
     if (!this._initializing) {
       this._provider.close();
     }
-    this.emitter.emit("error", message, details, errorType, "error");
+    this.emitter.emit("error", { message, details, type, severity: "error" });
     this._emitState();
   }
 
@@ -462,13 +462,12 @@ export default class RandomAccessPlayer implements Player {
       const messageTypes = Object.keys(messages)
         .filter((type) => (messages as any)[type] != undefined)
         .join("\n");
-      this.emitter.emit(
-        "error",
-        "Bad set of message types in RandomAccessPlayer",
-        `Message types: ${messageTypes}`,
-        "app",
-        "error",
-      );
+      this.emitter.emit("error", {
+        message: "Bad set of message types in RandomAccessPlayer",
+        details: `Message types: ${messageTypes}`,
+        type: "app",
+        severity: "error",
+      });
       return { parsedMessages: [], bobjects: [] };
     }
 
@@ -483,34 +482,31 @@ export default class RandomAccessPlayer implements Player {
     const filterMessages = (msgs: Message[], topics: string[]) =>
       filterMap(msgs, (message) => {
         if (!topics.includes(message.topic)) {
-          this.emitter.emit(
-            "error",
-            `Unexpected topic encountered: ${message.topic}; skipped message`,
-            `Full message details: ${JSON.stringify(message)}`,
-            "app",
-            "warn",
-          );
+          this.emitter.emit("error", {
+            message: `Unexpected topic encountered: ${message.topic}; skipped message`,
+            details: `Full message details: ${JSON.stringify(message)}`,
+            type: "app",
+            severity: "warn",
+          });
           return undefined;
         }
         const topic: Topic | undefined = this._providerTopics.find((t) => t.name === message.topic);
         if (!topic) {
-          this.emitter.emit(
-            "error",
-            `Could not find topic for message ${message.topic}; skipped message`,
-            `Full message details: ${JSON.stringify(message)}`,
-            "app",
-            "warn",
-          );
+          this.emitter.emit("error", {
+            message: `Could not find topic for message ${message.topic}; skipped message`,
+            details: `Full message details: ${JSON.stringify(message)}`,
+            type: "app",
+            severity: "warn",
+          });
           return undefined;
         }
         if (!topic.datatype) {
-          this.emitter.emit(
-            "error",
-            `Missing datatype for topic: ${message.topic}; skipped message`,
-            `Full message details: ${JSON.stringify(message)}`,
-            "app",
-            "warn",
-          );
+          this.emitter.emit("error", {
+            message: `Missing datatype for topic: ${message.topic}; skipped message`,
+            details: `Full message details: ${JSON.stringify(message)}`,
+            type: "app",
+            severity: "warn",
+          });
           return undefined;
         }
 

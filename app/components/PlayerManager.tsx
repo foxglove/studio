@@ -287,7 +287,9 @@ function PlayerManager({
         headerStampPlayer.setGlobalVariables(globalVariablesRef.current);
         setMaybePlayer({ player: headerStampPlayer });
       } catch (error) {
-        setMaybePlayer({ error: error.toString() });
+        setMaybePlayer({
+          error: { message: error.toString(), details: error, type: "app", severity: "error" },
+        });
       }
     },
     [setDiagnostics, setLogs, setRosLib, initialMessageOrder],

@@ -20,6 +20,7 @@ import {
   Frame,
   Message,
   Player,
+  PlayerError,
   PlayerPresence,
   PlayerState,
   PlayerStateActiveData,
@@ -48,7 +49,7 @@ const { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } = R
 type ResumeFrame = () => void;
 export type MessagePipelineContext = {
   playerState: PlayerState;
-  error: string | undefined;
+  error: PlayerError | undefined;
   frame: Frame;
   sortedTopics: Topic[];
   datatypes: RosDatatypes;
@@ -87,7 +88,7 @@ function defaultPlayerState(): PlayerState {
 
 export type MaybePlayer<P extends Player = Player> =
   | { loading: true; error?: undefined; player?: undefined }
-  | { loading?: false; error: string; player?: undefined }
+  | { loading?: false; error: PlayerError; player?: undefined }
   | { loading?: false; error?: undefined; player?: P };
 
 type ProviderProps = {
@@ -107,7 +108,7 @@ export function MessagePipelineProvider({
   globalVariables = {},
 }: ProviderProps): React.ReactElement {
   const currentPlayer = useRef<Player | undefined>(undefined);
-  const [error, setError] = useState<string | undefined>(maybePlayer.error);
+  const [playerError, setPlayerError] = useState<PlayerError | undefined>(maybePlayer.error);
   const [rawPlayerState, setRawPlayerState] = useState<PlayerState | undefined>();
   const playerState = useMemo(() => {
     // Use the MaybePlayer's status if we do not yet have a player to report presence.
@@ -155,13 +156,8 @@ export function MessagePipelineProvider({
     if (!player) {
       return undefined;
     }
-    const listener = (
-      message: string,
-      _details: string | Error,
-      _errorType: "app" | "user",
-      _severity: "error" | "warn",
-    ) => {
-      setError(message);
+    const listener = (error: PlayerError) => {
+      setPlayerError(error);
     };
     player.on("error", listener);
     return () => player.off("error", listener);
@@ -348,7 +344,7 @@ export function MessagePipelineProvider({
     <ContextInternal.Provider
       value={useShallowMemo({
         playerState,
-        error,
+        error: playerError,
         subscriptions,
         publishers,
         frame,
