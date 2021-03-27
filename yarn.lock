@@ -4852,13 +4852,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/webidl-conversions@npm:*":
-  version: 6.1.0
-  resolution: "@types/webidl-conversions@npm:6.1.0"
-  checksum: 5a939bfc40f097b3a0a9390178b294ca901f35d3fc9fcf042658bc5da4ac85fa50c60f23dbba57b8e594d9e8c1b5fca738174a395527ecc1bbe094ee900c7502
-  languageName: node
-  linkType: hard
-
 "@types/webpack-dev-server@npm:3.11.1":
   version: 3.11.1
   resolution: "@types/webpack-dev-server@npm:3.11.1"
@@ -4901,16 +4894,6 @@ __metadata:
     "@types/webpack-sources": "*"
     source-map: ^0.6.0
   checksum: c84012af1d0159e6c17b065139d8c15ffe18042445db4f9c61e2fe3aff1d4ebeb8a65af6824e991eb161334c2842c6d2b55f9d700bd7e64bf492f3dcbf1a92d1
-  languageName: node
-  linkType: hard
-
-"@types/whatwg-url@npm:^8":
-  version: 8.2.0
-  resolution: "@types/whatwg-url@npm:8.2.0"
-  dependencies:
-    "@types/node": "*"
-    "@types/webidl-conversions": "*"
-  checksum: 503fe74cec32b66437e088287c98b2ef7149e0dd0d96251b7c0b3d206bd33286ed492b784a00d28483a248e27fbebd24e254fd4d36b610760ae18f8820e825a0
   languageName: node
   linkType: hard
 
@@ -11734,7 +11717,6 @@ __metadata:
     "@types/rimraf": ^3
     "@types/sass": ^1
     "@types/webpack-dev-server": 3.11.1
-    "@types/whatwg-url": ^8
     "@typescript-eslint/eslint-plugin": 4.16.1
     "@typescript-eslint/parser": 4.16.1
     babel-loader: 8.2.2
@@ -11784,11 +11766,11 @@ __metadata:
     ts-node: 9.1.1
     typescript: 4.2.2
     typescript-plugin-css-modules: 3.2.0
+    universal-url: 2.0.0
     webpack: 5.26.3
     webpack-cli: 4.5.0
     webpack-dev-server: 3.11.2
     webpack-hot-middleware: 2.25.0
-    whatwg-url: 8.5.0
   languageName: unknown
   linkType: soft
 
@@ -12702,6 +12684,13 @@ fsevents@^1.2.7:
     property-information: ^5.0.0
     space-separated-tokens: ^1.0.0
   checksum: c801a859137b7b0092235e50b5c9927c8e0ddbfc4739f4da5bf20170821be6bd883744a11ed2a3909d00d24964632892118913b3b13b02601018035da8b00b52
+  languageName: node
+  linkType: hard
+
+"hasurl@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "hasurl@npm:1.0.0"
+  checksum: 523cb8fc4d586c9b7de2be51c3f9b5130c2192c4724b209d71aaeed860e84591059a400a5095d375861fd63f5bdcf90a6e80e1efcc1c6f860cf6165bb27632e0
   languageName: node
   linkType: hard
 
@@ -15638,7 +15627,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"lodash@npm:4.17.21, lodash@npm:4.x, lodash@npm:^4.0.1, lodash@npm:^4.17.10, lodash@npm:^4.17.11, lodash@npm:^4.17.14, lodash@npm:^4.17.15, lodash@npm:^4.17.19, lodash@npm:^4.17.20, lodash@npm:^4.17.21, lodash@npm:^4.17.4, lodash@npm:^4.7.0":
+"lodash@npm:4.17.21, lodash@npm:4.x, lodash@npm:^4.0.1, lodash@npm:^4.17.10, lodash@npm:^4.17.11, lodash@npm:^4.17.14, lodash@npm:^4.17.15, lodash@npm:^4.17.19, lodash@npm:^4.17.20, lodash@npm:^4.17.21, lodash@npm:^4.17.4":
   version: 4.17.21
   resolution: "lodash@npm:4.17.21"
   checksum: 4983720b9abca930a4a46f18db163d7dad8dd00dbed6db0cc7b499b33b717cce69f80928b27bbb1ff2cbd3b19d251ee90669a8b5ea466072ca81c2ebe91e7468
@@ -23234,6 +23223,16 @@ typescript@4.2.2:
   languageName: node
   linkType: hard
 
+"universal-url@npm:2.0.0":
+  version: 2.0.0
+  resolution: "universal-url@npm:2.0.0"
+  dependencies:
+    hasurl: ^1.0.0
+    whatwg-url: ^7.0.0
+  checksum: 403800e8b104e6cd131d802723ca75dc868b98d6acdd438dcd558dc66b83dcc25e20fe0508cb2cd68b22720cde8961f1638da3a0bc20ca93f911a8e073daa3b6
+  languageName: node
+  linkType: hard
+
 "universal-user-agent@npm:^6.0.0":
   version: 6.0.0
   resolution: "universal-user-agent@npm:6.0.0"
@@ -24160,17 +24159,6 @@ typescript@4.2.2:
   languageName: node
   linkType: hard
 
-"whatwg-url@npm:8.5.0":
-  version: 8.5.0
-  resolution: "whatwg-url@npm:8.5.0"
-  dependencies:
-    lodash: ^4.7.0
-    tr46: ^2.0.2
-    webidl-conversions: ^6.1.0
-  checksum: a070c4be45bd09e9f1593d678e798fb66cd2cbccd2a604a7453063c68ab4bb80b4a9e2a0a80562264e5963eb589311c6467599fdac9fb6a4112cd786397920e4
-  languageName: node
-  linkType: hard
-
 "whatwg-url@npm:^6.5.0":
   version: 6.5.0
   resolution: "whatwg-url@npm:6.5.0"
@@ -24179,6 +24167,17 @@ typescript@4.2.2:
     tr46: ^1.0.1
     webidl-conversions: ^4.0.2
   checksum: 454a06402d3ccec0057b8b2d00231153a38bb985749268903111166175e599254175461515b351cd3e6c7e1a9674c35adbcf708304cd38e6aae5b81c6ac9e095
+  languageName: node
+  linkType: hard
+
+"whatwg-url@npm:^7.0.0":
+  version: 7.1.0
+  resolution: "whatwg-url@npm:7.1.0"
+  dependencies:
+    lodash.sortby: ^4.7.0
+    tr46: ^1.0.1
+    webidl-conversions: ^4.0.2
+  checksum: ccbf75d3dfa6d97a7705acc250a43041dfcfa0c9695a5148cac844c39a29657d7c07b3c4533ebabb2401fedcd5eb98626256add2760403b0889c9983ea1a76aa
   languageName: node
   linkType: hard
 
