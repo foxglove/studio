@@ -69,6 +69,8 @@ export interface OsContext {
   getNetworkInterfaces(): NetworkInterface[];
   // Get a unique identifier for the system from the operating system
   getMachineId(): string;
+  // Get the version string from package.json
+  getAppVersion(): string;
 
   // file backed key/value storage
   storage: Storage;

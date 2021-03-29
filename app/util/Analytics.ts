@@ -24,14 +24,22 @@ export class Analytics {
     if (amplitudeApiKey != undefined && amplitudeApiKey.length > 0) {
       const userId = this.getUserId();
       const deviceId = this.getDeviceId();
+      const appVersion = this.getAppVersion();
       // eslint-disable-next-line no-restricted-syntax
-      console.log(`Initializing analytics session as user ${userId}, device ${deviceId}`);
+      console.log(
+        `Initializing analytics session as user ${userId}, device ${deviceId} (version ${appVersion})`,
+      );
       this._amplitude = amplitude.getInstance();
       this._amplitude.init(amplitudeApiKey);
       this._amplitude.setUserId(userId);
       this._amplitude.setDeviceId(deviceId);
+      this._amplitude.setVersionName(appVersion);
       this._amplitude.logEvent(AppEvent.APP_INIT);
     }
+  }
+
+  getAppVersion(): string {
+    return OsContextSingleton?.getAppVersion() ?? "0.0.0";
   }
 
   getUserId(): string {

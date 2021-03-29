@@ -11,6 +11,7 @@ import type { OsContext, OsContextForwardedEvent } from "@foxglove-studio/app/Os
 import { NetworkInterface } from "@foxglove-studio/app/OsContext";
 import { PreloaderSockets } from "@foxglove/electron-socket/preloader";
 
+import appPackage from "../package.json";
 import LocalFileStorage from "./LocalFileStorage";
 
 if (typeof process.env.SENTRY_DSN === "string") {
@@ -88,6 +89,9 @@ const ctx: OsContext = {
   },
   getMachineId: (): string => {
     return machineIdSync(true);
+  },
+  getAppVersion: (): string => {
+    return appPackage.version;
   },
 
   // Context bridge cannot expose "classes" only exposes functions
