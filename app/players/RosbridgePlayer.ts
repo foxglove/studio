@@ -183,7 +183,7 @@ export default class RosbridgePlayer implements Player {
       this.setSubscriptions(this._requestedSubscriptions);
       this._emitState();
     } catch (error) {
-      sendNotification("Error in fetching topics and datatypes", error, "app", "error");
+      sendNotification("Error connecting to rosbridge", error, "app", "error");
     } finally {
       // Regardless of what happens, request topics again in a little bit.
       this._requestTopicsTimeout = setTimeout(this._requestTopics, 3000);

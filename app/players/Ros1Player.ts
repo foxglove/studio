@@ -108,7 +108,7 @@ export default class Ros1Player implements Player {
       this.setSubscriptions(this.#requestedSubscriptions);
       this.#emitState();
     } catch (error) {
-      sendNotification("Error in fetching topics and datatypes", error, "app", "error");
+      sendNotification("Error connecting to ROS", error, "app", "error");
     } finally {
       // Regardless of what happens, request topics again in a little bit.
       this.#requestTopicsTimeout = setTimeout(this.#requestTopics, 3000);
