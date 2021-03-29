@@ -118,8 +118,8 @@ export default class RosbridgePlayer implements Player {
       if (!this._sentConnectionClosedNotification) {
         this._sentConnectionClosedNotification = true;
         sendNotification(
-          "WebSocket connection failed",
-          `Check that the WebSocket server at ${this._url} reachable.`,
+          "Rosbridge connection failed",
+          `Check that the rosbridge WebSocket server at ${this._url} is reachable.`,
           "user",
           "error",
         );
