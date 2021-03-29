@@ -165,6 +165,8 @@ async function getPlayerBuilderFromUserSelection(
     }
     case "ros1-core": {
       const url = await prompt({
+        title: "ROS 1 TCP connection",
+        placeholder: "localhost:11311",
         value: OsContextSingleton?.getEnvVar("ROS_MASTER_URI") ?? "localhost:11311",
         transformer: (str) => {
           const result = parseInputUrl(str, "ros:", {
@@ -190,7 +192,9 @@ async function getPlayerBuilderFromUserSelection(
     }
     case "ws": {
       const url = await prompt({
+        title: "WebSocket connection",
         placeholder: "ws://localhost:9090",
+        value: "ws://localhost:9090",
         transformer: (str) => {
           const result = parseInputUrl(str, "http:", {
             "http:": { protocol: "ws:", port: 80 },
@@ -218,6 +222,7 @@ async function getPlayerBuilderFromUserSelection(
     }
     case "http": {
       const url = await prompt({
+        title: "Remote bag file",
         placeholder: "https://example.com/file.bag",
         transformer: (str) => {
           const result = parseInputUrl(str, "https:", {
@@ -227,7 +232,7 @@ async function getPlayerBuilderFromUserSelection(
           });
           if (result == undefined) {
             throw new AppError(
-              "Invalid rosbag URL. Use a http:// or https:// URL of a web hosted bag file.",
+              "Invalid bag URL. Use a http:// or https:// URL of a web hosted bag file.",
             );
           }
           return result;

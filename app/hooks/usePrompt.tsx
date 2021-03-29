@@ -17,12 +17,18 @@ const ModalContent = styled.div`
   width: 300px;
 `;
 
+const ModalTitle = styled.h2`
+  font-size: 1.5em;
+  margin-bottom: 1em;
+`;
+
 const ModalActions = styled.div`
   padding-top: 10px;
   text-align: right;
 `;
 
 type PromptOptions = {
+  title?: string;
   placeholder?: string;
   value?: string;
 
@@ -34,15 +40,13 @@ type PromptOptions = {
   transformer?: (value: string) => string;
 };
 
-type ModalPromptProps = {
+type ModalPromptProps = PromptOptions & {
   onComplete: (value: string | undefined) => void;
-  placeholder?: string;
-  value?: string;
-  transformer?: (value: string) => string;
 };
 
 function ModalPrompt({
   onComplete,
+  title,
   placeholder,
   value: initialValue,
   transformer,
@@ -65,8 +69,9 @@ function ModalPrompt({
     <Modal onRequestClose={() => onComplete(undefined)}>
       <ModalContent>
         <div>
+          {title != undefined && <ModalTitle>{title}</ModalTitle>}
           <TextField
-            focusOnMount
+            selectOnMount
             placeholder={placeholder}
             value={value}
             onChange={setValue}
@@ -112,9 +117,7 @@ export function usePrompt(): (options?: PromptOptions) => Promise<string | undef
       return new Promise<string | undefined>((resolve) => {
         render(
           <ModalPrompt
-            placeholder={options?.placeholder}
-            value={options?.value}
-            transformer={options?.transformer}
+            {...options}
             onComplete={(value) => {
               unmountComponentAtNode(container);
               resolve(value);
