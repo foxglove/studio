@@ -26,16 +26,4 @@ export default {
     developmentDefault: false,
     productionDefault: false,
   },
-  ros1Native: {
-    name: "ROS1 Native Connector",
-    description: (
-      <>
-        Connect directly to a running ROS1 robot. The rosmaster instance and ROS nodes must be
-        addressable from this computer. If you need to specify a network interface to bind to, set
-        the ROS_HOSTNAME environment variable before launching Foxglove Studio.
-      </>
-    ),
-    developmentDefault: false,
-    productionDefault: false,
-  },
 } as FeatureDescriptions;
