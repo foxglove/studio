@@ -4,6 +4,7 @@
 
 import { init as initSentry } from "@sentry/electron";
 import { contextBridge, ipcRenderer } from "electron";
+import { machineIdSync } from "node-machine-id";
 import os from "os";
 
 import type { OsContext, OsContextForwardedEvent } from "@foxglove-studio/app/OsContext";
@@ -84,6 +85,9 @@ const ctx: OsContext = {
       }
     }
     return output;
+  },
+  getMachineId: (): string => {
+    return machineIdSync(true);
   },
 
   // Context bridge cannot expose "classes" only exposes functions

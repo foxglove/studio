@@ -9,6 +9,7 @@ import "@foxglove-studio/app/styles/global.scss";
 
 import App from "@foxglove-studio/app/App";
 import { getGlobalConfig } from "@foxglove-studio/app/GlobalConfig";
+import { Analytics } from "@foxglove-studio/app/util/Analytics";
 import installDevtoolsFormatters from "@foxglove-studio/app/util/installDevtoolsFormatters";
 import overwriteFetch from "@foxglove-studio/app/util/overwriteFetch";
 import waitForFonts from "@foxglove-studio/app/util/waitForFonts";
@@ -17,6 +18,8 @@ import { Sockets } from "@foxglove/electron-socket/renderer";
 if (typeof process.env.SENTRY_DSN === "string") {
   initSentry({ dsn: process.env.SENTRY_DSN });
 }
+
+new Analytics({ amplitudeApiKey: process.env.AMPLITUDE_API_KEY });
 
 installDevtoolsFormatters();
 overwriteFetch();
