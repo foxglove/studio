@@ -72,8 +72,8 @@ export default class RosbridgePlayer implements Player {
   _bobjectTopics: Set<string> = new Set();
   _parsedTopics: Set<string> = new Set();
   _receivedBytes: number = 0;
-  #sentConnectionClosedNotification = false;
-  #sentTopicsErrorNotification = false;
+  _sentConnectionClosedNotification = false;
+  _sentTopicsErrorNotification = false;
 
   constructor(url: string) {
     this._url = url;
@@ -115,8 +115,8 @@ export default class RosbridgePlayer implements Player {
       delete this._rosClient;
       this._emitState();
 
-      if (!this.#sentConnectionClosedNotification) {
-        this.#sentConnectionClosedNotification = true;
+      if (!this._sentConnectionClosedNotification) {
+        this._sentConnectionClosedNotification = true;
         sendNotification(
           "WebSocket connection failed",
           `Check that the WebSocket server at ${this._url} reachable.`,
@@ -139,9 +139,11 @@ export default class RosbridgePlayer implements Player {
     }
 
     try {
-      const result = await new Promise<any>((resolve, reject) =>
-        rosClient.getTopicsAndRawTypes(resolve, reject),
-      );
+      const result = await new Promise<{
+        topics: string[];
+        types: string[];
+        typedefs_full_text: string[];
+      }>((resolve, reject) => rosClient.getTopicsAndRawTypes(resolve, reject));
 
       const topicsMissingDatatypes: string[] = [];
       const topics = [];
@@ -149,11 +151,11 @@ export default class RosbridgePlayer implements Player {
       const messageReaders: Record<string, MessageReader> = {};
 
       for (let i = 0; i < result.topics.length; i++) {
-        const topicName = result.topics[i];
+        const topicName = result.topics[i] as string;
         const type = result.types[i];
         const messageDefinition = result.typedefs_full_text[i];
 
-        if (!type || !messageDefinition) {
+        if (type == undefined || messageDefinition == undefined) {
           topicsMissingDatatypes.push(topicName);
           continue;
         }
@@ -193,8 +195,8 @@ export default class RosbridgePlayer implements Player {
       this.setSubscriptions(this._requestedSubscriptions);
       this._emitState();
     } catch (error) {
-      if (!this.#sentTopicsErrorNotification) {
-        this.#sentTopicsErrorNotification = true;
+      if (!this._sentTopicsErrorNotification) {
+        this._sentTopicsErrorNotification = true;
         sendNotification("Error in fetching topics and datatypes", error, "app", "error");
       }
     } finally {
