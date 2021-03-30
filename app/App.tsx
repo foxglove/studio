@@ -66,7 +66,10 @@ import experimentalFeatures from "@foxglove-studio/app/experimentalFeatures";
 import welcomeLayout from "@foxglove-studio/app/layouts/welcomeLayout";
 import { PlayerPresence } from "@foxglove-studio/app/players/types";
 import getGlobalStore from "@foxglove-studio/app/store/getGlobalStore";
+import { ImportPanelLayoutPayload } from "@foxglove-studio/app/types/panels";
 import inAutomatedRunMode from "@foxglove-studio/app/util/inAutomatedRunMode";
+
+type TestableWindow = Window & { setPanelLayout?: (payload: ImportPanelLayoutPayload) => void };
 
 const SToolbarItem = styled.div`
   flex: 0 0 auto;
@@ -123,7 +126,8 @@ function Root() {
       containerRef.current.focus();
     }
     // Add a hook for integration tests.
-    (window as any).setPanelLayout = (payload: any) => dispatch(importPanelLayout(payload));
+    (window as TestableWindow).setPanelLayout = (payload: ImportPanelLayoutPayload) =>
+      dispatch(importPanelLayout(payload));
 
     OsContextSingleton?.addIpcEventListener("enter-full-screen", () => setFullScreen(true));
     OsContextSingleton?.addIpcEventListener("leave-full-screen", () => setFullScreen(false));
