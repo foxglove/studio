@@ -13,6 +13,7 @@ export function NativeFileMenuPlayerSelection(): ReactElement {
 
   useEffect(() => {
     for (const item of availableSources) {
+      OsContextSingleton?.menuRemoveInputSource(item.name);
       OsContextSingleton?.menuAddInputSource(item.name, () => {
         selectSource(item);
       });
