@@ -1654,7 +1654,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@emotion/hash@npm:0.8.0":
+"@emotion/hash@npm:0.8.0, @emotion/hash@npm:^0.8.0":
   version: 0.8.0
   resolution: "@emotion/hash@npm:0.8.0"
   checksum: 8fd781e18428745d6c7121bebf3965cad12c61f3bd5fb773e46f16f1d7b7ae1346770df438fcfe8bc73ecf6762a54baef7cf259a694575d4f06cabb79ebcf7c0
@@ -1677,6 +1677,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@emotion/memoize@npm:^0.7.4":
+  version: 0.7.5
+  resolution: "@emotion/memoize@npm:0.7.5"
+  checksum: 09f5290283c50ae32f0808bebacf7eaac7ecdbd799a27698479bd03821f3acbd2ac512adcf0ae43394fed804007d6cd18de0c49475a14cd020d5f18fc7ab72bf
+  languageName: node
+  linkType: hard
+
 "@emotion/serialize@npm:^0.11.15, @emotion/serialize@npm:^0.11.16":
   version: 0.11.16
   resolution: "@emotion/serialize@npm:0.11.16"
@@ -1687,6 +1694,19 @@ __metadata:
     "@emotion/utils": 0.11.3
     csstype: ^2.5.7
   checksum: b7d9a94a039ea5e86b0daccc29f0c40fbbda7004b1fde9ee14be38463c3aaabdd027b38c5c0e580f66883fb6e3b49160292843b0e14efe49e662a520c38f4c15
+  languageName: node
+  linkType: hard
+
+"@emotion/serialize@npm:^1.0.0":
+  version: 1.0.1
+  resolution: "@emotion/serialize@npm:1.0.1"
+  dependencies:
+    "@emotion/hash": ^0.8.0
+    "@emotion/memoize": ^0.7.4
+    "@emotion/unitless": ^0.7.5
+    "@emotion/utils": ^1.0.0
+    csstype: ^3.0.2
+  checksum: 88270ed68269897ec80c56e994bef4e3dd7aa7efb90ee0e41ed62fbefcf9dfa69385b64127a1f5f8de64d7ed1307e9e9da09b754e607b55a2751384e6b317824
   languageName: node
   linkType: hard
 
@@ -1732,7 +1752,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@emotion/unitless@npm:0.7.5, @emotion/unitless@npm:^0.7.4":
+"@emotion/unitless@npm:0.7.5, @emotion/unitless@npm:^0.7.4, @emotion/unitless@npm:^0.7.5":
   version: 0.7.5
   resolution: "@emotion/unitless@npm:0.7.5"
   checksum: 0be366ef09860037ef08aed0450cb5510f4be25886005e2f120f8e8b7385de6b41ac47df5b9bd55781e5153853e9ed5f49aa517dcbad34cc23bd8afb0201932a
@@ -1743,6 +1763,13 @@ __metadata:
   version: 0.11.3
   resolution: "@emotion/utils@npm:0.11.3"
   checksum: b5c3a22204a878eafa8deb362493b48c3f3a7f7ec3e5a18634d14aa8d5c9d8274db0a9d0206b3c124fa170640880fbcda987971699a1cf69355f2cec994da487
+  languageName: node
+  linkType: hard
+
+"@emotion/utils@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@emotion/utils@npm:1.0.0"
+  checksum: 56b2c5a45f1d9fed3f666fe921347ba8755827bdf9471fe768ec5cbec353bef70072a6890768c0f22a43f54c6af1c3aaa3512913c1a6af862c479dbe3e3b45b1
   languageName: node
   linkType: hard
 
@@ -1802,7 +1829,7 @@ __metadata:
     "@types/react-input-autosize": 2.2.0
     "@types/react-outside-click-handler": 1.3.0
     "@types/react-redux": 7.1.16
-    "@types/react-select": 1.2.0
+    "@types/react-select": 4.0.13
     "@types/react-table": 7.0.28
     "@types/react-virtualized": 9.21.11
     "@types/react-virtualized-select": 3.0.8
@@ -4576,7 +4603,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:17.0.3, @types/react-dom@npm:>=16.9.0":
+"@types/react-dom@npm:*, @types/react-dom@npm:17.0.3, @types/react-dom@npm:>=16.9.0":
   version: 17.0.3
   resolution: "@types/react-dom@npm:17.0.3"
   dependencies:
@@ -4624,12 +4651,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-select@npm:1.2.0":
-  version: 1.2.0
-  resolution: "@types/react-select@npm:1.2.0"
+"@types/react-select@npm:4.0.13":
+  version: 4.0.13
+  resolution: "@types/react-select@npm:4.0.13"
   dependencies:
+    "@emotion/serialize": ^1.0.0
     "@types/react": "*"
-  checksum: 5e11fd8a0736f811ea995fa57b23832c242a09827ecdf131a85b13e303ff56ad482e4890cec61f0a03590472b964dd2951e948f79057490674bc857133946817
+    "@types/react-dom": "*"
+    "@types/react-transition-group": "*"
+  checksum: 1ec421aecdb9f07416c00fba060e562838d9138574b6bbb2c06f4b7b23c89e8293835b1cf3ba4d92cc1dc4bf2757faa71e4b77eec45575e617245ba4b092b9de
   languageName: node
   linkType: hard
 
@@ -4666,6 +4696,15 @@ __metadata:
   dependencies:
     "@types/react": "*"
   checksum: bd3f8c6c2ae23f270b465106ae81c7e72dc97b64f83b980239bd45a69dcc9f41aada4183f16634320e8d02cede942e46258366a596dbefaae558abad236f4ab6
+  languageName: node
+  linkType: hard
+
+"@types/react-transition-group@npm:*":
+  version: 4.4.1
+  resolution: "@types/react-transition-group@npm:4.4.1"
+  dependencies:
+    "@types/react": "*"
+  checksum: 7d9d9ecf8187902c129c4bf99ee911658f5cf97ffe56f31703be06df70b5209d49515386e26be540508436c8383d2cb1cdc287777103c5eb5106a1027281e8ec
   languageName: node
   linkType: hard
 
