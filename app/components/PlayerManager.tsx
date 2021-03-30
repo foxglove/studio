@@ -42,6 +42,7 @@ import {
 import useElectronFilesToOpen from "@foxglove-studio/app/hooks/useElectronFilesToOpen";
 import { GlobalVariables } from "@foxglove-studio/app/hooks/useGlobalVariables";
 import { usePrompt } from "@foxglove-studio/app/hooks/usePrompt";
+import AnalyticsMetricsCollector from "@foxglove-studio/app/players/AnalyticsMetricsCollector";
 import OrderedStampPlayer from "@foxglove-studio/app/players/OrderedStampPlayer";
 import Ros1Player from "@foxglove-studio/app/players/Ros1Player";
 import RosbridgePlayer from "@foxglove-studio/app/players/RosbridgePlayer";
@@ -297,7 +298,7 @@ function PlayerManager({
   const buildPlayerOptions: BuildPlayerOptions = useShallowMemo({
     diskBagCaching: useExperimentalFeature("diskBagCaching"),
     unlimitedMemoryCache: useExperimentalFeature("unlimitedMemoryCache"),
-    metricsCollector: useAnalytics(),
+    metricsCollector: new AnalyticsMetricsCollector(useAnalytics()),
   });
 
   useEffect(() => {
