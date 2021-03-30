@@ -4,7 +4,7 @@
 
 import { createContext, useContext } from "react";
 
-import { Analytics } from "@foxglove-studio/app/util/Analytics";
+import { Analytics } from "@foxglove-studio/app/services/Analytics";
 
 const AnalyticsContext = createContext<Analytics | undefined>(undefined);
 

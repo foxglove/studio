@@ -5,7 +5,7 @@
 import { PropsWithChildren, useMemo } from "react";
 
 import AnalyticsContext from "@foxglove-studio/app/context/AnalyticsContext";
-import { Analytics } from "@foxglove-studio/app/util/Analytics";
+import { Analytics } from "@foxglove-studio/app/services/Analytics";
 
 export default function AnalyticsProvider(
   props: PropsWithChildren<{ amplitudeApiKey?: string }>,
