@@ -24,7 +24,7 @@
     "test:watch": "NODE_OPTIONS='-r ts-node/register' jest --watch"
   },
   "dependencies": {
-    "@foxglove/panacea-fetch": "workspace:packages/panacea-fetch",
+    "@foxglove/just-fetch": "workspace:packages/just-fetch",
     "byte-base64": "1.1.0",
     "sax": "1.2.4",
     "web-encoding": "1.1.0",

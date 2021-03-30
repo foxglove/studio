@@ -1,6 +1,0 @@
-parserOptions:
-  project: packages/panacea-fetch/tsconfig.json
-
-ignorePatterns:
-  - dist/
-  - dist.browser/

@@ -1916,9 +1916,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foxglove/panacea-fetch@workspace:packages/panacea-fetch":
+"@foxglove/just-fetch@workspace:packages/just-fetch":
   version: 0.0.0-use.local
-  resolution: "@foxglove/panacea-fetch@workspace:packages/panacea-fetch"
+  resolution: "@foxglove/just-fetch@workspace:packages/just-fetch"
   dependencies:
     node-fetch: ^3.0.0-beta.9
     tslib: 2.1.0
@@ -1986,7 +1986,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/xmlrpc@workspace:packages/xmlrpc"
   dependencies:
-    "@foxglove/panacea-fetch": "workspace:packages/panacea-fetch"
+    "@foxglove/just-fetch": "workspace:packages/just-fetch"
     "@jest/types": 26.6.2
     "@types/sax": ^1
     byte-base64: 1.1.0

@@ -1,5 +1,5 @@
 {
-  "name": "@foxglove/panacea-fetch",
+  "name": "@foxglove/just-fetch",
   "version": "0.0.1",
   "description": "Isomorphic ponyfill wrapping native browser fetch and node-fetch",
   "license": "MPL-2.0",
@@ -14,13 +14,13 @@
   },
   "homepage": "https://foxglove.dev/",
   "main": "index.ts",
-  "browser": "browser.ts",
+  "browser": "browser/index.ts",
   "files": [
-    "browser.ts",
+    "browser/index.ts",
     "index.ts"
   ],
   "scripts": {
-    "build": "tsc && tsc -p tsconfig.browser.json"
+    "build": "tsc && tsc -p browser/tsconfig.json"
   },
   "devDependencies": {
     "node-fetch": "^3.0.0-beta.9",
