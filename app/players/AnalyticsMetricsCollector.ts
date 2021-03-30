@@ -34,12 +34,12 @@ export default class AnalyticsMetricsCollector implements PlayerMetricsCollector
     this.logEvent(AppEvent.PLAYER_PLAY, { speed });
   }
 
-  seek(time: Time): void {
-    this.logEvent(AppEvent.PLAYER_SEEK, { time: toSec(time) });
+  seek(_time: Time): void {
+    // NOTE: This event fires in more cases than user interaction
   }
 
-  setSpeed(speed: number): void {
-    this.logEvent(AppEvent.PLAYER_SET_SPEED, { speed });
+  setSpeed(_speed: number): void {
+    // NOTE: This event fires in more cases than user interaction
   }
 
   pause(): void {
