@@ -20,6 +20,7 @@ import { MarkerMatcher } from "@foxglove-studio/app/panels/ThreeDimensionalViz/T
 import Transforms from "@foxglove-studio/app/panels/ThreeDimensionalViz/Transforms";
 import { cast, BobjectMessage, Topic, Frame, Message } from "@foxglove-studio/app/players/types";
 import {
+  BinaryPath,
   BinaryMarker,
   BinaryPolygonStamped,
   BinaryPoseStamped,
@@ -51,6 +52,7 @@ import {
   VISUALIZATION_MSGS_MARKER_ARRAY_DATATYPE,
   POSE_STAMPED_DATATYPE,
   NAV_MSGS_OCCUPANCY_GRID_DATATYPE,
+  NAV_MSGS_PATH_DATATYPE,
   POINT_CLOUD_DATATYPE,
   SENSOR_MSGS_LASER_SCAN_DATATYPE,
   GEOMETRY_MSGS_POLYGON_STAMPED_DATATYPE,
@@ -866,6 +868,27 @@ export default class SceneBuilder implements MarkerProvider {
         this._consumeOccupancyGrid(topic, deepParse(message));
 
         break;
+      case NAV_MSGS_PATH_DATATYPE: {
+        const topicSettings = this._settingsByKey[`t:${topic}`];
+
+        const pathStamped = cast<BinaryPath>(message);
+        if (pathStamped.poses().length() === 0) {
+          break;
+        }
+        const newMessage = {
+          header: deepParse(pathStamped.header()),
+          // Future: display orientation of the poses in the path
+          points: pathStamped
+            .poses()
+            .toArray()
+            .map((pose) => deepParse(pose.pose().position())),
+          closed: false,
+          scale: { x: 0.2 },
+          color: topicSettings?.overrideColor ?? { r: 0.5, g: 0.5, b: 1, a: 1 },
+        };
+        this._consumeNonMarkerMessage(topic, newMessage, 4 /* line strip */, message);
+        break;
+      }
       case POINT_CLOUD_DATATYPE:
         this._consumeNonMarkerMessage(topic, deepParse(message), 102);
 
@@ -965,16 +988,16 @@ export default class SceneBuilder implements MarkerProvider {
         }
 
         // Highlight if marker matches any of this topic's highlightMarkerMatchers; dim other markers
-        if (Object.keys(this._highlightMarkerMatchersByTopic).length > 0) {
-          const markerMatches = (this._highlightMarkerMatchersByTopic[topic.name] || []).some(
-            ({ checks = [] }) =>
-              checks.every(({ markerKeyPath, value }) => {
-                const markerValue = _.get(message, markerKeyPath as any);
-                return value === markerValue;
-              }),
-          );
-          marker.interactionData.highlighted = markerMatches;
-        }
+        // Markers that are not re-processed on this frame (i.e. older markers whose lifetime has
+        // not expired) do not get a new copy of interactionData, so they always need to be reset.
+        const markerMatches = (this._highlightMarkerMatchersByTopic[topic.name] || []).some(
+          ({ checks = [] }) =>
+            checks.every(({ markerKeyPath, value }) => {
+              const markerValue = _.get(message, markerKeyPath as any);
+              return value === markerValue;
+            }),
+        );
+        marker.interactionData.highlighted = markerMatches;
 
         // TODO(bmc): once we support more topic settings
         // flesh this out to be more marker type agnostic

@@ -191,7 +191,18 @@ export function makeConfig(_: unknown, argv: WebpackArgv): Configuration {
         // available options: https://github.com/Microsoft/monaco-editor-webpack-plugin#options
         languages: ["typescript", "javascript"],
       }),
-      new ForkTsCheckerWebpackPlugin(),
+      new ForkTsCheckerWebpackPlugin({
+        typescript: {
+          configOverwrite: {
+            compilerOptions: {
+              // During hot reloading and development it is useful to comment out code while iterating.
+              // We ignore errors from unused locals to avoid having to also comment
+              // those out while iterating.
+              noUnusedLocals: !(isDev && isServe),
+            },
+          },
+        },
+      }),
     ],
     node: {
       __dirname: true,
@@ -205,6 +216,7 @@ export default (env: unknown, argv: WebpackArgv): Configuration => {
   config.plugins?.push(
     new HtmlWebpackPlugin({
       templateContent: `
+        <!doctype html>
         <html>
           <head><meta charset="utf-8"></head>
           <script>global = globalThis;</script>

@@ -52,6 +52,7 @@ export default class Ros1Player implements Player {
   private _parsedTopics: Set<string> = new Set();
   private _hasReceivedMessage = false;
   private _metricsCollector: PlayerMetricsCollectorInterface;
+  private _sentTopicsErrorNotification = false;
 
   constructor(url: string, metricsCollector: PlayerMetricsCollectorInterface) {
     this._metricsCollector = metricsCollector;
@@ -116,7 +117,10 @@ export default class Ros1Player implements Player {
       this.setSubscriptions(this._requestedSubscriptions);
       this._emitState();
     } catch (error) {
-      sendNotification("Error connecting to ROS", error, "app", "error");
+      if (!this._sentTopicsErrorNotification) {
+        this._sentTopicsErrorNotification = true;
+        sendNotification("Error connecting to ROS", error, "app", "error");
+      }
     } finally {
       // Regardless of what happens, request topics again in a little bit.
       this._requestTopicsTimeout = setTimeout(this._requestTopics, 3000);
