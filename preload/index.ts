@@ -88,7 +88,7 @@ const ctx: OsContext = {
     return output;
   },
   getMachineId: (): string => {
-    return machineIdSync(true);
+    return machineIdSync();
   },
   getAppVersion: (): string => {
     return appPackage.version;

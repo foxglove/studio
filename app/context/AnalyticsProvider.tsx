@@ -5,16 +5,29 @@
 import { PropsWithChildren, useMemo } from "react";
 
 import AnalyticsContext from "@foxglove-studio/app/context/AnalyticsContext";
+import { useAsyncAppConfigurationValue } from "@foxglove-studio/app/hooks/useAsyncAppConfigurationValue";
 import { Analytics } from "@foxglove-studio/app/services/Analytics";
 
 export default function AnalyticsProvider(
   props: PropsWithChildren<{ amplitudeApiKey?: string }>,
 ): React.ReactElement {
+  const [telemetryState] = useAsyncAppConfigurationValue<boolean>("telemetry.telemetryEnabled");
+  const optOut = !(telemetryState.value ?? true);
+  const ready = !telemetryState.loading;
+
   const analytics = useMemo(() => {
     return new Analytics({
-      amplitudeApiKey: props.amplitudeApiKey ?? process.env.AMPLITUDE_API_KEY,
+      optOut,
+      amplitudeApiKey:
+        props.amplitudeApiKey ??
+        process.env.AMPLITUDE_API_KEY ??
+        "5901954258feaf8c2362f75b59d4e3cd",
     });
-  }, [props.amplitudeApiKey]);
+  }, [optOut, props.amplitudeApiKey]);
 
-  return <AnalyticsContext.Provider value={analytics}>{props.children}</AnalyticsContext.Provider>;
+  return (
+    <AnalyticsContext.Provider value={analytics}>
+      {ready ? props.children : undefined}
+    </AnalyticsContext.Provider>
+  );
 }

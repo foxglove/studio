@@ -4,22 +4,30 @@
 
 import { Time } from "rosbag";
 
+import { PlayerSourceDefinition } from "@foxglove-studio/app/context/PlayerSelectionContext";
 import {
   PlayerMetricsCollectorInterface,
   SubscribePayload,
 } from "@foxglove-studio/app/players/types";
 import { Analytics, AppEvent } from "@foxglove-studio/app/services/Analytics";
-import { toSec } from "@foxglove-studio/app/util/time";
+
+type EventData = { [key: string]: string | number | boolean };
 
 export default class AnalyticsMetricsCollector implements PlayerMetricsCollectorInterface {
+  metadata: EventData = {};
+  playerType?: PlayerSourceDefinition;
   private _analytics: Analytics;
 
   constructor(analytics: Analytics) {
     this._analytics = analytics;
   }
 
-  logEvent(event: AppEvent, data?: unknown): void {
-    this._analytics.logEvent(event, data);
+  setProperty(key: string, value: string | number | boolean): void {
+    this.metadata[key] = value;
+  }
+
+  logEvent(event: AppEvent, data?: EventData): void {
+    this._analytics.logEvent(event, { ...this.metadata, ...data });
   }
 
   playerConstructed(): void {

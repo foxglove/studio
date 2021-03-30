@@ -6,10 +6,13 @@ import amplitude from "amplitude-js";
 import { v4 as uuidv4 } from "uuid";
 
 import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
+import Logger from "@foxglove-studio/app/util/Logger";
 import Storage from "@foxglove-studio/app/util/Storage";
 
 const UUID_ZERO = "00000000-0000-0000-0000-000000000000";
 const USER_ID_KEY = "analytics_user_id";
+
+const log = new Logger(__filename);
 
 export enum AppEvent {
   APP_INIT = "APP_INIT",
@@ -28,15 +31,15 @@ export class Analytics {
   private _amplitude?: amplitude.AmplitudeClient;
   private _storage = new Storage();
 
-  constructor(options: { amplitudeApiKey: string | undefined }) {
+  constructor(options: { optOut?: boolean; amplitudeApiKey: string | undefined }) {
     const amplitudeApiKey = options.amplitudeApiKey;
-    if (amplitudeApiKey != undefined && amplitudeApiKey.length > 0) {
+    const optOut = options.optOut ?? false;
+    if (!optOut && amplitudeApiKey != undefined && amplitudeApiKey.length > 0) {
       const userId = this.getUserId();
       const deviceId = this.getDeviceId();
       const appVersion = this.getAppVersion();
-      // eslint-disable-next-line no-restricted-syntax
-      console.log(
-        `Initializing analytics session as user ${userId}, device ${deviceId} (version ${appVersion})`,
+      log.info(
+        `Initializing telemetry as user ${userId}, device ${deviceId} (version ${appVersion})`,
       );
       this._amplitude = amplitude.getInstance();
       this._amplitude.init(amplitudeApiKey);
@@ -44,6 +47,8 @@ export class Analytics {
       this._amplitude.setDeviceId(deviceId);
       this._amplitude.setVersionName(appVersion);
       this._amplitude.logEvent(AppEvent.APP_INIT);
+    } else {
+      log.info("Telemetry is disabled");
     }
   }
 

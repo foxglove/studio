@@ -146,6 +146,8 @@ async function getPlayerBuilderFromUserSelection(
   prompt: ReturnType<typeof usePrompt>,
   options: BuildPlayerOptions,
 ): Promise<(() => Promise<BuiltPlayer>) | undefined> {
+  options.metricsCollector.setProperty("player", definition.type);
+
   switch (definition.type) {
     case "file": {
       let file: File;
