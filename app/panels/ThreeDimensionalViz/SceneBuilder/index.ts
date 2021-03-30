@@ -997,6 +997,10 @@ export default class SceneBuilder implements MarkerProvider {
               }),
           );
           marker.interactionData.highlighted = markerMatches;
+        } else {
+          // Markers that are not re-processed on this frame (i.e. older markers whose lifetime has
+          // not expired) do not get a new copy of interactionData, so they need to be reset.
+          marker.interactionData.highlighted = false;
         }
 
         // TODO(bmc): once we support more topic settings
