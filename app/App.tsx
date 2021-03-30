@@ -52,6 +52,7 @@ import ShortcutsModal from "@foxglove-studio/app/components/ShortcutsModal";
 import SpinningLoadingIcon from "@foxglove-studio/app/components/SpinningLoadingIcon";
 import TinyConnectionPicker from "@foxglove-studio/app/components/TinyConnectionPicker";
 import Toolbar from "@foxglove-studio/app/components/Toolbar";
+import AnalyticsProvider from "@foxglove-studio/app/context/AnalyticsProvider";
 import { useAppConfiguration } from "@foxglove-studio/app/context/AppConfigurationContext";
 import ExperimentalFeaturesLocalStorageProvider from "@foxglove-studio/app/context/ExperimentalFeaturesLocalStorageProvider";
 import LinkHandlerContext from "@foxglove-studio/app/context/LinkHandlerContext";
@@ -282,19 +283,21 @@ export default function App(): ReactElement {
   return (
     <OsContextAppConfigurationProvider>
       <Provider store={globalStore}>
-        <ExperimentalFeaturesLocalStorageProvider features={experimentalFeatures}>
-          <ErrorBoundary>
-            <OsContextLayoutStorageProvider>
-              <LayoutStorageReduxAdapter />
-              <PlayerManager playerSources={playerSources}>
-                <NativeFileMenuPlayerSelection />
-                <DndProvider backend={HTML5Backend}>
-                  <Root />
-                </DndProvider>
-              </PlayerManager>
-            </OsContextLayoutStorageProvider>
-          </ErrorBoundary>
-        </ExperimentalFeaturesLocalStorageProvider>
+        <AnalyticsProvider>
+          <ExperimentalFeaturesLocalStorageProvider features={experimentalFeatures}>
+            <ErrorBoundary>
+              <OsContextLayoutStorageProvider>
+                <LayoutStorageReduxAdapter />
+                <PlayerManager playerSources={playerSources}>
+                  <NativeFileMenuPlayerSelection />
+                  <DndProvider backend={HTML5Backend}>
+                    <Root />
+                  </DndProvider>
+                </PlayerManager>
+              </OsContextLayoutStorageProvider>
+            </ErrorBoundary>
+          </ExperimentalFeaturesLocalStorageProvider>
+        </AnalyticsProvider>
       </Provider>
     </OsContextAppConfigurationProvider>
   );

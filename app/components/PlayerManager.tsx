@@ -27,6 +27,7 @@ import {
   MaybePlayer,
   MessagePipelineProvider,
 } from "@foxglove-studio/app/components/MessagePipeline";
+import { useAnalytics } from "@foxglove-studio/app/context/AnalyticsContext";
 import { useExperimentalFeature } from "@foxglove-studio/app/context/ExperimentalFeaturesContext";
 import PlayerSelectionContext, {
   PlayerSelection,
@@ -178,7 +179,7 @@ async function getPlayerBuilderFromUserSelection(
         );
       }
       return async () => ({
-        player: new Ros1Player(url),
+        player: new Ros1Player(url, options.metricsCollector),
         sources: [url],
       });
     }
@@ -198,7 +199,7 @@ async function getPlayerBuilderFromUserSelection(
       }
 
       return async () => ({
-        player: new RosbridgePlayer(url),
+        player: new RosbridgePlayer(url, options.metricsCollector),
         sources: [url],
       });
     }
@@ -293,9 +294,10 @@ function PlayerManager({
     [setDiagnostics, setLogs, setRosLib, initialMessageOrder],
   );
 
-  const buildPlayerOptions = useShallowMemo({
+  const buildPlayerOptions: BuildPlayerOptions = useShallowMemo({
     diskBagCaching: useExperimentalFeature("diskBagCaching"),
     unlimitedMemoryCache: useExperimentalFeature("unlimitedMemoryCache"),
+    metricsCollector: useAnalytics(),
   });
 
   useEffect(() => {

@@ -28,6 +28,7 @@ import {
   Topic,
   ParsedMessageDefinitionsByTopic,
   PlayerPresence,
+  PlayerMetricsCollectorInterface,
 } from "@foxglove-studio/app/players/types";
 import { RosDatatypes } from "@foxglove-studio/app/types/RosDatatypes";
 import { objectValues } from "@foxglove-studio/app/util";
@@ -72,10 +73,14 @@ export default class RosbridgePlayer implements Player {
   _bobjectTopics: Set<string> = new Set();
   _parsedTopics: Set<string> = new Set();
   _receivedBytes: number = 0;
+  _hasReceivedMessage = false;
+  _metricsCollector: PlayerMetricsCollectorInterface;
 
-  constructor(url: string) {
+  constructor(url: string, metricsCollector: PlayerMetricsCollectorInterface) {
+    this._metricsCollector = metricsCollector;
     this._url = url;
     this._start = fromMillis(Date.now());
+    this._metricsCollector.playerConstructed();
     this._open();
   }
 
@@ -175,6 +180,10 @@ export default class RosbridgePlayer implements Player {
         );
       }
 
+      if (this._providerTopics == undefined) {
+        this._metricsCollector.initialized();
+      }
+
       this._providerTopics = sortedTopics;
       this._providerDatatypes = bagConnectionsToDatatypes(datatypeDescriptions);
       this._messageReadersByDatatype = messageReaders;
@@ -251,6 +260,8 @@ export default class RosbridgePlayer implements Player {
     if (this._rosClient) {
       this._rosClient.close();
     }
+    this._metricsCollector.close();
+    this._hasReceivedMessage = false;
   }
 
   setSubscriptions(subscriptions: SubscribePayload[]): void {
@@ -301,6 +312,12 @@ export default class RosbridgePlayer implements Player {
 
         const receiveTime = fromMillis(Date.now());
         const innerMessage = messageReader.readMessage(Buffer.from(message.bytes));
+
+        if (!this._hasReceivedMessage) {
+          this._hasReceivedMessage = true;
+          this._metricsCollector.recordTimeToFirstMsgs();
+        }
+
         if (this._bobjectTopics.has(topicName) && this._providerDatatypes) {
           this._bobjects.push({
             topic: topicName,

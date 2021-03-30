@@ -3,19 +3,34 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import amplitude from "amplitude-js";
+import { Time } from "rosbag";
 import { v4 as uuidv4 } from "uuid";
 
 import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
+import type {
+  PlayerMetricsCollectorInterface,
+  SubscribePayload,
+} from "@foxglove-studio/app/players/types";
 import Storage from "@foxglove-studio/app/util/Storage";
+import { toSec } from "@foxglove-studio/app/util/time";
 
 const UUID_ZERO = "00000000-0000-0000-0000-000000000000";
 const USER_ID_KEY = "analytics_user_id";
 
 export enum AppEvent {
   APP_INIT = "APP_INIT",
+
+  // PlayerMetricsCollectorInterface events
+  PLAYER_CONSTRUCTED = "PLAYER_CONSTRUCTED",
+  PLAYER_INITIALIZED = "PLAYER_INITIALIZED",
+  PLAYER_PLAY = "PLAYER_PLAY",
+  PLAYER_SEEK = "PLAYER_SEEK",
+  PLAYER_SET_SPEED = "PLAYER_SET_SPEED",
+  PLAYER_PAUSE = "PLAYER_PAUSE",
+  PLAYER_CLOSE = "PLAYER_CLOSE",
 }
 
-export class Analytics {
+export class Analytics implements PlayerMetricsCollectorInterface {
   private _amplitude?: amplitude.AmplitudeClient;
   private _storage = new Storage();
 
@@ -55,7 +70,7 @@ export class Analytics {
     return OsContextSingleton?.getMachineId() ?? UUID_ZERO;
   }
 
-  async logEvent(event: AppEvent, data: unknown): Promise<void> {
+  async logEvent(event: AppEvent, data?: unknown): Promise<void> {
     return new Promise((resolve) => {
       if (this._amplitude == undefined) {
         return resolve();
@@ -63,4 +78,62 @@ export class Analytics {
       this._amplitude.logEvent(event, data, () => resolve());
     });
   }
+
+  //////////////////////////////////////////////////////////////////////////////
+  // PlayerMetricsCollectorInterface interface
+  //////////////////////////////////////////////////////////////////////////////
+
+  playerConstructed(): void {
+    this.logEvent(AppEvent.PLAYER_CONSTRUCTED);
+  }
+  initialized(): void {
+    this.logEvent(AppEvent.PLAYER_INITIALIZED);
+  }
+  play(speed: number): void {
+    this.logEvent(AppEvent.PLAYER_PLAY, { speed });
+  }
+  seek(time: Time): void {
+    this.logEvent(AppEvent.PLAYER_SEEK, { time: toSec(time) });
+  }
+  setSpeed(speed: number): void {
+    this.logEvent(AppEvent.PLAYER_SET_SPEED, { speed });
+  }
+  pause(): void {
+    this.logEvent(AppEvent.PLAYER_PAUSE);
+  }
+  close(): void {
+    this.logEvent(AppEvent.PLAYER_CLOSE);
+  }
+  setSubscriptions(_subscriptions: SubscribePayload[]): void {}
+  recordBytesReceived(_bytes: number): void {}
+  recordPlaybackTime(_time: Time, _stillLoadingData: boolean): void {}
+  recordDataProviderPerformance(
+    _metadata: Readonly<{
+      type: "average_throughput";
+      totalSizeOfMessages: number;
+      numberOfMessages: number;
+      requestedRangeDuration: Time;
+      receivedRangeDuration: Time;
+      topics: readonly string[];
+      totalTransferTime: Time;
+    }>,
+  ): void {}
+  recordUncachedRangeRequest(): void {}
+  recordTimeToFirstMsgs(): void {}
+  recordDataProviderInitializePerformance(
+    _metadata: Readonly<{
+      type: "initializationPerformance";
+      dataProviderType: string;
+      metrics: { [metricName: string]: string | number };
+    }>,
+  ): void {}
+  recordDataProviderStall(
+    _metadata: Readonly<{
+      type: "data_provider_stall";
+      stallDuration: Time;
+      requestTimeUntilStall: Time;
+      transferTimeUntilStall: Time;
+      bytesReceivedBeforeStall: number;
+    }>,
+  ): void {}
 }
