@@ -18,10 +18,7 @@ export default function AnalyticsProvider(
   const analytics = useMemo(() => {
     return new Analytics({
       optOut,
-      amplitudeApiKey:
-        props.amplitudeApiKey ??
-        process.env.AMPLITUDE_API_KEY ??
-        "5901954258feaf8c2362f75b59d4e3cd",
+      amplitudeApiKey: props.amplitudeApiKey ?? process.env.AMPLITUDE_API_KEY,
     });
   }, [optOut, props.amplitudeApiKey]);
 
