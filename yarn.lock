@@ -1859,7 +1859,7 @@ __metadata:
     react: 17.0.2
     react-autocomplete: "janpaul123/react-autocomplete#bc8737070b5744069719c8fcd4e0a197192b0d48"
     react-dnd: 10.0.2
-    react-dnd-html5-backend: 10.0.2
+    react-dnd-html5-backend: 14.0.0
     react-document-events: 1.5.1
     react-dom: 17.0.2
     react-highlight-words: 0.17.0
@@ -9594,6 +9594,17 @@ __metadata:
   bin:
     dmg-license: bin/dmg-license.js
   checksum: 7db69a7c4328b6418844432c3590540abff83ff692c2cea2894a2f6563f746fde87c8b9b3c017265a04b494327a83cb6203017e8b42a6011e8a9836b48ad3541
+  languageName: node
+  linkType: hard
+
+"dnd-core@npm:14.0.0":
+  version: 14.0.0
+  resolution: "dnd-core@npm:14.0.0"
+  dependencies:
+    "@react-dnd/asap": ^4.0.0
+    "@react-dnd/invariant": ^2.0.0
+    redux: ^4.0.5
+  checksum: 828092cc1581f6c0421c5430ac0cdd6a00f0baec81a689d565192110c611dc410b826242c099a764bc7c52d6e6ee2711a1535dfdd95c05fcfbe470dafa198bac
   languageName: node
   linkType: hard
 
@@ -19118,7 +19129,16 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"react-dnd-html5-backend@npm:10.0.2, react-dnd-html5-backend@npm:^10.0.2":
+"react-dnd-html5-backend@npm:14.0.0":
+  version: 14.0.0
+  resolution: "react-dnd-html5-backend@npm:14.0.0"
+  dependencies:
+    dnd-core: 14.0.0
+  checksum: 81c10d10eae1765170ceb949c9bc9b4b3551085c15a433c212a3906245d6388a110cec2e1e0a64536ca2d0ffdade644eb4f088ee3ee4dde65ef59b693a0b9896
+  languageName: node
+  linkType: hard
+
+"react-dnd-html5-backend@npm:^10.0.2":
   version: 10.0.2
   resolution: "react-dnd-html5-backend@npm:10.0.2"
   dependencies:
@@ -19949,7 +19969,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"redux@npm:4.0.5, redux@npm:^4.0.0, redux@npm:^4.0.4":
+"redux@npm:4.0.5, redux@npm:^4.0.0, redux@npm:^4.0.4, redux@npm:^4.0.5":
   version: 4.0.5
   resolution: "redux@npm:4.0.5"
   dependencies:
