@@ -113,7 +113,7 @@ describe("Database", () => {
     return db.close();
   });
 
-  it("can create writable stream", async () => {
+  it("can create writable stream", async (done) => {
     const db = await Database.open("stream", 1, (openedDb) => {
       openedDb.createObjectStore("bar", { autoIncrement: true });
     });
@@ -134,10 +134,11 @@ describe("Database", () => {
       expect(await store.get(3)).toEqual({ three: 3 });
       expect(await store.get(4)).toEqual(undefined);
       expect(writer.total).toEqual(3);
+      done();
     });
   });
 
-  it("can create writable stream with extra appended", async () => {
+  it("can create writable stream with extra appended", async (done) => {
     const db = await Database.open("stream-with-extra", 1, (openedDb) => {
       openedDb.createObjectStore("bar", { autoIncrement: true });
     });
@@ -158,6 +159,7 @@ describe("Database", () => {
       expect(await store.get(3)).toEqual({ three: 3, topic: "/foo" });
       expect(await store.get(4)).toEqual(undefined);
       expect(writer.total).toEqual(3);
+      done();
     });
   });
 

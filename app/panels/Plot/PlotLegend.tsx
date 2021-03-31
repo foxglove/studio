@@ -53,7 +53,7 @@ const shortXAxisLabel = (path: PlotXAxisVal): string => {
     case "timestamp":
       return "timestamp";
     default:
-      path as never; // Assert the switch is exhaustive
+      path ; // Assert the switch is exhaustive
       throw new Error(`unknown path: ${path}`);
   }
 };

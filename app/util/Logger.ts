@@ -56,7 +56,7 @@ export default class Logger {
       case "error":
         return this.error(message, ...args);
       default:
-        level as never;
+        level ;
         throw new Error(`Unknown level: ${level}`);
     }
   }

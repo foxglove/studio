@@ -44,7 +44,7 @@ function Story({
       setImmediate(() => {
         const hexInput = (document.querySelector(
           ".rc-color-picker-panel-params-hex",
-        ) as any) as HTMLInputElement;
+        ) ) as HTMLInputElement;
         hexInput.value = "#d2ff03";
         TestUtils.Simulate.change(hexInput);
         TestUtils.Simulate.blur(hexInput);
@@ -54,7 +54,7 @@ function Story({
       setImmediate(() => {
         const hexInput = (document.querySelector(
           ".rc-color-picker-panel-params-hex",
-        ) as any) as HTMLInputElement;
+        ) ) as HTMLInputElement;
         hexInput.value = "#c501ff";
         TestUtils.Simulate.change(hexInput);
         TestUtils.Simulate.blur(hexInput);

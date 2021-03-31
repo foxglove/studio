@@ -98,7 +98,7 @@ export class Deserializer {
   #onError = (err: Error): void => {
     if (!this.#error) {
       this.#error = err;
-      this.#callback?.(this.#error);
+      this.#callback(this.#error);
     }
   };
 

@@ -141,7 +141,7 @@ function getExamplePrimitive(primitiveType: RosPrimitive) {
     case "json":
       return "";
     default:
-      primitiveType as never;
+      primitiveType ;
       return "";
   }
 }

@@ -112,13 +112,15 @@ export class TcpConnection extends EventEmitter implements Connection {
     return `TCPROS not connected [socket ${fd}]`;
   };
 
-  #handleConnect = async (): Promise<void> => {
+  #handleConnect = (): void => {
     this.#connected = true;
     this.retries = 0;
-    this.#transportInfo = await this.#getTransportInfo();
-    // Write the initial request header. This prompts the publisher to respond
-    // with its own header then start streaming messages
-    this.writeHeader();
+    this.#getTransportInfo().then((info) => {
+      this.#transportInfo = info;
+      // Write the initial request header. This prompts the publisher to respond
+      // with its own header then start streaming messages
+      this.writeHeader();
+    });
   };
 
   #handleClose = (): void => {
