@@ -54,7 +54,7 @@ type Props = {
 // place the dropped item as a sibling of the Tab), as well as the "root drop targets" inside the
 // nested mosaic (that would place the dropped item as a direct child of the Tab). Makes it easier
 // to drop panels into a tab layout.
-const HideTopLevelDropTargets = styled.div`
+const HideTopLevelDropTargets = styled.div.attrs({ style: { margin: 0 } })`
   .mosaic-root + .drop-target-container {
     display: none !important;
   }

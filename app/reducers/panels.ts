@@ -827,7 +827,6 @@ const endDrag = (panelsState: PanelsState, dragPayload: EndDragPayload): PanelsS
   });
 
   if (withinSameTab && sourceTabConfig && sourceTabId) {
-    console.log("dragWithinSameTab");
     return dragWithinSameTab(panelsState, {
       originalLayout,
       sourceTabId,
@@ -840,7 +839,6 @@ const endDrag = (panelsState: PanelsState, dragPayload: EndDragPayload): PanelsS
   }
 
   if (toMainFromTab && sourceTabConfig && sourceTabId && destinationPath && position) {
-    console.log("dragToMainFromTab");
     return dragToMainFromTab(panelsState, {
       originalLayout,
       sourceTabId,
@@ -853,7 +851,6 @@ const endDrag = (panelsState: PanelsState, dragPayload: EndDragPayload): PanelsS
   }
 
   if (toTabfromMain && targetTabId) {
-    console.log("dragToTabFromMain");
     return dragToTabFromMain(panelsState, {
       originalLayout,
       panelId,
@@ -867,7 +864,6 @@ const endDrag = (panelsState: PanelsState, dragPayload: EndDragPayload): PanelsS
   }
 
   if (toTabfromTab && sourceTabConfig && sourceTabId && targetTabId) {
-    console.log("dragToTabFromTab");
     return dragToTabFromTab(panelsState, {
       originalLayout,
       panelId,
@@ -1013,7 +1009,6 @@ const panelsReducer = function (state: State, action: ActionTypes): State {
 
     case "END_DRAG":
       newState.persistedState.panels = endDrag(newState.persistedState.panels, action.payload);
-      console.log("new panels:", newState.persistedState.panels);
       break;
 
     case "SET_FETCHED_LAYOUT":
