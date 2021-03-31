@@ -71,7 +71,6 @@ rules:
   "@typescript-eslint/prefer-regexp-exec": off
 
   "@typescript-eslint/prefer-nullish-coalescing": warn
-  "@typescript-eslint/await-thenable": error
   "@typescript-eslint/no-confusing-non-null-assertion": error
   "@typescript-eslint/no-unnecessary-boolean-literal-compare": error
   # "@typescript-eslint/no-unnecessary-condition": error # TODO(jacob): see when this differs from strict-boolean-expressions
