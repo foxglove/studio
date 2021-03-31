@@ -135,7 +135,6 @@ export function syncBags(
       );
       break;
     default:
-      syncOption ;
       throw new Error(`Unsupported sync option ${syncOption}`);
   }
 
