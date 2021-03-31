@@ -2,9 +2,9 @@
   "extends": "../../tsconfig.json",
   "include": ["*.ts", "src/*.ts", "test/*.ts"],
   "compilerOptions": {
-    "target": "es2020",
-    "module": "es2020",
-    "lib": ["es2020", "DOM"],
+    "target": "esnext",
+    "module": "esnext",
+    "lib": ["esnext", "DOM"],
     "declaration": true,
     "rootDir": ".",
     "noUnusedParameters": true,

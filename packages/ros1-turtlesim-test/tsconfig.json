@@ -3,9 +3,9 @@
   "include": ["src/**/*.ts"],
   "compilerOptions": {
     "outDir": "dist",
-    "target": "es2020",
+    "target": "esnext",
     "module": "commonjs",
-    "lib": ["es2020"],
+    "lib": ["esnext"],
     "declaration": true,
     "rootDir": "./src",
     "noUnusedParameters": true,
