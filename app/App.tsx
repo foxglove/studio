@@ -221,10 +221,7 @@ function Root() {
           </RenderToBodyComponent>
         )}
 
-        <Toolbar
-          style={toolbarStyle}
-          onDoubleClick={() => OsContextSingleton?.handleToolbarDoubleClick()}
-        >
+        <Toolbar style={toolbarStyle} onDoubleClick={OsContextSingleton?.handleToolbarDoubleClick}>
           <SToolbarItem>
             <TinyConnectionPicker />
           </SToolbarItem>

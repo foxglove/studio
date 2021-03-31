@@ -52,7 +52,7 @@ export interface OsContext {
   // The process id of this application
   pid: number;
 
-  handleToolbarDoubleClick(): void;
+  handleToolbarDoubleClick: () => void;
 
   // Events from the native window are available in the main process but not the renderer, so we forward them through the bridge.
   addIpcEventListener(eventName: OsContextForwardedEvent, handler: () => void): void;
