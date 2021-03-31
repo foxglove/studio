@@ -2,9 +2,8 @@
   "extends": "../../tsconfig.json",
   "include": ["preloader/*.ts", "renderer/*.ts", "shared/*.ts"],
   "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "lib": ["esnext", "dom"],
+    "module": "es2020",
+    "lib": ["es2020", "dom"],
     "declaration": true,
     "rootDir": ".",
     "noUnusedParameters": true,

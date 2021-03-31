@@ -3,9 +3,8 @@
   "include": ["index.ts"],
   "compilerOptions": {
     "outDir": "../dist/browser",
-    "target": "esnext",
     "module": "commonjs",
-    "lib": ["esnext", "dom"],
+    "lib": ["es2020", "dom"],
     "declaration": true,
     "rootDir": "."
   }
