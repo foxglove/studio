@@ -296,6 +296,9 @@ async function createWindow(): Promise<void> {
     preloaderFileInputIsReady = true;
   });
 
+  // all experiences should be maximum
+  mainWindow.maximize();
+
   mainWindow.loadURL(rendererPath);
 
   if (!isProduction) {
