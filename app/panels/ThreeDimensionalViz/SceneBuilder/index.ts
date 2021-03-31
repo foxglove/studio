@@ -159,7 +159,10 @@ export function getSceneErrorsByTopic(
 }
 
 // Only display one non-lifetime message at a time, so we filter to the last one.
-export function filterOutSupersededMessages(messages: Message[], datatype: string): Message[] {
+export function filterOutSupersededMessages<T extends Pick<Message, "message">>(
+  messages: T[],
+  datatype: string,
+): T[] {
   // Later messages take precedence over earlier messages, so iterate from latest to earliest to
   // find the last one that matters.
   const reversedMessages = messages.slice().reverse();

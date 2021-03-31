@@ -144,7 +144,7 @@ class VideoRecordingClient {
     if (screenshotResolve) {
       throw new Error("Already have a screenshot queued!");
     }
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
       screenshotResolve = resolve;
     });
   }
