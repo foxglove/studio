@@ -274,12 +274,13 @@ export default class Ros1Player implements Player {
 
   setPublishers(publishers: AdvertisePayload[]): void {
     // TODO: Publishing
+    publishers = publishers.filter((p) => p.topic.length > 0);
     if (publishers.length > 0) {
       const topics = publishers.map((p) => p.topic).join(", ");
       sendNotification(
         "Publishing not supported",
         `Cannot publish to "${topics}", ROS publishing is not supported yet`,
-        "app",
+        "user",
         "error",
       );
     }
