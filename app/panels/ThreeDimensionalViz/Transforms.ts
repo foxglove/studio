@@ -27,6 +27,10 @@ function stripLeadingSlash(name: string) {
   return name.startsWith("/") ? name.slice(1) : name;
 }
 
+// REP 105 specifies a set of conventional root frame transform ids
+// https://www.ros.org/reps/rep-0105.html
+export const DEFAULT_ROOT_FRAME_IDS = ["base_link", "odom", "map", "earth"];
+
 export class Transform {
   id: string;
   matrix: mat4 = mat4.create();
@@ -132,8 +136,6 @@ export class Transform {
 }
 
 class TfStore {
-  static DEFAULT_FRAMES = ["base_link", "odom", "map", "earth"];
-
   private _storage = new Map<string, Transform>();
 
   get(key: string): Transform {
@@ -155,20 +157,8 @@ class TfStore {
     return Array.from(this._storage.values());
   }
 
-  default(): Transform | undefined {
-    // REP 105 specifies a set of conventional root frame transform ids
-    // We try these in order
-    // https://www.ros.org/reps/rep-0105.html
-    for (const frameId of TfStore.DEFAULT_FRAMES) {
-      const tf = this._storage.get(frameId);
-      if (tf != undefined) {
-        return tf;
-      }
-    }
-
-    // Fall back to the root of the first transform (lexicographically), if any
-    const firstFrameId = Array.from(this._storage.keys()).sort()[0];
-    return firstFrameId != undefined ? this._storage.get(firstFrameId)?.rootTransform() : undefined;
+  entries(): Readonly<Map<string, Transform>> {
+    return this._storage;
   }
 }
 
@@ -226,9 +216,5 @@ export default class Transforms {
 
   values(): Array<Transform> {
     return this.storage.values();
-  }
-
-  defaultTf(): Transform | undefined {
-    return this.storage.default();
   }
 }
