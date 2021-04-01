@@ -26,9 +26,13 @@ export function getFieldOffsetsAndReaders(
   data: Uint8Array,
   fields: readonly PointField[],
 ): FieldOffsetsAndReaders {
-  const result: any = {};
+  const result: FieldOffsetsAndReaders = {};
   for (const { name, datatype, offset = 0 } of fields) {
-    result[name] = { datatype, offset, reader: getReader(data, datatype, offset) };
+    result[name] = {
+      datatype: datatype.toString(),
+      offset,
+      reader: getReader(data, datatype, offset),
+    };
   }
   return result;
 }
@@ -197,7 +201,7 @@ export function createColorBuffer({
     if (!rgbField) {
       throw new Error("Cannot create color buffer in rgb mode without an rgb field");
     }
-    const rgbOffset = rgbField.offset || 0;
+    const rgbOffset = rgbField.offset ?? 0;
     if (hasValidStride(FLOAT_SIZE * stride)) {
       return {
         // RGB colors are encoded in a single 4-byte tuple and unfortunately we cannot extract
@@ -226,9 +230,9 @@ export function createColorBuffer({
     });
   }
 
-  const colorField = fields[colorMode.colorField || "rgb"];
+  const colorField = fields[colorMode.colorField ?? "rgb"];
   if (!colorField) {
-    throw new Error(`Cannot create color buffer without ${colorMode.colorField || "rgb"} field`);
+    throw new Error(`Cannot create color buffer without ${colorMode.colorField ?? "rgb"} field`);
   }
 
   // If the color is computed from any of the other float fields (i.e. x positions)
