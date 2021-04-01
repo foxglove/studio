@@ -165,10 +165,6 @@ export function createPositionBuffer({
   }
 
   // We cannot use positions as is from data buffer. Extract them.
-  // eslint-disable-next-line no-restricted-syntax
-  console.info(
-    `Vertex buffer stride will be too big (${stride}). Extracting positions from data in CPU`,
-  );
   return extractValues({
     data,
     readers: [xField.reader, yField.reader, zField.reader],
@@ -218,12 +214,6 @@ export function createColorBuffer({
       };
     }
     // stride is too big. Extract colors from data
-    // eslint-disable-next-line no-restricted-syntax
-    console.info(
-      `Vertex buffer stride will be too big (${
-        4 * stride
-      }). Extracting RGB colors from data in CPU`,
-    );
     return extractValues({
       data,
       readers: [
@@ -240,7 +230,6 @@ export function createColorBuffer({
   if (!colorField) {
     throw new Error(`Cannot create color buffer without ${colorMode.colorField || "rgb"} field`);
   }
-  console.log(`colorField.datatype=${colorField.datatype}, offset=${colorField.offset}`);
 
   // If the color is computed from any of the other float fields (i.e. x positions)
   // we can do the same trick as for positions, with just a different offset
@@ -264,8 +253,6 @@ export function createColorBuffer({
 
   // Color datatype is not float or stride is too big
   // Just extract color data from buffer using CPU
-  // eslint-disable-next-line no-restricted-syntax
-  console.info("Cannot reinterpret data. Extracting color buffer using CPU");
   return extractValues({
     data,
     readers: [colorField.reader],
