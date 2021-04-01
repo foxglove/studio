@@ -60,11 +60,10 @@ const Container = styled.div<{ flash: boolean; unread: boolean; color: string }>
     props.flash ? "black" : props.unread ? props.color : "rgba(255, 255, 255, 0.5)"};
 `;
 
-const Fader = styled.span<{ visible: boolean }>`
+const Fader = styled.span`
   text-align: center;
   font-size: 12px;
   padding-right: 2px;
-  opacity: ${(props) => (props.visible ? 1 : 0)};
   transition: opacity 200ms linear;
   display: inline-block;
   max-width: 500px;
@@ -292,9 +291,7 @@ export default function NotificationDisplay(): React.ReactElement {
                 <IconSvg />
               </Icon>
             </div>
-            <Fader visible={showMostRecent} style={{ paddingLeft: 5, cursor: "pointer" }}>
-              {firstNotification.message}
-            </Fader>
+            <Fader style={{ paddingLeft: 5, cursor: "pointer" }}>{firstNotification.message}</Fader>
             <div style={{ fontSize: 12 }}>{unreadCount > 1 && `${nbsp}(1 of ${unreadCount})`}</div>
           </div>
           <NotificationList notifications={notifications} onClick={setClickedNotification} />
