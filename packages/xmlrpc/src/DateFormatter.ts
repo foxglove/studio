@@ -9,18 +9,18 @@ export type DateFormatterOptions = {
 };
 
 export class DateFormatter {
-  #colons = true;
-  #hyphens = true;
-  #ms = true;
+  private _colons = true;
+  private _hyphens = true;
+  private _ms = true;
 
   // Regular Expression that dissects an ISO 8601 formatted string into an array of parts
   static ISO8601 = /([0-9]{4})([-]?([0-9]{2}))([-]?([0-9]{2}))(T-?([0-9]{2})(((:?([0-9]{2}))?((:?([0-9]{2}))?(\.([0-9]+))?))?)(Z|([+-]([0-9]{2}(:?([0-9]{2}))?)))?)?/;
 
   constructor(options?: DateFormatterOptions) {
     if (options) {
-      this.#colons = options.colons ?? this.#colons;
-      this.#hyphens = options.hyphens ?? this.#hyphens;
-      this.#ms = options.ms ?? this.#ms;
+      this._colons = options.colons ?? this._colons;
+      this._hyphens = options.hyphens ?? this._hyphens;
+      this._ms = options.ms ?? this._ms;
     }
   }
 
@@ -48,7 +48,7 @@ export class DateFormatter {
     date +=
       dateParts[17] !== undefined
         ? dateParts[17] + (dateParts[19] != undefined && dateParts[20] == undefined ? "00" : "")
-        : ["Z"];
+        : "Z";
 
     return new Date(date);
   }
@@ -63,10 +63,10 @@ export class DateFormatter {
     const parts = DateFormatter.getUTCDateParts(date);
 
     return [
-      [parts[0], parts[1], parts[2]].join(this.#hyphens ? "-" : ""),
+      [parts[0], parts[1], parts[2]].join(this._hyphens ? "-" : ""),
       "T",
-      [parts[3], parts[4], parts[5]].join(this.#colons ? ":" : ""),
-      this.#ms ? "." + parts[6] : "",
+      [parts[3], parts[4], parts[5]].join(this._colons ? ":" : ""),
+      this._ms ? "." + parts[6] : "",
       "Z",
     ].join("");
   }
@@ -99,11 +99,7 @@ export class DateFormatter {
    * @return {string}       - String with the padded digit
    */
   static zeroPad(digit: number, length: number): string {
-    let padded = "" + digit;
-    while (padded.length < length) {
-      padded = "0" + padded;
-    }
-    return padded;
+    return digit.toString().padStart(length, "0");
   }
 
   /**
@@ -111,9 +107,9 @@ export class DateFormatter {
    * in UTC
    *
    * @param {Date} date - Date Object
-   * @return {string[]}
+   * @return {[string, string, string, string, string, string, string]}
    */
-  static getUTCDateParts(date: Date): string[] {
+  static getUTCDateParts(date: Date): [string, string, string, string, string, string, string] {
     return [
       date.getUTCFullYear().toString(),
       DateFormatter.zeroPad(date.getUTCMonth() + 1, 2),
