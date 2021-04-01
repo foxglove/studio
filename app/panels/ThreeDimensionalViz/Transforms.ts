@@ -37,7 +37,7 @@ export class Transform {
     this.id = stripLeadingSlash(id);
   }
 
-  set(position: Point, orientation: Orientation) {
+  set(position: Point, orientation: Orientation): void {
     mat4.fromRotationTranslation(
       this.matrix,
       quat.set(tempOrient, orientation.x, orientation.y, orientation.z, orientation.w),
@@ -46,7 +46,7 @@ export class Transform {
     this._hasValidMatrix = true;
   }
 
-  isValid(rootId: string) {
+  isValid(rootId: string): boolean {
     return this._hasValidMatrix || this.id === rootId;
   }
 
@@ -132,6 +132,8 @@ export class Transform {
 }
 
 class TfStore {
+  static DEFAULT_FRAMES = ["base_link", "odom", "map", "earth"];
+
   private _storage = new Map<string, Transform>();
 
   get(key: string): Transform {
@@ -146,11 +148,27 @@ class TfStore {
   }
 
   has(key: string): boolean {
-    return this._storage.has(key);
+    return this._storage.has(stripLeadingSlash(key));
   }
 
   values(): Array<Transform> {
     return Array.from(this._storage.values());
+  }
+
+  default(): Transform | undefined {
+    // REP 105 specifies a set of conventional root frame transform ids
+    // We try these in order
+    // https://www.ros.org/reps/rep-0105.html
+    for (const frameId of TfStore.DEFAULT_FRAMES) {
+      const tf = this._storage.get(frameId);
+      if (tf != undefined) {
+        return tf;
+      }
+    }
+
+    // Fall back to the root of the first transform (lexicographically), if any
+    const firstFrameId = Array.from(this._storage.keys()).sort()[0];
+    return firstFrameId != undefined ? this._storage.get(firstFrameId)?.rootTransform() : undefined;
   }
 }
 
@@ -159,7 +177,7 @@ export default class Transforms {
   empty = true;
 
   // consume a tf message
-  consume(tfMessage: TF) {
+  consume(tfMessage: TF): void {
     // child_frame_id is the id of the tf
     const id = tfMessage.child_frame_id;
     const parentId = tfMessage.header.frame_id;
@@ -167,6 +185,12 @@ export default class Transforms {
     const { rotation, translation } = tfMessage.transform;
     tf.set(translation, rotation);
     tf.parent = this.storage.get(parentId);
+    this.empty = false;
+  }
+
+  // create a placeholder tf if we have not seen this frameId yet
+  register(frameId: string): void {
+    this.storage.get(frameId);
     this.empty = false;
   }
 
@@ -192,15 +216,19 @@ export default class Transforms {
   }
 
   // Return true if a transform with id _key_ exists in our transforms
-  has(key: string) {
+  has(key: string): boolean {
     return this.storage.has(key);
   }
 
-  get(key: string) {
+  get(key: string): Transform {
     return this.storage.get(key);
   }
 
   values(): Array<Transform> {
     return this.storage.values();
+  }
+
+  defaultTf(): Transform | undefined {
+    return this.storage.default();
   }
 }

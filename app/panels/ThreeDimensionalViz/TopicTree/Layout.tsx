@@ -405,22 +405,13 @@ export default function Layout({
   }, [colorOverrideBySourceIdxByVariable, globalVariables, linkedGlobalVariables]);
 
   const rootTf = useMemo(() => {
-    // REP 105 specifies a set of conventional root frame transform ids
-    // We try these in order
-    // https://www.ros.org/reps/rep-0105.html
-    const possibleRootFrames = ["base_link", "odom", "map", "earth"];
-
     // If the user specified a followTf, we give priority to the root frame from their followTf
-    if (followTf) {
-      possibleRootFrames.unshift(followTf);
+    if (followTf && transforms.has(followTf)) {
+      return transforms.rootOfTransform(followTf).id;
     }
 
-    for (const possibleRoot of possibleRootFrames) {
-      if (transforms.has(possibleRoot)) {
-        return transforms.rootOfTransform(possibleRoot).id;
-      }
-    }
-    return undefined;
+    // Otherwise, fall back to the default tf selection logic
+    return transforms.defaultTf()?.id;
   }, [transforms, followTf]);
 
   useEffect(() => {
