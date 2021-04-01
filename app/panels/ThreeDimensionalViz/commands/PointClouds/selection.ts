@@ -147,7 +147,7 @@ export function decodeAdditionalFields(
   [fieldName: string]: number[];
 } {
   const { fields, data, width, row_step, height, point_step } = marker;
-  const offsets = getFieldOffsetsAndReaders(fields);
+  const offsets = getFieldOffsetsAndReaders(data, fields);
   if (!offsets) {
     return {};
   }
@@ -165,7 +165,7 @@ export function decodeAdditionalFields(
       for (const fieldName of additionalField) {
         const reader = offsets[fieldName]?.reader;
         if (reader) {
-          const fieldValue = reader.read(data, dataStart);
+          const fieldValue = reader.read(dataStart);
           otherFieldsValues[fieldName][pointCount] = fieldValue;
         }
       }

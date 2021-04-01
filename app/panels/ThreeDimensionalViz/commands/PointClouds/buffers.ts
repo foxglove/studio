@@ -22,10 +22,13 @@ export type FieldOffsetsAndReaders = {
   [name: string]: { datatype: string; offset: number; reader?: FieldReader };
 };
 
-export function getFieldOffsetsAndReaders(fields: readonly PointField[]): FieldOffsetsAndReaders {
+export function getFieldOffsetsAndReaders(
+  data: Uint8Array,
+  fields: readonly PointField[],
+): FieldOffsetsAndReaders {
   const result: any = {};
   for (const { name, datatype, offset = 0 } of fields) {
-    result[name] = { datatype, offset, reader: getReader(datatype, offset) };
+    result[name] = { datatype, offset, reader: getReader(data, datatype, offset) };
   }
   return result;
 }
@@ -35,8 +38,8 @@ export const FLOAT_SIZE = Float32Array.BYTES_PER_ELEMENT;
 // Reinterpret a buffer of bytes as a buffer of float values
 export function reinterpretBufferToFloat(buffer: Uint8Array): Float32Array {
   return new Float32Array(
-    new Uint8Array(buffer).buffer,
-    0,
+    buffer.buffer,
+    buffer.byteOffset,
     buffer.length / Float32Array.BYTES_PER_ELEMENT,
   );
 }
@@ -89,7 +92,6 @@ function hasValidStride(stride: number): boolean {
 // This function always returns a Float32Array with three values for each point
 // in the cloud since it might be used for both colors and/or positions.
 function extractValues({
-  data,
   readers,
   pointCount,
   stride,
@@ -107,7 +109,7 @@ function extractValues({
       const reader = readers[j];
       let value = Number.NaN;
       if (reader != undefined) {
-        value = reader.read(data, pointStart);
+        value = reader.read(pointStart);
       }
       buffer[i * COMPONENT_COUNT + j] = value;
     }
@@ -225,9 +227,9 @@ export function createColorBuffer({
     return extractValues({
       data,
       readers: [
-        new Uint8Reader(rgbOffset + 0),
-        new Uint8Reader(rgbOffset + 1),
-        new Uint8Reader(rgbOffset + 2),
+        new Uint8Reader(data, rgbOffset + 0),
+        new Uint8Reader(data, rgbOffset + 1),
+        new Uint8Reader(data, rgbOffset + 2),
       ],
       stride,
       pointCount,
@@ -238,6 +240,7 @@ export function createColorBuffer({
   if (!colorField) {
     throw new Error(`Cannot create color buffer without ${colorMode.colorField || "rgb"} field`);
   }
+  console.log(`colorField.datatype=${colorField.datatype}, offset=${colorField.offset}`);
 
   // If the color is computed from any of the other float fields (i.e. x positions)
   // we can do the same trick as for positions, with just a different offset
@@ -246,7 +249,7 @@ export function createColorBuffer({
   // might be other values previous to this one that have different memory alignments.
   if (
     // @ts-expect-error typescript says this will always be false cause of the types involved
-    colorField.datatype === DATATYPE.float32 &&
+    colorField.datatype === DATATYPE.FLOAT32 &&
     colorField.offset % FLOAT_SIZE === 0 &&
     hasValidStride(stride)
   ) {
