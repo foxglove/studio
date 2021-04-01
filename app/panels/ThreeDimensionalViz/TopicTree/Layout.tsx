@@ -54,6 +54,7 @@ import MeasuringTool, {
 import {
   InteractionContextMenu,
   OBJECT_TAB_TYPE,
+  TabType,
 } from "@foxglove-studio/app/panels/ThreeDimensionalViz/Interactions";
 import useLinkedGlobalVariables from "@foxglove-studio/app/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
 import styles from "@foxglove-studio/app/panels/ThreeDimensionalViz/Layout.module.scss";
@@ -69,8 +70,11 @@ import { ColorPickerSettingsPanel } from "@foxglove-studio/app/panels/ThreeDimen
 import TopicSettingsModal from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/TopicSettingsModal";
 import TopicTree from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/TopicTree";
 import { TOPIC_DISPLAY_MODES } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/TopicViewModeSelector";
+import { TopicDisplayMode } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/types";
 import useSceneBuilderAndTransformsData from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/useSceneBuilderAndTransformsData";
-import Transforms from "@foxglove-studio/app/panels/ThreeDimensionalViz/Transforms";
+import Transforms, {
+  DEFAULT_ROOT_FRAME_IDS,
+} from "@foxglove-studio/app/panels/ThreeDimensionalViz/Transforms";
 import TransformsBuilder from "@foxglove-studio/app/panels/ThreeDimensionalViz/TransformsBuilder";
 import World from "@foxglove-studio/app/panels/ThreeDimensionalViz/World";
 import {
@@ -179,12 +183,12 @@ export default function Layout({
     selectedPolygonEditFormat = "yaml",
     showCrosshair,
     autoSyncCameraState,
-    topicDisplayMode = TOPIC_DISPLAY_MODES.SHOW_ALL.value as any,
+    topicDisplayMode = TOPIC_DISPLAY_MODES.SHOW_ALL.value as TopicDisplayMode,
     settingsByKey,
     colorOverrideBySourceIdxByVariable,
     disableAutoOpenClickedObject,
   },
-}: Props) {
+}: Props): React.ReactElement {
   const [filterText, setFilterText] = useState(""); // Topic tree text for filtering to see certain topics.
   const containerRef = useRef<HTMLDivElement>(ReactNull);
   const { linkedGlobalVariables } = useLinkedGlobalVariables();
@@ -311,7 +315,7 @@ export default function Layout({
     defaultTopicSettings,
     expandedKeys,
     filterText,
-    modifiedNamespaceTopics: modifiedNamespaceTopics || [],
+    modifiedNamespaceTopics: modifiedNamespaceTopics ?? [],
     providerTopics: topicTreeTopics,
     saveConfig,
     sceneErrorsByTopicKey,
@@ -375,51 +379,55 @@ export default function Layout({
   const colorOverrideMarkerMatchers = useMemo(() => {
     // Transform linkedGlobalVariables and overridesByGlobalVariable into markerMatchers for SceneBuilder
     const linkedGlobalVariablesByName = groupBy(linkedGlobalVariables, ({ name }) => name);
-    return Object.keys(colorOverrideBySourceIdxByVariable || {}).reduce(
-      (_activeColorOverrideMatchers, name) => {
-        return (colorOverrideBySourceIdxByVariable?.[name] || ([] as any)).flatMap(
-          (override: any, i: number) =>
-            override?.active
-              ? [
-                  ..._activeColorOverrideMatchers,
-                  ...(linkedGlobalVariablesByName[name] || []).map(({ topic, markerKeyPath }) => {
-                    const baseTopic = topic.replace(SECOND_SOURCE_PREFIX, "");
-                    return {
-                      topic: i === 0 ? baseTopic : joinTopics(SECOND_SOURCE_PREFIX, baseTopic),
-                      checks: [
-                        {
-                          markerKeyPath,
-                          value: globalVariables[name],
-                        },
-                      ],
-                      color: override.color,
-                    };
-                  }),
-                ]
-              : _activeColorOverrideMatchers,
-        );
-      },
-      [],
-    );
+    return Object.keys(
+      colorOverrideBySourceIdxByVariable ?? ({} as ColorOverrideBySourceIdxByVariable),
+    ).reduce((activeColorOverrideMatchers, name) => {
+      return (colorOverrideBySourceIdxByVariable?.[name] ?? ([] as ColorOverride[])).flatMap(
+        (override, i) =>
+          override?.active
+            ? [
+                ...activeColorOverrideMatchers,
+                ...(linkedGlobalVariablesByName[name] ?? []).map(({ topic, markerKeyPath }) => {
+                  const baseTopic = topic.replace(SECOND_SOURCE_PREFIX, "");
+                  return {
+                    topic: i === 0 ? baseTopic : joinTopics(SECOND_SOURCE_PREFIX, baseTopic),
+                    checks: [
+                      {
+                        markerKeyPath,
+                        value: globalVariables[name],
+                      },
+                    ],
+                    color: override.color,
+                  };
+                }),
+              ]
+            : activeColorOverrideMatchers,
+      );
+    }, [] as MarkerMatcher[]);
   }, [colorOverrideBySourceIdxByVariable, globalVariables, linkedGlobalVariables]);
 
   const rootTf = useMemo(() => {
-    // REP 105 specifies a set of conventional root frame transform ids
-    // We try these in order
-    // https://www.ros.org/reps/rep-0105.html
-    const possibleRootFrames = ["base_link", "odom", "map", "earth"];
-
-    // If the user specified a followTf, we give priority to the root frame from their followTf
+    // If the user specified a followTf we will only return the root frame from their followTf
     if (followTf) {
-      possibleRootFrames.unshift(followTf);
+      if (transforms.has(followTf)) {
+        return transforms.rootOfTransform(followTf).id;
+      }
+      return undefined;
     }
 
-    for (const possibleRoot of possibleRootFrames) {
-      if (transforms.has(possibleRoot)) {
-        return transforms.rootOfTransform(possibleRoot).id;
+    const tfStore = transforms.storage.entries();
+
+    // Try the conventional list of root frame transform ids
+    for (const frameId of DEFAULT_ROOT_FRAME_IDS) {
+      const tf = tfStore.get(frameId);
+      if (tf != undefined) {
+        return tf.id;
       }
     }
-    return undefined;
+
+    // Fall back to the root of the first transform (lexicographically), if any
+    const firstFrameId = Array.from(tfStore.keys()).sort()[0];
+    return firstFrameId != undefined ? tfStore.get(firstFrameId)?.rootTransform().id : undefined;
   }, [transforms, followTf]);
 
   useEffect(() => {
@@ -458,7 +466,7 @@ export default function Layout({
 
     // update the transforms and set the selected ones to render
     transformsBuilder.setTransforms(transforms, rootTf);
-    transformsBuilder.setSelectedTransforms(selectedNamespacesByTopic[TRANSFORM_TOPIC] || []);
+    transformsBuilder.setSelectedTransforms(selectedNamespacesByTopic[TRANSFORM_TOPIC] ?? []);
   }, [
     cleared,
     frame,
@@ -589,12 +597,12 @@ export default function Layout({
     toggleDebug,
   } = useMemo(() => {
     return {
-      onClick: (ev: MouseEvent, args?: ReglClickInfo) => {
+      onClick: (ev: MouseEvent, args?: ReglClickInfo & { objects: MouseEventObject[] }) => {
         // Don't set any clicked objects when measuring distance or drawing polygons.
         if (callbackInputsRef.current.isDrawing) {
           return;
         }
-        const newClickedObjects = (args && (args as any).objects) || [];
+        const newClickedObjects = args?.objects ?? ([] as MouseEventObject[]);
         const newClickedPosition = { clientX: ev.clientX, clientY: ev.clientY };
         const newSelectedObject = newClickedObjects.length === 1 ? newClickedObjects[0] : undefined;
 
@@ -610,7 +618,7 @@ export default function Layout({
         if (!containerRef.current) {
           return;
         }
-        const target = (ev.target as any) as HTMLElement;
+        const target = ev.target as HTMLElement;
         // Only close if the click target is inside the panel, e.g. don't close when dropdown menus rendered in portals are clicked
         if (containerRef.current.contains(target)) {
           setShowTopicTree(false);
@@ -664,7 +672,7 @@ export default function Layout({
         setDrawingTabType(undefined);
         searchTextProps.toggleSearchTextOpen(false);
         if (document.activeElement && document.activeElement === containerRef.current) {
-          (document.activeElement as any).blur();
+          (document.activeElement as HTMLElement).blur();
         }
       },
       t: (e) => {
@@ -696,7 +704,7 @@ export default function Layout({
   ]);
 
   const cursorType = isDrawing ? "crosshair" : "";
-  const { isHovered } = useContext(PanelContext) || {};
+  const { isHovered } = useContext(PanelContext) ?? {};
   const isDemoMode = useExperimentalFeature("demoMode");
   const isHidden = isDemoMode && !isHovered;
 
@@ -712,7 +720,7 @@ export default function Layout({
     () => ({
       setColorOverrideBySourceIdxByVariable,
       setHoveredMarkerMatchers: setHoveredMarkerMatchersDebounced,
-      colorOverrideBySourceIdxByVariable: colorOverrideBySourceIdxByVariable || {},
+      colorOverrideBySourceIdxByVariable: colorOverrideBySourceIdxByVariable ?? {},
     }),
     [
       colorOverrideBySourceIdxByVariable,
@@ -749,7 +757,7 @@ export default function Layout({
                   position: "relative",
                   width: "100%",
                   height: "100%",
-                } as any
+                } as React.CSSProperties
               }
             >
               {(!isDemoMode || (isDemoMode && isHovered)) && (
@@ -844,11 +852,15 @@ export default function Layout({
             >
               {children}
               <DrawPolygons>{polygonBuilder.polygons}</DrawPolygons>
-              <div style={videoRecordingStyle as any}>
+              <div style={videoRecordingStyle as React.CSSProperties}>
                 <LayoutToolbar
                   cameraState={cameraState}
-                  interactionsTabType={interactionsTabType as any}
-                  setInteractionsTabType={setInteractionsTabType as any}
+                  interactionsTabType={interactionsTabType as TabType | undefined}
+                  setInteractionsTabType={
+                    setInteractionsTabType as React.Dispatch<
+                      React.SetStateAction<TabType | undefined>
+                    >
+                  }
                   debug={debug}
                   followOrientation={followOrientation}
                   followTf={followTf}
