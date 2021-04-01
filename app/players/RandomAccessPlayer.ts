@@ -275,6 +275,14 @@ export default class RandomAccessPlayer implements Player {
       // we'd be "traveling back in time".
       this._cancelSeekBackfill = true;
     }
+    
+    // _nextReadStartTime points to the start of the _next_ range we want to read
+    // for our player state, we want to have currentTime represent the last time of the range we read
+    // It would be weird to provide a currentTime outside the bounds of what we read
+    let lastEnd = this._nextReadStartTime;
+    if (lastEnd.sec > 0 || lastEnd.nsec > 0) {
+      lastEnd = TimeUtil.add(lastEnd, { sec: 0, nsec: -1 });
+    }
 
     const data = {
       presence: this._reconnecting
