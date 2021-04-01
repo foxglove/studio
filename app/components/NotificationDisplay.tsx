@@ -27,7 +27,6 @@ import Modal, { Title } from "@foxglove-studio/app/components/Modal";
 import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToBodyComponent";
 import { getGlobalHooks } from "@foxglove-studio/app/loadWebviz";
 import { nbsp } from "@foxglove-studio/app/util/entities";
-import minivizAPI from "@foxglove-studio/app/util/minivizAPI";
 import {
   DetailsType,
   NotificationType,
@@ -241,10 +240,6 @@ export default function NotificationDisplay(): React.ReactElement {
         hideTimeout.current = setTimeout(() => {
           setShowMostRecent(false);
         }, FLASH_DURATION_MILLIS);
-
-        // Notify the iFrame from here, since we should always have a `window` here since we're not
-        // in a React component (and not in a worker).
-        minivizAPI.postNotificationMessage({ message, details, type, severity });
       },
     );
 
