@@ -16,13 +16,15 @@ describe("usePrompt", () => {
     expect(document.body.childNodes.length).toEqual(start);
   });
 
-  it("should support a placeholder", async () => {
+  it("should support a title and placeholder", async () => {
     const { result, unmount } = renderHook(() => usePrompt());
 
     result.current({
+      title: "test-title",
       placeholder: "test-placeholder",
     });
 
+    expect(screen.getByText("test-title")).not.toBeNullOrUndefined();
     const input = screen.getByPlaceholderText("test-placeholder") as HTMLInputElement;
     expect(input.value).toEqual("");
     unmount();
@@ -31,6 +33,7 @@ describe("usePrompt", () => {
   it("should return entered value", async () => {
     const { result, unmount } = renderHook(() => usePrompt());
     const valPromise = result.current({
+      title: "test-title",
       placeholder: "test-placeholder",
     });
 
@@ -48,6 +51,7 @@ describe("usePrompt", () => {
   it("should use an initial value", async () => {
     const { result, unmount } = renderHook(() => usePrompt());
     const valPromise = result.current({
+      title: "test-title",
       value: "initial-value",
       placeholder: "some-placeholder",
     });

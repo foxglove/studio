@@ -16,7 +16,7 @@ export default function ThemeProvider({
       // custom `as` component, but we get React warnings if our component doesn't support ref.
       // eslint-disable-next-line react/display-name
       as={React.forwardRef((props, _ref) => props.children)}
-      applyTo="body"
+      applyTo="none" // skip default global styles for now
       theme={theme}
     >
       {children}

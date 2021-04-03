@@ -56,6 +56,7 @@ import AnalyticsProvider from "@foxglove-studio/app/context/AnalyticsProvider";
 import { useAppConfiguration } from "@foxglove-studio/app/context/AppConfigurationContext";
 import ExperimentalFeaturesLocalStorageProvider from "@foxglove-studio/app/context/ExperimentalFeaturesLocalStorageProvider";
 import LinkHandlerContext from "@foxglove-studio/app/context/LinkHandlerContext";
+import ModalHost from "@foxglove-studio/app/context/ModalHost";
 import OsContextAppConfigurationProvider from "@foxglove-studio/app/context/OsContextAppConfigurationProvider";
 import OsContextLayoutStorageProvider from "@foxglove-studio/app/context/OsContextLayoutStorageProvider";
 import {
@@ -288,6 +289,7 @@ export default function App(): ReactElement {
     <AnalyticsProvider />,
     <ExperimentalFeaturesLocalStorageProvider features={experimentalFeatures} />,
     <ThemeProvider />,
+    <ModalHost />, // render modal elements inside the ThemeProvider
     /* eslint-enable react/jsx-key */
   ];
   function AllProviders({ children }: { children: React.ReactElement }) {

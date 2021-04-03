@@ -94,6 +94,7 @@ export default function LayoutMenu({
   const renameAction = useCallback(
     async (layout: Layout) => {
       const value = await prompt({
+        title: "Rename layout",
         value: layout.name,
       });
       if (!isMounted()) {
