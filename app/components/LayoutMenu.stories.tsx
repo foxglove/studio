@@ -39,7 +39,7 @@ export default {
   component: LayoutMenu,
   parameters: {
     chromatic: {
-      delay: 2000,
+      delay: 5000,
     },
   },
 };
