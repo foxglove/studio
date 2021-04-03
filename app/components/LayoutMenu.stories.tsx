@@ -44,7 +44,7 @@ export function Empty(): JSX.Element {
   const store = useMemo(() => configureStore(createRootReducer(createMemoryHistory())), []);
 
   return (
-    <div style={{ display: "flex" }}>
+    <div style={{ display: "flex", height: 400 }}>
       <Provider store={store}>
         <LayoutStorageContext.Provider value={storage}>
           <LayoutMenu defaultIsOpen />
@@ -87,7 +87,7 @@ export function LayoutList(): JSX.Element {
   }, []);
 
   return (
-    <div style={{ display: "flex" }}>
+    <div style={{ display: "flex", height: 400 }}>
       <Provider store={store}>
         <LayoutStorageContext.Provider value={storage}>
           <LayoutMenu defaultIsOpen />
