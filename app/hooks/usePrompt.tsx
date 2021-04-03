@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { DefaultButton, Dialog, DialogFooter, PrimaryButton, TextField } from "@fluentui/react";
-import { useCallback, useContext, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import ModalContext from "@foxglove-studio/app/context/ModalContext";
 
@@ -25,7 +25,7 @@ type ModalPromptProps = PromptOptions & {
 };
 
 function ModalPrompt({
-  onComplete,
+  onComplete: originalOnComplete,
   title,
   placeholder,
   value: initialValue,
@@ -42,6 +42,22 @@ function ModalPrompt({
       return err.toString();
     }
   }, [transformer, value]);
+
+  const completed = useRef(false);
+  const onComplete = useCallback(
+    (result: string | undefined) => {
+      if (!completed.current) {
+        completed.current = true;
+        originalOnComplete(result);
+      }
+    },
+    [originalOnComplete],
+  );
+  // Ensure we still call onComplete(undefined) when the component unmounts, if it hasn't been
+  // called already
+  useEffect(() => {
+    return () => onComplete(undefined);
+  }, [onComplete]);
 
   return (
     <Dialog hidden={false} onDismiss={() => onComplete(undefined)} dialogContentProps={{ title }}>
