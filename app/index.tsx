@@ -33,7 +33,7 @@ async function main() {
   await Sockets.Create();
 
   // consider moving waitForFonts into App to display an app loading screen
-  await waitForFonts();
+  // await waitForFonts(); //FIXME
 
   // This should live within App and become part of startup
   await getGlobalConfig().load();

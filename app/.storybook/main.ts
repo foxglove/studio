@@ -15,7 +15,10 @@ module.exports = {
   // Storybook's config is required, for instance the HtmlWebpackPlugin that they
   // use to generate the main iframe page.
   webpackFinal: (config: Configuration): Configuration => {
-    const rendererConfig = makeConfig(undefined, { mode: config.mode });
+    const rendererConfig = makeConfig(undefined, {
+      mode: config.mode,
+      env: { WEBPACK_SERVE: true }, // allow unused locals
+    });
     return {
       ...config,
       resolve: {

@@ -217,15 +217,21 @@ export default (env: unknown, argv: WebpackArgv): Configuration => {
   config.plugins?.push(
     new HtmlWebpackPlugin({
       templateContent: `
-        <!doctype html>
-        <html>
-          <head><meta charset="utf-8"></head>
-          <script>global = globalThis;</script>
-          <body>
-            <div id="root"></div>
-          </body>
-        </html>
-      `,
+<!doctype html>
+<html>
+  <head><meta charset="utf-8"></head>
+  <script>
+    global = globalThis;
+    window.FabricConfig = ${
+      // don't load @fabricui fonts from Microsoft servers
+      JSON.stringify({ fontBaseUrl: "" })
+    };
+  </script>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+`,
     }),
   );
   return config;

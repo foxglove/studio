@@ -49,7 +49,7 @@ storiesOf("<TinyConnectionPicker>", module).add("default", () => {
   return (
     <PlayerSelectionContext.Provider value={value}>
       <MockMessagePipelineProvider>
-        <div style={{ padding: 8, textAlign: "right", width: "100%" }}>
+        <div style={{ padding: 8, width: "100%" }}>
           <TinyConnectionPicker defaultIsOpen />
         </div>
       </MockMessagePipelineProvider>

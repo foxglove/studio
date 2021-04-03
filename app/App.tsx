@@ -66,6 +66,7 @@ import experimentalFeatures from "@foxglove-studio/app/experimentalFeatures";
 import welcomeLayout from "@foxglove-studio/app/layouts/welcomeLayout";
 import { PlayerPresence } from "@foxglove-studio/app/players/types";
 import getGlobalStore from "@foxglove-studio/app/store/getGlobalStore";
+import ThemeProvider from "@foxglove-studio/app/theme/ThemeProvider";
 import { ImportPanelLayoutPayload } from "@foxglove-studio/app/types/panels";
 import inAutomatedRunMode from "@foxglove-studio/app/util/inAutomatedRunMode";
 
@@ -279,25 +280,34 @@ export default function App(): ReactElement {
     },
   ];
 
+  const providers = [
+    /* eslint-disable react/jsx-key */
+    <OsContextAppConfigurationProvider />,
+    <OsContextLayoutStorageProvider />,
+    <Provider store={globalStore} />,
+    <AnalyticsProvider />,
+    <ExperimentalFeaturesLocalStorageProvider features={experimentalFeatures} />,
+    <ThemeProvider />,
+    /* eslint-enable react/jsx-key */
+  ];
+  function AllProviders({ children }: { children: React.ReactElement }) {
+    return providers.reduceRight(
+      (wrappedChildren, provider) => React.cloneElement(provider, undefined, wrappedChildren),
+      children,
+    );
+  }
+
   return (
-    <OsContextAppConfigurationProvider>
-      <Provider store={globalStore}>
-        <AnalyticsProvider>
-          <ExperimentalFeaturesLocalStorageProvider features={experimentalFeatures}>
-            <ErrorBoundary>
-              <OsContextLayoutStorageProvider>
-                <LayoutStorageReduxAdapter />
-                <PlayerManager playerSources={playerSources}>
-                  <NativeFileMenuPlayerSelection />
-                  <DndProvider backend={HTML5Backend}>
-                    <Root />
-                  </DndProvider>
-                </PlayerManager>
-              </OsContextLayoutStorageProvider>
-            </ErrorBoundary>
-          </ExperimentalFeaturesLocalStorageProvider>
-        </AnalyticsProvider>
-      </Provider>
-    </OsContextAppConfigurationProvider>
+    <AllProviders>
+      <ErrorBoundary>
+        <LayoutStorageReduxAdapter />
+        <PlayerManager playerSources={playerSources}>
+          <NativeFileMenuPlayerSelection />
+          <DndProvider backend={HTML5Backend}>
+            <Root />
+          </DndProvider>
+        </PlayerManager>
+      </ErrorBoundary>
+    </AllProviders>
   );
 }
