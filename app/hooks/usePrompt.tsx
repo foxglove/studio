@@ -2,15 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import {
-  DefaultButton,
-  Dialog,
-  DialogFooter,
-  ITextField,
-  PrimaryButton,
-  TextField,
-} from "@fluentui/react";
-import { useCallback, useContext, useMemo, useRef, useState } from "react";
+import { DefaultButton, Dialog, DialogFooter, PrimaryButton, TextField } from "@fluentui/react";
+import { useCallback, useContext, useMemo, useState } from "react";
 
 import ModalContext from "@foxglove-studio/app/context/ModalContext";
 
@@ -50,21 +43,8 @@ function ModalPrompt({
     }
   }, [transformer, value]);
 
-  const textFieldRef = useRef<ITextField>(ReactNull);
-
   return (
-    <Dialog
-      hidden={false}
-      onDismiss={() => onComplete(undefined)}
-      dialogContentProps={{ title }}
-      modalProps={{
-        layerProps: {
-          onLayerDidMount() {
-            textFieldRef.current?.select();
-          },
-        },
-      }}
-    >
+    <Dialog hidden={false} onDismiss={() => onComplete(undefined)} dialogContentProps={{ title }}>
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -76,7 +56,7 @@ function ModalPrompt({
         }}
       >
         <TextField
-          componentRef={textFieldRef}
+          componentRef={(textField) => textField?.select()}
           placeholder={placeholder}
           value={value}
           errorMessage={errorMessage}
