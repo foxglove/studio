@@ -39,7 +39,7 @@ export default {
   component: LayoutMenu,
   parameters: {
     screenshot: {
-      delay: 200,
+      delay: 2000,
     },
   },
 };
