@@ -12,22 +12,14 @@
 //   You may not use this file except in compliance with the License.
 
 import { ActionButton, IButton, IContextualMenuItemProps, IRenderFunction } from "@fluentui/react";
-import { createSvgIcon } from "@fluentui/react-icons-mdl2";
 import { ReactElement, useLayoutEffect, useRef } from "react";
 
-import RosSvg from "@foxglove-studio/app/assets/ros.svg";
+import RosIcon from "@foxglove-studio/app/components/RosIcon";
 import { usePlayerSelection } from "@foxglove-studio/app/context/PlayerSelectionContext";
 
 type TinyConnectionPickerProps = {
   defaultIsOpen?: boolean;
 };
-
-const RosIcon = createSvgIcon({
-  displayName: "ROS",
-  svg({ classes }) {
-    return <RosSvg className={classes.svg} style={{ width: "auto" }} />;
-  },
-});
 
 export default function TinyConnectionPicker({
   defaultIsOpen = false,
