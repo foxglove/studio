@@ -9,13 +9,14 @@ import {
   IContextualMenuItem,
 } from "@fluentui/react";
 import path from "path";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import { useDispatch, useSelector, useStore } from "react-redux";
-import { useAsyncRetry, useMountedState } from "react-use";
+import { useAsyncFn, useMountedState } from "react-use";
 import { v4 as uuidv4 } from "uuid";
 
 import { loadLayout } from "@foxglove-studio/app/actions/panels";
 import { Layout, useLayoutStorage } from "@foxglove-studio/app/context/LayoutStorageContext";
+import useLatestNonNull from "@foxglove-studio/app/hooks/useLatestNonNull";
 import { usePrompt } from "@foxglove-studio/app/hooks/usePrompt";
 import { State } from "@foxglove-studio/app/reducers";
 import { PanelsState } from "@foxglove-studio/app/reducers/panels";
@@ -73,17 +74,13 @@ export default function LayoutMenu({
   // a basic stale-while-revalidate pattern to avoid flicker of layout menu when we reload the layout list
   // When we re-visit local/remote layouts we will want to look at something like swr (https://swr.vercel.app/)
   // that will handle this and other nice things for us.
-  const [layouts, setLayouts] = useState<Layout[] | undefined>(undefined);
-  const { value: asyncLayouts, error, loading, retry: reload } = useAsyncRetry(async () => {
+  const [{ value: asyncLayouts, error, loading }, fetchLayouts] = useAsyncFn(async () => {
     const list = await layoutStorage.list();
     list.sort((a, b) => a.name.localeCompare(b.name));
     return list;
   }, [layoutStorage]);
-  useEffect(() => {
-    if (asyncLayouts) {
-      setLayouts(asyncLayouts);
-    }
-  }, [asyncLayouts]);
+
+  const layouts = useLatestNonNull(asyncLayouts);
 
   useEffect(() => {
     if (error) {
@@ -155,9 +152,9 @@ export default function LayoutMenu({
   const deleteLayout = useCallback(
     async (layout: Layout) => {
       await layoutStorage.delete(layout.id);
-      reload();
+      fetchLayouts();
     },
-    [layoutStorage, reload],
+    [layoutStorage, fetchLayouts],
   );
 
   const duplicateLayout = useCallback(() => {
@@ -240,7 +237,7 @@ export default function LayoutMenu({
     <ActionButton
       componentRef={buttonRef}
       iconProps={{ iconName: "FiveTileGrid" }}
-      menuProps={{ items }}
+      menuProps={{ items, onMenuOpened: () => fetchLayouts() }}
     />
   );
 }
