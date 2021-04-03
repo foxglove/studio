@@ -38,7 +38,7 @@ export default {
   title: "LayoutMenu",
   component: LayoutMenu,
   parameters: {
-    screenshot: {
+    chromatic: {
       delay: 2000,
     },
   },
