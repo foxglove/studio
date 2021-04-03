@@ -17,10 +17,19 @@ import webpack, {
 
 import { WebpackArgv } from "./WebpackArgv";
 
+type Options = {
+  // During hot reloading and development it is useful to comment out code while iterating.
+  // We ignore errors from unused locals to avoid having to also comment
+  // those out while iterating.
+  allowUnusedLocals?: boolean;
+};
+
 // Common configuration shared by Storybook and the main Webpack build
-export function makeConfig(_: unknown, argv: WebpackArgv): Configuration {
+export function makeConfig(_: unknown, argv: WebpackArgv, options?: Options): Configuration {
   const isDev = argv.mode === "development";
   const isServe = argv.env?.WEBPACK_SERVE ?? false;
+
+  const { allowUnusedLocals = isDev && isServe } = options ?? {};
 
   const plugins: WebpackPluginInstance[] = [];
   const ruleUse: RuleSetUseItem[] = [];
@@ -196,10 +205,7 @@ export function makeConfig(_: unknown, argv: WebpackArgv): Configuration {
         typescript: {
           configOverwrite: {
             compilerOptions: {
-              // During hot reloading and development it is useful to comment out code while iterating.
-              // We ignore errors from unused locals to avoid having to also comment
-              // those out while iterating.
-              noUnusedLocals: !(isDev && isServe),
+              noUnusedLocals: !allowUnusedLocals,
             },
           },
         },
