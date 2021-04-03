@@ -81,7 +81,13 @@ function ModalPrompt({
   }, [textField]);
 
   return (
-    <Dialog hidden={false} onDismiss={() => onComplete(undefined)} dialogContentProps={{ title }}>
+    <Dialog
+      // Needs a patch to fluent-ui to be able to set dark/light overay at the theme layer
+      modalProps={{ isDarkOverlay: false }}
+      hidden={false}
+      onDismiss={() => onComplete(undefined)}
+      dialogContentProps={{ title }}
+    >
       <form
         onSubmit={(event) => {
           event.preventDefault();
