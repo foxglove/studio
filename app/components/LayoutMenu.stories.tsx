@@ -39,12 +39,7 @@ export default {
   component: LayoutMenu,
   parameters: {
     screenshot: {
-      waitFor: async (): Promise<void> => {
-        // Wait a few frames for things to render completely
-        for (let i = 0; i < 5; i++) {
-          await new Promise((resolve) => requestAnimationFrame(resolve));
-        }
-      },
+      delay: 200,
     },
   },
 };
