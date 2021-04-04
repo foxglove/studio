@@ -19,7 +19,7 @@ import { FieldReader, Uint8Reader, getReader } from "./readers";
 import { DATATYPE, VertexBuffer } from "./types";
 
 export type FieldOffsetsAndReaders = {
-  [name: string]: { datatype: string; offset: number; reader?: FieldReader };
+  [name: string]: { datatype: number; offset: number; reader?: FieldReader };
 };
 
 export function getFieldOffsetsAndReaders(
@@ -29,7 +29,7 @@ export function getFieldOffsetsAndReaders(
   const result: FieldOffsetsAndReaders = {};
   for (const { name, datatype, offset = 0 } of fields) {
     result[name] = {
-      datatype: datatype.toString(),
+      datatype,
       offset,
       reader: getReader(data, datatype, offset),
     };
@@ -241,7 +241,6 @@ export function createColorBuffer({
   // memory alignment is correct (that is, it's divisible by sizeof(float)). There
   // might be other values previous to this one that have different memory alignments.
   if (
-    // @ts-expect-error typescript says this will always be false cause of the types involved
     colorField.datatype === DATATYPE.FLOAT32 &&
     colorField.offset % FLOAT_SIZE === 0 &&
     hasValidStride(stride)
