@@ -20,7 +20,6 @@ import {
 import { useRef } from "react";
 
 import MockMessagePipelineProvider from "@foxglove-studio/app/components/MessagePipeline/MockMessagePipelineProvider";
-import RosIcon from "@foxglove-studio/app/components/RosIcon";
 import TinyConnectionPicker from "@foxglove-studio/app/components/TinyConnectionPicker";
 import PlayerSelectionContext, {
   PlayerSelection,
