@@ -13,6 +13,7 @@ export function useAnalytics(): Analytics {
   if (analytics == undefined) {
     throw new Error("An AnalyticsContext provider is required to useAnalytics");
   }
+  analytics.init();
   return analytics;
 }
 

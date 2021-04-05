@@ -28,13 +28,25 @@ export enum AppEvent {
 }
 
 export class Analytics {
+  private _initialized = false;
   private _amplitude?: amplitude.AmplitudeClient;
   private _storage = new Storage();
+  private _optOut: boolean;
+  private _amplitudeApiKey?: string;
 
   constructor(options: { optOut?: boolean; amplitudeApiKey: string | undefined }) {
-    const amplitudeApiKey = options.amplitudeApiKey;
-    const optOut = options.optOut ?? false;
-    if (!optOut && amplitudeApiKey != undefined && amplitudeApiKey.length > 0) {
+    this._optOut = options.optOut ?? false;
+    this._amplitudeApiKey = options.amplitudeApiKey;
+  }
+
+  init(): void {
+    if (this._initialized) {
+      return;
+    }
+    this._initialized = true;
+
+    const amplitudeApiKey = this._amplitudeApiKey;
+    if (!this._optOut && amplitudeApiKey != undefined && amplitudeApiKey.length > 0) {
       const userId = this.getUserId();
       const deviceId = this.getDeviceId();
       const appVersion = this.getAppVersion();
