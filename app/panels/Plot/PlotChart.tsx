@@ -15,10 +15,10 @@ import { ScaleOptions } from "chart.js";
 import { AnnotationOptions } from "chartjs-plugin-annotation";
 import flatten from "lodash/flatten";
 import { ComponentProps, memo, useMemo } from "react";
+import { useResizeDetector } from "react-resize-detector";
 import { Time } from "rosbag";
 import { v4 as uuidv4 } from "uuid";
 
-import Dimensions from "@foxglove-studio/app/components/Dimensions";
 import TimeBasedChart, {
   ChartDefaultView,
   TimeBasedChartTooltipData,
@@ -407,29 +407,31 @@ export default memo<PlotChartProps>(function PlotChart(props: PlotChartProps) {
     };
   }, [maxYValue, minYValue]);
 
+  const { width, height, ref: sizeRef } = useResizeDetector();
+
+  const data = useMemo(() => {
+    return { datasets };
+  }, [datasets]);
+
   return (
-    <div className={styles.root}>
-      <Dimensions>
-        {({ width, height }) => (
-          <TimeBasedChart // Force a redraw every time the x-axis value changes.
-            key={xAxisVal}
-            isSynced
-            zoom
-            width={width}
-            height={height}
-            data={{ datasets }}
-            tooltips={tooltips}
-            annotations={annotations}
-            type="scatter"
-            yAxes={yAxes}
-            saveCurrentView={saveCurrentView}
-            xAxisIsPlaybackTime={xAxisVal === "timestamp"}
-            currentTime={currentTime}
-            defaultView={defaultView}
-            onClick={onClick}
-          />
-        )}
-      </Dimensions>
+    <div className={styles.root} ref={sizeRef}>
+      <TimeBasedChart
+        key={xAxisVal}
+        isSynced
+        zoom
+        width={width ?? 0}
+        height={height ?? 0}
+        data={data}
+        tooltips={tooltips}
+        annotations={annotations}
+        type="scatter"
+        yAxes={yAxes}
+        saveCurrentView={saveCurrentView}
+        xAxisIsPlaybackTime={xAxisVal === "timestamp"}
+        currentTime={currentTime}
+        defaultView={defaultView}
+        onClick={onClick}
+      />
     </div>
   );
 });

@@ -159,7 +159,7 @@ export function filterDatasets(
 
 // only sync the x axis and allow y-axis scales to auto-calculate
 type SyncBounds = { min: number; max: number; userInteraction: boolean };
-const useGlobalBounds = makeGlobalState<SyncBounds>();
+const useGlobalXBounds = makeGlobalState<SyncBounds>();
 
 // Calculation mode for the "reset view" view.
 export type ChartDefaultView =
@@ -258,7 +258,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
   const isUserInteraction = useRef(false);
 
   const [currentScales, setCurrentScales] = useState<RpcScales | undefined>();
-  const [globalBounds, setGlobalBounds] = useGlobalBounds({ enabled: isSynced });
+  const [globalBounds, setGlobalBounds] = useGlobalXBounds({ enabled: isSynced });
 
   const { labels, datasets } = data;
 

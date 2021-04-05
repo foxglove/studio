@@ -14,13 +14,13 @@
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { uniq } from "lodash";
 import { ComponentProps, useMemo, useState } from "react";
+import { useResizeDetector } from "react-resize-detector";
 import stringHash from "string-hash";
 import styled, { css } from "styled-components";
 import tinycolor from "tinycolor2";
 
 import * as PanelAPI from "@foxglove-studio/app/PanelAPI";
 import Button from "@foxglove-studio/app/components/Button";
-import Dimensions from "@foxglove-studio/app/components/Dimensions";
 import MessagePathInput from "@foxglove-studio/app/components/MessagePathSyntax/MessagePathInput";
 import useMessagesByPath from "@foxglove-studio/app/components/MessagePathSyntax/useMessagesByPath";
 import Panel from "@foxglove-studio/app/components/Panel";
@@ -375,6 +375,10 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     };
   }, []);
 
+  const { width, ref: sizeRef } = useResizeDetector({
+    handleHeight: false,
+  });
+
   return (
     <SRoot>
       <PanelToolbar floating helpContent={helpContent} />
@@ -390,53 +394,49 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
         </Button>
       </SAddButton>
       <SChartContainerOuter>
-        <Dimensions>
-          {({ width }) => (
-            <SChartContainerInner style={{ width: width, height }}>
-              <TimeBasedChart
-                zoom
-                isSynced
-                width={width}
-                height={height}
-                data={data}
-                type="scatter"
-                xAxes={xScale}
-                xAxisIsPlaybackTime
-                yAxes={yScale}
-                plugins={plugins}
-                tooltips={tooltips}
-              />
+        <SChartContainerInner style={{ height }} ref={sizeRef}>
+          <TimeBasedChart
+            zoom
+            isSynced
+            width={width ?? 0}
+            height={height}
+            data={data}
+            type="scatter"
+            xAxes={xScale}
+            xAxisIsPlaybackTime
+            yAxes={yScale}
+            plugins={plugins}
+            tooltips={tooltips}
+          />
 
-              {paths.map(({ value: path, timestampMethod }, index) => (
-                <SInputContainer
-                  key={index}
-                  style={{ top: index * heightPerTopic }}
-                  shrink={index === 0 && isHovered}
-                >
-                  <SInputDelete
-                    onClick={() => {
-                      const newPaths = config.paths.slice();
-                      newPaths.splice(index, 1);
-                      saveConfig({ paths: newPaths });
-                    }}
-                  >
-                    ✕
-                  </SInputDelete>
-                  <MessagePathInput
-                    path={path}
-                    onChange={onInputChange}
-                    index={index}
-                    autoSize
-                    validTypes={transitionableRosTypes}
-                    noMultiSlices
-                    timestampMethod={timestampMethod}
-                    onTimestampMethodChange={onInputTimestampMethodChange}
-                  />
-                </SInputContainer>
-              ))}
-            </SChartContainerInner>
-          )}
-        </Dimensions>
+          {paths.map(({ value: path, timestampMethod }, index) => (
+            <SInputContainer
+              key={index}
+              style={{ top: index * heightPerTopic }}
+              shrink={index === 0 && isHovered}
+            >
+              <SInputDelete
+                onClick={() => {
+                  const newPaths = config.paths.slice();
+                  newPaths.splice(index, 1);
+                  saveConfig({ paths: newPaths });
+                }}
+              >
+                ✕
+              </SInputDelete>
+              <MessagePathInput
+                path={path}
+                onChange={onInputChange}
+                index={index}
+                autoSize
+                validTypes={transitionableRosTypes}
+                noMultiSlices
+                timestampMethod={timestampMethod}
+                onTimestampMethodChange={onInputTimestampMethodChange}
+              />
+            </SInputContainer>
+          ))}
+        </SChartContainerInner>
       </SChartContainerOuter>
     </SRoot>
   );

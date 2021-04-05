@@ -17,13 +17,12 @@ import { useState, useCallback } from "react";
 import MockMessagePipelineProvider from "@foxglove-studio/app/components/MessagePipeline/MockMessagePipelineProvider";
 import { triggerWheel } from "@foxglove-studio/app/stories/PanelSetup";
 
-import TimeBasedChart from "./index";
+import TimeBasedChart, { TimeBasedChartTooltipData } from "./index";
 import type { Props } from "./index";
 
 const dataX = 0.000057603000000000004;
 const dataY = 5.544444561004639;
-// fixme - this should not be _any_
-const tooltipData: any = {
+const tooltipData: TimeBasedChartTooltipData = {
   x: dataX,
   y: dataY,
   item: {

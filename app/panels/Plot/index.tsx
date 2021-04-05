@@ -266,6 +266,7 @@ function Plot(props: Props) {
     [seek, startTime, xAxisVal],
   );
 
+  // console.log(preloadingEndTime);
   return (
     <Flex col clip center style={{ position: "relative" }}>
       <PanelToolbar
@@ -273,7 +274,7 @@ function Plot(props: Props) {
         floating
         menuContent={
           <PlotMenu
-            displayWidth={followingViewWidth || ""}
+            displayWidth={followingViewWidth ?? ""}
             minYValue={minYValue}
             maxYValue={maxYValue}
             saveConfig={saveConfig}

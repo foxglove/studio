@@ -152,9 +152,7 @@ export default class ChartJSManager {
   }) {
     const instance = this._chartInstance;
 
-    if (instance.options.plugins) {
-      instance.options.plugins.zoom = options.plugins?.zoom;
-    }
+    instance.options.plugins = this.addFunctionsToConfig(options).plugins;
 
     // scales are special because we can mutate them interally via the zoom plugin
     instance.options.scales = merge(instance.options.scales, options.scales);
