@@ -246,14 +246,6 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     resumeFrame.current = undefined;
   }, []);
 
-  // cleanup any paused frames on unmount
-  useEffect(() => {
-    return () => {
-      resumeFrame.current?.();
-      resumeFrame.current = undefined;
-    };
-  }, []);
-
   const hoverBar = useRef<HTMLDivElement>(ReactNull);
   const isUserInteraction = useRef(false);
 
@@ -264,21 +256,24 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
 
   const linesToHide = useMemo(() => props.linesToHide ?? {}, [props.linesToHide]);
 
-  const dataMemo = useMemo(() => {
-    // unpause any previous frame
-    if (resumeFrame.current) {
-      resumeFrame.current();
-    }
-
+  useEffect(() => {
     // see notes for onChartUpdate
     resumeFrame.current = pauseFrame("TimeBasedChart");
 
+    // cleanup pased frames on unmount or dataset changes
+    return () => {
+      resumeFrame.current?.();
+      resumeFrame.current = undefined;
+    };
+  }, [pauseFrame, datasets]);
+
+  const dataMemo = useMemo(() => {
     const filtered = filterDatasets(datasets, linesToHide);
     return {
       labels,
       datasets: filtered,
     };
-  }, [pauseFrame, datasets, linesToHide, labels]);
+  }, [datasets, linesToHide, labels]);
 
   // calculates the minX/maxX for all our datasets
   // default viewport scales to the entire dataset range
