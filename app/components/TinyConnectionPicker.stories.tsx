@@ -11,7 +11,16 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import {
+  ContextualMenu,
+  ContextualMenuItem,
+  IContextualMenuItemProps,
+  IRenderFunction,
+} from "@fluentui/react";
+import { useRef } from "react";
+
 import MockMessagePipelineProvider from "@foxglove-studio/app/components/MessagePipeline/MockMessagePipelineProvider";
+import RosIcon from "@foxglove-studio/app/components/RosIcon";
 import TinyConnectionPicker from "@foxglove-studio/app/components/TinyConnectionPicker";
 import PlayerSelectionContext, {
   PlayerSelection,
@@ -54,11 +63,97 @@ export function Default(): React.ReactElement {
     availableSources: playerSources,
   };
 
+  const ref = useRef<HTMLDivElement | ReactNull>(ReactNull);
+
   return (
     <PlayerSelectionContext.Provider value={value}>
       <MockMessagePipelineProvider>
         <div style={{ padding: 8, width: "100%", height: 400 }}>
           <TinyConnectionPicker defaultIsOpen />
+          <div ref={ref} style={{ position: "absolute", left: 200 }}>
+            <ContextualMenu
+              target={ref}
+              hidden={false}
+              items={playerSources.map((source) => {
+                let iconName: string | undefined;
+                let onRenderIcon: IRenderFunction<IContextualMenuItemProps> | undefined;
+                switch (source.type) {
+                  case "file":
+                    iconName = "OpenFile";
+                    break;
+                  case "ros1-core":
+                    // eslint-disable-next-line react/display-name
+                    onRenderIcon = (props) => <RosIcon className={props?.classNames.icon} />;
+                    break;
+                  case "ws":
+                    iconName = "Flow";
+                    break;
+                  case "http":
+                    iconName = "FileASPX";
+                    break;
+                }
+                return {
+                  key: source.name,
+                  text: source.name,
+                  onClick: () => void 0,
+                  iconProps: { iconName },
+                  onRenderIcon,
+                };
+              })}
+            />
+          </div>
+          <div style={{ position: "absolute", left: 400 }}>
+            {playerSources.map((source, i) => {
+              let iconName: string | undefined;
+              let onRenderIcon: IRenderFunction<IContextualMenuItemProps> | undefined;
+              switch (source.type) {
+                case "file":
+                  iconName = "OpenFile";
+                  break;
+                case "ros1-core":
+                  // eslint-disable-next-line react/display-name
+                  onRenderIcon = (props) => <RosIcon className={props?.classNames.icon} />;
+                  break;
+                case "ws":
+                  iconName = "Flow";
+                  break;
+                case "http":
+                  iconName = "FileASPX";
+                  break;
+              }
+              const item = {
+                key: source.name,
+                text: source.name,
+                onClick: () => void 0,
+                iconProps: { iconName },
+                onRenderIcon,
+              };
+              return (
+                <ContextualMenuItem
+                  key={source.type}
+                  index={i}
+                  hasIcons={true}
+                  classNames={{
+                    item: "",
+                    divider: "",
+                    root: "",
+                    linkContent: "",
+                    icon: "",
+                    checkmarkIcon: "",
+                    subMenuIcon: "",
+                    label: "",
+                    secondaryText: "",
+                    splitContainer: "",
+                    splitPrimary: "",
+                    splitMenu: "",
+                    linkContentMenu: "",
+                    screenReaderText: "",
+                  }}
+                  item={item}
+                />
+              );
+            })}
+          </div>
         </div>
       </MockMessagePipelineProvider>
     </PlayerSelectionContext.Provider>

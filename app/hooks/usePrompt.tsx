@@ -83,6 +83,7 @@ function ModalPrompt({
   return (
     <Dialog
       // Needs a patch to fluent-ui to be able to set dark/light overay at the theme layer
+      // FIXME
       modalProps={{ isDarkOverlay: false }}
       hidden={false}
       onDismiss={() => onComplete(undefined)}
