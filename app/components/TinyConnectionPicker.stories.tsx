@@ -11,9 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-// import { ContextualMenu, ContextualMenuItem } from "@fluentui/react";
-import { useRef } from "react";
-
 import MockMessagePipelineProvider from "@foxglove-studio/app/components/MessagePipeline/MockMessagePipelineProvider";
 import TinyConnectionPicker from "@foxglove-studio/app/components/TinyConnectionPicker";
 import PlayerSelectionContext, {
@@ -57,112 +54,11 @@ export function Default(): React.ReactElement {
     availableSources: playerSources,
   };
 
-  const ref = useRef<HTMLDivElement | ReactNull>(ReactNull);
-
   return (
     <PlayerSelectionContext.Provider value={value}>
       <MockMessagePipelineProvider>
         <div style={{ padding: 8, width: "100%", height: 400 }}>
           <TinyConnectionPicker defaultIsOpen />
-          {/* <div ref={ref} style={{ position: "absolute", left: 200 }}>
-            <ContextualMenu
-              doNotLayer={true}
-              target={new MouseEvent("click", { clientX: 200, clientY: 0 })}
-              styles={{
-                subComponentStyles: {
-                  menuItem: () => ({
-                    item: "",
-                    divider: "",
-                    root: "",
-                    linkContent: "",
-                    icon: "",
-                    checkmarkIcon: "",
-                    subMenuIcon: "",
-                    label: "",
-                    secondaryText: "",
-                    splitContainer: "",
-                    splitPrimary: "",
-                    splitMenu: "",
-                    linkContentMenu: "",
-                    screenReaderText: "",
-                  }),
-                },
-              }}
-              hidden={false}
-              items={playerSources.map((source) => {
-                let iconName: string;
-                switch (source.type) {
-                  case "file":
-                    iconName = "OpenFile";
-                    break;
-                  case "ros1-core":
-                    iconName = "studio.ROS";
-                    break;
-                  case "ws":
-                    iconName = "Flow";
-                    break;
-                  case "http":
-                    iconName = "FileASPX";
-                    break;
-                }
-                return {
-                  key: source.name,
-                  text: source.name,
-                  onClick: () => void 0,
-                  iconProps: { iconName },
-                };
-              })}
-            />
-          </div>
-          <div style={{ position: "absolute", left: 400 }}>
-            {playerSources.map((source, i) => {
-              let iconName: string;
-              switch (source.type) {
-                case "file":
-                  iconName = "OpenFile";
-                  break;
-                case "ros1-core":
-                  iconName = "studio.ROS";
-                  break;
-                case "ws":
-                  iconName = "Flow";
-                  break;
-                case "http":
-                  iconName = "FileASPX";
-                  break;
-              }
-              const item = {
-                key: source.name,
-                text: source.name,
-                onClick: () => void 0,
-                iconProps: { iconName },
-              };
-              return (
-                <ContextualMenuItem
-                  key={source.type}
-                  index={i}
-                  hasIcons={true}
-                  classNames={{
-                    item: "",
-                    divider: "",
-                    root: "",
-                    linkContent: "",
-                    icon: "",
-                    checkmarkIcon: "",
-                    subMenuIcon: "",
-                    label: "",
-                    secondaryText: "",
-                    splitContainer: "",
-                    splitPrimary: "",
-                    splitMenu: "",
-                    linkContentMenu: "",
-                    screenReaderText: "",
-                  }}
-                  item={item}
-                />
-              );
-            })}
-          </div> */}
         </div>
       </MockMessagePipelineProvider>
     </PlayerSelectionContext.Provider>
