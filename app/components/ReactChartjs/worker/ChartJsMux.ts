@@ -72,15 +72,15 @@ export default class ChartJsMux {
       this._managers.set(args.id, manager);
       return manager.getScales();
     });
-    rpc.receive("wheel", (args: any) => this._managers.get(args.id)?.wheel(args.event));
-    rpc.receive("mousedown", (args: any) => this._managers.get(args.id)?.mousedown(args.event));
-    rpc.receive("mousemove", (args: any) => this._managers.get(args.id)?.mousemove(args.event));
-    rpc.receive("mouseup", (args: any) => this._managers.get(args.id)?.mouseup(args.event));
-    rpc.receive("panstart", (args: any) => this._managers.get(args.id)?.panstart(args.event));
-    rpc.receive("panend", (args: any) => this._managers.get(args.id)?.panend(args.event));
-    rpc.receive("panmove", (args: any) => this._managers.get(args.id)?.panmove(args.event));
+    rpc.receive("wheel", (args: any) => this._getChart(args.id).wheel(args.event));
+    rpc.receive("mousedown", (args: any) => this._getChart(args.id).mousedown(args.event));
+    rpc.receive("mousemove", (args: any) => this._getChart(args.id).mousemove(args.event));
+    rpc.receive("mouseup", (args: any) => this._getChart(args.id).mouseup(args.event));
+    rpc.receive("panstart", (args: any) => this._getChart(args.id).panstart(args.event));
+    rpc.receive("panend", (args: any) => this._getChart(args.id).panend(args.event));
+    rpc.receive("panmove", (args: any) => this._getChart(args.id).panmove(args.event));
 
-    rpc.receive("update", (args: any) => this._managers.get(args.id)?.update(args));
+    rpc.receive("update", (args: any) => this._getChart(args.id).update(args));
     rpc.receive("destroy", (args: any) => {
       const manager = this._managers.get(args.id);
       if (manager) {
@@ -89,10 +89,18 @@ export default class ChartJsMux {
       }
     });
     rpc.receive("getElementsAtEvent", (args: any) =>
-      this._managers.get(args.id)?.getElementsAtEvent(args),
+      this._getChart(args.id).getElementsAtEvent(args),
     );
     rpc.receive("getDatalabelAtEvent", (args: any) =>
-      this._managers.get(args.id)?.getDatalabelAtEvent(args),
+      this._getChart(args.id).getDatalabelAtEvent(args),
     );
+  }
+
+  private _getChart(id: string): ChartJSManager {
+    const chart = this._managers.get(id);
+    if (!chart) {
+      throw new Error(`Could not find chart with id ${id}`);
+    }
+    return chart;
   }
 }

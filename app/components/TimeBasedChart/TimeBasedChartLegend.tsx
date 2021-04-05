@@ -21,7 +21,9 @@ import {
 
 type Props = {
   canToggleLines?: boolean;
-  datasets: readonly ChartDataset<"scatter", ScatterDataPoint[]>[];
+  // chartjs typings use _null_ to indicate gaps in the data
+  // eslint-disable-next-line no-restricted-syntax
+  datasets: readonly ChartDataset<"scatter", (ScatterDataPoint | null)[]>[];
   linesToHide: {
     [key: string]: boolean;
   };

@@ -13,7 +13,6 @@
 import { ChartOptions, ChartData, ScaleOptions, ScatterDataPoint } from "chart.js";
 import { AnnotationOptions } from "chartjs-plugin-annotation";
 import { ZoomOptions } from "chartjs-plugin-zoom/types/options";
-import { sortedUniqBy, uniqBy } from "lodash";
 import React, {
   memo,
   useEffect,
@@ -118,16 +117,10 @@ type FollowPlaybackState = Readonly<{
   xOffsetMax: number; // 1 means the right edge of the plot is one second after the current time.
 }>;
 
-type Data = ChartData<"scatter", ScatterDataPoint[]>;
+// Chartjs typings use _null_ to indicate _gaps_ in the dataset
+// eslint-disable-next-line no-restricted-syntax
+type Data = ChartData<"scatter", (ScatterDataPoint | null)[]>;
 type DataSet = Data["datasets"][0];
-
-const screenCoord = (value: number, valuePerPixel?: number) =>
-  !valuePerPixel ? value : Math.trunc(value / valuePerPixel);
-const datumStringPixel = (
-  { x, y }: ScatterDataPoint,
-  xScale: number | undefined,
-  yScale: number | undefined,
-): string => `${screenCoord(x, xScale)},${typeof y === "string" ? y : screenCoord(y, yScale)}`;
 
 // Exported for tests
 export function filterDatasets(
@@ -135,24 +128,23 @@ export function filterDatasets(
   linesToHide: {
     [key: string]: boolean;
   },
-  xScalePerPixel?: number,
-  yScalePerPixel?: number,
 ): DataSet[] {
   return filterMap(datasets, (dataset) => {
     const { label } = dataset;
     if (label === undefined || linesToHide[label]) {
       return;
     }
-    // For line charts, just remove adjacent points on top of each other so we can draw self-
-    // intersecting (loopy) lines.
-    const data = dataset.showLine
-      ? sortedUniqBy(dataset.data.slice(), (datum) =>
-          datumStringPixel(datum, xScalePerPixel, yScalePerPixel),
-        )
-      : // For scatter charts there's no point in drawing any overlapping points.
-        uniqBy(dataset.data.slice(), (datum) =>
-          datumStringPixel(datum, xScalePerPixel, yScalePerPixel),
-        );
+
+    // NaN item values are now allowed, instead we convert these to undefined entries
+    // which will create _gaps_ in the line
+    const data = dataset.data.map((item) => {
+      if (item == undefined || isNaN(item.x) || isNaN(item.y)) {
+        // Chartjs typings use _null_
+        // eslint-disable-next-line no-restricted-syntax
+        return null;
+      }
+      return item;
+    });
     return { ...dataset, data };
   });
 }
@@ -283,6 +275,9 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
 
     for (const dataset of dataMemo.datasets) {
       for (const item of dataset.data) {
+        if (item == undefined) {
+          continue;
+        }
         min = Math.min(min ?? item.x, item.x);
         max = Math.max(max ?? item.x, item.x);
       }
