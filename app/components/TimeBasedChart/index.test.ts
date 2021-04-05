@@ -21,6 +21,9 @@ describe("filterDatasets", () => {
       { data: [], label: "c" },
     ];
     const linesToHide = { a: false, b: true };
-    expect(filterDatasets(datasets, linesToHide).map(({ label }) => label)).toEqual(["a", "c"]);
+    expect(filterDatasets(datasets, linesToHide, 0, 0).map(({ label }) => label)).toEqual([
+      "a",
+      "c",
+    ]);
   });
 });

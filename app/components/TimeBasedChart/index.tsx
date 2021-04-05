@@ -128,6 +128,9 @@ export function filterDatasets(
   linesToHide: {
     [key: string]: boolean;
   },
+  width: number,
+  height: number,
+  bounds?: { x: { min: number; max: number }; y: { min: number; max: number } },
 ): DataSet[] {
   return filterMap(datasets, (dataset) => {
     const { label } = dataset;
@@ -135,9 +138,50 @@ export function filterDatasets(
       return;
     }
 
+    // we don't have any bounds to filter the dataset on, it goes unfiltered
+    if (!bounds) {
+      // NaN item values are now allowed, instead we convert these to undefined entries
+      // which will create _gaps_ in the line
+      const nanToNulldata = dataset.data.map((item) => {
+        if (item == undefined || isNaN(item.x) || isNaN(item.y)) {
+          // Chartjs typings use _null_
+          // eslint-disable-next-line no-restricted-syntax
+          return null;
+        }
+        return item;
+      });
+
+      return { ...dataset, data: nanToNulldata };
+    }
+
+    const pixelPerXValue = width / (bounds.x.max - bounds.x.min);
+    const pixelPerYValue = height / (bounds.y.max - bounds.y.min);
+
+    let prev: ScatterDataPoint | undefined;
+    const data = filterMap(dataset.data, (datum) => {
+      if (!datum || isNaN(datum.x) || isNaN(datum.y)) {
+        return datum;
+      }
+
+      if (!prev) {
+        prev = datum;
+        return datum;
+      }
+
+      const pixelXDistance = (datum.x - prev.x) * pixelPerXValue;
+      const pixelYDistance = (datum.y - prev.y) * pixelPerYValue;
+
+      if (pixelXDistance < 4 && pixelYDistance < 4) {
+        return;
+      }
+
+      prev = datum;
+      return datum;
+    });
+
     // NaN item values are now allowed, instead we convert these to undefined entries
     // which will create _gaps_ in the line
-    const data = dataset.data.map((item) => {
+    const nanToNulldata = data.map((item) => {
       if (item == undefined || isNaN(item.x) || isNaN(item.y)) {
         // Chartjs typings use _null_
         // eslint-disable-next-line no-restricted-syntax
@@ -145,7 +189,8 @@ export function filterDatasets(
       }
       return item;
     });
-    return { ...dataset, data };
+
+    return { ...dataset, data: nanToNulldata };
   });
 }
 
@@ -259,23 +304,21 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     };
   }, [pauseFrame, datasets]);
 
-  const dataMemo = useMemo(() => {
-    const filtered = filterDatasets(datasets, linesToHide);
-    return {
-      labels,
-      datasets: filtered,
-    };
-  }, [datasets, linesToHide, labels]);
+  // some callbacks don't need to re-create when the current scales change, so we keep a ref
+  const currentScalesRef = useRef<RpcScales | undefined>(currentScales);
+  useEffect(() => {
+    currentScalesRef.current = currentScales;
+  }, [currentScales]);
 
   // calculates the minX/maxX for all our datasets
-  // default viewport scales to the entire dataset range
+  // we do this on the unfiltered datasets because we need the bounds to properly filter adjacent points
   const datasetXBounds = useMemo(() => {
     let min;
     let max;
 
-    for (const dataset of dataMemo.datasets) {
+    for (const dataset of datasets) {
       for (const item of dataset.data) {
-        if (item == undefined) {
+        if (item == undefined || isNaN(item.x) || isNaN(item.y)) {
           continue;
         }
         min = Math.min(min ?? item.x, item.x);
@@ -294,7 +337,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     }
 
     return { min, max };
-  }, [dataMemo]);
+  }, [datasets]);
 
   // handle setting the sync value on updates to our scales
   useEffect(() => {
@@ -489,9 +532,11 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     clearGlobalHoverTime();
   }, [clearGlobalHoverTime, removeTooltip]);
 
+  // currentScalesRef is used because we don't need to change this callback content when the scales change
+  // this does mean that scale changes don't remove tooltips - which is a future enhancement
   const onMouseMove = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
-      const xScale = currentScales?.x;
+      const xScale = currentScalesRef.current?.x;
       if (!xScale || !canvasContainer.current) {
         removeTooltip();
         clearGlobalHoverTime();
@@ -513,7 +558,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
 
       setGlobalHoverTime(xVal);
     },
-    [currentScales, setGlobalHoverTime, removeTooltip, clearGlobalHoverTime],
+    [setGlobalHoverTime, removeTooltip, clearGlobalHoverTime],
   );
 
   const plugins = useMemo<ChartOptions["plugins"]>(() => {
@@ -531,6 +576,9 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     }
 
     return {
+      decimation: {
+        enabled: true,
+      },
       legend: {
         display: false,
       },
@@ -619,6 +667,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     };
 
     return {
+      type: "linear",
       ...yAxes,
       ticks: {
         ...defaultYTicksSettings,
@@ -626,6 +675,48 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
       },
     } as ScaleOptions;
   }, [yAxes]);
+
+  // changing the dataset bounds can change the current scales which then cache busts the
+  // dataMemo which could then change the scales. This creates a state update cycle and slows down rendering.
+  // Instead we
+  const [bustDataMemo, setBustDataMemo] = useState(0);
+  useEffect(() => {
+    if (isUserInteraction.current) {
+      setBustDataMemo((old) => ++old);
+    }
+  }, [currentScales]);
+
+  // Filter the dataset down to what can be shows to the user
+  // this ignores out of bounds points and points that are too close together
+  // we use either automatically calculated bounds (xScale) or the currentScale
+  // if the user is manually controlling the component
+  const dataMemo = useMemo(() => {
+    bustDataMemo; // to appease exchaustive lint hooks
+    const currentScalesLocal = currentScalesRef.current;
+
+    let bounds:
+      | { x: { min: number; max: number }; y: { min: number; max: number } }
+      | undefined = undefined;
+    if (currentScalesLocal?.x && currentScalesLocal?.y) {
+      bounds = {
+        x: {
+          min: currentScalesLocal.x.min,
+          max: currentScalesLocal.x.max,
+        },
+        y: {
+          min: currentScalesLocal.y.min,
+          max: currentScalesLocal.y.max,
+        },
+      };
+    }
+
+    const filtered = filterDatasets(datasets, linesToHide, width, height, bounds);
+
+    return {
+      labels,
+      datasets: filtered,
+    };
+  }, [bustDataMemo, datasets, linesToHide, width, height, labels]);
 
   const options = useMemo<ChartOptions>(() => {
     return {
