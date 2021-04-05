@@ -16,6 +16,8 @@ import {
 import { registerIcons, unregisterIcons } from "@fluentui/style-utilities";
 import { useLayoutEffect, useRef } from "react";
 
+import RosIcon from "@foxglove-studio/app/components/RosIcon";
+
 const iconComponents = [
   AddIcon,
   CheckMarkIcon,
@@ -37,6 +39,8 @@ for (const Component of iconComponents) {
   }
   icons[displayName.replace(/Icon$/, "")] = <Component />;
 }
+
+icons["studio.ROS"] = <RosIcon />;
 
 export default function useIcons(): void {
   const registered = useRef(false);

@@ -1,6 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
+import { IContextualMenuStyles, IContextualMenuItemStyles } from "@fluentui/react";
 import { createTheme } from "@fluentui/theme";
 
 // https://aka.ms/themedesigner
@@ -8,6 +9,21 @@ export default createTheme({
   semanticColors: {
     menuBackground: "#242429",
     menuItemBackgroundHovered: "#2e2e39",
+  },
+  components: {
+    ContextualMenu: {
+      styles: {
+        subComponentStyles: {
+          menuItem: {
+            // Improve menu item icon/text alignment - this may not be necessary if we choose a
+            // different font in the future.
+            icon: {
+              marginTop: -4,
+            },
+          } as Partial<IContextualMenuItemStyles>,
+        },
+      } as IContextualMenuStyles,
+    },
   },
   palette: {
     themePrimary: "#b093c4",

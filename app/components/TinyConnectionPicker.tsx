@@ -11,7 +11,13 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { ActionButton, IButton, IContextualMenuItemProps, IRenderFunction } from "@fluentui/react";
+import {
+  ActionButton,
+  IButton,
+  Icon,
+  IContextualMenuItemProps,
+  IRenderFunction,
+} from "@fluentui/react";
 import { ReactElement, useLayoutEffect, useRef } from "react";
 
 import RosIcon from "@foxglove-studio/app/components/RosIcon";
@@ -40,15 +46,13 @@ export default function TinyConnectionPicker({
       iconProps={{ iconName: "DataManagementSettings" }}
       menuProps={{
         items: availableSources.map((source) => {
-          let iconName: string | undefined;
-          let onRenderIcon: IRenderFunction<IContextualMenuItemProps> | undefined;
+          let iconName: string;
           switch (source.type) {
             case "file":
               iconName = "OpenFile";
               break;
             case "ros1-core":
-              // eslint-disable-next-line react/display-name
-              onRenderIcon = (props) => <RosIcon className={props?.classNames.icon} />;
+              iconName = "studio.ROS";
               break;
             case "ws":
               iconName = "Flow";
@@ -62,7 +66,6 @@ export default function TinyConnectionPicker({
             text: source.name,
             onClick: () => selectSource(source),
             iconProps: { iconName },
-            onRenderIcon,
           };
         }),
       }}

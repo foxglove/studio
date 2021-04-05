@@ -76,15 +76,13 @@ export function Default(): React.ReactElement {
               target={new MouseEvent("click", { clientX: 200, clientY: 0 })}
               hidden={false}
               items={playerSources.map((source) => {
-                let iconName: string | undefined;
-                let onRenderIcon: IRenderFunction<IContextualMenuItemProps> | undefined;
+                let iconName: string;
                 switch (source.type) {
                   case "file":
                     iconName = "OpenFile";
                     break;
                   case "ros1-core":
-                    // eslint-disable-next-line react/display-name
-                    onRenderIcon = (props) => <RosIcon className={props?.classNames.icon} />;
+                    iconName = "studio.ROS";
                     break;
                   case "ws":
                     iconName = "Flow";
@@ -98,22 +96,19 @@ export function Default(): React.ReactElement {
                   text: source.name,
                   onClick: () => void 0,
                   iconProps: { iconName },
-                  onRenderIcon,
                 };
               })}
             />
           </div>
           <div style={{ position: "absolute", left: 400 }}>
             {playerSources.map((source, i) => {
-              let iconName: string | undefined;
-              let onRenderIcon: IRenderFunction<IContextualMenuItemProps> | undefined;
+              let iconName: string;
               switch (source.type) {
                 case "file":
                   iconName = "OpenFile";
                   break;
                 case "ros1-core":
-                  // eslint-disable-next-line react/display-name
-                  onRenderIcon = (props) => <RosIcon className={props?.classNames.icon} />;
+                  iconName = "studio.ROS";
                   break;
                 case "ws":
                   iconName = "Flow";
@@ -127,7 +122,6 @@ export function Default(): React.ReactElement {
                 text: source.name,
                 onClick: () => void 0,
                 iconProps: { iconName },
-                onRenderIcon,
               };
               return (
                 <ContextualMenuItem
