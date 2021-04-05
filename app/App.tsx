@@ -10,8 +10,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { ActionButton, Layer } from "@fluentui/react";
 import AlertIcon from "@mdi/svg/svg/alert.svg";
-import CogIcon from "@mdi/svg/svg/cog.svg";
 import {
   ReactElement,
   useState,
@@ -33,11 +33,10 @@ import { importPanelLayout, loadLayout } from "@foxglove-studio/app/actions/pane
 import AddPanelMenu from "@foxglove-studio/app/components/AddPanelMenu";
 import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
 import { ExperimentalFeaturesModal } from "@foxglove-studio/app/components/ExperimentalFeaturesModal";
-import Flex from "@foxglove-studio/app/components/Flex";
 import GlobalKeyListener from "@foxglove-studio/app/components/GlobalKeyListener";
 import GlobalVariablesMenu from "@foxglove-studio/app/components/GlobalVariablesMenu";
 import HelpModal from "@foxglove-studio/app/components/HelpModal";
-import Icon, { WrappedIcon } from "@foxglove-studio/app/components/Icon";
+import Icon from "@foxglove-studio/app/components/Icon";
 import LayoutMenu from "@foxglove-studio/app/components/LayoutMenu";
 import LayoutStorageReduxAdapter from "@foxglove-studio/app/components/LayoutStorageReduxAdapter";
 import messagePathHelp from "@foxglove-studio/app/components/MessagePathSyntax/index.help.md";
@@ -240,16 +239,13 @@ function Root() {
             <GlobalVariablesMenu />
           </SToolbarItem>
           <SToolbarItem>
-            <Flex center>
-              <WrappedIcon medium fade onClick={() => setPreferencesOpen(true)}>
-                <CogIcon />
-              </WrappedIcon>
-              {preferencesOpen && (
-                <RenderToBodyComponent>
-                  <ExperimentalFeaturesModal onRequestClose={() => setPreferencesOpen(false)} />
-                </RenderToBodyComponent>
-              )}
-            </Flex>
+            <ActionButton
+              iconProps={{ iconName: "Settings" }}
+              onClick={() => setPreferencesOpen(true)}
+            />
+            {preferencesOpen && (
+              <ExperimentalFeaturesModal onRequestClose={() => setPreferencesOpen(false)} />
+            )}
           </SToolbarItem>
         </Toolbar>
         <PanelLayout />

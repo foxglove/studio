@@ -3,15 +3,21 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 import {
   AddIcon,
+  AddInIcon,
   CheckMarkIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   DataManagementSettingsIcon,
+  DeleteIcon,
+  EditIcon,
   FileASPXIcon,
   FiveTileGridIcon,
   FlowIcon,
+  MoreVerticalIcon,
   OpenFileIcon,
+  SettingsIcon,
   ShareIcon,
+  Variable2Icon,
 } from "@fluentui/react-icons-mdl2";
 import { registerIcons, unregisterIcons } from "@fluentui/style-utilities";
 import { useLayoutEffect, useRef } from "react";
@@ -20,15 +26,21 @@ import RosIcon from "@foxglove-studio/app/components/RosIcon";
 
 const iconComponents = [
   AddIcon,
+  AddInIcon,
   CheckMarkIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   DataManagementSettingsIcon,
+  DeleteIcon,
+  EditIcon,
   FileASPXIcon,
   FiveTileGridIcon,
   FlowIcon,
+  MoreVerticalIcon,
   OpenFileIcon,
+  SettingsIcon,
   ShareIcon,
+  Variable2Icon,
 ];
 
 const icons: Record<string, React.ReactElement> = {};

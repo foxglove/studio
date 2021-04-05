@@ -25,6 +25,7 @@ export default createTheme({
       } as IContextualMenuStyles,
     },
   },
+  isInverted: true,
   palette: {
     themePrimary: "#b093c4",
     themeLighterAlt: "#070608",
@@ -47,6 +48,8 @@ export default createTheme({
     neutralPrimary: "#f7f7f3",
     neutralDark: "#fdfdfc",
     black: "#fefefd",
+    blackTranslucent40: "#fefefd66",
     white: "#121217",
+    whiteTranslucent40: "#12121766",
   },
 });

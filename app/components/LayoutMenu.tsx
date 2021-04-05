@@ -205,10 +205,16 @@ export default function LayoutMenu({
         iconProps: layout.id === currentLayoutId ? { iconName: "Checkmark" } : undefined,
         subMenuProps: {
           items: [
-            { key: "rename", text: "Rename", onClick: () => void renameAction(layout) },
+            {
+              key: "rename",
+              text: "Rename",
+              iconProps: { iconName: "Edit" },
+              onClick: () => void renameAction(layout),
+            },
             {
               key: "delete",
               text: "Delete",
+              iconProps: { iconName: "Delete" },
               // delete only available for non-current layouts to avoid "what happens when I delete last layout"
               disabled: layout.id === currentLayoutId,
               onClick: (event) => {
@@ -238,6 +244,7 @@ export default function LayoutMenu({
       componentRef={buttonRef}
       iconProps={{ iconName: "FiveTileGrid" }}
       menuProps={{ items, onMenuOpened: () => fetchLayouts() }}
+      onRenderMenuIcon={() => ReactNull}
     />
   );
 }

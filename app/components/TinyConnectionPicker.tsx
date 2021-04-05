@@ -37,6 +37,7 @@ export default function TinyConnectionPicker({
       componentRef={buttonRef}
       data-test="open-connection-picker"
       iconProps={{ iconName: "DataManagementSettings" }}
+      onRenderMenuIcon={() => ReactNull}
       menuProps={{
         items: availableSources.map((source) => {
           let iconName: string;
