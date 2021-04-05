@@ -11,13 +11,16 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { createStore, applyMiddleware, Reducer } from "redux";
+import { createStore, applyMiddleware, Reducer, Store } from "redux";
 import thunk, { ThunkDispatch } from "redux-thunk";
 
 import { ActionTypes } from "@foxglove-studio/app/actions";
 import { State } from "@foxglove-studio/app/reducers";
 
-const configureStore = (reducer: Reducer<State, ActionTypes>, middleware: Array<any> = []) => {
+const configureStore = (
+  reducer: Reducer<State, ActionTypes>,
+  middleware: Array<any> = [],
+): Store<State, ActionTypes> => {
   let enhancer = applyMiddleware<ThunkDispatch<State, undefined, ActionTypes>>(
     thunk,
     ...middleware,
