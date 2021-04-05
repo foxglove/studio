@@ -42,7 +42,6 @@ import ChartComponent from "@foxglove-studio/app/components/ReactChartjs/index";
 import { RpcElement, RpcScales } from "@foxglove-studio/app/components/ReactChartjs/types";
 import TimeBasedChartLegend from "@foxglove-studio/app/components/TimeBasedChart/TimeBasedChartLegend";
 import makeGlobalState from "@foxglove-studio/app/components/TimeBasedChart/makeGlobalState";
-import Tooltip from "@foxglove-studio/app/components/Tooltip";
 import mixins from "@foxglove-studio/app/styles/mixins.module.scss";
 import { isBobject } from "@foxglove-studio/app/util/binaryObjects";
 import filterMap from "@foxglove-studio/app/util/filterMap";
@@ -113,14 +112,6 @@ const SBar = styled.div<{ xAxisIsPlaybackTime: boolean }>`
     props.xAxisIsPlaybackTime ? "#F7BE00 padding-box" : "#248EFF padding-box"};
   border-width: ${(props) => (props.xAxisIsPlaybackTime ? "4px" : "0px 4px")};
 `;
-
-const MemoizedTooltips = memo(function Tooltips() {
-  return (
-    <Tooltip contents={<div>Hold v to zoom vertically, or b to zoom both axes</div>} delay={0}>
-      <div style={{ position: "absolute", left: 0, top: 0, width: 30, bottom: 0 }} />
-    </Tooltip>
-  );
-});
 
 type FollowPlaybackState = Readonly<{
   xOffsetMin: number; // -1 means the left edge of the plot is one second before the current time.
@@ -713,7 +704,6 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
           <KeyListener global keyDownHandlers={keyDownHandlers} keyUpHandlers={keyUphandlers} />
         </SRoot>
       </div>
-      {props.zoom && <MemoizedTooltips />}
       {drawLegend && (
         <SLegend>
           <TimeBasedChartLegend

@@ -38,7 +38,6 @@ type Props = {
 
 const devicePixelRatio = window.devicePixelRatio ?? 1;
 
-// why do we limit to 4 workers? why not 2? 8?
 const webWorkerManager = new WebWorkerManager(ChartJSWorker, 4);
 
 // turn a React.MouseEvent into an object we can send over rpc
