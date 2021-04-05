@@ -15,7 +15,7 @@ import { CSSProperties, useMemo } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 
-import { RpcScales } from "@foxglove-studio/app/components/ReactChartjs/types";
+import { RpcScales } from "@foxglove-studio/app/components/Chart/types";
 import { State } from "@foxglove-studio/app/reducers";
 import { HoverValue } from "@foxglove-studio/app/types/hoverValue";
 

@@ -18,7 +18,7 @@ import { Zoom as ZoomPlugin } from "chartjs-plugin-zoom";
 import EventEmitter from "eventemitter3";
 import merge from "lodash/merge";
 
-import { RpcElement, RpcScales } from "@foxglove-studio/app/components/ReactChartjs/types";
+import { RpcElement, RpcScales } from "@foxglove-studio/app/components/Chart/types";
 
 // allows us to override the chart.ctx instance field which zoom plugin uses for adding event listeners
 type MutableContext = Omit<Chart, "ctx"> & { ctx: any };

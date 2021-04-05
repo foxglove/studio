@@ -31,14 +31,14 @@ import { v4 as uuidv4 } from "uuid";
 
 import { clearHoverValue, setHoverValue } from "@foxglove-studio/app/actions/hoverValue";
 import Button from "@foxglove-studio/app/components/Button";
+import ChartComponent from "@foxglove-studio/app/components/Chart/index";
+import { RpcElement, RpcScales } from "@foxglove-studio/app/components/Chart/types";
 import KeyListener from "@foxglove-studio/app/components/KeyListener";
 import {
   MessageAndData,
   MessagePathDataItem,
 } from "@foxglove-studio/app/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipeline";
-import ChartComponent from "@foxglove-studio/app/components/ReactChartjs/index";
-import { RpcElement, RpcScales } from "@foxglove-studio/app/components/ReactChartjs/types";
 import TimeBasedChartLegend from "@foxglove-studio/app/components/TimeBasedChart/TimeBasedChartLegend";
 import makeGlobalState from "@foxglove-studio/app/components/TimeBasedChart/makeGlobalState";
 import mixins from "@foxglove-studio/app/styles/mixins.module.scss";
@@ -131,7 +131,7 @@ export function filterDatasets(
 ): DataSet[] {
   return filterMap(datasets, (dataset) => {
     const { label } = dataset;
-    if (label === undefined || linesToHide[label]) {
+    if ((label === undefined || linesToHide[label]) ?? false) {
       return;
     }
 
@@ -207,7 +207,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     canToggleLines,
     toggleLine,
     data,
-    isSynced,
+    isSynced = false,
     tooltips,
     yAxes,
     xAxes,
@@ -700,7 +700,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
           <KeyListener global keyDownHandlers={keyDownHandlers} keyUpHandlers={keyUphandlers} />
         </SRoot>
       </div>
-      {drawLegend && (
+      {drawLegend === true && (
         <SLegend>
           <TimeBasedChartLegend
             datasetId={datasetId}

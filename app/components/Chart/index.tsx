@@ -7,7 +7,7 @@ import Hammer from "hammerjs";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import { RpcElement, RpcScales } from "@foxglove-studio/app/components/ReactChartjs/types";
+import { RpcElement, RpcScales } from "@foxglove-studio/app/components/Chart/types";
 import WebWorkerManager from "@foxglove-studio/app/util/WebWorkerManager";
 
 // Webworker Manager wants a constructor so we need to have a "class" wrapper
@@ -62,8 +62,8 @@ function Chart(props: Props) {
   const [currentScales, setScales] = useState<RpcScales | undefined>(undefined);
   const userInteraction = useRef(false);
 
-  const zoomEnabled = props.options.plugins?.zoom?.zoom?.enabled;
-  const panEnabled = props.options.plugins?.zoom?.pan?.enabled;
+  const zoomEnabled = props.options.plugins?.zoom?.zoom?.enabled ?? false;
+  const panEnabled = props.options.plugins?.zoom?.pan?.enabled ?? false;
 
   const { type, data, options, width, height } = props;
 
@@ -119,10 +119,8 @@ function Chart(props: Props) {
       return;
     }
 
-    if (!canvas.transferControlToOffscreen) {
-      throw new Error(
-        "ReactChartJS currently only works with browsers with offscreen canvas support",
-      );
+    if (!("transferControlToOffscreen" in canvas)) {
+      throw new Error("Chart requires browsers with offscreen canvas support");
     }
 
     initialized.current = true;

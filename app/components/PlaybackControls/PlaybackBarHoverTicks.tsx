@@ -14,11 +14,11 @@ import { useMemo } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import styled, { css } from "styled-components";
 
+import { RpcScales } from "@foxglove-studio/app/components/Chart/types";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove-studio/app/components/MessagePipeline";
-import { RpcScales } from "@foxglove-studio/app/components/ReactChartjs/types";
 import HoverBar from "@foxglove-studio/app/components/TimeBasedChart/HoverBar";
 import { toSec } from "@foxglove-studio/app/util/time";
 
