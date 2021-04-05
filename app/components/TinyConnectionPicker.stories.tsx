@@ -11,12 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import {
-  ContextualMenu,
-  ContextualMenuItem,
-  IContextualMenuItemProps,
-  IRenderFunction,
-} from "@fluentui/react";
+// import { ContextualMenu, ContextualMenuItem } from "@fluentui/react";
 import { useRef } from "react";
 
 import MockMessagePipelineProvider from "@foxglove-studio/app/components/MessagePipeline/MockMessagePipelineProvider";
@@ -31,7 +26,7 @@ export default {
   component: TinyConnectionPicker,
   parameters: {
     chromatic: {
-      delay: 5000,
+      delay: 15000,
     },
   },
 };
@@ -69,10 +64,30 @@ export function Default(): React.ReactElement {
       <MockMessagePipelineProvider>
         <div style={{ padding: 8, width: "100%", height: 400 }}>
           <TinyConnectionPicker defaultIsOpen />
-          <div ref={ref} style={{ position: "absolute", left: 200 }}>
+          {/* <div ref={ref} style={{ position: "absolute", left: 200 }}>
             <ContextualMenu
               doNotLayer={true}
               target={new MouseEvent("click", { clientX: 200, clientY: 0 })}
+              styles={{
+                subComponentStyles: {
+                  menuItem: () => ({
+                    item: "",
+                    divider: "",
+                    root: "",
+                    linkContent: "",
+                    icon: "",
+                    checkmarkIcon: "",
+                    subMenuIcon: "",
+                    label: "",
+                    secondaryText: "",
+                    splitContainer: "",
+                    splitPrimary: "",
+                    splitMenu: "",
+                    linkContentMenu: "",
+                    screenReaderText: "",
+                  }),
+                },
+              }}
               hidden={false}
               items={playerSources.map((source) => {
                 let iconName: string;
@@ -147,7 +162,7 @@ export function Default(): React.ReactElement {
                 />
               );
             })}
-          </div>
+          </div> */}
         </div>
       </MockMessagePipelineProvider>
     </PlayerSelectionContext.Provider>

@@ -11,16 +11,9 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import {
-  ActionButton,
-  IButton,
-  Icon,
-  IContextualMenuItemProps,
-  IRenderFunction,
-} from "@fluentui/react";
+import { ActionButton, IButton } from "@fluentui/react";
 import { ReactElement, useLayoutEffect, useRef } from "react";
 
-import RosIcon from "@foxglove-studio/app/components/RosIcon";
 import { usePlayerSelection } from "@foxglove-studio/app/context/PlayerSelectionContext";
 
 type TinyConnectionPickerProps = {
