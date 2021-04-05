@@ -4,6 +4,7 @@
 
 import { PropsWithChildren, useMemo } from "react";
 
+import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
 import AnalyticsContext from "@foxglove-studio/app/context/AnalyticsContext";
 import { Analytics } from "@foxglove-studio/app/services/Analytics";
 
@@ -12,6 +13,7 @@ export default function AnalyticsProvider(
 ): React.ReactElement {
   const analytics = useMemo(() => {
     return new Analytics({
+      optOut: !(OsContextSingleton?.isTelemetryEnabled() ?? true),
       amplitudeApiKey: props.amplitudeApiKey ?? process.env.AMPLITUDE_API_KEY,
     });
   }, [props.amplitudeApiKey]);
