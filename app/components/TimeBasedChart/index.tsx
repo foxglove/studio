@@ -293,6 +293,12 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
       }
     }
 
+    // if the min/max are the same, let chart component decide the bounds
+    // otherwise we end up with no x-axis
+    if (min === max) {
+      return;
+    }
+
     if (min == undefined || max == undefined) {
       return;
     }
