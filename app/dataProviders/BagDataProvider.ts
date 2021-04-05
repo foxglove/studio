@@ -264,16 +264,15 @@ export default class BagDataProvider implements DataProvider {
     let numberOfMessages = 0;
     const messages: Message[] = [];
     const onMessage = (msg: Message) => {
-      const { data, topic, timestamp } = msg as any;
+      const { data, topic, receiveTime } = msg as Readonly<Message> & {
+        data: Uint8Array;
+      };
       messages.push({
         topic,
-        receiveTime: timestamp,
-        message: data.buffer.slice(
-          data.byteOffset,
-          (data.byteOffset as number) + (data.length as number),
-        ),
+        receiveTime,
+        message: data.buffer.slice(data.byteOffset, data.byteOffset + data.length),
       });
-      totalSizeOfMessages += data.length as number;
+      totalSizeOfMessages += data.length;
       numberOfMessages += 1;
     };
     const options = {
