@@ -31,10 +31,9 @@ export class Analytics {
   private _amplitude?: amplitude.AmplitudeClient;
   private _storage = new Storage();
 
-  constructor(options: { optOut?: boolean; amplitudeApiKey: string | undefined }) {
+  constructor(options: { amplitudeApiKey: string | undefined }) {
     const amplitudeApiKey = options.amplitudeApiKey;
-    const optOut = options.optOut ?? false;
-    if (!optOut && amplitudeApiKey != undefined && amplitudeApiKey.length > 0) {
+    if (amplitudeApiKey != undefined && amplitudeApiKey.length > 0) {
       const userId = this.getUserId();
       const deviceId = this.getDeviceId();
       const appVersion = this.getAppVersion();

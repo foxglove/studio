@@ -47,6 +47,9 @@ if (require("electron-squirrel-startup")) {
   app.quit();
 }
 
+// This must be called before initSentry or initializing analytics
+configureTelemetry();
+
 if (typeof process.env.SENTRY_DSN === "string") {
   initSentry({ dsn: process.env.SENTRY_DSN });
 }
@@ -435,3 +438,31 @@ app.on("window-all-closed", () => {
     app.quit();
   }
 });
+
+// Load telemetry opt-out settings from settings.json and disable crash
+// reporting and/or telemetry if requested
+function configureTelemetry() {
+  const datastoreDir = path.join(app.getPath("userData"), "studio-datastores");
+  const settingsPath = path.join(datastoreDir, "settings.json");
+
+  try {
+    fs.mkdirSync(datastoreDir, { recursive: true });
+  } catch {
+    // Ignore directory creation errors, including dir already exists
+  }
+
+  try {
+    const settings = JSON.parse(fs.readFileSync(settingsPath, { encoding: "utf8" }));
+    const optOutCrashReporting = !(settings["telemetry.crashReportingEnabled"] ?? true);
+    const optOutTelemetry = !(settings["telemetry.telemetryEnabled"] ?? true);
+
+    if (optOutCrashReporting) {
+      process.env.SENTRY_DSN = undefined;
+    }
+    if (optOutTelemetry) {
+      process.env.AMPLITUDE_API_KEY = undefined;
+    }
+  } catch {
+    // Ignore file load or parsing errors, including settings.json not existing
+  }
+}
