@@ -72,7 +72,8 @@ export function Default(): React.ReactElement {
           <TinyConnectionPicker defaultIsOpen />
           <div ref={ref} style={{ position: "absolute", left: 200 }}>
             <ContextualMenu
-              target={ref}
+              doNotLayer={true}
+              target={new MouseEvent("click", { clientX: 200, clientY: 0 })}
               hidden={false}
               items={playerSources.map((source) => {
                 let iconName: string | undefined;
