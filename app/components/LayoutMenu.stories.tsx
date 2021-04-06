@@ -37,11 +37,6 @@ class FakeLayoutStorage implements LayoutStorage {
 export default {
   title: "LayoutMenu",
   component: LayoutMenu,
-  parameters: {
-    chromatic: {
-      delay: 5000,
-    },
-  },
 };
 
 export function Empty(): JSX.Element {

@@ -21,11 +21,6 @@ import PlayerSelectionContext, {
 export default {
   title: "<TinyConnectionPicker>",
   component: TinyConnectionPicker,
-  parameters: {
-    chromatic: {
-      delay: 15000,
-    },
-  },
 };
 
 export function Default(): React.ReactElement {
