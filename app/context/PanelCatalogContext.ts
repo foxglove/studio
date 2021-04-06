@@ -11,7 +11,14 @@ export type PanelInfo = {
   component: ComponentType<any> & PanelStatics<any>;
 };
 
+export type PanelCategory = {
+  label: string;
+  key: string;
+};
+
+// PanelCatalog describes the interface for getting available panels
 export interface PanelCatalog {
+  getPanelCategories(): PanelCategory[];
   getPanelsByCategory(): Map<string, PanelInfo[]>;
   getPanelsByType(): Map<string, PanelInfo>;
   getComponentForType(type: string): PanelInfo["component"] | undefined;

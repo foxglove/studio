@@ -2,9 +2,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { flatten } from "lodash";
-
-import { PanelCatalog, PanelInfo } from "@foxglove-studio/app/context/PanelCatalogContext";
+import {
+  PanelCatalog,
+  PanelCategory,
+  PanelInfo,
+} from "@foxglove-studio/app/context/PanelCatalogContext";
 import GlobalVariableSlider from "@foxglove-studio/app/panels/GlobalVariableSlider";
 import GlobalVariables from "@foxglove-studio/app/panels/GlobalVariables";
 import ImageViewPanel from "@foxglove-studio/app/panels/ImageView";
@@ -57,41 +59,53 @@ const debugging: PanelInfo[] = [
   { title: "Subscribe to List", component: SubscribeToList },
 ];
 
-// These panels should be hidden from the panel menu
+// Hidden panels are not present in panels by category or panel categories
+// They are only accessible by type
 const hidden = [{ title: "Welcome", component: WelcomePanel }];
 
+// BuiltinPanelCatalog implements a PanelCatalog for all our builtin panels
 class BuiltinPanelCatalog implements PanelCatalog {
-  getPanelsByCategory(): Map<string, PanelInfo[]> {
-    return new Map<string, PanelInfo[]>([
+  private _panelsByCategory: Map<string, PanelInfo[]>;
+  private _panelsByType: Map<string, PanelInfo>;
+
+  constructor() {
+    this._panelsByCategory = new Map<string, PanelInfo[]>([
       ["ros", ros],
       ["utilities", utilities],
       ["debugging", debugging],
+      ["hidden", hidden],
     ]);
-  }
 
-  getComponentForType(type: string): PanelInfo["component"] | undefined {
-    const panelsByCategory = this.getPanelsByCategory();
-
-    // allow hidden panels to be referenced by type but not appear in panels by category
-    panelsByCategory.set("hidden", hidden);
-
-    const allPanels = flatten([...panelsByCategory.values()]);
-    const panel = allPanels.find((item) => item.component.panelType === type);
-    return panel?.component;
-  }
-
-  getPanelsByType(): Map<string, PanelInfo> {
-    const panelsByType = new Map<string, PanelInfo>();
+    this._panelsByType = new Map<string, PanelInfo>();
 
     const panelsByCategory = this.getPanelsByCategory();
     for (const panels of panelsByCategory.values()) {
       for (const item of panels) {
         const panelType = item.component.panelType;
-        panelsByType.set(panelType, item);
+        this._panelsByType.set(panelType, item);
       }
     }
+  }
 
-    return panelsByType;
+  getPanelCategories(): PanelCategory[] {
+    // hidden panels are not present in the display categories
+    return [
+      { label: "ROS", key: "ros" },
+      { label: "Utilities", key: "utilities" },
+      { label: "Debugging", key: "debugging" },
+    ];
+  }
+
+  getPanelsByCategory(): Map<string, PanelInfo[]> {
+    return this._panelsByCategory;
+  }
+
+  getComponentForType(type: string): PanelInfo["component"] | undefined {
+    return this._panelsByType.get(type)?.component;
+  }
+
+  getPanelsByType(): Map<string, PanelInfo> {
+    return this._panelsByType;
   }
 }
 

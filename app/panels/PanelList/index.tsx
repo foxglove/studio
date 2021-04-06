@@ -87,38 +87,12 @@ const SEmptyState = styled.div`
 type PresetSettings =
   | { config: TabPanelConfig; relatedConfigs: SavedProps }
   | { config: PanelConfig; relatedConfigs: typeof undefined };
+
 export type PanelListItem = {
   title: string;
   component: React.ComponentType<any>;
   presetSettings?: PresetSettings;
 };
-
-/*
-function getPanelsByCategory(): {
-  [category: string]: PanelListItem[];
-} {
-  return BuiltinPanels;
-}
-
-let gPanelsByType: any;
-export function getPanelsByType(): {
-  [type: string]: PanelListItem;
-} {
-  if (!gPanelsByType) {
-    gPanelsByType = {};
-    const panelsByCategory = getPanelsByCategory();
-    for (const panels of Object.values(panelsByCategory)) {
-      const nonPresetPanels = panels.filter((panel) => panel && !panel.presetSettings);
-      for (const item of nonPresetPanels) {
-        const panelType = (item.component as any).panelType;
-        console.assert(panelType && !(panelType in gPanelsByType));
-        gPanelsByType[panelType] = item;
-      }
-    }
-  }
-  return gPanelsByType;
-}
-*/
 
 type DropDescription = {
   type: string;
@@ -280,15 +254,8 @@ function PanelList(props: Props) {
     setHighlightedPanelIdx(0);
   }, []);
 
-  const panelCategories = React.useMemo(() => {
-    return [
-      { label: "ROS", key: "ros" },
-      { label: "Utilities", key: "utilities" },
-      { label: "Debugging", key: "debugging" },
-    ];
-  }, []);
-
   const panelCatalog = usePanelCatalog();
+  const panelCategories = useMemo(() => panelCatalog.getPanelCategories(), [panelCatalog]);
   const panelsByCategory = useMemo(() => panelCatalog.getPanelsByCategory(), [panelCatalog]);
 
   useEffect(() => {
