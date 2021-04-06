@@ -14,7 +14,6 @@
 import React, { useCallback, ComponentType } from "react";
 
 import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
-import { getGlobalHooks } from "@foxglove-studio/app/loadWebviz";
 import { TopicSettingsEditorProps } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicSettingsEditor/types";
 import { Topic } from "@foxglove-studio/app/players/types";
 import {
@@ -39,18 +38,18 @@ export type { TopicSettingsEditorProps } from "./types";
 export function topicSettingsEditorForDatatype(
   datatype: string,
 ): ComponentType<TopicSettingsEditorProps<any, any>> | undefined {
-  const editors = {
-    [POINT_CLOUD_DATATYPE]: PointCloudSettingsEditor,
-    [VELODYNE_SCAN_DATATYPE]: PointCloudSettingsEditor,
-    [POSE_STAMPED_DATATYPE]: PoseSettingsEditor,
-    [SENSOR_MSGS_LASER_SCAN_DATATYPE]: LaserScanSettingsEditor,
-    [WEBVIZ_MARKER_DATATYPE]: MarkerSettingsEditor,
-    "visualization_msgs/Marker": MarkerSettingsEditor,
-    "visualization_msgs/MarkerArray": MarkerSettingsEditor,
-    [NAV_MSGS_PATH_DATATYPE]: MarkerSettingsEditor,
-    ...(getGlobalHooks() as any).perPanelHooks().ThreeDimensionalViz.topicSettingsEditors,
-  };
-  return editors[datatype];
+  const editors = new Map<string, any>([
+    [POINT_CLOUD_DATATYPE, PointCloudSettingsEditor],
+    [VELODYNE_SCAN_DATATYPE, PointCloudSettingsEditor],
+    [POSE_STAMPED_DATATYPE, PoseSettingsEditor],
+    [SENSOR_MSGS_LASER_SCAN_DATATYPE, LaserScanSettingsEditor],
+    [WEBVIZ_MARKER_DATATYPE, MarkerSettingsEditor],
+    ["visualization_msgs/Marker", MarkerSettingsEditor],
+    ["visualization_msgs/MarkerArray", MarkerSettingsEditor],
+    [NAV_MSGS_PATH_DATATYPE, MarkerSettingsEditor],
+  ]);
+
+  return editors.get(datatype);
 }
 
 export function canEditDatatype(datatype: string): boolean {

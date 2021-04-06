@@ -21,7 +21,7 @@ import {
   nonInstancedGetChildrenForHitmap,
 } from "regl-worldview";
 
-import { getGlobalHooks } from "@foxglove-studio/app/loadWebviz";
+import LaserScanVert from "@foxglove-studio/app/panels/ThreeDimensionalViz/LaserScanVert";
 import { LaserScan } from "@foxglove-studio/app/types/Messages";
 
 export const DEFAULT_FLAT_COLOR = { r: 0.5, g: 0.5, b: 1, a: 1 };
@@ -29,7 +29,7 @@ export const DEFAULT_FLAT_COLOR = { r: 0.5, g: 0.5, b: 1, a: 1 };
 const laserScan = (regl: Regl) =>
   withPose({
     primitive: "points",
-    vert: (getGlobalHooks() as any).perPanelHooks().ThreeDimensionalViz.LaserScanVert,
+    vert: LaserScanVert,
     frag: `
   precision mediump float;
   varying vec4 vColor;
