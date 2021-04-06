@@ -37,6 +37,7 @@ import {
   StampedMessage,
   Point,
   MutablePoint,
+  InstancedLineListMarker,
 } from "@foxglove-studio/app/types/Messages";
 import { MarkerProvider, MarkerCollector, Scene } from "@foxglove-studio/app/types/Scene";
 import { objectValues } from "@foxglove-studio/app/util";
@@ -983,7 +984,29 @@ export default class SceneBuilder implements MarkerProvider {
     };
   }
 
-  renderMarkers(add: MarkerCollector) {
+  renderMarkers(add: MarkerCollector): void {
+    const gridPoints: Point[] = [];
+    for (let i = 0; i <= 10; i++) {
+      gridPoints.push({ x: i - 5, y: 5, z: 0 });
+      gridPoints.push({ x: i - 5, y: -5, z: 0 });
+
+      gridPoints.push({ x: 5, y: i - 5, z: 0 });
+      gridPoints.push({ x: -5, y: i - 5, z: 0 });
+    }
+    const x: InstancedLineListMarker = {
+      type: 108,
+      header: { frame_id: "", stamp: { sec: 0, nsec: 0 }, seq: 0 },
+      ns: "foxglove",
+      id: "grid",
+      action: 0,
+      pose: { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } },
+      scale: { x: 0.02, y: 0.02, z: 0.02 },
+      color: { r: 36 / 255, g: 142 / 255, b: 255 / 255, a: 1 },
+      frame_locked: false,
+      points: gridPoints,
+    };
+    add.instancedLineList(x);
+
     for (const topic of objectValues(this.topicsByName)) {
       const collector = this.collectors[topic.name];
       if (!collector) {
