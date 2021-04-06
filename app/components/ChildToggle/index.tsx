@@ -225,7 +225,7 @@ export default function ChildToggle(props: Props): ReactElement {
       </div>
     );
 
-    return noPortal ? tree : <Layer>{tree}</Layer>;
+    return noPortal ? tree : <Layer eventBubblingEnabled>{tree}</Layer>;
   }
 
   const keyDownHandlers = {

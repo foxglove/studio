@@ -20,15 +20,13 @@ import {
 } from "@fluentui/react";
 import { useState, useCallback, useEffect, useRef, useLayoutEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import styled, { css } from "styled-components";
+import styled from "styled-components";
 
 import { AddPanelPayload, addPanel } from "@foxglove-studio/app/actions/panels";
 import GlobalVariablesTable, {
   ANIMATION_RESET_DELAY_MS,
   isActiveElementEditable,
-  makeFlashAnimation,
 } from "@foxglove-studio/app/components/GlobalVariablesTable";
-import { WrappedIcon } from "@foxglove-studio/app/components/Icon";
 import Menu from "@foxglove-studio/app/components/Menu";
 import HelpButton from "@foxglove-studio/app/components/PanelToolbar/HelpButton";
 import useGlobalVariables from "@foxglove-studio/app/hooks/useGlobalVariables";
