@@ -145,7 +145,8 @@ type FactoryOptions = {
 async function localBagFileSource(options: FactoryOptions) {
   let file: File;
 
-  // local bag file sources cannot be stored yet
+  // future enhancement woudl be to store the fileHandle in indexeddb and try to restore
+  // fileHandles can be stored in indexeddb but not localstorage
   if (!options.skipRestore) {
     return;
   }
@@ -167,7 +168,7 @@ async function localBagFileSource(options: FactoryOptions) {
 }
 
 async function remoteBagFileSource(options: FactoryOptions) {
-  const storageCacheKey = "studio.source.remotebag";
+  const storageCacheKey = `studio.source.${options.source.name}`;
 
   // undefined url indicates the user canceled the prompt
   let maybeUrl;
@@ -204,7 +205,7 @@ async function remoteBagFileSource(options: FactoryOptions) {
 }
 
 async function rosbridgeSource(options: FactoryOptions) {
-  const storageCacheKey = "studio.source.rosbridge";
+  const storageCacheKey = `studio.source.${options.source.name}`;
 
   // undefined url indicates the user canceled the prompt
   let maybeUrl;
@@ -246,7 +247,7 @@ async function rosbridgeSource(options: FactoryOptions) {
 }
 
 async function roscoreSource(options: FactoryOptions) {
-  const storageCacheKey = "studio.source.roscore";
+  const storageCacheKey = `studio.source.${options.source.name}`;
 
   // undefined url indicates the user canceled the prompt
   let maybeUrl;
