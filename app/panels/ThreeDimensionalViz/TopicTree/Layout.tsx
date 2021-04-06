@@ -51,6 +51,7 @@ import {
 import MeasuringTool, {
   MeasureInfo,
 } from "@foxglove-studio/app/panels/ThreeDimensionalViz/DrawingTools/MeasuringTool";
+import GridBuilder from "@foxglove-studio/app/panels/ThreeDimensionalViz/GridBuilder";
 import {
   InteractionContextMenu,
   OBJECT_TAB_TYPE,
@@ -242,9 +243,10 @@ export default function Layout({
     [drawingTabType, measureInfo.measureState],
   );
 
-  // initialize the SceneBuilder and TransformsBuilder
-  const { sceneBuilder, transformsBuilder } = useMemo(
+  // initialize the GridBuilder, SceneBuilder, and TransformsBuilder
+  const { gridBuilder, sceneBuilder, transformsBuilder } = useMemo(
     () => ({
+      gridBuilder: new GridBuilder(),
       sceneBuilder: new SceneBuilder(sceneBuilderHooks),
       transformsBuilder: new TransformsBuilder(),
     }),
@@ -698,7 +700,8 @@ export default function Layout({
     return handlers;
   }, [pinTopics, saveConfig, searchTextProps, toggleCameraMode]);
 
-  const markerProviders = useMemo(() => [sceneBuilder, transformsBuilder], [
+  const markerProviders = useMemo(() => [gridBuilder, sceneBuilder, transformsBuilder], [
+    gridBuilder,
     sceneBuilder,
     transformsBuilder,
   ]);
