@@ -37,7 +37,6 @@ import {
   StampedMessage,
   Point,
   MutablePoint,
-  InstancedLineListMarker,
 } from "@foxglove-studio/app/types/Messages";
 import { MarkerProvider, MarkerCollector, Scene } from "@foxglove-studio/app/types/Scene";
 import { objectValues } from "@foxglove-studio/app/util";
