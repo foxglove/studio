@@ -3,10 +3,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 import {
   AddIcon,
-  AddInIcon,
   CheckMarkIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  CirclePlusIcon,
   DataManagementSettingsIcon,
   DeleteIcon,
   EditIcon,
@@ -26,10 +26,10 @@ import RosIcon from "@foxglove-studio/app/components/RosIcon";
 
 const iconComponents = [
   AddIcon,
-  AddInIcon,
   CheckMarkIcon,
   ChevronDownIcon,
   ChevronRightIcon,
+  CirclePlusIcon,
   DataManagementSettingsIcon,
   DeleteIcon,
   EditIcon,

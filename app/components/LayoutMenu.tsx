@@ -242,7 +242,10 @@ export default function LayoutMenu({
   return (
     <ActionButton
       componentRef={buttonRef}
-      iconProps={{ iconName: "FiveTileGrid" }}
+      iconProps={{
+        iconName: "FiveTileGrid",
+        styles: { root: { "& span": { verticalAlign: "baseline" } } },
+      }}
       menuProps={{ items, onMenuOpened: () => fetchLayouts() }}
       onRenderMenuIcon={() => ReactNull}
     />

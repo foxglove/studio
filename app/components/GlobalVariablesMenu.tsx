@@ -108,14 +108,9 @@ function MenuContent(menuProps: IContextualMenuProps) {
   );
 }
 
-function GlobalVariablesMenu(props: Props) {
+function GlobalVariablesMenu(props: Props): React.ReactElement {
   const { defaultIsOpen, skipAnimation = inScreenshotTests() } = props;
   const [hasChangedVariable, setHasChangedVariable] = useState<boolean>(false);
-  const [isOpen, setIsOpen] = useState<boolean>(defaultIsOpen || false);
-  const onToggle = useCallback((newValue: boolean) => {
-    setHasChangedVariable(false);
-    setIsOpen(newValue);
-  }, []);
 
   const {
     palette: { themePrimary },
@@ -152,6 +147,7 @@ function GlobalVariablesMenu(props: Props) {
         iconName: "Variable2",
         styles: {
           root: {
+            "& span": { verticalAlign: "baseline" },
             animation: hasChangedVariable
               ? `${flashKeyframes} ${AnimationDuration}s ease-out forwards`
               : undefined,

@@ -240,7 +240,10 @@ function Root() {
           </SToolbarItem>
           <SToolbarItem>
             <ActionButton
-              iconProps={{ iconName: "Settings" }}
+              iconProps={{
+                iconName: "Settings",
+                styles: { root: { "& span": { verticalAlign: "baseline" } } },
+              }}
               onClick={() => setPreferencesOpen(true)}
             />
             {preferencesOpen && (

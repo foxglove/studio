@@ -62,7 +62,10 @@ function AddPanelMenu({ defaultIsOpen = false }: Props): React.ReactElement {
     <ActionButton
       componentRef={buttonRef}
       elementRef={buttonElementRef}
-      iconProps={{ iconName: "AddIn" }}
+      iconProps={{
+        iconName: "CirclePlus",
+        styles: { root: { "& span": { verticalAlign: "baseline" } } },
+      }}
       menuProps={{ items: [] }}
       onRenderMenuIcon={() => ReactNull}
       menuAs={MenuContent}
