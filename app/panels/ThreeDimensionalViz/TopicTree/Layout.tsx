@@ -90,7 +90,11 @@ import inScreenshotTests from "@foxglove-studio/app/stories/inScreenshotTests";
 import { Color } from "@foxglove-studio/app/types/Messages";
 import { getField } from "@foxglove-studio/app/util/binaryObjects";
 import filterMap from "@foxglove-studio/app/util/filterMap";
-import { SECOND_SOURCE_PREFIX, TRANSFORM_TOPIC } from "@foxglove-studio/app/util/globalConstants";
+import {
+  FOXGLOVE_GRID_TOPIC,
+  SECOND_SOURCE_PREFIX,
+  TRANSFORM_TOPIC,
+} from "@foxglove-studio/app/util/globalConstants";
 import { useShallowMemo } from "@foxglove-studio/app/util/hooks";
 import { inVideoRecordingMode } from "@foxglove-studio/app/util/inAutomatedRunMode";
 import { getTopicsByTopicName } from "@foxglove-studio/app/util/selectors";
@@ -444,6 +448,9 @@ export default function Layout({
   }, [rootTf, sceneBuilder, transforms]);
 
   useMemo(() => {
+    gridBuilder.setVisible(selectedTopicNames.includes(FOXGLOVE_GRID_TOPIC));
+    gridBuilder.setSettingsByKey(settingsByKey);
+
     // TODO(Audrey): add tests for the clearing behavior
     if (cleared) {
       sceneBuilder.clear();
@@ -471,19 +478,20 @@ export default function Layout({
     transformsBuilder.setSelectedTransforms(selectedNamespacesByTopic[TRANSFORM_TOPIC] ?? []);
   }, [
     cleared,
-    frame,
-    topics,
-    selectedTopicNames,
-    sceneBuilder,
-    transforms,
-    rootTf,
-    flattenMarkers,
-    selectedNamespacesByTopic,
-    settingsByKey,
-    globalVariables,
-    highlightMarkerMatchers,
     colorOverrideMarkerMatchers,
     currentTime,
+    flattenMarkers,
+    frame,
+    globalVariables,
+    gridBuilder,
+    highlightMarkerMatchers,
+    rootTf,
+    sceneBuilder,
+    selectedNamespacesByTopic,
+    selectedTopicNames,
+    settingsByKey,
+    topics,
+    transforms,
     transformsBuilder,
   ]);
 

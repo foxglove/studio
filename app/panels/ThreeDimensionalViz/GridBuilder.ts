@@ -11,28 +11,57 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { isEqual } from "lodash";
+
+import { TopicSettingsCollection } from "@foxglove-studio/app/panels/ThreeDimensionalViz/SceneBuilder";
+import {
+  DEFAULT_GRID_COLOR,
+  GridSettings,
+} from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicSettingsEditor/GridSettingsEditor";
 import { Point, InstancedLineListMarker } from "@foxglove-studio/app/types/Messages";
 import { MarkerProvider, MarkerCollector } from "@foxglove-studio/app/types/Scene";
+import { FOXGLOVE_GRID_TOPIC } from "@foxglove-studio/app/util/globalConstants";
 
 export default class GridBuilder implements MarkerProvider {
   grid: InstancedLineListMarker;
+  private _visible = true;
+  private _settings: GridSettings = {};
 
   constructor() {
-    this.grid = GridBuilder.BuildGrid();
+    this.grid = GridBuilder.BuildGrid(this._settings);
   }
 
   renderMarkers = (add: MarkerCollector): void => {
-    add.instancedLineList(this.grid);
+    if (this._visible) {
+      add.instancedLineList(this.grid);
+    }
   };
 
-  static BuildGrid(): InstancedLineListMarker {
-    const gridPoints: Point[] = [];
-    for (let i = 0; i <= 10; i++) {
-      gridPoints.push({ x: i - 5, y: 5, z: 0 });
-      gridPoints.push({ x: i - 5, y: -5, z: 0 });
+  setVisible(isVisible: boolean): void {
+    this._visible = isVisible;
+  }
 
-      gridPoints.push({ x: 5, y: i - 5, z: 0 });
-      gridPoints.push({ x: -5, y: i - 5, z: 0 });
+  setSettingsByKey(settings: TopicSettingsCollection): void {
+    const newSettings = settings[`t:${FOXGLOVE_GRID_TOPIC}`] ?? {};
+    if (!isEqual(newSettings, this._settings)) {
+      this._settings = newSettings;
+      this.grid = GridBuilder.BuildGrid(newSettings);
+    }
+  }
+
+  static BuildGrid(settings: GridSettings): InstancedLineListMarker {
+    const width = settings.width ?? 10;
+    const halfWidth = width / 2;
+    const subdivisions = settings.subdivisions ?? 9;
+    const step = width / (subdivisions + 1);
+
+    const gridPoints: Point[] = [];
+    for (let i = 0; i <= subdivisions + 1; i++) {
+      gridPoints.push({ x: i * step - halfWidth, y: halfWidth, z: 0 });
+      gridPoints.push({ x: i * step - halfWidth, y: -halfWidth, z: 0 });
+
+      gridPoints.push({ x: halfWidth, y: i * step - halfWidth, z: 0 });
+      gridPoints.push({ x: -halfWidth, y: i * step - halfWidth, z: 0 });
     }
     const grid: InstancedLineListMarker = {
       type: 108,
@@ -40,9 +69,12 @@ export default class GridBuilder implements MarkerProvider {
       ns: "foxglove",
       id: "grid",
       action: 0,
-      pose: { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } },
-      scale: { x: 1, y: 1, z: 1 },
-      color: { r: 36 / 255, g: 142 / 255, b: 255 / 255, a: 1 },
+      pose: {
+        position: { x: 0, y: 0, z: settings.heightOffset ?? 0 },
+        orientation: { x: 0, y: 0, z: 0, w: 1 },
+      },
+      scale: { x: settings.lineWidth ?? 1, y: 1, z: 1 },
+      color: settings.overrideColor ?? DEFAULT_GRID_COLOR,
       frame_locked: false,
       points: gridPoints,
     };
