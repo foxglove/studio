@@ -71,6 +71,7 @@ function getMarkers(markerProviders: MarkerProvider[]): InteractiveMarkersByType
   const collector: any = {};
   [
     "arrow",
+    "color",
     "cube",
     "cubeList",
     "cylinder",
