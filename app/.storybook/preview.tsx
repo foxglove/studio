@@ -3,13 +3,17 @@ import "./styles.scss";
 import waitForFonts from "@foxglove-studio/app/util/waitForFonts";
 import { withScreenshot } from "storycap";
 import { withMockSubscribeToNewsletter } from "./__mocks__/subscribeToNewsletter";
-import { StoryContext } from "@storybook/react";
+import { Story, StoryContext } from "@storybook/react";
 import ThemeProvider from "@foxglove-studio/app/theme/ThemeProvider";
 
 let loaded = false;
 
-function withTheme(story: Function, { parameters }: StoryContext) {
-  return <ThemeProvider>{story()}</ThemeProvider>;
+function withTheme(Story: Story, { parameters }: StoryContext) {
+  return (
+    <ThemeProvider>
+      <Story />
+    </ThemeProvider>
+  );
 }
 
 export const loaders = [

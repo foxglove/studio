@@ -14,9 +14,11 @@
 import React, { useCallback, ComponentType } from "react";
 
 import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
+import GridSettingsEditor from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicSettingsEditor/GridSettingsEditor";
 import { TopicSettingsEditorProps } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicSettingsEditor/types";
 import { Topic } from "@foxglove-studio/app/players/types";
 import {
+  FOXGLOVE_GRID_DATATYPE,
   NAV_MSGS_PATH_DATATYPE,
   POINT_CLOUD_DATATYPE,
   POSE_STAMPED_DATATYPE,
@@ -39,6 +41,7 @@ export function topicSettingsEditorForDatatype(
   datatype: string,
 ): ComponentType<TopicSettingsEditorProps<any, any>> | undefined {
   const editors = new Map<string, any>([
+    [FOXGLOVE_GRID_DATATYPE, GridSettingsEditor],
     [POINT_CLOUD_DATATYPE, PointCloudSettingsEditor],
     [VELODYNE_SCAN_DATATYPE, PointCloudSettingsEditor],
     [POSE_STAMPED_DATATYPE, PoseSettingsEditor],

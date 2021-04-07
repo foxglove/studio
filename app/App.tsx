@@ -83,6 +83,14 @@ const SToolbarItem = styled.div`
   // Allow interacting with buttons in the title bar without dragging the window
   -webkit-app-region: no-drag;
 `;
+
+const TruncatedText = styled.span`
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  line-height: normal;
+`;
+
 function Root() {
   const containerRef = useRef<HTMLDivElement>(ReactNull);
   const dispatch = useDispatch();
@@ -223,8 +231,9 @@ function Root() {
           <SToolbarItem>
             <TinyConnectionPicker />
           </SToolbarItem>
-          <SToolbarItem>
-            {currentSourceName ?? "Select a data source"} {presenceIcon}
+          <SToolbarItem style={{ flex: "0 1 auto" }}>
+            <TruncatedText>{currentSourceName ?? "Select a data source"}</TruncatedText>{" "}
+            {presenceIcon}
           </SToolbarItem>
           <div style={{ flexGrow: 1 }}></div>
           <SToolbarItem style={{ marginRight: 5 }}>

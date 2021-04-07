@@ -50,6 +50,7 @@ import {
 import MeasuringTool, {
   MeasureInfo,
 } from "@foxglove-studio/app/panels/ThreeDimensionalViz/DrawingTools/MeasuringTool";
+import GridBuilder from "@foxglove-studio/app/panels/ThreeDimensionalViz/GridBuilder";
 import {
   InteractionContextMenu,
   OBJECT_TAB_TYPE,
@@ -90,8 +91,6 @@ import { Color } from "@foxglove-studio/app/types/Messages";
 import { getField } from "@foxglove-studio/app/util/binaryObjects";
 import filterMap from "@foxglove-studio/app/util/filterMap";
 import {
-  SECOND_SOURCE_PREFIX,
-  TRANSFORM_TOPIC,
   GEOMETRY_MSGS_POLYGON_STAMPED_DATATYPE,
   NAV_MSGS_OCCUPANCY_GRID_DATATYPE,
   NAV_MSGS_PATH_DATATYPE,
@@ -105,6 +104,9 @@ import {
   VISUALIZATION_MSGS_MARKER_ARRAY_DATATYPE,
   WEBVIZ_MARKER_DATATYPE,
   WEBVIZ_MARKER_ARRAY_DATATYPE,
+  FOXGLOVE_GRID_TOPIC,
+  SECOND_SOURCE_PREFIX,
+  TRANSFORM_TOPIC,
 } from "@foxglove-studio/app/util/globalConstants";
 import { useShallowMemo } from "@foxglove-studio/app/util/hooks";
 import { inVideoRecordingMode } from "@foxglove-studio/app/util/inAutomatedRunMode";
@@ -256,9 +258,10 @@ export default function Layout({
     [drawingTabType, measureInfo.measureState],
   );
 
-  // initialize the SceneBuilder and TransformsBuilder
-  const { sceneBuilder, transformsBuilder } = useMemo(
+  // initialize the GridBuilder, SceneBuilder, and TransformsBuilder
+  const { gridBuilder, sceneBuilder, transformsBuilder } = useMemo(
     () => ({
+      gridBuilder: new GridBuilder(),
       sceneBuilder: new SceneBuilder(sceneBuilderHooks),
       transformsBuilder: new TransformsBuilder(),
     }),
@@ -467,6 +470,9 @@ export default function Layout({
   }, [rootTf, sceneBuilder, transforms]);
 
   useMemo(() => {
+    gridBuilder.setVisible(selectedTopicNames.includes(FOXGLOVE_GRID_TOPIC));
+    gridBuilder.setSettingsByKey(settingsByKey);
+
     // TODO(Audrey): add tests for the clearing behavior
     if (cleared) {
       sceneBuilder.clear();
@@ -494,19 +500,20 @@ export default function Layout({
     transformsBuilder.setSelectedTransforms(selectedNamespacesByTopic[TRANSFORM_TOPIC] ?? []);
   }, [
     cleared,
-    frame,
-    topics,
-    selectedTopicNames,
-    sceneBuilder,
-    transforms,
-    rootTf,
-    flattenMarkers,
-    selectedNamespacesByTopic,
-    settingsByKey,
-    globalVariables,
-    highlightMarkerMatchers,
     colorOverrideMarkerMatchers,
     currentTime,
+    flattenMarkers,
+    frame,
+    globalVariables,
+    gridBuilder,
+    highlightMarkerMatchers,
+    rootTf,
+    sceneBuilder,
+    selectedNamespacesByTopic,
+    selectedTopicNames,
+    settingsByKey,
+    topics,
+    transforms,
     transformsBuilder,
   ]);
 
@@ -723,7 +730,8 @@ export default function Layout({
     return handlers;
   }, [pinTopics, saveConfig, searchTextProps, toggleCameraMode]);
 
-  const markerProviders = useMemo(() => [sceneBuilder, transformsBuilder], [
+  const markerProviders = useMemo(() => [gridBuilder, sceneBuilder, transformsBuilder], [
+    gridBuilder,
     sceneBuilder,
     transformsBuilder,
   ]);
