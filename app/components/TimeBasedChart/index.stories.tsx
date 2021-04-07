@@ -14,7 +14,6 @@ import cloneDeep from "lodash/cloneDeep";
 import { useState, useCallback, useRef } from "react";
 
 import MockMessagePipelineProvider from "@foxglove-studio/app/components/MessagePipeline/MockMessagePipelineProvider";
-import signal from "@foxglove-studio/app/shared/signal";
 import { triggerWheel } from "@foxglove-studio/app/stories/PanelSetup";
 import { useScreenshotReady } from "@foxglove-studio/app/stories/ScreenshotReadyContext";
 
