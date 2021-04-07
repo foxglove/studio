@@ -81,6 +81,7 @@ export type Fixture = {
 type Props = {
   children: React.ReactNode;
   fixture?: Fixture;
+  panelCatalog?: PanelCatalog;
   omitDragAndDrop?: boolean;
   onMount?: (arg0: HTMLDivElement, store: Store) => void;
   onFirstMount?: (arg0: HTMLDivElement) => void;
@@ -149,6 +150,7 @@ export const MosaicWrapper = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+// empty catalog if one is not provided via props
 class MockPanelCatalog implements PanelCatalog {
   getPanelCategories(): PanelCategory[] {
     return [];
@@ -217,7 +219,7 @@ export default class PanelSetup extends React.PureComponent<Props, State> {
     super(props);
     this.state = {
       store: props.store ?? configureStore(createRootReducer(createMemoryHistory())),
-      mockPanelCatalog: new MockPanelCatalog(),
+      mockPanelCatalog: props.panelCatalog ?? new MockPanelCatalog(),
     };
   }
 
