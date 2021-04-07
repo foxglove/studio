@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import CubeOutline from "@mdi/svg/svg/cube-outline.svg";
 import { clamp } from "lodash";
 import { useMemo, useState, useEffect } from "react";
 import {
@@ -28,7 +29,6 @@ import {
 } from "regl-worldview";
 import styled from "styled-components";
 
-import { getGlobalHooks } from "@foxglove-studio/app/loadWebviz";
 import { Interactive } from "@foxglove-studio/app/panels/ThreeDimensionalViz/Interactions/types";
 import { GLTextMarker } from "@foxglove-studio/app/panels/ThreeDimensionalViz/SearchText";
 import {
@@ -250,10 +250,6 @@ export default function WorldMarkers({
     [cameraDistance],
   );
 
-  const useWorldspacePointSize = getGlobalHooks()
-    .perPanelHooks()
-    .ThreeDimensionalViz.useWorldspacePointSize();
-
   const backdropColor = useMemo((): ReglColor => averageMarkerColor(color), [color]);
 
   return (
@@ -267,7 +263,7 @@ export default function WorldMarkers({
         {pointcloud as any}
       </PointClouds>
       <Arrows layerIndex={layerIndex}>{arrow}</Arrows>
-      <Points layerIndex={layerIndex} useWorldSpaceSize={useWorldspacePointSize}>
+      <Points layerIndex={layerIndex} useWorldSpaceSize>
         {points}
       </Points>
       <Triangles layerIndex={layerIndex}>{triangleList}</Triangles>
@@ -322,9 +318,6 @@ export default function WorldMarkers({
             markerStyle?: any;
             iconOffset?: { x: number; y: number };
           };
-          const iconsByClassification = getGlobalHooks().perPanelHooks().ThreeDimensionalViz
-            .iconsByClassification;
-          const SvgIcon = iconsByClassification.DEFAULT;
 
           return (
             <SIconWrapper
@@ -339,7 +332,7 @@ export default function WorldMarkers({
                 ).toFixed()}px)`,
               }}
             >
-              <SvgIcon fill="white" width={scaledIconSize} height={scaledIconSize} />
+              <CubeOutline fill="white" width={scaledIconSize} height={scaledIconSize} />
             </SIconWrapper>
           );
         }}
