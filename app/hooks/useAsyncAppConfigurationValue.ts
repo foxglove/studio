@@ -11,7 +11,7 @@ import { useAppConfiguration } from "@foxglove-studio/app/context/AppConfigurati
 // The `state` returned can be used to show whether the get/set is still in progress.
 export function useAsyncAppConfigurationValue<T>(
   key: string,
-): [state: AsyncState<T>, setter: (value: T) => Promise<void>] {
+): [state: AsyncState<T>, setter: (value?: T) => Promise<void>] {
   const appConfiguration = useAppConfiguration();
 
   // async retry will start loading the value on mount
@@ -21,7 +21,7 @@ export function useAsyncAppConfigurationValue<T>(
   ]);
 
   const [setterState, setter] = useAsyncFn(
-    async (value: T) => {
+    async (value?: T) => {
       await appConfiguration.set(key, value);
       getterState.retry(); // re-trigger the getter so the new value is displayed
     },

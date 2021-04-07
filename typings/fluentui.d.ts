@@ -24,6 +24,7 @@ declare global {
     | "OpenFile"
     | "Settings"
     | "Share"
+    | "TestBeakerSolid"
     | "Variable2";
 }
 
