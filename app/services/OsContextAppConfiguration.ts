@@ -28,7 +28,7 @@ export default class OsContextAppConfiguration implements AppConfiguration {
     });
   }
 
-  async get(key: string): Promise<unknown> {
+  async get(key: string): Promise<unknown | undefined> {
     return await this._mutex.runExclusive(
       () => (this._currentValue as Record<string, unknown>)[key],
     );

@@ -37,9 +37,47 @@ function formatTimezone(name: string) {
   return `${name} (${zoneAbbr}, ${offsetStr})`;
 }
 
+function TimezoneSettings(): React.ReactElement {
+  const [timezone, setTimezone] = useAsyncAppConfigurationValue<string>("timezone");
+  const options: IComboBoxOption[] = useMemo(() => {
+    const result: IComboBoxOption[] = moment.tz.names().map((name) => {
+      return { key: `zone:${name}`, id: name, text: formatTimezone(name) };
+    });
+
+    result.unshift(
+      { key: "detect", text: `Detect from system: ${formatTimezone(moment.tz.guess())}` },
+      { key: "utc", text: `${formatTimezone("UTC")}` },
+      { key: "sep", text: "-", itemType: SelectableOptionMenuItemType.Divider },
+    );
+
+    return result;
+  }, []);
+
+  const onTimezoneSettingChange = useCallback((event, option?: IChoiceGroupOption) => {}, []);
+
+  const comboBoxId = useId("timezoneBox");
+
+  return (
+    <>
+      <Label htmlFor={comboBoxId}>Display timestamps in:</Label>
+      <ComboBox
+        id={comboBoxId}
+        allowFreeform
+        options={options}
+        selectedKey={timezone.value}
+        onChange={(event, option) => setTimezone(option?.id ?? "")}
+        style={{ maxWidth: 300 }}
+        calloutProps={{
+          directionalHintFixed: true,
+          directionalHint: DirectionalHint.bottomAutoEdge,
+        }}
+      />
+    </>
+  );
+}
+
 export default function Preferences(): React.ReactElement {
   // const [timezone, setTimezone] = useAsyncAppConfigurationValue<string>("timezone");
-  const [timezone, setTimezone] = useAsyncAppConfigurationValue<string>("timezone");
 
   // FIXME: these need to set preferences which are read on launch
   const [telemetryEnabled, setTelemetryEnabled] = useState(
@@ -50,47 +88,16 @@ export default function Preferences(): React.ReactElement {
   );
 
   const theme = useTheme();
-  const timezones: IComboBoxOption[] = useMemo(() => {
-    return moment.tz.names().map((name) => {
-      return { key: name, id: name, text: formatTimezone(name) };
-    });
-  }, []);
-
-  const timezoneOptions: IChoiceGroupOption[] = [
-    { key: "default", text: `Default: ${formatTimezone(moment.tz.guess())}` },
-    { key: "utc", text: `${formatTimezone("UTC")}` },
-  ];
-
-  const onTimezoneSettingChange = useCallback((event, option?: IChoiceGroupOption) => {}, []);
-
-  const comboBoxId = useId("timezoneBox");
   return (
     <Pivot>
-      <PivotItem headerText="Settings">
-        <Stack style={{ padding: theme.spacing.m }} tokens={{ childrenGap: theme.spacing.s1 }}>
-          <Stack.Item>
-            <Label htmlFor={comboBoxId}>Display timestamps in:</Label>
-            <ChoiceGroup onChange={onTimezoneSettingChange} options={timezoneOptions} />
-            <ComboBox
-              id={comboBoxId}
-              allowFreeform
-              options={timezones}
-              selectedKey={timezone.value}
-              onChange={(event, option) => setTimezone(option?.id ?? "")}
-              style={{ maxWidth: 300 }}
-              calloutProps={{
-                directionalHintFixed: true,
-                directionalHint: DirectionalHint.bottomAutoEdge,
-              }}
-            />
-          </Stack.Item>
-          <Text
-            variant="xLarge"
-            style={{ color: theme.palette.themePrimary, marginTop: theme.spacing.m }}
-          >
-            Privacy
-          </Text>
-          <Text variant="small" style={{ color: theme.palette.neutralSecondary }}>
+      <PivotItem headerText="Settings" style={{ padding: theme.spacing.m }}>
+        <Stack.Item>
+          <TimezoneSettings />
+        </Stack.Item>
+      </PivotItem>
+      <PivotItem headerText="Privacy" style={{ padding: theme.spacing.m }}>
+        <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
+          <Text style={{ color: theme.palette.neutralSecondary }}>
             Changes will take effect the next time {APP_NAME} is launched.
           </Text>
           <Checkbox

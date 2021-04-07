@@ -11,14 +11,14 @@ import { useAppConfiguration } from "@foxglove-studio/app/context/AppConfigurati
 // The `state` returned can be used to show whether the get/set is still in progress.
 export function useAsyncAppConfigurationValue<T>(
   key: string,
-): [state: AsyncState<T>, setter: (value?: T) => Promise<void>] {
+): [state: AsyncState<T | undefined>, setter: (value?: T) => Promise<void>] {
   const appConfiguration = useAppConfiguration();
 
   // async retry will start loading the value on mount
-  const getterState = useAsyncRetry(async () => (await appConfiguration.get(key)) as T, [
-    appConfiguration,
-    key,
-  ]);
+  const getterState = useAsyncRetry(
+    async () => (await appConfiguration.get(key)) as T | undefined,
+    [appConfiguration, key],
+  );
 
   const [setterState, setter] = useAsyncFn(
     async (value?: T) => {
