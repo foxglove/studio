@@ -12,7 +12,7 @@ const ScreenshotReadyContext = createContext<ScreenshotReady | undefined>(undefi
 export function useScreenshotReady(): ScreenshotReady {
   const ctx = useContext(ScreenshotReadyContext);
   if (!ctx) {
-    throw new Error("ScreenshotContext Provider is required to useScreenshot");
+    throw new Error("ScreenshotContext Provider is required to useScreenshotReady");
   }
 
   return ctx;

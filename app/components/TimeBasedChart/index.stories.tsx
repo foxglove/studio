@@ -16,6 +16,7 @@ import { useState, useCallback, useRef } from "react";
 import MockMessagePipelineProvider from "@foxglove-studio/app/components/MessagePipeline/MockMessagePipelineProvider";
 import signal from "@foxglove-studio/app/shared/signal";
 import { triggerWheel } from "@foxglove-studio/app/stories/PanelSetup";
+import { useScreenshotReady } from "@foxglove-studio/app/stories/ScreenshotReadyContext";
 
 import TimeBasedChart, { TimeBasedChartTooltipData } from "./index";
 import type { Props } from "./index";
@@ -96,13 +97,13 @@ export default {
   },
 };
 
-const simpleSignal = signal();
 export const Simple = () => {
+  const sceneReady = useScreenshotReady();
   const pauseFrame = useCallback(() => {
     return () => {
-      simpleSignal.resolve();
+      sceneReady();
     };
-  }, []);
+  }, [sceneReady]);
 
   return (
     <div style={{ width: "100%", height: "100%", background: "black" }}>
@@ -113,23 +114,18 @@ export const Simple = () => {
   );
 };
 
-Simple.parameters = {
-  screenshot: {
-    waitFor: simpleSignal,
-  },
-};
-
 // zoom and update without resetting zoom
-const zoomAndUpdateSignal = signal();
 export const CanZoomAndUpdate = () => {
+  const sceneReady = useScreenshotReady();
+
   const okTrigger = useRef(false);
   const pauseFrame = useCallback(() => {
     return () => {
       if (okTrigger.current) {
-        zoomAndUpdateSignal.resolve();
+        sceneReady();
       }
     };
-  }, []);
+  }, [sceneReady]);
 
   const [chartProps, setChartProps] = useState(cloneDeep(commonProps));
 
@@ -167,9 +163,10 @@ export const CanZoomAndUpdate = () => {
     </div>
   );
 };
-CanZoomAndUpdate.parameters = { screenshot: { waitFor: zoomAndUpdateSignal } };
 
 export const CleansUpTooltipOnUnmount = () => {
+  const sceneReady = useScreenshotReady();
+
   const [hasRenderedOnce, setHasRenderedOnce] = useState<boolean>(false);
   const refFn = useCallback(async () => {
     await new Promise((resolve) => setTimeout(resolve, 200));
@@ -181,7 +178,8 @@ export const CleansUpTooltipOnUnmount = () => {
     );
     await new Promise((resolve) => setTimeout(resolve, 100));
     setHasRenderedOnce(true);
-  }, []);
+    sceneReady();
+  }, [sceneReady]);
 
   if (hasRenderedOnce) {
     return ReactNull;
@@ -197,12 +195,14 @@ export const CleansUpTooltipOnUnmount = () => {
 };
 
 export const CallPauseOnInitialMount = () => {
+  const sceneReady = useScreenshotReady();
   const [unpauseFrameCount, setUnpauseFrameCount] = useState(0);
   const pauseFrame = useCallback(() => {
     return () => {
       setUnpauseFrameCount((old) => old + 1);
+      sceneReady();
     };
-  }, [setUnpauseFrameCount]);
+  }, [sceneReady]);
 
   return (
     <div style={{ width: "100%", height: "100%", background: "black" }}>
