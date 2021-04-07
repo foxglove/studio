@@ -5,12 +5,12 @@
 import { createContext, useContext } from "react";
 
 // indicate that screenshot is ready for capture
-type ScreenshotSignal = () => void;
+type ScreenshotReady = () => void;
 
-const ScreenshotContext = createContext<ScreenshotSignal | undefined>(undefined);
+const ScreenshotReadyContext = createContext<ScreenshotReady | undefined>(undefined);
 
-export function useScreenshot(): ScreenshotSignal {
-  const ctx = useContext(ScreenshotContext);
+export function useScreenshotReady(): ScreenshotReady {
+  const ctx = useContext(ScreenshotReadyContext);
   if (!ctx) {
     throw new Error("ScreenshotContext Provider is required to useScreenshot");
   }
@@ -18,4 +18,4 @@ export function useScreenshot(): ScreenshotSignal {
   return ctx;
 }
 
-export default ScreenshotContext;
+export default ScreenshotReadyContext;

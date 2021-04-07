@@ -15,7 +15,7 @@ import { useCallback } from "react";
 import TestUtils from "react-dom/test-utils";
 
 import PanelSetup from "@foxglove-studio/app/stories/PanelSetup";
-import { useScreenshot } from "@foxglove-studio/app/stories/ScreenshotContext";
+import { useScreenshotReady } from "@foxglove-studio/app/stories/ScreenshotReadyContext";
 
 import StateTransitions from "./index";
 
@@ -93,7 +93,7 @@ export default {
 };
 
 export const OnePath = () => {
-  const sceneReady = useScreenshot();
+  const sceneReady = useScreenshotReady();
   const pauseFrame = useCallback(() => {
     return () => {
       sceneReady();
@@ -112,7 +112,7 @@ export const OnePath = () => {
 };
 
 export const MultiplePaths = () => {
-  const sceneReady = useScreenshot();
+  const sceneReady = useScreenshotReady();
   const pauseFrame = useCallback(() => {
     return () => {
       sceneReady();
@@ -134,7 +134,7 @@ export const MultiplePaths = () => {
 };
 
 export const MultiplePathsWithHover = () => {
-  const sceneReady = useScreenshot();
+  const sceneReady = useScreenshotReady();
   const pauseFrame = useCallback(() => {
     return () => {
       sceneReady();
@@ -166,7 +166,7 @@ export const MultiplePathsWithHover = () => {
 };
 
 export const LongPath = () => {
-  const sceneReady = useScreenshot();
+  const sceneReady = useScreenshotReady();
   const pauseFrame = useCallback(() => {
     return () => {
       sceneReady();
@@ -185,7 +185,7 @@ export const LongPath = () => {
 };
 
 export const JsonPath = () => {
-  const sceneReady = useScreenshot();
+  const sceneReady = useScreenshotReady();
   const pauseFrame = useCallback(() => {
     return () => {
       sceneReady();
@@ -204,7 +204,7 @@ export const JsonPath = () => {
 };
 
 export const WithAHoveredTooltip = () => {
-  const sceneReady = useScreenshot();
+  const sceneReady = useScreenshotReady();
   const pauseFrame = useCallback(() => {
     return () => {
       sceneReady();
