@@ -116,21 +116,12 @@ export const Simple = () => {
 // zoom and update without resetting zoom
 export const CanZoomAndUpdate = () => {
   const sceneReady = useScreenshotReady();
+  const [chartProps, setChartProps] = useState(cloneDeep(commonProps));
+  const callCountRef = useRef(0);
 
   const okTrigger = useRef(false);
-  const pauseFrame = useCallback(() => {
-    return () => {
-      if (okTrigger.current) {
-        sceneReady();
-      }
-    };
-  }, [sceneReady]);
 
-  const [chartProps, setChartProps] = useState(cloneDeep(commonProps));
-
-  const refFn = useCallback(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
+  const doScroll = useCallback(async () => {
     const canvasEl = document.querySelector("canvas");
     if (!canvasEl) {
       return;
@@ -138,24 +129,40 @@ export const CanZoomAndUpdate = () => {
 
     // Zoom is a continuous event, so we need to simulate wheel multiple times
     for (let i = 0; i < 5; i++) {
-      triggerWheel(canvasEl, 1);
+      triggerWheel(canvasEl, 2);
+      await new Promise((resolve) => setTimeout(resolve, 10));
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 100));
     setChartProps((oldProps) => {
-      // the next chart render will trigger our screenshot signal
-      okTrigger.current = true;
-
       const newProps = cloneDeep(oldProps);
       const newDataPoint = cloneDeep(newProps.data.datasets[0]!.data[0]!);
       newDataPoint.x = 20;
       newProps.data.datasets[0]!.data[1] = newDataPoint;
+
+      // the next chart render will trigger our screenshot signal
+      okTrigger.current = true;
       return newProps;
     });
   }, []);
 
+  const pauseFrame = useCallback(() => {
+    return () => {
+      // first render of the chart triggers scrolling
+      if (callCountRef.current === 0) {
+        doScroll();
+      }
+
+      if (okTrigger.current) {
+        sceneReady();
+      }
+
+      ++callCountRef.current;
+    };
+  }, [doScroll, sceneReady]);
+
   return (
-    <div style={{ width: 800, height: 800, background: "black" }} ref={refFn}>
+    <div style={{ width: 800, height: 800, background: "black" }}>
       <MockMessagePipelineProvider pauseFrame={pauseFrame}>
         <TimeBasedChart {...chartProps} width={800} height={800} />
       </MockMessagePipelineProvider>
