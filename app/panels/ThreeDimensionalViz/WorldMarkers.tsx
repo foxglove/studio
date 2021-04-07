@@ -32,6 +32,7 @@ import { getGlobalHooks } from "@foxglove-studio/app/loadWebviz";
 import { Interactive } from "@foxglove-studio/app/panels/ThreeDimensionalViz/Interactions/types";
 import { GLTextMarker } from "@foxglove-studio/app/panels/ThreeDimensionalViz/SearchText";
 import {
+  Cover,
   OccupancyGrids,
   LaserScans,
   PointClouds,
@@ -54,12 +55,14 @@ import {
   SphereMarker,
   TextMarker,
   OverlayIconMarker,
+  ColorMarker,
 } from "@foxglove-studio/app/types/Messages";
 import { deepParse, isBobject } from "@foxglove-studio/app/util/binaryObjects";
 import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
 
 import glTextAtlasLoader, { TextAtlas } from "./utils/glTextAtlasLoader";
 import { groupLinesIntoInstancedLineLists } from "./utils/groupingUtils";
+import { ReglColor } from "@foxglove-studio/app/util/colorUtils";
 
 const ICON_WRAPPER_SIZE = 24;
 const ICON_SIZE = 14;
@@ -77,6 +80,7 @@ export type MarkerWithInteractionData = Interactive<any>;
 
 export type InteractiveMarkersByType = {
   arrow: MarkerWithInteractionData[];
+  color: Interactive<ColorMarker>[];
   cube: Interactive<CubeMarker>[];
   cubeList: Interactive<CubeListMarker>[];
   cylinder: Interactive<CylinderMarker>[];
@@ -127,6 +131,7 @@ export type WorldMarkerProps = {
 const MIN_SCALE = 0.6;
 const MIN_DISTANCE = 50;
 const MAX_DISTANCE = 100;
+
 // The icons will scale according to camera distance between MIN_DISTANCE and MAX_DISTANCE, from 100% to MIN_SCALE.
 function getIconScaleByCameraDistance(distance: number): number {
   const effectiveIconDistance = clamp(distance, MIN_DISTANCE, MAX_DISTANCE);
@@ -160,6 +165,33 @@ function getIconStyles(
   };
 }
 
+// Average a list of color markers into a single output color value. The returned value is the
+// mean RGB and max(alpha)
+function averageMarkerColor(colors: ColorMarker[]): ReglColor {
+  let count = 0;
+  const sum = colors.reduce(
+    (prev, cur) => {
+      if (cur.color == undefined) {
+        return prev;
+      }
+      prev[0] += cur.color.r;
+      prev[1] += cur.color.g;
+      prev[2] += cur.color.b;
+      prev[3] = Math.max(prev[3], cur.color.a);
+      ++count;
+      return prev;
+    },
+    [0, 0, 0, 0] as ReglColor,
+  );
+  if (count <= 1) {
+    return sum;
+  }
+  for (let i = 0; i < 3; i++) {
+    sum[i] /= count;
+  }
+  return sum;
+}
+
 export default function WorldMarkers({
   autoTextBackgroundColor,
   layerIndex,
@@ -170,6 +202,7 @@ export default function WorldMarkers({
   const getChildrenForHitmap = useMemo(() => createInstancedGetChildrenForHitmap(1), []);
   const {
     arrow,
+    color,
     cube,
     cubeList,
     cylinder,
@@ -221,8 +254,11 @@ export default function WorldMarkers({
     .perPanelHooks()
     .ThreeDimensionalViz.useWorldspacePointSize();
 
+  const backdropColor = useMemo((): ReglColor => averageMarkerColor(color), [color]);
+
   return (
     <>
+      <Cover color={backdropColor} />
       <OccupancyGrids layerIndex={(layerIndex as number) + LAYER_INDEX_OCCUPANCY_GRIDS}>
         {grid as any}
       </OccupancyGrids>

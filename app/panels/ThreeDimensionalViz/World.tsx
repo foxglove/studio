@@ -47,6 +47,7 @@ type Props = WorldSearchTextProps & {
 function getMarkers(markerProviders: MarkerProvider[]): InteractiveMarkersByType {
   const markers: InteractiveMarkersByType = {
     arrow: [],
+    color: [],
     cube: [],
     cubeList: [],
     cylinder: [],
