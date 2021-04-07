@@ -133,28 +133,30 @@ export const CanZoomAndUpdate = () => {
 
   const [chartProps, setChartProps] = useState(cloneDeep(commonProps));
 
-  const refFn = useCallback(() => {
-    setTimeout(() => {
-      const canvasEl = document.querySelector("canvas");
-      // Zoom is a continuous event, so we need to simulate wheel multiple times
-      if (canvasEl) {
-        for (let i = 0; i < 5; i++) {
-          triggerWheel(canvasEl, 1);
-        }
-        setTimeout(() => {
-          setChartProps((oldProps) => {
-            // the next chart render will trigger our screenshot signal
-            okTrigger.current = true;
+  const refFn = useCallback(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
-            const newProps = cloneDeep(oldProps);
-            const newDataPoint = cloneDeep(newProps.data.datasets[0]!.data[0]!);
-            newDataPoint.x = 20;
-            newProps.data.datasets[0]!.data[1] = newDataPoint;
-            return newProps;
-          });
-        }, 50);
-      }
-    }, 200);
+    const canvasEl = document.querySelector("canvas");
+    if (!canvasEl) {
+      return;
+    }
+
+    // Zoom is a continuous event, so we need to simulate wheel multiple times
+    for (let i = 0; i < 5; i++) {
+      triggerWheel(canvasEl, 1);
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    setChartProps((oldProps) => {
+      // the next chart render will trigger our screenshot signal
+      okTrigger.current = true;
+
+      const newProps = cloneDeep(oldProps);
+      const newDataPoint = cloneDeep(newProps.data.datasets[0]!.data[0]!);
+      newDataPoint.x = 20;
+      newProps.data.datasets[0]!.data[1] = newDataPoint;
+      return newProps;
+    });
   }, []);
 
   return (
@@ -169,22 +171,26 @@ CanZoomAndUpdate.parameters = { screenshot: { waitFor: zoomAndUpdateSignal } };
 
 export const CleansUpTooltipOnUnmount = () => {
   const [hasRenderedOnce, setHasRenderedOnce] = useState<boolean>(false);
-  const refFn = useCallback(() => {
-    setTimeout(() => {
-      const [canvas] = document.getElementsByTagName("canvas");
-      const { top, left } = canvas!.getBoundingClientRect();
-      document.dispatchEvent(
-        new MouseEvent("mousemove", { clientX: 363 + left, clientY: 650 + top }),
-      );
-      setTimeout(() => {
-        setHasRenderedOnce(true);
-      }, 100);
-    }, 200);
+  const refFn = useCallback(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    const [canvas] = document.getElementsByTagName("canvas");
+    const { top, left } = canvas!.getBoundingClientRect();
+    document.dispatchEvent(
+      new MouseEvent("mousemove", { clientX: 363 + left, clientY: 650 + top }),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    setHasRenderedOnce(true);
   }, []);
+
+  if (hasRenderedOnce) {
+    return ReactNull;
+  }
+
   return (
     <div style={{ width: "100%", height: "100%", background: "black" }} ref={refFn}>
       <MockMessagePipelineProvider>
-        {!hasRenderedOnce && <TimeBasedChart {...commonProps} />}
+        <TimeBasedChart {...commonProps} />
       </MockMessagePipelineProvider>
     </div>
   );

@@ -765,6 +765,12 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     onHover,
   };
 
+  // avoid rendering if width/height are 0 - usually on initial mount
+  // so we don't trigger onChartUpdate if we know we will immediately resize
+  if (width === 0 || height === 0) {
+    return ReactNull;
+  }
+
   return (
     <div style={{ display: "flex", width: "100%" }}>
       <div style={{ display: "flex", width }}>
