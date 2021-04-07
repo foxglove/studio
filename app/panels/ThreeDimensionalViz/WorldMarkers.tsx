@@ -58,11 +58,11 @@ import {
   ColorMarker,
 } from "@foxglove-studio/app/types/Messages";
 import { deepParse, isBobject } from "@foxglove-studio/app/util/binaryObjects";
+import { ReglColor } from "@foxglove-studio/app/util/colorUtils";
 import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
 
 import glTextAtlasLoader, { TextAtlas } from "./utils/glTextAtlasLoader";
 import { groupLinesIntoInstancedLineLists } from "./utils/groupingUtils";
-import { ReglColor } from "@foxglove-studio/app/util/colorUtils";
 
 const ICON_WRAPPER_SIZE = 24;
 const ICON_SIZE = 14;
@@ -167,9 +167,9 @@ function getIconStyles(
 
 // Average a list of color markers into a single output color value. The returned value is the
 // mean RGB and max(alpha)
-function averageMarkerColor(colors: ColorMarker[]): ReglColor {
+function averageMarkerColor(colorMarkers: ColorMarker[]): ReglColor {
   let count = 0;
-  const sum = colors.reduce(
+  const sum = colorMarkers.reduce(
     (prev, cur) => {
       if (cur.color == undefined) {
         return prev;
