@@ -171,10 +171,9 @@ export function filterDatasets(
         return datum;
       }
 
-      const pixelXDistance = (datum.x - prev.x) * pixelPerXValue;
-      const pixelYDistance = (datum.y - prev.y) * pixelPerYValue;
-
-      if (pixelXDistance < 4 && pixelYDistance < 4) {
+      const pixelXDistance = Math.abs((datum.x - prev.x) * pixelPerXValue);
+      const pixelYDistance = Math.abs((datum.y - prev.y) * pixelPerYValue);
+      if (pixelXDistance < 3 && pixelYDistance < 3) {
         return;
       }
 
