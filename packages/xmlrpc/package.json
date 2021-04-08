@@ -28,11 +28,11 @@
     "byte-base64": "1.1.0",
     "sax": "1.2.4",
     "web-encoding": "1.1.4",
-    "xmlbuilder2": "2.4.0"
+    "xmlbuilder2": "2.4.1"
   },
   "devDependencies": {
     "@jest/types": "26.6.2",
-    "@types/sax": "^1",
+    "@types/sax": "^1.2.1",
     "jest": "26.6.3",
     "jest-circus": "26.6.3",
     "tslib": "2.2.0",

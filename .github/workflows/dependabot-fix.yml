@@ -63,3 +63,8 @@ jobs:
           git add yarn.lock
           git commit -m '[dependabot skip] Fix yarn.lock'
           git push
+
+      - name: Request automerge if appropriate
+        run: yarn ts-node ./ci/dependabot-automerge.ts
+        env:
+          GITHUB_TOKEN: ${{ secrets.DEPENDABOT_FIX_GITHUB_TOKEN }}

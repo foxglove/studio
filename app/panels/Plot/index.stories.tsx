@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { storiesOf } from "@storybook/react";
+import { useCallback, useRef } from "react";
 import { parseMessageDefinition } from "rosbag";
 
 import Plot, { PlotConfig } from "@foxglove-studio/app/panels/Plot";
@@ -318,8 +319,8 @@ const exampleConfig: PlotConfig = {
 
 storiesOf("<Plot>", module)
   .addParameters({
-    screenshot: {
-      delay: 4000,
+    chromatic: {
+      delay: 50,
     },
   })
   .add("line graph", () => {
@@ -367,21 +368,35 @@ storiesOf("<Plot>", module)
     );
   })
   .add("line graph after zoom", () => {
+    const pauseState = useRef<"zoom" | "ready">("zoom");
+
+    const doZoom = useCallback(() => {
+      const canvasEl = document.querySelector("canvas");
+      // Zoom is a continuous event, so we need to simulate wheel multiple times
+      if (canvasEl) {
+        for (let i = 0; i < 5; i++) {
+          triggerWheel(canvasEl, 1);
+        }
+      }
+
+      // indicate our next render completion should mark the scene ready
+      pauseState.current = "ready";
+    }, []);
+
+    const pauseFrame = useCallback(() => {
+      return () => {
+        switch (pauseState.current) {
+          case "zoom":
+            doZoom();
+            break;
+          default:
+            break;
+        }
+      };
+    }, [doZoom]);
+
     return (
-      <PanelSetup
-        fixture={fixture}
-        onMount={(el: any) => {
-          setTimeout(() => {
-            const canvasEl = el.querySelector("canvas");
-            // Zoom is a continuous event, so we need to simulate wheel multiple times
-            if (canvasEl) {
-              for (let i = 0; i < 5; i++) {
-                triggerWheel(canvasEl, 1);
-              }
-            }
-          }, 100);
-        }}
-      >
+      <PanelSetup pauseFrame={pauseFrame} fixture={fixture}>
         <Plot config={exampleConfig} />
       </PanelSetup>
     );
@@ -596,14 +611,15 @@ storiesOf("<Plot>", module)
     );
   })
   .add("open x-axis dropdown menu", () => {
+    const pauseFrame = useCallback(() => {
+      return () => {
+        const xAxisDropdown = document.querySelectorAll("[data-test=plot-legend-x-axis-menu]")[0];
+        (xAxisDropdown as any).click();
+      };
+    }, []);
+
     return (
-      <PanelSetup
-        fixture={fixture}
-        onMount={() => {
-          const xAxisDropdown = document.querySelectorAll("[data-test=plot-legend-x-axis-menu]")[0];
-          (xAxisDropdown as any).click();
-        }}
-      >
+      <PanelSetup pauseFrame={pauseFrame} fixture={fixture}>
         <Plot config={exampleConfig} />
       </PanelSetup>
     );
