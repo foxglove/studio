@@ -10,13 +10,9 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { StoryContext } from "@storybook/addons";
 import cloneDeep from "lodash/cloneDeep";
-import { useState, useCallback, ComponentProps, useEffect, useRef } from "react";
+import { useState, useCallback, ComponentProps } from "react";
 import TestUtils from "react-dom/test-utils";
-
-import signal from "@foxglove-studio/app/shared/signal";
-import { useScreenshotReady } from "@foxglove-studio/app/stories/ScreenshotReadyContext";
 
 import ChartComponent from ".";
 
@@ -162,137 +158,14 @@ function DatalabelClickExample() {
   );
 }
 
-// fixme - add scene ready
-
 export default {
   title: "<ChartComponent>",
   component: ChartComponent,
-};
-
-export const ScreenshotDelayTest = () => {
-  const sceneReady = useScreenshotReady();
-  const startTimeRef = useRef(Date.now());
-  const [elapsed, setElapsed] = useState(0);
-
-  useEffect(() => {
-    setTimeout(sceneReady, 5 * 1000);
-  }, [sceneReady]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setElapsed((Date.now() - startTimeRef.current) / 1000);
-    }, 1000);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
-
-  return <div>Elapsed: {elapsed}</div>;
-};
-
-const sig = signal();
-export const WaitForTest = () => {
-  const startTimeRef = useRef(Date.now());
-  const [elapsed, setElapsed] = useState(0);
-
-  useEffect(() => {
-    setTimeout(() => sig.resolve(), 5 * 1000);
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setElapsed((Date.now() - startTimeRef.current) / 1000);
-    }, 1000);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
-
-  return <div>Elapsed: {elapsed}</div>;
-};
-
-WaitForTest.parameters = {
-  screenshot: {
-    waitFor: sig,
+  parameters: {
+    chromatic: {
+      delay: 100,
+    },
   },
-};
-
-export const DelayTest = () => {
-  const startTimeRef = useRef(Date.now());
-  const [elapsed, setElapsed] = useState(0);
-
-  useEffect(() => {
-    setTimeout(() => sig.resolve(), 10 * 1000);
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setElapsed((Date.now() - startTimeRef.current) / 1000);
-    }, 1000);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
-
-  return <div>Elapsed: {elapsed}</div>;
-};
-
-DelayTest.parameters = {
-  screenshot: {
-    delay: 5 * 1000,
-  },
-};
-
-export const ChromaticDelay = () => {
-  const startTimeRef = useRef(Date.now());
-  const [elapsed, setElapsed] = useState(0);
-
-  useEffect(() => {
-    setTimeout(() => sig.resolve(), 10 * 1000);
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setElapsed((Date.now() - startTimeRef.current) / 1000);
-    }, 1000);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
-
-  return <div>Elapsed: {elapsed}</div>;
-};
-
-ChromaticDelay.parameters = {
-  chromatic: {
-    delay: 5 * 1000,
-  },
-};
-
-export const ChromaticDelayParam = (_props: unknown, ctx: StoryContext) => {
-  ctx.parameters.chromatic = { delay: 5 * 1000 };
-  const startTimeRef = useRef(Date.now());
-  const [elapsed, setElapsed] = useState(0);
-
-  useEffect(() => {
-    setTimeout(() => sig.resolve(), 10 * 1000);
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setElapsed((Date.now() - startTimeRef.current) / 1000);
-    }, 1000);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
-
-  return <div>Elapsed: {elapsed}</div>;
 };
 
 export const Basic = () => {
@@ -307,6 +180,12 @@ export const CanUpdate = () => {
   return <DatalabelUpdateExample />;
 };
 
+CanUpdate.parameters = {
+  chromatic: {
+    delay: 500,
+  },
+};
+
 export const WithDatalabels = () => {
   return (
     <div style={divStyle}>
@@ -317,4 +196,10 @@ export const WithDatalabels = () => {
 
 export const AllowsClickingOnDatalabels = () => {
   return <DatalabelClickExample />;
+};
+
+AllowsClickingOnDatalabels.parameters = {
+  chromatic: {
+    delay: 500,
+  },
 };
