@@ -31,9 +31,35 @@ describe("useAsyncAppConfigurationValue", () => {
 
     const { result, unmount, waitForNextUpdate } = renderHook(
       () => useAsyncAppConfigurationValue("test.value"),
-      {
-        wrapper,
-      },
+      { wrapper },
+    );
+
+    // immediately on mount loading should be true
+    expect(result.current[0]).toMatchObject({ loading: true, retry: undefined });
+
+    await waitForNextUpdate();
+    expect(result.current[0]).toMatchObject({
+      loading: false,
+      value: "test.value",
+      retry: undefined,
+    });
+
+    unmount();
+  });
+
+  it("optimistically returns set value", async () => {
+    throw new Error("FIXME");
+    const wrapper = ({ children }: PropsWithChildren<unknown>) => {
+      return (
+        <AppConfigurationContext.Provider value={new FakeProvider()}>
+          {children}
+        </AppConfigurationContext.Provider>
+      );
+    };
+
+    const { result, unmount, waitForNextUpdate } = renderHook(
+      () => useAsyncAppConfigurationValue("test.value"),
+      { wrapper },
     );
 
     // immediately on mount loading should be true

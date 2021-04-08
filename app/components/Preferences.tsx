@@ -2,28 +2,40 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 import {
+  Callout,
   Checkbox,
   ChoiceGroup,
   ChoiceGroupOption,
   ComboBox,
+  CommandButton,
+  ContextualMenu,
   DirectionalHint,
+  getInputFocusStyle,
   IChoiceGroupOption,
   IComboBoxOption,
+  Icon,
+  IconButton,
   Label,
+  mergeStyleSets,
   Pivot,
   PivotItem,
   SelectableOptionMenuItemType,
   Stack,
   Text,
+  TextField,
   useTheme,
 } from "@fluentui/react";
 import { useId } from "@fluentui/react-hooks";
+import cx from "classnames";
+import { useCombobox } from "downshift";
 import moment from "moment-timezone";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
 import { ExperimentalFeatureSettings } from "@foxglove-studio/app/components/ExperimentalFeatureSettings";
 import { useAsyncAppConfigurationValue } from "@foxglove-studio/app/hooks/useAsyncAppConfigurationValue";
+import filterMap from "@foxglove-studio/app/util/filterMap";
+import fuzzyFilter from "@foxglove-studio/app/util/fuzzyFilter";
 
 function formatTimezone(name: string) {
   const tz = moment.tz(name);
@@ -37,33 +49,246 @@ function formatTimezone(name: string) {
   return `${name} (${zoneAbbr}, ${offsetStr})`;
 }
 
+type MenuItem = { key: string; text: string; value: string; disabled?: boolean };
+
 function TimezoneSettings(): React.ReactElement {
-  const [timezone, setTimezone] = useAsyncAppConfigurationValue<string>("timezone");
-  const options: IComboBoxOption[] = useMemo(() => {
-    const result: IComboBoxOption[] = moment.tz.names().map((name) => {
-      return { key: `zone:${name}`, id: name, text: formatTimezone(name) };
-    });
+  const [timezone, setTimezone] = useAsyncAppConfigurationValue<string>("timezone", {
+    optimistic: true,
+  });
+  const detectItem = useMemo(
+    () => ({
+      key: "detect",
+      text: `Detect from system: ${formatTimezone(moment.tz.guess())}`,
+      value: "",
+    }),
+    [],
+  );
+  const fixedItems: MenuItem[] = useMemo(
+    () => [
+      detectItem,
+      { key: "zone:UTC", text: `${formatTimezone("UTC")}`, value: "UTC" },
+      { key: "sep", text: "-", value: "-separator-", disabled: true },
+    ],
+    [detectItem],
+  );
+  const timezoneItems: MenuItem[] = useMemo(
+    () =>
+      filterMap(moment.tz.names(), (name) => {
+        // UTC is always hoisted to the top in fixedItems
+        if (name === "UTC") {
+          return undefined;
+        }
+        return { key: `zone:${name}`, text: formatTimezone(name), value: name };
+      }),
+    [],
+  );
 
-    result.unshift(
-      { key: "detect", text: `Detect from system: ${formatTimezone(moment.tz.guess())}` },
-      { key: "utc", text: `${formatTimezone("UTC")}` },
-      { key: "sep", text: "-", itemType: SelectableOptionMenuItemType.Divider },
-    );
+  const itemsByValue = useMemo(() => {
+    const map = new Map<string, MenuItem>();
+    for (const item of fixedItems) {
+      map.set(item.value, item);
+    }
+    for (const item of timezoneItems) {
+      map.set(item.value, item);
+    }
+    return map;
+  }, [fixedItems, timezoneItems]);
 
-    return result;
-  }, []);
+  const selectedItem = useMemo(() => itemsByValue.get(timezone.value ?? "") ?? detectItem, [
+    itemsByValue,
+    timezone.value,
+    detectItem,
+  ]);
+
+  console.log("selected item", selectedItem, "timezone value", timezone.value);
 
   const onTimezoneSettingChange = useCallback((event, option?: IChoiceGroupOption) => {}, []);
 
-  const comboBoxId = useId("timezoneBox");
+  const [filteredItems, setFilteredItems] = useState(timezoneItems);
+  const [inputValue, setInputValue] = useState(selectedItem.text);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const allItems = useMemo(() => [...fixedItems, ...filteredItems], [fixedItems, filteredItems]);
+  const {
+    getToggleButtonProps,
+    getLabelProps,
+    getMenuProps,
+    getInputProps,
+    getComboboxProps,
+    highlightedIndex,
+    getItemProps,
+  } = useCombobox({
+    items: allItems,
+    itemToString: (item) => item?.text ?? "",
+
+    isOpen,
+    onIsOpenChange: ({ isOpen: newValue }) => setIsOpen(newValue ?? false),
+
+    selectedItem,
+    onSelectedItemChange: (changes) => {
+      if (changes.type !== useCombobox.stateChangeTypes.ControlledPropUpdatedSelectedItem) {
+        setTimezone(changes.selectedItem?.value ?? undefined);
+      }
+    },
+
+    inputValue,
+    onInputValueChange: ({ type, inputValue: newValue, selectedItem: newSelectedItem }) => {
+      if (type !== useCombobox.stateChangeTypes.ControlledPropUpdatedSelectedItem) {
+        console.log("input value change", type, "to", newSelectedItem, "new value", newValue);
+        setInputValue(newValue ?? "");
+        setFilteredItems(fuzzyFilter(timezoneItems, newValue ?? "", (option) => option.text));
+      }
+    },
+    // stateReducer: (state, { type, changes }) => {
+    //   // console.log("reducer", type);
+    //   if (!state.isOpen && changes.isOpen === true) {
+    //     return { ...changes, inputValue: "" };
+    //   }
+    //   return changes;
+    // },
+  });
+
+  const comboboxRef = useRef<HTMLDivElement>(ReactNull);
+
+  const theme = useTheme();
+
+  const [focused, setFocused] = useState(false);
+
+  const styles = mergeStyleSets({
+    container: {
+      maxWidth: 300,
+      position: "relative",
+      display: "flex",
+      flexDirection: "row",
+      paddingLeft: theme.spacing.s1,
+      selectors: {
+        // setting border using pseudo-element here in order to
+        // prevent chevron button to overlap ComboBox border under certain resolutions
+        ":after": [
+          {
+            pointerEvents: "none",
+            content: "''",
+            position: "absolute",
+            left: 0,
+            top: 0,
+            bottom: 0,
+            right: 0,
+            borderWidth: "1px",
+            borderStyle: "solid",
+            borderColor: theme.semanticColors.inputBorder,
+            borderRadius: theme.effects.roundedCorner2,
+          },
+          focused && {
+            borderColor: theme.semanticColors.inputFocusBorderAlt,
+            borderWidth: 2,
+          },
+        ],
+      },
+      ":hover::after": !focused && {
+        borderColor: theme.semanticColors.inputBorderHovered,
+      },
+    },
+    input: {
+      // width: "100%",
+      flexGrow: 1,
+      padding: 0,
+      backgroundColor: theme.semanticColors.inputBackground,
+      color: theme.semanticColors.inputText,
+      fontSize: theme.fonts.medium.fontSize,
+    },
+    item: {
+      padding: theme.spacing.s1,
+    },
+    highlightedItem: {
+      backgroundColor: theme.semanticColors.menuItemBackgroundHovered,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: theme.semanticColors.menuDivider,
+    },
+    menuButton: {
+      color: theme.semanticColors.bodySubtext,
+    },
+    menuIcon: {
+      fontSize: theme.fonts.small.fontSize,
+    },
+  });
 
   return (
     <>
-      <Label htmlFor={comboBoxId}>Display timestamps in:</Label>
-      <ComboBox
-        id={comboBoxId}
+      <Label {...getLabelProps()}>Display timestamps in:</Label>
+      <div {...getComboboxProps({ ref: comboboxRef, className: styles.container })}>
+        <input
+          {...getInputProps({
+            className: styles.input,
+            onFocus: () => {
+              setFocused(true);
+              setIsOpen(true);
+            },
+            onBlur: () => setFocused(false),
+            onKeyDown: (event) => {
+              if (event.key === "Escape") {
+                if (isOpen) {
+                  event.stopPropagation();
+                } else {
+                  (event.nativeEvent as any).preventDownshiftDefault = true;
+                }
+              }
+            },
+          })}
+        />
+        <IconButton
+          styles={{ root: styles.menuButton }}
+          iconProps={{ iconName: "ChevronDown", styles: { root: styles.menuIcon } }}
+          {...getToggleButtonProps()}
+        />
+      </div>
+      <Callout
+        isBeakVisible={false}
+        hidden={!isOpen}
+        target={comboboxRef.current}
+        directionalHint={DirectionalHint.bottomLeftEdge}
+        directionalHintFixed
+      >
+        <ul {...getMenuProps({}, { suppressRefError: true })} ref={undefined}>
+          {isOpen &&
+            allItems.map((item, index) =>
+              item.text === "-" ? (
+                index === allItems.length - 1 ? (
+                  ReactNull
+                ) : (
+                  <li
+                    key={item.key}
+                    className={styles.divider}
+                    {...getItemProps({ item, disabled: item.disabled, index })}
+                  ></li>
+                )
+              ) : (
+                <li
+                  key={item.key}
+                  {...getItemProps({
+                    item,
+                    index,
+                    className: cx(styles.item, {
+                      [styles.highlightedItem]: index === highlightedIndex,
+                    }),
+                  })}
+                >
+                  <Icon
+                    iconName={item.value === selectedItem.value ? "Checkmark" : ""}
+                    style={{ marginRight: theme.spacing.s1 }}
+                  />
+                  {item.text}
+                </li>
+              ),
+            )}
+        </ul>
+      </Callout>
+
+      {/* <ComboBox
+        // id={comboBoxId}
         allowFreeform
-        options={options}
+        options={timezoneItems}
         selectedKey={timezone.value}
         onChange={(event, option) => setTimezone(option?.id ?? "")}
         style={{ maxWidth: 300 }}
@@ -71,7 +296,7 @@ function TimezoneSettings(): React.ReactElement {
           directionalHintFixed: true,
           directionalHint: DirectionalHint.bottomAutoEdge,
         }}
-      />
+      /> */}
     </>
   );
 }

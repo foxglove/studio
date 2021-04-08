@@ -16,6 +16,7 @@
     "chartjs-plugin-datalabels": "2.0.0-beta.1",
     "chartjs-plugin-zoom": "github:foxglove/chartjs-plugin-zoom#656541279943f00dce600288435f83c436293146",
     "classnames": "2.3.1",
+    "downshift": "6.1.2",
     "fuzzysort": "1.1.4",
     "gl-matrix": "3.3.0",
     "hammerjs": "2.0.8",
