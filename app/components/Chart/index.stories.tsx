@@ -10,6 +10,7 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
+import { StoryContext } from "@storybook/addons";
 import cloneDeep from "lodash/cloneDeep";
 import { useState, useCallback, ComponentProps, useEffect, useRef } from "react";
 import TestUtils from "react-dom/test-utils";
@@ -239,10 +240,59 @@ export const DelayTest = () => {
   return <div>Elapsed: {elapsed}</div>;
 };
 
-WaitForTest.parameters = {
+DelayTest.parameters = {
   screenshot: {
     delay: 5,
   },
+};
+
+export const ChromaticDelay = () => {
+  const startTimeRef = useRef(Date.now());
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    setTimeout(() => sig.resolve(), 10 * 1000);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setElapsed((Date.now() - startTimeRef.current) / 1000);
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
+  return <div>Elapsed: {elapsed}</div>;
+};
+
+ChromaticDelay.parameters = {
+  chromatic: {
+    delay: 5,
+  },
+};
+
+export const ChromaticDelayParam = (_props: unknown, ctx: StoryContext) => {
+  ctx.parameters.chromatic = { delay: 5 };
+  const startTimeRef = useRef(Date.now());
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    setTimeout(() => sig.resolve(), 10 * 1000);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setElapsed((Date.now() - startTimeRef.current) / 1000);
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
+  return <div>Elapsed: {elapsed}</div>;
 };
 
 export const Basic = () => {
