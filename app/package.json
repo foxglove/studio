@@ -68,7 +68,7 @@
     "redux": "4.0.5",
     "redux-devtools-extension": "2.13.9",
     "redux-thunk": "2.3.0",
-    "regl-worldview": "0.16.0",
+    "regl-worldview": "0.16.1",
     "reselect": "4.0.0",
     "rosbag": "github:foxglove/rosbag.js#fc61125fbc01ff55698c5ed48987b2d9e7599572",
     "roslib": "github:foxglove/roslibjs#364a19d5f3ada7543fac9194a50b96087c7556ba",
