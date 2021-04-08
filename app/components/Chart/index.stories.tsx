@@ -12,8 +12,10 @@
 //   You may not use this file except in compliance with the License.
 import { storiesOf } from "@storybook/react";
 import cloneDeep from "lodash/cloneDeep";
-import { useState, useCallback, ComponentProps } from "react";
+import { useState, useCallback, ComponentProps, useEffect, useRef } from "react";
 import TestUtils from "react-dom/test-utils";
+
+import { useScreenshotReady } from "@foxglove-studio/app/stories/ScreenshotReadyContext";
 
 import ChartComponent from ".";
 
@@ -159,21 +161,55 @@ function DatalabelClickExample() {
   );
 }
 
-storiesOf("<ChartComponent>", module)
-  .addParameters({
-    screenshot: {
-      delay: 1500,
-    },
-  })
-  .add("default", () => (
+// fixme - add scene ready
+
+export default {
+  title: "<ChartComponent>",
+  component: ChartComponent,
+};
+
+export const ScreenshotDelayTest = () => {
+  const sceneReady = useScreenshotReady();
+  const startTimeRef = useRef(Date.now());
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    setTimeout(sceneReady, 10 * 1000);
+  }, [sceneReady]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setElapsed((Date.now() - startTimeRef.current) / 1000);
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
+  return <div>Elapsed: {elapsed}</div>;
+};
+
+export const Basic = () => {
+  return (
     <div style={divStyle}>
       <ChartComponent {...props} />
     </div>
-  ))
-  .add("can update", () => <DatalabelUpdateExample />)
-  .add("with datalabels", () => (
+  );
+};
+
+export const CanUpdate = () => {
+  return <DatalabelUpdateExample />;
+};
+
+export const WithDatalabels = () => {
+  return (
     <div style={divStyle}>
       <ChartComponent {...propsWithDatalabels} />
     </div>
-  ))
-  .add("allows clicking on datalabels", () => <DatalabelClickExample />);
+  );
+};
+
+export const AllowsClickingOnDatalabels = () => {
+  return <DatalabelClickExample />;
+};
