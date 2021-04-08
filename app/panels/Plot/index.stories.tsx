@@ -344,9 +344,17 @@ storiesOf("<Plot>", module)
     );
   })
   .add("in a line graph with multiple plots, x-axes are synced", () => {
+    const callCountRef = useRef(0);
     const sceneReady = useScreenshotReady();
     const pauseFrame = useCallback(() => {
-      return sceneReady;
+      return () => {
+        ++callCountRef.current;
+
+        // since we have two plots and are syncing them, we expect two calls to resume frame
+        if (callCountRef.current >= 2) {
+          sceneReady();
+        }
+      };
     }, [sceneReady]);
 
     return (
