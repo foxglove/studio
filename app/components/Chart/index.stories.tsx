@@ -10,11 +10,11 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { storiesOf } from "@storybook/react";
 import cloneDeep from "lodash/cloneDeep";
 import { useState, useCallback, ComponentProps, useEffect, useRef } from "react";
 import TestUtils from "react-dom/test-utils";
 
+import signal from "@foxglove-studio/app/shared/signal";
 import { useScreenshotReady } from "@foxglove-studio/app/stories/ScreenshotReadyContext";
 
 import ChartComponent from ".";
@@ -174,7 +174,7 @@ export const ScreenshotDelayTest = () => {
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
-    setTimeout(sceneReady, 10 * 1000);
+    setTimeout(sceneReady, 5 * 1000);
   }, [sceneReady]);
 
   useEffect(() => {
@@ -188,6 +188,61 @@ export const ScreenshotDelayTest = () => {
   }, []);
 
   return <div>Elapsed: {elapsed}</div>;
+};
+
+const sig = signal();
+export const WaitForTest = () => {
+  const startTimeRef = useRef(Date.now());
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    setTimeout(() => sig.resolve(), 5 * 1000);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setElapsed((Date.now() - startTimeRef.current) / 1000);
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
+  return <div>Elapsed: {elapsed}</div>;
+};
+
+WaitForTest.parameters = {
+  screenshot: {
+    waitFor: sig,
+  },
+};
+
+export const DelayTest = () => {
+  const startTimeRef = useRef(Date.now());
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    setTimeout(() => sig.resolve(), 10 * 1000);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setElapsed((Date.now() - startTimeRef.current) / 1000);
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
+  return <div>Elapsed: {elapsed}</div>;
+};
+
+WaitForTest.parameters = {
+  screenshot: {
+    delay: 5,
+  },
 };
 
 export const Basic = () => {
