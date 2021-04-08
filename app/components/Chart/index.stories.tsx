@@ -242,7 +242,7 @@ export const DelayTest = () => {
 
 DelayTest.parameters = {
   screenshot: {
-    delay: 5,
+    delay: 5 * 1000,
   },
 };
 
@@ -269,12 +269,12 @@ export const ChromaticDelay = () => {
 
 ChromaticDelay.parameters = {
   chromatic: {
-    delay: 5,
+    delay: 5 * 1000,
   },
 };
 
 export const ChromaticDelayParam = (_props: unknown, ctx: StoryContext) => {
-  ctx.parameters.chromatic = { delay: 5 };
+  ctx.parameters.chromatic = { delay: 5 * 1000 };
   const startTimeRef = useRef(Date.now());
   const [elapsed, setElapsed] = useState(0);
 
