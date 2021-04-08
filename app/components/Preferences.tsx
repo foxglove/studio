@@ -100,14 +100,16 @@ function TimezoneSettings(): React.ReactElement {
     detectItem,
   ]);
 
-  console.log("selected item", selectedItem, "timezone value", timezone.value);
-
   const onTimezoneSettingChange = useCallback((event, option?: IChoiceGroupOption) => {}, []);
 
-  const [filteredItems, setFilteredItems] = useState(timezoneItems);
   const [inputValue, setInputValue] = useState(selectedItem.text);
   const [isOpen, setIsOpen] = useState(false);
+  const filteredItems = useMemo(
+    () => fuzzyFilter(timezoneItems, inputValue, (option) => option.text),
+    [timezoneItems, inputValue],
+  );
 
+  console.log("selected item", selectedItem, "input value", inputValue);
   const allItems = useMemo(() => [...fixedItems, ...filteredItems], [fixedItems, filteredItems]);
   const {
     getToggleButtonProps,
@@ -126,8 +128,13 @@ function TimezoneSettings(): React.ReactElement {
 
     selectedItem,
     onSelectedItemChange: (changes) => {
+      if (!changes.selectedItem) {
+        return;
+      }
       if (changes.type !== useCombobox.stateChangeTypes.ControlledPropUpdatedSelectedItem) {
-        setTimezone(changes.selectedItem?.value ?? undefined);
+        setTimezone(changes.selectedItem.value);
+      } else {
+        console.log("ignore onSelectedItemChange", changes);
       }
     },
 
@@ -136,7 +143,6 @@ function TimezoneSettings(): React.ReactElement {
       if (type !== useCombobox.stateChangeTypes.ControlledPropUpdatedSelectedItem) {
         console.log("input value change", type, "to", newSelectedItem, "new value", newValue);
         setInputValue(newValue ?? "");
-        setFilteredItems(fuzzyFilter(timezoneItems, newValue ?? "", (option) => option.text));
       }
     },
     // stateReducer: (state, { type, changes }) => {
@@ -198,6 +204,7 @@ function TimezoneSettings(): React.ReactElement {
     },
     item: {
       padding: theme.spacing.s1,
+      cursor: "pointer",
     },
     highlightedItem: {
       backgroundColor: theme.semanticColors.menuItemBackgroundHovered,
