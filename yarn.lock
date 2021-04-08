@@ -1928,9 +1928,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fluentui/react@npm:8.9.1":
-  version: 8.9.1
-  resolution: "@fluentui/react@npm:8.9.1"
+"@fluentui/react@npm:8.9.2":
+  version: 8.9.2
+  resolution: "@fluentui/react@npm:8.9.2"
   dependencies:
     "@fluentui/date-time-utilities": ^8.0.2
     "@fluentui/font-icons-mdl2": ^8.0.3
@@ -1950,7 +1950,7 @@ __metadata:
     "@types/react-dom": ">=16.8.0 <18.0.0"
     react: ">=16.8.0 <18.0.0"
     react-dom: ">=16.8.0 <18.0.0"
-  checksum: 5a3c7abcdc2a0faecf9cc7c382adf6e234c8e9760cc512afa177d81239a268a875f61f6ac576c9fb6d71a3541e967cd2f0c1c8d8c3e9d2ad5a35ada700ad12ea
+  checksum: 58f01d47760c166aac8d3029054fe0a4b03a4320e62defbbc35970cc3817e8d26463fe530ec299407b75f26b9ea726d85dc46c0c9d9f950dffe8366f45bbd007
   languageName: node
   linkType: hard
 
@@ -2011,7 +2011,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove-studio/app@workspace:app"
   dependencies:
-    "@fluentui/react": 8.9.1
+    "@fluentui/react": 8.9.2
     "@fluentui/react-icons-mdl2": 1.0.3
     "@mdi/svg": 5.9.55
     "@storybook/addon-actions": 6.2.5
@@ -2020,14 +2020,14 @@ __metadata:
     "@storybook/react": 6.2.5
     "@testing-library/react": 11.2.6
     "@testing-library/react-hooks": 5.1.1
-    "@types/argparse": ^2
+    "@types/argparse": ^2.0.5
     "@types/classnames": 2.2.11
     "@types/css-font-loading-module": 0.0.4
-    "@types/enzyme": ^3
+    "@types/enzyme": ^3.10.8
     "@types/enzyme-adapter-react-16": 1.0.6
     "@types/gl-matrix": 3.2.0
     "@types/hammerjs": 2.0.39
-    "@types/http-server": ^0
+    "@types/http-server": ^0.10.1
     "@types/js-yaml": 4.0.0
     "@types/moment-duration-format": 2.2.2
     "@types/prettier": 2.2.3
@@ -2041,7 +2041,7 @@ __metadata:
     "@types/react-redux": 7.1.16
     "@types/react-select": 1.2.0
     "@types/react-table": 7.0.29
-    "@types/react-transition-group": ^4
+    "@types/react-transition-group": ^4.4.1
     "@types/react-virtualized": 9.21.11
     "@types/react-virtualized-select": 3.0.8
     "@types/sanitize-html": 1.27.2
@@ -4081,7 +4081,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/argparse@npm:^2":
+"@types/argparse@npm:^2.0.5":
   version: 2.0.5
   resolution: "@types/argparse@npm:2.0.5"
   checksum: aad8f449dacea75bb6c993d784e85af8152d0991270f17f7acf53871c03097d4b77f55b83ba17354ac0f50dfe6adc6a404ba3672a6cdfb4ff25e6eeab679754f
@@ -4287,7 +4287,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/enzyme@npm:*, @types/enzyme@npm:^3":
+"@types/enzyme@npm:*, @types/enzyme@npm:^3.10.8":
   version: 3.10.8
   resolution: "@types/enzyme@npm:3.10.8"
   dependencies:
@@ -4451,7 +4451,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/http-server@npm:^0":
+"@types/http-server@npm:^0.10.1":
   version: 0.10.1
   resolution: "@types/http-server@npm:0.10.1"
   dependencies:
@@ -4889,7 +4889,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-transition-group@npm:^4":
+"@types/react-transition-group@npm:^4.4.1":
   version: 4.4.1
   resolution: "@types/react-transition-group@npm:4.4.1"
   dependencies:
