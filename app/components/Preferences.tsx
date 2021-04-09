@@ -1,14 +1,20 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import { Pivot, PivotItem, Stack, useTheme } from "@fluentui/react";
+import {
+  ComboBox,
+  DirectionalHint,
+  IComboBoxOption,
+  Pivot,
+  PivotItem,
+  SelectableOptionMenuItemType,
+  Stack,
+  useTheme,
+} from "@fluentui/react";
 import moment from "moment-timezone";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { ExperimentalFeatureSettings } from "@foxglove-studio/app/components/ExperimentalFeatureSettings";
-import FluentAutocomplete, {
-  AutocompleteItem,
-} from "@foxglove-studio/app/components/FluentAutocomplete";
 import { useAsyncAppConfigurationValue } from "@foxglove-studio/app/hooks/useAsyncAppConfigurationValue";
 import filterMap from "@foxglove-studio/app/util/filterMap";
 import fuzzyFilter from "@foxglove-studio/app/util/fuzzyFilter";
@@ -26,6 +32,8 @@ function formatTimezone(name: string) {
 }
 
 function TimezoneSettings(): React.ReactElement {
+  type Option = IComboBoxOption & { data: string };
+
   const [timezone, setTimezone] = useAsyncAppConfigurationValue<string>("timezone", {
     optimistic: true,
   });
@@ -33,63 +41,79 @@ function TimezoneSettings(): React.ReactElement {
     () => ({
       key: "detect",
       text: `Detect from system: ${formatTimezone(moment.tz.guess())}`,
-      value: "",
+      data: "",
     }),
     [],
   );
-  const fixedItems: AutocompleteItem<string>[] = useMemo(
+  const fixedItems: Option[] = useMemo(
     () => [
       detectItem,
-      { key: "zone:UTC", text: `${formatTimezone("UTC")}`, value: "UTC" },
-      { key: "sep", text: "", value: "-separator-", type: "divider" },
+      { key: "zone:UTC", text: `${formatTimezone("UTC")}`, data: "UTC" },
+      { key: "sep", text: "", data: "-separator-", itemType: SelectableOptionMenuItemType.Divider },
     ],
     [detectItem],
   );
-  const timezoneItems: AutocompleteItem<string>[] = useMemo(
+  const timezoneItems: Option[] = useMemo(
     () =>
-      new Array(10)
-        .fill(1)
-        .map((_, i) => ({ key: `zone:${i + 1}`, text: `${i + 1}`, value: `${i + 1}` })),
-    // filterMap(moment.tz.names(), (name) => {
-    //   // UTC is always hoisted to the top in fixedItems
-    //   if (name === "UTC") {
-    //     return undefined;
-    //   }
-    //   return { key: `zone:${name}`, text: formatTimezone(name), value: name };
-    // }),
+      filterMap(moment.tz.names(), (name) => {
+        // UTC is always hoisted to the top in fixedItems
+        if (name === "UTC") {
+          return undefined;
+        }
+        return { key: `zone:${name}`, text: formatTimezone(name), data: name };
+      }),
     [],
   );
 
-  const getFilteredItems = useCallback(
-    (inputValue: string) => {
-      const filteredItems = fuzzyFilter(timezoneItems, inputValue, (item) => item.text);
-      return [...fixedItems, ...filteredItems];
-    },
-    [fixedItems, timezoneItems],
-  );
-
-  const itemsByValue = useMemo(() => {
-    const map = new Map<string, AutocompleteItem<string>>();
+  const itemsByData = useMemo(() => {
+    const map = new Map<string, Option>();
     for (const item of fixedItems) {
-      map.set(item.value, item);
+      map.set(item.data, item);
     }
     for (const item of timezoneItems) {
-      map.set(item.value, item);
+      map.set(item.data, item);
     }
     return map;
   }, [fixedItems, timezoneItems]);
 
-  const selectedItem = useMemo(() => itemsByValue.get(timezone.value ?? "") ?? detectItem, [
-    itemsByValue,
+  const selectedItem = useMemo(() => itemsByData.get(timezone.value ?? "") ?? detectItem, [
+    itemsByData,
     timezone.value,
     detectItem,
   ]);
 
+  const [filterText, setFilterText] = useState<string>("");
+  const filteredItems = useMemo(() => {
+    const matchingItems = fuzzyFilter(timezoneItems, filterText, (item) => item.text);
+    return [...fixedItems, ...matchingItems];
+  }, [fixedItems, timezoneItems, filterText]);
+
+  const onPendingValueChanged = useCallback(
+    (option?: IComboBoxOption, index?: number, value?: string) => {
+      if (value != undefined) {
+        setFilterText(value);
+      }
+    },
+    [],
+  );
   return (
-    <FluentAutocomplete
-      getFilteredItems={getFilteredItems}
-      selectedItem={selectedItem}
-      onSelectedItemChange={(item) => setTimezone(item.value)}
+    <ComboBox
+      label="Display timestamps in:"
+      options={filteredItems}
+      allowFreeform
+      autoComplete="on"
+      openOnKeyboardFocus
+      selectedKey={selectedItem.key}
+      onChange={(event, option) => {
+        if (option) {
+          setTimezone(option.data);
+        }
+      }}
+      onPendingValueChanged={onPendingValueChanged}
+      calloutProps={{
+        directionalHint: DirectionalHint.bottomLeftEdge,
+        directionalHintFixed: true,
+      }}
     />
   );
 }
@@ -103,7 +127,9 @@ export default function Preferences(): React.ReactElement {
           <TimezoneSettings />
         </Stack.Item>
       </PivotItem>
-      {/* <PivotItem headerText="Privacy" style={{ padding: theme.spacing.m }}>
+      {/*
+      TODO(john): hook these up to actual app settings
+      <PivotItem headerText="Privacy" style={{ padding: theme.spacing.m }}>
         <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
           <Text style={{ color: theme.palette.neutralSecondary }}>
             Changes will take effect the next time {APP_NAME} is launched.
@@ -119,7 +145,8 @@ export default function Preferences(): React.ReactElement {
             label="Send anonymized crash reports"
           />
         </Stack>
-      </PivotItem> */}
+      </PivotItem>
+      */}
       <PivotItem headerText="Experimental Features">
         <ExperimentalFeatureSettings />
       </PivotItem>
