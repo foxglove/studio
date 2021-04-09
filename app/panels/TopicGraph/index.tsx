@@ -13,6 +13,7 @@
 
 import Cytoscape from "cytoscape";
 import CytoscapeCola from "cytoscape-cola";
+import CytoscapeDagre from "cytoscape-dagre";
 import { useCallback, useMemo } from "react";
 import CytoscapeComponent from "react-cytoscapejs";
 
@@ -23,13 +24,24 @@ import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
 
 const STYLESHEET: Cytoscape.Stylesheet[] = [
   {
+    selector: "edge",
+    style: {
+      "target-arrow-shape": "triangle",
+      "line-color": "rgb(190, 190, 187)",
+      "target-arrow-color": "rgb(190, 190, 187)",
+      "curve-style": "bezier",
+    },
+  },
+  {
     selector: 'node[type="node"]',
     style: {
       content: "data(label)",
       shape: "round-rectangle",
       width: "label",
       height: "label",
-      "background-color": "rgb(69, 165, 255)",
+      "background-color": "#000",
+      "border-color": "rgb(69, 165, 255)",
+      "border-width": "1px",
       "padding-top": "4px",
       "padding-right": "4px",
       "padding-bottom": "4px",
@@ -39,9 +51,7 @@ const STYLESHEET: Cytoscape.Stylesheet[] = [
       "text-wrap": "ellipsis",
       "text-valign": "center",
       "text-halign": "center",
-      "text-outline-color": "#000",
-      "text-outline-width": "1px",
-      color: "#fff",
+      color: "rgb(69, 165, 255)",
     },
   },
   {
@@ -63,7 +73,9 @@ const STYLESHEET: Cytoscape.Stylesheet[] = [
       shape: "round-rectangle",
       width: "label",
       height: "label",
-      "background-color": "rgb(255, 107, 130)",
+      "background-color": "#000",
+      "border-color": "rgb(255, 107, 130)",
+      "border-width": "1px",
       "padding-top": "4px",
       "padding-right": "4px",
       "padding-bottom": "4px",
@@ -73,25 +85,30 @@ const STYLESHEET: Cytoscape.Stylesheet[] = [
       "text-wrap": "ellipsis",
       "text-valign": "center",
       "text-halign": "center",
-      "text-outline-color": "#000",
-      "text-outline-width": "1px",
-      color: "#fff",
+      color: "rgb(255, 107, 130)",
     },
   },
 ];
 
-const LAYOUT = ({
-  name: "cola",
+const DAG_LAYOUT = ({
+  name: "dagre",
   fit: true,
-  animate: true,
-  refresh: 1,
-  maxSimulationTime: 1000,
-  nodeDimensionsIncludeLabels: true,
-  avoidOverlap: true,
-  handleDisconnected: true,
+  rankDir: "LR",
 } as unknown) as Cytoscape.LayoutOptions;
 
+// const DCG_LAYOUT = ({
+//   name: "cola",
+//   fit: true,
+//   animate: true,
+//   refresh: 1,
+//   maxSimulationTime: 1000,
+//   nodeDimensionsIncludeLabels: true,
+//   avoidOverlap: true,
+//   handleDisconnected: true,
+// } as unknown) as Cytoscape.LayoutOptions;
+
 Cytoscape.use(CytoscapeCola);
+Cytoscape.use(CytoscapeDagre);
 
 function unionInto<T>(dest: Set<T>, ...iterables: Set<T>[]): void {
   for (const iterable of iterables) {
@@ -191,7 +208,8 @@ function TopicGraph() {
       elements={elements}
       style={{ width: "100%", height: "100%" }}
       stylesheet={STYLESHEET}
-      layout={LAYOUT}
+      zoom={0.7}
+      layout={DAG_LAYOUT} // TODO: Detect cycles in the graph and switch to DCG_LAYOUT
     ></CytoscapeComponent>
   );
 }

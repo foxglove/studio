@@ -2066,6 +2066,7 @@ __metadata:
     chromatic: 5.7.1
     classnames: 2.3.1
     cytoscape-cola: 2.4.0
+    cytoscape-dagre: 2.3.2
     enzyme: 3.11.0
     fetch-mock: 9.11.0
     fuzzysort: 1.1.4
@@ -9231,6 +9232,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cytoscape-dagre@npm:2.3.2":
+  version: 2.3.2
+  resolution: "cytoscape-dagre@npm:2.3.2"
+  dependencies:
+    dagre: ^0.8.5
+  peerDependencies:
+    cytoscape: ^3.2.22
+  checksum: 99fe2b8f9fabddf4a8e122f2ca3d6971640ed1afe7463503b421f83aaaabdad6bcc7f1562519fcd516e6df11e1cd95f11e4056808f0d8033692a4967fd1b565e
+  languageName: node
+  linkType: hard
+
 "cytoscape@npm:^3.2.19":
   version: 3.18.2
   resolution: "cytoscape@npm:3.18.2"
@@ -9285,6 +9297,16 @@ __metadata:
   version: 1.0.10
   resolution: "d3-timer@npm:1.0.10"
   checksum: e302132e1fc8989a5693fc7d265a034d7634ec87a1a8ed85e5959715d9da413971d9289f0ef304c67397d2acb4ebebd99f5adf0c8819929b8f6c588a1fd01d36
+  languageName: node
+  linkType: hard
+
+"dagre@npm:^0.8.5":
+  version: 0.8.5
+  resolution: "dagre@npm:0.8.5"
+  dependencies:
+    graphlib: ^2.1.8
+    lodash: ^4.17.15
+  checksum: 174cf2dcb4e6fdaab37ef5357f4a0063b2d008f2aeeffb5354089560b29382707acbd55c9c534d4313f63ae6fb594b80171fb6402497042fa2c85196c419d610
   languageName: node
   linkType: hard
 
@@ -12715,6 +12737,15 @@ fsevents@^1.2.7:
   version: 1.0.4
   resolution: "grapheme-splitter@npm:1.0.4"
   checksum: 6875e94add80360364a609e1fd0fe325e3b82326db2278dd36c1011a6bfc0e098811e791dedf9a88d4ae3f9d17a5c6a8d684948dd7b097f1f8d5ff905676e2b2
+  languageName: node
+  linkType: hard
+
+"graphlib@npm:^2.1.8":
+  version: 2.1.8
+  resolution: "graphlib@npm:2.1.8"
+  dependencies:
+    lodash: ^4.17.15
+  checksum: 86e4433af9cf450c414d8cc58481ac8b96321fc25ecbbf08d27f0694a5e3a72a5c7a973795683b5ed5bbced75af1b0706c2b6e964f44f27b9078b229b652abee
   languageName: node
   linkType: hard
 
