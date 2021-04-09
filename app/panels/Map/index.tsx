@@ -2,8 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Map as LeafMap } from "leaflet";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MapContainer, TileLayer, Circle, useMapEvent } from "react-leaflet";
+import { MapContainer, TileLayer } from "react-leaflet";
 
 import {
   useBlocksByTopic,
@@ -12,7 +13,11 @@ import {
 } from "@foxglove-studio/app/PanelAPI";
 import EmptyState from "@foxglove-studio/app/components/EmptyState";
 import Panel from "@foxglove-studio/app/components/Panel";
+import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
 import Logger from "@foxglove/log";
+
+import FilteredPointMarkers from "./FilteredPointMarkers";
+import { Point, PointCache } from "./types";
 
 import "leaflet/dist/leaflet.css";
 
@@ -20,83 +25,18 @@ const log = Logger.getLogger(__filename);
 
 // https://docs.ros.org/en/api/sensor_msgs/html/msg/NavSatFix.html
 
-type Point = {
-  lat: number;
-  lon: number;
+// persisted panel state
+type Config = {
+  zoomLevel?: number;
 };
 
-// stamp -> point
-type PointCache = Map<number, Point>;
-
-type TopicTimePoint = {
-  stamp: number;
-  topic: string;
-  lat: number;
-  lon: number;
+type Props = {
+  config: Config;
+  saveConfig: (config: Config) => void;
 };
 
-// renders circle markers for all topic/points excluding points at the same pixel
-function FilteredPointMarkers(props: { pointsByTopic: Map<string, PointCache> }) {
-  // cache bust when zoom changes and we should re-filter
-  const [zoomChange, setZoomChange] = useState(0);
-
-  const map = useMapEvent("zoom", () => {
-    setZoomChange((old) => old + 1);
-  });
-
-  const { pointsByTopic } = props;
-  const filtered = useMemo<TopicTimePoint[]>(() => {
-    // to make exhaustive-deps lint check happy
-    // we need to bust our filter when zoom changes
-    zoomChange;
-
-    const arr: TopicTimePoint[] = [];
-
-    const ptSet = new Set<string>();
-    for (const [topic, cache] of pointsByTopic) {
-      for (const [stamp, point] of cache) {
-        const pt = {
-          topic,
-          stamp,
-          lat: point.lat,
-          lon: point.lon,
-        };
-        const pixelPoint = map.latLngToContainerPoint([pt.lat, pt.lon]);
-
-        const x = Math.trunc(pixelPoint.x);
-        const y = Math.trunc(pixelPoint.y);
-        const key = `${x},${y}`;
-
-        if (ptSet.has(key)) {
-          continue;
-        }
-
-        ptSet.add(key);
-        arr.push(pt);
-      }
-    }
-    return arr;
-  }, [map, pointsByTopic, zoomChange]);
-
-  // fixme - need to re-filter when data changes (pointsByTopic is stable right now for caching)
-  // throttle the re-filter
-
-  return (
-    <>
-      {filtered.map((topicPoint) => {
-        return (
-          <Circle
-            key={`${topicPoint.topic}+${topicPoint.stamp}`}
-            center={[topicPoint.lat, topicPoint.lon]}
-            radius={0.1}
-          />
-        );
-      })}
-    </>
-  );
-}
-
-function MapPanel() {
+function MapPanel(props: Props) {
+  const { saveConfig, config } = props;
   const topicCaches = useRef(new Map<string, PointCache>());
   const center = useRef<Point | undefined>();
 
@@ -120,8 +60,6 @@ function MapPanel() {
   useEffect(() => {
     log.debug("Eligible Topics: ", eligibleTopics);
   }, [eligibleTopics]);
-
-  // fixme - provide a way for the user to specify which topics to show/hide
 
   const { blocks } = useBlocksByTopic(eligibleTopics);
 
@@ -176,34 +114,59 @@ function MapPanel() {
     }
   }, [navMessages]);
 
+  const [currentMap, setCurrentMap] = useState<LeafMap | undefined>(undefined);
+
+  // persist panel config on zoom changes
+  useEffect(() => {
+    if (!currentMap) {
+      return;
+    }
+
+    const zoomChange = () => {
+      saveConfig({
+        zoomLevel: currentMap.getZoom(),
+      });
+    };
+
+    currentMap.on("zoom", zoomChange);
+    return () => {
+      currentMap.off("zoom", zoomChange);
+    };
+  }, [currentMap, saveConfig]);
+
   if (!center.current) {
-    return <EmptyState>Waiting for first gps point...</EmptyState>;
+    return (
+      <>
+        <PanelToolbar floating />
+        <EmptyState>Waiting for first gps point...</EmptyState>
+      </>
+    );
   }
 
-  // fixme - hide leaflet zoom icons and use our own
-
   return (
-    <div style={{ height: "100%", width: "100%" }}>
+    <>
+      <PanelToolbar floating />
       <MapContainer
+        whenCreated={setCurrentMap}
         preferCanvas
         style={{ width: "100%", height: "100%" }}
         center={[center.current.lat, center.current.lon]}
-        zoom={13}
+        zoom={config.zoomLevel ?? 15}
         scrollWheelZoom={false}
       >
         <TileLayer
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <FilteredPointMarkers pointsByTopic={topicCaches.current} />
+        <FilteredPointMarkers pointsByTopic={topicCaches} />
       </MapContainer>
-    </div>
+    </>
   );
 }
 
 MapPanel.panelType = "map";
-MapPanel.defaultConfig = {};
-
-// fixme save zoom level and center point
+MapPanel.defaultConfig = {
+  zoomLevel: 10,
+} as Config;
 
 export default Panel(MapPanel);
