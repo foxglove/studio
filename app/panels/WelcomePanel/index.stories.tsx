@@ -30,22 +30,22 @@ function makeConfiguration(entries?: [string, unknown][]): AppConfiguration {
 export function Default(): React.ReactElement {
   const [config] = useState(() => makeConfiguration());
   return (
-    <AppConfigurationContext.Provider value={config}>
-      <PanelSetup>
+    <PanelSetup>
+      <AppConfigurationContext.Provider value={config}>
         <WelcomePanel />
-      </PanelSetup>
-    </AppConfigurationContext.Provider>
+      </AppConfigurationContext.Provider>
+    </PanelSetup>
   );
 }
 
 export function AlreadySignedUp(): React.ReactElement {
   const [config] = useState(() => makeConfiguration([["onboarding.subscribed", true]]));
   return (
-    <AppConfigurationContext.Provider value={config}>
-      <PanelSetup>
+    <PanelSetup>
+      <AppConfigurationContext.Provider value={config}>
         <WelcomePanel />
-      </PanelSetup>
-    </AppConfigurationContext.Provider>
+      </AppConfigurationContext.Provider>
+    </PanelSetup>
   );
 }
 
@@ -57,11 +57,11 @@ export function LoadingGet(): React.ReactElement {
     removeChangeListener() {},
   }));
   return (
-    <AppConfigurationContext.Provider value={config}>
-      <PanelSetup>
+    <PanelSetup>
+      <AppConfigurationContext.Provider value={config}>
         <WelcomePanel />
-      </PanelSetup>
-    </AppConfigurationContext.Provider>
+      </AppConfigurationContext.Provider>
+    </PanelSetup>
   );
 }
 
@@ -93,11 +93,11 @@ function Example({ mockSetConfig }: { mockSetConfig?: () => Promise<void> }): Re
   }, []);
   return (
     <div style={{ flex: "1 1 auto" }} ref={wrapper}>
-      <AppConfigurationContext.Provider value={config}>
-        <PanelSetup>
+      <PanelSetup>
+        <AppConfigurationContext.Provider value={config}>
           <WelcomePanel />
-        </PanelSetup>
-      </AppConfigurationContext.Provider>
+        </AppConfigurationContext.Provider>
+      </PanelSetup>
     </div>
   );
 }
