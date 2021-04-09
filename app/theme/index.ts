@@ -7,6 +7,7 @@ import {
   ILayerStyles,
   IOverlayStyles,
   IModalStyles,
+  IComboBoxStyles,
 } from "@fluentui/react";
 import { createTheme } from "@fluentui/theme";
 
@@ -43,6 +44,20 @@ export default createTheme({
           "-webkit-app-region": "no-drag",
         },
       } as Partial<IModalStyles>,
+    },
+    ComboBox: {
+      // Style hacks that can be removed when we eventually clean up our global styles from global.scss
+      // which currently has margin: $control-margin;
+      styles: {
+        input: {
+          margin: 0,
+        },
+        root: {
+          ".ms-ComboBox-CaretDown-button": {
+            margin: 0,
+          },
+        },
+      } as Partial<IComboBoxStyles>,
     },
     // Prevent Layer from overriding root styles - similar to `applyTo="none"` on ThemeProvider.
     // https://github.com/microsoft/fluentui/issues/17701
