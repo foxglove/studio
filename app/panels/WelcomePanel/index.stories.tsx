@@ -19,11 +19,15 @@ export default {
 
 function makeConfiguration(entries?: [string, unknown][]): AppConfiguration {
   const map = new Map<string, unknown>(entries);
+  const listeners = new Set<() => void>();
   return {
     get: async (key: string) => map.get(key),
-    set: async (key: string, value: unknown) => void map.set(key, value),
-    addChangeListener() {},
-    removeChangeListener() {},
+    set: async (key: string, value: unknown) => {
+      map.set(key, value);
+      [...listeners].forEach((listener) => listener());
+    },
+    addChangeListener: (key, cb) => listeners.add(cb),
+    removeChangeListener: (key, cb) => listeners.delete(cb),
   };
 }
 
