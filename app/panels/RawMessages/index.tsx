@@ -19,7 +19,7 @@ import LessIcon from "@mdi/svg/svg/unfold-less-horizontal.svg";
 import MoreIcon from "@mdi/svg/svg/unfold-more-horizontal.svg";
 // eslint-disable-next-line no-restricted-imports
 import { first, isEqual, get, last } from "lodash";
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo } from "react";
 import ReactHoverObserver from "react-hover-observer";
 import Tree from "react-json-tree";
 
@@ -48,7 +48,6 @@ import { useLatestMessageDataItem } from "@foxglove-studio/app/components/Messag
 import Panel from "@foxglove-studio/app/components/Panel";
 import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
 import Tooltip from "@foxglove-studio/app/components/Tooltip";
-import useChangeDetector from "@foxglove-studio/app/hooks/useChangeDetector";
 import getDiff, {
   diffLabels,
   diffLabelsByLabelText,
