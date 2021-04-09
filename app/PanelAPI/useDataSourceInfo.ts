@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { Time } from "rosbag";
 
 import {
@@ -62,11 +62,14 @@ export default function useDataSourceInfo(): DataSourceInfo {
     ),
   );
 
-  return {
-    topics,
-    datatypes,
-    capabilities,
-    startTime,
-    playerId,
-  };
+  // we want the returned object to have a stable identity
+  return useMemo<DataSourceInfo>(() => {
+    return {
+      topics,
+      datatypes,
+      capabilities,
+      startTime,
+      playerId,
+    };
+  }, [capabilities, datatypes, playerId, startTime, topics]);
 }

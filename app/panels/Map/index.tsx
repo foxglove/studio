@@ -2,11 +2,15 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { LatLngExpression } from "leaflet";
-import { useEffect, useMemo, useState } from "react";
-import { MapContainer, TileLayer, Circle, useMap } from "react-leaflet";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { MapContainer, TileLayer, Circle, useMapEvent } from "react-leaflet";
 
-import { useDataSourceInfo, useMessagesByTopic } from "@foxglove-studio/app/PanelAPI";
+import {
+  useBlocksByTopic,
+  useDataSourceInfo,
+  useMessagesByTopic,
+} from "@foxglove-studio/app/PanelAPI";
+import EmptyState from "@foxglove-studio/app/components/EmptyState";
 import Panel from "@foxglove-studio/app/components/Panel";
 import Logger from "@foxglove/log";
 
@@ -21,58 +25,105 @@ type Point = {
   lon: number;
 };
 
-type RecenterProps = {
-  points: Point[];
+// stamp -> point
+type PointCache = Map<number, Point>;
+
+type TopicTimePoint = {
+  stamp: number;
+  topic: string;
+  lat: number;
+  lon: number;
 };
 
-function Recenter(props: RecenterProps) {
-  const map = useMap();
+// renders circle markers for all topic/points excluding points at the same pixel
+function FilteredPointMarkers(props: { pointsByTopic: Map<string, PointCache> }) {
+  // cache bust when zoom changes and we should re-filter
+  const [zoomChange, setZoomChange] = useState(0);
 
-  const { lat, lon } = props.points[0] ?? { lat: 51.505, lon: -0.09 };
+  const map = useMapEvent("zoom", () => {
+    setZoomChange((old) => old + 1);
+  });
 
-  useEffect(() => {
-    map.setView([lat, lon]);
-  }, [lat, lon, map]);
+  const { pointsByTopic } = props;
+  const filtered = useMemo<TopicTimePoint[]>(() => {
+    // to make exhaustive-deps lint check happy
+    // we need to bust our filter when zoom changes
+    zoomChange;
 
-  return <></>;
+    const arr: TopicTimePoint[] = [];
+
+    const ptSet = new Set<string>();
+    for (const [topic, cache] of pointsByTopic) {
+      for (const [stamp, point] of cache) {
+        const pt = {
+          topic,
+          stamp,
+          lat: point.lat,
+          lon: point.lon,
+        };
+        const pixelPoint = map.latLngToContainerPoint([pt.lat, pt.lon]);
+
+        const x = Math.trunc(pixelPoint.x);
+        const y = Math.trunc(pixelPoint.y);
+        const key = `${x},${y}`;
+
+        if (ptSet.has(key)) {
+          continue;
+        }
+
+        ptSet.add(key);
+        arr.push(pt);
+      }
+    }
+    return arr;
+  }, [map, pointsByTopic, zoomChange]);
+
+  // fixme - need to re-filter when data changes (pointsByTopic is stable right now for caching)
+  // throttle the re-filter
+
+  return (
+    <>
+      {filtered.map((topicPoint) => {
+        return (
+          <Circle
+            key={`${topicPoint.topic}+${topicPoint.stamp}`}
+            center={[topicPoint.lat, topicPoint.lon]}
+            radius={0.1}
+          />
+        );
+      })}
+    </>
+  );
 }
 
 function MapPanel() {
-  // fixme - why is this changing constantly!
-  const dataSourceInfo = useDataSourceInfo();
+  const topicCaches = useRef(new Map<string, PointCache>());
+  const center = useRef<Point | undefined>();
 
-  // fixme useShouldNotChangeOften to identify when data source changes too often
-  // maybe within useDataSourceInfo
+  const { topics, playerId } = useDataSourceInfo();
+
+  // clear cached points when the player changes
   useEffect(() => {
-    console.log("data source info changed");
-  }, [dataSourceInfo]);
+    center.current = undefined;
+    topicCaches.current = new Map();
+  }, [playerId]);
 
-  const eligibleTopics = useMemo(() => {
-    return ["/fix", "/vehicle/gps/fix"];
-  }, []);
-
-  // we don't care about the order of the points
-  // but we do care about avoiding caching the same point twice
-  // Map<timestamp, Point>
-
-  /*
   // eligible topics are those that match the message datatypes we support
   const eligibleTopics = useMemo(() => {
-    return dataSourceInfo.topics
+    return topics
       .filter((topic) => {
         return topic.datatype === "sensor_msgs/NavSatFix";
       })
       .map((topic) => topic.name);
-  }, [dataSourceInfo]);
-  */
+  }, [topics]);
 
   useEffect(() => {
-    log.info("Eligible Topics: ", eligibleTopics);
+    log.debug("Eligible Topics: ", eligibleTopics);
   }, [eligibleTopics]);
 
   // fixme - provide a way for the user to specify which topics to show/hide
 
-  const [allMessages, setAllMessages] = useState<Point[]>([]);
+  const { blocks } = useBlocksByTopic(eligibleTopics);
 
   const navMessages = useMessagesByTopic({
     topics: eligibleTopics,
@@ -80,45 +131,63 @@ function MapPanel() {
   });
 
   useEffect(() => {
-    const fixMessages = navMessages["/fix"];
+    for (const messageBlock of blocks) {
+      for (const [topic, payloads] of Object.entries(messageBlock)) {
+        let topicCache = topicCaches.current.get(topic);
+        if (!topicCache) {
+          topicCache = new Map();
+          topicCaches.current.set(topic, topicCache);
+        }
 
-    const points = fixMessages?.map((msg) => {
-      return {
-        status: msg.message.status,
-        lat: msg.message.latitude,
-        lon: msg.message.longitude,
-      };
-    });
-
-    if (!points || points.length === 0) {
-      return;
+        for (const payload of payloads) {
+          const stamp = payload.receiveTime.sec * 1e9 + payload.receiveTime.nsec;
+          const lat = (payload.message as any).latitude();
+          const lon = (payload.message as any).longitude();
+          const point: Point = {
+            lat,
+            lon,
+          };
+          topicCache.set(stamp, point);
+        }
+      }
     }
+  }, [blocks]);
 
-    setAllMessages((old) => {
-      return old.concat(points);
-    });
+  useEffect(() => {
+    for (const [topic, payloads] of Object.entries(navMessages)) {
+      let topicCache = topicCaches.current.get(topic);
+      if (!topicCache) {
+        topicCache = new Map();
+        topicCaches.current.set(topic, topicCache);
+      }
+
+      for (const payload of payloads) {
+        const stamp = payload.receiveTime.sec * 1e9 + payload.receiveTime.nsec;
+        const point: Point = {
+          lat: payload.message.latitude,
+          lon: payload.message.longitude,
+        };
+        topicCache.set(stamp, point);
+
+        if (!center.current) {
+          center.current = point;
+        }
+      }
+    }
   }, [navMessages]);
 
-  //console.log(allMessages);
+  if (!center.current) {
+    return <EmptyState>Waiting for first gps point...</EmptyState>;
+  }
 
-  // need a way to specify which topics to plot
-  // get topics by datatype (all navsat message topics)
-
-  // allow the user to show/hide any navsat message topic
-
-  // use messages by topics (active topics)
-
-  // as we get messages, add them to the message list
-
-  // any messages after current time are dropped from display
-  // supports scrubbing back and forward
+  // fixme - hide leaflet zoom icons and use our own
 
   return (
     <div style={{ height: "100%", width: "100%" }}>
       <MapContainer
         preferCanvas
         style={{ width: "100%", height: "100%" }}
-        center={[51.505, -0.09]}
+        center={[center.current.lat, center.current.lon]}
         zoom={13}
         scrollWheelZoom={false}
       >
@@ -126,10 +195,7 @@ function MapPanel() {
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <Recenter points={allMessages} />
-        {allMessages.map((point, idx) => {
-          return <Circle key={idx} center={[point.lat, point.lon]} radius={0.1} />;
-        })}
+        <FilteredPointMarkers pointsByTopic={topicCaches.current} />
       </MapContainer>
     </div>
   );
@@ -137,5 +203,7 @@ function MapPanel() {
 
 MapPanel.panelType = "map";
 MapPanel.defaultConfig = {};
+
+// fixme save zoom level and center point
 
 export default Panel(MapPanel);
