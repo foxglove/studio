@@ -21,7 +21,7 @@ import {
 import { Topic } from "@foxglove-studio/app/players/types";
 import { RosDatatypes } from "@foxglove-studio/app/types/RosDatatypes";
 
-// Metadata about the source of data currently being displayed in Webviz.
+// Metadata about the source of data currently being displayed.
 // This is not expected to change often, usually when changing data sources.
 export type DataSourceInfo = {
   topics: readonly Topic[];
