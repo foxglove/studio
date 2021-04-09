@@ -13,7 +13,7 @@
 
 import Cytoscape from "cytoscape";
 import CytoscapeCola from "cytoscape-cola";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import CytoscapeComponent from "react-cytoscapejs";
 
 import EmptyState from "@foxglove-studio/app/components/EmptyState";
@@ -26,13 +26,21 @@ const STYLESHEET: Cytoscape.Stylesheet[] = [
     selector: 'node[type="node"]',
     style: {
       content: "data(label)",
-      shape: "rectangle",
-      "background-color": "blue",
+      shape: "round-rectangle",
+      width: "label",
+      height: "label",
+      "background-color": "rgb(69, 165, 255)",
+      "padding-top": "4px",
+      "padding-right": "4px",
+      "padding-bottom": "4px",
+      "padding-left": "4px",
       "font-size": "16px",
+      "text-max-width": "200px",
+      "text-wrap": "ellipsis",
       "text-valign": "center",
       "text-halign": "center",
       "text-outline-color": "#000",
-      "text-outline-width": "2px",
+      "text-outline-width": "1px",
       color: "#fff",
     },
   },
@@ -41,7 +49,7 @@ const STYLESHEET: Cytoscape.Stylesheet[] = [
     style: {
       content: "data(label)",
       shape: "diamond",
-      "background-color": "green",
+      "background-color": "rgb(183, 157, 202)",
       "font-size": "16px",
       "text-outline-color": "#000",
       "text-outline-width": "2px",
@@ -52,13 +60,21 @@ const STYLESHEET: Cytoscape.Stylesheet[] = [
     selector: 'node[type="service"]',
     style: {
       content: "data(label)",
-      shape: "ellipse",
-      "background-color": "red",
+      shape: "round-rectangle",
+      width: "label",
+      height: "label",
+      "background-color": "rgb(255, 107, 130)",
+      "padding-top": "4px",
+      "padding-right": "4px",
+      "padding-bottom": "4px",
+      "padding-left": "4px",
       "font-size": "16px",
+      "text-max-width": "200px",
+      "text-wrap": "ellipsis",
       "text-valign": "center",
       "text-halign": "center",
       "text-outline-color": "#000",
-      "text-outline-width": "2px",
+      "text-outline-width": "1px",
       color: "#fff",
     },
   },
@@ -66,6 +82,7 @@ const STYLESHEET: Cytoscape.Stylesheet[] = [
 
 const LAYOUT = ({
   name: "cola",
+  fit: true,
   animate: true,
   refresh: 1,
   maxSimulationTime: 1000,
@@ -98,6 +115,68 @@ function TopicGraph() {
       [],
     ),
   );
+
+  const elements = useMemo<cytoscape.ElementDefinition[]>(() => {
+    const output: cytoscape.ElementDefinition[] = [];
+    const nodeIds = new Set<string>();
+    const topicIds = new Set<string>();
+    const serviceIds = new Set<string>();
+    if (publishedTopics != undefined) {
+      publishedTopics.forEach((curNodes, topic) => {
+        unionInto(nodeIds, curNodes);
+        topicIds.add(topic);
+      });
+    }
+    if (subscribedTopics != undefined) {
+      subscribedTopics.forEach((curNodes, topic) => {
+        unionInto(nodeIds, curNodes);
+        topicIds.add(topic);
+      });
+    }
+    if (services != undefined) {
+      services.forEach((curNodes, topic) => {
+        unionInto(nodeIds, curNodes);
+        serviceIds.add(topic);
+      });
+    }
+
+    for (const node of nodeIds) {
+      output.push({ data: { id: `n:${node}`, label: node, type: "node" } });
+    }
+    for (const topic of topicIds) {
+      output.push({ data: { id: `t:${topic}`, label: topic, type: "topic" } });
+    }
+    for (const service of serviceIds) {
+      output.push({ data: { id: `s:${service}`, label: service, type: "service" } });
+    }
+
+    if (publishedTopics != undefined) {
+      for (const [topic, publishers] of publishedTopics.entries()) {
+        for (const node of publishers) {
+          output.push({ data: { source: `n:${node}`, target: `t:${topic}` } });
+        }
+      }
+    }
+
+    if (subscribedTopics != undefined) {
+      for (const [topic, subscribers] of subscribedTopics.entries()) {
+        for (const node of subscribers) {
+          output.push({ data: { source: `t:${topic}`, target: `n:${node}` } });
+        }
+      }
+    }
+
+    if (services != undefined) {
+      for (const [service, providers] of services.entries()) {
+        for (const node of providers) {
+          output.push({ data: { source: `n:${node}`, target: `s:${service}` } });
+        }
+      }
+    }
+
+    return output;
+  }, [publishedTopics, subscribedTopics, services]);
+
   if (publishedTopics == undefined) {
     return (
       <>
@@ -105,60 +184,6 @@ function TopicGraph() {
         <EmptyState>Waiting for player data...</EmptyState>
       </>
     );
-  }
-
-  const elements: cytoscape.ElementDefinition[] = [];
-
-  const nodeIds = new Set<string>();
-  const topicIds = new Set<string>();
-  const serviceIds = new Set<string>();
-  publishedTopics.forEach((curNodes, topic) => {
-    unionInto(nodeIds, curNodes);
-    topicIds.add(topic);
-  });
-  if (subscribedTopics != undefined) {
-    subscribedTopics.forEach((curNodes, topic) => {
-      unionInto(nodeIds, curNodes);
-      topicIds.add(topic);
-    });
-  }
-  if (services != undefined) {
-    services.forEach((curNodes, topic) => {
-      unionInto(nodeIds, curNodes);
-      serviceIds.add(topic);
-    });
-  }
-
-  for (const node of nodeIds) {
-    elements.push({ data: { id: `n:${node}`, label: node, type: "node" } });
-  }
-  for (const topic of topicIds) {
-    elements.push({ data: { id: `t:${topic}`, label: topic, type: "topic" } });
-  }
-  for (const service of serviceIds) {
-    elements.push({ data: { id: `s:${service}`, label: service, type: "service" } });
-  }
-
-  for (const [topic, publishers] of publishedTopics.entries()) {
-    for (const node of publishers) {
-      elements.push({ data: { source: `n:${node}`, target: `t:${topic}` } });
-    }
-  }
-
-  if (subscribedTopics != undefined) {
-    for (const [topic, subscribers] of subscribedTopics.entries()) {
-      for (const node of subscribers) {
-        elements.push({ data: { source: `t:${topic}`, target: `n:${node}` } });
-      }
-    }
-  }
-
-  if (services != undefined) {
-    for (const [service, providers] of services.entries()) {
-      for (const node of providers) {
-        elements.push({ data: { source: `n:${node}`, target: `s:${service}` } });
-      }
-    }
   }
 
   return (
