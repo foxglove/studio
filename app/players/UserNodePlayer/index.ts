@@ -592,7 +592,6 @@ export default class UserNodePlayer implements Player {
   }
 
   close = () => {
-    console.log("close usernodeplayer");
     for (const nodeRegistration of this._nodeRegistrations) {
       nodeRegistration.terminate();
     }
