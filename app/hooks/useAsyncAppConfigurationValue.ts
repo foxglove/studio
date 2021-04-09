@@ -1,7 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAsyncFn, useAsyncRetry } from "react-use";
 
 import { useAppConfiguration } from "@foxglove-studio/app/context/AppConfigurationContext";
@@ -31,14 +31,18 @@ export function useAsyncAppConfigurationValue<T>(
     async () => (await appConfiguration.get(key)) as T | undefined,
     [appConfiguration, key],
   );
+  const { retry } = getterState;
+
+  useEffect(() => {
+    const listener = () => retry();
+    appConfiguration.addChangeListener(key, listener);
+    return () => appConfiguration.removeChangeListener(key, listener);
+  }, [key, appConfiguration, retry]);
 
   const [optimisticValue, setOptimisticValue] = useState<T | undefined>(undefined);
   const [setterState, setter] = useAsyncFn(
-    async (value?: T) => {
-      await appConfiguration.set(key, value);
-      getterState.retry(); // re-trigger the getter so the new value is displayed
-    },
-    [appConfiguration, key, getterState],
+    async (value?: T) => await appConfiguration.set(key, value),
+    [appConfiguration, key],
   );
 
   const state = useMemo(() => {

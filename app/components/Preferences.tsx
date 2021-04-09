@@ -10,6 +10,7 @@ import {
   SelectableOptionMenuItemType,
   Stack,
   useTheme,
+  VirtualizedComboBox,
 } from "@fluentui/react";
 import moment from "moment-timezone";
 import { useCallback, useMemo, useState } from "react";
@@ -35,7 +36,7 @@ function TimezoneSettings(): React.ReactElement {
   type Option = IComboBoxOption & { data: string };
 
   const [timezone, setTimezone] = useAsyncAppConfigurationValue<string>("timezone", {
-    optimistic: true,
+    optimistic: true, // prevent UI flicker while the new value is saving
   });
   const detectItem = useMemo(
     () => ({
@@ -96,8 +97,9 @@ function TimezoneSettings(): React.ReactElement {
     },
     [],
   );
+
   return (
-    <ComboBox
+    <VirtualizedComboBox
       label="Display timestamps in:"
       options={filteredItems}
       allowFreeform

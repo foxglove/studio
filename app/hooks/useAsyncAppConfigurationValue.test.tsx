@@ -17,6 +17,8 @@ class FakeProvider implements AppConfiguration {
   async set(_key: string, _value: unknown): Promise<void> {
     throw new Error("Method not implemented.");
   }
+  addChangeListener() {}
+  removeChangeListener() {}
 }
 
 describe("useAsyncAppConfigurationValue", () => {
@@ -48,7 +50,6 @@ describe("useAsyncAppConfigurationValue", () => {
   });
 
   it("optimistically returns set value", async () => {
-    throw new Error("FIXME");
     const wrapper = ({ children }: PropsWithChildren<unknown>) => {
       return (
         <AppConfigurationContext.Provider value={new FakeProvider()}>

@@ -19,7 +19,7 @@ import LessIcon from "@mdi/svg/svg/unfold-less-horizontal.svg";
 import MoreIcon from "@mdi/svg/svg/unfold-more-horizontal.svg";
 // eslint-disable-next-line no-restricted-imports
 import { first, isEqual, get, last } from "lodash";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import ReactHoverObserver from "react-hover-observer";
 import Tree from "react-json-tree";
 
@@ -29,7 +29,7 @@ import DropdownItem from "@foxglove-studio/app/components/Dropdown/DropdownItem"
 import EmptyState from "@foxglove-studio/app/components/EmptyState";
 import Flex from "@foxglove-studio/app/components/Flex";
 import Icon from "@foxglove-studio/app/components/Icon";
-import { getItemString } from "@foxglove-studio/app/components/JsonTree/getItemString";
+import useGetItemStringWithTimezone from "@foxglove-studio/app/components/JsonTree/useGetItemStringWithTimezone";
 import MessagePathInput from "@foxglove-studio/app/components/MessagePathSyntax/MessagePathInput";
 import {
   RosPath,
@@ -48,6 +48,7 @@ import { useLatestMessageDataItem } from "@foxglove-studio/app/components/Messag
 import Panel from "@foxglove-studio/app/components/Panel";
 import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
 import Tooltip from "@foxglove-studio/app/components/Tooltip";
+import useChangeDetector from "@foxglove-studio/app/hooks/useChangeDetector";
 import getDiff, {
   diffLabels,
   diffLabelsByLabelText,
@@ -134,6 +135,8 @@ function RawMessages(props: Props) {
   const { config, saveConfig, openSiblingPanel } = props;
   const { topicPath, diffMethod, diffTopicPath, diffEnabled, showFullMessageForDiff } = config;
   const { topics, datatypes } = useDataSourceInfo();
+
+  const getItemString = useGetItemStringWithTimezone();
 
   const topicRosPath: RosPath | undefined = useMemo(() => parseRosPath(topicPath), [topicPath]);
   const topic: Topic | undefined = useMemo(
@@ -361,6 +364,7 @@ function RawMessages(props: Props) {
     const CheckboxComponent = showFullMessageForDiff
       ? CheckboxMarkedIcon
       : CheckboxBlankOutlineIcon;
+
     return (
       <Flex col clip scroll className={styles.container}>
         <Metadata
@@ -512,6 +516,7 @@ function RawMessages(props: Props) {
     topic,
     topicPath,
     valueRenderer,
+    getItemString,
   ]);
 
   return (

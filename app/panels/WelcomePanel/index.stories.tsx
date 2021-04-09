@@ -22,6 +22,8 @@ function makeConfiguration(entries?: [string, unknown][]): AppConfiguration {
   return {
     get: async (key: string) => map.get(key),
     set: async (key: string, value: unknown) => void map.set(key, value),
+    addChangeListener() {},
+    removeChangeListener() {},
   };
 }
 
@@ -48,7 +50,12 @@ export function AlreadySignedUp(): React.ReactElement {
 }
 
 export function LoadingGet(): React.ReactElement {
-  const [config] = useState(() => ({ get: () => signal(), set: () => signal() }));
+  const [config] = useState(() => ({
+    get: () => signal(),
+    set: () => signal(),
+    addChangeListener() {},
+    removeChangeListener() {},
+  }));
   return (
     <AppConfigurationContext.Provider value={config}>
       <PanelSetup>
