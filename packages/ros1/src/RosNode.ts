@@ -14,6 +14,12 @@ import { Subscription } from "./Subscription";
 import { TcpConnection } from "./TcpConnection";
 import { TcpSocketCreate, TcpServer, TcpAddress, NetworkInterface } from "./TcpTypes";
 
+export type RosGraph = {
+  publishers: Map<string, Set<string>>;
+  subscribers: Map<string, Set<string>>;
+  services: Map<string, Set<string>>;
+};
+
 export type SubscribeOpts = {
   topic: string;
   type: string;
@@ -108,6 +114,30 @@ export class RosNode extends EventEmitter {
       throw new Error(`getPublishedTopics returned failure (status=${status}): ${msg}`);
     }
     return topicsAndTypes as [string, string][];
+  }
+
+  async getSystemState(): Promise<RosGraph> {
+    const [status, msg, systemState] = await this.rosMasterClient.getSystemState(this.name);
+    if (status !== 1) {
+      throw new Error(`getPublishedTopics returned failure (status=${status}): ${msg}`);
+    }
+    if (!Array.isArray(systemState) || systemState.length !== 3) {
+      throw new Error(`getPublishedTopics returned unrecognized data (${msg})`);
+    }
+
+    // Each of these has the form [ [topic, [node1...nodeN]] ... ]
+    type SystemStateEntry = [topic: string, nodes: string[]];
+    type SystemStateResponse = [SystemStateEntry[], SystemStateEntry[], SystemStateEntry[]];
+    const [pubs, subs, srvs] = systemState as SystemStateResponse;
+
+    const createMap = (entries: SystemStateEntry[]) =>
+      new Map<string, Set<string>>(entries.map(([topic, nodes]) => [topic, new Set(nodes)]));
+
+    return {
+      publishers: createMap(pubs),
+      subscribers: createMap(subs),
+      services: createMap(srvs),
+    };
   }
 
   tcpServerAddress(): TcpAddress | undefined {

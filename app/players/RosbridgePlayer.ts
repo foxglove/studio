@@ -259,6 +259,10 @@ export default class RosbridgePlayer implements Player {
         lastSeekTime: 1,
         topics: _providerTopics,
         datatypes: _providerDatatypes,
+        // FIXME
+        publishedTopics: new Map<string, Set<string>>(),
+        subscribedTopics: new Map<string, Set<string>>(),
+        services: new Map<string, Set<string>>(),
         parsedMessageDefinitionsByTopic: this._parsedMessageDefinitionsByTopic,
         playerWarnings: NO_WARNINGS,
       },

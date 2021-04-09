@@ -2034,6 +2034,7 @@ __metadata:
     "@types/promise-queue": 2.2.0
     "@types/react": 17.0.3
     "@types/react-autocomplete": 1.8.5
+    "@types/react-cytoscapejs": ^1
     "@types/react-dom": 17.0.3
     "@types/react-highlight-words": 0.16.2
     "@types/react-input-autosize": 2.2.0
@@ -2097,6 +2098,7 @@ __metadata:
     rc-tree: 4.1.5
     react: 17.0.2
     react-autocomplete: "janpaul123/react-autocomplete#bc8737070b5744069719c8fcd4e0a197192b0d48"
+    react-cytoscapejs: 1.2.1
     react-document-events: 1.5.1
     react-dom: 17.0.2
     react-highlight-words: 0.17.0
@@ -2119,7 +2121,7 @@ __metadata:
     redux: 4.0.5
     redux-devtools-extension: 2.13.9
     redux-thunk: 2.3.0
-    regl-worldview: "github:foxglove/webviz#workspace=regl-worldview&commit=65cc3fc2e154199714c4c8752639ef6179be311d"
+    regl-worldview: "github:foxglove/webviz#workspace=regl-worldview&commit=a53374f332d0624fc9f6463288d52c518b8d859b"
     reselect: 4.0.0
     rosbag: "github:foxglove/rosbag.js#fc61125fbc01ff55698c5ed48987b2d9e7599572"
     roslib: "github:foxglove/roslibjs#364a19d5f3ada7543fac9194a50b96087c7556ba"
@@ -4208,6 +4210,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/cytoscape@npm:*":
+  version: 3.14.12
+  resolution: "@types/cytoscape@npm:3.14.12"
+  checksum: 306d4d72a8833e88b50a7f3abdd225bd7922dade28f331cbbc25c2dc88f5a83066d6ffe724fe18db8eca6a774a55259301fcedb9deaef1f2859ac3e278d3a59b
+  languageName: node
+  linkType: hard
+
 "@types/debug@npm:^4.1.5":
   version: 4.1.5
   resolution: "@types/debug@npm:4.1.5"
@@ -4710,6 +4719,16 @@ __metadata:
   dependencies:
     "@types/react": "*"
   checksum: 3325f37f87a0a2aff18c17205fe43b4c993ed9d5a4b1c34dcaaa8a2edf7c126da68809ad26e3908cbd7de53b6dc3d0f9d5e9fa0363c8c9dc0f475619f164a4b1
+  languageName: node
+  linkType: hard
+
+"@types/react-cytoscapejs@npm:^1":
+  version: 1.2.1
+  resolution: "@types/react-cytoscapejs@npm:1.2.1"
+  dependencies:
+    "@types/cytoscape": "*"
+    "@types/react": "*"
+  checksum: 5f6a630290e1d9dc85df7d36eb11a23e0dcdb788c925de1f997c37dd37419cb53199cb7334e700a0d58302ddbe042b753de5fe16d327842a532e970741e5095f
   languageName: node
   linkType: hard
 
@@ -9200,6 +9219,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cytoscape@npm:^3.2.19":
+  version: 3.18.2
+  resolution: "cytoscape@npm:3.18.2"
+  dependencies:
+    heap: ^0.2.6
+    lodash.debounce: ^4.0.8
+  checksum: c9b93ac623d67b874a864694744e7c39c95d83953a3de9ffd3ff12fe2f189e22d896c799acfd7277cd852da75040d3438ca5808de68d8285e97287efbd511148
+  languageName: node
+  linkType: hard
+
 "dashdash@npm:^1.12.0":
   version: 1.14.1
   resolution: "dashdash@npm:1.14.1"
@@ -12933,7 +12962,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"heap@npm:0.2.6":
+"heap@npm:0.2.6, heap@npm:^0.2.6":
   version: 0.2.6
   resolution: "heap@npm:0.2.6"
   checksum: 7bb8c80753b64cfbb4685bd0aa4ba52101d63c4a90d450b151931e23d0e30552a60be5db4dd109d1a18e73d1af27ceca9884b1cc451a1b7757f3dd89bcdc21a4
@@ -19351,6 +19380,19 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"react-cytoscapejs@npm:1.2.1":
+  version: 1.2.1
+  resolution: "react-cytoscapejs@npm:1.2.1"
+  dependencies:
+    cytoscape: ^3.2.19
+    prop-types: ^15.6.2
+  peerDependencies:
+    react: ">=15.0.0"
+    react-dom: ">=15.0.0"
+  checksum: 6de241c4f7caa08e4b3791996a63bdb37632a2f736b386c17c11f0231f15d7150c7410deca681e28765f6ddb38807e753b7a2e353c4a39146e615a7c067f9f9f
+  languageName: node
+  linkType: hard
+
 "react-dev-utils@npm:^11.0.3":
   version: 11.0.3
   resolution: "react-dev-utils@npm:11.0.3"
@@ -20402,9 +20444,9 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"regl-worldview@github:foxglove/webviz#workspace=regl-worldview&commit=65cc3fc2e154199714c4c8752639ef6179be311d":
+"regl-worldview@github:foxglove/webviz#workspace=regl-worldview&commit=a53374f332d0624fc9f6463288d52c518b8d859b":
   version: 0.16.1
-  resolution: "regl-worldview@https://github.com/foxglove/webviz.git#workspace=regl-worldview&commit=65cc3fc2e154199714c4c8752639ef6179be311d"
+  resolution: "regl-worldview@https://github.com/foxglove/webviz.git#workspace=regl-worldview&commit=a53374f332d0624fc9f6463288d52c518b8d859b"
   dependencies:
     "@babel/runtime": ^7.3.1
     "@mapbox/tiny-sdf": ^1.1.1
@@ -20421,7 +20463,7 @@ fsevents@^1.2.7:
   peerDependencies:
     react: 16.x
     react-dom: 16.x
-  checksum: ac8acee14342253ff46f0b415119d2f46bf75c14f78c9f5c59c14f07b737f25c414eb35b705870cd56bfeefb2a3c6377f5aed0b79a9abcb7ca8bbd1fb9cff144
+  checksum: 61f2a05f37558b932e8e98bdf21df1d04258424748ac1964295668418da25f5a60ada4b6c37798728384426e0139f598d3b825337adcab4cc93efded618cf27c
   languageName: node
   linkType: hard
 
