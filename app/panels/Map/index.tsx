@@ -17,13 +17,12 @@ import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
 import Logger from "@foxglove/log";
 
 import FilteredPointMarkers from "./FilteredPointMarkers";
-import { Point, PointCache } from "./types";
+import helpContent from "./index.help.md";
+import { BinaryNavSatFixMsg, NavSatFixMsg, Point, PointCache } from "./types";
 
 import "leaflet/dist/leaflet.css";
 
 const log = Logger.getLogger(__filename);
-
-// https://docs.ros.org/en/api/sensor_msgs/html/msg/NavSatFix.html
 
 // persisted panel state
 type Config = {
@@ -63,11 +62,12 @@ function MapPanel(props: Props) {
 
   const { blocks } = useBlocksByTopic(eligibleTopics);
 
-  const navMessages = useMessagesByTopic({
+  const navMessages = useMessagesByTopic<NavSatFixMsg>({
     topics: eligibleTopics,
     historySize: 1,
   });
 
+  // add blocks (preloaded chunks from bag files)
   useEffect(() => {
     for (const messageBlock of blocks) {
       for (const [topic, payloads] of Object.entries(messageBlock)) {
@@ -79,8 +79,8 @@ function MapPanel(props: Props) {
 
         for (const payload of payloads) {
           const stamp = payload.receiveTime.sec * 1e9 + payload.receiveTime.nsec;
-          const lat = (payload.message as any).latitude();
-          const lon = (payload.message as any).longitude();
+          const lat = ((payload.message as unknown) as BinaryNavSatFixMsg).latitude();
+          const lon = ((payload.message as unknown) as BinaryNavSatFixMsg).longitude();
           const point: Point = {
             lat,
             lon,
@@ -91,6 +91,7 @@ function MapPanel(props: Props) {
     }
   }, [blocks]);
 
+  // add streamking messages
   useEffect(() => {
     for (const [topic, payloads] of Object.entries(navMessages)) {
       let topicCache = topicCaches.current.get(topic);
@@ -137,7 +138,7 @@ function MapPanel(props: Props) {
   if (!center.current) {
     return (
       <>
-        <PanelToolbar floating />
+        <PanelToolbar floating helpContent={helpContent} />
         <EmptyState>Waiting for first gps point...</EmptyState>
       </>
     );
@@ -145,7 +146,7 @@ function MapPanel(props: Props) {
 
   return (
     <>
-      <PanelToolbar floating />
+      <PanelToolbar floating helpContent={helpContent} />
       <MapContainer
         whenCreated={setCurrentMap}
         preferCanvas
