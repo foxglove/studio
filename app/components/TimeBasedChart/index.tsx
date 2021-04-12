@@ -23,7 +23,6 @@ import React, {
   useMemo,
   MouseEvent,
 } from "react";
-import ReactDOM from "react-dom";
 import { useDispatch } from "react-redux";
 import { Time } from "rosbag";
 import styled from "styled-components";
