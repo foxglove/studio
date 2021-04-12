@@ -12,8 +12,13 @@
 //   You may not use this file except in compliance with the License.
 
 import { storiesOf } from "@storybook/react";
+import styled from "styled-components";
 
 import Tooltip from "@foxglove-studio/app/components/Tooltip";
+
+const Spacer = styled.div`
+  width: 10px;
+`;
 
 storiesOf("<Tooltip>", module).add("basic examples", () => {
   const containerStyle = {
@@ -24,7 +29,6 @@ storiesOf("<Tooltip>", module).add("basic examples", () => {
   const style = {
     width: "50px",
     height: "50px",
-    margin: "10px",
     backgroundColor: "gray",
   };
   return (
@@ -32,12 +36,15 @@ storiesOf("<Tooltip>", module).add("basic examples", () => {
       <Tooltip contents="Top" placement="top" defaultShown>
         <div style={style} />
       </Tooltip>
+      <Spacer />
       <Tooltip contents="Left" placement="left" defaultShown>
         <div style={style} />
       </Tooltip>
+      <Spacer />
       <Tooltip contents="Right" placement="right" defaultShown>
         <div style={style} />
       </Tooltip>
+      <Spacer />
       <Tooltip contents="Bottom" placement="bottom" defaultShown>
         <div style={style} />
       </Tooltip>

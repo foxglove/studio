@@ -42,6 +42,7 @@ import {
 import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipeline";
 import TimeBasedChartLegend from "@foxglove-studio/app/components/TimeBasedChart/TimeBasedChartLegend";
 import makeGlobalState from "@foxglove-studio/app/components/TimeBasedChart/makeGlobalState";
+import Tooltip from "@foxglove-studio/app/components/Tooltip";
 import useDeepChangeDetector from "@foxglove-studio/app/hooks/useDeepChangeDetector";
 import mixins from "@foxglove-studio/app/styles/mixins.module.scss";
 import { isBobject } from "@foxglove-studio/app/util/binaryObjects";
@@ -50,7 +51,7 @@ import { defaultGetHeaderStamp } from "@foxglove-studio/app/util/synchronizeMess
 import { maybeGetBobjectHeaderStamp } from "@foxglove-studio/app/util/time";
 
 import HoverBar from "./HoverBar";
-import TimeBasedChartTooltip from "./TimeBasedChartTooltip";
+import TimeBasedChartTooltipContent from "./TimeBasedChartTooltipContent";
 
 export type TooltipItem = {
   queriedData: MessagePathDataItem[];
@@ -68,7 +69,7 @@ export const getTooltipItemForMessageHistoryItem = (item: MessageAndData): Toolt
 
 export type TimeBasedChartTooltipData = {
   x: number;
-  y: number | string;
+  y: number;
   datasetKey?: string;
   item: TooltipItem;
   path: string;
@@ -257,7 +258,6 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     xAxisIsPlaybackTime,
   } = props;
 
-  const tooltipRef = useRef<HTMLDivElement>(ReactNull);
   const hasUnmounted = useRef<boolean>(false);
   const canvasContainer = useRef<HTMLDivElement>(ReactNull);
 
@@ -449,32 +449,27 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     [setHasVerticalExclusiveZoom, setHasBothAxesZoom],
   );
 
-  const removeTooltip = useCallback(() => {
-    if (tooltipRef.current) {
-      ReactDOM.unmountComponentAtNode(tooltipRef.current);
-    }
-    if (tooltipRef.current?.parentNode) {
-      tooltipRef.current.parentNode.removeChild(tooltipRef.current);
-      tooltipRef.current = ReactNull;
-    }
-  }, []);
-
   // Always clean up tooltips when unmounting.
   useEffect(() => {
     return () => {
       hasUnmounted.current = true;
-      removeTooltip();
+      setActiveTooltip(undefined);
     };
-  }, [removeTooltip]);
+  }, []);
 
   // We use a custom tooltip so we can style it more nicely, and so that it can break
   // out of the bounds of the canvas, in case the panel is small.
+  const [activeTooltip, setActiveTooltip] = useState<{
+    x: number;
+    y: number;
+    data: TimeBasedChartTooltipData;
+  }>();
   const updateTooltip = useCallback(
     (element?: RpcElement) => {
       // This is an async callback, so it can fire after this component is unmounted. Make sure that we remove the
       // tooltip if this fires after unmount.
       if (!element || hasUnmounted.current) {
-        return removeTooltip();
+        return setActiveTooltip(undefined);
       }
 
       // Locate the tooltip for our data
@@ -484,29 +479,19 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
         (item) => item.x === element.data?.x && item.y === element.data?.y,
       );
       if (!tooltipData) {
-        return removeTooltip();
+        return setActiveTooltip(undefined);
       }
 
-      if (!tooltipRef.current) {
-        tooltipRef.current = document.createElement("div");
-        canvasContainer.current?.parentNode?.appendChild(tooltipRef.current);
+      const canvasRect = canvasContainer.current?.getBoundingClientRect();
+      if (canvasRect) {
+        setActiveTooltip({
+          x: canvasRect.left + element.view.x,
+          y: canvasRect.top + element.view.y,
+          data: tooltipData,
+        });
       }
-
-      ReactDOM.render(
-        <TimeBasedChartTooltip tooltip={tooltipData}>
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              transform: `translate(${element.view.x}px, ${element.view.y}px)`,
-            }}
-          />
-        </TimeBasedChartTooltip>,
-        tooltipRef.current,
-      );
     },
-    [removeTooltip, tooltips],
+    [tooltips],
   );
 
   const [hoverComponentId] = useState(() => uuidv4());
@@ -528,9 +513,9 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
   );
 
   const onMouseOut = useCallback(() => {
-    removeTooltip();
+    setActiveTooltip(undefined);
     clearGlobalHoverTime();
-  }, [clearGlobalHoverTime, removeTooltip]);
+  }, [clearGlobalHoverTime]);
 
   // currentScalesRef is used because we don't need to change this callback content when the scales change
   // this does mean that scale changes don't remove tooltips - which is a future enhancement
@@ -538,7 +523,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     (event: MouseEvent<HTMLDivElement>) => {
       const xScale = currentScalesRef.current?.x;
       if (!xScale || !canvasContainer.current) {
-        removeTooltip();
+        setActiveTooltip(undefined);
         clearGlobalHoverTime();
         return;
       }
@@ -551,14 +536,14 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
 
       const xInBounds = xVal >= xScale.min && xVal <= xScale.max;
       if (!xInBounds || isNaN(xVal)) {
-        removeTooltip();
+        setActiveTooltip(undefined);
         clearGlobalHoverTime();
         return;
       }
 
       setGlobalHoverTime(xVal);
     },
-    [setGlobalHoverTime, removeTooltip, clearGlobalHoverTime],
+    [setGlobalHoverTime, clearGlobalHoverTime],
   );
 
   const plugins = useMemo<ChartOptions["plugins"]>(() => {
@@ -772,6 +757,13 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
 
   return (
     <div style={{ display: "flex", width: "100%" }}>
+      {activeTooltip && (
+        <Tooltip
+          alwaysShown
+          targetPosition={{ x: activeTooltip.x, y: activeTooltip.y }}
+          contents={<TimeBasedChartTooltipContent tooltip={activeTooltip.data} />}
+        />
+      )}
       <div style={{ display: "flex", width }}>
         <SRoot onDoubleClick={onResetZoom}>
           <HoverBar

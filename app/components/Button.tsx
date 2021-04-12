@@ -20,7 +20,7 @@ import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
 
 export type Props = JSX.LibraryManagedAttributes<typeof BaseButton, BaseButton["props"]> & {
   innerRef?: LegacyRef<BaseButton>;
-  tooltipProps?: JSX.LibraryManagedAttributes<typeof Tooltip, Tooltip["props"]>;
+  tooltipProps?: Partial<React.ComponentProps<typeof Tooltip> & { alwaysShown?: false }>;
   style: CSSProperties;
   isPrimary?: boolean;
 };
@@ -60,16 +60,13 @@ export default class Button extends React.Component<Props> {
     if (tooltip) {
       return (
         <Tooltip contents={tooltip} {...tooltipProps}>
-          {/* Extra div allows Tooltip to insert the necessary event listeners */}
-          <div style={{ display: "inline-flex" }}>
-            <BaseButton
-              style={styleAlt}
-              {...otherProps}
-              {...eventHandlers}
-              className={newClassName}
-              ref={innerRef}
-            />
-          </div>
+          <BaseButton
+            style={styleAlt}
+            {...otherProps}
+            {...eventHandlers}
+            className={newClassName}
+            ref={innerRef}
+          />
         </Tooltip>
       );
     }
