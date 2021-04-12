@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 import { RosMsgDefinition } from "rosbag";
 
-import buildClass from "./DeserializerFactory";
+import buildReader from "./LazyMessageReaderFactory";
 
 function isBigEndian() {
   const array = new Uint8Array(4);
@@ -22,18 +22,22 @@ if (!isLittleEndian) {
 type LazyMessage<T> = T & { toJSON: () => T };
 
 export class LazyMessageReader<T = unknown> {
-  parser: ReturnType<typeof buildClass>;
+  readerImpl: ReturnType<typeof buildReader>;
   definitions: RosMsgDefinition[];
 
   constructor(definitions: RosMsgDefinition[]) {
-    this.parser = buildClass(definitions);
+    this.readerImpl = buildReader(definitions);
     this.definitions = definitions;
   }
 
   // Return the size of our message within the buffer
   size(buffer: Readonly<Uint8Array>): number {
     const view = new DataView(buffer.buffer, buffer.byteOffset);
-    return this.parser.size(view);
+    return this.readerImpl.size(view);
+  }
+
+  source(): string {
+    return this.readerImpl.source();
   }
 
   // Create a LazyMessage for the buffer
@@ -41,6 +45,6 @@ export class LazyMessageReader<T = unknown> {
   // known or available
   readMessage<R = T>(buffer: Readonly<Uint8Array>): LazyMessage<R> {
     const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
-    return this.parser.build(view) as LazyMessage<R>;
+    return this.readerImpl.build(view) as LazyMessage<R>;
   }
 }

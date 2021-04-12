@@ -33,6 +33,18 @@ describe("LazyReader", () => {
     [`uint16 sample # highest`, [0xff, 0xff], { sample: 65535 }],
     [`int32 sample # lowest`, [0x00, 0x00, 0x00, 0x80], { sample: -2147483648 }],
     [`int32 sample # highest`, [0xff, 0xff, 0xff, 0x7f], { sample: 2147483647 }],
+    [`uint32 sample # lowest`, [0x00, 0x00, 0x00, 0x00], { sample: 0 }],
+    [`uint32 sample # highest`, [0xff, 0xff, 0xff, 0xff], { sample: 4294967295 }],
+    [
+      `int64 sample # lowest`,
+      [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80],
+      { sample: -9223372036854775808n },
+    ],
+    [
+      `int64 sample # highest`,
+      [0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7f],
+      { sample: 9223372036854775807n },
+    ],
     [`uint64 sample # lowest`, [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00], { sample: 0n }],
     [
       `uint64 sample # highest`,
@@ -198,6 +210,9 @@ describe("LazyReader", () => {
 
     // check that our reader expected size matches the buffer size
     expect(reader.size(buffer)).toEqual(buffer.length);
+
+    // allows for easier review of the generated parser source
+    expect(reader.source()).toMatchSnapshot(msgDef);
 
     // check that our message matches the object
     expect(read.toJSON()).toMatchObject(expected);

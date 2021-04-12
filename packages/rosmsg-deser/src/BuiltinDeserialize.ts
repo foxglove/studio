@@ -30,12 +30,11 @@ function MakeTypedArrayDeserialze<T extends Indexable>(
 ) {
   return (view: DataView, offset: number, len: number): T => {
     const totalOffset = view.byteOffset + offset;
-    // aligned access provides for a fast path to typed array construction
+    // new TypedArray(...) will throw if you try to make a typed array on unaligned boundary
+    // but for aligned access we can use a typed array and avoid any extra memory alloc/copy
     if (totalOffset % TypedArrayConstructor.BYTES_PER_ELEMENT === 0) {
       return new TypedArrayConstructor(view.buffer, totalOffset, len);
     }
-
-    // unaligned access requires additional handling
 
     // benchmarks indicate for len < ~10 doing each individually is faster than copy
     if (len < 10) {
@@ -57,39 +56,17 @@ function MakeTypedArrayDeserialze<T extends Indexable>(
 }
 
 const deserializers = {
-  int8: (view: DataView, offset: number): number => {
-    return view.getInt8(offset);
-  },
-  uint8: (view: DataView, offset: number): number => {
-    return view.getUint8(offset);
-  },
-  bool: (view: DataView, offset: number): boolean => {
-    return view.getUint8(offset) !== 0;
-  },
-  int16: (view: DataView, offset: number): number => {
-    return view.getInt16(offset, true);
-  },
-  uint16: (view: DataView, offset: number): number => {
-    return view.getUint16(offset, true);
-  },
-  int32: (view: DataView, offset: number): number => {
-    return view.getInt32(offset, true);
-  },
-  uint32: (view: DataView, offset: number): number => {
-    return view.getUint32(offset, true);
-  },
-  int64: (view: DataView, offset: number): bigint => {
-    return view.getBigInt64(offset, true);
-  },
-  uint64: (view: DataView, offset: number): bigint => {
-    return view.getBigUint64(offset, true);
-  },
-  float32: (view: DataView, offset: number): number => {
-    return view.getFloat32(offset, true);
-  },
-  float64: (view: DataView, offset: number): number => {
-    return view.getFloat64(offset, true);
-  },
+  bool: (view: DataView, offset: number): boolean => view.getUint8(offset) !== 0,
+  int8: (view: DataView, offset: number): number => view.getInt8(offset),
+  uint8: (view: DataView, offset: number): number => view.getUint8(offset),
+  int16: (view: DataView, offset: number): number => view.getInt16(offset, true),
+  uint16: (view: DataView, offset: number): number => view.getUint16(offset, true),
+  int32: (view: DataView, offset: number): number => view.getInt32(offset, true),
+  uint32: (view: DataView, offset: number): number => view.getUint32(offset, true),
+  int64: (view: DataView, offset: number): bigint => view.getBigInt64(offset, true),
+  uint64: (view: DataView, offset: number): bigint => view.getBigUint64(offset, true),
+  float32: (view: DataView, offset: number): number => view.getFloat32(offset, true),
+  float64: (view: DataView, offset: number): number => view.getFloat64(offset, true),
   time: (view: DataView, offset: number): { sec: number; nsec: number } => {
     const sec = view.getUint32(offset, true);
     const nsec = view.getUint32(offset + 4, true);
@@ -98,8 +75,16 @@ const deserializers = {
   string: (view: DataView, offset: number): string => {
     const len = view.getInt32(offset, true);
     const codePoints = new Uint8Array(view.buffer, view.byteOffset + offset + 4, len);
-    const decoder = new (global as any).TextDecoder("ascii");
+    const decoder = new (global as any).TextDecoder("utf8");
     return decoder.decode(codePoints);
+  },
+  boolArray: (view: DataView, offset: number, len: number): boolean[] => {
+    const arr = new Array(len);
+    for (let idx = 0; idx < len; ++idx) {
+      arr[idx] = deserializers.bool(view, offset);
+      offset += 1;
+    }
+    return arr;
   },
   int8Array: MakeTypedArrayDeserialze(Int8Array, "getInt8"),
   uint8Array: MakeTypedArrayDeserialze(Uint8Array, "getUint8"),
@@ -141,6 +126,8 @@ const deserializers = {
 
     return timeArr;
   },
+  durationArray: (view: DataView, offset: number, len: number): { sec: number; nsec: number }[] =>
+    deserializers.timeArray(view, offset, len),
   fixedArray: (
     view: DataView,
     offset: number,

@@ -60,12 +60,13 @@ const builtinSizes = {
 };
 
 function sanitizeName(name: string): string {
-  return name.replace("/", "_");
+  return name.replace(/^[0-9]|[^a-zA-Z0-9_]/g, "_");
 }
 
 interface SerializedMessageReader {
   build: (view: DataView, offset?: number) => unknown;
   size: (view: DataView, offset?: number) => number;
+  source: () => string;
 }
 
 // Return a static size function for our @param field
@@ -220,7 +221,7 @@ function getterFunction(field: RosMsgField): string {
 // The size functions calculate the size of fields within arrays.
 // The offset methods calculate the start byte of the field within the entire message buffer.
 // The getter de-serializes the field from the message buffer.
-export default function buildClass(types: RosMsgDefinition[]): SerializedMessageReader {
+export default function buildReader(types: RosMsgDefinition[]): SerializedMessageReader {
   const classes = new Array<string>();
 
   // Build the types in reverse order so the root message appears last
@@ -315,5 +316,7 @@ export default function buildClass(types: RosMsgDefinition[]): SerializedMessage
   // close over our builtin deserializers and builtin size functions
   // eslint-disable-next-line no-new-func
   const wrapFn = new Function("readers", "sizes", `${src}\nreturn __RootMsg;`);
-  return wrapFn.call(undefined, deserializers, builtinSizes) as SerializedMessageReader;
+  const rootMsg = wrapFn.call(undefined, deserializers, builtinSizes) as SerializedMessageReader;
+  rootMsg.source = () => wrapFn.toString();
+  return rootMsg;
 }
