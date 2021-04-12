@@ -37,13 +37,13 @@ type Props = {
 function MapPanel(props: Props) {
   const { saveConfig, config } = props;
   const topicCaches = useRef(new Map<string, PointCache>());
-  const center = useRef<Point | undefined>();
+  const [center, setCenter] = useState<Point | undefined>();
 
   const { topics, playerId } = useDataSourceInfo();
 
   // clear cached points when the player changes
   useEffect(() => {
-    center.current = undefined;
+    setCenter(undefined);
     topicCaches.current = new Map();
   }, [playerId]);
 
@@ -85,13 +85,17 @@ function MapPanel(props: Props) {
             lat,
             lon,
           };
+
           topicCache.set(stamp, point);
+
+          // center is set only once
+          setCenter((old) => (old ? old : point));
         }
       }
     }
   }, [blocks]);
 
-  // add streamking messages
+  // add streaming messages
   useEffect(() => {
     for (const [topic, payloads] of Object.entries(navMessages)) {
       let topicCache = topicCaches.current.get(topic);
@@ -108,9 +112,8 @@ function MapPanel(props: Props) {
         };
         topicCache.set(stamp, point);
 
-        if (!center.current) {
-          center.current = point;
-        }
+        // center is set only once
+        setCenter((old) => (old ? old : point));
       }
     }
   }, [navMessages]);
@@ -135,7 +138,7 @@ function MapPanel(props: Props) {
     };
   }, [currentMap, saveConfig]);
 
-  if (!center.current) {
+  if (!center) {
     return (
       <>
         <PanelToolbar floating helpContent={helpContent} />
@@ -151,7 +154,7 @@ function MapPanel(props: Props) {
         whenCreated={setCurrentMap}
         preferCanvas
         style={{ width: "100%", height: "100%" }}
-        center={[center.current.lat, center.current.lon]}
+        center={[center.lat, center.lon]}
         zoom={config.zoomLevel ?? 15}
         scrollWheelZoom={false}
       >
