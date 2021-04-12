@@ -18,6 +18,18 @@
 // Without waiting, initial measureText calls have the wrong result, and the font sometimes doesn't
 // appear in screenshot tests.
 
-export default function waitForFonts() {
-  return Promise.all([...document.fonts].map((font) => font.load()));
+import Logger from "@foxglove/log";
+
+const log = Logger.getLogger(__filename);
+
+export default function waitForFonts(): Promise<FontFace[]> {
+  const allFonts = [...document.fonts];
+  log.info(
+    "Loading fonts:",
+    allFonts.map((f) => `"${f.family}" (${f.style}, ${f.weight} weight)`).join(", "),
+  );
+  return Promise.all(allFonts.map((font) => font.load())).then((fonts) => {
+    log.info(`Loaded ${allFonts.length} fonts`);
+    return fonts;
+  });
 }
