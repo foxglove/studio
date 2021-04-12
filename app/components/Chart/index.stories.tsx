@@ -14,6 +14,8 @@ import cloneDeep from "lodash/cloneDeep";
 import { useState, useCallback, ComponentProps } from "react";
 import TestUtils from "react-dom/test-utils";
 
+import mixins from "@foxglove-studio/app/styles/mixins.module.scss";
+
 import ChartComponent from ".";
 
 const dataPoint = {
@@ -71,7 +73,7 @@ const props: ComponentProps<typeof ChartComponent> = {
       y: {
         ticks: {
           font: {
-            family: `"Roboto Mono", Menlo, Inconsolata, "Courier New", Courier, monospace`,
+            family: mixins.monospaceFont,
             size: 10,
           },
           color: "#eee",
@@ -86,7 +88,7 @@ const props: ComponentProps<typeof ChartComponent> = {
       x: {
         ticks: {
           font: {
-            family: `"Roboto Mono", Menlo, Inconsolata, "Courier New", Courier, monospace`,
+            family: mixins.monospaceFont,
             size: 10,
           },
           color: "#eee",
