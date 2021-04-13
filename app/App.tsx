@@ -12,15 +12,7 @@
 
 import { ActionButton, Modal } from "@fluentui/react";
 import AlertIcon from "@mdi/svg/svg/alert.svg";
-import {
-  ReactElement,
-  useState,
-  CSSProperties,
-  useEffect,
-  useMemo,
-  useRef,
-  useCallback,
-} from "react";
+import { ReactElement, useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { DndProvider } from "react-dnd";
 import HTML5Backend from "react-dnd-html5-backend";
 import { Provider, useDispatch } from "react-redux";
