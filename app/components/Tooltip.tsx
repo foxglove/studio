@@ -18,7 +18,7 @@ import {
   useTheme,
   ICalloutContentStyles,
 } from "@fluentui/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 type Contents = React.ReactNode | (() => React.ReactNode);
 
