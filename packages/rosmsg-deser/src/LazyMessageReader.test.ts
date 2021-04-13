@@ -17,7 +17,7 @@ const serializeString = (str: string): Uint8Array => {
   return Uint8Array.from([...len, ...data]);
 };
 
-const Float32Buffer = (floats: number[]): Iterable<number> => {
+const float32Buffer = (floats: number[]): Iterable<number> => {
   return new Uint8Array(Float32Array.from(floats).buffer);
 };
 
