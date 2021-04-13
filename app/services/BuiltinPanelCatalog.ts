@@ -12,6 +12,7 @@ import GlobalVariables from "@foxglove-studio/app/panels/GlobalVariables";
 import ImageViewPanel from "@foxglove-studio/app/panels/ImageView";
 import InternalLogs from "@foxglove-studio/app/panels/InternalLogs";
 import Internals from "@foxglove-studio/app/panels/Internals";
+import MapPanel from "@foxglove-studio/app/panels/Map";
 import NodePlayground from "@foxglove-studio/app/panels/NodePlayground";
 import NumberOfRenders from "@foxglove-studio/app/panels/NumberOfRenders";
 import PlaybackPerformance from "@foxglove-studio/app/panels/PlaybackPerformance";
@@ -43,6 +44,7 @@ const ros: PanelInfo[] = [
   { title: "Topic Graph", component: TopicGraph },
   { title: "State Transitions", component: StateTransitions },
   { title: "Table", component: Table },
+  { title: "Map", component: MapPanel },
 ];
 
 const utilities: PanelInfo[] = [
