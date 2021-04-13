@@ -19,7 +19,6 @@ import EventEmitter from "eventemitter3";
 import merge from "lodash/merge";
 
 import { RpcElement, RpcScales } from "@foxglove-studio/app/components/Chart/types";
-import RobotoMono from "@foxglove-studio/app/styles/assets/latin-roboto-mono.woff2";
 import Logger from "@foxglove/log";
 
 const log = Logger.getLogger(__filename);
@@ -44,14 +43,6 @@ function removeEventListener(emitter: EventEmitter) {
   };
 }
 
-// Explicitly load the "Roboto Mono" font, since custom fonts from the main renderer are not
-// inherited by web workers
-async function loadDefaultFont(): Promise<FontFace> {
-  const fontFace = new FontFace("Roboto Mono", `url(${RobotoMono}) format('woff2')`);
-  ((self as unknown) as WorkerGlobalScope).fonts.add(fontFace);
-  return fontFace.load();
-}
-
 type InitOpts = {
   id: string;
   node: OffscreenCanvas;
@@ -59,6 +50,7 @@ type InitOpts = {
   data: ChartData;
   options: ChartOptions;
   devicePixelRatio: number;
+  fontLoaded: Promise<FontFace>;
 };
 
 export default class ChartJSManager {
@@ -72,9 +64,17 @@ export default class ChartJSManager {
     this.init(initOpts);
   }
 
-  async init({ id, node, type, data, options, devicePixelRatio }: InitOpts): Promise<void> {
-    const font = await loadDefaultFont();
-    log.info(`ChartJSManager(${id}) init, default font "${font.family}" status=${font.status}`);
+  async init({
+    id,
+    node,
+    type,
+    data,
+    options,
+    devicePixelRatio,
+    fontLoaded,
+  }: InitOpts): Promise<void> {
+    const font = await fontLoaded;
+    log.debug(`ChartJSManager(${id}) init, default font "${font.family}" status=${font.status}`);
 
     const fakeNode = {
       addEventListener: addEventListener(this._fakeNodeEvents),
@@ -100,7 +100,7 @@ export default class ChartJSManager {
     const fullOptions: ChartOptions = {
       ...this.addFunctionsToConfig(options),
       devicePixelRatio,
-      font: { family: "Roboto Mono" },
+      font: { family: "'Roboto Mono'" },
     };
 
     const chartInstance = new Chart(node, {
