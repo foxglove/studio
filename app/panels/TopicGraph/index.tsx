@@ -22,6 +22,8 @@ import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipel
 import Panel from "@foxglove-studio/app/components/Panel";
 import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
 
+import helpContent from "./index.help.md";
+
 const STYLESHEET: Cytoscape.Stylesheet[] = [
   {
     selector: "edge",
@@ -197,20 +199,23 @@ function TopicGraph() {
   if (publishedTopics == undefined) {
     return (
       <>
-        <PanelToolbar floating />
+        <PanelToolbar floating helpContent={helpContent} />
         <EmptyState>Waiting for player data...</EmptyState>
       </>
     );
   }
 
   return (
-    <CytoscapeComponent
-      elements={elements}
-      style={{ width: "100%", height: "100%" }}
-      stylesheet={STYLESHEET}
-      zoom={0.7}
-      layout={DAG_LAYOUT} // TODO: Detect cycles in the graph and switch to DCG_LAYOUT
-    ></CytoscapeComponent>
+    <>
+      <PanelToolbar floating helpContent={helpContent} />
+      <CytoscapeComponent
+        elements={elements}
+        style={{ width: "100%", height: "100%" }}
+        stylesheet={STYLESHEET}
+        zoom={0.7}
+        layout={DAG_LAYOUT} // TODO: Detect cycles in the graph and switch to DCG_LAYOUT
+      ></CytoscapeComponent>
+    </>
   );
 }
 
