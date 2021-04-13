@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 export interface LoggerService {
-  warn(message: string, context?: string): void;
+  warn?(message: string, context?: string): void;
   info?(message: string, context?: string): void;
   debug?(message: string, context?: string): void;
   verbose?(message: string, context?: string): void;

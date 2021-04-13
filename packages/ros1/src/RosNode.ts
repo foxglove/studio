@@ -231,7 +231,7 @@ export class RosNode extends EventEmitter {
     } catch (err) {
       // Warn and carry on, the rosmaster graph will be out of sync but there's
       // not much we can do (it may already be offline)
-      this._log?.warn(err, "unregisterSubscriber");
+      this._log?.warn?.(err, "unregisterSubscriber");
     }
   }
 
@@ -254,7 +254,7 @@ export class RosNode extends EventEmitter {
     } catch (err) {
       // Warn and carry on, the rosmaster graph will be out of sync but there's
       // not much we can do (it may already be offline)
-      this._log?.warn(err, "unregisterPublisher");
+      this._log?.warn?.(err, "unregisterPublisher");
     }
   }
 
