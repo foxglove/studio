@@ -16,9 +16,9 @@ import { TcpConnection } from "./TcpConnection";
 import { TcpSocketCreate, TcpServer, TcpAddress, NetworkInterface } from "./TcpTypes";
 
 export type RosGraph = {
-  publishers: Map<string, Set<string>>;
-  subscribers: Map<string, Set<string>>;
-  services: Map<string, Set<string>>;
+  publishers: Map<string, Set<string>>; // Maps topic names to arrays of nodes publishing each topic
+  subscribers: Map<string, Set<string>>; // Maps topic names to arrays of nodes subscribing to each topic
+  services: Map<string, Set<string>>; // Maps service names to arrays of nodes providing each service
 };
 
 export type SubscribeOpts = {
