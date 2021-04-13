@@ -26,8 +26,10 @@ export default {
 
 export function BasicExamples(): React.ReactElement {
   const containerStyle = {
-    margin: "50px",
+    padding: "50px",
     display: "flex",
+    width: "400px",
+    height: "300px",
   } as const;
   const style = {
     width: "50px",
