@@ -8,12 +8,14 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
 
     # Run each command in parallel with the same setup steps.
     strategy:
       fail-fast: false
       matrix:
+        os:
+          - ubuntu-20.04
         config:
           # Specify names so that the GitHub branch protection settings for
           # required checks don't need to change if we ever change the commands used.
@@ -23,8 +25,16 @@ jobs:
             command: yarn run test --maxWorkers=100%
           - name: storybook
             command: yarn workspace @foxglove-studio/app run chromatic
+        include:
+          - os: windows-2019
+            config:
+              name: lint
+              command: echo complete
+        exclude:
+          - os: windows-2019
+            config: { name: storybook }
 
-    name: ${{ matrix.config.name }}
+    name: ${{ matrix.config.name }} (${{ matrix.os }})
 
     steps:
       - uses: actions/checkout@v2
@@ -36,7 +46,7 @@ jobs:
         with:
           node-version: 14.x
       - name: Restore cache
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v2.1.5
         with:
           path: |
             .yarn/cache
@@ -59,7 +69,7 @@ jobs:
       matrix:
         os: [ubuntu-20.04]
 
-    name: integration-${{ matrix.os }}
+    name: integration (${{ matrix.os }})
 
     steps:
       - uses: actions/checkout@v2
@@ -70,7 +80,7 @@ jobs:
         with:
           node-version: 14.x
       - name: Restore cache
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v2.1.5
         with:
           path: |
             .yarn/cache

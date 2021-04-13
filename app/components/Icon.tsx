@@ -13,7 +13,7 @@
 
 import cx from "classnames";
 
-import Tooltip from "@foxglove-studio/app/components/Tooltip";
+import Tooltip, { useTooltip } from "@foxglove-studio/app/components/Tooltip";
 
 import styles from "./icon.module.scss";
 
@@ -34,7 +34,7 @@ type Props = {
     [key: string]: any;
   };
   tooltip?: React.ReactNode;
-  tooltipProps?: React.ComponentProps<typeof Tooltip>;
+  tooltipProps?: Partial<React.ComponentProps<typeof Tooltip> & { alwaysShown?: false }>;
   dataTest?: string;
 };
 
@@ -80,12 +80,22 @@ const Icon = (props: Props) => {
     }
   };
 
+  const { ref: tooltipRef, tooltip: tooltipNode } = useTooltip({
+    contents: tooltip,
+    ...tooltipProps,
+  });
+
   return (
-    <Tooltip contents={tooltip} {...tooltipProps}>
-      <span className={classNames} onClick={clickHandler} style={style} data-test={dataTest}>
-        {children}
-      </span>
-    </Tooltip>
+    <span
+      ref={tooltipRef}
+      className={classNames}
+      onClick={clickHandler}
+      style={style}
+      data-test={dataTest}
+    >
+      {children}
+      {tooltipNode}
+    </span>
   );
 };
 
