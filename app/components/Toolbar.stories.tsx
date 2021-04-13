@@ -12,10 +12,12 @@ export default {
 export function Default(): JSX.Element {
   return (
     <WindowGeometryContext.Provider value={{ insetToolbar: false }}>
-      <Toolbar>
-        <span style={{ flexGrow: 1 }}>Hello</span>
-        <span>There</span>
-      </Toolbar>
+      <div style={{ width: 400 }}>
+        <Toolbar>
+          <span style={{ flexGrow: 1 }}>Hello</span>
+          <span>There</span>
+        </Toolbar>
+      </div>
     </WindowGeometryContext.Provider>
   );
 }
@@ -23,10 +25,12 @@ export function Default(): JSX.Element {
 export function Inset(): JSX.Element {
   return (
     <WindowGeometryContext.Provider value={{ insetToolbar: true }}>
-      <Toolbar>
-        <span style={{ flexGrow: 1 }}>Hello</span>
-        <span>There</span>
-      </Toolbar>
+      <div style={{ width: 400 }}>
+        <Toolbar>
+          <span style={{ flexGrow: 1 }}>Hello</span>
+          <span>There</span>
+        </Toolbar>
+      </div>
     </WindowGeometryContext.Provider>
   );
 }
