@@ -41,7 +41,7 @@ import {
 import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipeline";
 import TimeBasedChartLegend from "@foxglove-studio/app/components/TimeBasedChart/TimeBasedChartLegend";
 import makeGlobalState from "@foxglove-studio/app/components/TimeBasedChart/makeGlobalState";
-import Tooltip from "@foxglove-studio/app/components/Tooltip";
+import { useTooltip } from "@foxglove-studio/app/components/Tooltip";
 import useDeepChangeDetector from "@foxglove-studio/app/hooks/useDeepChangeDetector";
 import mixins from "@foxglove-studio/app/styles/mixins.module.scss";
 import { isBobject } from "@foxglove-studio/app/util/binaryObjects";
@@ -463,6 +463,12 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     y: number;
     data: TimeBasedChartTooltipData;
   }>();
+  const { tooltip } = useTooltip({
+    shown: true,
+    noPointerEvents: true,
+    targetPosition: { x: activeTooltip?.x ?? 0, y: activeTooltip?.y ?? 0 },
+    contents: activeTooltip && <TimeBasedChartTooltipContent tooltip={activeTooltip.data} />,
+  });
   const updateTooltip = useCallback(
     (element?: RpcElement) => {
       // This is an async callback, so it can fire after this component is unmounted. Make sure that we remove the
@@ -756,13 +762,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
 
   return (
     <div style={{ display: "flex", width: "100%" }}>
-      {activeTooltip && (
-        <Tooltip
-          alwaysShown
-          targetPosition={{ x: activeTooltip.x, y: activeTooltip.y }}
-          contents={<TimeBasedChartTooltipContent tooltip={activeTooltip.data} />}
-        />
-      )}
+      {tooltip}
       <div style={{ display: "flex", width }}>
         <SRoot onDoubleClick={onResetZoom}>
           <HoverBar

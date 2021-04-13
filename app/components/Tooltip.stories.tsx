@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { storiesOf } from "@storybook/react";
 import styled from "styled-components";
 
 import Tooltip from "@foxglove-studio/app/components/Tooltip";
@@ -20,34 +19,38 @@ const Spacer = styled.div`
   width: 10px;
 `;
 
-storiesOf("<Tooltip>", module).add("basic examples", () => {
+export default {
+  title: "<Tooltip>",
+  component: Tooltip,
+};
+
+export function BasicExamples(): React.ReactElement {
   const containerStyle = {
     margin: "50px",
     display: "flex",
-    flexWrap: "wrap",
-  };
+  } as const;
   const style = {
     width: "50px",
     height: "50px",
     backgroundColor: "gray",
-  };
+  } as const;
   return (
-    <div style={containerStyle as any}>
-      <Tooltip contents="Top" placement="top" defaultShown>
+    <div style={containerStyle}>
+      <Tooltip contents="Top" placement="top" shown>
         <div style={style} />
       </Tooltip>
       <Spacer />
-      <Tooltip contents="Left" placement="left" defaultShown>
+      <Tooltip contents="Left" placement="left" shown>
         <div style={style} />
       </Tooltip>
       <Spacer />
-      <Tooltip contents="Right" placement="right" defaultShown>
+      <Tooltip contents="Right" placement="right" shown>
         <div style={style} />
       </Tooltip>
       <Spacer />
-      <Tooltip contents="Bottom" placement="bottom" defaultShown>
+      <Tooltip contents="Bottom" placement="bottom" shown>
         <div style={style} />
       </Tooltip>
     </div>
   );
-});
+}

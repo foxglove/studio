@@ -15,59 +15,49 @@ import {
   DirectionalHint,
   ICalloutProps,
   Tooltip as FluentTooltip,
-  ITooltipHost,
-  TooltipHost,
   useTheme,
   ICalloutContentStyles,
 } from "@fluentui/react";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type Contents = React.ReactNode | (() => React.ReactNode);
 
 export type Props = {
   contents?: Contents;
   placement?: "top" | "left" | "right" | "bottom";
+  // Rather than showing the tooltip when children are hovered, passing shown=true presents the
+  // tooltip immediately from the referenced element or targetPosition. This is used for stories and
+  // for components that need to customize tooltip position based on some mouse event they listen
+  // to.
+  shown?: boolean;
+  // If the tooltip is being manually shown with alwaysShown, then the tooltip capturing
+  // mouse events may get in the way of whatever component is managing it.
+  noPointerEvents?: boolean;
+  targetPosition?: { x: number; y: number };
+  // Milliseconds to wait before showing tooltip
+  delay?: number;
+};
 
-  // Show the tooltip automatically when mounted, for use in storybook.
-  defaultShown?: boolean;
-} & (
-  | { children?: React.ReactElement; alwaysShown?: false; targetPosition?: never }
-  | {
-      children?: never;
-      // Rather than showing the tooltip when children are hovered, present the tooltip immediately
-      // from the targetPosition. Children must not be passed when alwaysShown is true. This is used
-      // for components that need to customize tooltip position based on some mouse event they
-      // listen to.
-      alwaysShown: true;
-      targetPosition: { x: number; y: number };
-    }
-);
-
-export default function Tooltip({
-  children,
+// Returns a tooltip element that must be rendered into the React tree, and a ref that can be
+// attached to a native HTML element so the tooltip can be shown when the mouse enters/leaves the
+// element. Functions similarly to @fluentui/react's TooltipHost but without rendering an extra
+// element, so we can use it on "delicate" DOM hierarchies such as table cells.
+export function useTooltip({
   contents,
   placement = "top",
-  defaultShown = false,
+  shown: controlledShown,
   targetPosition,
-  alwaysShown = false,
-}: Props): React.ReactElement | ReactNull {
+  noPointerEvents = false,
+  delay = 300,
+}: Props): {
+  ref: React.RefCallback<HTMLElement>;
+  tooltip: React.ReactElement | ReactNull;
+} {
   const onRenderContent = useCallback(
     () => (typeof contents === "function" ? contents() : contents ?? ReactNull),
     [contents],
   );
   const theme = useTheme();
-
-  const tooltipHostRef = useRef<ITooltipHost>(ReactNull);
-  const showOnMount = useRef(defaultShown);
-  useEffect(() => {
-    if (showOnMount.current) {
-      tooltipHostRef.current?.show();
-    }
-  }, []);
-
-  if (!contents) {
-    return children ?? ReactNull;
-  }
 
   // Styles which ideally we would be able to set in the theme for all Tooltips:
   // https://github.com/microsoft/fluentui/discussions/17772
@@ -87,6 +77,9 @@ export default function Tooltip({
   if (targetPosition) {
     calloutProps.target = { left: targetPosition.x, top: targetPosition.y };
   }
+  if (noPointerEvents) {
+    calloutProps.styles.root = { pointerEvents: "none" };
+  }
 
   const directionalHint = {
     top: DirectionalHint.topCenter,
@@ -95,37 +88,81 @@ export default function Tooltip({
     bottom: DirectionalHint.bottomCenter,
   }[placement];
 
-  if (alwaysShown) {
-    if (React.Children.count(children) !== 0) {
-      throw new Error("Tooltip cannot have alwaysShown=true and children");
-    }
-    // If the TooltipHost is not managing showing/hiding the tooltip, then the tooltip capturing
-    // mouse events would get in the way of whatever component is managing it.
-    calloutProps.styles.root = { pointerEvents: "none" };
+  const [shown, setShown] = useState(controlledShown ?? false);
 
-    return (
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const enterListener = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => setShown(true), delay);
+  }, [delay]);
+  const leaveListener = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setShown(false);
+  }, []);
+  const elementRef = useRef<HTMLElement>(ReactNull);
+
+  // If we are shown on first render (in storybook) then the target element is not available yet
+  // - rerender when it is.
+  const initiallyShown = useRef(controlledShown);
+  const [, forceUpdateForInitiallyShown] = useState(false);
+
+  const refFn = useCallback(
+    (element: HTMLElement | ReactNull) => {
+      if (elementRef.current) {
+        elementRef.current.removeEventListener("mouseenter", enterListener);
+        elementRef.current.removeEventListener("mouseleave", leaveListener);
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+      }
+      if (initiallyShown.current && !elementRef.current && element) {
+        forceUpdateForInitiallyShown(true);
+      }
+      elementRef.current = element;
+      element?.addEventListener("mouseenter", enterListener);
+      element?.addEventListener("mouseleave", leaveListener);
+    },
+    [enterListener, leaveListener],
+  );
+
+  const tooltip =
+    contents && (controlledShown ?? shown) ? (
       <FluentTooltip
         hidden={false}
+        targetElement={elementRef.current ?? undefined}
         directionalHint={directionalHint}
         calloutProps={calloutProps}
         onRenderContent={onRenderContent}
-        styles={{
-          root: {
-            // Appear immediately when shown
-            animation: "none",
-          },
-        }}
+        styles={
+          controlledShown
+            ? // Appear immediately when forcibly shown
+              { root: { animation: "none" } }
+            : undefined
+        }
       />
+    ) : (
+      ReactNull
     );
-  }
+
+  return { ref: refFn, tooltip };
+}
+
+export default function Tooltip(
+  props: Props & { children: React.ReactElement },
+): React.ReactElement | ReactNull {
+  const { children } = props;
+  const { ref, tooltip } = useTooltip(props);
+  const child = React.Children.only(children);
+  const host = child ? React.cloneElement(child, { ref }) : undefined;
   return (
-    <TooltipHost
-      directionalHint={directionalHint}
-      componentRef={tooltipHostRef}
-      calloutProps={calloutProps}
-      tooltipProps={{ onRenderContent }}
-    >
-      {children}
-    </TooltipHost>
+    <>
+      {host}
+      {tooltip}
+    </>
   );
 }

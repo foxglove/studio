@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import Tooltip from "@foxglove-studio/app/components/Tooltip";
+import { useTooltip } from "@foxglove-studio/app/components/Tooltip";
 
 import TimeBasedChartTooltipContent from "./TimeBasedChartTooltipContent";
 
@@ -35,13 +35,10 @@ export function Default(): React.ReactElement {
     },
     startTime: { sec: 95, nsec: 0 },
   };
-  return (
-    <div style={{ width: "100%", height: "100%", background: "white" }}>
-      <Tooltip
-        alwaysShown
-        targetPosition={{ x: 200, y: 100 }}
-        contents={<TimeBasedChartTooltipContent tooltip={data} />}
-      />
-    </div>
-  );
+  const { tooltip } = useTooltip({
+    shown: true,
+    targetPosition: { x: 200, y: 100 },
+    contents: <TimeBasedChartTooltipContent tooltip={data} />,
+  });
+  return <div style={{ width: "100%", height: "100%", background: "white" }}>{tooltip}</div>;
 }

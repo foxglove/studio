@@ -41,8 +41,7 @@ import {
 } from "@foxglove-studio/app/components/PlaybackControls/sharedHelpers";
 import PlaybackSpeedControls from "@foxglove-studio/app/components/PlaybackSpeedControls";
 import Slider from "@foxglove-studio/app/components/Slider";
-// import tooltipStyles from "@foxglove-studio/app/components/Tooltip.module.scss";
-import Tooltip from "@foxglove-studio/app/components/Tooltip";
+import { useTooltip } from "@foxglove-studio/app/components/Tooltip";
 import { PlayerState, PlayerStateActiveData } from "@foxglove-studio/app/players/types";
 import colors from "@foxglove-studio/app/styles/colors.module.scss";
 import { formatTime } from "@foxglove-studio/app/util/formatTime";
@@ -95,9 +94,15 @@ export const UnconnectedPlaybackControls = memo<PlaybackControlProps>(
     const el = useRef<HTMLDivElement>(ReactNull);
     const slider = useRef<Slider>(ReactNull);
     const [repeat, setRepeat] = useState(false);
-    const [tooltip, setTooltip] = useState<
+    const [tooltipState, setTooltipState] = useState<
       { x: number; y: number; tip: JSX.Element } | undefined
     >();
+    const { tooltip } = useTooltip({
+      shown: tooltipState != undefined,
+      noPointerEvents: true,
+      targetPosition: { x: tooltipState?.x ?? 0, y: tooltipState?.y ?? 0 },
+      contents: tooltipState?.tip,
+    });
     const { seek, pause, play, player } = props;
 
     // playerState is unstable, and will cause callbacks to change identity every frame. They can take
@@ -147,7 +152,7 @@ export const UnconnectedPlaybackControls = memo<PlaybackControlProps>(
             <TooltipItem title="Elapsed" value={`${toSec(timeFromStart).toFixed(9)} sec`} />
           </div>
         );
-        setTooltip({ x, y, tip });
+        setTooltipState({ x, y, tip });
         dispatch(
           setHoverValue({
             componentId: hoverComponentId,
@@ -160,7 +165,7 @@ export const UnconnectedPlaybackControls = memo<PlaybackControlProps>(
     );
 
     const onMouseLeave = useCallback(() => {
-      setTooltip(undefined);
+      setTooltipState(undefined);
       dispatch(clearHoverValue({ componentId: hoverComponentId }));
     }, [dispatch, hoverComponentId]);
 
@@ -213,8 +218,9 @@ export const UnconnectedPlaybackControls = memo<PlaybackControlProps>(
             onClick={() => jumpSeek(DIRECTION.BACKWARD, { seek, player: playerState.current })}
             style={{ borderRadius: "4px 0px 0px 4px", marginLeft: "16px", marginRight: "1px" }}
             className={cx([styles.seekBtn, { [styles.inactive!]: !activeData }])}
+            tooltip="Seek backward"
           >
-            <Icon medium tooltip="Seek backward">
+            <Icon medium>
               <SkipPreviousOutlineIcon />
             </Icon>
           </Button>
@@ -222,8 +228,9 @@ export const UnconnectedPlaybackControls = memo<PlaybackControlProps>(
             onClick={() => jumpSeek(DIRECTION.FORWARD, { seek, player: playerState.current })}
             style={{ borderRadius: "0px 4px 4px 0px" }}
             className={cx([styles.seekBtn, { [styles.inactive!]: !activeData }])}
+            tooltip="Seek forward"
           >
-            <Icon medium tooltip="Seek forward">
+            <Icon medium>
               <SkipNextOutlineIcon />
             </Icon>
           </Button>
@@ -234,13 +241,7 @@ export const UnconnectedPlaybackControls = memo<PlaybackControlProps>(
 
     return (
       <Flex row className={styles.container}>
-        {tooltip && (
-          <Tooltip
-            alwaysShown
-            targetPosition={{ x: tooltip.x, y: tooltip.y }}
-            contents={tooltip.tip}
-          />
-        )}
+        {tooltip}
         <KeyListener global keyDownHandlers={keyDownHandlers} />
         <MessageOrderControls />
         <PlaybackSpeedControls />
