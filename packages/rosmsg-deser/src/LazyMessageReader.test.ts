@@ -17,7 +17,7 @@ const serializeString = (str: string): Uint8Array => {
   return Uint8Array.from([...len, ...data]);
 };
 
-const float32Buffer = (floats: number[]): Iterable<number> => {
+const float32Buffer = (floats: number[]): Uint8Array => {
   return new Uint8Array(Float32Array.from(floats).buffer);
 };
 
@@ -51,7 +51,7 @@ describe("LazyReader", () => {
       [0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff],
       { sample: 18446744073709551615n },
     ],
-    [`float32 sample`, Float32Buffer([5.5]), { sample: 5.5 }],
+    [`float32 sample`, float32Buffer([5.5]), { sample: 5.5 }],
     [
       `float64 sample`,
       new Uint8Array(Float64Array.of(0.123456789121212121212).buffer),
@@ -100,32 +100,32 @@ describe("LazyReader", () => {
       [0x00, 0x01, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00],
       { blank: 0, arr: [{ sec: 2, nsec: 3 }] },
     ],
-    [`float32[2] arr`, Float32Buffer([5.5, 6.5]), { arr: Float32Array.from([5.5, 6.5]) }],
+    [`float32[2] arr`, float32Buffer([5.5, 6.5]), { arr: Float32Array.from([5.5, 6.5]) }],
     [
       `uint8 blank\nfloat32[2] arr`,
-      [0x00, ...Float32Buffer([5.5, 6.5])],
+      [0x00, ...float32Buffer([5.5, 6.5])],
       { blank: 0, arr: Float32Array.from([5.5, 6.5]) },
     ],
     [
       `float32[] arr`,
       [
         ...[0x02, 0x00, 0x00, 0x00], // length
-        ...Float32Buffer([5.5, 6.5]),
+        ...float32Buffer([5.5, 6.5]),
       ],
       { arr: Float32Array.from([5.5, 6.5]) },
     ],
     [
       `uint8 blank\nfloat32[] arr`,
-      [0x00, ...[0x02, 0x00, 0x00, 0x00], ...Float32Buffer([5.5, 6.5])],
+      [0x00, ...[0x02, 0x00, 0x00, 0x00], ...float32Buffer([5.5, 6.5])],
       { blank: 0, arr: Float32Array.from([5.5, 6.5]) },
     ],
     [
       `float32[] first\nfloat32[] second`,
       [
         ...[0x02, 0x00, 0x00, 0x00], // length
-        ...Float32Buffer([5.5, 6.5]),
+        ...float32Buffer([5.5, 6.5]),
         ...[0x02, 0x00, 0x00, 0x00], // length
-        ...Float32Buffer([5.5, 6.5]),
+        ...float32Buffer([5.5, 6.5]),
       ],
       {
         first: Float32Array.from([5.5, 6.5]),
