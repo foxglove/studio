@@ -2146,11 +2146,12 @@ __metadata:
   resolution: "@foxglove/electron-socket@workspace:packages/electron-socket"
   dependencies:
     "@jest/types": 26.6.2
-    electron: 12.0.2
     eventemitter3: 4.0.7
     jest: 26.6.3
     tslib: 2.2.0
     typescript: 4.2.2
+  peerDependencies:
+    electron: ">=12"
   languageName: unknown
   linkType: soft
 
@@ -10290,19 +10291,6 @@ __metadata:
     lodash.isequal: ^4.5.0
     semver: ^7.3.4
   checksum: c0ebb2064ad6a17f93b29603edccd9ef2f689885ef1af02c0ee23426776d1073639178deb1aa002c4dc30c80fd4f6a49dfba85288a79d9a48431abe43968fe5f
-  languageName: node
-  linkType: hard
-
-"electron@npm:12.0.2":
-  version: 12.0.2
-  resolution: "electron@npm:12.0.2"
-  dependencies:
-    "@electron/get": ^1.0.1
-    "@types/node": ^14.6.2
-    extract-zip: ^1.0.3
-  bin:
-    electron: cli.js
-  checksum: 77f69f651309151748913fe3b57bcfc82f814142d7ccc8f9157c2ba7647b08ab9ae7d38b3231075ecce348422f0ce4351879e5f0e76095a8c8c304d08c2983d0
   languageName: node
   linkType: hard
 
