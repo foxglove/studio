@@ -8,14 +8,10 @@ type WindowGeometry = {
   // Whether the toolbar should be inset on the left side to allow space for "traffic light" buttons
   insetToolbar: boolean;
 };
-const WindowGeometryContext = createContext<WindowGeometry | undefined>(undefined);
+const WindowGeometryContext = createContext<WindowGeometry>({ insetToolbar: false });
 
 export function useWindowGeometry(): WindowGeometry {
-  const storage = useContext(WindowGeometryContext);
-  if (!storage) {
-    throw new Error("An WindowGeometryContext provider is required to useWindowGeometry");
-  }
-  return storage;
+  return useContext(WindowGeometryContext);
 }
 
 export default WindowGeometryContext;
