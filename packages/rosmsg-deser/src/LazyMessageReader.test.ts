@@ -7,7 +7,7 @@ import { TextDecoder } from "util";
 import { LazyMessageReader } from "./LazyMessageReader";
 
 // Jest runs in a node environment, TextDecoder is not available globally.
-// We provide TextDecoder from the uitl module.
+// We provide TextDecoder from the util module.
 (global as any).TextDecoder = TextDecoder;
 
 const serializeString = (str: string): Uint8Array => {
