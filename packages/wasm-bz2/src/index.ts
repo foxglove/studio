@@ -4,7 +4,10 @@
 
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="../typings/module.d.ts" />
+
 import ModuleFactory, { BZ2Module } from "@foxglove/wasm-bz2/dist/module";
+
+import fileUriToPath from "./fileuritopath";
 
 const wasmUrl = new URL("../dist/module.wasm", import.meta.url);
 
@@ -20,7 +23,7 @@ const isLoaded = new Promise<void>((resolve) => {
       // provide a fallback function.
       // By using only the URL.pathname the ModuleFactory properly loads the file in production and development
       // via fetch which works when the file is an absolute path on disk or served by the webserver in dev.
-      return wasmUrl.pathname;
+      return fileUriToPath(wasmUrl.toString());
     },
     onRuntimeInitialized: () => {
       loaded = true;
