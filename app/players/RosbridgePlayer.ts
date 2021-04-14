@@ -44,8 +44,6 @@ import {
   subtractTimes,
   TimestampMethod,
   toSec,
-  fromMillis,
-  TimestampMethod,
 } from "@foxglove-studio/app/util/time";
 import type { RosGraph } from "@foxglove/ros1";
 
