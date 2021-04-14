@@ -15,14 +15,18 @@ import hoistNonReactStatics from "hoist-non-react-statics";
 import PropTypes from "prop-types";
 
 import Transforms from "@foxglove-studio/app/panels/ThreeDimensionalViz/Transforms";
-import { Frame, Message } from "@foxglove-studio/app/players/types";
+import { Frame, Message, Topic } from "@foxglove-studio/app/players/types";
 import { TF } from "@foxglove-studio/app/types/Messages";
 import { isBobject, deepParse } from "@foxglove-studio/app/util/binaryObjects";
-import { TRANSFORM_STATIC_TOPIC, TRANSFORM_TOPIC } from "@foxglove-studio/app/util/globalConstants";
+import {
+  TF2_DATATYPE,
+  TF_DATATYPE,
+  TRANSFORM_STAMPED_DATATYPE,
+} from "@foxglove-studio/app/util/globalConstants";
 
 type State = { transforms: Transforms };
 type TfMessage = { transforms: TF[] };
-type BaseProps = { frame: Frame; cleared: boolean };
+type BaseProps = { frame: Frame; cleared?: boolean; topics: Topic[] };
 
 function consumeTfs(tfs: Message[] | undefined, transforms: Transforms): void {
   if (tfs != undefined) {
@@ -35,9 +39,23 @@ function consumeTfs(tfs: Message[] | undefined, transforms: Transforms): void {
   }
 }
 
+function consumeSingleTfs(tfs: Message[] | undefined, transforms: Transforms): void {
+  if (tfs != undefined) {
+    for (const { message } of tfs) {
+      const parsedMessage = (isBobject(message) ? deepParse(message) : message) as TF;
+      transforms.consume(parsedMessage);
+    }
+  }
+}
+
 function withTransforms<Props extends any>(ChildComponent: React.ComponentType<Props>) {
   class Component extends React.PureComponent<
-    Partial<{ frame: Frame; cleared: boolean; forwardedRef: any }>,
+    Partial<{
+      frame: Frame;
+      topics: Topic[];
+      cleared?: boolean;
+      forwardedRef: any;
+    }>,
     State
   > {
     static displayName = `withTransforms(${
@@ -51,17 +69,23 @@ function withTransforms<Props extends any>(ChildComponent: React.ComponentType<P
       nextProps: Props,
       prevState: State,
     ): Partial<State> | undefined {
-      const { frame, cleared } = nextProps as BaseProps;
+      const { frame, cleared, topics } = nextProps as BaseProps;
       let { transforms } = prevState;
-      if (cleared) {
+      if (cleared != undefined && cleared) {
         transforms = new Transforms();
       }
+
+      // FIXME: Memoize this, it rarely changes so no need to build it every frame
+      const topicsToDatatypes = new Map<string, string>(topics.map((t) => [t.name, t.datatype]));
 
       // Find any references to previously unseen frames in the set of incoming messages
       // Note the naming confusion between `frame` (a map of topic names to messages received on
       // that topic) and transform frames (coordinate frames)
       for (const topic in frame) {
-        for (const msg of frame[topic] as Message[]) {
+        const datatype = topicsToDatatypes.get(topic) ?? "";
+        const msgs = frame[topic] as Message[];
+
+        for (const msg of msgs) {
           const frameId: string | undefined = isBobject(msg.message)
             ? msg.message.header?.().frame_id?.()
             : msg.message.header?.frame_id;
@@ -69,11 +93,18 @@ function withTransforms<Props extends any>(ChildComponent: React.ComponentType<P
             transforms.register(frameId);
           }
         }
-      }
 
-      // Process all new /tf and /tf_static messages
-      consumeTfs(frame[TRANSFORM_TOPIC], transforms);
-      consumeTfs(frame[TRANSFORM_STATIC_TOPIC], transforms);
+        // Process all TF topics (ex: /tf and /tf_static)
+        switch (datatype) {
+          case TF_DATATYPE:
+          case TF2_DATATYPE:
+            consumeTfs(msgs, transforms);
+            break;
+          case TRANSFORM_STAMPED_DATATYPE:
+            consumeSingleTfs(msgs, transforms);
+            break;
+        }
+      }
 
       return { transforms };
     }
