@@ -14,6 +14,7 @@ export default function AnalyticsProvider(
   const analytics = useMemo(() => {
     return new Analytics({
       optOut: !(OsContextSingleton?.isTelemetryEnabled() ?? true),
+      crashReportingOptOut: !(OsContextSingleton?.isCrashReportingEnabled() ?? true),
       amplitudeApiKey: props.amplitudeApiKey ?? process.env.AMPLITUDE_API_KEY,
     });
   }, [props.amplitudeApiKey]);
