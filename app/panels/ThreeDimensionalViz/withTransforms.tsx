@@ -24,7 +24,7 @@ import {
   TRANSFORM_STAMPED_DATATYPE,
 } from "@foxglove-studio/app/util/globalConstants";
 
-type State = { transforms: Transforms };
+type State = { transforms: Transforms; topics: Topic[]; topicsToDatatypes: Map<string, string> };
 type TfMessage = { transforms: TF[] };
 type BaseProps = { frame: Frame; cleared?: boolean; topics: Topic[] };
 
@@ -63,20 +63,21 @@ function withTransforms<Props extends any>(ChildComponent: React.ComponentType<P
     })`;
     static contextTypes = { store: PropTypes.any };
 
-    state: State = { transforms: new Transforms() };
+    state: State = { transforms: new Transforms(), topics: [], topicsToDatatypes: new Map() };
 
     static getDerivedStateFromProps(
       nextProps: Props,
       prevState: State,
     ): Partial<State> | undefined {
       const { frame, cleared, topics } = nextProps as BaseProps;
-      let { transforms } = prevState;
+      let { transforms, topicsToDatatypes } = prevState;
       if (cleared != undefined && cleared) {
         transforms = new Transforms();
       }
 
-      // TODO: Memoize this, it rarely changes so no need to build it every frame
-      const topicsToDatatypes = new Map<string, string>(topics.map((t) => [t.name, t.datatype]));
+      if (topics !== prevState.topics) {
+        topicsToDatatypes = new Map<string, string>(topics.map((t) => [t.name, t.datatype]));
+      }
 
       // Find any references to previously unseen frames in the set of incoming messages
       // Note the naming confusion between `frame` (a map of topic names to messages received on
@@ -106,7 +107,7 @@ function withTransforms<Props extends any>(ChildComponent: React.ComponentType<P
         }
       }
 
-      return { transforms };
+      return { transforms, topics, topicsToDatatypes };
     }
 
     render() {
