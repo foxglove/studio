@@ -21,9 +21,9 @@ const isLoaded = new Promise<void>((resolve) => {
       // In browsers it will try to load the path via _fetch_, however, if it detects file:// prefix it assumes
       // that _fetch_ won't work and tries to fall-back to loading without _fetch_ which fails since we do not
       // provide a fallback function.
-      // By using only the URL.pathname the ModuleFactory properly loads the file in production and development
-      // via fetch which works when the file is an absolute path on disk or served by the webserver in dev.
-      return fileUriToPath(wasmUrl.toString());
+      // For file:// URLs, explicitly transform to a filesystem path. Otherwise, return the pathname
+      // which can be properly fetched
+      return wasmUrl.protocol === "file:" ? fileUriToPath(wasmUrl.toString()) : wasmUrl.pathname;
     },
     onRuntimeInitialized: () => {
       loaded = true;
