@@ -81,6 +81,7 @@ export default class RosbridgePlayer implements Player {
   _hasReceivedMessage = false;
   _sentConnectionClosedNotification = false;
   _sentTopicsErrorNotification = false;
+  _sentNodesErrorNotification = false;
 
   constructor(url: string, metricsCollector: PlayerMetricsCollectorInterface) {
     this._metricsCollector = metricsCollector;
@@ -208,10 +209,20 @@ export default class RosbridgePlayer implements Player {
       this.setSubscriptions(this._requestedSubscriptions);
 
       // Fetch the full graph topology
-      const graph = await this._getSystemState();
-      this._publishedTopics = graph.publishers;
-      this._subscribedTopics = graph.subscribers;
-      this._services = graph.services;
+      try {
+        const graph = await this._getSystemState();
+        this._publishedTopics = graph.publishers;
+        this._subscribedTopics = graph.subscribers;
+        this._services = graph.services;
+      } catch (error) {
+        if (!this._sentNodesErrorNotification) {
+          this._sentNodesErrorNotification = true;
+          sendNotification("Failed to fetch node details from rosbridge", error, "user", "warn");
+        }
+        this._publishedTopics = new Map();
+        this._subscribedTopics = new Map();
+        this._services = new Map();
+      }
 
       this._emitState();
     } catch (error) {
