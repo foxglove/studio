@@ -21,7 +21,7 @@ import packageJson from "./package.json";
 
 const styledComponentsTransformer = createStyledComponentsTransformer({
   getDisplayName: (filename, bindingName) => {
-    const sanitizedFilename = path.relative(__dirname, filename).replaceAll(/[^a-zA-Z0-9_-]/g, "_");
+    const sanitizedFilename = path.relative(__dirname, filename).replace(/[^a-zA-Z0-9_-]/g, "_");
     return bindingName != undefined ? `${bindingName}__${sanitizedFilename}` : sanitizedFilename;
   },
 });
