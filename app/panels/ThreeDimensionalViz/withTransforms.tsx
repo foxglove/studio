@@ -75,7 +75,7 @@ function withTransforms<Props extends any>(ChildComponent: React.ComponentType<P
         transforms = new Transforms();
       }
 
-      // FIXME: Memoize this, it rarely changes so no need to build it every frame
+      // TODO: Memoize this, it rarely changes so no need to build it every frame
       const topicsToDatatypes = new Map<string, string>(topics.map((t) => [t.name, t.datatype]));
 
       // Find any references to previously unseen frames in the set of incoming messages
