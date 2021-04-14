@@ -19,7 +19,7 @@ declare module "roslib" {
 
     getNodeDetails(
       node: string,
-      cb: (publications: string[], subscriptions: string[], services: string[]) => void,
+      cb: (subscriptions: string[], publications: string[], services: string[]) => void,
       errorCallback: (error: Error) => void,
     ): void;
 

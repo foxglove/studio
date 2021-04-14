@@ -103,7 +103,7 @@ class MockRosClient {
 
   getNodeDetails(
     _node: string,
-    callback: (publications: string[], subscriptions: string[], services: string[]) => void,
+    callback: (subscriptions: string[], publications: string[], services: string[]) => void,
     _errCb: (error: Error) => void,
   ) {
     callback([], [], []);

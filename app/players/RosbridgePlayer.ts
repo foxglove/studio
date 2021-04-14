@@ -467,7 +467,7 @@ export default class RosbridgePlayer implements Player {
           nodes.map((node) => {
             this._rosClient?.getNodeDetails(
               node,
-              (publications, subscriptions, services) => {
+              (subscriptions, publications, services) => {
                 publications.forEach((pub) => addEntry(output.publishers, pub, node));
                 subscriptions.forEach((sub) => addEntry(output.subscribers, sub, node));
                 services.forEach((srv) => addEntry(output.services, srv, node));
