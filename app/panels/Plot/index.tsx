@@ -13,7 +13,7 @@
 
 import { compact, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
-import { useEffect, useCallback, useMemo, useRef } from "react";
+import { useEffect, useCallback, useMemo, useRef, ComponentProps } from "react";
 import { Time, TimeUtil } from "rosbag";
 
 import {
@@ -34,6 +34,7 @@ import {
   getTooltipItemForMessageHistoryItem,
   TooltipItem,
 } from "@foxglove-studio/app/components/TimeBasedChart";
+import useShallowMemo from "@foxglove-studio/app/hooks/useShallowMemo";
 import PlotChart, {
   getDatasetsAndTooltips,
   PlotDataByPath,
@@ -41,7 +42,6 @@ import PlotChart, {
 import PlotLegend from "@foxglove-studio/app/panels/Plot/PlotLegend";
 import PlotMenu from "@foxglove-studio/app/panels/Plot/PlotMenu";
 import { PanelConfig } from "@foxglove-studio/app/types/panels";
-import { useShallowMemo } from "@foxglove-studio/app/util/hooks";
 import { fromSec, subtractTimes, toSec } from "@foxglove-studio/app/util/time";
 
 import helpContent from "./index.help.md";
@@ -254,8 +254,9 @@ function Plot(props: Props) {
     }
   }
 
-  const onClick = useCallback(
-    (_event, _datalabel, { x: seekSeconds }) => {
+  const onClick = useCallback<NonNullable<ComponentProps<typeof PlotChart>["onClick"]>>(
+    (params) => {
+      const seekSeconds = params.x;
       if (!startTime || seekSeconds == undefined || !seek || xAxisVal !== "timestamp") {
         return;
       }

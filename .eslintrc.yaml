@@ -4,6 +4,7 @@ env:
   node: true
 
 ignorePatterns:
+  - "!.storybook"
   - storybook-static
   # This file triggers an eslint bug because of our {fs: false} setting in webpack config.
   # But for some reason it only happens locally, not in CI.
@@ -86,7 +87,7 @@ rules:
   react-hooks/rules-of-hooks: error
   react-hooks/exhaustive-deps:
     - error
-    - additionalHooks: "(useAsync)"
+    - additionalHooks: "(useAsync(?!AppConfigurationValue))"
   no-new-func: error
   header/header:
     - error
@@ -372,8 +373,6 @@ overrides:
       - "app/players/automatedRun/performanceMeasuringClient.ts"
       - "app/players/automatedRun/videoRecordingClient.ts"
       - "app/reducers/panels.ts"
-      - "app/shared/layout.ts"
-      - "app/shared/validators.ts"
       - "app/store/getGlobalStore.ts"
       - "app/stories/PanelSetup.tsx"
       - "app/stories/PanelSetupWithBag.tsx"
@@ -402,7 +401,6 @@ overrides:
       - "app/util/fuzzyFilter.ts"
       - "app/util/getGlobalVariablesFromUrl.ts"
       - "app/util/getNewConnection.ts"
-      - "app/util/hooks.tsx"
       - "app/util/inAutomatedRunMode.ts"
       - "app/util/index.ts"
       - "app/util/indexeddb/Database.ts"

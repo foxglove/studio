@@ -4,7 +4,7 @@
 
 import { OsContext } from "@foxglove-studio/app/OsContext";
 import OsContextAppConfiguration from "@foxglove-studio/app/services/OsContextAppConfiguration";
-import signal from "@foxglove-studio/app/shared/signal";
+import signal from "@foxglove-studio/app/util/signal";
 
 type MockStorage = {
   [K in keyof OsContext["storage"]]: jest.Mock<
@@ -73,5 +73,68 @@ describe("OsContextAppConfiguration", () => {
       ["settings", "settings.json", JSON.stringify({ abc: 234 })],
       ["settings", "settings.json", JSON.stringify({ abc: 234, xyz: [true, false] })],
     ]);
+  });
+
+  it("calls listeners when values change", async () => {
+    const ctx = makeMockContext();
+
+    let value = JSON.stringify({ abc: 123 });
+    ctx.storage.get.mockImplementation(async () => value);
+    ctx.storage.put.mockImplementation(async (datastore, key, newValue) => {
+      if (typeof newValue !== "string") {
+        throw new Error("Expected storage.put to be given a string");
+      }
+      value = newValue;
+    });
+
+    const config = new OsContextAppConfiguration(ctx);
+
+    const listener = jest.fn();
+    config.addChangeListener("abc", listener);
+
+    await expect(config.get("abc")).resolves.toEqual(123);
+    expect(listener).toHaveBeenCalledTimes(0);
+
+    await config.set("abc", 1);
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    config.removeChangeListener("abc", listener);
+    await config.set("abc", 2);
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it("supports adding/removing listeners during listener callback", async () => {
+    const ctx = makeMockContext();
+
+    let value = JSON.stringify({ abc: 123 });
+    ctx.storage.get.mockImplementation(async () => value);
+    ctx.storage.put.mockImplementation(async (datastore, key, newValue) => {
+      if (typeof newValue !== "string") {
+        throw new Error("Expected storage.put to be given a string");
+      }
+      value = newValue;
+    });
+
+    const config = new OsContextAppConfiguration(ctx);
+
+    const listener1 = jest.fn();
+    const listener2 = jest.fn();
+    listener1.mockImplementation(() => {
+      config.removeChangeListener("abc", listener1);
+      config.addChangeListener("abc", listener2);
+    });
+    config.addChangeListener("abc", listener1);
+
+    await expect(config.get("abc")).resolves.toEqual(123);
+    expect(listener1).toHaveBeenCalledTimes(0);
+    expect(listener2).toHaveBeenCalledTimes(0);
+
+    await config.set("abc", 1);
+    expect(listener1).toHaveBeenCalledTimes(1);
+    expect(listener2).toHaveBeenCalledTimes(0);
+
+    await config.set("abc", 2);
+    expect(listener1).toHaveBeenCalledTimes(1);
+    expect(listener2).toHaveBeenCalledTimes(1);
   });
 });

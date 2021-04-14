@@ -42,8 +42,7 @@
     ]
   },
   "resolutions": {
-    "puppeteer-core": "8.0.0",
-    "@electron/universal": "https://github.com/foxglove/universal.git#commit=3e22e99bc0fbd18fd98815b1fb4a800b71ec30b4"
+    "puppeteer-core": "8.0.0"
   },
   "devDependencies": {
     "@actions/exec": "1.0.4",
@@ -73,7 +72,7 @@
     "colors": "1.4.0",
     "crypto-browserify": "3.12.0",
     "css-loader": "5.2.0",
-    "electron": "12.0.2",
+    "electron": "13.0.0-beta.13",
     "electron-builder": "22.10.5",
     "electron-devtools-installer": "3.1.1",
     "electron-notarize": "1.0.0",

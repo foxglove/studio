@@ -23,10 +23,10 @@ import React, {
   useMemo,
   MouseEvent,
 } from "react";
-import ReactDOM from "react-dom";
 import { useDispatch } from "react-redux";
 import { Time } from "rosbag";
 import styled from "styled-components";
+import { useDebounce } from "use-debounce";
 import { v4 as uuidv4 } from "uuid";
 
 import { clearHoverValue, setHoverValue } from "@foxglove-studio/app/actions/hoverValue";
@@ -41,15 +41,19 @@ import {
 import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipeline";
 import TimeBasedChartLegend from "@foxglove-studio/app/components/TimeBasedChart/TimeBasedChartLegend";
 import makeGlobalState from "@foxglove-studio/app/components/TimeBasedChart/makeGlobalState";
+import { useTooltip } from "@foxglove-studio/app/components/Tooltip";
+import useDeepChangeDetector from "@foxglove-studio/app/hooks/useDeepChangeDetector";
 import mixins from "@foxglove-studio/app/styles/mixins.module.scss";
 import { isBobject } from "@foxglove-studio/app/util/binaryObjects";
 import filterMap from "@foxglove-studio/app/util/filterMap";
-import { useDeepChangeDetector } from "@foxglove-studio/app/util/hooks";
 import { defaultGetHeaderStamp } from "@foxglove-studio/app/util/synchronizeMessages";
 import { maybeGetBobjectHeaderStamp } from "@foxglove-studio/app/util/time";
+import Logger from "@foxglove/log";
 
 import HoverBar from "./HoverBar";
-import TimeBasedChartTooltip from "./TimeBasedChartTooltip";
+import TimeBasedChartTooltipContent from "./TimeBasedChartTooltipContent";
+
+const log = Logger.getLogger(__filename);
 
 export type TooltipItem = {
   queriedData: MessagePathDataItem[];
@@ -67,7 +71,7 @@ export const getTooltipItemForMessageHistoryItem = (item: MessageAndData): Toolt
 
 export type TimeBasedChartTooltipData = {
   x: number;
-  y: number | string;
+  y: number;
   datasetKey?: string;
   item: TooltipItem;
   path: string;
@@ -116,6 +120,8 @@ type FollowPlaybackState = Readonly<{
   xOffsetMin: number; // -1 means the left edge of the plot is one second before the current time.
   xOffsetMax: number; // 1 means the right edge of the plot is one second after the current time.
 }>;
+
+type ChartComponentProps = ComponentProps<typeof ChartComponent>;
 
 // Chartjs typings use _null_ to indicate _gaps_ in the dataset
 // eslint-disable-next-line no-restricted-syntax
@@ -168,10 +174,9 @@ export function filterDatasets(
         return datum;
       }
 
-      const pixelXDistance = (datum.x - prev.x) * pixelPerXValue;
-      const pixelYDistance = (datum.y - prev.y) * pixelPerYValue;
-
-      if (pixelXDistance < 4 && pixelYDistance < 4) {
+      const pixelXDistance = Math.abs((datum.x - prev.x) * pixelPerXValue);
+      const pixelYDistance = Math.abs((datum.y - prev.y) * pixelPerYValue);
+      if (pixelXDistance < 3 && pixelYDistance < 3) {
         return;
       }
 
@@ -222,13 +227,7 @@ export type Props = {
     [key: string]: boolean;
   };
   datasetId?: string;
-  onClick?: (
-    ev: React.MouseEvent<HTMLCanvasElement>,
-    datalabel: unknown,
-    values: {
-      [axis: string]: number;
-    },
-  ) => void;
+  onClick?: ChartComponentProps["onClick"];
   saveCurrentView?: (minY: number, maxY: number, width?: number) => void;
   // If the x axis represents playback time ("timestamp"), the hover cursor will be synced.
   // Note, this setting should not be used for other time values.
@@ -261,7 +260,6 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     xAxisIsPlaybackTime,
   } = props;
 
-  const tooltipRef = useRef<HTMLDivElement>(ReactNull);
   const hasUnmounted = useRef<boolean>(false);
   const canvasContainer = useRef<HTMLDivElement>(ReactNull);
 
@@ -453,32 +451,33 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     [setHasVerticalExclusiveZoom, setHasBothAxesZoom],
   );
 
-  const removeTooltip = useCallback(() => {
-    if (tooltipRef.current) {
-      ReactDOM.unmountComponentAtNode(tooltipRef.current);
-    }
-    if (tooltipRef.current?.parentNode) {
-      tooltipRef.current.parentNode.removeChild(tooltipRef.current);
-      tooltipRef.current = ReactNull;
-    }
-  }, []);
-
   // Always clean up tooltips when unmounting.
   useEffect(() => {
     return () => {
       hasUnmounted.current = true;
-      removeTooltip();
+      setActiveTooltip(undefined);
     };
-  }, [removeTooltip]);
+  }, []);
 
   // We use a custom tooltip so we can style it more nicely, and so that it can break
   // out of the bounds of the canvas, in case the panel is small.
+  const [activeTooltip, setActiveTooltip] = useState<{
+    x: number;
+    y: number;
+    data: TimeBasedChartTooltipData;
+  }>();
+  const { tooltip } = useTooltip({
+    shown: true,
+    noPointerEvents: true,
+    targetPosition: { x: activeTooltip?.x ?? 0, y: activeTooltip?.y ?? 0 },
+    contents: activeTooltip && <TimeBasedChartTooltipContent tooltip={activeTooltip.data} />,
+  });
   const updateTooltip = useCallback(
     (element?: RpcElement) => {
       // This is an async callback, so it can fire after this component is unmounted. Make sure that we remove the
       // tooltip if this fires after unmount.
       if (!element || hasUnmounted.current) {
-        return removeTooltip();
+        return setActiveTooltip(undefined);
       }
 
       // Locate the tooltip for our data
@@ -488,29 +487,19 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
         (item) => item.x === element.data?.x && item.y === element.data?.y,
       );
       if (!tooltipData) {
-        return removeTooltip();
+        return setActiveTooltip(undefined);
       }
 
-      if (!tooltipRef.current) {
-        tooltipRef.current = document.createElement("div");
-        canvasContainer.current?.parentNode?.appendChild(tooltipRef.current);
+      const canvasRect = canvasContainer.current?.getBoundingClientRect();
+      if (canvasRect) {
+        setActiveTooltip({
+          x: canvasRect.left + element.view.x,
+          y: canvasRect.top + element.view.y,
+          data: tooltipData,
+        });
       }
-
-      ReactDOM.render(
-        <TimeBasedChartTooltip tooltip={tooltipData}>
-          <div
-            style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              transform: `translate(${element.view.x}px, ${element.view.y}px)`,
-            }}
-          />
-        </TimeBasedChartTooltip>,
-        tooltipRef.current,
-      );
     },
-    [removeTooltip, tooltips],
+    [tooltips],
   );
 
   const [hoverComponentId] = useState(() => uuidv4());
@@ -532,9 +521,9 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
   );
 
   const onMouseOut = useCallback(() => {
-    removeTooltip();
+    setActiveTooltip(undefined);
     clearGlobalHoverTime();
-  }, [clearGlobalHoverTime, removeTooltip]);
+  }, [clearGlobalHoverTime]);
 
   // currentScalesRef is used because we don't need to change this callback content when the scales change
   // this does mean that scale changes don't remove tooltips - which is a future enhancement
@@ -542,27 +531,27 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     (event: MouseEvent<HTMLDivElement>) => {
       const xScale = currentScalesRef.current?.x;
       if (!xScale || !canvasContainer.current) {
-        removeTooltip();
+        setActiveTooltip(undefined);
         clearGlobalHoverTime();
         return;
       }
 
       const canvasContainerRect = canvasContainer.current.getBoundingClientRect();
       const mouseX = event.pageX - canvasContainerRect.left;
-      const pixels = xScale.right - xScale.left;
+      const pixels = xScale.pixelMax - xScale.pixelMin;
       const range = xScale.max - xScale.min;
-      const xVal = (range / pixels) * (mouseX - xScale.left) + xScale.min;
+      const xVal = (range / pixels) * (mouseX - xScale.pixelMin) + xScale.min;
 
       const xInBounds = xVal >= xScale.min && xVal <= xScale.max;
       if (!xInBounds || isNaN(xVal)) {
-        removeTooltip();
+        setActiveTooltip(undefined);
         clearGlobalHoverTime();
         return;
       }
 
       setGlobalHoverTime(xVal);
     },
-    [setGlobalHoverTime, removeTooltip, clearGlobalHoverTime],
+    [setGlobalHoverTime, clearGlobalHoverTime],
   );
 
   const plugins = useMemo<ChartOptions["plugins"]>(() => {
@@ -680,47 +669,45 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     } as ScaleOptions;
   }, [yAxes]);
 
-  // changing the dataset bounds can change the current scales which then cache busts the
-  // dataMemo which could then change the scales. This creates a state update cycle and slows down rendering.
-  // Instead we
-  const [bustDataMemo, setBustDataMemo] = useState(0);
-  useEffect(() => {
-    if (isUserInteraction.current) {
-      setBustDataMemo((old) => ++old);
-    }
-  }, [currentScales]);
+  const filterDatasetsCached = useCallback(
+    (unfilteredDatasets: typeof datasets) => {
+      let bounds:
+        | { x: { min: number; max: number }; y: { min: number; max: number } }
+        | undefined = undefined;
+      if (currentScales?.x && currentScales?.y) {
+        bounds = {
+          x: {
+            min: currentScales.x.min,
+            max: currentScales.x.max,
+          },
+          y: {
+            min: currentScales.y.min,
+            max: currentScales.y.max,
+          },
+        };
+      }
+
+      return filterDatasets(unfilteredDatasets, linesToHide, width, height, bounds);
+    },
+    [currentScales, height, linesToHide, width],
+  );
+
+  // avoid re-filtering datasets on every change to scales, etc
+  // it is ok to filter the datasets once the view has changed/stabilized
+  // without filtering you can end up in a cascading update cycle from scales changing
+  // causing dataFiltered to change, which causes scales to change
+  const [filterDatasetsDebounced] = useDebounce(filterDatasetsCached, 250);
 
   // Filter the dataset down to what can be shows to the user
   // this ignores out of bounds points and points that are too close together
   // we use either automatically calculated bounds (xScale) or the currentScale
   // if the user is manually controlling the component
-  const dataMemo = useMemo(() => {
-    bustDataMemo; // to appease exchaustive lint hooks
-    const currentScalesLocal = currentScalesRef.current;
-
-    let bounds:
-      | { x: { min: number; max: number }; y: { min: number; max: number } }
-      | undefined = undefined;
-    if (currentScalesLocal?.x && currentScalesLocal?.y) {
-      bounds = {
-        x: {
-          min: currentScalesLocal.x.min,
-          max: currentScalesLocal.x.max,
-        },
-        y: {
-          min: currentScalesLocal.y.min,
-          max: currentScalesLocal.y.max,
-        },
-      };
-    }
-
-    const filtered = filterDatasets(datasets, linesToHide, width, height, bounds);
-
+  const dataFiltered = useMemo(() => {
     return {
       labels,
-      datasets: filtered,
+      datasets: filterDatasetsDebounced(datasets),
     };
-  }, [bustDataMemo, datasets, linesToHide, width, height, labels]);
+  }, [datasets, filterDatasetsDebounced, labels]);
 
   const options = useMemo<ChartOptions>(() => {
     return {
@@ -758,16 +745,19 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
 
   // we don't memo this because either options or data is likely to change with each render
   // maybe one day someone perfs this and decides to memo?
-  const chartProps: ComponentProps<typeof ChartComponent> = {
+  const chartProps: ChartComponentProps = {
     type,
     width,
     height,
     options,
-    data: dataMemo,
+    data: dataFiltered,
+    onClick: props.onClick,
     onScalesUpdate: onScalesUpdate,
     onChartUpdate,
     onHover,
   };
+
+  useEffect(() => log.debug(`<TimeBasedChart> (datasetId=${datasetId})`), [datasetId]);
 
   // avoid rendering if width/height are 0 - usually on initial mount
   // so we don't trigger onChartUpdate if we know we will immediately resize
@@ -777,6 +767,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
 
   return (
     <div style={{ display: "flex", width: "100%" }}>
+      {tooltip}
       <div style={{ display: "flex", width }}>
         <SRoot onDoubleClick={onResetZoom}>
           <HoverBar

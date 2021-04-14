@@ -10,17 +10,9 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { ActionButton } from "@fluentui/react";
+import { ActionButton, Modal } from "@fluentui/react";
 import AlertIcon from "@mdi/svg/svg/alert.svg";
-import {
-  ReactElement,
-  useState,
-  CSSProperties,
-  useEffect,
-  useMemo,
-  useRef,
-  useCallback,
-} from "react";
+import { ReactElement, useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { DndProvider } from "react-dnd";
 import HTML5Backend from "react-dnd-html5-backend";
 import { Provider, useDispatch } from "react-redux";
@@ -32,7 +24,6 @@ import { redoLayoutChange, undoLayoutChange } from "@foxglove-studio/app/actions
 import { importPanelLayout, loadLayout } from "@foxglove-studio/app/actions/panels";
 import AddPanelMenu from "@foxglove-studio/app/components/AddPanelMenu";
 import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
-import { ExperimentalFeaturesModal } from "@foxglove-studio/app/components/ExperimentalFeaturesModal";
 import GlobalKeyListener from "@foxglove-studio/app/components/GlobalKeyListener";
 import GlobalVariablesMenu from "@foxglove-studio/app/components/GlobalVariablesMenu";
 import HelpModal from "@foxglove-studio/app/components/HelpModal";
@@ -46,6 +37,7 @@ import NotificationDisplay from "@foxglove-studio/app/components/NotificationDis
 import PanelLayout from "@foxglove-studio/app/components/PanelLayout";
 import PlaybackControls from "@foxglove-studio/app/components/PlaybackControls";
 import PlayerManager from "@foxglove-studio/app/components/PlayerManager";
+import Preferences from "@foxglove-studio/app/components/Preferences";
 import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToBodyComponent";
 import ShortcutsModal from "@foxglove-studio/app/components/ShortcutsModal";
 import SpinningLoadingIcon from "@foxglove-studio/app/components/SpinningLoadingIcon";
@@ -63,6 +55,7 @@ import {
   PlayerSourceDefinition,
   usePlayerSelection,
 } from "@foxglove-studio/app/context/PlayerSelectionContext";
+import WindowGeometryContext from "@foxglove-studio/app/context/WindowGeometryContext";
 import experimentalFeatures from "@foxglove-studio/app/experimentalFeatures";
 import welcomeLayout from "@foxglove-studio/app/layouts/welcomeLayout";
 import { PlayerPresence } from "@foxglove-studio/app/players/types";
@@ -114,11 +107,6 @@ function Root() {
     }
   }, [dispatch, setPlayerFromDemoBag, isMounted]);
 
-  // On MacOS we use inset window controls, when the window is full-screen these controls are not present
-  // We detect the full screen state and adjust our rendering accordingly
-  // Note: this does not removed the handlers so should be done at the highest component level
-  const [isFullScreen, setFullScreen] = useState(false);
-
   const handleInternalLink = useCallback((event: React.MouseEvent, href: string) => {
     if (href === "#help:message-path-syntax") {
       event.preventDefault();
@@ -134,9 +122,6 @@ function Root() {
     // Add a hook for integration tests.
     (window as TestableWindow).setPanelLayout = (payload: ImportPanelLayoutPayload) =>
       dispatch(importPanelLayout(payload));
-
-    OsContextSingleton?.addIpcEventListener("enter-full-screen", () => setFullScreen(true));
-    OsContextSingleton?.addIpcEventListener("leave-full-screen", () => setFullScreen(false));
 
     // For undo/redo events, first try the browser's native undo/redo, and if that is disabled, then
     // undo/redo the layout history. Note that in GlobalKeyListener we also handle the keyboard
@@ -163,14 +148,6 @@ function Root() {
     );
     OsContextSingleton?.addIpcEventListener("open-welcome-layout", () => openWelcomeLayout());
   }, [dispatch, openWelcomeLayout]);
-
-  const toolbarStyle = useMemo<CSSProperties | undefined>(() => {
-    const insetWindowControls = OsContextSingleton?.platform === "darwin" && !isFullScreen;
-    if (insetWindowControls) {
-      return { marginLeft: "78px", borderLeft: "2px groove #29292f" };
-    }
-    return undefined;
-  }, [isFullScreen]);
 
   const appConfiguration = useAppConfiguration();
 
@@ -227,7 +204,7 @@ function Root() {
           </RenderToBodyComponent>
         )}
 
-        <Toolbar style={toolbarStyle} onDoubleClick={OsContextSingleton?.handleToolbarDoubleClick}>
+        <Toolbar onDoubleClick={OsContextSingleton?.handleToolbarDoubleClick}>
           <SToolbarItem>
             <TinyConnectionPicker />
           </SToolbarItem>
@@ -256,9 +233,13 @@ function Root() {
               }}
               onClick={() => setPreferencesOpen(true)}
             />
-            {preferencesOpen && (
-              <ExperimentalFeaturesModal onRequestClose={() => setPreferencesOpen(false)} />
-            )}
+            <Modal
+              styles={{ main: { width: "80vw", maxWidth: 850, height: "80vh", maxHeight: 600 } }}
+              isOpen={preferencesOpen}
+              onDismiss={() => setPreferencesOpen(false)}
+            >
+              <Preferences />
+            </Modal>
           </SToolbarItem>
         </Toolbar>
         <PanelLayout />
@@ -290,10 +271,23 @@ export default function App(): ReactElement {
     },
   ];
 
+  // On MacOS we use inset window controls, when the window is full-screen these controls are not present
+  // We detect the full screen state and adjust our rendering accordingly
+  // Note: this does not removed the handlers so should be done at the highest component level
+  const [isFullScreen, setFullScreen] = useState(false);
+  useEffect(() => {
+    OsContextSingleton?.addIpcEventListener("enter-full-screen", () => setFullScreen(true));
+    OsContextSingleton?.addIpcEventListener("leave-full-screen", () => setFullScreen(false));
+  }, []);
+
+  const insetToolbar = OsContextSingleton?.platform === "darwin" && !isFullScreen;
+  const windowGeometry = useMemo(() => ({ insetToolbar }), [insetToolbar]);
+
   const providers = [
     /* eslint-disable react/jsx-key */
     <OsContextAppConfigurationProvider />,
     <OsContextLayoutStorageProvider />,
+    <WindowGeometryContext.Provider value={windowGeometry} />,
     <Provider store={globalStore} />,
     <AnalyticsProvider />,
     <ExperimentalFeaturesLocalStorageProvider features={experimentalFeatures} />,

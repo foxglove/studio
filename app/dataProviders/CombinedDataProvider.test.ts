@@ -36,8 +36,8 @@ import RenameDataProvider from "@foxglove-studio/app/dataProviders/RenameDataPro
 import { mockExtensionPoint } from "@foxglove-studio/app/dataProviders/mockExtensionPoint";
 import { InitializationResult } from "@foxglove-studio/app/dataProviders/types";
 import { Bobject, BobjectMessage } from "@foxglove-studio/app/players/types";
-import delay from "@foxglove-studio/app/shared/delay";
 import { wrapJsObject } from "@foxglove-studio/app/util/binaryObjects";
+import delay from "@foxglove-studio/app/util/delay";
 import { SECOND_SOURCE_PREFIX } from "@foxglove-studio/app/util/globalConstants";
 import sendNotification from "@foxglove-studio/app/util/sendNotification";
 import { fromMillis } from "@foxglove-studio/app/util/time";
@@ -376,6 +376,7 @@ describe("CombinedDataProvider", () => {
       expect(await combinedProvider.initialize(mockExtensionPoint().extensionPoint)).toEqual({
         start: { nsec: 0, sec: 100 },
         end: { nsec: 0, sec: 104 },
+        connections: [],
         topics: [
           { datatype: "some_datatype", name: "/some_topic1", numMessages: undefined },
           {
@@ -456,6 +457,7 @@ describe("CombinedDataProvider", () => {
       expect(await combinedProvider.initialize(mockExtensionPoint().extensionPoint)).toEqual({
         start: { nsec: 0, sec: 101 },
         end: { nsec: 0, sec: 101 },
+        connections: [],
         topics: [
           { name: "/some_topic", datatype: "some_datatype" },
           { name: "/some_topic_2", datatype: "some_datatype_2" },

@@ -71,7 +71,7 @@ const props: ComponentProps<typeof ChartComponent> = {
       y: {
         ticks: {
           font: {
-            family: `"Roboto Mono", Menlo, Inconsolata, "Courier New", Courier, monospace`,
+            family: `"Roboto Mono"`,
             size: 10,
           },
           color: "#eee",
@@ -86,7 +86,7 @@ const props: ComponentProps<typeof ChartComponent> = {
       x: {
         ticks: {
           font: {
-            family: `"Roboto Mono", Menlo, Inconsolata, "Courier New", Courier, monospace`,
+            family: `"Roboto Mono"`,
             size: 10,
           },
           color: "#eee",
@@ -150,8 +150,8 @@ function DatalabelClickExample() {
       </div>
       <ChartComponent
         {...propsWithDatalabels}
-        onClick={(datalabel) => {
-          setClickedDatalabel(datalabel ?? undefined);
+        onClick={(ev) => {
+          setClickedDatalabel(ev.datalabel);
         }}
       />
     </div>

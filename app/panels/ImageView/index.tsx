@@ -33,13 +33,14 @@ import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipel
 import Panel from "@foxglove-studio/app/components/Panel";
 import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
 import { useExperimentalFeature } from "@foxglove-studio/app/context/ExperimentalFeaturesContext";
+import useDeepMemo from "@foxglove-studio/app/hooks/useDeepMemo";
+import useShallowMemo from "@foxglove-studio/app/hooks/useShallowMemo";
 import { Message, TypedMessage } from "@foxglove-studio/app/players/types";
 import inScreenshotTests from "@foxglove-studio/app/stories/inScreenshotTests";
 import colors from "@foxglove-studio/app/styles/colors.module.scss";
 import { CameraInfo } from "@foxglove-studio/app/types/Messages";
 import { SaveConfig } from "@foxglove-studio/app/types/panels";
 import filterMap from "@foxglove-studio/app/util/filterMap";
-import { useShallowMemo, useDeepMemo } from "@foxglove-studio/app/util/hooks";
 import naturalSort from "@foxglove-studio/app/util/naturalSort";
 import { getTopicsByTopicName } from "@foxglove-studio/app/util/selectors";
 import { colors as sharedColors } from "@foxglove-studio/app/util/sharedStyleConstants";
@@ -99,8 +100,6 @@ const TopicTimestampSpan = styled.span`
 const SEmptyStateWrapper = styled.div`
   width: 100%;
   height: 100%;
-  position: absolute;
-  z-index: 200;
   background: ${sharedColors.DARK2};
   display: flex;
   align-items: center;
@@ -162,6 +161,13 @@ function renderEmptyState(
     [topic: string]: Message[];
   },
 ) {
+  if (cameraTopic === "") {
+    return (
+      <SEmptyStateWrapper>
+        <EmptyState>Select a topic to view images</EmptyState>
+      </SEmptyStateWrapper>
+    );
+  }
   return (
     <SEmptyStateWrapper>
       <EmptyState>
@@ -355,7 +361,7 @@ function ImageView(props: Props) {
           toggleComponent={
             <ToggleComponent
               dataTest={"topics-dropdown"}
-              text={cameraTopic || "no image topics yet"}
+              text={cameraTopic || "no image topics"}
               disabled
             />
           }
@@ -363,21 +369,30 @@ function ImageView(props: Props) {
       );
     }
 
-    const items = [...imageTopicsByNamespace.keys()].sort().map((group) => {
-      const imageTopics = imageTopicsByNamespace.get(group);
+    const items = [...imageTopicsByNamespace.keys()].sort().map((namespace) => {
+      const imageTopics = imageTopicsByNamespace.get(namespace);
       if (!imageTopics) {
         return ReactNull;
       }
+
+      // If a namespace only contains itself as an entry, just render that item instead of a submenu.
+      if (imageTopics.length === 1 && imageTopics[0]?.name === namespace) {
+        return (
+          <DropdownItem key={namespace} value={namespace}>
+            {namespace}
+          </DropdownItem>
+        );
+      }
+
       imageTopics.sort(naturalSort("name"));
 
-      // place rectified topic above other imageTopics
       return (
         <SubMenu
           direction="right"
-          key={group}
-          text={group}
-          checked={group === cameraNamespace}
-          dataTest={group.substr(1)}
+          key={namespace}
+          text={namespace}
+          checked={namespace === cameraNamespace}
+          dataTest={namespace.substr(1)}
         >
           {imageTopics.map((topic) => {
             return (
@@ -396,7 +411,14 @@ function ImageView(props: Props) {
     });
     return (
       <Dropdown
-        toggleComponent={<ToggleComponent dataTest={"topics-dropdown"} text={cameraTopic} />}
+        toggleComponent={
+          <ToggleComponent
+            dataTest={"topics-dropdown"}
+            text={cameraTopic.length > 0 ? cameraTopic : "select a topic"}
+          />
+        }
+        value={cameraTopic}
+        onChange={(value) => onChangeCameraTopic(value)}
       >
         {items}
       </Dropdown>
@@ -589,14 +611,18 @@ function ImageView(props: Props) {
 
   const toolbar = useMemo(() => {
     return (
-      <PanelToolbar floating helpContent={helpContent} menuContent={menuContent}>
+      <PanelToolbar
+        floating={cameraTopic !== ""}
+        helpContent={helpContent}
+        menuContent={menuContent}
+      >
         <div className={style.controls}>
           {imageTopicDropdown}
           {markerDropdown}
         </div>
       </PanelToolbar>
     );
-  }, [imageTopicDropdown, markerDropdown, menuContent]);
+  }, [imageTopicDropdown, markerDropdown, menuContent, cameraTopic]);
 
   const renderBottomBar = () => {
     const canTransformMarkers = canTransformMarkersByTopic(cameraTopic);
@@ -661,7 +687,7 @@ ImageView.defaultConfig = {
   cameraTopic: "",
   enabledMarkerTopics: [],
   customMarkerTopicOptions: [],
-  scale: 0.2,
+  scale: 1,
   transformMarkers: false,
   synchronize: false,
   mode: "fit",
