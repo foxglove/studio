@@ -37,6 +37,7 @@ const devServerConfig: WebpackConfiguration = {
       return /\.webpack[\\/](main[\\/](?!.*hot-update)|package\.json)/.test(filePath);
     },
     hot: true,
+    disableHostCheck: true,
   },
   plugins: [
     new CleanWebpackPlugin(),
