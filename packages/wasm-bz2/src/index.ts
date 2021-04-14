@@ -7,12 +7,19 @@
 
 import ModuleFactory, { BZ2Module } from "@foxglove/wasm-bz2/dist/module";
 
-import fileUriToPath from "./fileuritopath";
-
 const wasmUrl = new URL("../dist/module.wasm", import.meta.url);
 
 let loaded = false;
 let Module: BZ2Module;
+
+function urlToPath(url: URL): string {
+  if (url.protocol !== "file:") {
+    return url.pathname;
+  }
+  // On Windows, new URL("file:///C:/wasm-bz2/dist/module.wasm").pathname -> "/C:/wasm-bz2/dist/module.wasm"
+  // In this case, strip the leading `/` off to transform it into a regular filesystem path
+  return url.pathname.replace(/^\/([A-Z]):\//, "$1:/");
+}
 
 const isLoaded = new Promise<void>((resolve) => {
   ModuleFactory({
@@ -21,9 +28,8 @@ const isLoaded = new Promise<void>((resolve) => {
       // In browsers it will try to load the path via _fetch_, however, if it detects file:// prefix it assumes
       // that _fetch_ won't work and tries to fall-back to loading without _fetch_ which fails since we do not
       // provide a fallback function.
-      // For file:// URLs, explicitly transform to a filesystem path. Otherwise, return the pathname
-      // which can be properly fetched
-      return wasmUrl.protocol === "file:" ? fileUriToPath(wasmUrl.toString()) : wasmUrl.pathname;
+      // Use a helper method that returns `wasmUrl.pathname` with an extra check for Windows filesystem paths
+      return urlToPath(wasmUrl);
     },
     onRuntimeInitialized: () => {
       loaded = true;
