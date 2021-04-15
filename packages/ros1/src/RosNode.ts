@@ -4,16 +4,19 @@
 
 import { EventEmitter } from "eventemitter3";
 
-import { HttpServer } from "@foxglove/xmlrpc";
+import { HttpServer, XmlRpcFault, XmlRpcValue } from "@foxglove/xmlrpc";
 
 import { LoggerService } from "./LoggerService";
 import { Publication } from "./Publication";
 import { RosFollower } from "./RosFollower";
 import { RosFollowerClient } from "./RosFollowerClient";
 import { RosMasterClient } from "./RosMasterClient";
+import { RosParamClient } from "./RosParamClient";
 import { Subscription } from "./Subscription";
 import { TcpConnection } from "./TcpConnection";
 import { TcpSocketCreate, TcpServer, TcpAddress, NetworkInterface } from "./TcpTypes";
+import { RosXmlRpcResponse, RosXmlRpcResponseOrFault } from "./XmlRpcTypes";
+import { isEmptyPlainObject } from "./objectTests";
 
 export type RosGraph = {
   publishers: Map<string, Set<string>>; // Maps topic names to arrays of nodes publishing each topic
@@ -35,9 +38,11 @@ export class RosNode extends EventEmitter {
   readonly pid: number;
 
   rosMasterClient: RosMasterClient;
+  rosParamClient: RosParamClient;
   rosFollower: RosFollower;
   subscriptions = new Map<string, Subscription>();
   publications = new Map<string, Publication>();
+  parameters = new Map<string, XmlRpcValue>();
 
   private _running = true;
   private _tcpSocketCreate: TcpSocketCreate;
@@ -61,6 +66,7 @@ export class RosNode extends EventEmitter {
     this.hostname = options.hostname;
     this.pid = options.pid;
     this.rosMasterClient = new RosMasterClient(options.rosMasterUri);
+    this.rosParamClient = new RosParamClient(options.rosMasterUri);
     this.rosFollower = new RosFollower(this, options.httpServer);
     this._tcpSocketCreate = options.tcpSocketCreate;
     this._tcpServer = options.tcpServer;
@@ -79,6 +85,10 @@ export class RosNode extends EventEmitter {
     this._tcpServer?.close();
     this.rosFollower.close();
 
+    if (this.parameters.size > 0) {
+      this.unsubscribeAllParams();
+    }
+
     for (const subTopic of Array.from(this.subscriptions.keys())) {
       this.unsubscribe(subTopic);
     }
@@ -89,6 +99,7 @@ export class RosNode extends EventEmitter {
 
     this.subscriptions.clear();
     this.publications.clear();
+    this.parameters.clear();
   }
 
   subscribe(options: SubscribeOpts): Subscription {
@@ -130,6 +141,88 @@ export class RosNode extends EventEmitter {
     publication.close();
     this.publications.delete(topic);
     return true;
+  }
+
+  async getParamNames(): Promise<string[]> {
+    const [status, msg, names] = await this.rosParamClient.getParamNames(this.name);
+    if (status !== 1) {
+      throw new Error(`getParamNames returned failure (status=${status}): ${msg}`);
+    }
+    if (!Array.isArray(names)) {
+      throw new Error(`getParamNames returned unrecognized data (${msg})`);
+    }
+    return names as string[];
+  }
+
+  async subscribeParam(key: string): Promise<XmlRpcValue> {
+    const [status, msg, value] = await this.rosParamClient.subscribeParam(
+      this.name,
+      this._callerApi(),
+      key,
+    );
+    if (status !== 1) {
+      throw new Error(`subscribeParam returned failure (status=${status}): ${msg}`);
+    }
+    // rosparam server returns an empty object ({}) if the parameter has not been set yet
+    const adjustedValue = isEmptyPlainObject(value) ? undefined : value;
+    this.parameters.set(key, adjustedValue);
+    return adjustedValue;
+  }
+
+  async unsubscribeParam(key: string): Promise<boolean> {
+    const [status, msg, value] = await this.rosParamClient.unsubscribeParam(
+      this.name,
+      this._callerApi(),
+      key,
+    );
+    if (status !== 1) {
+      throw new Error(`unsubscribeParam returned failure (status=${status}): ${msg}`);
+    }
+    this.parameters.delete(key);
+    const numUnsubscribed = value as number;
+    return numUnsubscribed === 1;
+  }
+
+  async subscribeAllParams(): Promise<Readonly<Map<string, XmlRpcValue>>> {
+    const keys = await this.getParamNames();
+    const res = await this.rosParamClient.subscribeParams(this.name, this._callerApi(), keys);
+    if (res.length !== keys.length) {
+      throw new Error(`subscribeAllParams returned unrecognized data: ${JSON.stringify(res)}`);
+    }
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i] as string;
+      const entry = res[i] as RosXmlRpcResponseOrFault;
+      if (entry instanceof XmlRpcFault) {
+        this._log?.warn?.(`subscribeAllParams errored on "${key}" (${entry})`);
+        continue;
+      }
+      const [status, msg, value] = entry as RosXmlRpcResponse;
+      if (status !== 1) {
+        this._log?.warn?.(`subscribeAllParams failed for "${key}" (status=${status}): ${msg}`);
+        continue;
+      }
+      // rosparam server returns an empty object ({}) if the parameter has not been set yet
+      const adjustedValue = isEmptyPlainObject(value) ? undefined : value;
+      this.parameters.set(key, adjustedValue);
+    }
+    return this.parameters;
+  }
+
+  async unsubscribeAllParams(): Promise<void> {
+    const keys = Array.from(this.parameters.keys());
+    const res = await this.rosParamClient.unsubscribeParams(this.name, this._callerApi(), keys);
+    if (res.length !== keys.length) {
+      throw new Error(`subscribeAllParams returned unrecognized data: ${JSON.stringify(res)}`);
+    }
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i] as string;
+      const [status, msg] = res[i] as RosXmlRpcResponse;
+      if (status !== 1) {
+        this._log?.warn?.(`unsubscribeAllParams failed for "${key}" (status=${status}): ${msg}`);
+        continue;
+      }
+    }
+    this.parameters.clear();
   }
 
   async getPublishedTopics(subgraph?: string): Promise<[topic: string, dataType: string][]> {
