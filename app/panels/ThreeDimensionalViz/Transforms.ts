@@ -149,6 +149,10 @@ class TfStore {
     return result;
   }
 
+  getMaybe(key: string): Transform | undefined {
+    return this._storage.get(stripLeadingSlash(key));
+  }
+
   has(key: string): boolean {
     return this._storage.has(stripLeadingSlash(key));
   }
@@ -198,8 +202,8 @@ export default class Transforms {
     frameId: string,
     rootId: string,
   ): MutablePose | undefined {
-    const tf = this.storage.get(frameId);
-    return tf.apply(output, original, rootId);
+    const tf = this.storage.getMaybe(frameId);
+    return tf?.apply(output, original, rootId);
   }
 
   rootOfTransform(transformID: string): Transform {
@@ -213,6 +217,10 @@ export default class Transforms {
 
   get(key: string): Transform {
     return this.storage.get(key);
+  }
+
+  getMaybe(key: string): Transform | undefined {
+    return this.storage.getMaybe(key);
   }
 
   values(): Array<Transform> {
