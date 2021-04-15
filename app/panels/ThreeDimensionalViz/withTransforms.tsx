@@ -62,11 +62,38 @@ function withTransforms<Props extends any>(ChildComponent: React.ComponentType<P
       // that topic) and transform frames (coordinate frames)
       for (const topic in frame) {
         for (const msg of frame[topic] as Message[]) {
-          const frameId: string | undefined = isBobject(msg.message)
-            ? msg.message.header?.().frame_id?.()
-            : msg.message.header?.frame_id;
-          if (frameId != undefined) {
-            transforms.register(frameId);
+          {
+            const frameId: string | undefined = isBobject(msg.message)
+              ? msg.message.header?.().frame_id?.()
+              : msg.message.header?.frame_id;
+            if (frameId != undefined) {
+              transforms.register(frameId);
+              continue;
+            }
+          }
+          // A hack specific to MarkerArray messages, which don't themselves have headers, but individual markers do.
+          if (isBobject(msg.message)) {
+            const markers = msg.message.markers?.();
+            if (!markers) {
+              continue;
+            }
+            for (const marker of markers) {
+              const frameId = marker.header?.().frame_id?.();
+              if (frameId != undefined) {
+                transforms.register(frameId);
+              }
+            }
+          } else {
+            const markers = msg.message.markers;
+            if (!markers) {
+              continue;
+            }
+            for (const marker of markers) {
+              const frameId = marker.header?.frame_id;
+              if (frameId != undefined) {
+                transforms.register(frameId);
+              }
+            }
           }
         }
       }
