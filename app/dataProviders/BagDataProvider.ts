@@ -32,6 +32,7 @@ import { Message } from "@foxglove-studio/app/players/types";
 import CachedFilelike, { FileReader } from "@foxglove-studio/app/util/CachedFilelike";
 import { bagConnectionsToTopics } from "@foxglove-studio/app/util/bagConnectionsHelper";
 import { getBagChunksOverlapCount } from "@foxglove-studio/app/util/bags";
+import { UserError } from "@foxglove-studio/app/util/errors";
 import sendNotification from "@foxglove-studio/app/util/sendNotification";
 import { fromMillis, subtractTimes } from "@foxglove-studio/app/util/time";
 import Logger from "@foxglove/log";
@@ -126,38 +127,44 @@ export default class BagDataProvider implements DataProvider {
     await decompressLZ4.isLoaded;
     await Bzip2.isLoaded;
 
-    if (bagPath.type === "remoteBagUrl") {
-      const fileReader = new LogMetricsReader(new BrowserHttpReader(bagPath.url), extensionPoint);
-      const remoteReader = new CachedFilelike({
-        fileReader,
-        cacheSizeInBytes: cacheSizeInBytes || 1024 * 1024 * 200, // 200MiB
-        logFn: (message) => {
-          log.info(`CachedFilelike: ${message}`);
-        },
-        keepReconnectingCallback: (reconnecting: boolean) => {
-          extensionPoint.reportMetadataCallback({
-            type: "updateReconnecting",
-            reconnecting,
-          });
-        },
-      });
-      await remoteReader.open(); // Important that we call this first, because it might throw an error if the file can't be read.
-      if (remoteReader.size() === 0) {
-        sendNotification("Cannot play invalid bag", "Bag is 0 bytes in size.", "user", "error");
-        return new Promise(() => {
-          // no-op
-        }); // Just never finish initializing.
-      }
+    try {
+      if (bagPath.type === "remoteBagUrl") {
+        const fileReader = new LogMetricsReader(new BrowserHttpReader(bagPath.url), extensionPoint);
+        const remoteReader = new CachedFilelike({
+          fileReader,
+          cacheSizeInBytes: cacheSizeInBytes || 1024 * 1024 * 200, // 200MiB
+          logFn: (message) => {
+            log.info(`CachedFilelike: ${message}`);
+          },
+          keepReconnectingCallback: (reconnecting: boolean) => {
+            extensionPoint.reportMetadataCallback({
+              type: "updateReconnecting",
+              reconnecting,
+            });
+          },
+        });
+        await remoteReader.open(); // Important that we call this first, because it might throw an error if the file can't be read.
+        if (remoteReader.size() === 0) {
+          sendNotification("Cannot play invalid bag", "Bag is 0 bytes in size.", "user", "error");
+          return new Promise(() => {
+            // no-op
+          }); // Just never finish initializing.
+        }
 
-      this._bag = new Bag(new BagReader(remoteReader));
-      await this._bag.open();
-    } else {
-      if (process.env.NODE_ENV === "test" && typeof bagPath.file !== "string") {
-        // Rosbag's `Bag.open` does not accept files in the "node" environment.
-        this._bag = await open(bagPath.file.name);
+        this._bag = new Bag(new BagReader(remoteReader));
+        await this._bag.open();
       } else {
-        this._bag = await open(bagPath.file);
+        if (process.env.NODE_ENV === "test" && typeof bagPath.file !== "string") {
+          // Rosbag's `Bag.open` does not accept files in the "node" environment.
+          this._bag = await open(bagPath.file.name);
+        } else {
+          this._bag = await open(bagPath.file);
+        }
       }
+    } catch (err) {
+      // Errors in this section come from invalid user data, so we don't want them to be reported as
+      // crashes.
+      throw new UserError(err);
     }
 
     const { startTime, endTime, chunkInfos } = this._bag;
