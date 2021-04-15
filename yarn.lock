@@ -1670,7 +1670,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@emotion/hash@npm:0.8.0":
+"@emotion/hash@npm:0.8.0, @emotion/hash@npm:^0.8.0":
   version: 0.8.0
   resolution: "@emotion/hash@npm:0.8.0"
   checksum: 8fd781e18428745d6c7121bebf3965cad12c61f3bd5fb773e46f16f1d7b7ae1346770df438fcfe8bc73ecf6762a54baef7cf259a694575d4f06cabb79ebcf7c0
@@ -1693,6 +1693,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@emotion/memoize@npm:^0.7.4":
+  version: 0.7.5
+  resolution: "@emotion/memoize@npm:0.7.5"
+  checksum: 09f5290283c50ae32f0808bebacf7eaac7ecdbd799a27698479bd03821f3acbd2ac512adcf0ae43394fed804007d6cd18de0c49475a14cd020d5f18fc7ab72bf
+  languageName: node
+  linkType: hard
+
 "@emotion/serialize@npm:^0.11.15, @emotion/serialize@npm:^0.11.16":
   version: 0.11.16
   resolution: "@emotion/serialize@npm:0.11.16"
@@ -1703,6 +1710,19 @@ __metadata:
     "@emotion/utils": 0.11.3
     csstype: ^2.5.7
   checksum: b7d9a94a039ea5e86b0daccc29f0c40fbbda7004b1fde9ee14be38463c3aaabdd027b38c5c0e580f66883fb6e3b49160292843b0e14efe49e662a520c38f4c15
+  languageName: node
+  linkType: hard
+
+"@emotion/serialize@npm:^1.0.0":
+  version: 1.0.2
+  resolution: "@emotion/serialize@npm:1.0.2"
+  dependencies:
+    "@emotion/hash": ^0.8.0
+    "@emotion/memoize": ^0.7.4
+    "@emotion/unitless": ^0.7.5
+    "@emotion/utils": ^1.0.0
+    csstype: ^3.0.2
+  checksum: 7dd9ea85105dcc04703b61c629e2ac21dcac2c057197cd7bcf83860e6441d07eeb0b64ab56b13a5a02e947e9c3e313353e3422bd119324fb56ffa93ba1e0ea9a
   languageName: node
   linkType: hard
 
@@ -1748,7 +1768,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@emotion/unitless@npm:0.7.5, @emotion/unitless@npm:^0.7.4":
+"@emotion/unitless@npm:0.7.5, @emotion/unitless@npm:^0.7.4, @emotion/unitless@npm:^0.7.5":
   version: 0.7.5
   resolution: "@emotion/unitless@npm:0.7.5"
   checksum: 0be366ef09860037ef08aed0450cb5510f4be25886005e2f120f8e8b7385de6b41ac47df5b9bd55781e5153853e9ed5f49aa517dcbad34cc23bd8afb0201932a
@@ -1759,6 +1779,13 @@ __metadata:
   version: 0.11.3
   resolution: "@emotion/utils@npm:0.11.3"
   checksum: b5c3a22204a878eafa8deb362493b48c3f3a7f7ec3e5a18634d14aa8d5c9d8274db0a9d0206b3c124fa170640880fbcda987971699a1cf69355f2cec994da487
+  languageName: node
+  linkType: hard
+
+"@emotion/utils@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@emotion/utils@npm:1.0.0"
+  checksum: 56b2c5a45f1d9fed3f666fe921347ba8755827bdf9471fe768ec5cbec353bef70072a6890768c0f22a43f54c6af1c3aaa3512913c1a6af862c479dbe3e3b45b1
   languageName: node
   linkType: hard
 
@@ -2041,7 +2068,7 @@ __metadata:
     "@types/react-input-autosize": 2.2.0
     "@types/react-outside-click-handler": 1.3.0
     "@types/react-redux": 7.1.16
-    "@types/react-select": 1.2.0
+    "@types/react-select": 4.0.15
     "@types/react-table": 7.0.29
     "@types/react-transition-group": ^4.4.1
     "@types/react-virtualized": 9.21.11
@@ -4771,7 +4798,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:17.0.3, @types/react-dom@npm:>=16.9.0":
+"@types/react-dom@npm:*, @types/react-dom@npm:17.0.3, @types/react-dom@npm:>=16.9.0":
   version: 17.0.3
   resolution: "@types/react-dom@npm:17.0.3"
   dependencies:
@@ -4819,12 +4846,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-select@npm:1.2.0":
-  version: 1.2.0
-  resolution: "@types/react-select@npm:1.2.0"
+"@types/react-select@npm:4.0.15":
+  version: 4.0.15
+  resolution: "@types/react-select@npm:4.0.15"
   dependencies:
+    "@emotion/serialize": ^1.0.0
     "@types/react": "*"
-  checksum: 5e11fd8a0736f811ea995fa57b23832c242a09827ecdf131a85b13e303ff56ad482e4890cec61f0a03590472b964dd2951e948f79057490674bc857133946817
+    "@types/react-dom": "*"
+    "@types/react-transition-group": "*"
+  checksum: 2872242b10d11157cab809898c20e24aa21a0af12f0a8e0cfa919b29dfade52666f77001f70087a5b179f58b6b95d9713708d2e313b0e018963f20a5b720bbe2
   languageName: node
   linkType: hard
 
@@ -4864,7 +4894,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-transition-group@npm:^4.4.1":
+"@types/react-transition-group@npm:*, @types/react-transition-group@npm:^4.4.1":
   version: 4.4.1
   resolution: "@types/react-transition-group@npm:4.4.1"
   dependencies:
