@@ -29,6 +29,7 @@ import {
   ParsedMessageDefinitionsByTopic,
   PlayerPresence,
   PlayerMetricsCollectorInterface,
+  ParameterValue,
 } from "@foxglove-studio/app/players/types";
 import { RosDatatypes } from "@foxglove-studio/app/types/RosDatatypes";
 import { objectValues } from "@foxglove-studio/app/util";
@@ -422,6 +423,15 @@ export default class RosbridgePlayer implements Player {
         });
       }
     }
+  }
+
+  setParameter(key: string, _value: ParameterValue): void {
+    sendNotification(
+      "Parameter editing unsupported",
+      `Cannot set parameter "${key}" with rosbridge, parameter editing is not supported`,
+      "app",
+      "error",
+    );
   }
 
   publish({ topic, msg }: PublishPayload): void {

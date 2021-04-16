@@ -11,22 +11,20 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import CloseIcon from "@mdi/svg/svg/close.svg";
-import { union, without } from "lodash";
-import { ReactElement, useEffect, useMemo, useRef, useState } from "react";
+import { union } from "lodash";
+import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styled, { css } from "styled-components";
 
-import Flex from "@foxglove-studio/app/components/Flex";
 import {
   isActiveElementEditable,
   makeFlashAnimation,
 } from "@foxglove-studio/app/components/GlobalVariablesTable";
-import Icon from "@foxglove-studio/app/components/Icon";
+import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipeline";
 import Panel from "@foxglove-studio/app/components/Panel";
 import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
 import { JSONInput } from "@foxglove-studio/app/components/input/JSONInput";
-import { ValidatedResizingInput } from "@foxglove-studio/app/components/input/ValidatedResizingInput";
 import { usePreviousValue } from "@foxglove-studio/app/hooks/usePreviousValue";
+import { ParameterValue } from "@foxglove-studio/app/players/types";
 import { colors as sharedColors } from "@foxglove-studio/app/util/sharedStyleConstants";
 
 import helpContent from "./index.help.md";
@@ -116,10 +114,18 @@ const SParametersPanel = styled.div`
 `;
 
 function ParametersTable(): ReactElement {
-  const { parameters, setParameter } = {
-    parameters: new Map<string, string | number | boolean | undefined>(),
-    setParameter: (_key: string, _value: unknown) => {},
-  }; //useParameters();
+  const { parameters, setParameter } = useMessagePipeline(
+    useCallback(
+      ({ setParameter: setParam, playerState: { activeData } }) =>
+        activeData
+          ? {
+              parameters: activeData.parameters ?? new Map(),
+              setParameter: setParam,
+            }
+          : { parameters: new Map(), setParameter: undefined },
+      [],
+    ),
+  );
 
   const parameterNames = useMemo(() => Array.from(parameters.keys()), [parameters]);
 
@@ -175,7 +181,7 @@ function ParametersTable(): ReactElement {
                   <JSONInput
                     dataTest={`parameter-value-input-${value}`}
                     value={value}
-                    onChange={(newVal) => setParameter(name, newVal)}
+                    onChange={(newVal) => setParameter?.(name, newVal as ParameterValue)}
                   />
                 </td>
                 {/* <td width="100%">

@@ -61,6 +61,8 @@ export interface Player {
   // new data, which might in turn trigger a backfill of messages.
   setSubscriptions(subscriptions: SubscribePayload[]): void;
   setPublishers(publishers: AdvertisePayload[]): void;
+  // Modify a remote parameter such as a rosparam.
+  setParameter(key: string, value: ParameterValue): void;
   // If the Player supports publishing (i.e. PlayerState#capabilities contains
   // PlayerCapabilities.advertise), publish a message.
   publish(request: PublishPayload): void;

@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { EventEmitter } from "eventemitter3";
+import { EventEmitter, ListenerFn } from "eventemitter3";
 
 import { HttpServer, XmlRpcFault, XmlRpcValue } from "@foxglove/xmlrpc";
 
@@ -31,6 +31,23 @@ export type SubscribeOpts = {
   queueSize?: number;
   tcpNoDelay?: boolean;
 };
+
+export declare interface RosNode {
+  on(
+    event: "paramUpdate",
+    listener: (
+      paramKey: string,
+      paramValue: XmlRpcValue,
+      prevParamValue: XmlRpcValue,
+      callerId: string,
+    ) => void,
+  ): this;
+  on(
+    event: "publisherUpdate",
+    listener: (topic: string, publishers: string[], callerId: string) => void,
+  ): this;
+  on(event: string, listener: ListenerFn): this;
+}
 
 export class RosNode extends EventEmitter {
   readonly name: string;
@@ -71,6 +88,19 @@ export class RosNode extends EventEmitter {
     this._tcpSocketCreate = options.tcpSocketCreate;
     this._tcpServer = options.tcpServer;
     this._log = options.log;
+
+    this.rosFollower.on("paramUpdate", (key, value, callerId) => {
+      const prevValue = this.parameters.get(key);
+      this.parameters.set(key, value);
+      this.emit("paramUpdate", key, value, prevValue, callerId);
+    });
+    this.rosFollower.on("publisherUpdate", (topic, publishers, callerId) => {
+      this.emit("publisherUpdate", topic, publishers, callerId);
+
+      // TODO: Subscribe/unsubscribe as necessary
+      // const sub = this.subscriptions.get(topic);
+      // if (sub != undefined) {}
+    });
   }
 
   async start(port?: number): Promise<void> {
@@ -152,6 +182,13 @@ export class RosNode extends EventEmitter {
       throw new Error(`getParamNames returned unrecognized data (${msg})`);
     }
     return names as string[];
+  }
+
+  async setParameter(key: string, value: XmlRpcValue): Promise<void> {
+    const [status, msg] = await this.rosParamClient.setParam(this.name, key, value);
+    if (status !== 1) {
+      throw new Error(`setParam returned failure (status=${status}): ${msg}`);
+    }
   }
 
   async subscribeParam(key: string): Promise<XmlRpcValue> {
