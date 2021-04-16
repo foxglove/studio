@@ -49,6 +49,7 @@ export declare interface RosFollower {
 export class RosFollower extends EventEmitter {
   private _rosNode: RosNode;
   private _server: XmlRpcServer;
+  private _url?: string;
 
   constructor(rosNode: RosNode, httpServer: HttpServer) {
     super();
@@ -57,7 +58,8 @@ export class RosFollower extends EventEmitter {
   }
 
   async start(hostname: string, port?: number): Promise<void> {
-    await this._server.listen(port, hostname, 10);
+    await this._server.listen(port, undefined, 10);
+    this._url = `http://${hostname}:${this._server.port()}/`;
 
     this._server.setHandler("getBusStats", this.getBusStats);
     this._server.setHandler("getBusInfo", this.getBusInfo);
@@ -75,7 +77,7 @@ export class RosFollower extends EventEmitter {
   }
 
   url(): string | undefined {
-    return this._server.url();
+    return this._url;
   }
 
   getBusStats = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
