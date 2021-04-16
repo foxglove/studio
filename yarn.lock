@@ -1928,9 +1928,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fluentui/react@npm:8.10.1":
-  version: 8.10.1
-  resolution: "@fluentui/react@npm:8.10.1"
+"@fluentui/react@npm:8.11.0":
+  version: 8.11.0
+  resolution: "@fluentui/react@npm:8.11.0"
   dependencies:
     "@fluentui/date-time-utilities": ^8.0.2
     "@fluentui/font-icons-mdl2": ^8.0.4
@@ -1950,7 +1950,7 @@ __metadata:
     "@types/react-dom": ">=16.8.0 <18.0.0"
     react: ">=16.8.0 <18.0.0"
     react-dom: ">=16.8.0 <18.0.0"
-  checksum: 760e362e8b719c904f9e0da770a046125d04aa46a0977feee3bcb76a9d9fcf22e5c23bf8081579aa929b99673d439f127be06e2838fa3f38986a05fc30404c87
+  checksum: 95f88f8423d857ccb5ac7f5bb77ef376c17611bd6dfc4534b4cf541f49c594db8a893c9d633018cc5e0aa9db7b1b5b1b3ee077cdfa4f22cde10d7eeb45eaaafe
   languageName: node
   linkType: hard
 
@@ -2011,7 +2011,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove-studio/app@workspace:app"
   dependencies:
-    "@fluentui/react": 8.10.1
+    "@fluentui/react": 8.11.0
     "@fluentui/react-icons-mdl2": 1.0.4
     "@mdi/svg": 5.9.55
     "@storybook/addon-actions": 6.2.5
@@ -2141,7 +2141,6 @@ __metadata:
     use-debounce: 6.0.1
     uuid: 8.3.2
     wasm-lz4: 1.0.0
-    ws: 7.4.4
   languageName: unknown
   linkType: soft
 
@@ -24822,7 +24821,16 @@ typescript@4.2.2:
   languageName: node
   linkType: hard
 
-"ws@npm:7.4.4, ws@npm:^7.2.1, ws@npm:^7.2.3":
+"ws@npm:^6.2.1":
+  version: 6.2.1
+  resolution: "ws@npm:6.2.1"
+  dependencies:
+    async-limiter: ~1.0.0
+  checksum: 35d32b09e28f799f04708c3a7bd9eff469ae63e60543d7e18335f28689228a42ee21210f48de680aad6e5317df76b5b1183d1a1ea4b4d14cb6e0943528f40e76
+  languageName: node
+  linkType: hard
+
+"ws@npm:^7.2.1, ws@npm:^7.2.3":
   version: 7.4.4
   resolution: "ws@npm:7.4.4"
   peerDependencies:
@@ -24834,15 +24842,6 @@ typescript@4.2.2:
     utf-8-validate:
       optional: true
   checksum: ad08761ed753cdd3f7172e9a9efc7d74e7e196623cace2380e5f74ff0abd16196e03223bd4148a34278dcbc653ee3841994635419281cbf303b3f22c589e2ec4
-  languageName: node
-  linkType: hard
-
-"ws@npm:^6.2.1":
-  version: 6.2.1
-  resolution: "ws@npm:6.2.1"
-  dependencies:
-    async-limiter: ~1.0.0
-  checksum: 35d32b09e28f799f04708c3a7bd9eff469ae63e60543d7e18335f28689228a42ee21210f48de680aad6e5317df76b5b1183d1a1ea4b4d14cb6e0943528f40e76
   languageName: node
   linkType: hard
 
