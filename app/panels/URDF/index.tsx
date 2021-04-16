@@ -99,27 +99,27 @@ function URDF() {
     if (models.length > 0) {
       scene.add(...models);
       console.log("models", models[0]);
-      models[0]?.traverse((c: any) => {
-        if (c.isMesh) {
-          c.castShadow = true;
-          c.receiveShadow = true;
+      // models[0]?.traverse((c: any) => {
+      //   if (c.isMesh) {
+      //     c.castShadow = true;
+      //     c.receiveShadow = true;
 
-          if (c.material) {
-            const mats = (Array.isArray(c.material) ? c.material : [c.material]).map((m: any) => {
-              if (m instanceof THREE.MeshBasicMaterial) {
-                m = new THREE.MeshPhongMaterial();
-              }
+      //     if (c.material) {
+      //       const mats = (Array.isArray(c.material) ? c.material : [c.material]).map((m: any) => {
+      //         if (m instanceof THREE.MeshBasicMaterial) {
+      //           m = new THREE.MeshPhongMaterial();
+      //         }
 
-              if (m.map) {
-                m.map.encoding = THREE.GammaEncoding;
-              }
+      //         if (m.map) {
+      //           m.map.encoding = THREE.GammaEncoding;
+      //         }
 
-              return m;
-            });
-            c.material = mats.length === 1 ? mats[0] : mats;
-          }
-        }
-      });
+      //         return m;
+      //       });
+      //       c.material = mats.length === 1 ? mats[0] : mats;
+      //     }
+      //   }
+      // });
     }
     controls?.update();
     renderer?.render(scene, camera);
