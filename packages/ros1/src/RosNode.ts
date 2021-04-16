@@ -192,9 +192,10 @@ export class RosNode extends EventEmitter {
   }
 
   async subscribeParam(key: string): Promise<XmlRpcValue> {
+    const callerApi = this._callerApi();
     const [status, msg, value] = await this.rosParamClient.subscribeParam(
       this.name,
-      this._callerApi(),
+      callerApi,
       key,
     );
     if (status !== 1) {
@@ -203,29 +204,40 @@ export class RosNode extends EventEmitter {
     // rosparam server returns an empty object ({}) if the parameter has not been set yet
     const adjustedValue = isEmptyPlainObject(value) ? undefined : value;
     this.parameters.set(key, adjustedValue);
+
+    this._log?.debug?.(`subscribed ${callerApi} to param "${key}" (${adjustedValue})`);
     return adjustedValue;
   }
 
   async unsubscribeParam(key: string): Promise<boolean> {
+    const callerApi = this._callerApi();
     const [status, msg, value] = await this.rosParamClient.unsubscribeParam(
       this.name,
-      this._callerApi(),
+      callerApi,
       key,
     );
     if (status !== 1) {
       throw new Error(`unsubscribeParam returned failure (status=${status}): ${msg}`);
     }
     this.parameters.delete(key);
-    const numUnsubscribed = value as number;
-    return numUnsubscribed === 1;
+    const didUnsubscribe = (value as number) === 1;
+
+    this._log?.debug?.(
+      `unsubscribed ${callerApi} from param "${key}" (didUnsubscribe=${didUnsubscribe})`,
+    );
+    return didUnsubscribe;
   }
 
   async subscribeAllParams(): Promise<Readonly<Map<string, XmlRpcValue>>> {
     const keys = await this.getParamNames();
-    const res = await this.rosParamClient.subscribeParams(this.name, this._callerApi(), keys);
+    const callerApi = this._callerApi();
+    const res = await this.rosParamClient.subscribeParams(this.name, callerApi, keys);
     if (res.length !== keys.length) {
       throw new Error(`subscribeAllParams returned unrecognized data: ${JSON.stringify(res)}`);
     }
+
+    // Rebuild local map of all subscribed parameters
+    this.parameters.clear();
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i] as string;
       const entry = res[i] as RosXmlRpcResponseOrFault;
@@ -242,12 +254,17 @@ export class RosNode extends EventEmitter {
       const adjustedValue = isEmptyPlainObject(value) ? undefined : value;
       this.parameters.set(key, adjustedValue);
     }
+
+    this._log?.debug?.(
+      `subscribed ${callerApi} to all parameters (${Array.from(this.parameters.keys())})`,
+    );
     return this.parameters;
   }
 
   async unsubscribeAllParams(): Promise<void> {
     const keys = Array.from(this.parameters.keys());
-    const res = await this.rosParamClient.unsubscribeParams(this.name, this._callerApi(), keys);
+    const callerApi = this._callerApi();
+    const res = await this.rosParamClient.unsubscribeParams(this.name, callerApi, keys);
     if (res.length !== keys.length) {
       throw new Error(`subscribeAllParams returned unrecognized data: ${JSON.stringify(res)}`);
     }
@@ -259,6 +276,8 @@ export class RosNode extends EventEmitter {
         continue;
       }
     }
+
+    this._log?.debug?.(`unsubscribed ${callerApi} from all parameters (${keys})`);
     this.parameters.clear();
   }
 
@@ -455,7 +474,7 @@ export class RosNode extends EventEmitter {
         // TODO: Handle this requestTopic() call failing
         const { address, port } = await RosNode.RequestTopic(this.name, topic, rosFollowerClient);
         this._log?.debug?.(
-          `reigstered with ${pubUrl} as a subscriber to ${topic}, connecting to tcpros://${address}:${port}`,
+          `registered with ${pubUrl} as a subscriber to ${topic}, connecting to tcpros://${address}:${port}`,
         );
 
         if (!this._running) {
