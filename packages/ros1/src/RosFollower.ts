@@ -160,7 +160,11 @@ export class RosFollower extends EventEmitter {
     }
 
     const [callerId, paramKey, paramValue] = args as [string, string, XmlRpcValue];
-    this.emit("paramUpdate", paramKey, paramValue, callerId);
+
+    // Normalize the parameter key since rosparam server may append "/"
+    const normalizedKey = paramKey.endsWith("/") ? paramKey.slice(0, -1) : paramKey;
+
+    this.emit("paramUpdate", normalizedKey, paramValue, callerId);
 
     return Promise.resolve([1, "", 0]);
   };
