@@ -16,7 +16,6 @@ import util from "util";
 
 import { resetLogEventForTests } from "@foxglove-studio/app/util/logEvent";
 
-// import MemoryStorage from "./MemoryStorage";
 
 process.env.WASM_LZ4_ENVIRONMENT = "NODE";
 
