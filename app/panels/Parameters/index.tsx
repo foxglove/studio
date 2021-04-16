@@ -32,6 +32,13 @@ import helpContent from "./index.help.md";
 // The minimum amount of time to wait between showing the parameter update animation again
 export const ANIMATION_RESET_DELAY_MS = 3000;
 
+const SScrollable = styled.div`
+  height: 100%;
+  width: 100%;
+  overflow-y: auto;
+  position: absolute;
+`;
+
 const SParametersTable = styled.div`
   display: flex;
   flex-direction: column;
@@ -159,32 +166,33 @@ function ParametersTable(): ReactElement {
   }, [parameters, skipAnimation]);
 
   return (
-    <SParametersTable>
-      <table>
-        <thead>
-          <tr>
-            <th>Parameter</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          {parameterNames.map((name) => {
-            const value = JSON.stringify(parameters.get(name) ?? "");
-            return (
-              <SAnimatedRow
-                key={`parameter-${name}`}
-                skipAnimation={skipAnimation.current}
-                animate={changedParameters.includes(name)}
-              >
-                <td>{name}</td>
-                <td width="100%">
-                  <JSONInput
-                    dataTest={`parameter-value-input-${value}`}
-                    value={value}
-                    onChange={(newVal) => setParameter?.(name, newVal as ParameterValue)}
-                  />
-                </td>
-                {/* <td width="100%">
+    <SScrollable>
+      <SParametersTable>
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            {parameterNames.map((name) => {
+              const value = JSON.stringify(parameters.get(name) ?? "");
+              return (
+                <SAnimatedRow
+                  key={`parameter-${name}`}
+                  skipAnimation={skipAnimation.current}
+                  animate={changedParameters.includes(name)}
+                >
+                  <td>{name}</td>
+                  <td width="100%">
+                    <JSONInput
+                      dataTest={`parameter-value-input-${value}`}
+                      value={value}
+                      onChange={(newVal) => setParameter?.(name, newVal as ParameterValue)}
+                    />
+                  </td>
+                  {/* <td width="100%">
                   <Flex center style={{ justifyContent: "space-between" }}>
                     --
                     <SIconWrapper onClick={() => setParameter(name, undefined)}>
@@ -194,12 +202,13 @@ function ParametersTable(): ReactElement {
                     </SIconWrapper>
                   </Flex>
                 </td> */}
-              </SAnimatedRow>
-            );
-          })}
-        </tbody>
-      </table>
-    </SParametersTable>
+                </SAnimatedRow>
+              );
+            })}
+          </tbody>
+        </table>
+      </SParametersTable>
+    </SScrollable>
   );
 }
 
