@@ -85,7 +85,7 @@ export const getValidatedTimeAndMethodFromString = ({
   date: string;
   timezone?: string;
 }): { time?: Time; method: "ROS" | "TOD" } | undefined => {
-  if (text == undefined) {
+  if (text == undefined || text === "") {
     return;
   }
   const isInvalidRosTime = isNaN(+text);
