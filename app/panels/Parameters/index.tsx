@@ -77,16 +77,16 @@ const SParametersTable = styled.div`
   }
 `;
 
-const SIconWrapper = styled.span<{ isOpen?: boolean }>`
-  display: inline-block;
-  cursor: pointer;
-  padding: 0;
-  color: ${sharedColors.LIGHT};
+// const SIconWrapper = styled.span<{ isOpen?: boolean }>`
+//   display: inline-block;
+//   cursor: pointer;
+//   padding: 0;
+//   color: ${sharedColors.LIGHT};
 
-  svg {
-    opacity: ${({ isOpen }) => (isOpen ?? false ? 1 : undefined)};
-  }
-`;
+//   svg {
+//     opacity: ${({ isOpen }) => (isOpen ?? false ? 1 : undefined)};
+//   }
+// `;
 
 const FlashRowAnimation = makeFlashAnimation(
   css`
