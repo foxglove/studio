@@ -12,6 +12,7 @@
 
 import { ActionButton, Modal } from "@fluentui/react";
 import AlertIcon from "@mdi/svg/svg/alert.svg";
+import { partition } from "lodash";
 import { ReactElement, useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { DndProvider } from "react-dnd";
 import HTML5Backend from "react-dnd-html5-backend";
@@ -23,6 +24,8 @@ import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
 import { redoLayoutChange, undoLayoutChange } from "@foxglove-studio/app/actions/layoutHistory";
 import { importPanelLayout, loadLayout } from "@foxglove-studio/app/actions/panels";
 import AddPanelMenu from "@foxglove-studio/app/components/AddPanelMenu";
+import DocumentDropListener from "@foxglove-studio/app/components/DocumentDropListener";
+import DropOverlay from "@foxglove-studio/app/components/DropOverlay";
 import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
 import GlobalKeyListener from "@foxglove-studio/app/components/GlobalKeyListener";
 import GlobalVariablesMenu from "@foxglove-studio/app/components/GlobalVariablesMenu";
@@ -55,13 +58,16 @@ import {
   PlayerSourceDefinition,
   usePlayerSelection,
 } from "@foxglove-studio/app/context/PlayerSelectionContext";
+import { RobotModelProvider, useRobotModels } from "@foxglove-studio/app/context/RobotModelContext";
 import WindowGeometryContext from "@foxglove-studio/app/context/WindowGeometryContext";
 import experimentalFeatures from "@foxglove-studio/app/experimentalFeatures";
+import useElectronFilesToOpen from "@foxglove-studio/app/hooks/useElectronFilesToOpen";
 import welcomeLayout from "@foxglove-studio/app/layouts/welcomeLayout";
 import { PlayerPresence } from "@foxglove-studio/app/players/types";
 import getGlobalStore from "@foxglove-studio/app/store/getGlobalStore";
 import ThemeProvider from "@foxglove-studio/app/theme/ThemeProvider";
 import { ImportPanelLayoutPayload } from "@foxglove-studio/app/types/panels";
+import { SECOND_SOURCE_PREFIX } from "@foxglove-studio/app/util/globalConstants";
 import inAutomatedRunMode from "@foxglove-studio/app/util/inAutomatedRunMode";
 
 type TestableWindow = Window & { setPanelLayout?: (payload: ImportPanelLayoutPayload) => void };
@@ -87,7 +93,7 @@ const TruncatedText = styled.span`
 function Root() {
   const containerRef = useRef<HTMLDivElement>(ReactNull);
   const dispatch = useDispatch();
-  const { currentSourceName, setPlayerFromDemoBag } = usePlayerSelection();
+  const { currentSourceName, setPlayerFromFiles, setPlayerFromDemoBag } = usePlayerSelection();
   const playerPresence = useMessagePipeline(
     useCallback(({ playerState }) => playerState.presence, []),
   );
@@ -164,6 +170,39 @@ function Root() {
     })();
   }, [appConfiguration, openWelcomeLayout]);
 
+  const { loadModelFromFile } = useRobotModels();
+
+  const openFiles = useCallback(
+    (files: FileList, { shiftPressed }: { shiftPressed: boolean }) => {
+      const [modelFiles, otherFiles] = partition(files ?? [], (file) =>
+        file.name.endsWith(".urdf"),
+      );
+      for (const file of modelFiles) {
+        loadModelFromFile(file);
+      }
+
+      if (otherFiles.length > 0) {
+        setPlayerFromFiles(otherFiles, { append: shiftPressed });
+      }
+    },
+    [loadModelFromFile, setPlayerFromFiles],
+  );
+
+  // files the main thread told us to open
+  const filesToOpen = useElectronFilesToOpen();
+  useEffect(() => {
+    if (filesToOpen) {
+      openFiles(filesToOpen, { shiftPressed: false });
+    }
+  }, [filesToOpen, openFiles]);
+
+  const dropHandler = useCallback(
+    ({ files, shiftPressed }: { files: FileList; shiftPressed: boolean }) => {
+      openFiles(files, { shiftPressed });
+    },
+    [openFiles],
+  );
+
   const presenceIcon = (() => {
     switch (playerPresence) {
       case PlayerPresence.NOT_PRESENT:
@@ -191,6 +230,16 @@ function Root() {
 
   return (
     <LinkHandlerContext.Provider value={handleInternalLink}>
+      <DocumentDropListener filesSelected={dropHandler}>
+        <DropOverlay>
+          <div style={{ fontSize: "4em", marginBottom: "1em" }}>Drop a bag file to load it!</div>
+          <div style={{ fontSize: "2em" }}>
+            (hold SHIFT while dropping a second bag file to add it
+            <br />
+            with all topics prefixed with {SECOND_SOURCE_PREFIX})
+          </div>
+        </DropOverlay>
+      </DocumentDropListener>
       <div ref={containerRef} className="app-container" tabIndex={0}>
         <GlobalKeyListener />
         {shortcutsModalOpen && (
@@ -291,6 +340,7 @@ export default function App(): ReactElement {
     <Provider store={globalStore} />,
     <AnalyticsProvider />,
     <ExperimentalFeaturesLocalStorageProvider features={experimentalFeatures} />,
+    <RobotModelProvider />,
     <ThemeProvider />,
     <ModalHost />, // render modal elements inside the ThemeProvider
     /* eslint-enable react/jsx-key */

@@ -27,6 +27,7 @@ import Tab from "@foxglove-studio/app/panels/Tab";
 import Table from "@foxglove-studio/app/panels/Table";
 import ThreeDimensionalViz from "@foxglove-studio/app/panels/ThreeDimensionalViz";
 import TopicGraph from "@foxglove-studio/app/panels/TopicGraph";
+import URDF from "@foxglove-studio/app/panels/URDF";
 import WelcomePanel from "@foxglove-studio/app/panels/WelcomePanel";
 import DiagnosticStatusPanel from "@foxglove-studio/app/panels/diagnostics/DiagnosticStatusPanel";
 import DiagnosticSummary from "@foxglove-studio/app/panels/diagnostics/DiagnosticSummary";
@@ -45,6 +46,7 @@ const ros: PanelInfo[] = [
   { title: "State Transitions", component: StateTransitions },
   { title: "Table", component: Table },
   { title: "Map", component: MapPanel },
+  { title: "URDF", component: URDF },
 ];
 
 const utilities: PanelInfo[] = [
