@@ -434,7 +434,9 @@ function PlayerManager({
     try {
       const url = new URL(firstLink);
       // only support the open command
-      if (url.pathname !== "//open") {
+
+      // Test if the pathname matches //open or //open/
+      if (!/\/\/open\/?/.test(url.pathname)) {
         return;
       }
 
