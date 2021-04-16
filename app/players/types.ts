@@ -31,6 +31,19 @@ export type ParsedMessageDefinitionsByTopic = {
   [topic: string]: RosMsgDefinition[];
 };
 
+// Valid types for parameter data (such as rosparams)
+export type ParameterValue =
+  | undefined
+  | boolean
+  | number
+  | string
+  | Date
+  | Uint8Array
+  | ParameterValue[]
+  | ParameterStruct;
+
+export type ParameterStruct = { [key: string]: ParameterValue };
+
 // A `Player` is a class that manages playback state. It manages subscriptions,
 // current time, which topics and datatypes are available, and so on.
 // For more details, see the types below.
@@ -171,6 +184,10 @@ export type PlayerStateActiveData = {
 
   // A map of service names to service provider IDs that provide each service.
   services?: Map<string, Set<string>>;
+
+  // A map of parameter names to parameter values, used to describe remote parameters such as
+  // rosparams.
+  parameters?: Map<string, ParameterValue>;
 
   // Used for late-parsing of binary messages. Required to cover any topic for which binary data is
   // given to panels. (May be empty for players that only provide messages parsed into objects.)

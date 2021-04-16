@@ -1,0 +1,212 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
+//
+// This file incorporates work covered by the following copyright and
+// permission notice:
+//
+//   Copyright 2018-2021 Cruise LLC
+//
+//   This source code is licensed under the Apache License, Version 2.0,
+//   found at http://www.apache.org/licenses/LICENSE-2.0
+//   You may not use this file except in compliance with the License.
+
+import CloseIcon from "@mdi/svg/svg/close.svg";
+import { union, without } from "lodash";
+import { ReactElement, useEffect, useMemo, useRef, useState } from "react";
+import styled, { css } from "styled-components";
+
+import Flex from "@foxglove-studio/app/components/Flex";
+import {
+  isActiveElementEditable,
+  makeFlashAnimation,
+} from "@foxglove-studio/app/components/GlobalVariablesTable";
+import Icon from "@foxglove-studio/app/components/Icon";
+import Panel from "@foxglove-studio/app/components/Panel";
+import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
+import { JSONInput } from "@foxglove-studio/app/components/input/JSONInput";
+import { ValidatedResizingInput } from "@foxglove-studio/app/components/input/ValidatedResizingInput";
+import { usePreviousValue } from "@foxglove-studio/app/hooks/usePreviousValue";
+import { colors as sharedColors } from "@foxglove-studio/app/util/sharedStyleConstants";
+
+import helpContent from "./index.help.md";
+
+// The minimum amount of time to wait between showing the parameter update animation again
+export const ANIMATION_RESET_DELAY_MS = 3000;
+
+const SParametersTable = styled.div`
+  display: flex;
+  flex-direction: column;
+  white-space: nowrap;
+  color: ${sharedColors.LIGHT};
+
+  table {
+    width: calc(100% + 1px);
+  }
+
+  thead {
+    user-select: none;
+    border-bottom: 1px solid ${sharedColors.BORDER_LIGHT};
+  }
+
+  th,
+  td {
+    padding: 0px 16px;
+    line-height: 100%;
+    border: none;
+  }
+
+  tr:first-child th {
+    padding: 8px 16px;
+    border: none;
+    text-align: left;
+    color: rgba(255, 255, 255, 0.6);
+    min-width: 120px;
+  }
+
+  td {
+    input {
+      background: none !important;
+      color: inherit;
+      width: 100%;
+      padding-left: 0;
+      padding-right: 0;
+      min-width: 40px;
+    }
+    &:last-child {
+      color: rgba(255, 255, 255, 0.6);
+    }
+  }
+`;
+
+const SIconWrapper = styled.span<{ isOpen?: boolean }>`
+  display: inline-block;
+  cursor: pointer;
+  padding: 0;
+  color: ${sharedColors.LIGHT};
+
+  svg {
+    opacity: ${({ isOpen }) => (isOpen ?? false ? 1 : undefined)};
+  }
+`;
+
+const FlashRowAnimation = makeFlashAnimation(
+  css`
+    background: transparent;
+  `,
+  css`
+    background: ${sharedColors.HIGHLIGHT_MUTED};
+  `,
+);
+
+const AnimationDuration = 3;
+const SAnimatedRow = styled.tr<{ animate: boolean; skipAnimation: boolean }>`
+  background: transparent;
+  animation: ${({ animate, skipAnimation }) =>
+      animate && !skipAnimation ? FlashRowAnimation : "none"}
+    ${AnimationDuration}s ease-in-out;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+  border-bottom: 1px solid ${sharedColors.BORDER_LIGHT};
+`;
+
+const SParametersPanel = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+function ParametersTable(): ReactElement {
+  const { parameters, setParameter } = {
+    parameters: new Map<string, string | number | boolean | undefined>(),
+    setParameter: (_key: string, _value: unknown) => {},
+  }; //useParameters();
+
+  const parameterNames = useMemo(() => Array.from(parameters.keys()), [parameters]);
+
+  // Don't run the animation when the Table first renders
+  const skipAnimation = useRef<boolean>(true);
+  useEffect(() => {
+    const timeoutId = setTimeout(() => (skipAnimation.current = false), ANIMATION_RESET_DELAY_MS);
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  const previousParameters = usePreviousValue(parameters);
+  const previousParametersRef = useRef<Map<string, unknown> | undefined>(previousParameters);
+  previousParametersRef.current = previousParameters;
+
+  const [changedParameters, setChangedParameters] = useState<string[]>([]);
+  useEffect(() => {
+    if (skipAnimation.current || isActiveElementEditable()) {
+      return;
+    }
+    const newChangedParameters = union(
+      Array.from(parameters.keys()),
+      Array.from(previousParametersRef.current?.keys() ?? []),
+    ).filter((name) => {
+      const previousValue = previousParametersRef.current?.get(name);
+      return previousValue !== parameters.get(name);
+    });
+
+    setChangedParameters(newChangedParameters);
+    const timerId = setTimeout(() => setChangedParameters([]), ANIMATION_RESET_DELAY_MS);
+    return () => clearTimeout(timerId);
+  }, [parameters, skipAnimation]);
+
+  return (
+    <SParametersTable>
+      <table>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          {parameterNames.map((name) => {
+            const value = JSON.stringify(parameters.get(name) ?? "");
+            return (
+              <SAnimatedRow
+                key={`parameter-${name}`}
+                skipAnimation={skipAnimation.current}
+                animate={changedParameters.includes(name)}
+              >
+                <td>{name}</td>
+                <td width="100%">
+                  <JSONInput
+                    dataTest={`parameter-value-input-${value}`}
+                    value={value}
+                    onChange={(newVal) => setParameter(name, newVal)}
+                  />
+                </td>
+                {/* <td width="100%">
+                  <Flex center style={{ justifyContent: "space-between" }}>
+                    --
+                    <SIconWrapper onClick={() => setParameter(name, undefined)}>
+                      <Icon small>
+                        <CloseIcon />
+                      </Icon>
+                    </SIconWrapper>
+                  </Flex>
+                </td> */}
+              </SAnimatedRow>
+            );
+          })}
+        </tbody>
+      </table>
+    </SParametersTable>
+  );
+}
+
+function Parameters(): ReactElement {
+  return (
+    <SParametersPanel>
+      <PanelToolbar helpContent={helpContent} floating />
+      <ParametersTable />
+    </SParametersPanel>
+  );
+}
+
+Parameters.panelType = "Parameters";
+Parameters.defaultConfig = {};
+
+export default Panel(Parameters);
