@@ -16,7 +16,6 @@ import util from "util";
 
 import { resetLogEventForTests } from "@foxglove-studio/app/util/logEvent";
 
-
 process.env.WASM_LZ4_ENVIRONMENT = "NODE";
 
 function noOp() {
