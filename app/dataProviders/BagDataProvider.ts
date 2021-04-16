@@ -132,7 +132,7 @@ export default class BagDataProvider implements DataProvider {
         const fileReader = new LogMetricsReader(new BrowserHttpReader(bagPath.url), extensionPoint);
         const remoteReader = new CachedFilelike({
           fileReader,
-          cacheSizeInBytes: cacheSizeInBytes || 1024 * 1024 * 200, // 200MiB
+          cacheSizeInBytes: cacheSizeInBytes ?? 1024 * 1024 * 200, // 200MiB
           logFn: (message) => {
             log.info(`CachedFilelike: ${message}`);
           },
@@ -143,22 +143,36 @@ export default class BagDataProvider implements DataProvider {
             });
           },
         });
-        await remoteReader.open(); // Important that we call this first, because it might throw an error if the file can't be read.
+        try {
+          await remoteReader.open(); // Important that we call this first, because it might throw an error if the file can't be read.
+        } catch (err) {
+          sendNotification("Fetching remote bag failed", (<Error>err).message, "user", "error");
+          return new Promise(() => {}); // Just never finish initializing.
+        }
         if (remoteReader.size() === 0) {
           sendNotification("Cannot play invalid bag", "Bag is 0 bytes in size.", "user", "error");
-          return new Promise(() => {
-            // no-op
-          }); // Just never finish initializing.
+          return new Promise(() => {}); // Just never finish initializing.
         }
 
         this._bag = new Bag(new BagReader(remoteReader));
-        await this._bag.open();
+
+        try {
+          await this._bag.open();
+        } catch (err) {
+          sendNotification("Opening remote bag failed", (<Error>err).message, "user", "error");
+          return new Promise(() => {}); // Just never finish initializing.
+        }
       } else {
         if (process.env.NODE_ENV === "test" && typeof bagPath.file !== "string") {
           // Rosbag's `Bag.open` does not accept files in the "node" environment.
           this._bag = await open(bagPath.file.name);
         } else {
-          this._bag = await open(bagPath.file);
+          if (process.env.NODE_ENV === "test" && typeof bagPath.file !== "string") {
+            // Rosbag's `Bag.open` does not accept files in the "node" environment.
+            this._bag = await open(bagPath.file.name);
+          } else {
+            this._bag = await open(bagPath.file);
+          }
         }
       }
     } catch (err) {
