@@ -65,7 +65,7 @@ const ctx: OsContext = {
   addIpcEventListener(eventName: OsContextForwardedEvent, handler: () => void) {
     ipcRenderer.on(eventName, () => handler());
   },
-  async menuAddInputSource(name: string, handler: () => void) {
+  async menuAddInputSource(name: string, handler: () => void, options?: { role?: "genericOpen" }) {
     if (menuClickListeners.has(name)) {
       throw new Error(`Menu input source ${name} already exists`);
     }
@@ -78,7 +78,7 @@ const ctx: OsContext = {
 
     menuClickListeners.set(name, listener);
     ipcRenderer.on("menu.click-input-source", listener);
-    await ipcRenderer.invoke("menu.add-input-source", name);
+    await ipcRenderer.invoke("menu.add-input-source", name, options);
   },
   async menuRemoveInputSource(name: string) {
     const listener = menuClickListeners.get(name);

@@ -15,6 +15,14 @@ export function installMenuInterface(): void {
     if (typeof name !== "string") {
       throw new Error("menu.add-input-source argument 'name' must be a string");
     }
+    if (args[1] != undefined && typeof args[1] !== "object") {
+      throw new Error("menu.add-input-source argument 'options' must be an object");
+    }
+    const { role } = args[1] ?? {};
+    if (role != undefined && typeof role !== "string") {
+      throw new Error("menu.add-input-source option 'role' must be a string");
+    }
+    console.warn("role is", name, role);
 
     const appMenu = Menu.getApplicationMenu();
     const fileMenu = appMenu?.getMenuItemById("fileMenu");
@@ -43,6 +51,7 @@ export function installMenuInterface(): void {
       new MenuItem({
         label: `Open ${name}`,
         id: name,
+        accelerator: role === "genericOpen" ? "CommandOrControl+O" : undefined,
         click: async () => {
           const focusedWindow = BrowserWindow.getFocusedWindow();
           if (!focusedWindow) {
