@@ -40,7 +40,7 @@ const ros: PanelInfo[] = [
   { title: "Plot", component: Plot },
   { title: "Publish", component: Publish },
   { title: "Raw Messages", component: RawMessages },
-  { title: "rosout", component: Rosout },
+  { title: "Rosout", component: Rosout },
   { title: "Topic Graph", component: TopicGraph },
   { title: "State Transitions", component: StateTransitions },
   { title: "Table", component: Table },
