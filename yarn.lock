@@ -1928,9 +1928,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fluentui/react@npm:8.10.1":
-  version: 8.10.1
-  resolution: "@fluentui/react@npm:8.10.1"
+"@fluentui/react@npm:8.11.1":
+  version: 8.11.1
+  resolution: "@fluentui/react@npm:8.11.1"
   dependencies:
     "@fluentui/date-time-utilities": ^8.0.2
     "@fluentui/font-icons-mdl2": ^8.0.4
@@ -1950,7 +1950,7 @@ __metadata:
     "@types/react-dom": ">=16.8.0 <18.0.0"
     react: ">=16.8.0 <18.0.0"
     react-dom: ">=16.8.0 <18.0.0"
-  checksum: 760e362e8b719c904f9e0da770a046125d04aa46a0977feee3bcb76a9d9fcf22e5c23bf8081579aa929b99673d439f127be06e2838fa3f38986a05fc30404c87
+  checksum: e0279498425966453bd640fe86efbde1bdff2e782d913c68729f10544827a8d1e81e3ca9166ac5f33c5c844b4f848f60fea9c73dbace1bf58913334576d32482
   languageName: node
   linkType: hard
 
@@ -2011,7 +2011,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove-studio/app@workspace:app"
   dependencies:
-    "@fluentui/react": 8.10.1
+    "@fluentui/react": 8.11.1
     "@fluentui/react-icons-mdl2": 1.0.4
     "@mdi/svg": 5.9.55
     "@storybook/addon-actions": 6.2.5
@@ -2061,7 +2061,7 @@ __metadata:
     argparse: 2.0.1
     async-mutex: 0.3.1
     cbor-js: 0.1.0
-    chart.js: 3.1.0
+    chart.js: 3.1.1
     chartjs-plugin-annotation: 1.0.0
     chartjs-plugin-datalabels: 2.0.0-beta.1
     chartjs-plugin-zoom: "github:foxglove/chartjs-plugin-zoom#656541279943f00dce600288435f83c436293146"
@@ -2078,7 +2078,6 @@ __metadata:
     hoist-non-react-statics: 3.3.2
     http-server: 0.12.3
     idb: 2.1.3
-    indent-string: 4.0.0
     int53: 1.0.0
     inter-ui: 3.18.0
     intervals-fn: 3.0.3
@@ -2144,7 +2143,6 @@ __metadata:
     use-debounce: 6.0.1
     uuid: 8.3.2
     wasm-lz4: 1.0.0
-    ws: 7.4.4
     xacro-parser: 0.2.3
   languageName: unknown
   linkType: soft
@@ -7896,10 +7894,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chart.js@npm:3.1.0":
-  version: 3.1.0
-  resolution: "chart.js@npm:3.1.0"
-  checksum: 19614f270918b6c865b155604749b6a69ce05477d557fd356a1853f2d742f71db392f0842b63ffaae687d8f02ee70cec58e7326cb78fd701abc621f4f47d61f6
+"chart.js@npm:3.1.1":
+  version: 3.1.1
+  resolution: "chart.js@npm:3.1.1"
+  checksum: 8aba6590507aa70b1bf479fecb0659b9ac8fed03e7649e16d3a99cc81316bc2a4997f1bf19b19ade08dcd1be8d065e4cd18385eef0de6a20122815036d4f81e0
   languageName: node
   linkType: hard
 
@@ -13728,17 +13726,17 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"indent-string@npm:4.0.0, indent-string@npm:^4.0.0":
-  version: 4.0.0
-  resolution: "indent-string@npm:4.0.0"
-  checksum: 3e54996c6e15ca00a7a4403be705bce4fb3bb4ac637da2e1473006e42a651863f53bfb8c3438c1b3aac77817768ac0cde0e7b7a81a6cf24a1286227a06510dbf
-  languageName: node
-  linkType: hard
-
 "indent-string@npm:^3.0.0":
   version: 3.2.0
   resolution: "indent-string@npm:3.2.0"
   checksum: 00d5200e3afc1ecfde7e82a28d14ce5e01ae5f07f883b5fdaa80146bb15854764f6a0e0ce5e41e30f377e25285139925adaf744b1754d83d69ab3852de7cd450
+  languageName: node
+  linkType: hard
+
+"indent-string@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "indent-string@npm:4.0.0"
+  checksum: 3e54996c6e15ca00a7a4403be705bce4fb3bb4ac637da2e1473006e42a651863f53bfb8c3438c1b3aac77817768ac0cde0e7b7a81a6cf24a1286227a06510dbf
   languageName: node
   linkType: hard
 
@@ -24928,7 +24926,16 @@ typescript@4.2.2:
   languageName: node
   linkType: hard
 
-"ws@npm:7.4.4, ws@npm:^7.2.1, ws@npm:^7.2.3":
+"ws@npm:^6.2.1":
+  version: 6.2.1
+  resolution: "ws@npm:6.2.1"
+  dependencies:
+    async-limiter: ~1.0.0
+  checksum: 35d32b09e28f799f04708c3a7bd9eff469ae63e60543d7e18335f28689228a42ee21210f48de680aad6e5317df76b5b1183d1a1ea4b4d14cb6e0943528f40e76
+  languageName: node
+  linkType: hard
+
+"ws@npm:^7.2.1, ws@npm:^7.2.3":
   version: 7.4.4
   resolution: "ws@npm:7.4.4"
   peerDependencies:
@@ -24940,15 +24947,6 @@ typescript@4.2.2:
     utf-8-validate:
       optional: true
   checksum: ad08761ed753cdd3f7172e9a9efc7d74e7e196623cace2380e5f74ff0abd16196e03223bd4148a34278dcbc653ee3841994635419281cbf303b3f22c589e2ec4
-  languageName: node
-  linkType: hard
-
-"ws@npm:^6.2.1":
-  version: 6.2.1
-  resolution: "ws@npm:6.2.1"
-  dependencies:
-    async-limiter: ~1.0.0
-  checksum: 35d32b09e28f799f04708c3a7bd9eff469ae63e60543d7e18335f28689228a42ee21210f48de680aad6e5317df76b5b1183d1a1ea4b4d14cb6e0943528f40e76
   languageName: node
   linkType: hard
 
