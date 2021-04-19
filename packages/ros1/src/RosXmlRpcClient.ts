@@ -36,35 +36,22 @@ export class RosXmlRpcClient {
   protected _multiMethodCall = async (
     requests: { methodName: string; params: XmlRpcValue[] }[],
   ): Promise<RosXmlRpcResponseOrFault[]> => {
-    const res = await this._client.methodCall("system.multicall", [requests]);
-    if (!Array.isArray(res) || res.length !== requests.length) {
-      throw new Error(`malformed XML-RPC response`);
-    }
+    const res = await this._client.multiMethodCall(requests);
 
     const output: RosXmlRpcResponseOrFault[] = [];
-
-    const createFault = (fault: XmlRpcStruct) => {
-      const faultString = typeof fault.faultString === "string" ? fault.faultString : undefined;
-      const faultCode = typeof fault.faultCode === "number" ? fault.faultCode : undefined;
-      return new XmlRpcFault(faultString, faultCode);
-    };
-
     for (const entry of res) {
-      if (!Array.isArray(entry) || entry.length !== 1) {
-        output.push(createFault(entry as XmlRpcStruct));
+      if (entry instanceof XmlRpcFault) {
+        output.push(entry);
+      } else if (!Array.isArray(entry) || entry.length !== 3) {
+        throw new Error(`malformed XML-RPC multicall response`);
       } else {
-        const innerEntry = entry[0];
-        if (!Array.isArray(innerEntry) || innerEntry.length !== 3) {
-          throw new Error(`malformed XML-RPC multicall response`);
-        }
-        const [code, msg] = innerEntry;
+        const [code, msg] = entry;
         if (typeof code !== "number" || typeof msg !== "string") {
           throw new Error(`invalid code/msg, code="${code}", msg="${msg}"`);
         }
-        output.push(innerEntry as RosXmlRpcResponse);
+        output.push(entry as RosXmlRpcResponse);
       }
     }
-
     return output;
   };
 }
