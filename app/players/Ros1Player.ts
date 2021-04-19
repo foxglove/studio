@@ -106,7 +106,7 @@ export default class Ros1Player implements Player {
       });
       this._rosNode = rosNode;
 
-      rosNode.on("paramUpdate", (key, value, prevValue, callerId) => {
+      rosNode.on("paramUpdate", ({ key, value, prevValue, callerId }) => {
         log.debug("paramUpdate", key, value, prevValue, callerId);
         this._parameters = new Map(rosNode.parameters);
       });

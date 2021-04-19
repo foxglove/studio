@@ -32,16 +32,15 @@ export type SubscribeOpts = {
   tcpNoDelay?: boolean;
 };
 
+export type ParamUpdateArgs = {
+  key: string;
+  value: XmlRpcValue;
+  prevValue: XmlRpcValue;
+  callerId: string;
+};
+
 export declare interface RosNode {
-  on(
-    event: "paramUpdate",
-    listener: (
-      paramKey: string,
-      paramValue: XmlRpcValue,
-      prevParamValue: XmlRpcValue,
-      callerId: string,
-    ) => void,
-  ): this;
+  on(event: "paramUpdate", listener: (args: ParamUpdateArgs) => void): this;
   on(
     event: "publisherUpdate",
     listener: (topic: string, publishers: string[], callerId: string) => void,
@@ -92,12 +91,12 @@ export class RosNode extends EventEmitter {
     this.rosFollower.on("paramUpdate", (key, value, callerId) => {
       const prevValue = this.parameters.get(key);
       this.parameters.set(key, value);
-      this.emit("paramUpdate", key, value, prevValue, callerId);
+      this.emit("paramUpdate", { key, value, prevValue, callerId });
     });
     this.rosFollower.on("publisherUpdate", (topic, publishers, callerId) => {
       this.emit("publisherUpdate", topic, publishers, callerId);
 
-      // TODO: Subscribe/unsubscribe as necessary
+      // FG-216: Subscribe/unsubscribe as necessary
       // const sub = this.subscriptions.get(topic);
       // if (sub != undefined) {}
     });

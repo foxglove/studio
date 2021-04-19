@@ -13,102 +13,24 @@
 
 import { union } from "lodash";
 import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import styled, { css } from "styled-components";
 
 import EmptyState from "@foxglove-studio/app/components/EmptyState";
-import {
-  isActiveElementEditable,
-  makeFlashAnimation,
-} from "@foxglove-studio/app/components/GlobalVariablesTable";
+import { isActiveElementEditable } from "@foxglove-studio/app/components/GlobalVariablesTable";
 import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipeline";
 import Panel from "@foxglove-studio/app/components/Panel";
 import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
 import { JSONInput } from "@foxglove-studio/app/components/input/JSONInput";
 import { usePreviousValue } from "@foxglove-studio/app/hooks/usePreviousValue";
 import { ParameterValue, PlayerCapabilities } from "@foxglove-studio/app/players/types";
-import { colors as sharedColors } from "@foxglove-studio/app/util/sharedStyleConstants";
 
+import AnimatedRow from "./AnimatedRow";
+import ParametersPanel from "./ParametersPanel";
+import ParametersTable from "./ParametersTable";
+import Scrollable from "./Scrollable";
 import helpContent from "./index.help.md";
 
 // The minimum amount of time to wait between showing the parameter update animation again
 export const ANIMATION_RESET_DELAY_MS = 3000;
-
-const SScrollable = styled.div`
-  height: 100%;
-  width: 100%;
-  overflow-y: auto;
-  position: absolute;
-`;
-
-const SParametersTable = styled.div`
-  display: flex;
-  flex-direction: column;
-  white-space: nowrap;
-  color: ${sharedColors.LIGHT};
-
-  table {
-    width: calc(100% + 1px);
-  }
-
-  thead {
-    user-select: none;
-    border-bottom: 1px solid ${sharedColors.BORDER_LIGHT};
-  }
-
-  th,
-  td {
-    padding: 0px 16px;
-    line-height: 100%;
-    border: none;
-  }
-
-  tr:first-child th {
-    padding: 8px 16px;
-    border: none;
-    text-align: left;
-    color: rgba(255, 255, 255, 0.6);
-    min-width: 120px;
-  }
-
-  td {
-    input {
-      background: none !important;
-      color: inherit;
-      width: 100%;
-      padding-left: 0;
-      padding-right: 0;
-      min-width: 40px;
-    }
-    &:last-child {
-      color: rgba(255, 255, 255, 0.6);
-    }
-  }
-`;
-
-const FlashRowAnimation = makeFlashAnimation(
-  css`
-    background: transparent;
-  `,
-  css`
-    background: ${sharedColors.HIGHLIGHT_MUTED};
-  `,
-);
-
-const AnimationDuration = 3;
-const SAnimatedRow = styled.tr<{ animate: boolean; skipAnimation: boolean }>`
-  background: transparent;
-  animation: ${({ animate, skipAnimation }) =>
-      animate && !skipAnimation ? FlashRowAnimation : "none"}
-    ${AnimationDuration}s ease-in-out;
-  animation-iteration-count: 1;
-  animation-fill-mode: forwards;
-  border-bottom: 1px solid ${sharedColors.BORDER_LIGHT};
-`;
-
-const SParametersPanel = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
 
 function Parameters(): ReactElement {
   const { capabilities, parameters, setParameter } = useMessagePipeline(
@@ -169,10 +91,10 @@ function Parameters(): ReactElement {
   }
 
   return (
-    <SParametersPanel>
+    <ParametersPanel>
       <PanelToolbar helpContent={helpContent} floating />
-      <SScrollable>
-        <SParametersTable>
+      <Scrollable>
+        <ParametersTable>
           <table>
             <thead>
               <tr>
@@ -184,7 +106,7 @@ function Parameters(): ReactElement {
               {parameterNames.map((name) => {
                 const value = JSON.stringify(parameters.get(name) ?? "");
                 return (
-                  <SAnimatedRow
+                  <AnimatedRow
                     key={`parameter-${name}`}
                     skipAnimation={skipAnimation.current}
                     animate={changedParameters.includes(name)}
@@ -201,14 +123,14 @@ function Parameters(): ReactElement {
                         value
                       )}
                     </td>
-                  </SAnimatedRow>
+                  </AnimatedRow>
                 );
               })}
             </tbody>
           </table>
-        </SParametersTable>
-      </SScrollable>
-    </SParametersPanel>
+        </ParametersTable>
+      </Scrollable>
+    </ParametersPanel>
   );
 }
 
