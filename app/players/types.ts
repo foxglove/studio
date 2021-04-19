@@ -333,6 +333,12 @@ export const PlayerCapabilities = {
 
   // Ability to play, pause, and seek in time.
   playbackControl: "playbackControl",
+
+  // List and retrieve values for configuration key/value pairs
+  getParameters: "getParameters",
+
+  // Set values for configuration key/value pairs
+  setParameters: "setParameters",
 };
 
 // A metrics collector is an interface passed into a `Player`, which will get called when certain

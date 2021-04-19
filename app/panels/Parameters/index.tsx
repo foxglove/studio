@@ -15,6 +15,7 @@ import { union } from "lodash";
 import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styled, { css } from "styled-components";
 
+import EmptyState from "@foxglove-studio/app/components/EmptyState";
 import {
   isActiveElementEditable,
   makeFlashAnimation,
@@ -24,7 +25,7 @@ import Panel from "@foxglove-studio/app/components/Panel";
 import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
 import { JSONInput } from "@foxglove-studio/app/components/input/JSONInput";
 import { usePreviousValue } from "@foxglove-studio/app/hooks/usePreviousValue";
-import { ParameterValue } from "@foxglove-studio/app/players/types";
+import { ParameterValue, PlayerCapabilities } from "@foxglove-studio/app/players/types";
 import { colors as sharedColors } from "@foxglove-studio/app/util/sharedStyleConstants";
 
 import helpContent from "./index.help.md";
@@ -120,19 +121,23 @@ const SParametersPanel = styled.div`
   flex-direction: column;
 `;
 
-function ParametersTable(): ReactElement {
-  const { parameters, setParameter } = useMessagePipeline(
+function Parameters(): ReactElement {
+  const { capabilities, parameters, setParameter } = useMessagePipeline(
     useCallback(
-      ({ setParameter: setParam, playerState: { activeData } }) =>
+      ({ setParameter: setParam, playerState: { activeData, capabilities: caps } }) =>
         activeData
           ? {
+              capabilities: caps,
               parameters: activeData.parameters ?? new Map(),
               setParameter: setParam,
             }
-          : { parameters: new Map(), setParameter: undefined },
+          : { capabilities: [] as string[], parameters: new Map(), setParameter: undefined },
       [],
     ),
   );
+
+  const canGetParams = capabilities.includes(PlayerCapabilities.getParameters);
+  const canSetParams = capabilities.includes(PlayerCapabilities.setParameters);
 
   const parameterNames = useMemo(() => Array.from(parameters.keys()), [parameters]);
 
@@ -165,58 +170,55 @@ function ParametersTable(): ReactElement {
     return () => clearTimeout(timerId);
   }, [parameters, skipAnimation]);
 
-  return (
-    <SScrollable>
-      <SParametersTable>
-        <table>
-          <thead>
-            <tr>
-              <th>Parameter</th>
-              <th>Value</th>
-            </tr>
-          </thead>
-          <tbody>
-            {parameterNames.map((name) => {
-              const value = JSON.stringify(parameters.get(name) ?? "");
-              return (
-                <SAnimatedRow
-                  key={`parameter-${name}`}
-                  skipAnimation={skipAnimation.current}
-                  animate={changedParameters.includes(name)}
-                >
-                  <td>{name}</td>
-                  <td width="100%">
-                    <JSONInput
-                      dataTest={`parameter-value-input-${value}`}
-                      value={value}
-                      onChange={(newVal) => setParameter?.(name, newVal as ParameterValue)}
-                    />
-                  </td>
-                  {/* <td width="100%">
-                  <Flex center style={{ justifyContent: "space-between" }}>
-                    --
-                    <SIconWrapper onClick={() => setParameter(name, undefined)}>
-                      <Icon small>
-                        <CloseIcon />
-                      </Icon>
-                    </SIconWrapper>
-                  </Flex>
-                </td> */}
-                </SAnimatedRow>
-              );
-            })}
-          </tbody>
-        </table>
-      </SParametersTable>
-    </SScrollable>
-  );
-}
+  if (!canGetParams) {
+    return (
+      <>
+        <PanelToolbar floating helpContent={helpContent} />
+        <EmptyState>Connect to a ROS source to view parameters</EmptyState>
+      </>
+    );
+  }
 
-function Parameters(): ReactElement {
   return (
     <SParametersPanel>
       <PanelToolbar helpContent={helpContent} floating />
-      <ParametersTable />
+      <SScrollable>
+        <SParametersTable>
+          <table>
+            <thead>
+              <tr>
+                <th>Parameter</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {parameterNames.map((name) => {
+                const value = JSON.stringify(parameters.get(name) ?? "");
+                return (
+                  <SAnimatedRow
+                    key={`parameter-${name}`}
+                    skipAnimation={skipAnimation.current}
+                    animate={changedParameters.includes(name)}
+                  >
+                    <td>{name}</td>
+                    <td width="100%">
+                      {canSetParams ? (
+                        <JSONInput
+                          dataTest={`parameter-value-input-${value}`}
+                          value={value}
+                          onChange={(newVal) => setParameter?.(name, newVal as ParameterValue)}
+                        />
+                      ) : (
+                        value
+                      )}
+                    </td>
+                  </SAnimatedRow>
+                );
+              })}
+            </tbody>
+          </table>
+        </SParametersTable>
+      </SScrollable>
     </SParametersPanel>
   );
 }

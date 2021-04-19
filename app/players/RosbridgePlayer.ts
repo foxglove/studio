@@ -48,7 +48,7 @@ import {
 } from "@foxglove-studio/app/util/time";
 import type { RosGraph } from "@foxglove/ros1";
 
-const capabilities = [PlayerCapabilities.advertise];
+const CAPABILITIES = [PlayerCapabilities.advertise];
 const NO_WARNINGS = Object.freeze({});
 
 // Connects to `rosbridge_server` instance using `roslibjs`. Currently doesn't support seeking or
@@ -255,7 +255,7 @@ export default class RosbridgePlayer implements Player {
       return this._listener({
         presence: PlayerPresence.INITIALIZING,
         progress: {},
-        capabilities,
+        capabilities: CAPABILITIES,
         playerId: this._id,
         activeData: undefined,
       });
@@ -272,7 +272,7 @@ export default class RosbridgePlayer implements Player {
     return this._listener({
       presence: PlayerPresence.PRESENT,
       progress: {},
-      capabilities,
+      capabilities: CAPABILITIES,
       playerId: this._id,
 
       activeData: {

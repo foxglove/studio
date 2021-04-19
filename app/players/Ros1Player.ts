@@ -13,6 +13,7 @@ import {
   Message,
   ParameterValue,
   Player,
+  PlayerCapabilities,
   PlayerMetricsCollectorInterface,
   PlayerPresence,
   PlayerState,
@@ -40,7 +41,7 @@ import { HttpServer } from "@foxglove/xmlrpc/src";
 const log = Logger.getLogger(__filename);
 const rosLog = Logger.getLogger("ROS1");
 
-const CAPABILITIES: string[] = [];
+const CAPABILITIES = [PlayerCapabilities.getParameters, PlayerCapabilities.setParameters];
 const NO_WARNINGS = Object.freeze({});
 
 // Connects to `rosmaster` instance using `@foxglove/ros1`. Currently doesn't support seeking or
