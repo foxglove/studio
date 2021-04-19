@@ -2076,7 +2076,7 @@ __metadata:
     history: 5.0.0
     hoist-non-react-statics: 3.3.2
     http-server: 0.12.3
-    idb: 2.1.3
+    idb: 6.0.0
     int53: 1.0.0
     inter-ui: 3.18.0
     intervals-fn: 3.0.3
@@ -13509,10 +13509,10 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"idb@npm:2.1.3":
-  version: 2.1.3
-  resolution: "idb@npm:2.1.3"
-  checksum: b902b2ed3f32daba7edeedeaf3786b2dbdcaf6e194dbe1b5084b59a3a41b5458dec11bed1ce8cd51548e66fb89854ff7a0fce2c55eb1bcf08a49e2acf30a2f63
+"idb@npm:6.0.0":
+  version: 6.0.0
+  resolution: "idb@npm:6.0.0"
+  checksum: 9250243fa964781371dfcacf387e0b3a4fcc36b38d19acb414de88c648f2072527693e45307669cab2a7b77fe5c96e1615958af3d78f4942af5d0e492d148af5
   languageName: node
   linkType: hard
 
