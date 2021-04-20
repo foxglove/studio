@@ -337,13 +337,14 @@ export default function App(): ReactElement {
     /* eslint-disable react/jsx-key */
     <OsContextAppConfigurationProvider />,
     <OsContextLayoutStorageProvider />,
+    <ThemeProvider />,
+    <ModalHost />, // render modal elements inside the ThemeProvider
     <WindowGeometryContext.Provider value={windowGeometry} />,
     <Provider store={globalStore} />,
     <AnalyticsProvider />,
     <ExperimentalFeaturesLocalStorageProvider features={experimentalFeatures} />,
+    <PlayerManager playerSources={playerSources} />,
     <RobotModelProvider />,
-    <ThemeProvider />,
-    <ModalHost />, // render modal elements inside the ThemeProvider
     /* eslint-enable react/jsx-key */
   ];
   function AllProviders({ children }: { children: React.ReactElement }) {
@@ -357,14 +358,12 @@ export default function App(): ReactElement {
     <AllProviders>
       <ErrorBoundary>
         <LayoutStorageReduxAdapter />
-        <PlayerManager playerSources={playerSources}>
-          <NativeFileMenuPlayerSelection />
-          <DndProvider backend={HTML5Backend}>
-            <BuiltinPanelCatalogProvider>
-              <Root />
-            </BuiltinPanelCatalogProvider>
-          </DndProvider>
-        </PlayerManager>
+        <NativeFileMenuPlayerSelection />
+        <DndProvider backend={HTML5Backend}>
+          <BuiltinPanelCatalogProvider>
+            <Root />
+          </BuiltinPanelCatalogProvider>
+        </DndProvider>
       </ErrorBoundary>
     </AllProviders>
   );
