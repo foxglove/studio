@@ -21,7 +21,10 @@ import Logger from "@foxglove/log";
 
 import StudioWindow from "./StudioWindow";
 import { installMenuInterface } from "./menu";
-import { registerRosPackageProtocolHandlers } from "./rosPackageResources";
+import {
+  registerRosPackageProtocolHandlers,
+  registerRosPackageProtocolSchemes,
+} from "./rosPackageResources";
 import { getTelemetrySettings } from "./telemetry";
 
 const log = Logger.getLogger(__filename);
@@ -95,6 +98,9 @@ app.on("open-url", (ev, url) => {
 ipcMain.handle("getUserDataPath", () => {
   return app.getPath("userData");
 });
+
+// Must be called before app.ready event
+registerRosPackageProtocolSchemes();
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.

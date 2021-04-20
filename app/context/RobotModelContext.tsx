@@ -11,6 +11,9 @@ import { XacroParser } from "xacro-parser";
 import { useParameter } from "@foxglove-studio/app/PanelAPI";
 import useShallowMemo from "@foxglove-studio/app/hooks/useShallowMemo";
 import sendNotification from "@foxglove-studio/app/util/sendNotification";
+import Logger from "@foxglove/log";
+
+const log = Logger.getLogger(__filename);
 
 type RobotModel = {
   loadModelFromFile: (file: File) => void;
@@ -26,6 +29,8 @@ export function useRobotModel(): RobotModel {
   return useContext(RobotModelContext);
 }
 
+const URDF_ROOT = "$URDF_ROOT";
+
 export function RobotModelProvider({
   children,
 }: React.PropsWithChildren<unknown>): React.ReactElement {
@@ -35,7 +40,30 @@ export function RobotModelProvider({
 
   const loadURDF = useCallback(
     async (text: string, basePath: string | undefined) => {
-      const urdf = await new XacroParser().parse(text);
+      const xacroParser = new XacroParser();
+      xacroParser.rospackCommands = {
+        // Translate find commands to `package://` URLs, which makes the XacroParser treat them as
+        // absolute paths while allowing us to re-parse and translate these to
+        // x-foxglove-ros-package URLs later.
+        find: (targetPkg) => `package://${targetPkg}`,
+      };
+      xacroParser.getFileContents = async (path: string) => {
+        // Given a fully formed package:// URL, translate it to something we can actually fetch.
+        const match = path.match(/^package:\/\/([^/]+)\/(.+)$/);
+        if (!match) {
+          throw new Error(`Unable to get file contents for ${path}`);
+        }
+        const targetPkg = match[1] as string;
+        const relPath = match[2] as string;
+        let url = `x-foxglove-ros-package:?targetPkg=${targetPkg}`;
+        if (basePath != undefined) {
+          url += `&basePath=${encodeURIComponent(basePath)}`;
+        }
+        url += `&relPath=${encodeURIComponent(relPath)}`;
+        return (await fetch(url)).text();
+      };
+      const urdf = await xacroParser.parse(text);
+      log.info("Parsing URDF", urdf);
 
       const manager = new THREE.LoadingManager();
       manager.setURLModifier((url) => {
@@ -68,8 +96,20 @@ export function RobotModelProvider({
         return url + `&relPath=`;
       };
 
+      manager.itemStart(URDF_ROOT);
       const robot = loader.parse(urdf);
+      manager.itemEnd(URDF_ROOT);
       await finishedLoading;
+      if (robot.children.length === 0) {
+        sendNotification(
+          "URDF file is empty",
+          `The processed URDF file${
+            basePath != undefined ? ` from ${basePath}` : ""
+          } contained no visual elements.`,
+          "user",
+          "warn",
+        );
+      }
       if (isMounted()) {
         setModel(robot);
       }

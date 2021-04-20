@@ -13,6 +13,15 @@ import Logger from "@foxglove/log";
 
 const log = Logger.getLogger(__filename);
 
+/** Extract a package name from a ROS package.xml file. */
+function rosPackageName(packageXmlContents: string) {
+  const doc = new DOMParser().parseFromString(packageXmlContents, "text/xml");
+  const packageName = Array.from(doc.documentElement?.childNodes ?? []).find(
+    (n) => n.nodeName.toLowerCase() === "name",
+  )?.textContent;
+  return packageName ?? undefined;
+}
+
 /**
  * Read package.xml from the given directory to determine if it is a ROS package. If so, return the
  * `<name/>` of the package.
@@ -22,11 +31,7 @@ async function rosPackageNameAtPath(packagePath: string): Promise<string | undef
     const contents = await fs.readFile(path.join(packagePath, "package.xml"), {
       encoding: "utf-8",
     });
-    const doc = new DOMParser().parseFromString(contents, "text/xml");
-    const packageName = Array.from(doc.firstChild?.childNodes ?? []).find(
-      (n) => n.nodeName === "name",
-    )?.textContent;
-    return packageName ?? undefined;
+    return rosPackageName(contents);
   } catch (err) {
     return undefined;
   }
@@ -141,4 +146,11 @@ export function registerRosPackageProtocolHandlers(): void {
       }
     },
   );
+}
+
+/** Enable fetch for custom URL schemes. */
+export function registerRosPackageProtocolSchemes(): void {
+  protocol.registerSchemesAsPrivileged([
+    { scheme: "x-foxglove-ros-package", privileges: { supportFetchAPI: true } },
+  ]);
 }

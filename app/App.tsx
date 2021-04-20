@@ -174,9 +174,8 @@ function Root() {
 
   const openFiles = useCallback(
     (files: FileList, { shiftPressed }: { shiftPressed: boolean }) => {
-      const [modelFiles, otherFiles] = partition(
-        files ?? [],
-        (file) => file.name.endsWith(".urdf") || file.name.endsWith(".urdf.xacro"),
+      const [modelFiles, otherFiles] = partition(files ?? [], (file) =>
+        /\.(urdf|xacro|xml)$/.test(file.name),
       );
       for (const file of modelFiles) {
         loadModelFromFile(file);
