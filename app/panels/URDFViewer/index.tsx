@@ -1,7 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import { ChoiceGroup, ComboBox, DefaultButton, Slider, Stack, useTheme } from "@fluentui/react";
+import { ComboBox, DefaultButton, Slider, Stack, Toggle, useTheme } from "@fluentui/react";
 import EventEmitter from "eventemitter3";
 import { pick } from "lodash";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -158,9 +158,9 @@ function JointValueSliders({
     },
     [saveConfig, customJointValues, model.joints],
   );
+  const theme = useTheme();
   return (
-    <Stack style={{ overflowY: "auto", width: "40%" }}>
-      <div style={{ height: 200 }}></div>
+    <Stack style={{ overflowY: "auto", width: "40%", maxWidth: 300, padding: theme.spacing.s1 }}>
       {joints.map(([name, joint]) => {
         const min = joint.jointType === "continuous" ? -Math.PI : +joint.limit.lower;
         const max = joint.jointType === "continuous" ? Math.PI : +joint.limit.upper;
@@ -295,60 +295,34 @@ function URDFViewer({ config, saveConfig }: Props) {
   const theme = useTheme();
   return (
     <Flex col clip>
-      <PanelToolbar floating helpContent={helpContent}>
-        <Stack grow tokens={{ childrenGap: theme.spacing.s1 }}>
-          <ChoiceGroup
-            label="Use joint states from:"
-            selectedKey={useCustomJointValues ? "custom" : "topic"}
-            onChange={(event, option) =>
+      <PanelToolbar helpContent={helpContent}>
+        <Stack grow horizontal verticalAlign="baseline">
+          <Toggle
+            inlineLabel
+            offText="Manual joint control"
+            onText="Topic"
+            checked={!useCustomJointValues}
+            onChange={(event, checked) =>
               saveConfig({
                 jointStatesTopic:
-                  option?.key === "custom" ? undefined : URDFViewer.defaultConfig.jointStatesTopic,
+                  checked ?? false ? URDFViewer.defaultConfig.jointStatesTopic : undefined,
               })
             }
-            options={[
-              {
-                key: "topic",
-                text: "Topic:",
-                onRenderField(props, defaultRender) {
-                  return (
-                    <Stack
-                      horizontal
-                      verticalAlign="baseline"
-                      tokens={{ childrenGap: theme.spacing.s1 }}
-                    >
-                      <Stack.Item>{defaultRender?.(props)}</Stack.Item>
-                      <Stack.Item>
-                        <ComboBox
-                          allowFreeform
-                          options={topicOptions}
-                          selectedKey={jointStatesTopic}
-                          disabled={!(props?.checked ?? false)}
-                          onChange={(event, option, index, value) => {
-                            if (option) {
-                              saveConfig({ jointStatesTopic: option.key as string });
-                            } else if (value != undefined) {
-                              saveConfig({ jointStatesTopic: value });
-                            }
-                          }}
-                        />
-                      </Stack.Item>
-                    </Stack>
-                  );
-                },
-              },
-              { key: "custom", text: "Custom values" },
-            ]}
           />
-          <Slider
-            label="Opacity:"
-            min={0}
-            max={1}
-            step={0.01}
-            value={opacity}
-            valueFormat={(value) => `${(value * 100).toFixed(0)}%`}
-            onChange={(value) => saveConfig({ opacity: value })}
-          />
+          {!useCustomJointValues && (
+            <ComboBox
+              allowFreeform
+              options={topicOptions}
+              selectedKey={jointStatesTopic}
+              onChange={(event, option, index, value) => {
+                if (option) {
+                  saveConfig({ jointStatesTopic: option.key as string });
+                } else if (value != undefined) {
+                  saveConfig({ jointStatesTopic: value });
+                }
+              }}
+            />
+          )}
         </Stack>
       </PanelToolbar>
       {model == undefined ? (
@@ -365,13 +339,32 @@ function URDFViewer({ config, saveConfig }: Props) {
                 inset: 0,
               }}
             />
-            {!cameraCentered && (
-              <DefaultButton
-                text="Re-center"
-                onClick={() => renderer.centerCamera()}
-                style={{ position: "absolute", bottom: theme.spacing.s1, right: theme.spacing.s1 }}
-              />
-            )}
+            <Stack
+              horizontal
+              horizontalAlign="space-between"
+              wrap
+              style={{
+                position: "absolute",
+                bottom: theme.spacing.s1,
+                left: theme.spacing.s1,
+                right: theme.spacing.s1,
+              }}
+            >
+              <Stack.Item grow style={{ minWidth: 120, maxWidth: 300 }}>
+                <Slider
+                  ariaLabel="Opacity"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={opacity}
+                  valueFormat={(value) => `${(value * 100).toFixed(0)}%`}
+                  onChange={(value) => saveConfig({ opacity: value })}
+                />
+              </Stack.Item>
+              {!cameraCentered && (
+                <DefaultButton text="Re-center" onClick={() => renderer.centerCamera()} />
+              )}
+            </Stack>
           </div>
           {useCustomJointValues && model && (
             <JointValueSliders model={model} config={config} saveConfig={saveConfig} />
