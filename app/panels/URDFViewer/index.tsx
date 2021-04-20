@@ -1,7 +1,16 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import { ComboBox, DefaultButton, Slider, Stack, Toggle, useTheme } from "@fluentui/react";
+import {
+  ComboBox,
+  DefaultButton,
+  Dropdown,
+  IDropdownOption,
+  Slider,
+  Stack,
+  Toggle,
+  useTheme,
+} from "@fluentui/react";
 import EventEmitter from "eventemitter3";
 import { pick } from "lodash";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
@@ -16,8 +25,9 @@ import EmptyState from "@foxglove-studio/app/components/EmptyState";
 import Flex from "@foxglove-studio/app/components/Flex";
 import Panel from "@foxglove-studio/app/components/Panel";
 import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
-import { useRobotModel } from "@foxglove-studio/app/context/RobotModelContext";
+import { useAssets } from "@foxglove-studio/app/context/AssetContext";
 import useCleanup from "@foxglove-studio/app/hooks/useCleanup";
+import { usePreviousValue } from "@foxglove-studio/app/hooks/usePreviousValue";
 import { JointState } from "@foxglove-studio/app/types/Messages";
 import { SaveConfig } from "@foxglove-studio/app/types/panels";
 import filterMap from "@foxglove-studio/app/util/filterMap";
@@ -190,7 +200,25 @@ function URDFViewer({ config, saveConfig }: Props) {
   const { customJointValues, jointStatesTopic, opacity } = config;
   const [canvas, setCanvas] = useState<HTMLCanvasElement | ReactNull>(ReactNull);
   const { ref: resizeRef, width, height } = useResizeDetector();
-  const { model } = useRobotModel();
+  const { assets } = useAssets();
+  const [selectedAssetId, setSelectedAssetId] = useState<string | undefined>();
+
+  const model = useMemo(() => {
+    const asset = assets.find(({ type, uuid }) => uuid === selectedAssetId && type === "urdf");
+    return asset?.model;
+  }, [assets, selectedAssetId]);
+
+  // Automatically select newly added URDF assets
+  const prevAssets = usePreviousValue(assets);
+  useEffect(() => {
+    const prevAssetIds = new Set(prevAssets?.map(({ uuid }) => uuid));
+    for (const asset of assets) {
+      if (!prevAssetIds.has(asset.uuid) && asset.type === "urdf") {
+        setSelectedAssetId(asset.uuid);
+        return;
+      }
+    }
+  }, [assets, prevAssets, selectedAssetId]);
 
   const [renderer] = useState(() => new Renderer());
   const [cameraCentered, setCameraCentered] = useState(renderer.cameraCentered);
@@ -292,6 +320,12 @@ function URDFViewer({ config, saveConfig }: Props) {
     return options;
   }, [jointStatesTopic, topics]);
 
+  const assetOptions: IDropdownOption[] = useMemo(() => {
+    return filterMap(assets, (asset) =>
+      asset.type === "urdf" ? { key: asset.uuid, text: asset.name } : undefined,
+    );
+  }, [assets]);
+
   const theme = useTheme();
   return (
     <Flex col clip>
@@ -339,6 +373,21 @@ function URDFViewer({ config, saveConfig }: Props) {
                 inset: 0,
               }}
             />
+            <div
+              style={{
+                position: "absolute",
+                top: theme.spacing.s1,
+                left: theme.spacing.s1,
+              }}
+            >
+              <Dropdown
+                options={assetOptions}
+                selectedKey={selectedAssetId}
+                onChange={(event, option) =>
+                  option != undefined && setSelectedAssetId(option.key as string)
+                }
+              />
+            </div>
             <Stack
               horizontal
               horizontalAlign="space-between"

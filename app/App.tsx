@@ -12,7 +12,6 @@
 
 import { ActionButton, Modal } from "@fluentui/react";
 import AlertIcon from "@mdi/svg/svg/alert.svg";
-import { partition } from "lodash";
 import { ReactElement, useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { DndProvider } from "react-dnd";
 import HTML5Backend from "react-dnd-html5-backend";
@@ -38,6 +37,7 @@ import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipel
 import { NativeFileMenuPlayerSelection } from "@foxglove-studio/app/components/NativeFileMenuPlayerSelection";
 import NotificationDisplay from "@foxglove-studio/app/components/NotificationDisplay";
 import PanelLayout from "@foxglove-studio/app/components/PanelLayout";
+import ParamAssetAdapter from "@foxglove-studio/app/components/ParamAssetAdapter";
 import PlaybackControls from "@foxglove-studio/app/components/PlaybackControls";
 import PlayerManager from "@foxglove-studio/app/components/PlayerManager";
 import Preferences from "@foxglove-studio/app/components/Preferences";
@@ -48,6 +48,7 @@ import TinyConnectionPicker from "@foxglove-studio/app/components/TinyConnection
 import Toolbar from "@foxglove-studio/app/components/Toolbar";
 import AnalyticsProvider from "@foxglove-studio/app/context/AnalyticsProvider";
 import { useAppConfiguration } from "@foxglove-studio/app/context/AppConfigurationContext";
+import { AssetsProvider, useAssets } from "@foxglove-studio/app/context/AssetContext";
 import BuiltinPanelCatalogProvider from "@foxglove-studio/app/context/BuiltinPanelCatalogProvider";
 import ExperimentalFeaturesLocalStorageProvider from "@foxglove-studio/app/context/ExperimentalFeaturesLocalStorageProvider";
 import LinkHandlerContext from "@foxglove-studio/app/context/LinkHandlerContext";
@@ -58,12 +59,12 @@ import {
   PlayerSourceDefinition,
   usePlayerSelection,
 } from "@foxglove-studio/app/context/PlayerSelectionContext";
-import { RobotModelProvider, useRobotModel } from "@foxglove-studio/app/context/RobotModelContext";
 import WindowGeometryContext from "@foxglove-studio/app/context/WindowGeometryContext";
 import experimentalFeatures from "@foxglove-studio/app/experimentalFeatures";
 import useElectronFilesToOpen from "@foxglove-studio/app/hooks/useElectronFilesToOpen";
 import welcomeLayout from "@foxglove-studio/app/layouts/welcomeLayout";
 import { PlayerPresence } from "@foxglove-studio/app/players/types";
+import URDFAssetLoader from "@foxglove-studio/app/services/URDFAssetLoader";
 import getGlobalStore from "@foxglove-studio/app/store/getGlobalStore";
 import ThemeProvider from "@foxglove-studio/app/theme/ThemeProvider";
 import { ImportPanelLayoutPayload } from "@foxglove-studio/app/types/panels";
@@ -170,22 +171,22 @@ function Root() {
     })();
   }, [appConfiguration, openWelcomeLayout]);
 
-  const { loadModelFromFile } = useRobotModel();
+  const { loadFromFile } = useAssets();
 
   const openFiles = useCallback(
-    (files: FileList, { shiftPressed }: { shiftPressed: boolean }) => {
-      const [modelFiles, otherFiles] = partition(files ?? [], (file) =>
-        /\.(urdf|xacro|xml)$/.test(file.name),
-      );
-      for (const file of modelFiles) {
-        loadModelFromFile(file);
+    async (files: FileList, { shiftPressed }: { shiftPressed: boolean }) => {
+      const otherFiles: File[] = [];
+      for (const file of files) {
+        if (!(await loadFromFile(file, file.path))) {
+          otherFiles.push(file);
+        }
       }
 
       if (otherFiles.length > 0) {
         setPlayerFromFiles(otherFiles, { append: shiftPressed });
       }
     },
-    [loadModelFromFile, setPlayerFromFiles],
+    [loadFromFile, setPlayerFromFiles],
   );
 
   // files the main thread told us to open
@@ -332,6 +333,8 @@ export default function App(): ReactElement {
   const insetToolbar = OsContextSingleton?.platform === "darwin" && !isFullScreen;
   const windowGeometry = useMemo(() => ({ insetToolbar }), [insetToolbar]);
 
+  const [assetLoaders] = useState(() => [new URDFAssetLoader()]);
+
   const providers = [
     /* eslint-disable react/jsx-key */
     <OsContextAppConfigurationProvider />,
@@ -343,7 +346,7 @@ export default function App(): ReactElement {
     <AnalyticsProvider />,
     <ExperimentalFeaturesLocalStorageProvider features={experimentalFeatures} />,
     <PlayerManager playerSources={playerSources} />,
-    <RobotModelProvider />,
+    <AssetsProvider loaders={assetLoaders} />,
     /* eslint-enable react/jsx-key */
   ];
   function AllProviders({ children }: { children: React.ReactElement }) {
@@ -357,6 +360,7 @@ export default function App(): ReactElement {
     <AllProviders>
       <ErrorBoundary>
         <LayoutStorageReduxAdapter />
+        <ParamAssetAdapter />
         <NativeFileMenuPlayerSelection />
         <DndProvider backend={HTML5Backend}>
           <BuiltinPanelCatalogProvider>
