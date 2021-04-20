@@ -58,7 +58,7 @@ import {
   PlayerSourceDefinition,
   usePlayerSelection,
 } from "@foxglove-studio/app/context/PlayerSelectionContext";
-import { RobotModelProvider, useRobotModels } from "@foxglove-studio/app/context/RobotModelContext";
+import { RobotModelProvider, useRobotModel } from "@foxglove-studio/app/context/RobotModelContext";
 import WindowGeometryContext from "@foxglove-studio/app/context/WindowGeometryContext";
 import experimentalFeatures from "@foxglove-studio/app/experimentalFeatures";
 import useElectronFilesToOpen from "@foxglove-studio/app/hooks/useElectronFilesToOpen";
@@ -170,7 +170,7 @@ function Root() {
     })();
   }, [appConfiguration, openWelcomeLayout]);
 
-  const { loadModelFromFile } = useRobotModels();
+  const { loadModelFromFile } = useRobotModel();
 
   const openFiles = useCallback(
     (files: FileList, { shiftPressed }: { shiftPressed: boolean }) => {

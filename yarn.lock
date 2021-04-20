@@ -4713,6 +4713,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/pngjs@npm:^6":
+  version: 6.0.0
+  resolution: "@types/pngjs@npm:6.0.0"
+  dependencies:
+    "@types/node": "*"
+  checksum: 3d37f03235904932890e411f6e33197b677b2b029ceadcba23a2dd7196484c30728d49055c585bf111cc878c32518c58f856cc3b39fc0de7c722012ab256cf38
+  languageName: node
+  linkType: hard
+
 "@types/prettier@npm:2.2.3, @types/prettier@npm:^2.0.0":
   version: 2.2.3
   resolution: "@types/prettier@npm:2.2.3"
@@ -5118,6 +5127,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/utif@npm:^3":
+  version: 3.0.1
+  resolution: "@types/utif@npm:3.0.1"
+  dependencies:
+    "@types/node": "*"
+  checksum: df2488006f8a8e413b1decd31caff353748348a7d4535e6c0908362e79b6584d05d743b263cca78744da7ea4e84126d3d669690d6484d5c7a39635c4bf020dbe
+  languageName: node
+  linkType: hard
+
 "@types/uuid@npm:8.3.0":
   version: 8.3.0
   resolution: "@types/uuid@npm:8.3.0"
@@ -5197,6 +5215,13 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: 69a752f6ffd809d170098e84bad046fa6589d9485e8e5292d2c48f8b8014b6b58779e4fac07a808895de79f595032ef055bb36b41945c6e1cc9d63010a0f50fb
+  languageName: node
+  linkType: hard
+
+"@types/xmldom@npm:^0":
+  version: 0.1.30
+  resolution: "@types/xmldom@npm:0.1.30"
+  checksum: 7b195da37ca63bcba37df495706333ec0bb7232cda5c2c146e27babce0434a0ab1684b0254c9ae6d4c571b18ef1d77b4ec8edc264fd1b7d67db9f85800bf50ba
   languageName: node
   linkType: hard
 
@@ -12106,10 +12131,13 @@ __metadata:
     "@types/electron-devtools-installer": 2.2.0
     "@types/license-checker": ^25.0.1
     "@types/nearley": 2.11.1
+    "@types/pngjs": ^6
     "@types/rimraf": ^3.0.0
     "@types/sass": ^1.16.0
     "@types/semver": ^7
+    "@types/utif": ^3
     "@types/webpack-dev-server": 3.11.3
+    "@types/xmldom": ^0
     "@typescript-eslint/eslint-plugin": 4.21.0
     "@typescript-eslint/parser": 4.21.0
     amplitude-js: 8.1.0
@@ -12148,6 +12176,7 @@ __metadata:
     nearley-loader: 2.0.0
     node-machine-id: 1.1.12
     path-browserify: 1.0.1
+    pngjs: 6.0.0
     prettier: 2.2.1
     react-svg-loader: 3.0.3
     readable-stream: 3.6.0
@@ -12165,10 +12194,12 @@ __metadata:
     typescript-plugin-css-modules: 3.2.0
     typescript-plugin-styled-components: 1.5.0
     universal-url: 2.0.0
+    utif: 3.1.0
     webpack: 5.33.2
     webpack-cli: 4.6.0
     webpack-dev-server: 3.11.2
     webpack-hot-middleware: 2.25.0
+    xmldom: 0.6.0
   languageName: unknown
   linkType: soft
 
@@ -18001,7 +18032,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"pako@npm:~1.0.2, pako@npm:~1.0.5":
+"pako@npm:^1.0.5, pako@npm:~1.0.2, pako@npm:~1.0.5":
   version: 1.0.11
   resolution: "pako@npm:1.0.11"
   checksum: 71c60150b68220ec52a404f3c39a4ed38f750e42452b88fe0eb2e6b5c98e91f73f706444359b097aca1e6db83ef8fef50b5a9ec100e30a606cda6da8d45e5439
@@ -18435,6 +18466,13 @@ fsevents@^1.2.7:
   version: 8.0.0
   resolution: "pluralize@npm:8.0.0"
   checksum: 5251b470a0c8e5181ac7e1d61028553f90cb2c85c34b8e468cea269ae715499524546c2c3681029ef5697d86c54bfb12e49388f5cc6082051e84f5888588f4ec
+  languageName: node
+  linkType: hard
+
+"pngjs@npm:6.0.0":
+  version: 6.0.0
+  resolution: "pngjs@npm:6.0.0"
+  checksum: b90cbd7d96e73a35427a08d1c583f58f0c63a34b7e8920dc228f3f3c5f3ed7ad359c5abafee78210d62453896300b280dd7cc3b5c2cb0f9291efcc86c35885ab
   languageName: node
   linkType: hard
 
@@ -24011,6 +24049,15 @@ typescript@4.2.2:
   languageName: node
   linkType: hard
 
+"utif@npm:3.1.0":
+  version: 3.1.0
+  resolution: "utif@npm:3.1.0"
+  dependencies:
+    pako: ^1.0.5
+  checksum: be5e47d6db8874b8958a93e14ad46ddf1ab36a1482868cd1a7345a3ae6dd214c1b534f7f94310f976785cc5a27bd415488033e39ee02db3198167387ec7d9522
+  languageName: node
+  linkType: hard
+
 "util-deprecate@npm:^1.0.1, util-deprecate@npm:^1.0.2, util-deprecate@npm:~1.0.1":
   version: 1.0.2
   resolution: "util-deprecate@npm:1.0.2"
@@ -25028,6 +25075,13 @@ typescript@4.2.2:
   version: 0.1.31
   resolution: "xmldom@npm:0.1.31"
   checksum: 69b741952c32338c915a74d3a6edc37bade58f93ff3722704cc6a10461c62cb5d6d1bcf2e7a3db6e3ff713f15c7e43089e54dfa369d471898905c489bd8e397b
+  languageName: node
+  linkType: hard
+
+"xmldom@npm:0.6.0":
+  version: 0.6.0
+  resolution: "xmldom@npm:0.6.0"
+  checksum: cca0cddf6f95e9bfa2432a9a819f97b840e6b36fad8017833f5c7d298b4fd69ef2e3e7b5dd68f1e53ec5dd4075bfc8f68e425b06928adc0a21c9bacf0af02b0c
   languageName: node
   linkType: hard
 

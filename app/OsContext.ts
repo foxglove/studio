@@ -58,11 +58,7 @@ export interface OsContext {
   addIpcEventListener(eventName: OsContextForwardedEvent, handler: () => void): void;
 
   // Manage file menu input source menu items
-  menuAddInputSource(
-    name: string,
-    handler: () => void,
-    options?: { role?: "genericOpen" },
-  ): Promise<void>;
+  menuAddInputSource(name: string, handler: () => void): Promise<void>;
   menuRemoveInputSource(name: string): Promise<void>;
 
   // Return true unless the user has opted out of crash reporting

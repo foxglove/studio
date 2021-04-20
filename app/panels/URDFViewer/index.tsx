@@ -1,9 +1,10 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import { ComboBox, DefaultButton, Slider, Stack, useTheme } from "@fluentui/react";
+import { ChoiceGroup, ComboBox, DefaultButton, Slider, Stack, useTheme } from "@fluentui/react";
 import EventEmitter from "eventemitter3";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { pick } from "lodash";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { useUpdate } from "react-use";
 import * as THREE from "three";
@@ -15,7 +16,7 @@ import EmptyState from "@foxglove-studio/app/components/EmptyState";
 import Flex from "@foxglove-studio/app/components/Flex";
 import Panel from "@foxglove-studio/app/components/Panel";
 import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
-import { useRobotModels } from "@foxglove-studio/app/context/RobotModelContext";
+import { useRobotModel } from "@foxglove-studio/app/context/RobotModelContext";
 import useCleanup from "@foxglove-studio/app/hooks/useCleanup";
 import { JointState } from "@foxglove-studio/app/types/Messages";
 import { SaveConfig } from "@foxglove-studio/app/types/panels";
@@ -34,7 +35,7 @@ class Renderer extends EventEmitter<EventTypes> {
   private renderer?: THREE.WebGLRenderer;
   private ambientLight: THREE.HemisphereLight;
   private dirLight: THREE.DirectionalLight;
-  private models: readonly URDFRobot[] = [];
+  private model?: URDFRobot;
   private opacity: number = 1;
 
   cameraCentered = true;
@@ -86,50 +87,42 @@ class Renderer extends EventEmitter<EventTypes> {
     this.renderer?.setSize(width, height);
   }
 
-  setModels(models: readonly URDFRobot[]) {
-    for (const model of this.models) {
-      model.traverse((obj) => (obj as { dispose?(): void }).dispose?.());
-      this.world.remove(model);
+  setModel(model?: URDFRobot) {
+    if (this.model) {
+      this.model.traverse((obj) => (obj as { dispose?(): void }).dispose?.());
+      this.world.remove(this.model);
     }
-    this.models = models;
-    for (const model of this.models) {
-      this.world.add(model);
+
+    this.model = model;
+    if (this.model) {
+      this.world.add(this.model);
     }
     this.centerCamera();
-    this.setOpacity(this.opacity); // Re-apply opacity to new models
+    this.setOpacity(this.opacity); // Re-apply opacity to new model
   }
 
   setOpacity(opacity: number) {
     this.opacity = opacity;
-    for (const model of this.models) {
-      model.traverse((obj) => {
-        if (obj instanceof THREE.Mesh) {
-          if (obj.material instanceof THREE.Material) {
-            obj.material.opacity = opacity;
-            obj.material.transparent = opacity < 1;
-            obj.material.depthWrite = !obj.material.transparent;
-          }
+    this.model?.traverse((obj) => {
+      if (obj instanceof THREE.Mesh) {
+        if (obj.material instanceof THREE.Material) {
+          obj.material.opacity = opacity;
+          obj.material.transparent = opacity < 1;
+          obj.material.depthWrite = !obj.material.transparent;
         }
-      });
-    }
+      }
+    });
   }
 
   render() {
+    // The light should follow the viewer's position
     this.dirLight.position.copy(this.camera.position);
+
     this.renderer?.render(this.scene, this.camera);
   }
 
-  setJointStates(jointStates: JointState) {
-    for (const model of this.models) {
-      const values: Record<string, number> = {};
-      jointStates.name.forEach((name, index) => {
-        const position = jointStates.position[index];
-        if (position != undefined) {
-          values[name] = position;
-        }
-      });
-      model.setJointValues(values);
-    }
+  setJointValues(values: Record<string, number>) {
+    this.model?.setJointValues(values);
   }
 
   dispose() {
@@ -139,6 +132,7 @@ class Renderer extends EventEmitter<EventTypes> {
 
 type Config = {
   jointStatesTopic?: string;
+  customJointValues?: Record<string, number>;
   opacity?: number;
 };
 type Props = {
@@ -146,11 +140,57 @@ type Props = {
   saveConfig: SaveConfig<Config>;
 };
 
+function JointValueSliders({
+  model,
+  config,
+  saveConfig,
+}: Props & { model: URDFRobot }): JSX.Element {
+  const { customJointValues } = config;
+  const joints = useMemo(
+    () => Object.entries(model.joints).sort(([key1], [key2]) => key1.localeCompare(key2)),
+    [model.joints],
+  );
+  const setJointValue = useCallback(
+    (name: string, val: number) => {
+      const newValues = pick(customJointValues ?? {}, Object.keys(model.joints));
+      newValues[name] = val;
+      saveConfig({ customJointValues: newValues });
+    },
+    [saveConfig, customJointValues, model.joints],
+  );
+  return (
+    <Stack style={{ overflowY: "auto", width: "40%" }}>
+      <div style={{ height: 200 }}></div>
+      {joints.map(([name, joint]) => {
+        const min = joint.jointType === "continuous" ? -Math.PI : +joint.limit.lower;
+        const max = joint.jointType === "continuous" ? Math.PI : +joint.limit.upper;
+        const value = customJointValues?.[name] ?? +joint.limit.lower;
+
+        const RANGE = 10000;
+        if (min === max) {
+          return ReactNull;
+        }
+        return (
+          <Slider
+            key={name}
+            label={name}
+            min={0}
+            max={RANGE}
+            value={(RANGE * (value - min)) / (max - min)}
+            onChange={(val) => setJointValue(name, min + (val / RANGE) * (max - min))}
+            valueFormat={(val) => (min + (val / RANGE) * (max - min)).toFixed(2)}
+          />
+        );
+      })}
+    </Stack>
+  );
+}
+
 function URDFViewer({ config, saveConfig }: Props) {
-  const { jointStatesTopic, opacity } = config;
+  const { customJointValues, jointStatesTopic, opacity } = config;
   const [canvas, setCanvas] = useState<HTMLCanvasElement | ReactNull>(ReactNull);
   const { ref: resizeRef, width, height } = useResizeDetector();
-  const { models } = useRobotModels();
+  const { model } = useRobotModel();
 
   const [renderer] = useState(() => new Renderer());
   const [cameraCentered, setCameraCentered] = useState(renderer.cameraCentered);
@@ -192,19 +232,39 @@ function URDFViewer({ config, saveConfig }: Props) {
   }, [width, height, renderer]);
 
   useLayoutEffect(() => {
-    renderer.setModels(models);
-  }, [renderer, models]);
+    renderer.setModel(model);
+  }, [renderer, model]);
 
-  const { ["/joint_states"]: [latestJointStates] = [] } = PanelAPI.useMessagesByTopic({
+  const {
+    [jointStatesTopic ?? ""]: [latestJointStatesMessage] = [],
+  } = PanelAPI.useMessagesByTopic<JointState>({
     topics: jointStatesTopic != undefined ? [jointStatesTopic] : [],
     historySize: 1,
   });
 
-  useLayoutEffect(() => {
-    if (latestJointStates) {
-      renderer.setJointStates(latestJointStates.message);
+  const useCustomJointValues = jointStatesTopic == undefined;
+  const jointValues = useMemo(() => {
+    if (useCustomJointValues) {
+      return customJointValues;
     }
-  }, [latestJointStates, renderer]);
+    const values: Record<string, number> = {};
+    const jointState = latestJointStatesMessage?.message;
+    if (jointState) {
+      jointState.name.forEach((name, index) => {
+        const position = jointState.position[index];
+        if (position != undefined) {
+          values[name] = position;
+        }
+      });
+    }
+    return values;
+  }, [customJointValues, latestJointStatesMessage, useCustomJointValues]);
+
+  useLayoutEffect(() => {
+    if (jointValues) {
+      renderer.setJointValues(jointValues);
+    }
+  }, [jointValues, renderer]);
 
   useLayoutEffect(() => {
     if (opacity != undefined) {
@@ -234,21 +294,51 @@ function URDFViewer({ config, saveConfig }: Props) {
 
   const theme = useTheme();
   return (
-    <Flex col>
+    <Flex col clip>
       <PanelToolbar floating helpContent={helpContent}>
         <Stack grow tokens={{ childrenGap: theme.spacing.s1 }}>
-          <ComboBox
+          <ChoiceGroup
             label="Use joint states from:"
-            allowFreeform
-            options={topicOptions}
-            selectedKey={jointStatesTopic}
-            onChange={(event, option, index, value) => {
-              if (option) {
-                saveConfig({ jointStatesTopic: option.key as string });
-              } else if (value != undefined) {
-                saveConfig({ jointStatesTopic: value });
-              }
-            }}
+            selectedKey={useCustomJointValues ? "custom" : "topic"}
+            onChange={(event, option) =>
+              saveConfig({
+                jointStatesTopic:
+                  option?.key === "custom" ? undefined : URDFViewer.defaultConfig.jointStatesTopic,
+              })
+            }
+            options={[
+              {
+                key: "topic",
+                text: "Topic:",
+                onRenderField(props, defaultRender) {
+                  return (
+                    <Stack
+                      horizontal
+                      verticalAlign="baseline"
+                      tokens={{ childrenGap: theme.spacing.s1 }}
+                    >
+                      <Stack.Item>{defaultRender?.(props)}</Stack.Item>
+                      <Stack.Item>
+                        <ComboBox
+                          allowFreeform
+                          options={topicOptions}
+                          selectedKey={jointStatesTopic}
+                          disabled={!(props?.checked ?? false)}
+                          onChange={(event, option, index, value) => {
+                            if (option) {
+                              saveConfig({ jointStatesTopic: option.key as string });
+                            } else if (value != undefined) {
+                              saveConfig({ jointStatesTopic: value });
+                            }
+                          }}
+                        />
+                      </Stack.Item>
+                    </Stack>
+                  );
+                },
+              },
+              { key: "custom", text: "Custom values" },
+            ]}
           />
           <Slider
             label="Opacity:"
@@ -261,27 +351,32 @@ function URDFViewer({ config, saveConfig }: Props) {
           />
         </Stack>
       </PanelToolbar>
-      {models.length === 0 ? (
+      {model == undefined ? (
         <EmptyState>Drag and drop a URDF file to visualize it.</EmptyState>
       ) : (
-        <div ref={resizeRef} style={{ flex: "1 1 auto", position: "relative" }}>
-          <canvas
-            ref={(el) => setCanvas(el)}
-            width={width}
-            height={height}
-            style={{
-              position: "absolute",
-              inset: 0,
-            }}
-          />
-          {!cameraCentered && (
-            <DefaultButton
-              text="Re-center"
-              onClick={() => renderer.centerCamera()}
-              style={{ position: "absolute", bottom: theme.spacing.s1, right: theme.spacing.s1 }}
+        <Flex row clip>
+          <div ref={resizeRef} style={{ flex: "1 1 auto", position: "relative" }}>
+            <canvas
+              ref={(el) => setCanvas(el)}
+              width={width}
+              height={height}
+              style={{
+                position: "absolute",
+                inset: 0,
+              }}
             />
+            {!cameraCentered && (
+              <DefaultButton
+                text="Re-center"
+                onClick={() => renderer.centerCamera()}
+                style={{ position: "absolute", bottom: theme.spacing.s1, right: theme.spacing.s1 }}
+              />
+            )}
+          </div>
+          {useCustomJointValues && model && (
+            <JointValueSliders model={model} config={config} saveConfig={saveConfig} />
           )}
-        </div>
+        </Flex>
       )}
     </Flex>
   );

@@ -7,13 +7,18 @@
 
 import "colors";
 import { addBreadcrumb, captureException, init as initSentry } from "@sentry/electron";
-import { app, BrowserWindow, ipcMain, Menu, session, nativeTheme } from "electron";
+import { app, BrowserWindow, ipcMain, Menu, session, nativeTheme, protocol } from "electron";
 import installExtension, {
   REACT_DEVELOPER_TOOLS,
   REDUX_DEVTOOLS,
 } from "electron-devtools-installer";
 import { autoUpdater } from "electron-updater";
 import fs from "fs";
+import fsPromise from "fs/promises";
+import path from "path";
+import { PNG } from "pngjs";
+import UTIF from "utif";
+import { DOMParser } from "xmldom";
 
 import { APP_NAME, APP_VERSION, APP_HOMEPAGE } from "@foxglove-studio/app/constants";
 import Logger from "@foxglove/log";
@@ -94,11 +99,95 @@ ipcMain.handle("getUserDataPath", () => {
   return app.getPath("userData");
 });
 
+async function rosPackageNameAtPath(packagePath: string): Promise<string | undefined> {
+  try {
+    const contents = await fsPromise.readFile(path.join(packagePath, "package.xml"), {
+      encoding: "utf-8",
+    });
+    const doc = new DOMParser().parseFromString(contents, "text/xml");
+    const packageName = Array.from(doc.firstChild?.childNodes ?? []).find(
+      (n) => n.nodeName === "name",
+    )?.textContent;
+    return packageName ?? undefined;
+  } catch (err) {
+    return undefined;
+  }
+}
+
+async function findRosPackageRoot(pkg: string, currentPath: string): Promise<string | undefined> {
+  for (;;) {
+    if ((await rosPackageNameAtPath(currentPath)) === pkg) {
+      return currentPath;
+    }
+    if (path.dirname(currentPath) === currentPath) {
+      return undefined;
+    }
+    currentPath = path.dirname(currentPath);
+  }
+}
+
+async function findRosPackageResource(urlString: string): Promise<string> {
+  const url = new URL(urlString);
+  const params = new URLSearchParams(url.search);
+  const targetPkg = params.get("targetPkg");
+  const basePath = params.get("basePath");
+  const relPath = params.get("relPath");
+  if (targetPkg == undefined) {
+    throw new Error("ROS package URL missing targetPkg");
+  }
+  if (basePath == undefined) {
+    throw new Error("ROS package URL missing basePath");
+  }
+  if (relPath == undefined) {
+    throw new Error("ROS package URL missing relPath");
+  }
+
+  const resourcePathParts = relPath.split("/");
+  const pkgRoot = await findRosPackageRoot(targetPkg, path.dirname(basePath));
+  if (pkgRoot == undefined) {
+    throw new Error(`ROS package ${targetPkg} not found. It must be an ancestor of ${basePath}.`);
+  }
+  return path.join(pkgRoot, ...resourcePathParts);
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", async () => {
   nativeTheme.themeSource = "dark";
+
+  protocol.registerFileProtocol("x-foxglove-ros-package", async (request, callback) => {
+    try {
+      const resPath = await findRosPackageResource(request.url);
+      console.log("responding from", resPath);
+      callback({ path: resPath });
+    } catch (err) {
+      console.warn("Error loading from ROS package url", request.url, err);
+      callback({ error: 404 });
+    }
+  });
+
+  protocol.registerBufferProtocol(
+    "x-foxglove-ros-package-converted-tiff",
+    async (request, callback) => {
+      try {
+        const resPath = await findRosPackageResource(request.url);
+        const buf = await fsPromise.readFile(resPath);
+        const [ifd] = UTIF.decode(buf);
+        if (!ifd) {
+          throw new Error("TIFF decoding failed");
+        }
+        UTIF.decodeImage(buf, ifd);
+        const png = new PNG({ width: ifd.width, height: ifd.height });
+        png.data = Buffer.from(UTIF.toRGBA8(ifd));
+        const pngData = PNG.sync.write(png);
+        callback({ mimeType: "image/png", data: pngData });
+      } catch (err) {
+        console.warn("Error loading from ROS package url", request.url, err);
+        callback({ error: 404 });
+      }
+    },
+  );
 
   // Only stable builds check for automatic updates
   if (process.env.NODE_ENV !== "production") {
@@ -165,9 +254,9 @@ app.on("ready", async () => {
     "script-src": `'self' 'unsafe-inline' 'unsafe-eval'`,
     "worker-src": `'self' blob:`,
     "style-src": "'self' 'unsafe-inline'",
-    "connect-src": "'self' ws: wss: http: https:", // Required for rosbridge connections
+    "connect-src": "'self' ws: wss: http: https: x-foxglove-ros-package:", // Required for rosbridge connections
     "font-src": "'self' data:",
-    "img-src": "'self' data: https:",
+    "img-src": "'self' data: https: x-foxglove-ros-package-converted-tiff:",
   };
 
   if (allowCrashReporting) {

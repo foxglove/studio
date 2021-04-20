@@ -13,11 +13,9 @@ export function NativeFileMenuPlayerSelection(): ReactElement {
 
   useEffect(() => {
     for (const item of availableSources) {
-      OsContextSingleton?.menuAddInputSource(
-        item.type === "file" ? "File" : item.name,
-        () => selectSource(item),
-        item.type === "file" ? { role: "genericOpen" } : undefined,
-      );
+      OsContextSingleton?.menuAddInputSource(item.name, () => {
+        selectSource(item);
+      });
     }
 
     return () => {
