@@ -33,6 +33,11 @@
         "ext": "urdf",
         "name": "Unified Robot Description Format File",
         "mimeType": "text/xml"
+      },
+      {
+        "ext": "xacro",
+        "name": "Xacro File",
+        "mimeType": "text/xml"
       }
     ]
   },
@@ -49,6 +54,11 @@
         "ext": "urdf",
         "name": "Unified Robot Description Format File",
         "icon": "resources/icon/URDFIcon.ico"
+      },
+      {
+        "ext": "xacro",
+        "name": "Xacro File",
+        "icon": "resources/icon/XacroIcon.ico"
       }
     ]
   },
@@ -63,7 +73,8 @@
     "entitlementsInherit": "resources/mac/entitlements.plist",
     "extraResources": [
       { "from": "resources/icon/BagIcon.png", "to": "BagIcon.png" },
-      { "from": "resources/icon/URDFIcon.png", "to": "URDFIcon.png" }
+      { "from": "resources/icon/URDFIcon.png", "to": "URDFIcon.png" },
+      { "from": "resources/icon/XacroIcon.png", "to": "XacroIcon.png" }
     ],
     "extendInfo": {
       "CFBundleDocumentTypes": [
@@ -84,6 +95,15 @@
           "LSHandlerRank": "Default",
           "CFBundleTypeIconSystemGenerated": 1,
           "LSItemContentTypes": ["org.ros.urdf"]
+        },
+        {
+          "CFBundleTypeExtensions": ["xacro"],
+          "CFBundleTypeIconFile": "XacroIcon",
+          "CFBundleTypeName": "Xacro File",
+          "CFBundleTypeRole": "Viewer",
+          "LSHandlerRank": "Default",
+          "CFBundleTypeIconSystemGenerated": 1,
+          "LSItemContentTypes": ["org.ros.xacro"]
         }
       ],
       "CFBundleURLTypes": [
@@ -106,6 +126,13 @@
           "UTTypeIcons": { "UTTypeIconText": "urdf" },
           "UTTypeIdentifier": "org.ros.urdf",
           "UTTypeTagSpecification": { "public.filename-extension": "urdf" }
+        },
+        {
+          "UTTypeConformsTo": ["public.xml"],
+          "UTTypeDescription": "Xacro File",
+          "UTTypeIcons": { "UTTypeIconText": "xacro" },
+          "UTTypeIdentifier": "org.ros.xacro",
+          "UTTypeTagSpecification": { "public.filename-extension": "xacro" }
         }
       ]
     }
