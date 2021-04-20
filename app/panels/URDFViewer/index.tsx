@@ -92,6 +92,7 @@ function URDFViewer({ config, saveConfig }: Props) {
     if (frameRef.current != undefined) {
       cancelAnimationFrame(frameRef.current);
     }
+    renderer.dispose();
   });
 
   useLayoutEffect(() => {

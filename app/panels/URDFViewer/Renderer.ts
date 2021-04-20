@@ -4,9 +4,22 @@
 import EventEmitter from "eventemitter3";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { URDFRobot } from "urdf-loader/src/URDFClasses";
+import { URDFRobot } from "urdf-loader";
 
 import { EventTypes } from "./index";
+
+// https://github.com/gkjohnson/urdf-loaders/issues/205
+function cloneModel(robot: URDFRobot): URDFRobot {
+  const copy = robot.clone();
+  copy.traverse((obj) => {
+    if (obj instanceof THREE.Mesh) {
+      if (obj.material) {
+        obj.material = obj.material.clone();
+      }
+    }
+  });
+  return copy;
+}
 
 export class Renderer extends EventEmitter<EventTypes> {
   private scene = new THREE.Scene();
@@ -70,10 +83,12 @@ export class Renderer extends EventEmitter<EventTypes> {
 
   setModel(model?: URDFRobot): void {
     if (this.model) {
+      this.model.traverse((obj) => (obj as { dispose?(): void }).dispose?.());
       this.world.remove(this.model);
     }
 
-    this.model = model;
+    // Clone models so they can be displayed in multiple URDF panels at once without interfering.
+    this.model = model ? cloneModel(model) : undefined;
     if (this.model) {
       this.world.add(this.model);
     }
@@ -103,5 +118,9 @@ export class Renderer extends EventEmitter<EventTypes> {
 
   setJointValues(values: Record<string, number>): void {
     this.model?.setJointValues(values);
+  }
+
+  dispose(): void {
+    this.scene.traverse((obj) => obj !== this.scene && (obj as { dispose?(): void }).dispose?.());
   }
 }

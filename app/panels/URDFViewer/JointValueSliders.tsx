@@ -4,7 +4,7 @@
 import { Slider, Stack, useTheme } from "@fluentui/react";
 import { pick } from "lodash";
 import { useCallback, useMemo } from "react";
-import { URDFRobot } from "urdf-loader/src/URDFClasses";
+import { URDFRobot } from "urdf-loader";
 
 export function JointValueSliders({
   model,
