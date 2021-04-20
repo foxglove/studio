@@ -1,0 +1,107 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
+import EventEmitter from "eventemitter3";
+import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { URDFRobot } from "urdf-loader/src/URDFClasses";
+
+import { EventTypes } from "./index";
+
+export class Renderer extends EventEmitter<EventTypes> {
+  private scene = new THREE.Scene();
+  private world = new THREE.Object3D();
+  private camera = new THREE.PerspectiveCamera();
+  private controls?: OrbitControls;
+  private renderer?: THREE.WebGLRenderer;
+  private ambientLight: THREE.HemisphereLight;
+  private dirLight: THREE.DirectionalLight;
+  private model?: URDFRobot;
+  private opacity: number = 1;
+
+  cameraCentered = true;
+
+  constructor() {
+    super();
+    this.camera.position.set(0, 0, 5);
+    this.centerCamera();
+    this.scene.add(this.world);
+    this.world.rotation.set(-Math.PI / 2, 0, 0);
+
+    this.ambientLight = new THREE.HemisphereLight("#666666", "#000");
+    this.ambientLight.groundColor.lerp(this.ambientLight.color, 0.5);
+    this.ambientLight.intensity = 0.8;
+    this.ambientLight.position.set(0, 1, 0);
+    this.scene.add(this.ambientLight);
+
+    this.dirLight = new THREE.DirectionalLight(0xffffff);
+    this.scene.add(this.dirLight);
+    this.scene.add(this.dirLight.target);
+  }
+
+  centerCamera(): void {
+    this.controls?.reset();
+    this.camera.updateProjectionMatrix();
+    this.cameraCentered = true;
+    this.emit("cameraMove");
+  }
+
+  setCanvas(canvas: HTMLCanvasElement): void {
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    this.renderer.setClearColor(0xffffff);
+    this.renderer.setClearAlpha(0.5);
+    this.renderer.outputEncoding = THREE.sRGBEncoding;
+
+    this.controls = new OrbitControls(this.camera, canvas);
+    // this.controls.enableDamping = true;
+    // this.controls.dampingFactor = 0.25;
+    this.controls.enableZoom = true;
+    this.controls.addEventListener("change", () => {
+      this.cameraCentered = this.controls?.target.equals(new THREE.Vector3()) ?? false;
+      this.emit("cameraMove");
+    });
+  }
+
+  setSize(width: number, height: number): void {
+    this.camera.aspect = width / height;
+    this.camera.updateProjectionMatrix();
+    this.renderer?.setSize(width, height);
+  }
+
+  setModel(model?: URDFRobot): void {
+    if (this.model) {
+      this.world.remove(this.model);
+    }
+
+    this.model = model;
+    if (this.model) {
+      this.world.add(this.model);
+    }
+    this.centerCamera();
+    this.setOpacity(this.opacity); // Re-apply opacity to new model
+  }
+
+  setOpacity(opacity: number): void {
+    this.opacity = opacity;
+    this.model?.traverse((obj) => {
+      if (obj instanceof THREE.Mesh) {
+        if (obj.material instanceof THREE.Material) {
+          obj.material.opacity = opacity;
+          obj.material.transparent = opacity < 1;
+          obj.material.depthWrite = !obj.material.transparent;
+        }
+      }
+    });
+  }
+
+  render(): void {
+    // The light should follow the viewer's position
+    this.dirLight.position.copy(this.camera.position);
+
+    this.renderer?.render(this.scene, this.camera);
+  }
+
+  setJointValues(values: Record<string, number>): void {
+    this.model?.setJointValues(values);
+  }
+}

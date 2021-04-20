@@ -175,7 +175,7 @@ app.on("ready", async () => {
     "script-src": `'self' 'unsafe-inline' 'unsafe-eval'`,
     "worker-src": `'self' blob:`,
     "style-src": "'self' 'unsafe-inline'",
-    "connect-src": "'self' ws: wss: http: https: x-foxglove-ros-package:", // Required for rosbridge connections
+    "connect-src": "'self' ws: wss: http: https: x-foxglove-ros-package:",
     "font-src": "'self' data:",
     "img-src": "'self' data: https: x-foxglove-ros-package-converted-tiff:",
   };
