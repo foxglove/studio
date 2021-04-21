@@ -34,8 +34,7 @@ if (allowCrashReporting && typeof process.env.SENTRY_DSN === "string") {
 type IpcListener = (ev: unknown, ...args: unknown[]) => void;
 const menuClickListeners = new Map<string, IpcListener>();
 
-// Initialize the RPC channel for electron-socket
-// FIXME: @jhurliman this returns a promise, should we have await here?
+// Initialize the RPC channel for electron-socket asyncronously
 PreloaderSockets.Create();
 
 window.addEventListener(
