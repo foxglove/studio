@@ -22,6 +22,5 @@
     "../typings/*.d.ts",
     "../*.ts",
     "../package.json"
-  ],
-  "references": [{ "path": "../packages" }]
+  ]
 }
