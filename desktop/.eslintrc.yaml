@@ -1,3 +1,10 @@
+parserOptions:
+  project: desktop/tsconfig.json
+settings:
+  import/resolver:
+    webpack:
+      config: ./webpack.main.config.ts
+
 rules:
   # Re-enable these when https://github.com/benmosher/eslint-plugin-import/issues/1996 is fixed
   import/no-unresolved: off
