@@ -1,10 +1,25 @@
-// TypeScript configuration for files in project root
-// Do not extend from this file, see /tsconfig.base.json instead
-// Do not add files to "include" if their directory already has its own tsconfig.json
 {
-  "extends": "./tsconfig.base.json",
-  "include": ["*.ts", "*.json", "resources/**/*", "test/**/*"],
   "compilerOptions": {
-    "noEmit": true
-  }
+    "target": "es2020",
+    "module": "commonjs",
+    "newLine": "lf",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "downlevelIteration": true,
+    "importHelpers": true,
+    "sourceMap": true,
+    "moduleResolution": "node",
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": false,
+    "typeRoots": ["node_modules/@types", "./typings"]
+  },
+  "include": ["*.ts", "*.js", "test/**/*.ts", "resources/notarize.ts"],
+  "exclude": ["node_modules"]
 }

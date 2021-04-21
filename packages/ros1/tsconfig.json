@@ -1,9 +1,12 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "include": ["src/**/*"],
+  "extends": "../../tsconfig.json",
+  "include": ["src/**/*.ts", "jest.config.ts"],
   "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist"
-  },
-  "references": [{ "path": "../xmlrpc" }]
+    "module": "es2020",
+    "lib": ["es2020"],
+    "declaration": true,
+    "rootDir": ".",
+    "noUnusedParameters": true,
+    "noEmit": true
+  }
 }

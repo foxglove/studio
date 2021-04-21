@@ -1,7 +1,4 @@
 {
-  "extends": "../tsconfig.base.json",
-  "include": ["**/*", "../typings/*.d.ts"],
-  "compilerOptions": {
-    "lib": ["dom", "es2020"]
-  }
+  "extends": "../tsconfig.json",
+  "include": ["**/*", "../typings/*.d.ts"]
 }

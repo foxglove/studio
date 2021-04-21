@@ -1,26 +1,17 @@
 {
-  "extends": "../tsconfig.base.json",
+  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "rootDir": "../",
+    "baseUrl": ".",
     "module": "es2020",
     "jsx": "react-jsx",
-    "lib": ["dom", "dom.iterable", "es2020"],
-    "noEmit": true,
+    "lib": ["DOM", "DOM.Iterable", "es2020"],
     "paths": {
       "micro-memoize": ["../typings/micro-memoize"],
-      "@foxglove-studio/app/*": ["./*"]
-    },
-    "noUnusedParameters": false
+      "@foxglove-studio/app/*": ["*"]
+    }
   },
   "typeAcquisition": {
     "exclude": ["node"]
   },
-  "include": [
-    "**/*",
-    "**/*.json",
-    ".storybook/**/*",
-    "../typings/*.d.ts",
-    "../*.ts",
-    "../package.json"
-  ]
+  "include": ["**/*", "../typings/*.d.ts", ".storybook/*"]
 }
