@@ -2,8 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 import EventEmitter from "eventemitter3";
+import { CameraState } from "regl-worldview";
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { URDFRobot } from "urdf-loader";
 
 import { EventTypes } from "./index";
@@ -25,7 +25,6 @@ export class Renderer extends EventEmitter<EventTypes> {
   private scene = new THREE.Scene();
   private world = new THREE.Object3D();
   private camera = new THREE.PerspectiveCamera();
-  private controls?: OrbitControls;
   private renderer?: THREE.WebGLRenderer;
   private ambientLight: THREE.HemisphereLight;
   private dirLight: THREE.DirectionalLight;
@@ -33,12 +32,8 @@ export class Renderer extends EventEmitter<EventTypes> {
   private opacity: number = 1;
   private jointValues: Record<string, number> = {};
 
-  cameraCentered = true;
-
   constructor() {
     super();
-    this.camera.position.set(0, 1, 5);
-    this.centerCamera();
     this.scene.add(this.world);
     this.world.rotation.set(-Math.PI / 2, 0, 0);
 
@@ -53,25 +48,11 @@ export class Renderer extends EventEmitter<EventTypes> {
     this.scene.add(this.dirLight.target);
   }
 
-  centerCamera(): void {
-    this.controls?.reset();
-    this.camera.updateProjectionMatrix();
-    this.cameraCentered = true;
-    this.emit("cameraMove");
-  }
-
   setCanvas(canvas: HTMLCanvasElement): void {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     this.renderer.setClearColor(0xffffff);
     this.renderer.setClearAlpha(0.5);
     this.renderer.outputEncoding = THREE.sRGBEncoding;
-
-    this.controls = new OrbitControls(this.camera, canvas);
-    this.controls.enableZoom = true;
-    this.controls.addEventListener("change", () => {
-      this.cameraCentered = this.controls?.target.equals(new THREE.Vector3()) ?? false;
-      this.emit("cameraMove");
-    });
   }
 
   setSize(width: number, height: number): void {
@@ -91,7 +72,6 @@ export class Renderer extends EventEmitter<EventTypes> {
     if (this.model) {
       this.world.add(this.model);
     }
-    this.centerCamera();
     // Re-apply customized values to new model
     this.setOpacity(this.opacity);
     this.setJointValues(this.jointValues);
@@ -108,6 +88,25 @@ export class Renderer extends EventEmitter<EventTypes> {
         }
       }
     });
+  }
+
+  /** Translate a Worldview CameraState to the three.js coordinate system */
+  setCameraState(cameraState: CameraState): void {
+    this.camera.position
+      .setFromSpherical(
+        new THREE.Spherical(cameraState.distance, cameraState.phi, -cameraState.thetaOffset),
+      )
+      .add(
+        new THREE.Vector3(
+          cameraState.targetOffset[0],
+          -cameraState.targetOffset[2], // always 0 in Worldview CameraListener
+          -cameraState.targetOffset[1],
+        ),
+      );
+    this.camera.quaternion.setFromEuler(
+      new THREE.Euler(cameraState.phi - Math.PI / 2, -cameraState.thetaOffset, 0, "ZYX"),
+    );
+    this.camera.updateProjectionMatrix();
   }
 
   render(): void {

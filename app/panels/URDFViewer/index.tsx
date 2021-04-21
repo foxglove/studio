@@ -11,9 +11,9 @@ import {
   Toggle,
   useTheme,
 } from "@fluentui/react";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
-import { useUpdate } from "react-use";
+import { CameraStore, CameraListener, CameraState, DEFAULT_CAMERA_STATE } from "regl-worldview";
 
 import * as PanelAPI from "@foxglove-studio/app/PanelAPI";
 import EmptyState from "@foxglove-studio/app/components/EmptyState";
@@ -44,6 +44,8 @@ export type Props = {
   saveConfig: SaveConfig<Config>;
 };
 
+const DEFAULT_DISTANCE = 5;
+
 function URDFViewer({ config, saveConfig }: Props) {
   const { customJointValues, jointStatesTopic, opacity } = config;
   const [canvas, setCanvas] = useState<HTMLCanvasElement | ReactNull>(ReactNull);
@@ -69,29 +71,8 @@ function URDFViewer({ config, saveConfig }: Props) {
   }, [assets, prevAssets, selectedAssetId]);
 
   const [renderer] = useState(() => new Renderer());
-  const [cameraCentered, setCameraCentered] = useState(renderer.cameraCentered);
-  const forceUpdate = useUpdate();
-  const frameRef = useRef<number | undefined>();
-  useEffect(() => {
-    const listener = () => {
-      if (frameRef.current == undefined) {
-        frameRef.current = requestAnimationFrame(() => {
-          frameRef.current = undefined;
-          setCameraCentered(renderer.cameraCentered);
-          forceUpdate();
-        });
-      }
-    };
-    renderer.addListener("cameraMove", listener);
-    return () => {
-      renderer.removeListener("cameraMove", listener);
-    };
-  }, [renderer, forceUpdate]);
 
   useCleanup(() => {
-    if (frameRef.current != undefined) {
-      cancelAnimationFrame(frameRef.current);
-    }
     renderer.dispose();
   });
 
@@ -148,7 +129,18 @@ function URDFViewer({ config, saveConfig }: Props) {
     }
   }, [renderer, opacity]);
 
+  const [cameraState, setCameraState] = useState(() => ({
+    ...DEFAULT_CAMERA_STATE,
+    distance: DEFAULT_DISTANCE,
+  }));
+  const [cameraStore] = useState(() => new CameraStore(setCameraState, cameraState));
+  const cameraCentered =
+    cameraState.targetOffset[0] === 0 &&
+    cameraState.targetOffset[1] === 0 &&
+    cameraState.targetOffset[2] === 0;
+
   useLayoutEffect(() => {
+    renderer.setCameraState(cameraState);
     renderer.render();
   });
 
@@ -219,15 +211,11 @@ function URDFViewer({ config, saveConfig }: Props) {
       ) : (
         <Flex row clip>
           <div ref={resizeRef} style={{ flex: "1 1 auto", position: "relative" }}>
-            <canvas
-              ref={(el) => setCanvas(el)}
-              width={width}
-              height={height}
-              style={{
-                position: "absolute",
-                inset: 0,
-              }}
-            />
+            <div style={{ position: "absolute", inset: 0 }}>
+              <CameraListener cameraStore={cameraStore} shiftKeys={true}>
+                <canvas ref={(el) => setCanvas(el)} width={width} height={height} />
+              </CameraListener>
+            </div>
             <div
               style={{
                 position: "absolute",
@@ -266,7 +254,18 @@ function URDFViewer({ config, saveConfig }: Props) {
                 />
               </Stack.Item>
               {!cameraCentered && (
-                <DefaultButton text="Re-center" onClick={() => renderer.centerCamera()} />
+                <DefaultButton
+                  text="Re-center"
+                  onClick={() => {
+                    const newState: CameraState = {
+                      ...cameraState,
+                      targetOffset: [0, 0, 0],
+                      distance: DEFAULT_DISTANCE,
+                    };
+                    cameraStore.setCameraState(newState);
+                    setCameraState(newState);
+                  }}
+                />
               )}
             </Stack>
           </div>
