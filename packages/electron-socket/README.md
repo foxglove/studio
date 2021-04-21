@@ -10,14 +10,14 @@ Raw sockets are not supported in browser contexts, even in Electron apps. To ove
 
 ```ts
 // preload.ts ////////////////////////////////////////////////////////////////
-import { PreloaderSockets } from "@foxglove/electron-socket/preloader";
+import { PreloaderSockets } from "@foxglove/electron-socket/src/preloader";
 
 PreloaderSockets.Create();
 ```
 
 ```ts
 // renderer.ts ///////////////////////////////////////////////////////////////
-import { Sockets } from "@foxglove/electron-socket/renderer";
+import { Sockets } from "@foxglove/electron-socket/src/renderer";
 
 async function main() {
   const net = await Sockets.Create();

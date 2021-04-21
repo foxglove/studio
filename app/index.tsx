@@ -14,7 +14,7 @@ import installDevtoolsFormatters from "@foxglove-studio/app/util/installDevtools
 import { initializeLogEvent } from "@foxglove-studio/app/util/logEvent";
 import overwriteFetch from "@foxglove-studio/app/util/overwriteFetch";
 import waitForFonts from "@foxglove-studio/app/util/waitForFonts";
-import { Sockets } from "@foxglove/electron-socket/renderer";
+import { Sockets } from "@foxglove/electron-socket/src/renderer";
 import Logger from "@foxglove/log";
 
 const log = Logger.getLogger(__filename);

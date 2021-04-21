@@ -10,7 +10,7 @@ import os from "os";
 import type { OsContext, OsContextForwardedEvent } from "@foxglove-studio/app/OsContext";
 import { NetworkInterface } from "@foxglove-studio/app/OsContext";
 import { APP_NAME, APP_VERSION } from "@foxglove-studio/app/constants";
-import { PreloaderSockets } from "@foxglove/electron-socket/preloader";
+import { PreloaderSockets } from "@foxglove/electron-socket/src/preloader";
 import Logger from "@foxglove/log";
 
 import LocalFileStorage from "./LocalFileStorage";
