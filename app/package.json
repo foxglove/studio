@@ -8,12 +8,6 @@
   "dependencies": {
     "@fluentui/react": "8.11.1",
     "@fluentui/react-icons-mdl2": "1.0.4",
-    "@foxglove/electron-socket": "workspace:packages/electron-socket",
-    "@foxglove/log": "workspace:packages/log",
-    "@foxglove/rosmsg-bobject": "workspace:packages/rosmsg-bobject",
-    "@foxglove/rosmsg-deser": "workspace:packages/rosmsg-deser",
-    "@foxglove/velodyne-cloud": "workspace:packages/velodyne-cloud",
-    "@foxglove/wasm-bz2": "workspace:packages/wasm-bz2",
     "@mdi/svg": "5.9.55",
     "async-mutex": "0.3.1",
     "cbor-js": "0.1.0",

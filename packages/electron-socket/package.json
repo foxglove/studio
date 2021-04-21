@@ -1,21 +1,36 @@
 {
   "name": "@foxglove/electron-socket",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Networking sockets for Electron apps",
   "license": "MPL-2.0",
   "private": true,
-  "scripts": {
-    "clean": "tsc --build --clean",
-    "prepack": "tsc --build"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/foxglove/studio.git"
+  },
+  "author": {
+    "name": "Foxglove Technologies",
+    "email": "support@foxglove.dev"
+  },
+  "homepage": "https://foxglove.dev/",
+  "exports": {
+    "./preloader": "./preloader/index.ts",
+    "./renderer": "./renderer/index.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {},
+  "devDependencies": {
+    "@jest/types": "26.6.2",
+    "jest": "26.6.3",
+    "tslib": "2.2.0",
+    "typescript": "4.2.2"
   },
   "dependencies": {
     "eventemitter3": "4.0.7"
   },
   "peerDependencies": {
     "electron": ">=12"
-  },
-  "devDependencies": {
-    "jest": "26.6.3",
-    "typescript": "4.2.2"
   }
 }

@@ -1,19 +1,32 @@
 {
   "name": "@foxglove/just-fetch",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Isomorphic ponyfill wrapping native browser fetch and node-fetch",
   "license": "MPL-2.0",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/foxglove/studio.git"
+  },
+  "author": {
+    "name": "Foxglove Technologies",
+    "email": "support@foxglove.dev"
+  },
+  "homepage": "https://foxglove.dev/",
   "main": "src/node.ts",
   "browser": "src/browser.ts",
+  "files": [
+    "src"
+  ],
   "scripts": {
-    "clean": "tsc --build --clean",
-    "prepack": "tsc --build"
-  },
-  "dependencies": {
-    "node-fetch": ">=3.0.0-beta.9"
+    "build": "tsc && tsc -p browser/tsconfig.json"
   },
   "devDependencies": {
+    "node-fetch": "^3.0.0-beta.9",
+    "tslib": "2.2.0",
     "typescript": "4.2.2"
+  },
+  "peerDependencies": {
+    "node-fetch": ">=3.0.0-beta.9"
   }
 }

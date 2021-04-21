@@ -2013,12 +2013,6 @@ __metadata:
   dependencies:
     "@fluentui/react": 8.11.1
     "@fluentui/react-icons-mdl2": 1.0.4
-    "@foxglove/electron-socket": "workspace:packages/electron-socket"
-    "@foxglove/log": "workspace:packages/log"
-    "@foxglove/rosmsg-bobject": "workspace:packages/rosmsg-bobject"
-    "@foxglove/rosmsg-deser": "workspace:packages/rosmsg-deser"
-    "@foxglove/velodyne-cloud": "workspace:packages/velodyne-cloud"
-    "@foxglove/wasm-bz2": "workspace:packages/wasm-bz2"
     "@mdi/svg": 5.9.55
     "@storybook/addon-actions": 6.2.5
     "@storybook/addon-essentials": 6.2.5
@@ -2153,8 +2147,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/electron-socket@workspace:packages/electron-socket"
   dependencies:
+    "@jest/types": 26.6.2
     eventemitter3: 4.0.7
     jest: 26.6.3
+    tslib: 2.2.0
     typescript: 4.2.2
   peerDependencies:
     electron: ">=12"
@@ -2165,16 +2161,17 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/just-fetch@workspace:packages/just-fetch"
   dependencies:
-    node-fetch: ">=3.0.0-beta.9"
+    node-fetch: ^3.0.0-beta.9
+    tslib: 2.2.0
     typescript: 4.2.2
+  peerDependencies:
+    node-fetch: ">=3.0.0-beta.9"
   languageName: unknown
   linkType: soft
 
 "@foxglove/log@workspace:packages/log":
   version: 0.0.0-use.local
   resolution: "@foxglove/log@workspace:packages/log"
-  dependencies:
-    typescript: 4.2.2
   languageName: unknown
   linkType: soft
 
@@ -2183,8 +2180,8 @@ __metadata:
   resolution: "@foxglove/ros1-turtlesim-test@workspace:packages/ros1-turtlesim-test"
   dependencies:
     "@foxglove/ros1": "workspace:packages/ros1"
-    "@foxglove/xmlrpc": "workspace:packages/xmlrpc"
     ts-node: 9.1.1
+    tslib: 2.2.0
     typescript: 4.2.2
   languageName: unknown
   linkType: soft
@@ -2194,9 +2191,12 @@ __metadata:
   resolution: "@foxglove/ros1@workspace:packages/ros1"
   dependencies:
     "@foxglove/xmlrpc": "workspace:packages/xmlrpc"
+    "@jest/types": 26.6.2
     eventemitter3: 4.0.7
     jest: 26.6.3
+    jest-circus: 26.6.3
     rosbag: "github:foxglove/rosbag.js#fc61125fbc01ff55698c5ed48987b2d9e7599572"
+    tslib: 2.2.0
     typescript: 4.2.2
     web-encoding: 1.1.4
   languageName: unknown
@@ -2205,18 +2205,12 @@ __metadata:
 "@foxglove/rosmsg-bobject@workspace:packages/rosmsg-bobject":
   version: 0.0.0-use.local
   resolution: "@foxglove/rosmsg-bobject@workspace:packages/rosmsg-bobject"
-  dependencies:
-    jest: 26.6.3
-    typescript: 4.2.2
   languageName: unknown
   linkType: soft
 
 "@foxglove/rosmsg-deser@workspace:packages/rosmsg-deser":
   version: 0.0.0-use.local
   resolution: "@foxglove/rosmsg-deser@workspace:packages/rosmsg-deser"
-  dependencies:
-    jest: 26.6.3
-    typescript: 4.2.2
   languageName: unknown
   linkType: soft
 
@@ -2224,10 +2218,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/velodyne-cloud@workspace:packages/velodyne-cloud"
   dependencies:
+    "@jest/types": 26.6.2
     jest: 26.6.3
     jest-circus: 26.6.3
     kelonio: 0.6.0
     rosbag: "github:foxglove/rosbag.js#fc61125fbc01ff55698c5ed48987b2d9e7599572"
+    tslib: 2.2.0
     typescript: 4.2.2
   languageName: unknown
   linkType: soft
@@ -2238,7 +2234,6 @@ __metadata:
   dependencies:
     "@types/emscripten": 1.39.4
     jest: 26.6.3
-    typescript: 4.2.2
   languageName: unknown
   linkType: soft
 
@@ -2247,11 +2242,13 @@ __metadata:
   resolution: "@foxglove/xmlrpc@workspace:packages/xmlrpc"
   dependencies:
     "@foxglove/just-fetch": "workspace:packages/just-fetch"
+    "@jest/types": 26.6.2
     "@types/sax": ^1.2.1
     byte-base64: 1.1.0
     jest: 26.6.3
     jest-circus: 26.6.3
     sax: 1.2.4
+    tslib: 2.2.0
     typescript: 4.2.2
     web-encoding: 1.1.4
     xmlbuilder2: 2.4.1
@@ -17094,20 +17091,20 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:>=3.0.0-beta.9":
+"node-fetch@npm:^2.6.0, node-fetch@npm:^2.6.1":
+  version: 2.6.1
+  resolution: "node-fetch@npm:2.6.1"
+  checksum: cbb171635e538162b977eac5dfe7a1e07a9a02e991924377a6435502291e2f823d306b95aabc455caebf4a118ccf836868462bc70ccc3095af02bb9da61fda37
+  languageName: node
+  linkType: hard
+
+"node-fetch@npm:^3.0.0-beta.9":
   version: 3.0.0-beta.9
   resolution: "node-fetch@npm:3.0.0-beta.9"
   dependencies:
     data-uri-to-buffer: ^3.0.1
     fetch-blob: ^2.1.1
   checksum: e1b71946805b6dbe44394df4dcd7287bb18c2d93bb5b1d41de24c5d87bc3ec28be5e7ec0601dfc93a62d41c05a25dc5f7c0804912e2c11bfbb23252c8ff2a155
-  languageName: node
-  linkType: hard
-
-"node-fetch@npm:^2.6.0, node-fetch@npm:^2.6.1":
-  version: 2.6.1
-  resolution: "node-fetch@npm:2.6.1"
-  checksum: cbb171635e538162b977eac5dfe7a1e07a9a02e991924377a6435502291e2f823d306b95aabc455caebf4a118ccf836868462bc70ccc3095af02bb9da61fda37
   languageName: node
   linkType: hard
 
@@ -23189,17 +23186,17 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
+"tslib@npm:2.2.0, tslib@npm:^2.0.0, tslib@npm:^2.0.1, tslib@npm:^2.0.3, tslib@npm:^2.1.0":
+  version: 2.2.0
+  resolution: "tslib@npm:2.2.0"
+  checksum: 2d35468c470410871c5246e43f12dcb6d0fc363b617c176f26443b9530e5c5ee8448966892a42956168d8f495da7865bda33dfe82c26c91991e28999974a618f
+  languageName: node
+  linkType: hard
+
 "tslib@npm:^1.10.0, tslib@npm:^1.8.1, tslib@npm:^1.9.0, tslib@npm:^1.9.3":
   version: 1.14.1
   resolution: "tslib@npm:1.14.1"
   checksum: f44fe7f216946b17d3e3074df3746372703cf24e9127b4c045511456e8e4bf25515fb0a1bb3937676cc305651c5d4fcb6377b0588a4c6a957e748c4c28905d17
-  languageName: node
-  linkType: hard
-
-"tslib@npm:^2.0.0, tslib@npm:^2.0.1, tslib@npm:^2.0.3, tslib@npm:^2.1.0":
-  version: 2.2.0
-  resolution: "tslib@npm:2.2.0"
-  checksum: 2d35468c470410871c5246e43f12dcb6d0fc363b617c176f26443b9530e5c5ee8448966892a42956168d8f495da7865bda33dfe82c26c91991e28999974a618f
   languageName: node
   linkType: hard
 
