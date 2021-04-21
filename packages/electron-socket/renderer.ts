@@ -4,4 +4,4 @@
 
 // Import helper since TypeScript doesn't support package exports yet:
 // https://github.com/microsoft/TypeScript/issues/33079
-export * from "./dist/renderer";
+export * from "./src/renderer";
