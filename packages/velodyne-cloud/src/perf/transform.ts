@@ -14,7 +14,7 @@ const transform = new Transformer(calibration);
 
 for (let i = 0; i < 500; i++) {
   const raw = new RawPacket(HDL32E_PACKET1);
-  const count = 0; // transform.validPoints(raw);
+  const count = 0; // transform.validPoints(raw); // FIXME @jhurliman
   const cloud = new PointCloud({ stamp: 0, maxPoints: count * 100 });
   for (let j = 0; j < 100; j++) {
     transform.unpack(raw, 0, 0, cloud);
