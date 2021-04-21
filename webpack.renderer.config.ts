@@ -112,9 +112,7 @@ export function makeConfig(_: unknown, argv: WebpackArgv, options?: Options): Co
                 // https://github.com/TypeStrong/ts-loader#onlycompilebundledfiles
                 // avoid looking at files which are not part of the bundle
                 onlyCompileBundledFiles: true,
-                projectReferences: true,
-                // FIXME: uncommenting this line breaks package building
-                // configFile: isDev ? "tsconfig.dev.json" : "tsconfig.json",
+                configFile: isDev ? "tsconfig.dev.json" : "tsconfig.json",
                 getCustomTransformers: () => ({ before: [styledComponentsTransformer] }),
               },
             },
