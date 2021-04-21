@@ -11,8 +11,8 @@ import {
   getNetworkInterfaces,
   getPid,
   TcpSocketNode,
-} from "@foxglove/ros1/dist/nodejs";
-import { HttpServerNodejs } from "@foxglove/xmlrpc/dist/HttpServerNodejs.js";
+} from "@foxglove/ros1/src/nodejs";
+import { HttpServerNodejs } from "@foxglove/xmlrpc/src/HttpServerNodejs";
 
 async function main() {
   const name = "/testclient";

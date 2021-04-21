@@ -4,7 +4,7 @@
   "description": "TypeScript library for converting Velodyne LIDAR packet data to point clouds",
   "license": "MPL-2.0",
   "private": true,
-  "main": "dist/index.js",
+  "main": "src/index.ts",
   "scripts": {
     "clean": "tsc --build --clean",
     "prepack": "tsc --build",

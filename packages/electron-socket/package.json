@@ -5,8 +5,8 @@
   "license": "MPL-2.0",
   "private": true,
   "exports": {
-    "./preloader": "./dist/preloader/index.js",
-    "./renderer": "./dist/renderer/index.js"
+    "./preloader": "./src/preloader/index.ts",
+    "./renderer": "./src/renderer/index.ts"
   },
   "scripts": {
     "clean": "tsc --build --clean",
