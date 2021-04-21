@@ -31,12 +31,13 @@ export class Renderer extends EventEmitter<EventTypes> {
   private dirLight: THREE.DirectionalLight;
   private model?: URDFRobot;
   private opacity: number = 1;
+  private jointValues: Record<string, number> = {};
 
   cameraCentered = true;
 
   constructor() {
     super();
-    this.camera.position.set(0, 0, 5);
+    this.camera.position.set(0, 1, 5);
     this.centerCamera();
     this.scene.add(this.world);
     this.world.rotation.set(-Math.PI / 2, 0, 0);
@@ -66,8 +67,6 @@ export class Renderer extends EventEmitter<EventTypes> {
     this.renderer.outputEncoding = THREE.sRGBEncoding;
 
     this.controls = new OrbitControls(this.camera, canvas);
-    // this.controls.enableDamping = true;
-    // this.controls.dampingFactor = 0.25;
     this.controls.enableZoom = true;
     this.controls.addEventListener("change", () => {
       this.cameraCentered = this.controls?.target.equals(new THREE.Vector3()) ?? false;
@@ -93,7 +92,9 @@ export class Renderer extends EventEmitter<EventTypes> {
       this.world.add(this.model);
     }
     this.centerCamera();
-    this.setOpacity(this.opacity); // Re-apply opacity to new model
+    // Re-apply customized values to new model
+    this.setOpacity(this.opacity);
+    this.setJointValues(this.jointValues);
   }
 
   setOpacity(opacity: number): void {
@@ -117,6 +118,7 @@ export class Renderer extends EventEmitter<EventTypes> {
   }
 
   setJointValues(values: Record<string, number>): void {
+    this.jointValues = values;
     this.model?.setJointValues(values);
   }
 

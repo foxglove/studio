@@ -15,7 +15,7 @@ type AssetWithUUID = Asset & { uuid: string };
 type Assets = {
   /** Returns true if the file was successfully loaded as an asset. */
   loadFromFile: (file: File, path: string | undefined) => Promise<boolean>;
-  assets: AssetWithUUID[];
+  assets: readonly AssetWithUUID[];
 };
 
 const AssetsContext = createContext<Assets>({
