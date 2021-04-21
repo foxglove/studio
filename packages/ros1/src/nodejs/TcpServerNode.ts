@@ -6,7 +6,6 @@ import EventEmitter from "eventemitter3";
 import net from "net";
 
 import { TcpAddress, TcpServer } from "../TcpTypes";
-
 import { TcpSocketNode } from "./TcpSocketNode";
 
 export class TcpServerNode extends EventEmitter implements TcpServer {
