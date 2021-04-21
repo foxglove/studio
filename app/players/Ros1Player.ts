@@ -33,7 +33,7 @@ import {
   TimestampMethod,
   toSec,
 } from "@foxglove-studio/app/util/time";
-import { Sockets } from "@foxglove/electron-socket/src/renderer";
+import { Sockets } from "@foxglove/electron-socket/renderer";
 import Logger from "@foxglove/log";
 import { RosNode, TcpSocket } from "@foxglove/ros1";
 import { HttpServer } from "@foxglove/xmlrpc";
