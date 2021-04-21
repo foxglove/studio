@@ -99,6 +99,7 @@ const PerfInfo = styled.div`
   left: 2px;
   font-size: 9px;
   opacity: 0.5;
+  user-select: none;
 `;
 
 type Props<Config> = {
