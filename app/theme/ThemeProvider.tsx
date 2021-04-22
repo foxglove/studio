@@ -23,6 +23,7 @@ const icons: {
   DataManagementSettings: <Icons.DataManagementSettingsIcon />,
   Delete: <Icons.DeleteIcon />,
   Edit: <Icons.EditIcon />,
+  ErrorBadge: <Icons.ErrorBadgeIcon />,
   FileASPX: <Icons.FileASPXIcon />,
   FiveTileGrid: <Icons.FiveTileGridIcon />,
   Flow: <Icons.FlowIcon />,

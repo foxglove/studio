@@ -4,7 +4,7 @@
 
 import http from "http";
 
-import { HttpHandler, HttpServer } from "@foxglove/xmlrpc";
+import { HttpHandler, HttpServer } from "./HttpTypes";
 
 export class HttpServerNodejs implements HttpServer {
   handler: HttpHandler;
@@ -38,6 +38,14 @@ export class HttpServerNodejs implements HttpServer {
     }
     const hostname = addr.address === "::" ? "[::]" : addr.address;
     return `http://${hostname}${addr.port != undefined ? ":" + String(addr.port) : ""}/`;
+  }
+
+  port(): number | undefined {
+    const addr = this._server.address();
+    if (addr == undefined || typeof addr === "string") {
+      return undefined;
+    }
+    return addr.port;
   }
 
   listen(port?: number, hostname?: string, backlog?: number): Promise<void> {

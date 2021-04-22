@@ -18,6 +18,7 @@ declare global {
     | "DataManagementSettings"
     | "Delete"
     | "Edit"
+    | "ErrorBadge"
     | "FileASPX"
     | "FiveTileGrid"
     | "Flow"

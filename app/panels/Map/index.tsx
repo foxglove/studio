@@ -156,6 +156,8 @@ function MapPanel(props: Props) {
         <TileLayer
           attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          maxNativeZoom={18}
+          maxZoom={24}
         />
         <FilteredPointMarkers messages={navMessages} blocks={blocks} />
       </MapContainer>
@@ -167,5 +169,6 @@ MapPanel.panelType = "map";
 MapPanel.defaultConfig = {
   zoomLevel: 10,
 } as Config;
+MapPanel.supportsStrictMode = false;
 
 export default Panel(MapPanel);

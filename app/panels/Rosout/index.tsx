@@ -106,5 +106,6 @@ export default Panel(
   Object.assign(RosoutPanel, {
     defaultConfig: { searchTerms: [], minLogLevel: 1, topicToRender: "/rosout" } as Config,
     panelType: "RosOut",
+    supportsStrictMode: false,
   }),
 );

@@ -21,6 +21,8 @@ jobs:
           # required checks don't need to change if we ever change the commands used.
           - name: lint
             command: yarn run lint:ci
+          - name: packages
+            command: yarn build:packages
           - name: test
             command: yarn run test --maxWorkers=100%
           - name: storybook
@@ -90,7 +92,7 @@ jobs:
       - run: yarn install --immutable
       - name: test:integration
         if: matrix.os == 'ubuntu-20.04'
-        uses: GabrielBB/xvfb-action@v1.4
+        uses: GabrielBB/xvfb-action@v1.5
         with:
           working-directory: ./
           run: yarn run test:integration
