@@ -18,6 +18,7 @@ import Button from "@foxglove-studio/app/components/Button";
 
 type RenderRowInput<Item> = ListRowProps & {
   item: Item;
+  ref?: React.RefCallback<Element>;
 };
 
 export type RenderRow<Item> = (row: RenderRowInput<Item>) => React.ReactNode;
@@ -125,7 +126,9 @@ function LogList<Item>({ items, renderRow }: Props<Item>): JSX.Element {
                   columnIndex={0}
                   rowIndex={rowProps.index}
                 >
-                  {renderRow({ ...rowProps, item: items[rowProps.index]! })}
+                  {({ registerChild }) =>
+                    renderRow({ ...rowProps, item: items[rowProps.index]!, ref: registerChild })
+                  }
                 </CellMeasurer>
               )}
               rowCount={items.length}

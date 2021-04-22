@@ -91,8 +91,8 @@ const RosoutPanel = React.memo(({ config, saveConfig, topics }: Props) => {
       <Stack grow>
         <LogList
           items={filteredMessages}
-          renderRow={({ item, style, key, index }) => (
-            <div key={key} style={index === 0 ? { ...style, paddingTop: 36 } : style}>
+          renderRow={({ item, style, key, index, ref }) => (
+            <div ref={ref} key={key} style={index === 0 ? { ...style, paddingTop: 36 } : style}>
               <LogMessage msg={item.message} />
             </div>
           )}
@@ -106,6 +106,5 @@ export default Panel(
   Object.assign(RosoutPanel, {
     defaultConfig: { searchTerms: [], minLogLevel: 1, topicToRender: "/rosout" } as Config,
     panelType: "RosOut",
-    supportsStrictMode: false,
   }),
 );

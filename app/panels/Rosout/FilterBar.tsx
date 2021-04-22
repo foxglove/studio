@@ -11,7 +11,14 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Dropdown, IDropdownOption, TagPicker, Stack, ISelectableOption } from "@fluentui/react";
+import {
+  Dropdown,
+  IDropdownOption,
+  TagPicker,
+  Stack,
+  ISelectableOption,
+  useTheme,
+} from "@fluentui/react";
 import ClipboardOutlineIcon from "@mdi/svg/svg/clipboard-outline.svg";
 
 import Icon from "@foxglove-studio/app/components/Icon";
@@ -70,9 +77,9 @@ export default function FilterBar(props: FilterBarProps): JSX.Element {
     name: term,
     key: term,
   }));
-
+  const theme = useTheme();
   return (
-    <Stack grow horizontal>
+    <Stack grow horizontal tokens={{ childrenGap: theme.spacing.s1 }}>
       <Dropdown
         onRenderOption={renderOption}
         onRenderTitle={renderTitle}
@@ -84,11 +91,6 @@ export default function FilterBar(props: FilterBarProps): JSX.Element {
             });
           }
         }}
-        styles={{
-          title: {
-            border: 0,
-          },
-        }}
         options={LOG_LEVEL_OPTIONS}
         selectedKey={props.minLogLevel}
       />
@@ -99,16 +101,20 @@ export default function FilterBar(props: FilterBarProps): JSX.Element {
             placeholder: "node name or message text",
           }}
           styles={{
-            text: {
-              border: 0,
-            },
+            text: { minWidth: 0 },
+            input: { width: 0 },
           }}
           removeButtonAriaLabel="Remove"
           selectionAriaLabel="Filter"
           resolveDelay={50}
           selectedItems={selectedItems}
           onResolveSuggestions={(filter: string) => {
-            return [{ name: filter, key: filter }, ...nodeNameOptions];
+            return [
+              { name: filter, key: filter },
+              ...nodeNameOptions.filter(
+                ({ key }) => selectedItems?.every((item) => item.key !== key) ?? true,
+              ),
+            ];
           }}
           onChange={(items) => {
             props.onFilterChange({
