@@ -177,8 +177,12 @@ export function MessagePipelineProvider({
           await pauseFrameForPromises(promises);
 
           currentPlayerTickState.waitingForPromises = false;
-          currentPlayerTickState.resolveFn();
-          currentPlayerTickState.resolveFn = undefined;
+          // https://github.com/microsoft/TypeScript/issues/43781
+          // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions
+          if (currentPlayerTickState.resolveFn) {
+            currentPlayerTickState.resolveFn();
+            currentPlayerTickState.resolveFn = undefined;
+          }
         } else {
           currentPlayerTickState.resolveFn();
           currentPlayerTickState.resolveFn = undefined;
