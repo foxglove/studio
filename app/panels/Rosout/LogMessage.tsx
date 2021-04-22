@@ -38,7 +38,7 @@ const classes = mergeStyleSets({
     textIndent: "-20px",
     paddingLeft: "20px",
     whiteSpace: "pre-wrap",
-    lineJeight: "1.2",
+    lineHeight: "1.2",
   },
 });
 
