@@ -22,14 +22,14 @@ function noOp() {
   // no-op
 }
 
-if (typeof window.URL.createObjectURL === "undefined") {
-  Object.defineProperty(window.URL, "createObjectURL", { value: noOp });
-}
-
 if (typeof window !== "undefined") {
   global.TextDecoder = util.TextDecoder as typeof TextDecoder;
   // polyfill URLSearchParams in jsdom
   window.URLSearchParams = UrlSearchParams;
+
+  if (typeof window.URL.createObjectURL === "undefined") {
+    Object.defineProperty(window.URL, "createObjectURL", { value: noOp });
+  }
 }
 
 // you can import fakes from fake-indexeddb and attach them to the jsdom global

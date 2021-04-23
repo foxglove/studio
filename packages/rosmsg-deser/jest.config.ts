@@ -5,4 +5,7 @@
 export default {
   preset: "ts-jest",
   testRunner: "jest-circus/runner",
+  haste: {
+    forceNodeFilesystemAPI: true,
+  },
 };

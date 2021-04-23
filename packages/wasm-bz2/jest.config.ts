@@ -13,4 +13,7 @@ export default {
   },
   testRunner: "jest-circus/runner",
   testMatch: ["<rootDir>/src/**/*.test.ts"],
+  haste: {
+    forceNodeFilesystemAPI: true,
+  },
 };

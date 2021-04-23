@@ -5,7 +5,7 @@
 export default {
   preset: "ts-jest",
   transform: {
-    "\\.tsx?$": "<rootDir>/test/transformers/rawImportPreprocessor.ts",
+    // "\\.tsx?$": "<rootDir>/test/transformers/rawImportPreprocessor.ts",
     "\\.ne$": "<rootDir>/test/transformers/neTransformer.js",
     "\\.(bin|template|wasm)$": "<rootDir>/test/transformers/rawTransformer.js",
   },
@@ -27,4 +27,7 @@ export default {
     "\\.(css|scss)$": "<rootDir>/test/mocks/styleMock.ts",
   },
   testRunner: "jest-circus/runner",
+  haste: {
+    forceNodeFilesystemAPI: true,
+  },
 };

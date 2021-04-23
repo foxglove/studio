@@ -6,4 +6,7 @@ export default {
   preset: "ts-jest",
   testRunner: "jest-circus/runner",
   testMatch: ["<rootDir>/src/**/*.test.ts"],
+  haste: {
+    forceNodeFilesystemAPI: true,
+  },
 };

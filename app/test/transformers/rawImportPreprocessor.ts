@@ -2,12 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import type { CacheKeyOptions, TransformOptions } from "@jest/transform";
-import type { Config } from "@jest/types";
 import fs from "fs";
-import { createTransformer } from "ts-jest";
+import TsJest from "ts-jest";
 
-const transformer = createTransformer();
+const transformer = TsJest.createTransformer();
 
 // look for `?raw` import statements
 // re-write these into `const variable = "string source";`;
@@ -21,17 +19,15 @@ const importReplacer = (_: unknown, p1: string, p2: string) => {
 function rewriteSource(source: string) {
   return source.replace(importRegEx, importReplacer);
 }
-
 module.exports = {
-  process(
+  process(source: string, filePath: string, options: Parameters<typeof transformer.process>[2]) {
+    return transformer.process(rewriteSource(source), filePath, options);
+  },
+  getCacheKey(
     source: string,
     filePath: string,
-    config: Config.ProjectConfig,
-    options?: TransformOptions,
+    options: Parameters<typeof transformer.process>[2],
   ) {
-    return transformer.process(rewriteSource(source), filePath, config, options);
-  },
-  getCacheKey(source: string, filePath: string, config: string, options: CacheKeyOptions) {
-    return transformer.getCacheKey(rewriteSource(source), filePath, config, options);
+    return transformer.getCacheKey(rewriteSource(source), filePath, options);
   },
 };
