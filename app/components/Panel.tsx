@@ -61,7 +61,7 @@ import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
 import Flex from "@foxglove-studio/app/components/Flex";
 import Icon from "@foxglove-studio/app/components/Icon";
 import KeyListener from "@foxglove-studio/app/components/KeyListener";
-import PanelContext, { usePanelContext } from "@foxglove-studio/app/components/PanelContext";
+import PanelContext from "@foxglove-studio/app/components/PanelContext";
 import MosaicDragHandle from "@foxglove-studio/app/components/PanelToolbar/MosaicDragHandle";
 import { useExperimentalFeature } from "@foxglove-studio/app/context/ExperimentalFeaturesContext";
 import { usePanelCatalog } from "@foxglove-studio/app/context/PanelCatalogContext";
