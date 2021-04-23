@@ -1,17 +1,11 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["**/*.ts", "./typings/*.d.ts"],
+  "include": ["./*.ts", "./src/**/*"],
   "compilerOptions": {
     "module": "es2020",
     "lib": ["es2020", "dom"],
-    "declaration": true,
-    "rootDir": ".",
+    "composite": true,
     "noUnusedParameters": true,
-    "noEmit": true,
-    "typeRoots": ["node_modules/@types", "./typings"],
-    "paths": {
-      "dns-packet": ["./typings/dns-packet"],
-      "multicast-dns": ["./typings/multicast-dns"]
-    }
+    "noEmit": true
   }
 }
