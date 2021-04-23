@@ -12,6 +12,7 @@ export default {
   globals: {
     ReactNull: null, // eslint-disable-line no-restricted-syntax
     "ts-jest": {
+      isolatedModules: true,
       babelConfig: {
         plugins: ["babel-plugin-transform-import-meta", "@babel/plugin-transform-modules-commonjs"],
       },

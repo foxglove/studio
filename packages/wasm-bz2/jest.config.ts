@@ -6,6 +6,7 @@ export default {
   preset: "ts-jest",
   globals: {
     "ts-jest": {
+      isolatedModules: true,
       babelConfig: {
         plugins: ["babel-plugin-transform-import-meta", "@babel/plugin-transform-modules-commonjs"],
       },

@@ -4,6 +4,11 @@
 
 export default {
   preset: "ts-jest",
+  globals: {
+    "ts-jest": {
+      isolatedModules: true,
+    },
+  },
   testRunner: "jest-circus/runner",
   testMatch: ["<rootDir>/src/**/*.test.ts"],
   haste: {
