@@ -61,7 +61,7 @@ import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
 import Flex from "@foxglove-studio/app/components/Flex";
 import Icon from "@foxglove-studio/app/components/Icon";
 import KeyListener from "@foxglove-studio/app/components/KeyListener";
-import PanelContext from "@foxglove-studio/app/components/PanelContext";
+import PanelContext, { usePanelContext } from "@foxglove-studio/app/components/PanelContext";
 import MosaicDragHandle from "@foxglove-studio/app/components/PanelToolbar/MosaicDragHandle";
 import { useExperimentalFeature } from "@foxglove-studio/app/context/ExperimentalFeaturesContext";
 import { usePanelCatalog } from "@foxglove-studio/app/context/PanelCatalogContext";
@@ -143,7 +143,6 @@ export default function Panel<Config extends PanelConfig>(
   PanelComponent: ComponentConstructorType<{
     config: Config;
     saveConfig: SaveConfig<Config>;
-    openSiblingPanel: (arg0: string, cb: (arg0: PanelConfig) => PanelConfig) => void;
     topics: Topic[];
     capabilities: string[];
     datatypes: RosDatatypes;
@@ -511,22 +510,13 @@ export default function Panel<Config extends PanelConfig>(
         <PanelComponent
           config={panelComponentConfig}
           saveConfig={saveCompleteConfig}
-          openSiblingPanel={openSiblingPanel}
           topics={[...topics]}
           datatypes={datatypes}
           capabilities={capabilities}
           isHovered={isHovered}
         />
       ),
-      [
-        panelComponentConfig,
-        saveCompleteConfig,
-        openSiblingPanel,
-        topics,
-        datatypes,
-        capabilities,
-        isHovered,
-      ],
+      [panelComponentConfig, saveCompleteConfig, topics, datatypes, capabilities, isHovered],
     );
 
     const isDemoMode = useExperimentalFeature("demoMode");
