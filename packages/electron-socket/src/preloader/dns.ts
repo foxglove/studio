@@ -41,11 +41,11 @@ export function mdnsLookup(
       return;
     }
 
-    for (const a of res.answers) {
-      if (a.name === hostname && a.type === recordType) {
+    for (const answer of res.answers) {
+      if (answer.name === hostname && answer.type === recordType) {
         cleanup();
         // eslint-disable-next-line no-restricted-syntax
-        callback(null, a.data, a.type === "AAAA" ? 6 : 4);
+        callback(null, answer.data, answer.type === "AAAA" ? 6 : 4);
       }
     }
   });
