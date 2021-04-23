@@ -19,7 +19,7 @@ import * as time from "./time";
 
 describe("time.toDate & time.fromDate", () => {
   it("converts to date and from date", () => {
-    const totalSeconds = Math.round(Date.now() / 1000);
+    const totalSeconds = Math.round(Date.now() / 1000) + "x";
     const stamp = { sec: totalSeconds, nsec: 1000 };
     const now = new Date(totalSeconds * 1000);
     expect(time.toDate(stamp)).toEqual(now);

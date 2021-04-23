@@ -3,9 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import fs from "fs";
-import TsJest from "ts-jest";
-
-const transformer = TsJest.createTransformer();
+import { Transformer } from "@jest/transform";
+// import {} from "@jest/create-cache-key-function";
 
 // look for `?raw` import statements
 // re-write these into `const variable = "string source";`;
@@ -19,15 +18,17 @@ const importReplacer = (_: unknown, p1: string, p2: string) => {
 function rewriteSource(source: string) {
   return source.replace(importRegEx, importReplacer);
 }
-module.exports = {
-  process(source: string, filePath: string, options: Parameters<typeof transformer.process>[2]) {
-    return transformer.process(rewriteSource(source), filePath, options);
+
+const transformer: Transformer = {
+  process(sourceText, sourcePath, options) {
+    return rewriteSource(sourceText);
   },
-  getCacheKey(
-    source: string,
-    filePath: string,
-    options: Parameters<typeof transformer.process>[2],
-  ) {
-    return transformer.getCacheKey(rewriteSource(source), filePath, options);
-  },
+  // FIXME
+  // getCacheKey(
+  //   sourceText, sourcePath, options,
+  // ) {
+  //   cryptod
+  //   return transformer.getCacheKey(rewriteSource(source), filePath, options);
+  // },
 };
+module.exports = transformer;

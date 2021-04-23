@@ -3,12 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 export default {
-  preset: "ts-jest",
-  globals: {
-    "ts-jest": {
-      isolatedModules: true,
-    },
-  },
   testRunner: "jest-circus/runner",
   haste: {
     forceNodeFilesystemAPI: true,

@@ -7,7 +7,7 @@
     "esModuleInterop": true,
     "downlevelIteration": true,
     "importHelpers": true,
-    // "isolatedModules": true,
+    "isolatedModules": true,
     "sourceMap": true,
     "moduleResolution": "node",
     "forceConsistentCasingInFileNames": true,
