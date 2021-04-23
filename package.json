@@ -48,7 +48,6 @@
   "devDependencies": {
     "@actions/exec": "1.0.4",
     "@babel/core": "7.13.16",
-    "@babel/preset-env": "7.13.15",
     "@babel/preset-typescript": "7.13.0",
     "@foxglove/electron-socket": "workspace:packages/electron-socket",
     "@foxglove/velodyne-cloud": "workspace:packages/velodyne-cloud",
@@ -57,7 +56,6 @@
     "@sentry/electron": "2.4.0",
     "@types/amplitude-js": "7.0.1",
     "@types/babel__core": "^7",
-    "@types/babel__preset-env": "^7",
     "@types/case-sensitive-paths-webpack-plugin": "2.1.5",
     "@types/circular-dependency-plugin": "^5.0.2",
     "@types/electron-devtools-installer": "2.2.0",

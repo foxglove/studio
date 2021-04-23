@@ -1,0 +1,6 @@
+{
+  "testRunner": "jest-circus/runner",
+  "haste": {
+    "forceNodeFilesystemAPI": true
+  }
+}

@@ -1,6 +1,6 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src/**/*.ts", "src/**/*.json", "fixtures/**/*", "jest.config.ts"],
+  "include": ["src/**/*.ts", "src/**/*.json", "fixtures/**/*"],
   "compilerOptions": {
     "outDir": "dist",
     "module": "commonjs",
