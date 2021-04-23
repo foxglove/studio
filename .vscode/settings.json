@@ -1,3 +1,4 @@
+// -*- jsonc -*-
 {
   "debug.javascript.autoAttachFilter": "onlyWithFlag",
   "debug.toolBarLocation": "docked",
