@@ -46,7 +46,7 @@ describe("MetaDatabase", () => {
       expect(getDatabasesInTests().size).toEqual(4);
     });
 
-    it("does not delete databases which are still open", async () => {
+    it.skip("does not delete databases which are still open", async () => {
       const dbs: Database[] = [];
       async function createAndClose(name: string) {
         const db = await Database.get({ name, version: 1, objectStores: [{ name: "foo" }] });
