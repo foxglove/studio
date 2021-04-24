@@ -47,13 +47,14 @@ export function makeConfig(_: unknown, argv: WebpackArgv, options?: Options): Co
   if (
     !isDev &&
     process.env.SENTRY_AUTH_TOKEN != undefined &&
+    process.env.SENTRY_ORG != undefined &&
     process.env.SENTRY_PROJECT != undefined
   ) {
     plugins.push(
       new SentryWebpackPlugin({
         authToken: process.env.SENTRY_AUTH_TOKEN,
-        org: "foxglove",
-        project: "studio",
+        org: process.env.SENTRY_ORG,
+        project: process.env.SENTRY_PROJECT,
         release: `${process.env.SENTRY_PROJECT}@${packageJson.version}`,
 
         // Since the render config appears last in the list of webpack configs, we use it to upload
