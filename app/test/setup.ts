@@ -15,6 +15,7 @@ import UrlSearchParams from "url-search-params";
 import util from "util";
 
 import { resetLogEventForTests } from "@foxglove-studio/app/util/logEvent";
+import setImmediate from "@foxglove-studio/app/util/setImmediate";
 
 process.env.WASM_LZ4_ENVIRONMENT = "NODE";
 
@@ -30,6 +31,10 @@ if (typeof window !== "undefined") {
   if (typeof window.URL.createObjectURL === "undefined") {
     Object.defineProperty(window.URL, "createObjectURL", { value: noOp });
   }
+
+  // jsdom removes Node's setImmediate from global, but we have tests & app code that use it
+  // https://github.com/facebook/jest/pull/11222
+  (window as any).setImmediate ??= setImmediate;
 }
 
 global.TextEncoder = util.TextEncoder;
