@@ -2150,6 +2150,7 @@ __metadata:
     "@jest/types": 26.6.2
     eventemitter3: 4.0.7
     jest: 26.6.3
+    multicast-dns: 7.2.2
     tslib: 2.2.0
     typescript: 4.2.2
   peerDependencies:
@@ -2205,6 +2206,9 @@ __metadata:
 "@foxglove/rosmsg-deser@workspace:packages/rosmsg-deser":
   version: 0.0.0-use.local
   resolution: "@foxglove/rosmsg-deser@workspace:packages/rosmsg-deser"
+  dependencies:
+    jest: 26.6.3
+    typescript: 4.2.2
   languageName: unknown
   linkType: soft
 
@@ -6675,7 +6679,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"babel-loader@npm:8.2.2, babel-loader@npm:^8.2.2":
+"babel-loader@npm:^8.2.2":
   version: 8.2.2
   resolution: "babel-loader@npm:8.2.2"
   dependencies:
@@ -9946,6 +9950,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dns-packet@npm:^4.0.0":
+  version: 4.2.0
+  resolution: "dns-packet@npm:4.2.0"
+  dependencies:
+    ip: ^1.1.5
+    safe-buffer: ^5.1.1
+  checksum: 1cd2d08f0bae59b16a08a86acc292b76c61c8353475a2538654ebc15331c49f962981291d99f904420b64b9a23e7938d880c157591029235088bc5e7b16ac8cb
+  languageName: node
+  linkType: hard
+
 "dns-txt@npm:^2.0.2":
   version: 2.0.2
   resolution: "dns-txt@npm:2.0.2"
@@ -12092,7 +12106,6 @@ __metadata:
     "@typescript-eslint/eslint-plugin": 4.21.0
     "@typescript-eslint/parser": 4.21.0
     amplitude-js: 8.1.0
-    babel-loader: 8.2.2
     babel-plugin-transform-import-meta: 1.0.1
     browserify-zlib: 0.2.0
     circular-dependency-plugin: 5.2.2
@@ -12129,6 +12142,7 @@ __metadata:
     path-browserify: 1.0.1
     pngjs: 6.0.0
     prettier: 2.2.1
+    react-refresh-typescript: 2.0.0
     react-svg-loader: 3.0.3
     readable-stream: 3.6.0
     rimraf: 3.0.2
@@ -16963,6 +16977,18 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"multicast-dns@npm:7.2.2":
+  version: 7.2.2
+  resolution: "multicast-dns@npm:7.2.2"
+  dependencies:
+    dns-packet: ^4.0.0
+    thunky: ^1.0.2
+  bin:
+    multicast-dns: cli.js
+  checksum: 5e26372b35da585d007a06f9d79d46aae8da3c800f9a4b6a9b828a2cd5de76c1f87e212686c57f42678f2491a50bd8f493c24d567aaa4232b9c208de5073c90f
+  languageName: node
+  linkType: hard
+
 "multicast-dns@npm:^6.0.1":
   version: 6.2.3
   resolution: "multicast-dns@npm:6.2.3"
@@ -19947,6 +19973,16 @@ fsevents@^1.2.7:
     react-native:
       optional: true
   checksum: f789c2d9cb19d33bd5764ea381537d94faf3b3872151b0eb5f6f3c07c3d8746b446664d72026fbafcfef3af7afcab907c9c0486b2c4d283d1ffd06f71dd39be7
+  languageName: node
+  linkType: hard
+
+"react-refresh-typescript@npm:2.0.0":
+  version: 2.0.0
+  resolution: "react-refresh-typescript@npm:2.0.0"
+  peerDependencies:
+    react-refresh: 0.10.x
+    typescript: ^4
+  checksum: 7da5e065e2cff5f29962ef7a6cd6775890ead864862ac2ff4fe41a91ef1630f8c1bb75c77fad52cf80a59778e58b8fd355c3f642e51580a997d3f592b6355e56
   languageName: node
   linkType: hard
 

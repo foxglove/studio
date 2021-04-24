@@ -15,7 +15,7 @@ import { RosParamClient } from "./RosParamClient";
 import { Subscription } from "./Subscription";
 import { TcpConnection } from "./TcpConnection";
 import { TcpSocketCreate, TcpServer, TcpAddress, NetworkInterface } from "./TcpTypes";
-import { RosXmlRpcResponse, RosXmlRpcResponseOrFault } from "./XmlRpcTypes";
+import { RosXmlRpcResponse } from "./XmlRpcTypes";
 import { isEmptyPlainObject } from "./objectTests";
 
 export type RosGraph = {
@@ -133,8 +133,16 @@ export class RosNode extends EventEmitter {
 
   subscribe(options: SubscribeOpts): Subscription {
     const { topic, type } = options;
+
+    // Check if we are already subscribed
+    let subscription = this.subscriptions.get(topic);
+    if (subscription != undefined) {
+      this._log?.debug?.(`reusing existing subscribtion to ${topic} (${type})`);
+      return subscription;
+    }
+
     const md5sum = options.md5sum ?? "*";
-    const subscription = new Subscription(topic, md5sum, type);
+    subscription = new Subscription(topic, md5sum, type);
     this.subscriptions.set(topic, subscription);
 
     this._log?.debug?.(`subscribing to ${topic} (${type})`);
@@ -239,7 +247,7 @@ export class RosNode extends EventEmitter {
     this.parameters.clear();
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i] as string;
-      const entry = res[i] as RosXmlRpcResponseOrFault;
+      const entry = res[i];
       if (entry instanceof XmlRpcFault) {
         this._log?.warn?.(`subscribeAllParams errored on "${key}" (${entry})`);
         continue;
