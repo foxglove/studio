@@ -10,7 +10,9 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "importHelpers": false,
-    "isolatedModules": true, //fixme:comment
+
+    // required for testing with babel-jest + babel-plugin-transform-typescript
+    "isolatedModules": true,
 
     // webpack handles JS imports for us
     "allowJs": false,
