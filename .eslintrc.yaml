@@ -87,14 +87,7 @@ rules:
     - error
     - additionalHooks: "(useAsync(?!AppConfigurationValue))"
   no-new-func: error
-  "foxglove-license-header": error
-  # header/header:
-  #   - error
-  #   - line
-  #   - - { pattern: "(^/\\*\\* @jest-environment jsdom \\*/$)?" }
-  #     - " This Source Code Form is subject to the terms of the Mozilla Public"
-  #     - " License, v2.0. If a copy of the MPL was not distributed with this"
-  #     - " file, You can obtain one at http://mozilla.org/MPL/2.0/"
+  foxglove-license-header: error
 
   curly: error
   "@typescript-eslint/no-unused-vars":
