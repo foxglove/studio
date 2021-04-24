@@ -62,7 +62,7 @@ class TestRunClient implements AutomatedRunClient {
   }
 }
 
-const getMessagesResult = { parsedMessages: [], rosBinaryMessages: undefined, bobjects: [] };
+const getMessagesResult = { parsedMessages: [], rosBinaryMessages: undefined };
 
 /* eslint-disable no-underscore-dangle */
 describe("AutomatedRunPlayer", () => {
@@ -70,7 +70,7 @@ describe("AutomatedRunPlayer", () => {
     const provider = new TestProvider({ getMessages: async () => getMessagesResult });
     const client = new TestRunClient({ shouldLoadDataBeforePlaying: true });
     const player = new AutomatedRunPlayer(provider, client);
-    player.setSubscriptions([{ topic: "/foo/bar", format: "parsedMessages" }]);
+    player.setSubscriptions([{ topic: "/foo/bar" }]);
     await delay(AUTOMATED_RUN_START_DELAY + 10);
     expect(player._initialized).toEqual(true);
     expect(player._isPlaying).toEqual(false);
@@ -97,7 +97,7 @@ describe("AutomatedRunPlayer", () => {
     expect(client.markPreloadEnd.mock.calls.length).toBe(0);
     expect(emitStateCalls).toBe(0);
 
-    player.setSubscriptions([{ topic: "/foo/bar", format: "parsedMessages" }]);
+    player.setSubscriptions([{ topic: "/foo/bar" }]);
     await delay(AUTOMATED_RUN_START_DELAY + 10);
 
     // Preloading has started but not finished.
@@ -144,7 +144,7 @@ describe("AutomatedRunPlayer", () => {
     const client = new TestRunClient();
 
     const player = new AutomatedRunPlayer(provider, client);
-    player.setSubscriptions([{ topic: "/foo/bar", format: "parsedMessages" }]);
+    player.setSubscriptions([{ topic: "/foo/bar" }]);
     await delay(AUTOMATED_RUN_START_DELAY + 10);
     expect(player._initialized).toEqual(true);
     expect(player._isPlaying).toEqual(true);
@@ -193,7 +193,7 @@ describe("AutomatedRunPlayer", () => {
 
     const client = new TestRunClient();
     const player = new AutomatedRunPlayer(provider, client);
-    player.setSubscriptions([{ topic: "/foo/bar", format: "parsedMessages" }]);
+    player.setSubscriptions([{ topic: "/foo/bar" }]);
     await delay(AUTOMATED_RUN_START_DELAY + 10);
     player.setListener(() => listener.signal);
 

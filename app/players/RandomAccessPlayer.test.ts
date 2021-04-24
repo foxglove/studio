@@ -17,7 +17,6 @@ import { TimeUtil, Time } from "rosbag";
 
 import { GetMessagesResult, GetMessagesTopics } from "@foxglove-studio/app/dataProviders/types";
 import {
-  BobjectMessage,
   Message,
   PlayerCapabilities,
   PlayerMetricsCollectorInterface,
@@ -82,7 +81,7 @@ class MessageStore {
   };
 }
 
-const getMessagesResult = { parsedMessages: [], bobjects: [], rosBinaryMessages: undefined };
+const getMessagesResult = { parsedMessages: [], rosBinaryMessages: undefined };
 
 describe("RandomAccessPlayer", () => {
   let mockDateNow: jest.SpyInstance<number, []>;
@@ -125,7 +124,6 @@ describe("RandomAccessPlayer", () => {
           isPlaying: false,
           lastSeekTime: 0,
           messages: [],
-          bobjects: [],
           totalBytesReceived: 0,
           messageOrder: "receiveTime",
           speed: 0.2,
@@ -185,7 +183,6 @@ describe("RandomAccessPlayer", () => {
           (
             msg.activeData ?? {
               messages: [],
-              bobjects: [],
             }
           ).isPlaying,
       ),
@@ -199,7 +196,6 @@ describe("RandomAccessPlayer", () => {
           (
             msg.activeData ?? {
               messages: [],
-              bobjects: [],
             }
           ).isPlaying,
       ),
@@ -214,7 +210,6 @@ describe("RandomAccessPlayer", () => {
           (
             msg.activeData ?? {
               messages: [],
-              bobjects: [],
             }
           ).isPlaying,
       ),
@@ -242,7 +237,6 @@ describe("RandomAccessPlayer", () => {
           (
             msg.activeData ?? {
               messages: [],
-              bobjects: [],
             }
           ).speed,
       ),
@@ -255,7 +249,6 @@ describe("RandomAccessPlayer", () => {
           (
             msg.activeData ?? {
               messages: [],
-              bobjects: [],
             }
           ).speed,
       ),
@@ -268,7 +261,6 @@ describe("RandomAccessPlayer", () => {
           (
             msg.activeData ?? {
               messages: [],
-              bobjects: [],
             }
           ).speed,
       ),
@@ -297,7 +289,7 @@ describe("RandomAccessPlayer", () => {
         case 2: {
           expect(start).toEqual({ sec: 10, nsec: 0 });
           expect(end).toEqual({ sec: 10, nsec: 4000000 });
-          expect(topics).toEqual({ parsedMessages: ["/foo/bar"], bobjects: [] });
+          expect(topics).toEqual({ parsedMessages: ["/foo/bar"] });
           const parsedMessages: Message[] = [
             {
               topic: "/foo/bar",
@@ -326,7 +318,7 @@ describe("RandomAccessPlayer", () => {
     source.setListener(store.add);
     await Promise.resolve();
 
-    source.setSubscriptions([{ topic: "/foo/bar", format: "parsedMessages" }]);
+    source.setSubscriptions([{ topic: "/foo/bar" }]);
     source.requestBackfill(); // We always get a `requestBackfill` after each `setSubscriptions`.
     source.startPlayback();
     const messages = await store.done;
@@ -334,16 +326,12 @@ describe("RandomAccessPlayer", () => {
     source.close();
 
     const messagePayloads = messages.map((msg) => {
-      const activeData = msg.activeData ?? {
-        messages: [],
-        bobjects: [],
-      };
-      return { messages: activeData.messages || [], bobjects: activeData.bobjects || [] };
+      return { messages: msg.activeData?.messages ?? [] };
     });
     expect(messagePayloads).toEqual([
-      { messages: [], bobjects: [] },
-      { messages: [], bobjects: [] },
-      { messages: [], bobjects: [] },
+      { messages: [] },
+      { messages: [] },
+      { messages: [] },
       {
         messages: [
           {
@@ -352,9 +340,8 @@ describe("RandomAccessPlayer", () => {
             message: { payload: "foo bar" },
           },
         ],
-        bobjects: [],
       },
-      { messages: [], bobjects: [] },
+      { messages: [] },
     ]);
   });
 
@@ -379,18 +366,14 @@ describe("RandomAccessPlayer", () => {
     source.close();
 
     const messagePayloads = messages.map((msg) => {
-      const activeData = msg.activeData ?? {
-        messages: [],
-        bobjects: [],
-      };
-      return { messages: activeData.messages || [], bobjects: activeData.bobjects || [] };
+      return { messages: msg.activeData?.messages ?? [] };
     });
     expect(messagePayloads).toEqual([
-      { messages: [], bobjects: [] }, // 1
-      { messages: [], bobjects: [] }, // 2
-      { messages: [], bobjects: [] }, // 3
-      { messages: [], bobjects: [] }, // 4
-      { messages: [], bobjects: [] }, // 5
+      { messages: [] }, // 1
+      { messages: [] }, // 2
+      { messages: [] }, // 3
+      { messages: [] }, // 4
+      { messages: [] }, // 5
     ]);
   });
 
@@ -413,13 +396,13 @@ describe("RandomAccessPlayer", () => {
           // initial getMessages from player initialization
           expect(start).toEqual({ sec: 10, nsec: 0 });
           expect(end).toEqual({ sec: 10, nsec: 0 });
-          expect(topics).toEqual({ parsedMessages: ["/foo/bar"], bobjects: [] });
+          expect(topics).toEqual({ parsedMessages: ["/foo/bar"] });
           return Promise.resolve(getMessagesResult);
 
         case 2:
           expect(start).toEqual({ sec: 10, nsec: 0 });
           expect(end).toEqual({ sec: 10, nsec: 4000000 });
-          expect(topics).toEqual({ parsedMessages: ["/foo/bar"], bobjects: [] });
+          expect(topics).toEqual({ parsedMessages: ["/foo/bar"] });
           source.pausePlayback();
           return Promise.resolve(getMessagesResult);
 
@@ -431,24 +414,20 @@ describe("RandomAccessPlayer", () => {
     const store = new MessageStore(4);
     source.setListener(store.add);
     await Promise.resolve();
-    source.setSubscriptions([{ topic: "/foo/bar", format: "parsedMessages" }]);
+    source.setSubscriptions([{ topic: "/foo/bar" }]);
     source.requestBackfill(); // We always get a `requestBackfill` after each `setSubscriptions`.
     source.startPlayback();
     const messages = await store.done;
     // close the player to stop more reads
     source.close();
     const messagePayloads = messages.map((msg) => {
-      const activeData = msg.activeData ?? {
-        messages: [],
-        bobjects: [],
-      };
-      return { messages: activeData.messages || [], bobjects: activeData.bobjects || [] };
+      return { messages: msg.activeData?.messages ?? [] };
     });
     expect(messagePayloads).toEqual([
-      { messages: [], bobjects: [] },
-      { messages: [], bobjects: [] },
-      { messages: [], bobjects: [] },
-      { messages: [], bobjects: [] },
+      { messages: [] },
+      { messages: [] },
+      { messages: [] },
+      { messages: [] },
     ]);
   });
 
@@ -471,13 +450,13 @@ describe("RandomAccessPlayer", () => {
           // initial getMessages from player initialization
           expect(start).toEqual({ sec: 10, nsec: 0 });
           expect(end).toEqual({ sec: 10, nsec: 0 });
-          expect(topics).toEqual({ parsedMessages: ["/foo/bar"], bobjects: [] });
+          expect(topics).toEqual({ parsedMessages: ["/foo/bar"] });
           return Promise.resolve(getMessagesResult);
 
         case 2: {
           expect(start).toEqual({ sec: 10, nsec: 0 });
           expect(end).toEqual({ sec: 10, nsec: 4000000 });
-          expect(topics).toEqual({ parsedMessages: ["/foo/bar"], bobjects: [] });
+          expect(topics).toEqual({ parsedMessages: ["/foo/bar"] });
           const parsedMessages: Message[] = [
             {
               topic: "/foo/bar",
@@ -509,22 +488,18 @@ describe("RandomAccessPlayer", () => {
     const store = new MessageStore(5);
     source.setListener(store.add);
     await Promise.resolve();
-    source.setSubscriptions([{ topic: "/foo/bar", format: "parsedMessages" }]);
+    source.setSubscriptions([{ topic: "/foo/bar" }]);
     source.requestBackfill(); // We always get a `requestBackfill` after each `setSubscriptions`.
 
     source.startPlayback();
     const messages = await store.done;
     const messagePayloads = messages.map((msg) => {
-      const activeData = msg.activeData ?? {
-        messages: [],
-        bobjects: [],
-      };
-      return { messages: activeData.messages || [], bobjects: activeData.bobjects || [] };
+      return { messages: msg.activeData?.messages ?? [] };
     });
     expect(messagePayloads).toEqual([
-      { messages: [], bobjects: [] },
-      { messages: [], bobjects: [] },
-      { messages: [], bobjects: [] },
+      { messages: [] },
+      { messages: [] },
+      { messages: [] },
       {
         messages: [
           {
@@ -533,9 +508,8 @@ describe("RandomAccessPlayer", () => {
             message: { payload: "foo bar" },
           },
         ],
-        bobjects: [],
       }, // this is the 'pause' messages payload - should be empty:
-      { messages: [], bobjects: [] },
+      { messages: [] },
     ]);
 
     source.close();
@@ -553,7 +527,7 @@ describe("RandomAccessPlayer", () => {
       end: Time,
       topics: GetMessagesTopics,
     ): Promise<GetMessagesResult> => {
-      expect(topics).toEqual({ parsedMessages: ["/foo/bar"], bobjects: [] });
+      expect(topics).toEqual({ parsedMessages: ["/foo/bar"] });
       callCount++;
       switch (callCount) {
         case 1:
@@ -598,7 +572,7 @@ describe("RandomAccessPlayer", () => {
     const store = new MessageStore(4);
     source.setListener(store.add);
     await Promise.resolve();
-    source.setSubscriptions([{ topic: "/foo/bar", format: "parsedMessages" }]);
+    source.setSubscriptions([{ topic: "/foo/bar" }]);
     source.requestBackfill(); // We always get a `requestBackfill` after each `setSubscriptions`.
     source.startPlayback();
 
@@ -608,7 +582,6 @@ describe("RandomAccessPlayer", () => {
       (msg) =>
         msg.activeData ?? {
           messages: [],
-          bobjects: [],
         },
     );
     expect(activeDatas.map((d: any) => d.lastSeekTime)).toEqual([
@@ -623,11 +596,11 @@ describe("RandomAccessPlayer", () => {
       { sec: 10, nsec: 0 },
       { sec: 10, nsec: 0 },
     ]);
-    expect(activeDatas.map((d) => ({ messages: d.messages, bobjects: d.bobjects }))).toEqual([
-      { messages: [], bobjects: [] },
-      { messages: [], bobjects: [] },
-      { messages: [], bobjects: [] },
-      { messages: [], bobjects: [] },
+    expect(activeDatas.map((d) => ({ messages: d.messages }))).toEqual([
+      { messages: [] },
+      { messages: [] },
+      { messages: [] },
+      { messages: [] },
     ]);
 
     source.close();
@@ -667,7 +640,7 @@ describe("RandomAccessPlayer", () => {
     const store = new MessageStore(2);
     source.setListener(store.add);
     await store.done;
-    source.setSubscriptions([{ topic: "/foo/bar", format: "parsedMessages" }]);
+    source.setSubscriptions([{ topic: "/foo/bar" }]);
 
     store.reset(2);
 
@@ -678,11 +651,10 @@ describe("RandomAccessPlayer", () => {
     const seekTimeAndMessages = messages.map(({ activeData }) => ({
       lastSeekTime: activeData?.lastSeekTime,
       messages: activeData?.messages,
-      bobjects: activeData?.bobjects,
     }));
     expect(seekTimeAndMessages).toEqual([
       // This is from the progress callback - the seek time should not yet be incremented.
-      { lastSeekTime: 0, messages: [], bobjects: [] }, // This is from the seek - the seek time should now be incremented and we should have new messages alongside it.
+      { lastSeekTime: 0, messages: [] }, // This is from the seek - the seek time should now be incremented and we should have new messages alongside it.
       {
         lastSeekTime: 1,
         messages: [
@@ -692,7 +664,6 @@ describe("RandomAccessPlayer", () => {
             message: { payload: "foo bar" },
           },
         ],
-        bobjects: [],
       },
     ]);
 
@@ -741,7 +712,7 @@ describe("RandomAccessPlayer", () => {
     const store = new MessageStore(2);
     source.setListener(store.add);
     await store.done;
-    source.setSubscriptions([{ topic: "/foo/bar", format: "parsedMessages" }]);
+    source.setSubscriptions([{ topic: "/foo/bar" }]);
 
     store.reset(4);
 
@@ -795,7 +766,7 @@ describe("RandomAccessPlayer", () => {
         case 1: {
           expect(start).toEqual({ sec: 19, nsec: 1e9 + 50 - SEEK_BACK_NANOSECONDS });
           expect(end).toEqual({ sec: 20, nsec: 50 });
-          expect(topics).toEqual({ parsedMessages: ["/foo/bar"], bobjects: [] });
+          expect(topics).toEqual({ parsedMessages: ["/foo/bar"] });
           const parsedMessages: Message[] = [
             {
               topic: "/foo/bar",
@@ -835,7 +806,7 @@ describe("RandomAccessPlayer", () => {
     ]);
 
     store.reset(1);
-    source.setSubscriptions([{ topic: "/foo/bar", format: "parsedMessages" }]);
+    source.setSubscriptions([{ topic: "/foo/bar" }]);
     source.requestBackfill(); // We always get a `requestBackfill` after each `setSubscriptions`.
     // Ensure results from the backfill always thrown away after the new seek, by making the lastSeekTime change.
     mockDateNow.mockReturnValue(Date.now() + 1);
@@ -851,7 +822,6 @@ describe("RandomAccessPlayer", () => {
         },
       ],
     ]);
-    expect(messages.map((msg) => (msg.activeData ? msg.activeData.bobjects : []))).toEqual([[]]);
     store.reset(3);
     source.startPlayback();
     const messages2 = await store.done;
@@ -861,7 +831,6 @@ describe("RandomAccessPlayer", () => {
           (
             msg.activeData ?? {
               messages: [],
-              bobjects: [],
             }
           ).messages,
       ),
@@ -876,17 +845,6 @@ describe("RandomAccessPlayer", () => {
       ],
       [],
     ]);
-    expect(
-      messages2.map(
-        (msg) =>
-          (
-            msg.activeData ?? {
-              messages: [],
-              bobjects: [],
-            }
-          ).bobjects,
-      ),
-    ).toEqual([[], [], []]);
 
     source.close();
   });
@@ -909,7 +867,7 @@ describe("RandomAccessPlayer", () => {
         case 1: {
           expect(start).toEqual({ sec: 19, nsec: 1e9 + 50 - SEEK_BACK_NANOSECONDS });
           expect(end).toEqual({ sec: 20, nsec: 50 });
-          expect(topics).toEqual({ parsedMessages: ["/foo/bar"], bobjects: [] });
+          expect(topics).toEqual({ parsedMessages: ["/foo/bar"] });
           return new Promise((resolve) => {
             backfillPromiseCallback = resolve;
           });
@@ -943,7 +901,7 @@ describe("RandomAccessPlayer", () => {
     ]);
 
     store.reset(3);
-    source.setSubscriptions([{ topic: "/foo/bar", format: "parsedMessages" }]);
+    source.setSubscriptions([{ topic: "/foo/bar" }]);
     source.requestBackfill(); // We always get a `requestBackfill` after each `setSubscriptions`.
     // Ensure results from the backfill always thrown away after the new seek, by making the lastSeekTime change.
     mockDateNow.mockReturnValue(Date.now() + 1);
@@ -961,7 +919,6 @@ describe("RandomAccessPlayer", () => {
           (
             msg.activeData ?? {
               messages: [],
-              bobjects: [],
             }
           ).messages,
       ),
@@ -976,17 +933,6 @@ describe("RandomAccessPlayer", () => {
       ],
       [], // pausePlayback
     ]);
-    expect(
-      messages.map(
-        (msg) =>
-          (
-            msg.activeData ?? {
-              messages: [],
-              bobjects: [],
-            }
-          ).bobjects,
-      ),
-    ).toEqual([[], [], []]);
 
     store.reset(0); // We expect 0 more messages; this will throw an error later if we received more.
     const result: Message = {
@@ -1006,7 +952,7 @@ describe("RandomAccessPlayer", () => {
       { name: "TestProvider", args: { provider }, children: [] },
       playerOptions,
     );
-    source.setSubscriptions([{ topic: "/foo/bar", format: "parsedMessages" }]);
+    source.setSubscriptions([{ topic: "/foo/bar" }]);
     source.requestBackfill(); // We always get a `requestBackfill` after each `setSubscriptions`.
 
     let lastGetMessagesCall: any;
@@ -1023,7 +969,7 @@ describe("RandomAccessPlayer", () => {
 
     source.setListener(async () => {});
     await Promise.resolve();
-    source.setSubscriptions([{ topic: "/foo/bar", format: "parsedMessages" }]);
+    source.setSubscriptions([{ topic: "/foo/bar" }]);
     source.requestBackfill(); // We always get a `requestBackfill` after each `setSubscriptions`.
 
     // Resolve original seek.
@@ -1043,7 +989,7 @@ describe("RandomAccessPlayer", () => {
     expect(lastGetMessagesCall).toEqual({
       start: { sec: 10, nsec: 0 }, // Clamped to start
       end: { sec: 10, nsec: 1 }, // Clamped to start
-      topics: { parsedMessages: ["/foo/bar"], bobjects: [] },
+      topics: { parsedMessages: ["/foo/bar"] },
       resolve: expect.any(Function),
     });
 
@@ -1055,7 +1001,7 @@ describe("RandomAccessPlayer", () => {
     expect(lastGetMessagesCall).toEqual({
       start: { nsec: 999999900, sec: 99 },
       end: { nsec: 0, sec: 100 },
-      topics: { parsedMessages: ["/foo/bar"], bobjects: [] },
+      topics: { parsedMessages: ["/foo/bar"] },
       resolve: expect.any(Function),
     });
 
@@ -1080,20 +1026,20 @@ describe("RandomAccessPlayer", () => {
       switch (callCount) {
         case 1:
           // initial getMessages from player initialization
-          expect(topics).toEqual({ parsedMessages: ["/foo/bar"], bobjects: [] });
+          expect(topics).toEqual({ parsedMessages: ["/foo/bar"] });
           return Promise.resolve(getMessagesResult);
 
         case 2:
-          expect(topics).toEqual({ parsedMessages: ["/foo/bar", "/baz"], bobjects: [] });
+          expect(topics).toEqual({ parsedMessages: ["/foo/bar", "/baz"] });
           return Promise.resolve(getMessagesResult);
 
         case 3:
           // The `requestBackfill` without a `setSubscriptions` is identical to the one above.
-          expect(topics).toEqual({ parsedMessages: ["/foo/bar", "/baz"], bobjects: [] });
+          expect(topics).toEqual({ parsedMessages: ["/foo/bar", "/baz"] });
           return Promise.resolve(getMessagesResult);
 
         case 4:
-          expect(topics).toEqual({ parsedMessages: ["/baz"], bobjects: [] });
+          expect(topics).toEqual({ parsedMessages: ["/baz"] });
           return Promise.resolve(getMessagesResult);
 
         // Never called with empty topics!
@@ -1106,27 +1052,18 @@ describe("RandomAccessPlayer", () => {
     const store = new MessageStore(9);
     source.setListener(store.add);
     await delay(1);
-    source.setSubscriptions([
-      { topic: "/foo/bar", format: "parsedMessages" },
-      { topic: "/new/topic", format: "parsedMessages" },
-    ]);
+    source.setSubscriptions([{ topic: "/foo/bar" }, { topic: "/new/topic" }]);
     source.requestBackfill(); // We always get a `requestBackfill` after each `setSubscriptions`.
     await delay(1);
-    source.setSubscriptions([
-      { topic: "/foo/bar", format: "parsedMessages" },
-      { topic: "/baz", format: "parsedMessages" },
-    ]);
+    source.setSubscriptions([{ topic: "/foo/bar" }, { topic: "/baz" }]);
     source.requestBackfill();
     await delay(1);
     source.requestBackfill(); // We can also get a requestBackfill without a `setSubscriptions`.
     await delay(1);
-    source.setSubscriptions([
-      { topic: "/new/topic", format: "parsedMessages" },
-      { topic: "/baz", format: "parsedMessages" },
-    ]);
+    source.setSubscriptions([{ topic: "/new/topic" }, { topic: "/baz" }]);
     source.requestBackfill();
     await delay(1);
-    source.setSubscriptions([{ topic: "/new/topic", format: "parsedMessages" }]);
+    source.setSubscriptions([{ topic: "/new/topic" }]);
     source.requestBackfill();
     await delay(1);
     source.startPlayback();
@@ -1168,7 +1105,7 @@ describe("RandomAccessPlayer", () => {
       end: Time,
       topics: GetMessagesTopics,
     ): Promise<GetMessagesResult> => {
-      expect(topics).toEqual({ parsedMessages: ["/foo/bar", "/baz"], bobjects: [] });
+      expect(topics).toEqual({ parsedMessages: ["/foo/bar", "/baz"] });
       const next = items.shift();
       if (!next) {
         resolve();
@@ -1182,30 +1119,17 @@ describe("RandomAccessPlayer", () => {
       playerOptions,
     );
     const messagesReceived: Message[] = [];
-    const bobjectsReceived: BobjectMessage[] = [];
-    source.setListener((msg) => {
+    source.setListener((playerState) => {
       messagesReceived.push(
-        ...((
-          msg.activeData ?? {
+        ...(
+          playerState.activeData ?? {
             messages: [],
-            bobjects: [],
           }
-        ).messages || []),
-      );
-      bobjectsReceived.push(
-        ...((
-          msg.activeData ?? {
-            messages: [],
-            bobjects: [],
-          }
-        ).bobjects || []),
+        ).messages,
       );
       return Promise.resolve();
     });
-    source.setSubscriptions([
-      { topic: "/foo/bar", format: "parsedMessages" },
-      { topic: "/baz", format: "parsedMessages" },
-    ]);
+    source.setSubscriptions([{ topic: "/foo/bar" }, { topic: "/baz" }]);
     source.requestBackfill(); // We always get a `requestBackfill` after each `setSubscriptions`.
     source.startPlayback();
     await done;
@@ -1232,7 +1156,6 @@ describe("RandomAccessPlayer", () => {
         message: { payload: "foo bar 2" },
       },
     ]);
-    expect(bobjectsReceived).toEqual([]);
 
     source.close();
   });
@@ -1322,7 +1245,7 @@ describe("RandomAccessPlayer", () => {
       { name: "TestProvider", args: { provider }, children: [] },
       playerOptions,
     );
-    player.setSubscriptions([{ topic: "/foo/bar", format: "parsedMessages" }]);
+    player.setSubscriptions([{ topic: "/foo/bar" }]);
     player.requestBackfill(); // We always get a `requestBackfill` after each `setSubscriptions`.
 
     const firstGetMessagesCall = signal();
@@ -1344,17 +1267,13 @@ describe("RandomAccessPlayer", () => {
 
     await firstGetMessagesCall;
     expect(getMessages.mock.calls).toEqual([
-      [
-        { sec: 10, nsec: 0 },
-        { sec: 10, nsec: 4000000 },
-        { parsedMessages: ["/foo/bar"], bobjects: [] },
-      ],
+      [{ sec: 10, nsec: 0 }, { sec: 10, nsec: 4000000 }, { parsedMessages: ["/foo/bar"] }],
     ]);
 
     expect(await store.done).toEqual([
       expect.objectContaining({ activeData: undefined }),
       expect.objectContaining({
-        activeData: expect.objectContaining({ isPlaying: true, messages: [], bobjects: [] }),
+        activeData: expect.objectContaining({ isPlaying: true, messages: [] }),
       }),
     ]);
 
@@ -1371,10 +1290,10 @@ describe("RandomAccessPlayer", () => {
 
     expect(await store.done).toEqual([
       expect.objectContaining({
-        activeData: expect.objectContaining({ isPlaying: false, messages: [], bobjects: [] }),
+        activeData: expect.objectContaining({ isPlaying: false, messages: [] }),
       }),
       expect.objectContaining({
-        activeData: expect.objectContaining({ isPlaying: true, messages: [], bobjects: [] }),
+        activeData: expect.objectContaining({ isPlaying: true, messages: [] }),
       }),
     ]);
 
@@ -1392,7 +1311,6 @@ describe("RandomAccessPlayer", () => {
         activeData: expect.objectContaining({
           isPlaying: true,
           messages: [expect.objectContaining(message1)],
-          bobjects: [],
         }),
       }),
     ]);
@@ -1404,7 +1322,6 @@ describe("RandomAccessPlayer", () => {
         activeData: expect.objectContaining({
           isPlaying: true,
           messages: [expect.objectContaining(message2)],
-          bobjects: [],
         }),
       }),
     ]);
@@ -1413,7 +1330,7 @@ describe("RandomAccessPlayer", () => {
     player.pausePlayback();
     expect(await store.done).toEqual([
       expect.objectContaining({
-        activeData: expect.objectContaining({ isPlaying: false, messages: [], bobjects: [] }),
+        activeData: expect.objectContaining({ isPlaying: false, messages: [] }),
       }),
     ]);
 
@@ -1591,7 +1508,7 @@ describe("RandomAccessPlayer", () => {
       { name: "TestProvider", args: { provider }, children: [] },
       playerOptions,
     );
-    player.setSubscriptions([{ topic: "/foo/bar", format: "parsedMessages" }]);
+    player.setSubscriptions([{ topic: "/foo/bar" }]);
     player.requestBackfill(); // We always get a `requestBackfill` after each `setSubscriptions`.
 
     const firstGetMessagesCall = signal();
@@ -1611,11 +1528,7 @@ describe("RandomAccessPlayer", () => {
 
     await firstGetMessagesCall;
     expect(getMessages.mock.calls).toEqual([
-      [
-        { sec: 10, nsec: 0 },
-        { sec: 10, nsec: 4000000 },
-        { parsedMessages: ["/foo/bar"], bobjects: [] },
-      ],
+      [{ sec: 10, nsec: 0 }, { sec: 10, nsec: 4000000 }, { parsedMessages: ["/foo/bar"] }],
     ]);
 
     Object.defineProperty(document, "visibilityState", {
@@ -1626,10 +1539,10 @@ describe("RandomAccessPlayer", () => {
     expect(await store.done).toEqual([
       expect.objectContaining({ activeData: undefined }),
       expect.objectContaining({
-        activeData: expect.objectContaining({ isPlaying: true, messages: [], bobjects: [] }),
+        activeData: expect.objectContaining({ isPlaying: true, messages: [] }),
       }),
       expect.objectContaining({
-        activeData: expect.objectContaining({ isPlaying: false, messages: [], bobjects: [] }),
+        activeData: expect.objectContaining({ isPlaying: false, messages: [] }),
       }),
     ]);
 
@@ -1658,14 +1571,14 @@ describe("RandomAccessPlayer", () => {
       playerOptions,
     );
     const store = new MessageStore(2);
-    player.setSubscriptions([{ topic: "/foo/bar", format: "parsedMessages" }]);
+    player.setSubscriptions([{ topic: "/foo/bar" }]);
     player.requestBackfill(); // We always get a `requestBackfill` after each `setSubscriptions`.
     player.setListener(store.add);
     const firstMessages = await store.done;
     expect(firstMessages).toEqual([
       expect.objectContaining({ activeData: undefined }), // isPlaying is set to false to begin
       expect.objectContaining({
-        activeData: expect.objectContaining({ isPlaying: false, messages: [], bobjects: [] }),
+        activeData: expect.objectContaining({ isPlaying: false, messages: [] }),
       }),
     ]);
     expect(provider.getMessages).toHaveBeenCalled();
@@ -1681,7 +1594,7 @@ describe("RandomAccessPlayer", () => {
       playerOptions,
     );
     const store = new MessageStore(2);
-    player.setSubscriptions([{ topic: "/foo/bar", format: "parsedMessages" }]);
+    player.setSubscriptions([{ topic: "/foo/bar" }]);
     player.requestBackfill(); // We always get a `requestBackfill` after each `setSubscriptions`.
 
     player.seekPlayback({ sec: 10, nsec: 0 });
@@ -1716,7 +1629,6 @@ describe("RandomAccessPlayer", () => {
     ): Promise<GetMessagesResult> => {
       expect(topics).toEqual({
         parsedMessages: ["/parsed_topic", "/parsed_and_binary_topic"],
-        bobjects: ["/parsed_and_binary_topic", "/only_binary_topic"],
       });
       return Promise.resolve(getMessagesResult);
     };
@@ -1724,11 +1636,9 @@ describe("RandomAccessPlayer", () => {
     const store = new MessageStore(2);
     source.setListener(store.add);
     source.setSubscriptions([
-      { topic: "/unknown_topic", format: "parsedMessages" }, // Shouldn't appear in getMessages at all!
-      { topic: "/parsed_topic", format: "parsedMessages" },
-      { topic: "/parsed_and_binary_topic", format: "parsedMessages" },
-      { topic: "/parsed_and_binary_topic", format: "bobjects" },
-      { topic: "/only_binary_topic", format: "bobjects" },
+      { topic: "/unknown_topic" }, // Shouldn't appear in getMessages at all!
+      { topic: "/parsed_topic" },
+      { topic: "/parsed_and_binary_topic" },
     ]);
     await store.done;
   });
@@ -1757,7 +1667,6 @@ describe("RandomAccessPlayer", () => {
     ): Promise<GetMessagesResult> => {
       expect(topics).toEqual({
         parsedMessages: ["/streaming_parsed", "/streaming_and_fallback_parsed"],
-        bobjects: ["/streaming_binary", "/streaming_and_fallback_binary"],
       });
       return Promise.resolve(getMessagesResult);
     };
@@ -1765,19 +1674,15 @@ describe("RandomAccessPlayer", () => {
     const store = new MessageStore(2);
     source.setListener(store.add);
     source.setSubscriptions([
-      { topic: "/unknown_topic", format: "parsedMessages" }, // Shouldn't appear in getMessages at all!
-      { topic: "/streaming_parsed", format: "parsedMessages" },
-      { topic: "/only_fallback_parsed", format: "parsedMessages", preloadingFallback: true },
-      { topic: "/streaming_and_fallback_parsed", format: "parsedMessages" },
+      { topic: "/unknown_topic" }, // Shouldn't appear in getMessages at all!
+      { topic: "/streaming_parsed" },
+      { topic: "/only_fallback_parsed", preloadingFallback: true },
+      { topic: "/streaming_and_fallback_parsed" },
       {
         topic: "/streaming_and_fallback_parsed",
-        format: "parsedMessages",
+
         preloadingFallback: true,
       },
-      { topic: "/streaming_binary", format: "bobjects" },
-      { topic: "/only_fallback_binary", format: "bobjects", preloadingFallback: true },
-      { topic: "/streaming_and_fallback_binary", format: "bobjects" },
-      { topic: "/streaming_and_fallback_binary", format: "bobjects", preloadingFallback: true },
     ]);
     await store.done;
   });
