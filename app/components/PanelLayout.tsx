@@ -69,7 +69,7 @@ const HideTopLevelDropTargets = styled.div.attrs({ style: { margin: 0 } })`
 function TabMosaicWrapper({ tabId, children }: PropsWithChildren<{ tabId?: string }>) {
   const [, drop] = useDrop({
     accept: MosaicDragType.WINDOW,
-    drop: (item, monitor) => {
+    drop: (_item, monitor) => {
       const nestedDropResult = monitor.getDropResult();
       if (nestedDropResult) {
         // The drop result may already have a tabId if it was dropped in a more deeply-nested Tab
@@ -103,10 +103,10 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
   const panelCatalog = usePanelCatalog();
 
   const renderTile = useCallback(
-    (id: string, path: any) => {
+    (id: string | Record<string, never> | undefined, path: any) => {
       // `id` is usually a string. But when `layout` is empty, `id` will be an empty object, in which case we don't need to render Tile
-      if (!id || typeof id !== "string") {
-        return;
+      if (id == undefined || typeof id !== "string") {
+        return <></>;
       }
       const type = getPanelTypeFromId(id);
 
@@ -142,9 +142,9 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
   const isDemoMode = useExperimentalFeature("demoMode");
   const bodyToRender = useMemo(
     () =>
-      layout ? (
+      layout != undefined || layout === "" ? (
         <MosaicWithoutDragDropContext
-          renderTile={renderTile as any}
+          renderTile={renderTile}
           className={isDemoMode ? "borderless" : "none"}
           resize={{ minimumPaneSizePercentage: 2 }}
           value={layout}
