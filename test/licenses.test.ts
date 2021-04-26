@@ -5,7 +5,7 @@
 import checker from "license-checker";
 import { join } from "path";
 
-const ALLOWED_LICENSES = [
+const ALLOWED_LICENSES: number[] = [
   "MPL-2.0",
   "MIT",
   "BSD",
