@@ -10,17 +10,27 @@ import {
   SelectableOptionMenuItemType,
   Stack,
   Text,
+  TextField,
   useTheme,
   VirtualizedComboBox,
 } from "@fluentui/react";
 import moment from "moment-timezone";
 import { useCallback, useMemo, useState } from "react";
 
+import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
 import { ExperimentalFeatureSettings } from "@foxglove-studio/app/components/ExperimentalFeatureSettings";
 import { useAsyncAppConfigurationValue } from "@foxglove-studio/app/hooks/useAsyncAppConfigurationValue";
 import filterMap from "@foxglove-studio/app/util/filterMap";
 import fuzzyFilter from "@foxglove-studio/app/util/fuzzyFilter";
 import { APP_NAME } from "@foxglove-studio/app/version";
+import { RosNode } from "@foxglove/ros1";
+
+function nonEmpty(str?: string): string | undefined {
+  if (str == undefined) {
+    return undefined;
+  }
+  return str.length > 0 ? str : undefined;
+}
 
 function formatTimezone(name: string) {
   const tz = moment.tz(name);
@@ -122,6 +132,30 @@ function TimezoneSettings(): React.ReactElement {
   );
 }
 
+function RosHostname(): React.ReactElement {
+  const [rosHostname, setRosHostname] = useAsyncAppConfigurationValue<string>("ros1.ros_hostname", {
+    optimistic: true, // prevent UI flicker while the new value is saving
+  });
+
+  const os = OsContextSingleton;
+  const rosHostnamePlaceholder = useMemo(
+    () =>
+      os != undefined
+        ? RosNode.GetRosHostname(os.getEnvVar, os.getHostname, os.getNetworkInterfaces)
+        : "localhost",
+    [os],
+  );
+
+  return (
+    <TextField
+      label="ROS_HOSTNAME"
+      placeholder={rosHostnamePlaceholder}
+      value={rosHostname.value}
+      onChange={(_event, newValue) => setRosHostname(nonEmpty(newValue))}
+    />
+  );
+}
+
 export default function Preferences(): React.ReactElement {
   const theme = useTheme();
 
@@ -137,6 +171,9 @@ export default function Preferences(): React.ReactElement {
       <PivotItem headerText="Settings" style={{ padding: theme.spacing.m }}>
         <Stack.Item>
           <TimezoneSettings />
+        </Stack.Item>
+        <Stack.Item>
+          <RosHostname />
         </Stack.Item>
       </PivotItem>
       {

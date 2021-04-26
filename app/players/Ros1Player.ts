@@ -46,6 +46,7 @@ const NO_WARNINGS = Object.freeze({});
 // showing simulated time, so current time from Date.now() is always used instead.
 export default class Ros1Player implements Player {
   private _url: string; // rosmaster URL.
+  private _hostname?: string; // ROS_HOSTNAME
   private _rosNode?: RosNode; // Our ROS node when we're connected.
   private _id: string = uuidv4(); // Unique ID for this player.
   private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
@@ -68,10 +69,15 @@ export default class Ros1Player implements Player {
   private _sentTopicsErrorNotification = false;
   private _sentNodesErrorNotification = false;
 
-  constructor(url: string, metricsCollector: PlayerMetricsCollectorInterface) {
-    log.info(`url: ${url}`);
+  constructor(
+    url: string,
+    hostname: string | undefined,
+    metricsCollector: PlayerMetricsCollectorInterface,
+  ) {
+    log.info(`initializing Ros1Player (url=${url})`);
     this._metricsCollector = metricsCollector;
     this._url = url;
+    this._hostname = hostname;
     this._start = fromMillis(Date.now());
     this._metricsCollector.playerConstructed();
     this._open();
@@ -83,6 +89,10 @@ export default class Ros1Player implements Player {
       return;
     }
 
+    const hostname =
+      this._hostname ??
+      RosNode.GetRosHostname(os.getEnvVar, os.getHostname, os.getNetworkInterfaces);
+
     const net = await Sockets.Create();
     const httpServer = await net.createHttpServer();
     const tcpSocketCreate = (options: { host: string; port: number }): Promise<TcpSocket> => {
@@ -92,7 +102,7 @@ export default class Ros1Player implements Player {
     if (this._rosNode == undefined) {
       const rosNode = new RosNode({
         name: "/foxglovestudio",
-        hostname: RosNode.GetRosHostname(os.getEnvVar, os.getHostname, os.getNetworkInterfaces),
+        hostname,
         pid: os.pid,
         rosMasterUri: this._url,
         httpServer: (httpServer as unknown) as HttpServer,

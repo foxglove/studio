@@ -40,6 +40,7 @@ import {
 } from "@foxglove-studio/app/dataProviders/standardDataProviderDescriptors";
 import { GlobalVariables } from "@foxglove-studio/app/hooks/useGlobalVariables";
 import { usePrompt } from "@foxglove-studio/app/hooks/usePrompt";
+import useRosHostname from "@foxglove-studio/app/hooks/useRosHostname";
 import useShallowMemo from "@foxglove-studio/app/hooks/useShallowMemo";
 import AnalyticsMetricsCollector from "@foxglove-studio/app/players/AnalyticsMetricsCollector";
 import OrderedStampPlayer from "@foxglove-studio/app/players/OrderedStampPlayer";
@@ -281,8 +282,11 @@ async function roscoreSource(options: FactoryOptions) {
 
   const url = maybeUrl;
   options.storage.setItem(storageCacheKey, url);
+
+  const hostname = useRosHostname();
+
   return async (playerOptions: BuildPlayerOptions) => ({
-    player: new Ros1Player(url, playerOptions.metricsCollector),
+    player: new Ros1Player(url, hostname, playerOptions.metricsCollector),
     sources: [url],
   });
 }
