@@ -376,7 +376,7 @@ export default class AutomatedRunPlayer implements Player {
       const estimatedSecondsRemaining = Math.round(((1 - percentComplete) * msPerPercent) / 1000);
       const eta = formatSeconds(
         Math.min(
-          estimatedSecondsRemaining,
+          isNaN(estimatedSecondsRemaining) ? 0 : estimatedSecondsRemaining,
           24 * 60 * 60,
           /* 24 hours */
         ),
