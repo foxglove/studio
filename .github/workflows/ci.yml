@@ -21,6 +21,7 @@ jobs:
           # required checks don't need to change if we ever change the commands used.
           - name: lint
             command: |
+              yarn dedupe --check
               yarn run tsc --noEmit # typecheck files that are not included by webpack or package builds
               yarn run lint:ci
           - name: packages
@@ -58,8 +59,6 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: ${{ runner.os }}-yarn-
       - run: yarn install --immutable
-      - run: yarn dedupe --check
-        if: matrix.config.name == 'lint'
       - run: ${{ matrix.config.command }}
         env:
           CHROMATIC_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
