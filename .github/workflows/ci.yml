@@ -20,7 +20,9 @@ jobs:
           # Specify names so that the GitHub branch protection settings for
           # required checks don't need to change if we ever change the commands used.
           - name: lint
-            command: yarn run lint:ci
+            command: |
+              yarn run tsc --noEmit # typecheck files that are not included by webpack or package builds
+              yarn run lint:ci
           - name: packages
             command: yarn build:packages
           - name: test
