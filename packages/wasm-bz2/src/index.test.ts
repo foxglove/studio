@@ -11,7 +11,7 @@ describe("wasm-bz2", () => {
     const data = Buffer.from(
       "QlpoOTFBWSZTWX78x88AAAMZgEACEAAyRoiQIAAiCMmmxCAaAMxKhYKglaLuSKcKEg/fmPng",
       "base64",
-    );
+    ) as Buffer | undefined;
     expect(() => Bzip2.decompress(data, 13)).toThrow(
       "BZ2 decompression failed: -8 (BZ_OUTBUFF_FULL)",
     );
