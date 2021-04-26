@@ -164,7 +164,7 @@ function StandardMenuItems({
   const panelContext = useContext(PanelContext);
 
   const type = getPanelType();
-  if (type != undefined) {
+  if (type == undefined) {
     return ReactNull;
   }
 
