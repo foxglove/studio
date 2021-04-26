@@ -89,7 +89,7 @@ export default class TreeNode extends Component<Props> {
       onToggleExpand,
       onToggleVisibility,
     } = this.props;
-    if (!node.expanded || node.children.length === 0) {
+    if (!(node.expanded ?? false) || node.children.length === 0) {
       return ReactNull;
     }
     return node.children.map((child) => {
@@ -142,7 +142,7 @@ export default class TreeNode extends Component<Props> {
   render(): React.ReactNode {
     const { node, depth, enableVisibilityToggle = false, disableCheckbox = false } = this.props;
     const {
-      expanded,
+      expanded = false,
       children,
       icon,
       disabled,
