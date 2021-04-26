@@ -47,7 +47,7 @@ type Props = {
 export default class TreeNode extends Component<Props> {
   onCheckboxClick = (): void => {
     const { onToggleCheck, node } = this.props;
-    if (!node.disabled && node.hasCheckbox) {
+    if (!(node.disabled ?? false) && (node.hasCheckbox ?? false)) {
       onToggleCheck(node);
     }
   };
@@ -111,7 +111,13 @@ export default class TreeNode extends Component<Props> {
   }
 
   getCheckboxIcon(): React.ReactNode {
-    const { checked, disabled, missing, hasCheckbox, children } = this.props.node;
+    const {
+      checked,
+      disabled = false,
+      missing = false,
+      hasCheckbox = false,
+      children,
+    } = this.props.node;
     if (!hasCheckbox) {
       return children.length > 0 && <FolderIcon />;
     }
@@ -126,7 +132,7 @@ export default class TreeNode extends Component<Props> {
 
   onEditClick = (e: React.MouseEvent<HTMLElement>): void => {
     const { onEditClick, node } = this.props;
-    if (!node.canEdit) {
+    if (!(node.canEdit ?? false)) {
       return;
     }
     e.stopPropagation();
@@ -142,8 +148,8 @@ export default class TreeNode extends Component<Props> {
       disabled,
       tooltip,
       canEdit,
-      hasEdit,
-      filtered,
+      hasEdit = false,
+      filtered = false,
       visible,
       namespace,
     } = node;
