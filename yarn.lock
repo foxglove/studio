@@ -2062,7 +2062,7 @@ __metadata:
     "@types/moment-duration-format": 2.2.2
     "@types/prettier": 2.2.3
     "@types/promise-queue": 2.2.0
-    "@types/react": 17.0.3
+    "@types/react": 17.0.4
     "@types/react-autocomplete": 1.8.5
     "@types/react-cytoscapejs": ^1
     "@types/react-dom": 17.0.3
@@ -2088,7 +2088,7 @@ __metadata:
     argparse: 2.0.1
     async-mutex: 0.3.1
     cbor-js: 0.1.0
-    chart.js: 3.1.1
+    chart.js: 3.2.0
     chartjs-plugin-annotation: 1.0.0
     chartjs-plugin-datalabels: 2.0.0-beta.1
     chartjs-plugin-zoom: "github:foxglove/chartjs-plugin-zoom#656541279943f00dce600288435f83c436293146"
@@ -5009,14 +5009,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:*, @types/react@npm:17.0.3, @types/react@npm:>=16.9.0":
-  version: 17.0.3
-  resolution: "@types/react@npm:17.0.3"
+"@types/react@npm:*, @types/react@npm:17.0.4, @types/react@npm:>=16.9.0":
+  version: 17.0.4
+  resolution: "@types/react@npm:17.0.4"
   dependencies:
     "@types/prop-types": "*"
     "@types/scheduler": "*"
     csstype: ^3.0.2
-  checksum: 5bcaabadc90a23ad9008540eae98a5819b638c4cf1b968adc67be47d6a8dc8cb100061d877dae97618fb275e405dc484b37154080c7ac0ea7df5efcdd8f98c24
+  checksum: d7a8121faa889d52148df392751b771be16a45369872e9ad2b5db3d5bb8f76e684db27c2447b440441e3da1f353d434fa20fdcb45b3a56a296aab0757862da77
   languageName: node
   linkType: hard
 
@@ -7990,10 +7990,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chart.js@npm:3.1.1":
-  version: 3.1.1
-  resolution: "chart.js@npm:3.1.1"
-  checksum: 8aba6590507aa70b1bf479fecb0659b9ac8fed03e7649e16d3a99cc81316bc2a4997f1bf19b19ade08dcd1be8d065e4cd18385eef0de6a20122815036d4f81e0
+"chart.js@npm:3.2.0":
+  version: 3.2.0
+  resolution: "chart.js@npm:3.2.0"
+  checksum: e8efc009ec00297358c1f8234dfe8ece44b35c3bf173622be38765b34703ccd4df2778cacf3f9ad698cb89319ce7e650fc59020b34ec108b5675478457cf5dfd
   languageName: node
   linkType: hard
 
