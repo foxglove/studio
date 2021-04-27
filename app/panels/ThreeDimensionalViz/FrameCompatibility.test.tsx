@@ -64,6 +64,7 @@ describe("FrameCompatibilityDEPRECATED", () => {
 
     // Make sure that we don't send `messages[0]` when receiving a new frame.
     provider.setProps({ messages: [messages[1], fooMsg1] });
+    expect(childFn.mock.calls.length).toBe(2);
     const frame2 = last(childFn.mock.calls)[0].frame;
     expect(Object.keys(frame2)).toEqual(["/some/topic"]);
     frameMessages = frame2["/some/topic"];
