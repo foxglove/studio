@@ -149,19 +149,23 @@ export function useMessageReducer<T>(props: Params<T>): T {
   const { restore, addMessage, addMessages } = props;
 
   const state = useRef<
-    | {
+    | Readonly<{
         messageEvents: PlayerStateActiveData["messages"] | undefined;
         lastSeekTime: number | undefined;
         reducedValue: T;
         restore: typeof restore;
         addMessage: typeof addMessage;
         addMessages: typeof addMessages;
-      }
+      }>
     | undefined
   >();
 
   return useMessagePipeline(
     useCallback(
+      // To compute the reduced value from new messages:
+      // - Call restore() to initialize state, if lastSeekTime has changed, or if reducers have changed
+      // - Call addMessage() or addMessages() if any new messages of interest have arrived
+      // - Otherwise, return the previous reducedValue so that we don't trigger an unnecessary render.
       function selectReducedMessages(ctx: MessagePipelineContext): T {
         const messageEvents = ctx.playerState.activeData?.messages;
         const lastSeekTime = ctx.playerState.activeData?.lastSeekTime;

@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useRef, useLayoutEffect, useState, useContext } from "react";
+import { useRef, useLayoutEffect, useState, useContext, useReducer } from "react";
 
 import { SelectableContext } from "@foxglove-studio/app/util/createSelectableContext";
 import Log from "@foxglove/log";
@@ -45,9 +45,9 @@ export default function useContextSelector<T, U>(
     throw new Error(`useContextSelector was used outside a corresponding <Provider />.`);
   }
 
-  const [, forceUpdate] = useState(0);
+  const [_, forceUpdate] = useReducer((x: number) => x + 1, 0);
   const state = useRef<
-    { contextValue: T; selectedValue: U; selector: (value: T) => U } | undefined
+    Readonly<{ contextValue: T; selectedValue: U; selector: (value: T) => U }> | undefined
   >();
   const contextValue = handle.currentValue();
   if (
@@ -67,7 +67,7 @@ export default function useContextSelector<T, U>(
     const sub = (newContextValue: T) => {
       const newSelectedValue = selectWithUnstableIdentityWarning(newContextValue, selector);
       if (newSelectedValue !== state.current?.selectedValue) {
-        forceUpdate((x) => x + 1);
+        forceUpdate();
       }
       state.current = {
         contextValue: newContextValue,
