@@ -36,7 +36,6 @@ export type PanelContextType<T> = {
 
   isHovered: boolean;
   isFocused: boolean;
-  isDragging: boolean;
   connectToolbarDragHandle: (el: Element | ReactNull) => void;
   supportsStrictMode: boolean; // remove when all panels have strict mode enabled :)
 };

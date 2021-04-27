@@ -302,8 +302,7 @@ export default React.memo<Props>(function PanelToolbar({
   menuContent,
   showHiddenControlsOnHover,
 }: Props) {
-  const { isHovered = false, id, supportsStrictMode = true, isDragging = false } =
-    useContext(PanelContext) ?? {};
+  const { isHovered = false, id, supportsStrictMode = true } = useContext(PanelContext) ?? {};
   const [containsOpen, setContainsOpen] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -359,7 +358,7 @@ export default React.memo<Props>(function PanelToolbar({
     return ReactNull;
   }
 
-  const isRendered = isHovered || containsOpen || isDragging || !!isUnknownPanel;
+  const isRendered = isHovered || containsOpen || !!isUnknownPanel;
 
   return (
     <div ref={sizeRef}>

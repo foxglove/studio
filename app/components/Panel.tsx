@@ -507,10 +507,7 @@ export default function Panel<Config extends PanelConfig>(
 
     const perfInfo = useRef<HTMLDivElement>(ReactNull);
     const quickActionsOverlayRef = useRef<HTMLDivElement>(ReactNull);
-    const [isDragging, setIsDragging] = useState(false);
     const onDragStart = useCallback(() => {
-      setIsDragging(true);
-
       // Temporarily hide the overlay so that the panel can be shown as the drag preview image --
       // even though the overlay is a sibling rather than a child, Chrome still includes it in the
       // preview if it is visible. Changing the appearance in the next React render cycle is not
@@ -522,8 +519,7 @@ export default function Panel<Config extends PanelConfig>(
         setTimeout(() => (overlay.style.opacity = "1"));
       }
     }, []);
-    const onDragEnd = useCallback(() => setIsDragging(false), []);
-    const dragSpec = { tabId, panelId: childId, onDragStart, onDragEnd };
+    const dragSpec = { tabId, panelId: childId, onDragStart };
     const [connectOverlayDragSource, connectOverlayDragPreview] = usePanelDrag(dragSpec);
     const [connectToolbarDragHandle, connectToolbarDragPreview] = usePanelDrag(dragSpec);
 
@@ -556,7 +552,6 @@ export default function Panel<Config extends PanelConfig>(
             enterFullscreen,
             isHovered,
             isFocused,
-            isDragging,
             tabId,
             supportsStrictMode: PanelComponent.supportsStrictMode ?? true,
             connectToolbarDragHandle,
