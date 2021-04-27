@@ -78,7 +78,6 @@ export default function usePanelDrag(props: {
         ownPath,
       });
     },
-    collect: (monitor) => ({ isDragging: monitor.isDragging() }),
   });
 
   return [connectDragSource, connectDragPreview];
