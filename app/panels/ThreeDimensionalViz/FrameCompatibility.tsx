@@ -28,11 +28,15 @@ const useFrame = (
   // in this way yourself!! `restore` and `addMessage` should be pure functions and not have
   // side effects!
   const frame = React.useRef<Frame>({});
+  const cleared = React.useRef(false);
   const counter = React.useRef(0);
-  const lastClearTime = PanelAPI.useMessageReducer<number>({
+  PanelAPI.useMessageReducer<number>({
     topics,
-    restore: React.useCallback(() => {
+    restore: React.useCallback((prevValue) => {
       frame.current = {};
+      if (prevValue == undefined) {
+        cleared.current = true;
+      }
       return ++counter.current;
     }, []),
     addMessages: React.useCallback((_, messages: readonly Message[]) => {
@@ -43,10 +47,12 @@ const useFrame = (
     }, []),
   });
 
-  const cleared = useChangeDetector([lastClearTime], false);
-  const latestFrame = frame.current;
-  frame.current = {};
-  return { cleared, frame: latestFrame };
+  try {
+    return { cleared: cleared.current, frame: frame.current };
+  } finally {
+    frame.current = {};
+    cleared.current = false;
+  }
 };
 
 // This higher-order component provides compatibility between the old way of Panels receiving
