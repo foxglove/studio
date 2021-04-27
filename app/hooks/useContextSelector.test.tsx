@@ -132,17 +132,21 @@ describe("createSelectableContext/useContextSelector", () => {
     root.unmount();
   });
 
-  it("propagates value to multiple consumers", () => {
+  it("propagates value to multiple consumers, including memoized subtrees", () => {
     const C = createSelectableContext<{ one: number; two: number }>();
     const Consumer1 = createTestConsumer(C, ({ one }) => one);
     const Consumer2 = createTestConsumer(C, ({ two }) => two);
 
+    const Memoized = React.memo(function Memoized({ children }: PropsWithChildren<unknown>) {
+      return <div>{children}</div>;
+    });
+
     const root = mount(
       <C.Provider value={{ one: 1, two: 2 }}>
         <Consumer1 />
-        <div>
+        <Memoized>
           <Consumer2 />
-        </div>
+        </Memoized>
       </C.Provider>,
     );
 

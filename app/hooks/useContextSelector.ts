@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useRef, useLayoutEffect, useState, useContext, useReducer } from "react";
+import { useRef, useLayoutEffect, useContext, useReducer } from "react";
 
 import { SelectableContext } from "@foxglove-studio/app/util/createSelectableContext";
 import Log from "@foxglove/log";
