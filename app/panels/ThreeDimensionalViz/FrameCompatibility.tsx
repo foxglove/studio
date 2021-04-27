@@ -15,7 +15,6 @@ import hoistNonReactStatics from "hoist-non-react-statics";
 import { uniq } from "lodash";
 
 import * as PanelAPI from "@foxglove-studio/app/PanelAPI";
-import useChangeDetector from "@foxglove-studio/app/hooks/useChangeDetector";
 import { Frame, Message, Topic } from "@foxglove-studio/app/players/types";
 
 const useFrame = (
