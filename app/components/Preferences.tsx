@@ -26,7 +26,7 @@ import fuzzyFilter from "@foxglove-studio/app/util/fuzzyFilter";
 import { APP_NAME } from "@foxglove-studio/app/version";
 import { RosNode } from "@foxglove/ros1";
 
-function nonEmpty(str?: string): string | undefined {
+function nonEmptyOrUndefined(str?: string): string | undefined {
   if (str == undefined) {
     return undefined;
   }
@@ -155,7 +155,7 @@ function RosHostname(): React.ReactElement {
       label="ROS_HOSTNAME"
       placeholder={rosHostnamePlaceholder}
       value={rosHostname.value}
-      onChange={(_event, newValue) => setRosHostname(nonEmpty(newValue))}
+      onChange={(_event, newValue) => setRosHostname(nonEmptyOrUndefined(newValue))}
     />
   );
 }

@@ -42,6 +42,12 @@ const rosLog = Logger.getLogger("ROS1");
 const CAPABILITIES = [PlayerCapabilities.getParameters, PlayerCapabilities.setParameters];
 const NO_WARNINGS = Object.freeze({});
 
+type Ros1PlayerOpts = {
+  url: string;
+  hostname?: string;
+  metricsCollector: PlayerMetricsCollectorInterface;
+};
+
 // Connects to `rosmaster` instance using `@foxglove/ros1`. Currently doesn't support seeking or
 // showing simulated time, so current time from Date.now() is always used instead.
 export default class Ros1Player implements Player {
@@ -69,11 +75,7 @@ export default class Ros1Player implements Player {
   private _sentTopicsErrorNotification = false;
   private _sentNodesErrorNotification = false;
 
-  constructor(
-    url: string,
-    hostname: string | undefined,
-    metricsCollector: PlayerMetricsCollectorInterface,
-  ) {
+  constructor({ url, hostname, metricsCollector }: Ros1PlayerOpts) {
     log.info(`initializing Ros1Player (url=${url})`);
     this._metricsCollector = metricsCollector;
     this._url = url;

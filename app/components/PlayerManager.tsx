@@ -285,10 +285,10 @@ async function roscoreSource(options: FactoryOptions) {
   const url = maybeUrl;
   options.storage.setItem(storageCacheKey, url);
 
-  const rosHostname = options.sourceOptions.rosHostname as string | undefined;
+  const hostname = options.sourceOptions.rosHostname as string | undefined;
 
   return async (playerOptions: BuildPlayerOptions) => ({
-    player: new Ros1Player(url, rosHostname, playerOptions.metricsCollector),
+    player: new Ros1Player({ url, hostname, metricsCollector: playerOptions.metricsCollector }),
     sources: [url],
   });
 }
