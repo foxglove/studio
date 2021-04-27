@@ -2150,6 +2150,7 @@ __metadata:
     redux-devtools-extension: 2.13.9
     redux-thunk: 2.3.0
     regl-worldview: "github:foxglove/webviz#workspace=regl-worldview&commit=48979519bb7c067c7a0162255d1ef083fef49199"
+    rehype-raw: 5.1.0
     reselect: 4.0.0
     rosbag: "github:foxglove/rosbag.js#fc61125fbc01ff55698c5ed48987b2d9e7599572"
     roslib: "github:foxglove/roslibjs#364a19d5f3ada7543fac9194a50b96087c7556ba"
@@ -13061,6 +13062,25 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"hast-util-raw@npm:^6.1.0":
+  version: 6.1.0
+  resolution: "hast-util-raw@npm:6.1.0"
+  dependencies:
+    "@types/hast": ^2.0.0
+    hast-util-from-parse5: ^6.0.0
+    hast-util-to-parse5: ^6.0.0
+    html-void-elements: ^1.0.0
+    parse5: ^6.0.0
+    unist-util-position: ^3.0.0
+    unist-util-visit: ^2.0.0
+    vfile: ^4.0.0
+    web-namespaces: ^1.0.0
+    xtend: ^4.0.0
+    zwitch: ^1.0.0
+  checksum: a6ab9e9b7a62d910da836d65d1d76549b8005366f27055b464d1df93091f56822fd69965e4432e04c290dfee9b191a30947e15db3ffab90e8df1d25879134753
+  languageName: node
+  linkType: hard
+
 "hast-util-to-parse5@npm:^6.0.0":
   version: 6.0.0
   resolution: "hast-util-to-parse5@npm:6.0.0"
@@ -20594,6 +20614,15 @@ fsevents@^1.2.7:
   version: 1.7.0
   resolution: "regl@npm:1.7.0"
   checksum: 31f8bb1b17b9f312200175af736efa67240761538da037499db280eb9e948e62cfde9e61a14dc9c37bcda106699ce57db5286d2339a24ef80e6112c1466faa6f
+  languageName: node
+  linkType: hard
+
+"rehype-raw@npm:5.1.0":
+  version: 5.1.0
+  resolution: "rehype-raw@npm:5.1.0"
+  dependencies:
+    hast-util-raw: ^6.1.0
+  checksum: 64e96084460bc8b6874dbac63ad35f29ba9ecae5b5b4463d95c72975e48572d9373a9b7212c382fcea2b5410361b5eb9618852c2742449bde06939c4e5428bbf
   languageName: node
   linkType: hard
 
