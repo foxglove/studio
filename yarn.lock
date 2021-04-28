@@ -2122,7 +2122,7 @@ __metadata:
     panzoom: 9.4.2
     prettier: 2.2.1
     promise-queue: 2.2.5
-    puppeteer-core: 8.0.0
+    puppeteer-core: 9.0.0
     quickhull3d: 2.0.4
     rc-color-picker: 1.2.6
     rc-tabs: 11.7.3
