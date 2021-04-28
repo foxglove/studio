@@ -36,6 +36,7 @@ export type UserNodes = {
 
 export type ConfigsPayload = {
   id: string;
+  // if you set override to true, existing config will be completely overriden by new passed in config
   override?: boolean;
   config: PanelConfig;
   defaultConfig?: PanelConfig;
@@ -45,7 +46,6 @@ export type ChangePanelLayoutPayload = {
   trimSavedProps?: boolean;
 };
 export type SaveConfigsPayload = {
-  // if you set override to true, existing config will be completely overriden by new passed in config
   configs: ConfigsPayload[];
 };
 

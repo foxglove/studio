@@ -18,6 +18,7 @@ import { Provider } from "react-redux";
 import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
 import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
 import LayoutStorageReduxAdapter from "@foxglove-studio/app/components/LayoutStorageReduxAdapter";
+import MultiProvider from "@foxglove-studio/app/components/MultiProvider";
 import { NativeFileMenuPlayerSelection } from "@foxglove-studio/app/components/NativeFileMenuPlayerSelection";
 import ParamAssetAdapter from "@foxglove-studio/app/components/ParamAssetAdapter";
 import PlayerManager from "@foxglove-studio/app/components/PlayerManager";
@@ -90,15 +91,9 @@ export default function App(): ReactElement {
     <AssetsProvider loaders={assetLoaders} />,
     /* eslint-enable react/jsx-key */
   ];
-  function AllProviders({ children }: { children: React.ReactElement }) {
-    return providers.reduceRight(
-      (wrappedChildren, provider) => React.cloneElement(provider, undefined, wrappedChildren),
-      children,
-    );
-  }
 
   return (
-    <AllProviders>
+    <MultiProvider providers={providers}>
       <ErrorBoundary>
         <LayoutStorageReduxAdapter />
         <ParamAssetAdapter />
@@ -111,6 +106,6 @@ export default function App(): ReactElement {
           </Suspense>
         </DndProvider>
       </ErrorBoundary>
-    </AllProviders>
+    </MultiProvider>
   );
 }

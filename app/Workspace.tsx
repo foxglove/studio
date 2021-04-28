@@ -10,7 +10,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { ActionButton, Modal } from "@fluentui/react";
+import { ActionButton, Modal, Stack } from "@fluentui/react";
 import AlertIcon from "@mdi/svg/svg/alert.svg";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useDispatch } from "react-redux";
@@ -32,6 +32,7 @@ import messagePathHelp from "@foxglove-studio/app/components/MessagePathSyntax/i
 import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipeline";
 import NotificationDisplay from "@foxglove-studio/app/components/NotificationDisplay";
 import PanelLayout from "@foxglove-studio/app/components/PanelLayout";
+import PanelSettings from "@foxglove-studio/app/components/PanelSettings";
 import PlaybackControls from "@foxglove-studio/app/components/PlaybackControls";
 import Preferences from "@foxglove-studio/app/components/Preferences";
 import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToBodyComponent";
@@ -271,7 +272,10 @@ export default function Workspace(): JSX.Element {
             </Modal>
           </SToolbarItem>
         </Toolbar>
-        <PanelLayout />
+        <Stack horizontal verticalFill>
+          <PanelLayout />
+          <PanelSettings />
+        </Stack>
         {showPlaybackControls && <PlaybackControls />}
       </div>
     </LinkHandlerContext.Provider>

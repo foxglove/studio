@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { Checkbox } from "@fluentui/react";
 import CheckboxBlankOutlineIcon from "@mdi/svg/svg/checkbox-blank-outline.svg";
 import CheckboxMarkedIcon from "@mdi/svg/svg/checkbox-marked.svg";
 import CloseIcon from "@mdi/svg/svg/close.svg";
@@ -271,7 +272,6 @@ function ImageView(props: Props) {
   const { config, saveConfig } = props;
   const {
     scale,
-    synchronize,
     cameraTopic,
     enabledMarkerTopics,
     panelHooks,
@@ -348,10 +348,6 @@ function ImageView(props: Props) {
     },
     [saveConfig],
   );
-
-  const onToggleSynchronize = useCallback(() => {
-    saveConfig({ synchronize: !config.synchronize });
-  }, [saveConfig, config.synchronize]);
 
   const imageTopicDropdown = useMemo(() => {
     const cameraNamespace = getCameraNamespace(cameraTopic);
@@ -557,13 +553,6 @@ function ImageView(props: Props) {
   const menuContent = useMemo(
     () => (
       <>
-        <Item
-          icon={synchronize ? <CheckboxMarkedIcon /> : <CheckboxBlankOutlineIcon />}
-          onClick={onToggleSynchronize}
-        >
-          <span>Synchronize images and markers</span>
-        </Item>
-        <hr />
         <SubMenu direction="right" text={`Image resolution: ${(scale * 100).toFixed()}%`}>
           {[0.2, 0.5, 1].map((value) => {
             return (
@@ -580,7 +569,7 @@ function ImageView(props: Props) {
         </SubMenu>
       </>
     ),
-    [scale, onChangeScale, synchronize, onToggleSynchronize],
+    [scale, onChangeScale],
   );
 
   const imageMessage = messagesByTopic[cameraTopic]?.[0];
@@ -685,6 +674,20 @@ function ImageView(props: Props) {
   );
 }
 
+function ImageViewSettings(): JSX.Element {
+  const [{ synchronize }, saveConfig] = PanelAPI.useConfig<Config>();
+
+  return (
+    <>
+      <Checkbox
+        label="Synchronize images and markers"
+        checked={synchronize}
+        onChange={(_event, checked) => saveConfig({ synchronize: checked })}
+      />
+    </>
+  );
+}
+
 ImageView.panelType = "ImageViewPanel";
 ImageView.defaultConfig = {
   cameraTopic: "",
@@ -698,5 +701,6 @@ ImageView.defaultConfig = {
   offset: [0, 0],
 } as Config;
 ImageView.supportsStrictMode = false;
+ImageView.Settings = ImageViewSettings;
 
 export default Panel(ImageView);
