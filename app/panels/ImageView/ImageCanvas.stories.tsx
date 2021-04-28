@@ -39,7 +39,7 @@ const cameraInfo = {
 const imageFormat = "image/png";
 // Image data has to be loaded asynchronously, so use this component to load it for stories.
 function LoadImageMessage({ children }: any) {
-  const [imageData, setImageData] = React.useState(undefined);
+  const [imageData, setImageData] = React.useState<Uint8Array | undefined>();
   React.useEffect(() => {
     const canvas = document.createElement("canvas");
     canvas.width = 400;
@@ -58,7 +58,7 @@ function LoadImageMessage({ children }: any) {
     ctx.strokeRect(0, 0, 400, 300);
     canvas.toBlob((blob) => {
       blob?.arrayBuffer().then((arrayBuffer) => {
-        setImageData(new Uint8Array(arrayBuffer) as any);
+        setImageData(new Uint8Array(arrayBuffer));
       });
     }, imageFormat);
   }, []);
