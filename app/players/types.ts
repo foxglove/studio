@@ -127,7 +127,7 @@ export type PlayerStateActiveData = {
   // and should be immediately following the previous array of messages that was emitted as part of
   // this state. If there is a discontinuity in messages, `lastSeekTime` should be different than
   // the previous state. Panels collect these messages using the `PanelAPI`.
-  messages: readonly Message[];
+  messages: readonly MessageEvent<unknown>[];
   totalBytesReceived: number; // always-increasing
 
   // The current playback position, which will be shown in the playback bar. This time should be
@@ -215,12 +215,11 @@ export type Topic = {
 };
 
 // A message event frames message data with the topic and receive time
-export type TypedMessage<T> = Readonly<{
+export type MessageEvent<T> = Readonly<{
   topic: string;
   receiveTime: Time;
   message: T;
 }>;
-export type Message = TypedMessage<unknown>;
 
 type RosSingularField = number | string | boolean | RosObject; // No time -- consider it a message.
 export type RosValue =
@@ -247,7 +246,7 @@ export type Progress = Readonly<{
 }>;
 
 export type Frame = {
-  [topic: string]: Message[];
+  [topic: string]: MessageEvent<unknown>[];
 };
 
 // Represents a subscription to a single topic, for use in `setSubscriptions`.

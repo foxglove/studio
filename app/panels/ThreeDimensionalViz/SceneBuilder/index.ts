@@ -19,7 +19,7 @@ import MessageCollector from "@foxglove-studio/app/panels/ThreeDimensionalViz/Sc
 import { MarkerMatcher } from "@foxglove-studio/app/panels/ThreeDimensionalViz/ThreeDimensionalVizContext";
 import Transforms from "@foxglove-studio/app/panels/ThreeDimensionalViz/Transforms";
 import VelodyneCloudConverter from "@foxglove-studio/app/panels/ThreeDimensionalViz/VelodyneCloudConverter";
-import { Topic, Frame, Message, TypedMessage } from "@foxglove-studio/app/players/types";
+import { Topic, Frame, MessageEvent } from "@foxglove-studio/app/players/types";
 import {
   Color,
   Marker,
@@ -29,7 +29,6 @@ import {
   MutablePose,
   Pose,
   StampedMessage,
-  Point,
   MutablePoint,
   BaseMarker,
   PoseStamped,
@@ -69,7 +68,7 @@ export type TopicSettingsCollection = {
 // builds a syntehtic arrow marker from a geometry_msgs/PoseStamped
 // these pose sizes were manually configured in rviz; for now we hard-code them here
 export const buildSyntheticArrowMarker = (
-  { topic, message }: Message,
+  { topic, message }: MessageEvent<unknown>,
   pose: Pose,
   getSyntheticArrowMarkerColor: (arg0: string) => Color,
 ) => ({
@@ -150,7 +149,7 @@ export function getSceneErrorsByTopic(
 }
 
 // Only display one non-lifetime message at a time, so we filter to the last one.
-export function filterOutSupersededMessages<T extends Pick<Message, "message">>(
+export function filterOutSupersededMessages<T extends Pick<MessageEvent<unknown>, "message">>(
   messages: T[],
   datatype: string,
 ): T[] {
@@ -247,7 +246,7 @@ export default class SceneBuilder implements MarkerProvider {
   // stored message arrays allowing used to re-render topics even when the latest
   // frame does not not contain that topic
   lastSeenMessages: {
-    [key: string]: Message[];
+    [key: string]: MessageEvent<unknown>[];
   } = {};
 
   constructor(hooks: ThreeDimensionalVizHooks) {
@@ -515,73 +514,6 @@ export default class SceneBuilder implements MarkerProvider {
     }
   };
 
-  _addMarker({ topic, message, name }: { topic: string; message: Marker; name: string }) {
-    let minZ = Number.MAX_SAFE_INTEGER;
-
-    const { points, pose } = message as any;
-    const { position } = pose as Pose;
-
-    // if the marker has points, adjust bounds by the points
-    if (points?.length) {
-      points.forEach((point: Point) => {
-        const x = point.x + position.x;
-        const y = point.y + position.y;
-        const z = point.z + position.z;
-        minZ = Math.min(minZ, point.z);
-        this.bounds.update({ x, y, z });
-      });
-    } else {
-      // otherwise just adjust by the pose
-      minZ = Math.min(minZ, position.z);
-      this.bounds.update(position);
-    }
-
-    // if the minimum z value of any point (or the pose) is exactly 0
-    // then assume this marker can be flattened
-    if (minZ === 0 && this.flatten && this.flattenedZHeightPose) {
-      (position as MutablePoint).z = this.flattenedZHeightPose.position.z;
-    }
-
-    // HACK(jacob): rather than hard-coding this, we should
-    //  (a) produce this visualization dynamically from a non-marker topic
-    //  (b) fix translucency so it looks correct (harder)
-    // HACK(steel): color should always be present. But don't crash just in case?
-    const color = this._hooks.getMarkerColor(topic, message.color as any);
-
-    // Allow topic settings to override marker color (see MarkerSettingsEditor.js)
-    let { overrideColor } =
-      this._settingsByKey[`ns:${topic}:${message.ns}`] || this._settingsByKey[`t:${topic}`] || {};
-
-    // Check for matching colorOverrideMarkerMatchers for this topic
-    const colorOverrideMarkerMatchers = this._colorOverrideMarkerMatchersByTopic[topic] || [];
-    const matchingMatcher = colorOverrideMarkerMatchers.find(({ checks = [] }) =>
-      checks.every(({ markerKeyPath, value }) => {
-        const markerValue = _.get(message, markerKeyPath as any);
-        return value === markerValue;
-      }),
-    );
-    if (matchingMatcher) {
-      overrideColor = matchingMatcher.color;
-    }
-
-    // Set later in renderMarkers so it be applied to markers generated in _consumeNonMarkerMessage
-    const highlighted = false;
-    const interactionData = {
-      topic,
-      highlighted,
-      originalMessage: message,
-    };
-    const marker = {
-      ...message,
-      pose,
-      interactionData,
-      color: overrideColor || color,
-      colors: overrideColor ? [] : message.colors,
-    };
-
-    this.collectors[topic]!.addMarker(marker as any, name);
-  }
-
   _consumeMarker(topic: string, message: BaseMarker): void {
     const namespace = message.ns;
     if (namespace.length > 0) {
@@ -689,6 +621,7 @@ export default class SceneBuilder implements MarkerProvider {
       originalMessage: message,
     };
     const lifetime = message.lifetime;
+
     // This "marker-ish" thing is an unholy union of many drawable types...
     const marker: any = {
       type: (message as any).type,
@@ -776,7 +709,7 @@ export default class SceneBuilder implements MarkerProvider {
     (this.collectors[topic] as any).addNonMarker(topic, mappedMessage);
   };
 
-  _consumeColor = (msg: TypedMessage<Color>): void => {
+  _consumeColor = (msg: MessageEvent<Color>): void => {
     const color = msg.message;
     if (color.r == undefined || color.g == undefined || color.b == undefined) {
       return;
@@ -858,7 +791,7 @@ export default class SceneBuilder implements MarkerProvider {
     this.topicsToRender.clear();
   }
 
-  _consumeMessage = (topic: string, datatype: string, msg: Message): void => {
+  _consumeMessage = (topic: string, datatype: string, msg: MessageEvent<unknown>): void => {
     const { message } = msg;
     switch (datatype) {
       case WEBVIZ_MARKER_DATATYPE:
@@ -917,7 +850,7 @@ export default class SceneBuilder implements MarkerProvider {
         this._consumeNonMarkerMessage(topic, message as StampedMessage, 104);
         break;
       case COLOR_RGBA_DATATYPE:
-        this._consumeColor(msg as TypedMessage<Color>);
+        this._consumeColor(msg as MessageEvent<Color>);
         break;
       case GEOMETRY_MSGS_POLYGON_STAMPED_DATATYPE: {
         // convert Polygon to a line strip
@@ -944,7 +877,7 @@ export default class SceneBuilder implements MarkerProvider {
       }
       default: {
         if (datatype.endsWith("/Color") || datatype.endsWith("/ColorRGBA")) {
-          this._consumeColor(msg as TypedMessage<Color>);
+          this._consumeColor(msg as MessageEvent<Color>);
           break;
         }
       }
