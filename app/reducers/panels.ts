@@ -83,7 +83,7 @@ import {
 
 const storage = new Storage();
 
-export const GLOBAL_STATE_STORAGE_KEY = "webvizGlobalState";
+export const GLOBAL_STATE_STORAGE_KEY = "studioGlobalState";
 export const defaultPlaybackConfig: PlaybackConfig = {
   speed: 0.2,
   messageOrder: "receiveTime",
