@@ -13,6 +13,7 @@
     "**/*.code-search": true,
     "**/bower_components": true,
     "**/node_modules": true,
+    ".webpack": true,
     ".yarn/**": true,
     "yarn.lock": true
   },
