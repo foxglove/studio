@@ -8,13 +8,18 @@ import os from "os";
 
 const BROADCAST_IP = "224.0.0.251";
 const PORT = 5353;
+const MIN_RETRY_MS = 1000;
+const RETRY_JITTER_MS = 500;
 
 export type MDnsResponse = {
   answer: packet.StringAnswer;
   rinfo: dgram.RemoteInfo;
 };
 
-export function mdns4Request(hostname: string): Promise<MDnsResponse | undefined> {
+export function mdns4Request(
+  hostname: string,
+  timeoutMs = 8000,
+): Promise<MDnsResponse | undefined> {
   return new Promise((resolve, reject) => {
     const interfaces = allInterfaces();
     if (interfaces.length === 0) {
@@ -28,7 +33,7 @@ export function mdns4Request(hostname: string): Promise<MDnsResponse | undefined
     };
 
     const sockets = interfaces.map((iface) => mdns4RequestOnIface(hostname, iface, finish));
-    const timeout = setTimeout(finish, 8000);
+    const timeout = setTimeout(finish, timeoutMs);
   });
 }
 
@@ -83,16 +88,10 @@ function mdns4RequestOnIface(
     socket.addMembership(BROADCAST_IP, iface);
 
     const message = packet.encode({ type: "query", questions: [{ type: "A", name: hostname }] });
-    let attempts = 0;
 
     const sendMessage = () => {
-      if (attempts++ >= 5) {
-        clearTimeout(timeout);
-        closeSocket(socket);
-        return;
-      }
       socket.send(message, 0, message.length, PORT, BROADCAST_IP);
-      timeout = setTimeout(sendMessage, 1000 + Math.random() * 500);
+      timeout = setTimeout(sendMessage, MIN_RETRY_MS + Math.random() * RETRY_JITTER_MS);
     };
 
     sendMessage();
