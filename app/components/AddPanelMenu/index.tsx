@@ -15,7 +15,7 @@ import { ActionButton, Callout, IButton, IContextualMenuProps } from "@fluentui/
 import { useCallback, useRef, useLayoutEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-import { addPanel, AddPanelPayload } from "@foxglove-studio/app/actions/panels";
+import { addPanel } from "@foxglove-studio/app/actions/panels";
 import Menu from "@foxglove-studio/app/components/Menu";
 import PanelList, { PanelSelection } from "@foxglove-studio/app/components/PanelList";
 import { State as ReduxState } from "@foxglove-studio/app/reducers";
@@ -30,7 +30,7 @@ export function useSelectPanel(): (selection: PanelSelection) => void {
   const layout = useSelector((state: ReduxState) => state.persistedState.panels.layout);
   return useCallback(
     ({ type, config, relatedConfigs }: PanelSelection) => {
-      dispatch(addPanel({ type, layout, config, relatedConfigs } as AddPanelPayload));
+      dispatch(addPanel({ type, layout, config, relatedConfigs }));
 
       const name = getEventNames().PANEL_ADD;
       const panelType = getEventTags().PANEL_TYPE;

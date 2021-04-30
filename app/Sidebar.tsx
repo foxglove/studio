@@ -3,28 +3,72 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { CommandBarButton, IIconProps, Stack, useTheme } from "@fluentui/react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
+import { MosaicNode, MosaicWithoutDragDropContext } from "react-mosaic-component";
+import styled from "styled-components";
 
 import { useSelectPanel } from "@foxglove-studio/app/components/AddPanelMenu";
 import GlobalVariablesTable from "@foxglove-studio/app/components/GlobalVariablesTable";
+import variablesHelp from "@foxglove-studio/app/components/GlobalVariablesTable/index.help.md";
 import PanelList from "@foxglove-studio/app/components/PanelList";
 import PanelSettings from "@foxglove-studio/app/components/PanelSettings";
+import { SidebarContent } from "@foxglove-studio/app/components/SidebarContent";
 
 const BUTTON_SIZE = 50;
 const ICON_SIZE = 24;
 const FADED_OPACITY = 0.7;
 
-function AddPanel() {
-  const selectPanel = useSelectPanel();
-  return <PanelList onPanelSelect={selectPanel} />;
-}
-
 function Noop(): ReactNull {
   return ReactNull;
 }
 
-export default function Sidebar(): JSX.Element {
+function AddPanel() {
+  const selectPanel = useSelectPanel();
+  return (
+    <SidebarContent title="Add panel">
+      <PanelList onPanelSelect={selectPanel} />
+    </SidebarContent>
+  );
+}
+
+function Variables() {
+  return (
+    <SidebarContent title="Variables" helpContent={variablesHelp}>
+      <GlobalVariablesTable />
+    </SidebarContent>
+  );
+}
+
+// Root drop targets in this top level sidebar mosaic interfere with drag/mouse events from the
+// PanelList. We don't allow users to edit the mosaic since it's just used for the sidebar, so we
+// can hide the drop targets.
+const HideRootDropTargets = styled.div`
+  & > .mosaic > .drop-target-container {
+    display: none !important;
+  }
+`;
+
+export default function Sidebar({ children }: React.PropsWithChildren<unknown>): JSX.Element {
   const [selectedIndex, setSelectedIndex] = useState<number | undefined>(undefined);
+  const [mosaicValue, setMosaicValue] = useState<MosaicNode<"sidebar" | "children">>("children");
+
+  const onSelectIndex = useCallback(
+    (index: number) => {
+      if (selectedIndex === index) {
+        setSelectedIndex(undefined);
+        setMosaicValue("children");
+      } else {
+        setSelectedIndex(index);
+        setMosaicValue({
+          direction: "row",
+          first: "sidebar",
+          second: "children",
+          splitPercentage: 30,
+        });
+      }
+    },
+    [selectedIndex],
+  );
 
   const items: {
     iconName: IIconProps["iconName"];
@@ -33,25 +77,18 @@ export default function Sidebar(): JSX.Element {
   }[] = [
     { iconName: "MediaAdd", title: "Add Panel", component: AddPanel },
     { iconName: "ColumnVerticalSectionEdit", title: "Panel Settings", component: PanelSettings },
-    { iconName: "Rename", title: "Variables", component: GlobalVariablesTable },
+    { iconName: "Rename", title: "Variables", component: Variables },
   ];
 
   const SelectedComponent = (selectedIndex != undefined && items[selectedIndex]?.component) || Noop;
 
   const theme = useTheme();
   return (
-    <Stack
-      horizontal
-      verticalFill
-      style={{
-        borderRight: `1px solid ${theme.semanticColors.bodyDivider}`,
-      }}
-    >
+    <Stack horizontal verticalFill>
       <Stack
         style={{
           width: BUTTON_SIZE,
           flexShrink: 0,
-          // borderTop: `1px solid ${theme.semanticColors.bodyDivider}`,
           borderRight: `1px solid ${theme.semanticColors.bodyDivider}`,
         }}
       >
@@ -73,7 +110,7 @@ export default function Sidebar(): JSX.Element {
                     },
                   },
                 }}
-                onClick={() => setSelectedIndex((selected) => (selected === i ? undefined : i))}
+                onClick={() => onSelectIndex(i)}
               />
               {selectedIndex === i && (
                 <div
@@ -85,16 +122,27 @@ export default function Sidebar(): JSX.Element {
                     width: 3,
                     backgroundColor: theme.palette.themePrimary,
                   }}
-                ></div>
+                />
               )}
             </Stack>
           );
         })}
       </Stack>
-      <Stack.Item>
-        <SelectedComponent />
-      </Stack.Item>
+      {
+        // By always rendering the mosaic, even if we are only showing children, we can prevent the
+        // children from having to re-mount each time the sidebar is opened/closed.
+      }
+      <HideRootDropTargets style={{ flex: "1 1 100%" }}>
+        <MosaicWithoutDragDropContext<"sidebar" | "children">
+          className=""
+          value={mosaicValue}
+          onChange={(value) => value != undefined && setMosaicValue(value)}
+          renderTile={(id) =>
+            id === "children" ? (children as JSX.Element) : <SelectedComponent />
+          }
+          resize={{ minimumPaneSizePercentage: 30 }}
+        />
+      </HideRootDropTargets>
     </Stack>
   );
-  // return <PanelSettings />;
 }

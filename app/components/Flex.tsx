@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import cx from "classnames";
-import { CSSProperties, LegacyRef } from "react";
+import { CSSProperties } from "react";
 
 import styles from "./Flex.module.scss";
 

@@ -10,7 +10,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { ActionButton, Modal, Stack } from "@fluentui/react";
+import { ActionButton, Modal } from "@fluentui/react";
 import AlertIcon from "@mdi/svg/svg/alert.svg";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useDispatch } from "react-redux";
@@ -20,11 +20,9 @@ import styled from "styled-components";
 import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
 import { redoLayoutChange, undoLayoutChange } from "@foxglove-studio/app/actions/layoutHistory";
 import { importPanelLayout, loadLayout } from "@foxglove-studio/app/actions/panels";
-import AddPanelMenu from "@foxglove-studio/app/components/AddPanelMenu";
 import DocumentDropListener from "@foxglove-studio/app/components/DocumentDropListener";
 import DropOverlay from "@foxglove-studio/app/components/DropOverlay";
 import GlobalKeyListener from "@foxglove-studio/app/components/GlobalKeyListener";
-import GlobalVariablesMenu from "@foxglove-studio/app/components/GlobalVariablesMenu";
 import HelpModal from "@foxglove-studio/app/components/HelpModal";
 import Icon from "@foxglove-studio/app/components/Icon";
 import LayoutMenu from "@foxglove-studio/app/components/LayoutMenu";
@@ -256,12 +254,6 @@ export default function Workspace(): JSX.Element {
             <LayoutMenu />
           </SToolbarItem>
           <SToolbarItem>
-            <AddPanelMenu />
-          </SToolbarItem>
-          <SToolbarItem>
-            <GlobalVariablesMenu />
-          </SToolbarItem>
-          <SToolbarItem>
             <ActionButton
               iconProps={{
                 iconName: "Settings",
@@ -278,10 +270,9 @@ export default function Workspace(): JSX.Element {
             </Modal>
           </SToolbarItem>
         </Toolbar>
-        <Stack horizontal verticalFill>
-          <Sidebar />
+        <Sidebar>
           <PanelLayout />
-        </Stack>
+        </Sidebar>
         {showPlaybackControls && <PlaybackControls />}
       </div>
     </LinkHandlerContext.Provider>

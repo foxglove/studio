@@ -40,17 +40,6 @@ const StickyDiv = styled.div`
   position: sticky;
   top: 0;
   z-index: 2;
-  background-color: ${colors.DARK3};
-`;
-
-const STitle = styled.h1`
-  padding: 16px 16px 0px 16px;
-  font-size: 14;
-`;
-
-const SDescription = styled.div`
-  padding: 8px 16px 16px;
-  opacity: 0.6;
 `;
 
 const SSearchInputContainer = styled(Flex)`
@@ -63,7 +52,7 @@ const SSearchInput = styled.input`
   background-color: ${colors.DARK5};
   padding: 8px;
   width: 100%;
-  min-width: 200px;
+  min-width: 0;
   margin: 0;
 
   &:hover,
@@ -74,9 +63,7 @@ const SSearchInput = styled.input`
 
 const SScrollContainer = styled.div`
   overflow-y: auto;
-  height: calc(100% - 142px);
-  padding-bottom: 8px;
-  background-color: ${colors.DARK3};
+  height: 100%;
 `;
 
 const SEmptyState = styled.div`
@@ -132,6 +119,7 @@ function DraggablePanelItem({
   const scrollRef = React.useRef<HTMLDivElement>(ReactNull);
   const [__, drag] = useDrag({
     item: { type: MosaicDragType.WINDOW },
+    options: { dropEffect: "copy" },
     begin: (_monitor) => ({ mosaicId } as any),
     end: (_item, monitor) => {
       const dropResult = monitor.getDropResult() || {};
@@ -220,7 +208,7 @@ function verifyPanels(panelsByCategory: Map<string, PanelInfo[]>) {
   }
 }
 
-function PanelList(props: Props) {
+function PanelList(props: Props): JSX.Element {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [highlightedPanelIdx, setHighlightedPanelIdx] = React.useState<number | undefined>();
   const { onPanelSelect, selectedPanelTitle } = props;
@@ -345,13 +333,8 @@ function PanelList(props: Props) {
   );
 
   return (
-    <div data-test-panel-category style={{ height: "100%", width: "320px" }}>
+    <div style={{ height: "100%", overflow: "hidden" }}>
       <StickyDiv>
-        <STitle>Add panel</STitle>
-        <SDescription>
-          Click to select a new panel or drag and drop to place a new panel.
-        </SDescription>
-        <hr />
         <div style={{ padding: "16px" }}>
           <SSearchInputContainer center>
             <Icon style={{ color: colors.LIGHT, opacity: 0.3 }}>

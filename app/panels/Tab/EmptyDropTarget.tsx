@@ -100,7 +100,7 @@ export const EmptyDropTarget = ({ mosaicId, tabId }: Props) => {
             <PanelList onPanelSelect={onPanelSelect} />
           </Menu>
         </ChildToggle>{" "}
-        {" or drag one in to get started."}
+        or drag one in to get started.
       </SEmptyStateText>
     </SDropTarget>
   );
