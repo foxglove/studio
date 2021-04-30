@@ -35,6 +35,9 @@ const icons: {
   Share: <Icons.ShareIcon />,
   TestBeakerSolid: <Icons.TestBeakerSolidIcon />,
   Variable2: <Icons.Variable2Icon />,
+  ColumnVerticalSectionEdit: <Icons.ColumnVerticalSectionEditIcon />,
+  MediaAdd: <Icons.MediaAddIcon />,
+  Rename: <Icons.RenameIcon />,
   "studio.ROS": <RosIcon />,
 };
 

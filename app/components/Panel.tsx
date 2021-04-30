@@ -574,7 +574,7 @@ export default function Panel<Config extends PanelConfig>(
             col
             dataTest={`panel-mouseenter-container ${childId ?? ""}`}
             clip
-            innerRef={(el) => {
+            ref={(el) => {
               connectOverlayDragPreview(el);
               connectToolbarDragPreview(el);
             }}

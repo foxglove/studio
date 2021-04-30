@@ -29,7 +29,10 @@ declare global {
     | "Settings"
     | "Share"
     | "TestBeakerSolid"
-    | "Variable2";
+    | "Variable2"
+    | "ColumnVerticalSectionEdit"
+    | "MediaAdd"
+    | "Rename";
 }
 
 declare module "@fluentui/react/lib/components/Icon" {

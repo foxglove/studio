@@ -43,11 +43,9 @@ type Props = {
   onMouseMove?: (arg0: MouseEvent) => void;
   // for storybook screenshots tests
   dataTest?: string;
-
-  innerRef?: LegacyRef<HTMLDivElement>;
 };
 
-const Flex = (props: Props) => {
+const Flex = React.forwardRef((props: Props, ref: React.ForwardedRef<HTMLDivElement>) => {
   const {
     col,
     row,
@@ -67,7 +65,6 @@ const Flex = (props: Props) => {
     onMouseLeave,
     onMouseMove,
     dataTest,
-    innerRef,
   } = props;
   if (col != undefined && col === row) {
     throw new Error("Flex col and row are mutually exclusive");
@@ -89,7 +86,7 @@ const Flex = (props: Props) => {
 
   return (
     <div
-      ref={innerRef}
+      ref={ref}
       data-test={dataTest}
       className={combinedClasses}
       style={style}
@@ -101,7 +98,7 @@ const Flex = (props: Props) => {
       {children}
     </div>
   );
-};
+});
 
 Flex.displayName = "Flex";
 export default Flex;

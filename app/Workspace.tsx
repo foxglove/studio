@@ -32,7 +32,6 @@ import messagePathHelp from "@foxglove-studio/app/components/MessagePathSyntax/i
 import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipeline";
 import NotificationDisplay from "@foxglove-studio/app/components/NotificationDisplay";
 import PanelLayout from "@foxglove-studio/app/components/PanelLayout";
-import PanelSettings from "@foxglove-studio/app/components/PanelSettings";
 import PlaybackControls from "@foxglove-studio/app/components/PlaybackControls";
 import Preferences from "@foxglove-studio/app/components/Preferences";
 import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToBodyComponent";
@@ -51,6 +50,8 @@ import { ImportPanelLayoutPayload } from "@foxglove-studio/app/types/panels";
 import { SECOND_SOURCE_PREFIX } from "@foxglove-studio/app/util/globalConstants";
 import inAutomatedRunMode from "@foxglove-studio/app/util/inAutomatedRunMode";
 import sendNotification from "@foxglove-studio/app/util/sendNotification";
+
+import Sidebar from "./Sidebar";
 
 type TestableWindow = Window & { setPanelLayout?: (payload: ImportPanelLayoutPayload) => void };
 
@@ -278,8 +279,8 @@ export default function Workspace(): JSX.Element {
           </SToolbarItem>
         </Toolbar>
         <Stack horizontal verticalFill>
+          <Sidebar />
           <PanelLayout />
-          <PanelSettings />
         </Stack>
         {showPlaybackControls && <PlaybackControls />}
       </div>

@@ -25,10 +25,10 @@ type Props = {
   defaultIsOpen?: boolean; // just for testing
 };
 
-function MenuContent(menuProps: IContextualMenuProps) {
+export function useSelectPanel(): (selection: PanelSelection) => void {
   const dispatch = useDispatch();
   const layout = useSelector((state: ReduxState) => state.persistedState.panels.layout);
-  const onPanelSelect = useCallback(
+  return useCallback(
     ({ type, config, relatedConfigs }: PanelSelection) => {
       dispatch(addPanel({ type, layout, config, relatedConfigs } as AddPanelPayload));
 
@@ -40,6 +40,10 @@ function MenuContent(menuProps: IContextualMenuProps) {
     },
     [dispatch, layout],
   );
+}
+
+function MenuContent(menuProps: IContextualMenuProps) {
+  const selectPanel = useSelectPanel();
   return (
     <Callout
       {...menuProps}
@@ -50,7 +54,7 @@ function MenuContent(menuProps: IContextualMenuProps) {
       }}
     >
       <Menu>
-        <PanelList onPanelSelect={onPanelSelect} />
+        <PanelList onPanelSelect={selectPanel} />
       </Menu>
     </Callout>
   );
