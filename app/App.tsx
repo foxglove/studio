@@ -13,7 +13,7 @@
 import { ReactElement, useState, useEffect, useMemo, Suspense } from "react";
 import { DndProvider } from "react-dnd";
 import HTML5Backend from "react-dnd-html5-backend";
-import { Provider } from "react-redux";
+import { Provider as ReduxProvider } from "react-redux";
 
 import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
 import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
@@ -83,7 +83,7 @@ export default function App(): ReactElement {
     <ThemeProvider />,
     <ModalHost />, // render modal elements inside the ThemeProvider
     <WindowGeometryContext.Provider value={windowGeometry} />,
-    <Provider store={globalStore} />,
+    <ReduxProvider store={globalStore} />,
     <AnalyticsProvider />,
     <ExperimentalFeaturesLocalStorageProvider features={experimentalFeatures} />,
     <PlayerManager playerSources={playerSources} />,
