@@ -1671,7 +1671,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@emotion/core@npm:^10.1.1":
+"@emotion/core@npm:^10.0.14, @emotion/core@npm:^10.1.1":
   version: 10.1.1
   resolution: "@emotion/core@npm:10.1.1"
   dependencies:
@@ -2070,7 +2070,7 @@ __metadata:
     "@types/react-input-autosize": 2.2.0
     "@types/react-outside-click-handler": 1.3.0
     "@types/react-redux": 7.1.16
-    "@types/react-table": 7.0.29
+    "@types/react-table": 7.7.0
     "@types/react-transition-group": ^4.4.1
     "@types/react-virtualized": 9.21.11
     "@types/sanitize-html": 2.3.1
@@ -2141,6 +2141,7 @@ __metadata:
     react-redux: 7.2.4
     react-resize-detector: 6.7.0
     react-table: 7.7.0
+    react-toast-notifications: 2.4.4
     react-transition-group: 4.4.1
     react-use: 17.2.4
     react-virtualized: 9.22.3
@@ -5121,12 +5122,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-table@npm:7.0.29":
-  version: 7.0.29
-  resolution: "@types/react-table@npm:7.0.29"
+"@types/react-table@npm:7.7.0":
+  version: 7.7.0
+  resolution: "@types/react-table@npm:7.7.0"
   dependencies:
     "@types/react": "*"
-  checksum: 3a0a29b2520b3561c9f9418d87c4988f73973a7a637b27ca4ec2f3090c8a842dd715913c23fa108e48242d86d895075b9b1bb5a23608ded494bc1cebb36c2261
+  checksum: af373b925625408ad1b3abdf9449e3ebe6769b5f91f7ca51b6509f04b1083b7ff9632fb4c49a141d79676e64e91c55de032ebd57c6ebb64227aad8be153873c9
   languageName: node
   linkType: hard
 
@@ -21225,7 +21226,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-transition-group@npm:4.4.1":
+"react-toast-notifications@npm:2.4.4":
+  version: 2.4.4
+  resolution: "react-toast-notifications@npm:2.4.4"
+  dependencies:
+    "@emotion/core": ^10.0.14
+    react-transition-group: ^4.4.1
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: c80f724344c2d0f48783b2151fecfa1147c8a776bacec6beeabe116c879ae7ff1fb3baab98ac8181c3c1f7df59dc458c9c9be5392945f6d3a11687c896df10de
+  languageName: node
+  linkType: hard
+
+"react-transition-group@npm:4.4.1, react-transition-group@npm:^4.4.1":
   version: 4.4.1
   resolution: "react-transition-group@npm:4.4.1"
   dependencies:
