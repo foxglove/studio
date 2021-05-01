@@ -508,7 +508,7 @@ export default class SceneBuilder implements MarkerProvider {
     return pose;
   };
 
-  _consumeMarkerArray = (topic: string, message: any): void => {
+  private _consumeMarkerArray = (topic: string, message: any): void => {
     for (const marker of message.markers) {
       this._consumeMarker(topic, marker);
     }
@@ -721,7 +721,7 @@ export default class SceneBuilder implements MarkerProvider {
     this._consumeNonMarkerMessage(msg.topic, newMessage, 110);
   };
 
-  _consumeNonMarkerMessage = (
+  private _consumeNonMarkerMessage = (
     topic: string,
     drawData: StampedMessage,
     type: number,

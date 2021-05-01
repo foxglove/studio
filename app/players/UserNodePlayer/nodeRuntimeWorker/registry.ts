@@ -47,11 +47,11 @@ export const containsFuncDeclaration = (args: any[]): boolean => {
   return false;
 };
 
-export const stringifyFuncsInObject = (arg: any): string => {
+export const stringifyFuncsInObject = (arg: unknown): unknown => {
   if (typeof arg === "function") {
     return `${arg}`;
-  } else if (arg != undefined && typeof arg === "object") {
-    const newArg = { ...arg };
+  } else if (typeof arg === "object" && arg != undefined) {
+    const newArg: Record<string, unknown> = { ...arg };
     for (const [key, value] of Object.entries(arg)) {
       newArg[key] = stringifyFuncsInObject(value);
     }

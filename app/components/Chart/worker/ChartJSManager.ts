@@ -118,42 +118,49 @@ export default class ChartJSManager {
     this._chartInstance = chartInstance;
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   wheel(event: any): RpcScales {
     event.target.getBoundingClientRect = () => event.target.boundingClientRect;
     this._fakeNodeEvents.emit("wheel", event);
     return this.getScales();
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   mousedown(event: any): RpcScales {
     event.target.getBoundingClientRect = () => event.target.boundingClientRect;
     this._fakeNodeEvents.emit("mousedown", event);
     return this.getScales();
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   mousemove(event: any): RpcScales {
     event.target.getBoundingClientRect = () => event.target.boundingClientRect;
     this._fakeNodeEvents.emit("mousemove", event);
     return this.getScales();
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   mouseup(event: any): RpcScales {
     event.target.getBoundingClientRect = () => event.target.boundingClientRect;
     this._fakeDocumentEvents.emit("mouseup", event);
     return this.getScales();
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   panstart(event: any): RpcScales {
     event.target.getBoundingClientRect = () => event.target.boundingClientRect;
     (this._chartInstance as any)?.$zoom.panStartHandler(event);
     return this.getScales();
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   panmove(event: any): RpcScales {
     event.target.getBoundingClientRect = () => event.target.boundingClientRect;
     (this._chartInstance as any)?.$zoom.panHandler(event);
     return this.getScales();
   }
 
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   panend(event: any): RpcScales {
     event.target.getBoundingClientRect = () => event.target.boundingClientRect;
     (this._chartInstance as any)?.$zoom.panEndHandler(event);

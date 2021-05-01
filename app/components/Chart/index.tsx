@@ -11,9 +11,9 @@ import { RpcElement, RpcScales } from "@foxglove-studio/app/components/Chart/typ
 import WebWorkerManager from "@foxglove-studio/app/util/WebWorkerManager";
 
 // Webworker Manager wants a constructor so we need to have a "class" wrapper
-class ChartJSWorker {
+class ChartJSWorker extends Worker {
   constructor() {
-    return new Worker(new URL("./worker/main", import.meta.url));
+    super(new URL("./worker/main", import.meta.url));
   }
 }
 

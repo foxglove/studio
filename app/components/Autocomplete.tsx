@@ -222,7 +222,7 @@ export default class Autocomplete<T = unknown> extends PureComponent<
   // Make sure the input field gets focused again after selecting, in case we're doing multiple
   // autocompletes. We pass in `this` to `onSelect` in case the user of this component wants to call
   // `blur()`.
-  _onSelect = (value: string, item: any): void => {
+  _onSelect = (value: string, item: T): void => {
     if (this._autocomplete.current?.refs.input) {
       (this._autocomplete.current.refs.input as any).focus();
       this.setState({ focused: true, value: undefined }, () => {

@@ -231,7 +231,7 @@ export default class CombinedDataProvider implements DataProvider {
   _progressPerProvider: (Progress | undefined)[];
   _extensionPoint?: ExtensionPoint;
 
-  constructor(_: any, children: DataProviderDescriptor[], getDataProvider: GetDataProvider) {
+  constructor(_: unknown, children: DataProviderDescriptor[], getDataProvider: GetDataProvider) {
     this._providers = children.map((descriptor) =>
       process.env.NODE_ENV === "test" && descriptor.name === "TestProvider"
         ? descriptor.args.provider

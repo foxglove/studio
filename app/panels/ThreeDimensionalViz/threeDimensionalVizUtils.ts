@@ -109,6 +109,7 @@ export function useTransformedCameraState({
   return { transformedCameraState: mergedCameraState, targetPose: targetPose || lastTargetPose };
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const getInstanceObj = (marker: any, idx: number): any => {
   if (!marker) {
     return;

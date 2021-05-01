@@ -139,7 +139,7 @@ export class TextureCache {
   // regl context
   regl: any;
 
-  constructor(regl: any) {
+  constructor(regl: unknown) {
     this.regl = regl;
   }
 
