@@ -36,6 +36,7 @@ export type NodeProjectConfig = {
   defaultLibFileName: string;
   declarations: NodeProjectFile[];
   utilityFiles: NodeProjectFile[];
+  rosLib: NodeProjectFile;
 };
 
 const utilityFiles: NodeProjectFile[] = rawUserUtils.map((utility) => ({

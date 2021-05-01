@@ -67,14 +67,14 @@ export function createLinkedChannels(): { local: Channel; remote: Channel } {
 // Check out the tests for more examples.
 export default class Rpc {
   static transferrables = "$$TRANSFERRABLES";
-  _channel: Channel;
+  _channel: Omit<Channel, "terminate">;
   _messageId: number = 0;
   _pendingCallbacks: {
     [key: number]: (arg0: any) => void;
   } = {};
   _receivers: Map<string, (arg0: any) => any> = new Map();
 
-  constructor(channel: Channel) {
+  constructor(channel: Omit<Channel, "terminate">) {
     this._channel = channel;
     if (this._channel.onmessage) {
       throw new Error(

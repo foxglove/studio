@@ -89,7 +89,7 @@ export const maxLen = (maxLength = 0) => (value: unknown): string | undefined =>
   return undefined;
 };
 
-export const hasLen = (len = 0) => (value: string | unknown[]): string | undefined => {
+export const hasLen = (len = 0) => (value: unknown): string | undefined => {
   if (Array.isArray(value)) {
     return value.length !== len
       ? `must contain exact ${len} array items (current item count: ${value.length})`

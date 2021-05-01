@@ -42,7 +42,7 @@ type Props = {
 
 export default function PointCloudDetails({
   selectedObject: { object, instanceIndex },
-}: Props): JSX.Element {
+}: Props): JSX.Element | ReactNull {
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   const { clickedPoint, clickedPointColor, additionalFieldValues } =

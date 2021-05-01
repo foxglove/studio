@@ -61,7 +61,7 @@ export function toRgba(rgba: Color): [number, number, number, number] {
 
 // extract clicked point's position, color and additional field values to display in the UI
 export function getClickedInfo(
-  maybeFullyDecodedMarker: MouseEventObject,
+  maybeFullyDecodedMarker: any, // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
   instanceIndex: number | undefined,
 ): ClickedInfo | undefined {
   const { positionBuffer, colorBuffer, fields, settings, is_bigendian } = maybeFullyDecodedMarker;
@@ -142,7 +142,8 @@ export function getClickedInfo(
 }
 
 // Extract positions so they can be saved to a file
-export function getAllPoints(maybeFullyDecodedMarker: MouseEventObject): number[] {
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export function getAllPoints(maybeFullyDecodedMarker: any): number[] {
   const { pointCount, positionBuffer } = maybeFullyDecodedMarker;
   const ret = [];
   for (let i = 0; i < pointCount; i++) {

@@ -80,7 +80,7 @@ const InteractionsBaseComponent = React.memo<PropsWithConfig>(function Interacti
     >
       <ToolGroup name={OBJECT_TAB_TYPE}>
         <ToolGroupFixedSizePane>
-          {selectedObject ? (
+          {maybeFullyDecodedObject ? (
             <>
               {selectedInteractionData && (
                 <SRow>

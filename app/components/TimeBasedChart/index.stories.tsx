@@ -160,7 +160,7 @@ CanZoomAndUpdate.parameters = {
   },
 };
 
-export const CleansUpTooltipOnUnmount = (): JSX.Element => {
+export const CleansUpTooltipOnUnmount = (): JSX.Element | ReactNull => {
   const [hasRenderedOnce, setHasRenderedOnce] = useState<boolean>(false);
   useMount(async () => {
     await new Promise((resolve) => setTimeout(resolve, 200));

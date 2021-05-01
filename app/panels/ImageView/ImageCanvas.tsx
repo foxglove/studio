@@ -40,11 +40,8 @@ import { ImageViewPanelHooks, Config, SaveImagePanelConfig } from "./index";
 import { renderImage } from "./renderImage";
 import { checkOutOfBounds, Dimensions } from "./util";
 
-// WebworkerManager wants to build workers as classes so we provide this wrapper
-class ImageCanvasWorker {
-  constructor() {
-    return new Worker(new URL("ImageCanvas.worker", import.meta.url));
-  }
+function makeImageCanvasWorker() {
+  return new Worker(new URL("ImageCanvas.worker", import.meta.url));
 }
 
 type OnFinishRenderImage = () => void;
@@ -85,7 +82,7 @@ const SErrorMessage = styled.div`
 const MAX_ZOOM_PERCENTAGE = 150;
 const ZOOM_STEP = 5;
 
-const webWorkerManager = new WebWorkerManager(ImageCanvasWorker, 1);
+const webWorkerManager = new WebWorkerManager(makeImageCanvasWorker, 1);
 
 type CanvasRenderer =
   | {

@@ -117,17 +117,19 @@ export const getInstanceObj = (marker: any, idx: number): any => {
   return marker?.metadataByIndex?.[idx];
 };
 
-export const getObject = (selectedObject: MouseEventObject): any => {
+export const getObject = (selectedObject?: MouseEventObject): any => {
   const object =
-    (selectedObject.instanceIndex !== undefined &&
+    (selectedObject?.instanceIndex !== undefined &&
       selectedObject.object.metadataByIndex !== undefined &&
       getInstanceObj(selectedObject.object, selectedObject.instanceIndex)) ||
     selectedObject?.object;
   return object;
 };
 
-export const getInteractionData = (selectedObject: MouseEventObject): InteractionData | undefined =>
-  selectedObject.object.interactionData || getObject(selectedObject)?.interactionData;
+export const getInteractionData = (
+  selectedObject?: MouseEventObject,
+): InteractionData | undefined =>
+  selectedObject?.object.interactionData || getObject(selectedObject)?.interactionData;
 
 export function getUpdatedGlobalVariablesBySelectedObject(
   selectedObject: MouseEventObject,
