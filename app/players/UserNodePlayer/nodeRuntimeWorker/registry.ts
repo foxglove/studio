@@ -32,7 +32,7 @@ if (process.env.NODE_ENV === "test") {
   });
 }
 
-export const containsFuncDeclaration = (args: any[]) => {
+export const containsFuncDeclaration = (args: any[]): boolean => {
   for (const arg of args) {
     if (typeof arg === "function") {
       return true;
@@ -47,7 +47,7 @@ export const containsFuncDeclaration = (args: any[]) => {
   return false;
 };
 
-export const stringifyFuncsInObject = (arg: any) => {
+export const stringifyFuncsInObject = (arg: any): string => {
   if (typeof arg === "function") {
     return `${arg}`;
   } else if (arg != undefined && typeof arg === "object") {
@@ -67,7 +67,7 @@ const getArgsToPrint = (args: any[]) => {
 };
 
 // Exported for tests.
-export const requireImplementation = (id: string, projectCode: Map<string, string>) => {
+export const requireImplementation = (id: string, projectCode: Map<string, string>): unknown => {
   const requestedFile = `${path.join(DEFAULT_WEBVIZ_NODE_PREFIX, id)}.js`;
   for (const [file, source] of projectCode.entries()) {
     if (requestedFile.endsWith(file)) {

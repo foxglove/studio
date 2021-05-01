@@ -111,7 +111,7 @@ export const isNotPrivate = (value: any): string | undefined =>
 const join = (rules: Array<Rule>) => (value: unknown) =>
   rules.map((rule) => rule(value)).filter((error) => error != undefined)[0];
 
-export const getWebsocketUrlError = (websocketUrl: string) => {
+export const getWebsocketUrlError = (websocketUrl: string): string => {
   return `"${websocketUrl}" is an invalid WebSocket URL`;
 };
 export const isWebsocketUrl = (value: string): string | undefined => {
@@ -232,7 +232,7 @@ export const point2DValidator = (jsonData?: unknown): ValidationResult | undefin
   return Object.keys(result).length === 0 ? undefined : result;
 };
 
-export const getLayoutNameError = (layoutName: string) => {
+export const getLayoutNameError = (layoutName: string): string => {
   return `"${layoutName}" is an invalid layout name. Layout name cannot contain @, %, or spaces`;
 };
 const isLayoutName = (value: string): string | undefined => {

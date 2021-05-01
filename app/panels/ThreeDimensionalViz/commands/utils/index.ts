@@ -144,7 +144,7 @@ export class TextureCache {
   }
 
   // returns a regl texture for a given marker
-  get(marker: OccupancyGridMessage) {
+  get(marker: OccupancyGridMessage): any {
     const { name } = marker;
     const item = this.store[name];
     if (!item) {

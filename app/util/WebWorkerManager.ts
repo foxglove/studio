@@ -67,7 +67,7 @@ export default class WebWorkerManager {
     return workerState.rpc;
   }
 
-  unregisterWorkerListener(id: string) {
+  unregisterWorkerListener(id: string): void {
     if (!this._allListeners.has(id)) {
       throw new Error("Cannot find listener to unregister");
     }

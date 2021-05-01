@@ -419,7 +419,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
     }
   });
 
-  renderZoomChart = () => {
+  renderZoomChart = (): React.ReactNode => {
     if (!this.state.openZoomChart) {
       return ReactNull;
     }
@@ -454,7 +454,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
     );
   };
 
-  applyPanZoom = () => {
+  applyPanZoom = (): void => {
     if (!this.panZoomCanvas) {
       return;
     }

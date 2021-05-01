@@ -91,7 +91,7 @@ export default class Rpc {
     this._channel.onmessage = this._onChannelMessage;
   }
 
-  _onChannelMessage = (ev: MessageEvent) => {
+  _onChannelMessage = (ev: MessageEvent): void => {
     const { id, topic, data } = ev.data;
     if (topic === RESPONSE) {
       this._pendingCallbacks[id]?.(ev.data);

@@ -49,12 +49,12 @@ export default class ErrorBoundary extends React.Component<
     errorInfo: undefined,
   };
 
-  componentDidCatch(error: Error, errorInfo: any) {
+  componentDidCatch(error: Error, errorInfo: any): void {
     captureException(new AppError(error, errorInfo));
     this.setState({ error, errorInfo });
   }
 
-  render() {
+  render(): React.ReactNode {
     const { error, errorInfo } = this.state;
     if (error) {
       let name = "this panel";

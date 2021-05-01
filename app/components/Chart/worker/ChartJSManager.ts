@@ -118,43 +118,43 @@ export default class ChartJSManager {
     this._chartInstance = chartInstance;
   }
 
-  wheel(event: any) {
+  wheel(event: any): RpcScales {
     event.target.getBoundingClientRect = () => event.target.boundingClientRect;
     this._fakeNodeEvents.emit("wheel", event);
     return this.getScales();
   }
 
-  mousedown(event: any) {
+  mousedown(event: any): RpcScales {
     event.target.getBoundingClientRect = () => event.target.boundingClientRect;
     this._fakeNodeEvents.emit("mousedown", event);
     return this.getScales();
   }
 
-  mousemove(event: any) {
+  mousemove(event: any): RpcScales {
     event.target.getBoundingClientRect = () => event.target.boundingClientRect;
     this._fakeNodeEvents.emit("mousemove", event);
     return this.getScales();
   }
 
-  mouseup(event: any) {
+  mouseup(event: any): RpcScales {
     event.target.getBoundingClientRect = () => event.target.boundingClientRect;
     this._fakeDocumentEvents.emit("mouseup", event);
     return this.getScales();
   }
 
-  panstart(event: any) {
+  panstart(event: any): RpcScales {
     event.target.getBoundingClientRect = () => event.target.boundingClientRect;
     (this._chartInstance as any)?.$zoom.panStartHandler(event);
     return this.getScales();
   }
 
-  panmove(event: any) {
+  panmove(event: any): RpcScales {
     event.target.getBoundingClientRect = () => event.target.boundingClientRect;
     (this._chartInstance as any)?.$zoom.panHandler(event);
     return this.getScales();
   }
 
-  panend(event: any) {
+  panend(event: any): RpcScales {
     event.target.getBoundingClientRect = () => event.target.boundingClientRect;
     (this._chartInstance as any)?.$zoom.panEndHandler(event);
     return this.getScales();

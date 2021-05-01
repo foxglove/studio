@@ -20,8 +20,17 @@ const TOTAL = 11;
 let ID = 1;
 export const ROS_VIZ_TOPIC_NAME = "/viz_markers";
 
-export const p = (x: number, y: number = x, z: number = x) => ({ x, y, z });
-export const q = (x: number, y: number = x, z: number = x, w: number = x) => ({ x, y, z, w });
+export const p = (
+  x: number,
+  y: number = x,
+  z: number = x,
+): { x: number; y: number; z: number } => ({ x, y, z });
+export const q = (
+  x: number,
+  y: number = x,
+  z: number = x,
+  w: number = x,
+): { x: number; y: number; z: number; w: number } => ({ x, y, z, w });
 
 const buildMatrix = (x: number, y: number, z: number, step = 1) => {
   const result = [];
@@ -58,7 +67,7 @@ function getTriangles(count: number = 10) {
   return { colors, points };
 }
 
-export function getLinePoints(count: number = 10) {
+export function getLinePoints(count: number = 10): { x: number; y: number; z: number }[] {
   const points = [];
   for (let i = 0; i < count; i++) {
     if (i % 3 === 0) {

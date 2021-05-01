@@ -364,7 +364,7 @@ export default class CombinedDataProvider implements DataProvider {
     return mergedMessages;
   }
 
-  _updateProgressForChild(providerIdx: number, progress: Progress) {
+  _updateProgressForChild(providerIdx: number, progress: Progress): void {
     this._progressPerProvider[providerIdx] = progress;
     // Assume empty for unreported progress
     const cleanProgresses = this._progressPerProvider.map((p) => p || emptyProgress());
