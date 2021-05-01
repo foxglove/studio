@@ -11,9 +11,9 @@ import { RpcElement, RpcScales } from "@foxglove-studio/app/components/Chart/typ
 import WebWorkerManager from "@foxglove-studio/app/util/WebWorkerManager";
 
 // Webworker Manager wants a constructor so we need to have a "class" wrapper
-class ChartJSWorker extends Worker {
+class ChartJSWorker {
   constructor() {
-    super(new URL("./worker/main", import.meta.url));
+    return new Worker(new URL("./worker/main", import.meta.url));
   }
 }
 
@@ -51,7 +51,7 @@ type Props = {
 
 const devicePixelRatio = window.devicePixelRatio ?? 1;
 
-const webWorkerManager = new WebWorkerManager(ChartJSWorker, 4);
+const webWorkerManager = new WebWorkerManager(ChartJSWorker as { new (): Worker }, 4);
 
 // turn a React.MouseEvent into an object we can send over rpc
 function rpcMouseEvent(event: React.MouseEvent<HTMLCanvasElement>) {
