@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { omit, difference, isEmpty, isNil } from "lodash";
-import { MouseEventObject, toRGBA, Color } from "regl-worldview";
+import { toRGBA, Color } from "regl-worldview";
 
 import {
   DEFAULT_FLAT_COLOR,
