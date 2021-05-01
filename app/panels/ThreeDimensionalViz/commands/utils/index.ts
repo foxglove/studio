@@ -31,7 +31,7 @@ export const COLORS = {
   PURPLE: tinycolor("purple"),
 };
 
-export function setRgba(buffer: Uint8Array, index: number, color: tinycolor.Instance) {
+export function setRgba(buffer: Uint8Array, index: number, color: tinycolor.Instance): void {
   const rgba255 = color.toRgb();
   rgba255.a *= 255;
   buffer[index] = rgba255.r;

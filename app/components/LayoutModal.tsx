@@ -23,7 +23,7 @@ type Props = {
   onRequestClose: () => void;
 };
 
-function LayoutModal({ onRequestClose }: Props) {
+function LayoutModal({ onRequestClose }: Props): JSX.Element {
   const panels = useSelector((state: State) => state.persistedState.panels);
   const dispatch = useDispatch();
 

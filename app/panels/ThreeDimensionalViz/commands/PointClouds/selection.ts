@@ -193,7 +193,7 @@ export function decodeAdditionalFields(marker: PointCloud2): any {
 
 // taken from http://docs.ros.org/jade/api/rviz/html/c++/point__cloud__transformers_8cpp_source.html
 // line 47
-export function setRainbowColor(colors: Uint8Array | number[], offset: number, pct: number) {
+export function setRainbowColor(colors: Uint8Array | number[], offset: number, pct: number): void {
   const h = (1 - pct) * 5.0 + 1.0;
   const i = Math.floor(h);
   let f = h % 1.0;

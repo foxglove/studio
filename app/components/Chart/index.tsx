@@ -68,7 +68,7 @@ function rpcMouseEvent(event: React.MouseEvent<HTMLCanvasElement>) {
 }
 
 // Chart component renders data using workers with chartjs offscreen canvas
-function Chart(props: Props) {
+function Chart(props: Props): JSX.Element {
   const [id] = useState(uuidv4());
   const initialized = useRef(false);
   const canvasRef = useRef<HTMLCanvasElement>(ReactNull);

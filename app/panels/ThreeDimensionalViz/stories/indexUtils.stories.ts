@@ -83,6 +83,7 @@ type Props = {
   type: number;
 };
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export function generateMarkers(props: Props, idx: number, markerName: string) {
   const rootTfID = "map";
   const header = { seq: 257399, stamp: { sec: 1534827954, nsec: 262587964 }, frame_id: rootTfID };

@@ -55,7 +55,7 @@ type Props = CommonProps & { readonly objectToDisplay: any };
 function ObjectDetailsWrapper({
   interactionData,
   selectedObject: { object, instanceIndex },
-}: WrapperProps) {
+}: WrapperProps): JSX.Element {
   const [showInstance, setShowInstance] = React.useState(true);
   const instanceObject = getInstanceObj(object, instanceIndex);
   const dropdownText = {
