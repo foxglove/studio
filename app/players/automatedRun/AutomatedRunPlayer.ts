@@ -33,7 +33,6 @@ import {
   Topic,
 } from "@foxglove-studio/app/players/types";
 import { USER_ERROR_PREFIX } from "@foxglove-studio/app/util/globalConstants";
-import { getSanitizedTopics } from "@foxglove-studio/app/util/selectors";
 import sendNotification, {
   NotificationType,
   NotificationSeverity,
@@ -43,6 +42,7 @@ import sendNotification, {
 } from "@foxglove-studio/app/util/sendNotification";
 import { clampTime, subtractTimes, toMillis } from "@foxglove-studio/app/util/time";
 import Logger from "@foxglove/log";
+import { intersection } from "lodash";
 
 const logger = Logger.getLogger(__filename);
 
@@ -78,7 +78,7 @@ export default class AutomatedRunPlayer implements Player {
   _provider: DataProvider;
   _providerResult?: InitializationResult;
   _progress: Progress = {};
-  _parsedTopics: Set<string> = new Set();
+  _subscribedTopics: Set<string> = new Set();
   _listener?: (arg0: PlayerState) => Promise<void>;
   _initializeTimeout?: ReturnType<typeof setTimeout>;
   _initialized: boolean = false;
@@ -143,7 +143,9 @@ export default class AutomatedRunPlayer implements Player {
     }
     const providerResult = this._providerResult;
 
-    const parsedTopics = getSanitizedTopics(this._parsedTopics, this._providerResult.topics);
+    const providerTopics = this._providerResult.topics.map(({ name }) => name);
+    const parsedTopics = intersection(Array.from(this._subscribedTopics), providerTopics);
+
     if (parsedTopics.length === 0) {
       return { parsedMessages: [] };
     }
@@ -226,7 +228,7 @@ export default class AutomatedRunPlayer implements Player {
   }
 
   setSubscriptions(subscriptions: SubscribePayload[]): void {
-    this._parsedTopics = new Set(subscriptions.map(({ topic }) => topic));
+    this._subscribedTopics = new Set(subscriptions.map(({ topic }) => topic));
 
     // Wait with running until we've subscribed to a bunch of topics.
     if (this._initializeTimeout) {

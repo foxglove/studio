@@ -42,7 +42,6 @@ import debouncePromise from "@foxglove-studio/app/util/debouncePromise";
 import delay from "@foxglove-studio/app/util/delay";
 import filterMap from "@foxglove-studio/app/util/filterMap";
 import { isRangeCoveredByRanges } from "@foxglove-studio/app/util/ranges";
-import { getSanitizedTopics } from "@foxglove-studio/app/util/selectors";
 import {
   clampTime,
   fromMillis,
@@ -53,6 +52,7 @@ import {
   SeekToTimeSpec,
   TimestampMethod,
 } from "@foxglove-studio/app/util/time";
+import { intersection } from "lodash";
 
 // The number of nanoseconds to seek backwards to build context during a seek
 // operation larger values mean more opportunity to capture context before the
@@ -411,7 +411,16 @@ export default class RandomAccessPlayer implements Player {
   });
 
   async _getMessages(start: Time, end: Time): Promise<{ parsedMessages: MessageEvent<unknown>[] }> {
-    const parsedTopics = getSanitizedTopics(this._parsedSubscribedTopics, this._providerTopics);
+    // fixme - getSanitizedTopics was memoized...
+    // why even do this here? provider topics doesn't change...
+    // so we can keep an updated list of topics to fetch when chagning parsedSubscribedTopics
+    // better yet - why do we care? let the provider ignore the topics it doesn't know about?!
+    // I see - its an optimisation where we don't even get messages from the provider if they don't
+    // provide them... maybe this doesn't matter tho!
+    //const parsedTopics = getSanitizedTopics(this._parsedSubscribedTopics, this._providerTopics);
+    const providerTopics = this._providerTopics.map(({ name }) => name);
+    const parsedTopics = intersection(Array.from(this._parsedSubscribedTopics), providerTopics);
+
     if (parsedTopics.length === 0) {
       return { parsedMessages: [] };
     }
@@ -440,7 +449,7 @@ export default class RandomAccessPlayer implements Player {
     if (parsedMessages.length > 0) {
       this._metricsCollector.recordTimeToFirstMsgs();
     }
-    const filterMessages = (msgs: MessageEvent<unknown>[], topics: string[]) =>
+    const filterMessages = (msgs: readonly MessageEvent<unknown>[], topics: string[]) =>
       filterMap(msgs, (message) => {
         this._problems.delete(message.topic);
 
@@ -474,7 +483,7 @@ export default class RandomAccessPlayer implements Player {
         };
       });
     return {
-      parsedMessages: filterMessages(parsedMessages as any, parsedTopics),
+      parsedMessages: filterMessages(parsedMessages, parsedTopics),
     };
   }
 

@@ -18,10 +18,11 @@ import Button from "@foxglove-studio/app/components/Button";
 import GlobalVariableName from "@foxglove-studio/app/panels/ThreeDimensionalViz/Interactions/GlobalVariableName";
 import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
 
-import { getPath, memoizedGetLinkedGlobalVariablesKeyByName } from "../interactionUtils";
+import { getPath } from "../interactionUtils";
 import useLinkedGlobalVariables, { LinkedGlobalVariable } from "../useLinkedGlobalVariables";
 import SGlobalVariableLink from "./SGlobalVariableLink";
 import UnlinkWrapper from "./UnlinkWrapper";
+import { useMemo } from "react";
 
 const SPath = styled.span`
   opacity: 0.8;
@@ -72,9 +73,14 @@ export default function UnlinkGlobalVariables({
   showList = false,
 }: Props): JSX.Element | ReactNull {
   const { linkedGlobalVariables, setLinkedGlobalVariables } = useLinkedGlobalVariables();
-  const linkedGlobalVariablesKeyByName = memoizedGetLinkedGlobalVariablesKeyByName(
-    linkedGlobalVariables,
-  );
+  const linkedGlobalVariablesKeyByName = useMemo(() => {
+    return linkedGlobalVariables.reduce((memo, { name, topic, markerKeyPath }) => {
+      const item = (memo[name] = memo[name] ?? []);
+      item.push({ topic, markerKeyPath, name });
+      return memo;
+    }, {} as Record<string, LinkedGlobalVariable[]>);
+  }, [linkedGlobalVariables]);
+
   const links: LinkedGlobalVariable[] = linkedGlobalVariablesKeyByName[name] || [];
   const firstLink = links[0];
 

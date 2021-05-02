@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import { isEqual, groupBy, partition } from "lodash";
-import microMemoize from "micro-memoize";
+import memoizeWeak from "memoize-weak";
 import { TimeUtil, Time } from "rosbag";
 
 import {
@@ -137,13 +137,14 @@ export default class UserNodePlayer implements Player {
     };
   }
 
-  _getTopics = microMemoize(
+  _getTopics = memoizeWeak(
     (topics: Topic[], nodeTopics: Topic[]): Topic[] => [...topics, ...nodeTopics],
     {
       isEqual,
     },
   );
-  _getDatatypes = microMemoize(
+
+  _getDatatypes = memoizeWeak(
     (datatypes: RosDatatypes, nodeRegistrations: NodeRegistration[]): RosDatatypes => {
       const userNodeDatatypes = nodeRegistrations.reduce(
         (allDatatypes, { nodeData }) => ({ ...allDatatypes, ...nodeData.datatypes }),
@@ -156,7 +157,7 @@ export default class UserNodePlayer implements Player {
 
   // When updating nodes while paused, we seek to the current time
   // (i.e. invoke _getMessages with an empty array) to refresh messages
-  _getMessages = microMemoize(
+  _getMessages = memoizeWeak(
     async (
       parsedMessages: readonly MessageEvent<unknown>[],
       _datatypes: RosDatatypes,
@@ -381,7 +382,8 @@ export default class UserNodePlayer implements Player {
     };
   };
 
-  private _getNodeRegistration = microMemoize(this._createNodeRegistration, {
+  // fixme- WTF this getter is actually a mutator!?
+  private _getNodeRegistration = memoizeWeak(this._createNodeRegistration, {
     isEqual,
     isPromise: true,
     maxSize: Infinity, // We prune the cache anytime the userNodes change, so it's not *actually* Infinite
