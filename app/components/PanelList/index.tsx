@@ -16,7 +16,7 @@ import { flatMap } from "lodash";
 import { useCallback, useEffect, useMemo } from "react";
 import { useDrag } from "react-dnd";
 import { MosaicDragType, MosaicPath } from "react-mosaic-component";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 
 import { dropPanel } from "@foxglove-studio/app/actions/panels";
@@ -30,6 +30,7 @@ import {
   PanelConfig,
   MosaicDropTargetPosition,
   SavedProps,
+  MosaicDropResult,
 } from "@foxglove-studio/app/types/panels";
 import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
 
@@ -98,8 +99,8 @@ type DropDescription = {
   type: string;
   config?: PanelConfig;
   relatedConfigs?: SavedProps;
-  position: MosaicDropTargetPosition;
-  path: MosaicPath;
+  position?: MosaicDropTargetPosition;
+  path?: MosaicPath;
   tabId?: string;
 };
 type PanelItemProps = {
@@ -113,10 +114,6 @@ type PanelItemProps = {
   checked?: boolean;
   highlighted?: boolean;
   onClick: () => void;
-  // the props here are actually used in the dragSource
-  // beginDrag and endDrag callbacks - the props are passed via react-dnd
-  // so keep the flow defs here so those functions can have access to some type info
-  mosaicId: string;
   onDrop: (arg0: DropDescription) => void;
 };
 
@@ -127,12 +124,11 @@ function DraggablePanelItem({
   onDrop,
   checked,
   highlighted,
-  mosaicId,
 }: PanelItemProps) {
   const scrollRef = React.useRef<HTMLDivElement>(ReactNull);
-  const [__, drag] = useDrag({
-    item: { type: MosaicDragType.WINDOW },
-    begin: (_monitor) => ({ mosaicId } as any),
+  const [__, drag] = useDrag<unknown, MosaicDropResult, never>({
+    type: MosaicDragType.WINDOW,
+    // item: () => ({ mosaicId }),
     end: (_item, monitor) => {
       const dropResult = monitor.getDropResult() || {};
       const { position, path, tabId } = dropResult;
@@ -226,9 +222,6 @@ function PanelList(props: Props): JSX.Element {
   const { onPanelSelect, selectedPanelTitle } = props;
 
   const dispatch = useDispatch();
-  const { mosaicId }: { mosaicId: string } = useSelector((state: any) => ({
-    mosaicId: state.mosaic.mosaicId,
-  }));
 
   // Update panel layout in Redux when a panel menu item is dropped;
   // actual operations to change layout supplied by react-mosaic-component
@@ -313,7 +306,6 @@ function PanelList(props: Props): JSX.Element {
       return (
         <DraggablePanelItem
           key={`${panelType}-${title}`}
-          mosaicId={mosaicId}
           panel={{
             type: panelType,
             title,
@@ -334,14 +326,7 @@ function PanelList(props: Props): JSX.Element {
         />
       );
     },
-    [
-      highlightedPanel,
-      mosaicId,
-      onPanelMenuItemDrop,
-      onPanelSelect,
-      searchQuery,
-      selectedPanelTitle,
-    ],
+    [highlightedPanel, onPanelMenuItemDrop, onPanelSelect, searchQuery, selectedPanelTitle],
   );
 
   return (
