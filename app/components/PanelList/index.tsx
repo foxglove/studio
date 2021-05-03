@@ -126,9 +126,8 @@ function DraggablePanelItem({
   highlighted,
 }: PanelItemProps) {
   const scrollRef = React.useRef<HTMLDivElement>(ReactNull);
-  const [__, drag] = useDrag<unknown, MosaicDropResult, never>({
+  const [, drag] = useDrag<unknown, MosaicDropResult, never>({
     type: MosaicDragType.WINDOW,
-    // item: () => ({ mosaicId }),
     end: (_item, monitor) => {
       const dropResult = monitor.getDropResult() || {};
       const { position, path, tabId } = dropResult;
