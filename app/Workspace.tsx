@@ -11,9 +11,9 @@
 //   You may not use this file except in compliance with the License.
 
 import { ActionButton, Modal } from "@fluentui/react";
-import AlertIcon from "@mdi/svg/svg/alert.svg";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useDispatch } from "react-redux";
+import { useToasts } from "react-toast-notifications";
 import { useMountedState } from "react-use";
 import styled from "styled-components";
 
@@ -26,17 +26,16 @@ import DropOverlay from "@foxglove-studio/app/components/DropOverlay";
 import GlobalKeyListener from "@foxglove-studio/app/components/GlobalKeyListener";
 import GlobalVariablesMenu from "@foxglove-studio/app/components/GlobalVariablesMenu";
 import HelpModal from "@foxglove-studio/app/components/HelpModal";
-import Icon from "@foxglove-studio/app/components/Icon";
 import LayoutMenu from "@foxglove-studio/app/components/LayoutMenu";
 import messagePathHelp from "@foxglove-studio/app/components/MessagePathSyntax/index.help.md";
 import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipeline";
 import NotificationDisplay from "@foxglove-studio/app/components/NotificationDisplay";
 import PanelLayout from "@foxglove-studio/app/components/PanelLayout";
 import PlaybackControls from "@foxglove-studio/app/components/PlaybackControls";
+import { PlayerStatusIndicator } from "@foxglove-studio/app/components/PlayerStatusIndicator";
 import Preferences from "@foxglove-studio/app/components/Preferences";
 import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToBodyComponent";
 import ShortcutsModal from "@foxglove-studio/app/components/ShortcutsModal";
-import SpinningLoadingIcon from "@foxglove-studio/app/components/SpinningLoadingIcon";
 import TinyConnectionPicker from "@foxglove-studio/app/components/TinyConnectionPicker";
 import Toolbar from "@foxglove-studio/app/components/Toolbar";
 import { useAppConfiguration } from "@foxglove-studio/app/context/AppConfigurationContext";
@@ -47,9 +46,7 @@ import useElectronFilesToOpen from "@foxglove-studio/app/hooks/useElectronFilesT
 import welcomeLayout from "@foxglove-studio/app/layouts/welcomeLayout";
 import { PlayerPresence } from "@foxglove-studio/app/players/types";
 import { ImportPanelLayoutPayload } from "@foxglove-studio/app/types/panels";
-import { SECOND_SOURCE_PREFIX } from "@foxglove-studio/app/util/globalConstants";
 import inAutomatedRunMode from "@foxglove-studio/app/util/inAutomatedRunMode";
-import sendNotification from "@foxglove-studio/app/util/sendNotification";
 
 type TestableWindow = Window & { setPanelLayout?: (payload: ImportPanelLayoutPayload) => void };
 
@@ -70,6 +67,9 @@ const TruncatedText = styled.span`
   overflow: hidden;
   line-height: normal;
 `;
+
+// file types we support for drag/drop
+const allowedDropExtensions = [".bag", ".urdf"];
 
 export default function Workspace(): JSX.Element {
   const containerRef = useRef<HTMLDivElement>(ReactNull);
@@ -137,6 +137,7 @@ export default function Workspace(): JSX.Element {
   }, [dispatch, openWelcomeLayout]);
 
   const appConfiguration = useAppConfiguration();
+  const { addToast } = useToasts();
 
   // Show welcome layout on first run
   useEffect(() => {
@@ -162,7 +163,9 @@ export default function Workspace(): JSX.Element {
             otherFiles.push(file);
           }
         } catch (err) {
-          sendNotification(`Failed to load ${file.name}`, err, "user", "warn");
+          addToast(`Failed to load ${file.name}`, {
+            appearance: "error",
+          });
         }
       }
 
@@ -170,7 +173,7 @@ export default function Workspace(): JSX.Element {
         setPlayerFromFiles(otherFiles, { append: shiftPressed });
       }
     },
-    [loadFromFile, setPlayerFromFiles],
+    [addToast, loadFromFile, setPlayerFromFiles],
   );
 
   // files the main thread told us to open
@@ -188,41 +191,14 @@ export default function Workspace(): JSX.Element {
     [openFiles],
   );
 
-  const presenceIcon = (() => {
-    switch (playerPresence) {
-      case PlayerPresence.NOT_PRESENT:
-      case PlayerPresence.PRESENT:
-        return undefined;
-      case PlayerPresence.CONSTRUCTING:
-      case PlayerPresence.INITIALIZING:
-      case PlayerPresence.RECONNECTING:
-        return (
-          <Icon small style={{ paddingLeft: 10 }}>
-            <SpinningLoadingIcon />
-          </Icon>
-        );
-      case PlayerPresence.ERROR:
-        return (
-          <Icon small style={{ paddingLeft: 10 }}>
-            <AlertIcon />
-          </Icon>
-        );
-    }
-  })();
-
   const showPlaybackControls =
     playerPresence === PlayerPresence.NOT_PRESENT || playerCapabilities.includes("playbackControl");
 
   return (
     <LinkHandlerContext.Provider value={handleInternalLink}>
-      <DocumentDropListener filesSelected={dropHandler}>
+      <DocumentDropListener filesSelected={dropHandler} allowedExtensions={allowedDropExtensions}>
         <DropOverlay>
-          <div style={{ fontSize: "4em", marginBottom: "1em" }}>Drop a bag file to load it!</div>
-          <div style={{ fontSize: "2em" }}>
-            (hold SHIFT while dropping a second bag file to add it
-            <br />
-            with all topics prefixed with {SECOND_SOURCE_PREFIX})
-          </div>
+          <div style={{ fontSize: "4em", marginBottom: "1em" }}>Drop a file here</div>
         </DropOverlay>
       </DocumentDropListener>
       <div ref={containerRef} className="app-container" tabIndex={0}>
@@ -244,7 +220,7 @@ export default function Workspace(): JSX.Element {
           </SToolbarItem>
           <SToolbarItem style={{ flex: "0 1 auto" }}>
             <TruncatedText>{currentSourceName ?? "Select a data source"}</TruncatedText>{" "}
-            {presenceIcon}
+            <PlayerStatusIndicator />
           </SToolbarItem>
           <div style={{ flexGrow: 1 }}></div>
           <SToolbarItem style={{ marginRight: 5 }}>

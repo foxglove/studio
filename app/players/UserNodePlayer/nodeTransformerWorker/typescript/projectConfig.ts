@@ -36,6 +36,7 @@ export type NodeProjectConfig = {
   defaultLibFileName: string;
   declarations: NodeProjectFile[];
   utilityFiles: NodeProjectFile[];
+  rosLib: NodeProjectFile;
 };
 
 const utilityFiles: NodeProjectFile[] = rawUserUtils.map((utility) => ({
@@ -43,7 +44,7 @@ const utilityFiles: NodeProjectFile[] = rawUserUtils.map((utility) => ({
   filePath: `${DEFAULT_STUDIO_NODE_PREFIX}${utility.fileName}`,
 }));
 
-export function getNodeProjectConfig() {
+export function getNodeProjectConfig(): NodeProjectConfig {
   // TODO load these from .ts files rather than string consts
   const declarations = [];
   declarations.push({

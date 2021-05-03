@@ -34,9 +34,8 @@
     "package:linux": "yarn package --linux",
     "package": "NODE_OPTIONS='-r ts-node/register' electron-builder build --publish never",
     "release:bump-nightly-version": "node -r ts-node/register ./ci/bump-nightly-version.ts",
-    "storybook": "ts-node ./ci/storybook.ts",
-    "storybook:ci": "ts-node ./ci/storybook.ts build capture publish",
-    "storybook:start": "ts-node ./ci/storybook.ts start"
+    "storybook": "NODE_OPTIONS=--max-old-space-size=4096 TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' yarn workspace @foxglove-studio/app run start-storybook",
+    "storybook:ci": "ts-node ./ci/storybook.ts"
   },
   "workspaces": {
     "packages": [
@@ -51,7 +50,7 @@
     "@babel/preset-env": "7.13.15",
     "@babel/preset-typescript": "7.13.0",
     "@foxglove/electron-socket": "workspace:packages/electron-socket",
-    "@foxglove/velodyne-cloud": "workspace:packages/velodyne-cloud",
+    "@foxglove/tsconfig": "workspace:packages/@foxglove/tsconfig",
     "@jest/types": "26.6.2",
     "@pmmmwh/react-refresh-webpack-plugin": "0.5.0-beta.1",
     "@sentry/electron": "2.4.0",
