@@ -165,7 +165,7 @@ function TopicGraph() {
     for (const node of nodeIds) {
       const widthPx = Math.min(LABEL_MAX_WIDTH, textMeasure.width(node));
       output.push({
-        style: { width: `${widthPx}px`, height: "20px" },
+        style: { width: `${widthPx}px` },
         data: { id: `n:${node}`, label: node, type: "node" },
       });
     }
