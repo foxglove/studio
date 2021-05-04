@@ -49,6 +49,7 @@ const STYLESHEET: Cytoscape.Stylesheet[] = [
     style: {
       content: "data(label)",
       shape: "round-rectangle",
+      width: "data(width)",
       height: "20px",
       "background-color": "#000",
       "border-color": "rgb(69, 165, 255)",
@@ -84,6 +85,7 @@ const STYLESHEET: Cytoscape.Stylesheet[] = [
     style: {
       content: "data(label)",
       shape: "round-rectangle",
+      width: "data(width)",
       height: "20px",
       "background-color": "#000",
       "border-color": "rgb(255, 107, 130)",
@@ -165,8 +167,7 @@ function TopicGraph() {
     for (const node of nodeIds) {
       const widthPx = Math.min(LABEL_MAX_WIDTH, textMeasure.width(node));
       output.push({
-        style: { width: `${widthPx}px` },
-        data: { id: `n:${node}`, label: node, type: "node" },
+        data: { id: `n:${node}`, label: node, type: "node", width: `${widthPx}px` },
       });
     }
     if (showTopics) {
@@ -180,8 +181,7 @@ function TopicGraph() {
       for (const service of serviceIds) {
         const widthPx = Math.min(LABEL_MAX_WIDTH, textMeasure.width(service));
         output.push({
-          style: { width: `${widthPx}px` },
-          data: { id: `s:${service}`, label: service, type: "service" },
+          data: { id: `s:${service}`, label: service, type: "service", width: `${widthPx}px` },
         });
       }
     }
@@ -213,6 +213,9 @@ function TopicGraph() {
             const subscribers = subscribedTopics.get(topic);
             if (subscribers != undefined) {
               for (const subNode of subscribers) {
+                if (subNode === pubNode) {
+                  continue;
+                }
                 const source = `n:${pubNode}`;
                 const target = `n:${subNode}`;
                 output.push({ data: { id: `${source}-${target}`, source, target } });
