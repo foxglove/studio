@@ -3,11 +3,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 declare module "text-metrics" {
-  type Options = {
+  export type Options = {
     multiline?: boolean;
   };
 
-  type Overrides = {
+  export type Overrides = {
     fontFamily?: string;
     fontSize?: string;
     fontWeight?: number;
@@ -15,7 +15,7 @@ declare module "text-metrics" {
     width?: number;
   };
 
-  class TextMeasure {
+  export class TextMeasure {
     width(text?: string, options?: Options, overrides?: Overrides): number;
     height(text: string): number;
     lines(text: string): string[];
