@@ -39,7 +39,7 @@ const BuiltinPanelCatalogProvider = React.lazy(
   () => import("@foxglove-studio/app/context/BuiltinPanelCatalogProvider"),
 );
 
-const Workspace = React.lazy(() => import("./Workspace"));
+const Workspace = React.lazy(() => import("@foxglove-studio/app/Workspace"));
 
 export default function App(): ReactElement {
   const globalStore = getGlobalStore();
@@ -94,8 +94,8 @@ export default function App(): ReactElement {
   ];
 
   return (
-    <MultiProvider providers={providers}>
-      <ErrorBoundary>
+    <ErrorBoundary>
+      <MultiProvider providers={providers}>
         <LayoutStorageReduxAdapter />
         <NativeFileMenuPlayerSelection />
         <DndProvider backend={HTML5Backend}>
@@ -105,7 +105,7 @@ export default function App(): ReactElement {
             </BuiltinPanelCatalogProvider>
           </Suspense>
         </DndProvider>
-      </ErrorBoundary>
-    </MultiProvider>
+      </MultiProvider>
+    </ErrorBoundary>
   );
 }
