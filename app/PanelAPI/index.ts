@@ -24,5 +24,3 @@ export { useMessagesByTopic } from "./useMessagesByTopic";
 export { useBlocksByTopic } from "./useBlocksByTopic";
 
 export { default as useParameter } from "./useParameter";
-
-export * from "./useConfig";

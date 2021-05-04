@@ -11,7 +11,6 @@ import { useSelectPanel } from "@foxglove-studio/app/components/AddPanelMenu";
 import GlobalVariablesTable from "@foxglove-studio/app/components/GlobalVariablesTable";
 import variablesHelp from "@foxglove-studio/app/components/GlobalVariablesTable/index.help.md";
 import PanelList from "@foxglove-studio/app/components/PanelList";
-import PanelSettings from "@foxglove-studio/app/components/PanelSettings";
 import { SidebarContent } from "@foxglove-studio/app/components/SidebarContent";
 
 const BUTTON_SIZE = 50;
@@ -76,7 +75,6 @@ export default function Sidebar({ children }: React.PropsWithChildren<unknown>):
     component: React.ComponentType;
   }[] = [
     { iconName: "MediaAdd", title: "Add Panel", component: AddPanel },
-    { iconName: "ColumnVerticalSectionEdit", title: "Panel Settings", component: PanelSettings },
     { iconName: "Rename", title: "Variables", component: Variables },
   ];
 
