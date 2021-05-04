@@ -42,15 +42,22 @@ function Story({
 
   useEffect(() => {
     if (clickKey != undefined) {
-      setTimeout(() => {
-        const button = document.querySelector<HTMLButtonElement>(
-          `button[data-sidebar-key=${clickKey}]`,
-        );
-        if (!button) {
-          throw new Error("Missing overflow button");
+      (async () => {
+        // Give the ResizeGroup some time to show the overflow button, to avoid flaky screenshot tests
+        for (let i = 0; i < 10; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 10));
+          const button = document.querySelector<HTMLButtonElement>(
+            `button[data-sidebar-key=${clickKey}]`,
+          );
+          if (button) {
+            button.click();
+            return;
+          }
         }
-        button?.click();
-      }, 10);
+        setSelectedKey(() => {
+          throw new Error("Missing sidebar button");
+        });
+      })();
     }
   }, [clickKey]);
 
