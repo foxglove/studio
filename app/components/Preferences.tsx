@@ -21,7 +21,7 @@ import { AppSetting } from "@foxglove-studio/app/AppSetting";
 import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
 import { ExperimentalFeatureSettings } from "@foxglove-studio/app/components/ExperimentalFeatureSettings";
 import { SidebarContent } from "@foxglove-studio/app/components/SidebarContent";
-import { useAsyncAppConfigurationValue } from "@foxglove-studio/app/hooks/useAsyncAppConfigurationValue";
+import { useAppConfigurationValue } from "@foxglove-studio/app/hooks/useAppConfigurationValue";
 import { nonEmptyOrUndefined } from "@foxglove-studio/app/util/emptyOrUndefined";
 import filterMap from "@foxglove-studio/app/util/filterMap";
 import fuzzyFilter from "@foxglove-studio/app/util/fuzzyFilter";
@@ -43,9 +43,7 @@ function formatTimezone(name: string) {
 function TimezoneSettings(): React.ReactElement {
   type Option = IComboBoxOption & { data: string };
 
-  const [timezone, setTimezone] = useAsyncAppConfigurationValue<string>(AppSetting.TIMEZONE, {
-    optimistic: true, // prevent UI flicker while the new value is saving
-  });
+  const [timezone, setTimezone] = useAppConfigurationValue<string>(AppSetting.TIMEZONE);
   const detectItem = useMemo(
     () => ({
       key: "detect",
@@ -85,9 +83,9 @@ function TimezoneSettings(): React.ReactElement {
     return map;
   }, [fixedItems, timezoneItems]);
 
-  const selectedItem = useMemo(() => itemsByData.get(timezone.value ?? "") ?? detectItem, [
+  const selectedItem = useMemo(() => itemsByData.get(timezone ?? "") ?? detectItem, [
     itemsByData,
-    timezone.value,
+    timezone,
     detectItem,
   ]);
 
@@ -129,11 +127,8 @@ function TimezoneSettings(): React.ReactElement {
 }
 
 function RosHostname(): React.ReactElement {
-  const [rosHostname, setRosHostname] = useAsyncAppConfigurationValue<string>(
+  const [rosHostname, setRosHostname] = useAppConfigurationValue<string>(
     AppSetting.ROS1_ROS_HOSTNAME,
-    {
-      optimistic: true, // prevent UI flicker while the new value is saving
-    },
   );
 
   const os = OsContextSingleton;
@@ -149,7 +144,7 @@ function RosHostname(): React.ReactElement {
     <TextField
       label="ROS_HOSTNAME"
       placeholder={rosHostnamePlaceholder}
-      value={rosHostname.value ?? ""}
+      value={rosHostname ?? ""}
       onChange={(_event, newValue) => setRosHostname(nonEmptyOrUndefined(newValue))}
     />
   );
@@ -158,10 +153,10 @@ function RosHostname(): React.ReactElement {
 export default function Preferences(): React.ReactElement {
   const theme = useTheme();
 
-  const [crashReportingEnabled, setCrashReportingEnabled] = useAsyncAppConfigurationValue<boolean>(
+  const [crashReportingEnabled, setCrashReportingEnabled] = useAppConfigurationValue<boolean>(
     AppSetting.CRASH_REPORTING_ENABLED,
   );
-  const [telemetryEnabled, setTelemetryEnabled] = useAsyncAppConfigurationValue<boolean>(
+  const [telemetryEnabled, setTelemetryEnabled] = useAppConfigurationValue<boolean>(
     AppSetting.TELEMETRY_ENABLED,
   );
 
@@ -184,12 +179,12 @@ export default function Preferences(): React.ReactElement {
               Changes will take effect the next time {APP_NAME} is launched.
             </Text>
             <Checkbox
-              checked={telemetryEnabled.value ?? true}
+              checked={telemetryEnabled ?? true}
               onChange={(_event, checked) => setTelemetryEnabled(checked)}
               label={`Send anonymized usage data to help us improve ${APP_NAME}`}
             />
             <Checkbox
-              checked={crashReportingEnabled.value ?? true}
+              checked={crashReportingEnabled ?? true}
               onChange={(_event, checked) => setCrashReportingEnabled(checked)}
               label="Send anonymized crash reports"
             />
