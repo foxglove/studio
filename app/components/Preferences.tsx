@@ -168,15 +168,17 @@ export default function Preferences(): React.ReactElement {
   return (
     <SidebarContent title="Preferences">
       <Pivot>
-        <PivotItem headerText="General" style={{ padding: theme.spacing.m }}>
-          <Stack.Item>
-            <TimezoneSettings />
-          </Stack.Item>
-          <Stack.Item>
-            <RosHostname />
-          </Stack.Item>
+        <PivotItem headerText="General" style={{ paddingTop: theme.spacing.m }}>
+          <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
+            <Stack.Item>
+              <TimezoneSettings />
+            </Stack.Item>
+            <Stack.Item>
+              <RosHostname />
+            </Stack.Item>
+          </Stack>
         </PivotItem>
-        <PivotItem headerText="Privacy" style={{ padding: theme.spacing.m }}>
+        <PivotItem headerText="Privacy" style={{ paddingTop: theme.spacing.m }}>
           <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
             <Text style={{ color: theme.palette.neutralSecondary }}>
               Changes will take effect the next time {APP_NAME} is launched.

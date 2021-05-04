@@ -10,6 +10,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { Stack } from "@fluentui/react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useDispatch } from "react-redux";
 import { useToasts } from "react-toast-notifications";
@@ -157,7 +158,7 @@ export default function Workspace(): JSX.Element {
     });
 
     OsContextSingleton?.addIpcEventListener("open-preferences", () =>
-      setSelectedSidebarItem("preferences"),
+      setSelectedSidebarItem((item) => (item === "preferences" ? undefined : "preferences")),
     );
     OsContextSingleton?.addIpcEventListener("open-message-path-syntax-help", () =>
       setMessagePathSyntaxModalOpen(true),
@@ -270,9 +271,15 @@ export default function Workspace(): JSX.Element {
           selectedKey={selectedSidebarItem}
           onSelectKey={setSelectedSidebarItem}
         >
-          <PanelLayout />
+          <Stack>
+            <PanelLayout />
+            {showPlaybackControls && (
+              <Stack.Item disableShrink>
+                <PlaybackControls />
+              </Stack.Item>
+            )}
+          </Stack>
         </Sidebar>
-        {showPlaybackControls && <PlaybackControls />}
       </div>
     </LinkHandlerContext.Provider>
   );

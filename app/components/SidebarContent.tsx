@@ -22,7 +22,6 @@ export function SidebarContent({
       verticalFill
       style={{
         padding: noPadding ? undefined : theme.spacing.m,
-        paddingBottom: 0,
         maxHeight: "100%",
         overflow: "auto",
       }}
@@ -31,7 +30,7 @@ export function SidebarContent({
       <Stack
         horizontal
         horizontalAlign="space-between"
-        style={{ padding: noPadding ? theme.spacing.m : undefined }}
+        style={{ padding: noPadding ? theme.spacing.m : undefined, paddingBottom: 0 }}
       >
         <Text as="h2" variant="large">
           {title}
