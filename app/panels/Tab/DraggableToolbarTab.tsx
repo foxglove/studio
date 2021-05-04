@@ -21,6 +21,7 @@ import {
   TabActions,
 } from "@foxglove-studio/app/panels/Tab/TabDndContext";
 import { ToolbarTab } from "@foxglove-studio/app/panels/Tab/ToolbarTab";
+import { TabLocation } from "@foxglove-studio/app/types/layouts";
 
 type Props = {
   isActive: boolean;
@@ -32,27 +33,28 @@ type Props = {
   setDraggingTabState: (arg0: { isOver: boolean; item?: DraggingTabItem }) => void;
 };
 
-export function DraggableToolbarTab(props: Props) {
+export function DraggableToolbarTab(props: Props): JSX.Element {
   const { isActive, tabCount, actions, panelId, tabTitle, tabIndex } = props;
 
   const ref = useRef(ReactNull);
   const dispatch = useDispatch();
-  const [{ isDragging }, dragRef] = useDrag({
-    item: { type: TAB_DRAG_TYPE, panelId, tabIndex },
+  const [{ isDragging }, dragRef] = useDrag<TabLocation, void, { isDragging: boolean }>({
+    type: TAB_DRAG_TYPE,
+    item: { panelId, tabIndex },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
   });
 
-  const [{ isOver }, dropRef] = useDrop({
+  const [{ isOver }, dropRef] = useDrop<TabLocation, void, { isOver: boolean }>({
     accept: TAB_DRAG_TYPE,
     collect: (monitor) => ({
       isOver: monitor.isOver(),
     }),
-    drop: (sourceItem, _monitor: any) => {
+    drop: (sourceItem, _monitor) => {
       const source = {
-        panelId: (sourceItem as any).panelId,
-        tabIndex: (sourceItem as any).tabIndex,
+        panelId: sourceItem.panelId,
+        tabIndex: sourceItem.tabIndex,
       };
       const target = { tabIndex, panelId };
       dispatch(moveTab({ source, target } as MoveTabPayload));

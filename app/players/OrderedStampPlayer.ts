@@ -10,7 +10,7 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { partition, uniq } from "lodash";
+import { partition } from "lodash";
 import microMemoize from "micro-memoize";
 import { Time, TimeUtil } from "rosbag";
 
@@ -22,10 +22,10 @@ import {
   SubscribePayload,
   Player,
   PlayerState,
-  PlayerWarnings,
   Topic,
   ParameterValue,
   MessageEvent,
+  PlayerProblem,
 } from "@foxglove-studio/app/players/types";
 import { StampedMessage } from "@foxglove-studio/app/types/Messages";
 import { RosDatatypes } from "@foxglove-studio/app/types/RosDatatypes";
@@ -54,8 +54,6 @@ export default class OrderedStampPlayer implements Player {
   _lastSeekId?: number = undefined;
   // Our best guess of "now" in case we need to force a backfill.
   _currentTime?: Time = undefined;
-  _previousUpstreamWarnings?: PlayerWarnings = undefined;
-  _warnings: PlayerWarnings = Object.freeze({});
   _topicsWithoutHeadersSinceSeek = new Set<string>();
 
   constructor(player: UserNodePlayer, messageOrder: TimestampMethod) {
@@ -63,7 +61,7 @@ export default class OrderedStampPlayer implements Player {
     this._messageOrder = messageOrder;
   }
 
-  setListener(listener: (arg0: PlayerState) => Promise<void>) {
+  setListener(listener: (arg0: PlayerState) => Promise<void>): void {
     this._player.setListener((state: PlayerState) => {
       const { activeData } = state;
       if (!activeData) {
@@ -89,22 +87,10 @@ export default class OrderedStampPlayer implements Player {
         isTime((message.message as Partial<StampedMessage>).header?.stamp),
       );
 
-      let newMissingTopic = false;
+      const topicsWithoutHeaders = new Set<string>();
       newMessagesWithoutHeaders.forEach(({ topic }) => {
-        if (!this._topicsWithoutHeadersSinceSeek.has(topic)) {
-          newMissingTopic = true;
-          this._topicsWithoutHeadersSinceSeek.add(topic);
-        }
+        topicsWithoutHeaders.add(topic);
       });
-      if (newMissingTopic || activeData.playerWarnings !== this._previousUpstreamWarnings) {
-        this._warnings = {
-          ...activeData.playerWarnings,
-          topicsWithoutHeaderStamps: uniq([
-            ...(activeData.playerWarnings.topicsWithoutHeaderStamps ?? []),
-            ...this._topicsWithoutHeadersSinceSeek,
-          ]),
-        };
-      }
 
       const extendedMessageBuffer = [...this._messageBuffer, ...newMessagesWithHeaders];
       // output messages older than this threshold (ie, send all messages up until the threshold
@@ -124,8 +110,22 @@ export default class OrderedStampPlayer implements Player {
       const currentTime = clampTime(thresholdTime, activeData.startTime, activeData.endTime);
       this._currentTime = currentTime;
       const topicsWithHeader = getTopicsWithHeader(activeData.topics, activeData.datatypes);
+
+      let problems: PlayerProblem[] | undefined = undefined;
+      if (topicsWithoutHeaders.size > 0) {
+        problems = Array.from(topicsWithoutHeaders.values()).map<PlayerProblem>((topic) => {
+          return {
+            severity: "warning",
+            message: `Missing header stamp for message on topic: ${topic}.`,
+            tip: `Ordering messages by header stamp is only supported for messages with a header.
+ Ensure that all messages on requested topics have a header.`,
+          };
+        });
+      }
+
       return listener({
         ...state,
+        problems,
         activeData: {
           ...activeData,
           topics: topicsWithHeader,
@@ -137,22 +137,22 @@ export default class OrderedStampPlayer implements Player {
             activeData.startTime,
             activeData.endTime,
           ),
-          playerWarnings: this._warnings,
         },
       });
     });
   }
 
-  setSubscriptions = (subscriptions: SubscribePayload[]) =>
+  setSubscriptions = (subscriptions: SubscribePayload[]): void =>
     this._player.setSubscriptions(subscriptions);
-  close = () => this._player.close();
-  setPublishers = (publishers: AdvertisePayload[]) => this._player.setPublishers(publishers);
-  setParameter = (key: string, value: ParameterValue) => this._player.setParameter(key, value);
-  publish = (request: PublishPayload) => this._player.publish(request);
-  startPlayback = () => this._player.startPlayback();
-  pausePlayback = () => this._player.pausePlayback();
-  setPlaybackSpeed = (speed: number) => this._player.setPlaybackSpeed(speed);
-  seekPlayback = (time: Time, backfillDuration?: Time) => {
+  close = (): void => this._player.close();
+  setPublishers = (publishers: AdvertisePayload[]): void => this._player.setPublishers(publishers);
+  setParameter = (key: string, value: ParameterValue): void =>
+    this._player.setParameter(key, value);
+  publish = (request: PublishPayload): void => this._player.publish(request);
+  startPlayback = (): void => this._player.startPlayback();
+  pausePlayback = (): void => this._player.pausePlayback();
+  setPlaybackSpeed = (speed: number): void => this._player.setPlaybackSpeed(speed);
+  seekPlayback = (time: Time, backfillDuration?: Time): void => {
     // Add a second to the backfill duration requested downstream, to give us extra data to reorder.
     if (this._messageOrder === "receiveTime") {
       return this._player.seekPlayback(time, backfillDuration);
@@ -166,7 +166,7 @@ export default class OrderedStampPlayer implements Player {
     const seekLocation = TimeUtil.add(time, { sec: BUFFER_DURATION_SECS, nsec: 0 });
     this._player.seekPlayback(seekLocation, { sec: BUFFER_DURATION_SECS, nsec: 0 });
   };
-  requestBackfill() {
+  requestBackfill(): void {
     if (!this._currentTime || this._messageOrder === "receiveTime") {
       return this._player.requestBackfill();
     }
@@ -183,13 +183,13 @@ export default class OrderedStampPlayer implements Player {
   setUserNodes(nodes: UserNodes): Promise<void> {
     return this._player.setUserNodes(nodes);
   }
-  setGlobalVariables(globalVariables: GlobalVariables) {
+  setGlobalVariables(globalVariables: GlobalVariables): void {
     this._player.setGlobalVariables(globalVariables);
     // So that downstream players can re-send messages that depend on global
     // variable state.
     this.requestBackfill();
   }
-  setMessageOrder(order: TimestampMethod) {
+  setMessageOrder(order: TimestampMethod): void {
     if (this._messageOrder !== order) {
       this._messageOrder = order;
       // Seek to invalidate the cache. Don't just requestBackfill(), because it needs to work while

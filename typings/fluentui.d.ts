@@ -32,7 +32,11 @@ declare global {
     | "Variable2"
     | "ColumnVerticalSectionEdit"
     | "MediaAdd"
-    | "Rename";
+    | "Rename"
+    | "Variable2"
+    | "Error"
+    | "Warning"
+    | never; // never has no effect here other than keeping the semicolon on a separate line for easier conflict resolution
 }
 
 declare module "@fluentui/react/lib/components/Icon" {

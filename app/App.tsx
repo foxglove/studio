@@ -12,7 +12,7 @@
 
 import { ReactElement, useState, useEffect, useMemo, Suspense } from "react";
 import { DndProvider } from "react-dnd";
-import HTML5Backend from "react-dnd-html5-backend";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import { Provider as ReduxProvider } from "react-redux";
 
 import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
@@ -21,6 +21,7 @@ import LayoutStorageReduxAdapter from "@foxglove-studio/app/components/LayoutSto
 import MultiProvider from "@foxglove-studio/app/components/MultiProvider";
 import { NativeFileMenuPlayerSelection } from "@foxglove-studio/app/components/NativeFileMenuPlayerSelection";
 import PlayerManager from "@foxglove-studio/app/components/PlayerManager";
+import StudioToastProvider from "@foxglove-studio/app/components/StudioToastProvider";
 import AnalyticsProvider from "@foxglove-studio/app/context/AnalyticsProvider";
 import { AssetsProvider } from "@foxglove-studio/app/context/AssetContext";
 import ExperimentalFeaturesLocalStorageProvider from "@foxglove-studio/app/context/ExperimentalFeaturesLocalStorageProvider";
@@ -83,6 +84,7 @@ export default function App(): ReactElement {
     <ThemeProvider />,
     <ModalHost />, // render modal elements inside the ThemeProvider
     <WindowGeometryContext.Provider value={windowGeometry} />,
+    <StudioToastProvider />,
     <ReduxProvider store={globalStore} />,
     <AnalyticsProvider />,
     <ExperimentalFeaturesLocalStorageProvider features={experimentalFeatures} />,

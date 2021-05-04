@@ -38,6 +38,8 @@ const icons: {
   ColumnVerticalSectionEdit: <Icons.ColumnVerticalSectionEditIcon />,
   MediaAdd: <Icons.MediaAddIcon />,
   Rename: <Icons.RenameIcon />,
+  Error: <Icons.ErrorIcon />,
+  Warning: <Icons.WarningIcon />,
   "studio.ROS": <RosIcon />,
 };
 

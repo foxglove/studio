@@ -55,9 +55,9 @@ type Props = CommonProps & { readonly objectToDisplay: any };
 function ObjectDetailsWrapper({
   interactionData,
   selectedObject: { object, instanceIndex },
-}: WrapperProps) {
+}: WrapperProps): JSX.Element {
   const [showInstance, setShowInstance] = React.useState(true);
-  const instanceObject = getInstanceObj(object, instanceIndex);
+  const instanceObject = getInstanceObj(object, instanceIndex as number);
   const dropdownText = {
     instance: "Show instance object",
     full: "Show full object",
@@ -142,7 +142,7 @@ function ObjectDetails({ interactionData, objectToDisplay }: Props) {
         data={sortedDataObject}
         shouldExpandNode={() => false}
         invertTheme={false}
-        theme={{ ...jsonTreeTheme, tree: { margin: 0 } }}
+        theme={{ ...jsonTreeTheme, tree: { margin: 0, whiteSpace: "pre-line" } }}
         hideRoot
         getItemString={getItemString}
         postprocessValue={maybePlainObject}

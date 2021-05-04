@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { History } from "history";
 import { isEmpty, isEqual, dropRight, pick, cloneDeep } from "lodash";
 import {
   updateTree,
@@ -143,7 +144,7 @@ export const defaultPersistedState = Object.freeze<PersistedState>({
 // too expensive.
 let initialPersistedState: PersistedState | undefined = undefined;
 export function getInitialPersistedStateAndMaybeUpdateLocalStorageAndURL(
-  history: any,
+  history: History,
 ): PersistedState {
   if (initialPersistedState == undefined) {
     const oldPersistedState: any = storage.getItem(GLOBAL_STATE_STORAGE_KEY);
@@ -572,7 +573,7 @@ const dropPanel = (
       ? panelsState.layout
       : updateTree<string>(
           panelsState.layout!,
-          createAddUpdates(panelsState.layout, id, destinationPath, position),
+          createAddUpdates(panelsState.layout, id, destinationPath, position ?? "left"),
         );
 
   // 'relatedConfigs' are used in Tab panel presets, so that the panels'
@@ -847,7 +848,13 @@ const endDrag = (panelsState: PanelsState, dragPayload: EndDragPayload): PanelsS
     return config ? { id, config } : undefined;
   });
 
-  if (withinSameTab && sourceTabConfig && sourceTabId != undefined) {
+  if (
+    withinSameTab &&
+    sourceTabConfig &&
+    sourceTabId != undefined &&
+    position != undefined &&
+    destinationPath != undefined
+  ) {
     return dragWithinSameTab(panelsState, {
       originalLayout,
       sourceTabId,
@@ -859,7 +866,13 @@ const endDrag = (panelsState: PanelsState, dragPayload: EndDragPayload): PanelsS
     });
   }
 
-  if (toMainFromTab && sourceTabConfig && sourceTabId != undefined) {
+  if (
+    toMainFromTab &&
+    sourceTabConfig &&
+    sourceTabId != undefined &&
+    position != undefined &&
+    destinationPath != undefined
+  ) {
     return dragToMainFromTab(panelsState, {
       originalLayout,
       sourceTabId,
