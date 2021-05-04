@@ -20,8 +20,9 @@ import ExperimentalFeaturesContext, {
 
 export function ExperimentalFeatureSettings(): React.ReactElement {
   const { settings, features, changeFeature } = useContext(ExperimentalFeaturesContext);
+  const theme = useTheme();
   return (
-    <Stack style={{ padding: useTheme().spacing.m }}>
+    <Stack style={{ padding: theme.spacing.m }} tokens={{ childrenGap: theme.spacing.m }}>
       {Object.keys(features).length === 0 && (
         <p>
           <em>Currently there are no experimental features.</em>
