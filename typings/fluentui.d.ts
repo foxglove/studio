@@ -36,6 +36,7 @@ declare global {
     | "Variable2"
     | "Error"
     | "Warning"
+    | "More"
     | never; // never has no effect here other than keeping the semicolon on a separate line for easier conflict resolution
 }
 

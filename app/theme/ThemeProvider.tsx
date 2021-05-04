@@ -40,6 +40,7 @@ const icons: {
   Rename: <Icons.RenameIcon />,
   Error: <Icons.ErrorIcon />,
   Warning: <Icons.WarningIcon />,
+  More: <Icons.MoreIcon />,
   "studio.ROS": <RosIcon />,
 };
 
