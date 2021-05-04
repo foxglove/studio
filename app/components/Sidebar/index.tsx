@@ -3,9 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  CommandBarButton,
   DirectionalHint,
-  IContextualMenuProps,
   IIconProps,
   IOverflowSetItemProps,
   makeStyles,
@@ -21,9 +19,7 @@ import styled from "styled-components";
 
 import filterMap from "@foxglove-studio/app/util/filterMap";
 
-const BUTTON_SIZE = 50;
-const ICON_SIZE = 24;
-const FADED_OPACITY = 0.7;
+import SidebarButton, { BUTTON_SIZE } from "./SidebarButton";
 
 function Noop(): ReactNull {
   return ReactNull;
@@ -46,6 +42,9 @@ export type SidebarItem = {
 
 const useStyles = makeStyles({
   resizeGroup: {
+    // A vertical Fluent ResizeGroup does not stretch to fill the height of its container - this
+    // seems to be a limitation of Fluent ResizeGroup. Unfortunately it also doesn't provide a way
+    // to customize the styles of the extra elements it adds to the tree.
     display: "flex",
     flexDirection: "column",
     flexGrow: 1,
@@ -56,60 +55,6 @@ const useStyles = makeStyles({
     },
   },
 });
-
-function SidebarButton({
-  dataSidebarKey,
-  selected,
-  title,
-  iconProps,
-  onClick,
-  menuProps,
-}: {
-  dataSidebarKey: string; // for storybook
-  selected: boolean;
-  title: string;
-  iconProps?: IIconProps;
-  onClick?: () => void;
-  menuProps?: IContextualMenuProps;
-}) {
-  const theme = useTheme();
-  return (
-    <Stack style={{ position: "relative", flexGrow: 1 }}>
-      <CommandBarButton
-        data-sidebar-key={dataSidebarKey}
-        title={title}
-        style={{ height: BUTTON_SIZE, margin: 0 }}
-        iconProps={{
-          styles: {
-            root: {
-              opacity: selected ? 1 : FADED_OPACITY,
-              fontSize: ICON_SIZE,
-              height: ICON_SIZE,
-              lineHeight: ICON_SIZE,
-              "& span": { verticalAlign: "baseline" },
-            },
-          },
-          ...iconProps,
-        }}
-        onClick={onClick}
-        menuProps={menuProps}
-        onRenderMenuIcon={() => ReactNull}
-      />
-      {selected && (
-        <div
-          style={{
-            position: "absolute",
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: 3,
-            backgroundColor: theme.palette.themePrimary,
-          }}
-        />
-      )}
-    </Stack>
-  );
-}
 
 export default function Sidebar<K extends string>({
   children,

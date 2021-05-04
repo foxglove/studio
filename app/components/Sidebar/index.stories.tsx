@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-import Sidebar, { SidebarItem } from "@foxglove-studio/app/Sidebar";
+import Sidebar, { SidebarItem } from ".";
 
 export default {
   title: "components/Sidebar",

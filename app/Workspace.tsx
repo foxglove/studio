@@ -18,7 +18,6 @@ import { useMountedState } from "react-use";
 import styled from "styled-components";
 
 import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
-import Sidebar, { SidebarItem } from "@foxglove-studio/app/Sidebar";
 import { redoLayoutChange, undoLayoutChange } from "@foxglove-studio/app/actions/layoutHistory";
 import { importPanelLayout, loadLayout } from "@foxglove-studio/app/actions/panels";
 import DocumentDropListener from "@foxglove-studio/app/components/DocumentDropListener";
@@ -38,6 +37,7 @@ import { PlayerStatusIndicator } from "@foxglove-studio/app/components/PlayerSta
 import Preferences from "@foxglove-studio/app/components/Preferences";
 import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToBodyComponent";
 import ShortcutsModal from "@foxglove-studio/app/components/ShortcutsModal";
+import Sidebar, { SidebarItem } from "@foxglove-studio/app/components/Sidebar";
 import { SidebarContent } from "@foxglove-studio/app/components/SidebarContent";
 import TinyConnectionPicker from "@foxglove-studio/app/components/TinyConnectionPicker";
 import Toolbar from "@foxglove-studio/app/components/Toolbar";
