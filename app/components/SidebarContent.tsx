@@ -7,18 +7,32 @@ import { Stack, Text, useTheme } from "@fluentui/react";
 import HelpButton from "@foxglove-studio/app/components/PanelToolbar/HelpButton";
 
 export function SidebarContent({
+  noPadding = false,
   title,
   children,
   helpContent,
-}: React.PropsWithChildren<{ title: string; helpContent?: React.ReactNode }>): JSX.Element {
+}: React.PropsWithChildren<{
+  title: string;
+  helpContent?: React.ReactNode;
+  noPadding?: boolean;
+}>): JSX.Element {
   const theme = useTheme();
   return (
     <Stack
       verticalFill
-      style={{ padding: theme.spacing.m, maxHeight: "100%", overflow: "auto" }}
+      style={{
+        padding: noPadding ? undefined : theme.spacing.m,
+        paddingBottom: 0,
+        maxHeight: "100%",
+        overflow: "auto",
+      }}
       tokens={{ childrenGap: theme.spacing.s1 }}
     >
-      <Stack horizontal horizontalAlign="space-between">
+      <Stack
+        horizontal
+        horizontalAlign="space-between"
+        style={{ padding: noPadding ? theme.spacing.m : undefined }}
+      >
         <Text as="h2" variant="large">
           {title}
         </Text>

@@ -4,6 +4,7 @@
 
 import {
   CommandBarButton,
+  DirectionalHint,
   IContextualMenuProps,
   IIconProps,
   IOverflowSetItemProps,
@@ -14,15 +15,10 @@ import {
   Stack,
   useTheme,
 } from "@fluentui/react";
-import { useCallback, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import { MosaicNode, MosaicWithoutDragDropContext } from "react-mosaic-component";
 import styled from "styled-components";
 
-import { useSelectPanel } from "@foxglove-studio/app/components/AddPanelMenu";
-import GlobalVariablesTable from "@foxglove-studio/app/components/GlobalVariablesTable";
-import variablesHelp from "@foxglove-studio/app/components/GlobalVariablesTable/index.help.md";
-import PanelList from "@foxglove-studio/app/components/PanelList";
-import { SidebarContent } from "@foxglove-studio/app/components/SidebarContent";
 import filterMap from "@foxglove-studio/app/util/filterMap";
 
 const BUTTON_SIZE = 50;
@@ -31,23 +27,6 @@ const FADED_OPACITY = 0.7;
 
 function Noop(): ReactNull {
   return ReactNull;
-}
-
-function AddPanel() {
-  const selectPanel = useSelectPanel();
-  return (
-    <SidebarContent title="Add panel">
-      <PanelList onPanelSelect={selectPanel} />
-    </SidebarContent>
-  );
-}
-
-function Variables() {
-  return (
-    <SidebarContent title="Variables" helpContent={variablesHelp}>
-      <GlobalVariablesTable />
-    </SidebarContent>
-  );
 }
 
 // Root drop targets in this top level sidebar mosaic interfere with drag/mouse events from the
@@ -59,28 +38,11 @@ const HideRootDropTargets = styled.div`
   }
 `;
 
-type SidebarItem = {
+export type SidebarItem = {
   iconName: IIconProps["iconName"];
   title: string;
   component: React.ComponentType;
 };
-
-function Preferences() {
-  return <SidebarContent title="Preferences"></SidebarContent>;
-}
-
-const SIDEBAR_ITEMS = new Map<string, SidebarItem>([
-  ["add-panel", { iconName: "MediaAdd", title: "Add Panel", component: AddPanel }],
-  ["variables", { iconName: "Rename", title: "Variables", component: Variables }],
-  ["variablesa", { iconName: "Rename", title: "Variables", component: Variables }],
-  ["variablesb", { iconName: "Rename", title: "Variables", component: Variables }],
-  ["variablesc", { iconName: "Rename", title: "Variables", component: Variables }],
-  ["variablesd", { iconName: "Rename", title: "Variables", component: Variables }],
-  ["variablese", { iconName: "Rename", title: "Variables", component: Variables }],
-  ["preferences", { iconName: "Settings", title: "Preferences", component: Preferences }],
-]);
-
-const SIDEBAR_BOTTOM_ITEMS: readonly string[] = ["preferences"];
 
 const useStyles = makeStyles({
   resizeGroup: {
@@ -96,24 +58,25 @@ const useStyles = makeStyles({
 });
 
 function SidebarButton({
+  dataSidebarKey,
   selected,
   title,
   iconProps,
   onClick,
   menuProps,
-  menuIconProps,
 }: {
+  dataSidebarKey: string; // for storybook
   selected: boolean;
   title: string;
   iconProps?: IIconProps;
   onClick?: () => void;
   menuProps?: IContextualMenuProps;
-  menuIconProps?: IIconProps;
 }) {
   const theme = useTheme();
   return (
     <Stack style={{ position: "relative", flexGrow: 1 }}>
       <CommandBarButton
+        data-sidebar-key={dataSidebarKey}
         title={title}
         style={{ height: BUTTON_SIZE, margin: 0 }}
         iconProps={{
@@ -130,7 +93,7 @@ function SidebarButton({
         }}
         onClick={onClick}
         menuProps={menuProps}
-        menuIconProps={menuIconProps}
+        onRenderMenuIcon={() => ReactNull}
       />
       {selected && (
         <div
@@ -148,20 +111,29 @@ function SidebarButton({
   );
 }
 
-export default function Sidebar({ children }: React.PropsWithChildren<unknown>): JSX.Element {
-  const [selectedKey, setSelectedKey] = useState<string | undefined>();
+export default function Sidebar<K extends string>({
+  children,
+  items,
+  bottomItems,
+  selectedKey,
+  onSelectKey,
+}: React.PropsWithChildren<{
+  items: Map<K, SidebarItem>;
+  bottomItems: readonly K[];
+  selectedKey: K | undefined;
+  onSelectKey: (key: K | undefined) => void;
+}>): JSX.Element {
   const [mosaicValue, setMosaicValue] = useState<MosaicNode<"sidebar" | "children">>("children");
 
   const theme = useTheme();
   const classNames = useStyles();
 
-  const onSelectKey = useCallback(
-    (key: string) => {
-      if (selectedKey === key) {
-        setSelectedKey(undefined);
+  const prevSelectedKey = useRef<string | undefined>(undefined);
+  useLayoutEffect(() => {
+    if (prevSelectedKey.current !== selectedKey) {
+      if (selectedKey == undefined) {
         setMosaicValue("children");
-      } else {
-        setSelectedKey(key);
+      } else if (prevSelectedKey.current == undefined) {
         setMosaicValue({
           direction: "row",
           first: "sidebar",
@@ -169,47 +141,62 @@ export default function Sidebar({ children }: React.PropsWithChildren<unknown>):
           splitPercentage: 30,
         });
       }
+      prevSelectedKey.current = selectedKey;
+    }
+  }, [selectedKey]);
+
+  const onItemClick = useCallback(
+    (key: K) => {
+      if (selectedKey === key) {
+        onSelectKey(undefined);
+      } else {
+        onSelectKey(key);
+      }
     },
-    [selectedKey],
+    [onSelectKey, selectedKey],
   );
 
-  const SelectedComponent =
-    (selectedKey != undefined && SIDEBAR_ITEMS.get(selectedKey)?.component) || Noop;
+  const SelectedComponent = (selectedKey != undefined && items.get(selectedKey)?.component) || Noop;
+
+  type OverflowSetItem = IOverflowSetItemProps & { key: K };
 
   // Callbacks for OverflowSet
   const onRenderItem = useCallback(
-    ({ key }: IOverflowSetItemProps) => {
-      const item = SIDEBAR_ITEMS.get(key);
+    ({ key }: OverflowSetItem) => {
+      const item = items.get(key);
       if (!item) {
         throw new Error(`Missing sidebar item ${key}`);
       }
       const { title, iconName } = item;
       return (
         <SidebarButton
+          dataSidebarKey={key}
           key={key}
           selected={selectedKey === key}
           title={title}
           iconProps={{ iconName }}
-          onClick={() => onSelectKey(key)}
+          onClick={() => onItemClick(key)}
         />
       );
     },
-    [onSelectKey, selectedKey],
+    [items, onItemClick, selectedKey],
   );
   const onRenderOverflowButton = useCallback(
-    (overflowItems?: IOverflowSetItemProps[]) => {
+    (overflowItems?: OverflowSetItem[]) => {
       if (!overflowItems) {
         return ReactNull;
       }
       const overflowItemSelected = overflowItems.some(({ key }) => selectedKey === key);
       return (
         <SidebarButton
+          dataSidebarKey="_overflow"
           selected={overflowItemSelected}
           title="More"
-          menuIconProps={{ iconName: "MoreVertical" }}
+          iconProps={{ iconName: "MoreVertical" }}
           menuProps={{
+            directionalHint: DirectionalHint.rightCenter,
             items: overflowItems.map(({ key }) => {
-              const item = SIDEBAR_ITEMS.get(key);
+              const item = items.get(key as K);
               if (!item) {
                 throw new Error(`Missing sidebar item ${key}`);
               }
@@ -219,22 +206,22 @@ export default function Sidebar({ children }: React.PropsWithChildren<unknown>):
                 canCheck: overflowItemSelected,
                 text: item.title,
                 iconProps: { iconName: item.iconName },
-                onClick: () => setSelectedKey(key),
+                onClick: () => onItemClick(key),
               };
             }),
           }}
         />
       );
     },
-    [selectedKey],
+    [items, selectedKey, onItemClick],
   );
 
   // Data and callbacks for ResizeGroup
   type Data = { itemsToShow: number };
   const onRenderData = useCallback(
     ({ itemsToShow }: Data) => {
-      const shownItems = filterMap(SIDEBAR_ITEMS.keys(), (key) =>
-        SIDEBAR_BOTTOM_ITEMS.includes(key) ? undefined : { key },
+      const shownItems = filterMap(items.keys(), (key) =>
+        bottomItems.includes(key) ? undefined : { key },
       );
       const overflowItems = shownItems.splice(itemsToShow);
 
@@ -251,19 +238,19 @@ export default function Sidebar({ children }: React.PropsWithChildren<unknown>):
             vertical
             items={shownItems}
             overflowItems={overflowItems}
-            onRenderItem={onRenderItem}
+            onRenderItem={onRenderItem as (_: IOverflowSetItemProps) => unknown}
             onRenderOverflowButton={onRenderOverflowButton}
           />
           <div style={{ flexGrow: 1 }} />
           <Stack
-          // mimic the OverflowSet item's display:flex
+          // extra Stack to match the OverflowSet item's display:flex
           >
-            {SIDEBAR_BOTTOM_ITEMS.map((key) => onRenderItem({ key }))}
+            {bottomItems.map((key) => onRenderItem({ key }))}
           </Stack>
         </Stack>
       );
     },
-    [onRenderItem, onRenderOverflowButton, theme],
+    [items, bottomItems, onRenderItem, onRenderOverflowButton, theme.semanticColors.bodyDivider],
   );
   const onReduceData = useCallback(
     ({ itemsToShow }: Data) => (itemsToShow === 0 ? undefined : { itemsToShow: itemsToShow - 1 }),
@@ -275,7 +262,7 @@ export default function Sidebar({ children }: React.PropsWithChildren<unknown>):
       <ResizeGroup
         className={classNames.resizeGroup}
         direction={ResizeGroupDirection.vertical}
-        data={{ itemsToShow: SIDEBAR_ITEMS.size - SIDEBAR_BOTTOM_ITEMS.length }}
+        data={{ itemsToShow: items.size - bottomItems.length }}
         onRenderData={onRenderData}
         onReduceData={onReduceData}
       />
