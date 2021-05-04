@@ -2174,7 +2174,6 @@ __metadata:
     text-width: 1.2.0
     three: 0.128.0
     tinycolor2: 1.4.2
-    ts-essentials: 7.0.1
     typescript: 4.2.2
     urdf-loader: 0.10.2
     url-search-params: 1.1.0
@@ -24734,15 +24733,6 @@ resolve@^2.0.0-next.3:
   version: 0.2.0
   resolution: "ts-easing@npm:0.2.0"
   checksum: 6f8c21c18411d3acadd15b7245fbea9d9b9320b8d0644e67bee78d17ad0a7604b7e4a4128a69d9c5fdd26bc52fe68c98ed8c0fa7dd9bf9049e6fb349bf94234f
-  languageName: node
-  linkType: hard
-
-"ts-essentials@npm:7.0.1":
-  version: 7.0.1
-  resolution: "ts-essentials@npm:7.0.1"
-  peerDependencies:
-    typescript: ">=3.7.0"
-  checksum: f3b7beedce99ac7a1af1f150ede1a8e5f1195fc7de4c01c308df33a2acfed8fa86ac3d898bdfc3a9132ac897799bf326c74187a088d297724fa7ab8ffd323329
   languageName: node
   linkType: hard
 
