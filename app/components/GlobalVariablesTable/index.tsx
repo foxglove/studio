@@ -63,13 +63,11 @@ const SGlobalVariablesTable = styled.div`
 
   th,
   td {
-    /* padding: 0px 16px; */
     line-height: 100%;
     border: none;
   }
 
   tr:first-child th {
-    /* padding: 8px 16px; */
     border: none;
     text-align: left;
     color: rgba(255, 255, 255, 0.6);
