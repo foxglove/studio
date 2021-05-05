@@ -60,9 +60,11 @@ import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
 import Flex from "@foxglove-studio/app/components/Flex";
 import Icon from "@foxglove-studio/app/components/Icon";
 import KeyListener from "@foxglove-studio/app/components/KeyListener";
+import MultiProvider from "@foxglove-studio/app/components/MultiProvider";
 import PanelContext from "@foxglove-studio/app/components/PanelContext";
 import { useExperimentalFeature } from "@foxglove-studio/app/context/ExperimentalFeaturesContext";
 import { usePanelCatalog } from "@foxglove-studio/app/context/PanelCatalogContext";
+import { PanelIdContext } from "@foxglove-studio/app/context/PanelIdContext";
 import usePanelDrag from "@foxglove-studio/app/hooks/usePanelDrag";
 import { State } from "@foxglove-studio/app/reducers";
 import { TabPanelConfig } from "@foxglove-studio/app/types/layouts";
@@ -119,6 +121,7 @@ export interface PanelStatics<Config> {
   panelType: string;
   defaultConfig: Config;
   supportsStrictMode?: boolean;
+  Settings?: React.ComponentType;
 }
 
 const EMPTY_CONFIG = Object.freeze({});
@@ -531,22 +534,29 @@ export default function Panel<Config extends PanelConfig>(
           }
         }}
       >
-        <PanelContext.Provider
-          value={{
-            type,
-            id: childId as any,
-            title,
-            config,
-            saveConfig: saveCompleteConfig as any,
-            updatePanelConfig,
-            openSiblingPanel,
-            enterFullscreen,
-            isHovered,
-            isFocused,
-            tabId,
-            supportsStrictMode: PanelComponent.supportsStrictMode ?? true,
-            connectToolbarDragHandle,
-          }}
+        <MultiProvider
+          providers={[
+            /* eslint-disable react/jsx-key */
+            <PanelContext.Provider
+              value={{
+                type,
+                id: childId as any,
+                title,
+                config,
+                saveConfig: saveCompleteConfig as any,
+                updatePanelConfig,
+                openSiblingPanel,
+                enterFullscreen,
+                isHovered,
+                isFocused,
+                tabId,
+                supportsStrictMode: PanelComponent.supportsStrictMode ?? true,
+                connectToolbarDragHandle,
+              }}
+            />,
+            <PanelIdContext.Provider value={childId} />,
+            /* eslint-enable react/jsx-key */
+          ]}
         >
           {/* Ensure user exits full-screen mode when leaving window, even if key is still pressed down */}
           <DocumentEvents target={window} enabled onBlur={onBlurDocument} />
@@ -632,7 +642,7 @@ export default function Panel<Config extends PanelConfig>(
             </ErrorBoundary>
             {process.env.NODE_ENV !== "production" && <PerfInfo ref={perfInfo} />}
           </Flex>
-        </PanelContext.Provider>
+        </MultiProvider>
       </Profiler>
     );
   }
@@ -641,5 +651,6 @@ export default function Panel<Config extends PanelConfig>(
     defaultConfig: PanelComponent.defaultConfig,
     panelType: PanelComponent.panelType,
     displayName: `Panel(${PanelComponent.displayName ?? PanelComponent.name})`,
+    Settings: PanelComponent.Settings,
   });
 }

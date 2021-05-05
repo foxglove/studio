@@ -32,6 +32,7 @@ import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipel
 import NotificationDisplay from "@foxglove-studio/app/components/NotificationDisplay";
 import PanelLayout from "@foxglove-studio/app/components/PanelLayout";
 import PanelList from "@foxglove-studio/app/components/PanelList";
+import PanelSettings from "@foxglove-studio/app/components/PanelSettings";
 import PlaybackControls from "@foxglove-studio/app/components/PlaybackControls";
 import { PlayerStatusIndicator } from "@foxglove-studio/app/components/PlayerStatusIndicator";
 import Preferences from "@foxglove-studio/app/components/Preferences";
@@ -72,10 +73,14 @@ const TruncatedText = styled.span`
   line-height: normal;
 `;
 
-type SidebarItemKey = "add-panel" | "variables" | "preferences";
+type SidebarItemKey = "add-panel" | "panel-settings" | "variables" | "preferences";
 
 const SIDEBAR_ITEMS = new Map<SidebarItemKey, SidebarItem>([
   ["add-panel", { iconName: "MediaAdd", title: "Add Panel", component: AddPanel }],
+  [
+    "panel-settings",
+    { iconName: "ColumnVerticalSectionEdit", title: "Panel Settings", component: PanelSettings },
+  ],
   ["variables", { iconName: "Rename", title: "Variables", component: Variables }],
   ["preferences", { iconName: "Settings", title: "Preferences", component: Preferences }],
 ]);
