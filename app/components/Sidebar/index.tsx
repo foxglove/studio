@@ -42,17 +42,8 @@ export type SidebarItem = {
 
 const useStyles = makeStyles({
   resizeGroup: {
-    // A vertical Fluent ResizeGroup does not stretch to fill the height of its container - this
-    // seems to be a limitation of Fluent ResizeGroup. Unfortunately it also doesn't provide a way
-    // to customize the styles of the extra elements it adds to the tree.
-    display: "flex",
-    flexDirection: "column",
-    flexGrow: 1,
-    "> div, > div > div": {
-      display: "flex",
-      flexDirection: "column",
-      flexGrow: 1,
-    },
+    height: "100%",
+    minHeight: 0,
   },
 });
 
@@ -171,46 +162,49 @@ export default function Sidebar<K extends string>({
       const overflowItems = shownItems.splice(itemsToShow);
 
       return (
-        <Stack
-          style={{
-            width: BUTTON_SIZE,
-            flexShrink: 0,
-            flexGrow: 1,
-            borderRight: `1px solid ${theme.semanticColors.bodyDivider}`,
-          }}
-        >
-          <OverflowSet
-            vertical
-            items={shownItems}
-            overflowItems={overflowItems}
-            onRenderItem={onRenderItem as (_: IOverflowSetItemProps) => unknown}
-            onRenderOverflowButton={onRenderOverflowButton}
-          />
-          <div style={{ flexGrow: 1 }} />
-          <Stack
-          // extra Stack to match the OverflowSet item's display:flex
-          >
-            {bottomItems.map((key) => onRenderItem({ key }))}
-          </Stack>
-        </Stack>
+        <OverflowSet
+          vertical
+          items={shownItems}
+          overflowItems={overflowItems}
+          onRenderItem={onRenderItem as (_: IOverflowSetItemProps) => unknown}
+          onRenderOverflowButton={onRenderOverflowButton}
+        />
       );
     },
-    [items, bottomItems, onRenderItem, onRenderOverflowButton, theme.semanticColors.bodyDivider],
+    [items, bottomItems, onRenderItem, onRenderOverflowButton],
   );
+  const numNonBottomItems = items.size - bottomItems.length;
   const onReduceData = useCallback(
     ({ itemsToShow }: Data) => (itemsToShow === 0 ? undefined : { itemsToShow: itemsToShow - 1 }),
     [],
   );
+  const onGrowData = useCallback(
+    ({ itemsToShow }: Data) =>
+      itemsToShow >= numNonBottomItems ? undefined : { itemsToShow: itemsToShow + 1 },
+    [numNonBottomItems],
+  );
 
   return (
     <Stack horizontal verticalFill style={{ overflow: "hidden" }}>
-      <ResizeGroup
-        className={classNames.resizeGroup}
-        direction={ResizeGroupDirection.vertical}
-        data={{ itemsToShow: items.size - bottomItems.length }}
-        onRenderData={onRenderData}
-        onReduceData={onReduceData}
-      />
+      <Stack
+        verticalAlign="space-between"
+        style={{
+          width: BUTTON_SIZE,
+          flexShrink: 0,
+          boxSizing: "content-box",
+          borderRight: `1px solid ${theme.semanticColors.bodyDivider}`,
+        }}
+      >
+        <ResizeGroup
+          className={classNames.resizeGroup}
+          direction={ResizeGroupDirection.vertical}
+          data={{ itemsToShow: numNonBottomItems }}
+          onRenderData={onRenderData}
+          onReduceData={onReduceData}
+          onGrowData={onGrowData}
+        />
+        {bottomItems.map((key) => onRenderItem({ key }))}
+      </Stack>
       {
         // By always rendering the mosaic, even if we are only showing children, we can prevent the
         // children from having to re-mount each time the sidebar is opened/closed.
