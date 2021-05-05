@@ -2,13 +2,17 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { StrictMode, useMemo } from "react";
-import { useSelector } from "react-redux";
+import { DefaultButton, Stack, Text, useTheme } from "@fluentui/react";
+import { StrictMode, useContext, useMemo, useState } from "react";
+import { ReactReduxContext, useDispatch, useSelector } from "react-redux";
 
+import { savePanelConfigs } from "@foxglove-studio/app/actions/panels";
+import ShareJsonModal from "@foxglove-studio/app/components/ShareJsonModal";
 import { SidebarContent } from "@foxglove-studio/app/components/SidebarContent";
 import { usePanelCatalog } from "@foxglove-studio/app/context/PanelCatalogContext";
 import { PanelIdContext } from "@foxglove-studio/app/context/PanelIdContext";
 import { State } from "@foxglove-studio/app/reducers";
+import { TAB_PANEL_TYPE } from "@foxglove-studio/app/util/globalConstants";
 import { getPanelTypeFromId } from "@foxglove-studio/app/util/layout";
 
 import SchemaEditor from "./SchemaEditor";
@@ -18,17 +22,44 @@ export default function PanelSettings(): JSX.Element {
     state.mosaic.selectedPanelIds.length === 1 ? state.mosaic.selectedPanelIds[0] : undefined,
   );
 
+  const theme = useTheme();
   const panelCatalog = usePanelCatalog();
-  const panelInfo = useMemo(
-    () =>
-      selectedPanelId != undefined
-        ? panelCatalog.getPanelsByType().get(getPanelTypeFromId(selectedPanelId))
-        : undefined,
-    [panelCatalog, selectedPanelId],
+  const { store } = useContext(ReactReduxContext);
+  const panelType = useMemo(
+    () => (selectedPanelId != undefined ? getPanelTypeFromId(selectedPanelId) : undefined),
+    [selectedPanelId],
   );
+  const panelInfo = useMemo(
+    () => (panelType != undefined ? panelCatalog.getPanelsByType().get(panelType) : undefined),
+    [panelCatalog, panelType],
+  );
+
+  const [showShareModal, setShowShareModal] = useState(false);
+  const dispatch = useDispatch();
+  const shareModal = useMemo(() => {
+    if (selectedPanelId == undefined || !showShareModal) {
+      return ReactNull;
+    }
+    const panelConfigById = store.getState().persistedState.panels.savedProps;
+    return (
+      <ShareJsonModal
+        onRequestClose={() => setShowShareModal(false)}
+        value={panelConfigById[selectedPanelId] ?? {}}
+        onChange={(config) =>
+          dispatch(savePanelConfigs({ configs: [{ id: selectedPanelId, config, override: true }] }))
+        }
+        noun="panel configuration"
+      />
+    );
+  }, [selectedPanelId, showShareModal, store, dispatch]);
+
   if (selectedPanelId == undefined) {
     return (
-      <SidebarContent title={`Panel Settings`}>Select a panel to edit its settings.</SidebarContent>
+      <SidebarContent title={`Panel Settings`}>
+        <Text styles={{ root: { color: theme.palette.neutralTertiary } }}>
+          Select a panel to edit its settings.
+        </Text>
+      </SidebarContent>
     );
   }
   if (!panelInfo) {
@@ -36,21 +67,55 @@ export default function PanelSettings(): JSX.Element {
       `Attempt to render settings but no panel component could be found for panel id ${selectedPanelId}`,
     );
   }
-  if (!panelInfo.component.configSchema) {
-    return (
-      <SidebarContent title={panelInfo.title}>
-        This panel does not provide any settings.
-      </SidebarContent>
-    );
-  }
 
   return (
-    <SidebarContent title={panelInfo.title}>
-      <StrictMode>
-        <PanelIdContext.Provider value={selectedPanelId}>
-          <SchemaEditor configSchema={panelInfo.component.configSchema} />
-        </PanelIdContext.Provider>
-      </StrictMode>
+    <SidebarContent title={`${panelInfo.title} Panel Settings`}>
+      {shareModal}
+      <Stack tokens={{ childrenGap: theme.spacing.m }}>
+        <Stack.Item>
+          {panelInfo.component.configSchema ? (
+            <StrictMode>
+              <PanelIdContext.Provider value={selectedPanelId}>
+                <SchemaEditor configSchema={panelInfo.component.configSchema} />
+              </PanelIdContext.Provider>
+            </StrictMode>
+          ) : (
+            <Text styles={{ root: { color: theme.palette.neutralTertiary } }}>
+              No additional settings available.
+            </Text>
+          )}
+        </Stack.Item>
+        <div style={{ height: theme.spacing.m }} />
+        <Stack.Item>
+          <DefaultButton
+            text="Import/export settings…"
+            styles={{ label: { fontWeight: "normal" } }}
+            iconProps={{
+              iconName: "CodeEdit",
+              styles: { root: { "& span": { verticalAlign: "baseline" } } },
+            }}
+            onClick={() => setShowShareModal(true)}
+            disabled={panelType === TAB_PANEL_TYPE}
+          />
+        </Stack.Item>
+        <Stack.Item>
+          <DefaultButton
+            text="Reset to defaults"
+            styles={{ label: { fontWeight: "normal" } }}
+            iconProps={{
+              iconName: "ClearSelection",
+              styles: { root: { "& span": { verticalAlign: "baseline" } } },
+            }}
+            onClick={() =>
+              dispatch(
+                savePanelConfigs({
+                  configs: [{ id: selectedPanelId, config: {}, override: true }],
+                }),
+              )
+            }
+          />
+        </Stack.Item>
+      </Stack>
     </SidebarContent>
   );
 }

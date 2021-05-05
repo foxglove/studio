@@ -110,9 +110,11 @@ export type UpdatePanelConfig<Config> = (
 export type OpenSiblingPanel = (arg0: string, cb: (arg0: PanelConfig) => PanelConfig) => void;
 
 export type PanelConfigSchemaEntry<ConfigKey = string> =
-  | { configKey: ConfigKey; type: "checkbox"; title: string }
+  | { key: ConfigKey; type: "text"; title: string; placeholder?: string }
+  | { key: ConfigKey; type: "color"; title: string }
+  | { key: ConfigKey; type: "toggle"; title: string }
   | {
-      configKey: ConfigKey;
+      key: ConfigKey;
       type: "dropdown";
       title: string;
       options: { value: string | number; text: string }[];

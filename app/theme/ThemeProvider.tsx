@@ -41,6 +41,8 @@ const icons: {
   Error: <Icons.ErrorIcon />,
   Warning: <Icons.WarningIcon />,
   More: <Icons.MoreIcon />,
+  CodeEdit: <Icons.CodeEditIcon />,
+  ClearSelection: <Icons.ClearSelectionIcon />,
   "studio.ROS": <RosIcon />,
 };
 

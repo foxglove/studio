@@ -340,14 +340,6 @@ function ImageView(props: Props) {
     },
     [topics, allCameraNamespaces, imageMarkerDatatypes, enabledMarkerTopics, saveConfig],
   );
-
-  const onChangeScale = useCallback(
-    (newScale: number) => {
-      saveConfig({ scale: newScale });
-    },
-    [saveConfig],
-  );
-
   const imageTopicDropdown = useMemo(() => {
     const cameraNamespace = getCameraNamespace(cameraTopic);
 
@@ -552,28 +544,6 @@ function ImageView(props: Props) {
     scale,
   ]);
 
-  const menuContent = useMemo(
-    () => (
-      <>
-        <SubMenu direction="right" text={`Image resolution: ${(scale * 100).toFixed()}%`}>
-          {[0.2, 0.5, 1].map((value) => {
-            return (
-              <Item
-                {...{ value }}
-                key={value}
-                checked={scale === value}
-                onClick={() => onChangeScale(value)}
-              >
-                {(value * 100).toFixed()}%
-              </Item>
-            );
-          })}
-        </SubMenu>
-      </>
-    ),
-    [scale, onChangeScale],
-  );
-
   const imageMessage = messagesByTopic[cameraTopic]?.[0];
   const lastImageMessageRef = React.useRef(imageMessage);
   if (imageMessage) {
@@ -603,18 +573,14 @@ function ImageView(props: Props) {
 
   const toolbar = useMemo(() => {
     return (
-      <PanelToolbar
-        floating={cameraTopic !== ""}
-        helpContent={helpContent}
-        menuContent={menuContent}
-      >
+      <PanelToolbar floating={cameraTopic !== ""} helpContent={helpContent}>
         <div className={style.controls}>
           {imageTopicDropdown}
           {markerDropdown}
         </div>
       </PanelToolbar>
     );
-  }, [imageTopicDropdown, markerDropdown, menuContent, cameraTopic]);
+  }, [imageTopicDropdown, markerDropdown, cameraTopic]);
 
   const renderBottomBar = () => {
     const canTransformMarkers = canTransformMarkersByTopic(cameraTopic);
@@ -689,9 +655,9 @@ const defaultConfig: Config = {
 };
 
 const configSchema: PanelConfigSchema<keyof Config> = [
-  { configKey: "synchronize", type: "checkbox", title: "Synchronize images and markers" },
+  { key: "synchronize", type: "toggle", title: "Synchronize images and markers" },
   {
-    configKey: "scale",
+    key: "scale",
     type: "dropdown",
     title: "Image resolution",
     options: [

@@ -49,5 +49,10 @@ export function useConfig<Config>(): [DeepReadonly<Config>, SaveConfig<Config>] 
     [dispatch, panelComponent.defaultConfig, panelId],
   );
 
-  return [config ?? panelComponent.defaultConfig, saveConfig];
+  const mergedConfig = useMemo(() => ({ ...panelComponent.defaultConfig, ...config }), [
+    panelComponent,
+    config,
+  ]);
+
+  return [mergedConfig, saveConfig];
 }

@@ -17,7 +17,7 @@ export default function SchemaEditor({
   return (
     <Stack tokens={{ childrenGap: theme.spacing.m }}>
       {configSchema.map((entry) => (
-        <SchemaEntryEditor key={entry.configKey} entry={entry} />
+        <SchemaEntryEditor key={entry.key} entry={entry} />
       ))}
     </Stack>
   );
