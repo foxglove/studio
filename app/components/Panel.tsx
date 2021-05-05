@@ -74,6 +74,7 @@ import {
   SaveFullConfigPayload,
   PanelConfig,
   SaveConfig,
+  PanelConfigSchema,
 } from "@foxglove-studio/app/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove-studio/app/util/globalConstants";
 import {
@@ -121,7 +122,7 @@ export interface PanelStatics<Config> {
   panelType: string;
   defaultConfig: Config;
   supportsStrictMode?: boolean;
-  Settings?: React.ComponentType;
+  configSchema?: PanelConfigSchema<string>;
 }
 
 const EMPTY_CONFIG = Object.freeze({});
@@ -651,6 +652,6 @@ export default function Panel<Config extends PanelConfig>(
     defaultConfig: PanelComponent.defaultConfig,
     panelType: PanelComponent.panelType,
     displayName: `Panel(${PanelComponent.displayName ?? PanelComponent.name})`,
-    Settings: PanelComponent.Settings,
+    configSchema: PanelComponent.configSchema,
   });
 }

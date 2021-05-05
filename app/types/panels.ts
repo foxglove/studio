@@ -108,3 +108,13 @@ export type UpdatePanelConfig<Config> = (
 ) => void;
 
 export type OpenSiblingPanel = (arg0: string, cb: (arg0: PanelConfig) => PanelConfig) => void;
+
+export type PanelConfigSchemaEntry<ConfigKey = string> =
+  | { configKey: ConfigKey; type: "checkbox"; title: string }
+  | {
+      configKey: ConfigKey;
+      type: "dropdown";
+      title: string;
+      options: { value: string | number; text: string }[];
+    };
+export type PanelConfigSchema<ConfigKey> = PanelConfigSchemaEntry<ConfigKey>[];

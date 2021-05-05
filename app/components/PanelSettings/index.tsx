@@ -11,6 +11,8 @@ import { PanelIdContext } from "@foxglove-studio/app/context/PanelIdContext";
 import { State } from "@foxglove-studio/app/reducers";
 import { getPanelTypeFromId } from "@foxglove-studio/app/util/layout";
 
+import SchemaEditor from "./SchemaEditor";
+
 export default function PanelSettings(): JSX.Element {
   const selectedPanelId = useSelector((state: State) =>
     state.mosaic.selectedPanelIds.length === 1 ? state.mosaic.selectedPanelIds[0] : undefined,
@@ -34,7 +36,7 @@ export default function PanelSettings(): JSX.Element {
       `Attempt to render settings but no panel component could be found for panel id ${selectedPanelId}`,
     );
   }
-  if (!panelInfo.component.Settings) {
+  if (!panelInfo.component.configSchema) {
     return (
       <SidebarContent title={panelInfo.title}>
         This panel does not provide any settings.
@@ -46,7 +48,7 @@ export default function PanelSettings(): JSX.Element {
     <SidebarContent title={panelInfo.title}>
       <StrictMode>
         <PanelIdContext.Provider value={selectedPanelId}>
-          <panelInfo.component.Settings />
+          <SchemaEditor configSchema={panelInfo.component.configSchema} />
         </PanelIdContext.Provider>
       </StrictMode>
     </SidebarContent>

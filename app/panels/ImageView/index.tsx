@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Checkbox } from "@fluentui/react";
 import CheckboxBlankOutlineIcon from "@mdi/svg/svg/checkbox-blank-outline.svg";
 import CheckboxMarkedIcon from "@mdi/svg/svg/checkbox-marked.svg";
 import CloseIcon from "@mdi/svg/svg/close.svg";
@@ -40,7 +39,7 @@ import { MessageEvent } from "@foxglove-studio/app/players/types";
 import inScreenshotTests from "@foxglove-studio/app/stories/inScreenshotTests";
 import colors from "@foxglove-studio/app/styles/colors.module.scss";
 import { CameraInfo, StampedMessage } from "@foxglove-studio/app/types/Messages";
-import { SaveConfig } from "@foxglove-studio/app/types/panels";
+import { PanelConfigSchema, SaveConfig } from "@foxglove-studio/app/types/panels";
 import { nonEmptyOrUndefined } from "@foxglove-studio/app/util/emptyOrUndefined";
 import filterMap from "@foxglove-studio/app/util/filterMap";
 import naturalSort from "@foxglove-studio/app/util/naturalSort";
@@ -677,22 +676,7 @@ function ImageView(props: Props) {
   );
 }
 
-function ImageViewSettings(): JSX.Element {
-  const [{ synchronize }, saveConfig] = PanelAPI.useConfig<Config>();
-
-  return (
-    <>
-      <Checkbox
-        label="Synchronize images and markers"
-        checked={synchronize}
-        onChange={(_event, checked) => saveConfig({ synchronize: checked })}
-      />
-    </>
-  );
-}
-
-ImageView.panelType = "ImageViewPanel";
-ImageView.defaultConfig = {
+const defaultConfig: Config = {
   cameraTopic: "",
   enabledMarkerTopics: [],
   customMarkerTopicOptions: [],
@@ -702,8 +686,27 @@ ImageView.defaultConfig = {
   mode: "fit",
   zoomPercentage: 100,
   offset: [0, 0],
-} as Config;
-ImageView.supportsStrictMode = false;
-ImageView.Settings = ImageViewSettings;
+};
 
-export default Panel(ImageView);
+const configSchema: PanelConfigSchema<keyof Config> = [
+  { configKey: "synchronize", type: "checkbox", title: "Synchronize images and markers" },
+  {
+    configKey: "scale",
+    type: "dropdown",
+    title: "Image resolution",
+    options: [
+      { value: 0.2, text: "20%" },
+      { value: 0.5, text: "50%" },
+      { value: 1, text: "100%" },
+    ],
+  },
+];
+
+export default Panel(
+  Object.assign(ImageView, {
+    panelType: "ImageViewPanel",
+    defaultConfig,
+    configSchema,
+    supportsStrictMode: false,
+  }),
+);
