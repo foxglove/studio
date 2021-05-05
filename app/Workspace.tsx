@@ -20,6 +20,7 @@ import styled from "styled-components";
 import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
 import { redoLayoutChange, undoLayoutChange } from "@foxglove-studio/app/actions/layoutHistory";
 import { importPanelLayout, loadLayout } from "@foxglove-studio/app/actions/panels";
+import ConnectionList from "@foxglove-studio/app/components/ConnectionList";
 import DocumentDropListener from "@foxglove-studio/app/components/DocumentDropListener";
 import DropOverlay from "@foxglove-studio/app/components/DropOverlay";
 import GlobalKeyListener from "@foxglove-studio/app/components/GlobalKeyListener";
@@ -39,7 +40,6 @@ import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToB
 import ShortcutsModal from "@foxglove-studio/app/components/ShortcutsModal";
 import Sidebar, { SidebarItem } from "@foxglove-studio/app/components/Sidebar";
 import { SidebarContent } from "@foxglove-studio/app/components/SidebarContent";
-import TinyConnectionPicker from "@foxglove-studio/app/components/TinyConnectionPicker";
 import Toolbar from "@foxglove-studio/app/components/Toolbar";
 import { useAppConfiguration } from "@foxglove-studio/app/context/AppConfigurationContext";
 import { useAssets } from "@foxglove-studio/app/context/AssetContext";
@@ -73,15 +73,27 @@ const TruncatedText = styled.span`
   line-height: normal;
 `;
 
-type SidebarItemKey = "add-panel" | "variables" | "preferences";
+type SidebarItemKey = "connection" | "add-panel" | "variables" | "preferences";
 
 const SIDEBAR_ITEMS = new Map<SidebarItemKey, SidebarItem>([
+  [
+    "connection",
+    { iconName: "DataManagementSettings", title: "Connection", component: Connection },
+  ],
   ["add-panel", { iconName: "MediaAdd", title: "Add Panel", component: AddPanel }],
   ["variables", { iconName: "Rename", title: "Variables", component: Variables }],
   ["preferences", { iconName: "Settings", title: "Preferences", component: Preferences }],
 ]);
 
 const SIDEBAR_BOTTOM_ITEMS: readonly SidebarItemKey[] = ["preferences"];
+
+function Connection() {
+  return (
+    <SidebarContent noPadding title="Connection">
+      <ConnectionList />
+    </SidebarContent>
+  );
+}
 
 function AddPanel() {
   const selectPanel = useSelectPanel();
@@ -264,14 +276,14 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
         )}
 
         <Toolbar onDoubleClick={OsContextSingleton?.handleToolbarDoubleClick}>
+          <div style={{ flexGrow: 1 }} />
           <SToolbarItem>
-            <TinyConnectionPicker />
-          </SToolbarItem>
-          <SToolbarItem style={{ flex: "0 1 auto" }}>
-            <TruncatedText>{currentSourceName ?? "Select a data source"}</TruncatedText>{" "}
             <PlayerStatusIndicator />
           </SToolbarItem>
-          <div style={{ flexGrow: 1 }}></div>
+          <SToolbarItem>
+            <TruncatedText>{currentSourceName ?? "Select a data source"}</TruncatedText>{" "}
+          </SToolbarItem>
+          <div style={{ flexGrow: 1 }} />
           <SToolbarItem style={{ marginRight: 5 }}>
             {!inAutomatedRunMode() && <NotificationDisplay />}
           </SToolbarItem>
