@@ -89,10 +89,10 @@ export const constantsByDatatype = createSelector<any, any, any, any>(
   },
 ) as FixedParametricSelector<any, any, any>;
 
-// Studio enum annotations are of the form: "Foo__studio_enum" (notice double underscore)
+// Studio enum annotations are of the form: "Foo__foxglove_enum" (notice double underscore)
 // This method returns type name from "Foo" or undefined name doesn't match this format
 export function extractTypeFromStudioEnumAnnotation(name: string): string | undefined {
-  const matches = [/(.*)__studio_enum$/.exec(name), /(.*)__webviz_enum$/.exec(name)];
+  const matches = [/(.*)__foxglove_enum$/.exec(name), /(.*)__webviz_enum$/.exec(name)];
   for (const match of matches) {
     if (match) {
       return match[1];
@@ -142,7 +142,7 @@ export const enumValuesByDatatypeAndField = createSelector<any, any, any, any>(
           }
           continue;
         }
-        // check if current field is annotation of the form: "Foo bar__studio_enum"
+        // check if current field is annotation of the form: "Foo bar__foxglove_enum"
         // This means that "bar" is enum of type "Foo"
         const fieldName = extractTypeFromStudioEnumAnnotation(field.name);
         if (fieldName != undefined) {
