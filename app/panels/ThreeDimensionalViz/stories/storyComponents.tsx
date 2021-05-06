@@ -132,7 +132,7 @@ export class FixtureExample extends React.Component<FixtureExampleProps, Fixture
           {this.props.futureTime != undefined && (
             <div style={{ height: "100px" }}>
               <GlobalVariableSliderPanel
-                config={{
+                overrideConfig={{
                   sliderProps: { min: 0, max: 12, step: 0.5 },
                   globalVariableName: "futureTime",
                 }}

@@ -98,7 +98,7 @@ const PerfInfo = styled.div`
 
 type Props<Config> = {
   childId?: string;
-  config?: Config;
+  overrideConfig?: Config;
   tabId?: string;
 };
 
@@ -129,7 +129,7 @@ export default function Panel<Config extends PanelConfig>(
     PanelStatics<Config>,
 ): ComponentType<Props<Config>> & PanelStatics<Config> {
   function ConnectedPanel(props: Props<Config>) {
-    const { childId, config: overrideConfig, tabId } = props;
+    const { childId, overrideConfig, tabId } = props;
     const { mosaicActions }: { mosaicActions: MosaicRootActions<any> } = useContext(MosaicContext);
     const { mosaicWindowActions }: { mosaicWindowActions: MosaicWindowActions } = useContext(
       MosaicWindowContext,

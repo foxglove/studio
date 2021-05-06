@@ -36,8 +36,8 @@ export function useConfig<Config>(): [Config, SaveConfig<Config>] {
  * directly, but is for use in internal code that's running outside of regular context providers.
  */
 export function useConfigById<Config>(
-  panelId?: string,
-  defaultConfig?: Config,
+  panelId: string | undefined,
+  defaultConfig: Config | undefined,
 ): [Config, SaveConfig<Config>] {
   const config = useSelector((state: State) =>
     panelId != undefined

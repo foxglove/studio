@@ -156,7 +156,7 @@ storiesOf("panels/NodePlayground", module)
         userNodeLogs: { nodeId1: { logs: [] } },
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ))
   .add("Editor shows new code when userNodes change", () => (
@@ -187,7 +187,7 @@ storiesOf("panels/NodePlayground", module)
         }, 500);
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
       <SExpectedResult style={{ left: "375px", top: "150px" }}>
         Should show function norm() code
       </SExpectedResult>
@@ -208,7 +208,7 @@ storiesOf("panels/NodePlayground", module)
       }}
     >
       <NodePlayground
-        config={{
+        overrideConfig={{
           selectedNodeId: "nodeId1",
           additionalBackStackItems: [
             {
@@ -241,7 +241,7 @@ storiesOf("panels/NodePlayground", module)
       }}
     >
       <NodePlayground
-        config={{
+        overrideConfig={{
           selectedNodeId: "nodeId1",
           additionalBackStackItems: [
             {
@@ -278,7 +278,7 @@ storiesOf("panels/NodePlayground", module)
           }, SIDEBAR_OPEN_CLICK_TIMEOUT);
         }}
       >
-        <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+        <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
       </PanelSetup>
     );
   })
@@ -292,7 +292,7 @@ storiesOf("panels/NodePlayground", module)
           }, SIDEBAR_OPEN_CLICK_TIMEOUT);
         }}
       >
-        <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+        <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
       </PanelSetup>
     );
   })
@@ -306,7 +306,7 @@ storiesOf("panels/NodePlayground", module)
           }, SIDEBAR_OPEN_CLICK_TIMEOUT);
         }}
       >
-        <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+        <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
       </PanelSetup>
     );
   })
@@ -361,7 +361,9 @@ storiesOf("panels/NodePlayground", module)
     };
     return (
       <PanelSetup fixture={{ ...fixture, userNodes }}>
-        <NodePlayground config={{ selectedNodeId: "nodeId1", editorForStorybook: <NeverLoad /> }} />
+        <NodePlayground
+          overrideConfig={{ selectedNodeId: "nodeId1", editorForStorybook: <NeverLoad /> }}
+        />
       </PanelSetup>
     );
   })
@@ -373,7 +375,7 @@ storiesOf("panels/NodePlayground", module)
         userNodeDiagnostics: { nodeId1: { diagnostics: [] } },
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ))
   .add("BottomBar - no errors - open", () => (
@@ -392,7 +394,7 @@ storiesOf("panels/NodePlayground", module)
         }, OPEN_BOTTOM_BAR_TIMEOUT);
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ))
   .add("BottomBar - no logs - open", () => (
@@ -411,7 +413,7 @@ storiesOf("panels/NodePlayground", module)
         }, OPEN_BOTTOM_BAR_TIMEOUT);
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ))
   .add("BottomBar - errors - closed", () => (
@@ -457,7 +459,7 @@ storiesOf("panels/NodePlayground", module)
         },
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ))
   .add("BottomBar - errors - open", () => (
@@ -511,7 +513,7 @@ storiesOf("panels/NodePlayground", module)
         }, OPEN_BOTTOM_BAR_TIMEOUT);
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ))
   .add("BottomBar - logs - closed", () => (
@@ -528,7 +530,7 @@ storiesOf("panels/NodePlayground", module)
         userNodeLogs: { nodeId1: { logs } },
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ))
   .add("BottomBar - logs - open", () => (
@@ -553,7 +555,7 @@ storiesOf("panels/NodePlayground", module)
         }, OPEN_BOTTOM_BAR_TIMEOUT);
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ))
   .add("BottomBar - cleared logs", () => (
@@ -577,7 +579,7 @@ storiesOf("panels/NodePlayground", module)
         }, OPEN_BOTTOM_BAR_TIMEOUT);
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ))
   .add("Settings", () => {

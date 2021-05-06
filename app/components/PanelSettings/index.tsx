@@ -62,7 +62,10 @@ export default function PanelSettings(): JSX.Element {
     );
   }, [selectedPanelId, showShareModal, store, dispatch]);
 
-  const [config, saveConfig] = useConfigById<Record<string, unknown>>(selectedPanelId);
+  const [config, saveConfig] = useConfigById<Record<string, unknown>>(
+    selectedPanelId,
+    panelInfo?.component.defaultConfig,
+  );
 
   if (selectedPanelId == undefined) {
     return (

@@ -39,7 +39,7 @@ export function NoTopic(): React.ReactElement {
 export function TopicButNoDataSource(): React.ReactElement {
   return (
     <PanelSetup>
-      <ImageView config={{ ...ImageView.defaultConfig, cameraTopic: "a_topic" }} />
+      <ImageView overrideConfig={{ ...ImageView.defaultConfig, cameraTopic: "a_topic" }} />
     </PanelSetup>
   );
 }
@@ -48,7 +48,7 @@ export function TopicButNoDataSourceHovered(): React.ReactElement {
   useHoverOnPanel();
   return (
     <PanelSetup>
-      <ImageView config={{ ...ImageView.defaultConfig, cameraTopic: "a_topic" }} />
+      <ImageView overrideConfig={{ ...ImageView.defaultConfig, cameraTopic: "a_topic" }} />
     </PanelSetup>
   );
 }
@@ -82,7 +82,7 @@ function AvailableTopicsStory({
         frame: {},
       }}
     >
-      <ImageView config={{ ...ImageView.defaultConfig, cameraTopic, scale: 1 }} />
+      <ImageView overrideConfig={{ ...ImageView.defaultConfig, cameraTopic, scale: 1 }} />
     </PanelSetup>
   );
 }
