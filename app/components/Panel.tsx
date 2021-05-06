@@ -65,6 +65,7 @@ import MultiProvider from "@foxglove-studio/app/components/MultiProvider";
 import PanelContext from "@foxglove-studio/app/components/PanelContext";
 import { usePanelCatalog } from "@foxglove-studio/app/context/PanelCatalogContext";
 import { PanelIdContext } from "@foxglove-studio/app/context/PanelIdContext";
+import { usePanelSettings } from "@foxglove-studio/app/context/PanelSettingsContext";
 import usePanelDrag from "@foxglove-studio/app/hooks/usePanelDrag";
 import { State } from "@foxglove-studio/app/reducers";
 import { TabPanelConfig } from "@foxglove-studio/app/types/layouts";
@@ -316,6 +317,8 @@ export default function Panel<Config extends PanelConfig>(
       [store, actions, tabId],
     );
 
+    const { panelSettingsOpen } = usePanelSettings();
+
     const onOverlayClick = useCallback(
       (e: MouseEvent) => {
         if (!fullScreen && quickActionsKeyPressed) {
@@ -326,8 +329,15 @@ export default function Panel<Config extends PanelConfig>(
           return;
         }
 
-        if (childId != undefined && (e.metaKey || shiftKeyPressed || isSelected)) {
-          e.stopPropagation();
+        if (childId == undefined) {
+          return;
+        }
+        if (panelSettingsOpen) {
+          // Allow clicking with no modifiers to select a panel (and deselect others) when panel settings are open
+          e.stopPropagation(); // select the deepest clicked panel, not parent tab panels
+          actions.setSelectedPanelIds(isSelected ? [] : [childId]);
+        } else if (e.metaKey || shiftKeyPressed || isSelected) {
+          e.stopPropagation(); // select the deepest clicked panel, not parent tab panels
           togglePanelSelected(childId);
         }
       },
@@ -338,6 +348,8 @@ export default function Panel<Config extends PanelConfig>(
         togglePanelSelected,
         shiftKeyPressed,
         isSelected,
+        actions,
+        panelSettingsOpen,
       ],
     );
 

@@ -11,7 +11,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Stack } from "@fluentui/react";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { useToasts } from "react-toast-notifications";
 import { useMountedState } from "react-use";
@@ -29,6 +29,7 @@ import HelpModal from "@foxglove-studio/app/components/HelpModal";
 import LayoutMenu from "@foxglove-studio/app/components/LayoutMenu";
 import messagePathHelp from "@foxglove-studio/app/components/MessagePathSyntax/index.help.md";
 import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipeline";
+import MultiProvider from "@foxglove-studio/app/components/MultiProvider";
 import NotificationDisplay from "@foxglove-studio/app/components/NotificationDisplay";
 import PanelLayout from "@foxglove-studio/app/components/PanelLayout";
 import PanelList from "@foxglove-studio/app/components/PanelList";
@@ -45,6 +46,7 @@ import Toolbar from "@foxglove-studio/app/components/Toolbar";
 import { useAppConfiguration } from "@foxglove-studio/app/context/AppConfigurationContext";
 import { useAssets } from "@foxglove-studio/app/context/AssetContext";
 import LinkHandlerContext from "@foxglove-studio/app/context/LinkHandlerContext";
+import { PanelSettingsContext } from "@foxglove-studio/app/context/PanelSettingsContext";
 import { usePlayerSelection } from "@foxglove-studio/app/context/PlayerSelectionContext";
 import useElectronFilesToOpen from "@foxglove-studio/app/hooks/useElectronFilesToOpen";
 import useNativeAppMenuEvent from "@foxglove-studio/app/hooks/useNativeAppMenuEvent";
@@ -265,8 +267,23 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
   const showPlaybackControls =
     playerPresence === PlayerPresence.NOT_PRESENT || playerCapabilities.includes("playbackControl");
 
+  const panelSettings = useMemo(
+    () => ({
+      panelSettingsOpen: selectedSidebarItem === "panel-settings",
+      openPanelSettings: () => setSelectedSidebarItem("panel-settings"),
+    }),
+    [selectedSidebarItem],
+  );
+
   return (
-    <LinkHandlerContext.Provider value={handleInternalLink}>
+    <MultiProvider
+      providers={[
+        /* eslint-disable react/jsx-key */
+        <LinkHandlerContext.Provider value={handleInternalLink} />,
+        <PanelSettingsContext.Provider value={panelSettings} />,
+        /* eslint-enable react/jsx-key */
+      ]}
+    >
       <DocumentDropListener filesSelected={dropHandler} allowedExtensions={allowedDropExtensions}>
         <DropOverlay>
           <div style={{ fontSize: "4em", marginBottom: "1em" }}>Drop a file here</div>
@@ -317,6 +334,6 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
           </Stack>
         </Sidebar>
       </div>
-    </LinkHandlerContext.Provider>
+    </MultiProvider>
   );
 }
