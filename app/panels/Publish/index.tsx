@@ -11,8 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import CheckboxBlankOutlineIcon from "@mdi/svg/svg/checkbox-blank-outline.svg";
-import CheckboxMarkedIcon from "@mdi/svg/svg/checkbox-marked.svg";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import styled from "styled-components";
 
@@ -20,10 +18,8 @@ import { useDataSourceInfo } from "@foxglove-studio/app/PanelAPI";
 import Autocomplete from "@foxglove-studio/app/components/Autocomplete";
 import Button from "@foxglove-studio/app/components/Button";
 import Flex from "@foxglove-studio/app/components/Flex";
-import Item from "@foxglove-studio/app/components/Menu/Item";
 import Panel from "@foxglove-studio/app/components/Panel";
 import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
-import PanelToolbarInput from "@foxglove-studio/app/components/PanelToolbarInput";
 import PanelToolbarLabel from "@foxglove-studio/app/components/PanelToolbarLabel";
 import usePublisher from "@foxglove-studio/app/hooks/usePublisher";
 import { PlayerCapabilities, Topic } from "@foxglove-studio/app/players/types";
