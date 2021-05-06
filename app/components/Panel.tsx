@@ -43,6 +43,7 @@ import { useSelector, useDispatch, useStore } from "react-redux";
 import { bindActionCreators } from "redux";
 import styled from "styled-components";
 
+import { useConfigById } from "@foxglove-studio/app/PanelAPI";
 import {
   addSelectedPanelId,
   removeSelectedPanelId,
@@ -98,7 +99,6 @@ const PerfInfo = styled.div`
 type Props<Config> = {
   childId?: string;
   config?: Config;
-  saveConfig?: (arg0: Config) => void;
   tabId?: string;
 };
 
@@ -108,8 +108,6 @@ export interface PanelStatics<Config> {
   supportsStrictMode?: boolean;
   configSchema?: PanelConfigSchema<Config>;
 }
-
-const EMPTY_CONFIG = Object.freeze({});
 
 // Like React.ComponentType<P>, but without restrictions on the constructor return type.
 type ComponentConstructorType<P> = { displayName?: string } & (
@@ -131,7 +129,7 @@ export default function Panel<Config extends PanelConfig>(
     PanelStatics<Config>,
 ): ComponentType<Props<Config>> & PanelStatics<Config> {
   function ConnectedPanel(props: Props<Config>) {
-    const { childId, config: originalConfig, saveConfig, tabId } = props;
+    const { childId, config: overrideConfig, tabId } = props;
     const { mosaicActions }: { mosaicActions: MosaicRootActions<any> } = useContext(MosaicContext);
     const { mosaicWindowActions }: { mosaicWindowActions: MosaicWindowActions } = useContext(
       MosaicWindowContext,
@@ -159,12 +157,6 @@ export default function Panel<Config extends PanelConfig>(
       tabId != undefined || state.persistedState.panels.layout == undefined
         ? false
         : !isParent(state.persistedState.panels.layout),
-    );
-    const config = useSelector(
-      (state: State) =>
-        (childId == undefined ? undefined : state.persistedState.panels.savedProps[childId]) ??
-        originalConfig ??
-        EMPTY_CONFIG,
     );
 
     const dispatch = useDispatch();
@@ -198,27 +190,12 @@ export default function Panel<Config extends PanelConfig>(
     const panelsByType = useMemo(() => panelCatalog.getPanelsByType(), [panelCatalog]);
     const type = PanelComponent.panelType;
     const title = useMemo(() => panelsByType.get(type)?.title ?? "", [panelsByType, type]);
-    const panelComponentConfig = useMemo(() => ({ ...PanelComponent.defaultConfig, ...config }), [
-      config,
-    ]);
 
-    // Mix partial config with current config or `defaultConfig`
-    // FIXME: useConfig here
-    const saveCompleteConfig = useCallback(
-      (configToSave: Partial<Config>) => {
-        if (saveConfig) {
-          saveConfig(configToSave as any);
-        }
-        if (childId != undefined) {
-          actions.savePanelConfigs({
-            configs: [
-              { id: childId, config: configToSave, defaultConfig: PanelComponent.defaultConfig },
-            ],
-          });
-        }
-      },
-      [actions, childId, saveConfig],
-    );
+    const [config, saveConfig] = useConfigById<Config>(childId, PanelComponent.defaultConfig);
+    const panelComponentConfig = useMemo(() => ({ ...config, ...overrideConfig }), [
+      config,
+      overrideConfig,
+    ]);
 
     const updatePanelConfig = useCallback(
       (panelType: string, perPanelFunc: (arg0: PanelConfig) => PanelConfig) => {
@@ -494,8 +471,8 @@ export default function Panel<Config extends PanelConfig>(
     }, [exitFullScreen, onReleaseQuickActionsKey]);
 
     const child = useMemo(
-      () => <PanelComponent config={panelComponentConfig} saveConfig={saveCompleteConfig} />,
-      [panelComponentConfig, saveCompleteConfig],
+      () => <PanelComponent config={panelComponentConfig} saveConfig={saveConfig} />,
+      [panelComponentConfig, saveConfig],
     );
 
     const renderCount = useRef(0);
@@ -544,7 +521,7 @@ export default function Panel<Config extends PanelConfig>(
                 id: childId as any,
                 title,
                 config,
-                saveConfig: saveCompleteConfig as any,
+                saveConfig: saveConfig as SaveConfig<PanelConfig>,
                 updatePanelConfig,
                 openSiblingPanel,
                 enterFullscreen,

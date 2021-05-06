@@ -4,7 +4,6 @@
 
 import { useCallback, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { DeepReadonly } from "ts-essentials";
 
 import { savePanelConfigs } from "@foxglove-studio/app/actions/panels";
 import { usePanelCatalog } from "@foxglove-studio/app/context/PanelCatalogContext";
@@ -13,19 +12,11 @@ import { State } from "@foxglove-studio/app/reducers";
 import { SaveConfig } from "@foxglove-studio/app/types/panels";
 import { getPanelTypeFromId } from "@foxglove-studio/app/util/layout";
 
-export function useConfig<Config>(): [DeepReadonly<Config>, SaveConfig<Config>] {
+/**
+ * Mix partial panel config from savedProps with the panel type's `defaultConfig` to form the complete panel configuration.
+ */
+export function useConfig<Config>(): [Config, SaveConfig<Config>] {
   const panelId = usePanelId();
-  return useConfigById(panelId);
-}
-
-export function useConfigById<Config>(
-  panelId?: string,
-): [DeepReadonly<Config>, SaveConfig<Config>] {
-  const config = useSelector((state: State) =>
-    panelId != undefined
-      ? (state.persistedState.panels.savedProps[panelId] as Config | undefined)
-      : undefined,
-  );
   const panelCatalog = usePanelCatalog();
   const panelComponent = useMemo(
     () =>
@@ -37,33 +28,43 @@ export function useConfigById<Config>(
   if (panelId != undefined && !panelComponent) {
     throw new Error(`Attempt to useConfig() with unknown panel id ${panelId}`);
   }
-  if (panelId != undefined && !panelComponent?.defaultConfig) {
-    throw new Error(
-      `Attempt to useConfig() but panel component ${
-        panelComponent?.displayName ?? panelComponent?.name
-      } has no defaultConfig`,
-    );
+  return useConfigById(panelId, panelComponent?.defaultConfig);
+}
+
+/**
+ * Like `useConfig`, but for a specific panel id. This generally shouldn't be used by panels
+ * directly, but is for use in internal code that's running outside of regular context providers.
+ */
+export function useConfigById<Config>(
+  panelId?: string,
+  defaultConfig?: Config,
+): [Config, SaveConfig<Config>] {
+  const config = useSelector((state: State) =>
+    panelId != undefined
+      ? (state.persistedState.panels.savedProps[panelId] as Config | undefined)
+      : undefined,
+  );
+  if (panelId != undefined && !defaultConfig) {
+    throw new Error(`Attempt to useConfig() but panel ${panelId} has no defaultConfig`);
   }
 
   const dispatch = useDispatch();
 
   const saveConfig: SaveConfig<Config> = useCallback(
     (newConfig) => {
-      if (panelId != undefined) {
+      if (panelId != undefined && defaultConfig != undefined) {
         dispatch(
           savePanelConfigs({
-            configs: [
-              { id: panelId, config: newConfig, defaultConfig: panelComponent?.defaultConfig },
-            ],
+            configs: [{ id: panelId, config: newConfig, defaultConfig }],
           }),
         );
       }
     },
-    [dispatch, panelComponent?.defaultConfig, panelId],
+    [dispatch, defaultConfig, panelId],
   );
 
-  const mergedConfig = useMemo(() => ({ ...panelComponent?.defaultConfig, ...config }), [
-    panelComponent,
+  const mergedConfig = useMemo(() => ({ ...(defaultConfig as Config), ...config }), [
+    defaultConfig,
     config,
   ]);
 
