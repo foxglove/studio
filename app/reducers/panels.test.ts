@@ -14,6 +14,7 @@
 
 import { getLeaves, MosaicParent } from "react-mosaic-component";
 
+import { setSelectedPanelIds } from "@foxglove-studio/app/actions/mosaic";
 import {
   changePanelLayout,
   savePanelConfigs,
@@ -55,9 +56,8 @@ function GetGlobalState() {
 
 const getStore = () => {
   const store = getGlobalStoreForTest();
-  const checkState = (fn: (arg: Pick<State, "persistedState">) => void) => {
-    const { persistedState } = store.getState();
-    fn({ persistedState });
+  const checkState = (fn: (arg: State) => void) => {
+    fn(store.getState());
   };
   return { store, checkState };
 };
@@ -524,15 +524,18 @@ describe("state.persistedState", () => {
     store.dispatch(
       importPanelLayout({ layout: "Audio!a", savedProps: { "Audio!a": { foo: "bar" } } }),
     );
+    store.dispatch(setSelectedPanelIds(["Audio!a", "unknown!b"]));
     store.dispatch(closePanel({ root: "Audio!a", path: [] }));
     checkState(
       ({
         persistedState: {
           panels: { layout, savedProps },
         },
+        mosaic: { selectedPanelIds },
       }) => {
         expect(layout).toEqual(undefined);
         expect(savedProps).toEqual({});
+        expect(selectedPanelIds).toEqual(["unknown!b"]);
       },
     );
   });
@@ -545,10 +548,12 @@ describe("state.persistedState", () => {
       savedProps: { "Audio!a": { foo: "bar" }, "Audio!b": { foo: "baz" } },
     };
     store.dispatch(importPanelLayout(panelLayout));
+    store.dispatch(setSelectedPanelIds(["Audio!a", "Audio!b"]));
     store.dispatch(closePanel({ root: panelLayout.layout, path: ["first"] }));
-    checkState(({ persistedState: { panels } }) => {
+    checkState(({ persistedState: { panels }, mosaic: { selectedPanelIds } }) => {
       expect(panels.layout).toEqual("Audio!b");
       expect(panels.savedProps).toEqual({ "Audio!b": { foo: "baz" } });
+      expect(selectedPanelIds).toEqual(["Audio!b"]);
     });
   });
 
@@ -562,12 +567,14 @@ describe("state.persistedState", () => {
       },
     };
     store.dispatch(importPanelLayout(panelLayout));
+    store.dispatch(setSelectedPanelIds(["Audio!a"]));
     store.dispatch(closePanel({ root: "Audio!a", path: [], tabId: "Tab!a" }));
-    checkState(({ persistedState: { panels } }) => {
+    checkState(({ persistedState: { panels }, mosaic: { selectedPanelIds } }) => {
       expect(panels.layout).toEqual("Tab!a");
       expect(panels.savedProps).toEqual({
         "Tab!a": { activeTabIdx: 0, tabs: [{ title: "A", layout: undefined }] },
       });
+      expect(selectedPanelIds).toEqual([]);
     });
   });
 

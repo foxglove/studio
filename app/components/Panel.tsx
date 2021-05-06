@@ -54,6 +54,7 @@ import {
   saveFullPanelConfig,
   changePanelLayout,
   createTabPanel,
+  closePanel,
 } from "@foxglove-studio/app/actions/panels";
 import Button from "@foxglove-studio/app/components/Button";
 import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
@@ -67,14 +68,7 @@ import { PanelIdContext } from "@foxglove-studio/app/context/PanelIdContext";
 import usePanelDrag from "@foxglove-studio/app/hooks/usePanelDrag";
 import { State } from "@foxglove-studio/app/reducers";
 import { TabPanelConfig } from "@foxglove-studio/app/types/layouts";
-import {
-  CreateTabPanelPayload,
-  SaveConfigsPayload,
-  SaveFullConfigPayload,
-  PanelConfig,
-  SaveConfig,
-  PanelConfigSchema,
-} from "@foxglove-studio/app/types/panels";
+import { PanelConfig, SaveConfig, PanelConfigSchema } from "@foxglove-studio/app/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove-studio/app/util/globalConstants";
 import {
   getAllPanelIds,
@@ -105,16 +99,6 @@ type Props<Config> = {
   config?: Config;
   saveConfig?: (arg0: Config) => void;
   tabId?: string;
-};
-type ActionProps = {
-  savePanelConfigs: (arg0: SaveConfigsPayload) => void;
-  saveFullPanelConfig: (arg0: SaveFullConfigPayload) => PanelConfig;
-  changePanelLayout: (panels: any) => void;
-  addSelectedPanelId: (panelId: string) => void;
-  removeSelectedPanelId: (panelId: string) => void;
-  setSelectedPanelIds: (panelIds: string[]) => void;
-  selectAllPanelIds: () => void;
-  createTabPanel: (arg0: CreateTabPanelPayload) => void;
 };
 
 export interface PanelStatics<Config> {
@@ -183,11 +167,12 @@ export default function Panel<Config extends PanelConfig>(
     );
 
     const dispatch = useDispatch();
-    const actions: ActionProps = useMemo(
+    const actions = useMemo(
       () =>
         bindActionCreators(
           {
             savePanelConfigs,
+            closePanel,
             saveFullPanelConfig,
             changePanelLayout,
             addSelectedPanelId,
@@ -384,7 +369,7 @@ export default function Panel<Config extends PanelConfig>(
       });
     }, [store, actions, childId]);
 
-    const closePanel = useCallback(() => {
+    const removePanel = useCallback(() => {
       const name = getEventNames().PANEL_REMOVE;
       const eventType = getEventTags().PANEL_TYPE;
       if (name != undefined && eventType !== undefined) {
@@ -393,8 +378,12 @@ export default function Panel<Config extends PanelConfig>(
           tags: { [eventType]: type },
         });
       }
-      mosaicActions.remove(mosaicWindowActions.getPath());
-    }, [mosaicActions, mosaicWindowActions, type]);
+      actions.closePanel({
+        path: mosaicWindowActions.getPath(),
+        root: mosaicActions.getRoot(),
+        tabId,
+      });
+    }, [actions, mosaicActions, mosaicWindowActions, tabId, type]);
 
     const splitPanel = useCallback(() => {
       const savedProps = store.getState().persistedState.panels.savedProps;
@@ -611,7 +600,7 @@ export default function Panel<Config extends PanelConfig>(
                     {shiftKeyPressed ? "Lock fullscreen" : "Fullscreen (Shift+click to lock)"}
                   </div>
                   <div>
-                    <Button onClick={closePanel} disabled={isOnlyPanel}>
+                    <Button onClick={removePanel} disabled={isOnlyPanel}>
                       <TrashCanOutlineIcon />
                       Remove
                     </Button>
