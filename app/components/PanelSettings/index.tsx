@@ -5,8 +5,10 @@
 import { DefaultButton, Stack, Text, useTheme } from "@fluentui/react";
 import { StrictMode, useContext, useMemo, useState } from "react";
 import { ReactReduxContext, useDispatch, useSelector } from "react-redux";
+import { useUnmount } from "react-use";
 
 import { useConfigById } from "@foxglove-studio/app/PanelAPI";
+import { removeSelectedPanelId } from "@foxglove-studio/app/actions/mosaic";
 import { savePanelConfigs } from "@foxglove-studio/app/actions/panels";
 import ShareJsonModal from "@foxglove-studio/app/components/ShareJsonModal";
 import { SidebarContent } from "@foxglove-studio/app/components/SidebarContent";
@@ -19,9 +21,16 @@ import { getPanelTypeFromId } from "@foxglove-studio/app/util/layout";
 import SchemaEditor from "./SchemaEditor";
 
 export default function PanelSettings(): JSX.Element {
+  const dispatch = useDispatch();
   const selectedPanelId = useSelector((state: State) =>
     state.mosaic.selectedPanelIds.length === 1 ? state.mosaic.selectedPanelIds[0] : undefined,
   );
+  useUnmount(() => {
+    // Automatically deselect the panel we were editing when the settings sidebar closes
+    if (selectedPanelId != undefined) {
+      dispatch(removeSelectedPanelId(selectedPanelId));
+    }
+  });
 
   const theme = useTheme();
   const panelCatalog = usePanelCatalog();
@@ -36,7 +45,6 @@ export default function PanelSettings(): JSX.Element {
   );
 
   const [showShareModal, setShowShareModal] = useState(false);
-  const dispatch = useDispatch();
   const shareModal = useMemo(() => {
     if (selectedPanelId == undefined || !showShareModal) {
       return ReactNull;
