@@ -224,10 +224,10 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
   // calculates the minX/maxX for all our datasets
   // we do this on the unfiltered datasets because we need the bounds to properly filter adjacent points
   const datasetBounds = useMemo(() => {
-    let xMin;
-    let xMax;
-    let yMin;
-    let yMax;
+    let xMin: number | undefined;
+    let xMax: number | undefined;
+    let yMin: number | undefined;
+    let yMax: number | undefined;
 
     for (const dataset of datasets) {
       for (const item of dataset.data) {
@@ -608,15 +608,53 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
       padding: 0,
     };
 
+    hasUserPannedOrZoomed;
+
+    let minY;
+    let maxY;
+
+    if (!hasUserPannedOrZoomed) {
+      const yBounds = datasetBounds.y;
+
+      // we prefer user specified bounds over dataset bounds
+      minY = yAxes.min ?? yBounds.min;
+      maxY = yAxes.max ?? yBounds.max;
+
+      // prevent max < min
+      if (maxY != undefined) {
+        minY = minY == undefined ? maxY : Math.min(maxY, minY);
+      }
+
+      // prevent min > max
+      if (minY != undefined) {
+        maxY = maxY == undefined ? minY : Math.max(maxY, minY);
+      }
+
+      // Add 5% grace around the range (i.e. padding) if the user hasn't specified manual settings
+      // for the min or max values respectively
+      if (maxY != undefined && minY != undefined) {
+        const range = Math.abs(maxY - minY);
+        if (yAxes.max == undefined) {
+          maxY += range * 0.05;
+        }
+
+        if (yAxes.min == undefined) {
+          minY -= range * 0.05;
+        }
+      }
+    }
+
     return {
       type: "linear",
       ...yAxes,
+      min: minY,
+      max: maxY,
       ticks: {
         ...defaultYTicksSettings,
         ...yAxes.ticks,
       },
     } as ScaleOptions;
-  }, [yAxes]);
+  }, [datasetBounds.y, yAxes, hasUserPannedOrZoomed]);
 
   const downsampleDatasets = useCallback(
     (fullDatasets: typeof datasets) => {
