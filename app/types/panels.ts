@@ -117,7 +117,7 @@ type KeyPathsOfImpl<T, Prefix extends string> =
     T extends Record<string, unknown>
     ? {
         [K in keyof T]-?: K extends string
-          ? `${Prefix}${K}` | KeyPathsOfImpl<T[K], Prefix extends "" ? `${K}.` : `${Prefix}.${K}.`>
+          ? `${Prefix}${K}` | KeyPathsOfImpl<T[K], `${Prefix}${K}.`>
           : never;
       }[keyof T]
     : never;
