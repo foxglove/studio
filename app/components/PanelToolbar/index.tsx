@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { ColumnVerticalSectionEditIcon } from "@fluentui/react-icons-mdl2";
 import AlertIcon from "@mdi/svg/svg/alert.svg";
 import ArrowSplitHorizontalIcon from "@mdi/svg/svg/arrow-split-horizontal.svg";
 import ArrowSplitVerticalIcon from "@mdi/svg/svg/arrow-split-vertical.svg";
@@ -27,6 +28,7 @@ import { useDispatch, useSelector, ReactReduxContext } from "react-redux";
 import { useResizeDetector } from "react-resize-detector";
 import { bindActionCreators } from "redux";
 
+import { setSelectedPanelIds } from "@foxglove-studio/app/actions/mosaic";
 import {
   savePanelConfigs,
   changePanelLayout,
@@ -42,6 +44,7 @@ import { Item, SubMenu } from "@foxglove-studio/app/components/Menu";
 import PanelContext from "@foxglove-studio/app/components/PanelContext";
 import PanelList, { PanelSelection } from "@foxglove-studio/app/components/PanelList";
 import { getPanelTypeFromMosaic } from "@foxglove-studio/app/components/PanelToolbar/utils";
+import { usePanelSettings } from "@foxglove-studio/app/context/PanelSettingsContext";
 import { State } from "@foxglove-studio/app/reducers";
 import frameless from "@foxglove-studio/app/util/frameless";
 import logEvent, { getEventNames, getEventTags } from "@foxglove-studio/app/util/logEvent";
@@ -71,7 +74,14 @@ function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknow
   const actions = useMemo(
     () =>
       bindActionCreators(
-        { savePanelConfigs, changePanelLayout, closePanel, splitPanel, swapPanel },
+        {
+          savePanelConfigs,
+          changePanelLayout,
+          closePanel,
+          splitPanel,
+          swapPanel,
+          setSelectedPanelIds,
+        },
         dispatch,
       ),
     [dispatch],
@@ -152,6 +162,14 @@ function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknow
   const { store } = useContext(ReactReduxContext);
   const panelContext = useContext(PanelContext);
 
+  const { openPanelSettings } = usePanelSettings();
+  const openSettings = useCallback(() => {
+    if (panelContext?.id != undefined) {
+      actions.setSelectedPanelIds([panelContext.id]);
+      openPanelSettings();
+    }
+  }, [actions, openPanelSettings, panelContext?.id]);
+
   const type = getPanelType();
   if (type == undefined) {
     return ReactNull;
@@ -204,6 +222,9 @@ function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknow
         tooltip="(shortcut: ` or ~)"
       >
         Remove panel
+      </Item>
+      <Item icon={<ColumnVerticalSectionEditIcon />} onClick={openSettings}>
+        Edit panel settings
       </Item>
     </>
   );
