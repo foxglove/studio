@@ -121,7 +121,7 @@ export interface PanelStatics<Config> {
   panelType: string;
   defaultConfig: Config;
   supportsStrictMode?: boolean;
-  configSchema?: PanelConfigSchema<string>;
+  configSchema?: PanelConfigSchema<Config>;
 }
 
 const EMPTY_CONFIG = Object.freeze({});
@@ -217,6 +217,7 @@ export default function Panel<Config extends PanelConfig>(
     ]);
 
     // Mix partial config with current config or `defaultConfig`
+    // FIXME: useConfig here
     const saveCompleteConfig = useCallback(
       (configToSave: Partial<Config>) => {
         if (saveConfig) {

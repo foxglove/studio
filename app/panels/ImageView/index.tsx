@@ -652,7 +652,7 @@ const defaultConfig: Config = {
   offset: [0, 0],
 };
 
-const configSchema: PanelConfigSchema<keyof Config> = [
+const configSchema: PanelConfigSchema<Config> = [
   { key: "synchronize", type: "toggle", title: "Synchronize images and markers" },
   {
     key: "scale",

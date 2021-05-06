@@ -1,6 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
+import SchemaEditor from "@foxglove-studio/app/components/PanelSettings/SchemaEditor";
 import DiagnosticSummary from "@foxglove-studio/app/panels/diagnostics/DiagnosticSummary";
 import {
   DiagnosticStatusArrayMsg,
@@ -106,5 +107,16 @@ export function Filtered(): JSX.Element {
         }}
       />
     </PanelSetup>
+  );
+}
+
+export function Settings(): JSX.Element {
+  return (
+    <SchemaEditor
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      configSchema={DiagnosticSummary.configSchema!}
+      config={DiagnosticSummary.defaultConfig}
+      saveConfig={() => {}}
+    />
   );
 }

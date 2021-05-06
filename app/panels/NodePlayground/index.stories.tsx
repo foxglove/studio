@@ -14,6 +14,7 @@
 import { storiesOf } from "@storybook/react";
 
 import { setUserNodes } from "@foxglove-studio/app/actions/panels";
+import SchemaEditor from "@foxglove-studio/app/components/PanelSettings/SchemaEditor";
 import NodePlayground, { Explorer } from "@foxglove-studio/app/panels/NodePlayground";
 import Sidebar from "@foxglove-studio/app/panels/NodePlayground/Sidebar";
 import testDocs from "@foxglove-studio/app/panels/NodePlayground/index.test.md";
@@ -578,4 +579,14 @@ storiesOf("panels/NodePlayground", module)
     >
       <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
-  ));
+  ))
+  .add("Settings", () => {
+    return (
+      <SchemaEditor
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        configSchema={NodePlayground.configSchema!}
+        config={NodePlayground.defaultConfig}
+        saveConfig={() => {}}
+      />
+    );
+  });

@@ -43,6 +43,8 @@ const icons: {
   More: <Icons.MoreIcon />,
   CodeEdit: <Icons.CodeEditIcon />,
   ClearSelection: <Icons.ClearSelectionIcon />,
+  ChevronUpSmall: <Icons.ChevronUpSmallIcon />,
+  ChevronDownSmall: <Icons.ChevronDownSmallIcon />,
   "studio.ROS": <RosIcon />,
 };
 

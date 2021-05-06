@@ -15,21 +15,32 @@ import { getPanelTypeFromId } from "@foxglove-studio/app/util/layout";
 
 export function useConfig<Config>(): [DeepReadonly<Config>, SaveConfig<Config>] {
   const panelId = usePanelId();
-  const config = useSelector(
-    (state: State) => state.persistedState.panels.savedProps[panelId] as Config | undefined,
+  return useConfigById(panelId);
+}
+
+export function useConfigById<Config>(
+  panelId?: string,
+): [DeepReadonly<Config>, SaveConfig<Config>] {
+  const config = useSelector((state: State) =>
+    panelId != undefined
+      ? (state.persistedState.panels.savedProps[panelId] as Config | undefined)
+      : undefined,
   );
   const panelCatalog = usePanelCatalog();
   const panelComponent = useMemo(
-    () => panelCatalog.getComponentForType(getPanelTypeFromId(panelId)),
+    () =>
+      panelId != undefined
+        ? panelCatalog.getComponentForType(getPanelTypeFromId(panelId))
+        : undefined,
     [panelCatalog, panelId],
   );
-  if (!panelComponent) {
+  if (panelId != undefined && !panelComponent) {
     throw new Error(`Attempt to useConfig() with unknown panel id ${panelId}`);
   }
-  if (!panelComponent.defaultConfig) {
+  if (panelId != undefined && !panelComponent?.defaultConfig) {
     throw new Error(
       `Attempt to useConfig() but panel component ${
-        panelComponent.displayName ?? panelComponent.name
+        panelComponent?.displayName ?? panelComponent?.name
       } has no defaultConfig`,
     );
   }
@@ -38,18 +49,20 @@ export function useConfig<Config>(): [DeepReadonly<Config>, SaveConfig<Config>] 
 
   const saveConfig: SaveConfig<Config> = useCallback(
     (newConfig) => {
-      dispatch(
-        savePanelConfigs({
-          configs: [
-            { id: panelId, config: newConfig, defaultConfig: panelComponent.defaultConfig },
-          ],
-        }),
-      );
+      if (panelId != undefined) {
+        dispatch(
+          savePanelConfigs({
+            configs: [
+              { id: panelId, config: newConfig, defaultConfig: panelComponent?.defaultConfig },
+            ],
+          }),
+        );
+      }
     },
-    [dispatch, panelComponent.defaultConfig, panelId],
+    [dispatch, panelComponent?.defaultConfig, panelId],
   );
 
-  const mergedConfig = useMemo(() => ({ ...panelComponent.defaultConfig, ...config }), [
+  const mergedConfig = useMemo(() => ({ ...panelComponent?.defaultConfig, ...config }), [
     panelComponent,
     config,
   ]);

@@ -230,7 +230,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
   );
 }
 
-const configSchema: PanelConfigSchema<keyof Config> = [
+const configSchema: PanelConfigSchema<Config> = [
   { key: "sortByLevel", type: "toggle", title: "Sort by level" },
 ];
 

@@ -6,6 +6,7 @@ import { DefaultButton, Stack, Text, useTheme } from "@fluentui/react";
 import { StrictMode, useContext, useMemo, useState } from "react";
 import { ReactReduxContext, useDispatch, useSelector } from "react-redux";
 
+import { useConfigById } from "@foxglove-studio/app/PanelAPI";
 import { savePanelConfigs } from "@foxglove-studio/app/actions/panels";
 import ShareJsonModal from "@foxglove-studio/app/components/ShareJsonModal";
 import { SidebarContent } from "@foxglove-studio/app/components/SidebarContent";
@@ -53,6 +54,8 @@ export default function PanelSettings(): JSX.Element {
     );
   }, [selectedPanelId, showShareModal, store, dispatch]);
 
+  const [config, saveConfig] = useConfigById<Record<string, unknown>>(selectedPanelId);
+
   if (selectedPanelId == undefined) {
     return (
       <SidebarContent title={`Panel Settings`}>
@@ -76,7 +79,11 @@ export default function PanelSettings(): JSX.Element {
           {panelInfo.component.configSchema ? (
             <StrictMode>
               <PanelIdContext.Provider value={selectedPanelId}>
-                <SchemaEditor configSchema={panelInfo.component.configSchema} />
+                <SchemaEditor
+                  configSchema={panelInfo.component.configSchema}
+                  config={config}
+                  saveConfig={saveConfig}
+                />
               </PanelIdContext.Provider>
             </StrictMode>
           ) : (

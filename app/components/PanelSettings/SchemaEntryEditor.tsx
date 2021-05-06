@@ -10,14 +10,17 @@ import {
   Dropdown,
   IColorPickerStyles,
   Label,
+  SpinButton,
   Stack,
   TextField,
   Toggle,
 } from "@fluentui/react";
-import { useRef, useState } from "react";
+// We need lodash.get for dynamic key path support
+// eslint-disable-next-line no-restricted-imports
+import { get, set, cloneDeep } from "lodash";
+import { useCallback, useRef, useState } from "react";
 
-import { useConfig } from "@foxglove-studio/app/PanelAPI";
-import { PanelConfigSchemaEntry } from "@foxglove-studio/app/types/panels";
+import { PanelConfigSchemaEntry, SaveConfig } from "@foxglove-studio/app/types/panels";
 import Logger from "@foxglove/log";
 
 const log = Logger.getLogger(__filename);
@@ -39,12 +42,21 @@ const COLOR_PICKER_STYLES: IColorPickerStyles = {
 
 export default function SchemaEntryEditor({
   entry,
+  config,
+  saveConfig,
 }: {
-  entry: PanelConfigSchemaEntry;
+  entry: PanelConfigSchemaEntry<string>;
+  config: Record<string, unknown>;
+  saveConfig: SaveConfig<Record<string, unknown>>;
 }): JSX.Element {
-  const [config, saveConfig] = useConfig<Record<string, unknown>>();
   const { key, title } = entry;
-  const currentValue = config[key];
+  const setValue = useCallback(
+    (value: unknown) => {
+      saveConfig(set(cloneDeep(config), key, value));
+    },
+    [config, key, saveConfig],
+  );
+  const currentValue = get(config, key);
   const [colorPickerShown, setColorPickerShown] = useState(false);
   const colorButtonRef = useRef<HTMLElement>(ReactNull);
 
@@ -62,7 +74,32 @@ export default function SchemaEntryEditor({
           label={title}
           placeholder={entry.placeholder}
           value={value}
-          onChange={(_event, newValue) => saveConfig({ [key]: newValue })}
+          onChange={(_event, newValue) => setValue(newValue)}
+        />
+      );
+    }
+    case "number": {
+      let value;
+      if (typeof currentValue === "number") {
+        value = currentValue;
+      } else {
+        value = 0;
+        log.warn(`Unexpected type for ${key}:`, currentValue);
+      }
+      const validate = entry.validate;
+      return (
+        <SpinButton
+          label={title}
+          value={value.toString()}
+          onValidate={
+            validate != undefined
+              ? (newValue) => validate(parseFloat(newValue)).toString()
+              : undefined
+          }
+          onChange={(_event, newValue) =>
+            newValue != undefined &&
+            setValue(validate != undefined ? validate(parseFloat(newValue)) : parseFloat(newValue))
+          }
         />
       );
     }
@@ -75,7 +112,7 @@ export default function SchemaEntryEditor({
         <Toggle
           label={title}
           checked={!!currentValue}
-          onChange={(_event, checked) => saveConfig({ [key]: checked })}
+          onChange={(_event, checked) => setValue(checked)}
         />
       );
     }
@@ -94,7 +131,7 @@ export default function SchemaEntryEditor({
           selectedKey={selectedKey}
           onChange={(_event, _value, index) => {
             if (index != undefined) {
-              saveConfig({ [key]: entry.options[index]?.value });
+              setValue(entry.options[index]?.value);
             }
           }}
           options={entry.options.map(({ value, text }) => ({ key: value, text }))}
@@ -131,7 +168,7 @@ export default function SchemaEntryEditor({
               <ColorPicker
                 color={value}
                 alphaType="none"
-                onChange={(_event, newValue) => saveConfig({ [key]: `#${newValue.hex}` })}
+                onChange={(_event, newValue) => setValue(`#${newValue.hex}`)}
                 styles={COLOR_PICKER_STYLES}
               />
             </Callout>
@@ -141,6 +178,6 @@ export default function SchemaEntryEditor({
     }
   }
   throw new Error(
-    `Unsupported type ${(entry as PanelConfigSchemaEntry).type} in panel config schema`,
+    `Unsupported type ${(entry as PanelConfigSchemaEntry<unknown>).type} in panel config schema`,
   );
 }

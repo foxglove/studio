@@ -234,7 +234,7 @@ function Publish(props: Props) {
   );
 }
 
-const configSchema: PanelConfigSchema<keyof Config> = [
+const configSchema: PanelConfigSchema<Config> = [
   { key: "advancedView", type: "toggle", title: "Editing mode" },
   { key: "buttonText", type: "text", title: "Button title" },
   { key: "buttonTooltip", type: "text", title: "Button tooltip" },

@@ -4,20 +4,24 @@
 
 import { Stack, useTheme } from "@fluentui/react";
 
-import { PanelConfigSchema } from "@foxglove-studio/app/types/panels";
+import { PanelConfigSchema, SaveConfig } from "@foxglove-studio/app/types/panels";
 
 import SchemaEntryEditor from "./SchemaEntryEditor";
 
 export default function SchemaEditor({
   configSchema,
+  config,
+  saveConfig,
 }: {
-  configSchema: PanelConfigSchema<string>;
+  configSchema: PanelConfigSchema<Record<string, unknown>>;
+  config: Record<string, unknown>;
+  saveConfig: SaveConfig<Record<string, unknown>>;
 }): JSX.Element {
   const theme = useTheme();
   return (
     <Stack tokens={{ childrenGap: theme.spacing.m }}>
       {configSchema.map((entry) => (
-        <SchemaEntryEditor key={entry.key} entry={entry} />
+        <SchemaEntryEditor config={config} saveConfig={saveConfig} key={entry.key} entry={entry} />
       ))}
     </Stack>
   );

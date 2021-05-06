@@ -109,8 +109,29 @@ export type UpdatePanelConfig<Config> = (
 
 export type OpenSiblingPanel = (arg0: string, cb: (arg0: PanelConfig) => PanelConfig) => void;
 
-export type PanelConfigSchemaEntry<ConfigKey = string> =
+type KeyPathsOfImpl<T, Prefix extends string> =
+  // return string when given any/unknown
+  unknown extends T
+    ? string
+    : // only extract keys from object types - not things like String.indexOf and Number.toString
+    T extends Record<string, unknown>
+    ? {
+        [K in keyof T]-?: K extends string
+          ? `${Prefix}${K}` | KeyPathsOfImpl<T[K], Prefix extends "" ? `${K}.` : `${Prefix}.${K}.`>
+          : never;
+      }[keyof T]
+    : never;
+
+/**
+ * Get all possible key paths in an object type, for instance:
+ *
+ * `KeyPathsOf<{a: 1, b?: {c: 2}}> = "a" | "b" | "b.c"`
+ */
+type KeyPathsOf<T> = KeyPathsOfImpl<T, "">;
+
+export type PanelConfigSchemaEntry<ConfigKey> =
   | { key: ConfigKey; type: "text"; title: string; placeholder?: string }
+  | { key: ConfigKey; type: "number"; title: string; validate?: (value: number) => number }
   | { key: ConfigKey; type: "color"; title: string }
   | { key: ConfigKey; type: "toggle"; title: string }
   | {
@@ -119,4 +140,4 @@ export type PanelConfigSchemaEntry<ConfigKey = string> =
       title: string;
       options: { value: string | number; text: string }[];
     };
-export type PanelConfigSchema<ConfigKey> = PanelConfigSchemaEntry<ConfigKey>[];
+export type PanelConfigSchema<Config> = PanelConfigSchemaEntry<KeyPathsOf<Config>>[];

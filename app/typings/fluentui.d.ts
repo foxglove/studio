@@ -39,6 +39,8 @@ declare global {
     | "More"
     | "CodeEdit"
     | "ClearSelection"
+    | "ChevronUpSmall"
+    | "ChevronDownSmall"
     | never; // never has no effect here other than keeping the semicolon on a separate line for easier conflict resolution
 }
 

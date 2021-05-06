@@ -6,6 +6,7 @@ import { action } from "@storybook/addon-actions";
 import { useEffect, useRef } from "react";
 import TestUtils from "react-dom/test-utils";
 
+import SchemaEditor from "@foxglove-studio/app/components/PanelSettings/SchemaEditor";
 import ImageView from "@foxglove-studio/app/panels/ImageView";
 import PanelSetup from "@foxglove-studio/app/stories/PanelSetup";
 
@@ -103,3 +104,14 @@ export const AvailableTopicsDescendentSelected = (): React.ReactElement => (
 export const AvailableTopicsMarkers = (): React.ReactElement => (
   <AvailableTopicsStory openMarkersMenu cameraTopic="/baz_image/compressed" />
 );
+
+export function Settings(): JSX.Element {
+  return (
+    <SchemaEditor
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      configSchema={ImageView.configSchema!}
+      config={ImageView.defaultConfig}
+      saveConfig={() => {}}
+    />
+  );
+}

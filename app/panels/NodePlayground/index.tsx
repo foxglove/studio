@@ -357,7 +357,7 @@ function NodePlayground(props: Props) {
   );
 }
 
-const configSchema: PanelConfigSchema<keyof Config> = [
+const configSchema: PanelConfigSchema<Config> = [
   { key: "autoFormatOnSave", type: "toggle", title: "Auto-format on save" },
 ];
 
