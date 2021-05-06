@@ -229,7 +229,7 @@ describe("state.persistedState", () => {
       store.dispatch(importPanelLayout(panelLayout));
       store.dispatch(
         addPanel({
-          type: "Audio",
+          id: "Audio!x",
           tabId: undefined,
           layout: panelLayout.layout,
           config: { foo: "bar" },
@@ -240,7 +240,7 @@ describe("state.persistedState", () => {
         const firstStr = layout.first as string;
         const secondStr = layout.second as string;
         expect(layout.direction).toEqual("row");
-        expect(getPanelTypeFromId(firstStr)).toEqual("Audio");
+        expect(firstStr).toEqual("Audio!x");
         expect(layout.second).toEqual("Tab!a");
 
         expect(panels.savedProps[firstStr]).toEqual({ foo: "bar" });
@@ -257,7 +257,7 @@ describe("state.persistedState", () => {
       };
       store.dispatch(importPanelLayout(panelLayout));
       store.dispatch(
-        addPanel({ type: "Audio", tabId: "Tab!a", layout: undefined, config: { foo: "bar" } }),
+        addPanel({ id: "Audio!x", tabId: "Tab!a", layout: undefined, config: { foo: "bar" } }),
       );
       checkState(
         ({
@@ -270,7 +270,7 @@ describe("state.persistedState", () => {
           expect(layout).toEqual("Tab!a");
           expect(savedProps["Tab!a"]?.activeTabIdx).toEqual(0);
           expect(tabs[0].title).toEqual("A");
-          expect(getPanelTypeFromId(newAudioId)).toEqual("Audio");
+          expect(newAudioId).toEqual("Audio!x");
           expect(tabs.length).toEqual(3);
 
           expect(savedProps[newAudioId]).toEqual({ foo: "bar" });

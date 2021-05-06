@@ -515,9 +515,8 @@ const moveTab = (panelsState: PanelsState, { source, target }: MoveTabPayload): 
 
 const addPanel = (
   panelsState: PanelsState,
-  { tabId, layout, type, config, relatedConfigs }: AddPanelPayload,
+  { tabId, layout, id, config, relatedConfigs }: AddPanelPayload,
 ) => {
-  const id = getPanelIdForType(type);
   let newPanelsState = { ...panelsState };
   let saveConfigsPayload: { configs: ConfigsPayload[] } = { configs: [] };
   if (config) {

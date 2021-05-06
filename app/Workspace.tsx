@@ -48,9 +48,9 @@ import { useAssets } from "@foxglove-studio/app/context/AssetContext";
 import LinkHandlerContext from "@foxglove-studio/app/context/LinkHandlerContext";
 import { PanelSettingsContext } from "@foxglove-studio/app/context/PanelSettingsContext";
 import { usePlayerSelection } from "@foxglove-studio/app/context/PlayerSelectionContext";
+import useAddPanel from "@foxglove-studio/app/hooks/useAddPanel";
 import useElectronFilesToOpen from "@foxglove-studio/app/hooks/useElectronFilesToOpen";
 import useNativeAppMenuEvent from "@foxglove-studio/app/hooks/useNativeAppMenuEvent";
-import useSelectPanel from "@foxglove-studio/app/hooks/useSelectPanel";
 import welcomeLayout from "@foxglove-studio/app/layouts/welcomeLayout";
 import { PlayerPresence } from "@foxglove-studio/app/players/types";
 import { ImportPanelLayoutPayload } from "@foxglove-studio/app/types/panels";
@@ -92,10 +92,10 @@ const SIDEBAR_ITEMS = new Map<SidebarItemKey, SidebarItem>([
 const SIDEBAR_BOTTOM_ITEMS: readonly SidebarItemKey[] = ["preferences"];
 
 function AddPanel() {
-  const selectPanel = useSelectPanel();
+  const addPanel = useAddPanel();
   return (
     <SidebarContent noPadding title="Add panel">
-      <PanelList onPanelSelect={selectPanel} />
+      <PanelList onPanelSelect={addPanel} />
     </SidebarContent>
   );
 }
