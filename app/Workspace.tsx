@@ -135,9 +135,11 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
     useCallback(({ playerState }) => playerState.capabilities, []),
   );
   const [selectedSidebarItem, setSelectedSidebarItem] = useState<SidebarItemKey | undefined>(
+    // Start with the sidebar open if no connection has been made
     currentSourceName == undefined ? "connection" : undefined,
   );
 
+  // Automatically close the connection sidebar when a connection is chosen
   const prevSourceName = useRef(currentSourceName);
   useLayoutEffect(() => {
     if (
