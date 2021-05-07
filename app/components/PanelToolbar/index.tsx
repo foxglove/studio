@@ -177,6 +177,13 @@ function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknow
 
   return (
     <>
+      <Item
+        icon={<SingleColumnEditIcon />}
+        onClick={openSettings}
+        disabled={!(panelContext?.hasSettings ?? false)}
+      >
+        Panel settings
+      </Item>
       <SubMenu
         text="Change panel"
         icon={<CheckboxMultipleBlankOutlineIcon />}
@@ -222,9 +229,6 @@ function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknow
         tooltip="(shortcut: ` or ~)"
       >
         Remove panel
-      </Item>
-      <Item icon={<SingleColumnEditIcon />} onClick={openSettings}>
-        Edit panel settings
       </Item>
     </>
   );

@@ -527,6 +527,7 @@ export default function Panel<Config extends PanelConfig>(
                 enterFullscreen,
                 isHovered,
                 isFocused,
+                hasSettings: PanelComponent.configSchema != undefined,
                 tabId,
                 supportsStrictMode: PanelComponent.supportsStrictMode ?? true,
                 connectToolbarDragHandle,
