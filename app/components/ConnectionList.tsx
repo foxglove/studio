@@ -2,15 +2,25 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ActionButton } from "@fluentui/react";
+import { ActionButton, Text, useTheme } from "@fluentui/react";
 
 import { usePlayerSelection } from "@foxglove-studio/app/context/PlayerSelectionContext";
 
 export default function ConnectionList(): JSX.Element {
   const { selectSource, availableSources } = usePlayerSelection();
 
+  const theme = useTheme();
+  const { currentSourceName } = usePlayerSelection();
   return (
     <>
+      <Text
+        block
+        styles={{ root: { color: theme.palette.neutralTertiary, marginBottom: theme.spacing.l1 } }}
+      >
+        {currentSourceName != undefined
+          ? currentSourceName
+          : "Not connected. Choose a data source below to get started."}
+      </Text>
       {availableSources.map((source) => {
         let iconName: RegisteredIconNames;
         switch (source.type) {
@@ -29,7 +39,14 @@ export default function ConnectionList(): JSX.Element {
         }
         return (
           <div key={source.name}>
-            <ActionButton iconProps={{ iconName }} onClick={() => selectSource(source)}>
+            <ActionButton
+              styles={{ root: { margin: 0, padding: 0, width: "100%" } }}
+              iconProps={{
+                iconName,
+                styles: { root: { "& span": { verticalAlign: "baseline" } } },
+              }}
+              onClick={() => selectSource(source)}
+            >
               {source.name}
             </ActionButton>
           </div>

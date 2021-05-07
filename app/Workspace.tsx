@@ -11,7 +11,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Stack } from "@fluentui/react";
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useToasts } from "react-toast-notifications";
 import { useMountedState } from "react-use";
@@ -56,6 +56,7 @@ import { PlayerPresence } from "@foxglove-studio/app/players/types";
 import { ImportPanelLayoutPayload } from "@foxglove-studio/app/types/panels";
 import { isNonEmptyOrUndefined } from "@foxglove-studio/app/util/emptyOrUndefined";
 import inAutomatedRunMode from "@foxglove-studio/app/util/inAutomatedRunMode";
+import { APP_NAME } from "@foxglove-studio/app/version";
 
 type TestableWindow = Window & { setPanelLayout?: (payload: ImportPanelLayoutPayload) => void };
 
@@ -97,7 +98,7 @@ const SIDEBAR_BOTTOM_ITEMS: readonly SidebarItemKey[] = ["preferences"];
 
 function Connection() {
   return (
-    <SidebarContent noPadding title="Connection">
+    <SidebarContent title="Connection">
       <ConnectionList />
     </SidebarContent>
   );
@@ -133,7 +134,22 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
   const playerCapabilities = useMessagePipeline(
     useCallback(({ playerState }) => playerState.capabilities, []),
   );
-  const [selectedSidebarItem, setSelectedSidebarItem] = useState<SidebarItemKey | undefined>();
+  const [selectedSidebarItem, setSelectedSidebarItem] = useState<SidebarItemKey | undefined>(
+    currentSourceName == undefined ? "connection" : undefined,
+  );
+
+  const prevSourceName = useRef(currentSourceName);
+  useLayoutEffect(() => {
+    if (
+      selectedSidebarItem === "connection" &&
+      prevSourceName.current == undefined &&
+      currentSourceName != undefined
+    ) {
+      setSelectedSidebarItem(undefined);
+    }
+    prevSourceName.current = currentSourceName;
+  }, [selectedSidebarItem, currentSourceName]);
+
   const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
   const [messagePathSyntaxModalOpen, setMessagePathSyntaxModalOpen] = useState(false);
 
@@ -320,7 +336,7 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
             <PlayerStatusIndicator />
           </SToolbarItem>
           <SToolbarItem>
-            <TruncatedText>{currentSourceName ?? "Select a data source"}</TruncatedText>{" "}
+            <TruncatedText>{currentSourceName ?? APP_NAME}</TruncatedText>{" "}
           </SToolbarItem>
           <div style={{ flexGrow: 1 }} />
           <SToolbarItem style={{ marginRight: 5 }}>
