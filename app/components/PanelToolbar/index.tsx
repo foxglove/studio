@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { ColumnVerticalSectionEditIcon } from "@fluentui/react-icons-mdl2";
+import { SingleColumnEditIcon } from "@fluentui/react-icons-mdl2";
 import AlertIcon from "@mdi/svg/svg/alert.svg";
 import ArrowSplitHorizontalIcon from "@mdi/svg/svg/arrow-split-horizontal.svg";
 import ArrowSplitVerticalIcon from "@mdi/svg/svg/arrow-split-vertical.svg";
@@ -223,7 +223,7 @@ function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknow
       >
         Remove panel
       </Item>
-      <Item icon={<ColumnVerticalSectionEditIcon />} onClick={openSettings}>
+      <Item icon={<SingleColumnEditIcon />} onClick={openSettings}>
         Edit panel settings
       </Item>
     </>

@@ -80,12 +80,12 @@ const TruncatedText = styled.span`
 type SidebarItemKey = "add-panel" | "panel-settings" | "variables" | "preferences";
 
 const SIDEBAR_ITEMS = new Map<SidebarItemKey, SidebarItem>([
-  ["add-panel", { iconName: "MediaAdd", title: "Add Panel", component: AddPanel }],
+  ["add-panel", { iconName: "RectangularClipping", title: "Add Panel", component: AddPanel }],
   [
     "panel-settings",
-    { iconName: "ColumnVerticalSectionEdit", title: "Panel Settings", component: PanelSettings },
+    { iconName: "SingleColumnEdit", title: "Panel Settings", component: PanelSettings },
   ],
-  ["variables", { iconName: "Rename", title: "Variables", component: Variables }],
+  ["variables", { iconName: "Variable2", title: "Variables", component: Variables }],
   ["preferences", { iconName: "Settings", title: "Preferences", component: Preferences }],
 ]);
 
