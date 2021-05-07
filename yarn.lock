@@ -1956,9 +1956,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fluentui/react@npm:8.14.1":
-  version: 8.14.1
-  resolution: "@fluentui/react@npm:8.14.1"
+"@fluentui/react@npm:8.14.4":
+  version: 8.14.4
+  resolution: "@fluentui/react@npm:8.14.4"
   dependencies:
     "@fluentui/date-time-utilities": ^8.1.0
     "@fluentui/font-icons-mdl2": ^8.1.0
@@ -1978,7 +1978,7 @@ __metadata:
     "@types/react-dom": ">=16.8.0 <18.0.0"
     react: ">=16.8.0 <18.0.0"
     react-dom: ">=16.8.0 <18.0.0"
-  checksum: 4ef6d82116a261ab4a24d94928bf5dffa91aa58392d1b219c3cb7a2e1c5a1abbebc2cd3b47c66c963fc3389027131be17c333f12ae5466d5bdc71b261c3898a3
+  checksum: 614b56a276cc2e3ed630545f4ca8dd4b6cdac8829699d3f8b933838d3d8fe9a100f220ac43ab0bafe332874d2d25d260c6fe2d8d7cfcfcc56957069259ab6b82
   languageName: node
   linkType: hard
 
@@ -2039,7 +2039,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove-studio/app@workspace:app"
   dependencies:
-    "@fluentui/react": 8.14.1
+    "@fluentui/react": 8.14.4
     "@fluentui/react-icons-mdl2": 1.1.0
     "@foxglove/hooks": "workspace:packages/@foxglove/hooks"
     "@foxglove/velodyne-cloud": "workspace:packages/velodyne-cloud"
@@ -2067,7 +2067,7 @@ __metadata:
     "@types/moment-duration-format": 2.2.2
     "@types/prettier": 2.2.3
     "@types/promise-queue": 2.2.0
-    "@types/react": 17.0.4
+    "@types/react": 17.0.5
     "@types/react-autocomplete": 1.8.5
     "@types/react-document-events": "workspace:packages/@types/react-document-events"
     "@types/react-dom": 17.0.3
@@ -2097,7 +2097,7 @@ __metadata:
     "@wojtekmaj/enzyme-adapter-react-17": 0.6.1
     argparse: 2.0.1
     async-mutex: 0.3.1
-    chart.js: 3.2.0
+    chart.js: 3.2.1
     chartjs-plugin-annotation: 1.0.1
     chartjs-plugin-datalabels: 2.0.0-beta.1
     chartjs-plugin-zoom: "github:foxglove/chartjs-plugin-zoom#656541279943f00dce600288435f83c436293146"
@@ -2141,7 +2141,7 @@ __metadata:
     react-input-autosize: 3.0.0
     react-json-tree: 0.15.0
     react-leaflet: 3.1.0
-    react-markdown: 6.0.1
+    react-markdown: 6.0.2
     react-monaco-editor: 0.43.0
     react-mosaic-component: 5.0.0
     react-outside-click-handler: 1.3.0
@@ -2169,7 +2169,7 @@ __metadata:
     shallowequal: 1.1.0
     storycap: 3.0.4
     string-hash: 1.1.3
-    styled-components: 5.2.3
+    styled-components: 5.3.0
     text-metrics: 2.0.9
     three: 0.128.0
     tinycolor2: 1.4.2
@@ -2619,7 +2619,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jest/types@npm:26.6.2, @jest/types@npm:^26.6.2":
+"@jest/types@npm:^26.6.2":
   version: 26.6.2
   resolution: "@jest/types@npm:26.6.2"
   dependencies:
@@ -5221,14 +5221,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:*, @types/react@npm:17.0.4, @types/react@npm:>=16.9.0":
-  version: 17.0.4
-  resolution: "@types/react@npm:17.0.4"
+"@types/react@npm:*, @types/react@npm:17.0.5, @types/react@npm:>=16.9.0":
+  version: 17.0.5
+  resolution: "@types/react@npm:17.0.5"
   dependencies:
     "@types/prop-types": "*"
     "@types/scheduler": "*"
     csstype: ^3.0.2
-  checksum: d7a8121faa889d52148df392751b771be16a45369872e9ad2b5db3d5bb8f76e684db27c2447b440441e3da1f353d434fa20fdcb45b3a56a296aab0757862da77
+  checksum: f9793e8113f14122d6ed20643b4fe27d30e10d7c80571a1d238c13f8171864f2a7b337194bf41310724498586ed4560fffd081a2d21e488afbb1aca33534189b
   languageName: node
   linkType: hard
 
@@ -8334,10 +8334,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chart.js@npm:3.2.0":
-  version: 3.2.0
-  resolution: "chart.js@npm:3.2.0"
-  checksum: e8efc009ec00297358c1f8234dfe8ece44b35c3bf173622be38765b34703ccd4df2778cacf3f9ad698cb89319ce7e650fc59020b34ec108b5675478457cf5dfd
+"chart.js@npm:3.2.1":
+  version: 3.2.1
+  resolution: "chart.js@npm:3.2.1"
+  checksum: 979b2a5775104b2c26522bbddf807be7deb66bb905edfa02df2024ca9fe8b3fd94bc7c743699fc9764a0216e325bb6ca125ec53ae44bede74387704ae1cd7461
   languageName: node
   linkType: hard
 
@@ -12713,7 +12713,6 @@ __metadata:
     "@babel/preset-typescript": 7.13.0
     "@foxglove/electron-socket": "workspace:packages/electron-socket"
     "@foxglove/tsconfig": "workspace:packages/@foxglove/tsconfig"
-    "@jest/types": 26.6.2
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.0-beta.1
     "@sentry/electron": 2.4.0
     "@sentry/webpack-plugin": 1.15.1
@@ -21057,9 +21056,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-markdown@npm:6.0.1":
-  version: 6.0.1
-  resolution: "react-markdown@npm:6.0.1"
+"react-markdown@npm:6.0.2":
+  version: 6.0.2
+  resolution: "react-markdown@npm:6.0.2"
   dependencies:
     "@types/hast": ^2.0.0
     "@types/unist": ^2.0.3
@@ -21073,10 +21072,11 @@ __metadata:
     style-to-object: ^0.3.0
     unified: ^9.0.0
     unist-util-visit: ^2.0.0
+    vfile: ^4.0.0
   peerDependencies:
     "@types/react": ">=16"
     react: ">=16"
-  checksum: 81900e3aedac97c5491e08fae756c776127507b871f93a53f00f3aa82573be770b06498f3d2e7636ee0e3e433cb13aa43423e10862916853ec334d552da9a2ea
+  checksum: 8aea1f47a5adde357ef59b67cab4997c8e34e728c9c96b387eeadf13eb89911d1250b5232ab9d07f955c2d20704aa4f71d9ea1b8784e07cf74aa18827d15b240
   languageName: node
   linkType: hard
 
@@ -23999,9 +23999,9 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"styled-components@npm:5.2.3":
-  version: 5.2.3
-  resolution: "styled-components@npm:5.2.3"
+"styled-components@npm:5.3.0":
+  version: 5.3.0
+  resolution: "styled-components@npm:5.3.0"
   dependencies:
     "@babel/helper-module-imports": ^7.0.0
     "@babel/traverse": ^7.4.5
@@ -24017,7 +24017,7 @@ resolve@^2.0.0-next.3:
     react: ">= 16.8.0"
     react-dom: ">= 16.8.0"
     react-is: ">= 16.8.0"
-  checksum: fca12eec3e1f714227d702bc9aa15a93a76571d9e2dba14d5180ae78488b3df5434718e7705d6f1fed2ae71d8113d129e14548623410d3e9bd781172e9617174
+  checksum: 1f94f92b5dab0b0a965646079604c184e9ef31fd0546881408039a5b4d9a4ebe73b6bb62b05912f06b68392352f1fed4c2dd66a74888b2446226aa0105b681c9
   languageName: node
   linkType: hard
 

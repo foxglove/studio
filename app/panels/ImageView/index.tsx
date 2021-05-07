@@ -32,14 +32,13 @@ import { Item, SubMenu } from "@foxglove-studio/app/components/Menu";
 import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipeline";
 import Panel from "@foxglove-studio/app/components/Panel";
 import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
-import { useExperimentalFeature } from "@foxglove-studio/app/context/ExperimentalFeaturesContext";
 import useDeepMemo from "@foxglove-studio/app/hooks/useDeepMemo";
 import useShallowMemo from "@foxglove-studio/app/hooks/useShallowMemo";
 import { MessageEvent } from "@foxglove-studio/app/players/types";
 import inScreenshotTests from "@foxglove-studio/app/stories/inScreenshotTests";
 import colors from "@foxglove-studio/app/styles/colors.module.scss";
 import { CameraInfo, StampedMessage } from "@foxglove-studio/app/types/Messages";
-import { SaveConfig } from "@foxglove-studio/app/types/panels";
+import { PanelConfigSchema, SaveConfig } from "@foxglove-studio/app/types/panels";
 import { nonEmptyOrUndefined } from "@foxglove-studio/app/util/emptyOrUndefined";
 import filterMap from "@foxglove-studio/app/util/filterMap";
 import naturalSort from "@foxglove-studio/app/util/naturalSort";
@@ -271,7 +270,6 @@ function ImageView(props: Props) {
   const { config, saveConfig } = props;
   const {
     scale,
-    synchronize,
     cameraTopic,
     enabledMarkerTopics,
     panelHooks,
@@ -279,7 +277,6 @@ function ImageView(props: Props) {
     customMarkerTopicOptions = NO_CUSTOM_OPTIONS,
   } = config;
   const { topics } = PanelAPI.useDataSourceInfo();
-  const isDemoMode = useExperimentalFeature("demoMode");
   const cameraTopicFullObject = useMemo(() => getTopicsByTopicName(topics)[cameraTopic], [
     cameraTopic,
     topics,
@@ -341,18 +338,6 @@ function ImageView(props: Props) {
     },
     [topics, allCameraNamespaces, imageMarkerDatatypes, enabledMarkerTopics, saveConfig],
   );
-
-  const onChangeScale = useCallback(
-    (newScale: number) => {
-      saveConfig({ scale: newScale });
-    },
-    [saveConfig],
-  );
-
-  const onToggleSynchronize = useCallback(() => {
-    saveConfig({ synchronize: !config.synchronize });
-  }, [saveConfig, config.synchronize]);
-
   const imageTopicDropdown = useMemo(() => {
     const cameraNamespace = getCameraNamespace(cameraTopic);
 
@@ -557,35 +542,6 @@ function ImageView(props: Props) {
     scale,
   ]);
 
-  const menuContent = useMemo(
-    () => (
-      <>
-        <Item
-          icon={synchronize ? <CheckboxMarkedIcon /> : <CheckboxBlankOutlineIcon />}
-          onClick={onToggleSynchronize}
-        >
-          <span>Synchronize images and markers</span>
-        </Item>
-        <hr />
-        <SubMenu direction="right" text={`Image resolution: ${(scale * 100).toFixed()}%`}>
-          {[0.2, 0.5, 1].map((value) => {
-            return (
-              <Item
-                {...{ value }}
-                key={value}
-                checked={scale === value}
-                onClick={() => onChangeScale(value)}
-              >
-                {(value * 100).toFixed()}%
-              </Item>
-            );
-          })}
-        </SubMenu>
-      </>
-    ),
-    [scale, onChangeScale, synchronize, onToggleSynchronize],
-  );
-
   const imageMessage = messagesByTopic[cameraTopic]?.[0];
   const lastImageMessageRef = React.useRef(imageMessage);
   if (imageMessage) {
@@ -615,18 +571,14 @@ function ImageView(props: Props) {
 
   const toolbar = useMemo(() => {
     return (
-      <PanelToolbar
-        floating={cameraTopic !== ""}
-        helpContent={helpContent}
-        menuContent={menuContent}
-      >
+      <PanelToolbar floating={cameraTopic !== ""} helpContent={helpContent}>
         <div className={style.controls}>
           {imageTopicDropdown}
           {markerDropdown}
         </div>
       </PanelToolbar>
     );
-  }, [imageTopicDropdown, markerDropdown, menuContent, cameraTopic]);
+  }, [imageTopicDropdown, markerDropdown, cameraTopic]);
 
   const renderBottomBar = () => {
     const canTransformMarkers = canTransformMarkersByTopic(cameraTopic);
@@ -683,13 +635,12 @@ function ImageView(props: Props) {
           onStartRenderImage={onStartRenderImage}
         />
       )}
-      {!showEmptyState && !isDemoMode && renderBottomBar()}
+      {!showEmptyState && renderBottomBar()}
     </Flex>
   );
 }
 
-ImageView.panelType = "ImageViewPanel";
-ImageView.defaultConfig = {
+const defaultConfig: Config = {
   cameraTopic: "",
   enabledMarkerTopics: [],
   customMarkerTopicOptions: [],
@@ -699,7 +650,27 @@ ImageView.defaultConfig = {
   mode: "fit",
   zoomPercentage: 100,
   offset: [0, 0],
-} as Config;
-ImageView.supportsStrictMode = false;
+};
 
-export default Panel(ImageView);
+const configSchema: PanelConfigSchema<Config> = [
+  { key: "synchronize", type: "toggle", title: "Synchronize images and markers" },
+  {
+    key: "scale",
+    type: "dropdown",
+    title: "Image resolution",
+    options: [
+      { value: 0.2, text: "20%" },
+      { value: 0.5, text: "50%" },
+      { value: 1, text: "100%" },
+    ],
+  },
+];
+
+export default Panel(
+  Object.assign(ImageView, {
+    panelType: "ImageViewPanel",
+    defaultConfig,
+    configSchema,
+    supportsStrictMode: false,
+  }),
+);

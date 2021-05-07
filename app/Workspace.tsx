@@ -11,7 +11,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Stack } from "@fluentui/react";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { useToasts } from "react-toast-notifications";
 import { useMountedState } from "react-use";
@@ -30,9 +30,11 @@ import HelpModal from "@foxglove-studio/app/components/HelpModal";
 import LayoutMenu from "@foxglove-studio/app/components/LayoutMenu";
 import messagePathHelp from "@foxglove-studio/app/components/MessagePathSyntax/index.help.md";
 import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipeline";
+import MultiProvider from "@foxglove-studio/app/components/MultiProvider";
 import NotificationDisplay from "@foxglove-studio/app/components/NotificationDisplay";
 import PanelLayout from "@foxglove-studio/app/components/PanelLayout";
 import PanelList from "@foxglove-studio/app/components/PanelList";
+import PanelSettings from "@foxglove-studio/app/components/PanelSettings";
 import PlaybackControls from "@foxglove-studio/app/components/PlaybackControls";
 import { PlayerStatusIndicator } from "@foxglove-studio/app/components/PlayerStatusIndicator";
 import Preferences from "@foxglove-studio/app/components/Preferences";
@@ -44,9 +46,11 @@ import Toolbar from "@foxglove-studio/app/components/Toolbar";
 import { useAppConfiguration } from "@foxglove-studio/app/context/AppConfigurationContext";
 import { useAssets } from "@foxglove-studio/app/context/AssetContext";
 import LinkHandlerContext from "@foxglove-studio/app/context/LinkHandlerContext";
+import { PanelSettingsContext } from "@foxglove-studio/app/context/PanelSettingsContext";
 import { usePlayerSelection } from "@foxglove-studio/app/context/PlayerSelectionContext";
+import useAddPanel from "@foxglove-studio/app/hooks/useAddPanel";
 import useElectronFilesToOpen from "@foxglove-studio/app/hooks/useElectronFilesToOpen";
-import useSelectPanel from "@foxglove-studio/app/hooks/useSelectPanel";
+import useNativeAppMenuEvent from "@foxglove-studio/app/hooks/useNativeAppMenuEvent";
 import welcomeLayout from "@foxglove-studio/app/layouts/welcomeLayout";
 import { PlayerPresence } from "@foxglove-studio/app/players/types";
 import { ImportPanelLayoutPayload } from "@foxglove-studio/app/types/panels";
@@ -73,15 +77,19 @@ const TruncatedText = styled.span`
   line-height: normal;
 `;
 
-type SidebarItemKey = "connection" | "add-panel" | "variables" | "preferences";
+type SidebarItemKey = "connection" | "add-panel" | "panel-settings" | "variables" | "preferences";
 
 const SIDEBAR_ITEMS = new Map<SidebarItemKey, SidebarItem>([
   [
     "connection",
     { iconName: "DataManagementSettings", title: "Connection", component: Connection },
   ],
-  ["add-panel", { iconName: "MediaAdd", title: "Add Panel", component: AddPanel }],
-  ["variables", { iconName: "Rename", title: "Variables", component: Variables }],
+  ["add-panel", { iconName: "RectangularClipping", title: "Add Panel", component: AddPanel }],
+  [
+    "panel-settings",
+    { iconName: "SingleColumnEdit", title: "Panel Settings", component: PanelSettings },
+  ],
+  ["variables", { iconName: "Variable2", title: "Variables", component: Variables }],
   ["preferences", { iconName: "Settings", title: "Preferences", component: Preferences }],
 ]);
 
@@ -96,10 +104,10 @@ function Connection() {
 }
 
 function AddPanel() {
-  const selectPanel = useSelectPanel();
+  const addPanel = useAddPanel();
   return (
     <SidebarContent noPadding title="Add panel">
-      <PanelList onPanelSelect={selectPanel} />
+      <PanelList onPanelSelect={addPanel} />
     </SidebarContent>
   );
 }
@@ -160,34 +168,50 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
     // Add a hook for integration tests.
     (window as TestableWindow).setPanelLayout = (payload: ImportPanelLayoutPayload) =>
       dispatch(importPanelLayout(payload));
+  }, [dispatch, openWelcomeLayout]);
 
-    // For undo/redo events, first try the browser's native undo/redo, and if that is disabled, then
-    // undo/redo the layout history. Note that in GlobalKeyListener we also handle the keyboard
-    // events for undo/redo, so if an input or textarea element that would handle the event is not
-    // focused, the GlobalKeyListener will handle it. The listeners here are to handle the case when
-    // an editable element is focused, or when the user directly chooses the undo/redo menu item.
-    OsContextSingleton?.addIpcEventListener("undo", () => {
+  // For undo/redo events, first try the browser's native undo/redo, and if that is disabled, then
+  // undo/redo the layout history. Note that in GlobalKeyListener we also handle the keyboard
+  // events for undo/redo, so if an input or textarea element that would handle the event is not
+  // focused, the GlobalKeyListener will handle it. The listeners here are to handle the case when
+  // an editable element is focused, or when the user directly chooses the undo/redo menu item.
+
+  useNativeAppMenuEvent(
+    "undo",
+    useCallback(() => {
       if (!document.execCommand("undo")) {
         dispatch(undoLayoutChange());
       }
-    });
-    OsContextSingleton?.addIpcEventListener("redo", () => {
+    }, [dispatch]),
+  );
+
+  useNativeAppMenuEvent(
+    "redo",
+    useCallback(() => {
       if (!document.execCommand("redo")) {
         dispatch(redoLayoutChange());
       }
-    });
+    }, [dispatch]),
+  );
 
-    OsContextSingleton?.addIpcEventListener("open-preferences", () =>
-      setSelectedSidebarItem((item) => (item === "preferences" ? undefined : "preferences")),
-    );
-    OsContextSingleton?.addIpcEventListener("open-message-path-syntax-help", () =>
-      setMessagePathSyntaxModalOpen(true),
-    );
-    OsContextSingleton?.addIpcEventListener("open-keyboard-shortcuts", () =>
-      setShortcutsModalOpen(true),
-    );
-    OsContextSingleton?.addIpcEventListener("open-welcome-layout", () => openWelcomeLayout());
-  }, [dispatch, openWelcomeLayout]);
+  useNativeAppMenuEvent(
+    "open-preferences",
+    useCallback(() => {
+      setSelectedSidebarItem((item) => (item === "preferences" ? undefined : "preferences"));
+    }, []),
+  );
+
+  useNativeAppMenuEvent(
+    "open-message-path-syntax-help",
+    useCallback(() => setMessagePathSyntaxModalOpen(true), []),
+  );
+
+  useNativeAppMenuEvent(
+    "open-keyboard-shortcuts",
+    useCallback(() => setShortcutsModalOpen(true), []),
+  );
+
+  useNativeAppMenuEvent("open-welcome-layout", openWelcomeLayout);
 
   const appConfiguration = useAppConfiguration();
   const { addToast } = useToasts();
@@ -255,8 +279,23 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
   const showPlaybackControls =
     playerPresence === PlayerPresence.NOT_PRESENT || playerCapabilities.includes("playbackControl");
 
+  const panelSettings = useMemo(
+    () => ({
+      panelSettingsOpen: selectedSidebarItem === "panel-settings",
+      openPanelSettings: () => setSelectedSidebarItem("panel-settings"),
+    }),
+    [selectedSidebarItem],
+  );
+
   return (
-    <LinkHandlerContext.Provider value={handleInternalLink}>
+    <MultiProvider
+      providers={[
+        /* eslint-disable react/jsx-key */
+        <LinkHandlerContext.Provider value={handleInternalLink} />,
+        <PanelSettingsContext.Provider value={panelSettings} />,
+        /* eslint-enable react/jsx-key */
+      ]}
+    >
       <DocumentDropListener filesSelected={dropHandler} allowedExtensions={allowedDropExtensions}>
         <DropOverlay>
           <div style={{ fontSize: "4em", marginBottom: "1em" }}>Drop a file here</div>
@@ -307,6 +346,6 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
           </Stack>
         </Sidebar>
       </div>
-    </LinkHandlerContext.Provider>
+    </MultiProvider>
   );
 }
