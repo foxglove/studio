@@ -11,7 +11,11 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import type { MosaicNode, MosaicPath } from "react-mosaic-component";
+import { CameraState } from "regl-worldview";
 
+import { TopicSettingsCollection } from "@foxglove-studio/app/panels/ThreeDimensionalViz/SceneBuilder";
+import { ColorOverrideBySourceIdxByVariable } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/Layout";
+import { TopicDisplayMode } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/types";
 import { PanelsState } from "@foxglove-studio/app/reducers/panels";
 import { TimestampMethod } from "@foxglove-studio/app/util/time";
 
@@ -110,9 +114,9 @@ export type UpdatePanelConfig<Config> = (
 export type OpenSiblingPanel = (arg0: string, cb: (arg0: PanelConfig) => PanelConfig) => void;
 
 type KeyPathsOfImpl<T, Prefix extends string> =
-  // return string when given any/unknown
+  // return never when given any/unknown
   unknown extends T
-    ? string
+    ? never
     : // only extract keys from object types - not things like String.indexOf and Number.toString
     T extends Record<string, unknown>
     ? {
@@ -140,4 +144,6 @@ export type PanelConfigSchemaEntry<ConfigKey> =
       title: string;
       options: { value: string | number; text: string }[];
     };
-export type PanelConfigSchema<Config> = PanelConfigSchemaEntry<KeyPathsOf<Config>>[];
+export type PanelConfigSchema<Config> = unknown extends Config
+  ? PanelConfigSchemaEntry<string>[]
+  : PanelConfigSchemaEntry<KeyPathsOf<Config>>[];
