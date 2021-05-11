@@ -11,11 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import type { MosaicNode, MosaicPath } from "react-mosaic-component";
-import { CameraState } from "regl-worldview";
 
-import { TopicSettingsCollection } from "@foxglove-studio/app/panels/ThreeDimensionalViz/SceneBuilder";
-import { ColorOverrideBySourceIdxByVariable } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/Layout";
-import { TopicDisplayMode } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/types";
 import { PanelsState } from "@foxglove-studio/app/reducers/panels";
 import { TimestampMethod } from "@foxglove-studio/app/util/time";
 

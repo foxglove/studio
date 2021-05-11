@@ -12,15 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { groupBy } from "lodash";
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import {
   Worldview,
@@ -37,7 +29,6 @@ import { useDebouncedCallback } from "use-debounce";
 import useDataSourceInfo from "@foxglove-studio/app/PanelAPI/useDataSourceInfo";
 import KeyListener from "@foxglove-studio/app/components/KeyListener";
 import Modal from "@foxglove-studio/app/components/Modal";
-import PanelContext from "@foxglove-studio/app/components/PanelContext";
 import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
 import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToBodyComponent";
 import useGlobalVariables from "@foxglove-studio/app/hooks/useGlobalVariables";
@@ -60,7 +51,6 @@ import {
 import useLinkedGlobalVariables from "@foxglove-studio/app/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
 import styles from "@foxglove-studio/app/panels/ThreeDimensionalViz/Layout.module.scss";
 import LayoutToolbar from "@foxglove-studio/app/panels/ThreeDimensionalViz/LayoutToolbar";
-import PanelToolbarMenu from "@foxglove-studio/app/panels/ThreeDimensionalViz/PanelToolbarMenu";
 import SceneBuilder from "@foxglove-studio/app/panels/ThreeDimensionalViz/SceneBuilder";
 import sceneBuilderHooks from "@foxglove-studio/app/panels/ThreeDimensionalViz/SceneBuilder/defaultHooks";
 import { useSearchText } from "@foxglove-studio/app/panels/ThreeDimensionalViz/SearchText";
