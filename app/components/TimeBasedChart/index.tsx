@@ -612,31 +612,22 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     let maxY;
 
     if (!hasUserPannedOrZoomed) {
+      const yBounds = datasetBounds.y;
+
       // we prefer user specified bounds over dataset bounds
       minY = yAxes.min;
       maxY = yAxes.max;
 
-      // prevent max < min
-      if (maxY != undefined) {
-        minY = minY == undefined ? maxY : Math.min(maxY, minY);
+      // chartjs bug if the maximum value < dataset min results in array index to an undefined
+      // value and an object access on this undefined value
+      if (maxY != undefined && minY == undefined && maxY < Number(yBounds.min)) {
+        minY = maxY;
       }
 
-      // prevent min > max
-      if (minY != undefined) {
-        maxY = maxY == undefined ? minY : Math.max(maxY, minY);
-      }
-
-      // Add 5% grace around the range (i.e. padding) if the user hasn't specified manual settings
-      // for the min or max values respectively
-      if (maxY != undefined && minY != undefined) {
-        const range = Math.abs(maxY - minY);
-        if (yAxes.max == undefined) {
-          maxY += range * 0.05;
-        }
-
-        if (yAxes.min == undefined) {
-          minY -= range * 0.05;
-        }
+      // chartjs bug if the minimum value > dataset max results in array index to an undefined
+      // value and an object access on this undefined value
+      if (minY != undefined && maxY == undefined && minY > Number(yBounds.max)) {
+        maxY = minY;
       }
     }
 
@@ -650,7 +641,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
         ...yAxes.ticks,
       },
     } as ScaleOptions;
-  }, [yAxes, hasUserPannedOrZoomed]);
+  }, [datasetBounds.y, yAxes, hasUserPannedOrZoomed]);
 
   const downsampleDatasets = useCallback(
     (fullDatasets: typeof datasets) => {
