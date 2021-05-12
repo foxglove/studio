@@ -11,11 +11,11 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { SingleColumnEditIcon } from "@fluentui/react-icons-mdl2";
 import AlertIcon from "@mdi/svg/svg/alert.svg";
 import ArrowSplitHorizontalIcon from "@mdi/svg/svg/arrow-split-horizontal.svg";
 import ArrowSplitVerticalIcon from "@mdi/svg/svg/arrow-split-vertical.svg";
 import CheckboxMultipleBlankOutlineIcon from "@mdi/svg/svg/checkbox-multiple-blank-outline.svg";
-import CodeJsonIcon from "@mdi/svg/svg/code-json.svg";
 import CogIcon from "@mdi/svg/svg/cog.svg";
 import DragIcon from "@mdi/svg/svg/drag.svg";
 import FullscreenIcon from "@mdi/svg/svg/fullscreen.svg";
@@ -28,6 +28,7 @@ import { useDispatch, useSelector, ReactReduxContext } from "react-redux";
 import { useResizeDetector } from "react-resize-detector";
 import { bindActionCreators } from "redux";
 
+import { setSelectedPanelIds } from "@foxglove-studio/app/actions/mosaic";
 import {
   savePanelConfigs,
   changePanelLayout,
@@ -43,10 +44,9 @@ import { Item, SubMenu } from "@foxglove-studio/app/components/Menu";
 import PanelContext from "@foxglove-studio/app/components/PanelContext";
 import PanelList, { PanelSelection } from "@foxglove-studio/app/components/PanelList";
 import { getPanelTypeFromMosaic } from "@foxglove-studio/app/components/PanelToolbar/utils";
-import ShareJsonModal from "@foxglove-studio/app/components/ShareJsonModal";
+import { usePanelSettings } from "@foxglove-studio/app/context/PanelSettingsContext";
 import { State } from "@foxglove-studio/app/reducers";
 import frameless from "@foxglove-studio/app/util/frameless";
-import { TAB_PANEL_TYPE } from "@foxglove-studio/app/util/globalConstants";
 import logEvent, { getEventNames, getEventTags } from "@foxglove-studio/app/util/logEvent";
 import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
 
@@ -56,7 +56,6 @@ type Props = {
   children?: React.ReactNode;
   floating?: boolean;
   helpContent?: React.ReactNode;
-  menuContent?: React.ReactNode;
   additionalIcons?: React.ReactNode;
   hideToolbars?: boolean;
   showHiddenControlsOnHover?: boolean;
@@ -65,15 +64,7 @@ type Props = {
 
 // separated into a sub-component so it can always skip re-rendering
 // it never changes after it initially mounts
-function StandardMenuItems({
-  tabId,
-  isUnknownPanel,
-  onEditPanelConfig,
-}: {
-  tabId?: string;
-  isUnknownPanel: boolean;
-  onEditPanelConfig: () => void;
-}) {
+function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknownPanel: boolean }) {
   const { mosaicActions } = useContext(MosaicContext);
   const { mosaicWindowActions } = useContext(MosaicWindowContext);
   const savedProps = useSelector((state: State) => state.persistedState.panels.savedProps);
@@ -81,7 +72,14 @@ function StandardMenuItems({
   const actions = useMemo(
     () =>
       bindActionCreators(
-        { savePanelConfigs, changePanelLayout, closePanel, splitPanel, swapPanel },
+        {
+          savePanelConfigs,
+          changePanelLayout,
+          closePanel,
+          splitPanel,
+          swapPanel,
+          setSelectedPanelIds,
+        },
         dispatch,
       ),
     [dispatch],
@@ -162,6 +160,14 @@ function StandardMenuItems({
   const { store } = useContext(ReactReduxContext);
   const panelContext = useContext(PanelContext);
 
+  const { openPanelSettings } = usePanelSettings();
+  const openSettings = useCallback(() => {
+    if (panelContext?.id != undefined) {
+      actions.setSelectedPanelIds([panelContext.id]);
+      openPanelSettings();
+    }
+  }, [actions, openPanelSettings, panelContext?.id]);
+
   const type = getPanelType();
   if (type == undefined) {
     return ReactNull;
@@ -169,6 +175,13 @@ function StandardMenuItems({
 
   return (
     <>
+      <Item
+        icon={<SingleColumnEditIcon />}
+        onClick={openSettings}
+        disabled={!(panelContext?.hasSettings ?? false)}
+      >
+        Panel settings
+      </Item>
       <SubMenu
         text="Change panel"
         icon={<CheckboxMultipleBlankOutlineIcon />}
@@ -215,28 +228,17 @@ function StandardMenuItems({
       >
         Remove panel
       </Item>
-      {!isUnknownPanel && (
-        <Item
-          icon={<CodeJsonIcon />}
-          onClick={onEditPanelConfig}
-          disabled={type === TAB_PANEL_TYPE}
-          dataTest="panel-settings-config"
-        >
-          Import/export panel settings
-        </Item>
-      )}
     </>
   );
 }
 
 type PanelToolbarControlsProps = Pick<
   Props,
-  "additionalIcons" | "floating" | "menuContent" | "showHiddenControlsOnHover"
+  "additionalIcons" | "floating" | "showHiddenControlsOnHover"
 > & {
   isRendered: boolean;
   showPanelName?: boolean;
   isUnknownPanel: boolean;
-  onEditPanelConfig: () => void;
 };
 
 // Keep controls, which don't change often, in a pure component in order to avoid re-rendering the
@@ -246,10 +248,8 @@ const PanelToolbarControls = React.memo(function PanelToolbarControls({
   floating = false,
   isRendered,
   isUnknownPanel,
-  menuContent,
   showHiddenControlsOnHover = false,
   showPanelName = false,
-  onEditPanelConfig,
 }: PanelToolbarControlsProps) {
   const panelContext = useContext(PanelContext);
 
@@ -270,13 +270,7 @@ const PanelToolbarControls = React.memo(function PanelToolbarControls({
           </Icon>
         }
       >
-        <StandardMenuItems
-          tabId={panelContext?.tabId}
-          isUnknownPanel={isUnknownPanel}
-          onEditPanelConfig={onEditPanelConfig}
-        />
-        {Boolean(menuContent) && <hr />}
-        {menuContent}
+        <StandardMenuItems tabId={panelContext?.tabId} isUnknownPanel={isUnknownPanel} />
       </Dropdown>
       {!isUnknownPanel && (
         <span ref={panelContext?.connectToolbarDragHandle} data-test="mosaic-drag-handle">
@@ -299,32 +293,11 @@ export default React.memo<Props>(function PanelToolbar({
   helpContent,
   hideToolbars = false,
   isUnknownPanel = false,
-  menuContent,
   showHiddenControlsOnHover,
 }: Props) {
-  const { isHovered = false, id, supportsStrictMode = true } = useContext(PanelContext) ?? {};
+  const { isHovered = false, supportsStrictMode = true } = useContext(PanelContext) ?? {};
   const [containsOpen, setContainsOpen] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-  const dispatch = useDispatch();
-
-  const { store } = useContext(ReactReduxContext);
-  const shareModal = useMemo(() => {
-    if (id == undefined || !showShareModal) {
-      return ReactNull;
-    }
-    const panelConfigById = store.getState().persistedState.panels.savedProps;
-    return (
-      <ShareJsonModal
-        onRequestClose={() => setShowShareModal(false)}
-        value={panelConfigById[id] ?? {}}
-        onChange={(config) =>
-          dispatch(savePanelConfigs({ configs: [{ id, config, override: true }] }))
-        }
-        noun="panel configuration"
-      />
-    );
-  }, [id, showShareModal, store, dispatch]);
 
   // Help-shown state must be hoisted outside the controls container so the modal can remain visible
   // when the panel is no longer hovered.
@@ -363,7 +336,6 @@ export default React.memo<Props>(function PanelToolbar({
   return (
     <div ref={sizeRef}>
       <ChildToggle.ContainsOpen onChange={setContainsOpen}>
-        {shareModal}
         {showHelp && <HelpModal onRequestClose={() => setShowHelp(false)}>{helpContent}</HelpModal>}
         <div
           className={cx(styles.panelToolbarContainer, {
@@ -378,11 +350,9 @@ export default React.memo<Props>(function PanelToolbar({
               isRendered={isRendered}
               showHiddenControlsOnHover={showHiddenControlsOnHover}
               floating={floating}
-              menuContent={menuContent}
               showPanelName={(width ?? 0) > 360}
               additionalIcons={additionalIconsWithHelp}
               isUnknownPanel={!!isUnknownPanel}
-              onEditPanelConfig={() => setShowShareModal(true)}
             />
           )}
         </div>

@@ -30,9 +30,9 @@ export function SidebarContent({
       <Stack
         horizontal
         horizontalAlign="space-between"
-        style={{ padding: noPadding ? theme.spacing.m : undefined, paddingBottom: 0 }}
+        style={{ padding: noPadding ? theme.spacing.m : undefined, paddingBottom: theme.spacing.m }}
       >
-        <Text as="h2" variant="large">
+        <Text as="h2" variant="xLarge">
           {title}
         </Text>
         {Boolean(helpContent) && (

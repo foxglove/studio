@@ -42,6 +42,7 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
     minWidth: 350,
     minHeight: 250,
     autoHideMenuBar: true,
+    trafficLightPosition: { x: 12, y: 10 },
     title: APP_NAME,
     webPreferences: {
       contextIsolation: true,
@@ -141,7 +142,7 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
       {
         label: "New Window",
         click: () => {
-          new StudioWindow();
+          new StudioWindow().load();
         },
       },
       { type: "separator" },
@@ -286,7 +287,7 @@ class StudioWindow {
           new MenuItem({
             label: "New Window",
             click: () => {
-              new StudioWindow();
+              new StudioWindow().load();
             },
           }),
         );
@@ -370,7 +371,7 @@ class StudioWindow {
       new MenuItem({
         label: "New Window",
         click: () => {
-          new StudioWindow();
+          new StudioWindow().load();
         },
       }),
     );

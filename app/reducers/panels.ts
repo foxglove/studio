@@ -84,6 +84,7 @@ import {
 
 const storage = new Storage();
 
+export const DEPRECATED_GLOBAL_STATE_STORAGE_KEY = "webvizGlobalState";
 export const GLOBAL_STATE_STORAGE_KEY = "studioGlobalState";
 export const defaultPlaybackConfig: PlaybackConfig = {
   speed: 0.2,
@@ -147,7 +148,10 @@ export function getInitialPersistedStateAndMaybeUpdateLocalStorageAndURL(
   history: History,
 ): PersistedState {
   if (initialPersistedState == undefined) {
-    const oldPersistedState: any = storage.getItem(GLOBAL_STATE_STORAGE_KEY);
+    const oldPersistedState: any =
+      storage.getItem(GLOBAL_STATE_STORAGE_KEY) ??
+      storage.getItem(DEPRECATED_GLOBAL_STATE_STORAGE_KEY);
+    storage.removeItem(DEPRECATED_GLOBAL_STATE_STORAGE_KEY);
 
     // cast to PersistedState to remove the Readonly created by the Object.freeze above
     const newPersistedState = cloneDeep(defaultPersistedState) as PersistedState;
@@ -515,9 +519,8 @@ const moveTab = (panelsState: PanelsState, { source, target }: MoveTabPayload): 
 
 const addPanel = (
   panelsState: PanelsState,
-  { tabId, layout, type, config, relatedConfigs }: AddPanelPayload,
+  { tabId, layout, id, config, relatedConfigs }: AddPanelPayload,
 ) => {
-  const id = getPanelIdForType(type);
   let newPanelsState = { ...panelsState };
   let saveConfigsPayload: { configs: ConfigsPayload[] } = { configs: [] };
   if (config) {
@@ -1013,9 +1016,15 @@ const panelsReducer = function (state: State, action: ActionTypes): State {
       };
       break;
 
-    case "CLOSE_PANEL":
+    case "CLOSE_PANEL": {
       newState.persistedState.panels = closePanel(newState.persistedState.panels, action.payload);
+      // Deselect the removed panel
+      const removedId = getNodeAtPath(action.payload.root, action.payload.path);
+      newState.mosaic.selectedPanelIds = newState.mosaic.selectedPanelIds.filter(
+        (id) => id !== removedId,
+      );
       break;
+    }
 
     case "SPLIT_PANEL":
       newState.persistedState.panels = splitPanel(state, action.payload);
