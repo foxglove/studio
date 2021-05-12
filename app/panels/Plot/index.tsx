@@ -256,14 +256,13 @@ function Plot(props: Props) {
     [seek, startTime, xAxisVal],
   );
 
-  // console.log(preloadingEndTime);
   return (
     <Flex col clip center style={{ position: "relative" }}>
       <PanelToolbar helpContent={helpContent} floating />
       <PlotChart
         paths={yAxisPaths}
-        minYValue={+(minYValue ?? NaN)}
-        maxYValue={+(maxYValue ?? NaN)}
+        minYValue={parseFloat((minYValue ?? "")?.toString())}
+        maxYValue={parseFloat((maxYValue ?? "")?.toString())}
         saveCurrentView={saveCurrentView as any}
         datasets={datasets}
         tooltips={tooltips}
