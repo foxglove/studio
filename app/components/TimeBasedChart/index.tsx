@@ -608,17 +608,13 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
       padding: 0,
     };
 
-    hasUserPannedOrZoomed;
-
     let minY;
     let maxY;
 
     if (!hasUserPannedOrZoomed) {
-      const yBounds = datasetBounds.y;
-
       // we prefer user specified bounds over dataset bounds
-      minY = yAxes.min ?? yBounds.min;
-      maxY = yAxes.max ?? yBounds.max;
+      minY = yAxes.min;
+      maxY = yAxes.max;
 
       // prevent max < min
       if (maxY != undefined) {
@@ -654,7 +650,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
         ...yAxes.ticks,
       },
     } as ScaleOptions;
-  }, [datasetBounds.y, yAxes, hasUserPannedOrZoomed]);
+  }, [yAxes, hasUserPannedOrZoomed]);
 
   const downsampleDatasets = useCallback(
     (fullDatasets: typeof datasets) => {
