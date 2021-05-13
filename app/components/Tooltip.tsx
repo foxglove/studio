@@ -11,10 +11,6 @@ import {
 } from "@fluentui/react";
 import { useCallback, useRef, useState } from "react";
 
-import toolbarStyles from "@foxglove-studio/app/components/Toolbar.module.scss";
-import { useWindowGeometry } from "@foxglove-studio/app/context/WindowGeometryContext";
-import styles from "@foxglove-studio/app/styles/variables.module.scss";
-
 type Contents = React.ReactNode | (() => React.ReactNode);
 
 export type Props = {
@@ -53,7 +49,6 @@ export function useTooltip({
     [contents],
   );
   const theme = useTheme();
-  const { insetToolbar } = useWindowGeometry();
 
   // Styles which ideally we would be able to set in the theme for all Tooltips:
   // https://github.com/microsoft/fluentui/discussions/17772
@@ -69,7 +64,7 @@ export function useTooltip({
       calloutMain: { background: theme.palette.neutralDark },
     },
     // Customize bounds to leave space for the window traffic light icons
-    bounds: (target, win) => {
+    bounds: (_target, win) => {
       if (!win) {
         return undefined;
       }
@@ -81,12 +76,6 @@ export function useTooltip({
         width: win.innerWidth - 2 * 8,
         height: win.innerHeight - 2 * 8,
       };
-      if (insetToolbar && target instanceof Element) {
-        const targetRect = target.getBoundingClientRect();
-        if (targetRect.left < parseInt(toolbarStyles.toolbarInsetWidth as string)) {
-          rect.top = parseInt(styles.topBarHeight as string);
-        }
-      }
       return rect;
     },
   };
