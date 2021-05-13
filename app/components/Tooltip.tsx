@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { IRawStyleBase } from "@fluentui/merge-styles";
 import {
   DirectionalHint,
   ICalloutProps,
@@ -50,6 +51,9 @@ export function useTooltip({
   );
   const theme = useTheme();
 
+  const titlebarHeight = (theme.components?.Titlebar?.styles as { root?: IRawStyleBase })?.root
+    ?.height;
+
   // Styles which ideally we would be able to set in the theme for all Tooltips:
   // https://github.com/microsoft/fluentui/discussions/17772
   const calloutProps: ICalloutProps & { styles: Partial<ICalloutContentStyles> } = {
@@ -69,7 +73,7 @@ export function useTooltip({
         return undefined;
       }
       const rect = {
-        top: 8,
+        top: typeof titlebarHeight === "string" ? parseFloat(titlebarHeight) : 8,
         left: 8,
         bottom: win.innerHeight - 8,
         right: win.innerWidth - 8,
