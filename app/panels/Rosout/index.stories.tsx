@@ -105,12 +105,12 @@ export const TopicToRender = (): JSX.Element => {
         topics: [
           { name: "/rosout", datatype: "rosgraph_msgs/Log" },
           { name: "/foo/rosout", datatype: "rosgraph_msgs/Log" },
-          { name: "/webviz_source_2/rosout", datatype: "rosgraph_msgs/Log" },
+          { name: "/studio_source_2/rosout", datatype: "rosgraph_msgs/Log" },
         ],
         frame: {
           "/rosout": makeMessages("/rosout"),
           "/foo/rosout": makeMessages("/foo/rosout"),
-          "/webviz_source_2/rosout": makeMessages("/webviz_source_2/rosout"),
+          "/studio_source_2/rosout": makeMessages("/studio_source_2/rosout"),
         },
       }}
       onMount={() => {
@@ -122,7 +122,7 @@ export const TopicToRender = (): JSX.Element => {
         });
       }}
     >
-      <Rosout config={{ searchTerms: [], minLogLevel: 1, topicToRender: "/foo/rosout" }} />
+      <Rosout overrideConfig={{ searchTerms: [], minLogLevel: 1, topicToRender: "/foo/rosout" }} />
     </PanelSetup>
   );
 };
@@ -149,7 +149,7 @@ export const FilteredTerms = (): JSX.Element => {
   return (
     <PanelSetup fixture={fixture}>
       <Rosout
-        config={{
+        overrideConfig={{
           searchTerms: ["multiple", "/some_topic"],
           minLogLevel: 1,
           topicToRender: "/rosout",
@@ -165,7 +165,11 @@ export const CaseInsitiveFilter = (): JSX.Element => {
   return (
     <PanelSetup fixture={fixture}>
       <Rosout
-        config={{ searchTerms: ["could", "Ipsum"], minLogLevel: 1, topicToRender: "/rosout" }}
+        overrideConfig={{
+          searchTerms: ["could", "Ipsum"],
+          minLogLevel: 1,
+          topicToRender: "/rosout",
+        }}
       />
     </PanelSetup>
   );

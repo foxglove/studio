@@ -22,6 +22,7 @@ jobs:
           # required checks don't need to change if we ever change the commands used.
           - name: lint
             command: |
+              # lint steps
               yarn dedupe --check
               yarn run tsc --noEmit # typecheck files that are not included by webpack or package builds
               yarn run lint:ci
@@ -42,7 +43,7 @@ jobs:
     name: ${{ matrix.config.name }} (${{ matrix.os }})
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0
           lfs: true
@@ -75,7 +76,7 @@ jobs:
     name: integration (${{ matrix.os }})
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.4
         with:
           lfs: true
       - name: Configure Node.js

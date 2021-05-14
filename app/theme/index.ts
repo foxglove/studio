@@ -11,13 +11,19 @@ import {
   ITooltipStyles,
   ITooltipStyleProps,
   IToggleStyles,
+  IStyle,
 } from "@fluentui/react";
 import { createTheme } from "@fluentui/theme";
 
+import { SANS_SERIF } from "@foxglove-studio/app/styles/fonts";
+import styles from "@foxglove-studio/app/styles/variables.module.scss";
 import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
 
 // https://aka.ms/themedesigner
 export default createTheme({
+  defaultFontStyle: {
+    fontFamily: SANS_SERIF,
+  },
   semanticColors: {
     menuBackground: "#242429",
     menuItemBackgroundHovered: "#2e2e39",
@@ -105,18 +111,25 @@ export default createTheme({
         },
       } as IToggleStyles,
     },
+    Titlebar: {
+      styles: {
+        root: {
+          height: styles.topBarHeight,
+        } as IStyle,
+      },
+    },
   },
   isInverted: true,
   palette: {
-    themePrimary: "#b093c4",
-    themeLighterAlt: "#070608",
-    themeLighter: "#1c181f",
-    themeLight: "#352c3b",
-    themeTertiary: "#6a5876",
-    themeSecondary: "#9b82ad",
-    themeDarkAlt: "#b79dca",
-    themeDark: "#c2aad2",
-    themeDarker: "#d1bfde",
+    themePrimary: "#9a74f2",
+    themeLighterAlt: "#fbf9fe",
+    themeLighter: "#eee8fd",
+    themeLight: "#e0d4fb",
+    themeTertiary: "#c1aaf7",
+    themeSecondary: "#a684f4",
+    themeDarkAlt: "#8b69da",
+    themeDark: "#7558b8",
+    themeDarker: "#564188",
     neutralLighterAlt: "#1a1a21",
     neutralLighter: "#22222a",
     neutralLight: "#2e2e39",

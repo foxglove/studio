@@ -22,7 +22,6 @@ import {
 } from "react";
 import { connect, ConnectedProps } from "react-redux";
 import { useLocalStorage, useMountedState } from "react-use";
-import { URL } from "universal-url";
 
 import { AppSetting } from "@foxglove-studio/app/AppSetting";
 import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
@@ -36,7 +35,6 @@ import {
   MessagePipelineProvider,
 } from "@foxglove-studio/app/components/MessagePipeline";
 import { useAnalytics } from "@foxglove-studio/app/context/AnalyticsContext";
-import { useExperimentalFeature } from "@foxglove-studio/app/context/ExperimentalFeaturesContext";
 import PlayerSelectionContext, {
   PlayerSelection,
   PlayerSourceDefinition,
@@ -47,7 +45,7 @@ import {
   getLocalBagDescriptor,
   getRemoteBagDescriptor,
 } from "@foxglove-studio/app/dataProviders/standardDataProviderDescriptors";
-import useAppSetting from "@foxglove-studio/app/hooks/useAppSetting";
+import { useAppConfigurationValue } from "@foxglove-studio/app/hooks/useAppConfigurationValue";
 import { GlobalVariables } from "@foxglove-studio/app/hooks/useGlobalVariables";
 import { usePrompt } from "@foxglove-studio/app/hooks/usePrompt";
 import useShallowMemo from "@foxglove-studio/app/hooks/useShallowMemo";
@@ -70,8 +68,6 @@ import { parseInputUrl } from "@foxglove-studio/app/util/url";
 import Logger from "@foxglove/log";
 
 const log = Logger.getLogger(__filename);
-
-const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
 
 type BuiltPlayer = {
   player: Player;
@@ -147,7 +143,6 @@ async function buildPlayerFromBagURLs(
 type FactoryOptions = {
   source: PlayerSourceDefinition;
   sourceOptions: Record<string, unknown>;
-  skipRestore: boolean;
   prompt: ReturnType<typeof usePrompt>;
   storage: Storage;
 };
@@ -155,10 +150,20 @@ type FactoryOptions = {
 async function localBagFileSource(options: FactoryOptions) {
   let file: File;
 
+  const restore = options.sourceOptions.restore ?? false;
+
   // future enhancement would be to store the fileHandle in indexeddb and try to restore
   // fileHandles can be stored in indexeddb but not localstorage
-  if (!options.skipRestore) {
+  if (restore) {
     return;
+  }
+
+  // maybe the caller has some files they want to open
+  const files = options.sourceOptions.files;
+  if (files && files instanceof Array) {
+    return async (playerOptions: BuildPlayerOptions) => {
+      return buildPlayerFromFiles(files, playerOptions);
+    };
   }
 
   try {
@@ -183,7 +188,14 @@ async function remoteBagFileSource(options: FactoryOptions) {
   // undefined url indicates the user canceled the prompt
   let maybeUrl;
 
-  if (options.skipRestore ?? false) {
+  const restore = options.sourceOptions.restore;
+  const urlOption = options.sourceOptions.url;
+
+  if (restore) {
+    maybeUrl = options.storage.getItem<string>(storageCacheKey);
+  } else if (urlOption && typeof urlOption === "string") {
+    maybeUrl = urlOption;
+  } else {
     maybeUrl = await options.prompt({
       title: "Remote bag file",
       placeholder: "https://example.com/file.bag",
@@ -201,8 +213,6 @@ async function remoteBagFileSource(options: FactoryOptions) {
         return result;
       },
     });
-  } else {
-    maybeUrl = options.storage.getItem<string>(storageCacheKey);
   }
 
   if (maybeUrl == undefined) {
@@ -219,8 +229,11 @@ async function rosbridgeSource(options: FactoryOptions) {
 
   // undefined url indicates the user canceled the prompt
   let maybeUrl;
+  const restore = options.sourceOptions.restore;
 
-  if (options.skipRestore ?? false) {
+  if (restore) {
+    maybeUrl = options.storage.getItem<string>(storageCacheKey);
+  } else {
     const value = options.storage.getItem<string>(storageCacheKey) ?? "ws://localhost:9090";
     maybeUrl = await options.prompt({
       title: "WebSocket connection",
@@ -240,8 +253,6 @@ async function rosbridgeSource(options: FactoryOptions) {
         return result;
       },
     });
-  } else {
-    maybeUrl = options.storage.getItem<string>(storageCacheKey);
   }
 
   if (maybeUrl == undefined) {
@@ -261,8 +272,11 @@ async function roscoreSource(options: FactoryOptions) {
 
   // undefined url indicates the user canceled the prompt
   let maybeUrl;
+  const restore = options.sourceOptions.restore;
 
-  if (options.skipRestore ?? false) {
+  if (restore) {
+    maybeUrl = options.storage.getItem<string>(storageCacheKey);
+  } else {
     const value = options.storage.getItem<string>(storageCacheKey);
 
     maybeUrl = await options.prompt({
@@ -283,8 +297,6 @@ async function roscoreSource(options: FactoryOptions) {
         return result;
       },
     });
-  } else {
-    maybeUrl = options.storage.getItem<string>(storageCacheKey);
   }
 
   if (maybeUrl == undefined) {
@@ -335,7 +347,6 @@ function PlayerManager({
 }: Props) {
   useWarnImmediateReRender();
 
-  const usedFiles = useRef<File[]>([]);
   const globalVariablesRef = useRef<GlobalVariables>(globalVariables);
   const [maybePlayer, setMaybePlayer] = useState<MaybePlayer<OrderedStampPlayer>>({});
   const [currentSourceName, setCurrentSourceName] = useState<string | undefined>(undefined);
@@ -351,9 +362,11 @@ function PlayerManager({
     return new AnalyticsMetricsCollector(analytics);
   }, [analytics]);
 
+  const [unlimitedMemoryCache = false] = useAppConfigurationValue<boolean>(
+    AppSetting.UNLIMITED_MEMORY_CACHE,
+  );
   const buildPlayerOptions: BuildPlayerOptions = useShallowMemo({
-    diskBagCaching: useExperimentalFeature("diskBagCaching"),
-    unlimitedMemoryCache: useExperimentalFeature("unlimitedMemoryCache"),
+    unlimitedMemoryCache: unlimitedMemoryCache,
     metricsCollector: metricsCollector,
   });
 
@@ -416,45 +429,17 @@ function PlayerManager({
     }
   }, []);
 
-  useEffect(() => {
-    const links = OsContextSingleton?.getDeepLinks() ?? [];
-    const firstLink = links[0];
-    if (firstLink == undefined) {
-      return;
-    }
-
-    try {
-      const url = new URL(firstLink);
-      // only support the open command
-
-      // Test if the pathname matches //open or //open/
-      if (!/\/\/open\/?/.test(url.pathname)) {
-        return;
-      }
-
-      // only support rosbag urls
-      const type = url.searchParams.get("type");
-      const bagUrl = url.searchParams.get("url");
-      if (type !== "rosbag" || bagUrl == undefined) {
-        return;
-      }
-      setPlayer(async (options: BuildPlayerOptions) => buildPlayerFromBagURLs([bagUrl], options));
-    } catch (err) {
-      log.error(err);
-    }
-  }, [setPlayer]);
-
   const prompt = usePrompt();
   const storage = useMemo(() => new Storage(), []);
 
-  const rosHostname = useAppSetting<string>(AppSetting.ROS1_ROS_HOSTNAME);
+  const [rosHostname] = useAppConfigurationValue<string>(AppSetting.ROS1_ROS_HOSTNAME);
 
   const [savedSource, setSavedSource] = useLocalStorage<PlayerSourceDefinition>(
     "studio.playermanager.selected-source",
   );
 
   const selectSource = useCallback(
-    async (selectedSource: PlayerSourceDefinition, restore: boolean = false) => {
+    async (selectedSource: PlayerSourceDefinition, params?: Record<string, unknown>) => {
       log.debug(`Select Source: ${selectedSource.name} ${selectedSource.type}`);
       setSavedSource(selectedSource);
 
@@ -466,12 +451,14 @@ function PlayerManager({
           throw new Error(`Could not create a player for ${selectedSource.name}`);
         }
 
-        const sourceOptions = { rosHostname };
+        if (!params) {
+          params = {};
+        }
+        params.rosHostname = rosHostname;
 
         const playerBuilder = await createPlayerBuilder({
           source: selectedSource,
-          sourceOptions,
-          skipRestore: !restore,
+          sourceOptions: params,
           prompt,
           storage,
         });
@@ -497,7 +484,7 @@ function PlayerManager({
   // restore the saved source on first mount
   useLayoutEffect(() => {
     if (savedSource) {
-      selectSource(savedSource, true /* restore */);
+      selectSource(savedSource, { restore: true });
     }
     // we only run the layout effect on first mount - never again even if the saved source changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -505,32 +492,6 @@ function PlayerManager({
 
   const value: PlayerSelection = {
     selectSource,
-    setPlayerFromFiles: useCallback(
-      (files: File[], { append = false }: { append?: boolean } = {}) => {
-        if (files.length === 0) {
-          return;
-        }
-
-        if (append) {
-          usedFiles.current = [...usedFiles.current, ...files];
-        } else {
-          usedFiles.current = [...files];
-        }
-        setPlayer(async (options: BuildPlayerOptions) =>
-          buildPlayerFromFiles(usedFiles.current, options),
-        );
-      },
-      [setPlayer],
-    ),
-    // Expose a simple way to load a demo bag for first launch onboarding.
-    // In the future we may want to replace this limited API with something more cohesive
-    // that exposes the different buildPlayerFromX methods above. At the same time,
-    // the prompt() responsibilities could be moved out of the PlayerManager.
-    setPlayerFromDemoBag: useCallback(
-      () =>
-        setPlayer((options: BuildPlayerOptions) => buildPlayerFromBagURLs([DEMO_BAG_URL], options)),
-      [setPlayer],
-    ),
     availableSources: playerSources,
     currentSourceName,
   };

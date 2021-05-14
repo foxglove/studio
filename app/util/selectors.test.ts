@@ -15,7 +15,7 @@ import {
   getTopicNames,
   getTopicsByTopicName,
   enumValuesByDatatypeAndField,
-  extractTypeFromWebizEnumAnnotation,
+  extractTypeFromStudioEnumAnnotation,
 } from "@foxglove-studio/app/util/selectors";
 
 describe("selectors", () => {
@@ -122,7 +122,7 @@ describe("selectors", () => {
             fields: [
               {
                 type: "another/state/values",
-                name: "state__webviz_enum",
+                name: "state__foxglove_enum",
                 isArray: false,
                 isComplex: false,
               },
@@ -145,12 +145,14 @@ describe("selectors", () => {
   });
 });
 
-describe("extractTypeFromWebizEnumAnnotation", () => {
+describe("extractTypeFromStudioEnumAnnotation", () => {
   it("returns type for field matching pattern", () => {
-    expect(extractTypeFromWebizEnumAnnotation("Foo__webviz_enum")).toEqual("Foo");
+    expect(extractTypeFromStudioEnumAnnotation("Foo__foxglove_enum")).toEqual("Foo");
+    expect(extractTypeFromStudioEnumAnnotation("Foo__webviz_enum")).toEqual("Foo");
   });
 
   it("returns undefined for field not mathcing", () => {
-    expect(extractTypeFromWebizEnumAnnotation("Foo__webviz_enum_EXTRA")).toBeUndefined();
+    expect(extractTypeFromStudioEnumAnnotation("Foo__foxglove_enum_EXTRA")).toBeUndefined();
+    expect(extractTypeFromStudioEnumAnnotation("Foo__webviz_enum_EXTRA")).toBeUndefined();
   });
 });

@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 import { sumBy } from "lodash";
 import styled from "styled-components";
-import textWidth, { Options } from "text-width";
+import textMetrics from "text-metrics";
 
 import AutoSizingCanvas from "@foxglove-studio/app/components/AutoSizingCanvas";
 import Slider from "@foxglove-studio/app/components/Slider";
@@ -23,7 +23,15 @@ import mixins from "@foxglove-studio/app/styles/mixins.module.scss";
 // we will remove every other label until the ratio is back above this value.
 const MINIMUM_LABEL_FREESPACE_RATIO = 2;
 
-const TICK_FONT: Options = { family: mixins.monospaceFont ?? "monospace", size: 10 };
+const fontFamily = mixins.monospaceFont ?? "monospace";
+const fontSize = "10px";
+let textMeasure: textMetrics.TextMeasure;
+function measureText(text: string): number {
+  if (textMeasure == undefined) {
+    textMeasure = textMetrics.init({ fontFamily, fontSize });
+  }
+  return textMeasure.width(text);
+}
 
 const SSliderContainer = styled.div`
   height: 30px;
@@ -84,12 +92,12 @@ function drawTicks(futureTime: number | undefined, sliderConfig: SliderProps) {
   const measuredLabels: any = [];
 
   // Represents the number of gaps, not the number of ticks
-  const steps = Math.ceil((max - min) / step);
+  const steps = Math.ceil((max - min) / (step == undefined || step === 0 ? 1 : step));
   for (let i = 0; i <= steps; i++) {
     const value = Math.min(min + (i / steps) * (max - min), max);
     const text = value.toFixed(1);
 
-    const tickWidth = textWidth(text, TICK_FONT);
+    const tickWidth = measureText(text);
     measuredLabels.push({
       text,
       value,
@@ -109,10 +117,10 @@ function drawTicks(futureTime: number | undefined, sliderConfig: SliderProps) {
       const y = height / 2 + 2;
 
       if (futureTime === value) {
-        ctx.font = `bold ${TICK_FONT.size}px ${TICK_FONT.family}`;
+        ctx.font = `bold ${fontSize} ${fontFamily}`;
         ctx.fillStyle = "white";
       } else {
-        ctx.font = `${TICK_FONT.size}px ${TICK_FONT.family}`;
+        ctx.font = `${fontSize} ${fontFamily}`;
         ctx.fillStyle = "#666";
       }
       ctx.fillText(text, x, y);

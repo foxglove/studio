@@ -11,64 +11,61 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useTheme } from "@fluentui/react";
-import { useContext } from "react";
+import { Toggle, Stack, Text, useTheme } from "@fluentui/react";
 
-import SegmentedControl from "@foxglove-studio/app/components/SegmentedControl";
-import TextContent from "@foxglove-studio/app/components/TextContent";
-import ExperimentalFeaturesContext, {
-  getDefaultKey,
-} from "@foxglove-studio/app/context/ExperimentalFeaturesContext";
+import { AppSetting } from "@foxglove-studio/app/AppSetting";
+import { useAppConfigurationValue } from "@foxglove-studio/app/hooks/useAppConfigurationValue";
+
+type Feature = {
+  key: AppSetting;
+  name: string;
+  description: JSX.Element;
+};
+
+const features: Feature[] = [
+  {
+    key: AppSetting.UNLIMITED_MEMORY_CACHE,
+    name: "Unlimited in-memory cache (requires restart)",
+    description: <>Fully buffer a bag into memory. This may use up a lot of system memory.</>,
+  },
+];
+
+function ExperimentalFeatureItem(props: { feature: Feature }) {
+  const { feature } = props;
+
+  const [enabled, setEnabled] = useAppConfigurationValue<boolean>(feature.key);
+  return (
+    <Stack>
+      <Stack horizontal>
+        <Stack grow>
+          <Text as="h2" variant="medium">
+            {feature.name}
+          </Text>
+        </Stack>
+        <Toggle
+          checked={enabled}
+          onChange={(_, checked) => setEnabled(checked)}
+          onText="Enabled"
+          offText="Disabled"
+        />
+      </Stack>
+      <div>{feature.description}</div>
+    </Stack>
+  );
+}
 
 export function ExperimentalFeatureSettings(): React.ReactElement {
-  const { settings, features, changeFeature } = useContext(ExperimentalFeaturesContext);
+  const theme = useTheme();
   return (
-    <div style={{ padding: useTheme().spacing.m }}>
-      <TextContent>
-        {Object.keys(features).length === 0 && (
-          <p>
-            <em>Currently there are no experimental features.</em>
-          </p>
-        )}
-      </TextContent>
-      <table style={{ marginTop: 12 }}>
-        <tbody>
-          {Object.entries(features).map(([id, feature]) => {
-            const { enabled = false, manuallySet = false } = settings[id] ?? {};
-            return (
-              <tr key={id}>
-                <td style={{ width: "100%", padding: 4 }}>
-                  <TextContent allowMarkdownHtml={true}>
-                    <h2>
-                      {feature.name} <code style={{ fontSize: 12 }}>{id}</code>
-                    </h2>
-                    {feature.description}
-                  </TextContent>
-                </td>
-                <td style={{ verticalAlign: "middle" }}>
-                  <SegmentedControl
-                    selectedId={manuallySet ? (enabled ? "alwaysOn" : "alwaysOff") : "default"}
-                    onChange={(value) => {
-                      if (value !== "default" && value !== "alwaysOn" && value !== "alwaysOff") {
-                        throw new Error(`Invalid value for radio button: ${value}`);
-                      }
-                      changeFeature(id, value);
-                    }}
-                    options={[
-                      {
-                        id: "default",
-                        label: `Default (${feature[getDefaultKey()] ? "on" : "off"})`,
-                      },
-                      { id: "alwaysOn", label: "On" },
-                      { id: "alwaysOff", label: "Off" },
-                    ]}
-                  />
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <Stack tokens={{ childrenGap: theme.spacing.m }}>
+      {features.length === 0 && (
+        <p>
+          <em>Currently there are no experimental features.</em>
+        </p>
+      )}
+      {features.map((feature) => (
+        <ExperimentalFeatureItem key={feature.key} feature={feature} />
+      ))}
+    </Stack>
   );
 }

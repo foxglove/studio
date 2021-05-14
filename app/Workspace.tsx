@@ -10,43 +10,55 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { ActionButton, Modal } from "@fluentui/react";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { Stack } from "@fluentui/react";
+import { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useToasts } from "react-toast-notifications";
 import { useMountedState } from "react-use";
 import styled from "styled-components";
 
-import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
 import { redoLayoutChange, undoLayoutChange } from "@foxglove-studio/app/actions/layoutHistory";
 import { importPanelLayout, loadLayout } from "@foxglove-studio/app/actions/panels";
-import AddPanelMenu from "@foxglove-studio/app/components/AddPanelMenu";
+import ConnectionList from "@foxglove-studio/app/components/ConnectionList";
 import DocumentDropListener from "@foxglove-studio/app/components/DocumentDropListener";
 import DropOverlay from "@foxglove-studio/app/components/DropOverlay";
 import GlobalKeyListener from "@foxglove-studio/app/components/GlobalKeyListener";
-import GlobalVariablesMenu from "@foxglove-studio/app/components/GlobalVariablesMenu";
+import GlobalVariablesTable from "@foxglove-studio/app/components/GlobalVariablesTable";
+import variablesHelp from "@foxglove-studio/app/components/GlobalVariablesTable/index.help.md";
 import HelpModal from "@foxglove-studio/app/components/HelpModal";
 import LayoutMenu from "@foxglove-studio/app/components/LayoutMenu";
 import messagePathHelp from "@foxglove-studio/app/components/MessagePathSyntax/index.help.md";
 import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipeline";
+import MultiProvider from "@foxglove-studio/app/components/MultiProvider";
 import NotificationDisplay from "@foxglove-studio/app/components/NotificationDisplay";
 import PanelLayout from "@foxglove-studio/app/components/PanelLayout";
+import PanelList from "@foxglove-studio/app/components/PanelList";
+import PanelSettings from "@foxglove-studio/app/components/PanelSettings";
 import PlaybackControls from "@foxglove-studio/app/components/PlaybackControls";
 import { PlayerStatusIndicator } from "@foxglove-studio/app/components/PlayerStatusIndicator";
 import Preferences from "@foxglove-studio/app/components/Preferences";
 import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToBodyComponent";
 import ShortcutsModal from "@foxglove-studio/app/components/ShortcutsModal";
-import TinyConnectionPicker from "@foxglove-studio/app/components/TinyConnectionPicker";
+import Sidebar, { SidebarItem } from "@foxglove-studio/app/components/Sidebar";
+import { SidebarContent } from "@foxglove-studio/app/components/SidebarContent";
 import Toolbar from "@foxglove-studio/app/components/Toolbar";
 import { useAppConfiguration } from "@foxglove-studio/app/context/AppConfigurationContext";
 import { useAssets } from "@foxglove-studio/app/context/AssetContext";
 import LinkHandlerContext from "@foxglove-studio/app/context/LinkHandlerContext";
+import { PanelSettingsContext } from "@foxglove-studio/app/context/PanelSettingsContext";
 import { usePlayerSelection } from "@foxglove-studio/app/context/PlayerSelectionContext";
+import useAddPanel from "@foxglove-studio/app/hooks/useAddPanel";
 import useElectronFilesToOpen from "@foxglove-studio/app/hooks/useElectronFilesToOpen";
+import useNativeAppMenuEvent from "@foxglove-studio/app/hooks/useNativeAppMenuEvent";
 import welcomeLayout from "@foxglove-studio/app/layouts/welcomeLayout";
 import { PlayerPresence } from "@foxglove-studio/app/players/types";
 import { ImportPanelLayoutPayload } from "@foxglove-studio/app/types/panels";
+import { isNonEmptyOrUndefined } from "@foxglove-studio/app/util/emptyOrUndefined";
 import inAutomatedRunMode from "@foxglove-studio/app/util/inAutomatedRunMode";
+import { APP_NAME } from "@foxglove-studio/app/version";
+import Log from "@foxglove/log";
+
+const log = Log.getLogger(__filename);
 
 type TestableWindow = Window & { setPanelLayout?: (payload: ImportPanelLayoutPayload) => void };
 
@@ -68,20 +80,86 @@ const TruncatedText = styled.span`
   line-height: normal;
 `;
 
+type SidebarItemKey = "connection" | "add-panel" | "panel-settings" | "variables" | "preferences";
+
+const SIDEBAR_ITEMS = new Map<SidebarItemKey, SidebarItem>([
+  [
+    "connection",
+    { iconName: "DataManagementSettings", title: "Connection", component: Connection },
+  ],
+  ["add-panel", { iconName: "RectangularClipping", title: "Add Panel", component: AddPanel }],
+  [
+    "panel-settings",
+    { iconName: "SingleColumnEdit", title: "Panel Settings", component: PanelSettings },
+  ],
+  ["variables", { iconName: "Variable2", title: "Variables", component: Variables }],
+  ["preferences", { iconName: "Settings", title: "Preferences", component: Preferences }],
+]);
+
+const SIDEBAR_BOTTOM_ITEMS: readonly SidebarItemKey[] = ["preferences"];
+
+function Connection() {
+  return (
+    <SidebarContent title="Connection">
+      <ConnectionList />
+    </SidebarContent>
+  );
+}
+
+function AddPanel() {
+  const addPanel = useAddPanel();
+  return (
+    <SidebarContent noPadding title="Add panel">
+      <PanelList onPanelSelect={addPanel} />
+    </SidebarContent>
+  );
+}
+
+function Variables() {
+  return (
+    <SidebarContent title="Variables" helpContent={variablesHelp}>
+      <GlobalVariablesTable />
+    </SidebarContent>
+  );
+}
+
 // file types we support for drag/drop
 const allowedDropExtensions = [".bag", ".urdf"];
 
-export default function Workspace(): JSX.Element {
+type WorkspaceProps = {
+  demoBagUrl?: string;
+  deepLinks?: string[];
+  onToolbarDoubleClick?: () => void;
+};
+
+export default function Workspace(props: WorkspaceProps): JSX.Element {
   const containerRef = useRef<HTMLDivElement>(ReactNull);
   const dispatch = useDispatch();
-  const { currentSourceName, setPlayerFromFiles, setPlayerFromDemoBag } = usePlayerSelection();
+  const { currentSourceName, selectSource } = usePlayerSelection();
   const playerPresence = useMessagePipeline(
     useCallback(({ playerState }) => playerState.presence, []),
   );
   const playerCapabilities = useMessagePipeline(
     useCallback(({ playerState }) => playerState.capabilities, []),
   );
-  const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [selectedSidebarItem, setSelectedSidebarItem] = useState<SidebarItemKey | undefined>(
+    // Start with the sidebar open if no connection has been made
+    currentSourceName == undefined ? "connection" : undefined,
+  );
+
+  // Automatically close the connection sidebar when a connection is chosen
+  const prevSourceName = useRef(currentSourceName);
+  useLayoutEffect(() => {
+    if (
+      selectedSidebarItem === "connection" &&
+      prevSourceName.current == undefined &&
+      currentSourceName != undefined
+    ) {
+      setSelectedSidebarItem(undefined);
+    }
+    prevSourceName.current = currentSourceName;
+  }, [selectedSidebarItem, currentSourceName]);
+
   const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
   const [messagePathSyntaxModalOpen, setMessagePathSyntaxModalOpen] = useState(false);
 
@@ -90,9 +168,16 @@ export default function Workspace(): JSX.Element {
   const openWelcomeLayout = useCallback(async () => {
     if (isMounted()) {
       dispatch(loadLayout(welcomeLayout));
-      await setPlayerFromDemoBag();
+      if (isNonEmptyOrUndefined(props.demoBagUrl)) {
+        selectSource(
+          { name: "Demo Bag", type: "http" },
+          {
+            url: props.demoBagUrl,
+          },
+        );
+      }
     }
-  }, [dispatch, setPlayerFromDemoBag, isMounted]);
+  }, [isMounted, dispatch, selectSource, props.demoBagUrl]);
 
   const handleInternalLink = useCallback((event: React.MouseEvent, href: string) => {
     if (href === "#help:message-path-syntax") {
@@ -109,32 +194,50 @@ export default function Workspace(): JSX.Element {
     // Add a hook for integration tests.
     (window as TestableWindow).setPanelLayout = (payload: ImportPanelLayoutPayload) =>
       dispatch(importPanelLayout(payload));
+  }, [dispatch, openWelcomeLayout]);
 
-    // For undo/redo events, first try the browser's native undo/redo, and if that is disabled, then
-    // undo/redo the layout history. Note that in GlobalKeyListener we also handle the keyboard
-    // events for undo/redo, so if an input or textarea element that would handle the event is not
-    // focused, the GlobalKeyListener will handle it. The listeners here are to handle the case when
-    // an editable element is focused, or when the user directly chooses the undo/redo menu item.
-    OsContextSingleton?.addIpcEventListener("undo", () => {
+  // For undo/redo events, first try the browser's native undo/redo, and if that is disabled, then
+  // undo/redo the layout history. Note that in GlobalKeyListener we also handle the keyboard
+  // events for undo/redo, so if an input or textarea element that would handle the event is not
+  // focused, the GlobalKeyListener will handle it. The listeners here are to handle the case when
+  // an editable element is focused, or when the user directly chooses the undo/redo menu item.
+
+  useNativeAppMenuEvent(
+    "undo",
+    useCallback(() => {
       if (!document.execCommand("undo")) {
         dispatch(undoLayoutChange());
       }
-    });
-    OsContextSingleton?.addIpcEventListener("redo", () => {
+    }, [dispatch]),
+  );
+
+  useNativeAppMenuEvent(
+    "redo",
+    useCallback(() => {
       if (!document.execCommand("redo")) {
         dispatch(redoLayoutChange());
       }
-    });
+    }, [dispatch]),
+  );
 
-    OsContextSingleton?.addIpcEventListener("open-preferences", () => setPreferencesOpen(true));
-    OsContextSingleton?.addIpcEventListener("open-message-path-syntax-help", () =>
-      setMessagePathSyntaxModalOpen(true),
-    );
-    OsContextSingleton?.addIpcEventListener("open-keyboard-shortcuts", () =>
-      setShortcutsModalOpen(true),
-    );
-    OsContextSingleton?.addIpcEventListener("open-welcome-layout", () => openWelcomeLayout());
-  }, [dispatch, openWelcomeLayout]);
+  useNativeAppMenuEvent(
+    "open-preferences",
+    useCallback(() => {
+      setSelectedSidebarItem((item) => (item === "preferences" ? undefined : "preferences"));
+    }, []),
+  );
+
+  useNativeAppMenuEvent(
+    "open-message-path-syntax-help",
+    useCallback(() => setMessagePathSyntaxModalOpen(true), []),
+  );
+
+  useNativeAppMenuEvent(
+    "open-keyboard-shortcuts",
+    useCallback(() => setShortcutsModalOpen(true), []),
+  );
+
+  useNativeAppMenuEvent("open-welcome-layout", openWelcomeLayout);
 
   const appConfiguration = useAppConfiguration();
   const { addToast } = useToasts();
@@ -142,8 +245,8 @@ export default function Workspace(): JSX.Element {
   // Show welcome layout on first run
   useEffect(() => {
     (async () => {
-      const welcomeLayoutShown = await appConfiguration.get("onboarding.welcome-layout.shown");
-      if (!welcomeLayoutShown) {
+      const welcomeLayoutShown = appConfiguration.get("onboarding.welcome-layout.shown");
+      if (welcomeLayoutShown == undefined || welcomeLayoutShown === false) {
         // Set configuration *before* opening the layout to avoid infinite recursion when the player
         // loading state causes us to re-render.
         await appConfiguration.set("onboarding.welcome-layout.shown", true);
@@ -152,6 +255,10 @@ export default function Workspace(): JSX.Element {
     })();
   }, [appConfiguration, openWelcomeLayout]);
 
+  // previously loaded files are tracked so support the "add bag" feature which loads a second bag
+  // file when the user presses shift during a drag/drop
+  const previousFiles = useRef<File[]>([]);
+
   const { loadFromFile } = useAssets();
 
   const openFiles = useCallback(
@@ -159,7 +266,9 @@ export default function Workspace(): JSX.Element {
       const otherFiles: File[] = [];
       for (const file of files) {
         try {
-          if (!(await loadFromFile(file, { basePath: file.path }))) {
+          // electron extends File with a `path` field which is not available in browsers
+          const basePath = (file as { path?: string }).path ?? "";
+          if (!(await loadFromFile(file, { basePath }))) {
             otherFiles.push(file);
           }
         } catch (err) {
@@ -170,10 +279,20 @@ export default function Workspace(): JSX.Element {
       }
 
       if (otherFiles.length > 0) {
-        setPlayerFromFiles(otherFiles, { append: shiftPressed });
+        if (shiftPressed) {
+          previousFiles.current = previousFiles.current.concat(otherFiles);
+        } else {
+          previousFiles.current = otherFiles;
+        }
+        selectSource(
+          { name: "Local Files", type: "file" },
+          {
+            files: previousFiles.current,
+          },
+        );
       }
     },
-    [addToast, loadFromFile, setPlayerFromFiles],
+    [addToast, loadFromFile, selectSource],
   );
 
   // files the main thread told us to open
@@ -183,6 +302,39 @@ export default function Workspace(): JSX.Element {
       openFiles(filesToOpen, { shiftPressed: false });
     }
   }, [filesToOpen, openFiles]);
+
+  useEffect(() => {
+    const firstLink = props.deepLinks?.[0];
+    if (firstLink == undefined) {
+      return;
+    }
+
+    try {
+      const url = new URL(firstLink);
+      // only support the open command
+
+      // Test if the pathname matches //open or //open/
+      if (!/\/\/open\/?/.test(url.pathname)) {
+        return;
+      }
+
+      // only support rosbag urls
+      const type = url.searchParams.get("type");
+      const bagUrl = url.searchParams.get("url");
+      if (type !== "rosbag" || bagUrl == undefined) {
+        return;
+      }
+      selectSource(
+        {
+          name: "Remote Bag",
+          type: "http",
+        },
+        { url: bagUrl },
+      );
+    } catch (err) {
+      log.error(err);
+    }
+  }, [props.deepLinks, selectSource]);
 
   const dropHandler = useCallback(
     ({ files, shiftPressed }: { files: FileList; shiftPressed: boolean }) => {
@@ -194,8 +346,23 @@ export default function Workspace(): JSX.Element {
   const showPlaybackControls =
     playerPresence === PlayerPresence.NOT_PRESENT || playerCapabilities.includes("playbackControl");
 
+  const panelSettings = useMemo(
+    () => ({
+      panelSettingsOpen: selectedSidebarItem === "panel-settings",
+      openPanelSettings: () => setSelectedSidebarItem("panel-settings"),
+    }),
+    [selectedSidebarItem],
+  );
+
   return (
-    <LinkHandlerContext.Provider value={handleInternalLink}>
+    <MultiProvider
+      providers={[
+        /* eslint-disable react/jsx-key */
+        <LinkHandlerContext.Provider value={handleInternalLink} />,
+        <PanelSettingsContext.Provider value={panelSettings} />,
+        /* eslint-enable react/jsx-key */
+      ]}
+    >
       <DocumentDropListener filesSelected={dropHandler} allowedExtensions={allowedDropExtensions}>
         <DropOverlay>
           <div style={{ fontSize: "4em", marginBottom: "1em" }}>Drop a file here</div>
@@ -214,47 +381,38 @@ export default function Workspace(): JSX.Element {
           </RenderToBodyComponent>
         )}
 
-        <Toolbar onDoubleClick={OsContextSingleton?.handleToolbarDoubleClick}>
+        <Toolbar onDoubleClick={props.onToolbarDoubleClick}>
+          <div style={{ flexGrow: 1 }} />
           <SToolbarItem>
-            <TinyConnectionPicker />
-          </SToolbarItem>
-          <SToolbarItem style={{ flex: "0 1 auto" }}>
-            <TruncatedText>{currentSourceName ?? "Select a data source"}</TruncatedText>{" "}
             <PlayerStatusIndicator />
           </SToolbarItem>
-          <div style={{ flexGrow: 1 }}></div>
+          <SToolbarItem>
+            <TruncatedText>{currentSourceName ?? APP_NAME}</TruncatedText>{" "}
+          </SToolbarItem>
+          <div style={{ flexGrow: 1 }} />
           <SToolbarItem style={{ marginRight: 5 }}>
             {!inAutomatedRunMode() && <NotificationDisplay />}
           </SToolbarItem>
           <SToolbarItem>
             <LayoutMenu />
           </SToolbarItem>
-          <SToolbarItem>
-            <AddPanelMenu />
-          </SToolbarItem>
-          <SToolbarItem>
-            <GlobalVariablesMenu />
-          </SToolbarItem>
-          <SToolbarItem>
-            <ActionButton
-              iconProps={{
-                iconName: "Settings",
-                styles: { root: { "& span": { verticalAlign: "baseline" } } },
-              }}
-              onClick={() => setPreferencesOpen(true)}
-            />
-            <Modal
-              styles={{ main: { width: "80vw", maxWidth: 850, height: "80vh", maxHeight: 600 } }}
-              isOpen={preferencesOpen}
-              onDismiss={() => setPreferencesOpen(false)}
-            >
-              <Preferences />
-            </Modal>
-          </SToolbarItem>
         </Toolbar>
-        <PanelLayout />
-        {showPlaybackControls && <PlaybackControls />}
+        <Sidebar
+          items={SIDEBAR_ITEMS}
+          bottomItems={SIDEBAR_BOTTOM_ITEMS}
+          selectedKey={selectedSidebarItem}
+          onSelectKey={setSelectedSidebarItem}
+        >
+          <Stack>
+            <PanelLayout />
+            {showPlaybackControls && (
+              <Stack.Item disableShrink>
+                <PlaybackControls />
+              </Stack.Item>
+            )}
+          </Stack>
+        </Sidebar>
       </div>
-    </LinkHandlerContext.Provider>
+    </MultiProvider>
   );
 }

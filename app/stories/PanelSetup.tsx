@@ -15,7 +15,7 @@ import { createMemoryHistory } from "history";
 import { flatten } from "lodash";
 import { ComponentProps } from "react";
 import { DndProvider } from "react-dnd";
-import HTML5Backend from "react-dnd-html5-backend";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import { Mosaic, MosaicNode, MosaicWindow } from "react-mosaic-component";
 
 import {
@@ -228,8 +228,10 @@ export default class PanelSetup extends React.PureComponent<Props, State> {
       store: props.store ?? configureStore(createRootReducer(createMemoryHistory())),
       mockPanelCatalog: props.panelCatalog ?? new MockPanelCatalog(),
       mockAppConfiguration: {
+        get() {
+          return undefined;
+        },
         async set() {},
-        async get() {},
         addChangeListener() {},
         removeChangeListener() {},
       },

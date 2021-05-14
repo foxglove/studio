@@ -147,8 +147,8 @@ export const setGlobalVariables = (payload: { [key: string]: unknown }): SET_GLO
   payload,
 });
 
-type SET_WEBVIZ_NODES = { type: "SET_USER_NODES"; payload: UserNodes };
-export const setUserNodes = (payload: UserNodes): SET_WEBVIZ_NODES => ({
+type SET_STUDIO_NODES = { type: "SET_USER_NODES"; payload: UserNodes };
+export const setUserNodes = (payload: UserNodes): SET_STUDIO_NODES => ({
   type: PANELS_ACTION_TYPES.SET_USER_NODES,
   payload,
 });
@@ -218,7 +218,10 @@ export const moveTab = (payload: MoveTabPayload): MOVE_TAB => ({
 });
 
 export type AddPanelPayload = {
-  type: string;
+  /** id must be formatted as returned by `getPanelIdForType`. This is required as an argument
+   * rather than automatically generated because the caller may want to use the new id for
+   * something, such as selecting the newly added panel. */
+  id: string;
   layout?: MosaicNode<string>;
   tabId?: string;
   config?: PanelConfig;
@@ -232,8 +235,8 @@ export const addPanel = (payload: AddPanelPayload): ADD_PANEL => ({
 
 export type DropPanelPayload = {
   newPanelType: string;
-  destinationPath: MosaicPath;
-  position: "top" | "bottom" | "left" | "right";
+  destinationPath?: MosaicPath;
+  position?: "top" | "bottom" | "left" | "right";
   tabId?: string;
   config?: PanelConfig;
   relatedConfigs?: SavedProps;
@@ -260,8 +263,8 @@ export type EndDragPayload = {
   panelId: string;
   sourceTabId?: string;
   targetTabId?: string;
-  position: MosaicDropTargetPosition;
-  destinationPath: MosaicPath;
+  position?: MosaicDropTargetPosition;
+  destinationPath?: MosaicPath;
   ownPath: MosaicPath;
 };
 type END_DRAG = { type: "END_DRAG"; payload: EndDragPayload };
@@ -278,7 +281,7 @@ export type PanelsActions =
   | CREATE_TAB_PANEL
   | OVERWRITE_GLOBAL_DATA
   | SET_GLOBAL_DATA
-  | SET_WEBVIZ_NODES
+  | SET_STUDIO_NODES
   | SET_LINKED_GLOBAL_VARIABLES
   | SET_PLAYBACK_CONFIG
   | CLOSE_PANEL

@@ -30,7 +30,7 @@ export const getTopicNames = createSelector<any, any, any, any>(
 ) as FixedParametricSelector<any, any, any>;
 
 export function getTopicPrefixes(topics: string[]): string[] {
-  // only support one prefix now, can add more such as `/webviz_bag_3` later
+  // only support one prefix now, can add more such as `/studio_bag_3` later
   return topics.some((topic) => topic.startsWith(SECOND_SOURCE_PREFIX))
     ? [SECOND_SOURCE_PREFIX]
     : [];
@@ -79,10 +79,10 @@ export const constantsByDatatype = createSelector<any, any, any, any>(
   },
 ) as FixedParametricSelector<any, any, any>;
 
-// webviz enum annotations are of the form: "Foo__webviz_enum" (notice double underscore)
+// Studio enum annotations are of the form: "Foo__foxglove_enum" (notice double underscore)
 // This method returns type name from "Foo" or undefined name doesn't match this format
-export function extractTypeFromWebizEnumAnnotation(name: string): string | undefined {
-  const match = /(.*)__webviz_enum$/.exec(name);
+export function extractTypeFromStudioEnumAnnotation(name: string): string | undefined {
+  const match = /(.*)__(foxglove|webviz)_enum$/.exec(name);
   if (match) {
     return match[1];
   }
@@ -130,9 +130,9 @@ export const enumValuesByDatatypeAndField = createSelector<any, any, any, any>(
           }
           continue;
         }
-        // check if current field is annotation of the form: "Foo bar__webviz_enum"
+        // check if current field is annotation of the form: "Foo bar__foxglove_enum"
         // This means that "bar" is enum of type "Foo"
-        const fieldName = extractTypeFromWebizEnumAnnotation(field.name);
+        const fieldName = extractTypeFromStudioEnumAnnotation(field.name);
         if (fieldName != undefined) {
           // associate all constants of type field.type with the annotated field
           currentResult[fieldName] = constantsByDatatype(datatypes)[field.type];

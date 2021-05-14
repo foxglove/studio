@@ -20,11 +20,11 @@ import { useResizeDetector } from "react-resize-detector";
 
 import getPrettifiedCode from "@foxglove-studio/app/panels/NodePlayground/prettier";
 import { Script, EditorSelection } from "@foxglove-studio/app/panels/NodePlayground/script";
-import vsWebvizTheme from "@foxglove-studio/app/panels/NodePlayground/theme/vs-webviz.json";
+import vsStudioTheme from "@foxglove-studio/app/panels/NodePlayground/theme/vs-studio.json";
 import { getNodeProjectConfig } from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/projectConfig";
 import inScreenshotTests from "@foxglove-studio/app/stories/inScreenshotTests";
 
-const VS_WEBVIZ_THEME = "vs-webviz";
+const VS_STUDIO_THEME = "vs-studio";
 
 const codeEditorService = StaticServices.codeEditorService.get();
 
@@ -157,8 +157,8 @@ const Editor = ({
         return;
       }
       monaco.editor.defineTheme(
-        VS_WEBVIZ_THEME,
-        vsWebvizTheme as monacoApi.editor.IStandaloneThemeData,
+        VS_STUDIO_THEME,
+        vsStudioTheme as monacoApi.editor.IStandaloneThemeData,
       );
 
       // Set eager model sync to enable intellisense between the user code and utility files
@@ -204,14 +204,14 @@ const Editor = ({
       projectConfig.utilityFiles.forEach((sourceFile) => {
         const filePath = monacoApi.Uri.parse(`file://${sourceFile.filePath}`);
         const model =
-          monaco.editor.getModel(filePath) ||
+          monaco.editor.getModel(filePath) ??
           monaco.editor.createModel(sourceFile.sourceCode, "typescript", filePath);
         model.updateOptions({ tabSize: 2 });
       });
 
       const filePath = monacoApi.Uri.parse(`file://${script.filePath}`);
       const model =
-        monaco.editor.getModel(filePath) ||
+        monaco.editor.getModel(filePath) ??
         monaco.editor.createModel(script.code, "typescript", filePath);
 
       // Because anything else is blasphemy.
@@ -268,7 +268,7 @@ const Editor = ({
     <div ref={sizeRef} style={{ width: "100%", height: "100%" }}>
       <MonacoEditor
         language="typescript"
-        theme={VS_WEBVIZ_THEME}
+        theme={VS_STUDIO_THEME}
         editorWillMount={willMount}
         editorDidMount={didMount}
         options={options}

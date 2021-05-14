@@ -55,20 +55,20 @@ const MockPanel2 = Panel(SamplePanel2);
 class MockPanelCatalog implements PanelCatalog {
   getPanelCategories(): PanelCategory[] {
     return [
-      { label: "ROS", key: "ros" },
-      { label: "MISC", key: "misc" },
+      { label: "VISUALIZATION", key: "visualization" },
+      { label: "DEBUGGING", key: "debugging" },
     ];
   }
   getPanelsByCategory(): Map<string, PanelInfo[]> {
     return new Map([
       [
-        "ros",
+        "visualization",
         [
           { title: "Some Panel", component: MockPanel1 },
           { title: "Happy Panel", component: MockPanel2 },
         ],
       ],
-      ["misc", [{ title: "Tab", component: Tab }]],
+      ["debugging", [{ title: "Tab", component: Tab }]],
     ]);
   }
   getPanelsByType(): Map<string, PanelInfo> {
@@ -238,7 +238,7 @@ storiesOf("panels/Tab/index", module)
   .add("with chosen active tab", () => (
     <PanelSetup panelCatalog={new MockPanelCatalog()} fixture={fixture}>
       <Tab
-        config={{
+        overrideConfig={{
           activeTabIdx: 1,
           tabs: [
             {
@@ -283,7 +283,7 @@ storiesOf("panels/Tab/index", module)
         TestUtils.Simulate.mouseEnter(mouseEnterContainer);
       }}
     >
-      <Tab config={{ activeTabIdx: 1, tabs: manyTabs }} />
+      <Tab overrideConfig={{ activeTabIdx: 1, tabs: manyTabs }} />
     </PanelSetup>
   ))
   .add("add tab", () => {

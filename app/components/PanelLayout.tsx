@@ -32,11 +32,10 @@ import {
 } from "@foxglove-studio/app/actions/panels";
 import Flex from "@foxglove-studio/app/components/Flex";
 import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
-import { useExperimentalFeature } from "@foxglove-studio/app/context/ExperimentalFeaturesContext";
 import { usePanelCatalog } from "@foxglove-studio/app/context/PanelCatalogContext";
 import { EmptyDropTarget } from "@foxglove-studio/app/panels/Tab/EmptyDropTarget";
 import { State, Dispatcher } from "@foxglove-studio/app/reducers";
-import { SaveConfigsPayload } from "@foxglove-studio/app/types/panels";
+import { MosaicDropResult, SaveConfigsPayload } from "@foxglove-studio/app/types/panels";
 import { getPanelIdForType, getPanelTypeFromId } from "@foxglove-studio/app/util/layout";
 
 import ErrorBoundary from "./ErrorBoundary";
@@ -67,15 +66,16 @@ const HideTopLevelDropTargets = styled.div.attrs({ style: { margin: 0 } })`
 // drop target. This allows a panel to know which mosaic it was dropped in regardless of nesting
 // level.
 function TabMosaicWrapper({ tabId, children }: PropsWithChildren<{ tabId?: string }>) {
-  const [, drop] = useDrop({
+  const [, drop] = useDrop<unknown, MosaicDropResult, never>({
     accept: MosaicDragType.WINDOW,
     drop: (_item, monitor) => {
-      const nestedDropResult = monitor.getDropResult();
+      const nestedDropResult = monitor.getDropResult<MosaicDropResult>();
       if (nestedDropResult) {
         // The drop result may already have a tabId if it was dropped in a more deeply-nested Tab
         // mosaic. Provide our tabId only if there wasn't one already.
         return { tabId, ...nestedDropResult };
       }
+      return undefined;
     },
   });
   return (
@@ -139,22 +139,21 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
     },
     [createTile, tabId, panelCatalog],
   );
-  const isDemoMode = useExperimentalFeature("demoMode");
   const bodyToRender = useMemo(
     () =>
       layout != undefined || layout === "" ? (
         <MosaicWithoutDragDropContext
           renderTile={renderTile}
-          className={isDemoMode ? "borderless" : "none"}
+          className={"none"}
           resize={{ minimumPaneSizePercentage: 2 }}
           value={layout}
           onChange={onChange}
           mosaicId={mosaicId}
         />
       ) : (
-        <EmptyDropTarget tabId={tabId} mosaicId={mosaicId} />
+        <EmptyDropTarget tabId={tabId} />
       ),
-    [isDemoMode, layout, mosaicId, onChange, renderTile, tabId],
+    [layout, mosaicId, onChange, renderTile, tabId],
   );
 
   return <ErrorBoundary ref={props.forwardedRef as any}>{bodyToRender}</ErrorBoundary>;

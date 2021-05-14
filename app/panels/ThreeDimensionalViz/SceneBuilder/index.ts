@@ -42,8 +42,8 @@ import {
   POSE_MARKER_SCALE,
   LINED_CONVEX_HULL_RENDERING_SETTING,
   MARKER_ARRAY_DATATYPES,
-  WEBVIZ_MARKER_DATATYPE,
-  WEBVIZ_MARKER_ARRAY_DATATYPE,
+  STUDIO_MARKER_DATATYPE,
+  STUDIO_MARKER_ARRAY_DATATYPE,
   VISUALIZATION_MSGS_MARKER_DATATYPE,
   VISUALIZATION_MSGS_MARKER_ARRAY_DATATYPE,
   POSE_STAMPED_DATATYPE,
@@ -334,7 +334,7 @@ export default class SceneBuilder implements MarkerProvider {
     // We need to update topicsToRender here so changes to the selected namespaces will appear on the next render()
     Object.keys(selectedNamespacesByTopic).forEach((topicName) => {
       const newNamespaces = selectedNamespacesByTopic[topicName];
-      const previousNamespaces = [...(this.selectedNamespacesByTopic?.[topicName] || [])];
+      const previousNamespaces = [...(this.selectedNamespacesByTopic?.[topicName] ?? [])];
       if (xor(newNamespaces, previousNamespaces).length > 0) {
         this._markTopicToRender(topicName);
       }
@@ -464,7 +464,7 @@ export default class SceneBuilder implements MarkerProvider {
       this.reportedErrorTopics.topicsWithBadFrameIds.add(topic);
       sendNotification(
         `Topic ${topic} has bad frame`,
-        "Non-root transforms may be out of sync, since webviz uses the latest transform message instead of the one matching header.stamp",
+        "Non-root transforms may be out of sync, since Studio uses the latest transform message instead of the one matching header.stamp",
         "user",
         "warn",
       );
@@ -598,7 +598,7 @@ export default class SceneBuilder implements MarkerProvider {
       this._settingsByKey[`ns:${topic}:${namespace}`] || this._settingsByKey[`t:${topic}`] || {};
 
     // Check for matching colorOverrideMarkerMatchers for this topic
-    const colorOverrideMarkerMatchers = this._colorOverrideMarkerMatchersByTopic[topic] || [];
+    const colorOverrideMarkerMatchers = this._colorOverrideMarkerMatchersByTopic[topic] ?? [];
     const matchingMatcher = colorOverrideMarkerMatchers.find(({ checks = [] }) =>
       checks.every(({ markerKeyPath = [], value }) => {
         // Get the item at the key path
@@ -776,7 +776,7 @@ export default class SceneBuilder implements MarkerProvider {
   // extracts renderable markers from the ros frame
   render(): void {
     this.flattenedZHeightPose =
-      this._hooks.getFlattenedPose(this.frame as any) || this.flattenedZHeightPose;
+      this._hooks.getFlattenedPose(this.frame as any) ?? this.flattenedZHeightPose;
 
     if (this.flattenedZHeightPose?.position) {
       this.bounds.update(this.flattenedZHeightPose.position);
@@ -794,12 +794,12 @@ export default class SceneBuilder implements MarkerProvider {
   _consumeMessage = (topic: string, datatype: string, msg: MessageEvent<unknown>): void => {
     const { message } = msg;
     switch (datatype) {
-      case WEBVIZ_MARKER_DATATYPE:
+      case STUDIO_MARKER_DATATYPE:
       case VISUALIZATION_MSGS_MARKER_DATATYPE:
         this._consumeMarker(topic, message as BaseMarker);
 
         break;
-      case WEBVIZ_MARKER_ARRAY_DATATYPE:
+      case STUDIO_MARKER_ARRAY_DATATYPE:
       case VISUALIZATION_MSGS_MARKER_ARRAY_DATATYPE:
         this._consumeMarkerArray(topic, message);
 
@@ -888,7 +888,7 @@ export default class SceneBuilder implements MarkerProvider {
     if (!this.frame) {
       return;
     }
-    const messages = this.frame[topic] || this.lastSeenMessages[topic];
+    const messages = this.frame[topic] ?? this.lastSeenMessages[topic];
     if (!messages) {
       return;
     }
@@ -938,7 +938,7 @@ export default class SceneBuilder implements MarkerProvider {
         // Highlight if marker matches any of this topic's highlightMarkerMatchers; dim other markers
         // Markers that are not re-processed on this frame (i.e. older markers whose lifetime has
         // not expired) do not get a new copy of interactionData, so they always need to be reset.
-        const markerMatches = (this._highlightMarkerMatchersByTopic[topic.name] || []).some(
+        const markerMatches = (this._highlightMarkerMatchersByTopic[topic.name] ?? []).some(
           ({ checks = [] }) =>
             checks.every(({ markerKeyPath, value }) => {
               const markerValue = _.get(message, markerKeyPath as any);
@@ -977,7 +977,6 @@ export default class SceneBuilder implements MarkerProvider {
     // allow topic settings to override renderable marker command (see MarkerSettingsEditor.js)
     const { overrideCommand } = this._settingsByKey[`t:${topic.name}`] || {};
 
-    // prettier-ignore
     switch (marker.type) {
       case 0:
         return add.arrow(marker);
@@ -1026,13 +1025,11 @@ export default class SceneBuilder implements MarkerProvider {
         return add.overlayIcon(marker);
       case 110:
         return add.color(marker);
-      default:
-        {
-          if (!this._hooks.addMarkerToCollector(add, marker)) {
-            this._setTopicError(topic.name, `Unsupported marker type: ${marker.type}`);
-          }
+      default: {
+        if (!this._hooks.addMarkerToCollector(add, marker)) {
+          this._setTopicError(topic.name, `Unsupported marker type: ${marker.type}`);
         }
-
+      }
     }
   }
 }

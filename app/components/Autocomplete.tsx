@@ -16,21 +16,26 @@ import { maxBy } from "lodash";
 import React, { PureComponent, RefObject } from "react";
 import ReactAutocomplete from "react-autocomplete";
 import { createPortal } from "react-dom";
-import textWidth from "text-width";
+import textMetrics from "text-metrics";
 
+import { SANS_SERIF } from "@foxglove-studio/app/styles/fonts";
 import fuzzyFilter from "@foxglove-studio/app/util/fuzzyFilter";
 
 import styles from "./Autocomplete.module.scss";
 
-const fontFamily = "'Inter UI', -apple-system, BlinkMacSystemFont, sans-serif";
-const fontSize = 12;
+const fontFamily = SANS_SERIF;
+const fontSize = "12px";
+let textMeasure: textMetrics.TextMeasure;
 function measureText(text: string): number {
-  return textWidth(text, { family: fontFamily, size: fontSize }) + 3;
+  if (textMeasure == undefined) {
+    textMeasure = textMetrics.init({ fontFamily, fontSize });
+  }
+  return textMeasure.width(text) + 3;
 }
 
 const rowHeight = parseInt(styles.rowHeight ?? "24");
 
-// <Autocomplete> is a Webviz-specific autocomplete with support for things like multiple
+// <Autocomplete> is a Studio-specific autocomplete with support for things like multiple
 // autocompletes that seamlessly transition into each other, e.g. when building more complex
 // strings like in the Plot panel.
 //

@@ -14,6 +14,7 @@
 import { storiesOf } from "@storybook/react";
 
 import { setUserNodes } from "@foxglove-studio/app/actions/panels";
+import SchemaEditor from "@foxglove-studio/app/components/PanelSettings/SchemaEditor";
 import NodePlayground, { Explorer } from "@foxglove-studio/app/panels/NodePlayground";
 import Sidebar from "@foxglove-studio/app/panels/NodePlayground/Sidebar";
 import testDocs from "@foxglove-studio/app/panels/NodePlayground/index.test.md";
@@ -21,11 +22,11 @@ import rawUserUtils from "@foxglove-studio/app/players/UserNodePlayer/nodeTransf
 import { UserNodeLog } from "@foxglove-studio/app/players/UserNodePlayer/types";
 import PanelSetup from "@foxglove-studio/app/stories/PanelSetup";
 import { SExpectedResult } from "@foxglove-studio/app/stories/storyHelpers";
-import { DEFAULT_WEBVIZ_NODE_PREFIX } from "@foxglove-studio/app/util/globalConstants";
+import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove-studio/app/util/globalConstants";
 
 const userNodes = {
-  nodeId1: { name: "/webviz_node/node", sourceCode: "const someVariableName = 1;" },
-  nodeId2: { name: "/webviz_node/node2", sourceCode: "const anotherVariableName = 2;" },
+  nodeId1: { name: "/studio_node/node", sourceCode: "const someVariableName = 1;" },
+  nodeId2: { name: "/studio_node/node2", sourceCode: "const anotherVariableName = 2;" },
 };
 
 const userNodeRosLib = `
@@ -69,7 +70,7 @@ const sourceCodeWithLogs = `
   import { Messages } from "ros";
 
   export const inputs = ["/my_topic"];
-  export const output = "${DEFAULT_WEBVIZ_NODE_PREFIX}";
+  export const output = "${DEFAULT_STUDIO_NODE_PREFIX}";
 
   const publisher = (): Messages.std_msgs__ColorRGBA => {
     log({ "someKey": { "nestedKey": "nestedValue" } });
@@ -96,7 +97,7 @@ const sourceCodeWithUtils = `
   import { norm } from "./pointClouds";
 
   export const inputs = ["/my_topic"];
-  export const output = "${DEFAULT_WEBVIZ_NODE_PREFIX}/1";
+  export const output = "${DEFAULT_STUDIO_NODE_PREFIX}/1";
 
   const publisher = (message: Input<"/my_topic">): { val: number } => {
     const val = norm({x:1, y:2, z:3});
@@ -147,7 +148,7 @@ storiesOf("panels/NodePlayground", module)
         ...fixture,
         userNodes: {
           nodeId1: {
-            name: "/webviz_node/node",
+            name: "/studio_node/node",
             sourceCode: sourceCodeWithUtils,
           },
         },
@@ -155,7 +156,7 @@ storiesOf("panels/NodePlayground", module)
         userNodeLogs: { nodeId1: { logs: [] } },
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ))
   .add("Editor shows new code when userNodes change", () => (
@@ -164,7 +165,7 @@ storiesOf("panels/NodePlayground", module)
         ...fixture,
         userNodes: {
           nodeId1: {
-            name: "/webviz_node/node",
+            name: "/studio_node/node",
             sourceCode: sourceCodeWithUtils,
           },
         },
@@ -177,7 +178,7 @@ storiesOf("panels/NodePlayground", module)
           store.dispatch(
             setUserNodes({
               nodeId1: {
-                name: "/webviz_node/node",
+                name: "/studio_node/node",
                 sourceCode: utilsSourceCode,
               },
             }),
@@ -186,7 +187,7 @@ storiesOf("panels/NodePlayground", module)
         }, 500);
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
       <SExpectedResult style={{ left: "375px", top: "150px" }}>
         Should show function norm() code
       </SExpectedResult>
@@ -198,7 +199,7 @@ storiesOf("panels/NodePlayground", module)
         ...fixture,
         userNodes: {
           nodeId1: {
-            name: "/webviz_node/node",
+            name: "/studio_node/node",
             sourceCode: sourceCodeWithUtils,
           },
         },
@@ -207,11 +208,11 @@ storiesOf("panels/NodePlayground", module)
       }}
     >
       <NodePlayground
-        config={{
+        overrideConfig={{
           selectedNodeId: "nodeId1",
           additionalBackStackItems: [
             {
-              filePath: "/webviz_node/pointClouds",
+              filePath: "/studio_node/pointClouds",
               code: utilsSourceCode,
               readOnly: true,
             },
@@ -226,7 +227,7 @@ storiesOf("panels/NodePlayground", module)
         ...fixture,
         userNodes: {
           nodeId1: {
-            name: "/webviz_node/node",
+            name: "/studio_node/node",
             sourceCode: sourceCodeWithUtils,
           },
         },
@@ -240,11 +241,11 @@ storiesOf("panels/NodePlayground", module)
       }}
     >
       <NodePlayground
-        config={{
+        overrideConfig={{
           selectedNodeId: "nodeId1",
           additionalBackStackItems: [
             {
-              filePath: "/webviz_node/pointClouds",
+              filePath: "/studio_node/pointClouds",
               code: utilsSourceCode,
               readOnly: true,
             },
@@ -277,7 +278,7 @@ storiesOf("panels/NodePlayground", module)
           }, SIDEBAR_OPEN_CLICK_TIMEOUT);
         }}
       >
-        <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+        <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
       </PanelSetup>
     );
   })
@@ -291,7 +292,7 @@ storiesOf("panels/NodePlayground", module)
           }, SIDEBAR_OPEN_CLICK_TIMEOUT);
         }}
       >
-        <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+        <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
       </PanelSetup>
     );
   })
@@ -305,7 +306,7 @@ storiesOf("panels/NodePlayground", module)
           }, SIDEBAR_OPEN_CLICK_TIMEOUT);
         }}
       >
-        <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+        <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
       </PanelSetup>
     );
   })
@@ -360,7 +361,9 @@ storiesOf("panels/NodePlayground", module)
     };
     return (
       <PanelSetup fixture={{ ...fixture, userNodes }}>
-        <NodePlayground config={{ selectedNodeId: "nodeId1", editorForStorybook: <NeverLoad /> }} />
+        <NodePlayground
+          overrideConfig={{ selectedNodeId: "nodeId1", editorForStorybook: <NeverLoad /> }}
+        />
       </PanelSetup>
     );
   })
@@ -368,18 +371,18 @@ storiesOf("panels/NodePlayground", module)
     <PanelSetup
       fixture={{
         ...fixture,
-        userNodes: { nodeId1: { name: "/webviz_node/node", sourceCode: "" } },
+        userNodes: { nodeId1: { name: "/studio_node/node", sourceCode: "" } },
         userNodeDiagnostics: { nodeId1: { diagnostics: [] } },
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ))
   .add("BottomBar - no errors - open", () => (
     <PanelSetup
       fixture={{
         ...fixture,
-        userNodes: { nodeId1: { name: "/webviz_node/node", sourceCode: "" } },
+        userNodes: { nodeId1: { name: "/studio_node/node", sourceCode: "" } },
         userNodeDiagnostics: { nodeId1: { diagnostics: [] } },
       }}
       onMount={(el: any) => {
@@ -391,14 +394,14 @@ storiesOf("panels/NodePlayground", module)
         }, OPEN_BOTTOM_BAR_TIMEOUT);
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ))
   .add("BottomBar - no logs - open", () => (
     <PanelSetup
       fixture={{
         ...fixture,
-        userNodes: { nodeId1: { name: "/webviz_node/node", sourceCode: "" } },
+        userNodes: { nodeId1: { name: "/studio_node/node", sourceCode: "" } },
         userNodeDiagnostics: { nodeId1: { diagnostics: [] } },
       }}
       onMount={(el: any) => {
@@ -410,14 +413,14 @@ storiesOf("panels/NodePlayground", module)
         }, OPEN_BOTTOM_BAR_TIMEOUT);
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ))
   .add("BottomBar - errors - closed", () => (
     <PanelSetup
       fixture={{
         ...fixture,
-        userNodes: { nodeId1: { name: "/webviz_node/node", sourceCode: "" } },
+        userNodes: { nodeId1: { name: "/studio_node/node", sourceCode: "" } },
         userNodeDiagnostics: {
           nodeId1: {
             diagnostics: [
@@ -456,14 +459,14 @@ storiesOf("panels/NodePlayground", module)
         },
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ))
   .add("BottomBar - errors - open", () => (
     <PanelSetup
       fixture={{
         ...fixture,
-        userNodes: { nodeId1: { name: "/webviz_node/node", sourceCode: "" } },
+        userNodes: { nodeId1: { name: "/studio_node/node", sourceCode: "" } },
         userNodeDiagnostics: {
           nodeId1: {
             diagnostics: [
@@ -510,7 +513,7 @@ storiesOf("panels/NodePlayground", module)
         }, OPEN_BOTTOM_BAR_TIMEOUT);
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ))
   .add("BottomBar - logs - closed", () => (
@@ -519,7 +522,7 @@ storiesOf("panels/NodePlayground", module)
         ...fixture,
         userNodes: {
           nodeId1: {
-            name: "/webviz_node/node",
+            name: "/studio_node/node",
             sourceCode: sourceCodeWithLogs,
           },
         },
@@ -527,7 +530,7 @@ storiesOf("panels/NodePlayground", module)
         userNodeLogs: { nodeId1: { logs } },
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ))
   .add("BottomBar - logs - open", () => (
@@ -536,7 +539,7 @@ storiesOf("panels/NodePlayground", module)
         ...fixture,
         userNodes: {
           nodeId1: {
-            name: "/webviz_node/node",
+            name: "/studio_node/node",
             sourceCode: sourceCodeWithLogs,
           },
         },
@@ -552,14 +555,14 @@ storiesOf("panels/NodePlayground", module)
         }, OPEN_BOTTOM_BAR_TIMEOUT);
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
   ))
   .add("BottomBar - cleared logs", () => (
     <PanelSetup
       fixture={{
         ...fixture,
-        userNodes: { nodeId1: { name: "/webviz_node/node", sourceCode: "" } },
+        userNodes: { nodeId1: { name: "/studio_node/node", sourceCode: "" } },
         userNodeDiagnostics: { nodeId1: { diagnostics: [] } },
         userNodeLogs: { nodeId1: { logs } },
       }}
@@ -576,6 +579,16 @@ storiesOf("panels/NodePlayground", module)
         }, OPEN_BOTTOM_BAR_TIMEOUT);
       }}
     >
-      <NodePlayground config={{ selectedNodeId: "nodeId1" }} />
+      <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
     </PanelSetup>
-  ));
+  ))
+  .add("Settings", () => {
+    return (
+      <SchemaEditor
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        configSchema={NodePlayground.configSchema!}
+        config={NodePlayground.defaultConfig}
+        saveConfig={() => {}}
+      />
+    );
+  });

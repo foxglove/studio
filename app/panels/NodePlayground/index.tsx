@@ -30,12 +30,11 @@ import TextContent from "@foxglove-studio/app/components/TextContent";
 import BottomBar from "@foxglove-studio/app/panels/NodePlayground/BottomBar";
 import Sidebar from "@foxglove-studio/app/panels/NodePlayground/Sidebar";
 import Playground from "@foxglove-studio/app/panels/NodePlayground/playground-icon.svg";
-import { UserNodes } from "@foxglove-studio/app/types/panels";
-import { DEFAULT_WEBVIZ_NODE_PREFIX } from "@foxglove-studio/app/util/globalConstants";
+import { PanelConfigSchema, UserNodes } from "@foxglove-studio/app/types/panels";
+import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove-studio/app/util/globalConstants";
 import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
 
 import Config from "./Config";
-import NodePlaygroundSettings from "./NodePlaygroundSettings";
 import { Script } from "./script";
 
 const Editor = React.lazy(() => import("@foxglove-studio/app/panels/NodePlayground/Editor"));
@@ -46,7 +45,7 @@ type Output = {};
 type GlobalVariables = { id: number };
 
 export const inputs = [];
-export const output = "${DEFAULT_WEBVIZ_NODE_PREFIX}";
+export const output = "${DEFAULT_STUDIO_NODE_PREFIX}";
 
 // Populate 'Input' with a parameter to properly type your inputs, e.g. 'Input<"/your_input_topic">'
 const publisher = (message: Input<>, globalVars: GlobalVariables): Output => {
@@ -183,7 +182,7 @@ function NodePlayground(props: Props) {
       setUserNodes({
         [newNodeId]: {
           sourceCode,
-          name: `${DEFAULT_WEBVIZ_NODE_PREFIX}${newNodeId.split("-")[0]}`,
+          name: `${DEFAULT_STUDIO_NODE_PREFIX}${newNodeId.split("-")[0]}`,
         },
       });
       saveConfig({ selectedNodeId: newNodeId });
@@ -230,11 +229,9 @@ function NodePlayground(props: Props) {
     [scriptBackStack],
   );
 
-  //const { width, height, ref: sizeRef } = useResizeDetector();
-
   return (
     <Stack verticalFill>
-      <PanelToolbar floating menuContent={<NodePlaygroundSettings {...props} />} />
+      <PanelToolbar floating />
       <Stack horizontal verticalFill>
         <Sidebar
           explorer={explorer}
@@ -360,11 +357,18 @@ function NodePlayground(props: Props) {
   );
 }
 
-NodePlayground.panelType = "NodePlayground";
-NodePlayground.defaultConfig = {
-  selectedNodeId: undefined,
-  autoFormatOnSave: true,
-};
-NodePlayground.supportsStrictMode = false;
+const configSchema: PanelConfigSchema<Config> = [
+  { key: "autoFormatOnSave", type: "toggle", title: "Auto-format on save" },
+];
 
-export default Panel(NodePlayground);
+export default Panel(
+  Object.assign(NodePlayground, {
+    panelType: "NodePlayground",
+    defaultConfig: {
+      selectedNodeId: undefined,
+      autoFormatOnSave: true,
+    },
+    supportsStrictMode: false,
+    configSchema,
+  }),
+);

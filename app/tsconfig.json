@@ -1,15 +1,6 @@
 {
   "extends": "@foxglove/tsconfig/tsconfig.base.json",
-  "include": [
-    "./**/*",
-    "./**/*.json",
-    "./.storybook/**/*",
-    "../package.json",
-    "../typings/*.d.ts",
-    // Webpack config is imported by Storybook
-    "../webpack.*.config.ts",
-    "../WebpackArgv.ts"
-  ],
+  "include": ["./**/*", "./**/*.json", "./.storybook/**/*", "../package.json"],
   "compilerOptions": {
     "noEmit": true,
     "rootDir": "../",

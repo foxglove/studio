@@ -14,7 +14,7 @@
 import { storiesOf } from "@storybook/react";
 import { createMemoryHistory } from "history";
 import { DndProvider } from "react-dnd";
-import HTML5Backend from "react-dnd-html5-backend";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import TestUtils from "react-dom/test-utils";
 import { Provider } from "react-redux";
 
@@ -46,14 +46,14 @@ const MockPanel2 = Panel(SamplePanel2);
 class MockPanelCatalog implements PanelCatalog {
   getPanelCategories(): PanelCategory[] {
     return [
-      { label: "ROS", key: "ros" },
-      { label: "DEBUG", key: "debug" },
+      { label: "VISUALIZATION", key: "visualization" },
+      { label: "DEBUGGING", key: "debugging" },
     ];
   }
   getPanelsByCategory(): Map<string, PanelInfo[]> {
     return new Map([
-      ["ros", [{ title: "Some Panel", component: MockPanel1 }]],
-      ["debug", [{ title: "Happy Panel", component: MockPanel2 }]],
+      ["visualization", [{ title: "Some Panel", component: MockPanel1 }]],
+      ["debugging", [{ title: "Happy Panel", component: MockPanel2 }]],
     ]);
   }
   getPanelsByType(): Map<string, PanelInfo> {
