@@ -8,7 +8,7 @@ import { Deserializer } from "./Deserializer";
 import { HttpRequest, HttpResponse, HttpServer } from "./HttpTypes";
 import { serializeFault, serializeMethodResponse } from "./Serializer";
 import { XmlRpcFault } from "./XmlRpcFault";
-import { XmlRpcMethodHandler } from "./XmlRpcTypes";
+import { XmlRpcMethodHandler, XmlRpcValue } from "./XmlRpcTypes";
 
 // Create an XML-RPC server with a user-supplied HTTP(S) implementation
 export class XmlRpcServer {
@@ -41,8 +41,15 @@ export class XmlRpcServer {
   }
 
   private _requestHandler = async (req: HttpRequest): Promise<HttpResponse> => {
-    const deserializer = new Deserializer();
-    const [methodName, args] = await deserializer.deserializeMethodCall(req.body);
+    let methodName: string;
+    let args: XmlRpcValue[];
+    try {
+      const deserializer = new Deserializer();
+      [methodName, args] = await deserializer.deserializeMethodCall(req.body);
+    } catch (err) {
+      return { statusCode: 500, statusMessage: `deserializeMethodCall failed: ${err}` };
+    }
+
     const handler = this.xmlRpcHandlers.get(methodName);
     if (handler != undefined) {
       let body: string | undefined;
