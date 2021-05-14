@@ -16,7 +16,7 @@ async function main() {
 
   await rosMaster.start(hostname, port);
   // eslint-disable-next-line no-restricted-syntax
-  console.log(`ROS_MASTER_URI=http://${hostname}:${port}`);
+  console.log(`ROS_MASTER_URI=http://${hostname}:${port}/`);
 }
 
 main();
