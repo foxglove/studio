@@ -31,7 +31,7 @@ import Icon from "@foxglove-studio/app/components/Icon";
 import { toolsColorScheme } from "@foxglove-studio/app/util/toolsColorScheme";
 
 import TableCell from "./TableCell";
-import { sanitizeAccessorPath } from "./sanitizeAccessor";
+import { sanitizeAccessorPath } from "./sanitizeAccessorPath";
 
 function getColumnsFromObject(
   val: { toJSON?: () => Record<string, unknown> },

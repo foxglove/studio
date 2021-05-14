@@ -17,7 +17,8 @@ import { Row } from "react-table";
 import styled from "styled-components";
 
 import Icon from "@foxglove-studio/app/components/Icon";
-import { sanitizeAccessorPath } from "@foxglove-studio/app/panels/Table/sanitizeAccessor";
+
+import { sanitizeAccessorPath } from "./sanitizeAccessorPath";
 
 const ObjectCell = styled.span`
   font-style: italic;
