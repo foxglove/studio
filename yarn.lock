@@ -2236,6 +2236,8 @@ __metadata:
   resolution: "@foxglove/ros1@workspace:packages/ros1"
   dependencies:
     "@foxglove/xmlrpc": "workspace:packages/xmlrpc"
+    esbuild: 0.11.21
+    esbuild-runner: 1.3.2
     eventemitter3: 4.0.7
     jest: 27.0.0-next.8
     jest-circus: 27.0.0-next.8
@@ -11426,6 +11428,37 @@ __metadata:
   version: 0.35.6
   resolution: "es6-shim@npm:0.35.6"
   checksum: 37aa7cb816826babc934a0909668f9e7bf8c558c0d61254c88da52be1a261e89da65566c584644747ae74fe3af77e1e35db6bcb001ea6c2ec53d6c5e5ef44449
+  languageName: node
+  linkType: hard
+
+"esbuild-runner@npm:1.3.2":
+  version: 1.3.2
+  resolution: "esbuild-runner@npm:1.3.2"
+  dependencies:
+    esbuild: ^0.8.20
+    source-map-support: ^0.5.19
+    tslib: ^2.0.3
+  bin:
+    esr: bin/esr.js
+  checksum: ab16a3dccd147a4d896fe5dbcd748b97990304a7f13ed32a58cb06c92de824f734b92fcaab9f05bbf442f4cf9bf7fdc96adbcf93819a12551548147899334cac
+  languageName: node
+  linkType: hard
+
+"esbuild@npm:0.11.21":
+  version: 0.11.21
+  resolution: "esbuild@npm:0.11.21"
+  bin:
+    esbuild: bin/esbuild
+  checksum: 5b122d678a0c00b746f8862a8e51656a268d3416487bfe61006ebb893519ee512d0a66639c23c1aeb89d454812b3f7c6e60e7c5a0859dcebfa8e2fe52ac8bdb4
+  languageName: node
+  linkType: hard
+
+"esbuild@npm:^0.8.20":
+  version: 0.8.57
+  resolution: "esbuild@npm:0.8.57"
+  bin:
+    esbuild: bin/esbuild
+  checksum: 0942950a21a30b57a324380cfedcb425cc1245412e720593415afa0d4f1b7c5f931aa6330937dc1353c754d45c1e5ff7dbc52eb514f54d85517114971300b454
   languageName: node
   linkType: hard
 
