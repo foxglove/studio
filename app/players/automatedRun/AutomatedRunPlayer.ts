@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { intersection } from "lodash";
 import Queue from "promise-queue";
 import { Time, TimeUtil } from "rosbag";
 import { v4 as uuidv4 } from "uuid";
@@ -42,7 +43,6 @@ import sendNotification, {
 } from "@foxglove-studio/app/util/sendNotification";
 import { clampTime, subtractTimes, toMillis } from "@foxglove-studio/app/util/time";
 import Logger from "@foxglove/log";
-import { intersection } from "lodash";
 
 const logger = Logger.getLogger(__filename);
 

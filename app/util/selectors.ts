@@ -11,7 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { keyBy } from "lodash";
+import { intersection, keyBy } from "lodash";
+import memoizeWeak from "memoize-weak";
 import { createSelectorCreator, defaultMemoize, createSelector } from "reselect";
 import shallowequal from "shallowequal";
 
@@ -28,6 +29,15 @@ export const getTopicNames = createSelector<any, any, any, any>(
   (topics: Topic[]) => topics,
   (topics: Topic[]): string[] => topics.map((topic) => topic.name),
 ) as FixedParametricSelector<any, any, any>;
+
+export const getSanitizedTopics = memoizeWeak(
+  (subscribedTopics: Set<string>, providerTopics: Topic[]): string[] => {
+    return intersection(
+      Array.from(subscribedTopics),
+      providerTopics.map(({ name }) => name),
+    );
+  },
+);
 
 export function getTopicPrefixes(topics: string[]): string[] {
   // only support one prefix now, can add more such as `/studio_bag_3` later
