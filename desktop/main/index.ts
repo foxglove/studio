@@ -25,6 +25,7 @@ import {
   registerRosPackageProtocolHandlers,
   registerRosPackageProtocolSchemes,
 } from "./rosPackageResources";
+import setDevModeDockIcon from "./setDevModeDockIcon";
 import { getTelemetrySettings } from "./telemetry";
 
 const start = Date.now();
@@ -51,6 +52,13 @@ if (allowCrashReporting && typeof process.env.SENTRY_DSN === "string") {
     dsn: process.env.SENTRY_DSN,
     autoSessionTracking: true,
     release: `${process.env.SENTRY_PROJECT}@${APP_VERSION}`,
+    // Remove the default breadbrumbs integration - it does not accurately track breadcrumbs and
+    // creates more noise than benefit.
+    integrations: (integrations) => {
+      return integrations.filter((integration) => {
+        return integration.name !== "Breadcrumbs";
+      });
+    },
     maxBreadcrumbs: 10,
   });
 }
@@ -227,15 +235,7 @@ app.on("ready", async () => {
     ]);
     console.groupEnd();
 
-    // In development, we run with the pre-packaged Electron binary, so we need to manually set the Dock icon.
-    try {
-      if (app.dock != undefined) {
-        // This fails when opening the app from a packaged DMG.
-        app.dock.setIcon("resources/icon/icon.png");
-      }
-    } catch (error) {
-      console.error("Unable to set icon", error);
-    }
+    setDevModeDockIcon();
   }
 
   // Content Security Policy
@@ -281,7 +281,7 @@ app.on("ready", async () => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) {
-      new StudioWindow();
+      new StudioWindow().load();
     }
   });
 

@@ -110,9 +110,9 @@ export type UpdatePanelConfig<Config> = (
 export type OpenSiblingPanel = (arg0: string, cb: (arg0: PanelConfig) => PanelConfig) => void;
 
 type KeyPathsOfImpl<T, Prefix extends string> =
-  // return string when given any/unknown
+  // return never when given any/unknown
   unknown extends T
-    ? string
+    ? never
     : // only extract keys from object types - not things like String.indexOf and Number.toString
     T extends Record<string, unknown>
     ? {
@@ -131,7 +131,18 @@ type KeyPathsOf<T> = KeyPathsOfImpl<T, "">;
 
 export type PanelConfigSchemaEntry<ConfigKey> =
   | { key: ConfigKey; type: "text"; title: string; placeholder?: string }
-  | { key: ConfigKey; type: "number"; title: string; validate?: (value: number) => number }
+  | {
+      key: ConfigKey;
+      type: "number";
+      title: string;
+      /**
+       * If validate returns undefined, the field value will not be changed. Otherwise the returned
+       * value will be used instead of the input value.
+       */
+      validate?: (value: number) => number | undefined;
+      placeholder?: string;
+      allowEmpty?: boolean;
+    }
   | { key: ConfigKey; type: "color"; title: string }
   | { key: ConfigKey; type: "toggle"; title: string }
   | {
@@ -140,4 +151,6 @@ export type PanelConfigSchemaEntry<ConfigKey> =
       title: string;
       options: { value: string | number; text: string }[];
     };
-export type PanelConfigSchema<Config> = PanelConfigSchemaEntry<KeyPathsOf<Config>>[];
+export type PanelConfigSchema<Config> = unknown extends Config
+  ? PanelConfigSchemaEntry<string>[]
+  : PanelConfigSchemaEntry<KeyPathsOf<Config>>[];

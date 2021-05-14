@@ -5,31 +5,12 @@
 // This file incorporates work covered by the following copyright and
 // permission notice:
 //
-//   Copyright 2018-2021 Cruise LLC
+//   Copyright 2020-2021 Cruise LLC
 //
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-@import "@foxglove-studio/app/styles/colors.module.scss";
-
-.input {
-  width: 70px;
-  height: 28px;
-  margin-top: -4px;
-  margin-bottom: -4px;
-}
-
-.inputError {
-  color: $red;
-}
-
-.lockItem {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.lockIcon {
-  fill: currentColor;
+export function sanitizeAccessorPath(accessorPath: string): string {
+  return accessorPath.replace(/\./g, "-");
 }

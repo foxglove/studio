@@ -11,10 +11,12 @@ import {
   ITooltipStyles,
   ITooltipStyleProps,
   IToggleStyles,
+  IStyle,
 } from "@fluentui/react";
 import { createTheme } from "@fluentui/theme";
 
 import { SANS_SERIF } from "@foxglove-studio/app/styles/fonts";
+import styles from "@foxglove-studio/app/styles/variables.module.scss";
 import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
 
 // https://aka.ms/themedesigner
@@ -109,32 +111,39 @@ export default createTheme({
         },
       } as IToggleStyles,
     },
+    Titlebar: {
+      styles: {
+        root: {
+          height: styles.topBarHeight,
+        } as IStyle,
+      },
+    },
   },
   isInverted: true,
   palette: {
-    themePrimary: "#b093c4",
-    themeLighterAlt: "#070608",
-    themeLighter: "#1c181f",
-    themeLight: "#352c3b",
-    themeTertiary: "#6a5876",
-    themeSecondary: "#9b82ad",
-    themeDarkAlt: "#b79dca",
-    themeDark: "#c2aad2",
-    themeDarker: "#d1bfde",
+    themePrimary: "#b8aefd",
+    themeLighterAlt: "#c0b7fd",
+    themeLighter: "#c8c0fd",
+    themeLight: "#d0c9fd",
+    themeTertiary: "#d7d2fe",
+    themeSecondary: "#dfdafe",
+    themeDarkAlt: "#e7e3fe",
+    themeDark: "#efecfe",
+    themeDarker: "#f6f5ff",
     neutralLighterAlt: "#1a1a21",
     neutralLighter: "#22222a",
     neutralLight: "#2e2e39",
     neutralQuaternaryAlt: "#363642",
     neutralQuaternary: "#3c3c49",
     neutralTertiaryAlt: "#595968",
-    neutralTertiary: "#8c8c8a",
-    neutralSecondary: "#8c8c8a",
-    neutralPrimaryAlt: "#fcfcf9",
-    neutralPrimary: "#f7f7f3",
-    neutralDark: "#fdfdfc",
-    black: "#fefefd",
-    blackTranslucent40: "#fefefd66",
+    neutralTertiary: "#f3f3f3",
+    neutralSecondary: "#f5f5f5",
+    neutralPrimaryAlt: "#f7f7f7",
+    neutralPrimary: "#eeeeee",
+    neutralDark: "#fbfbfb",
+    black: "#fdfdfd",
     white: "#121217",
+    blackTranslucent40: "#fdfdfd66",
     whiteTranslucent40: "#12121766",
   },
 });

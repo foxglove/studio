@@ -10,12 +10,11 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { ReactElement, useState, useEffect, useMemo, Suspense } from "react";
+import { ReactElement, useState, Suspense, useCallback, useMemo } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { Provider as ReduxProvider } from "react-redux";
 
-import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
 import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
 import LayoutStorageReduxAdapter from "@foxglove-studio/app/components/LayoutStorageReduxAdapter";
 import MultiProvider from "@foxglove-studio/app/components/MultiProvider";
@@ -25,15 +24,15 @@ import StudioToastProvider from "@foxglove-studio/app/components/StudioToastProv
 import AnalyticsProvider from "@foxglove-studio/app/context/AnalyticsProvider";
 import { AssetsProvider } from "@foxglove-studio/app/context/AssetContext";
 import ModalHost from "@foxglove-studio/app/context/ModalHost";
-import OsContextAppConfigurationProvider from "@foxglove-studio/app/context/OsContextAppConfigurationProvider";
-import OsContextLayoutStorageProvider from "@foxglove-studio/app/context/OsContextLayoutStorageProvider";
 import { PlayerSourceDefinition } from "@foxglove-studio/app/context/PlayerSelectionContext";
-import WindowGeometryContext from "@foxglove-studio/app/context/WindowGeometryContext";
 import URDFAssetLoader from "@foxglove-studio/app/services/URDFAssetLoader";
 import getGlobalStore from "@foxglove-studio/app/store/getGlobalStore";
 import ThemeProvider from "@foxglove-studio/app/theme/ThemeProvider";
 
+import { Desktop } from "../common/types";
 import NativeAppMenuProvider from "./components/NativeAppMenuProvider";
+import NativeStorageAppConfigurationProvider from "./components/NativeStorageAppConfigurationProvider";
+import NativeStorageLayoutStorageProvider from "./components/NativeStorageLayoutStorageProvider";
 
 const BuiltinPanelCatalogProvider = React.lazy(
   () => import("@foxglove-studio/app/context/BuiltinPanelCatalogProvider"),
@@ -42,6 +41,8 @@ const BuiltinPanelCatalogProvider = React.lazy(
 const Workspace = React.lazy(() => import("@foxglove-studio/app/Workspace"));
 
 const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
+
+const desktopBridge = (global as { desktopBridge?: Desktop }).desktopBridge;
 
 export default function App(): ReactElement {
   const globalStore = getGlobalStore();
@@ -65,27 +66,14 @@ export default function App(): ReactElement {
     },
   ];
 
-  // On MacOS we use inset window controls, when the window is full-screen these controls are not present
-  // We detect the full screen state and adjust our rendering accordingly
-  // Note: this does not removed the handlers so should be done at the highest component level
-  const [isFullScreen, setFullScreen] = useState(false);
-  useEffect(() => {
-    OsContextSingleton?.addIpcEventListener("enter-full-screen", () => setFullScreen(true));
-    OsContextSingleton?.addIpcEventListener("leave-full-screen", () => setFullScreen(false));
-  }, []);
-
-  const insetToolbar = OsContextSingleton?.platform === "darwin" && !isFullScreen;
-  const windowGeometry = useMemo(() => ({ insetToolbar }), [insetToolbar]);
-
   const [assetLoaders] = useState(() => [new URDFAssetLoader()]);
 
   const providers = [
     /* eslint-disable react/jsx-key */
-    <OsContextAppConfigurationProvider />,
-    <OsContextLayoutStorageProvider />,
+    <NativeStorageAppConfigurationProvider />,
+    <NativeStorageLayoutStorageProvider />,
     <ThemeProvider />,
     <ModalHost />, // render modal elements inside the ThemeProvider
-    <WindowGeometryContext.Provider value={windowGeometry} />,
     <StudioToastProvider />,
     <ReduxProvider store={globalStore} />,
     <AnalyticsProvider />,
@@ -95,6 +83,14 @@ export default function App(): ReactElement {
     /* eslint-enable react/jsx-key */
   ];
 
+  const deepLinks = useMemo(() => {
+    return desktopBridge?.getDeepLinks() ?? [];
+  }, []);
+
+  const handleToolbarDoubleClick = useCallback(() => {
+    desktopBridge?.handleToolbarDoubleClick();
+  }, []);
+
   return (
     <ErrorBoundary>
       <MultiProvider providers={providers}>
@@ -103,7 +99,11 @@ export default function App(): ReactElement {
         <DndProvider backend={HTML5Backend}>
           <Suspense fallback={<></>}>
             <BuiltinPanelCatalogProvider>
-              <Workspace demoBagUrl={DEMO_BAG_URL} />
+              <Workspace
+                demoBagUrl={DEMO_BAG_URL}
+                deepLinks={deepLinks}
+                onToolbarDoubleClick={handleToolbarDoubleClick}
+              />
             </BuiltinPanelCatalogProvider>
           </Suspense>
         </DndProvider>

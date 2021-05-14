@@ -17,7 +17,6 @@ import { useToasts } from "react-toast-notifications";
 import { useMountedState } from "react-use";
 import styled from "styled-components";
 
-import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
 import { redoLayoutChange, undoLayoutChange } from "@foxglove-studio/app/actions/layoutHistory";
 import { importPanelLayout, loadLayout } from "@foxglove-studio/app/actions/panels";
 import ConnectionList from "@foxglove-studio/app/components/ConnectionList";
@@ -57,6 +56,9 @@ import { ImportPanelLayoutPayload } from "@foxglove-studio/app/types/panels";
 import { isNonEmptyOrUndefined } from "@foxglove-studio/app/util/emptyOrUndefined";
 import inAutomatedRunMode from "@foxglove-studio/app/util/inAutomatedRunMode";
 import { APP_NAME } from "@foxglove-studio/app/version";
+import Log from "@foxglove/log";
+
+const log = Log.getLogger(__filename);
 
 type TestableWindow = Window & { setPanelLayout?: (payload: ImportPanelLayoutPayload) => void };
 
@@ -124,7 +126,13 @@ function Variables() {
 // file types we support for drag/drop
 const allowedDropExtensions = [".bag", ".urdf"];
 
-export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
+type WorkspaceProps = {
+  demoBagUrl?: string;
+  deepLinks?: string[];
+  onToolbarDoubleClick?: () => void;
+};
+
+export default function Workspace(props: WorkspaceProps): JSX.Element {
   const containerRef = useRef<HTMLDivElement>(ReactNull);
   const dispatch = useDispatch();
   const { currentSourceName, selectSource } = usePlayerSelection();
@@ -247,6 +255,10 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
     })();
   }, [appConfiguration, openWelcomeLayout]);
 
+  // previously loaded files are tracked so support the "add bag" feature which loads a second bag
+  // file when the user presses shift during a drag/drop
+  const previousFiles = useRef<File[]>([]);
+
   const { loadFromFile } = useAssets();
 
   const openFiles = useCallback(
@@ -267,11 +279,15 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
       }
 
       if (otherFiles.length > 0) {
+        if (shiftPressed) {
+          previousFiles.current = previousFiles.current.concat(otherFiles);
+        } else {
+          previousFiles.current = otherFiles;
+        }
         selectSource(
           { name: "Local Files", type: "file" },
           {
-            files: otherFiles,
-            append: shiftPressed,
+            files: previousFiles.current,
           },
         );
       }
@@ -286,6 +302,39 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
       openFiles(filesToOpen, { shiftPressed: false });
     }
   }, [filesToOpen, openFiles]);
+
+  useEffect(() => {
+    const firstLink = props.deepLinks?.[0];
+    if (firstLink == undefined) {
+      return;
+    }
+
+    try {
+      const url = new URL(firstLink);
+      // only support the open command
+
+      // Test if the pathname matches //open or //open/
+      if (!/\/\/open\/?/.test(url.pathname)) {
+        return;
+      }
+
+      // only support rosbag urls
+      const type = url.searchParams.get("type");
+      const bagUrl = url.searchParams.get("url");
+      if (type !== "rosbag" || bagUrl == undefined) {
+        return;
+      }
+      selectSource(
+        {
+          name: "Remote Bag",
+          type: "http",
+        },
+        { url: bagUrl },
+      );
+    } catch (err) {
+      log.error(err);
+    }
+  }, [props.deepLinks, selectSource]);
 
   const dropHandler = useCallback(
     ({ files, shiftPressed }: { files: FileList; shiftPressed: boolean }) => {
@@ -332,7 +381,7 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
           </RenderToBodyComponent>
         )}
 
-        <Toolbar onDoubleClick={OsContextSingleton?.handleToolbarDoubleClick}>
+        <Toolbar onDoubleClick={props.onToolbarDoubleClick}>
           <div style={{ flexGrow: 1 }} />
           <SToolbarItem>
             <PlayerStatusIndicator />

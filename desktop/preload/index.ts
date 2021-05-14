@@ -7,12 +7,13 @@ import { contextBridge, ipcRenderer } from "electron";
 import { machineId } from "node-machine-id";
 import os from "os";
 
-import type { OsContext, OsContextForwardedEvent } from "@foxglove-studio/app/OsContext";
+import type { OsContext } from "@foxglove-studio/app/OsContext";
 import { NetworkInterface } from "@foxglove-studio/app/OsContext";
 import { APP_NAME, APP_VERSION } from "@foxglove-studio/app/version";
 import { PreloaderSockets } from "@foxglove/electron-socket/preloader";
 import Logger from "@foxglove/log";
 
+import { Desktop, ForwardedMenuEvent, NativeMenuBridge, Storage } from "../common/types";
 import LocalFileStorage from "./LocalFileStorage";
 
 const log = Logger.getLogger(__filename);
@@ -22,7 +23,7 @@ log.info(`${APP_NAME} ${APP_VERSION}`);
 log.info(`initializing preloader, argv="${window.process.argv.join(" ")}"`);
 
 // Load opt-out settings for crash reporting and telemetry
-const [allowCrashReporting, allowTelemetry] = getTelemetrySettings();
+const [allowCrashReporting] = getTelemetrySettings();
 if (allowCrashReporting && typeof process.env.SENTRY_DSN === "string") {
   log.debug("initializing Sentry in preload");
   initSentry({
@@ -72,13 +73,56 @@ const machineIdPromise = machineId();
 const ctx: OsContext = {
   platform: process.platform,
   pid: process.pid,
+
+  // Environment queries
+  getEnvVar: (envVar: string) => process.env[envVar],
+  getHostname: os.hostname,
+  getNetworkInterfaces: (): NetworkInterface[] => {
+    const output: NetworkInterface[] = [];
+    const ifaces = os.networkInterfaces();
+    for (const name in ifaces) {
+      const iface = ifaces[name];
+      if (iface == undefined) {
+        continue;
+      }
+      for (const info of iface) {
+        output.push({ name, ...info, cidr: info.cidr ?? undefined });
+      }
+    }
+    return output;
+  },
+  getMachineId: (): Promise<string> => {
+    return machineIdPromise;
+  },
+  getAppVersion: (): string => {
+    return APP_VERSION;
+  },
+};
+
+const desktopBridge: Desktop = {
   handleToolbarDoubleClick() {
     ipcRenderer.send("window.toolbar-double-clicked");
   },
-  addIpcEventListener(eventName: OsContextForwardedEvent, handler: () => void) {
+  getDeepLinks: (): string[] => {
+    return window.process.argv.filter((arg) => arg.startsWith("foxglove://"));
+  },
+};
+
+const storageBridge: Storage = {
+  // Context bridge cannot expose "classes" only exposes functions
+  // We use .bind to attach the localFileStorage instance as _this_ to the function
+  list: localFileStorage.list.bind(localFileStorage),
+  all: localFileStorage.all.bind(localFileStorage),
+  get: localFileStorage.get.bind(localFileStorage),
+  put: localFileStorage.put.bind(localFileStorage),
+  delete: localFileStorage.delete.bind(localFileStorage),
+};
+
+const menuBridge: NativeMenuBridge = {
+  addIpcEventListener(eventName: ForwardedMenuEvent, handler: () => void) {
     ipcRenderer.on(eventName, () => handler());
   },
-  removeIpcEventListener(eventName: OsContextForwardedEvent, handler: () => void) {
+  removeIpcEventListener(eventName: ForwardedMenuEvent, handler: () => void) {
     ipcRenderer.off(eventName, () => handler());
   },
   async menuAddInputSource(name: string, handler: () => void) {
@@ -105,65 +149,27 @@ const ctx: OsContext = {
     ipcRenderer.off("menu.click-input-source", listener);
     await ipcRenderer.invoke("menu.remove-input-source", name);
   },
-
-  isCrashReportingEnabled: (): boolean => allowCrashReporting,
-  isTelemetryEnabled: (): boolean => allowTelemetry,
-
-  // Environment queries
-  getEnvVar: (envVar: string) => process.env[envVar],
-  getHostname: os.hostname,
-  getNetworkInterfaces: (): NetworkInterface[] => {
-    const output: NetworkInterface[] = [];
-    const ifaces = os.networkInterfaces();
-    for (const name in ifaces) {
-      const iface = ifaces[name];
-      if (iface == undefined) {
-        continue;
-      }
-      for (const info of iface) {
-        output.push({ name, ...info, cidr: info.cidr ?? undefined });
-      }
-    }
-    return output;
-  },
-  getMachineId: (): Promise<string> => {
-    return machineIdPromise;
-  },
-  getAppVersion: (): string => {
-    return APP_VERSION;
-  },
-
-  getDeepLinks: (): string[] => {
-    return window.process.argv.filter((arg) => arg.startsWith("foxglove://"));
-  },
-
-  // Context bridge cannot expose "classes" only exposes functions
-  // We use .bind to attach the localFileStorage instance as _this_ to the function
-  storage: {
-    list: localFileStorage.list.bind(localFileStorage),
-    all: localFileStorage.all.bind(localFileStorage),
-    get: localFileStorage.get.bind(localFileStorage),
-    put: localFileStorage.put.bind(localFileStorage),
-    delete: localFileStorage.delete.bind(localFileStorage),
-  },
 };
 
 // NOTE: Context Bridge imposes a number of limitations around how objects move between the context
-// and the outside world. These restrictions impact what the api surface can expose and how.
+// and the renderer. These restrictions impact what the api surface can expose and how.
+//
+// exposeInMainWorld is poorly named - it exposes the object to the renderer
 //
 // i.e.: returning a class instance doesn't work because prototypes do not survive the boundary
-contextBridge.exposeInMainWorld("ctxbridge", ctx); // poorly named - expose to renderer
+contextBridge.exposeInMainWorld("ctxbridge", ctx);
+contextBridge.exposeInMainWorld("menuBridge", menuBridge);
+contextBridge.exposeInMainWorld("storageBridge", storageBridge);
+contextBridge.exposeInMainWorld("allowCrashReporting", allowCrashReporting);
+contextBridge.exposeInMainWorld("desktopBridge", desktopBridge);
 
 // Load telemetry opt-out settings from window.process.argv
-function getTelemetrySettings(): [crashReportingEnabled: boolean, telemetryEnabled: boolean] {
+function getTelemetrySettings(): [crashReportingEnabled: boolean] {
   const argv = window.process.argv;
   const crashReportingEnabled = Boolean(
     parseInt(argv.find((arg) => arg.indexOf("--allowCrashReporting=") === 0)?.split("=")[1] ?? "0"),
   );
-  const telemetryEnabled = Boolean(
-    parseInt(argv.find((arg) => arg.indexOf("--allowTelemetry=") === 0)?.split("=")[1] ?? "0"),
-  );
-  return [crashReportingEnabled, telemetryEnabled];
+  return [crashReportingEnabled];
 }
 
 log.debug(`End Preload`);

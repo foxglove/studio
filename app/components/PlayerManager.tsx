@@ -22,7 +22,6 @@ import {
 } from "react";
 import { connect, ConnectedProps } from "react-redux";
 import { useLocalStorage, useMountedState } from "react-use";
-import { URL } from "universal-url";
 
 import { AppSetting } from "@foxglove-studio/app/AppSetting";
 import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
@@ -348,7 +347,6 @@ function PlayerManager({
 }: Props) {
   useWarnImmediateReRender();
 
-  const usedFiles = useRef<File[]>([]);
   const globalVariablesRef = useRef<GlobalVariables>(globalVariables);
   const [maybePlayer, setMaybePlayer] = useState<MaybePlayer<OrderedStampPlayer>>({});
   const [currentSourceName, setCurrentSourceName] = useState<string | undefined>(undefined);
@@ -431,34 +429,6 @@ function PlayerManager({
     }
   }, []);
 
-  useEffect(() => {
-    const links = OsContextSingleton?.getDeepLinks() ?? [];
-    const firstLink = links[0];
-    if (firstLink == undefined) {
-      return;
-    }
-
-    try {
-      const url = new URL(firstLink);
-      // only support the open command
-
-      // Test if the pathname matches //open or //open/
-      if (!/\/\/open\/?/.test(url.pathname)) {
-        return;
-      }
-
-      // only support rosbag urls
-      const type = url.searchParams.get("type");
-      const bagUrl = url.searchParams.get("url");
-      if (type !== "rosbag" || bagUrl == undefined) {
-        return;
-      }
-      setPlayer(async (options: BuildPlayerOptions) => buildPlayerFromBagURLs([bagUrl], options));
-    } catch (err) {
-      log.error(err);
-    }
-  }, [setPlayer]);
-
   const prompt = usePrompt();
   const storage = useMemo(() => new Storage(), []);
 
@@ -479,14 +449,6 @@ function PlayerManager({
         const createPlayerBuilder = lookupPlayerBuilderFactory(selectedSource);
         if (!createPlayerBuilder) {
           throw new Error(`Could not create a player for ${selectedSource.name}`);
-        }
-
-        if (selectedSource.type === "file") {
-          if (!params?.append) {
-            usedFiles.current = [];
-          } else if (params?.files instanceof Array) {
-            usedFiles.current = params.files;
-          }
         }
 
         if (!params) {

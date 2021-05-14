@@ -15,6 +15,7 @@ import { storiesOf } from "@storybook/react";
 import { useCallback, useRef } from "react";
 import { parseMessageDefinition } from "rosbag";
 
+import SchemaEditor from "@foxglove-studio/app/components/PanelSettings/SchemaEditor";
 import { BlockCache } from "@foxglove-studio/app/dataProviders/MemoryCacheDataProvider";
 import Plot, { PlotConfig } from "@foxglove-studio/app/panels/Plot";
 import PanelSetup, { triggerWheel } from "@foxglove-studio/app/stories/PanelSetup";
@@ -545,6 +546,27 @@ storiesOf("panels/Plot/index", module)
       </PanelSetup>
     );
   })
+  .add("with just min Y value more than maximum value", () => {
+    return (
+      <PanelSetup fixture={fixture}>
+        <Plot
+          overrideConfig={{
+            xAxisVal: "timestamp",
+            paths: [
+              {
+                value: "/some_topic/location.pose.velocity",
+                enabled: true,
+                timestampMethod: "receiveTime",
+              },
+            ],
+            minYValue: "5",
+            maxYValue: "",
+            showLegend: true,
+          }}
+        />
+      </PanelSetup>
+    );
+  })
   .add("with just max Y value less than maximum value", () => {
     return (
       <PanelSetup fixture={fixture}>
@@ -581,6 +603,27 @@ storiesOf("panels/Plot/index", module)
             ],
             minYValue: "",
             maxYValue: "2.8",
+            showLegend: true,
+          }}
+        />
+      </PanelSetup>
+    );
+  })
+  .add("with just max Y value less than minimum value", () => {
+    return (
+      <PanelSetup fixture={fixture}>
+        <Plot
+          overrideConfig={{
+            xAxisVal: "timestamp",
+            paths: [
+              {
+                value: "/some_topic/location.pose.velocity",
+                enabled: true,
+                timestampMethod: "receiveTime",
+              },
+            ],
+            minYValue: "",
+            maxYValue: "1",
             showLegend: true,
           }}
         />
@@ -865,5 +908,15 @@ storiesOf("panels/Plot/index", module)
           }}
         />
       </PanelSetup>
+    );
+  })
+  .add("Settings", () => {
+    return (
+      <SchemaEditor
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        configSchema={Plot.configSchema!}
+        config={Plot.defaultConfig}
+        saveConfig={() => {}}
+      />
     );
   });
