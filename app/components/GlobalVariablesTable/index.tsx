@@ -24,9 +24,7 @@ import { JSONInput } from "@foxglove-studio/app/components/input/JSONInput";
 import { ValidatedResizingInput } from "@foxglove-studio/app/components/input/ValidatedResizingInput";
 import useGlobalVariables, { GlobalVariables } from "@foxglove-studio/app/hooks/useGlobalVariables";
 import { usePreviousValue } from "@foxglove-studio/app/hooks/usePreviousValue";
-import useLinkedGlobalVariables, {
-  LinkedGlobalVariable,
-} from "@foxglove-studio/app/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
+import useLinkedGlobalVariables from "@foxglove-studio/app/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
 import { colors as sharedColors } from "@foxglove-studio/app/util/sharedStyleConstants";
 
 // The minimum amount of time to wait between showing the global variable update animation again
@@ -252,20 +250,12 @@ function LinkedGlobalVariableRow({ name }: { name: string }): ReactElement {
 
 function GlobalVariablesTable(): ReactElement {
   const { globalVariables, setGlobalVariables, overwriteGlobalVariables } = useGlobalVariables();
-  const { linkedGlobalVariables } = useLinkedGlobalVariables();
+  const { linkedGlobalVariablesByName } = useLinkedGlobalVariables();
   const globalVariableNames = useMemo(() => Object.keys(globalVariables), [globalVariables]);
 
-  const linkedGlobalVariablesKeyByName = useMemo(() => {
-    return linkedGlobalVariables.reduce((memo, { name, topic, markerKeyPath }) => {
-      const item = (memo[name] = memo[name] ?? []);
-      item.push({ topic, markerKeyPath, name });
-      return memo;
-    }, {} as Record<string, LinkedGlobalVariable[]>);
-  }, [linkedGlobalVariables]);
-
   const [linked, unlinked] = useMemo(() => {
-    return partition(globalVariableNames, (name) => !!linkedGlobalVariablesKeyByName[name]);
-  }, [globalVariableNames, linkedGlobalVariablesKeyByName]);
+    return partition(globalVariableNames, (name) => !!linkedGlobalVariablesByName[name]);
+  }, [globalVariableNames, linkedGlobalVariablesByName]);
 
   // Don't run the animation when the Table first renders
   const skipAnimation = useRef<boolean>(true);

@@ -22,7 +22,6 @@ import { getPath } from "../interactionUtils";
 import useLinkedGlobalVariables, { LinkedGlobalVariable } from "../useLinkedGlobalVariables";
 import SGlobalVariableLink from "./SGlobalVariableLink";
 import UnlinkWrapper from "./UnlinkWrapper";
-import { useMemo } from "react";
 
 const SPath = styled.span`
   opacity: 0.8;
@@ -72,16 +71,13 @@ export default function UnlinkGlobalVariables({
   name,
   showList = false,
 }: Props): JSX.Element | ReactNull {
-  const { linkedGlobalVariables, setLinkedGlobalVariables } = useLinkedGlobalVariables();
-  const linkedGlobalVariablesKeyByName = useMemo(() => {
-    return linkedGlobalVariables.reduce((memo, { name, topic, markerKeyPath }) => {
-      const item = (memo[name] = memo[name] ?? []);
-      item.push({ topic, markerKeyPath, name });
-      return memo;
-    }, {} as Record<string, LinkedGlobalVariable[]>);
-  }, [linkedGlobalVariables]);
+  const {
+    linkedGlobalVariables,
+    linkedGlobalVariablesByName,
+    setLinkedGlobalVariables,
+  } = useLinkedGlobalVariables();
 
-  const links: LinkedGlobalVariable[] = linkedGlobalVariablesKeyByName[name] || [];
+  const links: LinkedGlobalVariable[] = linkedGlobalVariablesByName[name] ?? [];
   const firstLink = links[0];
 
   if (!firstLink) {
