@@ -451,13 +451,13 @@ export class RosNode extends EventEmitter {
     try {
       res = await apiClient.requestTopic(name, topic, [["TCPROS"]]);
     } catch (err) {
-      throw new Error(`requestTopic("${topic}") from ${apiClient} failed. err=${err}`);
+      throw new Error(`requestTopic("${topic}") from ${apiClient.url()} failed. err=${err}`);
     }
     const [status, msg, protocol] = res;
 
     if (status !== 1) {
       throw new Error(
-        `requestTopic("${topic}") from ${apiClient} failed. status=${status}, msg=${msg}`,
+        `requestTopic("${topic}") from ${apiClient.url()} failed. status=${status}, msg=${msg}`,
       );
     }
     if (!Array.isArray(protocol) || protocol.length < 3 || protocol[0] !== "TCPROS") {
