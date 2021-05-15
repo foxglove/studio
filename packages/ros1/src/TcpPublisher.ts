@@ -68,13 +68,13 @@ export class TcpPublisher extends EventEmitter implements Publisher {
     const buffer = new ArrayBuffer(dataSize);
 
     // Write the 4-byte size integer
-    const payload = new Uint8Array(buffer, 0, dataSize);
-    new DataView(payload, 0, 4).setUint32(0, msgSize, true);
+    new DataView(buffer, 0, 4).setUint32(0, msgSize, true);
 
     // Write the serialized message data
-    const data = new Uint8Array(buffer, 4, dataSize);
-    publication.messageWriter.writeMessage(message, data as Buffer);
+    const msgData = new Uint8Array(buffer, 4, dataSize - 4);
+    publication.messageWriter.writeMessage(message, msgData as Buffer);
 
+    const data = new Uint8Array(buffer, 0, dataSize);
     return publication.write(this.transportType(), data);
   }
 
