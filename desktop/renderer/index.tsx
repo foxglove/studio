@@ -12,7 +12,6 @@ import "@foxglove-studio/app/styles/global.scss";
 
 import installDevtoolsFormatters from "@foxglove-studio/app/util/installDevtoolsFormatters";
 import { initializeLogEvent } from "@foxglove-studio/app/util/logEvent";
-import overwriteFetch from "@foxglove-studio/app/util/overwriteFetch";
 import waitForFonts from "@foxglove-studio/app/util/waitForFonts";
 import { APP_VERSION } from "@foxglove-studio/app/version";
 import { Sockets } from "@foxglove/electron-socket/renderer";
@@ -46,7 +45,6 @@ if (isCrashReportingEnabled && typeof process.env.SENTRY_DSN === "string") {
 }
 
 installDevtoolsFormatters();
-overwriteFetch();
 
 const rootEl = document.getElementById("root");
 if (!rootEl) {
