@@ -7,6 +7,7 @@ import { EventEmitter } from "eventemitter3";
 import { HttpServer, XmlRpcServer, XmlRpcValue } from "@foxglove/xmlrpc";
 
 import { RosXmlRpcResponse } from "./XmlRpcTypes";
+import { isPlainObject } from "./objectTests";
 
 function CheckArguments(args: XmlRpcValue[], expected: string[]): Error | undefined {
   if (args.length !== expected.length) {
@@ -25,11 +26,15 @@ function CheckArguments(args: XmlRpcValue[], expected: string[]): Error | undefi
 export class RosMaster extends EventEmitter {
   private _server: XmlRpcServer;
   private _url?: string;
+
   private _nodes = new Map<string, string>();
   private _services = new Map<string, Map<string, string>>();
   private _topics = new Map<string, string>();
   private _publications = new Map<string, Set<string>>();
   private _subscriptions = new Map<string, Set<string>>();
+
+  private _parameters = new Map<string, XmlRpcValue>();
+  private _paramSubscriptions = new Map<string, Map<string, string>>();
 
   constructor(httpServer: HttpServer) {
     super();
@@ -52,6 +57,14 @@ export class RosMaster extends EventEmitter {
     this._server.setHandler("getSystemState", this.getSystemState);
     this._server.setHandler("getUri", this.getUri);
     this._server.setHandler("lookupService", this.lookupService);
+    this._server.setHandler("deleteParam", this.deleteParam);
+    this._server.setHandler("setParam", this.setParam);
+    this._server.setHandler("getParam", this.getParam);
+    this._server.setHandler("searchParam", this.searchParam);
+    this._server.setHandler("subscribeParam", this.subscribeParam);
+    this._server.setHandler("unsubscribeParam", this.unsubscribeParam);
+    this._server.setHandler("hasParam", this.hasParam);
+    this._server.setHandler("getParamNames", this.getParamNames);
   }
 
   close(): void {
@@ -61,6 +74,8 @@ export class RosMaster extends EventEmitter {
   url(): string | undefined {
     return this._url;
   }
+
+  // <http://wiki.ros.org/ROS/Master_API> handlers
 
   registerService = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId, service, serviceApi, callerApi]
@@ -182,6 +197,7 @@ export class RosMaster extends EventEmitter {
     const publishers = this._publications.get(topic) as Set<string>;
     publishers.add(callerId);
 
+    this._topics.set(topic, topicType);
     this._nodes.set(callerId, callerApi);
 
     const subscribers = Array.from((this._subscriptions.get(topic) ?? new Set<string>()).values());
@@ -318,4 +334,150 @@ export class RosMaster extends EventEmitter {
     const serviceUrl = serviceProviders.values().next().value as string;
     return Promise.resolve([1, "", serviceUrl]);
   };
+
+  // <http://wiki.ros.org/ROS/Parameter%20Server%20API> handlers
+
+  deleteParam = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+    // [callerId, key]
+    const err = CheckArguments(args, ["string", "string"]);
+    if (err) {
+      return Promise.reject(err);
+    }
+
+    const [_callerId, key] = args as [string, string];
+
+    this._parameters.delete(key);
+
+    return Promise.resolve([1, "", 0]);
+  };
+
+  setParam = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+    // [callerId, key, value]
+    const err = CheckArguments(args, ["string", "string", "*"]);
+    if (err) {
+      return Promise.reject(err);
+    }
+
+    const [_callerId, key, value] = args as [string, string, XmlRpcValue];
+
+    if (isPlainObject(value)) {
+      const allKeyValues = objectToKeyValues(key, value as Record<string, XmlRpcValue>);
+      for (const [curKey, curValue] of allKeyValues) {
+        this._parameters.set(curKey, curValue);
+      }
+    } else {
+      this._parameters.set(key, value);
+    }
+
+    return Promise.resolve([1, "", 0]);
+  };
+
+  getParam = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+    // [callerId, key]
+    const err = CheckArguments(args, ["string", "string"]);
+    if (err) {
+      return Promise.reject(err);
+    }
+
+    // This endpoint needs to support namespace retrieval to fully match the rosparam server
+    // behavior
+    const [_callerId, key] = args as [string, string];
+
+    const value = this._parameters.get(key);
+    const status = value != undefined ? 1 : 0;
+    return Promise.resolve([status, "", value ?? {}]);
+  };
+
+  searchParam = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+    // [callerId, key]
+    const err = CheckArguments(args, ["string", "string"]);
+    if (err) {
+      return Promise.reject(err);
+    }
+
+    // This endpoint would have to take into account the callerId namespace, partial matching, and
+    // returning undefined keys to fully match the rosparam server behavior
+    const [_callerId, key] = args as [string, string];
+
+    const value = this._parameters.get(key);
+    const status = value != undefined ? 1 : 0;
+    return Promise.resolve([status, "", value ?? {}]);
+  };
+
+  subscribeParam = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+    // [callerId, callerApi, key]
+    const err = CheckArguments(args, ["string", "string", "string"]);
+    if (err) {
+      return Promise.reject(err);
+    }
+
+    const [callerId, callerApi, key] = args as [string, string, string];
+
+    if (!this._paramSubscriptions.has(key)) {
+      this._paramSubscriptions.set(key, new Map<string, string>());
+    }
+    const subscriptions = this._paramSubscriptions.get(key) as Map<string, string>;
+
+    subscriptions.set(callerId, callerApi);
+
+    const value = this._parameters.get(key) ?? {};
+    return Promise.resolve([1, "", value]);
+  };
+
+  unsubscribeParam = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+    // [callerId, callerApi, key]
+    const err = CheckArguments(args, ["string", "string", "string"]);
+    if (err) {
+      return Promise.reject(err);
+    }
+
+    const [callerId, _callerApi, key] = args as [string, string, string];
+
+    const subscriptions = this._paramSubscriptions.get(key);
+    if (subscriptions == undefined) {
+      return Promise.resolve([1, "", 0]);
+    }
+
+    const removed = subscriptions.delete(callerId);
+    return Promise.resolve([1, "", removed ? 1 : 0]);
+  };
+
+  hasParam = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+    // [callerId, key]
+    const err = CheckArguments(args, ["string", "string"]);
+    if (err) {
+      return Promise.reject(err);
+    }
+
+    const [_callerId, key] = args as [string, string];
+    return Promise.resolve([1, "", this._parameters.has(key)]);
+  };
+
+  getParamNames = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+    // [callerId]
+    const err = CheckArguments(args, ["string"]);
+    if (err) {
+      return Promise.reject(err);
+    }
+
+    const keys = Array.from(this._parameters.keys()).sort();
+    return Promise.resolve([1, "", keys]);
+  };
+}
+
+function objectToKeyValues(
+  prefix: string,
+  object: Record<string, XmlRpcValue>,
+): [string, XmlRpcValue][] {
+  let entries: [string, XmlRpcValue][] = [];
+  for (const curKey in object) {
+    const key = `${prefix}/${curKey}`;
+    const value = object[curKey];
+    if (isPlainObject(value)) {
+      entries = entries.concat(objectToKeyValues(key, value as Record<string, XmlRpcValue>));
+    } else {
+      entries.push([key, value]);
+    }
+  }
+  return entries;
 }
