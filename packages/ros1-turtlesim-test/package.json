@@ -20,7 +20,8 @@
   ],
   "scripts": {
     "prepack": "tsc -b",
-    "start": "ts-node src/index.ts"
+    "start": "ts-node src/index.ts",
+    "turtlesim": "ts-node src/turtlesim.ts"
   },
   "devDependencies": {
     "ts-node": "9.1.1",
