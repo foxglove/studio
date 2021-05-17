@@ -53,7 +53,6 @@ import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFiles
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
-import { ImportPanelLayoutPayload } from "@foxglove/studio-base/types/panels";
 import { isNonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
 import inAutomatedRunMode from "@foxglove/studio-base/util/inAutomatedRunMode";
 
