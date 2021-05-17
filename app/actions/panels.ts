@@ -26,7 +26,6 @@ import {
   PlaybackConfig,
   SavedProps,
   PanelConfig,
-  SetFetchedLayoutPayload,
   MosaicDropTargetPosition,
 } from "@foxglove-studio/app/types/panels";
 
@@ -49,8 +48,6 @@ export enum PANELS_ACTION_TYPES {
   DROP_PANEL = "DROP_PANEL",
   START_DRAG = "START_DRAG",
   END_DRAG = "END_DRAG",
-  SET_FETCHED_LAYOUT = "SET_FETCHED_LAYOUT",
-  SET_FETCH_LAYOUT_FAILED = "SET_FETCH_LAYOUT_FAILED",
   LOAD_LAYOUT = "LOAD_LAYOUT",
   CLEAR_LAYOUT_URL_REPLACED_BY_DEFAULT = "CLEAR_LAYOUT_URL_REPLACED_BY_DEFAULT",
 }
@@ -66,14 +63,6 @@ export type CHANGE_PANEL_LAYOUT = {
   payload: ChangePanelLayoutPayload;
 };
 type LOAD_LAYOUT = { type: "LOAD_LAYOUT"; payload: PanelsState };
-
-type SET_FETCHED_LAYOUT = { type: "SET_FETCHED_LAYOUT"; payload: SetFetchedLayoutPayload };
-type SET_FETCH_LAYOUT_FAILED = { type: "SET_FETCH_LAYOUT_FAILED"; payload: Error };
-export const setFetchedLayout =
-  (payload: SetFetchedLayoutPayload): Dispatcher<SET_FETCHED_LAYOUT> =>
-  (dispatch) => {
-    return dispatch({ type: PANELS_ACTION_TYPES.SET_FETCHED_LAYOUT, payload });
-  };
 
 export const savePanelConfigs =
   (payload: SaveConfigsPayload): Dispatcher<SAVE_PANEL_CONFIGS> =>
@@ -295,8 +284,6 @@ export type PanelsActions =
   | DROP_PANEL
   | START_DRAG
   | END_DRAG
-  | SET_FETCHED_LAYOUT
-  | SET_FETCH_LAYOUT_FAILED
   | LOAD_LAYOUT
   | CLEAR_LAYOUT_URL_REPLACED_BY_DEFAULT;
 

@@ -91,13 +91,6 @@ export type InitialLayoutFetchResult = {
   // The layoutFetchResult will be undefined if there is no layout to load in the URL.
   layoutFetchResult?: LayoutFetchResult;
 };
-export type SetFetchedLayoutPayload = {
-  isLoading: boolean;
-  error?: Error;
-  data?: LayoutFetchResult;
-  isFromLayoutUrlParam?: boolean;
-  layoutUrlReplacedByDefault?: LayoutUrl;
-};
 
 export type SaveConfig<Config> = (arg0: Partial<Config>) => void;
 
