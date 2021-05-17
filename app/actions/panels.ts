@@ -12,9 +12,9 @@
 //   You may not use this file except in compliance with the License.
 import { MosaicNode, MosaicPath } from "react-mosaic-component";
 
-import { LinkedGlobalVariables } from "@foxglove-studio/app/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
-import { Dispatcher } from "@foxglove-studio/app/reducers";
-import { TabLocation } from "@foxglove-studio/app/types/layouts";
+import { LinkedGlobalVariables } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
+import { Dispatcher } from "@foxglove/studio-base/reducers";
+import { TabLocation } from "@foxglove/studio-base/types/layouts";
 import {
   CreateTabPanelPayload,
   LoadLayoutPayload,
@@ -26,7 +26,7 @@ import {
   SavedProps,
   PanelConfig,
   MosaicDropTargetPosition,
-} from "@foxglove-studio/app/types/panels";
+} from "@foxglove/studio-base/types/panels";
 
 export enum PANELS_ACTION_TYPES {
   CHANGE_PANEL_LAYOUT = "CHANGE_PANEL_LAYOUT",
