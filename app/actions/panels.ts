@@ -49,7 +49,6 @@ export enum PANELS_ACTION_TYPES {
   START_DRAG = "START_DRAG",
   END_DRAG = "END_DRAG",
   LOAD_LAYOUT = "LOAD_LAYOUT",
-  CLEAR_LAYOUT_URL_REPLACED_BY_DEFAULT = "CLEAR_LAYOUT_URL_REPLACED_BY_DEFAULT",
 }
 
 export type SAVE_PANEL_CONFIGS = { type: "SAVE_PANEL_CONFIGS"; payload: SaveConfigsPayload };
@@ -104,15 +103,6 @@ export const loadLayout =
   (layout: PanelsState): Dispatcher<LOAD_LAYOUT> =>
   (dispatch) => {
     return dispatch({ type: PANELS_ACTION_TYPES.LOAD_LAYOUT, payload: layout });
-  };
-
-type CLEAR_LAYOUT_URL_REPLACED_BY_DEFAULT = {
-  type: "CLEAR_LAYOUT_URL_REPLACED_BY_DEFAULT";
-  payload?: never;
-};
-export const clearLayoutUrlReplacedByDefault =
-  (): Dispatcher<CLEAR_LAYOUT_URL_REPLACED_BY_DEFAULT> => (dispatch) => {
-    return dispatch({ type: PANELS_ACTION_TYPES.CLEAR_LAYOUT_URL_REPLACED_BY_DEFAULT });
   };
 
 type OVERWRITE_GLOBAL_DATA = {
@@ -284,7 +274,6 @@ export type PanelsActions =
   | DROP_PANEL
   | START_DRAG
   | END_DRAG
-  | LOAD_LAYOUT
-  | CLEAR_LAYOUT_URL_REPLACED_BY_DEFAULT;
+  | LOAD_LAYOUT;
 
 export const panelEditingActions = new Set<string>(Object.values(PANELS_ACTION_TYPES));
