@@ -74,24 +74,6 @@ export type ImportPanelLayoutPayload = Partial<Omit<PanelsState, "id" | "name">>
   skipSettingLocalStorage?: boolean;
 };
 
-export type LayoutFetchResult = {
-  content: PanelsState;
-  name: string;
-  savedBy: string;
-  releasedVersion: number;
-  fileSuffix?: string;
-};
-export type LayoutUrl = {
-  layoutId?: string;
-  layoutUrl?: string;
-  patch?: string;
-};
-export type InitialLayoutFetchResult = {
-  layoutUrlReplacedByDefault?: LayoutUrl;
-  // The layoutFetchResult will be undefined if there is no layout to load in the URL.
-  layoutFetchResult?: LayoutFetchResult;
-};
-
 export type SaveConfig<Config> = (arg0: Partial<Config>) => void;
 
 export type UpdatePanelConfig<Config> = (
