@@ -18,7 +18,7 @@ import { useMountedState } from "react-use";
 import styled from "styled-components";
 
 import { redoLayoutChange, undoLayoutChange } from "@foxglove-studio/app/actions/layoutHistory";
-import { importPanelLayout, loadLayout } from "@foxglove-studio/app/actions/panels";
+import { loadLayout } from "@foxglove-studio/app/actions/panels";
 import ConnectionList from "@foxglove-studio/app/components/ConnectionList";
 import DocumentDropListener from "@foxglove-studio/app/components/DocumentDropListener";
 import DropOverlay from "@foxglove-studio/app/components/DropOverlay";
@@ -52,15 +52,12 @@ import useElectronFilesToOpen from "@foxglove-studio/app/hooks/useElectronFilesT
 import useNativeAppMenuEvent from "@foxglove-studio/app/hooks/useNativeAppMenuEvent";
 import welcomeLayout from "@foxglove-studio/app/layouts/welcomeLayout";
 import { PlayerPresence } from "@foxglove-studio/app/players/types";
-import { ImportPanelLayoutPayload } from "@foxglove-studio/app/types/panels";
 import { isNonEmptyOrUndefined } from "@foxglove-studio/app/util/emptyOrUndefined";
 import inAutomatedRunMode from "@foxglove-studio/app/util/inAutomatedRunMode";
 import { APP_NAME } from "@foxglove-studio/app/version";
 import Log from "@foxglove/log";
 
 const log = Log.getLogger(__filename);
-
-type TestableWindow = Window & { setPanelLayout?: (payload: ImportPanelLayoutPayload) => void };
 
 const SToolbarItem = styled.div`
   flex: 0 0 auto;
@@ -191,10 +188,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     if (containerRef.current) {
       containerRef.current.focus();
     }
-    // Add a hook for integration tests.
-    (window as TestableWindow).setPanelLayout = (payload: ImportPanelLayoutPayload) =>
-      dispatch(importPanelLayout(payload));
-  }, [dispatch, openWelcomeLayout]);
+  }, []);
 
   // For undo/redo events, first try the browser's native undo/redo, and if that is disabled, then
   // undo/redo the layout history. Note that in GlobalKeyListener we also handle the keyboard
