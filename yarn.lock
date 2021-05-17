@@ -2009,9 +2009,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fluentui/react@npm:8.14.8":
-  version: 8.14.8
-  resolution: "@fluentui/react@npm:8.14.8"
+"@fluentui/react@npm:8.14.9":
+  version: 8.14.9
+  resolution: "@fluentui/react@npm:8.14.9"
   dependencies:
     "@fluentui/date-time-utilities": ^8.1.0
     "@fluentui/font-icons-mdl2": ^8.1.0
@@ -2031,7 +2031,7 @@ __metadata:
     "@types/react-dom": ">=16.8.0 <18.0.0"
     react: ">=16.8.0 <18.0.0"
     react-dom: ">=16.8.0 <18.0.0"
-  checksum: 97ce6d22b562fba5148c713e03aea0a093100324f485ed0a7fc9f39fefb687b5a91b9ba26162dacbc6467fbba9c3d7e5adbe71081c84463b29bb449c4437f47a
+  checksum: db200a48547fca01b4d47df6321a5c2104b62387b1af2714e15e10a2f9b686c0d025e2802b4ba1a5af7f9d0d38c92e8042c8f8c9d087a098834223a59b0df96b
   languageName: node
   linkType: hard
 
@@ -2088,11 +2088,85 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove-studio/app@workspace:app":
+"@foxglove/electron-socket@workspace:packages/electron-socket":
   version: 0.0.0-use.local
-  resolution: "@foxglove-studio/app@workspace:app"
+  resolution: "@foxglove/electron-socket@workspace:packages/electron-socket"
   dependencies:
-    "@fluentui/react": 8.14.8
+    "@types/dns-packet": 5.2.0
+    dns-packet: 5.2.1
+    eventemitter3: 4.0.7
+    typescript: 4.2.4
+  peerDependencies:
+    electron: ">=12"
+  languageName: unknown
+  linkType: soft
+
+"@foxglove/hooks@workspace:packages/@foxglove/hooks":
+  version: 0.0.0-use.local
+  resolution: "@foxglove/hooks@workspace:packages/@foxglove/hooks"
+  dependencies:
+    typescript: 4.2.4
+  languageName: unknown
+  linkType: soft
+
+"@foxglove/just-fetch@workspace:packages/just-fetch":
+  version: 0.0.0-use.local
+  resolution: "@foxglove/just-fetch@workspace:packages/just-fetch"
+  dependencies:
+    typescript: 4.2.4
+  peerDependencies:
+    node-fetch: ">=2.0.0"
+  languageName: unknown
+  linkType: soft
+
+"@foxglove/log@workspace:packages/log":
+  version: 0.0.0-use.local
+  resolution: "@foxglove/log@workspace:packages/log"
+  dependencies:
+    typescript: 4.2.4
+  languageName: unknown
+  linkType: soft
+
+"@foxglove/ros1-turtlesim-test@workspace:packages/ros1-turtlesim-test":
+  version: 0.0.0-use.local
+  resolution: "@foxglove/ros1-turtlesim-test@workspace:packages/ros1-turtlesim-test"
+  dependencies:
+    "@foxglove/ros1": "workspace:packages/ros1"
+    ts-node: 9.1.1
+    typescript: 4.2.4
+  languageName: unknown
+  linkType: soft
+
+"@foxglove/ros1@workspace:packages/ros1":
+  version: 0.0.0-use.local
+  resolution: "@foxglove/ros1@workspace:packages/ros1"
+  dependencies:
+    "@foxglove/xmlrpc": "workspace:packages/xmlrpc"
+    eventemitter3: 4.0.7
+    jest: 27.0.0-next.8
+    jest-circus: 27.0.0-next.8
+    rosbag: "github:foxglove/rosbag.js#fc61125fbc01ff55698c5ed48987b2d9e7599572"
+    typescript: 4.2.4
+    web-encoding: 1.1.5
+  languageName: unknown
+  linkType: soft
+
+"@foxglove/rosmsg-deser@workspace:packages/rosmsg-deser":
+  version: 0.0.0-use.local
+  resolution: "@foxglove/rosmsg-deser@workspace:packages/rosmsg-deser"
+  dependencies:
+    "@types/prettier": 2.2.3
+    jest: 27.0.0-next.8
+    prettier: 2.3.0
+    typescript: 4.2.4
+  languageName: unknown
+  linkType: soft
+
+"@foxglove/studio-base@workspace:app":
+  version: 0.0.0-use.local
+  resolution: "@foxglove/studio-base@workspace:app"
+  dependencies:
+    "@fluentui/react": 8.14.9
     "@fluentui/react-icons-mdl2": 1.1.0
     "@foxglove/hooks": "workspace:packages/@foxglove/hooks"
     "@foxglove/velodyne-cloud": "workspace:packages/velodyne-cloud"
@@ -2104,7 +2178,7 @@ __metadata:
     "@testing-library/dom": 7.31.0
     "@testing-library/react": 11.2.7
     "@testing-library/react-hooks": 5.1.2
-    "@types/argparse": ^2.0.6
+    "@types/argparse": ^2.0.7
     "@types/classnames": 2.3.1
     "@types/css-font-loading-module": 0.0.4
     "@types/cytoscape": ^3
@@ -2181,7 +2255,7 @@ __metadata:
     promise-queue: 2.2.5
     quickhull3d: 2.0.4
     rc-color-picker: 1.2.6
-    rc-tabs: 11.8.0
+    rc-tabs: 11.9.0
     rc-tree: 4.1.5
     react: 17.0.2
     react-autocomplete: "janpaul123/react-autocomplete#bc8737070b5744069719c8fcd4e0a197192b0d48"
@@ -2232,80 +2306,6 @@ __metadata:
     uuid: 8.3.2
     wasm-lz4: 1.0.0
     xacro-parser: 0.3.1
-  languageName: unknown
-  linkType: soft
-
-"@foxglove/electron-socket@workspace:packages/electron-socket":
-  version: 0.0.0-use.local
-  resolution: "@foxglove/electron-socket@workspace:packages/electron-socket"
-  dependencies:
-    "@types/dns-packet": 5.2.0
-    dns-packet: 5.2.1
-    eventemitter3: 4.0.7
-    typescript: 4.2.4
-  peerDependencies:
-    electron: ">=12"
-  languageName: unknown
-  linkType: soft
-
-"@foxglove/hooks@workspace:packages/@foxglove/hooks":
-  version: 0.0.0-use.local
-  resolution: "@foxglove/hooks@workspace:packages/@foxglove/hooks"
-  dependencies:
-    typescript: 4.2.4
-  languageName: unknown
-  linkType: soft
-
-"@foxglove/just-fetch@workspace:packages/just-fetch":
-  version: 0.0.0-use.local
-  resolution: "@foxglove/just-fetch@workspace:packages/just-fetch"
-  dependencies:
-    typescript: 4.2.4
-  peerDependencies:
-    node-fetch: ">=2.0.0"
-  languageName: unknown
-  linkType: soft
-
-"@foxglove/log@workspace:packages/log":
-  version: 0.0.0-use.local
-  resolution: "@foxglove/log@workspace:packages/log"
-  dependencies:
-    typescript: 4.2.4
-  languageName: unknown
-  linkType: soft
-
-"@foxglove/ros1-turtlesim-test@workspace:packages/ros1-turtlesim-test":
-  version: 0.0.0-use.local
-  resolution: "@foxglove/ros1-turtlesim-test@workspace:packages/ros1-turtlesim-test"
-  dependencies:
-    "@foxglove/ros1": "workspace:packages/ros1"
-    ts-node: 9.1.1
-    typescript: 4.2.4
-  languageName: unknown
-  linkType: soft
-
-"@foxglove/ros1@workspace:packages/ros1":
-  version: 0.0.0-use.local
-  resolution: "@foxglove/ros1@workspace:packages/ros1"
-  dependencies:
-    "@foxglove/xmlrpc": "workspace:packages/xmlrpc"
-    eventemitter3: 4.0.7
-    jest: 27.0.0-next.8
-    jest-circus: 27.0.0-next.8
-    rosbag: "github:foxglove/rosbag.js#fc61125fbc01ff55698c5ed48987b2d9e7599572"
-    typescript: 4.2.4
-    web-encoding: 1.1.5
-  languageName: unknown
-  linkType: soft
-
-"@foxglove/rosmsg-deser@workspace:packages/rosmsg-deser":
-  version: 0.0.0-use.local
-  resolution: "@foxglove/rosmsg-deser@workspace:packages/rosmsg-deser"
-  dependencies:
-    "@types/prettier": 2.2.3
-    jest: 27.0.0-next.8
-    prettier: 2.3.0
-    typescript: 4.2.4
   languageName: unknown
   linkType: soft
 
@@ -4347,10 +4347,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/argparse@npm:^2.0.6":
-  version: 2.0.6
-  resolution: "@types/argparse@npm:2.0.6"
-  checksum: 8643e8cc2f5594daf0d1c37491a9f0ad3eda16cba7498c71816fb5356ff235c0befc5fd0fb591bed72ee23e2faea7846e5b2aa6d6f82d6b8b053afb5add713ff
+"@types/argparse@npm:^2.0.7":
+  version: 2.0.7
+  resolution: "@types/argparse@npm:2.0.7"
+  checksum: 312214ffa3ed0c2416f0bdaa4e917e0f7662eca216710e628bdd04c1f44af2e4a82f38fe244a536cb64a2e1d6b150ca01a96c787040913b0110220ea82f2e3ca
   languageName: node
   linkType: hard
 
@@ -10303,7 +10303,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "desktop@workspace:desktop"
   dependencies:
-    "@foxglove-studio/app": "workspace:app"
+    "@foxglove/studio-base": "workspace:app"
   languageName: unknown
   linkType: soft
 
@@ -20666,9 +20666,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rc-tabs@npm:11.8.0":
-  version: 11.8.0
-  resolution: "rc-tabs@npm:11.8.0"
+"rc-tabs@npm:11.9.0":
+  version: 11.9.0
+  resolution: "rc-tabs@npm:11.9.0"
   dependencies:
     "@babel/runtime": ^7.11.2
     classnames: 2.x
@@ -20679,7 +20679,7 @@ __metadata:
   peerDependencies:
     react: ">=16.9.0"
     react-dom: ">=16.9.0"
-  checksum: 096fcc99a2c7b43a821ca1a6d0c13d80f2dcb8e6721e0dae199004edd1449302f3844677bbda93c70a7ba9848ddbfaf1812ed475e7917824fbc71f26ab6f20a1
+  checksum: f136fcfa8c4d46bb97eee60da84a36e2a518b803d7f9fcc21469a71ff5409d14b9f3d4ffe9af5cace949342cd902ad0d6c260ac091366ce9dea1559282851a57
   languageName: node
   linkType: hard
 
@@ -25934,7 +25934,7 @@ typescript@4.2.4:
   version: 0.0.0-use.local
   resolution: "web@workspace:web"
   dependencies:
-    "@foxglove-studio/app": "workspace:app"
+    "@foxglove/studio-base": "workspace:app"
     "@types/copy-webpack-plugin": 8.0.0
     copy-webpack-plugin: 8.1.1
     webpack: 5.37.0

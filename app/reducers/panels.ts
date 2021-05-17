@@ -24,7 +24,7 @@ import {
   MosaicNode,
 } from "react-mosaic-component";
 
-import { ActionTypes } from "@foxglove-studio/app/actions";
+import { ActionTypes } from "@foxglove/studio-base/actions";
 import {
   StartDragPayload,
   EndDragPayload,
@@ -34,11 +34,11 @@ import {
   AddPanelPayload,
   ClosePanelPayload,
   MoveTabPayload,
-} from "@foxglove-studio/app/actions/panels";
-import { GlobalVariables } from "@foxglove-studio/app/hooks/useGlobalVariables";
-import { LinkedGlobalVariables } from "@foxglove-studio/app/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
-import { State, PersistedState } from "@foxglove-studio/app/reducers";
-import { TabPanelConfig } from "@foxglove-studio/app/types/layouts";
+} from "@foxglove/studio-base/actions/panels";
+import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
+import { LinkedGlobalVariables } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
+import { State, PersistedState } from "@foxglove/studio-base/reducers";
+import { TabPanelConfig } from "@foxglove/studio-base/types/layouts";
 import {
   PanelConfig,
   ConfigsPayload,
@@ -51,10 +51,10 @@ import {
   UserNodes,
   PlaybackConfig,
   MosaicDropTargetPosition,
-} from "@foxglove-studio/app/types/panels";
-import Storage from "@foxglove-studio/app/util/Storage";
-import filterMap from "@foxglove-studio/app/util/filterMap";
-import { TAB_PANEL_TYPE } from "@foxglove-studio/app/util/globalConstants";
+} from "@foxglove/studio-base/types/panels";
+import Storage from "@foxglove/studio-base/util/Storage";
+import filterMap from "@foxglove/studio-base/util/filterMap";
+import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
 import {
   setDefaultFields,
   updateTabPanelLayout,
@@ -73,7 +73,7 @@ import {
   createAddUpdates,
   removePanelFromTabPanel,
   getPathFromNode,
-} from "@foxglove-studio/app/util/layout";
+} from "@foxglove/studio-base/util/layout";
 
 const storage = new Storage();
 
@@ -106,7 +106,6 @@ export const setPersistedStateInLocalStorage = (persistedState: PersistedState):
 
 // All panel fields have to be present.
 export const defaultPersistedState = Object.freeze<PersistedState>({
-  fetchedLayout: { isLoading: false, data: undefined },
   search: "",
   panels: {
     layout: {
@@ -147,29 +146,6 @@ export function getInitialPersistedStateAndMaybeUpdateLocalStorageAndURL(): Pers
     // cast to PersistedState to remove the Readonly created by the Object.freeze above
     const newPersistedState = cloneDeep(defaultPersistedState) as PersistedState;
 
-    const oldFetchedLayoutState = oldPersistedState?.fetchedLayout;
-    const fetchedLayoutDataFromLocalStorage = oldFetchedLayoutState?.data;
-
-    const isInitializedFromLocalStorage = false;
-
-    if (oldFetchedLayoutState) {
-      newPersistedState.fetchedLayout = oldFetchedLayoutState;
-    }
-
-    // 2. Set fetchedLayout state if it's available in localStorage.
-    if (fetchedLayoutDataFromLocalStorage) {
-      // Set `isInitializedFromLocalStorage` flag to skip initial layout fetch.
-      newPersistedState.fetchedLayout = {
-        ...oldFetchedLayoutState,
-        data: {
-          ...fetchedLayoutDataFromLocalStorage,
-        },
-        isInitializedFromLocalStorage,
-      };
-      newPersistedState.search = oldPersistedState.search;
-    }
-
-    // 3. Handle panel state.
     if (oldPersistedState?.panels) {
       newPersistedState.panels = oldPersistedState.panels;
     } else if (oldPersistedState?.layout) {
@@ -1005,15 +981,6 @@ const panelsReducer = function (state: State, action: ActionTypes): State {
       newState.persistedState.panels = endDrag(newState.persistedState.panels, action.payload);
       break;
 
-    case "SET_FETCHED_LAYOUT":
-      newState.persistedState.fetchedLayout = action.payload;
-      break;
-    case "SET_FETCH_LAYOUT_FAILED":
-      // Keep the previous fetched layout data, but set isLoading to false.
-      newState.persistedState.fetchedLayout.isLoading = false;
-      newState.persistedState.fetchedLayout.error = action.payload;
-      break;
-
     case "LOAD_LAYOUT":
       // Dispatched when loading the page with a layout query param, or when manually selecting a different layout.
       // Do not update URL based on ensuing migration changes.
@@ -1021,10 +988,6 @@ const panelsReducer = function (state: State, action: ActionTypes): State {
         newState.persistedState.panels,
         action.payload,
       );
-      break;
-
-    case "CLEAR_LAYOUT_URL_REPLACED_BY_DEFAULT":
-      newState.persistedState.fetchedLayout.layoutUrlReplacedByDefault = undefined;
       break;
 
     default:

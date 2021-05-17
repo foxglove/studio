@@ -14,20 +14,20 @@
 import { useRef, useMemo, useState, useEffect, useContext, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 
+import Log from "@foxglove/log";
 import {
   useMessagePipeline,
   MessagePipelineContext,
-} from "@foxglove-studio/app/components/MessagePipeline";
-import PanelContext from "@foxglove-studio/app/components/PanelContext";
-import useCleanup from "@foxglove-studio/app/hooks/useCleanup";
-import useDeepMemo from "@foxglove-studio/app/hooks/useDeepMemo";
-import useShouldNotChangeOften from "@foxglove-studio/app/hooks/useShouldNotChangeOften";
+} from "@foxglove/studio-base/components/MessagePipeline";
+import PanelContext from "@foxglove/studio-base/components/PanelContext";
+import useCleanup from "@foxglove/studio-base/hooks/useCleanup";
+import useDeepMemo from "@foxglove/studio-base/hooks/useDeepMemo";
+import useShouldNotChangeOften from "@foxglove/studio-base/hooks/useShouldNotChangeOften";
 import {
   MessageEvent,
   PlayerStateActiveData,
   SubscribePayload,
-} from "@foxglove-studio/app/players/types";
-import Log from "@foxglove/log";
+} from "@foxglove/studio-base/players/types";
 
 const log = Log.getLogger(__filename);
 

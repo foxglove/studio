@@ -1,12 +1,12 @@
 {
-  "name": "@foxglove-studio/app",
+  "name": "@foxglove/studio-base",
   "private": true,
   "scripts": {
     "chromatic": "chromatic --project-token $CHROMATIC_PROJECT_TOKEN --build-script-name storybook:build --exit-once-uploaded",
     "storybook:build": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' build-storybook"
   },
   "dependencies": {
-    "@fluentui/react": "8.14.8",
+    "@fluentui/react": "8.14.9",
     "@fluentui/react-icons-mdl2": "1.1.0",
     "@foxglove/hooks": "workspace:packages/@foxglove/hooks",
     "@foxglove/velodyne-cloud": "workspace:packages/velodyne-cloud",
@@ -39,7 +39,7 @@
     "promise-queue": "2.2.5",
     "quickhull3d": "2.0.4",
     "rc-color-picker": "1.2.6",
-    "rc-tabs": "11.8.0",
+    "rc-tabs": "11.9.0",
     "rc-tree": "4.1.5",
     "react": "17.0.2",
     "react-autocomplete": "janpaul123/react-autocomplete#bc8737070b5744069719c8fcd4e0a197192b0d48",
@@ -90,7 +90,7 @@
     "@testing-library/dom": "7.31.0",
     "@testing-library/react": "11.2.7",
     "@testing-library/react-hooks": "5.1.2",
-    "@types/argparse": "^2.0.6",
+    "@types/argparse": "^2.0.7",
     "@types/classnames": "2.3.1",
     "@types/css-font-loading-module": "0.0.4",
     "@types/cytoscape": "^3",

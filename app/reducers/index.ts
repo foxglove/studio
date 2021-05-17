@@ -15,26 +15,22 @@ import { Reducer } from "redux";
 import { ThunkAction } from "redux-thunk";
 import { v4 as uuidv4 } from "uuid";
 
-import { ActionTypes } from "@foxglove-studio/app/actions";
-import { ros_lib_dts } from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/ros";
-import hoverValue from "@foxglove-studio/app/reducers/hoverValue";
+import { ActionTypes } from "@foxglove/studio-base/actions";
+import { ros_lib_dts } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/ros";
+import hoverValue from "@foxglove/studio-base/reducers/hoverValue";
 import layoutHistory, {
   LayoutHistory,
   initialLayoutHistoryState,
-} from "@foxglove-studio/app/reducers/layoutHistory";
-import mosaic from "@foxglove-studio/app/reducers/mosaic";
+} from "@foxglove/studio-base/reducers/layoutHistory";
+import mosaic from "@foxglove/studio-base/reducers/mosaic";
 import panels, {
   PanelsState,
   getInitialPersistedStateAndMaybeUpdateLocalStorageAndURL,
-} from "@foxglove-studio/app/reducers/panels";
-import recentLayouts, {
-  maybeStoreNewRecentLayout,
-} from "@foxglove-studio/app/reducers/recentLayouts";
-import tests from "@foxglove-studio/app/reducers/tests";
-import userNodes, { UserNodeDiagnostics } from "@foxglove-studio/app/reducers/userNodes";
-import { Auth as AuthState } from "@foxglove-studio/app/types/Auth";
-import { HoverValue } from "@foxglove-studio/app/types/hoverValue";
-import { SetFetchedLayoutPayload } from "@foxglove-studio/app/types/panels";
+} from "@foxglove/studio-base/reducers/panels";
+import tests from "@foxglove/studio-base/reducers/tests";
+import userNodes, { UserNodeDiagnostics } from "@foxglove/studio-base/reducers/userNodes";
+import { Auth as AuthState } from "@foxglove/studio-base/types/Auth";
+import { HoverValue } from "@foxglove/studio-base/types/hoverValue";
 
 const getReducers = () => [
   panels,
@@ -42,13 +38,11 @@ const getReducers = () => [
   hoverValue,
   userNodes,
   layoutHistory,
-  recentLayouts,
   ...(process.env.NODE_ENV === "test" ? [tests] : []),
 ];
 
 export type PersistedState = {
   panels: PanelsState;
-  fetchedLayout: SetFetchedLayoutPayload;
   search?: string;
 };
 
@@ -61,16 +55,10 @@ export type State = {
   hoverValue?: HoverValue;
   userNodes: { userNodeDiagnostics: UserNodeDiagnostics; rosLib: string };
   layoutHistory: LayoutHistory;
-  commenting: {
-    fetchedCommentsBase: Comment[];
-    fetchedCommentsFeature: Comment[];
-    sourceToShow: string;
-  };
 };
 
 export default function createRootReducer(args?: { testAuth?: any }): Reducer<State, ActionTypes> {
   const persistedState = getInitialPersistedStateAndMaybeUpdateLocalStorageAndURL();
-  maybeStoreNewRecentLayout(persistedState);
   const initialState: State = {
     persistedState,
     mosaic: {
@@ -88,7 +76,6 @@ export default function createRootReducer(args?: { testAuth?: any }): Reducer<St
       rosLib: ros_lib_dts,
     },
     layoutHistory: initialLayoutHistoryState,
-    commenting: { fetchedCommentsBase: [], fetchedCommentsFeature: [], sourceToShow: "Both" },
   };
   return (state: State | undefined, action: ActionTypes): State => {
     const oldPersistedState: PersistedState | undefined = state?.persistedState;
