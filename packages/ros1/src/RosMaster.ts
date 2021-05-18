@@ -6,6 +6,8 @@ import { EventEmitter } from "eventemitter3";
 
 import { HttpServer, XmlRpcServer, XmlRpcValue } from "@foxglove/xmlrpc";
 
+import { LoggerService } from "./LoggerService";
+import { RosFollowerClient } from "./RosFollowerClient";
 import { RosXmlRpcResponse } from "./XmlRpcTypes";
 import { isPlainObject } from "./objectTests";
 
@@ -25,6 +27,7 @@ function CheckArguments(args: XmlRpcValue[], expected: string[]): Error | undefi
 
 export class RosMaster extends EventEmitter {
   private _server: XmlRpcServer;
+  private _log?: LoggerService;
   private _url?: string;
 
   private _nodes = new Map<string, string>();
@@ -36,9 +39,10 @@ export class RosMaster extends EventEmitter {
   private _parameters = new Map<string, XmlRpcValue>();
   private _paramSubscriptions = new Map<string, Map<string, string>>();
 
-  constructor(httpServer: HttpServer) {
+  constructor(httpServer: HttpServer, log?: LoggerService) {
     super();
     this._server = new XmlRpcServer(httpServer);
+    this._log = log;
   }
 
   async start(hostname: string, port?: number): Promise<void> {
@@ -202,8 +206,20 @@ export class RosMaster extends EventEmitter {
 
     const subscribers = Array.from((this._subscriptions.get(topic) ?? new Set<string>()).values());
     const subscriberApis = subscribers
+      .map((s) => this._nodes.get(s))
+      .filter((a) => a != undefined) as string[];
+
+    // Inform all subscribers of the new publisher
+    const publisherApis = Array.from(publishers.values())
+      .sort()
       .map((p) => this._nodes.get(p))
       .filter((a) => a != undefined) as string[];
+    for (const api of subscriberApis) {
+      new RosFollowerClient(api)
+        .publisherUpdate(callerId, topic, publisherApis)
+        .catch((apiErr) => this._log?.warn?.(`publisherUpdate call to ${api} failed: ${apiErr}`));
+    }
+
     return Promise.resolve([1, "", subscriberApis]);
   };
 
@@ -284,20 +300,20 @@ export class RosMaster extends EventEmitter {
       return Promise.reject(err);
     }
 
-    const publishers: [string, string[]][] = Array.from(
-      this._publications.entries(),
-    ).map(([topic, nodeNames]) => [topic, Array.from(nodeNames.values()).sort()]);
+    const publishers: [string, string[]][] = Array.from(this._publications.entries()).map(
+      ([topic, nodeNames]) => [topic, Array.from(nodeNames.values()).sort()],
+    );
 
-    const subscribers: [string, string[]][] = Array.from(
-      this._subscriptions.entries(),
-    ).map(([topic, nodeNames]) => [topic, Array.from(nodeNames.values()).sort()]);
+    const subscribers: [string, string[]][] = Array.from(this._subscriptions.entries()).map(
+      ([topic, nodeNames]) => [topic, Array.from(nodeNames.values()).sort()],
+    );
 
-    const services: [string, string[]][] = Array.from(
-      this._services.entries(),
-    ).map(([service, nodeNamesToServiceApis]) => [
-      service,
-      Array.from(nodeNamesToServiceApis.keys()).sort(),
-    ]);
+    const services: [string, string[]][] = Array.from(this._services.entries()).map(
+      ([service, nodeNamesToServiceApis]) => [
+        service,
+        Array.from(nodeNamesToServiceApis.keys()).sort(),
+      ],
+    );
 
     return Promise.resolve([1, "", [publishers, subscribers, services]]);
   };
@@ -358,15 +374,23 @@ export class RosMaster extends EventEmitter {
       return Promise.reject(err);
     }
 
-    const [_callerId, key, value] = args as [string, string, XmlRpcValue];
+    const [callerId, key, value] = args as [string, string, XmlRpcValue];
+    const allKeyValues: [string, XmlRpcValue][] = isPlainObject(value)
+      ? objectToKeyValues(key, value as Record<string, XmlRpcValue>)
+      : [[key, value]];
 
-    if (isPlainObject(value)) {
-      const allKeyValues = objectToKeyValues(key, value as Record<string, XmlRpcValue>);
-      for (const [curKey, curValue] of allKeyValues) {
-        this._parameters.set(curKey, curValue);
+    for (const [curKey, curValue] of allKeyValues) {
+      this._parameters.set(curKey, curValue);
+
+      // Notify any parameter subscribers about this new value
+      const subscribers = this._paramSubscriptions.get(curKey);
+      if (subscribers != undefined) {
+        for (const api of subscribers.values()) {
+          new RosFollowerClient(api)
+            .paramUpdate(callerId, curKey, curValue)
+            .catch((apiErr) => this._log?.warn?.(`paramUpdate call to ${api} failed: ${apiErr}`));
+        }
       }
-    } else {
-      this._parameters.set(key, value);
     }
 
     return Promise.resolve([1, "", 0]);
