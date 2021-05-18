@@ -10,6 +10,10 @@ import { serializeFault, serializeMethodResponse } from "./Serializer";
 import { XmlRpcFault } from "./XmlRpcFault";
 import { XmlRpcMethodHandler, XmlRpcValue } from "./XmlRpcTypes";
 
+const APPLICATION_ERROR = -32500;
+const NOT_FOUND_ERROR = -32601;
+const INVALID_PARAMS_ERROR = -32602;
+
 // Create an XML-RPC server with a user-supplied HTTP(S) implementation
 export class XmlRpcServer {
   readonly server: HttpServer;
@@ -50,24 +54,54 @@ export class XmlRpcServer {
       return { statusCode: 500, statusMessage: `deserializeMethodCall failed: ${err}` };
     }
 
-    const handler = this.xmlRpcHandlers.get(methodName);
-    if (handler != undefined) {
-      let body: string | undefined;
-      try {
-        body = serializeMethodResponse(await handler(methodName, args));
-      } catch (err) {
-        body = serializeFault(
-          err instanceof XmlRpcFault ? err : new XmlRpcFault(String(err.stack ?? err)),
+    let body: string;
+    if (methodName === "system.multicall") {
+      if (!Array.isArray(args) || args.length !== 1 || !Array.isArray(args[0])) {
+        body = serializeFault(new XmlRpcFault("Invalid system.multicall", INVALID_PARAMS_ERROR));
+      } else {
+        const calls = args[0] as { methodName: string; params: XmlRpcValue[] }[];
+        const responses = await Promise.all(
+          calls.map((c) => this._methodCallHandler(c.methodName, c.params)),
         );
+        const res: XmlRpcValue[] = responses.map((r) => {
+          if (r instanceof XmlRpcFault) {
+            return {
+              faultCode: r.faultCode ?? APPLICATION_ERROR,
+              faultString: r.faultString ?? r.message,
+            };
+          } else {
+            return [r];
+          }
+        });
+        body = serializeMethodResponse(res);
       }
-      const contentLength = String(new TextEncoder().encode(body).length);
-      return {
-        statusCode: 200,
-        headers: { "Content-Type": "text/xml", "Content-Length": contentLength },
-        body,
-      };
     } else {
-      return { statusCode: 404 };
+      const res = await this._methodCallHandler(methodName, args);
+      body = res instanceof XmlRpcFault ? serializeFault(res) : serializeMethodResponse(res);
+    }
+
+    const contentLength = String(new TextEncoder().encode(body).length);
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "text/xml", "Content-Length": contentLength },
+      body,
+    };
+  };
+
+  private _methodCallHandler = async (
+    methodName: string,
+    args: XmlRpcValue[],
+  ): Promise<XmlRpcValue | XmlRpcFault> => {
+    const handler = this.xmlRpcHandlers.get(methodName);
+    if (handler == undefined) {
+      return new XmlRpcFault(`Method "${methodName}" not found`, NOT_FOUND_ERROR);
+    }
+
+    try {
+      const res = await handler(methodName, args);
+      return res;
+    } catch (err) {
+      return err instanceof XmlRpcFault ? err : new XmlRpcFault(String(err.stack ?? err));
     }
   };
 }
