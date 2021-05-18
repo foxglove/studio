@@ -544,16 +544,3 @@ export function getConfigsForNestedPanelsInsideTab(
   });
   return configs;
 }
-
-export function setDefaultFields(defaultLayout: PanelsState, layout: PanelsState): PanelsState {
-  const clonedLayout = cloneDeep(layout) as any;
-
-  // Extra checks to make sure all the common fields for panels are present.
-  Object.keys(defaultLayout).forEach((fieldName) => {
-    const newFieldValue = clonedLayout[fieldName];
-    if (isEmpty(newFieldValue)) {
-      clonedLayout[fieldName] = (defaultLayout as any)[fieldName];
-    }
-  });
-  return clonedLayout;
-}

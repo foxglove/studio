@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 import { MosaicNode, MosaicPath } from "react-mosaic-component";
 
+import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { LinkedGlobalVariables } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
 import { Dispatcher } from "@foxglove/studio-base/reducers";
 import { TabLocation } from "@foxglove/studio-base/types/layouts";
@@ -27,6 +28,21 @@ import {
   PanelConfig,
   MosaicDropTargetPosition,
 } from "@foxglove/studio-base/types/panels";
+
+export type PanelsState = {
+  id?: string;
+  name?: string;
+  layout?: MosaicNode<string>;
+  // We store config for each panel in a hash keyed by the panel id.
+  // This should at some point be renamed to `config` or `configById` or so,
+  // but it's inconvenient to have this diverge from `PANEL_PROPS_KEY`.
+  configById: SavedProps;
+  globalVariables: GlobalVariables;
+  userNodes: UserNodes;
+  linkedGlobalVariables: LinkedGlobalVariables;
+  playbackConfig: PlaybackConfig;
+  version?: number;
+};
 
 export enum PANELS_ACTION_TYPES {
   CHANGE_PANEL_LAYOUT = "CHANGE_PANEL_LAYOUT",
@@ -60,7 +76,7 @@ export type CHANGE_PANEL_LAYOUT = {
   type: "CHANGE_PANEL_LAYOUT";
   payload: ChangePanelLayoutPayload;
 };
-type LOAD_LAYOUT = { type: "LOAD_LAYOUT"; payload: LoadLayoutPayload };
+export type LOAD_LAYOUT = { type: "LOAD_LAYOUT"; payload: LoadLayoutPayload };
 
 export const savePanelConfigs =
   (payload: SaveConfigsPayload): Dispatcher<SAVE_PANEL_CONFIGS> =>
@@ -91,7 +107,7 @@ export const loadLayout =
     return dispatch({ type: PANELS_ACTION_TYPES.LOAD_LAYOUT, payload });
   };
 
-type OVERWRITE_GLOBAL_DATA = {
+export type OVERWRITE_GLOBAL_DATA = {
   type: "OVERWRITE_GLOBAL_DATA";
   payload: {
     [key: string]: unknown;
@@ -104,7 +120,7 @@ export const overwriteGlobalVariables = (payload: {
   payload,
 });
 
-type SET_GLOBAL_DATA = {
+export type SET_GLOBAL_DATA = {
   type: "SET_GLOBAL_DATA";
   payload: {
     [key: string]: unknown;
@@ -115,13 +131,13 @@ export const setGlobalVariables = (payload: { [key: string]: unknown }): SET_GLO
   payload,
 });
 
-type SET_STUDIO_NODES = { type: "SET_USER_NODES"; payload: UserNodes };
+export type SET_STUDIO_NODES = { type: "SET_USER_NODES"; payload: UserNodes };
 export const setUserNodes = (payload: UserNodes): SET_STUDIO_NODES => ({
   type: PANELS_ACTION_TYPES.SET_USER_NODES,
   payload,
 });
 
-type SET_LINKED_GLOBAL_VARIABLES = {
+export type SET_LINKED_GLOBAL_VARIABLES = {
   type: "SET_LINKED_GLOBAL_VARIABLES";
   payload: LinkedGlobalVariables;
 };
@@ -132,7 +148,7 @@ export const setLinkedGlobalVariables = (
   payload,
 });
 
-type SET_PLAYBACK_CONFIG = { type: "SET_PLAYBACK_CONFIG"; payload: Partial<PlaybackConfig> };
+export type SET_PLAYBACK_CONFIG = { type: "SET_PLAYBACK_CONFIG"; payload: Partial<PlaybackConfig> };
 export const setPlaybackConfig = (payload: Partial<PlaybackConfig>): SET_PLAYBACK_CONFIG => ({
   type: PANELS_ACTION_TYPES.SET_PLAYBACK_CONFIG,
   payload,
@@ -143,7 +159,7 @@ export type ClosePanelPayload = {
   root: MosaicNode<string>;
   path: MosaicPath;
 };
-type CLOSE_PANEL = { type: "CLOSE_PANEL"; payload: ClosePanelPayload };
+export type CLOSE_PANEL = { type: "CLOSE_PANEL"; payload: ClosePanelPayload };
 export const closePanel = (payload: ClosePanelPayload): CLOSE_PANEL => ({
   type: PANELS_ACTION_TYPES.CLOSE_PANEL,
   payload,
@@ -157,7 +173,7 @@ export type SplitPanelPayload = {
   path: MosaicPath;
   config: PanelConfig;
 };
-type SPLIT_PANEL = { type: "SPLIT_PANEL"; payload: SplitPanelPayload };
+export type SPLIT_PANEL = { type: "SPLIT_PANEL"; payload: SplitPanelPayload };
 export const splitPanel = (payload: SplitPanelPayload): SPLIT_PANEL => ({
   type: PANELS_ACTION_TYPES.SPLIT_PANEL,
   payload,
@@ -172,14 +188,14 @@ export type SwapPanelPayload = {
   config: PanelConfig;
   relatedConfigs?: SavedProps;
 };
-type SWAP_PANEL = { type: "SWAP_PANEL"; payload: SwapPanelPayload };
+export type SWAP_PANEL = { type: "SWAP_PANEL"; payload: SwapPanelPayload };
 export const swapPanel = (payload: SwapPanelPayload): SWAP_PANEL => ({
   type: PANELS_ACTION_TYPES.SWAP_PANEL,
   payload,
 });
 
 export type MoveTabPayload = { source: TabLocation; target: TabLocation };
-type MOVE_TAB = { type: "MOVE_TAB"; payload: MoveTabPayload };
+export type MOVE_TAB = { type: "MOVE_TAB"; payload: MoveTabPayload };
 export const moveTab = (payload: MoveTabPayload): MOVE_TAB => ({
   type: PANELS_ACTION_TYPES.MOVE_TAB,
   payload,
@@ -195,7 +211,7 @@ export type AddPanelPayload = {
   config?: PanelConfig;
   relatedConfigs?: SavedProps;
 };
-type ADD_PANEL = { type: "ADD_PANEL"; payload: AddPanelPayload };
+export type ADD_PANEL = { type: "ADD_PANEL"; payload: AddPanelPayload };
 export const addPanel = (payload: AddPanelPayload): ADD_PANEL => ({
   type: PANELS_ACTION_TYPES.ADD_PANEL,
   payload,
@@ -209,7 +225,7 @@ export type DropPanelPayload = {
   config?: PanelConfig;
   relatedConfigs?: SavedProps;
 };
-type DROP_PANEL = { type: "DROP_PANEL"; payload: DropPanelPayload };
+export type DROP_PANEL = { type: "DROP_PANEL"; payload: DropPanelPayload };
 export const dropPanel = (payload: DropPanelPayload): DROP_PANEL => ({
   type: PANELS_ACTION_TYPES.DROP_PANEL,
   payload,
@@ -219,7 +235,7 @@ export type StartDragPayload = {
   path: MosaicPath;
   sourceTabId?: string;
 };
-type START_DRAG = { type: "START_DRAG"; payload: StartDragPayload };
+export type START_DRAG = { type: "START_DRAG"; payload: StartDragPayload };
 export const startDrag = (payload: StartDragPayload): START_DRAG => ({
   type: PANELS_ACTION_TYPES.START_DRAG,
   payload,
@@ -235,7 +251,7 @@ export type EndDragPayload = {
   destinationPath?: MosaicPath;
   ownPath: MosaicPath;
 };
-type END_DRAG = { type: "END_DRAG"; payload: EndDragPayload };
+export type END_DRAG = { type: "END_DRAG"; payload: EndDragPayload };
 export const endDrag = (payload: EndDragPayload): END_DRAG => ({
   type: PANELS_ACTION_TYPES.END_DRAG,
   payload,

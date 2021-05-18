@@ -113,7 +113,8 @@ const pushLayoutChange = (
 export default function (
   state: State,
   action: ActionTypes,
-  oldPersistedState?: PersistedState,
+  // FIXME -- need to put this as an adapter inside CurrentLayoutProvider so it can read/make changes
+  // oldPersistedState?: PersistedState,
 ): State {
   switch (action.type) {
     case "UNDO_LAYOUT_CHANGE": {

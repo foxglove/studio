@@ -48,7 +48,7 @@ export type ConfigsPayload = {
 };
 export type ChangePanelLayoutPayload = {
   layout?: MosaicNode<string>;
-  trimSavedProps?: boolean;
+  trimConfigById?: boolean;
 };
 export type SaveConfigsPayload = {
   configs: ConfigsPayload[];

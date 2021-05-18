@@ -31,10 +31,10 @@ function getGlobalStore(): Store {
   return store;
 }
 
-export function getGlobalStoreForTest(args?: { search?: string; testAuth?: unknown }): TestStore {
+export function getGlobalStoreForTest(): TestStore {
   const memoryHistory = createMemoryHistory();
   const testStore = configureTestingStore(
-    createRootReducer({ testAuth: args?.testAuth }),
+    createRootReducer(),
     [updateUrlAndLocalStorageMiddleware],
     memoryHistory,
   );

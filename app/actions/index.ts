@@ -14,7 +14,6 @@
 import { HoverValueActions } from "./hoverValue";
 import { LayoutHistoryActions } from "./layoutHistory";
 import { MosaicActions } from "./mosaic";
-import { PanelsActions } from "./panels";
 import { TestsActions } from "./tests";
 import { UserNodesActions } from "./userNodes";
 
@@ -23,5 +22,4 @@ export type ActionTypes =
   | HoverValueActions
   | LayoutHistoryActions
   | MosaicActions
-  | PanelsActions
   | UserNodesActions;

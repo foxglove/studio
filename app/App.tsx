@@ -17,6 +17,7 @@ import AnalyticsProvider from "@foxglove/studio-base/context/AnalyticsProvider";
 import { AssetsProvider } from "@foxglove/studio-base/context/AssetContext";
 import ModalHost from "@foxglove/studio-base/context/ModalHost";
 import { PlayerSourceDefinition } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
 import URDFAssetLoader from "@foxglove/studio-base/services/URDFAssetLoader";
 import getGlobalStore from "@foxglove/studio-base/store/getGlobalStore";
 
@@ -43,6 +44,7 @@ export default function App(props: AppProps): JSX.Element {
     <StudioToastProvider />,
     <AssetsProvider loaders={assetLoaders} />,
     <ReduxProvider store={globalStore} />,
+    <CurrentLayoutProvider />, //FIXME: save in localStorage - part of LayoutStorageReduxAdapter?
     <PlayerManager playerSources={props.availableSources} />,
     /* eslint-enable react/jsx-key */
   ];
