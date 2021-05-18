@@ -11,8 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { PersistedState, Dispatcher } from "@foxglove-studio/app/reducers";
-import { Auth as AuthState } from "@foxglove-studio/app/types/Auth";
+import { PersistedState, Dispatcher } from "@foxglove/studio-base/reducers";
+import { Auth as AuthState } from "@foxglove/studio-base/types/Auth";
 
 export type TEST_SET_PERSISTED_STATE = {
   type: "TEST_SET_PERSISTED_STATE";
@@ -25,16 +25,16 @@ export enum TEST_ACTION_TYPES {
   TEST_SET_AUTH_STATE = "TEST_SET_AUTH_STATE",
 }
 
-export const testOverwritePersistedState = (
-  payload: PersistedState,
-): Dispatcher<TEST_SET_PERSISTED_STATE> => (dispatch) => {
-  return dispatch({ type: TEST_ACTION_TYPES.TEST_SET_PERSISTED_STATE, payload });
-};
+export const testOverwritePersistedState =
+  (payload: PersistedState): Dispatcher<TEST_SET_PERSISTED_STATE> =>
+  (dispatch) => {
+    return dispatch({ type: TEST_ACTION_TYPES.TEST_SET_PERSISTED_STATE, payload });
+  };
 
-export const testOverwriteAuthState = (payload: AuthState): Dispatcher<TEST_SET_AUTH_STATE> => (
-  dispatch,
-) => {
-  return dispatch({ type: TEST_ACTION_TYPES.TEST_SET_AUTH_STATE, payload });
-};
+export const testOverwriteAuthState =
+  (payload: AuthState): Dispatcher<TEST_SET_AUTH_STATE> =>
+  (dispatch) => {
+    return dispatch({ type: TEST_ACTION_TYPES.TEST_SET_AUTH_STATE, payload });
+  };
 
 export type TestsActions = TEST_SET_PERSISTED_STATE | TEST_SET_AUTH_STATE;

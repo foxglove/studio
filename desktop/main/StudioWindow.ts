@@ -14,10 +14,10 @@ import {
 } from "electron";
 import path from "path";
 
-import colors from "@foxglove-studio/app/styles/colors.module.scss";
-import { APP_NAME } from "@foxglove-studio/app/version";
 import Logger from "@foxglove/log";
+import colors from "@foxglove/studio-base/styles/colors.module.scss";
 
+import pkgInfo from "../../package.json";
 import { simulateUserClick } from "./simulateUserClick";
 import { getTelemetrySettings } from "./telemetry";
 
@@ -43,7 +43,7 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
     minHeight: 250,
     autoHideMenuBar: true,
     trafficLightPosition: { x: 12, y: 10 },
-    title: APP_NAME,
+    title: pkgInfo.productName,
     webPreferences: {
       contextIsolation: true,
       preload: preloadPath,

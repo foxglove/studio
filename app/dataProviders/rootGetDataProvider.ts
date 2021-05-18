@@ -13,25 +13,20 @@
 
 import ApiCheckerDataProvider, {
   instrumentTreeWithApiCheckerDataProvider,
-} from "@foxglove-studio/app/dataProviders/ApiCheckerDataProvider";
-import BagDataProvider from "@foxglove-studio/app/dataProviders/BagDataProvider";
-import CombinedDataProvider from "@foxglove-studio/app/dataProviders/CombinedDataProvider";
-import MeasureDataProvider, {
-  instrumentTreeWithMeasureDataProvider,
-} from "@foxglove-studio/app/dataProviders/MeasureDataProvider";
-import MemoryCacheDataProvider from "@foxglove-studio/app/dataProviders/MemoryCacheDataProvider";
-import ParseMessagesDataProvider from "@foxglove-studio/app/dataProviders/ParseMessagesDataProvider";
-import RenameDataProvider from "@foxglove-studio/app/dataProviders/RenameDataProvider";
-import WorkerDataProvider from "@foxglove-studio/app/dataProviders/WorkerDataProvider";
-import createGetDataProvider from "@foxglove-studio/app/dataProviders/createGetDataProvider";
-import { DataProviderDescriptor, DataProvider } from "@foxglove-studio/app/dataProviders/types";
-import { MEASURE_DATA_PROVIDERS_QUERY_KEY } from "@foxglove-studio/app/util/globalConstants";
+} from "@foxglove/studio-base/dataProviders/ApiCheckerDataProvider";
+import BagDataProvider from "@foxglove/studio-base/dataProviders/BagDataProvider";
+import CombinedDataProvider from "@foxglove/studio-base/dataProviders/CombinedDataProvider";
+import MemoryCacheDataProvider from "@foxglove/studio-base/dataProviders/MemoryCacheDataProvider";
+import ParseMessagesDataProvider from "@foxglove/studio-base/dataProviders/ParseMessagesDataProvider";
+import RenameDataProvider from "@foxglove/studio-base/dataProviders/RenameDataProvider";
+import WorkerDataProvider from "@foxglove/studio-base/dataProviders/WorkerDataProvider";
+import createGetDataProvider from "@foxglove/studio-base/dataProviders/createGetDataProvider";
+import { DataProviderDescriptor, DataProvider } from "@foxglove/studio-base/dataProviders/types";
 
 const getDataProviderBase = createGetDataProvider({
   ApiCheckerDataProvider,
   BagDataProvider,
   CombinedDataProvider,
-  MeasureDataProvider,
   MemoryCacheDataProvider,
   ParseMessagesDataProvider,
   RenameDataProvider,
@@ -39,8 +34,5 @@ const getDataProviderBase = createGetDataProvider({
 });
 
 export function rootGetDataProvider(tree: DataProviderDescriptor): DataProvider {
-  if (new URLSearchParams(location.search).has(MEASURE_DATA_PROVIDERS_QUERY_KEY)) {
-    tree = instrumentTreeWithMeasureDataProvider(tree);
-  }
   return getDataProviderBase(instrumentTreeWithApiCheckerDataProvider(tree));
 }

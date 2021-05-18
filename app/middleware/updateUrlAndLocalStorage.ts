@@ -11,12 +11,11 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { ActionTypes } from "@foxglove-studio/app/actions";
-import { PANELS_ACTION_TYPES } from "@foxglove-studio/app/actions/panels";
-import { State } from "@foxglove-studio/app/reducers";
-import { setPersistedStateInLocalStorage } from "@foxglove-studio/app/reducers/panels";
-import { Store } from "@foxglove-studio/app/types/Store";
-import { getShouldProcessPatch } from "@foxglove-studio/app/util/layout";
+import { ActionTypes } from "@foxglove/studio-base/actions";
+import { PANELS_ACTION_TYPES } from "@foxglove/studio-base/actions/panels";
+import { State } from "@foxglove/studio-base/reducers";
+import { setPersistedStateInLocalStorage } from "@foxglove/studio-base/reducers/panels";
+import { Store } from "@foxglove/studio-base/types/Store";
 
 let updateUrlTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -75,38 +74,33 @@ const updateUrlActions = [
   END_DRAG,
 ].map((item) => item.toString());
 
-const updateUrlAndLocalStorageMiddlewareDebounced = (store: Store) => (
-  next: (action: ActionTypes) => State,
-) => (action: ActionTypes): State => {
-  const result = next(action);
-  // Any action that changes panels state should potentially trigger a URL update.
-  let skipSettingLocalStorage = false;
-  if (
-    action.payload !== undefined &&
-    typeof action.payload === "object" &&
-    "skipSettingLocalStorage" in action.payload
-  ) {
-    skipSettingLocalStorage = Boolean(action.payload.skipSettingLocalStorage);
-  }
-
-  if (updateUrlActions.includes(action.type)) {
-    if (updateUrlTimer) {
-      clearTimeout(updateUrlTimer);
+const updateUrlAndLocalStorageMiddlewareDebounced =
+  (store: Store) =>
+  (next: (action: ActionTypes) => State) =>
+  (action: ActionTypes): State => {
+    const result = next(action);
+    // Any action that changes panels state should potentially trigger a URL update.
+    let skipSettingLocalStorage = false;
+    if (
+      action.payload !== undefined &&
+      typeof action.payload === "object" &&
+      "skipSettingLocalStorage" in action.payload
+    ) {
+      skipSettingLocalStorage = Boolean(action.payload.skipSettingLocalStorage);
     }
-    updateUrlTimer = setTimeout(async () => {
-      const shouldProcessPatch = getShouldProcessPatch();
-      if (!shouldProcessPatch) {
+
+    if (updateUrlActions.includes(action.type)) {
+      if (updateUrlTimer) {
+        clearTimeout(updateUrlTimer);
+      }
+      updateUrlTimer = setTimeout(async () => {
         maybeSetPersistedStateInLocalStorage(store, skipSettingLocalStorage);
         return result;
-      }
+      }, 500);
+    }
 
-      maybeSetPersistedStateInLocalStorage(store, skipSettingLocalStorage);
-      return result;
-    }, 500);
-  }
-
-  maybeSetPersistedStateInLocalStorage(store, skipSettingLocalStorage);
-  return result;
-};
+    maybeSetPersistedStateInLocalStorage(store, skipSettingLocalStorage);
+    return result;
+  };
 
 export default updateUrlAndLocalStorageMiddlewareDebounced;

@@ -12,30 +12,29 @@
 //   You may not use this file except in compliance with the License.
 
 import { storiesOf } from "@storybook/react";
-import { createBrowserHistory } from "history";
 import TestUtils from "react-dom/test-utils";
 
-import Panel from "@foxglove-studio/app/components/Panel";
-import PanelLayout from "@foxglove-studio/app/components/PanelLayout";
+import Panel from "@foxglove/studio-base/components/Panel";
+import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import {
   PanelCatalog,
   PanelCategory,
   PanelInfo,
-} from "@foxglove-studio/app/context/PanelCatalogContext";
+} from "@foxglove/studio-base/context/PanelCatalogContext";
 import {
   nestedTabLayoutFixture,
   nestedTabLayoutFixture2,
-} from "@foxglove-studio/app/panels/Tab/nestedTabLayoutFixture";
-import createRootReducer from "@foxglove-studio/app/reducers";
-import configureStore from "@foxglove-studio/app/store/configureStore.testing";
-import PanelSetup from "@foxglove-studio/app/stories/PanelSetup";
-import { SExpectedResult } from "@foxglove-studio/app/stories/storyHelpers";
-import { dragAndDrop } from "@foxglove-studio/app/test/dragAndDropHelper";
-import tick from "@foxglove-studio/app/util/tick";
+} from "@foxglove/studio-base/panels/Tab/nestedTabLayoutFixture";
+import createRootReducer from "@foxglove/studio-base/reducers";
+import configureStore from "@foxglove/studio-base/store/configureStore.testing";
+import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
+import { SExpectedResult } from "@foxglove/studio-base/stories/storyHelpers";
+import { dragAndDrop } from "@foxglove/studio-base/test/dragAndDropHelper";
+import tick from "@foxglove/studio-base/util/tick";
 
 import Tab from "./index";
 
-const rootReducer = createRootReducer(createBrowserHistory());
+const rootReducer = createRootReducer();
 
 const SamplePanel1 = function () {
   return <div>Sample Panel 1</div>;
@@ -131,9 +130,9 @@ storiesOf("panels/Tab/index", module)
             await tick();
             (document.querySelectorAll('[data-test="pick-a-panel"]')[0] as any).click();
             await tick();
-            (document.querySelectorAll(
-              '[data-test="panel-menu-item Some Panel"]',
-            )[0] as any).click();
+            (
+              document.querySelectorAll('[data-test="panel-menu-item Some Panel"]')[0] as any
+            ).click();
           }, DEFAULT_TIMEOUT);
         }}
       >
@@ -159,9 +158,9 @@ storiesOf("panels/Tab/index", module)
             await tick();
             (document.querySelectorAll('[data-test="pick-a-panel"]')[0] as any).click();
             await tick();
-            (document.querySelectorAll(
-              '[data-test="panel-menu-item Some Panel"]',
-            )[0] as any).click();
+            (
+              document.querySelectorAll('[data-test="panel-menu-item Some Panel"]')[0] as any
+            ).click();
           }, DEFAULT_TIMEOUT);
         }}
       >
@@ -483,9 +482,9 @@ storiesOf("panels/Tab/index", module)
         onMount={() => {
           setTimeout(async () => {
             // Create a new tab on the left side
-            (document.querySelectorAll(
-              '[data-test~="Tab!Left"] [data-test="add-tab"]',
-            )[0] as any).click();
+            (
+              document.querySelectorAll('[data-test~="Tab!Left"] [data-test="add-tab"]')[0] as any
+            ).click();
 
             const dragHandle =
               document.querySelector(

@@ -43,35 +43,35 @@ import { useSelector, useDispatch, useStore } from "react-redux";
 import { bindActionCreators } from "redux";
 import styled from "styled-components";
 
-import { useConfigById } from "@foxglove-studio/app/PanelAPI";
+import { useConfigById } from "@foxglove/studio-base/PanelAPI";
 import {
   addSelectedPanelId,
   removeSelectedPanelId,
   setSelectedPanelIds,
   selectAllPanelIds,
-} from "@foxglove-studio/app/actions/mosaic";
+} from "@foxglove/studio-base/actions/mosaic";
 import {
   savePanelConfigs,
   saveFullPanelConfig,
   changePanelLayout,
   createTabPanel,
   closePanel,
-} from "@foxglove-studio/app/actions/panels";
-import Button from "@foxglove-studio/app/components/Button";
-import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
-import Flex from "@foxglove-studio/app/components/Flex";
-import Icon from "@foxglove-studio/app/components/Icon";
-import KeyListener from "@foxglove-studio/app/components/KeyListener";
-import MultiProvider from "@foxglove-studio/app/components/MultiProvider";
-import PanelContext from "@foxglove-studio/app/components/PanelContext";
-import { usePanelCatalog } from "@foxglove-studio/app/context/PanelCatalogContext";
-import { PanelIdContext } from "@foxglove-studio/app/context/PanelIdContext";
-import { usePanelSettings } from "@foxglove-studio/app/context/PanelSettingsContext";
-import usePanelDrag from "@foxglove-studio/app/hooks/usePanelDrag";
-import { State } from "@foxglove-studio/app/reducers";
-import { TabPanelConfig } from "@foxglove-studio/app/types/layouts";
-import { PanelConfig, SaveConfig, PanelConfigSchema } from "@foxglove-studio/app/types/panels";
-import { TAB_PANEL_TYPE } from "@foxglove-studio/app/util/globalConstants";
+} from "@foxglove/studio-base/actions/panels";
+import Button from "@foxglove/studio-base/components/Button";
+import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
+import Flex from "@foxglove/studio-base/components/Flex";
+import Icon from "@foxglove/studio-base/components/Icon";
+import KeyListener from "@foxglove/studio-base/components/KeyListener";
+import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
+import PanelContext from "@foxglove/studio-base/components/PanelContext";
+import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
+import { PanelIdContext } from "@foxglove/studio-base/context/PanelIdContext";
+import { usePanelSettings } from "@foxglove/studio-base/context/PanelSettingsContext";
+import usePanelDrag from "@foxglove/studio-base/hooks/usePanelDrag";
+import { State } from "@foxglove/studio-base/reducers";
+import { TabPanelConfig } from "@foxglove/studio-base/types/layouts";
+import { PanelConfig, SaveConfig, PanelConfigSchema } from "@foxglove/studio-base/types/panels";
+import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
 import {
   getAllPanelIds,
   getPanelIdForType,
@@ -80,9 +80,9 @@ import {
   getPathFromNode,
   isTabPanel,
   updateTabPanelLayout,
-} from "@foxglove-studio/app/util/layout";
-import logEvent, { getEventTags, getEventNames } from "@foxglove-studio/app/util/logEvent";
-import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
+} from "@foxglove/studio-base/util/layout";
+import logEvent, { getEventTags, getEventNames } from "@foxglove/studio-base/util/logEvent";
+import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import styles from "./Panel.module.scss";
 
@@ -131,9 +131,8 @@ export default function Panel<Config extends PanelConfig>(
   function ConnectedPanel(props: Props<Config>) {
     const { childId, overrideConfig, tabId } = props;
     const { mosaicActions }: { mosaicActions: MosaicRootActions<any> } = useContext(MosaicContext);
-    const { mosaicWindowActions }: { mosaicWindowActions: MosaicWindowActions } = useContext(
-      MosaicWindowContext,
-    );
+    const { mosaicWindowActions }: { mosaicWindowActions: MosaicWindowActions } =
+      useContext(MosaicWindowContext);
 
     // Used by actions that need to operate on the current state without causing the panel to
     // re-render by subscribing to various unnecessary parts of the state.
@@ -192,10 +191,10 @@ export default function Panel<Config extends PanelConfig>(
     const title = useMemo(() => panelsByType.get(type)?.title ?? "", [panelsByType, type]);
 
     const [config, saveConfig] = useConfigById<Config>(childId, PanelComponent.defaultConfig);
-    const panelComponentConfig = useMemo(() => ({ ...config, ...overrideConfig }), [
-      config,
-      overrideConfig,
-    ]);
+    const panelComponentConfig = useMemo(
+      () => ({ ...config, ...overrideConfig }),
+      [config, overrideConfig],
+    );
 
     const updatePanelConfig = useCallback(
       (panelType: string, perPanelFunc: (arg0: PanelConfig) => PanelConfig) => {

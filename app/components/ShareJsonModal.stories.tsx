@@ -15,12 +15,12 @@ import { storiesOf } from "@storybook/react";
 import { useEffect } from "react";
 import TestUtils from "react-dom/test-utils";
 
-import { importPanelLayout } from "@foxglove-studio/app/actions/panels";
-import ShareJsonModal from "@foxglove-studio/app/components/ShareJsonModal";
-import { ImportPanelLayoutPayload } from "@foxglove-studio/app/types/panels";
+import { loadLayout } from "@foxglove/studio-base/actions/panels";
+import ShareJsonModal from "@foxglove/studio-base/components/ShareJsonModal";
+import { LoadLayoutPayload } from "@foxglove/studio-base/types/panels";
 
-const onLayoutChange = (layout: ImportPanelLayoutPayload, _isFromUrl: boolean = false) => {
-  importPanelLayout(layout);
+const onLayoutChange = (layout: LoadLayoutPayload, _isFromUrl: boolean = false) => {
+  loadLayout(layout);
 };
 
 storiesOf("components/ShareJsonModal", module)

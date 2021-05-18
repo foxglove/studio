@@ -103,6 +103,7 @@ export class Publication extends EventEmitter {
         return [sub.connectionId, stats.bytesSent, stats.bytesSent, stats.messagesSent, 0];
       },
     );
+
     return [this.name, subStats];
   }
 }

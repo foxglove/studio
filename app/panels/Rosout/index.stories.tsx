@@ -13,8 +13,8 @@
 
 import TestUtils from "react-dom/test-utils";
 
-import Rosout from "@foxglove-studio/app/panels/Rosout";
-import PanelSetup from "@foxglove-studio/app/stories/PanelSetup";
+import Rosout from "@foxglove/studio-base/panels/Rosout";
+import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 const fixture = {
   topics: [{ name: "/rosout", datatype: "dummy" }],
@@ -66,8 +66,7 @@ const fixture = {
           header: { seq: 335, stamp: { sec: 1529678605, nsec: 521518001 }, frame_id: "" },
           level: 4,
           name: "/some_node",
-          msg:
-            "26826:\nheader: \n  seq: 0\n  stamp: 1529678605.349576000\n  Adipisicing minim veniam sint occaecat anim laborum irure velit ut non do labore.\n",
+          msg: "26826:\nheader: \n  seq: 0\n  stamp: 1529678605.349576000\n  Adipisicing minim veniam sint occaecat anim laborum irure velit ut non do labore.\n",
           file: "somefile.cpp",
           function: "SomeFunction:SomeContext",
           line: 491,

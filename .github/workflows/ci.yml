@@ -28,15 +28,19 @@ jobs:
               yarn run lint:ci
           - name: packages
             command: yarn build:packages
+          - name: web
+            command: yarn workspace web build:dev
           - name: test
             command: yarn run test --maxWorkers=100%
           - name: storybook
-            command: yarn workspace @foxglove-studio/app run chromatic
+            command: yarn workspace @foxglove/studio-base run chromatic
         exclude:
           - os: windows-2019
             config: { name: lint }
           - os: windows-2019
             config: { name: test }
+          - os: windows-2019
+            config: { name: web }
           - os: windows-2019
             config: { name: storybook }
 

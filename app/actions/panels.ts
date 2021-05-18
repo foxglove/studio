@@ -12,13 +12,12 @@
 //   You may not use this file except in compliance with the License.
 import { MosaicNode, MosaicPath } from "react-mosaic-component";
 
-import { LinkedGlobalVariables } from "@foxglove-studio/app/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
-import { Dispatcher } from "@foxglove-studio/app/reducers";
-import { PanelsState } from "@foxglove-studio/app/reducers/panels";
-import { TabLocation } from "@foxglove-studio/app/types/layouts";
+import { LinkedGlobalVariables } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
+import { Dispatcher } from "@foxglove/studio-base/reducers";
+import { TabLocation } from "@foxglove/studio-base/types/layouts";
 import {
   CreateTabPanelPayload,
-  ImportPanelLayoutPayload,
+  LoadLayoutPayload,
   ChangePanelLayoutPayload,
   SaveConfigsPayload,
   SaveFullConfigPayload,
@@ -26,9 +25,8 @@ import {
   PlaybackConfig,
   SavedProps,
   PanelConfig,
-  SetFetchedLayoutPayload,
   MosaicDropTargetPosition,
-} from "@foxglove-studio/app/types/panels";
+} from "@foxglove/studio-base/types/panels";
 
 export enum PANELS_ACTION_TYPES {
   CHANGE_PANEL_LAYOUT = "CHANGE_PANEL_LAYOUT",
@@ -49,10 +47,7 @@ export enum PANELS_ACTION_TYPES {
   DROP_PANEL = "DROP_PANEL",
   START_DRAG = "START_DRAG",
   END_DRAG = "END_DRAG",
-  SET_FETCHED_LAYOUT = "SET_FETCHED_LAYOUT",
-  SET_FETCH_LAYOUT_FAILED = "SET_FETCH_LAYOUT_FAILED",
   LOAD_LAYOUT = "LOAD_LAYOUT",
-  CLEAR_LAYOUT_URL_REPLACED_BY_DEFAULT = "CLEAR_LAYOUT_URL_REPLACED_BY_DEFAULT",
 }
 
 export type SAVE_PANEL_CONFIGS = { type: "SAVE_PANEL_CONFIGS"; payload: SaveConfigsPayload };
@@ -65,63 +60,36 @@ export type CHANGE_PANEL_LAYOUT = {
   type: "CHANGE_PANEL_LAYOUT";
   payload: ChangePanelLayoutPayload;
 };
-type LOAD_LAYOUT = { type: "LOAD_LAYOUT"; payload: PanelsState };
+type LOAD_LAYOUT = { type: "LOAD_LAYOUT"; payload: LoadLayoutPayload };
 
-type SET_FETCHED_LAYOUT = { type: "SET_FETCHED_LAYOUT"; payload: SetFetchedLayoutPayload };
-type SET_FETCH_LAYOUT_FAILED = { type: "SET_FETCH_LAYOUT_FAILED"; payload: Error };
-export const setFetchedLayout = (
-  payload: SetFetchedLayoutPayload,
-): Dispatcher<SET_FETCHED_LAYOUT> => (dispatch) => {
-  return dispatch({ type: PANELS_ACTION_TYPES.SET_FETCHED_LAYOUT, payload });
-};
+export const savePanelConfigs =
+  (payload: SaveConfigsPayload): Dispatcher<SAVE_PANEL_CONFIGS> =>
+  (dispatch) => {
+    return dispatch({ type: PANELS_ACTION_TYPES.SAVE_PANEL_CONFIGS, payload });
+  };
 
-export const savePanelConfigs = (payload: SaveConfigsPayload): Dispatcher<SAVE_PANEL_CONFIGS> => (
-  dispatch,
-) => {
-  return dispatch({ type: PANELS_ACTION_TYPES.SAVE_PANEL_CONFIGS, payload });
-};
-
-export const saveFullPanelConfig = (
-  payload: SaveFullConfigPayload,
-): Dispatcher<SAVE_FULL_PANEL_CONFIG> => (dispatch) => {
-  return dispatch({ type: PANELS_ACTION_TYPES.SAVE_FULL_PANEL_CONFIG, payload });
-};
+export const saveFullPanelConfig =
+  (payload: SaveFullConfigPayload): Dispatcher<SAVE_FULL_PANEL_CONFIG> =>
+  (dispatch) => {
+    return dispatch({ type: PANELS_ACTION_TYPES.SAVE_FULL_PANEL_CONFIG, payload });
+  };
 
 export const createTabPanel = (payload: CreateTabPanelPayload): CREATE_TAB_PANEL => ({
   type: PANELS_ACTION_TYPES.CREATE_TAB_PANEL,
   payload,
 });
 
-type IMPORT_PANEL_LAYOUT = { type: "IMPORT_PANEL_LAYOUT"; payload: ImportPanelLayoutPayload };
-export const importPanelLayout = (
-  payload: ImportPanelLayoutPayload,
-  { skipSettingLocalStorage = false }: { skipSettingLocalStorage?: boolean } = {},
-): Dispatcher<IMPORT_PANEL_LAYOUT> => (dispatch) => {
-  return dispatch({
-    type: PANELS_ACTION_TYPES.IMPORT_PANEL_LAYOUT,
-    payload: skipSettingLocalStorage ? { ...payload, skipSettingLocalStorage } : payload,
-  });
-};
+export const changePanelLayout =
+  (payload: ChangePanelLayoutPayload): Dispatcher<CHANGE_PANEL_LAYOUT> =>
+  (dispatch) => {
+    return dispatch({ type: PANELS_ACTION_TYPES.CHANGE_PANEL_LAYOUT, payload });
+  };
 
-export const changePanelLayout = (
-  payload: ChangePanelLayoutPayload,
-): Dispatcher<CHANGE_PANEL_LAYOUT> => (dispatch) => {
-  return dispatch({ type: PANELS_ACTION_TYPES.CHANGE_PANEL_LAYOUT, payload });
-};
-
-export const loadLayout = (layout: PanelsState): Dispatcher<LOAD_LAYOUT> => (dispatch) => {
-  return dispatch({ type: PANELS_ACTION_TYPES.LOAD_LAYOUT, payload: layout });
-};
-
-type CLEAR_LAYOUT_URL_REPLACED_BY_DEFAULT = {
-  type: "CLEAR_LAYOUT_URL_REPLACED_BY_DEFAULT";
-  payload?: never;
-};
-export const clearLayoutUrlReplacedByDefault = (): Dispatcher<CLEAR_LAYOUT_URL_REPLACED_BY_DEFAULT> => (
-  dispatch,
-) => {
-  return dispatch({ type: PANELS_ACTION_TYPES.CLEAR_LAYOUT_URL_REPLACED_BY_DEFAULT });
-};
+export const loadLayout =
+  (payload: LoadLayoutPayload): Dispatcher<LOAD_LAYOUT> =>
+  (dispatch) => {
+    return dispatch({ type: PANELS_ACTION_TYPES.LOAD_LAYOUT, payload });
+  };
 
 type OVERWRITE_GLOBAL_DATA = {
   type: "OVERWRITE_GLOBAL_DATA";
@@ -275,7 +243,6 @@ export const endDrag = (payload: EndDragPayload): END_DRAG => ({
 
 export type PanelsActions =
   | CHANGE_PANEL_LAYOUT
-  | IMPORT_PANEL_LAYOUT
   | SAVE_PANEL_CONFIGS
   | SAVE_FULL_PANEL_CONFIG
   | CREATE_TAB_PANEL
@@ -292,9 +259,6 @@ export type PanelsActions =
   | DROP_PANEL
   | START_DRAG
   | END_DRAG
-  | SET_FETCHED_LAYOUT
-  | SET_FETCH_LAYOUT_FAILED
-  | LOAD_LAYOUT
-  | CLEAR_LAYOUT_URL_REPLACED_BY_DEFAULT;
+  | LOAD_LAYOUT;
 
 export const panelEditingActions = new Set<string>(Object.values(PANELS_ACTION_TYPES));

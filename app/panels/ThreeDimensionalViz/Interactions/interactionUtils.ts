@@ -16,7 +16,7 @@ import { keyBy } from "lodash";
 import {
   LinkedGlobalVariables,
   LinkedGlobalVariable,
-} from "@foxglove-studio/app/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
 
 export function getTopicWithPath({
   topic,
@@ -51,9 +51,8 @@ export function getLinkedGlobalVariable({
   markerKeyPath: string[];
   linkedGlobalVariables: LinkedGlobalVariables;
 }): LinkedGlobalVariable | undefined {
-  const linkedGlobalVariablesKeyByTopicWithPath = getLinkedGlobalVariableKeyByTopicWithPath(
-    linkedGlobalVariables,
-  );
+  const linkedGlobalVariablesKeyByTopicWithPath =
+    getLinkedGlobalVariableKeyByTopicWithPath(linkedGlobalVariables);
   const topicWithPath = getTopicWithPath({ topic, markerKeyPath });
   return linkedGlobalVariablesKeyByTopicWithPath[topicWithPath];
 }

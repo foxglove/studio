@@ -15,16 +15,15 @@ import {
 import moment from "moment-timezone";
 import { useCallback, useMemo, useState } from "react";
 
-import { AppSetting } from "@foxglove-studio/app/AppSetting";
-import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
-import { ExperimentalFeatureSettings } from "@foxglove-studio/app/components/ExperimentalFeatureSettings";
-import { SidebarContent } from "@foxglove-studio/app/components/SidebarContent";
-import { useAppConfigurationValue } from "@foxglove-studio/app/hooks/useAppConfigurationValue";
-import { nonEmptyOrUndefined } from "@foxglove-studio/app/util/emptyOrUndefined";
-import filterMap from "@foxglove-studio/app/util/filterMap";
-import fuzzyFilter from "@foxglove-studio/app/util/fuzzyFilter";
-import { APP_NAME } from "@foxglove-studio/app/version";
 import { RosNode } from "@foxglove/ros1";
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
+import { ExperimentalFeatureSettings } from "@foxglove/studio-base/components/ExperimentalFeatureSettings";
+import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
+import { nonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
+import filterMap from "@foxglove/studio-base/util/filterMap";
+import fuzzyFilter from "@foxglove/studio-base/util/fuzzyFilter";
 
 function formatTimezone(name: string) {
   const tz = moment.tz(name);
@@ -81,11 +80,10 @@ function TimezoneSettings(): React.ReactElement {
     return map;
   }, [fixedItems, timezoneItems]);
 
-  const selectedItem = useMemo(() => itemsByData.get(timezone ?? "") ?? detectItem, [
-    itemsByData,
-    timezone,
-    detectItem,
-  ]);
+  const selectedItem = useMemo(
+    () => itemsByData.get(timezone ?? "") ?? detectItem,
+    [itemsByData, timezone, detectItem],
+  );
 
   const [filterText, setFilterText] = useState<string>("");
   const filteredItems = useMemo(() => {
@@ -193,12 +191,12 @@ export default function Preferences(): React.ReactElement {
           <SectionHeader>Privacy</SectionHeader>
           <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
             <Text style={{ color: theme.palette.neutralSecondary }}>
-              Changes will take effect the next time {APP_NAME} is launched.
+              Changes will take effect the next time Foxglove Studio is launched.
             </Text>
             <Checkbox
               checked={telemetryEnabled ?? true}
               onChange={(_event, checked) => setTelemetryEnabled(checked)}
-              label={`Send anonymized usage data to help us improve ${APP_NAME}`}
+              label={`Send anonymized usage data to help us improve Foxglove Studio`}
             />
             <Checkbox
               checked={crashReportingEnabled ?? true}

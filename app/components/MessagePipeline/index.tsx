@@ -11,13 +11,12 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { debounce, flatten, groupBy, isEqual } from "lodash";
+import { debounce, flatten, groupBy } from "lodash";
 import { Time } from "rosbag";
 
-import useContextSelector from "@foxglove-studio/app/hooks/useContextSelector";
-import { GlobalVariables } from "@foxglove-studio/app/hooks/useGlobalVariables";
-import useShallowMemo from "@foxglove-studio/app/hooks/useShallowMemo";
-import useShouldNotChangeOften from "@foxglove-studio/app/hooks/useShouldNotChangeOften";
+import useContextSelector from "@foxglove/studio-base/hooks/useContextSelector";
+import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
+import useShallowMemo from "@foxglove/studio-base/hooks/useShallowMemo";
 import {
   AdvertisePayload,
   Frame,
@@ -30,16 +29,14 @@ import {
   PublishPayload,
   SubscribePayload,
   Topic,
-} from "@foxglove-studio/app/players/types";
-import { RosDatatypes } from "@foxglove-studio/app/types/RosDatatypes";
-import createSelectableContext from "@foxglove-studio/app/util/createSelectableContext";
-import sendNotification from "@foxglove-studio/app/util/sendNotification";
-import signal from "@foxglove-studio/app/util/signal";
+} from "@foxglove/studio-base/players/types";
+import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
+import createSelectableContext from "@foxglove/studio-base/util/createSelectableContext";
+import sendNotification from "@foxglove/studio-base/util/sendNotification";
+import signal from "@foxglove/studio-base/util/signal";
 
 import { pauseFrameForPromises, FramePromise } from "./pauseFrameForPromise";
 import warnOnOutOfSyncMessages from "./warnOnOutOfSyncMessages";
-
-export const WARN_ON_SUBSCRIPTIONS_WITHIN_TIME_MS = 1000;
 
 const { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } = React;
 
@@ -141,9 +138,10 @@ export function MessagePipelineProvider({
     () => flatten(Object.values(subscriptionsById)),
     [subscriptionsById],
   );
-  const publishers: AdvertisePayload[] = useMemo(() => flatten(Object.values(publishersById)), [
-    publishersById,
-  ]);
+  const publishers: AdvertisePayload[] = useMemo(
+    () => flatten(Object.values(publishersById)),
+    [publishersById],
+  );
   const player = maybePlayer.player;
   useEffect(() => player?.setSubscriptions(subscriptions), [player, subscriptions]);
   useEffect(() => player?.setPublishers(publishers), [player, publishers]);
@@ -241,16 +239,7 @@ export function MessagePipelineProvider({
     };
   }, [player]);
 
-  const topics: Topic[] | undefined = playerState.activeData?.topics;
-  useShouldNotChangeOften(topics, () => {
-    sendNotification(
-      "Provider topics should not change often",
-      "If they do they are probably not memoized properly. Please let the Foxglove team know if you see this warning.",
-      "app",
-      "warn",
-    );
-  });
-
+  const topics: Topic[] | undefined = useShallowMemo(playerState.activeData?.topics);
   const unmemoizedDatatypes: RosDatatypes | undefined = playerState.activeData?.datatypes;
   const messages: readonly MessageEvent<unknown>[] | undefined = playerState.activeData?.messages;
   const frame = useMemo(() => groupBy(messages ?? [], "topic"), [messages]);
@@ -258,28 +247,8 @@ export function MessagePipelineProvider({
   const datatypes: RosDatatypes = useMemo(() => unmemoizedDatatypes ?? {}, [unmemoizedDatatypes]);
   const setSubscriptions = useCallback(
     (id: string, subscriptionsForId: SubscribePayload[]) => {
-      setAllSubscriptions((s) => {
-        if (
-          lastTimeWhenActiveDataBecameSet.current != undefined &&
-          Date.now() <
-            lastTimeWhenActiveDataBecameSet.current + WARN_ON_SUBSCRIPTIONS_WITHIN_TIME_MS &&
-          !isEqual(
-            new Set(subscriptionsForId.map(({ topic }) => topic)),
-            new Set((s[id] ?? []).map(({ topic }) => topic)),
-          )
-        ) {
-          // TODO(JP): Might be nice to use `sendNotification` here at some point, so users can let us know about this.
-          // However, there is currently a race condition where a layout can get loaded just after the player
-          // initializes. I'm not too sure how to prevent that, because we also don't want to ignore whenever the
-          // layout changes, since a panel might decide to save its config when data becomes available, and that is
-          // bad behaviour by itself too.
-          console.warn(
-            `Panel subscribed right after Player loaded, which causes unnecessary requests. Please let the Foxglove team know about this. Topics: ${subscriptionsForId
-              .map(({ topic }) => topic)
-              .join(", ")}`,
-          );
-        }
-        return { ...s, [id]: subscriptionsForId };
+      setAllSubscriptions((previousSubscriptions) => {
+        return { ...previousSubscriptions, [id]: subscriptionsForId };
       });
     },
     [setAllSubscriptions],

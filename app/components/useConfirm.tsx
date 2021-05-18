@@ -13,10 +13,10 @@
 
 import React, { useState, useCallback } from "react";
 
-import Button from "@foxglove-studio/app/components/Button";
-import Flex from "@foxglove-studio/app/components/Flex";
-import Modal, { Title } from "@foxglove-studio/app/components/Modal";
-import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToBodyComponent";
+import Button from "@foxglove/studio-base/components/Button";
+import Flex from "@foxglove/studio-base/components/Flex";
+import Modal, { Title } from "@foxglove/studio-base/components/Modal";
+import { RenderToBodyComponent } from "@foxglove/studio-base/components/RenderToBodyComponent";
 
 import styles from "./Confirm.module.scss";
 
@@ -43,9 +43,10 @@ type Props = {
 // shows a confirmation modal to the user with an ok and a cancel button
 // returns a promise which resolves with true if the user confirmed the modal
 // or false if the user closed the modal with escape or clicked the cancel button
-export default function useConfirm(
-  props: Props,
-): { modal?: React.ReactElement | ReactNull; open: () => void } {
+export default function useConfirm(props: Props): {
+  modal?: React.ReactElement | ReactNull;
+  open: () => void;
+} {
   const [isOpen, setIsOpen] = useState(false);
   const open = useCallback(() => setIsOpen(true), []);
 

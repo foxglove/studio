@@ -28,7 +28,7 @@
     "esbuild-runner": "1.3.2",
     "jest": "27.0.0-next.8",
     "jest-circus": "27.0.0-next.8",
-    "typescript": "4.2.2"
+    "typescript": "4.2.4"
   },
   "dependencies": {
     "@foxglove/xmlrpc": "workspace:packages/xmlrpc",

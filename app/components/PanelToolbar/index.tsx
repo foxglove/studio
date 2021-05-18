@@ -28,27 +28,26 @@ import { useDispatch, useSelector, ReactReduxContext } from "react-redux";
 import { useResizeDetector } from "react-resize-detector";
 import { bindActionCreators } from "redux";
 
-import { setSelectedPanelIds } from "@foxglove-studio/app/actions/mosaic";
+import { setSelectedPanelIds } from "@foxglove/studio-base/actions/mosaic";
 import {
   savePanelConfigs,
   changePanelLayout,
   closePanel,
   splitPanel,
   swapPanel,
-} from "@foxglove-studio/app/actions/panels";
-import ChildToggle from "@foxglove-studio/app/components/ChildToggle";
-import Dropdown from "@foxglove-studio/app/components/Dropdown";
-import HelpModal from "@foxglove-studio/app/components/HelpModal";
-import Icon from "@foxglove-studio/app/components/Icon";
-import { Item, SubMenu } from "@foxglove-studio/app/components/Menu";
-import PanelContext from "@foxglove-studio/app/components/PanelContext";
-import PanelList, { PanelSelection } from "@foxglove-studio/app/components/PanelList";
-import { getPanelTypeFromMosaic } from "@foxglove-studio/app/components/PanelToolbar/utils";
-import { usePanelSettings } from "@foxglove-studio/app/context/PanelSettingsContext";
-import { State } from "@foxglove-studio/app/reducers";
-import frameless from "@foxglove-studio/app/util/frameless";
-import logEvent, { getEventNames, getEventTags } from "@foxglove-studio/app/util/logEvent";
-import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
+} from "@foxglove/studio-base/actions/panels";
+import ChildToggle from "@foxglove/studio-base/components/ChildToggle";
+import Dropdown from "@foxglove/studio-base/components/Dropdown";
+import HelpModal from "@foxglove/studio-base/components/HelpModal";
+import Icon from "@foxglove/studio-base/components/Icon";
+import { Item, SubMenu } from "@foxglove/studio-base/components/Menu";
+import PanelContext from "@foxglove/studio-base/components/PanelContext";
+import PanelList, { PanelSelection } from "@foxglove/studio-base/components/PanelList";
+import { getPanelTypeFromMosaic } from "@foxglove/studio-base/components/PanelToolbar/utils";
+import { usePanelSettings } from "@foxglove/studio-base/context/PanelSettingsContext";
+import { State } from "@foxglove/studio-base/reducers";
+import logEvent, { getEventNames, getEventTags } from "@foxglove/studio-base/util/logEvent";
+import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import styles from "./index.module.scss";
 
@@ -135,25 +134,26 @@ function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknow
   );
 
   const swap = useCallback(
-    (id?: string) => ({ type, config, relatedConfigs }: PanelSelection) => {
-      actions.swapPanel({
-        tabId,
-        originalId: id as any,
-        type,
-        root: mosaicActions.getRoot() as any,
-        path: mosaicWindowActions.getPath(),
-        config: config as any,
-        relatedConfigs,
-      });
-      const name = getEventNames().PANEL_SWAP;
-      const eventType = getEventTags().PANEL_TYPE;
-      if (name != undefined && eventType != undefined) {
-        logEvent({
-          name: name,
-          tags: { [eventType]: type },
+    (id?: string) =>
+      ({ type, config, relatedConfigs }: PanelSelection) => {
+        actions.swapPanel({
+          tabId,
+          originalId: id as any,
+          type,
+          root: mosaicActions.getRoot() as any,
+          path: mosaicWindowActions.getPath(),
+          config: config as any,
+          relatedConfigs,
         });
-      }
-    },
+        const name = getEventNames().PANEL_SWAP;
+        const eventType = getEventTags().PANEL_TYPE;
+        if (name != undefined && eventType != undefined) {
+          logEvent({
+            name: name,
+            tags: { [eventType]: type },
+          });
+        }
+      },
     [actions, mosaicActions, mosaicWindowActions, tabId],
   );
 
@@ -327,7 +327,7 @@ export default React.memo<Props>(function PanelToolbar({
     handleHeight: false,
   });
 
-  if (frameless() || hideToolbars) {
+  if (hideToolbars) {
     return ReactNull;
   }
 

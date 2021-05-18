@@ -13,11 +13,11 @@
 
 import { sortBy } from "lodash";
 
-import { MessageReader } from "@foxglove-studio/app/dataProviders/types";
-import { MessageEvent } from "@foxglove-studio/app/players/types";
-import filterMap from "@foxglove-studio/app/util/filterMap";
-import sendNotification from "@foxglove-studio/app/util/sendNotification";
-import { toSec } from "@foxglove-studio/app/util/time";
+import { MessageReader } from "@foxglove/studio-base/dataProviders/types";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
+import filterMap from "@foxglove/studio-base/util/filterMap";
+import sendNotification from "@foxglove/studio-base/util/sendNotification";
+import { toSec } from "@foxglove/studio-base/util/time";
 
 // Amount of parsed messages measured in unparsed message size that we keep cached.
 // Exported for tests.
@@ -104,7 +104,7 @@ export default class ParsedMessageCache {
 
     if (this._cacheSizeInBytes > CACHE_SIZE_BYTES) {
       // Delete the least recently used caches, once they exceed CACHE_SIZE_BYTES.
-      const cacheEntries = (Object.entries(this._cachesByDeciSecond) as any) as [number, Cache][];
+      const cacheEntries = Object.entries(this._cachesByDeciSecond) as any as [number, Cache][];
       const sortedCaches = sortBy(cacheEntries, (val) => -val[1].lastAccessIndex);
       let totalBytes = 0;
       for (const [deciSecond, { sizeInBytes }] of sortedCaches) {

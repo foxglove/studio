@@ -8,17 +8,19 @@
 import { init as initSentry } from "@sentry/electron";
 import ReactDOM from "react-dom";
 
-import "@foxglove-studio/app/styles/global.scss";
+import "@foxglove/studio-base/styles/global.scss";
 
-import installDevtoolsFormatters from "@foxglove-studio/app/util/installDevtoolsFormatters";
-import { initializeLogEvent } from "@foxglove-studio/app/util/logEvent";
-import overwriteFetch from "@foxglove-studio/app/util/overwriteFetch";
-import waitForFonts from "@foxglove-studio/app/util/waitForFonts";
-import { APP_VERSION } from "@foxglove-studio/app/version";
 import { Sockets } from "@foxglove/electron-socket/renderer";
 import Logger from "@foxglove/log";
+import {
+  installDevtoolsFormatters,
+  initializeLogEvent,
+  overwriteFetch,
+  waitForFonts,
+} from "@foxglove/studio-base";
 
-import App from "./App";
+import pkgInfo from "../../package.json";
+import Root from "./Root";
 
 const log = Logger.getLogger(__filename);
 
@@ -33,7 +35,7 @@ if (isCrashReportingEnabled && typeof process.env.SENTRY_DSN === "string") {
   initSentry({
     dsn: process.env.SENTRY_DSN,
     autoSessionTracking: true,
-    release: `${process.env.SENTRY_PROJECT}@${APP_VERSION}`,
+    release: `${process.env.SENTRY_PROJECT}@${pkgInfo.version}`,
     // Remove the default breadbrumbs integration - it does not accurately track breadcrumbs and
     // creates more noise than benefit.
     integrations: (integrations) => {
@@ -64,7 +66,7 @@ async function main() {
 
   initializeLogEvent(() => undefined, {}, {});
 
-  ReactDOM.render(<App />, rootEl, () => {
+  ReactDOM.render(<Root />, rootEl, () => {
     // Integration tests look for this console log to indicate the app has rendered once
     log.debug("App rendered");
   });

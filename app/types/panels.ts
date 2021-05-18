@@ -12,8 +12,8 @@
 //   You may not use this file except in compliance with the License.
 import type { MosaicNode, MosaicPath } from "react-mosaic-component";
 
-import { PanelsState } from "@foxglove-studio/app/reducers/panels";
-import { TimestampMethod } from "@foxglove-studio/app/util/time";
+import { PanelsState } from "@foxglove/studio-base/reducers/panels";
+import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 // Mosaic Types
 export type MosaicDropTargetPosition = "top" | "bottom" | "left" | "right";
@@ -70,35 +70,7 @@ export type CreateTabPanelPayload = {
   singleTab: boolean;
 };
 
-export type ImportPanelLayoutPayload = Partial<Omit<PanelsState, "id" | "name">> & {
-  skipSettingLocalStorage?: boolean;
-};
-
-export type LayoutFetchResult = {
-  content: PanelsState;
-  name: string;
-  savedBy: string;
-  releasedVersion: number;
-  fileSuffix?: string;
-};
-export type LayoutUrl = {
-  layoutId?: string;
-  layoutUrl?: string;
-  patch?: string;
-};
-export type InitialLayoutFetchResult = {
-  layoutUrlReplacedByDefault?: LayoutUrl;
-  // The layoutFetchResult will be undefined if there is no layout to load in the URL.
-  layoutFetchResult?: LayoutFetchResult;
-};
-export type SetFetchedLayoutPayload = {
-  isLoading: boolean;
-  error?: Error;
-  data?: LayoutFetchResult;
-  isFromLayoutUrlParam?: boolean;
-  isInitializedFromLocalStorage?: boolean;
-  layoutUrlReplacedByDefault?: LayoutUrl;
-};
+export type LoadLayoutPayload = Partial<Omit<PanelsState, "id" | "name">>;
 
 export type SaveConfig<Config> = (arg0: Partial<Config>) => void;
 
