@@ -683,8 +683,9 @@ export class RosNode extends EventEmitter {
       // Call requestTopic on this publisher to register ourselves as a subscriber
       const socketInfo = await RosNode.RequestTopic(this.name, topic, rosFollowerClient);
       ({ address, port } = socketInfo);
+      const host = address.includes(":") ? `[${address}]` : address;
       this._log?.debug?.(
-        `registered with ${pubUrl} as a subscriber to ${topic}, connecting to tcpros://${address}:${port}`,
+        `registered with ${pubUrl} as a subscriber to ${topic}, connecting to tcpros://${host}:${port}`,
       );
 
       if (!this.isSubscribedTo(topic)) {

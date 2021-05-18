@@ -144,7 +144,8 @@ export class TcpConnection extends EventEmitter implements Connection {
   }
 
   toString(): string {
-    return `tcpros://${this._address}:${this._port}`;
+    const host = this._address.includes(":") ? `[${this._address}]` : this._address;
+    return `tcpros://${host}:${this._port}`;
   }
 
   private _getTransportInfo = async (): Promise<string> => {
@@ -153,7 +154,8 @@ export class TcpConnection extends EventEmitter implements Connection {
     const fd = (await this._socket.fd()) ?? -1;
     if (addr) {
       const { address, port } = addr;
-      return `TCPROS connection on port ${localPort} to [${address}:${port} on socket ${fd}]`;
+      const host = address.includes(":") ? `[${address}]` : address;
+      return `TCPROS connection on port ${localPort} to [${host}:${port} on socket ${fd}]`;
     }
     return `TCPROS not connected [socket ${fd}]`;
   };

@@ -46,6 +46,10 @@ export class Publication extends EventEmitter {
     this.messageWriter = messageWriter;
   }
 
+  subscribers(): Readonly<Map<number, SubscriberLink>> {
+    return this._subscribers;
+  }
+
   addSubscriber(connectionId: number, destinationCallerId: string, client: Client): void {
     const subscriber = new SubscriberLink(connectionId, destinationCallerId, client);
     this._subscribers.set(connectionId, subscriber);
@@ -81,28 +85,24 @@ export class Publication extends EventEmitter {
   }
 
   getInfo(): SubscriberInfo[] {
-    return Array.from(this._subscribers.values()).map(
-      (sub): SubscriberInfo => {
-        return [
-          sub.connectionId,
-          sub.destinationCallerId,
-          "o",
-          sub.client.transportType(),
-          this.name,
-          1,
-          sub.client.getTransportInfo(),
-        ];
-      },
-    );
+    return Array.from(this._subscribers.values()).map((sub): SubscriberInfo => {
+      return [
+        sub.connectionId,
+        sub.destinationCallerId,
+        "o",
+        sub.client.transportType(),
+        this.name,
+        1,
+        sub.client.getTransportInfo(),
+      ];
+    });
   }
 
   getStats(): [string, SubscriberStats[]] {
-    const subStats = Array.from(this._subscribers.values()).map(
-      (sub): SubscriberStats => {
-        const stats = sub.client.stats();
-        return [sub.connectionId, stats.bytesSent, stats.bytesSent, stats.messagesSent, 0];
-      },
-    );
+    const subStats = Array.from(this._subscribers.values()).map((sub): SubscriberStats => {
+      const stats = sub.client.stats();
+      return [sub.connectionId, stats.bytesSent, stats.bytesSent, stats.messagesSent, 0];
+    });
 
     return [this.name, subStats];
   }
