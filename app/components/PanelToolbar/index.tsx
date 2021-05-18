@@ -66,7 +66,7 @@ type Props = {
 function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknownPanel: boolean }) {
   const { mosaicActions } = useContext(MosaicContext);
   const { mosaicWindowActions } = useContext(MosaicWindowContext);
-  const savedProps = useSelector((state: State) => state.persistedState.panels.savedProps);
+  const savedProps = useSelector((state: State) => state.persistedState.panels.configById);
   const dispatch = useDispatch();
   const actions = useMemo(
     () =>

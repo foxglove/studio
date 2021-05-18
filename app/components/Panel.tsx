@@ -222,7 +222,7 @@ export default function Panel<Config extends PanelConfig>(
         if (typeof siblingId === "string" && getPanelTypeFromId(siblingId) === panelType) {
           const siblingConfig: PanelConfig = {
             ...siblingDefaultConfig,
-            ...store.getState().persistedState.panels.savedProps[siblingId],
+            ...store.getState().persistedState.panels.configById[siblingId],
           };
           actions.savePanelConfigs({
             configs: [
@@ -257,7 +257,7 @@ export default function Panel<Config extends PanelConfig>(
     const togglePanelSelected = useCallback(
       (panelId: string) => {
         const panelIdsToDeselect = [];
-        const savedProps = store.getState().persistedState.panels.savedProps;
+        const savedProps = store.getState().persistedState.panels.configById;
         const selectedPanelIds = store.getState().mosaic.selectedPanelIds;
 
         // If we selected a Tab panel, deselect its children
@@ -374,7 +374,7 @@ export default function Panel<Config extends PanelConfig>(
     }, [actions, mosaicActions, mosaicWindowActions, tabId, type]);
 
     const splitPanel = useCallback(() => {
-      const savedProps = store.getState().persistedState.panels.savedProps;
+      const savedProps = store.getState().persistedState.panels.configById;
       const tabSavedProps = tabId != undefined ? (savedProps[tabId] as TabPanelConfig) : undefined;
       if (tabId != undefined && tabSavedProps != undefined && childId != undefined) {
         const newId = getPanelIdForType(PanelComponent.panelType);

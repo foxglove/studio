@@ -80,7 +80,7 @@ describe("state.persistedState", () => {
     const { checkState } = getStore();
     checkState(({ persistedState: { panels } }) => {
       expect(panels.layout).toEqual(defaultPersistedState.panels.layout);
-      expect(panels.savedProps).toEqual({});
+      expect(panels.configById).toEqual({});
       expect(storage.getItem(GLOBAL_STATE_STORAGE_KEY)).toEqual(defaultPersistedState);
     });
   });
@@ -94,27 +94,27 @@ describe("state.persistedState", () => {
 
     checkState(({ persistedState: { panels } }) => {
       expect(panels.layout).not.toEqual("foo!bar");
-      expect(panels.savedProps).toEqual({});
+      expect(panels.configById).toEqual({});
     });
 
     store.dispatch(loadLayout(payload));
     checkState(({ persistedState: { panels } }) => {
       expect(panels.layout).toEqual("foo!bar");
-      expect(panels.savedProps).toEqual({ "foo!bar": { test: true } });
+      expect(panels.configById).toEqual({ "foo!bar": { test: true } });
 
       const globalState = GetGlobalState();
       expect(globalState.panels.layout).toEqual(panels.layout);
-      expect(globalState.panels.savedProps).toEqual(panels.savedProps);
+      expect(globalState.panels.configById).toEqual(panels.configById);
     });
 
     store.dispatch(changePanelLayout({ layout: "foo!bar" }));
     checkState(({ persistedState: { panels } }) => {
       expect(panels.layout).toEqual("foo!bar");
-      expect(panels.savedProps).toEqual({ "foo!bar": { test: true } });
+      expect(panels.configById).toEqual({ "foo!bar": { test: true } });
 
       const globalState = GetGlobalState();
       expect(globalState.panels.layout).toEqual(panels.layout);
-      expect(globalState.panels.savedProps).toEqual(panels.savedProps);
+      expect(globalState.panels.configById).toEqual(panels.configById);
     });
 
     store.dispatch(
@@ -124,11 +124,11 @@ describe("state.persistedState", () => {
     );
     checkState(({ persistedState: { panels } }) => {
       expect(panels.layout).toEqual("foo!bar");
-      expect(panels.savedProps).toEqual({ "foo!bar": { test: true, testing: true } });
+      expect(panels.configById).toEqual({ "foo!bar": { test: true, testing: true } });
 
       const globalState = GetGlobalState();
       expect(globalState.panels.layout).toEqual(panels.layout);
-      expect(globalState.panels.savedProps).toEqual(panels.savedProps);
+      expect(globalState.panels.configById).toEqual(panels.configById);
     });
   });
 
@@ -243,8 +243,8 @@ describe("state.persistedState", () => {
         expect(firstStr).toEqual("Audio!x");
         expect(layout.second).toEqual("Tab!a");
 
-        expect(panels.savedProps[firstStr]).toEqual({ foo: "bar" });
-        expect(panels.savedProps[secondStr]).toEqual(panelLayout.savedProps["Tab!a"]);
+        expect(panels.configById[firstStr]).toEqual({ foo: "bar" });
+        expect(panels.configById[secondStr]).toEqual(panelLayout.savedProps["Tab!a"]);
       });
     });
     it("adds panel to empty Tab layout", () => {
@@ -262,7 +262,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { layout, savedProps },
+            panels: { layout, configById: savedProps },
           },
         }) => {
           const tabs = savedProps["Tab!a"]?.tabs;
@@ -331,7 +331,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { layout: maybeLayout, savedProps },
+            panels: { layout: maybeLayout, configById: savedProps },
           },
         }) => {
           const layout = maybeLayout as MosaicParent<string>;
@@ -373,7 +373,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { layout, savedProps },
+            panels: { layout, configById: savedProps },
           },
         }) => {
           expect(layout).toEqual("Tab!a");
@@ -407,7 +407,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { layout, savedProps },
+            panels: { layout, configById: savedProps },
           },
         }) => {
           expect(layout).toEqual("Tab!a");
@@ -438,7 +438,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { layout: maybeLayout, savedProps },
+            panels: { layout: maybeLayout, configById: savedProps },
           },
         }) => {
           const layout = maybeLayout as MosaicParent<string>;
@@ -478,7 +478,7 @@ describe("state.persistedState", () => {
         }),
       );
       checkState(({ persistedState: { panels } }) => {
-        expect(panels.savedProps).toEqual({
+        expect(panels.configById).toEqual({
           "Tab!a": { activeTabIdx: 1, tabs: [{ title: "B" }, { title: "A" }, { title: "C" }] },
         });
       });
@@ -508,7 +508,7 @@ describe("state.persistedState", () => {
         }),
       );
       checkState(({ persistedState: { panels } }) => {
-        expect(panels.savedProps).toEqual({
+        expect(panels.configById).toEqual({
           "Tab!a": { activeTabIdx: 0, tabs: [{ title: "B" }, { title: "C" }] },
           "Tab!b": {
             activeTabIdx: 0,
@@ -521,13 +521,13 @@ describe("state.persistedState", () => {
 
   it("closes a panel in single-panel layout", () => {
     const { store, checkState } = getStore();
-    store.dispatch(loadLayout({ layout: "Audio!a", savedProps: { "Audio!a": { foo: "bar" } } }));
+    store.dispatch(loadLayout({ layout: "Audio!a", configById: { "Audio!a": { foo: "bar" } } }));
     store.dispatch(setSelectedPanelIds(["Audio!a", "unknown!b"]));
     store.dispatch(closePanel({ root: "Audio!a", path: [] }));
     checkState(
       ({
         persistedState: {
-          panels: { layout, savedProps },
+          panels: { layout, configById: savedProps },
         },
         mosaic: { selectedPanelIds },
       }) => {
@@ -550,7 +550,7 @@ describe("state.persistedState", () => {
     store.dispatch(closePanel({ root: panelLayout.layout, path: ["first"] }));
     checkState(({ persistedState: { panels }, mosaic: { selectedPanelIds } }) => {
       expect(panels.layout).toEqual("Audio!b");
-      expect(panels.savedProps).toEqual({ "Audio!b": { foo: "baz" } });
+      expect(panels.configById).toEqual({ "Audio!b": { foo: "baz" } });
       expect(selectedPanelIds).toEqual(["Audio!b"]);
     });
   });
@@ -569,7 +569,7 @@ describe("state.persistedState", () => {
     store.dispatch(closePanel({ root: "Audio!a", path: [], tabId: "Tab!a" }));
     checkState(({ persistedState: { panels }, mosaic: { selectedPanelIds } }) => {
       expect(panels.layout).toEqual("Tab!a");
-      expect(panels.savedProps).toEqual({
+      expect(panels.configById).toEqual({
         "Tab!a": { activeTabIdx: 0, tabs: [{ title: "A", layout: undefined }] },
       });
       expect(selectedPanelIds).toEqual([]);
@@ -603,7 +603,7 @@ describe("state.persistedState", () => {
   it("will set local storage when importing a panel layout", () => {
     const { store, checkState } = getStore();
 
-    const x = loadLayout({ layout: "myNewLayout", savedProps: {} });
+    const x = loadLayout({ layout: "myNewLayout", configById: {} });
     store.dispatch(x);
     checkState(() => {
       const globalState = GetGlobalState();
@@ -619,7 +619,7 @@ describe("state.persistedState", () => {
         second: { first: "RawMessages!a", second: "Audio!c", direction: "column" },
         direction: "row",
       },
-      savedProps: { "Audio!a": { foo: "bar" }, "RawMessages!a": { foo: "baz" } },
+      configById: { "Audio!a": { foo: "bar" }, "RawMessages!a": { foo: "baz" } },
     } as LoadLayoutPayload;
     const basePayload = {
       idToReplace: "Audio!a",
@@ -633,7 +633,7 @@ describe("state.persistedState", () => {
         second: "Tab!z",
         direction: "column",
       },
-      savedProps: {
+      configById: {
         "Audio!a": { foo: "bar" },
         "Tab!z": {
           activeTabIdx: 0,
@@ -664,7 +664,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { savedProps, layout: maybeLayout },
+            panels: { configById: savedProps, layout: maybeLayout },
           },
         }) => {
           const layout = maybeLayout as MosaicParent<string>;
@@ -680,7 +680,7 @@ describe("state.persistedState", () => {
             ],
           });
           expect(savedProps[layout.second as string]).toEqual(
-            regularLayoutPayload.savedProps?.[layout.second as string],
+            regularLayoutPayload.configById?.[layout.second as string],
           );
         },
       );
@@ -693,7 +693,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { savedProps, layout: maybeLayout },
+            panels: { configById: savedProps, layout: maybeLayout },
           },
         }) => {
           const layout = maybeLayout as MosaicParent<string>;
@@ -723,7 +723,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { savedProps, layout: maybeLayout },
+            panels: { configById: savedProps, layout: maybeLayout },
           },
         }) => {
           const layout = maybeLayout as MosaicParent<string>;
@@ -737,7 +737,7 @@ describe("state.persistedState", () => {
             ],
           });
           expect(savedProps[layout.second as string]).toEqual(
-            regularLayoutPayload.savedProps?.[layout.second as string],
+            regularLayoutPayload.configById?.[layout.second as string],
           );
         },
       );
@@ -750,7 +750,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { layout: maybeLayout, savedProps },
+            panels: { layout: maybeLayout, configById: savedProps },
           },
         }) => {
           const layout = maybeLayout as MosaicParent<string>;
@@ -808,7 +808,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { layout: maybeLayout, savedProps },
+            panels: { layout: maybeLayout, configById: savedProps },
           },
         }) => {
           const layout = maybeLayout as MosaicParent<string>;
@@ -842,7 +842,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { layout: maybeLayout, savedProps },
+            panels: { layout: maybeLayout, configById: savedProps },
           },
         }) => {
           const layout = maybeLayout as MosaicParent<string>;
@@ -886,7 +886,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { layout, savedProps },
+            panels: { layout, configById: savedProps },
           },
         }) => {
           expect(layout).toEqual("Tab!a");
@@ -920,7 +920,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { layout: maybeLayout, savedProps },
+            panels: { layout: maybeLayout, configById: savedProps },
           },
         }) => {
           const layout = maybeLayout as string;
@@ -953,7 +953,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { layout: maybeLayout, savedProps },
+            panels: { layout: maybeLayout, configById: savedProps },
           },
         }) => {
           const layout = maybeLayout as string;
@@ -990,7 +990,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { layout, savedProps },
+            panels: { layout, configById: savedProps },
           },
         }) => {
           expect(layout).toEqual("Tab!a");
@@ -1013,7 +1013,7 @@ describe("state.persistedState", () => {
           first: { direction: "row", second: "ThirdPanel!ye6m1m", first: "FourthPanel!abc" },
         },
       },
-      savedProps: {},
+      configById: {},
     } as PanelsState;
     const tabPanelState = {
       layout: {
@@ -1025,7 +1025,7 @@ describe("state.persistedState", () => {
           first: { direction: "row", second: "ThirdPanel!ye6m1m", first: "Tab!abc" },
         },
       },
-      savedProps: {},
+      configById: {},
     } as PanelsState;
 
     it("removes a panel's savedProps when it is removed from the layout", () => {
@@ -1039,7 +1039,7 @@ describe("state.persistedState", () => {
         expect(leaves).toContain("SecondPanel!2wydzut");
         expect(leaves).toContain("ThirdPanel!ye6m1m");
         expect(leaves).toContain("FourthPanel!abc");
-        expect(panels.savedProps).toEqual({});
+        expect(panels.configById).toEqual({});
       });
 
       const panelConfig = {
@@ -1056,7 +1056,7 @@ describe("state.persistedState", () => {
         }),
       );
       checkState(({ persistedState: { panels } }) => {
-        expect(panels.savedProps).toEqual({
+        expect(panels.configById).toEqual({
           "SecondPanel!2wydzut": { foo: "bar" },
           "FirstPanel!34otwwt": { baz: true },
         });
@@ -1067,7 +1067,7 @@ describe("state.persistedState", () => {
         }),
       );
       checkState(({ persistedState: { panels } }) => {
-        expect(panels.savedProps).toEqual({
+        expect(panels.configById).toEqual({
           "SecondPanel!2wydzut": { foo: "bar" },
           "FirstPanel!34otwwt": { baz: true },
         });
@@ -1078,13 +1078,13 @@ describe("state.persistedState", () => {
         }),
       );
       checkState(({ persistedState: { panels } }) => {
-        expect(panels.savedProps).toEqual({
+        expect(panels.configById).toEqual({
           "FirstPanel!34otwwt": { baz: true },
         });
       });
       store.dispatch(changePanelLayout({ layout: "foo!1234" }));
       checkState(({ persistedState: { panels } }) => {
-        expect(panels.savedProps).toEqual({});
+        expect(panels.configById).toEqual({});
       });
       store.dispatch(
         savePanelConfigs({
@@ -1092,7 +1092,7 @@ describe("state.persistedState", () => {
         }),
       );
       checkState(({ persistedState: { panels } }) => {
-        expect(panels.savedProps).toEqual({
+        expect(panels.configById).toEqual({
           "foo!1234": { okay: true },
         });
       });
@@ -1109,7 +1109,7 @@ describe("state.persistedState", () => {
         expect(leaves).toContain("SecondPanel!2wydzut");
         expect(leaves).toContain("ThirdPanel!ye6m1m");
         expect(leaves).toContain("Tab!abc");
-        expect(panels.savedProps).toEqual({});
+        expect(panels.configById).toEqual({});
       });
 
       const baseTabConfig = {
@@ -1118,13 +1118,13 @@ describe("state.persistedState", () => {
       };
       store.dispatch(savePanelConfigs({ configs: [baseTabConfig] }));
       checkState(({ persistedState: { panels } }) => {
-        expect(panels.savedProps).toEqual({ "Tab!abc": baseTabConfig.config });
+        expect(panels.configById).toEqual({ "Tab!abc": baseTabConfig.config });
       });
 
       const nestedPanelConfig = { id: "NestedPanel!xyz", config: { foo: "bar" } };
       store.dispatch(savePanelConfigs({ configs: [nestedPanelConfig] }));
       checkState(({ persistedState: { panels } }) => {
-        expect(panels.savedProps).toEqual({
+        expect(panels.configById).toEqual({
           "Tab!abc": baseTabConfig.config,
           "NestedPanel!xyz": nestedPanelConfig.config,
         });
@@ -1137,7 +1137,7 @@ describe("state.persistedState", () => {
       store.dispatch(savePanelConfigs({ configs: [emptyTabConfig] }));
       checkState(({ persistedState: { panels } }) => {
         // "NestedPanel!xyz" key in savedProps should be gone
-        expect(panels.savedProps).toEqual({ "Tab!abc": emptyTabConfig.config });
+        expect(panels.configById).toEqual({ "Tab!abc": emptyTabConfig.config });
       });
     });
 
@@ -1147,14 +1147,14 @@ describe("state.persistedState", () => {
       store.dispatch(savePanelConfigs({ configs: [{ id: "foo!bar", config: { foo: "baz" } }] }));
       store.dispatch(changePanelLayout({ layout: tabPanelState.layout }));
       checkState(({ persistedState: { panels } }) => {
-        expect(panels.savedProps).toEqual({});
+        expect(panels.configById).toEqual({});
       });
 
       store.dispatch(changePanelLayout({ layout: "foo!bar" }));
       store.dispatch(savePanelConfigs({ configs: [{ id: "foo!bar", config: { foo: "baz" } }] }));
       store.dispatch(changePanelLayout({ layout: tabPanelState.layout, trimSavedProps: false }));
       checkState(({ persistedState: { panels } }) => {
-        expect(panels.savedProps).toEqual({ "foo!bar": { foo: "baz" } });
+        expect(panels.configById).toEqual({ "foo!bar": { foo: "baz" } });
       });
     });
   });
@@ -1162,7 +1162,7 @@ describe("state.persistedState", () => {
   describe("handles dragging panels", () => {
     it("does not remove panel from single-panel layout when starting drag", () => {
       const { store, checkState } = getStore();
-      store.dispatch(loadLayout({ layout: "Audio!a", savedProps: {} }));
+      store.dispatch(loadLayout({ layout: "Audio!a", configById: {} }));
       store.dispatch(startDrag({ sourceTabId: undefined, path: [] }));
       checkState(
         ({
@@ -1179,7 +1179,7 @@ describe("state.persistedState", () => {
       store.dispatch(
         loadLayout({
           layout: { first: "Audio!a", second: "RawMessages!a", direction: "column" },
-          savedProps: {},
+          configById: {},
         }),
       );
       store.dispatch(startDrag({ sourceTabId: undefined, path: ["second"] }));
@@ -1203,7 +1203,7 @@ describe("state.persistedState", () => {
       store.dispatch(
         loadLayout({
           layout: { first: "Tab!a", second: "RawMessages!a", direction: "column" },
-          savedProps: {
+          configById: {
             "Tab!a": { activeTabIdx: 0, tabs: [{ title: "A", layout: "Audio!a" }] },
           },
         }),
@@ -1212,7 +1212,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { layout, savedProps },
+            panels: { layout, configById: savedProps },
           },
         }) => {
           expect(layout).toEqual({ first: "Tab!a", second: "RawMessages!a", direction: "column" });
@@ -1228,7 +1228,7 @@ describe("state.persistedState", () => {
       store.dispatch(
         loadLayout({
           layout: { first: "Tab!a", second: "RawMessages!a", direction: "column" },
-          savedProps: {
+          configById: {
             "Tab!a": {
               activeTabIdx: 0,
               tabs: [
@@ -1242,7 +1242,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { layout, savedProps },
+            panels: { layout, configById: savedProps },
           },
         }) => {
           expect(layout).toEqual({ first: "Tab!a", second: "RawMessages!a", direction: "column" });
@@ -1271,7 +1271,7 @@ describe("state.persistedState", () => {
           tabs: [{ title: "A", layout: { first: "Audio!a", second: "Plot!a", direction: "row" } }],
         },
       };
-      store.dispatch(loadLayout({ layout: "Tab!a", savedProps: originalSavedProps }));
+      store.dispatch(loadLayout({ layout: "Tab!a", configById: originalSavedProps }));
       store.dispatch(startDrag({ sourceTabId: "Tab!a", path: ["first"] }));
       store.dispatch(
         endDrag({
@@ -1288,7 +1288,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { layout, savedProps },
+            panels: { layout, configById: savedProps },
           },
         }) => {
           expect(layout).toEqual("Tab!a");
@@ -1314,7 +1314,7 @@ describe("state.persistedState", () => {
           tabs: [{ title: "A", layout: { first: "Audio!a", second: "Plot!a", direction: "row" } }],
         },
       };
-      store.dispatch(loadLayout({ layout: originalLayout, savedProps: originalSavedProps }));
+      store.dispatch(loadLayout({ layout: originalLayout, configById: originalSavedProps }));
       store.dispatch(startDrag({ sourceTabId: "Tab!a", path: ["first"] }));
       store.dispatch(
         endDrag({
@@ -1331,7 +1331,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { layout, savedProps },
+            panels: { layout, configById: savedProps },
           },
         }) => {
           expect(layout).toEqual({
@@ -1362,7 +1362,7 @@ describe("state.persistedState", () => {
       store.dispatch(
         loadLayout({
           layout: originalLayout,
-          savedProps: originalSavedProps,
+          configById: originalSavedProps,
         }),
       );
       store.dispatch(startDrag({ sourceTabId: undefined, path: ["second"] }));
@@ -1381,7 +1381,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { layout, savedProps },
+            panels: { layout, configById: savedProps },
           },
         }) => {
           expect(layout).toEqual("Tab!a");
@@ -1423,7 +1423,7 @@ describe("state.persistedState", () => {
           ],
         },
       };
-      store.dispatch(loadLayout({ layout: originalLayout, savedProps: originalSavedProps }));
+      store.dispatch(loadLayout({ layout: originalLayout, configById: originalSavedProps }));
       store.dispatch(startDrag({ sourceTabId: "Tab!a", path: ["first"] }));
       store.dispatch(
         endDrag({
@@ -1440,7 +1440,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { layout, savedProps },
+            panels: { layout, configById: savedProps },
           },
         }) => {
           expect(layout).toEqual({ first: "Tab!a", second: "Tab!b", direction: "column" });
@@ -1486,7 +1486,7 @@ describe("state.persistedState", () => {
         "Tab!b": { activeTabIdx: 0, tabs: [{ title: "B" }] },
         "Tab!c": tabCConfig,
       };
-      store.dispatch(loadLayout({ layout: originalLayout, savedProps: originalSavedProps }));
+      store.dispatch(loadLayout({ layout: originalLayout, configById: originalSavedProps }));
       store.dispatch(startDrag({ sourceTabId: "Tab!a", path: ["first"] }));
       store.dispatch(
         endDrag({
@@ -1503,7 +1503,7 @@ describe("state.persistedState", () => {
       checkState(
         ({
           persistedState: {
-            panels: { layout, savedProps },
+            panels: { layout, configById: savedProps },
           },
         }) => {
           expect(layout).toEqual({ first: "Tab!a", second: "Tab!b", direction: "column" });

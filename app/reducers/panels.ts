@@ -91,7 +91,7 @@ export type PanelsState = {
   // We store config for each panel in a hash keyed by the panel id.
   // This should at some point be renamed to `config` or `configById` or so,
   // but it's inconvenient to have this diverge from `PANEL_PROPS_KEY`.
-  savedProps: SavedProps;
+  configById: SavedProps;
   globalVariables: GlobalVariables;
   userNodes: UserNodes;
   linkedGlobalVariables: LinkedGlobalVariables;
@@ -118,7 +118,7 @@ export const defaultPersistedState = Object.freeze<PersistedState>({
       },
       splitPercentage: 33.3333333333,
     },
-    savedProps: {},
+    configById: {},
     globalVariables: {},
     userNodes: {},
     linkedGlobalVariables: [],
@@ -179,13 +179,13 @@ function changePanelLayout(
 ): PanelsState {
   // eslint-disable-next-line no-restricted-syntax
   const panelIds = getLeaves(layout ?? null).filter((panelId) => !isEmpty(panelId));
-  const panelIdsInsideTabPanels = getPanelIdsInsideTabPanels(panelIds, state.savedProps);
+  const panelIdsInsideTabPanels = getPanelIdsInsideTabPanels(panelIds, state.configById);
   // Filter savedProps in case a panel was removed from the layout
   // We don't want its savedProps hanging around forever
   const savedProps = trimSavedProps
-    ? pick(state.savedProps, [...panelIdsInsideTabPanels, ...panelIds])
-    : state.savedProps;
-  return { ...state, savedProps, layout };
+    ? pick(state.configById, [...panelIdsInsideTabPanels, ...panelIds])
+    : state.configById;
+  return { ...state, configById: savedProps, layout };
 }
 
 function savePanelConfigs(state: PanelsState, payload: SaveConfigsPayload): PanelsState {
@@ -213,7 +213,7 @@ function savePanelConfigs(state: PanelsState, payload: SaveConfigsPayload): Pane
             },
           };
     },
-    state.savedProps,
+    state.configById,
   );
   const tabPanelConfigSaved = configs.find(({ id }) => getPanelTypeFromId(id) === TAB_PANEL_TYPE);
   if (tabPanelConfigSaved) {
@@ -222,15 +222,15 @@ function savePanelConfigs(state: PanelsState, payload: SaveConfigsPayload): Pane
     const panelIdsInsideTabPanels = getPanelIdsInsideTabPanels(panelIds, newSavedProps);
     // Filter savedProps in case a panel was removed from a Tab layout
     // We don't want its savedProps hanging around forever
-    return { ...state, savedProps: pick(newSavedProps, [...panelIdsInsideTabPanels, ...panelIds]) };
+    return { ...state, configById: pick(newSavedProps, [...panelIdsInsideTabPanels, ...panelIds]) };
   }
-  return { ...state, savedProps: newSavedProps };
+  return { ...state, configById: newSavedProps };
 }
 
 function saveFullPanelConfig(state: PanelsState, payload: SaveFullConfigPayload): PanelsState {
   const { panelType, perPanelFunc } = payload;
-  const newProps = { ...state.savedProps };
-  const fullConfig = state.savedProps;
+  const newProps = { ...state.configById };
+  const fullConfig = state.configById;
   Object.keys(fullConfig).forEach((panelId) => {
     if (getPanelTypeFromId(panelId) === panelType) {
       const newPanelConfig = perPanelFunc(fullConfig[panelId]);
@@ -240,7 +240,7 @@ function saveFullPanelConfig(state: PanelsState, payload: SaveFullConfigPayload)
     }
   });
 
-  return { ...state, savedProps: newProps };
+  return { ...state, configById: newProps };
 }
 
 const closePanel = (
@@ -248,7 +248,7 @@ const closePanel = (
   { tabId, root, path }: ClosePanelPayload,
 ): PanelsState => {
   if (tabId != undefined) {
-    const config = panelsState.savedProps[tabId] as TabPanelConfig;
+    const config = panelsState.configById[tabId] as TabPanelConfig;
     const saveConfigsPayload = removePanelFromTabPanel(path, config, tabId);
     return savePanelConfigs(panelsState, saveConfigsPayload);
   } else if (typeof root === "string") {
@@ -267,7 +267,7 @@ const splitPanel = (
   const type = getPanelTypeFromId(id);
   const newId = getPanelIdForType(type);
   let newPanelsState = { ...state.persistedState.panels };
-  const { savedProps } = newPanelsState;
+  const { configById: savedProps } = newPanelsState;
   if (tabId != undefined) {
     const activeTabLayout = savedProps[tabId]?.tabs[savedProps[tabId]?.activeTabIdx].layout;
     const newTabLayout = updateTree(activeTabLayout, [
@@ -316,7 +316,7 @@ const swapPanel = (
   let newPanelsState = { ...state.persistedState.panels };
   // For a panel inside a Tab panel, update the Tab panel's tab layouts via savedProps
   if (tabId != undefined && originalId != undefined) {
-    const tabSavedProps = newPanelsState.savedProps[tabId];
+    const tabSavedProps = newPanelsState.configById[tabId];
     if (tabSavedProps) {
       const activeTabLayout = tabSavedProps.tabs[tabSavedProps.activeTabIdx]
         .layout as MosaicParent<string>;
@@ -346,7 +346,7 @@ const createTabPanelWithSingleTab = (
   { idToReplace, layout, idsToRemove }: CreateTabPanelPayload,
 ): State => {
   const newId = getPanelIdForType(TAB_PANEL_TYPE);
-  const { savedProps } = state.persistedState.panels;
+  const { configById: savedProps } = state.persistedState.panels;
   // Build the layout for the new tab
   const layoutWithInlinedTabs = inlineTabPanelLayouts(layout, savedProps, idsToRemove);
   const panelIdsNotInNewTab = getAllPanelIds(layout, savedProps).filter(
@@ -387,7 +387,7 @@ export const createTabPanelWithMultipleTabs = (
   state: State,
   { idToReplace, layout, idsToRemove }: CreateTabPanelPayload,
 ): State => {
-  const { savedProps } = state.persistedState.panels;
+  const { configById: savedProps } = state.persistedState.panels;
   const newId = getPanelIdForType(TAB_PANEL_TYPE);
   const newLayout = replaceAndRemovePanels({ originalId: idToReplace, newId, idsToRemove }, layout);
   let newPanelsState = changePanelLayout(
@@ -424,7 +424,7 @@ function loadLayout(
   return {
     ...payload,
     layout: payload.layout,
-    savedProps: payload.savedProps ?? {},
+    configById: payload.configById ?? {},
     globalVariables: payload.globalVariables ?? {},
     userNodes: payload.userNodes ?? {},
     linkedGlobalVariables: payload.linkedGlobalVariables ?? [],
@@ -435,8 +435,8 @@ function loadLayout(
 const moveTab = (panelsState: PanelsState, { source, target }: MoveTabPayload): PanelsState => {
   const saveConfigsPayload =
     source.panelId === target.panelId
-      ? reorderTabWithinTabPanel({ source, target, savedProps: panelsState.savedProps })
-      : moveTabBetweenTabPanels({ source, target, savedProps: panelsState.savedProps });
+      ? reorderTabWithinTabPanel({ source, target, savedProps: panelsState.configById })
+      : moveTabBetweenTabPanels({ source, target, savedProps: panelsState.configById });
   return savePanelConfigs(panelsState, saveConfigsPayload);
 };
 
@@ -463,7 +463,7 @@ const addPanel = (
           id: tabId,
           config: updateTabPanelLayout(changeLayoutPayload.layout, {
             ...DEFAULT_TAB_PANEL_CONFIG,
-            ...panelsState.savedProps[tabId],
+            ...panelsState.configById[tabId],
           }),
         },
       ],
@@ -488,7 +488,7 @@ const dropPanel = (
       id,
       destinationPath,
       position,
-      panelsState.savedProps[tabId],
+      panelsState.configById[tabId],
       tabId,
     );
     configs.push(...newConfigs);
@@ -569,7 +569,7 @@ const dragWithinSameTab = (
           id: sourceTabId,
           config: updateTabPanelLayout(
             newTree,
-            panelsState.savedProps[sourceTabId] as TabPanelConfig,
+            panelsState.configById[sourceTabId] as TabPanelConfig,
           ),
         },
         ...sourceTabChildConfigs,
@@ -603,7 +603,7 @@ const dragToMainFromTab = (
   // Remove panel from tab layout
   const saveConfigsPayload = removePanelFromTabPanel(
     ownPath,
-    panelsState.savedProps[sourceTabId] as TabPanelConfig,
+    panelsState.configById[sourceTabId] as TabPanelConfig,
     sourceTabId,
   );
   const panelConfigs = {
@@ -720,7 +720,7 @@ const startDrag = (
 ): PanelsState => {
   if (path.length > 0) {
     if (sourceTabId != undefined) {
-      const tabConfig = panelsState.savedProps[sourceTabId] as TabPanelConfig;
+      const tabConfig = panelsState.configById[sourceTabId] as TabPanelConfig;
       const activeLayout = tabConfig.tabs[tabConfig.activeTabIdx]?.layout;
       if (activeLayout == undefined) {
         return panelsState;
@@ -737,7 +737,7 @@ const startDrag = (
     });
   } else if (sourceTabId != undefined) {
     // If we've dragged a panel from a single panel tab layout, remove that panel
-    const sourceTabConfig = panelsState.savedProps[sourceTabId] as TabPanelConfig;
+    const sourceTabConfig = panelsState.configById[sourceTabId] as TabPanelConfig;
     return savePanelConfigs(panelsState, {
       configs: [{ id: sourceTabId, config: updateTabPanelLayout(undefined, sourceTabConfig) }],
     });

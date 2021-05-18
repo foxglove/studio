@@ -39,7 +39,7 @@ export default function usePanelDrag(props: {
   const dispatch = useDispatch();
   const mosaicId = useSelector(({ mosaic }: State) => mosaic.mosaicId);
   const originalLayout = useSelector((state: State) => state.persistedState.panels.layout);
-  const originalSavedProps = useSelector((state: State) => state.persistedState.panels.savedProps);
+  const originalSavedProps = useSelector((state: State) => state.persistedState.panels.configById);
   const actions = React.useMemo(
     () => bindActionCreators({ startDrag, endDrag }, dispatch),
     [dispatch],

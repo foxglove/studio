@@ -107,7 +107,7 @@ describe("state.layoutHistory", () => {
 
     store.dispatch(changePanelLayout({ layout: "foo!1234" }));
     checkState(({ persistedState }) => {
-      expect(persistedState.panels.savedProps).toEqual({});
+      expect(persistedState.panels.configById).toEqual({});
     });
 
     // Make some changes slowly.
@@ -118,25 +118,25 @@ describe("state.layoutHistory", () => {
     store.dispatch(savePanelConfigs({ configs: [{ id: "a!1", config: { value: 3 } }] }));
 
     checkState(({ persistedState }) => {
-      expect(persistedState.panels.savedProps).toEqual({ "a!1": { value: 3 } });
+      expect(persistedState.panels.configById).toEqual({ "a!1": { value: 3 } });
     });
 
     // Do not skip over value=2
     store.dispatch(undoLayoutChange());
     checkState(({ persistedState }) => {
-      expect(persistedState.panels.savedProps).toEqual({ "a!1": { value: 2 } });
+      expect(persistedState.panels.configById).toEqual({ "a!1": { value: 2 } });
     });
 
     // Do not skip over value=1
     store.dispatch(undoLayoutChange());
     checkState(({ persistedState }) => {
-      expect(persistedState.panels.savedProps).toEqual({ "a!1": { value: 1 } });
+      expect(persistedState.panels.configById).toEqual({ "a!1": { value: 1 } });
     });
 
     // Back to the original state.
     store.dispatch(undoLayoutChange());
     checkState(({ persistedState }) => {
-      expect(persistedState.panels.savedProps).toEqual({});
+      expect(persistedState.panels.configById).toEqual({});
     });
   });
 

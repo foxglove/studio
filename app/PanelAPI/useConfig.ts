@@ -41,7 +41,7 @@ export function useConfigById<Config>(
 ): [Config, SaveConfig<Config>] {
   const config = useSelector((state: State) =>
     panelId != undefined
-      ? (state.persistedState.panels.savedProps[panelId] as Config | undefined)
+      ? (state.persistedState.panels.configById[panelId] as Config | undefined)
       : undefined,
   );
   if (panelId != undefined && !defaultConfig) {

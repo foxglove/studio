@@ -43,7 +43,7 @@ const state: PanelsState = {
     direction: "row",
     splitPercentage: 64.34231378763867,
   },
-  savedProps: {
+  configById: {
     "ImageViewPanel!4evmpi6": {
       cameraTopic: "/image_color/compressed",
       enabledMarkerTopics: [],
