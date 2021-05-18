@@ -4,12 +4,16 @@
 
 import { RosMsgDefinition } from "rosbag";
 
+// Converts a ROS message definition (http://wiki.ros.org/msg) into a canonical
+// message description format that is suitable for MD5 checksum generation
 export function rosMsgDefinitionText(msgDefs: RosMsgDefinition[]): string {
   let output = "";
   for (let i = 0; i < msgDefs.length; i++) {
     const msgDef = msgDefs[i] as RosMsgDefinition;
-    const constants = msgDef.definitions.filter((d) => d.isConstant);
-    const variables = msgDef.definitions.filter((d) => d.isConstant == undefined || !d.isConstant);
+    const constants = msgDef.definitions.filter(({ isConstant }) => isConstant);
+    const variables = msgDef.definitions.filter(
+      ({ isConstant }) => isConstant == undefined || !isConstant,
+    );
 
     if (i > 0) {
       output +=

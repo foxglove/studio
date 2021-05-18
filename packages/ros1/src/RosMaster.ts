@@ -25,6 +25,10 @@ function CheckArguments(args: XmlRpcValue[], expected: string[]): Error | undefi
   return undefined;
 }
 
+// A server implementing the <http://wiki.ros.org/ROS/Master_API> and
+// <http://wiki.ros.org/ROS/Parameter%20Server%20API> APIs. This can be used as
+// an alternative server implementation than roscore provided by the ros_comm
+// library.
 export class RosMaster extends EventEmitter {
   private _server: XmlRpcServer;
   private _log?: LoggerService;
@@ -81,7 +85,7 @@ export class RosMaster extends EventEmitter {
 
   // <http://wiki.ros.org/ROS/Master_API> handlers
 
-  registerService = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  registerService = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId, service, serviceApi, callerApi]
     const err = CheckArguments(args, ["string", "string", "string", "string"]);
     if (err) {
@@ -101,7 +105,7 @@ export class RosMaster extends EventEmitter {
     return Promise.resolve([1, "", 0]);
   };
 
-  unregisterService = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  unregisterService = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId, service, serviceApi]
     const err = CheckArguments(args, ["string", "string", "string"]);
     if (err) {
@@ -122,7 +126,7 @@ export class RosMaster extends EventEmitter {
     return Promise.resolve([1, "", removed ? 1 : 0]);
   };
 
-  registerSubscriber = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  registerSubscriber = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId, topic, topicType, callerApi]
     const err = CheckArguments(args, ["string", "string", "string", "string"]);
     if (err) {
@@ -155,7 +159,7 @@ export class RosMaster extends EventEmitter {
     return Promise.resolve([1, "", publisherApis]);
   };
 
-  unregisterSubscriber = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  unregisterSubscriber = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId, topic, callerApi]
     const err = CheckArguments(args, ["string", "string", "string"]);
     if (err) {
@@ -177,7 +181,7 @@ export class RosMaster extends EventEmitter {
     return Promise.resolve([1, "", removed ? 1 : 0]);
   };
 
-  registerPublisher = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  registerPublisher = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId, topic, topicType, callerApi]
     const err = CheckArguments(args, ["string", "string", "string", "string"]);
     if (err) {
@@ -223,7 +227,7 @@ export class RosMaster extends EventEmitter {
     return Promise.resolve([1, "", subscriberApis]);
   };
 
-  unregisterPublisher = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  unregisterPublisher = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId, topic, callerApi]
     const err = CheckArguments(args, ["string", "string", "string"]);
     if (err) {
@@ -245,7 +249,7 @@ export class RosMaster extends EventEmitter {
     return Promise.resolve([1, "", removed ? 1 : 0]);
   };
 
-  lookupNode = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  lookupNode = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId, nodeName]
     const err = CheckArguments(args, ["string", "string"]);
     if (err) {
@@ -261,7 +265,7 @@ export class RosMaster extends EventEmitter {
     return Promise.resolve([1, "", nodeApi]);
   };
 
-  getPublishedTopics = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  getPublishedTopics = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId, subgraph]
     const err = CheckArguments(args, ["string", "string"]);
     if (err) {
@@ -282,7 +286,7 @@ export class RosMaster extends EventEmitter {
     return Promise.resolve([1, "", entries]);
   };
 
-  getTopicTypes = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  getTopicTypes = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId]
     const err = CheckArguments(args, ["string"]);
     if (err) {
@@ -293,7 +297,7 @@ export class RosMaster extends EventEmitter {
     return Promise.resolve([1, "", entries]);
   };
 
-  getSystemState = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  getSystemState = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId]
     const err = CheckArguments(args, ["string"]);
     if (err) {
@@ -318,7 +322,7 @@ export class RosMaster extends EventEmitter {
     return Promise.resolve([1, "", [publishers, subscribers, services]]);
   };
 
-  getUri = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  getUri = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId]
     const err = CheckArguments(args, ["string"]);
     if (err) {
@@ -333,7 +337,7 @@ export class RosMaster extends EventEmitter {
     return Promise.resolve([1, "", url]);
   };
 
-  lookupService = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  lookupService = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId, service]
     const err = CheckArguments(args, ["string", "string"]);
     if (err) {
@@ -353,7 +357,7 @@ export class RosMaster extends EventEmitter {
 
   // <http://wiki.ros.org/ROS/Parameter%20Server%20API> handlers
 
-  deleteParam = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  deleteParam = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId, key]
     const err = CheckArguments(args, ["string", "string"]);
     if (err) {
@@ -367,7 +371,7 @@ export class RosMaster extends EventEmitter {
     return Promise.resolve([1, "", 0]);
   };
 
-  setParam = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  setParam = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId, key, value]
     const err = CheckArguments(args, ["string", "string", "*"]);
     if (err) {
@@ -396,7 +400,7 @@ export class RosMaster extends EventEmitter {
     return Promise.resolve([1, "", 0]);
   };
 
-  getParam = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  getParam = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId, key]
     const err = CheckArguments(args, ["string", "string"]);
     if (err) {
@@ -412,7 +416,7 @@ export class RosMaster extends EventEmitter {
     return Promise.resolve([status, "", value ?? {}]);
   };
 
-  searchParam = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  searchParam = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId, key]
     const err = CheckArguments(args, ["string", "string"]);
     if (err) {
@@ -428,7 +432,7 @@ export class RosMaster extends EventEmitter {
     return Promise.resolve([status, "", value ?? {}]);
   };
 
-  subscribeParam = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  subscribeParam = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId, callerApi, key]
     const err = CheckArguments(args, ["string", "string", "string"]);
     if (err) {
@@ -448,7 +452,7 @@ export class RosMaster extends EventEmitter {
     return Promise.resolve([1, "", value]);
   };
 
-  unsubscribeParam = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  unsubscribeParam = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId, callerApi, key]
     const err = CheckArguments(args, ["string", "string", "string"]);
     if (err) {
@@ -466,7 +470,7 @@ export class RosMaster extends EventEmitter {
     return Promise.resolve([1, "", removed ? 1 : 0]);
   };
 
-  hasParam = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  hasParam = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId, key]
     const err = CheckArguments(args, ["string", "string"]);
     if (err) {
@@ -477,7 +481,7 @@ export class RosMaster extends EventEmitter {
     return Promise.resolve([1, "", this._parameters.has(key)]);
   };
 
-  getParamNames = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  getParamNames = (_methodName: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     // [callerId]
     const err = CheckArguments(args, ["string"]);
     if (err) {

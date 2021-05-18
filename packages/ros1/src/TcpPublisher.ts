@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { EventEmitter, ListenerFn } from "eventemitter3";
+import { EventEmitter } from "eventemitter3";
 
 import { Client } from "./Client";
 import { LoggerService } from "./LoggerService";
@@ -11,26 +11,29 @@ import { Publisher } from "./Publisher";
 import { PublicationLookup, TcpClient } from "./TcpClient";
 import { TcpAddress, TcpServer, TcpSocket } from "./TcpTypes";
 
-export declare interface TcpPublisher {
-  on(
-    eventName: "connection",
-    listener: (
-      topic: string,
-      connectionId: number,
-      destinationCallerId: string,
-      client: Client,
-    ) => void,
-  ): this;
-  on(event: string, listener: ListenerFn): this;
+type TcpPublisherOpts = {
+  server: TcpServer;
+  nodeName: string;
+  getConnectionId: () => number;
+  getPublication: PublicationLookup;
+  log?: LoggerService;
+};
+
+interface TcpPublisherEvents {
+  connection: (
+    topic: string,
+    connectionId: number,
+    destinationCallerId: string,
+    client: Client,
+  ) => void;
 }
 
-// Implements a subscriber for the TCPROS transport. The actual TCP transport is
-// implemented in the passed in `socket` (TcpSocket). A transform stream is used
-// internally for parsing the TCPROS message format (4 byte length followed by
-// message payload) so "message" events represent one full message each without
-// the length prefix. A transform class that meets this requirements is
-// implemented in `RosTcpMessageStream`.
-export class TcpPublisher extends EventEmitter implements Publisher {
+// Implements publishing support for the TCPROS transport. The actual TCP server
+// is implemented in the passed in `server` (TcpServer). A `RosNode` instance
+// uses a single `TcpPublisher` instance for all published topics, each incoming
+// TCP connection sends a connection header that specifies which topic that
+// connection is subscribing to.
+export class TcpPublisher extends EventEmitter<TcpPublisherEvents> implements Publisher {
   private _server: TcpServer;
   private _nodeName: string;
   private _getConnectionId: () => number;
@@ -39,13 +42,7 @@ export class TcpPublisher extends EventEmitter implements Publisher {
   private _shutdown = false;
   private _log?: LoggerService;
 
-  constructor(
-    server: TcpServer,
-    nodeName: string,
-    getConnectionId: () => number,
-    getPublication: PublicationLookup,
-    log?: LoggerService,
-  ) {
+  constructor({ server, nodeName, getConnectionId, getPublication, log }: TcpPublisherOpts) {
     super();
     this._server = server;
     this._nodeName = nodeName;
@@ -87,7 +84,7 @@ export class TcpPublisher extends EventEmitter implements Publisher {
   }
 
   close(): void {
-    this._log?.debug?.(`stopping tcp publisher`);
+    this._log?.debug?.(`stopping tcp publisher for ${this._nodeName}`);
 
     this._shutdown = true;
     this.removeAllListeners();
@@ -108,21 +105,27 @@ export class TcpPublisher extends EventEmitter implements Publisher {
       return;
     }
 
-    const addr = await socketRemoteAddress(socket);
+    let addr: TcpAddress | undefined;
+    try {
+      addr = await socket.remoteAddress();
+    } catch (err) {
+      this._log?.warn?.(`Cannot resolve remote address for incoming tcp connection: ${err}`);
+      return socket.close().catch(() => {});
+    }
     if (addr == undefined) {
       this._log?.warn?.(`Cannot resolve remote address for incoming tcp connection`);
       return socket.close().catch(() => {});
     }
 
     const connectionId = this._getConnectionId();
-    const client = new TcpClient(
+    const client = new TcpClient({
       socket,
-      addr.address,
-      addr.port,
-      this._nodeName,
-      this._getPublication,
-      this._log,
-    );
+      address: addr.address,
+      port: addr.port,
+      nodeName: this._nodeName,
+      getPublication: this._getPublication,
+      log: this._log,
+    });
     this._pendingClients.set(connectionId, client);
 
     client.on("subscribe", (topic, destinationCallerId) => {
@@ -143,12 +146,4 @@ export class TcpPublisher extends EventEmitter implements Publisher {
       this._log?.warn?.(`tcp publisher error: ${err}`);
     }
   };
-}
-
-async function socketRemoteAddress(socket: TcpSocket): Promise<TcpAddress | undefined> {
-  try {
-    return await socket.remoteAddress();
-  } catch {
-    return undefined;
-  }
 }

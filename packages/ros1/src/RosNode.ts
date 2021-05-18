@@ -104,13 +104,13 @@ export class RosNode extends EventEmitter {
     this.rosFollower = new RosFollower(this, options.httpServer);
     this._tcpSocketCreate = options.tcpSocketCreate;
     if (options.tcpServer != undefined) {
-      this._tcpPublisher = new TcpPublisher(
-        options.tcpServer,
-        this.name,
-        this._newConnectionId,
-        this._getPublication,
-        options.log,
-      );
+      this._tcpPublisher = new TcpPublisher({
+        server: options.tcpServer,
+        nodeName: this.name,
+        getConnectionId: this._newConnectionId,
+        getPublication: this._getPublication,
+        log: options.log,
+      });
       this._tcpPublisher.on("connection", this._handleTcpClientConnection);
     }
     this._log = options.log;
@@ -160,7 +160,7 @@ export class RosNode extends EventEmitter {
       return subscription;
     }
 
-    subscription = new Subscription(topic, md5sum, dataType, tcpNoDelay);
+    subscription = new Subscription({ name: topic, md5sum, dataType, tcpNoDelay });
     this.subscriptions.set(topic, subscription);
 
     this._log?.debug?.(`subscribing to ${topic} (${dataType})`);
@@ -683,9 +683,9 @@ export class RosNode extends EventEmitter {
       // Call requestTopic on this publisher to register ourselves as a subscriber
       const socketInfo = await RosNode.RequestTopic(this.name, topic, rosFollowerClient);
       ({ address, port } = socketInfo);
-      const host = address.includes(":") ? `[${address}]` : address;
+      const uri = TcpConnection.Uri(address, port);
       this._log?.debug?.(
-        `registered with ${pubUrl} as a subscriber to ${topic}, connecting to tcpros://${host}:${port}`,
+        `registered with ${pubUrl} as a subscriber to ${topic}, connecting to ${uri}`,
       );
 
       if (!this.isSubscribedTo(topic)) {

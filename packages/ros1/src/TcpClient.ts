@@ -14,6 +14,15 @@ import { concatData } from "./concatData";
 
 export type PublicationLookup = (topic: string) => Publication | undefined;
 
+type TcpClientOpts = {
+  socket: TcpSocket;
+  address: string;
+  port: number;
+  nodeName: string;
+  getPublication: PublicationLookup;
+  log?: LoggerService;
+};
+
 export declare interface TcpClient {
   on(eventName: "close", listener: () => void): this;
   on(eventName: "subscribe", listener: (topic: string, destinationCallerId: string) => void): this;
@@ -32,14 +41,7 @@ export class TcpClient extends EventEmitter implements Client {
   private _log?: LoggerService;
   private _transformer: RosTcpMessageStream;
 
-  constructor(
-    socket: TcpSocket,
-    address: string,
-    port: number,
-    nodeName: string,
-    getPublication: PublicationLookup,
-    log?: LoggerService,
-  ) {
+  constructor({ socket, address, port, nodeName, getPublication, log }: TcpClientOpts) {
     super();
     this._socket = socket;
     this._address = address;
@@ -93,8 +95,7 @@ export class TcpClient extends EventEmitter implements Client {
   }
 
   toString(): string {
-    const host = this._address.includes(":") ? `[${this._address}]` : this._address;
-    return `tcpros://${host}:${this._port}`;
+    return TcpConnection.Uri(this._address, this._port);
   }
 
   private _getTransportInfo = async (): Promise<string> => {

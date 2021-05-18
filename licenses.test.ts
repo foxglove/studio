@@ -33,6 +33,8 @@ describe("Dependency licenses", () => {
   });
 });
 
+// Uncomment this and the printLicenses() call above to print the full list of
+// found licenses. This can be helpful when debugging failures for this test
 // async function printLicenses() {
 //   // eslint-disable-next-line
 //   console.log((checker as any).asSummary(await checkLicenses()));

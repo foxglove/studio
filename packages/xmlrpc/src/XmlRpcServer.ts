@@ -6,13 +6,9 @@ import { TextEncoder } from "web-encoding";
 
 import { Deserializer } from "./Deserializer";
 import { HttpRequest, HttpResponse, HttpServer } from "./HttpTypes";
-import { serializeFault, serializeMethodResponse } from "./Serializer";
+import { serializeFault, serializeMethodResponse, XmlRpcError } from "./Serializer";
 import { XmlRpcFault } from "./XmlRpcFault";
 import { XmlRpcMethodHandler, XmlRpcValue } from "./XmlRpcTypes";
-
-const APPLICATION_ERROR = -32500;
-const NOT_FOUND_ERROR = -32601;
-const INVALID_PARAMS_ERROR = -32602;
 
 // Create an XML-RPC server with a user-supplied HTTP(S) implementation
 export class XmlRpcServer {
@@ -57,23 +53,25 @@ export class XmlRpcServer {
     let body: string;
     if (methodName === "system.multicall") {
       if (!Array.isArray(args) || args.length !== 1 || !Array.isArray(args[0])) {
-        body = serializeFault(new XmlRpcFault("Invalid system.multicall", INVALID_PARAMS_ERROR));
+        body = serializeFault(
+          new XmlRpcFault("Invalid system.multicall", XmlRpcError.INVALID_PARAMS_ERROR),
+        );
       } else {
         const calls = args[0] as { methodName: string; params: XmlRpcValue[] }[];
         const responses = await Promise.all(
           calls.map((c) => this._methodCallHandler(c.methodName, c.params)),
         );
-        const res: XmlRpcValue[] = responses.map((r) => {
-          if (r instanceof XmlRpcFault) {
+        const allResponses: XmlRpcValue[] = responses.map((res) => {
+          if (res instanceof XmlRpcFault) {
             return {
-              faultCode: r.faultCode ?? APPLICATION_ERROR,
-              faultString: r.faultString ?? r.message,
+              faultCode: res.faultCode ?? XmlRpcError.APPLICATION_ERROR,
+              faultString: res.faultString ?? res.message,
             };
           } else {
-            return [r];
+            return [res];
           }
         });
-        body = serializeMethodResponse(res);
+        body = serializeMethodResponse(allResponses);
       }
     } else {
       const res = await this._methodCallHandler(methodName, args);
@@ -94,7 +92,7 @@ export class XmlRpcServer {
   ): Promise<XmlRpcValue | XmlRpcFault> => {
     const handler = this.xmlRpcHandlers.get(methodName);
     if (handler == undefined) {
-      return new XmlRpcFault(`Method "${methodName}" not found`, NOT_FOUND_ERROR);
+      return new XmlRpcFault(`Method "${methodName}" not found`, XmlRpcError.NOT_FOUND_ERROR);
     }
 
     try {

@@ -13,7 +13,7 @@ const CALLER_API2 = "http://127.0.0.1:1112/";
 
 describe("RosMaster", () => {
   it("registers publishers", async () => {
-    const rosMaster = new RosMaster(new MockHttpServer());
+    const rosMaster = new RosMaster(new MockHttpServer("127.0.0.1", 11311));
     let res = await rosMaster.registerPublisher("registerPublisher", [
       CALLER_ID1,
       "/a",

@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import EventEmitter from "eventemitter3";
 import { MessageWriter, RosMsgDefinition } from "rosbag";
 
 import { Client } from "./Client";
@@ -15,7 +14,7 @@ type SubscriberStats = [number, number, number, number, 0];
 // e.g. [2, "/listener", "o", "TCPROS", "/chatter", true, "TCPROS connection on port 55878 to [127.0.0.1:44273 on socket 7]"]
 type SubscriberInfo = [number, string, "o", string, string, number, string];
 
-export class Publication extends EventEmitter {
+export class Publication {
   readonly name: string;
   readonly md5sum: string;
   readonly dataType: string;
@@ -35,8 +34,6 @@ export class Publication extends EventEmitter {
     messageDefinitionText: string,
     messageWriter: MessageWriter,
   ) {
-    super();
-
     this.name = name;
     this.md5sum = md5sum;
     this.dataType = dataType;

@@ -7,15 +7,21 @@ import { HttpHandler, HttpServer } from "@foxglove/xmlrpc";
 export class MockHttpServer implements HttpServer {
   handler: HttpHandler = (_req) => Promise.resolve({ statusCode: 404 });
 
-  private _listening = false;
   private _port?: number;
   private _hostname?: string;
+  private _defaultHost: string;
+  private _defaultPort: number;
+
+  constructor(defaultHost: string, defaultPort: number) {
+    this._defaultHost = defaultHost;
+    this._defaultPort = defaultPort;
+  }
 
   url(): string | undefined {
-    if (!this._listening) {
+    if (this._hostname == undefined || this._port == undefined) {
       return undefined;
     }
-    return `http://${this._hostname ?? "127.0.0.1"}:${this._port ?? 11311}/`;
+    return `http://${this._hostname}:${this._port}/`;
   }
 
   port(): number | undefined {
@@ -23,13 +29,13 @@ export class MockHttpServer implements HttpServer {
   }
 
   listen(port?: number, hostname?: string, _backlog?: number): Promise<void> {
-    this._port = port;
-    this._hostname = hostname;
-    this._listening = true;
+    this._port = port ?? this._defaultPort;
+    this._hostname = hostname ?? this._defaultHost;
     return Promise.resolve();
   }
 
   close(): void {
-    this._listening = false;
+    this._port = undefined;
+    this._hostname = undefined;
   }
 }

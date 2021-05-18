@@ -28,6 +28,13 @@ type PublisherInfo = [
   connectionInfo: string,
 ];
 
+type SubscriptionOpts = {
+  name: string;
+  md5sum: string;
+  dataType: string;
+  tcpNoDelay: boolean;
+};
+
 export declare interface Subscription {
   on(
     event: "header",
@@ -50,7 +57,7 @@ export class Subscription extends EventEmitter {
   readonly tcpNoDelay: boolean;
   private _publishers = new Map<number, PublisherLink>();
 
-  constructor(name: string, md5sum: string, dataType: string, tcpNoDelay: boolean) {
+  constructor({ name, md5sum, dataType, tcpNoDelay }: SubscriptionOpts) {
     super();
     this.name = name;
     this.md5sum = md5sum;
