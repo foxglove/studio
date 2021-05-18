@@ -5,26 +5,22 @@
 import { createContext, useContext } from "react";
 
 import { LinkedGlobalVariables } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
-import {
-  ChangePanelLayoutPayload,
-  SaveConfigsPayload,
-  CreateTabPanelPayload,
-  LoadLayoutPayload,
-  PanelConfig,
-  PlaybackConfig,
-  UserNodes,
-} from "@foxglove/studio-base/types/panels";
+import { PanelConfig, PlaybackConfig, UserNodes } from "@foxglove/studio-base/types/panels";
 
 import {
   PanelsState,
-  ClosePanelPayload,
-  SplitPanelPayload,
-  SwapPanelPayload,
-  MoveTabPayload,
   AddPanelPayload,
+  ChangePanelLayoutPayload,
+  ClosePanelPayload,
+  CreateTabPanelPayload,
   DropPanelPayload,
-  StartDragPayload,
   EndDragPayload,
+  LoadLayoutPayload,
+  MoveTabPayload,
+  SaveConfigsPayload,
+  SplitPanelPayload,
+  StartDragPayload,
+  SwapPanelPayload,
 } from "./actions";
 
 /**

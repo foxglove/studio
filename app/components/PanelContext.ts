@@ -11,12 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import {
-  SaveConfig,
-  PanelConfig,
-  UpdatePanelConfig,
-  OpenSiblingPanel,
-} from "@foxglove/studio-base/types/panels";
+import { SaveConfig, PanelConfig, OpenSiblingPanel } from "@foxglove/studio-base/types/panels";
 
 export type PanelContextType<T> = {
   // TODO(PanelAPI): private API, should not be used in panels
@@ -30,7 +25,7 @@ export type PanelContextType<T> = {
   saveConfig: SaveConfig<T>;
 
   // TODO(PanelAPI): move to usePanelActions()
-  updatePanelConfig: UpdatePanelConfig<T>;
+  updatePanelConfig: (panelType: string, updateConfig: (config: T) => T) => void;
   openSiblingPanel: OpenSiblingPanel;
   enterFullscreen: () => void;
 

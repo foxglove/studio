@@ -35,19 +35,16 @@ import {
   MoveTabPayload,
   PanelsActions,
   PanelsState,
-} from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import { LinkedGlobalVariables } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
-import { TabPanelConfig } from "@foxglove/studio-base/types/layouts";
-import {
-  PanelConfig,
   ConfigsPayload,
   CreateTabPanelPayload,
   ChangePanelLayoutPayload,
   SaveConfigsPayload,
   SaveFullConfigPayload,
+} from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
+import { TabPanelConfig } from "@foxglove/studio-base/types/layouts";
+import {
+  PanelConfig,
   SavedProps,
-  UserNodes,
   PlaybackConfig,
   MosaicDropTargetPosition,
 } from "@foxglove/studio-base/types/panels";
@@ -138,14 +135,11 @@ function saveFullPanelConfig(state: PanelsState, payload: SaveFullConfigPayload)
   const { panelType, perPanelFunc } = payload;
   const newProps = { ...state.configById };
   const fullConfig = state.configById;
-  Object.keys(fullConfig).forEach((panelId) => {
+  for (const [panelId, panelConfig] of Object.entries(fullConfig)) {
     if (getPanelTypeFromId(panelId) === panelType) {
-      const newPanelConfig = perPanelFunc(fullConfig[panelId]);
-      if (newPanelConfig) {
-        newProps[panelId] = newPanelConfig;
-      }
+      newProps[panelId] = perPanelFunc(panelConfig);
     }
-  });
+  }
 
   return { ...state, configById: newProps };
 }
