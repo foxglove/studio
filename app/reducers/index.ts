@@ -23,17 +23,10 @@ import layoutHistory, {
   initialLayoutHistoryState,
 } from "@foxglove/studio-base/reducers/layoutHistory";
 import mosaic from "@foxglove/studio-base/reducers/mosaic";
-import tests from "@foxglove/studio-base/reducers/tests";
 import userNodes, { UserNodeDiagnostics } from "@foxglove/studio-base/reducers/userNodes";
 import { HoverValue } from "@foxglove/studio-base/types/hoverValue";
 
-const getReducers = () => [
-  mosaic,
-  hoverValue,
-  userNodes,
-  layoutHistory,
-  ...(process.env.NODE_ENV === "test" ? [tests] : []),
-];
+const getReducers = () => [mosaic, hoverValue, userNodes, layoutHistory];
 
 export type Dispatcher<A extends ActionTypes> = ThunkAction<void, State, undefined, A>;
 
