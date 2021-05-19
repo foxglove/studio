@@ -60,6 +60,8 @@ export type PublisherUpdateArgs = {
   callerId: string;
 };
 
+const OK = 1;
+
 export declare interface RosNode {
   on(event: "paramUpdate", listener: (args: ParamUpdateArgs) => void): this;
   on(event: "publisherUpdate", listener: (args: PublisherUpdateArgs) => void): this;
@@ -266,7 +268,7 @@ export class RosNode extends EventEmitter {
 
   async getParamNames(): Promise<string[]> {
     const [status, msg, names] = await this.rosParamClient.getParamNames(this.name);
-    if (status !== 1) {
+    if (status !== OK) {
       throw new Error(`getParamNames returned failure (status=${status}): ${msg}`);
     }
     if (!Array.isArray(names)) {
@@ -277,7 +279,7 @@ export class RosNode extends EventEmitter {
 
   async setParameter(key: string, value: XmlRpcValue): Promise<void> {
     const [status, msg] = await this.rosParamClient.setParam(this.name, key, value);
-    if (status !== 1) {
+    if (status !== OK) {
       throw new Error(`setParam returned failure (status=${status}): ${msg}`);
     }
   }
@@ -289,7 +291,7 @@ export class RosNode extends EventEmitter {
       callerApi,
       key,
     );
-    if (status !== 1) {
+    if (status !== OK) {
       throw new Error(`subscribeParam returned failure (status=${status}): ${msg}`);
     }
     // rosparam server returns an empty object ({}) if the parameter has not been set yet
@@ -307,7 +309,7 @@ export class RosNode extends EventEmitter {
       callerApi,
       key,
     );
-    if (status !== 1) {
+    if (status !== OK) {
       throw new Error(`unsubscribeParam returned failure (status=${status}): ${msg}`);
     }
     this.parameters.delete(key);
@@ -357,7 +359,7 @@ export class RosNode extends EventEmitter {
         continue;
       }
       const [status, msg, value] = entry as RosXmlRpcResponse;
-      if (status !== 1) {
+      if (status !== OK) {
         this._log?.warn?.(`subscribeAllParams failed for "${key}" (status=${status}): ${msg}`);
         continue;
       }
@@ -380,7 +382,7 @@ export class RosNode extends EventEmitter {
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i] as string;
       const [status, msg] = res[i] as RosXmlRpcResponse;
-      if (status !== 1) {
+      if (status !== OK) {
         this._log?.warn?.(`unsubscribeAllParams failed for "${key}" (status=${status}): ${msg}`);
         continue;
       }
@@ -395,7 +397,7 @@ export class RosNode extends EventEmitter {
       this.name,
       subgraph,
     );
-    if (status !== 1) {
+    if (status !== OK) {
       throw new Error(`getPublishedTopics returned failure (status=${status}): ${msg}`);
     }
     return topicsAndTypes as [string, string][];
@@ -403,7 +405,7 @@ export class RosNode extends EventEmitter {
 
   async getSystemState(): Promise<RosGraph> {
     const [status, msg, systemState] = await this.rosMasterClient.getSystemState(this.name);
-    if (status !== 1) {
+    if (status !== OK) {
       throw new Error(`getPublishedTopics returned failure (status=${status}): ${msg}`);
     }
     if (!Array.isArray(systemState) || systemState.length !== 3) {
@@ -450,7 +452,7 @@ export class RosNode extends EventEmitter {
     }
     const [status, msg, protocol] = res;
 
-    if (status !== 1) {
+    if (status !== OK) {
       throw new Error(
         `requestTopic("${topic}") from ${apiClient.url()} failed. status=${status}, msg=${msg}`,
       );
@@ -552,7 +554,7 @@ export class RosNode extends EventEmitter {
       callerApi,
     );
 
-    if (status !== 1) {
+    if (status !== OK) {
       throw new Error(`registerSubscriber() failed. status=${status}, msg="${msg}"`);
     }
 
@@ -580,7 +582,7 @@ export class RosNode extends EventEmitter {
       callerApi,
     );
 
-    if (status !== 1) {
+    if (status !== OK) {
       throw new Error(`registerPublisher() failed. status=${status}, msg="${msg}"`);
     }
 
@@ -605,7 +607,7 @@ export class RosNode extends EventEmitter {
         callerApi,
       );
 
-      if (status !== 1) {
+      if (status !== OK) {
         throw new Error(`unregisterSubscriber() failed. status=${status}, msg="${msg}"`);
       }
 
@@ -628,7 +630,7 @@ export class RosNode extends EventEmitter {
         callerApi,
       );
 
-      if (status !== 1) {
+      if (status !== OK) {
         throw new Error(`unregisterPublisher() failed. status=${status}, msg="${msg}"`);
       }
 
