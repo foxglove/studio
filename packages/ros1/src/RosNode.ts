@@ -141,7 +141,7 @@ export class RosNode extends EventEmitter<RosNodeEvents> {
     }
 
     for (const pubTopic of Array.from(this.publications.keys())) {
-      this.unpublish(pubTopic);
+      this.unadvertise(pubTopic);
     }
 
     this.subscriptions.clear();
@@ -252,7 +252,7 @@ export class RosNode extends EventEmitter<RosNodeEvents> {
     return true;
   }
 
-  unpublish(topic: string): boolean {
+  unadvertise(topic: string): boolean {
     const publication = this.publications.get(topic);
     if (!publication) {
       return false;
