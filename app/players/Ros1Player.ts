@@ -403,20 +403,27 @@ export default class Ros1Player implements Player {
       }
     }
 
+    // Unadvertise any topics where the dataType changed
+    for (const { topic, datatype } of publishers) {
+      const existingPub = this._rosNode.publications.get(topic);
+      if (existingPub != undefined && existingPub.dataType !== datatype) {
+        this._rosNode.unadvertise(topic);
+      }
+    }
+
     // Advertise new topics
-    for (const pub of publishers) {
-      if (this._rosNode.publications.has(pub.topic)) {
+    for (const { topic, datatype: dataType, datatypes } of publishers) {
+      if (this._rosNode.publications.has(topic)) {
         continue;
       }
 
-      const topic = pub.topic;
       const msgdefProblemId = `msgdef:${topic}`;
       const advertiseProblemId = `advertise:${topic}`;
 
       // Try to retrieve the ROS message definition for this topic
       let msgdef: RosMsgDefinition[];
       try {
-        msgdef = rosDatatypesToMessageDefinition(this._providerDatatypes, pub.datatype);
+        msgdef = rosDatatypesToMessageDefinition(datatypes, dataType);
       } catch (error) {
         this._addProblem(msgdefProblemId, {
           severity: "warning",
@@ -427,15 +434,13 @@ export default class Ros1Player implements Player {
       }
 
       // Advertise this topic to ROS as being published by us
-      this._rosNode
-        .advertise({ topic, dataType: pub.datatype, messageDefinition: msgdef })
-        .catch((error) =>
-          this._addProblem(advertiseProblemId, {
-            severity: "error",
-            message: `Failed to advertise "${topic}"`,
-            error,
-          }),
-        );
+      this._rosNode.advertise({ topic, dataType, messageDefinition: msgdef }).catch((error) =>
+        this._addProblem(advertiseProblemId, {
+          severity: "error",
+          message: `Failed to advertise "${topic}"`,
+          error,
+        }),
+      );
     }
 
     this._emitState();
