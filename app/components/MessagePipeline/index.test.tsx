@@ -226,7 +226,9 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
         { topic: "/studio/test", datatype: "test", datatypes: {} },
       ]),
     );
-    expect(result.current.publishers).toEqual([{ topic: "/studio/test", datatype: "test" }]);
+    expect(result.current.publishers).toEqual([
+      { topic: "/studio/test", datatype: "test", datatypes: {} },
+    ]);
 
     act(() =>
       result.current.setPublishers("bar", [
@@ -234,8 +236,8 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       ]),
     );
     expect(result.current.publishers).toEqual([
-      { topic: "/studio/test", datatype: "test" },
-      { topic: "/studio/test2", datatype: "test2" },
+      { topic: "/studio/test", datatype: "test", datatypes: {} },
+      { topic: "/studio/test2", datatype: "test2", datatypes: {} },
     ]);
 
     const lastPublishers = result.current.publishers;
@@ -398,7 +400,9 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     const player2 = new FakePlayer();
     rerender({ maybePlayer: { player: player2 } });
     expect(player2.subscriptions).toEqual([{ topic: "/studio/test" }, { topic: "/studio/test2" }]);
-    expect(player2.publishers).toEqual([{ topic: "/studio/test", datatype: "test" }]);
+    expect(player2.publishers).toEqual([
+      { topic: "/studio/test", datatype: "test", datatypes: {} },
+    ]);
   });
 
   it("keeps activeData when closing a player", async () => {
