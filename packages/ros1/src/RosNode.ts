@@ -218,7 +218,7 @@ export class RosNode extends EventEmitter<RosNodeEvents> {
     return publication;
   }
 
-  publish(topic: string, message: unknown): Promise<void> {
+  async publish(topic: string, message: unknown): Promise<void> {
     if (this._tcpPublisher == undefined) {
       throw new Error(`cannot publish without a tcpServer`);
     }

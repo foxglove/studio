@@ -34,7 +34,7 @@
     "@foxglove/xmlrpc": "workspace:packages/xmlrpc",
     "eventemitter3": "4.0.7",
     "md5-typescript": "1.0.5",
-    "rosbag": "github:jhurliman/rosbag.js#c299e1ca95fc15b16e70465f10a28bcb1b350552",
+    "rosbag": "github:foxglove/rosbag.js#6ce4e00c16b80973e270d53e9fb362a516e74e03",
     "web-encoding": "1.1.5"
   }
 }
