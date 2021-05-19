@@ -35,18 +35,13 @@ import panelsReducer, { defaultPlaybackConfig } from "./reducers";
 export default function CurrentLayoutProvider({
   children,
 }: React.PropsWithChildren<unknown>): JSX.Element {
-  const [panelsState, dispatch] = useReducer(
-    (state: PanelsState, action: PanelsActions) => {
-      return panelsReducer(state, action);
-    },
-    {
-      configById: {},
-      globalVariables: {},
-      userNodes: {},
-      linkedGlobalVariables: [],
-      playbackConfig: defaultPlaybackConfig,
-    },
-  );
+  const [panelsState, dispatch] = useReducer(panelsReducer, {
+    configById: {},
+    globalVariables: {},
+    userNodes: {},
+    linkedGlobalVariables: [],
+    playbackConfig: defaultPlaybackConfig,
+  });
 
   const stateRef = useRef(panelsState);
   useLayoutEffect(() => {
