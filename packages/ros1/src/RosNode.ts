@@ -426,8 +426,8 @@ export class RosNode extends EventEmitter<RosNodeEvents> {
     };
   }
 
-  tcpServerAddress(): TcpAddress | undefined {
-    return this._tcpPublisher?.address();
+  tcpServerAddress(): Promise<TcpAddress | undefined> {
+    return this._tcpPublisher?.address() ?? Promise.resolve(undefined);
   }
 
   receivedBytes(): number {

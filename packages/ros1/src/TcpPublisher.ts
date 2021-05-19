@@ -9,7 +9,7 @@ import { LoggerService } from "./LoggerService";
 import { Publication } from "./Publication";
 import { Publisher } from "./Publisher";
 import { PublicationLookup, TcpClient } from "./TcpClient";
-import { TcpAddress, TcpServer, TcpSocket } from "./TcpTypes";
+import type { TcpAddress, TcpServer, TcpSocket } from "./TcpTypes";
 
 type TcpPublisherOpts = {
   server: TcpServer;
@@ -55,7 +55,7 @@ export class TcpPublisher extends EventEmitter<TcpPublisherEvents> implements Pu
     server.on("error", this._handleError);
   }
 
-  address(): TcpAddress | undefined {
+  address(): Promise<TcpAddress | undefined> {
     return this._server.address();
   }
 
