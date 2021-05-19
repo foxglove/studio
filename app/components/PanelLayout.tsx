@@ -18,9 +18,8 @@ import {
   MosaicDragType,
   MosaicNode,
 } from "react-mosaic-component";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import "react-mosaic-component/react-mosaic-component.css";
-import { bindActionCreators } from "redux";
 import styled from "styled-components";
 
 import "./PanelLayout.scss";
@@ -28,10 +27,11 @@ import "./PanelLayout.scss";
 import Flex from "@foxglove/studio-base/components/Flex";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { SaveConfigsPayload } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { EmptyDropTarget } from "@foxglove/studio-base/panels/Tab/EmptyDropTarget";
-import { State, Dispatcher } from "@foxglove/studio-base/reducers";
-import { MosaicDropResult, SaveConfigsPayload } from "@foxglove/studio-base/types/panels";
+import { State } from "@foxglove/studio-base/reducers";
+import { MosaicDropResult } from "@foxglove/studio-base/types/panels";
 import { getPanelIdForType, getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
 import ErrorBoundary from "./ErrorBoundary";

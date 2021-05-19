@@ -37,15 +37,17 @@ export default function mosaicReducer(state: State, action: ActionTypes): State 
     case "SET_SELECTED_PANEL_IDS":
       return { ...state, mosaic: { ...state.mosaic, selectedPanelIds: action.payload } };
     case "SELECT_ALL_PANELS":
-      return {
-        ...state,
-        mosaic: {
-          ...state.mosaic,
-          // eslint-disable-next-line no-restricted-syntax
-          selectedPanelIds: getLeaves(state.persistedState.panels.layout ?? null),
-        },
-      };
+      // FIXME
+      return state;
+    // return {
+    //   ...state,
+    //   mosaic: {
+    //     ...state.mosaic,
+    //     // eslint-disable-next-line no-restricted-syntax
+    //     selectedPanelIds: getLeaves(state.persistedState.panels.layout ?? null),
+    //   },
+    // };
     default:
-      return { ...state, mosaic: state.mosaic };
+      return state;
   }
 }

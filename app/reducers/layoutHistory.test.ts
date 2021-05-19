@@ -13,10 +13,10 @@
 //   You may not use this file except in compliance with the License.
 
 import { redoLayoutChange, undoLayoutChange } from "@foxglove/studio-base/actions/layoutHistory";
-import { changePanelLayout, savePanelConfigs } from "@foxglove/studio-base/actions/panels";
+// import { changePanelLayout, savePanelConfigs } from "@foxglove/studio-base/actions/panels";
 import { State } from "@foxglove/studio-base/reducers";
 import { NEVER_PUSH_LAYOUT_THRESHOLD_MS } from "@foxglove/studio-base/reducers/layoutHistory";
-import { GLOBAL_STATE_STORAGE_KEY } from "@foxglove/studio-base/reducers/panels";
+// import { GLOBAL_STATE_STORAGE_KEY } from "@foxglove/studio-base/reducers/panels";
 import { getGlobalStoreForTest } from "@foxglove/studio-base/store/getGlobalStore";
 import Storage from "@foxglove/studio-base/util/Storage";
 import delay from "@foxglove/studio-base/util/delay";

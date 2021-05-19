@@ -11,19 +11,21 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import { useCallback, useEffect } from "react";
-import { useSelector } from "react-redux";
 
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
-import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import {
+  useCurrentLayout,
+  useCurrentLayoutSelector,
+} from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 
 const SPEEDS = ["0.01", "0.02", "0.05", "0.1", "0.2", "0.5", "0.8", "1", "2", "3", "5"];
 
 export default function PlaybackSpeedControls(): JSX.Element {
-  const configSpeed = useSelector((state: any) => state.persistedState.panels.playbackConfig.speed);
+  const configSpeed = useCurrentLayoutSelector((state) => state.playbackConfig.speed);
   const speed = useMessagePipeline(
     useCallback(({ playerState }) => playerState.activeData?.speed, []),
   );
@@ -52,7 +54,7 @@ export default function PlaybackSpeedControls(): JSX.Element {
   const displayedSpeed = speed ?? configSpeed;
   let speedText = `–`;
 
-  if (displayedSpeed) {
+  if (displayedSpeed != undefined) {
     speedText = displayedSpeed < 0.1 ? `${displayedSpeed.toFixed(2)}x` : `${displayedSpeed}x`;
   }
 

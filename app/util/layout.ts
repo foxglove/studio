@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import { captureException } from "@sentry/electron";
-import { compact, cloneDeep, flatMap, isEmpty, xor, uniq } from "lodash";
+import { compact, flatMap, xor, uniq } from "lodash";
 import {
   createRemoveUpdate,
   getLeaves,
@@ -25,12 +25,13 @@ import {
 import { MosaicKey } from "react-mosaic-component/lib/types";
 
 import Logger from "@foxglove/log";
-import { PanelsState } from "@foxglove/studio-base/reducers/panels";
-import { TabLocation, TabPanelConfig } from "@foxglove/studio-base/types/layouts";
 import {
   ConfigsPayload,
-  PanelConfig,
   SaveConfigsPayload,
+} from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
+import { TabLocation, TabPanelConfig } from "@foxglove/studio-base/types/layouts";
+import {
+  PanelConfig,
   MosaicDropTargetPosition,
   SavedProps,
 } from "@foxglove/studio-base/types/panels";

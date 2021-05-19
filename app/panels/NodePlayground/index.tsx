@@ -14,6 +14,7 @@
 import { Stack } from "@fluentui/react";
 import ArrowLeftIcon from "@mdi/svg/svg/arrow-left.svg";
 import PlusIcon from "@mdi/svg/svg/plus.svg";
+import { omit } from "lodash";
 import { Suspense } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
@@ -251,7 +252,7 @@ function NodePlayground(props: Props) {
             saveConfig({ selectedNodeId: nodeId });
           }}
           deleteNode={(nodeId) => {
-            setUserNodes({ ...userNodes, [nodeId]: undefined });
+            setUserNodes(omit(userNodes, nodeId));
             saveConfig({ selectedNodeId: undefined });
           }}
           selectedNodeId={selectedNodeId}

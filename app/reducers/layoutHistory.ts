@@ -14,14 +14,16 @@
 import { isEqual } from "lodash";
 
 import { ActionTypes } from "@foxglove/studio-base/actions";
-import { panelEditingActions } from "@foxglove/studio-base/actions/panels";
-import { State, PersistedState } from "@foxglove/studio-base/reducers";
+// import { panelEditingActions } from "@foxglove/studio-base/actions/panels";
+import { State } from "@foxglove/studio-base/reducers";
 import {
   pushState,
   redoChange,
   undoChange,
   StateHistory,
 } from "@foxglove/studio-base/util/stateHistory";
+
+type PersistedState = any;
 
 const LAYOUT_HISTORY_SIZE = 20;
 // Threshold is a guess, and could be refined if it seems we're saving too few or too many entries
@@ -138,14 +140,15 @@ export default function (
       return { ...state, persistedState, layoutHistory };
     }
     default:
-      if (panelEditingActions.has(action.type)) {
-        const newLayoutHistory = pushLayoutChange(
-          oldPersistedState,
-          state.persistedState,
-          state.layoutHistory,
-        );
-        return { ...state, layoutHistory: newLayoutHistory };
-      }
+      // FIXME
+      // if (panelEditingActions.has(action.type)) {
+      //   const newLayoutHistory = pushLayoutChange(
+      //     oldPersistedState,
+      //     state.persistedState,
+      //     state.layoutHistory,
+      //   );
+      //   return { ...state, layoutHistory: newLayoutHistory };
+      // }
 
       return { ...state };
   }

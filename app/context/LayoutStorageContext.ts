@@ -4,7 +4,7 @@
 
 import { createContext, useContext } from "react";
 
-import { PanelsState } from "@foxglove/studio-base/reducers/panels";
+import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 
 export type Layout = {
   id: string;
