@@ -3,12 +3,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { isEqual, sortBy } from "lodash";
-import { RosMsgDefinition, Time } from "rosbag";
+import { Time } from "rosbag";
 import { v4 as uuidv4 } from "uuid";
 
 import { Sockets } from "@foxglove/electron-socket/renderer";
 import Logger from "@foxglove/log";
 import { RosNode, TcpSocket } from "@foxglove/ros1";
+import { RosMsgDefinition } from "@foxglove/rosmsg";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import {
   AdvertisePayload,
@@ -158,14 +159,32 @@ export default class Ros1Player implements Player {
       this.setSubscriptions(this._requestedSubscriptions);
 
       // Subscribe to all parameters
-      const params = await rosNode.subscribeAllParams();
-      if (!isEqual(params, this._parameters)) {
-        this._parameters = new Map();
-        params.forEach((value, key) => this._parameters.set(key, value));
+      try {
+        const params = await rosNode.subscribeAllParams();
+        if (!isEqual(params, this._parameters)) {
+          this._parameters = new Map();
+          params.forEach((value, key) => this._parameters.set(key, value));
+        }
+      } catch (error) {
+        this._problems.push({
+          severity: "warning",
+          message: "ROS parameter fetch failed",
+          tip: `Ensure that roscore is running and accessible at: ${this._url}`,
+          error,
+        });
       }
 
       // Fetch the full graph topology
-      await this._updateConnectionGraph(rosNode);
+      try {
+        await this._updateConnectionGraph(rosNode);
+      } catch (error) {
+        this._problems.push({
+          severity: "warning",
+          message: "ROS connection graph fetch failed",
+          tip: `Ensure that roscore is running and accessible at: ${this._url}`,
+          error,
+        });
+      }
 
       this._presence = PlayerPresence.PRESENT;
       this._emitState();
@@ -279,7 +298,7 @@ export default class Ros1Player implements Player {
       }
 
       const { datatype } = availTopic;
-      const subscription = this._rosNode.subscribe({ topic: topicName, type: datatype });
+      const subscription = this._rosNode.subscribe({ topic: topicName, dataType: datatype });
 
       subscription.on("header", (_header, msgdef, _reader) => {
         // We have to create a new object instead of just updating _providerDatatypes because it is

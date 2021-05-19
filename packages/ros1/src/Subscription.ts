@@ -3,7 +3,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { EventEmitter } from "eventemitter3";
-import { MessageReader, RosMsgDefinition } from "rosbag";
+import { MessageReader } from "rosbag";
+
+import { RosMsgDefinition } from "@foxglove/rosmsg";
 
 import { Connection } from "./Connection";
 import { PublisherLink } from "./PublisherLink";
@@ -28,32 +30,35 @@ type PublisherInfo = [
   connectionInfo: string,
 ];
 
-export declare interface Subscription {
-  on(
-    event: "header",
-    listener: (
-      header: Map<string, string>,
-      msgDef: RosMsgDefinition[],
-      msgReader: MessageReader,
-    ) => void,
-  ): this;
-  on(
-    event: "message",
-    listener: (msg: unknown, data: Uint8Array, publisher: PublisherLink) => void,
-  ): this;
+type SubscriptionOpts = {
+  name: string;
+  md5sum: string;
+  dataType: string;
+  tcpNoDelay: boolean;
+};
+
+export interface SubscriptionEvents {
+  header: (
+    header: Map<string, string>,
+    msgDef: RosMsgDefinition[],
+    msgReader: MessageReader,
+  ) => void;
+  message: (msg: unknown, data: Uint8Array, publisher: PublisherLink) => void;
 }
 
-export class Subscription extends EventEmitter {
+export class Subscription extends EventEmitter<SubscriptionEvents> {
   readonly name: string;
   readonly md5sum: string;
   readonly dataType: string;
+  readonly tcpNoDelay: boolean;
   private _publishers = new Map<number, PublisherLink>();
 
-  constructor(name: string, md5sum: string, dataType: string) {
+  constructor({ name, md5sum, dataType, tcpNoDelay }: SubscriptionOpts) {
     super();
     this.name = name;
     this.md5sum = md5sum;
     this.dataType = dataType;
+    this.tcpNoDelay = tcpNoDelay;
   }
 
   close(): void {

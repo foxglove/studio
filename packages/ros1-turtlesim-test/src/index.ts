@@ -36,7 +36,7 @@ async function main() {
 
     const sub = rosNode.subscribe({
       topic: "/turtle1/color_sensor",
-      type: "turtlesim/Color",
+      dataType: "turtlesim/Color",
     });
 
     sub.on("message", (msg, data, pub) => {

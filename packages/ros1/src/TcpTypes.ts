@@ -18,6 +18,15 @@ export interface NetworkInterface {
   netmask: string;
 }
 
+export interface TcpSocketEvents {
+  connect: () => void;
+  close: () => void;
+  data: (data: Uint8Array) => void;
+  end: () => void;
+  timeout: () => void;
+  error: (err: Error) => void;
+}
+
 export interface TcpSocket {
   remoteAddress(): Promise<TcpAddress | undefined>;
   localAddress(): Promise<TcpAddress | undefined>;
@@ -27,6 +36,7 @@ export interface TcpSocket {
   connect(): Promise<void>;
   close(): Promise<void>;
   write(data: Uint8Array): Promise<void>;
+  setNoDelay(noDelay?: boolean): Promise<void>;
 
   on(eventName: "connect", listener: () => void): this;
   on(eventName: "close", listener: () => void): this;
@@ -34,6 +44,12 @@ export interface TcpSocket {
   on(eventName: "end", listener: () => void): this;
   on(eventName: "timeout", listener: () => void): this;
   on(eventName: "error", listener: (err: Error) => void): this;
+}
+
+export interface TcpServerEvents {
+  close: () => void;
+  connection: (socket: TcpSocket) => void;
+  error: (err: Error) => void;
 }
 
 export interface TcpServer {

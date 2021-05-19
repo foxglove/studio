@@ -4,9 +4,9 @@
 
 import { EventEmitter } from "eventemitter3";
 
-import { TcpAddress, TcpServer, TcpSocket } from "../TcpTypes";
+import { TcpAddress, TcpServer, TcpServerEvents, TcpSocket, TcpSocketEvents } from "../TcpTypes";
 
-export class MockTcpSocket extends EventEmitter implements TcpSocket {
+export class MockTcpSocket extends EventEmitter<TcpSocketEvents> implements TcpSocket {
   private _connected = true;
 
   constructor() {
@@ -47,9 +47,13 @@ export class MockTcpSocket extends EventEmitter implements TcpSocket {
   write(_data: Uint8Array): Promise<void> {
     return Promise.resolve();
   }
+
+  setNoDelay(_noDelay?: boolean): Promise<void> {
+    return Promise.resolve();
+  }
 }
 
-export class MockTcpServer extends EventEmitter implements TcpServer {
+export class MockTcpServer extends EventEmitter<TcpServerEvents> implements TcpServer {
   listening = true;
 
   constructor() {
