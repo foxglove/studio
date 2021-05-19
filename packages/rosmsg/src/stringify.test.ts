@@ -11,9 +11,9 @@
 //   You may not use this file except in compliance with the License.
 
 import { parse } from "./parse";
-import { rosMsgDefinitionText } from "./text";
+import { stringify } from "./stringify";
 
-describe("rosMsgDefinitionText", () => {
+describe("stringify", () => {
   it("round trips a definition into canonical format", () => {
     const messageDefinition = `
       uint32 foo = 55
@@ -30,7 +30,7 @@ describe("rosMsgDefinitionText", () => {
     `;
     const types = parse(messageDefinition);
 
-    const output = rosMsgDefinitionText(types);
+    const output = stringify(types);
     expect(output).toEqual(`uint32 foo = 55
 int32 bar = -11
 float32 baz = -32.25

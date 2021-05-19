@@ -8,7 +8,7 @@ import { MessageWriter } from "rosbag";
 
 import {
   parse as parseMessageDefinition,
-  rosMsgDefinitionText,
+  stringify as rosMsgDefinitionText,
   RosMsgDefinition,
 } from "@foxglove/rosmsg";
 import { HttpServer, XmlRpcFault, XmlRpcValue } from "@foxglove/xmlrpc";
