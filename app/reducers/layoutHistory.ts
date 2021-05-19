@@ -114,10 +114,11 @@ const pushLayoutChange = (
 
 export default function (
   state: State,
-  action: ActionTypes,
+  _action: ActionTypes,
   // FIXME -- need to put this as an adapter inside CurrentLayoutProvider so it can read/make changes
   // oldPersistedState?: PersistedState,
 ): State {
+  /*
   switch (action.type) {
     case "UNDO_LAYOUT_CHANGE": {
       const { undoRedoState, layoutHistory } = undoLayoutChange(
@@ -140,16 +141,17 @@ export default function (
       return { ...state, persistedState, layoutHistory };
     }
     default:
-      // FIXME
-      // if (panelEditingActions.has(action.type)) {
-      //   const newLayoutHistory = pushLayoutChange(
-      //     oldPersistedState,
-      //     state.persistedState,
-      //     state.layoutHistory,
-      //   );
-      //   return { ...state, layoutHistory: newLayoutHistory };
-      // }
+      if (panelEditingActions.has(action.type)) {
+        const newLayoutHistory = pushLayoutChange(
+          oldPersistedState,
+          state.persistedState,
+          state.layoutHistory,
+        );
+        return { ...state, layoutHistory: newLayoutHistory };
+      }
 
       return { ...state };
   }
+  */
+  return state;
 }
