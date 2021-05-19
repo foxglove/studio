@@ -223,14 +223,14 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
 
     act(() =>
       result.current.setPublishers("test", [
-        { topic: "/studio/test", datatype: "test", msgdef: [] },
+        { topic: "/studio/test", datatype: "test", datatypes: {} },
       ]),
     );
     expect(result.current.publishers).toEqual([{ topic: "/studio/test", datatype: "test" }]);
 
     act(() =>
       result.current.setPublishers("bar", [
-        { topic: "/studio/test2", datatype: "test2", msgdef: [] },
+        { topic: "/studio/test2", datatype: "test2", datatypes: {} },
       ]),
     );
     expect(result.current.publishers).toEqual([
@@ -391,7 +391,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     act(() => result.current.setSubscriptions("bar", [{ topic: "/studio/test2" }]));
     act(() =>
       result.current.setPublishers("test", [
-        { topic: "/studio/test", datatype: "test", msgdef: [] },
+        { topic: "/studio/test", datatype: "test", datatypes: {} },
       ]),
     );
 
