@@ -16,6 +16,7 @@ jobs:
       matrix:
         os:
           - ubuntu-20.04
+          - windows-2019
         config:
           # Specify names so that the GitHub branch protection settings for
           # required checks don't need to change if we ever change the commands used.
@@ -33,6 +34,15 @@ jobs:
             command: yarn run test --maxWorkers=100%
           - name: storybook
             command: yarn workspace @foxglove/studio-base run chromatic
+        exclude:
+          - os: windows-2019
+            config: { name: lint }
+          - os: windows-2019
+            config: { name: test }
+          - os: windows-2019
+            config: { name: web }
+          - os: windows-2019
+            config: { name: storybook }
 
     name: ${{ matrix.config.name }} (${{ matrix.os }})
 
@@ -51,8 +61,8 @@ jobs:
           path: |
             .yarn/cache
             **/node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: ${{ runner.os }}-yarn-
+          key: ${{ runner.os }}-yarn-2-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-2-
       - run: yarn install --immutable
       - run: ${{ matrix.config.command }}
         env:
