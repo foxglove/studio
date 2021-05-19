@@ -47,6 +47,13 @@ const CAPABILITIES = [
   PlayerCapabilities.setParameters,
 ];
 
+enum Problem {
+  Connection = "Connection",
+  Parameters = "Parameters",
+  Graph = "Graph",
+  Publish = "Publish",
+}
+
 type Ros1PlayerOpts = {
   url: string;
   hostname?: string;
@@ -81,6 +88,7 @@ export default class Ros1Player implements Player {
 
   // track issues within the player
   private _problems: PlayerProblem[] = [];
+  private _problemsById = new Map<string, PlayerProblem>();
 
   constructor({ url, hostname, metricsCollector }: Ros1PlayerOpts) {
     log.info(`initializing Ros1Player (url=${url})`);
@@ -134,12 +142,25 @@ export default class Ros1Player implements Player {
     this._presence = PlayerPresence.PRESENT;
   };
 
-  private _requestTopics = async (): Promise<void> => {
-    // A call to requestTopics indicates another set of "requests" our player will make to
-    // the core. We invalidate any previous connection errors - new errors that occur will
-    // be the new problems.
-    this._problems = [];
+  private _addProblem(id: string, problem: PlayerProblem, skipEmit = false): void {
+    this._problemsById.set(id, problem);
+    this._problems = Array.from(this._problemsById.values());
+    if (!skipEmit) {
+      this._emitState();
+    }
+  }
 
+  private _clearProblem(id: string, skipEmit = false): void {
+    if (!this._problemsById.delete(id)) {
+      return;
+    }
+    this._problems = Array.from(this._problemsById.values());
+    if (!skipEmit) {
+      this._emitState();
+    }
+  }
+
+  private _requestTopics = async (): Promise<void> => {
     if (this._requestTopicsTimeout) {
       clearTimeout(this._requestTopicsTimeout);
     }
@@ -172,38 +193,37 @@ export default class Ros1Player implements Player {
           this._parameters = new Map();
           params.forEach((value, key) => this._parameters.set(key, value));
         }
+        this._clearProblem(Problem.Parameters, true);
       } catch (error) {
-        this._problems.push({
-          severity: "warning",
-          message: "ROS parameter fetch failed",
-          tip: `Ensure that roscore is running and accessible at: ${this._url}`,
-          error,
-        });
+        this._addProblem(
+          Problem.Parameters,
+          {
+            severity: "warning",
+            message: "ROS parameter fetch failed",
+            tip: `Ensure that roscore is running and accessible at: ${this._url}`,
+            error,
+          },
+          true,
+        );
       }
 
       // Fetch the full graph topology
-      try {
-        await this._updateConnectionGraph(rosNode);
-      } catch (error) {
-        this._problems.push({
-          severity: "warning",
-          message: "ROS connection graph fetch failed",
-          tip: `Ensure that roscore is running and accessible at: ${this._url}`,
-          error,
-        });
-      }
+      await this._updateConnectionGraph(rosNode);
 
       this._presence = PlayerPresence.PRESENT;
       this._emitState();
     } catch (error) {
       this._presence = PlayerPresence.INITIALIZING;
-      this._problems.push({
-        severity: "error",
-        message: "ROS connection failed",
-        tip: `Ensure that roscore is running and accessible at: ${this._url}`,
-        error,
-      });
-      this._emitState();
+      this._addProblem(
+        Problem.Connection,
+        {
+          severity: "error",
+          message: "ROS connection failed",
+          tip: `Ensure that roscore is running and accessible at: ${this._url}`,
+          error,
+        },
+        false,
+      );
     } finally {
       // Regardless of what happens, request topics again in a little bit.
       this._requestTopicsTimeout = setTimeout(this._requestTopics, 3000);
@@ -354,8 +374,7 @@ export default class Ros1Player implements Player {
       return;
     }
 
-    // ROS1 only supports publishing topics that begin with "/"
-    publishers = publishers.filter(({ topic }) => topic.startsWith("/"));
+    publishers = publishers.filter(({ topic }) => topic.length > 0 && topic !== "/");
     const topics = new Set<string>(publishers.map(({ topic }) => topic));
 
     // Unadvertise any topics that were previously published and no longer appear in the list
@@ -367,34 +386,42 @@ export default class Ros1Player implements Player {
 
     // Advertise new topics
     for (const pub of publishers) {
-      if (!this._rosNode.publications.has(pub.topic)) {
-        const topic = pub.topic;
-        let msgdef: RosMsgDefinition[];
-        try {
-          msgdef = rosDatatypesToMessageDefinition(this._providerDatatypes, pub.datatype);
-        } catch (error) {
-          this._problems.push({
-            severity: "warning",
-            message: `Unknown message definition for "${topic}"`,
-            tip: `Try subscribing to the topic "${topic} before publishing to it`,
-          });
-          continue;
-        }
-        this._rosNode
-          .advertise({
-            topic,
-            dataType: pub.datatype,
-            messageDefinition: msgdef,
-          })
-          .catch((error) =>
-            this._problems.push({
-              severity: "error",
-              message: `Failed to advertise "${topic}"`,
-              error,
-            }),
-          );
+      if (this._rosNode.publications.has(pub.topic)) {
+        continue;
       }
+
+      const topic = pub.topic;
+      const msgdefProblemId = `msgdef:${topic}`;
+      const advertiseProblemId = `advertise:${topic}`;
+
+      // Try to retrieve the ROS message definition for this topic
+      let msgdef: RosMsgDefinition[];
+      try {
+        msgdef = rosDatatypesToMessageDefinition(this._providerDatatypes, pub.datatype);
+        this._clearProblem(msgdefProblemId);
+      } catch (error) {
+        this._addProblem(msgdefProblemId, {
+          severity: "warning",
+          message: `Unknown message definition for "${topic}"`,
+          tip: `Try subscribing to the topic "${topic} before publishing to it`,
+        });
+        continue;
+      }
+
+      // Advertise this topic to ROS as being published by us
+      this._rosNode
+        .advertise({ topic, dataType: pub.datatype, messageDefinition: msgdef })
+        .then(() => this._clearProblem(advertiseProblemId))
+        .catch((error) =>
+          this._addProblem(advertiseProblemId, {
+            severity: "error",
+            message: `Failed to advertise "${topic}"`,
+            error,
+          }),
+        );
     }
+
+    this._emitState();
   }
 
   setParameter(key: string, value: ParameterValue): void {
@@ -406,11 +433,22 @@ export default class Ros1Player implements Player {
     // ROS1 doesn't tell nodes to create loopback connections
     this._handleMessage(topic, msg, false);
 
+    const problemId = `publish:${topic}`;
+
     if (this._rosNode != undefined) {
       if (this._rosNode.isAdvertising(topic)) {
-        this._rosNode.publish(topic, msg);
+        this._rosNode
+          .publish(topic, msg)
+          .then(() => this._clearProblem(problemId))
+          .catch((error) =>
+            this._addProblem(problemId, {
+              severity: "error",
+              message: `Publishing to ${topic} failed`,
+              error,
+            }),
+          );
       } else {
-        this._problems.push({
+        this._addProblem(problemId, {
           severity: "warning",
           message: `Unable to publish to "${topic}"`,
           tip: `ROS1 may be disconnected. Please try again in a moment`,
@@ -496,14 +534,19 @@ export default class Ros1Player implements Player {
         this._subscribedTopics = graph.subscribers;
         this._services = graph.services;
       }
+      this._clearProblem(Problem.Graph, true);
     } catch (error) {
-      this._problems.push({
-        severity: "warning",
-        message: "Unable to update connection graph",
-        tip: `The connection graph contains information about publishers and subscribers. A 
-stale graph may result in missing topics you expect. Ensure that roscore is reachable and healthy.`,
-        error,
-      });
+      this._addProblem(
+        Problem.Graph,
+        {
+          severity: "warning",
+          message: "Unable to update connection graph",
+          tip: `The connection graph contains information about publishers and subscribers. A 
+stale graph may result in missing topics you expect. Ensure that roscore is reachable at ${this._url}.`,
+          error,
+        },
+        true,
+      );
       this._publishedTopics = new Map();
       this._subscribedTopics = new Map();
       this._services = new Map();
