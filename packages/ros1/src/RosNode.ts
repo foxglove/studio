@@ -4,9 +4,13 @@
 
 import { EventEmitter, ListenerFn } from "eventemitter3";
 import { Md5 } from "md5-typescript";
-import { MessageWriter, RosMsgDefinition } from "rosbag";
+import { MessageWriter } from "rosbag";
 
-import { parse as parseMessageDefinition, rosMsgDefinitionText } from "@foxglove/rosmsg";
+import {
+  parse as parseMessageDefinition,
+  rosMsgDefinitionText,
+  RosMsgDefinition,
+} from "@foxglove/rosmsg";
 import { HttpServer, XmlRpcFault, XmlRpcValue } from "@foxglove/xmlrpc";
 
 import { Client } from "./Client";
