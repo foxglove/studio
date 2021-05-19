@@ -17,7 +17,7 @@ import { useDrag, ConnectDragSource, ConnectDragPreview } from "react-dnd";
 import { MosaicDragType, MosaicWindowContext } from "react-mosaic-component";
 import { useSelector } from "react-redux";
 
-import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { State } from "@foxglove/studio-base/reducers";
 import { MosaicDropResult } from "@foxglove/studio-base/types/panels";
 
@@ -41,7 +41,7 @@ export default function usePanelDrag(props: {
     state: { layout: originalLayout, configById: originalSavedProps },
     startDrag,
     endDrag,
-  } = useCurrentLayout();
+  } = useCurrentLayoutActions();
 
   const [, connectDragSource, connectDragPreview] = useDrag<
     PanelDragObject,

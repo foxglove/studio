@@ -16,8 +16,6 @@ import {
   LOAD_LAYOUT,
   MOVE_TAB,
   OVERWRITE_GLOBAL_DATA,
-  PanelsActions,
-  PanelsState,
   SAVE_FULL_PANEL_CONFIG,
   SAVE_PANEL_CONFIGS,
   SET_GLOBAL_DATA,
@@ -128,8 +126,7 @@ export default function CurrentLayoutProvider({
     [],
   );
 
-  const value: CurrentLayout = useShallowMemo({
-    state: panelsState,
+  const actions = useShallowMemo({
     getCurrentLayout,
     savePanelConfigs,
     updatePanelConfigs,
@@ -150,6 +147,8 @@ export default function CurrentLayoutProvider({
     startDrag,
     endDrag,
   });
+
+  const value: CurrentLayout = useShallowMemo({ state: panelsState, actions });
 
   return <CurrentLayoutContext.Provider value={value}>{children}</CurrentLayoutContext.Provider>;
 }

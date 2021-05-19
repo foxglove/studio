@@ -18,7 +18,7 @@ import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
 import Flex from "@foxglove/studio-base/components/Flex";
 import {
-  useCurrentLayout,
+  useCurrentLayoutActions,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import {
@@ -66,7 +66,7 @@ const PlaybackTimeDisplayMethod = ({
   const timeDisplayMethod = useCurrentLayoutSelector(
     (state) => state.playbackConfig.timeDisplayMethod ?? "ROS",
   );
-  const { setPlaybackConfig } = useCurrentLayout();
+  const { setPlaybackConfig } = useCurrentLayoutActions();
   const setTimeDisplayMethod = useCallback(
     (newTimeDisplayMethod) => setPlaybackConfig({ timeDisplayMethod: newTimeDisplayMethod }),
     [setPlaybackConfig],

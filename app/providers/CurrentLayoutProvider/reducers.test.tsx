@@ -15,7 +15,7 @@
 import { renderHook, act } from "@testing-library/react-hooks";
 import { getLeaves, MosaicParent } from "react-mosaic-component";
 
-import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
 import {
@@ -29,7 +29,9 @@ import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 import { defaultPlaybackConfig } from "./reducers";
 
 function getStore() {
-  const { result } = renderHook(() => useCurrentLayout(), { wrapper: CurrentLayoutProvider });
+  const { result } = renderHook(() => useCurrentLayoutActions(), {
+    wrapper: CurrentLayoutProvider,
+  });
 
   return { result };
 }

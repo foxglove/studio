@@ -13,7 +13,7 @@
 import { useRef } from "react";
 import { useDrag, useDrop } from "react-dnd";
 
-import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import {
   DraggingTabItem,
   TAB_DRAG_TYPE,
@@ -34,7 +34,7 @@ type Props = {
 
 export function DraggableToolbarTab(props: Props): JSX.Element {
   const { isActive, tabCount, actions, panelId, tabTitle, tabIndex } = props;
-  const { moveTab } = useCurrentLayout();
+  const { moveTab } = useCurrentLayoutActions();
 
   const ref = useRef(ReactNull);
   const [{ isDragging }, dragRef] = useDrag<TabLocation, void, { isDragging: boolean }>({

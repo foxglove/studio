@@ -14,7 +14,10 @@ import { useCallback } from "react";
 
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
-import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import {
+  useCurrentLayoutActions,
+  useCurrentLayoutSelector,
+} from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 
 const messageOrderLabel = {
@@ -23,13 +26,8 @@ const messageOrderLabel = {
 };
 
 export default function MessageOrderControls(): JSX.Element {
-  // FIXME: useContextSelector?
-  const {
-    state: {
-      playbackConfig: { messageOrder },
-    },
-    setPlaybackConfig,
-  } = useCurrentLayout();
+  const messageOrder = useCurrentLayoutSelector((state) => state.playbackConfig.messageOrder);
+  const { setPlaybackConfig } = useCurrentLayoutActions();
 
   const setMessageOrder = useCallback(
     (newMessageOrder) => {

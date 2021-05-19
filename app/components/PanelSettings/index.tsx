@@ -11,7 +11,7 @@ import { useConfigById } from "@foxglove/studio-base/PanelAPI";
 import { removeSelectedPanelId } from "@foxglove/studio-base/actions/mosaic";
 import ShareJsonModal from "@foxglove/studio-base/components/ShareJsonModal";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
-import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { PanelIdContext } from "@foxglove/studio-base/context/PanelIdContext";
 import { State } from "@foxglove/studio-base/reducers";
@@ -34,7 +34,7 @@ export default function PanelSettings(): JSX.Element {
 
   const theme = useTheme();
   const panelCatalog = usePanelCatalog();
-  const { getCurrentLayout, savePanelConfigs } = useCurrentLayout();
+  const { getCurrentLayout, savePanelConfigs } = useCurrentLayoutActions();
   const panelType = useMemo(
     () => (selectedPanelId != undefined ? getPanelTypeFromId(selectedPanelId) : undefined),
     [selectedPanelId],

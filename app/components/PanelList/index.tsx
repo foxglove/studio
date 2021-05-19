@@ -23,7 +23,7 @@ import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
 import { Item } from "@foxglove/studio-base/components/Menu";
 import TextHighlight from "@foxglove/studio-base/components/TextHighlight";
-import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PanelInfo, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { State } from "@foxglove/studio-base/reducers";
 import { TabPanelConfig } from "@foxglove/studio-base/types/layouts";
@@ -213,7 +213,7 @@ function PanelList(props: Props): JSX.Element {
   const [highlightedPanelIdx, setHighlightedPanelIdx] = React.useState<number | undefined>();
   const { onPanelSelect, selectedPanelTitle } = props;
 
-  const { dropPanel } = useCurrentLayout();
+  const { dropPanel } = useCurrentLayoutActions();
   const mosaicId = useSelector((state: State) => state.mosaic.mosaicId);
 
   // Update panel layout in Redux when a panel menu item is dropped;

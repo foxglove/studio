@@ -28,7 +28,7 @@ import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import SpinningLoadingIcon from "@foxglove/studio-base/components/SpinningLoadingIcon";
 import TextContent from "@foxglove/studio-base/components/TextContent";
 import {
-  useCurrentLayout,
+  useCurrentLayoutActions,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import BottomBar from "@foxglove/studio-base/panels/NodePlayground/BottomBar";
@@ -134,7 +134,7 @@ function NodePlayground(props: Props) {
   const userNodeDiagnostics = useSelector((state: any) => state.userNodes.userNodeDiagnostics);
   const rosLib = useSelector((state: State) => state.userNodes.rosLib);
 
-  const { setUserNodes } = useCurrentLayout();
+  const { setUserNodes } = useCurrentLayoutActions();
 
   const selectedNodeDiagnostics =
     selectedNodeId != undefined && userNodeDiagnostics[selectedNodeId]

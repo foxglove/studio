@@ -44,7 +44,7 @@ import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent"
 import Toolbar from "@foxglove/studio-base/components/Toolbar";
 import { useAppConfiguration } from "@foxglove/studio-base/context/AppConfigurationContext";
 import { useAssets } from "@foxglove/studio-base/context/AssetContext";
-import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import LinkHandlerContext from "@foxglove/studio-base/context/LinkHandlerContext";
 import { PanelSettingsContext } from "@foxglove/studio-base/context/PanelSettingsContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
@@ -161,7 +161,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const isMounted = useMountedState();
 
-  const { loadLayout } = useCurrentLayout();
+  const { loadLayout } = useCurrentLayoutActions();
 
   const openWelcomeLayout = useCallback(async () => {
     if (isMounted()) {

@@ -17,7 +17,7 @@ import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import {
-  useCurrentLayout,
+  useCurrentLayoutActions,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
@@ -37,7 +37,7 @@ export default function PlaybackSpeedControls(): JSX.Element {
   const setPlaybackSpeed = useMessagePipeline(
     useCallback(({ setPlaybackSpeed: pipelineSetPlaybackSpeed }) => pipelineSetPlaybackSpeed, []),
   );
-  const { setPlaybackConfig } = useCurrentLayout();
+  const { setPlaybackConfig } = useCurrentLayoutActions();
   const setSpeed = useCallback(
     (newSpeed) => {
       setPlaybackConfig({ speed: newSpeed });

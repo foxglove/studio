@@ -58,7 +58,7 @@ import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import {
-  useCurrentLayout,
+  useCurrentLayoutActions,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
@@ -156,7 +156,7 @@ export default function Panel<Config extends PanelConfig>(
     const dispatch = useDispatch();
 
     const { savePanelConfigs, updatePanelConfigs, createTabPanel, closePanel, getCurrentLayout } =
-      useCurrentLayout();
+      useCurrentLayoutActions();
 
     const actions = useMemo(
       () =>

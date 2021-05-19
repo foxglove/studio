@@ -13,7 +13,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react"
 import { useAsyncFn, useMountedState } from "react-use";
 import { v4 as uuidv4 } from "uuid";
 
-import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { Layout, useLayoutStorage } from "@foxglove/studio-base/context/LayoutStorageContext";
 import useLatestNonNull from "@foxglove/studio-base/hooks/useLatestNonNull";
@@ -61,8 +61,7 @@ export default function LayoutMenu({
     }
   }, [defaultIsOpen]);
 
-  // FIXME - need useContextSelector to avoid unnecessary updates?
-  const { getCurrentLayout, loadLayout } = useCurrentLayout();
+  const { getCurrentLayout, loadLayout } = useCurrentLayoutActions();
   const layoutStorage = useLayoutStorage();
 
   // a basic stale-while-revalidate pattern to avoid flicker of layout menu when we reload the layout list

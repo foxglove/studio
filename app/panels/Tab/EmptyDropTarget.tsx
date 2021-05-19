@@ -20,7 +20,7 @@ import EmptyBoxSvg from "@foxglove/studio-base/assets/emptyBox.svg";
 import ChildToggle from "@foxglove/studio-base/components/ChildToggle";
 import Menu from "@foxglove/studio-base/components/Menu";
 import PanelList, { PanelSelection } from "@foxglove/studio-base/components/PanelList";
-import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import cssColors from "@foxglove/studio-base/styles/colors.module.scss";
 import { MosaicDropResult } from "@foxglove/studio-base/types/panels";
 import { getPanelIdForType } from "@foxglove/studio-base/util/layout";
@@ -61,7 +61,7 @@ type Props = {
 };
 
 export const EmptyDropTarget = ({ tabId }: Props): JSX.Element => {
-  const { addPanel } = useCurrentLayout();
+  const { addPanel } = useCurrentLayoutActions();
 
   const [{ isOver }, drop] = useDrop<unknown, MosaicDropResult, { isOver: boolean }>({
     accept: MosaicDragType.WINDOW,

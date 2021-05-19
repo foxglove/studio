@@ -5,7 +5,7 @@
 import { useCallback, useMemo } from "react";
 
 import {
-  useCurrentLayout,
+  useCurrentLayoutActions,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
@@ -40,7 +40,7 @@ export function useConfigById<Config>(
   panelId: string | undefined,
   defaultConfig: Config | undefined,
 ): [Config, SaveConfig<Config>] {
-  const { savePanelConfigs } = useCurrentLayout();
+  const { savePanelConfigs } = useCurrentLayoutActions();
   const config = useCurrentLayoutSelector((state) =>
     panelId != undefined ? (state.configById[panelId] as Config | undefined) : undefined,
   );

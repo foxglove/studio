@@ -6,14 +6,14 @@ import { useDispatch } from "react-redux";
 
 import { setSelectedPanelIds } from "@foxglove/studio-base/actions/mosaic";
 import { PanelSelection } from "@foxglove/studio-base/components/PanelList";
-import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { usePanelSettings } from "@foxglove/studio-base/context/PanelSettingsContext";
 import { getPanelIdForType } from "@foxglove/studio-base/util/layout";
 import logEvent, { getEventNames, getEventTags } from "@foxglove/studio-base/util/logEvent";
 
 export default function useAddPanel(): (selection: PanelSelection) => void {
   const dispatch = useDispatch();
-  const { addPanel, getCurrentLayout } = useCurrentLayout();
+  const { addPanel, getCurrentLayout } = useCurrentLayoutActions();
   const { openPanelSettings } = usePanelSettings();
   return useCallback(
     ({ type, config, relatedConfigs }: PanelSelection) => {

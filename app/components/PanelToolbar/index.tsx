@@ -37,7 +37,7 @@ import { Item, SubMenu } from "@foxglove/studio-base/components/Menu";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import PanelList, { PanelSelection } from "@foxglove/studio-base/components/PanelList";
 import { getPanelTypeFromMosaic } from "@foxglove/studio-base/components/PanelToolbar/utils";
-import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { usePanelSettings } from "@foxglove/studio-base/context/PanelSettingsContext";
 import logEvent, { getEventNames, getEventTags } from "@foxglove/studio-base/util/logEvent";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -59,7 +59,7 @@ type Props = {
 function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknownPanel: boolean }) {
   const { mosaicActions } = useContext(MosaicContext);
   const { mosaicWindowActions } = useContext(MosaicWindowContext);
-  const { getCurrentLayout, closePanel, splitPanel, swapPanel } = useCurrentLayout();
+  const { getCurrentLayout, closePanel, splitPanel, swapPanel } = useCurrentLayoutActions();
   const dispatch = useDispatch();
   const actions = useMemo(() => bindActionCreators({ setSelectedPanelIds }, dispatch), [dispatch]);
 

@@ -29,37 +29,38 @@ import {
  */
 export interface CurrentLayout {
   state: PanelsState;
+  actions: {
+    /**
+     * Returns the current state - useful for click handlers and callbacks that read the state
+     * asynchronously and don't want to update every time the state changes.
+     */
+    getCurrentLayout: () => PanelsState;
 
-  /**
-   * Returns the current state - useful for click handlers and callbacks that read the state
-   * asynchronously and don't want to update every time the state changes.
-   */
-  getCurrentLayout: () => PanelsState;
-
-  savePanelConfigs: (payload: SaveConfigsPayload) => void;
-  updatePanelConfigs: (panelType: string, updater: (config: PanelConfig) => PanelConfig) => void;
-  createTabPanel: (payload: CreateTabPanelPayload) => void;
-  changePanelLayout: (payload: ChangePanelLayoutPayload) => void;
-  loadLayout: (payload: LoadLayoutPayload) => void;
-  overwriteGlobalVariables: (payload: { [key: string]: unknown }) => void;
-  setGlobalVariables: (payload: { [key: string]: unknown }) => void;
-  setUserNodes: (payload: UserNodes) => void;
-  setLinkedGlobalVariables: (payload: LinkedGlobalVariables) => void;
-  setPlaybackConfig: (payload: Partial<PlaybackConfig>) => void;
-  closePanel: (payload: ClosePanelPayload) => void;
-  splitPanel: (payload: SplitPanelPayload) => void;
-  swapPanel: (payload: SwapPanelPayload) => void;
-  moveTab: (payload: MoveTabPayload) => void;
-  addPanel: (payload: AddPanelPayload) => void;
-  dropPanel: (payload: DropPanelPayload) => void;
-  startDrag: (payload: StartDragPayload) => void;
-  endDrag: (payload: EndDragPayload) => void;
+    savePanelConfigs: (payload: SaveConfigsPayload) => void;
+    updatePanelConfigs: (panelType: string, updater: (config: PanelConfig) => PanelConfig) => void;
+    createTabPanel: (payload: CreateTabPanelPayload) => void;
+    changePanelLayout: (payload: ChangePanelLayoutPayload) => void;
+    loadLayout: (payload: LoadLayoutPayload) => void;
+    overwriteGlobalVariables: (payload: { [key: string]: unknown }) => void;
+    setGlobalVariables: (payload: { [key: string]: unknown }) => void;
+    setUserNodes: (payload: UserNodes) => void;
+    setLinkedGlobalVariables: (payload: LinkedGlobalVariables) => void;
+    setPlaybackConfig: (payload: Partial<PlaybackConfig>) => void;
+    closePanel: (payload: ClosePanelPayload) => void;
+    splitPanel: (payload: SplitPanelPayload) => void;
+    swapPanel: (payload: SwapPanelPayload) => void;
+    moveTab: (payload: MoveTabPayload) => void;
+    addPanel: (payload: AddPanelPayload) => void;
+    dropPanel: (payload: DropPanelPayload) => void;
+    startDrag: (payload: StartDragPayload) => void;
+    endDrag: (payload: EndDragPayload) => void;
+  };
 }
 
 const CurrentLayoutContext = createSelectableContext<CurrentLayout>();
 
-export function useCurrentLayout(): CurrentLayout {
-  return useContextSelector(CurrentLayoutContext, (value) => value);
+export function useCurrentLayoutActions(): CurrentLayout["actions"] {
+  return useContextSelector(CurrentLayoutContext, ({ actions }) => actions);
 }
 export function useCurrentLayoutSelector<T>(selector: (panelsState: PanelsState) => T): T {
   return useContextSelector(CurrentLayoutContext, ({ state }) => selector(state));

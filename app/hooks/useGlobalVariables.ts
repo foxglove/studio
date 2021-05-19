@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import {
-  useCurrentLayout,
+  useCurrentLayoutActions,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 
@@ -25,7 +25,7 @@ export default function useGlobalVariables(): {
   setGlobalVariables: (arg0: GlobalVariables) => void;
   overwriteGlobalVariables: (arg0: GlobalVariables) => void;
 } {
-  const { setGlobalVariables, overwriteGlobalVariables } = useCurrentLayout();
+  const { setGlobalVariables, overwriteGlobalVariables } = useCurrentLayoutActions();
   const globalVariables = useCurrentLayoutSelector((state) => state.globalVariables);
   return { setGlobalVariables, overwriteGlobalVariables, globalVariables };
 }

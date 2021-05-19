@@ -26,7 +26,7 @@ import "./PanelLayout.scss";
 
 import Flex from "@foxglove/studio-base/components/Flex";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { SaveConfigsPayload } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { EmptyDropTarget } from "@foxglove/studio-base/panels/Tab/EmptyDropTarget";
@@ -160,7 +160,7 @@ const ConnectedPanelLayout = (_: any, ref: any) => {
     state: { layout },
     changePanelLayout,
     savePanelConfigs,
-  } = useCurrentLayout();
+  } = useCurrentLayoutActions();
   const onChange = useCallback(
     (newLayout: MosaicNode<string>) => {
       changePanelLayout({ layout: newLayout });

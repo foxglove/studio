@@ -18,7 +18,7 @@ import styled from "styled-components";
 
 import Icon from "@foxglove/studio-base/components/Icon";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { DraggableToolbarTab } from "@foxglove/studio-base/panels/Tab/DraggableToolbarTab";
 import {
   DraggingTabItem,
@@ -64,7 +64,7 @@ type Props = {
 
 export function TabbedToolbar(props: Props): JSX.Element {
   const { panelId, actions, tabs, activeTabIdx, setDraggingTabState } = props;
-  const { moveTab } = useCurrentLayout();
+  const { moveTab } = useCurrentLayoutActions();
 
   const { preventTabDrop } = useContext(TabDndContext);
   const [{ isOver, item }, dropRef] = useDrop({
