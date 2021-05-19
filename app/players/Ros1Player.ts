@@ -315,28 +315,9 @@ export default class Ros1Player implements Player {
         Object.assign(typesByName, this._getRosDatatypes(datatype, msgdef));
         this._providerDatatypes = typesByName;
       });
-      subscription.on("message", (message, _data, _publisher) => {
-        if (this._providerTopics == undefined) {
-          return;
-        }
-
-        const receiveTime = fromMillis(Date.now());
-
-        if (!this._hasReceivedMessage) {
-          this._hasReceivedMessage = true;
-          this._metricsCollector.recordTimeToFirstMsgs();
-        }
-
-        const msg: MessageEvent<unknown> = {
-          topic: topicName,
-          receiveTime,
-          message: message,
-        };
-        this._parsedMessages.push(msg);
-        this._handleInternalMessage(msg);
-
-        this._emitState();
-      });
+      subscription.on("message", (message, _data, _pub) =>
+        this._handleMessage(topicName, message, true),
+      );
     }
 
     // Unsubscribe from topics that we are subscribed to but shouldn't be.
@@ -348,6 +329,25 @@ export default class Ros1Player implements Player {
       }
     }
   }
+
+  private _handleMessage = (topic: string, message: unknown, external: boolean): void => {
+    if (this._providerTopics == undefined) {
+      return;
+    }
+
+    const receiveTime = fromMillis(Date.now());
+
+    if (external && !this._hasReceivedMessage) {
+      this._hasReceivedMessage = true;
+      this._metricsCollector.recordTimeToFirstMsgs();
+    }
+
+    const msg: MessageEvent<unknown> = { topic, receiveTime, message };
+    this._parsedMessages.push(msg);
+    this._handleInternalMessage(msg);
+
+    this._emitState();
+  };
 
   setPublishers(publishers: AdvertisePayload[]): void {
     if (!this._rosNode || this._closed) {
@@ -368,12 +368,31 @@ export default class Ros1Player implements Player {
     // Advertise new topics
     for (const pub of publishers) {
       if (!this._rosNode.publications.has(pub.topic)) {
-        const msgdef = rosDatatypesToMessageDefinition(this._providerDatatypes, pub.datatype);
-        this._rosNode.advertise({
-          topic: pub.topic,
-          dataType: pub.datatype,
-          messageDefinition: msgdef,
-        });
+        const topic = pub.topic;
+        let msgdef: RosMsgDefinition[];
+        try {
+          msgdef = rosDatatypesToMessageDefinition(this._providerDatatypes, pub.datatype);
+        } catch (error) {
+          this._problems.push({
+            severity: "warning",
+            message: `Unknown message definition for "${topic}"`,
+            tip: `Try subscribing to the topic "${topic} before publishing to it`,
+          });
+          continue;
+        }
+        this._rosNode
+          .advertise({
+            topic,
+            dataType: pub.datatype,
+            messageDefinition: msgdef,
+          })
+          .catch((error) =>
+            this._problems.push({
+              severity: "error",
+              message: `Failed to advertise "${topic}"`,
+              error,
+            }),
+          );
       }
     }
   }
@@ -384,7 +403,20 @@ export default class Ros1Player implements Player {
   }
 
   publish({ topic, msg }: PublishPayload): void {
-    this._rosNode?.publish(topic, msg);
+    // ROS1 doesn't tell nodes to create loopback connections
+    this._handleMessage(topic, msg, false);
+
+    if (this._rosNode != undefined) {
+      if (this._rosNode.isAdvertising(topic)) {
+        this._rosNode.publish(topic, msg);
+      } else {
+        this._problems.push({
+          severity: "warning",
+          message: `Unable to publish to "${topic}"`,
+          tip: `ROS1 may be disconnected. Please try again in a moment`,
+        });
+      }
+    }
   }
 
   // Bunch of unsupported stuff. Just don't do anything for these.

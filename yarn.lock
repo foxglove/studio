@@ -2149,7 +2149,7 @@ __metadata:
     jest: 27.0.0-next.8
     jest-circus: 27.0.0-next.8
     md5-typescript: 1.0.5
-    rosbag: "github:foxglove/rosbag.js#fc61125fbc01ff55698c5ed48987b2d9e7599572"
+    rosbag: "github:jhurliman/rosbag.js#c299e1ca95fc15b16e70465f10a28bcb1b350552"
     typescript: 4.2.4
     web-encoding: 1.1.5
   languageName: unknown
@@ -2301,7 +2301,7 @@ __metadata:
     regl-worldview: "github:foxglove/webviz#workspace=regl-worldview&commit=48979519bb7c067c7a0162255d1ef083fef49199"
     rehype-raw: 5.1.0
     reselect: 4.0.0
-    rosbag: "github:foxglove/rosbag.js#fc61125fbc01ff55698c5ed48987b2d9e7599572"
+    rosbag: "github:jhurliman/rosbag.js#c299e1ca95fc15b16e70465f10a28bcb1b350552"
     roslib: "github:foxglove/roslibjs#364a19d5f3ada7543fac9194a50b96087c7556ba"
     sanitize-html: 2.3.3
     seedrandom: 3.0.5
@@ -2335,7 +2335,7 @@ __metadata:
     jest: 27.0.0-next.8
     jest-circus: 27.0.0-next.8
     kelonio: 0.6.0
-    rosbag: "github:foxglove/rosbag.js#fc61125fbc01ff55698c5ed48987b2d9e7599572"
+    rosbag: "github:jhurliman/rosbag.js#c299e1ca95fc15b16e70465f10a28bcb1b350552"
     typescript: 4.2.4
   languageName: unknown
   linkType: soft
@@ -22574,14 +22574,15 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"rosbag@github:foxglove/rosbag.js#fc61125fbc01ff55698c5ed48987b2d9e7599572":
-  version: 2.6.3
-  resolution: "rosbag@https://github.com/foxglove/rosbag.js.git#commit=fc61125fbc01ff55698c5ed48987b2d9e7599572"
+"rosbag@github:jhurliman/rosbag.js#c299e1ca95fc15b16e70465f10a28bcb1b350552":
+  version: 3.0.0
+  resolution: "rosbag@https://github.com/jhurliman/rosbag.js.git#commit=c299e1ca95fc15b16e70465f10a28bcb1b350552"
   dependencies:
     buffer: 6.0.3
     heap: 0.2.6
     int53: 1.0.0
-  checksum: 8cbb13a4eb1ca43593d86f1d407ad5cee3f95c69dd6a92070bff7892a41b0604c4373e924ea23deb22a249047e4009dfaa83fae8e159053990819decf8530cc8
+    web-encoding: 1.1.5
+  checksum: de8f698affff15d0dfcf267a8df3d3b9b7b4ebe6ccceeaff64615c226034bdd9eb01314c94ee14a6bd0380b46a370e47d08259ada98770a95ea7cf5e53e3c30e
   languageName: node
   linkType: hard
 

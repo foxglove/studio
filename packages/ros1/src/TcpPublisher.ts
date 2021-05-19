@@ -60,7 +60,7 @@ export class TcpPublisher extends EventEmitter<TcpPublisherEvents> implements Pu
   }
 
   publish(publication: Publication, message: unknown): Promise<void> {
-    const msgSize = publication.messageWriter.calculateBufferSize(message);
+    const msgSize = publication.messageWriter.calculateByteSize(message);
     const dataSize = 4 + msgSize;
     const buffer = new ArrayBuffer(dataSize);
 
@@ -69,7 +69,7 @@ export class TcpPublisher extends EventEmitter<TcpPublisherEvents> implements Pu
 
     // Write the serialized message data
     const msgData = new Uint8Array(buffer, 4, dataSize - 4);
-    publication.messageWriter.writeMessage(message, msgData as Buffer);
+    publication.messageWriter.writeMessage(message, msgData);
 
     const data = new Uint8Array(buffer, 0, dataSize);
     return publication.write(this.transportType(), data);
