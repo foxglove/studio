@@ -13,11 +13,6 @@
 
 import { HoverValueActions } from "./hoverValue";
 import { LayoutHistoryActions } from "./layoutHistory";
-import { MosaicActions } from "./mosaic";
 import { UserNodesActions } from "./userNodes";
 
-export type ActionTypes =
-  | HoverValueActions
-  | LayoutHistoryActions
-  | MosaicActions
-  | UserNodesActions;
+export type ActionTypes = HoverValueActions | LayoutHistoryActions | UserNodesActions;

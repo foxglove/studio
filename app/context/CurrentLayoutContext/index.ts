@@ -2,8 +2,13 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { useCallback } from "react";
+import { getLeaves } from "react-mosaic-component";
+
 import useContextSelector from "@foxglove/studio-base/hooks/useContextSelector";
+import useShallowMemo from "@foxglove/studio-base/hooks/useShallowMemo";
 import { LinkedGlobalVariables } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
+import toggleSelectedPanel from "@foxglove/studio-base/providers/CurrentLayoutProvider/toggleSelectedPanel";
 import { PanelConfig, PlaybackConfig, UserNodes } from "@foxglove/studio-base/types/panels";
 import createSelectableContext from "@foxglove/studio-base/util/createSelectableContext";
 
@@ -29,6 +34,11 @@ import {
  */
 export interface CurrentLayout {
   state: PanelsState;
+  selectedPanelIds: readonly string[];
+  getSelectedPanelIds: () => readonly string[];
+  setSelectedPanelIds: (
+    _: readonly string[] | ((prevState: readonly string[]) => string[]),
+  ) => void;
   actions: {
     /**
      * Returns the current state - useful for click handlers and callbacks that read the state
@@ -64,6 +74,52 @@ export function useCurrentLayoutActions(): CurrentLayout["actions"] {
 }
 export function useCurrentLayoutSelector<T>(selector: (panelsState: PanelsState) => T): T {
   return useContextSelector(CurrentLayoutContext, ({ state }) => selector(state));
+}
+export function useSelectedPanels(): {
+  getSelectedPanelIds: () => readonly string[];
+  selectedPanelIds: readonly string[];
+  setSelectedPanelIds: (
+    _: readonly string[] | ((prevState: readonly string[]) => string[]),
+  ) => void;
+  selectAllPanels: () => void;
+  togglePanelSelected: (panelId: string, containingTabId: string | undefined) => void;
+} {
+  const selectedPanelIds = useContextSelector(
+    CurrentLayoutContext,
+    (value) => value.selectedPanelIds,
+  );
+  const setSelectedPanelIds = useContextSelector(
+    CurrentLayoutContext,
+    (value) => value.setSelectedPanelIds,
+  );
+  const getSelectedPanelIds = useContextSelector(
+    CurrentLayoutContext,
+    (value) => value.getSelectedPanelIds,
+  );
+  const { getCurrentLayout } = useCurrentLayoutActions();
+
+  const selectAllPanels = useCallback(() => {
+    // eslint-disable-next-line no-restricted-syntax
+    const panelIds = getLeaves(getCurrentLayout().layout ?? null);
+    setSelectedPanelIds(panelIds);
+  }, [getCurrentLayout, setSelectedPanelIds]);
+
+  const togglePanelSelected = useCallback(
+    (panelId: string, containingTabId: string | undefined) => {
+      setSelectedPanelIds((selectedIds) =>
+        toggleSelectedPanel(panelId, containingTabId, getCurrentLayout().configById, selectedIds),
+      );
+    },
+    [setSelectedPanelIds, getCurrentLayout],
+  );
+
+  return useShallowMemo({
+    getSelectedPanelIds,
+    selectedPanelIds,
+    setSelectedPanelIds,
+    selectAllPanels,
+    togglePanelSelected,
+  });
 }
 
 export default CurrentLayoutContext;

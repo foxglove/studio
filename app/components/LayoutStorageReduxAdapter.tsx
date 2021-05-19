@@ -6,13 +6,17 @@ import { useEffect } from "react";
 import { useAsync, useThrottle } from "react-use";
 import { v4 as uuidv4 } from "uuid";
 
-import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import {
+  useCurrentLayoutActions,
+  useCurrentLayoutSelector,
+} from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useLayoutStorage } from "@foxglove/studio-base/context/LayoutStorageContext";
 import sendNotification from "@foxglove/studio-base/util/sendNotification";
 
 // LayoutStorageReduxAdapter persists the current panel state from redux to the current LayoutStorage context
 export default function LayoutStorageReduxAdapter(): ReactNull {
-  const { state: panelsState, loadLayout } = useCurrentLayoutActions();
+  const { loadLayout } = useCurrentLayoutActions();
+  const panelsState = useCurrentLayoutSelector((state) => state);
 
   // Debounce the panel state to avoid persisting the layout constantly as the user is adjusting it
   const throttledPanelsState = useThrottle(panelsState, 1000 /* 1 second */);

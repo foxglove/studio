@@ -1,7 +1,8 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import { useCallback, useLayoutEffect, useReducer, useRef } from "react";
+import { useCallback, useLayoutEffect, useReducer, useRef, useState } from "react";
+import { getNodeAtPath } from "react-mosaic-component";
 
 import CurrentLayoutContext, {
   CurrentLayout,
@@ -41,12 +42,17 @@ export default function CurrentLayoutProvider({
     playbackConfig: defaultPlaybackConfig,
   });
 
-  const stateRef = useRef(panelsState);
+  const [selectedPanelIds, setSelectedPanelIds] = useState<readonly string[]>([]);
+
+  const panelsStateRef = useRef(panelsState);
+  const selectedPanelIdsRef = useRef(selectedPanelIds);
   useLayoutEffect(() => {
-    stateRef.current = panelsState;
+    panelsStateRef.current = panelsState;
+    selectedPanelIdsRef.current = selectedPanelIds;
   });
 
-  const getCurrentLayout = useCallback(() => stateRef.current, []);
+  const getCurrentLayout = useCallback(() => panelsStateRef.current, []);
+  const getSelectedPanelIds = useCallback(() => selectedPanelIdsRef.current, []);
 
   const savePanelConfigs = useCallback(
     (payload: SAVE_PANEL_CONFIGS["payload"]) => dispatch({ type: "SAVE_PANEL_CONFIGS", payload }),
@@ -59,10 +65,10 @@ export default function CurrentLayoutProvider({
     ) => dispatch({ type: "SAVE_FULL_PANEL_CONFIG", payload: { panelType, perPanelFunc } }),
     [],
   );
-  const createTabPanel = useCallback(
-    (payload: CREATE_TAB_PANEL["payload"]) => dispatch({ type: "CREATE_TAB_PANEL", payload }),
-    [],
-  );
+  const createTabPanel = useCallback((payload: CREATE_TAB_PANEL["payload"]) => {
+    dispatch({ type: "CREATE_TAB_PANEL", payload });
+    setSelectedPanelIds([]);
+  }, []);
   const changePanelLayout = useCallback(
     (payload: CHANGE_PANEL_LAYOUT["payload"]) => dispatch({ type: "CHANGE_PANEL_LAYOUT", payload }),
     [],
@@ -93,10 +99,12 @@ export default function CurrentLayoutProvider({
     (payload: SET_PLAYBACK_CONFIG["payload"]) => dispatch({ type: "SET_PLAYBACK_CONFIG", payload }),
     [],
   );
-  const closePanel = useCallback(
-    (payload: CLOSE_PANEL["payload"]) => dispatch({ type: "CLOSE_PANEL", payload }),
-    [],
-  );
+  const closePanel = useCallback((payload: CLOSE_PANEL["payload"]) => {
+    dispatch({ type: "CLOSE_PANEL", payload });
+    // Deselect the removed panel
+    const closedId = getNodeAtPath(payload.root, payload.path);
+    setSelectedPanelIds((ids) => ids.filter((id) => id !== closedId));
+  }, []);
   const splitPanel = useCallback(
     (payload: SPLIT_PANEL["payload"]) => dispatch({ type: "SPLIT_PANEL", payload }),
     [],
@@ -148,7 +156,13 @@ export default function CurrentLayoutProvider({
     endDrag,
   });
 
-  const value: CurrentLayout = useShallowMemo({ state: panelsState, actions });
+  const value: CurrentLayout = useShallowMemo({
+    state: panelsState,
+    actions,
+    selectedPanelIds,
+    setSelectedPanelIds,
+    getSelectedPanelIds,
+  });
 
   return <CurrentLayoutContext.Provider value={value}>{children}</CurrentLayoutContext.Provider>;
 }

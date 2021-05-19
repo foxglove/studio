@@ -11,14 +11,12 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import { useCallback, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
 import styled from "styled-components";
 
 import Flex from "@foxglove/studio-base/components/Flex";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import { UnconnectedPanelLayout } from "@foxglove/studio-base/components/PanelLayout";
-import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { EmptyDropTarget } from "@foxglove/studio-base/panels/Tab/EmptyDropTarget";
 import {
   DraggingTabPanelState,
@@ -45,8 +43,6 @@ type Props = { config: Config; saveConfig: SaveConfig<Config> };
 
 function Tab({ config, saveConfig }: Props) {
   const panelId = usePanelContext().id;
-  const { savePanelConfigs } = useCurrentLayoutActions();
-  const mosaicId = useSelector(({ mosaic }: any) => mosaic.mosaicId);
 
   const { tabs, activeTabIdx } = config;
   const activeTab = tabs[activeTabIdx];
@@ -126,9 +122,7 @@ function Tab({ config, saveConfig }: Props) {
           <TabDndContext.Provider value={{ preventTabDrop }}>
             <UnconnectedPanelLayout
               layout={activeLayout}
-              savePanelConfigs={savePanelConfigs}
               onChange={onChangeLayout}
-              mosaicId={mosaicId}
               tabId={panelId}
             />
           </TabDndContext.Provider>

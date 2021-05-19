@@ -24,11 +24,8 @@ import TrashCanOutlineIcon from "@mdi/svg/svg/trash-can-outline.svg";
 import cx from "classnames";
 import { useContext, useState, useCallback, useMemo } from "react";
 import { MosaicContext, MosaicWindowContext } from "react-mosaic-component";
-import { useDispatch } from "react-redux";
 import { useResizeDetector } from "react-resize-detector";
-import { bindActionCreators } from "redux";
 
-import { setSelectedPanelIds } from "@foxglove/studio-base/actions/mosaic";
 import ChildToggle from "@foxglove/studio-base/components/ChildToggle";
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import HelpModal from "@foxglove/studio-base/components/HelpModal";
@@ -37,7 +34,10 @@ import { Item, SubMenu } from "@foxglove/studio-base/components/Menu";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import PanelList, { PanelSelection } from "@foxglove/studio-base/components/PanelList";
 import { getPanelTypeFromMosaic } from "@foxglove/studio-base/components/PanelToolbar/utils";
-import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import {
+  useCurrentLayoutActions,
+  useSelectedPanels,
+} from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { usePanelSettings } from "@foxglove/studio-base/context/PanelSettingsContext";
 import logEvent, { getEventNames, getEventTags } from "@foxglove/studio-base/util/logEvent";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -60,8 +60,7 @@ function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknow
   const { mosaicActions } = useContext(MosaicContext);
   const { mosaicWindowActions } = useContext(MosaicWindowContext);
   const { getCurrentLayout, closePanel, splitPanel, swapPanel } = useCurrentLayoutActions();
-  const dispatch = useDispatch();
-  const actions = useMemo(() => bindActionCreators({ setSelectedPanelIds }, dispatch), [dispatch]);
+  const { setSelectedPanelIds } = useSelectedPanels();
 
   const getPanelType = useCallback(
     () => getPanelTypeFromMosaic(mosaicWindowActions, mosaicActions),
@@ -141,10 +140,10 @@ function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknow
   const { openPanelSettings } = usePanelSettings();
   const openSettings = useCallback(() => {
     if (panelContext?.id != undefined) {
-      actions.setSelectedPanelIds([panelContext.id]);
+      setSelectedPanelIds([panelContext.id]);
       openPanelSettings();
     }
-  }, [actions, openPanelSettings, panelContext?.id]);
+  }, [setSelectedPanelIds, openPanelSettings, panelContext?.id]);
 
   const type = getPanelType();
   if (type == undefined) {

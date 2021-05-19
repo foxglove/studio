@@ -30,7 +30,6 @@ export type PanelContextType<T> = {
   enterFullscreen: () => void;
 
   isHovered: boolean;
-  isFocused: boolean;
   hasSettings: boolean;
   connectToolbarDragHandle: (el: Element | ReactNull) => void;
   supportsStrictMode: boolean; // remove when all panels have strict mode enabled :)

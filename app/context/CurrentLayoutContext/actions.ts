@@ -62,7 +62,7 @@ export type SaveFullConfigPayload = {
 export type CreateTabPanelPayload = {
   idToReplace?: string;
   layout: MosaicNode<string>;
-  idsToRemove: string[];
+  idsToRemove: readonly string[];
   singleTab: boolean;
 };
 

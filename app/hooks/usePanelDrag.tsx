@@ -14,15 +14,17 @@
 import _ from "lodash";
 import { useContext } from "react";
 import { useDrag, ConnectDragSource, ConnectDragPreview } from "react-dnd";
-import { MosaicDragType, MosaicWindowContext } from "react-mosaic-component";
+import { MosaicDragType, MosaicNode, MosaicWindowContext } from "react-mosaic-component";
 import { useSelector } from "react-redux";
 
 import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { State } from "@foxglove/studio-base/reducers";
-import { MosaicDropResult } from "@foxglove/studio-base/types/panels";
+import { MosaicDropResult, SavedProps } from "@foxglove/studio-base/types/panels";
 
-export type PanelDragObject = {
+type PanelDragObject = {
   deferredHide: number;
+  originalLayout: MosaicNode<string> | undefined;
+  originalConfigById: SavedProps;
 };
 
 // Hook to integrate mosaic drag functionality into any other component
@@ -37,11 +39,7 @@ export default function usePanelDrag(props: {
 
   const mosaicId = useSelector(({ mosaic }: State) => mosaic.mosaicId);
 
-  const {
-    state: { layout: originalLayout, configById: originalSavedProps },
-    startDrag,
-    endDrag,
-  } = useCurrentLayoutActions();
+  const { getCurrentLayout, startDrag, endDrag } = useCurrentLayoutActions();
 
   const [, connectDragSource, connectDragPreview] = useDrag<
     PanelDragObject,
@@ -54,16 +52,21 @@ export default function usePanelDrag(props: {
         onDragStart();
       }
 
+      const { layout: originalLayout, configById: originalConfigById } = getCurrentLayout();
+
       // The defer is necessary as the element must be present on start for HTML DnD to not cry
       const path = mosaicWindowActions.getPath();
       const deferredHide = _.defer(() => {
         startDrag({ path, sourceTabId });
       });
-      return { mosaicId, deferredHide };
+      return { mosaicId, deferredHide, originalLayout, originalConfigById };
     },
     end: (item, monitor) => {
       if (onDragEnd) {
         onDragEnd();
+      }
+      if (item.originalLayout == undefined) {
+        return;
       }
 
       // If the hide call hasn't happened yet, cancel it
@@ -76,8 +79,8 @@ export default function usePanelDrag(props: {
       }
 
       endDrag({
-        originalLayout: originalLayout as any,
-        originalSavedProps,
+        originalLayout: item.originalLayout,
+        originalSavedProps: item.originalConfigById,
         panelId,
         sourceTabId,
         targetTabId,

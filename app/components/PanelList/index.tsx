@@ -16,7 +16,7 @@ import { flatMap } from "lodash";
 import { useCallback, useEffect, useMemo } from "react";
 import { useDrag } from "react-dnd";
 import { MosaicDragType, MosaicPath } from "react-mosaic-component";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
 
 import Flex from "@foxglove/studio-base/components/Flex";

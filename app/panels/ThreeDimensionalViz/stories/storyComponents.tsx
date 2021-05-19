@@ -14,7 +14,6 @@
 import { uniq } from "lodash";
 import { Worldview } from "regl-worldview";
 
-import { selectAllPanelIds } from "@foxglove/studio-base/actions/mosaic";
 import Flex from "@foxglove/studio-base/components/Flex";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import GlobalVariableSliderPanel from "@foxglove/studio-base/panels/GlobalVariableSlider";

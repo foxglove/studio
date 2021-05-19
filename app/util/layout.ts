@@ -171,7 +171,7 @@ function replaceLeafLayouts(
 export function inlineTabPanelLayouts(
   layout: MosaicNode<string>,
   savedProps: SavedProps,
-  preserveTabPanelIds: string[],
+  preserveTabPanelIds: readonly string[],
 ): MosaicNode<string> {
   const tabFreeLayout = replaceLeafLayouts(layout, (id) => {
     if (typeof id === "string" && isTabPanel(id) && !preserveTabPanelIds.includes(id)) {
@@ -492,7 +492,7 @@ export const replaceAndRemovePanels = (
   panelArgs: {
     originalId?: string;
     newId?: string;
-    idsToRemove?: string[];
+    idsToRemove?: readonly string[];
   },
   layout: MosaicNode<string>,
 ): MosaicNode<string> | undefined => {
@@ -526,7 +526,7 @@ export const replaceAndRemovePanels = (
 export function getConfigsForNestedPanelsInsideTab(
   panelIdToReplace: string | undefined,
   tabPanelId: string | undefined,
-  panelIdsToRemove: string[],
+  panelIdsToRemove: readonly string[],
   savedProps: SavedProps,
 ): ConfigsPayload[] {
   const configs: ConfigsPayload[] = [];

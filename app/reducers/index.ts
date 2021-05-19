@@ -22,16 +22,15 @@ import layoutHistory, {
   LayoutHistory,
   initialLayoutHistoryState,
 } from "@foxglove/studio-base/reducers/layoutHistory";
-import mosaic from "@foxglove/studio-base/reducers/mosaic";
 import userNodes, { UserNodeDiagnostics } from "@foxglove/studio-base/reducers/userNodes";
 import { HoverValue } from "@foxglove/studio-base/types/hoverValue";
 
-const getReducers = () => [mosaic, hoverValue, userNodes, layoutHistory];
+const getReducers = () => [hoverValue, userNodes, layoutHistory];
 
 export type Dispatcher<A extends ActionTypes> = ThunkAction<void, State, undefined, A>;
 
 export type State = {
-  mosaic: { mosaicId: string; selectedPanelIds: string[] };
+  mosaic: { mosaicId: string };
   hoverValue?: HoverValue;
   userNodes: { userNodeDiagnostics: UserNodeDiagnostics; rosLib: string };
   layoutHistory: LayoutHistory;
@@ -42,7 +41,6 @@ export default function createRootReducer(): Reducer<State, ActionTypes> {
     mosaic: {
       // We use the same mosaicId for all mosaics to support dragging and dropping between them
       mosaicId: uuidv4(),
-      selectedPanelIds: [],
     },
     hoverValue: undefined,
     userNodes: {

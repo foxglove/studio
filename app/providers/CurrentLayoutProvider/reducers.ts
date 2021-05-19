@@ -278,15 +278,9 @@ const createTabPanelWithSingleTab = (
     configs: [tabPanelConfig, ...nestedPanelConfigs],
   });
   return newPanelsState;
-  // FIXME
-  // return {
-  //   ...state,
-  //   mosaic: { ...state.mosaic, selectedPanelIds: [newId] },
-  //   persistedState: { ...state.persistedState, panels: newPanelsState },
-  // };
 };
 
-export const createTabPanelWithMultipleTabs = (
+const createTabPanelWithMultipleTabs = (
   panelsState: PanelsState,
   { idToReplace, layout, idsToRemove }: CreateTabPanelPayload,
 ): PanelsState => {
@@ -314,12 +308,6 @@ export const createTabPanelWithMultipleTabs = (
   });
 
   return newPanelsState;
-  //FIXME
-  // return {
-  //   ...state,
-  //   mosaic: { ...state.mosaic, selectedPanelIds: [newId] },
-  //   persistedState: { ...state.persistedState, panels: newPanelsState },
-  // };
 };
 
 function loadLayout(
@@ -824,17 +812,9 @@ const panelsReducer = function (panelsState: PanelsState, action: PanelsActions)
       };
       break;
 
-    case "CLOSE_PANEL": {
+    case "CLOSE_PANEL":
       newPanelsState = closePanel(newPanelsState, action.payload);
-
-      // FIXME
-      // // Deselect the removed panel
-      // const removedId = getNodeAtPath(action.payload.root, action.payload.path);
-      // newState.mosaic.selectedPanelIds = newState.mosaic.selectedPanelIds.filter(
-      //   (id) => id !== removedId,
-      // );
       break;
-    }
 
     case "SPLIT_PANEL":
       newPanelsState = splitPanel(newPanelsState, action.payload);
