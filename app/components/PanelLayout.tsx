@@ -18,7 +18,6 @@ import {
   MosaicDragType,
   MosaicNode,
 } from "react-mosaic-component";
-import { useSelector } from "react-redux";
 import "react-mosaic-component/react-mosaic-component.css";
 import styled from "styled-components";
 
@@ -29,10 +28,10 @@ import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import {
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
+  usePanelMosaicId,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { EmptyDropTarget } from "@foxglove/studio-base/panels/Tab/EmptyDropTarget";
-import { State } from "@foxglove/studio-base/reducers";
 import { MosaicDropResult } from "@foxglove/studio-base/types/panels";
 import { getPanelIdForType, getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
@@ -82,8 +81,8 @@ function TabMosaicWrapper({ tabId, children }: PropsWithChildren<{ tabId?: strin
 
 export function UnconnectedPanelLayout(props: Props): React.ReactElement {
   const { savePanelConfigs } = useCurrentLayoutActions();
+  const mosaicId = usePanelMosaicId();
   const { layout, onChange, tabId } = props;
-  const mosaicId = useSelector(({ mosaic }: State) => mosaic.mosaicId);
   const createTile = useCallback(
     (config: any) => {
       const defaultPanelType = "RosOut";

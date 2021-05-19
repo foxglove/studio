@@ -16,16 +16,17 @@ import { flatMap } from "lodash";
 import { useCallback, useEffect, useMemo } from "react";
 import { useDrag } from "react-dnd";
 import { MosaicDragType, MosaicPath } from "react-mosaic-component";
-import { useSelector } from "react-redux";
 import styled from "styled-components";
 
 import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
 import { Item } from "@foxglove/studio-base/components/Menu";
 import TextHighlight from "@foxglove/studio-base/components/TextHighlight";
-import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import {
+  useCurrentLayoutActions,
+  usePanelMosaicId,
+} from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PanelInfo, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
-import { State } from "@foxglove/studio-base/reducers";
 import { TabPanelConfig } from "@foxglove/studio-base/types/layouts";
 import {
   PanelConfig,
@@ -214,9 +215,9 @@ function PanelList(props: Props): JSX.Element {
   const { onPanelSelect, selectedPanelTitle } = props;
 
   const { dropPanel } = useCurrentLayoutActions();
-  const mosaicId = useSelector((state: State) => state.mosaic.mosaicId);
+  const mosaicId = usePanelMosaicId();
 
-  // Update panel layout in Redux when a panel menu item is dropped;
+  // Update panel layout when a panel menu item is dropped;
   // actual operations to change layout supplied by react-mosaic-component
   const onPanelMenuItemDrop = React.useCallback(
     ({ config, relatedConfigs, type, position, path, tabId }: DropDescription) => {

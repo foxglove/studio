@@ -30,7 +30,6 @@ const getReducers = () => [hoverValue, userNodes, layoutHistory];
 export type Dispatcher<A extends ActionTypes> = ThunkAction<void, State, undefined, A>;
 
 export type State = {
-  mosaic: { mosaicId: string };
   hoverValue?: HoverValue;
   userNodes: { userNodeDiagnostics: UserNodeDiagnostics; rosLib: string };
   layoutHistory: LayoutHistory;
@@ -38,10 +37,6 @@ export type State = {
 
 export default function createRootReducer(): Reducer<State, ActionTypes> {
   const initialState: State = {
-    mosaic: {
-      // We use the same mosaicId for all mosaics to support dragging and dropping between them
-      mosaicId: uuidv4(),
-    },
     hoverValue: undefined,
     userNodes: {
       userNodeDiagnostics: {

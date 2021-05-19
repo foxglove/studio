@@ -34,11 +34,19 @@ import {
  */
 export interface CurrentLayout {
   state: PanelsState;
+
+  /**
+   * We use the same mosaicId for all mosaics (at the top level and within tabs) to support
+   * dragging and dropping between them.
+   */
+  mosaicId: string;
+
   selectedPanelIds: readonly string[];
   getSelectedPanelIds: () => readonly string[];
   setSelectedPanelIds: (
     _: readonly string[] | ((prevState: readonly string[]) => string[]),
   ) => void;
+
   actions: {
     /**
      * Returns the current state - useful for click handlers and callbacks that read the state
@@ -69,6 +77,9 @@ export interface CurrentLayout {
 
 const CurrentLayoutContext = createSelectableContext<CurrentLayout>();
 
+export function usePanelMosaicId(): string {
+  return useContextSelector(CurrentLayoutContext, ({ mosaicId }) => mosaicId);
+}
 export function useCurrentLayoutActions(): CurrentLayout["actions"] {
   return useContextSelector(CurrentLayoutContext, ({ actions }) => actions);
 }

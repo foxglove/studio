@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 import { useCallback, useLayoutEffect, useReducer, useRef, useState } from "react";
 import { getNodeAtPath } from "react-mosaic-component";
+import { v4 as uuidv4 } from "uuid";
 
 import CurrentLayoutContext, {
   CurrentLayout,
@@ -34,6 +35,8 @@ import panelsReducer, { defaultPlaybackConfig } from "./reducers";
 export default function CurrentLayoutProvider({
   children,
 }: React.PropsWithChildren<unknown>): JSX.Element {
+  const [mosaicId] = useState(() => uuidv4());
+
   const [panelsState, dispatch] = useReducer(panelsReducer, {
     configById: {},
     globalVariables: {},
@@ -158,6 +161,7 @@ export default function CurrentLayoutProvider({
 
   const value: CurrentLayout = useShallowMemo({
     state: panelsState,
+    mosaicId,
     actions,
     selectedPanelIds,
     setSelectedPanelIds,

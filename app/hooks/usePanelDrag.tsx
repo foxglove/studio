@@ -15,10 +15,11 @@ import _ from "lodash";
 import { useContext } from "react";
 import { useDrag, ConnectDragSource, ConnectDragPreview } from "react-dnd";
 import { MosaicDragType, MosaicNode, MosaicWindowContext } from "react-mosaic-component";
-import { useSelector } from "react-redux";
 
-import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import { State } from "@foxglove/studio-base/reducers";
+import {
+  useCurrentLayoutActions,
+  usePanelMosaicId,
+} from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { MosaicDropResult, SavedProps } from "@foxglove/studio-base/types/panels";
 
 type PanelDragObject = {
@@ -37,7 +38,7 @@ export default function usePanelDrag(props: {
   const { tabId: sourceTabId, panelId, onDragStart, onDragEnd } = props;
   const { mosaicWindowActions } = useContext(MosaicWindowContext);
 
-  const mosaicId = useSelector(({ mosaic }: State) => mosaic.mosaicId);
+  const mosaicId = usePanelMosaicId();
 
   const { getCurrentLayout, startDrag, endDrag } = useCurrentLayoutActions();
 
