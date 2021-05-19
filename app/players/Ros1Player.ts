@@ -27,6 +27,7 @@ import {
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
+import rosDatatypesToMessageDefinition from "@foxglove/studio-base/util/rosDatatypesToMessageDefinition";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import {
   addTimes,
@@ -40,7 +41,11 @@ import { HttpServer } from "@foxglove/xmlrpc";
 const log = Logger.getLogger(__filename);
 const rosLog = Logger.getLogger("ROS1");
 
-const CAPABILITIES = [PlayerCapabilities.getParameters, PlayerCapabilities.setParameters];
+const CAPABILITIES = [
+  PlayerCapabilities.advertise,
+  PlayerCapabilities.getParameters,
+  PlayerCapabilities.setParameters,
+];
 
 type Ros1PlayerOpts = {
   url: string;
@@ -58,7 +63,7 @@ export default class Ros1Player implements Player {
   private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
   private _closed: boolean = false; // Whether the player has been completely closed using close().
   private _providerTopics?: Topic[]; // Topics as advertised by rosmaster.
-  private _providerDatatypes: RosDatatypes = {}; // All ROS message definitions received from subscriptions.
+  private _providerDatatypes: RosDatatypes = {}; // All ROS message definitions received from subscriptions and set by publishers.
   private _publishedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of publisher IDs publishing each topic.
   private _subscribedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of subscriber IDs subscribed to each topic.
   private _services = new Map<string, Set<string>>(); // A map of service names to service provider IDs that provide each service.
@@ -103,6 +108,7 @@ export default class Ros1Player implements Player {
     const tcpSocketCreate = (options: { host: string; port: number }): Promise<TcpSocket> => {
       return net.createSocket(options.host, options.port);
     };
+    const tcpServer = await net.createServer();
 
     if (this._rosNode == undefined) {
       const rosNode = new RosNode({
@@ -112,6 +118,7 @@ export default class Ros1Player implements Player {
         rosMasterUri: this._url,
         httpServer: httpServer as unknown as HttpServer,
         tcpSocketCreate,
+        tcpServer,
         log: rosLog,
       });
       this._rosNode = rosNode;
@@ -343,9 +350,31 @@ export default class Ros1Player implements Player {
   }
 
   setPublishers(publishers: AdvertisePayload[]): void {
-    publishers = publishers.filter((p) => p.topic.length > 0);
-    if (publishers.length > 0) {
-      throw new Error("Publishing not supported");
+    if (!this._rosNode || this._closed) {
+      return;
+    }
+
+    // ROS1 only supports publishing topics that begin with "/"
+    publishers = publishers.filter(({ topic }) => topic.startsWith("/"));
+    const topics = new Set<string>(publishers.map(({ topic }) => topic));
+
+    // Unadvertise any topics that were previously published and no longer appear in the list
+    for (const topic of this._rosNode.publications.keys()) {
+      if (!topics.has(topic)) {
+        this._rosNode.unadvertise(topic);
+      }
+    }
+
+    // Advertise new topics
+    for (const pub of publishers) {
+      if (!this._rosNode.publications.has(pub.topic)) {
+        const msgdef = rosDatatypesToMessageDefinition(this._providerDatatypes, pub.datatype);
+        this._rosNode.advertise({
+          topic: pub.topic,
+          dataType: pub.datatype,
+          messageDefinition: msgdef,
+        });
+      }
     }
   }
 
@@ -354,8 +383,8 @@ export default class Ros1Player implements Player {
     this._rosNode?.setParameter(key, value);
   }
 
-  publish({ topic }: PublishPayload): void {
-    throw new Error(`Publishing not supported for topic: ${topic}`);
+  publish({ topic, msg }: PublishPayload): void {
+    this._rosNode?.publish(topic, msg);
   }
 
   // Bunch of unsupported stuff. Just don't do anything for these.
