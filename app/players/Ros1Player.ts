@@ -117,6 +117,7 @@ export default class Ros1Player implements Player {
       return net.createSocket(options.host, options.port);
     };
     const tcpServer = await net.createServer();
+    tcpServer.listen(undefined, hostname, 10);
 
     if (this._rosNode == undefined) {
       const rosNode = new RosNode({
@@ -155,6 +156,21 @@ export default class Ros1Player implements Player {
       return;
     }
     this._problems = Array.from(this._problemsById.values());
+    if (!skipEmit) {
+      this._emitState();
+    }
+  }
+
+  private _clearPublishProblems(skipEmit = false) {
+    let modified = false;
+    for (const key of this._problemsById.keys()) {
+      if (key.startsWith("msgdef:") || key.startsWith("advertise:") || key.startsWith("publish:")) {
+        modified ||= this._problemsById.delete(key);
+      }
+    }
+    if (modified) {
+      this._problems = Array.from(this._problemsById.values());
+    }
     if (!skipEmit) {
       this._emitState();
     }
@@ -377,6 +393,9 @@ export default class Ros1Player implements Player {
     publishers = publishers.filter(({ topic }) => topic.length > 0 && topic !== "/");
     const topics = new Set<string>(publishers.map(({ topic }) => topic));
 
+    // Clear all problems related to publishing
+    this._clearPublishProblems(true);
+
     // Unadvertise any topics that were previously published and no longer appear in the list
     for (const topic of this._rosNode.publications.keys()) {
       if (!topics.has(topic)) {
@@ -398,7 +417,6 @@ export default class Ros1Player implements Player {
       let msgdef: RosMsgDefinition[];
       try {
         msgdef = rosDatatypesToMessageDefinition(this._providerDatatypes, pub.datatype);
-        this._clearProblem(msgdefProblemId);
       } catch (error) {
         this._addProblem(msgdefProblemId, {
           severity: "warning",
@@ -411,7 +429,6 @@ export default class Ros1Player implements Player {
       // Advertise this topic to ROS as being published by us
       this._rosNode
         .advertise({ topic, dataType: pub.datatype, messageDefinition: msgdef })
-        .then(() => this._clearProblem(advertiseProblemId))
         .catch((error) =>
           this._addProblem(advertiseProblemId, {
             severity: "error",
@@ -430,9 +447,6 @@ export default class Ros1Player implements Player {
   }
 
   publish({ topic, msg }: PublishPayload): void {
-    // ROS1 doesn't tell nodes to create loopback connections
-    this._handleMessage(topic, msg, false);
-
     const problemId = `publish:${topic}`;
 
     if (this._rosNode != undefined) {

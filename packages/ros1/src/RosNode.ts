@@ -180,8 +180,9 @@ export class RosNode extends EventEmitter<RosNodeEvents> {
   async advertise(options: PublishOpts): Promise<Publication> {
     const { topic, dataType } = options;
 
-    if (!this._tcpPublisher == undefined) {
-      throw new Error(`cannot publish ${topic} without a tcpServer`);
+    const addr = await this.tcpServerAddress();
+    if (addr == undefined) {
+      throw new Error(`cannot publish ${topic} without a listening tcpServer`);
     }
 
     // Check if we are already publishing
