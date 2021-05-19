@@ -21,6 +21,7 @@ export interface TcpConnectionEvents {
     messageReader: MessageReader,
   ) => void;
   message: (msg: unknown, msgData: Uint8Array) => void;
+  error: (err: Error) => void;
 }
 
 // Implements a subscriber for the TCPROS transport. The actual TCP transport is
@@ -195,6 +196,7 @@ export class TcpConnection extends EventEmitter<TcpConnectionEvents> implements 
   private _handleError = (err: Error): void => {
     if (!this._shutdown) {
       this._log?.warn?.(`${this.toString()} error: ${err}`);
+      this.emit("error", err);
     }
   };
 
