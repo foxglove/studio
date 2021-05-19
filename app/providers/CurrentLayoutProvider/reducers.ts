@@ -84,12 +84,12 @@ function changePanelLayout(
   // eslint-disable-next-line no-restricted-syntax
   const panelIds = getLeaves(layout ?? null).filter((panelId) => !isEmpty(panelId));
   const panelIdsInsideTabPanels = getPanelIdsInsideTabPanels(panelIds, state.configById);
-  // Filter savedProps in case a panel was removed from the layout
-  // We don't want its savedProps hanging around forever
-  const savedProps = trimConfigById
+  // Filter configById in case a panel was removed from the layout
+  // We don't want its configById hanging around forever
+  const configById = trimConfigById
     ? pick(state.configById, [...panelIdsInsideTabPanels, ...panelIds])
     : state.configById;
-  return { ...state, configById: savedProps, layout };
+  return { ...state, configById: configById, layout };
 }
 
 function savePanelConfigs(state: PanelsState, payload: SaveConfigsPayload): PanelsState {
@@ -312,12 +312,13 @@ const createTabPanelWithMultipleTabs = (
 
 function loadLayout(
   _state: PanelsState,
-  payload: Partial<Omit<PanelsState, "id" | "name">>,
+  { savedProps, ...payload }: Partial<Omit<PanelsState, "id" | "name">>,
 ): PanelsState {
   return {
     ...payload,
     layout: payload.layout,
-    configById: payload.configById ?? {},
+    // configById was previously named savedProps; merge them for backward compatibility
+    configById: { ...payload.configById, ...savedProps } ?? {},
     globalVariables: payload.globalVariables ?? {},
     userNodes: payload.userNodes ?? {},
     linkedGlobalVariables: payload.linkedGlobalVariables ?? [],

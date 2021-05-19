@@ -31,6 +31,8 @@ export type PanelsState = {
   // This should at some point be renamed to `config` or `configById` or so,
   // but it's inconvenient to have this diverge from `PANEL_PROPS_KEY`.
   configById: SavedProps;
+  /** @deprecated renamed to configById */
+  savedProps?: SavedProps;
   globalVariables: GlobalVariables;
   userNodes: UserNodes;
   linkedGlobalVariables: LinkedGlobalVariables;
