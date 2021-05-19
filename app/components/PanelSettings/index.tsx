@@ -3,15 +3,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { DefaultButton, Stack, Text, useTheme } from "@fluentui/react";
-import { StrictMode, useContext, useMemo, useState } from "react";
-import { ReactReduxContext, useDispatch, useSelector } from "react-redux";
+import { StrictMode, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useUnmount } from "react-use";
 
 import { useConfigById } from "@foxglove/studio-base/PanelAPI";
 import { removeSelectedPanelId } from "@foxglove/studio-base/actions/mosaic";
-import { savePanelConfigs } from "@foxglove/studio-base/actions/panels";
 import ShareJsonModal from "@foxglove/studio-base/components/ShareJsonModal";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
+import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { PanelIdContext } from "@foxglove/studio-base/context/PanelIdContext";
 import { State } from "@foxglove/studio-base/reducers";
@@ -34,7 +34,7 @@ export default function PanelSettings(): JSX.Element {
 
   const theme = useTheme();
   const panelCatalog = usePanelCatalog();
-  const { store } = useContext(ReactReduxContext);
+  const { getCurrentLayout, savePanelConfigs } = useCurrentLayout();
   const panelType = useMemo(
     () => (selectedPanelId != undefined ? getPanelTypeFromId(selectedPanelId) : undefined),
     [selectedPanelId],
@@ -49,18 +49,18 @@ export default function PanelSettings(): JSX.Element {
     if (selectedPanelId == undefined || !showShareModal) {
       return ReactNull;
     }
-    const panelConfigById = store.getState().persistedState.panels.savedProps;
+    const panelConfigById = getCurrentLayout().configById;
     return (
       <ShareJsonModal
         onRequestClose={() => setShowShareModal(false)}
         value={panelConfigById[selectedPanelId] ?? {}}
         onChange={(config) =>
-          dispatch(savePanelConfigs({ configs: [{ id: selectedPanelId, config, override: true }] }))
+          savePanelConfigs({ configs: [{ id: selectedPanelId, config, override: true }] })
         }
         noun="panel configuration"
       />
     );
-  }, [selectedPanelId, showShareModal, store, dispatch]);
+  }, [selectedPanelId, showShareModal, getCurrentLayout, savePanelConfigs]);
 
   const [config, saveConfig] = useConfigById<Record<string, unknown>>(
     selectedPanelId,

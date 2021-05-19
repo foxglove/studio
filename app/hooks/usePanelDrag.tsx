@@ -12,13 +12,12 @@
 //   You may not use this file except in compliance with the License.
 
 import _ from "lodash";
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { useDrag, ConnectDragSource, ConnectDragPreview } from "react-dnd";
 import { MosaicDragType, MosaicWindowContext } from "react-mosaic-component";
-import { useSelector, useDispatch } from "react-redux";
-import { bindActionCreators } from "redux";
+import { useSelector } from "react-redux";
 
-import { startDrag, endDrag } from "@foxglove/studio-base/actions/panels";
+import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { State } from "@foxglove/studio-base/reducers";
 import { MosaicDropResult } from "@foxglove/studio-base/types/panels";
 
@@ -36,14 +35,13 @@ export default function usePanelDrag(props: {
   const { tabId: sourceTabId, panelId, onDragStart, onDragEnd } = props;
   const { mosaicWindowActions } = useContext(MosaicWindowContext);
 
-  const dispatch = useDispatch();
   const mosaicId = useSelector(({ mosaic }: State) => mosaic.mosaicId);
-  const originalLayout = useSelector((state: State) => state.persistedState.panels.layout);
-  const originalSavedProps = useSelector((state: State) => state.persistedState.panels.configById);
-  const actions = React.useMemo(
-    () => bindActionCreators({ startDrag, endDrag }, dispatch),
-    [dispatch],
-  );
+
+  const {
+    state: { layout: originalLayout, configById: originalSavedProps },
+    startDrag,
+    endDrag,
+  } = useCurrentLayout();
 
   const [, connectDragSource, connectDragPreview] = useDrag<
     PanelDragObject,
@@ -59,7 +57,7 @@ export default function usePanelDrag(props: {
       // The defer is necessary as the element must be present on start for HTML DnD to not cry
       const path = mosaicWindowActions.getPath();
       const deferredHide = _.defer(() => {
-        actions.startDrag({ path, sourceTabId });
+        startDrag({ path, sourceTabId });
       });
       return { mosaicId, deferredHide };
     },
@@ -77,7 +75,7 @@ export default function usePanelDrag(props: {
         return;
       }
 
-      actions.endDrag({
+      endDrag({
         originalLayout: originalLayout as any,
         originalSavedProps,
         panelId,

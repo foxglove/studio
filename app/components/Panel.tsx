@@ -50,13 +50,6 @@ import {
   setSelectedPanelIds,
   selectAllPanelIds,
 } from "@foxglove/studio-base/actions/mosaic";
-import {
-  savePanelConfigs,
-  saveFullPanelConfig,
-  changePanelLayout,
-  createTabPanel,
-  closePanel,
-} from "@foxglove/studio-base/actions/panels";
 import Button from "@foxglove/studio-base/components/Button";
 import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
 import Flex from "@foxglove/studio-base/components/Flex";
@@ -64,6 +57,10 @@ import Icon from "@foxglove/studio-base/components/Icon";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
+import {
+  useCurrentLayout,
+  useCurrentLayoutSelector,
+} from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { PanelIdContext } from "@foxglove/studio-base/context/PanelIdContext";
 import { usePanelSettings } from "@foxglove/studio-base/context/PanelSettingsContext";
@@ -152,26 +149,23 @@ export default function Panel<Config extends PanelConfig>(
         state.mosaic.selectedPanelIds[0] === childId,
     );
 
-    const isOnlyPanel = useSelector((state: State) =>
-      tabId != undefined || state.persistedState.panels.layout == undefined
-        ? false
-        : !isParent(state.persistedState.panels.layout),
+    const isOnlyPanel = useCurrentLayoutSelector((state) =>
+      tabId != undefined || state.layout == undefined ? false : !isParent(state.layout),
     );
 
     const dispatch = useDispatch();
+
+    const { savePanelConfigs, updatePanelConfigs, createTabPanel, closePanel, getCurrentLayout } =
+      useCurrentLayout();
+
     const actions = useMemo(
       () =>
         bindActionCreators(
           {
-            savePanelConfigs,
-            closePanel,
-            saveFullPanelConfig,
-            changePanelLayout,
             addSelectedPanelId,
             removeSelectedPanelId,
             setSelectedPanelIds,
             selectAllPanelIds,
-            createTabPanel,
           },
           dispatch,
         ),
@@ -196,13 +190,6 @@ export default function Panel<Config extends PanelConfig>(
       [config, overrideConfig],
     );
 
-    const updatePanelConfig = useCallback(
-      (panelType: string, perPanelFunc: (arg0: PanelConfig) => PanelConfig) => {
-        actions.saveFullPanelConfig({ panelType, perPanelFunc });
-      },
-      [actions],
-    );
-
     // Open a panel next to the current panel, of the specified `panelType`.
     // If such a panel already exists, we update it with the new props.
     const openSiblingPanel = useCallback(
@@ -222,9 +209,9 @@ export default function Panel<Config extends PanelConfig>(
         if (typeof siblingId === "string" && getPanelTypeFromId(siblingId) === panelType) {
           const siblingConfig: PanelConfig = {
             ...siblingDefaultConfig,
-            ...store.getState().persistedState.panels.configById[siblingId],
+            ...getCurrentLayout().configById[siblingId],
           };
-          actions.savePanelConfigs({
+          savePanelConfigs({
             configs: [
               {
                 id: siblingId,
@@ -240,7 +227,7 @@ export default function Panel<Config extends PanelConfig>(
         const newPanelPath = ownPath.concat("second");
         mosaicWindowActions.split({ type: panelType }).then(() => {
           const newPanelId = getNodeAtPath(mosaicActions.getRoot(), newPanelPath);
-          actions.savePanelConfigs({
+          savePanelConfigs({
             configs: [
               {
                 id: newPanelId,
@@ -251,13 +238,13 @@ export default function Panel<Config extends PanelConfig>(
           });
         });
       },
-      [store, actions, mosaicActions, mosaicWindowActions, panelCatalog],
+      [getCurrentLayout, mosaicActions, mosaicWindowActions, panelCatalog, savePanelConfigs],
     );
 
     const togglePanelSelected = useCallback(
       (panelId: string) => {
         const panelIdsToDeselect = [];
-        const savedProps = store.getState().persistedState.panels.configById;
+        const savedProps = getCurrentLayout().configById;
         const selectedPanelIds = store.getState().mosaic.selectedPanelIds;
 
         // If we selected a Tab panel, deselect its children
@@ -290,7 +277,7 @@ export default function Panel<Config extends PanelConfig>(
           (window.getSelection() as any).removeAllRanges();
         }
       },
-      [store, actions, tabId],
+      [getCurrentLayout, store, tabId, actions],
     );
 
     const { panelSettingsOpen } = usePanelSettings();
@@ -330,32 +317,32 @@ export default function Panel<Config extends PanelConfig>(
     );
 
     const groupPanels = useCallback(() => {
-      const layout = store.getState().persistedState.panels.layout;
+      const layout = getCurrentLayout().layout;
       const selectedPanelIds = store.getState().mosaic.selectedPanelIds;
       if (layout == undefined) {
         return;
       }
-      actions.createTabPanel({
+      createTabPanel({
         idToReplace: childId,
         layout,
         idsToRemove: selectedPanelIds,
         singleTab: true,
       });
-    }, [store, actions, childId]);
+    }, [getCurrentLayout, store, createTabPanel, childId]);
 
     const createTabs = useCallback(() => {
-      const layout = store.getState().persistedState.panels.layout;
+      const layout = getCurrentLayout().layout;
       const selectedPanelIds = store.getState().mosaic.selectedPanelIds;
       if (layout == undefined) {
         return;
       }
-      actions.createTabPanel({
+      createTabPanel({
         idToReplace: childId,
         layout,
         idsToRemove: selectedPanelIds,
         singleTab: false,
       });
-    }, [store, actions, childId]);
+    }, [getCurrentLayout, store, createTabPanel, childId]);
 
     const removePanel = useCallback(() => {
       const name = getEventNames().PANEL_REMOVE;
@@ -366,15 +353,15 @@ export default function Panel<Config extends PanelConfig>(
           tags: { [eventType]: type },
         });
       }
-      actions.closePanel({
+      closePanel({
         path: mosaicWindowActions.getPath(),
         root: mosaicActions.getRoot(),
         tabId,
       });
-    }, [actions, mosaicActions, mosaicWindowActions, tabId, type]);
+    }, [closePanel, mosaicActions, mosaicWindowActions, tabId, type]);
 
     const splitPanel = useCallback(() => {
-      const savedProps = store.getState().persistedState.panels.configById;
+      const savedProps = getCurrentLayout().configById;
       const tabSavedProps = tabId != undefined ? (savedProps[tabId] as TabPanelConfig) : undefined;
       if (tabId != undefined && tabSavedProps != undefined && childId != undefined) {
         const newId = getPanelIdForType(PanelComponent.panelType);
@@ -390,7 +377,7 @@ export default function Panel<Config extends PanelConfig>(
           },
         ]);
         const newTabConfig = updateTabPanelLayout(newTabLayout, tabSavedProps);
-        actions.savePanelConfigs({
+        savePanelConfigs({
           configs: [
             { id: tabId, config: newTabConfig },
             { id: newId, config },
@@ -407,7 +394,7 @@ export default function Panel<Config extends PanelConfig>(
           tags: { [eventType]: type },
         });
       }
-    }, [actions, childId, config, mosaicWindowActions, store, tabId, type]);
+    }, [childId, config, getCurrentLayout, mosaicWindowActions, savePanelConfigs, tabId, type]);
 
     const { onMouseEnter, onMouseLeave, onMouseMove, enterFullscreen, exitFullScreen } = useMemo(
       () => ({
@@ -521,7 +508,7 @@ export default function Panel<Config extends PanelConfig>(
                 title,
                 config,
                 saveConfig: saveConfig as SaveConfig<PanelConfig>,
-                updatePanelConfig,
+                updatePanelConfigs,
                 openSiblingPanel,
                 enterFullscreen,
                 isHovered,

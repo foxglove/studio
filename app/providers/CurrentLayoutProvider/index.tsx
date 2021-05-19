@@ -1,7 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import { useCallback, useReducer } from "react";
+import { useCallback, useLayoutEffect, useReducer, useRef } from "react";
 
 import CurrentLayoutContext, {
   CurrentLayout,
@@ -47,6 +47,13 @@ export default function CurrentLayoutProvider({
       playbackConfig: defaultPlaybackConfig,
     },
   );
+
+  const stateRef = useRef(panelsState);
+  useLayoutEffect(() => {
+    stateRef.current = panelsState;
+  });
+
+  const getCurrentLayout = useCallback(() => stateRef.current, []);
 
   const savePanelConfigs = useCallback(
     (payload: SAVE_PANEL_CONFIGS["payload"]) => dispatch({ type: "SAVE_PANEL_CONFIGS", payload }),
@@ -128,6 +135,7 @@ export default function CurrentLayoutProvider({
 
   const value: CurrentLayout = useShallowMemo({
     state: panelsState,
+    getCurrentLayout,
     savePanelConfigs,
     updatePanelConfigs,
     createTabPanel,

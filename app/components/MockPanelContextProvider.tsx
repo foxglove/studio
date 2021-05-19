@@ -23,7 +23,7 @@ const DEFAULT_MOCK_PANEL_CONTEXT: PanelContextType<any> = {
   saveConfig: () => {
     // no-op
   },
-  updatePanelConfig: () => {
+  updatePanelConfigs: () => {
     // no-op
   },
   openSiblingPanel: () => {

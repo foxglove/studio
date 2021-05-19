@@ -19,7 +19,6 @@ import styled from "styled-components";
 
 import Log from "@foxglove/log";
 import { redoLayoutChange, undoLayoutChange } from "@foxglove/studio-base/actions/layoutHistory";
-import { loadLayout } from "@foxglove/studio-base/actions/panels";
 import ConnectionList from "@foxglove/studio-base/components/ConnectionList";
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
 import DropOverlay from "@foxglove/studio-base/components/DropOverlay";
@@ -45,6 +44,7 @@ import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent"
 import Toolbar from "@foxglove/studio-base/components/Toolbar";
 import { useAppConfiguration } from "@foxglove/studio-base/context/AppConfigurationContext";
 import { useAssets } from "@foxglove/studio-base/context/AssetContext";
+import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import LinkHandlerContext from "@foxglove/studio-base/context/LinkHandlerContext";
 import { PanelSettingsContext } from "@foxglove/studio-base/context/PanelSettingsContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
@@ -161,9 +161,11 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const isMounted = useMountedState();
 
+  const { loadLayout } = useCurrentLayout();
+
   const openWelcomeLayout = useCallback(async () => {
     if (isMounted()) {
-      dispatch(loadLayout(welcomeLayout));
+      loadLayout(welcomeLayout);
       if (isNonEmptyOrUndefined(props.demoBagUrl)) {
         selectSource(
           { name: "Demo Bag", type: "http" },
@@ -173,7 +175,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         );
       }
     }
-  }, [isMounted, dispatch, selectSource, props.demoBagUrl]);
+  }, [isMounted, loadLayout, selectSource, props.demoBagUrl]);
 
   const handleInternalLink = useCallback((event: React.MouseEvent, href: string) => {
     if (href === "#help:message-path-syntax") {

@@ -25,7 +25,7 @@ export type PanelContextType<T> = {
   saveConfig: SaveConfig<T>;
 
   // TODO(PanelAPI): move to usePanelActions()
-  updatePanelConfig: (panelType: string, updateConfig: (config: T) => T) => void;
+  updatePanelConfigs: (panelType: string, updateConfig: (config: T) => T) => void;
   openSiblingPanel: OpenSiblingPanel;
   enterFullscreen: () => void;
 

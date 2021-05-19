@@ -15,11 +15,10 @@ import { Stack } from "@fluentui/react";
 import ArrowLeftIcon from "@mdi/svg/svg/arrow-left.svg";
 import PlusIcon from "@mdi/svg/svg/plus.svg";
 import { Suspense } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
 import { v4 as uuidv4 } from "uuid";
 
-import { setUserNodes as setUserNodesAction } from "@foxglove/studio-base/actions/panels";
 import Button from "@foxglove/studio-base/components/Button";
 import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
@@ -27,10 +26,15 @@ import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import SpinningLoadingIcon from "@foxglove/studio-base/components/SpinningLoadingIcon";
 import TextContent from "@foxglove/studio-base/components/TextContent";
+import {
+  useCurrentLayout,
+  useCurrentLayoutSelector,
+} from "@foxglove/studio-base/context/CurrentLayoutContext";
 import BottomBar from "@foxglove/studio-base/panels/NodePlayground/BottomBar";
 import Sidebar from "@foxglove/studio-base/panels/NodePlayground/Sidebar";
 import Playground from "@foxglove/studio-base/panels/NodePlayground/playground-icon.svg";
-import { PanelConfigSchema, UserNodes } from "@foxglove/studio-base/types/panels";
+import { State } from "@foxglove/studio-base/reducers";
+import { PanelConfigSchema } from "@foxglove/studio-base/types/panels";
 import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
@@ -125,15 +129,11 @@ function NodePlayground(props: Props) {
 
   const [explorer, updateExplorer] = React.useState<Explorer>(undefined);
 
-  const userNodes = useSelector((state: any) => state.persistedState.panels.userNodes);
+  const userNodes = useCurrentLayoutSelector((state) => state.userNodes);
   const userNodeDiagnostics = useSelector((state: any) => state.userNodes.userNodeDiagnostics);
-  const rosLib = useSelector((state: any) => state.userNodes.rosLib);
+  const rosLib = useSelector((state: State) => state.userNodes.rosLib);
 
-  const dispatch = useDispatch();
-  const setUserNodes = React.useCallback(
-    (payload: UserNodes) => dispatch(setUserNodesAction(payload)),
-    [dispatch],
-  );
+  const { setUserNodes } = useCurrentLayout();
 
   const selectedNodeDiagnostics =
     selectedNodeId != undefined && userNodeDiagnostics[selectedNodeId]
@@ -192,7 +192,7 @@ function NodePlayground(props: Props) {
 
   const saveNode = React.useCallback(
     (script) => {
-      if (selectedNodeId == undefined || !script) {
+      if (selectedNodeId == undefined || !script || !selectedNode) {
         return;
       }
       setUserNodes({ [selectedNodeId]: { ...selectedNode, sourceCode: script } });
@@ -237,7 +237,12 @@ function NodePlayground(props: Props) {
           explorer={explorer}
           updateExplorer={updateExplorer}
           selectNode={(nodeId) => {
-            if (selectedNodeId != undefined && currentScript && isCurrentScriptSelectedNode) {
+            if (
+              selectedNodeId != undefined &&
+              selectedNode &&
+              currentScript &&
+              isCurrentScriptSelectedNode
+            ) {
               // Save current state so that user can seamlessly go back to previous work.
               setUserNodes({
                 [selectedNodeId]: { ...selectedNode, sourceCode: currentScript.code },
@@ -275,7 +280,7 @@ function NodePlayground(props: Props) {
                 <ArrowLeftIcon />
               </Icon>
             )}
-            {selectedNodeId != undefined && (
+            {selectedNodeId != undefined && selectedNode && (
               <div style={{ position: "relative" }}>
                 <input
                   type="text"

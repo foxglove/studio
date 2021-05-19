@@ -12,11 +12,11 @@
 //   You may not use this file except in compliance with the License.
 
 import { useMemo } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { bindActionCreators } from "redux";
 
-import { setLinkedGlobalVariables } from "@foxglove/studio-base/actions/panels";
-import { State } from "@foxglove/studio-base/reducers";
+import {
+  useCurrentLayout,
+  useCurrentLayoutSelector,
+} from "@foxglove/studio-base/context/CurrentLayoutContext";
 
 export type LinkedGlobalVariable = {
   topic: string;
@@ -31,9 +31,8 @@ export default function useLinkedGlobalVariables(): {
   setLinkedGlobalVariables: (arg0: LinkedGlobalVariables) => void;
   linkedGlobalVariablesByName: { [name: string]: LinkedGlobalVariable[] };
 } {
-  const linkedGlobalVariables = useSelector(
-    (state: State) => state.persistedState.panels.linkedGlobalVariables,
-  );
+  const { setLinkedGlobalVariables } = useCurrentLayout();
+  const linkedGlobalVariables = useCurrentLayoutSelector((state) => state.linkedGlobalVariables);
   const linkedGlobalVariablesByName = useMemo(() => {
     const linksByName: { [name: string]: LinkedGlobalVariable[] } = {};
     for (const link of linkedGlobalVariables) {
@@ -41,10 +40,9 @@ export default function useLinkedGlobalVariables(): {
     }
     return linksByName;
   }, [linkedGlobalVariables]);
-  const dispatch = useDispatch();
   return {
     linkedGlobalVariables,
     linkedGlobalVariablesByName,
-    ...bindActionCreators({ setLinkedGlobalVariables }, dispatch),
+    setLinkedGlobalVariables,
   };
 }

@@ -71,7 +71,7 @@ const BaseRenderer = (props: Props, ref: React.Ref<unknown>) => {
     transforms,
     config: { autoSyncCameraState = false, followOrientation = false, followTf },
   } = props;
-  const { updatePanelConfig } = React.useContext(PanelContext) ?? {};
+  const { updatePanelConfigs: updatePanelConfig } = React.useContext(PanelContext) ?? {};
 
   const currentTime = useMessagePipeline(selectCurrentTime);
   const isPlaying = useMessagePipeline(selectIsPlaying);

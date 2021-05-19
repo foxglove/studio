@@ -25,13 +25,9 @@ import styled from "styled-components";
 
 import "./PanelLayout.scss";
 
-import {
-  changePanelLayout,
-  savePanelConfigs,
-  SAVE_PANEL_CONFIGS,
-} from "@foxglove/studio-base/actions/panels";
 import Flex from "@foxglove/studio-base/components/Flex";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { EmptyDropTarget } from "@foxglove/studio-base/panels/Tab/EmptyDropTarget";
 import { State, Dispatcher } from "@foxglove/studio-base/reducers";
@@ -43,7 +39,7 @@ import ErrorBoundary from "./ErrorBoundary";
 type Props = {
   layout?: MosaicNode<string>;
   onChange: (panels: any) => void;
-  savePanelConfigs: (arg0: SaveConfigsPayload) => Dispatcher<SAVE_PANEL_CONFIGS>;
+  savePanelConfigs: (arg0: SaveConfigsPayload) => void;
   forwardedRef?: ElementRef<any>;
   mosaicId?: string;
   tabId?: string;
@@ -160,17 +156,16 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
 }
 
 const ConnectedPanelLayout = (_: any, ref: any) => {
-  const layout = useSelector((state: State) => state.persistedState.panels.layout);
-  const dispatch = useDispatch();
-  const actions = React.useMemo(
-    () => bindActionCreators({ changePanelLayout, savePanelConfigs }, dispatch),
-    [dispatch],
-  );
+  const {
+    state: { layout },
+    changePanelLayout,
+    savePanelConfigs,
+  } = useCurrentLayout();
   const onChange = useCallback(
     (newLayout: MosaicNode<string>) => {
-      actions.changePanelLayout({ layout: newLayout });
+      changePanelLayout({ layout: newLayout });
     },
-    [actions],
+    [changePanelLayout],
   );
   const mosaicId = useSelector(({ mosaic }: State) => mosaic.mosaicId);
   return (
@@ -178,7 +173,7 @@ const ConnectedPanelLayout = (_: any, ref: any) => {
       forwardedRef={ref}
       layout={layout}
       onChange={onChange}
-      savePanelConfigs={actions.savePanelConfigs}
+      savePanelConfigs={savePanelConfigs}
       mosaicId={mosaicId}
     />
   );

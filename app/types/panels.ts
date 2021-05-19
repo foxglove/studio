@@ -34,7 +34,7 @@ export type PlaybackConfig = {
 
 export type UserNode = { name: string; sourceCode: string };
 export type UserNodes = {
-  [nodeId: string]: UserNode;
+  [nodeId: string]: UserNode | undefined;
 };
 
 export type SaveConfig<Config> = (arg0: Partial<Config>) => void;

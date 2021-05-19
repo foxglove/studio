@@ -3,19 +3,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { useAsync, useThrottle } from "react-use";
 import { v4 as uuidv4 } from "uuid";
 
-import { loadLayout } from "@foxglove/studio-base/actions/panels";
+import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useLayoutStorage } from "@foxglove/studio-base/context/LayoutStorageContext";
-import { State } from "@foxglove/studio-base/reducers";
 import sendNotification from "@foxglove/studio-base/util/sendNotification";
 
 // LayoutStorageReduxAdapter persists the current panel state from redux to the current LayoutStorage context
 export default function LayoutStorageReduxAdapter(): ReactNull {
-  const panelsState = useSelector((state: State) => state.persistedState.panels);
-  const dispatch = useDispatch();
+  const { state: panelsState, loadLayout } = useCurrentLayout();
 
   // Debounce the panel state to avoid persisting the layout constantly as the user is adjusting it
   const throttledPanelsState = useThrottle(panelsState, 1000 /* 1 second */);
@@ -39,13 +36,14 @@ export default function LayoutStorageReduxAdapter(): ReactNull {
   }, [layoutStorage, throttledPanelsState]);
 
   // set an id if panel is missing one
+  // FIXME: can we remove this?
   useEffect(() => {
     if (panelsState.id === undefined) {
       panelsState.id = uuidv4();
       panelsState.name = panelsState.name ?? "unnamed";
-      dispatch(loadLayout(panelsState));
+      loadLayout(panelsState);
     }
-  }, [dispatch, panelsState]);
+  }, [loadLayout, panelsState]);
 
   useEffect(() => {
     if (error) {

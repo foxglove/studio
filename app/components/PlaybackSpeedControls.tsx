@@ -11,13 +11,13 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import { useCallback, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
-import { setPlaybackConfig } from "@foxglove/studio-base/actions/panels";
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
+import { useCurrentLayout } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 
 const SPEEDS = ["0.01", "0.02", "0.05", "0.1", "0.2", "0.5", "0.8", "1", "2", "3", "5"];
@@ -32,18 +32,18 @@ export default function PlaybackSpeedControls(): JSX.Element {
 
   // TODO(JP): Might be nice to move all this logic a bit deeper down. It's a bit weird to be doing
   // all this in what's otherwise just a view component.
-  const dispatch = useDispatch();
   const setPlaybackSpeed = useMessagePipeline(
     useCallback(({ setPlaybackSpeed: pipelineSetPlaybackSpeed }) => pipelineSetPlaybackSpeed, []),
   );
+  const { setPlaybackConfig } = useCurrentLayout();
   const setSpeed = useCallback(
     (newSpeed) => {
-      dispatch(setPlaybackConfig({ speed: newSpeed }));
+      setPlaybackConfig({ speed: newSpeed });
       if (canSetSpeed) {
         setPlaybackSpeed(newSpeed);
       }
     },
-    [canSetSpeed, dispatch, setPlaybackSpeed],
+    [canSetSpeed, setPlaybackConfig, setPlaybackSpeed],
   );
 
   // Set the speed to the speed that we got from the config whenever we get a new Player.
