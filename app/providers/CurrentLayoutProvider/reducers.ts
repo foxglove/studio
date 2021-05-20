@@ -392,7 +392,7 @@ const dropPanel = (
     tabId != undefined
       ? panelsState.layout
       : updateTree<string>(
-          panelsState.layout!,
+          panelsState.layout as MosaicNode<string>,
           createAddUpdates(panelsState.layout, id, destinationPath, position ?? "left"),
         );
 
@@ -749,7 +749,7 @@ const endDrag = (panelsState: PanelsState, dragPayload: EndDragPayload): PanelsS
 };
 
 const panelsReducer = function (panelsState: PanelsState, action: PanelsActions): PanelsState {
-  let newPanelsState = panelsState;
+  let newPanelsState = { ...panelsState };
   switch (action.type) {
     case "CHANGE_PANEL_LAYOUT":
       newPanelsState = changePanelLayout(newPanelsState, action.payload);
