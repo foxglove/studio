@@ -314,7 +314,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
         sendNotification(
           `Image download failed`,
           `Failed to create an image from ${canvas.width}x${canvas.height} canvas`,
-          "user",
+          "app",
           "error",
         );
         return;
@@ -572,14 +572,18 @@ export default class ImageCanvas extends React.Component<Props, State> {
 
   render(): JSX.Element {
     const { mode, zoomPercentage, offset } = this.props.config;
-    if (zoomPercentage != undefined && (zoomPercentage > 150 || zoomPercentage < 0)) {
-      sendNotification(
-        `zoomPercentage for the image panel was ${zoomPercentage}, but must be between 0 and 150. It has been reset to 100.`,
-        "",
-        "user",
-        "warn",
-      );
-      (this.props as any).saveConfig({ zoomPercentage: 100 });
+    if (zoomPercentage != undefined) {
+      if (zoomPercentage < 0) {
+        sendNotification(
+          `zoomPercentage for the image panel was ${zoomPercentage}. It has been reset to 100.`,
+          "",
+          "user",
+          "warn",
+        );
+        this.props.saveConfig({ zoomPercentage: 100 });
+      } else if (zoomPercentage > 200) {
+        this.props.saveConfig({ zoomPercentage: 200 });
+      }
     }
     if (offset && offset.length !== 2) {
       sendNotification(
@@ -590,16 +594,14 @@ export default class ImageCanvas extends React.Component<Props, State> {
         "user",
         "warn",
       );
-      (this.props as any).saveConfig({ offset: [0, 0] });
+      this.props.saveConfig({ offset: [0, 0] });
     }
     return (
       <ReactResizeDetector handleWidth handleHeight onResize={this.applyPanZoom}>
         <div className={styles.root} ref={this._divRef}>
           <KeyListener keyDownHandlers={this.keyDownHandlers} />
           <div>
-            {this.state.error && (
-              <SErrorMessage>Error: {(this.state.error as any).message}</SErrorMessage>
-            )}
+            {this.state.error && <SErrorMessage>Error: {this.state.error.message}</SErrorMessage>}
             <canvas
               onContextMenu={this.onCanvasRightClick}
               ref={this._setCanvasRef}
