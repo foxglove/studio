@@ -25,14 +25,14 @@ async function main() {
   const msgdefsPath = join(__dirname, "..", "msgdefs");
   const libFile = join(__dirname, "..", "dist", "index.js");
   const declFile = join(__dirname, "..", "dist", "index.d.ts");
-  const definitions = {};
+  const definitions: Record<string, RosMsgDefinition> = {};
 
   const msgFiles = await getMsgFiles(msgdefsPath);
   for (const filename of msgFiles) {
     const dataType = filenameToDataType(filename);
     const msgdef = await readFile(filename, { encoding: "utf8" });
     const schema = parse(msgdef);
-    schema[0].name = dataType;
+    (schema[0] as RosMsgDefinition).name = dataType;
     for (const entry of schema) {
       if (entry.name == undefined) {
         throw new Error(`Failed to parse ${dataType} from ${filename}`);
