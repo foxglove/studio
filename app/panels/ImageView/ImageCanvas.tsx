@@ -16,7 +16,7 @@ import MagnifyIcon from "@mdi/svg/svg/magnify.svg";
 import cx from "classnames";
 import isEqual from "lodash/isEqual";
 import omit from "lodash/omit";
-import panzoom from "panzoom";
+import panzoom, { PanZoom } from "panzoom";
 import OutsideClickHandler from "react-outside-click-handler";
 import ReactResizeDetector from "react-resize-detector";
 import shallowequal from "shallowequal";
@@ -144,10 +144,13 @@ export default class ImageCanvas extends React.Component<Props, State> {
     }
   };
 
-  panZoomCanvas: any = undefined;
+  panZoomCanvas: PanZoom | undefined = undefined;
   bitmapDimensions: Dimensions = { width: 0, height: 0 };
 
   keepInBounds = (div: HTMLElement): void => {
+    if (this.panZoomCanvas == undefined) {
+      return;
+    }
     const { x, y, scale } = this.panZoomCanvas.getTransform();
     if (isNaN(x) || isNaN(y)) {
       sendNotification(
@@ -171,7 +174,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
       (this.bitmapDimensions.width * updatedPercentage) / 100,
       (this.bitmapDimensions.height * updatedPercentage) / 100,
     );
-    (this.props as any).saveConfig({ mode: "other", offset, zoomPercentage: updatedPercentage });
+    this.props.saveConfig({ mode: "other", offset, zoomPercentage: updatedPercentage });
     if (offset[0] !== x || offset[1] !== y) {
       this.panZoomCanvas.moveTo(offset[0], offset[1]);
     }
@@ -193,7 +196,10 @@ export default class ImageCanvas extends React.Component<Props, State> {
           return true;
         },
       });
-      this.panZoomCanvas.on("zoom", (_e: any) => {
+      this.panZoomCanvas.on("zoom", (_e) => {
+        if (this.panZoomCanvas == undefined) {
+          return;
+        }
         const { scale } = this.panZoomCanvas.getTransform();
         const minPercent = this.fitPercent() * 0.8;
         if (scale < minPercent / 100) {
@@ -201,7 +207,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
         }
         this.keepInBounds(div);
       });
-      this.panZoomCanvas.on("pan", (_e: any) => this.keepInBounds(div));
+      this.panZoomCanvas.on("pan", (_e) => this.keepInBounds(div));
     }
   };
 
@@ -304,6 +310,15 @@ export default class ImageCanvas extends React.Component<Props, State> {
     // context: https://stackoverflow.com/questions/37135417/download-canvas-as-png-in-fabric-js-giving-network-error
     // read the canvas data as an image (png)
     canvas.toBlob((blob) => {
+      if (blob == undefined) {
+        sendNotification(
+          `Image download failed`,
+          `Failed to create an image from ${canvas.width}x${canvas.height} canvas`,
+          "user",
+          "error",
+        );
+        return;
+      }
       // name the image the same name as the topic
       // note: the / characters in the file name will be replaced with _
       // by the browser
@@ -311,7 +326,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
       const topicName = topic.name.slice(1);
       const stamp = (image.message as Partial<StampedMessage>).header?.stamp ?? { sec: 0, nsec: 0 };
       const fileName = `${topicName}-${stamp.sec}-${stamp.nsec}`;
-      downloadFiles([{ blob: blob as any, fileName }]);
+      downloadFiles([{ blob, fileName }]);
     });
   };
 
@@ -326,21 +341,21 @@ export default class ImageCanvas extends React.Component<Props, State> {
   };
   onZoomFit = (): void => {
     const fitPercent = this.fitPercent();
-    this.panZoomCanvas.zoomAbs(0, 0, fitPercent / 100);
+    this.panZoomCanvas?.zoomAbs(0, 0, fitPercent / 100);
     this.moveToCenter();
-    (this.props as any).saveConfig({ mode: "fit", zoomPercentage: fitPercent });
+    this.props.saveConfig({ mode: "fit", zoomPercentage: fitPercent });
   };
 
   onZoomFill = (): void => {
     const fillPercent = this.fillPercent();
-    this.panZoomCanvas.zoomAbs(0, 0, fillPercent / 100);
+    this.panZoomCanvas?.zoomAbs(0, 0, fillPercent / 100);
     this.moveToCenter();
-    (this.props as any).saveConfig({ mode: "fill", zoomPercentage: fillPercent });
+    this.props.saveConfig({ mode: "fill", zoomPercentage: fillPercent });
   };
 
   goToTargetPercentage = (targetPercentage: number): void => {
     const { imageViewportWidth, imageViewportHeight } = this.getImageViewport();
-    this.panZoomCanvas.zoomAbs(
+    this.panZoomCanvas?.zoomAbs(
       imageViewportWidth / 2,
       imageViewportHeight / 2,
       targetPercentage / 100,
@@ -367,11 +382,19 @@ export default class ImageCanvas extends React.Component<Props, State> {
       config: { minValue, maxValue },
       onStartRenderImage,
     } = this.props;
-    if (!topic || !image) {
+    if (topic == undefined || image == undefined) {
       return;
     }
 
-    const imageMessage = image?.message as any;
+    const imageMessage = image.message as {
+      height?: number;
+      width?: number;
+      encoding?: string;
+      is_bigendian?: boolean;
+      step?: number;
+      format?: string;
+      data: Uint8Array;
+    };
 
     const options: RenderOptions = { minValue, maxValue };
 
@@ -418,7 +441,12 @@ export default class ImageCanvas extends React.Component<Props, State> {
       }
     } catch (error) {
       console.error(error);
-      sendNotification(`failed to decode image on ${image?.topic ?? ""}:`, "", "user", "error");
+      sendNotification(
+        `Failed to decode image on "${image?.topic ?? ""}"`,
+        error.message ?? error,
+        "user",
+        "error",
+      );
       this.setState({ error });
     } finally {
       onFinishImageRender();
@@ -479,7 +507,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
     } else if (mode === "other") {
       // Go to prevPercentage
       this.goToTargetPercentage(zoomPercentage ?? 100);
-      this.panZoomCanvas.moveTo(offset ? offset[0] : 0, offset ? offset[1] : 0);
+      this.panZoomCanvas.moveTo(offset?.[0] ?? 0, offset?.[1] ?? 0);
     }
   };
 
