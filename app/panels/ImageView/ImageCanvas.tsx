@@ -78,7 +78,7 @@ const SErrorMessage = styled.div`
   color: ${colors.red};
 `;
 
-const MAX_ZOOM_PERCENTAGE = 150;
+const MAX_ZOOM_PERCENTAGE = 300;
 const ZOOM_STEP = 5;
 
 const webWorkerManager = new WebWorkerManager(makeImageCanvasWorker, 1);
@@ -185,7 +185,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
     const div = this._divRef.current;
     if (canvas && div) {
       this.panZoomCanvas = panzoom(canvas, {
-        maxZoom: 1.5,
+        maxZoom: MAX_ZOOM_PERCENTAGE / 100,
         minZoom: 0,
         zoomSpeed: 0.05,
         smoothScroll: false,
@@ -581,8 +581,8 @@ export default class ImageCanvas extends React.Component<Props, State> {
           "warn",
         );
         this.props.saveConfig({ zoomPercentage: 100 });
-      } else if (zoomPercentage > 200) {
-        this.props.saveConfig({ zoomPercentage: 200 });
+      } else if (zoomPercentage > MAX_ZOOM_PERCENTAGE) {
+        this.props.saveConfig({ zoomPercentage: MAX_ZOOM_PERCENTAGE });
       }
     }
     if (offset && offset.length !== 2) {
