@@ -48,7 +48,7 @@ import { getSynchronizingReducers } from "@foxglove/studio-base/util/synchronize
 import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 import toggle from "@foxglove/studio-base/util/toggle";
 
-import ImageCanvas from "./ImageCanvas";
+import ImageCanvas, { DEFAULT_MAX_ZOOM } from "./ImageCanvas";
 import imageCanvasStyles from "./ImageCanvas.module.scss";
 import helpContent from "./index.help.md";
 import style from "./index.module.scss";
@@ -73,8 +73,10 @@ type DefaultConfig = {
 export type Config = DefaultConfig & {
   transformMarkers: boolean;
   mode?: "fit" | "fill" | "other";
+  pixelated?: boolean;
   zoomPercentage?: number;
   offset?: [number, number];
+  maxZoom?: number;
   minValue?: number;
   maxValue?: number;
   saveStoryConfig?: () => void;
@@ -644,11 +646,25 @@ const defaultConfig: Config = {
   synchronize: false,
   mode: "fit",
   zoomPercentage: 100,
+  maxZoom: DEFAULT_MAX_ZOOM,
   offset: [0, 0],
 };
 
 const configSchema: PanelConfigSchema<Config> = [
   { key: "synchronize", type: "toggle", title: "Synchronize images and markers" },
+  {
+    key: "pixelated",
+    type: "toggle",
+    title: "Nearest neighbor rendering",
+  },
+  {
+    key: "maxZoom",
+    type: "number",
+    title: "Maximum zoom %",
+    placeholder: `${DEFAULT_MAX_ZOOM}`,
+    allowEmpty: true,
+    validate: (value) => Math.max(100, value),
+  },
   {
     key: "minValue",
     type: "number",

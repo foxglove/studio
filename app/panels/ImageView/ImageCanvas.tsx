@@ -63,6 +63,7 @@ type Props = {
 type State = {
   error?: Error;
   openZoomChart: boolean;
+  pixelated?: boolean;
   contextMenuEvent?: MouseEvent;
 };
 
@@ -78,7 +79,8 @@ const SErrorMessage = styled.div`
   color: ${colors.red};
 `;
 
-const MAX_ZOOM_PERCENTAGE = 300;
+export const DEFAULT_MAX_ZOOM = 300;
+
 const ZOOM_STEP = 5;
 
 const webWorkerManager = new WebWorkerManager(makeImageCanvasWorker, 1);
@@ -98,10 +100,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
   _divRef = React.createRef<HTMLDivElement>();
   _id: string;
   _canvasRenderer: CanvasRenderer;
-  state: State = {
-    error: undefined,
-    openZoomChart: false,
-  };
+  state: State = { openZoomChart: false };
 
   constructor(props: Props) {
     super(props);
@@ -185,7 +184,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
     const div = this._divRef.current;
     if (canvas && div) {
       this.panZoomCanvas = panzoom(canvas, {
-        maxZoom: MAX_ZOOM_PERCENTAGE / 100,
+        maxZoom: (this.props.config.maxZoom ?? DEFAULT_MAX_ZOOM) / 100,
         minZoom: 0,
         zoomSpeed: 0.05,
         smoothScroll: false,
@@ -369,8 +368,11 @@ export default class ImageCanvas extends React.Component<Props, State> {
   };
 
   onZoomPlus = (): void => {
-    const { zoomPercentage } = this.props.config;
-    const targetPercentage = Math.min((zoomPercentage ?? 100) + ZOOM_STEP, MAX_ZOOM_PERCENTAGE);
+    const { maxZoom, zoomPercentage } = this.props.config;
+    const targetPercentage = Math.min(
+      (zoomPercentage ?? 100) + ZOOM_STEP,
+      maxZoom ?? DEFAULT_MAX_ZOOM,
+    );
     this.goToTargetPercentage(targetPercentage);
   };
 
@@ -499,12 +501,15 @@ export default class ImageCanvas extends React.Component<Props, State> {
       return;
     }
 
-    const { mode, zoomPercentage, offset } = this.props.config;
+    const { maxZoom, mode, zoomPercentage, offset } = this.props.config;
     if (mode == undefined || mode === "fit") {
+      this.panZoomCanvas.setMaxZoom(1.5);
       this.onZoomFit();
     } else if (mode === "fill") {
+      this.panZoomCanvas.setMaxZoom(1.5);
       this.onZoomFill();
     } else if (mode === "other") {
+      this.panZoomCanvas.setMaxZoom((maxZoom ?? DEFAULT_MAX_ZOOM) / 100);
       // Go to prevPercentage
       this.goToTargetPercentage(zoomPercentage ?? 100);
       this.panZoomCanvas.moveTo(offset?.[0] ?? 0, offset?.[1] ?? 0);
@@ -571,7 +576,18 @@ export default class ImageCanvas extends React.Component<Props, State> {
   };
 
   render(): JSX.Element {
-    const { mode, zoomPercentage, offset } = this.props.config;
+    const { pixelated, mode, zoomPercentage, offset } = this.props.config;
+    const maxZoom = this.props.config.maxZoom ?? DEFAULT_MAX_ZOOM;
+
+    if (this.panZoomCanvas != undefined) {
+      this.panZoomCanvas.setMaxZoom(maxZoom / 100);
+    }
+
+    if (pixelated !== this.state.pixelated && this._canvasRef.current != undefined) {
+      this._canvasRef.current.style.imageRendering = pixelated ?? false ? "pixelated" : "auto";
+      this.setState({ pixelated });
+    }
+
     if (zoomPercentage != undefined) {
       if (zoomPercentage < 0) {
         sendNotification(
@@ -581,10 +597,11 @@ export default class ImageCanvas extends React.Component<Props, State> {
           "warn",
         );
         this.props.saveConfig({ zoomPercentage: 100 });
-      } else if (zoomPercentage > MAX_ZOOM_PERCENTAGE) {
-        this.props.saveConfig({ zoomPercentage: MAX_ZOOM_PERCENTAGE });
+      } else if (zoomPercentage > maxZoom) {
+        this.props.saveConfig({ zoomPercentage: maxZoom });
       }
     }
+
     if (offset && offset.length !== 2) {
       sendNotification(
         `offset for the image panel was ${JSON.stringify(
@@ -596,6 +613,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
       );
       this.props.saveConfig({ offset: [0, 0] });
     }
+
     return (
       <ReactResizeDetector handleWidth handleHeight onResize={this.applyPanZoom}>
         <div className={styles.root} ref={this._divRef}>
@@ -623,11 +641,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
             {this.renderZoomChart()}
             <button className={styles.magnify} onClick={this.clickMagnify} data-magnify-icon>
               <MagnifyIcon />{" "}
-              {mode === "other" && (
-                <span>
-                  {zoomPercentage != undefined ? `${zoomPercentage.toFixed(1)}%` : "null"}
-                </span>
-              )}
+              {mode === "other" && <span>{`${(zoomPercentage ?? 100).toFixed(1)}%`}</span>}
             </button>
           </OutsideClickHandler>
         </div>
