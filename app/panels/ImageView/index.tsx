@@ -73,7 +73,7 @@ type DefaultConfig = {
 export type Config = DefaultConfig & {
   transformMarkers: boolean;
   mode?: "fit" | "fill" | "other";
-  pixelated?: boolean;
+  smooth?: boolean;
   zoomPercentage?: number;
   offset?: [number, number];
   maxZoom?: number;
@@ -653,9 +653,9 @@ const defaultConfig: Config = {
 const configSchema: PanelConfigSchema<Config> = [
   { key: "synchronize", type: "toggle", title: "Synchronize images and markers" },
   {
-    key: "pixelated",
+    key: "smooth",
     type: "toggle",
-    title: "Nearest neighbor rendering",
+    title: "Bilinear smoothing",
   },
   {
     key: "maxZoom",

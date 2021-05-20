@@ -63,7 +63,7 @@ type Props = {
 type State = {
   error?: Error;
   openZoomChart: boolean;
-  pixelated?: boolean;
+  smooth?: boolean;
   contextMenuEvent?: MouseEvent;
 };
 
@@ -183,6 +183,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
     const canvas = this._canvasRef.current;
     const div = this._divRef.current;
     if (canvas && div) {
+      canvas.style.imageRendering = this.props.config.smooth ?? false ? "auto" : "pixelated";
       this.panZoomCanvas = panzoom(canvas, {
         maxZoom: (this.props.config.maxZoom ?? DEFAULT_MAX_ZOOM) / 100,
         minZoom: 0,
@@ -576,16 +577,16 @@ export default class ImageCanvas extends React.Component<Props, State> {
   };
 
   render(): JSX.Element {
-    const { pixelated, mode, zoomPercentage, offset } = this.props.config;
+    const { smooth, mode, zoomPercentage, offset } = this.props.config;
     const maxZoom = this.props.config.maxZoom ?? DEFAULT_MAX_ZOOM;
 
     if (this.panZoomCanvas != undefined) {
       this.panZoomCanvas.setMaxZoom(maxZoom / 100);
     }
 
-    if (pixelated !== this.state.pixelated && this._canvasRef.current != undefined) {
-      this._canvasRef.current.style.imageRendering = pixelated ?? false ? "pixelated" : "auto";
-      this.setState({ pixelated });
+    if (smooth !== this.state.smooth && this._canvasRef.current != undefined) {
+      this._canvasRef.current.style.imageRendering = smooth ?? false ? "auto" : "pixelated";
+      this.setState({ smooth });
     }
 
     if (zoomPercentage != undefined) {
