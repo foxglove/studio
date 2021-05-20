@@ -14,6 +14,7 @@ import { storiesOf } from "@storybook/react";
 
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import PlaybackSpeedControls from "@foxglove/studio-base/components/PlaybackSpeedControls";
+import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
 
 const CAPABILITIES = ["setSpeed", "playbackControl"];
 
@@ -37,29 +38,37 @@ function ControlsStory() {
 storiesOf("components/PlaybackSpeedControls", module)
   .add("without speed capability", () => {
     return (
-      <MockMessagePipelineProvider>
-        <ControlsStory />
-      </MockMessagePipelineProvider>
+      <CurrentLayoutProvider>
+        <MockMessagePipelineProvider>
+          <ControlsStory />
+        </MockMessagePipelineProvider>
+      </CurrentLayoutProvider>
     );
   })
   .add("without a speed from the player", () => {
     return (
-      <MockMessagePipelineProvider capabilities={CAPABILITIES} activeData={{ speed: undefined }}>
-        <ControlsStory />
-      </MockMessagePipelineProvider>
+      <CurrentLayoutProvider>
+        <MockMessagePipelineProvider capabilities={CAPABILITIES} activeData={{ speed: undefined }}>
+          <ControlsStory />
+        </MockMessagePipelineProvider>
+      </CurrentLayoutProvider>
     );
   })
   .add("with a speed", () => {
     return (
-      <MockMessagePipelineProvider capabilities={CAPABILITIES}>
-        <ControlsStory />
-      </MockMessagePipelineProvider>
+      <CurrentLayoutProvider>
+        <MockMessagePipelineProvider capabilities={CAPABILITIES}>
+          <ControlsStory />
+        </MockMessagePipelineProvider>
+      </CurrentLayoutProvider>
     );
   })
   .add("with a very small speed", () => {
     return (
-      <MockMessagePipelineProvider capabilities={CAPABILITIES} activeData={{ speed: 0.01 }}>
-        <ControlsStory />
-      </MockMessagePipelineProvider>
+      <CurrentLayoutProvider>
+        <MockMessagePipelineProvider capabilities={CAPABILITIES} activeData={{ speed: 0.01 }}>
+          <ControlsStory />
+        </MockMessagePipelineProvider>
+      </CurrentLayoutProvider>
     );
   });

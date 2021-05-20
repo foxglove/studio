@@ -3,15 +3,17 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { useMemo } from "react";
-import { Provider } from "react-redux";
 
 import LayoutMenu from "@foxglove/studio-base/components/LayoutMenu";
+import CurrentLayoutContext, {
+  CurrentLayout,
+} from "@foxglove/studio-base/context/CurrentLayoutContext";
 import LayoutStorageContext, {
   Layout,
   LayoutStorage,
 } from "@foxglove/studio-base/context/LayoutStorageContext";
-import createRootReducer from "@foxglove/studio-base/reducers";
-import configureStore from "@foxglove/studio-base/store/configureStore.testing";
+import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
+import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 
 class FakeLayoutStorage implements LayoutStorage {
   private _layouts: Layout[];
@@ -33,6 +35,47 @@ class FakeLayoutStorage implements LayoutStorage {
   }
 }
 
+function makeMockLayoutContext(): CurrentLayout {
+  const currentLayout = {
+    id: "test-id",
+    configById: {},
+    globalVariables: {},
+    userNodes: {},
+    linkedGlobalVariables: [],
+    playbackConfig: defaultPlaybackConfig,
+  };
+  return {
+    state: currentLayout,
+    mosaicId: "x",
+    selectedPanelIds: [],
+    getSelectedPanelIds: () => [],
+    setSelectedPanelIds: () => {},
+    actions: {
+      getCurrentLayout: () => currentLayout,
+      undoLayoutChange: () => {},
+      redoLayoutChange: () => {},
+      savePanelConfigs: () => {},
+      updatePanelConfigs: () => {},
+      createTabPanel: () => {},
+      changePanelLayout: () => {},
+      loadLayout: () => {},
+      overwriteGlobalVariables: () => {},
+      setGlobalVariables: () => {},
+      setUserNodes: () => {},
+      setLinkedGlobalVariables: () => {},
+      setPlaybackConfig: () => {},
+      closePanel: () => {},
+      splitPanel: () => {},
+      swapPanel: () => {},
+      moveTab: () => {},
+      addPanel: () => {},
+      dropPanel: () => {},
+      startDrag: () => {},
+      endDrag: () => {},
+    },
+  };
+}
+
 export default {
   title: "components/LayoutMenu",
   component: LayoutMenu,
@@ -40,15 +83,14 @@ export default {
 
 export function Empty(): JSX.Element {
   const storage = useMemo(() => new FakeLayoutStorage(), []);
-  const store = useMemo(() => configureStore(createRootReducer()), []);
 
   return (
     <div style={{ display: "flex", height: 400 }}>
-      <Provider store={store}>
+      <CurrentLayoutProvider>
         <LayoutStorageContext.Provider value={storage}>
           <LayoutMenu defaultIsOpen />
         </LayoutStorageContext.Provider>
-      </Provider>
+      </CurrentLayoutProvider>
     </div>
   );
 }
@@ -75,23 +117,15 @@ export function LayoutList(): JSX.Element {
       ]),
     [],
   );
-  const store = useMemo(() => {
-    const newStore = configureStore(createRootReducer());
-
-    // set an id for the current panel state so we can see it highlited in the menu
-    const state = newStore.getState();
-    state.persistedState.panels.id = "test-id";
-
-    return newStore;
-  }, []);
+  const mockLayoutContext = useMemo(() => makeMockLayoutContext(), []);
 
   return (
     <div style={{ display: "flex", height: 400 }}>
-      <Provider store={store}>
+      <CurrentLayoutContext.Provider value={mockLayoutContext}>
         <LayoutStorageContext.Provider value={storage}>
           <LayoutMenu defaultIsOpen />
         </LayoutStorageContext.Provider>
-      </Provider>
+      </CurrentLayoutContext.Provider>
     </div>
   );
 }

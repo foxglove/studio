@@ -24,7 +24,12 @@ import {
 } from "@foxglove/studio-base/actions/userNodes";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurationContext";
-import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import {
+  CurrentLayoutActions,
+  SelectedPanelActions,
+  useCurrentLayoutActions,
+  useSelectedPanels,
+} from "@foxglove/studio-base/context/CurrentLayoutContext";
 import PanelCatalogContext, {
   PanelCatalog,
   PanelCategory,
@@ -78,7 +83,12 @@ type Props = {
   panelCatalog?: PanelCatalog;
   omitDragAndDrop?: boolean;
   pauseFrame?: ComponentProps<typeof MockMessagePipelineProvider>["pauseFrame"];
-  onMount?: (arg0: HTMLDivElement, store: Store) => void;
+  onMount?: (
+    arg0: HTMLDivElement,
+    store: Store,
+    actions: CurrentLayoutActions,
+    selectedPanelActions: SelectedPanelActions,
+  ) => void;
   onFirstMount?: (arg0: HTMLDivElement) => void;
   store?: Store;
   style?: {
@@ -170,13 +180,8 @@ function UnconnectedPanelSetup(props: Props): JSX.Element | ReactNull {
 
   const hasMounted = useRef(false);
 
-  const {
-    overwriteGlobalVariables,
-    setUserNodes,
-    changePanelLayout,
-    setLinkedGlobalVariables,
-    savePanelConfigs,
-  } = useCurrentLayoutActions();
+  const actions = useCurrentLayoutActions();
+  const selectedPanels = useSelectedPanels();
 
   const [initialized, setInitialized] = useState(false);
   useLayoutEffect(() => {
@@ -194,16 +199,16 @@ function UnconnectedPanelSetup(props: Props): JSX.Element | ReactNull {
       savedProps,
     } = props.fixture ?? {};
     if (globalVariables) {
-      overwriteGlobalVariables(globalVariables);
+      actions.overwriteGlobalVariables(globalVariables);
     }
     if (userNodes) {
-      setUserNodes(userNodes);
+      actions.setUserNodes(userNodes);
     }
     if (layout !== undefined) {
-      changePanelLayout({ layout });
+      actions.changePanelLayout({ layout });
     }
     if (linkedGlobalVariables) {
-      setLinkedGlobalVariables(linkedGlobalVariables);
+      actions.setLinkedGlobalVariables(linkedGlobalVariables);
     }
     if (userNodeDiagnostics) {
       store.dispatch(setUserNodeDiagnostics(userNodeDiagnostics));
@@ -215,21 +220,12 @@ function UnconnectedPanelSetup(props: Props): JSX.Element | ReactNull {
       store.dispatch(setUserNodeRosLib(userNodeRosLib));
     }
     if (savedProps) {
-      savePanelConfigs({
+      actions.savePanelConfigs({
         configs: Object.entries(savedProps).map(([id, config]: [string, any]) => ({ id, config })),
       });
     }
     setInitialized(true);
-  }, [
-    initialized,
-    props.fixture,
-    overwriteGlobalVariables,
-    setUserNodes,
-    changePanelLayout,
-    setLinkedGlobalVariables,
-    store,
-    savePanelConfigs,
-  ]);
+  }, [initialized, props.fixture, store, actions]);
 
   const {
     frame = {},
@@ -260,7 +256,7 @@ function UnconnectedPanelSetup(props: Props): JSX.Element | ReactNull {
           onFirstMount(el);
         }
         if (el && onMount) {
-          onMount(el, store);
+          onMount(el, store, actions, selectedPanels);
         }
       }}
     >

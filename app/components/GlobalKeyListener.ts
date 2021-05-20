@@ -10,9 +10,7 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { useCallback, useMemo, useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { bindActionCreators } from "redux";
+import { useCallback, useEffect } from "react";
 
 import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 

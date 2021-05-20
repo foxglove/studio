@@ -24,6 +24,7 @@ import PanelCatalogContext, {
   PanelCategory,
   PanelInfo,
 } from "@foxglove/studio-base/context/PanelCatalogContext";
+import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
 import createRootReducer from "@foxglove/studio-base/reducers";
 import configureStore from "@foxglove/studio-base/store/configureStore.testing";
 
@@ -112,7 +113,7 @@ storiesOf("components/PanelList", module)
     <DndProvider backend={HTML5Backend}>
       <Provider store={configureStore(createRootReducer())}>
         <PanelCatalogContext.Provider value={new MockPanelCatalog()}>
-          {childrenRenderFcn()}
+          <CurrentLayoutProvider>{childrenRenderFcn()}</CurrentLayoutProvider>
         </PanelCatalogContext.Provider>
       </Provider>
     </DndProvider>

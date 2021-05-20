@@ -166,11 +166,11 @@ export const ThreeDimPanelSetupWithBag = ({
         bag={bag}
         subscriptions={topics}
         store={store}
-        onMount={() => {
+        onMount={(_el, _store, _layoutActions, selectedPanelActions) => {
           // Wait for the panel to finish resizing
           setTimeout(() => {
             // Select the panel so we can control with the keyboard
-            store.dispatch(selectAllPanelIds() as any);
+            selectedPanelActions.selectAllPanels();
           }, 500);
         }}
         getMergedFixture={(bagFixture: any) => ({

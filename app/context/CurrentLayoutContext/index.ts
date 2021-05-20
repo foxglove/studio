@@ -78,18 +78,9 @@ export interface CurrentLayout {
   };
 }
 
-const CurrentLayoutContext = createSelectableContext<CurrentLayout>();
+export type CurrentLayoutActions = CurrentLayout["actions"];
 
-export function usePanelMosaicId(): string {
-  return useContextSelector(CurrentLayoutContext, ({ mosaicId }) => mosaicId);
-}
-export function useCurrentLayoutActions(): CurrentLayout["actions"] {
-  return useContextSelector(CurrentLayoutContext, ({ actions }) => actions);
-}
-export function useCurrentLayoutSelector<T>(selector: (panelsState: PanelsState) => T): T {
-  return useContextSelector(CurrentLayoutContext, ({ state }) => selector(state));
-}
-export function useSelectedPanels(): {
+export type SelectedPanelActions = {
   getSelectedPanelIds: () => readonly string[];
   selectedPanelIds: readonly string[];
   setSelectedPanelIds: (
@@ -97,7 +88,20 @@ export function useSelectedPanels(): {
   ) => void;
   selectAllPanels: () => void;
   togglePanelSelected: (panelId: string, containingTabId: string | undefined) => void;
-} {
+};
+
+const CurrentLayoutContext = createSelectableContext<CurrentLayout>();
+
+export function usePanelMosaicId(): string {
+  return useContextSelector(CurrentLayoutContext, ({ mosaicId }) => mosaicId);
+}
+export function useCurrentLayoutActions(): CurrentLayoutActions {
+  return useContextSelector(CurrentLayoutContext, ({ actions }) => actions);
+}
+export function useCurrentLayoutSelector<T>(selector: (panelsState: PanelsState) => T): T {
+  return useContextSelector(CurrentLayoutContext, ({ state }) => selector(state));
+}
+export function useSelectedPanels(): SelectedPanelActions {
   const selectedPanelIds = useContextSelector(
     CurrentLayoutContext,
     (value) => value.selectedPanelIds,

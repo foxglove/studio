@@ -13,10 +13,8 @@
 
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { Provider } from "react-redux";
 
-import createRootReducer from "@foxglove/studio-base/reducers";
-import configureStore from "@foxglove/studio-base/store/configureStore.testing";
+import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
 
 import GlobalVariablesTable from ".";
 
@@ -29,9 +27,9 @@ export function Table(): JSX.Element {
   return (
     <div style={{ margin: 30, paddingLeft: 300, height: 400 }}>
       <DndProvider backend={HTML5Backend}>
-        <Provider store={configureStore(createRootReducer())}>
+        <CurrentLayoutProvider>
           <GlobalVariablesTable />
-        </Provider>
+        </CurrentLayoutProvider>
       </DndProvider>
     </div>
   );

@@ -25,6 +25,7 @@ import {
   PlayerState,
   PlayerStateActiveData,
 } from "@foxglove/studio-base/players/types";
+import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
 
 import { UnconnectedPlaybackControls } from ".";
 import styles from "./index.module.scss";
@@ -73,13 +74,15 @@ function Wrapper({
 }) {
   return (
     <AppConfigurationContext.Provider value={mockAppConfiguration}>
-      <MockMessagePipelineProvider
-        capabilities={["setSpeed", "playbackControl"]}
-        store={store}
-        activeData={activeData}
-      >
-        <div style={{ padding: 20, margin: 100 }}>{children}</div>
-      </MockMessagePipelineProvider>
+      <CurrentLayoutProvider>
+        <MockMessagePipelineProvider
+          capabilities={["setSpeed", "playbackControl"]}
+          store={store}
+          activeData={activeData}
+        >
+          <div style={{ padding: 20, margin: 100 }}>{children}</div>
+        </MockMessagePipelineProvider>
+      </CurrentLayoutProvider>
     </AppConfigurationContext.Provider>
   );
 }
