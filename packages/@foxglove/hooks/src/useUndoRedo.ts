@@ -53,8 +53,8 @@ export default function useUndoRedo<T>(
   }, [currentState, historySize, isEqual, throttleMs]);
 
   const undo = useCallback(() => {
-    const newState = ref.current.undoStates.pop();
-    if (newState != undefined) {
+    if (ref.current.undoStates.length > 0) {
+      const newState = ref.current.undoStates.pop() as T;
       ref.current.redoStates.push(ref.current.currentState);
       ref.current.currentState = newState;
       setState(newState);
@@ -62,8 +62,8 @@ export default function useUndoRedo<T>(
   }, [setState]);
 
   const redo = useCallback(() => {
-    const newState = ref.current.redoStates.pop();
-    if (newState != undefined) {
+    if (ref.current.redoStates.length > 0) {
+      const newState = ref.current.redoStates.pop() as T;
       ref.current.undoStates.push(ref.current.currentState);
       ref.current.currentState = newState;
       setState(newState);

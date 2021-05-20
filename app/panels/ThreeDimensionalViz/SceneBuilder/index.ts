@@ -42,8 +42,6 @@ import {
   POSE_MARKER_SCALE,
   LINED_CONVEX_HULL_RENDERING_SETTING,
   MARKER_ARRAY_DATATYPES,
-  STUDIO_MARKER_DATATYPE,
-  STUDIO_MARKER_ARRAY_DATATYPE,
   VISUALIZATION_MSGS_MARKER_DATATYPE,
   VISUALIZATION_MSGS_MARKER_ARRAY_DATATYPE,
   POSE_STAMPED_DATATYPE,
@@ -602,9 +600,10 @@ export default class SceneBuilder implements MarkerProvider {
     const matchingMatcher = colorOverrideMarkerMatchers.find(({ checks = [] }) =>
       checks.every(({ markerKeyPath = [], value }) => {
         // Get the item at the key path
+        // i.e. key path: ["foo", "bar"] would return "value" in an object like {foo: {bar: "value" }}
         const markerValue = markerKeyPath.reduce(
-          (item: any, key) => item?.[key] && item[key](),
-          message as any,
+          (item: any, key) => item?.[key],
+          message as Record<string, unknown> | undefined,
         );
         return value === markerValue;
       }),
@@ -684,8 +683,21 @@ export default class SceneBuilder implements MarkerProvider {
     // in the future these will be customizable via the UI
     const [alpha, map] = this._hooks.getOccupancyGridValues(topic);
 
+    const { header, info, data } = message;
     const mappedMessage = {
-      ...message,
+      header: {
+        frame_id: header.frame_id,
+        stamp: header.stamp,
+        seq: header.seq,
+      },
+      info: {
+        map_load_time: info.map_load_time,
+        resolution: info.resolution,
+        width: info.width,
+        height: info.height,
+        origin: info.origin,
+      },
+      data,
       alpha,
       map,
       type,
@@ -794,12 +806,10 @@ export default class SceneBuilder implements MarkerProvider {
   _consumeMessage = (topic: string, datatype: string, msg: MessageEvent<unknown>): void => {
     const { message } = msg;
     switch (datatype) {
-      case STUDIO_MARKER_DATATYPE:
       case VISUALIZATION_MSGS_MARKER_DATATYPE:
         this._consumeMarker(topic, message as BaseMarker);
 
         break;
-      case STUDIO_MARKER_ARRAY_DATATYPE:
       case VISUALIZATION_MSGS_MARKER_ARRAY_DATATYPE:
         this._consumeMarkerArray(topic, message);
 

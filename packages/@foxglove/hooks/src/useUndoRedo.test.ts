@@ -7,10 +7,10 @@ import { useState, useRef, useCallback } from "react";
 
 import useUndoRedo from "./useUndoRedo";
 
-function setup(params: Parameters<typeof useUndoRedo>[2]) {
+function setup<T>(initialValue: T, params: Parameters<typeof useUndoRedo>[2]) {
   return renderHook(() => {
-    const [state, setState] = useState(0);
-    const internalSetStateCalls = useRef<number[]>([]);
+    const [state, setState] = useState(initialValue);
+    const internalSetStateCalls = useRef<T[]>([]);
     const { undo, redo } = useUndoRedo(
       state,
       useCallback((value) => {
@@ -23,7 +23,7 @@ function setup(params: Parameters<typeof useUndoRedo>[2]) {
       undo: () => act(() => undo()),
       redo: () => act(() => redo()),
       state,
-      setState: (value: number) => act(() => setState(value)),
+      setState: (value: T) => act(() => setState(value)),
       internalSetStateCalls: internalSetStateCalls.current,
     };
   });
@@ -31,7 +31,7 @@ function setup(params: Parameters<typeof useUndoRedo>[2]) {
 
 describe("useUndoRedo", () => {
   it("tracks history without duplicates", () => {
-    const { result } = setup({ isEqual: Object.is });
+    const { result } = setup(0, { isEqual: Object.is });
 
     expect(result.current.internalSetStateCalls).toEqual([]);
     result.current.setState(1);
@@ -62,8 +62,40 @@ describe("useUndoRedo", () => {
     expect(result.current.internalSetStateCalls).toEqual([1, 2, 1, 0, 1, 2]);
   });
 
+  it("supports undefined values", () => {
+    const { result } = setup<number | undefined>(undefined, { isEqual: Object.is });
+
+    result.current.setState(1);
+    result.current.setState(2);
+    result.current.setState(undefined);
+    result.current.setState(4);
+    result.current.setState(5);
+    result.current.undo();
+    result.current.undo();
+    result.current.undo();
+    result.current.undo();
+    result.current.undo();
+    result.current.redo();
+    result.current.redo();
+    result.current.redo();
+    result.current.redo();
+    result.current.redo();
+    expect(result.current.internalSetStateCalls).toEqual([
+      4,
+      undefined,
+      2,
+      1,
+      undefined,
+      1,
+      2,
+      undefined,
+      4,
+      5,
+    ]);
+  });
+
   it("clears redo state when doing a new action", () => {
-    const { result } = setup({ isEqual: Object.is });
+    const { result } = setup(0, { isEqual: Object.is });
 
     result.current.setState(1);
     result.current.setState(2);
@@ -83,7 +115,7 @@ describe("useUndoRedo", () => {
   });
 
   it("limits history when historySize is passed", () => {
-    const { result } = setup({ isEqual: Object.is, historySize: 2 });
+    const { result } = setup(0, { isEqual: Object.is, historySize: 2 });
 
     result.current.setState(1);
     result.current.setState(2);
@@ -100,7 +132,7 @@ describe("useUndoRedo", () => {
 
   it("doesn't use undo stack for changes within throttleMs", () => {
     const now = jest.spyOn(Date, "now").mockReturnValue(0);
-    const { result } = setup({ isEqual: Object.is, throttleMs: 10 });
+    const { result } = setup(0, { isEqual: Object.is, throttleMs: 10 });
 
     // these changes are too fast and are not added to the undo stack, but the latest value is kept
     // up to date
