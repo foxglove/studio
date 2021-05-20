@@ -66,7 +66,7 @@ export default function ColorPicker({ color, onChange, buttonShape }: Props): JS
       {button}
       {colorPickerShown && (
         <Callout
-          directionalHint={DirectionalHint.topAutoEdge}
+          directionalHint={DirectionalHint.topCenter}
           target={colorButtonRef.current}
           onDismiss={() => {
             setColorPickerShown(false);
