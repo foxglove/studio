@@ -1107,4 +1107,4 @@ const definitions = {
   },
 };
 
-export { definitions };
+module.exports = { definitions };

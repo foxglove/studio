@@ -71,7 +71,7 @@ function generateLibrary(definitions: Record<string, RosMsgDefinition>): string 
 
 const definitions = ${JSON.stringify(definitions)}
 
-export { definitions };
+module.exports = { definitions };
 `,
     PRETTIER_OPTS,
   );
