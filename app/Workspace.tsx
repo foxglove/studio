@@ -12,13 +12,11 @@
 
 import { Stack } from "@fluentui/react";
 import { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from "react";
-import { useDispatch } from "react-redux";
 import { useToasts } from "react-toast-notifications";
 import { useMountedState } from "react-use";
 import styled from "styled-components";
 
 import Log from "@foxglove/log";
-import { redoLayoutChange, undoLayoutChange } from "@foxglove/studio-base/actions/layoutHistory";
 import ConnectionList from "@foxglove/studio-base/components/ConnectionList";
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
 import DropOverlay from "@foxglove/studio-base/components/DropOverlay";
@@ -130,7 +128,6 @@ type WorkspaceProps = {
 
 export default function Workspace(props: WorkspaceProps): JSX.Element {
   const containerRef = useRef<HTMLDivElement>(ReactNull);
-  const dispatch = useDispatch();
   const { currentSourceName, selectSource } = usePlayerSelection();
   const playerPresence = useMessagePipeline(
     useCallback(({ playerState }) => playerState.presence, []),
@@ -197,22 +194,24 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   // focused, the GlobalKeyListener will handle it. The listeners here are to handle the case when
   // an editable element is focused, or when the user directly chooses the undo/redo menu item.
 
+  const { undoLayoutChange, redoLayoutChange } = useCurrentLayoutActions();
+
   useNativeAppMenuEvent(
     "undo",
     useCallback(() => {
       if (!document.execCommand("undo")) {
-        dispatch(undoLayoutChange());
+        undoLayoutChange();
       }
-    }, [dispatch]),
+    }, [undoLayoutChange]),
   );
 
   useNativeAppMenuEvent(
     "redo",
     useCallback(() => {
       if (!document.execCommand("redo")) {
-        dispatch(redoLayoutChange());
+        redoLayoutChange();
       }
-    }, [dispatch]),
+    }, [redoLayoutChange]),
   );
 
   useNativeAppMenuEvent(

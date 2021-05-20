@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { HoverValueActions } from "./hoverValue";
-import { LayoutHistoryActions } from "./layoutHistory";
 import { UserNodesActions } from "./userNodes";
 
-export type ActionTypes = HoverValueActions | LayoutHistoryActions | UserNodesActions;
+export type ActionTypes = HoverValueActions | UserNodesActions;

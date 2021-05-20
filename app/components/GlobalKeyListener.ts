@@ -14,7 +14,7 @@ import { useCallback, useMemo, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { bindActionCreators } from "redux";
 
-import { redoLayoutChange, undoLayoutChange } from "@foxglove/studio-base/actions/layoutHistory";
+import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 
 const inNativeUndoRedoElement = (eventTarget: EventTarget) => {
   if (eventTarget instanceof HTMLTextAreaElement) {
@@ -33,11 +33,7 @@ const inNativeUndoRedoElement = (eventTarget: EventTarget) => {
 };
 
 export default function GlobalKeyListener(): ReactNull {
-  const dispatch = useDispatch();
-  const actions = useMemo(
-    () => bindActionCreators({ redoLayoutChange, undoLayoutChange }, dispatch),
-    [dispatch],
-  );
+  const { undoLayoutChange, redoLayoutChange } = useCurrentLayoutActions();
   const keyDownHandler: (arg0: KeyboardEvent) => void = useCallback(
     (e) => {
       const target = e.target;
@@ -71,13 +67,13 @@ export default function GlobalKeyListener(): ReactNull {
         e.stopPropagation();
         e.preventDefault();
         if (e.shiftKey) {
-          actions.redoLayoutChange();
+          redoLayoutChange();
         } else {
-          actions.undoLayoutChange();
+          undoLayoutChange();
         }
       }
     },
-    [actions],
+    [undoLayoutChange, redoLayoutChange],
   );
 
   // Not using KeyListener because we want to preventDefault on [ctrl+z] but not on [z], and we want

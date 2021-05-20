@@ -54,6 +54,9 @@ export interface CurrentLayout {
      */
     getCurrentLayout: () => PanelsState;
 
+    undoLayoutChange: () => void;
+    redoLayoutChange: () => void;
+
     savePanelConfigs: (payload: SaveConfigsPayload) => void;
     updatePanelConfigs: (panelType: string, updater: (config: PanelConfig) => PanelConfig) => void;
     createTabPanel: (payload: CreateTabPanelPayload) => void;

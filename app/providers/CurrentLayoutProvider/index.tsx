@@ -1,10 +1,12 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
+import { isEqual } from "lodash";
 import { useCallback, useLayoutEffect, useReducer, useRef, useState } from "react";
 import { getNodeAtPath } from "react-mosaic-component";
 import { v4 as uuidv4 } from "uuid";
 
+import { useUndoRedo } from "@foxglove/hooks";
 import CurrentLayoutContext, {
   CurrentLayout,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
@@ -31,6 +33,9 @@ import {
 import useShallowMemo from "@foxglove/studio-base/hooks/useShallowMemo";
 
 import panelsReducer, { defaultPlaybackConfig } from "./reducers";
+
+const LAYOUT_HISTORY_SIZE = 20;
+export const LAYOUT_HISTORY_THROTTLE_MS = 1000; // Exported for tests
 
 export default function CurrentLayoutProvider({
   children,
@@ -137,8 +142,16 @@ export default function CurrentLayoutProvider({
     [],
   );
 
+  const { undo: undoLayoutChange, redo: redoLayoutChange } = useUndoRedo(panelsState, loadLayout, {
+    isEqual,
+    historySize: LAYOUT_HISTORY_SIZE,
+    throttleMs: LAYOUT_HISTORY_THROTTLE_MS,
+  });
+
   const actions = useShallowMemo({
     getCurrentLayout,
+    undoLayoutChange,
+    redoLayoutChange,
     savePanelConfigs,
     updatePanelConfigs,
     createTabPanel,

@@ -13,26 +13,20 @@
 
 import { Reducer } from "redux";
 import { ThunkAction } from "redux-thunk";
-import { v4 as uuidv4 } from "uuid";
 
 import { ActionTypes } from "@foxglove/studio-base/actions";
 import { ros_lib_dts } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/ros";
 import hoverValue from "@foxglove/studio-base/reducers/hoverValue";
-import layoutHistory, {
-  LayoutHistory,
-  initialLayoutHistoryState,
-} from "@foxglove/studio-base/reducers/layoutHistory";
 import userNodes, { UserNodeDiagnostics } from "@foxglove/studio-base/reducers/userNodes";
 import { HoverValue } from "@foxglove/studio-base/types/hoverValue";
 
-const getReducers = () => [hoverValue, userNodes, layoutHistory];
+const getReducers = () => [hoverValue, userNodes];
 
 export type Dispatcher<A extends ActionTypes> = ThunkAction<void, State, undefined, A>;
 
 export type State = {
   hoverValue?: HoverValue;
   userNodes: { userNodeDiagnostics: UserNodeDiagnostics; rosLib: string };
-  layoutHistory: LayoutHistory;
 };
 
 export default function createRootReducer(): Reducer<State, ActionTypes> {
@@ -45,7 +39,6 @@ export default function createRootReducer(): Reducer<State, ActionTypes> {
       },
       rosLib: ros_lib_dts,
     },
-    layoutHistory: initialLayoutHistoryState,
   };
   return (state: State | undefined, action: ActionTypes): State => {
     return getReducers().reduce((builtState, reducer) => reducer(builtState, action), {
