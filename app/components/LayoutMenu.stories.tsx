@@ -10,8 +10,9 @@ import LayoutStorageContext, {
   Layout,
   LayoutStorage,
 } from "@foxglove/studio-base/context/LayoutStorageContext";
-import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
-import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
+import CurrentLayoutState, {
+  DEFAULT_LAYOUT_FOR_TESTS,
+} from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 
 class FakeLayoutStorage implements LayoutStorage {
@@ -41,7 +42,7 @@ export default {
 
 export function Empty(): JSX.Element {
   const storage = useMemo(() => new FakeLayoutStorage(), []);
-  const currentLayout = useMemo(() => new CurrentLayoutState(), []);
+  const currentLayout = useMemo(() => new CurrentLayoutState(DEFAULT_LAYOUT_FOR_TESTS), []);
 
   return (
     <div style={{ display: "flex", height: 400 }}>
@@ -86,7 +87,7 @@ export function LayoutList(): JSX.Element {
       linkedGlobalVariables: [],
       playbackConfig: defaultPlaybackConfig,
     };
-    const state = new CurrentLayoutState();
+    const state = new CurrentLayoutState(DEFAULT_LAYOUT_FOR_TESTS);
     state.actions.loadLayout(mockLayout);
     return state;
   }, []);

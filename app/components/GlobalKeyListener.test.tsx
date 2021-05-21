@@ -17,7 +17,9 @@ import { mount } from "enzyme";
 import GlobalKeyListener from "@foxglove/studio-base/components/GlobalKeyListener";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import CurrentLayoutContext from "@foxglove/studio-base/context/CurrentLayoutContext";
-import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
+import CurrentLayoutState, {
+  DEFAULT_LAYOUT_FOR_TESTS,
+} from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 
 describe("GlobalKeyListener", () => {
   let undoSpy: jest.SpyInstance | undefined;
@@ -25,7 +27,7 @@ describe("GlobalKeyListener", () => {
   let unmount: (() => void) | undefined;
 
   beforeEach(() => {
-    const mockContext = new CurrentLayoutState();
+    const mockContext = new CurrentLayoutState(DEFAULT_LAYOUT_FOR_TESTS);
     undoSpy = jest.spyOn(mockContext.actions, "undoLayoutChange");
     redoSpy = jest.spyOn(mockContext.actions, "redoLayoutChange");
 

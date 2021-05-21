@@ -16,7 +16,9 @@ import { renderHook } from "@testing-library/react-hooks/dom";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import CurrentLayoutContext from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
-import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
+import CurrentLayoutState, {
+  DEFAULT_LAYOUT_FOR_TESTS,
+} from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 
 import { useLatestMessageDataItem } from "./useLatestMessageDataItem";
 
@@ -44,7 +46,7 @@ const fixtureMessages: MessageEvent<unknown>[] = [
 
 describe("useLatestMessageDataItem", () => {
   it("returns undefined by default", async () => {
-    const currentLayout = new CurrentLayoutState();
+    const currentLayout = new CurrentLayoutState(DEFAULT_LAYOUT_FOR_TESTS);
     const { result } = renderHook(({ path }) => useLatestMessageDataItem(path), {
       initialProps: { path: "/topic.value" },
       wrapper({ children }) {
@@ -61,7 +63,7 @@ describe("useLatestMessageDataItem", () => {
   });
 
   it("uses the latest message", async () => {
-    const currentLayout = new CurrentLayoutState();
+    const currentLayout = new CurrentLayoutState(DEFAULT_LAYOUT_FOR_TESTS);
     const { result, rerender } = renderHook(({ path }) => useLatestMessageDataItem(path), {
       initialProps: { path: "/topic.value", messages: [fixtureMessages[0]!] },
       wrapper({ children, messages }) {
@@ -86,7 +88,7 @@ describe("useLatestMessageDataItem", () => {
   });
 
   it("only keeps messages that match the path", async () => {
-    const currentLayout = new CurrentLayoutState();
+    const currentLayout = new CurrentLayoutState(DEFAULT_LAYOUT_FOR_TESTS);
     const { result } = renderHook(({ path }) => useLatestMessageDataItem(path), {
       initialProps: { path: "/topic{value==1}.value" },
       wrapper({ children }) {
@@ -109,7 +111,7 @@ describe("useLatestMessageDataItem", () => {
   });
 
   it("changing the path gives the new queriedData from the message", async () => {
-    const currentLayout = new CurrentLayoutState();
+    const currentLayout = new CurrentLayoutState(DEFAULT_LAYOUT_FOR_TESTS);
     const { result, rerender } = renderHook(({ path }) => useLatestMessageDataItem(path), {
       initialProps: { path: "/topic{value==1}.value" },
       wrapper({ children }) {

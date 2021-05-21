@@ -26,7 +26,9 @@ import PanelCatalogContext, {
   PanelCategory,
   PanelInfo,
 } from "@foxglove/studio-base/context/PanelCatalogContext";
-import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
+import CurrentLayoutState, {
+  DEFAULT_LAYOUT_FOR_TESTS,
+} from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 import createRootReducer from "@foxglove/studio-base/reducers";
 import configureStore from "@foxglove/studio-base/store/configureStore.testing";
 
@@ -112,7 +114,7 @@ storiesOf("components/PanelList", module)
     },
   })
   .addDecorator((childrenRenderFcn) => {
-    const currentLayout = useMemo(() => new CurrentLayoutState(), []);
+    const currentLayout = useMemo(() => new CurrentLayoutState(DEFAULT_LAYOUT_FOR_TESTS), []);
     return (
       <DndProvider backend={HTML5Backend}>
         <Provider store={configureStore(createRootReducer())}>

@@ -49,7 +49,9 @@ import {
   PublishPayload,
   AdvertisePayload,
 } from "@foxglove/studio-base/players/types";
-import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
+import CurrentLayoutState, {
+  DEFAULT_LAYOUT_FOR_TESTS,
+} from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 import createRootReducer from "@foxglove/studio-base/reducers";
 import configureStore from "@foxglove/studio-base/store/configureStore.testing";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
@@ -291,7 +293,7 @@ function UnconnectedPanelSetup(props: Props): JSX.Element | ReactNull {
 }
 
 export default function PanelSetup(props: Props): JSX.Element {
-  const currentLayout = useMemo(() => new CurrentLayoutState(), []);
+  const currentLayout = useMemo(() => new CurrentLayoutState(DEFAULT_LAYOUT_FOR_TESTS), []);
   return (
     <CurrentLayoutContext.Provider value={currentLayout}>
       <UnconnectedPanelSetup {...props} />

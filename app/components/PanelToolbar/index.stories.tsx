@@ -20,7 +20,9 @@ import ChildToggle from "@foxglove/studio-base/components/ChildToggle";
 import Icon from "@foxglove/studio-base/components/Icon";
 import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
 import CurrentLayoutContext from "@foxglove/studio-base/context/CurrentLayoutContext";
-import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
+import CurrentLayoutState, {
+  DEFAULT_LAYOUT_FOR_TESTS,
+} from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 
 import PanelToolbar from "./index";
 
@@ -96,7 +98,7 @@ function KeepToolbarVisibleHack() {
 
 storiesOf("components/PanelToolbar", module)
   .addDecorator((childrenRenderFcn) => {
-    const currentLayout = useMemo(() => new CurrentLayoutState(), []);
+    const currentLayout = useMemo(() => new CurrentLayoutState(DEFAULT_LAYOUT_FOR_TESTS), []);
     // Provide all stories with PanelContext and redux state
     return (
       <CurrentLayoutContext.Provider value={currentLayout}>

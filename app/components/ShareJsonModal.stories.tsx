@@ -19,11 +19,13 @@ import ShareJsonModal from "@foxglove/studio-base/components/ShareJsonModal";
 import CurrentLayoutContext, {
   useCurrentLayoutActions,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
+import CurrentLayoutState, {
+  DEFAULT_LAYOUT_FOR_TESTS,
+} from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 
 storiesOf("components/ShareJsonModal", module)
   .addDecorator((Child: any) => {
-    const currentLayout = useMemo(() => new CurrentLayoutState(), []);
+    const currentLayout = useMemo(() => new CurrentLayoutState(DEFAULT_LAYOUT_FOR_TESTS), []);
     return (
       <CurrentLayoutContext.Provider value={currentLayout}>
         <Child />

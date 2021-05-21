@@ -23,6 +23,7 @@ import {
   MosaicParent,
   MosaicNode,
 } from "react-mosaic-component";
+import { v4 as uuidv4 } from "uuid";
 
 import {
   StartDragPayload,
@@ -310,13 +311,15 @@ const createTabPanelWithMultipleTabs = (
 
 function loadLayout(
   _state: PanelsState,
-  { savedProps, ...payload }: Partial<Omit<PanelsState, "id" | "name">>,
+  { savedProps, ...payload }: Partial<PanelsState>,
 ): PanelsState {
   return {
     ...payload,
+    id: payload.id ?? uuidv4(),
+    name: payload.name ?? "unnamed",
     layout: payload.layout,
     // configById was previously named savedProps; merge them for backward compatibility
-    configById: { ...payload.configById, ...savedProps } ?? {},
+    configById: { ...payload.configById, ...savedProps },
     globalVariables: payload.globalVariables ?? {},
     userNodes: payload.userNodes ?? {},
     linkedGlobalVariables: payload.linkedGlobalVariables ?? [],

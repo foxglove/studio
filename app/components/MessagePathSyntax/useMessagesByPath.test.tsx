@@ -22,7 +22,9 @@ import CurrentLayoutContext from "@foxglove/studio-base/context/CurrentLayoutCon
 import useGlobalVariables, {
   GlobalVariables,
 } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
+import CurrentLayoutState, {
+  DEFAULT_LAYOUT_FOR_TESTS,
+} from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 
 import * as fixture from "./fixture";
 
@@ -48,7 +50,7 @@ type TestProps = {
 function makeMessagePipelineWrapper(initialGlobalVariables?: GlobalVariables) {
   const setSubscriptions = jest.fn();
 
-  const currentLayout = new CurrentLayoutState();
+  const currentLayout = new CurrentLayoutState(DEFAULT_LAYOUT_FOR_TESTS);
   if (initialGlobalVariables != undefined) {
     currentLayout.actions.setGlobalVariables(initialGlobalVariables);
   }

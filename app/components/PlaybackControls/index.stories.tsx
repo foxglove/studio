@@ -27,7 +27,9 @@ import {
   PlayerState,
   PlayerStateActiveData,
 } from "@foxglove/studio-base/players/types";
-import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
+import CurrentLayoutState, {
+  DEFAULT_LAYOUT_FOR_TESTS,
+} from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 
 import { UnconnectedPlaybackControls } from ".";
 import styles from "./index.module.scss";
@@ -72,7 +74,7 @@ function Wrapper({
   activeData?: PlayerStateActiveData;
   children: React.ReactNode;
 }) {
-  const currentLayout = useMemo(() => new CurrentLayoutState(), []);
+  const currentLayout = useMemo(() => new CurrentLayoutState(DEFAULT_LAYOUT_FOR_TESTS), []);
   return (
     <AppConfigurationContext.Provider value={mockAppConfiguration}>
       <CurrentLayoutContext.Provider value={currentLayout}>

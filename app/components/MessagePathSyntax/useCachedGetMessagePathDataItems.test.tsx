@@ -20,7 +20,9 @@ import MockMessagePipelineProvider from "@foxglove/studio-base/components/Messag
 import CurrentLayoutContext from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { Topic, MessageEvent } from "@foxglove/studio-base/players/types";
-import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
+import CurrentLayoutState, {
+  DEFAULT_LAYOUT_FOR_TESTS,
+} from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 import {
@@ -71,7 +73,7 @@ describe("useCachedGetMessagePathDataItems", () => {
         initialProps,
         wrapper: function Wrapper({ topics, datatypes, children }) {
           const currentLayout = useMemo(() => {
-            const state = new CurrentLayoutState();
+            const state = new CurrentLayoutState(DEFAULT_LAYOUT_FOR_TESTS);
             setGlobalVariables = state.actions.setGlobalVariables;
             if (initialGlobalVariables != undefined) {
               state.actions.setGlobalVariables(initialGlobalVariables);
@@ -735,7 +737,7 @@ describe("useDecodeMessagePathsForMessagesByTopic", () => {
     const datatypes = {
       datatype: { fields: [{ name: "value", type: "uint32", isArray: false, isComplex: false }] },
     };
-    const currentLayout = new CurrentLayoutState();
+    const currentLayout = new CurrentLayoutState(DEFAULT_LAYOUT_FOR_TESTS);
     const { result } = renderHook((paths) => useDecodeMessagePathsForMessagesByTopic(paths), {
       initialProps: ["/topic1.value", "/topic2.value", "/topic3.value", "/topic3..value"],
       wrapper({ children }) {

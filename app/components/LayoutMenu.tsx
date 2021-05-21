@@ -129,9 +129,10 @@ export default function LayoutMenu({
     const state = parsedState as PanelsState;
     state.id = uuidv4();
     state.name = layoutName;
+    await layoutStorage.put({ id: state.id, name: state.name, state });
 
     loadLayout(state);
-  }, [loadLayout, isMounted]);
+  }, [isMounted, layoutStorage, loadLayout]);
 
   const selectAction = useCallback(
     (layout: Layout) => {

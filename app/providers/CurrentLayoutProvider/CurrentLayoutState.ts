@@ -33,7 +33,9 @@ import panelsReducer, {
 } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import UndoRedo from "@foxglove/studio-base/util/UndoRedo";
 
-const DEFAULT_LAYOUT: PanelsState = {
+export const DEFAULT_LAYOUT_FOR_TESTS: PanelsState = {
+  id: "FOR_TESTS",
+  name: "FOR_TESTS",
   configById: {},
   globalVariables: {},
   userNodes: {},
@@ -46,14 +48,18 @@ const LAYOUT_HISTORY_THROTTLE_MS = 1000;
 
 export default class CurrentLayoutState implements CurrentLayout {
   private undoRedo: UndoRedo<PanelsState>;
-  private panelsState = DEFAULT_LAYOUT;
+  private panelsState: PanelsState;
   private panelsStateListeners = new Set<(_: PanelsState) => void>();
   private selectedPanelIds: readonly string[] = [];
   private selectedPanelIdsListeners = new Set<(_: readonly string[]) => void>();
 
   mosaicId = uuidv4();
 
-  constructor() {
+  constructor(initialState: PanelsState) {
+    this.panelsState = initialState;
+    // Run the reducer once to ensure any migrations happen (e.g. savedProps->configById)
+    this.dispatch({ type: "LOAD_LAYOUT", payload: initialState });
+
     this.undoRedo = new UndoRedo<PanelsState>(this.panelsState, {
       isEqual,
       historySize: LAYOUT_HISTORY_SIZE,

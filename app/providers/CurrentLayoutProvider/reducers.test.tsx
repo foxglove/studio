@@ -25,7 +25,9 @@ import {
   LoadLayoutPayload,
   PanelsState,
 } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
+import CurrentLayoutState, {
+  DEFAULT_LAYOUT_FOR_TESTS,
+} from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 import { TabPanelConfig } from "@foxglove/studio-base/types/layouts";
 import { MosaicDropTargetPosition } from "@foxglove/studio-base/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
@@ -34,7 +36,7 @@ import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 import { defaultPlaybackConfig } from "./reducers";
 
 function renderProvider() {
-  const currentLayout = new CurrentLayoutState();
+  const currentLayout = new CurrentLayoutState(DEFAULT_LAYOUT_FOR_TESTS);
   const { result } = renderHook(
     () => ({
       state: useCurrentLayoutSelector((state) => state),
@@ -56,8 +58,6 @@ function renderProvider() {
 }
 
 describe("layout reducers", () => {
-  // FIXME: replacement for deleted localStorage tests?
-
   describe("adds panel to a layout", () => {
     it("adds panel to main app layout", () => {
       const { result } = renderProvider();

@@ -24,8 +24,8 @@ import {
 } from "@foxglove/studio-base/types/panels";
 
 export type PanelsState = {
-  id?: string;
-  name?: string;
+  id: string;
+  name: string;
   layout?: MosaicNode<string>;
   // We store config for each panel in a hash keyed by the panel id.
   // This should at some point be renamed to `config` or `configById` or so,
@@ -68,7 +68,7 @@ export type CreateTabPanelPayload = {
   singleTab: boolean;
 };
 
-export type LoadLayoutPayload = Partial<Omit<PanelsState, "id" | "name">>;
+export type LoadLayoutPayload = Partial<PanelsState>;
 
 export type UpdatePanelConfig<Config> = (
   panelType: string,
