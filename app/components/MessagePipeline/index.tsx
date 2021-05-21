@@ -14,6 +14,8 @@
 import { debounce, flatten, groupBy } from "lodash";
 import { Time } from "rosbag";
 
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import useContextSelector from "@foxglove/studio-base/hooks/useContextSelector";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import useShallowMemo from "@foxglove/studio-base/hooks/useShallowMemo";
@@ -38,8 +40,6 @@ import signal from "@foxglove/studio-base/util/signal";
 
 import { pauseFrameForPromises, FramePromise } from "./pauseFrameForPromise";
 import warnOnOutOfSyncMessages from "./warnOnOutOfSyncMessages";
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
-import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 
 const { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } = React;
 
@@ -157,8 +157,8 @@ export function MessagePipelineProvider({
   }, [maybePlayer.error]);
 
   // Slow down the message pipeline framerate to the given FPS if it is set to less than 60
-  const [messageHz] = useAppConfigurationValue<number>(AppSetting.MESSAGE_HZ);
-  const skipFrames = 60 / (messageHz ?? 60) - 1;
+  const [messageRate] = useAppConfigurationValue<number>(AppSetting.MESSAGE_RATE);
+  const skipFrames = 60 / (messageRate ?? 60) - 1;
 
   // Delay the player listener promise until rendering has finished for the latest data.
   useLayoutEffect(() => {
@@ -191,7 +191,7 @@ export function MessagePipelineProvider({
         }
       }
     }, skipFrames);
-  }, [playerState]);
+  }, [playerState, skipFrames]);
 
   useEffect(() => {
     currentPlayer.current = player;

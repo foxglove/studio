@@ -125,9 +125,7 @@ function TimezoneSettings(): React.ReactElement {
 }
 
 function MessageFramerate(): React.ReactElement {
-  type Option = IComboBoxOption & { data: number };
-
-  const [messageHz, setMesageHz] = useAppConfigurationValue<number>(AppSetting.MESSAGE_HZ);
+  const [messageRate, setMesageRate] = useAppConfigurationValue<number>(AppSetting.MESSAGE_RATE);
   const entries = useMemo(
     () => MESSAGE_RATES.map((rate) => ({ key: rate, text: `${rate}`, data: rate })),
     [],
@@ -135,14 +133,14 @@ function MessageFramerate(): React.ReactElement {
 
   return (
     <VirtualizedComboBox
-      label="Message framerate:"
+      label="Message rate (Hz):"
       options={entries}
       autoComplete="on"
       openOnKeyboardFocus
-      selectedKey={messageHz ?? 60}
+      selectedKey={messageRate ?? 60}
       onChange={(_event, option) => {
         if (option) {
-          setMesageHz(option.data);
+          setMesageRate(option.data);
         }
       }}
       calloutProps={{
