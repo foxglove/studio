@@ -61,27 +61,30 @@ export default class CurrentLayoutState implements CurrentLayout {
     });
   }
 
-  addPanelsStateListener(listener: (_: PanelsState) => void): void {
+  addPanelsStateListener = (listener: (_: PanelsState) => void): void => {
     this.panelsStateListeners.add(listener);
-  }
-  removePanelsStateListener(listener: (_: PanelsState) => void): void {
+  };
+  removePanelsStateListener = (listener: (_: PanelsState) => void): void => {
     this.panelsStateListeners.delete(listener);
-  }
-  addSelectedPanelIdsListener(listener: (_: readonly string[]) => void): void {
+  };
+  addSelectedPanelIdsListener = (listener: (_: readonly string[]) => void): void => {
     this.selectedPanelIdsListeners.add(listener);
-  }
-  removeSelectedPanelIdsListener(listener: (_: readonly string[]) => void): void {
+  };
+  removeSelectedPanelIdsListener = (listener: (_: readonly string[]) => void): void => {
     this.selectedPanelIdsListeners.delete(listener);
-  }
+  };
 
-  setSelectedPanelIds(
+  setSelectedPanelIds = (
     value: readonly string[] | ((prevState: readonly string[]) => string[]),
-  ): void {
+  ): void => {
     this.selectedPanelIds = typeof value === "function" ? value(this.selectedPanelIds) : value;
-  }
-  getSelectedPanelIds(): readonly string[] {
+    for (const listener of [...this.selectedPanelIdsListeners]) {
+      listener(this.selectedPanelIds);
+    }
+  };
+  getSelectedPanelIds = (): readonly string[] => {
     return this.selectedPanelIds;
-  }
+  };
 
   actions = {
     getCurrentLayout: (): PanelsState => this.panelsState,

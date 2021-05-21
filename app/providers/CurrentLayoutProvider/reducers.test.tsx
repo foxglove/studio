@@ -15,7 +15,7 @@
 import { renderHook, act } from "@testing-library/react-hooks";
 import { getLeaves, MosaicNode, MosaicParent } from "react-mosaic-component";
 
-import {
+import CurrentLayoutContext, {
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
   useSelectedPanels,
@@ -25,7 +25,7 @@ import {
   LoadLayoutPayload,
   PanelsState,
 } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
+import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 import { TabPanelConfig } from "@foxglove/studio-base/types/layouts";
 import { MosaicDropTargetPosition } from "@foxglove/studio-base/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
@@ -34,6 +34,7 @@ import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 import { defaultPlaybackConfig } from "./reducers";
 
 function renderProvider() {
+  const currentLayout = new CurrentLayoutState();
   const { result } = renderHook(
     () => ({
       state: useCurrentLayoutSelector((state) => state),
@@ -41,7 +42,13 @@ function renderProvider() {
       selectedPanels: useSelectedPanels(),
     }),
     {
-      wrapper: CurrentLayoutProvider,
+      wrapper({ children }) {
+        return (
+          <CurrentLayoutContext.Provider value={currentLayout}>
+            {children}
+          </CurrentLayoutContext.Provider>
+        );
+      },
     },
   );
 
