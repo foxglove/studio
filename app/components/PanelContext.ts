@@ -16,7 +16,7 @@ import {
   PanelConfig,
   UpdatePanelConfig,
   OpenSiblingPanel,
-} from "@foxglove-studio/app/types/panels";
+} from "@foxglove/studio-base/types/panels";
 
 export type PanelContextType<T> = {
   // TODO(PanelAPI): private API, should not be used in panels
@@ -36,6 +36,7 @@ export type PanelContextType<T> = {
 
   isHovered: boolean;
   isFocused: boolean;
+  hasSettings: boolean;
   connectToolbarDragHandle: (el: Element | ReactNull) => void;
   supportsStrictMode: boolean; // remove when all panels have strict mode enabled :)
 };

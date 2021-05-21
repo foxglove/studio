@@ -18,8 +18,9 @@ import { Zoom as ZoomPlugin } from "chartjs-plugin-zoom";
 import EventEmitter from "eventemitter3";
 import merge from "lodash/merge";
 
-import { RpcElement, RpcScales } from "@foxglove-studio/app/components/Chart/types";
 import Logger from "@foxglove/log";
+import { RpcElement, RpcScales } from "@foxglove/studio-base/components/Chart/types";
+import { MONOSPACE } from "@foxglove/studio-base/styles/fonts";
 
 const log = Logger.getLogger(__filename);
 
@@ -100,7 +101,7 @@ export default class ChartJSManager {
     const fullOptions: ChartOptions = {
       ...this.addFunctionsToConfig(options),
       devicePixelRatio,
-      font: { family: "'Roboto Mono'" },
+      font: { family: MONOSPACE },
       // we force responsive off since we manually trigger width/height updates on the chart
       // responsive mode does not work properly with offscreen canvases and retina device pixel ratios
       // it results in a run-away canvas that keeps doubling in size!

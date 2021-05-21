@@ -13,8 +13,8 @@
 
 import { useRef, useLayoutEffect, useContext, useReducer } from "react";
 
-import { SelectableContext } from "@foxglove-studio/app/util/createSelectableContext";
 import Log from "@foxglove/log";
+import { SelectableContext } from "@foxglove/studio-base/util/createSelectableContext";
 
 const log = Log.getLogger(__filename);
 
@@ -46,9 +46,10 @@ export default function useContextSelector<T, U>(
   }
 
   const [_, forceUpdate] = useReducer((x: number) => x + 1, 0);
-  const state = useRef<
-    Readonly<{ contextValue: T; selectedValue: U; selector: (value: T) => U }> | undefined
-  >();
+  const state =
+    useRef<
+      Readonly<{ contextValue: T; selectedValue: U; selector: (value: T) => U }> | undefined
+    >();
   const contextValue = handle.currentValue();
   if (
     state.current === undefined ||

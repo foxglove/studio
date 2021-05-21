@@ -18,11 +18,12 @@ import React, { Ref as ReactRef, useCallback, useEffect, useMemo, useRef, useSta
 import styled from "styled-components";
 import textMetrics from "text-metrics";
 
-import Icon from "@foxglove-studio/app/components/Icon";
-import Tooltip from "@foxglove-studio/app/components/Tooltip";
-import { TabActions } from "@foxglove-studio/app/panels/Tab/TabDndContext";
-import { nonEmptyOrUndefined } from "@foxglove-studio/app/util/emptyOrUndefined";
-import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
+import Icon from "@foxglove/studio-base/components/Icon";
+import Tooltip from "@foxglove/studio-base/components/Tooltip";
+import { TabActions } from "@foxglove/studio-base/panels/Tab/TabDndContext";
+import { SANS_SERIF } from "@foxglove/studio-base/styles/fonts";
+import { nonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
+import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import styles from "./Tab.module.scss";
 
@@ -30,7 +31,7 @@ const MAX_TAB_WIDTH = 100;
 const MIN_ACTIVE_TAB_WIDTH = 40;
 const MIN_OTHER_TAB_WIDTH = 14;
 
-const fontFamily = "'Inter UI', -apple-system, BlinkMacSystemFont, sans-serif";
+const fontFamily = SANS_SERIF;
 const fontSize = "12px";
 let textMeasure: textMetrics.TextMeasure;
 function measureText(text: string): number {
@@ -103,11 +104,10 @@ export function ToolbarTab(props: Props): JSX.Element {
     }),
     [actions, tabIndex],
   );
-  const setTabTitle = useCallback(() => actions.setTabTitle(tabIndex, title), [
-    actions,
-    tabIndex,
-    title,
-  ]);
+  const setTabTitle = useCallback(
+    () => actions.setTabTitle(tabIndex, title),
+    [actions, tabIndex, title],
+  );
 
   const onClickTab = useCallback(() => {
     if (!isActive) {

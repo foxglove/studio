@@ -4,7 +4,7 @@
 
 import { Stack, Text, useTheme } from "@fluentui/react";
 
-import HelpButton from "@foxglove-studio/app/components/PanelToolbar/HelpButton";
+import HelpButton from "@foxglove/studio-base/components/PanelToolbar/HelpButton";
 
 export function SidebarContent({
   noPadding = false,
@@ -30,9 +30,9 @@ export function SidebarContent({
       <Stack
         horizontal
         horizontalAlign="space-between"
-        style={{ padding: noPadding ? theme.spacing.m : undefined, paddingBottom: 0 }}
+        style={{ padding: noPadding ? theme.spacing.m : undefined, paddingBottom: theme.spacing.m }}
       >
-        <Text as="h2" variant="large">
+        <Text as="h2" variant="xLarge">
           {title}
         </Text>
         {Boolean(helpContent) && (

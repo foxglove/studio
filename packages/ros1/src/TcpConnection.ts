@@ -3,8 +3,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { EventEmitter } from "eventemitter3";
-import { MessageReader, parseMessageDefinition, RosMsgDefinition } from "rosbag";
+import { MessageReader } from "rosbag";
 import { TextDecoder, TextEncoder } from "web-encoding";
+
+import { parse as parseMessageDefinition, RosMsgDefinition } from "@foxglove/rosmsg";
 
 import { Connection, ConnectionStats } from "./Connection";
 import { LoggerService } from "./LoggerService";
@@ -12,13 +14,23 @@ import { RosTcpMessageStream } from "./RosTcpMessageStream";
 import { TcpAddress, TcpSocket } from "./TcpTypes";
 import { backoff } from "./backoff";
 
+export interface TcpConnectionEvents {
+  header: (
+    header: Map<string, string>,
+    messageDefinition: RosMsgDefinition[],
+    messageReader: MessageReader,
+  ) => void;
+  message: (msg: unknown, msgData: Uint8Array) => void;
+  error: (err: Error) => void;
+}
+
 // Implements a subscriber for the TCPROS transport. The actual TCP transport is
 // implemented in the passed in `socket` (TcpSocket). A transform stream is used
 // internally for parsing the TCPROS message format (4 byte length followed by
 // message payload) so "message" events represent one full message each without
 // the length prefix. A transform class that meets this requirements is
 // implemented in `RosTcpMessageStream`.
-export class TcpConnection extends EventEmitter implements Connection {
+export class TcpConnection extends EventEmitter<TcpConnectionEvents> implements Connection {
   retries = 0;
 
   private _socket: TcpSocket;
@@ -144,7 +156,7 @@ export class TcpConnection extends EventEmitter implements Connection {
   }
 
   toString(): string {
-    return `tcpros://${this._address}:${this._port}`;
+    return TcpConnection.Uri(this._address, this._port);
   }
 
   private _getTransportInfo = async (): Promise<string> => {
@@ -153,7 +165,8 @@ export class TcpConnection extends EventEmitter implements Connection {
     const fd = (await this._socket.fd()) ?? -1;
     if (addr) {
       const { address, port } = addr;
-      return `TCPROS connection on port ${localPort} to [${address}:${port} on socket ${fd}]`;
+      const host = address.includes(":") ? `[${address}]` : address;
+      return `TCPROS connection on port ${localPort} to [${host}:${port} on socket ${fd}]`;
     }
     return `TCPROS not connected [socket ${fd}]`;
   };
@@ -183,6 +196,7 @@ export class TcpConnection extends EventEmitter implements Connection {
   private _handleError = (err: Error): void => {
     if (!this._shutdown) {
       this._log?.warn?.(`${this.toString()} error: ${err}`);
+      this.emit("error", err);
     }
   };
 
@@ -212,6 +226,13 @@ export class TcpConnection extends EventEmitter implements Connection {
       }
     }
   };
+
+  static Uri(address: string, port: number): string {
+    // RFC2732 requires IPv6 addresses that include ":" characters to be wrapped in "[]" brackets
+    // when used in a URI
+    const host = address.includes(":") ? `[${address}]` : address;
+    return `tcpros://${host}:${port}`;
+  }
 
   static SerializeHeader(header: Map<string, string>): Uint8Array {
     const encoder = new TextEncoder();

@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { EventEmitter, ListenerFn } from "eventemitter3";
+import { EventEmitter } from "eventemitter3";
 
 import { HttpServer, XmlRpcServer, XmlRpcValue } from "@foxglove/xmlrpc";
 
@@ -34,19 +34,12 @@ function TcpRequested(protocols: XmlRpcValue[]): boolean {
   return false;
 }
 
-export declare interface RosFollower {
-  on(
-    event: "paramUpdate",
-    listener: (paramKey: string, paramValue: XmlRpcValue, callerId: string) => void,
-  ): this;
-  on(
-    event: "publisherUpdate",
-    listener: (topic: string, publishers: string[], callerId: string) => void,
-  ): this;
-  on(event: string, listener: ListenerFn): this;
+export interface RosFollowerEvents {
+  paramUpdate: (paramKey: string, paramValue: XmlRpcValue, callerId: string) => void;
+  publisherUpdate: (topic: string, publishers: string[], callerId: string) => void;
 }
 
-export class RosFollower extends EventEmitter {
+export class RosFollower extends EventEmitter<RosFollowerEvents> {
   private _rosNode: RosNode;
   private _server: XmlRpcServer;
   private _url?: string;
@@ -184,24 +177,28 @@ export class RosFollower extends EventEmitter {
     return Promise.resolve([1, "", 0]);
   };
 
-  requestTopic = (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
+  requestTopic = async (_: string, args: XmlRpcValue[]): Promise<RosXmlRpcResponse> => {
     const err = CheckArguments(args, ["string", "string", "*"]);
     if (err) {
       return Promise.reject(err);
     }
 
-    // const topic = args[1] as string;
-    const protocols = args[2];
-    if (!Array.isArray(protocols) || !TcpRequested(protocols)) {
-      return Promise.resolve([0, "unsupported protocol", []]);
+    const topic = args[1] as string;
+    if (!this._rosNode.publications.has(topic)) {
+      return [0, `topic "${topic} is not advertised by node ${this._rosNode.name}"`, []];
     }
 
-    const addr = this._rosNode.tcpServerAddress();
-    if (!addr) {
-      return Promise.resolve([0, "cannot receive incoming connections", []]);
+    const protocols = args[2];
+    if (!Array.isArray(protocols) || !TcpRequested(protocols)) {
+      return [0, "unsupported protocol", []];
+    }
+
+    const addr = await this._rosNode.tcpServerAddress();
+    if (addr == undefined) {
+      return [0, "cannot receive incoming connections", []];
     }
 
     const tcp = ["TCPROS", addr.address, addr.port];
-    return Promise.resolve([1, "", tcp]);
+    return [1, "", tcp];
   };
 }

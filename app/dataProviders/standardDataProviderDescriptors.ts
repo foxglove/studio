@@ -11,22 +11,15 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { CoreDataProviders } from "@foxglove-studio/app/dataProviders/constants";
-import { DataProviderDescriptor } from "@foxglove-studio/app/dataProviders/types";
-import { DISABLE_WORKERS_QUERY_KEY } from "@foxglove-studio/app/util/globalConstants";
+import { CoreDataProviders } from "@foxglove/studio-base/dataProviders/constants";
+import { DataProviderDescriptor } from "@foxglove/studio-base/dataProviders/types";
 
-export const wrapInWorkerIfEnabled = (
-  descriptor: DataProviderDescriptor,
-): DataProviderDescriptor => {
-  const params = new URLSearchParams(window.location.search);
-  if (params.has(DISABLE_WORKERS_QUERY_KEY)) {
-    return descriptor;
-  }
+function wrapInWorker(descriptor: DataProviderDescriptor): DataProviderDescriptor {
   return { name: CoreDataProviders.WorkerDataProvider, args: {}, children: [descriptor] };
-};
+}
 
 export function getLocalBagDescriptor(file: File): DataProviderDescriptor {
-  return wrapInWorkerIfEnabled({
+  return wrapInWorker({
     name: CoreDataProviders.BagDataProvider,
     args: { bagPath: { type: "file", file } },
     children: [],
@@ -47,5 +40,5 @@ export function getRemoteBagDescriptor(
     children: [],
   };
 
-  return wrapInWorkerIfEnabled(bagDataProvider);
+  return wrapInWorker(bagDataProvider);
 }

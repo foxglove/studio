@@ -11,8 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-@import "@foxglove-studio/app/styles/colors.module.scss";
-@import "@foxglove-studio/app/styles/variables.module.scss";
+@import "@foxglove/studio-base/styles/colors.module.scss";
+@import "@foxglove/studio-base/styles/variables.module.scss";
 
 .toolbar {
   padding: 0 0 0 8px;
@@ -28,11 +28,6 @@
 }
 
 $toolbar-inset-width: 78px;
-
-.insetToolbar {
-  margin-left: $toolbar-inset-width;
-  border-left: 2px groove #29292f;
-}
 
 :export {
   toolbarInsetWidth: $toolbar-inset-width;

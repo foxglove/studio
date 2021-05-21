@@ -43,36 +43,35 @@ import { useSelector, useDispatch, useStore } from "react-redux";
 import { bindActionCreators } from "redux";
 import styled from "styled-components";
 
+import { useConfigById } from "@foxglove/studio-base/PanelAPI";
 import {
   addSelectedPanelId,
   removeSelectedPanelId,
   setSelectedPanelIds,
   selectAllPanelIds,
-} from "@foxglove-studio/app/actions/mosaic";
+} from "@foxglove/studio-base/actions/mosaic";
 import {
   savePanelConfigs,
   saveFullPanelConfig,
   changePanelLayout,
   createTabPanel,
-} from "@foxglove-studio/app/actions/panels";
-import Button from "@foxglove-studio/app/components/Button";
-import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
-import Flex from "@foxglove-studio/app/components/Flex";
-import Icon from "@foxglove-studio/app/components/Icon";
-import KeyListener from "@foxglove-studio/app/components/KeyListener";
-import PanelContext from "@foxglove-studio/app/components/PanelContext";
-import { usePanelCatalog } from "@foxglove-studio/app/context/PanelCatalogContext";
-import usePanelDrag from "@foxglove-studio/app/hooks/usePanelDrag";
-import { State } from "@foxglove-studio/app/reducers";
-import { TabPanelConfig } from "@foxglove-studio/app/types/layouts";
-import {
-  CreateTabPanelPayload,
-  SaveConfigsPayload,
-  SaveFullConfigPayload,
-  PanelConfig,
-  SaveConfig,
-} from "@foxglove-studio/app/types/panels";
-import { TAB_PANEL_TYPE } from "@foxglove-studio/app/util/globalConstants";
+  closePanel,
+} from "@foxglove/studio-base/actions/panels";
+import Button from "@foxglove/studio-base/components/Button";
+import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
+import Flex from "@foxglove/studio-base/components/Flex";
+import Icon from "@foxglove/studio-base/components/Icon";
+import KeyListener from "@foxglove/studio-base/components/KeyListener";
+import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
+import PanelContext from "@foxglove/studio-base/components/PanelContext";
+import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
+import { PanelIdContext } from "@foxglove/studio-base/context/PanelIdContext";
+import { usePanelSettings } from "@foxglove/studio-base/context/PanelSettingsContext";
+import usePanelDrag from "@foxglove/studio-base/hooks/usePanelDrag";
+import { State } from "@foxglove/studio-base/reducers";
+import { TabPanelConfig } from "@foxglove/studio-base/types/layouts";
+import { PanelConfig, SaveConfig, PanelConfigSchema } from "@foxglove/studio-base/types/panels";
+import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
 import {
   getAllPanelIds,
   getPanelIdForType,
@@ -81,9 +80,9 @@ import {
   getPathFromNode,
   isTabPanel,
   updateTabPanelLayout,
-} from "@foxglove-studio/app/util/layout";
-import logEvent, { getEventTags, getEventNames } from "@foxglove-studio/app/util/logEvent";
-import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
+} from "@foxglove/studio-base/util/layout";
+import logEvent, { getEventTags, getEventNames } from "@foxglove/studio-base/util/logEvent";
+import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import styles from "./Panel.module.scss";
 
@@ -99,28 +98,16 @@ const PerfInfo = styled.div`
 
 type Props<Config> = {
   childId?: string;
-  config?: Config;
-  saveConfig?: (arg0: Config) => void;
+  overrideConfig?: Config;
   tabId?: string;
-};
-type ActionProps = {
-  savePanelConfigs: (arg0: SaveConfigsPayload) => void;
-  saveFullPanelConfig: (arg0: SaveFullConfigPayload) => PanelConfig;
-  changePanelLayout: (panels: any) => void;
-  addSelectedPanelId: (panelId: string) => void;
-  removeSelectedPanelId: (panelId: string) => void;
-  setSelectedPanelIds: (panelIds: string[]) => void;
-  selectAllPanelIds: () => void;
-  createTabPanel: (arg0: CreateTabPanelPayload) => void;
 };
 
 export interface PanelStatics<Config> {
   panelType: string;
   defaultConfig: Config;
   supportsStrictMode?: boolean;
+  configSchema?: PanelConfigSchema<Config>;
 }
-
-const EMPTY_CONFIG = Object.freeze({});
 
 // Like React.ComponentType<P>, but without restrictions on the constructor return type.
 type ComponentConstructorType<P> = { displayName?: string } & (
@@ -142,11 +129,10 @@ export default function Panel<Config extends PanelConfig>(
     PanelStatics<Config>,
 ): ComponentType<Props<Config>> & PanelStatics<Config> {
   function ConnectedPanel(props: Props<Config>) {
-    const { childId, config: originalConfig, saveConfig, tabId } = props;
+    const { childId, overrideConfig, tabId } = props;
     const { mosaicActions }: { mosaicActions: MosaicRootActions<any> } = useContext(MosaicContext);
-    const { mosaicWindowActions }: { mosaicWindowActions: MosaicWindowActions } = useContext(
-      MosaicWindowContext,
-    );
+    const { mosaicWindowActions }: { mosaicWindowActions: MosaicWindowActions } =
+      useContext(MosaicWindowContext);
 
     // Used by actions that need to operate on the current state without causing the panel to
     // re-render by subscribing to various unnecessary parts of the state.
@@ -171,19 +157,14 @@ export default function Panel<Config extends PanelConfig>(
         ? false
         : !isParent(state.persistedState.panels.layout),
     );
-    const config = useSelector(
-      (state: State) =>
-        (childId == undefined ? undefined : state.persistedState.panels.savedProps[childId]) ??
-        originalConfig ??
-        EMPTY_CONFIG,
-    );
 
     const dispatch = useDispatch();
-    const actions: ActionProps = useMemo(
+    const actions = useMemo(
       () =>
         bindActionCreators(
           {
             savePanelConfigs,
+            closePanel,
             saveFullPanelConfig,
             changePanelLayout,
             addSelectedPanelId,
@@ -208,25 +189,11 @@ export default function Panel<Config extends PanelConfig>(
     const panelsByType = useMemo(() => panelCatalog.getPanelsByType(), [panelCatalog]);
     const type = PanelComponent.panelType;
     const title = useMemo(() => panelsByType.get(type)?.title ?? "", [panelsByType, type]);
-    const panelComponentConfig = useMemo(() => ({ ...PanelComponent.defaultConfig, ...config }), [
-      config,
-    ]);
 
-    // Mix partial config with current config or `defaultConfig`
-    const saveCompleteConfig = useCallback(
-      (configToSave: Partial<Config>) => {
-        if (saveConfig) {
-          saveConfig(configToSave as any);
-        }
-        if (childId != undefined) {
-          actions.savePanelConfigs({
-            configs: [
-              { id: childId, config: configToSave, defaultConfig: PanelComponent.defaultConfig },
-            ],
-          });
-        }
-      },
-      [actions, childId, saveConfig],
+    const [config, saveConfig] = useConfigById<Config>(childId, PanelComponent.defaultConfig);
+    const panelComponentConfig = useMemo(
+      () => ({ ...config, ...overrideConfig }),
+      [config, overrideConfig],
     );
 
     const updatePanelConfig = useCallback(
@@ -326,6 +293,8 @@ export default function Panel<Config extends PanelConfig>(
       [store, actions, tabId],
     );
 
+    const { panelSettingsOpen } = usePanelSettings();
+
     const onOverlayClick = useCallback(
       (e: MouseEvent) => {
         if (!fullScreen && quickActionsKeyPressed) {
@@ -336,8 +305,15 @@ export default function Panel<Config extends PanelConfig>(
           return;
         }
 
-        if (childId != undefined && (e.metaKey || shiftKeyPressed || isSelected)) {
-          e.stopPropagation();
+        if (childId == undefined) {
+          return;
+        }
+        if (panelSettingsOpen) {
+          // Allow clicking with no modifiers to select a panel (and deselect others) when panel settings are open
+          e.stopPropagation(); // select the deepest clicked panel, not parent tab panels
+          actions.setSelectedPanelIds(isSelected ? [] : [childId]);
+        } else if (e.metaKey || shiftKeyPressed || isSelected) {
+          e.stopPropagation(); // select the deepest clicked panel, not parent tab panels
           togglePanelSelected(childId);
         }
       },
@@ -348,6 +324,8 @@ export default function Panel<Config extends PanelConfig>(
         togglePanelSelected,
         shiftKeyPressed,
         isSelected,
+        actions,
+        panelSettingsOpen,
       ],
     );
 
@@ -379,7 +357,7 @@ export default function Panel<Config extends PanelConfig>(
       });
     }, [store, actions, childId]);
 
-    const closePanel = useCallback(() => {
+    const removePanel = useCallback(() => {
       const name = getEventNames().PANEL_REMOVE;
       const eventType = getEventTags().PANEL_TYPE;
       if (name != undefined && eventType !== undefined) {
@@ -388,8 +366,12 @@ export default function Panel<Config extends PanelConfig>(
           tags: { [eventType]: type },
         });
       }
-      mosaicActions.remove(mosaicWindowActions.getPath());
-    }, [mosaicActions, mosaicWindowActions, type]);
+      actions.closePanel({
+        path: mosaicWindowActions.getPath(),
+        root: mosaicActions.getRoot(),
+        tabId,
+      });
+    }, [actions, mosaicActions, mosaicWindowActions, tabId, type]);
 
     const splitPanel = useCallback(() => {
       const savedProps = store.getState().persistedState.panels.savedProps;
@@ -488,8 +470,8 @@ export default function Panel<Config extends PanelConfig>(
     }, [exitFullScreen, onReleaseQuickActionsKey]);
 
     const child = useMemo(
-      () => <PanelComponent config={panelComponentConfig} saveConfig={saveCompleteConfig} />,
-      [panelComponentConfig, saveCompleteConfig],
+      () => <PanelComponent config={panelComponentConfig} saveConfig={saveConfig} />,
+      [panelComponentConfig, saveConfig],
     );
 
     const renderCount = useRef(0);
@@ -529,22 +511,30 @@ export default function Panel<Config extends PanelConfig>(
           }
         }}
       >
-        <PanelContext.Provider
-          value={{
-            type,
-            id: childId as any,
-            title,
-            config,
-            saveConfig: saveCompleteConfig as any,
-            updatePanelConfig,
-            openSiblingPanel,
-            enterFullscreen,
-            isHovered,
-            isFocused,
-            tabId,
-            supportsStrictMode: PanelComponent.supportsStrictMode ?? true,
-            connectToolbarDragHandle,
-          }}
+        <MultiProvider
+          providers={[
+            /* eslint-disable react/jsx-key */
+            <PanelContext.Provider
+              value={{
+                type,
+                id: childId as any,
+                title,
+                config,
+                saveConfig: saveConfig as SaveConfig<PanelConfig>,
+                updatePanelConfig,
+                openSiblingPanel,
+                enterFullscreen,
+                isHovered,
+                isFocused,
+                hasSettings: PanelComponent.configSchema != undefined,
+                tabId,
+                supportsStrictMode: PanelComponent.supportsStrictMode ?? true,
+                connectToolbarDragHandle,
+              }}
+            />,
+            <PanelIdContext.Provider value={childId} />,
+            /* eslint-enable react/jsx-key */
+          ]}
         >
           {/* Ensure user exits full-screen mode when leaving window, even if key is still pressed down */}
           <DocumentEvents target={window} enabled onBlur={onBlurDocument} />
@@ -599,7 +589,7 @@ export default function Panel<Config extends PanelConfig>(
                     {shiftKeyPressed ? "Lock fullscreen" : "Fullscreen (Shift+click to lock)"}
                   </div>
                   <div>
-                    <Button onClick={closePanel} disabled={isOnlyPanel}>
+                    <Button onClick={removePanel} disabled={isOnlyPanel}>
                       <TrashCanOutlineIcon />
                       Remove
                     </Button>
@@ -630,7 +620,7 @@ export default function Panel<Config extends PanelConfig>(
             </ErrorBoundary>
             {process.env.NODE_ENV !== "production" && <PerfInfo ref={perfInfo} />}
           </Flex>
-        </PanelContext.Provider>
+        </MultiProvider>
       </Profiler>
     );
   }
@@ -639,5 +629,6 @@ export default function Panel<Config extends PanelConfig>(
     defaultConfig: PanelComponent.defaultConfig,
     panelType: PanelComponent.panelType,
     displayName: `Panel(${PanelComponent.displayName ?? PanelComponent.name})`,
+    configSchema: PanelComponent.configSchema,
   });
 }

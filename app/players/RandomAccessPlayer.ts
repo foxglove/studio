@@ -13,14 +13,14 @@
 import { TimeUtil, Time } from "rosbag";
 import { v4 as uuidv4 } from "uuid";
 
-import { rootGetDataProvider } from "@foxglove-studio/app/dataProviders/rootGetDataProvider";
+import { rootGetDataProvider } from "@foxglove/studio-base/dataProviders/rootGetDataProvider";
 import {
   Connection,
   DataProvider,
   DataProviderDescriptor,
   DataProviderMetadata,
-} from "@foxglove-studio/app/dataProviders/types";
-import NoopMetricsCollector from "@foxglove-studio/app/players/NoopMetricsCollector";
+} from "@foxglove/studio-base/dataProviders/types";
+import NoopMetricsCollector from "@foxglove/studio-base/players/NoopMetricsCollector";
 import {
   AdvertisePayload,
   MessageEvent,
@@ -36,13 +36,13 @@ import {
   PlayerPresence,
   ParameterValue,
   PlayerProblem,
-} from "@foxglove-studio/app/players/types";
-import { RosDatatypes } from "@foxglove-studio/app/types/RosDatatypes";
-import debouncePromise from "@foxglove-studio/app/util/debouncePromise";
-import delay from "@foxglove-studio/app/util/delay";
-import filterMap from "@foxglove-studio/app/util/filterMap";
-import { isRangeCoveredByRanges } from "@foxglove-studio/app/util/ranges";
-import { getSanitizedTopics } from "@foxglove-studio/app/util/selectors";
+} from "@foxglove/studio-base/players/types";
+import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
+import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
+import delay from "@foxglove/studio-base/util/delay";
+import filterMap from "@foxglove/studio-base/util/filterMap";
+import { isRangeCoveredByRanges } from "@foxglove/studio-base/util/ranges";
+import { getSanitizedTopics } from "@foxglove/studio-base/util/selectors";
 import {
   clampTime,
   fromMillis,
@@ -52,7 +52,7 @@ import {
   subtractTimes,
   SeekToTimeSpec,
   TimestampMethod,
-} from "@foxglove-studio/app/util/time";
+} from "@foxglove/studio-base/util/time";
 
 // The number of nanoseconds to seek backwards to build context during a seek
 // operation larger values mean more opportunity to capture context before the
@@ -440,7 +440,7 @@ export default class RandomAccessPlayer implements Player {
     if (parsedMessages.length > 0) {
       this._metricsCollector.recordTimeToFirstMsgs();
     }
-    const filterMessages = (msgs: MessageEvent<unknown>[], topics: string[]) =>
+    const filterMessages = (msgs: readonly MessageEvent<unknown>[], topics: string[]) =>
       filterMap(msgs, (message) => {
         this._problems.delete(message.topic);
 
@@ -474,7 +474,7 @@ export default class RandomAccessPlayer implements Player {
         };
       });
     return {
-      parsedMessages: filterMessages(parsedMessages as any, parsedTopics),
+      parsedMessages: filterMessages(parsedMessages, parsedTopics),
     };
   }
 

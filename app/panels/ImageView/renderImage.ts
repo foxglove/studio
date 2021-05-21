@@ -11,9 +11,9 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { MessageEvent } from "@foxglove-studio/app/players/types";
-import { ImageMarker, Color, Point } from "@foxglove-studio/app/types/Messages";
-import sendNotification from "@foxglove-studio/app/util/sendNotification";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
+import { ImageMarker, Color, Point } from "@foxglove/studio-base/types/Messages";
+import sendNotification from "@foxglove/studio-base/util/sendNotification";
 
 import CameraModel from "./CameraModel";
 import {
@@ -28,7 +28,14 @@ import {
   decodeMono8,
   decodeMono16,
 } from "./decodings";
-import { buildMarkerData, Dimensions, RawMarkerData, MarkerData, OffscreenCanvas } from "./util";
+import {
+  buildMarkerData,
+  Dimensions,
+  RawMarkerData,
+  MarkerData,
+  OffscreenCanvas,
+  RenderOptions,
+} from "./util";
 
 // Just globally keep track of if we've shown an error in rendering, since typically when you get
 // one error, you'd then get a whole bunch more, which is spammy.
@@ -41,11 +48,13 @@ export async function renderImage({
   imageMessage,
   imageMessageDatatype,
   rawMarkerData,
+  options,
 }: {
   canvas?: HTMLCanvasElement | OffscreenCanvas;
   imageMessage?: MessageEvent<unknown>;
   imageMessageDatatype?: string;
   rawMarkerData: RawMarkerData;
+  options?: RenderOptions;
 }): Promise<Dimensions | undefined> {
   if (!canvas) {
     return undefined;
@@ -65,7 +74,7 @@ export async function renderImage({
   }
 
   try {
-    const bitmap = await decodeMessageToBitmap(imageMessage, imageMessageDatatype);
+    const bitmap = await decodeMessageToBitmap(imageMessage, imageMessageDatatype, options);
     const dimensions = paintBitmap(canvas, bitmap, markerData);
     bitmap.close();
     return dimensions;
@@ -95,6 +104,7 @@ function maybeUnrectifyPoint(
 async function decodeMessageToBitmap(
   msg: MessageEvent<any>,
   datatype: string,
+  options: RenderOptions = {},
 ): Promise<ImageBitmap> {
   let image: ImageData | HTMLImageElement | Blob;
   const { data: rawData, is_bigendian, width, height, encoding } = msg.message;
@@ -109,7 +119,6 @@ async function decodeMessageToBitmap(
   // for properties consistent with either datatype, and render accordingly.
   if (datatype === "sensor_msgs/Image" && encoding) {
     image = new ImageData(width, height);
-    // prettier-ignore
     switch (encoding) {
       case "yuv422":
         decodeYUV(rawData as any, width, height, image.data);
@@ -118,6 +127,7 @@ async function decodeMessageToBitmap(
         decodeRGB8(rawData, width, height, image.data);
         break;
       case "bgr8":
+      case "8UC3":
         decodeBGR8(rawData, width, height, image.data);
         break;
       case "32FC1":
@@ -135,15 +145,16 @@ async function decodeMessageToBitmap(
       case "bayer_grbg8":
         decodeBayerGRBG8(rawData, width, height, image.data);
         break;
-      case "mono8":case "8UC1":
+      case "mono8":
+      case "8UC1":
         decodeMono8(rawData, width, height, image.data);
         break;
-      case "mono16":case "16UC1":
-        decodeMono16(rawData, width, height, is_bigendian, image.data);
+      case "mono16":
+      case "16UC1":
+        decodeMono16(rawData, width, height, is_bigendian, image.data, options);
         break;
       default:
         throw new Error(`Unsupported encoding ${encoding}`);
-
     }
   } else if (
     ["sensor_msgs/CompressedImage", "sensor_msgs/Image"].includes(datatype) ||

@@ -7,8 +7,8 @@ import { registerIcons, unregisterIcons } from "@fluentui/style-utilities";
 import { useLayoutEffect, useState } from "react";
 import { ThemeProvider as StyledThemeProvider } from "styled-components";
 
-import RosIcon from "@foxglove-studio/app/components/RosIcon";
-import theme from "@foxglove-studio/app/theme";
+import RosIcon from "@foxglove/studio-base/components/RosIcon";
+import theme from "@foxglove/studio-base/theme";
 
 const icons: {
   // This makes it a type error to forget to add an icon here once it has been added to RegisteredIconNames.
@@ -18,29 +18,33 @@ const icons: {
   Cancel: <Icons.CancelIcon />,
   CheckMark: <Icons.CheckMarkIcon />,
   ChevronDown: <Icons.ChevronDownIcon />,
+  ChevronDownSmall: <Icons.ChevronDownSmallIcon />,
   ChevronRight: <Icons.ChevronRightIcon />,
+  ChevronUpSmall: <Icons.ChevronUpSmallIcon />,
   CirclePlus: <Icons.CirclePlusIcon />,
   Clear: <Icons.ClearIcon />,
+  ClearSelection: <Icons.ClearSelectionIcon />,
+  CodeEdit: <Icons.CodeEditIcon />,
   DataManagementSettings: <Icons.DataManagementSettingsIcon />,
   Delete: <Icons.DeleteIcon />,
   Edit: <Icons.EditIcon />,
+  Error: <Icons.ErrorIcon />,
   ErrorBadge: <Icons.ErrorBadgeIcon />,
   FileASPX: <Icons.FileASPXIcon />,
   FiveTileGrid: <Icons.FiveTileGridIcon />,
   Flow: <Icons.FlowIcon />,
   Info: <Icons.InfoIcon />,
+  More: <Icons.MoreIcon />,
   MoreVertical: <Icons.MoreVerticalIcon />,
   OpenFile: <Icons.OpenFileIcon />,
+  RectangularClipping: <Icons.RectangularClippingIcon />,
+  Rename: <Icons.RenameIcon />,
   Settings: <Icons.SettingsIcon />,
   Share: <Icons.ShareIcon />,
+  SingleColumnEdit: <Icons.SingleColumnEditIcon />,
   TestBeakerSolid: <Icons.TestBeakerSolidIcon />,
   Variable2: <Icons.Variable2Icon />,
-  ColumnVerticalSectionEdit: <Icons.ColumnVerticalSectionEditIcon />,
-  MediaAdd: <Icons.MediaAddIcon />,
-  Rename: <Icons.RenameIcon />,
-  Error: <Icons.ErrorIcon />,
   Warning: <Icons.WarningIcon />,
-  More: <Icons.MoreIcon />,
   "studio.ROS": <RosIcon />,
 };
 

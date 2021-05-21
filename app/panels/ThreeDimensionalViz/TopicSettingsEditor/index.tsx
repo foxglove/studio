@@ -13,10 +13,10 @@
 
 import React, { useCallback, ComponentType } from "react";
 
-import ErrorBoundary from "@foxglove-studio/app/components/ErrorBoundary";
-import GridSettingsEditor from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicSettingsEditor/GridSettingsEditor";
-import { TopicSettingsEditorProps } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicSettingsEditor/types";
-import { Topic } from "@foxglove-studio/app/players/types";
+import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
+import GridSettingsEditor from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor/GridSettingsEditor";
+import { TopicSettingsEditorProps } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor/types";
+import { Topic } from "@foxglove/studio-base/players/types";
 import {
   FOXGLOVE_GRID_DATATYPE,
   NAV_MSGS_PATH_DATATYPE,
@@ -24,8 +24,9 @@ import {
   POSE_STAMPED_DATATYPE,
   SENSOR_MSGS_LASER_SCAN_DATATYPE,
   VELODYNE_SCAN_DATATYPE,
-  STUDIO_MARKER_DATATYPE,
-} from "@foxglove-studio/app/util/globalConstants";
+  VISUALIZATION_MSGS_MARKER_ARRAY_DATATYPE,
+  VISUALIZATION_MSGS_MARKER_DATATYPE,
+} from "@foxglove/studio-base/util/globalConstants";
 
 import LaserScanSettingsEditor from "./LaserScanSettingsEditor";
 import MarkerSettingsEditor from "./MarkerSettingsEditor";
@@ -46,9 +47,8 @@ export function topicSettingsEditorForDatatype(
     [VELODYNE_SCAN_DATATYPE, PointCloudSettingsEditor],
     [POSE_STAMPED_DATATYPE, PoseSettingsEditor],
     [SENSOR_MSGS_LASER_SCAN_DATATYPE, LaserScanSettingsEditor],
-    [STUDIO_MARKER_DATATYPE, MarkerSettingsEditor],
-    ["visualization_msgs/Marker", MarkerSettingsEditor],
-    ["visualization_msgs/MarkerArray", MarkerSettingsEditor],
+    [VISUALIZATION_MSGS_MARKER_DATATYPE, MarkerSettingsEditor],
+    [VISUALIZATION_MSGS_MARKER_ARRAY_DATATYPE, MarkerSettingsEditor],
     [NAV_MSGS_PATH_DATATYPE, MarkerSettingsEditor],
   ]);
 

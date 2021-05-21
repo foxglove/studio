@@ -14,10 +14,10 @@ import {
 } from "electron";
 import path from "path";
 
-import colors from "@foxglove-studio/app/styles/colors.module.scss";
-import { APP_NAME } from "@foxglove-studio/app/version";
 import Logger from "@foxglove/log";
+import colors from "@foxglove/studio-base/styles/colors.module.scss";
 
+import pkgInfo from "../../package.json";
 import { simulateUserClick } from "./simulateUserClick";
 import { getTelemetrySettings } from "./telemetry";
 
@@ -42,7 +42,8 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
     minWidth: 350,
     minHeight: 250,
     autoHideMenuBar: true,
-    title: APP_NAME,
+    trafficLightPosition: { x: 12, y: 10 },
+    title: pkgInfo.productName,
     webPreferences: {
       contextIsolation: true,
       preload: preloadPath,
@@ -141,7 +142,7 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
       {
         label: "New Window",
         click: () => {
-          new StudioWindow();
+          new StudioWindow().load();
         },
       },
       { type: "separator" },
@@ -281,12 +282,14 @@ class StudioWindow {
       if (Menu.getApplicationMenu() === this._menu) {
         const existingMenu = Menu.getApplicationMenu();
         const fileMenu = existingMenu?.getMenuItemById("fileMenu");
+        // https://github.com/electron/electron/issues/8598
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (fileMenu?.submenu as any)?.clear();
         fileMenu?.submenu?.append(
           new MenuItem({
             label: "New Window",
             click: () => {
-              new StudioWindow();
+              new StudioWindow().load();
             },
           }),
         );
@@ -363,6 +366,8 @@ class StudioWindow {
   private rebuildFileMenu(fileMenu: MenuItem): void {
     const browserWindow = this._window;
 
+    // https://github.com/electron/electron/issues/8598
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (fileMenu.submenu as any).clear();
     fileMenu.submenu?.items.splice(0, fileMenu.submenu.items.length);
 
@@ -370,7 +375,7 @@ class StudioWindow {
       new MenuItem({
         label: "New Window",
         click: () => {
-          new StudioWindow();
+          new StudioWindow().load();
         },
       }),
     );

@@ -11,27 +11,25 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import CheckboxBlankOutlineIcon from "@mdi/svg/svg/checkbox-blank-outline.svg";
-import CheckboxMarkedIcon from "@mdi/svg/svg/checkbox-marked.svg";
 import PinIcon from "@mdi/svg/svg/pin.svg";
 import cx from "classnames";
 import { compact } from "lodash";
 import { useCallback } from "react";
 import { List, AutoSizer } from "react-virtualized";
 
-import { useDataSourceInfo } from "@foxglove-studio/app/PanelAPI";
-import EmptyState from "@foxglove-studio/app/components/EmptyState";
-import Flex from "@foxglove-studio/app/components/Flex";
-import Icon from "@foxglove-studio/app/components/Icon";
-import { Item } from "@foxglove-studio/app/components/Menu";
-import Panel from "@foxglove-studio/app/components/Panel";
-import { usePanelContext } from "@foxglove-studio/app/components/PanelContext";
-import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
-import TopicToRenderMenu from "@foxglove-studio/app/components/TopicToRenderMenu";
-import DiagnosticsHistory from "@foxglove-studio/app/panels/diagnostics/DiagnosticsHistory";
-import filterMap from "@foxglove-studio/app/util/filterMap";
-import { DIAGNOSTIC_TOPIC } from "@foxglove-studio/app/util/globalConstants";
-import toggle from "@foxglove-studio/app/util/toggle";
+import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
+import EmptyState from "@foxglove/studio-base/components/EmptyState";
+import Flex from "@foxglove/studio-base/components/Flex";
+import Icon from "@foxglove/studio-base/components/Icon";
+import Panel from "@foxglove/studio-base/components/Panel";
+import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
+import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import TopicToRenderMenu from "@foxglove/studio-base/components/TopicToRenderMenu";
+import DiagnosticsHistory from "@foxglove/studio-base/panels/diagnostics/DiagnosticsHistory";
+import { PanelConfigSchema } from "@foxglove/studio-base/types/panels";
+import filterMap from "@foxglove/studio-base/util/filterMap";
+import { DIAGNOSTIC_TOPIC } from "@foxglove/studio-base/util/globalConstants";
+import toggle from "@foxglove/studio-base/util/toggle";
 
 import { Config as DiagnosticStatusConfig } from "./DiagnosticStatusPanel";
 import helpContent from "./DiagnosticSummary.help.md";
@@ -160,22 +158,9 @@ function DiagnosticSummary(props: Props): JSX.Element {
     />
   );
 
-  const menuContent = (
-    <Item
-      icon={sortByLevel ? <CheckboxMarkedIcon /> : <CheckboxBlankOutlineIcon />}
-      onClick={() => saveConfig({ sortByLevel: !sortByLevel })}
-    >
-      Sort by level
-    </Item>
-  );
-
   return (
     <Flex col className={styles.panel}>
-      <PanelToolbar
-        helpContent={helpContent}
-        additionalIcons={topicToRenderMenu}
-        menuContent={menuContent}
-      >
+      <PanelToolbar helpContent={helpContent} additionalIcons={topicToRenderMenu}>
         {hardwareFilter}
       </PanelToolbar>
       <Flex col>
@@ -193,9 +178,8 @@ function DiagnosticSummary(props: Props): JSX.Element {
               if (name == undefined || trimmedHardwareId == undefined) {
                 return;
               }
-              const diagnosticsByName = buffer.diagnosticsByNameByTrimmedHardwareId.get(
-                trimmedHardwareId,
-              );
+              const diagnosticsByName =
+                buffer.diagnosticsByNameByTrimmedHardwareId.get(trimmedHardwareId);
               return diagnosticsByName?.get(name);
             });
 
@@ -244,12 +228,21 @@ function DiagnosticSummary(props: Props): JSX.Element {
     </Flex>
   );
 }
-DiagnosticSummary.panelType = "DiagnosticSummary";
-DiagnosticSummary.defaultConfig = {
-  pinnedIds: [],
-  hardwareIdFilter: "",
-  topicToRender: DIAGNOSTIC_TOPIC,
-};
-DiagnosticSummary.supportsStrictMode = false;
 
-export default Panel(DiagnosticSummary);
+const configSchema: PanelConfigSchema<Config> = [
+  { key: "sortByLevel", type: "toggle", title: "Sort by level" },
+];
+
+export default Panel(
+  Object.assign(DiagnosticSummary, {
+    panelType: "DiagnosticSummary",
+    defaultConfig: {
+      pinnedIds: [],
+      hardwareIdFilter: "",
+      topicToRender: DIAGNOSTIC_TOPIC,
+      sortByLevel: true,
+    },
+    supportsStrictMode: false,
+    configSchema,
+  }),
+);

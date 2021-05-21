@@ -1,4 +1,4 @@
-@import "@foxglove-studio/app/styles/mixins.module.scss";
+@import "@foxglove/studio-base/styles/mixins.module.scss";
 .container {
   position: relative;
   margin: $control-margin;
@@ -25,7 +25,7 @@
   color: $text-input;
 
   .value {
-    @include sans-serif;
+    @include ff-sans-serif;
     flex: 1 1 auto;
   }
 

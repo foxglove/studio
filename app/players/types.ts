@@ -11,18 +11,19 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Time, RosMsgDefinition } from "rosbag";
+import { Time } from "rosbag";
 
-import { BlockCache } from "@foxglove-studio/app/dataProviders/MemoryCacheDataProvider";
+import { RosMsgDefinition } from "@foxglove/rosmsg";
+import { BlockCache } from "@foxglove/studio-base/dataProviders/MemoryCacheDataProvider";
 import {
   AverageThroughput,
   DataProviderStall,
   InitializationPerformanceMetadata,
-} from "@foxglove-studio/app/dataProviders/types";
-import { GlobalVariables } from "@foxglove-studio/app/hooks/useGlobalVariables";
-import { RosDatatypes } from "@foxglove-studio/app/types/RosDatatypes";
-import { Range } from "@foxglove-studio/app/util/ranges";
-import { TimestampMethod } from "@foxglove-studio/app/util/time";
+} from "@foxglove/studio-base/dataProviders/types";
+import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
+import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
+import { Range } from "@foxglove/studio-base/util/ranges";
+import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 export type MessageDefinitionsByTopic = {
   [topic: string]: string;
@@ -286,8 +287,12 @@ export type AdvertisePayload = {
   // exists.
   topic: string;
 
-  // The datatype name. Must already exist in `datatypes`.
+  // The datatype name
   datatype: string;
+
+  // A map of datatype names to ROS message definitions. This must include
+  // message definitions for all types referenced by `datatype` and its children
+  datatypes: RosDatatypes;
 
   // Optionally, where the request came from. Used in the "Internals" panel to improve debugging.
   advertiser?: { type: "panel"; name: string };

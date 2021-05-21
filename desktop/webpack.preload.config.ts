@@ -6,7 +6,7 @@ import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import path from "path";
 import { Configuration, EnvironmentPlugin } from "webpack";
 
-import { WebpackArgv } from "@foxglove-studio/app/WebpackArgv";
+import { WebpackArgv } from "@foxglove/studio-base/WebpackArgv";
 
 export default (_: unknown, argv: WebpackArgv): Configuration => {
   const isDev = argv.mode === "development";
@@ -37,6 +37,7 @@ export default (_: unknown, argv: WebpackArgv): Configuration => {
               // https://github.com/TypeStrong/ts-loader#onlycompilebundledfiles
               // avoid looking at files which are not part of the bundle
               onlyCompileBundledFiles: true,
+              projectReferences: true,
             },
           },
         },

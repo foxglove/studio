@@ -1,5 +1,5 @@
-@import "@foxglove-studio/app/styles/mixins.module.scss";
-@import "@foxglove-studio/app/styles/colors.module.scss";
+@import "@foxglove/studio-base/styles/mixins.module.scss";
+@import "@foxglove/studio-base/styles/colors.module.scss";
 
 .dropdown {
   .button {
@@ -8,7 +8,7 @@
 }
 
 .container {
-  @include sans-serif;
+  @include ff-sans-serif;
 
   .topicName {
     @extend %modal-subtitle;

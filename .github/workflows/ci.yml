@@ -16,7 +16,6 @@ jobs:
       matrix:
         os:
           - ubuntu-20.04
-          - windows-2019
         config:
           # Specify names so that the GitHub branch protection settings for
           # required checks don't need to change if we ever change the commands used.
@@ -28,22 +27,22 @@ jobs:
               yarn run lint:ci
           - name: packages
             command: yarn build:packages
+          - name: web
+            command: yarn workspace web build:dev
           - name: test
             command: yarn run test --maxWorkers=100%
           - name: storybook
-            command: yarn workspace @foxglove-studio/app run chromatic
-        exclude:
+            command: yarn workspace @foxglove/studio-base run chromatic
+        include:
           - os: windows-2019
-            config: { name: lint }
-          - os: windows-2019
-            config: { name: test }
-          - os: windows-2019
-            config: { name: storybook }
+            config:
+              name: packages
+              command: echo complete
 
     name: ${{ matrix.config.name }} (${{ matrix.os }})
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0
           lfs: true
@@ -57,8 +56,8 @@ jobs:
           path: |
             .yarn/cache
             **/node_modules
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: ${{ runner.os }}-yarn-
+          key: ${{ runner.os }}-yarn-4-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-4-
       - run: yarn install --immutable
       - run: ${{ matrix.config.command }}
         env:
@@ -76,7 +75,7 @@ jobs:
     name: integration (${{ matrix.os }})
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.4
         with:
           lfs: true
       - name: Configure Node.js

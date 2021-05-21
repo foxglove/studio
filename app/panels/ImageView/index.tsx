@@ -20,35 +20,39 @@ import cx from "classnames";
 import { last, uniq } from "lodash";
 import styled from "styled-components";
 
-import * as PanelAPI from "@foxglove-studio/app/PanelAPI";
-import Autocomplete from "@foxglove-studio/app/components/Autocomplete";
-import Dropdown from "@foxglove-studio/app/components/Dropdown";
-import DropdownItem from "@foxglove-studio/app/components/Dropdown/DropdownItem";
-import dropDownStyles from "@foxglove-studio/app/components/Dropdown/index.module.scss";
-import EmptyState from "@foxglove-studio/app/components/EmptyState";
-import Flex from "@foxglove-studio/app/components/Flex";
-import Icon from "@foxglove-studio/app/components/Icon";
-import { Item, SubMenu } from "@foxglove-studio/app/components/Menu";
-import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipeline";
-import Panel from "@foxglove-studio/app/components/Panel";
-import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
-import useDeepMemo from "@foxglove-studio/app/hooks/useDeepMemo";
-import useShallowMemo from "@foxglove-studio/app/hooks/useShallowMemo";
-import { MessageEvent } from "@foxglove-studio/app/players/types";
-import inScreenshotTests from "@foxglove-studio/app/stories/inScreenshotTests";
-import colors from "@foxglove-studio/app/styles/colors.module.scss";
-import { CameraInfo, StampedMessage } from "@foxglove-studio/app/types/Messages";
-import { SaveConfig } from "@foxglove-studio/app/types/panels";
-import { nonEmptyOrUndefined } from "@foxglove-studio/app/util/emptyOrUndefined";
-import filterMap from "@foxglove-studio/app/util/filterMap";
-import naturalSort from "@foxglove-studio/app/util/naturalSort";
-import { getTopicsByTopicName } from "@foxglove-studio/app/util/selectors";
-import { colors as sharedColors } from "@foxglove-studio/app/util/sharedStyleConstants";
-import { getSynchronizingReducers } from "@foxglove-studio/app/util/synchronizeMessages";
-import { formatTimeRaw } from "@foxglove-studio/app/util/time";
-import toggle from "@foxglove-studio/app/util/toggle";
+import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
+import Autocomplete from "@foxglove/studio-base/components/Autocomplete";
+import Dropdown from "@foxglove/studio-base/components/Dropdown";
+import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
+import dropDownStyles from "@foxglove/studio-base/components/Dropdown/index.module.scss";
+import EmptyState from "@foxglove/studio-base/components/EmptyState";
+import Flex from "@foxglove/studio-base/components/Flex";
+import Icon from "@foxglove/studio-base/components/Icon";
+import { Item, SubMenu } from "@foxglove/studio-base/components/Menu";
+import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
+import Panel from "@foxglove/studio-base/components/Panel";
+import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import useDeepMemo from "@foxglove/studio-base/hooks/useDeepMemo";
+import useShallowMemo from "@foxglove/studio-base/hooks/useShallowMemo";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
+import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
+import colors from "@foxglove/studio-base/styles/colors.module.scss";
+import { CameraInfo, StampedMessage } from "@foxglove/studio-base/types/Messages";
+import { PanelConfigSchema, SaveConfig } from "@foxglove/studio-base/types/panels";
+import { nonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
+import filterMap from "@foxglove/studio-base/util/filterMap";
+import {
+  VISUALIZATION_MSGS_IMAGE_MARKER_ARRAY_DATATYPE,
+  VISUALIZATION_MSGS_IMAGE_MARKER_DATATYPE,
+} from "@foxglove/studio-base/util/globalConstants";
+import naturalSort from "@foxglove/studio-base/util/naturalSort";
+import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
+import { colors as sharedColors } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { getSynchronizingReducers } from "@foxglove/studio-base/util/synchronizeMessages";
+import { formatTimeRaw } from "@foxglove/studio-base/util/time";
+import toggle from "@foxglove/studio-base/util/toggle";
 
-import ImageCanvas from "./ImageCanvas";
+import ImageCanvas, { DEFAULT_MAX_ZOOM } from "./ImageCanvas";
 import imageCanvasStyles from "./ImageCanvas.module.scss";
 import helpContent from "./index.help.md";
 import style from "./index.module.scss";
@@ -70,17 +74,15 @@ type DefaultConfig = {
   synchronize: boolean;
 };
 
-export type ImageViewPanelHooks = {
-  defaultConfig: DefaultConfig;
-  imageMarkerDatatypes: string[];
-};
-
 export type Config = DefaultConfig & {
-  panelHooks?: ImageViewPanelHooks;
   transformMarkers: boolean;
   mode?: "fit" | "fill" | "other";
+  smooth?: boolean;
   zoomPercentage?: number;
-  offset?: number[];
+  offset?: [number, number];
+  maxZoom?: number;
+  minValue?: number;
+  maxValue?: number;
   saveStoryConfig?: () => void;
 };
 
@@ -119,7 +121,7 @@ const TopicTimestamp = ({
 const BottomBar = ({ children }: { children?: React.ReactNode }) => (
   <div
     className={cx(imageCanvasStyles["bottom-bar"], {
-      [imageCanvasStyles.inScreenshotTests!]: inScreenshotTests(),
+      [imageCanvasStyles.inScreenshotTests as string]: inScreenshotTests(),
     })}
   >
     {children}
@@ -194,12 +196,13 @@ function renderEmptyState(
                   <code>{topic}</code>:{" "}
                   {topicMessages.length > 0
                     ? topicMessages
-                        .map((
-                          { message }, // In some cases, a user may have subscribed to a topic that does not include a header stamp.
-                        ) =>
-                          (message as Partial<StampedMessage>).header?.stamp
-                            ? formatTimeRaw((message as StampedMessage).header.stamp)
-                            : "[ unknown ]",
+                        .map(
+                          (
+                            { message }, // In some cases, a user may have subscribed to a topic that does not include a header stamp.
+                          ) =>
+                            (message as Partial<StampedMessage>).header?.stamp
+                              ? formatTimeRaw((message as StampedMessage).header.stamp)
+                              : "[ unknown ]",
                         )
                         .join(", ")
                     : "no messages"}
@@ -264,24 +267,22 @@ const AddTopic = ({
   );
 };
 
-const NO_CUSTOM_OPTIONS: any = [];
+const NO_CUSTOM_OPTIONS: string[] = [];
 
 function ImageView(props: Props) {
   const { config, saveConfig } = props;
   const {
     scale,
-    synchronize,
     cameraTopic,
     enabledMarkerTopics,
-    panelHooks,
     transformMarkers,
     customMarkerTopicOptions = NO_CUSTOM_OPTIONS,
   } = config;
   const { topics } = PanelAPI.useDataSourceInfo();
-  const cameraTopicFullObject = useMemo(() => getTopicsByTopicName(topics)[cameraTopic], [
-    cameraTopic,
-    topics,
-  ]);
+  const cameraTopicFullObject = useMemo(
+    () => getTopicsByTopicName(topics)[cameraTopic],
+    [cameraTopic, topics],
+  );
 
   // Namespaces represent marker topics based on the camera topic prefix (e.g. "/camera_front_medium")
   const { allCameraNamespaces, imageTopicsByNamespace } = useMemo(() => {
@@ -296,7 +297,10 @@ function ImageView(props: Props) {
   }, [topics]);
 
   const imageMarkerDatatypes = useMemo(
-    () => ["visualization_msgs/ImageMarker", "studio_msgs/ImageMarkerArray"],
+    () => [
+      VISUALIZATION_MSGS_IMAGE_MARKER_DATATYPE,
+      VISUALIZATION_MSGS_IMAGE_MARKER_ARRAY_DATATYPE,
+    ],
     [],
   );
   const defaultAvailableMarkerTopics = useMemo(
@@ -339,18 +343,6 @@ function ImageView(props: Props) {
     },
     [topics, allCameraNamespaces, imageMarkerDatatypes, enabledMarkerTopics, saveConfig],
   );
-
-  const onChangeScale = useCallback(
-    (newScale: number) => {
-      saveConfig({ scale: newScale });
-    },
-    [saveConfig],
-  );
-
-  const onToggleSynchronize = useCallback(() => {
-    saveConfig({ synchronize: !config.synchronize });
-  }, [saveConfig, config.synchronize]);
-
   const imageTopicDropdown = useMemo(() => {
     const cameraNamespace = getCameraNamespace(cameraTopic);
 
@@ -456,10 +448,10 @@ function ImageView(props: Props) {
 
   // Timestamps are displayed for informational purposes in the markers menu
   const renderedMarkerTimestamps = useMemo(() => {
-    const stamps = {};
+    const stamps: Record<string, string> = {};
     for (const { topic, message } of markersToRender) {
       // In some cases, a user may have subscribed to a topic that does not include a header stamp.
-      (stamps as any)[topic] = (message as Partial<StampedMessage>).header?.stamp
+      stamps[topic] = (message as Partial<StampedMessage>).header?.stamp
         ? formatTimeRaw((message as StampedMessage).header.stamp)
         : "[ not available ]";
     }
@@ -520,7 +512,7 @@ function ImageView(props: Props) {
             className={style.dropdownItem}
           >
             <span style={{ display: "inline-block", marginRight: "15px" }}>{topic}</span>
-            <TopicTimestamp text={(renderedMarkerTimestamps as any)[topic] || ""} />
+            <TopicTimestamp text={renderedMarkerTimestamps[topic] ?? ""} />
             {customMarkerTopicOptions.includes(topic) && (
               <Icon
                 style={{ position: "absolute", right: "10px" }}
@@ -530,7 +522,7 @@ function ImageView(props: Props) {
                       (topicOption) => topicOption !== topic,
                     ),
                     customMarkerTopicOptions: customMarkerTopicOptions.filter(
-                      (topicOption: any) => topicOption !== topic,
+                      (topicOption) => topicOption !== topic,
                     ),
                   })
                 }
@@ -554,35 +546,6 @@ function ImageView(props: Props) {
     saveConfig,
     scale,
   ]);
-
-  const menuContent = useMemo(
-    () => (
-      <>
-        <Item
-          icon={synchronize ? <CheckboxMarkedIcon /> : <CheckboxBlankOutlineIcon />}
-          onClick={onToggleSynchronize}
-        >
-          <span>Synchronize images and markers</span>
-        </Item>
-        <hr />
-        <SubMenu direction="right" text={`Image resolution: ${(scale * 100).toFixed()}%`}>
-          {[0.2, 0.5, 1].map((value) => {
-            return (
-              <Item
-                {...{ value }}
-                key={value}
-                checked={scale === value}
-                onClick={() => onChangeScale(value)}
-              >
-                {(value * 100).toFixed()}%
-              </Item>
-            );
-          })}
-        </SubMenu>
-      </>
-    ),
-    [scale, onChangeScale, synchronize, onToggleSynchronize],
-  );
 
   const imageMessage = messagesByTopic[cameraTopic]?.[0];
   const lastImageMessageRef = React.useRef(imageMessage);
@@ -613,18 +576,14 @@ function ImageView(props: Props) {
 
   const toolbar = useMemo(() => {
     return (
-      <PanelToolbar
-        floating={cameraTopic !== ""}
-        helpContent={helpContent}
-        menuContent={menuContent}
-      >
+      <PanelToolbar floating={cameraTopic !== ""} helpContent={helpContent}>
         <div className={style.controls}>
           {imageTopicDropdown}
           {markerDropdown}
         </div>
       </PanelToolbar>
     );
-  }, [imageTopicDropdown, markerDropdown, menuContent, cameraTopic]);
+  }, [imageTopicDropdown, markerDropdown, cameraTopic]);
 
   const renderBottomBar = () => {
     const canTransformMarkers = canTransformMarkersByTopic(cameraTopic);
@@ -672,7 +631,6 @@ function ImageView(props: Props) {
       {/* Always render the ImageCanvas because it's expensive to unmount and start up. */}
       {imageMessageToRender && (
         <ImageCanvas
-          panelHooks={panelHooks}
           topic={cameraTopicFullObject}
           image={imageMessageToRender}
           rawMarkerData={rawMarkerData}
@@ -686,8 +644,7 @@ function ImageView(props: Props) {
   );
 }
 
-ImageView.panelType = "ImageViewPanel";
-ImageView.defaultConfig = {
+const defaultConfig: Config = {
   cameraTopic: "",
   enabledMarkerTopics: [],
   customMarkerTopicOptions: [],
@@ -696,8 +653,56 @@ ImageView.defaultConfig = {
   synchronize: false,
   mode: "fit",
   zoomPercentage: 100,
+  maxZoom: DEFAULT_MAX_ZOOM,
   offset: [0, 0],
-} as Config;
-ImageView.supportsStrictMode = false;
+};
 
-export default Panel(ImageView);
+const configSchema: PanelConfigSchema<Config> = [
+  { key: "synchronize", type: "toggle", title: "Synchronize images and markers" },
+  {
+    key: "smooth",
+    type: "toggle",
+    title: "Bilinear smoothing",
+  },
+  {
+    key: "maxZoom",
+    type: "number",
+    title: "Maximum zoom %",
+    placeholder: `${DEFAULT_MAX_ZOOM}`,
+    allowEmpty: true,
+    validate: (value) => Math.max(100, value),
+  },
+  {
+    key: "minValue",
+    type: "number",
+    title: "Minimum value (depth images)",
+    placeholder: "0",
+    allowEmpty: true,
+  },
+  {
+    key: "maxValue",
+    type: "number",
+    title: "Maximum value (depth images)",
+    placeholder: "10000",
+    allowEmpty: true,
+  },
+  {
+    key: "scale",
+    type: "dropdown",
+    title: "Image resolution",
+    options: [
+      { value: 0.2, text: "20%" },
+      { value: 0.5, text: "50%" },
+      { value: 1, text: "100%" },
+    ],
+  },
+];
+
+export default Panel(
+  Object.assign(ImageView, {
+    panelType: "ImageViewPanel",
+    defaultConfig,
+    configSchema,
+    supportsStrictMode: false,
+  }),
+);

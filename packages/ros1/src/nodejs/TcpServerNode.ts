@@ -5,10 +5,10 @@
 import EventEmitter from "eventemitter3";
 import net from "net";
 
-import { TcpAddress, TcpServer } from "../TcpTypes";
+import { TcpAddress, TcpServer, TcpServerEvents } from "../TcpTypes";
 import { TcpSocketNode } from "./TcpSocketNode";
 
-export class TcpServerNode extends EventEmitter implements TcpServer {
+export class TcpServerNode extends EventEmitter<TcpServerEvents> implements TcpServer {
   private _server: net.Server;
 
   constructor(server: net.Server) {
@@ -26,7 +26,7 @@ export class TcpServerNode extends EventEmitter implements TcpServer {
     server.on("error", (err) => this.emit("error", err));
   }
 
-  address(): TcpAddress | undefined {
+  async address(): Promise<TcpAddress | undefined> {
     const addr = this._server.address();
     if (addr == undefined || typeof addr === "string") {
       // Address will only be a string for an IPC (named pipe) server, which

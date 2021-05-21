@@ -1,15 +1,16 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import DiagnosticSummary from "@foxglove-studio/app/panels/diagnostics/DiagnosticSummary";
+import SchemaEditor from "@foxglove/studio-base/components/PanelSettings/SchemaEditor";
+import DiagnosticSummary from "@foxglove/studio-base/panels/diagnostics/DiagnosticSummary";
 import {
   DiagnosticStatusArrayMsg,
   getDiagnosticId,
   KeyValue,
   LEVELS,
-} from "@foxglove-studio/app/panels/diagnostics/util";
-import { MessageEvent } from "@foxglove-studio/app/players/types";
-import PanelSetup from "@foxglove-studio/app/stories/PanelSetup";
+} from "@foxglove/studio-base/panels/diagnostics/util";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
+import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 export default {
   title: "panels/diagnostics/DiagnosticSummary",
@@ -66,7 +67,7 @@ export function WithPinnedNodes(): JSX.Element {
   return (
     <PanelSetup fixture={fixture}>
       <DiagnosticSummary
-        config={{
+        overrideConfig={{
           pinnedIds: [
             getDiagnosticId("hardware_id1", "name1"),
             getDiagnosticId("hardware_id4", "name4"),
@@ -83,7 +84,7 @@ export function WithoutSorting(): JSX.Element {
   return (
     <PanelSetup fixture={fixture}>
       <DiagnosticSummary
-        config={{
+        overrideConfig={{
           pinnedIds: [],
           topicToRender: "/diagnostics",
           hardwareIdFilter: "",
@@ -98,7 +99,7 @@ export function Filtered(): JSX.Element {
   return (
     <PanelSetup fixture={fixture}>
       <DiagnosticSummary
-        config={{
+        overrideConfig={{
           pinnedIds: [],
           topicToRender: "/diagnostics",
           hardwareIdFilter: "filter",
@@ -106,5 +107,16 @@ export function Filtered(): JSX.Element {
         }}
       />
     </PanelSetup>
+  );
+}
+
+export function Settings(): JSX.Element {
+  return (
+    <SchemaEditor
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      configSchema={DiagnosticSummary.configSchema!}
+      config={DiagnosticSummary.defaultConfig}
+      saveConfig={() => {}}
+    />
   );
 }

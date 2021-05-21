@@ -13,18 +13,23 @@
 
 import clamp from "lodash/clamp";
 
-import { Topic, MessageEvent } from "@foxglove-studio/app/players/types";
-import { CameraInfo } from "@foxglove-studio/app/types/Messages";
+import { Topic, MessageEvent } from "@foxglove/studio-base/players/types";
+import { CameraInfo } from "@foxglove/studio-base/types/Messages";
 import {
   isNonEmptyOrUndefined,
   nonEmptyOrUndefined,
-} from "@foxglove-studio/app/util/emptyOrUndefined";
+} from "@foxglove/studio-base/util/emptyOrUndefined";
 
 import CameraModel from "./CameraModel";
 
 // The OffscreenCanvas type is not yet in Flow. It's similar to, but more restrictive than HTMLCanvasElement.
 // TODO: change this to the Flow definition once it's been added.
 export type OffscreenCanvas = HTMLCanvasElement;
+
+export type RenderOptions = {
+  minValue?: number;
+  maxValue?: number;
+};
 
 export type Dimensions = { width: number; height: number };
 
@@ -129,7 +134,7 @@ export function checkOutOfBounds(
   outsideHeight: number,
   insideWidth: number,
   insideHeight: number,
-): number[] {
+): [number, number] {
   const leftX = 0;
   const topY = 0;
   const rightX = outsideWidth - insideWidth;

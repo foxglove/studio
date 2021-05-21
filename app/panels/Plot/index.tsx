@@ -20,32 +20,32 @@ import {
   useBlocksByTopic,
   useDataSourceInfo,
   useMessagesByTopic,
-} from "@foxglove-studio/app/PanelAPI";
-import Flex from "@foxglove-studio/app/components/Flex";
-import { getTopicsFromPaths } from "@foxglove-studio/app/components/MessagePathSyntax/parseRosPath";
+} from "@foxglove/studio-base/PanelAPI";
+import Flex from "@foxglove/studio-base/components/Flex";
+import { getTopicsFromPaths } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import {
   MessageDataItemsByPath,
   useDecodeMessagePathsForMessagesByTopic,
-} from "@foxglove-studio/app/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
+} from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import {
   MessagePipelineContext,
   useMessagePipeline,
-} from "@foxglove-studio/app/components/MessagePipeline";
-import Panel from "@foxglove-studio/app/components/Panel";
-import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
+} from "@foxglove/studio-base/components/MessagePipeline";
+import Panel from "@foxglove/studio-base/components/Panel";
+import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import {
+  ChartDefaultView,
   getTooltipItemForMessageHistoryItem,
   TooltipItem,
-} from "@foxglove-studio/app/components/TimeBasedChart";
-import useShallowMemo from "@foxglove-studio/app/hooks/useShallowMemo";
+} from "@foxglove/studio-base/components/TimeBasedChart";
+import useShallowMemo from "@foxglove/studio-base/hooks/useShallowMemo";
 import PlotChart, {
   getDatasetsAndTooltips,
   PlotDataByPath,
-} from "@foxglove-studio/app/panels/Plot/PlotChart";
-import PlotLegend from "@foxglove-studio/app/panels/Plot/PlotLegend";
-import PlotMenu from "@foxglove-studio/app/panels/Plot/PlotMenu";
-import { PanelConfig } from "@foxglove-studio/app/types/panels";
-import { fromSec, subtractTimes, toSec } from "@foxglove-studio/app/util/time";
+} from "@foxglove/studio-base/panels/Plot/PlotChart";
+import PlotLegend from "@foxglove/studio-base/panels/Plot/PlotLegend";
+import { PanelConfig, PanelConfigSchema } from "@foxglove/studio-base/types/panels";
+import { fromSec, subtractTimes, toSec } from "@foxglove/studio-base/util/time";
 
 import helpContent from "./index.help.md";
 import { PlotConfig } from "./types";
@@ -158,24 +158,6 @@ function Plot(props: Props) {
     currentViewWidth.current = width;
   }, []);
 
-  const setWidth = useCallback(
-    () =>
-      saveConfig({
-        followingViewWidth:
-          currentViewWidth.current != undefined ? currentViewWidth.current.toString() : "",
-      }),
-    [saveConfig],
-  );
-
-  const setMinMax = useCallback(
-    () =>
-      saveConfig({
-        minYValue: currentMinY.current != undefined ? currentMinY.current.toString() : "",
-        maxYValue: currentMaxY.current != undefined ? currentMaxY.current.toString() : "",
-      }),
-    [currentMaxY, currentMinY, saveConfig],
-  );
-
   useEffect(() => {
     if (yAxisPaths.length === 0) {
       saveConfig({ paths: [{ value: "", enabled: true, timestampMethod: "receiveTime" }] });
@@ -197,9 +179,8 @@ function Plot(props: Props) {
     preloadingFallback: !showSingleCurrentMessage,
   });
 
-  const decodeMessagePathsForMessagesByTopic = useDecodeMessagePathsForMessagesByTopic(
-    memoizedPaths,
-  );
+  const decodeMessagePathsForMessagesByTopic =
+    useDecodeMessagePathsForMessagesByTopic(memoizedPaths);
 
   const streamedItemsByPath = useMemo(
     () => getPlotDataByPath(decodeMessagePathsForMessagesByTopic(messagesByTopic)),
@@ -252,11 +233,11 @@ function Plot(props: Props) {
   const preloadingDisplayTime = timeToXValueForPreloading(currentTime);
   const preloadingStartTime = timeToXValueForPreloading(startTime); // zero or undefined
   const preloadingEndTime = timeToXValueForPreloading(endTime);
-  let defaultView;
+  let defaultView: ChartDefaultView | undefined;
   if (preloadingDisplayTime != undefined) {
-    if (followingViewWidth != undefined && parseFloat(followingViewWidth) > 0) {
+    if (followingViewWidth != undefined && +followingViewWidth > 0) {
       // Will be ignored in TimeBasedChart for non-preloading plots and non-timestamp plots.
-      defaultView = { type: "following", width: parseFloat(followingViewWidth) };
+      defaultView = { type: "following", width: +followingViewWidth };
     } else if (preloadingStartTime != undefined && preloadingEndTime != undefined) {
       defaultView = { type: "fixed", minXValue: preloadingStartTime, maxXValue: preloadingEndTime };
     }
@@ -275,37 +256,20 @@ function Plot(props: Props) {
     [seek, startTime, xAxisVal],
   );
 
-  // console.log(preloadingEndTime);
   return (
     <Flex col clip center style={{ position: "relative" }}>
-      <PanelToolbar
-        helpContent={helpContent}
-        floating
-        menuContent={
-          <PlotMenu
-            displayWidth={followingViewWidth ?? ""}
-            minYValue={minYValue}
-            maxYValue={maxYValue}
-            saveConfig={saveConfig}
-            setMinMax={setMinMax}
-            setWidth={setWidth}
-            datasets={datasets}
-            xAxisVal={xAxisVal}
-            tooltips={tooltips}
-          />
-        }
-      />
+      <PanelToolbar helpContent={helpContent} floating />
       <PlotChart
         paths={yAxisPaths}
-        minYValue={parseFloat(minYValue)}
-        maxYValue={parseFloat(maxYValue)}
+        minYValue={parseFloat((minYValue ?? "")?.toString())}
+        maxYValue={parseFloat((maxYValue ?? "")?.toString())}
         saveCurrentView={saveCurrentView as any}
         datasets={datasets}
         tooltips={tooltips}
         xAxisVal={xAxisVal}
         currentTime={preloadingDisplayTime}
         onClick={onClick}
-        defaultView={defaultView as any}
+        defaultView={defaultView}
       />
       <PlotLegend
         paths={yAxisPaths}
@@ -318,14 +282,31 @@ function Plot(props: Props) {
     </Flex>
   );
 }
-Plot.panelType = "Plot";
-Plot.defaultConfig = {
-  paths: [{ value: "", enabled: true, timestampMethod: "receiveTime" as const }],
-  minYValue: "",
-  maxYValue: "",
-  showLegend: true,
-  xAxisVal: "timestamp" as const,
-};
-Plot.supportsStrictMode = false;
 
-export default Panel(Plot);
+const configSchema: PanelConfigSchema<PlotConfig> = [
+  { key: "maxYValue", type: "number", title: "Y max", placeholder: "auto", allowEmpty: true },
+  { key: "minYValue", type: "number", title: "Y min", placeholder: "auto", allowEmpty: true },
+  {
+    key: "followingViewWidth",
+    type: "number",
+    title: "X range in seconds (for timestamp plots only)",
+    placeholder: "auto",
+    allowEmpty: true,
+    validate: (x) => (x > 0 ? x : undefined),
+  },
+];
+
+export default Panel(
+  Object.assign(Plot, {
+    panelType: "Plot",
+    defaultConfig: {
+      paths: [{ value: "", enabled: true, timestampMethod: "receiveTime" as const }],
+      minYValue: "",
+      maxYValue: "",
+      showLegend: true,
+      xAxisVal: "timestamp" as const,
+    },
+    supportsStrictMode: false,
+    configSchema,
+  }),
+);

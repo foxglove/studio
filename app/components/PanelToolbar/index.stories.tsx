@@ -13,15 +13,14 @@
 
 import DatabaseIcon from "@mdi/svg/svg/database.svg";
 import { storiesOf } from "@storybook/react";
-import { createMemoryHistory } from "history";
 import { Mosaic, MosaicWindow } from "react-mosaic-component";
 import { Provider } from "react-redux";
 
-import ChildToggle from "@foxglove-studio/app/components/ChildToggle";
-import Icon from "@foxglove-studio/app/components/Icon";
-import MockPanelContextProvider from "@foxglove-studio/app/components/MockPanelContextProvider";
-import createRootReducer from "@foxglove-studio/app/reducers";
-import configureStore from "@foxglove-studio/app/store/configureStore.testing";
+import ChildToggle from "@foxglove/studio-base/components/ChildToggle";
+import Icon from "@foxglove/studio-base/components/Icon";
+import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
+import createRootReducer from "@foxglove/studio-base/reducers";
+import configureStore from "@foxglove/studio-base/store/configureStore.testing";
 
 import PanelToolbar from "./index";
 
@@ -99,7 +98,7 @@ storiesOf("components/PanelToolbar", module)
   .addDecorator((childrenRenderFcn) => {
     // Provide all stories with PanelContext and redux state
     return (
-      <Provider store={configureStore(createRootReducer(createMemoryHistory()))}>
+      <Provider store={configureStore(createRootReducer())}>
         <MockPanelContextProvider>{childrenRenderFcn()}</MockPanelContextProvider>
       </Provider>
     );

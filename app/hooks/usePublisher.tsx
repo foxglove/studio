@@ -14,28 +14,46 @@
 import { useCallback, useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipeline";
+import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
+import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
+import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 type Props = {
   topic: string;
   datatype: string;
+  datatypes: RosDatatypes;
   name: string;
 };
 
-// Registers a publisher with the player and returns a publish() function to publish data.
-export default function usePublisher({ topic, datatype, name }: Props): (msg: unknown) => void {
+// Registers a publisher with the player and returns a publish() function to publish data. This uses
+// no-op functions if the player does not have the `advertise` capability
+export default function usePublisher({
+  topic,
+  datatype,
+  datatypes,
+  name,
+}: Props): (msg: unknown) => void {
   const [id] = useState(() => uuidv4());
+  const canPublish = useMessagePipeline((context) =>
+    context.playerState.capabilities.includes(PlayerCapabilities.advertise),
+  );
   const publish = useMessagePipeline((context) => context.publish);
   const setPublishers = useMessagePipeline((context) => context.setPublishers);
   useEffect(() => {
-    setPublishers(id, [{ topic, datatype, advertiser: { type: "panel", name } }]);
-    return () => setPublishers(id, []);
-  }, [id, topic, datatype, name, setPublishers]);
+    if (canPublish) {
+      setPublishers(id, [{ topic, datatype, datatypes, advertiser: { type: "panel", name } }]);
+      return () => setPublishers(id, []);
+    } else {
+      return undefined;
+    }
+  }, [id, topic, datatype, datatypes, name, setPublishers, canPublish]);
 
   return useCallback(
     (msg: unknown) => {
-      publish({ topic, msg });
+      if (canPublish) {
+        publish({ topic, msg });
+      }
     },
-    [publish, topic],
+    [publish, topic, canPublish],
   );
 }

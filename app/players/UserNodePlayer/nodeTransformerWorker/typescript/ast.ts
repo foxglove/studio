@@ -15,10 +15,10 @@
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 
 import { without } from "lodash";
-import type { RosMsgField } from "rosbag";
 import ts from "typescript/lib/typescript";
 
-import baseDatatypes from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/baseDatatypes";
+import { RosMsgField } from "@foxglove/rosmsg";
+import baseDatatypes from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/baseDatatypes";
 import {
   noFuncError,
   nonFuncError,
@@ -34,14 +34,14 @@ import {
   noTuples,
   limitedUnionsError,
   noNestedAny,
-} from "@foxglove-studio/app/players/UserNodePlayer/nodeTransformerWorker/typescript/errors";
+} from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/errors";
 import {
   DiagnosticSeverity,
   Sources,
   ErrorCodes,
   Diagnostic,
-} from "@foxglove-studio/app/players/UserNodePlayer/types";
-import type { RosDatatypes } from "@foxglove-studio/app/types/RosDatatypes";
+} from "@foxglove/studio-base/players/UserNodePlayer/types";
+import type { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 type TypeParam = {
   parent: TypeParam;

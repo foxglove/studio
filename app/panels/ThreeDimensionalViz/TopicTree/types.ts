@@ -12,8 +12,8 @@
 //   You may not use this file except in compliance with the License.
 import { Color } from "regl-worldview";
 
-import { Topic } from "@foxglove-studio/app/players/types";
-import { Namespace } from "@foxglove-studio/app/types/Messages";
+import { Topic } from "@foxglove/studio-base/players/types";
+import { Namespace } from "@foxglove/studio-base/types/Messages";
 
 import { Save3DConfig } from "../index";
 import { TopicDisplayMode as DisplayMode } from "./TopicViewModeSelector";
@@ -33,8 +33,6 @@ export type TreeUINode = { title: Node; key: string; children?: TreeUINode[]; di
 export type NamespacesByTopic = {
   [topicName: string]: string[];
 };
-type EditingNamespace = { namespaceKey: string; namespaceColor?: string };
-export type SetEditingNamespace = (arg0?: EditingNamespace) => void;
 
 export type TreeGroupNode = {
   type: "group";

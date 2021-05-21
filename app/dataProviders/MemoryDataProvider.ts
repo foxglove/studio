@@ -21,14 +21,14 @@ import {
   InitializationResult,
   DataProvider,
   MessageDefinitions,
-} from "@foxglove-studio/app/dataProviders/types";
+} from "@foxglove/studio-base/dataProviders/types";
 import {
   Topic,
   MessageDefinitionsByTopic,
   ParsedMessageDefinitionsByTopic,
   MessageEvent,
-} from "@foxglove-studio/app/players/types";
-import { RosDatatypes } from "@foxglove-studio/app/types/RosDatatypes";
+} from "@foxglove/studio-base/players/types";
+import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 function filterMessages<T>(
   start: Time,
@@ -104,10 +104,9 @@ export default class MemoryDataProvider implements DataProvider {
       });
     }
     const { parsedMessages, rosBinaryMessages } = this.messages;
-    const sortedMessages = [
-      ...(parsedMessages ?? []),
-      ...(rosBinaryMessages ?? []),
-    ].sort((m1, m2) => TimeUtil.compare(m1.receiveTime, m2.receiveTime));
+    const sortedMessages = [...(parsedMessages ?? []), ...(rosBinaryMessages ?? [])].sort(
+      (m1, m2) => TimeUtil.compare(m1.receiveTime, m2.receiveTime),
+    );
 
     let messageDefinitions: MessageDefinitions;
     if (this.datatypes || this.parsedMessageDefinitionsByTopic) {

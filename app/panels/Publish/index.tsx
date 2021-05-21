@@ -11,25 +11,22 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import CheckboxBlankOutlineIcon from "@mdi/svg/svg/checkbox-blank-outline.svg";
-import CheckboxMarkedIcon from "@mdi/svg/svg/checkbox-marked.svg";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import styled from "styled-components";
 
-import { useDataSourceInfo } from "@foxglove-studio/app/PanelAPI";
-import Autocomplete from "@foxglove-studio/app/components/Autocomplete";
-import Button from "@foxglove-studio/app/components/Button";
-import Flex from "@foxglove-studio/app/components/Flex";
-import Item from "@foxglove-studio/app/components/Menu/Item";
-import Panel from "@foxglove-studio/app/components/Panel";
-import PanelToolbar from "@foxglove-studio/app/components/PanelToolbar";
-import PanelToolbarInput from "@foxglove-studio/app/components/PanelToolbarInput";
-import PanelToolbarLabel from "@foxglove-studio/app/components/PanelToolbarLabel";
-import usePublisher from "@foxglove-studio/app/hooks/usePublisher";
-import { PlayerCapabilities, Topic } from "@foxglove-studio/app/players/types";
-import colors from "@foxglove-studio/app/styles/colors.module.scss";
-import { isNonEmptyOrUndefined } from "@foxglove-studio/app/util/emptyOrUndefined";
 import { useRethrow } from "@foxglove/hooks";
+import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
+import Autocomplete from "@foxglove/studio-base/components/Autocomplete";
+import Button from "@foxglove/studio-base/components/Button";
+import Flex from "@foxglove/studio-base/components/Flex";
+import Panel from "@foxglove/studio-base/components/Panel";
+import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import PanelToolbarLabel from "@foxglove/studio-base/components/PanelToolbarLabel";
+import usePublisher from "@foxglove/studio-base/hooks/usePublisher";
+import { PlayerCapabilities, Topic } from "@foxglove/studio-base/players/types";
+import colors from "@foxglove/studio-base/styles/colors.module.scss";
+import { PanelConfigSchema } from "@foxglove/studio-base/types/panels";
+import { isNonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
 
 import buildSampleMessage from "./buildSampleMessage";
 
@@ -107,7 +104,7 @@ function Publish(props: Props) {
     saveConfig,
   } = props;
 
-  const publish = usePublisher({ name: "Publish", topic: topicName, datatype });
+  const publish = usePublisher({ name: "Publish", topic: topicName, datatype, datatypes });
 
   const datatypeNames = useMemo(() => Object.keys(datatypes).sort(), [datatypes]);
   const { error, parsedObject } = useMemo(() => parseInput(value), [value]);
@@ -168,54 +165,9 @@ function Publish(props: Props) {
 
   const onChange = useCallback(
     (event: React.SyntheticEvent<HTMLTextAreaElement>) => {
-      saveConfig({ value: (event.target as any).value });
+      saveConfig({ value: (event.target as { value?: string }).value });
     },
     [saveConfig],
-  );
-
-  const menuContent = (
-    <>
-      <Item
-        icon={advancedView ? <CheckboxMarkedIcon /> : <CheckboxBlankOutlineIcon />}
-        onClick={() => {
-          saveConfig({ advancedView: !advancedView });
-        }}
-      >
-        <span>Advanced mode</span>
-      </Item>
-      <Item>
-        <PanelToolbarLabel>Button text</PanelToolbarLabel>
-        <PanelToolbarInput
-          type="text"
-          value={buttonText}
-          onChange={(event) => {
-            saveConfig({ buttonText: event.target.value });
-          }}
-          placeholder="Publish"
-        />
-      </Item>
-      <Item>
-        <PanelToolbarLabel>Button tooltip</PanelToolbarLabel>
-        <PanelToolbarInput
-          type="text"
-          value={buttonTooltip}
-          onChange={(event) => {
-            saveConfig({ buttonTooltip: event.target.value });
-          }}
-        />
-      </Item>
-      <Item>
-        <PanelToolbarLabel>Button color (rgba or hex)</PanelToolbarLabel>
-        <PanelToolbarInput
-          type="text"
-          value={buttonColor}
-          onChange={(event) => {
-            saveConfig({ buttonColor: event.target.value });
-          }}
-          placeholder="rgba(1,1,1,1) or #FFFFFF"
-        />
-      </Item>
-    </>
   );
 
   const canPublish = capabilities.includes(PlayerCapabilities.advertise);
@@ -225,7 +177,7 @@ function Publish(props: Props) {
 
   return (
     <Flex col style={{ height: "100%", padding: "12px" }}>
-      <PanelToolbar floating menuContent={menuContent} />
+      <PanelToolbar floating />
       {advancedView && (
         <SRow>
           <SSpan>Topic:</SSpan>
@@ -265,7 +217,7 @@ function Publish(props: Props) {
       <Flex row style={buttonRowStyle}>
         {isNonEmptyOrUndefined(error) && <SErrorText>{error}</SErrorText>}
         <Button
-          style={canPublish ? { backgroundColor: buttonColor } : {}}
+          style={{ backgroundColor: buttonColor }}
           tooltip={canPublish ? buttonTooltip : "Connect to ROS to publish data"}
           disabled={!canPublish || !parsedObject}
           primary={canPublish && !!parsedObject}
@@ -277,6 +229,13 @@ function Publish(props: Props) {
     </Flex>
   );
 }
+
+const configSchema: PanelConfigSchema<Config> = [
+  { key: "advancedView", type: "toggle", title: "Editing mode" },
+  { key: "buttonText", type: "text", title: "Button title" },
+  { key: "buttonTooltip", type: "text", title: "Button tooltip" },
+  { key: "buttonColor", type: "color", title: "Button color" },
+];
 
 export default Panel(
   Object.assign(React.memo(Publish), {
@@ -291,5 +250,6 @@ export default Panel(
       value: "",
     },
     supportsStrictMode: false,
+    configSchema,
   }),
 );

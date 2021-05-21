@@ -13,7 +13,7 @@
 
 import styled from "styled-components";
 
-import Tooltip from "@foxglove-studio/app/components/Tooltip";
+import Tooltip from "@foxglove/studio-base/components/Tooltip";
 
 const Spacer = styled.div`
   width: 10px;
@@ -26,7 +26,7 @@ export default {
 
 export function BasicExamples(): React.ReactElement {
   const containerStyle = {
-    padding: "50px",
+    padding: "100px",
     display: "flex",
     width: "400px",
     height: "300px",

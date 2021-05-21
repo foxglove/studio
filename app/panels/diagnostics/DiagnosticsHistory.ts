@@ -13,8 +13,8 @@
 
 import { sortedIndexBy } from "lodash";
 
-import * as PanelAPI from "@foxglove-studio/app/PanelAPI";
-import { MessageEvent } from "@foxglove-studio/app/players/types";
+import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
 
 import {
   DiagnosticStatusArrayMsg,
@@ -58,9 +58,8 @@ function maybeAddMessageToBuffer(
     let newHardwareId = false;
     let newDiagnostic = false;
     const trimmedHardwareId = trimHardwareId(status.hardware_id);
-    const hardwareDiagnosticsByName = buffer.diagnosticsByNameByTrimmedHardwareId.get(
-      trimmedHardwareId,
-    );
+    const hardwareDiagnosticsByName =
+      buffer.diagnosticsByNameByTrimmedHardwareId.get(trimmedHardwareId);
     if (hardwareDiagnosticsByName == undefined) {
       newHardwareId = true;
       newDiagnostic = true;

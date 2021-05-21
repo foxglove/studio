@@ -13,10 +13,10 @@
 
 import { storiesOf } from "@storybook/react";
 
-import Table from "@foxglove-studio/app/panels/Table";
-import PanelSetup from "@foxglove-studio/app/stories/PanelSetup";
+import Table from "@foxglove/studio-base/panels/Table";
+import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
-const makeArrayData = (length = 50, nestArray = true): any => {
+const makeArrayData = (length = 50, nestArray = true): unknown => {
   return new Array(length).fill(0).map((_, i) => {
     return {
       val: i,
@@ -55,21 +55,21 @@ storiesOf("panels/Table/index", module)
   .add("no topic path", () => {
     return (
       <PanelSetup fixture={{ frame: {}, topics: [] }}>
-        <Table config={{ topicPath: "" }} />
+        <Table overrideConfig={{ topicPath: "" }} />
       </PanelSetup>
     );
   })
   .add("no data", () => {
     return (
       <PanelSetup fixture={{ frame: {}, topics: [] }}>
-        <Table config={{ topicPath: "/unknown" }} />
+        <Table overrideConfig={{ topicPath: "/unknown" }} />
       </PanelSetup>
     );
   })
   .add("arrays", () => {
     return (
       <PanelSetup fixture={fixture}>
-        <Table config={{ topicPath: "/my_arr.array" }} />
+        <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
       </PanelSetup>
     );
   })
@@ -79,11 +79,13 @@ storiesOf("panels/Table/index", module)
         fixture={fixture}
         onMount={() => {
           setImmediate(() => {
-            (document.querySelectorAll("[data-test=expand-row-0]")[0] as any).click();
+            (
+              document.querySelectorAll("[data-test=expand-row-0]")[0] as HTMLTableCellElement
+            ).click();
           });
         }}
       >
-        <Table config={{ topicPath: "/my_arr.array" }} />
+        <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
       </PanelSetup>
     );
   })
@@ -93,11 +95,13 @@ storiesOf("panels/Table/index", module)
         fixture={fixture}
         onMount={() => {
           setImmediate(() => {
-            (document.querySelectorAll("[data-test=expand-cell-obj-0]")[0] as any).click();
+            (
+              document.querySelectorAll("[data-test=expand-cell-obj-0]")[0] as HTMLTableCellElement
+            ).click();
           });
         }}
       >
-        <Table config={{ topicPath: "/my_arr.array" }} />
+        <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
       </PanelSetup>
     );
   })
@@ -107,11 +111,13 @@ storiesOf("panels/Table/index", module)
         fixture={fixture}
         onMount={() => {
           setImmediate(() => {
-            (document.querySelectorAll("[data-test=expand-cell-arr-0]")[0] as any).click();
+            (
+              document.querySelectorAll("[data-test=expand-cell-arr-0]")[0] as HTMLTableCellElement
+            ).click();
           });
         }}
       >
-        <Table config={{ topicPath: "/my_arr.array" }} />
+        <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
       </PanelSetup>
     );
   })
@@ -121,12 +127,18 @@ storiesOf("panels/Table/index", module)
         fixture={fixture}
         onMount={() => {
           setImmediate(() => {
-            (document.querySelectorAll("[data-test=expand-row-0]")[0] as any).click();
-            (document.querySelectorAll("[data-test=expand-cell-arr-obj-0]")[0] as any).click();
+            (
+              document.querySelectorAll("[data-test=expand-row-0]")[0] as HTMLTableCellElement
+            ).click();
+            (
+              document.querySelectorAll(
+                "[data-test=expand-cell-arr-obj-0]",
+              )[0] as HTMLTableCellElement
+            ).click();
           });
         }}
       >
-        <Table config={{ topicPath: "/my_arr.array" }} />
+        <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
       </PanelSetup>
     );
   })
@@ -136,19 +148,23 @@ storiesOf("panels/Table/index", module)
         fixture={fixture}
         onMount={() => {
           setImmediate(() => {
-            (document.querySelectorAll("[data-test=expand-row-0]")[0] as any).click();
-            (document.querySelectorAll("[data-test=expand-row-1]")[0] as any).click();
+            (
+              document.querySelectorAll("[data-test=expand-row-0]")[0] as HTMLTableCellElement
+            ).click();
+            (
+              document.querySelectorAll("[data-test=expand-row-1]")[0] as HTMLTableCellElement
+            ).click();
           });
         }}
       >
-        <Table config={{ topicPath: "/my_arr.array" }} />
+        <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
       </PanelSetup>
     );
   })
   .add("filtering", () => {
     return (
       <PanelSetup fixture={fixture}>
-        <Table config={{ topicPath: "/my_arr.array[:]{val==3}" }} />
+        <Table overrideConfig={{ topicPath: "/my_arr.array[:]{val==3}" }} />
       </PanelSetup>
     );
   })
@@ -158,26 +174,30 @@ storiesOf("panels/Table/index", module)
         fixture={fixture}
         onMount={() => {
           setImmediate(() => {
-            (document.querySelectorAll("[data-test=column-header-val]")[0] as any).click();
-            (document.querySelectorAll("[data-test=column-header-val]")[0] as any).click();
+            (
+              document.querySelectorAll("[data-test=column-header-val]")[0] as HTMLTableCellElement
+            ).click();
+            (
+              document.querySelectorAll("[data-test=column-header-val]")[0] as HTMLTableCellElement
+            ).click();
           });
         }}
       >
-        <Table config={{ topicPath: "/my_arr.array" }} />
+        <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
       </PanelSetup>
     );
   })
   .add("handles primitives", () => {
     return (
       <PanelSetup fixture={fixture}>
-        <Table config={{ topicPath: "/my_arr.array[:].val" }} />
+        <Table overrideConfig={{ topicPath: "/my_arr.array[:].val" }} />
       </PanelSetup>
     );
   })
   .add("handles arrays of primitives", () => {
     return (
       <PanelSetup fixture={fixture}>
-        <Table config={{ topicPath: "/my_arr.array[:].primitiveArray" }} />
+        <Table overrideConfig={{ topicPath: "/my_arr.array[:].primitiveArray" }} />
       </PanelSetup>
     );
   })
@@ -185,7 +205,7 @@ storiesOf("panels/Table/index", module)
     return (
       <PanelSetup fixture={fixture}>
         <div style={{ width: "100px" }}>
-          <Table config={{ topicPath: "/my_arr.array[:]{val==3}" }} />
+          <Table overrideConfig={{ topicPath: "/my_arr.array[:]{val==3}" }} />
         </div>
       </PanelSetup>
     );

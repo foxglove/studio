@@ -14,19 +14,24 @@
 
 import { renderHook, RenderResult } from "@testing-library/react-hooks/dom";
 import { last } from "lodash";
-import { PropsWithChildren, useCallback } from "react";
+import { PropsWithChildren, useCallback, useState } from "react";
 import { act } from "react-dom/test-utils";
 
-import { GlobalVariables } from "@foxglove-studio/app/hooks/useGlobalVariables";
-import { PlayerPresence, PlayerStateActiveData } from "@foxglove-studio/app/players/types";
-import delay from "@foxglove-studio/app/util/delay";
-import { initializeLogEvent, resetLogEventForTests } from "@foxglove-studio/app/util/logEvent";
-import sendNotification from "@foxglove-studio/app/util/sendNotification";
-import tick from "@foxglove-studio/app/util/tick";
+import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurationContext";
+import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
+import { PlayerPresence, PlayerStateActiveData } from "@foxglove/studio-base/players/types";
+import delay from "@foxglove/studio-base/util/delay";
+import {
+  initializeLogEvent,
+  resetLogEventForTests,
+  Tags,
+} from "@foxglove/studio-base/util/logEvent";
+import { makeConfiguration } from "@foxglove/studio-base/util/makeConfiguration";
+import sendNotification from "@foxglove/studio-base/util/sendNotification";
+import tick from "@foxglove/studio-base/util/tick";
 
 import {
   MessagePipelineProvider,
-  WARN_ON_SUBSCRIPTIONS_WITHIN_TIME_MS,
   useMessagePipeline,
   MaybePlayer,
   MessagePipelineContext,
@@ -40,14 +45,19 @@ type WrapperProps = {
   maybePlayer: MaybePlayer;
   globalVariables?: GlobalVariables;
 };
+
 function Hook(_props: WrapperProps) {
   return useMessagePipeline(useCallback((value) => value, []));
 }
+
 function Wrapper({ children, maybePlayer, globalVariables }: PropsWithChildren<WrapperProps>) {
+  const [config] = useState(() => makeConfiguration());
   return (
-    <MessagePipelineProvider maybePlayer={maybePlayer} globalVariables={globalVariables}>
-      {children}
-    </MessagePipelineProvider>
+    <AppConfigurationContext.Provider value={config}>
+      <MessagePipelineProvider maybePlayer={maybePlayer} globalVariables={globalVariables}>
+        {children}
+      </MessagePipelineProvider>
+    </AppConfigurationContext.Provider>
   );
 }
 
@@ -218,13 +228,23 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       initialProps: { maybePlayer: { player } },
     });
 
-    act(() => result.current.setPublishers("test", [{ topic: "/studio/test", datatype: "test" }]));
-    expect(result.current.publishers).toEqual([{ topic: "/studio/test", datatype: "test" }]);
-
-    act(() => result.current.setPublishers("bar", [{ topic: "/studio/test2", datatype: "test2" }]));
+    act(() =>
+      result.current.setPublishers("test", [
+        { topic: "/studio/test", datatype: "test", datatypes: {} },
+      ]),
+    );
     expect(result.current.publishers).toEqual([
-      { topic: "/studio/test", datatype: "test" },
-      { topic: "/studio/test2", datatype: "test2" },
+      { topic: "/studio/test", datatype: "test", datatypes: {} },
+    ]);
+
+    act(() =>
+      result.current.setPublishers("bar", [
+        { topic: "/studio/test2", datatype: "test2", datatypes: {} },
+      ]),
+    );
+    expect(result.current.publishers).toEqual([
+      { topic: "/studio/test", datatype: "test", datatypes: {} },
+      { topic: "/studio/test2", datatype: "test2", datatypes: {} },
     ]);
 
     const lastPublishers = result.current.publishers;
@@ -247,7 +267,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     await act(() => player.emit());
     for (const [key, value] of Object.entries(result.current)) {
       if (typeof value === "function") {
-        expect((lastContext as any)[key]).toBe(value);
+        expect((lastContext as Record<string, unknown>)[key]).toBe(value);
       }
     }
   });
@@ -307,8 +327,8 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
   });
 
   describe("when changing the player", () => {
-    let player: any;
-    let player2: any;
+    let player: FakePlayer;
+    let player2: FakePlayer;
     let result: RenderResult<MessagePipelineContext>;
     beforeEach(async () => {
       player = new FakePlayer();
@@ -378,12 +398,18 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     });
     act(() => result.current.setSubscriptions("test", [{ topic: "/studio/test" }]));
     act(() => result.current.setSubscriptions("bar", [{ topic: "/studio/test2" }]));
-    act(() => result.current.setPublishers("test", [{ topic: "/studio/test", datatype: "test" }]));
+    act(() =>
+      result.current.setPublishers("test", [
+        { topic: "/studio/test", datatype: "test", datatypes: {} },
+      ]),
+    );
 
     const player2 = new FakePlayer();
     rerender({ maybePlayer: { player: player2 } });
     expect(player2.subscriptions).toEqual([{ topic: "/studio/test" }, { topic: "/studio/test2" }]);
-    expect(player2.publishers).toEqual([{ topic: "/studio/test", datatype: "test" }]);
+    expect(player2.publishers).toEqual([
+      { topic: "/studio/test", datatype: "test", datatypes: {} },
+    ]);
   });
 
   it("keeps activeData when closing a player", async () => {
@@ -420,64 +446,8 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     });
   });
 
-  it("logs a warning if a panel subscribes just after activeData becomes available", async () => {
-    const player = new FakePlayer();
-    const { result } = renderHook(Hook, {
-      wrapper: Wrapper,
-      initialProps: { maybePlayer: { player } },
-    });
-
-    expect(result.all.length).toBe(1);
-    act(() =>
-      (result.all[0] as MessagePipelineContext).setSubscriptions("id", [{ topic: "/test" }]),
-    );
-    expect(result.all.length).toBe(2);
-    expect(console.warn).toHaveBeenCalledTimes(0);
-
-    // Emit activeData.
-    const activeData: PlayerStateActiveData = {
-      messages: [],
-      messageOrder: "receiveTime",
-      currentTime: { sec: 0, nsec: 0 },
-      startTime: { sec: 0, nsec: 0 },
-      endTime: { sec: 1, nsec: 0 },
-      isPlaying: true,
-      speed: 0.2,
-      lastSeekTime: 1234,
-      topics: [{ name: "/input/foo", datatype: "foo" }],
-      datatypes: { foo: { fields: [] } },
-      parsedMessageDefinitionsByTopic: {},
-      totalBytesReceived: 1234,
-    };
-    await act(() => player.emit({ activeData }));
-    expect(result.all.length).toBe(3);
-
-    // Calling setSubscriptions right after activeData is ok if the set of topics doesn't change
-    act(() =>
-      (result.all[0] as MessagePipelineContext).setSubscriptions("id", [{ topic: "/test" }]),
-    );
-    expect((console.warn as jest.Mock).mock.calls).toEqual([]);
-    // But changing the set of topics results in a warning
-    act(() =>
-      (result.all[0] as MessagePipelineContext).setSubscriptions("id", [{ topic: "/test2" }]),
-    );
-    expect((console.warn as jest.Mock).mock.calls).toEqual([
-      [
-        "Panel subscribed right after Player loaded, which causes unnecessary requests. Please let the Foxglove team know about this. Topics: /test2",
-      ],
-    ]);
-
-    // If we wait a little bit, we shouldn't get any additional warnings.
-    await delay(WARN_ON_SUBSCRIPTIONS_WITHIN_TIME_MS + 200);
-    act(() =>
-      (result.all[0] as MessagePipelineContext).setSubscriptions("id", [{ topic: "/test" }]),
-    );
-    expect((console.warn as jest.Mock).mock.calls.length).toEqual(1);
-    (console.warn as jest.Mock).mockClear();
-  });
-
   describe("pauseFrame", () => {
-    let logger: any;
+    let logger: (args: { name: string; tags: Tags }) => void;
 
     beforeEach(async () => {
       logger = jest.fn();

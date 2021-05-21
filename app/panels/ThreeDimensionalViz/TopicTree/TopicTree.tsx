@@ -11,9 +11,13 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import ArrowLeftIcon from "@mdi/svg/svg/arrow-left.svg";
+import ArrowRightIcon from "@mdi/svg/svg/arrow-right.svg";
 import ChevronDownIcon from "@mdi/svg/svg/chevron-down.svg";
 import CloseIcon from "@mdi/svg/svg/close.svg";
 import MagnifyIcon from "@mdi/svg/svg/magnify.svg";
+import SwapHorizontalIcon from "@mdi/svg/svg/swap-horizontal.svg";
+import SyncIcon from "@mdi/svg/svg/sync.svg";
 import LessIcon from "@mdi/svg/svg/unfold-less-horizontal.svg";
 import MoreIcon from "@mdi/svg/svg/unfold-more-horizontal.svg";
 import { clamp, groupBy } from "lodash";
@@ -23,10 +27,14 @@ import { useResizeDetector } from "react-resize-detector";
 import { CSSTransition } from "react-transition-group";
 import styled from "styled-components";
 
-import Icon from "@foxglove-studio/app/components/Icon";
-import useChangeDetector from "@foxglove-studio/app/hooks/useChangeDetector";
-import useLinkedGlobalVariables from "@foxglove-studio/app/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
-import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
+import Dropdown from "@foxglove/studio-base/components/Dropdown";
+import Icon from "@foxglove/studio-base/components/Icon";
+import { Item } from "@foxglove/studio-base/components/Menu";
+import useChangeDetector from "@foxglove/studio-base/hooks/useChangeDetector";
+import useLinkedGlobalVariables from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
+import { TopicSettingsCollection } from "@foxglove/studio-base/panels/ThreeDimensionalViz/SceneBuilder";
+import { syncBags, SYNC_OPTIONS } from "@foxglove/studio-base/panels/ThreeDimensionalViz/syncBags";
+import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { Save3DConfig } from "../index";
 import DiffModeSettings from "./DiffModeSettings";
@@ -45,7 +53,6 @@ import {
   OnNamespaceOverrideColorChange,
   SceneErrorsByKey,
   SetCurrentEditingTopic,
-  SetEditingNamespace,
   TopicDisplayMode,
   TreeNode,
   VisibleTopicsCountByKey,
@@ -201,6 +208,7 @@ type SharedProps = {
   allKeys: string[];
   availableNamespacesByTopic: NamespacesByTopic;
   checkedKeys: string[];
+  settingsByKey: TopicSettingsCollection;
   derivedCustomSettingsByKey: DerivedCustomSettingsByKey;
   expandedKeys: string[];
   filterText: string;
@@ -215,7 +223,6 @@ type SharedProps = {
   saveConfig: Save3DConfig;
   sceneErrorsByKey: SceneErrorsByKey;
   setCurrentEditingTopic: SetCurrentEditingTopic;
-  setEditingNamespace: SetEditingNamespace;
   setFilterText: (arg0: string) => void;
   setShowTopicTree: (arg0: boolean | ((arg0: boolean) => boolean)) => void;
   shouldExpandAllKeys: boolean;
@@ -239,6 +246,7 @@ function TopicTree({
   allKeys,
   availableNamespacesByTopic,
   checkedKeys,
+  settingsByKey,
   derivedCustomSettingsByKey,
   expandedKeys,
   filterText,
@@ -253,7 +261,6 @@ function TopicTree({
   saveConfig,
   sceneErrorsByKey,
   setCurrentEditingTopic,
-  setEditingNamespace,
   setFilterText,
   setShowTopicTree,
   shouldExpandAllKeys,
@@ -294,7 +301,7 @@ function TopicTree({
   const showNoMatchesState = !getIsTreeNodeVisibleInTree(rootTreeNode.key);
 
   const isXSWidth = treeWidth < DEFAULT_XS_WIDTH;
-  const headerRightIconStyle = { margin: `4px ${(isXSWidth ? 0 : TREE_SPACING) + 2}px 4px 8px` };
+  const headerRightIconStyle = { margin: `4px ${(isXSWidth ? 0 : TREE_SPACING) + 2}px 4px 0px` };
 
   const { linkedGlobalVariables } = useLinkedGlobalVariables();
   const linkedGlobalVariablesByTopic = groupBy(linkedGlobalVariables, ({ topic }) => topic);
@@ -359,6 +366,41 @@ function TopicTree({
             <CloseIcon />
           </Icon>
         )}
+        <Dropdown
+          toggleComponent={
+            <Icon small fade style={headerRightIconStyle} tooltip="Sync settings">
+              <SyncIcon />
+            </Icon>
+          }
+        >
+          <Item
+            icon={<ArrowRightIcon />}
+            tooltip="Set bag 2's topic settings and selected topics to bag 1's"
+            onClick={() =>
+              saveConfig(syncBags({ checkedKeys, settingsByKey }, SYNC_OPTIONS.bag1ToBag2))
+            }
+          >
+            Sync bag 1 to bag 2
+          </Item>
+          <Item
+            icon={<ArrowLeftIcon />}
+            tooltip="Set bag 1's topic settings and selected topics to bag 2's"
+            onClick={() =>
+              saveConfig(syncBags({ checkedKeys, settingsByKey }, SYNC_OPTIONS.bag2ToBag1))
+            }
+          >
+            Sync bag 2 to bag 1
+          </Item>
+          <Item
+            icon={<SwapHorizontalIcon />}
+            tooltip="Swap topic settings and selected topics between bag 1 and bag 2"
+            onClick={() =>
+              saveConfig(syncBags({ checkedKeys, settingsByKey }, SYNC_OPTIONS.swapBag1AndBag2))
+            }
+          >
+            Swap bags 1 and 2
+          </Item>
+        </Dropdown>
       </STopicTreeHeader>
       {hasFeatureColumn && <DiffModeSettings enabled={diffModeEnabled} saveConfig={saveConfig} />}
       <div ref={scrollContainerRef} style={{ overflow: "auto", width: treeWidth }}>
@@ -382,7 +424,6 @@ function TopicTree({
               sceneErrorsByKey,
               setCurrentEditingTopic,
               derivedCustomSettingsByKey,
-              setEditingNamespace,
               topicDisplayMode,
               visibleTopicsCountByKey,
               width: treeWidth,

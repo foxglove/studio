@@ -12,13 +12,13 @@
 //   You may not use this file except in compliance with the License.
 
 import { intersection, keyBy } from "lodash";
-import microMemoize from "micro-memoize";
+import memoizeWeak from "memoize-weak";
 import { createSelectorCreator, defaultMemoize, createSelector } from "reselect";
 import shallowequal from "shallowequal";
 
-import { Topic } from "@foxglove-studio/app/players/types";
-import { RosDatatypes } from "@foxglove-studio/app/types/RosDatatypes";
-import { SECOND_SOURCE_PREFIX } from "@foxglove-studio/app/util/globalConstants";
+import { Topic } from "@foxglove/studio-base/players/types";
+import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
+import { SECOND_SOURCE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 
 // The ParametricSelector type declaration in reselect requires the props argument
 // The props argument is not actually required so we need to fix the declaration.
@@ -30,7 +30,7 @@ export const getTopicNames = createSelector<any, any, any, any>(
   (topics: Topic[]): string[] => topics.map((topic) => topic.name),
 ) as FixedParametricSelector<any, any, any>;
 
-export const getSanitizedTopics = microMemoize(
+export const getSanitizedTopics = memoizeWeak(
   (subscribedTopics: Set<string>, providerTopics: Topic[]): string[] => {
     return intersection(
       Array.from(subscribedTopics),
@@ -89,10 +89,10 @@ export const constantsByDatatype = createSelector<any, any, any, any>(
   },
 ) as FixedParametricSelector<any, any, any>;
 
-// Studio enum annotations are of the form: "Foo__studio_enum" (notice double underscore)
+// Studio enum annotations are of the form: "Foo__foxglove_enum" (notice double underscore)
 // This method returns type name from "Foo" or undefined name doesn't match this format
 export function extractTypeFromStudioEnumAnnotation(name: string): string | undefined {
-  const match = /(.*)__studio_enum$/.exec(name);
+  const match = /(.*)__(foxglove|webviz)_enum$/.exec(name);
   if (match) {
     return match[1];
   }
@@ -140,7 +140,7 @@ export const enumValuesByDatatypeAndField = createSelector<any, any, any, any>(
           }
           continue;
         }
-        // check if current field is annotation of the form: "Foo bar__studio_enum"
+        // check if current field is annotation of the form: "Foo bar__foxglove_enum"
         // This means that "bar" is enum of type "Foo"
         const fieldName = extractTypeFromStudioEnumAnnotation(field.name);
         if (fieldName != undefined) {

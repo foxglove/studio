@@ -12,15 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { groupBy } from "lodash";
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import {
   Worldview,
@@ -34,62 +26,58 @@ import {
 import { Time } from "rosbag";
 import { useDebouncedCallback } from "use-debounce";
 
-import useDataSourceInfo from "@foxglove-studio/app/PanelAPI/useDataSourceInfo";
-import KeyListener from "@foxglove-studio/app/components/KeyListener";
-import Modal from "@foxglove-studio/app/components/Modal";
-import PanelContext from "@foxglove-studio/app/components/PanelContext";
-import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToBodyComponent";
-import useGlobalVariables from "@foxglove-studio/app/hooks/useGlobalVariables";
-import useShallowMemo from "@foxglove-studio/app/hooks/useShallowMemo";
-import { Save3DConfig } from "@foxglove-studio/app/panels/ThreeDimensionalViz";
-import DebugStats from "@foxglove-studio/app/panels/ThreeDimensionalViz/DebugStats";
+import useDataSourceInfo from "@foxglove/studio-base/PanelAPI/useDataSourceInfo";
+import KeyListener from "@foxglove/studio-base/components/KeyListener";
+import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
+import useShallowMemo from "@foxglove/studio-base/hooks/useShallowMemo";
+import { Save3DConfig } from "@foxglove/studio-base/panels/ThreeDimensionalViz";
+import DebugStats from "@foxglove/studio-base/panels/ThreeDimensionalViz/DebugStats";
 import {
   POLYGON_TAB_TYPE,
   DrawingTabType,
-} from "@foxglove-studio/app/panels/ThreeDimensionalViz/DrawingTools";
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/DrawingTools";
 import MeasuringTool, {
   MeasureInfo,
-} from "@foxglove-studio/app/panels/ThreeDimensionalViz/DrawingTools/MeasuringTool";
-import GridBuilder from "@foxglove-studio/app/panels/ThreeDimensionalViz/GridBuilder";
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/DrawingTools/MeasuringTool";
+import GridBuilder from "@foxglove/studio-base/panels/ThreeDimensionalViz/GridBuilder";
 import {
   InteractionContextMenu,
   OBJECT_TAB_TYPE,
   TabType,
-} from "@foxglove-studio/app/panels/ThreeDimensionalViz/Interactions";
-import useLinkedGlobalVariables from "@foxglove-studio/app/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
-import styles from "@foxglove-studio/app/panels/ThreeDimensionalViz/Layout.module.scss";
-import LayoutToolbar from "@foxglove-studio/app/panels/ThreeDimensionalViz/LayoutToolbar";
-import PanelToolbarMenu from "@foxglove-studio/app/panels/ThreeDimensionalViz/PanelToolbarMenu";
-import SceneBuilder from "@foxglove-studio/app/panels/ThreeDimensionalViz/SceneBuilder";
-import sceneBuilderHooks from "@foxglove-studio/app/panels/ThreeDimensionalViz/SceneBuilder/defaultHooks";
-import { useSearchText } from "@foxglove-studio/app/panels/ThreeDimensionalViz/SearchText";
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions";
+import useLinkedGlobalVariables from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
+import styles from "@foxglove/studio-base/panels/ThreeDimensionalViz/Layout.module.scss";
+import LayoutToolbar from "@foxglove/studio-base/panels/ThreeDimensionalViz/LayoutToolbar";
+import SceneBuilder from "@foxglove/studio-base/panels/ThreeDimensionalViz/SceneBuilder";
+import sceneBuilderHooks from "@foxglove/studio-base/panels/ThreeDimensionalViz/SceneBuilder/defaultHooks";
+import { useSearchText } from "@foxglove/studio-base/panels/ThreeDimensionalViz/SearchText";
 import {
   MarkerMatcher,
   ThreeDimensionalVizContext,
-} from "@foxglove-studio/app/panels/ThreeDimensionalViz/ThreeDimensionalVizContext";
-import { ColorPickerSettingsPanel } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicSettingsEditor/ColorPickerForTopicSettings";
-import TopicSettingsModal from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/TopicSettingsModal";
-import TopicTree from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/TopicTree";
-import { TOPIC_DISPLAY_MODES } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/TopicViewModeSelector";
-import { TopicDisplayMode } from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/types";
-import useSceneBuilderAndTransformsData from "@foxglove-studio/app/panels/ThreeDimensionalViz/TopicTree/useSceneBuilderAndTransformsData";
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/ThreeDimensionalVizContext";
+import TopicSettingsModal from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/TopicSettingsModal";
+import TopicTree from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/TopicTree";
+import { TOPIC_DISPLAY_MODES } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/TopicViewModeSelector";
+import { TopicDisplayMode } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/types";
+import useSceneBuilderAndTransformsData from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/useSceneBuilderAndTransformsData";
 import Transforms, {
   DEFAULT_ROOT_FRAME_IDS,
-} from "@foxglove-studio/app/panels/ThreeDimensionalViz/Transforms";
-import TransformsBuilder from "@foxglove-studio/app/panels/ThreeDimensionalViz/TransformsBuilder";
-import World from "@foxglove-studio/app/panels/ThreeDimensionalViz/World";
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/Transforms";
+import TransformsBuilder from "@foxglove/studio-base/panels/ThreeDimensionalViz/TransformsBuilder";
+import World from "@foxglove/studio-base/panels/ThreeDimensionalViz/World";
 import {
   TargetPose,
   getInteractionData,
   getObject,
   getUpdatedGlobalVariablesBySelectedObject,
-} from "@foxglove-studio/app/panels/ThreeDimensionalViz/threeDimensionalVizUtils";
-import { ThreeDimensionalVizConfig } from "@foxglove-studio/app/panels/ThreeDimensionalViz/types";
-import { Frame, Topic } from "@foxglove-studio/app/players/types";
-import inScreenshotTests from "@foxglove-studio/app/stories/inScreenshotTests";
-import { Color } from "@foxglove-studio/app/types/Messages";
-import { isNonEmptyOrUndefined } from "@foxglove-studio/app/util/emptyOrUndefined";
-import filterMap from "@foxglove-studio/app/util/filterMap";
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/threeDimensionalVizUtils";
+import { ThreeDimensionalVizConfig } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
+import { Frame, Topic } from "@foxglove/studio-base/players/types";
+import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
+import { Color } from "@foxglove/studio-base/types/Messages";
+import { isNonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
+import filterMap from "@foxglove/studio-base/util/filterMap";
 import {
   COLOR_RGBA_DATATYPE,
   FOXGLOVE_GRID_TOPIC,
@@ -106,13 +94,11 @@ import {
   VELODYNE_SCAN_DATATYPE,
   VISUALIZATION_MSGS_MARKER_ARRAY_DATATYPE,
   VISUALIZATION_MSGS_MARKER_DATATYPE,
-  STUDIO_MARKER_ARRAY_DATATYPE,
-  STUDIO_MARKER_DATATYPE,
   TRANSFORM_STAMPED_DATATYPE,
-} from "@foxglove-studio/app/util/globalConstants";
-import { inVideoRecordingMode } from "@foxglove-studio/app/util/inAutomatedRunMode";
-import { getTopicsByTopicName } from "@foxglove-studio/app/util/selectors";
-import { joinTopics } from "@foxglove-studio/app/util/topicUtils";
+} from "@foxglove/studio-base/util/globalConstants";
+import { inVideoRecordingMode } from "@foxglove/studio-base/util/inAutomatedRunMode";
+import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
+import { joinTopics } from "@foxglove/studio-base/util/topicUtils";
 
 import useTopicTree, { TopicTreeContext } from "./useTopicTree";
 
@@ -175,8 +161,6 @@ const SUPPORTED_MARKER_DATATYPES = {
   // generally supported datatypes
   VISUALIZATION_MSGS_MARKER_DATATYPE,
   VISUALIZATION_MSGS_MARKER_ARRAY_DATATYPE,
-  STUDIO_MARKER_DATATYPE,
-  STUDIO_MARKER_ARRAY_DATATYPE,
   POSE_STAMPED_DATATYPE,
   POINT_CLOUD_DATATYPE,
   VELODYNE_SCAN_DATATYPE,
@@ -246,13 +230,6 @@ export default function Layout({
     measurePoints: { start: undefined, end: undefined },
   });
   const [currentEditingTopic, setCurrentEditingTopic] = useState<Topic | undefined>(undefined);
-  const [editingNamespace, setEditingNamespace] = useState<
-    | {
-        namespaceKey: string;
-        namespaceColor?: string;
-      }
-    | undefined
-  >();
 
   const searchTextProps = useSearchText();
   const {
@@ -266,9 +243,8 @@ export default function Layout({
   const [_, forceUpdate] = useReducer((x: number) => x + 1, 0);
   const measuringElRef = useRef<MeasuringTool>(ReactNull);
   const [drawingTabType, setDrawingTabType] = useState<DrawingTabType | undefined>(undefined);
-  const [interactionsTabType, setInteractionsTabType] = useState<DrawingTabType | undefined>(
-    undefined,
-  );
+  const [interactionsTabType, setInteractionsTabType] =
+    useState<DrawingTabType | undefined>(undefined);
 
   const [selectionState, setSelectionState] = useState<UserSelectionState>({
     clickedObjects: [],
@@ -314,8 +290,6 @@ export default function Layout({
       supportedMarkerDatatypesSet: new Set([
         VISUALIZATION_MSGS_MARKER_DATATYPE,
         VISUALIZATION_MSGS_MARKER_ARRAY_DATATYPE,
-        STUDIO_MARKER_DATATYPE,
-        STUDIO_MARKER_ARRAY_DATATYPE,
         POSE_STAMPED_DATATYPE,
         POINT_CLOUD_DATATYPE,
         VELODYNE_SCAN_DATATYPE,
@@ -350,14 +324,12 @@ export default function Layout({
     [],
   );
 
-  const {
-    availableNamespacesByTopic,
-    sceneErrorsByKey: sceneErrorsByTopicKey,
-  } = useSceneBuilderAndTransformsData({
-    sceneBuilder,
-    staticallyAvailableNamespacesByTopic,
-    transforms,
-  });
+  const { availableNamespacesByTopic, sceneErrorsByKey: sceneErrorsByTopicKey } =
+    useSceneBuilderAndTransformsData({
+      sceneBuilder,
+      staticallyAvailableNamespacesByTopic,
+      transforms,
+    });
 
   // Use deep compare so that we only regenerate rootTreeNode when topics change.
   const memoizedTopics = useShallowMemo(topics);
@@ -616,10 +588,8 @@ export default function Layout({
     if (!args) {
       return;
     }
-    const {
-      drawingTabType: currentDrawingTabType,
-      handleDrawPolygons: currentHandleDrawPolygons,
-    } = callbackInputsRef.current;
+    const { drawingTabType: currentDrawingTabType, handleDrawPolygons: currentHandleDrawPolygons } =
+      callbackInputsRef.current;
     const measuringHandler = measuringElRef.current && (measuringElRef.current as any)[eventName];
     const measureActive = measuringElRef.current?.measureActive ?? false;
     if (measuringHandler && measureActive) {
@@ -721,10 +691,8 @@ export default function Layout({
       onSetPolygons: (polygons: Polygon[]) => setPolygonBuilder(new PolygonBuilder(polygons)),
       toggleDebug: () => setDebug(!callbackInputsRef.current.debug),
       toggleCameraMode: () => {
-        const {
-          cameraState: currentCameraState,
-          saveConfig: currentSaveConfig,
-        } = callbackInputsRef.current;
+        const { cameraState: currentCameraState, saveConfig: currentSaveConfig } =
+          callbackInputsRef.current;
         currentSaveConfig({
           cameraState: { ...currentCameraState, perspective: !currentCameraState.perspective },
         });
@@ -782,15 +750,12 @@ export default function Layout({
     return handlers;
   }, [pinTopics, saveConfig, searchTextProps, toggleCameraMode]);
 
-  const markerProviders = useMemo(() => [gridBuilder, sceneBuilder, transformsBuilder], [
-    gridBuilder,
-    sceneBuilder,
-    transformsBuilder,
-  ]);
+  const markerProviders = useMemo(
+    () => [gridBuilder, sceneBuilder, transformsBuilder],
+    [gridBuilder, sceneBuilder, transformsBuilder],
+  );
 
   const cursorType = isDrawing ? "crosshair" : "";
-  const { isHovered = false } = useContext(PanelContext) ?? {};
-  const isHidden = !isHovered;
 
   const { videoRecordingStyle } = useMemo(
     () => ({
@@ -831,14 +796,7 @@ export default function Layout({
           data-test="3dviz-layout"
         >
           <KeyListener keyDownHandlers={keyDownHandlers} />
-          <PanelToolbarMenu
-            autoTextBackgroundColor={autoTextBackgroundColor}
-            checkedKeys={checkedKeys}
-            flattenMarkers={!!flattenMarkers}
-            helpContent={helpContent}
-            saveConfig={saveConfig}
-            settingsByKey={settingsByKey}
-          />
+          <PanelToolbar floating helpContent={helpContent} />
           <div style={{ position: "absolute", width: "100%", height: "100%" }}>
             <div
               style={
@@ -851,37 +809,35 @@ export default function Layout({
               }
               ref={topicTreeSizeRef}
             >
-              {isHovered && (
-                <TopicTree
-                  allKeys={allKeys}
-                  availableNamespacesByTopic={availableNamespacesByTopic}
-                  checkedKeys={checkedKeys}
-                  containerHeight={containerHeight ?? 0}
-                  containerWidth={containerWidth ?? 0}
-                  derivedCustomSettingsByKey={derivedCustomSettingsByKey}
-                  expandedKeys={expandedKeys}
-                  filterText={filterText}
-                  getIsNamespaceCheckedByDefault={getIsNamespaceCheckedByDefault}
-                  getIsTreeNodeVisibleInScene={getIsTreeNodeVisibleInScene}
-                  getIsTreeNodeVisibleInTree={getIsTreeNodeVisibleInTree}
-                  hasFeatureColumn={hasFeatureColumn}
-                  onExitTopicTreeFocus={onExitTopicTreeFocus}
-                  onNamespaceOverrideColorChange={onNamespaceOverrideColorChange}
-                  pinTopics={pinTopics}
-                  diffModeEnabled={diffModeEnabled}
-                  rootTreeNode={rootTreeNode}
-                  saveConfig={saveConfig}
-                  sceneErrorsByKey={sceneErrorsByKey}
-                  setCurrentEditingTopic={setCurrentEditingTopic}
-                  setEditingNamespace={setEditingNamespace}
-                  setFilterText={setFilterText}
-                  setShowTopicTree={setShowTopicTree}
-                  shouldExpandAllKeys={shouldExpandAllKeys}
-                  showTopicTree={showTopicTree}
-                  topicDisplayMode={topicDisplayMode}
-                  visibleTopicsCountByKey={visibleTopicsCountByKey}
-                />
-              )}
+              <TopicTree
+                allKeys={allKeys}
+                availableNamespacesByTopic={availableNamespacesByTopic}
+                checkedKeys={checkedKeys}
+                containerHeight={containerHeight ?? 0}
+                containerWidth={containerWidth ?? 0}
+                settingsByKey={settingsByKey}
+                derivedCustomSettingsByKey={derivedCustomSettingsByKey}
+                expandedKeys={expandedKeys}
+                filterText={filterText}
+                getIsNamespaceCheckedByDefault={getIsNamespaceCheckedByDefault}
+                getIsTreeNodeVisibleInScene={getIsTreeNodeVisibleInScene}
+                getIsTreeNodeVisibleInTree={getIsTreeNodeVisibleInTree}
+                hasFeatureColumn={hasFeatureColumn}
+                onExitTopicTreeFocus={onExitTopicTreeFocus}
+                onNamespaceOverrideColorChange={onNamespaceOverrideColorChange}
+                pinTopics={pinTopics}
+                diffModeEnabled={diffModeEnabled}
+                rootTreeNode={rootTreeNode}
+                saveConfig={saveConfig}
+                sceneErrorsByKey={sceneErrorsByKey}
+                setCurrentEditingTopic={setCurrentEditingTopic}
+                setFilterText={setFilterText}
+                setShowTopicTree={setShowTopicTree}
+                shouldExpandAllKeys={shouldExpandAllKeys}
+                showTopicTree={showTopicTree}
+                topicDisplayMode={topicDisplayMode}
+                visibleTopicsCountByKey={visibleTopicsCountByKey}
+              />
               {currentEditingTopic && (
                 <TopicSettingsModal
                   currentEditingTopic={currentEditingTopic}
@@ -893,26 +849,6 @@ export default function Layout({
                   saveConfig={saveConfig}
                   settingsByKey={settingsByKey}
                 />
-              )}
-              {editingNamespace && (
-                <RenderToBodyComponent>
-                  <Modal
-                    onRequestClose={() => setEditingNamespace(undefined)}
-                    contentStyle={{
-                      maxHeight: "calc(100vh - 200px)",
-                      maxWidth: 480,
-                      display: "flex",
-                      flexDirection: "column",
-                    }}
-                  >
-                    <ColorPickerSettingsPanel
-                      color={settingsByKey[editingNamespace.namespaceKey]?.overrideColor}
-                      onChange={(newColor) =>
-                        onNamespaceOverrideColorChange(newColor, editingNamespace.namespaceKey)
-                      }
-                    />
-                  </Modal>
-                </RenderToBodyComponent>
               )}
             </div>
           </div>
@@ -970,7 +906,6 @@ export default function Layout({
                   targetPose={targetPose}
                   transforms={transforms}
                   rootTf={rootTf}
-                  isHidden={isHidden}
                   {...searchTextProps}
                 />
               </div>

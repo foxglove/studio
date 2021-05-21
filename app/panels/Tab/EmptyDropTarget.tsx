@@ -17,15 +17,16 @@ import { MosaicDragType } from "react-mosaic-component";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 
-import { addPanel } from "@foxglove-studio/app/actions/panels";
-import EmptyBoxSvg from "@foxglove-studio/app/assets/emptyBox.svg";
-import ChildToggle from "@foxglove-studio/app/components/ChildToggle";
-import Menu from "@foxglove-studio/app/components/Menu";
-import PanelList, { PanelSelection } from "@foxglove-studio/app/components/PanelList";
-import cssColors from "@foxglove-studio/app/styles/colors.module.scss";
-import { MosaicDropResult } from "@foxglove-studio/app/types/panels";
-import logEvent, { getEventNames, getEventTags } from "@foxglove-studio/app/util/logEvent";
-import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
+import { addPanel } from "@foxglove/studio-base/actions/panels";
+import EmptyBoxSvg from "@foxglove/studio-base/assets/emptyBox.svg";
+import ChildToggle from "@foxglove/studio-base/components/ChildToggle";
+import Menu from "@foxglove/studio-base/components/Menu";
+import PanelList, { PanelSelection } from "@foxglove/studio-base/components/PanelList";
+import cssColors from "@foxglove/studio-base/styles/colors.module.scss";
+import { MosaicDropResult } from "@foxglove/studio-base/types/panels";
+import { getPanelIdForType } from "@foxglove/studio-base/util/layout";
+import logEvent, { getEventNames, getEventTags } from "@foxglove/studio-base/util/logEvent";
+import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 const SDropTarget = styled.div<{ isOver: boolean }>`
   display: flex;
@@ -75,7 +76,8 @@ export const EmptyDropTarget = ({ tabId }: Props): JSX.Element => {
 
   const onPanelSelect = useCallback(
     ({ type, config, relatedConfigs }: PanelSelection) => {
-      dispatch(addPanel({ tabId, type, layout: undefined, config, relatedConfigs }));
+      const id = getPanelIdForType(type);
+      dispatch(addPanel({ tabId, id, layout: undefined, config, relatedConfigs }));
       const name = getEventNames().PANEL_ADD;
       const eventType = getEventTags().PANEL_TYPE;
       if (name != undefined && eventType != undefined) {

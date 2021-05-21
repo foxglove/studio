@@ -24,31 +24,20 @@ import {
 } from "react-mosaic-component";
 import { MosaicKey } from "react-mosaic-component/lib/types";
 
-import { PanelsState } from "@foxglove-studio/app/reducers/panels";
-import { TabLocation, TabPanelConfig } from "@foxglove-studio/app/types/layouts";
+import Logger from "@foxglove/log";
+import { PanelsState } from "@foxglove/studio-base/reducers/panels";
+import { TabLocation, TabPanelConfig } from "@foxglove/studio-base/types/layouts";
 import {
   ConfigsPayload,
   PanelConfig,
   SaveConfigsPayload,
   MosaicDropTargetPosition,
   SavedProps,
-} from "@foxglove-studio/app/types/panels";
-import filterMap from "@foxglove-studio/app/util/filterMap";
-import {
-  TAB_PANEL_TYPE,
-  LAYOUT_QUERY_KEY,
-  LAYOUT_URL_QUERY_KEY,
-  PATCH_QUERY_KEY,
-} from "@foxglove-studio/app/util/globalConstants";
-import Logger from "@foxglove/log";
-
-import { isInIFrame } from "./iframeUtils";
+} from "@foxglove/studio-base/types/panels";
+import filterMap from "@foxglove/studio-base/util/filterMap";
+import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
 
 const log = Logger.getLogger(__filename);
-
-const IS_IN_IFRAME = isInIFrame();
-
-const PARAMS_TO_DECODE = new Set([LAYOUT_URL_QUERY_KEY]);
 
 // given a panel type, create a unique id for a panel
 // with the type embedded within the id
@@ -134,7 +123,7 @@ function getLayoutWithNewPanelIds(
     }
   }
   // TODO: Refactor above to allow for better typing here.
-  return (newLayout as any) as MosaicNode<string>;
+  return newLayout as any as MosaicNode<string>;
 }
 
 // Recursively removes all empty nodes from a layout
@@ -213,20 +202,22 @@ export const getParentTabPanelByPanelId = (
     return memo;
   }, {});
 
-const replaceMaybeTabLayoutWithNewPanelIds = (panelIdMap: PanelIdMap) => ({ id, config }: any) => {
-  return config.tabs
-    ? {
-        id,
-        config: {
-          ...config,
-          tabs: config.tabs.map((t: any) => ({
-            ...t,
-            layout: getLayoutWithNewPanelIds(t.layout, panelIdMap),
-          })),
-        },
-      }
-    : { id, config };
-};
+const replaceMaybeTabLayoutWithNewPanelIds =
+  (panelIdMap: PanelIdMap) =>
+  ({ id, config }: any) => {
+    return config.tabs
+      ? {
+          id,
+          config: {
+            ...config,
+            tabs: config.tabs.map((t: any) => ({
+              ...t,
+              layout: getLayoutWithNewPanelIds(t.layout, panelIdMap),
+            })),
+          },
+        }
+      : { id, config };
+  };
 
 export const getSaveConfigsPayloadForAddedPanel = ({
   id,
@@ -380,7 +371,7 @@ export const addPanelToTab = (
   tabId: string,
 ): SaveConfigsPayload => {
   const safeTabConfig = validateTabPanelConfig(tabConfig)
-    ? ((tabConfig as any) as TabPanelConfig)
+    ? (tabConfig as any as TabPanelConfig)
     : DEFAULT_TAB_PANEL_CONFIG;
 
   const currentTabLayout = safeTabConfig.tabs[safeTabConfig.activeTabIdx]?.layout;
@@ -552,38 +543,6 @@ export function getConfigsForNestedPanelsInsideTab(
     }
   });
   return configs;
-}
-
-export function stringifyParams(params: URLSearchParams): string {
-  const stringifiedParams = [];
-  for (const [key, value] of params) {
-    if (PARAMS_TO_DECODE.has(key)) {
-      stringifiedParams.push(`${key}=${decodeURIComponent(value)}`);
-    } else {
-      stringifiedParams.push(`${key}=${encodeURIComponent(value)}`);
-    }
-  }
-  return stringifiedParams.length > 0 ? `?${stringifiedParams.join("&")}` : "";
-}
-
-export function getUpdatedURLWithNewVersion(
-  search: string,
-  name: string,
-  version?: string,
-): string {
-  const params = new URLSearchParams(search);
-  params.set(LAYOUT_QUERY_KEY, `${name}${version != undefined ? `@${version}` : ""}`);
-  params.delete(PATCH_QUERY_KEY);
-  return stringifyParams(params);
-}
-export function getShouldProcessPatch(): boolean {
-  // Skip processing patch in iframe (currently used for MiniViz) since we can't update the URL anyway.
-  return !IS_IN_IFRAME;
-}
-// If we have a URL patch, the user has edited the layout.
-export function hasEditedLayout(): boolean {
-  const params = new URLSearchParams(window.location.search);
-  return params.has(PATCH_QUERY_KEY);
 }
 
 export function setDefaultFields(defaultLayout: PanelsState, layout: PanelsState): PanelsState {

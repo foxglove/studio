@@ -15,22 +15,20 @@ import { useDispatch, useSelector } from "react-redux";
 import { Time } from "rosbag";
 import styled from "styled-components";
 
-import { setPlaybackConfig } from "@foxglove-studio/app/actions/panels";
-import Dropdown from "@foxglove-studio/app/components/Dropdown";
-import DropdownItem from "@foxglove-studio/app/components/Dropdown/DropdownItem";
-import Flex from "@foxglove-studio/app/components/Flex";
-import { State } from "@foxglove-studio/app/reducers";
+import { setPlaybackConfig } from "@foxglove/studio-base/actions/panels";
+import Dropdown from "@foxglove/studio-base/components/Dropdown";
+import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
+import Flex from "@foxglove/studio-base/components/Flex";
+import { State } from "@foxglove/studio-base/reducers";
 import {
   formatDate,
   formatTime,
   getValidatedTimeAndMethodFromString,
-} from "@foxglove-studio/app/util/formatTime";
-import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
-import { formatTimeRaw, isTimeInRangeInclusive } from "@foxglove-studio/app/util/time";
+} from "@foxglove/studio-base/util/formatTime";
+import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { formatTimeRaw, isTimeInRangeInclusive } from "@foxglove/studio-base/util/time";
 
 import styles from "./index.module.scss";
-
-const MAX_WIDTH = 200;
 
 const SInput = styled.input`
   padding: 8px 4px;
@@ -144,7 +142,7 @@ const PlaybackTimeDisplayMethod = ({
   }, [hasError, inputText, isPlaying]);
 
   return (
-    <Flex start style={{ maxWidth: `${MAX_WIDTH}px`, alignItems: "center", marginLeft: "8px" }}>
+    <Flex start style={{ flexGrow: 0, alignItems: "center", marginLeft: "8px" }}>
       {currentTime ? (
         isEditing ? (
           <form onSubmit={onSubmit} style={{ width: "100%" }}>
@@ -177,10 +175,6 @@ const PlaybackTimeDisplayMethod = ({
       <Dropdown
         position="above"
         value={timeDisplayMethod}
-        menuStyle={{
-          width: `${MAX_WIDTH - 45}px`,
-          marginLeft: currentTime ? `-${MAX_WIDTH - 90}px` : `-${MAX_WIDTH - 90}px`,
-        }}
         text={timeDisplayMethod}
         onChange={(val) => setTimeDisplayMethod(val)}
         btnClassname={styles.timeDisplayMethodButton}

@@ -6,11 +6,11 @@ import { useCallback, useState } from "react";
 import URDFLoader from "urdf-loader";
 import { v4 as uuidv4 } from "uuid";
 
-import AssetsContext from "@foxglove-studio/app/context/AssetContext";
-import URDFViewer from "@foxglove-studio/app/panels/URDFViewer";
-import { MessageEvent } from "@foxglove-studio/app/players/types";
-import PanelSetup from "@foxglove-studio/app/stories/PanelSetup";
-import { JointState } from "@foxglove-studio/app/types/Messages";
+import AssetsContext from "@foxglove/studio-base/context/AssetContext";
+import URDFViewer from "@foxglove/studio-base/panels/URDFViewer";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
+import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
+import { JointState } from "@foxglove/studio-base/types/Messages";
 
 export default {
   title: "panels/URDFViewer/index",
@@ -50,7 +50,7 @@ export function CustomOpacity(): JSX.Element {
   return (
     <ExampleAssetsProvider>
       <PanelSetup>
-        <URDFViewer config={{ opacity: 0.25 }} />
+        <URDFViewer overrideConfig={{ opacity: 0.25 }} />
       </PanelSetup>
     </ExampleAssetsProvider>
   );
@@ -87,7 +87,7 @@ export function ManualJointPosition(): JSX.Element {
     <ExampleAssetsProvider>
       <PanelSetup>
         <URDFViewer
-          config={{ jointStatesTopic: undefined, customJointValues: { base_rotation: 1 } }}
+          overrideConfig={{ jointStatesTopic: undefined, customJointValues: { base_rotation: 1 } }}
         />
       </PanelSetup>
     </ExampleAssetsProvider>

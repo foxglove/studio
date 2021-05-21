@@ -13,14 +13,13 @@
 //   You may not use this file except in compliance with the License.
 
 import { act, renderHook } from "@testing-library/react-hooks";
-import { createMemoryHistory } from "history";
 import React, { PropsWithChildren } from "react";
 
-import { setGlobalVariables } from "@foxglove-studio/app/actions/panels";
-import useMessagesByPath from "@foxglove-studio/app/components/MessagePathSyntax/useMessagesByPath";
-import MockMessagePipelineProvider from "@foxglove-studio/app/components/MessagePipeline/MockMessagePipelineProvider";
-import createRootReducer from "@foxglove-studio/app/reducers";
-import configureStore from "@foxglove-studio/app/store/configureStore.testing";
+import { setGlobalVariables } from "@foxglove/studio-base/actions/panels";
+import useMessagesByPath from "@foxglove/studio-base/components/MessagePathSyntax/useMessagesByPath";
+import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
+import createRootReducer from "@foxglove/studio-base/reducers";
+import configureStore from "@foxglove/studio-base/store/configureStore.testing";
 
 import * as fixture from "./fixture";
 
@@ -331,7 +330,7 @@ describe("useMessagesByPath", () => {
       },
     };
     it("updates queriedData when a global variable changes", () => {
-      const store = configureStore(createRootReducer(createMemoryHistory()));
+      const store = configureStore(createRootReducer());
 
       store.dispatch(setGlobalVariables({ foo: 0 }));
 

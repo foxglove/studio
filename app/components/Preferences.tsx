@@ -5,8 +5,6 @@ import {
   Checkbox,
   DirectionalHint,
   IComboBoxOption,
-  Pivot,
-  PivotItem,
   SelectableOptionMenuItemType,
   Stack,
   Text,
@@ -17,16 +15,17 @@ import {
 import moment from "moment-timezone";
 import { useCallback, useMemo, useState } from "react";
 
-import { AppSetting } from "@foxglove-studio/app/AppSetting";
-import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
-import { ExperimentalFeatureSettings } from "@foxglove-studio/app/components/ExperimentalFeatureSettings";
-import { SidebarContent } from "@foxglove-studio/app/components/SidebarContent";
-import { useAppConfigurationValue } from "@foxglove-studio/app/hooks/useAppConfigurationValue";
-import { nonEmptyOrUndefined } from "@foxglove-studio/app/util/emptyOrUndefined";
-import filterMap from "@foxglove-studio/app/util/filterMap";
-import fuzzyFilter from "@foxglove-studio/app/util/fuzzyFilter";
-import { APP_NAME } from "@foxglove-studio/app/version";
 import { RosNode } from "@foxglove/ros1";
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
+import { ExperimentalFeatureSettings } from "@foxglove/studio-base/components/ExperimentalFeatureSettings";
+import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
+import { nonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
+import filterMap from "@foxglove/studio-base/util/filterMap";
+import fuzzyFilter from "@foxglove/studio-base/util/fuzzyFilter";
+
+const MESSAGE_RATES = [1, 3, 5, 10, 15, 20, 30, 60];
 
 function formatTimezone(name: string) {
   const tz = moment.tz(name);
@@ -83,11 +82,10 @@ function TimezoneSettings(): React.ReactElement {
     return map;
   }, [fixedItems, timezoneItems]);
 
-  const selectedItem = useMemo(() => itemsByData.get(timezone ?? "") ?? detectItem, [
-    itemsByData,
-    timezone,
-    detectItem,
-  ]);
+  const selectedItem = useMemo(
+    () => itemsByData.get(timezone ?? "") ?? detectItem,
+    [itemsByData, timezone, detectItem],
+  );
 
   const [filterText, setFilterText] = useState<string>("");
   const filteredItems = useMemo(() => {
@@ -126,6 +124,33 @@ function TimezoneSettings(): React.ReactElement {
   );
 }
 
+function MessageFramerate(): React.ReactElement {
+  const [messageRate, setMesageRate] = useAppConfigurationValue<number>(AppSetting.MESSAGE_RATE);
+  const entries = useMemo(
+    () => MESSAGE_RATES.map((rate) => ({ key: rate, text: `${rate}`, data: rate })),
+    [],
+  );
+
+  return (
+    <VirtualizedComboBox
+      label="Message rate (Hz):"
+      options={entries}
+      autoComplete="on"
+      openOnKeyboardFocus
+      selectedKey={messageRate ?? 60}
+      onChange={(_event, option) => {
+        if (option) {
+          setMesageRate(option.data);
+        }
+      }}
+      calloutProps={{
+        directionalHint: DirectionalHint.bottomLeftEdge,
+        directionalHintFixed: true,
+      }}
+    />
+  );
+}
+
 function RosHostname(): React.ReactElement {
   const [rosHostname, setRosHostname] = useAppConfigurationValue<string>(
     AppSetting.ROS1_ROS_HOSTNAME,
@@ -150,6 +175,23 @@ function RosHostname(): React.ReactElement {
   );
 }
 
+function SectionHeader({ children }: React.PropsWithChildren<unknown>) {
+  const theme = useTheme();
+  return (
+    <Text
+      block
+      as="h2"
+      variant="large"
+      style={{
+        marginBottom: theme.spacing.s1,
+        color: theme.palette.themeSecondary,
+      }}
+    >
+      {children}
+    </Text>
+  );
+}
+
 export default function Preferences(): React.ReactElement {
   const theme = useTheme();
 
@@ -162,26 +204,31 @@ export default function Preferences(): React.ReactElement {
 
   return (
     <SidebarContent title="Preferences">
-      <Pivot>
-        <PivotItem headerText="General" style={{ paddingTop: theme.spacing.m }}>
+      <Stack tokens={{ childrenGap: 30 }}>
+        <Stack.Item>
+          <SectionHeader>General</SectionHeader>
           <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
             <Stack.Item>
               <TimezoneSettings />
             </Stack.Item>
             <Stack.Item>
+              <MessageFramerate />
+            </Stack.Item>
+            <Stack.Item>
               <RosHostname />
             </Stack.Item>
           </Stack>
-        </PivotItem>
-        <PivotItem headerText="Privacy" style={{ paddingTop: theme.spacing.m }}>
+        </Stack.Item>
+        <Stack.Item>
+          <SectionHeader>Privacy</SectionHeader>
           <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
             <Text style={{ color: theme.palette.neutralSecondary }}>
-              Changes will take effect the next time {APP_NAME} is launched.
+              Changes will take effect the next time Foxglove Studio is launched.
             </Text>
             <Checkbox
               checked={telemetryEnabled ?? true}
               onChange={(_event, checked) => setTelemetryEnabled(checked)}
-              label={`Send anonymized usage data to help us improve ${APP_NAME}`}
+              label={`Send anonymized usage data to help us improve Foxglove Studio`}
             />
             <Checkbox
               checked={crashReportingEnabled ?? true}
@@ -189,11 +236,12 @@ export default function Preferences(): React.ReactElement {
               label="Send anonymized crash reports"
             />
           </Stack>
-        </PivotItem>
-        <PivotItem headerText="Experimental Features">
+        </Stack.Item>
+        <Stack.Item>
+          <SectionHeader>Experimental Features</SectionHeader>
           <ExperimentalFeatureSettings />
-        </PivotItem>
-      </Pivot>
+        </Stack.Item>
+      </Stack>
     </SidebarContent>
   );
 }

@@ -11,12 +11,11 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { createMemoryHistory } from "history";
 import { useRef, ReactNode } from "react";
 import { Provider } from "react-redux";
 
-import createRootReducer from "@foxglove-studio/app/reducers";
-import configureStore from "@foxglove-studio/app/store/configureStore";
+import createRootReducer from "@foxglove/studio-base/reducers";
+import configureStore from "@foxglove/studio-base/store/configureStore";
 
 type Store = ReturnType<typeof configureStore>;
 
@@ -26,7 +25,7 @@ type Props = {
 };
 
 export default function StoreSetup(props: Props): JSX.Element {
-  const storeRef = useRef(props.store ?? configureStore(createRootReducer(createMemoryHistory())));
+  const storeRef = useRef(props.store ?? configureStore(createRootReducer()));
 
   return <Provider store={storeRef.current}>{props.children}</Provider>;
 }

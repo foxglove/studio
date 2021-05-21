@@ -13,13 +13,13 @@
 
 import { useMemo } from "react";
 
-import * as PanelAPI from "@foxglove-studio/app/PanelAPI";
-import { getTopicsFromPaths } from "@foxglove-studio/app/components/MessagePathSyntax/parseRosPath";
+import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
+import { getTopicsFromPaths } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import {
   MessageDataItemsByPath,
   useDecodeMessagePathsForMessagesByTopic,
-} from "@foxglove-studio/app/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
-import useShallowMemo from "@foxglove-studio/app/hooks/useShallowMemo";
+} from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
+import useShallowMemo from "@foxglove/studio-base/hooks/useShallowMemo";
 
 // Given a set of message paths, subscribe to the appropriate topics and return
 // messages with their queried data decoded for each path.
@@ -35,11 +35,10 @@ export default function useMessagesByPath(
     historySize,
   });
 
-  const decodeMessagePathsForMessagesByTopic = useDecodeMessagePathsForMessagesByTopic(
-    memoizedPaths,
+  const decodeMessagePathsForMessagesByTopic =
+    useDecodeMessagePathsForMessagesByTopic(memoizedPaths);
+  return useMemo(
+    () => decodeMessagePathsForMessagesByTopic(messagesByTopic),
+    [decodeMessagePathsForMessagesByTopic, messagesByTopic],
   );
-  return useMemo(() => decodeMessagePathsForMessagesByTopic(messagesByTopic), [
-    decodeMessagePathsForMessagesByTopic,
-    messagesByTopic,
-  ]);
 }

@@ -14,12 +14,12 @@ import _, { flatten, groupBy, isEqual, keyBy, mapValues, some, xor } from "lodas
 import { Time } from "rosbag";
 import shallowequal from "shallowequal";
 
-import { GlobalVariables } from "@foxglove-studio/app/hooks/useGlobalVariables";
-import MessageCollector from "@foxglove-studio/app/panels/ThreeDimensionalViz/SceneBuilder/MessageCollector";
-import { MarkerMatcher } from "@foxglove-studio/app/panels/ThreeDimensionalViz/ThreeDimensionalVizContext";
-import Transforms from "@foxglove-studio/app/panels/ThreeDimensionalViz/Transforms";
-import VelodyneCloudConverter from "@foxglove-studio/app/panels/ThreeDimensionalViz/VelodyneCloudConverter";
-import { Topic, Frame, MessageEvent } from "@foxglove-studio/app/players/types";
+import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
+import MessageCollector from "@foxglove/studio-base/panels/ThreeDimensionalViz/SceneBuilder/MessageCollector";
+import { MarkerMatcher } from "@foxglove/studio-base/panels/ThreeDimensionalViz/ThreeDimensionalVizContext";
+import Transforms from "@foxglove/studio-base/panels/ThreeDimensionalViz/Transforms";
+import VelodyneCloudConverter from "@foxglove/studio-base/panels/ThreeDimensionalViz/VelodyneCloudConverter";
+import { Topic, Frame, MessageEvent } from "@foxglove/studio-base/players/types";
 import {
   Color,
   Marker,
@@ -34,16 +34,14 @@ import {
   PoseStamped,
   VelodyneScan,
   GeometryMsgs$PolygonStamped,
-} from "@foxglove-studio/app/types/Messages";
-import { MarkerProvider, MarkerCollector, Scene } from "@foxglove-studio/app/types/Scene";
-import Bounds from "@foxglove-studio/app/util/Bounds";
-import { emptyPose } from "@foxglove-studio/app/util/Pose";
+} from "@foxglove/studio-base/types/Messages";
+import { MarkerProvider, MarkerCollector, Scene } from "@foxglove/studio-base/types/Scene";
+import Bounds from "@foxglove/studio-base/util/Bounds";
+import { emptyPose } from "@foxglove/studio-base/util/Pose";
 import {
   POSE_MARKER_SCALE,
   LINED_CONVEX_HULL_RENDERING_SETTING,
   MARKER_ARRAY_DATATYPES,
-  STUDIO_MARKER_DATATYPE,
-  STUDIO_MARKER_ARRAY_DATATYPE,
   VISUALIZATION_MSGS_MARKER_DATATYPE,
   VISUALIZATION_MSGS_MARKER_ARRAY_DATATYPE,
   POSE_STAMPED_DATATYPE,
@@ -54,10 +52,10 @@ import {
   COLOR_RGBA_DATATYPE,
   SENSOR_MSGS_LASER_SCAN_DATATYPE,
   GEOMETRY_MSGS_POLYGON_STAMPED_DATATYPE,
-} from "@foxglove-studio/app/util/globalConstants";
-import naturalSort from "@foxglove-studio/app/util/naturalSort";
-import sendNotification from "@foxglove-studio/app/util/sendNotification";
-import { fromSec } from "@foxglove-studio/app/util/time";
+} from "@foxglove/studio-base/util/globalConstants";
+import naturalSort from "@foxglove/studio-base/util/naturalSort";
+import sendNotification from "@foxglove/studio-base/util/sendNotification";
+import { fromSec } from "@foxglove/studio-base/util/time";
 
 import { ThreeDimensionalVizHooks } from "./types";
 
@@ -602,9 +600,10 @@ export default class SceneBuilder implements MarkerProvider {
     const matchingMatcher = colorOverrideMarkerMatchers.find(({ checks = [] }) =>
       checks.every(({ markerKeyPath = [], value }) => {
         // Get the item at the key path
+        // i.e. key path: ["foo", "bar"] would return "value" in an object like {foo: {bar: "value" }}
         const markerValue = markerKeyPath.reduce(
-          (item: any, key) => item?.[key] && item[key](),
-          message as any,
+          (item: any, key) => item?.[key],
+          message as Record<string, unknown> | undefined,
         );
         return value === markerValue;
       }),
@@ -684,8 +683,21 @@ export default class SceneBuilder implements MarkerProvider {
     // in the future these will be customizable via the UI
     const [alpha, map] = this._hooks.getOccupancyGridValues(topic);
 
+    const { header, info, data } = message;
     const mappedMessage = {
-      ...message,
+      header: {
+        frame_id: header.frame_id,
+        stamp: header.stamp,
+        seq: header.seq,
+      },
+      info: {
+        map_load_time: info.map_load_time,
+        resolution: info.resolution,
+        width: info.width,
+        height: info.height,
+        origin: info.origin,
+      },
+      data,
       alpha,
       map,
       type,
@@ -794,12 +806,10 @@ export default class SceneBuilder implements MarkerProvider {
   _consumeMessage = (topic: string, datatype: string, msg: MessageEvent<unknown>): void => {
     const { message } = msg;
     switch (datatype) {
-      case STUDIO_MARKER_DATATYPE:
       case VISUALIZATION_MSGS_MARKER_DATATYPE:
         this._consumeMarker(topic, message as BaseMarker);
 
         break;
-      case STUDIO_MARKER_ARRAY_DATATYPE:
       case VISUALIZATION_MSGS_MARKER_ARRAY_DATATYPE:
         this._consumeMarkerArray(topic, message);
 
@@ -977,7 +987,6 @@ export default class SceneBuilder implements MarkerProvider {
     // allow topic settings to override renderable marker command (see MarkerSettingsEditor.js)
     const { overrideCommand } = this._settingsByKey[`t:${topic.name}`] || {};
 
-    // prettier-ignore
     switch (marker.type) {
       case 0:
         return add.arrow(marker);
@@ -1026,13 +1035,11 @@ export default class SceneBuilder implements MarkerProvider {
         return add.overlayIcon(marker);
       case 110:
         return add.color(marker);
-      default:
-        {
-          if (!this._hooks.addMarkerToCollector(add, marker)) {
-            this._setTopicError(topic.name, `Unsupported marker type: ${marker.type}`);
-          }
+      default: {
+        if (!this._hooks.addMarkerToCollector(add, marker)) {
+          this._setTopicError(topic.name, `Unsupported marker type: ${marker.type}`);
         }
-
+      }
     }
   }
 }

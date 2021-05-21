@@ -11,50 +11,52 @@
 //   You may not use this file except in compliance with the License.
 
 import { Stack } from "@fluentui/react";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useToasts } from "react-toast-notifications";
 import { useMountedState } from "react-use";
 import styled from "styled-components";
 
-import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
-import { redoLayoutChange, undoLayoutChange } from "@foxglove-studio/app/actions/layoutHistory";
-import { importPanelLayout, loadLayout } from "@foxglove-studio/app/actions/panels";
-import DocumentDropListener from "@foxglove-studio/app/components/DocumentDropListener";
-import DropOverlay from "@foxglove-studio/app/components/DropOverlay";
-import GlobalKeyListener from "@foxglove-studio/app/components/GlobalKeyListener";
-import GlobalVariablesTable from "@foxglove-studio/app/components/GlobalVariablesTable";
-import variablesHelp from "@foxglove-studio/app/components/GlobalVariablesTable/index.help.md";
-import HelpModal from "@foxglove-studio/app/components/HelpModal";
-import LayoutMenu from "@foxglove-studio/app/components/LayoutMenu";
-import messagePathHelp from "@foxglove-studio/app/components/MessagePathSyntax/index.help.md";
-import { useMessagePipeline } from "@foxglove-studio/app/components/MessagePipeline";
-import NotificationDisplay from "@foxglove-studio/app/components/NotificationDisplay";
-import PanelLayout from "@foxglove-studio/app/components/PanelLayout";
-import PanelList from "@foxglove-studio/app/components/PanelList";
-import PlaybackControls from "@foxglove-studio/app/components/PlaybackControls";
-import { PlayerStatusIndicator } from "@foxglove-studio/app/components/PlayerStatusIndicator";
-import Preferences from "@foxglove-studio/app/components/Preferences";
-import { RenderToBodyComponent } from "@foxglove-studio/app/components/RenderToBodyComponent";
-import ShortcutsModal from "@foxglove-studio/app/components/ShortcutsModal";
-import Sidebar, { SidebarItem } from "@foxglove-studio/app/components/Sidebar";
-import { SidebarContent } from "@foxglove-studio/app/components/SidebarContent";
-import TinyConnectionPicker from "@foxglove-studio/app/components/TinyConnectionPicker";
-import Toolbar from "@foxglove-studio/app/components/Toolbar";
-import { useAppConfiguration } from "@foxglove-studio/app/context/AppConfigurationContext";
-import { useAssets } from "@foxglove-studio/app/context/AssetContext";
-import LinkHandlerContext from "@foxglove-studio/app/context/LinkHandlerContext";
-import { usePlayerSelection } from "@foxglove-studio/app/context/PlayerSelectionContext";
-import useElectronFilesToOpen from "@foxglove-studio/app/hooks/useElectronFilesToOpen";
-import useNativeAppMenuEvent from "@foxglove-studio/app/hooks/useNativeAppMenuEvent";
-import useSelectPanel from "@foxglove-studio/app/hooks/useSelectPanel";
-import welcomeLayout from "@foxglove-studio/app/layouts/welcomeLayout";
-import { PlayerPresence } from "@foxglove-studio/app/players/types";
-import { ImportPanelLayoutPayload } from "@foxglove-studio/app/types/panels";
-import { isNonEmptyOrUndefined } from "@foxglove-studio/app/util/emptyOrUndefined";
-import inAutomatedRunMode from "@foxglove-studio/app/util/inAutomatedRunMode";
+import Log from "@foxglove/log";
+import { redoLayoutChange, undoLayoutChange } from "@foxglove/studio-base/actions/layoutHistory";
+import { loadLayout } from "@foxglove/studio-base/actions/panels";
+import ConnectionList from "@foxglove/studio-base/components/ConnectionList";
+import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
+import DropOverlay from "@foxglove/studio-base/components/DropOverlay";
+import GlobalKeyListener from "@foxglove/studio-base/components/GlobalKeyListener";
+import GlobalVariablesTable from "@foxglove/studio-base/components/GlobalVariablesTable";
+import variablesHelp from "@foxglove/studio-base/components/GlobalVariablesTable/index.help.md";
+import HelpModal from "@foxglove/studio-base/components/HelpModal";
+import LayoutMenu from "@foxglove/studio-base/components/LayoutMenu";
+import messagePathHelp from "@foxglove/studio-base/components/MessagePathSyntax/index.help.md";
+import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
+import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
+import NotificationDisplay from "@foxglove/studio-base/components/NotificationDisplay";
+import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
+import PanelList from "@foxglove/studio-base/components/PanelList";
+import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
+import PlaybackControls from "@foxglove/studio-base/components/PlaybackControls";
+import { PlayerStatusIndicator } from "@foxglove/studio-base/components/PlayerStatusIndicator";
+import Preferences from "@foxglove/studio-base/components/Preferences";
+import { RenderToBodyComponent } from "@foxglove/studio-base/components/RenderToBodyComponent";
+import ShortcutsModal from "@foxglove/studio-base/components/ShortcutsModal";
+import Sidebar, { SidebarItem } from "@foxglove/studio-base/components/Sidebar";
+import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
+import Toolbar from "@foxglove/studio-base/components/Toolbar";
+import { useAppConfiguration } from "@foxglove/studio-base/context/AppConfigurationContext";
+import { useAssets } from "@foxglove/studio-base/context/AssetContext";
+import LinkHandlerContext from "@foxglove/studio-base/context/LinkHandlerContext";
+import { PanelSettingsContext } from "@foxglove/studio-base/context/PanelSettingsContext";
+import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import useAddPanel from "@foxglove/studio-base/hooks/useAddPanel";
+import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFilesToOpen";
+import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
+import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
+import { PlayerPresence } from "@foxglove/studio-base/players/types";
+import { isNonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
+import inAutomatedRunMode from "@foxglove/studio-base/util/inAutomatedRunMode";
 
-type TestableWindow = Window & { setPanelLayout?: (payload: ImportPanelLayoutPayload) => void };
+const log = Log.getLogger(__filename);
 
 const SToolbarItem = styled.div`
   flex: 0 0 auto;
@@ -74,21 +76,37 @@ const TruncatedText = styled.span`
   line-height: normal;
 `;
 
-type SidebarItemKey = "add-panel" | "variables" | "preferences";
+type SidebarItemKey = "connection" | "add-panel" | "panel-settings" | "variables" | "preferences";
 
 const SIDEBAR_ITEMS = new Map<SidebarItemKey, SidebarItem>([
-  ["add-panel", { iconName: "MediaAdd", title: "Add Panel", component: AddPanel }],
-  ["variables", { iconName: "Rename", title: "Variables", component: Variables }],
+  [
+    "connection",
+    { iconName: "DataManagementSettings", title: "Connection", component: Connection },
+  ],
+  ["add-panel", { iconName: "RectangularClipping", title: "Add Panel", component: AddPanel }],
+  [
+    "panel-settings",
+    { iconName: "SingleColumnEdit", title: "Panel Settings", component: PanelSettings },
+  ],
+  ["variables", { iconName: "Variable2", title: "Variables", component: Variables }],
   ["preferences", { iconName: "Settings", title: "Preferences", component: Preferences }],
 ]);
 
 const SIDEBAR_BOTTOM_ITEMS: readonly SidebarItemKey[] = ["preferences"];
 
+function Connection() {
+  return (
+    <SidebarContent title="Connection">
+      <ConnectionList />
+    </SidebarContent>
+  );
+}
+
 function AddPanel() {
-  const selectPanel = useSelectPanel();
+  const addPanel = useAddPanel();
   return (
     <SidebarContent noPadding title="Add panel">
-      <PanelList onPanelSelect={selectPanel} />
+      <PanelList onPanelSelect={addPanel} />
     </SidebarContent>
   );
 }
@@ -104,7 +122,13 @@ function Variables() {
 // file types we support for drag/drop
 const allowedDropExtensions = [".bag", ".urdf"];
 
-export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
+type WorkspaceProps = {
+  demoBagUrl?: string;
+  deepLinks?: string[];
+  onToolbarDoubleClick?: () => void;
+};
+
+export default function Workspace(props: WorkspaceProps): JSX.Element {
   const containerRef = useRef<HTMLDivElement>(ReactNull);
   const dispatch = useDispatch();
   const { currentSourceName, selectSource } = usePlayerSelection();
@@ -114,7 +138,24 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
   const playerCapabilities = useMessagePipeline(
     useCallback(({ playerState }) => playerState.capabilities, []),
   );
-  const [selectedSidebarItem, setSelectedSidebarItem] = useState<SidebarItemKey | undefined>();
+  const [selectedSidebarItem, setSelectedSidebarItem] = useState<SidebarItemKey | undefined>(
+    // Start with the sidebar open if no connection has been made
+    currentSourceName == undefined ? "connection" : undefined,
+  );
+
+  // Automatically close the connection sidebar when a connection is chosen
+  const prevSourceName = useRef(currentSourceName);
+  useLayoutEffect(() => {
+    if (
+      selectedSidebarItem === "connection" &&
+      prevSourceName.current == undefined &&
+      currentSourceName != undefined
+    ) {
+      setSelectedSidebarItem(undefined);
+    }
+    prevSourceName.current = currentSourceName;
+  }, [selectedSidebarItem, currentSourceName]);
+
   const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
   const [messagePathSyntaxModalOpen, setMessagePathSyntaxModalOpen] = useState(false);
 
@@ -146,10 +187,7 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
     if (containerRef.current) {
       containerRef.current.focus();
     }
-    // Add a hook for integration tests.
-    (window as TestableWindow).setPanelLayout = (payload: ImportPanelLayoutPayload) =>
-      dispatch(importPanelLayout(payload));
-  }, [dispatch, openWelcomeLayout]);
+  }, []);
 
   // For undo/redo events, first try the browser's native undo/redo, and if that is disabled, then
   // undo/redo the layout history. Note that in GlobalKeyListener we also handle the keyboard
@@ -210,6 +248,10 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
     })();
   }, [appConfiguration, openWelcomeLayout]);
 
+  // previously loaded files are tracked so support the "add bag" feature which loads a second bag
+  // file when the user presses shift during a drag/drop
+  const previousFiles = useRef<File[]>([]);
+
   const { loadFromFile } = useAssets();
 
   const openFiles = useCallback(
@@ -230,11 +272,15 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
       }
 
       if (otherFiles.length > 0) {
+        if (shiftPressed) {
+          previousFiles.current = previousFiles.current.concat(otherFiles);
+        } else {
+          previousFiles.current = otherFiles;
+        }
         selectSource(
           { name: "Local Files", type: "file" },
           {
-            files: otherFiles,
-            append: shiftPressed,
+            files: previousFiles.current,
           },
         );
       }
@@ -250,6 +296,39 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
     }
   }, [filesToOpen, openFiles]);
 
+  useEffect(() => {
+    const firstLink = props.deepLinks?.[0];
+    if (firstLink == undefined) {
+      return;
+    }
+
+    try {
+      const url = new URL(firstLink);
+      // only support the open command
+
+      // Test if the pathname matches //open or //open/
+      if (!/\/\/open\/?/.test(url.pathname)) {
+        return;
+      }
+
+      // only support rosbag urls
+      const type = url.searchParams.get("type");
+      const bagUrl = url.searchParams.get("url");
+      if (type !== "rosbag" || bagUrl == undefined) {
+        return;
+      }
+      selectSource(
+        {
+          name: "Remote Bag",
+          type: "http",
+        },
+        { url: bagUrl },
+      );
+    } catch (err) {
+      log.error(err);
+    }
+  }, [props.deepLinks, selectSource]);
+
   const dropHandler = useCallback(
     ({ files, shiftPressed }: { files: FileList; shiftPressed: boolean }) => {
       openFiles(files, { shiftPressed });
@@ -260,8 +339,23 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
   const showPlaybackControls =
     playerPresence === PlayerPresence.NOT_PRESENT || playerCapabilities.includes("playbackControl");
 
+  const panelSettings = useMemo(
+    () => ({
+      panelSettingsOpen: selectedSidebarItem === "panel-settings",
+      openPanelSettings: () => setSelectedSidebarItem("panel-settings"),
+    }),
+    [selectedSidebarItem],
+  );
+
   return (
-    <LinkHandlerContext.Provider value={handleInternalLink}>
+    <MultiProvider
+      providers={[
+        /* eslint-disable react/jsx-key */
+        <LinkHandlerContext.Provider value={handleInternalLink} />,
+        <PanelSettingsContext.Provider value={panelSettings} />,
+        /* eslint-enable react/jsx-key */
+      ]}
+    >
       <DocumentDropListener filesSelected={dropHandler} allowedExtensions={allowedDropExtensions}>
         <DropOverlay>
           <div style={{ fontSize: "4em", marginBottom: "1em" }}>Drop a file here</div>
@@ -280,15 +374,15 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
           </RenderToBodyComponent>
         )}
 
-        <Toolbar onDoubleClick={OsContextSingleton?.handleToolbarDoubleClick}>
+        <Toolbar onDoubleClick={props.onToolbarDoubleClick}>
+          <div style={{ flexGrow: 1 }} />
           <SToolbarItem>
-            <TinyConnectionPicker />
-          </SToolbarItem>
-          <SToolbarItem style={{ flex: "0 1 auto" }}>
-            <TruncatedText>{currentSourceName ?? "Select a data source"}</TruncatedText>{" "}
             <PlayerStatusIndicator />
           </SToolbarItem>
-          <div style={{ flexGrow: 1 }}></div>
+          <SToolbarItem>
+            <TruncatedText>{currentSourceName ?? "Foxglove Studio"}</TruncatedText>{" "}
+          </SToolbarItem>
+          <div style={{ flexGrow: 1 }} />
           <SToolbarItem style={{ marginRight: 5 }}>
             {!inAutomatedRunMode() && <NotificationDisplay />}
           </SToolbarItem>
@@ -312,6 +406,6 @@ export default function Workspace(props: { demoBagUrl?: string }): JSX.Element {
           </Stack>
         </Sidebar>
       </div>
-    </LinkHandlerContext.Provider>
+    </MultiProvider>
   );
 }

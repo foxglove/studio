@@ -14,8 +14,8 @@
 import { mapValues } from "lodash";
 import { TimeUtil, Time } from "rosbag";
 
-import { MessageEvent } from "@foxglove-studio/app/players/types";
-import { StampedMessage } from "@foxglove-studio/app/types/Messages";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
+import { StampedMessage } from "@foxglove/studio-base/types/Messages";
 
 export const defaultGetHeaderStamp = (message?: Partial<StampedMessage>): Time | undefined => {
   return message?.header?.stamp;
@@ -154,9 +154,7 @@ function getSynchronizedState(
 }
 
 // Returns reducers for use with PanelAPI.useMessageReducer
-export function getSynchronizingReducers(
-  topics: readonly string[],
-): {
+export function getSynchronizingReducers(topics: readonly string[]): {
   restore: (value?: ReducedValue) => ReducedValue;
   addMessage: (value: ReducedValue, newMessage: MessageEvent<unknown>) => ReducedValue;
 } {

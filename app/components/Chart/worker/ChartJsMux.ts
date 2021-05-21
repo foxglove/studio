@@ -28,10 +28,10 @@ import {
 } from "chart.js";
 import AnnotationPlugin from "chartjs-plugin-annotation";
 
-import RobotoMono from "@foxglove-studio/app/styles/assets/latin-roboto-mono.woff2";
-import { RpcLike } from "@foxglove-studio/app/util/FakeRpc";
-import Rpc from "@foxglove-studio/app/util/Rpc";
-import { setupWorker } from "@foxglove-studio/app/util/RpcWorkerUtils";
+import RobotoMono from "@foxglove/studio-base/styles/assets/latin-roboto-mono.woff2";
+import { RpcLike } from "@foxglove/studio-base/util/FakeRpc";
+import Rpc from "@foxglove/studio-base/util/Rpc";
+import { setupWorker } from "@foxglove/studio-base/util/RpcWorkerUtils";
 
 import ChartJSManager from "./ChartJSManager";
 
@@ -42,7 +42,7 @@ import ChartJSManager from "./ChartJSManager";
 // scaling is set >100%.
 async function loadDefaultFont(): Promise<FontFace> {
   const fontFace = new FontFace("Roboto Mono", `url(${RobotoMono}) format('woff2')`);
-  ((self as unknown) as WorkerGlobalScope).fonts.add(fontFace);
+  (self as unknown as WorkerGlobalScope).fonts.add(fontFace);
   return fontFace.load();
 }
 

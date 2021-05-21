@@ -10,26 +10,7 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { colors } from "@foxglove-studio/app/util/sharedStyleConstants";
-
-// URL params
-// DANGER: if you change this you break existing urls
-export const REMOTE_BAG_URL_QUERY_KEY = "remote-bag-url";
-export const REMOTE_BAG_URL_2_QUERY_KEY = "remote-bag-url-2";
-export const ROSBRIDGE_WEBSOCKET_URL_QUERY_KEY = "rosbridge-websocket-url";
-export const MEASURE_DATA_PROVIDERS_QUERY_KEY = "_measureDataProviders";
-export const DEMO_QUERY_KEY = "demo";
-export const DISABLE_WORKERS_QUERY_KEY = "no-workers";
-export const SEEK_TO_UNIX_MS_QUERY_KEY = "seek-to"; // Used on load and set when paused
-export const SEEK_TO_RELATIVE_MS_QUERY_KEY = "seek-by"; // Only used on load. Can be negative.
-export const SEEK_TO_FRACTION_QUERY_KEY = "seek-fraction"; // Only used on load
-export const LAYOUT_QUERY_KEY = "layout";
-export const LAYOUT_URL_QUERY_KEY = "layout-url";
-export const PATCH_QUERY_KEY = "patch";
-export const OLD_GLOBAL_VARIABLES_QUERY_KEY = "global-data";
-export const GLOBAL_VARIABLES_QUERY_KEY = "global-variables";
-export const TEST_EVERYTHING_LAYOUT_QUERY_VAL = "_integration-test-everything-layout";
-export const FRAMELESS = "frameless";
+import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 export const DEFAULT_STUDIO_NODE_PREFIX = "/studio_node/";
 
@@ -45,35 +26,23 @@ export const NAV_MSGS_PATH_DATATYPE = "nav_msgs/Path";
 export const POINT_CLOUD_DATATYPE = "sensor_msgs/PointCloud2";
 export const POSE_STAMPED_DATATYPE = "geometry_msgs/PoseStamped";
 export const SENSOR_MSGS_LASER_SCAN_DATATYPE = "sensor_msgs/LaserScan";
-export const STUDIO_MARKER_DATATYPE = "visualization_msgs/StudioMarker";
-export const STUDIO_MARKER_ARRAY_DATATYPE = "visualization_msgs/StudioMarkerArray";
-export const FUTURE_VIZ_MSGS_DATATYPE = "future_visualization_msgs/StudioMarkerArray";
 export const TRANSFORM_STAMPED_DATATYPE = "geometry_msgs/TransformStamped";
 export const TF_DATATYPE = "tf/tfMessage";
 export const TF2_DATATYPE = "tf2_msgs/TFMessage";
 export const VELODYNE_SCAN_DATATYPE = "velodyne_msgs/VelodyneScan";
 export const VISUALIZATION_MSGS_MARKER_DATATYPE = "visualization_msgs/Marker";
 export const VISUALIZATION_MSGS_MARKER_ARRAY_DATATYPE = "visualization_msgs/MarkerArray";
+export const VISUALIZATION_MSGS_IMAGE_MARKER_DATATYPE = "visualization_msgs/ImageMarker";
+export const VISUALIZATION_MSGS_IMAGE_MARKER_ARRAY_DATATYPE = "visualization_msgs/ImageMarkerArray";
 
 export const FOXGLOVE_GRID_TOPIC = "/foxglove/grid";
 export const FOXGLOVE_GRID_DATATYPE = "foxglove/Grid";
 
 export const ROBOT_DESCRIPTION_PARAM = "/robot_description";
 
-export const MARKER_ARRAY_DATATYPES = [
-  "visualization_msgs/MarkerArray",
-  FUTURE_VIZ_MSGS_DATATYPE,
-  STUDIO_MARKER_ARRAY_DATATYPE,
-];
+export const MARKER_ARRAY_DATATYPES = [VISUALIZATION_MSGS_MARKER_ARRAY_DATATYPE];
 
 export const USER_ERROR_PREFIX = "[STUDIO USER ERROR]";
-
-// In testing there seems to be a small (~4%) performance penalty to freezing messages, so for now
-// we only do it in development/testing. StackOverflow says that there should be no difference
-// though: https://stackoverflow.com/questions/8435080/any-performance-benefit-to-locking-down-javascript-objects
-// So maybe we want to always do the freezing at some point? Probably requires some more testing to
-// be sure.
-export const FREEZE_MESSAGES = process.env.NODE_ENV !== "production";
 
 export const COLORS = {
   RED: { r: 1.0, g: 0.2, b: 0.2, a: 1.0 },

@@ -13,8 +13,8 @@
 
 import { Time } from "rosbag";
 
-import NoopMetricsCollector from "@foxglove-studio/app/players/NoopMetricsCollector";
-import RosbridgePlayer from "@foxglove-studio/app/players/RosbridgePlayer";
+import NoopMetricsCollector from "@foxglove/studio-base/players/NoopMetricsCollector";
+import RosbridgePlayer from "@foxglove/studio-base/players/RosbridgePlayer";
 
 const headerMessage = ({
   seq,
@@ -214,7 +214,7 @@ describe("RosbridgePlayer", () => {
         }
 
         expect(messages.length).toBe(1);
-        expect(messages[0]?.message).toEqual({
+        expect(messages[0]?.message).toMatchObject({
           header: {
             seq: 7643,
             stamp: { sec: 1234, nsec: 5678 },
@@ -237,7 +237,7 @@ describe("RosbridgePlayer", () => {
         }
 
         expect(messages.length).toBe(1);
-        expect(messages[0]?.message).toEqual({
+        expect(messages[0]?.message).toMatchObject({
           text: "some text",
         });
 

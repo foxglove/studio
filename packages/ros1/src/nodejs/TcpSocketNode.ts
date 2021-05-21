@@ -5,7 +5,7 @@
 import EventEmitter from "eventemitter3";
 import net from "net";
 
-import { TcpAddress, TcpSocket } from "../TcpTypes";
+import { TcpAddress, TcpSocket, TcpSocketEvents } from "../TcpTypes";
 
 type MaybeHasFd = {
   _handle?: {
@@ -13,7 +13,7 @@ type MaybeHasFd = {
   };
 };
 
-export class TcpSocketNode extends EventEmitter implements TcpSocket {
+export class TcpSocketNode extends EventEmitter<TcpSocketEvents> implements TcpSocket {
   private _host: string;
   private _port: number;
   private _socket: net.Socket;
@@ -60,7 +60,7 @@ export class TcpSocketNode extends EventEmitter implements TcpSocket {
     // where sockets have file descriptors. See
     // <https://github.com/nodejs/help/issues/1312>
     // eslint-disable-next-line no-underscore-dangle
-    return Promise.resolve(((this._socket as unknown) as MaybeHasFd)._handle?.fd);
+    return Promise.resolve((this._socket as unknown as MaybeHasFd)._handle?.fd);
   }
 
   connected(): Promise<boolean> {
@@ -94,6 +94,11 @@ export class TcpSocketNode extends EventEmitter implements TcpSocket {
         resolve();
       });
     });
+  }
+
+  setNoDelay(noDelay?: boolean): Promise<void> {
+    this._socket.setNoDelay(noDelay);
+    return Promise.resolve();
   }
 
   static Create({ host, port }: { host: string; port: number }): Promise<TcpSocket> {

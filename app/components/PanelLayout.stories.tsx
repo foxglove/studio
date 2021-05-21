@@ -12,22 +12,21 @@
 //   You may not use this file except in compliance with the License.
 
 import { storiesOf } from "@storybook/react";
-import { createMemoryHistory } from "history";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-import { changePanelLayout } from "@foxglove-studio/app/actions/panels";
-import MockPanelContextProvider from "@foxglove-studio/app/components/MockPanelContextProvider";
-import createRootReducer from "@foxglove-studio/app/reducers";
-import configureStore from "@foxglove-studio/app/store/configureStore.testing";
-import PanelSetup from "@foxglove-studio/app/stories/PanelSetup";
+import { changePanelLayout } from "@foxglove/studio-base/actions/panels";
+import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
+import createRootReducer from "@foxglove/studio-base/reducers";
+import configureStore from "@foxglove/studio-base/store/configureStore.testing";
+import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import PanelLayout from "./PanelLayout";
 
 const DEFAULT_CLICK_DELAY = 100;
 storiesOf("components/PanelLayout", module)
   .add("panel not found", () => {
-    const store = configureStore(createRootReducer(createMemoryHistory()));
+    const store = configureStore(createRootReducer());
     store.dispatch(changePanelLayout({ layout: "UnknownPanel!4co6n9d" }));
     return (
       <DndProvider backend={HTML5Backend}>
@@ -47,7 +46,7 @@ storiesOf("components/PanelLayout", module)
     );
   })
   .add("remove unknown panel", () => {
-    const store = configureStore(createRootReducer(createMemoryHistory()));
+    const store = configureStore(createRootReducer());
     store.dispatch(changePanelLayout({ layout: "UnknownPanel!4co6n9d" }));
     return (
       <DndProvider backend={HTML5Backend}>
