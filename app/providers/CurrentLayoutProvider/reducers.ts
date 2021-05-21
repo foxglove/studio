@@ -69,8 +69,6 @@ import {
   getPathFromNode,
 } from "@foxglove/studio-base/util/layout";
 
-export const DEPRECATED_GLOBAL_STATE_STORAGE_KEY = "webvizGlobalState";
-export const GLOBAL_STATE_STORAGE_KEY = "studioGlobalState";
 export const defaultPlaybackConfig: PlaybackConfig = {
   speed: 0.2,
   messageOrder: "receiveTime",

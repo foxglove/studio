@@ -8,7 +8,6 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { Provider as ReduxProvider } from "react-redux";
 
 import Workspace from "@foxglove/studio-base/Workspace";
-import LayoutStorageReduxAdapter from "@foxglove/studio-base/components/LayoutStorageReduxAdapter";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import { NativeFileMenuPlayerSelection } from "@foxglove/studio-base/components/NativeFileMenuPlayerSelection";
 import PlayerManager from "@foxglove/studio-base/components/PlayerManager";
@@ -44,14 +43,13 @@ export default function App(props: AppProps): JSX.Element {
     <StudioToastProvider />,
     <AssetsProvider loaders={assetLoaders} />,
     <ReduxProvider store={globalStore} />,
-    <CurrentLayoutProvider />, //FIXME: save in localStorage - part of LayoutStorageReduxAdapter?
+    <CurrentLayoutProvider />,
     <PlayerManager playerSources={props.availableSources} />,
     /* eslint-enable react/jsx-key */
   ];
 
   return (
     <MultiProvider providers={providers}>
-      <LayoutStorageReduxAdapter />
       <NativeFileMenuPlayerSelection />
       <DndProvider backend={HTML5Backend}>
         <Suspense fallback={<></>}>

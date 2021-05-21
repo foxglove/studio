@@ -15,7 +15,7 @@ export type Layout = {
 export interface LayoutStorage {
   list(): Promise<Layout[]>;
   get(id: string): Promise<Layout | undefined>;
-  put(layout: unknown): Promise<void>;
+  put(layout: Layout): Promise<void>;
   delete(id: string): Promise<void>;
 }
 
