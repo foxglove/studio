@@ -2,11 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ExtensionInstance } from "@foxglove-studio/app/ExtensionInstance";
 import Logger from "@foxglove/log";
 import { ExtensionContext, ExtensionMode } from "@foxglove/studio";
-
-import { Extension } from "./Extension";
+import { ExtensionInstance } from "@foxglove/studio-base/ExtensionInstance";
 
 const log = Logger.getLogger(__filename);
 
@@ -21,7 +19,7 @@ export class Extensions {
 
       if (instance.enabled) {
         try {
-          instance.extension = (await import(/* webpackIgnore: true */ uri)) as Extension;
+          instance.extension = await import(/* webpackIgnore: true */ uri);
           (instance.extension as { id: string }).id = instance.name();
           (instance.extension as { packageJson: unknown }).packageJson = instance.packageJson;
         } catch (err) {

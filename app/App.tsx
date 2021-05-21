@@ -8,6 +8,7 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { Provider as ReduxProvider } from "react-redux";
 
 import Workspace from "@foxglove/studio-base/Workspace";
+import ExtensionsProvider from "@foxglove/studio-base/components/ExtensionsProvider";
 import LayoutStorageReduxAdapter from "@foxglove/studio-base/components/LayoutStorageReduxAdapter";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import { NativeFileMenuPlayerSelection } from "@foxglove/studio-base/components/NativeFileMenuPlayerSelection";
@@ -44,6 +45,7 @@ export default function App(props: AppProps): JSX.Element {
     <AssetsProvider loaders={assetLoaders} />,
     <ReduxProvider store={globalStore} />,
     <PlayerManager playerSources={props.availableSources} />,
+    <ExtensionsProvider />,
     /* eslint-enable react/jsx-key */
   ];
 

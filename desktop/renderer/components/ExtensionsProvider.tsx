@@ -4,21 +4,22 @@
 
 import { PropsWithChildren, useMemo } from "react";
 
-import { Extensions } from "@foxglove-studio/app/Extensions";
-import OsContextSingleton from "@foxglove-studio/app/OsContextSingleton";
-import ExtensionsContext from "@foxglove-studio/app/context/ExtensionsContext";
 import Logger from "@foxglove/log";
+import { Extensions } from "@foxglove/studio-base/Extensions";
+import ExtensionsContext from "@foxglove/studio-base/context/ExtensionsContext";
+
+import { Desktop } from "../../common/types";
 
 const log = Logger.getLogger(__filename);
+const desktopBridge = (global as { desktopBridge?: Desktop }).desktopBridge;
 
 export default function ExtensionsProvider(props: PropsWithChildren<unknown>): JSX.Element {
   const extensions = useMemo(() => new Extensions(), []);
 
   useMemo(async () => {
-    // Fetch the list of extension URIs and parsed package.json files
-    const extensionList = await OsContextSingleton?.getExtensions();
+    const extensionList = (await desktopBridge?.getExtensions()) ?? [];
     log.debug(`Found ${extensionList?.length ?? 0} extension(s)`);
-    if (extensionList == undefined) {
+    if (extensionList.length === 0) {
       return;
     }
 
