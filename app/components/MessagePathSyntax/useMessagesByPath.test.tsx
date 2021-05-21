@@ -13,15 +13,16 @@
 //   You may not use this file except in compliance with the License.
 
 import { act, renderHook } from "@testing-library/react-hooks";
-import React, { PropsWithChildren, useLayoutEffect, useState } from "react";
+import React, { PropsWithChildren } from "react";
 
 import { MessageDataItemsByPath } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import useMessagesByPath from "@foxglove/studio-base/components/MessagePathSyntax/useMessagesByPath";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
+import CurrentLayoutContext from "@foxglove/studio-base/context/CurrentLayoutContext";
 import useGlobalVariables, {
   GlobalVariables,
 } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
+import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 
 import * as fixture from "./fixture";
 
@@ -47,16 +48,9 @@ type TestProps = {
 function makeMessagePipelineWrapper(initialGlobalVariables?: GlobalVariables) {
   const setSubscriptions = jest.fn();
 
-  function SetInitialGlobalVariables({ children }: { children: JSX.Element }) {
-    const { setGlobalVariables } = useGlobalVariables();
-    const [initialized, setInitialized] = useState(initialGlobalVariables == undefined);
-    useLayoutEffect(() => {
-      if (!initialized && initialGlobalVariables != undefined) {
-        setGlobalVariables(initialGlobalVariables);
-        setInitialized(true);
-      }
-    }, [initialized, setGlobalVariables]);
-    return initialized ? children : ReactNull;
+  const currentLayout = new CurrentLayoutState();
+  if (initialGlobalVariables != undefined) {
+    currentLayout.actions.setGlobalVariables(initialGlobalVariables);
   }
 
   const wrapper = ({
@@ -66,19 +60,17 @@ function makeMessagePipelineWrapper(initialGlobalVariables?: GlobalVariables) {
     messages = [],
     activeData,
   }: PropsWithChildren<TestProps>) => (
-    <CurrentLayoutProvider>
-      <SetInitialGlobalVariables>
-        <MockMessagePipelineProvider
-          topics={topics}
-          datatypes={datatypes}
-          messages={messages}
-          setSubscriptions={setSubscriptions}
-          activeData={activeData}
-        >
-          {children}
-        </MockMessagePipelineProvider>
-      </SetInitialGlobalVariables>
-    </CurrentLayoutProvider>
+    <CurrentLayoutContext.Provider value={currentLayout}>
+      <MockMessagePipelineProvider
+        topics={topics}
+        datatypes={datatypes}
+        messages={messages}
+        setSubscriptions={setSubscriptions}
+        activeData={activeData}
+      >
+        {children}
+      </MockMessagePipelineProvider>
+    </CurrentLayoutContext.Provider>
   );
   return { setSubscriptions, wrapper };
 }

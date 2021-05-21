@@ -12,19 +12,22 @@
 //   You may not use this file except in compliance with the License.
 
 import { storiesOf } from "@storybook/react";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import TestUtils from "react-dom/test-utils";
 
 import ShareJsonModal from "@foxglove/studio-base/components/ShareJsonModal";
-import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
+import CurrentLayoutContext, {
+  useCurrentLayoutActions,
+} from "@foxglove/studio-base/context/CurrentLayoutContext";
+import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 
 storiesOf("components/ShareJsonModal", module)
   .addDecorator((Child: any) => {
+    const currentLayout = useMemo(() => new CurrentLayoutState(), []);
     return (
-      <CurrentLayoutProvider>
+      <CurrentLayoutContext.Provider value={currentLayout}>
         <Child />
-      </CurrentLayoutProvider>
+      </CurrentLayoutContext.Provider>
     );
   })
   .add("standard", () => (

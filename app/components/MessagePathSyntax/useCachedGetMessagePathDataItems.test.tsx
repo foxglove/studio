@@ -13,15 +13,14 @@
 //   You may not use this file except in compliance with the License.
 import { act, renderHook } from "@testing-library/react-hooks";
 import { cloneDeep } from "lodash";
-import { useLayoutEffect, useState } from "react";
+import { useMemo } from "react";
 
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
-import useGlobalVariables, {
-  GlobalVariables,
-} from "@foxglove/studio-base/hooks/useGlobalVariables";
+import CurrentLayoutContext from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { Topic, MessageEvent } from "@foxglove/studio-base/players/types";
-import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
+import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 import {
@@ -64,48 +63,38 @@ describe("useCachedGetMessagePathDataItems", () => {
       datatypes: initialDatatypes,
     };
 
-    function SetInitialGlobalVariables({
-      value,
-      children,
-    }: {
-      value?: GlobalVariables;
-      children: JSX.Element;
-    }) {
-      const { setGlobalVariables } = useGlobalVariables();
-      const [initialized, setInitialized] = useState(value == undefined);
-      useLayoutEffect(() => {
-        if (!initialized && value != undefined) {
-          setGlobalVariables(value);
-          setInitialized(true);
-        }
-      }, [initialized, setGlobalVariables, value]);
-
-      // don't render children until global variables have been set
-      return initialized ? children : ReactNull;
-    }
+    let setGlobalVariables = (_: GlobalVariables) => {};
 
     const { result, rerender } = renderHook(
-      ({ paths }) => ({
-        getMessagePathDataItems: useCachedGetMessagePathDataItems(paths),
-        setGlobalVariables: useGlobalVariables().setGlobalVariables,
-      }),
+      ({ paths }) => useCachedGetMessagePathDataItems(paths),
       {
         initialProps,
-        wrapper({ topics, datatypes, children }) {
+        wrapper: function Wrapper({ topics, datatypes, children }) {
+          const currentLayout = useMemo(() => {
+            const state = new CurrentLayoutState();
+            setGlobalVariables = state.actions.setGlobalVariables;
+            if (initialGlobalVariables != undefined) {
+              state.actions.setGlobalVariables(initialGlobalVariables);
+            }
+            return state;
+          }, []);
           return (
-            <CurrentLayoutProvider>
-              <SetInitialGlobalVariables value={initialGlobalVariables}>
-                <MockMessagePipelineProvider topics={topics} datatypes={datatypes}>
-                  {children}
-                </MockMessagePipelineProvider>
-              </SetInitialGlobalVariables>
-            </CurrentLayoutProvider>
+            <CurrentLayoutContext.Provider value={currentLayout}>
+              <MockMessagePipelineProvider topics={topics} datatypes={datatypes}>
+                {children}
+              </MockMessagePipelineProvider>
+            </CurrentLayoutContext.Provider>
           );
         },
       },
     );
 
-    return { result, rerender, initialProps };
+    return {
+      result,
+      rerender,
+      initialProps,
+      setGlobalVariables,
+    };
   }
 
   it("clears the cache whenever any inputs to getMessagePathDataItems change", async () => {
@@ -117,55 +106,45 @@ describe("useCachedGetMessagePathDataItems", () => {
 
     const { result, rerender, initialProps } = setup(["/topic.an_array[0]", "/topic.an_array[1]"]);
 
-    const data0 = result.current.getMessagePathDataItems("/topic.an_array[0]", message);
-    const data1 = result.current.getMessagePathDataItems("/topic.an_array[1]", message);
+    const data0 = result.current("/topic.an_array[0]", message);
+    const data1 = result.current("/topic.an_array[1]", message);
     expect(data0).toEqual([{ path: "/topic.an_array[0]", value: 5 }]);
     expect(data1).toEqual([{ path: "/topic.an_array[1]", value: 10 }]);
 
     // Calling again returns cached version.
-    expect(result.current.getMessagePathDataItems("/topic.an_array[0]", message)).toBe(data0);
+    expect(result.current("/topic.an_array[0]", message)).toBe(data0);
 
     // Throws when asking for a path not in the list.
-    expect(() => result.current.getMessagePathDataItems("/topic.an_array[2]", message)).toThrow(
+    expect(() => result.current("/topic.an_array[2]", message)).toThrow(
       "not in the list of cached paths",
     );
 
     // Using the exact same paths but with a new array instance will keep the returned function exactly the same.
-    const originalCachedGetMessage = result.current.getMessagePathDataItems;
+    const originalCachedGetMessage = result.current;
     rerender({ ...initialProps, paths: ["/topic.an_array[0]", "/topic.an_array[1]"] });
-    expect(result.current.getMessagePathDataItems).toBe(originalCachedGetMessage);
+    expect(result.current).toBe(originalCachedGetMessage);
 
     // Changing paths maintains cache for the remaining path.
     rerender({ ...initialProps, paths: ["/topic.an_array[0]"] });
-    expect(result.current.getMessagePathDataItems("/topic.an_array[0]", message)).toBe(data0);
-    expect(() => result.current.getMessagePathDataItems("/topic.an_array[1]", message)).toThrow(
+    expect(result.current("/topic.an_array[0]", message)).toBe(data0);
+    expect(() => result.current("/topic.an_array[1]", message)).toThrow(
       "not in the list of cached paths",
     );
-    expect(result.current.getMessagePathDataItems).not.toBe(originalCachedGetMessage); // Function should also be different.
+    expect(result.current).not.toBe(originalCachedGetMessage); // Function should also be different.
     // Change it back to make sure that we indeed cleared the cache for the path that we removed.
     rerender({ ...initialProps, paths: ["/topic.an_array[0]", "/topic.an_array[1]"] });
-    expect(result.current.getMessagePathDataItems("/topic.an_array[1]", message)).not.toBe(data1);
-    expect(result.current.getMessagePathDataItems("/topic.an_array[0]", message)).toBe(data0); // Another sanity check.
+    expect(result.current("/topic.an_array[1]", message)).not.toBe(data1);
+    expect(result.current("/topic.an_array[0]", message)).toBe(data0); // Another sanity check.
 
     // Invalidate cache with topics.
-    const data0BeforeProviderTopicsChange = result.current.getMessagePathDataItems(
-      "/topic.an_array[0]",
-      message,
-    );
+    const data0BeforeProviderTopicsChange = result.current("/topic.an_array[0]", message);
     rerender({ ...initialProps, topics: cloneDeep(initialTopics) });
-    expect(result.current.getMessagePathDataItems("/topic.an_array[0]", message)).not.toBe(
-      data0BeforeProviderTopicsChange,
-    );
+    expect(result.current("/topic.an_array[0]", message)).not.toBe(data0BeforeProviderTopicsChange);
 
     // Invalidate cache with datatypes.
-    const data0BeforeDatatypesChange = result.current.getMessagePathDataItems(
-      "/topic.an_array[0]",
-      message,
-    );
+    const data0BeforeDatatypesChange = result.current("/topic.an_array[0]", message);
     rerender({ ...initialProps, datatypes: cloneDeep(initialDatatypes) });
-    expect(result.current.getMessagePathDataItems("/topic.an_array[0]", message)).not.toBe(
-      data0BeforeDatatypesChange,
-    );
+    expect(result.current("/topic.an_array[0]", message)).not.toBe(data0BeforeDatatypesChange);
   });
 
   it("clears the cache only when relevant global variables change", async () => {
@@ -174,21 +153,21 @@ describe("useCachedGetMessagePathDataItems", () => {
       receiveTime: { sec: 0, nsec: 0 },
       message: { an_array: [5, 10, 15, 20] },
     };
-    const { result } = setup(["/topic.an_array[$foo]"], { foo: 0 });
+    const { result, setGlobalVariables } = setup(["/topic.an_array[$foo]"], { foo: 0 });
 
-    const data0 = result.current.getMessagePathDataItems("/topic.an_array[$foo]", message);
+    const data0 = result.current("/topic.an_array[$foo]", message);
     expect(data0).toEqual([{ path: "/topic.an_array[0]", value: 5 }]);
 
     // Sanity check.
-    expect(result.current.getMessagePathDataItems("/topic.an_array[$foo]", message)).toBe(data0);
+    expect(result.current("/topic.an_array[$foo]", message)).toBe(data0);
 
     // Changing an unrelated global variable should not invalidate the cache.
-    act(() => result.current.setGlobalVariables({ bar: 0 }));
-    expect(result.current.getMessagePathDataItems("/topic.an_array[$foo]", message)).toBe(data0);
+    act(() => setGlobalVariables({ bar: 0 }));
+    expect(result.current("/topic.an_array[$foo]", message)).toBe(data0);
 
     // Changing a relevant global variable.
-    act(() => result.current.setGlobalVariables({ foo: 1 }));
-    expect(result.current.getMessagePathDataItems("/topic.an_array[$foo]", message)).toEqual([
+    act(() => setGlobalVariables({ foo: 1 }));
+    expect(result.current("/topic.an_array[$foo]", message)).toEqual([
       { path: "/topic.an_array[1]", value: 10 },
     ]);
   });
@@ -756,15 +735,16 @@ describe("useDecodeMessagePathsForMessagesByTopic", () => {
     const datatypes = {
       datatype: { fields: [{ name: "value", type: "uint32", isArray: false, isComplex: false }] },
     };
+    const currentLayout = new CurrentLayoutState();
     const { result } = renderHook((paths) => useDecodeMessagePathsForMessagesByTopic(paths), {
       initialProps: ["/topic1.value", "/topic2.value", "/topic3.value", "/topic3..value"],
       wrapper({ children }) {
         return (
-          <CurrentLayoutProvider>
+          <CurrentLayoutContext.Provider value={currentLayout}>
             <MockMessagePipelineProvider topics={topics} datatypes={datatypes}>
               {children}
             </MockMessagePipelineProvider>
-          </CurrentLayoutProvider>
+          </CurrentLayoutContext.Provider>
         );
       },
     });

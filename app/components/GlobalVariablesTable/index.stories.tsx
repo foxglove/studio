@@ -11,10 +11,12 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { useMemo } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
+import CurrentLayoutContext from "@foxglove/studio-base/context/CurrentLayoutContext";
+import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 
 import GlobalVariablesTable from ".";
 
@@ -24,12 +26,13 @@ export default {
 };
 
 export function Table(): JSX.Element {
+  const currentLayout = useMemo(() => new CurrentLayoutState(), []);
   return (
     <div style={{ margin: 30, paddingLeft: 300, height: 400 }}>
       <DndProvider backend={HTML5Backend}>
-        <CurrentLayoutProvider>
+        <CurrentLayoutContext.Provider value={currentLayout}>
           <GlobalVariablesTable />
-        </CurrentLayoutProvider>
+        </CurrentLayoutContext.Provider>
       </DndProvider>
     </div>
   );

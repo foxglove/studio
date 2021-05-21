@@ -13,12 +13,14 @@
 
 import DatabaseIcon from "@mdi/svg/svg/database.svg";
 import { storiesOf } from "@storybook/react";
+import { useMemo } from "react";
 import { Mosaic, MosaicWindow } from "react-mosaic-component";
 
 import ChildToggle from "@foxglove/studio-base/components/ChildToggle";
 import Icon from "@foxglove/studio-base/components/Icon";
 import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
-import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
+import CurrentLayoutContext from "@foxglove/studio-base/context/CurrentLayoutContext";
+import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 
 import PanelToolbar from "./index";
 
@@ -94,11 +96,12 @@ function KeepToolbarVisibleHack() {
 
 storiesOf("components/PanelToolbar", module)
   .addDecorator((childrenRenderFcn) => {
+    const currentLayout = useMemo(() => new CurrentLayoutState(), []);
     // Provide all stories with PanelContext and redux state
     return (
-      <CurrentLayoutProvider>
+      <CurrentLayoutContext.Provider value={currentLayout}>
         <MockPanelContextProvider>{childrenRenderFcn()}</MockPanelContextProvider>
-      </CurrentLayoutProvider>
+      </CurrentLayoutContext.Provider>
     );
   })
   .add("non-floating (narrow)", () => {

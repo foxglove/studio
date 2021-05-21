@@ -2,15 +2,15 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useCallback } from "react";
+import { createContext, useCallback, useLayoutEffect, useState } from "react";
 import { getLeaves } from "react-mosaic-component";
 
-import useContextSelector from "@foxglove/studio-base/hooks/useContextSelector";
+import { selectWithUnstableIdentityWarning } from "@foxglove/studio-base/hooks/selectWithUnstableIdentityWarning";
+import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
 import useShallowMemo from "@foxglove/studio-base/hooks/useShallowMemo";
 import { LinkedGlobalVariables } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
 import toggleSelectedPanel from "@foxglove/studio-base/providers/CurrentLayoutProvider/toggleSelectedPanel";
 import { PanelConfig, PlaybackConfig, UserNodes } from "@foxglove/studio-base/types/panels";
-import createSelectableContext from "@foxglove/studio-base/util/createSelectableContext";
 
 import {
   PanelsState,
@@ -33,7 +33,10 @@ import {
  * part of a saved "layout") used by the current workspace.
  */
 export interface CurrentLayout {
-  state: PanelsState;
+  addPanelsStateListener: (listener: (_: PanelsState) => void) => void;
+  removePanelsStateListener: (listener: (_: PanelsState) => void) => void;
+  addSelectedPanelIdsListener: (listener: (_: readonly string[]) => void) => void;
+  removeSelectedPanelIdsListener: (listener: (_: readonly string[]) => void) => void;
 
   /**
    * We use the same mosaicId for all mosaics (at the top level and within tabs) to support
@@ -41,7 +44,6 @@ export interface CurrentLayout {
    */
   mosaicId: string;
 
-  selectedPanelIds: readonly string[];
   getSelectedPanelIds: () => readonly string[];
   setSelectedPanelIds: (
     _: readonly string[] | ((prevState: readonly string[]) => string[]),
@@ -90,30 +92,41 @@ export type SelectedPanelActions = {
   togglePanelSelected: (panelId: string, containingTabId: string | undefined) => void;
 };
 
-const CurrentLayoutContext = createSelectableContext<CurrentLayout>();
+const CurrentLayoutContext = createContext<CurrentLayout | undefined>(undefined);
 
 export function usePanelMosaicId(): string {
-  return useContextSelector(CurrentLayoutContext, ({ mosaicId }) => mosaicId);
+  return useGuaranteedContext(CurrentLayoutContext).mosaicId;
 }
 export function useCurrentLayoutActions(): CurrentLayoutActions {
-  return useContextSelector(CurrentLayoutContext, ({ actions }) => actions);
+  return useGuaranteedContext(CurrentLayoutContext).actions;
 }
 export function useCurrentLayoutSelector<T>(selector: (panelsState: PanelsState) => T): T {
-  return useContextSelector(CurrentLayoutContext, ({ state }) => selector(state));
+  const currentLayout = useGuaranteedContext(CurrentLayoutContext);
+  const [value, setValue] = useState(() => selector(currentLayout.actions.getCurrentLayout()));
+
+  useLayoutEffect(() => {
+    const listener = (newState: PanelsState) => {
+      setValue(selectWithUnstableIdentityWarning(newState, selector));
+    };
+    currentLayout.addPanelsStateListener(listener);
+    return () => currentLayout.removePanelsStateListener(listener);
+  }, [currentLayout, selector]);
+
+  return value;
 }
 export function useSelectedPanels(): SelectedPanelActions {
-  const selectedPanelIds = useContextSelector(
-    CurrentLayoutContext,
-    (value) => value.selectedPanelIds,
+  const currentLayout = useGuaranteedContext(CurrentLayoutContext);
+  const [selectedPanelIds, setSelectedPanelIdsState] = useState(() =>
+    currentLayout.getSelectedPanelIds(),
   );
-  const setSelectedPanelIds = useContextSelector(
-    CurrentLayoutContext,
-    (value) => value.setSelectedPanelIds,
-  );
-  const getSelectedPanelIds = useContextSelector(
-    CurrentLayoutContext,
-    (value) => value.getSelectedPanelIds,
-  );
+  useLayoutEffect(() => {
+    const listener = (newIds: readonly string[]) => setSelectedPanelIdsState(newIds);
+    currentLayout.addSelectedPanelIdsListener(listener);
+    return () => currentLayout.removeSelectedPanelIdsListener(listener);
+  }, [currentLayout]);
+
+  const setSelectedPanelIds = useGuaranteedContext(CurrentLayoutContext).setSelectedPanelIds;
+  const getSelectedPanelIds = useGuaranteedContext(CurrentLayoutContext).getSelectedPanelIds;
   const { getCurrentLayout } = useCurrentLayoutActions();
 
   const selectAllPanels = useCallback(() => {

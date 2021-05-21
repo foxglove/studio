@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { flatten } from "lodash";
-import { ComponentProps, useLayoutEffect, useRef, useState } from "react";
+import { ComponentProps, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { Mosaic, MosaicNode, MosaicWindow } from "react-mosaic-component";
@@ -24,7 +24,7 @@ import {
 } from "@foxglove/studio-base/actions/userNodes";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurationContext";
-import {
+import CurrentLayoutContext, {
   CurrentLayoutActions,
   SelectedPanelActions,
   useCurrentLayoutActions,
@@ -49,7 +49,7 @@ import {
   PublishPayload,
   AdvertisePayload,
 } from "@foxglove/studio-base/players/types";
-import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
+import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 import createRootReducer from "@foxglove/studio-base/reducers";
 import configureStore from "@foxglove/studio-base/store/configureStore.testing";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
@@ -291,9 +291,10 @@ function UnconnectedPanelSetup(props: Props): JSX.Element | ReactNull {
 }
 
 export default function PanelSetup(props: Props): JSX.Element {
+  const currentLayout = useMemo(() => new CurrentLayoutState(), []);
   return (
-    <CurrentLayoutProvider>
+    <CurrentLayoutContext.Provider value={currentLayout}>
       <UnconnectedPanelSetup {...props} />
-    </CurrentLayoutProvider>
+    </CurrentLayoutContext.Provider>
   );
 }

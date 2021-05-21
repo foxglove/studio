@@ -16,52 +16,18 @@ import { mount } from "enzyme";
 
 import GlobalKeyListener from "@foxglove/studio-base/components/GlobalKeyListener";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
-import CurrentLayoutContext, {
-  CurrentLayout,
-} from "@foxglove/studio-base/context/CurrentLayoutContext";
-import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
+import CurrentLayoutContext from "@foxglove/studio-base/context/CurrentLayoutContext";
+import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 
 describe("GlobalKeyListener", () => {
-  let mockContext: CurrentLayout | undefined;
+  let undoSpy: jest.SpyInstance | undefined;
+  let redoSpy: jest.SpyInstance | undefined;
   let unmount: (() => void) | undefined;
 
   beforeEach(() => {
-    mockContext = {
-      state: {
-        configById: {},
-        globalVariables: {},
-        userNodes: {},
-        linkedGlobalVariables: [],
-        playbackConfig: defaultPlaybackConfig,
-      },
-      mosaicId: "x",
-      selectedPanelIds: [],
-      getSelectedPanelIds: () => [],
-      setSelectedPanelIds: () => {},
-      actions: {
-        getCurrentLayout: jest.fn(),
-        undoLayoutChange: jest.fn(),
-        redoLayoutChange: jest.fn(),
-        savePanelConfigs: jest.fn(),
-        updatePanelConfigs: jest.fn(),
-        createTabPanel: jest.fn(),
-        changePanelLayout: jest.fn(),
-        loadLayout: jest.fn(),
-        overwriteGlobalVariables: jest.fn(),
-        setGlobalVariables: jest.fn(),
-        setUserNodes: jest.fn(),
-        setLinkedGlobalVariables: jest.fn(),
-        setPlaybackConfig: jest.fn(),
-        closePanel: jest.fn(),
-        splitPanel: jest.fn(),
-        swapPanel: jest.fn(),
-        moveTab: jest.fn(),
-        addPanel: jest.fn(),
-        dropPanel: jest.fn(),
-        startDrag: jest.fn(),
-        endDrag: jest.fn(),
-      },
-    };
+    const mockContext = new CurrentLayoutState();
+    undoSpy = jest.spyOn(mockContext.actions, "undoLayoutChange");
+    redoSpy = jest.spyOn(mockContext.actions, "redoLayoutChange");
 
     const wrapper = document.createElement("div");
     document.body.appendChild(wrapper);
@@ -85,16 +51,16 @@ describe("GlobalKeyListener", () => {
 
   it("fires undo events", () => {
     document.dispatchEvent(new KeyboardEvent("keydown", { key: "z", ctrlKey: true }));
-    expect(mockContext?.actions.redoLayoutChange).not.toHaveBeenCalled();
-    expect(mockContext?.actions.undoLayoutChange).toHaveBeenCalledTimes(1);
+    expect(redoSpy).not.toHaveBeenCalled();
+    expect(undoSpy).toHaveBeenCalledTimes(1);
   });
 
   it("fires redo events", () => {
     document.dispatchEvent(
       new KeyboardEvent("keydown", { key: "z", ctrlKey: true, shiftKey: true }),
     );
-    expect(mockContext?.actions.redoLayoutChange).toHaveBeenCalledTimes(1);
-    expect(mockContext?.actions.undoLayoutChange).not.toHaveBeenCalled();
+    expect(redoSpy).toHaveBeenCalledTimes(1);
+    expect(undoSpy).not.toHaveBeenCalled();
   });
 
   it("does not fire undo/redo events from editable fields", () => {
@@ -105,8 +71,8 @@ describe("GlobalKeyListener", () => {
     shareTextarea.dispatchEvent(
       new KeyboardEvent("keydown", { key: "z", ctrlKey: true, bubbles: true }),
     );
-    expect(mockContext?.actions.undoLayoutChange).not.toHaveBeenCalled();
-    expect(mockContext?.actions.redoLayoutChange).not.toHaveBeenCalled();
+    expect(undoSpy).not.toHaveBeenCalled();
+    expect(redoSpy).not.toHaveBeenCalled();
 
     // Check that it does fire in a different text area.
     const otherTextarea = document.getElementById("other-text-area");
@@ -116,7 +82,7 @@ describe("GlobalKeyListener", () => {
     otherTextarea.dispatchEvent(
       new KeyboardEvent("keydown", { key: "z", ctrlKey: true, bubbles: true }),
     );
-    expect(mockContext?.actions.undoLayoutChange).not.toHaveBeenCalled();
-    expect(mockContext?.actions.redoLayoutChange).not.toHaveBeenCalled();
+    expect(undoSpy).not.toHaveBeenCalled();
+    expect(redoSpy).not.toHaveBeenCalled();
   });
 });

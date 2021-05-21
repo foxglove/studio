@@ -5,14 +5,13 @@
 import { useMemo } from "react";
 
 import LayoutMenu from "@foxglove/studio-base/components/LayoutMenu";
-import CurrentLayoutContext, {
-  CurrentLayout,
-} from "@foxglove/studio-base/context/CurrentLayoutContext";
+import CurrentLayoutContext from "@foxglove/studio-base/context/CurrentLayoutContext";
 import LayoutStorageContext, {
   Layout,
   LayoutStorage,
 } from "@foxglove/studio-base/context/LayoutStorageContext";
 import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
+import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 
 class FakeLayoutStorage implements LayoutStorage {
@@ -35,47 +34,6 @@ class FakeLayoutStorage implements LayoutStorage {
   }
 }
 
-function makeMockLayoutContext(): CurrentLayout {
-  const currentLayout = {
-    id: "test-id",
-    configById: {},
-    globalVariables: {},
-    userNodes: {},
-    linkedGlobalVariables: [],
-    playbackConfig: defaultPlaybackConfig,
-  };
-  return {
-    state: currentLayout,
-    mosaicId: "x",
-    selectedPanelIds: [],
-    getSelectedPanelIds: () => [],
-    setSelectedPanelIds: () => {},
-    actions: {
-      getCurrentLayout: () => currentLayout,
-      undoLayoutChange: () => {},
-      redoLayoutChange: () => {},
-      savePanelConfigs: () => {},
-      updatePanelConfigs: () => {},
-      createTabPanel: () => {},
-      changePanelLayout: () => {},
-      loadLayout: () => {},
-      overwriteGlobalVariables: () => {},
-      setGlobalVariables: () => {},
-      setUserNodes: () => {},
-      setLinkedGlobalVariables: () => {},
-      setPlaybackConfig: () => {},
-      closePanel: () => {},
-      splitPanel: () => {},
-      swapPanel: () => {},
-      moveTab: () => {},
-      addPanel: () => {},
-      dropPanel: () => {},
-      startDrag: () => {},
-      endDrag: () => {},
-    },
-  };
-}
-
 export default {
   title: "components/LayoutMenu",
   component: LayoutMenu,
@@ -83,14 +41,15 @@ export default {
 
 export function Empty(): JSX.Element {
   const storage = useMemo(() => new FakeLayoutStorage(), []);
+  const currentLayout = useMemo(() => new CurrentLayoutState(), []);
 
   return (
     <div style={{ display: "flex", height: 400 }}>
-      <CurrentLayoutProvider>
+      <CurrentLayoutContext.Provider value={currentLayout}>
         <LayoutStorageContext.Provider value={storage}>
           <LayoutMenu defaultIsOpen />
         </LayoutStorageContext.Provider>
-      </CurrentLayoutProvider>
+      </CurrentLayoutContext.Provider>
     </div>
   );
 }
@@ -117,7 +76,20 @@ export function LayoutList(): JSX.Element {
       ]),
     [],
   );
-  const mockLayoutContext = useMemo(() => makeMockLayoutContext(), []);
+
+  const mockLayoutContext = useMemo(() => {
+    const mockLayout = {
+      id: "test-id",
+      configById: {},
+      globalVariables: {},
+      userNodes: {},
+      linkedGlobalVariables: [],
+      playbackConfig: defaultPlaybackConfig,
+    };
+    const state = new CurrentLayoutState();
+    state.actions.loadLayout(mockLayout);
+    return state;
+  }, []);
 
   return (
     <div style={{ display: "flex", height: 400 }}>
