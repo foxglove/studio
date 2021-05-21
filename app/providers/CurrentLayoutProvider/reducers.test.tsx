@@ -389,6 +389,8 @@ describe("layout reducers", () => {
       result.current.actions.loadLayout({ layout: undefined });
     });
     expect(result.current.state).toEqual({
+      id: expect.any(String),
+      name: "unnamed",
       globalVariables: {},
       layout: undefined,
       linkedGlobalVariables: [],
