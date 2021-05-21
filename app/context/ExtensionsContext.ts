@@ -4,7 +4,7 @@
 
 import { createContext, useContext } from "react";
 
-import { Extensions } from "@foxglove-studio/app/Extensions";
+import { Extensions } from "@foxglove/studio-base/Extensions";
 
 const ExtensionsContext = createContext<Extensions | undefined>(undefined);
 
