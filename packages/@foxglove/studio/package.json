@@ -2,5 +2,6 @@
   "name": "@foxglove/studio",
   "version": "0.1.0",
   "license": "MPL-2.0",
-  "main": "./src"
+  "main": "",
+  "types": "index.d.ts"
 }
