@@ -8,6 +8,10 @@ import Logger from "@foxglove/log";
 import { Extensions } from "@foxglove/studio-base/Extensions";
 import ExtensionsContext from "@foxglove/studio-base/context/ExtensionsContext";
 
+interface Desktop {
+  getExtensions: () => Promise<{ uri: string; packageJson: unknown }[]>;
+}
+
 const log = Logger.getLogger(__filename);
 const desktopBridge = (global as { desktopBridge?: Desktop }).desktopBridge;
 
