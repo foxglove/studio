@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import Logger from "@foxglove/log";
-import { ExtensionContext, ExtensionMode } from "@foxglove/studio";
+import { ExtensionContext } from "@foxglove/studio";
 import { ExtensionInstance } from "@foxglove/studio-base/ExtensionInstance";
 
 const log = Logger.getLogger(__filename);
@@ -20,8 +20,6 @@ export class Extensions {
       if (instance.enabled) {
         try {
           instance.extension = await import(/* webpackIgnore: true */ uri);
-          (instance.extension as { id: string }).id = instance.name();
-          (instance.extension as { packageJson: unknown }).packageJson = instance.packageJson;
         } catch (err) {
           log.error(`Failed to import extension ${uri}: ${err}`);
         }
@@ -32,14 +30,18 @@ export class Extensions {
   activate(): void {
     const extensionMode =
       process.env.NODE_ENV === "production"
-        ? ExtensionMode.PRODUCTION
+        ? "production"
         : process.env.NODE_ENV === "test"
-        ? ExtensionMode.TEST
-        : ExtensionMode.DEVELOPMENT;
+        ? "test"
+        : "development";
     const ctx: ExtensionContext = { extensionMode };
 
     for (const instance of this.extensions.values()) {
-      if (instance.enabled && instance.extension != undefined) {
+      if (
+        instance.enabled &&
+        instance.extension != undefined &&
+        typeof instance.extension.activate === "function"
+      ) {
         log.debug(`Activating extension ${instance.name()}`);
         instance.extension.activate(ctx);
       }
