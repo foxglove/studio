@@ -21,6 +21,7 @@ import ModalHost from "@foxglove/studio-base/context/ModalHost";
 import { PlayerSourceDefinition } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
 import FirebaseAuthProvider from "@foxglove/studio-base/providers/FirebaseAuthProvider";
+import FirebaseRemoteLayoutStorageProvider from "@foxglove/studio-base/providers/FirebaseRemoteLayoutStorageProvider";
 import URDFAssetLoader from "@foxglove/studio-base/services/URDFAssetLoader";
 import getGlobalStore from "@foxglove/studio-base/store/getGlobalStore";
 
@@ -59,6 +60,7 @@ export default function App(props: AppProps): JSX.Element {
     // FIXME: do firebase providers belong in app or web/desktop?
     <FirebaseAppContext.Provider value={firebaseApp} />,
     <FirebaseAuthProvider />,
+    <FirebaseRemoteLayoutStorageProvider />,
     <AssetsProvider loaders={assetLoaders} />,
     <ReduxProvider store={globalStore} />,
     <CurrentLayoutProvider />,

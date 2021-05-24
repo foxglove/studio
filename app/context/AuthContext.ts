@@ -4,7 +4,7 @@
 
 import { createContext, useContext } from "react";
 
-export interface CurrentAccount {
+export interface CurrentUser {
   email?: string;
 
   // FIXME: bikeshed naming
@@ -17,7 +17,7 @@ export interface CurrentAccount {
 }
 
 export interface Auth {
-  currentAccount?: CurrentAccount;
+  currentUser?: CurrentUser;
 
   loginWithGoogle: () => Promise<void>;
 }

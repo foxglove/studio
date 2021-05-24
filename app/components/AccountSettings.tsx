@@ -8,15 +8,15 @@ import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent"
 import { useAuth } from "@foxglove/studio-base/context/AuthContext";
 
 export default function AccountSettings(): JSX.Element {
-  const { currentAccount, loginWithGoogle } = useAuth();
+  const { currentUser, loginWithGoogle } = useAuth();
 
   const theme = useTheme();
   let content: JSX.Element;
-  if (currentAccount) {
+  if (currentUser) {
     content = (
       <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
-        <div>Logged in as: {currentAccount.email ?? "(no email address)"}</div>
-        <DefaultButton text="Sign out" onClick={() => currentAccount.logout()} />
+        <div>Logged in as: {currentUser.email ?? "(no email address)"}</div>
+        <DefaultButton text="Sign out" onClick={() => currentUser.logout()} />
       </Stack>
     );
   } else {
