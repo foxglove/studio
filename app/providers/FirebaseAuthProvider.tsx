@@ -14,13 +14,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useToasts } from "react-toast-notifications";
 
 import Log from "@foxglove/log";
+import AuthContext from "@foxglove/studio-base/context/AuthContext";
 import { useFirebase } from "@foxglove/studio-base/context/FirebaseAppContext";
-import LoginContext from "@foxglove/studio-base/context/LoginContext";
 import useShallowMemo from "@foxglove/studio-base/hooks/useShallowMemo";
 
 const log = Log.getLogger(__filename);
 
-export default function FirebaseLoginProvider({
+export default function FirebaseAuthProvider({
   children,
 }: React.PropsWithChildren<unknown>): JSX.Element {
   const app = useFirebase();
@@ -64,5 +64,5 @@ export default function FirebaseLoginProvider({
     loginWithGoogle,
     logout,
   });
-  return <LoginContext.Provider value={value}>{children}</LoginContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

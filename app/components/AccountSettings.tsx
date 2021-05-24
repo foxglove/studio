@@ -5,18 +5,18 @@
 import { DefaultButton, Stack, useTheme } from "@fluentui/react";
 
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
-import { useLogin } from "@foxglove/studio-base/context/LoginContext";
+import { useAuth } from "@foxglove/studio-base/context/AuthContext";
 
 export default function AccountSettings(): JSX.Element {
-  const { loggedInUser, logout, loginWithGoogle } = useLogin();
+  const { currentAccount, loginWithGoogle } = useAuth();
 
   const theme = useTheme();
   let content: JSX.Element;
-  if (loggedInUser) {
+  if (currentAccount) {
     content = (
       <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
-        <div>Logged in as: {loggedInUser.email ?? "(no email address)"}</div>
-        <DefaultButton text="Sign out" onClick={logout} />
+        <div>Logged in as: {currentAccount.email ?? "(no email address)"}</div>
+        <DefaultButton text="Sign out" onClick={() => currentAccount.logout()} />
       </Stack>
     );
   } else {
