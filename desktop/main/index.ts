@@ -242,7 +242,8 @@ app.on("ready", async () => {
   const contentSecurityPolicy: Record<string, string> = {
     "default-src": "'self'",
     // We should use x-foxglove-extension: instead of file: (see https://github.com/foxglove/studio/issues/895)
-    "script-src": `'self' 'unsafe-inline' 'unsafe-eval' file:`,
+    "script-src": `'self' 'unsafe-inline' 'unsafe-eval' file: *.google.com *.firebaseapp.com *.accounts.youtube.com`,
+    "frame-src": `'self' *.firebaseapp.com`,
     "worker-src": `'self' blob:`,
     "style-src": "'self' 'unsafe-inline'",
     "connect-src": "'self' ws: wss: http: https: x-foxglove-ros-package:",

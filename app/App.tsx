@@ -53,13 +53,12 @@ export default function App(props: AppProps): JSX.Element {
 
   const providers = [
     /* eslint-disable react/jsx-key */
-    // FIXME: do firebase providers belong in app or web/desktop?
-    <FirebaseAppContext.Provider value={firebaseApp} />,
-    <FirebaseLoginProvider />,
-
     <AnalyticsProvider />,
     <ModalHost />, // render modal elements inside the ThemeProvider
     <StudioToastProvider />,
+    // FIXME: do firebase providers belong in app or web/desktop?
+    <FirebaseAppContext.Provider value={firebaseApp} />,
+    <FirebaseLoginProvider />,
     <AssetsProvider loaders={assetLoaders} />,
     <ReduxProvider store={globalStore} />,
     <CurrentLayoutProvider />,

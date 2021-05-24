@@ -7,10 +7,11 @@ import {
   getAuth,
   onAuthStateChanged,
   signOut,
-  signInWithPopup,
+  signInWithRedirect,
   GoogleAuthProvider,
 } from "@firebase/auth";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useToasts } from "react-toast-notifications";
 
 import Log from "@foxglove/log";
 import { useFirebase } from "@foxglove/studio-base/context/FirebaseAppContext";
@@ -25,6 +26,7 @@ export default function FirebaseLoginProvider({
   const app = useFirebase();
 
   const [user, setUser] = useState<User | undefined>();
+  const { addToast } = useToasts();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(getAuth(app), (newUser) => {
@@ -34,15 +36,23 @@ export default function FirebaseLoginProvider({
   }, [app]);
 
   const loginWithGoogle = useCallback(async () => {
-    const google = new GoogleAuthProvider(); // FIXME: safe to recreate this object on every login?
-    // FIXME: maybe signInWithRedirect?
-    const credential = await signInWithPopup(getAuth(app), google);
-    log.info("signed in:", credential);
-  }, [app]);
+    try {
+      const google = new GoogleAuthProvider(); // FIXME: safe to recreate this object on every login?
+      // FIXME: login via external browser?
+      const credential = await signInWithRedirect(getAuth(app), google);
+      log.info("signed in:", credential);
+    } catch (error) {
+      addToast(`Login error: ${error.toString()}`, { appearance: "error" });
+    }
+  }, [addToast, app]);
 
   const logout = useCallback(async () => {
-    return signOut(getAuth(app));
-  }, [app]);
+    try {
+      await signOut(getAuth(app));
+    } catch (error) {
+      addToast(`Logout error: ${error.toString()}`, { appearance: "error" });
+    }
+  }, [addToast, app]);
 
   const loggedInUser = useMemo(
     () => (user != undefined ? { email: user.email ?? undefined } : undefined),
