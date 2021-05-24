@@ -16,7 +16,9 @@ import { useToasts } from "react-toast-notifications";
 import Log from "@foxglove/log";
 import AuthContext from "@foxglove/studio-base/context/AuthContext";
 import { useFirebase } from "@foxglove/studio-base/context/FirebaseAppContext";
-import RemoteLayoutStorageContext from "@foxglove/studio-base/context/RemoteLayoutStorageContext";
+import RemoteLayoutStorageContext, {
+  RemoteLayoutStorage,
+} from "@foxglove/studio-base/context/RemoteLayoutStorageContext";
 import useShallowMemo from "@foxglove/studio-base/hooks/useShallowMemo";
 
 const log = Log.getLogger(__filename);
@@ -24,9 +26,19 @@ const log = Log.getLogger(__filename);
 export default function FirebaseRemoteLayoutStorageProvider({
   children,
 }: React.PropsWithChildren<unknown>): JSX.Element {
-  const app = useFirebase();
+  // const app = useFirebase();
 
-  const value = 0; /*FIXME*/
+  const value: RemoteLayoutStorage = useMemo(
+    () => ({
+      getCurrentUserLayouts: async () => [],
+      getSharedLayouts: async () => [],
+      getLayoutHistory: async () => [],
+
+      putCurrentUserLayout: async () => {},
+      putSharedLayout: async () => {},
+    }),
+    [],
+  );
   return (
     <RemoteLayoutStorageContext.Provider value={value}>
       {children}
