@@ -182,7 +182,7 @@ rules:
 
 overrides:
   - rules:
-      "@typescript-eslint/no-explicit-any": off
+      "@typescript-eslint/no-explicit-any": warn
     files:
       - "app/components/Autocomplete.stories.tsx"
       - "app/components/Autocomplete.tsx"
@@ -442,7 +442,7 @@ overrides:
       - "packages/@types/regl-worldview/index.d.ts"
 
   - rules:
-      "@typescript-eslint/no-non-null-assertion": off
+      "@typescript-eslint/no-non-null-assertion": warn
     files:
       - "app/components/Autocomplete.tsx"
       - "app/components/Chart/index.stories.tsx"

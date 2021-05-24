@@ -20,6 +20,7 @@
   "include": ["**/*", "app/.storybook/**/*"],
   "exclude": ["node_modules"],
   "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "es2020"],
     "jsx": "react-jsx"
   }
 }
