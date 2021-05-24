@@ -27244,22 +27244,7 @@ typescript@4.2.4:
   languageName: node
   linkType: hard
 
-"ws@npm:^7.2.1, ws@npm:^7.2.3":
-  version: 7.4.4
-  resolution: "ws@npm:7.4.4"
-  peerDependencies:
-    bufferutil: ^4.0.1
-    utf-8-validate: ^5.0.2
-  peerDependenciesMeta:
-    bufferutil:
-      optional: true
-    utf-8-validate:
-      optional: true
-  checksum: ad08761ed753cdd3f7172e9a9efc7d74e7e196623cace2380e5f74ff0abd16196e03223bd4148a34278dcbc653ee3841994635419281cbf303b3f22c589e2ec4
-  languageName: node
-  linkType: hard
-
-"ws@npm:^7.3.1":
+"ws@npm:^7.2.1, ws@npm:^7.2.3, ws@npm:^7.3.1":
   version: 7.4.5
   resolution: "ws@npm:7.4.5"
   peerDependencies:
