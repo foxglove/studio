@@ -24,7 +24,7 @@ export default (
       path: path.join(extensionPath, "dist"),
       filename: "extension.js",
       library: {
-        name: "entrypoint",
+        name: "__studio_extension_entrypoint",
         type: "var",
       },
     },

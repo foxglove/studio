@@ -7,10 +7,9 @@
     "target": "es2019",
     "lib": ["es2019"],
 
-    "allowJs": false,
+    "allowJs": true,
     "composite": true,
     "esModuleInterop": true,
-    "importHelpers": false,
     "isolatedModules": true,
     "jsx": "react-jsx",
     "moduleResolution": "node",
