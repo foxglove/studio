@@ -4,11 +4,11 @@
 
 import { ExtensionActivate } from "@foxglove/studio";
 
-import HelloWorldPanel from "./panels/HelloWorldPanel";
+import MapPanel from "./panels/Map";
 
 export const activate: ExtensionActivate = (extensionContext) => {
   extensionContext.registerPanel({
-    name: "hello",
-    component: HelloWorldPanel,
+    name: "map",
+    component: MapPanel,
   });
 };

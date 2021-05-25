@@ -5,8 +5,7 @@ import { LatLngBounds } from "leaflet";
 import { useMemo, useState } from "react";
 import { Circle, useMapEvent } from "react-leaflet";
 
-import { useMessagesByTopic } from "@foxglove/studio-base/PanelAPI";
-import { MessageBlock } from "@foxglove/studio-base/PanelAPI/useBlocksByTopic";
+import { useMessagesByTopic, MessageBlock } from "@foxglove/studio";
 
 import { NavSatFixMsg } from "./types";
 

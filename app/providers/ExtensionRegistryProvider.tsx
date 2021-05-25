@@ -8,6 +8,12 @@ import { useAsync } from "react-use";
 
 import Logger from "@foxglove/log";
 import { ExtensionContext, ExtensionModule } from "@foxglove/studio";
+import {
+  useConfig,
+  useMessagesByTopic,
+  useBlocksByTopic,
+  useDataSourceInfo,
+} from "@foxglove/studio-base/PanelAPI";
 import { useExtensionLoader } from "@foxglove/studio-base/context/ExtensionLoaderContext";
 import ExtensionRegistryContext, {
   ExtensionRegistry,
@@ -15,6 +21,13 @@ import ExtensionRegistryContext, {
 } from "@foxglove/studio-base/context/ExtensionRegistryContext";
 
 const log = Logger.getLogger(__filename);
+
+const FoxgloveStudio = {
+  useMessagesByTopic,
+  useBlocksByTopic,
+  useDataSourceInfo,
+  useConfig,
+};
 
 export default function ExtensionRegistryProvider(props: PropsWithChildren<unknown>): JSX.Element {
   const extensionLoader = useExtensionLoader();
@@ -37,7 +50,7 @@ export default function ExtensionRegistryProvider(props: PropsWithChildren<unkno
 
       const module = { exports: {} };
       const require = (name: string) => {
-        return { React, ReactDOM }[name];
+        return { React, ReactDOM, FoxgloveStudio }[name];
       };
 
       // load the extension module exports
