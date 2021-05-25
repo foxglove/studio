@@ -17,7 +17,7 @@ export default (
 
   const config: Configuration = {
     target: "web",
-    mode: isDev ? "none" : "production",
+    mode: isDev ? "development" : "production",
     context: extensionPath,
     entry: entryPoint,
     output: {
