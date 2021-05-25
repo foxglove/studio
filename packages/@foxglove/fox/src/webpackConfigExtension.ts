@@ -23,10 +23,7 @@ export default (
     output: {
       path: path.join(extensionPath, "dist"),
       filename: "extension.js",
-      library: {
-        name: "__studio_extension_entrypoint",
-        type: "var",
-      },
+      libraryTarget: "commonjs2",
     },
     devtool: isDev ? "eval-source-map" : "source-map",
     externals: {
