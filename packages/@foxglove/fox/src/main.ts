@@ -17,10 +17,9 @@ module.exports = function (argv: string[]): void {
   program.usage("<command> [options]");
 
   program
-    .command("create")
+    .command("create <pkgname>")
     .description("Create a new extension")
-    .option("-n, --name [name]", "Extension package name")
-    .action(({ name }) => main(createCommand({ name })));
+    .action((pkgname) => main(createCommand({ name: pkgname })));
 
   program
     .command("build")

@@ -2,7 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { readdir, readFile, writeFile } from "fs/promises";
+import { constants } from "fs";
+import { access, readdir, readFile, writeFile } from "fs/promises";
 import mkdirp from "mkdirp";
 import * as path from "path";
 import sanitize from "sanitize-filename";
@@ -15,15 +16,19 @@ export interface CreateOptions {
 }
 
 export async function createCommand(options: CreateOptions): Promise<void> {
-  const cwd = options.cwd ?? process.cwd();
   const name = options.name;
-  const templateDir = path.join(__dirname, "..", "template");
-  const extensionDir = path.join(cwd, name);
-
   if (name !== sanitize(name)) {
     throw new Error(
       `Name "${name}" contains invalid characters. Choose a filename-compatible project name`,
     );
+  }
+
+  const cwd = options.cwd ?? process.cwd();
+  const templateDir = path.join(__dirname, "..", "template");
+  const extensionDir = path.join(cwd, name);
+
+  if (await exists(extensionDir)) {
+    throw new Error(`Directory "${extensionDir}" already exists`);
   }
 
   const replacements = new Map([["${NAME}", name]]);
@@ -37,16 +42,25 @@ export async function createCommand(options: CreateOptions): Promise<void> {
   info(`Created Foxglove Studio extension "${name}" at ${extensionDir}`);
 }
 
-async function listFiles(baseDir: string, curDir = "."): Promise<string[]> {
+async function exists(filename: string): Promise<boolean> {
+  try {
+    await access(filename, constants.F_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function listFiles(baseDir: string, curDir?: string): Promise<string[]> {
   let output: string[] = [];
 
-  const dirname = path.join(baseDir, curDir);
-  const contents = await readdir(dirname, { withFileTypes: true });
+  curDir ??= baseDir;
+  const contents = await readdir(curDir, { withFileTypes: true });
   for (const entry of contents) {
     if (entry.isDirectory()) {
-      output = output.concat(await listFiles(baseDir, path.join(dirname, entry.name)));
+      output = output.concat(await listFiles(baseDir, path.join(curDir, entry.name)));
     } else if (entry.isFile()) {
-      output.push(path.relative(baseDir, path.join(dirname, entry.name)));
+      output.push(path.relative(baseDir, path.join(curDir, entry.name)));
     }
   }
 
