@@ -20,7 +20,7 @@ import NativeStorageLayoutStorageProvider from "./components/NativeStorageLayout
 
 const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
 
-const desktopBridge = (global as { desktopBridge?: Desktop }).desktopBridge;
+const desktopBridge = (global as unknown as { desktopBridge: Desktop }).desktopBridge;
 
 export default function Root(): ReactElement {
   const playerSources: PlayerSourceDefinition[] = [
@@ -51,13 +51,11 @@ export default function Root(): ReactElement {
     /* eslint-enable react/jsx-key */
   ];
 
-  const deepLinks = useMemo(() => {
-    return desktopBridge?.getDeepLinks() ?? [];
-  }, []);
+  const deepLinks = useMemo(() => desktopBridge.getDeepLinks(), []);
 
-  const handleToolbarDoubleClick = useCallback(() => {
-    desktopBridge?.handleToolbarDoubleClick();
-  }, []);
+  const handleToolbarDoubleClick = useCallback(() => desktopBridge.handleToolbarDoubleClick(), []);
+
+  const loginViaExternalBrowser = useCallback(() => desktopBridge?.loginViaExternalBrowser(), []);
 
   return (
     <ThemeProvider>
@@ -68,6 +66,7 @@ export default function Root(): ReactElement {
             deepLinks={deepLinks}
             onFullscreenToggle={handleToolbarDoubleClick}
             availableSources={playerSources}
+            login={loginViaExternalBrowser}
           />
         </MultiProvider>
       </ErrorBoundary>

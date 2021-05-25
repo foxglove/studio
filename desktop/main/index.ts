@@ -7,7 +7,7 @@
 
 import "colors";
 import { captureException, init as initSentry } from "@sentry/electron";
-import { app, BrowserWindow, ipcMain, Menu, session, nativeTheme } from "electron";
+import { app, BrowserWindow, ipcMain, Menu, session, nativeTheme, shell } from "electron";
 import installExtension, {
   REACT_DEVELOPER_TOOLS,
   REDUX_DEVTOOLS,
@@ -148,7 +148,9 @@ ipcMain.handle("load-pending-files", async (ev) => {
 // works on osx - even when app is closed
 // tho it is a bit strange since it isn't clear when this runs...
 const openUrls: string[] = [];
+let loginPromise: { resolve: (_: unknown) => void; reject: (_: Error) => void } | undefined;
 app.on("open-url", (ev, url) => {
+  console.log("open-url", url);
   if (!url.startsWith("foxglove://")) {
     return;
   }
@@ -156,13 +158,32 @@ app.on("open-url", (ev, url) => {
   ev.preventDefault();
 
   if (app.isReady()) {
-    if (url.startsWith("foxglove://")) {
-      new StudioWindow([url]);
+    // Note that `new URL(url).pathname` is different between main & preload
+    // FIXME: support linux/windows with app.requestSingleInstanceLock()
+    if (url.startsWith("foxglove://auth/login-complete?")) {
+      loginPromise?.resolve(new URL(url).search);
+      loginPromise = undefined;
+    } else {
+      new StudioWindow([url]).load();
     }
   } else {
     openUrls.push(url);
   }
 });
+
+ipcMain.handle(
+  "loginViaExternalBrowser",
+  () =>
+    new Promise((resolve, reject) => {
+      loginPromise?.reject(new Error("Login was interrupted by another login request."));
+      loginPromise = { resolve, reject };
+      // FIXME: production URL, maybe with configuration via .env
+      shell.openExternal("http://localhost:3000/login/").catch((err) => {
+        reject(err);
+        loginPromise = undefined;
+      });
+    }),
+);
 
 // support preload lookups for the user data path and home directory
 ipcMain.handle("getUserDataPath", () => app.getPath("userData"));

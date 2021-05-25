@@ -103,6 +103,9 @@ const ctx: OsContext = {
 };
 
 const desktopBridge: Desktop = {
+  loginViaExternalBrowser: async (): Promise<string> => {
+    return ipcRenderer.invoke("loginViaExternalBrowser");
+  },
   handleToolbarDoubleClick() {
     ipcRenderer.send("window.toolbar-double-clicked");
   },

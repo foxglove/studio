@@ -34,6 +34,7 @@ type AppProps = {
   demoBagUrl?: string;
   deepLinks?: string[];
   onFullscreenToggle?: () => void;
+  login: () => Promise<string>;
 };
 
 // FIXME: where is the right layer to inject this config?
@@ -59,7 +60,7 @@ export default function App(props: AppProps): JSX.Element {
     <StudioToastProvider />,
     // FIXME: do firebase providers belong in app or web/desktop?
     <FirebaseAppContext.Provider value={firebaseApp} />,
-    <FirebaseAuthProvider />,
+    <FirebaseAuthProvider login={props.login} />,
     <FirebaseRemoteLayoutStorageProvider />,
     <AssetsProvider loaders={assetLoaders} />,
     <ReduxProvider store={globalStore} />,
