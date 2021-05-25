@@ -31,6 +31,7 @@ export default (
     devtool: isDev ? "eval-source-map" : "source-map",
     externals: {
       "@foxglove/studio": "studio",
+      "object-assign": "Object.assign",
       react: "react",
       "react-dom": "reactDom",
     },
