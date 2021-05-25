@@ -4,6 +4,8 @@
 
 import program from "commander";
 
+import { buildCommand } from "./build";
+import { createCommand } from "./create";
 import { fatal } from "./log";
 import { installCommand, packageCommand } from "./package";
 
@@ -13,6 +15,17 @@ function main(task: Promise<void>): void {
 
 module.exports = function (argv: string[]): void {
   program.usage("<command> [options]");
+
+  program
+    .command("create")
+    .description("Create a new extension")
+    .option("-n, --name [name]", "Extension package name")
+    .action(({ name }) => main(createCommand({ name })));
+
+  program
+    .command("build")
+    .description("Build an extension, preparing it for packaging or installation")
+    .action(() => main(buildCommand()));
 
   program
     .command("package")

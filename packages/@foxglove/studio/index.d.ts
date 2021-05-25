@@ -5,5 +5,11 @@
 declare module "@foxglove/studio" {
   interface ExtensionContext {
     readonly extensionMode: "production" | "development" | "test";
+
+    registerPanel(name: string, panel: () => Promise<unknown>);
+  }
+
+  interface ExtensionActivate {
+    (ctx: ExtensionContext): void;
   }
 }
