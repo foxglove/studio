@@ -3,14 +3,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
-import type { Configuration } from "webpack";
 import * as path from "path";
+import type { Configuration } from "webpack";
 
 export default (
   extensionPath: string,
   entryPoint: string,
   env: string | undefined,
 ): Configuration => {
+  extensionPath = path.resolve(extensionPath);
   const isDev = env == undefined || env === "development";
   const configFile = path.join(extensionPath, "tsconfig.json");
 
@@ -20,7 +21,7 @@ export default (
     context: extensionPath,
     entry: entryPoint,
     output: {
-      path: path.resolve(extensionPath, "dist"),
+      path: path.join(extensionPath, "dist"),
       filename: "extension.js",
       library: {
         name: "entrypoint",

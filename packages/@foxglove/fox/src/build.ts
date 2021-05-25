@@ -2,11 +2,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import * as path from "path";
 import webpack from "webpack";
 
-import webpackConfig from "./webpackConfigExtension";
-
 import { info } from "./log";
+import webpackConfig from "./webpackConfigExtension";
 
 export interface BuildOptions {
   readonly entryPoint?: string;
@@ -15,8 +15,8 @@ export interface BuildOptions {
 
 export async function buildCommand(options: BuildOptions = {}): Promise<void> {
   const env = process.env.NODE_ENV === "production" ? "production" : "development";
-  const extensionPath = options.cwd ?? process.cwd();
-  const entryPoint = options.entryPoint ?? "src/index.ts";
+  const extensionPath = path.resolve((options.cwd ?? process.cwd()).replace(/"$/, ""));
+  const entryPoint = options.entryPoint ?? "./src/index.ts";
 
   const compiler = webpack(webpackConfig(extensionPath, entryPoint, env));
 
@@ -25,7 +25,7 @@ export async function buildCommand(options: BuildOptions = {}): Promise<void> {
     compiler.run((err, result) => {
       compiler.close(() => {});
       if (err) {
-        return reject(err);
+        return reject(err.message);
       }
       if (result == undefined) {
         return reject(new Error(`build did not produce any output`));
