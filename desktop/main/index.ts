@@ -59,7 +59,7 @@ function main() {
   }
 
   // If another instance of the app is already open, this call triggers the "second-instance" event
-  // in the original instance and returns true.
+  // in the original instance and returns false.
   if (!app.requestSingleInstanceLock()) {
     log.info(`Another instance of ${pkgInfo.productName} is already running. Quitting.`);
     app.quit();
