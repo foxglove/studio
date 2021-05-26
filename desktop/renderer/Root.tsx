@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import type { FirebaseOptions } from "@firebase/app";
 import { ReactElement, useCallback, useMemo } from "react";
 
 import {
@@ -11,6 +12,10 @@ import {
   PlayerSourceDefinition,
   ThemeProvider,
   UserProfileLocalStorageProvider,
+  StudioToastProvider,
+  FirebaseAppProvider,
+  FirebaseAuthProvider,
+  FirebaseRemoteLayoutStorageProvider,
 } from "@foxglove/studio-base";
 
 import { Desktop } from "../common/types";
@@ -42,20 +47,32 @@ export default function Root(): ReactElement {
     },
   ];
 
+  const firebaseConfig = useMemo(() => {
+    const config = process.env.FIREBASE_CONFIG;
+    if (config == undefined) {
+      throw new Error("Firebase is not configured");
+    }
+    return JSON.parse(config) as FirebaseOptions;
+  }, []);
+
+  const loginViaExternalBrowser = useCallback(() => desktopBridge.loginViaExternalBrowser(), []);
+
   const providers = [
     /* eslint-disable react/jsx-key */
+    <StudioToastProvider />,
     <NativeStorageAppConfigurationProvider />,
     <NativeStorageLayoutStorageProvider />,
     <NativeAppMenuProvider />,
     <UserProfileLocalStorageProvider />,
+    <FirebaseAppProvider config={firebaseConfig} />,
+    <FirebaseAuthProvider getLoginCredential={loginViaExternalBrowser} />,
+    <FirebaseRemoteLayoutStorageProvider />,
     /* eslint-enable react/jsx-key */
   ];
 
   const deepLinks = useMemo(() => desktopBridge.getDeepLinks(), []);
 
   const handleToolbarDoubleClick = useCallback(() => desktopBridge.handleToolbarDoubleClick(), []);
-
-  const loginViaExternalBrowser = useCallback(() => desktopBridge?.loginViaExternalBrowser(), []);
 
   return (
     <ThemeProvider>
@@ -66,7 +83,6 @@ export default function Root(): ReactElement {
             deepLinks={deepLinks}
             onFullscreenToggle={handleToolbarDoubleClick}
             availableSources={playerSources}
-            login={loginViaExternalBrowser}
           />
         </MultiProvider>
       </ErrorBoundary>

@@ -17,7 +17,7 @@ export default (env: unknown, argv: WebpackArgv): Configuration => {
   const isDev = argv.mode === "development";
   const isServe = argv.env?.WEBPACK_SERVE ?? false;
 
-  const allowUnusedVariables = isDev && isServe;
+  const allowUnusedVariables = isDev;
 
   const plugins: WebpackPluginInstance[] = [];
 

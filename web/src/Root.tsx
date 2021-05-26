@@ -11,6 +11,7 @@ import {
   PlayerSourceDefinition,
   ThemeProvider,
   UserProfileLocalStorageProvider,
+  StudioToastProvider,
 } from "@foxglove/studio-base";
 
 import AppConfigurationProvider from "./components/AppConfigurationProvider";
@@ -36,6 +37,7 @@ export default function Root(): ReactElement {
 
   const providers = [
     /* eslint-disable react/jsx-key */
+    <StudioToastProvider />,
     <AppConfigurationProvider />,
     <NoOpLayoutStorageProvider />,
     <UserProfileLocalStorageProvider />,

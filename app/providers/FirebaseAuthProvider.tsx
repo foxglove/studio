@@ -8,8 +8,8 @@ import {
   onAuthStateChanged,
   signOut,
   signInWithCredential,
-  GoogleAuthProvider,
   OAuthCredential,
+  AuthCredential,
 } from "@firebase/auth";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useToasts } from "react-toast-notifications";
@@ -21,10 +21,15 @@ import useShallowMemo from "@foxglove/studio-base/hooks/useShallowMemo";
 
 const log = Log.getLogger(__filename);
 
+type Props = {
+  /** Authenticate and return JSON representing a Firebase credential */
+  getLoginCredential: () => Promise<string>;
+};
+
 export default function FirebaseAuthProvider({
   children,
-  login,
-}: React.PropsWithChildren<{ login: () => Promise<string> }>): JSX.Element {
+  getLoginCredential,
+}: React.PropsWithChildren<Props>): JSX.Element {
   const app = useFirebase();
 
   const [user, setUser] = useState<User | undefined>();
@@ -44,27 +49,41 @@ export default function FirebaseAuthProvider({
     return unsubscribe;
   }, [addToast, app]);
 
-  const loginWithGoogle = useCallback(async () => {
-    try {
-      const params = new URLSearchParams(await login());
-      const credentialStr = params.get("google");
-      if (credentialStr == undefined) {
-        addToast(`Login failed: no data was returned from the browser.`, { appearance: "error" });
+  const loginWithCredential = useCallback(
+    async (credentialStr: string) => {
+      const authCredential: AuthCredential = JSON.parse(credentialStr);
+      if (authCredential.providerId !== "google.com" /* ProviderId.GOOGLE */) {
+        addToast(`Login failed: unsupported credential provider.`, {
+          appearance: "error",
+        });
         return;
       }
-      const oauthCredential = OAuthCredential.fromJSON(credentialStr);
+      const oauthCredential = OAuthCredential.fromJSON(authCredential);
       if (!oauthCredential) {
-        addToast(`Login failed: invalid data was returned from the browser.`, {
+        addToast(`Login failed: invalid credential data.`, {
           appearance: "error",
         });
         return;
       }
       const credential = await signInWithCredential(getAuth(app), oauthCredential);
-      log.info("signed in:", credential);
+      log.debug("signed in:", credential);
+    },
+    [addToast, app],
+  );
+
+  const login = useCallback(async () => {
+    try {
+      const params = new URLSearchParams(await getLoginCredential());
+      const credentialStr = params.get("credential");
+      if (credentialStr == undefined) {
+        addToast(`Login failed: no data was returned from the browser.`, { appearance: "error" });
+        return;
+      }
+      return loginWithCredential(credentialStr);
     } catch (error) {
       addToast(`Login error: ${error.toString()}`, { appearance: "error" });
     }
-  }, [addToast, app, login]);
+  }, [addToast, getLoginCredential, loginWithCredential]);
 
   const logout = useCallback(async () => {
     try {
@@ -89,7 +108,8 @@ export default function FirebaseAuthProvider({
 
   const value = useShallowMemo<Auth>({
     currentUser,
-    loginWithGoogle,
+    login,
+    loginWithCredential,
   });
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -19,7 +19,14 @@ export interface CurrentUser {
 export interface Auth {
   currentUser?: CurrentUser;
 
-  loginWithGoogle: () => Promise<void>;
+  /** Log in via the default flow, e.g. by opening a login page in another window/browser. */
+  login: () => Promise<void>;
+
+  /**
+   * Log in with a manually pasted token, for example if the normal login flow failed. This is
+   * particularly important for dev mode on Linux where setAsDefaultProtocolClient doesn't work.
+   */
+  loginWithCredential: (credential: string) => Promise<void>;
 }
 
 const AuthContext = createContext<Auth | undefined>(undefined);
@@ -27,7 +34,7 @@ const AuthContext = createContext<Auth | undefined>(undefined);
 export function useAuth(): Auth {
   const ctx = useContext(AuthContext);
   if (ctx === undefined) {
-    throw new Error("A LoginContext provider is required to useLogin");
+    throw new Error("An AuthContext provider is required to useAuth");
   }
   return ctx;
 }
