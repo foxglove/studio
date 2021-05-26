@@ -79,7 +79,7 @@ function generateDefinitions(definitions: Record<string, RosMsgDefinition>): str
     .join("\n");
   return `import { RosMsgDefinition } from "@foxglove/rosmsg";
 
-declare module "@foxglove/foxglove_msgs" {
+declare module "@foxglove/rosmsg-msgs-foxglove" {
   type RosMsgCommonDefinitions = {
 ${entries}
   };

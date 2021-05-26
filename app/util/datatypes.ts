@@ -11,8 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { definitions as foxgloveDefs } from "@foxglove/foxglove_msgs";
 import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
+import { definitions as foxgloveDefs } from "@foxglove/rosmsg-msgs-foxglove";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 export const basicDatatypes: RosDatatypes = {};

@@ -8,9 +8,9 @@
   "dependencies": {
     "@fluentui/react": "8.14.13",
     "@fluentui/react-icons-mdl2": "1.1.1",
-    "@foxglove/foxglove_msgs": "workspace:packages/foxglove_msgs",
     "@foxglove/hooks": "workspace:packages/@foxglove/hooks",
     "@foxglove/rosmsg-msgs-common": "workspace:packages/rosmsg-msgs-common",
+    "@foxglove/rosmsg-msgs-foxglove": "workspace:packages/rosmsg-msgs-foxglove",
     "@foxglove/velodyne-cloud": "workspace:packages/velodyne-cloud",
     "@mdi/svg": "5.9.55",
     "async-mutex": "0.3.1",

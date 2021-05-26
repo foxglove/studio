@@ -1,5 +1,5 @@
 {
-  "name": "@foxglove/foxglove_msgs",
+  "name": "@foxglove/rosmsg-msgs-foxglove",
   "version": "1.0.0",
   "license": "MIT",
   "repository": {
