@@ -14,7 +14,6 @@ import {
   UserProfileLocalStorageProvider,
   StudioToastProvider,
   FirebaseAppProvider,
-  FirebaseAuthProvider,
 } from "@foxglove/studio-base";
 
 import { Desktop } from "../common/types";
@@ -22,6 +21,7 @@ import NativeAppMenuProvider from "./components/NativeAppMenuProvider";
 import NativeStorageAppConfigurationProvider from "./components/NativeStorageAppConfigurationProvider";
 import NativeStorageLayoutStorageProvider from "./components/NativeStorageLayoutStorageProvider";
 import ExtensionLoaderProvider from "./providers/ExtensionLoaderProvider";
+import ExternalBrowserFirebaseAuthProvider from "./providers/ExternalBrowserFirebaseAuthProvider";
 
 const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
 
@@ -55,11 +55,6 @@ export default function Root(): ReactElement {
     return JSON.parse(config) as FirebaseOptions;
   }, []);
 
-  const authenticateViaExternalBrowser = useCallback(
-    () => desktopBridge.authenticateViaExternalBrowser(),
-    [],
-  );
-
   const providers = [
     /* eslint-disable react/jsx-key */
     <StudioToastProvider />,
@@ -68,7 +63,7 @@ export default function Root(): ReactElement {
     <NativeAppMenuProvider />,
     <UserProfileLocalStorageProvider />,
     <FirebaseAppProvider config={firebaseConfig} />,
-    <FirebaseAuthProvider getLoginCredential={authenticateViaExternalBrowser} />,
+    <ExternalBrowserFirebaseAuthProvider />,
     <ExtensionLoaderProvider />,
     /* eslint-enable react/jsx-key */
   ];

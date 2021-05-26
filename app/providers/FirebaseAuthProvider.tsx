@@ -22,8 +22,8 @@ import useShallowMemo from "@foxglove/studio-base/hooks/useShallowMemo";
 const log = Log.getLogger(__filename);
 
 type Props = {
-  /** Authenticate and return JSON representing a Firebase credential */
-  getLoginCredential: () => Promise<string>;
+  /** Authenticate and return a Firebase credential */
+  getLoginCredential: () => Promise<AuthCredential>;
 };
 
 export default function FirebaseAuthProvider({
@@ -73,13 +73,8 @@ export default function FirebaseAuthProvider({
 
   const login = useCallback(async () => {
     try {
-      const params = new URLSearchParams(await getLoginCredential());
-      const credentialStr = params.get("credential");
-      if (credentialStr == undefined) {
-        addToast(`Login failed: no data was returned from the browser.`, { appearance: "error" });
-        return;
-      }
-      return loginWithCredential(credentialStr);
+      const credential = await getLoginCredential();
+      return loginWithCredential(JSON.stringify(credential.toJSON()));
     } catch (error) {
       addToast(`Login error: ${error.toString()}`, { appearance: "error" });
     }
