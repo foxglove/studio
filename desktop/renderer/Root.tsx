@@ -55,7 +55,10 @@ export default function Root(): ReactElement {
     return JSON.parse(config) as FirebaseOptions;
   }, []);
 
-  const loginViaExternalBrowser = useCallback(() => desktopBridge.loginViaExternalBrowser(), []);
+  const authenticateViaExternalBrowser = useCallback(
+    () => desktopBridge.authenticateViaExternalBrowser(),
+    [],
+  );
 
   const providers = [
     /* eslint-disable react/jsx-key */
@@ -65,7 +68,7 @@ export default function Root(): ReactElement {
     <NativeAppMenuProvider />,
     <UserProfileLocalStorageProvider />,
     <FirebaseAppProvider config={firebaseConfig} />,
-    <FirebaseAuthProvider getLoginCredential={loginViaExternalBrowser} />,
+    <FirebaseAuthProvider getLoginCredential={authenticateViaExternalBrowser} />,
     <ExtensionLoaderProvider />,
     /* eslint-enable react/jsx-key */
   ];

@@ -13,7 +13,7 @@ import { BrowserWindow } from "electron";
  * Via the debugger we inject a DOM event to set the files of an <input> element.
  */
 const inputElementId = "electron-open-file-input";
-export default async function loadFilesToOpen(
+export default async function injectFilesToOpen(
   browserWindow: BrowserWindow,
   filesToOpen: string[],
 ): Promise<void> {

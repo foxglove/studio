@@ -15,8 +15,8 @@ import Logger from "@foxglove/log";
 
 import pkgInfo from "../../package.json";
 import StudioWindow from "./StudioWindow";
+import injectFilesToOpen from "./injectFilesToOpen";
 import installChromeExtensions from "./installChromeExtensions";
-import loadFilesToOpen from "./loadFilesToOpen";
 import { installMenuInterface } from "./menu";
 import {
   registerRosPackageProtocolHandlers,
@@ -130,7 +130,7 @@ function main() {
     if (preloaderFileInputIsReady) {
       const focusedWindow = BrowserWindow.getFocusedWindow();
       if (focusedWindow) {
-        await loadFilesToOpen(focusedWindow, filesToOpen);
+        await injectFilesToOpen(focusedWindow, filesToOpen);
       }
     }
   });
@@ -141,7 +141,7 @@ function main() {
   ipcMain.handle("load-pending-files", async (ev) => {
     const browserWindow = BrowserWindow.fromId(ev.sender.id);
     if (browserWindow) {
-      await loadFilesToOpen(browserWindow, filesToOpen);
+      await injectFilesToOpen(browserWindow, filesToOpen);
     }
     preloaderFileInputIsReady = true;
   });
@@ -175,7 +175,7 @@ function main() {
   });
 
   ipcMain.handle(
-    "loginViaExternalBrowser",
+    "authenticateViaExternalBrowser",
     () =>
       new Promise<string | undefined>((resolve, reject) => {
         loginPromise?.resolve(undefined);

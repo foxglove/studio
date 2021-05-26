@@ -54,7 +54,7 @@ interface Desktop {
    * Initiate login in an external browser and return a parameter string sent back from the login
    * flow
    */
-  loginViaExternalBrowser: () => Promise<string>;
+  authenticateViaExternalBrowser: () => Promise<string>;
 
   handleToolbarDoubleClick: () => void;
 
