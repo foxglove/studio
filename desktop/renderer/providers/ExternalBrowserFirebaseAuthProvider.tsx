@@ -1,7 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import type { AuthCredential } from "@firebase/auth";
+import { OAuthCredential } from "@firebase/auth";
 import { useCallback } from "react";
 
 import { FirebaseAuthProvider } from "@foxglove/studio-base";
@@ -19,8 +19,11 @@ export default function ExternalBrowserAuthProvider({
     if (credentialStr == undefined) {
       throw new Error(`No data was returned from the browser.`);
     }
-    const authCredential: AuthCredential = JSON.parse(credentialStr);
-    return authCredential;
+    const oauthCredential = OAuthCredential.fromJSON(credentialStr);
+    if (oauthCredential == undefined) {
+      throw new Error("Data does not represent a valid OAuth credential.");
+    }
+    return oauthCredential;
   }, []);
 
   return (
