@@ -10,7 +10,7 @@ import { Desktop } from "../../common/types";
 
 const desktopBridge = (global as unknown as { desktopBridge: Desktop }).desktopBridge;
 
-export default function ExternalBrowserAuthProvider({
+export default function ExternalBrowserFirebaseAuthProvider({
   children,
 }: React.PropsWithChildren<unknown>): JSX.Element {
   const getCredentialViaExternalBrowser = useCallback(async () => {
