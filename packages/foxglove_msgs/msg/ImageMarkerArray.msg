@@ -1,5 +1,5 @@
 # foxglove_msgs/ImageMarkerArray
-ImageMarker[] markers
+visualization_msgs/ImageMarker[] markers
 
 ================================================================================
 MSG: visualization_msgs/ImageMarker
