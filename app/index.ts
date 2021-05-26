@@ -33,3 +33,5 @@ export { default as FirebaseAppProvider } from "./providers/FirebaseAppProvider"
 export { default as FirebaseAuthProvider } from "./providers/FirebaseAuthProvider";
 export { default as FirebaseRemoteLayoutStorageProvider } from "./providers/FirebaseRemoteLayoutStorageProvider";
 export { default as StudioToastProvider } from "./components/StudioToastProvider";
+export { default as ExtensionLoaderContext } from "./context/ExtensionLoaderContext";
+export type { ExtensionLoader, ExtensionDetail } from "./context/ExtensionLoaderContext";

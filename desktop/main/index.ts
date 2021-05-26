@@ -243,8 +243,7 @@ function main() {
     // See: https://www.electronjs.org/docs/tutorial/security
     const contentSecurityPolicy: Record<string, string> = {
       "default-src": "'self'",
-      // We should use x-foxglove-extension: instead of file: (see https://github.com/foxglove/studio/issues/895)
-      "script-src": `'self' 'unsafe-inline' 'unsafe-eval' file:`,
+      "script-src": `'self' 'unsafe-inline' 'unsafe-eval'`,
       "worker-src": `'self' blob:`,
       "style-src": "'self' 'unsafe-inline'",
       "connect-src": "'self' ws: wss: http: https: x-foxglove-ros-package:",
