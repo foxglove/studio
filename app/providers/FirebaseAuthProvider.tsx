@@ -99,9 +99,6 @@ export default function FirebaseAuthProvider({
     }
     return {
       email: user.email ?? undefined,
-      addUserToWorkspace: async () => {},
-      removeUserFromWorkspace: async () => {},
-      getWorkspaceMembers: async () => [],
       logout,
     };
   }, [logout, user]);

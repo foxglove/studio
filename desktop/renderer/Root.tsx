@@ -15,7 +15,6 @@ import {
   StudioToastProvider,
   FirebaseAppProvider,
   FirebaseAuthProvider,
-  FirebaseRemoteLayoutStorageProvider,
 } from "@foxglove/studio-base";
 
 import { Desktop } from "../common/types";
@@ -67,7 +66,6 @@ export default function Root(): ReactElement {
     <UserProfileLocalStorageProvider />,
     <FirebaseAppProvider config={firebaseConfig} />,
     <FirebaseAuthProvider getLoginCredential={loginViaExternalBrowser} />,
-    <FirebaseRemoteLayoutStorageProvider />,
     <ExtensionLoaderProvider />,
     /* eslint-enable react/jsx-key */
   ];
