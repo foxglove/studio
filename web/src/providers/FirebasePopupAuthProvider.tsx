@@ -11,7 +11,7 @@ export default function FirebasePopupAuthProvider({
 }: React.PropsWithChildren<unknown>): JSX.Element {
   const app = useFirebase();
 
-  const getLoginCredential = useCallback(async () => {
+  const getCredential = useCallback(async () => {
     const result = await signInWithPopup(getAuth(app), new GoogleAuthProvider());
     const credential = GoogleAuthProvider.credentialFromResult(result);
     if (!credential) {
@@ -20,7 +20,5 @@ export default function FirebasePopupAuthProvider({
     return credential;
   }, [app]);
 
-  return (
-    <FirebaseAuthProvider getLoginCredential={getLoginCredential}>{children}</FirebaseAuthProvider>
-  );
+  return <FirebaseAuthProvider getCredential={getCredential}>{children}</FirebaseAuthProvider>;
 }

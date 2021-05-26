@@ -27,7 +27,7 @@ export default function ExternalBrowserFirebaseAuthProvider({
   }, []);
 
   return (
-    <FirebaseAuthProvider getLoginCredential={getCredentialViaExternalBrowser}>
+    <FirebaseAuthProvider getCredential={getCredentialViaExternalBrowser}>
       {children}
     </FirebaseAuthProvider>
   );

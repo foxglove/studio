@@ -23,12 +23,12 @@ const log = Log.getLogger(__filename);
 
 type Props = {
   /** Authenticate and return a Firebase credential */
-  getLoginCredential: () => Promise<AuthCredential>;
+  getCredential: () => Promise<AuthCredential>;
 };
 
 export default function FirebaseAuthProvider({
   children,
-  getLoginCredential,
+  getCredential,
 }: React.PropsWithChildren<Props>): JSX.Element {
   const app = useFirebase();
 
@@ -73,12 +73,12 @@ export default function FirebaseAuthProvider({
 
   const login = useCallback(async () => {
     try {
-      const credential = await getLoginCredential();
+      const credential = await getCredential();
       return loginWithCredential(JSON.stringify(credential.toJSON()));
     } catch (error) {
       addToast(`Login error: ${error.toString()}`, { appearance: "error" });
     }
-  }, [addToast, getLoginCredential, loginWithCredential]);
+  }, [addToast, getCredential, loginWithCredential]);
 
   const logout = useCallback(async () => {
     try {
