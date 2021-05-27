@@ -13,7 +13,6 @@ export default (
 ): Configuration => {
   extensionPath = path.resolve(extensionPath);
   const isDev = env == undefined || env === "development";
-  const configFile = path.join(extensionPath, "tsconfig.json");
 
   const config: Configuration = {
     target: "web",
@@ -46,7 +45,6 @@ export default (
               options: {
                 loader: "tsx",
                 target: "es2020",
-                tsconfigRaw: require(configFile),
               },
             },
           ],
