@@ -9,33 +9,20 @@ import {
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { usePanelId } from "@foxglove/studio-base/context/PanelIdContext";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
-import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
 /**
  * Mix partial panel config from savedProps with the panel type's `defaultConfig` to form the complete panel configuration.
  */
-export const useConfig: typeof panel.useConfig = () => {
+export const useConfig: typeof panel.useConfig = <Config>(defaultValue: Config) => {
   const panelId = usePanelId();
-  const panelCatalog = usePanelCatalog();
-  const panelComponent = useMemo(
-    () =>
-      panelId != undefined
-        ? panelCatalog.getPanelByType(getPanelTypeFromId(panelId))?.component
-        : undefined,
-    [panelCatalog, panelId],
-  );
-  if (panelId != undefined && !panelComponent) {
-    throw new Error(`Attempt to useConfig() with unknown panel id ${panelId}`);
-  }
-  return useConfigById(panelId, panelComponent?.defaultConfig);
+  return useConfigById(panelId, defaultValue);
 };
 
 /**
  * Like `useConfig`, but for a specific panel id. This generally shouldn't be used by panels
- * directly, but is for use in internal code that's running outside of regular context providers.
+ * directly, but is for use in internal code that's running outside of a PanelIdContext.
  */
 export function useConfigById<Config>(
   panelId: string | undefined,

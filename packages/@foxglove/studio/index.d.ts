@@ -97,7 +97,9 @@ declare module "@foxglove/studio" {
        * Load/Save panel configuration. This behaves in a manner similar to React.useState except the state
        * is persisted with the current layout.
        */
-      useConfig<Config>(): [Config, (config: Partial<Config>) => void];
+      useConfig<Config extends Record<string, unknown>>(
+        defaultValue: Config,
+      ): [Config, (config: Partial<Config>) => void];
 
       /**
        * Data source info" encapsulates **rarely-changing** metadata about the source from which

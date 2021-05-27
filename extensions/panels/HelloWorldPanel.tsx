@@ -4,8 +4,14 @@
 
 import { panel } from "@foxglove/studio";
 
+type Config = {
+  hello: string;
+};
+
 export default function HelloWorldPanel(): JSX.Element {
-  const [config] = panel.useConfig();
+  const [config] = panel.useConfig<Config>({
+    hello: "world",
+  });
 
   return (
     <>
