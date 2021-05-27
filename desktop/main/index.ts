@@ -48,6 +48,13 @@ function main() {
 
   const isProduction = process.env.NODE_ENV === "production";
 
+  if (!isProduction && app.dock != undefined) {
+    const devIcon = getDevModeIcon();
+    if (devIcon) {
+      app.dock.setIcon(devIcon);
+    }
+  }
+
   // Suppress Electron Security Warning in development
   // See the comment for the webSecurity setting on browser window
   process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = isProduction ? "false" : "true";
@@ -236,12 +243,6 @@ function main() {
 
     if (!isProduction) {
       await installChromeExtensions();
-      if (app.dock != undefined) {
-        const devIcon = getDevModeIcon();
-        if (devIcon) {
-          app.dock.setIcon(devIcon);
-        }
-      }
     }
 
     // Content Security Policy
