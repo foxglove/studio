@@ -2,11 +2,12 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 import { rgb2hsv, hsv2rgb } from "@fluentui/react";
-import { app, NativeImage, nativeImage } from "electron";
+import { NativeImage, nativeImage } from "electron";
 
 const ROTATION_DEGREES = 270;
 
-export function getDevModeIcon(): NativeImage | undefined {
+/** The regular app icon with a hue shift for development mode. */
+export default function getDevModeIcon(): NativeImage | undefined {
   try {
     // This can fail when opening the app from a packaged DMG.
     const originalIcon = nativeImage.createFromPath("resources/icon/icon.png");
@@ -23,16 +24,5 @@ export function getDevModeIcon(): NativeImage | undefined {
   } catch (error) {
     console.error("Unable to create dev mode icon", error);
     return undefined;
-  }
-}
-
-/** Set an icon with a hue shift for development mode. */
-export default function setDevModeDockIcon(): void {
-  if (app.dock == undefined) {
-    return;
-  }
-  const devIcon = getDevModeIcon();
-  if (devIcon) {
-    app.dock.setIcon(devIcon);
   }
 }
