@@ -41,7 +41,7 @@ import {
 } from "react-mosaic-component";
 import styled from "styled-components";
 
-import { useConfigById } from "@foxglove/studio-base/PanelAPI";
+import { usePanelConfigById } from "@foxglove/studio-base/PanelAPI";
 import Button from "@foxglove/studio-base/components/Button";
 import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
 import Flex from "@foxglove/studio-base/components/Flex";
@@ -158,7 +158,7 @@ export default function Panel<Config extends PanelConfig>(
       [panelCatalog, type],
     );
 
-    const [config, saveConfig] = useConfigById<Config>(childId, PanelComponent.defaultConfig);
+    const [config, saveConfig] = usePanelConfigById<Config>(childId, PanelComponent.defaultConfig);
     const panelComponentConfig = useMemo(
       () => ({ ...config, ...overrideConfig }),
       [config, overrideConfig],

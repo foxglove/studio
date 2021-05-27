@@ -6,7 +6,7 @@ import { DefaultButton, Stack, Text, useTheme } from "@fluentui/react";
 import { StrictMode, useMemo, useState } from "react";
 import { useUnmount } from "react-use";
 
-import { useConfigById } from "@foxglove/studio-base/PanelAPI";
+import { usePanelConfigById } from "@foxglove/studio-base/PanelAPI";
 import ShareJsonModal from "@foxglove/studio-base/components/ShareJsonModal";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import {
@@ -63,7 +63,7 @@ export default function PanelSettings(): JSX.Element {
     );
   }, [selectedPanelId, showShareModal, getCurrentLayout, savePanelConfigs]);
 
-  const [config, saveConfig] = useConfigById<Record<string, unknown>>(
+  const [config, saveConfig] = usePanelConfigById<Record<string, unknown>>(
     selectedPanelId,
     panelInfo?.component.defaultConfig,
   );

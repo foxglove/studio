@@ -14,9 +14,11 @@ import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
 /**
- * Mix partial panel config from savedProps with the panel type's `defaultConfig` to form the complete panel configuration.
+ * Get/Set the panel's configuration. Return value is similar to useState (i.e [value, setter])
+ *
+ * The config value mixes any persisted config with the default config.
  */
-export function useConfig<Config>(): [Config, SaveConfig<Config>] {
+export function usePanelConfig<Config>(defaultConfig?: Config): [Config, SaveConfig<Config>] {
   const panelId = usePanelId();
   const panelCatalog = usePanelCatalog();
   const panelComponent = useMemo(
@@ -29,14 +31,14 @@ export function useConfig<Config>(): [Config, SaveConfig<Config>] {
   if (panelId != undefined && !panelComponent) {
     throw new Error(`Attempt to useConfig() with unknown panel id ${panelId}`);
   }
-  return useConfigById(panelId, panelComponent?.defaultConfig);
+  return usePanelConfigById(panelId, defaultConfig);
 }
 
 /**
- * Like `useConfig`, but for a specific panel id. This generally shouldn't be used by panels
+ * Like `usePanelConfig`, but for a specific panel id. This generally shouldn't be used by panels
  * directly, but is for use in internal code that's running outside of regular context providers.
  */
-export function useConfigById<Config>(
+export function usePanelConfigById<Config>(
   panelId: string | undefined,
   defaultConfig: Config | undefined,
 ): [Config, SaveConfig<Config>] {
