@@ -1,5 +1,4 @@
 {
-  "//": "Note: we use babel-jest rather than ts-jest for performance reasons.",
   "transform": {
     "\\.tsx?$": "<rootDir>/test/transformers/typescriptTransformerWithRawImports.js",
     "\\.ne$": "<rootDir>/test/transformers/neTransformer.js",

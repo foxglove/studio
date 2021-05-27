@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 /* eslint-disable @typescript-eslint/no-var-requires */
-const babelJest = require("babel-jest").default;
+const esbuildJest = require("esbuild-jest").default;
 const fs = require("fs");
 
 // look for `?raw` import statements
@@ -21,9 +21,9 @@ function rewriteSource(source) {
 
 module.exports = {
   process(sourceText, ...args) {
-    return babelJest.process(rewriteSource(sourceText), ...args);
+    return esbuildJest.process(rewriteSource(sourceText), ...args);
   },
   getCacheKey(sourceText, ...args) {
-    return babelJest.getCacheKey(rewriteSource(sourceText), ...args);
+    return esbuildJest.getCacheKey(rewriteSource(sourceText), ...args);
   },
 };

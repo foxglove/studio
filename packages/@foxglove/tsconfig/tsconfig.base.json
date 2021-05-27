@@ -11,7 +11,6 @@
     "esModuleInterop": true,
     "importHelpers": false,
 
-    // required for testing with babel-jest + babel-plugin-transform-typescript
     "isolatedModules": true,
 
     // webpack handles JS imports for us
