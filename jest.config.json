@@ -12,6 +12,6 @@
     "^.+\\.tsx?$": ["esbuild-jest"]
   },
   "testMatch": ["**/licenses.test.ts"],
-  "///": "Native find is slow because it does not exclude files: https://github.com/facebook/jest/pull/11264#issuecomment-825377579",
+  "//": "Native find is slow because it does not exclude files: https://github.com/facebook/jest/pull/11264#issuecomment-825377579",
   "haste": { "forceNodeFilesystemAPI": true }
 }
