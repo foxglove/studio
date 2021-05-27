@@ -6,6 +6,13 @@ import { createContext, useContext } from "react";
 
 export interface CurrentUser {
   email?: string;
+
+  // FIXME: bikeshed naming
+  // addUserToWorkspace: (email: string) => Promise<void>;
+  // removeUserFromWorkspace: (email: string) => Promise<void>;
+
+  // getWorkspaceMembers: () => Promise<{ email: string }[]>;
+
   logout: () => Promise<void>;
 }
 
