@@ -4,7 +4,7 @@
 
 import { CleanWebpackPlugin } from "clean-webpack-plugin";
 import * as path from "path";
-import type { Configuration } from "webpack";
+import { Configuration } from "webpack";
 
 export default (
   extensionPath: string,
@@ -42,9 +42,11 @@ export default (
           exclude: /node_modules/,
           use: [
             {
-              loader: "ts-loader",
+              loader: "esbuild-loader",
               options: {
-                configFile,
+                loader: "tsx",
+                target: "es2020",
+                tsconfigRaw: require(configFile),
               },
             },
           ],

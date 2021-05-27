@@ -5,19 +5,9 @@
 import CircularDependencyPlugin from "circular-dependency-plugin";
 import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import MonacoWebpackPlugin from "monaco-editor-webpack-plugin";
-import path from "path";
-import ReactRefreshTypescript from "react-refresh-typescript";
-import createStyledComponentsTransformer from "typescript-plugin-styled-components";
 import webpack, { Configuration, WebpackPluginInstance } from "webpack";
 
 import { WebpackArgv } from "./WebpackArgv";
-
-const styledComponentsTransformer = createStyledComponentsTransformer({
-  getDisplayName: (filename, bindingName) => {
-    const sanitizedFilename = path.relative(__dirname, filename).replace(/[^a-zA-Z0-9_-]/g, "_");
-    return bindingName != undefined ? `${bindingName}__${sanitizedFilename}` : sanitizedFilename;
-  },
-});
 
 type Options = {
   // During hot reloading and development it is useful to comment out code while iterating.
@@ -76,21 +66,11 @@ export function makeConfig(
           resourceQuery: { not: [/raw/] },
           use: [
             {
-              loader: "ts-loader",
+              loader: "esbuild-loader",
               options: {
-                transpileOnly: true,
-                // https://github.com/TypeStrong/ts-loader#onlycompilebundledfiles
-                // avoid looking at files which are not part of the bundle
-                onlyCompileBundledFiles: true,
-                projectReferences: true,
-                configFile: isDev ? "tsconfig.dev.json" : "tsconfig.json",
-                getCustomTransformers: () => ({
-                  before: [
-                    styledComponentsTransformer,
-                    // only include refresh plugin when using webpack server
-                    ...(isServe ? [ReactRefreshTypescript()] : []),
-                  ],
-                }),
+                loader: "tsx",
+                target: "es2020",
+                tsconfigRaw: require(isDev ? "./tsconfig.dev.json" : "./tsconfig.json"),
               },
             },
           ],
