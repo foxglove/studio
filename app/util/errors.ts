@@ -16,7 +16,7 @@ import { DetailsType } from "@foxglove/studio-base/util/sendNotification";
 export class AppError extends Error {
   details: DetailsType;
   extraInfo: any;
-  message: string;
+  override message: string;
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
   constructor(details: DetailsType, extraInfo?: any) {
     super();
