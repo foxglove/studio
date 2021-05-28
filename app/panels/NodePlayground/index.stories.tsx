@@ -171,7 +171,7 @@ storiesOf("panels/NodePlayground", module)
         userNodeDiagnostics: { nodeId1: [] },
         userNodeLogs: { nodeId1: [] },
       }}
-      onMount={(el, _store, actions) => {
+      onMount={(el, actions) => {
         setTimeout(() => {
           // Change the userNodes to confirm the code in the Editor updates
           actions.setUserNodes({
