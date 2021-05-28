@@ -2738,7 +2738,6 @@ __metadata:
     "@types/text-metrics": "workspace:packages/@types/text-metrics"
     "@types/three": ^0
     "@types/tinycolor2": 1.4.2
-    "@types/universal-url": "workspace:packages/@types/universal-url"
     "@types/url-search-params": 1.1.0
     "@types/uuid": 8.3.0
     "@types/wicg-file-system-access": 2020.9.1
@@ -6118,12 +6117,6 @@ __metadata:
   checksum: 42e0dc4ac75a27c4bb91a3f8e82edfd8819cacb6edda08bdfb436700ea01a587faa30017fde744b0a0b33825f5e37686398c1eb5b664cabc3a72a6b3757f85a5
   languageName: node
   linkType: hard
-
-"@types/universal-url@workspace:packages/@types/universal-url":
-  version: 0.0.0-use.local
-  resolution: "@types/universal-url@workspace:packages/@types/universal-url"
-  languageName: unknown
-  linkType: soft
 
 "@types/url-search-params@npm:1.1.0":
   version: 1.1.0
@@ -13550,7 +13543,6 @@ __metadata:
     typescript: 4.2.4
     typescript-plugin-css-modules: 3.2.0
     typescript-plugin-styled-components: 1.5.0
-    universal-url: 2.0.0
     utif: 3.1.0
     webpack: 5.37.0
     webpack-cli: 4.7.0
@@ -14595,13 +14587,6 @@ __metadata:
     property-information: ^5.0.0
     space-separated-tokens: ^1.0.0
   checksum: c801a859137b7b0092235e50b5c9927c8e0ddbfc4739f4da5bf20170821be6bd883744a11ed2a3909d00d24964632892118913b3b13b02601018035da8b00b52
-  languageName: node
-  linkType: hard
-
-"hasurl@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "hasurl@npm:1.0.0"
-  checksum: 523cb8fc4d586c9b7de2be51c3f9b5130c2192c4724b209d71aaeed860e84591059a400a5095d375861fd63f5bdcf90a6e80e1efcc1c6f860cf6165bb27632e0
   languageName: node
   linkType: hard
 
@@ -20936,6 +20921,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"punycode@npm:1.3.2":
+  version: 1.3.2
+  resolution: "punycode@npm:1.3.2"
+  checksum: e67fddacd83b918ca2f4a47b1fd13858108779cdc2a3f2db3233ff82a25f9305d46e1d9891f7b9ad21ed36454adfc675d4559621fcffed2cf2067abd04e121cd
+  languageName: node
+  linkType: hard
+
 "punycode@npm:2.1.1, punycode@npm:^2.1.0, punycode@npm:^2.1.1":
   version: 2.1.1
   resolution: "punycode@npm:2.1.1"
@@ -25318,7 +25310,16 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"tr46@npm:^2.0.0, tr46@npm:^2.0.2":
+"tr46@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "tr46@npm:1.0.1"
+  dependencies:
+    punycode: ^2.1.0
+  checksum: 66e2e4d6799d3c2fcc56ad6084e8ab7b3e744f138babc86100e5e2bfaf011231d00d229cfccfaf338da953b96c3ea9128d182274915c1516c5189ee75b7c0ad9
+  languageName: node
+  linkType: hard
+
+"tr46@npm:^2.0.2":
   version: 2.1.0
   resolution: "tr46@npm:2.1.0"
   dependencies:
@@ -25920,16 +25921,6 @@ typescript@4.2.4:
     unist-util-is: ^4.0.0
     unist-util-visit-parents: ^3.0.0
   checksum: 7af837673e377693cf4c7bd966d5e088b52bd4a9c6e92f9b16ae5760a31243f627fbf3432ada6541e2b9091b8096007cb22aa8439cbbf04613898773743302d3
-  languageName: node
-  linkType: hard
-
-"universal-url@npm:2.0.0":
-  version: 2.0.0
-  resolution: "universal-url@npm:2.0.0"
-  dependencies:
-    hasurl: ^1.0.0
-    whatwg-url: ^7.0.0
-  checksum: 403800e8b104e6cd131d802723ca75dc868b98d6acdd438dcd558dc66b83dcc25e20fe0508cb2cd68b22720cde8961f1638da3a0bc20ca93f911a8e073daa3b6
   languageName: node
   linkType: hard
 
@@ -26578,6 +26569,13 @@ typescript@4.2.4:
   languageName: node
   linkType: hard
 
+"webidl-conversions@npm:^4.0.2":
+  version: 4.0.2
+  resolution: "webidl-conversions@npm:4.0.2"
+  checksum: 75c2ada4262cda41410ec898178f4f2a31419a905415a98a0bd1b93441ce4a2b942bae2d0ac6d637b749b9d3b309be5a49dbc3b06aae9d9e65280554268a2c94
+  languageName: node
+  linkType: hard
+
 "webidl-conversions@npm:^5.0.0":
   version: 5.0.0
   resolution: "webidl-conversions@npm:5.0.0"
@@ -26897,14 +26895,14 @@ typescript@4.2.4:
   languageName: node
   linkType: hard
 
-"whatwg-url@npm:8.0.0":
-  version: 8.0.0
-  resolution: "whatwg-url@npm:8.0.0"
+"whatwg-url@npm:^6.5.0":
+  version: 6.5.0
+  resolution: "whatwg-url@npm:6.5.0"
   dependencies:
     lodash.sortby: ^4.7.0
-    tr46: ^2.0.0
-    webidl-conversions: ^5.0.0
-  checksum: 35caa91ed4f612dc765e1a5c10749044cfc42f71a80aa3ba5170472cb23562a2c4a4f76453b83decc236bd9f6b088ce31d69dd3e79974dde93968c391d609e92
+    tr46: ^1.0.1
+    webidl-conversions: ^4.0.2
+  checksum: 454a06402d3ccec0057b8b2d00231153a38bb985749268903111166175e599254175461515b351cd3e6c7e1a9674c35adbcf708304cd38e6aae5b81c6ac9e095
   languageName: node
   linkType: hard
 
