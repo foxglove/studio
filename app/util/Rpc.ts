@@ -58,7 +58,7 @@ export function createLinkedChannels(): { local: Channel; remote: Channel } {
 // This class allows you to hook up bi-directional async calls across web-worker
 // boundaries where a single call to or from a worker can 'wait' on the response.
 // Errors in receivers are propigated back to the caller as a rejection.
-// It also supports returning transferrables over the web-worker postMessage api,
+// It also supports returning transferables over the web-worker postMessage api,
 // which was the main shortcomming with the worker-rpc npm module.
 // To attach rpc to an instance of a worker in the main thread:
 //   const rpc = new Rpc(workerInstace);
@@ -66,7 +66,7 @@ export function createLinkedChannels(): { local: Channel; remote: Channel } {
 //   const rpc = new Rpc(global);
 // Check out the tests for more examples.
 export default class Rpc {
-  static transferrables = "$$TRANSFERRABLES";
+  static transferables = "$$TRANSFERABLES";
   _channel: Omit<Channel, "terminate">;
   _messageId: number = 0;
   _pendingCallbacks: {
@@ -106,14 +106,14 @@ export default class Rpc {
         if (!result) {
           return this._channel.postMessage({ topic: RESPONSE, id });
         }
-        const transferrables = result[Rpc.transferrables];
-        delete result[Rpc.transferrables];
+        const transferables = result[Rpc.transferables];
+        delete result[Rpc.transferables];
         const message = {
           topic: RESPONSE,
           id,
           data: result,
         };
-        this._channel.postMessage(message, transferrables);
+        this._channel.postMessage(message, transferables);
       })
       .catch((err) => {
         const message = {
