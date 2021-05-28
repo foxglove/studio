@@ -47,7 +47,7 @@ type Props = LayoutToolbarSharedProps &
     polygonBuilder: PolygonBuilder;
     rootTf?: string;
     selectedObject?: MouseEventObject;
-    selectedPolygonEditFormat: "json" | "yaml";
+    selectedPolygonEditFormat: "json";
     setInteractionsTabType: (arg0?: TabType) => void;
     setMeasureInfo: (arg0: MeasureInfo) => void;
     showCrosshair?: boolean;

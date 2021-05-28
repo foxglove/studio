@@ -25,7 +25,7 @@ import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import Tooltip from "@foxglove/studio-base/components/Tooltip";
 import {
   UncontrolledValidatedInput,
-  YamlInput,
+  JsonInput,
 } from "@foxglove/studio-base/components/ValidatedInput";
 import {
   SValue,
@@ -189,7 +189,7 @@ export default function CameraInfo({
           </Flex>
           {edit && !isPlaying ? (
             <UncontrolledValidatedInput
-              format="yaml"
+              format="json"
               value={cameraState}
               onChange={(newCameraState) => saveConfig({ cameraState: newCameraState })}
               dataValidator={cameraStateValidator}
@@ -235,10 +235,10 @@ export default function CameraInfo({
                 {showCrosshair && !cameraState.perspective && (
                   <SRow style={{ paddingLeft: LABEL_WIDTH, marginBottom: 8 }}>
                     <SValue>
-                      <YamlInput
+                      <JsonInput
                         inputStyle={{ width: 140 }}
                         value={{ x: camPos2DTrimmed[0], y: camPos2DTrimmed[1] }}
-                        onChange={(data) => {
+                        onChange={(data: { x: number; y: number }) => {
                           const newPos = [data.x, data.y, 0];
                           // extract the targetOffset by subtracting from the target and un-rotating by heading
                           const newTargetOffset = vec3.rotateZ(

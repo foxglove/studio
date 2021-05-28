@@ -70,7 +70,7 @@ function DrawingTools({
 }
 
 DrawingTools.defaultProps = {
-  selectedPolygonEditFormat: EDIT_FORMAT.YAML,
+  selectedPolygonEditFormat: EDIT_FORMAT.JSON,
 };
 
 export default React.memo<Props>(DrawingTools);

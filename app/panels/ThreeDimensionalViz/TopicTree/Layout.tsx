@@ -209,7 +209,7 @@ export default function Layout({
     modifiedNamespaceTopics,
     pinTopics,
     diffModeEnabled,
-    selectedPolygonEditFormat = "yaml",
+    selectedPolygonEditFormat = "json",
     showCrosshair,
     autoSyncCameraState = false,
     topicDisplayMode = TOPIC_DISPLAY_MODES.SHOW_ALL.value as TopicDisplayMode,

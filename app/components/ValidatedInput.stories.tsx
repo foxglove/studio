@@ -24,7 +24,6 @@ const INPUT_OBJ = { id: 1, name: "foo" };
 const INPUT_OBJ1 = { id: 2, name: "bar" };
 
 const json = EDIT_FORMAT.JSON;
-const yaml = EDIT_FORMAT.YAML;
 
 function myValidator(data: any = {}): ValidationResult | undefined {
   const rules = { id: [isNumber] };
@@ -83,9 +82,6 @@ storiesOf("components/ValidatedInput", module)
         <Box>
           <ValidatedInput format={json} value={INPUT_OBJ} />
         </Box>
-        <Box>
-          <ValidatedInput format={yaml} value={INPUT_OBJ} />
-        </Box>
       </Flex>
     );
   })
@@ -96,9 +92,6 @@ storiesOf("components/ValidatedInput", module)
         <Box>
           <ValidatedInput format={json} value={invalidValue} dataValidator={myValidator} />
         </Box>
-        <Box>
-          <ValidatedInput format={yaml} value={invalidValue} dataValidator={myValidator} />
-        </Box>
       </Flex>
     );
   })
@@ -106,7 +99,6 @@ storiesOf("components/ValidatedInput", module)
     return (
       <Flex>
         <Example format={json} />
-        <Example format={yaml} />
       </Flex>
     );
   })

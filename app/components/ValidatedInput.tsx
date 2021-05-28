@@ -18,11 +18,10 @@ import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import Flex from "@foxglove/studio-base/components/Flex";
 import colors from "@foxglove/studio-base/styles/colors.module.scss";
 import { validationErrorToString, ValidationResult } from "@foxglove/studio-base/util/validators";
-import YAML from "@foxglove/studio-base/util/yaml";
 
 const { useState, useCallback, useRef, useLayoutEffect, useEffect } = React;
 
-export const EDIT_FORMAT: any = { JSON: "json", YAML: "yaml" };
+export const EDIT_FORMAT = { JSON: "json" };
 
 const SEditBox = styled.div`
   display: flex;
@@ -195,25 +194,21 @@ export function ValidatedInputBase({
   );
 }
 
-function JsonInput(props: BaseProps) {
-  function stringify(val: any) {
+export function JsonInput(props: BaseProps): JSX.Element {
+  function stringify(val: unknown) {
     return JSON.stringify(val, undefined, 2);
   }
   return <ValidatedInputBase parse={JSON.parse} stringify={stringify} {...props} />;
 }
 
-export function YamlInput(props: BaseProps): JSX.Element {
-  return <ValidatedInputBase parse={YAML.parse} stringify={YAML.stringify} {...props} />;
-}
-
-// An enhanced input component that allows editing values in json or yaml format with custom validations
+// An enhanced input component that allows editing values in json format with custom validations
 export default function ValidatedInput({
   format = EDIT_FORMAT.JSON,
   onSelectFormat,
   children,
   ...rest
 }: Props): JSX.Element {
-  const InputComponent = format === EDIT_FORMAT.JSON ? JsonInput : YamlInput;
+  const InputComponent = JsonInput;
   return (
     <Flex col>
       <Flex row reverse>
@@ -226,7 +221,7 @@ export default function ValidatedInput({
             onChange={onSelectFormat}
           >
             {Object.keys(EDIT_FORMAT).map((key) => (
-              <option value={EDIT_FORMAT[key]} key={key}>
+              <option value={EDIT_FORMAT[key as keyof typeof EDIT_FORMAT]} key={key}>
                 {key}
               </option>
             ))}
@@ -242,7 +237,7 @@ export default function ValidatedInput({
 
 // For component consumers that don't care about maintaining the editFormat state, use this instead
 export function UncontrolledValidatedInput({
-  format = EDIT_FORMAT.YAML,
+  format = EDIT_FORMAT.JSON,
   ...rest
 }: Props): JSX.Element {
   const [editFormat, setEditFormat] = React.useState<EditFormat>(format);
