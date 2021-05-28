@@ -29,7 +29,10 @@ import PanelCatalogContext, {
   PanelCatalog,
   PanelInfo,
 } from "@foxglove/studio-base/context/PanelCatalogContext";
-import { useUserNodeState } from "@foxglove/studio-base/context/UserNodeStateContext";
+import {
+  UserNodeStateProvider,
+  useUserNodeState,
+} from "@foxglove/studio-base/context/UserNodeStateContext";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import useShallowMemo from "@foxglove/studio-base/hooks/useShallowMemo";
 import { LinkedGlobalVariables } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
@@ -284,8 +287,10 @@ function UnconnectedPanelSetup(props: Props): JSX.Element | ReactNull {
 export default function PanelSetup(props: Props): JSX.Element {
   const currentLayout = useMemo(() => new CurrentLayoutState(DEFAULT_LAYOUT_FOR_TESTS), []);
   return (
-    <CurrentLayoutContext.Provider value={currentLayout}>
-      <UnconnectedPanelSetup {...props} />
-    </CurrentLayoutContext.Provider>
+    <UserNodeStateProvider>
+      <CurrentLayoutContext.Provider value={currentLayout}>
+        <UnconnectedPanelSetup {...props} />
+      </CurrentLayoutContext.Provider>
+    </UserNodeStateProvider>
   );
 }
