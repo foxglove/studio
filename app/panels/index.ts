@@ -7,7 +7,6 @@ import InternalLogs from "./InternalLogs";
 import Internals from "./Internals";
 import MapPanel from "./Map";
 import NodePlayground from "./NodePlayground";
-import NumberOfRenders from "./NumberOfRenders";
 import ParametersPanel from "./Parameters";
 import PlaybackPerformance from "./PlaybackPerformance";
 import Plot from "./Plot";
@@ -16,7 +15,6 @@ import RawMessages from "./RawMessages";
 import Rosout from "./Rosout";
 import SourceInfo from "./SourceInfo";
 import StateTransitions from "./StateTransitions";
-import SubscribeToList from "./SubscribeToList";
 import Tab from "./Tab";
 import Table from "./Table";
 import ThreeDimensionalViz from "./ThreeDimensionalViz";
@@ -48,11 +46,9 @@ const builtin = [
 ];
 
 const debug = [
-  { title: "Studio - Number of Renders", component: NumberOfRenders },
   { title: "Studio - Playback Performance", component: PlaybackPerformance },
   { title: "Studio - Internals", component: Internals },
   { title: "Studio - Logs", component: InternalLogs },
-  { title: "Studio - Subscribe to List", component: SubscribeToList },
 ];
 
 const hidden = [{ title: "Welcome", component: WelcomePanel }];

@@ -19,6 +19,7 @@ import Logger from "@foxglove/log";
 import colors from "@foxglove/studio-base/styles/colors.module.scss";
 
 import pkgInfo from "../../package.json";
+import getDevModeIcon from "./getDevModeIcon";
 import { simulateUserClick } from "./simulateUserClick";
 import { getTelemetrySettings } from "./telemetry";
 
@@ -31,6 +32,8 @@ const rendererPath = MAIN_WINDOW_WEBPACK_ENTRY;
 const closeMenuItem: MenuItemConstructorOptions = isMac ? { role: "close" } : { role: "quit" };
 
 const log = Logger.getLogger(__filename);
+
+type ClearableMenu = Menu & { clear: () => void };
 
 function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
   const [allowCrashReporting, allowTelemetry] = getTelemetrySettings();
@@ -62,6 +65,12 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
     },
     backgroundColor: colors.background,
   };
+  if (!isProduction) {
+    const devIcon = getDevModeIcon();
+    if (devIcon) {
+      windowOptions.icon = devIcon;
+    }
+  }
   if (isMac) {
     windowOptions.titleBarStyle = "hiddenInset";
   }
@@ -314,8 +323,7 @@ class StudioWindow {
         const existingMenu = Menu.getApplicationMenu();
         const fileMenu = existingMenu?.getMenuItemById("fileMenu");
         // https://github.com/electron/electron/issues/8598
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (fileMenu?.submenu as any)?.clear();
+        (fileMenu?.submenu as ClearableMenu)?.clear();
         fileMenu?.submenu?.append(
           new MenuItem({
             label: "New Window",
@@ -398,8 +406,7 @@ class StudioWindow {
     const browserWindow = this._window;
 
     // https://github.com/electron/electron/issues/8598
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (fileMenu.submenu as any).clear();
+    (fileMenu.submenu as ClearableMenu).clear();
     fileMenu.submenu?.items.splice(0, fileMenu.submenu.items.length);
 
     fileMenu.submenu?.append(

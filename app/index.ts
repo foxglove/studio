@@ -25,13 +25,11 @@ export type { NativeAppMenu, NativeAppMenuEvent } from "./context/NativeAppMenuC
 export type { PlayerSourceDefinition } from "./context/PlayerSelectionContext";
 export { default as ThemeProvider } from "./theme/ThemeProvider";
 export { default as installDevtoolsFormatters } from "./util/installDevtoolsFormatters";
-export { initializeLogEvent } from "./util/logEvent";
 export { default as overwriteFetch } from "./util/overwriteFetch";
 export { default as waitForFonts } from "./util/waitForFonts";
 export { default as UserProfileLocalStorageProvider } from "./providers/UserProfileLocalStorageProvider";
-export { default as FirebaseAppProvider } from "./providers/FirebaseAppProvider";
-export { useFirebase } from "./context/FirebaseAppContext";
-export { default as FirebaseAuthProvider } from "./providers/FirebaseAuthProvider";
 export { default as StudioToastProvider } from "./components/StudioToastProvider";
 export { default as ExtensionLoaderContext } from "./context/ExtensionLoaderContext";
 export type { ExtensionLoader, ExtensionDetail } from "./context/ExtensionLoaderContext";
+export { default as AuthContext, useAuth } from "./context/AuthContext";
+export type { Auth, CurrentUser } from "./context/AuthContext";

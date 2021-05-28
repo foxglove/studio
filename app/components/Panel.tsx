@@ -27,17 +27,18 @@ import React, {
   useRef,
   ComponentType,
   Profiler,
+  MouseEventHandler,
 } from "react";
 import DocumentEvents from "react-document-events";
 import {
   MosaicContext,
-  MosaicRootActions,
   MosaicWindowActions,
   MosaicWindowContext,
   getNodeAtPath,
   getOtherBranch,
   isParent,
   updateTree,
+  MosaicNode,
 } from "react-mosaic-component";
 import styled from "styled-components";
 
@@ -67,7 +68,6 @@ import {
   getPathFromNode,
   updateTabPanelLayout,
 } from "@foxglove/studio-base/util/layout";
-import logEvent, { getEventTags, getEventNames } from "@foxglove/studio-base/util/logEvent";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import styles from "./Panel.module.scss";
@@ -116,7 +116,7 @@ export default function Panel<Config extends PanelConfig>(
 ): ComponentType<Props<Config>> & PanelStatics<Config> {
   function ConnectedPanel(props: Props<Config>) {
     const { childId, overrideConfig, tabId } = props;
-    const { mosaicActions }: { mosaicActions: MosaicRootActions<any> } = useContext(MosaicContext);
+    const { mosaicActions } = useContext(MosaicContext);
     const { mosaicWindowActions }: { mosaicWindowActions: MosaicWindowActions } =
       useContext(MosaicWindowContext);
 
@@ -201,7 +201,7 @@ export default function Panel<Config extends PanelConfig>(
         // Otherwise, open new panel
         const newPanelPath = ownPath.concat("second");
         mosaicWindowActions.split({ type: panelType }).then(() => {
-          const newPanelId = getNodeAtPath(mosaicActions.getRoot(), newPanelPath);
+          const newPanelId = getNodeAtPath(mosaicActions.getRoot(), newPanelPath) as string;
           savePanelConfigs({
             configs: [
               {
@@ -218,8 +218,8 @@ export default function Panel<Config extends PanelConfig>(
 
     const { panelSettingsOpen } = usePanelSettings();
 
-    const onOverlayClick = useCallback(
-      (e: MouseEvent) => {
+    const onOverlayClick: MouseEventHandler<HTMLDivElement> = useCallback(
+      (e) => {
         if (!fullScreen && quickActionsKeyPressed) {
           setFullScreen(true);
           if (shiftKeyPressed) {
@@ -280,20 +280,12 @@ export default function Panel<Config extends PanelConfig>(
     }, [getCurrentLayout, getSelectedPanelIds, createTabPanel, childId]);
 
     const removePanel = useCallback(() => {
-      const name = getEventNames().PANEL_REMOVE;
-      const eventType = getEventTags().PANEL_TYPE;
-      if (name != undefined && eventType !== undefined) {
-        logEvent({
-          name,
-          tags: { [eventType]: type },
-        });
-      }
       closePanel({
         path: mosaicWindowActions.getPath(),
-        root: mosaicActions.getRoot(),
+        root: mosaicActions.getRoot() as MosaicNode<string>,
         tabId,
       });
-    }, [closePanel, mosaicActions, mosaicWindowActions, tabId, type]);
+    }, [closePanel, mosaicActions, mosaicWindowActions, tabId]);
 
     const splitPanel = useCallback(() => {
       const savedProps = getCurrentLayout().configById;
@@ -321,25 +313,17 @@ export default function Panel<Config extends PanelConfig>(
       } else {
         mosaicWindowActions.split({ type: PanelComponent.panelType });
       }
-      const name = getEventNames().PANEL_SPLIT;
-      const eventType = getEventTags().PANEL_TYPE;
-      if (name != undefined && eventType !== undefined) {
-        logEvent({
-          name,
-          tags: { [eventType]: type },
-        });
-      }
-    }, [childId, config, getCurrentLayout, mosaicWindowActions, savePanelConfigs, tabId, type]);
+    }, [childId, config, getCurrentLayout, mosaicWindowActions, savePanelConfigs, tabId]);
 
     const { onMouseEnter, onMouseLeave, onMouseMove, enterFullscreen, exitFullScreen } = useMemo(
       () => ({
         onMouseEnter: () => setIsHovered(true),
         onMouseLeave: () => setIsHovered(false),
-        onMouseMove: (e: any) => {
+        onMouseMove: ((e) => {
           if (e.metaKey !== cmdKeyPressed) {
             setCmdKeyPressed(e.metaKey);
           }
-        },
+        }) as MouseEventHandler<HTMLDivElement>,
         enterFullscreen: () => {
           setFullScreen(true);
           setFullScreenLocked(true);
@@ -368,7 +352,7 @@ export default function Panel<Config extends PanelConfig>(
           Meta: () => setCmdKeyPressed(false),
         },
         keyDownHandlers: {
-          a: (e: any) => {
+          a: (e: KeyboardEvent) => {
             e.preventDefault();
             if (cmdKeyPressed) {
               selectAllPanels();
@@ -439,7 +423,7 @@ export default function Panel<Config extends PanelConfig>(
             <PanelContext.Provider
               value={{
                 type,
-                id: childId as any,
+                id: childId ?? "$unknown_id",
                 title,
                 config,
                 saveConfig: saveConfig as SaveConfig<PanelConfig>,
@@ -466,9 +450,9 @@ export default function Panel<Config extends PanelConfig>(
             onMouseLeave={onMouseLeave}
             onMouseMove={onMouseMove}
             className={cx({
-              [styles.root!]: true,
-              [styles.rootFullScreen!]: fullScreen,
-              [styles.selected!]: isSelected,
+              [styles.root as string]: true,
+              [styles.rootFullScreen as string]: fullScreen,
+              [styles.selected as string]: isSelected,
             })}
             col
             dataTest={`panel-mouseenter-container ${childId ?? ""}`}
