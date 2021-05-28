@@ -143,6 +143,11 @@ export function makeConfig(
             { loader: "css-loader", options: { sourceMap: true } },
           ],
         },
+        {
+          test: /\.s?css$/,
+          loader: "esbuild-loader",
+          options: { loader: "css", minify: true },
+        },
         { test: /\.scss$/, loader: "sass-loader", options: { sourceMap: true } },
         { test: /\.woff2?$/, type: "asset/inline" },
         { test: /\.(glb|bag|ttf|bin)$/, type: "asset/resource" },

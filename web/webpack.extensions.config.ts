@@ -83,6 +83,11 @@ export default (_: unknown, argv: WebpackArgv): Configuration => {
             { loader: "css-loader", options: { sourceMap: true } },
           ],
         },
+        {
+          test: /\.s?css$/,
+          loader: "esbuild-loader",
+          options: { loader: "css", minify: true },
+        },
       ],
     },
 

@@ -12132,21 +12132,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esbuild@npm:0.12.0":
-  version: 0.12.0
-  resolution: "esbuild@npm:0.12.0"
+"esbuild@npm:0.12.4":
+  version: 0.12.4
+  resolution: "esbuild@npm:0.12.4"
   bin:
     esbuild: bin/esbuild
-  checksum: 73be24fcbd943776f92e2d6f71d0f6a31c9c3426163391e1351eb5f2bbcfed5eece22230319a9f353d20b293a3b50daa81d1b32af587fd0d5ae787d988bb5cdb
-  languageName: node
-  linkType: hard
-
-"esbuild@npm:^0.11.19":
-  version: 0.11.23
-  resolution: "esbuild@npm:0.11.23"
-  bin:
-    esbuild: bin/esbuild
-  checksum: 9226fc3d74f7555c96778c5d9204312c578e9c11b472deebfbab52c4ac58b9efc3a40be529368f6ccbe257d0059c6b8fd142c179824a3227d055d912c7b5a94a
+  checksum: 77170f047aa2816d29a0b51acf7c69b58182698425bc8b61b5103a8fbf00720bbd35e18ae9203fae3837f490e3c22b709b8994931f7b79ee6f9c5fcffb131226
   languageName: node
   linkType: hard
 
