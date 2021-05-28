@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import { MosaicNode, MosaicPath } from "react-mosaic-component";
-import { MosaicKey } from "react-mosaic-component/lib/types";
 
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { LinkedGlobalVariables } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
@@ -135,7 +134,7 @@ export type SET_PLAYBACK_CONFIG = { type: "SET_PLAYBACK_CONFIG"; payload: Partia
 
 export type ClosePanelPayload = {
   tabId?: string;
-  root: MosaicNode<MosaicKey>;
+  root: MosaicNode<string>;
   path: MosaicPath;
 };
 export type CLOSE_PANEL = { type: "CLOSE_PANEL"; payload: ClosePanelPayload };

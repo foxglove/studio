@@ -40,7 +40,6 @@ import {
   updateTree,
   MosaicNode,
 } from "react-mosaic-component";
-import { MosaicKey } from "react-mosaic-component/lib/types";
 import styled from "styled-components";
 
 import { useConfigById } from "@foxglove/studio-base/PanelAPI";
@@ -292,7 +291,7 @@ export default function Panel<Config extends PanelConfig>(
       }
       closePanel({
         path: mosaicWindowActions.getPath(),
-        root: mosaicActions.getRoot() as MosaicNode<MosaicKey>,
+        root: mosaicActions.getRoot() as MosaicNode<string>,
         tabId,
       });
     }, [closePanel, mosaicActions, mosaicWindowActions, tabId, type]);
