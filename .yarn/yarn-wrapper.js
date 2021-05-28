@@ -4,7 +4,7 @@
 const path = require("path");
 const fs = require("fs");
 
-const REAL_YARN = path.join(__dirname, "releases", "yarn-sources.cjs");
+const REAL_YARN = path.join(__dirname, "releases", "yarn-3.0.0-rc.2.cjs");
 
 try {
   if (fs.statSync(REAL_YARN).size < 10000) {
