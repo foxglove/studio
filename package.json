@@ -51,7 +51,11 @@
     "@types/node": "15.3.0",
     "esbuild-loader/esbuild": "0.12.4",
     "esbuild-runner/esbuild": "0.12.4",
-    "spectron/electron-chromedriver": "foxglove/chromedriver#7edaf1852173776e0e0db364acad12d4a9a8d17f"
+    "fetch-mock/whatwg-url": "8.0.0",
+    "node-libs-browser/punycode": "2.1.1",
+    "spectron/electron-chromedriver": "foxglove/chromedriver#7edaf1852173776e0e0db364acad12d4a9a8d17f",
+    "universal-url/whatwg-url": "8.0.0",
+    "url/punycode": "2.1.1"
   },
   "devDependencies": {
     "@actions/core": "1.2.7",
@@ -134,6 +138,7 @@
     "style-loader": "2.0.0",
     "ts-loader": "9.1.2",
     "ts-node": "9.1.1",
+    "tslib": "2.2.0",
     "typescript": "4.2.4",
     "typescript-plugin-css-modules": "3.2.0",
     "typescript-plugin-styled-components": "1.5.0",
