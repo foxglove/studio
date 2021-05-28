@@ -67,7 +67,7 @@ export default (_: unknown, argv: WebpackArgv): Configuration => {
         {
           test: /\.s?css$/,
           loader: "esbuild-loader",
-          options: { loader: "css", minify: true },
+          options: { loader: "css", minify: !isDev },
         },
         { test: /\.scss$/, loader: "sass-loader" },
       ],

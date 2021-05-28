@@ -146,7 +146,7 @@ export function makeConfig(
         {
           test: /\.s?css$/,
           loader: "esbuild-loader",
-          options: { loader: "css", minify: true },
+          options: { loader: "css", minify: !isDev },
         },
         { test: /\.scss$/, loader: "sass-loader", options: { sourceMap: true } },
         { test: /\.woff2?$/, type: "asset/inline" },
