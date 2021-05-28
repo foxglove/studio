@@ -69,7 +69,7 @@ const BottomBar = ({ nodeId, isSaved, save, diagnostics, logs }: Props): ReactEl
   }, [autoScroll, logs]);
 
   return (
-    <Flex col style={{ backgroundColor: colors.DARK1, bottom: 0, right: 0, left: 0 }}>
+    <Flex col style={{ backgroundColor: colors.DARK1, position: "relative" }}>
       <Flex
         row
         start

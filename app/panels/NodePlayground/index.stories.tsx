@@ -559,7 +559,7 @@ storiesOf("panels/NodePlayground", module)
         userNodeDiagnostics: { nodeId1: [] },
         userNodeLogs: { nodeId1: logs },
       }}
-      onMount={(el: any) => {
+      onFirstMount={(el: any) => {
         setTimeout(() => {
           const logsLabel = el.querySelector("[data-test=np-logs]");
           if (logsLabel) {
