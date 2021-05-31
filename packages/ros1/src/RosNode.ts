@@ -80,7 +80,10 @@ export class RosNode extends EventEmitter<RosNodeEvents> {
   rosParamClient: RosParamClient;
   rosFollower: RosFollower;
   subscriptions = new Map<string, Subscription>();
+
+  // fixme - why is this public? This seems like something the rosnode should manage carefully - not allow whoemever do whatever it wants!
   publications = new Map<string, Publication>();
+
   parameters = new Map<string, XmlRpcValue>();
 
   private _running = true;

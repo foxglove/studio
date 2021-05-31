@@ -386,6 +386,7 @@ export default class Ros1Player implements Player {
   };
 
   setPublishers(publishers: AdvertisePayload[]): void {
+    console.log("set publishers ROS1 player", publishers);
     if (!this._rosNode || this._closed) {
       return;
     }
@@ -414,8 +415,11 @@ export default class Ros1Player implements Player {
     // Advertise new topics
     for (const { topic, datatype: dataType, datatypes } of publishers) {
       if (this._rosNode.publications.has(topic)) {
+        console.log("have existing publication", topic);
         continue;
       }
+
+      console.log("publishing", topic);
 
       const msgdefProblemId = `msgdef:${topic}`;
       const advertiseProblemId = `advertise:${topic}`;
@@ -451,29 +455,29 @@ export default class Ros1Player implements Player {
     this._rosNode?.setParameter(key, value);
   }
 
+  // fixme - why isn't this async?
   publish({ topic, msg }: PublishPayload): void {
     const problemId = `publish:${topic}`;
 
-    if (this._rosNode != undefined) {
-      if (this._rosNode.isAdvertising(topic)) {
-        this._rosNode
-          .publish(topic, msg)
-          .then(() => this._clearProblem(problemId))
-          .catch((error) =>
-            this._addProblem(problemId, {
-              severity: "error",
-              message: `Publishing to ${topic} failed`,
-              error,
-            }),
-          );
-      } else {
-        this._addProblem(problemId, {
-          severity: "warning",
-          message: `Unable to publish to "${topic}"`,
-          tip: `ROS1 may be disconnected. Please try again in a moment`,
-        });
-      }
+    console.log("publish", topic, msg);
+    if (!this._rosNode) {
+      throw new Error("Node not connected");
     }
+
+    if (!this._rosNode.isAdvertising(topic)) {
+      throw new Error("Not advertising");
+    }
+
+    this._rosNode
+      .publish(topic, msg)
+      .then(() => this._clearProblem(problemId))
+      .catch((error) =>
+        this._addProblem(problemId, {
+          severity: "error",
+          message: `Publishing to ${topic} failed`,
+          error,
+        }),
+      );
   }
 
   // Bunch of unsupported stuff. Just don't do anything for these.

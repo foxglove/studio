@@ -14,25 +14,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
+import { panel } from "@foxglove/studio";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
-import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
-type Props = {
-  topic: string;
-  datatype: string;
-  datatypes: RosDatatypes;
-  name: string;
-};
-
-// Registers a publisher with the player and returns a publish() function to publish data. This uses
-// no-op functions if the player does not have the `advertise` capability
-export default function usePublisher({
-  topic,
-  datatype,
-  datatypes,
-  name,
-}: Props): (msg: unknown) => void {
+const usePublisher: typeof panel.usePublisher = ({ topic, datatype, datatypes, name }) => {
   const [id] = useState(() => uuidv4());
   const canPublish = useMessagePipeline((context) =>
     context.playerState.capabilities.includes(PlayerCapabilities.advertise),
@@ -56,4 +42,6 @@ export default function usePublisher({
     },
     [publish, topic, canPublish],
   );
-}
+};
+
+export default usePublisher;

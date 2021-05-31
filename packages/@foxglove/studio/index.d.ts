@@ -3,8 +3,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 declare module "@foxglove/studio" {
+  import { Theme } from "@fluentui/theme";
   import { Time } from "rosbag";
 
+  // fixme - this import doesn't exist for the end user since this package is not published
+  // Maybe we need to have ros-indepdenant message definition type
   import { RosMsgField } from "@foxglove/rosmsg";
 
   export type RosDatatype = {
@@ -106,6 +109,21 @@ declare module "@foxglove/studio" {
        * A data source might be a local file, a remote file, or a streaming source.
        */
       useDataSourceInfo(): DataSourceInfo;
+
+      // fixme - fix comment style
+      // Registers a publisher with the player and returns a publish() function to publish data. This uses
+      // no-op functions if the player does not have the `advertise` capability
+      usePublisher<MsgT = unknown>(params: {
+        topic: string;
+        datatype: string;
+        datatypes: RosDatatypes;
+        name: string;
+      }): (msg: MsgT) => void;
+
+      /**
+       * Return a theme compatible with Fluent UI ThemeProvider
+       */
+      useFluentUiTheme(): Theme;
     };
   }
 

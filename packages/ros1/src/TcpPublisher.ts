@@ -72,6 +72,8 @@ export class TcpPublisher extends EventEmitter<TcpPublisherEvents> implements Pu
     publication.messageWriter.writeMessage(message, msgData);
 
     const data = new Uint8Array(buffer, 0, dataSize);
+
+    console.log(data);
     return publication.write(this.transportType(), data);
   }
 

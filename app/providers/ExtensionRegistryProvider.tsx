@@ -14,6 +14,9 @@ import ExtensionRegistryContext, {
   ExtensionRegistry,
   RegisteredPanel,
 } from "@foxglove/studio-base/context/ExtensionRegistryContext";
+// fixme - move usePublisher to panel api
+import usePublisher from "@foxglove/studio-base/hooks/usePublisher";
+import theme from "@foxglove/studio-base/theme";
 
 const log = Logger.getLogger(__filename);
 
@@ -22,6 +25,8 @@ const FoxgloveStudio: StudioApi = {
     useMessagesByTopic,
     useDataSourceInfo,
     useConfig,
+    usePublisher,
+    useFluentUiTheme: () => theme,
   },
 };
 
@@ -48,10 +53,6 @@ export default function ExtensionRegistryProvider(props: PropsWithChildren<unkno
       const require = (name: string) => {
         return { React, ReactDOM, FoxgloveStudio }[name];
       };
-
-      // load the extension module exports
-      fn(module, require, {});
-      const wrappedExtensionModule = module.exports as ExtensionModule;
 
       const extensionMode =
         process.env.NODE_ENV === "production"
@@ -80,6 +81,10 @@ export default function ExtensionRegistryProvider(props: PropsWithChildren<unkno
       };
 
       try {
+        // invoke the extension entrypoint to get the module
+        fn(module, require, {});
+        const wrappedExtensionModule = module.exports as ExtensionModule;
+
         wrappedExtensionModule.activate(ctx);
       } catch (err) {
         log.error(err);
