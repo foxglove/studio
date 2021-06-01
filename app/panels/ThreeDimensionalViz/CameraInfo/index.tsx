@@ -23,10 +23,7 @@ import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import Tooltip from "@foxglove/studio-base/components/Tooltip";
-import {
-  UncontrolledValidatedInput,
-  JsonInput,
-} from "@foxglove/studio-base/components/ValidatedInput";
+import { JsonInput } from "@foxglove/studio-base/components/ValidatedInput";
 import {
   SValue,
   SLabel,
@@ -188,8 +185,7 @@ export default function CameraInfo({
             </Button>
           </Flex>
           {edit && !isPlaying ? (
-            <UncontrolledValidatedInput
-              format="json"
+            <JsonInput
               value={cameraState}
               onChange={(newCameraState) => saveConfig({ cameraState: newCameraState })}
               dataValidator={cameraStateValidator}

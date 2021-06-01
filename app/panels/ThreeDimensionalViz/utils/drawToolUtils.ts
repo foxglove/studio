@@ -13,7 +13,6 @@
 
 import { Polygon, PolygonPoint } from "regl-worldview";
 
-import { EditFormat } from "@foxglove/studio-base/components/ValidatedInput";
 import { Point2D } from "@foxglove/studio-base/panels/ThreeDimensionalViz/DrawingTools";
 
 export function polygonsToPoints(polygons: Polygon[]): Point2D[][] {
@@ -35,10 +34,7 @@ function pointsToJson(polygonPoints: Point2D[][]): string {
   return JSON.stringify(polygonPoints, undefined, 2);
 }
 
-export function getFormattedString(
-  polygonPoints: Point2D[][],
-  _selectedPolygonEditFormat: EditFormat,
-): string {
+export function getFormattedString(polygonPoints: Point2D[][]): string {
   return pointsToJson(polygonPoints);
 }
 
