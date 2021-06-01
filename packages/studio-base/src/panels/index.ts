@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 import GlobalVariableSlider from "./GlobalVariableSlider";
+import IframePanel from "./IFrame";
 import ImageViewPanel from "./ImageView";
 import InternalLogs from "./InternalLogs";
 import Internals from "./Internals";
@@ -49,6 +50,7 @@ const debug = [
   { title: "Studio - Playback Performance", component: PlaybackPerformance },
   { title: "Studio - Internals", component: Internals },
   { title: "Studio - Logs", component: InternalLogs },
+  { title: "Studio - IFrame", component: IframePanel },
 ];
 
 const hidden = [{ title: "Welcome", component: WelcomePanel }];

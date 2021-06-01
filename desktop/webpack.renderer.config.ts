@@ -59,7 +59,10 @@ export default (env: unknown, argv: WebpackArgv): Configuration => {
     // https://gist.github.com/msafi/d1b8571aa921feaaa0f893ab24bb727b
     target: "web",
     context: path.resolve(__dirname, "./renderer"),
-    entry: "./index.tsx",
+    entry: {
+      main: "./index.tsx",
+      extension: "./extension.ts",
+    },
     devtool: isDev ? "eval-cheap-module-source-map" : "source-map",
 
     output: {
@@ -108,6 +111,28 @@ export default (env: unknown, argv: WebpackArgv): Configuration => {
     </body>
   </html>
   `,
+        chunks: ["main"],
+      }),
+      new HtmlWebpackPlugin({
+        filename: "extension.html",
+        templateContent: `
+  <!doctype html>
+  <html>
+    <head><meta charset="utf-8"></head>
+    <script>
+      global = globalThis;
+      window.FabricConfig = ${
+        // don't load @fabricui fonts from Microsoft servers
+        // https://github.com/microsoft/fluentui/issues/10363
+        JSON.stringify({ fontBaseUrl: "" })
+      };
+    </script>
+    <body>
+      <div id="root"></div>
+    </body>
+  </html>
+  `,
+        chunks: ["extension"],
       }),
     ],
   };
