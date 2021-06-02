@@ -71,7 +71,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04]
+        os: [windows-2019]
 
     name: integration (${{ matrix.os }})
 
