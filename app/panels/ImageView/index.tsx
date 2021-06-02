@@ -52,7 +52,7 @@ import naturalSort from "@foxglove/studio-base/util/naturalSort";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import { colors as sharedColors } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { getSynchronizingReducers } from "@foxglove/studio-base/util/synchronizeMessages";
-import { formatTimeRaw } from "@foxglove/studio-base/util/time";
+import { formatTimeRaw, getTimestampForMessage } from "@foxglove/studio-base/util/time";
 import toggle from "@foxglove/studio-base/util/toggle";
 
 import ImageCanvas, { DEFAULT_MAX_ZOOM } from "./ImageCanvas";
@@ -163,7 +163,7 @@ function renderEmptyState(
   markerTopics: string[],
   shouldSynchronize: boolean,
   messagesByTopic: {
-    [topic: string]: MessageEvent<unknown>[];
+    [topic: string]: readonly MessageEvent<unknown>[];
   },
 ) {
   if (cameraTopic === "") {
@@ -202,10 +202,10 @@ function renderEmptyState(
                         .map(
                           (
                             { message }, // In some cases, a user may have subscribed to a topic that does not include a header stamp.
-                          ) =>
-                            (message as Partial<StampedMessage>).header?.stamp
-                              ? formatTimeRaw((message as StampedMessage).header.stamp)
-                              : "[ unknown ]",
+                          ) => {
+                            const stamp = getTimestampForMessage(message);
+                            return stamp != undefined ? formatTimeRaw(stamp) : "[ unknown ]";
+                          },
                         )
                         .join(", ")
                     : "no messages"}
@@ -459,9 +459,8 @@ function ImageView(props: Props) {
     const stamps: Record<string, string> = {};
     for (const { topic, message } of markersToRender) {
       // In some cases, a user may have subscribed to a topic that does not include a header stamp.
-      stamps[topic] = (message as Partial<StampedMessage>).header?.stamp
-        ? formatTimeRaw((message as StampedMessage).header.stamp)
-        : "[ not available ]";
+      const stamp = getTimestampForMessage(message);
+      stamps[topic] = stamp != undefined ? formatTimeRaw(stamp) : "[ not available ]";
     }
     return stamps;
   }, [markersToRender]);
