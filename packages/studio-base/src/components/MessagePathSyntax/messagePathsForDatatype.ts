@@ -16,6 +16,7 @@ import memoizeWeak from "memoize-weak";
 
 import { isTypicalFilterName } from "@foxglove/studio-base/components/MessagePathSyntax/isTypicalFilterName";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
+import { assertNever } from "@foxglove/studio-base/util/assertNever";
 import naturalSort from "@foxglove/studio-base/util/naturalSort";
 
 import {
@@ -250,8 +251,10 @@ export const traverseStructure = memoizeWeak(
           }
         }
       } else {
-        const _: never = msgPathPart;
-        throw new Error(`Invalid msgPathPart.type: ${(msgPathPart as MessagePathPart).type}`);
+        assertNever(
+          msgPathPart,
+          `Invalid msgPathPart.type: ${(msgPathPart as MessagePathPart).type}`,
+        );
       }
     }
     return { valid: true, msgPathPart: undefined, structureItem };
