@@ -423,7 +423,7 @@ export default class ImageCanvas extends React.Component<Props, State> {
             },
           },
           imageMessageDatatype: topic.datatype,
-          rawMarkerData,
+          rawMarkerData: JSON.parse(JSON.stringify(rawMarkerData)),
           options,
         });
       } else {
