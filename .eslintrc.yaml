@@ -312,6 +312,7 @@ overrides:
   - rules:
       "@typescript-eslint/no-non-null-assertion": warn
     files:
+      - "packages/rosmsg-deser/src/BuiltinDeserialize.ts"
       - "packages/studio-base/src/components/PanelToolbar/index.tsx"
       - "packages/studio-base/src/components/Tree/TreeNode.tsx"
       - "packages/studio-base/src/dataProviders/CombinedDataProvider.ts"
