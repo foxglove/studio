@@ -7,8 +7,8 @@
     "build:prod": "webpack --mode production --progress"
   },
   "dependencies": {
-    "@foxglove/studio-base": "workspace:app",
-    "@foxglove/studio-firebase": "workspace:packages/@foxglove/studio-firebase"
+    "@foxglove/studio-base": "workspace:packages/studio-base",
+    "@foxglove/studio-firebase": "workspace:packages/studio-firebase"
   },
   "devDependencies": {
     "@types/copy-webpack-plugin": "8.0.0",

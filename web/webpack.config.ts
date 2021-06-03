@@ -118,6 +118,10 @@ const mainConfig = (env: unknown, argv: WebpackArgv): Configuration => {
       }),
       new ForkTsCheckerWebpackPlugin({
         typescript: {
+          // By default the ForkTsChecker provided by appWebpackConfig will look at
+          // web/tsconfig.json, which is only used for top-level .ts files in the web folder (i.e.
+          // this webpack config file) but will not typecheck files under src. We need another
+          // ForkTsChecker to check these files.
           configFile: "src/tsconfig.json",
         },
       }),

@@ -2570,9 +2570,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/hooks@workspace:packages/@foxglove/hooks":
+"@foxglove/hooks@workspace:packages/hooks":
   version: 0.0.0-use.local
-  resolution: "@foxglove/hooks@workspace:packages/@foxglove/hooks"
+  resolution: "@foxglove/hooks@workspace:packages/hooks"
   dependencies:
     typescript: 4.3.2
   languageName: unknown
@@ -2666,22 +2666,22 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foxglove/studio-base@workspace:app":
+"@foxglove/studio-base@workspace:packages/studio-base":
   version: 0.0.0-use.local
-  resolution: "@foxglove/studio-base@workspace:app"
+  resolution: "@foxglove/studio-base@workspace:packages/studio-base"
   dependencies:
     "@fluentui/react": 8.16.0
     "@fluentui/react-icons-mdl2": 1.1.1
-    "@foxglove/hooks": "workspace:packages/@foxglove/hooks"
+    "@foxglove/hooks": "workspace:packages/hooks"
     "@foxglove/rosmsg-msgs-common": "workspace:packages/rosmsg-msgs-common"
     "@foxglove/rosmsg-msgs-foxglove": "workspace:packages/rosmsg-msgs-foxglove"
-    "@foxglove/studio": "workspace:packages/@foxglove/studio"
+    "@foxglove/studio": "workspace:packages/studio"
     "@foxglove/velodyne-cloud": "workspace:packages/velodyne-cloud"
     "@mdi/svg": 5.9.55
     "@storybook/addon-actions": 6.2.9
     "@storybook/addon-essentials": 6.2.9
     "@storybook/builder-webpack5": 6.2.9
-    "@storybook/react": "patch:@storybook/react@6.2.9#../patches/storybook-react.patch"
+    "@storybook/react": "patch:@storybook/react@6.2.9#../../patches/storybook-react.patch"
     "@testing-library/dom": 7.31.0
     "@testing-library/react": 11.2.7
     "@testing-library/react-hooks": 7.0.0
@@ -2807,30 +2807,30 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foxglove/studio-firebase@workspace:packages/@foxglove/studio-firebase":
+"@foxglove/studio-firebase@workspace:packages/studio-firebase":
   version: 0.0.0-use.local
-  resolution: "@foxglove/studio-firebase@workspace:packages/@foxglove/studio-firebase"
+  resolution: "@foxglove/studio-firebase@workspace:packages/studio-firebase"
   dependencies:
-    "@foxglove/hooks": "workspace:packages/@foxglove/hooks"
+    "@foxglove/hooks": "workspace:packages/hooks"
     "@foxglove/log": "workspace:packages/log"
-    "@foxglove/studio-base": "workspace:app"
+    "@foxglove/studio-base": "workspace:packages/studio-base"
     firebase: 9.0.0-beta.1
     typescript: 4.3.2
   languageName: unknown
   linkType: soft
 
-"@foxglove/studio@workspace:packages/@foxglove/studio":
+"@foxglove/studio@workspace:packages/studio":
   version: 0.0.0-use.local
-  resolution: "@foxglove/studio@workspace:packages/@foxglove/studio"
+  resolution: "@foxglove/studio@workspace:packages/studio"
   dependencies:
     "@types/react": 17.0.6
     react: 17.0.2
   languageName: unknown
   linkType: soft
 
-"@foxglove/tsconfig@workspace:packages/@foxglove/tsconfig":
+"@foxglove/tsconfig@workspace:packages/tsconfig":
   version: 0.0.0-use.local
-  resolution: "@foxglove/tsconfig@workspace:packages/@foxglove/tsconfig"
+  resolution: "@foxglove/tsconfig@workspace:packages/tsconfig"
   languageName: unknown
   linkType: soft
 
@@ -4750,9 +4750,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@storybook/react@patch:@storybook/react@6.2.9#../patches/storybook-react.patch::locator=%40foxglove%2Fstudio-base%40workspace%3Aapp":
+"@storybook/react@patch:@storybook/react@6.2.9#../../patches/storybook-react.patch::locator=%40foxglove%2Fstudio-base%40workspace%3Apackages%2Fstudio-base":
   version: 6.2.9
-  resolution: "@storybook/react@patch:@storybook/react@npm%3A6.2.9#../patches/storybook-react.patch::version=6.2.9&hash=969b8b&locator=%40foxglove%2Fstudio-base%40workspace%3Aapp"
+  resolution: "@storybook/react@patch:@storybook/react@npm%3A6.2.9#../../patches/storybook-react.patch::version=6.2.9&hash=969b8b&locator=%40foxglove%2Fstudio-base%40workspace%3Apackages%2Fstudio-base"
   dependencies:
     "@babel/preset-flow": ^7.12.1
     "@babel/preset-react": ^7.12.10
@@ -10848,8 +10848,8 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "desktop@workspace:desktop"
   dependencies:
-    "@foxglove/studio-base": "workspace:app"
-    "@foxglove/studio-firebase": "workspace:packages/@foxglove/studio-firebase"
+    "@foxglove/studio-base": "workspace:packages/studio-base"
+    "@foxglove/studio-firebase": "workspace:packages/studio-firebase"
   languageName: unknown
   linkType: soft
 
@@ -13399,7 +13399,7 @@ __metadata:
     "@babel/preset-typescript": 7.13.0
     "@foxglove/electron-socket": "workspace:packages/electron-socket"
     "@foxglove/eslint-plugin": 0.6.0
-    "@foxglove/tsconfig": "workspace:packages/@foxglove/tsconfig"
+    "@foxglove/tsconfig": "workspace:packages/tsconfig"
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.0-beta.8
     "@sentry/electron": 2.4.1
     "@sentry/webpack-plugin": 1.15.1
@@ -26397,8 +26397,8 @@ typescript@4.3.2:
   version: 0.0.0-use.local
   resolution: "web@workspace:web"
   dependencies:
-    "@foxglove/studio-base": "workspace:app"
-    "@foxglove/studio-firebase": "workspace:packages/@foxglove/studio-firebase"
+    "@foxglove/studio-base": "workspace:packages/studio-base"
+    "@foxglove/studio-firebase": "workspace:packages/studio-firebase"
     "@types/copy-webpack-plugin": 8.0.0
     copy-webpack-plugin: 9.0.0
     webpack: 5.37.0
