@@ -115,7 +115,7 @@ describe("layout reducers", () => {
       expect(tabs.length).toEqual(3);
 
       expect(configById[newAudioId]).toEqual({ foo: "bar" });
-      expect(configById[layout!]).toEqual({
+      expect(configById[layout as string]).toEqual({
         activeTabIdx: 0,
         tabs: [{ title: "A", layout: newAudioId }, { title: "B" }, { title: "C" }],
       });
@@ -166,7 +166,7 @@ describe("layout reducers", () => {
       expect(getPanelTypeFromId(layout.second as string)).toEqual("Tab");
 
       expect(configById["Audio!a"]).toEqual({ foo: "bar" });
-      const { activeTabIdx, tabs } = configById[layout.second!] as TabPanelConfig;
+      const { activeTabIdx, tabs } = configById[layout.second as string] as TabPanelConfig;
       expect(activeTabIdx).toEqual(0);
       expect(tabs.length).toEqual(1);
       expect(tabs[0]?.title).toEqual("A");
@@ -250,7 +250,7 @@ describe("layout reducers", () => {
       expect(layout.first).toEqual("Audio!a");
       expect(getPanelTypeFromId(layout.second as string)).toEqual("Tab");
 
-      const parentTabConfig = configById[layout.second!];
+      const parentTabConfig = configById[layout.second as string];
       expect(parentTabConfig?.tabs.length).toEqual(1);
       expect(parentTabConfig?.tabs[0].title).toEqual("A");
 
@@ -455,7 +455,7 @@ describe("layout reducers", () => {
       const layout = result.current.state.layout as MosaicParent<string>;
       expect(getPanelTypeFromId(layout.first as string)).toEqual(TAB_PANEL_TYPE);
       expect(getPanelTypeFromId(layout.second as string)).toEqual("Audio");
-      expect(configById[layout.first!]).toEqual({
+      expect(configById[layout.first as string]).toEqual({
         activeTabIdx: 0,
         tabs: [
           {
@@ -464,7 +464,9 @@ describe("layout reducers", () => {
           },
         ],
       });
-      expect(configById[layout.second!]).toEqual(regularLayoutPayload.configById?.[layout.second!]);
+      expect(configById[layout.second as string]).toEqual(
+        regularLayoutPayload.configById?.[layout.second as string],
+      );
     });
 
     it("will group selected panels into a Tab panel, even when a selected panel is nested", () => {
@@ -477,7 +479,7 @@ describe("layout reducers", () => {
       const layout = result.current.state.layout as MosaicParent<string>;
       expect(getPanelTypeFromId(layout.first as string)).toEqual(TAB_PANEL_TYPE);
       expect(getPanelTypeFromId(layout.second as string)).toEqual(TAB_PANEL_TYPE);
-      expect(configById[layout.first!]).toEqual({
+      expect(configById[layout.first as string]).toEqual({
         activeTabIdx: 0,
         tabs: [
           {
@@ -486,7 +488,7 @@ describe("layout reducers", () => {
           },
         ],
       });
-      expect(configById[layout.second!]).toEqual({
+      expect(configById[layout.second as string]).toEqual({
         activeTabIdx: 0,
         tabs: [{ title: "First tab", layout: "Audio!b" }],
       });
@@ -502,14 +504,16 @@ describe("layout reducers", () => {
       const layout = result.current.state.layout as MosaicParent<string>;
       expect(getPanelTypeFromId(layout.first as string)).toEqual(TAB_PANEL_TYPE);
       expect(getPanelTypeFromId(layout.second as string)).toEqual("Audio");
-      expect(configById[layout.first!]).toEqual({
+      expect(configById[layout.first as string]).toEqual({
         activeTabIdx: 0,
         tabs: [
           { title: "Audio", layout: "Audio!a" },
           { title: "RawMessages", layout: "RawMessages!a" },
         ],
       });
-      expect(configById[layout.second!]).toEqual(regularLayoutPayload.configById?.[layout.second!]);
+      expect(configById[layout.second as string]).toEqual(
+        regularLayoutPayload.configById?.[layout.second as string],
+      );
     });
 
     it("will create individual tabs for selected panels in a new Tab panel, even when a selected panel is nested", () => {
@@ -522,14 +526,14 @@ describe("layout reducers", () => {
       const layout = result.current.state.layout as MosaicParent<string>;
       expect(getPanelTypeFromId(layout.first as string)).toEqual(TAB_PANEL_TYPE);
       expect(getPanelTypeFromId(layout.second as string)).toEqual(TAB_PANEL_TYPE);
-      expect(configById[layout.first!]).toEqual({
+      expect(configById[layout.first as string]).toEqual({
         activeTabIdx: 0,
         tabs: [
           { title: "Audio", layout: "Audio!a" },
           { title: "RawMessages", layout: "RawMessages!a" },
         ],
       });
-      expect(configById[layout.second!]).toEqual({
+      expect(configById[layout.second as string]).toEqual({
         activeTabIdx: 0,
         tabs: [{ title: "First tab", layout: "Audio!b" }],
       });
@@ -577,7 +581,7 @@ describe("layout reducers", () => {
       expect(getPanelTypeFromId(layout.second as string)).toEqual("Audio");
       expect(layout.direction).toEqual("row");
       expect(configById["Audio!a"]).toEqual(audioConfig);
-      expect(configById[layout.second!]).toEqual(audioConfig);
+      expect(configById[layout.second as string]).toEqual(audioConfig);
     });
 
     it("can split Tab panel", () => {
@@ -609,7 +613,9 @@ describe("layout reducers", () => {
       expect(getPanelTypeFromId(layout.second as string)).toEqual("Tab");
       expect(layout.direction).toEqual("row");
       expect(configById["Tab!a"]).toEqual(tabConfig);
-      expect(getPanelTypeFromId(configById[layout.second!]?.tabs[0].layout)).toEqual("Audio");
+      expect(getPanelTypeFromId(configById[layout.second as string]?.tabs[0].layout)).toEqual(
+        "Audio",
+      );
       expect(configById["Audio!a"]).toEqual(audioConfig);
     });
 
