@@ -21,6 +21,7 @@ export default function ExtensionRegistryProvider(props: PropsWithChildren<unkno
 
       const extensions: ExtensionDetail[] = [
         {
+          id: "foxglove.builtin",
           name: "builtin",
           source: source,
         },

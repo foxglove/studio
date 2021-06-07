@@ -15,6 +15,7 @@ const desktopBridge = (global as { desktopBridge?: Desktop }).desktopBridge;
 
 type PackageInfo = {
   name: string;
+  displayName: string;
 };
 
 export default function ExtensionLoaderProvider(props: PropsWithChildren<unknown>): JSX.Element {
@@ -26,7 +27,8 @@ export default function ExtensionLoaderProvider(props: PropsWithChildren<unknown
       const pkgInfo = item.packageJson as PackageInfo;
 
       return {
-        name: pkgInfo.name,
+        id: pkgInfo.name,
+        name: pkgInfo.displayName,
         source: item.source,
       };
     });

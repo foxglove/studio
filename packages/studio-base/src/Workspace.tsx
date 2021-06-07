@@ -21,6 +21,7 @@ import AccountSettings from "@foxglove/studio-base/components/AccountSettings";
 import ConnectionList from "@foxglove/studio-base/components/ConnectionList";
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
 import DropOverlay from "@foxglove/studio-base/components/DropOverlay";
+import Extensions from "@foxglove/studio-base/components/Extensions";
 import GlobalKeyListener from "@foxglove/studio-base/components/GlobalKeyListener";
 import GlobalVariablesTable from "@foxglove/studio-base/components/GlobalVariablesTable";
 import variablesHelp from "@foxglove/studio-base/components/GlobalVariablesTable/index.help.md";
@@ -80,6 +81,7 @@ type SidebarItemKey =
   | "add-panel"
   | "panel-settings"
   | "variables"
+  | "extensions"
   | "account"
   | "preferences";
 
@@ -95,6 +97,7 @@ const SIDEBAR_ITEMS = new Map<SidebarItemKey, SidebarItem>([
   ],
   ["variables", { iconName: "Variable2", title: "Variables", component: Variables }],
   ["preferences", { iconName: "Settings", title: "Preferences", component: Preferences }],
+  ["extensions", { iconName: "AddIn", title: "Extensions", component: Extensions }],
   ...(process.env.NODE_ENV === "production"
     ? []
     : [
