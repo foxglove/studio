@@ -252,7 +252,6 @@ function Plot(props: Props) {
 
   return (
     <Flex col clip center style={{ position: "relative" }}>
-      <PanelToolbar helpContent={helpContent} floating />
       <PlotChart
         paths={yAxisPaths}
         minYValue={parseFloat((minYValue ?? "")?.toString())}

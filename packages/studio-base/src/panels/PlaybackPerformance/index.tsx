@@ -118,7 +118,6 @@ export function UnconnectedPlaybackPerformance({
 
   return (
     <Flex col>
-      <PanelToolbar floating helpContent={helpContent} />
       <Flex col wrap center start style={{ lineHeight: 1, whiteSpace: "nowrap" }}>
         <PlaybackPerformanceItem points={perfPoints.current.speed} maximum={1.6} decimalPlaces={2}>
           &times; realtime

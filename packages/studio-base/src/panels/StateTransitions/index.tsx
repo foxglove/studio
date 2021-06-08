@@ -24,8 +24,6 @@ import Button from "@foxglove/studio-base/components/Button";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import useMessagesByPath from "@foxglove/studio-base/components/MessagePathSyntax/useMessagesByPath";
 import Panel from "@foxglove/studio-base/components/Panel";
-import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
-import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import TimeBasedChart, {
   getTooltipItemForMessageHistoryItem,
   TimeBasedChartTooltipData,
@@ -187,7 +185,6 @@ type Props = {
 
 const StateTransitions = React.memo(function StateTransitions(props: Props) {
   const { config, saveConfig } = props;
-  const { isHovered } = usePanelContext();
   const { paths } = config;
 
   const onInputChange = (value: string, index?: number) => {
@@ -384,8 +381,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
 
   return (
     <SRoot>
-      <PanelToolbar floating helpContent={helpContent} />
-      <SAddButton show={isHovered}>
+      <SAddButton show={true}>
         <Button
           onClick={() =>
             saveConfig({
@@ -416,7 +412,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
             <SInputContainer
               key={index}
               style={{ top: index * heightPerTopic }}
-              shrink={index === 0 && isHovered}
+              shrink={index === 0}
             >
               <SInputDelete
                 onClick={() => {

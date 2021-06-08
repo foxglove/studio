@@ -231,7 +231,6 @@ function NodePlayground(props: Props) {
 
   return (
     <Stack verticalFill>
-      <PanelToolbar floating />
       <Stack horizontal verticalFill>
         <Sidebar
           explorer={explorer}

@@ -30,7 +30,7 @@ export default function PanelCatalogProvider(
       const PanelWrapper = () => {
         return (
           <>
-            <PanelToolbar floating />
+            <PanelToolbar />
             <PanelComponent />
           </>
         );

@@ -140,7 +140,6 @@ function MapPanel(props: Props) {
   if (!center) {
     return (
       <>
-        <PanelToolbar floating helpContent={helpContent} />
         <EmptyState>Waiting for first gps point...</EmptyState>
       </>
     );
@@ -148,7 +147,6 @@ function MapPanel(props: Props) {
 
   return (
     <>
-      <PanelToolbar floating helpContent={helpContent} />
       <MapContainer
         whenCreated={setCurrentMap}
         preferCanvas

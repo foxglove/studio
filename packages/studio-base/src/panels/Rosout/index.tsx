@@ -78,15 +78,13 @@ const RosoutPanel = React.memo(({ config, saveConfig }: Props) => {
 
   return (
     <Stack verticalFill>
-      <PanelToolbar floating helpContent={helpContent} additionalIcons={topicToRenderMenu}>
-        <FilterBar
-          searchTerms={searchTermsSet}
-          minLogLevel={minLogLevel}
-          nodeNames={seenNodeNames.current}
-          messages={filteredMessages}
-          onFilterChange={onFilterChange}
-        />
-      </PanelToolbar>
+      <FilterBar
+        searchTerms={searchTermsSet}
+        minLogLevel={minLogLevel}
+        nodeNames={seenNodeNames.current}
+        messages={filteredMessages}
+        onFilterChange={onFilterChange}
+      />
       <Stack grow>
         <LogList
           items={filteredMessages}

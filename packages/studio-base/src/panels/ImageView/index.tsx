@@ -32,7 +32,6 @@ import Icon from "@foxglove/studio-base/components/Icon";
 import { Item, SubMenu } from "@foxglove/studio-base/components/Menu";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
-import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import useDeepMemo from "@foxglove/studio-base/hooks/useDeepMemo";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
@@ -583,14 +582,12 @@ function ImageView(props: Props) {
 
   const toolbar = useMemo(() => {
     return (
-      <PanelToolbar floating={cameraTopic !== ""} helpContent={helpContent}>
-        <div className={style.controls}>
-          {imageTopicDropdown}
-          {markerDropdown}
-        </div>
-      </PanelToolbar>
+      <div className={style.controls}>
+        {imageTopicDropdown}
+        {markerDropdown}
+      </div>
     );
-  }, [imageTopicDropdown, markerDropdown, cameraTopic]);
+  }, [imageTopicDropdown, markerDropdown]);
 
   const renderBottomBar = () => {
     const canTransformMarkers = canTransformMarkersByTopic(cameraTopic);

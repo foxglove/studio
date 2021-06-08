@@ -496,60 +496,58 @@ function RawMessages(props: Props) {
 
   return (
     <Flex col clip style={{ position: "relative" }}>
-      <PanelToolbar helpContent={helpContent}>
-        <Icon tooltip="Toggle diff" medium fade onClick={onToggleDiff} active={diffEnabled}>
-          <PlusMinusIcon />
-        </Icon>
-        <Icon
-          tooltip={expandAll ?? false ? "Collapse all" : "Expand all"}
-          medium
-          fade
-          onClick={onToggleExpandAll}
-          style={{ position: "relative", top: 1 }}
-        >
-          {expandAll ?? false ? <LessIcon /> : <MoreIcon />}
-        </Icon>
-        <div className={styles.topicInputs}>
-          <MessagePathInput
-            index={0}
-            path={topicPath}
-            onChange={onTopicPathChange}
-            inputStyle={{ height: "100%" }}
-          />
-          {diffEnabled && (
-            <Flex>
-              <Tooltip contents="Diff method" placement="top">
-                <>
-                  <Dropdown
-                    value={diffMethod}
-                    onChange={(newDiffMethod) => saveConfig({ diffMethod: newDiffMethod })}
-                    noPortal
-                  >
-                    <DropdownItem value={PREV_MSG_METHOD}>
-                      <span>{PREV_MSG_METHOD}</span>
-                    </DropdownItem>
-                    <DropdownItem value={OTHER_SOURCE_METHOD}>
-                      <span>{OTHER_SOURCE_METHOD}</span>
-                    </DropdownItem>
-                    <DropdownItem value={CUSTOM_METHOD}>
-                      <span>custom</span>
-                    </DropdownItem>
-                  </Dropdown>
-                </>
-              </Tooltip>
-              {diffMethod === CUSTOM_METHOD ? (
-                <MessagePathInput
-                  index={1}
-                  path={diffTopicPath}
-                  onChange={onDiffTopicPathChange}
-                  inputStyle={{ height: "100%" }}
-                  prioritizedDatatype={topic?.datatype}
-                />
-              ) : undefined}
-            </Flex>
-          )}
-        </div>
-      </PanelToolbar>
+      <Icon tooltip="Toggle diff" medium fade onClick={onToggleDiff} active={diffEnabled}>
+        <PlusMinusIcon />
+      </Icon>
+      <Icon
+        tooltip={expandAll ?? false ? "Collapse all" : "Expand all"}
+        medium
+        fade
+        onClick={onToggleExpandAll}
+        style={{ position: "relative", top: 1 }}
+      >
+        {expandAll ?? false ? <LessIcon /> : <MoreIcon />}
+      </Icon>
+      <div className={styles.topicInputs}>
+        <MessagePathInput
+          index={0}
+          path={topicPath}
+          onChange={onTopicPathChange}
+          inputStyle={{ height: "100%" }}
+        />
+        {diffEnabled && (
+          <Flex>
+            <Tooltip contents="Diff method" placement="top">
+              <>
+                <Dropdown
+                  value={diffMethod}
+                  onChange={(newDiffMethod) => saveConfig({ diffMethod: newDiffMethod })}
+                  noPortal
+                >
+                  <DropdownItem value={PREV_MSG_METHOD}>
+                    <span>{PREV_MSG_METHOD}</span>
+                  </DropdownItem>
+                  <DropdownItem value={OTHER_SOURCE_METHOD}>
+                    <span>{OTHER_SOURCE_METHOD}</span>
+                  </DropdownItem>
+                  <DropdownItem value={CUSTOM_METHOD}>
+                    <span>custom</span>
+                  </DropdownItem>
+                </Dropdown>
+              </>
+            </Tooltip>
+            {diffMethod === CUSTOM_METHOD ? (
+              <MessagePathInput
+                index={1}
+                path={diffTopicPath}
+                onChange={onDiffTopicPathChange}
+                inputStyle={{ height: "100%" }}
+                prioritizedDatatype={topic?.datatype}
+              />
+            ) : undefined}
+          </Flex>
+        )}
+      </div>
       {renderSingleTopicOrDiffOutput()}
     </Flex>
   );

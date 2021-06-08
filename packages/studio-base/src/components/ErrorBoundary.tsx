@@ -17,7 +17,6 @@ import styled from "styled-components";
 
 import Button from "@foxglove/studio-base/components/Button";
 import Flex from "@foxglove/studio-base/components/Flex";
-import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import { AppError } from "@foxglove/studio-base/util/errors";
 
 const Heading = styled.div`
@@ -67,17 +66,15 @@ export default class ErrorBoundary extends React.Component<
       }
       return (
         <Flex col style={{ maxHeight: "100%", maxWidth: "100%" }}>
-          <PanelToolbar>
-            <ErrorBanner>
-              <div style={{ flexGrow: 1 }}>An error occurred in {name}.</div>
-              <Button
-                style={{ background: "rgba(255, 255, 255, 0.5)" }}
-                onClick={() => this.setState({ error: undefined, errorInfo: undefined })}
-              >
-                Reload Panel
-              </Button>
-            </ErrorBanner>
-          </PanelToolbar>
+          <ErrorBanner>
+            <div style={{ flexGrow: 1 }}>An error occurred in {name}.</div>
+            <Button
+              style={{ background: "rgba(255, 255, 255, 0.5)" }}
+              onClick={() => this.setState({ error: undefined, errorInfo: undefined })}
+            >
+              Reload Panel
+            </Button>
+          </ErrorBanner>
           <Flex col scroll scrollX style={{ padding: "2px 6px" }}>
             <Heading>Error stack:</Heading>
             <pre>{error.stack}</pre>

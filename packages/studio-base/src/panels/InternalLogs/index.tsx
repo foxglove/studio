@@ -8,7 +8,6 @@ import log from "@foxglove/log";
 import Checkbox from "@foxglove/studio-base/components/Checkbox";
 import Flex from "@foxglove/studio-base/components/Flex";
 import Panel from "@foxglove/studio-base/components/Panel";
-import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 
 type Config = {
   // we store disabled channels so any new channels are default enabled
@@ -42,32 +41,29 @@ function InternalLogs(props: Props) {
 
   return (
     <Flex col>
-      <PanelToolbar />
-      <Flex col>
-        {channels.map((logger) => {
-          const label = logger.name().length === 0 ? "default" : logger.name();
-          return (
-            <div key={label}>
-              <Checkbox
-                checked={logger.isEnabled()}
-                label={label}
-                onChange={(newChecked) => {
-                  // track disabled channels so loggers are on by default
-                  if (newChecked) {
-                    disabledChannels.delete(label);
-                  } else {
-                    disabledChannels.add(label);
-                  }
+      {channels.map((logger) => {
+        const label = logger.name().length === 0 ? "default" : logger.name();
+        return (
+          <div key={label}>
+            <Checkbox
+              checked={logger.isEnabled()}
+              label={label}
+              onChange={(newChecked) => {
+                // track disabled channels so loggers are on by default
+                if (newChecked) {
+                  disabledChannels.delete(label);
+                } else {
+                  disabledChannels.add(label);
+                }
 
-                  props.saveConfig({
-                    disabledChannels: Array.from(disabledChannels.values()),
-                  });
-                }}
-              />
-            </div>
-          );
-        })}
-      </Flex>
+                props.saveConfig({
+                  disabledChannels: Array.from(disabledChannels.values()),
+                });
+              }}
+            />
+          </div>
+        );
+      })}
     </Flex>
   );
 }

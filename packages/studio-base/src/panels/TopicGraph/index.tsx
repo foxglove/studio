@@ -261,7 +261,6 @@ function TopicGraph() {
   if (publishedTopics == undefined) {
     return (
       <>
-        <PanelToolbar floating helpContent={helpContent} />
         <EmptyState>Waiting for data...</EmptyState>
       </>
     );
@@ -269,7 +268,6 @@ function TopicGraph() {
 
   return (
     <>
-      <PanelToolbar floating helpContent={helpContent} />
       <Toolbar>
         <div className={styles.buttons}>
           <Button tooltip="Zoom Fit" onClick={onZoomFit}>

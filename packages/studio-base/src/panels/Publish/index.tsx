@@ -20,7 +20,6 @@ import Autocomplete from "@foxglove/studio-base/components/Autocomplete";
 import Button from "@foxglove/studio-base/components/Button";
 import Flex from "@foxglove/studio-base/components/Flex";
 import Panel from "@foxglove/studio-base/components/Panel";
-import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import PanelToolbarLabel from "@foxglove/studio-base/components/PanelToolbarLabel";
 import usePublisher from "@foxglove/studio-base/hooks/usePublisher";
 import { PlayerCapabilities, Topic } from "@foxglove/studio-base/players/types";
@@ -177,7 +176,6 @@ function Publish(props: Props) {
 
   return (
     <Flex col style={{ height: "100%", padding: "12px" }}>
-      <PanelToolbar floating />
       {advancedView && (
         <SRow>
           <SSpan>Topic:</SSpan>

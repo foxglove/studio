@@ -55,10 +55,13 @@
   left: 0;
   right: 0;
   bottom: 0;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-end;
+  font-size: 14px;
+  padding-top: 24px;
   z-index: 100000; // highest level within panel
-  display: none;
 
-  .root:hover > &,
   // for screenshot tests
   &:global(.hoverForScreenshot) {
     background-color: rgba(45, 45, 51, 1);
@@ -67,12 +70,6 @@
     justify-content: center;
     flex-wrap: wrap;
   }
-
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-end;
-  font-size: 14px;
-  padding-top: 24px;
 
   div {
     width: 100%;

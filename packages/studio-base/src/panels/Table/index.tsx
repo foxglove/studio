@@ -61,16 +61,14 @@ function TablePanel({ config, saveConfig }: Props) {
 
   return (
     <Flex col clip style={{ position: "relative" }}>
-      <PanelToolbar helpContent={helpContent}>
-        <div style={{ width: "100%", lineHeight: "20px" }}>
-          <MessagePathInput
-            index={0}
-            path={topicPath}
-            onChange={onTopicPathChange}
-            inputStyle={{ height: "100%" }}
-          />
-        </div>
-      </PanelToolbar>
+      <div style={{ width: "100%", lineHeight: "20px" }}>
+        <MessagePathInput
+          index={0}
+          path={topicPath}
+          onChange={onTopicPathChange}
+          inputStyle={{ height: "100%" }}
+        />
+      </div>
       {topicPath.length === 0 && <EmptyState>No topic selected</EmptyState>}
       {topicPath.length !== 0 && !isNonEmptyOrUndefined(cachedMessages) && (
         <EmptyState>Waiting for next message</EmptyState>

@@ -160,9 +160,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
 
   return (
     <Flex col className={styles.panel}>
-      <PanelToolbar helpContent={helpContent} additionalIcons={topicToRenderMenu}>
-        {hardwareFilter}
-      </PanelToolbar>
+      {hardwareFilter}
       <Flex col>
         <DiagnosticsHistory topic={topicToRender}>
           {(buffer) => {

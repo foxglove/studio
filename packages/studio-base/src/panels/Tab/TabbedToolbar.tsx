@@ -93,36 +93,34 @@ export function TabbedToolbar(props: Props): JSX.Element {
 
   return (
     <STabbedToolbar highlight={isOver}>
-      <PanelToolbar helpContent={helpContent} showHiddenControlsOnHover>
-        <STabs ref={dropRef} data-test="toolbar-droppable">
-          {tabs.map((tab, i) => (
-            <DraggableToolbarTab
-              isActive={activeTabIdx === i}
-              key={i}
-              panelId={panelId}
-              setDraggingTabState={setDraggingTabState}
-              actions={actions}
-              tabCount={tabs.length}
-              tabIndex={i}
-              tabTitle={tab.title}
-            />
-          ))}
-          <Icon
-            small
-            fade
-            dataTest="add-tab"
-            tooltip="Add tab"
-            style={{
-              flexShrink: 0,
-              margin: "0 8px",
-              transition: "opacity 0.2s",
-            }}
-            onClick={actions.addTab}
-          >
-            <PlusIcon onMouseDown={(e) => e.preventDefault()} />
-          </Icon>
-        </STabs>
-      </PanelToolbar>
+      <STabs ref={dropRef} data-test="toolbar-droppable">
+        {tabs.map((tab, i) => (
+          <DraggableToolbarTab
+            isActive={activeTabIdx === i}
+            key={i}
+            panelId={panelId}
+            setDraggingTabState={setDraggingTabState}
+            actions={actions}
+            tabCount={tabs.length}
+            tabIndex={i}
+            tabTitle={tab.title}
+          />
+        ))}
+        <Icon
+          small
+          fade
+          dataTest="add-tab"
+          tooltip="Add tab"
+          style={{
+            flexShrink: 0,
+            margin: "0 8px",
+            transition: "opacity 0.2s",
+          }}
+          onClick={actions.addTab}
+        >
+          <PlusIcon onMouseDown={(e) => e.preventDefault()} />
+        </Icon>
+      </STabs>
     </STabbedToolbar>
   );
 }

@@ -17,7 +17,6 @@ import styled from "styled-components";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
-import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import SelectableTimestamp from "@foxglove/studio-base/components/SelectableTimestamp";
 import clipboard from "@foxglove/studio-base/util/clipboard";
 import { formatDuration } from "@foxglove/studio-base/util/formatTime";
@@ -76,7 +75,6 @@ function SourceInfo() {
   if (!startTime || !endTime) {
     return (
       <>
-        <PanelToolbar floating />
         <EmptyState>Waiting for data...</EmptyState>
       </>
     );
@@ -85,7 +83,6 @@ function SourceInfo() {
   const duration = subtractTimes(endTime, startTime);
   return (
     <>
-      <PanelToolbar floating />
       <STableContainer>
         <SHeader>
           <SHeaderItem>

@@ -112,7 +112,7 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
       ) : (
         // If we haven't found a panel of the given type, render the panel selector
         <Flex col center dataTest={id}>
-          <PanelToolbar floating isUnknownPanel />
+          <PanelToolbar isUnknownPanel />
           Unknown panel type: {type}.
         </Flex>
       );

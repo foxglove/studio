@@ -44,6 +44,7 @@ import Toolbar from "@foxglove/studio-base/components/Toolbar";
 import { useAppConfiguration } from "@foxglove/studio-base/context/AppConfigurationContext";
 import { useAssets } from "@foxglove/studio-base/context/AssetContext";
 import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { LayoutEditContext } from "@foxglove/studio-base/context/LayoutEditContext";
 import LinkHandlerContext from "@foxglove/studio-base/context/LinkHandlerContext";
 import { PanelSettingsContext } from "@foxglove/studio-base/context/PanelSettingsContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
@@ -163,6 +164,13 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     ) {
       setSelectedSidebarItem(undefined);
     }
+
+    if (selectedSidebarItem === "add-panel") {
+      //editLayout(true);
+    } else {
+      //editLayout(false);
+    }
+
     prevSourceName.current = currentSourceName;
   }, [selectedSidebarItem, currentSourceName]);
 
@@ -361,12 +369,20 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     [selectedSidebarItem],
   );
 
+  const layoutEdit = useMemo(
+    () => ({
+      editing: selectedSidebarItem === "add-panel",
+    }),
+    [selectedSidebarItem],
+  );
+
   return (
     <MultiProvider
       providers={[
         /* eslint-disable react/jsx-key */
         <LinkHandlerContext.Provider value={handleInternalLink} />,
         <PanelSettingsContext.Provider value={panelSettings} />,
+        <LayoutEditContext.Provider value={layoutEdit} />,
         /* eslint-enable react/jsx-key */
       ]}
     >

@@ -197,7 +197,6 @@ function Internals() {
 
   return (
     <Container>
-      <PanelToolbar floating />
       <h1>Recording</h1>
       <TextContent>
         Press to start recording topic data for debug purposes. The latest messages on each topic

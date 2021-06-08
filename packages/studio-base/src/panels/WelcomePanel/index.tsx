@@ -66,7 +66,6 @@ function WelcomePanel() {
 
   return (
     <Flex col scroll dataTest="welcome-content">
-      <PanelToolbar floating />
       <TextContent style={{ padding: 12 }}>
         <h2 style={{ fontSize: "1.5em", marginBottom: "0.8em" }}>Welcome</h2>
         <p>

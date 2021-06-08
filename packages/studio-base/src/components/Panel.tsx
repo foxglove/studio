@@ -50,11 +50,13 @@ import Icon from "@foxglove/studio-base/components/Icon";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
+import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import {
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
   useSelectedPanels,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useLayoutEdit } from "@foxglove/studio-base/context/LayoutEditContext";
 import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { PanelIdContext } from "@foxglove/studio-base/context/PanelIdContext";
 import { usePanelSettings } from "@foxglove/studio-base/context/PanelSettingsContext";
@@ -148,7 +150,6 @@ export default function Panel<Config extends PanelConfig>(
     const [shiftKeyPressed, setShiftKeyPressed] = useState(false);
     const [cmdKeyPressed, setCmdKeyPressed] = useState(false);
     const [fullScreen, setFullScreen] = useState(false);
-    const [isHovered, setIsHovered] = useState(false);
     const [fullScreenLocked, setFullScreenLocked] = useState(false);
     const panelCatalog = usePanelCatalog();
 
@@ -315,10 +316,8 @@ export default function Panel<Config extends PanelConfig>(
       }
     }, [childId, config, getCurrentLayout, mosaicWindowActions, savePanelConfigs, tabId]);
 
-    const { onMouseEnter, onMouseLeave, onMouseMove, enterFullscreen, exitFullScreen } = useMemo(
+    const { onMouseMove, enterFullscreen, exitFullScreen } = useMemo(
       () => ({
-        onMouseEnter: () => setIsHovered(true),
-        onMouseLeave: () => setIsHovered(false),
         onMouseMove: ((e) => {
           if (e.metaKey !== cmdKeyPressed) {
             setCmdKeyPressed(e.metaKey);
@@ -400,6 +399,47 @@ export default function Panel<Config extends PanelConfig>(
     const [connectOverlayDragSource, connectOverlayDragPreview] = usePanelDrag(dragSpec);
     const [connectToolbarDragHandle, connectToolbarDragPreview] = usePanelDrag(dragSpec);
 
+    const MaybeStrictMode = useMemo(() => {
+      return PanelComponent.supportsStrictMode === true ? React.StrictMode : React.Fragment;
+    }, []);
+
+    const panelEditOverlay = useMemo(() => {
+      if (type === TAB_PANEL_TYPE) {
+        return ReactNull;
+      }
+
+      return (
+        <div
+          className={styles.quickActionsOverlay}
+          ref={(el) => {
+            quickActionsOverlayRef.current = el;
+            connectOverlayDragSource(el);
+          }}
+          data-panel-overlay
+        >
+          <div>
+            <div>
+              <FullscreenIcon />
+              {shiftKeyPressed ? "Lock fullscreen" : "Fullscreen (Shift+click to lock)"}
+            </div>
+            <div>
+              <Button onClick={removePanel} disabled={isOnlyPanel}>
+                <TrashCanOutlineIcon />
+                Remove
+              </Button>
+              <Button onClick={splitPanel}>
+                <GridLargeIcon />
+                Split
+              </Button>
+            </div>
+            {!isOnlyPanel && <p>Drag to move</p>}
+          </div>
+        </div>
+      );
+    }, [connectOverlayDragSource, isOnlyPanel, removePanel, shiftKeyPressed, splitPanel, type]);
+
+    const layoutEdit = useLayoutEdit();
+
     return (
       <Profiler
         id={childId ?? "$unknown_id"}
@@ -430,7 +470,6 @@ export default function Panel<Config extends PanelConfig>(
                 updatePanelConfigs,
                 openSiblingPanel,
                 enterFullscreen,
-                isHovered,
                 hasSettings: PanelComponent.configSchema != undefined,
                 tabId,
                 supportsStrictMode: PanelComponent.supportsStrictMode ?? true,
@@ -446,8 +485,6 @@ export default function Panel<Config extends PanelConfig>(
           <KeyListener global keyUpHandlers={keyUpHandlers} keyDownHandlers={keyDownHandlers} />
           <Flex
             onClick={onOverlayClick}
-            onMouseEnter={onMouseEnter}
-            onMouseLeave={onMouseLeave}
             onMouseMove={onMouseMove}
             className={cx({
               [styles.root!]: true,
@@ -479,34 +516,6 @@ export default function Panel<Config extends PanelConfig>(
                 </Button>
               </div>
             )}
-            {type !== TAB_PANEL_TYPE && quickActionsKeyPressed && !fullScreen && (
-              <div
-                className={styles.quickActionsOverlay}
-                ref={(el) => {
-                  quickActionsOverlayRef.current = el;
-                  connectOverlayDragSource(el);
-                }}
-                data-panel-overlay
-              >
-                <div>
-                  <div>
-                    <FullscreenIcon />
-                    {shiftKeyPressed ? "Lock fullscreen" : "Fullscreen (Shift+click to lock)"}
-                  </div>
-                  <div>
-                    <Button onClick={removePanel} disabled={isOnlyPanel}>
-                      <TrashCanOutlineIcon />
-                      Remove
-                    </Button>
-                    <Button onClick={splitPanel}>
-                      <GridLargeIcon />
-                      Split
-                    </Button>
-                  </div>
-                  {!isOnlyPanel && <p>Drag to move</p>}
-                </div>
-              </div>
-            )}
             {fullScreen && (
               <button
                 className={styles.exitFullScreen}
@@ -516,14 +525,38 @@ export default function Panel<Config extends PanelConfig>(
                 <CloseIcon /> <span>Exit fullscreen</span>
               </button>
             )}
-            <ErrorBoundary>
-              {PanelComponent.supportsStrictMode ?? true ? (
-                <React.StrictMode>{child}</React.StrictMode>
-              ) : (
-                child
-              )}
-            </ErrorBoundary>
-            {process.env.NODE_ENV !== "production" && <PerfInfo ref={perfInfo} />}
+            {(layoutEdit.editing || quickActionsKeyPressed) && (
+              <div style={{ width: "100%", zIndex: 3, borderBottom: "1px solid black" }}>
+                <PanelToolbar />{" "}
+              </div>
+            )}
+            {(layoutEdit.editing || quickActionsKeyPressed) && (
+              <div
+                style={{
+                  backgroundColor: "black",
+                  opacity: 0.95,
+                  position: "absolute",
+                  width: "100%",
+                  height: "100%",
+                  zIndex: 2,
+                }}
+              >
+                {panelEditOverlay}
+              </div>
+            )}
+            <div
+              style={{
+                position: "absolute",
+                zIndex: 1,
+                width: "100%",
+                height: "100%",
+                display: "flex",
+              }}
+            >
+              <ErrorBoundary>
+                <MaybeStrictMode>{child}</MaybeStrictMode>
+              </ErrorBoundary>
+            </div>
           </Flex>
         </MultiProvider>
       </Profiler>

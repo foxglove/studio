@@ -113,17 +113,15 @@ function DiagnosticStatusPanel(props: Props) {
 
           return (
             <>
-              <PanelToolbar floating helpContent={helpContent} additionalIcons={topicToRenderMenu}>
-                <Autocomplete
-                  placeholder={selectedDisplayName ?? "Select a diagnostic"}
-                  items={buffer.sortedAutocompleteEntries}
-                  getItemText={(entry) => entry.displayName}
-                  getItemValue={(entry) => entry.id}
-                  onSelect={onSelect}
-                  selectedItem={selectedItem as any}
-                  inputStyle={{ height: "100%" }}
-                />
-              </PanelToolbar>
+              <Autocomplete
+                placeholder={selectedDisplayName ?? "Select a diagnostic"}
+                items={buffer.sortedAutocompleteEntries}
+                getItemText={(entry) => entry.displayName}
+                getItemValue={(entry) => entry.id}
+                onSelect={onSelect}
+                selectedItem={selectedItem as any}
+                inputStyle={{ height: "100%" }}
+              />
               {selectedItems != undefined && selectedItems.length > 0 ? (
                 <Flex col scroll>
                   {sortBy(selectedItems, ({ status }) => status.name.toLowerCase()).map((item) => (

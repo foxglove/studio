@@ -176,36 +176,34 @@ function URDFViewer({ config, saveConfig }: Props) {
 
   return (
     <Flex col clip>
-      <PanelToolbar helpContent={helpContent}>
-        <Stack grow horizontal verticalAlign="baseline">
-          <Toggle
-            inlineLabel
-            offText="Manual joint control"
-            onText="Topic"
-            checked={!useCustomJointValues}
-            onChange={(_event, checked) =>
-              saveConfig({
-                jointStatesTopic:
-                  checked ?? false ? URDFViewer.defaultConfig.jointStatesTopic : undefined,
-              })
-            }
+      <Stack grow horizontal verticalAlign="baseline">
+        <Toggle
+          inlineLabel
+          offText="Manual joint control"
+          onText="Topic"
+          checked={!useCustomJointValues}
+          onChange={(_event, checked) =>
+            saveConfig({
+              jointStatesTopic:
+                checked ?? false ? URDFViewer.defaultConfig.jointStatesTopic : undefined,
+            })
+          }
+        />
+        {!useCustomJointValues && (
+          <ComboBox
+            allowFreeform
+            options={topicOptions}
+            selectedKey={jointStatesTopic}
+            onChange={(_event, option, _index, value) => {
+              if (option) {
+                saveConfig({ jointStatesTopic: option.key as string });
+              } else if (value != undefined) {
+                saveConfig({ jointStatesTopic: value });
+              }
+            }}
           />
-          {!useCustomJointValues && (
-            <ComboBox
-              allowFreeform
-              options={topicOptions}
-              selectedKey={jointStatesTopic}
-              onChange={(_event, option, _index, value) => {
-                if (option) {
-                  saveConfig({ jointStatesTopic: option.key as string });
-                } else if (value != undefined) {
-                  saveConfig({ jointStatesTopic: value });
-                }
-              }}
-            />
-          )}
-        </Stack>
-      </PanelToolbar>
+        )}
+      </Stack>
       <Stack verticalFill>
         {messageBar}
         {model == undefined ? (

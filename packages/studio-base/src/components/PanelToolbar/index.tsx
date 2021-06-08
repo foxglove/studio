@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { CommandBarButton } from "@fluentui/react";
 import { SingleColumnEditIcon } from "@fluentui/react-icons-mdl2";
 import AlertIcon from "@mdi/svg/svg/alert.svg";
 import ArrowSplitHorizontalIcon from "@mdi/svg/svg/arrow-split-horizontal.svg";
@@ -21,12 +22,9 @@ import DragIcon from "@mdi/svg/svg/drag.svg";
 import FullscreenIcon from "@mdi/svg/svg/fullscreen.svg";
 import HelpCircleOutlineIcon from "@mdi/svg/svg/help-circle-outline.svg";
 import TrashCanOutlineIcon from "@mdi/svg/svg/trash-can-outline.svg";
-import cx from "classnames";
 import { useContext, useState, useCallback, useMemo } from "react";
 import { MosaicContext, MosaicNode, MosaicWindowContext } from "react-mosaic-component";
-import { useResizeDetector } from "react-resize-detector";
 
-import ChildToggle from "@foxglove/studio-base/components/ChildToggle";
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import HelpModal from "@foxglove/studio-base/components/HelpModal";
 import Icon from "@foxglove/studio-base/components/Icon";
@@ -44,12 +42,7 @@ import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 import styles from "./index.module.scss";
 
 type Props = {
-  children?: React.ReactNode;
-  floating?: boolean;
   helpContent?: React.ReactNode;
-  additionalIcons?: React.ReactNode;
-  hideToolbars?: boolean;
-  showHiddenControlsOnHover?: boolean;
   isUnknownPanel?: boolean;
 };
 
@@ -184,71 +177,12 @@ function StandardMenuItems({ tabId, isUnknownPanel }: { tabId?: string; isUnknow
   );
 }
 
-type PanelToolbarControlsProps = Pick<
-  Props,
-  "additionalIcons" | "floating" | "showHiddenControlsOnHover"
-> & {
-  isRendered: boolean;
-  showPanelName?: boolean;
-  isUnknownPanel: boolean;
-};
-
-// Keep controls, which don't change often, in a pure component in order to avoid re-rendering the
-// whole PanelToolbar when only children change.
-const PanelToolbarControls = React.memo(function PanelToolbarControls({
-  additionalIcons,
-  floating = false,
-  isRendered,
-  isUnknownPanel,
-  showHiddenControlsOnHover = false,
-  showPanelName = false,
-}: PanelToolbarControlsProps) {
-  const panelContext = useContext(PanelContext);
-
-  return (
-    <div
-      className={styles.iconContainer}
-      style={showHiddenControlsOnHover && !isRendered ? { visibility: "hidden" } : {}}
-    >
-      {showPanelName && panelContext && (
-        <div className={styles.panelName}>{panelContext.title}</div>
-      )}
-      {additionalIcons}
-      <Dropdown
-        flatEdges={!floating}
-        toggleComponent={
-          <Icon fade tooltip="Panel settings" dataTest="panel-settings">
-            <CogIcon className={styles.icon} />
-          </Icon>
-        }
-      >
-        <StandardMenuItems tabId={panelContext?.tabId} isUnknownPanel={isUnknownPanel} />
-      </Dropdown>
-      {!isUnknownPanel && (
-        <span ref={panelContext?.connectToolbarDragHandle} data-test="mosaic-drag-handle">
-          <Icon fade tooltip="Move panel (shortcut: ` or ~)">
-            <DragIcon className={styles.dragIcon} />
-          </Icon>
-        </span>
-      )}
-    </div>
-  );
-});
-
-// Panel toolbar should be added to any panel that's part of the
-// react-mosaic layout.  It adds a drag handle, remove/replace controls
-// and has a place to add custom controls via it's children property
 export default React.memo<Props>(function PanelToolbar({
-  additionalIcons,
-  children,
-  floating = false,
   helpContent,
-  hideToolbars = false,
   isUnknownPanel = false,
-  showHiddenControlsOnHover,
 }: Props) {
-  const { isHovered = false, supportsStrictMode = true } = useContext(PanelContext) ?? {};
-  const [containsOpen, setContainsOpen] = useState(false);
+  const panelContext = useContext(PanelContext);
+  const { supportsStrictMode = true } = panelContext ?? {};
   const [showHelp, setShowHelp] = useState(false);
 
   // Help-shown state must be hoisted outside the controls container so the modal can remain visible
@@ -256,7 +190,6 @@ export default React.memo<Props>(function PanelToolbar({
   const additionalIconsWithHelp = useMemo(() => {
     return (
       <>
-        {additionalIcons}
         {!supportsStrictMode && process.env.NODE_ENV !== "production" && (
           <Icon
             clickable={false}
@@ -273,42 +206,31 @@ export default React.memo<Props>(function PanelToolbar({
         )}
       </>
     );
-  }, [additionalIcons, helpContent, supportsStrictMode]);
-
-  const { width, ref: sizeRef } = useResizeDetector({
-    handleHeight: false,
-  });
-
-  if (hideToolbars) {
-    return ReactNull;
-  }
-
-  const isRendered = isHovered || containsOpen || !!isUnknownPanel;
+  }, [helpContent, supportsStrictMode]);
 
   return (
-    <div ref={sizeRef}>
-      <ChildToggle.ContainsOpen onChange={setContainsOpen}>
-        {showHelp && <HelpModal onRequestClose={() => setShowHelp(false)}>{helpContent}</HelpModal>}
-        <div
-          className={cx(styles.panelToolbarContainer, {
-            [styles.floating!]: floating,
-            [styles.floatingShow!]: floating && isRendered,
-            [styles.hasChildren!]: Boolean(children),
-          })}
+    <div className={styles.root}>
+      {showHelp && <HelpModal onRequestClose={() => setShowHelp(false)}>{helpContent}</HelpModal>}
+      <div className={styles.iconContainer}>
+        <div className={styles.panelName}>{panelContext?.title ?? "unknown panel"}</div>
+        {additionalIconsWithHelp}
+        <Dropdown
+          toggleComponent={
+            <Icon fade tooltip="Panel settings" dataTest="panel-settings">
+              <CogIcon className={styles.icon} />
+            </Icon>
+          }
         >
-          {(isRendered || !floating) && children}
-          {(isRendered || showHiddenControlsOnHover) && (
-            <PanelToolbarControls
-              isRendered={isRendered}
-              showHiddenControlsOnHover={showHiddenControlsOnHover}
-              floating={floating}
-              showPanelName={(width ?? 0) > 360}
-              additionalIcons={additionalIconsWithHelp}
-              isUnknownPanel={!!isUnknownPanel}
-            />
-          )}
-        </div>
-      </ChildToggle.ContainsOpen>
+          <StandardMenuItems tabId={panelContext?.tabId} isUnknownPanel={isUnknownPanel} />
+        </Dropdown>
+        {!isUnknownPanel && (
+          <span ref={panelContext?.connectToolbarDragHandle} data-test="mosaic-drag-handle">
+            <Icon fade tooltip="Move panel (shortcut: ` or ~)">
+              <DragIcon className={styles.dragIcon} />
+            </Icon>
+          </span>
+        )}
+      </div>
     </div>
   );
 });
