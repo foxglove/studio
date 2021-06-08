@@ -67,7 +67,7 @@ const PublisherLine = styled.div`
   margin-bottom: 10px;
 `;
 
-export default function Extensions(): React.ReactElement {
+export default function ExtensionsSidebar(): React.ReactElement {
   const theme = useTheme();
 
   const [shouldFetch, setShouldFetch] = useState<boolean>(true);
