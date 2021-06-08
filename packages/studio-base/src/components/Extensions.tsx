@@ -1,8 +1,9 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
+
 import { mergeStyles, MessageBar, MessageBarType, Stack, useTheme } from "@fluentui/react";
-import { useState } from "react";
+import { SetStateAction, useMemo, useState } from "react";
 import { useAsync } from "react-use";
 import styled from "styled-components";
 
@@ -11,24 +12,10 @@ import { SectionHeader } from "@foxglove/studio-base/components/Menu";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import { useExtensionLoader } from "@foxglove/studio-base/context/ExtensionLoaderContext";
 
+import { ExtensionDetails, ExtensionEntry } from "./ExtensionDetails";
+
 const MARKETPLACE_URL =
   "https://raw.githubusercontent.com/foxglove/studio-extension-marketplace/main/extensions.json";
-
-type MarketplaceEntry = {
-  id: string;
-  name: string;
-  description: string;
-  publisher: string;
-  homepage: string;
-  license: string;
-  version: string;
-  shasum: string;
-  foxe: string;
-  keywords: string[];
-  time: Record<string, string>;
-};
-
-const ListItem = styled.div``;
 
 const ListItemStyles = mergeStyles({
   marginLeft: "-16px",
@@ -84,18 +71,15 @@ export default function Extensions(): React.ReactElement {
   const theme = useTheme();
 
   const [shouldFetch, setShouldFetch] = useState<boolean>(true);
-  const [marketplaceEntries, setMarketplaceEntries] = useState<MarketplaceEntry[]>([]);
+  const [marketplaceEntries, setMarketplaceEntries] = useState<ExtensionEntry[]>([]);
+  const [focusedExtension, setFocusedExtension] = useState<ExtensionEntry | undefined>(undefined);
 
   const extensionLoader = useExtensionLoader();
 
-  const { value: installed, error: installedError } = useAsync(async () => {
-    const extensionList = await extensionLoader.getExtensions();
-    return extensionList.map((extension) => (
-      <Stack.Item key={extension.id}>
-        <div>{extension.name}</div>
-      </Stack.Item>
-    ));
-  }, [extensionLoader]);
+  const { value: installed, error: installedError } = useAsync(
+    async () => await extensionLoader.getExtensions(),
+    [extensionLoader],
+  );
 
   if (installedError) {
     throw installedError;
@@ -108,35 +92,50 @@ export default function Extensions(): React.ReactElement {
     setShouldFetch(false);
 
     const data = await fetch(MARKETPLACE_URL);
-    const entries = (await data.json()) as MarketplaceEntry[];
+    const entries = (await data.json()) as ExtensionEntry[];
     setMarketplaceEntries(entries);
   }, [shouldFetch]);
 
-  if (availableError) {
-    const errorMsg =
-      "Failed to fetch the list of available extensions. Check your Internet connection and try again.";
+  const marketplaceMap = useMemo(
+    () => new Map<string, ExtensionEntry>(marketplaceEntries.map((entry) => [entry.id, entry])),
+    [marketplaceEntries],
+  );
+
+  const installedEntries = useMemo<ExtensionEntry[]>(
+    () =>
+      (installed ?? []).map((entry) => {
+        const marketplaceEntry = marketplaceMap.get(entry.id);
+        if (marketplaceEntry != undefined) {
+          marketplaceEntry.installed = true;
+          return marketplaceEntry;
+        }
+
+        return {
+          id: entry.id,
+          installed: true,
+          name: entry.name,
+          description: entry.description,
+          publisher: entry.publisher,
+          homepage: entry.homepage,
+          license: entry.license,
+          version: entry.version,
+          keywords: entry.keywords,
+        };
+      }),
+    [installed, marketplaceMap],
+  );
+
+  if (focusedExtension != undefined) {
     return (
-      <SidebarContent title="Extensions">
-        <MessageBar
-          messageBarType={MessageBarType.error}
-          isMultiline={true}
-          dismissButtonAriaLabel="Close"
-        >
-          {errorMsg}
-        </MessageBar>
-        <Button
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-          }}
-          onClick={() => setShouldFetch(true)}
-        >
-          Retry Fetching Extensions
-        </Button>
-      </SidebarContent>
+      <ExtensionDetails
+        extension={focusedExtension}
+        onClose={() => setFocusedExtension(undefined)}
+      />
     );
+  }
+
+  if (availableError) {
+    return FetchError(() => setShouldFetch(true));
   }
 
   return (
@@ -145,31 +144,69 @@ export default function Extensions(): React.ReactElement {
         <Stack.Item>
           <SectionHeader>Installed</SectionHeader>
           <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
-            {installed && installed.length > 0 ? installed : "No installed extensions"}
+            {installedEntries.length > 0
+              ? installedEntries.map((entry) => ExtensionListEntry(entry, setFocusedExtension))
+              : "No installed extensions"}
           </Stack>
         </Stack.Item>
         <Stack.Item>
           <SectionHeader>Available</SectionHeader>
           <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
-            {marketplaceEntries.map((entry) => (
-              <Stack.Item key={entry.id} className={ListItemStyles}>
-                <ListItem>
-                  <NameLine>
-                    <Name>{entry.name}</Name>
-                    <Version>{entry.version}</Version>
-                  </NameLine>
-                  <DescriptionLine>
-                    <Description>{entry.description}</Description>
-                  </DescriptionLine>
-                  <PublisherLine>
-                    <Publisher>{entry.publisher}</Publisher>
-                  </PublisherLine>
-                </ListItem>
-              </Stack.Item>
-            ))}
+            {marketplaceEntries.map((entry) => ExtensionListEntry(entry, setFocusedExtension))}
           </Stack>
         </Stack.Item>
       </Stack>
+    </SidebarContent>
+  );
+}
+
+function ExtensionListEntry(
+  entry: ExtensionEntry,
+  setFocusedExtension: (value: SetStateAction<ExtensionEntry | undefined>) => void,
+): React.ReactElement {
+  return (
+    <Stack.Item
+      key={entry.id}
+      className={ListItemStyles}
+      onClick={() => setFocusedExtension(entry)}
+    >
+      <NameLine>
+        <Name>{entry.name}</Name>
+        <Version>{entry.version}</Version>
+      </NameLine>
+      <DescriptionLine>
+        <Description>{entry.description}</Description>
+      </DescriptionLine>
+      <PublisherLine>
+        <Publisher>{entry.publisher}</Publisher>
+      </PublisherLine>
+    </Stack.Item>
+  );
+}
+
+function FetchError(onRetry: () => void): React.ReactElement {
+  const errorMsg =
+    "Failed to fetch the list of available extensions. Check your Internet connection and try again.";
+  return (
+    <SidebarContent title="Extensions">
+      <MessageBar
+        messageBarType={MessageBarType.error}
+        isMultiline={true}
+        dismissButtonAriaLabel="Close"
+      >
+        {errorMsg}
+      </MessageBar>
+      <Button
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+        }}
+        onClick={onRetry}
+      >
+        Retry Fetching Extensions
+      </Button>
     </SidebarContent>
   );
 }
