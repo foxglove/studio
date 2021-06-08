@@ -1,10 +1,12 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import { Stack, useTheme } from "@fluentui/react";
+import { mergeStyles, MessageBar, MessageBarType, Stack, useTheme } from "@fluentui/react";
+import { useState } from "react";
 import { useAsync } from "react-use";
 import styled from "styled-components";
 
+import Button from "@foxglove/studio-base/components/Button";
 import { SectionHeader } from "@foxglove/studio-base/components/Menu";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import { useExtensionLoader } from "@foxglove/studio-base/context/ExtensionLoaderContext";
@@ -26,9 +28,28 @@ type MarketplaceEntry = {
   time: Record<string, string>;
 };
 
+const ListItem = styled.div``;
+
+const ListItemStyles = mergeStyles({
+  marginLeft: "-16px",
+  marginRight: "-16px",
+  paddingLeft: "16px",
+  paddingRight: "16px",
+  selectors: {
+    ":hover": {
+      backgroundColor: "rgba(255, 255, 255, 0.05)",
+      cursor: "pointer",
+    },
+  },
+});
+
 const Name = styled.span`
   color: #8b888f;
   font-weight: bold;
+`;
+
+const NameLine = styled.div`
+  margin-top: 6px;
 `;
 
 const Version = styled.span`
@@ -56,11 +77,14 @@ const Publisher = styled.span`
 
 const PublisherLine = styled.div`
   margin-top: 4px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 `;
 
 export default function Extensions(): React.ReactElement {
   const theme = useTheme();
+
+  const [shouldFetch, setShouldFetch] = useState<boolean>(true);
+  const [marketplaceEntries, setMarketplaceEntries] = useState<MarketplaceEntry[]>([]);
 
   const extensionLoader = useExtensionLoader();
 
@@ -77,27 +101,42 @@ export default function Extensions(): React.ReactElement {
     throw installedError;
   }
 
-  const { value: available, error: availableError } = useAsync(async () => {
+  const { error: availableError } = useAsync(async () => {
+    if (!shouldFetch) {
+      return;
+    }
+    setShouldFetch(false);
+
     const data = await fetch(MARKETPLACE_URL);
     const entries = (await data.json()) as MarketplaceEntry[];
-    return entries.map((entry) => (
-      <Stack.Item key={entry.id}>
-        <div>
-          <Name>{entry.name}</Name>
-          <Version>{entry.version}</Version>
-        </div>
-        <DescriptionLine>
-          <Description>{entry.description}</Description>
-        </DescriptionLine>
-        <PublisherLine>
-          <Publisher>{entry.publisher}</Publisher>
-        </PublisherLine>
-      </Stack.Item>
-    ));
-  }, []);
+    setMarketplaceEntries(entries);
+  }, [shouldFetch]);
 
   if (availableError) {
-    throw availableError;
+    const errorMsg =
+      "Failed to fetch the list of available extensions. Check your Internet connection and try again.";
+    return (
+      <SidebarContent title="Extensions">
+        <MessageBar
+          messageBarType={MessageBarType.error}
+          isMultiline={true}
+          dismissButtonAriaLabel="Close"
+        >
+          {errorMsg}
+        </MessageBar>
+        <Button
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+          }}
+          onClick={() => setShouldFetch(true)}
+        >
+          Retry Fetching Extensions
+        </Button>
+      </SidebarContent>
+    );
   }
 
   return (
@@ -105,11 +144,30 @@ export default function Extensions(): React.ReactElement {
       <Stack tokens={{ childrenGap: 30 }}>
         <Stack.Item>
           <SectionHeader>Installed</SectionHeader>
-          <Stack tokens={{ childrenGap: theme.spacing.s1 }}>{installed}</Stack>
+          <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
+            {installed && installed.length > 0 ? installed : "No installed extensions"}
+          </Stack>
         </Stack.Item>
         <Stack.Item>
           <SectionHeader>Available</SectionHeader>
-          <Stack tokens={{ childrenGap: theme.spacing.s1 }}>{available}</Stack>
+          <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
+            {marketplaceEntries.map((entry) => (
+              <Stack.Item key={entry.id} className={ListItemStyles}>
+                <ListItem>
+                  <NameLine>
+                    <Name>{entry.name}</Name>
+                    <Version>{entry.version}</Version>
+                  </NameLine>
+                  <DescriptionLine>
+                    <Description>{entry.description}</Description>
+                  </DescriptionLine>
+                  <PublisherLine>
+                    <Publisher>{entry.publisher}</Publisher>
+                  </PublisherLine>
+                </ListItem>
+              </Stack.Item>
+            ))}
+          </Stack>
         </Stack.Item>
       </Stack>
     </SidebarContent>
