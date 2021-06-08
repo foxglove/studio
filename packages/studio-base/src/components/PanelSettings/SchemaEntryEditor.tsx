@@ -6,7 +6,7 @@ import { Dropdown, Label, SpinButton, Stack, TextField, Toggle } from "@fluentui
 // We need lodash.get for dynamic key path support
 // eslint-disable-next-line no-restricted-imports
 import { get, set, cloneDeep } from "lodash";
-import { SyntheticEvent, useCallback } from "react";
+import { useCallback } from "react";
 
 import Logger from "@foxglove/log";
 import ColorPicker from "@foxglove/studio-base/components/ColorPicker";
