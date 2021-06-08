@@ -198,7 +198,8 @@ export type Connection = {
 // means that you can describe a chain of data providers that includes a Worker or a WebSocket.
 export type DataProviderDescriptor = {
   name: string;
-  args: unknown;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  args: any;
   children: DataProviderDescriptor[];
 };
 
