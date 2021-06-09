@@ -9,7 +9,7 @@ import Logger from "@foxglove/log";
 
 import bagIcon from "../../resources/icon/BagIcon.png";
 import formatByteSize from "./formatByteSize";
-import { BagInfo } from "./getBagInfo";
+import { BagInfo, TopicInfo } from "./getBagInfo";
 
 const log = Logger.getLogger(__filename);
 
