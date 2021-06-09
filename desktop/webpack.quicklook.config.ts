@@ -15,6 +15,9 @@ import type { WebpackArgv } from "@foxglove/studio-base/WebpackArgv";
 export default (_env: unknown, argv: WebpackArgv): Configuration => {
   const isDev = argv.mode === "development";
   const isServe = argv.env?.WEBPACK_SERVE ?? false;
+
+  const allowUnusedVariables = isDev && isServe;
+
   return {
     name: "quicklook",
 
@@ -59,7 +62,16 @@ export default (_env: unknown, argv: WebpackArgv): Configuration => {
     },
 
     plugins: [
-      new ForkTsCheckerWebpackPlugin(),
+      new ForkTsCheckerWebpackPlugin({
+        typescript: {
+          configOverwrite: {
+            compilerOptions: {
+              noUnusedLocals: !allowUnusedVariables,
+              noUnusedParameters: !allowUnusedVariables,
+            },
+          },
+        },
+      }),
       new HtmlWebpackPlugin({
         templateContent: `
 <!doctype html>

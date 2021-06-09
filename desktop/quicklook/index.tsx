@@ -48,6 +48,10 @@ const GlobalStyle = createGlobalStyle`
     bottom: 0;
     left: 0;
   }
+
+  pre, code, tt {
+    font-family: ui-monospace, monospace;
+  }
 `;
 
 ReactDOM.render(

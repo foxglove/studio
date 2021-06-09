@@ -10846,6 +10846,7 @@ __metadata:
     "@foxglove/studio-base": "workspace:packages/studio-base"
     "@foxglove/studio-firebase": "workspace:packages/studio-firebase"
     "@types/plist": ^3
+    jest: 27.0.0-next.8
     plist: 3.0.2
     quicklookjs: 0.0.2
   languageName: unknown

@@ -2,15 +2,35 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useEffect, useState } from "react";
-import Bag from "rosbag";
+import { useAsync } from "react-use";
+import Bag, { Time, TimeUtil } from "rosbag";
 
 import Logger from "@foxglove/log";
 
+import formatByteSize from "./formatByteSize";
+
 const log = Logger.getLogger(__filename);
 
-type InfoEntry = { topic: string; datatype: string; numMessages: number };
-async function load(file: File): Promise<InfoEntry[]> {
+type TopicInfo = { topic: string; datatype: string; numMessages: number };
+
+type BagInfo = {
+  name: string;
+  size: number;
+  totalMessages: number;
+  startTime: Time | undefined;
+  endTime: Time | undefined;
+  topics: TopicInfo[];
+};
+
+function formatTimeRaw(stamp: Time): string {
+  if (stamp.sec < 0 || stamp.nsec < 0) {
+    log.error("Times are not allowed to be negative");
+    return "(invalid negative time)";
+  }
+  return `${stamp.sec}.${stamp.nsec.toFixed().padStart(9, "0")}`;
+}
+
+async function getBagInfo(file: File): Promise<BagInfo> {
   const bag = await Bag.open(file);
   //log("Chunk info:  ",JSON.stringify(bag.chunkInfos, undefined, 2));
   //log("Connections: ",JSON.stringify(bag.connections, undefined, 2));
@@ -27,83 +47,69 @@ async function load(file: File): Promise<InfoEntry[]> {
         topics:      /example_markers   10 msgs    : visualization_msgs/MarkerArray
         */
   const numMessagesByConnectionIndex = Array.from(bag.connections.values(), () => 0);
+  let totalMessages = 0;
   for (const chunk of bag.chunkInfos) {
     for (const { conn, count } of chunk.connections) {
       numMessagesByConnectionIndex[conn] += count;
+      totalMessages += count;
     }
   }
 
   const conns = [...bag.connections.values()].sort((a, b) => a.topic.localeCompare(b.topic));
-  const outputs: InfoEntry[] = [];
+  const topics: TopicInfo[] = [];
   for (const { topic, type: datatype, conn } of conns) {
-    outputs.push({
+    topics.push({
       topic,
       datatype: datatype ?? "(unknown)",
       numMessages: numMessagesByConnectionIndex[conn] ?? 0,
     });
   }
-  return outputs;
+  return {
+    name: file.name,
+    size: file.size,
+    totalMessages,
+    startTime: bag.startTime ?? undefined,
+    endTime: bag.endTime ?? undefined,
+    topics,
+  };
 }
-export default function Root(): JSX.Element {
-  const [file, setFile] = useState<File | undefined>(undefined);
-  const [infos, setInfos] = useState<InfoEntry[]>([]);
-  const [error, setError] = useState<string | undefined>();
 
-  useEffect(() => {
-    if (file) {
-      load(file)
-        .then((newInfos) => setInfos(newInfos))
-        .catch((err) => {
-          log.error("Error opening bag", err);
-          setError(`Error opening bag: ${err}`);
-        });
-    }
-  }, [file]);
-
-  useEffect(() => {
-    setError("starting");
-    quicklook
-      .getPreviewedFile()
-      .then((f) => {
-        setError(`Got response! ${f}`);
-        setFile(f);
-        quicklook.finishedLoading();
-      })
-      .catch((err) => {
-        log.error("Unable to get previewed file", err);
-        setError(`Unable to get previewed file: ${err}`);
-      });
-  }, []);
-
-  useEffect(() => {
-    const onDragOver = (event: DragEvent) => {
-      event.preventDefault();
-    };
-    const onDrop = (event: DragEvent) => {
-      event.preventDefault();
-      if (event.dataTransfer?.files[0]) {
-        setFile(event.dataTransfer.files[0]);
-      }
-    };
-    window.addEventListener("dragover", onDragOver);
-    window.addEventListener("drop", onDrop);
-    return () => {
-      window.removeEventListener("dragover", onDragOver);
-      window.removeEventListener("drop", onDrop);
-    };
-  }, []);
-
+function BagInfoDisplay({
+  info: { name, size, totalMessages, startTime, endTime, topics },
+}: {
+  info: BagInfo;
+}) {
   return (
     <div>
-      {error}
-      <input
-        type="file"
-        onChange={(event) => {
-          if (event.target.files?.[0]) {
-            setFile(event.target.files[0]);
-          }
-        }}
-      />
+      <div style={{ display: "flex" }}>
+        <div style={{ width: 128, height: 128 }}>Icon</div>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <div
+            style={{
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}
+          >
+            {name}
+          </div>
+          <div>
+            {totalMessages.toLocaleString()} {totalMessages === 1 ? "message" : "messages"},{" "}
+            {formatByteSize(size)}
+          </div>
+          {startTime && (
+            <div>
+              Start: {TimeUtil.toDate(startTime).toLocaleString()} ({formatTimeRaw(startTime)})
+            </div>
+          )}
+          {endTime && (
+            <div>
+              End: {TimeUtil.toDate(endTime).toLocaleString()} ({formatTimeRaw(endTime)})
+            </div>
+          )}
+        </div>
+      </div>
       <table>
         <tbody>
           <tr>
@@ -111,11 +117,13 @@ export default function Root(): JSX.Element {
             <th>Datatype</th>
             <th>Messages</th>
           </tr>
-          {infos.map(({ topic, datatype, numMessages }, i) => (
+          {topics.map(({ topic, datatype, numMessages }, i) => (
             <tr key={i}>
-              <td>{topic}</td>
+              <td>
+                <code>{topic}</code>
+              </td>
               <td>{datatype}</td>
-              <td>{numMessages}</td>
+              <td align="right">{numMessages.toLocaleString()}</td>
             </tr>
           ))}
         </tbody>
@@ -124,8 +132,20 @@ export default function Root(): JSX.Element {
   );
 }
 
-// webkit.messageHandlers.quicklook
-//   .postMessage({ action: "click", x: window.innerWidth / 2, y: window.innerHeight / 2 })
-//   .catch((err) => {
-//     log.error("Couldn't click", err);
-//   });
+export default function Root(): JSX.Element {
+  const state = useAsync(async () => {
+    try {
+      return getBagInfo(await quicklook.getPreviewedFile());
+    } finally {
+      await quicklook.finishedLoading();
+    }
+  }, []);
+
+  return (
+    <div>
+      {state.error}
+      {state.loading && "Loading…"}
+      {state.value && <BagInfoDisplay info={state.value} />}
+    </div>
+  );
+}
