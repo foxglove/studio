@@ -5710,7 +5710,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/plist@npm:^3.0.1":
+"@types/plist@npm:^3, @types/plist@npm:^3.0.1":
   version: 3.0.2
   resolution: "@types/plist@npm:3.0.2"
   dependencies:
@@ -10845,6 +10845,8 @@ __metadata:
   dependencies:
     "@foxglove/studio-base": "workspace:packages/studio-base"
     "@foxglove/studio-firebase": "workspace:packages/studio-firebase"
+    "@types/plist": ^3
+    plist: 3.0.2
     quicklookjs: 0.0.2
   languageName: unknown
   linkType: soft
@@ -20184,7 +20186,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"plist@npm:^3.0.1":
+"plist@npm:3.0.2, plist@npm:^3.0.1":
   version: 3.0.2
   resolution: "plist@npm:3.0.2"
   dependencies:
