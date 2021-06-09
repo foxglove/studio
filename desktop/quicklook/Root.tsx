@@ -4,6 +4,7 @@
 
 import { useAsync } from "react-use";
 import Bag, { Time, TimeUtil } from "rosbag";
+import styled from "styled-components";
 
 import Logger from "@foxglove/log";
 
@@ -74,6 +75,40 @@ async function getBagInfo(file: File): Promise<BagInfo> {
   };
 }
 
+const SummaryRow = styled.div`
+  margin: 2px 0;
+  font-size: 14px;
+  opacity: 0.75;
+`;
+
+const FileName = styled(SummaryRow)`
+  opacity: 1;
+  font-size: 18px;
+  font-weight: bold;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-all;
+  overflow: hidden;
+`;
+
+const TimeLabel = styled.span`
+  display: inline-block;
+  width: 40px;
+`;
+
+function TopicRow({ info: { topic, datatype, numMessages } }: { info: TopicInfo }) {
+  return (
+    <tr>
+      <td>
+        <code>{topic}</code>
+      </td>
+      <td>{datatype}</td>
+      <td align="right">{numMessages.toLocaleString()}</td>
+    </tr>
+  );
+}
+
 function BagInfoDisplay({
   info: { name, size, totalMessages, startTime, endTime, topics },
 }: {
@@ -81,32 +116,25 @@ function BagInfoDisplay({
 }) {
   return (
     <div>
-      <div style={{ display: "flex" }}>
+      <div style={{ display: "flex", flexFlow: "row wrap" }}>
         <div style={{ width: 128, height: 128 }}>Icon</div>
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <div
-            style={{
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-            }}
-          >
-            {name}
-          </div>
-          <div>
+        <div style={{ display: "flex", flexDirection: "column", minWidth: 300, flex: "1 1 0" }}>
+          <FileName>{name}</FileName>
+          <SummaryRow>
             {totalMessages.toLocaleString()} {totalMessages === 1 ? "message" : "messages"},{" "}
             {formatByteSize(size)}
-          </div>
+          </SummaryRow>
           {startTime && (
-            <div>
-              Start: {TimeUtil.toDate(startTime).toLocaleString()} ({formatTimeRaw(startTime)})
-            </div>
+            <SummaryRow style={{ fontVariantNumeric: "tabular-nums" }}>
+              <TimeLabel>Start:</TimeLabel>
+              {TimeUtil.toDate(startTime).toLocaleString()} ({formatTimeRaw(startTime)})
+            </SummaryRow>
           )}
           {endTime && (
-            <div>
-              End: {TimeUtil.toDate(endTime).toLocaleString()} ({formatTimeRaw(endTime)})
-            </div>
+            <SummaryRow style={{ fontVariantNumeric: "tabular-nums" }}>
+              <TimeLabel>End:</TimeLabel>
+              {TimeUtil.toDate(endTime).toLocaleString()} ({formatTimeRaw(endTime)})
+            </SummaryRow>
           )}
         </div>
       </div>
@@ -117,14 +145,8 @@ function BagInfoDisplay({
             <th>Datatype</th>
             <th>Messages</th>
           </tr>
-          {topics.map(({ topic, datatype, numMessages }, i) => (
-            <tr key={i}>
-              <td>
-                <code>{topic}</code>
-              </td>
-              <td>{datatype}</td>
-              <td align="right">{numMessages.toLocaleString()}</td>
-            </tr>
+          {topics.map((topicInfo, i) => (
+            <TopicRow key={i} info={topicInfo} />
           ))}
         </tbody>
       </table>
