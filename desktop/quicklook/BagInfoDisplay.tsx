@@ -2,35 +2,20 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useAsync } from "react-use";
-import Bag, { Time, TimeUtil } from "rosbag";
+import { Time, TimeUtil } from "rosbag";
 import styled from "styled-components";
 
 import Logger from "@foxglove/log";
 
 import bagIcon from "../../resources/icon/BagIcon.png";
 import formatByteSize from "./formatByteSize";
+import { BagInfo } from "./getBagInfo";
 
 const log = Logger.getLogger(__filename);
-
-type TopicInfo = {
-  topic: string;
-  datatype: string;
-  numMessages: number;
-  numConnections: number;
-};
 
 type FileInfo = {
   name: string;
   size: number;
-};
-
-type BagInfo = {
-  numChunks: number;
-  totalMessages: number;
-  startTime: Time | undefined;
-  endTime: Time | undefined;
-  topics: TopicInfo[];
 };
 
 function formatTimeRaw(stamp: Time): string {
@@ -39,45 +24,6 @@ function formatTimeRaw(stamp: Time): string {
     return "(invalid negative time)";
   }
   return `${stamp.sec}.${stamp.nsec.toFixed().padStart(9, "0")}`;
-}
-
-async function getBagInfo(file: File): Promise<BagInfo> {
-  const bag = await Bag.open(file);
-  const numMessagesByConnectionIndex = Array.from(bag.connections.values(), () => 0);
-  let totalMessages = 0;
-  for (const chunk of bag.chunkInfos) {
-    for (const { conn, count } of chunk.connections) {
-      numMessagesByConnectionIndex[conn] += count;
-      totalMessages += count;
-    }
-  }
-
-  const topicInfosByTopic = new Map<string, TopicInfo>();
-  for (const { topic, type: datatype, conn } of bag.connections.values()) {
-    const info = topicInfosByTopic.get(topic);
-    if (info != undefined) {
-      if (info.datatype !== datatype) {
-        info.datatype = "(multiple)";
-      }
-      info.numMessages += numMessagesByConnectionIndex[conn] ?? 0;
-      info.numConnections++;
-    } else {
-      topicInfosByTopic.set(topic, {
-        topic,
-        datatype: datatype ?? "(unknown)",
-        numMessages: numMessagesByConnectionIndex[conn] ?? 0,
-        numConnections: 1,
-      });
-    }
-  }
-  const topics = [...topicInfosByTopic.values()].sort((a, b) => a.topic.localeCompare(b.topic));
-  return {
-    totalMessages,
-    numChunks: bag.chunkInfos.length,
-    startTime: bag.startTime ?? undefined,
-    endTime: bag.endTime ?? undefined,
-    topics,
-  };
 }
 
 const SummaryRow = styled.div`
@@ -103,6 +49,9 @@ const TimeLabel = styled.span`
 `;
 
 const TopicList = styled.table`
+  width: 100%;
+  max-width: 100%;
+  word-break: break-word;
   border-spacing: 0 4px;
 `;
 
@@ -175,7 +124,7 @@ function TopicRow({ info: { topic, datatype, numMessages, numConnections } }: { 
   );
 }
 
-function BagInfoDisplay({
+export default function BagInfoDisplay({
   fileInfo,
   bagInfo,
   error,
@@ -183,7 +132,7 @@ function BagInfoDisplay({
   fileInfo: FileInfo;
   bagInfo?: BagInfo;
   error?: Error;
-}) {
+}): JSX.Element {
   return (
     <div style={{ width: "100%" }}>
       <div
@@ -231,28 +180,6 @@ function BagInfoDisplay({
           <TopicRow key={i} info={topicInfo} />
         ))}
       </TopicList>
-    </div>
-  );
-}
-
-export default function Root(): JSX.Element {
-  const state = useAsync(async () => {
-    try {
-      const file = await quicklook.getPreviewedFile();
-      const fileInfo = { name: file.name, size: file.size };
-      const { bagInfo, error } = await getBagInfo(file)
-        .then((info) => ({ bagInfo: info, error: undefined }))
-        .catch((err) => ({ bagInfo: undefined, error: err }));
-      return { fileInfo, bagInfo, error };
-    } finally {
-      await quicklook.finishedLoading();
-    }
-  }, []);
-
-  return (
-    <div>
-      {state.loading && "Loading…"}
-      {state.value && <BagInfoDisplay {...state.value} />}
     </div>
   );
 }

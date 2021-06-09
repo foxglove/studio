@@ -5,11 +5,13 @@
 /// <reference types="quicklookjs" />
 
 import ReactDOM from "react-dom";
+import { useAsync } from "react-use";
 import { createGlobalStyle } from "styled-components";
 
 import Logger from "@foxglove/log";
 
-import Root from "./Root";
+import BagInfoDisplay from "./BagInfoDisplay";
+import getBagInfo from "./getBagInfo";
 
 const log = Logger.getLogger(__filename);
 
@@ -35,26 +37,32 @@ const GlobalStyle = createGlobalStyle`
     padding: 10px;
     font-family: ui-sans-serif, -apple-system;
   }
-  table {
-    width: 100%;
-    max-width: 100%;
-    word-break: break-word;
-  }
-  #file-input-trigger {
-    position: absolute;
-    display: block;
-    margin: 0;
-    padding: 0;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-  }
-
   pre, code, tt {
     font-family: ui-monospace, monospace;
   }
 `;
+
+function Root(): JSX.Element {
+  const state = useAsync(async () => {
+    try {
+      const file = await quicklook.getPreviewedFile();
+      const fileInfo = { name: file.name, size: file.size };
+      const { bagInfo, error } = await getBagInfo(file)
+        .then((info) => ({ bagInfo: info, error: undefined }))
+        .catch((err) => ({ bagInfo: undefined, error: err }));
+      return { fileInfo, bagInfo, error };
+    } finally {
+      await quicklook.finishedLoading();
+    }
+  }, []);
+
+  return (
+    <div>
+      {state.loading && "Loading…"}
+      {state.value && <BagInfoDisplay {...state.value} />}
+    </div>
+  );
+}
 
 ReactDOM.render(
   <>

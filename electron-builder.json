@@ -122,13 +122,6 @@
       "UTImportedTypeDeclarations": [
         {
           "UTTypeConformsTo": ["public.data"],
-          "UTTypeDescription": "quicklookjs test file",
-          "UTTypeIcons": { "UTTypeIconText": "qljs" },
-          "UTTypeIdentifier": "net.bandes-storch.quicklookjs-example",
-          "UTTypeTagSpecification": { "public.filename-extension": "quicklookjs" }
-        },
-        {
-          "UTTypeConformsTo": ["public.data"],
           "UTTypeDescription": "ROS Bag File",
           "UTTypeIcons": { "UTTypeIconText": "bag" },
           "UTTypeIdentifier": "org.ros.bag",
