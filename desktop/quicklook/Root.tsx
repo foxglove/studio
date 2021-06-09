@@ -13,11 +13,20 @@ import formatByteSize from "./formatByteSize";
 
 const log = Logger.getLogger(__filename);
 
-type TopicInfo = { topic: string; datatype: string; numMessages: number };
+type TopicInfo = {
+  topic: string;
+  datatype: string;
+  numMessages: number;
+  numConnections: number;
+};
 
-type BagInfo = {
+type FileInfo = {
   name: string;
   size: number;
+};
+
+type BagInfo = {
+  numChunks: number;
   totalMessages: number;
   startTime: Time | undefined;
   endTime: Time | undefined;
@@ -34,20 +43,6 @@ function formatTimeRaw(stamp: Time): string {
 
 async function getBagInfo(file: File): Promise<BagInfo> {
   const bag = await Bag.open(file);
-  //log("Chunk info:  ",JSON.stringify(bag.chunkInfos, undefined, 2));
-  //log("Connections: ",JSON.stringify(bag.connections, undefined, 2));
-  /*
-        path:        /home/ubuntu/testbags/markers.bag
-        version:     2.0
-        duration:    3.0s
-        start:       May 03 2021 18:57:58.49 (1620068278.49)
-        end:         May 03 2021 18:58:01.50 (1620068281.50)
-        size:        15.1 KB
-        messages:    10
-        compression: none [1/1 chunks]
-        types:       visualization_msgs/MarkerArray [d155b9ce5188fbaf89745847fd5882d7]
-        topics:      /example_markers   10 msgs    : visualization_msgs/MarkerArray
-        */
   const numMessagesByConnectionIndex = Array.from(bag.connections.values(), () => 0);
   let totalMessages = 0;
   for (const chunk of bag.chunkInfos) {
@@ -57,19 +52,28 @@ async function getBagInfo(file: File): Promise<BagInfo> {
     }
   }
 
-  const conns = [...bag.connections.values()].sort((a, b) => a.topic.localeCompare(b.topic));
-  const topics: TopicInfo[] = [];
-  for (const { topic, type: datatype, conn } of conns) {
-    topics.push({
-      topic,
-      datatype: datatype ?? "(unknown)",
-      numMessages: numMessagesByConnectionIndex[conn] ?? 0,
-    });
+  const topicInfosByTopic = new Map<string, TopicInfo>();
+  for (const { topic, type: datatype, conn } of bag.connections.values()) {
+    const info = topicInfosByTopic.get(topic);
+    if (info != undefined) {
+      if (info.datatype !== datatype) {
+        info.datatype = "(multiple)";
+      }
+      info.numMessages += numMessagesByConnectionIndex[conn] ?? 0;
+      info.numConnections++;
+    } else {
+      topicInfosByTopic.set(topic, {
+        topic,
+        datatype: datatype ?? "(unknown)",
+        numMessages: numMessagesByConnectionIndex[conn] ?? 0,
+        numConnections: 1,
+      });
+    }
   }
+  const topics = [...topicInfosByTopic.values()].sort((a, b) => a.topic.localeCompare(b.topic));
   return {
-    name: file.name,
-    size: file.size,
     totalMessages,
+    numChunks: bag.chunkInfos.length,
     startTime: bag.startTime ?? undefined,
     endTime: bag.endTime ?? undefined,
     topics,
@@ -98,30 +102,87 @@ const TimeLabel = styled.span`
   width: 40px;
 `;
 
+const TopicList = styled.table`
+  border-spacing: 0 4px;
+`;
+
+const TopicRowWrapper = styled.tr`
+  max-width: 100%;
+  display: table-row;
+  word-break: break-word;
+  &:nth-child(2n) {
+    > :first-child {
+      background: rgba(0, 0, 0, 5%);
+      border-radius: 4px 0 0 4px;
+    }
+    > :last-child {
+      background: rgba(0, 0, 0, 5%);
+      border-radius: 0 4px 4px 0;
+    }
+  }
+  border-collapse: separate;
+`;
+
 const MessageCount = styled.td`
+  width: 1px; /* 0 doesn't work for some reason? */
+  padding: 2px 0;
   text-align: right;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
-  padding-right: 12px;
+  padding: 0 10px 0 4px;
+  color: #888;
+  vertical-align: baseline;
+`;
+
+const TopicNameAndDatatype = styled.td`
+  width: 100%;
+  padding: 2px 0;
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 10px;
+`;
+
+const TopicName = styled.code`
+  margin-right: 10px;
+`;
+
+const Datatype = styled.div`
+  font-size: 12px;
   opacity: 0.5;
 `;
 
-function TopicRow({ info: { topic, datatype, numMessages } }: { info: TopicInfo }) {
+const ErrorInfo = styled.div`
+  padding: 12px;
+  background: #ffeaea;
+  border: 1px dashed #cc5f5f;
+  border-radius: 4px;
+`;
+
+function TopicRow({ info: { topic, datatype, numMessages, numConnections } }: { info: TopicInfo }) {
   return (
-    <tr>
+    <TopicRowWrapper>
       <MessageCount>{numMessages.toLocaleString()}</MessageCount>
-      <td style={{ width: 250, paddingRight: 10 }}>
-        <code>{topic}</code>
-      </td>
-      <td style={{ fontSize: 12, opacity: 0.5 }}>{datatype}</td>
-    </tr>
+      <TopicNameAndDatatype>
+        <TopicName>{topic}</TopicName>
+        <Datatype>
+          {datatype}
+          {numConnections > 1 && ` (${numConnections})`}
+        </Datatype>
+      </TopicNameAndDatatype>
+    </TopicRowWrapper>
   );
 }
 
 function BagInfoDisplay({
-  info: { name, size, totalMessages, startTime, endTime, topics },
+  fileInfo,
+  bagInfo,
+  error,
 }: {
-  info: BagInfo;
+  fileInfo: FileInfo;
+  bagInfo?: BagInfo;
+  error?: Error;
 }) {
   return (
     <div style={{ width: "100%" }}>
@@ -136,32 +197,40 @@ function BagInfoDisplay({
       >
         <img src={bagIcon} style={{ width: 128 }} />
         <div style={{ display: "flex", flexDirection: "column", minWidth: 300, flex: "1 1 0" }}>
-          <FileName>{name}</FileName>
+          <FileName>{fileInfo.name}</FileName>
           <SummaryRow>
-            {totalMessages.toLocaleString()} {totalMessages === 1 ? "message" : "messages"},{" "}
-            {formatByteSize(size)}
+            {bagInfo && (
+              <>
+                {bagInfo.topics.length.toLocaleString()}{" "}
+                {bagInfo.topics.length === 1 ? "topic" : "topics"},{" "}
+                {bagInfo.numChunks.toLocaleString()} {bagInfo.numChunks === 1 ? "chunk" : "chunks"},{" "}
+                {bagInfo.totalMessages.toLocaleString()}{" "}
+                {bagInfo.totalMessages === 1 ? "message" : "messages"},{" "}
+              </>
+            )}
+            {formatByteSize(fileInfo.size)}
           </SummaryRow>
-          {startTime && (
+          {bagInfo?.startTime && (
             <SummaryRow style={{ fontVariantNumeric: "tabular-nums" }}>
               <TimeLabel>Start:</TimeLabel>
-              {TimeUtil.toDate(startTime).toLocaleString()} ({formatTimeRaw(startTime)})
+              {TimeUtil.toDate(bagInfo.startTime).toLocaleString()} (
+              {formatTimeRaw(bagInfo.startTime)})
             </SummaryRow>
           )}
-          {endTime && (
+          {bagInfo?.endTime && (
             <SummaryRow style={{ fontVariantNumeric: "tabular-nums" }}>
               <TimeLabel>End:</TimeLabel>
-              {TimeUtil.toDate(endTime).toLocaleString()} ({formatTimeRaw(endTime)})
+              {TimeUtil.toDate(bagInfo.endTime).toLocaleString()} ({formatTimeRaw(bagInfo.endTime)})
             </SummaryRow>
           )}
         </div>
       </div>
-      <table>
-        <tbody>
-          {topics.map((topicInfo, i) => (
-            <TopicRow key={i} info={topicInfo} />
-          ))}
-        </tbody>
-      </table>
+      {error && <ErrorInfo>{error.toString()}</ErrorInfo>}
+      <TopicList>
+        {bagInfo?.topics.map((topicInfo, i) => (
+          <TopicRow key={i} info={topicInfo} />
+        ))}
+      </TopicList>
     </div>
   );
 }
@@ -169,7 +238,12 @@ function BagInfoDisplay({
 export default function Root(): JSX.Element {
   const state = useAsync(async () => {
     try {
-      return getBagInfo(await quicklook.getPreviewedFile());
+      const file = await quicklook.getPreviewedFile();
+      const fileInfo = { name: file.name, size: file.size };
+      const { bagInfo, error } = await getBagInfo(file)
+        .then((info) => ({ bagInfo: info, error: undefined }))
+        .catch((err) => ({ bagInfo: undefined, error: err }));
+      return { fileInfo, bagInfo, error };
     } finally {
       await quicklook.finishedLoading();
     }
@@ -177,9 +251,8 @@ export default function Root(): JSX.Element {
 
   return (
     <div>
-      {state.error}
       {state.loading && "Loading…"}
-      {state.value && <BagInfoDisplay info={state.value} />}
+      {state.value && <BagInfoDisplay {...state.value} />}
     </div>
   );
 }
