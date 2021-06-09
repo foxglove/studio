@@ -33,6 +33,7 @@ export default (_env: unknown, argv: WebpackArgv): Configuration => {
 
     module: {
       rules: [
+        { test: /\.png$/, type: "asset/inline" },
         {
           test: /\.tsx?$/,
           exclude: /node_modules/,

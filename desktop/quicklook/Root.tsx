@@ -8,6 +8,7 @@ import styled from "styled-components";
 
 import Logger from "@foxglove/log";
 
+import bagIcon from "../../resources/icon/BagIcon.png";
 import formatByteSize from "./formatByteSize";
 
 const log = Logger.getLogger(__filename);
@@ -97,14 +98,22 @@ const TimeLabel = styled.span`
   width: 40px;
 `;
 
+const MessageCount = styled.td`
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  padding-right: 12px;
+  opacity: 0.5;
+`;
+
 function TopicRow({ info: { topic, datatype, numMessages } }: { info: TopicInfo }) {
   return (
     <tr>
-      <td>
+      <MessageCount>{numMessages.toLocaleString()}</MessageCount>
+      <td style={{ width: 250, paddingRight: 10 }}>
         <code>{topic}</code>
       </td>
-      <td>{datatype}</td>
-      <td align="right">{numMessages.toLocaleString()}</td>
+      <td style={{ fontSize: 12, opacity: 0.5 }}>{datatype}</td>
     </tr>
   );
 }
@@ -115,9 +124,17 @@ function BagInfoDisplay({
   info: BagInfo;
 }) {
   return (
-    <div>
-      <div style={{ display: "flex", flexFlow: "row wrap" }}>
-        <div style={{ width: 128, height: 128 }}>Icon</div>
+    <div style={{ width: "100%" }}>
+      <div
+        style={{
+          display: "flex",
+          flexFlow: "row wrap",
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: 16,
+        }}
+      >
+        <img src={bagIcon} style={{ width: 128 }} />
         <div style={{ display: "flex", flexDirection: "column", minWidth: 300, flex: "1 1 0" }}>
           <FileName>{name}</FileName>
           <SummaryRow>
@@ -140,11 +157,6 @@ function BagInfoDisplay({
       </div>
       <table>
         <tbody>
-          <tr>
-            <th>Topic</th>
-            <th>Datatype</th>
-            <th>Messages</th>
-          </tr>
           {topics.map((topicInfo, i) => (
             <TopicRow key={i} info={topicInfo} />
           ))}
