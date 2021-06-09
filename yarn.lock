@@ -10845,6 +10845,7 @@ __metadata:
   dependencies:
     "@foxglove/studio-base": "workspace:packages/studio-base"
     "@foxglove/studio-firebase": "workspace:packages/studio-firebase"
+    quicklookjs: 0.0.2
   languageName: unknown
   linkType: soft
 
@@ -20994,6 +20995,13 @@ __metadata:
     gl-vec3: ^1.0.3
     point-line-distance: ^1.0.0
   checksum: 341d98ccb69b20268e632ae8c8d479b608200f2aeb5bc51116d1f62ae23c83307177ab10afde49fd31a2971d7c4213a97ec95eb073ac336fe0f0298f552fff1e
+  languageName: node
+  linkType: hard
+
+"quicklookjs@npm:0.0.2":
+  version: 0.0.2
+  resolution: "quicklookjs@npm:0.0.2"
+  checksum: 8dc3b44b73a729ed4bb9e39b186432a5cc33a1da0344ad205ba4ca6cbef058188af67cf184dc85848b43e12f945ee10a3dc1b21e60d067e1bd62d91fd744dd89
   languageName: node
   linkType: hard
 
