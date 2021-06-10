@@ -2552,16 +2552,16 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foxglove/eslint-plugin@npm:0.7.0":
-  version: 0.7.0
-  resolution: "@foxglove/eslint-plugin@npm:0.7.0"
+"@foxglove/eslint-plugin@npm:0.8.0":
+  version: 0.8.0
+  resolution: "@foxglove/eslint-plugin@npm:0.8.0"
   peerDependencies:
     eslint: ^7
     eslint-config-prettier: ^8
     eslint-plugin-import: ^2
     eslint-plugin-prettier: ^3
     prettier: ^2
-  checksum: 11a33a0908179d0dc80819c62551ae11663df4fa1c413dd67b80af6d9649c33334148f0d3bd49d28688c2805ffbc4e9b74c045e69f3a0dad773be7dc07707e29
+  checksum: 41d3f388cacd4e607c6694307b79f0c8c5100b5f8103e68f7bfa650b5c17a0982c36e6b6bdd1801c59f4935ef14eec17f62db559f3a4eac971060c88b7cebef3
   languageName: node
   linkType: hard
 
@@ -13382,7 +13382,7 @@ __metadata:
     "@babel/preset-env": 7.14.4
     "@babel/preset-typescript": 7.13.0
     "@foxglove/electron-socket": "workspace:packages/electron-socket"
-    "@foxglove/eslint-plugin": 0.7.0
+    "@foxglove/eslint-plugin": 0.8.0
     "@foxglove/tsconfig": "workspace:packages/tsconfig"
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.0-beta.8
     "@sentry/electron": 2.4.1
