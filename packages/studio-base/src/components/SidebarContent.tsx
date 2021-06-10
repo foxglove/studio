@@ -8,7 +8,7 @@ import HelpButton from "@foxglove/studio-base/components/PanelToolbar/HelpButton
 
 export function SidebarContent({
   noPadding = false,
-  padRight = false,
+  paddingLeft,
   title,
   children,
   helpContent,
@@ -16,7 +16,7 @@ export function SidebarContent({
   title: string;
   helpContent?: React.ReactNode;
   noPadding?: boolean;
-  padRight?: boolean;
+  paddingLeft?: string;
 }>): JSX.Element {
   const theme = useTheme();
   return (
@@ -35,7 +35,7 @@ export function SidebarContent({
         style={{
           padding: noPadding ? theme.spacing.m : undefined,
           paddingBottom: theme.spacing.m,
-          paddingRight: padRight ? theme.spacing.m : undefined,
+          paddingLeft,
         }}
       >
         <Text as="h2" variant="xLarge">
