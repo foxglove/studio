@@ -76,10 +76,10 @@ export function ExtensionDetails({ extension, onClose }: Props): React.ReactElem
   );
 
   return (
-    <SidebarContent title={extension.name} padRight>
+    <SidebarContent title={extension.name} paddingLeft="32px">
       <ActionButton
-        iconProps={{ iconName: "Cancel" }}
-        style={{ position: "absolute", top: 0, right: 0 }}
+        iconProps={{ iconName: "ChevronLeft" }}
+        style={{ position: "absolute", top: "5px", left: "8px" }}
         onClick={onClose}
       ></ActionButton>
       <ExtensionId href={extension.homepage} target="_blank">

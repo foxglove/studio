@@ -15,6 +15,7 @@ declare global {
     | "CheckMark"
     | "ChevronDown"
     | "ChevronDownSmall"
+    | "ChevronLeft"
     | "ChevronRight"
     | "ChevronUpSmall"
     | "CirclePlus"
