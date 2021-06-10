@@ -17,6 +17,7 @@ import { useMountedState } from "react-use";
 import styled from "styled-components";
 
 import Log from "@foxglove/log";
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import AccountSettings from "@foxglove/studio-base/components/AccountSettings";
 import ConnectionList from "@foxglove/studio-base/components/ConnectionList";
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
@@ -49,6 +50,7 @@ import LinkHandlerContext from "@foxglove/studio-base/context/LinkHandlerContext
 import { PanelSettingsContext } from "@foxglove/studio-base/context/PanelSettingsContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import useAddPanel from "@foxglove/studio-base/hooks/useAddPanel";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFilesToOpen";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
@@ -364,6 +366,17 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     [selectedSidebarItem],
   );
 
+  const [showMarketplace = false] = useAppConfigurationValue<boolean>(
+    AppSetting.EXTENSION_MARKETPLACE,
+  );
+  const sidebarItems = useMemo(() => {
+    const filteredSidebarItems = new Map(SIDEBAR_ITEMS);
+    if (!showMarketplace) {
+      filteredSidebarItems.delete("extensions");
+    }
+    return filteredSidebarItems;
+  }, [showMarketplace]);
+
   return (
     <MultiProvider
       providers={[
@@ -408,7 +421,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           </SToolbarItem>
         </Toolbar>
         <Sidebar
-          items={SIDEBAR_ITEMS}
+          items={sidebarItems}
           bottomItems={SIDEBAR_BOTTOM_ITEMS}
           selectedKey={selectedSidebarItem}
           onSelectKey={setSelectedSidebarItem}
