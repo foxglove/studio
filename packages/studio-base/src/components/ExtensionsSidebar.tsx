@@ -11,11 +11,12 @@ import Button from "@foxglove/studio-base/components/Button";
 import { SectionHeader } from "@foxglove/studio-base/components/Menu";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import { useExtensionLoader } from "@foxglove/studio-base/context/ExtensionLoaderContext";
+import {
+  ExtensionMarketplaceDetail,
+  useExtensionMarketplace,
+} from "@foxglove/studio-base/context/ExtensionMarketplaceContext";
 
-import { ExtensionDetails, ExtensionEntry } from "./ExtensionDetails";
-
-const MARKETPLACE_URL =
-  "https://raw.githubusercontent.com/foxglove/studio-extension-marketplace/main/extensions.json";
+import { ExtensionDetails } from "./ExtensionDetails";
 
 const ListItemStyles = mergeStyles({
   marginLeft: "-16px",
@@ -71,10 +72,12 @@ export default function ExtensionsSidebar(): React.ReactElement {
   const theme = useTheme();
 
   const [shouldFetch, setShouldFetch] = useState<boolean>(true);
-  const [marketplaceEntries, setMarketplaceEntries] = useState<ExtensionEntry[]>([]);
-  const [focusedExtension, setFocusedExtension] = useState<ExtensionEntry | undefined>(undefined);
+  const [marketplaceEntries, setMarketplaceEntries] = useState<ExtensionMarketplaceDetail[]>([]);
+  const [focusedExtension, setFocusedExtension] =
+    useState<ExtensionMarketplaceDetail | undefined>(undefined);
 
   const extensionLoader = useExtensionLoader();
+  const marketplace = useExtensionMarketplace();
 
   const { value: installed, error: installedError } = useAsync(
     async () => await extensionLoader.getExtensions(),
@@ -91,17 +94,19 @@ export default function ExtensionsSidebar(): React.ReactElement {
     }
     setShouldFetch(false);
 
-    const data = await fetch(MARKETPLACE_URL);
-    const entries = (await data.json()) as ExtensionEntry[];
+    const entries = await marketplace.getAvailableExtensions();
     setMarketplaceEntries(entries);
-  }, [shouldFetch]);
+  }, [marketplace, shouldFetch]);
 
   const marketplaceMap = useMemo(
-    () => new Map<string, ExtensionEntry>(marketplaceEntries.map((entry) => [entry.id, entry])),
+    () =>
+      new Map<string, ExtensionMarketplaceDetail>(
+        marketplaceEntries.map((entry) => [entry.id, entry]),
+      ),
     [marketplaceEntries],
   );
 
-  const installedEntries = useMemo<ExtensionEntry[]>(
+  const installedEntries = useMemo<ExtensionMarketplaceDetail[]>(
     () =>
       (installed ?? []).map((entry) => {
         const marketplaceEntry = marketplaceMap.get(entry.id);
@@ -161,8 +166,8 @@ export default function ExtensionsSidebar(): React.ReactElement {
 }
 
 function ExtensionListEntry(
-  entry: ExtensionEntry,
-  setFocusedExtension: (value: SetStateAction<ExtensionEntry | undefined>) => void,
+  entry: ExtensionMarketplaceDetail,
+  setFocusedExtension: (value: SetStateAction<ExtensionMarketplaceDetail | undefined>) => void,
 ): React.ReactElement {
   return (
     <Stack.Item

@@ -9,26 +9,13 @@ import styled from "styled-components";
 import Button from "@foxglove/studio-base/components/Button";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import TextContent from "@foxglove/studio-base/components/TextContent";
-
-export type ExtensionEntry = {
-  id: string;
-  installed?: boolean;
-  name: string;
-  description: string;
-  publisher: string;
-  homepage: string;
-  license: string;
-  version: string;
-  readme?: string;
-  changelog?: string;
-  shasum?: string;
-  foxe?: string;
-  keywords?: string[];
-  time?: Record<string, string>;
-};
+import {
+  ExtensionMarketplaceDetail,
+  useExtensionMarketplace,
+} from "@foxglove/studio-base/context/ExtensionMarketplaceContext";
 
 type Props = {
-  extension: ExtensionEntry;
+  extension: ExtensionMarketplaceDetail;
   onClose: () => void;
 };
 
@@ -63,16 +50,17 @@ const Description = styled.div`
 `;
 
 export function ExtensionDetails({ extension, onClose }: Props): React.ReactElement {
+  const marketplace = useExtensionMarketplace();
   const readmeUrl = extension.readme;
   const changelogUrl = extension.changelog;
 
   const { value: readmeContent } = useAsync(
-    async () => (readmeUrl != undefined ? await (await fetch(readmeUrl)).text() : ""),
-    [readmeUrl],
+    async () => (readmeUrl != undefined ? await marketplace.getMarkdown(readmeUrl) : ""),
+    [marketplace, readmeUrl],
   );
   const { value: changelogContent } = useAsync(
-    async () => (changelogUrl != undefined ? await (await fetch(changelogUrl)).text() : ""),
-    [changelogUrl],
+    async () => (changelogUrl != undefined ? await marketplace.getMarkdown(changelogUrl) : ""),
+    [marketplace, changelogUrl],
   );
 
   return (
