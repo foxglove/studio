@@ -8,10 +8,13 @@ import JSZip from "jszip";
 import { dirname, join as pathJoin } from "path";
 
 import Logger from "@foxglove/log";
+import {
+  ExtensionPackageJson,
+  getPackageDirname,
+  getPackageId,
+} from "@foxglove/studio-base/src/util/extensions";
 
 import { DesktopExtension } from "../common/types";
-
-type PackageJson = { name: string; version: string; publisher?: string };
 
 const log = Logger.getLogger(__filename);
 
@@ -55,77 +58,61 @@ export async function installExtension(
   const archive = await JSZip.loadAsync(foxeFileData);
 
   // Check for a package.json file
-  const packageJsonZipObj = archive.files["package.json"];
-  if (packageJsonZipObj == undefined) {
+  const pkgJsonZipObj = archive.files["package.json"];
+  if (pkgJsonZipObj == undefined) {
     throw new Error(`Extension does not contain a package.json file`);
   }
 
   // Unpack and parse the package.json file
-  let packageJson: Record<string, unknown>;
+  let pkgJson: ExtensionPackageJson;
   try {
-    packageJson = JSON.parse(await packageJsonZipObj.async("string"));
+    pkgJson = JSON.parse(await pkgJsonZipObj.async("string"));
   } catch (err) {
     log.error(err);
     throw new Error(`Extension contains an invalid package.json`);
   }
 
-  // Check for basic validity of package.json
-  const packageId = packageJson.name;
-  if (typeof packageId !== "string") {
-    throw new Error(`package.json is missing required "name" field`);
-  }
-  if (typeof packageJson.version !== "string") {
-    throw new Error(`package.json is missing required "version" field`);
-  }
+  // Check for basic validity of package.json and get the packageId
+  const packageId = getPackageId(pkgJson);
 
   // Build the extension folder name based on package.json fields
-  const dir = getPackageDirname(packageJson as PackageJson);
-  if (dir.length >= 255) {
-    throw new Error(`Extension publisher+name+version is too long`);
-  }
+  const dir = getPackageDirname(pkgJson);
 
-  // Create the extension folder
+  // Delete any previous installation and create the extension folder
   const extensionBaseDir = pathJoin(rootFolder, dir);
+  await rm(extensionBaseDir, { recursive: true, force: true });
   await mkdir(extensionBaseDir, { recursive: true });
 
   // Unpack all files into the extension folder
   for (const [relPath, zipObj] of Object.entries(archive.files)) {
-    const fileData = await zipObj.async("uint8array");
     const filePath = pathJoin(extensionBaseDir, relPath);
-    await mkdir(dirname(filePath), { recursive: true });
-    await writeFile(filePath, fileData);
+    if (zipObj.dir) {
+      await mkdir(dirname(filePath), { recursive: true });
+    } else {
+      const fileData = await zipObj.async("uint8array");
+      await mkdir(dirname(filePath), { recursive: true });
+      await writeFile(filePath, fileData);
+    }
   }
 
   return packageId;
 }
 
 export async function uninstallExtension(id: string, rootFolder: string): Promise<boolean> {
+  log.debug(`Searching for extension ${id} in ${rootFolder} to uninstall`);
+
   // Find this extension
   const userExtensions = await loadExtensions(rootFolder);
-  const extension = userExtensions.find((ext) => (ext.packageJson as { name: string }).name === id);
+  const extension = userExtensions.find(
+    (ext) => getPackageId(ext.packageJson as ExtensionPackageJson) === id,
+  );
   if (extension == undefined) {
+    log.error(`Extension ${id} was not found, searched ${userExtensions.length} extensions`);
     return false;
   }
 
   // Delete the extension directory and contents
+  log.info(`Deleting extension directory ${extension.directory}`);
   await rm(extension.directory, { recursive: true, force: true });
   return true;
-}
-
-function getPackageDirname(pkgJson: PackageJson): string {
-  const pkgName = parsePackageName(pkgJson.name);
-  const publisher = pkgJson.publisher ?? pkgName.namespace;
-  if (publisher == undefined || publisher.length === 0) {
-    throw new Error(`package.json is missing required "publisher" field`);
-  }
-
-  return `${publisher}.${pkgName.name}-${pkgJson.version}`;
-}
-
-function parsePackageName(name: string): { namespace?: string; name: string } {
-  const res = /^@([^/]+)\/(.+)/.exec(name);
-  if (res == undefined) {
-    return { name };
-  }
-  return { namespace: res[1], name: res[2] as string };
 }

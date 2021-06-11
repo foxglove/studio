@@ -33,3 +33,4 @@ export { default as ExtensionLoaderContext } from "./context/ExtensionLoaderCont
 export type { ExtensionLoader, ExtensionDetail } from "./context/ExtensionLoaderContext";
 export { default as AuthContext, useAuth } from "./context/AuthContext";
 export type { Auth, CurrentUser } from "./context/AuthContext";
+export * from "./util/extensions";

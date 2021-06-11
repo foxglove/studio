@@ -6,7 +6,12 @@ import { PropsWithChildren } from "react";
 import { useAsync } from "react-use";
 
 import Logger from "@foxglove/log";
-import { ExtensionLoaderContext, ExtensionLoader, ExtensionDetail } from "@foxglove/studio-base";
+import {
+  getPackageId,
+  ExtensionLoaderContext,
+  ExtensionLoader,
+  ExtensionDetail,
+} from "@foxglove/studio-base";
 
 import { Desktop } from "../../common/types";
 
@@ -31,9 +36,8 @@ export default function ExtensionLoaderProvider(props: PropsWithChildren<unknown
 
     const extensions = extensionList.map<ExtensionDetail>((item) => {
       const pkgInfo = item.packageJson as PackageInfo;
-
       return {
-        id: pkgInfo.name,
+        id: getPackageId(pkgInfo),
         name: pkgInfo.displayName,
         description: pkgInfo.description,
         publisher: pkgInfo.publisher,
@@ -61,9 +65,12 @@ export default function ExtensionLoaderProvider(props: PropsWithChildren<unknown
             `Installed extension ${id} from ${foxeFileData.byteLength} byte file but it was not found after installation`,
           );
         }
+
+        // FIXME: Refresh the list of installed extensions
+
         const newPkgInfo = entry.packageJson as PackageInfo;
         return {
-          id: newPkgInfo.name,
+          id: getPackageId(newPkgInfo),
           name: newPkgInfo.displayName,
           description: newPkgInfo.description,
           publisher: newPkgInfo.publisher,
@@ -75,9 +82,14 @@ export default function ExtensionLoaderProvider(props: PropsWithChildren<unknown
         };
       },
       async uninstallExtension(id: string): Promise<boolean> {
-        return desktopBridge?.uninstallExtension(id) ?? false;
+        const uninstalled = (await desktopBridge?.uninstallExtension(id)) ?? false;
+
+        // FIXME: Refresh the list of installed extensions
+
+        return uninstalled;
       },
     };
+
     return loader;
   }, []);
 

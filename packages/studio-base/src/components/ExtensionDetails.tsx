@@ -9,6 +9,7 @@ import styled from "styled-components";
 import Button from "@foxglove/studio-base/components/Button";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import TextContent from "@foxglove/studio-base/components/TextContent";
+import { useExtensionLoader } from "@foxglove/studio-base/context/ExtensionLoaderContext";
 import {
   ExtensionMarketplaceDetail,
   useExtensionMarketplace,
@@ -24,6 +25,11 @@ const ExtensionId = styled.a`
   background-color: rgba(255, 255, 255, 0.2);
   padding: 3px;
   text-decoration: none;
+  white-space: nowrap;
+  display: inline-block;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  overflow: hidden;
 `;
 
 const Publisher = styled.div`
@@ -50,6 +56,7 @@ const Description = styled.div`
 `;
 
 export function ExtensionDetails({ extension, onClose }: Props): React.ReactElement {
+  const extensionLoader = useExtensionLoader();
   const marketplace = useExtensionMarketplace();
   const readmeUrl = extension.readme;
   const changelogUrl = extension.changelog;
@@ -77,7 +84,11 @@ export function ExtensionDetails({ extension, onClose }: Props): React.ReactElem
       <License>{extension.license}</License>
       <Publisher>{extension.publisher}</Publisher>
       <Description>{extension.description}</Description>
-      {extension.installed === true ? <UninstallButton /> : <InstallButton />}
+      {extension.installed === true ? (
+        <UninstallButton onClick={() => extensionLoader.uninstallExtension(extension.id)} />
+      ) : (
+        <InstallButton onClick={() => {}} />
+      )}
       <Pivot style={{ marginTop: "16px" }}>
         <PivotItem headerText="README">
           <TextContent>{readmeContent}</TextContent>
@@ -90,17 +101,17 @@ export function ExtensionDetails({ extension, onClose }: Props): React.ReactElem
   );
 }
 
-function UninstallButton(): React.ReactElement {
+function UninstallButton({ onClick }: { onClick: () => void }): React.ReactElement {
   return (
-    <Button style={{ minWidth: "100px" }} onClick={() => {}}>
+    <Button style={{ minWidth: "100px" }} onClick={onClick}>
       Uninstall
     </Button>
   );
 }
 
-function InstallButton(): React.ReactElement {
+function InstallButton({ onClick }: { onClick: () => void }): React.ReactElement {
   return (
-    <Button style={{ minWidth: "100px" }} onClick={() => {}}>
+    <Button style={{ minWidth: "100px" }} onClick={onClick}>
       Install
     </Button>
   );
