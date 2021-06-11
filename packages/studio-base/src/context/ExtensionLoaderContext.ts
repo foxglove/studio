@@ -18,6 +18,8 @@ export interface ExtensionDetail {
 
 export interface ExtensionLoader {
   getExtensions(): Promise<ExtensionDetail[]>;
+  installExtension(foxeFileData: Uint8Array): Promise<ExtensionDetail>;
+  uninstallExtension(id: string): Promise<boolean>;
 }
 
 const ExtensionLoaderContext = createContext<ExtensionLoader | undefined>(undefined);

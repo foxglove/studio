@@ -47,6 +47,36 @@ export default function ExtensionLoaderProvider(props: PropsWithChildren<unknown
 
     const loader: ExtensionLoader = {
       getExtensions: () => Promise.resolve(extensions),
+      async installExtension(foxeFileData: Uint8Array): Promise<ExtensionDetail> {
+        if (desktopBridge == undefined) {
+          throw new Error(`Cannot install extension without a desktopBridge`);
+        }
+        const id = await desktopBridge.installExtension(foxeFileData);
+        const updatedExtensionList = await desktopBridge.getExtensions();
+        const entry = updatedExtensionList.find(
+          (extension) => (extension.packageJson as PackageInfo).name === id,
+        );
+        if (entry == undefined) {
+          throw new Error(
+            `Installed extension ${id} from ${foxeFileData.byteLength} byte file but it was not found after installation`,
+          );
+        }
+        const newPkgInfo = entry.packageJson as PackageInfo;
+        return {
+          id: newPkgInfo.name,
+          name: newPkgInfo.displayName,
+          description: newPkgInfo.description,
+          publisher: newPkgInfo.publisher,
+          homepage: newPkgInfo.homepage,
+          license: newPkgInfo.license,
+          version: newPkgInfo.version,
+          keywords: newPkgInfo.keywords,
+          source: entry.source,
+        };
+      },
+      async uninstallExtension(id: string): Promise<boolean> {
+        return desktopBridge?.uninstallExtension(id) ?? false;
+      },
     };
     return loader;
   }, []);

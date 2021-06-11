@@ -46,6 +46,7 @@ interface Storage {
 type DesktopExtension = {
   packageJson: unknown;
   source: string;
+  directory: string;
 };
 
 interface Desktop {
@@ -62,6 +63,13 @@ interface Desktop {
 
   // Get an array of available extensions and parsed package.json files
   getExtensions: () => Promise<DesktopExtension[]>;
+
+  // Install a Foxglove Studio extension (.foxe file) locally. The extension id is returned
+  installExtension: (foxeFileData: Uint8Array) => Promise<string>;
+
+  // Uninstall an extension. Returns true if the extension was found and uninstalled, or false if it
+  // was not found (i.e. already uninstalled)
+  uninstallExtension: (id: string) => Promise<boolean>;
 }
 
 export type { NativeMenuBridge, Storage, StorageContent, Desktop, DesktopExtension };

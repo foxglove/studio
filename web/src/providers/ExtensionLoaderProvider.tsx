@@ -35,6 +35,8 @@ export default function ExtensionRegistryProvider(props: PropsWithChildren<unkno
 
       const loader: ExtensionLoader = {
         getExtensions: () => Promise.resolve(extensions),
+        installExtension,
+        uninstallExtension,
       };
       return loader;
     } catch (err) {
@@ -42,6 +44,8 @@ export default function ExtensionRegistryProvider(props: PropsWithChildren<unkno
 
       const loader: ExtensionLoader = {
         getExtensions: () => Promise.resolve([]),
+        installExtension,
+        uninstallExtension,
       };
       return loader;
     }
@@ -60,4 +64,13 @@ export default function ExtensionRegistryProvider(props: PropsWithChildren<unkno
       {props.children}
     </ExtensionLoaderContext.Provider>
   );
+}
+
+async function installExtension(_foxeFileData: Uint8Array): Promise<ExtensionDetail> {
+  // The web view can load extensions, but can't install them
+  throw new Error("Extensions cannot be installed from the web viewer");
+}
+
+async function uninstallExtension(_id: string): Promise<boolean> {
+  return false;
 }
