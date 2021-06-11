@@ -33,21 +33,21 @@ export const diffLabels = {
   },
   CHANGED: { labelText: "STUDIO_DIFF___CHANGED", color: jsonTreeTheme.base0B },
   ID: { labelText: "STUDIO_DIFF___ID" },
-};
+} as const;
 
 export const diffLabelsByLabelText = keyBy(Object.values(diffLabels), "labelText");
 
 export default function getDiff(
-  before: any, // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
-  after: any, // eslint-disable-line @typescript-eslint/explicit-module-boundary-types
+  before: unknown,
+  after: unknown,
   idLabel?: string,
   showFullMessageForDiff: boolean = false,
-): any {
+): unknown {
   if (Array.isArray(before) && Array.isArray(after)) {
     let idToCompareWith: string | undefined;
     const allItems = before.concat(after);
     if (allItems[0] && typeof allItems[0] === "object") {
-      let candidateIdsToCompareWith: any = {};
+      let candidateIdsToCompareWith: Record<string, { before: unknown[]; after: unknown[] }> = {};
       if (allItems[0].id != undefined) {
         candidateIdsToCompareWith.id = { before: [], after: [] };
       }
@@ -59,23 +59,23 @@ export default function getDiff(
       if (!every(allItems, (item) => item && typeof item === "object")) {
         candidateIdsToCompareWith = {};
       }
-      for (const idKey in candidateIdsToCompareWith) {
+      for (const [idKey, candidates] of Object.entries(candidateIdsToCompareWith)) {
         for (const beforeItem of before) {
           if (beforeItem[idKey] != undefined) {
-            candidateIdsToCompareWith[idKey].before.push(beforeItem[idKey]);
+            candidates.before.push(beforeItem[idKey]);
           }
         }
       }
-      for (const idKey in candidateIdsToCompareWith) {
+      for (const [idKey, candidates] of Object.entries(candidateIdsToCompareWith)) {
         for (const afterItem of after) {
           if (afterItem[idKey] != undefined) {
-            candidateIdsToCompareWith[idKey].after.push(afterItem[idKey]);
+            candidates.after.push(afterItem[idKey]);
           }
         }
       }
-      for (const idKey in candidateIdsToCompareWith) {
-        const { before: candidateIdBefore, after: candidateIdAfter } =
-          candidateIdsToCompareWith[idKey];
+      for (const [idKey, { before: candidateIdBefore, after: candidateIdAfter }] of Object.entries(
+        candidateIdsToCompareWith,
+      )) {
         if (
           uniq(candidateIdBefore).length === before.length &&
           uniq(candidateIdAfter).length === after.length
@@ -103,12 +103,15 @@ export default function getDiff(
         delete unmatchedAfterById[id];
         if (!isEmpty(innerDiff)) {
           const isDeleted =
-            Object.keys(innerDiff).length === 1 &&
-            Object.keys(innerDiff)[0] === diffLabels.DELETED.labelText;
+            Object.keys(innerDiff as Record<string, unknown>).length === 1 &&
+            Object.keys(innerDiff as Record<string, unknown>)[0] === diffLabels.DELETED.labelText;
           diff.push(
             isDeleted
               ? innerDiff
-              : { [diffLabels.ID.labelText]: { [idToCompareWith]: id }, ...innerDiff },
+              : {
+                  [diffLabels.ID.labelText]: { [idToCompareWith]: id },
+                  ...(innerDiff as Record<string, unknown>),
+                },
           );
         }
       }
@@ -123,14 +126,19 @@ export default function getDiff(
   }
 
   if (before && after && typeof before === "object" && typeof after === "object") {
-    const diff: any = {};
+    const diff: Record<string, unknown> = {};
     const allKeys = Object.keys(before).concat(Object.keys(after));
     for (const key of uniq(allKeys)) {
-      const innerDiff = getDiff(before[key], after[key], undefined, showFullMessageForDiff);
+      const innerDiff = getDiff(
+        (before as Record<string, unknown>)[key],
+        (after as Record<string, unknown>)[key],
+        undefined,
+        showFullMessageForDiff,
+      );
       if (!isEmpty(innerDiff)) {
         diff[key] = innerDiff;
       } else if (showFullMessageForDiff) {
-        diff[key] = before[key];
+        diff[key] = (before as Record<string, unknown>)[key];
       }
     }
     return diff;
@@ -144,16 +152,24 @@ export default function getDiff(
     if (!isNonEmptyOrUndefined(idLabel) || afterIsNotObj) {
       return { [diffLabels.ADDED.labelText]: after };
     }
-    const idLabelObj = { [diffLabels.ID.labelText]: { [idLabel]: { ...after }[idLabel] } };
-    return { [diffLabels.ADDED.labelText]: { ...idLabelObj, ...after } };
+    const idLabelObj = {
+      [diffLabels.ID.labelText]: { [idLabel]: { ...(after as Record<string, unknown>) }[idLabel] },
+    };
+    return {
+      [diffLabels.ADDED.labelText]: { ...idLabelObj, ...(after as Record<string, unknown>) },
+    };
   }
   if (after === undefined) {
     const beforeIsNotObj = Array.isArray(before) || typeof before !== "object";
     if (!isNonEmptyOrUndefined(idLabel) || beforeIsNotObj) {
       return { [diffLabels.DELETED.labelText]: before };
     }
-    const idLabelObj = { [diffLabels.ID.labelText]: { [idLabel]: { ...before }[idLabel] } };
-    return { [diffLabels.DELETED.labelText]: { ...idLabelObj, ...before } };
+    const idLabelObj = {
+      [diffLabels.ID.labelText]: { [idLabel]: { ...(before as Record<string, unknown>) }[idLabel] },
+    };
+    return {
+      [diffLabels.DELETED.labelText]: { ...idLabelObj, ...(before as Record<string, unknown>) },
+    };
   }
   return {
     [diffLabels.CHANGED.labelText]: `${JSON.stringify(before) ?? ""} ${diffArrow} ${

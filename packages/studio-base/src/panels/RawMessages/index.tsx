@@ -85,13 +85,13 @@ type Props = {
   saveConfig: (arg0: Partial<RawMessagesConfig>) => void;
 };
 
-const isSingleElemArray = (obj: unknown) => {
+const isSingleElemArray = (obj: unknown): obj is unknown[] => {
   if (!Array.isArray(obj)) {
     return false;
   }
   return obj.filter((a) => a != undefined).length === 1;
 };
-const dataWithoutWrappingArray = (data: any) => {
+const dataWithoutWrappingArray = (data: unknown) => {
   return isSingleElemArray(data) && typeof data[0] === "object" ? data[0] : data;
 };
 
@@ -208,7 +208,8 @@ function RawMessages(props: Props) {
       ...keyPath: (number | string)[]
     ) => (
       <ReactHoverObserver className={styles.iconWrapper}>
-        {({ isHovering }: any) => {
+        {({ isHovering }) => {
+          // We make sure to always pass in a number at the end, but that's hard to express in the type system.
           const lastKeyPath = last(keyPath) as number;
           let valueAction: ValueAction | undefined;
           if (isHovering && structureItem) {
@@ -230,7 +231,7 @@ function RawMessages(props: Props) {
               if (typeof field === "string") {
                 const enumMapping = enumValuesByDatatypeAndField(datatypes);
                 const datatype = childStructureItem.datatype;
-                constantName = enumMapping[datatype]?.[field]?.[itemValue as any];
+                constantName = enumMapping[datatype]?.[field]?.[String(itemValue)];
               }
             }
           }
@@ -393,7 +394,7 @@ function RawMessages(props: Props) {
                   typeof val === "object" &&
                   val != undefined &&
                   Object.keys(val).length === 1 &&
-                  diffLabelTexts.includes(Object.keys(val)[0] as string)
+                  (diffLabelTexts as string[]).includes(Object.keys(val)[0] as string)
                 ) {
                   if (Object.keys(val)[0] !== diffLabels.ID.labelText) {
                     return Object.values(val)[0];
