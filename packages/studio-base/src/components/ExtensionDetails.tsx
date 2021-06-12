@@ -3,7 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { ActionButton, Pivot, PivotItem } from "@fluentui/react";
-import { useAsync } from "react-use";
+import { useCallback, useState } from "react";
+import { useAsync, useMountedState } from "react-use";
 import styled from "styled-components";
 
 import Button from "@foxglove/studio-base/components/Button";
@@ -16,6 +17,7 @@ import {
 } from "@foxglove/studio-base/context/ExtensionMarketplaceContext";
 
 type Props = {
+  installed: boolean;
   extension: ExtensionMarketplaceDetail;
   onClose: () => void;
 };
@@ -55,7 +57,9 @@ const Description = styled.div`
   margin-bottom: 16px;
 `;
 
-export function ExtensionDetails({ extension, onClose }: Props): React.ReactElement {
+export function ExtensionDetails({ extension, onClose, installed }: Props): React.ReactElement {
+  const [isInstalled, setIsInstalled] = useState(installed);
+  const isMounted = useMountedState();
   const extensionLoader = useExtensionLoader();
   const marketplace = useExtensionMarketplace();
   const readmeUrl = extension.readme;
@@ -69,6 +73,11 @@ export function ExtensionDetails({ extension, onClose }: Props): React.ReactElem
     async () => (changelogUrl != undefined ? await marketplace.getMarkdown(changelogUrl) : ""),
     [marketplace, changelogUrl],
   );
+
+  const uninstall = useCallback(async () => {
+    await extensionLoader.uninstallExtension(extension.id);
+    isMounted() && setIsInstalled(false);
+  }, [extension.id, extensionLoader, isMounted]);
 
   return (
     <SidebarContent title={extension.name} paddingLeft="32px">
@@ -84,11 +93,7 @@ export function ExtensionDetails({ extension, onClose }: Props): React.ReactElem
       <License>{extension.license}</License>
       <Publisher>{extension.publisher}</Publisher>
       <Description>{extension.description}</Description>
-      {extension.installed === true ? (
-        <UninstallButton onClick={() => extensionLoader.uninstallExtension(extension.id)} />
-      ) : (
-        <InstallButton onClick={() => {}} />
-      )}
+      {isInstalled ? <UninstallButton onClick={uninstall} /> : <InstallButton onClick={() => {}} />}
       <Pivot style={{ marginTop: "16px" }}>
         <PivotItem headerText="README">
           <TextContent>{readmeContent}</TextContent>

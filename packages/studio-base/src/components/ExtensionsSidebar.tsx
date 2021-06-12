@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { mergeStyles, MessageBar, MessageBarType, Stack, useTheme } from "@fluentui/react";
-import { SetStateAction, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useAsync } from "react-use";
 import styled from "styled-components";
 
@@ -74,7 +74,13 @@ export default function ExtensionsSidebar(): React.ReactElement {
   const [shouldFetch, setShouldFetch] = useState<boolean>(true);
   const [marketplaceEntries, setMarketplaceEntries] = useState<ExtensionMarketplaceDetail[]>([]);
   const [focusedExtension, setFocusedExtension] =
-    useState<ExtensionMarketplaceDetail | undefined>(undefined);
+    useState<
+      | {
+          installed: boolean;
+          entry: ExtensionMarketplaceDetail;
+        }
+      | undefined
+    >(undefined);
 
   const extensionLoader = useExtensionLoader();
   const marketplace = useExtensionMarketplace();
@@ -111,7 +117,6 @@ export default function ExtensionsSidebar(): React.ReactElement {
       (installed ?? []).map((entry) => {
         const marketplaceEntry = marketplaceMap.get(entry.id);
         if (marketplaceEntry != undefined) {
-          marketplaceEntry.installed = true;
           return marketplaceEntry;
         }
 
@@ -133,7 +138,8 @@ export default function ExtensionsSidebar(): React.ReactElement {
   if (focusedExtension != undefined) {
     return (
       <ExtensionDetails
-        extension={focusedExtension}
+        installed={focusedExtension.installed}
+        extension={focusedExtension.entry}
         onClose={() => setFocusedExtension(undefined)}
       />
     );
@@ -150,14 +156,36 @@ export default function ExtensionsSidebar(): React.ReactElement {
           <SectionHeader>Installed</SectionHeader>
           <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
             {installedEntries.length > 0
-              ? installedEntries.map((entry) => ExtensionListEntry(entry, setFocusedExtension))
+              ? installedEntries.map((entry) => (
+                  <ExtensionListEntry
+                    key={entry.id}
+                    entry={entry}
+                    onClick={() =>
+                      setFocusedExtension({
+                        installed: true,
+                        entry,
+                      })
+                    }
+                  />
+                ))
               : "No installed extensions"}
           </Stack>
         </Stack.Item>
         <Stack.Item>
           <SectionHeader>Available</SectionHeader>
           <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
-            {marketplaceEntries.map((entry) => ExtensionListEntry(entry, setFocusedExtension))}
+            {marketplaceEntries.map((entry) => (
+              <ExtensionListEntry
+                key={entry.id}
+                entry={entry}
+                onClick={() =>
+                  setFocusedExtension({
+                    installed: false,
+                    entry,
+                  })
+                }
+              />
+            ))}
           </Stack>
         </Stack.Item>
       </Stack>
@@ -165,16 +193,13 @@ export default function ExtensionsSidebar(): React.ReactElement {
   );
 }
 
-function ExtensionListEntry(
-  entry: ExtensionMarketplaceDetail,
-  setFocusedExtension: (value: SetStateAction<ExtensionMarketplaceDetail | undefined>) => void,
-): React.ReactElement {
+function ExtensionListEntry(props: {
+  entry: ExtensionMarketplaceDetail;
+  onClick: () => void;
+}): JSX.Element {
+  const { entry } = props;
   return (
-    <Stack.Item
-      key={entry.id}
-      className={ListItemStyles}
-      onClick={() => setFocusedExtension(entry)}
-    >
+    <Stack.Item key={entry.id} className={ListItemStyles} onClick={props.onClick}>
       <NameLine>
         <Name>{entry.name}</Name>
         <Version>{entry.version}</Version>
