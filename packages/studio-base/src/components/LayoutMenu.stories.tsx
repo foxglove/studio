@@ -11,27 +11,7 @@ import CurrentLayoutState, {
   DEFAULT_LAYOUT_FOR_TESTS,
 } from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
-import { LocalLayout, LocalLayoutStorage } from "@foxglove/studio-base/services/LocalLayoutStorage";
-
-class FakeLayoutStorage implements LocalLayoutStorage {
-  private _layouts: LocalLayout[];
-
-  constructor(layouts: LocalLayout[] = []) {
-    this._layouts = layouts;
-  }
-  list(): Promise<LocalLayout[]> {
-    return Promise.resolve(this._layouts);
-  }
-  get(_id: string): Promise<LocalLayout | undefined> {
-    throw new Error("Method not implemented.");
-  }
-  put(_layout: unknown): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  delete(_id: string): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-}
+import MockLocalLayoutStorage from "@foxglove/studio-base/services/CachedRemoteLayoutStorage/MockLocalLayoutStorage";
 
 export default {
   title: "components/LayoutMenu",
@@ -39,7 +19,7 @@ export default {
 };
 
 export function Empty(): JSX.Element {
-  const storage = useMemo(() => new FakeLayoutStorage(), []);
+  const storage = useMemo(() => new MockLocalLayoutStorage(), []);
   const currentLayout = useMemo(() => new CurrentLayoutState(DEFAULT_LAYOUT_FOR_TESTS), []);
 
   return (
@@ -56,20 +36,23 @@ export function Empty(): JSX.Element {
 export function LayoutList(): JSX.Element {
   const storage = useMemo(
     () =>
-      new FakeLayoutStorage([
+      new MockLocalLayoutStorage([
         {
           id: "not-current",
           name: "Another Layout",
+          path: undefined,
           state: undefined,
         },
         {
           id: "test-id",
           name: "Current Layout",
+          path: undefined,
           state: undefined,
         },
         {
           id: "short-id",
           name: "Short",
+          path: undefined,
           state: undefined,
         },
       ]),

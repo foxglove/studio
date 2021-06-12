@@ -70,7 +70,7 @@ export default function LayoutMenu({
   // When we re-visit local/remote layouts we will want to look at something like swr (https://swr.vercel.app/)
   // that will handle this and other nice things for us.
   const [{ value: asyncLayouts, error, loading }, fetchLayouts] = useAsyncFn(async () => {
-    const list = await layoutStorage.list();
+    const list = [...(await layoutStorage.list())];
     list.sort((a, b) => a.name.localeCompare(b.name));
     return list;
   }, [layoutStorage]);
@@ -131,7 +131,7 @@ export default function LayoutMenu({
     const state = parsedState as PanelsState;
     state.id = uuidv4();
     state.name = layoutName;
-    await layoutStorage.put({ id: state.id, name: state.name, state });
+    await layoutStorage.put({ id: state.id, path: undefined, name: state.name, state });
 
     loadLayout(state);
   }, [isMounted, layoutStorage, loadLayout]);
@@ -204,6 +204,7 @@ export default function LayoutMenu({
     ) {
       layouts.push({
         id: currentLayout.id,
+        path: undefined,
         name: currentLayout.name ?? "unnamed",
         state: currentLayout,
       });

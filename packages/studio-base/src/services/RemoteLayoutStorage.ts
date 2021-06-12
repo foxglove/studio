@@ -28,7 +28,7 @@ export type RemoteLayout = {
 };
 
 export interface RemoteLayoutStorage {
-  getLayouts: () => Promise<RemoteLayoutMetadata[]>;
+  getLayouts: () => Promise<readonly RemoteLayoutMetadata[]>;
 
   getLayout: (id: LayoutID) => Promise<RemoteLayout | undefined>;
 
@@ -39,13 +39,14 @@ export interface RemoteLayoutStorage {
   }) => Promise<{ status: "success"; newMetadata: RemoteLayoutMetadata } | { status: "conflict" }>;
 
   updateLayout: (params: {
+    targetID: LayoutID;
     path: string[];
     name: string;
     data: PanelsState;
-    targetID: LayoutID;
     ifUnmodifiedSince: ISO8601Timestamp;
   }) => Promise<
     | { status: "success"; newMetadata: RemoteLayoutMetadata }
+    | { status: "not-found" }
     | { status: "conflict" }
     | { status: "precondition-failed" }
   >;
@@ -55,7 +56,11 @@ export interface RemoteLayoutStorage {
     path: string[];
     name: string;
     permission: "org_read" | "org_write";
-  }) => Promise<{ status: "success"; newMetadata: RemoteLayoutMetadata } | { status: "conflict" }>;
+  }) => Promise<
+    | { status: "success"; newMetadata: RemoteLayoutMetadata }
+    | { status: "not-found" }
+    | { status: "conflict" }
+  >;
 
   updateSharedLayout: (params: {
     sourceID: LayoutID;
@@ -66,22 +71,24 @@ export interface RemoteLayoutStorage {
     ifUnmodifiedSince: ISO8601Timestamp;
   }) => Promise<
     | { status: "success"; newMetadata: RemoteLayoutMetadata }
+    | { status: "not-found" }
     | { status: "conflict" }
     | { status: "precondition-failed" }
   >;
 
   deleteLayout: (params: {
-    id: LayoutID;
+    targetID: LayoutID;
     ifUnmodifiedSince: ISO8601Timestamp;
   }) => Promise<{ status: "success" | "precondition-failed" }>;
 
   renameLayout: (params: {
-    id: LayoutID;
+    targetID: LayoutID;
     name: string;
     path: string[];
     ifUnmodifiedSince: ISO8601Timestamp;
   }) => Promise<
     | { status: "success"; newMetadata: RemoteLayoutMetadata }
+    | { status: "not-found" }
     | { status: "conflict" }
     | { status: "precondition-failed" }
   >;

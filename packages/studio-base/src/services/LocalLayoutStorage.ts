@@ -8,6 +8,7 @@ import { RemoteLayoutMetadata } from "@foxglove/studio-base/services/RemoteLayou
 export type LocalLayout = {
   id: string;
   name: string;
+  path: string[] | undefined;
   state: PanelsState | undefined;
 
   /** Last known metadata from the server for this layout */
@@ -19,7 +20,7 @@ export type LocalLayout = {
 };
 
 export interface LocalLayoutStorage {
-  list(): Promise<LocalLayout[]>;
+  list(): Promise<readonly LocalLayout[]>;
   get(id: string): Promise<LocalLayout | undefined>;
   put(layout: LocalLayout): Promise<void>;
   delete(id: string): Promise<void>;

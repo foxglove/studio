@@ -18,7 +18,7 @@ import {
   RemoteLayoutStorage,
 } from "@foxglove/studio-base/services/RemoteLayoutStorage";
 
-const FAKE_USER: UserMetadata = {
+export const FAKE_USER: UserMetadata = {
   id: "fakeuser" as UserID,
   email: "fakeuser@example.com",
   name: "Fake User",
@@ -27,7 +27,7 @@ const FAKE_USER: UserMetadata = {
 export default class MockRemoteLayoutStorage implements RemoteLayoutStorage {
   private layoutsById = new Map<LayoutID, RemoteLayout>();
 
-  async getLayouts(): Promise<RemoteLayoutMetadata[]> {
+  async getLayouts(): Promise<readonly RemoteLayoutMetadata[]> {
     return Array.from(this.layoutsById.values(), (layout) => layout.metadata);
   }
 
@@ -185,30 +185,30 @@ export default class MockRemoteLayoutStorage implements RemoteLayoutStorage {
   }
 
   async deleteLayout({
-    id,
+    targetID,
     ifUnmodifiedSince,
   }: {
-    id: LayoutID;
+    targetID: LayoutID;
     ifUnmodifiedSince: ISO8601Timestamp;
   }): Promise<{ status: "success" | "precondition-failed" }> {
-    const target = this.layoutsById.get(id);
+    const target = this.layoutsById.get(targetID);
     if (!target) {
       return { status: "success" };
     }
     if (Date.parse(target.metadata.updatedAt) !== Date.parse(ifUnmodifiedSince)) {
       return { status: "precondition-failed" };
     }
-    this.layoutsById.delete(id);
+    this.layoutsById.delete(targetID);
     return { status: "success" };
   }
 
   async renameLayout({
-    id,
+    targetID,
     name,
     path,
     ifUnmodifiedSince,
   }: {
-    id: LayoutID;
+    targetID: LayoutID;
     name: string;
     path: string[];
     ifUnmodifiedSince: ISO8601Timestamp;
@@ -217,10 +217,10 @@ export default class MockRemoteLayoutStorage implements RemoteLayoutStorage {
     | { status: "conflict" }
     | { status: "precondition-failed" }
   > {
-    const target = this.layoutsById.get(id);
+    const target = this.layoutsById.get(targetID);
     if (!target) {
       return { status: "conflict" };
     }
-    return this.updateLayout({ targetID: id, name, path, ifUnmodifiedSince, data: target.data });
+    return this.updateLayout({ targetID, name, path, ifUnmodifiedSince, data: target.data });
   }
 }

@@ -23,7 +23,7 @@ function getMetadata(layout: LocalLayout): LayoutMetadata {
   return {
     id: layout.id as LayoutID,
     name: layout.name,
-    path: [],
+    path: layout.path ?? [],
     creator: undefined,
     createdAt: undefined,
     updatedAt: undefined,
@@ -52,7 +52,6 @@ export default class LocalOnlyLayoutStorage implements LayoutStorage {
       return undefined;
     }
     return {
-      name: localLayout.name,
       data: localLayout.state,
       metadata: getMetadata(localLayout),
     };
@@ -67,11 +66,8 @@ export default class LocalOnlyLayoutStorage implements LayoutStorage {
     name: string;
     data: PanelsState;
   }): Promise<void> {
-    if (path.length !== 0) {
-      throw new Error("Layout paths are not supported in local-only storage");
-    }
     const id = uuidv4() as LayoutID;
-    await this.storage.put({ id, name, state: data });
+    await this.storage.put({ id, name, path, state: data });
   }
 
   async updateLayout({
@@ -85,10 +81,7 @@ export default class LocalOnlyLayoutStorage implements LayoutStorage {
     data: PanelsState;
     targetID: LayoutID;
   }): Promise<void> {
-    if (path.length !== 0) {
-      throw new Error("Layout paths are not supported in local-only storage");
-    }
-    await this.storage.put({ id: targetID, name, state: data });
+    await this.storage.put({ id: targetID, name, path, state: data });
   }
 
   async shareLayout(_: unknown): Promise<void> {
@@ -112,13 +105,10 @@ export default class LocalOnlyLayoutStorage implements LayoutStorage {
     name: string;
     path: string[];
   }): Promise<void> {
-    if (path.length !== 0) {
-      throw new Error("Layout paths are not supported in local-only storage");
-    }
     const target = await this.storage.get(id);
     if (!target) {
       throw new Error(`Layout id ${id} not found`);
     }
-    await this.storage.put({ id, name, state: target.state });
+    await this.storage.put({ id, name, path, state: target.state });
   }
 }

@@ -192,7 +192,7 @@ describe("CurrentLayoutProvider", () => {
     const mockLayoutStorage = makeMockLayoutStorage();
     mockLayoutStorage.get.mockImplementation(async (): Promise<LocalLayout> => {
       layoutStorageGetCalled.resolve();
-      return { id: "example", name: "Example layout", state: expectedState };
+      return { id: "example", path: undefined, name: "Example layout", state: expectedState };
     });
 
     const mockUserProfile = makeMockUserProfile();
@@ -208,7 +208,7 @@ describe("CurrentLayoutProvider", () => {
   it("saves new layout selection into UserProfile", async () => {
     const mockLayoutStorage = makeMockLayoutStorage();
     mockLayoutStorage.get.mockImplementation(async (): Promise<LocalLayout> => {
-      return { id: "example", name: "Example layout", state: TEST_LAYOUT };
+      return { id: "example", path: undefined, name: "Example layout", state: TEST_LAYOUT };
     });
 
     const userProfileSetCalled = signal();
@@ -240,7 +240,7 @@ describe("CurrentLayoutProvider", () => {
     const layoutStoragePutCalled = signal();
     const mockLayoutStorage = makeMockLayoutStorage();
     mockLayoutStorage.get.mockImplementation(async (): Promise<LocalLayout> => {
-      return { id: TEST_LAYOUT.id, name: TEST_LAYOUT.name, state: TEST_LAYOUT };
+      return { id: TEST_LAYOUT.id, path: undefined, name: TEST_LAYOUT.name, state: TEST_LAYOUT };
     });
     mockLayoutStorage.put.mockImplementation(async () => layoutStoragePutCalled.resolve());
 

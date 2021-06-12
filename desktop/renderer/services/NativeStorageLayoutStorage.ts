@@ -26,7 +26,7 @@ export default class NativeStorageLayoutStorage implements LocalLayoutStorage {
     this._ctx = storage;
   }
 
-  async list(): Promise<LocalLayout[]> {
+  async list(): Promise<readonly LocalLayout[]> {
     const items = await this._ctx.all(NativeStorageLayoutStorage.STORE_NAME);
 
     const layouts: LocalLayout[] = [];

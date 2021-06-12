@@ -28,7 +28,6 @@ export type LayoutMetadata = {
 };
 
 export type Layout = {
-  name: string;
   data: PanelsState;
   metadata: LayoutMetadata;
 };
@@ -47,7 +46,7 @@ export interface LayoutStorage {
     targetID: LayoutID;
   }): Promise<void>;
 
-  supportsSharing: boolean;
+  readonly supportsSharing: boolean;
 
   shareLayout(params: {
     sourceID: LayoutID;

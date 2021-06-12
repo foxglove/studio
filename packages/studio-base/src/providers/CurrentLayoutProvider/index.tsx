@@ -87,6 +87,7 @@ function CurrentLayoutProviderWithInitialState({
     layoutStorage
       .put({
         id: throttledPanelsState.id,
+        path: undefined,
         name: throttledPanelsState.name,
         state: throttledPanelsState,
       })
