@@ -3196,7 +3196,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jest/transform@npm:^27.0.0-next.8, @jest/transform@npm:^27.0.2":
+"@jest/transform@npm:^27.0.2":
   version: 27.0.2
   resolution: "@jest/transform@npm:27.0.2"
   dependencies:
@@ -3232,7 +3232,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jest/types@npm:^27.0.0-next.8, @jest/types@npm:^27.0.2":
+"@jest/types@npm:^27.0.2":
   version: 27.0.2
   resolution: "@jest/types@npm:27.0.2"
   dependencies:
@@ -7758,25 +7758,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"babel-jest@npm:27.0.0-next.8":
-  version: 27.0.0-next.8
-  resolution: "babel-jest@npm:27.0.0-next.8"
-  dependencies:
-    "@jest/transform": ^27.0.0-next.8
-    "@jest/types": ^27.0.0-next.8
-    "@types/babel__core": ^7.1.14
-    babel-plugin-istanbul: ^6.0.0
-    babel-preset-jest: ^27.0.0-next.3
-    chalk: ^4.0.0
-    graceful-fs: ^4.2.4
-    slash: ^3.0.0
-  peerDependencies:
-    "@babel/core": ^7.8.0
-  checksum: d4829b10f890dbaeddd88632b4f9d1d941d300dd401dde163f90f4761939adc54826276ef23415a8eba01c9ff98c19700cade1e06ce7072918c696469dbfb260
-  languageName: node
-  linkType: hard
-
-"babel-jest@npm:^27.0.2":
+"babel-jest@npm:27.0.2, babel-jest@npm:^27.0.2":
   version: 27.0.2
   resolution: "babel-jest@npm:27.0.2"
   dependencies:
@@ -8043,7 +8025,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"babel-preset-jest@npm:^27.0.0-next.3, babel-preset-jest@npm:^27.0.1":
+"babel-preset-jest@npm:^27.0.1":
   version: 27.0.1
   resolution: "babel-preset-jest@npm:27.0.1"
   dependencies:
@@ -13411,7 +13393,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": 4.26.0
     "@typescript-eslint/parser": 4.26.0
     amplitude-js: 8.2.1
-    babel-jest: 27.0.0-next.8
+    babel-jest: 27.0.2
     babel-plugin-transform-import-meta: 2.0.0
     browserify-zlib: 0.2.0
     circular-dependency-plugin: 5.2.2
