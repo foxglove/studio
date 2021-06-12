@@ -46,9 +46,9 @@ export default function ExtensionLoaderProvider(props: PropsWithChildren<unknown
 
       const pkgInfo = detail.packageJson as ExtensionInfo;
 
-      // fixme - is this the best we can do in 2021?
-      // one way to handle this is window.reload()...
-      // this is heavy handed but will ensure that extension is loaded
+      // Unfortunately because we do not provide a subscriber interface for extension loader
+      // callers don't have a good way of being notified when the extension list changes
+      // instead of working around this we reload the entire display
       window.location.reload();
 
       return {
@@ -66,7 +66,7 @@ export default function ExtensionLoaderProvider(props: PropsWithChildren<unknown
     async uninstallExtension(id: string): Promise<boolean> {
       const uninstalled = (await desktopBridge?.uninstallExtension(id)) ?? false;
 
-      // fixme
+      // see comments for window.location.reload() in installExtension
       window.location.reload();
       return uninstalled;
     },
