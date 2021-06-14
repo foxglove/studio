@@ -64,6 +64,7 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
   const marketplace = useExtensionMarketplace();
   const readmeUrl = extension.readme;
   const changelogUrl = extension.changelog;
+  const canInstall = extension.foxe != undefined;
 
   const { value: readmeContent } = useAsync(
     async () => (readmeUrl != undefined ? await marketplace.getMarkdown(readmeUrl) : ""),
@@ -73,6 +74,16 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
     async () => (changelogUrl != undefined ? await marketplace.getMarkdown(changelogUrl) : ""),
     [marketplace, changelogUrl],
   );
+
+  const install = useCallback(async () => {
+    const url = extension.foxe;
+    if (url == undefined) {
+      throw new Error(`Cannot install extension ${extension.id}, "foxe" URL is missing`);
+    }
+    const data = await extensionLoader.downloadExtension(url);
+    await extensionLoader.installExtension(data);
+    isMounted() && setIsInstalled(true);
+  }, [extension.id, extension.foxe, extensionLoader, isMounted]);
 
   const uninstall = useCallback(async () => {
     await extensionLoader.uninstallExtension(extension.id);
@@ -93,7 +104,11 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
       <License>{extension.license}</License>
       <Publisher>{extension.publisher}</Publisher>
       <Description>{extension.description}</Description>
-      {isInstalled ? <UninstallButton onClick={uninstall} /> : <InstallButton onClick={() => {}} />}
+      {isInstalled ? (
+        <UninstallButton onClick={uninstall} />
+      ) : canInstall ? (
+        <InstallButton onClick={install} />
+      ) : undefined}
       <Pivot style={{ marginTop: "16px" }}>
         <PivotItem headerText="README">
           <TextContent>{readmeContent}</TextContent>

@@ -38,6 +38,10 @@ export default function ExtensionLoaderProvider(props: PropsWithChildren<unknown
     async loadExtension(id: string): Promise<string> {
       return desktopBridge?.loadExtension(id) ?? "";
     },
+    async downloadExtension(url: string): Promise<Uint8Array> {
+      const res = await fetch(url);
+      return new Uint8Array(await res.arrayBuffer());
+    },
     async installExtension(foxeFileData: Uint8Array): Promise<ExtensionInfo> {
       if (desktopBridge == undefined) {
         throw new Error(`Cannot install extension without a desktopBridge`);

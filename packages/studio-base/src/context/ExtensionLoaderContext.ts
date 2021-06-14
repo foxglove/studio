@@ -23,6 +23,10 @@ export interface ExtensionLoader {
   // load the source code for a specific extension
   loadExtension(id: string): Promise<string>;
 
+  // download a .foxe file from a web URL and store it in memory. The resulting binary data can be
+  // passed into `installExtension`
+  downloadExtension(url: string): Promise<Uint8Array>;
+
   // install extension contained within the file data
   installExtension(foxeFileData: Uint8Array): Promise<ExtensionInfo>;
 
