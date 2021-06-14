@@ -104,13 +104,11 @@ export default function ExtensionsSidebar(): React.ReactElement {
     setMarketplaceEntries(entries);
   }, [marketplace, shouldFetch]);
 
-  const marketplaceMap = useMemo(
-    () =>
-      new Map<string, ExtensionMarketplaceDetail>(
-        marketplaceEntries.map((entry) => [entry.id, entry]),
-      ),
-    [marketplaceEntries],
-  );
+  const marketplaceMap = useMemo(() => {
+    return new Map<string, ExtensionMarketplaceDetail>(
+      marketplaceEntries.map((entry) => [entry.id, entry]),
+    );
+  }, [marketplaceEntries]);
 
   const installedEntries = useMemo<ExtensionMarketplaceDetail[]>(
     () =>
@@ -134,6 +132,12 @@ export default function ExtensionsSidebar(): React.ReactElement {
       }),
     [installed, marketplaceMap],
   );
+
+  // Hide installed extensions from the list of available extensions
+  const filteredMarketplaceEntries = useMemo(() => {
+    const installedIds = new Set<string>(installed?.map((entry) => entry.id));
+    return marketplaceEntries.filter((entry) => !installedIds.has(entry.id));
+  }, [marketplaceEntries, installed]);
 
   if (focusedExtension != undefined) {
     return (
@@ -174,7 +178,7 @@ export default function ExtensionsSidebar(): React.ReactElement {
         <Stack.Item>
           <SectionHeader>Available</SectionHeader>
           <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
-            {marketplaceEntries.map((entry) => (
+            {filteredMarketplaceEntries.map((entry) => (
               <ExtensionListEntry
                 key={entry.id}
                 entry={entry}
