@@ -5,9 +5,9 @@
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import CachedRemoteLayoutStorage from "@foxglove/studio-base/services/CachedRemoteLayoutStorage";
-import MockLocalLayoutStorage from "@foxglove/studio-base/services/CachedRemoteLayoutStorage/MockLocalLayoutStorage";
 import { ISO8601Timestamp, LayoutMetadata } from "@foxglove/studio-base/services/LayoutStorage";
 import { LocalLayout } from "@foxglove/studio-base/services/LocalLayoutStorage";
+import MockLocalLayoutStorage from "@foxglove/studio-base/services/MockLocalLayoutStorage";
 import MockRemoteLayoutStorage, {
   FAKE_USER,
 } from "@foxglove/studio-base/services/MockRemoteLayoutStorage";

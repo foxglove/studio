@@ -11,7 +11,7 @@ import CurrentLayoutState, {
   DEFAULT_LAYOUT_FOR_TESTS,
 } from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
-import MockLocalLayoutStorage from "@foxglove/studio-base/services/CachedRemoteLayoutStorage/MockLocalLayoutStorage";
+import MockLocalLayoutStorage from "@foxglove/studio-base/services/MockLocalLayoutStorage";
 
 export default {
   title: "components/LayoutMenu",
