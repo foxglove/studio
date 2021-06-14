@@ -97,7 +97,7 @@ const dataWithoutWrappingArray = (data: unknown) => {
 
 // lazy messages don't have own properties so we need to invoke "toJSON" to get the message
 // as a regular object
-function maybeShallowParse(val: unknown) {
+function maybeDeepParse(val: unknown) {
   if (val && typeof val === "object" && "toJSON" in val) {
     return (val as { toJSON: () => unknown }).toJSON();
   }
@@ -329,12 +329,7 @@ function RawMessages(props: Props) {
     // lazy messages have non-enumerable getters but do have a toJSON method to turn themselves into an object
     const diff =
       diffEnabled &&
-      getDiff(
-        JSON.parse(JSON.stringify(data)),
-        JSON.parse(JSON.stringify(diffData)),
-        undefined,
-        showFullMessageForDiff,
-      );
+      getDiff(maybeDeepParse(data), maybeDeepParse(diffData), undefined, showFullMessageForDiff);
     const diffLabelTexts = Object.values(diffLabels).map(({ labelText }) => labelText);
 
     const CheckboxComponent = showFullMessageForDiff
@@ -389,7 +384,7 @@ function RawMessages(props: Props) {
                 return valueRenderer(rootStructureItem, data, baseItem.queriedData, ...args);
               }}
               postprocessValue={(rawVal: unknown) => {
-                const val = maybeShallowParse(rawVal);
+                const val = maybeDeepParse(rawVal);
                 if (
                   typeof val === "object" &&
                   val != undefined &&
