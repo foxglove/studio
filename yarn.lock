@@ -2796,7 +2796,7 @@ __metadata:
     react-use: "patch:react-use@17.2.4#../../patches/react-use.patch"
     react-virtualized: 9.22.3
     reg-notify-github-plugin: 0.10.16
-    reg-publish-gcs-plugin: 0.10.15
+    reg-publish-gcs-plugin: 0.10.16
     reg-simple-keygen-plugin: 0.10.15
     reg-suit: 0.10.15
     regl-worldview: "github:foxglove/webviz#workspace=regl-worldview&commit=6eb0e8c45eff795f8718f33bf3e10478951e7249"
@@ -22254,16 +22254,16 @@ react-use@17.2.4:
   languageName: node
   linkType: hard
 
-"reg-publish-gcs-plugin@npm:0.10.15":
-  version: 0.10.15
-  resolution: "reg-publish-gcs-plugin@npm:0.10.15"
+"reg-publish-gcs-plugin@npm:0.10.16":
+  version: 0.10.16
+  resolution: "reg-publish-gcs-plugin@npm:0.10.16"
   dependencies:
     "@google-cloud/storage": ^5.3.0
     form-data: ^4.0.0
     mkdirp: ^1.0.4
-    reg-suit-util: ^0.10.15
+    reg-suit-util: ^0.10.16
     uuid: ^8.3.0
-  checksum: 46689f694f49e4d7e0678cb3b279b8d225192f42cecf8acce0aae45906324540d2cc093c4486017802dc6b069e9cc423f6e8c91a0e7c38c541243a63ae3a0ed2
+  checksum: 93f30f1315616ca16dda7a971b8995cca55ac7349cf85c6acd5265a5a97660ce463369fb214f48657e4fb9ceeb06232f1dcccdbacaa92e4cbae378714ced230a
   languageName: node
   linkType: hard
 
