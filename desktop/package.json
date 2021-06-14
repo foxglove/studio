@@ -7,7 +7,7 @@
     "jszip": "3.6.0"
   },
   "devDependencies": {
-    "@types/plist": "^3",
+    "@types/plist": "^3.0.2",
     "plist": "3.0.2",
     "quicklookjs": "0.0.2"
   }

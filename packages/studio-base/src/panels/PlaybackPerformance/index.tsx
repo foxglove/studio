@@ -64,11 +64,12 @@ export function UnconnectedPlaybackPerformance({
   timestamp,
   activeData,
 }: UnconnectedPlaybackPerformanceProps): JSX.Element {
-  const playbackInfo =
-    React.useRef<{ timestamp: number; activeData: PlayerStateActiveData } | undefined>();
+  const playbackInfo = React.useRef<
+    { timestamp: number; activeData: PlayerStateActiveData } | undefined
+  >();
   const lastPlaybackInfo = playbackInfo.current;
   if (activeData && (!playbackInfo.current || playbackInfo.current.activeData !== activeData)) {
-    playbackInfo.current = { timestamp, activeData } as any;
+    playbackInfo.current = { timestamp, activeData };
   }
 
   const perfPoints = React.useRef<{
@@ -108,8 +109,7 @@ export function UnconnectedPlaybackPerformance({
     const newMegabitsReceived = (8 * newBytesReceived) / 1e6;
     const megabitsPerSecond = newMegabitsReceived / (renderTimeMs / 1000);
     perfPoints.current.megabitsPerSecond.push({ value: megabitsPerSecond, timestamp });
-    for (const name in perfPoints.current) {
-      const points = (perfPoints.current as any)[name];
+    for (const points of Object.values(perfPoints.current)) {
       while (points[0] && points[0].timestamp < timestamp - TIME_RANGE) {
         points.shift();
       }

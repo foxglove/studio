@@ -3,42 +3,17 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 declare module "@foxglove/studio" {
-  import { Time } from "rosbag";
+  export interface Time {
+    sec: number;
+    nsec: number;
+  }
 
-  import { RosMsgField } from "@foxglove/rosmsg";
-
-  export type RosDatatype = {
-    fields: RosMsgField[];
-  };
-
-  export type RosDatatypes = {
-    [key: string]: RosDatatype;
-  };
-
-  // Represents a ROS topic, though the actual data does not need to come from a ROS system.
+  // A topic is a namespace for specific types of messages
   export type Topic = {
-    // Of ROS topic format, i.e. "/some/topic". We currently depend on this slashes format a bit in
-    // `<MessageHistroy>`, though we could relax this and support arbitrary strings. It's nice to have
-    // a consistent representation for topics that people recognize though.
+    // topic name i.e. "/some/topic"
     name: string;
-    // Name of the datatype (see `type PlayerStateActiveData` for details).
+    // topic datatype
     datatype: string;
-    // The original topic name, if the topic name was at some point renamed, e.g. in
-    // RenameDataProvider.
-    originalTopic?: string;
-    // The number of messages present on the topic. Valid only for sources with a fixed number of
-    // messages, such as bags.
-    numMessages?: number;
-  };
-
-  // Metadata about the source of data currently being displayed.
-  // This is not expected to change often, usually when changing data sources.
-  export type DataSourceInfo = {
-    topics: readonly Topic[];
-    datatypes: RosDatatypes;
-    capabilities: string[];
-    startTime?: Time; // Only `startTime`, since `endTime` can change rapidly when connected to a live system.
-    playerId: string;
   };
 
   /**
@@ -65,6 +40,16 @@ declare module "@foxglove/studio" {
      * List of available topics. This list includes subscribed and unsubscribed topics.
      */
     topics?: readonly Topic[];
+
+    /**
+     * A seconds value indicating a preview time. The preview time is set when a user hovers
+     * over the seek bar or when a panel sets the preview time explicitly. The preview time
+     * is a seconds value within the playback range.
+     *
+     * i.e. A plot panel may set the preview time when a user is hovering over the plot to signal
+     * to other panels where the user is currently hovering and allow them to render accordingly.
+     */
+    previewTime?: number;
   }
 
   export type PanelExtensionContext = {
@@ -91,6 +76,11 @@ declare module "@foxglove/studio" {
      * The state value should be JSON serializable.
      */
     saveState: (state: Partial<unknown>) => void;
+
+    /**
+     * Set the active preview time. Setting the preview time to undefined clears the preview time.
+     */
+    setPreviewTime: (time: number | undefined) => void;
 
     /**
      * Process render events for the panel. Each render event receives a render state and a done callback.
