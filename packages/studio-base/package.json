@@ -150,7 +150,7 @@
     "fetch-mock": "9.11.0",
     "http-server": "0.12.3",
     "reg-notify-github-plugin": "0.10.16",
-    "reg-publish-gcs-plugin": "0.10.15",
+    "reg-publish-gcs-plugin": "0.10.16",
     "reg-simple-keygen-plugin": "0.10.15",
     "reg-suit": "0.10.15",
     "storycap": "3.0.4",
