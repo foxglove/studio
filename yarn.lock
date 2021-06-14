@@ -2798,7 +2798,7 @@ __metadata:
     reg-notify-github-plugin: 0.10.16
     reg-publish-gcs-plugin: 0.10.15
     reg-simple-keygen-plugin: 0.10.15
-    reg-suit: 0.10.15
+    reg-suit: 0.10.16
     regl-worldview: "github:foxglove/webviz#workspace=regl-worldview&commit=6eb0e8c45eff795f8718f33bf3e10478951e7249"
     rehype-raw: 5.1.0
     reselect: 4.0.0
@@ -22274,15 +22274,15 @@ react-use@17.2.4:
   languageName: node
   linkType: hard
 
-"reg-suit-core@npm:^0.10.15":
-  version: 0.10.15
-  resolution: "reg-suit-core@npm:0.10.15"
+"reg-suit-core@npm:^0.10.16":
+  version: 0.10.16
+  resolution: "reg-suit-core@npm:0.10.16"
   dependencies:
     cpx: ^1.5.0
     reg-cli: ^0.17.0
-    reg-suit-util: ^0.10.15
+    reg-suit-util: ^0.10.16
     rimraf: ^3.0.2
-  checksum: eed4f4efa011d4cdb492571c425af0a21c74f29ab520593cbaed2c80fe58e0672590eaa5e6ed3da8175a25a7b692541ab0983ee15a7ecb84b64bd581b6dba4f0
+  checksum: 7a7dbaca35b1eae527bf0be5ae852be1b059fe91c30c91c7be7999ee7e936f8230855c3ab1e1863175fe596eceba0eb766eb274e8c6a422ea7132c5f5622b1cf
   languageName: node
   linkType: hard
 
@@ -22307,19 +22307,19 @@ react-use@17.2.4:
   languageName: node
   linkType: hard
 
-"reg-suit@npm:0.10.15":
-  version: 0.10.15
-  resolution: "reg-suit@npm:0.10.15"
+"reg-suit@npm:0.10.16":
+  version: 0.10.16
+  resolution: "reg-suit@npm:0.10.16"
   dependencies:
     cp-file: 9.0.0
     ignore: 5.1.8
     inquirer: 7.3.3
-    reg-suit-core: ^0.10.15
-    reg-suit-util: ^0.10.15
-    yargs: 16.2.0
+    reg-suit-core: ^0.10.16
+    reg-suit-util: ^0.10.16
+    yargs: 17.0.1
   bin:
     reg-suit: lib/cli.js
-  checksum: 41cf443628419a2346a598bd40f1f36f80a9e94debbb9a92c3e16caaaa21b71df5beda1d6c2dee15a745fd142c3a31b88d722c9daeea22acdc5f960556c1d0d4
+  checksum: a984c619f048e3c8fd7d4bf8daa744cd0a9cee9df3e05f990c2f354035ae657c08ee02e9101e1c7d23afb7c2c74964d7cbd53701f44f25827ec4720275d8990e
   languageName: node
   linkType: hard
 
@@ -27136,6 +27136,21 @@ typescript@4.3.2:
     y18n: ^5.0.5
     yargs-parser: ^20.2.2
   checksum: b14afbb51e3251a204d81937c86a7e9d4bdbf9a2bcee38226c900d00f522969ab675703bee2a6f99f8e20103f608382936034e64d921b74df82b63c07c5e8f59
+  languageName: node
+  linkType: hard
+
+"yargs@npm:17.0.1":
+  version: 17.0.1
+  resolution: "yargs@npm:17.0.1"
+  dependencies:
+    cliui: ^7.0.2
+    escalade: ^3.1.1
+    get-caller-file: ^2.0.5
+    require-directory: ^2.1.1
+    string-width: ^4.2.0
+    y18n: ^5.0.5
+    yargs-parser: ^20.2.2
+  checksum: 4ffffa5a82647e5d07840b64bed88c365b901d3d4a4c51745dddb10d177902d85014026d7224aae18c42df9ca3f75a41c5aff556e5342e2f8ffc5177d149cd17
   languageName: node
   linkType: hard
 
