@@ -73,9 +73,14 @@ export default function ExtensionsSidebar(): React.ReactElement {
 
   const [shouldFetch, setShouldFetch] = useState<boolean>(true);
   const [marketplaceEntries, setMarketplaceEntries] = useState<ExtensionMarketplaceDetail[]>([]);
-  const [focusedExtension, setFocusedExtension] = useState<ExtensionMarketplaceDetail | undefined>(
-    undefined,
-  );
+  const [focusedExtension, setFocusedExtension] =
+    useState<
+      | {
+          installed: boolean;
+          entry: ExtensionMarketplaceDetail;
+        }
+      | undefined
+    >(undefined);
 
   const extensionLoader = useExtensionLoader();
   const marketplace = useExtensionMarketplace();
