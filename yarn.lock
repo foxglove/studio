@@ -2643,7 +2643,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/rosmsg-deser@workspace:packages/rosmsg-deser"
   dependencies:
-    "@types/prettier": 2.2.3
+    "@types/prettier": 2.3.0
     jest: 27.0.4
     prettier: 2.3.0
     typescript: 4.3.2
@@ -2655,7 +2655,7 @@ __metadata:
   resolution: "@foxglove/rosmsg-msgs-common@workspace:packages/rosmsg-msgs-common"
   dependencies:
     "@foxglove/rosmsg": "workspace:packages/rosmsg"
-    "@types/prettier": 2.2.3
+    "@types/prettier": 2.3.0
     esbuild-runner: 2.2.0
     prettier: 2.3.0
     typescript: 4.3.2
@@ -2667,7 +2667,7 @@ __metadata:
   resolution: "@foxglove/rosmsg-msgs-foxglove@workspace:packages/rosmsg-msgs-foxglove"
   dependencies:
     "@foxglove/rosmsg": "workspace:packages/rosmsg"
-    "@types/prettier": 2.2.3
+    "@types/prettier": 2.3.0
     esbuild-runner: 2.2.0
     prettier: 2.3.0
     typescript: 4.3.2
@@ -2714,7 +2714,7 @@ __metadata:
     "@types/leaflet": 1.7.2
     "@types/memoize-weak": "workspace:packages/@types/memoize-weak"
     "@types/moment-duration-format": 2.2.2
-    "@types/prettier": 2.2.3
+    "@types/prettier": 2.3.0
     "@types/promise-queue": 2.2.0
     "@types/react": 17.0.9
     "@types/react-autocomplete": 1.8.5
@@ -5742,10 +5742,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/prettier@npm:2.2.3, @types/prettier@npm:^2.1.5":
-  version: 2.2.3
-  resolution: "@types/prettier@npm:2.2.3"
-  checksum: 78f1d731f9db92467596d3e2116efc402343a72ee69fa6444368317a2caf7d21ffe7d748637656ebef97ab65087867375089e743f0b9a378557cf979e5a9ac29
+"@types/prettier@npm:2.3.0, @types/prettier@npm:^2.1.5":
+  version: 2.3.0
+  resolution: "@types/prettier@npm:2.3.0"
+  checksum: 8dd9b5263fd91001d72ca4e2ff89fb0d1ba23a450bd723b4478eb651755a2f1151af14ab90c4f7dadba607142757b340c1d7271ae56806563c76719d3321ec20
   languageName: node
   linkType: hard
 
