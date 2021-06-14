@@ -146,7 +146,7 @@ export default function ExtensionsSidebar(): React.ReactElement {
   }
 
   if (availableError) {
-    return FetchError(() => setShouldFetch(true));
+    return <FetchError onRetry={() => setShouldFetch(true)}></FetchError>;
   }
 
   return (
@@ -214,7 +214,7 @@ function ExtensionListEntry(props: {
   );
 }
 
-function FetchError(onRetry: () => void): React.ReactElement {
+function FetchError(props: { onRetry: () => void }): React.ReactElement {
   const errorMsg =
     "Failed to fetch the list of available extensions. Check your Internet connection and try again.";
   return (
@@ -233,7 +233,7 @@ function FetchError(onRetry: () => void): React.ReactElement {
           left: "50%",
           transform: "translate(-50%, -50%)",
         }}
-        onClick={onRetry}
+        onClick={props.onRetry}
       >
         Retry Fetching Extensions
       </Button>

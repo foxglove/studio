@@ -4,6 +4,7 @@
 
 import { ActionButton, Pivot, PivotItem } from "@fluentui/react";
 import { useCallback, useState } from "react";
+import { useToasts } from "react-toast-notifications";
 import { useAsync, useMountedState } from "react-use";
 import styled from "styled-components";
 
@@ -62,6 +63,7 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
   const isMounted = useMountedState();
   const extensionLoader = useExtensionLoader();
   const marketplace = useExtensionMarketplace();
+  const { addToast } = useToasts();
   const readmeUrl = extension.readme;
   const changelogUrl = extension.changelog;
   const canInstall = extension.foxe != undefined;
@@ -77,13 +79,19 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
 
   const install = useCallback(async () => {
     const url = extension.foxe;
-    if (url == undefined) {
-      throw new Error(`Cannot install extension ${extension.id}, "foxe" URL is missing`);
+    try {
+      if (url == undefined) {
+        throw new Error(`Cannot install extension ${extension.id}, "foxe" URL is missing`);
+      }
+      const data = await extensionLoader.downloadExtension(url);
+      await extensionLoader.installExtension(data);
+      isMounted() && setIsInstalled(true);
+    } catch (err) {
+      addToast(`Failed to download extension ${extension.id}: ${err.message}`, {
+        appearance: "error",
+      });
     }
-    const data = await extensionLoader.downloadExtension(url);
-    await extensionLoader.installExtension(data);
-    isMounted() && setIsInstalled(true);
-  }, [extension.id, extension.foxe, extensionLoader, isMounted]);
+  }, [extension.id, extension.foxe, extensionLoader, isMounted, addToast]);
 
   const uninstall = useCallback(async () => {
     await extensionLoader.uninstallExtension(extension.id);
