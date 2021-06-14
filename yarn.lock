@@ -2742,7 +2742,7 @@ __metadata:
     "@types/uuid": 8.3.0
     "@types/wicg-file-system-access": 2020.9.1
     "@types/ws": 7.4.4
-    "@wojtekmaj/enzyme-adapter-react-17": 0.6.1
+    "@wojtekmaj/enzyme-adapter-react-17": 0.6.2
     argparse: 2.0.1
     async-mutex: 0.3.1
     chart.js: 3.3.2
@@ -6790,29 +6790,29 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@wojtekmaj/enzyme-adapter-react-17@npm:0.6.1":
-  version: 0.6.1
-  resolution: "@wojtekmaj/enzyme-adapter-react-17@npm:0.6.1"
+"@wojtekmaj/enzyme-adapter-react-17@npm:0.6.2":
+  version: 0.6.2
+  resolution: "@wojtekmaj/enzyme-adapter-react-17@npm:0.6.2"
   dependencies:
-    "@wojtekmaj/enzyme-adapter-utils": ^0.1.0
+    "@wojtekmaj/enzyme-adapter-utils": ^0.1.1
     enzyme-shallow-equal: ^1.0.0
     has: ^1.0.0
     object.assign: ^4.1.0
     object.values: ^1.1.0
     prop-types: ^15.7.0
-    react-is: ^17.0.0
+    react-is: ^17.0.2
     react-test-renderer: ^17.0.0
   peerDependencies:
     enzyme: ^3.0.0
     react: ^17.0.0-0
     react-dom: ^17.0.0-0
-  checksum: 4c970f458d2c0887ef3e13c884e62bd3272e5f7ee2f4e21df2673fff43fbe1a91e1e8fd371f0cf840437e2a2cb25b83ef58af0561bc00ede2947ae582f3be41b
+  checksum: 984c09fe16f385e5f01b4ed6328f100271fe723cbc26c80b35977d54a3c5d32e3a3a2e91f74cc004f40dcb15c9c134beb95e27c38ea0e7ae4cfa101e51173ed1
   languageName: node
   linkType: hard
 
-"@wojtekmaj/enzyme-adapter-utils@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "@wojtekmaj/enzyme-adapter-utils@npm:0.1.0"
+"@wojtekmaj/enzyme-adapter-utils@npm:^0.1.1":
+  version: 0.1.1
+  resolution: "@wojtekmaj/enzyme-adapter-utils@npm:0.1.1"
   dependencies:
     function.prototype.name: ^1.1.0
     has: ^1.0.0
@@ -6821,7 +6821,7 @@ __metadata:
     prop-types: ^15.7.0
   peerDependencies:
     react: ^17.0.0-0
-  checksum: 871d71533fc6c953c8af49588ec97771d9b6f29353104cefd36cce878a5ae39ccc37199c2db908d4537938a1047097a783d0b35d8b815efa4fb94ff7d054066a
+  checksum: dc3dd0c2da0a0d0ab065f542fa5892f00026eec7eca34c0e673760ce0a35f19893fae64f648f3bb7121b9c47752d20a32fa0ca814d5e9300d3cdc14d899f535f
   languageName: node
   linkType: hard
 
@@ -21579,7 +21579,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-is@npm:17.0.2, react-is@npm:^16.12.0 || ^17.0.0, react-is@npm:^17.0.0, react-is@npm:^17.0.1":
+"react-is@npm:17.0.2, react-is@npm:^16.12.0 || ^17.0.0, react-is@npm:^17.0.0, react-is@npm:^17.0.1, react-is@npm:^17.0.2":
   version: 17.0.2
   resolution: "react-is@npm:17.0.2"
   checksum: 9d6d111d8990dc98bc5402c1266a808b0459b5d54830bbea24c12d908b536df7883f268a7868cfaedde3dd9d4e0d574db456f84d2e6df9c4526f99bb4b5344d8
