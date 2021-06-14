@@ -4,7 +4,7 @@
 
 /**
  * Holds a value generated from a calling a given async function. The function is called at most
- * once and it not called until the first `get()` of the LazilyInitialized object.
+ * once and is not called until the first `get()` of the LazilyInitialized object.
  */
 export default class LazilyInitialized<T> {
   // The promise and compute function are held separately so the function can be garbage collected

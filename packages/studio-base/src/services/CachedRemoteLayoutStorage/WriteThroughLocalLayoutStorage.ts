@@ -2,9 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { LazilyInitialized } from "@foxglove/den/async";
 import { LocalLayout, LocalLayoutStorage } from "@foxglove/studio-base/services/LocalLayoutStorage";
-
-import LazilyInitialized from "./LazilyInitialized";
 
 /**
  * A view of LocalLayoutStorage which only calls the underlying list() once, and implements all

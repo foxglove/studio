@@ -5,9 +5,9 @@
 import { isEqual } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
+import { MutexLocked } from "@foxglove/den/async";
 import Logger from "@foxglove/log";
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import MutexLocked from "@foxglove/studio-base/services/CachedRemoteLayoutStorage/MutexLocked";
 import WriteThroughLocalLayoutStorage from "@foxglove/studio-base/services/CachedRemoteLayoutStorage/WriteThroughLocalLayoutStorage";
 import {
   Layout,
