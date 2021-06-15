@@ -8,18 +8,18 @@ import { v4 as uuidv4 } from "uuid";
 import { MutexLocked } from "@foxglove/den/async";
 import Logger from "@foxglove/log";
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import WriteThroughLocalLayoutStorage from "@foxglove/studio-base/services/CachedRemoteLayoutStorage/WriteThroughLocalLayoutStorage";
+import { CachedLayout, ILayoutCache } from "@foxglove/studio-base/services/ILayoutCache";
 import {
   Layout,
   LayoutID,
   LayoutMetadata,
-  LayoutStorage,
-} from "@foxglove/studio-base/services/LayoutStorage";
-import { LocalLayout, LocalLayoutStorage } from "@foxglove/studio-base/services/LocalLayoutStorage";
+  ILayoutStorage,
+} from "@foxglove/studio-base/services/ILayoutStorage";
 import {
   RemoteLayoutMetadata,
-  RemoteLayoutStorage,
-} from "@foxglove/studio-base/services/RemoteLayoutStorage";
+  IRemoteLayoutStorage,
+} from "@foxglove/studio-base/services/IRemoteLayoutStorage";
+import WriteThroughLayoutCache from "@foxglove/studio-base/services/WriteThroughLayoutCache";
 import filterMap from "@foxglove/studio-base/util/filterMap";
 
 import computeLayoutSyncOperations, { ConflictType } from "./computeLayoutSyncOperations";
@@ -33,7 +33,7 @@ export type ConflictInfo = { layoutName: string; type: ConflictType };
  * Determine the metadata that we should vend out to clients based on a cached layout. Uses the
  * layout's serverMetadata if available.
  */
-function getEffectiveMetadata(layout: LocalLayout): LayoutMetadata {
+function getEffectiveMetadata(layout: CachedLayout): LayoutMetadata {
   return (
     layout.serverMetadata ?? {
       // When a layout is new on the client, we treat our local id as though it were a server id.
@@ -61,15 +61,15 @@ function getEffectiveMetadata(layout: LocalLayout): LayoutMetadata {
  * This object does not handle any timeout logic and assumes that timeouts from remote storage will
  * be bubbled up as errors.
  */
-export default class CachedRemoteLayoutStorage implements LayoutStorage {
+export default class CachedRemoteLayoutStorage implements ILayoutStorage {
   /**
    * All access to cache storage is wrapped in a mutex to prevent multi-step operations (such as
    * reading and then writing a single layout, or writing one and deleting another) from getting
    * interleaved.
    */
-  private cacheStorage: MutexLocked<LocalLayoutStorage>;
+  private cacheStorage: MutexLocked<ILayoutCache>;
 
-  private remoteStorage: RemoteLayoutStorage;
+  private remoteStorage: IRemoteLayoutStorage;
 
   readonly supportsSharing = true;
 
@@ -77,17 +77,17 @@ export default class CachedRemoteLayoutStorage implements LayoutStorage {
     cacheStorage,
     remoteStorage,
   }: {
-    cacheStorage: LocalLayoutStorage;
-    remoteStorage: RemoteLayoutStorage;
+    cacheStorage: ILayoutCache;
+    remoteStorage: IRemoteLayoutStorage;
   }) {
-    this.cacheStorage = new MutexLocked(new WriteThroughLocalLayoutStorage(cacheStorage));
+    this.cacheStorage = new MutexLocked(new WriteThroughLayoutCache(cacheStorage));
     this.remoteStorage = remoteStorage;
   }
 
   /** Helper function for read-modify-write operations in the cache storage. */
   private async updateCachedLayout(
     id: LayoutID,
-    modify: (layout: LocalLayout | undefined) => LocalLayout,
+    modify: (layout: CachedLayout | undefined) => CachedLayout,
   ) {
     await this.cacheStorage.runExclusive(async (cache) => {
       await cache.put(modify(await cache.get(id)));
@@ -255,6 +255,7 @@ export default class CachedRemoteLayoutStorage implements LayoutStorage {
       throw new Error("Only one syncWithRemote operation may be in progress at a time.");
     }
     try {
+      this.isSyncing = true;
       return await this.syncWithRemoteImpl();
     } finally {
       this.isSyncing = false;
@@ -262,11 +263,11 @@ export default class CachedRemoteLayoutStorage implements LayoutStorage {
   }
 
   private async syncWithRemoteImpl(): Promise<ConflictInfo[]> {
-    const [localLayoutsById, remoteLayoutsById] = await Promise.all([
+    const [cachedLayoutsById, remoteLayoutsById] = await Promise.all([
       this.cacheStorage
         .runExclusive((cache) => cache.list())
         .then(
-          (layouts): ReadonlyMap<string, LocalLayout> =>
+          (layouts): ReadonlyMap<string, CachedLayout> =>
             new Map(layouts.map((layout) => [layout.id, layout])),
         ),
       this.remoteStorage
@@ -278,11 +279,11 @@ export default class CachedRemoteLayoutStorage implements LayoutStorage {
     ]);
 
     const conflicts: ConflictInfo[] = [];
-    for (const operation of computeLayoutSyncOperations(localLayoutsById, remoteLayoutsById)) {
+    for (const operation of computeLayoutSyncOperations(cachedLayoutsById, remoteLayoutsById)) {
       switch (operation.type) {
         case "conflict": {
-          const { localLayout, conflictType } = operation;
-          conflicts.push({ layoutName: localLayout.name, type: conflictType });
+          const { cachedLayout, conflictType } = operation;
+          conflicts.push({ layoutName: cachedLayout.name, type: conflictType });
           break;
         }
 
@@ -301,10 +302,10 @@ export default class CachedRemoteLayoutStorage implements LayoutStorage {
         }
 
         case "update-cached-metadata": {
-          const { localLayout, remoteLayout } = operation;
+          const { cachedLayout, remoteLayout } = operation;
           await this.cacheStorage.runExclusive((cache) =>
             cache.put({
-              ...localLayout,
+              ...cachedLayout,
               serverMetadata: remoteLayout,
               locallyDeleted: false,
               locallyModified: false,
@@ -314,42 +315,42 @@ export default class CachedRemoteLayoutStorage implements LayoutStorage {
         }
 
         case "delete-local": {
-          const { localLayout } = operation;
-          await this.cacheStorage.runExclusive((cache) => cache.delete(localLayout.id));
+          const { cachedLayout } = operation;
+          await this.cacheStorage.runExclusive((cache) => cache.delete(cachedLayout.id));
           break;
         }
 
         case "delete-remote": {
-          const { localLayout, remoteLayout } = operation;
+          const { cachedLayout, remoteLayout } = operation;
           const response = await this.remoteStorage.deleteLayout({
             targetID: remoteLayout.id,
             ifUnmodifiedSince: remoteLayout.updatedAt,
           });
           switch (response.status) {
             case "success":
-              await this.cacheStorage.runExclusive((cache) => cache.delete(localLayout.id));
+              await this.cacheStorage.runExclusive((cache) => cache.delete(cachedLayout.id));
               break;
             case "precondition-failed":
-              conflicts.push({ layoutName: localLayout.name, type: "local-delete-remote-update" });
+              conflicts.push({ layoutName: cachedLayout.name, type: "local-delete-remote-update" });
               break;
           }
           break;
         }
 
         case "upload-new": {
-          const { localLayout } = operation;
+          const { cachedLayout } = operation;
           const newName = getNewLayoutName(
-            localLayout.name,
+            cachedLayout.name,
             new Set(
               filterMap(remoteLayoutsById.values(), (layout) =>
-                isEqual(localLayout.path ?? [], layout.path) ? layout.name : undefined,
+                isEqual(cachedLayout.path ?? [], layout.path) ? layout.name : undefined,
               ),
             ),
           );
           const response = await this.remoteStorage.saveNewLayout({
-            path: localLayout.path ?? [],
+            path: cachedLayout.path ?? [],
             name: newName,
-            data: localLayout.state,
+            data: cachedLayout.state,
           });
           switch (response.status) {
             case "success":
@@ -359,28 +360,28 @@ export default class CachedRemoteLayoutStorage implements LayoutStorage {
                   id: response.newMetadata.id,
                   name: response.newMetadata.name,
                   path: response.newMetadata.path,
-                  state: localLayout.state,
+                  state: cachedLayout.state,
                   serverMetadata: response.newMetadata,
                 });
-                await cache.delete(localLayout.id);
+                await cache.delete(cachedLayout.id);
               });
               break;
             case "conflict":
-              conflicts.push({ layoutName: localLayout.name, type: "both-update" });
+              conflicts.push({ layoutName: cachedLayout.name, type: "both-update" });
               break;
           }
           break;
         }
 
         case "upload-updated": {
-          const { localLayout, remoteLayout } = operation;
-          let responsePromise: ReturnType<RemoteLayoutStorage["updateLayout"]>;
+          const { cachedLayout, remoteLayout } = operation;
+          let responsePromise: ReturnType<IRemoteLayoutStorage["updateLayout"]>;
           //FIXME: maybe these should both be calls to update, with data being optional, and remove the rename API?
-          if (!localLayout.state) {
+          if (!cachedLayout.state) {
             responsePromise = this.remoteStorage.renameLayout({
               targetID: remoteLayout.id,
-              name: localLayout.name,
-              path: localLayout.path ?? [],
+              name: cachedLayout.name,
+              path: cachedLayout.path ?? [],
               ifUnmodifiedSince: remoteLayout.updatedAt,
             });
           } else {
@@ -389,14 +390,14 @@ export default class CachedRemoteLayoutStorage implements LayoutStorage {
               name: remoteLayout.name,
               path: remoteLayout.path,
               ifUnmodifiedSince: remoteLayout.updatedAt,
-              data: localLayout.state,
+              data: cachedLayout.state,
             });
           }
           const response = await responsePromise;
           switch (response.status) {
             case "success":
               await this.cacheStorage.runExclusive((cache) =>
-                cache.put({ ...localLayout, serverMetadata: response.newMetadata }),
+                cache.put({ ...cachedLayout, serverMetadata: response.newMetadata }),
               );
               break;
             case "not-found":
@@ -405,11 +406,11 @@ export default class CachedRemoteLayoutStorage implements LayoutStorage {
               );
               break;
             case "precondition-failed":
-              conflicts.push({ layoutName: localLayout.name, type: "both-update" });
+              conflicts.push({ layoutName: cachedLayout.name, type: "both-update" });
               break;
             case "conflict":
               conflicts.push({
-                layoutName: localLayout.name,
+                layoutName: cachedLayout.name,
                 type: "local-update-remote-delete",
               });
               break;

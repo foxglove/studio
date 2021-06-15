@@ -3,9 +3,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import { RemoteLayoutMetadata } from "@foxglove/studio-base/services/RemoteLayoutStorage";
+import { RemoteLayoutMetadata } from "@foxglove/studio-base/services/IRemoteLayoutStorage";
 
-export type LocalLayout = {
+export type CachedLayout = {
   id: string;
   name: string;
   path: string[] | undefined;
@@ -19,9 +19,9 @@ export type LocalLayout = {
   locallyModified?: boolean;
 };
 
-export interface LocalLayoutStorage {
-  list(): Promise<readonly LocalLayout[]>;
-  get(id: string): Promise<LocalLayout | undefined>;
-  put(layout: LocalLayout): Promise<void>;
+export interface ILayoutCache {
+  list(): Promise<readonly CachedLayout[]>;
+  get(id: string): Promise<CachedLayout | undefined>;
+  put(layout: CachedLayout): Promise<void>;
   delete(id: string): Promise<void>;
 }

@@ -7,7 +7,7 @@ import {
   ISO8601Timestamp,
   LayoutID,
   LayoutMetadata,
-} from "@foxglove/studio-base/services/LayoutStorage";
+} from "@foxglove/studio-base/services/ILayoutStorage";
 
 /**
  * Metadata that describes a panel layout on a remote server.
@@ -27,7 +27,7 @@ export type RemoteLayout = {
   metadata: RemoteLayoutMetadata;
 };
 
-export interface RemoteLayoutStorage {
+export interface IRemoteLayoutStorage {
   getLayouts: () => Promise<readonly RemoteLayoutMetadata[]>;
 
   getLayout: (id: LayoutID) => Promise<RemoteLayout | undefined>;

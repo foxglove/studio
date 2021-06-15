@@ -7,9 +7,9 @@ import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLa
 import computeLayoutSyncOperations, {
   SyncOperation,
 } from "@foxglove/studio-base/services/CachedRemoteLayoutStorage/computeLayoutSyncOperations";
-import { ISO8601Timestamp, LayoutID, UserID } from "@foxglove/studio-base/services/LayoutStorage";
-import { LocalLayout } from "@foxglove/studio-base/services/LocalLayoutStorage";
-import { RemoteLayoutMetadata } from "@foxglove/studio-base/services/RemoteLayoutStorage";
+import { CachedLayout } from "@foxglove/studio-base/services/ILayoutCache";
+import { ISO8601Timestamp, LayoutID, UserID } from "@foxglove/studio-base/services/ILayoutStorage";
+import { RemoteLayoutMetadata } from "@foxglove/studio-base/services/IRemoteLayoutStorage";
 
 function makeMetadata(
   id: string,
@@ -43,7 +43,7 @@ describe("computeLayoutSyncOperations", () => {
 
   it.each<{
     name: string;
-    local: [string, LocalLayout][];
+    local: [string, CachedLayout][];
     remote: [LayoutID, RemoteLayoutMetadata][];
     expected: SyncOperation[];
   }>([
@@ -73,14 +73,14 @@ describe("computeLayoutSyncOperations", () => {
       name: "cleans up empty layout from cache",
       local: [["local1", local1]],
       remote: [],
-      expected: [{ type: "upload-new", localLayout: local1 }],
+      expected: [{ type: "upload-new", cachedLayout: local1 }],
     },
 
     {
       name: "uploads new layout",
       local: [["local1", local1]],
       remote: [],
-      expected: [{ type: "upload-new", localLayout: local1 }],
+      expected: [{ type: "upload-new", cachedLayout: local1 }],
     },
 
     {
@@ -92,7 +92,7 @@ describe("computeLayoutSyncOperations", () => {
       expected: [
         {
           type: "update-cached-metadata",
-          localLayout: {
+          cachedLayout: {
             ...local1,
             serverMetadata: makeMetadata("remote1", "1", { updatedAt: 5 }),
           },
@@ -117,7 +117,7 @@ describe("computeLayoutSyncOperations", () => {
       expected: [
         {
           type: "upload-updated",
-          localLayout: {
+          cachedLayout: {
             ...local1,
             serverMetadata: makeMetadata("remote1", "1", { updatedAt: 5 }),
             locallyModified: true,
@@ -145,7 +145,7 @@ describe("computeLayoutSyncOperations", () => {
       expected: [
         {
           type: "upload-updated",
-          localLayout: {
+          cachedLayout: {
             ...local1,
             name: "2",
             state: undefined,
@@ -173,7 +173,7 @@ describe("computeLayoutSyncOperations", () => {
       expected: [
         {
           type: "delete-remote",
-          localLayout: {
+          cachedLayout: {
             ...local1,
             serverMetadata: makeMetadata("remote1", "1", { updatedAt: 5 }),
             locallyDeleted: true,
@@ -200,7 +200,7 @@ describe("computeLayoutSyncOperations", () => {
         {
           type: "conflict",
           conflictType: "both-update",
-          localLayout: {
+          cachedLayout: {
             ...local1,
             serverMetadata: makeMetadata("remote1", "1", { updatedAt: 5 }),
             locallyModified: true,
@@ -226,7 +226,7 @@ describe("computeLayoutSyncOperations", () => {
         {
           type: "conflict",
           conflictType: "local-update-remote-delete",
-          localLayout: {
+          cachedLayout: {
             ...local1,
             serverMetadata: makeMetadata("remote1", "1", { updatedAt: 5 }),
             locallyModified: true,
@@ -252,7 +252,7 @@ describe("computeLayoutSyncOperations", () => {
         {
           type: "conflict",
           conflictType: "local-delete-remote-update",
-          localLayout: {
+          cachedLayout: {
             ...local1,
             serverMetadata: makeMetadata("remote1", "1", { updatedAt: 5 }),
             locallyDeleted: true,
@@ -270,7 +270,7 @@ describe("computeLayoutSyncOperations", () => {
       expected: [
         {
           type: "delete-local",
-          localLayout: {
+          cachedLayout: {
             ...local1,
             serverMetadata: makeMetadata("remote1", "1", { updatedAt: 5 }),
           },
@@ -294,7 +294,7 @@ describe("computeLayoutSyncOperations", () => {
       expected: [
         {
           type: "delete-local",
-          localLayout: {
+          cachedLayout: {
             ...local1,
             serverMetadata: makeMetadata("remote1", "1", { updatedAt: 5 }),
             locallyDeleted: true,

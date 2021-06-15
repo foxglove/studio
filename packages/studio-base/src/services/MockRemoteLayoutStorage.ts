@@ -11,12 +11,12 @@ import {
   ISO8601Timestamp,
   UserID,
   UserMetadata,
-} from "@foxglove/studio-base/services/LayoutStorage";
+} from "@foxglove/studio-base/services/ILayoutStorage";
 import {
   RemoteLayout,
   RemoteLayoutMetadata,
-  RemoteLayoutStorage,
-} from "@foxglove/studio-base/services/RemoteLayoutStorage";
+  IRemoteLayoutStorage,
+} from "@foxglove/studio-base/services/IRemoteLayoutStorage";
 
 export const FAKE_USER: UserMetadata = {
   id: "fakeuser" as UserID,
@@ -24,7 +24,7 @@ export const FAKE_USER: UserMetadata = {
   name: "Fake User",
 };
 
-export default class MockRemoteLayoutStorage implements RemoteLayoutStorage {
+export default class MockRemoteLayoutStorage implements IRemoteLayoutStorage {
   private layoutsById = new Map<LayoutID, RemoteLayout>();
 
   async getLayouts(): Promise<readonly RemoteLayoutMetadata[]> {

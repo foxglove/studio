@@ -6,17 +6,17 @@ import { v4 as uuidv4 } from "uuid";
 
 import Logger from "@foxglove/log";
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
+import { CachedLayout, ILayoutCache } from "@foxglove/studio-base/services/ILayoutCache";
 import {
   Layout,
   LayoutID,
   LayoutMetadata,
-  LayoutStorage,
-} from "@foxglove/studio-base/services/LayoutStorage";
-import { LocalLayout, LocalLayoutStorage } from "@foxglove/studio-base/services/LocalLayoutStorage";
+  ILayoutStorage,
+} from "@foxglove/studio-base/services/ILayoutStorage";
 
 const log = Logger.getLogger(__filename);
 
-function getMetadata(layout: LocalLayout): LayoutMetadata {
+function getMetadata(layout: CachedLayout): LayoutMetadata {
   if (layout.serverMetadata) {
     log.warn(`Local-only layout ${layout.id} has unexpected server metadata`);
   }
@@ -32,28 +32,28 @@ function getMetadata(layout: LocalLayout): LayoutMetadata {
 }
 
 /**
- * A LayoutStorage that's backed solely by a LocalLayoutStorage. This is used when centralized
+ * A ILayoutStorage that's backed solely by an ILayoutCache. This is used when centralized
  * layout storage is not available because the user is not logged in to an account.
  *
  * Any `serverMetadata` on the local layout is ignored and generally is not expected to be present.
  */
-export default class LocalOnlyLayoutStorage implements LayoutStorage {
+export default class CacheOnlyLayoutStorage implements ILayoutStorage {
   supportsSharing = false;
 
-  constructor(private storage: LocalLayoutStorage) {}
+  constructor(private storage: ILayoutCache) {}
 
   async getLayouts(): Promise<LayoutMetadata[]> {
     return (await this.storage.list()).map(getMetadata);
   }
 
   async getLayout(id: LayoutID): Promise<Layout | undefined> {
-    const localLayout = await this.storage.get(id);
-    if (!localLayout || !localLayout.state) {
+    const cachedLayout = await this.storage.get(id);
+    if (!cachedLayout || !cachedLayout.state) {
       return undefined;
     }
     return {
-      data: localLayout.state,
-      metadata: getMetadata(localLayout),
+      data: cachedLayout.state,
+      metadata: getMetadata(cachedLayout),
     };
   }
 

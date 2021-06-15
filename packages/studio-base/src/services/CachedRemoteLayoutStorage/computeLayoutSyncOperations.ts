@@ -2,85 +2,89 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { LayoutID } from "@foxglove/studio-base/services/LayoutStorage";
-import { LocalLayout } from "@foxglove/studio-base/services/LocalLayoutStorage";
-import { RemoteLayoutMetadata } from "@foxglove/studio-base/services/RemoteLayoutStorage";
+import { CachedLayout } from "@foxglove/studio-base/services/ILayoutCache";
+import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
+import { RemoteLayoutMetadata } from "@foxglove/studio-base/services/IRemoteLayoutStorage";
 
 export type ConflictType =
   | "local-delete-remote-update"
   | "local-update-remote-delete"
   | "both-update";
 
-type LocalLayoutWithState = LocalLayout & { state: NonNullable<LocalLayout["state"]> };
+type CachedLayoutWithState = CachedLayout & { state: NonNullable<CachedLayout["state"]> };
 
 export type SyncOperation =
   | { type: "add-to-cache"; remoteLayout: RemoteLayoutMetadata }
-  | { type: "delete-local"; localLayout: LocalLayout }
-  | { type: "delete-remote"; localLayout: LocalLayout; remoteLayout: RemoteLayoutMetadata }
-  | { type: "upload-new"; localLayout: LocalLayoutWithState }
-  | { type: "upload-updated"; localLayout: LocalLayout; remoteLayout: RemoteLayoutMetadata }
-  | { type: "update-cached-metadata"; localLayout: LocalLayout; remoteLayout: RemoteLayoutMetadata }
+  | { type: "delete-local"; cachedLayout: CachedLayout }
+  | { type: "delete-remote"; cachedLayout: CachedLayout; remoteLayout: RemoteLayoutMetadata }
+  | { type: "upload-new"; cachedLayout: CachedLayoutWithState }
+  | { type: "upload-updated"; cachedLayout: CachedLayout; remoteLayout: RemoteLayoutMetadata }
+  | {
+      type: "update-cached-metadata";
+      cachedLayout: CachedLayout;
+      remoteLayout: RemoteLayoutMetadata;
+    }
   | {
       type: "conflict";
-      localLayout: LocalLayout;
+      cachedLayout: CachedLayout;
       conflictType: ConflictType;
     };
 
 export default function computeLayoutSyncOperations(
-  localLayoutsById: ReadonlyMap<string, LocalLayout>,
+  cachedLayoutsById: ReadonlyMap<string, CachedLayout>,
   remoteLayoutsById: ReadonlyMap<LayoutID, RemoteLayoutMetadata>,
 ): SyncOperation[] {
   const ops: SyncOperation[] = [];
   const newLayoutsToCache = new Map(remoteLayoutsById);
 
-  for (const localLayout of localLayoutsById.values()) {
+  for (const cachedLayout of cachedLayoutsById.values()) {
     // If the layout was created locally, upload it
-    if (localLayout.serverMetadata == undefined) {
-      if (localLayout.state == undefined) {
+    if (cachedLayout.serverMetadata == undefined) {
+      if (cachedLayout.state == undefined) {
         // Nothing to upload, might as well delete.
-        ops.push({ type: "delete-local", localLayout });
+        ops.push({ type: "delete-local", cachedLayout });
       } else {
         ops.push({
           type: "upload-new",
           // Convince TS that state is present
-          localLayout: { ...localLayout, state: localLayout.state },
+          cachedLayout: { ...cachedLayout, state: cachedLayout.state },
         });
       }
       continue;
     }
-    newLayoutsToCache.delete(localLayout.serverMetadata.id);
+    newLayoutsToCache.delete(cachedLayout.serverMetadata.id);
 
     //FIXME: ensure that localId matches remote id?
 
     // If we know the layout's server id, but it no longer exists on the server, delete it
-    const remoteLayout = remoteLayoutsById.get(localLayout.serverMetadata.id);
+    const remoteLayout = remoteLayoutsById.get(cachedLayout.serverMetadata.id);
     if (remoteLayout == undefined) {
-      if (localLayout.locallyModified === true) {
-        ops.push({ type: "conflict", localLayout, conflictType: "local-update-remote-delete" });
+      if (cachedLayout.locallyModified === true) {
+        ops.push({ type: "conflict", cachedLayout, conflictType: "local-update-remote-delete" });
       } else {
-        ops.push({ type: "delete-local", localLayout });
+        ops.push({ type: "delete-local", cachedLayout });
       }
       continue;
     }
 
-    const cachedUpdatedAt = Date.parse(localLayout.serverMetadata.updatedAt);
+    const cachedUpdatedAt = Date.parse(cachedLayout.serverMetadata.updatedAt);
     const serverUpdatedAt = Date.parse(remoteLayout.updatedAt);
 
     if (serverUpdatedAt > cachedUpdatedAt) {
-      if (localLayout.locallyModified === true || localLayout.locallyDeleted === true) {
+      if (cachedLayout.locallyModified === true || cachedLayout.locallyDeleted === true) {
         ops.push({
           type: "conflict",
-          localLayout,
+          cachedLayout,
           conflictType:
-            localLayout.locallyDeleted === true ? "local-delete-remote-update" : "both-update",
+            cachedLayout.locallyDeleted === true ? "local-delete-remote-update" : "both-update",
         });
       } else {
-        ops.push({ type: "update-cached-metadata", localLayout, remoteLayout });
+        ops.push({ type: "update-cached-metadata", cachedLayout, remoteLayout });
       }
-    } else if (localLayout.locallyDeleted === true) {
-      ops.push({ type: "delete-remote", localLayout, remoteLayout });
-    } else if (localLayout.locallyModified === true) {
-      ops.push({ type: "upload-updated", localLayout, remoteLayout });
+    } else if (cachedLayout.locallyDeleted === true) {
+      ops.push({ type: "delete-remote", cachedLayout, remoteLayout });
+    } else if (cachedLayout.locallyModified === true) {
+      ops.push({ type: "upload-updated", cachedLayout, remoteLayout });
     }
   }
 

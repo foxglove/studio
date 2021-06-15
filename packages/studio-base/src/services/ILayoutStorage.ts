@@ -32,7 +32,7 @@ export type Layout = {
   metadata: LayoutMetadata;
 };
 
-export interface LayoutStorage {
+export interface ILayoutStorage {
   getLayouts(): Promise<LayoutMetadata[]>;
 
   getLayout(id: LayoutID): Promise<Layout | undefined>;

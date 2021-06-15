@@ -5,13 +5,13 @@
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import CachedRemoteLayoutStorage from "@foxglove/studio-base/services/CachedRemoteLayoutStorage";
-import { ISO8601Timestamp, LayoutMetadata } from "@foxglove/studio-base/services/LayoutStorage";
-import { LocalLayout } from "@foxglove/studio-base/services/LocalLayoutStorage";
-import MockLocalLayoutStorage from "@foxglove/studio-base/services/MockLocalLayoutStorage";
+import { CachedLayout } from "@foxglove/studio-base/services/ILayoutCache";
+import { ISO8601Timestamp, LayoutMetadata } from "@foxglove/studio-base/services/ILayoutStorage";
+import { RemoteLayoutMetadata } from "@foxglove/studio-base/services/IRemoteLayoutStorage";
+import MockLayoutCache from "@foxglove/studio-base/services/MockLayoutCache";
 import MockRemoteLayoutStorage, {
   FAKE_USER,
 } from "@foxglove/studio-base/services/MockRemoteLayoutStorage";
-import { RemoteLayoutMetadata } from "@foxglove/studio-base/services/RemoteLayoutStorage";
 import { PanelConfig } from "@foxglove/studio-base/types/panels";
 
 function makePanelsState(configById: Record<string, PanelConfig>): PanelsState {
@@ -41,7 +41,7 @@ describe("CachedRemoteLayoutStorage", () => {
   });
 
   it("writes new layouts to cache, then uploads them", async () => {
-    const cacheStorage = new MockLocalLayoutStorage();
+    const cacheStorage = new MockLayoutCache();
     const remoteStorage = new MockRemoteLayoutStorage();
     const storage = new CachedRemoteLayoutStorage({ cacheStorage, remoteStorage });
 
@@ -64,7 +64,7 @@ describe("CachedRemoteLayoutStorage", () => {
     const cachedLayouts = await storage.getLayouts();
     expect(cachedLayouts).toEqual([expectedCached]);
 
-    const expectedLocal: LocalLayout = {
+    const expectedLocal: CachedLayout = {
       id: expect.any(String),
       path: ["a", "b"],
       name: "layout1",
