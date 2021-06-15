@@ -96,19 +96,12 @@ jobs:
 
       - run: yarn install --immutable
 
-      #- name: Configure playwright environment
-      #  uses: microsoft/playwright-github-action@v1
-
       - name: test:integration
         if: matrix.os == 'ubuntu-20.04'
         uses: GabrielBB/xvfb-action@v1.5
         with:
           working-directory: ./
           run: yarn run test:integration
-
-      #- name: test:integration
-      #  run: xvfb-run --auto-servernum -- yarn run test:integration
-      #  if: matrix.os == 'ubuntu-20.04'
 
       - name: test:integration
         if: matrix.os != 'ubuntu-20.04'

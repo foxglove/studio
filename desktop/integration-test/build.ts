@@ -6,12 +6,13 @@ import webpack from "webpack";
 
 import webpackConfig from "../webpack.config";
 
-// global jest test setup builds the webpack build before running any integration tests
-export default async (): Promise<string> => {
-  const appPath = path.join(__dirname, "..", ".webpack");
+const appPath = path.join(__dirname, "..", ".webpack");
+export { appPath };
 
+// global jest test setup builds the webpack build before running any integration tests
+export default async (): Promise<void> => {
   if ((process.env.INTEGRATION_SKIP_BUILD ?? "") !== "") {
-    return appPath;
+    return;
   }
 
   const compiler = webpack(
@@ -24,9 +25,9 @@ export default async (): Promise<string> => {
     }),
   );
 
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     // eslint-disable-next-line no-restricted-syntax
-    console.info("Building Webpack");
+    console.info("Building Webpack. To skip, set INTEGRATION_SKIP_BUILD=1");
     compiler.run((err, result) => {
       compiler.close(() => {});
       if (err) {
@@ -40,7 +41,7 @@ export default async (): Promise<string> => {
       }
       // eslint-disable-next-line no-restricted-syntax
       console.info("Webpack build complete");
-      resolve(appPath);
+      resolve();
     });
   });
 };
