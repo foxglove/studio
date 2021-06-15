@@ -92,13 +92,16 @@ jobs:
             **/node_modules
           key: v5-${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: v5-${{ runner.os }}-yarn-
+
       - run: yarn install --immutable
-      - name: test:integration
-        if: matrix.os == 'ubuntu-20.04'
+
+      - name: Configure playwright environment
         uses: microsoft/playwright-github-action@v1
-        with:
-          working-directory: ./
-          run: xvfb-run --auto-servernum -- yarn run test:integration
+
+      - name: test:integration
+        run: xvfb-run --auto-servernum -- yarn run test:integration
+        if: matrix.os == 'ubuntu-20.04'
+
       - name: test:integration
         if: matrix.os != 'ubuntu-20.04'
         run: yarn run test:integration
