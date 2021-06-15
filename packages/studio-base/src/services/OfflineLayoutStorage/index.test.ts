@@ -346,6 +346,59 @@ describe("OfflineLayoutStorage", () => {
       ]);
     });
 
+    it("uploads new layouts under a different name if there is a conflict", async () => {
+      const existingLayout: RemoteLayout = {
+        id: "id1" as LayoutID,
+        path: ["a"],
+        name: "Foo",
+        creator: FAKE_USER,
+        createdAt: new Date(10).toISOString() as ISO8601Timestamp,
+        updatedAt: new Date(10).toISOString() as ISO8601Timestamp,
+        permission: "creator_write",
+        data: makePanelsState({ existingPanel: { a: 1 } }),
+      };
+      const cacheStorage = new MockLayoutCache();
+      const remoteStorage = new MockRemoteLayoutStorage([existingLayout]);
+      const storage = new OfflineLayoutStorage({ cacheStorage, remoteStorage });
+
+      await storage.saveNewLayout({
+        path: ["a"],
+        name: "Foo",
+        data: makePanelsState({ newLayoutPanel: { b: 2 } }),
+      });
+      await storage.saveNewLayout({
+        path: ["b", "c"],
+        name: "Foo",
+        data: makePanelsState({ newLayoutPanel2: { c: 3 } }),
+      });
+
+      jest.setSystemTime(10);
+      await expect(storage.syncWithRemote()).resolves.toEqual([]);
+
+      const remoteLayouts = await remoteStorage.getLayouts();
+      expect(remoteLayouts).toEqual([
+        { ...existingLayout, data: undefined },
+        {
+          id: expect.any(String),
+          path: ["a"],
+          name: "Foo 1", // conflict - renamed
+          creator: FAKE_USER,
+          createdAt: new Date(10).toISOString() as ISO8601Timestamp,
+          updatedAt: new Date(10).toISOString() as ISO8601Timestamp,
+          permission: "creator_write",
+        },
+        {
+          id: expect.any(String),
+          path: ["b", "c"],
+          name: "Foo", // no conflict - not renamed
+          creator: FAKE_USER,
+          createdAt: new Date(10).toISOString() as ISO8601Timestamp,
+          updatedAt: new Date(10).toISOString() as ISO8601Timestamp,
+          permission: "creator_write",
+        },
+      ]);
+    });
+
     it("uploads locally modified layouts to the server", async () => {
       const remote1: RemoteLayoutMetadata = {
         id: "id1" as LayoutID,
