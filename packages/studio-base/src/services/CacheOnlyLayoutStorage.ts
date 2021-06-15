@@ -52,8 +52,8 @@ export default class CacheOnlyLayoutStorage implements ILayoutStorage {
       return undefined;
     }
     return {
+      ...getMetadata(cachedLayout),
       data: cachedLayout.state,
-      metadata: getMetadata(cachedLayout),
     };
   }
 

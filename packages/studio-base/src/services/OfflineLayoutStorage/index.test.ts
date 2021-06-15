@@ -93,8 +93,8 @@ describe("OfflineLayoutStorage", () => {
     expectedRemote.id = remoteLayouts[0]!.id;
 
     await expect(remoteStorage.getLayout(expectedRemote.id)).resolves.toEqual({
+      ...expectedRemote,
       data: expectedLocal.state,
-      metadata: expectedRemote,
     });
 
     // The new server metadata has been written to the cache

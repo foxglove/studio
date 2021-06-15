@@ -104,7 +104,7 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
   async getLayout(id: LayoutID): Promise<Layout | undefined> {
     const layout = await this.cacheStorage.runExclusive((cache) => cache.get(id));
     if (layout?.state) {
-      return { data: layout.state, metadata: getEffectiveMetadata(layout) };
+      return { ...getEffectiveMetadata(layout), data: layout.state };
     }
     // It's quite possible that we have metadata from the server from a previous sync, but no
     // locally cached data, if the user has never selected this layout before. We need to query the
@@ -115,15 +115,16 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
       // next sync.
       return undefined;
     }
+    const { data, ...metadata } = remoteLayout;
     await this.cacheStorage.runExclusive((cache) =>
       // In the unlikely event that local modifications (rename or delete) got into the cache since we
       // last checked, the remote response will override them.
       cache.put({
-        id: remoteLayout.metadata.id,
-        name: remoteLayout.metadata.name,
-        path: remoteLayout.metadata.path,
-        state: remoteLayout.data,
-        serverMetadata: remoteLayout.metadata,
+        id: metadata.id,
+        name: metadata.name,
+        path: metadata.path,
+        state: data,
+        serverMetadata: metadata,
       }),
     );
     return remoteLayout;

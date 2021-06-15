@@ -16,16 +16,15 @@ import {
  * enable permissions and consistency checks.
  */
 export type RemoteLayoutMetadata = {
-  [K in keyof LayoutMetadata]-?: NonNullable<LayoutMetadata[K]>;
+  [K in keyof Omit<LayoutMetadata, "data">]-?: NonNullable<LayoutMetadata[K]>;
+} & {
+  data?: never;
 };
 
 /**
  * A panel layout stored on a remote server.
  */
-export type RemoteLayout = {
-  data: PanelsState;
-  metadata: RemoteLayoutMetadata;
-};
+export type RemoteLayout = Omit<RemoteLayoutMetadata, "data"> & { data: PanelsState };
 
 export interface IRemoteLayoutStorage {
   getLayouts: () => Promise<readonly RemoteLayoutMetadata[]>;

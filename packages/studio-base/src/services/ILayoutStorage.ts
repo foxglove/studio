@@ -25,12 +25,10 @@ export type LayoutMetadata = {
   createdAt: ISO8601Timestamp | undefined;
   updatedAt: ISO8601Timestamp | undefined;
   permission: "creator_write" | "org_read" | "org_write";
+  data?: never;
 };
 
-export type Layout = {
-  data: PanelsState;
-  metadata: LayoutMetadata;
-};
+export type Layout = Omit<LayoutMetadata, "data"> & { data: PanelsState };
 
 export interface ILayoutStorage {
   getLayouts(): Promise<LayoutMetadata[]>;
