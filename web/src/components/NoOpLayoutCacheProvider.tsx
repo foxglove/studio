@@ -6,7 +6,7 @@ import { PropsWithChildren, useState } from "react";
 
 import { ILayoutCache, LayoutCacheContext } from "@foxglove/studio-base";
 
-export default function NoOpLayoutStorageProvider(props: PropsWithChildren<unknown>): JSX.Element {
+export default function NoOpLayoutCacheProvider(props: PropsWithChildren<unknown>): JSX.Element {
   const [ctx] = useState<ILayoutCache>(() => {
     return {
       async list() {

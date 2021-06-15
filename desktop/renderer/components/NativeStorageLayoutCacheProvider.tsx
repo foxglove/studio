@@ -9,7 +9,7 @@ import { LayoutCacheContext } from "@foxglove/studio-base";
 import { useNativeStorage } from "../context/NativeStorageContext";
 import NativeStorageLayoutStorage from "../services/NativeStorageLayoutStorage";
 
-export default function NativeStorageLayoutStorageProvider(
+export default function NativeStorageLayoutCacheProvider(
   props: PropsWithChildren<unknown>,
 ): JSX.Element {
   const storage = useNativeStorage();
