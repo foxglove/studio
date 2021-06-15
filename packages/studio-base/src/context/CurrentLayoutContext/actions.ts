@@ -24,7 +24,6 @@ import {
 } from "@foxglove/studio-base/types/panels";
 
 export type PanelsState = {
-  //FIXME: should we remove id and name?
   id: string;
   name: string;
   layout?: MosaicNode<string>;

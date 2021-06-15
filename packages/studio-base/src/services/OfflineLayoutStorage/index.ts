@@ -379,7 +379,6 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
         case "upload-updated": {
           const { cachedLayout, remoteLayout } = operation;
           let responsePromise: ReturnType<IRemoteLayoutStorage["updateLayout"]>;
-          //FIXME: maybe these should both be calls to update, with data being optional, and remove the rename API?
           if (!cachedLayout.state) {
             responsePromise = this.remoteStorage.renameLayout({
               targetID: remoteLayout.id,

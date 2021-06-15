@@ -54,8 +54,6 @@ export default function computeLayoutSyncOperations(
     }
     newLayoutsToCache.delete(cachedLayout.serverMetadata.id);
 
-    //FIXME: ensure that localId matches remote id?
-
     // If we know the layout's server id, but it no longer exists on the server, delete it
     const remoteLayout = remoteLayoutsById.get(cachedLayout.serverMetadata.id);
     if (remoteLayout == undefined) {
