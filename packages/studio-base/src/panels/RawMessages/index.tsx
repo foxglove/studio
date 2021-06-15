@@ -208,7 +208,7 @@ function RawMessages(props: Props) {
       itemValue: unknown,
       ...keyPath: (number | string)[]
     ) => (
-      <ReactHoverObserver className={styles.iconWrapper}>
+      <ReactHoverObserver className={styles.iconWrapper ?? ""}>
         {({ isHovering }) => {
           // lastKeyPath is string in diff mode, number in regular mode
           const lastKeyPath = last(keyPath) as number | string;
@@ -262,7 +262,7 @@ function RawMessages(props: Props) {
                   {smallNumberArrayStr}
                   <Icon
                     fade
-                    className={styles.icon}
+                    className={styles.icon ?? ""}
                     // eslint-disable-next-line no-restricted-syntax
                     onClick={() => console.log(itemValue)}
                     tooltip="Log data to browser console"
@@ -271,7 +271,7 @@ function RawMessages(props: Props) {
                   </Icon>
                 </>
               )}
-              <span className={styles.iconBox}>
+              <span className={styles.iconBox ?? ""}>
                 {valueAction && (
                   <RawMessagesIcons
                     valueAction={valueAction}
@@ -339,7 +339,7 @@ function RawMessages(props: Props) {
       : CheckboxBlankOutlineIcon;
 
     return (
-      <Flex col clip scroll className={styles.container}>
+      <Flex col clip scroll className={styles.container ?? ""}>
         <Metadata
           data={data}
           diffData={diffData}
@@ -349,7 +349,7 @@ function RawMessages(props: Props) {
           {...(diffItem ? { diffMessage: diffItem.message } : undefined)}
         />
         {shouldDisplaySingleVal ? (
-          <div className={styles.singleVal}>
+          <div className={styles.singleVal ?? ""}>
             <MaybeCollapsedValue itemLabel={String(singleVal)} />
           </div>
         ) : diffEnabled && isEqual({}, diff) ? (
@@ -512,7 +512,7 @@ function RawMessages(props: Props) {
         >
           {expandAll ?? false ? <LessIcon /> : <MoreIcon />}
         </Icon>
-        <div className={styles.topicInputs}>
+        <div className={styles.topicInputs ?? ""}>
           <MessagePathInput
             index={0}
             path={topicPath}
@@ -546,7 +546,7 @@ function RawMessages(props: Props) {
                   path={diffTopicPath}
                   onChange={onDiffTopicPathChange}
                   inputStyle={{ height: "100%" }}
-                  prioritizedDatatype={topic?.datatype}
+                  {...(topic ? { prioritizedDatatype: topic.datatype } : {})}
                 />
               ) : undefined}
             </Flex>
