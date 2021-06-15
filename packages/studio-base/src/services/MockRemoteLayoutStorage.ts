@@ -27,6 +27,10 @@ export const FAKE_USER: UserMetadata = {
 export default class MockRemoteLayoutStorage implements IRemoteLayoutStorage {
   private layoutsById = new Map<LayoutID, RemoteLayout>();
 
+  constructor(layouts: RemoteLayout[] = []) {
+    this.layoutsById = new Map(layouts.map((layout) => [layout.id, layout]));
+  }
+
   async getLayouts(): Promise<readonly RemoteLayoutMetadata[]> {
     return Array.from(this.layoutsById.values(), ({ data: _, ...metadata }) => metadata);
   }

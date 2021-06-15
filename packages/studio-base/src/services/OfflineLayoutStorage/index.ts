@@ -307,6 +307,8 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
           await this.cacheStorage.runExclusive((cache) =>
             cache.put({
               ...cachedLayout,
+              name: remoteLayout.name,
+              path: remoteLayout.path,
               serverMetadata: remoteLayout,
               locallyDeleted: false,
               locallyModified: false,
@@ -388,8 +390,8 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
           } else {
             responsePromise = this.remoteStorage.updateLayout({
               targetID: remoteLayout.id,
-              name: remoteLayout.name,
-              path: remoteLayout.path,
+              name: cachedLayout.name,
+              path: cachedLayout.path ?? [],
               ifUnmodifiedSince: remoteLayout.updatedAt,
               data: cachedLayout.state,
             });
