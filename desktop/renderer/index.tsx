@@ -51,16 +51,13 @@ if (!rootEl) {
 }
 
 async function main() {
-  console.log("main start");
   // Initialize the RPC channel for electron-socket. This method is called first
   // since the window.onmessage handler needs to be installed before
   // window.onload fires
   await Sockets.Create();
-  console.log("post sockets create");
 
   // consider moving waitForFonts into App to display an app loading screen
   await waitForFonts();
-  console.log("post fonts");
 
   ReactDOM.render(<Root />, rootEl, () => {
     // Integration tests look for this console log to indicate the app has rendered once

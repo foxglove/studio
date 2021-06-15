@@ -5,7 +5,11 @@
 import electronPath from "electron";
 import { _electron as electron } from "playwright";
 
+import Logger from "@foxglove/log";
+
 import build from "./build";
+
+const log = Logger.getLogger(__filename);
 
 (async () => {
   const appPath = await build();
@@ -17,16 +21,6 @@ import build from "./build";
     executablePath: electronPath as unknown as string,
   });
 
-  // Evaluation expression in the Electron context.
-  /*
-  const appPath = await electronApp.evaluate(async ({ app }) => {
-    // This runs in the main Electron process, parameter here is always
-    // the result of the require('electron') in the main app script.
-    return app.getAppPath();
-  });
-  console.log(appPath);
-  */
-
   // Get the first window that the app opens, wait if necessary.
   const electronWindow = await electronApp.firstWindow();
 
@@ -37,7 +31,7 @@ import build from "./build";
         reject(new Error(message.text()));
         return;
       }
-      console.log(message.text());
+      log.info(message.text());
 
       if (message.text().includes("App rendered")) {
         resolve();
