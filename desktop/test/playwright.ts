@@ -3,14 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import electronPath from "electron";
-import path from "path";
 import { _electron as electron } from "playwright";
 
 import build from "./build";
 
 (async () => {
-  await build();
-  const appPath = path.join(__dirname, "..", ".webpack");
+  const appPath = await build();
 
   // In node.js the electron import gives us the path to the electron binary
   // Our type definitions don't realize this so cast the variable to a string
@@ -47,10 +45,5 @@ import build from "./build";
     });
   });
 
-  // Capture a screenshot.
-  await electronWindow.screenshot({ path: "intro.png" });
-  // Click button.
-  // Exit app.
   await electronApp.close();
-  console.log("done");
 })();
