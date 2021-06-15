@@ -13,7 +13,7 @@
 import { first, last } from "lodash";
 import { ReactNode } from "react";
 
-import { diffLabels } from "@foxglove/studio-base/panels/RawMessages/getDiff";
+import { diffLabels, DiffObject } from "@foxglove/studio-base/panels/RawMessages/getDiff";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 export const DATA_ARRAY_PREVIEW_LIMIT = 20;
@@ -32,7 +32,7 @@ export const ROS_COMMON_MSGS: Set<string> = new Set([
 ]);
 
 function getChangeCounts(
-  data: Record<string, unknown>,
+  data: DiffObject,
   startingCounts: {
     -readonly [K in typeof diffLabels["ADDED" | "CHANGED" | "DELETED"]["labelText"]]: number;
   },
@@ -45,7 +45,7 @@ function getChangeCounts(
     ) {
       startingCounts[key]++;
     } else if (typeof data[key] === "object" && data[key] != undefined) {
-      getChangeCounts(data[key] as Record<string, unknown>, startingCounts);
+      getChangeCounts(data[key] as DiffObject, startingCounts);
     }
   }
   return startingCounts;
@@ -53,11 +53,11 @@ function getChangeCounts(
 
 export const getItemStringForDiff = (
   _type: string,
-  data: Record<string, unknown>,
+  data: DiffObject,
   itemType: ReactNode,
 ): ReactNode => {
   const { ADDED, DELETED, CHANGED, ID } = diffLabels;
-  const id = data[ID.labelText] as Record<string, unknown> | undefined;
+  const id = data[ID.labelText] as DiffObject | undefined;
   const idLabel = id
     ? Object.keys(id)
         .map((key) => `${key}: ${id[key]}`)

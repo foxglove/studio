@@ -37,12 +37,13 @@ export const diffLabels = {
 
 export const diffLabelsByLabelText = keyBy(Object.values(diffLabels), "labelText");
 
+export type DiffObject = Record<string, unknown>;
 export default function getDiff(
   before: unknown,
   after: unknown,
   idLabel?: string,
   showFullMessageForDiff: boolean = false,
-): unknown {
+): undefined | DiffObject | DiffObject[] {
   if (Array.isArray(before) && Array.isArray(after)) {
     let idToCompareWith: string | undefined;
     const allItems = before.concat(after);
@@ -103,14 +104,14 @@ export default function getDiff(
         delete unmatchedAfterById[id];
         if (!isEmpty(innerDiff)) {
           const isDeleted =
-            Object.keys(innerDiff as Record<string, unknown>).length === 1 &&
-            Object.keys(innerDiff as Record<string, unknown>)[0] === diffLabels.DELETED.labelText;
+            Object.keys(innerDiff as DiffObject).length === 1 &&
+            Object.keys(innerDiff as DiffObject)[0] === diffLabels.DELETED.labelText;
           diff.push(
             isDeleted
-              ? innerDiff
+              ? (innerDiff as DiffObject)
               : {
                   [diffLabels.ID.labelText]: { [idToCompareWith]: id },
-                  ...(innerDiff as Record<string, unknown>),
+                  ...(innerDiff as DiffObject),
                 },
           );
         }
@@ -118,7 +119,7 @@ export default function getDiff(
       for (const afterItem of Object.values(unmatchedAfterById)) {
         const innerDiff = getDiff(undefined, afterItem, idToCompareWith, showFullMessageForDiff);
         if (!isEmpty(innerDiff)) {
-          diff.push(innerDiff);
+          diff.push(innerDiff as DiffObject);
         }
       }
       return diff;
@@ -126,19 +127,19 @@ export default function getDiff(
   }
 
   if (before && after && typeof before === "object" && typeof after === "object") {
-    const diff: Record<string, unknown> = {};
+    const diff: DiffObject = {};
     const allKeys = Object.keys(before).concat(Object.keys(after));
     for (const key of uniq(allKeys)) {
       const innerDiff = getDiff(
-        (before as Record<string, unknown>)[key],
-        (after as Record<string, unknown>)[key],
+        (before as DiffObject)[key],
+        (after as DiffObject)[key],
         undefined,
         showFullMessageForDiff,
       );
       if (!isEmpty(innerDiff)) {
         diff[key] = innerDiff;
       } else if (showFullMessageForDiff) {
-        diff[key] = (before as Record<string, unknown>)[key];
+        diff[key] = (before as DiffObject)[key];
       }
     }
     return diff;
@@ -153,10 +154,10 @@ export default function getDiff(
       return { [diffLabels.ADDED.labelText]: after };
     }
     const idLabelObj = {
-      [diffLabels.ID.labelText]: { [idLabel]: { ...(after as Record<string, unknown>) }[idLabel] },
+      [diffLabels.ID.labelText]: { [idLabel]: { ...(after as DiffObject) }[idLabel] },
     };
     return {
-      [diffLabels.ADDED.labelText]: { ...idLabelObj, ...(after as Record<string, unknown>) },
+      [diffLabels.ADDED.labelText]: { ...idLabelObj, ...(after as DiffObject) },
     };
   }
   if (after === undefined) {
@@ -165,10 +166,10 @@ export default function getDiff(
       return { [diffLabels.DELETED.labelText]: before };
     }
     const idLabelObj = {
-      [diffLabels.ID.labelText]: { [idLabel]: { ...(before as Record<string, unknown>) }[idLabel] },
+      [diffLabels.ID.labelText]: { [idLabel]: { ...(before as DiffObject) }[idLabel] },
     };
     return {
-      [diffLabels.DELETED.labelText]: { ...idLabelObj, ...(before as Record<string, unknown>) },
+      [diffLabels.DELETED.labelText]: { ...idLabelObj, ...(before as DiffObject) },
     };
   }
   return {

@@ -50,6 +50,7 @@ import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Tooltip from "@foxglove/studio-base/components/Tooltip";
 import getDiff, {
+  DiffObject,
   diffLabels,
   diffLabelsByLabelText,
 } from "@foxglove/studio-base/panels/RawMessages/getDiff";
@@ -201,20 +202,20 @@ function RawMessages(props: Props) {
   const valueRenderer = useCallback(
     (
       structureItem: MessagePathStructureItem | undefined,
-      data: unknown[],
-      queriedData: MessagePathDataItem[],
+      data: unknown[] | DiffObject,
+      queriedData: MessagePathDataItem[] | DiffObject,
       label: string,
       itemValue: unknown,
       ...keyPath: (number | string)[]
     ) => (
       <ReactHoverObserver className={styles.iconWrapper}>
         {({ isHovering }) => {
-          // We make sure to always pass in a number at the end, but that's hard to express in the type system.
-          const lastKeyPath = last(keyPath) as number;
+          // lastKeyPath is string in diff mode, number in regular mode
+          const lastKeyPath = last(keyPath) as number | string;
           let valueAction: ValueAction | undefined;
           if (isHovering && structureItem) {
             valueAction = getValueActionForValue(
-              data[lastKeyPath],
+              (data as unknown[])[lastKeyPath as number],
               structureItem,
               keyPath.slice(0, -1).reverse(),
             );
@@ -235,7 +236,8 @@ function RawMessages(props: Props) {
               }
             }
           }
-          const basePath = queriedData[lastKeyPath]?.path ?? "";
+          const basePath =
+            (queriedData as MessagePathDataItem[])[lastKeyPath as number]?.path ?? "";
           let itemLabel = label;
           // output preview for the first x items if the data is in binary format
           // sample output: Int8Array(331776) [-4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, ...]
@@ -327,9 +329,9 @@ function RawMessages(props: Props) {
 
     // json parse/stringify round trip is used to deep parse data and diff data which may be lazy messages
     // lazy messages have non-enumerable getters but do have a toJSON method to turn themselves into an object
-    const diff =
-      diffEnabled &&
-      getDiff(maybeDeepParse(data), maybeDeepParse(diffData), undefined, showFullMessageForDiff);
+    const diff = diffEnabled
+      ? getDiff(maybeDeepParse(data), maybeDeepParse(diffData), undefined, showFullMessageForDiff)
+      : {};
     const diffLabelTexts = Object.values(diffLabels).map(({ labelText }) => labelText);
 
     const CheckboxComponent = showFullMessageForDiff
@@ -342,9 +344,9 @@ function RawMessages(props: Props) {
           data={data}
           diffData={diffData}
           diff={diff}
-          datatype={topic?.datatype}
           message={baseItem.message}
-          diffMessage={diffItem?.message}
+          {...(topic ? { datatype: topic.datatype } : undefined)}
+          {...(diffItem ? { diffMessage: diffItem.message } : undefined)}
         />
         {shouldDisplaySingleVal ? (
           <div className={styles.singleVal}>
@@ -375,13 +377,18 @@ function RawMessages(props: Props) {
               getItemString={diffEnabled ? getItemStringForDiff : getItemString}
               valueRenderer={(...args) => {
                 if (diffEnabled) {
-                  return valueRenderer(undefined, diff, diff, ...args);
+                  return valueRenderer(undefined, diff as DiffObject, diff as DiffObject, ...args);
                 }
                 if (hideWrappingArray) {
                   // When the wrapping array is hidden, put it back here.
                   return valueRenderer(rootStructureItem, [data], baseItem.queriedData, ...args, 0);
                 }
-                return valueRenderer(rootStructureItem, data, baseItem.queriedData, ...args);
+                return valueRenderer(
+                  rootStructureItem,
+                  data as unknown[],
+                  baseItem.queriedData,
+                  ...args,
+                );
               }}
               postprocessValue={(rawVal: unknown) => {
                 const val = maybeDeepParse(rawVal);
