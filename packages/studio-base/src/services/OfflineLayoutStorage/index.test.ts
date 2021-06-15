@@ -4,7 +4,6 @@
 
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
-import CachedRemoteLayoutStorage from "@foxglove/studio-base/services/CachedRemoteLayoutStorage";
 import { CachedLayout } from "@foxglove/studio-base/services/ILayoutCache";
 import { ISO8601Timestamp, LayoutMetadata } from "@foxglove/studio-base/services/ILayoutStorage";
 import { RemoteLayoutMetadata } from "@foxglove/studio-base/services/IRemoteLayoutStorage";
@@ -12,6 +11,7 @@ import MockLayoutCache from "@foxglove/studio-base/services/MockLayoutCache";
 import MockRemoteLayoutStorage, {
   FAKE_USER,
 } from "@foxglove/studio-base/services/MockRemoteLayoutStorage";
+import OfflineLayoutStorage from "@foxglove/studio-base/services/OfflineLayoutStorage";
 import { PanelConfig } from "@foxglove/studio-base/types/panels";
 
 function makePanelsState(configById: Record<string, PanelConfig>): PanelsState {
@@ -27,7 +27,7 @@ function makePanelsState(configById: Record<string, PanelConfig>): PanelsState {
   };
 }
 
-describe("CachedRemoteLayoutStorage", () => {
+describe("OfflineLayoutStorage", () => {
   const originalDate = Date;
   const mockDateNow = jest.fn<number, []>().mockReturnValue(NaN);
   let mockDate: jest.SpyInstance<Date, [number]> | undefined;
@@ -43,7 +43,7 @@ describe("CachedRemoteLayoutStorage", () => {
   it("writes new layouts to cache, then uploads them", async () => {
     const cacheStorage = new MockLayoutCache();
     const remoteStorage = new MockRemoteLayoutStorage();
-    const storage = new CachedRemoteLayoutStorage({ cacheStorage, remoteStorage });
+    const storage = new OfflineLayoutStorage({ cacheStorage, remoteStorage });
 
     await storage.saveNewLayout({
       path: ["a", "b"],

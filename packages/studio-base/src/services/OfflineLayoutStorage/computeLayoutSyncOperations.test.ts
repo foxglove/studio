@@ -4,12 +4,11 @@
 
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
-import computeLayoutSyncOperations, {
-  SyncOperation,
-} from "@foxglove/studio-base/services/CachedRemoteLayoutStorage/computeLayoutSyncOperations";
 import { CachedLayout } from "@foxglove/studio-base/services/ILayoutCache";
 import { ISO8601Timestamp, LayoutID, UserID } from "@foxglove/studio-base/services/ILayoutStorage";
 import { RemoteLayoutMetadata } from "@foxglove/studio-base/services/IRemoteLayoutStorage";
+
+import computeLayoutSyncOperations, { SyncOperation } from "./computeLayoutSyncOperations";
 
 function makeMetadata(
   id: string,
