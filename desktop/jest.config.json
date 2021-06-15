@@ -1,5 +1,4 @@
 {
-  "globalSetup": "<rootDir>/test/globalSetup.ts",
   "transform": {
     "\\.[jt]sx?$": ["babel-jest", { "rootMode": "upward" }]
   },
