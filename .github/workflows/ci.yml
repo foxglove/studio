@@ -95,10 +95,10 @@ jobs:
       - run: yarn install --immutable
       - name: test:integration
         if: matrix.os == 'ubuntu-20.04'
-        uses: GabrielBB/xvfb-action@v1.5
+        uses: microsoft/playwright-github-action@v1
         with:
           working-directory: ./
-          run: yarn run test:integration
+          run: xvfb-run --auto-servernum -- yarn run test:integration
       - name: test:integration
         if: matrix.os != 'ubuntu-20.04'
         run: yarn run test:integration
