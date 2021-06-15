@@ -6,7 +6,10 @@ import electronPath from "electron";
 import path from "path";
 import { _electron as electron } from "playwright";
 
+import build from "./build";
+
 (async () => {
+  await build();
   const appPath = path.join(__dirname, "..", ".webpack");
 
   // In node.js the electron import gives us the path to the electron binary

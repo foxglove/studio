@@ -28,7 +28,7 @@
     "test": "jest",
     "test:debug": "cross-env NODE_OPTIONS='--inspect-brk' jest",
     "test:watch": "jest --watch",
-    "test:integration": "ts-node desktop/test/playwright",
+    "test:integration": "cross-env NODE_OPTIONS='--max-old-space-size=6144' ts-node desktop/test/playwright",
     "package:win": "yarn package --win",
     "package:darwin": "yarn package --mac",
     "package:linux": "yarn package --linux",
