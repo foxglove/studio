@@ -28,7 +28,6 @@ import GlobalVariablesTable from "@foxglove/studio-base/components/GlobalVariabl
 import variablesHelp from "@foxglove/studio-base/components/GlobalVariablesTable/index.help.md";
 import HelpModal from "@foxglove/studio-base/components/HelpModal";
 import LayoutBrowser from "@foxglove/studio-base/components/LayoutBrowser";
-import LayoutMenu from "@foxglove/studio-base/components/LayoutMenu";
 import messagePathHelp from "@foxglove/studio-base/components/MessagePathSyntax/index.help.md";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
@@ -436,9 +435,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           <div style={{ flexGrow: 1 }} />
           <SToolbarItem style={{ marginRight: 5 }}>
             {!inAutomatedRunMode() && <NotificationDisplay />}
-          </SToolbarItem>
-          <SToolbarItem>
-            <LayoutMenu />
           </SToolbarItem>
         </Toolbar>
         <Sidebar

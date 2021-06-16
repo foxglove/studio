@@ -2,7 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { IconButton, ITextField, makeStyles, Stack, useTheme } from "@fluentui/react";
+import {
+  ContextualMenuItemType,
+  IconButton,
+  ITextField,
+  makeStyles,
+  Stack,
+  useTheme,
+} from "@fluentui/react";
 import { TextField } from "@fluentui/react";
 import cx from "classnames";
 import { useCallback, useState } from "react";
@@ -162,6 +169,7 @@ export default function LayoutRow<T extends LayoutItem>({
                 iconProps: { iconName: "Share" },
                 onClick: exportAction,
               },
+              { key: "divider_1", itemType: ContextualMenuItemType.Divider },
               {
                 key: "delete",
                 text: "Delete…",

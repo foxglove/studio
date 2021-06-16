@@ -4,7 +4,6 @@
 
 import { useMemo } from "react";
 
-import LayoutMenu from "@foxglove/studio-base/components/LayoutMenu";
 import CurrentLayoutContext from "@foxglove/studio-base/context/CurrentLayoutContext";
 import LayoutCacheContext from "@foxglove/studio-base/context/LayoutCacheContext";
 import CurrentLayoutState, {
@@ -13,9 +12,11 @@ import CurrentLayoutState, {
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import MockLayoutCache from "@foxglove/studio-base/services/MockLayoutCache";
 
+import LayoutBrowser from "./index";
+
 export default {
-  title: "components/LayoutMenu",
-  component: LayoutMenu,
+  title: "components/LayoutBrowser",
+  component: LayoutBrowser,
 };
 
 export function Empty(): JSX.Element {
@@ -26,7 +27,7 @@ export function Empty(): JSX.Element {
     <div style={{ display: "flex", height: 400 }}>
       <CurrentLayoutContext.Provider value={currentLayout}>
         <LayoutCacheContext.Provider value={storage}>
-          <LayoutMenu defaultIsOpen />
+          <LayoutBrowser />
         </LayoutCacheContext.Provider>
       </CurrentLayoutContext.Provider>
     </div>
@@ -77,7 +78,7 @@ export function LayoutList(): JSX.Element {
     <div style={{ display: "flex", height: 400 }}>
       <CurrentLayoutContext.Provider value={mockLayoutContext}>
         <LayoutCacheContext.Provider value={storage}>
-          <LayoutMenu defaultIsOpen />
+          <LayoutBrowser />
         </LayoutCacheContext.Provider>
       </CurrentLayoutContext.Provider>
     </div>
