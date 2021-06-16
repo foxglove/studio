@@ -22,6 +22,7 @@ import ExtensionRegistryProvider from "@foxglove/studio-base/providers/Extension
 import PanelCatalogProvider from "@foxglove/studio-base/providers/PanelCatalogProvider";
 import URDFAssetLoader from "@foxglove/studio-base/services/URDFAssetLoader";
 
+// comment
 type AppProps = {
   availableSources: PlayerSourceDefinition[];
   demoBagUrl?: string;
