@@ -202,14 +202,14 @@ function RawMessages(props: Props) {
   const valueRenderer = useCallback(
     (
       structureItem: MessagePathStructureItem | undefined,
-      data: unknown[] | DiffObject,
-      queriedData: MessagePathDataItem[] | DiffObject,
+      data: unknown[] | undefined | DiffObject | DiffObject[],
+      queriedData: MessagePathDataItem[] | undefined | DiffObject | DiffObject[],
       label: string,
       itemValue: unknown,
       ...keyPath: (number | string)[]
     ) => (
       <ReactHoverObserver className={styles.iconWrapper ?? ""}>
-        {({ isHovering }) => {
+        {({ isHovering }: { isHovering: boolean }) => {
           // lastKeyPath is string in diff mode, number in regular mode
           const lastKeyPath = last(keyPath) as number | string;
           let valueAction: ValueAction | undefined;
@@ -377,7 +377,8 @@ function RawMessages(props: Props) {
               getItemString={diffEnabled ? getItemStringForDiff : getItemString}
               valueRenderer={(...args) => {
                 if (diffEnabled) {
-                  return valueRenderer(undefined, diff as DiffObject, diff as DiffObject, ...args);
+                  // TODO: Refactor to create a version of valueRenderer that is only invoked when diffEnabled
+                  return valueRenderer(undefined, diff, diff, ...args);
                 }
                 if (hideWrappingArray) {
                   // When the wrapping array is hidden, put it back here.
