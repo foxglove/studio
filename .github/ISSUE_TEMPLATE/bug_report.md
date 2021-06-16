@@ -1,6 +1,7 @@
 ---
 name: Bug
 about: Report an issue
+labels: "bug"
 ---
 
 **Description**
