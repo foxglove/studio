@@ -13,7 +13,6 @@
 
 import CheckboxBlankOutlineIcon from "@mdi/svg/svg/checkbox-blank-outline.svg";
 import CheckboxMarkedIcon from "@mdi/svg/svg/checkbox-marked.svg";
-import ConsoleLineIcon from "@mdi/svg/svg/console-line.svg";
 import PlusMinusIcon from "@mdi/svg/svg/plus-minus.svg";
 import LessIcon from "@mdi/svg/svg/unfold-less-horizontal.svg";
 import MoreIcon from "@mdi/svg/svg/unfold-more-horizontal.svg";
@@ -50,7 +49,6 @@ import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Tooltip from "@foxglove/studio-base/components/Tooltip";
 import getDiff, {
-  DiffObject,
   diffLabels,
   diffLabelsByLabelText,
 } from "@foxglove/studio-base/panels/RawMessages/getDiff";
@@ -58,9 +56,9 @@ import { Topic } from "@foxglove/studio-base/players/types";
 import { jsonTreeTheme, SECOND_SOURCE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 import { enumValuesByDatatypeAndField } from "@foxglove/studio-base/util/selectors";
 
-import { HighlightedValue, SDiffSpan, MaybeCollapsedValue } from "./Diff";
+import { SDiffSpan, MaybeCollapsedValue } from "./Diff";
 import Metadata from "./Metadata";
-import RawMessagesIcons from "./RawMessagesIcons";
+import Value from "./Value";
 import {
   ValueAction,
   getValueActionForValue,
@@ -199,23 +197,70 @@ function RawMessages(props: Props) {
     [expandedFields],
   );
 
+  const getValueLabels = useCallback(
+    ({
+      constantName,
+      label,
+      itemValue,
+    }: {
+      constantName: string | undefined;
+      label: string;
+      itemValue: unknown;
+    }): { arrLabel: string; itemLabel: string } => {
+      let itemLabel = label;
+      // output preview for the first x items if the data is in binary format
+      // sample output: Int8Array(331776) [-4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, ...]
+      let arrLabel = "";
+      if (ArrayBuffer.isView(itemValue)) {
+        const array = itemValue as Uint8Array;
+        const itemPart = array.slice(0, DATA_ARRAY_PREVIEW_LIMIT).join(", ");
+        const length = array.length;
+        arrLabel = `(${length}) [${itemPart}${length >= DATA_ARRAY_PREVIEW_LIMIT ? ", ..." : ""}] `;
+        itemLabel = itemValue.constructor.name;
+      }
+      if (constantName != undefined) {
+        itemLabel = `${itemLabel} (${constantName})`;
+      }
+      return { arrLabel, itemLabel };
+    },
+    [],
+  );
+
+  const renderDiffLabel = useCallback(
+    (label: string, itemValue: unknown) => {
+      let constantName: string | undefined;
+      const { arrLabel, itemLabel } = getValueLabels({ constantName, label, itemValue });
+      return (
+        <Value
+          arrLabel={arrLabel}
+          basePath=""
+          itemLabel={itemLabel}
+          itemValue={itemValue}
+          valueAction={undefined}
+          onTopicPathChange={onTopicPathChange}
+          openSiblingPanel={openSiblingPanel}
+        />
+      );
+    },
+    [getValueLabels, onTopicPathChange, openSiblingPanel],
+  );
+
   const valueRenderer = useCallback(
     (
       structureItem: MessagePathStructureItem | undefined,
-      data: unknown[] | undefined | DiffObject | DiffObject[],
-      queriedData: MessagePathDataItem[] | undefined | DiffObject | DiffObject[],
+      data: unknown[],
+      queriedData: MessagePathDataItem[],
       label: string,
       itemValue: unknown,
       ...keyPath: (number | string)[]
     ) => (
       <ReactHoverObserver className={styles.iconWrapper ?? ""}>
         {({ isHovering }: { isHovering: boolean }) => {
-          // lastKeyPath is string in diff mode, number in regular mode
-          const lastKeyPath = last(keyPath) as number | string;
+          const lastKeyPath = last(keyPath) as number;
           let valueAction: ValueAction | undefined;
           if (isHovering && structureItem) {
             valueAction = getValueActionForValue(
-              (data as unknown[])[lastKeyPath as number],
+              data[lastKeyPath],
               structureItem,
               keyPath.slice(0, -1).reverse(),
             );
@@ -236,57 +281,23 @@ function RawMessages(props: Props) {
               }
             }
           }
-          const basePath =
-            (queriedData as MessagePathDataItem[])[lastKeyPath as number]?.path ?? "";
-          let itemLabel = label;
-          // output preview for the first x items if the data is in binary format
-          // sample output: Int8Array(331776) [-4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, ...]
-          let smallNumberArrayStr = "";
-          if (ArrayBuffer.isView(itemValue)) {
-            const array = itemValue as Uint8Array;
-            const itemPart = array.slice(0, DATA_ARRAY_PREVIEW_LIMIT).join(", ");
-            const length = array.length;
-            smallNumberArrayStr = `(${length}) [${itemPart}${
-              length >= DATA_ARRAY_PREVIEW_LIMIT ? ", ..." : ""
-            }] `;
-            itemLabel = itemValue.constructor.name;
-          }
-          if (constantName != undefined) {
-            itemLabel = `${itemLabel} (${constantName})`;
-          }
+          const basePath = queriedData[lastKeyPath]?.path ?? "";
+          const { arrLabel, itemLabel } = getValueLabels({ constantName, label, itemValue });
           return (
-            <span>
-              <HighlightedValue itemLabel={itemLabel} />
-              {smallNumberArrayStr.length !== 0 && (
-                <>
-                  {smallNumberArrayStr}
-                  <Icon
-                    fade
-                    className={styles.icon ?? ""}
-                    // eslint-disable-next-line no-restricted-syntax
-                    onClick={() => console.log(itemValue)}
-                    tooltip="Log data to browser console"
-                  >
-                    <ConsoleLineIcon />
-                  </Icon>
-                </>
-              )}
-              <span className={styles.iconBox ?? ""}>
-                {valueAction && (
-                  <RawMessagesIcons
-                    valueAction={valueAction}
-                    basePath={basePath}
-                    onTopicPathChange={onTopicPathChange}
-                    openSiblingPanel={openSiblingPanel}
-                  />
-                )}
-              </span>
-            </span>
+            <Value
+              arrLabel={arrLabel}
+              basePath={basePath}
+              itemLabel={itemLabel}
+              itemValue={itemValue}
+              valueAction={valueAction}
+              onTopicPathChange={onTopicPathChange}
+              openSiblingPanel={openSiblingPanel}
+            />
           );
         }}
       </ReactHoverObserver>
     ),
-    [datatypes, onTopicPathChange, openSiblingPanel],
+    [datatypes, getValueLabels, onTopicPathChange, openSiblingPanel],
   );
 
   const renderSingleTopicOrDiffOutput = useCallback(() => {
@@ -377,8 +388,7 @@ function RawMessages(props: Props) {
               getItemString={diffEnabled ? getItemStringForDiff : getItemString}
               valueRenderer={(...args) => {
                 if (diffEnabled) {
-                  // TODO: Refactor to create a version of valueRenderer that is only invoked when diffEnabled
-                  return valueRenderer(undefined, diff, diff, ...args);
+                  return renderDiffLabel(args[0], args[1]);
                 }
                 if (hideWrappingArray) {
                   // When the wrapping array is hidden, put it back here.
@@ -495,6 +505,7 @@ function RawMessages(props: Props) {
     topic,
     topicPath,
     valueRenderer,
+    renderDiffLabel,
     getItemString,
   ]);
 
