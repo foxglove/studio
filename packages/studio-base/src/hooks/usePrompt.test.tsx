@@ -12,6 +12,9 @@ import { usePrompt } from "./usePrompt";
 
 describe("usePrompt", () => {
   it("cleans up extra nodes added", async () => {
+    const foo: number = "bar";
+    void foo;
+
     const start = document.body.childNodes.length;
     const { result, unmount } = renderHook(() => usePrompt(), { wrapper: ModalHost });
     expect(document.body.childNodes.length).toEqual(start);
