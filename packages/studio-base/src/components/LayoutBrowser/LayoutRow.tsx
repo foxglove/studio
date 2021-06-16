@@ -135,15 +135,24 @@ export default function LayoutRow<T extends LayoutItem>({
 
       {editingName ? (
         <>
-          <IconButton type="submit" iconProps={{ iconName: "CheckMark" }} ariaLabel="Rename" />
+          <IconButton
+            type="submit"
+            iconProps={{ iconName: "CheckMark" }}
+            ariaLabel="Rename"
+            data-test="commit-rename"
+          />
           <IconButton
             iconProps={{ iconName: "Cancel" }}
             onClick={() => setEditingName(false)}
             ariaLabel="Cancel"
+            data-test="cancel-rename"
           />
         </>
       ) : (
         <IconButton
+          ariaLabel="Layout actions"
+          data={{ text: "x" }}
+          data-test="layout-actions"
           iconProps={{
             iconName: "More",
             styles: { root: { "& span": { verticalAlign: "baseline" } } },
@@ -156,12 +165,14 @@ export default function LayoutRow<T extends LayoutItem>({
                 text: "Rename",
                 iconProps: { iconName: "Rename" },
                 onClick: renameAction,
+                ["data-test"]: "rename-layout",
               },
               {
                 key: "duplicate",
                 text: "Duplicate",
                 iconProps: { iconName: "Copy" },
                 onClick: duplicateAction,
+                ["data-test"]: "duplicate-layout",
               },
               {
                 key: "export",
@@ -178,6 +189,7 @@ export default function LayoutRow<T extends LayoutItem>({
                   styles: { root: { color: theme.semanticColors.errorText } },
                 },
                 onClick: confirmDelete.open,
+                ["data-test"]: "delete-layout",
               },
             ],
           }}

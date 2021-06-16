@@ -26,7 +26,11 @@ import { downloadTextFile } from "@foxglove/studio-base/util/download";
 import LayoutSection from "./LayoutSection";
 import showOpenFilePicker from "./showOpenFilePicker";
 
-export default function LayoutBrowser(): JSX.Element {
+export default function LayoutBrowser({
+  currentDateForStorybook,
+}: React.PropsWithChildren<{
+  currentDateForStorybook?: Date;
+}>): JSX.Element {
   const isMounted = useMountedState();
   const { addToast } = useToasts();
   const layoutCache = useLayoutCache();
@@ -108,7 +112,9 @@ export default function LayoutBrowser(): JSX.Element {
 
   const createNewLayout = useCallback(async () => {
     const state: PanelsState = {
-      name: `Unnamed layout ${moment().format("l")} at ${moment().format("LT")}`,
+      name: `Unnamed layout ${moment(currentDateForStorybook).format("l")} at ${moment(
+        currentDateForStorybook,
+      ).format("LT")}`,
       id: uuidv4(),
       configById: {},
       globalVariables: {},
@@ -119,7 +125,7 @@ export default function LayoutBrowser(): JSX.Element {
     await layoutCache.put({ id: state.id, name: state.name, path: [], state });
     loadLayout(state);
     reloadLayouts();
-  }, [layoutCache, loadLayout, reloadLayouts]);
+  }, [currentDateForStorybook, layoutCache, loadLayout, reloadLayouts]);
 
   const onExportLayout = useCallback((item: CachedLayout) => {
     if (item.state) {
@@ -184,6 +190,7 @@ export default function LayoutBrowser(): JSX.Element {
           iconProps={{ iconName: "Add" }}
           onClick={createNewLayout}
           ariaLabel="Create new layout"
+          data-test="add-layout"
         >
           {createLayoutTooltip.tooltip}
         </IconButton>,
