@@ -24,6 +24,8 @@ import { SANS_SERIF } from "@foxglove/studio-base/styles/fonts";
 import styles from "@foxglove/studio-base/styles/variables.module.scss";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
+const THEME_HUE = 247;
+
 // https://aka.ms/themedesigner
 export default createTheme({
   defaultFontStyle: {
@@ -160,8 +162,6 @@ export default createTheme({
     whiteTranslucent40: "#12121766",
   },
 });
-
-const THEME_HUE = 247;
 
 function themeColors(): Partial<IPalette> {
   const keys: (keyof IPalette)[] = [
