@@ -5,12 +5,12 @@
 import {
   ContextualMenuItemType,
   IconButton,
+  TextField,
   ITextField,
   makeStyles,
   Stack,
   useTheme,
 } from "@fluentui/react";
-import { TextField } from "@fluentui/react";
 import cx from "classnames";
 import { useCallback, useState } from "react";
 
