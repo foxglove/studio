@@ -15,13 +15,16 @@ import {
   IStyle,
   ISpinnerStyles,
   IPalette,
+  hsl2rgb,
+  getColorFromRGBA,
 } from "@fluentui/react";
 import { createTheme } from "@fluentui/theme";
-import tinycolor from "tinycolor2";
 
 import { SANS_SERIF } from "@foxglove/studio-base/styles/fonts";
 import styles from "@foxglove/studio-base/styles/variables.module.scss";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
+
+const THEME_HUE = 247;
 
 // https://aka.ms/themedesigner
 export default createTheme({
@@ -151,27 +154,8 @@ export default createTheme({
   },
   isInverted: true,
   palette: {
-    ...themePaletteColors({ inverted: true }),
-    // themePrimary: "#b8aefd",
-    // themeLighterAlt: "#c0b7fd",
-    // themeLighter: "#c8c0fd",
-    // themeLight: "#d0c9fd",
-    // themeTertiary: "#d7d2fe",
-    // themeSecondary: "#dfdafe",
-    // themeDarkAlt: "#e7e3fe",
-    // themeDark: "#efecfe",
-    // themeDarker: "#f6f5ff",
-    neutralLighterAlt: "#1a1a21",
-    neutralLighter: "#22222a",
-    neutralLight: "#2e2e39",
-    neutralQuaternaryAlt: "#363642",
-    neutralQuaternary: "#3c3c49",
-    neutralTertiaryAlt: "#595968",
-    neutralTertiary: "#f3f3f3",
-    neutralSecondary: "#f5f5f5",
-    neutralPrimaryAlt: "#f7f7f7",
-    neutralPrimary: "#eeeeee",
-    neutralDark: "#fbfbfb",
+    ...themeColors(),
+    ...neutralColors(),
     black: "#fdfdfd",
     white: "#121217",
     blackTranslucent40: "#fdfdfd66",
@@ -179,7 +163,7 @@ export default createTheme({
   },
 });
 
-function themePaletteColors({ inverted }: { inverted: boolean }): Partial<IPalette> {
+function themeColors(): Partial<IPalette> {
   const keys: (keyof IPalette)[] = [
     "themeDarker",
     "themeDark",
@@ -191,18 +175,42 @@ function themePaletteColors({ inverted }: { inverted: boolean }): Partial<IPalet
     "themeLighter",
     "themeLighterAlt",
   ];
-  if (inverted) {
-    keys.reverse();
-  }
+  keys.reverse(); // reverse because our theme is inverted
+
   const result: Partial<IPalette> = Object.fromEntries(
     keys.map((key, i) => {
       const ratio = i / (keys.length - 1);
-      // return [key, tinycolor({ h: 247, s: 30 + ratio * 45, l: 40 + ratio * 55 }).toHexString()];
       return [
         key,
-        // tinycolor({ h: 247, s: Math.min(30 + ratio * 75, 75), l: 55 + ratio * 42 }).toHexString(),
-        tinycolor({ h: 247, s: Math.min(20 + ratio * 75, 75), l: 40 + ratio * 57 }).toHexString(),
+        "#" +
+          getColorFromRGBA(hsl2rgb(THEME_HUE, Math.min(20 + ratio * 75, 75), 40 + ratio * 57)).hex,
       ];
+    }),
+  );
+  return result;
+}
+
+function neutralColors(): Partial<IPalette> {
+  const keys: (keyof IPalette)[] = [
+    "neutralDark",
+    "neutralPrimary",
+    "neutralPrimaryAlt",
+    "neutralSecondary",
+    "neutralSecondaryAlt",
+    "neutralTertiary",
+    "neutralTertiaryAlt",
+    "neutralQuaternary",
+    "neutralQuaternaryAlt",
+    "neutralLight",
+    "neutralLighter",
+    "neutralLighterAlt",
+  ];
+  keys.reverse(); // reverse because our theme is inverted
+
+  const result: Partial<IPalette> = Object.fromEntries(
+    keys.map((key, i) => {
+      const ratio = i / (keys.length - 1);
+      return [key, "#" + getColorFromRGBA(hsl2rgb(THEME_HUE, 5, 10 + ratio * 85)).hex];
     }),
   );
   return result;
