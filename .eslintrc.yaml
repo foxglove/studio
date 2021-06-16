@@ -154,8 +154,6 @@ overrides:
       - "packages/studio-base/src/panels/RawMessages/getValueActionForValue.ts"
       - "packages/studio-base/src/panels/RawMessages/index.tsx"
       - "packages/studio-base/src/panels/RawMessages/utils.tsx"
-      - "packages/studio-base/src/panels/ThreeDimensionalViz/Interactions/Interactions.tsx"
-      - "packages/studio-base/src/panels/ThreeDimensionalViz/Interactions/ObjectDetails.tsx"
       - "packages/studio-base/src/panels/ThreeDimensionalViz/PositionControl.tsx"
       - "packages/studio-base/src/panels/ThreeDimensionalViz/SceneBuilder/index.ts"
       - "packages/studio-base/src/panels/ThreeDimensionalViz/SceneBuilder/types.ts"

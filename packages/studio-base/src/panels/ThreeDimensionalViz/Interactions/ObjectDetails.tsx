@@ -157,8 +157,8 @@ function ObjectDetails({ interactionData, objectToDisplay }: Props) {
               <GlobalVariableLink
                 hasNestedValue
                 style={{ marginLeft: 4 }}
-                label={label as any}
-                markerKeyPath={markerKeyPath as any}
+                label={label}
+                markerKeyPath={markerKeyPath}
                 topic={topic}
                 variableValue={objectForPath}
               />
@@ -171,7 +171,7 @@ function ObjectDetails({ interactionData, objectToDisplay }: Props) {
             <GlobalVariableLink
               style={{ marginLeft: 16 }}
               label={label}
-              markerKeyPath={markerKeyPath as any}
+              markerKeyPath={markerKeyPath}
               topic={topic}
               variableValue={itemValue}
             />
