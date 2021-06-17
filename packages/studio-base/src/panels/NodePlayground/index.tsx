@@ -14,7 +14,7 @@
 import { Stack } from "@fluentui/react";
 import ArrowLeftIcon from "@mdi/svg/svg/arrow-left.svg";
 import PlusIcon from "@mdi/svg/svg/plus.svg";
-import { Suspense, useEffect } from "react";
+import { Suspense } from "react";
 import styled from "styled-components";
 import { v4 as uuidv4 } from "uuid";
 
