@@ -7,12 +7,15 @@ import { useToasts } from "react-toast-notifications";
 import { useAsync, useThrottle } from "react-use";
 import { v4 as uuidv4 } from "uuid";
 
+import Logger from "@foxglove/log";
 import CurrentLayoutContext from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import { useLocalLayoutStorage } from "@foxglove/studio-base/context/LocalLayoutStorageContext";
+import { useLayoutCache } from "@foxglove/studio-base/context/LayoutCacheContext";
 import { useUserProfileStorage } from "@foxglove/studio-base/context/UserProfileStorageContext";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
 import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
+
+const log = Logger.getLogger(__filename);
 
 function migrateLegacyLayoutFromLocalStorage() {
   let result: PanelsState | undefined;
@@ -42,7 +45,7 @@ function CurrentLayoutProviderWithInitialState({
   const { addToast } = useToasts();
 
   const { setUserProfile } = useUserProfileStorage();
-  const layoutStorage = useLocalLayoutStorage();
+  const layoutStorage = useLayoutCache();
 
   const [stateInstance] = useState(() => new CurrentLayoutState(initialState));
   const [panelsState, setPanelsState] = useState(() => stateInstance.actions.getCurrentLayout());
@@ -87,11 +90,12 @@ function CurrentLayoutProviderWithInitialState({
     layoutStorage
       .put({
         id: throttledPanelsState.id,
+        path: undefined,
         name: throttledPanelsState.name,
         state: throttledPanelsState,
       })
       .catch((error) => {
-        console.error(error);
+        log.error(error);
         addToast(`The current layout could not be saved. ${error.toString()}`, {
           appearance: "error",
           id: "CurrentLayoutProvider.layoutStorage.put",
@@ -130,7 +134,7 @@ export default function CurrentLayoutProvider({
   const { addToast } = useToasts();
 
   const { getUserProfile } = useUserProfileStorage();
-  const layoutStorage = useLocalLayoutStorage();
+  const layoutStorage = useLayoutCache();
 
   const loadInitialState = useAsync(async (): Promise<PanelsState | undefined> => {
     try {

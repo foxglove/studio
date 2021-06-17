@@ -27,7 +27,7 @@ import GlobalKeyListener from "@foxglove/studio-base/components/GlobalKeyListene
 import GlobalVariablesTable from "@foxglove/studio-base/components/GlobalVariablesTable";
 import variablesHelp from "@foxglove/studio-base/components/GlobalVariablesTable/index.help.md";
 import HelpModal from "@foxglove/studio-base/components/HelpModal";
-import LayoutMenu from "@foxglove/studio-base/components/LayoutMenu";
+import LayoutBrowser from "@foxglove/studio-base/components/LayoutBrowser";
 import messagePathHelp from "@foxglove/studio-base/components/MessagePathSyntax/index.help.md";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
@@ -38,6 +38,7 @@ import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
 import PlaybackControls from "@foxglove/studio-base/components/PlaybackControls";
 import { PlayerStatusIndicator } from "@foxglove/studio-base/components/PlayerStatusIndicator";
 import Preferences from "@foxglove/studio-base/components/Preferences";
+import RemountOnValueChange from "@foxglove/studio-base/components/RemountOnValueChange";
 import { RenderToBodyComponent } from "@foxglove/studio-base/components/RenderToBodyComponent";
 import ShortcutsModal from "@foxglove/studio-base/components/ShortcutsModal";
 import Sidebar, { SidebarItem } from "@foxglove/studio-base/components/Sidebar";
@@ -46,6 +47,7 @@ import Toolbar from "@foxglove/studio-base/components/Toolbar";
 import { useAppConfiguration } from "@foxglove/studio-base/context/AppConfigurationContext";
 import { useAssets } from "@foxglove/studio-base/context/AssetContext";
 import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useExtensionLoader } from "@foxglove/studio-base/context/ExtensionLoaderContext";
 import LinkHandlerContext from "@foxglove/studio-base/context/LinkHandlerContext";
 import { PanelSettingsContext } from "@foxglove/studio-base/context/PanelSettingsContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
@@ -85,6 +87,7 @@ type SidebarItemKey =
   | "variables"
   | "extensions"
   | "account"
+  | "layouts"
   | "preferences";
 
 const SIDEBAR_ITEMS = new Map<SidebarItemKey, SidebarItem>([
@@ -92,6 +95,7 @@ const SIDEBAR_ITEMS = new Map<SidebarItemKey, SidebarItem>([
     "connection",
     { iconName: "DataManagementSettings", title: "Connection", component: Connection },
   ],
+  ["layouts", { iconName: "FiveTileGrid", title: "Layouts", component: LayoutBrowser }],
   ["add-panel", { iconName: "RectangularClipping", title: "Add Panel", component: AddPanel }],
   [
     "panel-settings",
@@ -136,7 +140,7 @@ function Variables() {
 }
 
 // file types we support for drag/drop
-const allowedDropExtensions = [".bag", ".urdf"];
+const allowedDropExtensions = [".bag", ".foxe", ".urdf"];
 
 type WorkspaceProps = {
   demoBagUrl?: string;
@@ -153,6 +157,11 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const playerCapabilities = useMessagePipeline(
     useCallback(({ playerState }) => playerState.capabilities, []),
   );
+
+  // we use requestBackfill to signal when a player changes for RemountOnValueChange below
+  // see comment below above the RemountOnValueChange component
+  const requestBackfill = useMessagePipeline(useCallback((ctx) => ctx.requestBackfill, []));
+
   const [selectedSidebarItem, setSelectedSidebarItem] = useState<SidebarItemKey | undefined>(
     // Start with the sidebar open if no connection has been made
     currentSourceName == undefined ? "connection" : undefined,
@@ -273,20 +282,37 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const { loadFromFile } = useAssets();
 
+  const extensionLoader = useExtensionLoader();
+
   const openFiles = useCallback(
     async (files: FileList, { shiftPressed }: { shiftPressed: boolean }) => {
       const otherFiles: File[] = [];
       for (const file of files) {
-        try {
-          // electron extends File with a `path` field which is not available in browsers
-          const basePath = (file as { path?: string }).path ?? "";
-          if (!(await loadFromFile(file, { basePath }))) {
-            otherFiles.push(file);
+        // electron extends File with a `path` field which is not available in browsers
+        const basePath = (file as { path?: string }).path ?? "";
+
+        if (file.name.endsWith(".foxe")) {
+          // Extension installation
+          try {
+            const arrayBuffer = await file.arrayBuffer();
+            const data = new Uint8Array(arrayBuffer);
+            const extension = await extensionLoader.installExtension(data);
+            addToast(`Installed extension ${extension.id}`, { appearance: "success" });
+          } catch (err) {
+            addToast(`Failed to install extension ${file.name}: ${err.message}`, {
+              appearance: "error",
+            });
           }
-        } catch (err) {
-          addToast(`Failed to load ${file.name}`, {
-            appearance: "error",
-          });
+        } else {
+          try {
+            if (!(await loadFromFile(file, { basePath }))) {
+              otherFiles.push(file);
+            }
+          } catch (err) {
+            addToast(`Failed to load ${file.name}`, {
+              appearance: "error",
+            });
+          }
         }
       }
 
@@ -304,7 +330,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         );
       }
     },
-    [addToast, loadFromFile, selectSource],
+    [addToast, extensionLoader, loadFromFile, selectSource],
   );
 
   // files the main thread told us to open
@@ -416,9 +442,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           <SToolbarItem style={{ marginRight: 5 }}>
             {!inAutomatedRunMode() && <NotificationDisplay />}
           </SToolbarItem>
-          <SToolbarItem>
-            <LayoutMenu />
-          </SToolbarItem>
         </Toolbar>
         <Sidebar
           items={sidebarItems}
@@ -426,14 +449,17 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           selectedKey={selectedSidebarItem}
           onSelectKey={setSelectedSidebarItem}
         >
-          <Stack>
-            <PanelLayout />
-            {showPlaybackControls && (
-              <Stack.Item disableShrink>
-                <PlaybackControls />
-              </Stack.Item>
-            )}
-          </Stack>
+          {/* To ensure no stale player state remains, we unmount all panels when players change */}
+          <RemountOnValueChange value={requestBackfill}>
+            <Stack>
+              <PanelLayout />
+              {showPlaybackControls && (
+                <Stack.Item disableShrink>
+                  <PlaybackControls />
+                </Stack.Item>
+              )}
+            </Stack>
+          </RemountOnValueChange>
         </Sidebar>
       </div>
     </MultiProvider>
