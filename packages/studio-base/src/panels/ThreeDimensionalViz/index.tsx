@@ -234,5 +234,9 @@ BaseRenderer.configSchema = configSchema;
 export const Renderer = hoistNonReactStatics(React.forwardRef(BaseRenderer), BaseRenderer);
 
 export default Panel<ThreeDimensionalVizConfig>(
+  // Getting HOC types right is hard - luckily we can sidestep this problem if we refactor
+  // compatibility and withTransforms to both use hooks. This panel is the only user of them.
+  // https://github.com/foxglove/studio/issues/1255
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   FrameCompatibilityDEPRECATED(withTransforms(Renderer), []) as any,
 );
