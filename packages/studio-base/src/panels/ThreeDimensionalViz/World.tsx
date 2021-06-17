@@ -46,7 +46,7 @@ import { MarkerCollector, MarkerProvider } from "@foxglove/studio-base/types/Sce
 type Props = WorldSearchTextProps & {
   autoTextBackgroundColor: boolean;
   cameraState: CameraState;
-  children?: Node;
+  children?: React.ReactNode;
   isPlaying: boolean;
   markerProviders: MarkerProvider[];
   onCameraStateChange: (arg0: CameraState) => void;

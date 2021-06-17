@@ -126,11 +126,11 @@ export type LayoutTopicSettingsSharedProps = {
 
 type Props = LayoutToolbarSharedProps &
   LayoutTopicSettingsSharedProps & {
-    children?: Node;
+    children?: React.ReactNode;
     cleared?: boolean;
     currentTime: Time;
     frame?: Frame;
-    helpContent: Node | string;
+    helpContent: React.ReactNode | string;
     isPlaying?: boolean;
     config: ThreeDimensionalVizConfig;
     saveConfig: Save3DConfig;
@@ -242,9 +242,8 @@ export default function Layout({
   const [_, forceUpdate] = useReducer((x: number) => x + 1, 0);
   const measuringElRef = useRef<MeasuringTool>(ReactNull);
   const [drawingTabType, setDrawingTabType] = useState<DrawingTabType | undefined>(undefined);
-  const [interactionsTabType, setInteractionsTabType] = useState<DrawingTabType | undefined>(
-    undefined,
-  );
+  const [interactionsTabType, setInteractionsTabType] =
+    useState<DrawingTabType | undefined>(undefined);
 
   const [selectionState, setSelectionState] = useState<UserSelectionState>({
     clickedObjects: [],

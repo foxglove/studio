@@ -44,7 +44,7 @@ export type Props = {
   cleared?: boolean;
   config: ThreeDimensionalVizConfig;
   frame: Frame;
-  helpContent: Node | string;
+  helpContent: React.ReactNode;
   saveConfig: Save3DConfig;
   setSubscriptions: (subscriptions: string[]) => void;
   topics: Topic[];
