@@ -9,7 +9,6 @@
   },
   "artifactName": "${name}-${version}-${os}-${arch}.${ext}",
   "afterSign": "resources/notarize.ts",
-  "afterPack": "desktop/afterPack.ts",
   "icon": "resources/icon/icon.icns",
   "protocols": [
     {
@@ -82,12 +81,6 @@
     "icon": "resources/icon/icon.icns",
     "entitlements": "resources/mac/entitlements.plist",
     "entitlementsInherit": "resources/mac/entitlements.plist",
-    "extraFiles": [
-      {
-        "from": "node_modules/quicklookjs/dist/PreviewExtension.appex",
-        "to": "PlugIns/PreviewExtension.appex"
-      }
-    ],
     "extraResources": [
       { "from": "resources/icon/BagIcon.png", "to": "BagIcon.png" },
       { "from": "resources/icon/FoxeIcon.png", "to": "FoxeIcon.png" },
