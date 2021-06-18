@@ -21,43 +21,40 @@ import { Frame, MessageEvent } from "@foxglove/studio-base/players/types";
  *
  * This hook is stateful. It will trigger a re-render when there are new frames.
  *
- * @returns a cleared field indicating if the frame is a new frame and the frame itself
+ * @returns an object with a reset field and a frame field. The reset field indicates if
+ * the frame marks a new series of frames rather than a continuation of previous frames
  */
-const useFrame = (topics: string[]): { cleared: boolean; frame: Frame } => {
+const useFrame = (topics: string[]): { reset: boolean; frame: Frame } => {
   // useMessageReducer may invoke restore and addMessages multiple times in a single pass
   // We use this flag to indicate if we've returned the result from a previous state update
   // and can start accumulating a new state
   const returnedLastValueRef = useRef(false);
 
-  const clearedRef = React.useRef(false);
-
   // accumulate messages into a frame until we return the frame
-  const frame = PanelAPI.useMessageReducer({
+  // once we've returned the frame we can accumulate messages into a new frame
+  // reset indicates when the frame is the start of a new frame sequence
+  const response = PanelAPI.useMessageReducer<{ reset: boolean; frame: Frame }>({
     topics,
     restore: useCallback(() => {
-      clearedRef.current = true;
       returnedLastValueRef.current = false;
-      return {};
+      return { reset: true, frame: {} };
     }, []),
     addMessages: useCallback((prev, messages: readonly MessageEvent<unknown>[]) => {
       if (returnedLastValueRef.current) {
-        prev = {};
+        // after we've returned the value we can remove the reset flag and clear the frame
+        prev.reset = false;
+        prev.frame = {};
         returnedLastValueRef.current = false;
       }
 
       for (const message of messages) {
-        (prev[message.topic] ??= []).push(message);
+        (prev.frame[message.topic] ??= []).push(message);
       }
 
       // every call to addMessages returns a new reference to trigger a state update
-      return { ...prev };
+      return { reset: prev.reset, frame: { ...prev.frame } };
     }, []),
   });
-
-  const response = { cleared: clearedRef.current, frame };
-
-  // next time we update we no longer have a new frame (cleared)
-  clearedRef.current = false;
 
   // indicate we've returned the previous state and can start building a new frame
   returnedLastValueRef.current = true;

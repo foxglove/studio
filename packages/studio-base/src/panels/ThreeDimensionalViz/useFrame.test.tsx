@@ -69,7 +69,7 @@ describe("useFrame", () => {
       },
     );
 
-    expect(result.current.cleared).toEqual(true);
+    expect(result.current.reset).toEqual(true);
     expect(result.current.frame["/some/topic"]).toEqual([
       {
         topic: "/some/topic",
@@ -78,9 +78,9 @@ describe("useFrame", () => {
       },
     ]);
 
-    // next render has cleared = false since the frame is no longer a new frame
+    // re-render keeps reset value since no new messages have been fed in
     rerender();
-    expect(result.current.cleared).toEqual(false);
+    expect(result.current.reset).toEqual(true);
     expect(result.current.frame["/some/topic"]).toEqual([
       {
         topic: "/some/topic",
@@ -114,7 +114,7 @@ describe("useFrame", () => {
       },
     );
 
-    expect(result.current.cleared).toEqual(true);
+    expect(result.current.reset).toEqual(true);
     expect(result.current.frame["/some/topic"]).toEqual([
       {
         topic: "/some/topic",
@@ -123,10 +123,10 @@ describe("useFrame", () => {
       },
     ]);
 
-    // next render has cleared = false since the frame is no longer a new frame
     rerender({ messages: [messageEventFixtures[1]] });
 
-    expect(result.current.cleared).toEqual(false);
+    // next render indicates reset is false since the stream remains the same
+    expect(result.current.reset).toEqual(false);
     expect(result.current.frame["/some/topic"]).toEqual([
       {
         topic: "/some/topic",

@@ -128,7 +128,7 @@ type Props = LayoutToolbarSharedProps &
   LayoutTopicSettingsSharedProps & {
     children?: React.ReactNode;
     currentTime: Time;
-    cleared: boolean;
+    resetFrame: boolean;
     frame: Frame;
     helpContent: React.ReactNode | string;
     isPlaying?: boolean;
@@ -189,7 +189,7 @@ export default function Layout({
   currentTime,
   followOrientation,
   followTf,
-  cleared,
+  resetFrame,
   frame,
   helpContent,
   isPlaying = false,
@@ -484,7 +484,7 @@ export default function Layout({
     gridBuilder.setVisible(selectedTopicNames.includes(FOXGLOVE_GRID_TOPIC));
     gridBuilder.setSettingsByKey(settingsByKey);
 
-    if (cleared) {
+    if (resetFrame) {
       sceneBuilder.clear();
     }
 
@@ -515,7 +515,6 @@ export default function Layout({
     }
     transformsBuilder.setSelectedTransforms(selectedNamespacesByTopic[TRANSFORM_TOPIC] ?? []);
   }, [
-    cleared,
     colorOverrideMarkerMatchers,
     currentTime,
     flattenMarkers,
@@ -524,6 +523,7 @@ export default function Layout({
     gridBuilder,
     highlightMarkerMatchers,
     playerId,
+    resetFrame,
     rootTf,
     sceneBuilder,
     selectedNamespacesByTopic,

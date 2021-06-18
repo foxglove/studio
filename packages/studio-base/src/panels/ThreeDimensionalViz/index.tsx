@@ -67,8 +67,8 @@ function BaseRenderer(props: Props): JSX.Element {
     setSubscribedTopics(uniq(newTopics));
   }, []);
 
-  const { cleared, frame } = useFrame(subscribedTopics);
-  const transforms = useTransforms(topics, frame, cleared);
+  const { reset: resetFrame, frame } = useFrame(subscribedTopics);
+  const transforms = useTransforms(topics, frame, resetFrame);
   const currentTime = useMessagePipeline(selectCurrentTime);
   const isPlaying = useMessagePipeline(selectIsPlaying);
 
@@ -179,7 +179,7 @@ function BaseRenderer(props: Props): JSX.Element {
       currentTime={currentTime}
       followOrientation={followOrientation}
       followTf={followTf}
-      cleared={cleared}
+      resetFrame={resetFrame}
       frame={frame}
       helpContent={helpContent}
       isPlaying={isPlaying}

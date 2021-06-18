@@ -47,7 +47,7 @@ function consumeSingleTfs(tfs: MessageEvent<TF>[], transforms: Transforms): void
  *
  * If the frame is undefined, transform accumulation is reset and all existing transforms are discarded.
  */
-function useTransforms(topics: readonly Topic[], frame: Frame, cleared: boolean): Transforms {
+function useTransforms(topics: readonly Topic[], frame: Frame, reset: boolean): Transforms {
   const topicsToDatatypes = useMemo(() => {
     return new Map<string, string>(topics.map((topic) => [topic.name, topic.datatype]));
   }, [topics]);
@@ -55,7 +55,7 @@ function useTransforms(topics: readonly Topic[], frame: Frame, cleared: boolean)
   const transformsRef = useRef(new Transforms());
 
   return useMemo<Transforms>(() => {
-    if (cleared) {
+    if (reset) {
       transformsRef.current = new Transforms();
     }
 
@@ -120,7 +120,7 @@ function useTransforms(topics: readonly Topic[], frame: Frame, cleared: boolean)
     newTransforms.empty = transforms.empty;
 
     return (transformsRef.current = newTransforms);
-  }, [cleared, frame, topicsToDatatypes]);
+  }, [reset, frame, topicsToDatatypes]);
 }
 
 export default useTransforms;
