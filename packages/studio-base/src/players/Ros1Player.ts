@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { isEqual, sortBy } from "lodash";
-import { Time } from "rosbag";
+import { Time, TimeUtil } from "rosbag";
 import { v4 as uuidv4 } from "uuid";
 
 import { Sockets } from "@foxglove/electron-socket/renderer";
@@ -85,6 +85,9 @@ export default class Ros1Player implements Player {
   private _hasReceivedMessage = false;
   private _metricsCollector: PlayerMetricsCollectorInterface;
   private _presence: PlayerPresence = PlayerPresence.CONSTRUCTING;
+
+  // fixme - remove
+  private _lastCurrentTime: Time = { sec: 0, nsec: 0 };
 
   // track issues within the player
   private _problems: PlayerProblem[] = [];
@@ -246,6 +249,8 @@ export default class Ros1Player implements Player {
     }
   };
 
+  private _reversionCount = 0;
+
   private _emitState = debouncePromise(() => {
     if (!this._listener || this._closed) {
       return Promise.resolve();
@@ -266,11 +271,24 @@ export default class Ros1Player implements Player {
 
     // Time is always moving forward even if we don't get messages from the server.
     // If we are not connected, don't emit updates since we are not longer getting new data
-    if (this._presence === PlayerPresence.PRESENT) {
+    if (this._presence === PlayerPresence.PRESENT && this._clockTime == undefined) {
+      // fixme - the triggering of emit state again (even tho there are no new messages)
+      // invokes _getCurrentTime, which (see the comment in getCurrentTime) results in time reversion
       setTimeout(this._emitState, 100);
     }
 
     const currentTime = this._getCurrentTime();
+
+    if (TimeUtil.isGreaterThan(this._lastCurrentTime, currentTime)) {
+      this._reversionCount += 1;
+
+      if (this._reversionCount > 10) {
+        throw new Error("time reversion");
+      }
+    }
+
+    this._lastCurrentTime = currentTime;
+
     const messages = this._parsedMessages;
     this._parsedMessages = [];
     return this._listener({
@@ -578,6 +596,9 @@ stale graph may result in missing topics you expect. Ensure that roscore is reac
       return now;
     }
 
+    // fixme
+    // the clockTime has not changed, but the delta has (since it is now more elapsed time from _clockReceived)
+    // this results in a return value that is earlier than before
     const delta = subtractTimes(now, this._clockReceived);
     return addTimes(this._clockTime, delta);
   }
