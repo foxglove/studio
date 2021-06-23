@@ -35,8 +35,6 @@ type Props = {
 };
 
 // shows a confirmation modal to the user with an ok and a cancel button
-// returns a promise which resolves with true if the user confirmed the modal
-// or false if the user closed the modal with escape or clicked the cancel button
 export default function useConfirm(props: Props): {
   modal?: React.ReactElement | ReactNull;
   open: () => void;
@@ -49,6 +47,39 @@ export default function useConfirm(props: Props): {
     props.action(ok);
   }
   const confirmStyle = props.confirmStyle ?? "danger";
+
+  const buttons = [
+    props.cancel !== false && (
+      <DefaultButton onClick={() => close(false)} text={props.cancel ?? "Cancel"} />
+    ),
+    <DefaultButton
+      key="confirm"
+      primary={confirmStyle === "primary"}
+      styles={
+        confirmStyle === "danger"
+          ? {
+              root: { backgroundColor: "#c72121", borderColor: "#c72121", color: "white" },
+              rootHovered: {
+                backgroundColor: "#b31b1b",
+                borderColor: "#b31b1b",
+                color: "white",
+              },
+              rootPressed: {
+                backgroundColor: "#771010",
+                borderColor: "#771010",
+                color: "white",
+              },
+            }
+          : undefined
+      }
+      type="submit"
+      text={props.ok ?? "OK"}
+    />,
+  ];
+  if (confirmStyle === "danger") {
+    buttons.reverse();
+  }
+
   const modal = (
     <Dialog
       hidden={!isOpen}
@@ -61,33 +92,7 @@ export default function useConfirm(props: Props): {
           close(true);
         }}
       >
-        <DialogFooter styles={{ actions: { whiteSpace: "nowrap" } }}>
-          <DefaultButton
-            primary={confirmStyle === "primary"}
-            styles={
-              confirmStyle === "danger"
-                ? {
-                    root: { backgroundColor: "#c72121", borderColor: "#c72121", color: "white" },
-                    rootHovered: {
-                      backgroundColor: "#b31b1b",
-                      borderColor: "#b31b1b",
-                      color: "white",
-                    },
-                    rootPressed: {
-                      backgroundColor: "#771010",
-                      borderColor: "#771010",
-                      color: "white",
-                    },
-                  }
-                : undefined
-            }
-            type="submit"
-            text={props.ok ?? "OK"}
-          />
-          {props.cancel !== false && (
-            <DefaultButton onClick={() => close(false)} text={props.cancel ?? "Cancel"} />
-          )}
-        </DialogFooter>
+        <DialogFooter styles={{ actions: { whiteSpace: "nowrap" } }}>{buttons}</DialogFooter>
       </form>
     </Dialog>
   );
