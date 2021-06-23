@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { DefaultButton, Dialog, DialogFooter, useTheme } from "@fluentui/react";
+import { DefaultButton, Dialog, DialogFooter } from "@fluentui/react";
 import React, { useState, useCallback } from "react";
 
 type ConfirmStyle = "danger" | "primary";
@@ -41,7 +41,6 @@ export default function useConfirm(props: Props): {
   modal?: React.ReactElement | ReactNull;
   open: () => void;
 } {
-  const theme = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const open = useCallback(() => setIsOpen(true), []);
 
