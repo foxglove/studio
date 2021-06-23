@@ -184,7 +184,7 @@ function TopicSettingsModal({
       datatype={datatype}
       onFieldChange={onFieldChange}
       onSettingsChange={onSettingsChange}
-      settings={settingsByKey[topicSettingsKey] || {}}
+      settings={settingsByKey[topicSettingsKey] ?? {}}
       topicName={nonPrefixedTopic}
     />
   );
