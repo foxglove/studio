@@ -43,7 +43,6 @@ const builtin: PanelInfo[] = [
   { title: "Topic Graph", component: TopicGraph },
   { title: "Data Source Info", component: SourceInfo },
   { title: "Variable Slider", component: GlobalVariableSlider },
-  { title: "Node Playground", component: NodePlayground },
   { title: "Tab", component: Tab },
 ];
 

@@ -14,15 +14,13 @@
 import { Stack } from "@fluentui/react";
 import ArrowLeftIcon from "@mdi/svg/svg/arrow-left.svg";
 import PlusIcon from "@mdi/svg/svg/plus.svg";
-import { Suspense } from "react";
+import { Suspense, useLayoutEffect, useState } from "react";
 import styled from "styled-components";
 import { v4 as uuidv4 } from "uuid";
 
 import Button from "@foxglove/studio-base/components/Button";
 import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
-import Panel from "@foxglove/studio-base/components/Panel";
-import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import SpinningLoadingIcon from "@foxglove/studio-base/components/SpinningLoadingIcon";
 import TextContent from "@foxglove/studio-base/components/TextContent";
 import {
@@ -33,11 +31,9 @@ import { useUserNodeState } from "@foxglove/studio-base/context/UserNodeStateCon
 import BottomBar from "@foxglove/studio-base/panels/NodePlayground/BottomBar";
 import Sidebar from "@foxglove/studio-base/panels/NodePlayground/Sidebar";
 import Playground from "@foxglove/studio-base/panels/NodePlayground/playground-icon.svg";
-import { PanelConfigSchema } from "@foxglove/studio-base/types/panels";
 import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-import Config from "./Config";
 import { Script } from "./script";
 
 const Editor = React.lazy(() => import("@foxglove/studio-base/panels/NodePlayground/Editor"));
@@ -56,11 +52,6 @@ const publisher = (message: Input<>, globalVars: GlobalVariables): Output => {
 };
 
 export default publisher;`;
-
-type Props = {
-  config: Config;
-  saveConfig: (config: Partial<Config>) => void;
-};
 
 const UnsavedDot = styled.div`
   display: ${({ isSaved }: { isSaved: boolean }) => (isSaved ? "none" : "initial")};
@@ -122,10 +113,12 @@ const WelcomeScreen = ({
   );
 };
 
-function NodePlayground(props: Props) {
-  const { config, saveConfig } = props;
-  const { autoFormatOnSave = false, selectedNodeId, editorForStorybook } = config;
+function NodePlayground(): JSX.Element {
+  // fixme
+  const autoFormatOnSave = true;
+  const editorForStorybook = undefined;
 
+  const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>();
   const [explorer, updateExplorer] = React.useState<Explorer>(undefined);
 
   const userNodes = useCurrentLayoutSelector((state) => state.userNodes);
@@ -163,15 +156,16 @@ function NodePlayground(props: Props) {
     width: `${inputTitle.length + 4}ch`, // Width based on character count of title + padding
   };
 
-  React.useLayoutEffect(() => {
+  useLayoutEffect(() => {
     if (selectedNode) {
-      const testItems = props.config.additionalBackStackItems ?? [];
+      // fixme
+      //const testItems = props.config.additionalBackStackItems ?? [];
       setScriptBackStack([
         { filePath: selectedNode.name, code: selectedNode.sourceCode, readOnly: false },
-        ...testItems,
+        //...testItems,
       ]);
     }
-  }, [props.config.additionalBackStackItems, selectedNode]);
+  }, [selectedNode]);
 
   const addNewNode = React.useCallback(
     (code?: string) => {
@@ -184,9 +178,9 @@ function NodePlayground(props: Props) {
           name: `${DEFAULT_STUDIO_NODE_PREFIX}${newNodeId.split("-")[0]}`,
         },
       });
-      saveConfig({ selectedNodeId: newNodeId });
+      setSelectedNodeId(newNodeId);
     },
-    [saveConfig, setUserNodes],
+    [setUserNodes],
   );
 
   const saveNode = React.useCallback(
@@ -230,7 +224,6 @@ function NodePlayground(props: Props) {
 
   return (
     <Stack verticalFill>
-      <PanelToolbar floating />
       <Stack horizontal verticalFill>
         <Sidebar
           explorer={explorer}
@@ -247,11 +240,11 @@ function NodePlayground(props: Props) {
                 [selectedNodeId]: { ...selectedNode, sourceCode: currentScript.code },
               });
             }
-            saveConfig({ selectedNodeId: nodeId });
+            setSelectedNodeId(nodeId);
           }}
           deleteNode={(nodeId) => {
             setUserNodes({ ...userNodes, [nodeId]: undefined });
-            saveConfig({ selectedNodeId: undefined });
+            setSelectedNodeId(undefined);
           }}
           selectedNodeId={selectedNodeId}
           userNodes={userNodes}
@@ -361,18 +354,4 @@ function NodePlayground(props: Props) {
   );
 }
 
-const configSchema: PanelConfigSchema<Config> = [
-  { key: "autoFormatOnSave", type: "toggle", title: "Auto-format on save" },
-];
-
-export default Panel(
-  Object.assign(NodePlayground, {
-    panelType: "NodePlayground",
-    defaultConfig: {
-      selectedNodeId: undefined,
-      autoFormatOnSave: true,
-    },
-    supportsStrictMode: false,
-    configSchema,
-  }),
-);
+export default NodePlayground;

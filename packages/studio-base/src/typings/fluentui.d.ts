@@ -21,6 +21,7 @@ declare global {
     | "CirclePlus"
     | "Clear"
     | "ClearSelection"
+    | "Code"
     | "CodeEdit"
     | "Contact"
     | "Copy"

@@ -27,6 +27,7 @@ const icons: {
   Clear: <Icons.ClearIcon />,
   ClearSelection: <Icons.ClearSelectionIcon />,
   CodeEdit: <Icons.CodeEditIcon />,
+  Code: <Icons.CodeIcon />,
   Contact: <Icons.ContactIcon />,
   Copy: <Icons.CopyIcon />,
   DataManagementSettings: <Icons.DataManagementSettingsIcon />,

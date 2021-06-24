@@ -56,6 +56,7 @@ import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConf
 import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFilesToOpen";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
+import NodePlayground from "@foxglove/studio-base/panels/NodePlayground";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 import { isNonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
 import inAutomatedRunMode from "@foxglove/studio-base/util/inAutomatedRunMode";
@@ -81,14 +82,15 @@ const TruncatedText = styled.span`
 `;
 
 type SidebarItemKey =
-  | "connection"
-  | "add-panel"
-  | "panel-settings"
-  | "variables"
-  | "extensions"
   | "account"
+  | "add-panel"
+  | "connection"
+  | "extensions"
   | "layouts"
-  | "preferences";
+  | "nodes"
+  | "panel-settings"
+  | "preferences"
+  | "variables";
 
 const SIDEBAR_ITEMS = new Map<SidebarItemKey, SidebarItem>([
   [
@@ -103,6 +105,7 @@ const SIDEBAR_ITEMS = new Map<SidebarItemKey, SidebarItem>([
   ],
   ["variables", { iconName: "Variable2", title: "Variables", component: Variables }],
   ["preferences", { iconName: "Settings", title: "Preferences", component: Preferences }],
+  ["nodes", { iconName: "Code", title: "Nodes", component: NodePlaygroundSidebar }],
   ["extensions", { iconName: "AddIn", title: "Extensions", component: ExtensionsSidebar }],
   ...(process.env.NODE_ENV === "production"
     ? []
@@ -135,6 +138,14 @@ function Variables() {
   return (
     <SidebarContent title="Variables" helpContent={variablesHelp}>
       <GlobalVariablesTable />
+    </SidebarContent>
+  );
+}
+
+function NodePlaygroundSidebar() {
+  return (
+    <SidebarContent noPadding>
+      <NodePlayground />
     </SidebarContent>
   );
 }

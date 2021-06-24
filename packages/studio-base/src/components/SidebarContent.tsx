@@ -5,6 +5,7 @@
 import { Stack, Text, useTheme } from "@fluentui/react";
 
 import HelpButton from "@foxglove/studio-base/components/PanelToolbar/HelpButton";
+import { isNonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
 
 export function SidebarContent({
   noPadding = false,
@@ -14,7 +15,7 @@ export function SidebarContent({
   leadingItems,
   trailingItems,
 }: React.PropsWithChildren<{
-  title: string;
+  title?: string;
   helpContent?: React.ReactNode;
   noPadding?: boolean;
 
@@ -41,36 +42,40 @@ export function SidebarContent({
       }}
       tokens={{ childrenGap: theme.spacing.s1 }}
     >
-      <Stack
-        horizontal
-        horizontalAlign="space-between"
-        verticalAlign="center"
-        style={{
-          padding: noPadding ? theme.spacing.m : undefined,
-          paddingBottom: theme.spacing.m,
-        }}
-      >
-        {leadingItems && (
-          <Stack horizontal verticalAlign="center">
-            {leadingItems.map((item, i) => (
-              <Stack.Item key={i}>{item}</Stack.Item>
-            ))}
-          </Stack>
-        )}
-        <Stack.Item grow>
-          <Text as="h2" variant="xLarge">
-            {title}
-          </Text>
-        </Stack.Item>
-        {trailingItems && (
-          <Stack horizontal verticalAlign="center">
-            {trailingItems.map((item, i) => (
-              <Stack.Item key={i}>{item}</Stack.Item>
-            ))}
-          </Stack>
-        )}
-      </Stack>
-      <Stack.Item>{children}</Stack.Item>
+      {(leadingItems || title || trailingItems) && (
+        <Stack
+          horizontal
+          horizontalAlign="space-between"
+          verticalAlign="center"
+          style={{
+            padding: noPadding ? theme.spacing.m : undefined,
+            paddingBottom: theme.spacing.m,
+          }}
+        >
+          {leadingItems && (
+            <Stack horizontal verticalAlign="center">
+              {leadingItems.map((item, i) => (
+                <Stack.Item key={i}>{item}</Stack.Item>
+              ))}
+            </Stack>
+          )}
+          {title != undefined && (
+            <Stack.Item grow>
+              <Text as="h2" variant="xLarge">
+                {title}
+              </Text>
+            </Stack.Item>
+          )}
+          {trailingItems && (
+            <Stack horizontal verticalAlign="center">
+              {trailingItems.map((item, i) => (
+                <Stack.Item key={i}>{item}</Stack.Item>
+              ))}
+            </Stack>
+          )}
+        </Stack>
+      )}
+      <Stack.Item grow>{children}</Stack.Item>
     </Stack>
   );
 }
