@@ -48,6 +48,9 @@ class StandardTypeOffsetCalculator {
   // The following are used in the StandardTypeWriter.
   string(value: string): number {
     // int32 length
+    if (typeof value !== "string") {
+      throw new Error(`Expected string but got ${typeof value}`);
+    }
     const length = 4 + value.length;
     return this._incrementAndReturn(length);
   }
@@ -241,13 +244,13 @@ function createWriterAndSizeCalculator(types: RosMsgDefinition[]): WriterAndSize
   ): string | undefined => {
     const lines: string[] = [];
     type.definitions.forEach((def) => {
-      if (def.isConstant ?? false) {
+      if (def.isConstant) {
         return;
       }
 
       // Accesses the field we are currently writing. Pulled out for easy reuse.
       const accessMessageField = `message["${def.name}"]`;
-      if (def.isArray ?? false) {
+      if (def.isArray) {
         const lenField = `length_${def.name}`;
         // set a variable pointing to the parsed fixed array length
         // or write the byte indicating the dynamic length
@@ -261,7 +264,7 @@ function createWriterAndSizeCalculator(types: RosMsgDefinition[]): WriterAndSize
         // start the for-loop
         lines.push(`for (var i = 0; i < ${lenField}; i++) {`);
         // if the sub type is complex we need to allocate it and parse its values
-        if (def.isComplex ?? false) {
+        if (def.isComplex) {
           const defType = findTypeByName(types, def.type);
           // recursively call the function for the sub-type
           lines.push(`  ${friendlyName(defType.name)}(${argName}, ${accessMessageField}[i]);`);
@@ -270,7 +273,7 @@ function createWriterAndSizeCalculator(types: RosMsgDefinition[]): WriterAndSize
           lines.push(`  ${argName}.${def.type}(${accessMessageField}[i]);`);
         }
         lines.push("}"); // close the for-loop
-      } else if (def.isComplex ?? false) {
+      } else if (def.isComplex) {
         const defType = findTypeByName(types, def.type);
         lines.push(`${friendlyName(defType.name)}(${argName}, ${accessMessageField});`);
       } else {
