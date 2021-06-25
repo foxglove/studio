@@ -138,7 +138,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/core@npm:7.14.6, @babel/core@npm:^7.0.0, @babel/core@npm:^7.1.0, @babel/core@npm:^7.12.10, @babel/core@npm:^7.4.5, @babel/core@npm:^7.7.2, @babel/core@npm:^7.7.5":
+"@babel/core@npm:7.14.6, @babel/core@npm:^7.0.0, @babel/core@npm:^7.1.0, @babel/core@npm:^7.12.10, @babel/core@npm:^7.12.17, @babel/core@npm:^7.4.5, @babel/core@npm:^7.7.2, @babel/core@npm:^7.7.5":
   version: 7.14.6
   resolution: "@babel/core@npm:7.14.6"
   dependencies:
@@ -1142,7 +1142,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-transform-modules-commonjs@npm:^7.14.5":
+"@babel/plugin-transform-modules-commonjs@npm:^7.12.13, @babel/plugin-transform-modules-commonjs@npm:^7.14.5":
   version: 7.14.5
   resolution: "@babel/plugin-transform-modules-commonjs@npm:7.14.5"
   dependencies:
@@ -2530,6 +2530,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@foxglove/cdr@workspace:packages/cdr":
+  version: 0.0.0-use.local
+  resolution: "@foxglove/cdr@workspace:packages/cdr"
+  dependencies:
+    "@foxglove/eslint-plugin": 0.10.0
+    "@types/eslint": ^7
+    "@types/eslint-plugin-prettier": ^3
+    "@types/jest": 26.0.23
+    "@types/prettier": 2.3.0
+    "@typescript-eslint/eslint-plugin": 4.28.0
+    "@typescript-eslint/parser": 4.28.0
+    esbuild: 0.12.9
+    esbuild-jest: 0.5.0
+    eslint: 7.29.0
+    eslint-config-prettier: 8.3.0
+    eslint-plugin-import: 2.23.4
+    eslint-plugin-jest: 24.3.6
+    eslint-plugin-prettier: 3.4.0
+    jest: 27.0.5
+    prettier: 2.3.1
+    typescript: 4.3.4
+  languageName: unknown
+  linkType: soft
+
 "@foxglove/den@workspace:*, @foxglove/den@workspace:packages/den":
   version: 0.0.0-use.local
   resolution: "@foxglove/den@workspace:packages/den"
@@ -2551,6 +2575,19 @@ __metadata:
     electron: ">=12"
   languageName: unknown
   linkType: soft
+
+"@foxglove/eslint-plugin@npm:0.10.0":
+  version: 0.10.0
+  resolution: "@foxglove/eslint-plugin@npm:0.10.0"
+  peerDependencies:
+    eslint: ^7
+    eslint-config-prettier: ^8
+    eslint-plugin-import: ^2
+    eslint-plugin-prettier: ^3
+    prettier: ^2
+  checksum: 3e363868f4f1f62551ff6fcc68e7f19a5b4135439e4dae81d40f999b045acbe43784c8a26300c3d37e40d5323852afdc8734514da0d2286ed275c6ec406fff26
+  languageName: node
+  linkType: hard
 
 "@foxglove/eslint-plugin@npm:0.9.0":
   version: 0.9.0
@@ -5179,7 +5216,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/babel__core@npm:^7.0.0, @types/babel__core@npm:^7.1.14":
+"@types/babel__core@npm:^7.0.0, @types/babel__core@npm:^7.1.14, @types/babel__core@npm:^7.1.7":
   version: 7.1.14
   resolution: "@types/babel__core@npm:7.1.14"
   dependencies:
@@ -5450,6 +5487,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/eslint-plugin-prettier@npm:^3":
+  version: 3.1.0
+  resolution: "@types/eslint-plugin-prettier@npm:3.1.0"
+  dependencies:
+    "@types/eslint": "*"
+  checksum: e8fc9991cc181967a961c344ab894b57122e54b5f36950373f42638bb05847caef89a0e12decbb5b4a42e4eefaeefe63053ee2cbf6e1dfce43d77a445bbae728
+  languageName: node
+  linkType: hard
+
 "@types/eslint-scope@npm:^3.7.0":
   version: 3.7.0
   resolution: "@types/eslint-scope@npm:3.7.0"
@@ -5467,6 +5513,16 @@ __metadata:
     "@types/estree": "*"
     "@types/json-schema": "*"
   checksum: bb53f0fe7a34d1a5182fdb5ddcd1293b7d2923af20a4c0f8a35cc8bca5e52b40ac79b015abb2c9ab024d11715349bdfea484ef6dc244d3d9bf4dfa58e24944fb
+  languageName: node
+  linkType: hard
+
+"@types/eslint@npm:^7":
+  version: 7.2.13
+  resolution: "@types/eslint@npm:7.2.13"
+  dependencies:
+    "@types/estree": "*"
+    "@types/json-schema": "*"
+  checksum: 6dac9f9d7d155c90a6eba104718e1adb43c3e4020ea75ab8f5094db8603617473a4ac6f7ddeb2c670822860b869a7e3871406a82425ec470965cdfc1f3dd3ad0
   languageName: node
   linkType: hard
 
@@ -7801,6 +7857,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"babel-jest@npm:^26.6.3":
+  version: 26.6.3
+  resolution: "babel-jest@npm:26.6.3"
+  dependencies:
+    "@jest/transform": ^26.6.2
+    "@jest/types": ^26.6.2
+    "@types/babel__core": ^7.1.7
+    babel-plugin-istanbul: ^6.0.0
+    babel-preset-jest: ^26.6.2
+    chalk: ^4.0.0
+    graceful-fs: ^4.2.4
+    slash: ^3.0.0
+  peerDependencies:
+    "@babel/core": ^7.0.0
+  checksum: 5917233f0d381e719e195b69b81e46da90293432d10288d79f8f59b8f3f9ac030e14701f3d9f90893fb739481df1d132446f1b983d841e65e2623775db100897
+  languageName: node
+  linkType: hard
+
 "babel-loader@npm:^8.2.2":
   version: 8.2.2
   resolution: "babel-loader@npm:8.2.2"
@@ -7881,6 +7955,18 @@ __metadata:
     istanbul-lib-instrument: ^4.0.0
     test-exclude: ^6.0.0
   checksum: bc586cf088ec471a98a474ef0e9361ace61947da2a3e54162f1e1ab712a1a81a88007639e8aff7db2fc8678ae7c671e696e6edd6ccf72db8e6af86f0628d5a08
+  languageName: node
+  linkType: hard
+
+"babel-plugin-jest-hoist@npm:^26.6.2":
+  version: 26.6.2
+  resolution: "babel-plugin-jest-hoist@npm:26.6.2"
+  dependencies:
+    "@babel/template": ^7.3.3
+    "@babel/types": ^7.3.3
+    "@types/babel__core": ^7.0.0
+    "@types/babel__traverse": ^7.0.6
+  checksum: abe3732fdf20f96e91cbf788a54d776b30bd7a6054cb002a744d7071c656813e26e77a780dc2a6f6b197472897e220836cd907bda3fadb9d0481126bfd6c3783
   languageName: node
   linkType: hard
 
@@ -8047,6 +8133,18 @@ __metadata:
   peerDependencies:
     "@babel/core": ^7.0.0
   checksum: d118c2742498c5492c095bc8541f4076b253e705b5f1ad9a2e7d302d81a84866f0070346662355c8e25fc02caa28dc2da8d69bcd67794a0d60c4d6fab6913cc8
+  languageName: node
+  linkType: hard
+
+"babel-preset-jest@npm:^26.6.2":
+  version: 26.6.2
+  resolution: "babel-preset-jest@npm:26.6.2"
+  dependencies:
+    babel-plugin-jest-hoist: ^26.6.2
+    babel-preset-current-node-syntax: ^1.0.0
+  peerDependencies:
+    "@babel/core": ^7.0.0
+  checksum: 1d9bef3a7ac6751a09d29ceb84be8b1998abd210fafa12223689c744db4f2a63ab90cba7986a71f3154d9aceda9dbeca563178731d21cbaf793b4096ed3a4d01
   languageName: node
   linkType: hard
 
@@ -11855,6 +11953,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"esbuild-jest@npm:0.5.0":
+  version: 0.5.0
+  resolution: "esbuild-jest@npm:0.5.0"
+  dependencies:
+    "@babel/core": ^7.12.17
+    "@babel/plugin-transform-modules-commonjs": ^7.12.13
+    babel-jest: ^26.6.3
+  peerDependencies:
+    esbuild: ">=0.8.50"
+  checksum: 210d1a1111815675f247ba32174b821aedf3d8ab34eb0fa0bd6b60c97db9df5bcc5b034d19ba988a2d8733d46d4cd59e3cfa1cfdfddce3b4584f9d40ad24beb0
+  languageName: node
+  linkType: hard
+
 "esbuild-loader@npm:2.13.1":
   version: 2.13.1
   resolution: "esbuild-loader@npm:2.13.1"
@@ -11892,6 +12003,15 @@ __metadata:
   bin:
     esbuild: bin/esbuild
   checksum: e0877a981e2f6ee7ec92cea9c1c019dc06309e0b89b0d21cb21a46db3e6195495b72aec7533ef6de7ec7f3c306181460b1b5a1d47087da53664b8d8929a81fd0
+  languageName: node
+  linkType: hard
+
+"esbuild@npm:0.12.9":
+  version: 0.12.9
+  resolution: "esbuild@npm:0.12.9"
+  bin:
+    esbuild: bin/esbuild
+  checksum: 1f157abb95e42089d0b520ca9ff4dfac17ecdc55057aa07a2735bb45e9bcff5d72ce6006d5edc41007801305c0700c862cff09f8b447ba3e309d0a0a9ffc140f
   languageName: node
   linkType: hard
 
