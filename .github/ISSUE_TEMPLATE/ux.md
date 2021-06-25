@@ -1,7 +1,7 @@
 ---
-name: Bug
-about: Report an issue
-labels: "bug"
+name: UX Issue
+about: Report a pain point with existing functionality
+labels: "ux"
 ---
 
 **Description**
@@ -14,7 +14,7 @@ labels: "bug"
 <!--- Include code, screenshots, and an example data source (i.e. a `.bag` file), if relevant. -->
 
 
-**Expected Behavior**
+**Current Experience**
 
 
-**Actual Behavior**
+**Desired Experience**
