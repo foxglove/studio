@@ -2605,7 +2605,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/ros1@workspace:packages/ros1"
   dependencies:
-    "@foxglove/rosmsg": "github:foxglove/rosmsg#b4bf2e453cee21d0f337654bb7e3a3c2240b27a6"
+    "@foxglove/rosmsg": "github:foxglove/rosmsg#c9fd8b2c23396c46d0d91d104f347c73d402605e"
     "@foxglove/rosmsg-serialization": "workspace:packages/rosmsg-serialization"
     "@foxglove/xmlrpc": "workspace:*"
     esbuild-runner: 2.2.0
@@ -2621,7 +2621,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/rosmsg-msgs-common@workspace:packages/rosmsg-msgs-common"
   dependencies:
-    "@foxglove/rosmsg": "github:foxglove/rosmsg#b4bf2e453cee21d0f337654bb7e3a3c2240b27a6"
+    "@foxglove/rosmsg": "github:foxglove/rosmsg#c9fd8b2c23396c46d0d91d104f347c73d402605e"
     "@types/prettier": 2.3.0
     esbuild-runner: 2.2.0
     prettier: 2.3.1
@@ -2633,7 +2633,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/rosmsg-msgs-foxglove@workspace:packages/rosmsg-msgs-foxglove"
   dependencies:
-    "@foxglove/rosmsg": "github:foxglove/rosmsg#b4bf2e453cee21d0f337654bb7e3a3c2240b27a6"
+    "@foxglove/rosmsg": "github:foxglove/rosmsg#c9fd8b2c23396c46d0d91d104f347c73d402605e"
     "@types/prettier": 2.3.0
     esbuild-runner: 2.2.0
     prettier: 2.3.1
@@ -2645,7 +2645,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/rosmsg-serialization@workspace:packages/rosmsg-serialization"
   dependencies:
-    "@foxglove/rosmsg": "github:foxglove/rosmsg#b4bf2e453cee21d0f337654bb7e3a3c2240b27a6"
+    "@foxglove/rosmsg": "github:foxglove/rosmsg#c9fd8b2c23396c46d0d91d104f347c73d402605e"
     "@types/prettier": 2.3.0
     jest: 27.0.5
     prettier: 2.3.1
@@ -2653,13 +2653,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foxglove/rosmsg@github:foxglove/rosmsg#b4bf2e453cee21d0f337654bb7e3a3c2240b27a6":
+"@foxglove/rosmsg@github:foxglove/rosmsg#c9fd8b2c23396c46d0d91d104f347c73d402605e":
   version: 0.1.0
-  resolution: "@foxglove/rosmsg@https://github.com/foxglove/rosmsg.git#commit=b4bf2e453cee21d0f337654bb7e3a3c2240b27a6"
+  resolution: "@foxglove/rosmsg@https://github.com/foxglove/rosmsg.git#commit=c9fd8b2c23396c46d0d91d104f347c73d402605e"
   dependencies:
     moo: ^0.5.1
     nearley: ^2.20.1
-  checksum: 6355ce54766d36d8b87e0de3c026c3012f8ffc7fd0d9cbf9864a5d92af0bcf951da1a6ee3084f0fcaba4d6114ae78c6bf3aef6f6db6a55b549ecd464bd552377
+  checksum: 0c7a83e2379ff1b7f6c72294210931e1a72e1329586619434f4cd8dcfd92f4782117a962ba3e98f878457add56d017a10abf0861166835887141f460f26d534d
   languageName: node
   linkType: hard
 
