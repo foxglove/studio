@@ -2530,6 +2530,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@foxglove/cdr@npm:0.1.0":
+  version: 0.1.0
+  resolution: "@foxglove/cdr@npm:0.1.0"
+  checksum: ef4f81bc15d735219ed2e9e76c1d1dd04ce6e1e8489cbb77ec46eeceb71ff2fe585c49b442d9242b0f83e2a026f52d2d3f6a4ca9b2f24b044745f4fefc379883
+  languageName: node
+  linkType: hard
+
 "@foxglove/den@workspace:*, @foxglove/den@workspace:packages/den":
   version: 0.0.0-use.local
   resolution: "@foxglove/den@workspace:packages/den"
@@ -2645,6 +2652,19 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/rosmsg-serialization@workspace:packages/rosmsg-serialization"
   dependencies:
+    "@foxglove/rosmsg": 0.1.1
+    "@types/prettier": 2.3.0
+    jest: 27.0.5
+    prettier: 2.3.1
+    typescript: 4.3.4
+  languageName: unknown
+  linkType: soft
+
+"@foxglove/rosmsg2-serialization@workspace:packages/rosmsg2-serialization":
+  version: 0.0.0-use.local
+  resolution: "@foxglove/rosmsg2-serialization@workspace:packages/rosmsg2-serialization"
+  dependencies:
+    "@foxglove/cdr": 0.1.0
     "@foxglove/rosmsg": 0.1.1
     "@types/prettier": 2.3.0
     jest: 27.0.5

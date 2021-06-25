@@ -1,0 +1,33 @@
+{
+  "name": "@foxglove/rosmsg2-serialization",
+  "license": "MPL-2.0",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/foxglove/studio.git"
+  },
+  "author": {
+    "name": "Foxglove Technologies",
+    "email": "support@foxglove.dev"
+  },
+  "homepage": "https://foxglove.dev/",
+  "main": "src/index.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "prepack": "tsc -b",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@foxglove/cdr": "0.1.0",
+    "@foxglove/rosmsg": "0.1.1"
+  },
+  "devDependencies": {
+    "@types/prettier": "2.3.0",
+    "jest": "27.0.5",
+    "prettier": "2.3.1",
+    "typescript": "4.3.4"
+  }
+}
