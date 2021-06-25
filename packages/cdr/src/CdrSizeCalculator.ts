@@ -43,7 +43,7 @@ export class CdrSizeCalculator {
   }
 
   float64(): number {
-    return this.incrementAndReturn(4);
+    return this.incrementAndReturn(8);
   }
 
   string(length: number): number {
@@ -60,7 +60,10 @@ export class CdrSizeCalculator {
   // returns the new offset
   private incrementAndReturn(byteCount: number): number {
     const alignment = (this.offset - 4) % byteCount;
-    this.offset += byteCount + alignment;
+    if (alignment > 0) {
+      this.offset += byteCount - alignment;
+    }
+    this.offset += byteCount;
     return this.offset;
   }
 }

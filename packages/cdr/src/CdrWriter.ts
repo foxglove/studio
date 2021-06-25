@@ -15,7 +15,7 @@ export class CdrWriter {
   private offset: number;
 
   get data(): Uint8Array {
-    return this.array;
+    return new Uint8Array(this.buffer, 0, this.offset);
   }
 
   get size(): number {
@@ -43,7 +43,7 @@ export class CdrWriter {
     // The RTPS specification does not define any settings for the 2 byte
     // options field and further states that a receiver should not interpret it
     // when it reads the options field
-    this.view.setUint16(0, 0, false);
+    this.view.setUint16(2, 0, false);
     this.offset = 4;
   }
 
@@ -136,10 +136,11 @@ export class CdrWriter {
   private align(size: number): void {
     // The four byte header is not considered for alignment
     const alignment = (this.offset - 4) % size;
-    this.resizeIfNeeded(alignment + size);
+    const padding = alignment > 0 ? size - alignment : 0;
+    this.resizeIfNeeded(padding + size);
     // Write padding bytes
-    this.array.fill(0, this.offset, this.offset + alignment);
-    this.offset += alignment;
+    this.array.fill(0, this.offset, this.offset + padding);
+    this.offset += padding;
   }
 
   private resizeIfNeeded(additionalBytes: number): void {

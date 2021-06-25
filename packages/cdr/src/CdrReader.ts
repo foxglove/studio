@@ -3,7 +3,7 @@ export class CdrReader {
   private view: DataView;
   private offset: number;
   private littleEndian: boolean;
-  private textDecoder = new TextDecoder("CdrReader");
+  private textDecoder = new TextDecoder("utf8");
 
   get data(): Uint8Array {
     return this.array;
@@ -99,7 +99,7 @@ export class CdrReader {
       this.offset += length;
       return "";
     }
-    const data = new Uint8Array(this.array.buffer, this.array.byteOffset + this.offset, length);
+    const data = new Uint8Array(this.array.buffer, this.array.byteOffset + this.offset, length - 1);
     const value = this.textDecoder.decode(data);
     this.offset += length;
     return value;
@@ -110,6 +110,9 @@ export class CdrReader {
   }
 
   private align(size: number): void {
-    this.offset += (this.offset - 4) % size;
+    const alignment = (this.offset - 4) % size;
+    if (alignment > 0) {
+      this.offset += size - alignment;
+    }
   }
 }
