@@ -21,7 +21,7 @@
     "prepack": "node -r esbuild-runner/register src/index.ts"
   },
   "dependencies": {
-    "@foxglove/rosmsg": "github:foxglove/rosmsg#c9fd8b2c23396c46d0d91d104f347c73d402605e"
+    "@foxglove/rosmsg": "0.1.1"
   },
   "devDependencies": {
     "@types/prettier": "2.3.0",
