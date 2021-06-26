@@ -21,7 +21,6 @@ import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayout
 import { CachedLayout } from "@foxglove/studio-base/services/ILayoutCache";
 import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 import Storage from "@foxglove/studio-base/util/Storage";
-import delay from "@foxglove/studio-base/util/delay";
 import signal from "@foxglove/studio-base/util/signal";
 
 const TEST_LAYOUT: PanelsState = {
