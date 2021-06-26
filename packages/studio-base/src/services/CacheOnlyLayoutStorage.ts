@@ -65,9 +65,11 @@ export default class CacheOnlyLayoutStorage implements ILayoutStorage {
     path: string[];
     name: string;
     data: PanelsState;
-  }): Promise<void> {
+  }): Promise<LayoutMetadata> {
     const id = uuidv4() as LayoutID;
-    await this.storage.put({ id, name, path, state: data });
+    const newLayout: CachedLayout = { id, name, path, state: data };
+    await this.storage.put(newLayout);
+    return getMetadata(newLayout);
   }
 
   async updateLayout({
@@ -106,7 +108,7 @@ export default class CacheOnlyLayoutStorage implements ILayoutStorage {
     path: string[];
   }): Promise<void> {
     const target = await this.storage.get(id);
-    if (!target) {
+    if (!target?.state) {
       throw new Error(`Layout id ${id} not found`);
     }
     await this.storage.put({ id, name, path, state: target.state });
