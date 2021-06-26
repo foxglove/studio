@@ -6,6 +6,7 @@
  * Determine a name under which to save a new layout. The given name will be used, but if it would
  * conflict with an existing name, a number will be appended.
  */
+// FIXME: not needed?
 export default function getNewLayoutName(
   desiredName: string,
   existingNames: ReadonlySet<string>,

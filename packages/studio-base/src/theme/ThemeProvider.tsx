@@ -47,6 +47,7 @@ const icons: {
   Share: <Icons.ShareIcon />,
   SingleColumnEdit: <Icons.SingleColumnEditIcon />,
   TestBeakerSolid: <Icons.TestBeakerSolidIcon />,
+  Upload: <Icons.UploadIcon />,
   Variable2: <Icons.Variable2Icon />,
   Warning: <Icons.WarningIcon />,
   "studio.ROS": <RosIcon />,

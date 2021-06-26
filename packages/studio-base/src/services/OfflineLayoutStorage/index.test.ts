@@ -7,6 +7,7 @@ import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLa
 import { CachedLayout } from "@foxglove/studio-base/services/ILayoutCache";
 import {
   ISO8601Timestamp,
+  Layout,
   LayoutID,
   LayoutMetadata,
 } from "@foxglove/studio-base/services/ILayoutStorage";
@@ -69,6 +70,7 @@ describe("OfflineLayoutStorage", () => {
       createdAt: undefined,
       updatedAt: undefined,
       permission: "creator_write",
+      hasUnsyncedChanges: true,
     });
 
     expect(remoteGetLayout).toHaveBeenCalledTimes(0);
@@ -86,8 +88,9 @@ describe("OfflineLayoutStorage", () => {
       data: makePanelsState({}),
     };
 
+    const { data: _, ...serverMetadata } = remote1;
     const cacheStorage = new MockLayoutCache([
-      { id: remote1.id, name: "Foo", path: ["a"], state: undefined },
+      { id: remote1.id, name: "Foo", path: ["a"], state: undefined, serverMetadata },
     ]);
 
     const remoteStorage = new MockRemoteLayoutStorage([remote1]);
@@ -95,21 +98,13 @@ describe("OfflineLayoutStorage", () => {
 
     const storage = new OfflineLayoutStorage({ cacheStorage, remoteStorage });
 
-    await expect(storage.getLayouts()).resolves.toEqual([
-      {
-        id: remote1.id,
-        name: "Foo",
-        path: ["a"],
-        creator: undefined,
-        createdAt: undefined,
-        updatedAt: undefined,
-        permission: "creator_write",
-      },
-    ]);
+    const expectedMetadata = { ...serverMetadata, hasUnsyncedChanges: false };
+    await expect(storage.getLayouts()).resolves.toEqual([expectedMetadata]);
 
     expect(remoteGetLayout).toHaveBeenCalledTimes(0);
 
-    await expect(storage.getLayout(remote1.id)).resolves.toEqual(remote1);
+    const expectedLayout: Layout = { ...remote1, hasUnsyncedChanges: false };
+    await expect(storage.getLayout(remote1.id)).resolves.toEqual(expectedLayout);
     expect(remoteGetLayout).toHaveBeenCalledTimes(1);
   });
 
@@ -245,6 +240,34 @@ describe("OfflineLayoutStorage", () => {
       await expect(cacheStorage.list()).resolves.toEqual([]);
     });
 
+    it("filters locally deleted layouts out of results", async () => {
+      const remote1: RemoteLayoutMetadata = {
+        id: "id1" as LayoutID,
+        path: ["a"],
+        name: "Foo",
+        creator: FAKE_USER,
+        createdAt: new Date(10).toISOString() as ISO8601Timestamp,
+        updatedAt: new Date(10).toISOString() as ISO8601Timestamp,
+        permission: "creator_write",
+      };
+      const cacheStorage = new MockLayoutCache([
+        {
+          id: remote1.id,
+          path: remote1.path,
+          name: remote1.name,
+          state: undefined,
+          serverMetadata: remote1,
+          locallyDeleted: true,
+        },
+      ]);
+      const remoteStorage = new MockRemoteLayoutStorage([
+        { ...remote1, data: makePanelsState({}) },
+      ]);
+      const storage = new OfflineLayoutStorage({ cacheStorage, remoteStorage });
+      await expect(storage.getLayouts()).resolves.toEqual([]);
+      await expect(storage.getLayout(remote1.id)).resolves.toBeUndefined();
+    });
+
     it("deletes locally deleted layouts from the server and then cache", async () => {
       const remote1: RemoteLayoutMetadata = {
         id: "id1" as LayoutID,
@@ -294,6 +317,7 @@ describe("OfflineLayoutStorage", () => {
         createdAt: undefined,
         updatedAt: undefined,
         permission: "creator_write",
+        hasUnsyncedChanges: true,
       };
       const layouts = await storage.getLayouts();
       expect(layouts).toEqual([expectedLayout]);
@@ -341,6 +365,19 @@ describe("OfflineLayoutStorage", () => {
       // The new server metadata has been written to the cache, replacing the old metadata
       await expect(cacheStorage.list()).resolves.toEqual([
         { ...expectedCached, serverMetadata: expectedRemote },
+      ]);
+      expectedLayout.hasUnsyncedChanges = false;
+      await expect(storage.getLayouts()).resolves.toEqual([
+        {
+          id: expectedCached.id,
+          path: ["a", "b"],
+          name: "layout1",
+          creator: FAKE_USER,
+          createdAt: new Date(10).toISOString() as ISO8601Timestamp,
+          updatedAt: new Date(10).toISOString() as ISO8601Timestamp,
+          permission: "creator_write",
+          hasUnsyncedChanges: false,
+        },
       ]);
     });
 

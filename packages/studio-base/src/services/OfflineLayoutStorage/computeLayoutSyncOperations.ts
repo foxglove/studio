@@ -7,7 +7,7 @@ import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 import { RemoteLayoutMetadata } from "@foxglove/studio-base/services/IRemoteLayoutStorage";
 
 export type ConflictType =
-  | "local-delete-remote-update"
+  | "local-delete-remote-update" // FIXME: remove and just ignore local delete in this case?
   | "local-update-remote-delete"
   | "both-update";
 
@@ -40,8 +40,8 @@ export default function computeLayoutSyncOperations(
   for (const cachedLayout of cachedLayoutsById.values()) {
     // If the layout was created locally, upload it
     if (cachedLayout.serverMetadata == undefined) {
-      if (cachedLayout.state == undefined) {
-        // Nothing to upload, might as well delete.
+      // If it's already been deleted or there is nothing to upload, delete.
+      if (cachedLayout.locallyDeleted === true || cachedLayout.state == undefined) {
         ops.push({ type: "delete-local", cachedLayout });
       } else {
         ops.push({

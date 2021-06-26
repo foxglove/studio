@@ -25,6 +25,11 @@ export type LayoutMetadata = {
   createdAt: ISO8601Timestamp | undefined;
   updatedAt: ISO8601Timestamp | undefined;
   permission: "creator_write" | "org_read" | "org_write";
+  /**
+   * Indicates whether changes have been made to the user's copy of this layout that have yet to be
+   * saved. Save the changes by calling ILayoutStorage.syncLayout().
+   */
+  hasUnsyncedChanges: boolean;
   data?: never;
 };
 
@@ -47,6 +52,8 @@ export interface ILayoutStorage {
     data: PanelsState;
     targetID: LayoutID;
   }): Promise<void>;
+
+  syncLayout(id: LayoutID): Promise<void>;
 
   readonly supportsSharing: boolean;
 

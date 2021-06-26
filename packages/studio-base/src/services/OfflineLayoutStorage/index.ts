@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { isEqual } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
 import { MutexLocked } from "@foxglove/den/async";
@@ -22,32 +21,38 @@ import {
 import WriteThroughLayoutCache from "@foxglove/studio-base/services/WriteThroughLayoutCache";
 import filterMap from "@foxglove/studio-base/util/filterMap";
 
-import computeLayoutSyncOperations, { ConflictType } from "./computeLayoutSyncOperations";
-import getNewLayoutName from "./getNewLayoutName";
+import computeLayoutSyncOperations, {
+  ConflictType,
+  SyncOperation,
+} from "./computeLayoutSyncOperations";
 
 const log = Logger.getLogger(__filename);
 
-export type ConflictInfo = { layoutName: string; type: ConflictType };
+export type ConflictInfo = { cacheId: string; remoteId?: LayoutID; type: ConflictType };
 
 /**
  * Determine the metadata that we should vend out to clients based on a cached layout. Uses the
  * layout's serverMetadata if available.
  */
 function getEffectiveMetadata(layout: CachedLayout): LayoutMetadata {
-  return (
-    layout.serverMetadata ?? {
-      // When a layout is new on the client, we treat our local id as though it were a server id.
-      // This will be replaced with the server id once we upload the layout.
-      id: layout.id as LayoutID,
+  return layout.serverMetadata != undefined
+    ? {
+        ...layout.serverMetadata,
+        hasUnsyncedChanges: layout.locallyModified ?? false,
+      }
+    : {
+        // When a layout is new on the client, we treat our local id as though it were a server id.
+        // This will be replaced with the server id once we upload the layout.
+        id: layout.id as LayoutID,
 
-      name: layout.name,
-      path: layout.path ?? [],
-      creator: undefined,
-      createdAt: undefined,
-      updatedAt: undefined,
-      permission: "creator_write",
-    }
-  );
+        name: layout.name,
+        path: layout.path ?? [],
+        creator: undefined,
+        createdAt: undefined,
+        updatedAt: undefined,
+        permission: "creator_write",
+        hasUnsyncedChanges: true,
+      };
 }
 
 /**
@@ -57,6 +62,9 @@ function getEffectiveMetadata(layout: CachedLayout): LayoutMetadata {
  * The local cache is used first for all operations except layout sharing. A sync operation
  * determines what actions are needed to reconcile the cache with the remote storage, and performs
  * them or reports conflicts that it cannot resolve.
+ *
+ * By default we don't (currently) upload new layouts or changes made locally. The user triggers
+ * these uploads with an explicit save action.
  *
  * This object does not handle any timeout logic and assumes that timeouts from remote storage will
  * be bubbled up as errors.
@@ -95,20 +103,22 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
   }
 
   async getLayouts(): Promise<LayoutMetadata[]> {
-    return Array.from(
-      await this.cacheStorage.runExclusive((cache) => cache.list()),
-      getEffectiveMetadata,
+    return filterMap(await this.cacheStorage.runExclusive((cache) => cache.list()), (layout) =>
+      // FIXME: still need to return the layout if it has conflicts? or just drop local deletes if there's been a remote update?
+      layout.locallyDeleted === true ? undefined : getEffectiveMetadata(layout),
     );
   }
 
   async getLayout(id: LayoutID): Promise<Layout | undefined> {
     const layout = await this.cacheStorage.runExclusive((cache) => cache.get(id));
+    if (layout?.locallyDeleted === true) {
+      return undefined;
+    }
     if (layout?.state) {
       return { ...getEffectiveMetadata(layout), data: layout.state };
     }
-    // It's quite possible that we have metadata from the server from a previous sync, but no
-    // locally cached data, if the user has never selected this layout before. We need to query the
-    // server in order to hydrate our cached layout.
+    // If the user has never selected this layout, or if it has been updated on the server since
+    // last time it was selected, we need to query the server in order to hydrate the cached layout.
     const remoteLayout = await this.remoteStorage.getLayout(id);
     if (!remoteLayout) {
       // If we still have local metadata for this layout in the cache, it will be deleted during the
@@ -127,7 +137,7 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
         serverMetadata: metadata,
       }),
     );
-    return remoteLayout;
+    return { ...remoteLayout, hasUnsyncedChanges: false };
   }
 
   async saveNewLayout({
@@ -138,10 +148,12 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
     path: string[];
     name: string;
     data: PanelsState;
-  }): Promise<void> {
-    await this.cacheStorage.runExclusive((cache) =>
-      cache.put({ id: uuidv4(), name, path, state: data }),
-    );
+  }): Promise<LayoutMetadata> {
+    return this.cacheStorage.runExclusive(async (cache) => {
+      const layout = { id: uuidv4(), name, path, state: data };
+      await cache.put(layout);
+      return getEffectiveMetadata(layout);
+    });
   }
 
   async updateLayout({
@@ -243,6 +255,24 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
     }
   }
 
+  /** Save a layout to the server following an explicit user action. */
+  async syncLayout(id: LayoutID): Promise<void> {
+    const cachedLayout = await this.cacheStorage.runExclusive((cache) => cache.get(id));
+    if (cachedLayout?.state != undefined) {
+      if (cachedLayout.serverMetadata != undefined) {
+        await this.performSyncOperations(
+          [{ type: "upload-updated", cachedLayout, remoteLayout: cachedLayout.serverMetadata }],
+          { uploadChanges: true },
+        );
+      } else {
+        await this.performSyncOperations(
+          [{ type: "upload-new", cachedLayout: { ...cachedLayout, state: cachedLayout.state } }],
+          { uploadChanges: true },
+        );
+      }
+    }
+  }
+
   private isSyncing = false;
 
   /**
@@ -279,12 +309,28 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
         ),
     ]);
 
+    const operations = computeLayoutSyncOperations(cachedLayoutsById, remoteLayoutsById);
+    log.info("Sync operations:", operations);
+
+    // By default we don't (currently) upload new layouts or changes made locally. The user
+    // triggers these uploads with an explicit save action.
+    return this.performSyncOperations(operations, { uploadChanges: false });
+  }
+
+  private async performSyncOperations(
+    operations: SyncOperation[],
+    { uploadChanges }: { uploadChanges: boolean },
+  ): Promise<ConflictInfo[]> {
     const conflicts: ConflictInfo[] = [];
-    for (const operation of computeLayoutSyncOperations(cachedLayoutsById, remoteLayoutsById)) {
+    for (const operation of operations) {
       switch (operation.type) {
         case "conflict": {
           const { cachedLayout, conflictType } = operation;
-          conflicts.push({ layoutName: cachedLayout.name, type: conflictType });
+          conflicts.push({
+            cacheId: cachedLayout.id,
+            remoteId: cachedLayout.serverMetadata?.id,
+            type: conflictType,
+          });
           break;
         }
 
@@ -310,6 +356,7 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
               name: remoteLayout.name,
               path: remoteLayout.path,
               serverMetadata: remoteLayout,
+              state: undefined, // clear out the state so we know it needs to be fetched from the server
               locallyDeleted: false,
               locallyModified: false,
             }),
@@ -334,25 +381,24 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
               await this.cacheStorage.runExclusive((cache) => cache.delete(cachedLayout.id));
               break;
             case "precondition-failed":
-              conflicts.push({ layoutName: cachedLayout.name, type: "local-delete-remote-update" });
+              conflicts.push({
+                cacheId: cachedLayout.id,
+                remoteId: cachedLayout.serverMetadata?.id,
+                type: "local-delete-remote-update",
+              });
               break;
           }
           break;
         }
 
         case "upload-new": {
+          if (!uploadChanges) {
+            break;
+          }
           const { cachedLayout } = operation;
-          const newName = getNewLayoutName(
-            cachedLayout.name,
-            new Set(
-              filterMap(remoteLayoutsById.values(), (layout) =>
-                isEqual(cachedLayout.path ?? [], layout.path) ? layout.name : undefined,
-              ),
-            ),
-          );
           const response = await this.remoteStorage.saveNewLayout({
             path: cachedLayout.path ?? [],
-            name: newName,
+            name: cachedLayout.name,
             data: cachedLayout.state,
           });
           switch (response.status) {
@@ -370,13 +416,20 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
               });
               break;
             case "conflict":
-              conflicts.push({ layoutName: cachedLayout.name, type: "both-update" });
+              conflicts.push({
+                cacheId: cachedLayout.id,
+                remoteId: cachedLayout.serverMetadata?.id,
+                type: "both-update",
+              });
               break;
           }
           break;
         }
 
         case "upload-updated": {
+          if (!uploadChanges) {
+            break;
+          }
           const { cachedLayout, remoteLayout } = operation;
           let responsePromise: ReturnType<IRemoteLayoutStorage["updateLayout"]>;
           if (!cachedLayout.state) {
@@ -399,7 +452,11 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
           switch (response.status) {
             case "success":
               await this.cacheStorage.runExclusive((cache) =>
-                cache.put({ ...cachedLayout, serverMetadata: response.newMetadata }),
+                cache.put({
+                  ...cachedLayout,
+                  locallyModified: false,
+                  serverMetadata: response.newMetadata,
+                }),
               );
               break;
             case "not-found":
@@ -408,11 +465,16 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
               );
               break;
             case "precondition-failed":
-              conflicts.push({ layoutName: cachedLayout.name, type: "both-update" });
+              conflicts.push({
+                cacheId: cachedLayout.id,
+                remoteId: cachedLayout.serverMetadata?.id,
+                type: "both-update",
+              });
               break;
             case "conflict":
               conflicts.push({
-                layoutName: cachedLayout.name,
+                cacheId: cachedLayout.id,
+                remoteId: cachedLayout.serverMetadata?.id,
                 type: "local-update-remote-delete",
               });
               break;
@@ -421,6 +483,7 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
         }
       }
     }
+    log.info("Sync conflicts:", conflicts);
     return conflicts;
   }
 }

@@ -9,6 +9,7 @@ import { captureException, init as initSentry } from "@sentry/electron";
 import { app, BrowserWindow, ipcMain, Menu, session, nativeTheme, shell } from "electron";
 import { autoUpdater } from "electron-updater";
 import fs from "fs";
+import path from "path";
 
 import Logger from "@foxglove/log";
 
@@ -196,6 +197,16 @@ function main() {
         });
       }),
   );
+
+  ipcMain.handle("debug_openFakeRemoteLayoutStorageDirectory", async () => {
+    const msg = await shell.openPath(
+      // FIXME: don't hardcode this?
+      path.join(app.getPath("userData"), "studio-datastores", "fake-remote-layouts"),
+    );
+    if (msg !== "") {
+      throw new Error(msg);
+    }
+  });
 
   // support preload lookups for the user data path and home directory
   ipcMain.handle("getUserDataPath", () => app.getPath("userData"));
