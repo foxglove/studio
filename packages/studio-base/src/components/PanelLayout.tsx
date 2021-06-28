@@ -160,7 +160,6 @@ export default function PanelLayout(): JSX.Element {
   const layout = useCurrentLayoutSelector((state) => state.selectedLayout?.data.layout);
   const onChange = useCallback(
     (newLayout: MosaicNode<string>) => {
-      //FIXME: how to handle actions when no layout is selected?
       changePanelLayout({ layout: newLayout });
     },
     [changePanelLayout],

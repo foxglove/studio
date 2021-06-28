@@ -88,20 +88,11 @@ function CurrentLayoutProviderWithInitialState({
     if (selectedLayout == undefined) {
       return;
     }
-    //FIXME shouldn't need to fetch before each save
+    log.debug("updateLayout");
     layoutStorage
-      .getLayout(selectedLayout.id)
-      .then((layout) => {
-        if (!layout) {
-          throw new Error("FIXME Unable to fetch current layout");
-        }
-        log.debug("updateLayout");
-        return layoutStorage.updateLayout({
-          path: layout.path, //FIXME
-          name: layout.name, //fixme
-          targetID: selectedLayout.id,
-          data: selectedLayout.data,
-        });
+      .updateLayout({
+        targetID: selectedLayout.id,
+        data: selectedLayout.data,
       })
       .catch((error) => {
         log.error(error);

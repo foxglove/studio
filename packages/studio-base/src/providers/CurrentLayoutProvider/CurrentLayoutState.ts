@@ -62,7 +62,7 @@ export default class CurrentLayoutState implements ICurrentLayout {
     this.layoutState = { selectedLayout: undefined };
     // Run the loadLayout action once to ensure any migrations happen (e.g. savedProps->configById)
     if (initialState.selectedLayout) {
-      this.actions.loadLayout(initialState.selectedLayout);
+      this.actions.setSelectedLayout(initialState.selectedLayout);
     }
 
     this.undoRedo = new UndoRedo(this.layoutState, {
@@ -104,11 +104,11 @@ export default class CurrentLayoutState implements ICurrentLayout {
   actions = {
     getCurrentLayoutState: (): LayoutState => this.layoutState,
     undoLayoutChange: (): void =>
-      this.undoRedo.undo(({ selectedLayout }) => this.actions.loadLayout(selectedLayout)),
+      this.undoRedo.undo(({ selectedLayout }) => this.actions.setSelectedLayout(selectedLayout)),
     redoLayoutChange: (): void =>
-      this.undoRedo.redo(({ selectedLayout }) => this.actions.loadLayout(selectedLayout)),
+      this.undoRedo.redo(({ selectedLayout }) => this.actions.setSelectedLayout(selectedLayout)),
 
-    loadLayout: (
+    setSelectedLayout: (
       newLayout:
         | {
             id: LayoutID;

@@ -57,7 +57,7 @@ storiesOf("components/ShareJsonModal", module)
         }, 10);
       }, 10);
     }, []);
-    const { loadLayout } = useCurrentLayoutActions();
+    const { setSelectedLayout } = useCurrentLayoutActions();
     return (
       <div data-modalcontainer="true">
         <ShareJsonModal
@@ -66,7 +66,7 @@ storiesOf("components/ShareJsonModal", module)
           }}
           value={""}
           onChange={(value) =>
-            loadLayout({ id: "X" as LayoutID, data: value as Partial<PanelsState> })
+            setSelectedLayout({ id: "X" as LayoutID, data: value as Partial<PanelsState> })
           }
           noun="layout"
         />

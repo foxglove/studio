@@ -187,7 +187,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const isMounted = useMountedState();
 
   const layoutStorage = useLayoutStorage();
-  const { loadLayout } = useCurrentLayoutActions();
+  const { setSelectedLayout } = useCurrentLayoutActions();
 
   const openWelcomeLayout = useCallback(async () => {
     const newLayout = await layoutStorage.saveNewLayout({
@@ -196,7 +196,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       data: welcomeLayout.data,
     });
     if (isMounted()) {
-      loadLayout({ id: newLayout.id, data: welcomeLayout.data });
+      setSelectedLayout({ id: newLayout.id, data: welcomeLayout.data });
       if (isNonEmptyOrUndefined(props.demoBagUrl)) {
         selectSource(
           { name: "Demo Bag", type: "http" },
@@ -206,7 +206,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         );
       }
     }
-  }, [layoutStorage, isMounted, loadLayout, props.demoBagUrl, selectSource]);
+  }, [layoutStorage, isMounted, setSelectedLayout, props.demoBagUrl, selectSource]);
 
   const handleInternalLink = useCallback((event: React.MouseEvent, href: string) => {
     if (href === "#help:message-path-syntax") {
