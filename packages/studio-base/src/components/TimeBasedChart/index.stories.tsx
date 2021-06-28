@@ -173,9 +173,9 @@ export function CleansUpTooltipOnUnmount(
     const { top, left } = canvas!.getBoundingClientRect();
     // wait for chart to render before triggering tooltip
     let tooltip: Element | undefined;
-    for (let i = 0; !tooltip && i < 10; i++) {
+    for (let i = 0; !tooltip && i < 20; i++) {
       TestUtils.Simulate.mouseMove(canvas!, { clientX: 333 + left, clientY: 650 + top });
-      await new Promise((resolve) => setTimeout(resolve, 30));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       tooltip = document.querySelector("[data-test~=TimeBasedChartTooltipContent]") ?? undefined;
     }
     if (tooltip == undefined) {
