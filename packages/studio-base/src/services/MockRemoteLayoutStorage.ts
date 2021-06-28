@@ -90,10 +90,14 @@ export default class MockRemoteLayoutStorage implements IRemoteLayoutStorage {
   }
 
   async updateLayout({
+    name,
+    path,
     data,
     targetID,
     ifUnmodifiedSince,
   }: {
+    name: string | undefined;
+    path: string[] | undefined;
     data: PanelsState;
     targetID: LayoutID;
     ifUnmodifiedSince: ISO8601Timestamp;
@@ -106,6 +110,15 @@ export default class MockRemoteLayoutStorage implements IRemoteLayoutStorage {
     if (!target) {
       return { status: "conflict" };
     }
+    if (
+      this.hasNameConflict({
+        path: path ?? target.path,
+        name: name ?? target.name,
+        permission: "creator_write",
+      })
+    ) {
+      return { status: "conflict" };
+    }
     const { data: _, ...targetMetadata } = target;
     if (Date.parse(targetMetadata.updatedAt) !== Date.parse(ifUnmodifiedSince)) {
       return { status: "precondition-failed" };
@@ -113,6 +126,8 @@ export default class MockRemoteLayoutStorage implements IRemoteLayoutStorage {
     const now = new Date().toISOString() as ISO8601Timestamp;
     const newMetadata: RemoteLayoutMetadata = {
       ...targetMetadata,
+      name: name ?? targetMetadata.name,
+      path: path ?? targetMetadata.path,
       updatedAt: now,
     };
     this.layoutsById.set(targetID, { ...newMetadata, data });

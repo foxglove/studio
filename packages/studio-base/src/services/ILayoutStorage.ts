@@ -41,7 +41,12 @@ export interface ILayoutStorage {
     data: PanelsState;
   }): Promise<LayoutMetadata>;
 
-  updateLayout(params: { targetID: LayoutID; data: PanelsState }): Promise<void>;
+  updateLayout(params: {
+    targetID: LayoutID;
+    name: string | undefined;
+    path: string[] | undefined;
+    data: PanelsState;
+  }): Promise<void>;
 
   readonly supportsSharing: boolean;
 
