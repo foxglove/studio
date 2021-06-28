@@ -93,6 +93,8 @@ function CurrentLayoutProviderWithInitialState({
       .updateLayout({
         targetID: selectedLayout.id,
         data: selectedLayout.data,
+        path: undefined,
+        name: undefined,
       })
       .catch((error) => {
         log.error(error);
