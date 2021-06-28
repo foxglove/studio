@@ -169,13 +169,15 @@ export function CleansUpTooltipOnUnmount(
 ): JSX.Element | ReactNull {
   const [hasRenderedOnce, setHasRenderedOnce] = useState<boolean>(false);
   const { error } = useAsync(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // wait for chart to render before triggering tooltip
-
     const [canvas] = document.getElementsByTagName("canvas");
     const { top, left } = canvas!.getBoundingClientRect();
-    TestUtils.Simulate.mouseMove(canvas!, { clientX: 333 + left, clientY: 650 + top });
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    const tooltip = document.querySelector("[data-test~=TimeBasedChartTooltipContent]");
+    // wait for chart to render before triggering tooltip
+    let tooltip: Element | undefined;
+    for (let i = 0; !tooltip && i < 10; i++) {
+      TestUtils.Simulate.mouseMove(canvas!, { clientX: 333 + left, clientY: 650 + top });
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      tooltip = document.querySelector("[data-test~=TimeBasedChartTooltipContent]") ?? undefined;
+    }
     if (tooltip == undefined) {
       throw new Error("could not find tooltip");
     }
