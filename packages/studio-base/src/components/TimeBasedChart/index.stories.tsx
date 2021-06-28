@@ -169,7 +169,7 @@ export function CleansUpTooltipOnUnmount(
 ): JSX.Element | ReactNull {
   const [hasRenderedOnce, setHasRenderedOnce] = useState<boolean>(false);
   const { error } = useAsync(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // wait for chart to render before triggering tooltip
 
     const [canvas] = document.getElementsByTagName("canvas");
     const { top, left } = canvas!.getBoundingClientRect();
@@ -192,7 +192,7 @@ export function CleansUpTooltipOnUnmount(
   }, [hasRenderedOnce, ctx.parameters.screenshot.signal]);
 
   if (hasRenderedOnce) {
-    return ReactNull;
+    return <></>;
   }
 
   return (
