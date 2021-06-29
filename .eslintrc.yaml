@@ -148,4 +148,3 @@ overrides:
     files:
       - "packages/studio-base/src/context/PanelCatalogContext.ts"
       - "packages/studio-base/src/panels/NodePlayground/Editor.tsx"
-      - "packages/studio-base/src/types/panels.ts"
