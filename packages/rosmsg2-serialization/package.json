@@ -21,8 +21,9 @@
     "test": "jest"
   },
   "dependencies": {
-    "@foxglove/cdr": "0.1.0",
-    "@foxglove/rosmsg": "0.1.1"
+    "@foxglove/cdr": "0.2.1",
+    "@foxglove/rosmsg": "0.1.1",
+    "@foxglove/rostime": "1.1.0"
   },
   "devDependencies": {
     "@types/prettier": "2.3.0",

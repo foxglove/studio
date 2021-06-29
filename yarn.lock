@@ -2530,10 +2530,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/cdr@npm:0.1.0":
-  version: 0.1.0
-  resolution: "@foxglove/cdr@npm:0.1.0"
-  checksum: ef4f81bc15d735219ed2e9e76c1d1dd04ce6e1e8489cbb77ec46eeceb71ff2fe585c49b442d9242b0f83e2a026f52d2d3f6a4ca9b2f24b044745f4fefc379883
+"@foxglove/cdr@npm:0.2.1":
+  version: 0.2.1
+  resolution: "@foxglove/cdr@npm:0.2.1"
+  checksum: c543a9b86aee09d22da35df23cd98e2a8c7fb7d418222ed1eb41409f57849669c2b4ef9fe3332dcdb64f9b05917879d662506f4acdf63b05756956b87ccde46c
   languageName: node
   linkType: hard
 
@@ -2664,8 +2664,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/rosmsg2-serialization@workspace:packages/rosmsg2-serialization"
   dependencies:
-    "@foxglove/cdr": 0.1.0
+    "@foxglove/cdr": 0.2.1
     "@foxglove/rosmsg": 0.1.1
+    "@foxglove/rostime": 1.1.0
     "@types/prettier": 2.3.0
     jest: 27.0.5
     prettier: 2.3.1
@@ -2680,6 +2681,13 @@ __metadata:
     moo: ^0.5.1
     nearley: ^2.20.1
   checksum: 54309a60a8c590c7c35aa2dcf039831f5a0ba041bbc40288a92d6c769fbfafe1fae588332530ad966c7430f521717323bd7f6fc3b71c2b50cf6e4695653f0db4
+  languageName: node
+  linkType: hard
+
+"@foxglove/rostime@npm:1.1.0":
+  version: 1.1.0
+  resolution: "@foxglove/rostime@npm:1.1.0"
+  checksum: 69af3b78da033dec7efbd73723444ec24504a63a9a86c2284b022c83fb71141842c8718c22de268b04916467022b349d2d193ad75064d515cbda158ca54f800e
   languageName: node
   linkType: hard
 
