@@ -298,9 +298,7 @@ export default function TreeNodeRow({
                   dataTest={`visibility-toggle~${key}~column${columnIdx}`}
                   key={columnIdx}
                   size={node.type === "topic" ? "SMALL" : "NORMAL"}
-                  overrideColor={
-                    derivedCustomSettings?.overrideColorByColumn?.[columnIdx] as Color | undefined
-                  }
+                  overrideColor={derivedCustomSettings?.overrideColorByColumn?.[columnIdx]}
                   checked={checked}
                   onToggle={() => {
                     toggleNodeChecked(key, columnIdx);
