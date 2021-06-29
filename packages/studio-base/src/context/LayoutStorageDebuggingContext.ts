@@ -12,6 +12,7 @@ type ILayoutStorageDebugging = {
   openFakeStorageDirectory: () => Promise<void>;
   syncNow: () => Promise<void>;
   injectEdit: (id: LayoutID) => Promise<void>;
+  injectRename: (id: LayoutID) => Promise<void>;
   injectDelete: (id: LayoutID) => Promise<void>;
 };
 

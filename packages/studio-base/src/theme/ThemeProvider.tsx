@@ -31,6 +31,7 @@ const icons: {
   Copy: <Icons.CopyIcon />,
   DataManagementSettings: <Icons.DataManagementSettingsIcon />,
   Delete: <Icons.DeleteIcon />,
+  DownloadDocument: <Icons.DownloadDocumentIcon />,
   Edit: <Icons.EditIcon />,
   Error: <Icons.ErrorIcon />,
   ErrorBadge: <Icons.ErrorBadgeIcon />,

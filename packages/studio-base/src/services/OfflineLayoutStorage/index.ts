@@ -32,12 +32,14 @@ export type ConflictInfo = { cacheId: string; remoteId?: LayoutID; type: Conflic
 
 /**
  * Determine the metadata that we should vend out to clients based on a cached layout. Uses the
- * layout's serverMetadata if available.
+ * layout's serverMetadata if available, except for local modifications.
  */
 function getEffectiveMetadata(layout: CachedLayout): LayoutMetadata {
   return layout.serverMetadata != undefined
     ? {
         ...layout.serverMetadata,
+        name: layout.name,
+        path: layout.path ?? [],
         hasUnsyncedChanges: layout.locallyModified ?? false,
       }
     : {
@@ -206,42 +208,6 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
         throw new Error("The layout could not be found.");
       case "conflict":
         throw new Error("A layout with this name already exists.");
-    }
-  }
-
-  /** Only works when online */
-  async updateSharedLayout(params: {
-    sourceID: LayoutID;
-    path: string[];
-    name: string;
-    permission: "org_read" | "org_write";
-    targetID: LayoutID;
-  }): Promise<void> {
-    const source = await this.cacheStorage.runExclusive((cache) => cache.get(params.sourceID));
-    if (!source) {
-      throw new Error(
-        `Can't update shared layout ${params.sourceID} because it doesn't exist in the cache.`,
-      );
-    }
-    if (!source.serverMetadata) {
-      throw new Error(
-        `Can't update shared layout ${params.sourceID} because it doesn't have metadata in the cache.`,
-      );
-    }
-
-    const response = await this.remoteStorage.updateSharedLayout({
-      ...params,
-      ifUnmodifiedSince: source.serverMetadata.updatedAt,
-    });
-    switch (response.status) {
-      case "success":
-        break;
-      case "not-found":
-        throw new Error(`The shared layout could not be foud.`);
-      case "precondition-failed":
-        throw new Error(`This layout was already modified by someone else.`);
-      case "conflict":
-        throw new Error(`This layout was already deleted by someone else.`);
     }
   }
 

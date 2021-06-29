@@ -64,14 +64,6 @@ export interface ILayoutStorage {
     permission: "org_read" | "org_write";
   }): Promise<void>;
 
-  updateSharedLayout(params: {
-    sourceID: LayoutID;
-    path: string[];
-    name: string;
-    permission: "org_read" | "org_write";
-    targetID: LayoutID;
-  }): Promise<void>;
-
   deleteLayout(params: { id: LayoutID }): Promise<void>;
 
   renameLayout(params: { id: LayoutID; name: string; path: string[] }): Promise<void>;

@@ -19,6 +19,7 @@ import {
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { useLayoutStorage } from "@foxglove/studio-base/context/LayoutStorageContext";
 import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
+import { usePrompt } from "@foxglove/studio-base/hooks/usePrompt";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { LayoutMetadata } from "@foxglove/studio-base/services/ILayoutStorage";
@@ -31,7 +32,6 @@ import { debugBorder } from "./styles";
 // FIXME: show sync state
 // FIXME: sync periodically
 // FIXME: show conflicts from last sync
-// FIXME: add share button to create shared layouts
 // FIXME: cache change listener to respond to changes from CurrentLayoutProvider?
 // FIXME  -- and vice versa, CurrentLayoutProvider needs to be updated when current layout id is deleted
 
@@ -44,6 +44,7 @@ export default function LayoutBrowser({
   const isMounted = useMountedState();
   const { addToast } = useToasts();
   const layoutStorage = useLayoutStorage();
+  const prompt = usePrompt();
 
   const currentLayoutId = useCurrentLayoutSelector((state) => state.selectedLayout?.id);
   const { setSelectedLayout } = useCurrentLayoutActions();
@@ -158,7 +159,7 @@ export default function LayoutBrowser({
       data: state as PanelsState,
     });
     onSelectLayout(newLayout);
-    reloadLayouts();
+    await reloadLayouts();
   }, [currentDateForStorybook, layoutStorage, onSelectLayout, reloadLayouts]);
 
   const onExportLayout = useCallback(
@@ -170,6 +171,36 @@ export default function LayoutBrowser({
       }
     },
     [layoutStorage],
+  );
+
+  const onShareLayout = useCallback(
+    async (item: LayoutMetadata) => {
+      const existingSharedLayouts = layouts.value?.shared ?? [];
+      const name = await prompt({
+        title: `Share “${item.name}”`,
+        value: item.name,
+        transformer: (value: string) => {
+          if (
+            existingSharedLayouts.some(
+              (sharedLayout) => sharedLayout.path.length === 0 && sharedLayout.name === value,
+            )
+          ) {
+            throw new Error("A shared layout with this name already exists.");
+          }
+          return value;
+        },
+      });
+      if (name != undefined) {
+        await layoutStorage.shareLayout({
+          sourceID: item.id,
+          path: [],
+          name,
+          permission: "org_write",
+        });
+      }
+      reloadLayouts();
+    },
+    [layoutStorage, layouts.value?.shared, prompt, reloadLayouts],
   );
 
   const importLayout = useCallback(async () => {
@@ -253,6 +284,7 @@ export default function LayoutBrowser({
             onRename={onRenameLayout}
             onDuplicate={onDuplicateLayout}
             onDelete={onDeleteLayout}
+            onShare={onShareLayout}
             onExport={onExportLayout}
           />
         </Stack.Item>
@@ -268,6 +300,7 @@ export default function LayoutBrowser({
               onRename={onRenameLayout}
               onDuplicate={onDuplicateLayout}
               onDelete={onDeleteLayout}
+              onShare={onShareLayout}
               onExport={onExportLayout}
             />
           )}

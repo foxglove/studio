@@ -26,6 +26,7 @@ declare global {
     | "Copy"
     | "DataManagementSettings"
     | "Delete"
+    | "DownloadDocument"
     | "Edit"
     | "Error"
     | "ErrorBadge"

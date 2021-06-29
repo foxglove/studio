@@ -104,10 +104,6 @@ export default class CacheOnlyLayoutStorage implements ILayoutStorage {
     throw new Error("Sharing is not supported in local-only storage");
   }
 
-  async updateSharedLayout(_: unknown): Promise<void> {
-    throw new Error("Sharing is not supported in local-only storage");
-  }
-
   async deleteLayout({ id }: { id: LayoutID }): Promise<void> {
     await this.storage.delete(id);
   }

@@ -65,6 +65,7 @@ export default function LayoutRow({
   onRename,
   onDuplicate,
   onDelete,
+  onShare,
   onExport,
 }: {
   layout: LayoutMetadata;
@@ -74,6 +75,7 @@ export default function LayoutRow({
   onRename: (item: LayoutMetadata, newName: string) => void;
   onDuplicate: (item: LayoutMetadata) => void;
   onDelete: (item: LayoutMetadata) => void;
+  onShare: (item: LayoutMetadata) => void;
   onExport: (item: LayoutMetadata) => void;
 }): JSX.Element {
   const styles = useStyles();
@@ -101,6 +103,7 @@ export default function LayoutRow({
 
   const duplicateAction = useCallback(() => onDuplicate(layout), [layout, onDuplicate]);
 
+  const shareAction = useCallback(() => onShare(layout), [layout, onShare]);
   const exportAction = useCallback(() => onExport(layout), [layout, onExport]);
 
   const onSubmit = useCallback(
@@ -144,7 +147,7 @@ export default function LayoutRow({
 
   const layoutDebug = useContext(LayoutStorageDebuggingContext);
 
-  const menuItems: IContextualMenuItem[] = [
+  const menuItems: (boolean | IContextualMenuItem)[] = [
     {
       key: "save",
       text: layout.hasUnsyncedChanges ? "Save changes" : "No changes",
@@ -167,10 +170,16 @@ export default function LayoutRow({
       onClick: duplicateAction,
       ["data-test"]: "duplicate-layout",
     },
+    layout.permission === "creator_write" && {
+      key: "share",
+      text: "Share",
+      iconProps: { iconName: "Share" },
+      onClick: shareAction,
+    },
     {
       key: "export",
       text: "Export",
-      iconProps: { iconName: "Share" },
+      iconProps: { iconName: "DownloadDocument" },
       onClick: exportAction,
     },
     { key: "divider_1", itemType: ContextualMenuItemType.Divider },
@@ -201,6 +210,17 @@ export default function LayoutRow({
         },
       },
       {
+        key: "debug_rename",
+        text: "Inject rename",
+        iconProps: { iconName: "TestBeakerSolid" },
+        onClick: () => void layoutDebug.injectRename(layout.id),
+        itemProps: {
+          styles: {
+            root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
+          },
+        },
+      },
+      {
         key: "debug_delete",
         text: "Inject delete",
         iconProps: { iconName: "TestBeakerSolid" },
@@ -213,6 +233,10 @@ export default function LayoutRow({
       },
     );
   }
+
+  const filteredItems = menuItems.filter(
+    (item): item is IContextualMenuItem => typeof item === "object",
+  );
 
   const [contextMenuEvent, setContextMenuEvent] = useState<MouseEvent | undefined>();
 
@@ -236,7 +260,7 @@ export default function LayoutRow({
       {contextMenuEvent && (
         <ContextualMenu
           target={contextMenuEvent}
-          items={menuItems}
+          items={filteredItems}
           onDismiss={() => setContextMenuEvent(undefined)}
         />
       )}
@@ -281,7 +305,7 @@ export default function LayoutRow({
             styles: { root: { "& span": { verticalAlign: "baseline" } } },
           }}
           onRenderMenuIcon={() => ReactNull}
-          menuProps={{ items: menuItems }}
+          menuProps={{ items: filteredItems }}
         />
       )}
     </Stack>

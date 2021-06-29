@@ -75,6 +75,23 @@ export default function LayoutStorageProviders({
     [fakeRemoteStorage],
   );
 
+  const injectRename = useCallback(
+    async (id: LayoutID) => {
+      const layout = await fakeRemoteStorage.getLayout(id);
+      if (!layout) {
+        throw new Error("This layout doesn't exist on the server");
+      }
+      // FIXME: allow this to work on shared layouts
+      await fakeRemoteStorage.renameLayout({
+        targetID: layout.id,
+        path: layout.path,
+        name: `${layout.name} renamed`,
+        ifUnmodifiedSince: layout.updatedAt,
+      });
+    },
+    [fakeRemoteStorage],
+  );
+
   const injectDelete = useCallback(
     async (id: LayoutID) => {
       const layout = await fakeRemoteStorage.getLayout(id);
@@ -92,6 +109,7 @@ export default function LayoutStorageProviders({
     openFakeStorageDirectory,
     syncNow,
     injectEdit,
+    injectRename,
     injectDelete,
   });
 

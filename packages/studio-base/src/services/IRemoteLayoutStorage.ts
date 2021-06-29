@@ -63,20 +63,6 @@ export interface IRemoteLayoutStorage {
     | { status: "conflict" }
   >;
 
-  updateSharedLayout: (params: {
-    sourceID: LayoutID;
-    path: string[];
-    name: string;
-    permission: "org_read" | "org_write";
-    targetID: LayoutID;
-    ifUnmodifiedSince: ISO8601Timestamp;
-  }) => Promise<
-    | { status: "success"; newMetadata: RemoteLayoutMetadata }
-    | { status: "not-found" }
-    | { status: "conflict" }
-    | { status: "precondition-failed" }
-  >;
-
   deleteLayout: (params: {
     targetID: LayoutID;
     ifUnmodifiedSince: ISO8601Timestamp;

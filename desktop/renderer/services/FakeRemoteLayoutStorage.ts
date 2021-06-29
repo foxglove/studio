@@ -165,7 +165,7 @@ export default class FakeRemoteLayoutStorage implements IRemoteLayoutStorage {
       await storage.put(
         FakeRemoteLayoutStorage.STORE_NAME,
         newLayout.id + ".json",
-        JSON.stringify(newLayout),
+        JSON.stringify(newLayout, undefined, 2),
       );
 
       return { status: "success", newMetadata };
@@ -195,9 +195,6 @@ export default class FakeRemoteLayoutStorage implements IRemoteLayoutStorage {
       if (!target) {
         return { status: "not-found" };
       }
-      if (target.permission !== "creator_write") {
-        throw new Error("updateLayout should only be used on personal layouts");
-      }
       if (target.updatedAt !== ifUnmodifiedSince) {
         return { status: "precondition-failed" };
       }
@@ -206,7 +203,7 @@ export default class FakeRemoteLayoutStorage implements IRemoteLayoutStorage {
           ignoringId: targetID,
           path,
           name,
-          permission: "creator_write",
+          permission: target.permission,
         })
       ) {
         return { status: "conflict" };
@@ -221,7 +218,7 @@ export default class FakeRemoteLayoutStorage implements IRemoteLayoutStorage {
       await storage.put(
         FakeRemoteLayoutStorage.STORE_NAME,
         targetID + ".json",
-        JSON.stringify(newLayout),
+        JSON.stringify(newLayout, undefined, 2),
       );
       const { data: _, ...newMetadata } = newLayout;
       return { status: "success", newMetadata };
@@ -276,74 +273,7 @@ export default class FakeRemoteLayoutStorage implements IRemoteLayoutStorage {
       await storage.put(
         FakeRemoteLayoutStorage.STORE_NAME,
         newLayout.id + ".json",
-        JSON.stringify(newLayout),
-      );
-      const { data: _, ...newMetadata } = newLayout;
-      return { status: "success", newMetadata };
-    });
-  }
-
-  async updateSharedLayout({
-    sourceID,
-    path,
-    name,
-    permission,
-    targetID,
-    ifUnmodifiedSince,
-  }: {
-    sourceID: LayoutID;
-    path: string[];
-    name: string;
-    permission: "org_read" | "org_write";
-    targetID: LayoutID;
-    ifUnmodifiedSince: ISO8601Timestamp;
-  }): Promise<
-    | { status: "success"; newMetadata: RemoteLayoutMetadata }
-    | { status: "not-found" }
-    | { status: "conflict" }
-    | { status: "precondition-failed" }
-  > {
-    return this.storage.runExclusive(async (storage) => {
-      const target = await this.getLayoutUnlocked(storage, targetID);
-      if (!target) {
-        return { status: "conflict" };
-      }
-      const source = await this.getLayoutUnlocked(storage, sourceID);
-      if (!source) {
-        return { status: "not-found" };
-      }
-      if (target.permission === "creator_write") {
-        throw new Error("shareLayout target should be a shared layout");
-      }
-      if (source.permission !== "creator_write") {
-        throw new Error("shareLayout source should be a personal layouts");
-      }
-      if (
-        await this.hasNameConflictUnlocked(storage, {
-          ignoringId: targetID,
-          path,
-          name,
-          permission,
-        })
-      ) {
-        return { status: "conflict" };
-      }
-      if (target.updatedAt !== ifUnmodifiedSince) {
-        return { status: "precondition-failed" };
-      }
-      const now = new Date().toISOString() as ISO8601Timestamp;
-      const newLayout: RemoteLayout = {
-        ...target,
-        path,
-        name,
-        data: source.data,
-        updatedAt: now,
-        permission,
-      };
-      await storage.put(
-        FakeRemoteLayoutStorage.STORE_NAME,
-        newLayout.id,
-        JSON.stringify(newLayout),
+        JSON.stringify(newLayout, undefined, 2),
       );
       const { data: _, ...newMetadata } = newLayout;
       return { status: "success", newMetadata };
@@ -416,7 +346,7 @@ export default class FakeRemoteLayoutStorage implements IRemoteLayoutStorage {
       await storage.put(
         FakeRemoteLayoutStorage.STORE_NAME,
         target.id + ".json",
-        JSON.stringify(newLayout),
+        JSON.stringify(newLayout, undefined, 2),
       );
       const { data: _, ...newMetadata } = newLayout;
       return { status: "success", newMetadata };

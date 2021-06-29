@@ -51,8 +51,8 @@ function makeMockLayoutStorage() {
     getLayout: jest.fn().mockImplementation(mockThrow("getLayout")),
     saveNewLayout: jest.fn().mockImplementation(mockThrow("saveNewLayout")),
     updateLayout: jest.fn().mockImplementation(mockThrow("updateLayout")),
+    syncLayout: jest.fn().mockImplementation(mockThrow("syncLayout")),
     shareLayout: jest.fn().mockImplementation(mockThrow("shareLayout")),
-    updateSharedLayout: jest.fn().mockImplementation(mockThrow("updateSharedLayout")),
     deleteLayout: jest.fn().mockImplementation(mockThrow("deleteLayout")),
     renameLayout: jest.fn().mockImplementation(mockThrow("renameLayout")),
   };
