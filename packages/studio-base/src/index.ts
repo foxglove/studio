@@ -49,7 +49,6 @@ export type {
 } from "./services/IRemoteLayoutStorage";
 export { default as CacheOnlyLayoutStorage } from "./services/CacheOnlyLayoutStorage";
 export { default as CacheOnlyLayoutStorageProvider } from "./providers/CacheOnlyLayoutStorageProvider";
-export { default as OfflineLayoutStorageProvider } from "./providers/OfflineLayoutStorageProvider";
 export { AppSetting } from "./AppSetting";
 export { useAppConfigurationValue } from "./hooks/useAppConfigurationValue";
 export type { PanelsState } from "./context/CurrentLayoutContext/actions";

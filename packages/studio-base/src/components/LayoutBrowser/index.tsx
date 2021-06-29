@@ -46,7 +46,7 @@ export default function LayoutBrowser({
   const layoutStorage = useLayoutStorage();
 
   const currentLayoutId = useCurrentLayoutSelector((state) => state.selectedLayout?.id);
-  const { loadLayout } = useCurrentLayoutActions();
+  const { setSelectedLayout } = useCurrentLayoutActions();
 
   const [layouts, reloadLayouts] = useAsyncFn(
     async () => {
@@ -71,10 +71,10 @@ export default function LayoutBrowser({
     async (item: LayoutMetadata) => {
       const layout = await layoutStorage.getLayout(item.id);
       if (layout) {
-        loadLayout({ id: layout.id, data: layout.data });
+        setSelectedLayout(layout);
       }
     },
-    [layoutStorage, loadLayout],
+    [layoutStorage, setSelectedLayout],
   );
 
   const onSaveLayout = useCallback(
@@ -123,7 +123,7 @@ export default function LayoutBrowser({
         for (const { id } of await layoutStorage.getLayouts()) {
           const layout = await layoutStorage.getLayout(id);
           if (layout) {
-            loadLayout({ id: layout.id, data: layout.data });
+            setSelectedLayout(layout);
             return;
           }
         }
@@ -138,7 +138,7 @@ export default function LayoutBrowser({
         await reloadLayouts();
       }
     },
-    [currentLayoutId, layoutStorage, loadLayout, onSelectLayout, reloadLayouts],
+    [currentLayoutId, layoutStorage, setSelectedLayout, onSelectLayout, reloadLayouts],
   );
 
   const createNewLayout = useCallback(async () => {

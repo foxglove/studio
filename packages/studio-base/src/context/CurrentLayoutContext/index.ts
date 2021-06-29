@@ -60,6 +60,8 @@ export interface ICurrentLayout {
      */
     getCurrentLayoutState: () => LayoutState;
 
+    setSelectedLayout: (payload: { id: LayoutID; data: Partial<PanelsState> } | undefined) => void;
+
     undoLayoutChange: () => void;
     redoLayoutChange: () => void;
 
@@ -67,7 +69,6 @@ export interface ICurrentLayout {
     updatePanelConfigs: (panelType: string, updater: (config: PanelConfig) => PanelConfig) => void;
     createTabPanel: (payload: CreateTabPanelPayload) => void;
     changePanelLayout: (payload: ChangePanelLayoutPayload) => void;
-    loadLayout: (payload: { id: LayoutID; data: Partial<PanelsState> }) => void; //FIXME: rename to setCurrentLayout/setSelectedLayout?
     overwriteGlobalVariables: (payload: { [key: string]: unknown }) => void;
     setGlobalVariables: (payload: { [key: string]: unknown }) => void;
     setUserNodes: (payload: Partial<UserNodes>) => void;

@@ -47,10 +47,10 @@ export interface ILayoutStorage {
   }): Promise<LayoutMetadata>;
 
   updateLayout(params: {
-    path: string[];
-    name: string;
-    data: PanelsState;
     targetID: LayoutID;
+    name: string | undefined;
+    path: string[] | undefined;
+    data: PanelsState;
   }): Promise<void>;
 
   syncLayout(id: LayoutID): Promise<void>;

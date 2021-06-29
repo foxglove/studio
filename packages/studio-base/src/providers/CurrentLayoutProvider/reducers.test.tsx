@@ -68,7 +68,7 @@ describe("layout reducers", () => {
         },
       };
       act(() => {
-        result.current.actions.loadLayout({ id: "X" as LayoutID, data: panelLayout });
+        result.current.actions.setSelectedLayout({ id: "X" as LayoutID, data: panelLayout });
         result.current.actions.addPanel({
           id: "Audio!x",
           tabId: undefined,
@@ -95,7 +95,7 @@ describe("layout reducers", () => {
         },
       };
       act(() => {
-        result.current.actions.loadLayout({ id: "X" as LayoutID, data: panelLayout });
+        result.current.actions.setSelectedLayout({ id: "X" as LayoutID, data: panelLayout });
         result.current.actions.addPanel({
           id: "Audio!x",
           tabId: "Tab!a",
@@ -130,7 +130,7 @@ describe("layout reducers", () => {
         },
       };
       act(() => {
-        result.current.actions.loadLayout({ id: "X" as LayoutID, data: panelLayout });
+        result.current.actions.setSelectedLayout({ id: "X" as LayoutID, data: panelLayout });
         result.current.actions.dropPanel({
           newPanelType: "Audio",
           destinationPath: [],
@@ -148,7 +148,7 @@ describe("layout reducers", () => {
       const { result } = renderProvider();
       const panelLayout = { layout: "Audio!a", configById: { "Audio!a": { foo: "bar" } } };
       act(() => {
-        result.current.actions.loadLayout({ id: "X" as LayoutID, data: panelLayout });
+        result.current.actions.setSelectedLayout({ id: "X" as LayoutID, data: panelLayout });
         result.current.actions.dropPanel({
           newPanelType: "Tab",
           destinationPath: [],
@@ -182,7 +182,7 @@ describe("layout reducers", () => {
         },
       };
       act(() => {
-        result.current.actions.loadLayout({ id: "X" as LayoutID, data: panelLayout });
+        result.current.actions.setSelectedLayout({ id: "X" as LayoutID, data: panelLayout });
         result.current.actions.dropPanel({
           newPanelType: "Audio",
           destinationPath: [],
@@ -209,7 +209,7 @@ describe("layout reducers", () => {
         },
       };
       act(() => {
-        result.current.actions.loadLayout({ id: "X" as LayoutID, data: panelLayout });
+        result.current.actions.setSelectedLayout({ id: "X" as LayoutID, data: panelLayout });
         result.current.actions.dropPanel({
           newPanelType: "Audio",
           destinationPath: [],
@@ -232,7 +232,7 @@ describe("layout reducers", () => {
       const { result } = renderProvider();
       const panelLayout = { layout: "Audio!a" };
       act(() => {
-        result.current.actions.loadLayout({ id: "X" as LayoutID, data: panelLayout });
+        result.current.actions.setSelectedLayout({ id: "X" as LayoutID, data: panelLayout });
         result.current.actions.dropPanel({
           newPanelType: "Tab",
           destinationPath: [],
@@ -272,7 +272,7 @@ describe("layout reducers", () => {
         },
       };
       act(() => {
-        result.current.actions.loadLayout({ id: "X" as LayoutID, data: panelLayout });
+        result.current.actions.setSelectedLayout({ id: "X" as LayoutID, data: panelLayout });
         result.current.actions.moveTab({
           source: { panelId: "Tab!a", tabIndex: 0 },
           target: { panelId: "Tab!a", tabIndex: 1 },
@@ -301,7 +301,7 @@ describe("layout reducers", () => {
         },
       };
       act(() => {
-        result.current.actions.loadLayout({ id: "X" as LayoutID, data: panelLayout });
+        result.current.actions.setSelectedLayout({ id: "X" as LayoutID, data: panelLayout });
         result.current.actions.moveTab({
           source: { panelId: "Tab!a", tabIndex: 0 },
           target: { panelId: "Tab!b", tabIndex: 1 },
@@ -321,7 +321,7 @@ describe("layout reducers", () => {
   it("closes a panel in single-panel layout", () => {
     const { result } = renderProvider();
     act(() => {
-      result.current.actions.loadLayout({
+      result.current.actions.setSelectedLayout({
         id: "X" as LayoutID,
         data: {
           layout: "Audio!a",
@@ -345,7 +345,7 @@ describe("layout reducers", () => {
       configById: { "Audio!a": { foo: "bar" }, "Audio!b": { foo: "baz" } },
     };
     act(() => {
-      result.current.actions.loadLayout({ id: "X" as LayoutID, data: panelLayout });
+      result.current.actions.setSelectedLayout({ id: "X" as LayoutID, data: panelLayout });
       result.current.selectedPanels.setSelectedPanelIds(["Audio!a", "Audio!b"]);
       result.current.actions.closePanel({ root: panelLayout.layout, path: ["first"] });
     });
@@ -364,7 +364,7 @@ describe("layout reducers", () => {
       },
     };
     act(() => {
-      result.current.actions.loadLayout({ id: "X" as LayoutID, data: panelLayout });
+      result.current.actions.setSelectedLayout({ id: "X" as LayoutID, data: panelLayout });
       result.current.selectedPanels.setSelectedPanelIds(["Audio!a"]);
       result.current.actions.closePanel({ root: "Audio!a", path: [], tabId: "Tab!a" });
     });
@@ -379,7 +379,7 @@ describe("layout reducers", () => {
     const { result } = renderProvider();
     const panelsState: Partial<PanelsState> = { layout: "foo" };
     act(() => {
-      result.current.actions.loadLayout({ id: "X" as LayoutID, data: panelsState });
+      result.current.actions.setSelectedLayout({ id: "X" as LayoutID, data: panelsState });
     });
     expect(result.current.selectedId).toEqual("X");
     expect(result.current.state!.layout).toEqual("foo");
@@ -388,7 +388,10 @@ describe("layout reducers", () => {
   it("resets panels to a valid state when importing an empty layout", () => {
     const { result } = renderProvider();
     act(() => {
-      result.current.actions.loadLayout({ id: "X" as LayoutID, data: { layout: undefined } });
+      result.current.actions.setSelectedLayout({
+        id: "X" as LayoutID,
+        data: { layout: undefined },
+      });
     });
     expect(result.current.selectedId).toEqual("X");
     expect(result.current.state).toEqual({
@@ -449,7 +452,10 @@ describe("layout reducers", () => {
     it("will group selected panels into a Tab panel", () => {
       const { result } = renderProvider();
       act(() => {
-        result.current.actions.loadLayout({ id: "X" as LayoutID, data: regularLayoutPayload });
+        result.current.actions.setSelectedLayout({
+          id: "X" as LayoutID,
+          data: regularLayoutPayload,
+        });
         result.current.actions.createTabPanel({ ...createTabPanelPayload, singleTab: true });
       });
       const { configById } = result.current.state!;
@@ -473,7 +479,10 @@ describe("layout reducers", () => {
     it("will group selected panels into a Tab panel, even when a selected panel is nested", () => {
       const { result } = renderProvider();
       act(() => {
-        result.current.actions.loadLayout({ id: "X" as LayoutID, data: nestedLayoutPayload });
+        result.current.actions.setSelectedLayout({
+          id: "X" as LayoutID,
+          data: nestedLayoutPayload,
+        });
         result.current.actions.createTabPanel({ ...nestedCreateTabPanelPayload, singleTab: true });
       });
       const { configById } = result.current.state!;
@@ -498,7 +507,10 @@ describe("layout reducers", () => {
     it("will create individual tabs for selected panels in a new Tab panel", () => {
       const { result } = renderProvider();
       act(() => {
-        result.current.actions.loadLayout({ id: "X" as LayoutID, data: regularLayoutPayload });
+        result.current.actions.setSelectedLayout({
+          id: "X" as LayoutID,
+          data: regularLayoutPayload,
+        });
         result.current.actions.createTabPanel({ ...createTabPanelPayload, singleTab: false });
       });
       const { configById } = result.current.state!;
@@ -520,7 +532,10 @@ describe("layout reducers", () => {
     it("will create individual tabs for selected panels in a new Tab panel, even when a selected panel is nested", () => {
       const { result } = renderProvider();
       act(() => {
-        result.current.actions.loadLayout({ id: "X" as LayoutID, data: nestedLayoutPayload });
+        result.current.actions.setSelectedLayout({
+          id: "X" as LayoutID,
+          data: nestedLayoutPayload,
+        });
         result.current.actions.createTabPanel({ ...nestedCreateTabPanelPayload, singleTab: false });
       });
       const { configById } = result.current.state!;
@@ -895,7 +910,7 @@ describe("layout reducers", () => {
     it("does not remove panel from single-panel layout when starting drag", () => {
       const { result } = renderProvider();
       act(() => {
-        result.current.actions.loadLayout({
+        result.current.actions.setSelectedLayout({
           id: "X" as LayoutID,
           data: { layout: "Audio!a", configById: {} },
         });
@@ -906,7 +921,7 @@ describe("layout reducers", () => {
     it("hides panel from multi-panel layout when starting drag", () => {
       const { result } = renderProvider();
       act(() => {
-        result.current.actions.loadLayout({
+        result.current.actions.setSelectedLayout({
           id: "X" as LayoutID,
           data: {
             layout: { first: "Audio!a", second: "RawMessages!a", direction: "column" },
@@ -925,7 +940,7 @@ describe("layout reducers", () => {
     it("removes non-Tab panel from single-panel tab layout when starting drag", () => {
       const { result } = renderProvider();
       act(() => {
-        result.current.actions.loadLayout({
+        result.current.actions.setSelectedLayout({
           id: "X" as LayoutID,
           data: {
             layout: { first: "Tab!a", second: "RawMessages!a", direction: "column" },
@@ -946,7 +961,7 @@ describe("layout reducers", () => {
     it("hides panel from multi-panel Tab layout when starting drag", () => {
       const { result } = renderProvider();
       act(() => {
-        result.current.actions.loadLayout({
+        result.current.actions.setSelectedLayout({
           id: "X" as LayoutID,
           data: {
             layout: { first: "Tab!a", second: "RawMessages!a", direction: "column" },
@@ -988,7 +1003,7 @@ describe("layout reducers", () => {
         },
       };
       act(() => {
-        result.current.actions.loadLayout({
+        result.current.actions.setSelectedLayout({
           id: "X" as LayoutID,
           data: { layout: "Tab!a", configById: originalSavedProps },
         });
@@ -1025,7 +1040,7 @@ describe("layout reducers", () => {
         },
       };
       act(() => {
-        result.current.actions.loadLayout({
+        result.current.actions.setSelectedLayout({
           id: "X" as LayoutID,
           data: {
             layout: originalLayout,
@@ -1069,7 +1084,7 @@ describe("layout reducers", () => {
         },
       };
       act(() => {
-        result.current.actions.loadLayout({
+        result.current.actions.setSelectedLayout({
           id: "X" as LayoutID,
           data: {
             layout: originalLayout,
@@ -1127,7 +1142,7 @@ describe("layout reducers", () => {
         },
       };
       act(() => {
-        result.current.actions.loadLayout({
+        result.current.actions.setSelectedLayout({
           id: "X" as LayoutID,
           data: {
             layout: originalLayout,
@@ -1189,7 +1204,7 @@ describe("layout reducers", () => {
         "Tab!c": tabCConfig,
       };
       act(() => {
-        result.current.actions.loadLayout({
+        result.current.actions.setSelectedLayout({
           id: "X" as LayoutID,
           data: {
             layout: originalLayout,
@@ -1223,7 +1238,10 @@ describe("layout reducers", () => {
     it("handles drags in single-panel layouts", () => {
       const { result } = renderProvider();
       act(() => {
-        result.current.actions.loadLayout({ id: "X" as LayoutID, data: { layout: "Audio!a" } });
+        result.current.actions.setSelectedLayout({
+          id: "X" as LayoutID,
+          data: { layout: "Audio!a" },
+        });
         result.current.actions.startDrag({ sourceTabId: undefined, path: [] });
         result.current.actions.endDrag({
           originalLayout: "Audio!a",
@@ -1246,7 +1264,7 @@ describe("layout reducers", () => {
         direction: "row",
       } as MosaicParent<string>;
       act(() => {
-        result.current.actions.loadLayout({
+        result.current.actions.setSelectedLayout({
           id: "X" as LayoutID,
           data: { layout: originalLayout },
         });
@@ -1276,7 +1294,7 @@ describe("layout reducers", () => {
         direction: "row",
       } as MosaicParent<string>;
       act(() => {
-        result.current.actions.loadLayout({
+        result.current.actions.setSelectedLayout({
           id: "X" as LayoutID,
           data: { layout: originalLayout },
         });

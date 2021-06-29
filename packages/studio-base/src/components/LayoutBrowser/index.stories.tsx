@@ -17,6 +17,7 @@ import CurrentLayoutState, {
   DEFAULT_LAYOUT_FOR_TESTS,
 } from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
+import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 import MockLayoutCache from "@foxglove/studio-base/services/MockLayoutCache";
 import delay from "@foxglove/studio-base/util/delay";
 import signal, { Signal } from "@foxglove/studio-base/util/signal";
@@ -53,13 +54,16 @@ function WithSetup(Child: Story, ctx: StoryContext): JSX.Element {
   const currentLayout = useMemo(
     () =>
       new CurrentLayoutState({
-        id: "test-id",
-        name: "Current Layout",
-        configById: {},
-        globalVariables: {},
-        userNodes: {},
-        linkedGlobalVariables: [],
-        playbackConfig: defaultPlaybackConfig,
+        selectedLayout: {
+          id: "test-id" as LayoutID,
+          data: {
+            configById: {},
+            globalVariables: {},
+            userNodes: {},
+            linkedGlobalVariables: [],
+            playbackConfig: defaultPlaybackConfig,
+          },
+        },
       }),
     [],
   );
@@ -259,7 +263,7 @@ function DeleteStory({
     await delay(10);
     document.querySelector<HTMLElement>(`[data-test="delete-layout"]`)!.click();
     await delay(10);
-    document.querySelector<HTMLElement>(`.button.is-danger`)!.click();
+    document.querySelector<HTMLElement>(`button[type="submit"]`)!.click();
     await delay(10);
 
     if (!(await layoutCache.list()).some((layout) => layout.name === name)) {

@@ -125,7 +125,10 @@ export default function LayoutRow({
   }, []);
 
   const onTextFieldMount = useCallback((field: ITextField | ReactNull) => {
-    field?.select();
+    // When focusing via right-click we need an extra tick to be able to successfully focus the field
+    setTimeout(() => {
+      field?.select();
+    }, 0);
   }, []);
 
   const confirmDelete = useConfirm({

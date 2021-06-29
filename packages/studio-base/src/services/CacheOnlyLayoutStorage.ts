@@ -78,17 +78,26 @@ export default class CacheOnlyLayoutStorage implements ILayoutStorage {
   }
 
   async updateLayout({
-    path,
     name,
+    path,
     data,
     targetID,
   }: {
-    path: string[];
-    name: string;
-    data: PanelsState;
     targetID: LayoutID;
+    name: string | undefined;
+    path: string[] | undefined;
+    data: PanelsState;
   }): Promise<void> {
-    await this.storage.put({ id: targetID, name, path, state: data });
+    const cachedLayout = await this.storage.get(targetID);
+    if (!cachedLayout || !cachedLayout.state) {
+      throw new Error("Attempted to update a layout that does not already exist");
+    }
+    await this.storage.put({
+      id: targetID,
+      name: name ?? cachedLayout.name,
+      path: path ?? cachedLayout.path,
+      state: data,
+    });
   }
 
   async shareLayout(_: unknown): Promise<void> {
