@@ -48,9 +48,6 @@ class StandardTypeOffsetCalculator {
   // The following are used in the StandardTypeWriter.
   string(value: string): number {
     // int32 length
-    if (typeof value !== "string") {
-      throw new Error(`Expected string but got ${typeof value}`);
-    }
     const length = 4 + value.length;
     return this._incrementAndReturn(length);
   }
