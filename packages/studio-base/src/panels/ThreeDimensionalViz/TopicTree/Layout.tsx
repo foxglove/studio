@@ -75,7 +75,7 @@ import {
 import { ThreeDimensionalVizConfig } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
 import { Frame, Topic } from "@foxglove/studio-base/players/types";
 import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
-import { Color } from "@foxglove/studio-base/types/Messages";
+import { Color, Marker } from "@foxglove/studio-base/types/Messages";
 import { isNonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
 import filterMap from "@foxglove/studio-base/util/filterMap";
 import {
@@ -242,9 +242,7 @@ export default function Layout({
   const [_, forceUpdate] = useReducer((x: number) => x + 1, 0);
   const measuringElRef = useRef<MeasuringTool>(ReactNull);
   const [drawingTabType, setDrawingTabType] = useState<DrawingTabType | undefined>(undefined);
-  const [interactionsTabType, setInteractionsTabType] = useState<DrawingTabType | undefined>(
-    undefined,
-  );
+  const [interactionsTabType, setInteractionsTabType] = useState<TabType | undefined>(undefined);
 
   const [selectionState, setSelectionState] = useState<UserSelectionState>({
     clickedObjects: [],
@@ -403,7 +401,7 @@ export default function Layout({
     }
     // Highlight the selected object if the interactionsTab popout is open
     if (selectedObject && interactionsTabType != undefined) {
-      const marker = getObject(selectedObject);
+      const marker = getObject(selectedObject) as Marker | undefined;
       const topic = getInteractionData(selectedObject)?.topic;
       return marker && isNonEmptyOrUndefined(topic)
         ? [
@@ -502,7 +500,6 @@ export default function Layout({
     sceneBuilder.setSelectedNamespacesByTopic(selectedNamespacesByTopic);
     sceneBuilder.setSettingsByKey(settingsByKey);
     sceneBuilder.setTopics(selectedTopics);
-    sceneBuilder.setGlobalVariables({ globalVariables });
     sceneBuilder.setHighlightedMatchers(highlightMarkerMatchers);
     sceneBuilder.setColorOverrideMatchers(colorOverrideMarkerMatchers);
     sceneBuilder.setFrame(frame);
@@ -519,7 +516,6 @@ export default function Layout({
     currentTime,
     flattenMarkers,
     frame,
-    globalVariables,
     gridBuilder,
     highlightMarkerMatchers,
     playerId,
@@ -535,8 +531,8 @@ export default function Layout({
   ]);
 
   const handleDrawPolygons = useCallback(
-    (eventName: EventName, ev: MouseEvent, args?: ReglClickInfo) => {
-      (polygonBuilder as any)[eventName](ev, args);
+    (eventName: EventName, ev: React.MouseEvent, args: ReglClickInfo) => {
+      polygonBuilder[eventName](ev, args);
       forceUpdate();
     },
     [polygonBuilder],
@@ -577,20 +573,26 @@ export default function Layout({
     [],
   );
 
-  const handleEvent = useCallback((eventName: EventName, ev: MouseEvent, args?: ReglClickInfo) => {
-    if (!args) {
-      return;
-    }
-    const { drawingTabType: currentDrawingTabType, handleDrawPolygons: currentHandleDrawPolygons } =
-      callbackInputsRef.current;
-    const measuringHandler = measuringElRef.current && (measuringElRef.current as any)[eventName];
-    const measureActive = measuringElRef.current?.measureActive ?? false;
-    if (measuringHandler && measureActive) {
-      return measuringHandler(ev, args);
-    } else if (currentDrawingTabType === POLYGON_TAB_TYPE) {
-      currentHandleDrawPolygons(eventName, ev, args);
-    }
-  }, []);
+  const handleEvent = useCallback(
+    (eventName: EventName, ev: React.MouseEvent, args?: ReglClickInfo) => {
+      if (!args) {
+        return;
+      }
+      const {
+        drawingTabType: currentDrawingTabType,
+        handleDrawPolygons: currentHandleDrawPolygons,
+      } = callbackInputsRef.current;
+      const measuringHandler =
+        eventName === "onDoubleClick" ? undefined : measuringElRef.current?.[eventName];
+      const measureActive = measuringElRef.current?.measureActive ?? false;
+      if (measuringHandler && measureActive) {
+        return measuringHandler(ev.nativeEvent, args);
+      } else if (currentDrawingTabType === POLYGON_TAB_TYPE) {
+        currentHandleDrawPolygons(eventName, ev, args);
+      }
+    },
+    [],
+  );
 
   const updateGlobalVariablesFromSelection = useCallback(
     (newSelectedObject?: MouseEventObject) => {
@@ -613,7 +615,7 @@ export default function Layout({
     (newSelectedObject?: MouseEventObject) => {
       if (!isDrawing) {
         const shouldBeOpen = newSelectedObject != undefined && !disableAutoOpenClickedObject;
-        setInteractionsTabType(shouldBeOpen ? (OBJECT_TAB_TYPE as any) : undefined);
+        setInteractionsTabType(shouldBeOpen ? OBJECT_TAB_TYPE : undefined);
       }
     },
     [disableAutoOpenClickedObject, isDrawing],
@@ -644,12 +646,13 @@ export default function Layout({
     toggleDebug,
   } = useMemo(() => {
     return {
-      onClick: (ev: MouseEvent, args?: ReglClickInfo & { objects: MouseEventObject[] }) => {
+      onClick: (ev: React.MouseEvent, args?: ReglClickInfo) => {
         // Don't set any clicked objects when measuring distance or drawing polygons.
         if (callbackInputsRef.current.isDrawing) {
           return;
         }
-        const newClickedObjects = args?.objects ?? ([] as MouseEventObject[]);
+        const newClickedObjects =
+          (args?.objects as MouseEventObject[] | undefined) ?? ([] as MouseEventObject[]);
         const newClickedPosition = { clientX: ev.clientX, clientY: ev.clientY };
         const newSelectedObject = newClickedObjects.length === 1 ? newClickedObjects[0] : undefined;
 
@@ -671,16 +674,18 @@ export default function Layout({
           setShowTopicTree(false);
         }
       },
-      onDoubleClick: (ev: MouseEvent, args?: ReglClickInfo) =>
+      onDoubleClick: (ev: React.MouseEvent, args?: ReglClickInfo) =>
         handleEvent("onDoubleClick", ev, args),
       onExitTopicTreeFocus: () => {
         if (containerRef.current) {
           containerRef.current.focus();
         }
       },
-      onMouseDown: (ev: MouseEvent, args?: ReglClickInfo) => handleEvent("onMouseDown", ev, args),
-      onMouseMove: (ev: MouseEvent, args?: ReglClickInfo) => handleEvent("onMouseMove", ev, args),
-      onMouseUp: (ev: MouseEvent, args?: ReglClickInfo) => handleEvent("onMouseUp", ev, args),
+      onMouseDown: (ev: React.MouseEvent, args?: ReglClickInfo) =>
+        handleEvent("onMouseDown", ev, args),
+      onMouseMove: (ev: React.MouseEvent, args?: ReglClickInfo) =>
+        handleEvent("onMouseMove", ev, args),
+      onMouseUp: (ev: React.MouseEvent, args?: ReglClickInfo) => handleEvent("onMouseUp", ev, args),
       onSetPolygons: (polygons: Polygon[]) => setPolygonBuilder(new PolygonBuilder(polygons)),
       toggleDebug: () => setDebug(!callbackInputsRef.current.debug),
       toggleCameraMode: () => {
@@ -870,12 +875,8 @@ export default function Layout({
               <div style={videoRecordingStyle as React.CSSProperties}>
                 <LayoutToolbar
                   cameraState={cameraState}
-                  interactionsTabType={interactionsTabType as TabType | undefined}
-                  setInteractionsTabType={
-                    setInteractionsTabType as React.Dispatch<
-                      React.SetStateAction<TabType | undefined>
-                    >
-                  }
+                  interactionsTabType={interactionsTabType}
+                  setInteractionsTabType={setInteractionsTabType}
                   debug={debug}
                   followOrientation={followOrientation}
                   followTf={followTf}

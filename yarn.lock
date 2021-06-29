@@ -2451,9 +2451,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fluentui/react@npm:8.21.0":
-  version: 8.21.0
-  resolution: "@fluentui/react@npm:8.21.0"
+"@fluentui/react@npm:8.21.1":
+  version: 8.21.1
+  resolution: "@fluentui/react@npm:8.21.1"
   dependencies:
     "@fluentui/date-time-utilities": ^8.2.0
     "@fluentui/font-icons-mdl2": ^8.1.4
@@ -2473,7 +2473,7 @@ __metadata:
     "@types/react-dom": ">=16.8.0 <18.0.0"
     react: ">=16.8.0 <18.0.0"
     react-dom: ">=16.8.0 <18.0.0"
-  checksum: 290a5a2ef8532d013c42331da99a73b3abd0f9d3f5f707262f1931502d57e3f06dd5e30f1cd5bfa47153ca5611083c5a31f2b3d43af02f2ebc9caa248ca91d1b
+  checksum: 9759d85583fb39f6788e280b33ef0884646425bbcdab31ff0c7780e9f57a926c8987b880ddd8a8909467db3885d930eb0a312f318973de6a0c2fd4e27b1fbeaa
   languageName: node
   linkType: hard
 
@@ -2573,15 +2573,14 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foxglove/just-fetch@workspace:*, @foxglove/just-fetch@workspace:packages/just-fetch":
-  version: 0.0.0-use.local
-  resolution: "@foxglove/just-fetch@workspace:packages/just-fetch"
+"@foxglove/just-fetch@npm:1.0.0":
+  version: 1.0.0
+  resolution: "@foxglove/just-fetch@npm:1.0.0"
   dependencies:
-    typescript: 4.3.4
-  peerDependencies:
-    node-fetch: ">=2.0.0"
-  languageName: unknown
-  linkType: soft
+    node-fetch: ^2
+  checksum: b6d2ea35a5ddd37186c0332644344ddd58ac6b3c2d6b5f6aff6670eefe0c97a17ab439a14b5199af1b50050ac86c3570d4f1d49bf186c6455bb0c930bac71766
+  languageName: node
+  linkType: hard
 
 "@foxglove/log@workspace:*, @foxglove/log@workspace:packages/log":
   version: 0.0.0-use.local
@@ -2667,7 +2666,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/studio-base@workspace:packages/studio-base"
   dependencies:
-    "@fluentui/react": 8.21.0
+    "@fluentui/react": 8.21.1
     "@fluentui/react-icons-mdl2": 1.1.4
     "@foxglove/den": "workspace:*"
     "@foxglove/hooks": "workspace:*"
@@ -2854,7 +2853,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/xmlrpc@workspace:packages/xmlrpc"
   dependencies:
-    "@foxglove/just-fetch": "workspace:*"
+    "@foxglove/just-fetch": 1.0.0
     "@types/sax": ^1.2.1
     byte-base64: 1.1.0
     jest: 27.0.5
@@ -18951,7 +18950,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:2.6.1, node-fetch@npm:^2.3.0, node-fetch@npm:^2.6.0, node-fetch@npm:^2.6.1":
+"node-fetch@npm:2.6.1, node-fetch@npm:^2, node-fetch@npm:^2.3.0, node-fetch@npm:^2.6.0, node-fetch@npm:^2.6.1":
   version: 2.6.1
   resolution: "node-fetch@npm:2.6.1"
   checksum: 91075bedd57879117e310fbcc36983ad5d699e522edb1ebcdc4ee5294c982843982652925c3532729fdc86b2d64a8a827797a745f332040d91823c8752ee4d7c

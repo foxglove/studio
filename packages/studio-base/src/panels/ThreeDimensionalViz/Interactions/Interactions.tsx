@@ -23,9 +23,12 @@ import Icon from "@foxglove/studio-base/components/Icon";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import ObjectDetails from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/ObjectDetails";
 import TopicLink from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/TopicLink";
+import { SelectedObject } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/types";
 import styles from "@foxglove/studio-base/panels/ThreeDimensionalViz/Layout.module.scss";
 import { decodeAdditionalFields } from "@foxglove/studio-base/panels/ThreeDimensionalViz/commands/PointClouds/selection";
 import { getInteractionData } from "@foxglove/studio-base/panels/ThreeDimensionalViz/threeDimensionalVizUtils";
+import { ThreeDimensionalVizConfig } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
+import { PointCloud2 } from "@foxglove/studio-base/types/Messages";
 import { SaveConfig, PanelConfig } from "@foxglove/studio-base/types/panels";
 
 import LinkedGlobalVariableList from "./LinkedGlobalVariableList";
@@ -56,10 +59,12 @@ const InteractionsBaseComponent = React.memo<PropsWithConfig>(function Interacti
   saveConfig,
 }: PropsWithConfig) {
   const { object } = selectedObject ?? {};
-  const isPointCloud = object && object.type === 102;
+  const isPointCloud = object ? (object as unknown as { type: number }).type === 102 : false;
   const maybeFullyDecodedObject = React.useMemo(
     () =>
-      isPointCloud ? { ...selectedObject, object: decodeAdditionalFields(object) } : selectedObject,
+      isPointCloud
+        ? { ...selectedObject, object: decodeAdditionalFields(object as unknown as PointCloud2) }
+        : selectedObject,
     [isPointCloud, object, selectedObject],
   );
 
@@ -89,9 +94,11 @@ const InteractionsBaseComponent = React.memo<PropsWithConfig>(function Interacti
                   </SValue>
                 </SRow>
               )}
-              {isPointCloud && <PointCloudDetails selectedObject={maybeFullyDecodedObject} />}
+              {isPointCloud && (
+                <PointCloudDetails selectedObject={maybeFullyDecodedObject as SelectedObject} />
+              )}
               <ObjectDetails
-                selectedObject={maybeFullyDecodedObject}
+                selectedObject={maybeFullyDecodedObject as SelectedObject}
                 interactionData={selectedInteractionData}
               />
             </>
@@ -119,9 +126,9 @@ const InteractionsBaseComponent = React.memo<PropsWithConfig>(function Interacti
 // Wrap the Interactions so that we don't rerender every time any part of the PanelContext config changes, but just the
 // one value that we care about.
 export default function Interactions(props: Props): JSX.Element {
-  const { saveConfig, config: { disableAutoOpenClickedObject = false } = {} } = React.useContext(
+  const { saveConfig, config: { disableAutoOpenClickedObject = false } = {} } = (React.useContext(
     PanelContext,
-  ) ?? { saveConfig: () => {} };
+  ) ?? { saveConfig: () => {} }) as { config?: ThreeDimensionalVizConfig; saveConfig: () => void };
   return (
     <InteractionsBaseComponent
       {...props}
