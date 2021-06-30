@@ -154,9 +154,6 @@ function main() {
   });
 
   const openUrls: string[] = [];
-  let loginPromise:
-    | { resolve: (_: string | undefined) => void; reject: (_: Error) => void }
-    | undefined;
 
   // works on osx - even when app is closed
   // tho it is a bit strange since it isn't clear when this runs...
@@ -168,35 +165,12 @@ function main() {
 
     ev.preventDefault();
 
-    // Note that `new URL(url).pathname` is different between main & preload, so we just use startsWith
-    if (url.startsWith("foxglove://auth/login-complete?")) {
-      loginPromise?.resolve(new URL(url).search);
-      loginPromise = undefined;
+    if (app.isReady()) {
+      new StudioWindow([url]).load();
     } else {
-      if (app.isReady()) {
-        new StudioWindow([url]).load();
-      } else {
-        openUrls.push(url);
-      }
+      openUrls.push(url);
     }
   });
-
-  ipcMain.handle(
-    "authenticateViaExternalBrowser",
-    () =>
-      new Promise<string | undefined>((resolve, reject) => {
-        loginPromise?.resolve(undefined);
-        loginPromise = { resolve, reject };
-        if (process.env.AUTH_URL == undefined) {
-          reject(new Error("Authentication URL not configured."));
-          return;
-        }
-        shell.openExternal("https://foxglove.dev/auth?source=studio").catch((err) => {
-          reject(err);
-          loginPromise = undefined;
-        });
-      }),
-  );
 
   ipcMain.handle("debug_openFakeRemoteLayoutStorageDirectory", async () => {
     const msg = await shell.openPath(
