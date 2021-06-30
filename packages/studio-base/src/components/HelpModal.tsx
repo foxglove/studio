@@ -11,35 +11,63 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { IconButton, Modal, makeStyles, useTheme } from "@fluentui/react";
 import { PropsWithChildren, ReactElement } from "react";
-import styled, { CSSProperties } from "styled-components";
 
-import Modal from "@foxglove/studio-base/components/Modal";
 import TextContent from "@foxglove/studio-base/components/TextContent";
 
-const SRoot = styled.div`
-  max-width: 700px; // Px value because beyond a certain absolute width the lines become harder to read.
-  width: calc(100vw - 30px);
-  max-height: calc(100vh - 30px);
-  overflow-y: auto;
-  padding: 2.5em;
-`;
-
-type Props = {
-  onRequestClose: () => void;
-  rootStyle?: CSSProperties;
-};
+const useStyles = makeStyles((theme) => ({
+  content: {
+    padding: theme.spacing.l1,
+  },
+  header: {
+    backgroundColor: theme.semanticColors.bodyBackground,
+    display: "flex",
+    flexDirection: "space-between",
+    justifyContent: "flex-end",
+    padding: theme.spacing.s1,
+    position: "sticky",
+    top: 0,
+  },
+}));
 
 export default function HelpModal({
   onRequestClose,
   children,
-  rootStyle,
-}: PropsWithChildren<Props>): ReactElement {
+}: PropsWithChildren<{ onRequestClose: () => void }>): ReactElement {
+  const classes = useStyles();
+  const theme = useTheme();
+
   return (
-    <Modal onRequestClose={onRequestClose}>
-      <SRoot {...(rootStyle ? { style: rootStyle } : undefined)}>
+    <Modal
+      isOpen
+      onDismiss={onRequestClose}
+      styles={{
+        scrollableContent: {
+          maxWidth: 700,
+          maxHeight: `calc(100vh - ${theme.spacing.l2})`,
+        },
+      }}
+    >
+      <div className={classes.header}>
+        <IconButton
+          styles={{
+            root: {
+              color: theme.palette.neutralSecondary,
+              margin: 0, // TODO: remove this once global.scss is removed
+            },
+            rootHovered: {
+              color: theme.palette.neutralSecondaryAlt,
+            },
+          }}
+          ariaLabel="Close help modal"
+          iconProps={{ iconName: "Clear" }}
+          onClick={onRequestClose}
+        />
+      </div>
+      <div className={classes.content}>
         <TextContent allowMarkdownHtml={true}>{children}</TextContent>
-      </SRoot>
+      </div>
     </Modal>
   );
 }
