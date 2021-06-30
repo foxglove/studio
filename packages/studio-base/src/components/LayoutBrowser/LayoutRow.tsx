@@ -199,6 +199,16 @@ export default function LayoutRow({
     menuItems.push(
       { key: "debug_divider", itemType: ContextualMenuItemType.Divider },
       {
+        key: "debug_id",
+        text: layout.id,
+        disabled: true,
+        itemProps: {
+          styles: {
+            root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
+          },
+        },
+      },
+      {
         key: "debug_edit",
         text: "Inject edit",
         iconProps: { iconName: "TestBeakerSolid" },
