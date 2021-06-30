@@ -321,9 +321,6 @@ export default class FakeRemoteLayoutStorage implements IRemoteLayoutStorage {
       if (!target) {
         return { status: "conflict" };
       }
-      if (target.permission !== "creator_write") {
-        throw new Error("renameLayout target should be a personal layout");
-      }
       if (
         await this.hasNameConflictUnlocked(storage, {
           ignoringId: undefined,

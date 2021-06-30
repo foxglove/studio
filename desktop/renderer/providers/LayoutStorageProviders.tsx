@@ -81,7 +81,6 @@ export default function LayoutStorageProviders({
       if (!layout) {
         throw new Error("This layout doesn't exist on the server");
       }
-      // FIXME: allow this to work on shared layouts
       await fakeRemoteStorage.renameLayout({
         targetID: layout.id,
         path: layout.path,

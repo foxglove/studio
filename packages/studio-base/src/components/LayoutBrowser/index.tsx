@@ -33,7 +33,7 @@ import { debugBorder } from "./styles";
 // FIXME: sync periodically
 // FIXME: show conflicts from last sync
 // FIXME: cache change listener to respond to changes from CurrentLayoutProvider?
-// FIXME  -- and vice versa, CurrentLayoutProvider needs to be updated when current layout id is deleted
+// FIXME  -- and vice versa, CurrentLayoutProvider needs to be cleared when current layout id is deleted
 
 export default function LayoutBrowser({
   currentDateForStorybook,
