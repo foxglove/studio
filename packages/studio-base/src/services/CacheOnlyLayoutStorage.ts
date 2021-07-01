@@ -45,6 +45,22 @@ export default class CacheOnlyLayoutStorage implements ILayoutStorage {
 
   constructor(private storage: ILayoutCache) {}
 
+  private changeListeners = new Set<() => void>();
+
+  addLayoutsChangedListener(listener: () => void): void {
+    this.changeListeners.add(listener);
+  }
+  removeLayoutsChangedListener(listener: () => void): void {
+    this.changeListeners.delete(listener);
+  }
+  private notifyChangeListeners() {
+    queueMicrotask(() => {
+      for (const listener of [...this.changeListeners]) {
+        listener();
+      }
+    });
+  }
+
   async getLayouts(): Promise<LayoutMetadata[]> {
     return (await this.storage.list()).map(getMetadata);
   }
@@ -76,6 +92,7 @@ export default class CacheOnlyLayoutStorage implements ILayoutStorage {
     const id = uuidv4() as LayoutID;
     const newLayout: CachedLayout = { id, name, path, state: data };
     await this.storage.put(newLayout);
+    this.notifyChangeListeners();
     return getMetadata(newLayout);
   }
 
@@ -100,6 +117,7 @@ export default class CacheOnlyLayoutStorage implements ILayoutStorage {
       path: path ?? cachedLayout.path,
       state: data,
     });
+    this.notifyChangeListeners();
   }
 
   async shareLayout(_: unknown): Promise<void> {
@@ -108,6 +126,7 @@ export default class CacheOnlyLayoutStorage implements ILayoutStorage {
 
   async deleteLayout({ id }: { id: LayoutID }): Promise<void> {
     await this.storage.delete(id);
+    this.notifyChangeListeners();
   }
 
   async renameLayout({
@@ -124,5 +143,6 @@ export default class CacheOnlyLayoutStorage implements ILayoutStorage {
       throw new Error(`Layout id ${id} not found`);
     }
     await this.storage.put({ id, name, path, state: target.state });
+    this.notifyChangeListeners();
   }
 }

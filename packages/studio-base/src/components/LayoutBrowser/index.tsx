@@ -31,8 +31,6 @@ import { debugBorder } from "./styles";
 
 // FIXME: show sync state
 // FIXME: sync periodically
-// FIXME: show conflicts from last sync
-// FIXME: cache change listener to respond to changes from CurrentLayoutProvider?
 // FIXME  -- and vice versa, CurrentLayoutProvider needs to be cleared when current layout id is deleted
 
 export default function LayoutBrowser({
@@ -63,6 +61,12 @@ export default function LayoutBrowser({
     { loading: true },
   );
 
+  useEffect(() => {
+    const listener = () => reloadLayouts();
+    layoutStorage.addLayoutsChangedListener(listener);
+    return () => layoutStorage.removeLayoutsChangedListener(listener);
+  }, [layoutStorage, reloadLayouts]);
+
   // Start loading on first mount
   useEffect(() => {
     reloadLayouts();
@@ -81,9 +85,8 @@ export default function LayoutBrowser({
   const onSaveLayout = useCallback(
     async (item: LayoutMetadata) => {
       await layoutStorage.syncLayout(item.id);
-      await reloadLayouts();
     },
-    [layoutStorage, reloadLayouts],
+    [layoutStorage],
   );
 
   const onRenameLayout = useCallback(
@@ -92,9 +95,8 @@ export default function LayoutBrowser({
       if (currentLayoutId === item.id) {
         await onSelectLayout(item);
       }
-      await reloadLayouts();
     },
-    [currentLayoutId, layoutStorage, onSelectLayout, reloadLayouts],
+    [currentLayoutId, layoutStorage, onSelectLayout],
   );
 
   const onDuplicateLayout = useCallback(
@@ -108,38 +110,33 @@ export default function LayoutBrowser({
         });
         await onSelectLayout(newLayout);
       }
-      await reloadLayouts();
     },
-    [layoutStorage, onSelectLayout, reloadLayouts],
+    [layoutStorage, onSelectLayout],
   );
 
   const onDeleteLayout = useCallback(
     async (item: LayoutMetadata) => {
       await layoutStorage.deleteLayout({ id: item.id });
-      try {
-        if (currentLayoutId !== item.id) {
+      if (currentLayoutId !== item.id) {
+        return;
+      }
+      // If the layout was selected, select a different available layout
+      for (const { id } of await layoutStorage.getLayouts()) {
+        const layout = await layoutStorage.getLayout(id);
+        if (layout) {
+          setSelectedLayout(layout);
           return;
         }
-        // If the layout was selected, select a different available layout
-        for (const { id } of await layoutStorage.getLayouts()) {
-          const layout = await layoutStorage.getLayout(id);
-          if (layout) {
-            setSelectedLayout(layout);
-            return;
-          }
-        }
-        // If no existing layout could be selected, use the welcome layout
-        const newLayout = await layoutStorage.saveNewLayout({
-          path: [],
-          name: welcomeLayout.name,
-          data: welcomeLayout.data,
-        });
-        await onSelectLayout(newLayout);
-      } finally {
-        await reloadLayouts();
       }
+      // If no existing layout could be selected, use the welcome layout
+      const newLayout = await layoutStorage.saveNewLayout({
+        path: [],
+        name: welcomeLayout.name,
+        data: welcomeLayout.data,
+      });
+      await onSelectLayout(newLayout);
     },
-    [currentLayoutId, layoutStorage, setSelectedLayout, onSelectLayout, reloadLayouts],
+    [currentLayoutId, layoutStorage, setSelectedLayout, onSelectLayout],
   );
 
   const createNewLayout = useCallback(async () => {
@@ -159,8 +156,7 @@ export default function LayoutBrowser({
       data: state as PanelsState,
     });
     onSelectLayout(newLayout);
-    await reloadLayouts();
-  }, [currentDateForStorybook, layoutStorage, onSelectLayout, reloadLayouts]);
+  }, [currentDateForStorybook, layoutStorage, onSelectLayout]);
 
   const onExportLayout = useCallback(
     async (item: LayoutMetadata) => {
@@ -198,9 +194,8 @@ export default function LayoutBrowser({
           permission: "org_write",
         });
       }
-      reloadLayouts();
     },
-    [layoutStorage, layouts.value?.shared, prompt, reloadLayouts],
+    [layoutStorage, layouts.value?.shared, prompt],
   );
 
   const importLayout = useCallback(async () => {
@@ -237,8 +232,7 @@ export default function LayoutBrowser({
     const data = parsedState as PanelsState;
     const newLayout = await layoutStorage.saveNewLayout({ path: [], name: layoutName, data });
     onSelectLayout(newLayout);
-    reloadLayouts();
-  }, [addToast, isMounted, layoutStorage, onSelectLayout, reloadLayouts]);
+  }, [addToast, isMounted, layoutStorage, onSelectLayout]);
 
   const createLayoutTooltip = useTooltip({ contents: "Create new layout" });
   const importLayoutTooltip = useTooltip({ contents: "Import layout" });

@@ -43,6 +43,9 @@ export type LayoutMetadata = {
 export type Layout = Omit<LayoutMetadata, "data"> & { data: PanelsState };
 
 export interface ILayoutStorage {
+  addLayoutsChangedListener(listener: () => void): void;
+  removeLayoutsChangedListener(listener: () => void): void;
+
   getLayouts(): Promise<LayoutMetadata[]>;
 
   getLayout(id: LayoutID): Promise<Layout | undefined>;

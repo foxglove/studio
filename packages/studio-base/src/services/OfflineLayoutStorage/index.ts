@@ -88,6 +88,8 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
 
   readonly supportsSharing = true;
 
+  private changeListeners = new Set<() => void>();
+
   constructor({
     cacheStorage,
     remoteStorage,
@@ -99,6 +101,20 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
     this.remoteStorage = remoteStorage;
   }
 
+  addLayoutsChangedListener(listener: () => void): void {
+    this.changeListeners.add(listener);
+  }
+  removeLayoutsChangedListener(listener: () => void): void {
+    this.changeListeners.delete(listener);
+  }
+  private notifyChangeListeners() {
+    queueMicrotask(() => {
+      for (const listener of [...this.changeListeners]) {
+        listener();
+      }
+    });
+  }
+
   /** Helper function for read-modify-write operations in the cache storage. */
   private async updateCachedLayout(
     id: LayoutID,
@@ -107,6 +123,7 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
     await this.cacheStorage.runExclusive(async (cache) => {
       await cache.put(modify(await cache.get(id)));
     });
+    this.notifyChangeListeners();
   }
 
   async getLayouts(): Promise<LayoutMetadata[]> {
@@ -145,6 +162,7 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
         serverMetadata: metadata,
       }),
     );
+    this.notifyChangeListeners();
     return {
       ...remoteLayout,
       hasUnsyncedChanges: false,
@@ -161,11 +179,13 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
     name: string;
     data: PanelsState;
   }): Promise<LayoutMetadata> {
-    return this.cacheStorage.runExclusive(async (cache) => {
+    const newMetadata = await this.cacheStorage.runExclusive(async (cache) => {
       const layout = { id: uuidv4(), name, path, state: data };
       await cache.put(layout);
       return getEffectiveMetadata(layout, this.latestConflictsByCacheId);
     });
+    this.notifyChangeListeners();
+    return newMetadata;
   }
 
   async updateLayout({ targetID, data }: { targetID: LayoutID; data: PanelsState }): Promise<void> {
@@ -175,6 +195,7 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
       }
       return { ...layout, state: data, locallyModified: true };
     });
+    this.notifyChangeListeners();
   }
 
   async deleteLayout({ id }: { id: LayoutID }): Promise<void> {
@@ -184,6 +205,7 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
       }
       return { ...layout, locallyDeleted: true };
     });
+    this.notifyChangeListeners();
   }
 
   async renameLayout({
@@ -201,6 +223,7 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
       }
       return { ...layout, name, path, locallyModified: true };
     });
+    this.notifyChangeListeners();
   }
 
   /** Only works when online */
@@ -219,27 +242,27 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
       case "conflict":
         throw new Error("A layout with this name already exists.");
     }
+    this.notifyChangeListeners();
   }
 
   /** Save a layout to the server following an explicit user action. */
   async syncLayout(id: LayoutID): Promise<ConflictType | undefined> {
     const cachedLayout = await this.cacheStorage.runExclusive((cache) => cache.get(id));
+    let conflict: ConflictInfo | undefined;
     if (cachedLayout?.serverMetadata != undefined) {
-      return (
-        await this.performSyncOperation(
-          { type: "upload-updated", cachedLayout, remoteLayout: cachedLayout.serverMetadata },
-          { uploadChanges: true },
-        )
-      )?.type;
+      conflict = await this.performSyncOperation(
+        { type: "upload-updated", cachedLayout, remoteLayout: cachedLayout.serverMetadata },
+        { uploadChanges: true },
+      );
     } else if (cachedLayout?.state != undefined) {
-      return (
-        await this.performSyncOperation(
-          { type: "upload-new", cachedLayout: { ...cachedLayout, state: cachedLayout.state } },
-          { uploadChanges: true },
-        )
-      )?.type;
+      conflict = await this.performSyncOperation(
+        { type: "upload-new", cachedLayout: { ...cachedLayout, state: cachedLayout.state } },
+        { uploadChanges: true },
+      );
     }
-    return undefined;
+
+    this.notifyChangeListeners();
+    return conflict?.type;
   }
 
   private isSyncing = false;
@@ -250,19 +273,21 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
    * storage, or both.
    * @returns Any conflicts that arose during the sync.
    */
-  async syncWithRemote(): Promise<Map<string, ConflictInfo>> {
+  async syncWithRemote(): Promise<ReadonlyMap<string, ConflictInfo>> {
     if (this.isSyncing) {
       throw new Error("Only one syncWithRemote operation may be in progress at a time.");
     }
     try {
       this.isSyncing = true;
-      return (this.latestConflictsByCacheId = await this.syncWithRemoteImpl());
+      this.latestConflictsByCacheId = await this.syncWithRemoteImpl();
+      this.notifyChangeListeners();
+      return this.latestConflictsByCacheId;
     } finally {
       this.isSyncing = false;
     }
   }
 
-  private async syncWithRemoteImpl(): Promise<Map<string, ConflictInfo>> {
+  private async syncWithRemoteImpl(): Promise<ReadonlyMap<string, ConflictInfo>> {
     const [cachedLayoutsById, remoteLayoutsById] = await Promise.all([
       this.cacheStorage
         .runExclusive((cache) => cache.list())
