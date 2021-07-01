@@ -311,6 +311,33 @@ describe("computeLayoutSyncOperations", () => {
         },
       ],
     },
+
+    {
+      name: "deletes locally when deleted and modified locally and deleted remotely",
+      local: [
+        [
+          "local1",
+          {
+            ...local1,
+            serverMetadata: makeMetadata("remote1", "1", { updatedAt: 5 }),
+            locallyDeleted: true,
+            locallyModified: true,
+          },
+        ],
+      ],
+      remote: [],
+      expected: [
+        {
+          type: "delete-local",
+          cachedLayout: {
+            ...local1,
+            serverMetadata: makeMetadata("remote1", "1", { updatedAt: 5 }),
+            locallyDeleted: true,
+            locallyModified: true,
+          },
+        },
+      ],
+    },
   ])("$name", ({ local, remote, expected }) => {
     expect(computeLayoutSyncOperations(new Map(local), new Map(remote))).toEqual(expected);
   });

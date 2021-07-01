@@ -13,6 +13,7 @@ import {
   LayoutID,
   LayoutMetadata,
   ILayoutStorage,
+  ConflictType,
 } from "@foxglove/studio-base/services/ILayoutStorage";
 import {
   RemoteLayoutMetadata,
@@ -21,10 +22,7 @@ import {
 import WriteThroughLayoutCache from "@foxglove/studio-base/services/WriteThroughLayoutCache";
 import filterMap from "@foxglove/studio-base/util/filterMap";
 
-import computeLayoutSyncOperations, {
-  ConflictType,
-  SyncOperation,
-} from "./computeLayoutSyncOperations";
+import computeLayoutSyncOperations, { SyncOperation } from "./computeLayoutSyncOperations";
 
 const log = Logger.getLogger(__filename);
 
@@ -34,13 +32,17 @@ export type ConflictInfo = { cacheId: string; remoteId?: LayoutID; type: Conflic
  * Determine the metadata that we should vend out to clients based on a cached layout. Uses the
  * layout's serverMetadata if available, except for local modifications.
  */
-function getEffectiveMetadata(layout: CachedLayout): LayoutMetadata {
+function getEffectiveMetadata(
+  layout: CachedLayout,
+  conflictsByCacheId: ReadonlyMap<string, ConflictInfo>,
+): LayoutMetadata {
   return layout.serverMetadata != undefined
     ? {
         ...layout.serverMetadata,
         name: layout.name,
         path: layout.path ?? [],
         hasUnsyncedChanges: layout.locallyModified ?? false,
+        conflict: conflictsByCacheId.get(layout.id)?.type,
       }
     : {
         // When a layout is new on the client, we treat our local id as though it were a server id.
@@ -54,6 +56,7 @@ function getEffectiveMetadata(layout: CachedLayout): LayoutMetadata {
         updatedAt: undefined,
         permission: "creator_write",
         hasUnsyncedChanges: true,
+        conflict: conflictsByCacheId.get(layout.id)?.type,
       };
 }
 
@@ -81,6 +84,8 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
 
   private remoteStorage: IRemoteLayoutStorage;
 
+  private latestConflictsByCacheId: ReadonlyMap<string, ConflictInfo> = new Map();
+
   readonly supportsSharing = true;
 
   constructor({
@@ -106,8 +111,9 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
 
   async getLayouts(): Promise<LayoutMetadata[]> {
     return filterMap(await this.cacheStorage.runExclusive((cache) => cache.list()), (layout) =>
-      // FIXME: still need to return the layout if it has conflicts? or just drop local deletes if there's been a remote update?
-      layout.locallyDeleted === true ? undefined : getEffectiveMetadata(layout),
+      layout.locallyDeleted === true && !this.latestConflictsByCacheId.has(layout.id)
+        ? undefined
+        : getEffectiveMetadata(layout, this.latestConflictsByCacheId),
     );
   }
 
@@ -117,7 +123,7 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
       return undefined;
     }
     if (layout?.state) {
-      return { ...getEffectiveMetadata(layout), data: layout.state };
+      return { ...getEffectiveMetadata(layout, this.latestConflictsByCacheId), data: layout.state };
     }
     // If the user has never selected this layout, or if it has been updated on the server since
     // last time it was selected, we need to query the server in order to hydrate the cached layout.
@@ -139,7 +145,11 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
         serverMetadata: metadata,
       }),
     );
-    return { ...remoteLayout, hasUnsyncedChanges: false };
+    return {
+      ...remoteLayout,
+      hasUnsyncedChanges: false,
+      conflict: undefined,
+    };
   }
 
   async saveNewLayout({
@@ -154,7 +164,7 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
     return this.cacheStorage.runExclusive(async (cache) => {
       const layout = { id: uuidv4(), name, path, state: data };
       await cache.put(layout);
-      return getEffectiveMetadata(layout);
+      return getEffectiveMetadata(layout, this.latestConflictsByCacheId);
     });
   }
 
@@ -212,21 +222,24 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
   }
 
   /** Save a layout to the server following an explicit user action. */
-  async syncLayout(id: LayoutID): Promise<void> {
+  async syncLayout(id: LayoutID): Promise<ConflictType | undefined> {
     const cachedLayout = await this.cacheStorage.runExclusive((cache) => cache.get(id));
-    if (cachedLayout?.state != undefined) {
-      if (cachedLayout.serverMetadata != undefined) {
-        await this.performSyncOperations(
-          [{ type: "upload-updated", cachedLayout, remoteLayout: cachedLayout.serverMetadata }],
+    if (cachedLayout?.serverMetadata != undefined) {
+      return (
+        await this.performSyncOperation(
+          { type: "upload-updated", cachedLayout, remoteLayout: cachedLayout.serverMetadata },
           { uploadChanges: true },
-        );
-      } else {
-        await this.performSyncOperations(
-          [{ type: "upload-new", cachedLayout: { ...cachedLayout, state: cachedLayout.state } }],
+        )
+      )?.type;
+    } else if (cachedLayout?.state != undefined) {
+      return (
+        await this.performSyncOperation(
+          { type: "upload-new", cachedLayout: { ...cachedLayout, state: cachedLayout.state } },
           { uploadChanges: true },
-        );
-      }
+        )
+      )?.type;
     }
+    return undefined;
   }
 
   private isSyncing = false;
@@ -237,19 +250,19 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
    * storage, or both.
    * @returns Any conflicts that arose during the sync.
    */
-  async syncWithRemote(): Promise<ConflictInfo[]> {
+  async syncWithRemote(): Promise<Map<string, ConflictInfo>> {
     if (this.isSyncing) {
       throw new Error("Only one syncWithRemote operation may be in progress at a time.");
     }
     try {
       this.isSyncing = true;
-      return await this.syncWithRemoteImpl();
+      return (this.latestConflictsByCacheId = await this.syncWithRemoteImpl());
     } finally {
       this.isSyncing = false;
     }
   }
 
-  private async syncWithRemoteImpl(): Promise<ConflictInfo[]> {
+  private async syncWithRemoteImpl(): Promise<Map<string, ConflictInfo>> {
     const [cachedLayoutsById, remoteLayoutsById] = await Promise.all([
       this.cacheStorage
         .runExclusive((cache) => cache.list())
@@ -270,176 +283,182 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
 
     // By default we don't (currently) upload new layouts or changes made locally. The user
     // triggers these uploads with an explicit save action.
-    return this.performSyncOperations(operations, { uploadChanges: false });
+    const conflicts = await this.performSyncOperations(operations, { uploadChanges: false });
+    return new Map(conflicts.map((info) => [info.cacheId, info]));
   }
 
   private async performSyncOperations(
     operations: SyncOperation[],
-    { uploadChanges }: { uploadChanges: boolean },
+    options: { uploadChanges: boolean },
   ): Promise<ConflictInfo[]> {
     const conflicts: ConflictInfo[] = [];
     for (const operation of operations) {
-      switch (operation.type) {
-        case "conflict": {
-          const { cachedLayout, conflictType } = operation;
-          conflicts.push({
-            cacheId: cachedLayout.id,
-            remoteId: cachedLayout.serverMetadata?.id,
-            type: conflictType,
-          });
-          break;
-        }
-
-        case "add-to-cache": {
-          const { remoteLayout } = operation;
-          await this.cacheStorage.runExclusive((cache) =>
-            cache.put({
-              id: remoteLayout.id,
-              name: remoteLayout.name,
-              path: remoteLayout.path,
-              state: undefined,
-              serverMetadata: remoteLayout,
-            }),
-          );
-          break;
-        }
-
-        case "update-cached-metadata": {
-          const { cachedLayout, remoteLayout } = operation;
-          await this.cacheStorage.runExclusive((cache) =>
-            cache.put({
-              ...cachedLayout,
-              name: remoteLayout.name,
-              path: remoteLayout.path,
-              serverMetadata: remoteLayout,
-              state: undefined, // clear out the state so we know it needs to be fetched from the server
-              locallyDeleted: false,
-              locallyModified: false,
-            }),
-          );
-          break;
-        }
-
-        case "delete-local": {
-          const { cachedLayout } = operation;
-          await this.cacheStorage.runExclusive((cache) => cache.delete(cachedLayout.id));
-          break;
-        }
-
-        case "delete-remote": {
-          const { cachedLayout, remoteLayout } = operation;
-          const response = await this.remoteStorage.deleteLayout({
-            targetID: remoteLayout.id,
-            ifUnmodifiedSince: remoteLayout.updatedAt,
-          });
-          switch (response.status) {
-            case "success":
-              await this.cacheStorage.runExclusive((cache) => cache.delete(cachedLayout.id));
-              break;
-            case "precondition-failed":
-              conflicts.push({
-                cacheId: cachedLayout.id,
-                remoteId: cachedLayout.serverMetadata?.id,
-                type: "local-delete-remote-update",
-              });
-              break;
-          }
-          break;
-        }
-
-        case "upload-new": {
-          if (!uploadChanges) {
-            break;
-          }
-          const { cachedLayout } = operation;
-          const response = await this.remoteStorage.saveNewLayout({
-            path: cachedLayout.path ?? [],
-            name: cachedLayout.name,
-            data: cachedLayout.state,
-          });
-          switch (response.status) {
-            case "success":
-              // The server generated a new id, so ours gets replaced
-              await this.cacheStorage.runExclusive(async (cache) => {
-                await cache.put({
-                  id: response.newMetadata.id,
-                  name: response.newMetadata.name,
-                  path: response.newMetadata.path,
-                  state: cachedLayout.state,
-                  serverMetadata: response.newMetadata,
-                });
-                await cache.delete(cachedLayout.id);
-              });
-              break;
-            case "conflict":
-              conflicts.push({
-                cacheId: cachedLayout.id,
-                remoteId: cachedLayout.serverMetadata?.id,
-                type: "both-update",
-              });
-              break;
-          }
-          break;
-        }
-
-        case "upload-updated": {
-          if (!uploadChanges) {
-            break;
-          }
-          const { cachedLayout, remoteLayout } = operation;
-          let responsePromise: ReturnType<IRemoteLayoutStorage["updateLayout"]>;
-          if (!cachedLayout.state) {
-            responsePromise = this.remoteStorage.renameLayout({
-              targetID: remoteLayout.id,
-              name: cachedLayout.name,
-              path: cachedLayout.path ?? [],
-              ifUnmodifiedSince: remoteLayout.updatedAt,
-            });
-          } else {
-            responsePromise = this.remoteStorage.updateLayout({
-              targetID: remoteLayout.id,
-              name: cachedLayout.name,
-              path: cachedLayout.path ?? [],
-              ifUnmodifiedSince: remoteLayout.updatedAt,
-              data: cachedLayout.state,
-            });
-          }
-          const response = await responsePromise;
-          switch (response.status) {
-            case "success":
-              await this.cacheStorage.runExclusive((cache) =>
-                cache.put({
-                  ...cachedLayout,
-                  locallyModified: false,
-                  serverMetadata: response.newMetadata,
-                }),
-              );
-              break;
-            case "not-found":
-              log.warn(
-                `Tried to rename or upload a layout that didn't exist (${remoteLayout.id}). Ignoring until next sync.`,
-              );
-              break;
-            case "precondition-failed":
-              conflicts.push({
-                cacheId: cachedLayout.id,
-                remoteId: cachedLayout.serverMetadata?.id,
-                type: "both-update",
-              });
-              break;
-            case "conflict":
-              conflicts.push({
-                cacheId: cachedLayout.id,
-                remoteId: cachedLayout.serverMetadata?.id,
-                type: "local-update-remote-delete",
-              });
-              break;
-          }
-          break;
-        }
+      const conflict = await this.performSyncOperation(operation, options);
+      if (conflict) {
+        conflicts.push(conflict);
       }
     }
-    log.info("Sync conflicts:", conflicts);
     return conflicts;
+  }
+
+  private async performSyncOperation(
+    operation: SyncOperation,
+    { uploadChanges }: { uploadChanges: boolean },
+  ): Promise<ConflictInfo | undefined> {
+    switch (operation.type) {
+      case "conflict": {
+        const { cachedLayout, conflictType } = operation;
+        return {
+          cacheId: cachedLayout.id,
+          remoteId: cachedLayout.serverMetadata?.id,
+          type: conflictType,
+        };
+      }
+
+      case "add-to-cache": {
+        const { remoteLayout } = operation;
+        await this.cacheStorage.runExclusive((cache) =>
+          cache.put({
+            id: remoteLayout.id,
+            name: remoteLayout.name,
+            path: remoteLayout.path,
+            state: undefined,
+            serverMetadata: remoteLayout,
+          }),
+        );
+        break;
+      }
+
+      case "update-cached-metadata": {
+        const { cachedLayout, remoteLayout } = operation;
+        await this.cacheStorage.runExclusive((cache) =>
+          cache.put({
+            ...cachedLayout,
+            name: remoteLayout.name,
+            path: remoteLayout.path,
+            serverMetadata: remoteLayout,
+            state: undefined, // clear out the state so we know it needs to be fetched from the server
+            locallyDeleted: false,
+            locallyModified: false,
+          }),
+        );
+        break;
+      }
+
+      case "delete-local": {
+        const { cachedLayout } = operation;
+        await this.cacheStorage.runExclusive((cache) => cache.delete(cachedLayout.id));
+        break;
+      }
+
+      case "delete-remote": {
+        const { cachedLayout, remoteLayout } = operation;
+        const response = await this.remoteStorage.deleteLayout({
+          targetID: remoteLayout.id,
+          ifUnmodifiedSince: remoteLayout.updatedAt,
+        });
+        switch (response.status) {
+          case "success":
+            await this.cacheStorage.runExclusive((cache) => cache.delete(cachedLayout.id));
+            break;
+          case "precondition-failed":
+            return {
+              cacheId: cachedLayout.id,
+              remoteId: remoteLayout.id,
+              type: "local-delete-remote-update",
+            };
+        }
+        break;
+      }
+
+      case "upload-new": {
+        if (!uploadChanges) {
+          break;
+        }
+        const { cachedLayout } = operation;
+        const response = await this.remoteStorage.saveNewLayout({
+          path: cachedLayout.path ?? [],
+          name: cachedLayout.name,
+          data: cachedLayout.state,
+        });
+        switch (response.status) {
+          case "success":
+            // The server generated a new id, so ours gets replaced
+            await this.cacheStorage.runExclusive(async (cache) => {
+              await cache.put({
+                id: response.newMetadata.id,
+                name: response.newMetadata.name,
+                path: response.newMetadata.path,
+                state: cachedLayout.state,
+                serverMetadata: response.newMetadata,
+              });
+              await cache.delete(cachedLayout.id);
+            });
+            break;
+          case "conflict":
+            return {
+              cacheId: cachedLayout.id,
+              remoteId: undefined,
+              type: "name-collision",
+            };
+        }
+        break;
+      }
+
+      case "upload-updated": {
+        if (!uploadChanges) {
+          break;
+        }
+        const { cachedLayout, remoteLayout } = operation;
+        let responsePromise: ReturnType<IRemoteLayoutStorage["updateLayout"]>;
+        if (!cachedLayout.state) {
+          responsePromise = this.remoteStorage.renameLayout({
+            targetID: remoteLayout.id,
+            name: cachedLayout.name,
+            path: cachedLayout.path ?? [],
+            ifUnmodifiedSince: remoteLayout.updatedAt,
+          });
+        } else {
+          responsePromise = this.remoteStorage.updateLayout({
+            targetID: remoteLayout.id,
+            name: cachedLayout.name,
+            path: cachedLayout.path ?? [],
+            ifUnmodifiedSince: remoteLayout.updatedAt,
+            data: cachedLayout.state,
+          });
+        }
+        const response = await responsePromise;
+        switch (response.status) {
+          case "success":
+            await this.cacheStorage.runExclusive((cache) =>
+              cache.put({
+                ...cachedLayout,
+                locallyModified: false,
+                serverMetadata: response.newMetadata,
+              }),
+            );
+            break;
+          case "not-found":
+            log.warn(
+              `Tried to rename or upload a layout that didn't exist (${remoteLayout.id}). Ignoring until next sync.`,
+            );
+            break;
+          case "precondition-failed":
+            return {
+              cacheId: cachedLayout.id,
+              remoteId: remoteLayout.id,
+              type: "both-update",
+            };
+          case "conflict":
+            return {
+              cacheId: cachedLayout.id,
+              remoteId: remoteLayout.id,
+              type: "local-update-remote-delete",
+            };
+        }
+        break;
+      }
+    }
+    return undefined;
   }
 }

@@ -3,13 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { CachedLayout } from "@foxglove/studio-base/services/ILayoutCache";
-import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
+import { ConflictType, LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 import { RemoteLayoutMetadata } from "@foxglove/studio-base/services/IRemoteLayoutStorage";
-
-export type ConflictType =
-  | "local-delete-remote-update" // FIXME: remove and just ignore local delete in this case?
-  | "local-update-remote-delete"
-  | "both-update";
 
 type CachedLayoutWithState = CachedLayout & { state: NonNullable<CachedLayout["state"]> };
 
@@ -57,10 +52,10 @@ export default function computeLayoutSyncOperations(
     // If we know the layout's server id, but it no longer exists on the server, delete it
     const remoteLayout = remoteLayoutsById.get(cachedLayout.serverMetadata.id);
     if (remoteLayout == undefined) {
-      if (cachedLayout.locallyModified === true) {
-        ops.push({ type: "conflict", cachedLayout, conflictType: "local-update-remote-delete" });
-      } else {
+      if (cachedLayout.locallyDeleted === true || cachedLayout.locallyModified !== true) {
         ops.push({ type: "delete-local", cachedLayout });
+      } else {
+        ops.push({ type: "conflict", cachedLayout, conflictType: "local-update-remote-delete" });
       }
       continue;
     }

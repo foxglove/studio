@@ -14,7 +14,7 @@ import {
   ContextualMenu,
 } from "@fluentui/react";
 import cx from "classnames";
-import { useCallback, useContext, useState } from "react";
+import { useCallback, useContext, useMemo, useState } from "react";
 
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import useConfirm from "@foxglove/studio-base/components/useConfirm";
@@ -141,9 +141,23 @@ export default function LayoutRow({
     confirmStyle: "danger",
   });
 
-  const unsyncedChangesTooltip = useTooltip({
-    contents: layout.hasUnsyncedChanges ? "Changes not synced" : undefined,
-  });
+  const tooltipContent = useMemo(() => {
+    if (layout.conflict == undefined) {
+      return layout.hasUnsyncedChanges ? "Changes not synced" : undefined;
+    }
+    switch (layout.conflict) {
+      case "both-update":
+        return "Someone else also updated this layout.";
+      case "local-delete-remote-update":
+        return "You deleted this layout but it has been updated on the server.";
+      case "local-update-remote-delete":
+        return "You deleted this layout but someone else updated it.";
+      case "name-collision":
+        return "A layout with this name already exists.";
+    }
+  }, [layout.conflict, layout.hasUnsyncedChanges]);
+
+  const changesOrConflictsTooltip = useTooltip({ contents: tooltipContent });
 
   const layoutDebug = useContext(LayoutStorageDebuggingContext);
 
@@ -274,7 +288,7 @@ export default function LayoutRow({
           onDismiss={() => setContextMenuEvent(undefined)}
         />
       )}
-      {unsyncedChangesTooltip.tooltip}
+      {changesOrConflictsTooltip.tooltip}
       {confirmDelete.modal}
       <Stack.Item grow className={styles.layoutName} title={layout.name}>
         {editingName ? (
@@ -309,10 +323,16 @@ export default function LayoutRow({
           ariaLabel="Layout actions"
           data={{ text: "x" }}
           data-test="layout-actions"
-          elementRef={unsyncedChangesTooltip.ref}
+          elementRef={changesOrConflictsTooltip.ref}
           iconProps={{
-            iconName: layout.hasUnsyncedChanges ? "Info" : "More", // FIXME: better icon
-            styles: { root: { "& span": { verticalAlign: "baseline" } } },
+            iconName:
+              layout.conflict != undefined ? "Error" : layout.hasUnsyncedChanges ? "Info" : "More",
+            styles: {
+              root: {
+                "& span": { verticalAlign: "baseline" },
+                color: layout.conflict != undefined ? theme.semanticColors.errorIcon : undefined,
+              },
+            },
           }}
           onRenderMenuIcon={() => ReactNull}
           menuProps={{ items: filteredItems }}

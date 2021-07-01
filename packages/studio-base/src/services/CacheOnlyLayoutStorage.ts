@@ -28,7 +28,9 @@ function getMetadata(layout: CachedLayout): LayoutMetadata {
     createdAt: undefined,
     updatedAt: undefined,
     permission: "creator_write",
-    hasUnsyncedChanges: false, // we don't track local changes since this is cache-only storage
+    // we don't track local changes and conflicts since this is cache-only storage
+    hasUnsyncedChanges: false,
+    conflict: undefined,
   };
 }
 
@@ -58,7 +60,7 @@ export default class CacheOnlyLayoutStorage implements ILayoutStorage {
     };
   }
 
-  async syncLayout(_id: LayoutID): Promise<void> {
+  async syncLayout(_id: LayoutID): Promise<undefined> {
     throw new Error("CacheOnlyLayoutStorage should never have unsynced changes");
   }
 

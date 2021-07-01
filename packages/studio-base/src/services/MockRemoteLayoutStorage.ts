@@ -41,7 +41,11 @@ export default class MockRemoteLayoutStorage implements IRemoteLayoutStorage {
     permission: "creator_write" | "org_read" | "org_write";
   }) {
     for (const layout of this.layoutsById.values()) {
-      if (isEqual(path, layout.path) && name === layout.name && layout.permission !== permission) {
+      if (
+        isEqual(path, layout.path) &&
+        name === layout.name &&
+        (layout.permission === "creator_write") === (permission === "creator_write")
+      ) {
         return true;
       }
     }
@@ -65,14 +69,8 @@ export default class MockRemoteLayoutStorage implements IRemoteLayoutStorage {
     name: string;
     data: PanelsState;
   }): Promise<{ status: "success"; newMetadata: RemoteLayoutMetadata } | { status: "conflict" }> {
-    for (const layout of this.layoutsById.values()) {
-      if (
-        isEqual(path, layout.path) &&
-        name === layout.name &&
-        layout.permission === "creator_write"
-      ) {
-        return { status: "conflict" };
-      }
+    if (this.hasNameConflict({ path, name, permission: "creator_write" })) {
+      return { status: "conflict" };
     }
     const id = uuidv4() as LayoutID;
     const now = new Date().toISOString() as ISO8601Timestamp;

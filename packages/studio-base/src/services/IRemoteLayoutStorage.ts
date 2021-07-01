@@ -16,7 +16,7 @@ import {
  * enable permissions and consistency checks.
  */
 export type RemoteLayoutMetadata = {
-  [K in keyof Omit<LayoutMetadata, "data" | "hasUnsyncedChanges">]-?: NonNullable<
+  [K in keyof Omit<LayoutMetadata, "data" | "hasUnsyncedChanges" | "conflict">]-?: NonNullable<
     LayoutMetadata[K]
   >;
 } & {

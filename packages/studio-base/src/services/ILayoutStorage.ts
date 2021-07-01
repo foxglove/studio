@@ -16,6 +16,12 @@ export type UserMetadata = {
   email: string;
 };
 
+export type ConflictType =
+  | "local-delete-remote-update"
+  | "local-update-remote-delete"
+  | "both-update"
+  | "name-collision";
+
 /** Metadata that describes a panel layout. */
 export type LayoutMetadata = {
   id: LayoutID;
@@ -30,6 +36,7 @@ export type LayoutMetadata = {
    * saved. Save the changes by calling ILayoutStorage.syncLayout().
    */
   hasUnsyncedChanges: boolean;
+  conflict: ConflictType | undefined;
   data?: never;
 };
 
@@ -53,7 +60,7 @@ export interface ILayoutStorage {
     data: PanelsState;
   }): Promise<void>;
 
-  syncLayout(id: LayoutID): Promise<void>;
+  syncLayout(id: LayoutID): Promise<ConflictType | undefined>;
 
   readonly supportsSharing: boolean;
 
