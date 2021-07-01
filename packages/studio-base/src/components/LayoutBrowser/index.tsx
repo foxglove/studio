@@ -30,8 +30,6 @@ import LayoutSection from "./LayoutSection";
 import showOpenFilePicker from "./showOpenFilePicker";
 import { debugBorder } from "./styles";
 
-// FIXME: sync periodically
-
 export default function LayoutBrowser({
   currentDateForStorybook,
 }: React.PropsWithChildren<{

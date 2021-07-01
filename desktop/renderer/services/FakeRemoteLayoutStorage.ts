@@ -78,7 +78,7 @@ export default class FakeRemoteLayoutStorage implements IRemoteLayoutStorage {
 
       if (
         (ignoringId == undefined || ignoringId !== parsed.id) &&
-        (permission === "creator_write") === (parsed.permission === "creator_write") /*FIXME*/ &&
+        (permission === "creator_write") === (parsed.permission === "creator_write") &&
         parsed.name === name &&
         isEqual(parsed.path, path)
       ) {

@@ -22,10 +22,6 @@ export default class LocalFileStorage implements Storage {
 
     const entries = await fs.readdir(datastoreDir);
     for (const entry of entries) {
-      if (entry === ".DS_Store") {
-        // FIXME: more general solution?
-        continue;
-      }
       result.push(entry);
     }
 
