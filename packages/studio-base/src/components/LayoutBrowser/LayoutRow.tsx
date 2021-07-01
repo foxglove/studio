@@ -24,8 +24,6 @@ import { nonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined
 
 import { debugBorder } from "./styles";
 
-// FIXME: display path as part of name
-
 const useStyles = makeStyles((theme) => ({
   layoutRow: {
     cursor: "pointer",
@@ -56,6 +54,14 @@ const useStyles = makeStyles((theme) => ({
     whiteSpace: "nowrap",
     overflow: "hidden",
     lineHeight: theme.spacing.l2, // avoid descenders being cut off
+  },
+
+  pathSegment: {
+    color: theme.palette.neutralSecondary,
+  },
+  pathSeparator: {
+    color: theme.palette.neutralTertiary,
+    padding: `0 ${theme.spacing.s2}`,
   },
 }));
 
@@ -301,7 +307,17 @@ export default function LayoutRow({
             onKeyDown={onTextFieldKeyDown}
           />
         ) : (
-          layout.name
+          <>
+            {layout.path.map((item) => {
+              return (
+                <>
+                  <span className={styles.pathSegment}>{item}</span>
+                  <span className={styles.pathSeparator}>›</span>
+                </>
+              );
+            })}
+            {layout.name}
+          </>
         )}
       </Stack.Item>
 
