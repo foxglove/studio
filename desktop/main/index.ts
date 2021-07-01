@@ -14,6 +14,7 @@ import path from "path";
 import Logger from "@foxglove/log";
 
 import pkgInfo from "../../package.json";
+import { DATASTORES_DIR_NAME, FAKE_REMOTE_LAYOUT_STORE_NAME } from "../common/storage";
 import StudioWindow from "./StudioWindow";
 import getDevModeIcon from "./getDevModeIcon";
 import injectFilesToOpen from "./injectFilesToOpen";
@@ -174,8 +175,7 @@ function main() {
 
   ipcMain.handle("debug_openFakeRemoteLayoutStorageDirectory", async () => {
     const msg = await shell.openPath(
-      // FIXME: don't hardcode this?
-      path.join(app.getPath("userData"), "studio-datastores", "fake-remote-layouts"),
+      path.join(app.getPath("userData"), DATASTORES_DIR_NAME, FAKE_REMOTE_LAYOUT_STORE_NAME),
     );
     if (msg !== "") {
       throw new Error(msg);

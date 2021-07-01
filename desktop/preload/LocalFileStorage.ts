@@ -8,6 +8,7 @@ import path from "path";
 
 import Logger from "@foxglove/log";
 
+import { DATASTORES_DIR_NAME } from "../common/storage";
 import type { Storage, StorageContent } from "../common/types";
 
 const log = Logger.getLogger(__filename);
@@ -104,7 +105,7 @@ export default class LocalFileStorage implements Storage {
       throw new Error(`datastore (${datastore}) contains invalid characters`);
     }
 
-    const datastoresDir = path.join(basePath, "studio-datastores");
+    const datastoresDir = path.join(basePath, DATASTORES_DIR_NAME);
     try {
       await fs.mkdir(datastoresDir);
     } catch (err) {
