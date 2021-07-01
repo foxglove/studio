@@ -24,6 +24,8 @@ import { nonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined
 
 import { debugBorder } from "./styles";
 
+// FIXME: display path as part of name
+
 const useStyles = makeStyles((theme) => ({
   layoutRow: {
     cursor: "pointer",

@@ -29,9 +29,7 @@ import LayoutSection from "./LayoutSection";
 import showOpenFilePicker from "./showOpenFilePicker";
 import { debugBorder } from "./styles";
 
-// FIXME: show sync state
 // FIXME: sync periodically
-// FIXME  -- and vice versa, CurrentLayoutProvider needs to be cleared when current layout id is deleted
 
 export default function LayoutBrowser({
   currentDateForStorybook,

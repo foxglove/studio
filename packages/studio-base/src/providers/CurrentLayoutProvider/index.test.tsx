@@ -47,6 +47,8 @@ function mockThrow(name: string) {
 function makeMockLayoutStorage() {
   return {
     supportsSharing: false,
+    addLayoutsChangedListener: jest.fn(),
+    removeLayoutsChangedListener: jest.fn(),
     getLayouts: jest.fn().mockImplementation(mockThrow("getLayouts")),
     getLayout: jest.fn().mockImplementation(mockThrow("getLayout")),
     saveNewLayout: jest.fn().mockImplementation(mockThrow("saveNewLayout")),
@@ -309,5 +311,39 @@ describe("CurrentLayoutProvider", () => {
       { selectedLayout: { id: "TEST_ID", data: TEST_LAYOUT } },
       { selectedLayout: { id: "TEST_ID", data: newState } },
     ]);
+  });
+
+  it("unsets current layout when the current layout is deleted", async () => {
+    const layoutStorageListCalled = signal();
+    const mockLayoutStorage = makeMockLayoutStorage();
+    mockLayoutStorage.getLayout.mockImplementation(async () => {
+      return { id: "TEST_ID", path: undefined, name: "Test layout", data: TEST_LAYOUT };
+    });
+    mockLayoutStorage.getLayouts.mockImplementation(async () => {
+      layoutStorageListCalled.resolve();
+      return [];
+    });
+
+    const mockUserProfile = makeMockUserProfile();
+    mockUserProfile.getUserProfile.mockResolvedValue({ currentLayoutId: "example" });
+    mockUserProfile.setUserProfile.mockResolvedValue(undefined);
+
+    const { currentLayoutStates, childMounted } = renderTest({
+      mockLayoutStorage,
+      mockUserProfile,
+    });
+    await act(() => childMounted);
+    expect(currentLayoutStates).toEqual([{ selectedLayout: { id: "TEST_ID", data: TEST_LAYOUT } }]);
+
+    expect(mockLayoutStorage.addLayoutsChangedListener).toHaveBeenCalledTimes(1);
+    mockLayoutStorage.addLayoutsChangedListener.mock.calls[0][0]();
+
+    await act(() => layoutStorageListCalled);
+
+    expect(currentLayoutStates).toEqual([
+      { selectedLayout: { id: "TEST_ID", data: TEST_LAYOUT } },
+      { selectedLayout: undefined },
+    ]);
+    expect(mockUserProfile.setUserProfile.mock.calls).toEqual([[{ currentLayoutId: undefined }]]);
   });
 });
