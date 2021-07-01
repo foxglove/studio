@@ -308,8 +308,6 @@ export default function LayoutBrowser({
         <div style={{ flexGrow: 1 }} />
         {process.env.NODE_ENV !== "production" && layoutDebug && (
           <Stack
-            horizontal
-            wrap
             style={{
               position: "sticky",
               bottom: 0,
@@ -321,28 +319,55 @@ export default function LayoutBrowser({
             }}
             tokens={{ childrenGap: theme.spacing.s1 }}
           >
-            <Toggle
-              checked={layoutDebug.useFakeRemoteLayoutStorage}
-              onChange={(_event, newValue) =>
-                layoutDebug.setUseFakeRemoteLayoutStorage(newValue ?? false)
-              }
-              inlineLabel
-              label="Use fake remote storage"
-            />
+            <Stack.Item grow align="stretch">
+              <Toggle
+                checked={layoutDebug.useFakeRemoteLayoutStorage}
+                onChange={(_event, newValue) =>
+                  layoutDebug.setUseFakeRemoteLayoutStorage(newValue ?? false)
+                }
+                inlineLabel
+                label="Use fake remote storage"
+                styles={{
+                  root: {
+                    marginBottom: 0,
+                  },
+                }}
+              />
+            </Stack.Item>
             {layoutDebug.useFakeRemoteLayoutStorage && (
-              <>
-                <DefaultButton
-                  text="Open dir"
-                  onClick={() => layoutDebug.openFakeStorageDirectory()}
-                />
-                <DefaultButton
-                  text="Sync now"
-                  onClick={async () => {
-                    await layoutDebug.syncNow();
-                    reloadLayouts();
-                  }}
-                />
-              </>
+              <Stack.Item grow align="stretch">
+                <Stack disableShrink horizontal tokens={{ childrenGap: theme.spacing.s1 }}>
+                  <Stack.Item grow>
+                    <DefaultButton
+                      text="Open dir"
+                      onClick={() => layoutDebug.openFakeStorageDirectory()}
+                      styles={{
+                        root: {
+                          display: "block",
+                          width: "100%",
+                          margin: 0,
+                        },
+                      }}
+                    />
+                  </Stack.Item>
+                  <Stack.Item grow>
+                    <DefaultButton
+                      text="Sync now"
+                      onClick={async () => {
+                        await layoutDebug.syncNow();
+                        reloadLayouts();
+                      }}
+                      styles={{
+                        root: {
+                          display: "block",
+                          width: "100%",
+                          margin: 0,
+                        },
+                      }}
+                    />
+                  </Stack.Item>
+                </Stack>
+              </Stack.Item>
             )}
           </Stack>
         )}
