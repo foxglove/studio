@@ -16,6 +16,7 @@ import {
 import cx from "classnames";
 import { useCallback, useContext, useMemo, useState } from "react";
 
+import conflictTypeToString from "@foxglove/studio-base/components/LayoutBrowser/conflictTypeToString";
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import useConfirm from "@foxglove/studio-base/components/useConfirm";
 import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
@@ -150,19 +151,11 @@ export default function LayoutRow({
   });
 
   const tooltipContent = useMemo(() => {
-    if (layout.conflict == undefined) {
+    const conflictString = conflictTypeToString(layout.conflict);
+    if (conflictString == undefined) {
       return layout.hasUnsyncedChanges ? "Changes not synced" : undefined;
     }
-    switch (layout.conflict) {
-      case "both-update":
-        return "Someone else also updated this layout.";
-      case "local-delete-remote-update":
-        return "You deleted this layout but it has been updated on the server.";
-      case "local-update-remote-delete":
-        return "You deleted this layout but someone else updated it.";
-      case "name-collision":
-        return "A layout with this name already exists.";
-    }
+    return conflictString;
   }, [layout.conflict, layout.hasUnsyncedChanges]);
 
   const changesOrConflictsTooltip = useTooltip({ contents: tooltipContent });

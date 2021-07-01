@@ -10,6 +10,7 @@ import { useToasts } from "react-toast-notifications";
 import { useMountedState } from "react-use";
 import useAsyncFn from "react-use/lib/useAsyncFn";
 
+import conflictTypeToString from "@foxglove/studio-base/components/LayoutBrowser/conflictTypeToString";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import {
@@ -82,9 +83,12 @@ export default function LayoutBrowser({
 
   const onSaveLayout = useCallback(
     async (item: LayoutMetadata) => {
-      await layoutStorage.syncLayout(item.id);
+      const conflictString = conflictTypeToString(await layoutStorage.syncLayout(item.id));
+      if (conflictString != undefined) {
+        addToast(conflictString, { autoDismiss: true, appearance: "warning" });
+      }
     },
-    [layoutStorage],
+    [addToast, layoutStorage],
   );
 
   const onRenameLayout = useCallback(
