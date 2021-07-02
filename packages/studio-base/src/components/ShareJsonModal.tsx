@@ -2,10 +2,16 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Dialog, DialogFooter, TextField } from "@fluentui/react";
+import {
+  DefaultButton,
+  Dialog,
+  DialogFooter,
+  IconButton,
+  TextField,
+  useTheme,
+} from "@fluentui/react";
 import { useCallback, useMemo, useState } from "react";
 
-import Button from "@foxglove/studio-base/components/Button";
 import clipboard from "@foxglove/studio-base/util/clipboard";
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
 
@@ -24,6 +30,7 @@ export default function ShareJsonModal({
   noun,
   title,
 }: Props): React.ReactElement {
+  const theme = useTheme();
   const [value, setValue] = useState(JSON.stringify(initialValue, undefined, 2));
   const [copied, setCopied] = useState(false);
 
@@ -57,33 +64,83 @@ export default function ShareJsonModal({
       onDismiss={onRequestClose}
       title={title}
       subText={`Paste a new ${noun} to use it, or copy this one to share it:`}
-      styles={{
-        main: {
-          maxWidth: "700px !important",
-        },
-      }}
+      maxWidth="700px"
     >
       <TextField
         data-nativeundoredo="true"
         multiline
+        rows={10}
         autoAdjustHeight
         value={value}
         onChange={(e, newValue) => newValue != undefined && setValue(newValue)}
         autoFocus
+        errorMessage={error && "The JSON provided is invalid."}
+        spellCheck={false}
         styles={{
           field: {
             fontFamily: "monospace !important",
           },
         }}
       />
-      {error && <div className="notification is-danger">The input you provided is invalid.</div>}
-      <DialogFooter>
-        <Button primary onClick={handleSubmit} className="test-apply" disabled={error != undefined}>
-          Apply
-        </Button>
-        <Button onClick={handleDownload}>Download</Button>
-        <Button onClick={handleCopy}>{copied ? "Copied!" : "Copy"}</Button>
-        <Button onClick={() => setValue("{}")}>Clear</Button>
+      <DialogFooter
+        styles={{
+          action: {
+            margin: 0,
+          },
+          actionsRight: {
+            display: "flex",
+            justifyContent: "space-between",
+          },
+        }}
+      >
+        <div>
+          <IconButton
+            onClick={handleDownload}
+            iconProps={{ iconName: "Download" }}
+            title="Download"
+            ariaLabel="Download"
+            styles={{
+              root: {
+                color: theme.palette.neutralPrimary,
+              },
+            }}
+          />
+          <IconButton
+            onClick={handleCopy}
+            iconProps={{ iconName: copied ? "CheckMark" : "ClipboardList" }}
+            title={copied ? "Copied" : "Copy to Clipboard"}
+            ariaLabel={copied ? "Copied" : "Copy to Clipboard"}
+            styles={{
+              root: {
+                color: copied ? theme.semanticColors.successIcon : theme.palette.neutralPrimary,
+              },
+              rootFocused: {
+                color: copied ? theme.semanticColors.successIcon : theme.palette.themePrimary,
+              },
+            }}
+          />
+          <IconButton
+            onClick={() => setValue("{}")}
+            iconProps={{ iconName: "Delete" }}
+            title="Clear"
+            ariaLabel="Clear"
+            styles={{
+              root: {
+                color: theme.palette.neutralPrimary,
+              },
+              rootHovered: {
+                color: theme.semanticColors.errorText,
+              },
+            }}
+          />
+        </div>
+
+        <div>
+          <DefaultButton onClick={onRequestClose}>Cancel</DefaultButton>
+          <DefaultButton primary onClick={handleSubmit} disabled={error != undefined}>
+            Apply
+          </DefaultButton>
+        </div>
       </DialogFooter>
     </Dialog>
   );
