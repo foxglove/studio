@@ -59,7 +59,7 @@ export default function LayoutBrowser({
   );
 
   useEffect(() => {
-    const listener = async () => reloadLayouts();
+    const listener = () => void reloadLayouts();
     layoutStorage.addLayoutsChangedListener(listener);
     return () => layoutStorage.removeLayoutsChangedListener(listener);
   }, [layoutStorage, reloadLayouts]);
@@ -318,7 +318,7 @@ export default function LayoutBrowser({
                 <Stack.Item grow>
                   <DefaultButton
                     text="Open dir"
-                    onClick={async () => layoutDebug.openFakeStorageDirectory()}
+                    onClick={() => void layoutDebug.openFakeStorageDirectory()}
                     styles={{
                       root: {
                         display: "block",

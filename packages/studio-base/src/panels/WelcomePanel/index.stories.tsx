@@ -47,7 +47,7 @@ type ExampleProps = {
 
 function Example({
   mockSetConfig,
-  mockSubscribe = async () => Promise.resolve(),
+  mockSubscribe = async () => undefined,
 }: ExampleProps): React.ReactElement {
   const [config] = useState(() => {
     const configuration = makeConfiguration();
@@ -102,6 +102,4 @@ export const SubscribeFailed = (): React.ReactElement => (
   <Example mockSubscribe={async () => Promise.reject("Example subscribe error")} />
 );
 
-export const Success = (): React.ReactElement => (
-  <Example mockSubscribe={async () => Promise.resolve()} />
-);
+export const Success = (): React.ReactElement => <Example mockSubscribe={async () => undefined} />;

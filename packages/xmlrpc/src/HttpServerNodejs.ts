@@ -11,7 +11,7 @@ export class HttpServerNodejs implements HttpServer {
   private _server: http.Server;
 
   constructor() {
-    this.handler = async () => Promise.resolve({ statusCode: 404 });
+    this.handler = async () => ({ statusCode: 404 });
     this._server = new http.Server((req, res) => {
       // Read the full request body into a string
       const chunks: Uint8Array[] = [];

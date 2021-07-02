@@ -1406,7 +1406,7 @@ describe("RandomAccessPlayer", () => {
 
     it("delegates to metricsCollector on actions", async () => {
       const provider = new TestProvider();
-      provider.getMessages = async () => Promise.resolve(getMessagesResult);
+      provider.getMessages = async () => getMessagesResult;
 
       const metricsCollector = new TestMetricsCollector();
       const source = new RandomAccessPlayer(
@@ -1495,7 +1495,7 @@ describe("RandomAccessPlayer", () => {
 
   it("seeks the player after starting", async () => {
     const provider = new TestProvider();
-    provider.getMessages = jest.fn().mockImplementation(async () => Promise.resolve(getMessagesResult));
+    provider.getMessages = jest.fn().mockImplementation(async () => getMessagesResult);
     const player = new RandomAccessPlayer(
       { name: "TestProvider", args: { provider }, children: [] },
       playerOptions,
@@ -1518,7 +1518,7 @@ describe("RandomAccessPlayer", () => {
 
   it("does not seek until setListener is called to initialize the start and end time", async () => {
     const provider = new TestProvider();
-    provider.getMessages = jest.fn().mockImplementation(async () => Promise.resolve(getMessagesResult));
+    provider.getMessages = jest.fn().mockImplementation(async () => getMessagesResult);
     const player = new RandomAccessPlayer(
       { name: "TestProvider", args: { provider }, children: [] },
       playerOptions,
@@ -1540,7 +1540,7 @@ describe("RandomAccessPlayer", () => {
 
   it("keeps currentTime reference equality if current time does not change", async () => {
     const provider = new TestProvider();
-    provider.getMessages = jest.fn().mockImplementation(async () => Promise.resolve(getMessagesResult));
+    provider.getMessages = jest.fn().mockImplementation(async () => getMessagesResult);
     const player = new RandomAccessPlayer(
       { name: "TestProvider", args: { provider }, children: [] },
       playerOptions,
