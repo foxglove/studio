@@ -8,7 +8,8 @@ import { PanelStatics } from "@foxglove/studio-base/components/Panel";
 
 export type PanelInfo = {
   title: string;
-  component: ComponentType & PanelStatics<Record<string, unknown>>;
+  component: ComponentType<{ childId?: string; tabId?: string }> &
+    PanelStatics<Record<string, unknown>>;
 };
 
 // PanelCatalog describes the interface for getting available panels
