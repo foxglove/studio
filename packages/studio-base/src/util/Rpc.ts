@@ -133,7 +133,7 @@ export default class Rpc {
   // send a message across the rpc boundary to a receiver on the other side
   // this returns a promise for the receiver's response.  If there is no registered
   // receiver for the given topic, this method throws
-  send<TResult>(topic: string, data?: unknown, transfer?: Transferable[]): Promise<TResult> {
+  async send<TResult>(topic: string, data?: unknown, transfer?: Transferable[]): Promise<TResult> {
     const id = this._messageId++;
     const message = { topic, id, data };
     const result = new Promise<TResult>((resolve, reject) => {
@@ -155,11 +155,10 @@ export default class Rpc {
   // register a receiver for a given message on a topic
   // only one receiver can be registered per topic and currently
   // 'deregistering' a receiver is not supported since this is not common
-  receive<T, TOut>(topic: string, handler: (arg0: T) => TOut): Promise<void> {
+  receive<T, TOut>(topic: string, handler: (arg0: T) => TOut): void {
     if (this._receivers.has(topic)) {
       throw new Error(`Receiver already registered for topic: ${topic}`);
     }
     this._receivers.set(topic, handler);
-    return Promise.resolve();
   }
 }

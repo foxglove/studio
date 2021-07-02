@@ -42,15 +42,18 @@ if (!inSharedWorker()) {
   const rpc = new Rpc(port);
 
   // If any errors occurred while nobody was connected, send them now
-  unsentErrors.forEach((message) => rpc.send("error", message));
+  unsentErrors.forEach(async (message) => rpc.send("error", message));
   unsentErrors = [];
   (global as unknown as SharedWorkerGlobalScope).onerror = (event: ErrorEvent) => {
-    rpc.send("error", event.error.toString());
+    void rpc.send("error", event.error.toString());
   };
   (global as unknown as SharedWorkerGlobalScope).onunhandledrejection = (
     event: PromiseRejectionEvent,
   ) => {
-    rpc.send("error", String(event.reason instanceof Error ? event.reason.message : event.reason));
+    void rpc.send(
+      "error",
+      String(event.reason instanceof Error ? event.reason.message : event.reason),
+    );
   };
 
   // Just check fetch is blocked on registration, don't slow down message processing.

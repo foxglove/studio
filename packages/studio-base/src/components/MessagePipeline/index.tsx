@@ -205,7 +205,7 @@ export function MessagePipelineProvider({
       waitingForPromises: false,
     };
 
-    player.setListener((newPlayerState: PlayerState) => {
+    player.setListener(async (newPlayerState: PlayerState) => {
       warnOnOutOfSyncMessages(newPlayerState);
       if (currentPlayer.current !== player) {
         return Promise.resolve();
@@ -299,7 +299,7 @@ export function MessagePipelineProvider({
 
   React.useEffect(() => {
     let skipUpdate = false;
-    (async () => {
+    void (async () => {
       // Wait for the current frame to finish rendering if needed
       await pauseFrameForPromises(playerTickState.current.promisesToWaitFor ?? []);
 

@@ -57,7 +57,7 @@ describe("RpcWorkerUtils and RpcMainThreadUtils", () => {
       });
 
       const worker = new Rpc(workerChannel);
-      worker.send("sendNotification", {
+      void worker.send("sendNotification", {
         message: "test",
         details: "details",
         type: "user",

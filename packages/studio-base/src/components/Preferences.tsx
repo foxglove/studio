@@ -112,7 +112,7 @@ function TimezoneSettings(): React.ReactElement {
       selectedKey={selectedItem.key}
       onChange={(_event, option) => {
         if (option) {
-          setTimezone(option.data);
+          void setTimezone(option.data);
         }
       }}
       onPendingValueChanged={onPendingValueChanged}
@@ -125,7 +125,7 @@ function TimezoneSettings(): React.ReactElement {
 }
 
 function MessageFramerate(): React.ReactElement {
-  const [messageRate, setMesageRate] = useAppConfigurationValue<number>(AppSetting.MESSAGE_RATE);
+  const [messageRate, setMessageRate] = useAppConfigurationValue<number>(AppSetting.MESSAGE_RATE);
   const entries = useMemo(
     () => MESSAGE_RATES.map((rate) => ({ key: rate, text: `${rate}`, data: rate })),
     [],
@@ -140,7 +140,7 @@ function MessageFramerate(): React.ReactElement {
       selectedKey={messageRate ?? 60}
       onChange={(_event, option) => {
         if (option) {
-          setMesageRate(option.data);
+          void setMessageRate(option.data);
         }
       }}
       calloutProps={{
@@ -170,7 +170,7 @@ function RosHostname(): React.ReactElement {
       label="ROS_HOSTNAME"
       placeholder={rosHostnamePlaceholder}
       value={rosHostname ?? ""}
-      onChange={(_event, newValue) => setRosHostname(nonEmptyOrUndefined(newValue))}
+      onChange={(_event, newValue) => void setRosHostname(nonEmptyOrUndefined(newValue))}
     />
   );
 }
@@ -227,12 +227,12 @@ export default function Preferences(): React.ReactElement {
             </Text>
             <Checkbox
               checked={telemetryEnabled ?? true}
-              onChange={(_event, checked) => setTelemetryEnabled(checked)}
+              onChange={(_event, checked) => void setTelemetryEnabled(checked)}
               label={`Send anonymized usage data to help us improve Foxglove Studio`}
             />
             <Checkbox
               checked={crashReportingEnabled ?? true}
-              onChange={(_event, checked) => setCrashReportingEnabled(checked)}
+              onChange={(_event, checked) => void setCrashReportingEnabled(checked)}
               label="Send anonymized crash reports"
             />
           </Stack>

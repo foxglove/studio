@@ -163,7 +163,7 @@ describe("Rpc", () => {
     expect(result).toEqual([1, 2, 3]);
   });
 
-  it("throws when registering a receiver twice", async () => {
+  it("throws when registering a receiver twice", () => {
     const rpc = new Rpc(createLinkedChannels().local);
     rpc.receive("foo", () => {
       // no-op

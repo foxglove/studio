@@ -429,8 +429,8 @@ storiesOf("panels/ThreeDimensionalViz/Interactions/Interaction", module)
     );
   });
 
-const selectObject = () => simulateDragClick([468, 340]);
-const deselectObject = () => simulateDragClick([515, 630]);
+const selectObject = async () => simulateDragClick([468, 340]);
+const deselectObject = async () => simulateDragClick([515, 630]);
 
 storiesOf("panels/ThreeDimensionalViz/interactions/open-close behavior", module)
   .addParameters({ chromatic: { delay: 2500 } })
@@ -441,7 +441,7 @@ storiesOf("panels/ThreeDimensionalViz/interactions/open-close behavior", module)
           onMount={(_) =>
             setImmediate(async () => {
               await delay(250);
-              selectObject();
+              await selectObject();
             })
           }
         />
@@ -459,7 +459,7 @@ storiesOf("panels/ThreeDimensionalViz/interactions/open-close behavior", module)
                 document.querySelectorAll('[data-test="ExpandingToolbar-Drawing tools"]')[0] as any
               ).click(); // Start drawing
               await delay(250);
-              selectObject();
+              await selectObject();
             })
           }
         />
@@ -473,9 +473,9 @@ storiesOf("panels/ThreeDimensionalViz/interactions/open-close behavior", module)
           onMount={(_) =>
             setImmediate(async () => {
               await delay(250);
-              selectObject();
+              await selectObject();
               await tick();
-              deselectObject();
+              await deselectObject();
             })
           }
         />
@@ -489,7 +489,7 @@ storiesOf("panels/ThreeDimensionalViz/interactions/open-close behavior", module)
           initialConfigOverride={{ disableAutoOpenClickedObject: true }}
           onMount={(_) =>
             setImmediate(async () => {
-              selectObject();
+              await selectObject();
             })
           }
         />

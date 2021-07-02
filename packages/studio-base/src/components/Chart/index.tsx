@@ -93,7 +93,7 @@ function Chart(props: Props): JSX.Element {
 
   // helper function to send rpc to our worker - all invocations need an _id_ so we inject it here
   const rpcSend = useCallback(
-    <T extends unknown>(
+    async <T extends unknown>(
       topic: string,
       payload?: Record<string, unknown>,
       transferables?: Transferable[],
@@ -107,7 +107,7 @@ function Chart(props: Props): JSX.Element {
   useLayoutEffect(() => {
     const actualId = id;
     return () => {
-      rpcSend("destroy");
+      void rpcSend("destroy");
       webWorkerManager.unregisterWorkerListener(actualId);
     };
   }, [id, rpcSend]);
@@ -308,7 +308,7 @@ function Chart(props: Props): JSX.Element {
 
   const onMouseUp = useCallback(
     async (event: React.MouseEvent<HTMLCanvasElement>) => {
-      rpcSend("mouseup", {
+      return rpcSend("mouseup", {
         event: rpcMouseEvent(event),
       });
     },

@@ -124,7 +124,7 @@ export function getBlocksToKeep({
       // If we don't have size, there are no blocks to keep!
       const sizeInBytes = blockSizesInBytes[blockIndex];
 
-      if (sizeInBytes === undefined) {
+      if (sizeInBytes == undefined) {
         continue;
       }
 
@@ -374,7 +374,7 @@ export default class MemoryCacheDataProvider implements DataProvider {
     });
   }
 
-  close(): Promise<void> {
+  async close(): Promise<void> {
     delete this._currentConnection; // Make sure that the current "connection" loop stops executing.
 
     return this._provider.close();
@@ -472,7 +472,7 @@ export default class MemoryCacheDataProvider implements DataProvider {
     }
 
     // Then see if we need to set a new connection based on the new connection and read requests state.
-    this._maybeRunNewConnections();
+    void this._maybeRunNewConnections();
   }
 
   _getNewConnection(): Range | undefined {

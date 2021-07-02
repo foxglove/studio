@@ -75,14 +75,14 @@ export default function PanelSetupWithBag({
   }, [fixture, frameHistoryCompatibility]);
 
   useEffect(() => {
-    (async () => {
+    void (async () => {
       const player = new StoryPlayer([bag, bag2].filter(Boolean) as string[]);
       const formattedSubscriptions: SubscribePayload[] = flatten(
         (subscriptions ?? []).map((topic) => [{ topic }]),
       );
       player.setSubscriptions(formattedSubscriptions);
 
-      player.setListener(({ activeData }: PlayerState) => {
+      player.setListener(async ({ activeData }: PlayerState) => {
         if (!activeData) {
           return Promise.resolve();
         }

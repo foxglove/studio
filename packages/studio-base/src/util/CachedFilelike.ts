@@ -102,7 +102,7 @@ export default class CachedFilelike implements Filelike {
   }
 
   async open(): Promise<void> {
-    if (this._fileSize !== undefined) {
+    if (this._fileSize != undefined) {
       return;
     }
     const { size } = await this._fileReader.open();
@@ -126,7 +126,7 @@ export default class CachedFilelike implements Filelike {
 
   // Get the file size. Requires a call to `open()` or `read()` first.
   size(): number {
-    if (this._fileSize === undefined) {
+    if (this._fileSize == undefined) {
       throw new Error("CachedFilelike has not been opened");
     }
     return this._fileSize;
@@ -149,16 +149,20 @@ export default class CachedFilelike implements Filelike {
       throw new Error(`Requested more data than cache size: ${length} > ${this._cacheSizeInBytes}`);
     }
 
-    this.open().then(() => {
-      const size = this.size();
-      if (range.end > size) {
-        callback(new Error(`CachedFilelike#read past size`));
-        return;
-      }
+    this.open()
+      .then(() => {
+        const size = this.size();
+        if (range.end > size) {
+          callback(new Error(`CachedFilelike#read past size`));
+          return;
+        }
 
-      this._readRequests.push({ range, callback, requestTime: Date.now() });
-      this._updateState();
-    });
+        this._readRequests.push({ range, callback, requestTime: Date.now() });
+        this._updateState();
+      })
+      .catch((err) => {
+        callback(err);
+      });
   }
 
   // Gets called any time our connection or read requests change.

@@ -97,7 +97,7 @@ export default class Ros1Player implements Player {
     this._hostname = hostname;
     this._start = fromMillis(Date.now());
     this._metricsCollector.playerConstructed();
-    this._open();
+    void this._open();
   }
 
   private _open = async (): Promise<void> => {
@@ -113,11 +113,11 @@ export default class Ros1Player implements Player {
 
     const net = await Sockets.Create();
     const httpServer = await net.createHttpServer();
-    const tcpSocketCreate = (options: { host: string; port: number }): Promise<TcpSocket> => {
+    const tcpSocketCreate = async (options: { host: string; port: number }): Promise<TcpSocket> => {
       return net.createSocket(options.host, options.port);
     };
     const tcpServer = await net.createServer();
-    tcpServer.listen(undefined, hostname, 10);
+    void tcpServer.listen(undefined, hostname, 10);
 
     if (this._rosNode == undefined) {
       const rosNode = new RosNode({
@@ -246,7 +246,7 @@ export default class Ros1Player implements Player {
     }
   };
 
-  private _emitState = debouncePromise(() => {
+  private _emitState = debouncePromise(async () => {
     if (!this._listener || this._closed) {
       return Promise.resolve();
     }
@@ -515,7 +515,7 @@ export default class Ros1Player implements Player {
 
   private _addInternalSubscriptions(subscriptions: SubscribePayload[]): void {
     // Always subscribe to /clock if available
-    if (subscriptions.find((sub) => sub.topic === "/clock") === undefined) {
+    if (subscriptions.find((sub) => sub.topic === "/clock") == undefined) {
       subscriptions.unshift({
         topic: "/clock",
         requester: { type: "other", name: "Ros1Player" },

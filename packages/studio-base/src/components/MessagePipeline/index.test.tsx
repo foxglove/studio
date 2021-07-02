@@ -94,9 +94,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       initialProps: { maybePlayer: { player } },
     });
 
-    act(() => {
-      player.emit();
-    });
+    await act(async () => player.emit());
     expect(result.all).toEqual([
       expect.objectContaining({
         playerState: {
@@ -129,8 +127,8 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     rerender({ maybePlayer: { loading: true } });
     rerender({ maybePlayer: { error: new Error("failed to load player") } });
     rerender({ maybePlayer: { player } });
-    await act(() => player.emit());
-    await act(() => player.emit({ presence: PlayerPresence.RECONNECTING }));
+    await act(async () => player.emit());
+    await act(async () => player.emit({ presence: PlayerPresence.RECONNECTING }));
     expect(
       result.all.map((ctx) => {
         if (ctx instanceof Error) {
@@ -149,16 +147,16 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     sendNotification.expectCalledDuringTest();
   });
 
-  it("throws an error when the player emits before the previous emit has been resolved", () => {
+  it("throws an error when the player emits before the previous emit has been resolved", async () => {
     const player = new FakePlayer();
     renderHook(Hook, {
       wrapper: Wrapper,
       initialProps: { maybePlayer: { player } },
     });
     act(() => {
-      player.emit();
+      void player.emit();
     });
-    expect(() => player.emit()).toThrow(
+    await expect(async () => player.emit()).rejects.toThrow(
       "New playerState was emitted before last playerState was rendered.",
     );
   });
@@ -188,7 +186,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     expect(mockSetGlobalVariables.mock.calls).toEqual([[{}], [{ futureTime: 1 }]]);
   });
 
-  it("sets subscriptions", () => {
+  it("sets subscriptions", async () => {
     const player = new FakePlayer();
     const { result } = renderHook(Hook, {
       wrapper: Wrapper,
@@ -209,14 +207,12 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     ]);
     const lastSubscriptions = result.current.subscriptions;
     // cause the player to emit a frame outside the render loop to trigger another render
-    act(() => {
-      player.emit();
-    });
+    await act(async () => player.emit());
     // make sure subscriptions are reference equal when they don't change
     expect(result.current.subscriptions).toBe(lastSubscriptions);
   });
 
-  it("sets publishers", () => {
+  it("sets publishers", async () => {
     const player = new FakePlayer();
     const { result } = renderHook(Hook, {
       wrapper: Wrapper,
@@ -244,9 +240,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
 
     const lastPublishers = result.current.publishers;
     // cause the player to emit a frame outside the render loop to trigger another render
-    act(() => {
-      player.emit();
-    });
+    await act(async () => player.emit());
     // make sure publishers are reference equal when they don't change
     expect(result.current.publishers).toBe(lastPublishers);
   });
@@ -259,7 +253,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     });
 
     const lastContext = result.current;
-    await act(() => player.emit());
+    await act(async () => player.emit());
     for (const [key, value] of Object.entries(result.current)) {
       if (typeof value === "function") {
         expect((lastContext as Record<string, unknown>)[key]).toBe(value);
@@ -278,9 +272,9 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     expect(result.all.length).toBe(1);
     // Now wait for the player state emit cycle to complete.
     // This promise should resolve when the render loop finishes.
-    await act(() => player.emit());
+    await act(async () => player.emit());
     expect(result.all.length).toBe(2);
-    await act(() => player.emit());
+    await act(async () => player.emit());
     expect(result.all.length).toBe(3);
   });
 
@@ -335,7 +329,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
         initialProps: { maybePlayer: { player } },
       }));
 
-      await act(() => player.emit());
+      await act(async () => player.emit());
       expect(result.all.length).toBe(2);
 
       player2 = new FakePlayer();
@@ -346,9 +340,9 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     });
 
     it("closes old player when new player is supplied and stops old player message flow", async () => {
-      await act(() => player2.emit());
+      await act(async () => player2.emit());
       expect(result.all.length).toBe(5);
-      await act(() => player.emit());
+      await act(async () => player.emit());
       expect(result.all.length).toBe(5);
       expect(
         result.all.map((ctx) => {
@@ -361,9 +355,9 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     });
 
     it("does not think the old player is the new player if it emits first", async () => {
-      await act(() => player.emit());
+      await act(async () => player.emit());
       expect(result.all.length).toBe(4);
-      await act(() => player2.emit());
+      await act(async () => player2.emit());
       expect(result.all.length).toBe(5);
       expect(
         result.all.map((ctx) => {
@@ -427,7 +421,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       parsedMessageDefinitionsByTopic: {},
       totalBytesReceived: 1234,
     };
-    await act(() => player.emit({ activeData }));
+    await act(async () => player.emit({ activeData }));
     expect(result.all.length).toBe(2);
 
     rerender({ maybePlayer: { player: undefined } });
@@ -451,7 +445,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       });
 
       await act(async () => {
-        player.emit().then(() => {
+        return player.emit().then(() => {
           hasFinishedFrame = true;
         });
       });
@@ -474,7 +468,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       // Trigger the next emit.
       let hasFinishedFrame = false;
       await act(async () => {
-        player.emit().then(() => {
+        void player.emit().then(() => {
           hasFinishedFrame = true;
         });
       });
@@ -508,7 +502,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
 
         let hasFinishedFrame = false;
         await act(async () => {
-          player.emit().then(() => {
+          void player.emit().then(() => {
             hasFinishedFrame = true;
           });
         });
@@ -545,7 +539,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       // Then trigger the next emit.
       let hasFinishedFrame = false;
       await act(async () => {
-        player.emit().then(() => {
+        void player.emit().then(() => {
           hasFinishedFrame = true;
         });
       });
@@ -568,7 +562,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       // Then trigger the next emit.
       let hasFinishedFrame = false;
       await act(async () => {
-        player.emit().then(() => {
+        void player.emit().then(() => {
           hasFinishedFrame = true;
         });
       });
@@ -593,7 +587,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       // Then trigger the next emit.
       let hasFinishedFrame = false;
       await act(async () => {
-        player.emit().then(() => {
+        void player.emit().then(() => {
           hasFinishedFrame = true;
         });
       });
@@ -614,9 +608,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       const firstPlayerResumeFn = result.current.pauseFrame("");
 
       // Then trigger the next emit.
-      await act(async () => {
-        player.emit();
-      });
+      act(() => void player.emit());
       await delay(20);
 
       // Replace the player.
@@ -627,7 +619,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
       const secondPlayerResumeFn = result.current.pauseFrame("");
       let secondPlayerHasFinishedFrame = false;
       await act(async () => {
-        newPlayer.emit().then(() => {
+        void newPlayer.emit().then(() => {
           secondPlayerHasFinishedFrame = true;
         });
       });

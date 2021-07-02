@@ -20,7 +20,7 @@ export default function CurrentUserProvider(props: PropsWithChildren<unknown>): 
   const api = useConsoleApi();
   const [bearerToken] = useLocalStorage<string>("fox.bearer-token");
 
-  const { loading, value, error } = useAsync(() => {
+  const { loading, value, error } = useAsync(async () => {
     if (!isNonEmptyOrUndefined(bearerToken)) {
       return Promise.resolve(undefined);
     }

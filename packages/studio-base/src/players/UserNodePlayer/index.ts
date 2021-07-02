@@ -123,7 +123,7 @@ export default class UserNodePlayer implements Player {
 
   constructor(player: Player, userNodeActions: UserNodeActions) {
     this._player = player;
-    this._player.setListener((state) => this._onPlayerState(state));
+    this._player.setListener(async (state) => this._onPlayerState(state));
     const { setUserNodeDiagnostics, addUserNodeLogs, setUserNodeRosLib } = userNodeActions;
 
     // TODO(troy): can we make the below action flow better? Might be better to
@@ -298,7 +298,7 @@ export default class UserNodePlayer implements Player {
             });
 
             // trigger listener updates
-            this._emitState();
+            void this._emitState();
           };
 
           const port: MessagePort = worker.port;
@@ -310,7 +310,7 @@ export default class UserNodePlayer implements Player {
               message: `Node playground runtime error: ${String(event.data)}`,
             });
 
-            this._emitState();
+            void this._emitState();
           };
           port.start();
           rpc = new Rpc(port);
@@ -323,7 +323,7 @@ export default class UserNodePlayer implements Player {
               message: `Node playground runtime error: ${msg}`,
             });
 
-            this._emitState();
+            void this._emitState();
           });
         }
 
@@ -444,7 +444,7 @@ export default class UserNodePlayer implements Player {
           message: `Node playground error: ${event.message}`,
         });
 
-        this._emitState();
+        void this._emitState();
       };
 
       const port: MessagePort = worker.port;
@@ -456,7 +456,7 @@ export default class UserNodePlayer implements Player {
           message: `Node playground error: ${String(event.data)}`,
         });
 
-        this._emitState();
+        void this._emitState();
       };
       port.start();
       const rpc = new Rpc(port);
@@ -469,7 +469,7 @@ export default class UserNodePlayer implements Player {
           message: `Node playground error: ${msg}`,
         });
 
-        this._emitState();
+        void this._emitState();
       });
 
       this._nodeTransformRpc = rpc;
@@ -716,7 +716,7 @@ export default class UserNodePlayer implements Player {
     }
     this._player.close();
     if (this._nodeTransformRpc) {
-      this._nodeTransformRpc.send("close");
+      void this._nodeTransformRpc.send("close");
     }
   };
 

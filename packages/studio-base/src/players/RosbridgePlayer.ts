@@ -118,7 +118,7 @@ export default class RosbridgePlayer implements Player {
       this._rosClient = rosClient;
 
       this._setupPublishers();
-      this._requestTopics();
+      void this._requestTopics();
     });
 
     rosClient.on("error", (err) => {
@@ -254,7 +254,7 @@ export default class RosbridgePlayer implements Player {
     }
   };
 
-  _emitState = debouncePromise(() => {
+  _emitState = debouncePromise(async () => {
     if (!this._listener || this._closed) {
       return Promise.resolve();
     }
@@ -470,7 +470,7 @@ export default class RosbridgePlayer implements Player {
 
   private _addInternalSubscriptions(subscriptions: SubscribePayload[]): void {
     // Always subscribe to /clock if available
-    if (subscriptions.find((sub) => sub.topic === "/clock") === undefined) {
+    if (subscriptions.find((sub) => sub.topic === "/clock") == undefined) {
       subscriptions.unshift({
         topic: "/clock",
         requester: { type: "other", name: "Ros1Player" },
