@@ -14,8 +14,6 @@
 
 import { mount } from "enzyme";
 
-import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
-
 import ShareJsonModal from "./ShareJsonModal";
 
 describe("<ShareJsonModal />", () => {
@@ -25,21 +23,20 @@ describe("<ShareJsonModal />", () => {
       done();
     };
     const wrapper = mount(
-      <ThemeProvider>
-        <div data-modalcontainer="true">
-          <ShareJsonModal
-            onRequestClose={() => {
-              // no-op
-            }}
-            value={{}}
-            onChange={pass}
-            noun="layout"
-          />
-        </div>
-      </ThemeProvider>,
+      <div data-modalcontainer="true">
+        <ShareJsonModal
+          title="Foo"
+          onRequestClose={() => {
+            // no-op
+          }}
+          initialValue={{}}
+          onChange={pass}
+          noun="layout"
+        />
+      </div>,
     );
-    const newValue = btoa(JSON.stringify({ id: "foo" }));
-    wrapper.find(".textarea").simulate("change", { target: { value: newValue } });
+    const newValue = JSON.stringify({ id: "foo" });
+    wrapper.find("textarea").simulate("change", { target: { value: newValue } });
     wrapper.find("Button[children='Apply']").first().simulate("click");
     expect(wrapper.find(".is-danger").exists()).toBe(false);
   });
@@ -49,21 +46,20 @@ describe("<ShareJsonModal />", () => {
       done("Change callback was fired unexpectedly");
     };
     const wrapper = mount(
-      <ThemeProvider>
-        <div data-modalcontainer="true">
-          <ShareJsonModal
-            onRequestClose={() => {
-              // no-op
-            }}
-            value={{}}
-            onChange={fail}
-            noun="layout"
-          />
-        </div>
-      </ThemeProvider>,
+      <div data-modalcontainer="true">
+        <ShareJsonModal
+          title="Foo"
+          onRequestClose={() => {
+            // no-op
+          }}
+          initialValue={{}}
+          onChange={fail}
+          noun="layout"
+        />
+      </div>,
     );
     const newValue = "asdlkfjasdf";
-    wrapper.find(".textarea").simulate("change", { target: { value: newValue } });
+    wrapper.find("textarea").simulate("change", { target: { value: newValue } });
     wrapper.find("Button[children='Apply']").first().simulate("click");
     expect(wrapper.find(".is-danger").exists()).toBe(true);
     done();
@@ -75,27 +71,24 @@ describe("<ShareJsonModal />", () => {
       done();
     };
     const wrapper = mount(
-      <ThemeProvider>
-        <div data-modalcontainer="true">
-          <ShareJsonModal
-            onRequestClose={() => {
-              // no-op
-            }}
-            value={{}}
-            onChange={pass}
-            noun="layout"
-          />
-        </div>
-      </ThemeProvider>,
+      <div data-modalcontainer="true">
+        <ShareJsonModal
+          title="Foo"
+          onRequestClose={() => {
+            // no-op
+          }}
+          initialValue={{}}
+          onChange={pass}
+          noun="layout"
+        />
+      </div>,
     );
-    const newValue = btoa(
-      JSON.stringify({
-        layout: "RosOut!cuuf9u",
-        savedProps: {},
-        globalVariables: {},
-      }),
-    );
-    wrapper.find(".textarea").simulate("change", { target: { value: newValue } });
+    const newValue = JSON.stringify({
+      layout: "RosOut!cuuf9u",
+      savedProps: {},
+      globalVariables: {},
+    });
+    wrapper.find("textarea").simulate("change", { target: { value: newValue } });
     wrapper.find("Button[children='Apply']").first().simulate("click");
     expect(wrapper.find(".is-danger").exists()).toBe(false);
   });
