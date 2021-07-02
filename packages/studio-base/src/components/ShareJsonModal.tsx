@@ -77,9 +77,7 @@ export default function ShareJsonModal({
         errorMessage={error && "The JSON provided is invalid."}
         spellCheck={false}
         styles={{
-          field: {
-            fontFamily: "monospace !important",
-          },
+          field: { fontFamily: "monospace !important" },
         }}
       />
       <DialogFooter
@@ -100,9 +98,7 @@ export default function ShareJsonModal({
             title="Download"
             ariaLabel="Download"
             styles={{
-              root: {
-                color: theme.palette.neutralPrimary,
-              },
+              root: { color: theme.palette.neutralPrimary },
             }}
           />
           <IconButton
@@ -125,12 +121,8 @@ export default function ShareJsonModal({
             title="Clear"
             ariaLabel="Clear"
             styles={{
-              root: {
-                color: theme.palette.neutralPrimary,
-              },
-              rootHovered: {
-                color: theme.semanticColors.errorText,
-              },
+              root: { color: theme.palette.neutralPrimary },
+              rootHovered: { color: theme.semanticColors.errorText },
             }}
           />
         </div>
