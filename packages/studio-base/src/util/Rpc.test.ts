@@ -172,7 +172,7 @@ describe("Rpc", () => {
       rpc.receive("foo", () => {
         // no-op
       }),
-    ).toThrow();
+    ).rejects.toThrow();
   });
 
   // Regression test for memory leak.

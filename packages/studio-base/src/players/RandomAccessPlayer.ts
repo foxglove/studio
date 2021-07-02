@@ -250,7 +250,7 @@ export default class RandomAccessPlayer implements Player {
 
   _emitState = debouncePromise(async () => {
     if (!this._listener) {
-      return Promise.resolve();
+      return;
     }
 
     if (this._hasError) {
@@ -476,6 +476,7 @@ export default class RandomAccessPlayer implements Player {
   }
 
   startPlayback(): void {
+    console.log("start playback, isPlaying=", this._isPlaying, this._emitState.currentPromise);
     if (this._isPlaying) {
       return;
     }
@@ -486,6 +487,7 @@ export default class RandomAccessPlayer implements Player {
   }
 
   pausePlayback(): void {
+    console.log("pause playback, isPlaying=", this._isPlaying, this._emitState.currentPromise);
     if (!this._isPlaying) {
       return;
     }

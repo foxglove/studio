@@ -73,7 +73,7 @@ export default class TestProvider implements DataProvider {
 
   async initialize(extensionPoint: ExtensionPoint): Promise<InitializationResult> {
     this.extensionPoint = extensionPoint;
-    return Promise.resolve({
+    return {
       start: this._start,
       end: this._end,
       topics: this._topics,
@@ -85,7 +85,7 @@ export default class TestProvider implements DataProvider {
         messageDefinitionsByTopic: {},
         parsedMessageDefinitionsByTopic: {},
       },
-    });
+    };
   }
 
   getMessages: GetMessages = async (
@@ -98,6 +98,5 @@ export default class TestProvider implements DataProvider {
 
   async close(): Promise<void> {
     this.closed = true;
-    return Promise.resolve();
   }
 }
