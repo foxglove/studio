@@ -63,8 +63,11 @@ export default function ShareJsonModal({
       hidden={false}
       onDismiss={onRequestClose}
       title={title}
-      subText={`Paste a new ${noun} to use it, or copy this one to share it:`}
-      maxWidth="700px"
+      modalProps={{ isBlocking: true }}
+      dialogContentProps={{
+        subText: `Paste a new ${noun} to use it, or copy this one to share it:`,
+      }}
+      maxWidth={`calc(100vw - ${theme.spacing.l2})`}
     >
       <TextField
         data-nativeundoredo="true"
@@ -77,7 +80,7 @@ export default function ShareJsonModal({
         errorMessage={error && "The JSON provided is invalid."}
         spellCheck={false}
         styles={{
-          field: { fontFamily: "monospace !important" },
+          field: { fontFamily: "monospace !important", maxHeight: "60vh", overflowY: "auto" },
         }}
       />
       <DialogFooter
@@ -127,12 +130,9 @@ export default function ShareJsonModal({
           />
         </div>
 
-        <div>
-          <DefaultButton onClick={onRequestClose}>Cancel</DefaultButton>
-          <DefaultButton primary onClick={handleSubmit} disabled={error != undefined}>
-            Apply
-          </DefaultButton>
-        </div>
+        <DefaultButton disabled={error != undefined} primary onClick={handleSubmit}>
+          Apply
+        </DefaultButton>
       </DialogFooter>
     </Dialog>
   );
