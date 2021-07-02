@@ -2286,7 +2286,7 @@ __metadata:
     browserify-zlib: 0.2.0
     chart.js: 3.4.0
     chartjs-plugin-annotation: 1.0.2
-    chartjs-plugin-datalabels: 2.0.0-rc.1
+    chartjs-plugin-datalabels: 2.0.0
     chartjs-plugin-zoom: "github:foxglove/chartjs-plugin-zoom#656541279943f00dce600288435f83c436293146"
     chromatic: 5.9.2
     circular-dependency-plugin: 5.2.2
@@ -8845,12 +8845,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chartjs-plugin-datalabels@npm:2.0.0-rc.1":
-  version: 2.0.0-rc.1
-  resolution: "chartjs-plugin-datalabels@npm:2.0.0-rc.1"
+"chartjs-plugin-datalabels@npm:2.0.0":
+  version: 2.0.0
+  resolution: "chartjs-plugin-datalabels@npm:2.0.0"
   peerDependencies:
     chart.js: ^3.0.0
-  checksum: 6c3b4e23fa926096e2f95bcfc7de7d532cec0e96f5cc7d661e115d3f750bf1c2f9fb7cd0d94a8b1bb7e6e824532f15198f623ba008269a234a250ce78e9c10bf
+  checksum: aa59cabc57feca686281033f6160c4f7e84f973e5ad27e794daa7a6bc8dbf7a14055fee4c05df6a9d8c7be66ec0a59203244e8f528fce3dfd13847bf92d7aa7c
   languageName: node
   linkType: hard
 
