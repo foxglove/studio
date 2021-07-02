@@ -11,7 +11,7 @@ class FakeConsoleApi extends ConsoleApi {
     super("");
   }
 
-  override orgs(): Promise<Org[]> {
+  async override orgs(): Promise<Org[]> {
     return Promise.resolve([{ id: "1234", slug: "Slug" }]);
   }
 }

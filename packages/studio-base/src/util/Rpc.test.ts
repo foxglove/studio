@@ -168,7 +168,7 @@ describe("Rpc", () => {
     rpc.receive("foo", () => {
       // no-op
     });
-    expect(() =>
+    expect(async () =>
       rpc.receive("foo", () => {
         // no-op
       }),

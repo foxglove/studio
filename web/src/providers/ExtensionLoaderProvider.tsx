@@ -19,8 +19,8 @@ export default function ExtensionRegistryProvider(props: PropsWithChildren<unkno
       const extensions: ExtensionInfo[] = [];
 
       const loader: ExtensionLoader = {
-        getExtensions: () => Promise.resolve(extensions),
-        loadExtension: (_id: string): Promise<string> => {
+        getExtensions: async () => Promise.resolve(extensions),
+        loadExtension: async (_id: string): Promise<string> => {
           throw new Error(`not implemented`);
         },
         downloadExtension,
@@ -32,8 +32,8 @@ export default function ExtensionRegistryProvider(props: PropsWithChildren<unkno
       log.error(err);
 
       const loader: ExtensionLoader = {
-        getExtensions: () => Promise.resolve([]),
-        loadExtension: () => Promise.resolve(""),
+        getExtensions: async () => Promise.resolve([]),
+        loadExtension: async () => Promise.resolve(""),
         downloadExtension,
         installExtension,
         uninstallExtension,

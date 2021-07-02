@@ -71,7 +71,7 @@ export default class TestProvider implements DataProvider {
     }
   }
 
-  initialize(extensionPoint: ExtensionPoint): Promise<InitializationResult> {
+  async initialize(extensionPoint: ExtensionPoint): Promise<InitializationResult> {
     this.extensionPoint = extensionPoint;
     return Promise.resolve({
       start: this._start,
@@ -88,7 +88,7 @@ export default class TestProvider implements DataProvider {
     });
   }
 
-  getMessages: GetMessages = (
+  getMessages: GetMessages = async (
     _start: Time,
     _end: Time,
     _topics: GetMessagesTopics,
@@ -96,7 +96,7 @@ export default class TestProvider implements DataProvider {
     throw new Error("not implemented");
   };
 
-  close(): Promise<void> {
+  async close(): Promise<void> {
     this.closed = true;
     return Promise.resolve();
   }

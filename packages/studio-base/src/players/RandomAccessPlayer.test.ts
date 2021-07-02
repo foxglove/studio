@@ -56,7 +56,7 @@ class MessageStore {
     });
   }
 
-  add = (message: PlayerState): Promise<void> => {
+  add = async (message: PlayerState): Promise<void> => {
     this._messages.push(omit(message, ["playerId"]));
     if (this._messages.length === this._expected) {
       this._resolve(this._messages);
@@ -167,7 +167,7 @@ describe("RandomAccessPlayer", () => {
     const store = new MessageStore(2);
     source.setListener(store.add);
     // make getMessages do nothing since we're going to start reading
-    provider.getMessages = () =>
+    provider.getMessages = async () =>
       new Promise(() => {
         // no-op
       });
@@ -268,7 +268,7 @@ describe("RandomAccessPlayer", () => {
     expect.assertions(7);
     const provider = new TestProvider();
     let callCount = 0;
-    provider.getMessages = (
+    provider.getMessages = async (
       start: Time,
       end: Time,
       topics: GetMessagesTopics,
@@ -342,7 +342,7 @@ describe("RandomAccessPlayer", () => {
 
   it("does not ask the data provider for data when it has no subscriptions", async () => {
     const provider = new TestProvider();
-    provider.getMessages = (): Promise<GetMessagesResult> => {
+    provider.getMessages = async (): Promise<GetMessagesResult> => {
       throw new Error("getMessages should not be called");
     };
 
@@ -380,7 +380,7 @@ describe("RandomAccessPlayer", () => {
     );
 
     let callCount = 0;
-    provider.getMessages = (
+    provider.getMessages = async (
       start: Time,
       end: Time,
       topics: GetMessagesTopics,
@@ -434,7 +434,7 @@ describe("RandomAccessPlayer", () => {
     );
 
     let callCount = 0;
-    provider.getMessages = (
+    provider.getMessages = async (
       start: Time,
       end: Time,
       topics: GetMessagesTopics,
@@ -751,7 +751,7 @@ describe("RandomAccessPlayer", () => {
       playerOptions,
     );
     let callCount = 0;
-    provider.getMessages = (
+    provider.getMessages = async (
       start: Time,
       end: Time,
       topics: GetMessagesTopics,
@@ -852,7 +852,7 @@ describe("RandomAccessPlayer", () => {
     );
     let callCount = 0;
     let backfillPromiseCallback: any;
-    provider.getMessages = (
+    provider.getMessages = async (
       start: Time,
       end: Time,
       topics: GetMessagesTopics,
@@ -951,7 +951,7 @@ describe("RandomAccessPlayer", () => {
     source.requestBackfill(); // We always get a `requestBackfill` after each `setSubscriptions`.
 
     let lastGetMessagesCall: any;
-    const getMessages = (
+    const getMessages = async (
       start: Time,
       end: Time,
       topics: GetMessagesTopics,
@@ -1012,7 +1012,7 @@ describe("RandomAccessPlayer", () => {
     );
 
     let callCount = 0;
-    provider.getMessages = (
+    provider.getMessages = async (
       _start: Time,
       _end: Time,
       topics: GetMessagesTopics,
@@ -1095,7 +1095,7 @@ describe("RandomAccessPlayer", () => {
     ];
     let resolve: any;
     const done = new Promise((_resolve) => (resolve = _resolve));
-    provider.getMessages = (
+    provider.getMessages = async (
       _start: Time,
       _end: Time,
       topics: GetMessagesTopics,
@@ -1114,7 +1114,7 @@ describe("RandomAccessPlayer", () => {
       playerOptions,
     );
     const messagesReceived: MessageEvent<unknown>[] = [];
-    source.setListener((playerState) => {
+    source.setListener(async (playerState) => {
       messagesReceived.push(
         ...(
           playerState.activeData ?? {
@@ -1169,7 +1169,7 @@ describe("RandomAccessPlayer", () => {
 
   it("doesn't try to close provider after initialization error", async () => {
     class FailTestProvider extends TestProvider {
-      override initialize() {
+      async override initialize() {
         return Promise.reject(new Error("fake initialization failure"));
       }
     }
@@ -1406,7 +1406,7 @@ describe("RandomAccessPlayer", () => {
 
     it("delegates to metricsCollector on actions", async () => {
       const provider = new TestProvider();
-      provider.getMessages = () => Promise.resolve(getMessagesResult);
+      provider.getMessages = async () => Promise.resolve(getMessagesResult);
 
       const metricsCollector = new TestMetricsCollector();
       const source = new RandomAccessPlayer(
@@ -1426,7 +1426,7 @@ describe("RandomAccessPlayer", () => {
 
       // player should initialize even if the listener promise hasn't resolved yet
       let resolveListener: any;
-      listener.mockImplementationOnce(() => {
+      listener.mockImplementationOnce(async () => {
         return new Promise((resolve) => {
           resolveListener = resolve;
         });
@@ -1495,7 +1495,7 @@ describe("RandomAccessPlayer", () => {
 
   it("seeks the player after starting", async () => {
     const provider = new TestProvider();
-    provider.getMessages = jest.fn().mockImplementation(() => Promise.resolve(getMessagesResult));
+    provider.getMessages = jest.fn().mockImplementation(async () => Promise.resolve(getMessagesResult));
     const player = new RandomAccessPlayer(
       { name: "TestProvider", args: { provider }, children: [] },
       playerOptions,
@@ -1518,7 +1518,7 @@ describe("RandomAccessPlayer", () => {
 
   it("does not seek until setListener is called to initialize the start and end time", async () => {
     const provider = new TestProvider();
-    provider.getMessages = jest.fn().mockImplementation(() => Promise.resolve(getMessagesResult));
+    provider.getMessages = jest.fn().mockImplementation(async () => Promise.resolve(getMessagesResult));
     const player = new RandomAccessPlayer(
       { name: "TestProvider", args: { provider }, children: [] },
       playerOptions,
@@ -1540,7 +1540,7 @@ describe("RandomAccessPlayer", () => {
 
   it("keeps currentTime reference equality if current time does not change", async () => {
     const provider = new TestProvider();
-    provider.getMessages = jest.fn().mockImplementation(() => Promise.resolve(getMessagesResult));
+    provider.getMessages = jest.fn().mockImplementation(async () => Promise.resolve(getMessagesResult));
     const player = new RandomAccessPlayer(
       { name: "TestProvider", args: { provider }, children: [] },
       playerOptions,
@@ -1572,7 +1572,7 @@ describe("RandomAccessPlayer", () => {
       playerOptions,
     );
 
-    provider.getMessages = (
+    provider.getMessages = async (
       _start: Time,
       _end: Time,
       topics: GetMessagesTopics,
@@ -1610,7 +1610,7 @@ describe("RandomAccessPlayer", () => {
       playerOptions,
     );
 
-    provider.getMessages = (
+    provider.getMessages = async (
       _start: Time,
       _end: Time,
       topics: GetMessagesTopics,

@@ -59,19 +59,19 @@ const marketplaceExtensions: ExtensionInfo[] = [
 ];
 
 const MockExtensionLoader: ExtensionLoader = {
-  getExtensions: (): Promise<ExtensionInfo[]> => Promise.resolve(installedExtensions),
-  loadExtension: (_id: string): Promise<string> => Promise.resolve(""),
-  downloadExtension: (_url: string): Promise<Uint8Array> => Promise.resolve(new Uint8Array()),
-  installExtension: (_foxeFileData: Uint8Array): Promise<ExtensionInfo> => {
+  getExtensions: async (): Promise<ExtensionInfo[]> => Promise.resolve(installedExtensions),
+  loadExtension: async (_id: string): Promise<string> => Promise.resolve(""),
+  downloadExtension: async (_url: string): Promise<Uint8Array> => Promise.resolve(new Uint8Array()),
+  installExtension: async (_foxeFileData: Uint8Array): Promise<ExtensionInfo> => {
     throw new Error("MockExtensionLoader cannot install extensions");
   },
-  uninstallExtension: (_id: string): Promise<boolean> => Promise.resolve(false),
+  uninstallExtension: async (_id: string): Promise<boolean> => Promise.resolve(false),
 };
 
 const MockExtensionMarketplace: ExtensionMarketplace = {
-  getAvailableExtensions: (): Promise<ExtensionMarketplaceDetail[]> =>
+  getAvailableExtensions: async (): Promise<ExtensionMarketplaceDetail[]> =>
     Promise.resolve(marketplaceExtensions),
-  getMarkdown: (url: string): Promise<string> =>
+  getMarkdown: async (url: string): Promise<string> =>
     Promise.resolve(`# Markdown
 Mock markdown rendering for URL [${url}](${url}).`),
 };
