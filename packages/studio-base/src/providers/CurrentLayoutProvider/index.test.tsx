@@ -47,8 +47,9 @@ function mockThrow(name: string) {
 function makeMockLayoutStorage() {
   return {
     supportsSharing: false,
-    addLayoutsChangedListener: jest.fn(),
-    removeLayoutsChangedListener: jest.fn(),
+    supportsSyncing: false,
+    addLayoutsChangedListener: jest.fn(/*noop*/),
+    removeLayoutsChangedListener: jest.fn(/*noop*/),
     getLayouts: jest.fn().mockImplementation(mockThrow("getLayouts")),
     getLayout: jest.fn().mockImplementation(mockThrow("getLayout")),
     saveNewLayout: jest.fn().mockImplementation(mockThrow("saveNewLayout")),
