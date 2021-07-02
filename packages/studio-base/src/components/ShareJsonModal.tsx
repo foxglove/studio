@@ -7,6 +7,7 @@ import {
   Dialog,
   DialogFooter,
   IconButton,
+  Stack,
   TextField,
   useTheme,
 } from "@fluentui/react";
@@ -94,7 +95,7 @@ export default function ShareJsonModal({
           },
         }}
       >
-        <div>
+        <Stack tokens={{ childrenGap: theme.spacing.s1 }} horizontal>
           <IconButton
             onClick={handleDownload}
             iconProps={{ iconName: "Download" }}
@@ -128,7 +129,7 @@ export default function ShareJsonModal({
               rootHovered: { color: theme.semanticColors.errorText },
             }}
           />
-        </div>
+        </Stack>
 
         <DefaultButton disabled={error != undefined} primary onClick={handleSubmit}>
           Apply
