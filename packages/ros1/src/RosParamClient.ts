@@ -24,7 +24,11 @@ export class RosParamClient extends RosXmlRpcClient {
     return this._methodCall("searchParam", [callerId, key]);
   }
 
-  async subscribeParam(callerId: string, callerApi: string, key: string): Promise<RosXmlRpcResponse> {
+  async subscribeParam(
+    callerId: string,
+    callerApi: string,
+    key: string,
+  ): Promise<RosXmlRpcResponse> {
     return this._methodCall("subscribeParam", [callerId, callerApi, key]);
   }
 
@@ -40,7 +44,11 @@ export class RosParamClient extends RosXmlRpcClient {
     return this._multiMethodCall(requests);
   }
 
-  async unsubscribeParam(callerId: string, callerApi: string, key: string): Promise<RosXmlRpcResponse> {
+  async unsubscribeParam(
+    callerId: string,
+    callerApi: string,
+    key: string,
+  ): Promise<RosXmlRpcResponse> {
     return this._methodCall("unsubscribeParam", [callerId, callerApi, key]);
   }
 

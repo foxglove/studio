@@ -128,10 +128,12 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
   }
 
   async getLayouts(): Promise<LayoutMetadata[]> {
-    return filterMap(await this.cacheStorage.runExclusive(async (cache) => cache.list()), (layout) =>
-      layout.locallyDeleted === true && !this.latestConflictsByCacheId.has(layout.id)
-        ? undefined
-        : getEffectiveMetadata(layout, this.latestConflictsByCacheId),
+    return filterMap(
+      await this.cacheStorage.runExclusive(async (cache) => cache.list()),
+      (layout) =>
+        layout.locallyDeleted === true && !this.latestConflictsByCacheId.has(layout.id)
+          ? undefined
+          : getEffectiveMetadata(layout, this.latestConflictsByCacheId),
     );
   }
 
