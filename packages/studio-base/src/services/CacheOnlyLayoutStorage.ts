@@ -41,7 +41,8 @@ function getMetadata(layout: CachedLayout): LayoutMetadata {
  * Any `serverMetadata` on the local layout is ignored and generally is not expected to be present.
  */
 export default class CacheOnlyLayoutStorage implements ILayoutStorage {
-  supportsSharing = false;
+  readonly supportsSharing = false;
+  readonly supportsSyncing = false;
 
   constructor(private storage: ILayoutCache) {}
 

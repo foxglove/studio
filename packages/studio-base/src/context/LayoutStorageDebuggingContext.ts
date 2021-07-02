@@ -8,7 +8,6 @@ import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 
 type ILayoutStorageDebugging = {
   useFakeRemoteLayoutStorage: boolean;
-  setUseFakeRemoteLayoutStorage: (_: boolean) => void;
   openFakeStorageDirectory: () => Promise<void>;
   syncNow: () => Promise<void>;
   injectEdit: (id: LayoutID) => Promise<void>;

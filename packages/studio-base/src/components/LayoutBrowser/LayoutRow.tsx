@@ -19,6 +19,7 @@ import { useCallback, useContext, useMemo, useState } from "react";
 import conflictTypeToString from "@foxglove/studio-base/components/LayoutBrowser/conflictTypeToString";
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import useConfirm from "@foxglove/studio-base/components/useConfirm";
+import { useLayoutStorage } from "@foxglove/studio-base/context/LayoutStorageContext";
 import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
 import { LayoutMetadata } from "@foxglove/studio-base/services/ILayoutStorage";
 import { nonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
@@ -93,6 +94,8 @@ export default function LayoutRow({
   const [editingName, setEditingName] = useState(false);
   const [nameFieldValue, setNameFieldValue] = useState("");
 
+  const layoutStorage = useLayoutStorage();
+
   const saveAction = useCallback(() => {
     onSave(layout);
   }, [layout, onSave]);
@@ -163,9 +166,9 @@ export default function LayoutRow({
   const layoutDebug = useContext(LayoutStorageDebuggingContext);
 
   const menuItems: (boolean | IContextualMenuItem)[] = [
-    {
+    layoutStorage.supportsSyncing && {
       key: "save",
-      text: layout.hasUnsyncedChanges ? "Save changes" : "No changes",
+      text: layout.hasUnsyncedChanges ? "Save changes" : "No unsaved changes",
       iconProps: { iconName: "Upload" },
       onClick: saveAction,
       ["data-test"]: "save-layout",
@@ -185,12 +188,13 @@ export default function LayoutRow({
       onClick: duplicateAction,
       ["data-test"]: "duplicate-layout",
     },
-    layout.permission === "creator_write" && {
-      key: "share",
-      text: "Share",
-      iconProps: { iconName: "Share" },
-      onClick: shareAction,
-    },
+    layoutStorage.supportsSharing &&
+      layout.permission === "creator_write" && {
+        key: "share",
+        text: "Share",
+        iconProps: { iconName: "Share" },
+        onClick: shareAction,
+      },
     {
       key: "export",
       text: "Export",

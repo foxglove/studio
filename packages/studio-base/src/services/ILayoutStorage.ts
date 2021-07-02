@@ -63,6 +63,8 @@ export interface ILayoutStorage {
     data: PanelsState;
   }): Promise<void>;
 
+  readonly supportsSyncing: boolean;
+
   syncLayout(id: LayoutID): Promise<ConflictType | undefined>;
 
   readonly supportsSharing: boolean;

@@ -87,6 +87,7 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
   private latestConflictsByCacheId: ReadonlyMap<string, ConflictInfo> = new Map();
 
   readonly supportsSharing = true;
+  readonly supportsSyncing = true;
 
   private changeListeners = new Set<() => void>();
 

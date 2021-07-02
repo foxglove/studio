@@ -27,8 +27,9 @@ const log = Logger.getLogger(__filename);
 export default function LayoutStorageProviders({
   children,
 }: React.PropsWithChildren<unknown>): JSX.Element {
-  const [useFakeRemoteLayoutStorage = false, setUseFakeRemoteLayoutStorage] =
-    useAppConfigurationValue<boolean>(AppSetting.FAKE_REMOTE_LAYOUTS);
+  const [useFakeRemoteLayoutStorage = false] = useAppConfigurationValue<boolean>(
+    AppSetting.FAKE_REMOTE_LAYOUTS,
+  );
   const nativeStorage = useNativeStorage();
   const layoutCache = useLayoutCache();
   const fakeRemoteStorage = useMemo(
@@ -104,7 +105,6 @@ export default function LayoutStorageProviders({
 
   const debugging = useShallowMemo({
     useFakeRemoteLayoutStorage,
-    setUseFakeRemoteLayoutStorage,
     openFakeStorageDirectory,
     syncNow,
     injectEdit,

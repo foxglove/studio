@@ -1,7 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import { DefaultButton, IconButton, Spinner, Stack, Toggle, useTheme } from "@fluentui/react";
+import { DefaultButton, IconButton, Spinner, Stack, useTheme } from "@fluentui/react";
 import { partition } from "lodash";
 import moment from "moment";
 import path from "path";
@@ -300,7 +300,7 @@ export default function LayoutBrowser({
           )}
         </Stack.Item>
         <div style={{ flexGrow: 1 }} />
-        {process.env.NODE_ENV !== "production" && layoutDebug && (
+        {process.env.NODE_ENV !== "production" && layoutDebug?.useFakeRemoteLayoutStorage && (
           <Stack
             style={{
               position: "sticky",
@@ -314,55 +314,38 @@ export default function LayoutBrowser({
             tokens={{ childrenGap: theme.spacing.s1 }}
           >
             <Stack.Item grow align="stretch">
-              <Toggle
-                checked={layoutDebug.useFakeRemoteLayoutStorage}
-                onChange={(_event, newValue) =>
-                  layoutDebug.setUseFakeRemoteLayoutStorage(newValue ?? false)
-                }
-                inlineLabel
-                label="Use fake remote storage"
-                styles={{
-                  root: {
-                    marginBottom: 0,
-                  },
-                }}
-              />
+              <Stack disableShrink horizontal tokens={{ childrenGap: theme.spacing.s1 }}>
+                <Stack.Item grow>
+                  <DefaultButton
+                    text="Open dir"
+                    onClick={() => layoutDebug.openFakeStorageDirectory()}
+                    styles={{
+                      root: {
+                        display: "block",
+                        width: "100%",
+                        margin: 0,
+                      },
+                    }}
+                  />
+                </Stack.Item>
+                <Stack.Item grow>
+                  <DefaultButton
+                    text="Sync now"
+                    onClick={async () => {
+                      await layoutDebug.syncNow();
+                      reloadLayouts();
+                    }}
+                    styles={{
+                      root: {
+                        display: "block",
+                        width: "100%",
+                        margin: 0,
+                      },
+                    }}
+                  />
+                </Stack.Item>
+              </Stack>
             </Stack.Item>
-            {layoutDebug.useFakeRemoteLayoutStorage && (
-              <Stack.Item grow align="stretch">
-                <Stack disableShrink horizontal tokens={{ childrenGap: theme.spacing.s1 }}>
-                  <Stack.Item grow>
-                    <DefaultButton
-                      text="Open dir"
-                      onClick={() => layoutDebug.openFakeStorageDirectory()}
-                      styles={{
-                        root: {
-                          display: "block",
-                          width: "100%",
-                          margin: 0,
-                        },
-                      }}
-                    />
-                  </Stack.Item>
-                  <Stack.Item grow>
-                    <DefaultButton
-                      text="Sync now"
-                      onClick={async () => {
-                        await layoutDebug.syncNow();
-                        reloadLayouts();
-                      }}
-                      styles={{
-                        root: {
-                          display: "block",
-                          width: "100%",
-                          margin: 0,
-                        },
-                      }}
-                    />
-                  </Stack.Item>
-                </Stack>
-              </Stack.Item>
-            )}
           </Stack>
         )}
       </Stack>
