@@ -2122,12 +2122,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foxglove/just-fetch@npm:1.0.0":
-  version: 1.0.0
-  resolution: "@foxglove/just-fetch@npm:1.0.0"
+"@foxglove/just-fetch@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@foxglove/just-fetch@npm:1.2.0"
   dependencies:
-    node-fetch: ^2
-  checksum: b6d2ea35a5ddd37186c0332644344ddd58ac6b3c2d6b5f6aff6670eefe0c97a17ab439a14b5199af1b50050ac86c3570d4f1d49bf186c6455bb0c930bac71766
+    node-fetch: ^3.0.0-beta.9
+  checksum: 0334ab426dddd68d25fced4dce8118cc982929d85b4a489dcf521232ffbef17deb175cfbe5bfcf28f258fe7d3c215bf641cb3db414b73981debb604b7f8d4a5b
   languageName: node
   linkType: hard
 
@@ -2417,7 +2417,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/xmlrpc@workspace:packages/xmlrpc"
   dependencies:
-    "@foxglove/just-fetch": 1.0.0
+    "@foxglove/just-fetch": 1.2.0
     "@types/sax": ^1.2.1
     byte-base64: 1.1.0
     jest: 27.0.5
@@ -10268,6 +10268,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"data-uri-to-buffer@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "data-uri-to-buffer@npm:3.0.1"
+  checksum: c59c3009686a78c071806b72f4810856ec28222f0f4e252aa495ec027ed9732298ceea99c50328cf59b151dd34cbc3ad6150bbb43e41fc56fa19f48c99e9fc30
+  languageName: node
+  linkType: hard
+
 "data-urls@npm:^2.0.0":
   version: 2.0.0
   resolution: "data-urls@npm:2.0.0"
@@ -12610,6 +12617,16 @@ __metadata:
   dependencies:
     pend: ~1.2.0
   checksum: c8585fd5713f4476eb8261150900d2cb7f6ff2d87f8feb306ccc8a1122efd152f1783bdb2b8dc891395744583436bfd8081d8e63ece0ec8687eeefea394d4ff2
+  languageName: node
+  linkType: hard
+
+"fetch-blob@npm:^2.1.1":
+  version: 2.1.2
+  resolution: "fetch-blob@npm:2.1.2"
+  peerDependenciesMeta:
+    domexception:
+      optional: true
+  checksum: 22d4487ce78ea4e52b432b0057d8d42922d5d93c0374b0bc2692cebdcb11bf8fac4f6d141b31f1633db1e9212effd38385adbd765a2c7412a621307058499214
   languageName: node
   linkType: hard
 
@@ -18385,10 +18402,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-fetch@npm:^2, node-fetch@npm:^2.3.0, node-fetch@npm:^2.6.0, node-fetch@npm:^2.6.1":
+"node-fetch@npm:^2.3.0, node-fetch@npm:^2.6.0, node-fetch@npm:^2.6.1":
   version: 2.6.1
   resolution: "node-fetch@npm:2.6.1"
   checksum: 91075bedd57879117e310fbcc36983ad5d699e522edb1ebcdc4ee5294c982843982652925c3532729fdc86b2d64a8a827797a745f332040d91823c8752ee4d7c
+  languageName: node
+  linkType: hard
+
+"node-fetch@npm:^3.0.0-beta.9":
+  version: 3.0.0-beta.9
+  resolution: "node-fetch@npm:3.0.0-beta.9"
+  dependencies:
+    data-uri-to-buffer: ^3.0.1
+    fetch-blob: ^2.1.1
+  checksum: 586af0910649cb62f1c044ddac41e71c0b0f48133fba406ad5e0fab51baff18f22cd187ea65ef690ceed7386a71910e904348105dc8eae55f907fa94df7e76ca
   languageName: node
   linkType: hard
 
