@@ -2001,9 +2001,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fluentui/react@npm:8.21.1":
-  version: 8.21.1
-  resolution: "@fluentui/react@npm:8.21.1"
+"@fluentui/react@npm:8.22.0":
+  version: 8.22.0
+  resolution: "@fluentui/react@npm:8.22.0"
   dependencies:
     "@fluentui/date-time-utilities": ^8.2.0
     "@fluentui/font-icons-mdl2": ^8.1.4
@@ -2023,7 +2023,7 @@ __metadata:
     "@types/react-dom": ">=16.8.0 <18.0.0"
     react: ">=16.8.0 <18.0.0"
     react-dom: ">=16.8.0 <18.0.0"
-  checksum: 9759d85583fb39f6788e280b33ef0884646425bbcdab31ff0c7780e9f57a926c8987b880ddd8a8909467db3885d930eb0a312f318973de6a0c2fd4e27b1fbeaa
+  checksum: ef0ea1209790d766787952d3924a74e618cc3d0c9307d3c9f680f227c8a19a423565a2c742424c45b4ab7080fa1fa4468fbe65864ef128a92648e64ee409cfb1
   languageName: node
   linkType: hard
 
@@ -2215,7 +2215,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/studio-base@workspace:packages/studio-base"
   dependencies:
-    "@fluentui/react": 8.21.1
+    "@fluentui/react": 8.22.0
     "@fluentui/react-icons-mdl2": 1.1.4
     "@foxglove/den": "workspace:*"
     "@foxglove/electron-socket": 1.0.0
