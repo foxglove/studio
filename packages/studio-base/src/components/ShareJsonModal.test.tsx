@@ -62,9 +62,6 @@ describe("<ShareJsonModal />", () => {
 
     wrapper.find("textarea").simulate("change", { target: { value: newValue } });
     wrapper.find(".ms-Button--primary").first().simulate("click");
-
-    console.log(wrapper.find("DialogContentBase").debug());
-
     expect(
       wrapper.find("TextFieldBase[errorMessage='The JSON provided is invalid.']").exists(),
     ).toBe(true);
