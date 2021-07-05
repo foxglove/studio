@@ -76,7 +76,7 @@ export default function ShareJsonModal({
         rows={10}
         autoAdjustHeight
         value={value}
-        onChange={(e, newValue) => newValue != undefined && setValue(newValue)}
+        onChange={(_, newValue) => newValue != undefined && setValue(newValue)}
         autoFocus
         errorMessage={error && "The JSON provided is invalid."}
         spellCheck={false}
