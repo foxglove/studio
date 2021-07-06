@@ -87,7 +87,6 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
     const map = new LeafMap(mapContainerRef.current, {
       layers: [tileLayer],
-      // renderer: new Canvas({ tolerance: 10 }),
     });
 
     // the map must be initialized with some view before other features work
@@ -147,7 +146,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
   const onClick = useCallback(
     (messageEvent: MessageEvent<NavSatFixMsg>) => {
-      context.seekPlayback(toSec(messageEvent.receiveTime));
+      context.seekPlayback?.(toSec(messageEvent.receiveTime));
     },
     [context],
   );

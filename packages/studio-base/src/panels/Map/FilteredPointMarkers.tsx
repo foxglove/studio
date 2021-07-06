@@ -64,23 +64,27 @@ function FilteredPointLayer(args: Args): FeatureGroup {
     marker.addTo(markersLayer);
   }
 
-  markersLayer.on("mouseover", (event) => {
-    const marker = event.sourceTarget as PointMarker;
-    marker.setStyle({ color: "yellow" });
-    marker.bringToFront();
-    args.onHover?.(marker.messageEvent);
-  });
-  markersLayer.on("click", (event) => {
-    const marker = event.sourceTarget as PointMarker;
-    if (marker.messageEvent) {
-      args.onClick?.(marker.messageEvent);
-    }
-  });
-  markersLayer.on("mouseout", (event) => {
-    const marker = event.sourceTarget as PointMarker;
-    marker.setStyle(defaultStyle);
-    args.onHover?.(undefined);
-  });
+  if (args.onHover) {
+    markersLayer.on("mouseover", (event) => {
+      const marker = event.sourceTarget as PointMarker;
+      marker.setStyle({ color: "yellow" });
+      marker.bringToFront();
+      args.onHover?.(marker.messageEvent);
+    });
+    markersLayer.on("mouseout", (event) => {
+      const marker = event.sourceTarget as PointMarker;
+      marker.setStyle(defaultStyle);
+      args.onHover?.(undefined);
+    });
+  }
+  if (args.onClick) {
+    markersLayer.on("click", (event) => {
+      const marker = event.sourceTarget as PointMarker;
+      if (marker.messageEvent) {
+        args.onClick?.(marker.messageEvent);
+      }
+    });
+  }
 
   return markersLayer;
 }

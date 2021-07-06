@@ -85,7 +85,7 @@ declare module "@foxglove/studio" {
     /**
      * Seek playback to the given time. Behaves as if the user had clicked the playback bar to seek.
      */
-    seekPlayback: (time: number) => void;
+    seekPlayback?: (time: number) => void;
 
     /**
      * Process render events for the panel. Each render event receives a render state and a done callback.
