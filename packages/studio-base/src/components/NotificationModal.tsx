@@ -53,7 +53,7 @@ export default function NotificationModal({
             variant="xLarge"
             nowrap
             style={{
-              color: displayPropsBySeverity[severity] || theme.palette.blueLight,
+              color: displayPropsBySeverity[severity],
             }}
           >
             {message}
@@ -84,7 +84,7 @@ export default function NotificationModal({
           />
         </header>
         <div className={classes.content}>
-          {(details instanceof Error && (
+          {details instanceof Error ? (
             <TextField
               styles={{
                 field: {
@@ -103,9 +103,11 @@ export default function NotificationModal({
               value={details.stack}
               underlined={false}
             />
-          )) ||
-            (!!details && <Text>{details}</Text>) ||
-            "No details provided"}
+          ) : details != undefined && details !== "" ? (
+            <Text>{details}</Text>
+          ) : (
+            "No details provided"
+          )}
         </div>
       </Modal>
     </RenderToBodyComponent>
