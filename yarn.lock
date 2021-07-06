@@ -2231,7 +2231,7 @@ __metadata:
     "@testing-library/react-hooks": 7.0.1
     "@types/amplitude-js": 8.0.0
     "@types/argparse": 2.0.9
-    "@types/circular-dependency-plugin": 5.0.2
+    "@types/circular-dependency-plugin": 5.0.3
     "@types/classnames": 2.3.1
     "@types/css-font-loading-module": 0.0.5
     "@types/cytoscape": ^3.14.15
@@ -4811,12 +4811,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/circular-dependency-plugin@npm:5.0.2":
-  version: 5.0.2
-  resolution: "@types/circular-dependency-plugin@npm:5.0.2"
+"@types/circular-dependency-plugin@npm:5.0.3":
+  version: 5.0.3
+  resolution: "@types/circular-dependency-plugin@npm:5.0.3"
   dependencies:
     "@types/webpack": ^4
-  checksum: 6610a777be7fb3875238cb68ff5df5c54771f8d3a8b95e45fde115183f652e2cfda8e3b0d782c299c655056895f52182dadeeeee526082d80dcbd162d9839d0b
+  checksum: 635f2ed0aa7d60677cd84396a8b8976b54437f230340c2a71d883319fe9ca11b5c74442058c2977c7e5bf3567e51723defd441630c585b76852242149d32f59e
   languageName: node
   linkType: hard
 
