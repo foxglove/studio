@@ -147,7 +147,7 @@
     "@types/styled-components": "5.1.10",
     "@types/text-metrics": "workspace:*",
     "@types/three": "^0.130.0",
-    "@types/tinycolor2": "1.4.2",
+    "@types/tinycolor2": "1.4.3",
     "@types/url-search-params": "1.1.0",
     "@types/uuid": "8.3.1",
     "@types/wicg-file-system-access": "2020.9.1",
