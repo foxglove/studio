@@ -24,7 +24,7 @@ import sendNotification from "@foxglove/studio-base/util/sendNotification";
 
 const randomNum = () => Math.floor(Math.random() * 1000);
 const addError = () =>
-  sendNotification(`Another error #${randomNum()}`, "some details", "app", "error");
+  sendNotification(`Another error #${randomNum()}`, new Error("some details"), "app", "error");
 const addWarning = () =>
   sendNotification(`Another warning #${randomNum()}`, "some details", "app", "warn");
 const addInfo = () =>
@@ -61,7 +61,7 @@ storiesOf("components/NotificationDisplay", module)
       override componentDidMount() {
         sendNotification(
           "Something bad happened",
-          "This error is on purpose - it comes from the story",
+          new Error("This error is on purpose - it comes from the story"),
           "app",
           "error",
         );
@@ -112,13 +112,13 @@ storiesOf("components/NotificationDisplay", module)
     React.useLayoutEffect(() => {
       sendNotification(
         "Something bad happened 1",
-        "This error is on purpose - it comes from the story",
+        new Error("This error is on purpose - it comes from the story"),
         "app",
         "error",
       );
       sendNotification(
         "Something bad happened 2",
-        "This error is on purpose - it comes from the story",
+        new Error("This error is on purpose - it comes from the story"),
         "app",
         "error",
       );
@@ -130,7 +130,7 @@ storiesOf("components/NotificationDisplay", module)
       );
       sendNotification(
         "Something bad happened 3",
-        "This error is on purpose - it comes from the story",
+        new Error("This error is on purpose - it comes from the story"),
         "app",
         "error",
       );
@@ -169,7 +169,7 @@ storiesOf("components/NotificationDisplay", module)
       {
         id: "5",
         message: "Foo foo baz",
-        details: "Some error details",
+        details: new Error("Some error details"),
         read: false,
         created: moment(date).subtract(17, "minutes").toDate(),
         severity: "error",
@@ -185,7 +185,7 @@ storiesOf("components/NotificationDisplay", module)
       {
         id: "3",
         message: "Some fake error",
-        details: "Foo bar baz this is a long-ish error details string",
+        details: new Error("Foo bar baz this is a long-ish error details string"),
         read: false,
         created: moment(date).subtract(3, "seconds").toDate(),
         severity: "error",
@@ -209,7 +209,7 @@ storiesOf("components/NotificationDisplay", module)
         notification={{
           id: "1",
           message: "Error 1",
-          details: "Some error details",
+          details: new Error("Some error details"),
           read: false,
           created: new Date(),
           severity: "error",
