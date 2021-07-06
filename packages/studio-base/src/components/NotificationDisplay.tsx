@@ -24,7 +24,6 @@ import ChildToggle from "@foxglove/studio-base/components/ChildToggle";
 import Icon from "@foxglove/studio-base/components/Icon";
 import Menu from "@foxglove/studio-base/components/Menu";
 import NotificationModal from "@foxglove/studio-base/components/NotificationModal";
-
 import {
   DetailsType,
   NotificationType,

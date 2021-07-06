@@ -24,7 +24,7 @@ import sendNotification from "@foxglove/studio-base/util/sendNotification";
 
 const randomNum = () => Math.floor(Math.random() * 1000);
 const addError = () =>
-  sendNotification(`Another error #${randomNum()}`, "some details", "app", "error");
+  sendNotification(`Another error #${randomNum()}`, new Error("Some error"), "app", "error");
 const addWarning = () =>
   sendNotification(`Another warning #${randomNum()}`, "some details", "app", "warn");
 const addInfo = () =>
@@ -61,7 +61,7 @@ storiesOf("components/NotificationDisplay", module)
       override componentDidMount() {
         sendNotification(
           "Something bad happened",
-          "This error is on purpose - it comes from the story",
+          new Error("This error is on purpose - it comes from the story"),
           "app",
           "error",
         );
@@ -112,13 +112,13 @@ storiesOf("components/NotificationDisplay", module)
     React.useLayoutEffect(() => {
       sendNotification(
         "Something bad happened 1",
-        "This error is on purpose - it comes from the story",
+        new Error("This error is on purpose - it comes from the story"),
         "app",
         "error",
       );
       sendNotification(
         "Something bad happened 2",
-        "This error is on purpose - it comes from the story",
+        new Error("This error is on purpose - it comes from the story"),
         "app",
         "error",
       );
