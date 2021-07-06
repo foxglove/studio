@@ -4,7 +4,6 @@
 
 import { IconButton, Modal, Text, TextField, makeStyles, useTheme } from "@fluentui/react";
 
-import { RenderToBodyComponent } from "@foxglove/studio-base/components/RenderToBodyComponent";
 import { DetailsType, NotificationSeverity } from "@foxglove/studio-base/util/sendNotification";
 
 export type NotificationMessage = {
@@ -46,70 +45,68 @@ export default function NotificationModal({
   };
 
   return (
-    <RenderToBodyComponent>
-      <Modal isOpen onDismiss={onRequestClose}>
-        <header className={classes.header}>
-          <Text
-            variant="xLarge"
-            nowrap
-            style={{
-              color: displayPropsBySeverity[severity],
-            }}
-          >
-            {message}
-          </Text>
-          <IconButton
+    <Modal isOpen onDismiss={onRequestClose}>
+      <header className={classes.header}>
+        <Text
+          variant="xLarge"
+          nowrap
+          style={{
+            color: displayPropsBySeverity[severity],
+          }}
+        >
+          {message}
+        </Text>
+        <IconButton
+          styles={{
+            root: {
+              color: theme.palette.neutralSecondary,
+              margin: 0, // TODO: remove this once global.scss is removed
+              marginLeft: theme.spacing.l1,
+            },
+            rootHovered: {
+              color: theme.palette.neutralSecondaryAlt,
+            },
+            icon: {
+              verticalAlign: "top",
+              marginLeft: theme.spacing.s1,
+              marginRight: theme.spacing.s1,
+              height: theme.spacing.l2,
+              lineHeight: theme.spacing.l2,
+              textAlign: "center",
+              flexShrink: 0,
+            },
+          }}
+          ariaLabel="Close help modal"
+          iconProps={{ iconName: "Cancel" }}
+          onClick={onRequestClose}
+        />
+      </header>
+      <div className={classes.content}>
+        {details instanceof Error ? (
+          <TextField
             styles={{
-              root: {
-                color: theme.palette.neutralSecondary,
-                margin: 0, // TODO: remove this once global.scss is removed
-                marginLeft: theme.spacing.l1,
-              },
-              rootHovered: {
-                color: theme.palette.neutralSecondaryAlt,
-              },
-              icon: {
-                verticalAlign: "top",
-                marginLeft: theme.spacing.s1,
-                marginRight: theme.spacing.s1,
-                height: theme.spacing.l2,
-                lineHeight: theme.spacing.l2,
-                textAlign: "center",
-                flexShrink: 0,
+              field: {
+                color: theme.semanticColors.bodyText,
+                fontSize: "81.25%",
+                fontFamily: "'Ubuntu Mono', Menlo, Monaco, Courier, monospace !important",
+                maxHeight: "50vh",
+                overflowY: "auto",
               },
             }}
-            ariaLabel="Close help modal"
-            iconProps={{ iconName: "Cancel" }}
-            onClick={onRequestClose}
+            readOnly
+            disabled
+            multiline
+            cols={90}
+            rows={12}
+            value={details.stack}
+            underlined={false}
           />
-        </header>
-        <div className={classes.content}>
-          {details instanceof Error ? (
-            <TextField
-              styles={{
-                field: {
-                  color: theme.semanticColors.bodyText,
-                  fontSize: "81.25%",
-                  fontFamily: "'Ubuntu Mono', Menlo, Monaco, Courier, monospace !important",
-                  maxHeight: "50vh",
-                  overflowY: "auto",
-                },
-              }}
-              readOnly
-              disabled
-              multiline
-              cols={90}
-              rows={12}
-              value={details.stack}
-              underlined={false}
-            />
-          ) : details != undefined && details !== "" ? (
-            <Text>{details}</Text>
-          ) : (
-            "No details provided"
-          )}
-        </div>
-      </Modal>
-    </RenderToBodyComponent>
+        ) : details != undefined && details !== "" ? (
+          <Text>{details}</Text>
+        ) : (
+          "No details provided"
+        )}
+      </div>
+    </Modal>
   );
 }
