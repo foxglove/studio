@@ -2262,7 +2262,7 @@ __metadata:
     "@types/roslib": "workspace:*"
     "@types/sanitize-html": 2.3.1
     "@types/sass": ^1.16.0
-    "@types/seedrandom": 3.0.0
+    "@types/seedrandom": 3.0.1
     "@types/shallowequal": 1.1.1
     "@types/string-hash": 1.1.1
     "@types/styled-components": 5.1.11
@@ -5655,10 +5655,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/seedrandom@npm:3.0.0":
-  version: 3.0.0
-  resolution: "@types/seedrandom@npm:3.0.0"
-  checksum: 557bf38dda275745f70fa24c7b0e0812d57bb06b7d39bf31ddd2a6013f8d23b1d0ca8d319023efd4c9eb96463375142c9727a9c77d13ecee81a0a230cd3892b9
+"@types/seedrandom@npm:3.0.1":
+  version: 3.0.1
+  resolution: "@types/seedrandom@npm:3.0.1"
+  checksum: d9755452f224a4f5072a1d8738da6c9de3039fc59a2a449b1f658e51087be7b48ada49bcabc8b0f16633c095f55598c32fcd072c448858422a2f6a0566569e4c
   languageName: node
   linkType: hard
 
