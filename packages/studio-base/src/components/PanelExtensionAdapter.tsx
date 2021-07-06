@@ -26,6 +26,7 @@ import {
 } from "@foxglove/studio-base/context/HoverValueContext";
 import { PlayerState } from "@foxglove/studio-base/players/types";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
+import { fromSec, toSec } from "@foxglove/studio-base/util/time";
 
 const log = Logger.getLogger(__filename);
 
@@ -174,13 +175,15 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       const hoverVal = hoverValueRef.current?.value;
 
       if (startTime != undefined && hoverVal != undefined) {
-        const startStamp = startTime.sec + startTime.nsec / 1e9;
-        const stamp = startStamp + hoverVal;
+        const stamp = toSec(startTime) + hoverVal;
         if (stamp !== renderState.previewTime) {
           shouldRender = true;
         }
         renderState.previewTime = stamp;
       } else {
+        if (renderState.previewTime != undefined) {
+          shouldRender = true;
+        }
         renderState.previewTime = undefined;
       }
     }
@@ -232,6 +235,10 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
       saveState: saveConfig,
 
+      seekPlayback: (stamp: number) => {
+        latestPipelineContextRef.current?.seekPlayback(fromSec(stamp));
+      },
+
       setPreviewTime: (stamp: number | undefined) => {
         if (stamp == undefined) {
           clearHoverValue("PanelExtensionAdatper");
@@ -243,7 +250,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
           if (!startTime) {
             return;
           }
-          const secondsFromStart = stamp - startTime.sec + startTime.nsec / 1e9;
+          const secondsFromStart = stamp - toSec(startTime);
           setHoverValue({
             type: "PLAYBACK_SECONDS",
             componentId: "PanelExtensionAdatper",
