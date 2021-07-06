@@ -16,8 +16,6 @@ import { useEffect } from "react";
 import TestUtils from "react-dom/test-utils";
 
 import ShareJsonModal from "@foxglove/studio-base/components/ShareJsonModal";
-import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 
 storiesOf("components/ShareJsonModal", module)
   .add("standard", () => (
