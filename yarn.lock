@@ -2261,7 +2261,7 @@ __metadata:
     "@types/regl-worldview": "workspace:*"
     "@types/roslib": "workspace:*"
     "@types/sanitize-html": 2.3.1
-    "@types/sass": ^1.16.0
+    "@types/sass": ^1.16.1
     "@types/seedrandom": 3.0.0
     "@types/shallowequal": 1.1.1
     "@types/string-hash": 1.1.1
@@ -5639,12 +5639,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/sass@npm:^1.16.0":
-  version: 1.16.0
-  resolution: "@types/sass@npm:1.16.0"
+"@types/sass@npm:^1.16.1":
+  version: 1.16.1
+  resolution: "@types/sass@npm:1.16.1"
   dependencies:
     "@types/node": "*"
-  checksum: b09be13879d345a3ae5c8e4598278377c80a3d553bc01c012e7530a9f3c6f421cc19ef73c4afdaf905996fd5be7b202ec99e6ef3d5e61501f9e53ebd82c542ec
+  checksum: 3f86d2eaf4988a2775fc0fc164d35e73ce82d71228191da7b11d97ad5e8ac129f1c5f798307e31482f8cfebab758bd3b24e731860bed81afe5a1bbe13fa2b2df
   languageName: node
   linkType: hard
 
