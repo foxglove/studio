@@ -151,7 +151,7 @@
     "@types/url-search-params": "1.1.0",
     "@types/uuid": "8.3.1",
     "@types/wicg-file-system-access": "2020.9.1",
-    "@types/ws": "7.4.5",
+    "@types/ws": "7.4.6",
     "@wojtekmaj/enzyme-adapter-react-17": "0.6.2",
     "argparse": "2.0.1",
     "browserify-zlib": "0.2.0",
