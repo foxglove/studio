@@ -11,12 +11,11 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Dialog } from "@fluentui/react";
+import { DefaultButton, Dialog, DialogFooter } from "@fluentui/react";
 import { isEmpty, omit } from "lodash";
 import Tabs, { TabPane } from "rc-tabs";
 import React, { useCallback } from "react";
 
-import Button from "@foxglove/studio-base/components/Button";
 import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
 import { RenderToBodyComponent } from "@foxglove/studio-base/components/RenderToBodyComponent";
 import { topicSettingsEditorForDatatype } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor";
@@ -31,6 +30,7 @@ function MainEditor({
   columnIndex: _columnIndex,
   onFieldChange,
   onSettingsChange,
+  setCurrentEditingTopic,
   settings,
   topicName: _topicName,
 }: {
@@ -43,6 +43,7 @@ function MainEditor({
       | Record<string, unknown>
       | ((prevSettings: Record<string, unknown>) => Record<string, unknown>),
   ) => void;
+  setCurrentEditingTopic: (arg0?: Topic) => void;
   settings: Record<string, unknown>;
   topicName: string;
 }) {
@@ -60,15 +61,12 @@ function MainEditor({
           settings={settings}
           onSettingsChange={onSettingsChange}
         />
-        <Button
-          className="test-reset-settings-btn"
-          style={{ marginTop: 8 }}
-          onClick={() => {
-            onSettingsChange({});
-          }}
-        >
-          Reset to defaults
-        </Button>
+        <DialogFooter>
+          <DefaultButton onClick={() => onSettingsChange({})}>Reset to defaults</DefaultButton>
+          <DefaultButton primary onClick={() => setCurrentEditingTopic(undefined)}>
+            Apply
+          </DefaultButton>
+        </DialogFooter>
       </div>
     </ErrorBoundary>
   );
@@ -142,8 +140,10 @@ function TopicSettingsModal({
       onSettingsChange={onSettingsChange}
       settings={settingsByKey[topicSettingsKey] ?? {}}
       topicName={nonPrefixedTopic}
+      setCurrentEditingTopic={setCurrentEditingTopic}
     />
   );
+
   return (
     <RenderToBodyComponent>
       <Dialog
