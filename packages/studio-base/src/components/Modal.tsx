@@ -63,9 +63,7 @@ type Props = {
 };
 
 // Generic modal that renders a semi-transparent backdrop and close icon.
-export default function Modal(
-  props: PropsWithChildren<Props>
-): React.ReactElement {
+export default function Modal(props: PropsWithChildren<Props>): React.ReactElement {
   return (
     <Layer>
       <Container>
@@ -77,10 +75,7 @@ export default function Modal(
             ...props.contentStyle,
           }}
         >
-          <KeyListener
-            global
-            keyDownHandlers={{ Escape: props.onRequestClose }}
-          />
+          <KeyListener global keyDownHandlers={{ Escape: props.onRequestClose }} />
           <Icon
             fade
             dataTest="modal-close-icon"

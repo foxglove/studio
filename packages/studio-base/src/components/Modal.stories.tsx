@@ -20,11 +20,7 @@ import Dropdown from "@foxglove/studio-base/components/Dropdown/index";
 import Modal from "@foxglove/studio-base/components/Modal";
 import TextContent from "@foxglove/studio-base/components/TextContent";
 
-function ContentStory({
-  showChildToggle = false,
-}: {
-  showChildToggle?: boolean;
-}) {
+function ContentStory({ showChildToggle = false }: { showChildToggle?: boolean }) {
   const renderedRef = React.useRef(false);
   return (
     <Modal
@@ -82,10 +78,7 @@ storiesOf("components/Modal", module)
             link
           </a>
           <div>this is a floating, fixed position modal</div>
-          <div>
-            you can press escape or click outside of the modal to fire the close
-            action
-          </div>
+          <div>you can press escape or click outside of the modal to fire the close action</div>
         </TextContent>
       </div>
     </Modal>
