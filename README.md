@@ -1,10 +1,10 @@
 # <img src="resources/icon/icon.png" width="40" height="40" align="top"> Foxglove Studio
 
-Foxglove Studio ([foxglove.dev](https://foxglove.dev)) is an integrated visualization and diagnosis tool for robotics. It began as a fork and evolution of[Webviz](https://github.com/cruise-automation/webviz), an open source project developed by [Cruise](https://getcruise.com/).
+Foxglove Studio ([foxglove.dev](https://foxglove.dev)) is an integrated visualization and diagnosis tool for robotics. It began as a fork and evolution of [Webviz](https://github.com/cruise-automation/webviz), an open source project developed by [Cruise](https://getcruise.com/).
 
-To learn more about Foxglove, visit [foxglove.dev/about](https://foxglove.dev/about), read our [documentation](https://foxglove.dev/docs) and [release notes](https://github.com/foxglove/studio/releases), or check out [our blog](https://foxglove.dev/blog).
+To learn more, visit [our website](https://foxglove.dev/about), read our [documentation](https://foxglove.dev/docs) and [release notes](https://github.com/foxglove/studio/releases), or check out [our blog](https://foxglove.dev/blog).
 
-You can also follow us on [Twitter](https://twitter.com/foxglovedev) to stay up-to-date on what our team is working on.
+You can also follow us on [Twitter](https://twitter.com/foxglovedev) or [LinkedIn](https://www.linkedin.com/company/foxglovedev), to stay up-to-date on what our team is working on.
 
 <p align="center">
   <a href="https://foxglove.dev"><img alt="Foxglove Studio screenshot" src="/resources/screenshot.jpg"></a>
