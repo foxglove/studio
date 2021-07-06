@@ -2229,7 +2229,7 @@ __metadata:
     "@testing-library/dom": 8.1.0
     "@testing-library/react": 12.0.0
     "@testing-library/react-hooks": 7.0.1
-    "@types/amplitude-js": 8.0.0
+    "@types/amplitude-js": 8.0.1
     "@types/argparse": 2.0.9
     "@types/circular-dependency-plugin": 5.0.2
     "@types/classnames": 2.3.1
@@ -4684,10 +4684,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/amplitude-js@npm:8.0.0":
-  version: 8.0.0
-  resolution: "@types/amplitude-js@npm:8.0.0"
-  checksum: 921d6f80aa503e127b3e612628e915430e565a2da215c21cda0f18bd4b027c57c2309652b356a239fd7b16e19bb4bd716d7dcea6eee6fad244f83882f670c266
+"@types/amplitude-js@npm:8.0.1":
+  version: 8.0.1
+  resolution: "@types/amplitude-js@npm:8.0.1"
+  checksum: 538fe5d43d76b58a1b479f28ef54035f918533942cb944ad9d22b640792034d22d9500c4ff6a854e8aa25c1cc020322e5db809c4eef9192d4adbc1774b569374
   languageName: node
   linkType: hard
 
