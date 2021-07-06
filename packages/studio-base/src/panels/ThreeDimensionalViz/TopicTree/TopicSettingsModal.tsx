@@ -64,7 +64,7 @@ function MainEditor({
         <DialogFooter>
           <DefaultButton onClick={() => onSettingsChange({})}>Reset to defaults</DefaultButton>
           <DefaultButton primary onClick={() => setCurrentEditingTopic(undefined)}>
-            Apply
+            Done
           </DefaultButton>
         </DialogFooter>
       </div>
