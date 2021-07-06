@@ -81,7 +81,11 @@ export default function ShareJsonModal({
         errorMessage={error && "The JSON provided is invalid."}
         spellCheck={false}
         styles={{
-          field: { fontFamily: "monospace !important", maxHeight: "60vh", overflowY: "auto" },
+          field: {
+            fontFamily: "'Ubuntu Mono', Menlo, Monaco, Courier, monospace !important",
+            maxHeight: "50vh",
+            overflowY: "auto",
+          },
         }}
       />
       <DialogFooter

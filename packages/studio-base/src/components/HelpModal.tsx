@@ -12,9 +12,6 @@ const useStyles = makeStyles((theme) => ({
     padding: theme.spacing.l1,
   },
   header: {
-    display: "flex",
-    flexDirection: "space-between",
-    justifyContent: "flex-end",
     padding: theme.spacing.l1,
     position: "absolute",
     top: 0,

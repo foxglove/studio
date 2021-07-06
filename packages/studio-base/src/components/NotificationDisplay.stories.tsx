@@ -17,9 +17,9 @@ import { useRef } from "react";
 
 import NotificationDisplay, {
   NotificationList,
-  NotificationModal,
   NotificationMessage,
 } from "@foxglove/studio-base/components/NotificationDisplay";
+import NotificationModal from "@foxglove/studio-base/components/NotificationModal";
 import sendNotification from "@foxglove/studio-base/util/sendNotification";
 
 const randomNum = () => Math.floor(Math.random() * 1000);
@@ -209,7 +209,7 @@ storiesOf("components/NotificationDisplay", module)
         notification={{
           id: "1",
           message: "Error 1",
-          details: "Some error details",
+          details: new Error("Some error message"),
           read: false,
           created: new Date(),
           severity: "error",
@@ -224,7 +224,7 @@ storiesOf("components/NotificationDisplay", module)
         notification={{
           id: "1",
           message: "Warning 1",
-          details: "Some error details",
+          details: "This is just some plain warning text",
           read: false,
           created: new Date(),
           severity: "warn",
@@ -255,9 +255,9 @@ storiesOf("components/NotificationDisplay", module)
           id: "1",
           message: "Error 1",
           details: (
-            <p>
+            <div>
               This is <b style={{ color: "red" }}>customized</b> error detail.
-            </p>
+            </div>
           ),
           read: false,
           created: new Date(),
