@@ -141,7 +141,7 @@
     "@types/roslib": "workspace:*",
     "@types/sanitize-html": "2.3.1",
     "@types/sass": "^1.16.0",
-    "@types/seedrandom": "3.0.0",
+    "@types/seedrandom": "3.0.1",
     "@types/shallowequal": "1.1.1",
     "@types/string-hash": "1.1.1",
     "@types/styled-components": "5.1.11",
