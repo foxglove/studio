@@ -2260,7 +2260,7 @@ __metadata:
     "@types/react-virtualized": 9.21.11
     "@types/regl-worldview": "workspace:*"
     "@types/roslib": "workspace:*"
-    "@types/sanitize-html": 2.3.1
+    "@types/sanitize-html": 2.3.2
     "@types/sass": ^1.16.0
     "@types/seedrandom": 3.0.0
     "@types/shallowequal": 1.1.1
@@ -5630,12 +5630,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@types/sanitize-html@npm:2.3.1":
-  version: 2.3.1
-  resolution: "@types/sanitize-html@npm:2.3.1"
+"@types/sanitize-html@npm:2.3.2":
+  version: 2.3.2
+  resolution: "@types/sanitize-html@npm:2.3.2"
   dependencies:
     htmlparser2: ^6.0.0
-  checksum: c216b843c0b0a6b1d001e384b84bbab7427e3b7e12566b561df1b668ef5f00489342c499f82ff8e6d09b2536343a67a4f1eac3f2bea975878318e3e554159542
+  checksum: 7f5b7e8a354d247a8fc6edc7c6fee8a7537bfda9002f5b15e127e3329896d5c2ad52ec9db8ba8503db0f6cdce724b68ea6533256aeb5ec367682ee536bae5b65
   languageName: node
   linkType: hard
 
