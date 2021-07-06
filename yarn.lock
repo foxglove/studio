@@ -2274,7 +2274,7 @@ __metadata:
     "@types/styled-components": 5.1.10
     "@types/text-metrics": "workspace:*"
     "@types/three": ^0.130.0
-    "@types/tinycolor2": 1.4.2
+    "@types/tinycolor2": 1.4.3
     "@types/url-search-params": 1.1.0
     "@types/uuid": 8.3.1
     "@types/wicg-file-system-access": 2020.9.1
@@ -5726,10 +5726,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/tinycolor2@npm:1.4.2":
-  version: 1.4.2
-  resolution: "@types/tinycolor2@npm:1.4.2"
-  checksum: 4687c4c7081d08e8758f8238daf48d5fb19bb0ad15a14354dd742ad1d61ff6b66fcbd8f4cd6388ecb9e6b155bfec104883c550495ec0e0ff5333b6e5bcc56795
+"@types/tinycolor2@npm:1.4.3":
+  version: 1.4.3
+  resolution: "@types/tinycolor2@npm:1.4.3"
+  checksum: 61984b2825d4ee902016ef24777787bb2fb9e4999ccd4f7e5a709442c00cf90ba4afa510b9c78f18dcc83c03305d597d5fe3825a6aad38354f95c68af70ebc1b
   languageName: node
   linkType: hard
 
