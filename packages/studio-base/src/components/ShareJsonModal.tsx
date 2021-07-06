@@ -49,7 +49,7 @@ export default function ShareJsonModal({
   }, [decodedValue, onChange, onRequestClose]);
 
   const handleCopy = useCallback(() => {
-    clipboard.copy(value).then(() => {
+    void clipboard.copy(value).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
