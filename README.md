@@ -11,6 +11,7 @@ To learn more, visit the following resources:
 - [About](https://foxglove.dev/about)
 - [Documentation](https://foxglove.dev/docs)
 - [Release notes](https://github.com/foxglove/studio/releases)
+- [ROS Wiki page](http://wiki.ros.org/FoxgloveStudio)
 - [Blog](https://foxglove.dev/blog)
 
 You can also join us on the following platforms to ask questions, share feedback, and stay up-to-date on what our team is working on:
