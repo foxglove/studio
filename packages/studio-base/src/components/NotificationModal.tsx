@@ -40,9 +40,9 @@ export default function NotificationModal({
   const theme = useTheme();
 
   const displayPropsBySeverity = {
-    error: theme.semanticColors.errorIcon,
-    warn: theme.semanticColors.severeWarningIcon,
-    info: theme.semanticColors.infoIcon,
+    error: theme.semanticColors.errorBackground,
+    warn: theme.semanticColors.warningBackground,
+    info: theme.palette.blueLight,
   };
 
   return (
@@ -53,7 +53,7 @@ export default function NotificationModal({
             variant="xLarge"
             nowrap
             style={{
-              color: displayPropsBySeverity[severity] || theme.semanticColors.infoIcon,
+              color: displayPropsBySeverity[severity] || theme.palette.blueLight,
             }}
           >
             {message}
