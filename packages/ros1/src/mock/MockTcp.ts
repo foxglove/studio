@@ -14,42 +14,40 @@ export class MockTcpSocket extends EventEmitter<TcpSocketEvents> implements TcpS
   }
 
   async remoteAddress(): Promise<TcpAddress | undefined> {
-    return Promise.resolve({
+    return {
       address: "192.168.1.2",
       port: 40000,
       family: this._connected ? "IPv4" : undefined,
-    });
+    };
   }
 
   async localAddress(): Promise<TcpAddress | undefined> {
-    return Promise.resolve(
-      this._connected ? { address: "127.0.0.1", port: 30000, family: "IPv4" } : undefined,
-    );
+    return this._connected ? { address: "127.0.0.1", port: 30000, family: "IPv4" } : undefined;
   }
 
   async fd(): Promise<number | undefined> {
-    return Promise.resolve(1);
+    return 1;
   }
 
   async connected(): Promise<boolean> {
-    return Promise.resolve(this._connected);
+    return this._connected;
   }
 
   async connect(): Promise<void> {
-    return Promise.resolve();
+    return undefined;
   }
 
   async close(): Promise<void> {
     this._connected = false;
-    return Promise.resolve();
+    return undefined;
   }
 
   async write(_data: Uint8Array): Promise<void> {
-    return Promise.resolve();
+    return undefined;
   }
 
   async setNoDelay(_noDelay?: boolean): Promise<void> {
-    return Promise.resolve();
+    return undefined;
   }
 }
 
@@ -61,9 +59,7 @@ export class MockTcpServer extends EventEmitter<TcpServerEvents> implements TcpS
   }
 
   async address(): Promise<TcpAddress | undefined> {
-    return Promise.resolve(
-      this.listening ? { address: "192.168.1.1", port: 20000, family: "IPv4" } : undefined,
-    );
+    return this.listening ? { address: "192.168.1.1", port: 20000, family: "IPv4" } : undefined;
   }
 
   close(): void {
@@ -76,12 +72,12 @@ export async function TcpListen(_options: {
   port?: number;
   backlog?: number;
 }): Promise<MockTcpServer> {
-  return Promise.resolve(new MockTcpServer());
+  return new MockTcpServer();
 }
 
 export async function TcpSocketConnect(_options: {
   host: string;
   port: number;
 }): Promise<TcpSocket> {
-  return Promise.resolve(new MockTcpSocket());
+  return new MockTcpSocket();
 }

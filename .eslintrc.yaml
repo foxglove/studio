@@ -56,6 +56,8 @@ rules:
   no-unused-expressions: error
   no-param-reassign: error
 
+  "@foxglove/no-return-promise-resolve": error
+
   no-useless-rename: error
   object-shorthand: error
 

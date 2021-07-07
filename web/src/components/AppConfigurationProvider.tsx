@@ -13,7 +13,7 @@ export default function AppConfigurationProvider(props: PropsWithChildren<unknow
         return undefined;
       },
       async set() {
-        return Promise.resolve();
+        return undefined;
       },
       addChangeListener() {},
       removeChangeListener() {},
