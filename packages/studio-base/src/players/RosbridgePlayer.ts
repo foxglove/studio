@@ -254,15 +254,15 @@ export default class RosbridgePlayer implements Player {
     }
   };
 
-  _emitState = debouncePromise(async () => {
+  // Potentially performance-sensitive; await can be expensive
+  // eslint-disable-next-line @typescript-eslint/promise-function-async
+  _emitState = debouncePromise(() => {
     if (!this._listener || this._closed) {
-      return undefined;
+      return Promise.resolve();
     }
 
     const { _providerTopics, _providerDatatypes, _start } = this;
     if (!_providerTopics || !_providerDatatypes || !_start) {
-      // Potentially performance-sensitive
-      // eslint-disable-next-line @typescript-eslint/return-await
       return this._listener({
         presence: this._presence,
         progress: {},
@@ -282,8 +282,6 @@ export default class RosbridgePlayer implements Player {
     const currentTime = this._getCurrentTime();
     const messages = this._parsedMessages;
     this._parsedMessages = [];
-    // Potentially performance-sensitive
-    // eslint-disable-next-line @typescript-eslint/return-await
     return this._listener({
       presence: this._presence,
       progress: {},

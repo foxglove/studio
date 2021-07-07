@@ -111,7 +111,9 @@ function maybeUnrectifyPoint(
   return point;
 }
 
-async function decodeMessageToBitmap(
+// Potentially performance-sensitive; await can be expensive
+// eslint-disable-next-line @typescript-eslint/promise-function-async
+function decodeMessageToBitmap(
   msg: MessageEvent<unknown>,
   datatype: string,
   options: RenderOptions = {},
@@ -180,8 +182,6 @@ async function decodeMessageToBitmap(
     throw new Error(`Message type is not usable for rendering images.`);
   }
 
-  // Potentially performance-sensitive
-  // eslint-disable-next-line @typescript-eslint/return-await
   return self.createImageBitmap(image);
 }
 

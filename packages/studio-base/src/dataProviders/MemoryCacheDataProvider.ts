@@ -345,7 +345,9 @@ export default class MemoryCacheDataProvider implements DataProvider {
     return result;
   }
 
-  async getMessages(
+  // Potentially performance-sensitive; await can be expensive
+  // eslint-disable-next-line @typescript-eslint/promise-function-async
+  getMessages(
     startTime: Time,
     endTime: Time,
     subscriptions: GetMessagesTopics,
@@ -362,8 +364,6 @@ export default class MemoryCacheDataProvider implements DataProvider {
       start: Math.floor(timeRange.start / this._memCacheBlockSizeNs),
       end: Math.floor((timeRange.end - 1) / this._memCacheBlockSizeNs) + 1, // `Range` defines `end` as exclusive.
     };
-    // Potentially performance-sensitive
-    // eslint-disable-next-line @typescript-eslint/return-await
     return new Promise((resolve) => {
       this._readRequests.push({
         timeRange,

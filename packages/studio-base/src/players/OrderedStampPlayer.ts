@@ -67,19 +67,17 @@ export default class OrderedStampPlayer implements Player {
   }
 
   setListener(listener: (arg0: PlayerState) => Promise<void>): void {
-    this._player.setListener(async (state: PlayerState) => {
+    // Potentially performance-sensitive; await can be expensive
+    // eslint-disable-next-line @typescript-eslint/promise-function-async
+    this._player.setListener((state: PlayerState) => {
       const { activeData } = state;
       if (!activeData) {
         // No new messages since last time.
-        // Potentially performance-sensitive
-        // eslint-disable-next-line @typescript-eslint/return-await
         return listener(state);
       }
       if (this._messageOrder === "receiveTime") {
         // Set "now" to seek to in case messageOrder changes.
         this._currentTime = activeData.currentTime;
-        // Potentially performance-sensitive
-        // eslint-disable-next-line @typescript-eslint/return-await
         return listener(state);
       }
 
