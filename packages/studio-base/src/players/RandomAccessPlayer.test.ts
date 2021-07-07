@@ -411,7 +411,7 @@ describe("RandomAccessPlayer", () => {
       }
     };
 
-    const store = new MessageStore(3);
+    const store = new MessageStore(4);
     source.setListener(store.add);
     await Promise.resolve();
     source.setSubscriptions([{ topic: "/foo/bar" }]);
@@ -423,7 +423,12 @@ describe("RandomAccessPlayer", () => {
     const messagePayloads = messages.map((msg) => {
       return { messages: msg.activeData?.messages ?? [] };
     });
-    expect(messagePayloads).toEqual([{ messages: [] }, { messages: [] }, { messages: [] }]);
+    expect(messagePayloads).toEqual([
+      { messages: [] },
+      { messages: [] },
+      { messages: [] },
+      { messages: [] },
+    ]);
   });
 
   it("pauses and does not emit messages after pause", async () => {
