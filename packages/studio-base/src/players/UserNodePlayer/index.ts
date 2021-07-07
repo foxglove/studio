@@ -511,8 +511,8 @@ export default class UserNodePlayer implements Player {
     }
 
     const allNodeRegistrations = await Promise.all(
-      Object.entries(this._userNodes).map(async ([nodeId, userNode]) =>
-        await this._createNodeRegistration(nodeId, userNode),
+      Object.entries(this._userNodes).map(
+        async ([nodeId, userNode]) => await this._createNodeRegistration(nodeId, userNode),
       ),
     );
 

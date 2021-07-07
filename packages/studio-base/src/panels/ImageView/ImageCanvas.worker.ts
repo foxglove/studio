@@ -48,7 +48,13 @@ class ImageCanvasWorker {
         options: RenderOptions;
       }): Promise<Dimensions | undefined> => {
         const canvas = this._idToCanvas[id];
-        return await renderImage({ canvas, imageMessage, imageMessageDatatype, rawMarkerData, options });
+        return await renderImage({
+          canvas,
+          imageMessage,
+          imageMessageDatatype,
+          rawMarkerData,
+          options,
+        });
       },
     );
   }

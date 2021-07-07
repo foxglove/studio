@@ -154,16 +154,17 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
       return undefined;
     }
     const { data, ...metadata } = remoteLayout;
-    await this.cacheStorage.runExclusive(async (cache) =>
-      // In the unlikely event that local modifications (rename or delete) got into the cache since we
-      // last checked, the remote response will override them.
-      await cache.put({
-        id: metadata.id,
-        name: metadata.name,
-        path: metadata.path,
-        state: data,
-        serverMetadata: metadata,
-      }),
+    await this.cacheStorage.runExclusive(
+      async (cache) =>
+        // In the unlikely event that local modifications (rename or delete) got into the cache since we
+        // last checked, the remote response will override them.
+        await cache.put({
+          id: metadata.id,
+          name: metadata.name,
+          path: metadata.path,
+          state: data,
+          serverMetadata: metadata,
+        }),
     );
     this.notifyChangeListeners();
     return {
@@ -345,30 +346,32 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
 
       case "add-to-cache": {
         const { remoteLayout } = operation;
-        await this.cacheStorage.runExclusive(async (cache) =>
-          await cache.put({
-            id: remoteLayout.id,
-            name: remoteLayout.name,
-            path: remoteLayout.path,
-            state: undefined,
-            serverMetadata: remoteLayout,
-          }),
+        await this.cacheStorage.runExclusive(
+          async (cache) =>
+            await cache.put({
+              id: remoteLayout.id,
+              name: remoteLayout.name,
+              path: remoteLayout.path,
+              state: undefined,
+              serverMetadata: remoteLayout,
+            }),
         );
         break;
       }
 
       case "update-cached-metadata": {
         const { cachedLayout, remoteLayout } = operation;
-        await this.cacheStorage.runExclusive(async (cache) =>
-          await cache.put({
-            ...cachedLayout,
-            name: remoteLayout.name,
-            path: remoteLayout.path,
-            serverMetadata: remoteLayout,
-            state: undefined, // clear out the state so we know it needs to be fetched from the server
-            locallyDeleted: false,
-            locallyModified: false,
-          }),
+        await this.cacheStorage.runExclusive(
+          async (cache) =>
+            await cache.put({
+              ...cachedLayout,
+              name: remoteLayout.name,
+              path: remoteLayout.path,
+              serverMetadata: remoteLayout,
+              state: undefined, // clear out the state so we know it needs to be fetched from the server
+              locallyDeleted: false,
+              locallyModified: false,
+            }),
         );
         break;
       }
@@ -387,7 +390,9 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
         });
         switch (response.status) {
           case "success":
-            await this.cacheStorage.runExclusive(async (cache) => await cache.delete(cachedLayout.id));
+            await this.cacheStorage.runExclusive(
+              async (cache) => await cache.delete(cachedLayout.id),
+            );
             break;
           case "precondition-failed":
             return {
@@ -458,12 +463,13 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
         const response = await responsePromise;
         switch (response.status) {
           case "success":
-            await this.cacheStorage.runExclusive(async (cache) =>
-              await cache.put({
-                ...cachedLayout,
-                locallyModified: false,
-                serverMetadata: response.newMetadata,
-              }),
+            await this.cacheStorage.runExclusive(
+              async (cache) =>
+                await cache.put({
+                  ...cachedLayout,
+                  locallyModified: false,
+                  serverMetadata: response.newMetadata,
+                }),
             );
             break;
           case "not-found":
