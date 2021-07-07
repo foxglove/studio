@@ -94,11 +94,7 @@ export class XmlRpcClientMock {
       case "lookupService": {
         const serviceName = args[1];
         if (TURTLESIM_SERVICES.has(serviceName as string)) {
-          return [
-            1,
-            "rosrpc URI: [rosrpc://localhost:38017]",
-            "rosrpc://localhost:38017",
-          ];
+          return [1, "rosrpc URI: [rosrpc://localhost:38017]", "rosrpc://localhost:38017"];
         }
         return [-1, "no provider", ""];
       }

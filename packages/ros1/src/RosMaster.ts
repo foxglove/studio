@@ -143,11 +143,7 @@ export class RosMaster {
 
     const dataType = this._topics.get(topic);
     if (dataType != undefined && dataType !== topicType) {
-      return [
-        0,
-        `topic_type "${topicType}" for topic "${topic}" does not match "${dataType}"`,
-        [],
-      ];
+      return [0, `topic_type "${topicType}" for topic "${topic}" does not match "${dataType}"`, []];
     }
 
     if (!this._subscriptions.has(topic)) {
@@ -204,11 +200,7 @@ export class RosMaster {
 
     const dataType = this._topics.get(topic);
     if (dataType != undefined && dataType !== topicType) {
-      return [
-        0,
-        `topic_type "${topicType}" for topic "${topic}" does not match "${dataType}"`,
-        [],
-      ];
+      return [0, `topic_type "${topicType}" for topic "${topic}" does not match "${dataType}"`, []];
     }
 
     if (!this._publications.has(topic)) {
