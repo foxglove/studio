@@ -362,7 +362,9 @@ export default class MemoryCacheDataProvider implements DataProvider {
       start: Math.floor(timeRange.start / this._memCacheBlockSizeNs),
       end: Math.floor((timeRange.end - 1) / this._memCacheBlockSizeNs) + 1, // `Range` defines `end` as exclusive.
     };
-    return await new Promise((resolve) => {
+    // Potentially performance-sensitive
+    // eslint-disable-next-line @typescript-eslint/return-await
+    return new Promise((resolve) => {
       this._readRequests.push({
         timeRange,
         blockRange,

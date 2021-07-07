@@ -180,7 +180,9 @@ async function decodeMessageToBitmap(
     throw new Error(`Message type is not usable for rendering images.`);
   }
 
-  return await self.createImageBitmap(image);
+  // Potentially performance-sensitive
+  // eslint-disable-next-line @typescript-eslint/return-await
+  return self.createImageBitmap(image);
 }
 
 function clearCanvas(canvas?: HTMLCanvasElement) {

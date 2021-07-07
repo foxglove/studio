@@ -71,12 +71,16 @@ export default class OrderedStampPlayer implements Player {
       const { activeData } = state;
       if (!activeData) {
         // No new messages since last time.
-        return await listener(state);
+        // Potentially performance-sensitive
+        // eslint-disable-next-line @typescript-eslint/return-await
+        return listener(state);
       }
       if (this._messageOrder === "receiveTime") {
         // Set "now" to seek to in case messageOrder changes.
         this._currentTime = activeData.currentTime;
-        return await listener(state);
+        // Potentially performance-sensitive
+        // eslint-disable-next-line @typescript-eslint/return-await
+        return listener(state);
       }
 
       if (activeData.lastSeekTime !== this._lastSeekId) {

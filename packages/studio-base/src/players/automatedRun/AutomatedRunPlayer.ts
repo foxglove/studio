@@ -187,7 +187,9 @@ export default class AutomatedRunPlayer implements Player {
   }
 
   async _emitState(messages: readonly MessageEvent<unknown>[], currentTime: Time): Promise<void> {
-    return await this._emitStateQueue.add(async () => {
+    // Potentially performance-sensitive
+    // eslint-disable-next-line @typescript-eslint/return-await
+    return this._emitStateQueue.add(async () => {
       if (!this._listener) {
         return;
       }
@@ -199,7 +201,9 @@ export default class AutomatedRunPlayer implements Player {
       if (initializationResult.messageDefinitions.type === "raw") {
         throw new Error("AutomatedRunPlayer requires parsed message definitions");
       }
-      return await this._listener({
+      // Potentially performance-sensitive
+      // eslint-disable-next-line @typescript-eslint/return-await
+      return this._listener({
         presence: PlayerPresence.PRESENT,
         progress: this._progress,
         capabilities: [],

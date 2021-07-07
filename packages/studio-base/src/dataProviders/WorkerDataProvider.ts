@@ -72,7 +72,9 @@ export default class WorkerDataProvider implements DataProvider {
     if (!this._provider) {
       throw new Error("WorkerDataProvieder not initialized");
     }
-    return await this._provider.getMessages(start, end, topics);
+    // Potentially performance-sensitive
+    // eslint-disable-next-line @typescript-eslint/return-await
+    return this._provider.getMessages(start, end, topics);
   }
 
   async close(): Promise<void> {

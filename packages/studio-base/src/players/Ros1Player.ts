@@ -254,7 +254,9 @@ export default class Ros1Player implements Player {
     const providerTopics = this._providerTopics;
     const start = this._start;
     if (!providerTopics || !start) {
-      return await this._listener({
+      // Potentially performance-sensitive
+      // eslint-disable-next-line @typescript-eslint/return-await
+      return this._listener({
         presence: this._presence,
         progress: {},
         capabilities: CAPABILITIES,
@@ -273,7 +275,9 @@ export default class Ros1Player implements Player {
     const currentTime = this._getCurrentTime();
     const messages = this._parsedMessages;
     this._parsedMessages = [];
-    return await this._listener({
+    // Potentially performance-sensitive
+    // eslint-disable-next-line @typescript-eslint/return-await
+    return this._listener({
       presence: this._presence,
       progress: {},
       capabilities: CAPABILITIES,

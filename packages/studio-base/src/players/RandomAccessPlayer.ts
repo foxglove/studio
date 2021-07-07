@@ -254,7 +254,9 @@ export default class RandomAccessPlayer implements Player {
     }
 
     if (this._hasError) {
-      return await this._listener({
+      // Potentially performance-sensitive
+      // eslint-disable-next-line @typescript-eslint/return-await
+      return this._listener({
         presence: PlayerPresence.ERROR,
         progress: {},
         capabilities: [],
@@ -328,7 +330,9 @@ export default class RandomAccessPlayer implements Player {
           },
     };
 
-    return await this._listener(data);
+    // Potentially performance-sensitive
+    // eslint-disable-next-line @typescript-eslint/return-await
+    return this._listener(data);
   });
 
   async _tick(): Promise<void> {
