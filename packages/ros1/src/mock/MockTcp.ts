@@ -33,22 +33,15 @@ export class MockTcpSocket extends EventEmitter<TcpSocketEvents> implements TcpS
     return this._connected;
   }
 
-  async connect(): Promise<void> {
-    return undefined;
-  }
+  async connect(): Promise<void> {}
 
   async close(): Promise<void> {
     this._connected = false;
-    return undefined;
   }
 
-  async write(_data: Uint8Array): Promise<void> {
-    return undefined;
-  }
+  async write(_data: Uint8Array): Promise<void> {}
 
-  async setNoDelay(_noDelay?: boolean): Promise<void> {
-    return undefined;
-  }
+  async setNoDelay(_noDelay?: boolean): Promise<void> {}
 }
 
 export class MockTcpServer extends EventEmitter<TcpServerEvents> implements TcpServer {

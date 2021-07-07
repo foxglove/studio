@@ -84,7 +84,7 @@ export default function PanelSetupWithBag({
 
       player.setListener(async ({ activeData }: PlayerState) => {
         if (!activeData) {
-          return undefined;
+          return;
         }
         const { messages, topics } = activeData;
         const frame = groupBy(messages, "topic");
@@ -95,7 +95,6 @@ export default function PanelSetupWithBag({
             topics,
           }),
         );
-        return undefined;
       });
     })();
   }, [bag, bag2, getMergedFixture, subscriptions]);

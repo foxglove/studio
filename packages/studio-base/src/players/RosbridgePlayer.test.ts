@@ -161,12 +161,11 @@ describe("RosbridgePlayer", () => {
     player.setListener(async ({ activeData }) => {
       const { topics } = activeData ?? {};
       if (!topics) {
-        return undefined;
+        return;
       }
 
       expect(topics).toStrictEqual([{ name: "/topic/A", datatype: "/std_msgs/Header" }]);
       done();
-      return undefined;
     });
   });
 
@@ -210,7 +209,7 @@ describe("RosbridgePlayer", () => {
       player.setListener(async ({ activeData }) => {
         const { messages } = activeData ?? {};
         if (!messages) {
-          return undefined;
+          return;
         }
 
         expect(messages.length).toBe(1);
@@ -223,7 +222,6 @@ describe("RosbridgePlayer", () => {
         });
 
         done();
-        return undefined;
       });
     });
 
@@ -233,7 +231,7 @@ describe("RosbridgePlayer", () => {
       player.setListener(async ({ activeData }) => {
         const { messages } = activeData ?? {};
         if (!messages) {
-          return undefined;
+          return;
         }
 
         expect(messages.length).toBe(1);
@@ -242,7 +240,6 @@ describe("RosbridgePlayer", () => {
         });
 
         done();
-        return undefined;
       });
     });
   });

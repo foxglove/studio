@@ -48,8 +48,8 @@ export class TcpSocketNode extends EventEmitter<TcpSocketEvents> implements TcpS
     const family = this._socket.remoteFamily; // There is no localFamily
     const address = this._socket.localAddress;
     return port != undefined && family != undefined && address != undefined
-        ? { port, family, address }
-        : undefined;
+      ? { port, family, address }
+      : undefined;
   }
 
   async fd(): Promise<number | undefined> {
@@ -79,7 +79,6 @@ export class TcpSocketNode extends EventEmitter<TcpSocketEvents> implements TcpS
 
   async close(): Promise<void> {
     this._socket.destroy();
-    return undefined;
   }
 
   async write(data: Uint8Array): Promise<void> {
@@ -96,7 +95,6 @@ export class TcpSocketNode extends EventEmitter<TcpSocketEvents> implements TcpS
 
   async setNoDelay(noDelay?: boolean): Promise<void> {
     this._socket.setNoDelay(noDelay);
-    return undefined;
   }
 
   static async Create({ host, port }: { host: string; port: number }): Promise<TcpSocket> {

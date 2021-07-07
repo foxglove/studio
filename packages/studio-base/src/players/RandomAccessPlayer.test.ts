@@ -1122,7 +1122,6 @@ describe("RandomAccessPlayer", () => {
           }
         ).messages,
       );
-      return undefined;
     });
     source.setSubscriptions([{ topic: "/foo/bar" }, { topic: "/baz" }]);
     source.requestBackfill(); // We always get a `requestBackfill` after each `setSubscriptions`.
@@ -1499,9 +1498,7 @@ describe("RandomAccessPlayer", () => {
 
   it("seeks the player after starting", async () => {
     const provider = new TestProvider();
-    provider.getMessages = jest
-      .fn()
-      .mockImplementation(async () => getMessagesResult);
+    provider.getMessages = jest.fn().mockImplementation(async () => getMessagesResult);
     const player = new RandomAccessPlayer(
       { name: "TestProvider", args: { provider }, children: [] },
       playerOptions,
@@ -1524,9 +1521,7 @@ describe("RandomAccessPlayer", () => {
 
   it("does not seek until setListener is called to initialize the start and end time", async () => {
     const provider = new TestProvider();
-    provider.getMessages = jest
-      .fn()
-      .mockImplementation(async () => getMessagesResult);
+    provider.getMessages = jest.fn().mockImplementation(async () => getMessagesResult);
     const player = new RandomAccessPlayer(
       { name: "TestProvider", args: { provider }, children: [] },
       playerOptions,
@@ -1548,9 +1543,7 @@ describe("RandomAccessPlayer", () => {
 
   it("keeps currentTime reference equality if current time does not change", async () => {
     const provider = new TestProvider();
-    provider.getMessages = jest
-      .fn()
-      .mockImplementation(async () => getMessagesResult);
+    provider.getMessages = jest.fn().mockImplementation(async () => getMessagesResult);
     const player = new RandomAccessPlayer(
       { name: "TestProvider", args: { provider }, children: [] },
       playerOptions,

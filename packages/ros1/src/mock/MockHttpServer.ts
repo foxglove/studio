@@ -31,7 +31,6 @@ export class MockHttpServer implements HttpServer {
   async listen(port?: number, hostname?: string, _backlog?: number): Promise<void> {
     this._port = port ?? this._defaultPort;
     this._hostname = hostname ?? this._defaultHost;
-    return undefined;
   }
 
   close(): void {
