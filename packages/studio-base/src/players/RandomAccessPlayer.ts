@@ -254,7 +254,7 @@ export default class RandomAccessPlayer implements Player {
     }
 
     if (this._hasError) {
-      return this._listener({
+      return await this._listener({
         presence: PlayerPresence.ERROR,
         progress: {},
         capabilities: [],
@@ -328,7 +328,7 @@ export default class RandomAccessPlayer implements Player {
           },
     };
 
-    return this._listener(data);
+    return await this._listener(data);
   });
 
   async _tick(): Promise<void> {

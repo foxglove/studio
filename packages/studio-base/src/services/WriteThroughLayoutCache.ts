@@ -16,7 +16,7 @@ export default class WriteThroughLayoutCache implements ILayoutCache {
 
   constructor(private cache: ILayoutCache) {
     this.map = new LazilyInitialized(async () =>
-      this.cache.list().then((layouts) => new Map(layouts.map((layout) => [layout.id, layout]))),
+      await this.cache.list().then((layouts) => new Map(layouts.map((layout) => [layout.id, layout]))),
     );
   }
 

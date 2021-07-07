@@ -180,7 +180,7 @@ async function decodeMessageToBitmap(
     throw new Error(`Message type is not usable for rendering images.`);
   }
 
-  return self.createImageBitmap(image);
+  return await self.createImageBitmap(image);
 }
 
 function clearCanvas(canvas?: HTMLCanvasElement) {

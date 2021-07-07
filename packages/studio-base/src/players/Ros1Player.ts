@@ -114,7 +114,7 @@ export default class Ros1Player implements Player {
     const net = await Sockets.Create();
     const httpServer = await net.createHttpServer();
     const tcpSocketCreate = async (options: { host: string; port: number }): Promise<TcpSocket> => {
-      return net.createSocket(options.host, options.port);
+      return await net.createSocket(options.host, options.port);
     };
     const tcpServer = await net.createServer();
     void tcpServer.listen(undefined, hostname, 10);
@@ -254,7 +254,7 @@ export default class Ros1Player implements Player {
     const providerTopics = this._providerTopics;
     const start = this._start;
     if (!providerTopics || !start) {
-      return this._listener({
+      return await this._listener({
         presence: this._presence,
         progress: {},
         capabilities: CAPABILITIES,
@@ -273,7 +273,7 @@ export default class Ros1Player implements Player {
     const currentTime = this._getCurrentTime();
     const messages = this._parsedMessages;
     this._parsedMessages = [];
-    return this._listener({
+    return await this._listener({
       presence: this._presence,
       progress: {},
       capabilities: CAPABILITIES,

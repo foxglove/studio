@@ -261,7 +261,7 @@ export default class RosbridgePlayer implements Player {
 
     const { _providerTopics, _providerDatatypes, _start } = this;
     if (!_providerTopics || !_providerDatatypes || !_start) {
-      return this._listener({
+      return await this._listener({
         presence: this._presence,
         progress: {},
         capabilities: CAPABILITIES,
@@ -280,7 +280,7 @@ export default class RosbridgePlayer implements Player {
     const currentTime = this._getCurrentTime();
     const messages = this._parsedMessages;
     this._parsedMessages = [];
-    return this._listener({
+    return await this._listener({
       presence: this._presence,
       progress: {},
       capabilities: CAPABILITIES,

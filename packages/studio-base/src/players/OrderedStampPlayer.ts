@@ -71,12 +71,12 @@ export default class OrderedStampPlayer implements Player {
       const { activeData } = state;
       if (!activeData) {
         // No new messages since last time.
-        return listener(state);
+        return await listener(state);
       }
       if (this._messageOrder === "receiveTime") {
         // Set "now" to seek to in case messageOrder changes.
         this._currentTime = activeData.currentTime;
-        return listener(state);
+        return await listener(state);
       }
 
       if (activeData.lastSeekTime !== this._lastSeekId) {
@@ -185,7 +185,7 @@ export default class OrderedStampPlayer implements Player {
     this.seekPlayback(this._currentTime);
   }
   async setUserNodes(nodes: UserNodes): Promise<void> {
-    return this._player.setUserNodes(nodes);
+    return await this._player.setUserNodes(nodes);
   }
   setGlobalVariables(globalVariables: GlobalVariables): void {
     this._player.setGlobalVariables(globalVariables);

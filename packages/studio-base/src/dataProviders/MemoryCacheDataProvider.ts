@@ -362,7 +362,7 @@ export default class MemoryCacheDataProvider implements DataProvider {
       start: Math.floor(timeRange.start / this._memCacheBlockSizeNs),
       end: Math.floor((timeRange.end - 1) / this._memCacheBlockSizeNs) + 1, // `Range` defines `end` as exclusive.
     };
-    return new Promise((resolve) => {
+    return await new Promise((resolve) => {
       this._readRequests.push({
         timeRange,
         blockRange,
@@ -377,7 +377,7 @@ export default class MemoryCacheDataProvider implements DataProvider {
   async close(): Promise<void> {
     delete this._currentConnection; // Make sure that the current "connection" loop stops executing.
 
-    return this._provider.close();
+    return await this._provider.close();
   }
 
   // We're primarily interested in the topics for the first outstanding read request, and after that

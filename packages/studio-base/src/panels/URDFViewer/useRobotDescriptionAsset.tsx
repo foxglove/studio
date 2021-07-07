@@ -22,7 +22,7 @@ export default function useRobotDescriptionAsset(): {
     if (robotDescriptionParam == undefined) {
       return undefined;
     }
-    return new URDFAssetLoader().load(new File([robotDescriptionParam], "robot_description.urdf"), {
+    return await new URDFAssetLoader().load(new File([robotDescriptionParam], "robot_description.urdf"), {
       basePath: undefined,
     });
   }, [robotDescriptionParam]);

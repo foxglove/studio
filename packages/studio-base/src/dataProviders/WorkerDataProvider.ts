@@ -65,14 +65,14 @@ export default class WorkerDataProvider implements DataProvider {
     }
 
     this._provider = new RpcDataProvider(new Rpc(this._worker), [this._child]);
-    return this._provider.initialize(extensionPoint);
+    return await this._provider.initialize(extensionPoint);
   }
 
   async getMessages(start: Time, end: Time, topics: GetMessagesTopics): Promise<GetMessagesResult> {
     if (!this._provider) {
       throw new Error("WorkerDataProvieder not initialized");
     }
-    return this._provider.getMessages(start, end, topics);
+    return await this._provider.getMessages(start, end, topics);
   }
 
   async close(): Promise<void> {
