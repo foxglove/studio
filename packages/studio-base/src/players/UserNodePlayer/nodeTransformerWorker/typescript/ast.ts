@@ -11,9 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-// @ts-nocheck
-/* eslint-disable @typescript-eslint/strict-boolean-expressions */
-
 import { without } from "lodash";
 import ts from "typescript/lib/typescript";
 
@@ -75,6 +72,7 @@ export const findChild = (node: ts.Node, kind: ts.SyntaxKind[]): ts.Node | undef
     if (kind.includes(child.kind)) {
       return child;
     }
+    return undefined;
   });
 
 // Symbols can have multiple declarations associated with them. For instance,
@@ -82,11 +80,12 @@ export const findChild = (node: ts.Node, kind: ts.SyntaxKind[]): ts.Node | undef
 // symbol. In those instances, we should ideally search through the declarations
 // on a symbol to explicitly find what we are looking for.
 export const findDeclaration = (symbol: ts.Symbol, kind: ts.SyntaxKind[]): ts.Node | undefined => {
-  for (const declaration of symbol.declarations) {
+  for (const declaration of symbol.declarations ?? []) {
     if (kind.includes(declaration.kind)) {
       return declaration;
     }
   }
+  return undefined;
 };
 
 const findImportedTypeDeclaration = (
@@ -106,10 +105,13 @@ const buildTypeMapFromParams = (
   typeParameters: ts.TypeParameterDeclaration[] = [],
   typeMap: TypeMap,
 ): TypeMap => {
-  const newTypeParamMap = {};
+  const newTypeParamMap: TypeMap = {};
   for (let i = 0; i < typeParameters.length; i++) {
     const currentParam = typeParameters[i];
-    newTypeParamMap[currentParam.name.escapedText] = {
+    if (!currentParam) {
+      continue;
+    }
+    newTypeParamMap[currentParam.name.escapedText.toString()] = {
       current: currentParam,
       parent: typeMap[i] ?? { parent: undefined, current: currentParam.default },
     };
@@ -118,7 +120,7 @@ const buildTypeMapFromParams = (
 };
 
 const buildTypeMapFromArgs = (typeArguments: ts.TypeNode[] = [], typeMap: TypeMap): TypeMap => {
-  const newTypeParamMap = {};
+  const newTypeParamMap: TypeMap = {};
   typeArguments.forEach((typeArg, i) => {
     const text = typeArg.getText();
     const parent = typeMap[text] ?? typeMap[i];
@@ -172,7 +174,7 @@ export const findDefaultExportFunction = (
 export const findReturnType = (
   checker: ts.TypeChecker,
   depth: number = 1,
-  node: ts.Node,
+  node?: ts.Node,
 ): ts.TypeLiteralNode | ts.InterfaceDeclaration => {
   if (depth > MAX_DEPTH) {
     throw new Error(`Max AST traversal depth exceeded ${MAX_DEPTH}.`);
@@ -187,7 +189,7 @@ export const findReturnType = (
   switch (node.kind) {
     case ts.SyntaxKind.TypeLiteral:
     case ts.SyntaxKind.InterfaceDeclaration:
-      return node;
+      return node as ts.InterfaceDeclaration;
     case ts.SyntaxKind.ArrowFunction: {
       const nextNode = findChild(node, [
         ts.SyntaxKind.TypeReference,
@@ -203,7 +205,7 @@ export const findReturnType = (
     }
     case ts.SyntaxKind.Identifier: {
       const symbol = checker.getSymbolAtLocation(node);
-      if (!symbol.valueDeclaration) {
+      if (!symbol?.valueDeclaration) {
         throw new DatatypeExtractionError(nonFuncError);
       }
       return visitNext(symbol.valueDeclaration);
@@ -216,7 +218,11 @@ export const findReturnType = (
       return visitNext(nextNode);
     }
     case ts.SyntaxKind.TypeReference: {
-      const symbol = checker.getSymbolAtLocation(node.typeName);
+      const typeRef = node as ts.TypeReferenceNode;
+      const symbol = checker.getSymbolAtLocation(typeRef.typeName);
+      if (!symbol) {
+        return visitNext();
+      }
       const nextNode = findDeclaration(symbol, [
         ts.SyntaxKind.TypeAliasDeclaration,
         ts.SyntaxKind.InterfaceDeclaration,
@@ -230,10 +236,10 @@ export const findReturnType = (
       return visitNext(nextNode);
     }
     case ts.SyntaxKind.FunctionType: {
-      return visitNext(node.type);
+      return visitNext((node as ts.FunctionTypeNode).type);
     }
     case ts.SyntaxKind.TypeAliasDeclaration: {
-      return visitNext(node.type);
+      return visitNext((node as ts.TypeAliasDeclaration).type);
     }
     case ts.SyntaxKind.ImportSpecifier: {
       const declaration = findImportedTypeDeclaration(checker, node, [
@@ -244,8 +250,9 @@ export const findReturnType = (
     }
 
     case ts.SyntaxKind.IndexedAccessType: {
-      const declaration = visitNext(node.objectType);
-      const indexedProperty = node.indexType?.literal?.text;
+      const indexedNode = node as ts.IndexedAccessTypeNode;
+      const declaration = visitNext(indexedNode.objectType);
+      const indexedProperty = indexedNode.indexType?.literal?.text;
 
       const next = declaration.members.find((member) => member.name?.text === indexedProperty);
 
@@ -268,7 +275,7 @@ export const findReturnType = (
       throw new DatatypeExtractionError(classError);
     }
     case ts.SyntaxKind.UnionType: {
-      const remainingTypes = node.types.filter(
+      const remainingTypes = (node as ts.UnionTypeNode).types.filter(
         ({ kind }) => kind !== ts.SyntaxKind.UndefinedKeyword,
       );
       if (remainingTypes.length !== 1) {
@@ -538,7 +545,7 @@ export const constructDatatypes = (
     }
   };
 
-  const { members } = node;
+  const { members = [] } = node;
   const rosMsgFields = members.map(({ type, name }) =>
     getRosMsgField(name.getText(), type, false, false, currentTypeParamMap, depth + 1),
   );

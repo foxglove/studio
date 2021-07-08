@@ -11,9 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-// @ts-nocheck
-/* eslint-disable @typescript-eslint/strict-boolean-expressions */
-
 import ts from "typescript/lib/typescript";
 
 import { formatInterfaceName } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/generateRosLib";
@@ -85,7 +82,7 @@ export const getInputTopics = (nodeData: NodeData): NodeData => {
     };
   }
 
-  const inputTopicElements = inputsExport.declarations[0]?.initializer?.elements;
+  const inputTopicElements = inputsExport?.declarations?.[0]?.initializer?.elements;
   if (
     !inputTopicElements ||
     inputTopicElements.some(({ kind }) => kind !== ts.SyntaxKind.StringLiteral)
@@ -363,7 +360,7 @@ export const extractDatatypes = (nodeData: NodeData): NodeData => {
   }
 
   // Keys each message definition like { 'std_msg__ColorRGBA': 'std_msg/ColorRGBA' }
-  const messageDefinitionMap = {};
+  const messageDefinitionMap: Record<string, string> = {};
   Object.keys(sourceDatatypes).forEach((datatype) => {
     messageDefinitionMap[formatInterfaceName(datatype)] = datatype;
   });
@@ -456,8 +453,7 @@ const transform = ({
     },
     topics,
   );
-  // eslint-disable-next-line no-restricted-syntax
-  return { ...result, sourceFile: null, typeChecker: null };
+  return { ...result, sourceFile: undefined, typeChecker: undefined };
 };
 
 export default transform;
