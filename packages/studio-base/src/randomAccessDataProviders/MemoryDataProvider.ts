@@ -19,9 +19,9 @@ import {
   GetMessagesResult,
   GetMessagesTopics,
   InitializationResult,
-  DataProvider,
+  RandomAccessDataProvider,
   MessageDefinitions,
-} from "@foxglove/studio-base/dataProviders/types";
+} from "@foxglove/studio-base/randomAccessDataProviders/types";
 import {
   Topic,
   MessageDefinitionsByTopic,
@@ -66,7 +66,7 @@ type MemoryDataProviderOptions = {
 };
 
 // in-memory data provider
-export default class MemoryDataProvider implements DataProvider {
+export default class MemoryDataProvider implements RandomAccessDataProvider {
   messages: GetMessagesResult;
   topics?: Topic[];
   datatypes?: RosDatatypes;

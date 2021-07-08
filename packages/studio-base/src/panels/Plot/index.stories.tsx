@@ -15,7 +15,7 @@ import { useCallback, useRef } from "react";
 
 import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
 import SchemaEditor from "@foxglove/studio-base/components/PanelSettings/SchemaEditor";
-import { BlockCache } from "@foxglove/studio-base/dataProviders/MemoryCacheDataProvider";
+import { BlockCache } from "@foxglove/studio-base/randomAccessDataProviders/MemoryCacheDataProvider";
 import Plot, { PlotConfig } from "@foxglove/studio-base/panels/Plot";
 import PanelSetup, { triggerWheel } from "@foxglove/studio-base/stories/PanelSetup";
 import { fromSec } from "@foxglove/studio-base/util/time";

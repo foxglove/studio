@@ -11,10 +11,10 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import BagDataProvider from "@foxglove/studio-base/dataProviders/BagDataProvider";
-import CombinedDataProvider from "@foxglove/studio-base/dataProviders/CombinedDataProvider";
-import ParseMessagesDataProvider from "@foxglove/studio-base/dataProviders/ParseMessagesDataProvider";
-import RenameDataProvider from "@foxglove/studio-base/dataProviders/RenameDataProvider";
+import BagDataProvider from "@foxglove/studio-base/randomAccessDataProviders/BagDataProvider";
+import CombinedDataProvider from "@foxglove/studio-base/randomAccessDataProviders/CombinedDataProvider";
+import ParseMessagesDataProvider from "@foxglove/studio-base/randomAccessDataProviders/ParseMessagesDataProvider";
+import RenameDataProvider from "@foxglove/studio-base/randomAccessDataProviders/RenameDataProvider";
 import {
   PlayerState,
   SubscribePayload,

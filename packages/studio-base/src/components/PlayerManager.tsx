@@ -37,12 +37,12 @@ import PlayerSelectionContext, {
   PlayerSourceDefinition,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { useUserNodeState } from "@foxglove/studio-base/context/UserNodeStateContext";
-import { CoreDataProviders } from "@foxglove/studio-base/dataProviders/constants";
-import { getRemoteBagGuid } from "@foxglove/studio-base/dataProviders/getRemoteBagGuid";
+import { CoreDataProviders } from "@foxglove/studio-base/randomAccessDataProviders/constants";
+import { getRemoteBagGuid } from "@foxglove/studio-base/randomAccessDataProviders/getRemoteBagGuid";
 import {
   getLocalBagDescriptor,
   getRemoteBagDescriptor,
-} from "@foxglove/studio-base/dataProviders/standardDataProviderDescriptors";
+} from "@foxglove/studio-base/randomAccessDataProviders/standardDataProviderDescriptors";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { usePrompt } from "@foxglove/studio-base/hooks/usePrompt";

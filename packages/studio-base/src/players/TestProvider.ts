@@ -16,10 +16,10 @@ import { Time } from "rosbag";
 import {
   ExtensionPoint,
   InitializationResult,
-  DataProvider,
+  RandomAccessDataProvider,
   GetMessagesResult,
   GetMessagesTopics,
-} from "@foxglove/studio-base/dataProviders/types";
+} from "@foxglove/studio-base/randomAccessDataProviders/types";
 import { Topic } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
@@ -53,7 +53,7 @@ type GetMessages = (
   topics: GetMessagesTopics,
 ) => Promise<GetMessagesResult>;
 
-export default class TestProvider implements DataProvider {
+export default class TestProvider implements RandomAccessDataProvider {
   _start: Time;
   _end: Time;
   _topics: Topic[];

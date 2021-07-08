@@ -21,7 +21,7 @@ import {
   GetMessagesResult,
   GetMessagesTopics,
   InitializationResult,
-} from "@foxglove/studio-base/dataProviders/types";
+} from "@foxglove/studio-base/randomAccessDataProviders/types";
 import {
   MessageEvent,
   PlayerCapabilities,
@@ -946,7 +946,7 @@ describe("RandomAccessPlayer", () => {
     source.close();
   });
 
-  it("clamps times passed to the DataProvider", async () => {
+  it("clamps times passed to the RandomAccessDataProvider", async () => {
     const provider = new TestProvider();
     const source = new RandomAccessPlayer(
       { name: "TestProvider", args: { provider }, children: [] },
