@@ -15,6 +15,7 @@ import { assign, flatten, isEqual } from "lodash";
 import memoizeWeak from "memoize-weak";
 import { TimeUtil, Time } from "rosbag";
 
+import { Progress, MessageEvent } from "@foxglove/studio-base/players/types";
 import {
   BlockCache,
   MemoryCacheBlock,
@@ -30,7 +31,6 @@ import {
   MessageDefinitions,
   ParsedMessageDefinitions,
 } from "@foxglove/studio-base/randomAccessDataProviders/types";
-import { Progress, MessageEvent } from "@foxglove/studio-base/players/types";
 import { RosDatatype } from "@foxglove/studio-base/types/RosDatatypes";
 import filterMap from "@foxglove/studio-base/util/filterMap";
 import { deepIntersect } from "@foxglove/studio-base/util/ranges";

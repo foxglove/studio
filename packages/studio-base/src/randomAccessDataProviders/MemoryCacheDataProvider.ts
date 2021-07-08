@@ -18,6 +18,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
 import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
 import {
   RandomAccessDataProvider,
   RandomAccessDataProviderDescriptor,
@@ -27,7 +28,6 @@ import {
   GetMessagesTopics,
   InitializationResult,
 } from "@foxglove/studio-base/randomAccessDataProviders/types";
-import { MessageEvent } from "@foxglove/studio-base/players/types";
 import filterMap from "@foxglove/studio-base/util/filterMap";
 import { getNewConnection } from "@foxglove/studio-base/util/getNewConnection";
 import {

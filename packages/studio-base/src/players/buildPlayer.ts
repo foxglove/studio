@@ -2,14 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { CoreDataProviders } from "@foxglove/studio-base/randomAccessDataProviders/constants";
-import { rootGetDataProvider } from "@foxglove/studio-base/randomAccessDataProviders/rootGetDataProvider";
-import { RandomAccessDataProviderDescriptor } from "@foxglove/studio-base/randomAccessDataProviders/types";
 import RandomAccessPlayer from "@foxglove/studio-base/players/RandomAccessPlayer";
 import AutomatedRunPlayer from "@foxglove/studio-base/players/automatedRun/AutomatedRunPlayer";
 import PerformanceMeasuringClient from "@foxglove/studio-base/players/automatedRun/PerformanceMeasuringClient";
 import videoRecordingClient from "@foxglove/studio-base/players/automatedRun/videoRecordingClient";
 import { Player, PlayerMetricsCollectorInterface } from "@foxglove/studio-base/players/types";
+import { CoreDataProviders } from "@foxglove/studio-base/randomAccessDataProviders/constants";
+import { rootGetDataProvider } from "@foxglove/studio-base/randomAccessDataProviders/rootGetDataProvider";
+import { RandomAccessDataProviderDescriptor } from "@foxglove/studio-base/randomAccessDataProviders/types";
 import {
   inVideoRecordingMode,
   inPlaybackPerformanceMeasuringMode,

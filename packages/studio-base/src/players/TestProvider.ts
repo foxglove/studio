@@ -13,6 +13,7 @@
 
 import { Time } from "rosbag";
 
+import { Topic } from "@foxglove/studio-base/players/types";
 import {
   ExtensionPoint,
   InitializationResult,
@@ -20,7 +21,6 @@ import {
   GetMessagesResult,
   GetMessagesTopics,
 } from "@foxglove/studio-base/randomAccessDataProviders/types";
-import { Topic } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 const defaultStart = { sec: 10, nsec: 0 };

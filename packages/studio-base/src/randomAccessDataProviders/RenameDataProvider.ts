@@ -14,6 +14,7 @@
 import memoizeWeak from "memoize-weak";
 import { Time } from "rosbag";
 
+import { Progress, Topic, MessageEvent } from "@foxglove/studio-base/players/types";
 import {
   BlockCache,
   MemoryCacheBlock,
@@ -29,7 +30,6 @@ import {
   RandomAccessDataProvider,
   MessageDefinitions,
 } from "@foxglove/studio-base/randomAccessDataProviders/types";
-import { Progress, Topic, MessageEvent } from "@foxglove/studio-base/players/types";
 import { isNonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
 import filterMap from "@foxglove/studio-base/util/filterMap";
 

@@ -17,6 +17,7 @@ import ReadResult from "rosbag/dist/ReadResult";
 import decompressLZ4 from "wasm-lz4";
 
 import Logger from "@foxglove/log";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
 import BrowserHttpReader from "@foxglove/studio-base/randomAccessDataProviders/BrowserHttpReader";
 import {
   RandomAccessDataProvider,
@@ -29,7 +30,6 @@ import {
   AverageThroughput,
 } from "@foxglove/studio-base/randomAccessDataProviders/types";
 import { getReportMetadataForChunk } from "@foxglove/studio-base/randomAccessDataProviders/util";
-import { MessageEvent } from "@foxglove/studio-base/players/types";
 import CachedFilelike, { FileReader } from "@foxglove/studio-base/util/CachedFilelike";
 import { bagConnectionsToTopics } from "@foxglove/studio-base/util/bagConnectionsHelper";
 import { getBagChunksOverlapCount } from "@foxglove/studio-base/util/bags";

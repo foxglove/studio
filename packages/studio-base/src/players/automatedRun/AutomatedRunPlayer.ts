@@ -18,11 +18,6 @@ import { v4 as uuidv4 } from "uuid";
 
 import Logger from "@foxglove/log";
 import {
-  RandomAccessDataProvider,
-  RandomAccessDataProviderMetadata,
-  InitializationResult,
-} from "@foxglove/studio-base/randomAccessDataProviders/types";
-import {
   AdvertisePayload,
   MessageEvent,
   ParameterValue,
@@ -34,6 +29,11 @@ import {
   SubscribePayload,
   Topic,
 } from "@foxglove/studio-base/players/types";
+import {
+  RandomAccessDataProvider,
+  RandomAccessDataProviderMetadata,
+  InitializationResult,
+} from "@foxglove/studio-base/randomAccessDataProviders/types";
 import { USER_ERROR_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 import sendNotification, {
   NotificationType,

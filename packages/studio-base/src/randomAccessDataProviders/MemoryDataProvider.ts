@@ -15,6 +15,12 @@ import { last } from "lodash";
 import { TimeUtil, Time } from "rosbag";
 
 import {
+  Topic,
+  MessageDefinitionsByTopic,
+  ParsedMessageDefinitionsByTopic,
+  MessageEvent,
+} from "@foxglove/studio-base/players/types";
+import {
   ExtensionPoint,
   GetMessagesResult,
   GetMessagesTopics,
@@ -22,12 +28,6 @@ import {
   RandomAccessDataProvider,
   MessageDefinitions,
 } from "@foxglove/studio-base/randomAccessDataProviders/types";
-import {
-  Topic,
-  MessageDefinitionsByTopic,
-  ParsedMessageDefinitionsByTopic,
-  MessageEvent,
-} from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 function filterMessages<T>(
