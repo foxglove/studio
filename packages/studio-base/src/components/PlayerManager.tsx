@@ -56,7 +56,7 @@ import { CoreDataProviders } from "@foxglove/studio-base/randomAccessDataProvide
 import { getRemoteBagGuid } from "@foxglove/studio-base/randomAccessDataProviders/getRemoteBagGuid";
 import {
   getLocalBagDescriptor,
-  getLocalRosbag2Descriptor
+  getLocalRosbag2Descriptor,
   getRemoteBagDescriptor,
 } from "@foxglove/studio-base/randomAccessDataProviders/standardDataProviderDescriptors";
 import { UserNodes } from "@foxglove/studio-base/types/panels";

@@ -9,31 +9,31 @@ import { ROS2_TO_DEFINITIONS, Rosbag2, openFileSystemDirectoryHandle } from "@fo
 import { stringify } from "@foxglove/rosmsg";
 import { MessageEvent } from "@foxglove/studio";
 import {
-  Connection,
-  DataProvider,
-  DataProviderDescriptor,
-  DataProviderProblem,
-  ExtensionPoint,
-  GetMessagesResult,
-  GetMessagesTopics,
-  InitializationResult,
-} from "@foxglove/studio-base/dataProviders/types";
-import {
   MessageDefinitionsByTopic,
   ParsedMessageDefinitionsByTopic,
   Topic,
 } from "@foxglove/studio-base/players/types";
+import {
+  Connection,
+  RandomAccessDataProvider,
+  RandomAccessDataProviderDescriptor,
+  RandomAccessDataProviderProblem,
+  ExtensionPoint,
+  GetMessagesResult,
+  GetMessagesTopics,
+  InitializationResult,
+} from "@foxglove/studio-base/randomAccessDataProviders/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 type BagFolderPath = { type: "folder"; folder: FileSystemDirectoryHandle | string };
 
 type Options = { bagFolderPath: BagFolderPath };
 
-export default class Rosbag2DataProvider implements DataProvider {
+export default class Rosbag2DataProvider implements RandomAccessDataProvider {
   private options_: Options;
   private bag_?: Rosbag2;
 
-  constructor(options: Options, children: DataProviderDescriptor[]) {
+  constructor(options: Options, children: RandomAccessDataProviderDescriptor[]) {
     if (children.length > 0) {
       throw new Error("Rosbag2DataProvider cannot have children");
     }
@@ -54,7 +54,7 @@ export default class Rosbag2DataProvider implements DataProvider {
     const topicDefs = await this.bag_.readTopics();
     const messageCounts = await this.bag_.messageCounts();
 
-    const problems: DataProviderProblem[] = [];
+    const problems: RandomAccessDataProviderProblem[] = [];
     const topics: Topic[] = [];
     const connections: Connection[] = [];
     const datatypes: RosDatatypes = {};

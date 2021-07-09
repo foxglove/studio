@@ -50,7 +50,7 @@ import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 //
 // RandomAccessDataProviders have a strict API which is enforced automatically in ApiCheckerDataProvider.
 
-export type DataProviderProblem = {
+export type RandomAccessDataProviderProblem = {
   severity: "error" | "warning";
   message: string;
   error?: Error;
@@ -141,7 +141,7 @@ export type InitializationResult = {
 
   // Any errors or warnings that should be surfaced to the user as a result of initializing a data
   // provider
-  problems: DataProviderProblem[];
+  problems: RandomAccessDataProviderProblem[];
 };
 
 export type ExtensionPoint = {
