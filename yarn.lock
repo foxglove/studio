@@ -2108,16 +2108,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/eslint-plugin@npm:0.12.2":
-  version: 0.12.2
-  resolution: "@foxglove/eslint-plugin@npm:0.12.2"
+"@foxglove/eslint-plugin@npm:0.13.0":
+  version: 0.13.0
+  resolution: "@foxglove/eslint-plugin@npm:0.13.0"
   peerDependencies:
     eslint: ^7
     eslint-config-prettier: ^8
+    eslint-plugin-filenames: ^1
     eslint-plugin-import: ^2
     eslint-plugin-prettier: ^3
     prettier: ^2
-  checksum: fcb91db4e54381b3ea907989bc8d735cb427667e24ccfca17ae32fbbf59928602f0ecd93cec52464665677ad5a17894ff367dbf643dfaeabe4d1936985f7db4b
+  checksum: 94cc99f0ff7bd84443b40d509bdb44696716f801f1bd3a4e6e174366d8e275d6427f95dea43004ba95116796482304c75cb728750930ba553f30d4ae4d46071a
   languageName: node
   linkType: hard
 
@@ -2130,11 +2131,11 @@ __metadata:
   linkType: soft
 
 "@foxglove/just-fetch@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "@foxglove/just-fetch@npm:1.2.0"
+  version: 1.2.1
+  resolution: "@foxglove/just-fetch@npm:1.2.1"
   dependencies:
     node-fetch: ^3.0.0-beta.9
-  checksum: 0334ab426dddd68d25fced4dce8118cc982929d85b4a489dcf521232ffbef17deb175cfbe5bfcf28f258fe7d3c215bf641cb3db414b73981debb604b7f8d4a5b
+  checksum: 2f88bc819db3ac29b03cd6c2315625eaeb43d62c59158ac17cf0b0bc97cb3220033d8c03aeb3d5d1832e3032cd507234628d13d6bdfe2f926c180189dbc8d47e
   languageName: node
   linkType: hard
 
@@ -12690,7 +12691,7 @@ __metadata:
     "@babel/core": 7.14.6
     "@babel/preset-env": 7.14.7
     "@babel/preset-typescript": 7.14.5
-    "@foxglove/eslint-plugin": 0.12.2
+    "@foxglove/eslint-plugin": 0.13.0
     "@foxglove/tsconfig": 1.0.0
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.0-rc.0
     "@sentry/electron": 2.5.0

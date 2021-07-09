@@ -44,13 +44,3 @@ export function getRemoteBagDescriptor(
 
   return wrapInWorker(bagDataProvider);
 }
-
-export function getLocalRosbag2Descriptor(
-  folder: FileSystemDirectoryHandle,
-): DataProviderDescriptor {
-  return {
-    name: CoreDataProviders.Rosbag2DataProvider,
-    args: { bagFolderPath: { type: "folder", folder } },
-    children: [],
-  };
-}

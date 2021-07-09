@@ -13,9 +13,9 @@
 
 import ApiCheckerDataProvider from "@foxglove/studio-base/dataProviders/ApiCheckerDataProvider";
 import BagDataProvider from "@foxglove/studio-base/dataProviders/BagDataProvider";
+import Rosbag2DataProvider from "@foxglove/studio-base/dataProviders/Rosbag2DataProvider";
 import RpcDataProviderRemote from "@foxglove/studio-base/dataProviders/RpcDataProviderRemote";
 import createGetDataProvider from "@foxglove/studio-base/dataProviders/createGetDataProvider";
-import Rosbag2DataProvider from "@foxglove/studio-base/dataProviders/Rosbag2DataProvider";
 import Rpc, { Channel } from "@foxglove/studio-base/util/Rpc";
 import { inWebWorker } from "@foxglove/studio-base/util/workers";
 

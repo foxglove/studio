@@ -37,13 +37,6 @@ import PlayerSelectionContext, {
   PlayerSourceDefinition,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { useUserNodeState } from "@foxglove/studio-base/context/UserNodeStateContext";
-import { CoreDataProviders } from "@foxglove/studio-base/dataProviders/constants";
-import { getRemoteBagGuid } from "@foxglove/studio-base/dataProviders/getRemoteBagGuid";
-import {
-  getLocalBagDescriptor,
-  getLocalRosbag2Descriptor,
-  getRemoteBagDescriptor,
-} from "@foxglove/studio-base/dataProviders/standardDataProviderDescriptors";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { usePrompt } from "@foxglove/studio-base/hooks/usePrompt";
@@ -59,6 +52,13 @@ import {
 } from "@foxglove/studio-base/players/buildPlayer";
 import { buildRosbag2PlayerFromDescriptor } from "@foxglove/studio-base/players/buildRosbag2Player";
 import { Player } from "@foxglove/studio-base/players/types";
+import { CoreDataProviders } from "@foxglove/studio-base/randomAccessDataProviders/constants";
+import { getRemoteBagGuid } from "@foxglove/studio-base/randomAccessDataProviders/getRemoteBagGuid";
+import {
+  getLocalBagDescriptor,
+  getLocalRosbag2Descriptor
+  getRemoteBagDescriptor,
+} from "@foxglove/studio-base/randomAccessDataProviders/standardDataProviderDescriptors";
 import { UserNodes } from "@foxglove/studio-base/types/panels";
 import Storage from "@foxglove/studio-base/util/Storage";
 import { AppError } from "@foxglove/studio-base/util/errors";
@@ -254,7 +254,8 @@ async function remoteBagFileSource(options: FactoryOptions) {
 
   const url = maybeUrl;
   options.storage.setItem(storageCacheKey, url);
-  return async (playerOptions: BuildPlayerOptions) => buildPlayerFromBagURLs([url], playerOptions);
+  return async (playerOptions: BuildPlayerOptions) =>
+    await buildPlayerFromBagURLs([url], playerOptions);
 }
 
 async function rosbridgeSource(options: FactoryOptions) {
