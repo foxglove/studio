@@ -35,11 +35,11 @@ export function Default(): React.ReactElement {
     },
     {
       name: "ROS1 Bag File (local)",
-      type: "ros1-file",
+      type: "ros1-local-bagfile",
     },
     {
       name: "ROS1 Bag File (HTTP)",
-      type: "ros1-http",
+      type: "ros1-remote-bagfile",
     },
     {
       name: "ROS2 Bag Folder (local)",

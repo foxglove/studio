@@ -24,7 +24,7 @@ export default function ConnectionList(): JSX.Element {
       {availableSources.map((source) => {
         let iconName: RegisteredIconNames;
         switch (source.type) {
-          case "ros1-file":
+          case "ros1-local-bagfile":
             iconName = "OpenFile";
             break;
           case "ros2-folder":
@@ -36,7 +36,7 @@ export default function ConnectionList(): JSX.Element {
           case "ros-ws":
             iconName = "Flow";
             break;
-          case "ros1-http":
+          case "ros1-remote-bagfile":
             iconName = "FileASPX";
             break;
         }

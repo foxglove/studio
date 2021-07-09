@@ -439,7 +439,7 @@ export default function PlayerManager({
   // changes to the GUID fetching in buildPlayerFromBagURLs.
   const lookupPlayerBuilderFactory = useCallback((definition: PlayerSourceDefinition) => {
     switch (definition.type) {
-      case "ros1-file":
+      case "ros1-local-bagfile":
         return localBagFileSource;
       case "ros2-folder":
         return localRosbag2FolderSource;
@@ -447,7 +447,7 @@ export default function PlayerManager({
         return roscoreSource;
       case "ros-ws":
         return rosbridgeSource;
-      case "ros1-http":
+      case "ros1-remote-bagfile":
         return remoteBagFileSource;
       default:
         return;
