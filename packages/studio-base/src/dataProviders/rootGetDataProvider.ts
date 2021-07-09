@@ -19,8 +19,8 @@ import CombinedDataProvider from "@foxglove/studio-base/dataProviders/CombinedDa
 import MemoryCacheDataProvider from "@foxglove/studio-base/dataProviders/MemoryCacheDataProvider";
 import ParseMessagesDataProvider from "@foxglove/studio-base/dataProviders/ParseMessagesDataProvider";
 import RenameDataProvider from "@foxglove/studio-base/dataProviders/RenameDataProvider";
-import WorkerDataProvider from "@foxglove/studio-base/dataProviders/WorkerDataProvider";
 import Rosbag2DataProvider from "@foxglove/studio-base/dataProviders/Rosbag2DataProvider";
+import WorkerDataProvider from "@foxglove/studio-base/dataProviders/WorkerDataProvider";
 import createGetDataProvider from "@foxglove/studio-base/dataProviders/createGetDataProvider";
 import { DataProviderDescriptor, DataProvider } from "@foxglove/studio-base/dataProviders/types";
 

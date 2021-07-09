@@ -259,6 +259,7 @@ export default class BagDataProvider implements DataProvider {
         messageDefinitionMd5SumByTopic,
       },
       providesParsedMessages: false,
+      problems: [],
     };
   }
 

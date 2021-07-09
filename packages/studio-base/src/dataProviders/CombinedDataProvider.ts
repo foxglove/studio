@@ -291,6 +291,7 @@ export default class CombinedDataProvider implements DataProvider {
     throwOnDuplicateTopics(mergedTopics.map(({ name }) => name));
     throwOnMixedParsedMessages(results.map(({ providesParsedMessages }) => providesParsedMessages));
     const combinedMessageDefinitions = mergeMessageDefinitions(results);
+    const combinedProblems = results.flatMap((result) => result.problems);
 
     return {
       start,
@@ -299,6 +300,7 @@ export default class CombinedDataProvider implements DataProvider {
       connections: mergedConnections,
       providesParsedMessages: results[0]?.providesParsedMessages ?? false,
       messageDefinitions: combinedMessageDefinitions,
+      problems: combinedProblems,
     };
   }
 

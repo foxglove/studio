@@ -57,6 +57,7 @@ import {
   buildPlayerFromDescriptor,
   BuildPlayerOptions,
 } from "@foxglove/studio-base/players/buildPlayer";
+import { buildRosbag2PlayerFromDescriptor } from "@foxglove/studio-base/players/buildRosbag2Player";
 import { Player } from "@foxglove/studio-base/players/types";
 import { UserNodes } from "@foxglove/studio-base/types/panels";
 import Storage from "@foxglove/studio-base/util/Storage";
@@ -146,7 +147,7 @@ function buildRosbag2PlayerFromFolder(
   options: BuildPlayerOptions,
 ): BuiltPlayer {
   return {
-    player: buildPlayerFromDescriptor(getLocalRosbag2Descriptor(folder), options),
+    player: buildRosbag2PlayerFromDescriptor(getLocalRosbag2Descriptor(folder), options),
     sources: [folder.name],
   };
 }

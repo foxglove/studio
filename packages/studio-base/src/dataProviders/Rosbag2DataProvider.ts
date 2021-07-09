@@ -2,24 +2,32 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Md5 } from "md5-typescript";
 import { Time } from "rosbag";
 
-import Logger from "@foxglove/log";
-import { Rosbag2, openFileSystemDirectoryHandle } from "@foxglove/rosbag2-web";
+import { ROS2_TO_DEFINITIONS, Rosbag2, openFileSystemDirectoryHandle } from "@foxglove/rosbag2-web";
+import { stringify } from "@foxglove/rosmsg";
+import { MessageEvent } from "@foxglove/studio";
 import {
+  Connection,
   DataProvider,
   DataProviderDescriptor,
+  DataProviderProblem,
   ExtensionPoint,
   GetMessagesResult,
   GetMessagesTopics,
   InitializationResult,
 } from "@foxglove/studio-base/dataProviders/types";
+import {
+  MessageDefinitionsByTopic,
+  ParsedMessageDefinitionsByTopic,
+  Topic,
+} from "@foxglove/studio-base/players/types";
+import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 type BagFolderPath = { type: "folder"; folder: FileSystemDirectoryHandle | string };
 
 type Options = { bagFolderPath: BagFolderPath };
-
-const log = Logger.getLogger(__filename);
 
 export default class Rosbag2DataProvider implements DataProvider {
   private options_: Options;
@@ -42,18 +50,62 @@ export default class Rosbag2DataProvider implements DataProvider {
       throw new Error("Opening ROS2 bags via the native interface is not implemented yet");
     }
 
+    const [start, end] = await this.bag_.timeRange();
+    const topicDefs = await this.bag_.readTopics();
+    const messageCounts = await this.bag_.messageCounts();
+
+    const problems: DataProviderProblem[] = [];
+    const topics: Topic[] = [];
+    const connections: Connection[] = [];
+    const datatypes: RosDatatypes = {};
+    const messageDefinitionsByTopic: MessageDefinitionsByTopic = {};
+    const parsedMessageDefinitionsByTopic: ParsedMessageDefinitionsByTopic = {};
+
+    for (const topicDef of topicDefs) {
+      const parsedMsgdef = ROS2_TO_DEFINITIONS.get(topicDef.type);
+      if (parsedMsgdef == undefined) {
+        problems.push({
+          severity: "warning",
+          message: `Topic "${topicDef.name}" has unrecognized datatype "${topicDef.type}"`,
+        });
+        continue;
+      }
+
+      // TODO: fullParsedMessageDefinitions should include all dependent message defs
+      const fullParsedMessageDefinitions = [parsedMsgdef];
+      const messageDefinition = stringify(fullParsedMessageDefinitions);
+      const md5sum = Md5.init(messageDefinition);
+
+      topics.push({
+        name: topicDef.name,
+        datatype: topicDef.type,
+        numMessages: messageCounts.get(topicDef.name),
+      });
+      connections.push({
+        messageDefinition,
+        md5sum,
+        topic: topicDef.name,
+        type: topicDef.type,
+        callerid: topicDef.name,
+      });
+      datatypes[topicDef.type] = { fields: parsedMsgdef.definitions };
+      messageDefinitionsByTopic[topicDef.name] = messageDefinition;
+      parsedMessageDefinitionsByTopic[topicDef.name] = fullParsedMessageDefinitions;
+    }
+
     return {
-      start: { sec: 0, nsec: 0 },
-      end: { sec: 0, nsec: 0 },
-      topics: [],
-      connections: [],
+      start,
+      end,
+      topics,
+      connections,
       providesParsedMessages: true,
       messageDefinitions: {
         type: "parsed",
-        datatypes: {},
-        messageDefinitionsByTopic: {},
-        parsedMessageDefinitionsByTopic: {},
+        datatypes,
+        messageDefinitionsByTopic,
+        parsedMessageDefinitionsByTopic,
       },
+      problems,
     };
   }
 
@@ -62,10 +114,28 @@ export default class Rosbag2DataProvider implements DataProvider {
     end: Time,
     subscriptions: GetMessagesTopics,
   ): Promise<GetMessagesResult> {
-    return { parsedMessages: [] };
+    if (this.bag_ == undefined) {
+      throw new Error(`Rosbag2DataProvider is not initialized`);
+    }
+
+    const topics = subscriptions.parsedMessages as string[] | undefined;
+    if (topics == undefined) {
+      return {};
+    }
+
+    const parsedMessages: MessageEvent<unknown>[] = [];
+    for await (const msg of this.bag_.readMessages({ startTime: start, endTime: end, topics })) {
+      parsedMessages.push({
+        topic: msg.topic.name,
+        receiveTime: msg.timestamp,
+        message: msg.data,
+      });
+    }
+
+    return { parsedMessages };
   }
 
   async close(): Promise<void> {
-    // no-op
+    return this.bag_?.close();
   }
 }
