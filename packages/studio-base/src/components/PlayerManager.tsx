@@ -473,7 +473,11 @@ export default function PlayerManager({
 
         const createPlayerBuilder = lookupPlayerBuilderFactory(selectedSource);
         if (!createPlayerBuilder) {
-          throw new Error(`Could not create a player for ${selectedSource.name}`);
+          // This can happen when upgrading from an older version of Studio that used different
+          // player names
+          log.error(`Could not create a player for ${selectedSource.name}`);
+          setMaybePlayer({ player: undefined });
+          return;
         }
 
         const playerBuilder = await createPlayerBuilder({
