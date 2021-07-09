@@ -4,7 +4,7 @@
 
 import { createContext, useContext } from "react";
 
-type SourceTypes = "file" | "ros1-core" | "ws" | "http";
+type SourceTypes = "ros1-file" | "ros2-folder" | "ros1-socket" | "ros-ws" | "ros1-http";
 
 export type PlayerSourceDefinition = {
   name: string;
@@ -13,6 +13,10 @@ export type PlayerSourceDefinition = {
 
 type FileSourceParams = {
   files?: File[];
+};
+
+type FolderSourceParams = {
+  folder?: string;
 };
 
 type HttpSourceParams = {
@@ -24,8 +28,9 @@ type SpecializedPlayerSource<T extends SourceTypes> = Omit<PlayerSourceDefinitio
 };
 
 interface SelectSourceFunction {
-  (definition: SpecializedPlayerSource<"file">, params?: FileSourceParams): void;
-  (definition: SpecializedPlayerSource<"http">, params?: HttpSourceParams): void;
+  (definition: SpecializedPlayerSource<"ros1-file">, params?: FileSourceParams): void;
+  (definition: SpecializedPlayerSource<"ros2-folder">, params?: FolderSourceParams): void;
+  (definition: SpecializedPlayerSource<"ros1-http">, params?: HttpSourceParams): void;
   (definition: PlayerSourceDefinition, params?: never): void;
 }
 

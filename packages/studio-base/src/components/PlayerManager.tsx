@@ -41,6 +41,7 @@ import { CoreDataProviders } from "@foxglove/studio-base/dataProviders/constants
 import { getRemoteBagGuid } from "@foxglove/studio-base/dataProviders/getRemoteBagGuid";
 import {
   getLocalBagDescriptor,
+  getLocalRosbag2Descriptor,
   getRemoteBagDescriptor,
 } from "@foxglove/studio-base/dataProviders/standardDataProviderDescriptors";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
@@ -140,6 +141,16 @@ async function buildPlayerFromBagURLs(
   throw new Error(`Unsupported number of urls: ${urls.length}`);
 }
 
+function buildRosbag2PlayerFromFolder(
+  folder: FileSystemDirectoryHandle,
+  options: BuildPlayerOptions,
+): BuiltPlayer {
+  return {
+    player: buildPlayerFromDescriptor(getLocalRosbag2Descriptor(folder), options),
+    sources: [folder.name],
+  };
+}
+
 type FactoryOptions = {
   source: PlayerSourceDefinition;
   sourceOptions: Record<string, unknown>;
@@ -155,7 +166,7 @@ async function localBagFileSource(options: FactoryOptions) {
   // future enhancement would be to store the fileHandle in indexeddb and try to restore
   // fileHandles can be stored in indexeddb but not localstorage
   if (restore) {
-    return;
+    return undefined;
   }
 
   // maybe the caller has some files they want to open
@@ -179,6 +190,27 @@ async function localBagFileSource(options: FactoryOptions) {
   }
   return async (playerOptions: BuildPlayerOptions) => {
     return buildPlayerFromFiles([file], playerOptions);
+  };
+}
+
+async function localRosbag2FolderSource(options: FactoryOptions) {
+  let folder: FileSystemDirectoryHandle;
+
+  const restore = options.sourceOptions.restore ?? false;
+  if (restore) {
+    return undefined;
+  }
+
+  try {
+    folder = await showDirectoryPicker();
+  } catch (error) {
+    if (error.name === "AbortError") {
+      return undefined;
+    }
+    throw error;
+  }
+  return async (playerOptions: BuildPlayerOptions) => {
+    return buildRosbag2PlayerFromFolder(folder, playerOptions);
   };
 }
 
@@ -405,13 +437,15 @@ export default function PlayerManager({
   // changes to the GUID fetching in buildPlayerFromBagURLs.
   const lookupPlayerBuilderFactory = useCallback((definition: PlayerSourceDefinition) => {
     switch (definition.type) {
-      case "file":
+      case "ros1-file":
         return localBagFileSource;
-      case "ros1-core":
+      case "ros2-folder":
+        return localRosbag2FolderSource;
+      case "ros1-socket":
         return roscoreSource;
-      case "ws":
+      case "ros-ws":
         return rosbridgeSource;
-      case "http":
+      case "ros1-http":
         return remoteBagFileSource;
       default:
         return;

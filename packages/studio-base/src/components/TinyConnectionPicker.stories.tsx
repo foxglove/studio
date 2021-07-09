@@ -26,20 +26,24 @@ export default {
 export function Default(): React.ReactElement {
   const playerSources: PlayerSourceDefinition[] = [
     {
-      name: "Bag File",
-      type: "file",
+      name: "ROS1",
+      type: "ros1-socket",
     },
     {
-      name: "ROS",
-      type: "ros1-core",
+      name: "Rosbridge (WebSocket)",
+      type: "ros-ws",
     },
     {
-      name: "Websocket",
-      type: "ws",
+      name: "ROS1 Bag File (local)",
+      type: "ros1-file",
     },
     {
-      name: "HTTP",
-      type: "http",
+      name: "ROS1 Bag File (HTTP)",
+      type: "ros1-http",
+    },
+    {
+      name: "ROS2 Bag Folder (local)",
+      type: "ros2-folder",
     },
   ];
 

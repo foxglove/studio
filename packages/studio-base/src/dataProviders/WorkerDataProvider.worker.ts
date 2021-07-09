@@ -15,12 +15,14 @@ import ApiCheckerDataProvider from "@foxglove/studio-base/dataProviders/ApiCheck
 import BagDataProvider from "@foxglove/studio-base/dataProviders/BagDataProvider";
 import RpcDataProviderRemote from "@foxglove/studio-base/dataProviders/RpcDataProviderRemote";
 import createGetDataProvider from "@foxglove/studio-base/dataProviders/createGetDataProvider";
+import Rosbag2DataProvider from "@foxglove/studio-base/dataProviders/Rosbag2DataProvider";
 import Rpc, { Channel } from "@foxglove/studio-base/util/Rpc";
 import { inWebWorker } from "@foxglove/studio-base/util/workers";
 
 const getDataProvider = createGetDataProvider({
   ApiCheckerDataProvider,
   BagDataProvider,
+  Rosbag2DataProvider,
 });
 
 if (inWebWorker()) {

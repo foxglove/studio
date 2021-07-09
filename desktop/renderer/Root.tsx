@@ -28,20 +28,24 @@ const desktopBridge = (global as unknown as { desktopBridge: Desktop }).desktopB
 export default function Root(): ReactElement {
   const playerSources: PlayerSourceDefinition[] = [
     {
-      name: "ROS",
-      type: "ros1-core",
+      name: "ROS1",
+      type: "ros1-socket",
     },
     {
       name: "Rosbridge (WebSocket)",
-      type: "ws",
+      type: "ros-ws",
     },
     {
-      name: "Bag File (local)",
-      type: "file",
+      name: "ROS1 Bag File (local)",
+      type: "ros1-file",
     },
     {
-      name: "Bag File (HTTP)",
-      type: "http",
+      name: "ROS1 Bag File (HTTP)",
+      type: "ros1-http",
+    },
+    {
+      name: "ROS2 Bag Folder (local)",
+      type: "ros2-folder",
     },
   ];
 
