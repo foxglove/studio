@@ -329,7 +329,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           previousFiles.current = otherFiles;
         }
         selectSource(
-          { name: "ROS1 Bag File (local)", type: "ros1-local-bagfile" },
+          { name: "ROS 1 Bag File (local)", type: "ros1-local-bagfile" },
           {
             files: previousFiles.current,
           },
@@ -370,7 +370,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       }
       selectSource(
         {
-          name: "ROS1 Bag File (HTTP)",
+          name: "ROS 1 Bag File (HTTP)",
           type: "ros1-remote-bagfile",
         },
         { url: bagUrl },

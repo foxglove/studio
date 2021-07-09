@@ -28,7 +28,7 @@ const desktopBridge = (global as unknown as { desktopBridge: Desktop }).desktopB
 export default function Root(): ReactElement {
   const playerSources: PlayerSourceDefinition[] = [
     {
-      name: "ROS1",
+      name: "ROS 1",
       type: "ros1-socket",
     },
     {
@@ -36,15 +36,15 @@ export default function Root(): ReactElement {
       type: "ros-ws",
     },
     {
-      name: "ROS1 Bag File (local)",
+      name: "ROS 1 Bag File (local)",
       type: "ros1-local-bagfile",
     },
     {
-      name: "ROS1 Bag File (HTTP)",
+      name: "ROS 1 Bag File (HTTP)",
       type: "ros1-remote-bagfile",
     },
     {
-      name: "ROS2 Bag Folder (local)",
+      name: "ROS 2 Bag Folder (local)",
       type: "ros2-folder",
     },
   ];
