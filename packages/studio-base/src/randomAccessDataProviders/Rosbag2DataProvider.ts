@@ -136,6 +136,6 @@ export default class Rosbag2DataProvider implements RandomAccessDataProvider {
   }
 
   async close(): Promise<void> {
-    return this.bag_?.close();
+    await this.bag_?.close();
   }
 }

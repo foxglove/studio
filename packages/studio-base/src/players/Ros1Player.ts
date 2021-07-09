@@ -246,6 +246,8 @@ export default class Ros1Player implements Player {
     }
   };
 
+  // Potentially performance-sensitive; await can be expensive
+  // eslint-disable-next-line @typescript-eslint/promise-function-async
   private _emitState = debouncePromise(() => {
     if (!this._listener || this._closed) {
       return Promise.resolve();
