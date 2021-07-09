@@ -18,16 +18,16 @@ import { v4 as uuidv4 } from "uuid";
 
 import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
 import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
 import {
-  DataProvider,
-  DataProviderDescriptor,
+  RandomAccessDataProvider,
+  RandomAccessDataProviderDescriptor,
   ExtensionPoint,
   GetDataProvider,
   GetMessagesResult,
   GetMessagesTopics,
   InitializationResult,
-} from "@foxglove/studio-base/dataProviders/types";
-import { MessageEvent } from "@foxglove/studio-base/players/types";
+} from "@foxglove/studio-base/randomAccessDataProviders/types";
 import filterMap from "@foxglove/studio-base/util/filterMap";
 import { getNewConnection } from "@foxglove/studio-base/util/getNewConnection";
 import {
@@ -223,12 +223,12 @@ export function getPrefetchStartPoint(uncachedRanges: Range[], cursorPosition: n
   return uncachedRanges[0]?.start ?? 0;
 }
 
-// This fills up the memory with messages from an underlying DataProvider. The messages have to be
+// This fills up the memory with messages from an underlying RandomAccessDataProvider. The messages have to be
 // unparsed ROS messages. The messages are evicted from this in-memory cache based on some constants
 // defined at the top of this file.
-export default class MemoryCacheDataProvider implements DataProvider {
+export default class MemoryCacheDataProvider implements RandomAccessDataProvider {
   _id: string;
-  _provider: DataProvider;
+  _provider: RandomAccessDataProvider;
   _extensionPoint?: ExtensionPoint;
 
   // The actual blocks that contain the messages. Blocks have a set "width" in terms of nanoseconds
@@ -292,7 +292,7 @@ export default class MemoryCacheDataProvider implements DataProvider {
       id: string;
       unlimitedCache?: boolean;
     },
-    children: DataProviderDescriptor[],
+    children: RandomAccessDataProviderDescriptor[],
     getDataProvider: GetDataProvider,
   ) {
     this._id = id;
@@ -345,7 +345,9 @@ export default class MemoryCacheDataProvider implements DataProvider {
     return result;
   }
 
-  async getMessages(
+  // Potentially performance-sensitive; await can be expensive
+  // eslint-disable-next-line @typescript-eslint/promise-function-async
+  getMessages(
     startTime: Time,
     endTime: Time,
     subscriptions: GetMessagesTopics,
@@ -377,7 +379,7 @@ export default class MemoryCacheDataProvider implements DataProvider {
   async close(): Promise<void> {
     delete this._currentConnection; // Make sure that the current "connection" loop stops executing.
 
-    return this._provider.close();
+    return await this._provider.close();
   }
 
   // We're primarily interested in the topics for the first outstanding read request, and after that
