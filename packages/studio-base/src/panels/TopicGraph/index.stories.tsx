@@ -32,17 +32,11 @@ function TopicsStory({
     frame: {},
     topics: [{ name: "/topic", datatype: "std_msgs/Header" }],
     activeData: {
-      publishedTopics: new Map(
-        Object.entries({
-          "/topic": new Set(["pub-1", "pub-2"]),
-          "/topic_without_subscriber": new Set(["pub-1", "pub-2"]),
-        }),
-      ),
-      subscribedTopics: new Map(
-        Object.entries({
-          "/topic": new Set(["sub-1"]),
-        }),
-      ),
+      publishedTopics: new Map([
+        ["/topic", new Set(["pub-1", "pub-2"])],
+        ["/topic_without_subscriber", new Set(["pub-1", "pub-2"])],
+      ]),
+      subscribedTopics: new Map([["/topic", new Set(["sub-1"])]]),
     },
   });
 
@@ -73,16 +67,8 @@ export const ReLayout = (): JSX.Element => {
     frame: {},
     topics: [{ name: "/topic", datatype: "std_msgs/Header" }],
     activeData: {
-      publishedTopics: new Map(
-        Object.entries({
-          "/topic": new Set(["pub-1", "pub-2"]),
-        }),
-      ),
-      subscribedTopics: new Map(
-        Object.entries({
-          "/topic": new Set(["sub-1"]),
-        }),
-      ),
+      publishedTopics: new Map([["/topic", new Set(["pub-1", "pub-2"])]]),
+      subscribedTopics: new Map([["/topic", new Set(["sub-1"])]]),
     },
   });
 
@@ -92,16 +78,8 @@ export const ReLayout = (): JSX.Element => {
         frame: {},
         topics: [{ name: "/topic", datatype: "std_msgs/Header" }],
         activeData: {
-          publishedTopics: new Map(
-            Object.entries({
-              "/topic": new Set(["pub-1", "pub-2"]),
-            }),
-          ),
-          subscribedTopics: new Map(
-            Object.entries({
-              "/topic": new Set(["sub-1", "sub-2"]),
-            }),
-          ),
+          publishedTopics: new Map([["/topic", new Set(["pub-1", "pub-2"])]]),
+          subscribedTopics: new Map([["/topic", new Set(["sub-1", "sub-2"])]]),
         },
       });
     }, 100);
