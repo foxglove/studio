@@ -16,6 +16,8 @@ import {
 } from "@foxglove/studio-base/util/inAutomatedRunMode";
 import { getSeekToTime } from "@foxglove/studio-base/util/time";
 
+// This is separate from buildPlayerFromDescriptor because we can't use ParseMessages and
+// MemoryCache with Rosbag2DataProvider currently (they only support ROS1 binary messages)
 export function buildRosbag2PlayerFromDescriptor(
   rootDescriptor: RandomAccessDataProviderDescriptor,
   options: BuildPlayerOptions,
