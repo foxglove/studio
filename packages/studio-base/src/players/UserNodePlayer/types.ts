@@ -93,8 +93,6 @@ export type NodeData = {
   outputTopic: string;
   outputDatatype: string;
   datatypes: RosDatatypes;
-  // Should be ts.SourceFile and ts.TypeChecker. Not strongly typing here since we want to keep
-  // Typescript out of the main bundle.
   sourceFile?: SourceFile;
   typeChecker?: TypeChecker;
   rosLib: string;

@@ -27,13 +27,11 @@ const modifiers = [
 ];
 
 const createProperty = (name: string, type: ts.TypeNode) => {
-  return ts.factory.createPropertyDeclaration(
-    undefined /* decorators */,
+  return ts.factory.createPropertySignature(
     undefined /* modifiers */,
     name /* name */,
     undefined /* questionOrExclamationToken */,
     type /* type */,
-    undefined,
   );
 };
 
@@ -120,20 +118,20 @@ export const generateTypeDefs = (datatypes: RosDatatypes): InterfaceDeclarations
       const typedArray = typedArrayMap.get(type);
       const rosPrimitive = rosPrimitivesToTypeScriptMap.get(type);
       const rosSpecial = rosSpecialTypesToTypescriptMap.get(type);
-      if (isConstant) {
+      if (isConstant === true) {
         // TODO: Support ROS constants at some point.
         return undefined;
-      } else if (isArray && typedArray) {
+      } else if (isArray === true && typedArray != undefined) {
         node = ts.factory.createTypeReferenceNode(typedArray);
-      } else if (rosPrimitive) {
+      } else if (rosPrimitive != undefined) {
         node = ts.factory.createKeywordTypeNode(rosPrimitive);
       } else if (rosSpecial) {
         node = ts.factory.createTypeReferenceNode(rosSpecial.name);
       } else {
-        node = ts.createTypeReferenceNode(formatInterfaceName(type));
+        node = ts.factory.createTypeReferenceNode(formatInterfaceName(type));
       }
-      if (isArray && !typedArray) {
-        node = ts.createArrayTypeNode(node);
+      if (isArray === true && typedArray == undefined) {
+        node = ts.factory.createArrayTypeNode(node);
       }
 
       return createProperty(name, node);
@@ -169,7 +167,7 @@ const generateRosLib = ({
     [],
   );
 
-  const typedMessage = ts.createInterfaceDeclaration(
+  const typedMessage = ts.factory.createInterfaceDeclaration(
     undefined,
     /* decorators */
     modifiers,
@@ -177,9 +175,12 @@ const generateRosLib = ({
     "Input",
     /* name */
     [
-      ts.createTypeParameterDeclaration(
+      ts.factory.createTypeParameterDeclaration(
         "T",
-        ts.createTypeOperatorNode(ts.SyntaxKind.KeyOfKeyword, TopicsToMessageDefinition.name),
+        ts.factory.createTypeOperatorNode(
+          ts.SyntaxKind.KeyOfKeyword,
+          TopicsToMessageDefinition.name,
+        ),
       ),
     ],
     /* typeParameters */
@@ -205,7 +206,7 @@ const generateRosLib = ({
       };
     }
 
-    TopicsToMessageDefinition = ts.updateInterfaceDeclaration(
+    TopicsToMessageDefinition = ts.factory.updateInterfaceDeclaration(
       TopicsToMessageDefinition,
       /* node */
       undefined,
@@ -220,7 +221,7 @@ const generateRosLib = ({
       [
         ...TopicsToMessageDefinition.members,
         createProperty(
-          ts.factory.createStringLiteral(name),
+          name,
           ts.factory.createTypeReferenceNode(
             `${DATATYPES_IDENTIFIER}.${formatInterfaceName(datatype)}`,
           ),
@@ -230,13 +231,13 @@ const generateRosLib = ({
     );
   });
 
-  const datatypesNamespace = ts.createModuleDeclaration(
+  const datatypesNamespace = ts.factory.createModuleDeclaration(
     undefined,
     /* decorators */
     modifiers,
     /* modifiers */
-    ts.createIdentifier(DATATYPES_IDENTIFIER),
-    ts.createModuleBlock(
+    ts.factory.createIdentifier(DATATYPES_IDENTIFIER),
+    ts.factory.createModuleBlock(
       Object.values(datatypeInterfaces).map((val) => {
         return val;
       }),

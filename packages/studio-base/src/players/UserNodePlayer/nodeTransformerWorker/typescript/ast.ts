@@ -94,15 +94,12 @@ const findImportedTypeDeclaration = (
   kind: ts.SyntaxKind[],
 ): ts.Node | undefined => {
   const declaredType = checker.getDeclaredTypeOfSymbol(node.symbol);
-  if (!declaredType) {
-    throw new Error(`Could not find type import type`);
-  }
-  return findDeclaration(declaredType.symbol || declaredType.aliasSymbol, kind);
+  return findDeclaration(declaredType.symbol, kind);
 };
 
 // These functions are used to build up mapping for generic types.
 const buildTypeMapFromParams = (
-  typeParameters: ts.TypeParameterDeclaration[] = [],
+  typeParameters: readonly ts.TypeParameterDeclaration[] = [],
   typeMap: TypeMap,
 ): TypeMap => {
   const newTypeParamMap: TypeMap = {};
@@ -130,9 +127,7 @@ const buildTypeMapFromArgs = (typeArguments: ts.TypeNode[] = [], typeMap: TypeMa
   return newTypeParamMap;
 };
 
-const isNodeFromRosModule = (
-  node: ts.SyntaxKind.TypeLiteral | ts.SyntaxKind.InterfaceDeclaration,
-): boolean => {
+const isNodeFromRosModule = (node: ts.TypeLiteralNode | ts.InterfaceDeclaration): boolean => {
   return node.getSourceFile().fileName.endsWith("ros/index.d.ts");
 };
 
@@ -188,6 +183,7 @@ export const findReturnType = (
 
   switch (node.kind) {
     case ts.SyntaxKind.TypeLiteral:
+      return node as ts.TypeLiteralNode;
     case ts.SyntaxKind.InterfaceDeclaration:
       return node as ts.InterfaceDeclaration;
     case ts.SyntaxKind.ArrowFunction: {
@@ -290,7 +286,7 @@ export const findReturnType = (
 
 export const constructDatatypes = (
   checker: ts.TypeChecker,
-  node: ts.SyntaxKind.TypeLiteral | ts.SyntaxKind.InterfaceDeclaration,
+  node: ts.TypeLiteralNode | ts.InterfaceDeclaration,
   currentDatatype: string,
   messageDefinitionMap: { [formattedDatatype: string]: string },
   depth: number = 1,
@@ -350,10 +346,11 @@ export const constructDatatypes = (
     switch (tsNode.kind) {
       case ts.SyntaxKind.InterfaceDeclaration:
       case ts.SyntaxKind.TypeLiteral: {
-        const symbolName = tsNode.symbol.name;
+        const typeLiteral = tsNode as ts.TypeLiteralNode;
+        const symbolName = typeLiteral.symbol.name;
 
         // The 'json' type is special because rosbagjs represents it as a primitive field
-        if (isNodeFromRosModule(tsNode) && symbolName === "json") {
+        if (isNodeFromRosModule(typeLiteral) && symbolName === "json") {
           return {
             name,
             type: "json",
@@ -364,12 +361,12 @@ export const constructDatatypes = (
         }
 
         const nestedType =
-          isNodeFromRosModule(tsNode) && messageDefinitionMap[symbolName]
+          isNodeFromRosModule(typeLiteral) && messageDefinitionMap[symbolName]
             ? messageDefinitionMap[symbolName]
             : `${currentDatatype}/${name}`;
         const { datatypes: nestedDatatypes } = constructDatatypes(
           checker,
-          tsNode,
+          typeLiteral,
           nestedType,
           messageDefinitionMap,
           depth + 1,
@@ -411,7 +408,8 @@ export const constructDatatypes = (
       }
 
       case ts.SyntaxKind.ArrayType: {
-        return getRosMsgField(name, tsNode.elementType, true, true, typeMap, innerDepth + 1);
+        const arrayNode = tsNode as ts.ArrayTypeNode;
+        return getRosMsgField(name, arrayNode.elementType, true, true, typeMap, innerDepth + 1);
       }
 
       case ts.SyntaxKind.BigIntKeyword:
@@ -449,10 +447,11 @@ export const constructDatatypes = (
         };
 
       case ts.SyntaxKind.TypeAliasDeclaration: {
-        const newTypeParamMap = buildTypeMapFromParams(tsNode.typeParameters, typeMap);
+        const typeAlias = tsNode as ts.TypeAliasDeclaration;
+        const newTypeParamMap = buildTypeMapFromParams(typeAlias.typeParameters, typeMap);
         return getRosMsgField(
           name,
-          tsNode.type,
+          typeAlias.type,
           isArray,
           isComplex,
           newTypeParamMap,
@@ -461,7 +460,8 @@ export const constructDatatypes = (
       }
 
       case ts.SyntaxKind.TypeReference: {
-        const nextSymbol = checker.getSymbolAtLocation(tsNode.typeName);
+        const typeRef = tsNode as ts.TypeReferenceNode;
+        const nextSymbol = checker.getSymbolAtLocation(typeRef.typeName);
 
         // There is a troubling discrepancy between how Typescript defines
         // array literals 'number[]' and arrays of the form 'Array<number>'.
@@ -471,15 +471,22 @@ export const constructDatatypes = (
         // One solution could potentially to 'cast' this node as an
         // ArrayTypeNode and recurse. Opting out of using 'Array' keyword for
         // now.
-        if (nextSymbol.escapedName === "Array") {
+        if (nextSymbol?.escapedName === "Array") {
           throw new DatatypeExtractionError(preferArrayLiteral);
         }
 
-        const typeParam = findDeclaration(nextSymbol, [ts.SyntaxKind.TypeParameter]);
+        if (!nextSymbol) {
+          throw new Error("Could not find symbol");
+        }
+
+        const typeParam = findDeclaration(nextSymbol, [ts.SyntaxKind.TypeParameter]) as
+          | ts.TypeParameterDeclaration
+          | undefined;
+
         if (typeParam) {
-          if (typeParam.name && typeMap[typeParam.name.escapedText]) {
-            let next = typeMap[typeParam.name.escapedText];
-            while (next.parent) {
+          if (typeMap[typeParam.name.escapedText.toString()]) {
+            let next = typeMap[typeParam.name.escapedText.toString()];
+            while (next?.parent) {
               next = next.parent;
             }
             return getRosMsgField(name, next.current, isArray, isComplex, typeMap, innerDepth + 1);
@@ -514,6 +521,11 @@ export const constructDatatypes = (
           ts.SyntaxKind.InterfaceDeclaration,
           ts.SyntaxKind.TypeAliasDeclaration,
         ]);
+
+        if (!declaration) {
+          throw new Error("Failed to find import declaration");
+        }
+
         return getRosMsgField(name, declaration, isArray, isComplex, typeMap, innerDepth + 1);
       }
       case ts.SyntaxKind.IntersectionType: {
