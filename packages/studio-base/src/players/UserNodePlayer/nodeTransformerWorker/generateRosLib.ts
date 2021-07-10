@@ -26,7 +26,7 @@ const modifiers = [
   ts.factory.createModifier(ts.SyntaxKind.DeclareKeyword),
 ];
 
-const createProperty = (name: string, type: ts.TypeNode) => {
+const createProperty = (name: string | ts.PropertyName, type: ts.TypeNode) => {
   return ts.factory.createPropertySignature(
     undefined /* modifiers */,
     name /* name */,
@@ -69,30 +69,26 @@ const jsonInterfaceDeclaration = ts.factory.createInterfaceDeclaration(
 export const formatInterfaceName = (type: string): string => type.replace(/\//g, "__");
 
 // http://wiki.ros.org/msg
-const rosPrimitivesToTypeScriptMap = new Map(
-  Object.entries({
-    uint8: ts.SyntaxKind.NumberKeyword,
-    int8: ts.SyntaxKind.NumberKeyword,
-    uint16: ts.SyntaxKind.NumberKeyword,
-    int16: ts.SyntaxKind.NumberKeyword,
-    uint32: ts.SyntaxKind.NumberKeyword,
-    int32: ts.SyntaxKind.NumberKeyword,
-    float32: ts.SyntaxKind.NumberKeyword,
-    float64: ts.SyntaxKind.NumberKeyword,
-    int64: ts.SyntaxKind.NumberKeyword,
-    uint64: ts.SyntaxKind.NumberKeyword,
-    string: ts.SyntaxKind.StringKeyword,
-    bool: ts.SyntaxKind.BooleanKeyword,
-  }),
-);
+const rosPrimitivesToTypeScriptMap = new Map<string, ts.KeywordTypeSyntaxKind>([
+  ["uint8", ts.SyntaxKind.NumberKeyword],
+  ["int8", ts.SyntaxKind.NumberKeyword],
+  ["uint16", ts.SyntaxKind.NumberKeyword],
+  ["int16", ts.SyntaxKind.NumberKeyword],
+  ["uint32", ts.SyntaxKind.NumberKeyword],
+  ["int32", ts.SyntaxKind.NumberKeyword],
+  ["float32", ts.SyntaxKind.NumberKeyword],
+  ["float64", ts.SyntaxKind.NumberKeyword],
+  ["int64", ts.SyntaxKind.NumberKeyword],
+  ["uint64", ts.SyntaxKind.NumberKeyword],
+  ["string", ts.SyntaxKind.StringKeyword],
+  ["bool", ts.SyntaxKind.BooleanKeyword],
+]);
 
 // NOTE: This list should stay in sync with rosbagjs. Exported for tests.
-export const typedArrayMap = new Map<string, string>(
-  Object.entries({
-    uint8: "Uint8Array",
-    int8: "Int8Array",
-  }),
-);
+export const typedArrayMap = new Map<string, string>([
+  ["uint8", "Uint8Array"],
+  ["int8", "Int8Array"],
+]);
 
 const timeInterface = createTimeInterfaceDeclaration("Time");
 const durationInterface = createTimeInterfaceDeclaration("Duration");
@@ -179,7 +175,7 @@ const generateRosLib = ({
         "T",
         ts.factory.createTypeOperatorNode(
           ts.SyntaxKind.KeyOfKeyword,
-          TopicsToMessageDefinition.name,
+          ts.factory.createTypeReferenceNode(TopicsToMessageDefinition.name),
         ),
       ),
     ],
