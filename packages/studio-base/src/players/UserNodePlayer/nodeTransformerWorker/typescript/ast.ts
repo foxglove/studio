@@ -294,7 +294,7 @@ export const findReturnType = (
       const next = declaration.members.find((member): member is ts.PropertySignature => {
         return (
           ts.isPropertySignature(member) &&
-          ts.isIdentifier(member.name) &&
+          (ts.isIdentifier(member.name) || ts.isStringLiteral(member.name)) &&
           member.name.text === indexedProperty
         );
       });
