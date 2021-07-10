@@ -31,6 +31,7 @@ import {
   noTuples,
   limitedUnionsError,
   noNestedAny,
+  invalidIndexedAccessError,
 } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/errors";
 import {
   DiagnosticSeverity,
@@ -276,22 +277,34 @@ export const findReturnType = (
       const indexedNode = node as ts.IndexedAccessTypeNode;
       const declaration = visitNext(indexedNode.objectType);
 
-      const maybeLiteralTypeNode = indexedNode.indexType as unknown as
-        | ts.LiteralTypeNode
-        | undefined;
+      if (!ts.isLiteralTypeNode(indexedNode.indexType)) {
+        throw new DatatypeExtractionError({
+          ...invalidIndexedAccessError,
+          message: "Indexed access is only allowed with string literal indexes",
+        });
+      }
+      if (!ts.isStringLiteral(indexedNode.indexType.literal)) {
+        throw new DatatypeExtractionError({
+          ...invalidIndexedAccessError,
+          message: "Indexed access is only allowed with string literal indexes",
+        });
+      }
+      const indexedProperty = indexedNode.indexType.literal.text;
 
-      const maybeLiteralLikeNode = maybeLiteralTypeNode?.literal as unknown as
-        | ts.LiteralLikeNode
-        | undefined;
-      const indexedProperty = maybeLiteralLikeNode?.text;
-
-      const next = declaration.members.find((member) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (member.name as any).text === indexedProperty;
+      const next = declaration.members.find((member): member is ts.PropertySignature => {
+        return (
+          ts.isPropertySignature(member) &&
+          ts.isIdentifier(member.name) &&
+          member.name.text === indexedProperty
+        );
       });
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return visitNext((next as unknown as any).type as ts.TypeNode);
+      if (!next || !next.type) {
+        throw new DatatypeExtractionError({
+          ...invalidIndexedAccessError,
+          message: `Couldn't find member ${indexedProperty} in indexed access`,
+        });
+      }
+      return visitNext(next.type);
     }
 
     case ts.SyntaxKind.TypeQuery:

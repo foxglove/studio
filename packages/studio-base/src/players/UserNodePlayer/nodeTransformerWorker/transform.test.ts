@@ -1508,6 +1508,24 @@ describe("pipeline", () => {
           `,
         error: ErrorCodes.DatatypeExtraction.INVALID_PROPERTY,
       },
+      {
+        description: "Indexed access type with non-literal index",
+        sourceCode: `
+          interface Pos { position: { pos: { x: number, y: number } }, lala: string  };
+          export default (msg: any): Pos[keyof Pos] => {
+            return { pos: { x: 1, y: 2 } };
+          };`,
+        error: ErrorCodes.DatatypeExtraction.INVALID_INDEXED_ACCESS,
+      },
+      {
+        description: "Indexed access type with non-string index",
+        sourceCode: `
+          interface Pos { [key: number]: number  };
+          export default (msg: any): Pos[3] => {
+            throw new Error();
+          };`,
+        error: ErrorCodes.DatatypeExtraction.INVALID_INDEXED_ACCESS,
+      },
     ];
 
     describe("extracts datatypes from the return type of the publisher", () => {
