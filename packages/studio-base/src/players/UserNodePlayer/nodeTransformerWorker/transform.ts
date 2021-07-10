@@ -54,10 +54,7 @@ export const getInputTopics = (nodeData: NodeData): NodeData => {
     );
   }
 
-  // sourceFile has type ts.SourceFile which doesn't include the symbol property
-  // The symbol property is present on the actual sourceFile instance tho so we cast to a ts.Type
-  const symbol = (sourceFile as unknown as ts.Type).symbol as ts.Symbol | undefined;
-
+  const symbol = typeChecker.getSymbolAtLocation(sourceFile);
   if (!symbol) {
     const error: Diagnostic = {
       severity: DiagnosticSeverity.Error,
