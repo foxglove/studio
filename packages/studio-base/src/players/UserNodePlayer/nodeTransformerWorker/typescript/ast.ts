@@ -625,11 +625,44 @@ export const constructDatatypes = (
   };
 
   const { members = [] } = node;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rosMsgFields = (members as any).map(
-    ({ type, name }: { type: ts.TypeNode; name: ts.PropertyName }) =>
-      getRosMsgField(name.getText(), type, false, false, currentTypeParamMap, depth + 1),
-  );
+  const rosMsgFields = members.map((member) => {
+    if (!member.name) {
+      throw new DatatypeExtractionError({
+        severity: DiagnosticSeverity.Error,
+        message: `Encountered type member with no name in ${interfaceName ?? currentDatatype}`,
+        source: Sources.DatatypeExtraction,
+        code: ErrorCodes.DatatypeExtraction.INVALID_PROPERTY,
+      });
+    }
+    if (!ts.isPropertySignature(member)) {
+      throw new DatatypeExtractionError({
+        severity: DiagnosticSeverity.Error,
+        message: `Unexpected type member (kind ${member.kind}) in ${
+          interfaceName ?? currentDatatype
+        }`,
+        source: Sources.DatatypeExtraction,
+        code: ErrorCodes.DatatypeExtraction.INVALID_PROPERTY,
+      });
+    }
+    if (!member.type) {
+      throw new DatatypeExtractionError({
+        severity: DiagnosticSeverity.Error,
+        message: `Member ${member.name.getText()} has no type in ${
+          interfaceName ?? currentDatatype
+        }`,
+        source: Sources.DatatypeExtraction,
+        code: ErrorCodes.DatatypeExtraction.INVALID_PROPERTY,
+      });
+    }
+    return getRosMsgField(
+      member.name.getText(),
+      member.type,
+      false,
+      false,
+      currentTypeParamMap,
+      depth + 1,
+    );
+  });
 
   return {
     outputDatatype: currentDatatype,

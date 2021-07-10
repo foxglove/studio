@@ -1489,6 +1489,25 @@ describe("pipeline", () => {
           export default publisher;`,
         error: ErrorCodes.DatatypeExtraction.LIMITED_UNIONS,
       },
+      {
+        description: "Return type member with no type",
+        sourceCode: `
+          // @ts-ignore
+          export default function(): {x} {
+            throw new Error();
+          };
+          `,
+        error: ErrorCodes.DatatypeExtraction.INVALID_PROPERTY,
+      },
+      {
+        description: "Return type member with no name",
+        sourceCode: `
+          export default function(): {(): number;} {
+            throw new Error();
+          };
+          `,
+        error: ErrorCodes.DatatypeExtraction.INVALID_PROPERTY,
+      },
     ];
 
     describe("extracts datatypes from the return type of the publisher", () => {

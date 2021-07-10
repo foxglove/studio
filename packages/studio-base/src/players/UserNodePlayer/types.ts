@@ -54,6 +54,7 @@ export const ErrorCodes = {
     LIMITED_UNIONS: 15,
     NO_NESTED_ANY: 16,
     NO_MAPPED_TYPES: 17,
+    INVALID_PROPERTY: 18,
   },
   InputTopicsChecker: {
     NO_TOPIC_AVAIL: 1,
