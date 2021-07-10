@@ -92,12 +92,10 @@ export const typedArrayMap = new Map<string, string>([
 
 const timeInterface = createTimeInterfaceDeclaration("Time");
 const durationInterface = createTimeInterfaceDeclaration("Duration");
-const rosSpecialTypesToTypescriptMap = new Map(
-  Object.entries({
-    time: timeInterface,
-    duration: durationInterface,
-  }),
-);
+const rosSpecialTypesToTypescriptMap = new Map([
+  ["time", timeInterface],
+  ["duration", durationInterface],
+]);
 
 // Creates a 1-1 mapping of ROS datatypes to Typescript interface declarations.
 export const generateTypeDefs = (datatypes: RosDatatypes): InterfaceDeclarations => {
