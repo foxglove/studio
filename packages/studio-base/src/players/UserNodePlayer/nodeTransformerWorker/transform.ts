@@ -93,7 +93,7 @@ export const getInputTopics = (nodeData: NodeData): NodeData => {
       severity: DiagnosticSeverity.Error,
       message: "inputs export must be an array variable.",
       source: Sources.InputTopicsChecker,
-      code: ErrorCodes.InputTopicsChecker.EMPTY_INPUTS_EXPORT,
+      code: ErrorCodes.InputTopicsChecker.BAD_INPUTS_TYPE,
     };
     return {
       ...nodeData,
@@ -106,7 +106,7 @@ export const getInputTopics = (nodeData: NodeData): NodeData => {
       severity: DiagnosticSeverity.Error,
       message: "inputs export must be an array variable.",
       source: Sources.InputTopicsChecker,
-      code: ErrorCodes.InputTopicsChecker.EMPTY_INPUTS_EXPORT,
+      code: ErrorCodes.InputTopicsChecker.BAD_INPUTS_TYPE,
     };
     return {
       ...nodeData,
@@ -409,6 +409,10 @@ export const extractDatatypes = (nodeData: NodeData): NodeData => {
 
   try {
     const exportNode = findDefaultExportFunction(sourceFile, typeChecker);
+    if (!exportNode) {
+      throw new Error("Your node must default export a function");
+    }
+
     const typeNode = findReturnType(typeChecker, 0, exportNode);
 
     const { outputDatatype, datatypes } = constructDatatypes(

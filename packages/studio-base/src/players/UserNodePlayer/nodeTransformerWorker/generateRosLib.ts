@@ -51,7 +51,7 @@ const createTimeInterfaceDeclaration = (name: string) => {
 
 // Since rosbagjs treats json as a primitive, we have to shim it in.
 // TODO: Update json declaration in a smarter way.
-const jsonInterfaceDeclaration = ts.createInterfaceDeclaration(
+const jsonInterfaceDeclaration = ts.factory.createInterfaceDeclaration(
   undefined,
   /* decorators */
   modifiers,
@@ -221,7 +221,7 @@ const generateRosLib = ({
       [
         ...TopicsToMessageDefinition.members,
         createProperty(
-          name,
+          ts.factory.createStringLiteral(name),
           ts.factory.createTypeReferenceNode(
             `${DATATYPES_IDENTIFIER}.${formatInterfaceName(datatype)}`,
           ),

@@ -41,8 +41,8 @@ import {
 import type { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 type TypeParam = {
-  parent: TypeParam;
-  current: ts.TypeParameterDeclaration | ts.TypeNode;
+  parent?: TypeParam;
+  current?: ts.TypeParameterDeclaration | ts.TypeNode;
 };
 
 type TypeMap = {
@@ -93,8 +93,13 @@ const findImportedTypeDeclaration = (
   node: ts.Node,
   kind: ts.SyntaxKind[],
 ): ts.Node | undefined => {
-  const declaredType = checker.getDeclaredTypeOfSymbol(node.symbol);
-  return findDeclaration(declaredType.symbol, kind);
+  const symbol = maybeSymbol(node);
+  if (!symbol) {
+    return undefined;
+  }
+
+  const declaredType = checker.getDeclaredTypeOfSymbol(symbol);
+  return findDeclaration(declaredType.symbol ?? declaredType.aliasSymbol, kind);
 };
 
 // These functions are used to build up mapping for generic types.
@@ -116,7 +121,10 @@ const buildTypeMapFromParams = (
   return newTypeParamMap;
 };
 
-const buildTypeMapFromArgs = (typeArguments: ts.TypeNode[] = [], typeMap: TypeMap): TypeMap => {
+const buildTypeMapFromArgs = (
+  typeArguments: readonly ts.TypeNode[] = [],
+  typeMap: TypeMap,
+): TypeMap => {
   const newTypeParamMap: TypeMap = {};
   typeArguments.forEach((typeArg, i) => {
     const text = typeArg.getText();
@@ -131,12 +139,21 @@ const isNodeFromRosModule = (node: ts.TypeLiteralNode | ts.InterfaceDeclaration)
   return node.getSourceFile().fileName.endsWith("ros/index.d.ts");
 };
 
+function maybeSymbol(node: ts.Node): ts.Symbol | undefined {
+  return (node as unknown as ts.Type | undefined)?.symbol;
+}
+
 export const findDefaultExportFunction = (
   source: ts.SourceFile,
   checker: ts.TypeChecker,
-): ts.Node => {
+): ts.Node | undefined => {
+  const symbol = maybeSymbol(source);
+  if (!symbol) {
+    return undefined;
+  }
+
   const defaultExportSymbol = checker
-    .getExportsOfModule(source.symbol)
+    .getExportsOfModule(symbol)
     .find((node) => node.escapedName === "default");
   if (!defaultExportSymbol) {
     throw new DatatypeExtractionError(noFuncError);
@@ -152,6 +169,11 @@ export const findDefaultExportFunction = (
   const exportAssignmentNode = findDeclaration(defaultExportSymbol, [
     ts.SyntaxKind.ExportAssignment,
   ]);
+
+  if (!exportAssignmentNode) {
+    throw new DatatypeExtractionError(noFuncError);
+  }
+
   const exportedNode = findChild(exportAssignmentNode, [
     ts.SyntaxKind.FunctionDeclaration,
     ts.SyntaxKind.FunctionExpression,
@@ -169,14 +191,10 @@ export const findDefaultExportFunction = (
 export const findReturnType = (
   checker: ts.TypeChecker,
   depth: number = 1,
-  node?: ts.Node,
+  node: ts.Node,
 ): ts.TypeLiteralNode | ts.InterfaceDeclaration => {
   if (depth > MAX_DEPTH) {
     throw new Error(`Max AST traversal depth exceeded ${MAX_DEPTH}.`);
-  }
-
-  if (!node) {
-    throw new Error("Node is undefined.");
   }
 
   const visitNext = findReturnType.bind(undefined, checker, depth + 1);
@@ -217,7 +235,7 @@ export const findReturnType = (
       const typeRef = node as ts.TypeReferenceNode;
       const symbol = checker.getSymbolAtLocation(typeRef.typeName);
       if (!symbol) {
-        return visitNext();
+        throw new DatatypeExtractionError(badTypeReturnError);
       }
       const nextNode = findDeclaration(symbol, [
         ts.SyntaxKind.TypeAliasDeclaration,
@@ -225,10 +243,16 @@ export const findReturnType = (
         ts.SyntaxKind.ClassDeclaration,
         ts.SyntaxKind.ImportSpecifier,
       ]);
+      if (!nextNode) {
+        throw new DatatypeExtractionError(badTypeReturnError);
+      }
       return visitNext(nextNode);
     }
     case ts.SyntaxKind.FunctionDeclaration: {
       const nextNode = findChild(node, [ts.SyntaxKind.TypeReference, ts.SyntaxKind.TypeLiteral]);
+      if (!nextNode) {
+        throw new DatatypeExtractionError(badTypeReturnError);
+      }
       return visitNext(nextNode);
     }
     case ts.SyntaxKind.FunctionType: {
@@ -242,17 +266,32 @@ export const findReturnType = (
         ts.SyntaxKind.TypeLiteral,
         ts.SyntaxKind.InterfaceDeclaration,
       ]);
+      if (!declaration) {
+        throw new DatatypeExtractionError(badTypeReturnError);
+      }
       return visitNext(declaration);
     }
 
     case ts.SyntaxKind.IndexedAccessType: {
       const indexedNode = node as ts.IndexedAccessTypeNode;
       const declaration = visitNext(indexedNode.objectType);
-      const indexedProperty = indexedNode.indexType?.literal?.text;
 
-      const next = declaration.members.find((member) => member.name?.text === indexedProperty);
+      const maybeLiteralTypeNode = indexedNode.indexType as unknown as
+        | ts.LiteralTypeNode
+        | undefined;
 
-      return visitNext(next.type);
+      const maybeLiteralLikeNode = maybeLiteralTypeNode?.literal as unknown as
+        | ts.LiteralLikeNode
+        | undefined;
+      const indexedProperty = maybeLiteralLikeNode?.text;
+
+      const next = declaration.members.find((member) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return (member.name as any).text === indexedProperty;
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return visitNext((next as unknown as any).type as ts.TypeNode);
     }
 
     case ts.SyntaxKind.TypeQuery:
@@ -277,7 +316,11 @@ export const findReturnType = (
       if (remainingTypes.length !== 1) {
         throw new DatatypeExtractionError(limitedUnionsError);
       }
-      return visitNext(remainingTypes[0]);
+      const remaining = remainingTypes[0];
+      if (!remaining) {
+        throw new DatatypeExtractionError(badTypeReturnError);
+      }
+      return visitNext(remaining);
     }
     default:
       throw new Error("Unhandled node kind.");
@@ -300,16 +343,17 @@ export const constructDatatypes = (
   // definition, we can check whether it exists in the 'ros' module and just
   // return the ros-specific definition, e.g. 'std_msgs/ColorRGBA', instead of
   // our own definition. This allows user nodes to operate much more freely.
-  const interfaceName = node.name?.text;
-  if (isNodeFromRosModule(node) && messageDefinitionMap[interfaceName]) {
+  const interfaceName = ts.isInterfaceDeclaration(node) ? node.name.text : undefined;
+  const messageDef = interfaceName != undefined ? messageDefinitionMap[interfaceName] : undefined;
+  if (isNodeFromRosModule(node) && messageDef != undefined) {
     return {
-      outputDatatype: messageDefinitionMap[interfaceName],
+      outputDatatype: messageDef,
       datatypes: baseDatatypes,
     };
   }
 
   // TODO: Remove when we remove DEPRECATED__ros. Hardcoded 'visualization_msgs/MarkerArray' flow.
-  const memberKeys = node.members.map(({ name }) => name.getText());
+  const memberKeys = node.members.map(({ name }) => name?.getText());
   if (memberKeys.includes("markers")) {
     if (memberKeys.length > 1) {
       throw new DatatypeExtractionError({
@@ -347,7 +391,7 @@ export const constructDatatypes = (
       case ts.SyntaxKind.InterfaceDeclaration:
       case ts.SyntaxKind.TypeLiteral: {
         const typeLiteral = tsNode as ts.TypeLiteralNode;
-        const symbolName = typeLiteral.symbol.name;
+        const symbolName = maybeSymbol(tsNode)?.name;
 
         // The 'json' type is special because rosbagjs represents it as a primitive field
         if (isNodeFromRosModule(typeLiteral) && symbolName === "json") {
@@ -360,29 +404,41 @@ export const constructDatatypes = (
           };
         }
 
+        const messageDefinition =
+          symbolName != undefined ? messageDefinitionMap[symbolName] : undefined;
+
         const nestedType =
-          isNodeFromRosModule(typeLiteral) && messageDefinitionMap[symbolName]
-            ? messageDefinitionMap[symbolName]
+          isNodeFromRosModule(typeLiteral) && messageDefinition != undefined
+            ? messageDefinition
             : `${currentDatatype}/${name}`;
+
+        if (nestedType == undefined) {
+          throw new Error("could not find nested type");
+        }
+
+        const typeParamMap = ts.isInterfaceDeclaration(tsNode)
+          ? buildTypeMapFromParams(tsNode.typeParameters, typeMap)
+          : typeMap;
+
         const { datatypes: nestedDatatypes } = constructDatatypes(
           checker,
           typeLiteral,
           nestedType,
           messageDefinitionMap,
           depth + 1,
-          tsNode.typeParameters ? buildTypeMapFromParams(tsNode.typeParameters, typeMap) : typeMap,
+          typeParamMap,
         );
-        const childFields = nestedDatatypes[nestedType].fields;
+        const childFields = nestedDatatypes[nestedType]?.fields ?? [];
         if (childFields.length === 2) {
           const secField = childFields.find((field) => field.name === "sec");
           const nsecField = childFields.find((field) => field.name === "nsec");
           if (
             secField &&
             nsecField &&
-            !secField.isComplex &&
-            !nsecField.isComplex &&
-            !secField.isArray &&
-            !nsecField.isArray
+            secField.isComplex !== true &&
+            nsecField.isComplex !== true &&
+            secField.isArray !== true &&
+            nsecField.isArray !== true
           ) {
             // TODO(JP): Might want to do some extra checks for types here. But then again,
             // "time" is just pretty awkward of a field in general; maybe we should instead
@@ -489,7 +545,14 @@ export const constructDatatypes = (
             while (next?.parent) {
               next = next.parent;
             }
-            return getRosMsgField(name, next.current, isArray, isComplex, typeMap, innerDepth + 1);
+            return getRosMsgField(
+              name,
+              next!.current!,
+              isArray,
+              isComplex,
+              typeMap,
+              innerDepth + 1,
+            );
           }
           throw new Error(`Could not find type ${typeParam.getText()} in type map.`);
         }
@@ -501,12 +564,16 @@ export const constructDatatypes = (
           ts.SyntaxKind.ClassDeclaration,
         ]);
 
+        if (!nextNode) {
+          throw new Error("Could not find next node");
+        }
+
         return getRosMsgField(
           name,
           nextNode,
           isArray,
           isComplex,
-          buildTypeMapFromArgs(tsNode.typeArguments, typeMap),
+          buildTypeMapFromArgs(typeRef.typeArguments, typeMap),
           innerDepth + 1,
         );
       }
@@ -558,8 +625,10 @@ export const constructDatatypes = (
   };
 
   const { members = [] } = node;
-  const rosMsgFields = members.map(({ type, name }) =>
-    getRosMsgField(name.getText(), type, false, false, currentTypeParamMap, depth + 1),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rosMsgFields = (members as any).map(
+    ({ type, name }: { type: ts.TypeNode; name: ts.PropertyName }) =>
+      getRosMsgField(name.getText(), type, false, false, currentTypeParamMap, depth + 1),
   );
 
   return {

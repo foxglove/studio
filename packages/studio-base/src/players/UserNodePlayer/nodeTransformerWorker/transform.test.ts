@@ -132,7 +132,7 @@ describe("pipeline", () => {
         "const input = '/some_topic';\nexport const inputs = [ input ]",
         ErrorCodes.InputTopicsChecker.BAD_INPUTS_TYPE,
       ],
-    ])("returns errors for badly formatted inputs", (sourceCode, errorCategory) => {
+    ])("returns errors for badly formatted input: %s", (sourceCode, errorCategory) => {
       const { diagnostics } = compose(compile, getInputTopics)({ ...baseNodeData, sourceCode }, []);
       expect(diagnostics.length).toEqual(1);
       expect(diagnostics[0]?.severity).toEqual(DiagnosticSeverity.Error);
