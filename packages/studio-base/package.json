@@ -13,8 +13,8 @@
     "email": "support@foxglove.dev"
   },
   "homepage": "https://foxglove.dev/",
-  "main": ".webpack/main.js",
-  "types": "dist/index.d.ts",
+  "main": ".webpack/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     ".webpack",
     "dist",
@@ -240,7 +240,7 @@
     "use-pan-and-zoom": "0.6.2",
     "uuid": "8.3.2",
     "wasm-lz4": "2.0.0",
-    "webpack": "5.44.0",
+    "webpack": "5.42.1",
     "xacro-parser": "0.3.1"
   }
 }

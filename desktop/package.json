@@ -8,6 +8,7 @@
   },
   "devDependencies": {
     "@types/plist": "^3.0.2",
+    "esbuild-loader": "2.13.1",
     "plist": "3.0.2",
     "quicklookjs": "0.0.3"
   }

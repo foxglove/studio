@@ -34,10 +34,13 @@ const mainConfig = (env: unknown, argv: WebpackArgv): Configuration => {
 
     output: {
       publicPath: "",
+      filename: "index.js",
       path: path.resolve(__dirname, ".webpack"),
       library: {
         type: "umd",
       },
+      //chunkLoading: "import",
+      //workerChunkLoading: "import",
     },
 
     plugins: [
