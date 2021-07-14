@@ -127,9 +127,7 @@ export default class BagDataProvider implements RandomAccessDataProvider {
     this._extensionPoint = extensionPoint;
     const { bagPath, cacheSizeInBytes } = this._options;
     await decompressLZ4.isLoaded;
-    this.bzip2 = await Bzip2.init({
-      locateFile: () => new URL("@foxglove/wasm-bz2/wasm/module.wasm", import.meta.url).toString(),
-    });
+    this.bzip2 = await Bzip2.init();
 
     try {
       if (bagPath.type === "remoteBagUrl") {

@@ -2454,10 +2454,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foxglove/wasm-bz2@npm:0.0.2":
-  version: 0.0.2
-  resolution: "@foxglove/wasm-bz2@npm:0.0.2"
-  checksum: 2ab056473e869bfdb4d9ff4fb5880cb1e0b5f248dcd95e9cf90da9440199f14d3cdc206c9e1ae2b651cb06acd524a65ea02c58e05fe384db002a24c2829991d1
+"@foxglove/wasm-bz2@npm:0.0.4":
+  version: 0.0.4
+  resolution: "@foxglove/wasm-bz2@npm:0.0.4"
+  checksum: 48492b02fbea537bf5483c320effe5ebfebb4c79ab95ac3ff95c2ff52668b5e57c74d598038edce5ea0b0a35d8b917b73e9fa5a3c9a95750663db4beca9241e0
   languageName: node
   linkType: hard
 
@@ -12732,7 +12732,7 @@ __metadata:
     "@babel/preset-typescript": 7.14.5
     "@foxglove/eslint-plugin": 0.13.0
     "@foxglove/tsconfig": 1.0.0
-    "@foxglove/wasm-bz2": 0.0.2
+    "@foxglove/wasm-bz2": 0.0.4
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.0-rc.0
     "@sentry/electron": 2.5.1
     "@sentry/webpack-plugin": 1.16.0
