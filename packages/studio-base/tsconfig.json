@@ -6,6 +6,7 @@
     "outDir": "./dist",
     "module": "commonjs",
     "jsx": "react-jsx",
+    "declarationMap": false,
     "lib": ["dom", "dom.iterable", "es2020", "webworker"],
     "paths": {
       "@foxglove/studio-base/*": ["./src/*"]
