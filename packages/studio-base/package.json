@@ -21,7 +21,7 @@
     "src"
   ],
   "scripts": {
-    "prepack": "tsc --emitDeclarationOnly --module es2020 --project tsconfig.json",
+    "prepack": "yarn build && tsc --emitDeclarationOnly --module es2020 --project tsconfig.json",
     "chromatic": "chromatic --project-token $CHROMATIC_PROJECT_TOKEN --build-script-name storybook:build --exit-once-uploaded",
     "storybook:build": "cross-env NODE_OPTIONS='--max-old-space-size=6144' TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' build-storybook --config-dir src/.storybook",
     "build": "cross-env NODE_OPTIONS='--max-old-space-size=6144' webpack --mode development --progress"
