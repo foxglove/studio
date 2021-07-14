@@ -114,6 +114,7 @@ export default class BagDataProvider implements RandomAccessDataProvider {
   _bag?: Bag;
   _lastPerformanceStatsToLog?: TimedDataThroughput;
   _extensionPoint?: ExtensionPoint;
+  private bzip2?: Bzip2;
 
   constructor(options: Options, children: RandomAccessDataProviderDescriptor[]) {
     if (children.length > 0) {
@@ -126,7 +127,9 @@ export default class BagDataProvider implements RandomAccessDataProvider {
     this._extensionPoint = extensionPoint;
     const { bagPath, cacheSizeInBytes } = this._options;
     await decompressLZ4.isLoaded;
-    await Bzip2.isLoaded;
+    this.bzip2 = await Bzip2.init({
+      locateFile: () => new URL("@foxglove/wasm-bz2/wasm/module.wasm", import.meta.url).toString(),
+    });
 
     try {
       if (bagPath.type === "remoteBagUrl") {
@@ -319,8 +322,11 @@ export default class BagDataProvider implements RandomAccessDataProvider {
       noParse: true,
       decompress: {
         bz2: (buffer: Buffer, size: number) => {
+          if (!this.bzip2) {
+            throw new Error("bzip2 not initialized");
+          }
           try {
-            return Buffer.from(Bzip2.decompress(buffer, size, { small: false }));
+            return Buffer.from(this.bzip2.decompress(buffer, size, { small: false }));
           } catch (error) {
             reportMalformedError("bz2 decompression", error);
             throw error;

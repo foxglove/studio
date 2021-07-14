@@ -2454,15 +2454,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foxglove/wasm-bz2@workspace:packages/wasm-bz2":
-  version: 0.0.0-use.local
-  resolution: "@foxglove/wasm-bz2@workspace:packages/wasm-bz2"
-  dependencies:
-    "@types/emscripten": 1.39.4
-    jest: 27.0.6
-    typescript: 4.3.5
-  languageName: unknown
-  linkType: soft
+"@foxglove/wasm-bz2@npm:0.0.2":
+  version: 0.0.2
+  resolution: "@foxglove/wasm-bz2@npm:0.0.2"
+  checksum: 2ab056473e869bfdb4d9ff4fb5880cb1e0b5f248dcd95e9cf90da9440199f14d3cdc206c9e1ae2b651cb06acd524a65ea02c58e05fe384db002a24c2829991d1
+  languageName: node
+  linkType: hard
 
 "@foxglove/xmlrpc@npm:1.0.0":
   version: 1.0.0
@@ -5002,13 +4999,6 @@ __metadata:
   version: 2.2.0
   resolution: "@types/electron-devtools-installer@npm:2.2.0"
   checksum: 3906fc466b32eaa9a70fcde05902f30060880b0f270014c8ded65d2eb3a76372d9230c1767e3dc279e3ebaf35f4e228c1527830120d8ec80437df7bff574e541
-  languageName: node
-  linkType: hard
-
-"@types/emscripten@npm:1.39.4":
-  version: 1.39.4
-  resolution: "@types/emscripten@npm:1.39.4"
-  checksum: 7a51e08b2230b9b8f29db095703499c0c7a8e8195d5de288fc8583f4599f07172d700df89931e26eaab4f54ccc114d266373da6d15a711ef7a41b2dd6d450ccf
   languageName: node
   linkType: hard
 
@@ -12693,6 +12683,7 @@ __metadata:
     "@babel/preset-typescript": 7.14.5
     "@foxglove/eslint-plugin": 0.13.0
     "@foxglove/tsconfig": 1.0.0
+    "@foxglove/wasm-bz2": 0.0.2
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.0-rc.0
     "@sentry/electron": 2.5.0
     "@sentry/webpack-plugin": 1.15.1
