@@ -14,14 +14,14 @@
   },
   "homepage": "https://foxglove.dev/",
   "browser": "./assets/index.js",
-  "main": "./src/index.ts",
+  "main": "./src",
   "files": [
     "assets",
     "dist",
     "src"
   ],
   "scripts": {
-    "prepack": "yarn build && tsc --emitDeclarationOnly --module es2020 --project tsconfig.json",
+    "prepack": "tsc --module es2020 --project tsconfig.json",
     "chromatic": "chromatic --project-token $CHROMATIC_PROJECT_TOKEN --build-script-name storybook:build --exit-once-uploaded",
     "storybook:build": "cross-env NODE_OPTIONS='--max-old-space-size=6144' TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' build-storybook --config-dir src/.storybook",
     "build": "cross-env NODE_OPTIONS='--max-old-space-size=6144' webpack --mode development --progress"
@@ -181,6 +181,7 @@
     "ts-loader": "9.2.3",
     "typescript": "4.3.5",
     "typescript-plugin-styled-components": "2.0.0",
+    "typescript-transform-paths": "3.1.0",
     "urdf-loader": "0.10.2",
     "url-search-params": "1.1.0",
     "use-debounce": "7.0.0",

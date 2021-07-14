@@ -2,8 +2,6 @@
   "extends": "@foxglove/tsconfig/base",
   "include": ["./src/**/*", "./src/**/*.json", "./src/.storybook/**/*", "../package.json"],
   "compilerOptions": {
-    "rootDir": "./src",
-    "outDir": "./dist",
     "jsx": "react-jsx",
     "lib": ["dom", "dom.iterable", "es2020", "webworker"],
     "paths": {
