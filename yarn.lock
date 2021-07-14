@@ -2343,6 +2343,7 @@ __metadata:
     chromatic: 5.9.2
     circular-dependency-plugin: 5.2.2
     classnames: 2.3.1
+    clean-webpack-plugin: 4.0.0-alpha.0
     cross-env: 7.0.3
     crypto-browserify: 3.12.0
     css-loader: 5.2.7
@@ -2374,7 +2375,7 @@ __metadata:
     promise-queue: 2.2.5
     quickhull3d: 2.0.4
     rc-tabs: 11.9.1
-    rc-tree: 5.0.0
+    rc-tree: 4.2.2
     react: 17.0.2
     react-autocomplete: "janpaul123/react-autocomplete#bc8737070b5744069719c8fcd4e0a197192b0d48"
     react-document-events: 1.5.1
@@ -2390,7 +2391,7 @@ __metadata:
     react-resize-detector: 6.7.4
     react-svg-loader: 3.0.3
     react-table: 7.7.0
-    react-toast-notifications: 2.5.1
+    react-toast-notifications: 2.5.0
     react-transition-group: 4.4.2
     react-use: "patch:react-use@17.2.4#../../patches/react-use.patch"
     react-virtualized: 9.22.3
@@ -2426,6 +2427,7 @@ __metadata:
     use-pan-and-zoom: 0.6.2
     uuid: 8.3.2
     wasm-lz4: 2.0.0
+    webpack: 5.44.0
     xacro-parser: 0.3.1
   languageName: unknown
   linkType: soft
@@ -20367,9 +20369,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rc-tree@npm:5.0.0":
-  version: 5.0.0
-  resolution: "rc-tree@npm:5.0.0"
+"rc-tree@npm:4.2.2":
+  version: 4.2.2
+  resolution: "rc-tree@npm:4.2.2"
   dependencies:
     "@babel/runtime": ^7.10.1
     classnames: 2.x
@@ -20379,7 +20381,7 @@ __metadata:
   peerDependencies:
     react: "*"
     react-dom: "*"
-  checksum: facd507f0b18927b80401c3f8ec389114213d27331d30287511440a7aa03cc6c695e3b1119f6df22028589bfaabc8b2ca67360006d8453e1be5ba284ffa30b34
+  checksum: 2635e98e997948d323b44ad7c086de1f2b50545e221ce7e6477d90e97cfc6c500ed0274ca85cda13d56679a0eee9f7d45973878e3032c27b7ce2897d6e0e7596
   languageName: node
   linkType: hard
 
@@ -21006,16 +21008,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-toast-notifications@npm:2.5.1":
-  version: 2.5.1
-  resolution: "react-toast-notifications@npm:2.5.1"
+"react-toast-notifications@npm:2.5.0":
+  version: 2.5.0
+  resolution: "react-toast-notifications@npm:2.5.0"
   dependencies:
     "@emotion/core": ^10.0.14
     react-transition-group: ^4.4.1
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 138b9c79c10313d513a40a8a5e6bc5c38e08f88208eeefd8a3f3da2eeecc954431a864d09ba76294456d8d15067526deb3ce76f1bec6d55fff17cc5a3df02a99
+  checksum: 96d7e635377a051bbfa48293871872bf7b4d4c8233f6c529e3ca4d8a937d2576e884b01b8e2c10204e4f23597aac278699c4ba8781fcfdea3f73e906049837b4
   languageName: node
   linkType: hard
 
