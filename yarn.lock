@@ -2245,7 +2245,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/rosmsg@npm:0.2.1":
+"@foxglove/rosmsg@npm:0.2.1, @foxglove/rosmsg@npm:^0.2.0":
   version: 0.2.1
   resolution: "@foxglove/rosmsg@npm:0.2.1"
   dependencies:
@@ -2262,16 +2262,6 @@ __metadata:
     moo: ^0.5.1
     nearley: ^2.20.1
   checksum: 703ec8482ca012f00369bd2367d8f9632c0933203a89b06903df06568f4954888d664d706538b2fdc2b73c2454655f69e903101cfaebfdc4f434cba387974d08
-  languageName: node
-  linkType: hard
-
-"@foxglove/rosmsg@npm:^0.2.0":
-  version: 0.2.0
-  resolution: "@foxglove/rosmsg@npm:0.2.0"
-  dependencies:
-    moo: ^0.5.1
-    nearley: ^2.20.1
-  checksum: 033e2345bdfd693f7c7f19c4e70d8b4e9fa02724920bf92029c03176dcc14319b75b8557651a49cd0136fd839b162de4bf93c7777f04e77ed094ae9def30484a
   languageName: node
   linkType: hard
 
