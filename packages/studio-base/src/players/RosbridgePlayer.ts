@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { isEqual, sortBy } from "lodash";
-import { Time } from "rosbag";
+import { Time } from "@foxglove/rostime";
 import roslib from "roslib";
 import { v4 as uuidv4 } from "uuid";
 
