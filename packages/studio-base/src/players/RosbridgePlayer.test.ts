@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { Time } from "@foxglove/rostime";
-
 import NoopMetricsCollector from "@foxglove/studio-base/players/NoopMetricsCollector";
 import RosbridgePlayer from "@foxglove/studio-base/players/RosbridgePlayer";
 

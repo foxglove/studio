@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { Time } from "@foxglove/rostime";
-
 import { Topic } from "@foxglove/studio-base/players/types";
 import {
   ExtensionPoint,
