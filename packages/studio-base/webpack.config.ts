@@ -41,18 +41,7 @@ const mainConfig = (env: unknown, argv: WebpackArgv): Configuration => {
       },
     },
 
-    plugins: [
-      new CleanWebpackPlugin(),
-      ...(appWebpackConfig.plugins ?? []),
-      // fixme - make these options to their respective contexts so they aren't in studio base
-      /*
-      new EnvironmentPlugin({
-        AMPLITUDE_API_KEY: process.env.AMPLITUDE_API_KEY ?? null, // eslint-disable-line no-restricted-syntax
-        SIGNUP_API_URL: "https://foxglove.dev/api/signup",
-        SLACK_INVITE_URL: "https://foxglove.dev/join-slack",
-      }),
-      */
-    ],
+    plugins: [new CleanWebpackPlugin(), ...(appWebpackConfig.plugins ?? [])],
   };
 
   return config;

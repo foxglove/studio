@@ -3,10 +3,10 @@
   "include": ["./src/**/*", "./src/**/*.json", "./src/.storybook/**/*", "../package.json"],
   "compilerOptions": {
     "rootDir": "./src",
-    "outDir": "./src",
     "module": "commonjs",
     "jsx": "react-jsx",
     "declarationMap": false,
+    "sourceMap": false,
     "lib": ["dom", "dom.iterable", "es2020", "webworker"],
     "paths": {
       "@foxglove/studio-base/*": ["./src/*"]
