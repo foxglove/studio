@@ -7,6 +7,7 @@ import GlobalVariableSlider from "./GlobalVariableSlider";
 import ImageViewPanel from "./ImageView";
 import InternalLogs from "./InternalLogs";
 import Internals from "./Internals";
+import Joystick from "./JoystickPanel";
 import MapPanel from "./Map";
 import NodePlayground from "./NodePlayground";
 import ParametersPanel from "./Parameters";
@@ -31,6 +32,7 @@ const builtin: PanelInfo[] = [
   { title: `Diagnostics – Detail`, component: DiagnosticStatusPanel },
   { title: `Diagnostics – Summary`, component: DiagnosticSummary },
   { title: "Image", component: ImageViewPanel },
+  { title: "Joystick", component: Joystick },
   { title: "Map", component: MapPanel },
   { title: "Parameters", component: ParametersPanel },
   { title: "Plot", component: Plot },
