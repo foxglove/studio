@@ -26,7 +26,7 @@ export const Empty = (): JSX.Element => {
 function TopicsStory({
   topicVisibility: initialTopicVisibility,
 }: {
-  topicVisibility: "hide" | "show" | "show-only-with-subscribers";
+  topicVisibility: "none" | "all" | "subscribers";
 }) {
   const [fixture] = useState<Fixture>({
     frame: {},
@@ -41,7 +41,7 @@ function TopicsStory({
   });
 
   useAsync(async () => {
-    const clicks = { show: 0, hide: 1, "show-only-with-subscribers": 2 }[initialTopicVisibility];
+    const clicks = { all: 0, none: 1, subscribers: 2 }[initialTopicVisibility];
     for (let i = 0; i < clicks; i++) {
       await delay(10);
       document.querySelector<HTMLElement>(`[data-test="toggle-topics"]`)!.click();
@@ -55,11 +55,11 @@ function TopicsStory({
   );
 }
 
-export const AllTopics = (): JSX.Element => <TopicsStory topicVisibility="show" />;
+export const AllTopics = (): JSX.Element => <TopicsStory topicVisibility="all" />;
 export const TopicsWithSubscribers = (): JSX.Element => (
-  <TopicsStory topicVisibility="show-only-with-subscribers" />
+  <TopicsStory topicVisibility="subscribers" />
 );
-export const TopicsHidden = (): JSX.Element => <TopicsStory topicVisibility="hide" />;
+export const TopicsHidden = (): JSX.Element => <TopicsStory topicVisibility="none" />;
 
 // Adding new active data should cause the graph to re-layout
 export const ReLayout = (): JSX.Element => {

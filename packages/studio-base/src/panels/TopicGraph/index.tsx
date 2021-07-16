@@ -103,7 +103,17 @@ const STYLESHEET: Cytoscape.Stylesheet[] = [
     },
   },
 ];
-const topicIdsToLabelsMap: Record<string, string> = {
+
+type TopicVisibility =
+  | "all"
+  | "none"
+  | "published"
+  | "subscribed"
+  | "connected"
+  | "disconnected-pub"
+  | "disconnected-sub";
+
+const topicVisibilityToLabelMap: Record<TopicVisibility, string> = {
   all: "All topics",
   none: "No topics",
   published: "Published topics",
@@ -138,7 +148,7 @@ function TopicGraph() {
 
   const [lrOrientation, setLROrientation] = useState<boolean>(false);
   const [showServices, setShowServices] = useState<boolean>(true);
-  const [topicVisibility, setTopicVisibility] = useState<string>("all");
+  const [topicVisibility, setTopicVisibility] = useState<TopicVisibility>("all");
 
   const textMeasure = useMemo(
     () =>
@@ -304,7 +314,7 @@ function TopicGraph() {
   }, [lrOrientation]);
 
   const topicVisibilityTooltip: string = useMemo(() => {
-    return `Showing ${(topicIdsToLabelsMap[topicVisibility] ?? "").toLowerCase()}`;
+    return `Showing ${(topicVisibilityToLabelMap[topicVisibility] ?? "").toLowerCase()}`;
   }, [topicVisibility]);
 
   const topicButtonColor = useMemo(() => {
@@ -367,11 +377,11 @@ function TopicGraph() {
               selectedId={topicVisibility}
               onChange={(id) => {
                 graph.current?.resetUserPanZoom();
-                setTopicVisibility(id);
+                setTopicVisibility(id as TopicVisibility);
               }}
-              options={Object.keys(topicIdsToLabelsMap).map((id) => ({
+              options={Object.keys(topicVisibilityToLabelMap).map((id) => ({
                 id,
-                label: topicIdsToLabelsMap[id] ?? "",
+                label: topicVisibilityToLabelMap[id as TopicVisibility] ?? "",
               }))}
             />
           </ToolGroup>
