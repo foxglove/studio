@@ -8,7 +8,8 @@ type SourceTypes =
   | "ros1-local-bagfile"
   | "ros2-folder"
   | "ros1-socket"
-  | "ros-ws"
+  | "ros1-rosbridge-websocket"
+  | "ros2-rosbridge-websocket"
   | "ros1-remote-bagfile"
   | "velodyne-device";
 

@@ -22,19 +22,23 @@ const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo
 export default function Root(): JSX.Element {
   const playerSources: PlayerSourceDefinition[] = [
     {
-      name: "Rosbridge (WebSocket)",
-      type: "ros-ws",
+      name: "ROS 1 Rosbridge",
+      type: "ros1-rosbridge-websocket",
     },
     {
-      name: "ROS 1 Bag File (local)",
+      name: "ROS 2 Rosbridge",
+      type: "ros2-rosbridge-websocket",
+    },
+    {
+      name: "ROS 1 Bag (local)",
       type: "ros1-local-bagfile",
     },
     {
-      name: "ROS 1 Bag File (HTTP)",
+      name: "ROS 1 Bag (HTTP)",
       type: "ros1-remote-bagfile",
     },
     {
-      name: "ROS 2 Bag Folder (local)",
+      name: "ROS 2 Bag (local)",
       type: "ros2-folder",
     },
   ];
