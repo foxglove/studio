@@ -11,11 +11,11 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import ArrowDownIcon from "@mdi/svg/svg/arrow-down-bold.svg";
-import ArrowRightIcon from "@mdi/svg/svg/arrow-right-bold.svg";
+import ArrowLeftRightIcon from "@mdi/svg/svg/arrow-left-right.svg";
+import ArrowUpDownIcon from "@mdi/svg/svg/arrow-up-down.svg";
 import FitToPageIcon from "@mdi/svg/svg/fit-to-page-outline.svg";
-import ServiceIcon from "@mdi/svg/svg/ray-end.svg";
-import TopicIcon from "@mdi/svg/svg/transit-connection-horizontal.svg";
+import ServiceIcon from "@mdi/svg/svg/rectangle-outline.svg";
+import TopicIcon from "@mdi/svg/svg/rhombus.svg";
 import Cytoscape from "cytoscape";
 import { useCallback, useMemo, useRef, useState } from "react";
 import textMetrics from "text-metrics";
@@ -298,7 +298,16 @@ function TopicGraph() {
     }
 
     return output;
-  }, [textMeasure, publishedTopics, subscribedTopics, services, topicVisibility, showServices]);
+  }, [
+    textMeasure,
+    publishedTopics,
+    subscribedTopics,
+    services,
+    topicVisibility,
+    getTopicDetails,
+    passesConditions,
+    showServices,
+  ]);
 
   const graph = useRef<GraphMutation>();
 
@@ -312,11 +321,11 @@ function TopicGraph() {
   }, [lrOrientation]);
 
   const topicVisibilityTooltip: string = useMemo(() => {
-    return topicIdsToLabelsMap[topicVisibility] ?? "";
+    return `Showing ${(topicIdsToLabelsMap[topicVisibility] ?? "").toLowerCase()}`;
   }, [topicVisibility]);
 
   const topicButtonColor = useMemo(() => {
-    return topicVisibility === "none" ? "white" : colors.accent;
+    return topicVisibility === "none" ? "white" : colors.lightPurple;
   }, [topicVisibility]);
 
   const toggleShowServices = useCallback(() => {
@@ -345,14 +354,14 @@ function TopicGraph() {
           </Button>
           <Button tooltip="Orientation" onClick={toggleOrientation}>
             <Icon style={{ color: "white" }} small>
-              {lrOrientation ? <ArrowRightIcon /> : <ArrowDownIcon />}
+              {lrOrientation ? <ArrowLeftRightIcon /> : <ArrowUpDownIcon />}
             </Icon>
           </Button>
           <Button
-            tooltip={showServices ? "Hide Services" : "Show Services"}
+            tooltip={showServices ? "Showing services" : "Hiding services"}
             onClick={toggleShowServices}
           >
-            <Icon style={{ color: showServices ? colors.accent : "white" }} small>
+            <Icon style={{ color: showServices ? colors.red : "white" }} small>
               <ServiceIcon />
             </Icon>
           </Button>
