@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@fluentui/react": "8.23.2",
+    "@fluentui/react-icons": "1.1.135",
     "@fluentui/react-icons-mdl2": "1.1.6",
     "@foxglove/den": "workspace:*",
     "@foxglove/electron-socket": "1.1.0",

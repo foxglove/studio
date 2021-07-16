@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 import { ThemeProvider as FluentThemeProvider } from "@fluentui/react";
+import { ArrowMaximize20Regular, ArrowMinimize20Regular } from "@fluentui/react-icons";
 import * as Icons from "@fluentui/react-icons-mdl2";
 import { registerIcons, unregisterIcons } from "@fluentui/style-utilities";
 import { useLayoutEffect, useState } from "react";
@@ -42,6 +43,8 @@ const icons: {
   Flow: <Icons.FlowIcon />,
   GenericScan: <Icons.GenericScanIcon />,
   Info: <Icons.InfoIcon />,
+  Maximize: <ArrowMaximize20Regular />,
+  Minimize: <ArrowMinimize20Regular />,
   More: <Icons.MoreIcon />,
   MoreVertical: <Icons.MoreVerticalIcon />,
   OpenFile: <Icons.OpenFileIcon />,

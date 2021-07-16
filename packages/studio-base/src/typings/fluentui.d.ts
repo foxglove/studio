@@ -37,6 +37,8 @@ declare global {
     | "Flow"
     | "GenericScan"
     | "Info"
+    | "Maximize"
+    | "Minimize"
     | "More"
     | "MoreVertical"
     | "OpenFile"
