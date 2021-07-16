@@ -104,8 +104,8 @@ const STYLESHEET: Cytoscape.Stylesheet[] = [
   },
 ];
 const topicIdsToLabelsMap: Record<string, string> = {
-  none: "No topics",
   all: "All topics",
+  none: "No topics",
   published: "Published topics",
   subscribed: "Subscribed topics",
   connected: "Connected topics",
