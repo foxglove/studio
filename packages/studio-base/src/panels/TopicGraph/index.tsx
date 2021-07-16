@@ -103,14 +103,6 @@ const STYLESHEET: Cytoscape.Stylesheet[] = [
     },
   },
 ];
-type TopicVisibilityOptions =
-  | "none"
-  | "all"
-  | "published"
-  | "subscribed"
-  | "connected"
-  | "disconnected-pub"
-  | "disconnected-sub";
 const topicIdsToLabelsMap: Record<string, string> = {
   none: "No topics",
   all: "All topics",
@@ -146,7 +138,7 @@ function TopicGraph() {
 
   const [lrOrientation, setLROrientation] = useState<boolean>(false);
   const [showServices, setShowServices] = useState<boolean>(true);
-  const [topicVisibility, setTopicVisibility] = useState<TopicVisibilityOptions>("all");
+  const [topicVisibility, setTopicVisibility] = useState<string>("all");
 
   const textMeasure = useMemo(
     () =>
@@ -157,24 +149,18 @@ function TopicGraph() {
     [],
   );
 
-  const getTopicDetails = useCallback(
+  const topicPassesConditions = useCallback(
     ({
       topicIdWithSubscriptions,
       topic,
     }: {
       topicIdWithSubscriptions: Set<string>;
       topic: string;
-    }) => {
+    }): boolean => {
       const publishedTopicsWithFallback = publishedTopics ?? new Map([]);
       const published = publishedTopicsWithFallback.has(topic);
       const subscribed = topicIdWithSubscriptions.has(topic);
-      return { published, subscribed };
-    },
-    [publishedTopics],
-  );
 
-  const passesConditions = useCallback(
-    ({ published, subscribed }: { published: boolean; subscribed: boolean }): boolean => {
       if (topicVisibility === "none") {
         return false;
       }
@@ -187,7 +173,7 @@ function TopicGraph() {
         (topicVisibility === "disconnected-sub" && subscribed && !published)
       );
     },
-    [topicVisibility],
+    [publishedTopics, topicVisibility],
   );
 
   const elements = useMemo<cytoscape.ElementDefinition[]>(() => {
@@ -225,8 +211,7 @@ function TopicGraph() {
     }
     if (topicVisibility !== "none") {
       for (const topic of topicIds) {
-        const { published, subscribed } = getTopicDetails({ topicIdWithSubscriptions, topic });
-        if (!passesConditions({ published, subscribed })) {
+        if (!topicPassesConditions({ topicIdWithSubscriptions, topic })) {
           continue;
         }
         output.push({
@@ -265,8 +250,7 @@ function TopicGraph() {
       default:
         if (publishedTopics != undefined) {
           for (const [topic, publishers] of publishedTopics.entries()) {
-            const { published, subscribed } = getTopicDetails({ topicIdWithSubscriptions, topic });
-            if (!passesConditions({ published, subscribed })) {
+            if (!topicPassesConditions({ topicIdWithSubscriptions, topic })) {
               continue;
             }
 
@@ -304,8 +288,7 @@ function TopicGraph() {
     subscribedTopics,
     services,
     topicVisibility,
-    getTopicDetails,
-    passesConditions,
+    topicPassesConditions,
     showServices,
   ]);
 
@@ -384,7 +367,6 @@ function TopicGraph() {
               selectedId={topicVisibility}
               onChange={(id) => {
                 graph.current?.resetUserPanZoom();
-                // @ts-ignore
                 setTopicVisibility(id);
               }}
               options={Object.keys(topicIdsToLabelsMap).map((id) => ({
