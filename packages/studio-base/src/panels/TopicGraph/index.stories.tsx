@@ -8,7 +8,7 @@ import { useAsync } from "react-use";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 import delay from "@foxglove/studio-base/util/delay";
 
-import TopicGraph from "./index";
+import TopicGraph, { TopicVisibility } from "./index";
 
 export default {
   title: "panels/TopicGraph/index",
@@ -26,7 +26,7 @@ export const Empty = (): JSX.Element => {
 function TopicsStory({
   topicVisibility: initialTopicVisibility,
 }: {
-  topicVisibility: "none" | "all" | "subscribers";
+  topicVisibility: TopicVisibility;
 }) {
   const [fixture] = useState<Fixture>({
     frame: {},
@@ -41,10 +41,16 @@ function TopicsStory({
   });
 
   useAsync(async () => {
-    const clicks = { all: 0, none: 1, subscribers: 2 }[initialTopicVisibility];
-    for (let i = 0; i < clicks; i++) {
-      await delay(10);
-      document.querySelector<HTMLElement>(`[data-test="toggle-topics"]`)!.click();
+    await delay(10);
+    document.querySelector<HTMLElement>(`[data-test="set-topic-visibility"] button`)!.click();
+    const radioOption = document.querySelector<HTMLElement>(
+      `[data-test="${initialTopicVisibility}"]`,
+    );
+    if (radioOption) {
+      radioOption.click();
+      document
+        .querySelector<HTMLElement>(`[data-test="set-topic-visibility"] div button:last-child`)!
+        .click();
     }
   }, [initialTopicVisibility]);
 
@@ -57,7 +63,7 @@ function TopicsStory({
 
 export const AllTopics = (): JSX.Element => <TopicsStory topicVisibility="all" />;
 export const TopicsWithSubscribers = (): JSX.Element => (
-  <TopicsStory topicVisibility="subscribers" />
+  <TopicsStory topicVisibility="subscribed" />
 );
 export const TopicsHidden = (): JSX.Element => <TopicsStory topicVisibility="none" />;
 

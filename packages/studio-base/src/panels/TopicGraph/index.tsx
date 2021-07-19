@@ -104,7 +104,7 @@ const STYLESHEET: Cytoscape.Stylesheet[] = [
   },
 ];
 
-type TopicVisibility =
+export type TopicVisibility =
   | "all"
   | "none"
   | "published"
@@ -360,6 +360,7 @@ function TopicGraph() {
           </Button>
         </div>
         <ExpandingToolbar
+          dataTest="set-topic-visibility"
           tooltip={topicVisibilityTooltip}
           icon={
             <Icon style={{ color: topicButtonColor }}>
