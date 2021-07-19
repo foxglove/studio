@@ -13,8 +13,8 @@ import {
   CacheOnlyLayoutStorageProvider,
 } from "@foxglove/studio-base";
 
-import AppConfigurationProvider from "./components/AppConfigurationProvider";
-import NoOpLayoutCacheProvider from "./components/NoOpLayoutCacheProvider";
+import LocalStorageAppConfigurationProvider from "./components/LocalStorageAppConfigurationProvider";
+import LocalStorageLayoutCacheProvider from "./components/LocalStorageLayoutCacheProvider";
 import ExtensionLoaderProvider from "./providers/ExtensionLoaderProvider";
 
 const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
@@ -23,23 +23,27 @@ export default function Root(): JSX.Element {
   const playerSources: PlayerSourceDefinition[] = [
     {
       name: "Rosbridge (WebSocket)",
-      type: "ws",
+      type: "ros-ws",
     },
     {
-      name: "Bag File (local)",
-      type: "file",
+      name: "ROS 1 Bag File (local)",
+      type: "ros1-local-bagfile",
     },
     {
-      name: "Bag File (HTTP)",
-      type: "http",
+      name: "ROS 1 Bag File (HTTP)",
+      type: "ros1-remote-bagfile",
+    },
+    {
+      name: "ROS 2 Bag Folder (local)",
+      type: "ros2-folder",
     },
   ];
 
   const providers = [
     /* eslint-disable react/jsx-key */
     <StudioToastProvider />,
-    <AppConfigurationProvider />,
-    <NoOpLayoutCacheProvider />,
+    <LocalStorageAppConfigurationProvider />,
+    <LocalStorageLayoutCacheProvider />,
     <CacheOnlyLayoutStorageProvider />,
     <UserProfileLocalStorageProvider />,
     <ExtensionLoaderProvider />,

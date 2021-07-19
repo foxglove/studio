@@ -15,9 +15,11 @@ import { useCallback, useRef } from "react";
 
 import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
 import SchemaEditor from "@foxglove/studio-base/components/PanelSettings/SchemaEditor";
-import { BlockCache } from "@foxglove/studio-base/dataProviders/MemoryCacheDataProvider";
 import Plot, { PlotConfig } from "@foxglove/studio-base/panels/Plot";
+import { BlockCache } from "@foxglove/studio-base/randomAccessDataProviders/MemoryCacheDataProvider";
 import PanelSetup, { triggerWheel } from "@foxglove/studio-base/stories/PanelSetup";
+import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
+import useResumeCount from "@foxglove/studio-base/stories/useResumeCount";
 import { fromSec } from "@foxglove/studio-base/util/time";
 
 const float64StampedDefinition = `std_msgs/Header header
@@ -328,27 +330,37 @@ export default {
 
 LineGraph.storyName = "line graph";
 export function LineGraph(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
   return (
-    <PanelSetup fixture={fixture}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
       <Plot overrideConfig={exampleConfig} />
     </PanelSetup>
   );
 }
+LineGraph.parameters = {
+  useReadySignal: true,
+};
 
 LineGraphWithLegendsHidden.storyName = "line graph with legends hidden";
 export function LineGraphWithLegendsHidden(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
   return (
-    <PanelSetup fixture={fixture}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
       <Plot overrideConfig={{ ...exampleConfig, showLegend: false }} />
     </PanelSetup>
   );
 }
+LineGraphWithLegendsHidden.parameters = {
+  useReadySignal: true,
+};
 
 InALineGraphWithMultiplePlotsXAxesAreSynced.storyName =
   "in a line graph with multiple plots, x-axes are synced";
 export function InALineGraphWithMultiplePlotsXAxesAreSynced(): JSX.Element {
+  const pauseFrame = useResumeCount(6);
+
   return (
-    <PanelSetup fixture={fixture} style={{ flexDirection: "column" }}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame} style={{ flexDirection: "column" }}>
       <Plot
         overrideConfig={{
           ...exampleConfig,
@@ -376,10 +388,14 @@ export function InALineGraphWithMultiplePlotsXAxesAreSynced(): JSX.Element {
     </PanelSetup>
   );
 }
+InALineGraphWithMultiplePlotsXAxesAreSynced.parameters = {
+  useReadySignal: true,
+};
 
 LineGraphAfterZoom.storyName = "line graph after zoom";
 export function LineGraphAfterZoom(): JSX.Element {
   const pauseState = useRef<"zoom" | "ready">("zoom");
+  const readyState = useReadySignal();
 
   const doZoom = useCallback(() => {
     const canvasEl = document.querySelector("canvas");
@@ -401,10 +417,11 @@ export function LineGraphAfterZoom(): JSX.Element {
           doZoom();
           break;
         default:
+          readyState();
           break;
       }
     };
-  }, [doZoom]);
+  }, [doZoom, readyState]);
 
   return (
     <PanelSetup pauseFrame={pauseFrame} fixture={fixture}>
@@ -412,11 +429,15 @@ export function LineGraphAfterZoom(): JSX.Element {
     </PanelSetup>
   );
 }
+LineGraphAfterZoom.parameters = {
+  useReadySignal: true,
+};
 
 TimestampMethodHeaderStamp.storyName = "timestampMethod: headerStamp";
 export function TimestampMethodHeaderStamp(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
   return (
-    <PanelSetup fixture={fixture}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
       <Plot
         overrideConfig={{
           ...exampleConfig,
@@ -433,11 +454,16 @@ export function TimestampMethodHeaderStamp(): JSX.Element {
     </PanelSetup>
   );
 }
+TimestampMethodHeaderStamp.parameters = {
+  useReadySignal: true,
+};
 
 LongPath.storyName = "long path";
 export function LongPath(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={fixture} style={{ maxWidth: 250 }}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame} style={{ maxWidth: 250 }}>
       <Plot
         overrideConfig={{
           ...exampleConfig,
@@ -453,11 +479,16 @@ export function LongPath(): JSX.Element {
     </PanelSetup>
   );
 }
+LongPath.parameters = {
+  useReadySignal: true,
+};
 
 DisabledPath.storyName = "disabled path";
 export function DisabledPath(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={fixture}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
       <Plot
         overrideConfig={{
           ...exampleConfig,
@@ -478,11 +509,16 @@ export function DisabledPath(): JSX.Element {
     </PanelSetup>
   );
 }
+DisabledPath.parameters = {
+  useReadySignal: true,
+};
 
 ReferenceLine.storyName = "reference line";
 export function ReferenceLine(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={fixture}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
       <Plot
         overrideConfig={{
           xAxisVal: "timestamp",
@@ -500,11 +536,16 @@ export function ReferenceLine(): JSX.Element {
     </PanelSetup>
   );
 }
+ReferenceLine.parameters = {
+  useReadySignal: true,
+};
 
 WithMinAndMaxYValues.storyName = "with min and max Y values";
 export function WithMinAndMaxYValues(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={fixture}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
       <Plot
         overrideConfig={{
           xAxisVal: "timestamp",
@@ -523,11 +564,16 @@ export function WithMinAndMaxYValues(): JSX.Element {
     </PanelSetup>
   );
 }
+WithMinAndMaxYValues.parameters = {
+  useReadySignal: true,
+};
 
 WithJustMinYValueLessThanMinimumValue.storyName = "with just min Y value less than minimum value";
 export function WithJustMinYValueLessThanMinimumValue(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={fixture}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
       <Plot
         overrideConfig={{
           xAxisVal: "timestamp",
@@ -546,11 +592,16 @@ export function WithJustMinYValueLessThanMinimumValue(): JSX.Element {
     </PanelSetup>
   );
 }
+WithJustMinYValueLessThanMinimumValue.parameters = {
+  useReadySignal: true,
+};
 
 WithJustMinYValueMoreThanMinimumValue.storyName = "with just min Y value more than minimum value";
 export function WithJustMinYValueMoreThanMinimumValue(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={fixture}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
       <Plot
         overrideConfig={{
           xAxisVal: "timestamp",
@@ -569,11 +620,16 @@ export function WithJustMinYValueMoreThanMinimumValue(): JSX.Element {
     </PanelSetup>
   );
 }
+WithJustMinYValueMoreThanMinimumValue.parameters = {
+  useReadySignal: true,
+};
 
 WithJustMinYValueMoreThanMaximumValue.storyName = "with just min Y value more than maximum value";
 export function WithJustMinYValueMoreThanMaximumValue(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={fixture}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
       <Plot
         overrideConfig={{
           xAxisVal: "timestamp",
@@ -592,11 +648,16 @@ export function WithJustMinYValueMoreThanMaximumValue(): JSX.Element {
     </PanelSetup>
   );
 }
+WithJustMinYValueMoreThanMaximumValue.parameters = {
+  useReadySignal: true,
+};
 
 WithJustMaxYValueLessThanMaximumValue.storyName = "with just max Y value less than maximum value";
 export function WithJustMaxYValueLessThanMaximumValue(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={fixture}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
       <Plot
         overrideConfig={{
           xAxisVal: "timestamp",
@@ -615,11 +676,16 @@ export function WithJustMaxYValueLessThanMaximumValue(): JSX.Element {
     </PanelSetup>
   );
 }
+WithJustMaxYValueLessThanMaximumValue.parameters = {
+  useReadySignal: true,
+};
 
 WithJustMaxYValueMoreThanMaximumValue.storyName = "with just max Y value more than maximum value";
 export function WithJustMaxYValueMoreThanMaximumValue(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={fixture}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
       <Plot
         overrideConfig={{
           xAxisVal: "timestamp",
@@ -638,11 +704,16 @@ export function WithJustMaxYValueMoreThanMaximumValue(): JSX.Element {
     </PanelSetup>
   );
 }
+WithJustMaxYValueMoreThanMaximumValue.parameters = {
+  useReadySignal: true,
+};
 
 WithJustMaxYValueLessThanMinimumValue.storyName = "with just max Y value less than minimum value";
 export function WithJustMaxYValueLessThanMinimumValue(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={fixture}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
       <Plot
         overrideConfig={{
           xAxisVal: "timestamp",
@@ -661,12 +732,17 @@ export function WithJustMaxYValueLessThanMinimumValue(): JSX.Element {
     </PanelSetup>
   );
 }
+WithJustMaxYValueLessThanMinimumValue.parameters = {
+  useReadySignal: true,
+};
 
 ScatterPlotPlusLineGraphPlusReferenceLine.storyName =
   "scatter plot plus line graph plus reference line";
 export function ScatterPlotPlusLineGraphPlusReferenceLine(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={fixture}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
       <Plot
         overrideConfig={{
           ...exampleConfig,
@@ -688,27 +764,16 @@ export function ScatterPlotPlusLineGraphPlusReferenceLine(): JSX.Element {
     </PanelSetup>
   );
 }
-
-OpenXAxisDropdownMenu.storyName = "open x-axis dropdown menu";
-export function OpenXAxisDropdownMenu(): JSX.Element {
-  const pauseFrame = useCallback(() => {
-    return () => {
-      const xAxisDropdown = document.querySelectorAll("[data-test=plot-legend-x-axis-menu]")[0];
-      (xAxisDropdown as any).click();
-    };
-  }, []);
-
-  return (
-    <PanelSetup pauseFrame={pauseFrame} fixture={fixture}>
-      <Plot overrideConfig={exampleConfig} />
-    </PanelSetup>
-  );
-}
+ScatterPlotPlusLineGraphPlusReferenceLine.parameters = {
+  useReadySignal: true,
+};
 
 IndexBasedXAxisForArray.storyName = "index-based x-axis for array";
 export function IndexBasedXAxisForArray(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={fixture}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
       <Plot
         overrideConfig={{
           ...exampleConfig,
@@ -726,11 +791,16 @@ export function IndexBasedXAxisForArray(): JSX.Element {
     </PanelSetup>
   );
 }
+IndexBasedXAxisForArray.parameters = {
+  useReadySignal: true,
+};
 
 CustomXAxisTopic.storyName = "custom x-axis topic";
 export function CustomXAxisTopic(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={fixture}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
       <Plot
         overrideConfig={{
           ...exampleConfig,
@@ -748,12 +818,17 @@ export function CustomXAxisTopic(): JSX.Element {
     </PanelSetup>
   );
 }
+CustomXAxisTopic.parameters = {
+  useReadySignal: true,
+};
 
 CurrentCustomXAxisTopic.storyName = "current custom x-axis topic";
 export function CurrentCustomXAxisTopic(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   // As above, but just shows a single point instead of the whole line.
   return (
-    <PanelSetup fixture={fixture}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
       <Plot
         overrideConfig={{
           ...exampleConfig,
@@ -771,12 +846,17 @@ export function CurrentCustomXAxisTopic(): JSX.Element {
     </PanelSetup>
   );
 }
+CurrentCustomXAxisTopic.parameters = {
+  useReadySignal: true,
+};
 
 CustomXAxisTopicWithMismatchedDataLengths.storyName =
   "custom x-axis topic with mismatched data lengths";
 export function CustomXAxisTopicWithMismatchedDataLengths(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={fixture}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
       <Plot
         overrideConfig={{
           ...exampleConfig,
@@ -805,11 +885,17 @@ export function CustomXAxisTopicWithMismatchedDataLengths(): JSX.Element {
     </PanelSetup>
   );
 }
+CustomXAxisTopicWithMismatchedDataLengths.parameters = {
+  useReadySignal: true,
+};
 
 SuperCloseValues.storyName = "super close values";
 export function SuperCloseValues(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
     <PanelSetup
+      pauseFrame={pauseFrame}
       fixture={{
         datatypes: {
           "std_msgs/Float32": { fields: [{ name: "data", type: "float32", isArray: false }] },
@@ -846,11 +932,16 @@ export function SuperCloseValues(): JSX.Element {
     </PanelSetup>
   );
 }
+SuperCloseValues.parameters = {
+  useReadySignal: true,
+};
 
 TimeValues.storyName = "time values";
 export function TimeValues(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={fixture}>
+    <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
       <Plot
         overrideConfig={{
           ...exampleConfig,
@@ -868,11 +959,16 @@ export function TimeValues(): JSX.Element {
     </PanelSetup>
   );
 }
+TimeValues.parameters = {
+  useReadySignal: true,
+};
 
 PreloadedDataInBinaryBlocks.storyName = "preloaded data in binary blocks";
 export function PreloadedDataInBinaryBlocks(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={withEndTime(fixture, { sec: 2, nsec: 0 })}>
+    <PanelSetup pauseFrame={pauseFrame} fixture={withEndTime(fixture, { sec: 2, nsec: 0 })}>
       <Plot
         overrideConfig={{
           ...exampleConfig,
@@ -885,11 +981,16 @@ export function PreloadedDataInBinaryBlocks(): JSX.Element {
     </PanelSetup>
   );
 }
+PreloadedDataInBinaryBlocks.parameters = {
+  useReadySignal: true,
+};
 
 MixedStreamedAndPreloadedData.storyName = "mixed streamed and preloaded data";
 export function MixedStreamedAndPreloadedData(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={withEndTime(fixture, { sec: 3, nsec: 0 })}>
+    <PanelSetup pauseFrame={pauseFrame} fixture={withEndTime(fixture, { sec: 3, nsec: 0 })}>
       <Plot
         overrideConfig={{
           ...exampleConfig,
@@ -906,11 +1007,16 @@ export function MixedStreamedAndPreloadedData(): JSX.Element {
     </PanelSetup>
   );
 }
+MixedStreamedAndPreloadedData.parameters = {
+  useReadySignal: true,
+};
 
 PreloadedDataAndItsDerivative.storyName = "preloaded data and its derivative";
 export function PreloadedDataAndItsDerivative(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={withEndTime(fixture, { sec: 2, nsec: 0 })}>
+    <PanelSetup pauseFrame={pauseFrame} fixture={withEndTime(fixture, { sec: 2, nsec: 0 })}>
       <Plot
         overrideConfig={{
           ...exampleConfig,
@@ -927,11 +1033,16 @@ export function PreloadedDataAndItsDerivative(): JSX.Element {
     </PanelSetup>
   );
 }
+PreloadedDataAndItsDerivative.parameters = {
+  useReadySignal: true,
+};
 
 PreloadedDataAndItsNegative.storyName = "preloaded data and its negative";
 export function PreloadedDataAndItsNegative(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={withEndTime(fixture, { sec: 2, nsec: 0 })}>
+    <PanelSetup pauseFrame={pauseFrame} fixture={withEndTime(fixture, { sec: 2, nsec: 0 })}>
       <Plot
         overrideConfig={{
           ...exampleConfig,
@@ -948,11 +1059,16 @@ export function PreloadedDataAndItsNegative(): JSX.Element {
     </PanelSetup>
   );
 }
+PreloadedDataAndItsNegative.parameters = {
+  useReadySignal: true,
+};
 
 PreloadedDataAndItsAbsoluteValue.storyName = "preloaded data and its absolute value";
 export function PreloadedDataAndItsAbsoluteValue(): JSX.Element {
+  const pauseFrame = useResumeCount(3);
+
   return (
-    <PanelSetup fixture={withEndTime(fixture, { sec: 2, nsec: 0 })}>
+    <PanelSetup pauseFrame={pauseFrame} fixture={withEndTime(fixture, { sec: 2, nsec: 0 })}>
       <Plot
         overrideConfig={{
           ...exampleConfig,
@@ -969,6 +1085,9 @@ export function PreloadedDataAndItsAbsoluteValue(): JSX.Element {
     </PanelSetup>
   );
 }
+PreloadedDataAndItsAbsoluteValue.parameters = {
+  useReadySignal: true,
+};
 
 export function Settings(): JSX.Element {
   return (

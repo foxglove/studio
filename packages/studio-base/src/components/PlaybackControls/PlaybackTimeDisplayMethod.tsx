@@ -11,9 +11,9 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { Time } from "rosbag";
 import styled from "styled-components";
 
+import { Time } from "@foxglove/rostime";
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
 import Flex from "@foxglove/studio-base/components/Flex";
@@ -68,7 +68,8 @@ const PlaybackTimeDisplayMethod = ({
   );
   const { setPlaybackConfig } = useCurrentLayoutActions();
   const setTimeDisplayMethod = useCallback(
-    (newTimeDisplayMethod) => setPlaybackConfig({ timeDisplayMethod: newTimeDisplayMethod }),
+    (newTimeDisplayMethod: "ROS" | "TOD" | undefined) =>
+      setPlaybackConfig({ timeDisplayMethod: newTimeDisplayMethod }),
     [setPlaybackConfig],
   );
 
@@ -87,7 +88,7 @@ const PlaybackTimeDisplayMethod = ({
   const [hasError, setHasError] = useState<boolean>(false);
 
   const onSubmit = useCallback(
-    (e) => {
+    (e: React.SyntheticEvent) => {
       e.preventDefault();
 
       if (inputText == undefined || inputText.length === 0) {

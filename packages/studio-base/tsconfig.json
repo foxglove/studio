@@ -3,11 +3,17 @@
   "include": ["./src/**/*", "./src/**/*.json", "./src/.storybook/**/*", "../package.json"],
   "compilerOptions": {
     "rootDir": "./src",
-    "outDir": "./dist",
+    "baseUrl": "./src",
     "jsx": "react-jsx",
     "lib": ["dom", "dom.iterable", "es2020", "webworker"],
+    "declarationMap": false,
+    "sourceMap": false,
     "paths": {
-      "@foxglove/studio-base/*": ["./src/*"]
-    }
+      "@foxglove/studio-base/*": ["./*"]
+    },
+    "plugins": [
+      { "transform": "typescript-transform-paths" },
+      { "transform": "typescript-transform-paths", "afterDeclarations": true }
+    ]
   }
 }

@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { isEqual, sortBy } from "lodash";
-import { Time } from "rosbag";
 import roslib from "roslib";
 import { v4 as uuidv4 } from "uuid";
 
@@ -20,6 +19,7 @@ import Log from "@foxglove/log";
 import type { RosGraph } from "@foxglove/ros1";
 import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
 import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
+import { Time } from "@foxglove/rostime";
 import {
   AdvertisePayload,
   MessageEvent,
@@ -124,7 +124,7 @@ export default class RosbridgePlayer implements Player {
     rosClient.on("error", (err) => {
       if (err) {
         this._problems.push({
-          severity: "warning",
+          severity: "warn",
           message: "Rosbridge issue",
           error: err,
         });
@@ -207,7 +207,7 @@ export default class RosbridgePlayer implements Player {
 
       if (topicsMissingDatatypes.length > 0) {
         this._problems.push({
-          severity: "warning",
+          severity: "warn",
           message: "Could not resolve all message types",
           tip: `Message types could not be found for these topics: ${topicsMissingDatatypes.join(
             ",",

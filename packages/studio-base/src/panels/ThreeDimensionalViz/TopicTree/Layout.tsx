@@ -23,10 +23,10 @@ import {
   MouseEventObject,
   Polygon,
 } from "regl-worldview";
-import { Time } from "rosbag";
 import { useDebouncedCallback } from "use-debounce";
 
 import { useShallowMemo } from "@foxglove/hooks";
+import { Time } from "@foxglove/rostime";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
@@ -565,9 +565,9 @@ export default function Layout({
   };
 
   const setColorOverrideBySourceIdxByVariable = useCallback(
-    (_colorOverrideBySourceIdxByVariable) => {
+    (newValue: ColorOverrideBySourceIdxByVariable) => {
       callbackInputsRef.current.saveConfig({
-        colorOverrideBySourceIdxByVariable: _colorOverrideBySourceIdxByVariable,
+        colorOverrideBySourceIdxByVariable: newValue,
       });
     },
     [],

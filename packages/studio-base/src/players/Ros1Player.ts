@@ -3,13 +3,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { isEqual, sortBy } from "lodash";
-import { Time } from "rosbag";
 import { v4 as uuidv4 } from "uuid";
 
 import { Sockets } from "@foxglove/electron-socket/renderer";
 import Logger from "@foxglove/log";
 import { RosNode, TcpSocket } from "@foxglove/ros1";
 import { RosMsgDefinition } from "@foxglove/rosmsg";
+import { Time } from "@foxglove/rostime";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import {
   AdvertisePayload,
@@ -214,7 +214,7 @@ export default class Ros1Player implements Player {
         this._addProblem(
           Problem.Parameters,
           {
-            severity: "warning",
+            severity: "warn",
             message: "ROS parameter fetch failed",
             tip: `Ensure that roscore is running and accessible at: ${this._url}`,
             error,
@@ -428,7 +428,7 @@ export default class Ros1Player implements Player {
         msgdef = rosDatatypesToMessageDefinition(datatypes, dataType);
       } catch (error) {
         this._addProblem(msgdefProblemId, {
-          severity: "warning",
+          severity: "warn",
           message: `Unknown message definition for "${topic}"`,
           tip: `Try subscribing to the topic "${topic} before publishing to it`,
         });
@@ -470,7 +470,7 @@ export default class Ros1Player implements Player {
           );
       } else {
         this._addProblem(problemId, {
-          severity: "warning",
+          severity: "warn",
           message: `Unable to publish to "${topic}"`,
           tip: `ROS1 may be disconnected. Please try again in a moment`,
         });
@@ -560,7 +560,7 @@ export default class Ros1Player implements Player {
       this._addProblem(
         Problem.Graph,
         {
-          severity: "warning",
+          severity: "warn",
           message: "Unable to update connection graph",
           tip: `The connection graph contains information about publishers and subscribers. A 
 stale graph may result in missing topics you expect. Ensure that roscore is reachable at ${this._url}.`,

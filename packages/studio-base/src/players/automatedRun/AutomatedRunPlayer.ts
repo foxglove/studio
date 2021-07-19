@@ -13,15 +13,10 @@
 
 import { intersection } from "lodash";
 import Queue from "promise-queue";
-import { Time, TimeUtil } from "rosbag";
 import { v4 as uuidv4 } from "uuid";
 
 import Logger from "@foxglove/log";
-import {
-  DataProvider,
-  DataProviderMetadata,
-  InitializationResult,
-} from "@foxglove/studio-base/dataProviders/types";
+import { Time, add, isLessThan } from "@foxglove/rostime";
 import {
   AdvertisePayload,
   MessageEvent,
@@ -34,6 +29,11 @@ import {
   SubscribePayload,
   Topic,
 } from "@foxglove/studio-base/players/types";
+import {
+  RandomAccessDataProvider,
+  RandomAccessDataProviderMetadata,
+  InitializationResult,
+} from "@foxglove/studio-base/randomAccessDataProviders/types";
 import { USER_ERROR_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 import sendNotification, {
   NotificationType,
@@ -75,7 +75,7 @@ function formatSeconds(sec: number): string {
 export default class AutomatedRunPlayer implements Player {
   static className = "AutomatedRunPlayer";
   _isPlaying: boolean = false;
-  _provider: DataProvider;
+  _provider: RandomAccessDataProvider;
   _providerResult?: InitializationResult;
   _progress: Progress = {};
   _subscribedTopics: Set<string> = new Set();
@@ -94,7 +94,7 @@ export default class AutomatedRunPlayer implements Player {
   // deterministically so we put them in a FIFO queue.
   _emitStateQueue: Queue = new Queue(1);
 
-  constructor(provider: DataProvider, client: AutomatedRunClient) {
+  constructor(provider: RandomAccessDataProvider, client: AutomatedRunClient) {
     this._provider = provider;
     this._speed = client.speed;
     this._msPerFrame = client.msPerFrame;
@@ -251,7 +251,7 @@ export default class AutomatedRunPlayer implements Player {
         this._progress = progress;
         void this._onUpdateProgress();
       },
-      reportMetadataCallback: (metadata: DataProviderMetadata) => {
+      reportMetadataCallback: (metadata: RandomAccessDataProviderMetadata) => {
         switch (metadata.type) {
           case "updateReconnecting":
             sendNotification(
@@ -357,14 +357,14 @@ export default class AutomatedRunPlayer implements Player {
     // We split up the frames between the workers,
     // so we need to advance time based on the number of workers
     const nsFrameTimePerWorker = nsBagTimePerFrame * workerCount;
-    currentTime = TimeUtil.add(currentTime, { sec: 0, nsec: nsBagTimePerFrame * workerIndex });
+    currentTime = add(currentTime, { sec: 0, nsec: nsBagTimePerFrame * workerIndex });
 
     let frameCount = 0;
-    while (TimeUtil.isLessThan(currentTime, this._providerResult.end)) {
+    while (isLessThan(currentTime, this._providerResult.end)) {
       if (this._waitToReportErrorPromise) {
         await this._waitToReportErrorPromise;
       }
-      const end = TimeUtil.add(currentTime, { sec: 0, nsec: nsFrameTimePerWorker });
+      const end = add(currentTime, { sec: 0, nsec: nsFrameTimePerWorker });
 
       this._client.markTotalFrameStart();
       const { parsedMessages } = await this._getMessages(currentTime, end);
@@ -395,7 +395,7 @@ export default class AutomatedRunPlayer implements Player {
 
       await this._client.onFrameFinished(frameCount);
 
-      currentTime = TimeUtil.add(end, { sec: 0, nsec: 1 });
+      currentTime = add(end, { sec: 0, nsec: 1 });
       frameCount++;
     }
 

@@ -13,8 +13,8 @@
 
 import { mergeStyleSets } from "@fluentui/react";
 import { padStart } from "lodash";
-import { Time } from "rosbag";
 
+import { Time } from "@foxglove/rostime";
 import mixins from "@foxglove/studio-base/styles/mixins.module.scss";
 
 import LevelToString from "./LevelToString";
@@ -47,20 +47,20 @@ const classes = mergeStyleSets({
 
 export default React.memo(function LogMessage({ msg }: { msg: RosgraphMsgs$Log }) {
   const altStr = `${msg.file}:${msg.line}`;
-
   const strLevel = LevelToString(msg.level);
-
   const levelClassName = logLevelColorsStyle[strLevel.toLocaleLowerCase()];
+  const stamp = msg.header?.stamp ?? msg.stamp ?? { sec: 0, nsec: 0 };
 
   // the first message line is rendered with the info/stamp/name
   // following newlines are rendered on their own line
   const lines = msg.msg.split("\n");
+
   return (
     <div title={altStr} className={`${classes.root} ${levelClassName}`}>
       <div>
         <span>[{padStart(strLevel, 5, " ")}]</span>
         <span>
-          [<Stamp stamp={msg.header.stamp} />]
+          [<Stamp stamp={stamp} />]
         </span>
         <span>
           [{msg.name}
