@@ -8,6 +8,7 @@ import styled from "styled-components";
 import "@foxglove/studio-base/styles/global.scss";
 
 const MINIMUM_CHROME_VERSION = 76;
+
 const StyledBanner = styled.div`
   text-align: center;
   position: absolute;
@@ -18,13 +19,20 @@ const StyledBanner = styled.div`
   background-color: rgba(99, 102, 241, 0.9);
   z-index: 100;
 `;
+const StyledIconWrapper = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  fill: white;
+`;
 
 const VersionBanner = function ({
   isChrome,
   currentVersion,
+  isDismissable,
 }: {
   isChrome: boolean;
   currentVersion: number;
+  isDismissable: boolean;
 }): ReactElement | ReactNull {
   const [showBanner, setShowBanner] = useState(true);
 
@@ -33,19 +41,20 @@ const VersionBanner = function ({
   }
 
   const prompt = isChrome
-    ? `Update Chrome to version ${MINIMUM_CHROME_VERSION}+ to continue.`
+    ? `You're using an outdated version of Chrome. Update to version ${MINIMUM_CHROME_VERSION}+ to continue.`
     : `You're using an unsupported browser. Use Chrome ${MINIMUM_CHROME_VERSION}+ to continue.`;
   const fixText = isChrome ? "Update Chrome" : "Download Chrome";
 
   return (
     <StyledBanner>
       <div>
-        <div
-          style={{ display: "flex", justifyContent: "flex-end", fill: "white" }}
-          onClick={() => setShowBanner(false)}
-        >
-          <CloseIcon />
-        </div>
+        {isDismissable ? (
+          <StyledIconWrapper onClick={() => setShowBanner(false)}>
+            <CloseIcon />
+          </StyledIconWrapper>
+        ) : (
+          ReactNull
+        )}
         <p>{prompt} </p>
         {isChrome ? undefined : (
           <p>
