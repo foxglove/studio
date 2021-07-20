@@ -51,13 +51,14 @@ export default function PanelCatalogProvider(
       return {
         category: "misc",
         title: panel.registration.name,
-        component: Panel(PanelWrapper),
+        type: panelType,
+        module: async () => ({ default: Panel(PanelWrapper) }),
       };
     });
   }, [extensionRegistry]);
 
   const allPanels = useMemo(() => {
-    return [...panels.builtin, ...panels.hidden, ...panels.debug, ...wrappedExtensionPanels];
+    return [...panels.builtin, ...panels.hidden, ...wrappedExtensionPanels];
   }, [wrappedExtensionPanels]);
 
   const visiblePanels = useMemo(() => {
@@ -73,7 +74,7 @@ export default function PanelCatalogProvider(
     const byType = new Map<string, PanelInfo>();
 
     for (const panel of allPanels) {
-      const type = panel.component.panelType;
+      const type = panel.type;
       byType.set(type, panel);
     }
     return byType;
@@ -86,6 +87,15 @@ export default function PanelCatalogProvider(
       },
       getPanelByType(type: string) {
         return panelsByType.get(type);
+      },
+      async getConfigSchema(type: string) {
+        const panelInfo = panelsByType.get(type);
+        if (!panelInfo) {
+          return undefined;
+        }
+
+        const loadedModule = await panelInfo.module();
+        return loadedModule.default.configSchema;
       },
     };
   }, [panelsByType, visiblePanels]);
