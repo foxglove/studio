@@ -2639,7 +2639,7 @@ __metadata:
     use-pan-and-zoom: 0.6.2
     uuid: 8.3.2
     wasm-lz4: 2.0.0
-    webpack: 5.45.1
+    webpack: 5.44.0
     xacro-parser: 0.3.1
   languageName: unknown
   linkType: soft
@@ -11266,16 +11266,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron@npm:13.1.7":
-  version: 13.1.7
-  resolution: "electron@npm:13.1.7"
+"electron@npm:13.1.6":
+  version: 13.1.6
+  resolution: "electron@npm:13.1.6"
   dependencies:
     "@electron/get": ^1.0.1
     "@types/node": ^14.6.2
     extract-zip: ^1.0.3
   bin:
     electron: cli.js
-  checksum: 750a3133a279ce37bc6e0d62482ae80f989c51fa8a99237c0dc956eef6d305ed5f8f550098bc54d669bcd79b7d625e6ac9cc91eb368d998f39fa59a0e68472e9
+  checksum: 9ca988f415e203d77f8fa3fcd9d4d7a6c677154b251c937bbacfa05180e5318b4a6ec494a997e1e691d6843d70c38e7e6382141dfaa8fbe23354d041c4a005bf
   languageName: node
   linkType: hard
 
@@ -13026,7 +13026,7 @@ __metadata:
     clean-webpack-plugin: 4.0.0-alpha.0
     colors: 1.4.0
     cross-env: 7.0.3
-    electron: 13.1.7
+    electron: 13.1.6
     electron-builder: 22.11.9
     electron-devtools-installer: 3.2.0
     electron-notarize: 1.0.0
@@ -25950,6 +25950,42 @@ typescript@4.3.5:
   languageName: node
   linkType: hard
 
+"webpack@npm:5.44.0, webpack@npm:^5.1.0, webpack@npm:^5.9.0":
+  version: 5.44.0
+  resolution: "webpack@npm:5.44.0"
+  dependencies:
+    "@types/eslint-scope": ^3.7.0
+    "@types/estree": ^0.0.50
+    "@webassemblyjs/ast": 1.11.1
+    "@webassemblyjs/wasm-edit": 1.11.1
+    "@webassemblyjs/wasm-parser": 1.11.1
+    acorn: ^8.4.1
+    browserslist: ^4.14.5
+    chrome-trace-event: ^1.0.2
+    enhanced-resolve: ^5.8.0
+    es-module-lexer: ^0.7.1
+    eslint-scope: 5.1.1
+    events: ^3.2.0
+    glob-to-regexp: ^0.4.1
+    graceful-fs: ^4.2.4
+    json-parse-better-errors: ^1.0.2
+    loader-runner: ^4.2.0
+    mime-types: ^2.1.27
+    neo-async: ^2.6.2
+    schema-utils: ^3.0.0
+    tapable: ^2.1.1
+    terser-webpack-plugin: ^5.1.3
+    watchpack: ^2.2.0
+    webpack-sources: ^2.3.0
+  peerDependenciesMeta:
+    webpack-cli:
+      optional: true
+  bin:
+    webpack: bin/webpack.js
+  checksum: a173d875045267b5cb8ead959c1b47dc06ca191ee7cdbf6a094d5947261f1e4e167addc20eb65945078500247b74497e65270f4dbca1bcaf17327b462800c0ef
+  languageName: node
+  linkType: hard
+
 "webpack@npm:5.45.1":
   version: 5.45.1
   resolution: "webpack@npm:5.45.1"
@@ -25983,42 +26019,6 @@ typescript@4.3.5:
   bin:
     webpack: bin/webpack.js
   checksum: 7aca5a40bf95d83c89b30b7c58da70e6aba672fc97b8f8ddea18516ce026706982b3b6b5c9509a6295b87de889df64f9a08e125ba9a36a128cb84cbce742225c
-  languageName: node
-  linkType: hard
-
-"webpack@npm:^5.1.0, webpack@npm:^5.9.0":
-  version: 5.44.0
-  resolution: "webpack@npm:5.44.0"
-  dependencies:
-    "@types/eslint-scope": ^3.7.0
-    "@types/estree": ^0.0.50
-    "@webassemblyjs/ast": 1.11.1
-    "@webassemblyjs/wasm-edit": 1.11.1
-    "@webassemblyjs/wasm-parser": 1.11.1
-    acorn: ^8.4.1
-    browserslist: ^4.14.5
-    chrome-trace-event: ^1.0.2
-    enhanced-resolve: ^5.8.0
-    es-module-lexer: ^0.7.1
-    eslint-scope: 5.1.1
-    events: ^3.2.0
-    glob-to-regexp: ^0.4.1
-    graceful-fs: ^4.2.4
-    json-parse-better-errors: ^1.0.2
-    loader-runner: ^4.2.0
-    mime-types: ^2.1.27
-    neo-async: ^2.6.2
-    schema-utils: ^3.0.0
-    tapable: ^2.1.1
-    terser-webpack-plugin: ^5.1.3
-    watchpack: ^2.2.0
-    webpack-sources: ^2.3.0
-  peerDependenciesMeta:
-    webpack-cli:
-      optional: true
-  bin:
-    webpack: bin/webpack.js
-  checksum: a173d875045267b5cb8ead959c1b47dc06ca191ee7cdbf6a094d5947261f1e4e167addc20eb65945078500247b74497e65270f4dbca1bcaf17327b462800c0ef
   languageName: node
   linkType: hard
 
