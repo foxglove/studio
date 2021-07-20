@@ -1,11 +1,13 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
+import { DefaultButton } from "@fluentui/react/lib/Button";
 import CloseIcon from "@mdi/svg/svg/close.svg";
 import { useState, ReactElement } from "react";
 import styled from "styled-components";
 
 import "@foxglove/studio-base/styles/global.scss";
+import styles from "./VersionBanner.module.scss";
 
 const MINIMUM_CHROME_VERSION = 76;
 
@@ -17,6 +19,7 @@ const StyledBanner = styled.div<{
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  text-align: center;
   width: 100vw;
   padding: 10px;
   background-color: rgba(99, 102, 241, 0.9);
@@ -45,8 +48,8 @@ const VersionBanner = function ({
   }
 
   const prompt = isChrome
-    ? `You're using an outdated version of Chrome. Update to version ${MINIMUM_CHROME_VERSION}+ to continue.`
-    : `You're using an unsupported browser. Use Chrome ${MINIMUM_CHROME_VERSION}+ to continue.`;
+    ? "You're using an outdated version of Chrome."
+    : "You're using an unsupported browser.";
   const fixText = isChrome ? "Update Chrome" : "Download Chrome";
 
   return (
@@ -59,18 +62,20 @@ const VersionBanner = function ({
         ) : (
           ReactNull
         )}
-        <p>{prompt} </p>
+        <p>
+          {prompt} Foxglove Studio currently requires Chrome v{MINIMUM_CHROME_VERSION}+.
+        </p>
         {isChrome ? undefined : (
           <p>
-            Check out our browser support progress in{" "}
-            <a href="https://github.com/foxglove/studio/issues/1511">this GitHub issue</a>.
+            Check out our cross-browser support progress in GitHub issue{" "}
+            <a href="https://github.com/foxglove/studio/issues/1511">#1511</a>.
           </p>
         )}
       </div>
 
       <div style={{ paddingTop: "10px", marginBottom: "12px" }}>
         <a href="https://www.google.com/chrome/" target="_blank" rel="noreferrer">
-          <button>{fixText}</button>
+          <DefaultButton className={styles.bannerBtn}>{fixText}</DefaultButton>
         </a>
       </div>
     </StyledBanner>
