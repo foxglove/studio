@@ -11,9 +11,6 @@ const MINIMUM_CHROME_VERSION = 76;
 
 const StyledBanner = styled.div`
   text-align: center;
-  position: absolute;
-  top: 0px;
-  left: 0px;
   width: 100vw;
   padding: 10px;
   background-color: rgba(99, 102, 241, 0.9);
@@ -23,6 +20,7 @@ const StyledIconWrapper = styled.div`
   display: flex;
   justify-content: flex-end;
   fill: white;
+  margin-bottom: -20px;
 `;
 
 const VersionBanner = function ({
