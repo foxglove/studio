@@ -2,19 +2,26 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import { useToasts } from "react-toast-notifications";
 
+import { useShallowMemo } from "@foxglove/hooks";
+import Logger from "@foxglove/log";
 import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { useLayoutCache } from "@foxglove/studio-base/context/LayoutCacheContext";
 import LayoutStorageContext from "@foxglove/studio-base/context/LayoutStorageContext";
+import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
 import CacheOnlyLayoutStorage from "@foxglove/studio-base/services/CacheOnlyLayoutStorage";
 import ConsoleApiRemoteLayoutStorage from "@foxglove/studio-base/services/ConsoleApiRemoteLayoutStorage";
 import OfflineLayoutStorage from "@foxglove/studio-base/services/OfflineLayoutStorage";
 
+const log = Logger.getLogger(__filename);
+
 export default function ConsoleApiLayoutStorageProvider({
   children,
 }: React.PropsWithChildren<unknown>): JSX.Element {
+  const { addToast } = useToasts();
   const api = useConsoleApi();
   const currentUser = useCurrentUser();
 
@@ -28,9 +35,21 @@ export default function ConsoleApiLayoutStorageProvider({
     [layoutCache, apiStorage],
   );
 
+  const syncNow = useCallback(async () => {
+    try {
+      const conflicts = await offlineStorage.syncWithRemote();
+      log.info("synced, conflicts:", conflicts);
+    } catch (error) {
+      addToast(`Sync failed: ${error.message}`, { appearance: "error" });
+    }
+  }, [addToast, offlineStorage]);
+  const debugging = useShallowMemo({ syncNow });
+
   return (
-    <LayoutStorageContext.Provider value={currentUser ? offlineStorage : cacheOnlyStorage}>
-      {children}
-    </LayoutStorageContext.Provider>
+    <LayoutStorageDebuggingContext.Provider value={debugging}>
+      <LayoutStorageContext.Provider value={currentUser ? offlineStorage : cacheOnlyStorage}>
+        {children}
+      </LayoutStorageContext.Provider>
+    </LayoutStorageDebuggingContext.Provider>
   );
 }

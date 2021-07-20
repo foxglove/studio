@@ -214,7 +214,7 @@ export default function LayoutRow({
     },
   ];
 
-  if (layoutDebug?.useFakeRemoteLayoutStorage === true) {
+  if (layoutDebug) {
     menuItems.push(
       { key: "debug_divider", itemType: ContextualMenuItemType.Divider },
       {
@@ -227,40 +227,46 @@ export default function LayoutRow({
           },
         },
       },
-      {
-        key: "debug_edit",
-        text: "Inject edit",
-        iconProps: { iconName: "TestBeakerSolid" },
-        onClick: () => void layoutDebug.injectEdit(layout.id),
-        itemProps: {
-          styles: {
-            root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
-          },
-        },
-      },
-      {
-        key: "debug_rename",
-        text: "Inject rename",
-        iconProps: { iconName: "TestBeakerSolid" },
-        onClick: () => void layoutDebug.injectRename(layout.id),
-        itemProps: {
-          styles: {
-            root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
-          },
-        },
-      },
-      {
-        key: "debug_delete",
-        text: "Inject delete",
-        iconProps: { iconName: "TestBeakerSolid" },
-        onClick: () => void layoutDebug.injectDelete(layout.id),
-        itemProps: {
-          styles: {
-            root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
-          },
-        },
-      },
     );
+  }
+  if (layoutDebug?.injectEdit) {
+    menuItems.push({
+      key: "debug_edit",
+      text: "Inject edit",
+      iconProps: { iconName: "TestBeakerSolid" },
+      onClick: () => void layoutDebug.injectEdit?.(layout.id),
+      itemProps: {
+        styles: {
+          root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
+        },
+      },
+    });
+  }
+  if (layoutDebug?.injectRename) {
+    menuItems.push({
+      key: "debug_rename",
+      text: "Inject rename",
+      iconProps: { iconName: "TestBeakerSolid" },
+      onClick: () => void layoutDebug.injectRename?.(layout.id),
+      itemProps: {
+        styles: {
+          root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
+        },
+      },
+    });
+  }
+  if (layoutDebug?.injectDelete) {
+    menuItems.push({
+      key: "debug_delete",
+      text: "Inject delete",
+      iconProps: { iconName: "TestBeakerSolid" },
+      onClick: () => void layoutDebug.injectDelete?.(layout.id),
+      itemProps: {
+        styles: {
+          root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
+        },
+      },
+    });
   }
 
   const filteredItems = menuItems.filter(

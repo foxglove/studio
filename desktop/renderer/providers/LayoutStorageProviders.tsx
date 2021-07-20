@@ -104,7 +104,6 @@ export default function LayoutStorageProviders({
   );
 
   const debugging = useShallowMemo({
-    useFakeRemoteLayoutStorage,
     openFakeStorageDirectory,
     syncNow,
     injectEdit,

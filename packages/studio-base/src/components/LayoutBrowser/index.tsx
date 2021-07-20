@@ -300,7 +300,7 @@ export default function LayoutBrowser({
           )}
         </Stack.Item>
         <div style={{ flexGrow: 1 }} />
-        {process.env.NODE_ENV !== "production" && layoutDebug?.useFakeRemoteLayoutStorage && (
+        {process.env.NODE_ENV !== "production" && layoutDebug && (
           <Stack
             style={{
               position: "sticky",
@@ -315,19 +315,21 @@ export default function LayoutBrowser({
           >
             <Stack.Item grow align="stretch">
               <Stack disableShrink horizontal tokens={{ childrenGap: theme.spacing.s1 }}>
-                <Stack.Item grow>
-                  <DefaultButton
-                    text="Open dir"
-                    onClick={() => void layoutDebug.openFakeStorageDirectory()}
-                    styles={{
-                      root: {
-                        display: "block",
-                        width: "100%",
-                        margin: 0,
-                      },
-                    }}
-                  />
-                </Stack.Item>
+                {layoutDebug.openFakeStorageDirectory && (
+                  <Stack.Item grow>
+                    <DefaultButton
+                      text="Open dir"
+                      onClick={() => void layoutDebug.openFakeStorageDirectory?.()}
+                      styles={{
+                        root: {
+                          display: "block",
+                          width: "100%",
+                          margin: 0,
+                        },
+                      }}
+                    />
+                  </Stack.Item>
+                )}
                 <Stack.Item grow>
                   <DefaultButton
                     text="Sync now"

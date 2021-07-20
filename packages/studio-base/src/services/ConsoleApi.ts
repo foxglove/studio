@@ -140,12 +140,12 @@ class ConsoleApi {
 
     const res = await fetch(fullUrl, fullConfig);
     if (res.status !== 200) {
-      try {
-        const json = (await res.json()) as unknown;
-        throw new Error((json as { error?: string }).error ?? "Request failed");
-      } catch (err) {
-        throw new Error(err.message ?? "Request failed");
-      }
+      const json = (await res.json().catch((err) => {
+        throw new Error(`Status ${res.status}: ${err.message}`);
+      })) as { message?: string };
+      throw new Error(
+        `Status ${res.status}${json.message != undefined ? `: ${json.message}` : ""}`,
+      );
     }
 
     try {
