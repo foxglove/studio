@@ -2550,7 +2550,7 @@ __metadata:
     chartjs-plugin-annotation: 1.0.2
     chartjs-plugin-datalabels: 2.0.0
     chartjs-plugin-zoom: "github:foxglove/chartjs-plugin-zoom#656541279943f00dce600288435f83c436293146"
-    chromatic: 5.10.0-canary.0
+    chromatic: 5.9.2
     circular-dependency-plugin: 5.2.2
     classnames: 2.3.1
     cross-env: 7.0.3
@@ -2574,8 +2574,8 @@ __metadata:
     moment: 2.29.1
     moment-duration-format: 2.3.2
     moment-timezone: 0.5.33
-    monaco-editor: 0.26.1
-    monaco-editor-webpack-plugin: 4.1.1
+    monaco-editor: 0.25.2
+    monaco-editor-webpack-plugin: 4.0.0
     natsort: 2.0.2
     nearley: 2.20.1
     nearley-loader: 2.0.0
@@ -8904,9 +8904,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chromatic@npm:5.10.0-canary.0":
-  version: 5.10.0-canary.0
-  resolution: "chromatic@npm:5.10.0-canary.0"
+"chromatic@npm:5.9.2":
+  version: 5.9.2
+  resolution: "chromatic@npm:5.9.2"
   dependencies:
     "@actions/core": ^1.2.4
     "@actions/github": ^4.0.0
@@ -8949,7 +8949,7 @@ __metadata:
     chroma: bin/register.js
     chromatic: bin/register.js
     chromatic-cli: bin/register.js
-  checksum: 815ea2a946f71bac40d407c2df548dcf4ea71b41a9641068d0185c1002b6a5c7311508f59ad04d40759ac7c9e5b389a52edbdbcee8f833b17bea8c5af3f5f0de
+  checksum: 395b78f107dd508371c6e7ac9f44ec5bce9e05d517c05d94a20137cde07d316d9dedfa32d1d8a646f657e384f68daf4ffd93700e31e769da6e6a854b6dbd67c3
   languageName: node
   linkType: hard
 
@@ -18043,29 +18043,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"monaco-editor-webpack-plugin@npm:4.1.1":
-  version: 4.1.1
-  resolution: "monaco-editor-webpack-plugin@npm:4.1.1"
+"monaco-editor-webpack-plugin@npm:4.0.0":
+  version: 4.0.0
+  resolution: "monaco-editor-webpack-plugin@npm:4.0.0"
   dependencies:
     loader-utils: ^2.0.0
   peerDependencies:
-    monaco-editor: 0.25.x || 0.26.x
+    monaco-editor: 0.25.x
     webpack: ^4.5.0 || 5.x
-  checksum: 869edbd9b726a87facd39714e70a32957a880e63069b342fe0f931115c0ef2ae644d6c8dcbe92a3f1b1b0d24b3b096a5c50f06f5f0bff648462f1d553f4cc5f7
+  checksum: d0e98435d27eca6616abf6b69dd5755a2e893058436bd936231099a36ebf4a6ca49e12149c23ea3670d39d45994fe766e7a723ec6d16cd2f4a5d874729267bea
   languageName: node
   linkType: hard
 
-"monaco-editor@npm:*":
+"monaco-editor@npm:*, monaco-editor@npm:0.25.2":
   version: 0.25.2
   resolution: "monaco-editor@npm:0.25.2"
   checksum: 27a581f147984d3fca1f2d036a81a4265fe3f8fa65fcfa5d92f67473177ae87ff9e08891260d54efe765a2b534eece1f1d5f1751992f4e80bfb795f40abe6c27
-  languageName: node
-  linkType: hard
-
-"monaco-editor@npm:0.26.1":
-  version: 0.26.1
-  resolution: "monaco-editor@npm:0.26.1"
-  checksum: 2d531aa1245c891330e398c6ddb63fa9489a3cb4c668e304aa1ead6d5e3a14ee30e601fb94d265f7f00bfb1abe197e6dfcdfbebc1e307ea8efa99b3ecb069278
   languageName: node
   linkType: hard
 
