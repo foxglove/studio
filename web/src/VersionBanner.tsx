@@ -1,6 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
+import CloseIcon from "@mdi/svg/svg/close.svg";
 import { useState, ReactElement } from "react";
 import styled from "styled-components";
 
@@ -35,13 +36,16 @@ const VersionBanner = function ({
     ? `Update Chrome to version ${MINIMUM_CHROME_VERSION}+ to continue.`
     : `You're using an unsupported browser. Use Chrome ${MINIMUM_CHROME_VERSION}+ to continue.`;
   const fixText = isChrome ? "Update Chrome" : "Download Chrome";
-  const continueText = isChrome
-    ? "Continue with unsupported version"
-    : "Continue with unsupported browser";
 
   return (
     <StyledBanner>
       <div>
+        <div
+          style={{ display: "flex", justifyContent: "flex-end", fill: "white" }}
+          onClick={() => setShowBanner(false)}
+        >
+          <CloseIcon />
+        </div>
         <p>{prompt} </p>
         {isChrome ? undefined : (
           <p>
@@ -51,11 +55,10 @@ const VersionBanner = function ({
         )}
       </div>
 
-      <div style={{ paddingTop: "20px" }}>
+      <div style={{ paddingTop: "10px" }}>
         <a href="https://www.google.com/chrome/" target="_blank" rel="noreferrer">
           <button>{fixText}</button>
         </a>
-        <button onClick={() => setShowBanner(false)}>{continueText}</button>
       </div>
     </StyledBanner>
   );

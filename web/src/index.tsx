@@ -44,7 +44,7 @@ async function main() {
     log.debug("App rendered");
   };
 
-  if (!isChrome) {
+  if (typeof BigUint64Array !== "function") {
     ReactDOM.render(banner, rootEl, renderCallback);
     return;
   }
