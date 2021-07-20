@@ -2038,7 +2038,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@eslint/eslintrc@npm:^0.4.3":
+"@eslint/eslintrc@npm:^0.4.2":
   version: 0.4.3
   resolution: "@eslint/eslintrc@npm:0.4.3"
   dependencies:
@@ -11987,12 +11987,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:7.31.0":
-  version: 7.31.0
-  resolution: "eslint@npm:7.31.0"
+"eslint@npm:7.30.0":
+  version: 7.30.0
+  resolution: "eslint@npm:7.30.0"
   dependencies:
     "@babel/code-frame": 7.12.11
-    "@eslint/eslintrc": ^0.4.3
+    "@eslint/eslintrc": ^0.4.2
     "@humanwhocodes/config-array": ^0.5.0
     ajv: ^6.10.0
     chalk: ^4.0.0
@@ -12033,7 +12033,7 @@ __metadata:
     v8-compile-cache: ^2.0.3
   bin:
     eslint: bin/eslint.js
-  checksum: fd73d07ce0b73e5ea950b295a6eaf8d45914b4e56cba4ef49e55a36dc7e965a4865f63f618c0a096a01d089752d9e44180b80ba8657039b8e631dd40e0af1663
+  checksum: 872f90844b164dd61ec1bb949d2e33e7fbd189e0652fabe2cbbd0bdce1e4cd7ed08e72fa213795a453ae39fe24460771800608e765febb9e778deb28b9db3cc1
   languageName: node
   linkType: hard
 
@@ -13032,7 +13032,7 @@ __metadata:
     electron-notarize: 1.0.0
     electron-squirrel-startup: 1.0.0
     electron-updater: 4.4.1
-    eslint: 7.31.0
+    eslint: 7.30.0
     eslint-config-prettier: 8.3.0
     eslint-import-resolver-webpack: 0.13.1
     eslint-plugin-file-progress: 1.1.1
@@ -13059,7 +13059,7 @@ __metadata:
     typescript: 4.3.5
     typescript-plugin-css-modules: 3.4.0
     utif: 3.1.0
-    webpack: 5.45.1
+    webpack: 5.44.0
     webpack-cli: 4.7.2
     webpack-dev-server: 3.11.2
     webpack-hot-middleware: 2.25.0
