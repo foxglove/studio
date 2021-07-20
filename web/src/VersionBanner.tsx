@@ -6,7 +6,7 @@ import styled from "styled-components";
 
 import "@foxglove/studio-base/styles/global.scss";
 
-const MINIMUM_CHROME_VERSION = 91;
+const MINIMUM_CHROME_VERSION = 76;
 const StyledBanner = styled.div`
   text-align: center;
   position: absolute;
