@@ -9,18 +9,24 @@ import "@foxglove/studio-base/styles/global.scss";
 
 const MINIMUM_CHROME_VERSION = 76;
 
-const StyledBanner = styled.div`
-  text-align: center;
+const StyledBanner = styled.div<{
+  isDismissable: boolean;
+}>`
+  height: ${(props) => (props.isDismissable ? "auto" : "100%")};
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   width: 100vw;
   padding: 10px;
   background-color: rgba(99, 102, 241, 0.9);
   z-index: 100;
 `;
 const StyledIconWrapper = styled.div`
-  display: flex;
-  justify-content: flex-end;
   fill: white;
-  margin-bottom: -20px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
 `;
 
 const VersionBanner = function ({
@@ -44,7 +50,7 @@ const VersionBanner = function ({
   const fixText = isChrome ? "Update Chrome" : "Download Chrome";
 
   return (
-    <StyledBanner>
+    <StyledBanner isDismissable={isDismissable}>
       <div>
         {isDismissable ? (
           <StyledIconWrapper onClick={() => setShowBanner(false)}>
@@ -62,7 +68,7 @@ const VersionBanner = function ({
         )}
       </div>
 
-      <div style={{ paddingTop: "10px" }}>
+      <div style={{ paddingTop: "10px", marginBottom: "12px" }}>
         <a href="https://www.google.com/chrome/" target="_blank" rel="noreferrer">
           <button>{fixText}</button>
         </a>
