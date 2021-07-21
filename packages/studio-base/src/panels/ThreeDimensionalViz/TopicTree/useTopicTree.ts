@@ -36,6 +36,8 @@ import {
   UseTreeOutput,
   DerivedCustomSettingsByKey,
   OnNamespaceOverrideColorChange,
+  TreeTopicNode,
+  TreeGroupNode,
 } from "./types";
 
 const DEFAULT_TOPICS_COUNT_BY_KEY = {};
@@ -74,6 +76,57 @@ export function generateNodeKey({
   throw new Error(
     `Incorrect input for generating the node key. Either topicName or name must be present.`,
   );
+}
+
+function topicToTreeNode(topic: string, prefix: string, parents: Map<string, TreeNode>) {
+  const parts = topic.split("/").filter(Boolean);
+  if (parts.length === 1) {
+    const topicNode: TreeTopicNode = {
+      type: "topic",
+      key: `t:${prefix}/${topic}`,
+      topicName: `${prefix}/${topic}`,
+      featureKey: "",
+      providerAvailable: false,
+      availableByColumn: [],
+    };
+
+    const parent = parents.get(prefix);
+    if (parent) {
+      parent.children ??= [];
+      parent.children.push(topicNode);
+    }
+    return topicNode;
+  }
+
+  const first = parts.shift();
+  const fullPrefix = `${prefix}/${first}`;
+
+  const groupNode: TreeGroupNode = {
+    type: "group",
+    name: fullPrefix,
+    key: `tg:${fullPrefix}`,
+    featureKey: "",
+    children: [],
+    availableByColumn: [],
+    providerAvailable: false,
+  };
+
+  // if we haven't yet added this node to parents, add it and to its parents
+  if (!parents.has(fullPrefix)) {
+    parents.set(fullPrefix, groupNode);
+
+    const parent = parents.get(prefix);
+    if (parent) {
+      parent.children ??= [];
+      parent.children.push(groupNode);
+    }
+
+    topicToTreeNode(parts.join("/"), fullPrefix, parents);
+    return groupNode;
+  }
+
+  topicToTreeNode(parts.join("/"), fullPrefix, parents);
+  return;
 }
 
 // Recursive function to generate the tree nodes from config data.
@@ -130,15 +183,32 @@ export function generateTreeNode(
     };
   }
   if (isNonEmptyOrUndefined(name)) {
-    const childrenNodes = children.map((config) =>
-      generateTreeNode(config, {
-        availableTopicsNamesSet,
-        // First level children's parent key is undefined, not `root`.
-        parentKey: name === "root" ? undefined : key,
-        datatypesByTopic,
-        hasFeatureColumn,
-      }),
-    );
+    let childrenNodes = [];
+
+    if (name === "Topics") {
+      const parents = new Map<string, TreeNode>();
+      const topics = children.map((config) => config.topicName);
+      for (const topic of topics) {
+        if (topic == undefined) {
+          continue;
+        }
+
+        const node = topicToTreeNode(topic, "", parents);
+        if (node) {
+          childrenNodes?.push(node);
+        }
+      }
+    } else {
+      childrenNodes = children.map((config) => {
+        return generateTreeNode(config, {
+          availableTopicsNamesSet,
+          // First level children's parent key is undefined, not `root`.
+          parentKey: name === "root" ? undefined : key,
+          datatypesByTopic,
+          hasFeatureColumn,
+        });
+      });
+    }
     return {
       key,
       featureKey,
