@@ -37,6 +37,7 @@ async function main() {
   const searchParams = new URLSearchParams(window.location.search);
   const demoMode = searchParams.get("demo") != undefined;
   if (demoMode) {
+    // Remove ?demo from the page URL so reloading the page doesn't save a new copy of the demo layout.
     searchParams.delete("demo");
     history.replaceState(undefined, "", `${window.location.pathname}?${searchParams.toString()}`);
   }
@@ -67,7 +68,7 @@ async function main() {
   ReactDOM.render(
     <>
       {banner}
-      <Root alwaysLoadWelcomeLayoutOnMount={demoMode} />
+      <Root loadWelcomeLayout={demoMode} />
     </>,
     rootEl,
     renderCallback,

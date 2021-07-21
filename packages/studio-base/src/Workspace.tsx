@@ -141,7 +141,7 @@ function Variables() {
 const allowedDropExtensions = [".bag", ".foxe", ".urdf"];
 
 type WorkspaceProps = {
-  alwaysLoadWelcomeLayoutOnMount?: boolean;
+  loadWelcomeLayout?: boolean;
   demoBagUrl?: string;
   deepLinks?: string[];
   onToolbarDoubleClick?: () => void;
@@ -272,7 +272,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   useMount(() => {
     void (async () => {
       const welcomeLayoutShown = appConfiguration.get("onboarding.welcome-layout.shown");
-      if (welcomeLayoutShown !== true || props.alwaysLoadWelcomeLayoutOnMount === true) {
+      if (welcomeLayoutShown !== true || props.loadWelcomeLayout === true) {
         await appConfiguration.set("onboarding.welcome-layout.shown", true);
         await openWelcomeLayout();
       }
