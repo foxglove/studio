@@ -62,7 +62,7 @@ async function downloadExtension(_url: string): Promise<Uint8Array> {
 }
 
 async function installExtension(_foxeFileData: Uint8Array): Promise<ExtensionInfo> {
-  throw new Error("Please use the desktop version to use extensions");
+  throw new Error("Please download the desktop app to use extensions");
 }
 
 async function uninstallExtension(_id: string): Promise<boolean> {
