@@ -28,6 +28,7 @@ import URDFAssetLoader from "@foxglove/studio-base/services/URDFAssetLoader";
 import "./styles/global.scss";
 
 type AppProps = {
+  alwaysLoadWelcomeLayoutOnMount?: boolean;
   availableSources: PlayerSourceDefinition[];
   demoBagUrl?: string;
   deepLinks?: string[];
@@ -64,6 +65,7 @@ export default function App(props: AppProps): JSX.Element {
         <Suspense fallback={<></>}>
           <PanelCatalogProvider>
             <Workspace
+              alwaysLoadWelcomeLayoutOnMount={props.alwaysLoadWelcomeLayoutOnMount}
               demoBagUrl={props.demoBagUrl}
               deepLinks={props.deepLinks}
               onToolbarDoubleClick={props.onFullscreenToggle}

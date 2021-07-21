@@ -19,7 +19,11 @@ import ExtensionLoaderProvider from "./providers/ExtensionLoaderProvider";
 
 const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
 
-export function Root(): JSX.Element {
+export function Root({
+  alwaysLoadWelcomeLayoutOnMount,
+}: {
+  alwaysLoadWelcomeLayoutOnMount: boolean;
+}): JSX.Element {
   const playerSources: PlayerSourceDefinition[] = [
     {
       name: "Rosbridge (WebSocket)",
@@ -54,7 +58,11 @@ export function Root(): JSX.Element {
     <ThemeProvider>
       <ErrorBoundary>
         <MultiProvider providers={providers}>
-          <App demoBagUrl={DEMO_BAG_URL} availableSources={playerSources} />
+          <App
+            alwaysLoadWelcomeLayoutOnMount={alwaysLoadWelcomeLayoutOnMount}
+            demoBagUrl={DEMO_BAG_URL}
+            availableSources={playerSources}
+          />
         </MultiProvider>
       </ErrorBoundary>
     </ThemeProvider>
