@@ -7,11 +7,13 @@ import { useToasts } from "react-toast-notifications";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { useLayoutCache } from "@foxglove/studio-base/context/LayoutCacheContext";
 import LayoutStorageContext from "@foxglove/studio-base/context/LayoutStorageContext";
 import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import CacheOnlyLayoutStorage from "@foxglove/studio-base/services/CacheOnlyLayoutStorage";
 import ConsoleApiRemoteLayoutStorage from "@foxglove/studio-base/services/ConsoleApiRemoteLayoutStorage";
 import OfflineLayoutStorage from "@foxglove/studio-base/services/OfflineLayoutStorage";
@@ -22,6 +24,9 @@ export default function ConsoleApiLayoutStorageProvider({
   children,
 }: React.PropsWithChildren<unknown>): JSX.Element {
   const { addToast } = useToasts();
+  const [enableConsoleApiLayouts = false] = useAppConfigurationValue<boolean>(
+    AppSetting.ENABLE_CONSOLE_API_LAYOUTS,
+  );
   const api = useConsoleApi();
   const currentUser = useCurrentUser();
 
@@ -47,7 +52,9 @@ export default function ConsoleApiLayoutStorageProvider({
 
   return (
     <LayoutStorageDebuggingContext.Provider value={debugging}>
-      <LayoutStorageContext.Provider value={currentUser ? offlineStorage : cacheOnlyStorage}>
+      <LayoutStorageContext.Provider
+        value={enableConsoleApiLayouts && currentUser ? offlineStorage : cacheOnlyStorage}
+      >
         {children}
       </LayoutStorageContext.Provider>
     </LayoutStorageDebuggingContext.Provider>

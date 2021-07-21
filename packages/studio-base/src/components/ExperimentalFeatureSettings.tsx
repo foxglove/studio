@@ -45,6 +45,11 @@ const features: Feature[] = [
             </>
           ),
         },
+        {
+          key: AppSetting.ENABLE_CONSOLE_API_LAYOUTS,
+          name: "Team shared layouts",
+          description: <>Enable team layout sharing when signed in to Studio.</>,
+        },
       ]
     : []),
 ];
