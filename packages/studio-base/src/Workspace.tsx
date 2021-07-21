@@ -188,6 +188,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const { setSelectedLayout } = useCurrentLayoutActions();
 
   const openWelcomeLayout = useCallback(async () => {
+    /*
     const newLayout = await layoutStorage.saveNewLayout({
       path: [],
       name: welcomeLayout.name,
@@ -204,6 +205,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         );
       }
     }
+    */
   }, [layoutStorage, isMounted, setSelectedLayout, props.demoBagUrl, selectSource]);
 
   const handleInternalLink = useCallback((event: React.MouseEvent, href: string) => {
@@ -319,6 +321,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         }
       }
 
+      /*
       if (otherFiles.length > 0) {
         if (shiftPressed) {
           previousFiles.current = previousFiles.current.concat(otherFiles);
@@ -332,6 +335,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           },
         );
       }
+      */
     },
     [addToast, extensionLoader, loadFromFile, selectSource],
   );
@@ -344,6 +348,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     }
   }, [filesToOpen, openFiles]);
 
+  /*
   useEffect(() => {
     const firstLink = props.deepLinks?.[0];
     if (firstLink == undefined) {
@@ -376,6 +381,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       log.error(err);
     }
   }, [props.deepLinks, selectSource]);
+  */
 
   const dropHandler = useCallback(
     ({ files, shiftPressed }: { files: FileList; shiftPressed: boolean }) => {

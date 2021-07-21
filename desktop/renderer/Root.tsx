@@ -12,6 +12,8 @@ import {
   ThemeProvider,
   UserProfileLocalStorageProvider,
   StudioToastProvider,
+  // fixme - expose these at top level? this one should be in desktop?
+  ros1PlayerSource,
 } from "@foxglove/studio-base";
 
 import { Desktop } from "../common/types";
@@ -26,32 +28,7 @@ const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo
 const desktopBridge = (global as unknown as { desktopBridge: Desktop }).desktopBridge;
 
 export default function Root(): ReactElement {
-  const playerSources: PlayerSourceDefinition[] = [
-    {
-      name: "ROS 1",
-      type: "ros1-socket",
-    },
-    {
-      name: "Rosbridge (WebSocket)",
-      type: "ros-ws",
-    },
-    {
-      name: "ROS 1 Bag File (local)",
-      type: "ros1-local-bagfile",
-    },
-    {
-      name: "ROS 1 Bag File (HTTP)",
-      type: "ros1-remote-bagfile",
-    },
-    {
-      name: "ROS 2 Bag Folder (local)",
-      type: "ros2-folder",
-    },
-    {
-      name: "Velodyne LIDAR",
-      type: "velodyne-device",
-    },
-  ];
+  const playerSources: PlayerSourceDefinition[] = [ros1PlayerSource];
 
   const providers = [
     /* eslint-disable react/jsx-key */

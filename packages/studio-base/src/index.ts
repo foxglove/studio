@@ -50,5 +50,7 @@ export { default as CacheOnlyLayoutStorageProvider } from "./providers/CacheOnly
 export { AppSetting } from "./AppSetting";
 export { useAppConfigurationValue } from "./hooks/useAppConfigurationValue";
 export type { PanelsState } from "./context/CurrentLayoutContext/actions";
-export { default as OfflineLayoutStorage } from "@foxglove/studio-base/services/OfflineLayoutStorage";
-export { default as LayoutStorageDebuggingContext } from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
+export { default as OfflineLayoutStorage } from "./services/OfflineLayoutStorage";
+export { default as LayoutStorageDebuggingContext } from "./context/LayoutStorageDebuggingContext";
+export { default as ros1PlayerSource } from "./playerSources/ros1PlayerSource";
+export { default as useConfirm } from "./components/useConfirm";

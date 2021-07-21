@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { useEffect } from "react";
+
 import {
   App,
   ErrorBoundary,
@@ -11,6 +13,7 @@ import {
   UserProfileLocalStorageProvider,
   StudioToastProvider,
   CacheOnlyLayoutStorageProvider,
+  useConfirm,
 } from "@foxglove/studio-base";
 
 import LocalStorageAppConfigurationProvider from "./components/LocalStorageAppConfigurationProvider";
@@ -22,20 +25,20 @@ const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo
 export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX.Element {
   const playerSources: PlayerSourceDefinition[] = [
     {
-      name: "Rosbridge (WebSocket)",
-      type: "ros-ws",
-    },
-    {
-      name: "ROS 1 Bag File (local)",
-      type: "ros1-local-bagfile",
-    },
-    {
-      name: "ROS 1 Bag File (HTTP)",
-      type: "ros1-remote-bagfile",
-    },
-    {
-      name: "ROS 2 Bag Folder (local)",
-      type: "ros2-folder",
+      id: "ros1-socket",
+      name: "ROS 1",
+      component: function Ros1() {
+        const { modal, open } = useConfirm({
+          title: "Download desktop",
+          confirmStyle: "primary",
+          action: () => {},
+        });
+
+        useEffect(() => {
+          open();
+        }, [open]);
+        return <>{modal}</>;
+      },
     },
   ];
 

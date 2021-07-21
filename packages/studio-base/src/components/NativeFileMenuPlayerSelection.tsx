@@ -2,14 +2,22 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ReactElement, useEffect } from "react";
+import { ReactElement, useEffect, useState } from "react";
 
 import { useNativeAppMenu } from "@foxglove/studio-base/context/NativeAppMenuContext";
-import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import {
+  PlayerSourceDefinition,
+  usePlayerSelection,
+} from "@foxglove/studio-base/context/PlayerSelectionContext";
 
 // NativeFileMenuPlayerSelection adds available player selection items to the apps native OS menubar
 export function NativeFileMenuPlayerSelection(): ReactElement {
   const { selectSource, availableSources } = usePlayerSelection();
+  const [count, setCount] = useState(0);
+
+  const [selectedSource, setSelectedSource] = useState<PlayerSourceDefinition | undefined>(
+    undefined,
+  );
 
   const nativeAppMenu = useNativeAppMenu();
 
@@ -20,7 +28,9 @@ export function NativeFileMenuPlayerSelection(): ReactElement {
 
     for (const item of availableSources) {
       nativeAppMenu.addFileEntry(item.name, () => {
-        selectSource(item);
+        // increment count to re-create the selected source component
+        setCount((old) => old + 1);
+        setSelectedSource(item);
       });
     }
 
@@ -31,5 +41,6 @@ export function NativeFileMenuPlayerSelection(): ReactElement {
     };
   }, [availableSources, nativeAppMenu, selectSource]);
 
-  return <></>;
+  // key is used to render a new component when the same source is selected again
+  return <>{selectedSource && <selectedSource.component key={count} />}</>;
 }
