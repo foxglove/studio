@@ -65,7 +65,9 @@ export interface ILayoutStorage {
 
   readonly supportsSyncing: boolean;
 
-  syncLayout(id: LayoutID): Promise<ConflictType | undefined>;
+  syncLayout(
+    id: LayoutID,
+  ): Promise<{ status: "success"; newId?: LayoutID } | { status: "conflict"; type: ConflictType }>;
 
   readonly supportsSharing: boolean;
 

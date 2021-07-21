@@ -77,7 +77,7 @@ export default class CacheOnlyLayoutStorage implements ILayoutStorage {
     };
   }
 
-  async syncLayout(_id: LayoutID): Promise<undefined> {
+  async syncLayout(_id: LayoutID): Promise<never> {
     throw new Error("CacheOnlyLayoutStorage should never have unsynced changes");
   }
 

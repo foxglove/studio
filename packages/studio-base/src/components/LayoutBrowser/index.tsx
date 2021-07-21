@@ -70,7 +70,7 @@ export default function LayoutBrowser({
   }, [reloadLayouts]);
 
   const onSelectLayout = useCallback(
-    async (item: LayoutMetadata) => {
+    async (item: Pick<LayoutMetadata, "id">) => {
       const layout = await layoutStorage.getLayout(item.id);
       if (layout) {
         setSelectedLayout(layout);
@@ -81,12 +81,20 @@ export default function LayoutBrowser({
 
   const onSaveLayout = useCallback(
     async (item: LayoutMetadata) => {
-      const conflictString = conflictTypeToString(await layoutStorage.syncLayout(item.id));
-      if (conflictString != undefined) {
-        addToast(conflictString, { autoDismiss: true, appearance: "warning" });
+      const result = await layoutStorage.syncLayout(item.id);
+      switch (result.status) {
+        case "success":
+          if (result.newId != undefined) {
+            await onSelectLayout({ id: result.newId });
+          }
+          break;
+        case "conflict": {
+          addToast(conflictTypeToString(result.type), { autoDismiss: true, appearance: "warning" });
+          break;
+        }
       }
     },
-    [addToast, layoutStorage],
+    [addToast, layoutStorage, onSelectLayout],
   );
 
   const onRenameLayout = useCallback(
