@@ -58,7 +58,7 @@ export default function ExtensionLoaderProvider(props: PropsWithChildren<unknown
 }
 
 async function downloadExtension(_url: string): Promise<Uint8Array> {
-  throw new Error("Please use the desktop version to use extensions");
+  throw new Error("Please download the desktop app to use extensions");
 }
 
 async function installExtension(_foxeFileData: Uint8Array): Promise<ExtensionInfo> {
