@@ -49,8 +49,7 @@
   "resolutions": {
     "@types/node": "15.3.0",
     "esbuild-loader/esbuild": "0.12.4",
-    "esbuild-runner/esbuild": "0.12.4",
-    "node-libs-browser/punycode": "2.1.1"
+    "esbuild-runner/esbuild": "0.12.4"
   },
   "devDependencies": {
     "@actions/core": "1.4.0",
