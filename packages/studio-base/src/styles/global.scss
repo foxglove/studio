@@ -194,36 +194,3 @@ button {
     padding: 4px 8px;
   }
 }
-
-th {
-  color: $text-normal;
-
-  tr:first-child & {
-    padding-top: 4px;
-    padding-bottom: 4px;
-  }
-}
-
-th,
-td {
-  border: 1px solid $divider;
-  padding: 0 0.3em;
-  line-height: 1.3em;
-}
-
-tr {
-  svg {
-    opacity: 0.6;
-  }
-}
-
-tr:hover {
-  td {
-    background-color: $dark4;
-    cursor: pointer;
-  }
-
-  svg {
-    opacity: 0.8;
-  }
-}
