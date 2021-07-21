@@ -18,9 +18,12 @@ export default async (): Promise<void> => {
   const compiler = webpack(
     webpackConfig.map((config) => {
       if (typeof config === "function") {
-        return config(undefined, { mode: "production" });
+        const cfg = config(undefined, { mode: "production" });
+        cfg.devtool = false;
+        return cfg;
       }
 
+      config.devtool = false;
       return config;
     }),
   );
