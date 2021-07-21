@@ -58,6 +58,8 @@ import { PlayerPresence } from "@foxglove/studio-base/players/types";
 import { isNonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
 import inAutomatedRunMode from "@foxglove/studio-base/util/inAutomatedRunMode";
 
+import styles from "./Workspace.module.scss";
+
 const log = Log.getLogger(__filename);
 
 const SToolbarItem = styled.div`
@@ -409,7 +411,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           <div style={{ fontSize: "4em", marginBottom: "1em" }}>Drop a file here</div>
         </DropOverlay>
       </DocumentDropListener>
-      <div ref={containerRef} className="app-container" tabIndex={0}>
+      <div ref={containerRef} className={styles.appContainer} tabIndex={0}>
         <GlobalKeyListener />
         {shortcutsModalOpen && (
           <ShortcutsModal onRequestClose={() => setShortcutsModalOpen(false)} />

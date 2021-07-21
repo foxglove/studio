@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { mergeStyles } from "@fluentui/react";
 import { ReactElement, useCallback, useMemo } from "react";
 
 import {
@@ -24,6 +25,19 @@ import LayoutStorageProviders from "./providers/LayoutStorageProviders";
 const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
 
 const desktopBridge = (global as unknown as { desktopBridge: Desktop }).desktopBridge;
+
+mergeStyles({
+  ":global(html, body, #root)": {
+    display: "flex",
+    width: "100%",
+    height: "100%",
+    margin: 0,
+    padding: 0,
+    flexDirection: "column",
+    flex: "1 1 100%",
+    boxSizing: "border-box",
+  },
+});
 
 export default function Root(): ReactElement {
   const playerSources: PlayerSourceDefinition[] = [
