@@ -6,7 +6,6 @@ import { partition } from "lodash";
 import moment from "moment";
 import path from "path";
 import { useCallback, useContext, useEffect } from "react";
-import ReactDOM from "react-dom";
 import { useToasts } from "react-toast-notifications";
 import { useMountedState } from "react-use";
 import useAsyncFn from "react-use/lib/useAsyncFn";
@@ -74,12 +73,7 @@ export default function LayoutBrowser({
     async (item: Pick<LayoutMetadata, "id">) => {
       const layout = await layoutStorage.getLayout(item.id);
       if (layout) {
-        // Changing the layout causes React effects to run in panels, which may result in panels
-        // trying to save their config. In order to avoid saving old config into the new layout, we
-        // need to ensure React batches updates so the PanelLayout changes first.
-        ReactDOM.unstable_batchedUpdates(() => {
-          setSelectedLayout(layout);
-        });
+        setSelectedLayout(layout);
       }
     },
     [layoutStorage, setSelectedLayout],
@@ -138,12 +132,7 @@ export default function LayoutBrowser({
       for (const { id } of await layoutStorage.getLayouts()) {
         const layout = await layoutStorage.getLayout(id);
         if (layout) {
-          // Changing the layout causes React effects to run in panels, which may result in panels
-          // trying to save their config. In order to avoid saving old config into the new layout, we
-          // need to ensure React batches updates so the PanelLayout changes first.
-          ReactDOM.unstable_batchedUpdates(() => {
-            setSelectedLayout(layout);
-          });
+          setSelectedLayout(layout);
           return;
         }
       }
