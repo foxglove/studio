@@ -75,4 +75,6 @@ const hidden: PanelInfo[] = [
   },
 ];
 
-export default { builtin, debug, hidden };
+const preconfigured: PanelInfo[] = [];
+
+export default { builtin, debug, hidden, preconfigured };

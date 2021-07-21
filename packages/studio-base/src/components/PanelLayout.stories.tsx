@@ -21,9 +21,12 @@ import { PanelConfigSchemaEntry } from "@foxglove/studio-base/types/panels";
 
 import PanelLayout from "./PanelLayout";
 
-const allPanels: PanelInfo[] = [
-  { title: "Some Panel", type: "Sample1", module: async () => await new Promise(() => {}) },
-];
+const allPanels: { regular: readonly PanelInfo[]; preconfigured: readonly PanelInfo[] } = {
+  regular: [
+    { title: "Some Panel", type: "Sample1", module: async () => await new Promise(() => {}) },
+  ],
+  preconfigured: [],
+};
 
 class MockPanelCatalog implements PanelCatalog {
   async getConfigSchema(type: string): Promise<PanelConfigSchemaEntry<string>[] | undefined> {
@@ -34,11 +37,14 @@ class MockPanelCatalog implements PanelCatalog {
     const module = await info?.module();
     return module.default.configSchema;
   }
-  getPanels(): PanelInfo[] {
+  getPanels(): { regular: readonly PanelInfo[]; preconfigured: readonly PanelInfo[] } {
     return allPanels;
   }
   getPanelByType(type: string): PanelInfo | undefined {
-    return allPanels.find((panel) => panel.type === type);
+    return (
+      allPanels.regular.find((panel) => panel.type === type) ??
+      allPanels.preconfigured.find((panel) => panel.type === type)
+    );
   }
 }
 
