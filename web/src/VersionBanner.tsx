@@ -1,20 +1,24 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import { DefaultButton } from "@fluentui/react/lib/Button";
+import { DefaultButton, Stack, Text } from "@fluentui/react";
 import CloseIcon from "@mdi/svg/svg/close.svg";
 import { useState, ReactElement } from "react";
 import styled from "styled-components";
-
-import "@foxglove/studio-base/styles/global.scss";
-import styles from "./VersionBanner.module.scss";
 
 const MINIMUM_CHROME_VERSION = 76;
 
 const StyledBanner = styled.div<{
   isDismissable: boolean;
 }>`
-  height: ${(props) => (props.isDismissable ? "auto" : "100%")};
+  height: ${(props) => (props.isDismissable ? "auto" : "100vh")};
+  ${(props) =>
+    !props.isDismissable &&
+    `position: fixed;
+  top: 0;
+  left:0;
+  right:0;
+  bottom:0;`};
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -22,6 +26,7 @@ const StyledBanner = styled.div<{
   text-align: center;
   width: 100vw;
   padding: 10px;
+  color: white;
   background-color: rgba(99, 102, 241, 0.9);
   z-index: 100;
 `;
@@ -54,7 +59,7 @@ const VersionBanner = function ({
 
   return (
     <StyledBanner isDismissable={isDismissable}>
-      <div>
+      <Stack tokens={{ childrenGap: 8 }} horizontalAlign="center">
         {isDismissable ? (
           <StyledIconWrapper onClick={() => setShowBanner(false)}>
             <CloseIcon />
@@ -62,22 +67,38 @@ const VersionBanner = function ({
         ) : (
           ReactNull
         )}
-        <p>
+
+        <Text styles={{ root: { color: "white" } }}>
           {prompt} Foxglove Studio currently requires Chrome v{MINIMUM_CHROME_VERSION}+.
-        </p>
+        </Text>
+
         {isChrome ? undefined : (
-          <p>
+          <Text styles={{ root: { color: "white" } }}>
             Check out our cross-browser support progress in GitHub issue{" "}
             <a href="https://github.com/foxglove/studio/issues/1511">#1511</a>.
-          </p>
+          </Text>
         )}
-      </div>
 
-      <div style={{ paddingTop: "10px", marginBottom: "12px" }}>
-        <a href="https://www.google.com/chrome/" target="_blank" rel="noreferrer">
-          <DefaultButton className={styles.bannerBtn}>{fixText}</DefaultButton>
-        </a>
-      </div>
+        <DefaultButton
+          href="https://www.google.com/chrome/"
+          target="_blank"
+          rel="noreferrer"
+          styles={{
+            root: {
+              color: "rgba(255,255, 255, 0.7)",
+              backgroundColor: "rgba(255,255, 255, 0.1)",
+              borderRadius: "4px",
+              border: "none",
+            },
+            rootHovered: {
+              color: "white",
+              backgroundColor: "rgba(255,255, 255, 0.4)",
+            },
+          }}
+        >
+          {fixText}
+        </DefaultButton>
+      </Stack>
     </StyledBanner>
   );
 };
