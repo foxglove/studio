@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useMemo, useState, useContext } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
@@ -14,6 +14,7 @@ import AnalyticsProvider from "@foxglove/studio-base/context/AnalyticsProvider";
 import { AssetsProvider } from "@foxglove/studio-base/context/AssetsContext";
 import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
 import { HoverValueProvider } from "@foxglove/studio-base/context/HoverValueContext";
+import LayoutStorageContext from "@foxglove/studio-base/context/LayoutStorageContext";
 import ModalHost from "@foxglove/studio-base/context/ModalHost";
 import { PlayerSourceDefinition } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { UserNodeStateProvider } from "@foxglove/studio-base/context/UserNodeStateContext";
@@ -42,12 +43,15 @@ export default function App(props: AppProps): JSX.Element {
     return new ConsoleApi(process.env.FOXGLOVE_API_URL!);
   }, []);
 
+  // Allow platform to override layout storage, e.g. for debugging
+  const hasPlatformLayoutStorage = !!useContext(LayoutStorageContext);
+
   const providers = [
     /* eslint-disable react/jsx-key */
     <AnalyticsProvider />,
     <ConsoleApiContext.Provider value={api} />,
     <CurrentUserProvider />,
-    <ConsoleApiLayoutStorageProvider />,
+    !hasPlatformLayoutStorage && <ConsoleApiLayoutStorageProvider />,
     <ModalHost />, // render modal elements inside the ThemeProvider
     <AssetsProvider loaders={assetLoaders} />,
     <HoverValueProvider />,
@@ -57,7 +61,7 @@ export default function App(props: AppProps): JSX.Element {
     <ExtensionRegistryProvider />,
     <PlayerManager playerSources={props.availableSources} />,
     /* eslint-enable react/jsx-key */
-  ];
+  ].filter((x): x is JSX.Element => x !== false);
 
   return (
     <MultiProvider providers={providers}>
