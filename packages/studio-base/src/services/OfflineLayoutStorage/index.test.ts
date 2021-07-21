@@ -422,7 +422,10 @@ describe("OfflineLayoutStorage", () => {
         status: "conflict",
         type: "name-collision",
       });
-      await expect(storage.syncLayout(newId2)).resolves.toEqual({ status: "success" });
+      await expect(storage.syncLayout(newId2)).resolves.toEqual({
+        status: "success",
+        newId: expect.any(String),
+      });
 
       const remoteLayouts = await remoteStorage.getLayouts();
       expect(remoteLayouts).toEqual([
@@ -465,10 +468,7 @@ describe("OfflineLayoutStorage", () => {
       const storage = new OfflineLayoutStorage({ cacheStorage, remoteStorage });
 
       jest.setSystemTime(20);
-      await expect(storage.syncLayout(remote1.id)).resolves.toEqual({
-        status: "success",
-        newId: remote1.id,
-      });
+      await expect(storage.syncLayout(remote1.id)).resolves.toEqual({ status: "success" });
       await expect(remoteStorage.getLayouts()).resolves.toEqual([
         {
           ...remote1,
@@ -513,10 +513,7 @@ describe("OfflineLayoutStorage", () => {
 
       jest.setSystemTime(20);
       await expect(storage.syncWithRemote()).resolves.toEqual(new Map());
-      await expect(storage.syncLayout(remote1.id)).resolves.toEqual({
-        status: "success",
-        newId: remote1.id,
-      });
+      await expect(storage.syncLayout(remote1.id)).resolves.toEqual({ status: "success" });
       await expect(remoteStorage.getLayouts()).resolves.toEqual([
         {
           ...remote1,
