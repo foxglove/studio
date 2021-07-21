@@ -146,13 +146,6 @@ strong {
   @extend %bold;
 }
 
-p {
-  margin: 1em 0;
-  &:last-child {
-    margin-bottom: 0;
-  }
-}
-
 hr {
   border: none;
   display: block;
