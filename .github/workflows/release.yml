@@ -1,0 +1,32 @@
+# This workflow is responsible for finalizing a release after it is published from the GitHub UI:
+#
+#  - Merge the release branch into main
+#  - Publish modules to NPM
+#
+# This workflow does not draft releases - that happens in the studio-release-builder repo.
+
+name: Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: main
+          lfs: true
+
+      - name: Merge release tag
+        run: |
+
+      - uses: octokit/request-action@v2.x
+        with:
+          route: POST /repos/{owner}/{repo}/merges
+          owner: foxglove
+          repo: studio
+          base: main
+          head:
