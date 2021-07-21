@@ -20,7 +20,6 @@ import { CoreDataProviders } from "@foxglove/studio-base/randomAccessDataProvide
 import { mockExtensionPoint } from "@foxglove/studio-base/randomAccessDataProviders/mockExtensionPoint";
 import delay from "@foxglove/studio-base/util/delay";
 import naturalSort from "@foxglove/studio-base/util/naturalSort";
-import sendNotification from "@foxglove/studio-base/util/sendNotification";
 
 import MemoryCacheDataProvider, {
   getBlocksToKeep,
@@ -362,7 +361,6 @@ describe("MemoryCacheDataProvider", () => {
       { parsedMessages: ["/foo"] },
     );
     await delay(10);
-    sendNotification.expectCalledDuringTest();
   });
 
   // TODO(JP): We test getBlocksToKeep separately, but never as part of MemoryCacheDataProvider.

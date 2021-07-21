@@ -14,7 +14,6 @@ import { MessageEvent } from "@foxglove/studio-base/players/types";
 import ApiCheckerDataProvider from "@foxglove/studio-base/randomAccessDataProviders/ApiCheckerDataProvider";
 import MemoryDataProvider from "@foxglove/studio-base/randomAccessDataProviders/MemoryDataProvider";
 import { mockExtensionPoint } from "@foxglove/studio-base/randomAccessDataProviders/mockExtensionPoint";
-import sendNotification from "@foxglove/studio-base/util/sendNotification";
 
 function getProvider(isRoot: boolean = false) {
   const memoryDataProvider = new MemoryDataProvider({
@@ -97,10 +96,6 @@ describe("ApiCheckerDataProvider", () => {
     });
 
     describe("failure", () => {
-      afterEach(() => {
-        sendNotification.expectCalledDuringTest();
-      });
-
       it("throws when calling twice", async () => {
         const { provider } = getProvider();
         await provider.initialize(mockExtensionPoint().extensionPoint);
@@ -164,9 +159,6 @@ describe("ApiCheckerDataProvider", () => {
     });
 
     describe("failure", () => {
-      afterEach(() => {
-        sendNotification.expectCalledDuringTest();
-      });
       it("throws when calling getMessages before initialize", async () => {
         const { provider } = getProvider();
         await expect(
@@ -309,9 +301,6 @@ describe("ApiCheckerDataProvider", () => {
     });
 
     describe("failure", () => {
-      afterEach(() => {
-        sendNotification.expectCalledDuringTest();
-      });
       it("throws when calling close before initialize", async () => {
         const { provider } = getProvider();
         await expect(provider.close()).rejects.toThrow();

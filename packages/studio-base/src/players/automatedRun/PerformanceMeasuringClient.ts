@@ -15,8 +15,6 @@ import round from "lodash/round";
 import sortBy from "lodash/sortBy";
 import sum from "lodash/sum";
 
-import sendNotification from "@foxglove/studio-base/util/sendNotification";
-
 export type PerformanceStats = {
   bagLengthMs: number;
   speed: number;
@@ -79,16 +77,6 @@ class PerformanceMeasuringClient {
   totalFrameTimes: number[] = [];
 
   start({ bagLengthMs }: { bagLengthMs: number }): void {
-    if (process.env.NODE_ENV !== "production" && process.env.NODE_ENV !== "test") {
-      sendNotification(
-        "In performance measuring mode, but NODE_ENV is not production!",
-        "Use `yarn performance-start` instead of `yarn start`.",
-        "user",
-        "error",
-      );
-      return;
-    }
-
     this.bagLengthMs = bagLengthMs;
     this.startTime = performance.now();
     this.startedMeasuringPerformance = true;

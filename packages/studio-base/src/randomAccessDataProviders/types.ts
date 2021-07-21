@@ -91,10 +91,7 @@ export type MessageDefinitions =
 export interface RandomAccessDataProvider {
   // Do any up-front initializing of the provider, and takes an optional extension point for
   // callbacks that only some implementations care about. May only be called once. If there's an
-  // error during initialization, it must be reported using `sendNotification` (even in Web Workers).
-  // If the error is unrecoverable, just never resolve the promise.
-  // TODO(JP): It would be better to reject the promise explicitly in case of unrecoverable errors,
-  // so we can update the UI appropriately.
+  // error during initialization, it is reported on the problem field of InitializationResult
   initialize(extensionPoint: ExtensionPoint): Promise<InitializationResult>;
   // Get messages for a time range inclusive of start and end matching any of the provided topics.
   // May only be called after `initialize` has finished. Returned messages must be ordered by

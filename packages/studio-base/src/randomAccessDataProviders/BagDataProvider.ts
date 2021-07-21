@@ -36,7 +36,6 @@ import { bagConnectionsToTopics } from "@foxglove/studio-base/util/bagConnection
 import { getBagChunksOverlapCount } from "@foxglove/studio-base/util/bags";
 import { isNonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
 import { UserError } from "@foxglove/studio-base/util/errors";
-import sendNotification from "@foxglove/studio-base/util/sendNotification";
 import { fromMillis, subtractTimes } from "@foxglove/studio-base/util/time";
 import Bzip2 from "@foxglove/wasm-bz2";
 
@@ -45,15 +44,6 @@ type BagPath = { type: "file"; file: File | string } | { type: "remoteBagUrl"; u
 type Options = { bagPath: BagPath; cacheSizeInBytes?: number };
 
 const log = Logger.getLogger(__filename);
-
-function reportMalformedError(operation: string, error: Error): void {
-  sendNotification(
-    `Error during ${operation}`,
-    `An error was encountered during ${operation}. This usually happens if the bag is somehow malformed.\n\n${error.stack}`,
-    "user",
-    "error",
-  );
-}
 
 export type TimedDataThroughput = {
   startTime: Time;
@@ -143,12 +133,26 @@ export default class BagDataProvider implements RandomAccessDataProvider {
         try {
           await remoteReader.open(); // Important that we call this first, because it might throw an error if the file can't be read.
         } catch (err) {
-          sendNotification("Fetching remote bag failed", (err as Error).message, "user", "error");
-          return new Promise(() => {}); // Just never finish initializing.
+          return {
+            problems: [
+              {
+                severity: "error",
+                message: "Fetching remote bag failed",
+                error: err,
+              },
+            ],
+          };
         }
         if (remoteReader.size() === 0) {
-          sendNotification("Cannot play invalid bag", "Bag is 0 bytes in size.", "user", "error");
-          return new Promise(() => {}); // Just never finish initializing.
+          return {
+            problems: [
+              {
+                severity: "error",
+                message: "Empty bag file",
+                error: new Error("Bag is 0 bytes in size"),
+              },
+            ],
+          };
         }
 
         this._bag = new Bag(new BagReader(remoteReader));
@@ -156,7 +160,15 @@ export default class BagDataProvider implements RandomAccessDataProvider {
         try {
           await this._bag.open();
         } catch (err) {
-          sendNotification("Opening remote bag failed", (err as Error).message, "user", "error");
+          return {
+            problems: [
+              {
+                severity: "error",
+                message: "Opening remote bag failed",
+                error: err,
+              },
+            ],
+          };
           return new Promise(() => {}); // Just never finish initializing.
         }
       } else {
@@ -203,6 +215,7 @@ export default class BagDataProvider implements RandomAccessDataProvider {
       }
     }
     if (emptyConnections.length > 0) {
+      // fixme - add to problems?
       sendNotification(
         "Empty connections found",
         `This bag has some empty connections, which Studio does not currently support. We'll try to play the remaining topics. Details:\n\n${JSON.stringify(
@@ -214,17 +227,22 @@ export default class BagDataProvider implements RandomAccessDataProvider {
     }
 
     if (!startTime || !endTime || connections.length === 0) {
-      // This will abort video generation:
-      sendNotification("Cannot play invalid bag", "Bag is empty or corrupt.", "user", "error");
-      return new Promise(() => {
-        // no-op
-      }); // Just never finish initializing.
+      return {
+        problems: [
+          {
+            severity: "error",
+            message: "Cannot play invalid bag",
+            error: new Error("Bag is empty or corrupt"),
+          },
+        ],
+      };
     }
     const chunksOverlapCount = getBagChunksOverlapCount(chunkInfos);
     // If >25% of the chunks overlap, show a warning. It's common for a small number of chunks to overlap
     // since it looks like `rosbag record` has a bit of a race condition, and that's not too terrible, so
     // only warn when there's a more serious slowdown.
     if (chunksOverlapCount > chunkInfos.length * 0.25) {
+      // fixme - add to problems
       sendNotification(
         "Bag is unsorted, which is slow",
         `This bag has many overlapping chunks (${chunksOverlapCount} out of ${chunkInfos.length}), which means that we have to decompress many chunks in order to load a particular time range. This is slow. Ideally, fix this where you're generating your bags, by sorting the messages by receive time, e.g. using a script like this: https://gist.github.com/janpaul123/deaa92338d5e8309ef7aa7a55d625152`,
@@ -314,29 +332,15 @@ export default class BagDataProvider implements RandomAccessDataProvider {
           if (!this.bzip2) {
             throw new Error("bzip2 not initialized");
           }
-          try {
-            return Buffer.from(this.bzip2.decompress(buffer, size, { small: false }));
-          } catch (error) {
-            reportMalformedError("bz2 decompression", error);
-            throw error;
-          }
+          return Buffer.from(this.bzip2.decompress(buffer, size, { small: false }));
         },
         lz4: (...args: unknown[]) => {
-          try {
-            return decompressLZ4(...args);
-          } catch (error) {
-            reportMalformedError("lz4 decompression", error);
-            throw error;
-          }
+          return decompressLZ4(...args);
         },
       },
     };
-    try {
-      await this._bag?.readMessages(options, onMessage);
-    } catch (error) {
-      reportMalformedError("bag parsing", error);
-      throw error;
-    }
+
+    await this._bag?.readMessages(options, onMessage);
     messages.sort((a, b) => compare(a.receiveTime, b.receiveTime));
     // Range end is inclusive.
     const duration = add(subtractTimes(end, start), { sec: 0, nsec: 1 });

@@ -34,7 +34,6 @@ import {
 import { RosDatatype } from "@foxglove/studio-base/types/RosDatatypes";
 import filterMap from "@foxglove/studio-base/util/filterMap";
 import { deepIntersect } from "@foxglove/studio-base/util/ranges";
-import sendNotification from "@foxglove/studio-base/util/sendNotification";
 import { clampTime } from "@foxglove/studio-base/util/time";
 
 import rawMessageDefinitionsToParsed from "./rawMessageDefinitionsToParsed";
@@ -266,9 +265,12 @@ export default class CombinedDataProvider implements RandomAccessDataProvider {
         const { start, end, topics } = outcome.value;
         return { start, end, topicSet: new Set(topics.map((t) => t.name)) };
       }
-      sendNotification("Data unavailable", outcome.reason, "user", "warn");
+      // fixme - make problems?
+      //sendNotification("Data unavailable", outcome.reason, "user", "warn");
       return undefined;
     });
+
+    // fixme - make problems
     if (initializeOutcomes.every(({ status }) => status === "rejected")) {
       return new Promise(() => {
         // no-op

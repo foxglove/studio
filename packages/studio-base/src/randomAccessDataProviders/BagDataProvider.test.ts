@@ -18,7 +18,6 @@ import BagDataProvider, {
   statsAreAdjacent,
   TimedDataThroughput,
 } from "@foxglove/studio-base/randomAccessDataProviders/BagDataProvider";
-import sendNotification from "@foxglove/studio-base/util/sendNotification";
 
 const dummyExtensionPoint = {
   progressCallback() {
@@ -144,7 +143,6 @@ describe("BagDataProvider", () => {
     const sortedTimestamps = [...timestamps];
     sortedTimestamps.sort(compare);
     expect(timestamps).toEqual(sortedTimestamps);
-    sendNotification.expectCalledDuringTest();
   });
 });
 

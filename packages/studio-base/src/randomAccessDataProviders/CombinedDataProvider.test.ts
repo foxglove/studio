@@ -36,7 +36,6 @@ import { mockExtensionPoint } from "@foxglove/studio-base/randomAccessDataProvid
 import { InitializationResult } from "@foxglove/studio-base/randomAccessDataProviders/types";
 import delay from "@foxglove/studio-base/util/delay";
 import { SECOND_SOURCE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
-import sendNotification from "@foxglove/studio-base/util/sendNotification";
 import { fromMillis } from "@foxglove/studio-base/util/time";
 
 // reusable providers
@@ -337,7 +336,6 @@ describe("CombinedDataProvider", () => {
         { parsedMessages: ["/some_topic"] },
       );
       expect(messagesResult).toEqual({ parsedMessages: [message] });
-      sendNotification.expectCalledDuringTest();
     });
   });
 

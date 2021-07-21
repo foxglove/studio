@@ -35,7 +35,6 @@ import {
   mergeNewRangeIntoUnsortedNonOverlappingList,
   missingRanges,
 } from "@foxglove/studio-base/util/ranges";
-import sendNotification from "@foxglove/studio-base/util/sendNotification";
 import { fromNanoSec, subtractTimes, toNanoSec } from "@foxglove/studio-base/util/time";
 
 // I (JP) mostly just made these numbers up. It might be worth experimenting with different values
@@ -538,6 +537,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
       }
 
       const connectionSuccess = await this._setConnection(newConnection).catch((err) => {
+        // fixme - throw?
         sendNotification(
           `MemoryCacheDataProvider connection ${
             this._currentConnection ? this._currentConnection.id : ""
@@ -618,12 +618,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
       const { rosBinaryMessages, parsedMessages } = messages;
 
       if (parsedMessages != undefined) {
-        const types = (Object.keys(messages) as (keyof typeof messages)[])
-          .filter((type) => messages[type] != undefined)
-          .join("\n");
-        sendNotification("MemoryCacheDataProvider got bad message types", types, "app", "error");
-        // Do not retry.
-        return false;
+        throw new Error("MemoryCacheDataProvider got bad message types");
       }
 
       // If we're not current any more, discard the messages, because otherwise we might write duplicate messages.
@@ -658,6 +653,8 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
       if (sizeInBytes > MAX_BLOCK_SIZE_BYTES && !this._loggedTooLargeError) {
         this._loggedTooLargeError = true;
 
+        // fixme - throw? Seems too much - will this prevent user from using the app?
+        // should this be exposed as an error event instead?
         sendNotification(
           "Very large block found",
           `A very large block (${Math.round(
