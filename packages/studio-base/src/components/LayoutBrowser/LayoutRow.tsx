@@ -58,14 +58,6 @@ const useStyles = makeStyles((theme) => ({
     overflow: "hidden",
     lineHeight: theme.spacing.l2, // avoid descenders being cut off
   },
-
-  pathSegment: {
-    color: theme.palette.neutralSecondary,
-  },
-  pathSeparator: {
-    color: theme.palette.neutralTertiary,
-    padding: `0 ${theme.spacing.s2}`,
-  },
 }));
 
 export default function LayoutRow({
@@ -318,17 +310,7 @@ export default function LayoutRow({
             onKeyDown={onTextFieldKeyDown}
           />
         ) : (
-          <>
-            {layout.path.map((item) => {
-              return (
-                <Fragment key={item}>
-                  <span className={styles.pathSegment}>{item}</span>
-                  <span className={styles.pathSeparator}>›</span>
-                </Fragment>
-              );
-            })}
-            {layout.name}
-          </>
+          layout.name
         )}
       </Stack.Item>
 
