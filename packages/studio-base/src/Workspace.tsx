@@ -32,6 +32,7 @@ import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipe
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import NotificationDisplay from "@foxglove/studio-base/components/NotificationDisplay";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
+import { PanelSelection } from "@foxglove/studio-base/components/PanelList";
 import PanelList from "@foxglove/studio-base/components/PanelList";
 import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
 import PlaybackControls from "@foxglove/studio-base/components/PlaybackControls";
@@ -42,6 +43,7 @@ import ShortcutsModal from "@foxglove/studio-base/components/ShortcutsModal";
 import Sidebar, { SidebarItem } from "@foxglove/studio-base/components/Sidebar";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Toolbar from "@foxglove/studio-base/components/Toolbar";
+import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useAppConfiguration } from "@foxglove/studio-base/context/AppConfigurationContext";
 import { useAssets } from "@foxglove/studio-base/context/AssetsContext";
 import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
@@ -54,7 +56,9 @@ import useAddPanel from "@foxglove/studio-base/hooks/useAddPanel";
 import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFilesToOpen";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
+import AnalyticsMetricsCollector from "@foxglove/studio-base/players/AnalyticsMetricsCollector";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
+import { AppEvent } from "@foxglove/studio-base/services/Analytics";
 import { isNonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
 import inAutomatedRunMode from "@foxglove/studio-base/util/inAutomatedRunMode";
 
@@ -122,9 +126,24 @@ function Connection() {
 
 function AddPanel() {
   const addPanel = useAddPanel();
+
+  const analytics = useAnalytics();
+  const metricsCollector = useMemo(() => {
+    return new AnalyticsMetricsCollector(analytics);
+  }, [analytics]);
+
+  const onPanelSelect = useCallback(
+    (props: PanelSelection) => {
+      addPanel(props);
+      metricsCollector.setProperty("panel", props.type);
+      metricsCollector.logEvent(AppEvent.LAYOUT_ADD_PANEL);
+    },
+    [addPanel, metricsCollector],
+  );
+
   return (
     <SidebarContent noPadding title="Add panel">
-      <PanelList onPanelSelect={addPanel} />
+      <PanelList onPanelSelect={onPanelSelect} />
     </SidebarContent>
   );
 }

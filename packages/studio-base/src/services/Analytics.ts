@@ -27,6 +27,9 @@ export enum AppEvent {
   PLAYER_SET_SPEED = "PLAYER_SET_SPEED",
   PLAYER_PAUSE = "PLAYER_PAUSE",
   PLAYER_CLOSE = "PLAYER_CLOSE",
+
+  // Layout events
+  LAYOUT_ADD_PANEL = "LAYOUT_ADD_PANEL",
 }
 
 export class Analytics {
