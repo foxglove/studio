@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, release/*]
   pull_request:
     branches: [main]
 
@@ -28,13 +28,15 @@ jobs:
               yarn run tsc --noEmit # typecheck files that are not included by webpack or package builds
               yarn run lint:ci
           - name: packages
-            command: yarn build:packages
+            command: yarn run build:packages
           - name: web
-            command: yarn workspace web build:dev
+            command: yarn run web:build:prod
           - name: test
             command: yarn run test --maxWorkers=100%
           - name: storybook
             command: yarn workspace @foxglove/studio-base run chromatic
+          - name: pack studio-base
+            command: yarn workspace @foxglove/studio-base pack
         include:
           - os: windows-2019
             config:

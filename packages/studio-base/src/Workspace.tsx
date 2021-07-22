@@ -13,11 +13,10 @@
 import { Stack } from "@fluentui/react";
 import { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from "react";
 import { useToasts } from "react-toast-notifications";
-import { useMountedState } from "react-use";
+import { useMount, useMountedState } from "react-use";
 import styled from "styled-components";
 
 import Log from "@foxglove/log";
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import AccountSettings from "@foxglove/studio-base/components/AccountSettingsSidebar/AccountSettings";
 import ConnectionList from "@foxglove/studio-base/components/ConnectionList";
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
@@ -52,7 +51,6 @@ import LinkHandlerContext from "@foxglove/studio-base/context/LinkHandlerContext
 import { PanelSettingsContext } from "@foxglove/studio-base/context/PanelSettingsContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import useAddPanel from "@foxglove/studio-base/hooks/useAddPanel";
-import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFilesToOpen";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
@@ -143,6 +141,7 @@ function Variables() {
 const allowedDropExtensions = [".bag", ".foxe", ".urdf"];
 
 type WorkspaceProps = {
+  loadWelcomeLayout?: boolean;
   demoBagUrl?: string;
   deepLinks?: string[];
   onToolbarDoubleClick?: () => void;
@@ -270,17 +269,15 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const { addToast } = useToasts();
 
   // Show welcome layout on first run
-  useEffect(() => {
+  useMount(() => {
     void (async () => {
       const welcomeLayoutShown = appConfiguration.get("onboarding.welcome-layout.shown");
-      if (welcomeLayoutShown == undefined || welcomeLayoutShown === false) {
-        // Set configuration *before* opening the layout to avoid infinite recursion when the player
-        // loading state causes us to re-render.
+      if (welcomeLayoutShown !== true || props.loadWelcomeLayout === true) {
         await appConfiguration.set("onboarding.welcome-layout.shown", true);
         await openWelcomeLayout();
       }
     })();
-  }, [appConfiguration, openWelcomeLayout]);
+  });
 
   // previously loaded files are tracked so support the "add bag" feature which loads a second bag
   // file when the user presses shift during a drag/drop
@@ -398,17 +395,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     [selectedSidebarItem],
   );
 
-  const [showMarketplace = false] = useAppConfigurationValue<boolean>(
-    AppSetting.EXTENSION_MARKETPLACE,
-  );
-  const sidebarItems = useMemo(() => {
-    const filteredSidebarItems = new Map(SIDEBAR_ITEMS);
-    if (!showMarketplace) {
-      filteredSidebarItems.delete("extensions");
-    }
-    return filteredSidebarItems;
-  }, [showMarketplace]);
-
   return (
     <MultiProvider
       providers={[
@@ -448,7 +434,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           </SToolbarItem>
         </Toolbar>
         <Sidebar
-          items={sidebarItems}
+          items={SIDEBAR_ITEMS}
           bottomItems={SIDEBAR_BOTTOM_ITEMS}
           selectedKey={selectedSidebarItem}
           onSelectKey={setSelectedSidebarItem}
