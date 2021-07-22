@@ -7,6 +7,7 @@ import { useToasts } from "react-toast-notifications";
 import { useAsync, useMountedState, useThrottle } from "react-use";
 
 import Logger from "@foxglove/log";
+import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import CurrentLayoutContext, {
   LayoutState,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
@@ -48,7 +49,8 @@ function CurrentLayoutProviderWithInitialState({
   const { setUserProfile } = useUserProfileStorage();
   const layoutStorage = useLayoutStorage();
 
-  const [stateInstance] = useState(() => new CurrentLayoutState(initialState));
+  const analytics = useAnalytics();
+  const [stateInstance] = useState(() => new CurrentLayoutState(initialState, analytics));
   const [layoutState, setLayoutState] = useState(() =>
     stateInstance.actions.getCurrentLayoutState(),
   );
