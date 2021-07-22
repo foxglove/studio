@@ -15,8 +15,8 @@
 .button {
   display: flex;
   max-width: 100%;
-  padding: 4px 10px;
-  background-color: $dark4;
+  padding: 4px 10px !important;
+  background-color: $dark4 !important;
 
   .title {
     overflow: hidden;

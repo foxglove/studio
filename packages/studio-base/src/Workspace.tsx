@@ -10,15 +10,15 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Stack } from "@fluentui/react";
+import { makeStyles, Stack } from "@fluentui/react";
 import { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from "react";
 import { useToasts } from "react-toast-notifications";
 import { useMount, useMountedState } from "react-use";
-import styled from "styled-components";
 
 import Log from "@foxglove/log";
 import AccountSettings from "@foxglove/studio-base/components/AccountSettingsSidebar/AccountSettings";
 import ConnectionList from "@foxglove/studio-base/components/ConnectionList";
+import CssBaseline from "@foxglove/studio-base/components/CssBaseline";
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
 import DropOverlay from "@foxglove/studio-base/components/DropOverlay";
 import ExtensionsSidebar from "@foxglove/studio-base/components/ExtensionsSidebar";
@@ -60,23 +60,37 @@ import inAutomatedRunMode from "@foxglove/studio-base/util/inAutomatedRunMode";
 
 const log = Log.getLogger(__filename);
 
-const SToolbarItem = styled.div`
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  height: 100%;
-  min-width: 40px;
-
-  // Allow interacting with buttons in the title bar without dragging the window
-  -webkit-app-region: no-drag;
-`;
-
-const TruncatedText = styled.span`
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  line-height: normal;
-`;
+const useStyles = makeStyles({
+  container: {
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    position: "relative",
+    flex: "1 1 100%",
+    outline: "none",
+    overflow: "hidden",
+  },
+  dropzone: {
+    fontSize: "4em",
+    marginBottom: "1em",
+  },
+  toolbarItem: {
+    flex: "0 0 auto",
+    display: "flex",
+    alignItems: "center",
+    height: "100%",
+    minWidth: "40px",
+    // Allow interacting with buttons in the title bar without dragging the window
+    "-webkit-app-region": "no-drag",
+  },
+  truncate: {
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
+    overflow: "hidden",
+    lineHeight: "normal",
+  },
+});
 
 type SidebarItemKey =
   | "connection"
@@ -148,6 +162,7 @@ type WorkspaceProps = {
 };
 
 export default function Workspace(props: WorkspaceProps): JSX.Element {
+  const classes = useStyles();
   const containerRef = useRef<HTMLDivElement>(ReactNull);
   const { currentSourceName, selectSource } = usePlayerSelection();
   const playerPresence = useMessagePipeline(
@@ -404,12 +419,13 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         /* eslint-enable react/jsx-key */
       ]}
     >
+      <CssBaseline />
       <DocumentDropListener filesSelected={dropHandler} allowedExtensions={allowedDropExtensions}>
         <DropOverlay>
-          <div style={{ fontSize: "4em", marginBottom: "1em" }}>Drop a file here</div>
+          <div className={classes.dropzone}>Drop a file here</div>
         </DropOverlay>
       </DocumentDropListener>
-      <div ref={containerRef} className="app-container" tabIndex={0}>
+      <div className={classes.container} ref={containerRef} tabIndex={0}>
         <GlobalKeyListener />
         {shortcutsModalOpen && (
           <ShortcutsModal onRequestClose={() => setShortcutsModalOpen(false)} />
@@ -422,16 +438,16 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
         <Toolbar onDoubleClick={props.onToolbarDoubleClick}>
           <div style={{ flexGrow: 1 }} />
-          <SToolbarItem>
+          <div className={classes.toolbarItem}>
             <PlayerStatusIndicator />
-          </SToolbarItem>
-          <SToolbarItem>
-            <TruncatedText>{currentSourceName ?? "Foxglove Studio"}</TruncatedText>{" "}
-          </SToolbarItem>
+          </div>
+          <div className={classes.toolbarItem}>
+            <span className={classes.truncate}>{currentSourceName ?? "Foxglove Studio"}</span>{" "}
+          </div>
           <div style={{ flexGrow: 1 }} />
-          <SToolbarItem style={{ marginRight: 5 }}>
+          <div className={classes.toolbarItem} style={{ marginRight: 5 }}>
             {!inAutomatedRunMode() && <NotificationDisplay />}
-          </SToolbarItem>
+          </div>
         </Toolbar>
         <Sidebar
           items={SIDEBAR_ITEMS}

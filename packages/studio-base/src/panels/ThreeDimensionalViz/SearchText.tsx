@@ -22,6 +22,7 @@ import { CameraState, cameraStateSelectors } from "regl-worldview";
 
 import Button from "@foxglove/studio-base/components/Button";
 import Icon from "@foxglove/studio-base/components/Icon";
+import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import useDeepChangeDetector from "@foxglove/studio-base/hooks/useDeepChangeDetector";
 import { Interactive } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/types";
 import Transforms from "@foxglove/studio-base/panels/ThreeDimensionalViz/Transforms";
@@ -287,7 +288,7 @@ const SearchText = React.memo<SearchTextComponentProps>(function SearchText({
         <Icon medium>
           <SearchIcon />
         </Icon>
-        <input
+        <LegacyInput
           autoFocus
           ref={searchInputRef}
           type="text"

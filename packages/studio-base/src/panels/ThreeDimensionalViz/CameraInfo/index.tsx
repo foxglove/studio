@@ -21,6 +21,7 @@ import Button from "@foxglove/studio-base/components/Button";
 import ExpandingToolbar, { ToolGroup } from "@foxglove/studio-base/components/ExpandingToolbar";
 import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
+import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import Tooltip from "@foxglove/studio-base/components/Tooltip";
 import { JsonInput } from "@foxglove/studio-base/components/ValidatedInput";
@@ -202,7 +203,7 @@ export default function CameraInfo({
                     <SLabel>Auto sync:</SLabel>
                   </Tooltip>
                   <SValue>
-                    <input
+                    <LegacyInput
                       type="checkbox"
                       checked={autoSyncCameraState}
                       onChange={() =>
@@ -220,7 +221,7 @@ export default function CameraInfo({
                     Show crosshair:
                   </SLabel>
                   <SValue>
-                    <input
+                    <LegacyInput
                       type="checkbox"
                       disabled={cameraState.perspective}
                       checked={showCrosshair}

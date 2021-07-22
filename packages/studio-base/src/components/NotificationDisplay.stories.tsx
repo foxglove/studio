@@ -15,6 +15,7 @@ import { storiesOf } from "@storybook/react";
 import moment from "moment";
 import { useRef } from "react";
 
+import { LegacyButton } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import NotificationDisplay, {
   NotificationList,
 } from "@foxglove/studio-base/components/NotificationDisplay";
@@ -40,9 +41,9 @@ const NotificationDisplayWrapper = () => (
 
 const AddMoreButtons = () => (
   <div style={{ paddingTop: 20 }}>
-    <button onClick={addInfo}>add info</button>
-    <button onClick={addWarning}>add warning</button>
-    <button onClick={addError}>add error</button>
+    <LegacyButton onClick={addInfo}>add info</LegacyButton>
+    <LegacyButton onClick={addWarning}>add warning</LegacyButton>
+    <LegacyButton onClick={addError}>add error</LegacyButton>
   </div>
 );
 
