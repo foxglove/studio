@@ -14,7 +14,7 @@ import {
   ContextualMenu,
 } from "@fluentui/react";
 import cx from "classnames";
-import { Fragment, useCallback, useContext, useMemo, useState } from "react";
+import { useCallback, useContext, useMemo, useState } from "react";
 import { useMountedState } from "react-use";
 
 import conflictTypeToString from "@foxglove/studio-base/components/LayoutBrowser/conflictTypeToString";
