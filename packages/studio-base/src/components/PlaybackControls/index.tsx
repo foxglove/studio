@@ -314,6 +314,7 @@ export const UnconnectedPlaybackControls = memo<PlaybackControlProps>(
 
     return (
       <div>
+        {tooltip}
         {loopTooltip.tooltip}
         {seekBackwardTooltip.tooltip}
         {seekForwardTooltip.tooltip}
@@ -371,7 +372,6 @@ export const UnconnectedPlaybackControls = memo<PlaybackControlProps>(
               verticalAlign="center"
               styles={{ root: { height: "28px", position: "relative" } }}
             >
-              {tooltip}
               <div
                 className={cx(classes.fullWidthBar, {
                   [classes.fullWidthBarActive]: activeData,
