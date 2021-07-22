@@ -29,6 +29,7 @@ export enum AppEvent {
   PLAYER_CLOSE = "PLAYER_CLOSE",
 
   // Layout events
+  LAYOUT_CREATE = "LAYOUT_CREATE",
   LAYOUT_ADD_PANEL = "LAYOUT_ADD_PANEL",
 }
 

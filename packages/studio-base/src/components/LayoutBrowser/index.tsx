@@ -5,7 +5,7 @@ import { DefaultButton, IconButton, Spinner, Stack, useTheme } from "@fluentui/r
 import { partition } from "lodash";
 import moment from "moment";
 import path from "path";
-import { useCallback, useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect, useMemo } from "react";
 import { useToasts } from "react-toast-notifications";
 import { useMountedState } from "react-use";
 import useAsyncFn from "react-use/lib/useAsyncFn";
@@ -13,6 +13,7 @@ import useAsyncFn from "react-use/lib/useAsyncFn";
 import conflictTypeToString from "@foxglove/studio-base/components/LayoutBrowser/conflictTypeToString";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
+import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import {
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
@@ -22,7 +23,9 @@ import { useLayoutStorage } from "@foxglove/studio-base/context/LayoutStorageCon
 import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
 import { usePrompt } from "@foxglove/studio-base/hooks/usePrompt";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
+import AnalyticsMetricsCollector from "@foxglove/studio-base/players/AnalyticsMetricsCollector";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
+import { AppEvent } from "@foxglove/studio-base/services/Analytics";
 import { LayoutMetadata } from "@foxglove/studio-base/services/ILayoutStorage";
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
 
@@ -145,6 +148,9 @@ export default function LayoutBrowser({
     [currentLayoutId, layoutStorage, setSelectedLayout, onSelectLayout],
   );
 
+  const analytics = useAnalytics();
+  const metricsCollector = useMemo(() => new AnalyticsMetricsCollector(analytics), [analytics]);
+
   const createNewLayout = useCallback(async () => {
     const name = `Unnamed layout ${moment(currentDateForStorybook).format("l")} at ${moment(
       currentDateForStorybook,
@@ -161,7 +167,9 @@ export default function LayoutBrowser({
       data: state as PanelsState,
     });
     void onSelectLayout(newLayout);
-  }, [currentDateForStorybook, layoutStorage, onSelectLayout]);
+
+    metricsCollector.logEvent(AppEvent.LAYOUT_CREATE);
+  }, [currentDateForStorybook, layoutStorage, metricsCollector, onSelectLayout]);
 
   const onExportLayout = useCallback(
     async (item: LayoutMetadata) => {

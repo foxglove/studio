@@ -128,9 +128,7 @@ function AddPanel() {
   const addPanel = useAddPanel();
 
   const analytics = useAnalytics();
-  const metricsCollector = useMemo(() => {
-    return new AnalyticsMetricsCollector(analytics);
-  }, [analytics]);
+  const metricsCollector = useMemo(() => new AnalyticsMetricsCollector(analytics), [analytics]);
 
   const onPanelSelect = useCallback(
     (props: PanelSelection) => {
