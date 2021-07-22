@@ -55,7 +55,6 @@ import useAddPanel from "@foxglove/studio-base/hooks/useAddPanel";
 import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFilesToOpen";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
-import AnalyticsMetricsCollector from "@foxglove/studio-base/players/AnalyticsMetricsCollector";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 import { AppEvent } from "@foxglove/studio-base/services/Analytics";
 import { isNonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
@@ -127,15 +126,13 @@ function AddPanel() {
   const addPanel = useAddPanel();
 
   const analytics = useAnalytics();
-  const metricsCollector = useMemo(() => new AnalyticsMetricsCollector(analytics), [analytics]);
 
   const onPanelSelect = useCallback(
     (props: PanelSelection) => {
       addPanel(props);
-      metricsCollector.setProperty("panel", props.type);
-      metricsCollector.logEvent(AppEvent.LAYOUT_ADD_PANEL);
+      analytics.logEvent(AppEvent.LAYOUT_ADD_PANEL, { type: props.type });
     },
-    [addPanel, metricsCollector],
+    [addPanel, analytics],
   );
 
   return (

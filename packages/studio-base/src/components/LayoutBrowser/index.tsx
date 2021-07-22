@@ -5,7 +5,7 @@ import { DefaultButton, IconButton, Spinner, Stack, useTheme } from "@fluentui/r
 import { partition } from "lodash";
 import moment from "moment";
 import path from "path";
-import { useCallback, useContext, useEffect, useMemo } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import { useToasts } from "react-toast-notifications";
 import { useMountedState } from "react-use";
 import useAsyncFn from "react-use/lib/useAsyncFn";
@@ -23,7 +23,6 @@ import { useLayoutStorage } from "@foxglove/studio-base/context/LayoutStorageCon
 import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
 import { usePrompt } from "@foxglove/studio-base/hooks/usePrompt";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
-import AnalyticsMetricsCollector from "@foxglove/studio-base/players/AnalyticsMetricsCollector";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { AppEvent } from "@foxglove/studio-base/services/Analytics";
 import { LayoutMetadata } from "@foxglove/studio-base/services/ILayoutStorage";
@@ -149,7 +148,6 @@ export default function LayoutBrowser({
   );
 
   const analytics = useAnalytics();
-  const metricsCollector = useMemo(() => new AnalyticsMetricsCollector(analytics), [analytics]);
 
   const createNewLayout = useCallback(async () => {
     const name = `Unnamed layout ${moment(currentDateForStorybook).format("l")} at ${moment(
@@ -168,8 +166,8 @@ export default function LayoutBrowser({
     });
     void onSelectLayout(newLayout);
 
-    metricsCollector.logEvent(AppEvent.LAYOUT_CREATE);
-  }, [currentDateForStorybook, layoutStorage, metricsCollector, onSelectLayout]);
+    analytics.logEvent(AppEvent.LAYOUT_CREATE);
+  }, [currentDateForStorybook, layoutStorage, analytics, onSelectLayout]);
 
   const onExportLayout = useCallback(
     async (item: LayoutMetadata) => {
@@ -177,10 +175,10 @@ export default function LayoutBrowser({
       if (layout) {
         const content = JSON.stringify(layout.data, undefined, 2);
         downloadTextFile(content, `${item.name}.json`);
-        metricsCollector.logEvent(AppEvent.LAYOUT_EXPORT);
+        analytics.logEvent(AppEvent.LAYOUT_EXPORT);
       }
     },
-    [layoutStorage, metricsCollector],
+    [layoutStorage, analytics],
   );
 
   const onShareLayout = useCallback(
@@ -242,8 +240,8 @@ export default function LayoutBrowser({
     const newLayout = await layoutStorage.saveNewLayout({ name: layoutName, data });
     void onSelectLayout(newLayout);
 
-    metricsCollector.logEvent(AppEvent.LAYOUT_IMPORT);
-  }, [addToast, isMounted, layoutStorage, metricsCollector, onSelectLayout]);
+    analytics.logEvent(AppEvent.LAYOUT_IMPORT);
+  }, [addToast, isMounted, layoutStorage, analytics, onSelectLayout]);
 
   const createLayoutTooltip = useTooltip({ contents: "Create new layout" });
   const importLayoutTooltip = useTooltip({ contents: "Import layout" });
