@@ -6,6 +6,7 @@ import { Suspense, useMemo, useState, useContext } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import Workspace from "@foxglove/studio-base/Workspace";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import { NativeFileMenuPlayerSelection } from "@foxglove/studio-base/components/NativeFileMenuPlayerSelection";
@@ -28,6 +29,7 @@ import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 import URDFAssetLoader from "@foxglove/studio-base/services/URDFAssetLoader";
 
 import "./styles/global.scss";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 
 type AppProps = {
   /**
@@ -48,15 +50,16 @@ export default function App(props: AppProps): JSX.Element {
     return new ConsoleApi(process.env.FOXGLOVE_API_URL!);
   }, []);
 
-  // Allow platform to override layout storage, e.g. for debugging
-  const hasPlatformLayoutStorage = !!useContext(LayoutStorageContext);
+  const [useFakeRemoteLayoutStorage = false] = useAppConfigurationValue<boolean>(
+    AppSetting.FAKE_REMOTE_LAYOUTS,
+  );
 
   const providers = [
     /* eslint-disable react/jsx-key */
     <AnalyticsProvider />,
     <ConsoleApiContext.Provider value={api} />,
     <CurrentUserProvider />,
-    !hasPlatformLayoutStorage && <ConsoleApiLayoutStorageProvider />,
+    !useFakeRemoteLayoutStorage && <ConsoleApiLayoutStorageProvider />,
     <ModalHost />, // render modal elements inside the ThemeProvider
     <AssetsProvider loaders={assetLoaders} />,
     <HoverValueProvider />,
