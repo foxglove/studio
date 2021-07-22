@@ -49,6 +49,7 @@ import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
 import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
+import { LegacyButton } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import {
@@ -546,13 +547,13 @@ export default function Panel<Config extends PanelConfig>(
               </div>
             )}
             {fullScreen && (
-              <button
+              <LegacyButton
                 className={styles.exitFullScreen}
                 onClick={exitFullScreen}
                 data-panel-overlay-exit
               >
                 <CloseIcon /> <span>Exit fullscreen</span>
-              </button>
+              </LegacyButton>
             )}
             <ErrorBoundary>
               {PanelComponent.supportsStrictMode ?? true ? (

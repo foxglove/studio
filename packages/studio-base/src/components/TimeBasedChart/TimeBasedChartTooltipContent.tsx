@@ -13,6 +13,7 @@
 
 import { PropsWithChildren } from "react";
 
+import { LegacyGlobalTable } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { formatTime } from "@foxglove/studio-base/util/formatTime";
 import { subtractTimes, toSec, formatTimeRaw } from "@foxglove/studio-base/util/time";
 
@@ -46,7 +47,7 @@ export default function TimeBasedChartTooltipContent(
           {tooltip.source}
         </div>
       )}
-      <table>
+      <LegacyGlobalTable>
         <tbody>
           <tr>
             <th />
@@ -71,7 +72,7 @@ export default function TimeBasedChartTooltipContent(
             )}
           </tr>
         </tbody>
-      </table>
+      </LegacyGlobalTable>
     </div>
   );
 }

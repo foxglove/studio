@@ -29,6 +29,7 @@ import dropDownStyles from "@foxglove/studio-base/components/Dropdown/index.modu
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
+import { LegacyButton } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { Item, SubMenu } from "@foxglove/studio-base/components/Menu";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
@@ -132,7 +133,7 @@ const ToggleComponent = ({
   dataTest?: string;
 }) => {
   return (
-    <button
+    <LegacyButton
       style={{ maxWidth: "100%", padding: "4px 8px" }}
       className={cx({ disabled })}
       data-test={dataTest}
@@ -141,7 +142,7 @@ const ToggleComponent = ({
       <Icon style={{ marginLeft: 4 }}>
         <MenuDownIcon style={{ width: 14, height: 14, opacity: 0.5 }} />
       </Icon>
-    </button>
+    </LegacyButton>
   );
 };
 
