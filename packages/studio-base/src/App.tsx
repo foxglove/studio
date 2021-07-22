@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Suspense, useMemo, useState, useContext } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
@@ -15,10 +15,10 @@ import AnalyticsProvider from "@foxglove/studio-base/context/AnalyticsProvider";
 import { AssetsProvider } from "@foxglove/studio-base/context/AssetsContext";
 import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
 import { HoverValueProvider } from "@foxglove/studio-base/context/HoverValueContext";
-import LayoutStorageContext from "@foxglove/studio-base/context/LayoutStorageContext";
 import ModalHost from "@foxglove/studio-base/context/ModalHost";
 import { PlayerSourceDefinition } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { UserNodeStateProvider } from "@foxglove/studio-base/context/UserNodeStateContext";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import ConsoleApiLayoutStorageProvider from "@foxglove/studio-base/providers/ConsoleApiLayoutStorageProvider";
 import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
 import CurrentUserProvider from "@foxglove/studio-base/providers/CurrentUserProvider";
@@ -29,7 +29,6 @@ import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 import URDFAssetLoader from "@foxglove/studio-base/services/URDFAssetLoader";
 
 import "./styles/global.scss";
-import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 
 type AppProps = {
   /**
