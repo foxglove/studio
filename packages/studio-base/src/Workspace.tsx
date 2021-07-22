@@ -32,8 +32,7 @@ import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipe
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import NotificationDisplay from "@foxglove/studio-base/components/NotificationDisplay";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
-import { PanelSelection } from "@foxglove/studio-base/components/PanelList";
-import PanelList from "@foxglove/studio-base/components/PanelList";
+import PanelList, { PanelSelection } from "@foxglove/studio-base/components/PanelList";
 import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
 import PlaybackControls from "@foxglove/studio-base/components/PlaybackControls";
 import { PlayerStatusIndicator } from "@foxglove/studio-base/components/PlayerStatusIndicator";

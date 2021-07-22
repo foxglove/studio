@@ -30,6 +30,8 @@ export enum AppEvent {
 
   // Layout events
   LAYOUT_CREATE = "LAYOUT_CREATE",
+  LAYOUT_IMPORT = "LAYOUT_IMPORT",
+  LAYOUT_EXPORT = "LAYOUT_EXPORT",
   LAYOUT_ADD_PANEL = "LAYOUT_ADD_PANEL",
 }
 

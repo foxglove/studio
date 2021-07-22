@@ -177,9 +177,10 @@ export default function LayoutBrowser({
       if (layout) {
         const content = JSON.stringify(layout.data, undefined, 2);
         downloadTextFile(content, `${item.name}.json`);
+        metricsCollector.logEvent(AppEvent.LAYOUT_EXPORT);
       }
     },
-    [layoutStorage],
+    [layoutStorage, metricsCollector],
   );
 
   const onShareLayout = useCallback(
@@ -240,7 +241,9 @@ export default function LayoutBrowser({
     const data = parsedState as PanelsState;
     const newLayout = await layoutStorage.saveNewLayout({ name: layoutName, data });
     void onSelectLayout(newLayout);
-  }, [addToast, isMounted, layoutStorage, onSelectLayout]);
+
+    metricsCollector.logEvent(AppEvent.LAYOUT_IMPORT);
+  }, [addToast, isMounted, layoutStorage, metricsCollector, onSelectLayout]);
 
   const createLayoutTooltip = useTooltip({ contents: "Create new layout" });
   const importLayoutTooltip = useTooltip({ contents: "Import layout" });
