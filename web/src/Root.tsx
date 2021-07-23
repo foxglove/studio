@@ -10,7 +10,6 @@ import {
   ThemeProvider,
   UserProfileLocalStorageProvider,
   StudioToastProvider,
-  CacheOnlyLayoutStorageProvider,
 } from "@foxglove/studio-base";
 
 import LocalStorageAppConfigurationProvider from "./components/LocalStorageAppConfigurationProvider";
@@ -19,8 +18,20 @@ import ExtensionLoaderProvider from "./providers/ExtensionLoaderProvider";
 
 const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
 
-export function Root(): JSX.Element {
+export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX.Element {
   const playerSources: PlayerSourceDefinition[] = [
+    {
+      name: "ROS 1",
+      type: "ros1-socket",
+      disabledReason: (
+        <>
+          ROS 1 Native connections are only available in our desktop app.&nbsp;
+          <a href="https://foxglove.dev/download" target="_blank" rel="noreferrer">
+            Download it here.
+          </a>
+        </>
+      ),
+    },
     {
       name: "Rosbridge (WebSocket)",
       type: "ros-ws",
@@ -37,6 +48,18 @@ export function Root(): JSX.Element {
       name: "ROS 2 Bag Folder (local)",
       type: "ros2-folder",
     },
+    {
+      name: "Velodyne LIDAR",
+      type: "velodyne-device",
+      disabledReason: (
+        <>
+          Velodyne connections are only available in our desktop app.&nbsp;
+          <a href="https://foxglove.dev/download" target="_blank" rel="noreferrer">
+            Download it here.
+          </a>
+        </>
+      ),
+    },
   ];
 
   const providers = [
@@ -44,7 +67,6 @@ export function Root(): JSX.Element {
     <StudioToastProvider />,
     <LocalStorageAppConfigurationProvider />,
     <LocalStorageLayoutCacheProvider />,
-    <CacheOnlyLayoutStorageProvider />,
     <UserProfileLocalStorageProvider />,
     <ExtensionLoaderProvider />,
     /* eslint-enable react/jsx-key */
@@ -54,7 +76,11 @@ export function Root(): JSX.Element {
     <ThemeProvider>
       <ErrorBoundary>
         <MultiProvider providers={providers}>
-          <App demoBagUrl={DEMO_BAG_URL} availableSources={playerSources} />
+          <App
+            loadWelcomeLayout={loadWelcomeLayout}
+            demoBagUrl={DEMO_BAG_URL}
+            availableSources={playerSources}
+          />
         </MultiProvider>
       </ErrorBoundary>
     </ThemeProvider>

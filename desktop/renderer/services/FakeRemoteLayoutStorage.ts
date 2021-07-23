@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { isEqual } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
 import { MutexLocked } from "@foxglove/den/async";
@@ -28,11 +27,7 @@ function assertLayout(value: unknown): asserts value is RemoteLayout {
   }
 }
 
-const FAKE_USER = {
-  id: "fakeuser" as UserID,
-  email: "fakeuser@example.com",
-  name: "Fake User",
-};
+const FAKE_USER_ID = "fakeuser" as UserID;
 
 /**
  * An implementation of "remote" layout storage that stores layouts in native storage for debugging
@@ -55,12 +50,10 @@ export default class FakeRemoteLayoutStorage implements IRemoteLayoutStorage {
     storage: Storage,
     {
       ignoringId,
-      path,
       name,
       permission,
     }: {
       ignoringId: LayoutID | undefined;
-      path: string[];
       name: string;
       permission: "creator_write" | "org_read" | "org_write";
     },
@@ -79,8 +72,7 @@ export default class FakeRemoteLayoutStorage implements IRemoteLayoutStorage {
       if (
         (ignoringId == undefined || ignoringId !== parsed.id) &&
         (permission === "creator_write") === (parsed.permission === "creator_write") &&
-        parsed.name === name &&
-        isEqual(parsed.path, path)
+        parsed.name === name
       ) {
         return true;
       }
@@ -136,21 +128,20 @@ export default class FakeRemoteLayoutStorage implements IRemoteLayoutStorage {
   }
 
   async saveNewLayout({
-    path,
     name,
     data,
+    permission,
   }: {
-    path: string[];
     name: string;
     data: PanelsState;
+    permission: "creator_write" | "org_read" | "org_write";
   }): Promise<{ status: "success"; newMetadata: RemoteLayoutMetadata } | { status: "conflict" }> {
     return await this.storage.runExclusive(async (storage) => {
       if (
         await this.hasNameConflictUnlocked(storage, {
           ignoringId: undefined,
-          path,
           name,
-          permission: "creator_write",
+          permission,
         })
       ) {
         return { status: "conflict" };
@@ -159,11 +150,10 @@ export default class FakeRemoteLayoutStorage implements IRemoteLayoutStorage {
       const newMetadata: RemoteLayoutMetadata = {
         id: uuidv4() as LayoutID,
         name,
-        path,
-        creator: FAKE_USER,
+        creatorUserId: FAKE_USER_ID,
         createdAt: now,
         updatedAt: now,
-        permission: "creator_write",
+        permission,
       };
       const newLayout: RemoteLayout = { ...newMetadata, data };
       await storage.put(
@@ -178,15 +168,15 @@ export default class FakeRemoteLayoutStorage implements IRemoteLayoutStorage {
 
   async updateLayout({
     targetID,
-    path,
     name,
     data,
+    permission,
     ifUnmodifiedSince,
   }: {
     targetID: LayoutID;
-    path: string[];
-    name: string;
-    data: PanelsState;
+    name?: string;
+    data?: PanelsState;
+    permission?: "creator_write" | "org_read" | "org_write";
     ifUnmodifiedSince: ISO8601Timestamp;
   }): Promise<
     | { status: "success"; newMetadata: RemoteLayoutMetadata }
@@ -205,78 +195,22 @@ export default class FakeRemoteLayoutStorage implements IRemoteLayoutStorage {
       if (
         await this.hasNameConflictUnlocked(storage, {
           ignoringId: targetID,
-          path,
-          name,
-          permission: target.permission,
+          name: name ?? target.name,
+          permission: permission ?? target.permission,
         })
       ) {
         return { status: "conflict" };
       }
       const newLayout: RemoteLayout = {
         ...target,
-        path,
-        name,
-        data,
+        name: name ?? target.name,
+        data: data ?? target.data,
+        permission: permission ?? target.permission,
         updatedAt: new Date().toISOString() as ISO8601Timestamp,
       };
       await storage.put(
         FakeRemoteLayoutStorage.STORE_NAME,
         targetID + ".json",
-        JSON.stringify(newLayout, undefined, 2),
-      );
-      const { data: _, ...newMetadata } = newLayout;
-      return { status: "success", newMetadata };
-    });
-  }
-
-  async shareLayout({
-    sourceID,
-    path,
-    name,
-    permission,
-  }: {
-    sourceID: LayoutID;
-    path: string[];
-    name: string;
-    permission: "org_read" | "org_write";
-  }): Promise<
-    | { status: "success"; newMetadata: RemoteLayoutMetadata }
-    | { status: "not-found" }
-    | { status: "conflict" }
-  > {
-    return await this.storage.runExclusive(async (storage) => {
-      const source = await this.getLayoutUnlocked(storage, sourceID);
-      if (!source) {
-        return { status: "not-found" };
-      }
-      if (source.permission !== "creator_write") {
-        throw new Error("shareLayout should only be used on personal layouts");
-      }
-      if (
-        await this.hasNameConflictUnlocked(storage, {
-          ignoringId: undefined,
-          path,
-          name,
-          permission,
-        })
-      ) {
-        return { status: "conflict" };
-      }
-      const now = new Date().toISOString() as ISO8601Timestamp;
-      const id = uuidv4() as LayoutID;
-      const newLayout: RemoteLayout = {
-        id,
-        path,
-        name,
-        data: source.data,
-        creator: FAKE_USER,
-        createdAt: now,
-        updatedAt: now,
-        permission,
-      };
-      await storage.put(
-        FakeRemoteLayoutStorage.STORE_NAME,
-        newLayout.id + ".json",
         JSON.stringify(newLayout, undefined, 2),
       );
       const { data: _, ...newMetadata } = newLayout;
@@ -301,56 +235,6 @@ export default class FakeRemoteLayoutStorage implements IRemoteLayoutStorage {
       }
       await storage.delete(FakeRemoteLayoutStorage.STORE_NAME, targetID + ".json");
       return { status: "success" };
-    });
-  }
-
-  async renameLayout({
-    targetID,
-    name,
-    path,
-    ifUnmodifiedSince,
-  }: {
-    targetID: LayoutID;
-    name: string;
-    path: string[];
-    ifUnmodifiedSince: ISO8601Timestamp;
-  }): Promise<
-    | { status: "success"; newMetadata: RemoteLayoutMetadata }
-    | { status: "not-found" }
-    | { status: "conflict" }
-    | { status: "precondition-failed" }
-  > {
-    return await this.storage.runExclusive(async (storage) => {
-      const target = await this.getLayoutUnlocked(storage, targetID);
-      if (!target) {
-        return { status: "conflict" };
-      }
-      if (
-        await this.hasNameConflictUnlocked(storage, {
-          ignoringId: undefined,
-          path,
-          name,
-          permission: target.permission,
-        })
-      ) {
-        return { status: "conflict" };
-      }
-      if (target.updatedAt !== ifUnmodifiedSince) {
-        return { status: "precondition-failed" };
-      }
-      const newLayout: RemoteLayout = {
-        ...target,
-        name,
-        path,
-        updatedAt: new Date().toISOString() as ISO8601Timestamp,
-      };
-      await storage.put(
-        FakeRemoteLayoutStorage.STORE_NAME,
-        target.id + ".json",
-        JSON.stringify(newLayout, undefined, 2),
-      );
-      const { data: _, ...newMetadata } = newLayout;
-      return { status: "success", newMetadata };
     });
   }
 }

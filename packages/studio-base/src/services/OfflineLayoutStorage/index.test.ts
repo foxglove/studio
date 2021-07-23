@@ -43,18 +43,15 @@ describe("OfflineLayoutStorage", () => {
   it("returns layout data from cache without fetching from remote storage", async () => {
     const remote1: RemoteLayout = {
       id: "id1" as LayoutID,
-      path: ["a"],
       name: "Foo",
-      creator: FAKE_USER,
+      creatorUserId: FAKE_USER.id,
       createdAt: new Date(1).toISOString() as ISO8601Timestamp,
       updatedAt: new Date(1).toISOString() as ISO8601Timestamp,
       permission: "creator_write",
       data: makePanelsState({}),
     };
 
-    const cacheStorage = new MockLayoutCache([
-      { id: "id1", name: "Foo", path: ["a"], state: remote1.data },
-    ]);
+    const cacheStorage = new MockLayoutCache([{ id: "id1", name: "Foo", state: remote1.data }]);
 
     const remoteStorage = new MockRemoteLayoutStorage([remote1]);
     const remoteGetLayout = jest.spyOn(remoteStorage, "getLayout");
@@ -64,9 +61,8 @@ describe("OfflineLayoutStorage", () => {
     await expect(storage.getLayout(remote1.id)).resolves.toEqual({
       id: "id1",
       name: "Foo",
-      path: ["a"],
       data: remote1.data,
-      creator: undefined,
+      creatorUserId: undefined,
       createdAt: undefined,
       updatedAt: undefined,
       permission: "creator_write",
@@ -79,9 +75,8 @@ describe("OfflineLayoutStorage", () => {
   it("fetches layout data from the server on demand when only metadata is cached", async () => {
     const remote1: RemoteLayout = {
       id: "id1" as LayoutID,
-      path: ["a"],
       name: "Foo",
-      creator: FAKE_USER,
+      creatorUserId: FAKE_USER.id,
       createdAt: new Date(1).toISOString() as ISO8601Timestamp,
       updatedAt: new Date(1).toISOString() as ISO8601Timestamp,
       permission: "creator_write",
@@ -90,7 +85,7 @@ describe("OfflineLayoutStorage", () => {
 
     const { data: _, ...serverMetadata } = remote1;
     const cacheStorage = new MockLayoutCache([
-      { id: remote1.id, name: "Foo", path: ["a"], state: undefined, serverMetadata },
+      { id: remote1.id, name: "Foo", state: undefined, serverMetadata },
     ]);
 
     const remoteStorage = new MockRemoteLayoutStorage([remote1]);
@@ -112,9 +107,8 @@ describe("OfflineLayoutStorage", () => {
     it("returns conflicts", async () => {
       const remote1: RemoteLayoutMetadata = {
         id: "id1" as LayoutID,
-        path: ["a"],
         name: "Foo",
-        creator: FAKE_USER,
+        creatorUserId: FAKE_USER.id,
         createdAt: new Date(10).toISOString() as ISO8601Timestamp,
         updatedAt: new Date(10).toISOString() as ISO8601Timestamp,
         permission: "creator_write",
@@ -123,7 +117,6 @@ describe("OfflineLayoutStorage", () => {
         {
           id: remote1.id,
           name: remote1.name,
-          path: [],
           state: undefined,
           serverMetadata: remote1,
           locallyDeleted: true,
@@ -150,9 +143,8 @@ describe("OfflineLayoutStorage", () => {
     it("saves new metadata to cache", async () => {
       const remote1: RemoteLayoutMetadata = {
         id: "id1" as LayoutID,
-        path: ["a"],
         name: "Foo",
-        creator: FAKE_USER,
+        creatorUserId: FAKE_USER.id,
         createdAt: new Date(10).toISOString() as ISO8601Timestamp,
         updatedAt: new Date(10).toISOString() as ISO8601Timestamp,
         permission: "creator_write",
@@ -167,7 +159,6 @@ describe("OfflineLayoutStorage", () => {
       await expect(cacheStorage.list()).resolves.toEqual([
         {
           id: remote1.id,
-          path: remote1.path,
           name: remote1.name,
           serverMetadata: remote1,
         },
@@ -177,18 +168,16 @@ describe("OfflineLayoutStorage", () => {
     it("saves newly updated metadata to cache", async () => {
       const remote1: RemoteLayoutMetadata = {
         id: "id1" as LayoutID,
-        path: ["a"],
         name: "Foo",
-        creator: FAKE_USER,
+        creatorUserId: FAKE_USER.id,
         createdAt: new Date(10).toISOString() as ISO8601Timestamp,
         updatedAt: new Date(10).toISOString() as ISO8601Timestamp,
         permission: "creator_write",
       };
       const remote1Updated: RemoteLayoutMetadata = {
         ...remote1,
-        path: ["b", "c"],
         name: "Foo2",
-        creator: FAKE_USER,
+        creatorUserId: FAKE_USER.id,
         createdAt: new Date(10).toISOString() as ISO8601Timestamp,
         updatedAt: new Date(20).toISOString() as ISO8601Timestamp,
         permission: "org_read",
@@ -196,7 +185,6 @@ describe("OfflineLayoutStorage", () => {
       const cacheStorage = new MockLayoutCache([
         {
           id: remote1.id,
-          path: remote1.path,
           name: remote1.name,
           state: undefined,
           serverMetadata: remote1,
@@ -211,7 +199,6 @@ describe("OfflineLayoutStorage", () => {
       await expect(cacheStorage.list()).resolves.toEqual([
         {
           id: remote1.id,
-          path: remote1Updated.path,
           name: remote1Updated.name,
           serverMetadata: remote1Updated,
           locallyModified: false,
@@ -223,9 +210,8 @@ describe("OfflineLayoutStorage", () => {
     it("deletes unmodified cached layouts", async () => {
       const remote1: RemoteLayoutMetadata = {
         id: "id1" as LayoutID,
-        path: ["a"],
         name: "Foo",
-        creator: FAKE_USER,
+        creatorUserId: FAKE_USER.id,
         createdAt: new Date(10).toISOString() as ISO8601Timestamp,
         updatedAt: new Date(10).toISOString() as ISO8601Timestamp,
         permission: "creator_write",
@@ -233,7 +219,6 @@ describe("OfflineLayoutStorage", () => {
       const cacheStorage = new MockLayoutCache([
         {
           id: remote1.id,
-          path: remote1.path,
           name: remote1.name,
           state: undefined,
           serverMetadata: remote1,
@@ -248,9 +233,8 @@ describe("OfflineLayoutStorage", () => {
     it("filters locally deleted layouts out of results", async () => {
       const remote1: RemoteLayoutMetadata = {
         id: "id1" as LayoutID,
-        path: ["a"],
         name: "Foo",
-        creator: FAKE_USER,
+        creatorUserId: FAKE_USER.id,
         createdAt: new Date(10).toISOString() as ISO8601Timestamp,
         updatedAt: new Date(10).toISOString() as ISO8601Timestamp,
         permission: "creator_write",
@@ -258,7 +242,6 @@ describe("OfflineLayoutStorage", () => {
       const cacheStorage = new MockLayoutCache([
         {
           id: remote1.id,
-          path: remote1.path,
           name: remote1.name,
           state: undefined,
           serverMetadata: remote1,
@@ -276,9 +259,8 @@ describe("OfflineLayoutStorage", () => {
     it("deletes locally deleted layouts from the server and then cache", async () => {
       const remote1: RemoteLayoutMetadata = {
         id: "id1" as LayoutID,
-        path: ["a"],
         name: "Foo",
-        creator: FAKE_USER,
+        creatorUserId: FAKE_USER.id,
         createdAt: new Date(10).toISOString() as ISO8601Timestamp,
         updatedAt: new Date(10).toISOString() as ISO8601Timestamp,
         permission: "creator_write",
@@ -286,7 +268,6 @@ describe("OfflineLayoutStorage", () => {
       const cacheStorage = new MockLayoutCache([
         {
           id: remote1.id,
-          path: remote1.path,
           name: remote1.name,
           state: undefined,
           serverMetadata: remote1,
@@ -308,17 +289,16 @@ describe("OfflineLayoutStorage", () => {
       const storage = new OfflineLayoutStorage({ cacheStorage, remoteStorage });
 
       await storage.saveNewLayout({
-        path: ["a", "b"],
         name: "layout1",
         data: makePanelsState({}),
+        permission: "creator_write",
       });
 
       // The new layout is available from the cache immediately
       const expectedLayout: LayoutMetadata = {
         id: expect.any(String),
-        path: ["a", "b"],
         name: "layout1",
-        creator: undefined,
+        creatorUserId: undefined,
         createdAt: undefined,
         updatedAt: undefined,
         permission: "creator_write",
@@ -330,7 +310,6 @@ describe("OfflineLayoutStorage", () => {
 
       const expectedCached: CachedLayout = {
         id: expect.any(String),
-        path: ["a", "b"],
         name: "layout1",
         state: makePanelsState({}),
       };
@@ -352,9 +331,8 @@ describe("OfflineLayoutStorage", () => {
       await storage.syncLayout(layouts[0]!.id);
       const expectedRemote: RemoteLayoutMetadata = {
         id: expect.any(String),
-        path: ["a", "b"],
         name: "layout1",
-        creator: FAKE_USER,
+        creatorUserId: FAKE_USER.id,
         createdAt: new Date(10).toISOString() as ISO8601Timestamp,
         updatedAt: new Date(10).toISOString() as ISO8601Timestamp,
         permission: "creator_write",
@@ -380,9 +358,8 @@ describe("OfflineLayoutStorage", () => {
       await expect(storage.getLayouts()).resolves.toEqual([
         {
           id: expectedCached.id,
-          path: ["a", "b"],
           name: "layout1",
-          creator: FAKE_USER,
+          creatorUserId: FAKE_USER.id,
           createdAt: new Date(10).toISOString() as ISO8601Timestamp,
           updatedAt: new Date(10).toISOString() as ISO8601Timestamp,
           permission: "creator_write",
@@ -394,9 +371,8 @@ describe("OfflineLayoutStorage", () => {
     it("doesn't upload new layouts if there is a name conflict", async () => {
       const existingLayout: RemoteLayout = {
         id: "id1" as LayoutID,
-        path: ["a"],
         name: "Foo",
-        creator: FAKE_USER,
+        creatorUserId: FAKE_USER.id,
         createdAt: new Date(10).toISOString() as ISO8601Timestamp,
         updatedAt: new Date(10).toISOString() as ISO8601Timestamp,
         permission: "creator_write",
@@ -407,28 +383,33 @@ describe("OfflineLayoutStorage", () => {
       const storage = new OfflineLayoutStorage({ cacheStorage, remoteStorage });
 
       const { id: newId1 } = await storage.saveNewLayout({
-        path: ["a"],
         name: "Foo",
         data: makePanelsState({ newLayoutPanel: { b: 2 } }),
+        permission: "creator_write",
       });
       const { id: newId2 } = await storage.saveNewLayout({
-        path: ["b", "c"],
-        name: "Foo",
+        name: "Bar",
         data: makePanelsState({ newLayoutPanel2: { c: 3 } }),
+        permission: "creator_write",
       });
 
       jest.setSystemTime(10);
-      await expect(storage.syncLayout(newId1)).resolves.toBe("name-collision");
-      await expect(storage.syncLayout(newId2)).resolves.toBeUndefined();
+      await expect(storage.syncLayout(newId1)).resolves.toEqual({
+        status: "conflict",
+        type: "name-collision",
+      });
+      await expect(storage.syncLayout(newId2)).resolves.toEqual({
+        status: "success",
+        newId: expect.any(String),
+      });
 
       const remoteLayouts = await remoteStorage.getLayouts();
       expect(remoteLayouts).toEqual([
         { ...existingLayout, data: undefined },
         {
           id: expect.any(String),
-          path: ["b", "c"],
-          name: "Foo", // no conflict - not renamed
-          creator: FAKE_USER,
+          name: "Bar",
+          creatorUserId: FAKE_USER.id,
           createdAt: new Date(10).toISOString() as ISO8601Timestamp,
           updatedAt: new Date(10).toISOString() as ISO8601Timestamp,
           permission: "creator_write",
@@ -439,9 +420,8 @@ describe("OfflineLayoutStorage", () => {
     it("uploads locally modified layouts to the server", async () => {
       const remote1: RemoteLayoutMetadata = {
         id: "id1" as LayoutID,
-        path: ["a"],
         name: "Foo",
-        creator: FAKE_USER,
+        creatorUserId: FAKE_USER.id,
         createdAt: new Date(10).toISOString() as ISO8601Timestamp,
         updatedAt: new Date(10).toISOString() as ISO8601Timestamp,
         permission: "creator_write",
@@ -449,7 +429,6 @@ describe("OfflineLayoutStorage", () => {
       const cacheStorage = new MockLayoutCache([
         {
           id: remote1.id,
-          path: ["b", "c"],
           name: "Bar",
           state: makePanelsState({ fooPanel: { a: 1 } }),
           serverMetadata: remote1,
@@ -462,18 +441,16 @@ describe("OfflineLayoutStorage", () => {
       const storage = new OfflineLayoutStorage({ cacheStorage, remoteStorage });
 
       jest.setSystemTime(20);
-      await expect(storage.syncLayout(remote1.id)).resolves.toBeUndefined();
+      await expect(storage.syncLayout(remote1.id)).resolves.toEqual({ status: "success" });
       await expect(remoteStorage.getLayouts()).resolves.toEqual([
         {
           ...remote1,
-          path: ["b", "c"],
           name: "Bar",
           updatedAt: new Date(20).toISOString() as ISO8601Timestamp,
         },
       ]);
       await expect(remoteStorage.getLayout(remote1.id)).resolves.toEqual({
         ...remote1,
-        path: ["b", "c"],
         name: "Bar",
         updatedAt: new Date(20).toISOString() as ISO8601Timestamp,
         data: makePanelsState({ fooPanel: { a: 1 } }),
@@ -483,9 +460,8 @@ describe("OfflineLayoutStorage", () => {
     it("renames locally renamed layouts on the server when only metadata is cached", async () => {
       const remote1: RemoteLayoutMetadata = {
         id: "id1" as LayoutID,
-        path: ["a"],
         name: "Foo",
-        creator: FAKE_USER,
+        creatorUserId: FAKE_USER.id,
         createdAt: new Date(10).toISOString() as ISO8601Timestamp,
         updatedAt: new Date(10).toISOString() as ISO8601Timestamp,
         permission: "creator_write",
@@ -493,7 +469,6 @@ describe("OfflineLayoutStorage", () => {
       const cacheStorage = new MockLayoutCache([
         {
           id: remote1.id,
-          path: ["b", "c"],
           name: "Bar",
           state: undefined,
           serverMetadata: remote1,
@@ -507,18 +482,16 @@ describe("OfflineLayoutStorage", () => {
 
       jest.setSystemTime(20);
       await expect(storage.syncWithRemote()).resolves.toEqual(new Map());
-      await expect(storage.syncLayout(remote1.id)).resolves.toBeUndefined();
+      await expect(storage.syncLayout(remote1.id)).resolves.toEqual({ status: "success" });
       await expect(remoteStorage.getLayouts()).resolves.toEqual([
         {
           ...remote1,
-          path: ["b", "c"],
           name: "Bar",
           updatedAt: new Date(20).toISOString() as ISO8601Timestamp,
         },
       ]);
       await expect(remoteStorage.getLayout(remote1.id)).resolves.toEqual({
         ...remote1,
-        path: ["b", "c"],
         name: "Bar",
         updatedAt: new Date(20).toISOString() as ISO8601Timestamp,
         data: makePanelsState({ fooPanel: { a: 1 } }),

@@ -19,8 +19,6 @@ export type RemoteLayoutMetadata = {
   [K in keyof Omit<LayoutMetadata, "data" | "hasUnsyncedChanges" | "conflict">]-?: NonNullable<
     LayoutMetadata[K]
   >;
-} & {
-  data?: never;
 };
 
 /**
@@ -34,49 +32,26 @@ export interface IRemoteLayoutStorage {
   getLayout: (id: LayoutID) => Promise<RemoteLayout | undefined>;
 
   saveNewLayout: (params: {
-    path: string[];
     name: string;
     data: PanelsState;
+    permission: "creator_write" | "org_read" | "org_write";
   }) => Promise<{ status: "success"; newMetadata: RemoteLayoutMetadata } | { status: "conflict" }>;
 
   updateLayout: (params: {
     targetID: LayoutID;
-    path: string[];
-    name: string;
-    data: PanelsState;
+    name?: string;
+    data?: PanelsState;
+    permission?: "creator_write" | "org_read" | "org_write";
     ifUnmodifiedSince: ISO8601Timestamp;
   }) => Promise<
     | { status: "success"; newMetadata: RemoteLayoutMetadata }
     | { status: "not-found" }
     | { status: "conflict" }
     | { status: "precondition-failed" }
-  >;
-
-  shareLayout: (params: {
-    sourceID: LayoutID;
-    path: string[];
-    name: string;
-    permission: "org_read" | "org_write";
-  }) => Promise<
-    | { status: "success"; newMetadata: RemoteLayoutMetadata }
-    | { status: "not-found" }
-    | { status: "conflict" }
   >;
 
   deleteLayout: (params: {
     targetID: LayoutID;
     ifUnmodifiedSince: ISO8601Timestamp;
   }) => Promise<{ status: "success" | "precondition-failed" }>;
-
-  renameLayout: (params: {
-    targetID: LayoutID;
-    name: string;
-    path: string[];
-    ifUnmodifiedSince: ISO8601Timestamp;
-  }) => Promise<
-    | { status: "success"; newMetadata: RemoteLayoutMetadata }
-    | { status: "not-found" }
-    | { status: "conflict" }
-    | { status: "precondition-failed" }
-  >;
 }
