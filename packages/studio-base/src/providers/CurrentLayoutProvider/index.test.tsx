@@ -148,6 +148,7 @@ describe("CurrentLayoutProvider", () => {
           {
             name: "unnamed",
             data: persistedState.panels,
+            permission: "creator_write",
           },
         ],
       ]);
