@@ -24,7 +24,7 @@ import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutS
 import { usePrompt } from "@foxglove/studio-base/hooks/usePrompt";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
-import { AppEvent } from "@foxglove/studio-base/services/Analytics";
+import AppEvent from "@foxglove/studio-base/services/AppEvent";
 import { LayoutMetadata } from "@foxglove/studio-base/services/ILayoutStorage";
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
 
