@@ -12,21 +12,12 @@
 //   You may not use this file except in compliance with the License.
 
 import { PropsWithChildren } from "react";
-import styled from "styled-components";
 
-import { LegacyTable } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { formatTime } from "@foxglove/studio-base/util/formatTime";
-import { colors as sharedColors } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { subtractTimes, toSec, formatTimeRaw } from "@foxglove/studio-base/util/time";
 
 import styles from "./TimeBasedChartTooltipContent.module.scss";
 import { TimeBasedChartTooltipData } from "./index";
-
-const STable = styled(LegacyTable)`
-  th {
-    color: ${sharedColors.TEXT_NORMAL} !important;
-  }
-`;
 
 type Props = {
   tooltip: TimeBasedChartTooltipData;
@@ -55,7 +46,7 @@ export default function TimeBasedChartTooltipContent(
           {tooltip.source}
         </div>
       )}
-      <STable>
+      <table>
         <tbody>
           <tr>
             <th />
@@ -80,7 +71,7 @@ export default function TimeBasedChartTooltipContent(
             )}
           </tr>
         </tbody>
-      </STable>
+      </table>
     </div>
   );
 }
