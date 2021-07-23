@@ -158,7 +158,7 @@ export default class CurrentLayoutState implements ICurrentLayout {
     createTabPanel: (payload: CREATE_TAB_PANEL["payload"]): void => {
       this.dispatch({ type: "CREATE_TAB_PANEL", payload });
       this.setSelectedPanelIds([]);
-      this.analytics!.logEvent(AppEvent.LAYOUT_ADD_PANEL, { type: "Tab" });
+      this.analytics?.logEvent(AppEvent.LAYOUT_ADD_PANEL, { type: "Tab" });
     },
     changePanelLayout: (payload: CHANGE_PANEL_LAYOUT["payload"]): void =>
       this.dispatch({ type: "CHANGE_PANEL_LAYOUT", payload }),
@@ -182,19 +182,19 @@ export default class CurrentLayoutState implements ICurrentLayout {
       this.dispatch({ type: "SPLIT_PANEL", payload }),
     swapPanel: (payload: SWAP_PANEL["payload"]): void => {
       this.dispatch({ type: "SWAP_PANEL", payload });
-      this.analytics!.logEvent(AppEvent.LAYOUT_ADD_PANEL, { type: payload.type });
-      this.analytics!.logEvent(AppEvent.LAYOUT_REMOVE_PANEL, {
+      this.analytics?.logEvent(AppEvent.LAYOUT_ADD_PANEL, { type: payload.type });
+      this.analytics?.logEvent(AppEvent.LAYOUT_REMOVE_PANEL, {
         type: getPanelTypeFromId(payload.originalId),
       });
     },
     moveTab: (payload: MOVE_TAB["payload"]): void => this.dispatch({ type: "MOVE_TAB", payload }),
     addPanel: (payload: ADD_PANEL["payload"]): void => {
       this.dispatch({ type: "ADD_PANEL", payload });
-      this.analytics!.logEvent(AppEvent.LAYOUT_ADD_PANEL, { type: getPanelTypeFromId(payload.id) });
+      this.analytics?.logEvent(AppEvent.LAYOUT_ADD_PANEL, { type: getPanelTypeFromId(payload.id) });
     },
     dropPanel: (payload: DROP_PANEL["payload"]): void => {
       this.dispatch({ type: "DROP_PANEL", payload });
-      this.analytics!.logEvent(AppEvent.LAYOUT_ADD_PANEL, { type: payload.newPanelType });
+      this.analytics?.logEvent(AppEvent.LAYOUT_ADD_PANEL, { type: payload.newPanelType });
     },
     startDrag: (payload: START_DRAG["payload"]): void =>
       this.dispatch({ type: "START_DRAG", payload }),

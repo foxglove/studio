@@ -7,7 +7,6 @@ import { ToastProvider } from "react-toast-notifications";
 
 import { AppConfigurationContext } from "@foxglove/studio-base";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
-import AnalyticsProvider from "@foxglove/studio-base/context/AnalyticsProvider";
 import { HoverValueProvider } from "@foxglove/studio-base/context/HoverValueContext";
 import { UserNodeStateProvider } from "@foxglove/studio-base/context/UserNodeStateContext";
 import ReadySignalContext from "@foxglove/studio-base/stories/ReadySignalContext";
@@ -42,7 +41,6 @@ function WithContextProviders(Child: Story, ctx: StoryContext): JSX.Element {
     <ToastProvider>{undefined}</ToastProvider>,
     <HoverValueProvider />,
     <UserNodeStateProvider />,
-    <AnalyticsProvider />,
     /* eslint-enable react/jsx-key */
   ];
   return (
