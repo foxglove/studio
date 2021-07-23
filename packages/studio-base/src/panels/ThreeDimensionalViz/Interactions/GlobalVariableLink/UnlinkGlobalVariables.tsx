@@ -16,7 +16,6 @@ import styled from "styled-components";
 
 import Button from "@foxglove/studio-base/components/Button";
 import GlobalVariableName from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/GlobalVariableName";
-import styles from "@foxglove/studio-base/panels/ThreeDimensionalViz/Layout.module.scss";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { getPath } from "../interactionUtils";
@@ -91,7 +90,6 @@ export default function UnlinkGlobalVariables({
         return (
           <SListItem key={idx} style={listStyle}>
             <Button
-              className={styles.button}
               danger
               small
               style={{ flexShrink: 0 }}

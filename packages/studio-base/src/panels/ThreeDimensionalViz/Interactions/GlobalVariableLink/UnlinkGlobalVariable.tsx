@@ -16,7 +16,6 @@ import styled from "styled-components";
 
 import Button from "@foxglove/studio-base/components/Button";
 import GlobalVariableName from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/GlobalVariableName";
-import styles from "@foxglove/studio-base/panels/ThreeDimensionalViz/Layout.module.scss";
 
 import { getPath } from "../interactionUtils";
 import useLinkedGlobalVariables, { LinkedGlobalVariable } from "../useLinkedGlobalVariables";
@@ -43,7 +42,6 @@ export default function UnlinkGlobalVariable({
         <SPath>{getPath(markerKeyPath)}</SPath>?
       </p>
       <Button
-        className={styles.button}
         danger
         onClick={() => {
           const newLinkedGlobalVariables = linkedGlobalVariables.filter(
@@ -60,9 +58,7 @@ export default function UnlinkGlobalVariable({
       >
         Unlink
       </Button>
-      <Button className={styles.button} onClick={() => setIsOpen(false)}>
-        Cancel
-      </Button>
+      <Button onClick={() => setIsOpen(false)}>Cancel</Button>
     </SGlobalVariableForm>
   );
 }
