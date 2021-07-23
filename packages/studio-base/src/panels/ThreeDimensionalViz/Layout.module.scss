@@ -59,10 +59,11 @@ $spacing: 15px;
   margin-bottom: 10px;
 
   button {
-    background-color: transparent;
-    border: none;
-    padding-left: 4px;
-    padding-right: 4px;
+    background-color: transparent !important;
+    border: none !important;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+    align-items: start;
   }
 
   span:global(.icon) {

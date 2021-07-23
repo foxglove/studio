@@ -17,6 +17,7 @@ export const LegacyButton = styled.button`
   border: none;
   color: ${sharedColors.TEXT_CONTROL};
   font: inherit;
+  line-height: 100%;
   font-family: ${SANS_SERIF};
   font-size: 100%;
   margin: ${spacing.CONTROL_MARGIN};
@@ -91,6 +92,7 @@ export const LegacyTextarea = styled.textarea`
   border: 2px solid ${sharedColors.TEXT_NORMAL};
   color: ${sharedColors.TEXT_NORMAL};
   font: inherit;
+  line-height: 1.2;
   font-family: ${MONOSPACE};
   font-size: 100%;
   margin: ${spacing.CONTROL_MARGIN};
