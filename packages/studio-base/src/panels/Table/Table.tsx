@@ -30,7 +30,7 @@ import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import Icon from "@foxglove/studio-base/components/Icon";
 import {
   LegacyButton,
-  LegacyGlobalTable,
+  LegacyTable,
   LegacySelect,
 } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { toolsColorScheme } from "@foxglove/studio-base/util/toolsColorScheme";
@@ -192,7 +192,7 @@ export default function Table({
 
   return (
     <>
-      <LegacyGlobalTable {...getTableProps()}>
+      <LegacyTable {...getTableProps()}>
         <thead>
           {headerGroups.map((headerGroup, i) => {
             return (
@@ -238,7 +238,7 @@ export default function Table({
             );
           })}
         </tbody>
-      </LegacyGlobalTable>
+      </LegacyTable>
       {!isNested && (
         <div style={{ margin: "4px auto 0" }}>
           <LegacyButton onClick={() => gotoPage(0)} disabled={!canPreviousPage}>

@@ -16,7 +16,7 @@ import { ReactElement, useEffect, useMemo, useRef, useState } from "react";
 
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import { isActiveElementEditable } from "@foxglove/studio-base/components/GlobalVariablesTable";
-import { LegacyGlobalTable } from "@foxglove/studio-base/components/LegacyStyledComponents";
+import { LegacyTable } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import {
   MessagePipelineContext,
   useMessagePipeline,
@@ -102,7 +102,7 @@ function Parameters(): ReactElement {
       <PanelToolbar helpContent={helpContent} floating />
       <Scrollable>
         <ParametersTable>
-          <LegacyGlobalTable>
+          <LegacyTable>
             <thead>
               <tr>
                 <th>Parameter</th>
@@ -134,7 +134,7 @@ function Parameters(): ReactElement {
                 );
               })}
             </tbody>
-          </LegacyGlobalTable>
+          </LegacyTable>
         </ParametersTable>
       </Scrollable>
     </ParametersPanel>
