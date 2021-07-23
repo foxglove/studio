@@ -43,7 +43,7 @@ function MainToolbar({
   const cameraModeTip = perspective ? "Switch to 2D camera" : "Switch to 3D camera";
   const measureActive = measureState === "place-start" || measureState === "place-finish";
   return (
-    <div className={styles.button}>
+    <div className={styles.buttons}>
       <Button className={styles.button} tooltip={cameraModeTip} onClick={onToggleCameraMode}>
         <Icon
           style={{ color: perspective ? colors.accent : "white" }}

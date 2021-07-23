@@ -79,7 +79,11 @@ export default function ExpandingToolbar<T extends string>({
     });
     return (
       <div data-test={dataTest} className={className}>
-        <Button tooltip={tooltip} onClick={() => onSelectTab(selectedTabLocal)}>
+        <Button
+          className={styles.iconButton}
+          tooltip={tooltip}
+          onClick={() => onSelectTab(selectedTabLocal)}
+        >
           <Icon dataTest={`ExpandingToolbar-${tooltip}`}>{icon}</Icon>
         </Button>
       </div>
