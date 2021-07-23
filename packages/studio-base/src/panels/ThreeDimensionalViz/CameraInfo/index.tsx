@@ -93,6 +93,7 @@ function CameraStateInfo({ cameraState, onAlignXYAxis }: CameraStateInfoProps) {
             <SLabel width={LABEL_WIDTH}>{key}:</SLabel> <SValue>{val}</SValue>
             {key === "thetaOffset" && (
               <Button
+                className={styles.button}
                 onClick={onAlignXYAxis}
                 tooltip="Align XY axis by reseting thetaOffset to 0. Will no longer follow orientation."
               >
@@ -162,6 +163,7 @@ export default function CameraInfo({
         <Flex col style={{ minWidth: DEFAULT_CAMERA_INFO_WIDTH }}>
           <Flex row reverse>
             <Button
+              className={styles.button}
               tooltip="Copy cameraState"
               small
               onClick={() => {
@@ -171,6 +173,7 @@ export default function CameraInfo({
               Copy
             </Button>
             <Button
+              className={styles.button}
               disabled={isPlaying}
               tooltip={
                 isPlaying
@@ -181,7 +184,11 @@ export default function CameraInfo({
             >
               {edit ? "Done" : "Edit"}
             </Button>
-            <Button tooltip="Sync camera state across all 3D panels" onClick={syncCameraState}>
+            <Button
+              className={styles.button}
+              tooltip="Sync camera state across all 3D panels"
+              onClick={syncCameraState}
+            >
               Sync
             </Button>
           </Flex>

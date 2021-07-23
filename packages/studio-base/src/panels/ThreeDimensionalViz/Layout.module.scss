@@ -51,20 +51,22 @@ $spacing: 15px;
   pointer-events: none;
 }
 
+.button {
+  background-color: transparent !important;
+  border: none !important;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+  align-items: start !important;
+  margin-right: 4px !important;
+  margin-left: 4px !important;
+}
+
 .buttons {
   @extend %floating-box;
   display: flex;
   flex-direction: column;
   padding: 0px;
   margin-bottom: 10px;
-
-  button {
-    background-color: transparent !important;
-    border: none !important;
-    padding-left: 4px !important;
-    padding-right: 4px !important;
-    align-items: start;
-  }
 
   span:global(.icon) {
     width: 18px;

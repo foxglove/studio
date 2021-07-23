@@ -43,8 +43,8 @@ function MainToolbar({
   const cameraModeTip = perspective ? "Switch to 2D camera" : "Switch to 3D camera";
   const measureActive = measureState === "place-start" || measureState === "place-finish";
   return (
-    <div className={styles.buttons}>
-      <Button tooltip={cameraModeTip} onClick={onToggleCameraMode}>
+    <div className={styles.button}>
+      <Button className={styles.button} tooltip={cameraModeTip} onClick={onToggleCameraMode}>
         <Icon
           style={{ color: perspective ? colors.accent : "white" }}
           dataTest={`MainToolbar-toggleCameraMode`}
@@ -53,6 +53,7 @@ function MainToolbar({
         </Icon>
       </Button>
       <Button
+        className={styles.button}
         disabled={perspective}
         tooltip={
           perspective
@@ -72,7 +73,7 @@ function MainToolbar({
         </Icon>
       </Button>
       {process.env.NODE_ENV === "development" && (
-        <Button tooltip="Debug" onClick={onToggleDebug}>
+        <Button className={styles.button} tooltip="Debug" onClick={onToggleDebug}>
           <Icon style={{ color: debug ? colors.accent : "white" }}>
             <BugIcon />
           </Icon>

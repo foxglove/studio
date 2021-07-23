@@ -104,8 +104,7 @@ export default function ExpandingToolbar<T extends string>({
             </Button>
           );
         })}
-        <div className={styles.spaceSeparator} />
-        <Button onClick={() => onSelectTab(undefined)}>
+        <Button className={styles.expandButton} onClick={() => onSelectTab(undefined)}>
           <Icon>
             <ArrowCollapseIcon />
           </Icon>

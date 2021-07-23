@@ -125,7 +125,7 @@ export const List = (): JSX.Element => {
           }}
           key={item.id}
         >
-          <h2 style={{ color: "orange", marginRight: 8 }}>{item.id}</h2> {item.text}
+          <span style={{ color: "orange", marginRight: 8 }}>{item.id}</span> {item.text}
         </div>
       )}
     />

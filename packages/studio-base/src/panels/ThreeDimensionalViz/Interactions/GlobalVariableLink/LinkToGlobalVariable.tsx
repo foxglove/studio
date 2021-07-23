@@ -21,6 +21,7 @@ import Icon from "@foxglove/studio-base/components/Icon";
 import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import GlobalVariableName from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/GlobalVariableName";
+import styles from "@foxglove/studio-base/panels/ThreeDimensionalViz/Layout.module.scss";
 import colors from "@foxglove/studio-base/styles/colors.module.scss";
 
 import useLinkedGlobalVariables from "../useLinkedGlobalVariables";
@@ -104,10 +105,17 @@ export default function LinkToGlobalVariable({
           onChange={(e) => setName(e.target.value.replace(/^\$/, ""))}
         />
         <p data-test="action-buttons">
-          <Button primary={name.length > 0} disabled={name.length === 0} onClick={addLink}>
+          <Button
+            className={styles.button}
+            primary={name.length > 0}
+            disabled={name.length === 0}
+            onClick={addLink}
+          >
             Add Link
           </Button>
-          <Button onClick={() => setIsOpen(false)}>Cancel</Button>
+          <Button className={styles.button} onClick={() => setIsOpen(false)}>
+            Cancel
+          </Button>
         </p>
       </SGlobalVariableForm>
     </ChildToggle>
