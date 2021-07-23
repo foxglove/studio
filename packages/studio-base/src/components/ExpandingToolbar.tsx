@@ -98,7 +98,7 @@ export default function ExpandingToolbar<T extends string>({
   return (
     <div data-test={dataTest} className={cx(className, styles.expanded)}>
       <Flex row className={styles.tabBar}>
-        <div>
+        <Flex row>
           {React.Children.map(children, (child) => {
             return (
               <Button
@@ -109,7 +109,7 @@ export default function ExpandingToolbar<T extends string>({
               </Button>
             );
           })}
-        </div>
+        </Flex>
         <Button className={styles.expandButton} onClick={() => onSelectTab(undefined)}>
           <Icon>
             <ArrowCollapseIcon />
