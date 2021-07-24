@@ -89,7 +89,7 @@ export const LegacyTextarea = styled.textarea`
   border: 2px solid ${sharedColors.TEXT_NORMAL};
   color: ${sharedColors.TEXT_NORMAL};
   font: inherit;
-  line-height: 1.2;
+  line-height: 1.4;
   font-family: ${MONOSPACE};
   font-size: 100%;
   margin: ${spacing.CONTROL_MARGIN};
