@@ -266,7 +266,7 @@ const FollowTFControl = memo<Props>((props: Props) => {
         </Icon>
       ) : undefined}
       <Button
-        className={styles.button}
+        className={styles.iconButton}
         tooltipProps={{ placement: "top" }}
         onClick={onClickFollowButton}
         tooltip={getFollowButtonTooltip()}
