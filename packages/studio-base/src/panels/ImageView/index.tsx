@@ -349,6 +349,7 @@ function ImageView(props: Props) {
     if (imageTopicsByNamespace.size === 0) {
       return (
         <Dropdown
+          btnClassname={style.dropdown}
           toggleComponent={
             <ToggleComponent
               dataTest={"topics-dropdown"}
