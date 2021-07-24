@@ -5,6 +5,7 @@
 import { mergeStyles, useTheme } from "@fluentui/react";
 
 import "@foxglove/studio-base/styles/reset.scss";
+import "@foxglove/studio-base/styles/assets/latin-roboto-mono.scss";
 
 import { MONOSPACE } from "@foxglove/studio-base/styles/fonts";
 

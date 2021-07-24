@@ -11,7 +11,6 @@ import { colors as sharedColors, spacing } from "@foxglove/studio-base/util/shar
  * @deprecated The LegacyButton should not be used for new features. use fluentui/react instead
  */
 export const LegacyButton = styled.button`
-  /* Re-homed from global.scss */
   background-color: ${sharedColors.BACKGROUND_CONTROL};
   border-radius: 4px;
   border: none;
@@ -60,7 +59,6 @@ export const LegacyButton = styled.button`
  * @deprecated The LegacyInput should not be used for new features. use fluentui/react instead
  */
 export const LegacyInput = styled.input`
-  /* Re-homed from global.scss */
   background-color: rgba(255, 255, 255, 0.05);
   border-radius: 4px;
   border: none;
@@ -86,7 +84,6 @@ export const LegacyInput = styled.input`
  * @deprecated The LegacyTextarea should not be used for new features. use fluentui/react instead
  */
 export const LegacyTextarea = styled.textarea`
-  /* Re-homed from global.scss */
   background-color: ${sharedColors.DARK};
   border-radius: 4px;
   border: 2px solid ${sharedColors.TEXT_NORMAL};
