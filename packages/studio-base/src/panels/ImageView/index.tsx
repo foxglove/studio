@@ -492,6 +492,7 @@ function ImageView(props: Props) {
             ? "camera_info is required when image resolution is set to less than 100%.\nResolution can be changed in the panel settings."
             : undefined
         }
+        btnClassname={style.dropdown}
         disabled={availableAndEnabledMarkerTopics.length === 0 || missingRequiredCameraInfo}
       >
         {availableAndEnabledMarkerTopics.map((topic) => (
