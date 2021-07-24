@@ -2210,6 +2210,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@foxglove/rosbag@github:foxglove/rosbag#18255370d91811d7d2152f630ed3ef2f9ceb1455":
+  version: 3.0.0
+  resolution: "@foxglove/rosbag@https://github.com/foxglove/rosbag.git#commit=18255370d91811d7d2152f630ed3ef2f9ceb1455"
+  dependencies:
+    buffer: 6.0.3
+    heap: 0.2.6
+    int53: 1.0.0
+    web-encoding: 1.1.5
+  checksum: 9053bc41fceea8aebe2f40b32dd4193259ccbd65d93838b8b3e5a5ceda161bb942237bf26caa293c0a3e2548f8c70a1c0b094c0dbd6bc1960f62a273089906f2
+  languageName: node
+  linkType: hard
+
 "@foxglove/rosmsg-msgs-common@npm:1.0.1, @foxglove/rosmsg-msgs-common@npm:^1.0.0":
   version: 1.0.1
   resolution: "@foxglove/rosmsg-msgs-common@npm:1.0.1"
@@ -2273,6 +2285,7 @@ __metadata:
     "@foxglove/electron-socket": 1.1.0
     "@foxglove/hooks": "workspace:*"
     "@foxglove/ros1": 1.0.1
+    "@foxglove/rosbag": "github:foxglove/rosbag#18255370d91811d7d2152f630ed3ef2f9ceb1455"
     "@foxglove/rosbag2-web": 1.0.0
     "@foxglove/rosmsg-msgs-common": 1.0.1
     "@foxglove/rosmsg-msgs-foxglove": 2.0.1
@@ -2319,7 +2332,6 @@ __metadata:
     "@types/react-table": 7.7.2
     "@types/react-transition-group": ^4.4.2
     "@types/react-virtualized": 9.21.12
-    "@types/regl-worldview": "workspace:*"
     "@types/roslib": "workspace:*"
     "@types/sanitize-html": 2.3.2
     "@types/sass": ^1.16.1
@@ -2402,10 +2414,9 @@ __metadata:
     reg-publish-gcs-plugin: 0.10.16
     reg-simple-keygen-plugin: 0.10.16
     reg-suit: 0.10.16
-    regl-worldview: "github:foxglove/webviz#workspace=regl-worldview&commit=6eb0e8c45eff795f8718f33bf3e10478951e7249"
+    regl-worldview: "github:foxglove/webviz#workspace=regl-worldview&commit=b570564684c6382b2c1aef08ccd634f4e67ec989"
     rehype-raw: 5.1.0
     reselect: 4.0.0
-    rosbag: "github:foxglove/rosbag.js#1d776c9548ef6bdbd0209c7721941f8d4f25947f"
     roslib: "github:foxglove/roslibjs#1c29f898683cc07945d400ec97916520920041a2"
     sanitize-html: 2.4.0
     sass: 1.35.2
@@ -5625,7 +5636,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/regl-worldview@workspace:*, @types/regl-worldview@workspace:packages/@types/regl-worldview":
+"@types/regl-worldview@workspace:packages/@types/regl-worldview":
   version: 0.0.0-use.local
   resolution: "@types/regl-worldview@workspace:packages/@types/regl-worldview"
   languageName: unknown
@@ -21519,9 +21530,9 @@ react-use@17.2.4:
   languageName: node
   linkType: hard
 
-"regl-worldview@github:foxglove/webviz#workspace=regl-worldview&commit=6eb0e8c45eff795f8718f33bf3e10478951e7249":
+"regl-worldview@github:foxglove/webviz#workspace=regl-worldview&commit=b570564684c6382b2c1aef08ccd634f4e67ec989":
   version: 0.16.1
-  resolution: "regl-worldview@https://github.com/foxglove/webviz.git#workspace=regl-worldview&commit=6eb0e8c45eff795f8718f33bf3e10478951e7249"
+  resolution: "regl-worldview@https://github.com/foxglove/webviz.git#workspace=regl-worldview&commit=b570564684c6382b2c1aef08ccd634f4e67ec989"
   dependencies:
     "@babel/runtime": ^7.3.1
     "@mapbox/tiny-sdf": ^1.1.1
@@ -21538,7 +21549,7 @@ react-use@17.2.4:
   peerDependencies:
     react: 16.x
     react-dom: 16.x
-  checksum: e104f13b4e3b230343101c504fc85df6333fd662bf489fafcb6900c714c6c18a373d6c10e757d728199970a553c22725d13fc72fcd640200295359f2e60c43fa
+  checksum: 361d24b3fdc0372932317472e1ed2da0de4346d06f14c69727c02c08957d47d75b9a25d2f1a340cff602db1d80aa0d002210ab6d00a0ba2cb76b2b4b5dcf9bff
   languageName: node
   linkType: hard
 
@@ -22003,18 +22014,6 @@ resolve@^2.0.0-next.3:
     semver-compare: ^1.0.0
     sprintf-js: ^1.1.2
   checksum: 682e28d5491e3ae99728a35ba188f4f0ccb6347dbd492f95dc9f4bfdfe8ee63d8203ad234766ee2db88c8d7a300714304976eb095ce5c9366fe586c03a21586c
-  languageName: node
-  linkType: hard
-
-"rosbag@github:foxglove/rosbag.js#1d776c9548ef6bdbd0209c7721941f8d4f25947f":
-  version: 3.0.0
-  resolution: "rosbag@https://github.com/foxglove/rosbag.js.git#commit=1d776c9548ef6bdbd0209c7721941f8d4f25947f"
-  dependencies:
-    buffer: 6.0.3
-    heap: 0.2.6
-    int53: 1.0.0
-    web-encoding: 1.1.5
-  checksum: 980199c797b87c08b87eb3d9b817739621094e5cbf52c058e1932f02abc4f1219e950ae2fe6871cc7cd3c9196f39c11eb6a0bf83ec630e021f757cb7fae87f7a
   languageName: node
   linkType: hard
 

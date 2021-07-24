@@ -30,7 +30,6 @@ import LayoutBrowser from "@foxglove/studio-base/components/LayoutBrowser";
 import messagePathHelp from "@foxglove/studio-base/components/MessagePathSyntax/index.help.md";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
-import NotificationDisplay from "@foxglove/studio-base/components/NotificationDisplay";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelList from "@foxglove/studio-base/components/PanelList";
 import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
@@ -56,7 +55,6 @@ import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuE
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 import { isNonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
-import inAutomatedRunMode from "@foxglove/studio-base/util/inAutomatedRunMode";
 
 const log = Log.getLogger(__filename);
 
@@ -206,6 +204,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     const newLayout = await layoutStorage.saveNewLayout({
       name: welcomeLayout.name,
       data: welcomeLayout.data,
+      permission: "creator_write",
     });
     if (isMounted()) {
       setSelectedLayout({ id: newLayout.id, data: welcomeLayout.data });
@@ -444,9 +443,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
             <span className={classes.truncate}>{currentSourceName ?? "Foxglove Studio"}</span>{" "}
           </div>
           <div style={{ flexGrow: 1 }} />
-          <div className={classes.toolbarItem} style={{ marginRight: 5 }}>
-            {!inAutomatedRunMode() && <NotificationDisplay />}
-          </div>
         </Toolbar>
         <Sidebar
           items={SIDEBAR_ITEMS}
