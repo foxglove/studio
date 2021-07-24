@@ -61,12 +61,12 @@ $spacing: 15px;
 }
 
 .button {
-  background-color: transparent;
-  border: none;
-  padding: 4px;
-  align-items: start;
-  margin-right: 4px;
-  margin-left: 4px;
+  background-color: transparent !important;
+  border: none !important;
+  padding: 4px !important;
+  align-items: start !important;
+  margin-right: 4px !important;
+  margin-left: 4px !important;
 }
 
 .buttons {
