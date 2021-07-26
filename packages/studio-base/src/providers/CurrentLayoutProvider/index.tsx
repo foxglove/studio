@@ -191,7 +191,11 @@ export default function CurrentLayoutProvider({
       const legacyLayout = migrateLegacyLayoutFromLocalStorage();
       if (legacyLayout != undefined) {
         const { name = "unnamed", ...data } = legacyLayout;
-        const newLayout = await layoutStorage.saveNewLayout({ name, data });
+        const newLayout = await layoutStorage.saveNewLayout({
+          name,
+          data,
+          permission: "creator_write",
+        });
         return { selectedLayout: { id: newLayout.id, data } };
       }
       // If the user's previously selected layout can be loaded, use it
@@ -214,6 +218,7 @@ export default function CurrentLayoutProvider({
       const newLayout = await layoutStorage.saveNewLayout({
         name: welcomeLayout.name,
         data: welcomeLayout.data,
+        permission: "creator_write",
       });
       return { selectedLayout: { id: newLayout.id, data: welcomeLayout.data } };
     } catch (error) {
