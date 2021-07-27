@@ -29,6 +29,7 @@ type Props = {
   polygonBuilder: PolygonBuilder;
   onSetDrawingTabType: (arg0?: DrawingTabType) => void;
   defaultSelectedTab?: DrawingTabType; // for UI testing
+  showForTests?: boolean;
 };
 
 // add more drawing shapes later, e.g. Grid, Axes, Crosshairs
@@ -37,6 +38,7 @@ function DrawingTools({
   onSetDrawingTabType,
   onSetPolygons,
   polygonBuilder,
+  showForTests,
 }: Props) {
   const [selectedTab, setSelectedTab] = React.useState<DrawingTabType | undefined>(
     defaultSelectedTab,
@@ -46,7 +48,7 @@ function DrawingTools({
     AppSetting.ENABLE_DRAWING_POLYGONS,
   );
 
-  return enableDrawingPolygons ? (
+  return enableDrawingPolygons || showForTests === true ? (
     <ExpandingToolbar
       tooltip="Drawing tools"
       icon={
