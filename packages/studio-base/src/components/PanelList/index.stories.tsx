@@ -44,26 +44,25 @@ SamplePanel2.defaultConfig = {};
 const MockPanel1 = Panel(SamplePanel1);
 const MockPanel2 = Panel(SamplePanel2);
 
-const allPanels: { regular: PanelInfo[]; preconfigured: PanelInfo[] } = {
-  regular: [
-    { title: "Regular Panel BBB", type: "Sample1", module: async () => ({ default: MockPanel1 }) },
-    { title: "Regular Panel AAA", type: "Sample2", module: async () => ({ default: MockPanel2 }) },
-  ],
-  preconfigured: [
-    {
-      title: "Preconfigured Panel AAA",
-      type: "Sample1",
-      module: async () => ({ default: MockPanel1 }),
-      config: { text: "def" },
-    },
-    {
-      title: "Preconfigured Panel BBB",
-      type: "Sample2",
-      module: async () => ({ default: MockPanel1 }),
-      config: { num: 456 },
-    },
-  ],
-};
+const allPanels: PanelInfo[] = [
+  { title: "Regular Panel BBB", type: "Sample1", module: async () => ({ default: MockPanel1 }) },
+  { title: "Regular Panel AAA", type: "Sample2", module: async () => ({ default: MockPanel2 }) },
+
+  {
+    title: "Preconfigured Panel AAA",
+    type: "Sample1",
+    module: async () => ({ default: MockPanel1 }),
+    config: { text: "def" },
+    preconfigured: true,
+  },
+  {
+    title: "Preconfigured Panel BBB",
+    type: "Sample2",
+    module: async () => ({ default: MockPanel1 }),
+    config: { num: 456 },
+    preconfigured: true,
+  },
+];
 
 class MockPanelCatalog implements PanelCatalog {
   async getConfigSchema(type: string): Promise<PanelConfigSchemaEntry<string>[] | undefined> {
@@ -74,14 +73,11 @@ class MockPanelCatalog implements PanelCatalog {
     const module = await info?.module();
     return module.default.configSchema;
   }
-  getPanels(): { regular: readonly PanelInfo[]; preconfigured: readonly PanelInfo[] } {
+  getPanels(): readonly PanelInfo[] {
     return allPanels;
   }
   getPanelByType(type: string): PanelInfo | undefined {
-    return (
-      allPanels.regular.find((panel) => panel.type === type) ??
-      allPanels.preconfigured.find((panel) => panel.type === type)
-    );
+    return allPanels.find((panel) => panel.preconfigured !== true && panel.type === type);
   }
 }
 

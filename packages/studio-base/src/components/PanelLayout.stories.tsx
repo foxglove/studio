@@ -24,28 +24,25 @@ import { PanelConfigSchemaEntry } from "@foxglove/studio-base/types/panels";
 
 import PanelLayout from "./PanelLayout";
 
-const allPanels: { regular: readonly PanelInfo[]; preconfigured: readonly PanelInfo[] } = {
-  regular: [
-    { title: "Some Panel", type: "Sample1", module: async () => await new Promise(() => {}) },
-    {
-      title: "Broken Panel",
-      type: "Sample2",
-      module: async () => {
-        return {
-          default: Panel(
-            Object.assign(
-              function BrokenPanel() {
-                throw new Error("I don't work!");
-              },
-              { panelType: "Sample2", defaultConfig: {} },
-            ),
+const allPanels: readonly PanelInfo[] = [
+  { title: "Some Panel", type: "Sample1", module: async () => await new Promise(() => {}) },
+  {
+    title: "Broken Panel",
+    type: "Sample2",
+    module: async () => {
+      return {
+        default: Panel(
+          Object.assign(
+            function BrokenPanel() {
+              throw new Error("I don't work!");
+            },
+            { panelType: "Sample2", defaultConfig: {} },
           ),
-        };
-      },
+        ),
+      };
     },
-  ],
-  preconfigured: [],
-};
+  },
+];
 
 class MockPanelCatalog implements PanelCatalog {
   async getConfigSchema(type: string): Promise<PanelConfigSchemaEntry<string>[] | undefined> {
@@ -56,14 +53,11 @@ class MockPanelCatalog implements PanelCatalog {
     const module = await info?.module();
     return module.default.configSchema;
   }
-  getPanels(): { regular: readonly PanelInfo[]; preconfigured: readonly PanelInfo[] } {
+  getPanels(): readonly PanelInfo[] {
     return allPanels;
   }
   getPanelByType(type: string): PanelInfo | undefined {
-    return (
-      allPanels.regular.find((panel) => panel.type === type) ??
-      allPanels.preconfigured.find((panel) => panel.type === type)
-    );
+    return allPanels.find((panel) => panel.preconfigured !== true && panel.type === type);
   }
 }
 

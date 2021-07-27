@@ -44,14 +44,11 @@ SamplePanel2.defaultConfig = {};
 const MockPanel1 = Panel(SamplePanel1);
 const MockPanel2 = Panel(SamplePanel2);
 
-const allPanels: { regular: readonly PanelInfo[]; preconfigured: readonly PanelInfo[] } = {
-  regular: [
-    { title: "Some Panel", type: "Sample1", module: async () => ({ default: MockPanel1 }) },
-    { title: "Happy Panel", type: "Sample2", module: async () => ({ default: MockPanel2 }) },
-    { title: "Tab", type: "Tab", module: async () => ({ default: Tab }) },
-  ],
-  preconfigured: [],
-};
+const allPanels: readonly PanelInfo[] = [
+  { title: "Some Panel", type: "Sample1", module: async () => ({ default: MockPanel1 }) },
+  { title: "Happy Panel", type: "Sample2", module: async () => ({ default: MockPanel2 }) },
+  { title: "Tab", type: "Tab", module: async () => ({ default: Tab }) },
+];
 
 class MockPanelCatalog implements PanelCatalog {
   async getConfigSchema(type: string): Promise<PanelConfigSchemaEntry<string>[] | undefined> {
@@ -62,14 +59,11 @@ class MockPanelCatalog implements PanelCatalog {
     const module = await info?.module();
     return module.default.configSchema;
   }
-  getPanels(): { regular: readonly PanelInfo[]; preconfigured: readonly PanelInfo[] } {
+  getPanels(): readonly PanelInfo[] {
     return allPanels;
   }
   getPanelByType(type: string): PanelInfo | undefined {
-    return (
-      allPanels.regular.find((panel) => panel.type === type) ??
-      allPanels.preconfigured.find((panel) => panel.type === type)
-    );
+    return allPanels.find((panel) => panel.preconfigured !== true && panel.type === type);
   }
 }
 

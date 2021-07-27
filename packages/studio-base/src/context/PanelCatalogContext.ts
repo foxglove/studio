@@ -21,12 +21,13 @@ export type PanelInfo = {
   module: () => Promise<{ default: PanelComponent }>;
   config?: PanelConfig;
   relatedConfigs?: { [panelId: string]: PanelConfig };
+  preconfigured?: boolean;
 };
 
 /** PanelCatalog describes the interface for getting available panels */
 export interface PanelCatalog {
   /** get a list of the available panels */
-  getPanels(): { regular: readonly PanelInfo[]; preconfigured: readonly PanelInfo[] };
+  getPanels(): readonly PanelInfo[];
 
   /** Get panel information for a specific panel type (i.e. 3d, map, image, etc) */
   getPanelByType(type: string): PanelInfo | undefined;

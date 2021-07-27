@@ -226,7 +226,9 @@ function PanelList(props: Props): JSX.Element {
 
   const panelCatalog = usePanelCatalog();
   const { allRegularPanels, allPreconfiguredPanels } = useMemo(() => {
-    const { regular, preconfigured } = panelCatalog.getPanels();
+    const panels = panelCatalog.getPanels();
+    const regular = panels.filter((panel) => panel.preconfigured !== true);
+    const preconfigured = panels.filter((panel) => panel.preconfigured === true);
     const sortByTitle = (a: PanelInfo, b: PanelInfo) =>
       a.title.localeCompare(b.title, undefined, { ignorePunctuation: true, sensitivity: "base" });
 
