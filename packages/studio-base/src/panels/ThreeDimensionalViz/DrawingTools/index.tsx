@@ -13,6 +13,7 @@
 import PencilIcon from "@mdi/svg/svg/pencil.svg";
 import { PolygonBuilder, Polygon } from "regl-worldview";
 
+import { useAppConfigurationValue, AppSetting } from "@foxglove/studio-base";
 import ExpandingToolbar, { ToolGroup } from "@foxglove/studio-base/components/ExpandingToolbar";
 import Icon from "@foxglove/studio-base/components/Icon";
 import styles from "@foxglove/studio-base/panels/ThreeDimensionalViz/Layout.module.scss";
@@ -41,7 +42,11 @@ function DrawingTools({
     defaultSelectedTab,
   );
 
-  return (
+  const [enableDrawingPolygons = false] = useAppConfigurationValue<boolean>(
+    AppSetting.ENABLE_DRAWING_POLYGONS,
+  );
+
+  return enableDrawingPolygons ? (
     <ExpandingToolbar
       tooltip="Drawing tools"
       icon={
@@ -60,6 +65,8 @@ function DrawingTools({
         <Polygons onSetPolygons={onSetPolygons} polygonBuilder={polygonBuilder} />
       </ToolGroup>
     </ExpandingToolbar>
+  ) : (
+    ReactNull
   );
 }
 
