@@ -268,8 +268,7 @@ function PanelList(props: Props): JSX.Element {
     return highlightedPanelIdx != undefined ? allFilteredPanels[highlightedPanelIdx] : undefined;
   }, [allFilteredPanels, highlightedPanelIdx]);
 
-  const noResults = filteredRegularPanels.length === 0;
-  const noPreconfiguredResults = filteredPreconfiguredPanels.length === 0;
+  const noResults = allFilteredPanels.length === 0;
 
   const onKeyDown = React.useCallback(
     (e: React.KeyboardEvent) => {
@@ -335,13 +334,8 @@ function PanelList(props: Props): JSX.Element {
         </div>
       </StickyDiv>
       <SScrollContainer>
-        {noPreconfiguredResults && allPreconfiguredPanels.length > 0 && (
-          <SEmptyState>No preconfigured panels match search criteria.</SEmptyState>
-        )}
-        {filteredPreconfiguredPanels.map(displayPanelListItem)}
-        <hr />
         {noResults && <SEmptyState>No panels match search criteria.</SEmptyState>}
-        {filteredRegularPanels.map(displayPanelListItem)}
+        {allFilteredPanels.map(displayPanelListItem)}
       </SScrollContainer>
     </div>
   );
