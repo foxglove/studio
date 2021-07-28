@@ -19,7 +19,7 @@ import NativeAppMenuProvider from "./components/NativeAppMenuProvider";
 import NativeStorageAppConfigurationProvider from "./components/NativeStorageAppConfigurationProvider";
 import NativeStorageLayoutCacheProvider from "./components/NativeStorageLayoutCacheProvider";
 import ExtensionLoaderProvider from "./providers/ExtensionLoaderProvider";
-import LayoutStorageProviders from "./providers/LayoutStorageProviders";
+import FakeLayoutStorageProviders from "./providers/FakeLayoutStorageProviders";
 
 const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
 
@@ -32,11 +32,11 @@ export default function Root(): ReactElement {
       type: "ros1-socket",
     },
     {
-      name: "ROS 1 Rosbridge",
+      name: "ROS 1 Rosbridge (WebSocket)",
       type: "ros1-rosbridge-websocket",
     },
     {
-      name: "ROS 2 Rosbridge",
+      name: "ROS 2 Rosbridge (WebSocket)",
       type: "ros2-rosbridge-websocket",
     },
     {
@@ -62,7 +62,7 @@ export default function Root(): ReactElement {
     <StudioToastProvider />,
     <NativeStorageAppConfigurationProvider />,
     <NativeStorageLayoutCacheProvider />,
-    <LayoutStorageProviders />,
+    <FakeLayoutStorageProviders />,
     <NativeAppMenuProvider />,
     <UserProfileLocalStorageProvider />,
     <ExtensionLoaderProvider />,

@@ -3,29 +3,39 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Story, StoryContext } from "@storybook/react";
-import { useMemo } from "react";
 import { ToastProvider } from "react-toast-notifications";
 
+import { AppConfigurationContext } from "@foxglove/studio-base";
+import CssBaseline from "@foxglove/studio-base/components/CssBaseline";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import { HoverValueProvider } from "@foxglove/studio-base/context/HoverValueContext";
 import { UserNodeStateProvider } from "@foxglove/studio-base/context/UserNodeStateContext";
 import ReadySignalContext from "@foxglove/studio-base/stories/ReadySignalContext";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
+import { makeConfiguration } from "@foxglove/studio-base/util/makeConfiguration";
+import signal from "@foxglove/studio-base/util/signal";
 import waitForFonts from "@foxglove/studio-base/util/waitForFonts";
 
-import "@foxglove/studio-base/styles/global.scss";
 import "./styles.scss";
 
 let loaded = false;
 
 function WithContextProviders(Child: Story, ctx: StoryContext): JSX.Element {
-  const sig = ctx.parameters?.screenshot?.signal;
-  const readySignal = useMemo(() => {
-    return sig ? () => sig.resolve() : undefined;
-  }, [sig]);
+  if (ctx.parameters?.useReadySignal) {
+    const sig = signal();
+    ctx.parameters.storyReady = sig;
+    ctx.parameters.readySignal = () => {
+      sig.resolve();
+    };
+  }
+
+  const readySignal = ctx.parameters.readySignal;
+
+  const config = makeConfiguration();
 
   const providers = [
     /* eslint-disable react/jsx-key */
+    <AppConfigurationContext.Provider value={config} />,
     <ReadySignalContext.Provider value={readySignal} />,
     <ThemeProvider />,
     <ToastProvider>{undefined}</ToastProvider>,
@@ -35,6 +45,7 @@ function WithContextProviders(Child: Story, ctx: StoryContext): JSX.Element {
   ];
   return (
     <MultiProvider providers={providers}>
+      <CssBaseline />
       <Child />
     </MultiProvider>
   );

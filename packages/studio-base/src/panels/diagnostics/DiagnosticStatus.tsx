@@ -24,6 +24,7 @@ import styled from "styled-components";
 
 import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
+import { LegacyTable } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import Tooltip from "@foxglove/studio-base/components/Tooltip";
 import { openSiblingPlotPanel } from "@foxglove/studio-base/panels/Plot";
 import { openSiblingStateTransitionsPanel } from "@foxglove/studio-base/panels/StateTransitions";
@@ -42,7 +43,7 @@ type Props = {
   splitFraction: number;
   onChangeSplitFraction: (arg0: number) => void;
   topicToRender: string;
-  openSiblingPanel: (arg0: string, cb: (arg0: PanelConfig) => PanelConfig) => void;
+  openSiblingPanel: (type: string, cb: (arg0: PanelConfig) => PanelConfig) => void;
   collapsedSections: { name: string; section: string }[];
   saveConfig: (arg0: Partial<Config>) => void;
 };
@@ -73,7 +74,7 @@ const ResizeHandle = styled.div.attrs<{ splitFraction: number }>(({ splitFractio
   }
 `;
 
-const KeyValueTable = styled.table`
+const KeyValueTable = styled(LegacyTable)`
   table-layout: fixed;
   width: 100%;
   line-height: 1.3em;

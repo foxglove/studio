@@ -11,6 +11,7 @@ import Workspace from "@foxglove/studio-base/Workspace";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import { NativeFileMenuPlayerSelection } from "@foxglove/studio-base/components/NativeFileMenuPlayerSelection";
 import PlayerManager from "@foxglove/studio-base/components/PlayerManager";
+import SendNotificationToastAdapter from "@foxglove/studio-base/components/SendNotificationToastAdapter";
 import AnalyticsProvider from "@foxglove/studio-base/context/AnalyticsProvider";
 import { AssetsProvider } from "@foxglove/studio-base/context/AssetsContext";
 import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
@@ -19,6 +20,7 @@ import ModalHost from "@foxglove/studio-base/context/ModalHost";
 import { PlayerSourceDefinition } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { UserNodeStateProvider } from "@foxglove/studio-base/context/UserNodeStateContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
+import ConsoleApiLayoutStorageProvider from "@foxglove/studio-base/providers/ConsoleApiLayoutStorageProvider";
 import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
 import CurrentUserProvider from "@foxglove/studio-base/providers/CurrentUserProvider";
 import ExtensionMarketplaceProvider from "@foxglove/studio-base/providers/ExtensionMarketplaceProvider";
@@ -27,9 +29,12 @@ import PanelCatalogProvider from "@foxglove/studio-base/providers/PanelCatalogPr
 import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 import URDFAssetLoader from "@foxglove/studio-base/services/URDFAssetLoader";
 
-import "@foxglove/studio-base/styles/global.scss";
-
 type AppProps = {
+  /**
+   * Set to true to force loading the welcome layout for demo mode. Normally the demo is only shown
+   * on first launch and not subsequent launches.
+   */
+  loadWelcomeLayout?: boolean;
   availableSources: PlayerSourceDefinition[];
   demoBagUrl?: string;
   deepLinks?: string[];
@@ -42,6 +47,10 @@ export default function App(props: AppProps): JSX.Element {
   const api = useMemo(() => {
     return new ConsoleApi(process.env.FOXGLOVE_API_URL!);
   }, []);
+
+  const [useFakeRemoteLayoutStorage = false] = useAppConfigurationValue<boolean>(
+    AppSetting.FAKE_REMOTE_LAYOUTS,
+  );
 
   const [showRos2Rosbridge = false] = useAppConfigurationValue<boolean>(
     AppSetting.SHOW_ROS2_ROSBRIDGE,
@@ -60,6 +69,7 @@ export default function App(props: AppProps): JSX.Element {
     <AnalyticsProvider />,
     <ConsoleApiContext.Provider value={api} />,
     <CurrentUserProvider />,
+    !useFakeRemoteLayoutStorage && <ConsoleApiLayoutStorageProvider />,
     <ModalHost />, // render modal elements inside the ThemeProvider
     <AssetsProvider loaders={assetLoaders} />,
     <HoverValueProvider />,
@@ -69,15 +79,17 @@ export default function App(props: AppProps): JSX.Element {
     <ExtensionRegistryProvider />,
     <PlayerManager playerSources={filteredDataSources} />,
     /* eslint-enable react/jsx-key */
-  ];
+  ].filter((x): x is JSX.Element => x !== false);
 
   return (
     <MultiProvider providers={providers}>
+      <SendNotificationToastAdapter />
       <NativeFileMenuPlayerSelection />
       <DndProvider backend={HTML5Backend}>
         <Suspense fallback={<></>}>
           <PanelCatalogProvider>
             <Workspace
+              loadWelcomeLayout={props.loadWelcomeLayout}
               demoBagUrl={props.demoBagUrl}
               deepLinks={props.deepLinks}
               onToolbarDoubleClick={props.onFullscreenToggle}

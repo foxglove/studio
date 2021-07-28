@@ -12,11 +12,11 @@
 //   You may not use this file except in compliance with the License.
 
 import { debounce, isEqual } from "lodash";
-import Bag, { open, BagReader } from "rosbag";
-import ReadResult from "rosbag/dist/ReadResult";
 import decompressLZ4 from "wasm-lz4";
 
 import Logger from "@foxglove/log";
+import Bag, { open, BagReader } from "@foxglove/rosbag";
+import ReadResult from "@foxglove/rosbag/dist/ReadResult";
 import { Time, add, compare } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import BrowserHttpReader from "@foxglove/studio-base/randomAccessDataProviders/BrowserHttpReader";
@@ -68,10 +68,7 @@ export const statsAreAdjacent = (a: TimedDataThroughput, b: TimedDataThroughput)
   );
 };
 
-export const mergeStats = (
-  a: TimedDataThroughput,
-  b: TimedDataThroughput,
-): TimedDataThroughput => ({
+const mergeStats = (a: TimedDataThroughput, b: TimedDataThroughput): TimedDataThroughput => ({
   startTime: a.startTime,
   endTime: b.endTime,
   data: {
@@ -190,7 +187,6 @@ export default class BagDataProvider implements RandomAccessDataProvider {
     for (const [connId, connection] of this._bag.connections) {
       const { messageDefinition, md5sum, topic, type, callerid } = connection;
       if (
-        isNonEmptyOrUndefined(messageDefinition) &&
         isNonEmptyOrUndefined(md5sum) &&
         isNonEmptyOrUndefined(topic) &&
         isNonEmptyOrUndefined(type)
@@ -207,9 +203,6 @@ export default class BagDataProvider implements RandomAccessDataProvider {
       }
     }
     if (emptyConnections.length > 0) {
-      // TODO(JP): Actually support empty message definitions (e.g. "std_msgs/Empty"). For that we
-      // ideally need an actual use case, and then we need to make sure that we don't naively do
-      // `if (messageDefinition)` in a bunch of places.
       sendNotification(
         "Empty connections found",
         `This bag has some empty connections, which Studio does not currently support. We'll try to play the remaining topics. Details:\n\n${JSON.stringify(

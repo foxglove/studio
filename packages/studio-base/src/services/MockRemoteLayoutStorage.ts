@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { isEqual } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
@@ -32,17 +31,14 @@ export default class MockRemoteLayoutStorage implements IRemoteLayoutStorage {
   }
 
   private hasNameConflict({
-    path,
     name,
     permission,
   }: {
-    path: string[];
     name: string;
     permission: "creator_write" | "org_read" | "org_write";
   }) {
     for (const layout of this.layoutsById.values()) {
       if (
-        isEqual(path, layout.path) &&
         name === layout.name &&
         (layout.permission === "creator_write") === (permission === "creator_write")
       ) {
@@ -61,15 +57,15 @@ export default class MockRemoteLayoutStorage implements IRemoteLayoutStorage {
   }
 
   async saveNewLayout({
-    path,
     name,
     data,
+    permission,
   }: {
-    path: string[];
     name: string;
     data: PanelsState;
+    permission: "creator_write" | "org_read" | "org_write";
   }): Promise<{ status: "success"; newMetadata: RemoteLayoutMetadata } | { status: "conflict" }> {
-    if (this.hasNameConflict({ path, name, permission: "creator_write" })) {
+    if (this.hasNameConflict({ name, permission })) {
       return { status: "conflict" };
     }
     const id = uuidv4() as LayoutID;
@@ -77,9 +73,8 @@ export default class MockRemoteLayoutStorage implements IRemoteLayoutStorage {
     const newMetadata: RemoteLayoutMetadata = {
       id,
       name,
-      path,
-      permission: "creator_write",
-      creator: FAKE_USER,
+      permission,
+      creatorUserId: FAKE_USER.id,
       createdAt: now,
       updatedAt: now,
     };
@@ -89,14 +84,14 @@ export default class MockRemoteLayoutStorage implements IRemoteLayoutStorage {
 
   async updateLayout({
     name,
-    path,
     data,
+    permission,
     targetID,
     ifUnmodifiedSince,
   }: {
-    name: string | undefined;
-    path: string[] | undefined;
-    data: PanelsState;
+    name?: string;
+    data?: PanelsState;
+    permission?: "creator_write" | "org_read" | "org_write";
     targetID: LayoutID;
     ifUnmodifiedSince: ISO8601Timestamp;
   }): Promise<
@@ -110,14 +105,13 @@ export default class MockRemoteLayoutStorage implements IRemoteLayoutStorage {
     }
     if (
       this.hasNameConflict({
-        path: path ?? target.path,
         name: name ?? target.name,
-        permission: target.permission,
+        permission: permission ?? target.permission,
       })
     ) {
       return { status: "conflict" };
     }
-    const { data: _, ...targetMetadata } = target;
+    const { data: targetData, ...targetMetadata } = target;
     if (Date.parse(targetMetadata.updatedAt) !== Date.parse(ifUnmodifiedSince)) {
       return { status: "precondition-failed" };
     }
@@ -125,43 +119,10 @@ export default class MockRemoteLayoutStorage implements IRemoteLayoutStorage {
     const newMetadata: RemoteLayoutMetadata = {
       ...targetMetadata,
       name: name ?? targetMetadata.name,
-      path: path ?? targetMetadata.path,
+      permission: permission ?? targetMetadata.permission,
       updatedAt: now,
     };
-    this.layoutsById.set(targetID, { ...newMetadata, data });
-    return { status: "success", newMetadata };
-  }
-
-  async shareLayout({
-    sourceID,
-    path,
-    name,
-    permission,
-  }: {
-    sourceID: LayoutID;
-    path: string[];
-    name: string;
-    permission: "org_read" | "org_write";
-  }): Promise<{ status: "success"; newMetadata: RemoteLayoutMetadata } | { status: "conflict" }> {
-    const source = this.layoutsById.get(sourceID);
-    if (!source) {
-      return { status: "conflict" };
-    }
-    if (this.hasNameConflict({ path, name, permission: "creator_write" })) {
-      return { status: "conflict" };
-    }
-    const id = uuidv4() as LayoutID;
-    const now = new Date().toISOString() as ISO8601Timestamp;
-    const newMetadata: RemoteLayoutMetadata = {
-      id,
-      name,
-      path,
-      permission,
-      creator: FAKE_USER,
-      createdAt: now,
-      updatedAt: now,
-    };
-    this.layoutsById.set(id, { ...newMetadata, data: source.data });
+    this.layoutsById.set(targetID, { ...newMetadata, data: data ?? targetData });
     return { status: "success", newMetadata };
   }
 
@@ -181,42 +142,5 @@ export default class MockRemoteLayoutStorage implements IRemoteLayoutStorage {
     }
     this.layoutsById.delete(targetID);
     return { status: "success" };
-  }
-
-  async renameLayout({
-    targetID,
-    name,
-    path,
-    ifUnmodifiedSince,
-  }: {
-    targetID: LayoutID;
-    name: string;
-    path: string[];
-    ifUnmodifiedSince: ISO8601Timestamp;
-  }): Promise<
-    | { status: "success"; newMetadata: RemoteLayoutMetadata }
-    | { status: "conflict" }
-    | { status: "precondition-failed" }
-  > {
-    const target = this.layoutsById.get(targetID);
-    if (!target) {
-      return { status: "conflict" };
-    }
-    if (this.hasNameConflict({ path, name, permission: target.permission })) {
-      return { status: "conflict" };
-    }
-    const { data: _, ...targetMetadata } = target;
-    if (Date.parse(targetMetadata.updatedAt) !== Date.parse(ifUnmodifiedSince)) {
-      return { status: "precondition-failed" };
-    }
-    const now = new Date().toISOString() as ISO8601Timestamp;
-    const newMetadata: RemoteLayoutMetadata = {
-      ...targetMetadata,
-      name,
-      path,
-      updatedAt: now,
-    };
-    this.layoutsById.set(targetID, { ...newMetadata, data: target.data });
-    return { status: "success", newMetadata };
   }
 }

@@ -29,6 +29,7 @@ import dropDownStyles from "@foxglove/studio-base/components/Dropdown/index.modu
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
+import { LegacyButton } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { Item, SubMenu } from "@foxglove/studio-base/components/Menu";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
@@ -41,13 +42,6 @@ import { CameraInfo, StampedMessage } from "@foxglove/studio-base/types/Messages
 import { PanelConfigSchema, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { nonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
 import filterMap from "@foxglove/studio-base/util/filterMap";
-import {
-  FOXGLOVE_MSGS_IMAGE_MARKER_ARRAY_DATATYPE,
-  STUDIO_MSGS_IMAGE_MARKER_ARRAY_DATATYPE,
-  VISUALIZATION_MSGS_IMAGE_MARKER_ARRAY_DATATYPE,
-  VISUALIZATION_MSGS_IMAGE_MARKER_DATATYPE,
-  WEBVIZ_MSGS_IMAGE_MARKER_ARRAY_DATATYPE,
-} from "@foxglove/studio-base/util/globalConstants";
 import naturalSort from "@foxglove/studio-base/util/naturalSort";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import { colors as sharedColors } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -139,7 +133,7 @@ const ToggleComponent = ({
   dataTest?: string;
 }) => {
   return (
-    <button
+    <LegacyButton
       style={{ maxWidth: "100%", padding: "4px 8px" }}
       className={cx({ disabled })}
       data-test={dataTest}
@@ -148,7 +142,7 @@ const ToggleComponent = ({
       <Icon style={{ marginLeft: 4 }}>
         <MenuDownIcon style={{ width: 14, height: 14, opacity: 0.5 }} />
       </Icon>
-    </button>
+    </LegacyButton>
   );
 };
 
@@ -299,12 +293,13 @@ function ImageView(props: Props) {
   const imageMarkerDatatypes = useMemo(
     () => [
       // Single marker
-      VISUALIZATION_MSGS_IMAGE_MARKER_DATATYPE,
+      "visualization_msgs/ImageMarker",
       // Marker arrays
-      FOXGLOVE_MSGS_IMAGE_MARKER_ARRAY_DATATYPE,
-      STUDIO_MSGS_IMAGE_MARKER_ARRAY_DATATYPE,
-      VISUALIZATION_MSGS_IMAGE_MARKER_ARRAY_DATATYPE,
-      WEBVIZ_MSGS_IMAGE_MARKER_ARRAY_DATATYPE,
+      "foxglove_msgs/ImageMarkerArray",
+      "studio_msgs/ImageMarkerArray",
+      "visualization_msgs/ImageMarkerArray",
+      // backwards compat with webviz
+      "webviz_msgs/ImageMarkerArray",
     ],
     [],
   );
@@ -354,6 +349,7 @@ function ImageView(props: Props) {
     if (imageTopicsByNamespace.size === 0) {
       return (
         <Dropdown
+          btnClassname={style.dropdown}
           toggleComponent={
             <ToggleComponent
               dataTest={"topics-dropdown"}
@@ -497,6 +493,7 @@ function ImageView(props: Props) {
             ? "camera_info is required when image resolution is set to less than 100%.\nResolution can be changed in the panel settings."
             : undefined
         }
+        btnClassname={style.dropdown}
         disabled={availableAndEnabledMarkerTopics.length === 0 || missingRequiredCameraInfo}
       >
         {availableAndEnabledMarkerTopics.map((topic) => (

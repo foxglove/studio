@@ -34,9 +34,9 @@ const features: Feature[] = [
     description: <>Show Studio debug panels in the add panel list.</>,
   },
   {
-    key: AppSetting.EXTENSION_MARKETPLACE,
-    name: "Extension Marketplace",
-    description: <>Enable the extension marketplace for installing/uninstalling extensions</>,
+    key: AppSetting.ENABLE_DRAWING_POLYGONS,
+    name: "Drawing polygons in 3D panel",
+    description: <>Show sidebar control to draw polygons in the 3D panel.</>,
   },
   {
     key: AppSetting.SHOW_ROS2_ROSBRIDGE,
@@ -47,13 +47,18 @@ const features: Feature[] = [
     ? [
         {
           key: AppSetting.FAKE_REMOTE_LAYOUTS,
-          name: "Fake remote layout storage",
+          name: "Fake remote layout storage (desktop only)",
           description: (
             <>
               Use a folder on disk as a “remote” layout server to experiment with shared layout
               functionality.
             </>
           ),
+        },
+        {
+          key: AppSetting.ENABLE_CONSOLE_API_LAYOUTS,
+          name: "Team shared layouts",
+          description: <>Enable team layout sharing when signed in to Studio.</>,
         },
       ]
     : []),

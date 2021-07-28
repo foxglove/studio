@@ -10,16 +10,15 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Stack } from "@fluentui/react";
+import { makeStyles, Stack } from "@fluentui/react";
 import { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from "react";
 import { useToasts } from "react-toast-notifications";
-import { useMountedState } from "react-use";
-import styled from "styled-components";
+import { useMount, useMountedState } from "react-use";
 
 import Log from "@foxglove/log";
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import AccountSettings from "@foxglove/studio-base/components/AccountSettingsSidebar/AccountSettings";
 import ConnectionList from "@foxglove/studio-base/components/ConnectionList";
+import CssBaseline from "@foxglove/studio-base/components/CssBaseline";
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
 import DropOverlay from "@foxglove/studio-base/components/DropOverlay";
 import ExtensionsSidebar from "@foxglove/studio-base/components/ExtensionsSidebar";
@@ -31,7 +30,6 @@ import LayoutBrowser from "@foxglove/studio-base/components/LayoutBrowser";
 import messagePathHelp from "@foxglove/studio-base/components/MessagePathSyntax/index.help.md";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
-import NotificationDisplay from "@foxglove/studio-base/components/NotificationDisplay";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelList from "@foxglove/studio-base/components/PanelList";
 import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
@@ -52,33 +50,45 @@ import LinkHandlerContext from "@foxglove/studio-base/context/LinkHandlerContext
 import { PanelSettingsContext } from "@foxglove/studio-base/context/PanelSettingsContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import useAddPanel from "@foxglove/studio-base/hooks/useAddPanel";
-import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFilesToOpen";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 import { isNonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
-import inAutomatedRunMode from "@foxglove/studio-base/util/inAutomatedRunMode";
 
 const log = Log.getLogger(__filename);
 
-const SToolbarItem = styled.div`
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  height: 100%;
-  min-width: 40px;
-
-  // Allow interacting with buttons in the title bar without dragging the window
-  -webkit-app-region: no-drag;
-`;
-
-const TruncatedText = styled.span`
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  line-height: normal;
-`;
+const useStyles = makeStyles({
+  container: {
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    flexDirection: "column",
+    position: "relative",
+    flex: "1 1 100%",
+    outline: "none",
+    overflow: "hidden",
+  },
+  dropzone: {
+    fontSize: "4em",
+    marginBottom: "1em",
+  },
+  toolbarItem: {
+    flex: "0 0 auto",
+    display: "flex",
+    alignItems: "center",
+    height: "100%",
+    minWidth: "40px",
+    // Allow interacting with buttons in the title bar without dragging the window
+    "-webkit-app-region": "no-drag",
+  },
+  truncate: {
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
+    overflow: "hidden",
+    lineHeight: "normal",
+  },
+});
 
 type SidebarItemKey =
   | "connection"
@@ -124,6 +134,7 @@ function Connection() {
 
 function AddPanel() {
   const addPanel = useAddPanel();
+
   return (
     <SidebarContent noPadding title="Add panel">
       <PanelList onPanelSelect={addPanel} />
@@ -143,12 +154,14 @@ function Variables() {
 const allowedDropExtensions = [".bag", ".foxe", ".urdf"];
 
 type WorkspaceProps = {
+  loadWelcomeLayout?: boolean;
   demoBagUrl?: string;
   deepLinks?: string[];
   onToolbarDoubleClick?: () => void;
 };
 
 export default function Workspace(props: WorkspaceProps): JSX.Element {
+  const classes = useStyles();
   const containerRef = useRef<HTMLDivElement>(ReactNull);
   const { currentSourceName, selectSource } = usePlayerSelection();
   const playerPresence = useMessagePipeline(
@@ -190,9 +203,9 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const openWelcomeLayout = useCallback(async () => {
     const newLayout = await layoutStorage.saveNewLayout({
-      path: [],
       name: welcomeLayout.name,
       data: welcomeLayout.data,
+      permission: "creator_write",
     });
     if (isMounted()) {
       setSelectedLayout({ id: newLayout.id, data: welcomeLayout.data });
@@ -270,17 +283,15 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const { addToast } = useToasts();
 
   // Show welcome layout on first run
-  useEffect(() => {
+  useMount(() => {
     void (async () => {
       const welcomeLayoutShown = appConfiguration.get("onboarding.welcome-layout.shown");
-      if (welcomeLayoutShown == undefined || welcomeLayoutShown === false) {
-        // Set configuration *before* opening the layout to avoid infinite recursion when the player
-        // loading state causes us to re-render.
+      if (welcomeLayoutShown !== true || props.loadWelcomeLayout === true) {
         await appConfiguration.set("onboarding.welcome-layout.shown", true);
         await openWelcomeLayout();
       }
     })();
-  }, [appConfiguration, openWelcomeLayout]);
+  });
 
   // previously loaded files are tracked so support the "add bag" feature which loads a second bag
   // file when the user presses shift during a drag/drop
@@ -398,17 +409,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     [selectedSidebarItem],
   );
 
-  const [showMarketplace = false] = useAppConfigurationValue<boolean>(
-    AppSetting.EXTENSION_MARKETPLACE,
-  );
-  const sidebarItems = useMemo(() => {
-    const filteredSidebarItems = new Map(SIDEBAR_ITEMS);
-    if (!showMarketplace) {
-      filteredSidebarItems.delete("extensions");
-    }
-    return filteredSidebarItems;
-  }, [showMarketplace]);
-
   return (
     <MultiProvider
       providers={[
@@ -418,12 +418,13 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         /* eslint-enable react/jsx-key */
       ]}
     >
+      <CssBaseline />
       <DocumentDropListener filesSelected={dropHandler} allowedExtensions={allowedDropExtensions}>
         <DropOverlay>
-          <div style={{ fontSize: "4em", marginBottom: "1em" }}>Drop a file here</div>
+          <div className={classes.dropzone}>Drop a file here</div>
         </DropOverlay>
       </DocumentDropListener>
-      <div ref={containerRef} className="app-container" tabIndex={0}>
+      <div className={classes.container} ref={containerRef} tabIndex={0}>
         <GlobalKeyListener />
         {shortcutsModalOpen && (
           <ShortcutsModal onRequestClose={() => setShortcutsModalOpen(false)} />
@@ -436,19 +437,16 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
         <Toolbar onDoubleClick={props.onToolbarDoubleClick}>
           <div style={{ flexGrow: 1 }} />
-          <SToolbarItem>
+          <div className={classes.toolbarItem}>
             <PlayerStatusIndicator />
-          </SToolbarItem>
-          <SToolbarItem>
-            <TruncatedText>{currentSourceName ?? "Foxglove Studio"}</TruncatedText>{" "}
-          </SToolbarItem>
+          </div>
+          <div className={classes.toolbarItem}>
+            <span className={classes.truncate}>{currentSourceName ?? "Foxglove Studio"}</span>{" "}
+          </div>
           <div style={{ flexGrow: 1 }} />
-          <SToolbarItem style={{ marginRight: 5 }}>
-            {!inAutomatedRunMode() && <NotificationDisplay />}
-          </SToolbarItem>
         </Toolbar>
         <Sidebar
-          items={sidebarItems}
+          items={SIDEBAR_ITEMS}
           bottomItems={SIDEBAR_BOTTOM_ITEMS}
           selectedKey={selectedSidebarItem}
           onSelectKey={setSelectedSidebarItem}

@@ -7,6 +7,7 @@ import { useToasts } from "react-toast-notifications";
 import { useAsync, useMountedState, useThrottle } from "react-use";
 
 import Logger from "@foxglove/log";
+import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import CurrentLayoutContext, {
   LayoutState,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
@@ -41,14 +42,14 @@ function migrateLegacyLayoutFromLocalStorage() {
  */
 function CurrentLayoutProviderWithInitialState({
   initialState,
+  stateInstance,
   children,
-}: React.PropsWithChildren<{ initialState: LayoutState }>) {
+}: React.PropsWithChildren<{ initialState: LayoutState; stateInstance: CurrentLayoutState }>) {
   const { addToast } = useToasts();
 
   const { setUserProfile } = useUserProfileStorage();
   const layoutStorage = useLayoutStorage();
 
-  const [stateInstance] = useState(() => new CurrentLayoutState(initialState));
   const [layoutState, setLayoutState] = useState(() =>
     stateInstance.actions.getCurrentLayoutState(),
   );
@@ -107,7 +108,6 @@ function CurrentLayoutProviderWithInitialState({
       .updateLayout({
         targetID: selectedLayout.id,
         data: selectedLayout.data,
-        path: undefined,
         name: undefined,
       })
       .catch((error) => {
@@ -140,14 +140,46 @@ function CurrentLayoutProviderWithInitialState({
   );
 }
 
+function CurrentLayoutProviderWithoutAnalytics({
+  initialState,
+  children,
+}: React.PropsWithChildren<{ initialState: LayoutState }>) {
+  const [stateInstance] = useState(() => new CurrentLayoutState(initialState));
+  return (
+    <CurrentLayoutProviderWithInitialState
+      initialState={initialState}
+      stateInstance={stateInstance}
+    >
+      {children}
+    </CurrentLayoutProviderWithInitialState>
+  );
+}
+
+function CurrentLayoutProviderWithAnalytics({
+  initialState,
+  children,
+}: React.PropsWithChildren<{ initialState: LayoutState }>) {
+  const analytics = useAnalytics();
+  const [stateInstance] = useState(() => new CurrentLayoutState(initialState, analytics));
+  return (
+    <CurrentLayoutProviderWithInitialState
+      initialState={initialState}
+      stateInstance={stateInstance}
+    >
+      {children}
+    </CurrentLayoutProviderWithInitialState>
+  );
+}
+
 /**
  * Concrete implementation of CurrentLayoutContext.Provider which handles automatically saving and
  * restoring the current layout from LayoutStorage. Must be rendered inside a LayoutStorage
  * provider.
  */
 export default function CurrentLayoutProvider({
+  disableAnalyticsForTests,
   children,
-}: React.PropsWithChildren<unknown>): JSX.Element | ReactNull {
+}: React.PropsWithChildren<{ disableAnalyticsForTests?: boolean }>): JSX.Element | ReactNull {
   const { addToast } = useToasts();
 
   const { getUserProfile } = useUserProfileStorage();
@@ -159,7 +191,11 @@ export default function CurrentLayoutProvider({
       const legacyLayout = migrateLegacyLayoutFromLocalStorage();
       if (legacyLayout != undefined) {
         const { name = "unnamed", ...data } = legacyLayout;
-        const newLayout = await layoutStorage.saveNewLayout({ path: [], name, data });
+        const newLayout = await layoutStorage.saveNewLayout({
+          name,
+          data,
+          permission: "creator_write",
+        });
         return { selectedLayout: { id: newLayout.id, data } };
       }
       // If the user's previously selected layout can be loaded, use it
@@ -180,9 +216,9 @@ export default function CurrentLayoutProvider({
       }
       // If none were available, load the welcome layout.
       const newLayout = await layoutStorage.saveNewLayout({
-        path: [],
         name: welcomeLayout.name,
         data: welcomeLayout.data,
+        permission: "creator_write",
       });
       return { selectedLayout: { id: newLayout.id, data: welcomeLayout.data } };
     } catch (error) {
@@ -199,11 +235,17 @@ export default function CurrentLayoutProvider({
     return ReactNull;
   }
 
-  return (
-    <CurrentLayoutProviderWithInitialState
+  return disableAnalyticsForTests === true ? (
+    <CurrentLayoutProviderWithoutAnalytics
       initialState={loadInitialState.value ?? { selectedLayout: undefined }}
     >
       {children}
-    </CurrentLayoutProviderWithInitialState>
+    </CurrentLayoutProviderWithoutAnalytics>
+  ) : (
+    <CurrentLayoutProviderWithAnalytics
+      initialState={loadInitialState.value ?? { selectedLayout: undefined }}
+    >
+      {children}
+    </CurrentLayoutProviderWithAnalytics>
   );
 }
