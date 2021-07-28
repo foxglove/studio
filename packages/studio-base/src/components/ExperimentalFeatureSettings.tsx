@@ -38,6 +38,11 @@ const features: Feature[] = [
     name: "Extension Marketplace",
     description: <>Enable the extension marketplace for installing/uninstalling extensions</>,
   },
+  {
+    key: AppSetting.SHOW_ROS2_ROSBRIDGE,
+    name: "ROS 2 Rosbridge",
+    description: <>Enable ROS 2 Rosbridge as a possible data source connection.</>,
+  },
   ...(process.env.NODE_ENV !== "production"
     ? [
         {
