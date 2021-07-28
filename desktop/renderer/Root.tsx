@@ -48,7 +48,7 @@ export default function Root(): ReactElement {
       type: "ros1-remote-bagfile",
     },
     {
-      name: "ROS 2 Bag (local)",
+      name: "ROS 2 Bag Folder (local)",
       type: "ros2-folder",
     },
     {
