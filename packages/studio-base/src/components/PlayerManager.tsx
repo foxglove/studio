@@ -500,7 +500,7 @@ export default function PlayerManager({
     switch (definition.type) {
       case "ros1-local-bagfile":
         return localBagFileSource;
-      case "ros2-folder":
+      case "ros2-local-bagfile":
         return localRosbag2FolderSource;
       case "ros1-socket":
         return roscoreSource;

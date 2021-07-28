@@ -50,7 +50,7 @@ export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX
     },
     {
       name: "ROS 2 Bag (local)",
-      type: "ros2-folder",
+      type: "ros2-local-bagfile",
     },
     {
       name: "Velodyne LIDAR",

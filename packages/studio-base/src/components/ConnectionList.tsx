@@ -51,7 +51,7 @@ export default function ConnectionList(): JSX.Element {
           case "ros1-local-bagfile":
             iconName = "OpenFile";
             break;
-          case "ros2-folder":
+          case "ros2-local-bagfile":
             iconName = "OpenFolder";
             break;
           case "ros1-socket":

@@ -49,7 +49,7 @@ export default function Root(): ReactElement {
     },
     {
       name: "ROS 2 Bag (local)",
-      type: "ros2-folder",
+      type: "ros2-local-bagfile",
     },
     {
       name: "Velodyne LIDAR",
