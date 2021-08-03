@@ -5,6 +5,7 @@
 // Make Electron type definitions available globally, such as extensions to File and other built-ins
 /// <reference types="electron" />
 
+import { mergeStyles } from "@fluentui/react";
 import { init as initSentry } from "@sentry/electron";
 import ReactDOM from "react-dom";
 
@@ -47,6 +48,21 @@ const rootEl = document.getElementById("root");
 if (!rootEl) {
   throw new Error("missing #root element");
 }
+
+// set global styles for our app containers
+mergeStyles({
+  ":global(html, body, #root)": {
+    margin: 0,
+    height: "100%",
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+    position: "relative",
+    flex: "1 1 100%",
+    outline: "none",
+    overflow: "hidden",
+  },
+});
 
 async function main() {
   // Initialize the RPC channel for electron-socket. This method is called first

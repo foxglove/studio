@@ -10,6 +10,7 @@ import {
   ThemeProvider,
   UserProfileLocalStorageProvider,
   StudioToastProvider,
+  CssBaseline,
 } from "@foxglove/studio-base";
 
 import LocalStorageAppConfigurationProvider from "./components/LocalStorageAppConfigurationProvider";
@@ -78,15 +79,17 @@ export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX
 
   return (
     <ThemeProvider>
-      <ErrorBoundary>
-        <MultiProvider providers={providers}>
-          <App
-            loadWelcomeLayout={loadWelcomeLayout}
-            demoBagUrl={DEMO_BAG_URL}
-            availableSources={playerSources}
-          />
-        </MultiProvider>
-      </ErrorBoundary>
+      <CssBaseline>
+        <ErrorBoundary>
+          <MultiProvider providers={providers}>
+            <App
+              loadWelcomeLayout={loadWelcomeLayout}
+              demoBagUrl={DEMO_BAG_URL}
+              availableSources={playerSources}
+            />
+          </MultiProvider>
+        </ErrorBoundary>
+      </CssBaseline>
     </ThemeProvider>
   );
 }

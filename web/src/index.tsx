@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { mergeStyles } from "@fluentui/react";
 import { init as initSentry } from "@sentry/browser";
 import ReactDOM from "react-dom";
 
@@ -32,6 +33,21 @@ const rootEl = document.getElementById("root");
 if (!rootEl) {
   throw new Error("missing #root element");
 }
+
+// set global styles for our app containers
+mergeStyles({
+  ":global(html, body, #root)": {
+    margin: 0,
+    height: "100%",
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+    position: "relative",
+    flex: "1 1 100%",
+    outline: "none",
+    overflow: "hidden",
+  },
+});
 
 async function main() {
   const searchParams = new URLSearchParams(window.location.search);

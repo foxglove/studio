@@ -3,46 +3,33 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { mergeStyles, useTheme } from "@fluentui/react";
-
-import "@foxglove/studio-base/styles/reset.scss";
-import "@foxglove/studio-base/styles/assets/latin-roboto-mono.scss";
+import { PropsWithChildren } from "react";
 
 import { MONOSPACE } from "@foxglove/studio-base/styles/fonts";
 
-export default function CssBaseline(): ReactNull {
+import "@foxglove/studio-base/styles/assets/latin-roboto-mono.scss";
+
+export default function CssBaseline(props: PropsWithChildren<unknown>): JSX.Element {
   const theme = useTheme();
 
-  mergeStyles({
-    ":global(body, html, #root)": {
-      height: "100%",
-      width: "100%",
-      display: "flex",
-      flexDirection: "column",
-      position: "relative",
-      flex: "1 1 100%",
-      outline: "none",
-      overflow: "hidden",
-      background: theme.semanticColors.bodyBackground,
-      color: theme.semanticColors.bodyText,
-      font: "inherit",
-      ...theme.fonts.small,
-    },
-    ":global(#root)": {
-      // ensure portals are able to stack on top of the main app
-      zIndex: 0,
-    },
-    ":global(::selection)": {
+  // styles scoped to our container
+  const className = mergeStyles({
+    "::selection": {
       backgroundColor: theme.palette.blackTranslucent40,
     },
-    ":global(code, pre, tt)": {
+    "*,*:before,*:after": {
+      boxSizing: "inherit",
+    },
+    "code, pre, tt": {
       fontFamily: MONOSPACE,
       overflowWrap: "break-word",
     },
-    ":global(code)": {
+    code: {
+      padding: "0 0.25em",
       backgroundColor: theme.semanticColors.bodyBackgroundHovered,
       borderRadius: "0.2em",
     },
-    ":global(div)": {
+    div: {
       "::-webkit-scrollbar": {
         width: "4px",
         height: "4px",
@@ -55,14 +42,24 @@ export default function CssBaseline(): ReactNull {
         borderRadius: "2px",
       },
     },
-    ":global(a)": {
+    p: {
+      margin: "1em 0",
+
+      ":last-child": {
+        marginBottom: 0,
+      },
+    },
+    a: {
       color: theme.semanticColors.link,
 
       ":hover": {
         color: theme.semanticColors.linkHovered,
       },
     },
-    ":global(hr)": {
+    "b,strong": {
+      fontWeight: "bolder",
+    },
+    hr: {
       border: "none",
       display: "block",
       height: "1px",
@@ -70,7 +67,32 @@ export default function CssBaseline(): ReactNull {
       padding: "0",
       backgroundColor: theme.semanticColors.bodyDivider,
     },
+    table: {
+      borderCollapse: "collapse",
+      borderSpacing: 0,
+    },
+    "th, td": {
+      textAlign: "left",
+      verticalAlign: "top",
+    },
+
+    // root element styling
+    boxSizing: "border-box",
+    lineHeight: 1,
+    height: "100%",
+    width: "100%",
+    display: "flex",
+    flexDirection: "column",
+    position: "relative",
+    flex: "1 1 100%",
+    outline: "none",
+    overflow: "hidden",
+    background: theme.semanticColors.bodyBackground,
+    color: theme.semanticColors.bodyText,
+    font: "inherit",
+    zIndex: 0,
+    ...theme.fonts.small,
   });
 
-  return ReactNull;
+  return <div className={className}>{props.children}</div>;
 }

@@ -37,17 +37,19 @@ function WithContextProviders(Child: Story, ctx: StoryContext): JSX.Element {
     /* eslint-disable react/jsx-key */
     <AppConfigurationContext.Provider value={config} />,
     <ReadySignalContext.Provider value={readySignal} />,
-    <ThemeProvider />,
     <ToastProvider>{undefined}</ToastProvider>,
     <HoverValueProvider />,
     <UserNodeStateProvider />,
     /* eslint-enable react/jsx-key */
   ];
   return (
-    <MultiProvider providers={providers}>
-      <CssBaseline />
-      <Child />
-    </MultiProvider>
+    <ThemeProvider>
+      <CssBaseline>
+        <MultiProvider providers={providers}>
+          <Child />
+        </MultiProvider>
+      </CssBaseline>
+    </ThemeProvider>
   );
 }
 
