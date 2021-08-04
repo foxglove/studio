@@ -50,7 +50,7 @@ const features: Feature[] = [
   },
   {
     key: AppSetting.ENABLE_CONSOLE_API_LAYOUTS,
-    name: "Team shared layouts",
+    name: "Team Shared Layouts",
     description: <>Enable team layout sharing when signed in to Studio.</>,
   },
   ...(process.env.NODE_ENV !== "production"
