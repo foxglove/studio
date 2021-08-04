@@ -14,13 +14,13 @@ export default function GlobalCss(): JSX.Element {
       boxSizing: "border-box",
       margin: 0,
       padding: 0,
+      height: "100%",
+      width: "100%",
     },
     ":global(*,*:before,*:after)": {
       boxSizing: "inherit",
     },
     ":global(body)": {
-      height: "100%",
-      width: "100%",
       background: theme.semanticColors.bodyBackground,
       color: theme.semanticColors.bodyText,
       font: "inherit",
