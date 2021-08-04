@@ -7,18 +7,20 @@ import {
   ISO8601Timestamp,
   LayoutID,
   LayoutMetadata,
+  UserID,
 } from "@foxglove/studio-base/services/ILayoutStorage";
 
 /**
  * Metadata that describes a panel layout on a remote server.
  *
- * @note Optional values in `LayoutMetadata` are required when layouts are loaded from a server, to
- * enable permissions and consistency checks.
+ * @note Some optional values in `LayoutMetadata` are required when layouts are loaded from a
+ * server, to enable permissions and consistency checks.
  */
-export type RemoteLayoutMetadata = {
-  [K in keyof Omit<LayoutMetadata, "data" | "hasUnsyncedChanges" | "conflict">]-?: NonNullable<
-    LayoutMetadata[K]
-  >;
+export type RemoteLayoutMetadata = { creatorUserId: UserID | undefined } & {
+  [K in keyof Omit<
+    LayoutMetadata,
+    "data" | "hasUnsyncedChanges" | "conflict" | "creatorUserId"
+  >]-?: NonNullable<LayoutMetadata[K]>;
 };
 
 /**
