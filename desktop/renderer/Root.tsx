@@ -13,6 +13,7 @@ import {
   UserProfileLocalStorageProvider,
   StudioToastProvider,
   CssBaseline,
+  GlobalCss,
 } from "@foxglove/studio-base";
 
 import { Desktop } from "../common/types";
@@ -76,6 +77,7 @@ export default function Root(): ReactElement {
 
   return (
     <ThemeProvider>
+      <GlobalCss />
       <CssBaseline>
         <ErrorBoundary>
           <MultiProvider providers={providers}>

@@ -5,16 +5,3 @@
   animation: none !important;
   caret-color: transparent !important;
 }
-
-html,
-body,
-#root {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  flex: 1 1 100%;
-  outline: none;
-  overflow: hidden;
-}

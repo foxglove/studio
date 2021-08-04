@@ -76,21 +76,17 @@ export default function CssBaseline(props: PropsWithChildren<unknown>): JSX.Elem
       verticalAlign: "top",
     },
 
-    // root element styling
-    boxSizing: "border-box",
-    lineHeight: 1,
+    // container styling
     height: "100%",
     width: "100%",
     display: "flex",
     flexDirection: "column",
     position: "relative",
     flex: "1 1 100%",
-    outline: "none",
     overflow: "hidden",
     background: theme.semanticColors.bodyBackground,
     color: theme.semanticColors.bodyText,
     font: "inherit",
-    zIndex: 0,
     ...theme.fonts.small,
   });
 

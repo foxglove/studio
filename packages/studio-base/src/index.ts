@@ -53,3 +53,4 @@ export type { PanelsState } from "./context/CurrentLayoutContext/actions";
 export { default as OfflineLayoutStorage } from "./services/OfflineLayoutStorage";
 export { default as LayoutStorageDebuggingContext } from "./context/LayoutStorageDebuggingContext";
 export { default as CssBaseline } from "./components/CssBaseline";
+export { default as GlobalCss } from "./components/GlobalCss";

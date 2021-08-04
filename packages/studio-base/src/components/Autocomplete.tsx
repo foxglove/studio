@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Layer } from "@fluentui/react";
 import cx from "classnames";
 import { maxBy } from "lodash";
 import React, { CSSProperties, PureComponent, RefObject } from "react";
@@ -101,7 +100,6 @@ export default class Autocomplete<T = unknown> extends PureComponent<
   _autocomplete: RefObject<ReactAutocomplete>;
   _ignoreFocus: boolean = false;
   _ignoreBlur: boolean = false;
-  _layerRef: HTMLDivElement | ReactNull = ReactNull;
 
   static defaultProps = {
     getItemText: defaultGetText("getItemText"),
@@ -285,114 +283,110 @@ export default class Autocomplete<T = unknown> extends PureComponent<
 
     const selectedItemValue = selectedItem != undefined ? getItemValue(selectedItem) : undefined;
     return (
-      <>
-        <ReactAutocomplete
-          open={open}
-          items={autocompleteItems}
-          getItemValue={getItemValue}
-          renderItem={(item, isHighlighted) => {
-            const itemValue = getItemValue(item);
-            return (
-              <div
-                key={itemValue}
-                data-highlighted={isHighlighted}
-                data-test-auto-item
-                className={cx(styles.autocompleteItem, {
-                  [styles.highlighted!]: isHighlighted,
-                  [styles.selected!]:
-                    selectedItemValue != undefined && itemValue === selectedItemValue,
-                })}
-              >
-                {getItemText(item)}
-              </div>
-            );
-          }}
-          onChange={this._onChange}
-          onSelect={this._onSelect}
-          value={value ?? ""}
-          inputProps={{
-            className: cx(styles.input, {
-              [styles.inputError!]: hasError,
-              [styles.placeholder!]: value == undefined || value.length === 0,
-            }),
-            autoCorrect: "off",
-            autoCapitalize: "off",
-            spellCheck: "false",
-            placeholder,
-            style: {
-              ...inputStyle,
-              fontFamily,
-              fontSize,
-              width: autoSize
-                ? Math.max(
-                    measureText(value != undefined && value.length > 0 ? value : placeholder ?? ""),
-                    minWidth,
-                  )
-                : "100%",
-            },
-            onFocus: this._onFocus,
-            onBlur: this._onBlur,
-            onMouseDown: this._onMouseDown,
-            onKeyDown: this._onKeyDown,
-          }}
-          renderMenu={(menuItems, _val, style) => {
-            // Hacky virtualization. Either don't show all menuItems (typical when the user is still
-            // typing in the autcomplete), or do show them all (once the user scrolls). Not the most
-            // sophisticated, but good enough!
-            const maxNumberOfItems = Math.ceil(window.innerHeight / rowHeight + 10);
-            const menuItemsToShow =
-              this.state.showAllItems || menuItems.length <= maxNumberOfItems * 2
-                ? menuItems
-                : menuItems.slice(0, maxNumberOfItems).concat(menuItems.slice(-maxNumberOfItems));
+      <ReactAutocomplete
+        open={open}
+        items={autocompleteItems}
+        getItemValue={getItemValue}
+        renderItem={(item, isHighlighted) => {
+          const itemValue = getItemValue(item);
+          return (
+            <div
+              key={itemValue}
+              data-highlighted={isHighlighted}
+              data-test-auto-item
+              className={cx(styles.autocompleteItem, {
+                [styles.highlighted!]: isHighlighted,
+                [styles.selected!]:
+                  selectedItemValue != undefined && itemValue === selectedItemValue,
+              })}
+            >
+              {getItemText(item)}
+            </div>
+          );
+        }}
+        onChange={this._onChange}
+        onSelect={this._onSelect}
+        value={value ?? ""}
+        inputProps={{
+          className: cx(styles.input, {
+            [styles.inputError!]: hasError,
+            [styles.placeholder!]: value == undefined || value.length === 0,
+          }),
+          autoCorrect: "off",
+          autoCapitalize: "off",
+          spellCheck: "false",
+          placeholder,
+          style: {
+            ...inputStyle,
+            fontFamily,
+            fontSize,
+            width: autoSize
+              ? Math.max(
+                  measureText(value != undefined && value.length > 0 ? value : placeholder ?? ""),
+                  minWidth,
+                )
+              : "100%",
+          },
+          onFocus: this._onFocus,
+          onBlur: this._onBlur,
+          onMouseDown: this._onMouseDown,
+          onKeyDown: this._onKeyDown,
+        }}
+        renderMenu={(menuItems, _val, style) => {
+          // Hacky virtualization. Either don't show all menuItems (typical when the user is still
+          // typing in the autcomplete), or do show them all (once the user scrolls). Not the most
+          // sophisticated, but good enough!
+          const maxNumberOfItems = Math.ceil(window.innerHeight / rowHeight + 10);
+          const menuItemsToShow =
+            this.state.showAllItems || menuItems.length <= maxNumberOfItems * 2
+              ? menuItems
+              : menuItems.slice(0, maxNumberOfItems).concat(menuItems.slice(-maxNumberOfItems));
 
-            // The longest string might not be the widest (e.g. "|||" vs "www"), but this is
-            // quite a bit faster, so we throw in a nice padding and call it good enough! :-)
-            const longestItem = maxBy(autocompleteItems, (item) => getItemText(item).length);
-            const width =
-              50 + (longestItem != undefined ? measureText(getItemText(longestItem)) : 0);
-            const maxHeight = `calc(100vh - 10px - ${style.top}px)`;
+          // The longest string might not be the widest (e.g. "|||" vs "www"), but this is
+          // quite a bit faster, so we throw in a nice padding and call it good enough! :-)
+          const longestItem = maxBy(autocompleteItems, (item) => getItemText(item).length);
+          const width = 50 + (longestItem != undefined ? measureText(getItemText(longestItem)) : 0);
+          const maxHeight = `calc(100vh - 10px - ${style.top}px)`;
 
-            return (
+          return (
+            <div
+              className={styles.root}
+              key={
+                autocompleteKey
+                /* So we scroll to the top when selecting */
+              }
+              style={
+                // If the autocomplete would fall off the screen, pin it to the right.
+                (style.left as number) + width <= window.innerWidth
+                  ? { ...menuStyle, ...style, width, maxWidth: "100%", maxHeight }
+                  : {
+                      ...menuStyle,
+                      ...style,
+                      width,
+                      maxWidth: "100%",
+                      maxHeight,
+                      left: "auto",
+                      right: 0,
+                    }
+              }
+              onScroll={this._onScroll}
+            >
+              {/* Have to wrap onMouseEnter and onMouseLeave in a separate <div>, as react-autocomplete
+               * would override them on the root <div>. */}
               <div
-                className={styles.root}
-                key={
-                  autocompleteKey
-                  /* So we scroll to the top when selecting */
-                }
-                style={
-                  // If the autocomplete would fall off the screen, pin it to the right.
-                  (style.left as number) + width <= window.innerWidth
-                    ? { ...menuStyle, ...style, width, maxWidth: "100%", maxHeight }
-                    : {
-                        ...menuStyle,
-                        ...style,
-                        width,
-                        maxWidth: "100%",
-                        maxHeight,
-                        left: "auto",
-                        right: 0,
-                      }
-                }
-                onScroll={this._onScroll}
+                onMouseEnter={() => (this._ignoreBlur = true)}
+                onMouseLeave={() => (this._ignoreBlur = false)}
               >
-                {/* Have to wrap onMouseEnter and onMouseLeave in a separate <div>, as react-autocomplete
-                 * would override them on the root <div>. */}
-                <div
-                  onMouseEnter={() => (this._ignoreBlur = true)}
-                  onMouseLeave={() => (this._ignoreBlur = false)}
-                >
-                  {menuItemsToShow}
-                </div>
+                {menuItemsToShow}
               </div>
-            );
-          }}
-          // @ts-expect-error renderMenuWrapper added in the fork but we don't have typings for it
-          renderMenuWrapper={(menu: React.ReactNode) => createPortal(menu, this._layerRef)}
-          ref={this._autocomplete}
-          wrapperStyle={{ flex: "1 1 auto", overflow: "hidden", marginLeft: 6 }}
-        />
-        <Layer ref={(el) => (this._layerRef = el)} />
-      </>
+            </div>
+          );
+        }}
+        // @ts-expect-error renderMenuWrapper added in the fork but we don't have typings for it
+        renderMenuWrapper={(menu: React.ReactNode) => createPortal(menu, document.body)}
+        ref={this._autocomplete}
+        wrapperStyle={{ flex: "1 1 auto", overflow: "hidden", marginLeft: 6 }}
+      />
     );
   }
 }
