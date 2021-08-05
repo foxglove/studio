@@ -14,9 +14,6 @@ export default function CssBaseline(props: PropsWithChildren<unknown>): JSX.Elem
 
   // styles scoped to our container
   const className = mergeStyles({
-    "::selection": {
-      backgroundColor: theme.palette.blackTranslucent40,
-    },
     "*,*:before,*:after": {
       boxSizing: "inherit",
     },
@@ -49,23 +46,8 @@ export default function CssBaseline(props: PropsWithChildren<unknown>): JSX.Elem
         marginBottom: 0,
       },
     },
-    a: {
-      color: theme.semanticColors.link,
-
-      ":hover": {
-        color: theme.semanticColors.linkHovered,
-      },
-    },
     "b,strong": {
       fontWeight: "bolder",
-    },
-    hr: {
-      border: "none",
-      display: "block",
-      height: "1px",
-      margin: "0",
-      padding: "0",
-      backgroundColor: theme.semanticColors.bodyDivider,
     },
     table: {
       borderCollapse: "collapse",
