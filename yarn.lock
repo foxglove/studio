@@ -2210,15 +2210,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/rosbag@github:foxglove/rosbag#bd6f117f30d580ef5c56dcb7fd33461b8889414d":
+"@foxglove/rosbag@github:foxglove/rosbag#c1d7f343d2a86e07ae9aa6bf032ee98df4538d48":
   version: 0.0.0
-  resolution: "@foxglove/rosbag@https://github.com/foxglove/rosbag.git#commit=bd6f117f30d580ef5c56dcb7fd33461b8889414d"
+  resolution: "@foxglove/rosbag@https://github.com/foxglove/rosbag.git#commit=c1d7f343d2a86e07ae9aa6bf032ee98df4538d48"
   dependencies:
     "@foxglove/rosmsg": ^1.0.1
     "@foxglove/rosmsg-serialization": ^1.0.2
     "@foxglove/rostime": ^1.1.0
     heap: 0.2.6
-  checksum: 6e7c311d80c919faaa359a4e118e85944d237798dde3bcb2df5b256aa63e6999cdf62dff2025ef67c62aee80e827e98b784cacc29bce2019bf771ff93bb0f4e5
+  checksum: 33d921bc0467dd53cfdb70b99e02e5059150f7d68e2d20ec1fd6c697ccdd541770a13a95b85533c0cd19a60f26247acf76510f70d996727fb6a5177ccd7eb1cf
   languageName: node
   linkType: hard
 
@@ -2285,7 +2285,7 @@ __metadata:
     "@foxglove/electron-socket": 1.1.0
     "@foxglove/hooks": "workspace:*"
     "@foxglove/ros1": 1.0.1
-    "@foxglove/rosbag": "github:foxglove/rosbag#bd6f117f30d580ef5c56dcb7fd33461b8889414d"
+    "@foxglove/rosbag": "github:foxglove/rosbag#c1d7f343d2a86e07ae9aa6bf032ee98df4538d48"
     "@foxglove/rosbag2-web": 1.0.0
     "@foxglove/rosmsg-msgs-common": 1.0.1
     "@foxglove/rosmsg-msgs-foxglove": 2.0.1
