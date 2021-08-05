@@ -2240,7 +2240,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/rosmsg-serialization@npm:1.0.1, @foxglove/rosmsg-serialization@npm:^1.0.0":
+"@foxglove/rosmsg-serialization@npm:1.0.1":
   version: 1.0.1
   resolution: "@foxglove/rosmsg-serialization@npm:1.0.1"
   dependencies:
@@ -2249,7 +2249,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/rosmsg-serialization@npm:^1.0.2":
+"@foxglove/rosmsg-serialization@npm:^1.0.0, @foxglove/rosmsg-serialization@npm:^1.0.2":
   version: 1.0.2
   resolution: "@foxglove/rosmsg-serialization@npm:1.0.2"
   dependencies:
@@ -2269,14 +2269,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/rosmsg@npm:^1.0.0":
-  version: 1.0.0
-  resolution: "@foxglove/rosmsg@npm:1.0.0"
-  checksum: 15b307dd2d02fdf6837b1f37d7fb996ebc1c38cf8b346c50fe411801276fb16af86316b452e9a829e251aff88d85049093bef011bc18daf37d9de76af8ad26e8
-  languageName: node
-  linkType: hard
-
-"@foxglove/rosmsg@npm:^1.0.1":
+"@foxglove/rosmsg@npm:^1.0.0, @foxglove/rosmsg@npm:^1.0.1":
   version: 1.0.1
   resolution: "@foxglove/rosmsg@npm:1.0.1"
   checksum: b3775d1b743474cd9ca605a3d77a264f403bb9b9988d1785652e05e89ba89cac6bddcd7a1247f9d44120e36a43c5176c67d2fafa505be5d22e4602aa5ab95904
