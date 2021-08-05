@@ -2210,16 +2210,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/rosbag@github:foxglove/rosbag#1728e7db55e46ee1a025829836f2f9d1cf462947":
-  version: 3.0.0
-  resolution: "@foxglove/rosbag@https://github.com/foxglove/rosbag.git#commit=1728e7db55e46ee1a025829836f2f9d1cf462947"
+"@foxglove/rosbag@github:foxglove/rosbag#bd6f117f30d580ef5c56dcb7fd33461b8889414d":
+  version: 0.0.0
+  resolution: "@foxglove/rosbag@https://github.com/foxglove/rosbag.git#commit=bd6f117f30d580ef5c56dcb7fd33461b8889414d"
   dependencies:
-    "@foxglove/rosmsg": 1.0.0
-    "@foxglove/rosmsg-serialization": 1.0.1
-    "@foxglove/rostime": 1.1.0
-    buffer: 6.0.3
+    "@foxglove/rosmsg": ^1.0.1
+    "@foxglove/rosmsg-serialization": ^1.0.2
+    "@foxglove/rostime": ^1.1.0
     heap: 0.2.6
-  checksum: a83edaaf40800eb6c9783726277aeec98f779ee30faab6f419c3482f2a2e45a08410d199097186b1675438031f175be62e70fdc371ec10fef3a1926983145727
+  checksum: 6e7c311d80c919faaa359a4e118e85944d237798dde3bcb2df5b256aa63e6999cdf62dff2025ef67c62aee80e827e98b784cacc29bce2019bf771ff93bb0f4e5
   languageName: node
   linkType: hard
 
@@ -2241,16 +2240,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/rosmsg-serialization@npm:1.0.1":
-  version: 1.0.1
-  resolution: "@foxglove/rosmsg-serialization@npm:1.0.1"
-  dependencies:
-    "@foxglove/rosmsg": ^1.0.0
-  checksum: 4bbeaa947949b117ee7777fb5a3de44fc4ecc06fa9f0bd433c8ae0931e200ce203d2820b2367b8a1980be1f1911670ad7c4f8d213d2f1c910a8ead79b0c84fe1
-  languageName: node
-  linkType: hard
-
-"@foxglove/rosmsg-serialization@npm:1.0.2, @foxglove/rosmsg-serialization@npm:^1.0.0":
+"@foxglove/rosmsg-serialization@npm:1.0.2, @foxglove/rosmsg-serialization@npm:^1.0.0, @foxglove/rosmsg-serialization@npm:^1.0.2":
   version: 1.0.2
   resolution: "@foxglove/rosmsg-serialization@npm:1.0.2"
   dependencies:
@@ -2267,13 +2257,6 @@ __metadata:
     "@foxglove/rosmsg": ^1.0.0
     "@foxglove/rostime": ^1.1.0
   checksum: 9f398d144ce559aec70870ecbdedb2de98d9e582afe502a810fea166aa93f9ef807ade8cabf366b8ee0956fadf9f28a17e42d13dae9b01b67ebb175a781e5b4e
-  languageName: node
-  linkType: hard
-
-"@foxglove/rosmsg@npm:1.0.0":
-  version: 1.0.0
-  resolution: "@foxglove/rosmsg@npm:1.0.0"
-  checksum: 15b307dd2d02fdf6837b1f37d7fb996ebc1c38cf8b346c50fe411801276fb16af86316b452e9a829e251aff88d85049093bef011bc18daf37d9de76af8ad26e8
   languageName: node
   linkType: hard
 
@@ -2302,7 +2285,7 @@ __metadata:
     "@foxglove/electron-socket": 1.1.0
     "@foxglove/hooks": "workspace:*"
     "@foxglove/ros1": 1.0.1
-    "@foxglove/rosbag": "github:foxglove/rosbag#1728e7db55e46ee1a025829836f2f9d1cf462947"
+    "@foxglove/rosbag": "github:foxglove/rosbag#bd6f117f30d580ef5c56dcb7fd33461b8889414d"
     "@foxglove/rosbag2-web": 1.0.0
     "@foxglove/rosmsg-msgs-common": 1.0.1
     "@foxglove/rosmsg-msgs-foxglove": 2.0.1
@@ -8106,16 +8089,6 @@ __metadata:
   version: 1.0.3
   resolution: "buffer-xor@npm:1.0.3"
   checksum: 10c520df29d62fa6e785e2800e586a20fc4f6dfad84bcdbd12e1e8a83856de1cb75c7ebd7abe6d036bbfab738a6cf18a3ae9c8e5a2e2eb3167ca7399ce65373a
-  languageName: node
-  linkType: hard
-
-"buffer@npm:6.0.3":
-  version: 6.0.3
-  resolution: "buffer@npm:6.0.3"
-  dependencies:
-    base64-js: ^1.3.1
-    ieee754: ^1.2.1
-  checksum: 5ad23293d9a731e4318e420025800b42bf0d264004c0286c8cc010af7a270c7a0f6522e84f54b9ad65cbd6db20b8badbfd8d2ebf4f80fa03dab093b89e68c3f9
   languageName: node
   linkType: hard
 
@@ -14244,7 +14217,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ieee754@npm:^1.1.13, ieee754@npm:^1.1.4, ieee754@npm:^1.2.1":
+"ieee754@npm:^1.1.13, ieee754@npm:^1.1.4":
   version: 1.2.1
   resolution: "ieee754@npm:1.2.1"
   checksum: 5144c0c9815e54ada181d80a0b810221a253562422e7c6c3a60b1901154184f49326ec239d618c416c1c5945a2e197107aee8d986a3dd836b53dffefd99b5e7e
