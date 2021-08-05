@@ -24,6 +24,7 @@ export default function GlobalCss(): JSX.Element {
       background: theme.semanticColors.bodyBackground,
       color: theme.semanticColors.bodyText,
       font: "inherit",
+      lineHeight: 1,
       ...theme.fonts.small,
     },
     ":global(#root)": {
