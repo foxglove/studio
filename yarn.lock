@@ -2210,15 +2210,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/rosbag@github:foxglove/rosbag#993b7e64577c038bc34880db999e1c023e89667f":
+"@foxglove/rosbag@github:foxglove/rosbag#488cebb9ecf0ff406639b5f16651d75cb61c51c7":
   version: 0.0.0
-  resolution: "@foxglove/rosbag@https://github.com/foxglove/rosbag.git#commit=993b7e64577c038bc34880db999e1c023e89667f"
+  resolution: "@foxglove/rosbag@https://github.com/foxglove/rosbag.git#commit=488cebb9ecf0ff406639b5f16651d75cb61c51c7"
   dependencies:
     "@foxglove/rosmsg": ^1.0.1
     "@foxglove/rosmsg-serialization": ^1.0.2
     "@foxglove/rostime": ^1.1.0
     heap: 0.2.6
-  checksum: b091459e82d0726318a5dbc56cace6e6ac09725310925db7684dfdba24ed35fa116c1b8c79039164706e11ba4086f127e00a1db9875544571ba4641d59901179
+  checksum: c24cd1e143cd826d08025cfdfa5e787315ea1c71d55f1d7fef4fd9315fb27b01b8f37af9cfcfccdf8bf38842b69413bd9406284fa473c1079878973617037556
   languageName: node
   linkType: hard
 
@@ -2240,12 +2240,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/rosmsg-serialization@npm:1.0.2, @foxglove/rosmsg-serialization@npm:^1.0.0, @foxglove/rosmsg-serialization@npm:^1.0.2":
-  version: 1.0.2
-  resolution: "@foxglove/rosmsg-serialization@npm:1.0.2"
+"@foxglove/rosmsg-serialization@npm:1.0.3, @foxglove/rosmsg-serialization@npm:^1.0.0, @foxglove/rosmsg-serialization@npm:^1.0.2":
+  version: 1.0.3
+  resolution: "@foxglove/rosmsg-serialization@npm:1.0.3"
   dependencies:
     "@foxglove/rosmsg": ^1.0.1
-  checksum: 85a19755d85df9a1993bea2068720ccebdc7b0f775d4800cf97d382fb44b47344c4215e8c6b520cbb604e29c9acdd1eb384dc5b2ec90f06b3bfd3eb8f4f22922
+  checksum: 9fe4686116b383a3fd12357db64a65a10792ad6e6ef54b02ae95ce870c760bfcc3de1f0c7b8df8d910f44e11ff7c3a12cdf011bf9b0c0cafe67c05c8f33ba04c
   languageName: node
   linkType: hard
 
@@ -2285,11 +2285,11 @@ __metadata:
     "@foxglove/electron-socket": 1.1.0
     "@foxglove/hooks": "workspace:*"
     "@foxglove/ros1": 1.0.1
-    "@foxglove/rosbag": "github:foxglove/rosbag#993b7e64577c038bc34880db999e1c023e89667f"
+    "@foxglove/rosbag": "github:foxglove/rosbag#488cebb9ecf0ff406639b5f16651d75cb61c51c7"
     "@foxglove/rosbag2-web": 1.0.0
     "@foxglove/rosmsg-msgs-common": 1.0.1
     "@foxglove/rosmsg-msgs-foxglove": 2.0.1
-    "@foxglove/rosmsg-serialization": 1.0.2
+    "@foxglove/rosmsg-serialization": 1.0.3
     "@foxglove/rostime": 1.1.0
     "@foxglove/studio": "workspace:*"
     "@foxglove/velodyne-cloud": 1.0.0
