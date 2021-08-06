@@ -34,7 +34,7 @@
     "@foxglove/electron-socket": "1.1.0",
     "@foxglove/hooks": "workspace:*",
     "@foxglove/ros1": "1.0.1",
-    "@foxglove/rosbag": "github:foxglove/rosbag#434217866bba58a4a92c320fc66cc845fe25e2a0",
+    "@foxglove/rosbag": "github:foxglove/rosbag#5e832fb488c0f57ae22b9d60597aa88a80fb6832",
     "@foxglove/rosbag2-web": "1.0.0",
     "@foxglove/rosmsg-msgs-common": "1.0.1",
     "@foxglove/rosmsg-msgs-foxglove": "2.0.1",
