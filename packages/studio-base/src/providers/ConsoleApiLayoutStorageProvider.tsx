@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useToasts } from "react-toast-notifications";
 import { useInterval, useNetworkState } from "react-use";
 
@@ -17,6 +17,7 @@ import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutS
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import CacheOnlyLayoutStorage from "@foxglove/studio-base/services/CacheOnlyLayoutStorage";
 import ConsoleApiRemoteLayoutStorage from "@foxglove/studio-base/services/ConsoleApiRemoteLayoutStorage";
+import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 import OfflineLayoutStorage from "@foxglove/studio-base/services/OfflineLayoutStorage";
 
 const log = Logger.getLogger(__filename);
@@ -59,24 +60,80 @@ export default function ConsoleApiLayoutStorageProvider({
   const visibilityState = useVisibilityState();
 
   // Sync periodically when logged in, online, and the app is not hidden
+  const enableSyncing = currentUser != undefined && online && visibilityState === "visible";
+  useEffect(() => {
+    if (enableSyncing) {
+      void sync();
+    }
+  }, [enableSyncing, sync]);
   useInterval(
     sync,
-    currentUser && online && visibilityState === "visible"
-      ? SYNC_INTERVAL
-      : null /* eslint-disable-line no-restricted-syntax */,
+    enableSyncing ? SYNC_INTERVAL : null /* eslint-disable-line no-restricted-syntax */,
   );
 
-  const debugging = useShallowMemo({ syncNow: sync });
+  const storage = enableConsoleApiLayouts && currentUser ? offlineStorage : cacheOnlyStorage;
+
+  const injectEdit = useCallback(
+    async (id: LayoutID) => {
+      const layout = await apiStorage.getLayout(id);
+      if (!layout) {
+        throw new Error("This layout doesn't exist on the server");
+      }
+      await apiStorage.updateLayout({
+        targetID: layout.id,
+        name: layout.name,
+        data: {
+          ...layout.data,
+          layout: {
+            direction: "row",
+            first: `onboarding.welcome!${Math.round(Math.random() * 1e6).toString(36)}`,
+            second: layout.data.layout ?? "unknown",
+            splitPercentage: 33,
+          },
+        },
+        ifUnmodifiedSince: layout.updatedAt,
+      });
+    },
+    [apiStorage],
+  );
+
+  const injectRename = useCallback(
+    async (id: LayoutID) => {
+      const layout = await apiStorage.getLayout(id);
+      if (!layout) {
+        throw new Error("This layout doesn't exist on the server");
+      }
+      await apiStorage.updateLayout({
+        targetID: layout.id,
+        name: `${layout.name} renamed`,
+        ifUnmodifiedSince: layout.updatedAt,
+      });
+    },
+    [apiStorage],
+  );
+
+  const injectDelete = useCallback(
+    async (id: LayoutID) => {
+      const layout = await apiStorage.getLayout(id);
+      if (!layout) {
+        throw new Error("This layout doesn't exist on the server");
+      }
+      await apiStorage.deleteLayout({ targetID: id, ifUnmodifiedSince: layout.updatedAt });
+    },
+    [apiStorage],
+  );
+
+  const debugging = useShallowMemo({ syncNow: sync, injectEdit, injectRename, injectDelete });
 
   return (
     <LayoutStorageDebuggingContext.Provider
-      value={process.env.NODE_ENV !== "production" && currentUser ? debugging : undefined}
+      value={
+        process.env.NODE_ENV !== "production" && enableConsoleApiLayouts && currentUser
+          ? debugging
+          : undefined
+      }
     >
-      <LayoutStorageContext.Provider
-        value={enableConsoleApiLayouts && currentUser ? offlineStorage : cacheOnlyStorage}
-      >
-        {children}
-      </LayoutStorageContext.Provider>
+      <LayoutStorageContext.Provider value={storage}>{children}</LayoutStorageContext.Provider>
     </LayoutStorageDebuggingContext.Provider>
   );
 }

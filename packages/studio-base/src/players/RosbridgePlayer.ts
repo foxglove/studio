@@ -152,6 +152,7 @@ export default class RosbridgePlayer implements Player {
         topic.unsubscribe();
         this._topicSubscriptions.delete(topicName);
       }
+      rosClient.close(); // ensure the underlying worker is cleaned up
       delete this._rosClient;
 
       this._problems.push({
@@ -540,7 +541,7 @@ export default class RosbridgePlayer implements Player {
       entries.add(value);
     };
 
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       this._rosClient?.getNodes(async (nodes) => {
         await Promise.all(
           nodes.map((node) => {

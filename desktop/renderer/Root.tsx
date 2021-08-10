@@ -12,6 +12,8 @@ import {
   ThemeProvider,
   UserProfileLocalStorageProvider,
   StudioToastProvider,
+  CssBaseline,
+  GlobalCss,
 } from "@foxglove/studio-base";
 
 import { Desktop } from "../common/types";
@@ -19,7 +21,6 @@ import NativeAppMenuProvider from "./components/NativeAppMenuProvider";
 import NativeStorageAppConfigurationProvider from "./components/NativeStorageAppConfigurationProvider";
 import NativeStorageLayoutCacheProvider from "./components/NativeStorageLayoutCacheProvider";
 import ExtensionLoaderProvider from "./providers/ExtensionLoaderProvider";
-import FakeLayoutStorageProviders from "./providers/FakeLayoutStorageProviders";
 
 const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
 
@@ -62,7 +63,6 @@ export default function Root(): ReactElement {
     <StudioToastProvider />,
     <NativeStorageAppConfigurationProvider />,
     <NativeStorageLayoutCacheProvider />,
-    <FakeLayoutStorageProviders />,
     <NativeAppMenuProvider />,
     <UserProfileLocalStorageProvider />,
     <ExtensionLoaderProvider />,
@@ -75,16 +75,19 @@ export default function Root(): ReactElement {
 
   return (
     <ThemeProvider>
-      <ErrorBoundary>
-        <MultiProvider providers={providers}>
-          <App
-            demoBagUrl={DEMO_BAG_URL}
-            deepLinks={deepLinks}
-            onFullscreenToggle={handleToolbarDoubleClick}
-            availableSources={playerSources}
-          />
-        </MultiProvider>
-      </ErrorBoundary>
+      <GlobalCss />
+      <CssBaseline>
+        <ErrorBoundary>
+          <MultiProvider providers={providers}>
+            <App
+              demoBagUrl={DEMO_BAG_URL}
+              deepLinks={deepLinks}
+              onFullscreenToggle={handleToolbarDoubleClick}
+              availableSources={playerSources}
+            />
+          </MultiProvider>
+        </ErrorBoundary>
+      </CssBaseline>
     </ThemeProvider>
   );
 }
