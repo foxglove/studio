@@ -26,9 +26,7 @@ jobs:
               yarn dedupe --check
               yarn run tsc --noEmit # typecheck files that are not included by webpack or package builds
               yarn run lint:ci
-              echo "::add-matcher::.github/unused-exports-problem-matcher.json"
-                yarn run lint:unused-exports
-              echo "::remove-matcher owner=lint-unused-exports::"
+              yarn run lint:unused-exports
           - name: packages
             command: yarn run build:packages
           - name: web
