@@ -275,7 +275,7 @@ export default function LayoutRow({
             },
             {
               key: "delete-remote",
-              text: "Delete anyway",
+              text: "Delete for everyone",
               iconProps: { iconName: "Delete" },
               styles: { root: { color: theme.semanticColors.errorText } },
               onClick: confirmDeleteRemote,
@@ -287,7 +287,7 @@ export default function LayoutRow({
             {
               key: "overwrite-remote",
               text: "Use my version instead",
-              iconProps: { iconName: "RemoveFromTrash" },
+              iconProps: { iconName: "Upload" },
               onClick: confirmOverwriteRemote,
             },
             {

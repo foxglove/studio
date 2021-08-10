@@ -539,14 +539,37 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
         const cachedLayout = await this.cacheStorage.runExclusive(
           async (cache) => await cache.get(id),
         );
+        if (!cachedLayout || !cachedLayout.state) {
+          return { status: "success" };
+        }
         const remoteLayout = await this.remoteStorage.getLayout(id);
-        if (!cachedLayout) {
-          return { status: "success" };
-        }
+
+        // If the layout was deleted on the server, upload it as a new layout
         if (!remoteLayout) {
-          log.warn(`Remote layout not found when overwriting ${id}`);
-          return { status: "success" };
+          if (!cachedLayout.serverMetadata) {
+            throw new Error(`Expected serverMetadata when resolving conflict for ${id}`);
+          }
+          const response = await this.remoteStorage.saveNewLayout({
+            name: cachedLayout.name,
+            permission: cachedLayout.serverMetadata?.permission,
+            data: cachedLayout.state,
+          });
+          if (response.status !== "success") {
+            throw new Error(`Unable to re-upload remotely deleted layout: ${response.status}`);
+          }
+          await this.cacheStorage.runExclusive(async (cache) => {
+            await cache.put({
+              id: response.newMetadata.id,
+              name: response.newMetadata.name,
+              state: cachedLayout.state,
+              serverMetadata: response.newMetadata,
+            });
+            await cache.delete(id);
+          });
+          return { status: "success", newId: response.newMetadata.id };
         }
+
+        // Otherwise, update the remote layout with a new ifUnmodifiedSince
         const response = await this.remoteStorage.updateLayout({
           targetID: remoteLayout.id,
           name: cachedLayout.name,
