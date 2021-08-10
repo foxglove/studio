@@ -20,6 +20,7 @@ async function main(): Promise<void> {
   );
   const lines = stdout.trim().split("\n");
   for (const line of lines) {
+    // cf. https://github.com/nadeesha/ts-prune/blob/45c6be7e8db44f2421cc57b52e50e8ea4e402782/src/presenter.ts#L8
     const match = /^(.+):(\d+) - (.+)$/.exec(line);
     if (match && (process.env.CI ?? "") !== "") {
       info(`::error file=${match[1]},line=${match[2]}::Unused export ${match[3]}`);
