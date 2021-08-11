@@ -75,7 +75,7 @@ export default function LayoutRow({
   layout: LayoutMetadata;
   selected: boolean;
   onSave: (item: LayoutMetadata) => void;
-  onSelect: (item: LayoutMetadata, isUserSelected?: boolean) => void;
+  onSelect: (item: LayoutMetadata, selectedViaClick?: boolean) => void;
   onRename: (item: LayoutMetadata, newName: string) => void;
   onDuplicate: (item: LayoutMetadata) => void;
   onDelete: (item: LayoutMetadata) => void;

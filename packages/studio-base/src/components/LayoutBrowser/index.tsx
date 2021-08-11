@@ -73,11 +73,11 @@ export default function LayoutBrowser({
   }, [reloadLayouts]);
 
   const onSelectLayout = useCallback(
-    async (item: Pick<LayoutMetadata, "id">, isUserSelected?: boolean) => {
+    async (item: Pick<LayoutMetadata, "id">, selectedViaClick?: boolean) => {
       const layout = await layoutStorage.getLayout(item.id);
       if (layout) {
         setSelectedLayout(layout);
-        if (isUserSelected === true) {
+        if (selectedViaClick === true) {
           void analytics.logEvent(AppEvent.LAYOUT_SELECT);
         }
       }
