@@ -40,6 +40,6 @@ function JoystickPanelAdapter(props: Props) {
 
 JoystickPanelAdapter.panelType = "Control";
 JoystickPanelAdapter.defaultConfig = {};
-JoystickPanelAdapter.supportsStrictMode = false;
+JoystickPanelAdapter.supportsStrictMode = true;
 
 export default Panel(JoystickPanelAdapter);
