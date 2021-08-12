@@ -41,10 +41,10 @@ export default class FakePlayer implements Player {
     presence?: PlayerPresence;
   } = {}): Promise<void> {
     if (!this.listener) {
-      return Promise.resolve();
+      return undefined;
     }
 
-    return this.listener({
+    return await this.listener({
       playerId: this.playerId,
       presence: presence ?? PlayerPresence.PRESENT,
       capabilities: this._capabilities,

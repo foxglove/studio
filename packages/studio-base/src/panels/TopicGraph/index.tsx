@@ -11,21 +11,23 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import ArrowDownIcon from "@mdi/svg/svg/arrow-down-bold.svg";
-import ArrowRightIcon from "@mdi/svg/svg/arrow-right-bold.svg";
+import ArrowLeftRightIcon from "@mdi/svg/svg/arrow-left-right.svg";
+import ArrowUpDownIcon from "@mdi/svg/svg/arrow-up-down.svg";
 import FitToPageIcon from "@mdi/svg/svg/fit-to-page-outline.svg";
-import ServiceIcon from "@mdi/svg/svg/ray-end.svg";
-import TopicIcon from "@mdi/svg/svg/transit-connection-horizontal.svg";
+import ServiceIcon from "@mdi/svg/svg/rectangle-outline.svg";
+import TopicIcon from "@mdi/svg/svg/rhombus.svg";
 import Cytoscape from "cytoscape";
 import { useCallback, useMemo, useRef, useState } from "react";
 import textMetrics from "text-metrics";
 
 import Button from "@foxglove/studio-base/components/Button";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
+import ExpandingToolbar, { ToolGroup } from "@foxglove/studio-base/components/ExpandingToolbar";
 import Icon from "@foxglove/studio-base/components/Icon";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import Radio from "@foxglove/studio-base/components/Radio";
 import styles from "@foxglove/studio-base/panels/ThreeDimensionalViz/Layout.module.scss";
 import colors from "@foxglove/studio-base/styles/colors.module.scss";
 
@@ -102,6 +104,25 @@ const STYLESHEET: Cytoscape.Stylesheet[] = [
   },
 ];
 
+export type TopicVisibility =
+  | "all"
+  | "none"
+  | "published"
+  | "subscribed"
+  | "connected"
+  | "disconnected-pub"
+  | "disconnected-sub";
+
+const topicVisibilityToLabelMap: Record<TopicVisibility, string> = {
+  all: "All topics",
+  none: "No topics",
+  published: "Published topics",
+  subscribed: "Subscribed topics",
+  connected: "Connected topics",
+  "disconnected-pub": "Disconnected published topics",
+  "disconnected-sub": "Disconnected subscribed topics",
+};
+
 function unionInto<T>(dest: Set<T>, ...iterables: Set<T>[]): void {
   for (const iterable of iterables) {
     for (const item of iterable) {
@@ -111,6 +132,8 @@ function unionInto<T>(dest: Set<T>, ...iterables: Set<T>[]): void {
 }
 
 function TopicGraph() {
+  const [selectedTab, setSelectedTab] = useState<"Topics" | undefined>(undefined);
+
   const publishedTopics = useMessagePipeline(
     useCallback((ctx) => ctx.playerState.activeData?.publishedTopics, []),
   );
@@ -124,10 +147,8 @@ function TopicGraph() {
   );
 
   const [lrOrientation, setLROrientation] = useState<boolean>(false);
-
-  const [showTopics, setShowTopics] = useState<boolean>(true);
-
   const [showServices, setShowServices] = useState<boolean>(true);
+  const [topicVisibility, setTopicVisibility] = useState<TopicVisibility>("all");
 
   const textMeasure = useMemo(
     () =>
@@ -138,10 +159,38 @@ function TopicGraph() {
     [],
   );
 
+  const topicPassesConditions = useCallback(
+    ({
+      topicIdWithSubscriptions,
+      topic,
+    }: {
+      topicIdWithSubscriptions: Set<string>;
+      topic: string;
+    }): boolean => {
+      const publishedTopicsWithFallback = publishedTopics ?? new Map([]);
+      const published = publishedTopicsWithFallback.has(topic);
+      const subscribed = topicIdWithSubscriptions.has(topic);
+
+      if (topicVisibility === "none") {
+        return false;
+      }
+      return (
+        topicVisibility === "all" ||
+        (topicVisibility === "published" && published) ||
+        (topicVisibility === "subscribed" && subscribed) ||
+        (topicVisibility === "connected" && published && subscribed) ||
+        (topicVisibility === "disconnected-pub" && published && !subscribed) ||
+        (topicVisibility === "disconnected-sub" && subscribed && !published)
+      );
+    },
+    [publishedTopics, topicVisibility],
+  );
+
   const elements = useMemo<cytoscape.ElementDefinition[]>(() => {
     const output: cytoscape.ElementDefinition[] = [];
     const nodeIds = new Set<string>();
     const topicIds = new Set<string>();
+    const topicIdWithSubscriptions = new Set<string>();
     const serviceIds = new Set<string>();
     if (publishedTopics != undefined) {
       publishedTopics.forEach((curNodes, topic) => {
@@ -153,6 +202,7 @@ function TopicGraph() {
       subscribedTopics.forEach((curNodes, topic) => {
         unionInto(nodeIds, curNodes);
         topicIds.add(topic);
+        topicIdWithSubscriptions.add(topic);
       });
     }
     if (services != undefined) {
@@ -169,8 +219,11 @@ function TopicGraph() {
         data: { id: `n:${node}`, label: node, type: "node" },
       });
     }
-    if (showTopics) {
+    if (topicVisibility !== "none") {
       for (const topic of topicIds) {
+        if (!topicPassesConditions({ topicIdWithSubscriptions, topic })) {
+          continue;
+        }
         output.push({
           data: { id: `t:${topic}`, label: topic, type: "topic" },
         });
@@ -186,44 +239,48 @@ function TopicGraph() {
       }
     }
 
-    if (showTopics) {
-      if (publishedTopics != undefined) {
-        for (const [topic, publishers] of publishedTopics.entries()) {
-          for (const node of publishers) {
-            const source = `n:${node}`;
-            const target = `t:${topic}`;
-            output.push({ data: { id: `${source}-${target}`, source, target } });
-          }
+    switch (topicVisibility) {
+      case "none":
+        if (publishedTopics == undefined || subscribedTopics == undefined) {
+          break;
         }
-      }
-
-      if (subscribedTopics != undefined) {
-        for (const [topic, subscribers] of subscribedTopics.entries()) {
-          for (const node of subscribers) {
-            const source = `t:${topic}`;
-            const target = `n:${node}`;
-            output.push({ data: { id: `${source}-${target}`, source, target } });
-          }
-        }
-      }
-    } else {
-      if (publishedTopics != undefined && subscribedTopics != undefined) {
         for (const [topic, publishers] of publishedTopics.entries()) {
           for (const pubNode of publishers) {
-            const subscribers = subscribedTopics.get(topic);
-            if (subscribers != undefined) {
-              for (const subNode of subscribers) {
-                if (subNode === pubNode) {
-                  continue;
-                }
-                const source = `n:${pubNode}`;
-                const target = `n:${subNode}`;
-                output.push({ data: { id: `${source}-${target}`, source, target } });
+            for (const subNode of subscribedTopics.get(topic) ?? []) {
+              if (subNode === pubNode) {
+                continue;
               }
+              const source = `n:${pubNode}`;
+              const target = `n:${subNode}`;
+              output.push({ data: { id: `${source}-${target}`, source, target } });
             }
           }
         }
-      }
+        break;
+      default:
+        if (publishedTopics != undefined) {
+          for (const [topic, publishers] of publishedTopics.entries()) {
+            if (!topicPassesConditions({ topicIdWithSubscriptions, topic })) {
+              continue;
+            }
+
+            for (const node of publishers) {
+              const source = `n:${node}`;
+              const target = `t:${topic}`;
+              output.push({ data: { id: `${source}-${target}`, source, target } });
+            }
+          }
+        }
+
+        if (subscribedTopics != undefined) {
+          for (const [topic, subscribers] of subscribedTopics.entries()) {
+            for (const node of subscribers) {
+              const source = `t:${topic}`;
+              const target = `n:${node}`;
+              output.push({ data: { id: `${source}-${target}`, source, target } });
+            }
+          }
+        }
     }
 
     if (showServices && services != undefined) {
@@ -235,7 +292,15 @@ function TopicGraph() {
     }
 
     return output;
-  }, [textMeasure, publishedTopics, subscribedTopics, services, showTopics, showServices]);
+  }, [
+    textMeasure,
+    publishedTopics,
+    subscribedTopics,
+    services,
+    topicVisibility,
+    topicPassesConditions,
+    showServices,
+  ]);
 
   const graph = useRef<GraphMutation>();
 
@@ -248,10 +313,13 @@ function TopicGraph() {
     setLROrientation(!lrOrientation);
   }, [lrOrientation]);
 
-  const toggleShowTopics = useCallback(() => {
-    graph.current?.resetUserPanZoom();
-    setShowTopics(!showTopics);
-  }, [showTopics]);
+  const topicVisibilityTooltip: string = useMemo(() => {
+    return `Showing ${(topicVisibilityToLabelMap[topicVisibility] ?? "").toLowerCase()}`;
+  }, [topicVisibility]);
+
+  const topicButtonColor = useMemo(() => {
+    return topicVisibility === "none" ? "white" : colors.lightPurple;
+  }, [topicVisibility]);
 
   const toggleShowServices = useCallback(() => {
     graph.current?.resetUserPanZoom();
@@ -272,30 +340,54 @@ function TopicGraph() {
       <PanelToolbar floating helpContent={helpContent} />
       <Toolbar>
         <div className={styles.buttons}>
-          <Button tooltip="Zoom Fit" onClick={onZoomFit}>
+          <Button className={styles.iconButton} tooltip="Zoom Fit" onClick={onZoomFit}>
             <Icon style={{ color: "white" }} small>
               <FitToPageIcon />
             </Icon>
           </Button>
-          <Button tooltip="Orientation" onClick={toggleOrientation}>
+          <Button className={styles.iconButton} tooltip="Orientation" onClick={toggleOrientation}>
             <Icon style={{ color: "white" }} small>
-              {lrOrientation ? <ArrowRightIcon /> : <ArrowDownIcon />}
-            </Icon>
-          </Button>
-          <Button tooltip={showTopics ? "Hide Topics" : "Show Topics"} onClick={toggleShowTopics}>
-            <Icon style={{ color: showTopics ? colors.accent : "white" }} small>
-              <TopicIcon />
+              {lrOrientation ? <ArrowLeftRightIcon /> : <ArrowUpDownIcon />}
             </Icon>
           </Button>
           <Button
-            tooltip={showServices ? "Hide Services" : "Show Services"}
+            className={styles.iconButton}
+            tooltip={showServices ? "Showing services" : "Hiding services"}
             onClick={toggleShowServices}
           >
-            <Icon style={{ color: showServices ? colors.accent : "white" }} small>
+            <Icon style={{ color: showServices ? colors.red : "white" }} small>
               <ServiceIcon />
             </Icon>
           </Button>
         </div>
+        <ExpandingToolbar
+          dataTest="set-topic-visibility"
+          tooltip={topicVisibilityTooltip}
+          icon={
+            <Icon style={{ color: topicButtonColor }}>
+              <TopicIcon />
+            </Icon>
+          }
+          className={styles.buttons}
+          selectedTab={selectedTab}
+          onSelectTab={(newSelectedTab) => {
+            setSelectedTab(newSelectedTab);
+          }}
+        >
+          <ToolGroup name="Topics">
+            <Radio
+              selectedId={topicVisibility}
+              onChange={(id) => {
+                graph.current?.resetUserPanZoom();
+                setTopicVisibility(id as TopicVisibility);
+              }}
+              options={Object.keys(topicVisibilityToLabelMap).map((id) => ({
+                id,
+                label: topicVisibilityToLabelMap[id as TopicVisibility] ?? "",
+              }))}
+            />
+          </ToolGroup>
+        </ExpandingToolbar>
       </Toolbar>
       <Graph
         style={STYLESHEET}

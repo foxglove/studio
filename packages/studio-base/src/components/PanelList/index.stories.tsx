@@ -27,6 +27,7 @@ import PanelCatalogContext, {
 import CurrentLayoutState, {
   DEFAULT_LAYOUT_FOR_TESTS,
 } from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
+import { PanelConfigSchemaEntry } from "@foxglove/studio-base/types/panels";
 
 const SamplePanel1 = function () {
   return <div></div>;
@@ -43,17 +44,40 @@ SamplePanel2.defaultConfig = {};
 const MockPanel1 = Panel(SamplePanel1);
 const MockPanel2 = Panel(SamplePanel2);
 
-const allPanels = [
-  { title: "Some Panel", component: MockPanel1 },
-  { title: "Happy Panel", component: MockPanel2 },
+const allPanels: PanelInfo[] = [
+  { title: "Regular Panel BBB", type: "Sample1", module: async () => ({ default: MockPanel1 }) },
+  { title: "Regular Panel AAA", type: "Sample2", module: async () => ({ default: MockPanel2 }) },
+
+  {
+    title: "Preconfigured Panel AAA",
+    type: "Sample1",
+    module: async () => ({ default: MockPanel1 }),
+    config: { text: "def" },
+    preconfigured: true,
+  },
+  {
+    title: "Preconfigured Panel BBB",
+    type: "Sample2",
+    module: async () => ({ default: MockPanel1 }),
+    config: { num: 456 },
+    preconfigured: true,
+  },
 ];
 
 class MockPanelCatalog implements PanelCatalog {
-  getPanels(): PanelInfo[] {
+  async getConfigSchema(type: string): Promise<PanelConfigSchemaEntry<string>[] | undefined> {
+    const info = this.getPanelByType(type);
+    if (!info) {
+      return undefined;
+    }
+    const module = await info?.module();
+    return module.default.configSchema;
+  }
+  getPanels(): readonly PanelInfo[] {
     return allPanels;
   }
   getPanelByType(type: string): PanelInfo | undefined {
-    return allPanels.find((panel) => panel.component.panelType === type);
+    return allPanels.find((panel) => panel.preconfigured !== true && panel.type === type);
   }
 }
 
@@ -123,7 +147,7 @@ storiesOf("components/PanelList", module)
       />
     </div>
   ))
-  .add("filtered panel list", () => <PanelListWithInteractions inputValue="h" />)
+  .add("filtered panel list", () => <PanelListWithInteractions inputValue="AAA" />)
   .add("navigating panel list with arrow keys", () => (
     <PanelListWithInteractions events={[arrowDown, arrowDown, arrowUp]} />
   ))
@@ -131,14 +155,14 @@ storiesOf("components/PanelList", module)
     <PanelListWithInteractions events={[arrowUp]} />
   ))
   .add("filtered panel list without results in 1st category", () => (
-    <PanelListWithInteractions inputValue="Happy" />
+    <PanelListWithInteractions inputValue="regular" />
   ))
   .add("filtered panel list without results in last category", () => (
-    <PanelListWithInteractions inputValue="Some" />
+    <PanelListWithInteractions inputValue="preconfigured" />
   ))
   .add("filtered panel list without results in any category", () => (
-    <PanelListWithInteractions inputValue="zz" />
+    <PanelListWithInteractions inputValue="WWW" />
   ))
   .add("case-insensitive filtering and highlight submenu", () => (
-    <PanelListWithInteractions inputValue="hn" />
+    <PanelListWithInteractions inputValue="pA" />
   ));

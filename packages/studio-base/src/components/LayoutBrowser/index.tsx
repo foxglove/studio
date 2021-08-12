@@ -13,6 +13,7 @@ import useAsyncFn from "react-use/lib/useAsyncFn";
 import conflictTypeToString from "@foxglove/studio-base/components/LayoutBrowser/conflictTypeToString";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
+import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import {
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
@@ -23,7 +24,8 @@ import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutS
 import { usePrompt } from "@foxglove/studio-base/hooks/usePrompt";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
-import { LayoutMetadata } from "@foxglove/studio-base/services/ILayoutStorage";
+import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
+import { ConflictResolution, LayoutMetadata } from "@foxglove/studio-base/services/ILayoutStorage";
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
 
 import LayoutSection from "./LayoutSection";
@@ -40,6 +42,7 @@ export default function LayoutBrowser({
   const { addToast } = useToasts();
   const layoutStorage = useLayoutStorage();
   const prompt = usePrompt();
+  const analytics = useAnalytics();
 
   const currentLayoutId = useCurrentLayoutSelector((state) => state.selectedLayout?.id);
   const { setSelectedLayout } = useCurrentLayoutActions();
@@ -70,33 +73,46 @@ export default function LayoutBrowser({
   }, [reloadLayouts]);
 
   const onSelectLayout = useCallback(
-    async (item: LayoutMetadata) => {
+    async (item: Pick<LayoutMetadata, "id">, selectedViaClick?: boolean) => {
       const layout = await layoutStorage.getLayout(item.id);
       if (layout) {
         setSelectedLayout(layout);
+        if (selectedViaClick === true) {
+          void analytics.logEvent(AppEvent.LAYOUT_SELECT);
+        }
       }
     },
-    [layoutStorage, setSelectedLayout],
+    [analytics, layoutStorage, setSelectedLayout],
   );
 
   const onSaveLayout = useCallback(
     async (item: LayoutMetadata) => {
-      const conflictString = conflictTypeToString(await layoutStorage.syncLayout(item.id));
-      if (conflictString != undefined) {
-        addToast(conflictString, { autoDismiss: true, appearance: "warning" });
+      const result = await layoutStorage.syncLayout(item.id);
+      switch (result.status) {
+        case "success":
+          if (result.newId != undefined) {
+            await onSelectLayout({ id: result.newId });
+          }
+          break;
+        case "conflict": {
+          addToast(conflictTypeToString(result.type), { autoDismiss: true, appearance: "warning" });
+          void analytics.logEvent(AppEvent.LAYOUT_CONFLICT, { type: result.type });
+          break;
+        }
       }
     },
-    [addToast, layoutStorage],
+    [analytics, addToast, layoutStorage, onSelectLayout],
   );
 
   const onRenameLayout = useCallback(
     async (item: LayoutMetadata, newName: string) => {
-      await layoutStorage.renameLayout({ id: item.id, path: [], name: newName });
+      await layoutStorage.updateLayout({ targetID: item.id, name: newName });
       if (currentLayoutId === item.id) {
         await onSelectLayout(item);
+        void analytics.logEvent(AppEvent.LAYOUT_RENAME);
       }
     },
-    [currentLayoutId, layoutStorage, onSelectLayout],
+    [analytics, currentLayoutId, layoutStorage, onSelectLayout],
   );
 
   const onDuplicateLayout = useCallback(
@@ -104,19 +120,22 @@ export default function LayoutBrowser({
       const source = await layoutStorage.getLayout(item.id);
       if (source) {
         const newLayout = await layoutStorage.saveNewLayout({
-          path: [],
           name: `${item.name} copy`,
           data: source.data,
+          permission: "creator_write",
         });
         await onSelectLayout(newLayout);
+        void analytics.logEvent(AppEvent.LAYOUT_DUPLICATE);
       }
     },
-    [layoutStorage, onSelectLayout],
+    [analytics, layoutStorage, onSelectLayout],
   );
 
   const onDeleteLayout = useCallback(
     async (item: LayoutMetadata) => {
       await layoutStorage.deleteLayout({ id: item.id });
+      void analytics.logEvent(AppEvent.LAYOUT_DELETE);
+
       if (currentLayoutId !== item.id) {
         return;
       }
@@ -130,13 +149,13 @@ export default function LayoutBrowser({
       }
       // If no existing layout could be selected, use the welcome layout
       const newLayout = await layoutStorage.saveNewLayout({
-        path: [],
         name: welcomeLayout.name,
         data: welcomeLayout.data,
+        permission: "creator_write",
       });
       await onSelectLayout(newLayout);
     },
-    [currentLayoutId, layoutStorage, setSelectedLayout, onSelectLayout],
+    [analytics, currentLayoutId, layoutStorage, setSelectedLayout, onSelectLayout],
   );
 
   const createNewLayout = useCallback(async () => {
@@ -152,11 +171,13 @@ export default function LayoutBrowser({
     };
     const newLayout = await layoutStorage.saveNewLayout({
       name,
-      path: [],
       data: state as PanelsState,
+      permission: "creator_write",
     });
     void onSelectLayout(newLayout);
-  }, [currentDateForStorybook, layoutStorage, onSelectLayout]);
+
+    void analytics.logEvent(AppEvent.LAYOUT_CREATE);
+  }, [currentDateForStorybook, layoutStorage, analytics, onSelectLayout]);
 
   const onExportLayout = useCallback(
     async (item: LayoutMetadata) => {
@@ -164,9 +185,10 @@ export default function LayoutBrowser({
       if (layout) {
         const content = JSON.stringify(layout.data, undefined, 2);
         downloadTextFile(content, `${item.name}.json`);
+        void analytics.logEvent(AppEvent.LAYOUT_EXPORT);
       }
     },
-    [layoutStorage],
+    [layoutStorage, analytics],
   );
 
   const onShareLayout = useCallback(
@@ -176,26 +198,35 @@ export default function LayoutBrowser({
         title: `Share “${item.name}”`,
         value: item.name,
         transformer: (value: string) => {
-          if (
-            existingSharedLayouts.some(
-              (sharedLayout) => sharedLayout.path.length === 0 && sharedLayout.name === value,
-            )
-          ) {
+          if (existingSharedLayouts.some((sharedLayout) => sharedLayout.name === value)) {
             throw new Error("A shared layout with this name already exists.");
           }
           return value;
         },
       });
       if (name != undefined) {
-        await layoutStorage.shareLayout({
-          sourceID: item.id,
-          path: [],
+        const layout = await layoutStorage.getLayout(item.id);
+        if (!layout) {
+          throw new Error("The layout could not be found.");
+        }
+        await layoutStorage.saveNewLayout({
           name,
+          data: layout.data,
           permission: "org_write",
         });
+        void analytics.logEvent(AppEvent.LAYOUT_SHARE);
       }
     },
-    [layoutStorage, layouts.value?.shared, prompt],
+    [analytics, layoutStorage, layouts.value?.shared, prompt],
+  );
+
+  const onResolveConflict = useCallback(
+    async (item: LayoutMetadata, resolution: ConflictResolution) => {
+      const result = await layoutStorage.resolveConflict(item.id, resolution);
+      // Since the layout may have changed, re-select it in order to load the latest data
+      await onSelectLayout({ id: result.newId ?? item.id });
+    },
+    [layoutStorage, onSelectLayout],
   );
 
   const importLayout = useCallback(async () => {
@@ -230,9 +261,14 @@ export default function LayoutBrowser({
     }
 
     const data = parsedState as PanelsState;
-    const newLayout = await layoutStorage.saveNewLayout({ path: [], name: layoutName, data });
+    const newLayout = await layoutStorage.saveNewLayout({
+      name: layoutName,
+      data,
+      permission: "creator_write",
+    });
     void onSelectLayout(newLayout);
-  }, [addToast, isMounted, layoutStorage, onSelectLayout]);
+    void analytics.logEvent(AppEvent.LAYOUT_IMPORT);
+  }, [addToast, isMounted, layoutStorage, analytics, onSelectLayout]);
 
   const createLayoutTooltip = useTooltip({ contents: "Create new layout" });
   const importLayoutTooltip = useTooltip({ contents: "Import layout" });
@@ -280,6 +316,7 @@ export default function LayoutBrowser({
             onDelete={onDeleteLayout}
             onShare={onShareLayout}
             onExport={onExportLayout}
+            onResolveConflict={onResolveConflict}
           />
         </Stack.Item>
         <Stack.Item>
@@ -296,11 +333,12 @@ export default function LayoutBrowser({
               onDelete={onDeleteLayout}
               onShare={onShareLayout}
               onExport={onExportLayout}
+              onResolveConflict={onResolveConflict}
             />
           )}
         </Stack.Item>
         <div style={{ flexGrow: 1 }} />
-        {process.env.NODE_ENV !== "production" && layoutDebug?.useFakeRemoteLayoutStorage && (
+        {layoutDebug && (
           <Stack
             style={{
               position: "sticky",
@@ -315,19 +353,21 @@ export default function LayoutBrowser({
           >
             <Stack.Item grow align="stretch">
               <Stack disableShrink horizontal tokens={{ childrenGap: theme.spacing.s1 }}>
-                <Stack.Item grow>
-                  <DefaultButton
-                    text="Open dir"
-                    onClick={() => void layoutDebug.openFakeStorageDirectory()}
-                    styles={{
-                      root: {
-                        display: "block",
-                        width: "100%",
-                        margin: 0,
-                      },
-                    }}
-                  />
-                </Stack.Item>
+                {layoutDebug.openFakeStorageDirectory && (
+                  <Stack.Item grow>
+                    <DefaultButton
+                      text="Open dir"
+                      onClick={() => void layoutDebug.openFakeStorageDirectory?.()}
+                      styles={{
+                        root: {
+                          display: "block",
+                          width: "100%",
+                          margin: 0,
+                        },
+                      }}
+                    />
+                  </Stack.Item>
+                )}
                 <Stack.Item grow>
                   <DefaultButton
                     text="Sync now"

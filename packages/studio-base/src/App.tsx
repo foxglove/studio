@@ -6,10 +6,12 @@ import { Suspense, useMemo, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import Workspace from "@foxglove/studio-base/Workspace";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import { NativeFileMenuPlayerSelection } from "@foxglove/studio-base/components/NativeFileMenuPlayerSelection";
 import PlayerManager from "@foxglove/studio-base/components/PlayerManager";
+import SendNotificationToastAdapter from "@foxglove/studio-base/components/SendNotificationToastAdapter";
 import AnalyticsProvider from "@foxglove/studio-base/context/AnalyticsProvider";
 import { AssetsProvider } from "@foxglove/studio-base/context/AssetsContext";
 import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
@@ -17,6 +19,8 @@ import { HoverValueProvider } from "@foxglove/studio-base/context/HoverValueCont
 import ModalHost from "@foxglove/studio-base/context/ModalHost";
 import { PlayerSourceDefinition } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { UserNodeStateProvider } from "@foxglove/studio-base/context/UserNodeStateContext";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
+import ConsoleApiLayoutStorageProvider from "@foxglove/studio-base/providers/ConsoleApiLayoutStorageProvider";
 import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
 import CurrentUserProvider from "@foxglove/studio-base/providers/CurrentUserProvider";
 import ExtensionMarketplaceProvider from "@foxglove/studio-base/providers/ExtensionMarketplaceProvider";
@@ -26,6 +30,11 @@ import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 import URDFAssetLoader from "@foxglove/studio-base/services/URDFAssetLoader";
 
 type AppProps = {
+  /**
+   * Set to true to force loading the welcome layout for demo mode. Normally the demo is only shown
+   * on first launch and not subsequent launches.
+   */
+  loadWelcomeLayout?: boolean;
   availableSources: PlayerSourceDefinition[];
   demoBagUrl?: string;
   deepLinks?: string[];
@@ -39,11 +48,24 @@ export default function App(props: AppProps): JSX.Element {
     return new ConsoleApi(process.env.FOXGLOVE_API_URL!);
   }, []);
 
+  const [showRos2Rosbridge = false] = useAppConfigurationValue<boolean>(
+    AppSetting.SHOW_ROS2_ROSBRIDGE,
+  );
+
+  const filteredDataSources = useMemo(
+    () =>
+      showRos2Rosbridge
+        ? props.availableSources
+        : props.availableSources.filter((source) => source.type !== "ros2-rosbridge-websocket"),
+    [props.availableSources, showRos2Rosbridge],
+  );
+
   const providers = [
     /* eslint-disable react/jsx-key */
     <AnalyticsProvider />,
     <ConsoleApiContext.Provider value={api} />,
     <CurrentUserProvider />,
+    <ConsoleApiLayoutStorageProvider />,
     <ModalHost />, // render modal elements inside the ThemeProvider
     <AssetsProvider loaders={assetLoaders} />,
     <HoverValueProvider />,
@@ -51,17 +73,19 @@ export default function App(props: AppProps): JSX.Element {
     <CurrentLayoutProvider />,
     <ExtensionMarketplaceProvider />,
     <ExtensionRegistryProvider />,
-    <PlayerManager playerSources={props.availableSources} />,
+    <PlayerManager playerSources={filteredDataSources} />,
     /* eslint-enable react/jsx-key */
   ];
 
   return (
     <MultiProvider providers={providers}>
+      <SendNotificationToastAdapter />
       <NativeFileMenuPlayerSelection />
       <DndProvider backend={HTML5Backend}>
         <Suspense fallback={<></>}>
           <PanelCatalogProvider>
             <Workspace
+              loadWelcomeLayout={props.loadWelcomeLayout}
               demoBagUrl={props.demoBagUrl}
               deepLinks={props.deepLinks}
               onToolbarDoubleClick={props.onFullscreenToggle}

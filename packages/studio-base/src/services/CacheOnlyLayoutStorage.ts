@@ -23,8 +23,7 @@ function getMetadata(layout: CachedLayout): LayoutMetadata {
   return {
     id: layout.id as LayoutID,
     name: layout.name,
-    path: layout.path ?? [],
-    creator: undefined,
+    creatorUserId: undefined,
     createdAt: undefined,
     updatedAt: undefined,
     permission: "creator_write",
@@ -77,73 +76,61 @@ export default class CacheOnlyLayoutStorage implements ILayoutStorage {
     };
   }
 
-  async syncLayout(_id: LayoutID): Promise<undefined> {
+  async syncLayout(): Promise<never> {
     throw new Error("CacheOnlyLayoutStorage should never have unsynced changes");
   }
 
+  async resolveConflict(): Promise<{ status: "success"; newId?: LayoutID | undefined }> {
+    throw new Error("CacheOnlyLayoutStorage should never have conflicts to resolve");
+  }
+
   async saveNewLayout({
-    path,
     name,
     data,
+    permission,
   }: {
-    path: string[];
     name: string;
     data: PanelsState;
+    permission: "creator_write" | "org_read" | "org_write";
   }): Promise<LayoutMetadata> {
+    if (permission !== "creator_write") {
+      throw new Error("Shared layouts are not supported in local-only storage");
+    }
     const id = uuidv4() as LayoutID;
-    const newLayout: CachedLayout = { id, name, path, state: data };
+    const newLayout: CachedLayout = { id, name, state: data };
     await this.storage.put(newLayout);
     this.notifyChangeListeners();
     return getMetadata(newLayout);
   }
 
   async updateLayout({
-    name,
-    path,
-    data,
     targetID,
+    name,
+    data,
+    permission,
   }: {
     targetID: LayoutID;
-    name: string | undefined;
-    path: string[] | undefined;
-    data: PanelsState;
+    name?: string;
+    data?: PanelsState;
+    permission?: "creator_write" | "org_read" | "org_write";
   }): Promise<void> {
     const cachedLayout = await this.storage.get(targetID);
     if (!cachedLayout || !cachedLayout.state) {
       throw new Error("Attempted to update a layout that does not already exist");
     }
+    if (permission != undefined && permission !== "creator_write") {
+      throw new Error("Shared layouts are not supported in local-only storage");
+    }
     await this.storage.put({
       id: targetID,
       name: name ?? cachedLayout.name,
-      path: path ?? cachedLayout.path,
-      state: data,
+      state: data ?? cachedLayout.state,
     });
     this.notifyChangeListeners();
   }
 
-  async shareLayout(_: unknown): Promise<void> {
-    throw new Error("Sharing is not supported in local-only storage");
-  }
-
   async deleteLayout({ id }: { id: LayoutID }): Promise<void> {
     await this.storage.delete(id);
-    this.notifyChangeListeners();
-  }
-
-  async renameLayout({
-    id,
-    name,
-    path,
-  }: {
-    id: LayoutID;
-    name: string;
-    path: string[];
-  }): Promise<void> {
-    const target = await this.storage.get(id);
-    if (!target?.state) {
-      throw new Error(`Layout id ${id} not found`);
-    }
-    await this.storage.put({ id, name, path, state: target.state });
     this.notifyChangeListeners();
   }
 }

@@ -15,12 +15,13 @@ import PinIcon from "@mdi/svg/svg/pin.svg";
 import cx from "classnames";
 import { compact } from "lodash";
 import { useCallback, useMemo } from "react";
-import { List, AutoSizer } from "react-virtualized";
+import { List, AutoSizer, ListRowProps } from "react-virtualized";
 
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
+import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
@@ -124,7 +125,8 @@ function DiagnosticSummary(props: Props): JSX.Element {
   );
 
   const renderRow = useCallback(
-    ({ item, style, key }) => {
+    // eslint-disable-next-line react/no-unused-prop-types
+    ({ item, style, key }: ListRowProps & { item: DiagnosticInfo }) => {
       return (
         <div key={key} style={style}>
           <NodeRow
@@ -140,7 +142,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
   );
 
   const hardwareFilter = (
-    <input
+    <LegacyInput
       style={{ width: "100%", padding: "0", background: "transparent", opacity: "0.5" }}
       value={hardwareIdFilter}
       placeholder={"Filter hardware id"}
@@ -203,7 +205,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
             height={height}
             style={{ outline: "none" }}
             rowHeight={25}
-            rowRenderer={(rowProps) => renderRow({ ...rowProps, item: nodes[rowProps.index] })}
+            rowRenderer={(rowProps) => renderRow({ ...rowProps, item: nodes[rowProps.index]! })}
             rowCount={nodes.length}
             overscanRowCount={10}
           />

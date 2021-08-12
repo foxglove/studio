@@ -11,8 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Time } from "rosbag";
-
+import { Time } from "@foxglove/rostime";
 import NoopMetricsCollector from "@foxglove/studio-base/players/NoopMetricsCollector";
 import RosbridgePlayer from "@foxglove/studio-base/players/RosbridgePlayer";
 
@@ -135,7 +134,11 @@ describe("RosbridgePlayer", () => {
   let player: RosbridgePlayer;
 
   beforeEach(() => {
-    player = new RosbridgePlayer("ws://some-url", new NoopMetricsCollector());
+    player = new RosbridgePlayer({
+      url: "ws://some-url",
+      rosVersion: 1,
+      metricsCollector: new NoopMetricsCollector(),
+    });
   });
 
   afterEach(() => {
@@ -161,12 +164,11 @@ describe("RosbridgePlayer", () => {
     player.setListener(async ({ activeData }) => {
       const { topics } = activeData ?? {};
       if (!topics) {
-        return Promise.resolve();
+        return;
       }
 
       expect(topics).toStrictEqual([{ name: "/topic/A", datatype: "/std_msgs/Header" }]);
       done();
-      return Promise.resolve();
     });
   });
 
@@ -210,7 +212,7 @@ describe("RosbridgePlayer", () => {
       player.setListener(async ({ activeData }) => {
         const { messages } = activeData ?? {};
         if (!messages) {
-          return Promise.resolve();
+          return;
         }
 
         expect(messages.length).toBe(1);
@@ -223,7 +225,6 @@ describe("RosbridgePlayer", () => {
         });
 
         done();
-        return Promise.resolve();
       });
     });
 
@@ -233,7 +234,7 @@ describe("RosbridgePlayer", () => {
       player.setListener(async ({ activeData }) => {
         const { messages } = activeData ?? {};
         if (!messages) {
-          return Promise.resolve();
+          return;
         }
 
         expect(messages.length).toBe(1);
@@ -242,7 +243,6 @@ describe("RosbridgePlayer", () => {
         });
 
         done();
-        return Promise.resolve();
       });
     });
   });

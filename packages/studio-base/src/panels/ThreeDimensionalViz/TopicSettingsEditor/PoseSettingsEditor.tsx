@@ -17,6 +17,7 @@ import { ComponentProps } from "react";
 
 import ColorPicker from "@foxglove/studio-base/components/ColorPicker";
 import Flex from "@foxglove/studio-base/components/Flex";
+import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { Color, PoseStamped } from "@foxglove/studio-base/types/Messages";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
@@ -80,6 +81,7 @@ export default function PoseSettingsEditor(
             <ColorPicker
               color={settings.overrideColor}
               onChange={(newColor) => onFieldChange("overrideColor", newColor)}
+              alphaType="alpha"
             />
             <SLabel>Shaft width</SLabel>
             <SInput
@@ -168,7 +170,7 @@ export default function PoseSettingsEditor(
           { value: "arrow", title: "Arrow" },
         ].map(({ value, title }) => (
           <div key={value} style={{ marginBottom: "4px", display: "flex" }}>
-            <input
+            <LegacyInput
               type="radio"
               value={value}
               checked={settings.modelType === value || (value === "arrow" && badModelTypeSetting)}

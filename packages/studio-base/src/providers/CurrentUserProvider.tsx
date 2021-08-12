@@ -22,10 +22,10 @@ export default function CurrentUserProvider(props: PropsWithChildren<unknown>): 
 
   const { loading, value, error } = useAsync(async () => {
     if (!isNonEmptyOrUndefined(bearerToken)) {
-      return Promise.resolve(undefined);
+      return undefined;
     }
     api.setAuthHeader(`Bearer ${bearerToken}`);
-    return api.me();
+    return await api.me();
   }, [api, bearerToken]);
 
   useEffect(() => {

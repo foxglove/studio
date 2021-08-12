@@ -13,6 +13,7 @@
 
 import styled from "styled-components";
 
+import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 const { useRef, useState, useLayoutEffect, useCallback } = React;
@@ -97,7 +98,7 @@ export default function TextField({
   }, [error, onError]);
 
   const validate = useCallback(
-    (val) => {
+    (val: string) => {
       const validationResult = validator(val);
       if (validationResult != undefined) {
         setError(validationResult);
@@ -110,7 +111,7 @@ export default function TextField({
   );
 
   const handleChange = useCallback(
-    ({ target }) => {
+    ({ target }: React.ChangeEvent<HTMLInputElement>) => {
       setInputStr(target.value);
       if (!validateOnBlur) {
         validate(target.value);
@@ -135,7 +136,7 @@ export default function TextField({
   return (
     <STextField style={style}>
       {label != undefined && <STextFieldLabel>{label}</STextFieldLabel>}
-      <input
+      <LegacyInput
         onBlur={handleBlur}
         ref={inputRef}
         placeholder={placeholder}

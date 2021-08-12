@@ -29,6 +29,7 @@ import dropDownStyles from "@foxglove/studio-base/components/Dropdown/index.modu
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
+import { LegacyButton } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { Item, SubMenu } from "@foxglove/studio-base/components/Menu";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
@@ -41,13 +42,6 @@ import { CameraInfo, StampedMessage } from "@foxglove/studio-base/types/Messages
 import { PanelConfigSchema, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { nonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
 import filterMap from "@foxglove/studio-base/util/filterMap";
-import {
-  FOXGLOVE_MSGS_IMAGE_MARKER_ARRAY_DATATYPE,
-  STUDIO_MSGS_IMAGE_MARKER_ARRAY_DATATYPE,
-  VISUALIZATION_MSGS_IMAGE_MARKER_ARRAY_DATATYPE,
-  VISUALIZATION_MSGS_IMAGE_MARKER_DATATYPE,
-  WEBVIZ_MSGS_IMAGE_MARKER_ARRAY_DATATYPE,
-} from "@foxglove/studio-base/util/globalConstants";
 import naturalSort from "@foxglove/studio-base/util/naturalSort";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import { colors as sharedColors } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -55,8 +49,7 @@ import { getSynchronizingReducers } from "@foxglove/studio-base/util/synchronize
 import { formatTimeRaw, getTimestampForMessage } from "@foxglove/studio-base/util/time";
 import toggle from "@foxglove/studio-base/util/toggle";
 
-import ImageCanvas, { DEFAULT_MAX_ZOOM } from "./ImageCanvas";
-import imageCanvasStyles from "./ImageCanvas.module.scss";
+import ImageCanvas from "./ImageCanvas";
 import helpContent from "./index.help.md";
 import style from "./index.module.scss";
 import {
@@ -73,7 +66,6 @@ type DefaultConfig = {
   cameraTopic: string;
   enabledMarkerTopics: string[];
   customMarkerTopicOptions?: string[];
-  scale: number;
   synchronize: boolean;
 };
 
@@ -81,9 +73,9 @@ export type Config = DefaultConfig & {
   transformMarkers: boolean;
   mode?: "fit" | "fill" | "other";
   smooth?: boolean;
+  zoom?: number;
+  pan?: { x: number; y: number };
   zoomPercentage?: number;
-  offset?: [number, number];
-  maxZoom?: number;
   minValue?: number;
   maxValue?: number;
   saveStoryConfig?: () => void;
@@ -123,8 +115,8 @@ const TopicTimestamp = ({
 
 const BottomBar = ({ children }: { children?: React.ReactNode }) => (
   <div
-    className={cx(imageCanvasStyles["bottom-bar"], {
-      [imageCanvasStyles.inScreenshotTests!]: inScreenshotTests(),
+    className={cx(style["bottom-bar"], {
+      [style.inScreenshotTests!]: inScreenshotTests(),
     })}
   >
     {children}
@@ -141,7 +133,7 @@ const ToggleComponent = ({
   dataTest?: string;
 }) => {
   return (
-    <button
+    <LegacyButton
       style={{ maxWidth: "100%", padding: "4px 8px" }}
       className={cx({ disabled })}
       data-test={dataTest}
@@ -150,7 +142,7 @@ const ToggleComponent = ({
       <Icon style={{ marginLeft: 4 }}>
         <MenuDownIcon style={{ width: 14, height: 14, opacity: 0.5 }} />
       </Icon>
-    </button>
+    </LegacyButton>
   );
 };
 
@@ -177,16 +169,16 @@ function renderEmptyState(
     <SEmptyStateWrapper>
       <EmptyState>
         Waiting for images {markerTopics.length > 0 && "and markers"} on:
-        <ul>
-          <li>
+        <div>
+          <div>
             <code>{cameraTopic}</code>
-          </li>
+          </div>
           {markerTopics.sort().map((m) => (
-            <li key={m}>
+            <div key={m}>
               <code>{m}</code>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
         {shouldSynchronize && (
           <>
             <p>
@@ -275,7 +267,6 @@ const NO_CUSTOM_OPTIONS: string[] = [];
 function ImageView(props: Props) {
   const { config, saveConfig } = props;
   const {
-    scale,
     cameraTopic,
     enabledMarkerTopics,
     transformMarkers,
@@ -302,12 +293,13 @@ function ImageView(props: Props) {
   const imageMarkerDatatypes = useMemo(
     () => [
       // Single marker
-      VISUALIZATION_MSGS_IMAGE_MARKER_DATATYPE,
+      "visualization_msgs/ImageMarker",
       // Marker arrays
-      FOXGLOVE_MSGS_IMAGE_MARKER_ARRAY_DATATYPE,
-      STUDIO_MSGS_IMAGE_MARKER_ARRAY_DATATYPE,
-      VISUALIZATION_MSGS_IMAGE_MARKER_ARRAY_DATATYPE,
-      WEBVIZ_MSGS_IMAGE_MARKER_ARRAY_DATATYPE,
+      "foxglove_msgs/ImageMarkerArray",
+      "studio_msgs/ImageMarkerArray",
+      "visualization_msgs/ImageMarkerArray",
+      // backwards compat with webviz
+      "webviz_msgs/ImageMarkerArray",
     ],
     [],
   );
@@ -357,6 +349,7 @@ function ImageView(props: Props) {
     if (imageTopicsByNamespace.size === 0) {
       return (
         <Dropdown
+          btnClassname={style.dropdown}
           toggleComponent={
             <ToggleComponent
               dataTest={"topics-dropdown"}
@@ -429,16 +422,13 @@ function ImageView(props: Props) {
     topics: cameraInfoTopic != undefined ? [cameraInfoTopic] : [],
     restore: useCallback((value) => value, []),
     addMessage: useCallback(
-      (_value, { message }: MessageEvent<unknown>) => message as CameraInfo,
+      (_value: CameraInfo | undefined, { message }: MessageEvent<unknown>) => message as CameraInfo,
       [],
     ),
   });
 
   const shouldSynchronize = config.synchronize && enabledMarkerTopics.length > 0;
-  const imageAndMarkerTopics = useShallowMemo([
-    { topic: cameraTopic, imageScale: scale },
-    ...enabledMarkerTopics,
-  ]);
+  const imageAndMarkerTopics = useShallowMemo([{ topic: cameraTopic }, ...enabledMarkerTopics]);
   const { messagesByTopic, synchronizedMessages } = useOptionallySynchronizedMessages(
     shouldSynchronize,
     imageAndMarkerTopics,
@@ -489,8 +479,6 @@ function ImageView(props: Props) {
   );
 
   const markerDropdown = useMemo(() => {
-    const missingRequiredCameraInfo = scale !== 1 && !cameraInfo;
-
     return (
       <Dropdown
         dataTest={"markers-dropdown"}
@@ -498,12 +486,7 @@ function ImageView(props: Props) {
         onChange={onToggleMarkerName}
         value={enabledMarkerTopics}
         text={availableAndEnabledMarkerTopics.length > 0 ? "markers" : "no markers"}
-        tooltip={
-          missingRequiredCameraInfo
-            ? "camera_info is required when image resolution is set to less than 100%.\nResolution can be changed in the panel settings."
-            : undefined
-        }
-        disabled={availableAndEnabledMarkerTopics.length === 0 || missingRequiredCameraInfo}
+        btnClassname={style.dropdown}
       >
         {availableAndEnabledMarkerTopics.map((topic) => (
           <Item
@@ -545,13 +528,11 @@ function ImageView(props: Props) {
   }, [
     addTopicsMenu,
     availableAndEnabledMarkerTopics,
-    cameraInfo,
     customMarkerTopicOptions,
     enabledMarkerTopics,
     onToggleMarkerName,
     renderedMarkerTimestamps,
     saveConfig,
-    scale,
   ]);
 
   const imageMessage = messagesByTopic[cameraTopic]?.[0];
@@ -574,12 +555,13 @@ function ImageView(props: Props) {
     return onFinishRenderImage;
   }, [pauseFrame]);
 
-  const rawMarkerData = {
-    markers: markersToRender,
-    scale,
-    transformMarkers,
-    cameraInfo: markersToRender.length > 0 ? cameraInfo : undefined,
-  };
+  const rawMarkerData = useMemo(() => {
+    return {
+      markers: markersToRender,
+      transformMarkers,
+      cameraInfo: markersToRender.length > 0 ? cameraInfo : undefined,
+    };
+  }, [cameraInfo, markersToRender, transformMarkers]);
 
   const toolbar = useMemo(() => {
     return (
@@ -655,13 +637,11 @@ const defaultConfig: Config = {
   cameraTopic: "",
   enabledMarkerTopics: [],
   customMarkerTopicOptions: [],
-  scale: 1,
   transformMarkers: false,
   synchronize: false,
   mode: "fit",
-  zoomPercentage: 100,
-  maxZoom: DEFAULT_MAX_ZOOM,
-  offset: [0, 0],
+  zoom: 1,
+  pan: { x: 0, y: 0 },
 };
 
 const configSchema: PanelConfigSchema<Config> = [
@@ -670,14 +650,6 @@ const configSchema: PanelConfigSchema<Config> = [
     key: "smooth",
     type: "toggle",
     title: "Bilinear smoothing",
-  },
-  {
-    key: "maxZoom",
-    type: "number",
-    title: "Maximum zoom %",
-    placeholder: `${DEFAULT_MAX_ZOOM}`,
-    allowEmpty: true,
-    validate: (value) => Math.max(100, value),
   },
   {
     key: "minValue",
@@ -693,16 +665,6 @@ const configSchema: PanelConfigSchema<Config> = [
     placeholder: "10000",
     allowEmpty: true,
   },
-  {
-    key: "scale",
-    type: "dropdown",
-    title: "Image resolution",
-    options: [
-      { value: 0.2, text: "20%" },
-      { value: 0.5, text: "50%" },
-      { value: 1, text: "100%" },
-    ],
-  },
 ];
 
 export default Panel(
@@ -710,6 +672,6 @@ export default Panel(
     panelType: "ImageViewPanel",
     defaultConfig,
     configSchema,
-    supportsStrictMode: false,
+    supportsStrictMode: true,
   }),
 );

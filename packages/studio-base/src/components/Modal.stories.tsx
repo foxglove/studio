@@ -11,12 +11,14 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { Link } from "@fluentui/react";
 import { action } from "@storybook/addon-actions";
 import { storiesOf } from "@storybook/react";
 
 import ChildToggle from "@foxglove/studio-base/components/ChildToggle";
 import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
 import Dropdown from "@foxglove/studio-base/components/Dropdown/index";
+import { LegacyButton } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import Modal from "@foxglove/studio-base/components/Modal";
 import TextContent from "@foxglove/studio-base/components/TextContent";
 
@@ -47,7 +49,7 @@ function ContentStory({ showChildToggle = false }: { showChildToggle?: boolean }
       >
         {showChildToggle ? (
           <ChildToggle position="below">
-            <button>Toggle</button>
+            <LegacyButton>Toggle</LegacyButton>
             <p>ChildToggle component inside a Modal</p>
           </ChildToggle>
         ) : (
@@ -60,7 +62,6 @@ function ContentStory({ showChildToggle = false }: { showChildToggle?: boolean }
           >
             <DropdownItem value="one" />
             <DropdownItem value="two" />
-            <hr />
             <DropdownItem value="three" />
           </Dropdown>
         )}
@@ -74,9 +75,9 @@ storiesOf("components/Modal", module)
     <Modal onRequestClose={() => action("close")()}>
       <div style={{ padding: 20 }}>
         <TextContent>
-          <a href="https://google.com" rel="noopener noreferrer">
+          <Link href="https://google.com" rel="noopener noreferrer">
             link
-          </a>
+          </Link>
           <div>this is a floating, fixed position modal</div>
           <div>you can press escape or click outside of the modal to fire the close action</div>
         </TextContent>

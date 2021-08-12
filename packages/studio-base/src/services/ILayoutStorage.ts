@@ -22,12 +22,17 @@ export type ConflictType =
   | "both-update"
   | "name-collision";
 
+export type ConflictResolution =
+  | "revert-local"
+  | "delete-local"
+  | "delete-remote"
+  | "overwrite-remote";
+
 /** Metadata that describes a panel layout. */
 export type LayoutMetadata = {
   id: LayoutID;
   name: string;
-  path: string[];
-  creator: UserMetadata | undefined;
+  creatorUserId: UserID | undefined;
   createdAt: ISO8601Timestamp | undefined;
   updatedAt: ISO8601Timestamp | undefined;
   permission: "creator_write" | "org_read" | "org_write";
@@ -51,32 +56,30 @@ export interface ILayoutStorage {
   getLayout(id: LayoutID): Promise<Layout | undefined>;
 
   saveNewLayout(params: {
-    path: string[];
     name: string;
     data: PanelsState;
+    permission: "creator_write" | "org_read" | "org_write";
   }): Promise<LayoutMetadata>;
 
   updateLayout(params: {
     targetID: LayoutID;
-    name: string | undefined;
-    path: string[] | undefined;
-    data: PanelsState;
+    name?: string;
+    data?: PanelsState;
+    permission?: "creator_write" | "org_read" | "org_write";
   }): Promise<void>;
 
   readonly supportsSyncing: boolean;
 
-  syncLayout(id: LayoutID): Promise<ConflictType | undefined>;
+  syncLayout(
+    id: LayoutID,
+  ): Promise<{ status: "success"; newId?: LayoutID } | { status: "conflict"; type: ConflictType }>;
+
+  resolveConflict(
+    id: LayoutID,
+    resolution: ConflictResolution,
+  ): Promise<{ status: "success"; newId?: LayoutID }>;
 
   readonly supportsSharing: boolean;
 
-  shareLayout(params: {
-    sourceID: LayoutID;
-    path: string[];
-    name: string;
-    permission: "org_read" | "org_write";
-  }): Promise<void>;
-
   deleteLayout(params: { id: LayoutID }): Promise<void>;
-
-  renameLayout(params: { id: LayoutID; name: string; path: string[] }): Promise<void>;
 }

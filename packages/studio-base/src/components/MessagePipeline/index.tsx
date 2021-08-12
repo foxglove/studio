@@ -12,9 +12,9 @@
 //   You may not use this file except in compliance with the License.
 
 import { debounce, flatten, groupBy } from "lodash";
-import { Time } from "rosbag";
 
 import { useShallowMemo } from "@foxglove/hooks";
+import { Time } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
@@ -95,12 +95,12 @@ type ProviderProps = {
   // information is passed in and merged with other player state.
   maybePlayer?: MaybePlayer;
 
-  globalVariables?: GlobalVariables;
+  globalVariables: GlobalVariables;
 };
 export function MessagePipelineProvider({
   children,
   maybePlayer = {},
-  globalVariables = {},
+  globalVariables,
 }: ProviderProps): React.ReactElement {
   const currentPlayer = useRef<Player | undefined>(undefined);
   const [rawPlayerState, setRawPlayerState] = useState<PlayerState>(defaultPlayerState);
@@ -208,7 +208,7 @@ export function MessagePipelineProvider({
     player.setListener(async (newPlayerState: PlayerState) => {
       warnOnOutOfSyncMessages(newPlayerState);
       if (currentPlayer.current !== player) {
-        return Promise.resolve();
+        return undefined;
       }
       if (playerTickState.current.resolveFn) {
         throw new Error("New playerState was emitted before last playerState was rendered.");
@@ -235,7 +235,7 @@ export function MessagePipelineProvider({
         return newPlayerState;
       });
 
-      return promise;
+      return await promise;
     });
     return () => {
       currentPlayer.current = playerTickState.current.resolveFn = undefined;

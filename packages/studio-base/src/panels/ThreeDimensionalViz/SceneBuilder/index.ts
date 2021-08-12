@@ -11,13 +11,14 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import _, { flatten, groupBy, isEqual, keyBy, mapValues, some, xor } from "lodash";
-import { Time } from "rosbag";
 import shallowequal from "shallowequal";
 
+import Log from "@foxglove/log";
+import { Time } from "@foxglove/rostime";
 import {
   InteractionData,
   Interactive,
-} from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions";
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/types";
 import MessageCollector from "@foxglove/studio-base/panels/ThreeDimensionalViz/SceneBuilder/MessageCollector";
 import { MarkerMatcher } from "@foxglove/studio-base/panels/ThreeDimensionalViz/ThreeDimensionalVizContext";
 import Transforms from "@foxglove/studio-base/panels/ThreeDimensionalViz/Transforms";
@@ -50,8 +51,6 @@ import { MarkerProvider, MarkerCollector, Scene } from "@foxglove/studio-base/ty
 import Bounds from "@foxglove/studio-base/util/Bounds";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
 import {
-  POSE_MARKER_SCALE,
-  LINED_CONVEX_HULL_RENDERING_SETTING,
   MARKER_ARRAY_DATATYPES,
   VISUALIZATION_MSGS_MARKER_DATATYPE,
   VISUALIZATION_MSGS_MARKER_ARRAY_DATATYPE,
@@ -70,6 +69,8 @@ import { fromSec } from "@foxglove/studio-base/util/time";
 
 import { ThreeDimensionalVizHooks } from "./types";
 
+const log = Log.getLogger(__filename);
+
 export type TopicSettingsCollection = {
   [topicOrNamespaceKey: string]: Record<string, unknown>;
 };
@@ -83,7 +84,7 @@ const buildSyntheticArrowMarker = (
 ) => ({
   type: 103,
   pose,
-  scale: POSE_MARKER_SCALE,
+  scale: { x: 2, y: 2, z: 0.1 },
   color: getSyntheticArrowMarkerColor(topic),
   interactionData: { topic, originalMessage: message },
 });
@@ -825,6 +826,7 @@ export default class SceneBuilder implements MarkerProvider {
       try {
         this._consumeTopic(topic);
       } catch (error) {
+        log.error(error);
         this._setTopicError(topic, error.toString());
       }
     }
@@ -940,10 +942,14 @@ export default class SceneBuilder implements MarkerProvider {
     this.errors.topicsWithBadFrameIds.delete(topic);
     this.errors.topicsWithError.delete(topic);
     this.collectors[topic] ??= new MessageCollector();
-    (this.collectors[topic] as MessageCollector).setClock(this._clock ?? { sec: 0, nsec: 0 });
-    (this.collectors[topic] as MessageCollector).flush();
+    this.collectors[topic]?.setClock(this._clock ?? { sec: 0, nsec: 0 });
+    this.collectors[topic]?.flush();
 
-    const datatype = (this.topicsByName[topic] as Topic).datatype;
+    const datatype = this.topicsByName[topic]?.datatype;
+    if (datatype == undefined) {
+      return;
+    }
+
     // If topic has a decayTime set, markers with no lifetime will get one
     // later on, so we don't need to filter them. Note: A decayTime of zero is
     // defined as an infinite lifetime
@@ -1037,13 +1043,13 @@ export default class SceneBuilder implements MarkerProvider {
       case 3:
         return add.cylinder(marker);
       case 4:
-        if (overrideCommand === LINED_CONVEX_HULL_RENDERING_SETTING) {
+        if (overrideCommand === "LinedConvexHull") {
           return add.linedConvexHull(marker);
         }
 
         return add.lineStrip(marker);
       case 5:
-        if (overrideCommand === LINED_CONVEX_HULL_RENDERING_SETTING) {
+        if (overrideCommand === "LinedConvexHull") {
           return add.linedConvexHull(marker);
         }
 

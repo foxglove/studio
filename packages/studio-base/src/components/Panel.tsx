@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { MessageBar, MessageBarType, Stack, useTheme } from "@fluentui/react";
 import BorderAllIcon from "@mdi/svg/svg/border-all.svg";
 import CloseIcon from "@mdi/svg/svg/close.svg";
 import ExpandAllOutlineIcon from "@mdi/svg/svg/expand-all-outline.svg";
@@ -28,6 +29,7 @@ import React, {
   ComponentType,
   Profiler,
   MouseEventHandler,
+  useLayoutEffect,
 } from "react";
 import DocumentEvents from "react-document-events";
 import {
@@ -39,22 +41,23 @@ import {
   updateTree,
   MosaicNode,
 } from "react-mosaic-component";
+import { useMountedState } from "react-use";
 import styled from "styled-components";
 
 import { useConfigById } from "@foxglove/studio-base/PanelAPI";
 import Button from "@foxglove/studio-base/components/Button";
-import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
+import ErrorBoundary, { ErrorRendererProps } from "@foxglove/studio-base/components/ErrorBoundary";
 import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
-import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
+import { LegacyButton } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
+import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import {
   useCurrentLayoutActions,
   useSelectedPanels,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
-import { PanelIdContext } from "@foxglove/studio-base/context/PanelIdContext";
 import { usePanelSettings } from "@foxglove/studio-base/context/PanelSettingsContext";
 import usePanelDrag from "@foxglove/studio-base/hooks/usePanelDrag";
 import { TabPanelConfig } from "@foxglove/studio-base/types/layouts";
@@ -100,6 +103,25 @@ type ComponentConstructorType<P> = { displayName?: string } & (
   | { (props: P): React.ReactElement<unknown> | ReactNull }
 );
 
+function ErrorToolbar(errorProps: ErrorRendererProps): JSX.Element {
+  const theme = useTheme();
+  return (
+    <Stack style={{ overflow: "hidden" }}>
+      <PanelToolbar backgroundColor={theme.semanticColors.errorBackground}>
+        <MessageBar
+          messageBarType={MessageBarType.error}
+          dismissIconProps={{ iconName: "Refresh" }}
+          dismissButtonAriaLabel="Reset"
+          onDismiss={errorProps.onDismiss}
+        >
+          {errorProps.error.toString()}
+        </MessageBar>
+      </PanelToolbar>
+      {errorProps.defaultRenderErrorDetails(errorProps)}
+    </Stack>
+  );
+}
+
 // HOC that wraps panel in an error boundary and flex box.
 // Gives panel a `config` and `saveConfig`.
 //   export default Panel(MyPanelComponent)
@@ -115,6 +137,9 @@ export default function Panel<Config extends PanelConfig>(
 ): ComponentType<Props<Config>> & PanelStatics<Config> {
   function ConnectedPanel(props: Props<Config>) {
     const { childId, overrideConfig, tabId } = props;
+
+    const isMounted = useMountedState();
+
     const { mosaicActions } = useContext(MosaicContext);
     const { mosaicWindowActions }: { mosaicWindowActions: MosaicWindowActions } =
       useContext(MosaicWindowContext);
@@ -157,29 +182,48 @@ export default function Panel<Config extends PanelConfig>(
       [panelCatalog, type],
     );
 
-    const [config, saveConfig] = useConfigById<Config>(childId, PanelComponent.defaultConfig);
+    const defaultConfig = PanelComponent.defaultConfig;
+    const [savedConfig, saveConfig] = useConfigById<Config>(childId);
+
+    // PanelSettings needs useConfigById to return a config
+    // If there is no saved config, we save the default config provided by the panel.
+    // This typically happens when a new panel is added and the layout does not yet have a config.
+    // Even if this effect gets run more than once, we only need to save the default config once.
+    const savedDefaultConfig = useRef(false);
+    useLayoutEffect(() => {
+      if (!savedConfig && !savedDefaultConfig.current) {
+        savedDefaultConfig.current = true;
+        saveConfig(defaultConfig);
+      }
+    }, [defaultConfig, saveConfig, savedConfig]);
+
     const panelComponentConfig = useMemo(
-      () => ({ ...config, ...overrideConfig }),
-      [config, overrideConfig],
+      () => ({ ...defaultConfig, ...savedConfig, ...overrideConfig }),
+      [savedConfig, defaultConfig, overrideConfig],
     );
 
     // Open a panel next to the current panel, of the specified `panelType`.
     // If such a panel already exists, we update it with the new props.
     const openSiblingPanel = useCallback(
-      (panelType: string, siblingConfigCreator: (arg0: PanelConfig) => PanelConfig) => {
+      async (panelType: string, siblingConfigCreator: (config: PanelConfig) => PanelConfig) => {
         const panelsState = getCurrentLayout().selectedLayout?.data;
         if (!panelsState) {
           return;
         }
         const siblingPanel = panelCatalog.getPanelByType(panelType);
-        const siblingComponent = siblingPanel?.component;
-        if (!siblingComponent) {
+        if (!siblingPanel) {
           return;
         }
-        const siblingDefaultConfig = siblingComponent.defaultConfig;
+
+        const siblingModule = await siblingPanel.module();
+        if (!isMounted()) {
+          return;
+        }
+
+        const siblingDefaultConfig = siblingModule.default.defaultConfig;
         const ownPath = mosaicWindowActions.getPath();
 
-        // Try to find a sibling summary panel and update it with the `siblingConfig`
+        // Try to find a sibling panel and update it with the `siblingConfig`
         const lastNode = last(ownPath);
         const siblingPathEnd = lastNode != undefined ? getOtherBranch(lastNode) : "second";
         const siblingPath = ownPath.slice(0, -1).concat(siblingPathEnd);
@@ -216,7 +260,14 @@ export default function Panel<Config extends PanelConfig>(
           });
         });
       },
-      [getCurrentLayout, mosaicActions, mosaicWindowActions, panelCatalog, savePanelConfigs],
+      [
+        getCurrentLayout,
+        isMounted,
+        mosaicActions,
+        mosaicWindowActions,
+        panelCatalog,
+        savePanelConfigs,
+      ],
     );
 
     const { panelSettingsOpen } = usePanelSettings();
@@ -313,13 +364,20 @@ export default function Panel<Config extends PanelConfig>(
         savePanelConfigs({
           configs: [
             { id: tabId, config: newTabConfig },
-            { id: newId, config },
+            { id: newId, config: panelComponentConfig },
           ],
         });
       } else {
         void mosaicWindowActions.split({ type: PanelComponent.panelType });
       }
-    }, [childId, config, getCurrentLayout, mosaicWindowActions, savePanelConfigs, tabId]);
+    }, [
+      childId,
+      getCurrentLayout,
+      mosaicWindowActions,
+      panelComponentConfig,
+      savePanelConfigs,
+      tabId,
+    ]);
 
     const { onMouseMove, enterFullscreen, exitFullScreen } = useMemo(
       () => ({
@@ -421,28 +479,21 @@ export default function Panel<Config extends PanelConfig>(
           }
         }}
       >
-        <MultiProvider
-          providers={[
-            /* eslint-disable react/jsx-key */
-            <PanelContext.Provider
-              value={{
-                type,
-                id: childId ?? "$unknown_id",
-                title,
-                config,
-                saveConfig: saveConfig as SaveConfig<PanelConfig>,
-                updatePanelConfigs,
-                openSiblingPanel,
-                enterFullscreen,
-                hasSettings: PanelComponent.configSchema != undefined,
-                tabId,
-                supportsStrictMode: PanelComponent.supportsStrictMode ?? true,
-                connectToolbarDragHandle,
-              }}
-            />,
-            <PanelIdContext.Provider value={childId} />,
-            /* eslint-enable react/jsx-key */
-          ]}
+        <PanelContext.Provider
+          value={{
+            type,
+            id: childId ?? "$unknown_id",
+            title,
+            config: panelComponentConfig,
+            saveConfig: saveConfig as SaveConfig<PanelConfig>,
+            updatePanelConfigs,
+            openSiblingPanel,
+            enterFullscreen,
+            hasSettings: PanelComponent.configSchema != undefined,
+            tabId,
+            supportsStrictMode: PanelComponent.supportsStrictMode ?? true,
+            connectToolbarDragHandle,
+          }}
         >
           {/* Ensure user exits full-screen mode when leaving window, even if key is still pressed down */}
           <DocumentEvents target={window} enabled onBlur={onBlurDocument} />
@@ -508,15 +559,15 @@ export default function Panel<Config extends PanelConfig>(
               </div>
             )}
             {fullScreen && (
-              <button
+              <LegacyButton
                 className={styles.exitFullScreen}
                 onClick={exitFullScreen}
                 data-panel-overlay-exit
               >
                 <CloseIcon /> <span>Exit fullscreen</span>
-              </button>
+              </LegacyButton>
             )}
-            <ErrorBoundary>
+            <ErrorBoundary renderError={(errorProps) => <ErrorToolbar {...errorProps} />}>
               {PanelComponent.supportsStrictMode ?? true ? (
                 <React.StrictMode>{child}</React.StrictMode>
               ) : (
@@ -525,7 +576,7 @@ export default function Panel<Config extends PanelConfig>(
             </ErrorBoundary>
             {process.env.NODE_ENV !== "production" && <PerfInfo ref={perfInfo} />}
           </Flex>
-        </MultiProvider>
+        </PanelContext.Provider>
       </Profiler>
     );
   }

@@ -11,11 +11,10 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import Bag from "rosbag";
-
+import type { Bag } from "@foxglove/rosbag";
 import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
-import { Connection } from "@foxglove/studio-base/dataProviders/types";
 import { Topic } from "@foxglove/studio-base/players/types";
+import { Connection } from "@foxglove/studio-base/randomAccessDataProviders/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 type DatatypeDescription = {
@@ -26,10 +25,11 @@ type DatatypeDescription = {
 // Extract one big list of datatypes from the individual connections.
 export function bagConnectionsToDatatypes(
   connections: readonly DatatypeDescription[],
+  { ros2 }: { ros2: boolean },
 ): RosDatatypes {
   const datatypes: RosDatatypes = {};
   connections.forEach((connection) => {
-    const connectionTypes = parseMessageDefinition(connection.messageDefinition);
+    const connectionTypes = parseMessageDefinition(connection.messageDefinition, { ros2 });
     connectionTypes.forEach(({ name, definitions }, index) => {
       // The first definition usually doesn't have an explicit name,
       // so we get the name from the connection.

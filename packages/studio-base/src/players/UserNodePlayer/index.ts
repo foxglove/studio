@@ -12,10 +12,10 @@
 //   You may not use this file except in compliance with the License.
 import { isEqual, groupBy, partition } from "lodash";
 import memoizeWeak from "memoize-weak";
-import { TimeUtil, Time } from "rosbag";
 import shallowequal from "shallowequal";
 
 import Log from "@foxglove/log";
+import { Time, compare } from "@foxglove/rostime";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
   Diagnostic,
@@ -123,7 +123,7 @@ export default class UserNodePlayer implements Player {
 
   constructor(player: Player, userNodeActions: UserNodeActions) {
     this._player = player;
-    this._player.setListener(async (state) => this._onPlayerState(state));
+    this._player.setListener(async (state) => await this._onPlayerState(state));
     const { setUserNodeDiagnostics, addUserNodeLogs, setUserNodeRosLib } = userNodeActions;
 
     // TODO(troy): can we make the below action flow better? Might be better to
@@ -211,7 +211,7 @@ export default class UserNodePlayer implements Player {
     const result = {
       parsedMessages: parsedMessages
         .concat(nodeParsedMessages)
-        .sort((a, b) => TimeUtil.compare(a.receiveTime, b.receiveTime)),
+        .sort((a, b) => compare(a.receiveTime, b.receiveTime)),
     };
     this._lastGetMessagesInput = { parsedMessages, globalVariables, nodeRegistrations };
     this._lastGetMessagesResult = result;
@@ -233,7 +233,7 @@ export default class UserNodePlayer implements Player {
 
     // This code causes us to reset workers twice because the forceSeek resets the workers too
     // TODO: Only reset workers once
-    return this._resetWorkers().then(() => {
+    return await this._resetWorkers().then(() => {
       this.setSubscriptions(this._subscriptions);
       const { currentTime, isPlaying = false } = this._lastPlayerStateActiveData ?? {};
       if (currentTime && !isPlaying) {
@@ -367,7 +367,7 @@ export default class UserNodePlayer implements Player {
       if (!result) {
         this._problemStore.set(problemKey, {
           message: `Node playground node ${nodeId} timed out`,
-          severity: "warning",
+          severity: "warn",
         });
         return;
       }
@@ -390,7 +390,7 @@ export default class UserNodePlayer implements Player {
 
       if (!result.message) {
         this._problemStore.set(problemKey, {
-          severity: "warning",
+          severity: "warn",
           message: `Node playground node ${nodeId} did not produce a message`,
         });
         return;
@@ -511,8 +511,8 @@ export default class UserNodePlayer implements Player {
     }
 
     const allNodeRegistrations = await Promise.all(
-      Object.entries(this._userNodes).map(async ([nodeId, userNode]) =>
-        this._createNodeRegistration(nodeId, userNode),
+      Object.entries(this._userNodes).map(
+        async ([nodeId, userNode]) => await this._createNodeRegistration(nodeId, userNode),
       ),
     );
 

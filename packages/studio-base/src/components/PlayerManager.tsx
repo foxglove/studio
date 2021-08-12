@@ -37,12 +37,6 @@ import PlayerSelectionContext, {
   PlayerSourceDefinition,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { useUserNodeState } from "@foxglove/studio-base/context/UserNodeStateContext";
-import { CoreDataProviders } from "@foxglove/studio-base/dataProviders/constants";
-import { getRemoteBagGuid } from "@foxglove/studio-base/dataProviders/getRemoteBagGuid";
-import {
-  getLocalBagDescriptor,
-  getRemoteBagDescriptor,
-} from "@foxglove/studio-base/dataProviders/standardDataProviderDescriptors";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { usePrompt } from "@foxglove/studio-base/hooks/usePrompt";
@@ -52,11 +46,22 @@ import OrderedStampPlayer from "@foxglove/studio-base/players/OrderedStampPlayer
 import Ros1Player from "@foxglove/studio-base/players/Ros1Player";
 import RosbridgePlayer from "@foxglove/studio-base/players/RosbridgePlayer";
 import UserNodePlayer from "@foxglove/studio-base/players/UserNodePlayer";
+import VelodynePlayer, {
+  DEFAULT_VELODYNE_PORT,
+} from "@foxglove/studio-base/players/VelodynePlayer";
 import {
   buildPlayerFromDescriptor,
   BuildPlayerOptions,
 } from "@foxglove/studio-base/players/buildPlayer";
+import { buildRosbag2PlayerFromDescriptor } from "@foxglove/studio-base/players/buildRosbag2Player";
 import { Player } from "@foxglove/studio-base/players/types";
+import { CoreDataProviders } from "@foxglove/studio-base/randomAccessDataProviders/constants";
+import { getRemoteBagGuid } from "@foxglove/studio-base/randomAccessDataProviders/getRemoteBagGuid";
+import {
+  getLocalBagDescriptor,
+  getLocalRosbag2Descriptor,
+  getRemoteBagDescriptor,
+} from "@foxglove/studio-base/randomAccessDataProviders/standardDataProviderDescriptors";
 import { UserNodes } from "@foxglove/studio-base/types/panels";
 import Storage from "@foxglove/studio-base/util/Storage";
 import { AppError } from "@foxglove/studio-base/util/errors";
@@ -140,6 +145,16 @@ async function buildPlayerFromBagURLs(
   throw new Error(`Unsupported number of urls: ${urls.length}`);
 }
 
+function buildRosbag2PlayerFromFolder(
+  folder: FileSystemDirectoryHandle,
+  options: BuildPlayerOptions,
+): BuiltPlayer {
+  return {
+    player: buildRosbag2PlayerFromDescriptor(getLocalRosbag2Descriptor(folder), options),
+    sources: [folder.name],
+  };
+}
+
 type FactoryOptions = {
   source: PlayerSourceDefinition;
   sourceOptions: Record<string, unknown>;
@@ -155,7 +170,7 @@ async function localBagFileSource(options: FactoryOptions) {
   // future enhancement would be to store the fileHandle in indexeddb and try to restore
   // fileHandles can be stored in indexeddb but not localstorage
   if (restore) {
-    return;
+    return undefined;
   }
 
   // maybe the caller has some files they want to open
@@ -179,6 +194,27 @@ async function localBagFileSource(options: FactoryOptions) {
   }
   return async (playerOptions: BuildPlayerOptions) => {
     return buildPlayerFromFiles([file], playerOptions);
+  };
+}
+
+async function localRosbag2FolderSource(options: FactoryOptions) {
+  let folder: FileSystemDirectoryHandle;
+
+  const restore = options.sourceOptions.restore ?? false;
+  if (restore) {
+    return undefined;
+  }
+
+  try {
+    folder = await showDirectoryPicker();
+  } catch (error) {
+    if (error.name === "AbortError") {
+      return undefined;
+    }
+    throw error;
+  }
+  return async (playerOptions: BuildPlayerOptions) => {
+    return buildRosbag2PlayerFromFolder(folder, playerOptions);
   };
 }
 
@@ -221,7 +257,8 @@ async function remoteBagFileSource(options: FactoryOptions) {
 
   const url = maybeUrl;
   options.storage.setItem(storageCacheKey, url);
-  return async (playerOptions: BuildPlayerOptions) => buildPlayerFromBagURLs([url], playerOptions);
+  return async (playerOptions: BuildPlayerOptions) =>
+    await buildPlayerFromBagURLs([url], playerOptions);
 }
 
 async function rosbridgeSource(options: FactoryOptions) {
@@ -259,10 +296,26 @@ async function rosbridgeSource(options: FactoryOptions) {
     return undefined;
   }
 
+  let rosVersion: 1 | 2;
+  switch (options.source.type) {
+    case "ros1-rosbridge-websocket":
+      rosVersion = 1;
+      break;
+    case "ros2-rosbridge-websocket":
+      rosVersion = 2;
+      break;
+    default:
+      throw new Error(`Invalid source type for rosbridge: ${options.source.type}`);
+  }
+
   const url = maybeUrl;
   options.storage.setItem(storageCacheKey, url);
   return async (playerOptions: BuildPlayerOptions) => ({
-    player: new RosbridgePlayer(url, playerOptions.metricsCollector),
+    player: new RosbridgePlayer({
+      url,
+      rosVersion,
+      metricsCollector: playerOptions.metricsCollector,
+    }),
     sources: [url],
   });
 }
@@ -314,6 +367,48 @@ async function roscoreSource(options: FactoryOptions) {
   });
 }
 
+async function velodyneSource(options: FactoryOptions) {
+  const storageCacheKey = `studio.source.${options.source.name}`;
+
+  // undefined port indicates the user canceled the prompt
+  let maybePort;
+  const restore = options.sourceOptions.restore;
+
+  if (restore) {
+    maybePort = options.storage.getItem<string>(storageCacheKey);
+  } else {
+    const value = options.storage.getItem<string>(storageCacheKey);
+
+    maybePort = await options.prompt({
+      title: "Velodyne LIDAR UDP port",
+      placeholder: `${DEFAULT_VELODYNE_PORT}`,
+      value: value ?? `${DEFAULT_VELODYNE_PORT}`,
+      transformer: (str) => {
+        const parsed = parseInt(str);
+        if (isNaN(parsed) || parsed <= 0 || parsed > 65535) {
+          throw new AppError(
+            "Invalid port number. Please enter a valid UDP port number to listen for Velodyne packets",
+          );
+        }
+        return parsed.toString();
+      },
+    });
+  }
+
+  if (maybePort == undefined) {
+    return undefined;
+  }
+
+  const portStr = maybePort;
+  const port = parseInt(portStr);
+  options.storage.setItem(storageCacheKey, portStr);
+
+  return async (playerOptions: BuildPlayerOptions) => ({
+    player: new VelodynePlayer({ port, metricsCollector: playerOptions.metricsCollector }),
+    sources: [portStr],
+  });
+}
+
 export default function PlayerManager({
   children,
   playerSources,
@@ -334,10 +429,10 @@ export default function PlayerManager({
   );
   const userNodes = useCurrentLayoutSelector((state) => state.selectedLayout?.data.userNodes);
   const globalVariables = useCurrentLayoutSelector(
-    (state) => state.selectedLayout?.data.globalVariables,
+    (state) => state.selectedLayout?.data.globalVariables ?? EMPTY_GLOBAL_VARIABLES,
   );
 
-  const globalVariablesRef = useRef<GlobalVariables>(globalVariables ?? EMPTY_GLOBAL_VARIABLES);
+  const globalVariablesRef = useRef<GlobalVariables>(globalVariables);
   const [maybePlayer, setMaybePlayer] = useState<MaybePlayer<OrderedStampPlayer>>({});
   const [currentSourceName, setCurrentSourceName] = useState<string | undefined>(undefined);
   const isMounted = useMountedState();
@@ -348,9 +443,7 @@ export default function PlayerManager({
   const [initialMessageOrder] = useState(messageOrder);
 
   const analytics = useAnalytics();
-  const metricsCollector = useMemo(() => {
-    return new AnalyticsMetricsCollector(analytics);
-  }, [analytics]);
+  const metricsCollector = useMemo(() => new AnalyticsMetricsCollector(analytics), [analytics]);
 
   const [unlimitedMemoryCache = false] = useAppConfigurationValue<boolean>(
     AppSetting.UNLIMITED_MEMORY_CACHE,
@@ -378,7 +471,7 @@ export default function PlayerManager({
           userNodePlayer,
           initialMessageOrder ?? DEFAULT_MESSAGE_ORDER,
         );
-        headerStampPlayer.setGlobalVariables(globalVariablesRef.current ?? EMPTY_GLOBAL_VARIABLES);
+        headerStampPlayer.setGlobalVariables(globalVariablesRef.current);
         setMaybePlayer({ player: headerStampPlayer });
       } catch (error) {
         setMaybePlayer({ error });
@@ -405,14 +498,19 @@ export default function PlayerManager({
   // changes to the GUID fetching in buildPlayerFromBagURLs.
   const lookupPlayerBuilderFactory = useCallback((definition: PlayerSourceDefinition) => {
     switch (definition.type) {
-      case "file":
+      case "ros1-local-bagfile":
         return localBagFileSource;
-      case "ros1-core":
+      case "ros2-local-bagfile":
+        return localRosbag2FolderSource;
+      case "ros1-socket":
         return roscoreSource;
-      case "ws":
+      case "ros1-rosbridge-websocket":
+      case "ros2-rosbridge-websocket":
         return rosbridgeSource;
-      case "http":
+      case "ros1-remote-bagfile":
         return remoteBagFileSource;
+      case "velodyne-device":
+        return velodyneSource;
       default:
         return;
     }
@@ -437,7 +535,11 @@ export default function PlayerManager({
 
         const createPlayerBuilder = lookupPlayerBuilderFactory(selectedSource);
         if (!createPlayerBuilder) {
-          throw new Error(`Could not create a player for ${selectedSource.name}`);
+          // This can happen when upgrading from an older version of Studio that used different
+          // player names
+          log.error(`Could not create a player for ${selectedSource.name}`);
+          setMaybePlayer({ player: undefined });
+          return;
         }
 
         const playerBuilder = await createPlayerBuilder({

@@ -4,15 +4,27 @@
 
 import { createContext, useContext } from "react";
 
-type SourceTypes = "file" | "ros1-core" | "ws" | "http";
+type SourceTypes =
+  | "ros1-local-bagfile"
+  | "ros2-local-bagfile"
+  | "ros1-socket"
+  | "ros1-rosbridge-websocket"
+  | "ros2-rosbridge-websocket"
+  | "ros1-remote-bagfile"
+  | "velodyne-device";
 
 export type PlayerSourceDefinition = {
   name: string;
   type: SourceTypes;
+  disabledReason?: string | JSX.Element;
 };
 
 type FileSourceParams = {
   files?: File[];
+};
+
+type FolderSourceParams = {
+  folder?: string;
 };
 
 type HttpSourceParams = {
@@ -24,8 +36,9 @@ type SpecializedPlayerSource<T extends SourceTypes> = Omit<PlayerSourceDefinitio
 };
 
 interface SelectSourceFunction {
-  (definition: SpecializedPlayerSource<"file">, params?: FileSourceParams): void;
-  (definition: SpecializedPlayerSource<"http">, params?: HttpSourceParams): void;
+  (definition: SpecializedPlayerSource<"ros1-local-bagfile">, params?: FileSourceParams): void;
+  (definition: SpecializedPlayerSource<"ros2-local-bagfile">, params?: FolderSourceParams): void;
+  (definition: SpecializedPlayerSource<"ros1-remote-bagfile">, params?: HttpSourceParams): void;
   (definition: PlayerSourceDefinition, params?: never): void;
 }
 

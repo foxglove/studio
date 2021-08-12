@@ -34,24 +34,25 @@ const features: Feature[] = [
     description: <>Show Studio debug panels in the add panel list.</>,
   },
   {
-    key: AppSetting.EXTENSION_MARKETPLACE,
-    name: "Extension Marketplace",
-    description: <>Enable the extension marketplace for installing/uninstalling extensions</>,
+    key: AppSetting.ENABLE_DRAWING_POLYGONS,
+    name: "Drawing polygons in 3D panel",
+    description: <>Show sidebar control to draw polygons in the 3D panel.</>,
   },
-  ...(process.env.NODE_ENV !== "production"
-    ? [
-        {
-          key: AppSetting.FAKE_REMOTE_LAYOUTS,
-          name: "Fake remote layout storage",
-          description: (
-            <>
-              Use a folder on disk as a “remote” layout server to experiment with shared layout
-              functionality.
-            </>
-          ),
-        },
-      ]
-    : []),
+  {
+    key: AppSetting.SHOW_ROS2_ROSBRIDGE,
+    name: "ROS 2 Rosbridge",
+    description: <>Enable ROS 2 Rosbridge as a possible data source connection.</>,
+  },
+  {
+    key: AppSetting.ENABLE_LEGACY_PLOT_PANEL,
+    name: "Legacy Plot Panel",
+    description: <>Enable the legacy plot panel.</>,
+  },
+  {
+    key: AppSetting.ENABLE_CONSOLE_API_LAYOUTS,
+    name: "Team Shared Layouts",
+    description: <>Enable team layout sharing when signed in to Studio.</>,
+  },
 ];
 
 function ExperimentalFeatureItem(props: { feature: Feature }) {

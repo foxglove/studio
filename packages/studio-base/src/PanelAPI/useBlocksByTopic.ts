@@ -13,18 +13,18 @@
 
 import memoizeWeak from "memoize-weak";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { MessageReader } from "rosbag";
 import { v4 as uuidv4 } from "uuid";
 
 import { useShallowMemo } from "@foxglove/hooks";
+import type { MessageReader } from "@foxglove/rosmsg-serialization";
 import {
   useMessagePipeline,
   MessagePipelineContext,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
-import { MemoryCacheBlock } from "@foxglove/studio-base/dataProviders/MemoryCacheDataProvider";
 import useCleanup from "@foxglove/studio-base/hooks/useCleanup";
 import { SubscribePayload, MessageEvent } from "@foxglove/studio-base/players/types";
+import { MemoryCacheBlock } from "@foxglove/studio-base/randomAccessDataProviders/MemoryCacheDataProvider";
 
 export type MessageBlock = {
   readonly [topicName: string]: readonly MessageEvent<unknown>[];

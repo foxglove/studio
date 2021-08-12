@@ -43,6 +43,18 @@ type TokenResponse = {
   id_token: string;
 };
 
+export type LayoutID = string & { __brand: "LayoutID" };
+export type ISO8601Timestamp = string & { __brand: "ISO8601Timestamp" };
+
+export type ConsoleApiLayout = {
+  id: LayoutID;
+  name: string;
+  created_at: ISO8601Timestamp;
+  updated_at: ISO8601Timestamp;
+  permission: "creator_write" | "org_read" | "org_write";
+  data?: Record<string, unknown>;
+};
+
 class ConsoleApi {
   private _baseUrl: string;
   private _authHeader?: string;
@@ -56,54 +68,65 @@ class ConsoleApi {
   }
 
   async orgs(): Promise<Org[]> {
-    return this.get<Org[]>("/v1/orgs");
+    return await this.get<Org[]>("/v1/orgs");
   }
 
   async me(): Promise<CurrentUser> {
-    return this.get<CurrentUser>("/v1/me");
+    return await this.get<CurrentUser>("/v1/me");
   }
 
   async signin(args: SigninArgs): Promise<Session> {
-    return this.post<Session>("/v1/signin", args);
+    return await this.post<Session>("/v1/signin", args);
   }
 
   async signout(): Promise<void> {
-    return this.post<void>("/v1/signout");
+    return await this.post<void>("/v1/signout");
   }
 
   async deviceCode(args: DeviceCodeArgs): Promise<DeviceCodeResponse> {
-    return this.post<DeviceCodeResponse>("/v1/auth/device-code", {
+    return await this.post<DeviceCodeResponse>("/v1/auth/device-code", {
       client_id: args.client_id,
     });
   }
 
   async token(args: TokenArgs): Promise<TokenResponse> {
-    return this.post<TokenResponse>("/v1/auth/token", {
+    return await this.post<TokenResponse>("/v1/auth/token", {
       device_code: args.device_code,
       client_id: args.client_id,
     });
   }
 
-  protected async get<T>(apiPath: string, query?: Record<string, string>): Promise<T> {
-    return this.request<T>(
+  private async get<T>(apiPath: string, query?: Record<string, string>): Promise<T> {
+    return await this.request<T>(
       query == undefined ? apiPath : `${apiPath}?${new URLSearchParams(query).toString()}`,
-      {
-        method: "GET",
-      },
+      { method: "GET" },
     );
   }
 
-  protected async post<T>(apiPath: string, body?: unknown): Promise<T> {
-    return this.request<T>(apiPath, {
+  private async post<T>(apiPath: string, body?: unknown): Promise<T> {
+    return await this.request<T>(apiPath, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
   }
 
-  protected async request<T>(url: string, config?: RequestInit): Promise<T> {
+  private async put<T>(apiPath: string, body?: unknown): Promise<T> {
+    return await this.request<T>(apiPath, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  }
+
+  private async delete<T>(apiPath: string, query?: Record<string, string>): Promise<T> {
+    return await this.request<T>(
+      query == undefined ? apiPath : `${apiPath}?${new URLSearchParams(query).toString()}`,
+      { method: "DELETE" },
+    );
+  }
+
+  private async request<T>(url: string, config?: RequestInit): Promise<T> {
     const fullUrl = `${this._baseUrl}${url}`;
 
     const headers: Record<string, string> = {};
@@ -114,21 +137,53 @@ class ConsoleApi {
 
     const res = await fetch(fullUrl, fullConfig);
     if (res.status !== 200) {
-      try {
-        const json = (await res.json()) as unknown;
-        throw new Error((json as { error?: string }).error ?? "Request failed");
-      } catch (err) {
-        throw new Error(err.message ?? "Request failed");
-      }
+      const json = (await res.json().catch((err) => {
+        throw new Error(`Status ${res.status}: ${err.message}`);
+      })) as { message?: string };
+      throw new Error(
+        `Status ${res.status}${json.message != undefined ? `: ${json.message}` : ""}`,
+      );
     }
 
     try {
-      return res.json() as Promise<T>;
+      return (await res.json()) as T;
     } catch (err) {
       throw new Error("Request Failed.");
     }
   }
+
+  async getLayouts(options: { includeData: boolean }): Promise<readonly ConsoleApiLayout[]> {
+    return await this.get<ConsoleApiLayout[]>("/v1/layouts", {
+      include_data: options.includeData ? "true" : "false",
+    });
+  }
+
+  async getLayout(
+    id: LayoutID,
+    options: { includeData: boolean },
+  ): Promise<ConsoleApiLayout | undefined> {
+    return await this.get<ConsoleApiLayout>(`/v1/layouts/${id}`, {
+      include_data: options.includeData ? "true" : "false",
+    });
+  }
+
+  async createLayout(
+    layout: Pick<ConsoleApiLayout, "name" | "permission" | "data">,
+  ): Promise<ConsoleApiLayout> {
+    return await this.post<ConsoleApiLayout>("/v1/layouts", layout);
+  }
+
+  async updateLayout(
+    layout: Pick<ConsoleApiLayout, "id"> &
+      Partial<Pick<ConsoleApiLayout, "name" | "permission" | "data">>,
+  ): Promise<ConsoleApiLayout> {
+    return await this.put<ConsoleApiLayout>(`/v1/layouts/${layout.id}`, layout);
+  }
+
+  async deleteLayout(id: LayoutID): Promise<void> {
+    await this.delete<ConsoleApiLayout>(`/v1/layouts/${id}`);
+  }
 }
 
-export type { CurrentUser, Org };
+export type { CurrentUser, Org, DeviceCodeResponse, Session };
 export default ConsoleApi;

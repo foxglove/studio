@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Link } from "@fluentui/react";
+
 import {
   App,
   ErrorBoundary,
@@ -10,37 +12,69 @@ import {
   ThemeProvider,
   UserProfileLocalStorageProvider,
   StudioToastProvider,
-  CacheOnlyLayoutStorageProvider,
+  CssBaseline,
+  GlobalCss,
 } from "@foxglove/studio-base";
 
-import AppConfigurationProvider from "./components/AppConfigurationProvider";
-import NoOpLayoutCacheProvider from "./components/NoOpLayoutCacheProvider";
+import LocalStorageAppConfigurationProvider from "./components/LocalStorageAppConfigurationProvider";
+import LocalStorageLayoutCacheProvider from "./components/LocalStorageLayoutCacheProvider";
 import ExtensionLoaderProvider from "./providers/ExtensionLoaderProvider";
 
 const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
 
-export default function Root(): JSX.Element {
+export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX.Element {
   const playerSources: PlayerSourceDefinition[] = [
     {
-      name: "Rosbridge (WebSocket)",
-      type: "ws",
+      name: "ROS 1",
+      type: "ros1-socket",
+      disabledReason: (
+        <>
+          ROS 1 Native connections are only available in our desktop app.&nbsp;
+          <Link href="https://foxglove.dev/download" target="_blank" rel="noreferrer">
+            Download it here.
+          </Link>
+        </>
+      ),
     },
     {
-      name: "Bag File (local)",
-      type: "file",
+      name: "ROS 1 Rosbridge (WebSocket)",
+      type: "ros1-rosbridge-websocket",
     },
     {
-      name: "Bag File (HTTP)",
-      type: "http",
+      name: "ROS 2 Rosbridge (WebSocket)",
+      type: "ros2-rosbridge-websocket",
+    },
+    {
+      name: "ROS 1 Bag (local)",
+      type: "ros1-local-bagfile",
+    },
+    {
+      name: "ROS 1 Bag (HTTP)",
+      type: "ros1-remote-bagfile",
+    },
+    {
+      name: "ROS 2 Bag (local)",
+      type: "ros2-local-bagfile",
+    },
+    {
+      name: "Velodyne LIDAR",
+      type: "velodyne-device",
+      disabledReason: (
+        <>
+          Velodyne connections are only available in our desktop app.&nbsp;
+          <Link href="https://foxglove.dev/download" target="_blank" rel="noreferrer">
+            Download it here.
+          </Link>
+        </>
+      ),
     },
   ];
 
   const providers = [
     /* eslint-disable react/jsx-key */
     <StudioToastProvider />,
-    <AppConfigurationProvider />,
-    <NoOpLayoutCacheProvider />,
-    <CacheOnlyLayoutStorageProvider />,
+    <LocalStorageAppConfigurationProvider />,
+    <LocalStorageLayoutCacheProvider />,
     <UserProfileLocalStorageProvider />,
     <ExtensionLoaderProvider />,
     /* eslint-enable react/jsx-key */
@@ -48,11 +82,18 @@ export default function Root(): JSX.Element {
 
   return (
     <ThemeProvider>
-      <ErrorBoundary>
-        <MultiProvider providers={providers}>
-          <App demoBagUrl={DEMO_BAG_URL} availableSources={playerSources} />
-        </MultiProvider>
-      </ErrorBoundary>
+      <GlobalCss />
+      <CssBaseline>
+        <ErrorBoundary>
+          <MultiProvider providers={providers}>
+            <App
+              loadWelcomeLayout={loadWelcomeLayout}
+              demoBagUrl={DEMO_BAG_URL}
+              availableSources={playerSources}
+            />
+          </MultiProvider>
+        </ErrorBoundary>
+      </CssBaseline>
     </ThemeProvider>
   );
 }

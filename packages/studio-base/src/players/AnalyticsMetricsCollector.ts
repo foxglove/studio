@@ -2,15 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Time } from "rosbag";
-
 import Log from "@foxglove/log";
+import { Time } from "@foxglove/rostime";
 import { PlayerSourceDefinition } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import {
   PlayerMetricsCollectorInterface,
   SubscribePayload,
 } from "@foxglove/studio-base/players/types";
-import { Analytics, AppEvent } from "@foxglove/studio-base/services/Analytics";
+import IAnalytics, { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 
 const log = Log.getLogger(__filename);
 
@@ -19,9 +18,9 @@ type EventData = { [key: string]: string | number | boolean };
 export default class AnalyticsMetricsCollector implements PlayerMetricsCollectorInterface {
   metadata: EventData = {};
   playerType?: PlayerSourceDefinition;
-  private _analytics: Analytics;
+  private _analytics: IAnalytics;
 
-  constructor(analytics: Analytics) {
+  constructor(analytics: IAnalytics) {
     log.debug("New AnalyticsMetricsCollector");
     this._analytics = analytics;
   }
@@ -31,7 +30,7 @@ export default class AnalyticsMetricsCollector implements PlayerMetricsCollector
   }
 
   logEvent(event: AppEvent, data?: EventData): void {
-    this._analytics.logEvent(event, { ...this.metadata, ...data });
+    void this._analytics.logEvent(event, { ...this.metadata, ...data });
   }
 
   playerConstructed(): void {

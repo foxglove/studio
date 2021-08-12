@@ -14,9 +14,9 @@
 import { compact, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
 import { useEffect, useCallback, useMemo, ComponentProps } from "react";
-import { Time, TimeUtil } from "rosbag";
 
 import { useShallowMemo } from "@foxglove/hooks";
+import { Time, add } from "@foxglove/rostime";
 import {
   useBlocksByTopic,
   useDataSourceInfo,
@@ -54,7 +54,7 @@ export { plotableRosTypes } from "./types";
 export type { PlotConfig, PlotXAxisVal } from "./types";
 
 export function openSiblingPlotPanel(
-  openSiblingPanel: (arg0: string, cb: (arg0: PanelConfig) => PanelConfig) => void,
+  openSiblingPanel: (type: string, cb: (config: PanelConfig) => PanelConfig) => void,
   topicName: string,
 ): void {
   openSiblingPanel("Plot", (config: PanelConfig) => ({
@@ -245,7 +245,7 @@ function Plot(props: Props) {
         return;
       }
       // The player validates and clamps the time.
-      const seekTime = TimeUtil.add(startTime, fromSec(seekSeconds));
+      const seekTime = add(startTime, fromSec(seekSeconds));
       seek(seekTime);
     },
     [seek, startTime, xAxisVal],

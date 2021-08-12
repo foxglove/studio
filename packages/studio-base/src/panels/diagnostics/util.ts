@@ -12,8 +12,8 @@
 //   You may not use this file except in compliance with the License.
 
 import { sortBy, truncate } from "lodash";
-import { Time } from "rosbag";
 
+import { Time } from "@foxglove/rostime";
 import { Header } from "@foxglove/studio-base/types/Messages";
 import fuzzyFilter from "@foxglove/studio-base/util/fuzzyFilter";
 
@@ -69,9 +69,6 @@ export type DiagnosticStatusArrayMsg = {
 };
 
 export type DiagnosticsById = Map<DiagnosticId, DiagnosticInfo>;
-export type DiagnosticsByLevel = {
-  [key: string]: DiagnosticsById;
-};
 
 // Remove leading slash from hardware_id if present.
 export function trimHardwareId(hardwareId: string): string {

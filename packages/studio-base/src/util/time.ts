@@ -12,16 +12,10 @@
 //   You may not use this file except in compliance with the License.
 
 // No time functions that require `moment` should live in this file.
-import { Time, TimeUtil } from "rosbag";
-
 import log from "@foxglove/log";
+import { Time, add, compare, isLessThan } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import { MarkerArray, StampedMessage } from "@foxglove/studio-base/types/Messages";
-
-type BatchTimestamp = {
-  seconds: number;
-  nanoseconds: number;
-};
 
 export type TimestampMethod = "receiveTime" | "headerStamp";
 
@@ -80,7 +74,7 @@ export function percentOf(start: Time, end: Time, target: Time): number {
 
 export function interpolateTimes(start: Time, end: Time, fraction: number): Time {
   const duration = subtractTimes(end, start);
-  return TimeUtil.add(start, fromNanoSec(fraction * toNanoSec(duration)));
+  return add(start, fromNanoSec(fraction * toNanoSec(duration)));
 }
 
 function fixTime(t: Time): Time {
@@ -114,11 +108,6 @@ export function subtractTimes(
 // (at max a few weeks).
 export function toNanoSec({ sec, nsec }: Time): number {
   return sec * 1e9 + nsec;
-}
-
-// WARNING! Imprecise float; see above.
-export function toMicroSec({ sec, nsec }: Time): number {
-  return (sec * 1e9 + nsec) / 1000;
 }
 
 // WARNING! Imprecise float; see above.
@@ -200,22 +189,18 @@ export function formatFrame({ sec, nsec }: Time): string {
   return `${sec}.${String.prototype.padStart.call(nsec, 9, "0")}`;
 }
 
-export function transformBatchTimestamp({ seconds, nanoseconds }: BatchTimestamp): string {
-  return formatFrame({ sec: seconds, nsec: nanoseconds });
-}
-
 export function clampTime(time: Time, start: Time, end: Time): Time {
-  if (TimeUtil.compare(start, time) > 0) {
+  if (compare(start, time) > 0) {
     return start;
   }
-  if (TimeUtil.compare(end, time) < 0) {
+  if (compare(end, time) < 0) {
     return end;
   }
   return time;
 }
 
 export const isTimeInRangeInclusive = (time: Time, start: Time, end: Time): boolean => {
-  if (TimeUtil.compare(start, time) > 0 || TimeUtil.compare(end, time) < 0) {
+  if (compare(start, time) > 0 || compare(end, time) < 0) {
     return false;
   }
   return true;
@@ -280,10 +265,7 @@ export function getSeekTimeFromSpec(spec: SeekToTimeSpec, start: Time, end: Time
     spec.type === "absolute"
       ? spec.time
       : spec.type === "relative"
-      ? TimeUtil.add(
-          TimeUtil.isLessThan(spec.startOffset, { sec: 0, nsec: 0 }) ? end : start,
-          spec.startOffset,
-        )
+      ? add(isLessThan(spec.startOffset, { sec: 0, nsec: 0 }) ? end : start, spec.startOffset)
       : interpolateTimes(start, end, spec.fraction);
   return clampTime(rawSpecTime, start, end);
 }

@@ -12,8 +12,8 @@
 //   You may not use this file except in compliance with the License.
 import { partition } from "lodash";
 import memoizeWeak from "memoize-weak";
-import { Time, TimeUtil } from "rosbag";
 
+import { Time, add, compare, isLessThan } from "@foxglove/rostime";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import UserNodePlayer from "@foxglove/studio-base/players/UserNodePlayer";
 import {
@@ -67,7 +67,9 @@ export default class OrderedStampPlayer implements Player {
   }
 
   setListener(listener: (arg0: PlayerState) => Promise<void>): void {
-    this._player.setListener(async (state: PlayerState) => {
+    // Potentially performance-sensitive; await can be expensive
+    // eslint-disable-next-line @typescript-eslint/promise-function-async
+    this._player.setListener((state: PlayerState) => {
       const { activeData } = state;
       if (!activeData) {
         // No new messages since last time.
@@ -104,12 +106,12 @@ export default class OrderedStampPlayer implements Player {
         nsec: activeData.currentTime.nsec,
       };
       const [messages, newMessageBuffer] = partition(extendedMessageBuffer, (message) =>
-        TimeUtil.isLessThan(message.message.header.stamp, thresholdTime),
+        isLessThan(message.message.header.stamp, thresholdTime),
       );
 
       this._messageBuffer = newMessageBuffer;
 
-      messages.sort((a, b) => TimeUtil.compare(a.message.header.stamp, b.message.header.stamp));
+      messages.sort((a, b) => compare(a.message.header.stamp, b.message.header.stamp));
 
       const currentTime = clampTime(thresholdTime, activeData.startTime, activeData.endTime);
       this._currentTime = currentTime;
@@ -119,7 +121,7 @@ export default class OrderedStampPlayer implements Player {
       if (topicsWithoutHeaders.size > 0) {
         problems = Array.from(topicsWithoutHeaders.values()).map<PlayerProblem>((topic) => {
           return {
-            severity: "warning",
+            severity: "warn",
             message: `Missing header stamp for message on topic: ${topic}.`,
             tip: `Ordering messages by header stamp is only supported for messages with a header.
  Ensure that all messages on requested topics have a header.`,
@@ -167,7 +169,7 @@ export default class OrderedStampPlayer implements Player {
     // Seek ahead of where we're interested in. If we want to seek to 10s, we want to backfill
     // messages with receive times between 10s and 11s.
     // Add backfilling for our translation buffer.
-    const seekLocation = TimeUtil.add(time, { sec: BUFFER_DURATION_SECS, nsec: 0 });
+    const seekLocation = add(time, { sec: BUFFER_DURATION_SECS, nsec: 0 });
     this._player.seekPlayback(seekLocation, { sec: BUFFER_DURATION_SECS, nsec: 0 });
   };
   requestBackfill(): void {
@@ -185,7 +187,7 @@ export default class OrderedStampPlayer implements Player {
     this.seekPlayback(this._currentTime);
   }
   async setUserNodes(nodes: UserNodes): Promise<void> {
-    return this._player.setUserNodes(nodes);
+    return await this._player.setUserNodes(nodes);
   }
   setGlobalVariables(globalVariables: GlobalVariables): void {
     this._player.setGlobalVariables(globalVariables);

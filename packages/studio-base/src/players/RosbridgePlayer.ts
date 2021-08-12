@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { isEqual, sortBy } from "lodash";
-import { Time } from "rosbag";
 import roslib from "roslib";
 import { v4 as uuidv4 } from "uuid";
 
@@ -20,6 +19,8 @@ import Log from "@foxglove/log";
 import type { RosGraph } from "@foxglove/ros1";
 import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
 import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
+import { MessageReader as ROS2MessageReader } from "@foxglove/rosmsg2-serialization";
+import { Time } from "@foxglove/rostime";
 import {
   AdvertisePayload,
   MessageEvent,
@@ -57,6 +58,7 @@ const CAPABILITIES = [PlayerCapabilities.advertise];
 // unmarshalls into plain JS objects.
 export default class RosbridgePlayer implements Player {
   private _url: string; // WebSocket URL.
+  private _rosVersion: 1 | 2;
   private _rosClient?: roslib.Ros; // The roslibjs client when we're connected.
   private _id: string = uuidv4(); // Unique ID for this player.
   private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
@@ -67,7 +69,7 @@ export default class RosbridgePlayer implements Player {
   private _subscribedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of subscriber IDs subscribed to each topic.
   private _services = new Map<string, Set<string>>(); // A map of service names to service provider IDs that provide each service.
   private _messageReadersByDatatype: {
-    [datatype: string]: LazyMessageReader;
+    [datatype: string]: LazyMessageReader | ROS2MessageReader;
   } = {};
   private _start?: Time; // The time at which we started playing.
   private _clockTime?: Time; // The most recent published `/clock` time, if available
@@ -90,10 +92,19 @@ export default class RosbridgePlayer implements Player {
   private _presence: PlayerPresence = PlayerPresence.NOT_PRESENT;
   private _problems: PlayerProblem[] = [];
 
-  constructor(url: string, metricsCollector: PlayerMetricsCollectorInterface) {
+  constructor({
+    url,
+    rosVersion,
+    metricsCollector,
+  }: {
+    url: string;
+    rosVersion: 1 | 2;
+    metricsCollector: PlayerMetricsCollectorInterface;
+  }) {
     this._presence = PlayerPresence.CONSTRUCTING;
     this._metricsCollector = metricsCollector;
     this._url = url;
+    this._rosVersion = rosVersion;
     this._start = fromMillis(Date.now());
     this._metricsCollector.playerConstructed();
     this._open();
@@ -124,7 +135,7 @@ export default class RosbridgePlayer implements Player {
     rosClient.on("error", (err) => {
       if (err) {
         this._problems.push({
-          severity: "warning",
+          severity: "warn",
           message: "Rosbridge issue",
           error: err,
         });
@@ -141,6 +152,7 @@ export default class RosbridgePlayer implements Player {
         topic.unsubscribe();
         this._topicSubscriptions.delete(topicName);
       }
+      rosClient.close(); // ensure the underlying worker is cleaned up
       delete this._rosClient;
 
       this._problems.push({
@@ -178,10 +190,10 @@ export default class RosbridgePlayer implements Player {
       const topicsMissingDatatypes: string[] = [];
       const topics = [];
       const datatypeDescriptions = [];
-      const messageReaders: Record<string, LazyMessageReader> = {};
+      const messageReaders: Record<string, LazyMessageReader | ROS2MessageReader> = {};
 
       for (let i = 0; i < result.topics.length; i++) {
-        const topicName = result.topics[i] as string;
+        const topicName = result.topics[i]!;
         const type = result.types[i];
         const messageDefinition = result.typedefs_full_text[i];
 
@@ -191,11 +203,13 @@ export default class RosbridgePlayer implements Player {
         }
         topics.push({ name: topicName, datatype: type });
         datatypeDescriptions.push({ type, messageDefinition });
-        const parsedDefinition =
-          typeof messageDefinition === "string"
-            ? parseMessageDefinition(messageDefinition)
-            : messageDefinition;
-        messageReaders[type] = messageReaders[type] ?? new LazyMessageReader(parsedDefinition);
+        const parsedDefinition = parseMessageDefinition(messageDefinition, {
+          ros2: this._rosVersion === 2,
+        });
+        messageReaders[type] ??=
+          this._rosVersion === 1
+            ? new LazyMessageReader(parsedDefinition)
+            : new ROS2MessageReader(parsedDefinition);
         this._parsedMessageDefinitionsByTopic[topicName] = parsedDefinition;
       }
 
@@ -207,7 +221,7 @@ export default class RosbridgePlayer implements Player {
 
       if (topicsMissingDatatypes.length > 0) {
         this._problems.push({
-          severity: "warning",
+          severity: "warn",
           message: "Could not resolve all message types",
           tip: `Message types could not be found for these topics: ${topicsMissingDatatypes.join(
             ",",
@@ -220,7 +234,9 @@ export default class RosbridgePlayer implements Player {
       }
 
       this._providerTopics = sortedTopics;
-      this._providerDatatypes = bagConnectionsToDatatypes(datatypeDescriptions);
+      this._providerDatatypes = bagConnectionsToDatatypes(datatypeDescriptions, {
+        ros2: this._rosVersion === 2,
+      });
       this._messageReadersByDatatype = messageReaders;
 
       // Try subscribing again, since we might now be able to subscribe to some new topics.
@@ -254,7 +270,9 @@ export default class RosbridgePlayer implements Player {
     }
   };
 
-  _emitState = debouncePromise(async () => {
+  // Potentially performance-sensitive; await can be expensive
+  // eslint-disable-next-line @typescript-eslint/promise-function-async
+  _emitState = debouncePromise(() => {
     if (!this._listener || this._closed) {
       return Promise.resolve();
     }
@@ -380,7 +398,7 @@ export default class RosbridgePlayer implements Player {
           const msg: MessageEvent<unknown> = {
             topic: topicName,
             receiveTime,
-            message: innerMessage as never,
+            message: innerMessage,
           };
           this._parsedMessages.push(msg);
           this._handleInternalMessage(msg);
@@ -523,7 +541,7 @@ export default class RosbridgePlayer implements Player {
       entries.add(value);
     };
 
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       this._rosClient?.getNodes(async (nodes) => {
         await Promise.all(
           nodes.map((node) => {

@@ -8,10 +8,12 @@ import TestUtils from "react-dom/test-utils";
 import { useAsync } from "react-use";
 import { AsyncState } from "react-use/lib/useAsyncFn";
 
+import AnalyticsProvider from "@foxglove/studio-base/context/AnalyticsProvider";
 import CurrentLayoutContext from "@foxglove/studio-base/context/CurrentLayoutContext";
 import LayoutCacheContext, {
   useLayoutCache,
 } from "@foxglove/studio-base/context/LayoutCacheContext";
+import ModalHost from "@foxglove/studio-base/context/ModalHost";
 import CacheOnlyLayoutStorageProvider from "@foxglove/studio-base/providers/CacheOnlyLayoutStorageProvider";
 import CurrentLayoutState, {
   DEFAULT_LAYOUT_FOR_TESTS,
@@ -19,8 +21,8 @@ import CurrentLayoutState, {
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 import MockLayoutCache from "@foxglove/studio-base/services/MockLayoutCache";
+import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
 import delay from "@foxglove/studio-base/util/delay";
-import signal, { Signal } from "@foxglove/studio-base/util/signal";
 
 import LayoutBrowser from "./index";
 
@@ -69,13 +71,17 @@ function WithSetup(Child: Story, ctx: StoryContext): JSX.Element {
   );
   return (
     <div style={{ display: "flex", height: 400 }}>
-      <CurrentLayoutContext.Provider value={currentLayout}>
-        <LayoutCacheContext.Provider value={storage}>
-          <CacheOnlyLayoutStorageProvider>
-            <Child />
-          </CacheOnlyLayoutStorageProvider>
-        </LayoutCacheContext.Provider>
-      </CurrentLayoutContext.Provider>
+      <ModalHost>
+        <AnalyticsProvider>
+          <CurrentLayoutContext.Provider value={currentLayout}>
+            <LayoutCacheContext.Provider value={storage}>
+              <CacheOnlyLayoutStorageProvider>
+                <Child />
+              </CacheOnlyLayoutStorageProvider>
+            </LayoutCacheContext.Provider>
+          </CurrentLayoutContext.Provider>
+        </AnalyticsProvider>
+      </ModalHost>
     </div>
   );
 }
@@ -105,14 +111,16 @@ export function LayoutList(): JSX.Element {
   return <LayoutBrowser />;
 }
 
-AddLayout.parameters = { screenshot: { signal: signal() } };
-export function AddLayout(_args: unknown, ctx: StoryContext): JSX.Element {
+AddLayout.parameters = { useReadySignal: true };
+export function AddLayout(_args: unknown): JSX.Element {
+  const readySignal = useReadySignal();
+
   useAsyncThrowing(async () => {
     await delay(100);
     document.querySelector<HTMLElement>(`[data-test="add-layout"]`)!.click();
     await delay(10);
-    ctx.parameters.screenshot.signal.resolve();
-  }, [ctx.parameters.screenshot.signal]);
+    readySignal();
+  }, [readySignal]);
   return (
     <LayoutBrowser
       currentDateForStorybook={useMemo(() => new Date("2021-06-16T04:28:33.549Z"), [])}
@@ -120,33 +128,39 @@ export function AddLayout(_args: unknown, ctx: StoryContext): JSX.Element {
   );
 }
 
-MenuOpen.parameters = { screenshot: { signal: signal() } };
-export function MenuOpen(_args: unknown, ctx: StoryContext): JSX.Element {
+MenuOpen.parameters = { useReadySignal: true };
+export function MenuOpen(_args: unknown): JSX.Element {
+  const readySignal = useReadySignal();
+
   useAsyncThrowing(async () => {
     await delay(100);
     document.querySelectorAll<HTMLElement>(`[data-test="layout-actions"]`)[1]!.click();
     await delay(10);
-    ctx.parameters.screenshot.signal.resolve();
-  }, [ctx.parameters.screenshot.signal]);
+    readySignal();
+  }, [readySignal]);
 
   return <LayoutBrowser />;
 }
 
-EditingName.parameters = { screenshot: { signal: signal() } };
-export function EditingName(_args: unknown, ctx: StoryContext): JSX.Element {
+EditingName.parameters = { useReadySignal: true };
+export function EditingName(_args: unknown): JSX.Element {
+  const readySignal = useReadySignal();
+
   useAsyncThrowing(async () => {
     await delay(100);
     document.querySelectorAll<HTMLElement>(`[data-test="layout-actions"]`)[1]!.click();
     await delay(10);
     document.querySelector<HTMLElement>(`[data-test="rename-layout"]`)!.click();
-    ctx.parameters.screenshot.signal.resolve();
-  }, [ctx.parameters.screenshot.signal]);
+    readySignal();
+  }, [readySignal]);
 
   return <LayoutBrowser />;
 }
 
-CancelRenameWithEscape.parameters = { screenshot: { signal: signal() } };
-export function CancelRenameWithEscape(_args: unknown, ctx: StoryContext): JSX.Element {
+CancelRenameWithEscape.parameters = { useReadySignal: true };
+export function CancelRenameWithEscape(_args: unknown): JSX.Element {
+  const readySignal = useReadySignal();
+
   useAsyncThrowing(async () => {
     await delay(100);
     document.querySelectorAll<HTMLElement>(`[data-test="layout-actions"]`)[1]!.click();
@@ -155,14 +169,16 @@ export function CancelRenameWithEscape(_args: unknown, ctx: StoryContext): JSX.E
     await delay(10);
     TestUtils.Simulate.keyDown(document.activeElement!, { key: "Escape" });
     await delay(10);
-    ctx.parameters.screenshot.signal.resolve();
-  }, [ctx.parameters.screenshot.signal]);
+    readySignal();
+  }, [readySignal]);
 
   return <LayoutBrowser />;
 }
 
-CancelRenameWithButton.parameters = { screenshot: { signal: signal() } };
-export function CancelRenameWithButton(_args: unknown, ctx: StoryContext): JSX.Element {
+CancelRenameWithButton.parameters = { useReadySignal: true };
+export function CancelRenameWithButton(_args: unknown): JSX.Element {
+  const readySignal = useReadySignal();
+
   useAsyncThrowing(async () => {
     await delay(100);
     document.querySelectorAll<HTMLElement>(`[data-test="layout-actions"]`)[1]!.click();
@@ -171,14 +187,16 @@ export function CancelRenameWithButton(_args: unknown, ctx: StoryContext): JSX.E
     await delay(10);
     document.querySelector<HTMLElement>(`[data-test="cancel-rename"]`)!.click();
     await delay(10);
-    ctx.parameters.screenshot.signal.resolve();
-  }, [ctx.parameters.screenshot.signal]);
+    readySignal();
+  }, [readySignal]);
 
   return <LayoutBrowser />;
 }
 
-CommitRenameWithSubmit.parameters = { screenshot: { signal: signal() } };
-export function CommitRenameWithSubmit(_args: unknown, ctx: StoryContext): JSX.Element {
+CommitRenameWithSubmit.parameters = { useReadySignal: true };
+export function CommitRenameWithSubmit(_args: unknown): JSX.Element {
+  const readySignal = useReadySignal();
+
   useAsyncThrowing(async () => {
     await delay(100);
     document.querySelectorAll<HTMLElement>(`[data-test="layout-actions"]`)[1]!.click();
@@ -194,7 +212,7 @@ export function CommitRenameWithSubmit(_args: unknown, ctx: StoryContext): JSX.E
   useEffect(() => {
     void layoutCache.list().then((layouts) => {
       if (layouts.some((layout) => layout.name === "New name")) {
-        ctx.parameters.screenshot.signal.resolve();
+        readySignal();
       }
     });
   });
@@ -202,8 +220,8 @@ export function CommitRenameWithSubmit(_args: unknown, ctx: StoryContext): JSX.E
   return <LayoutBrowser />;
 }
 
-CommitRenameWithButton.parameters = { screenshot: { signal: signal() } };
-export function CommitRenameWithButton(_args: unknown, ctx: StoryContext): JSX.Element {
+CommitRenameWithButton.parameters = { useReadySignal: true };
+export function CommitRenameWithButton(_args: unknown): JSX.Element {
   useAsyncThrowing(async () => {
     await delay(100);
     document.querySelectorAll<HTMLElement>(`[data-test="layout-actions"]`)[1]!.click();
@@ -216,10 +234,12 @@ export function CommitRenameWithButton(_args: unknown, ctx: StoryContext): JSX.E
   }, []);
 
   const layoutCache = useLayoutCache();
+  const readySignal = useReadySignal();
+
   useEffect(() => {
     void layoutCache.list().then((layouts) => {
       if (layouts.some((layout) => layout.name === "New name")) {
-        ctx.parameters.screenshot.signal.resolve();
+        readySignal();
       }
     });
   });
@@ -227,9 +247,11 @@ export function CommitRenameWithButton(_args: unknown, ctx: StoryContext): JSX.E
   return <LayoutBrowser />;
 }
 
-Duplicate.parameters = { screenshot: { signal: signal() } };
-export function Duplicate(_args: unknown, ctx: StoryContext): JSX.Element {
+Duplicate.parameters = { useReadySignal: true };
+export function Duplicate(_args: unknown): JSX.Element {
   const layoutCache = useLayoutCache();
+  const readySignal = useReadySignal();
+
   useAsyncThrowing(async () => {
     await delay(100);
     document.querySelectorAll<HTMLElement>(`[data-test="layout-actions"]`)[1]!.click();
@@ -238,11 +260,11 @@ export function Duplicate(_args: unknown, ctx: StoryContext): JSX.Element {
     await delay(10);
 
     if ((await layoutCache.list()).some((layout) => layout.name === "Current Layout copy")) {
-      ctx.parameters.screenshot.signal.resolve();
+      readySignal();
     } else {
       throw new Error("Duplicate failed");
     }
-  }, [ctx.parameters.screenshot.signal, layoutCache]);
+  }, [readySignal, layoutCache]);
 
   return <LayoutBrowser />;
 }
@@ -254,7 +276,7 @@ function DeleteStory({
 }: {
   index: number;
   name: string;
-  signal: Signal<void>;
+  signal: () => void;
 }) {
   const layoutCache = useLayoutCache();
   useAsyncThrowing(async () => {
@@ -267,7 +289,7 @@ function DeleteStory({
     await delay(10);
 
     if (!(await layoutCache.list()).some((layout) => layout.name === name)) {
-      sig.resolve();
+      sig();
     } else {
       throw new Error("Delete failed");
     }
@@ -276,18 +298,25 @@ function DeleteStory({
   return <LayoutBrowser />;
 }
 
-DeleteLayout.parameters = { screenshot: { signal: signal() } };
-export function DeleteLayout(_args: unknown, ctx: StoryContext): JSX.Element {
-  return <DeleteStory index={0} name="Another Layout" signal={ctx.parameters.screenshot.signal} />;
+export function DeleteLayout(_args: unknown): JSX.Element {
+  const readySignal = useReadySignal();
+  return <DeleteStory index={0} name="Another Layout" signal={readySignal} />;
 }
+DeleteLayout.parameters = { useReadySignal: true };
 
-DeleteSelectedLayout.parameters = { screenshot: { signal: signal() } };
-export function DeleteSelectedLayout(_args: unknown, ctx: StoryContext): JSX.Element {
-  return <DeleteStory index={1} name="Current Layout" signal={ctx.parameters.screenshot.signal} />;
+export function DeleteSelectedLayout(_args: unknown): JSX.Element {
+  const readySignal = useReadySignal();
+  return <DeleteStory index={1} name="Current Layout" signal={readySignal} />;
 }
+DeleteSelectedLayout.parameters = { useReadySignal: true };
 
+export function DeleteLastLayout(_args: unknown): JSX.Element {
+  const readySignal = useReadySignal();
+
+  return <DeleteStory index={0} name="Current Layout" signal={readySignal} />;
+}
 DeleteLastLayout.parameters = {
-  screenshot: { signal: signal() },
+  useReadySignal: true,
   mockLayouts: [
     {
       id: "test-id",
@@ -297,6 +326,3 @@ DeleteLastLayout.parameters = {
     },
   ],
 };
-export function DeleteLastLayout(_args: unknown, ctx: StoryContext): JSX.Element {
-  return <DeleteStory index={0} name="Current Layout" signal={ctx.parameters.screenshot.signal} />;
-}
