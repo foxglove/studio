@@ -49,7 +49,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           # Chromatic requires running build on the branch head, not PR merge commit
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           lfs: true
 
@@ -87,7 +87,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ github.event.pull_request.head.sha }}
           lfs: true
 
       - uses: actions/setup-node@v2
