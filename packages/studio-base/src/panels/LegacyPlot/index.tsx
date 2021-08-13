@@ -148,7 +148,9 @@ function TwoDimensionalPlot(props: Props) {
         return undefined;
       }
 
-      const dataset = { data, showLine: true, fill: false, ...picked };
+      // since message might be a lazy message, we need to read the individual x/y fields from each item
+      const dataPoints = data.map((item) => ({ x: item.x, y: item.y }));
+      const dataset = { data: dataPoints, showLine: true, fill: false, ...picked };
       if (pointRadiusOverride != undefined) {
         dataset.pointRadius = parseFloat(pointRadiusOverride);
       }
@@ -162,7 +164,9 @@ function TwoDimensionalPlot(props: Props) {
         return undefined;
       }
 
-      const dataset = { data, showLine: true, fill: false, ...picked };
+      // since message might be a lazy message, we need to read the individual x/y fields from each item
+      const dataPoints = data.map((item) => ({ x: item.x, y: item.y }));
+      const dataset = { data: dataPoints, showLine: true, fill: false, ...picked };
       if (pointRadiusOverride != undefined) {
         dataset.pointRadius = parseFloat(pointRadiusOverride);
       }
@@ -176,7 +180,10 @@ function TwoDimensionalPlot(props: Props) {
         return undefined;
       }
 
-      const closedData = data[0] != undefined ? data.concat([data[0]]) : data;
+      // since message might be a lazy message, we need to read the individual x/y fields from each item
+      const dataPoints = data.map((item) => ({ x: item.x, y: item.y }));
+      const closedData =
+        dataPoints[0] != undefined ? dataPoints.concat([dataPoints[0]]) : dataPoints;
       const dataset = {
         data: closedData,
         fill: true,
@@ -224,7 +231,7 @@ function TwoDimensionalPlot(props: Props) {
         };
     return {
       grid: { color: gridColor },
-      scaleLabel: { display: yAxisLabel != undefined, labelString: yAxisLabel },
+      title: { display: yAxisLabel != undefined, text: yAxisLabel },
       ...minMax,
     };
   }, [allYs, getBufferedMinMax, gridColor, hasUserPannedOrZoomed, maxYVal, minYVal, yAxisLabel]);
@@ -241,7 +248,7 @@ function TwoDimensionalPlot(props: Props) {
 
     return {
       grid: { color: gridColor },
-      scaleLabel: { display: xAxisLabel != undefined, labelString: xAxisLabel },
+      title: { display: xAxisLabel != undefined, text: xAxisLabel },
       ...minMax,
     };
   }, [allXs, getBufferedMinMax, gridColor, hasUserPannedOrZoomed, maxXVal, minXVal, xAxisLabel]);
@@ -257,7 +264,6 @@ function TwoDimensionalPlot(props: Props) {
 
   const options = useMemo<ChartOptions>(
     () => ({
-      title: { display: title != undefined, text: title },
       scales: {
         y: yScale,
         x: xScale,
@@ -265,6 +271,7 @@ function TwoDimensionalPlot(props: Props) {
       color: colors.GRAY,
       animation: { duration: 0 },
       plugins: {
+        title: { display: title != undefined, text: title, color: "white" },
         tooltip: {
           intersect: false,
           mode: "nearest",

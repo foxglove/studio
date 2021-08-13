@@ -15,7 +15,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Time, add, areEqual, compare } from "@foxglove/rostime";
 import NoopMetricsCollector from "@foxglove/studio-base/players/NoopMetricsCollector";
 import {
-  AdvertisePayload,
+  AdvertiseOptions,
   MessageEvent,
   Player,
   PlayerCapabilities,
@@ -112,7 +112,7 @@ export default class RandomAccessPlayer implements Player {
   _parsedSubscribedTopics: Set<string> = new Set();
   _providerTopics: Topic[] = [];
   _providerConnections: Connection[] = [];
-  _providerDatatypes: RosDatatypes = {};
+  _providerDatatypes: RosDatatypes = new Map();
   _metricsCollector: PlayerMetricsCollectorInterface;
   _initializing: boolean = true;
   _initialized: boolean = false;
@@ -594,7 +594,7 @@ export default class RandomAccessPlayer implements Player {
     this.seekPlayback(this._currentTime);
   }
 
-  setPublishers(_publishers: AdvertisePayload[]): void {
+  setPublishers(_publishers: AdvertiseOptions[]): void {
     // no-op
   }
 
