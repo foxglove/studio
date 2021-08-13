@@ -12,7 +12,7 @@ import { RosMsgDefinition } from "@foxglove/rosmsg";
 import { Time } from "@foxglove/rostime";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import {
-  AdvertisePayload,
+  AdvertiseOptions,
   MessageEvent,
   ParameterValue,
   Player,
@@ -385,7 +385,7 @@ export default class Ros1Player implements Player {
     this._emitState();
   };
 
-  setPublishers(publishers: AdvertisePayload[]): void {
+  setPublishers(publishers: AdvertiseOptions[]): void {
     if (!this._rosNode || this._closed) {
       return;
     }
@@ -412,7 +412,9 @@ export default class Ros1Player implements Player {
     }
 
     // Advertise new topics
-    for (const { topic, datatype: dataType, datatypes } of validPublishers) {
+    for (const advertiseOptions of validPublishers) {
+      const { topic, datatype: dataType, options } = advertiseOptions;
+
       if (this._rosNode.publications.has(topic)) {
         continue;
       }
@@ -423,6 +425,10 @@ export default class Ros1Player implements Player {
       // Try to retrieve the ROS message definition for this topic
       let msgdef: RosMsgDefinition[];
       try {
+        const datatypes = options?.["datatypes"] as RosDatatypes | undefined;
+        if (!datatypes || !(datatypes instanceof Map)) {
+          throw new Error("The datatypes option is required for publishing");
+        }
         msgdef = rosDatatypesToMessageDefinition(datatypes, dataType);
       } catch (error) {
         this._addProblem(msgdefProblemId, {
