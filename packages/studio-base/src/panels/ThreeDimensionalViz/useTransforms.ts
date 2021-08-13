@@ -14,12 +14,12 @@
 import { useMemo, useRef } from "react";
 
 import Transforms from "@foxglove/studio-base/panels/ThreeDimensionalViz/Transforms";
-import { Frame, MessageEvent, Topic } from "@foxglove/studio-base/players/types";
-import { MarkerArray, StampedMessage, TF } from "@foxglove/studio-base/types/Messages";
 import {
   TF_DATATYPES,
   TRANSFORM_STAMPED_DATATYPES,
-} from "@foxglove/studio-base/util/globalConstants";
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/constants";
+import { Frame, MessageEvent, Topic } from "@foxglove/studio-base/players/types";
+import { MarkerArray, StampedMessage, TF } from "@foxglove/studio-base/types/Messages";
 
 type TfMessage = { transforms: TF[] };
 

@@ -14,15 +14,8 @@ import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 export const DEFAULT_STUDIO_NODE_PREFIX = "/studio_node/";
 
-export const TRANSFORM_TOPIC = "/tf";
 export const DIAGNOSTIC_TOPIC = "/diagnostics";
 export const SECOND_SOURCE_PREFIX = "/studio_source_2";
-
-export const TRANSFORM_STAMPED_DATATYPES = [
-  "geometry_msgs/TransformStamped",
-  "geometry_msgs/msg/TransformStamped",
-];
-export const TF_DATATYPES = ["tf/tfMessage", "tf2_msgs/TFMessage", "tf2_msgs/msg/TFMessage"];
 
 export const FOXGLOVE_GRID_TOPIC = "/foxglove/grid";
 export const FOXGLOVE_GRID_DATATYPE = "foxglove/Grid";

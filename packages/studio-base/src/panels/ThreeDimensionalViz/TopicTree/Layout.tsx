@@ -67,6 +67,11 @@ import Transforms, {
 import TransformsBuilder from "@foxglove/studio-base/panels/ThreeDimensionalViz/TransformsBuilder";
 import World from "@foxglove/studio-base/panels/ThreeDimensionalViz/World";
 import {
+  TF_DATATYPES,
+  TRANSFORM_STAMPED_DATATYPES,
+  TRANSFORM_TOPIC,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/constants";
+import {
   TargetPose,
   getInteractionData,
   getObject,
@@ -80,9 +85,6 @@ import filterMap from "@foxglove/studio-base/util/filterMap";
 import {
   FOXGLOVE_GRID_TOPIC,
   SECOND_SOURCE_PREFIX,
-  TF_DATATYPES,
-  TRANSFORM_TOPIC,
-  TRANSFORM_STAMPED_DATATYPES,
 } from "@foxglove/studio-base/util/globalConstants";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import { joinTopics } from "@foxglove/studio-base/util/topicUtils";
