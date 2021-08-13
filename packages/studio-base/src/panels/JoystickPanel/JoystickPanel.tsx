@@ -2,7 +2,18 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Stack, StackItem } from "@fluentui/react";
+import {
+  Dropdown,
+  Label,
+  Pivot,
+  PivotItem,
+  Stack,
+  StackItem,
+  Text,
+  TextField,
+  Toggle,
+  useTheme,
+} from "@fluentui/react";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 
 // import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
@@ -25,6 +36,7 @@ type Config = {
 
 function JoystickPanel(props: JoystickPanelProps): JSX.Element {
   const { context } = props;
+  const theme = useTheme();
 
   const config = context.initialState as Config;
 
@@ -73,21 +85,125 @@ function JoystickPanel(props: JoystickPanelProps): JSX.Element {
   }, [topics]);
 
   return (
-    <Stack verticalFill style={{ flexFlow: "inherit" }}>
-      <StackItem>
-        <Autocomplete
-          placeholder="Enter a topic"
-          items={topicNames}
-          hasError={false}
-          onChange={onChangeTopic}
-          onSelect={onSelectTopic}
-          selectedItem={currentTopic}
-        />
-      </StackItem>
-      <StackItem grow={1}>
-        <Joystick />
-      </StackItem>
-    </Stack>
+    <Pivot styles={{ root: { backgroundColor: theme.semanticColors.bodyBackground } }}>
+      <PivotItem
+        headerText="Controls"
+        headerButtonProps={{
+          "data-order": 1,
+          "data-title": "Controls",
+        }}
+      >
+        <Stack verticalFill tokens={{ padding: theme.spacing.l1, childrenGap: theme.spacing.m }}>
+          <StackItem grow={1}>
+            <Joystick />
+          </StackItem>
+        </Stack>
+      </PivotItem>
+      <PivotItem
+        headerText="Settings"
+        headerButtonProps={{
+          "data-order": 2,
+          "data-title": "Setting",
+        }}
+      >
+        <Stack verticalFill tokens={{ padding: theme.spacing.l1, childrenGap: theme.spacing.m }}>
+          <StackItem>
+            <Text>Publish Topic</Text>
+            <Stack
+              tokens={{
+                padding: `${theme.spacing.s1} 0`,
+              }}
+            >
+              <Autocomplete
+                placeholder="Enter a topic"
+                items={topicNames}
+                hasError={false}
+                onChange={onChangeTopic}
+                onSelect={onSelectTopic}
+                selectedItem={currentTopic}
+                inputStyle={{
+                  padding: theme.spacing.s1,
+                  border: `1px solid ${theme.semanticColors.inputBorder}`,
+                  backgroundColor: theme.semanticColors.inputBackground,
+                }}
+              />
+            </Stack>
+          </StackItem>
+          <StackItem grow>
+            <Toggle label="Show stop button" />
+          </StackItem>
+          <StackItem grow>
+            <Stack horizontal verticalAlign="end" tokens={{ childrenGap: theme.spacing.m }}>
+              <StackItem grow>
+                <Label>Up Button:</Label>
+              </StackItem>
+              <Dropdown
+                label="Message"
+                defaultSelectedKey="z"
+                options={[
+                  { key: "x", text: "x" },
+                  { key: "y", text: "y" },
+                  { key: "z", text: "z" },
+                ]}
+                styles={{ root: { minWidth: 96 } }}
+              />
+              <TextField type="number" label="Increment" defaultValue="3" />
+            </Stack>
+          </StackItem>
+          <StackItem>
+            <Stack horizontal verticalAlign="center" tokens={{ childrenGap: theme.spacing.m }}>
+              <StackItem grow>
+                <Label>Down Button:</Label>
+              </StackItem>
+              <Dropdown
+                defaultSelectedKey="z"
+                options={[
+                  { key: "x", text: "x" },
+                  { key: "y", text: "y" },
+                  { key: "z", text: "z" },
+                ]}
+                styles={{ root: { minWidth: 96 } }}
+              />
+              <TextField type="number" defaultValue="3" />
+            </Stack>
+          </StackItem>
+          <StackItem>
+            <Stack horizontal verticalAlign="center" tokens={{ childrenGap: theme.spacing.m }}>
+              <StackItem grow>
+                <Label>Left Button:</Label>
+              </StackItem>
+              <Dropdown
+                defaultSelectedKey="x"
+                options={[
+                  { key: "x", text: "x" },
+                  { key: "y", text: "y" },
+                  { key: "z", text: "z" },
+                ]}
+                styles={{ root: { minWidth: 96 } }}
+              />
+              <TextField defaultValue="6.28" type="number" />
+            </Stack>
+          </StackItem>
+          <StackItem>
+            <Stack horizontal verticalAlign="center" tokens={{ childrenGap: theme.spacing.m }}>
+              <StackItem grow>
+                <Label>Right Button:</Label>
+              </StackItem>
+              <Dropdown
+                defaultSelectedKey="x"
+                options={[
+                  { key: "x", text: "x" },
+                  { key: "y", text: "y" },
+                  { key: "z", text: "z" },
+                ]}
+                styles={{ root: { minWidth: 96 } }}
+              />
+              <TextField defaultValue="-6.28" type="number" />
+            </Stack>
+          </StackItem>
+        </Stack>
+      </PivotItem>
+    </Pivot>
   );
 }
 
