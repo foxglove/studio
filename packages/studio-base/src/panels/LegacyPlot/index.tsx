@@ -224,7 +224,7 @@ function TwoDimensionalPlot(props: Props) {
         };
     return {
       grid: { color: gridColor },
-      scaleLabel: { display: yAxisLabel != undefined, labelString: yAxisLabel },
+      title: { display: yAxisLabel != undefined, text: yAxisLabel },
       ...minMax,
     };
   }, [allYs, getBufferedMinMax, gridColor, hasUserPannedOrZoomed, maxYVal, minYVal, yAxisLabel]);
@@ -241,7 +241,7 @@ function TwoDimensionalPlot(props: Props) {
 
     return {
       grid: { color: gridColor },
-      scaleLabel: { display: xAxisLabel != undefined, labelString: xAxisLabel },
+      title: { display: xAxisLabel != undefined, text: xAxisLabel },
       ...minMax,
     };
   }, [allXs, getBufferedMinMax, gridColor, hasUserPannedOrZoomed, maxXVal, minXVal, xAxisLabel]);
@@ -257,7 +257,6 @@ function TwoDimensionalPlot(props: Props) {
 
   const options = useMemo<ChartOptions>(
     () => ({
-      title: { display: title != undefined, text: title },
       scales: {
         y: yScale,
         x: xScale,
@@ -265,6 +264,7 @@ function TwoDimensionalPlot(props: Props) {
       color: colors.GRAY,
       animation: { duration: 0 },
       plugins: {
+        title: { display: title != undefined, text: title, color: "white" },
         tooltip: {
           intersect: false,
           mode: "nearest",
