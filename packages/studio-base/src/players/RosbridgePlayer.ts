@@ -252,19 +252,21 @@ export default class RosbridgePlayer implements Player {
         this._problems.push({
           severity: "error",
           message: "Failed to fetch node details from rosbridge",
+          error,
         });
         this._publishedTopics = new Map();
         this._subscribedTopics = new Map();
         this._services = new Map();
       }
-
-      this._emitState();
     } catch (error) {
       this._problems.push({
         severity: "error",
         message: "Failed to fetch topics from rosbridge",
+        error,
       });
     } finally {
+      this._emitState();
+
       // Regardless of what happens, request topics again in a little bit.
       this._requestTopicsTimeout = setTimeout(this._requestTopics, 3000);
     }
