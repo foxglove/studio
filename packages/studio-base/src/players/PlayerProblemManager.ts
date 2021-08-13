@@ -5,7 +5,9 @@
 import { PlayerProblem } from "@foxglove/studio-base/players/types";
 
 /**
- * Manages a set of PlayerProblems keyed by ID.
+ * Manages a set of PlayerProblems keyed by ID. Calls to problems() will return the same object as
+ * long as problems have not been added/removed; this helps the player pipeline to know when it
+ * needs to re-process player problems.
  */
 export default class PlayerProblemManager {
   private _problemsById = new Map<string, PlayerProblem>();
