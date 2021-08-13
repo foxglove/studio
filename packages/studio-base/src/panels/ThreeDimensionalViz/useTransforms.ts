@@ -17,9 +17,8 @@ import Transforms from "@foxglove/studio-base/panels/ThreeDimensionalViz/Transfo
 import { Frame, MessageEvent, Topic } from "@foxglove/studio-base/players/types";
 import { MarkerArray, StampedMessage, TF } from "@foxglove/studio-base/types/Messages";
 import {
-  TF2_DATATYPE,
-  TF_DATATYPE,
-  TRANSFORM_STAMPED_DATATYPE,
+  TF_DATATYPES,
+  TRANSFORM_STAMPED_DATATYPES,
 } from "@foxglove/studio-base/util/globalConstants";
 
 type TfMessage = { transforms: TF[] };
@@ -95,18 +94,12 @@ function useTransforms(topics: readonly Topic[], frame: Frame, reset: boolean): 
       }
 
       // Process all TF topics (ex: /tf and /tf_static)
-      switch (datatype) {
-        case TF_DATATYPE:
-        case TF2_DATATYPE:
-          consumeTfs(msgs as MessageEvent<TfMessage>[], transforms);
-          updated = true;
-
-          break;
-        case TRANSFORM_STAMPED_DATATYPE:
-          consumeSingleTfs(msgs as MessageEvent<TF>[], transforms);
-          updated = true;
-
-          break;
+      if (TF_DATATYPES.includes(datatype)) {
+        consumeTfs(msgs as MessageEvent<TfMessage>[], transforms);
+        updated = true;
+      } else if (TRANSFORM_STAMPED_DATATYPES.includes(datatype)) {
+        consumeSingleTfs(msgs as MessageEvent<TF>[], transforms);
+        updated = true;
       }
     }
     if (!updated) {

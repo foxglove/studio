@@ -78,22 +78,11 @@ import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
 import { Color, Marker } from "@foxglove/studio-base/types/Messages";
 import filterMap from "@foxglove/studio-base/util/filterMap";
 import {
-  COLOR_RGBA_DATATYPE,
   FOXGLOVE_GRID_TOPIC,
-  GEOMETRY_MSGS_POLYGON_STAMPED_DATATYPE,
-  NAV_MSGS_OCCUPANCY_GRID_DATATYPE,
-  NAV_MSGS_PATH_DATATYPE,
-  POINT_CLOUD_DATATYPE,
-  POSE_STAMPED_DATATYPE,
   SECOND_SOURCE_PREFIX,
-  SENSOR_MSGS_LASER_SCAN_DATATYPE,
-  TF_DATATYPE,
-  TF2_DATATYPE,
+  TF_DATATYPES,
   TRANSFORM_TOPIC,
-  VELODYNE_SCAN_DATATYPE,
-  VISUALIZATION_MSGS_MARKER_ARRAY_DATATYPE,
-  VISUALIZATION_MSGS_MARKER_DATATYPE,
-  TRANSFORM_STAMPED_DATATYPE,
+  TRANSFORM_STAMPED_DATATYPES,
 } from "@foxglove/studio-base/util/globalConstants";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import { joinTopics } from "@foxglove/studio-base/util/topicUtils";
@@ -153,22 +142,30 @@ export type ColorOverride = {
 };
 export type ColorOverrideBySourceIdxByVariable = Record<GlobalVariableName, ColorOverride[]>;
 
-const SUPPORTED_MARKER_DATATYPES = {
-  // generally supported datatypes
-  VISUALIZATION_MSGS_MARKER_DATATYPE,
-  VISUALIZATION_MSGS_MARKER_ARRAY_DATATYPE,
-  POSE_STAMPED_DATATYPE,
-  POINT_CLOUD_DATATYPE,
-  VELODYNE_SCAN_DATATYPE,
-  SENSOR_MSGS_LASER_SCAN_DATATYPE,
-  COLOR_RGBA_DATATYPE,
-  NAV_MSGS_OCCUPANCY_GRID_DATATYPE,
-  NAV_MSGS_PATH_DATATYPE,
-  GEOMETRY_MSGS_POLYGON_STAMPED_DATATYPE,
-  TF_DATATYPE,
-  TF2_DATATYPE,
-};
-const SUPPORTED_MARKER_DATATYPES_SET = new Set(Object.values(SUPPORTED_MARKER_DATATYPES));
+// generally supported datatypes
+const SUPPORTED_MARKER_DATATYPES_SET = new Set([
+  "visualization_msgs/Marker",
+  "visualization_msgs/msg/Marker",
+  "visualization_msgs/MarkerArray",
+  "visualization_msgs/msg/MarkerArray",
+  "geometry_msgs/PoseStamped",
+  "geometry_msgs/msg/PoseStamped",
+  "sensor_msgs/PointCloud2",
+  "sensor_msgs/msg/PointCloud2",
+  "velodyne_msgs/VelodyneScan",
+  "velodyne_msgs/msg/VelodyneScan",
+  "sensor_msgs/LaserScan",
+  "sensor_msgs/msg/LaserScan",
+  "std_msgs/ColorRGBA",
+  "std_msgs/msg/ColorRGBA",
+  "nav_msgs/OccupancyGrid",
+  "nav_msgs/msg/OccupancyGrid",
+  "nav_msgs/Path",
+  "nav_msgs/msg/Path",
+  "geometry_msgs/PolygonStamped",
+  "geometry_msgs/msg/PolygonStamped",
+  ...TF_DATATYPES,
+]);
 
 function isTopicRenderable(topic: Topic): boolean {
   const datatype = topic.datatype;
@@ -281,19 +278,6 @@ export default function Layout({
   } = useMemo(
     () => ({
       blacklistTopicsSet: new Set(),
-      supportedMarkerDatatypesSet: new Set([
-        VISUALIZATION_MSGS_MARKER_DATATYPE,
-        VISUALIZATION_MSGS_MARKER_ARRAY_DATATYPE,
-        POSE_STAMPED_DATATYPE,
-        POINT_CLOUD_DATATYPE,
-        VELODYNE_SCAN_DATATYPE,
-        SENSOR_MSGS_LASER_SCAN_DATATYPE,
-        NAV_MSGS_OCCUPANCY_GRID_DATATYPE,
-        NAV_MSGS_PATH_DATATYPE,
-        GEOMETRY_MSGS_POLYGON_STAMPED_DATATYPE,
-        TF_DATATYPE,
-        TF2_DATATYPE,
-      ]),
       topicTreeConfig: {
         name: "root",
         children: [
@@ -373,9 +357,8 @@ export default function Layout({
     // Subscribe to all TF topics
     for (const topic of memoizedTopics) {
       if (
-        topic.datatype === TF_DATATYPE ||
-        topic.datatype === TF2_DATATYPE ||
-        topic.datatype === TRANSFORM_STAMPED_DATATYPE
+        TF_DATATYPES.includes(topic.datatype) ||
+        TRANSFORM_STAMPED_DATATYPES.includes(topic.datatype)
       ) {
         allTopics.add(topic.name);
       }
