@@ -9,6 +9,8 @@ import { Sockets } from "@foxglove/electron-socket/renderer";
 import Logger from "@foxglove/log";
 import { RosNode } from "@foxglove/ros2";
 import { RosMsgDefinition } from "@foxglove/rosmsg";
+import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
+import { definitions as foxgloveDefs } from "@foxglove/rosmsg-msgs-foxglove";
 import { Time } from "@foxglove/rostime";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
@@ -27,7 +29,7 @@ import {
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
-// import rosDatatypesToMessageDefinition from "@foxglove/studio-base/util/rosDatatypesToMessageDefinition";
+import rosDatatypesToMessageDefinition from "@foxglove/studio-base/util/rosDatatypesToMessageDefinition";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import { fromMillis, TimestampMethod } from "@foxglove/studio-base/util/time";
 
@@ -56,7 +58,7 @@ export default class Ros2Player implements Player {
   private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
   private _closed = false; // Whether the player has been completely closed using close().
   private _providerTopics?: Topic[]; // Topics as advertised by peers
-  private _providerDatatypes: RosDatatypes = new Map(); // All ROS message definitions received from subscriptions and set by publishers.
+  private _providerDatatypes = new Map<string, RosMsgDefinition>(); // All known ROS 2 message definitions.
   private _publishedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of publisher IDs publishing each topic.
   private _subscribedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of subscriber IDs subscribed to each topic.
   // private _services = new Map<string, Set<string>>(); // A map of service names to service provider IDs that provide each service.
@@ -79,6 +81,20 @@ export default class Ros2Player implements Player {
     this._metricsCollector = metricsCollector;
     this._start = fromMillis(Date.now());
     this._metricsCollector.playerConstructed();
+
+    // The ros1ToRos2Type() hack can be removed when @foxglove/rosmsg-msgs-* packages are updated to
+    // natively support ROS 2
+    for (const dataType in commonDefs) {
+      const msgDef = (commonDefs as Record<string, RosMsgDefinition>)[dataType]!;
+      this._providerDatatypes.set(dataType, msgDef);
+      this._providerDatatypes.set(ros1ToRos2Type(dataType), msgDef);
+    }
+    for (const dataType in foxgloveDefs) {
+      const msgDef = (foxgloveDefs as Record<string, RosMsgDefinition>)[dataType]!;
+      this._providerDatatypes.set(dataType, msgDef);
+      this._providerDatatypes.set(ros1ToRos2Type(dataType), msgDef);
+    }
+
     void this._open();
   }
 
@@ -313,7 +329,7 @@ export default class Ros2Player implements Player {
       // Try to retrieve the ROS message definition for this topic
       let msgDefinition: RosMsgDefinition[] | undefined;
       try {
-        // msgDefinition = rosDatatypesToMessageDefinition(this._allMessageDefinitions, dataType);
+        msgDefinition = rosDatatypesToMessageDefinition(this._providerDatatypes, dataType);
       } catch (error) {
         this._addProblem(`msgdef:${topicName}`, {
           severity: "warn",
@@ -330,8 +346,8 @@ export default class Ros2Player implements Player {
       //   const newDatatypes = this._getRosDatatypes(datatype, msgdef);
       //   this._providerDatatypes = new Map([...this._providerDatatypes, ...newDatatypes]);
       // });
-      subscription.on("message", (message, _data, _pub) =>
-        this._handleMessage(topicName, message, true),
+      subscription.on("message", (timestamp, message, _data, _pub) =>
+        this._handleMessage(topicName, timestamp, message, true),
       );
     }
 
@@ -345,12 +361,18 @@ export default class Ros2Player implements Player {
     }
   }
 
-  private _handleMessage = (topic: string, message: unknown, external: boolean): void => {
+  private _handleMessage = (
+    topic: string,
+    timestamp: Time,
+    message: unknown,
+    external: boolean,
+  ): void => {
     if (this._providerTopics == undefined) {
       return;
     }
 
-    const receiveTime = fromMillis(Date.now());
+    // const receiveTime = fromMillis(Date.now());
+    const receiveTime = timestamp;
 
     if (external && !this._hasReceivedMessage) {
       this._hasReceivedMessage = true;
@@ -557,4 +579,12 @@ export default class Ros2Player implements Player {
     // const delta = subtractTimes(now, this._clockReceived);
     // return addTimes(this._clockTime, delta);
   }
+}
+
+function ros1ToRos2Type(dataType: string): string {
+  const parts = dataType.split("/");
+  if (parts.length === 2) {
+    return `${parts[0]}/msg/${parts[1]}`;
+  }
+  return dataType;
 }
