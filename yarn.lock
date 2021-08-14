@@ -2103,15 +2103,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foxglove/electron-socket@npm:1.1.0":
-  version: 1.1.0
-  resolution: "@foxglove/electron-socket@npm:1.1.0"
+"@foxglove/electron-socket@npm:1.2.0":
+  version: 1.2.0
+  resolution: "@foxglove/electron-socket@npm:1.2.0"
   dependencies:
     dns-packet: ^5.2.4
     eventemitter3: ^4.0.7
   peerDependencies:
     electron: ">=12"
-  checksum: afe0dc3465e34ac497f6c5c6555e2ae8dbed7b454c2d9dfa40ed41217d8066c17d6fc29fbc71a7ce454ace33ee09be7009d28167053ab127eb5bafe179fc0b09
+  checksum: a6972982701b71387d75909a210eef4ac4af064725660ffc360be1a7ef1655ce2e883e947b0a6228178af20b1e7fe15ab3f00078c4dabd9eef8c97103681e88f
   languageName: node
   linkType: hard
 
@@ -2186,6 +2186,18 @@ __metadata:
     eventemitter3: ^4.0.7
     md5-typescript: ^1.0.5
   checksum: 9e6a4713a0b670579e9836951ff2affa03f07a53da1900fe1532bd49d0bf2a5afe2196cc3f23656353d1c9037a1d4469b4928b3bf5cec4796d46758d3b863f59
+  languageName: node
+  linkType: hard
+
+"@foxglove/ros2@github:foxglove/ros2#d052491bf855a0a3676e297404fb3b8ed158b05d":
+  version: 0.1.3
+  resolution: "@foxglove/ros2@https://github.com/foxglove/ros2.git#commit=d052491bf855a0a3676e297404fb3b8ed158b05d"
+  dependencies:
+    "@foxglove/rosmsg": ^1.0.0
+    "@foxglove/rosmsg2-serialization": ^1.0.1
+    "@foxglove/rtps": ^1.1.1
+    eventemitter3: ^4.0.7
+  checksum: 848ec17c6386a809577cdb6b0b6e9bcb34f14f2c4da38c1e51e2dc913e49fe8788df59f5f80c9e6daf4d51a16988c1afef3c4aef8d3e9cf7b71c365422f938fc
   languageName: node
   linkType: hard
 
@@ -2275,6 +2287,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@foxglove/rtps@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "@foxglove/rtps@npm:1.1.1"
+  dependencies:
+    "@foxglove/cdr": ^1.1.1
+    "@foxglove/rostime": ^1.1.0
+    eventemitter3: ^4.0.7
+  checksum: c906b8d35f70efe227a2f5015040c77ec964cdd8fab2da6f49a8ae725d8df47948e845a699e32d325c02291a749e6b782ecc3b0c8e83a7baa02a7c22e3665214
+  languageName: node
+  linkType: hard
+
 "@foxglove/studio-base@workspace:*, @foxglove/studio-base@workspace:packages/studio-base":
   version: 0.0.0-use.local
   resolution: "@foxglove/studio-base@workspace:packages/studio-base"
@@ -2283,9 +2306,10 @@ __metadata:
     "@fluentui/react-icons": 1.1.136
     "@fluentui/react-icons-mdl2": 1.1.8
     "@foxglove/den": "workspace:*"
-    "@foxglove/electron-socket": 1.1.0
+    "@foxglove/electron-socket": 1.2.0
     "@foxglove/hooks": "workspace:*"
     "@foxglove/ros1": 1.0.1
+    "@foxglove/ros2": "github:foxglove/ros2#d052491bf855a0a3676e297404fb3b8ed158b05d"
     "@foxglove/rosbag": 0.1.0
     "@foxglove/rosbag2-web": 1.0.1
     "@foxglove/rosmsg": 1.0.2
@@ -10299,7 +10323,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "desktop@workspace:desktop"
   dependencies:
-    "@foxglove/electron-socket": 1.1.0
+    "@foxglove/electron-socket": 1.2.0
     "@foxglove/studio-base": "workspace:*"
     "@types/plist": ^3.0.2
     jszip: 3.7.1

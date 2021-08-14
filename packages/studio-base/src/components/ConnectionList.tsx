@@ -55,6 +55,7 @@ export default function ConnectionList(): JSX.Element {
             iconName = "OpenFolder";
             break;
           case "ros1-socket":
+          case "ros2-socket":
             iconName = "studio.ROS";
             break;
           case "ros1-rosbridge-websocket":

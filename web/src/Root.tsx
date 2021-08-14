@@ -41,6 +41,18 @@ export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX
       type: "ros1-rosbridge-websocket",
     },
     {
+      name: "ROS 2",
+      type: "ros2-socket",
+      disabledReason: (
+        <>
+          ROS 2 Native connections are only available in our desktop app.&nbsp;
+          <Link href="https://foxglove.dev/download" target="_blank" rel="noreferrer">
+            Download it here.
+          </Link>
+        </>
+      ),
+    },
+    {
       name: "ROS 2 Rosbridge (WebSocket)",
       type: "ros2-rosbridge-websocket",
     },

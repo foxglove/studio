@@ -8,6 +8,7 @@ type SourceTypes =
   | "ros1-local-bagfile"
   | "ros2-local-bagfile"
   | "ros1-socket"
+  | "ros2-socket"
   | "ros1-rosbridge-websocket"
   | "ros2-rosbridge-websocket"
   | "ros1-remote-bagfile"
