@@ -24,8 +24,7 @@ if (typeof process.env.SENTRY_DSN === "string") {
         return integration.name !== "Breadcrumbs";
       });
     },
-    beforeSend: (event, _hint?) =>
-      event.message === "ResizeObserver loop limit exceeded" ? ReactNull : event,
+    ignoreErrors: ["ResizeObserver loop limit exceeded"],
   });
 }
 
