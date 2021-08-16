@@ -36,7 +36,8 @@ if (isCrashReportingEnabled && typeof process.env.SENTRY_DSN === "string") {
         return integration.name !== "Breadcrumbs";
       });
     },
-    maxBreadcrumbs: 10,
+    beforeSend: (event, _hint?) =>
+      event.message === "ResizeObserver loop limit exceeded" ? ReactNull : event,
   });
 }
 
