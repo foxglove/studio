@@ -432,7 +432,7 @@ export default function PointClouds({
   markerCache.current = updateMarkerCache(markerCache.current, children as PointCloudMarker[]);
   const decodedMarkers = !(clearCachedMarkers ?? false)
     ? [...markerCache.current.values()].map((decoded) => decoded.marker)
-    : (children as PointCloudMarker[]).map((m) => decodeMarker(m));
+    : (children as PointCloudMarker[]).map((m) => decodeMarker(m)).filter((m) => m != undefined);
   return (
     <Command getChildrenForHitmap={instancedGetChildrenForHitmap} {...rest} reglCommand={command}>
       {decodedMarkers}

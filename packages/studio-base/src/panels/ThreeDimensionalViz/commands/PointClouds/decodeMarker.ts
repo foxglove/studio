@@ -18,6 +18,7 @@ import {
   ColorMode,
   PointCloudSettings,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor/PointCloudSettingsEditor";
+import sendNotification from "@foxglove/studio-base/util/sendNotification";
 
 import {
   getFieldOffsetsAndReaders,
@@ -25,6 +26,7 @@ import {
   createColorBuffer,
   getVertexCount,
   getVertexValue,
+  FieldOffsetsAndReaders,
 } from "./buffers";
 import { PointCloudMarker, VertexBuffer } from "./types";
 
@@ -43,7 +45,7 @@ export type DecodedMarker = PointCloudMarker & {
 
 // Decode a marker and generate position and color buffers for rendering
 // The resulting marker should be memoized for better performance
-export function decodeMarker(marker: PointCloudMarker): DecodedMarker {
+export function decodeMarker(marker: PointCloudMarker): DecodedMarker | undefined {
   const {
     fields = [],
     settings = {},
@@ -53,7 +55,14 @@ export function decodeMarker(marker: PointCloudMarker): DecodedMarker {
     hitmapColors,
     data,
   } = marker;
-  const offsetsAndReaders = getFieldOffsetsAndReaders(data, fields);
+  let offsetsAndReaders: FieldOffsetsAndReaders | undefined;
+  try {
+    offsetsAndReaders = getFieldOffsetsAndReaders(data, fields);
+  } catch (err) {
+    sendNotification("Point cloud decoding failed", err, "user", "error");
+    return undefined;
+  }
+
   const rgbOffset = offsetsAndReaders.rgb?.offset;
 
   // Calculate the number of points in the cloud.

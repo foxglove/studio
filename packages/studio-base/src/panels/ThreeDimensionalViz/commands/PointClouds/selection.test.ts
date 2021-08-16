@@ -20,20 +20,20 @@ import { getClickedInfo, getAllPoints, decodeAdditionalFields } from "./selectio
 describe("<PointClouds />", () => {
   describe("getClickedInfo", () => {
     it("returns undefined when points field is empty", () => {
-      const partiallyDecodedMarker = decodeMarker(POINT_CLOUD_WITH_ADDITIONAL_FIELDS);
+      const partiallyDecodedMarker = decodeMarker(POINT_CLOUD_WITH_ADDITIONAL_FIELDS)!;
       const fullyDecodedMarker = decodeAdditionalFields(partiallyDecodedMarker);
       expect(getClickedInfo(fullyDecodedMarker, 1000)).toEqual(undefined);
     });
 
     it("returns undefined when instanceIndex does not match any point", () => {
-      const partiallyDecodedMarker = decodeMarker(POINT_CLOUD_WITH_ADDITIONAL_FIELDS);
+      const partiallyDecodedMarker = decodeMarker(POINT_CLOUD_WITH_ADDITIONAL_FIELDS)!;
       const fullyDecodedMarker = decodeAdditionalFields(partiallyDecodedMarker);
       expect(getClickedInfo(fullyDecodedMarker, undefined)).toEqual(undefined);
       expect(getClickedInfo(fullyDecodedMarker, 1000)).toEqual(undefined);
     });
 
     it("returns selected point positions and colors", () => {
-      const marker = decodeMarker(POINT_CLOUD_MESSAGE);
+      const marker = decodeMarker(POINT_CLOUD_MESSAGE)!;
       const clickInfo = getClickedInfo(marker, 1);
       expect(clickInfo).not.toBeNullOrUndefined();
       expect((clickInfo?.clickedPoint ?? []).map((v) => Math.floor(v))).toStrictEqual([
@@ -46,7 +46,7 @@ describe("<PointClouds />", () => {
     });
 
     it("returns selected point positions and colors when instanceIndex is zero", () => {
-      const marker = decodeMarker(POINT_CLOUD_MESSAGE);
+      const marker = decodeMarker(POINT_CLOUD_MESSAGE)!;
       const clickInfo = getClickedInfo(marker, 0);
       expect(clickInfo).not.toBeNullOrUndefined();
       expect((clickInfo?.clickedPoint ?? []).map((v) => Math.floor(v))).toStrictEqual([
@@ -63,7 +63,7 @@ describe("<PointClouds />", () => {
         ...POINT_CLOUD_MESSAGE,
         settings: { colorMode: { mode: "rgb" } },
         is_bigendian: true,
-      });
+      })!;
       const clickInfo = getClickedInfo(marker, 1);
       expect(clickInfo).not.toBeNullOrUndefined();
       expect((clickInfo?.clickedPoint ?? []).map((v) => Math.floor(v))).toStrictEqual([
@@ -80,7 +80,7 @@ describe("<PointClouds />", () => {
         ...POINT_CLOUD_MESSAGE,
         settings: { colorMode: { mode: "rainbow", colorField: "y" } } as PointCloudSettings,
       };
-      const marker = decodeMarker(input);
+      const marker = decodeMarker(input)!;
       const clickInfo = getClickedInfo(marker, 1);
       expect(clickInfo).not.toBeNullOrUndefined();
       expect((clickInfo?.clickedPoint ?? []).map((v) => Math.floor(v))).toStrictEqual([
@@ -104,7 +104,7 @@ describe("<PointClouds />", () => {
           },
         } as PointCloudSettings,
       };
-      const marker = decodeMarker(input);
+      const marker = decodeMarker(input)!;
       const clickInfo = getClickedInfo(marker, 1);
       expect(clickInfo).not.toBeNullOrUndefined();
       expect((clickInfo?.clickedPoint ?? []).map((v) => Math.floor(v))).toStrictEqual([0, 1, 2]);
@@ -119,7 +119,7 @@ describe("<PointClouds />", () => {
         ...POINT_CLOUD_WITH_ADDITIONAL_FIELDS,
         settings: { colorMode: { mode: "rainbow", colorField: "bar" } } as PointCloudSettings,
       };
-      const marker = decodeMarker(input);
+      const marker = decodeMarker(input)!;
       const clickInfo = getClickedInfo(decodeAdditionalFields(marker), 1);
       expect(clickInfo).not.toBeNullOrUndefined();
       expect((clickInfo?.clickedPoint ?? []).map((v) => Math.floor(v))).toStrictEqual([0, 1, 2]);
@@ -137,7 +137,7 @@ describe("<PointClouds />", () => {
 
   describe("getAllPoints", () => {
     it("converts float array to numbers", () => {
-      const marker = decodeMarker(POINT_CLOUD_MESSAGE);
+      const marker = decodeMarker(POINT_CLOUD_MESSAGE)!;
       const points = getAllPoints(marker);
       expect(points.map((v) => Math.floor(v))).toStrictEqual([-2239, -706, -3, -2239, -706, -3]);
     });
