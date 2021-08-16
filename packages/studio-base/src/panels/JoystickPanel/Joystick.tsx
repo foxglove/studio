@@ -6,7 +6,7 @@ import { makeStyles } from "@fluentui/react";
 import clsx from "clsx";
 import { useCallback, useState } from "react";
 
-const useStyles = makeStyles(({ spacing }) => ({
+const useStyles = makeStyles({
   root: {
     display: "flex",
     flexDirection: "column",
@@ -20,7 +20,7 @@ const useStyles = makeStyles(({ spacing }) => ({
     maxHeight: "100%",
     maxWidth: "100%",
   },
-}));
+});
 
 const useButtonStyles = makeStyles(({ semanticColors }) => ({
   background: {
@@ -102,7 +102,7 @@ const useStopButtonStyles = makeStyles(({ fonts, semanticColors }) => ({
   },
 }));
 
-enum JoystickAction {
+export enum JoystickAction {
   STOP = 0,
   UP,
   DOWN,
