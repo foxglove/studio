@@ -19,7 +19,7 @@ describe("<PointClouds />", () => {
   describe("positions", () => {
     it("builds position buffer by reinterpreting data from PointCloud2", () => {
       const result = decodeMarker(POINT_CLOUD_MESSAGE as any);
-      const { positionBuffer } = result!;
+      const { positionBuffer } = result;
       const { buffer, offset, stride } = positionBuffer;
       expect(buffer.length).toBe(6 * FLOAT_SIZE);
       expect(offset).toBe(0);
@@ -39,7 +39,7 @@ describe("<PointClouds />", () => {
         width: 1,
         row_step: 32,
       } as any);
-      const { positionBuffer } = result!;
+      const { positionBuffer } = result;
       const { buffer, offset, stride } = positionBuffer;
       expect(buffer.length).toBe(6 * FLOAT_SIZE);
       expect(offset).toBe(0);
@@ -64,7 +64,7 @@ describe("<PointClouds />", () => {
           },
         },
       };
-      const result = decodeMarker(input as any)!;
+      const result = decodeMarker(input as any);
       const { positionBuffer } = result;
       // Positions are extracted because stride is not divisible by sizeof(float)
       expect(positionBuffer.buffer.length).toBe(6);
@@ -78,7 +78,7 @@ describe("<PointClouds />", () => {
       const result = decodeMarker({
         ...POINT_CLOUD_MESSAGE,
         settings: { colorMode: { mode: "flat", flatColor: { r: 1, g: 0, b: 0, a: 1 } } },
-      } as any)!;
+      } as any);
       const { colorBuffer } = result;
       expect(colorBuffer).toBeUndefined();
     });
@@ -89,7 +89,7 @@ describe("<PointClouds />", () => {
       const result = decodeMarker({
         ...POINT_CLOUD_MESSAGE,
         settings: { colorMode: { mode: "rgb" } },
-      } as any)!;
+      } as any);
       const { colorBuffer, data } = result;
       expect(colorBuffer).not.toBeNullOrUndefined();
       const { buffer, offset, stride } = colorBuffer ?? {};
@@ -109,7 +109,7 @@ describe("<PointClouds />", () => {
         ...POINT_CLOUD_MESSAGE,
         settings: { colorMode: { mode: "rgb" } },
         is_bigendian: true,
-      } as any)!;
+      } as any);
       const { colorBuffer, data } = result;
       expect(colorBuffer).not.toBeNullOrUndefined();
       const { buffer, offset, stride } = colorBuffer ?? {};
@@ -131,7 +131,7 @@ describe("<PointClouds />", () => {
         ...POINT_CLOUD_MESSAGE,
         settings: { colorMode: { mode: "rainbow", colorField: "y" } },
       };
-      const result = decodeMarker(input as any)!;
+      const result = decodeMarker(input as any);
       const { positionBuffer, colorBuffer } = result;
       expect(positionBuffer.buffer.length).toBe(6 * FLOAT_SIZE);
       expect(positionBuffer.offset).toBe(0);
@@ -150,7 +150,7 @@ describe("<PointClouds />", () => {
         ...POINT_CLOUD_WITH_ADDITIONAL_FIELDS,
         settings: { colorMode: { mode: "rainbow", colorField: "foo" } },
       };
-      const result = decodeMarker(input as any)!;
+      const result = decodeMarker(input as any);
       const { positionBuffer, colorBuffer } = result;
       // Positions are extracted because stride is not divisible by sizeof(float)
       expect(positionBuffer.buffer.length).toBe(6);
@@ -179,7 +179,7 @@ describe("<PointClouds />", () => {
           },
         },
       };
-      const result = decodeMarker(input as any)!;
+      const result = decodeMarker(input as any);
       const { positionBuffer, colorBuffer } = result;
       expect(positionBuffer.buffer.length).toBe(6 * FLOAT_SIZE);
       expect(positionBuffer.offset).toBe(0);
@@ -205,7 +205,7 @@ describe("<PointClouds />", () => {
           },
         },
       };
-      const result = decodeMarker(input as any)!;
+      const result = decodeMarker(input as any);
       const { positionBuffer, colorBuffer } = result;
       // Positions are extracted because stride is not divisible by sizeof(float)
       expect(positionBuffer.buffer.length).toBe(6);
@@ -228,7 +228,7 @@ describe("<PointClouds />", () => {
         ...POINT_CLOUD_WITH_ADDITIONAL_FIELDS,
         settings: { colorMode: { mode: "rainbow", colorField } },
       };
-      const result = decodeMarker(input as any)!;
+      const result = decodeMarker(input as any);
       const { colorBuffer } = result;
       return colorBuffer;
     };
@@ -305,7 +305,7 @@ describe("<PointClouds />", () => {
         ...POINT_CLOUD_MESSAGE,
         settings: { colorMode: { mode: "rainbow", colorField: "y" } },
       };
-      const result = decodeMarker(input as any)!;
+      const result = decodeMarker(input as any);
       const { minColorValue, maxColorValue } = result;
       expect(Math.floor(minColorValue)).toBe(-2239);
       expect(Math.floor(maxColorValue)).toBe(-706);
@@ -316,7 +316,7 @@ describe("<PointClouds />", () => {
         ...POINT_CLOUD_MESSAGE,
         settings: { colorMode: { mode: "rainbow", colorField: "y", minValue: -3000 } },
       };
-      const result = decodeMarker(input as any)!;
+      const result = decodeMarker(input as any);
       const { minColorValue, maxColorValue } = result;
       expect(Math.floor(minColorValue)).toBe(-3000);
       expect(Math.floor(maxColorValue)).toBe(-706);
@@ -327,7 +327,7 @@ describe("<PointClouds />", () => {
         ...POINT_CLOUD_MESSAGE,
         settings: { colorMode: { mode: "rainbow", colorField: "y", maxValue: 200 } },
       };
-      const result = decodeMarker(input as any)!;
+      const result = decodeMarker(input as any);
       const { minColorValue, maxColorValue } = result;
       expect(Math.floor(minColorValue)).toBe(-2239);
       expect(Math.floor(maxColorValue)).toBe(200);
@@ -340,7 +340,7 @@ describe("<PointClouds />", () => {
           colorMode: { mode: "rainbow", colorField: "y", minValue: -3000, maxValue: 200 },
         },
       };
-      const result = decodeMarker(input as any)!;
+      const result = decodeMarker(input as any);
       const { minColorValue, maxColorValue } = result;
       expect(Math.floor(minColorValue)).toBe(-3000);
       expect(Math.floor(maxColorValue)).toBe(200);

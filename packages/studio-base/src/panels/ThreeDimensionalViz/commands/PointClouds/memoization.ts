@@ -25,26 +25,22 @@ export function updateMarkerCache(
 ): Map<Uint8Array, MemoizedMarker> {
   const markerCache = new Map<Uint8Array, MemoizedMarker>();
   markers.forEach((marker) => {
-    const cachedData = existing.get(marker.data);
+    let decoded = existing.get(marker.data);
     // Check if a decoded marker already exists in cache. If not, decode it and save it for later use
     // Compare 'settings' by deep-equality since they may be change by user. Also, the instance is different when re-rendering Layout
     // Compare 'hitmapColors' by reference because the same marker msg may contain different values
     if (
-      cachedData == undefined ||
-      !isEqual(marker.settings, cachedData.settings) ||
-      marker.hitmapColors !== cachedData.hitmapColors
+      !decoded ||
+      !isEqual(marker.settings, decoded.settings) ||
+      marker.hitmapColors !== decoded.hitmapColors
     ) {
-      const decodedMarker = decodeMarker(marker);
-      if (decodedMarker != undefined) {
-        markerCache.set(marker.data, {
-          marker: decodedMarker,
-          settings: marker.settings,
-          hitmapColors: marker.hitmapColors,
-        });
-      }
-    } else {
-      markerCache.set(marker.data, cachedData);
+      decoded = {
+        marker: decodeMarker(marker),
+        settings: marker.settings,
+        hitmapColors: marker.hitmapColors,
+      };
     }
+    markerCache.set(marker.data, decoded);
   });
   return markerCache;
 }
