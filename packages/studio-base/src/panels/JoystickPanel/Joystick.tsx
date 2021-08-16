@@ -116,7 +116,7 @@ type JoystickProps = {
 };
 
 function Joystick(props: JoystickProps): JSX.Element {
-  const { onClick, disableStop = false } = props;
+  const { onClick, disableStop = true } = props;
 
   const [currentAction, setCurrentAction] = useState<JoystickAction | undefined>();
 
