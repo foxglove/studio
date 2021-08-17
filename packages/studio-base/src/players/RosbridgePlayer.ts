@@ -192,12 +192,7 @@ export default class RosbridgePlayer implements Player {
       // Automatically detect the ROS version based on the datatypes.
       // The rosbridge server itself publishes /rosout so the topic should be reliably present.
       let rosVersion: 1 | 2;
-      if (
-        // We have to check for rcl_interfaces/Log because the rcl get_topic_names_and_types API
-        // returns the datatype names without /msg/, and the rosbridge server simply forwards them.
-        result.types.includes("rcl_interfaces/msg/Log") ||
-        result.types.includes("rcl_interfaces/Log")
-      ) {
+      if (result.types.includes("rcl_interfaces/msg/Log")) {
         rosVersion = 2;
         this._problems.removeProblem("unknownRosVersion");
       } else if (result.types.includes("rosgraph_msgs/Log")) {
