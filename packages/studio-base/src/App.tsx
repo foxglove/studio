@@ -48,18 +48,6 @@ export default function App(props: AppProps): JSX.Element {
     return new ConsoleApi(process.env.FOXGLOVE_API_URL!);
   }, []);
 
-  const [showRos2Rosbridge = false] = useAppConfigurationValue<boolean>(
-    AppSetting.SHOW_ROS2_ROSBRIDGE,
-  );
-
-  const filteredDataSources = useMemo(
-    () =>
-      showRos2Rosbridge
-        ? props.availableSources
-        : props.availableSources.filter((source) => source.type !== "ros2-rosbridge-websocket"),
-    [props.availableSources, showRos2Rosbridge],
-  );
-
   const providers = [
     /* eslint-disable react/jsx-key */
     <AnalyticsProvider />,
@@ -73,7 +61,7 @@ export default function App(props: AppProps): JSX.Element {
     <CurrentLayoutProvider />,
     <ExtensionMarketplaceProvider />,
     <ExtensionRegistryProvider />,
-    <PlayerManager playerSources={filteredDataSources} />,
+    <PlayerManager playerSources={props.availableSources} />,
     /* eslint-enable react/jsx-key */
   ];
 
