@@ -38,7 +38,7 @@ function TeleopPanelAdapter(props: Props) {
   );
 }
 
-TeleopPanelAdapter.panelType = "Control";
+TeleopPanelAdapter.panelType = "Teleop";
 TeleopPanelAdapter.defaultConfig = {};
 TeleopPanelAdapter.supportsStrictMode = true;
 
