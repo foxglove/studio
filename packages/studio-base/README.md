@@ -1,18 +1,6 @@
 # @foxglove/studio-base &nbsp; [![npm version](https://img.shields.io/npm/v/@foxglove/studio-base.svg?style=flat)](https://www.npmjs.com/package/@foxglove/studio-base)
 
-This package contains core components used in the [Foxglove Studio](https://github.com/foxglove/studio) app.
-
-## Installation
-
-```
-npm install @foxglove/studio-base
-```
-
-or
-
-```
-yarn add @foxglove/studio-base
-```
+This package contains core components used in [Foxglove Studio](https://github.com/foxglove/studio).
 
 ## Quick start
 
@@ -29,7 +17,7 @@ This package includes the following exports:
 - Types
 - Utils – `formatTime`, `fuzzyFilter`, `naturalSort`, etc.
 
-You can import these at the top-level:
+When contributing to the [Foxglove Studio](https://github.com/foxglove/studio) codebase, you can import these at the top-level:
 
 ```
 import { ExtensionInfo, ExtensionLoaderContext, ExtensionLoader } from "@foxglove/studio-base";
