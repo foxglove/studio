@@ -68,7 +68,7 @@ export default function Settings(props: SettingsProps): JSX.Element {
   }, []);
 
   return (
-    <Stack verticalFill tokens={{ padding: theme.spacing.l1, childrenGap: theme.spacing.m }}>
+    <Stack verticalFill tokens={{ childrenGap: theme.spacing.m }}>
       <StackItem>
         <Text>Publish Topic</Text>
         <Stack
@@ -88,6 +88,9 @@ export default function Settings(props: SettingsProps): JSX.Element {
               border: `1px solid ${theme.semanticColors.inputBorder}`,
               backgroundColor: theme.semanticColors.inputBackground,
             }}
+            menuStyle={{
+              zIndex: 1000000 + 1, // Make sure the menu is above the dialog
+            }}
           />
         </Stack>
       </StackItem>
@@ -100,7 +103,7 @@ export default function Settings(props: SettingsProps): JSX.Element {
             label="Field"
             selectedKey={config.upButton.field}
             options={dropDownOptions}
-            styles={{ root: { minWidth: 96 } }}
+            styles={{ root: { minWidth: 128 } }}
             onChange={(_ev, option) => {
               if (option?.key == undefined) {
                 return;
@@ -115,6 +118,7 @@ export default function Settings(props: SettingsProps): JSX.Element {
             type="number"
             label="Value"
             defaultValue={String(config.upButton.value)}
+            styles={{ root: { width: 80 } }}
             onChange={(_ev, value) => {
               if (!value || isNaN(+value)) {
                 return;
@@ -135,7 +139,7 @@ export default function Settings(props: SettingsProps): JSX.Element {
           <Dropdown
             selectedKey={config.downButton.field}
             options={dropDownOptions}
-            styles={{ root: { minWidth: 96 } }}
+            styles={{ root: { minWidth: 128 } }}
             onChange={(_ev, option) => {
               if (option?.key == undefined) {
                 return;
@@ -149,6 +153,7 @@ export default function Settings(props: SettingsProps): JSX.Element {
           <TextField
             type="number"
             defaultValue={String(config.downButton.value)}
+            styles={{ root: { width: 80 } }}
             onChange={(_ev, value) => {
               if (!value || isNaN(+value)) {
                 return;
@@ -169,7 +174,7 @@ export default function Settings(props: SettingsProps): JSX.Element {
           <Dropdown
             selectedKey={config.leftButton.field}
             options={dropDownOptions}
-            styles={{ root: { minWidth: 96 } }}
+            styles={{ root: { minWidth: 128 } }}
             onChange={(_ev, option) => {
               if (option?.key == undefined) {
                 return;
@@ -183,6 +188,7 @@ export default function Settings(props: SettingsProps): JSX.Element {
           <TextField
             type="number"
             defaultValue={String(config.leftButton.value)}
+            styles={{ root: { width: 80 } }}
             onChange={(_ev, value) => {
               if (!value || isNaN(+value)) {
                 return;
@@ -203,7 +209,7 @@ export default function Settings(props: SettingsProps): JSX.Element {
           <Dropdown
             selectedKey={config.rightButton.field}
             options={dropDownOptions}
-            styles={{ root: { minWidth: 96 } }}
+            styles={{ root: { minWidth: 128 } }}
             onChange={(_ev, option) => {
               if (option?.key == undefined) {
                 return;
@@ -217,6 +223,7 @@ export default function Settings(props: SettingsProps): JSX.Element {
           <TextField
             type="number"
             defaultValue={String(config.rightButton.value)}
+            styles={{ root: { width: 80 } }}
             onChange={(_ev, value) => {
               if (!value || isNaN(+value)) {
                 return;

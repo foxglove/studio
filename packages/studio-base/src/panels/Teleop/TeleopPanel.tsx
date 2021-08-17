@@ -2,11 +2,12 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Pivot, PivotItem, Stack, StackItem, useTheme } from "@fluentui/react";
+import { Dialog, DialogFooter, PrimaryButton, Stack, useTheme } from "@fluentui/react";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 
 import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
 import { PanelExtensionContext, Topic } from "@foxglove/studio";
+import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconButton";
 
 import DirectionalPad, { DirectionalPadAction } from "./DirectionalPad";
 import Settings from "./Settings";
@@ -43,6 +44,7 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
   });
 
   const [topics, setTopics] = useState<readonly Topic[] | undefined>();
+  const [showSettings, setShowSettings] = useState<boolean>(false);
 
   const onChangeConfig = useCallback(
     (newConfig: Config) => {
@@ -159,30 +161,46 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
   }, [renderDone]);
 
   return (
-    <Pivot styles={{ root: { backgroundColor: theme.semanticColors.bodyBackground } }}>
-      <PivotItem
-        headerText="Controls"
-        headerButtonProps={{
-          "data-order": 1,
-          "data-title": "Controls",
-        }}
+    <>
+      <Stack
+        verticalFill
+        verticalAlign="center"
+        horizontalAlign="center"
+        tokens={{ padding: `min(5%, ${theme.spacing.s1})` }}
       >
-        <Stack verticalFill tokens={{ padding: theme.spacing.l1, childrenGap: theme.spacing.m }}>
-          <StackItem grow={1}>
-            <DirectionalPad onClick={onAction} />
-          </StackItem>
-        </Stack>
-      </PivotItem>
-      <PivotItem
-        headerText="Settings"
-        headerButtonProps={{
-          "data-order": 2,
-          "data-title": "Setting",
-        }}
+        <DirectionalPad onClick={onAction} />
+      </Stack>
+      <Stack styles={{ root: { position: "absolute", top: 0, left: 0, margin: theme.spacing.s1 } }}>
+        <HoverableIconButton
+          onClick={() => setShowSettings(true)}
+          iconProps={{
+            iconName: "Settings",
+            iconNameActive: "SettingsFilled",
+          }}
+          styles={{
+            root: {
+              backgroundColor: theme.semanticColors.buttonBackgroundHovered,
+              "&:hover": { backgroundColor: theme.semanticColors.buttonBackgroundPressed },
+            },
+            icon: { height: 20 },
+          }}
+        >
+          Panel Settings
+        </HoverableIconButton>
+      </Stack>
+      <Dialog
+        dialogContentProps={{ title: "Teleop Panel Settings", showCloseButton: true }}
+        hidden={!showSettings}
+        onDismiss={() => setShowSettings(false)}
+        maxWidth={480}
+        minWidth={480}
       >
-        <Settings topics={topicNames} config={config} onConfigChange={onChangeConfig} />
-      </PivotItem>
-    </Pivot>
+        <Settings config={config} onConfigChange={onChangeConfig} topics={topicNames} />
+        <DialogFooter>
+          <PrimaryButton onClick={() => setShowSettings(false)}>Done</PrimaryButton>
+        </DialogFooter>
+      </Dialog>
+    </>
   );
 }
 

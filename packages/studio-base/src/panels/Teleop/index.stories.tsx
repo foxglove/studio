@@ -9,7 +9,7 @@ import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import TeleopPanel from "./index";
 
 export default {
-  title: "panels/Joystick/index",
+  title: "panels/Teleop/index",
   component: TeleopPanel,
   decorators: [
     (StoryComponent: Story, { parameters }: StoryContext): JSX.Element => {

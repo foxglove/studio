@@ -59,11 +59,11 @@ const useButtonStyles = makeStyles(({ semanticColors }) => ({
       },
     },
   },
-  text: {
+  icon: {
     pointerEvents: "none",
     fill: semanticColors.buttonText,
   },
-  textDisabled: {
+  iconDisabled: {
     fill: semanticColors.bodyBackground,
   },
 }));
@@ -150,7 +150,7 @@ function DirectionalPad(props: DirectionalPadProps): JSX.Element {
               })}
               d="M162.707,78.945c-20.74,-14.771 -48.795,-14.771 -69.535,-0l-42.723,-42.723c44.594,-37.791 110.372,-37.794 154.981,-0l-42.723,42.723Z"
             />
-            <path d="M128,30.364l20,20l-40,-0l20,-20Z" />
+            <path className={buttonClasses.icon} d="M128,30.364l20,20l-40,-0l20,-20Z" />
           </g>
 
           {/* DOWN button */}
@@ -161,7 +161,7 @@ function DirectionalPad(props: DirectionalPadProps): JSX.Element {
               })}
               d="M93.172,176.764c20.74,14.771 48.795,14.771 69.535,0l42.723,42.723c-44.594,37.791 -110.372,37.794 -154.981,0l42.723,-42.723Z"
             />
-            <path d="M128,225.345l-20,-20l40,0l-20,20Z" />
+            <path className={buttonClasses.icon} d="M128,225.345l-20,-20l40,0l-20,20Z" />
           </g>
         </g>
 
@@ -174,7 +174,7 @@ function DirectionalPad(props: DirectionalPadProps): JSX.Element {
               })}
               d="M36.307,205.345c-37.793,-44.609 -37.791,-110.387 -0,-154.981l42.723,42.723c-14.771,20.74 -14.771,48.795 -0,69.535l-42.723,42.723Z"
             />
-            <path d="M30.449,127.854l20,-20l0,40l-20,-20Z" />
+            <path className={buttonClasses.icon} d="M30.449,127.854l20,-20l0,40l-20,-20Z" />
           </g>
 
           {/* RIGHT button */}
@@ -185,7 +185,7 @@ function DirectionalPad(props: DirectionalPadProps): JSX.Element {
               })}
               d="M219.572,50.364c37.794,44.609 37.791,110.387 0.001,154.981l-42.724,-42.723c14.771,-20.74 14.771,-48.795 0,-69.535l42.723,-42.723Z"
             />
-            <path d="M225.43,127.854l-20,20l0,-40l20,20Z" />
+            <path className={buttonClasses.icon} d="M225.43,127.854l-20,20l0,-40l20,20Z" />
           </g>
         </g>
 
