@@ -102,7 +102,7 @@ const useStopButtonStyles = makeStyles(({ fonts, semanticColors }) => ({
   },
 }));
 
-export enum JoystickAction {
+export enum DirectionalPadAction {
   STOP = 0,
   UP,
   DOWN,
@@ -110,29 +110,29 @@ export enum JoystickAction {
   RIGHT,
 }
 
-type JoystickProps = {
-  onClick?: (action: JoystickAction) => void;
+type DirectionalPadProps = {
+  onClick?: (action: DirectionalPadAction) => void;
   disableStop?: boolean;
 };
 
-function Joystick(props: JoystickProps): JSX.Element {
+function DirectionalPad(props: DirectionalPadProps): JSX.Element {
   const { onClick, disableStop = true } = props;
 
-  const [currentAction, setCurrentAction] = useState<JoystickAction | undefined>();
+  const [currentAction, setCurrentAction] = useState<DirectionalPadAction | undefined>();
 
   const classes = useStyles();
   const buttonClasses = useButtonStyles();
   const stopButtonClasses = useStopButtonStyles();
 
   const handleMouseDown = useCallback(
-    (action: JoystickAction) => {
+    (action: DirectionalPadAction) => {
       setCurrentAction(action);
       onClick?.(action);
     },
     [onClick],
   );
 
-  const makeMouseHandlers = (action: JoystickAction) => ({
+  const makeMouseHandlers = (action: DirectionalPadAction) => ({
     onMouseDown: () => handleMouseDown(action),
     onMouseUp: () => setCurrentAction(undefined),
     onMouseLeave: () => setCurrentAction(undefined),
@@ -143,10 +143,10 @@ function Joystick(props: JoystickProps): JSX.Element {
       <svg className={classes.control} viewBox="0 0 256 256">
         <g opacity={1}>
           {/* UP button */}
-          <g {...makeMouseHandlers(JoystickAction.UP)} role="button">
+          <g {...makeMouseHandlers(DirectionalPadAction.UP)} role="button">
             <path
               className={clsx(buttonClasses.background, {
-                [buttonClasses.backgroundPressed]: currentAction === JoystickAction.UP,
+                [buttonClasses.backgroundPressed]: currentAction === DirectionalPadAction.UP,
               })}
               d="M162.707,78.945c-20.74,-14.771 -48.795,-14.771 -69.535,-0l-42.723,-42.723c44.594,-37.791 110.372,-37.794 154.981,-0l-42.723,42.723Z"
             />
@@ -154,10 +154,10 @@ function Joystick(props: JoystickProps): JSX.Element {
           </g>
 
           {/* DOWN button */}
-          <g {...makeMouseHandlers(JoystickAction.DOWN)} role="button">
+          <g {...makeMouseHandlers(DirectionalPadAction.DOWN)} role="button">
             <path
               className={clsx(buttonClasses.background, {
-                [buttonClasses.backgroundPressed]: currentAction === JoystickAction.DOWN,
+                [buttonClasses.backgroundPressed]: currentAction === DirectionalPadAction.DOWN,
               })}
               d="M93.172,176.764c20.74,14.771 48.795,14.771 69.535,0l42.723,42.723c-44.594,37.791 -110.372,37.794 -154.981,0l42.723,-42.723Z"
             />
@@ -167,10 +167,10 @@ function Joystick(props: JoystickProps): JSX.Element {
 
         <g opacity={1}>
           {/* LEFT button */}
-          <g {...makeMouseHandlers(JoystickAction.LEFT)} role="button">
+          <g {...makeMouseHandlers(DirectionalPadAction.LEFT)} role="button">
             <path
               className={clsx(buttonClasses.background, {
-                [buttonClasses.backgroundPressed]: currentAction === JoystickAction.LEFT,
+                [buttonClasses.backgroundPressed]: currentAction === DirectionalPadAction.LEFT,
               })}
               d="M36.307,205.345c-37.793,-44.609 -37.791,-110.387 -0,-154.981l42.723,42.723c-14.771,20.74 -14.771,48.795 -0,69.535l-42.723,42.723Z"
             />
@@ -178,10 +178,10 @@ function Joystick(props: JoystickProps): JSX.Element {
           </g>
 
           {/* RIGHT button */}
-          <g {...makeMouseHandlers(JoystickAction.RIGHT)} role="button">
+          <g {...makeMouseHandlers(DirectionalPadAction.RIGHT)} role="button">
             <path
               className={clsx(buttonClasses.background, {
-                [buttonClasses.backgroundPressed]: currentAction === JoystickAction.RIGHT,
+                [buttonClasses.backgroundPressed]: currentAction === DirectionalPadAction.RIGHT,
               })}
               d="M219.572,50.364c37.794,44.609 37.791,110.387 0.001,154.981l-42.724,-42.723c14.771,-20.74 14.771,-48.795 0,-69.535l42.723,-42.723Z"
             />
@@ -191,7 +191,7 @@ function Joystick(props: JoystickProps): JSX.Element {
 
         {/* STOP button */}
         {!disableStop && (
-          <g {...makeMouseHandlers(JoystickAction.STOP)} role="button">
+          <g {...makeMouseHandlers(DirectionalPadAction.STOP)} role="button">
             <circle
               className={clsx(stopButtonClasses.background, {
                 [stopButtonClasses.backgroundDisabled]: false,
@@ -218,4 +218,4 @@ function Joystick(props: JoystickProps): JSX.Element {
   );
 }
 
-export default Joystick;
+export default DirectionalPad;

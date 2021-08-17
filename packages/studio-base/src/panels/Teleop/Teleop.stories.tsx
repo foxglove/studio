@@ -4,13 +4,13 @@
 
 import { action } from "@storybook/addon-actions";
 
-import Joystick from "./Joystick";
+import DirectionalPad from "./DirectionalPad";
 
 export default {
-  title: "panels/Joystick/Joystick",
-  component: Joystick,
+  title: "panels/Teleop/DirectionalPad",
+  component: DirectionalPad,
 };
 
 export const Basic = (): JSX.Element => {
-  return <Joystick onClick={action("click")} />;
+  return <DirectionalPad onClick={action("click")} />;
 };

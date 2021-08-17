@@ -10,13 +10,13 @@ import PanelExtensionAdapter from "@foxglove/studio-base/components/PanelExtensi
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
-import JoystickPanel from "./JoystickPanel";
+import TeleopPanel from "./TeleopPanel";
 import helpContent from "./index.help.md";
 
 function initPanel(context: PanelExtensionContext) {
   ReactDOM.render(
     <ThemeProvider>
-      <JoystickPanel context={context} />
+      <TeleopPanel context={context} />
     </ThemeProvider>,
     context.panelElement,
   );
@@ -27,7 +27,7 @@ type Props = {
   saveConfig: SaveConfig<unknown>;
 };
 
-function JoystickPanelAdapter(props: Props) {
+function TeleopPanelAdapter(props: Props) {
   return (
     <PanelExtensionAdapter
       config={props.config}
@@ -38,8 +38,8 @@ function JoystickPanelAdapter(props: Props) {
   );
 }
 
-JoystickPanelAdapter.panelType = "Control";
-JoystickPanelAdapter.defaultConfig = {};
-JoystickPanelAdapter.supportsStrictMode = true;
+TeleopPanelAdapter.panelType = "Control";
+TeleopPanelAdapter.defaultConfig = {};
+TeleopPanelAdapter.supportsStrictMode = true;
 
-export default Panel(JoystickPanelAdapter);
+export default Panel(TeleopPanelAdapter);

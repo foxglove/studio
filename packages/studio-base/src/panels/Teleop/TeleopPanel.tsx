@@ -8,15 +8,15 @@ import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
 import { PanelExtensionContext, Topic } from "@foxglove/studio";
 
-import Joystick, { JoystickAction } from "./Joystick";
+import DirectionalPad, { DirectionalPadAction } from "./DirectionalPad";
 import Settings from "./Settings";
 import { Config, DeepPartial } from "./types";
 
-type JoystickPanelProps = {
+type TeleopPanelProps = {
   context: PanelExtensionContext;
 };
 
-function JoystickPanel(props: JoystickPanelProps): JSX.Element {
+function TeleopPanel(props: TeleopPanelProps): JSX.Element {
   const { context } = props;
   const { saveState } = context;
   const theme = useTheme();
@@ -92,7 +92,7 @@ function JoystickPanel(props: JoystickPanelProps): JSX.Element {
   }, [topics]);
 
   const onAction = useCallback(
-    (action: JoystickAction) => {
+    (action: DirectionalPadAction) => {
       if (!currentTopic) {
         return;
       }
@@ -134,16 +134,16 @@ function JoystickPanel(props: JoystickPanelProps): JSX.Element {
       }
 
       switch (action) {
-        case JoystickAction.UP:
+        case DirectionalPadAction.UP:
           setFieldValue(config.upButton.field, config.upButton.value);
           break;
-        case JoystickAction.DOWN:
+        case DirectionalPadAction.DOWN:
           setFieldValue(config.downButton.field, config.downButton.value);
           break;
-        case JoystickAction.LEFT:
+        case DirectionalPadAction.LEFT:
           setFieldValue(config.leftButton.field, config.leftButton.value);
           break;
-        case JoystickAction.RIGHT:
+        case DirectionalPadAction.RIGHT:
           setFieldValue(config.rightButton.field, config.rightButton.value);
           break;
         default:
@@ -169,7 +169,7 @@ function JoystickPanel(props: JoystickPanelProps): JSX.Element {
       >
         <Stack verticalFill tokens={{ padding: theme.spacing.l1, childrenGap: theme.spacing.m }}>
           <StackItem grow={1}>
-            <Joystick onClick={onAction} />
+            <DirectionalPad onClick={onAction} />
           </StackItem>
         </Stack>
       </PivotItem>
@@ -186,4 +186,4 @@ function JoystickPanel(props: JoystickPanelProps): JSX.Element {
   );
 }
 
-export default JoystickPanel;
+export default TeleopPanel;

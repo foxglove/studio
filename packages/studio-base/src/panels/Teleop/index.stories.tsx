@@ -6,11 +6,11 @@ import { Story, StoryContext } from "@storybook/react";
 
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
-import JoystickPanel from "./index";
+import TeleopPanel from "./index";
 
 export default {
   title: "panels/Joystick/index",
-  component: JoystickPanel,
+  component: TeleopPanel,
   decorators: [
     (StoryComponent: Story, { parameters }: StoryContext): JSX.Element => {
       return (
@@ -23,5 +23,5 @@ export default {
 };
 
 export const EmptyState = (): JSX.Element => {
-  return <JoystickPanel />;
+  return <TeleopPanel />;
 };
