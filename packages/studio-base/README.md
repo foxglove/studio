@@ -4,30 +4,14 @@ This package contains core components used in [Foxglove Studio](https://github.c
 
 ## Quick start
 
-This package includes the following exports:
-
-- Components – e.g. `ColorPicker`, `Dropdown`, `Menu`, etc.
-- Contexts with providers – `AppConfigurationContext`, `AppConfigurationContext.Provider`, `CurrentLayoutContext`, etc.
-- Hooks – `useAddPanel`, `useAppConfigurationValue`, `useNativeAppMenuEvent`, etc.
-- Panels – `Map`, `NodePlayground`, `Plot`, etc.
-- PanelAPI hooks – `useDataSourceInfo`, `useMessageReducer`, `useMessagesByTopic`, etc.
-- Players – `RandomAccessPlayer`, `RosPlayer`, `RosbridgePlayer`, etc.
-- Services – `ILayoutCache`, `ILayoutStorage`, `IRemoteLayoutStorage`, etc.
-- Styles and theme provider
-- Types
-- Utils – `formatTime`, `fuzzyFilter`, `naturalSort`, etc.
-
-When contributing to the [Foxglove Studio](https://github.com/foxglove/studio) codebase, you can import these at the top-level:
+When contributing to the [Foxglove Studio](https://github.com/foxglove/studio) codebase, you can import from `@foxglove/studio-base` at its top-level or from lower in its directory:
 
 ```
 import { ExtensionInfo, ExtensionLoaderContext, ExtensionLoader } from "@foxglove/studio-base";
-```
-
-or from lower in the package directory:
-
-```
 import fuzzyFilter from "@foxglove/studio-base/util/fuzzyFilter";
 ```
+
+For a full list of the package's exports, reference its [`index.ts` file](https://github.com/foxglove/studio/blob/main/packages/studio-base/src/index.ts).
 
 ## Stay in touch
 
