@@ -210,6 +210,7 @@ export default class VelodynePlayer implements Player {
     this._parsedMessages = [];
     return this._listener({
       presence: this._presence,
+      type: "velodyne",
       progress: {},
       capabilities: CAPABILITIES,
       playerId: this._id,

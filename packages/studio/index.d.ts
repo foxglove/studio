@@ -50,6 +50,14 @@ declare module "@foxglove/studio" {
      * to other panels where the user is currently hovering and allow them to render accordingly.
      */
     previewTime?: number | undefined;
+
+    /**
+     * Indicates the type of the data source when a data source is present. The type varies by data source.
+     *
+     * I.E. A data source would indicate "ros1" or "ros2" if it is a ROS 1 or 2 data source. This
+     * allows logic to condition on specific data sources.
+     */
+    dataSourceType?: string;
   }
 
   export type PanelExtensionContext = {

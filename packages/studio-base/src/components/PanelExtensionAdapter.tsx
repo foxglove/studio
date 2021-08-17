@@ -208,6 +208,13 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       }
     }
 
+    if (watchedFieldsRef.current.has("dataSourceType")) {
+      if (renderState.dataSourceType !== ctx.playerState.type) {
+        renderState.dataSourceType = ctx.playerState.type;
+        shouldRender = true;
+      }
+    }
+
     if (!shouldRender) {
       return;
     }

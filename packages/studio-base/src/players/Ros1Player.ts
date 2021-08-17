@@ -260,6 +260,7 @@ export default class Ros1Player implements Player {
     if (!providerTopics || !start) {
       return this._listener({
         presence: this._presence,
+        type: "ros1",
         progress: {},
         capabilities: CAPABILITIES,
         playerId: this._id,
@@ -279,6 +280,7 @@ export default class Ros1Player implements Player {
     this._parsedMessages = [];
     return this._listener({
       presence: this._presence,
+      type: "ros1",
       progress: {},
       capabilities: CAPABILITIES,
       playerId: this._id,

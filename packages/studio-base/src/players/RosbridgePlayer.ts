@@ -90,6 +90,7 @@ export default class RosbridgePlayer implements Player {
   private _hasReceivedMessage = false;
   private _presence: PlayerPresence = PlayerPresence.NOT_PRESENT;
   private _problems = new PlayerProblemManager();
+  private _rosVersion: 1 | 2 = 1;
 
   constructor({
     url,
@@ -191,15 +192,14 @@ export default class RosbridgePlayer implements Player {
 
       // Automatically detect the ROS version based on the datatypes.
       // The rosbridge server itself publishes /rosout so the topic should be reliably present.
-      let rosVersion: 1 | 2;
       if (result.types.includes("rcl_interfaces/msg/Log")) {
-        rosVersion = 2;
+        this._rosVersion = 2;
         this._problems.removeProblem("unknownRosVersion");
       } else if (result.types.includes("rosgraph_msgs/Log")) {
-        rosVersion = 1;
+        this._rosVersion = 1;
         this._problems.removeProblem("unknownRosVersion");
       } else {
-        rosVersion = 1;
+        this._rosVersion = 1;
         this._problems.addProblem("unknownRosVersion", {
           severity: "warn",
           message: "Unable to detect ROS version, assuming ROS 1",
@@ -218,10 +218,10 @@ export default class RosbridgePlayer implements Player {
         topics.push({ name: topicName, datatype: type });
         datatypeDescriptions.push({ type, messageDefinition });
         const parsedDefinition = parseMessageDefinition(messageDefinition, {
-          ros2: rosVersion === 2,
+          ros2: this._rosVersion === 2,
         });
         messageReaders[type] ??=
-          rosVersion === 1
+          this._rosVersion === 1
             ? new LazyMessageReader(parsedDefinition)
             : new ROS2MessageReader(parsedDefinition);
         this._parsedMessageDefinitionsByTopic[topicName] = parsedDefinition;
@@ -249,7 +249,7 @@ export default class RosbridgePlayer implements Player {
 
       this._providerTopics = sortedTopics;
       this._providerDatatypes = bagConnectionsToDatatypes(datatypeDescriptions, {
-        ros2: rosVersion === 2,
+        ros2: this._rosVersion === 2,
       });
       this._messageReadersByDatatype = messageReaders;
 
@@ -297,6 +297,7 @@ export default class RosbridgePlayer implements Player {
     if (!_providerTopics || !_providerDatatypes || !_start) {
       return this._listener({
         presence: this._presence,
+        type: this._rosVersion === 2 ? "ros2" : "ros1",
         progress: {},
         capabilities: CAPABILITIES,
         playerId: this._id,
@@ -316,6 +317,7 @@ export default class RosbridgePlayer implements Player {
     this._parsedMessages = [];
     return this._listener({
       presence: this._presence,
+      type: this._rosVersion === 2 ? "ros2" : "ros1",
       progress: {},
       capabilities: CAPABILITIES,
       playerId: this._id,

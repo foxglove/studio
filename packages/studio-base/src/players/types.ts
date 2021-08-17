@@ -112,6 +112,9 @@ export type PlayerState = {
   // Information about the player's presence or connection status, for the UI to show a loading indicator.
   presence: PlayerPresence;
 
+  // Optional player type
+  type?: string;
+
   // Show some sort of progress indication in the playback bar; see `type Progress` for more details.
   // TODO(JP): Maybe we should unify some progress and the other initialization fields above into
   // one "status" object?
