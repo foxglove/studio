@@ -193,6 +193,8 @@ export default class RosbridgePlayer implements Player {
       // The rosbridge server itself publishes /rosout so the topic should be reliably present.
       let rosVersion: 1 | 2;
       if (
+        // We have to check for rcl_interfaces/Log because the rcl get_topic_names_and_types API
+        // returns the datatype names without /msg/, and the rosbridge server simply forwards them.
         result.types.includes("rcl_interfaces/msg/Log") ||
         result.types.includes("rcl_interfaces/Log")
       ) {
