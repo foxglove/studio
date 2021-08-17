@@ -23,7 +23,7 @@ import { MessageReader as ROS2MessageReader } from "@foxglove/rosmsg2-serializat
 import { Time } from "@foxglove/rostime";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
-  AdvertisePayload,
+  AdvertiseOptions,
   MessageEvent,
   Player,
   PlayerCapabilities,
@@ -83,7 +83,7 @@ export default class RosbridgePlayer implements Player {
   // active publishers for the current connection
   private _topicPublishers = new Map<string, roslib.Topic>();
   // which topics we want to advertise to other nodes
-  private _advertisements: AdvertisePayload[] = [];
+  private _advertisements: AdvertiseOptions[] = [];
   private _parsedMessageDefinitionsByTopic: ParsedMessageDefinitionsByTopic = {};
   private _parsedTopics: Set<string> = new Set();
   private _receivedBytes: number = 0;
@@ -389,9 +389,27 @@ export default class RosbridgePlayer implements Player {
           return;
         }
         try {
-          const bytes = (message as { bytes: ArrayBuffer }).bytes;
           const receiveTime = fromMillis(Date.now());
-          const innerMessage = messageReader.readMessage(Buffer.from(bytes));
+          const buffer = (message as { bytes: ArrayBuffer }).bytes;
+          const bytes = new Uint8Array(buffer);
+
+          // This conditional can be removed when the ROS2 deserializer supports size()
+          if (messageReader instanceof LazyMessageReader) {
+            const msgSize = messageReader.size(bytes);
+            if (msgSize > bytes.byteLength) {
+              this._problems.addProblem(problemId, {
+                severity: "error",
+                message: `Message buffer not large enough on ${topicName}`,
+                error: new Error(
+                  `Cannot read ${msgSize} byte message from ${bytes.byteLength} byte buffer`,
+                ),
+              });
+              this._emitState();
+              return;
+            }
+          }
+
+          const innerMessage = messageReader.readMessage(bytes);
 
           if (!this._hasReceivedMessage) {
             this._hasReceivedMessage = true;
@@ -430,7 +448,7 @@ export default class RosbridgePlayer implements Player {
     }
   }
 
-  setPublishers(publishers: AdvertisePayload[]): void {
+  setPublishers(publishers: AdvertiseOptions[]): void {
     // Since `setPublishers` is rarely called, we can get away with just throwing away the old
     // Roslib.Topic objects and creating new ones.
     for (const publisher of this._topicPublishers.values()) {

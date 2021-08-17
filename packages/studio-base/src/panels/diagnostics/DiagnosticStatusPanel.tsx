@@ -22,7 +22,6 @@ import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import TopicToRenderMenu from "@foxglove/studio-base/components/TopicToRenderMenu";
-import { isNonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
 import { DIAGNOSTIC_TOPIC } from "@foxglove/studio-base/util/globalConstants";
 
 import DiagnosticStatus from "./DiagnosticStatus";
@@ -78,7 +77,7 @@ function DiagnosticStatusPanel(props: Props) {
       topicToRender={topicToRender}
       onChange={(newTopicToRender) => saveConfig({ topicToRender: newTopicToRender })}
       topics={topics}
-      singleTopicDatatype={"diagnostic_msgs/DiagnosticArray"}
+      allowedDatatypes={["diagnostic_msgs/DiagnosticArray", "diagnostic_msgs/msg/DiagnosticArray"]}
       defaultTopicToRender={DIAGNOSTIC_TOPIC}
     />
   );
@@ -145,7 +144,7 @@ function DiagnosticStatusPanel(props: Props) {
             />
           ))}
         </Flex>
-      ) : isNonEmptyOrUndefined(selectedDisplayName) ? (
+      ) : selectedDisplayName ? (
         <EmptyState>
           Waiting for diagnostics from <code>{selectedDisplayName}</code>
         </EmptyState>

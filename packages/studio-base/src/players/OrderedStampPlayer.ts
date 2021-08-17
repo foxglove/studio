@@ -17,7 +17,7 @@ import { Time, add, compare, isLessThan } from "@foxglove/rostime";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import UserNodePlayer from "@foxglove/studio-base/players/UserNodePlayer";
 import {
-  AdvertisePayload,
+  AdvertiseOptions,
   PublishPayload,
   SubscribePayload,
   Player,
@@ -45,7 +45,15 @@ export const BUFFER_DURATION_SECS = 1.0;
 const getTopicsWithHeader = memoizeWeak((topics: Topic[], datatypes: RosDatatypes) => {
   return topics.filter(({ datatype }) => {
     const fields = datatypes.get(datatype)?.definitions;
-    return fields?.find((field) => field.type === "std_msgs/Header");
+    return (
+      // An unqualified "Header" is resolved as std_msgs/Header, per http://wiki.ros.org/msg
+      (fields?.[0]?.name === "header" && fields[0].type === "Header") ||
+      fields?.find(
+        (field) =>
+          field.name === "header" &&
+          (field.type === "std_msgs/Header" || field.type === "std_msgs/msg/Header"),
+      )
+    );
   });
 });
 
@@ -151,7 +159,7 @@ export default class OrderedStampPlayer implements Player {
   setSubscriptions = (subscriptions: SubscribePayload[]): void =>
     this._player.setSubscriptions(subscriptions);
   close = (): void => this._player.close();
-  setPublishers = (publishers: AdvertisePayload[]): void => this._player.setPublishers(publishers);
+  setPublishers = (publishers: AdvertiseOptions[]): void => this._player.setPublishers(publishers);
   setParameter = (key: string, value: ParameterValue): void =>
     this._player.setParameter(key, value);
   publish = (request: PublishPayload): void => this._player.publish(request);

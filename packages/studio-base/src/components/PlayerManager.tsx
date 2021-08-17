@@ -333,10 +333,11 @@ async function ros1Source(options: FactoryOptions) {
   } else {
     const value = options.storage.getItem<string>(storageCacheKey);
 
+    const os = OsContextSingleton; // workaround for https://github.com/webpack/webpack/issues/12960
     maybeUrl = await options.prompt({
       title: "ROS 1 TCP connection",
       placeholder: "localhost:11311",
-      value: value ?? OsContextSingleton?.getEnvVar("ROS_MASTER_URI") ?? "localhost:11311",
+      value: value ?? os?.getEnvVar("ROS_MASTER_URI") ?? "localhost:11311",
       transformer: (str) => {
         const result = parseInputUrl(str, "ros:", {
           "http:": { port: 80 },

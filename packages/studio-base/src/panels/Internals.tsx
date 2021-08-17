@@ -29,10 +29,9 @@ import {
   Topic,
   MessageEvent,
   SubscribePayload,
-  AdvertisePayload,
+  AdvertiseOptions,
 } from "@foxglove/studio-base/players/types";
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
-import { nonEmptyOrUndefined } from "@foxglove/studio-base/util/emptyOrUndefined";
 import filterMap from "@foxglove/studio-base/util/filterMap";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 
@@ -74,8 +73,12 @@ function getSubscriptionGroup({ requester }: SubscribePayload): string {
   }
 }
 
-function getPublisherGroup({ advertiser }: AdvertisePayload): string {
-  return advertiser == undefined ? "<unknown>" : advertiser;
+function getPublisherGroup({ options }: AdvertiseOptions): string {
+  const name = options?.["name"];
+  if (typeof name !== "string") {
+    return "<Studio>";
+  }
+  return name;
 }
 
 type RecordedData = {
@@ -183,10 +186,8 @@ function Internals() {
   }
 
   function downloadJSON() {
-    downloadTextFile(
-      nonEmptyOrUndefined(JSON.stringify(recordedData.current)) ?? "{}",
-      "fixture.json",
-    );
+    const dataJson = JSON.stringify(recordedData.current);
+    downloadTextFile(dataJson ? dataJson : "{}", "fixture.json");
   }
 
   return (

@@ -13,7 +13,7 @@ import { Time } from "@foxglove/rostime";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
-  AdvertisePayload,
+  AdvertiseOptions,
   MessageEvent,
   ParameterValue,
   Player,
@@ -53,6 +53,7 @@ enum Problem {
   Parameters = "Parameters",
   Graph = "Graph",
   Publish = "Publish",
+  Node = "Node",
 }
 
 type Ros1PlayerOpts = {
@@ -133,6 +134,14 @@ export default class Ros1Player implements Player {
       rosNode.on("paramUpdate", ({ key, value, prevValue, callerId }) => {
         log.debug("paramUpdate", key, value, prevValue, callerId);
         this._parameters = new Map(rosNode.parameters);
+      });
+      rosNode.on("error", (error) => {
+        this._addProblem(Problem.Node, {
+          severity: "warn",
+          message: "ROS node error",
+          tip: `Connectivity will be automatically re-established`,
+          error,
+        });
       });
     }
 
@@ -347,6 +356,14 @@ export default class Ros1Player implements Player {
       subscription.on("message", (message, _data, _pub) =>
         this._handleMessage(topicName, message, true),
       );
+      subscription.on("error", (error) => {
+        this._addProblem(`subscribe:${topicName}`, {
+          severity: "warn",
+          message: `Topic subscription error for "${topicName}"`,
+          tip: `The subscription to "${topicName}" will be automatically re-established`,
+          error,
+        });
+      });
     }
 
     // Unsubscribe from topics that we are subscribed to but shouldn't be.
@@ -378,7 +395,7 @@ export default class Ros1Player implements Player {
     this._emitState();
   };
 
-  setPublishers(publishers: AdvertisePayload[]): void {
+  setPublishers(publishers: AdvertiseOptions[]): void {
     if (!this._rosNode || this._closed) {
       return;
     }
@@ -405,7 +422,9 @@ export default class Ros1Player implements Player {
     }
 
     // Advertise new topics
-    for (const { topic, datatype: dataType, datatypes } of validPublishers) {
+    for (const advertiseOptions of validPublishers) {
+      const { topic, datatype: dataType, options } = advertiseOptions;
+
       if (this._rosNode.publications.has(topic)) {
         continue;
       }
@@ -416,6 +435,10 @@ export default class Ros1Player implements Player {
       // Try to retrieve the ROS message definition for this topic
       let msgdef: RosMsgDefinition[];
       try {
+        const datatypes = options?.["datatypes"] as RosDatatypes | undefined;
+        if (!datatypes || !(datatypes instanceof Map)) {
+          throw new Error("The datatypes option is required for publishing");
+        }
         msgdef = rosDatatypesToMessageDefinition(datatypes, dataType);
       } catch (error) {
         this._addProblem(msgdefProblemId, {
