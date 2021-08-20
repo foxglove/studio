@@ -17,8 +17,7 @@ import { merge } from "lodash";
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import { Time, compare } from "@foxglove/rostime";
-import { subtract as subtractTimes, toSec, fromSec } from "@foxglove/rostime";
+import { Time, compare, subtract as subtractTimes, toSec, fromSec } from "@foxglove/rostime";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconButton";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";

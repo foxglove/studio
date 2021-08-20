@@ -12,8 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import Logger from "@foxglove/log";
-import { Time, isLessThan } from "@foxglove/rostime";
-import { subtract as subtractTimes, toSec } from "@foxglove/rostime";
+import { Time, isLessThan, subtract as subtractTimes, toSec } from "@foxglove/rostime";
 import { PlayerState, MessageEvent } from "@foxglove/studio-base/players/types";
 import sendNotification from "@foxglove/studio-base/util/sendNotification";
 import { formatFrame, getTimestampForMessageEvent } from "@foxglove/studio-base/util/time";
