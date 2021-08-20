@@ -12,7 +12,16 @@
 //   You may not use this file except in compliance with the License.
 import { v4 as uuidv4 } from "uuid";
 
-import { Time, add, areEqual, compare } from "@foxglove/rostime";
+import {
+  Time,
+  add,
+  areEqual,
+  compare,
+  clampTime,
+  fromMillis,
+  percentOf,
+  subtract as subtractTimes,
+} from "@foxglove/rostime";
 import NoopMetricsCollector from "@foxglove/studio-base/players/NoopMetricsCollector";
 import {
   AdvertiseOptions,
@@ -44,12 +53,8 @@ import filterMap from "@foxglove/studio-base/util/filterMap";
 import { isRangeCoveredByRanges } from "@foxglove/studio-base/util/ranges";
 import { getSanitizedTopics } from "@foxglove/studio-base/util/selectors";
 import {
-  clampTime,
-  fromMillis,
   getSeekTimeFromSpec,
-  percentOf,
   SEEK_ON_START_NS,
-  subtractTimes,
   SeekToTimeSpec,
   TimestampMethod,
 } from "@foxglove/studio-base/util/time";

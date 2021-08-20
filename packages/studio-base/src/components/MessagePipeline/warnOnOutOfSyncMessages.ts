@@ -13,14 +13,10 @@
 
 import Logger from "@foxglove/log";
 import { Time, isLessThan } from "@foxglove/rostime";
+import { subtract as subtractTimes, toSec } from "@foxglove/rostime";
 import { PlayerState, MessageEvent } from "@foxglove/studio-base/players/types";
 import sendNotification from "@foxglove/studio-base/util/sendNotification";
-import {
-  subtractTimes,
-  toSec,
-  formatFrame,
-  getTimestampForMessageEvent,
-} from "@foxglove/studio-base/util/time";
+import { formatFrame, getTimestampForMessageEvent } from "@foxglove/studio-base/util/time";
 
 const DRIFT_THRESHOLD_SEC = 1; // Maximum amount of drift allowed.
 const WAIT_FOR_SEEK_SEC = 1; // How long we wait for a change in `lastSeekTime` before warning.
