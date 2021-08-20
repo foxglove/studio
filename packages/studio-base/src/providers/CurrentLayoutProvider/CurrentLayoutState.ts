@@ -31,7 +31,7 @@ import panelsReducer, {
   defaultPlaybackConfig,
 } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
-import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
+import { LayoutID } from "@foxglove/studio-base/services/ILayoutManager";
 import UndoRedo from "@foxglove/studio-base/util/UndoRedo";
 import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 

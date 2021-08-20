@@ -26,8 +26,8 @@ export type {
   LayoutID,
   UserID,
   ISO8601Timestamp,
-  ILayoutStorage,
-} from "./services/ILayoutStorage";
+  ILayoutManager as ILayoutStorage,
+} from "./services/ILayoutManager";
 export { default as NativeAppMenuContext } from "./context/NativeAppMenuContext";
 export type { NativeAppMenu, NativeAppMenuEvent } from "./context/NativeAppMenuContext";
 export type { PlayerSourceDefinition } from "./context/PlayerSelectionContext";
@@ -39,7 +39,7 @@ export { default as UserProfileLocalStorageProvider } from "./providers/UserProf
 export { default as StudioToastProvider } from "./components/StudioToastProvider";
 export { default as ExtensionLoaderContext } from "./context/ExtensionLoaderContext";
 export type { ExtensionLoader, ExtensionInfo } from "./context/ExtensionLoaderContext";
-export { default as LayoutStorageContext } from "./context/LayoutStorageContext";
+export { default as LayoutManagerContext } from "./context/LayoutManagerContext";
 export type {
   RemoteLayout,
   RemoteLayoutMetadata,

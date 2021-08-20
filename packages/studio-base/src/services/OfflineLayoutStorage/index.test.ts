@@ -10,7 +10,7 @@ import {
   Layout,
   LayoutID,
   LayoutMetadata,
-} from "@foxglove/studio-base/services/ILayoutStorage";
+} from "@foxglove/studio-base/services/ILayoutManager";
 import {
   RemoteLayout,
   RemoteLayoutMetadata,
@@ -323,7 +323,7 @@ describe("OfflineLayoutStorage", () => {
 
       jest.setSystemTime(10);
       await expect(storage.syncWithRemote()).resolves.toEqual(new Map());
-      await storage.syncLayout(layouts[0]!.id);
+      await storage.overwriteLayout(layouts[0]!.id);
       const expectedRemote: RemoteLayoutMetadata = {
         id: expect.any(String),
         name: "layout1",
@@ -389,11 +389,11 @@ describe("OfflineLayoutStorage", () => {
       });
 
       jest.setSystemTime(10);
-      await expect(storage.syncLayout(newId1)).resolves.toEqual({
+      await expect(storage.overwriteLayout(newId1)).resolves.toEqual({
         status: "conflict",
         type: "name-collision",
       });
-      await expect(storage.syncLayout(newId2)).resolves.toEqual({
+      await expect(storage.overwriteLayout(newId2)).resolves.toEqual({
         status: "success",
         newId: expect.any(String),
       });
@@ -469,7 +469,7 @@ describe("OfflineLayoutStorage", () => {
 
       // Explicit single layout sync uploads changes for shared layouts
       jest.setSystemTime(20);
-      await expect(storage.syncLayout(remote2.id)).resolves.toEqual({ status: "success" });
+      await expect(storage.overwriteLayout(remote2.id)).resolves.toEqual({ status: "success" });
       await expect(remoteStorage.getLayout(remote2.id)).resolves.toEqual({
         ...remote2,
         name: "Bar2",
@@ -503,7 +503,7 @@ describe("OfflineLayoutStorage", () => {
 
       jest.setSystemTime(20);
       await expect(storage.syncWithRemote()).resolves.toEqual(new Map());
-      await expect(storage.syncLayout(remote1.id)).resolves.toEqual({ status: "success" });
+      await expect(storage.overwriteLayout(remote1.id)).resolves.toEqual({ status: "success" });
       await expect(remoteStorage.getLayouts()).resolves.toEqual([
         {
           ...remote1,

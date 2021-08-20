@@ -46,7 +46,7 @@ import { useAppConfiguration } from "@foxglove/studio-base/context/AppConfigurat
 import { useAssets } from "@foxglove/studio-base/context/AssetsContext";
 import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useExtensionLoader } from "@foxglove/studio-base/context/ExtensionLoaderContext";
-import { useLayoutStorage } from "@foxglove/studio-base/context/LayoutStorageContext";
+import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import LinkHandlerContext from "@foxglove/studio-base/context/LinkHandlerContext";
 import { PanelSettingsContext } from "@foxglove/studio-base/context/PanelSettingsContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
@@ -162,7 +162,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const isMounted = useMountedState();
 
-  const layoutStorage = useLayoutStorage();
+  const layoutStorage = useLayoutManager();
   const { setSelectedLayout } = useCurrentLayoutActions();
 
   const openWelcomeLayout = useCallback(async () => {

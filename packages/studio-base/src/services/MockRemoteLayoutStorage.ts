@@ -10,7 +10,7 @@ import {
   ISO8601Timestamp,
   UserID,
   UserMetadata,
-} from "@foxglove/studio-base/services/ILayoutStorage";
+} from "@foxglove/studio-base/services/ILayoutManager";
 import {
   RemoteLayout,
   RemoteLayoutMetadata,

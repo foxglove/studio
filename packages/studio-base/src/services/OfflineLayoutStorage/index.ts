@@ -12,10 +12,10 @@ import {
   Layout,
   LayoutID,
   LayoutMetadata,
-  ILayoutStorage,
+  ILayoutManager,
   ConflictType,
   ConflictResolution,
-} from "@foxglove/studio-base/services/ILayoutStorage";
+} from "@foxglove/studio-base/services/ILayoutManager";
 import {
   RemoteLayoutMetadata,
   IRemoteLayoutStorage,
@@ -73,7 +73,7 @@ function getEffectiveMetadata(
  * This object does not handle any timeout logic and assumes that timeouts from remote storage will
  * be bubbled up as errors.
  */
-export default class OfflineLayoutStorage implements ILayoutStorage {
+export default class OfflineLayoutStorage implements ILayoutManager {
   /**
    * All access to cache storage is wrapped in a mutex to prevent multi-step operations (such as
    * reading and then writing a single layout, or writing one and deleting another) from getting
@@ -244,7 +244,7 @@ export default class OfflineLayoutStorage implements ILayoutStorage {
   }
 
   /** Save a layout to the server following an explicit user action. */
-  async syncLayout(
+  async overwriteLayout(
     id: LayoutID,
   ): Promise<{ status: "success"; newId?: LayoutID } | { status: "conflict"; type: ConflictType }> {
     const cachedLayout = await this.cacheStorage.runExclusive(async (cache) => await cache.get(id));

@@ -14,14 +14,14 @@ import {
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import LayoutStorageContext from "@foxglove/studio-base/context/LayoutStorageContext";
+import LayoutManagerContext from "@foxglove/studio-base/context/LayoutManagerContext";
 import {
   UserProfileStorage,
   UserProfileStorageContext,
 } from "@foxglove/studio-base/context/UserProfileStorageContext";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
 import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
-import { ILayoutStorage, LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
+import { ILayoutManager, LayoutID } from "@foxglove/studio-base/services/ILayoutManager";
 import Storage from "@foxglove/studio-base/util/Storage";
 import signal from "@foxglove/studio-base/util/signal";
 
@@ -70,7 +70,7 @@ function renderTest({
   mockLayoutStorage,
   mockUserProfile,
 }: {
-  mockLayoutStorage: ILayoutStorage;
+  mockLayoutStorage: ILayoutManager;
   mockUserProfile: UserProfileStorage;
 }) {
   const childMounted = signal();
@@ -84,13 +84,13 @@ function renderTest({
   }
   mount(
     <ToastProvider>
-      <LayoutStorageContext.Provider value={mockLayoutStorage}>
+      <LayoutManagerContext.Provider value={mockLayoutStorage}>
         <UserProfileStorageContext.Provider value={mockUserProfile}>
           <CurrentLayoutProvider disableAnalyticsForTests={true}>
             <Child />
           </CurrentLayoutProvider>
         </UserProfileStorageContext.Provider>
-      </LayoutStorageContext.Provider>
+      </LayoutManagerContext.Provider>
     </ToastProvider>,
   );
   return { currentLayoutStates, actions, childMounted };

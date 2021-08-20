@@ -12,12 +12,12 @@ import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { useLayoutCache } from "@foxglove/studio-base/context/LayoutCacheContext";
-import LayoutStorageContext from "@foxglove/studio-base/context/LayoutStorageContext";
+import LayoutManagerContext from "@foxglove/studio-base/context/LayoutManagerContext";
 import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import CacheOnlyLayoutStorage from "@foxglove/studio-base/services/CacheOnlyLayoutStorage";
 import ConsoleApiRemoteLayoutStorage from "@foxglove/studio-base/services/ConsoleApiRemoteLayoutStorage";
-import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
+import { LayoutID } from "@foxglove/studio-base/services/ILayoutManager";
 import OfflineLayoutStorage from "@foxglove/studio-base/services/OfflineLayoutStorage";
 
 const log = Logger.getLogger(__filename);
@@ -134,7 +134,7 @@ export default function ConsoleApiLayoutStorageProvider({
           : undefined
       }
     >
-      <LayoutStorageContext.Provider value={storage}>{children}</LayoutStorageContext.Provider>
+      <LayoutManagerContext.Provider value={storage}>{children}</LayoutManagerContext.Provider>
     </LayoutStorageDebuggingContext.Provider>
   );
 }

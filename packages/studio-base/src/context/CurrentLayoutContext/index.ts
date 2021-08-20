@@ -10,7 +10,7 @@ import { selectWithUnstableIdentityWarning } from "@foxglove/studio-base/hooks/s
 import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
 import { LinkedGlobalVariables } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
 import toggleSelectedPanel from "@foxglove/studio-base/providers/CurrentLayoutProvider/toggleSelectedPanel";
-import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
+import { LayoutID } from "@foxglove/studio-base/services/ILayoutManager";
 import { PanelConfig, PlaybackConfig, UserNodes } from "@foxglove/studio-base/types/panels";
 
 import {

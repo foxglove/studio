@@ -19,10 +19,10 @@ import { useMountedState } from "react-use";
 
 import conflictTypeToString from "@foxglove/studio-base/components/LayoutBrowser/conflictTypeToString";
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
-import { useLayoutStorage } from "@foxglove/studio-base/context/LayoutStorageContext";
+import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
 import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
-import { ConflictResolution, LayoutMetadata } from "@foxglove/studio-base/services/ILayoutStorage";
+import { ConflictResolution, LayoutMetadata } from "@foxglove/studio-base/services/ILayoutManager";
 
 import { debugBorder } from "./styles";
 
@@ -89,7 +89,7 @@ export default function LayoutRow({
   const [editingName, setEditingName] = useState(false);
   const [nameFieldValue, setNameFieldValue] = useState("");
 
-  const layoutStorage = useLayoutStorage();
+  const layoutStorage = useLayoutManager();
 
   const saveAction = useCallback(() => {
     onSave(layout);

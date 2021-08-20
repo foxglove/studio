@@ -19,13 +19,13 @@ import {
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import { useLayoutStorage } from "@foxglove/studio-base/context/LayoutStorageContext";
+import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
 import { usePrompt } from "@foxglove/studio-base/hooks/usePrompt";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
-import { ConflictResolution, LayoutMetadata } from "@foxglove/studio-base/services/ILayoutStorage";
+import { ConflictResolution, LayoutMetadata } from "@foxglove/studio-base/services/ILayoutManager";
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
 
 import LayoutSection from "./LayoutSection";
@@ -40,7 +40,7 @@ export default function LayoutBrowser({
   const theme = useTheme();
   const isMounted = useMountedState();
   const { addToast } = useToasts();
-  const layoutStorage = useLayoutStorage();
+  const layoutStorage = useLayoutManager();
   const prompt = usePrompt();
   const analytics = useAnalytics();
 
@@ -87,7 +87,7 @@ export default function LayoutBrowser({
 
   const onSaveLayout = useCallback(
     async (item: LayoutMetadata) => {
-      const result = await layoutStorage.syncLayout(item.id);
+      const result = await layoutStorage.overwriteLayout(item.id);
       switch (result.status) {
         case "success":
           if (result.newId != undefined) {

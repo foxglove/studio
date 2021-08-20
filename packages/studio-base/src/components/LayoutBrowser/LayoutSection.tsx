@@ -4,7 +4,7 @@
 
 import { makeStyles, Stack, Text } from "@fluentui/react";
 
-import { ConflictResolution, LayoutMetadata } from "@foxglove/studio-base/services/ILayoutStorage";
+import { ConflictResolution, LayoutMetadata } from "@foxglove/studio-base/services/ILayoutManager";
 
 import LayoutRow from "./LayoutRow";
 

@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { CachedLayout } from "@foxglove/studio-base/services/ILayoutCache";
-import { ConflictType, LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
+import { ConflictType, LayoutID } from "@foxglove/studio-base/services/ILayoutManager";
 import { RemoteLayoutMetadata } from "@foxglove/studio-base/services/IRemoteLayoutStorage";
 
 type CachedLayoutWithState = CachedLayout & { state: NonNullable<CachedLayout["state"]> };

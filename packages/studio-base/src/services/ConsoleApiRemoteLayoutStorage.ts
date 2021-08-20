@@ -5,7 +5,7 @@
 import Logger from "@foxglove/log";
 import { PanelsState } from "@foxglove/studio-base/";
 import ConsoleApi, { ConsoleApiLayout } from "@foxglove/studio-base/services/ConsoleApi";
-import { LayoutID, ISO8601Timestamp } from "@foxglove/studio-base/services/ILayoutStorage";
+import { LayoutID, ISO8601Timestamp } from "@foxglove/studio-base/services/ILayoutManager";
 import {
   IRemoteLayoutStorage,
   RemoteLayout,

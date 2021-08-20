@@ -6,80 +6,29 @@ import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/
 
 // We use "brand" tags to prevent confusion between string types with distinct meanings
 // https://github.com/microsoft/TypeScript/issues/4895
-export type UserID = string & { __brand: "UserID" };
 export type LayoutID = string & { __brand: "LayoutID" };
 export type ISO8601Timestamp = string & { __brand: "ISO8601Timestamp" };
 
-export type UserMetadata = {
-  id: UserID;
-  name: string;
-  email: string;
-};
-
-export type ConflictType =
-  | "local-delete-remote-update"
-  | "local-update-remote-delete"
-  | "both-update"
-  | "name-collision";
-
-export type ConflictResolution =
-  | "revert-local"
-  | "delete-local"
-  | "delete-remote"
-  | "overwrite-remote";
-
-/** Metadata that describes a panel layout. */
-export type LayoutMetadata = {
+export type Layout = {
   id: LayoutID;
   name: string;
-  creatorUserId: UserID | undefined;
+  data: PanelsState;
+
   createdAt: ISO8601Timestamp | undefined;
   updatedAt: ISO8601Timestamp | undefined;
   permission: "creator_write" | "org_read" | "org_write";
+
   /**
-   * Indicates whether changes have been made to the user's copy of this layout that have yet to be
-   * saved. Save the changes by calling ILayoutStorage.syncLayout().
+   * Indicates baseline from which this layout was forked, if applicable.
    */
-  hasUnsyncedChanges: boolean;
-  conflict: ConflictType | undefined;
-  data?: never;
+  baselineId: LayoutID | undefined;
+  // FIXME: also store updatedAt of baseline when it was forked, so we can warn about newer changes when overwriting?
 };
 
-export type Layout = Omit<LayoutMetadata, "data"> & { data: PanelsState };
-
 export interface ILayoutStorage {
-  addLayoutsChangedListener(listener: () => void): void;
-  removeLayoutsChangedListener(listener: () => void): void;
-
-  getLayouts(): Promise<LayoutMetadata[]>;
-
-  getLayout(id: LayoutID): Promise<Layout | undefined>;
-
-  saveNewLayout(params: {
-    name: string;
-    data: PanelsState;
-    permission: "creator_write" | "org_read" | "org_write";
-  }): Promise<LayoutMetadata>;
-
-  updateLayout(params: {
-    targetID: LayoutID;
-    name?: string;
-    data?: PanelsState;
-    permission?: "creator_write" | "org_read" | "org_write";
-  }): Promise<void>;
-
-  readonly supportsSyncing: boolean;
-
-  syncLayout(
-    id: LayoutID,
-  ): Promise<{ status: "success"; newId?: LayoutID } | { status: "conflict"; type: ConflictType }>;
-
-  resolveConflict(
-    id: LayoutID,
-    resolution: ConflictResolution,
-  ): Promise<{ status: "success"; newId?: LayoutID }>;
-
-  readonly supportsSharing: boolean;
-
-  deleteLayout(params: { id: LayoutID }): Promise<void>;
+  list(): Promise<readonly Layout[]>;
+  get(id: LayoutID): Promise<Layout | undefined>;
+  create(layout: Pick<Layout, "name" | "data" | "permission" | "baselineId">): Promise<Layout>;
+  put(layout: Layout): Promise<Layout>;
+  delete(id: LayoutID): Promise<void>;
 }

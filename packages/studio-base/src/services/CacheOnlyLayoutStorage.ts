@@ -11,8 +11,8 @@ import {
   Layout,
   LayoutID,
   LayoutMetadata,
-  ILayoutStorage,
-} from "@foxglove/studio-base/services/ILayoutStorage";
+  ILayoutManager,
+} from "@foxglove/studio-base/services/ILayoutManager";
 
 const log = Logger.getLogger(__filename);
 
@@ -39,7 +39,7 @@ function getMetadata(layout: CachedLayout): LayoutMetadata {
  *
  * Any `serverMetadata` on the local layout is ignored and generally is not expected to be present.
  */
-export default class CacheOnlyLayoutStorage implements ILayoutStorage {
+export default class CacheOnlyLayoutStorage implements ILayoutManager {
   readonly supportsSharing = false;
   readonly supportsSyncing = false;
 
@@ -76,7 +76,7 @@ export default class CacheOnlyLayoutStorage implements ILayoutStorage {
     };
   }
 
-  async syncLayout(): Promise<never> {
+  async overwriteLayout(): Promise<never> {
     throw new Error("CacheOnlyLayoutStorage should never have unsynced changes");
   }
 

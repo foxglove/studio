@@ -5,7 +5,7 @@
 import { useMemo } from "react";
 
 import { useLayoutCache } from "@foxglove/studio-base/context/LayoutCacheContext";
-import LayoutStorageContext from "@foxglove/studio-base/context/LayoutStorageContext";
+import LayoutManagerContext from "@foxglove/studio-base/context/LayoutManagerContext";
 import CacheOnlyLayoutStorage from "@foxglove/studio-base/services/CacheOnlyLayoutStorage";
 
 /**
@@ -18,5 +18,5 @@ export default function CacheOnlyLayoutStorageProvider({
 }: React.PropsWithChildren<unknown>): JSX.Element {
   const cache = useLayoutCache();
   const storage = useMemo(() => new CacheOnlyLayoutStorage(cache), [cache]);
-  return <LayoutStorageContext.Provider value={storage}>{children}</LayoutStorageContext.Provider>;
+  return <LayoutManagerContext.Provider value={storage}>{children}</LayoutManagerContext.Provider>;
 }

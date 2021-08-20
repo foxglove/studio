@@ -12,7 +12,7 @@ import CurrentLayoutContext, {
   LayoutState,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import { useLayoutStorage } from "@foxglove/studio-base/context/LayoutStorageContext";
+import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import { useUserProfileStorage } from "@foxglove/studio-base/context/UserProfileStorageContext";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
 import CurrentLayoutState from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
@@ -48,7 +48,7 @@ function CurrentLayoutProviderWithInitialState({
   const { addToast } = useToasts();
 
   const { setUserProfile } = useUserProfileStorage();
-  const layoutStorage = useLayoutStorage();
+  const layoutStorage = useLayoutManager();
 
   const [layoutState, setLayoutState] = useState(() =>
     stateInstance.actions.getCurrentLayoutState(),
@@ -183,7 +183,7 @@ export default function CurrentLayoutProvider({
   const { addToast } = useToasts();
 
   const { getUserProfile } = useUserProfileStorage();
-  const layoutStorage = useLayoutStorage();
+  const layoutStorage = useLayoutManager();
 
   const loadInitialState = useAsync(async (): Promise<LayoutState> => {
     try {
