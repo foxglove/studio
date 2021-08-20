@@ -615,8 +615,8 @@ export default class RandomAccessPlayer implements Player {
 
   // Exposed for testing.
   hasCachedRange(start: Time, end: Time): boolean {
-    const fractionStart = percentOf(this._start, this._end, start) / 100;
-    const fractionEnd = percentOf(this._start, this._end, end) / 100;
+    const fractionStart = percentOf(this._start, this._end, start);
+    const fractionEnd = percentOf(this._start, this._end, end);
     return isRangeCoveredByRanges(
       { start: fractionStart, end: fractionEnd },
       this._progress.fullyLoadedFractionRanges ?? [],
