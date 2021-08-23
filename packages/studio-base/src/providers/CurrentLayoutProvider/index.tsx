@@ -4,7 +4,7 @@
 import { isEqual } from "lodash";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useToasts } from "react-toast-notifications";
-import { useAsync, useMountedState, useThrottle } from "react-use";
+import { useAsync, useThrottle } from "react-use";
 
 import Logger from "@foxglove/log";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
@@ -48,25 +48,26 @@ function CurrentLayoutProviderWithInitialState({
   const { addToast } = useToasts();
 
   const { setUserProfile } = useUserProfileStorage();
-  const layoutStorage = useLayoutManager();
+  const layoutManager = useLayoutManager();
 
   const [layoutState, setLayoutState] = useState(() =>
     stateInstance.actions.getCurrentLayoutState(),
   );
 
-  const isMounted = useMountedState();
+  // const isMounted = useMountedState();
 
-  // If the current layout is deleted, deselect it
-  useEffect(() => {
-    const listener = async () => {
-      const selectedId = stateInstance.actions.getCurrentLayoutState().selectedLayout?.id;
-      if (!(await layoutStorage.getLayouts()).some(({ id }) => id === selectedId) && isMounted()) {
-        stateInstance.actions.setSelectedLayout(undefined);
-      }
-    };
-    layoutStorage.addLayoutsChangedListener(listener);
-    return () => layoutStorage.removeLayoutsChangedListener(listener);
-  }, [isMounted, layoutStorage, stateInstance.actions]);
+  // FIXME: something like this is needed when working with remote layouts
+  // // If the current layout is deleted, deselect it
+  // useEffect(() => {
+  //   const listener = async () => {
+  //     const selectedId = stateInstance.actions.getCurrentLayoutState().selectedLayout?.id;
+  //     if (!(await layoutManager.getLayouts()).some(({ id }) => id === selectedId) && isMounted()) {
+  //       stateInstance.actions.setSelectedLayout(undefined);
+  //     }
+  //   };
+  //   layoutManager.addLayoutsChangedListener(listener);
+  //   return () => layoutManager.removeLayoutsChangedListener(listener);
+  // }, [isMounted, layoutManager, stateInstance.actions]);
 
   const lastCurrentLayoutId = useRef(initialState.selectedLayout?.id);
   const previousSavedState = useRef<LayoutState | undefined>();
@@ -83,7 +84,7 @@ function CurrentLayoutProviderWithInitialState({
       if (state.selectedLayout?.id !== previousSavedState.current?.selectedLayout?.id) {
         previousSavedState.current = state;
       }
-      log.debug("state changed");
+      log.debug("state changed, selected layout =", state.selectedLayout?.id);
       setLayoutState(state);
     };
     stateInstance.addLayoutStateListener(listener);
@@ -104,11 +105,16 @@ function CurrentLayoutProviderWithInitialState({
       return;
     }
     log.debug("updateLayout");
-    layoutStorage
+    layoutManager
       .updateLayout({
-        targetID: selectedLayout.id,
+        id: selectedLayout.id,
         data: selectedLayout.data,
-        name: undefined,
+      })
+      .then((result) => {
+        // FIXME: risk of infinite save loop?
+        if (result.id !== selectedLayout.id) {
+          stateInstance.actions.setSelectedLayout(result);
+        }
       })
       .catch((error) => {
         log.error(error);
@@ -117,7 +123,7 @@ function CurrentLayoutProviderWithInitialState({
           id: "CurrentLayoutProvider.layoutStorage.put",
         });
       });
-  }, [addToast, layoutStorage, throttledLayoutState]);
+  }, [addToast, layoutManager, throttledLayoutState]);
 
   // Save the selected layout id to the UserProfile.
   useEffect(() => {

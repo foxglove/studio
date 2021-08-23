@@ -3,21 +3,28 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { PropsWithChildren, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 
-import { CachedLayout, ILayoutCache, LayoutCacheContext } from "@foxglove/studio-base";
+import {
+  Layout,
+  LayoutStorageContext,
+  ISO8601Timestamp,
+  LayoutID,
+  INamespacedLayoutStorage,
+} from "@foxglove/studio-base";
 
-const KEY_PREFIX = "studio.layout-cache.";
+const KEY_PREFIX = "studio.layout-cache";
 
 export default function LocalStorageLayoutCacheProvider(
   props: PropsWithChildren<unknown>,
 ): JSX.Element {
-  const [ctx] = useState<ILayoutCache>(() => {
+  const [ctx] = useState<INamespacedLayoutStorage>(() => {
     return {
-      async list(): Promise<readonly CachedLayout[]> {
-        const results: CachedLayout[] = [];
+      async list(namespace: string): Promise<readonly Layout[]> {
+        const results: Layout[] = [];
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
-          if (key?.startsWith(KEY_PREFIX) === true) {
+          if (key?.startsWith(`${KEY_PREFIX}.${namespace}.`) === true) {
             const layout = localStorage.getItem(key);
             if (layout != undefined) {
               results.push(JSON.parse(layout));
@@ -27,20 +34,34 @@ export default function LocalStorageLayoutCacheProvider(
         return results;
       },
 
-      async get(id: string): Promise<CachedLayout | undefined> {
-        const layout = localStorage.getItem(KEY_PREFIX + id);
+      async create(
+        namespace: string,
+        layout: Pick<Layout, "name" | "data" | "permission" | "baselineId">,
+      ): Promise<Layout> {
+        const id = uuidv4() as LayoutID;
+        const now = new Date().toISOString() as ISO8601Timestamp;
+        const newLayout = { ...layout, id, createdAt: now, updatedAt: now };
+        localStorage.setItem(`${KEY_PREFIX}.${namespace}.${id}`, JSON.stringify(newLayout));
+        return newLayout;
+      },
+
+      async get(namespace: string, id: LayoutID): Promise<Layout | undefined> {
+        const layout = localStorage.getItem(`${KEY_PREFIX}.${namespace}.${id}`);
         return layout == undefined ? undefined : JSON.parse(layout);
       },
 
-      async put(layout: CachedLayout): Promise<void> {
-        localStorage.setItem(KEY_PREFIX + layout.id, JSON.stringify(layout));
+      async put(namespace: string, layout: Layout): Promise<Layout> {
+        localStorage.setItem(`${KEY_PREFIX}.${namespace}.${layout.id}`, JSON.stringify(layout));
+        return layout;
       },
 
-      async delete(id: string): Promise<void> {
-        localStorage.removeItem(KEY_PREFIX + id);
+      async delete(namespace: string, id: LayoutID): Promise<void> {
+        localStorage.removeItem(`${KEY_PREFIX}.${namespace}.${id}`);
       },
     };
   });
 
-  return <LayoutCacheContext.Provider value={ctx}>{props.children}</LayoutCacheContext.Provider>;
+  return (
+    <LayoutStorageContext.Provider value={ctx}>{props.children}</LayoutStorageContext.Provider>
+  );
 }

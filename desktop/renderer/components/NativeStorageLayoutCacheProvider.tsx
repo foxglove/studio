@@ -4,11 +4,12 @@
 
 import { PropsWithChildren, useMemo } from "react";
 
-import { LayoutCacheContext } from "@foxglove/studio-base";
+import { LayoutStorageContext } from "@foxglove/studio-base";
 
 import { useNativeStorage } from "../context/NativeStorageContext";
 import NativeStorageLayoutCache from "../services/NativeStorageLayoutCache";
 
+//FIXME - rename
 export default function NativeStorageLayoutCacheProvider(
   props: PropsWithChildren<unknown>,
 ): JSX.Element {
@@ -19,6 +20,6 @@ export default function NativeStorageLayoutCacheProvider(
   }, [storage]);
 
   return (
-    <LayoutCacheContext.Provider value={provider}>{props.children}</LayoutCacheContext.Provider>
+    <LayoutStorageContext.Provider value={provider}>{props.children}</LayoutStorageContext.Provider>
   );
 }

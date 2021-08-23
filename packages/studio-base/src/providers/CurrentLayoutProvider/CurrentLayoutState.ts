@@ -31,7 +31,7 @@ import panelsReducer, {
   defaultPlaybackConfig,
 } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
-import { LayoutID } from "@foxglove/studio-base/services/ILayoutManager";
+import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 import UndoRedo from "@foxglove/studio-base/util/UndoRedo";
 import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
@@ -110,6 +110,8 @@ export default class CurrentLayoutState implements ICurrentLayout {
 
   actions = {
     getCurrentLayoutState: (): LayoutState => this.layoutState,
+
+    // FIXME: revert + undo jumps back to edited id that no longer exists
     undoLayoutChange: (): void =>
       this.undoRedo.undo(({ selectedLayout }) => this.actions.setSelectedLayout(selectedLayout)),
     redoLayoutChange: (): void =>

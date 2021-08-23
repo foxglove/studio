@@ -25,6 +25,17 @@ export type Layout = {
   // FIXME: also store updatedAt of baseline when it was forked, so we can warn about newer changes when overwriting?
 };
 
+export interface INamespacedLayoutStorage {
+  list(ns: string): Promise<readonly Layout[]>;
+  get(ns: string, id: LayoutID): Promise<Layout | undefined>;
+  create(
+    ns: string,
+    layout: Pick<Layout, "name" | "data" | "permission" | "baselineId">,
+  ): Promise<Layout>;
+  put(ns: string, layout: Layout): Promise<Layout>;
+  delete(ns: string, id: LayoutID): Promise<void>;
+}
+
 export interface ILayoutStorage {
   list(): Promise<readonly Layout[]>;
   get(id: LayoutID): Promise<Layout | undefined>;

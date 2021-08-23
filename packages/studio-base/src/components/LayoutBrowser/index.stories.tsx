@@ -10,16 +10,15 @@ import { AsyncState } from "react-use/lib/useAsyncFn";
 
 import AnalyticsProvider from "@foxglove/studio-base/context/AnalyticsProvider";
 import CurrentLayoutContext from "@foxglove/studio-base/context/CurrentLayoutContext";
-import LayoutCacheContext, {
-  useLayoutCache,
-} from "@foxglove/studio-base/context/LayoutCacheContext";
+import LayoutStorageContext, {
+  useLayoutStorage,
+} from "@foxglove/studio-base/context/LayoutStorageContext";
 import ModalHost from "@foxglove/studio-base/context/ModalHost";
-import CacheOnlyLayoutStorageProvider from "@foxglove/studio-base/providers/CacheOnlyLayoutStorageProvider";
 import CurrentLayoutState, {
   DEFAULT_LAYOUT_FOR_TESTS,
 } from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
-import { LayoutID } from "@foxglove/studio-base/services/ILayoutManager";
+import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 import MockLayoutCache from "@foxglove/studio-base/services/MockLayoutCache";
 import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
 import delay from "@foxglove/studio-base/util/delay";
@@ -74,11 +73,11 @@ function WithSetup(Child: Story, ctx: StoryContext): JSX.Element {
       <ModalHost>
         <AnalyticsProvider>
           <CurrentLayoutContext.Provider value={currentLayout}>
-            <LayoutCacheContext.Provider value={storage}>
+            <LayoutStorageContext.Provider value={storage}>
               <CacheOnlyLayoutStorageProvider>
                 <Child />
               </CacheOnlyLayoutStorageProvider>
-            </LayoutCacheContext.Provider>
+            </LayoutStorageContext.Provider>
           </CurrentLayoutContext.Provider>
         </AnalyticsProvider>
       </ModalHost>
@@ -208,7 +207,7 @@ export function CommitRenameWithSubmit(_args: unknown): JSX.Element {
     TestUtils.Simulate.submit(document.activeElement!);
   }, []);
 
-  const layoutCache = useLayoutCache();
+  const layoutCache = useLayoutStorage();
   useEffect(() => {
     void layoutCache.list().then((layouts) => {
       if (layouts.some((layout) => layout.name === "New name")) {
@@ -233,7 +232,7 @@ export function CommitRenameWithButton(_args: unknown): JSX.Element {
     document.querySelector<HTMLElement>(`[data-test="commit-rename"]`)!.click();
   }, []);
 
-  const layoutCache = useLayoutCache();
+  const layoutCache = useLayoutStorage();
   const readySignal = useReadySignal();
 
   useEffect(() => {
@@ -249,7 +248,7 @@ export function CommitRenameWithButton(_args: unknown): JSX.Element {
 
 Duplicate.parameters = { useReadySignal: true };
 export function Duplicate(_args: unknown): JSX.Element {
-  const layoutCache = useLayoutCache();
+  const layoutCache = useLayoutStorage();
   const readySignal = useReadySignal();
 
   useAsyncThrowing(async () => {
@@ -278,7 +277,7 @@ function DeleteStory({
   name: string;
   signal: () => void;
 }) {
-  const layoutCache = useLayoutCache();
+  const layoutCache = useLayoutStorage();
   useAsyncThrowing(async () => {
     await delay(100);
     document.querySelectorAll<HTMLElement>(`[data-test="layout-actions"]`)[index]!.click();

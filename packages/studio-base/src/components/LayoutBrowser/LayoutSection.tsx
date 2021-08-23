@@ -4,7 +4,7 @@
 
 import { makeStyles, Stack, Text } from "@fluentui/react";
 
-import { ConflictResolution, LayoutMetadata } from "@foxglove/studio-base/services/ILayoutManager";
+import { DisplayedLayout } from "@foxglove/studio-base/services/ILayoutManager";
 
 import LayoutRow from "./LayoutRow";
 
@@ -35,27 +35,31 @@ export default function LayoutSection({
   emptyText,
   items,
   selectedId,
-  onSave,
+  // onSave,
   onSelect,
   onRename,
   onDuplicate,
   onDelete,
   onShare,
   onExport,
-  onResolveConflict,
+  // onResolveConflict,
+  onOverwrite,
+  onRevert,
 }: {
   title: string | undefined;
   emptyText: string | undefined;
-  items: readonly LayoutMetadata[] | undefined;
+  items: readonly DisplayedLayout[] | undefined;
   selectedId?: string;
-  onSave: (item: LayoutMetadata) => void;
-  onSelect: (item: LayoutMetadata, selectedViaClick?: boolean) => void;
-  onRename: (item: LayoutMetadata, newName: string) => void;
-  onDuplicate: (item: LayoutMetadata) => void;
-  onDelete: (item: LayoutMetadata) => void;
-  onShare: (item: LayoutMetadata) => void;
-  onExport: (item: LayoutMetadata) => void;
-  onResolveConflict: (item: LayoutMetadata, resolution: ConflictResolution) => void;
+  // onSave: (item: DisplayedLayout) => void;
+  onSelect: (item: DisplayedLayout, selectedViaClick?: boolean) => void;
+  onRename: (item: DisplayedLayout, newName: string) => void;
+  onDuplicate: (item: DisplayedLayout) => void;
+  onDelete: (item: DisplayedLayout) => void;
+  onShare: (item: DisplayedLayout) => void;
+  onExport: (item: DisplayedLayout) => void;
+  // onResolveConflict: (item: DisplayedLayout, resolution: ConflictResolution) => void;
+  onOverwrite: (item: DisplayedLayout) => void;
+  onRevert: (item: DisplayedLayout) => void;
 }): JSX.Element {
   const styles = useStyles();
   return (
@@ -75,13 +79,15 @@ export default function LayoutSection({
             key={layout.id}
             layout={layout}
             onSelect={onSelect}
-            onSave={onSave}
+            // onSave={onSave}
             onRename={onRename}
             onDuplicate={onDuplicate}
             onDelete={onDelete}
             onShare={onShare}
             onExport={onExport}
-            onResolveConflict={onResolveConflict}
+            // onResolveConflict={onResolveConflict}
+            onOverwrite={onOverwrite}
+            onRevert={onRevert}
           />
         ))}
       </Stack.Item>

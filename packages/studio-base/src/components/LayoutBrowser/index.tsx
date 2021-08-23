@@ -10,7 +10,6 @@ import { useToasts } from "react-toast-notifications";
 import { useMountedState } from "react-use";
 import useAsyncFn from "react-use/lib/useAsyncFn";
 
-import conflictTypeToString from "@foxglove/studio-base/components/LayoutBrowser/conflictTypeToString";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
@@ -25,7 +24,7 @@ import { usePrompt } from "@foxglove/studio-base/hooks/usePrompt";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
-import { ConflictResolution, LayoutMetadata } from "@foxglove/studio-base/services/ILayoutManager";
+import { DisplayedLayout } from "@foxglove/studio-base/services/ILayoutManager";
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
 
 import LayoutSection from "./LayoutSection";
@@ -55,7 +54,10 @@ export default function LayoutBrowser({
           ? (layout) => layout.permission === "creator_write"
           : () => true,
       );
-      return { personal, shared };
+      return {
+        personal: personal.sort((a, b) => a.name.localeCompare(b.name)),
+        shared: shared.sort((a, b) => a.name.localeCompare(b.name)),
+      };
     },
     [layoutStorage],
     { loading: true },
@@ -73,7 +75,7 @@ export default function LayoutBrowser({
   }, [reloadLayouts]);
 
   const onSelectLayout = useCallback(
-    async (item: Pick<LayoutMetadata, "id">, selectedViaClick?: boolean) => {
+    async (item: Pick<DisplayedLayout, "id">, selectedViaClick?: boolean) => {
       const layout = await layoutStorage.getLayout(item.id);
       if (layout) {
         setSelectedLayout(layout);
@@ -85,30 +87,29 @@ export default function LayoutBrowser({
     [analytics, layoutStorage, setSelectedLayout],
   );
 
-  const onSaveLayout = useCallback(
-    async (item: LayoutMetadata) => {
-      const result = await layoutStorage.overwriteLayout(item.id);
-      switch (result.status) {
-        case "success":
-          if (result.newId != undefined) {
-            await onSelectLayout({ id: result.newId });
-          }
-          break;
-        case "conflict": {
-          addToast(conflictTypeToString(result.type), { autoDismiss: true, appearance: "warning" });
-          void analytics.logEvent(AppEvent.LAYOUT_CONFLICT, { type: result.type });
-          break;
-        }
-      }
-    },
-    [analytics, addToast, layoutStorage, onSelectLayout],
-  );
+  // const onSaveLayout = useCallback(
+  //   async (item: DisplayedLayout) => {
+  //     try {
+  //       const result = await layoutStorage.overwriteLayout({ id: item.id });
+  //       if (result.id !== item.id) {
+  //         await onSelectLayout({ id: result.id });
+  //       }
+  //     } catch (error) {
+  //       addToast(`Error saving layout: ${error.toString()}`, {
+  //         autoDismiss: true,
+  //         appearance: "warning",
+  //       });
+  //       // void analytics.logEvent(AppEvent.LAYOUT_CONFLICT, { type: result.type });
+  //     }
+  //   },
+  //   [addToast, layoutStorage, onSelectLayout],
+  // );
 
   const onRenameLayout = useCallback(
-    async (item: LayoutMetadata, newName: string) => {
-      await layoutStorage.updateLayout({ targetID: item.id, name: newName });
-      if (currentLayoutId === item.id) {
-        await onSelectLayout(item);
+    async (item: DisplayedLayout, newName: string) => {
+      const result = await layoutStorage.updateLayout({ id: item.id, name: newName });
+      if (currentLayoutId === item.id && result.id !== item.id) {
+        await onSelectLayout(result);
         void analytics.logEvent(AppEvent.LAYOUT_RENAME);
       }
     },
@@ -116,7 +117,7 @@ export default function LayoutBrowser({
   );
 
   const onDuplicateLayout = useCallback(
-    async (item: LayoutMetadata) => {
+    async (item: DisplayedLayout) => {
       const source = await layoutStorage.getLayout(item.id);
       if (source) {
         const newLayout = await layoutStorage.saveNewLayout({
@@ -132,7 +133,7 @@ export default function LayoutBrowser({
   );
 
   const onDeleteLayout = useCallback(
-    async (item: LayoutMetadata) => {
+    async (item: DisplayedLayout) => {
       await layoutStorage.deleteLayout({ id: item.id });
       void analytics.logEvent(AppEvent.LAYOUT_DELETE);
 
@@ -180,7 +181,7 @@ export default function LayoutBrowser({
   }, [currentDateForStorybook, layoutStorage, analytics, onSelectLayout]);
 
   const onExportLayout = useCallback(
-    async (item: LayoutMetadata) => {
+    async (item: DisplayedLayout) => {
       const layout = await layoutStorage.getLayout(item.id);
       if (layout) {
         const content = JSON.stringify(layout.data, undefined, 2);
@@ -192,7 +193,7 @@ export default function LayoutBrowser({
   );
 
   const onShareLayout = useCallback(
-    async (item: LayoutMetadata) => {
+    async (item: DisplayedLayout) => {
       const existingSharedLayouts = layouts.value?.shared ?? [];
       const name = await prompt({
         title: `Share “${item.name}”`,
@@ -220,13 +221,34 @@ export default function LayoutBrowser({
     [analytics, layoutStorage, layouts.value?.shared, prompt],
   );
 
-  const onResolveConflict = useCallback(
-    async (item: LayoutMetadata, resolution: ConflictResolution) => {
-      const result = await layoutStorage.resolveConflict(item.id, resolution);
-      // Since the layout may have changed, re-select it in order to load the latest data
-      await onSelectLayout({ id: result.newId ?? item.id });
+  // FIXME: remove?
+  // const onResolveConflict = useCallback(
+  //   async (item: DisplayedLayout, resolution: ConflictResolution) => {
+  //     const result = await layoutStorage.resolveConflict(item.id, resolution);
+  //     // Since the layout may have changed, re-select it in order to load the latest data
+  //     await onSelectLayout({ id: result.newId ?? item.id });
+  //   },
+  //   [layoutStorage, onSelectLayout],
+  // );
+
+  const onOverwriteLayout = useCallback(
+    async (item: DisplayedLayout) => {
+      const result = await layoutStorage.overwriteLayout({ id: item.id });
+      if (currentLayoutId === item.id && result.id !== item.id) {
+        await onSelectLayout({ id: result.id });
+      }
     },
-    [layoutStorage, onSelectLayout],
+    [currentLayoutId, layoutStorage, onSelectLayout],
+  );
+
+  const onRevertLayout = useCallback(
+    async (item: DisplayedLayout) => {
+      const result = await layoutStorage.revertLayout({ id: item.id });
+      if (currentLayoutId === item.id && result.id !== item.id) {
+        await onSelectLayout({ id: result.id });
+      }
+    },
+    [currentLayoutId, layoutStorage, onSelectLayout],
   );
 
   const importLayout = useCallback(async () => {
@@ -310,13 +332,15 @@ export default function LayoutBrowser({
             items={layouts.value?.personal}
             selectedId={currentLayoutId}
             onSelect={onSelectLayout}
-            onSave={onSaveLayout}
+            // onSave={onSaveLayout}
             onRename={onRenameLayout}
             onDuplicate={onDuplicateLayout}
             onDelete={onDeleteLayout}
             onShare={onShareLayout}
             onExport={onExportLayout}
-            onResolveConflict={onResolveConflict}
+            // onResolveConflict={onResolveConflict}
+            onOverwrite={onOverwriteLayout}
+            onRevert={onRevertLayout}
           />
         </Stack.Item>
         <Stack.Item>
@@ -327,13 +351,15 @@ export default function LayoutBrowser({
               items={layouts.value?.shared}
               selectedId={currentLayoutId}
               onSelect={onSelectLayout}
-              onSave={onSaveLayout}
+              // onSave={onSaveLayout}
               onRename={onRenameLayout}
               onDuplicate={onDuplicateLayout}
               onDelete={onDeleteLayout}
               onShare={onShareLayout}
               onExport={onExportLayout}
-              onResolveConflict={onResolveConflict}
+              // onResolveConflict={onResolveConflict}
+              onOverwrite={onOverwriteLayout}
+              onRevert={onRevertLayout}
             />
           )}
         </Stack.Item>

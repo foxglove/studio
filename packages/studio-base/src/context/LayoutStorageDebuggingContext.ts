@@ -4,7 +4,7 @@
 
 import { createContext } from "react";
 
-import { LayoutID } from "@foxglove/studio-base/services/ILayoutManager";
+import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 
 type ILayoutStorageDebugging = {
   openFakeStorageDirectory?: () => Promise<void>;

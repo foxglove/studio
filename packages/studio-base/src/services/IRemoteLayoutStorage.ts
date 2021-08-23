@@ -3,11 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import {
-  ISO8601Timestamp,
-  LayoutID,
-  LayoutMetadata,
-} from "@foxglove/studio-base/services/ILayoutManager";
+import { ISO8601Timestamp, LayoutID, Layout } from "@foxglove/studio-base/services/ILayoutStorage";
 
 /**
  * Metadata that describes a panel layout on a remote server.
@@ -15,11 +11,9 @@ import {
  * @note Some optional values in `LayoutMetadata` are required when layouts are loaded from a
  * server, to enable permissions and consistency checks.
  */
-export type RemoteLayoutMetadata = Pick<LayoutMetadata, "creatorUserId"> &
+export type RemoteLayoutMetadata = Layout &
   {
-    [K in keyof Omit<LayoutMetadata, "data" | "isModified" | "creatorUserId">]-?: NonNullable<
-      LayoutMetadata[K]
-    >;
+    [K in keyof Omit<Layout, "data" | "isModified">]-?: NonNullable<Layout[K]>;
   };
 
 /**
@@ -27,6 +21,7 @@ export type RemoteLayoutMetadata = Pick<LayoutMetadata, "creatorUserId"> &
  */
 export type RemoteLayout = Omit<RemoteLayoutMetadata, "data"> & { data: PanelsState };
 
+// FIXME
 export interface IRemoteLayoutStorage {
   getLayouts: () => Promise<readonly RemoteLayoutMetadata[]>;
 

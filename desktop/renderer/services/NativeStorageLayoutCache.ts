@@ -2,14 +2,21 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { v4 as uuidv4 } from "uuid";
+
 import Log from "@foxglove/log";
-import { CachedLayout, ILayoutCache } from "@foxglove/studio-base";
+import {
+  Layout,
+  INamespacedLayoutStorage,
+  LayoutID,
+  ISO8601Timestamp,
+} from "@foxglove/studio-base";
 
 import { Storage } from "../../common/types";
 
 const log = Log.getLogger(__filename);
 
-function assertLayout(value: unknown): asserts value is CachedLayout {
+function assertLayout(value: unknown): asserts value is Layout {
   if (typeof value !== "object" || value == undefined) {
     throw new Error("Invariant violation - layout item is not an object");
   }
@@ -20,8 +27,8 @@ function assertLayout(value: unknown): asserts value is CachedLayout {
 }
 
 // Implement a LayoutStorage interface over OsContext
-export default class NativeStorageLayoutCache implements ILayoutCache {
-  private static STORE_NAME = "layouts";
+export default class NativeStorageLayoutCache implements INamespacedLayoutStorage {
+  private static STORE_PREFIX = "layouts-";
 
   private _ctx: Storage;
 
@@ -29,10 +36,10 @@ export default class NativeStorageLayoutCache implements ILayoutCache {
     this._ctx = storage;
   }
 
-  async list(): Promise<readonly CachedLayout[]> {
-    const items = await this._ctx.all(NativeStorageLayoutCache.STORE_NAME);
+  async list(namespace: string): Promise<readonly Layout[]> {
+    const items = await this._ctx.all(NativeStorageLayoutCache.STORE_PREFIX + namespace);
 
-    const layouts: CachedLayout[] = [];
+    const layouts: Layout[] = [];
     for (const item of items) {
       if (!(item instanceof Uint8Array)) {
         throw new Error("Invariant violation - layout item is not a buffer");
@@ -51,8 +58,23 @@ export default class NativeStorageLayoutCache implements ILayoutCache {
     return layouts;
   }
 
-  async get(id: string): Promise<CachedLayout | undefined> {
-    const item = await this._ctx.get(NativeStorageLayoutCache.STORE_NAME, id);
+  async create(
+    namespace: string,
+    layout: Pick<Layout, "name" | "data" | "permission" | "baselineId">,
+  ): Promise<Layout> {
+    const id = uuidv4() as LayoutID;
+    const now = new Date().toISOString() as ISO8601Timestamp;
+    const newLayout = { ...layout, id, createdAt: now, updatedAt: now };
+    await this._ctx.put(
+      NativeStorageLayoutCache.STORE_PREFIX + namespace,
+      id,
+      JSON.stringify(newLayout),
+    );
+    return newLayout;
+  }
+
+  async get(namespace: string, id: LayoutID): Promise<Layout | undefined> {
+    const item = await this._ctx.get(NativeStorageLayoutCache.STORE_PREFIX + namespace, id);
     if (item == undefined) {
       return undefined;
     }
@@ -66,12 +88,13 @@ export default class NativeStorageLayoutCache implements ILayoutCache {
     return parsed;
   }
 
-  async put(layout: CachedLayout): Promise<void> {
+  async put(namespace: string, layout: Layout): Promise<Layout> {
     const content = JSON.stringify(layout);
-    return await this._ctx.put(NativeStorageLayoutCache.STORE_NAME, layout.id, content);
+    await this._ctx.put(NativeStorageLayoutCache.STORE_PREFIX + namespace, layout.id, content);
+    return layout;
   }
 
-  async delete(id: string): Promise<void> {
-    return await this._ctx.delete(NativeStorageLayoutCache.STORE_NAME, id);
+  async delete(namespace: string, id: LayoutID): Promise<void> {
+    return await this._ctx.delete(NativeStorageLayoutCache.STORE_PREFIX + namespace, id);
   }
 }
