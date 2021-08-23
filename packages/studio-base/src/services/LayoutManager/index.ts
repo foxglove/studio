@@ -162,6 +162,42 @@ export default class LayoutManager implements ILayoutManager {
       // FIXME: remote layout support
       throw new Error("Sharing is not supported");
     }
+
+    // If only the name changes, rename "in place"
+    if (name != undefined && data == undefined && permission == undefined) {
+      // FIXME: cleanup / possibly combine with code path for non-rename below
+      const layout = await this.storage.runExclusive(
+        async ({ workingStorage, baselineStorage }) => {
+          // Update the working copy of the layout if it is already modified
+          const working = await workingStorage.get(id);
+          if (working) {
+            const result = await workingStorage.put({ ...working, name });
+            if (working.baselineId == undefined) {
+              throw new Error("Unable to rename layout with no baseline");
+            }
+            //FIXME: should only be able to rename when selected?
+            const baseline = await baselineStorage.get(working.baselineId);
+            if (baseline) {
+              await baselineStorage.put({ ...baseline, name });
+            }
+            return { ...result, isModified: true };
+          }
+
+          // If this is the first edit, create a working copy that points to the baseline
+          const baseline = await baselineStorage.get(id);
+          if (baseline) {
+            // FIXME: if baseline comes from the server, we shouldn't mess with it randomly
+            const result = await baselineStorage.put({ ...baseline, name });
+            return { ...result, isModified: false };
+          }
+
+          throw new Error(`Layout ${id} is neither a working copy nor an existing baseline`);
+        },
+      );
+      this.notifyChangeListeners();
+      return layout;
+    }
+
     //FIXME: should id creation be handled in the storage? if so we can't choose the id for workingStorage, so need a separate reference to baseline id
     const layout = await this.storage.runExclusive(async ({ workingStorage, baselineStorage }) => {
       // Update the working copy of the layout if it is already modified
