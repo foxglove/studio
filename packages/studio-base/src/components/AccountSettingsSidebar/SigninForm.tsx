@@ -54,6 +54,19 @@ export default function SigninForm(): JSX.Element {
     [setBearerToken],
   );
 
+  // open new window with the device code to facilitate user signin flow
+  useEffect(() => {
+    if (!deviceCode) {
+      return;
+    }
+
+    const url = new URL(deviceCode.verification_uri);
+    url.searchParams.append("user_code", deviceCode.user_code);
+    const href = url.toString();
+
+    window.open(href, "_blank");
+  }, [deviceCode]);
+
   const modal = useMemo(() => {
     if (deviceCode) {
       return <DeviceCodeDialog deviceCode={deviceCode} onClose={onClose} />;
