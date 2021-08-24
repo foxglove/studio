@@ -12,26 +12,38 @@ export type ISO8601Timestamp = string & { __brand: "ISO8601Timestamp" };
 export type Layout = {
   id: LayoutID;
   name: string;
-  data: PanelsState;
-
-  createdAt: ISO8601Timestamp | undefined;
-  updatedAt: ISO8601Timestamp | undefined;
   permission: "creator_write" | "org_read" | "org_write";
 
+  /** old field name, migrated to working/baseline */
+  data?: PanelsState;
+
+  /** The last explicitly saved version of this layout. */
+  baseline: {
+    data: PanelsState;
+    updatedAt: ISO8601Timestamp;
+  };
+
   /**
-   * Indicates baseline from which this layout was forked, if applicable.
+   * The working copy of this layout, if it has been edited since the last explicit save.
    */
-  baselineId: LayoutID | undefined;
-  // FIXME: also store updatedAt of baseline when it was forked, so we can warn about newer changes when overwriting?
+  working:
+    | {
+        data: PanelsState;
+        updatedAt: ISO8601Timestamp;
+      }
+    | undefined;
+
+  /**
+   * Whether the layout has been locally deleted and needs to be deleted on the server next time
+   * we're online.
+   */
+  locallyDeleted: boolean | undefined;
 };
 
+//FIXME: rename, delete, or move
 export interface INamespacedLayoutStorage {
   list(ns: string): Promise<readonly Layout[]>;
   get(ns: string, id: LayoutID): Promise<Layout | undefined>;
-  create(
-    ns: string,
-    layout: Pick<Layout, "name" | "data" | "permission" | "baselineId">,
-  ): Promise<Layout>;
   put(ns: string, layout: Layout): Promise<Layout>;
   delete(ns: string, id: LayoutID): Promise<void>;
 }
@@ -39,7 +51,39 @@ export interface INamespacedLayoutStorage {
 export interface ILayoutStorage {
   list(): Promise<readonly Layout[]>;
   get(id: LayoutID): Promise<Layout | undefined>;
-  create(layout: Pick<Layout, "name" | "data" | "permission" | "baselineId">): Promise<Layout>;
   put(layout: Layout): Promise<Layout>;
   delete(id: LayoutID): Promise<void>;
+}
+
+// FIXME: move
+export function migrateLayout(value: unknown): Layout {
+  if (typeof value !== "object" || value == undefined) {
+    throw new Error("Invariant violation - layout item is not an object");
+  }
+  const layout = value as Partial<Layout>;
+  if (!("id" in layout) || !layout.id) {
+    throw new Error("Invariant violation - layout item is missing an id");
+  }
+
+  const now = new Date().toISOString() as ISO8601Timestamp;
+
+  let baseline = layout.baseline;
+  if (!baseline) {
+    if (layout.working) {
+      baseline = layout.working;
+    } else if (layout.data) {
+      baseline = { data: layout.data, updatedAt: now };
+    } else {
+      throw new Error("Invariant violation - layout item is missing data");
+    }
+  }
+
+  return {
+    id: layout.id,
+    name: layout.name ?? `Unnamed (${now})`,
+    permission: layout.permission ?? "creator_write",
+    working: layout.working,
+    baseline,
+    locallyDeleted: layout.locallyDeleted ?? false,
+  };
 }

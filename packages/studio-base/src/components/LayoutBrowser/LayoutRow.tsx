@@ -14,10 +14,9 @@ import {
   ContextualMenu,
 } from "@fluentui/react";
 import cx from "classnames";
-import { useCallback, useContext, useMemo, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { useMountedState } from "react-use";
 
-import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
 import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
@@ -152,16 +151,6 @@ export default function LayoutRow({
   }, []);
 
   const confirm = useConfirm();
-
-  const tooltipContent = useMemo(() => {
-    // const conflictString = conflictTypeToString(layout.conflict);
-    // if (conflictString == undefined) {
-    return layout.isModified ? "Modified" : undefined;
-    // }
-    // return conflictString;
-  }, [layout.isModified]);
-
-  const changesOrConflictsTooltip = useTooltip({ contents: tooltipContent });
 
   const layoutDebug = useContext(LayoutStorageDebuggingContext);
 
@@ -351,7 +340,7 @@ export default function LayoutRow({
   //   }
   // }
 
-  if (layout.isModified) {
+  if (layout.working != undefined) {
     menuItems.unshift(
       {
         key: "overwrite",
@@ -384,7 +373,7 @@ export default function LayoutRow({
       },
       {
         key: "debug_updated_at",
-        text: `Updated at: ${layout.updatedAt ?? "unknown"}`,
+        text: `Updated at: ${layout.working?.updatedAt ?? layout.baseline.updatedAt}`,
         disabled: true,
         itemProps: {
           styles: {
@@ -464,7 +453,6 @@ export default function LayoutRow({
           onDismiss={() => setContextMenuEvent(undefined)}
         />
       )}
-      {changesOrConflictsTooltip.tooltip}
       <Stack.Item grow className={styles.layoutName} title={layout.name}>
         {editingName ? (
           <TextField
@@ -498,9 +486,8 @@ export default function LayoutRow({
           ariaLabel="Layout actions"
           data={{ text: "x" }}
           data-test="layout-actions"
-          elementRef={changesOrConflictsTooltip.ref}
           iconProps={{
-            iconName: layout.isModified ? "Info" : "More",
+            iconName: layout.working != undefined ? "Info" : "More",
             styles: {
               root: {
                 "& span": { verticalAlign: "baseline" },

@@ -26,11 +26,6 @@ class NamespacedLayoutStorage implements ILayoutStorage {
   async get(id: LayoutID): Promise<Layout | undefined> {
     return await this.storage.get(this.ns, id);
   }
-  async create(
-    layout: Pick<Layout, "data" | "name" | "permission" | "baselineId">,
-  ): Promise<Layout> {
-    return await this.storage.create(this.ns, layout);
-  }
   async put(layout: Layout): Promise<Layout> {
     return await this.storage.put(this.ns, layout);
   }
@@ -52,20 +47,15 @@ export default function ConsoleApiLayoutStorageProvider({
   // const apiStorage = useMemo(() => new ConsoleApiRemoteLayoutStorage(api), [api]);
 
   const layoutStorage = useLayoutStorage();
-  const workingStorage = useMemo(
+  const localLayoutStorage = useMemo(
     // FIXME: namespace by user id when logged in?
-    () => new NamespacedLayoutStorage(layoutStorage, "local-working"),
-    [layoutStorage],
-  );
-  const baselineStorage = useMemo(
-    // FIXME: namespace by user id when logged in?
-    () => new NamespacedLayoutStorage(layoutStorage, "local-baseline"),
+    () => new NamespacedLayoutStorage(layoutStorage, "local"),
     [layoutStorage],
   );
 
   const layoutManager = useMemo(
-    () => new LayoutManager({ workingStorage, baselineStorage }),
-    [workingStorage, baselineStorage],
+    () => new LayoutManager({ storage: localLayoutStorage }),
+    [localLayoutStorage],
   );
 
   // const sync = useCallback(async () => {

@@ -6,12 +6,13 @@ import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/
 import { Layout, LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 
 // FIXME: better name?
+// FIXME: just delete?
 export type DisplayedLayout = Layout & {
   /**
    * Indicates whether changes have been made to the user's copy of this layout that have yet to be
    * saved. Save the changes by calling ILayoutStorage.syncLayout().
    */
-  isModified: boolean;
+  // isModified: boolean;
 };
 
 export interface ILayoutManager {
@@ -21,7 +22,7 @@ export interface ILayoutManager {
   addLayoutsChangedListener(listener: () => void): void;
   removeLayoutsChangedListener(listener: () => void): void;
 
-  getLayouts(): Promise<DisplayedLayout[]>;
+  getLayouts(): Promise<readonly DisplayedLayout[]>;
 
   getLayout(id: LayoutID): Promise<DisplayedLayout | undefined>;
 

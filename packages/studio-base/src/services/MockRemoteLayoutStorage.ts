@@ -78,7 +78,6 @@ export default class MockRemoteLayoutStorage implements IRemoteLayoutStorage {
       name,
       permission,
       creatorUserId: FAKE_USER.id,
-      createdAt: now,
       updatedAt: now,
     };
     this.layoutsById.set(id, { ...newMetadata, data });

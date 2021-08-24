@@ -11,9 +11,10 @@ import { ISO8601Timestamp, LayoutID, Layout } from "@foxglove/studio-base/servic
  * @note Some optional values in `LayoutMetadata` are required when layouts are loaded from a
  * server, to enable permissions and consistency checks.
  */
+//FIXME: should be a totally different type?
 export type RemoteLayoutMetadata = Layout &
   {
-    [K in keyof Omit<Layout, "data" | "isModified">]-?: NonNullable<Layout[K]>;
+    [K in keyof Omit<Layout, "data">]-?: NonNullable<Layout[K]>;
   };
 
 /**

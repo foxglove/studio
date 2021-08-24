@@ -17,7 +17,6 @@ const log = Logger.getLogger(__filename);
 function convertLayout({
   id,
   name,
-  created_at,
   updated_at,
   permission,
   data,
@@ -26,7 +25,6 @@ function convertLayout({
     id,
     name,
     creatorUserId: undefined,
-    createdAt: created_at,
     updatedAt: updated_at,
     permission,
     data: data as PanelsState | undefined,

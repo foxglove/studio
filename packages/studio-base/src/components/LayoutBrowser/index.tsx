@@ -78,7 +78,7 @@ export default function LayoutBrowser({
     async (item: Pick<DisplayedLayout, "id">, selectedViaClick?: boolean) => {
       const layout = await layoutStorage.getLayout(item.id);
       if (layout) {
-        setSelectedLayout(layout);
+        setSelectedLayout({ id: layout.id, data: layout.working?.data ?? layout.baseline.data });
         if (selectedViaClick === true) {
           void analytics.logEvent(AppEvent.LAYOUT_SELECT);
         }
@@ -122,7 +122,7 @@ export default function LayoutBrowser({
       if (source) {
         const newLayout = await layoutStorage.saveNewLayout({
           name: `${item.name} copy`,
-          data: source.data,
+          data: source.working?.data ?? source.baseline.data,
           permission: "creator_write",
         });
         await onSelectLayout(newLayout);
@@ -144,7 +144,7 @@ export default function LayoutBrowser({
       for (const { id } of await layoutStorage.getLayouts()) {
         const layout = await layoutStorage.getLayout(id);
         if (layout) {
-          setSelectedLayout(layout);
+          setSelectedLayout({ id: layout.id, data: layout.working?.data ?? layout.baseline.data });
           return;
         }
       }
@@ -212,7 +212,7 @@ export default function LayoutBrowser({
         }
         await layoutStorage.saveNewLayout({
           name,
-          data: layout.data,
+          data: layout.working?.data ?? layout.baseline.data,
           permission: "org_write",
         });
         void analytics.logEvent(AppEvent.LAYOUT_SHARE);
@@ -234,7 +234,7 @@ export default function LayoutBrowser({
   const onOverwriteLayout = useCallback(
     async (item: DisplayedLayout) => {
       const result = await layoutStorage.overwriteLayout({ id: item.id });
-      if (currentLayoutId === item.id && result.id !== item.id) {
+      if (currentLayoutId === item.id) {
         await onSelectLayout({ id: result.id });
       }
     },
@@ -244,7 +244,7 @@ export default function LayoutBrowser({
   const onRevertLayout = useCallback(
     async (item: DisplayedLayout) => {
       const result = await layoutStorage.revertLayout({ id: item.id });
-      if (currentLayoutId === item.id && result.id !== item.id) {
+      if (currentLayoutId === item.id) {
         await onSelectLayout({ id: result.id });
       }
     },

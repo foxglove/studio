@@ -3,19 +3,21 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { PropsWithChildren, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
 
+import Log from "@foxglove/log";
 import {
   Layout,
   LayoutStorageContext,
-  ISO8601Timestamp,
   LayoutID,
   INamespacedLayoutStorage,
+  migrateLayout,
 } from "@foxglove/studio-base";
+
+const log = Log.getLogger(__filename);
 
 const KEY_PREFIX = "studio.layout-cache";
 
-export default function LocalStorageLayoutCacheProvider(
+export default function LocalStorageLayoutStorageProvider(
   props: PropsWithChildren<unknown>,
 ): JSX.Element {
   const [ctx] = useState<INamespacedLayoutStorage>(() => {
@@ -27,27 +29,20 @@ export default function LocalStorageLayoutCacheProvider(
           if (key?.startsWith(`${KEY_PREFIX}.${namespace}.`) === true) {
             const layout = localStorage.getItem(key);
             if (layout != undefined) {
-              results.push(JSON.parse(layout));
+              try {
+                results.push(migrateLayout(JSON.parse(layout)));
+              } catch (err) {
+                log.error(err);
+              }
             }
           }
         }
         return results;
       },
 
-      async create(
-        namespace: string,
-        layout: Pick<Layout, "name" | "data" | "permission" | "baselineId">,
-      ): Promise<Layout> {
-        const id = uuidv4() as LayoutID;
-        const now = new Date().toISOString() as ISO8601Timestamp;
-        const newLayout = { ...layout, id, createdAt: now, updatedAt: now };
-        localStorage.setItem(`${KEY_PREFIX}.${namespace}.${id}`, JSON.stringify(newLayout));
-        return newLayout;
-      },
-
       async get(namespace: string, id: LayoutID): Promise<Layout | undefined> {
         const layout = localStorage.getItem(`${KEY_PREFIX}.${namespace}.${id}`);
-        return layout == undefined ? undefined : JSON.parse(layout);
+        return layout == undefined ? undefined : migrateLayout(JSON.parse(layout));
       },
 
       async put(namespace: string, layout: Layout): Promise<Layout> {

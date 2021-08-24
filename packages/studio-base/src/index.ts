@@ -26,6 +26,7 @@ export type {
   ILayoutStorage,
   INamespacedLayoutStorage,
 } from "./services/ILayoutStorage";
+export { migrateLayout } from "./services/ILayoutStorage";
 export { default as NativeAppMenuContext } from "./context/NativeAppMenuContext";
 export type { NativeAppMenu, NativeAppMenuEvent } from "./context/NativeAppMenuContext";
 export type { PlayerSourceDefinition } from "./context/PlayerSelectionContext";

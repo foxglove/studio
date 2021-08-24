@@ -110,12 +110,6 @@ function CurrentLayoutProviderWithInitialState({
         id: selectedLayout.id,
         data: selectedLayout.data,
       })
-      .then((result) => {
-        // FIXME: risk of infinite save loop?
-        if (result.id !== selectedLayout.id) {
-          stateInstance.actions.setSelectedLayout(result);
-        }
-      })
       .catch((error) => {
         log.error(error);
         addToast(`The current layout could not be saved. ${error.toString()}`, {
@@ -209,7 +203,9 @@ export default function CurrentLayoutProvider({
       if (currentLayoutId != undefined) {
         const layout = await layoutStorage.getLayout(currentLayoutId);
         if (layout != undefined) {
-          return { selectedLayout: { id: layout.id, data: layout.data } };
+          return {
+            selectedLayout: { id: layout.id, data: layout.working?.data ?? layout.baseline.data },
+          };
         }
       }
       // Otherwise try to choose any available layout
@@ -217,7 +213,9 @@ export default function CurrentLayoutProvider({
       if (allLayouts[0]) {
         const layout = await layoutStorage.getLayout(allLayouts[0].id);
         if (layout) {
-          return { selectedLayout: { id: layout.id, data: layout.data } };
+          return {
+            selectedLayout: { id: layout.id, data: layout.working?.data ?? layout.baseline.data },
+          };
         }
       }
       // If none were available, load the welcome layout.
