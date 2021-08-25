@@ -44,7 +44,7 @@ export default function LayoutBrowser({
   const analytics = useAnalytics();
 
   const currentLayoutId = useCurrentLayoutSelector((state) => state.selectedLayout?.id);
-  const { setSelectedLayout } = useCurrentLayoutActions();
+  const { setSelectedLayoutId } = useCurrentLayoutActions();
 
   const [layouts, reloadLayouts] = useAsyncFn(
     async () => {
@@ -75,16 +75,14 @@ export default function LayoutBrowser({
   }, [reloadLayouts]);
 
   const onSelectLayout = useCallback(
+    //FIXME: boolean trap
     async (item: Pick<DisplayedLayout, "id">, selectedViaClick?: boolean) => {
-      const layout = await layoutStorage.getLayout(item.id);
-      if (layout) {
-        setSelectedLayout({ id: layout.id, data: layout.working?.data ?? layout.baseline.data });
-        if (selectedViaClick === true) {
-          void analytics.logEvent(AppEvent.LAYOUT_SELECT);
-        }
+      setSelectedLayoutId(item.id);
+      if (selectedViaClick === true) {
+        void analytics.logEvent(AppEvent.LAYOUT_SELECT);
       }
     },
-    [analytics, layoutStorage, setSelectedLayout],
+    [analytics, setSelectedLayoutId],
   );
 
   // const onSaveLayout = useCallback(
@@ -107,13 +105,10 @@ export default function LayoutBrowser({
 
   const onRenameLayout = useCallback(
     async (item: DisplayedLayout, newName: string) => {
-      const result = await layoutStorage.updateLayout({ id: item.id, name: newName });
-      if (currentLayoutId === item.id && result.id !== item.id) {
-        await onSelectLayout(result);
-        void analytics.logEvent(AppEvent.LAYOUT_RENAME);
-      }
+      await layoutStorage.updateLayout({ id: item.id, name: newName });
+      void analytics.logEvent(AppEvent.LAYOUT_RENAME);
     },
-    [analytics, currentLayoutId, layoutStorage, onSelectLayout],
+    [analytics, layoutStorage],
   );
 
   const onDuplicateLayout = useCallback(
@@ -141,14 +136,14 @@ export default function LayoutBrowser({
         return;
       }
       // If the layout was selected, select a different available layout
-      for (const { id } of await layoutStorage.getLayouts()) {
-        const layout = await layoutStorage.getLayout(id);
-        if (layout) {
-          setSelectedLayout({ id: layout.id, data: layout.working?.data ?? layout.baseline.data });
-          return;
-        }
+      for (const layout of await layoutStorage.getLayouts()) {
+        setSelectedLayoutId(layout.id);
+        return;
       }
-      // If no existing layout could be selected, use the welcome layout
+      // If no other layouts exist, use the welcome layout
+      //FIXME: consolidate calls to add the welcome layout
+      // - https://github.com/foxglove/studio/issues/1545
+      // - https://github.com/foxglove/studio/pull/1575
       const newLayout = await layoutStorage.saveNewLayout({
         name: welcomeLayout.name,
         data: welcomeLayout.data,
@@ -156,7 +151,7 @@ export default function LayoutBrowser({
       });
       await onSelectLayout(newLayout);
     },
-    [analytics, currentLayoutId, layoutStorage, setSelectedLayout, onSelectLayout],
+    [analytics, currentLayoutId, layoutStorage, setSelectedLayoutId, onSelectLayout],
   );
 
   const createNewLayout = useCallback(async () => {
@@ -233,22 +228,18 @@ export default function LayoutBrowser({
 
   const onOverwriteLayout = useCallback(
     async (item: DisplayedLayout) => {
-      const result = await layoutStorage.overwriteLayout({ id: item.id });
-      if (currentLayoutId === item.id) {
-        await onSelectLayout({ id: result.id });
-      }
+      // CurrentLayoutProvider automatically updates in its layout change listener
+      await layoutStorage.overwriteLayout({ id: item.id });
     },
-    [currentLayoutId, layoutStorage, onSelectLayout],
+    [layoutStorage],
   );
 
   const onRevertLayout = useCallback(
     async (item: DisplayedLayout) => {
-      const result = await layoutStorage.revertLayout({ id: item.id });
-      if (currentLayoutId === item.id) {
-        await onSelectLayout({ id: result.id });
-      }
+      // CurrentLayoutProvider automatically updates in its layout change listener
+      await layoutStorage.revertLayout({ id: item.id });
     },
-    [currentLayoutId, layoutStorage, onSelectLayout],
+    [layoutStorage],
   );
 
   const importLayout = useCallback(async () => {

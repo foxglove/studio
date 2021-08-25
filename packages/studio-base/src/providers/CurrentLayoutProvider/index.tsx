@@ -57,13 +57,6 @@ export default function CurrentLayoutProvider({
 
   const [mosaicId] = useState(() => uuidv4());
 
-  const [layoutState, setLayoutState] = useState<LayoutState>({
-    loading: true,
-    selectedLayout: undefined,
-  });
-  const layoutStateRef = useRef(layoutState);
-  layoutStateRef.current = layoutState;
-
   const layoutStateListeners = useRef(new Set<(_: LayoutState) => void>());
   const addLayoutStateListener = useCallback((listener: (_: LayoutState) => void) => {
     layoutStateListeners.current.add(listener);
@@ -71,6 +64,19 @@ export default function CurrentLayoutProvider({
   const removeLayoutStateListener = useCallback((listener: (_: LayoutState) => void) => {
     layoutStateListeners.current.delete(listener);
   }, []);
+
+  const [layoutState, setLayoutStateInternal] = useState<LayoutState>({
+    loading: true,
+    selectedLayout: undefined,
+  });
+  const setLayoutState = useCallback((newState: LayoutState) => {
+    setLayoutStateInternal(newState);
+    for (const listener of [...layoutStateListeners.current]) {
+      listener(newState);
+    }
+  }, []);
+  const layoutStateRef = useRef(layoutState);
+  layoutStateRef.current = layoutState;
 
   const selectedPanelIds = useRef<readonly string[]>([]);
   const selectedPanelIdsListeners = useRef(new Set<(_: readonly string[]) => void>());
@@ -220,6 +226,7 @@ export default function CurrentLayoutProvider({
       setSelectedLayoutId,
       getCurrentLayoutState: () => layoutStateRef.current,
 
+      // FIXME
       undoLayoutChange: () => {
         throw new Error("Not implemented");
       },

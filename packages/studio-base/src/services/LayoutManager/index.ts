@@ -8,7 +8,11 @@ import { MutexLocked } from "@foxglove/den/async";
 import Logger from "@foxglove/log";
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { ISO8601Timestamp } from "@foxglove/studio-base/services/ConsoleApi";
-import { ILayoutManager, DisplayedLayout } from "@foxglove/studio-base/services/ILayoutManager";
+import {
+  ILayoutManager,
+  DisplayedLayout,
+  LayoutChangeListener,
+} from "@foxglove/studio-base/services/ILayoutManager";
 import { ILayoutStorage, LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 
 const log = Logger.getLogger(__filename);
@@ -27,23 +31,23 @@ export default class LayoutManager implements ILayoutManager {
 
   readonly supportsSharing = false; // FIXME remote layout support
 
-  private changeListeners = new Set<() => void>();
+  private changeListeners = new Set<LayoutChangeListener>();
 
   constructor({ storage }: { storage: ILayoutStorage }) {
     // FIXME: continue wrapping in WriteThrough layer?
     this.storage = new MutexLocked(storage);
   }
 
-  addLayoutsChangedListener(listener: () => void): void {
+  addLayoutsChangedListener(listener: LayoutChangeListener): void {
     this.changeListeners.add(listener);
   }
-  removeLayoutsChangedListener(listener: () => void): void {
+  removeLayoutsChangedListener(listener: LayoutChangeListener): void {
     this.changeListeners.delete(listener);
   }
-  private notifyChangeListeners() {
+  private notifyChangeListeners(event: { updatedLayout: DisplayedLayout | undefined }) {
     queueMicrotask(() => {
       for (const listener of [...this.changeListeners]) {
-        listener();
+        listener(event);
       }
     });
   }
@@ -86,7 +90,7 @@ export default class LayoutManager implements ILayoutManager {
           locallyDeleted: false,
         }),
     );
-    this.notifyChangeListeners();
+    this.notifyChangeListeners({ updatedLayout: newLayout });
     return newLayout;
   }
 
@@ -121,7 +125,7 @@ export default class LayoutManager implements ILayoutManager {
       }
       return await storage.put(updatedLayout);
     });
-    this.notifyChangeListeners();
+    this.notifyChangeListeners({ updatedLayout: result });
     return result;
   }
 
@@ -135,7 +139,7 @@ export default class LayoutManager implements ILayoutManager {
       }
       await storage.put({ ...layout, locallyDeleted: true });
     });
-    this.notifyChangeListeners();
+    this.notifyChangeListeners({ updatedLayout: undefined });
   }
 
   async overwriteLayout({ id }: { id: LayoutID }): Promise<DisplayedLayout> {
@@ -151,7 +155,7 @@ export default class LayoutManager implements ILayoutManager {
         working: undefined,
       });
     });
-    this.notifyChangeListeners();
+    this.notifyChangeListeners({ updatedLayout: result });
     return result;
   }
 
@@ -167,7 +171,7 @@ export default class LayoutManager implements ILayoutManager {
         working: undefined,
       });
     });
-    this.notifyChangeListeners();
+    this.notifyChangeListeners({ updatedLayout: result });
     return result;
   }
 
