@@ -1,6 +1,6 @@
 {
   "name": "foxglove-studio",
-  "version": "0.15.0-dev",
+  "version": "0.16.0-dev",
   "description": "Integrated robotics visualization and debugging.",
   "productName": "Foxglove Studio",
   "productDescription": "Foxglove Studio is an highly customizable and extensible visualization and display tool for robotics.",
@@ -40,7 +40,6 @@
     "package:e2e": "yarn && yarn clean && yarn build:prod && yarn package",
     "release:bump-nightly-version": "node -r ts-node/register ./ci/bump-nightly-version.ts",
     "storybook": "cross-env TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' yarn workspace @foxglove/studio-base run start-storybook --config-dir src/.storybook",
-    "storybook:ci": "ts-node ./ci/storybook.ts",
     "version:all": "yarn workspaces foreach version"
   },
   "workspaces": {
@@ -76,9 +75,9 @@
     "@types/semver": "^7.3.8",
     "@types/utif": "^3.0.1",
     "@types/webpack-dev-server": "3.11.5",
-    "@types/xmldom": "^0.1.31",
     "@typescript-eslint/eslint-plugin": "4.29.2",
     "@typescript-eslint/parser": "4.29.2",
+    "@xmldom/xmldom": "0.7.2",
     "babel-jest": "27.0.6",
     "babel-plugin-transform-import-meta": "2.0.0",
     "clean-webpack-plugin": "4.0.0-alpha.0",
@@ -122,7 +121,6 @@
     "webpack": "5.50.0",
     "webpack-cli": "4.8.0",
     "webpack-dev-server": "3.11.2",
-    "webpack-hot-middleware": "2.25.0",
-    "xmldom": "0.6.0"
+    "webpack-hot-middleware": "2.25.0"
   }
 }

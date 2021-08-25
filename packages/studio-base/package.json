@@ -1,6 +1,6 @@
 {
   "name": "@foxglove/studio-base",
-  "version": "0.15.0-dev",
+  "version": "0.16.0-dev",
   "description": "Core components of Foxglove Studio",
   "license": "MPL-2.0",
   "repository": {
@@ -21,7 +21,6 @@
   ],
   "scripts": {
     "prepack": "yarn build:webpack && yarn build:tsc",
-    "chromatic": "chromatic --build-script-name storybook:build --auto-accept-changes main --exit-once-uploaded",
     "storybook:build": "cross-env TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' build-storybook --config-dir src/.storybook",
     "build:tsc": "ttsc --module es2020 --project tsconfig.json",
     "build:webpack": "cross-env TS_NODE_PROJECT=\"tsconfig.cli.json\" webpack --mode production --progress"
@@ -160,10 +159,6 @@
     "react-use": "patch:react-use@17.2.4#../../patches/react-use.patch",
     "react-virtualized": "9.22.3",
     "readable-stream": "3.6.0",
-    "reg-notify-github-plugin": "0.10.16",
-    "reg-publish-gcs-plugin": "0.10.16",
-    "reg-simple-keygen-plugin": "0.10.16",
-    "reg-suit": "0.10.16",
     "regl-worldview": "github:foxglove/webviz#workspace=regl-worldview&commit=b570564684c6382b2c1aef08ccd634f4e67ec989",
     "rehype-raw": "5.1.0",
     "reselect": "4.0.0",
