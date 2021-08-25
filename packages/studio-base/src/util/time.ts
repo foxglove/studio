@@ -50,39 +50,6 @@ function fixTime(t: Time): Time {
   return { sec, nsec };
 }
 
-export function findClosestTimestampIndex(
-  currentTime: Time,
-  frameTimestamps: string[] = [],
-): number {
-  const currT = toSec(currentTime);
-  const timestamps = frameTimestamps.map(Number);
-  const maxIdx = frameTimestamps.length - 1;
-  if (frameTimestamps.length === 0) {
-    return -1;
-  }
-  let [l, r] = [0, maxIdx];
-  if (currT <= (timestamps[0] as number)) {
-    return 0;
-  } else if (currT >= (timestamps[maxIdx] as number)) {
-    return maxIdx;
-  }
-
-  while (l <= r) {
-    const m = l + Math.floor((r - l) / 2);
-    const prevT = timestamps[m] as number;
-    const nextT = timestamps[m + 1] as number;
-
-    if (prevT <= currT && currT < nextT) {
-      return m;
-    } else if (prevT < currT && nextT <= currT) {
-      l = m + 1;
-    } else {
-      r = m - 1;
-    }
-  }
-  return -1;
-}
-
 export function formatFrame({ sec, nsec }: Time): string {
   return `${sec}.${String.prototype.padStart.call(nsec, 9, "0")}`;
 }
