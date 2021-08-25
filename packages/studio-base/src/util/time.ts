@@ -13,15 +13,7 @@
 
 // No time functions that require `moment` should live in this file.
 import log from "@foxglove/log";
-import {
-  Time,
-  add,
-  isLessThan,
-  toSec,
-  fromNanoSec,
-  clampTime,
-  interpolate,
-} from "@foxglove/rostime";
+import { Time, add, isLessThan, fromNanoSec, clampTime, interpolate } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import { MarkerArray, StampedMessage } from "@foxglove/studio-base/types/Messages";
 
