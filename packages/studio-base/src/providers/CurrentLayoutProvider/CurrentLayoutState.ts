@@ -32,7 +32,6 @@ import panelsReducer, {
 } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
-import UndoRedo from "@foxglove/studio-base/util/UndoRedo";
 import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
 export const DEFAULT_LAYOUT_FOR_TESTS: LayoutState = {
@@ -48,11 +47,7 @@ export const DEFAULT_LAYOUT_FOR_TESTS: LayoutState = {
   },
 };
 
-const LAYOUT_HISTORY_SIZE = 20;
-const LAYOUT_HISTORY_THROTTLE_MS = 1000;
-
 export default class CurrentLayoutState implements ICurrentLayout {
-  private undoRedo: UndoRedo<LayoutState>;
   private analytics?: { logEvent: (event: AppEvent, data?: { [key: string]: unknown }) => void };
   private layoutState: LayoutState;
   private layoutStateListeners = new Set<(_: LayoutState) => void>();
@@ -72,16 +67,6 @@ export default class CurrentLayoutState implements ICurrentLayout {
     if (initialState.selectedLayout) {
       this.actions.setSelectedLayout({ id: initialState.selectedLayout.id });
     }
-
-    this.undoRedo = new UndoRedo(this.layoutState, {
-      isEqual: (a, b) => a === b, // we use isEqual to gate changes in updateState()
-      historySize: LAYOUT_HISTORY_SIZE,
-      throttleMs: LAYOUT_HISTORY_THROTTLE_MS,
-    });
-
-    this.addLayoutStateListener((state) => {
-      this.undoRedo.updateState(state);
-    });
   }
 
   addLayoutStateListener = (listener: (_: LayoutState) => void): void => {
@@ -111,16 +96,6 @@ export default class CurrentLayoutState implements ICurrentLayout {
 
   actions = {
     getCurrentLayoutState: (): LayoutState => this.layoutState,
-
-    // FIXME: revert/delete + undo jumps back to edited id that no longer exists
-    undoLayoutChange: (): void => {
-      this.undoRedo.undo(({ selectedLayout }) => this.actions.setSelectedLayout(selectedLayout));
-      this.analytics?.logEvent(AppEvent.UNDO_LAYOUT_CHANGE);
-    },
-    redoLayoutChange: (): void => {
-      this.undoRedo.redo(({ selectedLayout }) => this.actions.setSelectedLayout(selectedLayout));
-      this.analytics?.logEvent(AppEvent.REDO_LAYOUT_CHANGE);
-    },
 
     setSelectedLayout: (
       newLayout:

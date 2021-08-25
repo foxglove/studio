@@ -22,7 +22,6 @@ import ConnectionList from "@foxglove/studio-base/components/ConnectionList";
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
 import DropOverlay from "@foxglove/studio-base/components/DropOverlay";
 import ExtensionsSidebar from "@foxglove/studio-base/components/ExtensionsSidebar";
-import GlobalKeyListener from "@foxglove/studio-base/components/GlobalKeyListener";
 import GlobalVariablesTable from "@foxglove/studio-base/components/GlobalVariablesTable";
 import variablesHelp from "@foxglove/studio-base/components/GlobalVariablesTable/index.help.md";
 import HelpModal from "@foxglove/studio-base/components/HelpModal";
@@ -205,32 +204,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       containerRef.current.focus();
     }
   }, []);
-
-  // For undo/redo events, first try the browser's native undo/redo, and if that is disabled, then
-  // undo/redo the layout history. Note that in GlobalKeyListener we also handle the keyboard
-  // events for undo/redo, so if an input or textarea element that would handle the event is not
-  // focused, the GlobalKeyListener will handle it. The listeners here are to handle the case when
-  // an editable element is focused, or when the user directly chooses the undo/redo menu item.
-
-  const { undoLayoutChange, redoLayoutChange } = useCurrentLayoutActions();
-
-  useNativeAppMenuEvent(
-    "undo",
-    useCallback(() => {
-      if (!document.execCommand("undo")) {
-        undoLayoutChange();
-      }
-    }, [undoLayoutChange]),
-  );
-
-  useNativeAppMenuEvent(
-    "redo",
-    useCallback(() => {
-      if (!document.execCommand("redo")) {
-        redoLayoutChange();
-      }
-    }, [redoLayoutChange]),
-  );
 
   useNativeAppMenuEvent(
     "open-preferences",
@@ -438,7 +411,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         </DropOverlay>
       </DocumentDropListener>
       <div className={classes.container} ref={containerRef} tabIndex={0}>
-        <GlobalKeyListener />
         {shortcutsModalOpen && (
           <ShortcutsModal onRequestClose={() => setShortcutsModalOpen(false)} />
         )}

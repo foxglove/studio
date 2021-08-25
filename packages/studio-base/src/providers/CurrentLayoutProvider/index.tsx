@@ -226,14 +226,6 @@ export default function CurrentLayoutProvider({
       setSelectedLayoutId,
       getCurrentLayoutState: () => layoutStateRef.current,
 
-      // FIXME
-      undoLayoutChange: () => {
-        throw new Error("Not implemented");
-      },
-      redoLayoutChange: () => {
-        throw new Error("Not implemented");
-      },
-
       //FIXME: createTabPanel and closePanel need to update selected panels
       //FIXME: analytics
       savePanelConfigs: (payload: SaveConfigsPayload) =>

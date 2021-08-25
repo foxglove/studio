@@ -63,9 +63,6 @@ export interface ICurrentLayout {
 
     setSelectedLayoutId: (id: LayoutID) => void;
 
-    undoLayoutChange: () => void;
-    redoLayoutChange: () => void;
-
     savePanelConfigs: (payload: SaveConfigsPayload) => void;
     updatePanelConfigs: (panelType: string, updater: (config: PanelConfig) => PanelConfig) => void;
     createTabPanel: (payload: CreateTabPanelPayload) => void;
