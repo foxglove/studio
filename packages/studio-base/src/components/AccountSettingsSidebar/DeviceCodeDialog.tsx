@@ -4,11 +4,11 @@
 
 import {
   Stack,
-  StackItem,
+  TextField,
   Text,
-  makeStyles,
   Dialog,
   DialogFooter,
+  DefaultButton,
   PrimaryButton,
   useTheme,
   Link,
@@ -27,26 +27,8 @@ type DeviceCodePanelProps = {
   onClose?: (session?: Session) => void;
 };
 
-const useStyles = makeStyles((theme) => {
-  return {
-    text: {
-      textAlign: "center",
-      fontWeight: "bold",
-      padding: theme.spacing.l1,
-    },
-    orgItem: {
-      cursor: "pointer",
-
-      ":hover": {
-        opacity: 0.8,
-      },
-    },
-  };
-});
-
 // Show instructions on opening the browser and entering the device code
 export default function DeviceCodeDialog(props: DeviceCodePanelProps): JSX.Element {
-  const classes = useStyles();
   const theme = useTheme();
   const isMounted = useMountedState();
   const api = useConsoleApi();
@@ -81,7 +63,7 @@ export default function DeviceCodeDialog(props: DeviceCodePanelProps): JSX.Eleme
   }, [api, deviceCode, isMounted]);
 
   const { value: session, error: signinError } = useAsync(async () => {
-    if (!deviceResponse) {
+    if (deviceResponse == undefined) {
       return;
     }
 
@@ -92,50 +74,62 @@ export default function DeviceCodeDialog(props: DeviceCodePanelProps): JSX.Eleme
 
   const dialogContent = useMemo(() => {
     return (
-      <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
-        <Text variant="large">Finish sign-in in your web browser.</Text>
-        <StackItem className={classes.text}>
-          <Text variant="xLarge">{userCode} </Text>
-        </StackItem>
-
-        <StackItem>
-          <Text variant="large">
-            If your browser did not automatically open, use the link below.
+      <Stack tokens={{ childrenGap: theme.spacing.l1 }}>
+        <Stack tokens={{ childrenGap: theme.spacing.s1 }} styles={{ root: { lineHeight: "1.3" } }}>
+          <Text variant="medium" block>
+            To connect your Foxglove account, follow the instructions in your browser.
           </Text>
-        </StackItem>
-        <StackItem className={classes.text}>
-          <Text variant="large">
-            <Link href={`${verificationUrl}?user_code=${userCode}`}>{verificationUrl}</Link>
+          <Text variant="medium" block>
+            If your browser didn’t open automatically, please{" "}
+            <Link href={`${verificationUrl}?user_code=${userCode}`}>click here</Link> to continue.
           </Text>
-        </StackItem>
+        </Stack>
 
-        <Text variant="large">Waiting for browser sign-in...</Text>
+        <TextField
+          label="Your device confirmation code is:"
+          value={userCode}
+          autoFocus
+          readOnly
+          styles={{
+            root: {
+              textAlign: "center",
+            },
+            field: {
+              fontSize: theme.fonts.xxLarge.fontSize,
+              textAlign: "center",
+            },
+            fieldGroup: {
+              marginTop: theme.spacing.s2,
+              height: 48,
+            },
+          }}
+        />
       </Stack>
     );
-  }, [classes, userCode, verificationUrl, theme]);
+  }, [userCode, verificationUrl, theme]);
 
   useEffect(() => {
-    if (session) {
+    if (session != undefined) {
       onClose?.(session);
     }
   }, [onClose, session]);
 
-  if (deviceResponseError || signinError) {
+  if (deviceResponseError != undefined || signinError != undefined) {
     return (
       <Dialog hidden={false} title="Error">
         {deviceResponseError?.message ?? signinError?.message}
         <DialogFooter>
-          <PrimaryButton text="close" onClick={() => onClose?.()} />
+          <PrimaryButton text="Done" onClick={() => onClose?.()} />
         </DialogFooter>
       </Dialog>
     );
   }
 
   return (
-    <Dialog hidden={false} maxWidth="100%" title="Complete Sign in">
+    <Dialog hidden={false} minWidth={440} title="Complete Sign in">
       {dialogContent}
       <DialogFooter>
-        <PrimaryButton text="cancel" onClick={() => onClose?.()} />
+        <DefaultButton text="Cancel" onClick={() => onClose?.()} />
       </DialogFooter>
     </Dialog>
   );
