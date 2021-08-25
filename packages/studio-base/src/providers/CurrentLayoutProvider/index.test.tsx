@@ -86,7 +86,7 @@ function renderTest({
     <ToastProvider>
       <LayoutManagerContext.Provider value={mockLayoutStorage}>
         <UserProfileStorageContext.Provider value={mockUserProfile}>
-          <CurrentLayoutProvider disableAnalyticsForTests={true}>
+          <CurrentLayoutProvider>
             <Child />
           </CurrentLayoutProvider>
         </UserProfileStorageContext.Provider>

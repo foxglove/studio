@@ -63,13 +63,14 @@ export default class CurrentLayoutState implements ICurrentLayout {
 
   constructor(
     initialState: LayoutState,
+    private getLayoutData: (id: LayoutID) => Promise<PanelsState | undefined>,
     analytics?: { logEvent: (event: AppEvent, data?: { [key: string]: unknown }) => void },
   ) {
     this.analytics = analytics;
     this.layoutState = { selectedLayout: undefined };
     // Run the loadLayout action once to ensure any migrations happen (e.g. savedProps->configById)
     if (initialState.selectedLayout) {
-      this.actions.setSelectedLayout(initialState.selectedLayout);
+      this.actions.setSelectedLayout({ id: initialState.selectedLayout.id });
     }
 
     this.undoRedo = new UndoRedo(this.layoutState, {
@@ -111,11 +112,15 @@ export default class CurrentLayoutState implements ICurrentLayout {
   actions = {
     getCurrentLayoutState: (): LayoutState => this.layoutState,
 
-    // FIXME: revert + undo jumps back to edited id that no longer exists
-    undoLayoutChange: (): void =>
-      this.undoRedo.undo(({ selectedLayout }) => this.actions.setSelectedLayout(selectedLayout)),
-    redoLayoutChange: (): void =>
-      this.undoRedo.redo(({ selectedLayout }) => this.actions.setSelectedLayout(selectedLayout)),
+    // FIXME: revert/delete + undo jumps back to edited id that no longer exists
+    undoLayoutChange: (): void => {
+      this.undoRedo.undo(({ selectedLayout }) => this.actions.setSelectedLayout(selectedLayout));
+      this.analytics?.logEvent(AppEvent.UNDO_LAYOUT_CHANGE);
+    },
+    redoLayoutChange: (): void => {
+      this.undoRedo.redo(({ selectedLayout }) => this.actions.setSelectedLayout(selectedLayout));
+      this.analytics?.logEvent(AppEvent.REDO_LAYOUT_CHANGE);
+    },
 
     setSelectedLayout: (
       newLayout:
@@ -128,7 +133,14 @@ export default class CurrentLayoutState implements ICurrentLayout {
             };
           }
         | undefined,
-    ): void =>
+    ): void => {
+      this.updateState(() => {
+        if (!newLayout) {
+          return { selectedLayout: undefined };
+        }
+        return { selectedLayout: undefined, loading: true };
+      });
+
       this.updateState(() => {
         if (!newLayout) {
           return { selectedLayout: undefined };
@@ -151,7 +163,8 @@ export default class CurrentLayoutState implements ICurrentLayout {
             },
           },
         };
-      }),
+      });
+    },
 
     savePanelConfigs: (payload: SAVE_PANEL_CONFIGS["payload"]): void =>
       this.dispatch({ type: "SAVE_PANEL_CONFIGS", payload }),

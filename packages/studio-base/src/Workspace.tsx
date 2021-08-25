@@ -163,7 +163,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const isMounted = useMountedState();
 
   const layoutStorage = useLayoutManager();
-  const { setSelectedLayout } = useCurrentLayoutActions();
+  const { setSelectedLayoutId } = useCurrentLayoutActions();
 
   const openWelcomeLayout = useCallback(async () => {
     const newLayout = await layoutStorage.saveNewLayout({
@@ -172,7 +172,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       permission: "creator_write",
     });
     if (isMounted()) {
-      setSelectedLayout({ id: newLayout.id, data: welcomeLayout.data });
+      setSelectedLayoutId(newLayout.id);
       if (props.demoBagUrl) {
         selectSource(
           { name: "Demo Bag", type: "ros1-remote-bagfile" },
@@ -182,7 +182,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         );
       }
     }
-  }, [layoutStorage, isMounted, setSelectedLayout, props.demoBagUrl, selectSource]);
+  }, [layoutStorage, isMounted, setSelectedLayoutId, props.demoBagUrl, selectSource]);
 
   const handleInternalLink = useCallback((event: React.MouseEvent, href: string) => {
     if (href === "#help:message-path-syntax") {

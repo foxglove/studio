@@ -29,6 +29,7 @@ import {
 } from "./actions";
 
 export type LayoutState = Readonly<{
+  loading?: boolean;
   selectedLayout: { id: LayoutID; data: PanelsState } | undefined;
 }>;
 
@@ -60,7 +61,7 @@ export interface ICurrentLayout {
      */
     getCurrentLayoutState: () => LayoutState;
 
-    setSelectedLayout: (payload: { id: LayoutID; data: Partial<PanelsState> } | undefined) => void;
+    setSelectedLayoutId: (id: LayoutID) => void;
 
     undoLayoutChange: () => void;
     redoLayoutChange: () => void;

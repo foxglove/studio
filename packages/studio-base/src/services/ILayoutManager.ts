@@ -15,12 +15,18 @@ export type DisplayedLayout = Layout & {
   // isModified: boolean;
 };
 
+export type LayoutChangeListener = (event: { updatedLayout: DisplayedLayout | undefined }) => void;
+
 export interface ILayoutManager {
   /** Indicates whether permissions other than "creator_write" are supported. */
   readonly supportsSharing: boolean;
 
-  addLayoutsChangedListener(listener: () => void): void;
-  removeLayoutsChangedListener(listener: () => void): void;
+  /**
+   * Called when a change has occurred to the layouts and the user interface should be updated.
+   * If a particular layout was updated, its data will be passed in the event.
+   */
+  addLayoutsChangedListener(listener: LayoutChangeListener): void;
+  removeLayoutsChangedListener(listener: LayoutChangeListener): void;
 
   getLayouts(): Promise<readonly DisplayedLayout[]>;
 
