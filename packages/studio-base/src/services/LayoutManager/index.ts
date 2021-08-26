@@ -20,18 +20,33 @@ const log = Logger.getLogger(__filename);
  * A wrapper around ILayoutStorage for a particular namespace.
  */
 class NamespacedLayoutStorage {
-  constructor(private storage: ILayoutStorage, private namespace: string) {}
+  private migration?: Promise<void>;
+  constructor(
+    private storage: ILayoutStorage,
+    private namespace: string,
+    { migrateLocalLayouts }: { migrateLocalLayouts: boolean },
+  ) {
+    if (migrateLocalLayouts) {
+      this.migration = storage.migrateLocalLayouts?.(namespace).catch((error) => {
+        log.error("Migration failed:", error);
+      });
+    }
+  }
 
   async list(): Promise<readonly Layout[]> {
+    await this.migration;
     return await this.storage.list(this.namespace);
   }
   async get(id: LayoutID): Promise<Layout | undefined> {
+    await this.migration;
     return await this.storage.get(this.namespace, id);
   }
   async put(layout: Layout): Promise<Layout> {
+    await this.migration;
     return await this.storage.put(this.namespace, layout);
   }
   async delete(id: LayoutID): Promise<void> {
+    await this.migration;
     await this.storage.delete(this.namespace, id);
   }
 }
@@ -49,7 +64,9 @@ export default class LayoutManager implements ILayoutManager {
   private changeListeners = new Set<LayoutChangeListener>();
 
   constructor({ storage }: { storage: ILayoutStorage }) {
-    this.storage = new MutexLocked(new NamespacedLayoutStorage(storage, "local"));
+    this.storage = new MutexLocked(
+      new NamespacedLayoutStorage(storage, "local", { migrateLocalLayouts: true }),
+    );
   }
 
   addLayoutsChangedListener(listener: LayoutChangeListener): void {

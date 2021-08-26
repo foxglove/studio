@@ -10,9 +10,9 @@ import { Storage } from "../../common/types";
 const log = Log.getLogger(__filename);
 
 // Implement a LayoutStorage interface over OsContext
-// FIXME: migration?
 export default class NativeStorageLayoutStorage implements ILayoutStorage {
   private static STORE_PREFIX = "layouts-";
+  private static LEGACY_STORE_NAME = "layouts";
 
   private _ctx: Storage;
 
@@ -63,5 +63,28 @@ export default class NativeStorageLayoutStorage implements ILayoutStorage {
 
   async delete(namespace: string, id: LayoutID): Promise<void> {
     return await this._ctx.delete(NativeStorageLayoutStorage.STORE_PREFIX + namespace, id);
+  }
+
+  async migrateLocalLayouts(namespace: string): Promise<void> {
+    const items = await this._ctx.all(NativeStorageLayoutStorage.LEGACY_STORE_NAME);
+    for (const item of items) {
+      if (!(item instanceof Uint8Array)) {
+        continue;
+      }
+
+      try {
+        const str = new TextDecoder().decode(item);
+        const parsed = JSON.parse(str);
+        const layout = migrateLayout(parsed);
+        await this._ctx.put(
+          NativeStorageLayoutStorage.STORE_PREFIX + namespace,
+          layout.id,
+          JSON.stringify(layout),
+        );
+        await this._ctx.delete(NativeStorageLayoutStorage.LEGACY_STORE_NAME, layout.id);
+      } catch (err) {
+        log.error(err);
+      }
+    }
   }
 }

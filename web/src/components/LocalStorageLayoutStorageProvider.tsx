@@ -4,6 +4,7 @@
 
 import { PropsWithChildren, useState } from "react";
 
+import { filterMap } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import {
   Layout,
@@ -15,9 +16,8 @@ import {
 
 const log = Log.getLogger(__filename);
 
-const KEY_PREFIX = "studio.layout-cache";
+const KEY_PREFIX = "studio.layouts";
 
-// FIXME: migration?
 export default function LocalStorageLayoutStorageProvider(
   props: PropsWithChildren<unknown>,
 ): JSX.Element {
@@ -53,6 +53,28 @@ export default function LocalStorageLayoutStorageProvider(
 
       async delete(namespace: string, id: LayoutID): Promise<void> {
         localStorage.removeItem(`${KEY_PREFIX}.${namespace}.${id}`);
+      },
+
+      async migrateLocalLayouts(namespace: string) {
+        const legacyKeys = filterMap(new Array(localStorage.length), (_, i) => {
+          const key = localStorage.key(i) ?? undefined;
+          return key?.startsWith("studio.layout-cache.") ?? false ? key : undefined;
+        });
+        for (const key of legacyKeys) {
+          const item = localStorage.getItem(key);
+          if (item != undefined) {
+            try {
+              const layout = migrateLayout(JSON.parse(item));
+              localStorage.setItem(
+                `${KEY_PREFIX}.${namespace}.${layout.id}`,
+                JSON.stringify(layout),
+              );
+              localStorage.removeItem(key);
+            } catch (err) {
+              log.error(`Migrating ${key}:`, err);
+            }
+          }
+        }
       },
     };
   });
