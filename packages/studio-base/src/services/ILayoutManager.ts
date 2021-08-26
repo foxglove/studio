@@ -5,18 +5,13 @@
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { Layout, LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 
-// FIXME: better name?
-// FIXME: just delete?
-export type DisplayedLayout = Layout & {
-  /**
-   * Indicates whether changes have been made to the user's copy of this layout that have yet to be
-   * saved. Save the changes by calling ILayoutStorage.syncLayout().
-   */
-  // isModified: boolean;
-};
+export type LayoutChangeListener = (event: { updatedLayout: Layout | undefined }) => void;
 
-export type LayoutChangeListener = (event: { updatedLayout: DisplayedLayout | undefined }) => void;
-
+/**
+ * The Layout Manager is a high-level interface on top of raw layout storage which maps more closely
+ * to actions the user can take in the application.
+ * @see LayoutManager concrete implementation
+ */
 export interface ILayoutManager {
   /** Indicates whether permissions other than "creator_write" are supported. */
   readonly supportsSharing: boolean;
@@ -28,15 +23,15 @@ export interface ILayoutManager {
   addLayoutsChangedListener(listener: LayoutChangeListener): void;
   removeLayoutsChangedListener(listener: LayoutChangeListener): void;
 
-  getLayouts(): Promise<readonly DisplayedLayout[]>;
+  getLayouts(): Promise<readonly Layout[]>;
 
-  getLayout(id: LayoutID): Promise<DisplayedLayout | undefined>;
+  getLayout(id: LayoutID): Promise<Layout | undefined>;
 
   saveNewLayout(params: {
     name: string;
     data: PanelsState;
     permission: "creator_write" | "org_read" | "org_write";
-  }): Promise<DisplayedLayout>;
+  }): Promise<Layout>;
 
   /**
    * Persist changes to the user's edited copy of this layout.
@@ -49,13 +44,13 @@ export interface ILayoutManager {
     name?: string;
     data?: PanelsState;
     permission?: "creator_write" | "org_read" | "org_write";
-  }): Promise<DisplayedLayout>;
+  }): Promise<Layout>;
 
-  deleteLayout(params: { id: LayoutID; baselineId?: LayoutID }): Promise<void>;
+  deleteLayout(params: { id: LayoutID }): Promise<void>;
 
   /** Save the local changes so they override the baseline. */
-  overwriteLayout(params: { id: LayoutID }): Promise<DisplayedLayout>;
+  overwriteLayout(params: { id: LayoutID }): Promise<Layout>;
 
   /** Revert this layout to the baseline. */
-  revertLayout(params: { id: LayoutID }): Promise<DisplayedLayout>;
+  revertLayout(params: { id: LayoutID }): Promise<Layout>;
 }

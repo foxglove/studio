@@ -24,7 +24,7 @@ import { usePrompt } from "@foxglove/studio-base/hooks/usePrompt";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
-import { DisplayedLayout } from "@foxglove/studio-base/services/ILayoutManager";
+import { Layout } from "@foxglove/studio-base/services/ILayoutStorage";
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
 
 import LayoutSection from "./LayoutSection";
@@ -76,7 +76,7 @@ export default function LayoutBrowser({
 
   const onSelectLayout = useCallback(
     //FIXME: boolean trap
-    async (item: Pick<DisplayedLayout, "id">, selectedViaClick?: boolean) => {
+    async (item: Pick<Layout, "id">, selectedViaClick?: boolean) => {
       setSelectedLayoutId(item.id);
       if (selectedViaClick === true) {
         void analytics.logEvent(AppEvent.LAYOUT_SELECT);
@@ -85,26 +85,8 @@ export default function LayoutBrowser({
     [analytics, setSelectedLayoutId],
   );
 
-  // const onSaveLayout = useCallback(
-  //   async (item: DisplayedLayout) => {
-  //     try {
-  //       const result = await layoutStorage.overwriteLayout({ id: item.id });
-  //       if (result.id !== item.id) {
-  //         await onSelectLayout({ id: result.id });
-  //       }
-  //     } catch (error) {
-  //       addToast(`Error saving layout: ${error.toString()}`, {
-  //         autoDismiss: true,
-  //         appearance: "warning",
-  //       });
-  //       // void analytics.logEvent(AppEvent.LAYOUT_CONFLICT, { type: result.type });
-  //     }
-  //   },
-  //   [addToast, layoutStorage, onSelectLayout],
-  // );
-
   const onRenameLayout = useCallback(
-    async (item: DisplayedLayout, newName: string) => {
+    async (item: Layout, newName: string) => {
       await layoutStorage.updateLayout({ id: item.id, name: newName });
       void analytics.logEvent(AppEvent.LAYOUT_RENAME);
     },
@@ -112,7 +94,7 @@ export default function LayoutBrowser({
   );
 
   const onDuplicateLayout = useCallback(
-    async (item: DisplayedLayout) => {
+    async (item: Layout) => {
       const source = await layoutStorage.getLayout(item.id);
       if (source) {
         const newLayout = await layoutStorage.saveNewLayout({
@@ -128,7 +110,7 @@ export default function LayoutBrowser({
   );
 
   const onDeleteLayout = useCallback(
-    async (item: DisplayedLayout) => {
+    async (item: Layout) => {
       await layoutStorage.deleteLayout({ id: item.id });
       void analytics.logEvent(AppEvent.LAYOUT_DELETE);
 
@@ -176,10 +158,10 @@ export default function LayoutBrowser({
   }, [currentDateForStorybook, layoutStorage, analytics, onSelectLayout]);
 
   const onExportLayout = useCallback(
-    async (item: DisplayedLayout) => {
+    async (item: Layout) => {
       const layout = await layoutStorage.getLayout(item.id);
       if (layout) {
-        const content = JSON.stringify(layout.data, undefined, 2);
+        const content = JSON.stringify(layout.working?.data ?? layout.baseline.data, undefined, 2);
         downloadTextFile(content, `${item.name}.json`);
         void analytics.logEvent(AppEvent.LAYOUT_EXPORT);
       }
@@ -188,7 +170,7 @@ export default function LayoutBrowser({
   );
 
   const onShareLayout = useCallback(
-    async (item: DisplayedLayout) => {
+    async (item: Layout) => {
       const existingSharedLayouts = layouts.value?.shared ?? [];
       const name = await prompt({
         title: `Share “${item.name}”`,
@@ -216,18 +198,8 @@ export default function LayoutBrowser({
     [analytics, layoutStorage, layouts.value?.shared, prompt],
   );
 
-  // FIXME: remove?
-  // const onResolveConflict = useCallback(
-  //   async (item: DisplayedLayout, resolution: ConflictResolution) => {
-  //     const result = await layoutStorage.resolveConflict(item.id, resolution);
-  //     // Since the layout may have changed, re-select it in order to load the latest data
-  //     await onSelectLayout({ id: result.newId ?? item.id });
-  //   },
-  //   [layoutStorage, onSelectLayout],
-  // );
-
   const onOverwriteLayout = useCallback(
-    async (item: DisplayedLayout) => {
+    async (item: Layout) => {
       // CurrentLayoutProvider automatically updates in its layout change listener
       await layoutStorage.overwriteLayout({ id: item.id });
     },
@@ -235,7 +207,7 @@ export default function LayoutBrowser({
   );
 
   const onRevertLayout = useCallback(
-    async (item: DisplayedLayout) => {
+    async (item: Layout) => {
       // CurrentLayoutProvider automatically updates in its layout change listener
       await layoutStorage.revertLayout({ id: item.id });
     },

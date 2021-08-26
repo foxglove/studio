@@ -14,7 +14,7 @@ export type Layout = {
   name: string;
   permission: "creator_write" | "org_read" | "org_write";
 
-  /** old field name, migrated to working/baseline */
+  /** @deprecated old field name, migrated to working/baseline */
   data?: PanelsState;
 
   /** The last explicitly saved version of this layout. */
@@ -32,30 +32,18 @@ export type Layout = {
         updatedAt: ISO8601Timestamp;
       }
     | undefined;
-
-  /**
-   * Whether the layout has been locally deleted and needs to be deleted on the server next time
-   * we're online.
-   */
-  locallyDeleted: boolean | undefined;
 };
 
-//FIXME: rename, delete, or move
-export interface INamespacedLayoutStorage {
-  list(ns: string): Promise<readonly Layout[]>;
-  get(ns: string, id: LayoutID): Promise<Layout | undefined>;
-  put(ns: string, layout: Layout): Promise<Layout>;
-  delete(ns: string, id: LayoutID): Promise<void>;
-}
-
 export interface ILayoutStorage {
-  list(): Promise<readonly Layout[]>;
-  get(id: LayoutID): Promise<Layout | undefined>;
-  put(layout: Layout): Promise<Layout>;
-  delete(id: LayoutID): Promise<void>;
+  list(namespace: string): Promise<readonly Layout[]>;
+  get(namespace: string, id: LayoutID): Promise<Layout | undefined>;
+  put(namespace: string, layout: Layout): Promise<Layout>;
+  delete(namespace: string, id: LayoutID): Promise<void>;
 }
 
-// FIXME: move
+/**
+ * Import a layout from storage, transferring old properties to the current expected format.
+ */
 export function migrateLayout(value: unknown): Layout {
   if (typeof value !== "object" || value == undefined) {
     throw new Error("Invariant violation - layout item is not an object");
@@ -84,6 +72,5 @@ export function migrateLayout(value: unknown): Layout {
     permission: layout.permission ?? "creator_write",
     working: layout.working,
     baseline,
-    locallyDeleted: layout.locallyDeleted ?? false,
   };
 }

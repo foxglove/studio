@@ -10,12 +10,31 @@ import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/
 import { ISO8601Timestamp } from "@foxglove/studio-base/services/ConsoleApi";
 import {
   ILayoutManager,
-  DisplayedLayout,
   LayoutChangeListener,
 } from "@foxglove/studio-base/services/ILayoutManager";
-import { ILayoutStorage, LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
+import { ILayoutStorage, Layout, LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 
 const log = Logger.getLogger(__filename);
+
+/**
+ * A wrapper around ILayoutStorage for a particular namespace.
+ */
+class NamespacedLayoutStorage {
+  constructor(private storage: ILayoutStorage, private namespace: string) {}
+
+  async list(): Promise<readonly Layout[]> {
+    return await this.storage.list(this.namespace);
+  }
+  async get(id: LayoutID): Promise<Layout | undefined> {
+    return await this.storage.get(this.namespace, id);
+  }
+  async put(layout: Layout): Promise<Layout> {
+    return await this.storage.put(this.namespace, layout);
+  }
+  async delete(id: LayoutID): Promise<void> {
+    await this.storage.delete(this.namespace, id);
+  }
+}
 
 export default class LayoutManager implements ILayoutManager {
   /**
@@ -23,19 +42,14 @@ export default class LayoutManager implements ILayoutManager {
    * and then writing a single layout, or writing one and deleting another) from getting
    * interleaved.
    */
-  private storage: MutexLocked<ILayoutStorage>;
+  private storage: MutexLocked<NamespacedLayoutStorage>;
 
-  // FIXME remote layout support
-  // private remoteStorage: IRemoteLayoutStorage;
-  // private latestConflictsByCacheId: ReadonlyMap<string, ConflictInfo> = new Map();
-
-  readonly supportsSharing = false; // FIXME remote layout support
+  readonly supportsSharing = false;
 
   private changeListeners = new Set<LayoutChangeListener>();
 
   constructor({ storage }: { storage: ILayoutStorage }) {
-    // FIXME: continue wrapping in WriteThrough layer?
-    this.storage = new MutexLocked(storage);
+    this.storage = new MutexLocked(new NamespacedLayoutStorage(storage, "local"));
   }
 
   addLayoutsChangedListener(listener: LayoutChangeListener): void {
@@ -44,7 +58,7 @@ export default class LayoutManager implements ILayoutManager {
   removeLayoutsChangedListener(listener: LayoutChangeListener): void {
     this.changeListeners.delete(listener);
   }
-  private notifyChangeListeners(event: { updatedLayout: DisplayedLayout | undefined }) {
+  private notifyChangeListeners(event: { updatedLayout: Layout | undefined }) {
     queueMicrotask(() => {
       for (const listener of [...this.changeListeners]) {
         listener(event);
@@ -52,17 +66,12 @@ export default class LayoutManager implements ILayoutManager {
     });
   }
 
-  async getLayouts(): Promise<readonly DisplayedLayout[]> {
-    return await this.storage.runExclusive(async (storage) =>
-      (await storage.list()).filter((layout) => !(layout.locallyDeleted ?? false)),
-    );
+  async getLayouts(): Promise<readonly Layout[]> {
+    return await this.storage.runExclusive(async (storage) => await storage.list());
   }
 
-  async getLayout(id: LayoutID): Promise<DisplayedLayout | undefined> {
-    return await this.storage.runExclusive(async (storage) => {
-      const layout = await storage.get(id);
-      return layout?.locallyDeleted ?? false ? undefined : layout;
-    });
+  async getLayout(id: LayoutID): Promise<Layout | undefined> {
+    return await this.storage.runExclusive(async (storage) => await storage.get(id));
   }
 
   async saveNewLayout({
@@ -73,10 +82,8 @@ export default class LayoutManager implements ILayoutManager {
     name: string;
     data: PanelsState;
     permission: "creator_write" | "org_read" | "org_write";
-  }): Promise<DisplayedLayout> {
-    // For shared layouts, start by going directly to the server
+  }): Promise<Layout> {
     if (permission !== "creator_write") {
-      // FIXME: remote layout support
       throw new Error("Sharing is not supported");
     }
     const newLayout = await this.storage.runExclusive(
@@ -87,7 +94,6 @@ export default class LayoutManager implements ILayoutManager {
           permission,
           working: undefined,
           baseline: { data, updatedAt: new Date().toISOString() as ISO8601Timestamp },
-          locallyDeleted: false,
         }),
     );
     this.notifyChangeListeners({ updatedLayout: newLayout });
@@ -104,9 +110,8 @@ export default class LayoutManager implements ILayoutManager {
     name: string | undefined;
     data: PanelsState | undefined;
     permission?: "creator_write" | "org_read" | "org_write";
-  }): Promise<DisplayedLayout> {
+  }): Promise<Layout> {
     if (permission != undefined && permission !== "creator_write") {
-      // FIXME: remote layout support
       throw new Error("Sharing is not supported");
     }
 
@@ -130,20 +135,18 @@ export default class LayoutManager implements ILayoutManager {
   }
 
   async deleteLayout({ id }: { id: LayoutID }): Promise<void> {
-    // FIXME: remote layouts: record tombstone and later delete on the server
     await this.storage.runExclusive(async (storage) => {
       const layout = await storage.get(id);
       if (!layout) {
         log.warn(`Cannot delete layout id ${id} because it does not exist`);
         return;
       }
-      await storage.put({ ...layout, locallyDeleted: true });
+      await storage.delete(id);
     });
     this.notifyChangeListeners({ updatedLayout: undefined });
   }
 
-  async overwriteLayout({ id }: { id: LayoutID }): Promise<DisplayedLayout> {
-    // FIXME remote layout support
+  async overwriteLayout({ id }: { id: LayoutID }): Promise<Layout> {
     const result = await this.storage.runExclusive(async (storage) => {
       const layout = await storage.get(id);
       if (!layout) {
@@ -159,8 +162,7 @@ export default class LayoutManager implements ILayoutManager {
     return result;
   }
 
-  async revertLayout({ id }: { id: LayoutID }): Promise<DisplayedLayout> {
-    // FIXME remote layout support
+  async revertLayout({ id }: { id: LayoutID }): Promise<Layout> {
     const result = await this.storage.runExclusive(async (storage) => {
       const layout = await storage.get(id);
       if (!layout) {
@@ -174,28 +176,4 @@ export default class LayoutManager implements ILayoutManager {
     this.notifyChangeListeners({ updatedLayout: result });
     return result;
   }
-
-  // FIXME remote layout support
-  // /** Ensures at most one sync operation is in progress at a time */
-  // private currentSync?: Promise<ReadonlyMap<string, ConflictInfo>>;
-
-  // /**
-  //  * Attempt to synchronize the local cache with remote storage. At minimum this incurs a fetch of
-  //  * the cached and remote layout lists; it may also involve modifications to the cache, remote
-  //  * storage, or both.
-  //  * @returns Any conflicts that arose during the sync.
-  //  */
-  // async syncWithRemote(): Promise<ReadonlyMap<string, ConflictInfo>> {
-  //   if (this.currentSync) {
-  //     return await this.currentSync;
-  //   }
-  //   try {
-  //     this.currentSync = this.syncWithRemoteImpl();
-  //     this.latestConflictsByCacheId = await this.currentSync;
-  //     this.notifyChangeListeners();
-  //     return this.latestConflictsByCacheId;
-  //   } finally {
-  //     this.currentSync = undefined;
-  //   }
-  // }
 }

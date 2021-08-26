@@ -4,7 +4,7 @@
 
 import { makeStyles, Stack, Text } from "@fluentui/react";
 
-import { DisplayedLayout } from "@foxglove/studio-base/services/ILayoutManager";
+import { Layout } from "@foxglove/studio-base/services/ILayoutStorage";
 
 import LayoutRow from "./LayoutRow";
 
@@ -48,18 +48,16 @@ export default function LayoutSection({
 }: {
   title: string | undefined;
   emptyText: string | undefined;
-  items: readonly DisplayedLayout[] | undefined;
+  items: readonly Layout[] | undefined;
   selectedId?: string;
-  // onSave: (item: DisplayedLayout) => void;
-  onSelect: (item: DisplayedLayout, selectedViaClick?: boolean) => void;
-  onRename: (item: DisplayedLayout, newName: string) => void;
-  onDuplicate: (item: DisplayedLayout) => void;
-  onDelete: (item: DisplayedLayout) => void;
-  onShare: (item: DisplayedLayout) => void;
-  onExport: (item: DisplayedLayout) => void;
-  // onResolveConflict: (item: DisplayedLayout, resolution: ConflictResolution) => void;
-  onOverwrite: (item: DisplayedLayout) => void;
-  onRevert: (item: DisplayedLayout) => void;
+  onSelect: (item: Layout, selectedViaClick?: boolean) => void;
+  onRename: (item: Layout, newName: string) => void;
+  onDuplicate: (item: Layout) => void;
+  onDelete: (item: Layout) => void;
+  onShare: (item: Layout) => void;
+  onExport: (item: Layout) => void;
+  onOverwrite: (item: Layout) => void;
+  onRevert: (item: Layout) => void;
 }): JSX.Element {
   const styles = useStyles();
   return (

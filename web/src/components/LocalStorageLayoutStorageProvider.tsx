@@ -9,7 +9,7 @@ import {
   Layout,
   LayoutStorageContext,
   LayoutID,
-  INamespacedLayoutStorage,
+  ILayoutStorage,
   migrateLayout,
 } from "@foxglove/studio-base";
 
@@ -17,10 +17,11 @@ const log = Log.getLogger(__filename);
 
 const KEY_PREFIX = "studio.layout-cache";
 
+// FIXME: migration?
 export default function LocalStorageLayoutStorageProvider(
   props: PropsWithChildren<unknown>,
 ): JSX.Element {
-  const [ctx] = useState<INamespacedLayoutStorage>(() => {
+  const [ctx] = useState<ILayoutStorage>(() => {
     return {
       async list(namespace: string): Promise<readonly Layout[]> {
         const results: Layout[] = [];

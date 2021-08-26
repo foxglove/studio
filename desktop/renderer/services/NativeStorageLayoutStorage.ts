@@ -3,14 +3,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import Log from "@foxglove/log";
-import { Layout, INamespacedLayoutStorage, LayoutID, migrateLayout } from "@foxglove/studio-base";
+import { Layout, ILayoutStorage, LayoutID, migrateLayout } from "@foxglove/studio-base";
 
 import { Storage } from "../../common/types";
 
 const log = Log.getLogger(__filename);
 
 // Implement a LayoutStorage interface over OsContext
-export default class NativeStorageLayoutStorage implements INamespacedLayoutStorage {
+// FIXME: migration?
+export default class NativeStorageLayoutStorage implements ILayoutStorage {
   private static STORE_PREFIX = "layouts-";
 
   private _ctx: Storage;

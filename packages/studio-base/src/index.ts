@@ -19,13 +19,7 @@ export type {
   ChangeHandler,
 } from "./context/AppConfigurationContext";
 export { default as LayoutStorageContext, useLayoutStorage } from "./context/LayoutStorageContext";
-export type {
-  Layout,
-  LayoutID,
-  ISO8601Timestamp,
-  ILayoutStorage,
-  INamespacedLayoutStorage,
-} from "./services/ILayoutStorage";
+export type { Layout, LayoutID, ISO8601Timestamp, ILayoutStorage } from "./services/ILayoutStorage";
 export { migrateLayout } from "./services/ILayoutStorage";
 export { default as NativeAppMenuContext } from "./context/NativeAppMenuContext";
 export type { NativeAppMenu, NativeAppMenuEvent } from "./context/NativeAppMenuContext";
@@ -39,11 +33,6 @@ export { default as StudioToastProvider } from "./components/StudioToastProvider
 export { default as ExtensionLoaderContext } from "./context/ExtensionLoaderContext";
 export type { ExtensionLoader, ExtensionInfo } from "./context/ExtensionLoaderContext";
 export { default as LayoutManagerContext } from "./context/LayoutManagerContext";
-export type {
-  RemoteLayout,
-  RemoteLayoutMetadata,
-  IRemoteLayoutStorage,
-} from "./services/IRemoteLayoutStorage";
 export { AppSetting } from "./AppSetting";
 export { useAppConfigurationValue } from "./hooks/useAppConfigurationValue";
 export type { PanelsState } from "./context/CurrentLayoutContext/actions";

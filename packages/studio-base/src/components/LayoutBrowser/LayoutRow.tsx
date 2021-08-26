@@ -20,7 +20,7 @@ import { useMountedState } from "react-use";
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
 import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
-import { DisplayedLayout } from "@foxglove/studio-base/services/ILayoutManager";
+import { Layout } from "@foxglove/studio-base/services/ILayoutStorage";
 
 import { debugBorder } from "./styles";
 
@@ -71,18 +71,16 @@ export default function LayoutRow({
   onOverwrite,
   onRevert,
 }: {
-  layout: DisplayedLayout;
+  layout: Layout;
   selected: boolean;
-  // onSave: (item: DisplayedLayout) => void;
-  onSelect: (item: DisplayedLayout, selectedViaClick?: boolean) => void;
-  onRename: (item: DisplayedLayout, newName: string) => void;
-  onDuplicate: (item: DisplayedLayout) => void;
-  onDelete: (item: DisplayedLayout) => void;
-  onShare: (item: DisplayedLayout) => void;
-  onExport: (item: DisplayedLayout) => void;
-  // onResolveConflict: (item: DisplayedLayout, resolution: ConflictResolution) => void;
-  onOverwrite: (item: DisplayedLayout) => void;
-  onRevert: (item: DisplayedLayout) => void;
+  onSelect: (item: Layout, selectedViaClick?: boolean) => void;
+  onRename: (item: Layout, newName: string) => void;
+  onDuplicate: (item: Layout) => void;
+  onDelete: (item: Layout) => void;
+  onShare: (item: Layout) => void;
+  onExport: (item: Layout) => void;
+  onOverwrite: (item: Layout) => void;
+  onRevert: (item: Layout) => void;
 }): JSX.Element {
   const styles = useStyles();
   const theme = useTheme();
