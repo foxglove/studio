@@ -14,11 +14,11 @@ async function main(): Promise<void> {
       "packages/studio-base/tsconfig.json",
       "--error",
       "--ignore",
-      `used in module|^packages/(hooks|den)/|/studio-base/src/index\\.ts|/studio-base/src/stories/|/studio-base/src/test/|/nodeTransformerWorker/typescript/userUtils|\\.stories\\.ts|/\\.storybook/`,
+      String.raw`used in module|^packages/(hooks|den)/|/studio-base/src/index\.ts|/studio-base/src/stories/|/studio-base/src/test/|/nodeTransformerWorker/typescript/userUtils|\.stories\.ts|/\.storybook/`,
 
       // --skip means don't consider exports used if they are only used in these files
       "--skip",
-      `\\.test\\.ts|\\.stories\\.tsx`,
+      String.raw`\.test\.ts|\.stories\.tsx`,
     ],
     { ignoreReturnCode: true },
   );
