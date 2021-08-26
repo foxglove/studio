@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { getNodeAtPath } from "react-mosaic-component";
 import { useToasts } from "react-toast-notifications";
 import { useAsync, useAsyncFn, useMountedState } from "react-use";
 import { v4 as uuidv4 } from "uuid";
@@ -33,8 +34,10 @@ import { useUserProfileStorage } from "@foxglove/studio-base/context/UserProfile
 import { LinkedGlobalVariables } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
 import panelsReducer from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { LayoutID } from "@foxglove/studio-base/services/ConsoleApi";
+import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import { LayoutChangeListener } from "@foxglove/studio-base/services/ILayoutManager";
 import { PanelConfig, UserNodes, PlaybackConfig } from "@foxglove/studio-base/types/panels";
+import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
 const log = Logger.getLogger(__filename);
 
@@ -205,14 +208,15 @@ export default function CurrentLayoutProvider({
       setSelectedLayoutId,
       getCurrentLayoutState: () => layoutStateRef.current,
 
-      //FIXME: createTabPanel and closePanel need to update selected panels
-      //FIXME: analytics
       savePanelConfigs: (payload: SaveConfigsPayload) =>
         performAction({ type: "SAVE_PANEL_CONFIGS", payload }),
       updatePanelConfigs: (panelType: string, perPanelFunc: (config: PanelConfig) => PanelConfig) =>
         performAction({ type: "SAVE_FULL_PANEL_CONFIG", payload: { panelType, perPanelFunc } }),
-      createTabPanel: (payload: CreateTabPanelPayload) =>
-        performAction({ type: "CREATE_TAB_PANEL", payload }),
+      createTabPanel: (payload: CreateTabPanelPayload) => {
+        performAction({ type: "CREATE_TAB_PANEL", payload });
+        setSelectedPanelIds([]);
+        analytics?.logEvent(AppEvent.PANEL_ADD, { type: "Tab" });
+      },
       changePanelLayout: (payload: ChangePanelLayoutPayload) =>
         performAction({ type: "CHANGE_PANEL_LAYOUT", payload }),
       overwriteGlobalVariables: (payload: { [key: string]: unknown }) =>
@@ -225,16 +229,40 @@ export default function CurrentLayoutProvider({
         performAction({ type: "SET_LINKED_GLOBAL_VARIABLES", payload }),
       setPlaybackConfig: (payload: Partial<PlaybackConfig>) =>
         performAction({ type: "SET_PLAYBACK_CONFIG", payload }),
-      closePanel: (payload: ClosePanelPayload) => performAction({ type: "CLOSE_PANEL", payload }),
+      closePanel: (payload: ClosePanelPayload) => {
+        performAction({ type: "CLOSE_PANEL", payload });
+
+        const closedId = getNodeAtPath(payload.root, payload.path);
+        // Deselect the removed panel
+        setSelectedPanelIds((ids) => ids.filter((id) => id !== closedId));
+
+        analytics?.logEvent(
+          AppEvent.PANEL_DELETE,
+          typeof closedId === "string" ? { type: getPanelTypeFromId(closedId) } : undefined,
+        );
+      },
       splitPanel: (payload: SplitPanelPayload) => performAction({ type: "SPLIT_PANEL", payload }),
-      swapPanel: (payload: SwapPanelPayload) => performAction({ type: "SWAP_PANEL", payload }),
+      swapPanel: (payload: SwapPanelPayload) => {
+        performAction({ type: "SWAP_PANEL", payload });
+        analytics?.logEvent(AppEvent.PANEL_ADD, { type: payload.type, action: "swap" });
+        analytics?.logEvent(AppEvent.PANEL_DELETE, {
+          type: getPanelTypeFromId(payload.originalId),
+          action: "swap",
+        });
+      },
       moveTab: (payload: MoveTabPayload) => performAction({ type: "MOVE_TAB", payload }),
-      addPanel: (payload: AddPanelPayload) => performAction({ type: "ADD_PANEL", payload }),
-      dropPanel: (payload: DropPanelPayload) => performAction({ type: "DROP_PANEL", payload }),
+      addPanel: (payload: AddPanelPayload) => {
+        performAction({ type: "ADD_PANEL", payload });
+        analytics?.logEvent(AppEvent.PANEL_ADD, { type: getPanelTypeFromId(payload.id) });
+      },
+      dropPanel: (payload: DropPanelPayload) => {
+        performAction({ type: "DROP_PANEL", payload });
+        analytics?.logEvent(AppEvent.PANEL_ADD, { type: payload.newPanelType, action: "drop" });
+      },
       startDrag: (payload: StartDragPayload) => performAction({ type: "START_DRAG", payload }),
       endDrag: (payload: EndDragPayload) => performAction({ type: "END_DRAG", payload }),
     }),
-    [performAction, setSelectedLayoutId],
+    [analytics, performAction, setSelectedLayoutId, setSelectedPanelIds],
   );
 
   const value: ICurrentLayout = useShallowMemo({
