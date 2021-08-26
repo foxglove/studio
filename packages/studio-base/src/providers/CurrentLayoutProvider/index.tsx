@@ -1,11 +1,9 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import { Mutex } from "async-mutex";
-import { isEqual } from "lodash";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useToasts } from "react-toast-notifications";
-import { useAsync, useAsyncFn, useMountedState, useThrottle } from "react-use";
+import { useAsync, useAsyncFn, useMountedState } from "react-use";
 import { v4 as uuidv4 } from "uuid";
 
 import Logger from "@foxglove/log";
@@ -130,7 +128,7 @@ export default function CurrentLayoutProvider({
         addToast(`The layout could not be loaded. ${error.toString()}`, { appearance: "error" });
       }
     },
-    [addToast, isMounted, layoutManager, setUserProfile],
+    [addToast, isMounted, layoutManager, setLayoutState, setUserProfile],
   );
 
   // When the user performs an action, we immediately setLayoutState to update the UI. Saving back
@@ -143,10 +141,8 @@ export default function CurrentLayoutProvider({
         layoutStateRef.current.loading === true ||
         layoutStateRef.current.selectedLayout == undefined
       ) {
-        console.log("action", action.type, "skipped");
         return;
       }
-      console.log("performing action", action.type);
       const newLayout = {
         id: layoutStateRef.current.selectedLayout.id,
         data: panelsReducer(layoutStateRef.current.selectedLayout.data, action),
@@ -161,7 +157,6 @@ export default function CurrentLayoutProvider({
         if (!params) {
           return;
         }
-        console.log("saving after action:", params);
         layoutManager.updateLayout(params).catch((error) => {
           log.error(error);
           if (isMounted()) {
@@ -173,7 +168,7 @@ export default function CurrentLayoutProvider({
         });
       }, SAVE_INTERVAL_MS);
     },
-    [addToast, isMounted, layoutManager],
+    [addToast, isMounted, layoutManager, setLayoutState],
   );
 
   // Changes to the layout storage from external user actions (such as resetting a layout to a
@@ -185,7 +180,6 @@ export default function CurrentLayoutProvider({
         layoutStateRef.current.selectedLayout &&
         updatedLayout.id === layoutStateRef.current.selectedLayout.id
       ) {
-        console.log("layout updated:", updatedLayout);
         //FIXME: filter out changes from performActions? or maybe they don't cause problems?
         setLayoutState({
           loading: false,
@@ -194,26 +188,11 @@ export default function CurrentLayoutProvider({
             data: updatedLayout.working?.data ?? updatedLayout.baseline.data,
           },
         });
-      } else {
-        console.log("layout updated, IGNORED", updatedLayout);
       }
     };
     layoutManager.addLayoutsChangedListener(listener);
     return () => layoutManager.removeLayoutsChangedListener(listener);
-  }, [layoutManager]);
-
-  // FIXME: something like this is needed when working with remote layouts
-  // // If the current layout is deleted, deselect it
-  // useEffect(() => {
-  //   const listener = async () => {
-  //     const selectedId = stateInstance.actions.getCurrentLayoutState().selectedLayout?.id;
-  //     if (!(await layoutManager.getLayouts()).some(({ id }) => id === selectedId) && isMounted()) {
-  //       stateInstance.actions.setSelectedLayout(undefined);
-  //     }
-  //   };
-  //   layoutManager.addLayoutsChangedListener(listener);
-  //   return () => layoutManager.removeLayoutsChangedListener(listener);
-  // }, [isMounted, layoutManager, stateInstance.actions]);
+  }, [layoutManager, setLayoutState]);
 
   // Load initial state by re-selecting the last selected layout from the UserProfile
   useAsync(async () => {

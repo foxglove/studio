@@ -47,6 +47,7 @@ export const DEFAULT_LAYOUT_FOR_TESTS: LayoutState = {
   },
 };
 
+// FIXME: delete
 export default class CurrentLayoutState implements ICurrentLayout {
   private analytics?: { logEvent: (event: AppEvent, data?: { [key: string]: unknown }) => void };
   private layoutState: LayoutState;
@@ -58,7 +59,6 @@ export default class CurrentLayoutState implements ICurrentLayout {
 
   constructor(
     initialState: LayoutState,
-    private getLayoutData: (id: LayoutID) => Promise<PanelsState | undefined>,
     analytics?: { logEvent: (event: AppEvent, data?: { [key: string]: unknown }) => void },
   ) {
     this.analytics = analytics;
