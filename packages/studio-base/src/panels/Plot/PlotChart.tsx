@@ -16,12 +16,12 @@ import { AnnotationOptions } from "chartjs-plugin-annotation";
 import { ComponentProps, memo, useMemo } from "react";
 import { useResizeDetector } from "react-resize-detector";
 
+import { filterMap } from "@foxglove/den/collection";
 import TimeBasedChart, {
   Props as TimeBasedChartProps,
   ChartDefaultView,
   TimeBasedChartTooltipData,
 } from "@foxglove/studio-base/components/TimeBasedChart";
-import filterMap from "@foxglove/studio-base/util/filterMap";
 import { lineColors } from "@foxglove/studio-base/util/plotColors";
 
 import styles from "./PlotChart.module.scss";
@@ -96,7 +96,17 @@ export default memo<PlotChartProps>(function PlotChart(props: PlotChartProps) {
     };
   }, [maxYValue, minYValue]);
 
-  const { width, height, ref: sizeRef } = useResizeDetector();
+  // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
+  // and existing resize observation.
+  // https://github.com/maslianok/react-resize-detector/issues/45
+  const {
+    width,
+    height,
+    ref: sizeRef,
+  } = useResizeDetector({
+    refreshRate: 0,
+    refreshMode: "debounce",
+  });
 
   const data = useMemo(() => {
     return { datasets };

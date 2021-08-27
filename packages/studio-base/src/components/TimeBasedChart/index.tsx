@@ -28,6 +28,7 @@ import styled from "styled-components";
 import { useDebouncedCallback } from "use-debounce";
 import { v4 as uuidv4 } from "uuid";
 
+import { filterMap } from "@foxglove/den/collection";
 import Logger from "@foxglove/log";
 import { Time } from "@foxglove/rostime";
 import Button from "@foxglove/studio-base/components/Button";
@@ -47,7 +48,6 @@ import {
   useSetHoverValue,
 } from "@foxglove/studio-base/context/HoverValueContext";
 import mixins from "@foxglove/studio-base/styles/mixins.module.scss";
-import filterMap from "@foxglove/studio-base/util/filterMap";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import HoverBar from "./HoverBar";
@@ -617,22 +617,17 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
     let maxY;
 
     if (!hasUserPannedOrZoomed) {
-      const yBounds = datasetBounds.y;
-
       // we prefer user specified bounds over dataset bounds
       minY = yAxes.min;
       maxY = yAxes.max;
 
-      // chartjs bug if the maximum value < dataset min results in array index to an undefined
-      // value and an object access on this undefined value
-      if (maxY != undefined && minY == undefined && maxY < Number(yBounds.min)) {
-        minY = maxY;
+      // chartjs doesn't like it when only one of min/max are specified for scales
+      // so if either is specified then we specify both
+      if (maxY == undefined && minY != undefined) {
+        maxY = datasetBounds.y.max;
       }
-
-      // chartjs bug if the minimum value > dataset max results in array index to an undefined
-      // value and an object access on this undefined value
-      if (minY != undefined && maxY == undefined && minY > Number(yBounds.max)) {
-        maxY = minY;
+      if (minY == undefined && maxY != undefined) {
+        minY = datasetBounds.y.min;
       }
     }
 
@@ -772,7 +767,7 @@ export default memo<Props>(function TimeBasedChart(props: Props) {
   const options = useMemo<ChartOptions>(() => {
     return {
       maintainAspectRatio: false,
-      animation: { duration: 0 },
+      animation: false,
       // Disable splines, they seem to cause weird rendering artifacts:
       elements: { line: { tension: 0 } },
       hover: {
