@@ -294,13 +294,11 @@ export default function LayoutBrowser({
             items={layouts.value?.personal}
             selectedId={currentLayoutId}
             onSelect={onSelectLayout}
-            // onSave={onSaveLayout}
             onRename={onRenameLayout}
             onDuplicate={onDuplicateLayout}
             onDelete={onDeleteLayout}
             onShare={onShareLayout}
             onExport={onExportLayout}
-            // onResolveConflict={onResolveConflict}
             onOverwrite={onOverwriteLayout}
             onRevert={onRevertLayout}
           />
@@ -313,13 +311,11 @@ export default function LayoutBrowser({
               items={layouts.value?.shared}
               selectedId={currentLayoutId}
               onSelect={onSelectLayout}
-              // onSave={onSaveLayout}
               onRename={onRenameLayout}
               onDuplicate={onDuplicateLayout}
               onDelete={onDeleteLayout}
               onShare={onShareLayout}
               onExport={onExportLayout}
-              // onResolveConflict={onResolveConflict}
               onOverwrite={onOverwriteLayout}
               onRevert={onRevertLayout}
             />
