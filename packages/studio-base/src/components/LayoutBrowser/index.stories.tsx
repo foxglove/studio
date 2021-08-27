@@ -63,7 +63,7 @@ function WithSetup(Child: Story, ctx: StoryContext): JSX.Element {
   );
   const userProfile = useMemo(
     () => ({
-      getUserProfile: async () => ({}),
+      getUserProfile: async () => ({ currentLayoutId: "test-id" }),
       setUserProfile: async () => {},
     }),
     [],
