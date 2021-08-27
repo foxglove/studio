@@ -70,14 +70,17 @@ export default function CurrentLayoutProvider({
     loading: true,
     selectedLayout: undefined,
   });
+  const layoutStateRef = useRef(layoutState);
   const setLayoutState = useCallback((newState: LayoutState) => {
     setLayoutStateInternal(newState);
+
+    // listeners rely on being able to getCurrentLayoutState() inside effects that may run before we re-render
+    layoutStateRef.current = newState;
+
     for (const listener of [...layoutStateListeners.current]) {
       listener(newState);
     }
   }, []);
-  const layoutStateRef = useRef(layoutState);
-  layoutStateRef.current = layoutState;
 
   const selectedPanelIds = useRef<readonly string[]>([]);
   const selectedPanelIdsListeners = useRef(new Set<(_: readonly string[]) => void>());

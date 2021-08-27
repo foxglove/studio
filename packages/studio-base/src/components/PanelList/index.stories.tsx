@@ -24,9 +24,6 @@ import PanelCatalogContext, {
   PanelCatalog,
   PanelInfo,
 } from "@foxglove/studio-base/context/PanelCatalogContext";
-import CurrentLayoutState, {
-  DEFAULT_LAYOUT_FOR_TESTS,
-} from "@foxglove/studio-base/providers/CurrentLayoutProvider/CurrentLayoutState";
 import { PanelConfigSchemaEntry } from "@foxglove/studio-base/types/panels";
 
 const SamplePanel1 = function () {
@@ -127,13 +124,10 @@ storiesOf("components/PanelList", module)
     },
   })
   .addDecorator((childrenRenderFcn) => {
-    const currentLayout = useMemo(() => new CurrentLayoutState(DEFAULT_LAYOUT_FOR_TESTS), []);
     return (
       <DndProvider backend={HTML5Backend}>
         <PanelCatalogContext.Provider value={new MockPanelCatalog()}>
-          <CurrentLayoutContext.Provider value={currentLayout}>
-            {childrenRenderFcn()}
-          </CurrentLayoutContext.Provider>
+          {childrenRenderFcn()}
         </PanelCatalogContext.Provider>
       </DndProvider>
     );

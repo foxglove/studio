@@ -52,6 +52,8 @@ class NamespacedLayoutStorage {
 }
 
 export default class LayoutManager implements ILayoutManager {
+  static readonly LOCAL_STORAGE_NAMESPACE = "local";
+
   /**
    * All access to storage is wrapped in a mutex to prevent multi-step operations (such as reading
    * and then writing a single layout, or writing one and deleting another) from getting
@@ -65,7 +67,9 @@ export default class LayoutManager implements ILayoutManager {
 
   constructor({ storage }: { storage: ILayoutStorage }) {
     this.storage = new MutexLocked(
-      new NamespacedLayoutStorage(storage, "local", { migrateLocalLayouts: true }),
+      new NamespacedLayoutStorage(storage, LayoutManager.LOCAL_STORAGE_NAMESPACE, {
+        migrateLocalLayouts: true,
+      }),
     );
   }
 
