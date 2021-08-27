@@ -75,13 +75,11 @@ export default function LayoutSection({
             key={layout.id}
             layout={layout}
             onSelect={onSelect}
-            // onSave={onSave}
             onRename={onRename}
             onDuplicate={onDuplicate}
             onDelete={onDelete}
             onShare={onShare}
             onExport={onExport}
-            // onResolveConflict={onResolveConflict}
             onOverwrite={onOverwrite}
             onRevert={onRevert}
           />
