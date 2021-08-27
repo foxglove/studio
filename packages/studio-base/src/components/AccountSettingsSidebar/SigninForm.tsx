@@ -7,12 +7,11 @@ import { ComponentProps, useCallback, useEffect, useMemo, useState } from "react
 import { useToasts } from "react-toast-notifications";
 import { useAsyncFn, useLocalStorage } from "react-use";
 
-import {
-  AccountSyncGraphic,
-  DeviceCodeDialog,
-} from "@foxglove/studio-base/components/AccountSettingsSidebar";
 import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
 import { DeviceCodeResponse } from "@foxglove/studio-base/services/ConsoleApi";
+
+import AccountSyncGraphic from "./AccountSyncGraphic";
+import DeviceCodeDialog from "./DeviceCodeDialog";
 
 export default function SigninForm(): JSX.Element {
   const theme = useTheme();

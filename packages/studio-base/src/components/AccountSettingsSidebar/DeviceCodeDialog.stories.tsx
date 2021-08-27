@@ -4,10 +4,11 @@
 
 import { Story, StoryContext } from "@storybook/react";
 
-import { DeviceCodeDialog } from "@foxglove/studio-base/components/AccountSettingsSidebar";
 import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
 import ModalHost from "@foxglove/studio-base/context/ModalHost";
 import ConsoleApi, { Org } from "@foxglove/studio-base/services/ConsoleApi";
+
+import DeviceCodeDialog from "./DeviceCodeDialog";
 
 class FakeConsoleApi extends ConsoleApi {
   constructor() {
