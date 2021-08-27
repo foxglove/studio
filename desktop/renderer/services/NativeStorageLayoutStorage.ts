@@ -66,6 +66,7 @@ export default class NativeStorageLayoutStorage implements ILayoutStorage {
   }
 
   async migrateLocalLayouts(namespace: string): Promise<void> {
+    // Layouts were previously stored in a single un-namespaced store named "layouts".
     const items = await this._ctx.all(NativeStorageLayoutStorage.LEGACY_STORE_NAME);
     for (const item of items) {
       if (!(item instanceof Uint8Array)) {

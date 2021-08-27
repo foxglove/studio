@@ -56,6 +56,7 @@ export default function LocalStorageLayoutStorageProvider(
       },
 
       async migrateLocalLayouts(namespace: string) {
+        // Layouts were previously stored with the un-namespaced prefix "studio.layout-cache".
         const legacyKeys = filterMap(new Array(localStorage.length), (_, i) => {
           const key = localStorage.key(i) ?? undefined;
           return key?.startsWith("studio.layout-cache.") ?? false ? key : undefined;

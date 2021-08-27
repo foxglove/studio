@@ -49,6 +49,9 @@ export interface ILayoutStorage {
 
 /**
  * Import a layout from storage, transferring old properties to the current expected format.
+ *
+ * Layouts created before we stored both working/baseline copies were stored with a "data" field;
+ * migrate this to a baseline layout.
  */
 export function migrateLayout(value: unknown): Layout {
   if (typeof value !== "object" || value == undefined) {
