@@ -12,14 +12,12 @@
 //   You may not use this file except in compliance with the License.
 
 import { storiesOf } from "@storybook/react";
-import { useMemo } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import TestUtils from "react-dom/test-utils";
 
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelList from "@foxglove/studio-base/components/PanelList";
-import CurrentLayoutContext from "@foxglove/studio-base/context/CurrentLayoutContext";
 import PanelCatalogContext, {
   PanelCatalog,
   PanelInfo,
