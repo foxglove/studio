@@ -18,6 +18,7 @@ import { UserProfileStorageContext } from "@foxglove/studio-base/context/UserPro
 import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import LayoutManagerProvider from "@foxglove/studio-base/providers/LayoutManagerProvider";
+import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 import LayoutManager from "@foxglove/studio-base/services/LayoutManager";
 import MockLayoutStorage from "@foxglove/studio-base/services/MockLayoutStorage";
 import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
@@ -63,7 +64,7 @@ function WithSetup(Child: Story, ctx: StoryContext): JSX.Element {
   );
   const userProfile = useMemo(
     () => ({
-      getUserProfile: async () => ({ currentLayoutId: "test-id" }),
+      getUserProfile: async () => ({ currentLayoutId: "test-id" as LayoutID }),
       setUserProfile: async () => {},
     }),
     [],

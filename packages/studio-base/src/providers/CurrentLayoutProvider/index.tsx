@@ -192,7 +192,6 @@ export default function CurrentLayoutProvider({
         layoutStateRef.current.selectedLayout &&
         updatedLayout.id === layoutStateRef.current.selectedLayout.id
       ) {
-        //FIXME: filter out changes from performActions? or maybe they don't cause problems?
         setLayoutState({
           loading: false,
           selectedLayout: {

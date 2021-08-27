@@ -75,7 +75,6 @@ export default function LayoutBrowser({
   }, [reloadLayouts]);
 
   const onSelectLayout = useCallback(
-    //FIXME: boolean trap
     async (item: Pick<Layout, "id">, selectedViaClick?: boolean) => {
       setSelectedLayoutId(item.id);
       if (selectedViaClick === true) {
@@ -123,7 +122,7 @@ export default function LayoutBrowser({
         return;
       }
       // If no other layouts exist, use the welcome layout
-      //FIXME: consolidate calls to add the welcome layout
+      // This call should probably be removed and consolidated with other calls to add the welcome layout:
       // - https://github.com/foxglove/studio/issues/1545
       // - https://github.com/foxglove/studio/pull/1575
       const newLayout = await layoutStorage.saveNewLayout({
