@@ -7,8 +7,8 @@ import { useToasts } from "react-toast-notifications";
 import { useAsync, useAsyncFn, useMountedState } from "react-use";
 import { v4 as uuidv4 } from "uuid";
 
+import { useShallowMemo } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
-import { useShallowMemo } from "@foxglove/studio-base/../../hooks/src";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import CurrentLayoutContext, {
   ICurrentLayout,
