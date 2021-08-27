@@ -104,7 +104,10 @@ export default function CurrentLayoutProvider({
   );
 
   const [, setSelectedLayoutId] = useAsyncFn(
-    async (id: LayoutID | undefined) => {
+    async (
+      id: LayoutID | undefined,
+      { saveToProfile = true }: { saveToProfile?: boolean } = {},
+    ) => {
       if (id == undefined) {
         setLayoutState({ loading: false, selectedLayout: undefined });
         return;
@@ -122,16 +125,19 @@ export default function CurrentLayoutProvider({
             loading: false,
             selectedLayout: { id: layout.id, data: layout.working?.data ?? layout.baseline.data },
           });
-          setUserProfile({ currentLayoutId: id }).catch((error) => {
-            console.error(error);
-            addToast(`The current layout could not be saved. ${error.toString()}`, {
-              appearance: "error",
+          if (saveToProfile) {
+            setUserProfile({ currentLayoutId: id }).catch((error) => {
+              console.error(error);
+              addToast(`The current layout could not be saved. ${error.toString()}`, {
+                appearance: "error",
+              });
             });
-          });
+          }
         }
       } catch (error) {
         console.error(error);
         addToast(`The layout could not be loaded. ${error.toString()}`, { appearance: "error" });
+        setLayoutState({ loading: false, selectedLayout: undefined });
       }
     },
     [addToast, isMounted, layoutManager, setLayoutState, setUserProfile],
@@ -203,7 +209,7 @@ export default function CurrentLayoutProvider({
   // Load initial state by re-selecting the last selected layout from the UserProfile
   useAsync(async () => {
     const { currentLayoutId } = await getUserProfile();
-    await setSelectedLayoutId(currentLayoutId);
+    await setSelectedLayoutId(currentLayoutId, { saveToProfile: false });
   }, [getUserProfile, setSelectedLayoutId]);
 
   const actions: ICurrentLayout["actions"] = useMemo(
