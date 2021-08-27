@@ -27,21 +27,8 @@ class FakeConsoleApi extends ConsoleApi {
   }
 }
 
-class NeverLoadOrgsConsoleApi extends FakeConsoleApi {
-  // never finish loading the orgs
-  override async orgs(): Promise<Org[]> {
-    return await new Promise(() => {});
-  }
-}
-
-class NoOrgsConsoleApi extends FakeConsoleApi {
-  override async orgs(): Promise<Org[]> {
-    return [];
-  }
-}
-
 export default {
-  title: "AccountSettingsSidebar/DeviceCode",
+  title: "AccountSettingsSidebar/DeviceCodeDialog",
   component: DeviceCodeDialog,
   decorators: [
     (SingleStory: Story, ctx: StoryContext): JSX.Element => {
@@ -84,52 +71,4 @@ export const CodeTimeout = (): JSX.Element => {
       }}
     />
   );
-};
-
-export const LoadingOrgs = (): JSX.Element => {
-  return (
-    <DeviceCodeDialog
-      deviceCode={{
-        device_code: "foobar",
-        expires_in: 1,
-        interval: 0,
-        user_code: "AAAA-12BB",
-        verification_uri: "https://console.example.com/activate",
-      }}
-    />
-  );
-};
-LoadingOrgs.parameters = {
-  consoleApi: new NeverLoadOrgsConsoleApi(),
-};
-
-export const OrgSelect = (): JSX.Element => {
-  return (
-    <DeviceCodeDialog
-      deviceCode={{
-        device_code: "foobar",
-        expires_in: 1,
-        interval: 0,
-        user_code: "AAAA-12BB",
-        verification_uri: "https://console.example.com/activate",
-      }}
-    />
-  );
-};
-
-export const NoOrgs = (): JSX.Element => {
-  return (
-    <DeviceCodeDialog
-      deviceCode={{
-        device_code: "foobar",
-        expires_in: 1,
-        interval: 0,
-        user_code: "AAAA-12BB",
-        verification_uri: "https://console.example.com/activate",
-      }}
-    />
-  );
-};
-NoOrgs.parameters = {
-  consoleApi: new NoOrgsConsoleApi(),
 };
