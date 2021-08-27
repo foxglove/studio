@@ -4,11 +4,10 @@
 
 import { Story, StoryContext } from "@storybook/react";
 
+import { DeviceCodeDialog } from "@foxglove/studio-base/components/AccountSettingsSidebar";
 import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
 import ModalHost from "@foxglove/studio-base/context/ModalHost";
 import ConsoleApi, { Org } from "@foxglove/studio-base/services/ConsoleApi";
-
-import DeviceCode from "./DeviceCodeDialog";
 
 class FakeConsoleApi extends ConsoleApi {
   constructor() {
@@ -42,7 +41,7 @@ class NoOrgsConsoleApi extends FakeConsoleApi {
 
 export default {
   title: "AccountSettingsSidebar/DeviceCode",
-  component: DeviceCode,
+  component: DeviceCodeDialog,
   decorators: [
     (SingleStory: Story, ctx: StoryContext): JSX.Element => {
       const fakeConsoleApi = ctx.parameters.consoleApi ?? new FakeConsoleApi();
@@ -60,7 +59,7 @@ export default {
 
 export const ShowDeviceCode = (): JSX.Element => {
   return (
-    <DeviceCode
+    <DeviceCodeDialog
       deviceCode={{
         device_code: "foobar",
         expires_in: 100000,
@@ -74,7 +73,7 @@ export const ShowDeviceCode = (): JSX.Element => {
 
 export const CodeTimeout = (): JSX.Element => {
   return (
-    <DeviceCode
+    <DeviceCodeDialog
       deviceCode={{
         device_code: "foobar",
         expires_in: 0,
@@ -88,7 +87,7 @@ export const CodeTimeout = (): JSX.Element => {
 
 export const LoadingOrgs = (): JSX.Element => {
   return (
-    <DeviceCode
+    <DeviceCodeDialog
       deviceCode={{
         device_code: "foobar",
         expires_in: 1,
@@ -105,7 +104,7 @@ LoadingOrgs.parameters = {
 
 export const OrgSelect = (): JSX.Element => {
   return (
-    <DeviceCode
+    <DeviceCodeDialog
       deviceCode={{
         device_code: "foobar",
         expires_in: 1,
@@ -119,7 +118,7 @@ export const OrgSelect = (): JSX.Element => {
 
 export const NoOrgs = (): JSX.Element => {
   return (
-    <DeviceCode
+    <DeviceCodeDialog
       deviceCode={{
         device_code: "foobar",
         expires_in: 1,

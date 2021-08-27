@@ -4,11 +4,9 @@
 
 import { useMemo } from "react";
 
+import { AccountInfo, SigninForm } from "@foxglove/studio-base/components/AccountSettingsSidebar";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
-
-import AccountInfo from "./AccountInfo";
-import SigninForm from "./SigninForm";
 
 export default function AccountSettings(): JSX.Element {
   const me = useCurrentUser();
