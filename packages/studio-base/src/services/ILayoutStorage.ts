@@ -16,6 +16,8 @@ export type Layout = {
 
   /** @deprecated old field name, migrated to working/baseline */
   data?: PanelsState;
+  /** @deprecated old field name, migrated to working/baseline */
+  state?: PanelsState;
 
   /** The last explicitly saved version of this layout. */
   baseline: {
@@ -70,6 +72,8 @@ export function migrateLayout(value: unknown): Layout {
       baseline = layout.working;
     } else if (layout.data) {
       baseline = { data: layout.data, updatedAt: now };
+    } else if (layout.state) {
+      baseline = { data: layout.state, updatedAt: now };
     } else {
       throw new Error("Invariant violation - layout item is missing data");
     }
