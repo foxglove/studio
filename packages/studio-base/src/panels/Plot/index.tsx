@@ -264,8 +264,12 @@ function Plot(props: Props) {
           if (showSingleCurrentMessage) {
             accumulated[path] = [[tooltipItem]];
           } else {
-            const plotDataPath = (accumulated[path] ??= []);
-            plotDataPath.push([tooltipItem]);
+            const plotDataPath = (accumulated[path] ??= [[]]);
+            // PlotDataPaths have 2d arrays of tooltip items to accomodate blocks which may have gaps
+            // so each continuous set of blocks forms one set of tooltip items.
+            // For streaming messages we treat this as one continuous set of items and always add
+            // to the first "range"
+            plotDataPath[0]!.push(tooltipItem);
           }
         }
       }
