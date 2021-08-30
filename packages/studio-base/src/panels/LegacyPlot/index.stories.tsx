@@ -127,15 +127,15 @@ export default {
   },
 };
 
-export const basic = (): JSX.Element => {
+export function Basic(): JSX.Element {
   return (
     <PanelSetup fixture={fixture}>
       <TwoDimensionalPlot overrideConfig={{ path: { value: "/plot_a.versions[0]" } }} />
     </PanelSetup>
   );
-};
+}
 
-export const customMinMaxWindow = (): JSX.Element => {
+export function CustomMinMaxWindow(): JSX.Element {
   return (
     <PanelSetup fixture={fixture}>
       <TwoDimensionalPlot
@@ -149,9 +149,9 @@ export const customMinMaxWindow = (): JSX.Element => {
       />
     </PanelSetup>
   );
-};
+}
 
-export const customMinMaxVal = (): JSX.Element => {
+export function CustomMinMaxVal(): JSX.Element {
   return (
     <PanelSetup fixture={fixture}>
       <TwoDimensionalPlot
@@ -159,17 +159,18 @@ export const customMinMaxVal = (): JSX.Element => {
       />
     </PanelSetup>
   );
-};
+}
 
-export const emptyTopic = (): JSX.Element => {
+export function EmptyTopic(): JSX.Element {
   return (
     <PanelSetup fixture={fixture}>
       <TwoDimensionalPlot overrideConfig={{ path: { value: "/plot_b" } }} />
     </PanelSetup>
   );
-};
+}
 
-export const withTooltip = (): JSX.Element => {
+WithTooltip.parameters = { chromatic: { delay: 5000 } };
+export function WithTooltip(): JSX.Element {
   return (
     <div
       style={{ width: 300, height: 300 }}
@@ -189,9 +190,10 @@ export const withTooltip = (): JSX.Element => {
       </PanelSetup>
     </div>
   );
-};
+}
 
-export const showResetAfterHorizontalZoom = (): JSX.Element => {
+ShowResetAfterHorizontalZoom.parameters = { chromatic: { delay: 5000 } };
+export function ShowResetAfterHorizontalZoom(): JSX.Element {
   return (
     <PanelSetup
       fixture={fixture}
@@ -202,8 +204,9 @@ export const showResetAfterHorizontalZoom = (): JSX.Element => {
       <TwoDimensionalPlot overrideConfig={{ path: { value: "/plot_a.versions[0]" } }} />
     </PanelSetup>
   );
-};
-export const showResetAfterVerticalZoom = (): JSX.Element => {
+}
+ShowResetAfterVerticalZoom.parameters = { chromatic: { delay: 5000 } };
+export function ShowResetAfterVerticalZoom(): JSX.Element {
   return (
     <PanelSetup
       fixture={fixture}
@@ -217,8 +220,9 @@ export const showResetAfterVerticalZoom = (): JSX.Element => {
       <TwoDimensionalPlot overrideConfig={{ path: { value: "/plot_a.versions[0]" } }} />
     </PanelSetup>
   );
-};
-export const showResetZoom = (): JSX.Element => {
+}
+ShowResetZoom.parameters = { chromatic: { delay: 5000 } };
+export function ShowResetZoom(): JSX.Element {
   return (
     <PanelSetup
       fixture={fixture}
@@ -232,9 +236,10 @@ export const showResetZoom = (): JSX.Element => {
       <TwoDimensionalPlot overrideConfig={{ path: { value: "/plot_a.versions[0]" } }} />
     </PanelSetup>
   );
-};
+}
 
-export const resetZoom = (): JSX.Element => {
+ResetZoom.parameters = { chromatic: { delay: 5000 } };
+export function ResetZoom(): JSX.Element {
   return (
     <PanelSetup
       fixture={fixture}
@@ -251,4 +256,4 @@ export const resetZoom = (): JSX.Element => {
       <TwoDimensionalPlot overrideConfig={{ path: { value: "/plot_a.versions[0]" } }} />
     </PanelSetup>
   );
-};
+}
