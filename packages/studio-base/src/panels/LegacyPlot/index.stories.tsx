@@ -130,7 +130,7 @@ export default {
 
 Basic.parameters = { useReadySignal: true };
 export function Basic(): JSX.Element {
-  const readySignal = useReadySignal({ count: 1 });
+  const readySignal = useReadySignal({ count: 1 + 1 });
   return (
     <PanelSetup fixture={fixture}>
       <TwoDimensionalPlot
@@ -143,7 +143,7 @@ export function Basic(): JSX.Element {
 
 CustomMinMaxWindow.parameters = { useReadySignal: true };
 export function CustomMinMaxWindow(): JSX.Element {
-  const readySignal = useReadySignal({ count: 1 });
+  const readySignal = useReadySignal({ count: 1 + 1 });
   return (
     <PanelSetup fixture={fixture}>
       <TwoDimensionalPlot
@@ -162,7 +162,7 @@ export function CustomMinMaxWindow(): JSX.Element {
 
 CustomMinMaxVal.parameters = { useReadySignal: true };
 export function CustomMinMaxVal(): JSX.Element {
-  const readySignal = useReadySignal({ count: 2 });
+  const readySignal = useReadySignal({ count: 2 + 1 });
   return (
     <PanelSetup fixture={fixture}>
       <TwoDimensionalPlot
@@ -183,7 +183,7 @@ export function EmptyTopic(): JSX.Element {
 
 WithTooltip.parameters = { useReadySignal: true };
 export function WithTooltip(): JSX.Element {
-  const readySignal = useReadySignal({ count: 1 });
+  const readySignal = useReadySignal({ count: 1 + 1 });
   return (
     <div
       style={{ width: 300, height: 300 }}
@@ -210,7 +210,7 @@ export function WithTooltip(): JSX.Element {
 
 ShowResetAfterHorizontalZoom.parameters = { useReadySignal: true };
 export function ShowResetAfterHorizontalZoom(): JSX.Element {
-  const readySignal = useReadySignal({ count: 2 });
+  const readySignal = useReadySignal({ count: 2 + 1 });
   return (
     <PanelSetup
       fixture={fixture}
@@ -227,7 +227,7 @@ export function ShowResetAfterHorizontalZoom(): JSX.Element {
 }
 ShowResetAfterVerticalZoom.parameters = { useReadySignal: true };
 export function ShowResetAfterVerticalZoom(): JSX.Element {
-  const readySignal = useReadySignal({ count: 4 });
+  const readySignal = useReadySignal({ count: 4 + 1 });
   return (
     <PanelSetup
       fixture={fixture}
@@ -247,7 +247,7 @@ export function ShowResetAfterVerticalZoom(): JSX.Element {
 }
 ShowResetZoom.parameters = { useReadySignal: true };
 export function ShowResetZoom(): JSX.Element {
-  const readySignal = useReadySignal({ count: 4 });
+  const readySignal = useReadySignal({ count: 4 + 1 });
   return (
     <PanelSetup
       fixture={fixture}
@@ -268,7 +268,7 @@ export function ShowResetZoom(): JSX.Element {
 
 ResetZoom.parameters = { useReadySignal: true };
 export function ResetZoom(): JSX.Element {
-  const readySignal = useReadySignal({ count: 4 });
+  const readySignal = useReadySignal({ count: 4 + 1 });
   return (
     <PanelSetup
       fixture={fixture}
