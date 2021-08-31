@@ -50,6 +50,7 @@ export type ConsoleApiLayout = {
   name: string;
   created_at: ISO8601Timestamp;
   updated_at: ISO8601Timestamp;
+  saved_at?: ISO8601Timestamp;
   permission: "creator_write" | "org_read" | "org_write";
   data?: Record<string, unknown>;
 };
@@ -166,16 +167,22 @@ class ConsoleApi {
     });
   }
 
-  async createLayout(
-    layout: Pick<ConsoleApiLayout, "name" | "permission" | "data">,
-  ): Promise<ConsoleApiLayout> {
+  async createLayout(layout: {
+    saved_at: ISO8601Timestamp | undefined;
+    name: string | undefined;
+    permission: "creator_write" | "org_read" | "org_write" | undefined;
+    data: Record<string, unknown> | undefined;
+  }): Promise<ConsoleApiLayout> {
     return await this.post<ConsoleApiLayout>("/v1/layouts", layout);
   }
 
-  async updateLayout(
-    layout: Pick<ConsoleApiLayout, "id"> &
-      Partial<Pick<ConsoleApiLayout, "name" | "permission" | "data">>,
-  ): Promise<ConsoleApiLayout> {
+  async updateLayout(layout: {
+    id: LayoutID;
+    saved_at: ISO8601Timestamp;
+    name: string | undefined;
+    permission: "creator_write" | "org_read" | "org_write" | undefined;
+    data: Record<string, unknown> | undefined;
+  }): Promise<ConsoleApiLayout> {
     return await this.put<ConsoleApiLayout>(`/v1/layouts/${layout.id}`, layout);
   }
 

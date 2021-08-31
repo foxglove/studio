@@ -6,12 +6,16 @@ import { useMemo } from "react";
 
 import LayoutManagerContext from "@foxglove/studio-base/context/LayoutManagerContext";
 import { useLayoutStorage } from "@foxglove/studio-base/context/LayoutStorageContext";
+import { useRemoteLayoutStorage } from "@foxglove/studio-base/context/RemoteLayoutStorageContext";
 import LayoutManager from "@foxglove/studio-base/services/LayoutManager";
 
 export default function LayoutManagerProvider({
   children,
 }: React.PropsWithChildren<unknown>): JSX.Element {
   const layoutStorage = useLayoutStorage();
+
+  const remoteLayoutStorage = useRemoteLayoutStorage();
+  //FIXME todo
 
   const layoutManager = useMemo(
     () => new LayoutManager({ storage: layoutStorage }),
