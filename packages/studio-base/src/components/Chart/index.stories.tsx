@@ -122,11 +122,9 @@ export default {
 };
 
 export const Basic: Story = (_args) => {
-  const readySignal = useReadySignal();
-
   return (
     <div style={divStyle}>
-      <ChartComponent {...props} onChartUpdate={readySignal} />
+      <ChartComponent {...props} />
     </div>
   );
 };
