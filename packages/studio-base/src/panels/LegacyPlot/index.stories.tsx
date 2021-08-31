@@ -217,6 +217,7 @@ function useStepSequence(...steps: StepFn[]): () => void {
   return useCallback(() => {
     const step = stepsRef.current[stepIndexRef.current++];
     if (!step) {
+      throw new Error("No more steps");
       return;
     }
     step();
@@ -239,11 +240,12 @@ export function ShowResetAfterHorizontalZoom(): JSX.Element {
 }
 ShowResetAfterVerticalZoom.parameters = { useReadySignal: true };
 export function ShowResetAfterVerticalZoom(): JSX.Element {
-  const readySignal = useReadySignal();
+  const readySignal = useReadySignal({ count: 2 });
   const step = useStepSequence(
     useCallback(() => {
       zoomOut({ key: "v", code: "KeyV", keyCode: 86, ctrlKey: false, metaKey: false });
     }, []),
+    readySignal,
     readySignal,
   );
 
@@ -258,11 +260,12 @@ export function ShowResetAfterVerticalZoom(): JSX.Element {
 }
 ShowResetZoom.parameters = { useReadySignal: true };
 export function ShowResetZoom(): JSX.Element {
-  const readySignal = useReadySignal();
+  const readySignal = useReadySignal({ count: 2 });
   const step = useStepSequence(
     useCallback(() => {
       zoomOut({ key: "b", code: "KeyB", keyCode: 66, ctrlKey: false, metaKey: false });
     }, []),
+    readySignal,
     readySignal,
   );
 
