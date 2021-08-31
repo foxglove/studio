@@ -13,7 +13,7 @@ const ReadySignalContext = createContext<ReadySignal | undefined>(undefined);
  * for a screenshot test. To use this, the story must have the `useReadySignal` parameter set, i.e.
  * `Story.parameters = { useReadySignal: true }`.
  *
- * If provided, `count` can be set to require multiple calls to the returned function before the
+ * An optional `count` can be set to require multiple calls to the returned function before the
  * story will be marked as ready.
  */
 function useReadySignal({ count }: { count: number } = { count: 1 }): ReadySignal {
