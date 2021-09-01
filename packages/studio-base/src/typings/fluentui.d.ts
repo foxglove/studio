@@ -61,6 +61,7 @@ declare global {
     | "SettingsFilled"
     | "Share"
     | "SingleColumnEdit"
+    | "StatusCircleInner"
     | "TestBeakerSolid"
     | "Undo"
     | "Upload"

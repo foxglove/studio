@@ -29,13 +29,21 @@ const useStyles = makeStyles((theme) => ({
     cursor: "pointer",
     paddingLeft: theme.spacing.m,
     paddingRight: theme.spacing.s1,
+
+    ":focus-within": {
+      background: theme.semanticColors.listItemBackgroundHovered,
+    },
     ":hover": {
       background: theme.semanticColors.listItemBackgroundHovered,
+    },
+    ":hover > .ms-Button--hasMenu": {
+      opacity: 1,
     },
   },
 
   layoutRowSelected: {
     background: theme.semanticColors.listItemBackgroundChecked,
+
     ":hover": {
       background: theme.semanticColors.listItemBackgroundCheckedHovered,
     },
@@ -45,6 +53,7 @@ const useStyles = makeStyles((theme) => ({
   layoutRowWithOpenMenu: {
     background: theme.semanticColors.listItemBackgroundHovered,
   },
+
   layoutRowSelectedWithOpenMenu: {
     background: theme.semanticColors.listItemBackgroundCheckedHovered,
   },
@@ -54,6 +63,17 @@ const useStyles = makeStyles((theme) => ({
     whiteSpace: "nowrap",
     overflow: "hidden",
     lineHeight: theme.spacing.l2, // avoid descenders being cut off
+  },
+
+  menuButton: {
+    opacity: 0,
+
+    ":focus": {
+      opacity: 1,
+    },
+  },
+  menuButtonWorking: {
+    opacity: 1,
   },
 }));
 
@@ -482,10 +502,13 @@ export default function LayoutRow({
       ) : (
         <IconButton
           ariaLabel="Layout actions"
+          className={cx(styles.menuButton, {
+            [styles.menuButtonWorking]: layout.working != undefined,
+          })}
           data={{ text: "x" }}
           data-test="layout-actions"
           iconProps={{
-            iconName: layout.working != undefined ? "Info" : "More",
+            iconName: layout.working != undefined ? "StatusCircleInner" : "More",
             styles: {
               root: {
                 "& span": { verticalAlign: "baseline" },
@@ -494,6 +517,9 @@ export default function LayoutRow({
           }}
           onRenderMenuIcon={() => ReactNull}
           menuProps={{ items: filteredItems }}
+          styles={{
+            rootHovered: { background: "transparent" },
+          }}
         />
       )}
     </Stack>

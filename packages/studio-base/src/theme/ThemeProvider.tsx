@@ -81,6 +81,7 @@ const icons: {
   SettingsFilled: <Settings20Filled />,
   Share: <Icons.ShareIcon />,
   SingleColumnEdit: <Icons.SingleColumnEditIcon />,
+  StatusCircleInner: <Icons.StatusCircleInnerIcon />,
   TestBeakerSolid: <Icons.TestBeakerSolidIcon />,
   Undo: <Icons.UndoIcon />,
   Upload: <Icons.UploadIcon />,
