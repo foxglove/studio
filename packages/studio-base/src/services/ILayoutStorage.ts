@@ -9,10 +9,12 @@ import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/
 export type LayoutID = string & { __brand: "LayoutID" };
 export type ISO8601Timestamp = string & { __brand: "ISO8601Timestamp" };
 
+export type LayoutPermission = "creator_write" | "org_read" | "org_write";
+
 export type Layout = {
   id: LayoutID;
   name: string;
-  permission: "creator_write" | "org_read" | "org_write";
+  permission: LayoutPermission;
 
   /** @deprecated old field name, migrated to working/baseline */
   data?: PanelsState;
@@ -22,7 +24,7 @@ export type Layout = {
   /** The last explicitly saved version of this layout. */
   baseline: {
     data: PanelsState;
-    updatedAt: ISO8601Timestamp;
+    savedAt: ISO8601Timestamp | undefined;
   };
 
   /**
@@ -31,7 +33,7 @@ export type Layout = {
   working:
     | {
         data: PanelsState;
-        updatedAt: ISO8601Timestamp;
+        savedAt: ISO8601Timestamp | undefined;
       }
     | undefined;
 };
@@ -47,6 +49,18 @@ export interface ILayoutStorage {
    * layouts into the new namespace used for local layouts.
    */
   migrateLocalLayouts?(namespace: string): Promise<void>;
+}
+
+export function layoutPermissionIsShared(
+  permission: LayoutPermission,
+): permission is Exclude<LayoutPermission, "creator_write"> {
+  return permission !== "creator_write";
+}
+
+export function layoutIsShared(
+  layout: Layout,
+): layout is Layout & { permission: Exclude<LayoutPermission, "creator_write"> } {
+  return layoutPermissionIsShared(layout.permission);
 }
 
 /**
@@ -71,9 +85,9 @@ export function migrateLayout(value: unknown): Layout {
     if (layout.working) {
       baseline = layout.working;
     } else if (layout.data) {
-      baseline = { data: layout.data, updatedAt: now };
+      baseline = { data: layout.data, savedAt: now };
     } else if (layout.state) {
-      baseline = { data: layout.state, updatedAt: now };
+      baseline = { data: layout.state, savedAt: now };
     } else {
       throw new Error("Invariant violation - layout item is missing data");
     }

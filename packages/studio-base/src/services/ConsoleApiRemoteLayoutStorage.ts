@@ -2,9 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { filterMap } from "@foxglove/den/collection";
 import Logger from "@foxglove/log";
-import { PanelsState } from "@foxglove/studio-base/";
-import { filterMap } from "@foxglove/studio-base/../../den/collection";
+import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import ConsoleApi, { ConsoleApiLayout } from "@foxglove/studio-base/services/ConsoleApi";
 import { LayoutID, ISO8601Timestamp } from "@foxglove/studio-base/services/ILayoutStorage";
 import {
@@ -14,15 +14,15 @@ import {
 
 const log = Logger.getLogger(__filename);
 
-function convertLayout({ id, name, permission, data }: ConsoleApiLayout): RemoteLayout {
+function convertLayout({ id, name, permission, data, saved_at }: ConsoleApiLayout): RemoteLayout {
   if (data == undefined) {
     throw new Error(`Missing data for server layout ${name} (${id})`);
   }
-  return { id, name, permission, data: data as PanelsState };
+  return { id, name, permission, data: data as PanelsState, savedAt: saved_at };
 }
 
 export default class ConsoleApiRemoteLayoutStorage implements IRemoteLayoutStorage {
-  constructor(private api: ConsoleApi) {}
+  constructor(readonly namespace: string, private api: ConsoleApi) {}
 
   async getLayouts(): Promise<readonly RemoteLayout[]> {
     return filterMap(await this.api.getLayouts({ includeData: false }), (layout) => {
@@ -43,66 +43,35 @@ export default class ConsoleApiRemoteLayoutStorage implements IRemoteLayoutStora
     name,
     data,
     permission,
+    savedAt,
   }: {
     name: string;
     data: PanelsState;
     permission: "creator_write" | "org_read" | "org_write";
+    savedAt: ISO8601Timestamp;
   }): Promise<RemoteLayout> {
-    try {
-      const result = await this.api.createLayout({ name, data, permission });
-      return { status: "success", newMetadata: convertLayout(result) };
-    } catch (err) {
-      log.warn(err);
-      return { status: "conflict" };
-    }
+    const result = await this.api.createLayout({ name, data, permission, saved_at: savedAt });
+    return convertLayout(result);
   }
 
   async updateLayout({
-    targetID,
+    id,
     name,
     data,
     permission,
-    ifUnmodifiedSince,
+    savedAt,
   }: {
-    targetID: LayoutID;
+    id: LayoutID;
     name?: string;
     data?: PanelsState;
     permission?: "creator_write" | "org_read" | "org_write";
-    ifUnmodifiedSince: ISO8601Timestamp;
-  }): Promise<
-    | { status: "success"; newMetadata: RemoteLayoutMetadata }
-    | { status: "not-found" }
-    | { status: "conflict" }
-    | { status: "precondition-failed" }
-  > {
-    try {
-      const existingLayout = await this.api.getLayout(targetID, { includeData: false });
-      if (!existingLayout) {
-        return { status: "not-found" };
-      }
-      if (existingLayout.updated_at !== ifUnmodifiedSince) {
-        return { status: "precondition-failed" };
-      }
-      const result = await this.api.updateLayout({
-        id: targetID,
-        name,
-        data,
-        permission,
-      });
-      return { status: "success", newMetadata: convertLayout(result) };
-    } catch (err) {
-      log.warn(err);
-      return { status: "conflict" };
-    }
+    savedAt: ISO8601Timestamp;
+  }): Promise<RemoteLayout> {
+    const result = await this.api.updateLayout({ id, name, data, permission, saved_at: savedAt });
+    return convertLayout(result);
   }
 
-  async deleteLayout({
-    targetID,
-  }: {
-    targetID: LayoutID;
-    ifUnmodifiedSince: ISO8601Timestamp;
-  }): Promise<{ status: "success" | "precondition-failed" }> {
-    await this.api.deleteLayout(targetID);
-    return { status: "success" };
+  async deleteLayout(id: LayoutID): Promise<void> {
+    await this.api.deleteLayout(id);
   }
 }

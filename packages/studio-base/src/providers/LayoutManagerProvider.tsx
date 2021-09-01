@@ -13,13 +13,11 @@ export default function LayoutManagerProvider({
   children,
 }: React.PropsWithChildren<unknown>): JSX.Element {
   const layoutStorage = useLayoutStorage();
-
   const remoteLayoutStorage = useRemoteLayoutStorage();
-  //FIXME todo
 
   const layoutManager = useMemo(
-    () => new LayoutManager({ storage: layoutStorage }),
-    [layoutStorage],
+    () => new LayoutManager({ local: layoutStorage, remote: remoteLayoutStorage }),
+    [layoutStorage, remoteLayoutStorage],
   );
 
   return (

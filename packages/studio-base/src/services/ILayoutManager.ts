@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import { Layout, LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
+import { Layout, LayoutID, LayoutPermission } from "@foxglove/studio-base/services/ILayoutStorage";
 
 export type LayoutChangeListener = (event: { updatedLayout: Layout | undefined }) => void;
 
@@ -30,7 +30,7 @@ export interface ILayoutManager {
   saveNewLayout(params: {
     name: string;
     data: PanelsState;
-    permission: "creator_write" | "org_read" | "org_write";
+    permission: LayoutPermission;
   }): Promise<Layout>;
 
   /**
@@ -43,7 +43,7 @@ export interface ILayoutManager {
     id: LayoutID;
     name?: string;
     data?: PanelsState;
-    permission?: "creator_write" | "org_read" | "org_write";
+    // FIXME: ok to remove permission?
   }): Promise<Layout>;
 
   deleteLayout(params: { id: LayoutID }): Promise<void>;

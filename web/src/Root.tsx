@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Link } from "@fluentui/react";
+import { useMemo } from "react";
 
 import {
   App,
@@ -14,6 +15,10 @@ import {
   StudioToastProvider,
   CssBaseline,
   GlobalCss,
+  ConsoleApi,
+  ConsoleApiContext,
+  ConsoleApiRemoteLayoutStorageProvider,
+  CurrentUserProvider,
 } from "@foxglove/studio-base";
 
 import LocalStorageAppConfigurationProvider from "./components/LocalStorageAppConfigurationProvider";
@@ -66,8 +71,13 @@ export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX
     },
   ];
 
+  const api = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);
+
   const providers = [
     /* eslint-disable react/jsx-key */
+    <ConsoleApiContext.Provider value={api} />,
+    <CurrentUserProvider />,
+    <ConsoleApiRemoteLayoutStorageProvider />,
     <StudioToastProvider />,
     <LocalStorageAppConfigurationProvider />,
     <LocalStorageLayoutStorageProvider />,

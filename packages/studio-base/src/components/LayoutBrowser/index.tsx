@@ -23,7 +23,7 @@ import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutS
 import { usePrompt } from "@foxglove/studio-base/hooks/usePrompt";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
-import { Layout } from "@foxglove/studio-base/services/ILayoutStorage";
+import { Layout, layoutIsShared } from "@foxglove/studio-base/services/ILayoutStorage";
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
 
 import LayoutSection from "./LayoutSection";
@@ -47,11 +47,9 @@ export default function LayoutBrowser({
 
   const [layouts, reloadLayouts] = useAsyncFn(
     async () => {
-      const [personal, shared] = partition(
+      const [shared, personal] = partition(
         await layoutStorage.getLayouts(),
-        layoutStorage.supportsSharing
-          ? (layout) => layout.permission === "creator_write"
-          : () => true,
+        layoutStorage.supportsSharing ? layoutIsShared : () => true,
       );
       return {
         personal: personal.sort((a, b) => a.name.localeCompare(b.name)),
@@ -313,7 +311,7 @@ export default function LayoutBrowser({
           )}
         </Stack.Item>
         <div style={{ flexGrow: 1 }} />
-        {layoutDebug && (
+        {layoutDebug?.syncNow && (
           <Stack
             style={{
               position: "sticky",
@@ -328,26 +326,11 @@ export default function LayoutBrowser({
           >
             <Stack.Item grow align="stretch">
               <Stack disableShrink horizontal tokens={{ childrenGap: theme.spacing.s1 }}>
-                {layoutDebug.openFakeStorageDirectory && (
-                  <Stack.Item grow>
-                    <DefaultButton
-                      text="Open dir"
-                      onClick={() => void layoutDebug.openFakeStorageDirectory?.()}
-                      styles={{
-                        root: {
-                          display: "block",
-                          width: "100%",
-                          margin: 0,
-                        },
-                      }}
-                    />
-                  </Stack.Item>
-                )}
                 <Stack.Item grow>
                   <DefaultButton
                     text="Sync now"
                     onClick={async () => {
-                      await layoutDebug.syncNow();
+                      await layoutDebug.syncNow?.();
                       await reloadLayouts();
                     }}
                     styles={{

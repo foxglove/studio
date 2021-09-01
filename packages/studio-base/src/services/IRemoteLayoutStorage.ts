@@ -3,7 +3,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
-import { ISO8601Timestamp, LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
+import {
+  ISO8601Timestamp,
+  LayoutID,
+  LayoutPermission,
+} from "@foxglove/studio-base/services/ILayoutStorage";
 
 /**
  * A panel layout stored on a remote server.
@@ -11,8 +15,9 @@ import { ISO8601Timestamp, LayoutID } from "@foxglove/studio-base/services/ILayo
 export type RemoteLayout = {
   id: LayoutID;
   name: string;
-  permission: "creator_write" | "org_read" | "org_write";
+  permission: LayoutPermission;
   data: PanelsState;
+  savedAt: ISO8601Timestamp | undefined;
 };
 
 export interface IRemoteLayoutStorage {
@@ -29,7 +34,7 @@ export interface IRemoteLayoutStorage {
   saveNewLayout: (params: {
     name: string;
     data: PanelsState;
-    permission: "creator_write" | "org_read" | "org_write";
+    permission: LayoutPermission;
     savedAt: ISO8601Timestamp;
   }) => Promise<RemoteLayout>;
 
@@ -37,7 +42,7 @@ export interface IRemoteLayoutStorage {
     id: LayoutID;
     name?: string;
     data?: PanelsState;
-    permission?: "creator_write" | "org_read" | "org_write";
+    permission?: LayoutPermission;
     savedAt: ISO8601Timestamp;
   }) => Promise<RemoteLayout>;
 

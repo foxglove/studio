@@ -8,12 +8,8 @@ import { IRemoteLayoutStorage } from "@foxglove/studio-base/services/IRemoteLayo
 
 const RemoteLayoutStorageContext = createContext<IRemoteLayoutStorage | undefined>(undefined);
 
-export function useRemoteLayoutStorage(): IRemoteLayoutStorage {
-  const ctx = useContext(RemoteLayoutStorageContext);
-  if (ctx == undefined) {
-    throw new Error("A LayoutStorage provider is required to useRemoteLayoutStorage");
-  }
-  return ctx;
+export function useRemoteLayoutStorage(): IRemoteLayoutStorage | undefined {
+  return useContext(RemoteLayoutStorageContext);
 }
 
 export default RemoteLayoutStorageContext;

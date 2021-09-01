@@ -3,6 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 type CurrentUser = {
+  id: string;
+  orgId: string;
   email: string;
 };
 

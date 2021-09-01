@@ -12,7 +12,18 @@ import {
   ILayoutManager,
   LayoutChangeListener,
 } from "@foxglove/studio-base/services/ILayoutManager";
-import { ILayoutStorage, Layout, LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
+import {
+  ILayoutStorage,
+  Layout,
+  LayoutID,
+  layoutIsShared,
+  LayoutPermission,
+  layoutPermissionIsShared,
+} from "@foxglove/studio-base/services/ILayoutStorage";
+import {
+  IRemoteLayoutStorage,
+  RemoteLayout,
+} from "@foxglove/studio-base/services/IRemoteLayoutStorage";
 
 const log = Logger.getLogger(__filename);
 
@@ -59,18 +70,26 @@ export default class LayoutManager implements ILayoutManager {
    * and then writing a single layout, or writing one and deleting another) from getting
    * interleaved.
    */
-  private storage: MutexLocked<NamespacedLayoutStorage>;
+  private local: MutexLocked<NamespacedLayoutStorage>;
+  private remote: IRemoteLayoutStorage | undefined;
 
   readonly supportsSharing = false;
 
   private changeListeners = new Set<LayoutChangeListener>();
 
-  constructor({ storage }: { storage: ILayoutStorage }) {
-    this.storage = new MutexLocked(
-      new NamespacedLayoutStorage(storage, LayoutManager.LOCAL_STORAGE_NAMESPACE, {
+  constructor({
+    local,
+    remote,
+  }: {
+    local: ILayoutStorage;
+    remote: IRemoteLayoutStorage | undefined;
+  }) {
+    this.local = new MutexLocked(
+      new NamespacedLayoutStorage(local, LayoutManager.LOCAL_STORAGE_NAMESPACE, {
         migrateLocalLayouts: true,
       }),
     );
+    this.remote = remote;
   }
 
   addLayoutsChangedListener(listener: LayoutChangeListener): void {
@@ -88,11 +107,11 @@ export default class LayoutManager implements ILayoutManager {
   }
 
   async getLayouts(): Promise<readonly Layout[]> {
-    return await this.storage.runExclusive(async (storage) => await storage.list());
+    return await this.local.runExclusive(async (local) => await local.list());
   }
 
   async getLayout(id: LayoutID): Promise<Layout | undefined> {
-    return await this.storage.runExclusive(async (storage) => await storage.get(id));
+    return await this.local.runExclusive(async (local) => await local.get(id));
   }
 
   async saveNewLayout({
@@ -102,80 +121,158 @@ export default class LayoutManager implements ILayoutManager {
   }: {
     name: string;
     data: PanelsState;
-    permission: "creator_write" | "org_read" | "org_write";
+    permission: LayoutPermission;
   }): Promise<Layout> {
-    if (permission !== "creator_write") {
-      throw new Error("Sharing is not supported");
+    if (layoutPermissionIsShared(permission)) {
+      if (!this.remote) {
+        throw new Error("Shared layouts are not supported without remote layout storage");
+      }
+      const newLayout = await this.remote.saveNewLayout({
+        name,
+        data,
+        permission,
+        savedAt: new Date().toISOString() as ISO8601Timestamp,
+      });
+      const result = await this.local.runExclusive(
+        async (local) =>
+          await local.put({
+            id: newLayout.id,
+            name: newLayout.name,
+            permission: newLayout.permission,
+            baseline: { savedAt: newLayout.savedAt, data: newLayout.data },
+            working: undefined,
+          }),
+      );
+      this.notifyChangeListeners({ updatedLayout: undefined });
+      return result;
     }
-    const newLayout = await this.storage.runExclusive(
-      async (storage) =>
-        await storage.put({
+
+    const newLayout = await this.local.runExclusive(
+      async (local) =>
+        await local.put({
           id: uuidv4() as LayoutID,
           name,
           permission,
           working: undefined,
-          baseline: { data, updatedAt: new Date().toISOString() as ISO8601Timestamp },
+          baseline: { data, savedAt: new Date().toISOString() as ISO8601Timestamp },
         }),
     );
     this.notifyChangeListeners({ updatedLayout: newLayout });
     return newLayout;
   }
 
+  // FIXME: ok to remove permission?
   async updateLayout({
     id,
     name,
     data,
-    permission,
   }: {
     id: LayoutID;
     name: string | undefined;
     data: PanelsState | undefined;
-    permission?: "creator_write" | "org_read" | "org_write";
   }): Promise<Layout> {
-    if (permission != undefined && permission !== "creator_write") {
-      throw new Error("Sharing is not supported");
+    const localLayout = await this.local.runExclusive(async (local) => await local.get(id));
+    if (!localLayout) {
+      throw new Error(`Cannot update layout ${id} because it does not exist`);
     }
-
-    const result = await this.storage.runExclusive(async (storage) => {
-      const layout = await storage.get(id);
-      if (!layout) {
-        throw new Error(`Cannot update layout ${id} because it does not exist`);
+    if (layoutIsShared(localLayout)) {
+      if (!this.remote) {
+        throw new Error("Shared layouts are not supported without remote layout storage");
       }
-      const updatedLayout = {
-        ...layout,
-        name: name ?? layout.name,
-        permission: permission ?? layout.permission,
-      };
-      if (data != undefined) {
-        updatedLayout.working = { data, updatedAt: new Date().toISOString() as ISO8601Timestamp };
-      }
-      return await storage.put(updatedLayout);
-    });
-    this.notifyChangeListeners({ updatedLayout: result });
-    return result;
+      const updatedRemote = await this.remote.updateLayout({
+        id,
+        name,
+        data,
+        savedAt: new Date().toISOString() as ISO8601Timestamp,
+      });
+      const updatedLocal = await this.local.runExclusive(async (local) => {
+        return await local.put({
+          id,
+          name: updatedRemote.name,
+          permission: updatedRemote.permission,
+          baseline: { data: updatedRemote.data, savedAt: updatedRemote.savedAt },
+          working: localLayout?.working,
+        });
+      });
+      this.notifyChangeListeners({ updatedLayout: updatedLocal });
+      return updatedLocal;
+    } else {
+      const updatedLocal = await this.local.runExclusive(async (local) => {
+        const updatedLayout = {
+          ...localLayout,
+          name: name ?? localLayout.name,
+        };
+        if (data != undefined) {
+          updatedLayout.working = { data, savedAt: new Date().toISOString() as ISO8601Timestamp };
+        }
+        return await local.put(updatedLayout);
+      });
+      this.notifyChangeListeners({ updatedLayout: updatedLocal });
+      return updatedLocal;
+    }
   }
 
   async deleteLayout({ id }: { id: LayoutID }): Promise<void> {
-    await this.storage.runExclusive(async (storage) => {
-      const layout = await storage.get(id);
-      if (!layout) {
-        log.warn(`Cannot delete layout id ${id} because it does not exist`);
-        return;
+    const localLayout = await this.local.runExclusive(async (local) => await local.get(id));
+    if (!localLayout) {
+      throw new Error(`Cannot update layout ${id} because it does not exist`);
+    }
+    if (layoutIsShared(localLayout)) {
+      if (!this.remote) {
+        throw new Error("Shared layouts are not supported without remote layout storage");
       }
-      await storage.delete(id);
-    });
+      await this.remote.deleteLayout(id);
+    }
+    await this.local.runExclusive(async (local) => await local.delete(id));
     this.notifyChangeListeners({ updatedLayout: undefined });
   }
 
   async overwriteLayout({ id }: { id: LayoutID }): Promise<Layout> {
-    const result = await this.storage.runExclusive(async (storage) => {
-      const layout = await storage.get(id);
-      if (!layout) {
-        throw new Error(`Cannot overwrite layout id ${id} because it does not exist`);
+    const localLayout = await this.local.runExclusive(async (local) => await local.get(id));
+    if (!localLayout) {
+      throw new Error(`Cannot overwrite layout ${id} because it does not exist`);
+    }
+    if (layoutIsShared(localLayout)) {
+      if (!this.remote) {
+        throw new Error("Shared layouts are not supported without remote layout storage");
       }
-      return await storage.put({
+      const updatedBaseline = await this.remote.updateLayout({
+        id,
+        data: localLayout.working?.data ?? localLayout.baseline.data,
+        savedAt: new Date().toISOString() as ISO8601Timestamp,
+      });
+      const result = await this.local.runExclusive(
+        async (local) =>
+          await local.put({
+            ...localLayout,
+            baseline: { data: updatedBaseline.data, savedAt: updatedBaseline.savedAt },
+            working: undefined,
+          }),
+      );
+      this.notifyChangeListeners({ updatedLayout: result });
+      return result;
+    } else {
+      const result = await this.local.runExclusive(
+        async (local) =>
+          await local.put({
+            ...localLayout,
+            baseline: localLayout.working ?? localLayout.baseline,
+            working: undefined,
+          }),
+      );
+      this.notifyChangeListeners({ updatedLayout: result });
+      return result;
+    }
+  }
+
+  async revertLayout({ id }: { id: LayoutID }): Promise<Layout> {
+    const result = await this.local.runExclusive(async (local) => {
+      const layout = await local.get(id);
+      if (!layout) {
+        throw new Error(`Cannot revert layout id ${id} because it does not exist`);
+      }
+      return await local.put({
         ...layout,
-        baseline: layout.working ?? layout.baseline,
         working: undefined,
       });
     });
@@ -183,18 +280,49 @@ export default class LayoutManager implements ILayoutManager {
     return result;
   }
 
-  async revertLayout({ id }: { id: LayoutID }): Promise<Layout> {
-    const result = await this.storage.runExclusive(async (storage) => {
-      const layout = await storage.get(id);
-      if (!layout) {
-        throw new Error(`Cannot revert layout id ${id} because it does not exist`);
-      }
-      return await storage.put({
-        ...layout,
-        working: undefined,
-      });
-    });
-    this.notifyChangeListeners({ updatedLayout: result });
-    return result;
+  /** Ensures at most one sync operation is in progress at a time */
+  private currentSync?: Promise<void>;
+
+  /**
+   * Attempt to synchronize the local cache with remote storage. At minimum this incurs a fetch of
+   * the cached and remote layout lists; it may also involve modifications to the cache, remote
+   * storage, or both.
+   * @returns Any conflicts that arose during the sync.
+   */
+  async syncWithRemote(): Promise<void> {
+    if (this.currentSync) {
+      return await this.currentSync;
+    }
+    try {
+      this.currentSync = this.syncWithRemoteImpl();
+      this.notifyChangeListeners({ updatedLayout: undefined });
+    } finally {
+      this.currentSync = undefined;
+    }
+  }
+
+  private async syncWithRemoteImpl(): Promise<void> {
+    if (!this.remote) {
+      return;
+    }
+    const [cachedLayoutsById, remoteLayoutsById] = await Promise.all([
+      this.local.runExclusive(
+        async (local) =>
+          await local
+            .list()
+            .then(
+              (layouts): ReadonlyMap<string, Layout> =>
+                new Map(layouts.map((layout) => [layout.id, layout])),
+            ),
+      ),
+      this.remote
+        .getLayouts()
+        .then(
+          (layouts): ReadonlyMap<string, RemoteLayout> =>
+            new Map(layouts.map((layout) => [layout.id, layout])),
+        ),
+    ]);
+
+    //FIXME
   }
 }

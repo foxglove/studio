@@ -20,7 +20,7 @@ import { useMountedState } from "react-use";
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
 import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
-import { Layout } from "@foxglove/studio-base/services/ILayoutStorage";
+import { Layout, layoutIsShared } from "@foxglove/studio-base/services/ILayoutStorage";
 
 import { debugBorder } from "./styles";
 
@@ -232,7 +232,7 @@ export default function LayoutRow({
       ["data-test"]: "duplicate-layout",
     },
     layoutStorage.supportsSharing &&
-      layout.permission === "creator_write" && {
+      !layoutIsShared(layout) && {
         key: "share",
         text: "Share",
         iconProps: { iconName: "Share" },
