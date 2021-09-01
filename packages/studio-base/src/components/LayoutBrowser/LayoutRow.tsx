@@ -12,6 +12,7 @@ import {
   useTheme,
   IContextualMenuItem,
   ContextualMenu,
+  StackItem,
 } from "@fluentui/react";
 import cx from "classnames";
 import { useCallback, useContext, useState } from "react";
@@ -52,10 +53,18 @@ const useStyles = makeStyles((theme) => ({
   // Pin the "hover" style when the right-click menu is open
   layoutRowWithOpenMenu: {
     background: theme.semanticColors.listItemBackgroundHovered,
+
+    "& .ms-Button--hasMenu": {
+      opacity: 1,
+    },
   },
 
   layoutRowSelectedWithOpenMenu: {
     background: theme.semanticColors.listItemBackgroundCheckedHovered,
+
+    "& .ms-Button--hasMenu": {
+      opacity: 1,
+    },
   },
 
   layoutName: {
@@ -69,6 +78,9 @@ const useStyles = makeStyles((theme) => ({
     opacity: 0,
 
     ":focus": {
+      opacity: 1,
+    },
+    "&.is-expanded": {
       opacity: 1,
     },
   },
@@ -471,7 +483,7 @@ export default function LayoutRow({
           onDismiss={() => setContextMenuEvent(undefined)}
         />
       )}
-      <Stack.Item grow className={styles.layoutName} title={layout.name}>
+      <StackItem grow className={styles.layoutName} title={layout.name}>
         {editingName ? (
           <TextField
             componentRef={onTextFieldMount}
@@ -482,10 +494,10 @@ export default function LayoutRow({
         ) : (
           layout.name
         )}
-      </Stack.Item>
+      </StackItem>
 
       {editingName ? (
-        <>
+        <StackItem styles={{ root: { marginRight: `-${theme.spacing.s1}` } }}>
           <IconButton
             type="submit"
             iconProps={{ iconName: "CheckMark" }}
@@ -498,7 +510,7 @@ export default function LayoutRow({
             ariaLabel="Cancel"
             data-test="cancel-rename"
           />
-        </>
+        </StackItem>
       ) : (
         <IconButton
           ariaLabel="Layout actions"
@@ -518,6 +530,10 @@ export default function LayoutRow({
           onRenderMenuIcon={() => ReactNull}
           menuProps={{ items: filteredItems }}
           styles={{
+            root: {
+              marginRight: `-${theme.spacing.s1}`,
+              borderRadius: "none",
+            },
             rootHovered: { background: "transparent" },
           }}
         />

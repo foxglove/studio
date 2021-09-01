@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { List, makeStyles, Stack, Text } from "@fluentui/react";
+import { makeStyles, Stack, Text } from "@fluentui/react";
 
 import { Layout } from "@foxglove/studio-base/services/ILayoutStorage";
 
@@ -66,7 +66,7 @@ export default function LayoutSection({
         </Text>
       )}
       <Stack.Item>
-        <Text className={styles.emptyText} style={{ lineHeight: "1.3" }}>
+        <Text className={styles.emptyText} styles={{ root: { lineHeight: "1.3" } }}>
           {items != undefined && items.length === 0 && emptyText}
         </Text>
         {items?.map((layout) => (
