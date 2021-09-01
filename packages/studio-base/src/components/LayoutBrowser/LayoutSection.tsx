@@ -59,7 +59,7 @@ export default function LayoutSection({
 }): JSX.Element {
   const styles = useStyles();
   return (
-    <Stack>
+    <Stack grow>
       {title != undefined && (
         <Text as="h2" className={styles.sectionHeader}>
           {title}

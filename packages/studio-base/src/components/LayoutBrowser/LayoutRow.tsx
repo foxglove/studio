@@ -5,6 +5,7 @@
 import {
   ContextualMenuItemType,
   IconButton,
+  Text,
   TextField,
   ITextField,
   makeStyles,
@@ -170,6 +171,9 @@ export default function LayoutRow({
   const onTextFieldKeyDown = useCallback((event: React.KeyboardEvent) => {
     if (event.key === "Escape") {
       setEditingName(false);
+    }
+    if (event.key === "Tab") {
+      // Submit
     }
   }, []);
 
@@ -483,35 +487,25 @@ export default function LayoutRow({
           onDismiss={() => setContextMenuEvent(undefined)}
         />
       )}
-      <StackItem grow className={styles.layoutName} title={layout.name}>
+      <StackItem grow title={layout.name}>
         {editingName ? (
           <TextField
             componentRef={onTextFieldMount}
             value={nameFieldValue}
             onChange={(_event, newValue) => newValue != undefined && setNameFieldValue(newValue)}
             onKeyDown={onTextFieldKeyDown}
+            styles={{
+              fieldGroup: {
+                marginLeft: `-${theme.spacing.s1}`,
+              },
+            }}
           />
         ) : (
-          layout.name
+          <Text className={styles.layoutName}>{layout.name}</Text>
         )}
       </StackItem>
 
-      {editingName ? (
-        <StackItem styles={{ root: { marginRight: `-${theme.spacing.s1}` } }}>
-          <IconButton
-            type="submit"
-            iconProps={{ iconName: "CheckMark" }}
-            ariaLabel="Rename"
-            data-test="commit-rename"
-          />
-          <IconButton
-            iconProps={{ iconName: "Cancel" }}
-            onClick={() => setEditingName(false)}
-            ariaLabel="Cancel"
-            data-test="cancel-rename"
-          />
-        </StackItem>
-      ) : (
+      {!editingName && (
         <IconButton
           ariaLabel="Layout actions"
           className={cx(styles.menuButton, {
