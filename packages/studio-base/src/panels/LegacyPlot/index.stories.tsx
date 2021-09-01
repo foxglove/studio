@@ -218,7 +218,6 @@ function useStepSequence(...steps: StepFn[]): () => void {
     const step = stepsRef.current[stepIndexRef.current++];
     if (!step) {
       throw new Error("No more steps");
-      return;
     }
     step();
   }, []);
