@@ -11,11 +11,11 @@ import { RosNode } from "@foxglove/ros2";
 import { RosMsgDefinition } from "@foxglove/rosmsg";
 import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
 import { definitions as foxgloveDefs } from "@foxglove/rosmsg-msgs-foxglove";
-import { Time } from "@foxglove/rostime";
+import { Time, fromMillis } from "@foxglove/rostime";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
-  AdvertisePayload,
+  AdvertiseOptions,
   MessageEvent,
   ParameterValue,
   Player,
@@ -27,11 +27,10 @@ import {
   SubscribePayload,
   Topic,
 } from "@foxglove/studio-base/players/types";
-import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
 import rosDatatypesToMessageDefinition from "@foxglove/studio-base/util/rosDatatypesToMessageDefinition";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
-import { fromMillis, TimestampMethod } from "@foxglove/studio-base/util/time";
+import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 const log = Logger.getLogger(__filename);
 const rosLog = Logger.getLogger("ROS2");
@@ -72,7 +71,7 @@ export default class Ros2Player implements Player {
   private _requestTopicsTimeout?: ReturnType<typeof setTimeout>; // setTimeout() handle for _requestTopics().
   private _hasReceivedMessage = false;
   private _metricsCollector: PlayerMetricsCollectorInterface;
-  private _presence: PlayerPresence = PlayerPresence.CONSTRUCTING;
+  private _presence: PlayerPresence = PlayerPresence.INITIALIZING;
   private _problems = new PlayerProblemManager();
 
   constructor({ domainId, metricsCollector }: Ros2PlayerOpts) {
@@ -137,13 +136,13 @@ export default class Ros2Player implements Player {
     }
   }
 
-  private _clearProblem(id: string, skipEmit = false): void {
-    if (this._problems.removeProblem(id)) {
-      if (!skipEmit) {
-        this._emitState();
-      }
-    }
-  }
+  // private _clearProblem(id: string, skipEmit = false): void {
+  //   if (this._problems.removeProblem(id)) {
+  //     if (!skipEmit) {
+  //       this._emitState();
+  //     }
+  //   }
+  // }
 
   private _clearPublishProblems(skipEmit = false) {
     if (
@@ -295,7 +294,7 @@ export default class Ros2Player implements Player {
   close(): void {
     this._closed = true;
     if (this._rosNode) {
-      this._rosNode.shutdown();
+      void this._rosNode.shutdown();
     }
     this._metricsCollector.close();
     this._hasReceivedMessage = false;
@@ -340,12 +339,6 @@ export default class Ros2Player implements Player {
 
       const subscription = this._rosNode.subscribe({ topic: topicName, dataType, msgDefinition });
 
-      // subscription.on("header", (_header, msgdef, _reader) => {
-      //   // We have to create a new object instead of just updating _providerDatatypes to support
-      //   // shallow memo
-      //   const newDatatypes = this._getRosDatatypes(datatype, msgdef);
-      //   this._providerDatatypes = new Map([...this._providerDatatypes, ...newDatatypes]);
-      // });
       subscription.on("message", (timestamp, message, _data, _pub) =>
         this._handleMessage(topicName, timestamp, message, true),
       );
@@ -386,7 +379,7 @@ export default class Ros2Player implements Player {
     this._emitState();
   };
 
-  setPublishers(_publishers: AdvertisePayload[]): void {
+  setPublishers(_publishers: AdvertiseOptions[]): void {
     if (!this._rosNode || this._closed) {
       return;
     }
@@ -495,22 +488,6 @@ export default class Ros2Player implements Player {
   setGlobalVariables(): void {
     // no-op
   }
-
-  private _getRosDatatypes = (
-    datatype: string,
-    messageDefinition: RosMsgDefinition[],
-  ): RosDatatypes => {
-    const typesByName: RosDatatypes = new Map();
-    for (const def of messageDefinition) {
-      // The first definition usually doesn't have an explicit name so we use the datatype
-      if (def.name == undefined) {
-        typesByName.set(datatype, def);
-      } else {
-        typesByName.set(def.name, def);
-      }
-    }
-    return typesByName;
-  };
 
   private _addInternalSubscriptions(subscriptions: SubscribePayload[]): void {
     // Always subscribe to /clock if available
