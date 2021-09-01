@@ -17,7 +17,7 @@ import decompressLZ4 from "wasm-lz4";
 import Logger from "@foxglove/log";
 import { Bag, BagReader } from "@foxglove/rosbag";
 import { BlobReader } from "@foxglove/rosbag/web";
-import { Time, add, compare } from "@foxglove/rostime";
+import { Time, add, compare, fromMillis, subtract as subtractTimes } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import BrowserHttpReader from "@foxglove/studio-base/randomAccessDataProviders/BrowserHttpReader";
 import {
@@ -36,7 +36,6 @@ import { bagConnectionsToTopics } from "@foxglove/studio-base/util/bagConnection
 import { getBagChunksOverlapCount } from "@foxglove/studio-base/util/bags";
 import { UserError } from "@foxglove/studio-base/util/errors";
 import sendNotification from "@foxglove/studio-base/util/sendNotification";
-import { fromMillis, subtractTimes } from "@foxglove/studio-base/util/time";
 import Bzip2 from "@foxglove/wasm-bz2";
 
 type BagPath = { type: "file"; file: Blob } | { type: "remoteBagUrl"; url: string };
@@ -193,7 +192,7 @@ export default class BagDataProvider implements RandomAccessDataProvider {
     if (emptyConnections.length > 0) {
       sendNotification(
         "Empty connections found",
-        `This bag has some empty connections, which Studio does not currently support. We'll try to play the remaining topics. Details:\n\n${JSON.stringify(
+        `This bag has some empty connections, which Foxglove Studio does not currently support. We'll try to play the remaining topics. Details:\n\n${JSON.stringify(
           emptyConnections,
         )}`,
         "user",

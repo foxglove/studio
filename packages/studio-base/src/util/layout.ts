@@ -24,6 +24,7 @@ import {
 } from "react-mosaic-component";
 import { MosaicDirection, MosaicKey } from "react-mosaic-component/lib/types";
 
+import { filterMap } from "@foxglove/den/collection";
 import Logger from "@foxglove/log";
 import {
   ConfigsPayload,
@@ -35,7 +36,6 @@ import {
   MosaicDropTargetPosition,
   SavedProps,
 } from "@foxglove/studio-base/types/panels";
-import filterMap from "@foxglove/studio-base/util/filterMap";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
 
 const log = Logger.getLogger(__filename);
@@ -264,7 +264,7 @@ export function getPanelIdsInsideTabPanels(panelIds: string[], savedProps: Saved
   return flatMap(tabLayouts, getLeaves);
 }
 
-export const DEFAULT_TAB_PANEL_CONFIG = {
+export const DEFAULT_TAB_PANEL_CONFIG: TabPanelConfig = {
   activeTabIdx: 0,
   tabs: [{ title: "1", layout: undefined }],
 };

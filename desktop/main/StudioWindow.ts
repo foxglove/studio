@@ -10,7 +10,6 @@ import {
   Menu,
   MenuItemConstructorOptions,
   shell,
-  systemPreferences,
   MenuItem,
 } from "electron";
 import path from "path";
@@ -46,7 +45,6 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
     minWidth: 350,
     minHeight: 250,
     autoHideMenuBar: true,
-    trafficLightPosition: { x: 12, y: 10 },
     title: pkgInfo.productName,
     webPreferences: {
       contextIsolation: true,
@@ -70,9 +68,6 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
     if (devIcon) {
       windowOptions.icon = devIcon;
     }
-  }
-  if (isMac) {
-    windowOptions.titleBarStyle = "hiddenInset";
   }
 
   const browserWindow = new BrowserWindow(windowOptions);
@@ -109,24 +104,6 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
     if (isExternal) {
       event.preventDefault();
       void shell.openExternal(reqUrl);
-    }
-  });
-
-  browserWindow.webContents.on("ipc-message", (_event: unknown, channel: string) => {
-    if (channel === "window.toolbar-double-clicked") {
-      const action: string =
-        systemPreferences.getUserDefault?.("AppleActionOnDoubleClick", "string") || "Maximize";
-      if (action === "Minimize") {
-        browserWindow.minimize();
-      } else if (action === "Maximize") {
-        if (browserWindow.isMaximized()) {
-          browserWindow.unmaximize();
-        } else {
-          browserWindow.maximize();
-        }
-      } else {
-        // "None"
-      }
     }
   });
 
@@ -190,16 +167,8 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
     role: "editMenu",
     label: "Edit",
     submenu: [
-      {
-        label: "Undo",
-        accelerator: "CommandOrControl+Z",
-        click: () => browserWindow.webContents.send("undo"),
-      },
-      {
-        label: "Redo",
-        accelerator: "CommandOrControl+Shift+Z",
-        click: () => browserWindow.webContents.send("redo"),
-      },
+      { role: "undo" },
+      { role: "redo" },
       { type: "separator" },
       { role: "cut" },
       { role: "copy" },
@@ -330,7 +299,7 @@ class StudioWindow {
 
     const id = browserWindow.webContents.id;
 
-    log.info(`New studio window ${id}`);
+    log.info(`New Foxglove Studio window ${id}`);
     StudioWindow.windowsByContentId.set(id, this);
 
     // when a window closes and it is the current application menu, clear the input sources

@@ -9,7 +9,13 @@ import { Sockets } from "@foxglove/electron-socket/renderer";
 import Logger from "@foxglove/log";
 import { RosNode, TcpSocket } from "@foxglove/ros1";
 import { RosMsgDefinition } from "@foxglove/rosmsg";
-import { Time } from "@foxglove/rostime";
+import {
+  Time,
+  add as addTimes,
+  fromMillis,
+  subtract as subtractTimes,
+  toSec,
+} from "@foxglove/rostime";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
@@ -30,13 +36,7 @@ import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
 import rosDatatypesToMessageDefinition from "@foxglove/studio-base/util/rosDatatypesToMessageDefinition";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
-import {
-  addTimes,
-  fromMillis,
-  subtractTimes,
-  TimestampMethod,
-  toSec,
-} from "@foxglove/studio-base/util/time";
+import { TimestampMethod } from "@foxglove/studio-base/util/time";
 import { HttpServer } from "@foxglove/xmlrpc";
 
 const log = Logger.getLogger(__filename);
@@ -86,7 +86,7 @@ export default class Ros1Player implements Player {
   private _requestTopicsTimeout?: ReturnType<typeof setTimeout>; // setTimeout() handle for _requestTopics().
   private _hasReceivedMessage = false;
   private _metricsCollector: PlayerMetricsCollectorInterface;
-  private _presence: PlayerPresence = PlayerPresence.CONSTRUCTING;
+  private _presence: PlayerPresence = PlayerPresence.INITIALIZING;
   private _problems = new PlayerProblemManager();
 
   constructor({ url, hostname, metricsCollector }: Ros1PlayerOpts) {
@@ -259,6 +259,7 @@ export default class Ros1Player implements Player {
     const start = this._start;
     if (!providerTopics || !start) {
       return this._listener({
+        name: this._url,
         presence: this._presence,
         progress: {},
         capabilities: CAPABILITIES,
@@ -278,6 +279,7 @@ export default class Ros1Player implements Player {
     const messages = this._parsedMessages;
     this._parsedMessages = [];
     return this._listener({
+      name: this._url,
       presence: this._presence,
       progress: {},
       capabilities: CAPABILITIES,

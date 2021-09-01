@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ReactElement, useCallback, useMemo } from "react";
+import { ReactElement, useMemo } from "react";
 
 import {
   App,
@@ -19,7 +19,7 @@ import {
 import { Desktop } from "../common/types";
 import NativeAppMenuProvider from "./components/NativeAppMenuProvider";
 import NativeStorageAppConfigurationProvider from "./components/NativeStorageAppConfigurationProvider";
-import NativeStorageLayoutCacheProvider from "./components/NativeStorageLayoutCacheProvider";
+import NativeStorageLayoutStorageProvider from "./components/NativeStorageLayoutStorageProvider";
 import ExtensionLoaderProvider from "./providers/ExtensionLoaderProvider";
 
 const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
@@ -33,16 +33,12 @@ export default function Root(): ReactElement {
       type: "ros1-socket",
     },
     {
-      name: "ROS 1 Rosbridge (WebSocket)",
-      type: "ros1-rosbridge-websocket",
-    },
-    {
-      name: "ROS 2",
+      name: "ROS 2 [BETA]",
       type: "ros2-socket",
     },
     {
-      name: "ROS 2 Rosbridge (WebSocket)",
-      type: "ros2-rosbridge-websocket",
+      name: "Rosbridge (WebSocket)",
+      type: "rosbridge-websocket",
     },
     {
       name: "ROS 1 Bag (local)",
@@ -66,7 +62,7 @@ export default function Root(): ReactElement {
     /* eslint-disable react/jsx-key */
     <StudioToastProvider />,
     <NativeStorageAppConfigurationProvider />,
-    <NativeStorageLayoutCacheProvider />,
+    <NativeStorageLayoutStorageProvider />,
     <NativeAppMenuProvider />,
     <UserProfileLocalStorageProvider />,
     <ExtensionLoaderProvider />,
@@ -75,20 +71,13 @@ export default function Root(): ReactElement {
 
   const deepLinks = useMemo(() => desktopBridge.getDeepLinks(), []);
 
-  const handleToolbarDoubleClick = useCallback(() => desktopBridge.handleToolbarDoubleClick(), []);
-
   return (
     <ThemeProvider>
       <GlobalCss />
       <CssBaseline>
         <ErrorBoundary>
           <MultiProvider providers={providers}>
-            <App
-              demoBagUrl={DEMO_BAG_URL}
-              deepLinks={deepLinks}
-              onFullscreenToggle={handleToolbarDoubleClick}
-              availableSources={playerSources}
-            />
+            <App demoBagUrl={DEMO_BAG_URL} deepLinks={deepLinks} availableSources={playerSources} />
           </MultiProvider>
         </ErrorBoundary>
       </CssBaseline>

@@ -322,7 +322,6 @@ function NodePlayground(props: Props) {
               <WelcomeScreen addNewNode={addNewNode} updateExplorer={updateExplorer} />
             )}
             <div
-              data-nativeundoredo="true"
               style={{
                 flexGrow: 1,
                 width: "100%",
@@ -372,13 +371,14 @@ const configSchema: PanelConfigSchema<Config> = [
   { key: "autoFormatOnSave", type: "toggle", title: "Auto-format on save" },
 ];
 
+const defaultConfig: Config = {
+  selectedNodeId: undefined,
+  autoFormatOnSave: true,
+};
 export default Panel(
   Object.assign(NodePlayground, {
     panelType: "NodePlayground",
-    defaultConfig: {
-      selectedNodeId: undefined,
-      autoFormatOnSave: true,
-    },
+    defaultConfig,
     supportsStrictMode: false,
     configSchema,
   }),

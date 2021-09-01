@@ -19,6 +19,7 @@ import stringHash from "string-hash";
 import styled, { css } from "styled-components";
 import tinycolor from "tinycolor2";
 
+import { subtract as subtractTimes, toSec } from "@foxglove/rostime";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import Button from "@foxglove/studio-base/components/Button";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
@@ -33,7 +34,7 @@ import { MONOSPACE } from "@foxglove/studio-base/styles/fonts";
 import { PanelConfig } from "@foxglove/studio-base/types/panels";
 import { darkColor, lineColors } from "@foxglove/studio-base/util/plotColors";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
-import { TimestampMethod, subtractTimes, toSec } from "@foxglove/studio-base/util/time";
+import { TimestampMethod } from "@foxglove/studio-base/util/time";
 import { grey } from "@foxglove/studio-base/util/toolsColorScheme";
 
 import helpContent from "./index.help.md";
@@ -231,8 +232,8 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     return [grey, ...lineColors];
   }, []);
 
-  const { datasets, tooltips, maxY } = useMemo(() => {
-    let outMaxY: number | undefined;
+  const { datasets, tooltips, minY } = useMemo(() => {
+    let outMinY: number | undefined;
 
     const outTooltips: TimeBasedChartTooltipData[] = [];
     const outDatasets: typeof data["datasets"] = [];
@@ -244,6 +245,12 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       let prevQueryValue;
       let previousTimestamp;
       let currentData: typeof outDatasets[0]["data"] = [];
+
+      // y axis values are set based on the path we are rendering
+      // negative makes each path render below the previous
+      const y = (pathIndex + 1) * 6 * -1;
+      outMinY = Math.min(outMinY ?? y, y - 3);
+
       for (const itemByPath of itemsByPath[pathValue] ?? []) {
         const item = getTooltipItemForMessageHistoryItem(itemByPath);
         const timestamp = timestampMethod === "headerStamp" ? item.headerStamp : item.receiveTime;
@@ -283,10 +290,6 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
           baseColors[positiveModulo(valueForColor, Object.values(baseColors).length)] ?? "grey";
 
         const x = toSec(subtractTimes(timestamp, startTime));
-
-        // y axis values are set based on the path we are rendering
-        const y = (pathIndex + 1) * 6;
-        outMaxY = Math.max(outMaxY ?? y, y + 3);
 
         const element = {
           x,
@@ -352,7 +355,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     return {
       datasets: outDatasets,
       tooltips: outTooltips,
-      maxY: outMaxY,
+      minY: outMinY,
     };
   }, [baseColors, itemsByPath, paths, startTime]);
 
@@ -367,10 +370,10 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
         display: false,
       },
       type: "linear",
-      min: 3,
-      max: maxY,
+      min: minY,
+      max: -3,
     };
-  }, [maxY]);
+  }, [minY]);
 
   const xScale = useMemo<ScaleOptions>(() => {
     return {
@@ -378,8 +381,13 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     };
   }, []);
 
+  // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
+  // and existing resize observation.
+  // https://github.com/maslianok/react-resize-detector/issues/45
   const { width, ref: sizeRef } = useResizeDetector({
     handleHeight: false,
+    refreshRate: 0,
+    refreshMode: "debounce",
   });
 
   return (
@@ -445,10 +453,11 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   );
 });
 
+const defaultConfig: PanelConfig = { paths: [] };
 export default Panel(
   Object.assign(StateTransitions, {
     panelType: "StateTransitions",
-    defaultConfig: { paths: [] },
+    defaultConfig,
     supportsStrictMode: false,
   }),
 );

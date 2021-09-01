@@ -20,16 +20,14 @@ import {
   useRef,
   useState,
 } from "react";
+import { useToasts } from "react-toast-notifications";
 import { useLocalStorage, useMountedState } from "react-use";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
-import {
-  MaybePlayer,
-  MessagePipelineProvider,
-} from "@foxglove/studio-base/components/MessagePipeline";
+import { MessagePipelineProvider } from "@foxglove/studio-base/components/MessagePipeline";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import { useCurrentLayoutSelector } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import PlayerSelectionContext, {
@@ -43,30 +41,14 @@ import { usePrompt } from "@foxglove/studio-base/hooks/usePrompt";
 import useWarnImmediateReRender from "@foxglove/studio-base/hooks/useWarnImmediateReRender";
 import AnalyticsMetricsCollector from "@foxglove/studio-base/players/AnalyticsMetricsCollector";
 import OrderedStampPlayer from "@foxglove/studio-base/players/OrderedStampPlayer";
-import Ros1Player from "@foxglove/studio-base/players/Ros1Player";
 import Ros2Player from "@foxglove/studio-base/players/Ros2Player";
-import RosbridgePlayer from "@foxglove/studio-base/players/RosbridgePlayer";
 import UserNodePlayer from "@foxglove/studio-base/players/UserNodePlayer";
-import VelodynePlayer, {
-  DEFAULT_VELODYNE_PORT,
-} from "@foxglove/studio-base/players/VelodynePlayer";
-import {
-  buildPlayerFromDescriptor,
-  BuildPlayerOptions,
-} from "@foxglove/studio-base/players/buildPlayer";
-import { buildRosbag2PlayerFromDescriptor } from "@foxglove/studio-base/players/buildRosbag2Player";
+import { BuildPlayerOptions } from "@foxglove/studio-base/players/buildPlayer";
 import { Player } from "@foxglove/studio-base/players/types";
-import { CoreDataProviders } from "@foxglove/studio-base/randomAccessDataProviders/constants";
-import { getRemoteBagGuid } from "@foxglove/studio-base/randomAccessDataProviders/getRemoteBagGuid";
-import {
-  getLocalBagDescriptor,
-  getLocalRosbag2Descriptor,
-  getRemoteBagDescriptor,
-} from "@foxglove/studio-base/randomAccessDataProviders/standardDataProviderDescriptors";
+import { getLocalRosbag2Descriptor } from "@foxglove/studio-base/randomAccessDataProviders/standardDataProviderDescriptors";
 import { UserNodes } from "@foxglove/studio-base/types/panels";
 import Storage from "@foxglove/studio-base/util/Storage";
 import { AppError } from "@foxglove/studio-base/util/errors";
-import { SECOND_SOURCE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 import { parseInputUrl } from "@foxglove/studio-base/util/url";
 
 const log = Logger.getLogger(__filename);
@@ -75,95 +57,15 @@ const DEFAULT_MESSAGE_ORDER = "receiveTime";
 const EMPTY_USER_NODES: UserNodes = Object.freeze({});
 const EMPTY_GLOBAL_VARIABLES: GlobalVariables = Object.freeze({});
 
-type BuiltPlayer = {
-  player: Player;
-  sources: string[];
-};
-
-function buildPlayerFromFiles(files: File[], options: BuildPlayerOptions): BuiltPlayer {
-  if (files.length === 1) {
-    return {
-      player: buildPlayerFromDescriptor(getLocalBagDescriptor(files[0] as File), options),
-      sources: files.map((file) => String(file.name)),
-    };
-  } else if (files.length === 2) {
-    return {
-      player: buildPlayerFromDescriptor(
-        {
-          name: CoreDataProviders.CombinedDataProvider,
-          args: {},
-          children: [
-            getLocalBagDescriptor(files[0] as File),
-            {
-              name: CoreDataProviders.RenameDataProvider,
-              args: { prefix: SECOND_SOURCE_PREFIX },
-              children: [getLocalBagDescriptor(files[1] as File)],
-            },
-          ],
-        },
-        options,
-      ),
-      sources: files.map((file) => String(file.name)),
-    };
-  }
-  throw new Error(`Unsupported number of files: ${files.length}`);
-}
-
-async function buildPlayerFromBagURLs(
-  urls: string[],
-  options: BuildPlayerOptions,
-): Promise<BuiltPlayer> {
-  const guids = await Promise.all(urls.map(getRemoteBagGuid));
-
-  if (urls.length === 1) {
-    return {
-      player: buildPlayerFromDescriptor(
-        getRemoteBagDescriptor(urls[0] as string, guids[0], options),
-        options,
-      ),
-      sources: urls.map((url) => url.toString()),
-    };
-  } else if (urls.length === 2) {
-    return {
-      player: buildPlayerFromDescriptor(
-        {
-          name: CoreDataProviders.CombinedDataProvider,
-          args: {},
-          children: [
-            getRemoteBagDescriptor(urls[0] as string, guids[0], options),
-            {
-              name: CoreDataProviders.RenameDataProvider,
-              args: { prefix: SECOND_SOURCE_PREFIX },
-              children: [getRemoteBagDescriptor(urls[1] as string, guids[1], options)],
-            },
-          ],
-        },
-        options,
-      ),
-      sources: urls.map((url) => url.toString()),
-    };
-  }
-  throw new Error(`Unsupported number of urls: ${urls.length}`);
-}
-
-function buildRosbag2PlayerFromFolder(
-  folder: FileSystemDirectoryHandle,
-  options: BuildPlayerOptions,
-): BuiltPlayer {
-  return {
-    player: buildRosbag2PlayerFromDescriptor(getLocalRosbag2Descriptor(folder), options),
-    sources: [folder.name],
-  };
-}
-
 type FactoryOptions = {
   source: PlayerSourceDefinition;
   sourceOptions: Record<string, unknown>;
+  playerOptions: BuildPlayerOptions;
   prompt: ReturnType<typeof usePrompt>;
   storage: Storage;
 };
 
-async function localBagFileSource(options: FactoryOptions) {
+async function localBagFileSource(options: FactoryOptions): Promise<Player | undefined> {
   let file: File;
 
   const restore = options.sourceOptions.restore ?? false;
@@ -174,12 +76,12 @@ async function localBagFileSource(options: FactoryOptions) {
     return undefined;
   }
 
+  const { buildPlayerFromFiles } = await import("@foxglove/studio-base/players/buildPlayer");
+
   // maybe the caller has some files they want to open
   const files = options.sourceOptions.files;
   if (files && files instanceof Array) {
-    return async (playerOptions: BuildPlayerOptions) => {
-      return buildPlayerFromFiles(files, playerOptions);
-    };
+    return buildPlayerFromFiles(files, options.playerOptions);
   }
 
   try {
@@ -193,12 +95,11 @@ async function localBagFileSource(options: FactoryOptions) {
     }
     throw error;
   }
-  return async (playerOptions: BuildPlayerOptions) => {
-    return buildPlayerFromFiles([file], playerOptions);
-  };
+
+  return buildPlayerFromFiles([file], options.playerOptions);
 }
 
-async function localRosbag2FolderSource(options: FactoryOptions) {
+async function localRosbag2FolderSource(options: FactoryOptions): Promise<Player | undefined> {
   let folder: FileSystemDirectoryHandle;
 
   const restore = options.sourceOptions.restore ?? false;
@@ -214,12 +115,14 @@ async function localRosbag2FolderSource(options: FactoryOptions) {
     }
     throw error;
   }
-  return async (playerOptions: BuildPlayerOptions) => {
-    return buildRosbag2PlayerFromFolder(folder, playerOptions);
-  };
+
+  const { buildRosbag2PlayerFromDescriptor } = await import(
+    "@foxglove/studio-base/players/buildRosbag2Player"
+  );
+  return buildRosbag2PlayerFromDescriptor(getLocalRosbag2Descriptor(folder), options.playerOptions);
 }
 
-async function remoteBagFileSource(options: FactoryOptions) {
+async function remoteBagFileSource(options: FactoryOptions): Promise<Player | undefined> {
   const storageCacheKey = `studio.source.${options.source.name}`;
 
   // undefined url indicates the user canceled the prompt
@@ -258,12 +161,18 @@ async function remoteBagFileSource(options: FactoryOptions) {
 
   const url = maybeUrl;
   options.storage.setItem(storageCacheKey, url);
-  return async (playerOptions: BuildPlayerOptions) =>
-    await buildPlayerFromBagURLs([url], playerOptions);
+
+  const { buildPlayerFromBagURLs } = await import("@foxglove/studio-base/players/buildPlayer");
+  return buildPlayerFromBagURLs([url], options.playerOptions);
 }
 
-async function rosbridgeSource(options: FactoryOptions) {
+async function rosbridgeSource(options: FactoryOptions): Promise<Player | undefined> {
   const storageCacheKey = `studio.source.${options.source.name}`;
+
+  // load the player on-demand
+  const { default: RosbridgePlayer } = await import(
+    "@foxglove/studio-base/players/RosbridgePlayer"
+  );
 
   // undefined url indicates the user canceled the prompt
   let maybeUrl;
@@ -297,32 +206,19 @@ async function rosbridgeSource(options: FactoryOptions) {
     return undefined;
   }
 
-  let rosVersion: 1 | 2;
-  switch (options.source.type) {
-    case "ros1-rosbridge-websocket":
-      rosVersion = 1;
-      break;
-    case "ros2-rosbridge-websocket":
-      rosVersion = 2;
-      break;
-    default:
-      throw new Error(`Invalid source type for rosbridge: ${options.source.type}`);
-  }
-
   const url = maybeUrl;
   options.storage.setItem(storageCacheKey, url);
-  return async (playerOptions: BuildPlayerOptions) => ({
-    player: new RosbridgePlayer({
-      url,
-      rosVersion,
-      metricsCollector: playerOptions.metricsCollector,
-    }),
-    sources: [url],
+  return new RosbridgePlayer({
+    url,
+    metricsCollector: options.playerOptions.metricsCollector,
   });
 }
 
-async function ros1Source(options: FactoryOptions) {
+async function ros1Source(options: FactoryOptions): Promise<Player | undefined> {
   const storageCacheKey = `studio.source.${options.source.name}`;
+
+  // load the player on-demand
+  const { default: Ros1Player } = await import("@foxglove/studio-base/players/Ros1Player");
 
   // undefined url indicates the user canceled the prompt
   let maybeUrl;
@@ -363,13 +259,14 @@ async function ros1Source(options: FactoryOptions) {
 
   const hostname = options.sourceOptions.rosHostname as string | undefined;
 
-  return async (playerOptions: BuildPlayerOptions) => ({
-    player: new Ros1Player({ url, hostname, metricsCollector: playerOptions.metricsCollector }),
-    sources: [url],
+  return new Ros1Player({
+    url,
+    hostname,
+    metricsCollector: options.playerOptions.metricsCollector,
   });
 }
 
-async function ros2Source(options: FactoryOptions) {
+async function ros2Source(options: FactoryOptions): Promise<Player | undefined> {
   const storageCacheKey = `studio.source.${options.source.name}`;
 
   // undefined url indicates the user canceled the prompt
@@ -403,14 +300,16 @@ async function ros2Source(options: FactoryOptions) {
   const domainId = parseInt(domainIdStr);
   options.storage.setItem(storageCacheKey, maybeDomainId);
 
-  return async (playerOptions: BuildPlayerOptions) => ({
-    player: new Ros2Player({ domainId, metricsCollector: playerOptions.metricsCollector }),
-    sources: [domainIdStr],
-  });
+  return new Ros2Player({ domainId, metricsCollector: options.playerOptions.metricsCollector });
 }
 
-async function velodyneSource(options: FactoryOptions) {
+async function velodyneSource(options: FactoryOptions): Promise<Player | undefined> {
   const storageCacheKey = `studio.source.${options.source.name}`;
+
+  // load the player on-demand
+  const { default: VelodynePlayer, DEFAULT_VELODYNE_PORT } = await import(
+    "@foxglove/studio-base/players/VelodynePlayer"
+  );
 
   // undefined port indicates the user canceled the prompt
   let maybePort;
@@ -445,10 +344,7 @@ async function velodyneSource(options: FactoryOptions) {
   const port = parseInt(portStr);
   options.storage.setItem(storageCacheKey, portStr);
 
-  return async (playerOptions: BuildPlayerOptions) => ({
-    player: new VelodynePlayer({ port, metricsCollector: playerOptions.metricsCollector }),
-    sources: [portStr],
-  });
+  return new VelodynePlayer({ port, metricsCollector: options.playerOptions.metricsCollector });
 }
 
 export default function PlayerManager({
@@ -475,8 +371,7 @@ export default function PlayerManager({
   );
 
   const globalVariablesRef = useRef<GlobalVariables>(globalVariables);
-  const [maybePlayer, setMaybePlayer] = useState<MaybePlayer<OrderedStampPlayer>>({});
-  const [currentSourceName, setCurrentSourceName] = useState<string | undefined>(undefined);
+  const [basePlayer, setBasePlayer] = useState<Player | undefined>();
   const isMounted = useMountedState();
 
   // We don't want to recreate the player when the message order changes, but we do want to
@@ -495,49 +390,29 @@ export default function PlayerManager({
     metricsCollector,
   });
 
-  // Load a new player using the given definition -- passed as a function so that the asynchronous
-  // operation can be included as part of the "loading" state we pass in to MessagePipelineProvider.
-  const setPlayer = useCallback(
-    async (buildPlayer: (options: BuildPlayerOptions) => Promise<BuiltPlayer | undefined>) => {
-      setMaybePlayer({ loading: true });
-      try {
-        const builtPlayer = await buildPlayer(buildPlayerOptions);
-        if (!builtPlayer) {
-          setMaybePlayer({ player: undefined });
-          return;
-        }
-        setCurrentSourceName(builtPlayer.sources.join(","));
+  const player = useMemo<OrderedStampPlayer | undefined>(() => {
+    if (!basePlayer) {
+      return undefined;
+    }
 
-        const userNodePlayer = new UserNodePlayer(builtPlayer.player, userNodeActions);
-        const headerStampPlayer = new OrderedStampPlayer(
-          userNodePlayer,
-          initialMessageOrder ?? DEFAULT_MESSAGE_ORDER,
-        );
-        headerStampPlayer.setGlobalVariables(globalVariablesRef.current);
-        setMaybePlayer({ player: headerStampPlayer });
-      } catch (error) {
-        setMaybePlayer({ error });
-      }
-    },
-    [buildPlayerOptions, userNodeActions, initialMessageOrder],
-  );
+    const userNodePlayer = new UserNodePlayer(basePlayer, userNodeActions);
+    const headerStampPlayer = new OrderedStampPlayer(
+      userNodePlayer,
+      initialMessageOrder ?? DEFAULT_MESSAGE_ORDER,
+    );
+    headerStampPlayer.setGlobalVariables(globalVariablesRef.current);
+    return headerStampPlayer;
+  }, [basePlayer, initialMessageOrder, userNodeActions]);
 
   useEffect(() => {
-    maybePlayer.player?.setMessageOrder(messageOrder ?? DEFAULT_MESSAGE_ORDER);
-  }, [messageOrder, maybePlayer]);
+    player?.setMessageOrder(messageOrder ?? DEFAULT_MESSAGE_ORDER);
+  }, [player, messageOrder]);
   useEffect(() => {
-    maybePlayer.player?.setUserNodes(userNodes ?? EMPTY_USER_NODES);
-  }, [userNodes, maybePlayer]);
+    player?.setUserNodes(userNodes ?? EMPTY_USER_NODES);
+  }, [player, userNodes]);
 
   // Based on a source type, prompt the user for additional input and return a function to build the
-  // requested player. The user input and actual building of the player are in separate async
-  // operations so the player manager can delay clearing out the old player and entering the
-  // "constructing" state until the user selection has completed. Returns undefined if the user
-  // cancels the operation.
-  //
-  // TODO(jacob): can we reduce the indirection here by making it so we can always immediately
-  // construct a player, remove maybePlayer and remove CONSTRUCTING from the enum? This would require
-  // changes to the GUID fetching in buildPlayerFromBagURLs.
+  // requested player.
   const lookupPlayerBuilderFactory = useCallback((definition: PlayerSourceDefinition) => {
     switch (definition.type) {
       case "ros1-local-bagfile":
@@ -548,8 +423,7 @@ export default function PlayerManager({
         return ros1Source;
       case "ros2-socket":
         return ros2Source;
-      case "ros1-rosbridge-websocket":
-      case "ros2-rosbridge-websocket":
+      case "rosbridge-websocket":
         return rosbridgeSource;
       case "ros1-remote-bagfile":
         return remoteBagFileSource;
@@ -561,6 +435,7 @@ export default function PlayerManager({
   }, []);
 
   const prompt = usePrompt();
+  const { addToast } = useToasts();
   const storage = useMemo(() => new Storage(), []);
 
   const [rosHostname] = useAppConfigurationValue<string>(AppSetting.ROS1_ROS_HOSTNAME);
@@ -577,35 +452,41 @@ export default function PlayerManager({
       try {
         metricsCollector.setProperty("player", selectedSource.type);
 
-        const createPlayerBuilder = lookupPlayerBuilderFactory(selectedSource);
-        if (!createPlayerBuilder) {
+        const buildPlayer = lookupPlayerBuilderFactory(selectedSource);
+        if (!buildPlayer) {
           // This can happen when upgrading from an older version of Studio that used different
           // player names
-          log.error(`Could not create a player for ${selectedSource.name}`);
-          setMaybePlayer({ player: undefined });
+          addToast(`Could not create a player for ${selectedSource.name}.`, {
+            appearance: "error",
+          });
           return;
         }
 
-        const playerBuilder = await createPlayerBuilder({
+        const newBasePlayer = await buildPlayer({
           source: selectedSource,
           sourceOptions: { ...params, rosHostname },
+          playerOptions: buildPlayerOptions,
           prompt,
           storage,
         });
-        if (playerBuilder && isMounted()) {
-          void setPlayer(playerBuilder);
+        if (newBasePlayer && isMounted()) {
+          setBasePlayer(newBasePlayer);
         }
       } catch (error) {
-        setMaybePlayer({ error });
+        setBasePlayer(undefined);
+        addToast(error.message, {
+          appearance: "error",
+        });
       }
     },
     [
+      addToast,
+      buildPlayerOptions,
       isMounted,
       lookupPlayerBuilderFactory,
       metricsCollector,
       prompt,
       rosHostname,
-      setPlayer,
       setSavedSource,
       storage,
     ],
@@ -623,13 +504,12 @@ export default function PlayerManager({
   const value: PlayerSelection = {
     selectSource,
     availableSources: playerSources,
-    currentSourceName,
   };
 
   return (
     <>
       <PlayerSelectionContext.Provider value={value}>
-        <MessagePipelineProvider maybePlayer={maybePlayer} globalVariables={globalVariables}>
+        <MessagePipelineProvider player={player} globalVariables={globalVariables}>
           {children}
         </MessagePipelineProvider>
       </PlayerSelectionContext.Provider>

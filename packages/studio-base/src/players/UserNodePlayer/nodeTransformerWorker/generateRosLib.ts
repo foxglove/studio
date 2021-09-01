@@ -13,9 +13,9 @@
 
 import ts from "typescript/lib/typescript";
 
+import { filterMap } from "@foxglove/den/collection";
 import { Topic } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
-import filterMap from "@foxglove/studio-base/util/filterMap";
 
 export type InterfaceDeclarations = {
   [datatype: string]: ts.InterfaceDeclaration;
@@ -272,8 +272,8 @@ const generateRosLib = ({
      * Input<"/your_input_topic_2">'.
      *
      * These types are dynamically generated from the bag(s) currently in your
-     * Studio session, so if a datatype changes, your Node Playground node may
-     * not compile on the newly formatted bag.
+     * Foxglove Studio session, so if a datatype changes, your Node Playground
+     * node may not compile on the newly formatted bag.
      */
     ${printer.printNode(ts.EmitHint.Unspecified, typedMessage, sourceFile)}
   `;

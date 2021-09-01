@@ -76,6 +76,10 @@ const mainConfig = (env: unknown, argv: WebpackArgv): Configuration => {
         org: process.env.SENTRY_ORG,
         project: process.env.SENTRY_PROJECT,
         include: path.resolve(__dirname, ".webpack"),
+        setCommits:
+          process.env.SENTRY_REPO && process.env.SENTRY_CURRENT_COMMIT
+            ? { repo: process.env.SENTRY_REPO, commit: process.env.SENTRY_CURRENT_COMMIT }
+            : undefined,
       }),
     );
   }
@@ -94,6 +98,10 @@ const mainConfig = (env: unknown, argv: WebpackArgv): Configuration => {
 
     output: {
       publicPath: "/",
+
+      // Output filenames should include content hashes in order to cache bust when new versions are available
+      filename: "[name].[contenthash].js",
+
       path: path.resolve(__dirname, ".webpack"),
     },
 

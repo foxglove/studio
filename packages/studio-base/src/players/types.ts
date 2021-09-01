@@ -94,7 +94,6 @@ export interface Player {
 
 export enum PlayerPresence {
   NOT_PRESENT = "NOT_PRESENT",
-  CONSTRUCTING = "CONSTRUCTING",
   INITIALIZING = "INITIALIZING",
   RECONNECTING = "RECONNECTING",
   PRESENT = "PRESENT",
@@ -124,6 +123,10 @@ export type PlayerState = {
   // A unique id for this player (typically a UUID generated on construction). This is used to clear
   // out any data when switching to a new player.
   playerId: string;
+
+  // String name for the player
+  // The player could set this value to represent the current connection, name, ports, etc.
+  name?: string;
 
   // Surface issues during playback or player initialization
   problems?: PlayerProblem[];
@@ -266,13 +269,6 @@ export type SubscribePayload = {
 
   // Optionally, where the request came from. Used in the "Internals" panel to improve debugging.
   requester?: { type: "panel" | "node" | "other"; name: string };
-
-  // If all subscriptions for this topic have this flag set, and the topic is available in
-  // PlayerState#Progress#blocks, the message won't be included in PlayerStateActiveData#messages.
-  // This is used by parsed-message subscribers to avoid parsing the messages at playback time when
-  // possible. Note: If there are other subscriptions without this flag set, the messages may still
-  // be delivered to the fallback subscriber.
-  preloadingFallback?: boolean;
 };
 
 // Represents a single topic publisher, for use in `setPublishers`.

@@ -14,13 +14,13 @@ import { useMemo } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import styled, { css } from "styled-components";
 
+import { toSec } from "@foxglove/rostime";
 import { RpcScales } from "@foxglove/studio-base/components/Chart/types";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import HoverBar from "@foxglove/studio-base/components/TimeBasedChart/HoverBar";
-import { toSec } from "@foxglove/studio-base/util/time";
 
 const sharedTickStyles = css`
   position: absolute;
@@ -62,8 +62,13 @@ export default React.memo<Props>(function PlaybackBarHoverTicks({ componentId }:
   const startTime = useMessagePipeline(getStartTime);
   const endTime = useMessagePipeline(getEndTime);
 
+  // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
+  // and existing resize observation.
+  // https://github.com/maslianok/react-resize-detector/issues/45
   const { width, ref } = useResizeDetector({
     handleHeight: false,
+    refreshMode: "debounce",
+    refreshRate: 0,
   });
 
   const scaleBounds = useMemo<RpcScales | undefined>(() => {

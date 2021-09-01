@@ -13,18 +13,17 @@
 
 import { ScaleOptions } from "chart.js";
 import { AnnotationOptions } from "chartjs-plugin-annotation";
-import { ComponentProps, memo, useMemo } from "react";
+import { ComponentProps, useMemo } from "react";
 import { useResizeDetector } from "react-resize-detector";
 
+import { filterMap } from "@foxglove/den/collection";
 import TimeBasedChart, {
   Props as TimeBasedChartProps,
   ChartDefaultView,
   TimeBasedChartTooltipData,
 } from "@foxglove/studio-base/components/TimeBasedChart";
-import filterMap from "@foxglove/studio-base/util/filterMap";
 import { lineColors } from "@foxglove/studio-base/util/plotColors";
 
-import styles from "./PlotChart.module.scss";
 import { PlotXAxisVal } from "./index";
 import { PlotPath, isReferenceLinePlotPathType } from "./internalTypes";
 
@@ -56,6 +55,7 @@ function getAnnotations(paths: PlotPath[]) {
 }
 
 type PlotChartProps = {
+  isSynced: boolean;
   paths: PlotPath[];
   minYValue: number;
   maxYValue: number;
@@ -66,7 +66,7 @@ type PlotChartProps = {
   defaultView?: ChartDefaultView;
   onClick?: TimeBasedChartProps["onClick"];
 };
-export default memo<PlotChartProps>(function PlotChart(props: PlotChartProps) {
+export default function PlotChart(props: PlotChartProps): JSX.Element {
   const {
     paths,
     currentTime,
@@ -75,6 +75,7 @@ export default memo<PlotChartProps>(function PlotChart(props: PlotChartProps) {
     maxYValue,
     datasets,
     onClick,
+    isSynced,
     tooltips,
     xAxisVal,
   } = props;
@@ -96,17 +97,27 @@ export default memo<PlotChartProps>(function PlotChart(props: PlotChartProps) {
     };
   }, [maxYValue, minYValue]);
 
-  const { width, height, ref: sizeRef } = useResizeDetector();
+  // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
+  // and existing resize observation.
+  // https://github.com/maslianok/react-resize-detector/issues/45
+  const {
+    width,
+    height,
+    ref: sizeRef,
+  } = useResizeDetector({
+    refreshRate: 0,
+    refreshMode: "debounce",
+  });
 
   const data = useMemo(() => {
     return { datasets };
   }, [datasets]);
 
   return (
-    <div className={styles.root} ref={sizeRef}>
+    <div style={{ width: "100%", flexGrow: 1, overflow: "hidden" }} ref={sizeRef}>
       <TimeBasedChart
         key={xAxisVal}
-        isSynced
+        isSynced={isSynced}
         zoom
         width={width ?? 0}
         height={height ?? 0}
@@ -122,4 +133,4 @@ export default memo<PlotChartProps>(function PlotChart(props: PlotChartProps) {
       />
     </div>
   );
-});
+}

@@ -6,6 +6,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { useResizeDetector } from "react-resize-detector";
 import { CameraStore, CameraListener, CameraState, DEFAULT_CAMERA_STATE } from "regl-worldview";
 
+import { filterMap } from "@foxglove/den/collection";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import Flex from "@foxglove/studio-base/components/Flex";
@@ -16,7 +17,6 @@ import useCleanup from "@foxglove/studio-base/hooks/useCleanup";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import { JointState } from "@foxglove/studio-base/types/Messages";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
-import filterMap from "@foxglove/studio-base/util/filterMap";
 import { ROBOT_DESCRIPTION_PARAM } from "@foxglove/studio-base/util/globalConstants";
 
 import { JointValueSliders } from "./JointValueSliders";
@@ -40,10 +40,26 @@ export type Props = {
 
 const DEFAULT_DISTANCE = 5;
 
+const defaultConfig: Config = {
+  jointStatesTopic: "/joint_states",
+  opacity: 0.75,
+};
+
 function URDFViewer({ config, saveConfig }: Props) {
   const { customJointValues, jointStatesTopic, opacity } = config;
   const [canvas, setCanvas] = useState<HTMLCanvasElement | ReactNull>(ReactNull);
-  const { ref: resizeRef, width, height } = useResizeDetector();
+
+  // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
+  // and existing resize observation.
+  // https://github.com/maslianok/react-resize-detector/issues/45
+  const {
+    ref: resizeRef,
+    width,
+    height,
+  } = useResizeDetector({
+    refreshRate: 0,
+    refreshMode: "debounce",
+  });
   const { assets } = useAssets();
   const [selectedAssetId, setSelectedAssetId] = useState<string | undefined>();
 
@@ -187,8 +203,7 @@ function URDFViewer({ config, saveConfig }: Props) {
             checked={!useCustomJointValues}
             onChange={(_event, checked) =>
               saveConfig({
-                jointStatesTopic:
-                  checked ?? false ? URDFViewer.defaultConfig.jointStatesTopic : undefined,
+                jointStatesTopic: checked ?? false ? defaultConfig.jointStatesTopic : undefined,
               })
             }
           />
@@ -254,9 +269,9 @@ function URDFViewer({ config, saveConfig }: Props) {
   );
 }
 
-URDFViewer.panelType = "URDFViewer";
-URDFViewer.defaultConfig = {
-  jointStatesTopic: "/joint_states",
-  opacity: 0.75,
-};
-export default Panel(URDFViewer);
+export default Panel(
+  Object.assign(URDFViewer, {
+    panelType: "URDFViewer",
+    defaultConfig,
+  }),
+);

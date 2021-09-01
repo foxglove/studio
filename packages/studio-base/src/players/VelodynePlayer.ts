@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { Sockets, UdpRemoteInfo, UdpSocketRenderer } from "@foxglove/electron-socket/renderer";
 import Logger from "@foxglove/log";
-import { Time } from "@foxglove/rostime";
+import { Time, fromMillis, add as addTimes, toDate, fromDate, fromMicros } from "@foxglove/rostime";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
   AdvertiseOptions,
@@ -23,13 +23,6 @@ import {
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
-import {
-  fromMillis,
-  addTimes,
-  toDate,
-  fromDate,
-  fromMicros,
-} from "@foxglove/studio-base/util/time";
 import { Model, RawPacket, packetRate } from "@foxglove/velodyne-cloud";
 
 const log = Logger.getLogger(__filename);
@@ -85,7 +78,7 @@ export default class VelodynePlayer implements Player {
   private _packets: RawPacket[] = []; // Queue of packets that will form the next parsed message
   private _parsedMessages: MessageEvent<unknown>[] = []; // Queue of messages that we'll send in next _emitState() call
   private _metricsCollector: PlayerMetricsCollectorInterface;
-  private _presence: PlayerPresence = PlayerPresence.CONSTRUCTING;
+  private _presence: PlayerPresence = PlayerPresence.INITIALIZING;
 
   // track issues within the player
   private _problems: PlayerProblem[] = [];
@@ -209,6 +202,7 @@ export default class VelodynePlayer implements Player {
     const messages = this._parsedMessages;
     this._parsedMessages = [];
     return this._listener({
+      name: "Velodyne",
       presence: this._presence,
       progress: {},
       capabilities: CAPABILITIES,

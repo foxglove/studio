@@ -1,7 +1,11 @@
 {
   "name": "@foxglove/studio",
-  "version": "0.15.0-dev",
+  "version": "0.16.0-dev",
   "license": "MPL-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/foxglove/studio/tree/main/packages/studio"
+  },
   "main": "",
   "types": "index.d.ts"
 }

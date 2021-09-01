@@ -100,7 +100,18 @@ export default function ImageCanvas(props: Props): JSX.Element {
   const [zoomMode, setZoomMode] = useState<Config["mode"]>(mode);
 
   const canvasRef = useRef<HTMLCanvasElement>(ReactNull);
-  const { width, height, ref: rootRef } = useResizeDetector();
+
+  // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
+  // and existing resize observation.
+  // https://github.com/maslianok/react-resize-detector/issues/45
+  const {
+    width,
+    height,
+    ref: rootRef,
+  } = useResizeDetector({
+    refreshRate: 0,
+    refreshMode: "debounce",
+  });
 
   // The render function dispatches rendering to the main thread or a worker
   const [doRenderImage, setDoRenderImage] = useState<RenderImage | undefined>(undefined);
@@ -226,7 +237,9 @@ export default function ImageCanvas(props: Props): JSX.Element {
   const {
     setPan,
     setZoom,
-    pan: panValue,
+    // panX/panY need to be split apart because the pan object's identity may change on each render,
+    // and we want to avoid unnecessary updates to useEffects/useMemos below
+    pan: { x: panX, y: panY },
     zoom: scaleValue,
     setContainer,
     panZoomHandlers,
@@ -266,8 +279,8 @@ export default function ImageCanvas(props: Props): JSX.Element {
     const targetHeight = height * devicePixelRatio;
 
     const computedViewbox = {
-      x: panValue.x * devicePixelRatio,
-      y: panValue.y * devicePixelRatio,
+      x: panX * devicePixelRatio,
+      y: panY * devicePixelRatio,
       scale: scaleValue,
     };
 
@@ -296,8 +309,8 @@ export default function ImageCanvas(props: Props): JSX.Element {
     width,
     height,
     devicePixelRatio,
-    panValue.x,
-    panValue.y,
+    panX,
+    panY,
     scaleValue,
     image?.message,
     onStartRenderImage,
@@ -342,10 +355,10 @@ export default function ImageCanvas(props: Props): JSX.Element {
 
   useLayoutEffect(() => {
     saveConfig({
-      pan: panValue,
+      pan: { x: panX, y: panY },
       zoom: scaleValue,
     });
-  }, [panValue, saveConfig, scaleValue]);
+  }, [panX, panY, saveConfig, scaleValue]);
 
   const zoomContextMenu = useMemo(() => {
     return (

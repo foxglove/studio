@@ -31,17 +31,12 @@ const features: Feature[] = [
   {
     key: AppSetting.SHOW_DEBUG_PANELS,
     name: "Studio Debug Panels",
-    description: <>Show Studio debug panels in the add panel list.</>,
+    description: <>Show Foxglove Studio debug panels in the add panel list.</>,
   },
   {
     key: AppSetting.ENABLE_DRAWING_POLYGONS,
     name: "Drawing polygons in 3D panel",
     description: <>Show sidebar control to draw polygons in the 3D panel.</>,
-  },
-  {
-    key: AppSetting.SHOW_ROS2_ROSBRIDGE,
-    name: "ROS 2 Rosbridge",
-    description: <>Enable ROS 2 Rosbridge as a possible data source connection.</>,
   },
   {
     key: AppSetting.ENABLE_LEGACY_PLOT_PANEL,
@@ -51,7 +46,7 @@ const features: Feature[] = [
   {
     key: AppSetting.ENABLE_CONSOLE_API_LAYOUTS,
     name: "Team Shared Layouts",
-    description: <>Enable team layout sharing when signed in to Studio.</>,
+    description: <>Enable team layout sharing when signed in to Foxglove Studio.</>,
   },
 ];
 

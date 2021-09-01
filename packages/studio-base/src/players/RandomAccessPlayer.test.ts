@@ -16,7 +16,7 @@
 
 import { omit } from "lodash";
 
-import { Time, add } from "@foxglove/rostime";
+import { Time, add, fromNanoSec } from "@foxglove/rostime";
 import {
   MessageEvent,
   PlayerCapabilities,
@@ -31,7 +31,7 @@ import {
 } from "@foxglove/studio-base/randomAccessDataProviders/types";
 import delay from "@foxglove/studio-base/util/delay";
 import signal from "@foxglove/studio-base/util/signal";
-import { fromNanoSec, getSeekToTime, SEEK_ON_START_NS } from "@foxglove/studio-base/util/time";
+import { getSeekToTime, SEEK_ON_START_NS } from "@foxglove/studio-base/util/time";
 
 import RandomAccessPlayer, {
   RandomAccessPlayerOptions,
@@ -1599,50 +1599,6 @@ describe("RandomAccessPlayer", () => {
       { topic: "/unknown_topic" }, // Shouldn't appear in getMessages at all!
       { topic: "/parsed_topic" },
       { topic: "/parsed_and_binary_topic" },
-    ]);
-    await store.done;
-  });
-
-  it("does not request messages when all subscribers set `preloadingFallback`", async () => {
-    expect.assertions(1);
-    const provider = new TestProvider({
-      topics: [
-        { name: "/streaming_parsed", datatype: "dummy" },
-        { name: "/fallback_parsed", datatype: "dummy" },
-        { name: "/streaming_and_fallback_parsed", datatype: "dummy" },
-        { name: "/streaming_binary", datatype: "dummy" },
-        { name: "/only_fallback_binary", datatype: "dummy" },
-        { name: "/streaming_and_fallback_binary", datatype: "dummy" },
-      ],
-    });
-    const source = new RandomAccessPlayer(
-      { name: "TestProvider", args: { provider }, children: [] },
-      playerOptions,
-    );
-
-    provider.getMessages = async (
-      _start: Time,
-      _end: Time,
-      topics: GetMessagesTopics,
-    ): Promise<GetMessagesResult> => {
-      expect(topics).toEqual({
-        parsedMessages: ["/streaming_parsed", "/streaming_and_fallback_parsed"],
-      });
-      return getMessagesResult;
-    };
-
-    const store = new MessageStore(2);
-    source.setListener(store.add);
-    source.setSubscriptions([
-      { topic: "/unknown_topic" }, // Shouldn't appear in getMessages at all!
-      { topic: "/streaming_parsed" },
-      { topic: "/only_fallback_parsed", preloadingFallback: true },
-      { topic: "/streaming_and_fallback_parsed" },
-      {
-        topic: "/streaming_and_fallback_parsed",
-
-        preloadingFallback: true,
-      },
     ]);
     await store.done;
   });
