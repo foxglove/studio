@@ -371,7 +371,7 @@ export default function LayoutRow({
       },
       {
         key: "debug_updated_at",
-        text: `Updated at: ${layout.working?.updatedAt ?? layout.baseline.updatedAt}`,
+        text: `Saved at: ${layout.working?.savedAt ?? layout.baseline.savedAt}`,
         disabled: true,
         itemProps: {
           styles: {

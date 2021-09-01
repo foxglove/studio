@@ -73,7 +73,7 @@ export default class LayoutManager implements ILayoutManager {
   private local: MutexLocked<NamespacedLayoutStorage>;
   private remote: IRemoteLayoutStorage | undefined;
 
-  readonly supportsSharing = false;
+  readonly supportsSharing: boolean;
 
   private changeListeners = new Set<LayoutChangeListener>();
 
@@ -90,6 +90,7 @@ export default class LayoutManager implements ILayoutManager {
       }),
     );
     this.remote = remote;
+    this.supportsSharing = remote != undefined;
   }
 
   addLayoutsChangedListener(listener: LayoutChangeListener): void {
@@ -171,45 +172,22 @@ export default class LayoutManager implements ILayoutManager {
     name: string | undefined;
     data: PanelsState | undefined;
   }): Promise<Layout> {
-    const localLayout = await this.local.runExclusive(async (local) => await local.get(id));
-    if (!localLayout) {
-      throw new Error(`Cannot update layout ${id} because it does not exist`);
-    }
-    if (layoutIsShared(localLayout)) {
-      if (!this.remote) {
-        throw new Error("Shared layouts are not supported without remote layout storage");
+    const result = await this.local.runExclusive(async (local) => {
+      const layout = await local.get(id);
+      if (!layout) {
+        throw new Error(`Cannot update layout ${id} because it does not exist`);
       }
-      const updatedRemote = await this.remote.updateLayout({
-        id,
-        name,
-        data,
-        savedAt: new Date().toISOString() as ISO8601Timestamp,
-      });
-      const updatedLocal = await this.local.runExclusive(async (local) => {
-        return await local.put({
-          id,
-          name: updatedRemote.name,
-          permission: updatedRemote.permission,
-          baseline: { data: updatedRemote.data, savedAt: updatedRemote.savedAt },
-          working: localLayout?.working,
-        });
-      });
-      this.notifyChangeListeners({ updatedLayout: updatedLocal });
-      return updatedLocal;
-    } else {
-      const updatedLocal = await this.local.runExclusive(async (local) => {
-        const updatedLayout = {
-          ...localLayout,
-          name: name ?? localLayout.name,
-        };
-        if (data != undefined) {
-          updatedLayout.working = { data, savedAt: new Date().toISOString() as ISO8601Timestamp };
-        }
-        return await local.put(updatedLayout);
-      });
-      this.notifyChangeListeners({ updatedLayout: updatedLocal });
-      return updatedLocal;
-    }
+      const updatedLayout = {
+        ...layout,
+        name: name ?? layout.name,
+      };
+      if (data != undefined) {
+        updatedLayout.working = { data, savedAt: new Date().toISOString() as ISO8601Timestamp };
+      }
+      return await local.put(updatedLayout);
+    });
+    this.notifyChangeListeners({ updatedLayout: result });
+    return result;
   }
 
   async deleteLayout({ id }: { id: LayoutID }): Promise<void> {

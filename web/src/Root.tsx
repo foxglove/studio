@@ -75,11 +75,11 @@ export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX
 
   const providers = [
     /* eslint-disable react/jsx-key */
+    <LocalStorageAppConfigurationProvider />,
     <ConsoleApiContext.Provider value={api} />,
     <CurrentUserProvider />,
     <ConsoleApiRemoteLayoutStorageProvider />,
     <StudioToastProvider />,
-    <LocalStorageAppConfigurationProvider />,
     <LocalStorageLayoutStorageProvider />,
     <UserProfileLocalStorageProvider />,
     <ExtensionLoaderProvider />,

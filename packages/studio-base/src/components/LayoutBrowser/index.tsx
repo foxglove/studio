@@ -49,7 +49,7 @@ export default function LayoutBrowser({
     async () => {
       const [shared, personal] = partition(
         await layoutStorage.getLayouts(),
-        layoutStorage.supportsSharing ? layoutIsShared : () => true,
+        layoutStorage.supportsSharing ? layoutIsShared : () => false,
       );
       return {
         personal: personal.sort((a, b) => a.name.localeCompare(b.name)),

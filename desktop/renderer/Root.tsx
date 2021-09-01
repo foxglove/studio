@@ -62,11 +62,11 @@ export default function Root(): ReactElement {
 
   const providers = [
     /* eslint-disable react/jsx-key */
+    <NativeStorageAppConfigurationProvider />,
     <ConsoleApiContext.Provider value={api} />,
     <CurrentUserProvider />,
     <ConsoleApiRemoteLayoutStorageProvider />,
     <StudioToastProvider />,
-    <NativeStorageAppConfigurationProvider />,
     <NativeStorageLayoutStorageProvider />,
     <NativeAppMenuProvider />,
     <UserProfileLocalStorageProvider />,
