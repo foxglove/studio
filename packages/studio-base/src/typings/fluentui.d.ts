@@ -29,6 +29,7 @@ declare global {
     | "Copy"
     | "DataManagementSettings"
     | "Delete"
+    | "DependencyAdd"
     | "DownloadDocument"
     | "Download"
     | "Edit"

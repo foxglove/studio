@@ -11,6 +11,12 @@ export type ISO8601Timestamp = string & { __brand: "ISO8601Timestamp" };
 
 export type LayoutPermission = "creator_write" | "org_read" | "org_write";
 
+export type LayoutSyncStatus =
+  | "new"
+  | "updated"
+  | "tracked"
+  | "locally-deleted"
+  | "remotely-deleted";
 export type Layout = {
   id: LayoutID;
   name: string;
@@ -33,6 +39,15 @@ export type Layout = {
   working:
     | {
         data: PanelsState;
+        savedAt: ISO8601Timestamp | undefined;
+      }
+    | undefined;
+
+  /** Info about this layout from remote storage. */
+  remote:
+    | {
+        syncStatus: LayoutSyncStatus;
+        /** The last savedAt time returned by the server. */
         savedAt: ISO8601Timestamp | undefined;
       }
     | undefined;
@@ -99,5 +114,6 @@ export function migrateLayout(value: unknown): Layout {
     permission: layout.permission ?? "creator_write",
     working: layout.working,
     baseline,
+    remote: undefined,
   };
 }

@@ -96,12 +96,12 @@ export default function LayoutBrowser({
   }, [confirm, currentLayoutId, layoutManager]);
 
   const onSelectLayout = useCallback(
-    async (item: Pick<Layout, "id">, selectedViaClick?: boolean) => {
+    async (item: Layout, selectedViaClick?: boolean) => {
       if (selectedViaClick === true) {
         if (!(await promptForUnsavedChanges())) {
           return;
         }
-        void analytics.logEvent(AppEvent.LAYOUT_SELECT);
+        void analytics.logEvent(AppEvent.LAYOUT_SELECT, { permission: item.permission });
       }
       setSelectedLayoutId(item.id);
     },
@@ -112,7 +112,7 @@ export default function LayoutBrowser({
   const onRenameLayout = useCallback(
     async (item: Layout, newName: string) => {
       await layoutManager.updateLayout({ id: item.id, name: newName });
-      void analytics.logEvent(AppEvent.LAYOUT_RENAME);
+      void analytics.logEvent(AppEvent.LAYOUT_RENAME, { permission: item.permission });
     },
     [analytics, layoutManager],
   );
@@ -122,16 +122,13 @@ export default function LayoutBrowser({
       if (!(await promptForUnsavedChanges())) {
         return;
       }
-      const source = await layoutManager.getLayout(item.id);
-      if (source) {
-        const newLayout = await layoutManager.saveNewLayout({
-          name: `${item.name} copy`,
-          data: source.working?.data ?? source.baseline.data,
-          permission: "creator_write",
-        });
-        await onSelectLayout(newLayout);
-        void analytics.logEvent(AppEvent.LAYOUT_DUPLICATE);
-      }
+      const newLayout = await layoutManager.saveNewLayout({
+        name: `${item.name} copy`,
+        data: item.working?.data ?? item.baseline.data,
+        permission: "creator_write",
+      });
+      await onSelectLayout(newLayout);
+      void analytics.logEvent(AppEvent.LAYOUT_DUPLICATE, { permission: item.permission });
     },
     [analytics, layoutManager, onSelectLayout, promptForUnsavedChanges],
   );
@@ -139,7 +136,7 @@ export default function LayoutBrowser({
   const onDeleteLayout = useCallback(
     async (item: Layout) => {
       await layoutManager.deleteLayout({ id: item.id });
-      void analytics.logEvent(AppEvent.LAYOUT_DELETE);
+      void analytics.logEvent(AppEvent.LAYOUT_DELETE, { permission: item.permission });
 
       if (currentLayoutId !== item.id) {
         return;
@@ -181,14 +178,11 @@ export default function LayoutBrowser({
 
   const onExportLayout = useCallback(
     async (item: Layout) => {
-      const layout = await layoutManager.getLayout(item.id);
-      if (layout) {
-        const content = JSON.stringify(layout.working?.data ?? layout.baseline.data, undefined, 2);
-        downloadTextFile(content, `${item.name}.json`);
-        void analytics.logEvent(AppEvent.LAYOUT_EXPORT);
-      }
+      const content = JSON.stringify(item.working?.data ?? item.baseline.data, undefined, 2);
+      downloadTextFile(content, `${item.name}.json`);
+      void analytics.logEvent(AppEvent.LAYOUT_EXPORT, { permission: item.permission });
     },
-    [layoutManager, analytics],
+    [analytics],
   );
 
   const onShareLayout = useCallback(
@@ -205,16 +199,12 @@ export default function LayoutBrowser({
         },
       });
       if (name != undefined) {
-        const layout = await layoutManager.getLayout(item.id);
-        if (!layout) {
-          throw new Error("The layout could not be found.");
-        }
         await layoutManager.saveNewLayout({
           name,
-          data: layout.working?.data ?? layout.baseline.data,
+          data: item.working?.data ?? item.baseline.data,
           permission: "org_write",
         });
-        void analytics.logEvent(AppEvent.LAYOUT_SHARE);
+        void analytics.logEvent(AppEvent.LAYOUT_SHARE, { permission: item.permission });
       }
     },
     [analytics, layoutManager, layouts.value?.shared, prompt],
@@ -224,7 +214,7 @@ export default function LayoutBrowser({
     async (item: Layout) => {
       // CurrentLayoutProvider automatically updates in its layout change listener
       await layoutManager.overwriteLayout({ id: item.id });
-      void analytics.logEvent(AppEvent.LAYOUT_OVERWRITE);
+      void analytics.logEvent(AppEvent.LAYOUT_OVERWRITE, { permission: item.permission });
     },
     [analytics, layoutManager],
   );
@@ -233,9 +223,21 @@ export default function LayoutBrowser({
     async (item: Layout) => {
       // CurrentLayoutProvider automatically updates in its layout change listener
       await layoutManager.revertLayout({ id: item.id });
-      void analytics.logEvent(AppEvent.LAYOUT_REVERT);
+      void analytics.logEvent(AppEvent.LAYOUT_REVERT, { permission: item.permission });
     },
     [analytics, layoutManager],
+  );
+
+  const onMakePersonalCopy = useCallback(
+    async (item: Layout) => {
+      const newLayout = await layoutManager.makePersonalCopy({
+        id: item.id,
+        name: `${item.name} copy`,
+      });
+      await onSelectLayout(newLayout);
+      void analytics.logEvent(AppEvent.LAYOUT_MAKE_PERSONAL_COPY, { permission: item.permission });
+    },
+    [analytics, layoutManager, onSelectLayout],
   );
 
   const importLayout = useCallback(async () => {
@@ -329,6 +331,7 @@ export default function LayoutBrowser({
             onExport={onExportLayout}
             onOverwrite={onOverwriteLayout}
             onRevert={onRevertLayout}
+            onMakePersonalCopy={onMakePersonalCopy}
           />
         </Stack.Item>
         <Stack.Item>
@@ -346,6 +349,7 @@ export default function LayoutBrowser({
               onExport={onExportLayout}
               onOverwrite={onOverwriteLayout}
               onRevert={onRevertLayout}
+              onMakePersonalCopy={onMakePersonalCopy}
             />
           )}
         </Stack.Item>

@@ -99,36 +99,55 @@ class ConsoleApi {
   }
 
   private async get<T>(apiPath: string, query?: Record<string, string>): Promise<T> {
-    return await this.request<T>(
-      query == undefined ? apiPath : `${apiPath}?${new URLSearchParams(query).toString()}`,
-      { method: "GET" },
-    );
+    return (
+      await this.request<T>(
+        query == undefined ? apiPath : `${apiPath}?${new URLSearchParams(query).toString()}`,
+        { method: "GET" },
+      )
+    ).json;
   }
 
   private async post<T>(apiPath: string, body?: unknown): Promise<T> {
-    return await this.request<T>(apiPath, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    return (
+      await this.request<T>(apiPath, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+    ).json;
   }
 
-  private async put<T>(apiPath: string, body?: unknown): Promise<T> {
-    return await this.request<T>(apiPath, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+  private async patch<T>(apiPath: string, body?: unknown): Promise<T> {
+    return (
+      await this.request<T>(apiPath, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      })
+    ).json;
   }
 
-  private async delete<T>(apiPath: string, query?: Record<string, string>): Promise<T> {
+  private async delete<T>(
+    apiPath: string,
+    query?: Record<string, string>,
+  ): Promise<{ status: number; json: T }> {
     return await this.request<T>(
       query == undefined ? apiPath : `${apiPath}?${new URLSearchParams(query).toString()}`,
       { method: "DELETE" },
+      { allowedStatuses: [404] },
     );
   }
 
-  private async request<T>(url: string, config?: RequestInit): Promise<T> {
+  private async request<T>(
+    url: string,
+    config?: RequestInit,
+    {
+      allowedStatuses = [],
+    }: {
+      /** By default, status codes other than 200 will throw an error. */
+      allowedStatuses?: number[];
+    } = {},
+  ): Promise<{ status: number; json: T }> {
     const fullUrl = `${this._baseUrl}${url}`;
 
     const headers: Record<string, string> = {};
@@ -138,7 +157,7 @@ class ConsoleApi {
     const fullConfig = { ...config, headers: { ...headers, ...config?.headers } };
 
     const res = await fetch(fullUrl, fullConfig);
-    if (res.status !== 200) {
+    if (res.status !== 200 && !allowedStatuses.includes(res.status)) {
       const json = (await res.json().catch((err) => {
         throw new Error(`Status ${res.status}: ${err.message}`);
       })) as { message?: string };
@@ -148,7 +167,7 @@ class ConsoleApi {
     }
 
     try {
-      return (await res.json()) as T;
+      return { status: res.status, json: (await res.json()) as T };
     } catch (err) {
       throw new Error("Request Failed.");
     }
@@ -170,6 +189,7 @@ class ConsoleApi {
   }
 
   async createLayout(layout: {
+    id: LayoutID | undefined;
     saved_at: ISO8601Timestamp | undefined;
     name: string | undefined;
     permission: "creator_write" | "org_read" | "org_write" | undefined;
@@ -185,11 +205,11 @@ class ConsoleApi {
     permission: "creator_write" | "org_read" | "org_write" | undefined;
     data: Record<string, unknown> | undefined;
   }): Promise<ConsoleApiLayout> {
-    return await this.put<ConsoleApiLayout>(`/v1/layouts/${layout.id}`, layout);
+    return await this.patch<ConsoleApiLayout>(`/v1/layouts/${layout.id}`, layout);
   }
 
-  async deleteLayout(id: LayoutID): Promise<void> {
-    await this.delete<ConsoleApiLayout>(`/v1/layouts/${id}`);
+  async deleteLayout(id: LayoutID): Promise<boolean> {
+    return (await this.delete(`/v1/layouts/${id}`)).status === 200;
   }
 }
 

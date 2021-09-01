@@ -39,12 +39,7 @@ export interface ILayoutManager {
    * @note If the layout has not been edited before, the returned layout's id may be different from
    * the input id.
    */
-  updateLayout(params: {
-    id: LayoutID;
-    name?: string;
-    data?: PanelsState;
-    // FIXME: ok to remove permission?
-  }): Promise<Layout>;
+  updateLayout(params: { id: LayoutID; name?: string; data?: PanelsState }): Promise<Layout>;
 
   deleteLayout(params: { id: LayoutID }): Promise<void>;
 
@@ -53,4 +48,7 @@ export interface ILayoutManager {
 
   /** Revert this layout to the baseline. */
   revertLayout(params: { id: LayoutID }): Promise<Layout>;
+
+  /** Transfer a shared layout's working changes into a new personal layout. */
+  makePersonalCopy(params: { id: LayoutID; name: string }): Promise<Layout>;
 }
