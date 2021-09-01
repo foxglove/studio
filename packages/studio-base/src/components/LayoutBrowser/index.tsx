@@ -108,6 +108,7 @@ export default function LayoutBrowser({
     [analytics, promptForUnsavedChanges, setSelectedLayoutId],
   );
 
+  // FIXME: show spinner while renaming/overwriting or other operations that may hit the server
   const onRenameLayout = useCallback(
     async (item: Layout, newName: string) => {
       await layoutManager.updateLayout({ id: item.id, name: newName });

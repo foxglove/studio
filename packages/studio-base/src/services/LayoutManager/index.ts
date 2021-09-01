@@ -172,22 +172,41 @@ export default class LayoutManager implements ILayoutManager {
     name: string | undefined;
     data: PanelsState | undefined;
   }): Promise<Layout> {
-    const result = await this.local.runExclusive(async (local) => {
-      const layout = await local.get(id);
-      if (!layout) {
-        throw new Error(`Cannot update layout ${id} because it does not exist`);
+    const now = new Date().toISOString() as ISO8601Timestamp;
+    const localLayout = await this.local.runExclusive(async (local) => await local.get(id));
+    if (!localLayout) {
+      throw new Error(`Cannot update layout ${id} because it does not exist`);
+    }
+
+    // Renames of shared layouts go directly to the server
+    if (name != undefined && layoutIsShared(localLayout)) {
+      if (!this.remote) {
+        throw new Error("Shared layouts are not supported without remote layout storage");
       }
-      const updatedLayout = {
-        ...layout,
-        name: name ?? layout.name,
-      };
-      if (data != undefined) {
-        updatedLayout.working = { data, savedAt: new Date().toISOString() as ISO8601Timestamp };
-      }
-      return await local.put(updatedLayout);
-    });
-    this.notifyChangeListeners({ updatedLayout: result });
-    return result;
+      const updatedBaseline = await this.remote.updateLayout({ id, name, savedAt: now });
+      const result = await this.local.runExclusive(
+        async (local) =>
+          await local.put({
+            ...localLayout,
+            name: updatedBaseline.name,
+            baseline: { data: updatedBaseline.data, savedAt: updatedBaseline.savedAt },
+            working: data != undefined ? { data, savedAt: now } : localLayout.working,
+          }),
+      );
+      this.notifyChangeListeners({ updatedLayout: result });
+      return result;
+    } else {
+      const result = await this.local.runExclusive(
+        async (local) =>
+          await local.put({
+            ...localLayout,
+            name: name ?? localLayout.name,
+            working: data != undefined ? { data, savedAt: now } : localLayout.working,
+          }),
+      );
+      this.notifyChangeListeners({ updatedLayout: result });
+      return result;
+    }
   }
 
   async deleteLayout({ id }: { id: LayoutID }): Promise<void> {
