@@ -85,10 +85,10 @@ export default function computeLayoutSyncOperations(
           ops.push({ local: true, type: "mark-deleted", localLayout });
           break;
         case "tracked":
-          if (localLayout.working != undefined) {
-            ops.push({ local: true, type: "mark-deleted", localLayout });
-          } else {
+          if (localLayout.working == undefined) {
             ops.push({ local: true, type: "delete-local", localLayout });
+          } else {
+            ops.push({ local: true, type: "mark-deleted", localLayout });
           }
           break;
         case "locally-deleted":
@@ -98,6 +98,9 @@ export default function computeLayoutSyncOperations(
           ops.push({ local: true, type: "delete-local", localLayout });
           break;
         case "remotely-deleted":
+          if (localLayout.working == undefined) {
+            ops.push({ local: true, type: "delete-local", localLayout });
+          }
           break;
       }
     }

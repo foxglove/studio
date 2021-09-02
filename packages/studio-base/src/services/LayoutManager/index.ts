@@ -143,11 +143,17 @@ export default class LayoutManager implements ILayoutManager {
   }
 
   async getLayouts(): Promise<readonly Layout[]> {
-    return await this.local.runExclusive(async (local) => await local.list());
+    return await this.local.runExclusive(async (local) => {
+      const layouts = await local.list();
+      return layouts.filter((layout) => layout.remote?.syncStatus !== "locally-deleted");
+    });
   }
 
   async getLayout(id: LayoutID): Promise<Layout | undefined> {
-    return await this.local.runExclusive(async (local) => await local.get(id));
+    return await this.local.runExclusive(async (local) => {
+      const layout = await local.get(id);
+      return layout?.remote?.syncStatus === "locally-deleted" ? undefined : layout;
+    });
   }
 
   @LayoutManager.withActivity
