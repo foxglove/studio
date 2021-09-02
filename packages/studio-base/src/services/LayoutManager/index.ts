@@ -206,9 +206,12 @@ export default class LayoutManager implements ILayoutManager {
             ...localLayout,
             name: name ?? localLayout.name,
             working: data != undefined ? { data, savedAt: now } : localLayout.working,
-            remote: this.remote
-              ? { syncStatus: "updated", savedAt: localLayout.remote?.savedAt }
-              : localLayout.remote,
+
+            // If the name is being changed, we will need to upload to the server
+            remote:
+              this.remote && name != undefined
+                ? { syncStatus: "updated", savedAt: localLayout.remote?.savedAt }
+                : localLayout.remote,
           }),
       );
       this.notifyChangeListeners({ updatedLayout: result });
@@ -338,9 +341,11 @@ export default class LayoutManager implements ILayoutManager {
    */
   async syncWithRemote(): Promise<void> {
     if (this.currentSync) {
+      log.debug("Layout sync is already in progress");
       return await this.currentSync;
     }
     try {
+      log.debug("Starting layout sync");
       this.currentSync = this.syncWithRemoteImpl();
       await this.currentSync;
       this.notifyChangeListeners({ updatedLayout: undefined });
