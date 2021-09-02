@@ -168,14 +168,17 @@ export default function LayoutRow({
     [editingName, layout, nameFieldValue, onRename],
   );
 
-  const onTextFieldKeyDown = useCallback((event: React.KeyboardEvent) => {
-    if (event.key === "Escape") {
-      setEditingName(false);
-    }
-    if (event.key === "Tab") {
-      // Submit
-    }
-  }, []);
+  const onTextFieldKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setEditingName(false);
+      }
+      if (event.key === "Tab") {
+        onSubmit(event);
+      }
+    },
+    [onSubmit],
+  );
 
   const onTextFieldMount = useCallback((field: ITextField | ReactNull) => {
     // When focusing via right-click we need an extra tick to be able to successfully focus the field
@@ -487,7 +490,7 @@ export default function LayoutRow({
           onDismiss={() => setContextMenuEvent(undefined)}
         />
       )}
-      <StackItem grow title={layout.name}>
+      <StackItem grow>
         {editingName ? (
           <TextField
             componentRef={onTextFieldMount}
@@ -501,7 +504,9 @@ export default function LayoutRow({
             }}
           />
         ) : (
-          <Text className={styles.layoutName}>{layout.name}</Text>
+          <Text className={styles.layoutName} title={layout.name}>
+            {layout.name}
+          </Text>
         )}
       </StackItem>
 
@@ -514,7 +519,7 @@ export default function LayoutRow({
           data={{ text: "x" }}
           data-test="layout-actions"
           iconProps={{
-            iconName: layout.working != undefined ? "StatusCircleInner" : "More",
+            iconName: layout.working != undefined ? "LocationDot" : "More",
             styles: {
               root: {
                 "& span": { verticalAlign: "baseline" },
