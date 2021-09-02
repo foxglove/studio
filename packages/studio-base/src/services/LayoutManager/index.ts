@@ -79,17 +79,33 @@ export default class LayoutManager implements ILayoutManager {
 
   private emitter = new EventEmitter<LayoutManagerEventTypes>();
 
-  private _isActive = false;
+  private activityCount = 0;
+
+  /**
+   * A decorator to emit activity events before and after an async operation so the UI can show that
+   * the operation is in progress.
+   */
+  private static withActivity<Args extends unknown[], Ret>(
+    _prototype: typeof LayoutManager.prototype,
+    _propertyKey: string,
+    descriptor: TypedPropertyDescriptor<(this: LayoutManager, ...args: Args) => Promise<Ret>>,
+  ) {
+    const method = descriptor.value!;
+    descriptor.value = async function (...args) {
+      try {
+        this.activityCount++;
+        this.emitter.emit("activitychange");
+        return await method.apply(this, args);
+      } finally {
+        this.activityCount--;
+        this.emitter.emit("activitychange");
+      }
+    };
+  }
+
   // eslint-disable-next-line no-restricted-syntax
   get isActive(): boolean {
-    return this._isActive;
-  }
-  private setActive(newValue: boolean) {
-    if (newValue === this._isActive) {
-      return;
-    }
-    this._isActive = newValue;
-    this.emitter.emit("activitychange");
+    return this.activityCount > 0;
   }
 
   constructor({
@@ -133,6 +149,7 @@ export default class LayoutManager implements ILayoutManager {
     return await this.local.runExclusive(async (local) => await local.get(id));
   }
 
+  @LayoutManager.withActivity
   async saveNewLayout({
     name,
     data,
@@ -183,6 +200,7 @@ export default class LayoutManager implements ILayoutManager {
     return newLayout;
   }
 
+  @LayoutManager.withActivity
   async updateLayout({
     id,
     name,
@@ -236,6 +254,7 @@ export default class LayoutManager implements ILayoutManager {
     }
   }
 
+  @LayoutManager.withActivity
   async deleteLayout({ id }: { id: LayoutID }): Promise<void> {
     const localLayout = await this.local.runExclusive(async (local) => await local.get(id));
     if (!localLayout) {
@@ -267,6 +286,7 @@ export default class LayoutManager implements ILayoutManager {
     this.notifyChangeListeners({ updatedLayout: undefined });
   }
 
+  @LayoutManager.withActivity
   async overwriteLayout({ id }: { id: LayoutID }): Promise<Layout> {
     const localLayout = await this.local.runExclusive(async (local) => await local.get(id));
     if (!localLayout) {
@@ -313,6 +333,7 @@ export default class LayoutManager implements ILayoutManager {
     }
   }
 
+  @LayoutManager.withActivity
   async revertLayout({ id }: { id: LayoutID }): Promise<Layout> {
     const result = await this.local.runExclusive(async (local) => {
       const layout = await local.get(id);
@@ -328,6 +349,7 @@ export default class LayoutManager implements ILayoutManager {
     return result;
   }
 
+  @LayoutManager.withActivity
   async makePersonalCopy({ id, name }: { id: LayoutID; name: string }): Promise<Layout> {
     const now = new Date().toISOString() as ISO8601Timestamp;
     const result = await this.local.runExclusive(async (local) => {
@@ -358,20 +380,21 @@ export default class LayoutManager implements ILayoutManager {
    * the cached and remote layout lists; it may also involve modifications to the cache, remote
    * storage, or both.
    */
+  @LayoutManager.withActivity
   async syncWithRemote(): Promise<void> {
     if (this.currentSync) {
       log.debug("Layout sync is already in progress");
       return await this.currentSync;
     }
+    const start = performance.now();
     try {
       log.debug("Starting layout sync");
-      this.setActive(true);
       this.currentSync = this.syncWithRemoteImpl();
       await this.currentSync;
       this.notifyChangeListeners({ updatedLayout: undefined });
     } finally {
       this.currentSync = undefined;
-      this.setActive(false);
+      log.debug(`Completed sync in ${((performance.now() - start) / 1000).toFixed(2)}s`);
     }
   }
 
