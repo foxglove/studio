@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import EventEmitter, { EventNames, EventListener } from "eventemitter3";
 import { partition } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
@@ -11,7 +12,7 @@ import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/
 import { ISO8601Timestamp } from "@foxglove/studio-base/services/ConsoleApi";
 import {
   ILayoutManager,
-  LayoutChangeListener,
+  LayoutManagerEventTypes,
 } from "@foxglove/studio-base/services/ILayoutManager";
 import {
   ILayoutStorage,
@@ -76,7 +77,20 @@ export default class LayoutManager implements ILayoutManager {
 
   readonly supportsSharing: boolean;
 
-  private changeListeners = new Set<LayoutChangeListener>();
+  private emitter = new EventEmitter<LayoutManagerEventTypes>();
+
+  private _isActive = false;
+  // eslint-disable-next-line no-restricted-syntax
+  get isActive(): boolean {
+    return this._isActive;
+  }
+  private setActive(newValue: boolean) {
+    if (newValue === this._isActive) {
+      return;
+    }
+    this._isActive = newValue;
+    this.emitter.emit("activitychange");
+  }
 
   constructor({
     local,
@@ -94,18 +108,21 @@ export default class LayoutManager implements ILayoutManager {
     this.supportsSharing = remote != undefined;
   }
 
-  addLayoutsChangedListener(listener: LayoutChangeListener): void {
-    this.changeListeners.add(listener);
+  on<E extends EventNames<LayoutManagerEventTypes>>(
+    name: E,
+    listener: EventListener<LayoutManagerEventTypes, E>,
+  ): void {
+    this.emitter.on(name, listener);
   }
-  removeLayoutsChangedListener(listener: LayoutChangeListener): void {
-    this.changeListeners.delete(listener);
+  off<E extends EventNames<LayoutManagerEventTypes>>(
+    name: E,
+    listener: EventListener<LayoutManagerEventTypes, E>,
+  ): void {
+    this.emitter.off(name, listener);
   }
+
   private notifyChangeListeners(event: { updatedLayout: Layout | undefined }) {
-    queueMicrotask(() => {
-      for (const listener of [...this.changeListeners]) {
-        listener(event);
-      }
-    });
+    queueMicrotask(() => this.emitter.emit("change", event));
   }
 
   async getLayouts(): Promise<readonly Layout[]> {
@@ -348,11 +365,13 @@ export default class LayoutManager implements ILayoutManager {
     }
     try {
       log.debug("Starting layout sync");
+      this.setActive(true);
       this.currentSync = this.syncWithRemoteImpl();
       await this.currentSync;
       this.notifyChangeListeners({ updatedLayout: undefined });
     } finally {
       this.currentSync = undefined;
+      this.setActive(false);
     }
   }
 

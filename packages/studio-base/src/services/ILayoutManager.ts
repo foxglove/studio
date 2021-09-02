@@ -2,11 +2,21 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { EventNames, EventListener } from "eventemitter3";
+
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { Layout, LayoutID, LayoutPermission } from "@foxglove/studio-base/services/ILayoutStorage";
 
-export type LayoutChangeListener = (event: { updatedLayout: Layout | undefined }) => void;
+export type LayoutManagerEventTypes = {
+  /**
+   * Called when a change has occurred to the layouts and the user interface should be updated.
+   * If a particular layout was updated, its data will be passed in the event.
+   */
+  change: (event: { updatedLayout: Layout | undefined }) => void;
 
+  /** Called when the layout manager starts or stops asynchronous activity.  */
+  activitychange: () => void;
+};
 /**
  * The Layout Manager is a high-level interface on top of raw layout storage which maps more closely
  * to actions the user can take in the application.
@@ -16,12 +26,16 @@ export interface ILayoutManager {
   /** Indicates whether permissions other than "creator_write" are supported. */
   readonly supportsSharing: boolean;
 
-  /**
-   * Called when a change has occurred to the layouts and the user interface should be updated.
-   * If a particular layout was updated, its data will be passed in the event.
-   */
-  addLayoutsChangedListener(listener: LayoutChangeListener): void;
-  removeLayoutsChangedListener(listener: LayoutChangeListener): void;
+  readonly isActive: boolean;
+
+  on<E extends EventNames<LayoutManagerEventTypes>>(
+    name: E,
+    listener: EventListener<LayoutManagerEventTypes, E>,
+  ): void;
+  off<E extends EventNames<LayoutManagerEventTypes>>(
+    name: E,
+    listener: EventListener<LayoutManagerEventTypes, E>,
+  ): void;
 
   getLayouts(): Promise<readonly Layout[]>;
 

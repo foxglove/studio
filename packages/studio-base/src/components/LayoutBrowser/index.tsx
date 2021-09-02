@@ -5,7 +5,7 @@ import { DefaultButton, IconButton, Spinner, Stack, useTheme } from "@fluentui/r
 import { partition } from "lodash";
 import moment from "moment";
 import path from "path";
-import { useCallback, useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useToasts } from "react-toast-notifications";
 import { useMountedState } from "react-use";
 import useAsyncFn from "react-use/lib/useAsyncFn";
@@ -47,6 +47,13 @@ export default function LayoutBrowser({
   const currentLayoutId = useCurrentLayoutSelector((state) => state.selectedLayout?.id);
   const { setSelectedLayoutId } = useCurrentLayoutActions();
 
+  const [isActive, setIsActive] = useState(false);
+  useEffect(() => {
+    const listener = () => setIsActive(layoutManager.isActive);
+    layoutManager.on("activitychange", listener);
+    return () => layoutManager.off("activitychange", listener);
+  }, [layoutManager]);
+
   const [layouts, reloadLayouts] = useAsyncFn(
     async () => {
       const [shared, personal] = partition(
@@ -64,8 +71,8 @@ export default function LayoutBrowser({
 
   useEffect(() => {
     const listener = () => void reloadLayouts();
-    layoutManager.addLayoutsChangedListener(listener);
-    return () => layoutManager.removeLayoutsChangedListener(listener);
+    layoutManager.on("change", listener);
+    return () => layoutManager.off("change", listener);
   }, [layoutManager, reloadLayouts]);
 
   // Start loading on first mount
@@ -294,7 +301,7 @@ export default function LayoutBrowser({
       title="Layouts"
       noPadding
       trailingItems={[
-        layouts.loading && <Spinner />,
+        (layouts.loading || isActive) && <Spinner />,
         // eslint-disable-next-line react/jsx-key
         <IconButton
           elementRef={createLayoutTooltip.ref}
