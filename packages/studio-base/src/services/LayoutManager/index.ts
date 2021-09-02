@@ -228,7 +228,9 @@ export default class LayoutManager implements ILayoutManager {
       if (!this.remote) {
         throw new Error("Shared layouts are not supported without remote layout storage");
       }
-      await this.remote.deleteLayout(id);
+      if (localLayout.remote?.syncStatus !== "remotely-deleted") {
+        await this.remote.deleteLayout(id);
+      }
     }
     await this.local.runExclusive(async (local) => {
       if (this.remote && !layoutIsShared(localLayout)) {
