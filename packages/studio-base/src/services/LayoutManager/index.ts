@@ -116,6 +116,7 @@ export default class LayoutManager implements ILayoutManager {
     remote: IRemoteLayoutStorage | undefined;
   }) {
     this.local = new MutexLocked(
+      //FIXME: use remote.namespace for namespace
       new NamespacedLayoutStorage(local, LayoutManager.LOCAL_STORAGE_NAMESPACE, {
         migrateLocalLayouts: true,
       }),

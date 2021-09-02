@@ -2,15 +2,18 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
+import { useInterval, useNetworkState } from "react-use";
 
-import { useShallowMemo } from "@foxglove/hooks";
+import { useShallowMemo, useVisibilityState } from "@foxglove/hooks";
 import LayoutManagerContext from "@foxglove/studio-base/context/LayoutManagerContext";
 import { useLayoutStorage } from "@foxglove/studio-base/context/LayoutStorageContext";
 import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
 import { useRemoteLayoutStorage } from "@foxglove/studio-base/context/RemoteLayoutStorageContext";
 import { ISO8601Timestamp, LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 import LayoutManager from "@foxglove/studio-base/services/LayoutManager";
+
+const SYNC_INTERVAL = 15_000;
 
 export default function LayoutManagerProvider({
   children,
@@ -21,6 +24,25 @@ export default function LayoutManagerProvider({
   const layoutManager = useMemo(
     () => new LayoutManager({ local: layoutStorage, remote: remoteLayoutStorage }),
     [layoutStorage, remoteLayoutStorage],
+  );
+
+  const sync = useCallback(async () => {
+    await layoutManager.syncWithRemote();
+  }, [layoutManager]);
+
+  const { online = false } = useNetworkState();
+  const visibilityState = useVisibilityState();
+
+  // Sync periodically when logged in, online, and the app is not hidden
+  const enableSyncing = remoteLayoutStorage != undefined && online && visibilityState === "visible";
+  useEffect(() => {
+    if (enableSyncing) {
+      void sync();
+    }
+  }, [enableSyncing, sync]);
+  useInterval(
+    sync,
+    enableSyncing ? SYNC_INTERVAL : null /* eslint-disable-line no-restricted-syntax */,
   );
 
   const injectEdit = useCallback(
@@ -69,11 +91,7 @@ export default function LayoutManagerProvider({
     [remoteLayoutStorage],
   );
 
-  const syncNow = useCallback(async () => {
-    await layoutManager.syncWithRemote();
-  }, [layoutManager]);
-
-  const debugging = useShallowMemo({ syncNow, injectEdit, injectRename, injectDelete });
+  const debugging = useShallowMemo({ syncNow: sync, injectEdit, injectRename, injectDelete });
 
   return (
     <LayoutStorageDebuggingContext.Provider
