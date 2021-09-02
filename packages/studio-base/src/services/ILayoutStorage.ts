@@ -114,6 +114,6 @@ export function migrateLayout(value: unknown): Layout {
     permission: layout.permission ?? "creator_write",
     working: layout.working,
     baseline,
-    remote: undefined,
+    remote: layout.remote,
   };
 }

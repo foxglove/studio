@@ -267,6 +267,16 @@ export default function LayoutRow({
           },
         },
       },
+      {
+        key: "debug_sync_status",
+        text: `Sync status: ${layout.remote?.syncStatus}`,
+        disabled: true,
+        itemProps: {
+          styles: {
+            root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
+          },
+        },
+      },
     );
   }
   if (layoutDebug?.injectEdit) {
