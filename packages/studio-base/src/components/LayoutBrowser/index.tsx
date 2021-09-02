@@ -20,6 +20,7 @@ import {
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
+import useCallbackWithToast from "@foxglove/studio-base/hooks/useCallbackWithToast";
 import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
 import { usePrompt } from "@foxglove/studio-base/hooks/usePrompt";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
@@ -102,7 +103,7 @@ export default function LayoutBrowser({
     return true;
   }, [confirm, currentLayoutId, layoutManager]);
 
-  const onSelectLayout = useCallback(
+  const onSelectLayout = useCallbackWithToast(
     async (item: Layout, selectedViaClick?: boolean) => {
       if (selectedViaClick === true) {
         if (!(await promptForUnsavedChanges())) {
@@ -116,7 +117,7 @@ export default function LayoutBrowser({
   );
 
   // FIXME: show spinner while renaming/overwriting or other operations that may hit the server
-  const onRenameLayout = useCallback(
+  const onRenameLayout = useCallbackWithToast(
     async (item: Layout, newName: string) => {
       await layoutManager.updateLayout({ id: item.id, name: newName });
       void analytics.logEvent(AppEvent.LAYOUT_RENAME, { permission: item.permission });
@@ -124,7 +125,7 @@ export default function LayoutBrowser({
     [analytics, layoutManager],
   );
 
-  const onDuplicateLayout = useCallback(
+  const onDuplicateLayout = useCallbackWithToast(
     async (item: Layout) => {
       if (!(await promptForUnsavedChanges())) {
         return;
@@ -140,7 +141,7 @@ export default function LayoutBrowser({
     [analytics, layoutManager, onSelectLayout, promptForUnsavedChanges],
   );
 
-  const onDeleteLayout = useCallback(
+  const onDeleteLayout = useCallbackWithToast(
     async (item: Layout) => {
       await layoutManager.deleteLayout({ id: item.id });
       void analytics.logEvent(AppEvent.LAYOUT_DELETE, { permission: item.permission });
@@ -159,7 +160,7 @@ export default function LayoutBrowser({
     [analytics, currentLayoutId, layoutManager, setSelectedLayoutId],
   );
 
-  const createNewLayout = useCallback(async () => {
+  const createNewLayout = useCallbackWithToast(async () => {
     if (!(await promptForUnsavedChanges())) {
       return;
     }
@@ -183,7 +184,7 @@ export default function LayoutBrowser({
     void analytics.logEvent(AppEvent.LAYOUT_CREATE);
   }, [promptForUnsavedChanges, currentDateForStorybook, layoutManager, onSelectLayout, analytics]);
 
-  const onExportLayout = useCallback(
+  const onExportLayout = useCallbackWithToast(
     async (item: Layout) => {
       const content = JSON.stringify(item.working?.data ?? item.baseline.data, undefined, 2);
       downloadTextFile(content, `${item.name}.json`);
@@ -192,7 +193,7 @@ export default function LayoutBrowser({
     [analytics],
   );
 
-  const onShareLayout = useCallback(
+  const onShareLayout = useCallbackWithToast(
     async (item: Layout) => {
       const existingSharedLayouts = layouts.value?.shared ?? [];
       const name = await prompt({
@@ -217,7 +218,7 @@ export default function LayoutBrowser({
     [analytics, layoutManager, layouts.value?.shared, prompt],
   );
 
-  const onOverwriteLayout = useCallback(
+  const onOverwriteLayout = useCallbackWithToast(
     async (item: Layout) => {
       // CurrentLayoutProvider automatically updates in its layout change listener
       await layoutManager.overwriteLayout({ id: item.id });
@@ -226,7 +227,7 @@ export default function LayoutBrowser({
     [analytics, layoutManager],
   );
 
-  const onRevertLayout = useCallback(
+  const onRevertLayout = useCallbackWithToast(
     async (item: Layout) => {
       // CurrentLayoutProvider automatically updates in its layout change listener
       await layoutManager.revertLayout({ id: item.id });
@@ -235,7 +236,7 @@ export default function LayoutBrowser({
     [analytics, layoutManager],
   );
 
-  const onMakePersonalCopy = useCallback(
+  const onMakePersonalCopy = useCallbackWithToast(
     async (item: Layout) => {
       const newLayout = await layoutManager.makePersonalCopy({
         id: item.id,
@@ -247,7 +248,7 @@ export default function LayoutBrowser({
     [analytics, layoutManager, onSelectLayout],
   );
 
-  const importLayout = useCallback(async () => {
+  const importLayout = useCallbackWithToast(async () => {
     if (!(await promptForUnsavedChanges())) {
       return;
     }
