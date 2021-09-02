@@ -66,6 +66,7 @@ class NamespacedLayoutStorage {
 
 export default class LayoutManager implements ILayoutManager {
   static readonly LOCAL_STORAGE_NAMESPACE = "local";
+  static readonly REMOTE_STORAGE_NAMESPACE_PREFIX = "remote-";
 
   /**
    * All access to storage is wrapped in a mutex to prevent multi-step operations (such as reading
@@ -116,10 +117,13 @@ export default class LayoutManager implements ILayoutManager {
     remote: IRemoteLayoutStorage | undefined;
   }) {
     this.local = new MutexLocked(
-      //FIXME: use remote.namespace for namespace
-      new NamespacedLayoutStorage(local, LayoutManager.LOCAL_STORAGE_NAMESPACE, {
-        migrateLocalLayouts: true,
-      }),
+      new NamespacedLayoutStorage(
+        local,
+        remote
+          ? LayoutManager.REMOTE_STORAGE_NAMESPACE_PREFIX + remote.namespace
+          : LayoutManager.LOCAL_STORAGE_NAMESPACE,
+        { migrateLocalLayouts: true },
+      ),
     );
     this.remote = remote;
     this.supportsSharing = remote != undefined;
