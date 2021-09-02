@@ -85,6 +85,12 @@ export default function computeLayoutSyncOperations(
           ops.push({ local: true, type: "mark-deleted", localLayout });
           break;
         case "tracked":
+          if (localLayout.working != undefined) {
+            ops.push({ local: true, type: "mark-deleted", localLayout });
+          } else {
+            ops.push({ local: true, type: "delete-local", localLayout });
+          }
+          break;
         case "locally-deleted":
           if (layoutIsShared(localLayout)) {
             log.warn(`Shared layout ${localLayout.id} shouldn't be marked as locally deleted`);
