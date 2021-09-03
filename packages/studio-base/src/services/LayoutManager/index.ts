@@ -491,68 +491,66 @@ export default class LayoutManager implements ILayoutManager {
   private async performRemoteSyncOperations(
     operations: readonly (SyncOperation & { local: false })[],
   ): Promise<void> {
-    if (!this.remote) {
+    const { remote } = this;
+    if (!remote) {
       return;
     }
 
     // Any necessary local cleanups are performed all at once after the server operations, so the
     // server ops can be done without blocking other local sync operations.
-    const cleanups: ((local: NamespacedLayoutStorage) => void)[] = [];
+    type CleanupFunction = (local: NamespacedLayoutStorage) => void;
 
-    for (const operation of operations) {
-      switch (operation.type) {
-        case "delete-remote": {
-          const { localLayout } = operation;
-          log.debug(`Deleting remote layout ${localLayout.id}`);
-          if (!(await this.remote.deleteLayout(localLayout.id))) {
-            log.warn(`Deleting layout ${localLayout.id} which was not present in remote storage`);
+    const cleanups = await Promise.all(
+      operations.map(async (operation): Promise<CleanupFunction> => {
+        switch (operation.type) {
+          case "delete-remote": {
+            const { localLayout } = operation;
+            log.debug(`Deleting remote layout ${localLayout.id}`);
+            if (!(await remote.deleteLayout(localLayout.id))) {
+              log.warn(`Deleting layout ${localLayout.id} which was not present in remote storage`);
+            }
+            return async (local) => await local.delete(localLayout.id);
           }
-          cleanups.push(async (local) => await local.delete(localLayout.id));
-          break;
-        }
 
-        case "upload-new": {
-          const { localLayout } = operation;
-          log.debug(`Uploading new layout ${localLayout.id}`);
-          const newBaseline = await this.remote.saveNewLayout({
-            id: localLayout.id,
-            name: localLayout.name,
-            data: localLayout.baseline.data,
-            permission: localLayout.permission,
-            savedAt: localLayout.baseline.savedAt ?? (new Date().toISOString() as ISO8601Timestamp),
-          });
-          cleanups.push(
-            async (local) =>
+          case "upload-new": {
+            const { localLayout } = operation;
+            log.debug(`Uploading new layout ${localLayout.id}`);
+            const newBaseline = await remote.saveNewLayout({
+              id: localLayout.id,
+              name: localLayout.name,
+              data: localLayout.baseline.data,
+              permission: localLayout.permission,
+              savedAt:
+                localLayout.baseline.savedAt ?? (new Date().toISOString() as ISO8601Timestamp),
+            });
+            return async (local) =>
               await local.put({
                 ...localLayout,
                 baseline: { ...localLayout.baseline, savedAt: newBaseline.savedAt },
                 syncInfo: { status: "tracked", lastRemoteSavedAt: newBaseline.savedAt },
-              }),
-          );
-          break;
-        }
+              });
+          }
 
-        case "upload-updated": {
-          const { localLayout } = operation;
-          log.debug(`Uploading updated layout ${localLayout.id}`);
-          const newBaseline = await this.remote.updateLayout({
-            id: localLayout.id,
-            name: localLayout.name,
-            data: localLayout.baseline.data,
-            savedAt: localLayout.baseline.savedAt ?? (new Date().toISOString() as ISO8601Timestamp),
-          });
-          cleanups.push(
-            async (local) =>
+          case "upload-updated": {
+            const { localLayout } = operation;
+            log.debug(`Uploading updated layout ${localLayout.id}`);
+            const newBaseline = await remote.updateLayout({
+              id: localLayout.id,
+              name: localLayout.name,
+              data: localLayout.baseline.data,
+              savedAt:
+                localLayout.baseline.savedAt ?? (new Date().toISOString() as ISO8601Timestamp),
+            });
+            return async (local) =>
               await local.put({
                 ...localLayout,
                 baseline: { ...localLayout.baseline, savedAt: newBaseline.savedAt },
                 syncInfo: { status: "tracked", lastRemoteSavedAt: newBaseline.savedAt },
-              }),
-          );
-          break;
+              });
+          }
         }
-      }
-    }
+      }),
+    );
 
     await this.local.runExclusive(async (local) => {
       for (const cleanup of cleanups) {
