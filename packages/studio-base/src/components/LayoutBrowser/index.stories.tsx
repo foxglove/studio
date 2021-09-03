@@ -113,6 +113,32 @@ export function LayoutList(): JSX.Element {
   return <LayoutBrowser />;
 }
 
+TruncatedLayoutName.parameters = {
+  mockLayouts: [
+    {
+      id: "not-current",
+      name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
+      baseline: { data: DEFAULT_LAYOUT_FOR_TESTS, updatedAt: new Date(10).toISOString() },
+    },
+  ],
+};
+export function TruncatedLayoutName(): JSX.Element {
+  return <LayoutBrowser />;
+}
+
+TruncatedLayoutNameSelected.parameters = {
+  mockLayouts: [
+    {
+      id: "test-id",
+      name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
+      baseline: { data: DEFAULT_LAYOUT_FOR_TESTS, updatedAt: new Date(10).toISOString() },
+    },
+  ],
+};
+export function TruncatedLayoutNameSelected(): JSX.Element {
+  return <LayoutBrowser />;
+}
+
 AddLayout.parameters = { useReadySignal: true };
 export function AddLayout(_args: unknown): JSX.Element {
   const readySignal = useReadySignal();
