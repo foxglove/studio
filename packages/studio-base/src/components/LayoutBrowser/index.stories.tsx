@@ -216,7 +216,7 @@ export function CommitRenameWithTab(_args: unknown): JSX.Element {
     (document.activeElement as HTMLInputElement).value = "New name";
     TestUtils.Simulate.change(document.activeElement!);
     await delay(10);
-    TestUtils.Simulate.keyDown(document.activeElement!, { key: "Tab" });
+    TestUtils.Simulate.blur(document.activeElement!);
     readySignal();
   }, [readySignal]);
 
