@@ -42,8 +42,12 @@ export default function Root(): ReactElement {
       badgeText: "beta",
     },
     {
-      name: "Rosbridge (WebSocket)",
-      type: "rosbridge-websocket",
+      name: "ROS 1 Rosbridge (WebSocket)",
+      type: "ros1-rosbridge-websocket",
+    },
+    {
+      name: "ROS 2 Rosbridge (WebSocket)",
+      type: "ros2-rosbridge-websocket",
     },
     {
       name: "ROS 1 Bag (local)",

@@ -206,10 +206,23 @@ async function rosbridgeSource(options: FactoryOptions): Promise<Player | undefi
     return undefined;
   }
 
+  let rosVersion: 1 | 2;
+  switch (options.source.type) {
+    case "ros1-rosbridge-websocket":
+      rosVersion = 1;
+      break;
+    case "ros2-rosbridge-websocket":
+      rosVersion = 2;
+      break;
+    default:
+      throw new Error(`Invalid source type for rosbridge: ${options.source.type}`);
+  }
+
   const url = maybeUrl;
   options.storage.setItem(storageCacheKey, url);
   return new RosbridgePlayer({
     url,
+    rosVersion,
     metricsCollector: options.playerOptions.metricsCollector,
   });
 }
@@ -423,7 +436,8 @@ export default function PlayerManager({
         return ros1Source;
       case "ros2-socket":
         return ros2Source;
-      case "rosbridge-websocket":
+      case "ros1-rosbridge-websocket":
+      case "ros2-rosbridge-websocket":
         return rosbridgeSource;
       case "ros1-remote-bagfile":
         return remoteBagFileSource;

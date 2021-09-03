@@ -107,7 +107,8 @@ export default function ConnectionList(): JSX.Element {
           case "ros2-socket":
             iconName = "studio.ROS";
             break;
-          case "rosbridge-websocket":
+          case "ros1-rosbridge-websocket":
+          case "ros2-rosbridge-websocket":
             iconName = "Flow";
             break;
           case "ros1-remote-bagfile":
