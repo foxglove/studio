@@ -48,12 +48,12 @@ export default function LayoutBrowser({
   const currentLayoutId = useCurrentLayoutSelector((state) => state.selectedLayout?.id);
   const { setSelectedLayoutId } = useCurrentLayoutActions();
 
-  const [isActive, setIsActive] = useState(layoutManager.isActive);
+  const [isBusy, setIsBusy] = useState(layoutManager.isBusy);
   useLayoutEffect(() => {
-    const listener = () => setIsActive(layoutManager.isActive);
+    const listener = () => setIsBusy(layoutManager.isBusy);
     listener();
-    layoutManager.on("activitychange", listener);
-    return () => layoutManager.off("activitychange", listener);
+    layoutManager.on("busychange", listener);
+    return () => layoutManager.off("busychange", listener);
   }, [layoutManager]);
 
   const [layouts, reloadLayouts] = useAsyncFn(
@@ -305,7 +305,7 @@ export default function LayoutBrowser({
       title="Layouts"
       noPadding
       trailingItems={[
-        (layouts.loading || isActive) && <Spinner />,
+        (layouts.loading || isBusy) && <Spinner />,
         // eslint-disable-next-line react/jsx-key
         <IconButton
           elementRef={createLayoutTooltip.ref}

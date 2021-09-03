@@ -15,7 +15,7 @@ export type LayoutManagerEventTypes = {
   change: (event: { updatedLayout: Layout | undefined }) => void;
 
   /** Called when the layout manager starts or stops asynchronous activity.  */
-  activitychange: () => void;
+  busychange: () => void;
 };
 /**
  * The Layout Manager is a high-level interface on top of raw layout storage which maps more closely
@@ -26,7 +26,7 @@ export interface ILayoutManager {
   /** Indicates whether permissions other than "creator_write" are supported. */
   readonly supportsSharing: boolean;
 
-  readonly isActive: boolean;
+  readonly isBusy: boolean;
 
   on<E extends EventNames<LayoutManagerEventTypes>>(
     name: E,
