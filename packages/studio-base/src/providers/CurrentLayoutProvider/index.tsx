@@ -170,7 +170,6 @@ export default function CurrentLayoutProvider({
 
       const newLayout = {
         id: layoutStateRef.current.selectedLayout.id,
-        loading: false,
         data: newData,
       };
 
@@ -198,7 +197,7 @@ export default function CurrentLayoutProvider({
       // Some actions like CHANGE_PANEL_LAYOUT will cause further downstream effects to update panel
       // configs (i.e. set default configs). These result in calls to performAction. To ensure the
       // debounced params are set in the proper order, we invoke setLayoutState at the end.
-      setLayoutState({ selectedLayout: newLayout });
+      setLayoutState({ selectedLayout: { ...newLayout, loading: false } });
     },
     [addToast, isMounted, layoutManager, setLayoutState],
   );
