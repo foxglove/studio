@@ -111,6 +111,9 @@ export default class RosbridgePlayer implements Player {
     if (this._closed) {
       return;
     }
+    if (this._rosClient != undefined) {
+      throw new Error(`Attempted to open a second Rosbridge connection`);
+    }
     this._problems.removeProblem("rosbridge:connection-failed");
     log.info(`Opening connection to ${this._url}`);
 
@@ -358,6 +361,10 @@ export default class RosbridgePlayer implements Player {
     this._closed = true;
     if (this._rosClient) {
       this._rosClient.close();
+    }
+    if (this._emitTimer != undefined) {
+      clearTimeout(this._emitTimer);
+      this._emitTimer = undefined;
     }
     this._metricsCollector.close();
     this._hasReceivedMessage = false;

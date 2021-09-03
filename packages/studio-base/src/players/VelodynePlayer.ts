@@ -247,6 +247,10 @@ export default class VelodynePlayer implements Player {
       void this._socket.dispose();
       this._socket = undefined;
     }
+    if (this._emitTimer != undefined) {
+      clearTimeout(this._emitTimer);
+      this._emitTimer = undefined;
+    }
     this._metricsCollector.close();
     this._totalBytesReceived = 0;
     this._seq = 0;

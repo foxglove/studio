@@ -300,6 +300,10 @@ export default class Ros2Player implements Player {
     if (this._rosNode) {
       void this._rosNode.shutdown();
     }
+    if (this._emitTimer != undefined) {
+      clearTimeout(this._emitTimer);
+      this._emitTimer = undefined;
+    }
     this._metricsCollector.close();
     this._hasReceivedMessage = false;
   }

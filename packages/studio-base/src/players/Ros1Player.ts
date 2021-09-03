@@ -323,6 +323,10 @@ export default class Ros1Player implements Player {
     if (this._rosNode) {
       this._rosNode.shutdown();
     }
+    if (this._emitTimer != undefined) {
+      clearTimeout(this._emitTimer);
+      this._emitTimer = undefined;
+    }
     this._metricsCollector.close();
     this._hasReceivedMessage = false;
   }
