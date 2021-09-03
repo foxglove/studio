@@ -45,11 +45,11 @@ export type Layout = {
 
   /** Info about this layout from remote storage. */
   // FIXME: rename
-  remote:
+  syncInfo:
     | {
-        syncStatus: LayoutSyncStatus;
+        status: LayoutSyncStatus;
         /** The last savedAt time returned by the server. */
-        savedAt: ISO8601Timestamp | undefined;
+        lastRemoteSavedAt: ISO8601Timestamp | undefined;
       }
     | undefined;
 };
@@ -115,6 +115,6 @@ export function migrateLayout(value: unknown): Layout {
     permission: layout.permission ?? "creator_write",
     working: layout.working,
     baseline,
-    remote: layout.remote,
+    syncInfo: layout.syncInfo,
   };
 }

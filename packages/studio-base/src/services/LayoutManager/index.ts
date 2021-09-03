@@ -149,14 +149,14 @@ export default class LayoutManager implements ILayoutManager {
   async getLayouts(): Promise<readonly Layout[]> {
     return await this.local.runExclusive(async (local) => {
       const layouts = await local.list();
-      return layouts.filter((layout) => layout.remote?.syncStatus !== "locally-deleted");
+      return layouts.filter((layout) => layout.syncInfo?.status !== "locally-deleted");
     });
   }
 
   async getLayout(id: LayoutID): Promise<Layout | undefined> {
     return await this.local.runExclusive(async (local) => {
       const layout = await local.get(id);
-      return layout?.remote?.syncStatus === "locally-deleted" ? undefined : layout;
+      return layout?.syncInfo?.status === "locally-deleted" ? undefined : layout;
     });
   }
 
@@ -189,7 +189,7 @@ export default class LayoutManager implements ILayoutManager {
             permission: newLayout.permission,
             baseline: { data: newLayout.data, savedAt: newLayout.savedAt },
             working: undefined,
-            remote: { syncStatus: "tracked", savedAt: newLayout.savedAt },
+            syncInfo: { status: "tracked", lastRemoteSavedAt: newLayout.savedAt },
           }),
       );
       this.notifyChangeListeners({ updatedLayout: undefined });
@@ -204,7 +204,7 @@ export default class LayoutManager implements ILayoutManager {
           permission,
           baseline: { data, savedAt: new Date().toISOString() as ISO8601Timestamp },
           working: undefined,
-          remote: this.remote ? { syncStatus: "new", savedAt: undefined } : undefined,
+          syncInfo: this.remote ? { status: "new", lastRemoteSavedAt: undefined } : undefined,
         }),
     );
     this.notifyChangeListeners({ updatedLayout: newLayout });
@@ -240,7 +240,7 @@ export default class LayoutManager implements ILayoutManager {
             name: updatedBaseline.name,
             baseline: { data: updatedBaseline.data, savedAt: updatedBaseline.savedAt },
             working: data != undefined ? { data, savedAt: now } : localLayout.working,
-            remote: { syncStatus: "tracked", savedAt: updatedBaseline.savedAt },
+            syncInfo: { status: "tracked", lastRemoteSavedAt: updatedBaseline.savedAt },
           }),
       );
       this.notifyChangeListeners({ updatedLayout: result });
@@ -254,10 +254,10 @@ export default class LayoutManager implements ILayoutManager {
             working: data != undefined ? { data, savedAt: now } : localLayout.working,
 
             // If the name is being changed, we will need to upload to the server
-            remote:
+            syncInfo:
               this.remote && name != undefined
-                ? { syncStatus: "updated", savedAt: localLayout.remote?.savedAt }
-                : localLayout.remote,
+                ? { status: "updated", lastRemoteSavedAt: localLayout.syncInfo?.lastRemoteSavedAt }
+                : localLayout.syncInfo,
           }),
       );
       this.notifyChangeListeners({ updatedLayout: result });
@@ -275,7 +275,7 @@ export default class LayoutManager implements ILayoutManager {
       if (!this.remote) {
         throw new Error("Shared layouts are not supported without remote layout storage");
       }
-      if (localLayout.remote?.syncStatus !== "remotely-deleted") {
+      if (localLayout.syncInfo?.status !== "remotely-deleted") {
         await this.remote.deleteLayout(id);
       }
     }
@@ -287,7 +287,10 @@ export default class LayoutManager implements ILayoutManager {
             data: localLayout.working?.data ?? localLayout.baseline.data,
             savedAt: new Date().toISOString() as ISO8601Timestamp,
           },
-          remote: { syncStatus: "locally-deleted", savedAt: localLayout.remote?.savedAt },
+          syncInfo: {
+            status: "locally-deleted",
+            lastRemoteSavedAt: localLayout.syncInfo?.lastRemoteSavedAt,
+          },
         });
       } else {
         // Don't have remote storage, or already deleted on remote
@@ -319,7 +322,7 @@ export default class LayoutManager implements ILayoutManager {
             ...localLayout,
             baseline: { data: updatedBaseline.data, savedAt: updatedBaseline.savedAt },
             working: undefined,
-            remote: { syncStatus: "tracked", savedAt: updatedBaseline.savedAt },
+            syncInfo: { status: "tracked", lastRemoteSavedAt: updatedBaseline.savedAt },
           }),
       );
       this.notifyChangeListeners({ updatedLayout: result });
@@ -334,9 +337,9 @@ export default class LayoutManager implements ILayoutManager {
               savedAt: now,
             },
             working: undefined,
-            remote: this.remote
-              ? { syncStatus: "updated", savedAt: localLayout.remote?.savedAt }
-              : localLayout.remote,
+            syncInfo: this.remote
+              ? { status: "updated", lastRemoteSavedAt: localLayout.syncInfo?.lastRemoteSavedAt }
+              : localLayout.syncInfo,
           }),
       );
       this.notifyChangeListeners({ updatedLayout: result });
@@ -374,7 +377,7 @@ export default class LayoutManager implements ILayoutManager {
         permission: "creator_write",
         baseline: { data: layout.working?.data ?? layout.baseline.data, savedAt: now },
         working: undefined,
-        remote: { syncStatus: "new", savedAt: now },
+        syncInfo: { status: "new", lastRemoteSavedAt: now },
       });
       await local.put({ ...layout, working: undefined });
       return newLayout;
@@ -441,7 +444,7 @@ export default class LayoutManager implements ILayoutManager {
             log.debug(`Marking layout as remotely deleted: ${localLayout.id}`);
             await local.put({
               ...localLayout,
-              remote: { syncStatus: "remotely-deleted", savedAt: undefined },
+              syncInfo: { status: "remotely-deleted", lastRemoteSavedAt: undefined },
             });
             break;
           }
@@ -459,7 +462,7 @@ export default class LayoutManager implements ILayoutManager {
               permission: remoteLayout.permission,
               baseline: { data: remoteLayout.data, savedAt: remoteLayout.savedAt },
               working: undefined,
-              remote: { syncStatus: "tracked", savedAt: remoteLayout.savedAt },
+              syncInfo: { status: "tracked", lastRemoteSavedAt: remoteLayout.savedAt },
             });
             break;
           }
@@ -473,7 +476,10 @@ export default class LayoutManager implements ILayoutManager {
               permission: remoteLayout.permission,
               baseline: { data: remoteLayout.data, savedAt: remoteLayout.savedAt },
               working: localLayout.working,
-              remote: { syncStatus: localLayout.remote.syncStatus, savedAt: remoteLayout.savedAt },
+              syncInfo: {
+                status: localLayout.syncInfo.status,
+                lastRemoteSavedAt: remoteLayout.savedAt,
+              },
             });
             break;
           }
@@ -520,7 +526,7 @@ export default class LayoutManager implements ILayoutManager {
               await local.put({
                 ...localLayout,
                 baseline: { ...localLayout.baseline, savedAt: newBaseline.savedAt },
-                remote: { syncStatus: "tracked", savedAt: newBaseline.savedAt },
+                syncInfo: { status: "tracked", lastRemoteSavedAt: newBaseline.savedAt },
               }),
           );
           break;
@@ -541,7 +547,7 @@ export default class LayoutManager implements ILayoutManager {
               await local.put({
                 ...localLayout,
                 baseline: { ...localLayout.baseline, savedAt: newBaseline.savedAt },
-                remote: { syncStatus: "tracked", savedAt: newBaseline.savedAt },
+                syncInfo: { status: "tracked", lastRemoteSavedAt: newBaseline.savedAt },
               }),
           );
           break;

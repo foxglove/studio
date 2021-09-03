@@ -18,7 +18,7 @@ export type SyncOperation =
   | {
       local: true;
       type: "update-baseline";
-      localLayout: Layout & { remote: NonNullable<Layout["remote"]> };
+      localLayout: Layout & { syncInfo: NonNullable<Layout["syncInfo"]> };
       remoteLayout: RemoteLayout;
     };
 
@@ -34,11 +34,11 @@ export default function computeLayoutSyncOperations(
     const remoteLayout = remoteLayoutsById.get(localLayout.id);
     if (remoteLayout) {
       remoteLayoutsById.delete(localLayout.id);
-      switch (localLayout.remote?.syncStatus) {
+      switch (localLayout.syncInfo?.status) {
         case undefined:
         case "new":
           log.warn(
-            `Remote layout is present but local has sync status: ${localLayout.remote?.syncStatus}`,
+            `Remote layout is present but local has sync status: ${localLayout.syncInfo?.status}`,
           );
           if (layoutIsShared(localLayout)) {
             log.warn(`Shared layout ${localLayout.id} shouldn't be untracked`);
@@ -50,11 +50,14 @@ export default function computeLayoutSyncOperations(
           ops.push({ local: false, type: "upload-updated", localLayout });
           break;
         case "tracked":
-          if (localLayout.remote.savedAt !== remoteLayout.savedAt || !remoteLayout.savedAt) {
+          if (
+            localLayout.syncInfo.lastRemoteSavedAt !== remoteLayout.savedAt ||
+            !remoteLayout.savedAt
+          ) {
             ops.push({
               local: true,
               type: "update-baseline",
-              localLayout: { ...localLayout, remote: localLayout.remote },
+              localLayout: { ...localLayout, syncInfo: localLayout.syncInfo },
               remoteLayout,
             });
           }
@@ -72,7 +75,7 @@ export default function computeLayoutSyncOperations(
           break;
       }
     } else {
-      switch (localLayout.remote?.syncStatus) {
+      switch (localLayout.syncInfo?.status) {
         case undefined:
         case "new":
           if (layoutIsShared(localLayout)) {

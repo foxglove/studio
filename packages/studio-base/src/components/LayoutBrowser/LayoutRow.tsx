@@ -208,7 +208,7 @@ export default function LayoutRow({
     },
   ];
 
-  const deletedOnServer = layout.remote?.syncStatus === "remotely-deleted";
+  const deletedOnServer = layout.syncInfo?.status === "remotely-deleted";
   if (layout.working != undefined) {
     menuItems.unshift(
       {
@@ -269,7 +269,7 @@ export default function LayoutRow({
       },
       {
         key: "debug_sync_status",
-        text: `Sync status: ${layout.remote?.syncStatus}`,
+        text: `Sync status: ${layout.syncInfo?.status}`,
         disabled: true,
         itemProps: {
           styles: {
