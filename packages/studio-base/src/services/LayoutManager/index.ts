@@ -17,6 +17,7 @@ import {
 import {
   ILayoutStorage,
   Layout,
+  layoutAppearsDeleted,
   LayoutID,
   layoutIsShared,
   LayoutPermission,
@@ -149,14 +150,14 @@ export default class LayoutManager implements ILayoutManager {
   async getLayouts(): Promise<readonly Layout[]> {
     return await this.local.runExclusive(async (local) => {
       const layouts = await local.list();
-      return layouts.filter((layout) => layout.syncInfo?.status !== "locally-deleted");
+      return layouts.filter((layout) => !layoutAppearsDeleted(layout));
     });
   }
 
   async getLayout(id: LayoutID): Promise<Layout | undefined> {
     return await this.local.runExclusive(async (local) => {
       const layout = await local.get(id);
-      return layout?.syncInfo?.status === "locally-deleted" ? undefined : layout;
+      return layout && !layoutAppearsDeleted(layout) ? layout : undefined;
     });
   }
 

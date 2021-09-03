@@ -78,6 +78,13 @@ export function layoutIsShared(
   return layoutPermissionIsShared(layout.permission);
 }
 
+export function layoutAppearsDeleted(layout: Layout): boolean {
+  return (
+    layout.syncInfo?.status === "locally-deleted" ||
+    (layout.syncInfo?.status === "remotely-deleted" && layout.working == undefined)
+  );
+}
+
 /**
  * Import a layout from storage, transferring old properties to the current expected format.
  *

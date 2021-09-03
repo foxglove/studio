@@ -84,7 +84,7 @@ const useStyles = makeStyles((theme) => ({
       opacity: 1,
     },
   },
-  menuButtonWorking: {
+  menuButtonModified: {
     opacity: 1,
   },
 }));
@@ -117,6 +117,7 @@ export default function LayoutRow({
   const styles = useStyles();
   const theme = useTheme();
   const isMounted = useMountedState();
+  const confirm = useConfirm();
 
   const [editingName, setEditingName] = useState(false);
   const [nameFieldValue, setNameFieldValue] = useState("");
@@ -129,7 +130,10 @@ export default function LayoutRow({
   const onMenuOpened = useCallback(() => setMenuOpen(true), []);
   const onMenuDismissed = useCallback(() => setMenuOpen(false), []);
 
+  const layoutDebug = useContext(LayoutStorageDebuggingContext);
   const layoutStorage = useLayoutManager();
+  const deletedOnServer = layout.syncInfo?.status === "remotely-deleted";
+  const hasModifications = layout.working != undefined;
 
   // const saveAction = useCallback(() => {
   //   onSave(layout);
@@ -198,10 +202,6 @@ export default function LayoutRow({
     }, 0);
   }, []);
 
-  const confirm = useConfirm();
-
-  const layoutDebug = useContext(LayoutStorageDebuggingContext);
-
   const confirmDelete = useCallback(() => {
     void confirm({
       title: `Delete “${layout.name}”?`,
@@ -228,6 +228,8 @@ export default function LayoutRow({
       iconProps: { iconName: "Copy" },
       onClick: duplicateAction,
       ["data-test"]: "duplicate-layout",
+      // Duplicate first requires saving or discarding changes
+      disabled: hasModifications && layoutIsShared(layout),
     },
     layoutStorage.supportsSharing &&
       !layoutIsShared(layout) && {
@@ -255,8 +257,7 @@ export default function LayoutRow({
     },
   ];
 
-  const deletedOnServer = layout.syncInfo?.status === "remotely-deleted";
-  if (layout.working != undefined) {
+  if (hasModifications) {
     const sectionItems: IContextualMenuItem[] = [
       {
         key: "overwrite",
@@ -327,46 +328,40 @@ export default function LayoutRow({
           },
         },
       },
+      {
+        key: "debug_edit",
+        text: "Inject edit",
+        iconProps: { iconName: "TestBeakerSolid" },
+        onClick: () => void layoutDebug.injectEdit(layout.id),
+        itemProps: {
+          styles: {
+            root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
+          },
+        },
+      },
+      {
+        key: "debug_rename",
+        text: "Inject rename",
+        iconProps: { iconName: "TestBeakerSolid" },
+        onClick: () => void layoutDebug.injectRename(layout.id),
+        itemProps: {
+          styles: {
+            root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
+          },
+        },
+      },
+      {
+        key: "debug_delete",
+        text: "Inject delete",
+        iconProps: { iconName: "TestBeakerSolid" },
+        onClick: () => void layoutDebug.injectDelete(layout.id),
+        itemProps: {
+          styles: {
+            root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
+          },
+        },
+      },
     );
-  }
-  if (layoutDebug?.injectEdit) {
-    menuItems.push({
-      key: "debug_edit",
-      text: "Inject edit",
-      iconProps: { iconName: "TestBeakerSolid" },
-      onClick: () => void layoutDebug.injectEdit?.(layout.id),
-      itemProps: {
-        styles: {
-          root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
-        },
-      },
-    });
-  }
-  if (layoutDebug?.injectRename) {
-    menuItems.push({
-      key: "debug_rename",
-      text: "Inject rename",
-      iconProps: { iconName: "TestBeakerSolid" },
-      onClick: () => void layoutDebug.injectRename?.(layout.id),
-      itemProps: {
-        styles: {
-          root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
-        },
-      },
-    });
-  }
-  if (layoutDebug?.injectDelete) {
-    menuItems.push({
-      key: "debug_delete",
-      text: "Inject delete",
-      iconProps: { iconName: "TestBeakerSolid" },
-      onClick: () => void layoutDebug.injectDelete?.(layout.id),
-      itemProps: {
-        styles: {
-          root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
-        },
-      },
-    });
   }
 
   const filteredItems = menuItems.filter(
@@ -432,7 +427,7 @@ export default function LayoutRow({
         <IconButton
           ariaLabel="Layout actions"
           className={cx(styles.menuButton, {
-            [styles.menuButtonWorking]: layout.working != undefined,
+            [styles.menuButtonModified]: hasModifications,
           })}
           onFocus={() => setHovered(true)}
           onBlur={() => setHovered(false)}
@@ -443,7 +438,7 @@ export default function LayoutRow({
                 ? "More"
                 : deletedOnServer
                 ? "Error"
-                : layout.working != undefined
+                : hasModifications
                 ? "LocationDot"
                 : "More",
             styles: {
