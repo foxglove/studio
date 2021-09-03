@@ -545,11 +545,6 @@ export default function LayoutRow({
           data-test="layout-actions"
           iconProps={{
             iconName: menuOpen || hovered || layout.working == undefined ? "More" : "LocationDot",
-            styles: {
-              root: {
-                "& span": { verticalAlign: "baseline" },
-              },
-            },
           }}
           onRenderMenuIcon={() => ReactNull}
           menuProps={{
@@ -567,6 +562,9 @@ export default function LayoutRow({
             },
           }}
           styles={{
+            icon: {
+              height: 20,
+            },
             root: {
               marginRight: `-${theme.spacing.s1}`,
               borderRadius: "none",
