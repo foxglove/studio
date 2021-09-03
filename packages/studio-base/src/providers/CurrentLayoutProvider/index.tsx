@@ -156,7 +156,7 @@ export default function CurrentLayoutProvider({
     (action: PanelsActions) => {
       if (
         layoutStateRef.current.selectedLayout?.data == undefined ||
-        layoutStateRef.current.selectedLayout.loading == undefined
+        layoutStateRef.current.selectedLayout.loading === true
       ) {
         return;
       }
