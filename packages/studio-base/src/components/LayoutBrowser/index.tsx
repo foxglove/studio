@@ -242,7 +242,10 @@ export default function LayoutBrowser({
         name: `${item.name} copy`,
       });
       await onSelectLayout(newLayout);
-      void analytics.logEvent(AppEvent.LAYOUT_MAKE_PERSONAL_COPY, { permission: item.permission });
+      void analytics.logEvent(AppEvent.LAYOUT_MAKE_PERSONAL_COPY, {
+        permission: item.permission,
+        syncStatus: item.syncInfo?.status,
+      });
     },
     [analytics, layoutManager, onSelectLayout],
   );
