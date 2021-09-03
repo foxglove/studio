@@ -29,24 +29,40 @@ const useStyles = makeStyles((theme) => ({
     cursor: "pointer",
     paddingLeft: theme.spacing.m,
     paddingRight: theme.spacing.s1,
+    borderBottom: `1px solid ${theme.semanticColors.bodyBackground}`,
+    borderTop: `1px solid ${theme.semanticColors.bodyBackground}`,
+
     ":hover": {
-      background: theme.semanticColors.listItemBackgroundHovered,
+      background: theme.semanticColors.menuItemBackgroundHovered,
+    },
+    ":hover > .ms-Button--hasMenu": {
+      opacity: 1,
     },
   },
 
   layoutRowSelected: {
-    background: theme.semanticColors.listItemBackgroundChecked,
+    background: theme.semanticColors.menuItemBackgroundHovered,
+
     ":hover": {
-      background: theme.semanticColors.listItemBackgroundCheckedHovered,
+      background: theme.semanticColors.menuItemBackgroundHovered,
     },
   },
 
   // Pin the "hover" style when the right-click menu is open
   layoutRowWithOpenMenu: {
-    background: theme.semanticColors.listItemBackgroundHovered,
+    background: theme.semanticColors.menuItemBackgroundHovered,
+
+    "& .ms-Button--hasMenu": {
+      opacity: 1,
+    },
   },
+
   layoutRowSelectedWithOpenMenu: {
-    background: theme.semanticColors.listItemBackgroundCheckedHovered,
+    background: theme.semanticColors.menuItemBackgroundHovered,
+
+    "& .ms-Button--hasMenu": {
+      opacity: 1,
+    },
   },
 
   layoutName: {
@@ -54,6 +70,22 @@ const useStyles = makeStyles((theme) => ({
     whiteSpace: "nowrap",
     overflow: "hidden",
     lineHeight: theme.spacing.l2, // avoid descenders being cut off
+    userSelect: "none",
+  },
+  layoutNameSelected: {
+    fontWeight: 600,
+    color: theme.palette.themePrimary,
+  },
+
+  menuButton: {
+    opacity: 0,
+
+    "&.is-expanded, :focus": {
+      opacity: 1,
+    },
+  },
+  menuButtonWorking: {
+    opacity: 1,
   },
 }));
 
@@ -88,6 +120,14 @@ export default function LayoutRow({
 
   const [editingName, setEditingName] = useState(false);
   const [nameFieldValue, setNameFieldValue] = useState("");
+  const [hovered, setHovered] = useState<boolean>(false);
+  const [menuOpen, setMenuOpen] = useState<boolean>(false);
+
+  const onMouseEnter = useCallback(() => setHovered(true), []);
+  const onMouseLeave = useCallback(() => setHovered(false), []);
+
+  const onMenuOpened = useCallback(() => setMenuOpen(true), []);
+  const onMenuDismissed = useCallback(() => setMenuOpen(false), []);
 
   const layoutStorage = useLayoutManager();
 
@@ -143,6 +183,13 @@ export default function LayoutRow({
       setEditingName(false);
     }
   }, []);
+
+  const onBlur = useCallback(
+    (event: React.FocusEvent) => {
+      onSubmit(event);
+    },
+    [onSubmit],
+  );
 
   const onTextFieldMount = useCallback((field: ITextField | ReactNull) => {
     // When focusing via right-click we need an extra tick to be able to successfully focus the field
@@ -210,7 +257,7 @@ export default function LayoutRow({
 
   const deletedOnServer = layout.syncInfo?.status === "remotely-deleted";
   if (layout.working != undefined) {
-    menuItems.unshift(
+    const sectionItems: IContextualMenuItem[] = [
       {
         key: "overwrite",
         text: "Save changes",
@@ -225,23 +272,26 @@ export default function LayoutRow({
         onClick: revertAction,
         disabled: deletedOnServer,
       },
-      { key: "modified_divider", itemType: ContextualMenuItemType.Divider },
-    );
+    ];
     if (layoutIsShared(layout)) {
-      menuItems.unshift({
+      sectionItems.unshift({
         key: "copy_to_personal",
         text: "Save as a personal copy",
         iconProps: { iconName: "DependencyAdd" },
         onClick: makePersonalCopyAction,
       });
     }
-    if (deletedOnServer) {
-      menuItems.unshift({
-        key: "deleted_on_server",
-        text: "Someone else has deleted this layout.",
-        disabled: true,
-      });
-    }
+    menuItems.unshift({
+      key: "changes",
+      itemType: ContextualMenuItemType.Section,
+      sectionProps: {
+        bottomDivider: true,
+        title: deletedOnServer
+          ? "Someone else has deleted this layout."
+          : "This layout has been modified since it was last saved.",
+        items: sectionItems,
+      },
+    });
   }
 
   if (layoutDebug) {
@@ -332,11 +382,14 @@ export default function LayoutRow({
       verticalAlign="center"
       className={cx(styles.layoutRow, {
         [styles.layoutRowSelected]: selected,
-        [styles.layoutRowWithOpenMenu]: contextMenuEvent != undefined,
-        [styles.layoutRowSelectedWithOpenMenu]: selected && contextMenuEvent != undefined,
+        [styles.layoutRowWithOpenMenu]: contextMenuEvent != undefined || menuOpen,
+        [styles.layoutRowSelectedWithOpenMenu]:
+          (selected && contextMenuEvent != undefined) || menuOpen,
       })}
       onClick={editingName ? undefined : onClick}
       onSubmit={onSubmit}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       onContextMenu={(event) => {
         event.preventDefault();
         setContextMenuEvent(event.nativeEvent);
@@ -349,50 +402,81 @@ export default function LayoutRow({
           onDismiss={() => setContextMenuEvent(undefined)}
         />
       )}
-      <Stack.Item grow className={styles.layoutName} title={layout.name}>
-        {editingName ? (
-          <TextField
-            componentRef={onTextFieldMount}
-            value={nameFieldValue}
-            onChange={(_event, newValue) => newValue != undefined && setNameFieldValue(newValue)}
-            onKeyDown={onTextFieldKeyDown}
-          />
-        ) : (
-          layout.name
-        )}
-      </Stack.Item>
-
       {editingName ? (
-        <>
-          <IconButton
-            type="submit"
-            iconProps={{ iconName: "CheckMark" }}
-            ariaLabel="Rename"
-            data-test="commit-rename"
-          />
-          <IconButton
-            iconProps={{ iconName: "Cancel" }}
-            onClick={() => setEditingName(false)}
-            ariaLabel="Cancel"
-            data-test="cancel-rename"
-          />
-        </>
+        <TextField
+          componentRef={onTextFieldMount}
+          value={nameFieldValue}
+          onChange={(_event, newValue) => newValue != undefined && setNameFieldValue(newValue)}
+          onKeyDown={onTextFieldKeyDown}
+          onBlur={onBlur}
+          styles={{
+            root: {
+              flex: 1,
+            },
+            fieldGroup: {
+              marginLeft: `-${theme.spacing.s1}`,
+            },
+          }}
+        />
       ) : (
+        <Stack.Item
+          grow
+          title={layout.name}
+          className={cx(styles.layoutName, { [styles.layoutNameSelected]: selected })}
+        >
+          {layout.name}
+        </Stack.Item>
+      )}
+
+      {!editingName && (
         <IconButton
           ariaLabel="Layout actions"
-          data={{ text: "x" }}
+          className={cx(styles.menuButton, {
+            [styles.menuButtonWorking]: layout.working != undefined,
+          })}
+          onFocus={() => setHovered(true)}
+          onBlur={() => setHovered(false)}
           data-test="layout-actions"
           iconProps={{
-            iconName: layout.working != undefined ? (deletedOnServer ? "Error" : "Info") : "More",
+            iconName:
+              menuOpen || hovered
+                ? "More"
+                : deletedOnServer
+                ? "Error"
+                : layout.working != undefined
+                ? "LocationDot"
+                : "More",
             styles: {
               root: {
-                "& span": { verticalAlign: "baseline" },
                 color: deletedOnServer ? theme.semanticColors.errorIcon : undefined,
               },
             },
           }}
           onRenderMenuIcon={() => ReactNull}
-          menuProps={{ items: filteredItems }}
+          menuProps={{
+            items: filteredItems,
+            onMenuOpened,
+            onMenuDismissed,
+            styles: {
+              header: {
+                height: 30,
+
+                "& i": {
+                  display: "none",
+                },
+              },
+            },
+          }}
+          styles={{
+            icon: {
+              height: 20,
+            },
+            root: {
+              marginRight: `-${theme.spacing.s1}`,
+              borderRadius: "none",
+            },
+            rootHovered: { background: "transparent" },
+          }}
         />
       )}
     </Stack>
