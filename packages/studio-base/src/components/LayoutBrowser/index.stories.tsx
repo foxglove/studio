@@ -206,33 +206,6 @@ export function CommitRenameWithTab(_args: unknown): JSX.Element {
   return <LayoutBrowser />;
 }
 
-CommitRenameWithButton.parameters = { useReadySignal: true };
-export function CommitRenameWithButton(_args: unknown): JSX.Element {
-  useAsyncThrowing(async () => {
-    await delay(100);
-    document.querySelectorAll<HTMLElement>(`[data-test="layout-actions"]`)[1]!.click();
-    await delay(10);
-    document.querySelector<HTMLElement>(`[data-test="rename-layout"]`)!.click();
-    await delay(10);
-    (document.activeElement as HTMLInputElement).value = "New name";
-    TestUtils.Simulate.change(document.activeElement!);
-    document.querySelector<HTMLElement>(`[data-test="commit-rename"]`)!.click();
-  }, []);
-
-  const layoutStorage = useLayoutStorage();
-  const readySignal = useReadySignal();
-
-  useEffect(() => {
-    void layoutStorage.list(LayoutManager.LOCAL_STORAGE_NAMESPACE).then((layouts) => {
-      if (layouts.some((layout) => layout.name === "New name")) {
-        readySignal();
-      }
-    });
-  });
-
-  return <LayoutBrowser />;
-}
-
 Duplicate.parameters = { useReadySignal: true };
 export function Duplicate(_args: unknown): JSX.Element {
   const layoutStorage = useLayoutStorage();
