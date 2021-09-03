@@ -48,6 +48,8 @@ type DesktopExtension = {
 };
 
 interface Desktop {
+  setRepresentedFilename(path: string | undefined): Promise<void>;
+
   // Get an array of deep links provided on app launch
   getDeepLinks: () => string[];
 
