@@ -5,7 +5,6 @@
 import {
   ContextualMenuItemType,
   IconButton,
-  Text,
   TextField,
   ITextField,
   makeStyles,
@@ -73,6 +72,10 @@ const useStyles = makeStyles((theme) => ({
     overflow: "hidden",
     lineHeight: theme.spacing.l2, // avoid descenders being cut off
     userSelect: "none",
+  },
+  layoutNameSelected: {
+    fontWeight: 600,
+    color: theme.palette.themePrimary,
   },
 
   menuButton: {
@@ -523,13 +526,11 @@ export default function LayoutRow({
           }}
         />
       ) : (
-        <StackItem grow className={styles.layoutName}>
-          <Text
-            title={layout.name}
-            styles={{ root: selected && { fontWeight: 600, color: theme.palette.themePrimary } }}
-          >
-            {layout.name}
-          </Text>
+        <StackItem
+          grow
+          className={cx(styles.layoutName, { [styles.layoutNameSelected]: selected })}
+        >
+          <span title={layout.name}>{layout.name}</span>
         </StackItem>
       )}
 
@@ -541,7 +542,6 @@ export default function LayoutRow({
           })}
           onFocus={() => setHovered(true)}
           onBlur={() => setHovered(false)}
-          data={{ text: "x" }}
           data-test="layout-actions"
           iconProps={{
             iconName: menuOpen || hovered || layout.working == undefined ? "More" : "LocationDot",
