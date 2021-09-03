@@ -12,7 +12,6 @@ import {
   useTheme,
   IContextualMenuItem,
   ContextualMenu,
-  StackItem,
 } from "@fluentui/react";
 import cx from "classnames";
 import { useCallback, useContext, useState } from "react";
@@ -526,12 +525,13 @@ export default function LayoutRow({
           }}
         />
       ) : (
-        <StackItem
+        <Stack.Item
           grow
+          title={layout.name}
           className={cx(styles.layoutName, { [styles.layoutNameSelected]: selected })}
         >
-          <span title={layout.name}>{layout.name}</span>
-        </StackItem>
+          {layout.name}
+        </Stack.Item>
       )}
 
       {!editingName && (
