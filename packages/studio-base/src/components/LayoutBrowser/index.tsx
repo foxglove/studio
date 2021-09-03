@@ -5,7 +5,7 @@ import { DefaultButton, IconButton, Spinner, Stack, useTheme } from "@fluentui/r
 import { partition } from "lodash";
 import moment from "moment";
 import path from "path";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useLayoutEffect, useState } from "react";
 import { useToasts } from "react-toast-notifications";
 import { useMountedState } from "react-use";
 import useAsyncFn from "react-use/lib/useAsyncFn";
@@ -48,9 +48,10 @@ export default function LayoutBrowser({
   const currentLayoutId = useCurrentLayoutSelector((state) => state.selectedLayout?.id);
   const { setSelectedLayoutId } = useCurrentLayoutActions();
 
-  const [isActive, setIsActive] = useState(false);
-  useEffect(() => {
+  const [isActive, setIsActive] = useState(layoutManager.isActive);
+  useLayoutEffect(() => {
     const listener = () => setIsActive(layoutManager.isActive);
+    listener();
     layoutManager.on("activitychange", listener);
     return () => layoutManager.off("activitychange", listener);
   }, [layoutManager]);
