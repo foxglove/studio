@@ -57,6 +57,8 @@ export type ConsoleApiLayout = {
   data?: Record<string, unknown>;
 };
 
+type ApiResponse<T> = { status: number; json: T };
+
 class ConsoleApi {
   private _baseUrl: string;
   private _authHeader?: string;
@@ -130,7 +132,7 @@ class ConsoleApi {
   private async delete<T>(
     apiPath: string,
     query?: Record<string, string>,
-  ): Promise<{ status: number; json: T }> {
+  ): Promise<ApiResponse<T>> {
     return await this.request<T>(
       query == undefined ? apiPath : `${apiPath}?${new URLSearchParams(query).toString()}`,
       { method: "DELETE" },
@@ -147,7 +149,7 @@ class ConsoleApi {
       /** By default, status codes other than 200 will throw an error. */
       allowedStatuses?: number[];
     } = {},
-  ): Promise<{ status: number; json: T }> {
+  ): Promise<ApiResponse<T>> {
     const fullUrl = `${this._baseUrl}${url}`;
 
     const headers: Record<string, string> = {};
