@@ -44,7 +44,7 @@ function makeMockLayoutManager() {
   return {
     supportsSharing: false,
     supportsSyncing: false,
-    isActive: false,
+    isBusy: false,
     on: jest.fn(/*noop*/),
     off: jest.fn(/*noop*/),
     getLayouts: jest.fn().mockImplementation(mockThrow("getLayouts")),
