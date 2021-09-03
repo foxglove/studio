@@ -217,7 +217,6 @@ export default function CurrentLayoutProvider({
           },
         });
       }
-      //FIXME: deselect layout if it was deleted
     };
     layoutManager.on("change", listener);
     return () => layoutManager.off("change", listener);

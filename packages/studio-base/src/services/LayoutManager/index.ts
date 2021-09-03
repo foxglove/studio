@@ -532,7 +532,6 @@ export default class LayoutManager implements ILayoutManager {
           break;
         }
 
-        //FIXME: ensure we handle renames properly
         case "upload-updated": {
           const { localLayout } = operation;
           log.debug(`Uploading updated layout ${localLayout.id}`);

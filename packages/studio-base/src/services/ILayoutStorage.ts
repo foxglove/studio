@@ -44,7 +44,6 @@ export type Layout = {
     | undefined;
 
   /** Info about this layout from remote storage. */
-  // FIXME: rename
   syncInfo:
     | {
         status: LayoutSyncStatus;
