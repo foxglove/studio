@@ -48,6 +48,7 @@ type DesktopExtension = {
 };
 
 interface Desktop {
+  /** https://www.electronjs.org/docs/tutorial/represented-file */
   setRepresentedFilename(path: string | undefined): Promise<void>;
 
   // Get an array of deep links provided on app launch
