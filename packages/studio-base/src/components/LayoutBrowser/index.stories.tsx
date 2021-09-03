@@ -70,7 +70,7 @@ function WithSetup(Child: Story, ctx: StoryContext): JSX.Element {
     [],
   );
   return (
-    <div style={{ display: "flex", height: 400 }}>
+    <div style={{ display: "flex", height: "100%", width: 320 }}>
       <ModalHost>
         <AnalyticsProvider>
           <UserProfileStorageContext.Provider value={userProfile}>
@@ -177,26 +177,8 @@ export function CancelRenameWithEscape(_args: unknown): JSX.Element {
   return <LayoutBrowser />;
 }
 
-CancelRenameWithButton.parameters = { useReadySignal: true };
-export function CancelRenameWithButton(_args: unknown): JSX.Element {
-  const readySignal = useReadySignal();
-
-  useAsyncThrowing(async () => {
-    await delay(100);
-    document.querySelectorAll<HTMLElement>(`[data-test="layout-actions"]`)[1]!.click();
-    await delay(10);
-    document.querySelector<HTMLElement>(`[data-test="rename-layout"]`)!.click();
-    await delay(10);
-    document.querySelector<HTMLElement>(`[data-test="cancel-rename"]`)!.click();
-    await delay(10);
-    readySignal();
-  }, [readySignal]);
-
-  return <LayoutBrowser />;
-}
-
-CommitRenameWithSubmit.parameters = { useReadySignal: true };
-export function CommitRenameWithSubmit(_args: unknown): JSX.Element {
+CommitRenameWithTab.parameters = { useReadySignal: true };
+export function CommitRenameWithTab(_args: unknown): JSX.Element {
   const readySignal = useReadySignal();
 
   useAsyncThrowing(async () => {
@@ -207,8 +189,10 @@ export function CommitRenameWithSubmit(_args: unknown): JSX.Element {
     await delay(10);
     (document.activeElement as HTMLInputElement).value = "New name";
     TestUtils.Simulate.change(document.activeElement!);
-    TestUtils.Simulate.submit(document.activeElement!);
-  }, []);
+    await delay(10);
+    TestUtils.Simulate.keyDown(document.activeElement!, { key: "Tab" });
+    readySignal();
+  }, [readySignal]);
 
   const layoutStorage = useLayoutStorage();
   useEffect(() => {

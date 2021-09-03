@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { makeStyles, Stack, Text } from "@fluentui/react";
+import { makeStyles, Stack, StackItem, Text } from "@fluentui/react";
 
 import { Layout } from "@foxglove/studio-base/services/ILayoutStorage";
 
@@ -59,13 +59,13 @@ export default function LayoutSection({
 }): JSX.Element {
   const styles = useStyles();
   return (
-    <Stack grow>
+    <Stack>
       {title != undefined && (
         <Text as="h2" className={styles.sectionHeader}>
           {title}
         </Text>
       )}
-      <Stack.Item>
+      <StackItem>
         <Text className={styles.emptyText} styles={{ root: { lineHeight: "1.3" } }}>
           {items != undefined && items.length === 0 && emptyText}
         </Text>
@@ -84,7 +84,7 @@ export default function LayoutSection({
             onRevert={onRevert}
           />
         ))}
-      </Stack.Item>
+      </StackItem>
     </Stack>
   );
 }

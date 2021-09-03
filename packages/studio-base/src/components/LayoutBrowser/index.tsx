@@ -317,14 +317,16 @@ export default function LayoutBrowser({
         <div style={{ flexGrow: 1 }} />
         {layoutDebug && (
           <Stack
-            style={{
-              position: "sticky",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              background: theme.semanticColors.bodyBackground,
-              padding: theme.spacing.s1,
-              ...debugBorder,
+            styles={{
+              root: {
+                position: "sticky",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                background: theme.semanticColors.bodyBackground,
+                padding: theme.spacing.s1,
+                ...debugBorder,
+              },
             }}
             tokens={{ childrenGap: theme.spacing.s1 }}
           >

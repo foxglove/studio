@@ -32,11 +32,8 @@ const useStyles = makeStyles((theme) => ({
     paddingLeft: theme.spacing.m,
     paddingRight: theme.spacing.s1,
 
-    ":focus-within": {
-      background: theme.semanticColors.listItemBackgroundHovered,
-    },
-    ":hover": {
-      background: theme.semanticColors.listItemBackgroundHovered,
+    ":focus-within, :hover": {
+      background: theme.semanticColors.menuItemBackgroundHovered,
     },
     ":hover > .ms-Button--hasMenu": {
       opacity: 1,
@@ -44,16 +41,17 @@ const useStyles = makeStyles((theme) => ({
   },
 
   layoutRowSelected: {
-    background: theme.semanticColors.listItemBackgroundChecked,
+    color: theme.palette.themePrimary,
+    // background: theme.semanticColors.listItemBackgroundChecked,
 
     ":hover": {
-      background: theme.semanticColors.listItemBackgroundCheckedHovered,
+      background: theme.semanticColors.menuItemBackgroundHovered,
     },
   },
 
   // Pin the "hover" style when the right-click menu is open
   layoutRowWithOpenMenu: {
-    background: theme.semanticColors.listItemBackgroundHovered,
+    background: theme.semanticColors.menuItemBackgroundHovered,
 
     "& .ms-Button--hasMenu": {
       opacity: 1,
@@ -61,7 +59,7 @@ const useStyles = makeStyles((theme) => ({
   },
 
   layoutRowSelectedWithOpenMenu: {
-    background: theme.semanticColors.listItemBackgroundCheckedHovered,
+    background: theme.semanticColors.menuItemBackgroundHovered,
 
     "& .ms-Button--hasMenu": {
       opacity: 1,
@@ -73,15 +71,13 @@ const useStyles = makeStyles((theme) => ({
     whiteSpace: "nowrap",
     overflow: "hidden",
     lineHeight: theme.spacing.l2, // avoid descenders being cut off
+    userSelect: "none",
   },
 
   menuButton: {
     opacity: 0,
 
-    ":focus": {
-      opacity: 1,
-    },
-    "&.is-expanded": {
+    "&.is-expanded, :focus": {
       opacity: 1,
     },
   },
@@ -121,6 +117,14 @@ export default function LayoutRow({
 
   const [editingName, setEditingName] = useState(false);
   const [nameFieldValue, setNameFieldValue] = useState("");
+  const [hovered, setHovered] = useState<boolean>(false);
+  const [menuOpen, setMenuOpen] = useState<boolean>(false);
+
+  const onMouseEnter = useCallback(() => setHovered(true), []);
+  const onMouseLeave = useCallback(() => setHovered(false), []);
+
+  const onMenuOpened = useCallback(() => setMenuOpen(true), []);
+  const onMenuDismissed = useCallback(() => setMenuOpen(false), []);
 
   const layoutStorage = useLayoutManager();
 
@@ -168,14 +172,15 @@ export default function LayoutRow({
     [editingName, layout, nameFieldValue, onRename],
   );
 
-  const onTextFieldKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setEditingName(false);
-      }
-      if (event.key === "Tab") {
-        onSubmit(event);
-      }
+  const onTextFieldKeyDown = useCallback((event: React.KeyboardEvent) => {
+    if (event.key === "Escape") {
+      setEditingName(false);
+    }
+  }, []);
+
+  const onBlur = useCallback(
+    (event: React.FocusEvent) => {
+      onSubmit(event);
     },
     [onSubmit],
   );
@@ -378,21 +383,28 @@ export default function LayoutRow({
   // }
 
   if (layout.working != undefined) {
-    menuItems.unshift(
-      {
-        key: "overwrite",
-        text: "Save changes",
-        iconProps: { iconName: "Upload" },
-        onClick: overwriteAction,
+    menuItems.unshift({
+      key: "changes",
+      itemType: ContextualMenuItemType.Section,
+      sectionProps: {
+        bottomDivider: true,
+        title: "This layout has changed",
+        items: [
+          {
+            key: "overwrite",
+            text: "Save changes",
+            iconProps: { iconName: "Upload" },
+            onClick: overwriteAction,
+          },
+          {
+            key: "revert",
+            text: "Revert to last saved version",
+            iconProps: { iconName: "Undo" },
+            onClick: revertAction,
+          },
+        ],
       },
-      {
-        key: "revert",
-        text: "Revert to last saved version",
-        iconProps: { iconName: "Undo" },
-        onClick: revertAction,
-      },
-      { key: "modified_divider", itemType: ContextualMenuItemType.Divider },
-    );
+    });
   }
 
   if (layoutDebug) {
@@ -473,11 +485,14 @@ export default function LayoutRow({
       verticalAlign="center"
       className={cx(styles.layoutRow, {
         [styles.layoutRowSelected]: selected,
-        [styles.layoutRowWithOpenMenu]: contextMenuEvent != undefined,
-        [styles.layoutRowSelectedWithOpenMenu]: selected && contextMenuEvent != undefined,
+        [styles.layoutRowWithOpenMenu]: contextMenuEvent != undefined || menuOpen,
+        [styles.layoutRowSelectedWithOpenMenu]:
+          (selected && contextMenuEvent != undefined) || menuOpen,
       })}
       onClick={editingName ? undefined : onClick}
       onSubmit={onSubmit}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       onContextMenu={(event) => {
         event.preventDefault();
         setContextMenuEvent(event.nativeEvent);
@@ -490,25 +505,27 @@ export default function LayoutRow({
           onDismiss={() => setContextMenuEvent(undefined)}
         />
       )}
-      <StackItem grow>
-        {editingName ? (
-          <TextField
-            componentRef={onTextFieldMount}
-            value={nameFieldValue}
-            onChange={(_event, newValue) => newValue != undefined && setNameFieldValue(newValue)}
-            onKeyDown={onTextFieldKeyDown}
-            styles={{
-              fieldGroup: {
-                marginLeft: `-${theme.spacing.s1}`,
-              },
-            }}
-          />
-        ) : (
-          <Text className={styles.layoutName} title={layout.name}>
-            {layout.name}
-          </Text>
-        )}
-      </StackItem>
+      {editingName ? (
+        <TextField
+          componentRef={onTextFieldMount}
+          value={nameFieldValue}
+          onChange={(_event, newValue) => newValue != undefined && setNameFieldValue(newValue)}
+          onKeyDown={onTextFieldKeyDown}
+          onBlur={onBlur}
+          styles={{
+            root: {
+              flex: 1,
+            },
+            fieldGroup: {
+              marginLeft: `-${theme.spacing.s1}`,
+            },
+          }}
+        />
+      ) : (
+        <StackItem grow className={styles.layoutName}>
+          <Text title={layout.name}>{layout.name}</Text>
+        </StackItem>
+      )}
 
       {!editingName && (
         <IconButton
@@ -516,10 +533,12 @@ export default function LayoutRow({
           className={cx(styles.menuButton, {
             [styles.menuButtonWorking]: layout.working != undefined,
           })}
+          onFocus={() => setHovered(true)}
+          onBlur={() => setHovered(false)}
           data={{ text: "x" }}
           data-test="layout-actions"
           iconProps={{
-            iconName: layout.working != undefined ? "LocationDot" : "More",
+            iconName: menuOpen || hovered || layout.working == undefined ? "More" : "LocationDot",
             styles: {
               root: {
                 "& span": { verticalAlign: "baseline" },
@@ -527,7 +546,20 @@ export default function LayoutRow({
             },
           }}
           onRenderMenuIcon={() => ReactNull}
-          menuProps={{ items: filteredItems }}
+          menuProps={{
+            items: filteredItems,
+            onMenuOpened,
+            onMenuDismissed,
+            styles: {
+              header: {
+                height: 30,
+
+                "& i": {
+                  display: "none",
+                },
+              },
+            },
+          }}
           styles={{
             root: {
               marginRight: `-${theme.spacing.s1}`,
