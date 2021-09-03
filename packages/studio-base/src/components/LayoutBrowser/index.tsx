@@ -257,23 +257,39 @@ export default function LayoutBrowser({
       title="Layouts"
       noPadding
       trailingItems={[
-        layouts.loading && <Spinner />,
-        // eslint-disable-next-line react/jsx-key
+        layouts.loading && <Spinner key="spinner" />,
         <IconButton
+          key="add-layout"
           elementRef={createLayoutTooltip.ref}
           iconProps={{ iconName: "Add" }}
           onClick={createNewLayout}
           ariaLabel="Create new layout"
           data-test="add-layout"
+          styles={{
+            icon: {
+              height: 20,
+            },
+            root: {
+              margin: `0 ${theme.spacing.s2}`,
+            },
+          }}
         >
           {createLayoutTooltip.tooltip}
         </IconButton>,
-        // eslint-disable-next-line react/jsx-key
         <IconButton
+          key="import-layout"
           elementRef={importLayoutTooltip.ref}
           iconProps={{ iconName: "OpenFile" }}
           onClick={importLayout}
           ariaLabel="Import layout"
+          styles={{
+            root: {
+              marginRight: `-${theme.spacing.s1}`,
+            },
+            icon: {
+              height: 20,
+            },
+          }}
         >
           {importLayoutTooltip.tooltip}
         </IconButton>,

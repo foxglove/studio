@@ -31,8 +31,10 @@ const useStyles = makeStyles((theme) => ({
     cursor: "pointer",
     paddingLeft: theme.spacing.m,
     paddingRight: theme.spacing.s1,
+    borderBottom: `1px solid ${theme.semanticColors.bodyBackground}`,
+    borderTop: `1px solid ${theme.semanticColors.bodyBackground}`,
 
-    ":focus-within, :hover": {
+    ":hover": {
       background: theme.semanticColors.menuItemBackgroundHovered,
     },
     ":hover > .ms-Button--hasMenu": {
@@ -41,8 +43,7 @@ const useStyles = makeStyles((theme) => ({
   },
 
   layoutRowSelected: {
-    color: theme.palette.themePrimary,
-    // background: theme.semanticColors.listItemBackgroundChecked,
+    background: theme.semanticColors.menuItemBackgroundHovered,
 
     ":hover": {
       background: theme.semanticColors.menuItemBackgroundHovered,
@@ -523,7 +524,12 @@ export default function LayoutRow({
         />
       ) : (
         <StackItem grow className={styles.layoutName}>
-          <Text title={layout.name}>{layout.name}</Text>
+          <Text
+            title={layout.name}
+            styles={{ root: selected && { fontWeight: 600, color: theme.palette.themePrimary } }}
+          >
+            {layout.name}
+          </Text>
         </StackItem>
       )}
 
