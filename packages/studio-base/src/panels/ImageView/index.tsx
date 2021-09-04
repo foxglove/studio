@@ -39,11 +39,11 @@ import useDeepMemo from "@foxglove/studio-base/hooks/useDeepMemo";
 import { IMAGE_DATATYPES } from "@foxglove/studio-base/panels/ImageView/renderImage";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
-import colors from "@foxglove/studio-base/styles/colors.module.scss";
 import { CameraInfo, StampedMessage } from "@foxglove/studio-base/types/Messages";
 import { PanelConfigSchema, SaveConfig } from "@foxglove/studio-base/types/panels";
 import naturalSort from "@foxglove/studio-base/util/naturalSort";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
+import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { colors as sharedColors } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { getSynchronizingReducers } from "@foxglove/studio-base/util/synchronizeMessages";
 import { formatTimeRaw, getTimestampForMessage } from "@foxglove/studio-base/util/time";
@@ -605,7 +605,7 @@ function ImageView(props: Props) {
           fade
           medium
         >
-          <WavesIcon style={{ color: transformMarkers ? colors.orange : colors.textBright }} />
+          <WavesIcon style={{ color: transformMarkers ? colors.ORANGE2 : colors.TEXT_BRIGHT }} />
         </Icon>
       </BottomBar>
     );
