@@ -16,9 +16,8 @@ import styled from "styled-components";
 import { Time } from "@foxglove/rostime";
 import CopyText from "@foxglove/studio-base/components/CopyText";
 import Icon from "@foxglove/studio-base/components/Icon";
-import mixins from "@foxglove/studio-base/styles/mixins.module.scss";
 import { formatDate, formatTime } from "@foxglove/studio-base/util/formatTime";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { colors, fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 
 const SRoot = styled.div`
@@ -28,7 +27,7 @@ const SRoot = styled.div`
 `;
 
 const DateWrapper = styled.div`
-  font-family: ${mixins.monospaceFont};
+  font-family: ${fonts.MONOSPACE};
   font-size: 14px;
   font-weight: normal;
   color: ${colors.GREY};
@@ -37,7 +36,7 @@ const DateWrapper = styled.div`
 
 const TimestampWrapper = styled.div`
   display: flex;
-  font-family: ${mixins.monospaceFont};
+  font-family: ${fonts.MONOSPACE};
   font-size: 14px;
   font-weight: normal;
   color: ${colors.GREY};
