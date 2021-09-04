@@ -44,7 +44,6 @@ import { PanelConfigSchema, SaveConfig } from "@foxglove/studio-base/types/panel
 import naturalSort from "@foxglove/studio-base/util/naturalSort";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
-import { colors as sharedColors } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { getSynchronizingReducers } from "@foxglove/studio-base/util/synchronizeMessages";
 import { formatTimeRaw, getTimestampForMessage } from "@foxglove/studio-base/util/time";
 import toggle from "@foxglove/studio-base/util/toggle";
@@ -97,7 +96,7 @@ const TopicTimestampSpan = styled.span`
 const SEmptyStateWrapper = styled.div`
   width: 100%;
   height: 100%;
-  background: ${sharedColors.DARK2};
+  background: ${colors.DARK2};
   display: flex;
   align-items: center;
   justify-content: center;
