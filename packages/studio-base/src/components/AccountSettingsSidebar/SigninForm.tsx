@@ -40,7 +40,7 @@ export default function SigninForm(): JSX.Element {
         >
           <AccountSyncGraphic width={192} />
         </Stack>
-        <Text variant="mediumPlus">
+        <Text variant="medium">
           Sign in to Foxglove to access collaboration features like shared layouts.
         </Text>
 
