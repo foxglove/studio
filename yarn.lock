@@ -5879,16 +5879,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/yargs@npm:^16.0.0":
-  version: 16.0.3
-  resolution: "@types/yargs@npm:16.0.3"
-  dependencies:
-    "@types/yargs-parser": "*"
-  checksum: 0968b06d2f6df764cb180a4089b293ae313a310b0c3524c296f93ac896ca1ed8d857b595db0388355f9f45772226d25d6a4f7df359302f245040a63ba057ae5a
-  languageName: node
-  linkType: hard
-
-"@types/yargs@npm:^16.0.2":
+"@types/yargs@npm:^16.0.0, @types/yargs@npm:^16.0.2":
   version: 16.0.4
   resolution: "@types/yargs@npm:16.0.4"
   dependencies:
