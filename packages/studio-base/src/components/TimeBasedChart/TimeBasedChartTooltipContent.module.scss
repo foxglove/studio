@@ -15,7 +15,7 @@
 @import "@foxglove/studio-base/styles/mixins.module.scss";
 
 .root {
-  @include ff-monospace;
+  font-family: "Roboto Mono";
   font-size: 11px;
   line-height: 1.4;
   max-width: 350px;
