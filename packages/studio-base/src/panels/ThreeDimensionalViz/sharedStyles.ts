@@ -15,7 +15,6 @@ const sharedStyles = mergeStyleSets({
     marginRight: "4px !important",
     marginLeft: "4px !important",
   },
-
   button: {
     backgroundColor: "transparent !important",
     border: "none !important",
@@ -24,21 +23,19 @@ const sharedStyles = mergeStyleSets({
     marginRight: "4px !important",
     marginLeft: "4px !important",
   },
-
   buttons: {
     backgroundColor: `${colors.DARK3}`,
     borderRadius: "4px",
     boxShadow: "0 0px 32px rgba(8, 8, 10, 0.6)",
     overflow: "hidden",
     pointerEvents: "auto",
-    flexShrink: "0",
-
+    flexShrink: 0,
     display: "flex",
     flexDirection: "column",
     padding: 0,
     marginBottom: 10,
 
-    "&.icon": {
+    "& .icon": {
       width: 18,
       height: 18,
       fontSize: 18,
