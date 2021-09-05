@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { mergeStyleSets } from "@fluentui/react";
 import CheckIcon from "@mdi/svg/svg/check.svg";
 import CloseIcon from "@mdi/svg/svg/close.svg";
 import cx from "classnames";
@@ -24,7 +25,37 @@ import Tooltip from "@foxglove/studio-base/components/Tooltip";
 import { TabActions } from "@foxglove/studio-base/panels/Tab/TabDndContext";
 import { colors, fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-import styles from "./Tab.module.scss";
+const styles = mergeStyleSets({
+  root: {
+    position: "relative",
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+    display: "flex",
+    alignItems: "center",
+    width: "100%",
+    height: 26,
+    padding: "0 6px",
+    userSelect: "none",
+    border: "1px solid transparent",
+
+    // Shift the tab down so it's flush with the bottom of the PanelToolbar
+    top: 4,
+    marginTop: -4,
+
+    "&.active": {
+      userSelect: "all",
+    },
+    "&:not(.active) + &:not(.active):before": {
+      borderLeft: "1px solid rgb(45, 45, 51)",
+      content: '""',
+      height: "16px",
+      left: "0",
+      position: "absolute", // within .draggableTab
+      top: 4,
+      zIndex: 1,
+    },
+  },
+});
 
 const MAX_TAB_WIDTH = 100;
 const MIN_ACTIVE_TAB_WIDTH = 40;
@@ -179,7 +210,7 @@ export function ToolbarTab(props: Props): JSX.Element {
       value={tabTitle}
       onClick={onClickTab}
       ref={innerRef}
-      className={cx(styles.tab, { [styles.active!]: isActive })}
+      className={cx(styles.root, { active: isActive })}
     >
       <Tooltip contents={editingTitle ? "" : tooltip} placement="top">
         {/* This div has to be here because the <ToolTip> overwrites the ref of its child*/}
