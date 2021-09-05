@@ -57,7 +57,7 @@ const styles = mergeStyleSets({
     padding: 0,
     marginBottom: 10,
 
-    "& .icon": {
+    "& span.icon": {
       width: 18,
       height: 18,
       fontSize: 18,
