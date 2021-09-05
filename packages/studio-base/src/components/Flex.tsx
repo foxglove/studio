@@ -97,11 +97,11 @@ type Props = {
 
 const Flex = React.forwardRef((props: Props, ref: React.ForwardedRef<HTMLDivElement>) => {
   const {
+    col,
+    row,
+    reverse,
     style,
     className,
-    row,
-    col,
-    reverse,
     center,
     start,
     end,
