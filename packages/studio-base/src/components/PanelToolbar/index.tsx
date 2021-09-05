@@ -102,7 +102,7 @@ const styles = mergeStyleSets({
         left: 0,
         backgroundColor: colors.TOOLBAR_FIXED,
       },
-      "&:not(.hasChildren) .iconContainer": {
+      "&:not(.hasChildren) > *": {
         backgroundColor: colors.DARK3,
         borderRadius: 4,
         boxShadow: "0 6px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.2)",
