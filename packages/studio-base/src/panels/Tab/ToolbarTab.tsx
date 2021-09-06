@@ -71,8 +71,8 @@ const styles = mergeStyleSets({
     },
   },
   input: {
-    backgroundColor: "transparent",
-    padding: 0,
+    backgroundColor: "transparent !important",
+    padding: "0px !important",
     pointerEvents: "none",
     width: "100%",
 
