@@ -60,7 +60,7 @@ const styles = mergeStyleSets({
     "&.hidden": {
       opacity: 0,
     },
-    "&:not(.active) + &:not(.active):before": {
+    "&:not(.isActive) + &:not(.isActive):before": {
       borderLeft: "1px solid rgb(45, 45, 51)",
       content: '""',
       height: 16,
