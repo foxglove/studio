@@ -125,7 +125,7 @@ const classes = mergeStyleSets({
           cursor: "unset",
         },
       },
-      "&.isXSWidth": {
+      ".isXSWidth &": {
         padding: `0 ${TREE_SPACING}px`,
       },
     },
