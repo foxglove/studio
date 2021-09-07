@@ -13,7 +13,7 @@
 
 import { Stack, IButtonStyles, useTheme } from "@fluentui/react";
 import { merge } from "lodash";
-import { MutableRefObject, useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { compare } from "@foxglove/rostime";
 import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconButton";
@@ -22,6 +22,7 @@ import MessageOrderControls from "@foxglove/studio-base/components/MessageOrderC
 import {
   MessagePipelineContext,
   useMessagePipeline,
+  useMessagePipelineGetter,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import {
   jumpSeek,
@@ -41,28 +42,6 @@ const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
 const selectIsPlaying = (ctx: MessagePipelineContext) =>
   ctx.playerState.activeData?.isPlaying === true;
 const selectIsActive = (ctx: MessagePipelineContext) => !!ctx.playerState.activeData;
-const selectPlayer = (ctx: MessagePipelineContext) => ctx.playerState;
-
-// Select an item from the message pipeline by ref. Use this if you want to consume
-// the latest value from the message pipeline within a callback. This avoids listing the item
-// within the callback dependencies which causes the callback to be re-created
-//
-// NOTE: Using a pipeline ref will prevent your component render from triggering on changes.
-function usePipelineRef<T>(
-  selector: (ctx: MessagePipelineContext) => T,
-): MutableRefObject<T | undefined> {
-  const valRef = useRef<T | undefined>();
-  useMessagePipeline(
-    useCallback(
-      (ctx) => {
-        valRef.current = selector(ctx);
-        return undefined;
-      },
-      [selector],
-    ),
-  );
-  return valRef;
-}
 
 export default function PlaybackControls(): JSX.Element {
   const theme = useTheme();
@@ -72,7 +51,7 @@ export default function PlaybackControls(): JSX.Element {
   const play = useMessagePipeline(selectPlay);
   const seek = useMessagePipeline(selectSeek);
 
-  const player = usePipelineRef(selectPlayer);
+  const msgPipeline = useMessagePipelineGetter();
   const isActive = useMessagePipeline(selectIsActive);
   const isPlaying = useMessagePipeline(selectIsPlaying);
 
@@ -81,13 +60,13 @@ export default function PlaybackControls(): JSX.Element {
       startTime: start,
       endTime: end,
       currentTime: current,
-    } = player.current?.activeData ?? {};
+    } = msgPipeline().playerState.activeData ?? {};
     // if we are at the end, we need to go back to start
     if (current && end && start && compare(current, end) >= 0) {
       seek(start);
     }
     play();
-  }, [play, player, seek]);
+  }, [msgPipeline, play, seek]);
 
   const toggleRepeat = useCallback(() => {
     setRepeat((old) => !old);
@@ -105,19 +84,21 @@ export default function PlaybackControls(): JSX.Element {
     () => ({
       " ": togglePlayPause,
       ArrowLeft: (ev: KeyboardEvent) => {
-        if (!player.current?.activeData?.currentTime) {
+        const currentTime = msgPipeline().playerState.activeData?.currentTime;
+        if (!currentTime) {
           return;
         }
-        seek(jumpSeek(DIRECTION.BACKWARD, player.current.activeData?.currentTime, ev));
+        seek(jumpSeek(DIRECTION.BACKWARD, currentTime, ev));
       },
       ArrowRight: (ev: KeyboardEvent) => {
-        if (!player.current?.activeData?.currentTime) {
+        const currentTime = msgPipeline().playerState.activeData?.currentTime;
+        if (!currentTime) {
           return;
         }
-        seek(jumpSeek(DIRECTION.FORWARD, player.current.activeData?.currentTime, ev));
+        seek(jumpSeek(DIRECTION.FORWARD, currentTime, ev));
       },
     }),
-    [player, seek, togglePlayPause],
+    [msgPipeline, seek, togglePlayPause],
   );
 
   const loopTooltip = useTooltip({ contents: "Loop playback" });
@@ -239,10 +220,11 @@ export default function PlaybackControls(): JSX.Element {
             iconProps={{ iconName: "Previous", iconNameActive: "PreviousFilled" }}
             disabled={!isActive}
             onClick={() => {
-              if (!player.current?.activeData?.currentTime) {
+              const currentTime = msgPipeline().playerState.activeData?.currentTime;
+              if (!currentTime) {
                 return;
               }
-              seek(jumpSeek(DIRECTION.BACKWARD, player.current.activeData?.currentTime));
+              seek(jumpSeek(DIRECTION.BACKWARD, currentTime));
             }}
             styles={merge(seekIconButttonStyles({ left: true }), iconButtonStyles)}
           />
@@ -251,10 +233,11 @@ export default function PlaybackControls(): JSX.Element {
             iconProps={{ iconName: "Next", iconNameActive: "NextFilled" }}
             disabled={!isActive}
             onClick={() => {
-              if (!player.current?.activeData?.currentTime) {
+              const currentTime = msgPipeline().playerState.activeData?.currentTime;
+              if (!currentTime) {
                 return;
               }
-              seek(jumpSeek(DIRECTION.FORWARD, player.current.activeData?.currentTime));
+              seek(jumpSeek(DIRECTION.FORWARD, currentTime));
             }}
             styles={merge(seekIconButttonStyles({ right: true }), iconButtonStyles)}
           />
