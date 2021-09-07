@@ -179,7 +179,9 @@ function main() {
 
     ev.preventDefault();
 
-    if (app.isReady()) {
+    if (url.startsWith("foxglove://signin-complete")) {
+      app.focus({ steal: true });
+    } else if (app.isReady()) {
       new StudioWindow([url]).load();
     } else {
       openUrls.push(url);
