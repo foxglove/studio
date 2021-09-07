@@ -13,22 +13,28 @@
 
 import { mergeStyleSets } from "@fluentui/react";
 import cx from "classnames";
-import { CSSProperties } from "react";
+import { ComponentProps, CSSProperties, ReactNode, MouseEvent } from "react";
 
 import Tooltip, { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 type IconSizeKey = "xlarge" | "large" | "medium" | "small" | "xsmall" | "xxsmall";
-type IconSize = [IconSizeKey, number];
 
-const ICON_SIZES: IconSize[] = [
-  ["xlarge", 32],
-  ["large", 24],
-  ["medium", 20],
-  ["small", 18],
-  ["xsmall", 16],
-  ["xxsmall", 11],
-];
+function makeIconStyle(size: number) {
+  return {
+    width: size,
+    height: size,
+    fontSize: size,
+    verticalAlign: "middle",
+
+    img: {
+      width: size,
+      height: size,
+      fontSize: size,
+      verticalAlign: "middle",
+    },
+  };
+}
 
 const classes = mergeStyleSets({
   icon: {
@@ -68,37 +74,25 @@ const classes = mergeStyleSets({
       backgroundColor: colors.DARK4,
     },
   },
-  ...ICON_SIZES.reduce((acc, [name, size]) => {
-    return {
-      ...acc,
-      [name]: {
-        width: size,
-        height: size,
-        fontSize: size,
-        verticalAlign: "middle",
-
-        img: {
-          width: size,
-          height: size,
-          fontSize: size,
-          verticalAlign: "middle",
-        },
-      },
-    };
-  }, {}),
+  xlarge: makeIconStyle(32),
+  large: makeIconStyle(24),
+  medium: makeIconStyle(20),
+  small: makeIconStyle(18),
+  xsmall: makeIconStyle(16),
+  xxsmall: makeIconStyle(11),
 });
 
 type Props = {
-  children: React.ReactNode;
+  children: ReactNode;
   active?: boolean;
   fade?: boolean;
   size?: IconSizeKey;
-  onClick?: (e: React.MouseEvent<HTMLElement>) => void;
+  onClick?: (e: MouseEvent<HTMLElement>) => void;
   clickable?: boolean;
   className?: string;
   style?: CSSProperties;
-  tooltip?: React.ReactNode;
-  tooltipProps?: Partial<React.ComponentProps<typeof Tooltip> & { alwaysShown?: false }>;
+  tooltip?: ReactNode;
+  tooltipProps?: Partial<ComponentProps<typeof Tooltip> & { alwaysShown?: false }>;
   dataTest?: string;
 };
 
@@ -131,7 +125,7 @@ const Icon = (props: Props): JSX.Element => {
   // if we have a click handler
   // cancel the bubbling on the event and process it
   // in our click handler callback; otherwise, let it bubble
-  const clickHandler = (e: React.MouseEvent<HTMLElement>) => {
+  const clickHandler = (e: MouseEvent<HTMLElement>) => {
     if (onClick) {
       e.preventDefault();
       e.stopPropagation();
