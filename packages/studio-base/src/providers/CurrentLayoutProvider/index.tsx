@@ -36,7 +36,7 @@ import { LinkedGlobalVariables } from "@foxglove/studio-base/panels/ThreeDimensi
 import panelsReducer from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import { LayoutID } from "@foxglove/studio-base/services/ConsoleApi";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
-import { LayoutChangeListener } from "@foxglove/studio-base/services/ILayoutManager";
+import { LayoutManagerEventTypes } from "@foxglove/studio-base/services/ILayoutManager";
 import { PanelConfig, UserNodes, PlaybackConfig } from "@foxglove/studio-base/types/panels";
 import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
@@ -68,7 +68,6 @@ export default function CurrentLayoutProvider({
   }, []);
 
   const [layoutState, setLayoutStateInternal] = useState<LayoutState>({
-    loading: true,
     selectedLayout: undefined,
   });
   const layoutStateRef = useRef(layoutState);
@@ -110,21 +109,24 @@ export default function CurrentLayoutProvider({
       { saveToProfile = true }: { saveToProfile?: boolean } = {},
     ) => {
       if (id == undefined) {
-        setLayoutState({ loading: false, selectedLayout: undefined });
+        setLayoutState({ selectedLayout: undefined });
         return;
       }
       try {
-        setLayoutState({ loading: true, selectedLayout: undefined });
+        setLayoutState({ selectedLayout: { id, loading: true, data: undefined } });
         const layout = await layoutManager.getLayout(id);
         if (!isMounted()) {
           return;
         }
         if (layout == undefined) {
-          setLayoutState({ loading: false, selectedLayout: undefined });
+          setLayoutState({ selectedLayout: undefined });
         } else {
           setLayoutState({
-            loading: false,
-            selectedLayout: { id: layout.id, data: layout.working?.data ?? layout.baseline.data },
+            selectedLayout: {
+              loading: false,
+              id: layout.id,
+              data: layout.working?.data ?? layout.baseline.data,
+            },
           });
           if (saveToProfile) {
             setUserProfile({ currentLayoutId: id }).catch((error) => {
@@ -138,26 +140,28 @@ export default function CurrentLayoutProvider({
       } catch (error) {
         console.error(error);
         addToast(`The layout could not be loaded. ${error.toString()}`, { appearance: "error" });
-        setLayoutState({ loading: false, selectedLayout: undefined });
+        setLayoutState({ selectedLayout: undefined });
       }
     },
     [addToast, isMounted, layoutManager, setLayoutState, setUserProfile],
   );
 
+  type UpdateLayoutParams = { id: LayoutID; data: PanelsState };
+  const unsavedLayoutsRef = useRef(new Map<LayoutID, UpdateLayoutParams>());
+
   // When the user performs an action, we immediately setLayoutState to update the UI. Saving back
   // to the LayoutManager is debounced.
   const debouncedSaveTimeout = useRef<ReturnType<typeof setTimeout>>();
-  const debouncedSaveParams = useRef<{ id: LayoutID; data: PanelsState }>();
   const performAction = useCallback(
     (action: PanelsActions) => {
       if (
-        layoutStateRef.current.loading === true ||
-        layoutStateRef.current.selectedLayout == undefined
+        layoutStateRef.current.selectedLayout?.data == undefined ||
+        layoutStateRef.current.selectedLayout.loading === true
       ) {
         return;
       }
       const oldData = layoutStateRef.current.selectedLayout.data;
-      const newData = panelsReducer(layoutStateRef.current.selectedLayout.data, action);
+      const newData = panelsReducer(oldData, action);
 
       // the panel state did not change, so no need to perform layout state updates or layout manager updates
       if (isEqual(oldData, newData)) {
@@ -169,30 +173,31 @@ export default function CurrentLayoutProvider({
         data: newData,
       };
 
-      debouncedSaveParams.current = newLayout;
-      debouncedSaveTimeout.current ??= setTimeout(() => {
-        const params = debouncedSaveParams.current;
+      // store the layout for saving
+      unsavedLayoutsRef.current.set(newLayout.id, newLayout);
 
-        debouncedSaveParams.current = undefined;
+      debouncedSaveTimeout.current ??= setTimeout(() => {
+        const layoutsToSave = [...unsavedLayoutsRef.current.values()];
+        unsavedLayoutsRef.current.clear();
+
         debouncedSaveTimeout.current = undefined;
-        if (!params) {
-          return;
+        for (const params of layoutsToSave) {
+          layoutManager.updateLayout(params).catch((error) => {
+            log.error(error);
+            if (isMounted()) {
+              addToast(`Your changes could not be saved. ${error.toString()}`, {
+                appearance: "error",
+                id: "CurrentLayoutProvider.throttledSave",
+              });
+            }
+          });
         }
-        layoutManager.updateLayout(params).catch((error) => {
-          log.error(error);
-          if (isMounted()) {
-            addToast(`Your changes could not be saved. ${error.toString()}`, {
-              appearance: "error",
-              id: "CurrentLayoutProvider.throttledSave",
-            });
-          }
-        });
       }, SAVE_INTERVAL_MS);
 
       // Some actions like CHANGE_PANEL_LAYOUT will cause further downstream effects to update panel
       // configs (i.e. set default configs). These result in calls to performAction. To ensure the
       // debounced params are set in the proper order, we invoke setLayoutState at the end.
-      setLayoutState({ loading: false, selectedLayout: newLayout });
+      setLayoutState({ selectedLayout: { ...newLayout, loading: false } });
     },
     [addToast, isMounted, layoutManager, setLayoutState],
   );
@@ -200,23 +205,23 @@ export default function CurrentLayoutProvider({
   // Changes to the layout storage from external user actions (such as resetting a layout to a
   // previous saved state) need to trigger setLayoutState.
   useEffect(() => {
-    const listener: LayoutChangeListener = ({ updatedLayout }) => {
+    const listener: LayoutManagerEventTypes["change"] = ({ updatedLayout }) => {
       if (
         updatedLayout &&
         layoutStateRef.current.selectedLayout &&
         updatedLayout.id === layoutStateRef.current.selectedLayout.id
       ) {
         setLayoutState({
-          loading: false,
           selectedLayout: {
+            loading: false,
             id: updatedLayout.id,
             data: updatedLayout.working?.data ?? updatedLayout.baseline.data,
           },
         });
       }
     };
-    layoutManager.addLayoutsChangedListener(listener);
-    return () => layoutManager.removeLayoutsChangedListener(listener);
+    layoutManager.on("change", listener);
+    return () => layoutManager.off("change", listener);
   }, [layoutManager, setLayoutState]);
 
   // Load initial state by re-selecting the last selected layout from the UserProfile

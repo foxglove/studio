@@ -86,12 +86,12 @@ export default (env: unknown, argv: WebpackArgv): Configuration => {
         SIGNUP_API_URL: "https://foxglove.dev/api/signup",
         SLACK_INVITE_URL: "https://foxglove.dev/join-slack",
         OAUTH_CLIENT_ID: process.env.OAUTH_CLIENT_ID ?? "oSJGEAQm16LNF09FSVTMYJO5aArQzq8o",
-        FOXGLOVE_API_URL: process.env.FOXGLOVE_API_URL ?? "http://api.foxglove.dev",
+        FOXGLOVE_API_URL: process.env.FOXGLOVE_API_URL ?? "https://api.foxglove.dev",
       }),
       new HtmlWebpackPlugin({
         templateContent: `
   <!doctype html>
-  <html>
+  <html style="background-color: #121217;">
     <head><meta charset="utf-8"></head>
     <script>
       global = globalThis;

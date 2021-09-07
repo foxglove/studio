@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Link } from "@fluentui/react";
+import { useMemo } from "react";
 
 import {
   App,
@@ -14,6 +15,10 @@ import {
   StudioToastProvider,
   CssBaseline,
   GlobalCss,
+  ConsoleApi,
+  ConsoleApiContext,
+  ConsoleApiRemoteLayoutStorageProvider,
+  CurrentUserProvider,
 } from "@foxglove/studio-base";
 
 import LocalStorageAppConfigurationProvider from "./components/LocalStorageAppConfigurationProvider";
@@ -37,8 +42,21 @@ export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX
       ),
     },
     {
-      name: "ROS 2 [BETA]",
+      name: "ROS 1 Rosbridge",
+      type: "rosbridge-websocket",
+    },
+    {
+      name: "ROS 1 Bag (local)",
+      type: "ros1-local-bagfile",
+    },
+    {
+      name: "ROS 1 Bag (remote)",
+      type: "ros1-remote-bagfile",
+    },
+    {
+      name: "ROS 2",
       type: "ros2-socket",
+      badgeText: "beta",
       disabledReason: (
         <>
           ROS 2 Native connections are only available in our desktop app.&nbsp;
@@ -49,16 +67,8 @@ export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX
       ),
     },
     {
-      name: "Rosbridge (WebSocket)",
+      name: "ROS 2 Rosbridge",
       type: "rosbridge-websocket",
-    },
-    {
-      name: "ROS 1 Bag (local)",
-      type: "ros1-local-bagfile",
-    },
-    {
-      name: "ROS 1 Bag (HTTP)",
-      type: "ros1-remote-bagfile",
     },
     {
       name: "ROS 2 Bag (local)",
@@ -78,10 +88,15 @@ export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX
     },
   ];
 
+  const api = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);
+
   const providers = [
     /* eslint-disable react/jsx-key */
-    <StudioToastProvider />,
     <LocalStorageAppConfigurationProvider />,
+    <ConsoleApiContext.Provider value={api} />,
+    <CurrentUserProvider />,
+    <ConsoleApiRemoteLayoutStorageProvider />,
+    <StudioToastProvider />,
     <LocalStorageLayoutStorageProvider />,
     <UserProfileLocalStorageProvider />,
     <ExtensionLoaderProvider />,

@@ -14,12 +14,17 @@ import {
   StudioToastProvider,
   CssBaseline,
   GlobalCss,
+  ConsoleApi,
+  ConsoleApiContext,
+  CurrentUserProvider,
+  ConsoleApiRemoteLayoutStorageProvider,
 } from "@foxglove/studio-base";
 
 import { Desktop } from "../common/types";
 import NativeAppMenuProvider from "./components/NativeAppMenuProvider";
 import NativeStorageAppConfigurationProvider from "./components/NativeStorageAppConfigurationProvider";
 import NativeStorageLayoutStorageProvider from "./components/NativeStorageLayoutStorageProvider";
+import NativeWindowProvider from "./components/NativeWindowProvider";
 import ExtensionLoaderProvider from "./providers/ExtensionLoaderProvider";
 
 const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
@@ -33,11 +38,7 @@ export default function Root(): ReactElement {
       type: "ros1-socket",
     },
     {
-      name: "ROS 2 [BETA]",
-      type: "ros2-socket",
-    },
-    {
-      name: "Rosbridge (WebSocket)",
+      name: "ROS 1 Rosbridge",
       type: "rosbridge-websocket",
     },
     {
@@ -45,8 +46,17 @@ export default function Root(): ReactElement {
       type: "ros1-local-bagfile",
     },
     {
-      name: "ROS 1 Bag (HTTP)",
+      name: "ROS 1 Bag (remote)",
       type: "ros1-remote-bagfile",
+    },
+    {
+      name: "ROS 2",
+      type: "ros2-socket",
+      badgeText: "beta",
+    },
+    {
+      name: "ROS 2 Rosbridge",
+      type: "rosbridge-websocket",
     },
     {
       name: "ROS 2 Bag (local)",
@@ -58,12 +68,18 @@ export default function Root(): ReactElement {
     },
   ];
 
+  const api = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);
+
   const providers = [
     /* eslint-disable react/jsx-key */
-    <StudioToastProvider />,
     <NativeStorageAppConfigurationProvider />,
+    <ConsoleApiContext.Provider value={api} />,
+    <CurrentUserProvider />,
+    <ConsoleApiRemoteLayoutStorageProvider />,
+    <StudioToastProvider />,
     <NativeStorageLayoutStorageProvider />,
     <NativeAppMenuProvider />,
+    <NativeWindowProvider />,
     <UserProfileLocalStorageProvider />,
     <ExtensionLoaderProvider />,
     /* eslint-enable react/jsx-key */

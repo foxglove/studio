@@ -20,7 +20,7 @@ import { useMountedState } from "react-use";
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
 import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
-import { Layout } from "@foxglove/studio-base/services/ILayoutStorage";
+import { Layout, layoutIsShared } from "@foxglove/studio-base/services/ILayoutStorage";
 
 import { debugBorder } from "./styles";
 
@@ -29,24 +29,40 @@ const useStyles = makeStyles((theme) => ({
     cursor: "pointer",
     paddingLeft: theme.spacing.m,
     paddingRight: theme.spacing.s1,
+    borderBottom: `1px solid ${theme.semanticColors.bodyBackground}`,
+    borderTop: `1px solid ${theme.semanticColors.bodyBackground}`,
+
     ":hover": {
-      background: theme.semanticColors.listItemBackgroundHovered,
+      background: theme.semanticColors.menuItemBackgroundHovered,
+    },
+    ":hover > .ms-Button--hasMenu": {
+      opacity: 1,
     },
   },
 
   layoutRowSelected: {
-    background: theme.semanticColors.listItemBackgroundChecked,
+    background: theme.semanticColors.menuItemBackgroundHovered,
+
     ":hover": {
-      background: theme.semanticColors.listItemBackgroundCheckedHovered,
+      background: theme.semanticColors.menuItemBackgroundHovered,
     },
   },
 
   // Pin the "hover" style when the right-click menu is open
   layoutRowWithOpenMenu: {
-    background: theme.semanticColors.listItemBackgroundHovered,
+    background: theme.semanticColors.menuItemBackgroundHovered,
+
+    "& .ms-Button--hasMenu": {
+      opacity: 1,
+    },
   },
+
   layoutRowSelectedWithOpenMenu: {
-    background: theme.semanticColors.listItemBackgroundCheckedHovered,
+    background: theme.semanticColors.menuItemBackgroundHovered,
+
+    "& .ms-Button--hasMenu": {
+      opacity: 1,
+    },
   },
 
   layoutName: {
@@ -54,22 +70,36 @@ const useStyles = makeStyles((theme) => ({
     whiteSpace: "nowrap",
     overflow: "hidden",
     lineHeight: theme.spacing.l2, // avoid descenders being cut off
+    userSelect: "none",
+  },
+  layoutNameSelected: {
+    color: theme.palette.themePrimary,
+  },
+
+  menuButton: {
+    opacity: 0,
+
+    "&.is-expanded, :focus": {
+      opacity: 1,
+    },
+  },
+  menuButtonModified: {
+    opacity: 1,
   },
 }));
 
 export default function LayoutRow({
   layout,
   selected,
-  // onSave,
   onSelect,
   onRename,
   onDuplicate,
   onDelete,
   onShare,
   onExport,
-  // onResolveConflict,
   onOverwrite,
   onRevert,
+  onMakePersonalCopy,
 }: {
   layout: Layout;
   selected: boolean;
@@ -81,15 +111,24 @@ export default function LayoutRow({
   onExport: (item: Layout) => void;
   onOverwrite: (item: Layout) => void;
   onRevert: (item: Layout) => void;
+  onMakePersonalCopy: (item: Layout) => void;
 }): JSX.Element {
   const styles = useStyles();
   const theme = useTheme();
   const isMounted = useMountedState();
+  const confirm = useConfirm();
 
   const [editingName, setEditingName] = useState(false);
   const [nameFieldValue, setNameFieldValue] = useState("");
+  const [menuOpen, setMenuOpen] = useState<boolean>(false);
 
+  const onMenuOpened = useCallback(() => setMenuOpen(true), []);
+  const onMenuDismissed = useCallback(() => setMenuOpen(false), []);
+
+  const layoutDebug = useContext(LayoutStorageDebuggingContext);
   const layoutStorage = useLayoutManager();
+  const deletedOnServer = layout.syncInfo?.status === "remotely-deleted";
+  const hasModifications = layout.working != undefined;
 
   // const saveAction = useCallback(() => {
   //   onSave(layout);
@@ -101,6 +140,9 @@ export default function LayoutRow({
   const revertAction = useCallback(() => {
     onRevert(layout);
   }, [layout, onRevert]);
+  const makePersonalCopyAction = useCallback(() => {
+    onMakePersonalCopy(layout);
+  }, [layout, onMakePersonalCopy]);
 
   const renameAction = useCallback(() => {
     setEditingName(true);
@@ -108,12 +150,10 @@ export default function LayoutRow({
   }, [layout]);
 
   const onClick = useCallback(() => {
-    if (selected) {
-      renameAction();
-    } else {
+    if (!selected) {
       onSelect(layout, true);
     }
-  }, [layout, onSelect, renameAction, selected]);
+  }, [layout, onSelect, selected]);
 
   const duplicateAction = useCallback(() => onDuplicate(layout), [layout, onDuplicate]);
 
@@ -141,16 +181,19 @@ export default function LayoutRow({
     }
   }, []);
 
+  const onBlur = useCallback(
+    (event: React.FocusEvent) => {
+      onSubmit(event);
+    },
+    [onSubmit],
+  );
+
   const onTextFieldMount = useCallback((field: ITextField | ReactNull) => {
     // When focusing via right-click we need an extra tick to be able to successfully focus the field
     setTimeout(() => {
       field?.select();
     }, 0);
   }, []);
-
-  const confirm = useConfirm();
-
-  const layoutDebug = useContext(LayoutStorageDebuggingContext);
 
   const confirmDelete = useCallback(() => {
     void confirm({
@@ -163,58 +206,6 @@ export default function LayoutRow({
       }
     });
   }, [confirm, isMounted, layout, onDelete]);
-
-  // const confirmRevertLocal = useCallback(() => {
-  //   void confirm({
-  //     title: `Revert “${layout.name}” to the latest version?`,
-  //     prompt: "Changes made on this device will be lost.",
-  //     ok: "Revert",
-  //     variant: "danger",
-  //   }).then((response) => {
-  //     if (response === "ok" && isMounted()) {
-  //       onResolveConflict(layout, "revert-local");
-  //     }
-  //   });
-  // }, [confirm, isMounted, layout, onResolveConflict]);
-
-  // const confirmDeleteLocal = useCallback(() => {
-  //   void confirm({
-  //     title: `Delete “${layout.name}”?`,
-  //     prompt: "Changes made on this device will be lost.",
-  //     ok: "Delete",
-  //     variant: "danger",
-  //   }).then((response) => {
-  //     if (response === "ok" && isMounted()) {
-  //       onResolveConflict(layout, "delete-local");
-  //     }
-  //   });
-  // }, [confirm, isMounted, layout, onResolveConflict]);
-
-  // const confirmOverwriteRemote = useCallback(() => {
-  //   void confirm({
-  //     title: `Overwrite “${layout.name}” with local changes?`,
-  //     prompt: "Changes made by others will be lost.",
-  //     ok: "Overwrite",
-  //     variant: "danger",
-  //   }).then((response) => {
-  //     if (response === "ok" && isMounted()) {
-  //       onResolveConflict(layout, "overwrite-remote");
-  //     }
-  //   });
-  // }, [confirm, isMounted, layout, onResolveConflict]);
-
-  // const confirmDeleteRemote = useCallback(() => {
-  //   void confirm({
-  //     title: `Delete “${layout.name}”?`,
-  //     prompt: "Changes made by others will be lost.",
-  //     ok: "Delete",
-  //     variant: "danger",
-  //   }).then((response) => {
-  //     if (response === "ok" && isMounted()) {
-  //       onResolveConflict(layout, "delete-remote");
-  //     }
-  //   });
-  // }, [confirm, isMounted, layout, onResolveConflict]);
 
   const menuItems: (boolean | IContextualMenuItem)[] = [
     {
@@ -230,9 +221,11 @@ export default function LayoutRow({
       iconProps: { iconName: "Copy" },
       onClick: duplicateAction,
       ["data-test"]: "duplicate-layout",
+      // Duplicate first requires saving or discarding changes
+      disabled: hasModifications && layoutIsShared(layout),
     },
     layoutStorage.supportsSharing &&
-      layout.permission === "creator_write" && {
+      !layoutIsShared(layout) && {
         key: "share",
         text: "Share",
         iconProps: { iconName: "Share" },
@@ -257,103 +250,42 @@ export default function LayoutRow({
     },
   ];
 
-  // if (layoutStorage.supportsSyncing) {
-  //   if (layout.conflict != undefined) {
-  //     let conflictItems: IContextualMenuItem[];
-  //     switch (layout.conflict) {
-  //       case "local-delete-remote-update":
-  //         conflictItems = [
-  //           {
-  //             key: "revert-local",
-  //             text: "Revert to latest version",
-  //             iconProps: { iconName: "RemoveFromTrash" },
-  //             onClick: confirmRevertLocal,
-  //           },
-  //           {
-  //             key: "delete-remote",
-  //             text: "Delete for everyone",
-  //             iconProps: { iconName: "Delete" },
-  //             styles: { root: { color: theme.semanticColors.errorText } },
-  //             onClick: confirmDeleteRemote,
-  //           },
-  //         ];
-  //         break;
-  //       case "local-update-remote-delete":
-  //         conflictItems = [
-  //           {
-  //             key: "overwrite-remote",
-  //             text: "Use my version instead",
-  //             iconProps: { iconName: "Upload" },
-  //             onClick: confirmOverwriteRemote,
-  //           },
-  //           {
-  //             key: "delete-local",
-  //             text: "Delete my version",
-  //             iconProps: { iconName: "Delete" },
-  //             styles: { root: { color: theme.semanticColors.errorText } },
-  //             onClick: confirmDeleteLocal,
-  //           },
-  //         ];
-  //         break;
-  //       case "both-update":
-  //         conflictItems = [
-  //           {
-  //             key: "overwrite-remote",
-  //             text: "Use my version instead",
-  //             iconProps: { iconName: "Upload" },
-  //             onClick: confirmOverwriteRemote,
-  //           },
-  //           {
-  //             key: "revert-local",
-  //             text: "Revert to latest version",
-  //             iconProps: { iconName: "Download" },
-  //             styles: { root: { color: theme.semanticColors.errorText } },
-  //             onClick: confirmRevertLocal,
-  //           },
-  //         ];
-  //         break;
-  //       case "name-collision":
-  //         // Only course of action is renaming the layout
-  //         conflictItems = [];
-  //         break;
-  //     }
-
-  //     menuItems.unshift({
-  //       key: "conflicts",
-  //       itemType: ContextualMenuItemType.Section,
-  //       sectionProps: {
-  //         bottomDivider: true,
-  //         title: conflictTypeToString(layout.conflict),
-  //         items: conflictItems,
-  //       },
-  //     });
-  //   } else {
-  //     menuItems.unshift({
-  //       key: "sync",
-  //       text: layout.isModified ? "Sync changes" : "No unsynced changes",
-  //       iconProps: { iconName: "Upload" },
-  //       onClick: saveAction,
-  //       disabled: !layout.isModified,
-  //     });
-  //   }
-  // }
-
-  if (layout.working != undefined) {
-    menuItems.unshift(
+  if (hasModifications) {
+    const sectionItems: IContextualMenuItem[] = [
       {
         key: "overwrite",
         text: "Save changes",
         iconProps: { iconName: "Upload" },
         onClick: overwriteAction,
+        disabled: deletedOnServer,
       },
       {
         key: "revert",
         text: "Revert to last saved version",
         iconProps: { iconName: "Undo" },
         onClick: revertAction,
+        disabled: deletedOnServer,
       },
-      { key: "modified_divider", itemType: ContextualMenuItemType.Divider },
-    );
+    ];
+    if (layoutIsShared(layout)) {
+      sectionItems.unshift({
+        key: "copy_to_personal",
+        text: "Save as a personal copy",
+        iconProps: { iconName: "DependencyAdd" },
+        onClick: makePersonalCopyAction,
+      });
+    }
+    menuItems.unshift({
+      key: "changes",
+      itemType: ContextualMenuItemType.Section,
+      sectionProps: {
+        bottomDivider: true,
+        title: deletedOnServer
+          ? "Someone else has deleted this layout."
+          : "This layout has been modified since it was last saved.",
+        items: sectionItems,
+      },
+    });
   }
 
   if (layoutDebug) {
@@ -371,7 +303,7 @@ export default function LayoutRow({
       },
       {
         key: "debug_updated_at",
-        text: `Updated at: ${layout.working?.updatedAt ?? layout.baseline.updatedAt}`,
+        text: `Saved at: ${layout.working?.savedAt ?? layout.baseline.savedAt}`,
         disabled: true,
         itemProps: {
           styles: {
@@ -379,46 +311,50 @@ export default function LayoutRow({
           },
         },
       },
+      {
+        key: "debug_sync_status",
+        text: `Sync status: ${layout.syncInfo?.status}`,
+        disabled: true,
+        itemProps: {
+          styles: {
+            root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
+          },
+        },
+      },
+      {
+        key: "debug_edit",
+        text: "Inject edit",
+        iconProps: { iconName: "TestBeakerSolid" },
+        onClick: () => void layoutDebug.injectEdit(layout.id),
+        itemProps: {
+          styles: {
+            root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
+          },
+        },
+      },
+      {
+        key: "debug_rename",
+        text: "Inject rename",
+        iconProps: { iconName: "TestBeakerSolid" },
+        onClick: () => void layoutDebug.injectRename(layout.id),
+        itemProps: {
+          styles: {
+            root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
+          },
+        },
+      },
+      {
+        key: "debug_delete",
+        text: "Inject delete",
+        iconProps: { iconName: "TestBeakerSolid" },
+        onClick: () => void layoutDebug.injectDelete(layout.id),
+        itemProps: {
+          styles: {
+            root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
+          },
+        },
+      },
     );
-  }
-  if (layoutDebug?.injectEdit) {
-    menuItems.push({
-      key: "debug_edit",
-      text: "Inject edit",
-      iconProps: { iconName: "TestBeakerSolid" },
-      onClick: () => void layoutDebug.injectEdit?.(layout.id),
-      itemProps: {
-        styles: {
-          root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
-        },
-      },
-    });
-  }
-  if (layoutDebug?.injectRename) {
-    menuItems.push({
-      key: "debug_rename",
-      text: "Inject rename",
-      iconProps: { iconName: "TestBeakerSolid" },
-      onClick: () => void layoutDebug.injectRename?.(layout.id),
-      itemProps: {
-        styles: {
-          root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
-        },
-      },
-    });
-  }
-  if (layoutDebug?.injectDelete) {
-    menuItems.push({
-      key: "debug_delete",
-      text: "Inject delete",
-      iconProps: { iconName: "TestBeakerSolid" },
-      onClick: () => void layoutDebug.injectDelete?.(layout.id),
-      itemProps: {
-        styles: {
-          root: { ...debugBorder, borderRight: "none", borderTop: "none", borderBottom: "none" },
-        },
-      },
-    });
   }
 
   const filteredItems = menuItems.filter(
@@ -434,8 +370,9 @@ export default function LayoutRow({
       verticalAlign="center"
       className={cx(styles.layoutRow, {
         [styles.layoutRowSelected]: selected,
-        [styles.layoutRowWithOpenMenu]: contextMenuEvent != undefined,
-        [styles.layoutRowSelectedWithOpenMenu]: selected && contextMenuEvent != undefined,
+        [styles.layoutRowWithOpenMenu]: contextMenuEvent != undefined || menuOpen,
+        [styles.layoutRowSelectedWithOpenMenu]:
+          (selected && contextMenuEvent != undefined) || menuOpen,
       })}
       onClick={editingName ? undefined : onClick}
       onSubmit={onSubmit}
@@ -451,49 +388,72 @@ export default function LayoutRow({
           onDismiss={() => setContextMenuEvent(undefined)}
         />
       )}
-      <Stack.Item grow className={styles.layoutName} title={layout.name}>
-        {editingName ? (
-          <TextField
-            componentRef={onTextFieldMount}
-            value={nameFieldValue}
-            onChange={(_event, newValue) => newValue != undefined && setNameFieldValue(newValue)}
-            onKeyDown={onTextFieldKeyDown}
-          />
-        ) : (
-          layout.name
-        )}
-      </Stack.Item>
-
       {editingName ? (
-        <>
-          <IconButton
-            type="submit"
-            iconProps={{ iconName: "CheckMark" }}
-            ariaLabel="Rename"
-            data-test="commit-rename"
-          />
-          <IconButton
-            iconProps={{ iconName: "Cancel" }}
-            onClick={() => setEditingName(false)}
-            ariaLabel="Cancel"
-            data-test="cancel-rename"
-          />
-        </>
+        <TextField
+          componentRef={onTextFieldMount}
+          value={nameFieldValue}
+          onChange={(_event, newValue) => newValue != undefined && setNameFieldValue(newValue)}
+          onKeyDown={onTextFieldKeyDown}
+          onBlur={onBlur}
+          styles={{
+            root: {
+              flex: 1,
+            },
+            fieldGroup: {
+              marginLeft: `-${theme.spacing.s1}`,
+            },
+          }}
+        />
       ) : (
+        <Stack.Item
+          grow
+          title={layout.name}
+          className={cx(styles.layoutName, { [styles.layoutNameSelected]: selected })}
+        >
+          {layout.name}
+        </Stack.Item>
+      )}
+
+      {!editingName && (
         <IconButton
           ariaLabel="Layout actions"
-          data={{ text: "x" }}
+          className={cx(styles.menuButton, {
+            [styles.menuButtonModified]: hasModifications,
+          })}
           data-test="layout-actions"
           iconProps={{
-            iconName: layout.working != undefined ? "Info" : "More",
+            iconName: deletedOnServer ? "Error" : hasModifications ? "LocationDot" : "More",
             styles: {
               root: {
-                "& span": { verticalAlign: "baseline" },
+                color: deletedOnServer ? theme.semanticColors.errorIcon : undefined,
               },
             },
           }}
           onRenderMenuIcon={() => ReactNull}
-          menuProps={{ items: filteredItems }}
+          menuProps={{
+            items: filteredItems,
+            onMenuOpened,
+            onMenuDismissed,
+            styles: {
+              header: {
+                height: 30,
+
+                "& i": {
+                  display: "none",
+                },
+              },
+            },
+          }}
+          styles={{
+            icon: {
+              height: 20,
+            },
+            root: {
+              marginRight: `-${theme.spacing.s1}`,
+              borderRadius: "none",
+            },
+            rootHovered: { background: "transparent" },
+          }}
         />
       )}
     </Stack>

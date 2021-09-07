@@ -23,8 +23,8 @@ import styled from "styled-components";
 import Autocomplete from "@foxglove/studio-base/components/Autocomplete";
 import Button from "@foxglove/studio-base/components/Button";
 import Icon from "@foxglove/studio-base/components/Icon";
-import styles from "@foxglove/studio-base/panels/ThreeDimensionalViz/Layout.module.scss";
-import colors from "@foxglove/studio-base/styles/colors.module.scss";
+import styles from "@foxglove/studio-base/panels/ThreeDimensionalViz/sharedStyles";
+import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import Transforms, { Transform } from "./Transforms";
 
@@ -222,7 +222,7 @@ const FollowTFControl = memo<Props>((props: Props) => {
     <Container
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeaveDebounced}
-      style={{ color: tfToFollow ? undefined : colors.textMuted }}
+      style={{ color: tfToFollow ? undefined : colors.TEXT_MUTED }}
     >
       {showFrameList && (
         <Autocomplete
@@ -269,7 +269,7 @@ const FollowTFControl = memo<Props>((props: Props) => {
         onClick={onClickFollowButton}
         tooltip={getFollowButtonTooltip()}
       >
-        <Icon style={{ color: tfToFollow ? colors.accent : "white" }}>
+        <Icon style={{ color: tfToFollow ? colors.ACCENT : "white" }}>
           {followOrientation ? <CompassOutlineIcon /> : <CrosshairsGpsIcon />}
         </Icon>
       </Button>

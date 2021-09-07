@@ -43,6 +43,7 @@ export default function LayoutSection({
   onExport,
   onOverwrite,
   onRevert,
+  onMakePersonalCopy,
 }: {
   title: string | undefined;
   emptyText: string | undefined;
@@ -56,6 +57,7 @@ export default function LayoutSection({
   onExport: (item: Layout) => void;
   onOverwrite: (item: Layout) => void;
   onRevert: (item: Layout) => void;
+  onMakePersonalCopy: (item: Layout) => void;
 }): JSX.Element {
   const styles = useStyles();
   return (
@@ -66,7 +68,7 @@ export default function LayoutSection({
         </Text>
       )}
       <Stack.Item>
-        <Text className={styles.emptyText} style={{ lineHeight: "1.3" }}>
+        <Text className={styles.emptyText} styles={{ root: { lineHeight: "1.3" } }}>
           {items != undefined && items.length === 0 && emptyText}
         </Text>
         {items?.map((layout) => (
@@ -82,6 +84,7 @@ export default function LayoutSection({
             onExport={onExport}
             onOverwrite={onOverwrite}
             onRevert={onRevert}
+            onMakePersonalCopy={onMakePersonalCopy}
           />
         ))}
       </Stack.Item>

@@ -8,6 +8,10 @@
 // See typings/index.d.ts for additional included references
 /// <reference types="./typings" />
 
+export { default as ConsoleApi } from "@foxglove/studio-base/services/ConsoleApi";
+export { default as ConsoleApiContext } from "@foxglove/studio-base/context/ConsoleApiContext";
+export { default as ConsoleApiRemoteLayoutStorageProvider } from "@foxglove/studio-base/providers/ConsoleApiRemoteLayoutStorageProvider";
+export { default as CurrentUserProvider } from "@foxglove/studio-base/providers/CurrentUserProvider";
 export { default as App } from "./App";
 export type { NetworkInterface, OsContext } from "./OsContext";
 export { default as ErrorBoundary } from "./components/ErrorBoundary";
@@ -23,6 +27,8 @@ export type { Layout, LayoutID, ISO8601Timestamp, ILayoutStorage } from "./servi
 export { migrateLayout } from "./services/ILayoutStorage";
 export { default as NativeAppMenuContext } from "./context/NativeAppMenuContext";
 export type { NativeAppMenu, NativeAppMenuEvent } from "./context/NativeAppMenuContext";
+export { default as NativeWindowContext } from "./context/NativeWindowContext";
+export type { NativeWindow } from "./context/NativeWindowContext";
 export type { PlayerSourceDefinition } from "./context/PlayerSelectionContext";
 export { default as ThemeProvider } from "./theme/ThemeProvider";
 export { default as installDevtoolsFormatters } from "./util/installDevtoolsFormatters";

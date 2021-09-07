@@ -18,7 +18,7 @@ import { UserProfileStorageContext } from "@foxglove/studio-base/context/UserPro
 import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
 import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 import LayoutManagerProvider from "@foxglove/studio-base/providers/LayoutManagerProvider";
-import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
+import { ISO8601Timestamp, Layout, LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
 import LayoutManager from "@foxglove/studio-base/services/LayoutManager";
 import MockLayoutStorage from "@foxglove/studio-base/services/MockLayoutStorage";
 import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
@@ -34,29 +34,45 @@ const DEFAULT_LAYOUT_FOR_TESTS: PanelsState = {
   playbackConfig: defaultPlaybackConfig,
 };
 
+const exampleCurrentLayout: Layout = {
+  id: "test-id" as LayoutID,
+  name: "Current Layout",
+  baseline: {
+    data: DEFAULT_LAYOUT_FOR_TESTS,
+    savedAt: new Date(10).toISOString() as ISO8601Timestamp,
+  },
+  permission: "creator_write",
+  working: undefined,
+  syncInfo: undefined,
+};
 function WithSetup(Child: Story, ctx: StoryContext): JSX.Element {
   const storage = useMemo(
     () =>
       new MockLayoutStorage(
         LayoutManager.LOCAL_STORAGE_NAMESPACE,
-        ctx.parameters?.mockLayouts ?? [
+        (ctx.parameters?.mockLayouts as Layout[] | undefined) ?? [
           {
-            id: "not-current",
+            id: "not-current" as LayoutID,
             name: "Another Layout",
-            path: ["some", "path"],
-            baseline: { data: DEFAULT_LAYOUT_FOR_TESTS, updatedAt: new Date(10).toISOString() },
+            baseline: {
+              data: DEFAULT_LAYOUT_FOR_TESTS,
+              savedAt: new Date(10).toISOString() as ISO8601Timestamp,
+            },
+            permission: "creator_write",
+            working: undefined,
+            syncInfo: undefined,
           },
+          exampleCurrentLayout,
           {
-            id: "test-id",
-            name: "Current Layout",
-            path: undefined,
-            baseline: { data: DEFAULT_LAYOUT_FOR_TESTS, updatedAt: new Date(10).toISOString() },
-          },
-          {
-            id: "short-id",
+            id: "short-id" as LayoutID,
             name: "Short",
-            path: undefined,
-            baseline: { data: DEFAULT_LAYOUT_FOR_TESTS, updatedAt: new Date(10).toISOString() },
+            baseline: {
+              data: DEFAULT_LAYOUT_FOR_TESTS,
+              savedAt: new Date(10).toISOString() as ISO8601Timestamp,
+            },
+            permission: "creator_write",
+            working: undefined,
+            syncInfo: undefined,
           },
         ],
       ),
@@ -70,7 +86,7 @@ function WithSetup(Child: Story, ctx: StoryContext): JSX.Element {
     [],
   );
   return (
-    <div style={{ display: "flex", height: 400 }}>
+    <div style={{ display: "flex", height: "100%", width: 320 }}>
       <ModalHost>
         <AnalyticsProvider>
           <UserProfileStorageContext.Provider value={userProfile}>
@@ -110,6 +126,32 @@ export function Empty(): JSX.Element {
 Empty.parameters = { mockLayouts: [] };
 
 export function LayoutList(): JSX.Element {
+  return <LayoutBrowser />;
+}
+
+TruncatedLayoutName.parameters = {
+  mockLayouts: [
+    {
+      id: "not-current",
+      name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
+      baseline: { data: DEFAULT_LAYOUT_FOR_TESTS, updatedAt: new Date(10).toISOString() },
+    },
+  ],
+};
+export function TruncatedLayoutName(): JSX.Element {
+  return <LayoutBrowser />;
+}
+
+TruncatedLayoutNameSelected.parameters = {
+  mockLayouts: [
+    {
+      id: "test-id",
+      name: "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
+      baseline: { data: DEFAULT_LAYOUT_FOR_TESTS, updatedAt: new Date(10).toISOString() },
+    },
+  ],
+};
+export function TruncatedLayoutNameSelected(): JSX.Element {
   return <LayoutBrowser />;
 }
 
@@ -177,8 +219,8 @@ export function CancelRenameWithEscape(_args: unknown): JSX.Element {
   return <LayoutBrowser />;
 }
 
-CancelRenameWithButton.parameters = { useReadySignal: true };
-export function CancelRenameWithButton(_args: unknown): JSX.Element {
+CommitRenameWithTab.parameters = { useReadySignal: true };
+export function CommitRenameWithTab(_args: unknown): JSX.Element {
   const readySignal = useReadySignal();
 
   useAsyncThrowing(async () => {
@@ -187,57 +229,14 @@ export function CancelRenameWithButton(_args: unknown): JSX.Element {
     await delay(10);
     document.querySelector<HTMLElement>(`[data-test="rename-layout"]`)!.click();
     await delay(10);
-    document.querySelector<HTMLElement>(`[data-test="cancel-rename"]`)!.click();
+    (document.activeElement as HTMLInputElement).value = "New name";
+    TestUtils.Simulate.change(document.activeElement!);
     await delay(10);
+    TestUtils.Simulate.blur(document.activeElement!);
     readySignal();
   }, [readySignal]);
 
-  return <LayoutBrowser />;
-}
-
-CommitRenameWithSubmit.parameters = { useReadySignal: true };
-export function CommitRenameWithSubmit(_args: unknown): JSX.Element {
-  const readySignal = useReadySignal();
-
-  useAsyncThrowing(async () => {
-    await delay(100);
-    document.querySelectorAll<HTMLElement>(`[data-test="layout-actions"]`)[1]!.click();
-    await delay(10);
-    document.querySelector<HTMLElement>(`[data-test="rename-layout"]`)!.click();
-    await delay(10);
-    (document.activeElement as HTMLInputElement).value = "New name";
-    TestUtils.Simulate.change(document.activeElement!);
-    TestUtils.Simulate.submit(document.activeElement!);
-  }, []);
-
   const layoutStorage = useLayoutStorage();
-  useEffect(() => {
-    void layoutStorage.list(LayoutManager.LOCAL_STORAGE_NAMESPACE).then((layouts) => {
-      if (layouts.some((layout) => layout.name === "New name")) {
-        readySignal();
-      }
-    });
-  });
-
-  return <LayoutBrowser />;
-}
-
-CommitRenameWithButton.parameters = { useReadySignal: true };
-export function CommitRenameWithButton(_args: unknown): JSX.Element {
-  useAsyncThrowing(async () => {
-    await delay(100);
-    document.querySelectorAll<HTMLElement>(`[data-test="layout-actions"]`)[1]!.click();
-    await delay(10);
-    document.querySelector<HTMLElement>(`[data-test="rename-layout"]`)!.click();
-    await delay(10);
-    (document.activeElement as HTMLInputElement).value = "New name";
-    TestUtils.Simulate.change(document.activeElement!);
-    document.querySelector<HTMLElement>(`[data-test="commit-rename"]`)!.click();
-  }, []);
-
-  const layoutStorage = useLayoutStorage();
-  const readySignal = useReadySignal();
-
   useEffect(() => {
     void layoutStorage.list(LayoutManager.LOCAL_STORAGE_NAMESPACE).then((layouts) => {
       if (layouts.some((layout) => layout.name === "New name")) {
@@ -327,12 +326,5 @@ export function DeleteLastLayout(_args: unknown): JSX.Element {
 }
 DeleteLastLayout.parameters = {
   useReadySignal: true,
-  mockLayouts: [
-    {
-      id: "test-id",
-      name: "Current Layout",
-      path: undefined,
-      baseline: { data: DEFAULT_LAYOUT_FOR_TESTS, updatedAt: new Date(10).toISOString() },
-    },
-  ],
+  mockLayouts: [exampleCurrentLayout],
 };

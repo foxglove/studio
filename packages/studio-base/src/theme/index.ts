@@ -12,7 +12,6 @@ import {
   ITooltipStyleProps,
   IColorPickerStyles,
   IToggleStyles,
-  IStyle,
   ISpinnerStyles,
   IPalette,
   hsl2rgb,
@@ -20,16 +19,14 @@ import {
 } from "@fluentui/react";
 import { createTheme } from "@fluentui/theme";
 
-import { SANS_SERIF } from "@foxglove/studio-base/styles/fonts";
-import styles from "@foxglove/studio-base/styles/variables.module.scss";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { colors, fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 const THEME_HUE = 247;
 
 // https://aka.ms/themedesigner
 export default createTheme({
   defaultFontStyle: {
-    fontFamily: SANS_SERIF,
+    fontFamily: fonts.SANS_SERIF,
   },
   semanticColors: {
     menuBackground: "#242429",
@@ -142,15 +139,6 @@ export default createTheme({
           borderWidth: 2,
         },
       } as Partial<ISpinnerStyles>,
-    },
-
-    // Custom (non-Fluent) components
-    Titlebar: {
-      styles: {
-        root: {
-          height: styles.topBarHeight,
-        } as IStyle,
-      },
     },
   },
   isInverted: true,
