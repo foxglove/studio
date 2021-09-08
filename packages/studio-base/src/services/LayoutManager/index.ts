@@ -38,10 +38,10 @@ class NamespacedLayoutStorage {
   constructor(
     private storage: ILayoutStorage,
     private namespace: string,
-    { migrateLocalLayouts }: { migrateLocalLayouts: boolean },
+    { migrateUnnamespacedLayouts }: { migrateUnnamespacedLayouts: boolean },
   ) {
-    if (migrateLocalLayouts) {
-      this.migration = storage.migrateLocalLayouts?.(namespace).catch((error) => {
+    if (migrateUnnamespacedLayouts) {
+      this.migration = storage.migrateUnnamespacedLayouts?.(namespace).catch((error) => {
         log.error("Migration failed:", error);
       });
     }
@@ -123,7 +123,7 @@ export default class LayoutManager implements ILayoutManager {
         remote
           ? LayoutManager.REMOTE_STORAGE_NAMESPACE_PREFIX + remote.namespace
           : LayoutManager.LOCAL_STORAGE_NAMESPACE,
-        { migrateLocalLayouts: true },
+        { migrateUnnamespacedLayouts: true },
       ),
     );
     this.remote = remote;

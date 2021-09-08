@@ -63,7 +63,7 @@ export interface ILayoutStorage {
    * If applicable, the layout manager will call this method to migrate any old existing local
    * layouts into the new namespace used for local layouts.
    */
-  migrateLocalLayouts?(namespace: string): Promise<void>;
+  migrateUnnamespacedLayouts?(namespace: string): Promise<void>;
 }
 
 export function layoutPermissionIsShared(
