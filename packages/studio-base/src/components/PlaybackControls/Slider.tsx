@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { clamp } from "lodash";
-import { useCallback, useEffect, useRef, MouseEvent, ReactNode } from "react";
+import { useCallback, useEffect, useRef, MouseEvent, ReactNode, useMemo } from "react";
 import styled from "styled-components";
 
 import Logger from "@foxglove/log";
@@ -134,9 +134,9 @@ export default function Slider(props: Props): JSX.Element {
     }
   }, [min, max]);
 
-  if (max < min) {
-    return <></>;
-  }
+  const sliderValue = useMemo(() => {
+    return value != undefined && max > min ? (value - min) / (max - min) : undefined;
+  }, [max, min, value]);
 
   return (
     <StyledSlider
@@ -148,7 +148,7 @@ export default function Slider(props: Props): JSX.Element {
       onMouseMove={onMouseMove}
       onMouseOut={onHoverOut}
     >
-      {renderSlider(value != undefined && min !== max ? (value - min) / (max - min) : undefined)}
+      {renderSlider(sliderValue)}
     </StyledSlider>
   );
 }
