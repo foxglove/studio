@@ -64,6 +64,11 @@ export interface ILayoutStorage {
    * layouts into the new namespace used for local layouts.
    */
   migrateUnnamespacedLayouts?(namespace: string): Promise<void>;
+
+  /**
+   * The layout manager will call this method to convert any local layouts to personal layouts when logging in.
+   */
+  importLayouts(params: { fromNamespace: string; toNamespace: string }): Promise<void>;
 }
 
 export function layoutPermissionIsShared(
