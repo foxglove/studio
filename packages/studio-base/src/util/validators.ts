@@ -152,7 +152,7 @@ const isPolygons = (value: unknown): string | undefined => {
 
 // validate the polygons must be a nested array of xy points
 export const polygonPointsValidator = (jsonData?: unknown): ValidationResult | undefined => {
-  if (jsonData == undefined || isEqual(jsonData, []) || isEqual(jsonData, {})) {
+  if (jsonData == undefined || jsonData === "" || isEqual(jsonData, []) || isEqual(jsonData, {})) {
     return undefined;
   }
   const rules = { polygons: [isPolygons] };
