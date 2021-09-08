@@ -2,15 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import {
-  DefaultButton,
-  Icon,
-  PrimaryButton,
-  Stack,
-  StackItem,
-  Text,
-  useTheme,
-} from "@fluentui/react";
+import { DefaultButton, Icon, PrimaryButton, Stack, Text, useTheme } from "@fluentui/react";
 import { useCallback } from "react";
 import { useLocalStorage } from "react-use";
 
