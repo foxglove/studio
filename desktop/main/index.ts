@@ -180,6 +180,7 @@ function main() {
     ev.preventDefault();
 
     if (url.startsWith("foxglove://signin-complete")) {
+      // When completing sign in from Console, the browser can launch this URL to re-focus the app.
       app.focus({ steal: true });
     } else if (app.isReady()) {
       new StudioWindow([url]).load();
