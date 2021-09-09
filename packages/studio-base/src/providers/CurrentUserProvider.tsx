@@ -2,10 +2,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { PropsWithChildren, useEffect } from "react";
+import { PropsWithChildren, useEffect, useRef, useState } from "react";
 import { useAsync, useLocalStorage } from "react-use";
 
 import Logger from "@foxglove/log";
+import { useShallowMemo } from "@foxglove/studio-base/../../hooks/src";
 import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
 import CurrentUserContext from "@foxglove/studio-base/context/CurrentUserContext";
 
@@ -17,23 +18,27 @@ const log = Logger.getLogger(__filename);
  */
 export default function CurrentUserProvider(props: PropsWithChildren<unknown>): JSX.Element {
   const api = useConsoleApi();
-  const [bearerToken] = useLocalStorage<string>("fox.bearer-token");
+  const [bearerToken, setBearerToken] = useLocalStorage<string>("fox.bearer-token");
+  const [completedFirstLoad, setCompletedFirstLoad] = useState(false);
 
-  const { loading, value, error } = useAsync(async () => {
-    if (!bearerToken) {
+  const { value: currentUser } = useAsync(async () => {
+    try {
+      if (!bearerToken) {
+        return undefined;
+      }
+      api.setAuthHeader(`Bearer ${bearerToken}`);
+      return await api.me();
+    } catch (error) {
+      log.error(error);
       return undefined;
+    } finally {
+      setCompletedFirstLoad(true);
     }
-    api.setAuthHeader(`Bearer ${bearerToken}`);
-    return await api.me();
   }, [api, bearerToken]);
 
-  useEffect(() => {
-    if (error) {
-      log.error(error);
-    }
-  }, [error]);
+  const value = useShallowMemo({ currentUser, setBearerToken });
 
-  if (loading) {
+  if (!completedFirstLoad) {
     return <></>;
   }
 

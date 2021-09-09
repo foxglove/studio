@@ -8,11 +8,11 @@ import { useLocalStorage } from "react-use";
 
 import Logger from "@foxglove/log";
 import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
-import { CurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
+import { User } from "@foxglove/studio-base/context/CurrentUserContext";
 
 const log = Logger.getLogger(__filename);
 
-export default function AccountInfo(props: { me?: CurrentUser }): JSX.Element {
+export default function AccountInfo(props: { currentUser?: User }): JSX.Element {
   const theme = useTheme();
   const api = useConsoleApi();
   const [_, _set, removeBearerToken] = useLocalStorage<string>("fox.bearer-token");
@@ -25,7 +25,7 @@ export default function AccountInfo(props: { me?: CurrentUser }): JSX.Element {
     window.location.reload();
   }, [api, removeBearerToken]);
 
-  if (!props.me) {
+  if (!props.currentUser) {
     return <></>;
   }
 
@@ -50,7 +50,7 @@ export default function AccountInfo(props: { me?: CurrentUser }): JSX.Element {
             >
               Signed in as
             </Text>
-            <Text variant="medium">{props.me.email ?? "(no email address)"}</Text>
+            <Text variant="medium">{props.currentUser.email ?? "(no email address)"}</Text>
           </Stack>
         </Stack>
         <PrimaryButton href={process.env.FOXGLOVE_ACCOUNT_DASHBOARD_URL}>
