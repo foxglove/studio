@@ -2,11 +2,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { PropsWithChildren, useCallback, useEffect, useRef, useState } from "react";
+import { PropsWithChildren, useCallback, useState } from "react";
 import { useAsync, useLocalStorage } from "react-use";
 
+import { useShallowMemo } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
-import { useShallowMemo } from "@foxglove/studio-base/../../hooks/src";
 import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
 import CurrentUserContext from "@foxglove/studio-base/context/CurrentUserContext";
 
