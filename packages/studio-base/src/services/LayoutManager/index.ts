@@ -567,6 +567,7 @@ export default class LayoutManager implements ILayoutManager {
             return async (local) =>
               await local.put({
                 ...localLayout,
+                name: newBaseline.name,
                 baseline: { ...localLayout.baseline, savedAt: newBaseline.savedAt },
                 syncInfo: { status: "tracked", lastRemoteSavedAt: newBaseline.savedAt },
               });

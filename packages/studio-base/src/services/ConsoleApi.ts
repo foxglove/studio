@@ -1,6 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
+import Logger from "@foxglove/log";
 
 type CurrentUser = {
   id: string;
@@ -58,6 +59,8 @@ export type ConsoleApiLayout = {
 };
 
 type ApiResponse<T> = { status: number; json: T };
+
+const log = Logger.getLogger(__filename);
 
 class ConsoleApi {
   private _baseUrl: string;
@@ -119,14 +122,16 @@ class ConsoleApi {
     ).json;
   }
 
-  private async patch<T>(apiPath: string, body?: unknown): Promise<T> {
-    return (
-      await this.request<T>(apiPath, {
+  private async patch<T>(apiPath: string, body?: unknown): Promise<ApiResponse<T>> {
+    return await this.request<T>(
+      apiPath,
+      {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
-      })
-    ).json;
+      },
+      { allowedStatuses: [409] },
+    );
   }
 
   private async delete<T>(
@@ -207,7 +212,20 @@ class ConsoleApi {
     permission: "creator_write" | "org_read" | "org_write" | undefined;
     data: Record<string, unknown> | undefined;
   }): Promise<ConsoleApiLayout> {
-    return await this.patch<ConsoleApiLayout>(`/v1/layouts/${layout.id}`, layout);
+    const { status, json: newLayout } = await this.patch<ConsoleApiLayout>(
+      `/v1/layouts/${layout.id}`,
+      layout,
+    );
+    if (status === 409) {
+      const existingLayout = await this.getLayout(layout.id, { includeData: true });
+      if (!existingLayout) {
+        throw new Error(`Update rejected but layout is not present on server: ${layout.id}`);
+      }
+      log.info(`Layout update rejected, overwriting with server version: ${layout.id}`);
+      return existingLayout;
+    } else {
+      return newLayout;
+    }
   }
 
   async deleteLayout(id: LayoutID): Promise<boolean> {
