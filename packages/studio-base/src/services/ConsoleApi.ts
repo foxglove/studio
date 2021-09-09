@@ -211,20 +211,15 @@ class ConsoleApi {
     name: string | undefined;
     permission: "creator_write" | "org_read" | "org_write" | undefined;
     data: Record<string, unknown> | undefined;
-  }): Promise<ConsoleApiLayout> {
+  }): Promise<{ status: "success"; newLayout: ConsoleApiLayout } | { status: "conflict" }> {
     const { status, json: newLayout } = await this.patch<ConsoleApiLayout>(
       `/v1/layouts/${layout.id}`,
       layout,
     );
-    if (status === 409) {
-      const existingLayout = await this.getLayout(layout.id, { includeData: true });
-      if (!existingLayout) {
-        throw new Error(`Update rejected but layout is not present on server: ${layout.id}`);
-      }
-      log.info(`Layout update rejected, overwriting with server version: ${layout.id}`);
-      return existingLayout;
+    if (status === 200) {
+      return { status: "success", newLayout };
     } else {
-      return newLayout;
+      return { status: "conflict" };
     }
   }
 
