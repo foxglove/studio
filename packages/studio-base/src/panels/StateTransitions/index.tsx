@@ -19,16 +19,12 @@ import stringHash from "string-hash";
 import styled, { css } from "styled-components";
 import tinycolor from "tinycolor2";
 
-import { subtract as subtractTimes, toSec } from "@foxglove/rostime";
-import { add as addTimes, fromSec } from "@foxglove/rostime";
+import { add as addTimes, subtract as subtractTimes, toSec, fromSec } from "@foxglove/rostime";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import Button from "@foxglove/studio-base/components/Button";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import useMessagesByPath from "@foxglove/studio-base/components/MessagePathSyntax/useMessagesByPath";
-import {
-  MessagePipelineContext,
-  useMessagePipeline,
-} from "@foxglove/studio-base/components/MessagePipeline";
+import { useMessagePipelineGetter } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import TimeBasedChart, {
@@ -395,16 +391,18 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     refreshMode: "debounce",
   });
 
-  const seek = useMessagePipeline((ctx: MessagePipelineContext) => ctx.seekPlayback);
+  const messagePipeline = useMessagePipelineGetter();
   const onClick = useCallback(
     ({ x: seekSeconds }: OnChartClickArgs) => {
-      if (seekSeconds == undefined) {
+      const { startTime: start } = messagePipeline().playerState.activeData ?? {};
+      const { seekPlayback } = messagePipeline();
+      if (seekSeconds == undefined || start == undefined) {
         return;
       }
-      const seekTime = addTimes(startTime, fromSec(seekSeconds));
-      seek(seekTime);
+      const seekTime = addTimes(start, fromSec(seekSeconds));
+      seekPlayback(seekTime);
     },
-    [seek, startTime],
+    [messagePipeline],
   );
 
   return (
