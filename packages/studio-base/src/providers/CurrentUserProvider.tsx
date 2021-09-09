@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { PropsWithChildren, useEffect, useRef, useState } from "react";
+import { PropsWithChildren, useCallback, useEffect, useRef, useState } from "react";
 import { useAsync, useLocalStorage } from "react-use";
 
 import Logger from "@foxglove/log";
@@ -18,7 +18,8 @@ const log = Logger.getLogger(__filename);
  */
 export default function CurrentUserProvider(props: PropsWithChildren<unknown>): JSX.Element {
   const api = useConsoleApi();
-  const [bearerToken, setBearerToken] = useLocalStorage<string>("fox.bearer-token");
+  const [bearerToken, setBearerToken, removeBearerToken] =
+    useLocalStorage<string>("fox.bearer-token");
   const [completedFirstLoad, setCompletedFirstLoad] = useState(false);
 
   const { value: currentUser } = useAsync(async () => {
@@ -36,7 +37,12 @@ export default function CurrentUserProvider(props: PropsWithChildren<unknown>): 
     }
   }, [api, bearerToken]);
 
-  const value = useShallowMemo({ currentUser, setBearerToken });
+  const signOut = useCallback(async () => {
+    removeBearerToken();
+    await api.signout();
+  }, [api, removeBearerToken]);
+
+  const value = useShallowMemo({ currentUser, setBearerToken, signOut });
 
   if (!completedFirstLoad) {
     return <></>;

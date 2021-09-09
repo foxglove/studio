@@ -12,12 +12,14 @@ export interface User {
 
 export interface CurrentUser {
   currentUser: User | undefined;
-  setBearerToken: (_: string) => void;
+  setBearerToken: (token: string) => void;
+  signOut: () => Promise<void>;
 }
 
 const CurrentUserContext = createContext<CurrentUser>({
   currentUser: undefined,
   setBearerToken: () => {},
+  signOut: async () => {},
 });
 
 export function useCurrentUser(): CurrentUser {
