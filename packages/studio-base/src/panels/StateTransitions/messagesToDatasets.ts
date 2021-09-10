@@ -4,8 +4,7 @@
 
 import stringHash from "string-hash";
 
-import { Time, toSec } from "@foxglove/rostime";
-import { subtract as subtractTimes } from "@foxglove/rostime";
+import { Time, toSec, subtract as subtractTimes } from "@foxglove/rostime";
 import { ChartData } from "@foxglove/studio-base/components/Chart";
 import { MessageAndData } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import {
