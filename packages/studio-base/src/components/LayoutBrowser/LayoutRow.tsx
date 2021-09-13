@@ -273,8 +273,8 @@ export default function LayoutRow({
         text: "Save changes",
         iconProps: { iconName: "Upload" },
         onClick: overwriteAction,
-        disabled: deletedOnServer || !isOnline,
-        secondaryText: !isOnline ? "Offline" : undefined,
+        disabled: deletedOnServer || (layoutIsShared(layout) && !isOnline),
+        secondaryText: layoutIsShared(layout) && !isOnline ? "Offline" : undefined,
       },
       {
         key: "revert",
