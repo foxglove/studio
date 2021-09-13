@@ -410,7 +410,7 @@ function ImageView(props: Props) {
           toggleComponent={
             <ToggleComponent
               dataTest={"topics-dropdown"}
-              text={cameraTopic ? cameraTopic : "no image topics"}
+              text={cameraTopic ? cameraTopic : "No image topics"}
               disabled
             />
           }
@@ -463,7 +463,7 @@ function ImageView(props: Props) {
         toggleComponent={
           <ToggleComponent
             dataTest={"topics-dropdown"}
-            text={cameraTopic.length > 0 ? cameraTopic : "select a topic"}
+            text={cameraTopic.length > 0 ? cameraTopic : "Select a topic"}
           />
         }
         value={cameraTopic}
@@ -542,7 +542,7 @@ function ImageView(props: Props) {
         closeOnChange={false}
         onChange={onToggleMarkerName}
         value={enabledMarkerTopics}
-        text={availableAndEnabledMarkerTopics.length > 0 ? "markers" : "no markers"}
+        text={availableAndEnabledMarkerTopics.length > 0 ? "Markers" : "No markers"}
         btnClassname={classes.dropdown}
       >
         {availableAndEnabledMarkerTopics.map((topic) => (
