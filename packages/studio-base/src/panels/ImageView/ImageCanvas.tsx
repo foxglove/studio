@@ -126,6 +126,17 @@ const classes = mergeStyleSets({
     justifyContent: "center",
     color: colors.RED2,
   },
+  canvas: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    imageRendering: "pixelated",
+  },
+  canvasImageRenderingSmooth: {
+    imageRendering: "auto",
+  },
 });
 
 const webWorkerManager = new WebWorkerManager(() => {
@@ -521,14 +532,9 @@ export default function ImageCanvas(props: Props): JSX.Element {
       <canvas
         onContextMenu={onCanvasContextMenu}
         {...panZoomHandlers}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          imageRendering: config.smooth === true ? "auto" : "pixelated",
-        }}
+        className={cx(classes.canvas, {
+          [classes.canvasImageRenderingSmooth]: config.smooth === true,
+        })}
         ref={canvasRef}
       />
       {contextMenuEvent && (
