@@ -14,7 +14,9 @@ const log = Logger.getLogger(__filename);
 
 /**
  * CurrentUserProvider attempts to load the current user's profile if there is an authenticated
- * session
+ * session.
+ *
+ * The provider also exposes function to set and clear the current session token.
  */
 export default function ConsoleApiCurrentUserProvider(
   props: PropsWithChildren<unknown>,
@@ -37,7 +39,8 @@ export default function ConsoleApiCurrentUserProvider(
     },
   );
 
-  // We need to set the api auth header info before any other parts of the app can use the api
+  // When we have a valid token, we need to set the api auth header so child components can make
+  // authenticated requests
   useMemo(() => {
     if (!bearerToken) {
       return;
@@ -65,14 +68,10 @@ export default function ConsoleApiCurrentUserProvider(
     await api.signout();
   }, [api, removeBearerToken, removeCachedCurrentUser]);
 
-  const currentUser = useMemo<User | undefined>(() => {
-    return cachedCurrentUser;
-  }, [cachedCurrentUser]);
-
-  const value = useShallowMemo({ currentUser, setBearerToken, signOut });
+  const value = useShallowMemo({ currentUser: cachedCurrentUser, setBearerToken, signOut });
 
   // Wait for first time loading to complete
-  if (!currentUser && loading) {
+  if (!cachedCurrentUser && loading) {
     return <></>;
   }
 
