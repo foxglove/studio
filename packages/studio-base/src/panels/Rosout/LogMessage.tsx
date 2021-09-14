@@ -48,7 +48,7 @@ const classes = mergeStyleSets({
 
 export default React.memo(function LogMessage({ msg }: { msg: RosgraphMsgs$Log }) {
   const altStr = `${msg.file}:${msg.line}`;
-  const strLevel = LevelToString(msg.level).toLocaleLowerCase();
+  const strLevel = LevelToString(msg.level);
   const stamp = msg.header?.stamp ?? msg.stamp ?? { sec: 0, nsec: 0 };
 
   // the first message line is rendered with the info/stamp/name
@@ -59,11 +59,11 @@ export default React.memo(function LogMessage({ msg }: { msg: RosgraphMsgs$Log }
     <div
       title={altStr}
       className={cx(classes.root, {
-        [logStyles.fatal]: strLevel === "fatal",
-        [logStyles.error]: strLevel === "error",
-        [logStyles.warn]: strLevel === "warn",
-        [logStyles.info]: strLevel === "info",
-        [logStyles.debug]: strLevel === "debug",
+        [logStyles.fatal]: strLevel === "FATAL",
+        [logStyles.error]: strLevel === "ERROR",
+        [logStyles.warn]: strLevel === "WARN",
+        [logStyles.info]: strLevel === "INFO",
+        [logStyles.debug]: strLevel === "DEBUG",
       })}
     >
       <div>

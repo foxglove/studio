@@ -55,17 +55,17 @@ function renderOption(option: ISelectableOption | undefined) {
   if (!option) {
     return ReactNull;
   }
-  const strLevel = LevelToString(option.key as number).toLocaleLowerCase();
+  const strLevel = LevelToString(option.key as number);
 
   return (
     <div
       key={option.key}
       className={cx({
-        [logStyles.fatal]: strLevel === "fatal",
-        [logStyles.error]: strLevel === "error",
-        [logStyles.warn]: strLevel === "warn",
-        [logStyles.info]: strLevel === "info",
-        [logStyles.debug]: strLevel === "debug",
+        [logStyles.fatal]: strLevel === "FATAL",
+        [logStyles.error]: strLevel === "ERROR",
+        [logStyles.warn]: strLevel === "WARN",
+        [logStyles.info]: strLevel === "INFO",
+        [logStyles.debug]: strLevel === "DEBUG",
       })}
     >
       {option.text}
