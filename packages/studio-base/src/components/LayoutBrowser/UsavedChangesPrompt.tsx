@@ -14,7 +14,7 @@ import {
   DefaultButton,
   PrimaryButton,
 } from "@fluentui/react";
-import { useCallback, useContext, FormEvent } from "react";
+import { useCallback, useContext, useMemo, useState } from "react";
 
 import ModalContext from "@foxglove/studio-base/context/ModalContext";
 import { Layout } from "@foxglove/studio-base/services/ILayoutStorage";
@@ -25,19 +25,6 @@ type UnsavedChangesResolution =
   | { type: "makePersonal"; name: string }
   | { type: "overwrite" };
 
-const options: IChoiceGroupOption[] = [
-  {
-    key: "update",
-    text: (
-      <>
-        Update team layout <b>“Layout name”</b>
-      </>
-    ),
-  },
-  { key: "discard", text: "Discard changes" },
-  { key: "copy", text: "Save a personal copy" },
-];
-
 export function UnsavedChangesPrompt({
   layout,
   onComplete,
@@ -46,18 +33,37 @@ export function UnsavedChangesPrompt({
   onComplete: (_: UnsavedChangesResolution) => void;
 }): JSX.Element {
   const theme = useTheme();
-  const [choice, setChoice] = React.useState<IChoiceGroupOption>(options[2]);
+
+  const options = useMemo(
+    () => [
+      { key: "discard", text: "Discard changes" },
+      {
+        key: "update",
+        text: `Update team layout “${layout.name}”`,
+      },
+      { key: "copy", text: "Save a personal copy" },
+    ],
+    [layout.name],
+  );
+  const [selectedKey, setSelectedKey] = useState("discard");
+
   const handleChange = React.useCallback(
-    (ev: FormEvent<HTMLInputElement>, option: IChoiceGroupOption): void => {
-      setChoice(option);
+    (_event: React.FormEvent | undefined, option: IChoiceGroupOption | undefined): void => {
+      if (option) {
+        setSelectedKey(option.key);
+      }
     },
     [],
   );
 
+  const onCancel = useCallback(() => {
+    onComplete({ type: "cancel" });
+  }, [onComplete]);
+
   return (
     <Dialog
       hidden={false}
-      onDismiss={() => onComplete({ type: "cancel" })}
+      onDismiss={onCancel}
       dialogContentProps={{ title: "You have unsaved changes" }}
       minWidth={320}
       maxWidth={480}
@@ -70,26 +76,26 @@ export function UnsavedChangesPrompt({
       >
         <Stack tokens={{ childrenGap: theme.spacing.m }} styles={{ root: { minHeight: 180 } }}>
           <ChoiceGroup
-            defaultSelectedKey="update"
+            selectedKey={selectedKey}
             options={options}
             onChange={handleChange}
             required={true}
           />
-          {choice.key === "discard" && (
+          {selectedKey === "discard" && (
             <Text styles={{ root: { color: theme.semanticColors.bodySubtext } }}>
-              Your changes will be permantly deleted, this cannot be undone.
+              Your changes will be permantly deleted. This cannot be undone.
             </Text>
           )}
-          {choice.key === "copy" && (
-            <TextField autoFocus label="Layout name" defaultValue="Layout name copy" />
+          {selectedKey === "copy" && (
+            <TextField autoFocus label="Layout name" defaultValue={`${layout.name} copy`} />
           )}
         </Stack>
         <DialogFooter styles={{ actions: { whiteSpace: "nowrap" } }}>
-          <DefaultButton text="Cancel" />
+          <DefaultButton text="Cancel" onClick={onCancel} />
           <PrimaryButton
-            text={choice.key === "B" ? "Discard Changes" : "Save"}
+            text={selectedKey === "B" ? "Discard Changes" : "Save"}
             styles={
-              choice.key === "B"
+              selectedKey === "B"
                 ? {
                     root: {
                       backgroundColor: theme.semanticColors.errorText,
