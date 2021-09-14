@@ -29,9 +29,13 @@ type UnsavedChangesResolution =
 export function UnsavedChangesPrompt({
   layout,
   onComplete,
+  defaultSelectedKey = "discard",
+  defaultPersonalCopyName,
 }: {
   layout: Layout;
   onComplete: (_: UnsavedChangesResolution) => void;
+  defaultSelectedKey?: Exclude<UnsavedChangesResolution["type"], "cancel">;
+  defaultPersonalCopyName?: string;
 }): JSX.Element {
   const theme = useTheme();
 
@@ -48,8 +52,7 @@ export function UnsavedChangesPrompt({
     ],
     [layout.name],
   );
-  const [selectedKey, setSelectedKey] =
-    useState<Exclude<UnsavedChangesResolution["type"], "cancel">>("discard");
+  const [selectedKey, setSelectedKey] = useState(defaultSelectedKey);
 
   const handleChoiceGroupChange = React.useCallback(
     (_event: React.FormEvent | undefined, option: IChoiceGroupOption | undefined): void => {
@@ -60,7 +63,9 @@ export function UnsavedChangesPrompt({
     [],
   );
 
-  const [personalCopyName, setPersonalCopyName] = useState(`${layout.name} copy`);
+  const [personalCopyName, setPersonalCopyName] = useState(
+    defaultPersonalCopyName ?? `${layout.name} copy`,
+  );
   const personalCopyNameRef = useLatest(personalCopyName);
   const handleNameChange = useCallback((_event: React.FormEvent, value: string | undefined) => {
     if (value != undefined) {
@@ -129,7 +134,7 @@ export function UnsavedChangesPrompt({
           <DefaultButton text="Cancel" onClick={handleCancel} />
           <PrimaryButton
             type="submit"
-            text={selectedKey === "discard" ? "Discard Changes" : "Save"}
+            text={selectedKey === "discard" ? "Discard changes" : "Save"}
             styles={
               selectedKey === "discard"
                 ? {

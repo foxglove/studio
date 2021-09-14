@@ -34,3 +34,34 @@ const dummyLayout: Layout = {
 export function Default(): JSX.Element {
   return <UnsavedChangesPrompt layout={dummyLayout} onComplete={action("onComplete")} />;
 }
+
+export function Overwrite(): JSX.Element {
+  return (
+    <UnsavedChangesPrompt
+      layout={dummyLayout}
+      onComplete={action("onComplete")}
+      defaultSelectedKey="overwrite"
+    />
+  );
+}
+
+export function MakePersonal(): JSX.Element {
+  return (
+    <UnsavedChangesPrompt
+      layout={dummyLayout}
+      onComplete={action("onComplete")}
+      defaultSelectedKey="makePersonal"
+    />
+  );
+}
+
+export function MakePersonalWithEmptyField(): JSX.Element {
+  return (
+    <UnsavedChangesPrompt
+      layout={dummyLayout}
+      onComplete={action("onComplete")}
+      defaultSelectedKey="makePersonal"
+      defaultPersonalCopyName=""
+    />
+  );
+}
