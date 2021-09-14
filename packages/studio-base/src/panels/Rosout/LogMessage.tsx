@@ -12,13 +12,14 @@
 //   You may not use this file except in compliance with the License.
 
 import { mergeStyleSets } from "@fluentui/react";
+import cx from "classnames";
 import { padStart } from "lodash";
 
 import { Time } from "@foxglove/rostime";
+import logStyles from "@foxglove/studio-base/panels/Rosout/logStyles";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import LevelToString from "./LevelToString";
-import logLevelColorsStyle from "./LogLevelColors.module.scss";
 import { RosgraphMsgs$Log } from "./types";
 
 // pad the start of `val` with 0's to make the total string length `count` size
@@ -47,8 +48,7 @@ const classes = mergeStyleSets({
 
 export default React.memo(function LogMessage({ msg }: { msg: RosgraphMsgs$Log }) {
   const altStr = `${msg.file}:${msg.line}`;
-  const strLevel = LevelToString(msg.level);
-  const levelClassName = logLevelColorsStyle[strLevel.toLocaleLowerCase()];
+  const strLevel = LevelToString(msg.level).toLocaleLowerCase();
   const stamp = msg.header?.stamp ?? msg.stamp ?? { sec: 0, nsec: 0 };
 
   // the first message line is rendered with the info/stamp/name
@@ -56,7 +56,16 @@ export default React.memo(function LogMessage({ msg }: { msg: RosgraphMsgs$Log }
   const lines = msg.msg.split("\n");
 
   return (
-    <div title={altStr} className={`${classes.root} ${levelClassName}`}>
+    <div
+      title={altStr}
+      className={cx(classes.root, {
+        [logStyles.fatal]: strLevel === "fatal",
+        [logStyles.error]: strLevel === "error",
+        [logStyles.warn]: strLevel === "warn",
+        [logStyles.info]: strLevel === "info",
+        [logStyles.debug]: strLevel === "debug",
+      })}
+    >
       <div>
         <span>[{padStart(strLevel, 5, " ")}]</span>
         <span>
