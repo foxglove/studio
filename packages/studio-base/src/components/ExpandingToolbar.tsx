@@ -49,7 +49,7 @@ const classes = mergeStyleSets({
     borderBottom: "2px solid transparent !important",
   },
   tabSelected: {
-    borderBottom: "2px solid $text-normal !important",
+    borderBottom: `2px solid ${colors.TEXT_NORMAL} !important`,
   },
   fixedSizePane: {
     height: PANE_HEIGHT,
