@@ -51,7 +51,8 @@
   },
   "resolutions": {
     "@types/node": "15.3.0",
-    "esbuild-loader/esbuild": "0.12.18"
+    "esbuild-loader/esbuild": "0.12.18",
+    "react-dnd": "14.0.2"
   },
   "devDependencies": {
     "@actions/core": "1.5.0",

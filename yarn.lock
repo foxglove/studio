@@ -2912,9 +2912,9 @@ __metadata:
   linkType: hard
 
 "@microsoft/load-themed-styles@npm:^1.10.26":
-  version: 1.10.210
-  resolution: "@microsoft/load-themed-styles@npm:1.10.210"
-  checksum: 2ed064b759970678725559eaa79a5f21bb2b1af55e3907f3fbc34d3dfe28587582768ca9955d5983c5a57013dc0302502626b91a5e3ea6a537d20f1e754f98c9
+  version: 1.10.211
+  resolution: "@microsoft/load-themed-styles@npm:1.10.211"
+  checksum: 21025e9b021d729ceb51205e43e161543eee7211aa2ee767facdc47ba4fa79073065623d648380ba4881b905d8bc5ea2802aef6834f4db35d92f3f83274eaf8f
   languageName: node
   linkType: hard
 
@@ -20126,9 +20126,9 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"react-dnd@npm:^14.0.2":
-  version: 14.0.3
-  resolution: "react-dnd@npm:14.0.3"
+"react-dnd@npm:14.0.2":
+  version: 14.0.2
+  resolution: "react-dnd@npm:14.0.2"
   dependencies:
     "@react-dnd/invariant": ^2.0.0
     "@react-dnd/shallowequal": ^2.0.0
@@ -20147,7 +20147,7 @@ fsevents@^1.2.7:
       optional: true
     "@types/react":
       optional: true
-  checksum: 65e864110dde3d77dcacbb3666ccbc6d6f86c7c057e8fba948d8681d9c02e271fb3a9a3caabfd61ebc63e223e80d3adea4778264ddf1ba2909780bdf4f645ad2
+  checksum: 140965a3b5824d510c23ce5a1efaebc179cb36fbf20d558d576dc956b2ea601c0e7bbfe3577661664e73c618f7e103d2bb4e919e08c6ea1da3bd0593854b9ede
   languageName: node
   linkType: hard
 
