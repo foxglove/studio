@@ -11,6 +11,8 @@ import {
   Text,
   TextField,
   useTheme,
+  DefaultButton,
+  PrimaryButton,
 } from "@fluentui/react";
 import { useCallback, useContext, FormEvent } from "react";
 
@@ -82,7 +84,30 @@ export function UnsavedChangesPrompt({
             <TextField autoFocus label="Layout name" defaultValue="Layout name copy" />
           )}
         </Stack>
-        <DialogFooter styles={{ actions: { whiteSpace: "nowrap" } }}>Buttons here</DialogFooter>
+        <DialogFooter styles={{ actions: { whiteSpace: "nowrap" } }}>
+          <DefaultButton text="Cancel" />
+          <PrimaryButton
+            text={choice.key === "B" ? "Discard Changes" : "Save"}
+            styles={
+              choice.key === "B"
+                ? {
+                    root: {
+                      backgroundColor: theme.semanticColors.errorText,
+                      borderColor: theme.semanticColors.errorText,
+                    },
+                    rootHovered: {
+                      backgroundColor: theme.semanticColors.errorText,
+                      borderColor: theme.semanticColors.errorText,
+                    },
+                    rootChecked: {
+                      backgroundColor: theme.semanticColors.errorText,
+                      borderColor: theme.semanticColors.errorText,
+                    },
+                  }
+                : {}
+            }
+          />
+        </DialogFooter>
       </form>
     </Dialog>
   );
