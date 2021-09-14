@@ -21,6 +21,7 @@ import { useMountedState } from "react-use";
 import useAsyncFn from "react-use/lib/useAsyncFn";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import { useUnsavedChangesPrompt } from "@foxglove/studio-base/components/LayoutBrowser/UsavedChangesPrompt";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
@@ -114,6 +115,8 @@ export default function LayoutBrowser({
     void reloadLayouts();
   }, [reloadLayouts]);
 
+  const openUnsavedChangesPrompt = useUnsavedChangesPrompt();
+
   const promptForUnsavedChanges = useCallback(async () => {
     // Don't allow the user to switch away from a personal layout if they have unsaved changes. This
     // currently has a race condition because of the throttled save in CurrentLayoutProvider -- it's
@@ -125,16 +128,18 @@ export default function LayoutBrowser({
       layoutIsShared(currentLayout) &&
       currentLayout.working != undefined
     ) {
-      await confirm({
-        title: `“${currentLayout.name}” has been modified`,
-        prompt: "Save or discard your changes before switching layouts.",
-        ok: "Fine",
-        cancel: "Do Not Sell My Personal Information",
-      });
+      const result = await openUnsavedChangesPrompt(currentLayout);
+      switch (result.type) {
+        case "cancel":
+        case "discard":
+        case "makePersonal":
+        case "overwrite":
+          throw new Error("TODO");
+      }
       return false;
     }
     return true;
-  }, [confirm, currentLayoutId, layoutManager]);
+  }, [currentLayoutId, layoutManager, openUnsavedChangesPrompt]);
 
   const onSelectLayout = useCallbackWithToast(
     async (item: Layout, { selectedViaClick = false }: { selectedViaClick?: boolean } = {}) => {
