@@ -14,7 +14,13 @@ import {
 
 const log = Logger.getLogger(__filename);
 
-function convertLayout({ id, name, permission, data, saved_at }: ConsoleApiLayout): RemoteLayout {
+function convertLayout({
+  id,
+  name,
+  permission,
+  data,
+  savedAt: saved_at,
+}: ConsoleApiLayout): RemoteLayout {
   if (data == undefined) {
     throw new Error(`Missing data for server layout ${name} (${id})`);
   }
@@ -52,7 +58,7 @@ export default class ConsoleApiRemoteLayoutStorage implements IRemoteLayoutStora
     permission: "creator_write" | "org_read" | "org_write";
     savedAt: ISO8601Timestamp;
   }): Promise<RemoteLayout> {
-    const result = await this.api.createLayout({ id, name, data, permission, saved_at: savedAt });
+    const result = await this.api.createLayout({ id, name, data, permission, savedAt });
     return convertLayout(result);
   }
 
@@ -69,7 +75,7 @@ export default class ConsoleApiRemoteLayoutStorage implements IRemoteLayoutStora
     permission?: "creator_write" | "org_read" | "org_write";
     savedAt: ISO8601Timestamp;
   }): Promise<{ status: "success"; newLayout: RemoteLayout } | { status: "conflict" }> {
-    const result = await this.api.updateLayout({ id, name, data, permission, saved_at: savedAt });
+    const result = await this.api.updateLayout({ id, name, data, permission, savedAt });
     switch (result.status) {
       case "success":
         return { status: "success", newLayout: convertLayout(result.newLayout) };

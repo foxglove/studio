@@ -17,8 +17,8 @@ class FakeConsoleApi extends ConsoleApi {
 
   override async token(): ReturnType<ConsoleApi["token"]> {
     return {
-      access_token: "foo",
-      id_token: "bar",
+      accessToken: "foo",
+      idToken: "bar",
     };
   }
 
