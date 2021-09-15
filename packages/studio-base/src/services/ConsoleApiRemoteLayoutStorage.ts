@@ -49,7 +49,7 @@ export default class ConsoleApiRemoteLayoutStorage implements IRemoteLayoutStora
     id: LayoutID | undefined;
     name: string;
     data: PanelsState;
-    permission: "creator_write" | "org_read" | "org_write";
+    permission: "CREATOR_WRITE" | "ORG_READ" | "ORG_WRITE";
     savedAt: ISO8601Timestamp;
   }): Promise<RemoteLayout> {
     const result = await this.api.createLayout({ id, name, data, permission, savedAt });
@@ -66,7 +66,7 @@ export default class ConsoleApiRemoteLayoutStorage implements IRemoteLayoutStora
     id: LayoutID;
     name?: string;
     data?: PanelsState;
-    permission?: "creator_write" | "org_read" | "org_write";
+    permission?: "CREATOR_WRITE" | "ORG_READ" | "ORG_WRITE";
     savedAt: ISO8601Timestamp;
   }): Promise<{ status: "success"; newLayout: RemoteLayout } | { status: "conflict" }> {
     const result = await this.api.updateLayout({ id, name, data, permission, savedAt });

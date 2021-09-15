@@ -56,7 +56,7 @@ export type ConsoleApiLayout = {
   createdAt: ISO8601Timestamp;
   updatedAt: ISO8601Timestamp;
   savedAt?: ISO8601Timestamp;
-  permission: "creator_write" | "org_read" | "org_write";
+  permission: "CREATOR_WRITE" | "ORG_READ" | "ORG_WRITE";
   data?: Record<string, unknown>;
 };
 
@@ -199,7 +199,7 @@ class ConsoleApi {
     id: LayoutID | undefined;
     savedAt: ISO8601Timestamp | undefined;
     name: string | undefined;
-    permission: "creator_write" | "org_read" | "org_write" | undefined;
+    permission: "CREATOR_WRITE" | "ORG_READ" | "ORG_WRITE" | undefined;
     data: Record<string, unknown> | undefined;
   }): Promise<ConsoleApiLayout> {
     return await this.post<ConsoleApiLayout>("/v1/layouts", layout);
@@ -209,7 +209,7 @@ class ConsoleApi {
     id: LayoutID;
     savedAt: ISO8601Timestamp;
     name: string | undefined;
-    permission: "creator_write" | "org_read" | "org_write" | undefined;
+    permission: "CREATOR_WRITE" | "ORG_READ" | "ORG_WRITE" | undefined;
     data: Record<string, unknown> | undefined;
   }): Promise<{ status: "success"; newLayout: ConsoleApiLayout } | { status: "conflict" }> {
     const { status, json: newLayout } = await this.patch<ConsoleApiLayout>(
