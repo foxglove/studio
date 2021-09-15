@@ -121,7 +121,7 @@ export function migrateLayout(value: unknown): Layout {
   }
 
   function migrateData(data: PanelsState): PanelsState {
-    const result = { ...data, configById: data.configById ?? data.savedProps };
+    const result = { ...data, configById: data.configById ?? data.savedProps ?? {} };
     delete result.savedProps;
     return result;
   }
