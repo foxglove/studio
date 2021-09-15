@@ -116,7 +116,7 @@ export default function DeviceCodeDialog(props: DeviceCodePanelProps): JSX.Eleme
     if (!deviceCode) {
       return ReactNull;
     }
-    const { userCode, verificationUri: verificationUrl } = deviceCode;
+    const { userCode, verificationUri } = deviceCode;
     return (
       <Stack tokens={{ childrenGap: theme.spacing.l1 }}>
         <Stack tokens={{ childrenGap: theme.spacing.s1 }} styles={{ root: { lineHeight: "1.3" } }}>
@@ -136,7 +136,7 @@ export default function DeviceCodeDialog(props: DeviceCodePanelProps): JSX.Eleme
           </Text>
           <Text variant="medium" block>
             If your browser didn’t open automatically, please{" "}
-            <Link href={`${verificationUrl}?user_code=${userCode}`}>click here</Link> to continue.
+            <Link href={`${verificationUri}?user_code=${userCode}`}>click here</Link> to continue.
           </Text>
         </Stack>
       </Stack>
