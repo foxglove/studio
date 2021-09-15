@@ -350,12 +350,12 @@ function Chart(props: Props): JSX.Element {
   const { onHover } = props;
   const onMouseMove = useCallback(
     async (event: React.MouseEvent<HTMLCanvasElement>) => {
-      if (onHover && mousePresetRef.current) {
+      if (onHover && mousePresentRef.current) {
         const elements = await rpcSend<RpcElement[]>("getElementsAtEvent", {
           event: rpcMouseEvent(event),
         });
 
-        if (!isMounted() || !mousePresetRef.current) {
+        if (!isMounted() || !mousePresentRef.current) {
           return;
         }
 
@@ -366,11 +366,11 @@ function Chart(props: Props): JSX.Element {
   );
 
   const onMouseEnter = useCallback(() => {
-    mousePresetRef.current = true;
+    mousePresentRef.current = true;
   }, []);
 
   const onMouseLeave = useCallback(() => {
-    mousePresetRef.current = false;
+    mousePresentRef.current = false;
     onHover?.([]);
   }, [onHover]);
 
