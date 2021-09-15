@@ -21,7 +21,6 @@ import { clamp } from "lodash";
 import { ReactElement } from "react";
 import { createSelector } from "reselect";
 import sanitizeHtml from "sanitize-html";
-import styled from "styled-components";
 
 import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
@@ -110,33 +109,30 @@ const classes = mergeStyleSets({
       verticalAlign: -2,
     },
   },
-});
+  resizeHandle: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: 12,
+    marginLeft: -6,
+    cursor: "col-resize",
 
-const ResizeHandle = styled.div.attrs<{ splitFraction: number }>(({ splitFraction }) => ({
-  style: { left: `${100 * splitFraction}%` },
-}))<{ splitFraction: number }>`
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 12px;
-  margin-left: -6px;
-  cursor: col-resize;
-  :hover,
-  :active,
-  :focus {
-    outline: none;
-    ::after {
-      content: "";
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 6px;
-      margin-left: -2px;
-      width: 4px;
-      background-color: ${colors.DIVIDER};
-    }
-  }
-`;
+    ":hover, :active, :focus": {
+      outline: "none",
+
+      "::after": {
+        content: '""',
+        position: "absolute",
+        top: 0,
+        bottom: 0,
+        left: 6,
+        marginLeft: -2,
+        width: 4,
+        backgroundColor: colors.DIVIDER,
+      },
+    },
+  },
+});
 
 type FormattedKeyValue = {
   key: string;
@@ -381,10 +377,11 @@ class DiagnosticStatus extends React.Component<Props, unknown> {
 
     return (
       <div>
-        <ResizeHandle
-          data-test-resizehandle
-          splitFraction={splitFraction}
+        <div
+          className={classes.resizeHandle}
+          style={{ left: `${100 * splitFraction}%` }}
           onMouseDown={this._resizeMouseDown}
+          data-test-resizehandle
         />
         <table className={classes.table} ref={this._tableRef}>
           <tbody>
