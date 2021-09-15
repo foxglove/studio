@@ -14,17 +14,11 @@ import {
 
 const log = Logger.getLogger(__filename);
 
-function convertLayout({
-  id,
-  name,
-  permission,
-  data,
-  savedAt: saved_at,
-}: ConsoleApiLayout): RemoteLayout {
+function convertLayout({ id, name, permission, data, savedAt }: ConsoleApiLayout): RemoteLayout {
   if (data == undefined) {
     throw new Error(`Missing data for server layout ${name} (${id})`);
   }
-  return { id, name, permission, data: data as PanelsState, savedAt: saved_at };
+  return { id, name, permission, data: data as PanelsState, savedAt };
 }
 
 export default class ConsoleApiRemoteLayoutStorage implements IRemoteLayoutStorage {
