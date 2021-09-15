@@ -131,9 +131,9 @@ class NodeRow extends React.PureComponent<NodeRowProps> {
         >
           <PinIcon />
         </Icon>
-        <span>{info.displayName}</span>
-        {" – "}
-        <span
+        <div>{info.displayName}</div>
+        &nbsp;–&nbsp;
+        <div
           className={cx({
             [classes.ok]: levelName === "ok",
             [classes.warn]: levelName === "warn",
@@ -142,7 +142,7 @@ class NodeRow extends React.PureComponent<NodeRowProps> {
           })}
         >
           {info.status.message}
-        </span>
+        </div>
       </div>
     );
   }
