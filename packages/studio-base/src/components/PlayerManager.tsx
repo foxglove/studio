@@ -65,6 +65,14 @@ type FactoryOptions = {
   storage: Storage;
 };
 
+type FoxgloveDataPlatformOptions = {
+  start: string;
+  end: string;
+  seek?: string;
+  org: string;
+  deviceid: string;
+};
+
 async function localBagFileSource(options: FactoryOptions): Promise<Player | undefined> {
   let file: File;
 
@@ -164,6 +172,41 @@ async function remoteBagFileSource(options: FactoryOptions): Promise<Player | un
 
   const { buildPlayerFromBagURLs } = await import("@foxglove/studio-base/players/buildPlayer");
   return buildPlayerFromBagURLs([url], options.playerOptions);
+}
+
+async function foxgloveDataPlatformSource(options: FactoryOptions): Promise<Player | undefined> {
+  const storageCacheKey = `studio.source.${options.source.name}`;
+
+  // load the player on-demand
+  const { default: FoxgloveDataPlatformPlayer } = await import(
+    "@foxglove/studio-base/players/FoxgloveDataPlatformPlayer"
+  );
+
+  let params: FoxgloveDataPlatformOptions | undefined;
+
+  const restore = Boolean(options.sourceOptions.restore ?? false);
+  if (restore) {
+    params = options.storage.getItem<FoxgloveDataPlatformOptions>(storageCacheKey);
+  } else if (typeof options.sourceOptions.start === "string") {
+    params = options.sourceOptions as FoxgloveDataPlatformOptions;
+    if (!params.start || !params.end || !params.org || !params.deviceid) {
+      throw new Error(
+        `Missing required FoxgloveDataPlatform parameters in ${JSON.stringify(
+          options.sourceOptions,
+        )}`,
+      );
+    }
+  }
+
+  if (!params) {
+    return undefined;
+  }
+
+  options.storage.setItem(storageCacheKey, params);
+  return new FoxgloveDataPlatformPlayer({
+    params,
+    metricsCollector: options.playerOptions.metricsCollector,
+  });
 }
 
 async function rosbridgeSource(options: FactoryOptions): Promise<Player | undefined> {
@@ -415,6 +458,8 @@ export default function PlayerManager({
   // requested player.
   const lookupPlayerBuilderFactory = useCallback((definition: PlayerSourceDefinition) => {
     switch (definition.type) {
+      case "foxglove-data-platform":
+        return foxgloveDataPlatformSource;
       case "ros1-local-bagfile":
         return localBagFileSource;
       case "ros2-local-bagfile":

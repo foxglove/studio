@@ -11,6 +11,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { makeStyles, Stack } from "@fluentui/react";
+import moment from "moment";
 import { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from "react";
 import { useToasts } from "react-toast-notifications";
 import { useMount, useMountedState } from "react-use";
@@ -110,6 +111,10 @@ function Variables() {
       <GlobalVariablesTable />
     </SidebarContent>
   );
+}
+
+function isISO8601(str: string): boolean {
+  return moment(str, moment.ISO_8601, true).isValid();
 }
 
 // file types we support for drag/drop
@@ -319,19 +324,44 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         return;
       }
 
-      // only support rosbag urls
       const type = url.searchParams.get("type");
-      const bagUrl = url.searchParams.get("url");
-      if (type !== "rosbag" || bagUrl == undefined) {
-        return;
+      if (type === "rosbag") {
+        const bagUrl = url.searchParams.get("url");
+        if (!bagUrl) {
+          log.warn(`Missing rosbag url param in ${url}`);
+          return;
+        }
+        selectSource(
+          {
+            name: "ROS 1 Bag File (HTTP)",
+            type: "ros1-remote-bagfile",
+          },
+          { url: bagUrl },
+        );
+      } else if (type === "foxglove-data-platform") {
+        const start = url.searchParams.get("start") ?? "";
+        const end = url.searchParams.get("end") ?? "";
+        const seek = url.searchParams.get("seek") ?? undefined;
+        const org = url.searchParams.get("org");
+        const deviceid = url.searchParams.get("deviceid");
+        if (!org || !deviceid) {
+          log.warn(`Missing org or deviceid param in ${url}`);
+          return;
+        }
+        if (!isISO8601(start) || !isISO8601(end) || (seek && !isISO8601(seek))) {
+          log.warn(`Missing or invalid ISO8601 timestamp(s) in ${url}`);
+          return;
+        }
+        selectSource(
+          {
+            name: "Foxglove Data Platform",
+            type: "foxglove-data-platform",
+          },
+          { start, end, seek, org, deviceid },
+        );
+      } else {
+        log.warn(`Unknown deep link type ${url}`);
       }
-      selectSource(
-        {
-          name: "ROS 1 Bag File (HTTP)",
-          type: "ros1-remote-bagfile",
-        },
-        { url: bagUrl },
-      );
     } catch (err) {
       log.error(err);
     }
