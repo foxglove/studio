@@ -345,7 +345,7 @@ function Chart(props: Props): JSX.Element {
   // Since hover events are handled via rpc, we might get a response back when we've
   // already hovered away from the chart. We gate calling onHover by whether the mouse is still
   // present on the component
-  const mousePresetRef = useRef(false);
+  const mousePresentRef = useRef(false);
 
   const { onHover } = props;
   const onMouseMove = useCallback(
