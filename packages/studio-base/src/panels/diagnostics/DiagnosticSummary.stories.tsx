@@ -71,7 +71,25 @@ export function WithPinnedNodes(): JSX.Element {
           minLevel: 0,
           pinnedIds: [
             getDiagnosticId("hardware_id1", "name1"),
-            getDiagnosticId("hardware_id4", "name4"),
+            getDiagnosticId("hardware_id3/filter", "name3"),
+          ],
+          topicToRender: "/diagnostics",
+          hardwareIdFilter: "",
+        }}
+      />
+    </PanelSetup>
+  );
+}
+
+export function WithPinnedNodesAndFilter(): JSX.Element {
+  return (
+    <PanelSetup fixture={fixture}>
+      <DiagnosticSummary
+        overrideConfig={{
+          minLevel: 2,
+          pinnedIds: [
+            getDiagnosticId("hardware_id1", "name1"),
+            getDiagnosticId("hardware_id3/filter", "name3"),
           ],
           topicToRender: "/diagnostics",
           hardwareIdFilter: "",
@@ -97,12 +115,44 @@ export function WithoutSorting(): JSX.Element {
   );
 }
 
-export function Filtered(): JSX.Element {
+export function FilteredByHardwareId(): JSX.Element {
   return (
     <PanelSetup fixture={fixture}>
       <DiagnosticSummary
         overrideConfig={{
           minLevel: 0,
+          pinnedIds: [],
+          topicToRender: "/diagnostics",
+          hardwareIdFilter: "filter",
+          sortByLevel: false,
+        }}
+      />
+    </PanelSetup>
+  );
+}
+
+export function FilteredByLevel(): JSX.Element {
+  return (
+    <PanelSetup fixture={fixture}>
+      <DiagnosticSummary
+        overrideConfig={{
+          minLevel: 2,
+          pinnedIds: [],
+          topicToRender: "/diagnostics",
+          hardwareIdFilter: "",
+          sortByLevel: false,
+        }}
+      />
+    </PanelSetup>
+  );
+}
+
+export function FilteredByHardwareIdAndLevel(): JSX.Element {
+  return (
+    <PanelSetup fixture={fixture}>
+      <DiagnosticSummary
+        overrideConfig={{
+          minLevel: 2,
           pinnedIds: [],
           topicToRender: "/diagnostics",
           hardwareIdFilter: "filter",

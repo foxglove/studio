@@ -43,6 +43,7 @@ import {
   getDiagnosticsByLevel,
   filterAndSortDiagnostics,
   LEVEL_NAMES,
+  KNOWN_LEVELS,
 } from "./util";
 
 type NodeRowProps = {
@@ -193,7 +194,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
   const renderRow = useCallback(
     // eslint-disable-next-line react/no-unused-prop-types
     ({ item, style, key }: ListRowProps & { item: DiagnosticInfo }) => {
-      return item.status.level >= minLevel ? (
+      return (
         <div key={key} style={style}>
           <NodeRow
             info={item}
@@ -202,11 +203,9 @@ function DiagnosticSummary(props: Props): JSX.Element {
             onClickPin={togglePinned}
           />
         </div>
-      ) : (
-        ReactNull
       );
     },
-    [minLevel, pinnedIds, showDetails, togglePinned],
+    [pinnedIds, showDetails, togglePinned],
   );
 
   const hardwareFilter = (
@@ -267,7 +266,9 @@ function DiagnosticSummary(props: Props): JSX.Element {
           pinnedIds,
         );
 
-    const nodes: DiagnosticInfo[] = [...compact(pinnedNodes), ...sortedNodes];
+    const nodes: DiagnosticInfo[] = [...compact(pinnedNodes), ...sortedNodes].filter(
+      ({ status }) => status.level >= minLevel,
+    );
     if (nodes.length === 0) {
       return ReactNull;
     }
@@ -286,7 +287,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
         )}
       </AutoSizer>
     );
-  }, [diagnostics, hardwareIdFilter, pinnedIds, renderRow, sortByLevel, topicToRender]);
+  }, [diagnostics, hardwareIdFilter, pinnedIds, renderRow, sortByLevel, minLevel, topicToRender]);
 
   const renderOption = (option: ISelectableOption | undefined) =>
     option ? (
@@ -318,10 +319,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
               saveConfig({ minLevel: option.key as number });
             }
           }}
-          options={[0, 1, 2, 3].map((key: number) => ({
-            key,
-            text: LEVEL_NAMES[key] ?? "",
-          }))}
+          options={KNOWN_LEVELS.map((key: number) => ({ key, text: LEVEL_NAMES[key] ?? "" }))}
           selectedKey={minLevel}
         />
         {hardwareFilter}
