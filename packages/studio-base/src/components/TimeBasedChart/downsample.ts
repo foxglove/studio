@@ -4,8 +4,6 @@
 
 import { ChartData, ScatterDataPoint } from "chart.js";
 
-import { filterMap } from "@foxglove/den/collection";
-
 // Chartjs typings use _null_ to indicate _gaps_ in the dataset
 // eslint-disable-next-line no-restricted-syntax
 type ChartNull = null;
@@ -39,14 +37,103 @@ export default function downsample(dataset: DataSet, bounds: DownsampleBounds): 
   // ignore points if they are within 1 pixel of each other
   const threshold = 2;
 
-  let prevPoint: { x: number; y: number } | undefined = undefined;
+  const prevPoint: { x: number; y: number } | undefined = undefined;
   const endIndex = dataset.data.length - 1;
+
+  const downsampled: ScatterDataPoint[] = [];
+
+  type IntervalItem = { xPixel: number; yPixel: number; datum: ScatterDataPoint };
+
+  let intFirst: IntervalItem | undefined;
+  let intLast: IntervalItem | undefined;
+  let intMin: IntervalItem | undefined;
+  let intMax: IntervalItem | undefined;
+
+  for (const datum of dataset.data) {
+    if (!datum) {
+      continue;
+    }
+
+    // we need to keep the first points outside the set
+    if (datum.x < bounds.x.min || datum.x > bounds.x.max) {
+      continue;
+    }
+
+    if (datum.y < bounds.y.min || datum.y > bounds.y.max) {
+      continue;
+    }
+
+    const x = Math.round(datum.x * pixelPerXValue);
+    const y = Math.round(datum.y * pixelPerYValue);
+
+    // interval has ended
+    if (intFirst?.xPixel !== x) {
+      // add the min value from previous interval if it doesn't match the first or last of that interval
+      if (intMin && intMin?.yPixel !== intFirst?.yPixel && intMin?.yPixel !== intLast?.yPixel) {
+        downsampled.push(intMin?.datum);
+      }
+
+      // add the max value from previous interval if it doesn't match the first or last of that interval
+      if (intMax && intMax?.yPixel !== intFirst?.yPixel && intMax?.yPixel !== intLast?.yPixel) {
+        downsampled.push(intMax?.datum);
+      }
+
+      // add the last value if it doesn't match the first
+      if (intLast && intFirst?.yPixel !== intLast?.yPixel) {
+        downsampled.push(intLast.datum);
+      }
+
+      // always add the first datum of an new interval
+      downsampled.push(datum);
+
+      intFirst = intLast = { xPixel: x, yPixel: y, datum };
+      intMin = { xPixel: x, yPixel: y, datum };
+      intMax = { xPixel: x, yPixel: y, datum };
+      continue;
+    }
+
+    intLast = { xPixel: x, yPixel: y, datum };
+
+    if (intMin && y < intMin.yPixel) {
+      intMin.yPixel = y;
+      intMin.datum = datum;
+    }
+
+    if (intMax && y > intMax.yPixel) {
+      intMax.yPixel = y;
+      intMax.datum = datum;
+    }
+  }
+
+  // add the min value from previous interval if it doesn't match the first or last of that interval
+  if (intMin && intMin?.yPixel !== intFirst?.yPixel && intMin?.yPixel !== intLast?.yPixel) {
+    downsampled.push(intMin?.datum);
+  }
+
+  // add the max value from previous interval if it doesn't match the first or last of that interval
+  if (intMax && intMax?.yPixel !== intFirst?.yPixel && intMax?.yPixel !== intLast?.yPixel) {
+    downsampled.push(intMax?.datum);
+  }
+
+  // add the last value if it doesn't match the first
+  if (intLast && intFirst?.yPixel !== intLast?.yPixel) {
+    downsampled.push(intLast.datum);
+  }
+
+  /*
   const downsampled = filterMap(dataset.data, (datum, index) => {
     if (!datum) {
       return datum;
     }
 
     const point = { x: datum.x * pixelPerXValue, y: datum.y * pixelPerYValue };
+
+    const existing = sparseX[point.x];
+    if (!existing) {
+      sparseX[point.x] = { min: datum.y, max: datum.y };
+      return datum;
+    }
+
     if (!prevPoint) {
       prevPoint = point;
       return datum;
@@ -65,6 +152,7 @@ export default function downsample(dataset: DataSet, bounds: DownsampleBounds): 
     prevPoint = point;
     return datum;
   });
+  */
 
   return { ...dataset, data: downsampled };
 }

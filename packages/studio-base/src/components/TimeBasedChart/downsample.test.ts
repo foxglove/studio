@@ -26,7 +26,6 @@ describe("downsample", () => {
         { x: 0, y: 0 },
         { x: 10, y: 0 },
         { x: 20, y: 0 },
-        { x: 20, y: 10 },
         { x: 20, y: 20 },
       ],
     });
@@ -47,6 +46,52 @@ describe("downsample", () => {
       data: [
         { x: 0, y: 0 },
         { x: 0, y: 0.2 },
+      ],
+    });
+  });
+
+  it("should keep the min/max values within an interval", () => {
+    const result = downsample(
+      {
+        data: [
+          { x: 0, y: 0 },
+          { x: 0, y: 100 },
+          { x: 0, y: -20 },
+          { x: 0, y: 4 },
+        ],
+      },
+      bounds,
+    );
+    expect(result).toEqual({
+      data: [
+        { x: 0, y: 0 },
+        { x: 0, y: -20 },
+        { x: 0, y: 100 },
+        { x: 0, y: 4 },
+      ],
+    });
+  });
+
+  it("should keep entry/exit datum to an interval", () => {
+    const result = downsample(
+      {
+        data: [
+          { x: 0, y: 0 },
+          { x: 1, y: 0 },
+          { x: 1, y: 100 },
+          { x: 1, y: 4 },
+          { x: 2, y: 5 },
+        ],
+      },
+      bounds,
+    );
+    expect(result).toEqual({
+      data: [
+        { x: 0, y: 0 },
+        { x: 1, y: 0 },
+        { x: 1, y: 100 },
+        { x: 1, y: 4 },
+        { x: 2, y: 5 },
       ],
     });
   });
