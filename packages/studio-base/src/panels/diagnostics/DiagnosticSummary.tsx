@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { mergeStyleSets } from "@fluentui/merge-styles";
+import { Dropdown, IDropdownOption, ISelectableOption } from "@fluentui/react";
 import PinIcon from "@mdi/svg/svg/pin.svg";
 import cx from "classnames";
 import { compact } from "lodash";
@@ -149,6 +150,7 @@ class NodeRow extends React.PureComponent<NodeRowProps> {
 }
 
 type Config = {
+  minLevel: number;
   pinnedIds: DiagnosticId[];
   topicToRender: string;
   hardwareIdFilter: string;
@@ -162,7 +164,7 @@ type Props = {
 function DiagnosticSummary(props: Props): JSX.Element {
   const { config, saveConfig } = props;
   const { topics } = useDataSourceInfo();
-  const { topicToRender, pinnedIds, hardwareIdFilter, sortByLevel = true } = config;
+  const { minLevel, topicToRender, pinnedIds, hardwareIdFilter, sortByLevel = true } = config;
   const { openSiblingPanel } = usePanelContext();
 
   const togglePinned = useCallback(
@@ -191,7 +193,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
   const renderRow = useCallback(
     // eslint-disable-next-line react/no-unused-prop-types
     ({ item, style, key }: ListRowProps & { item: DiagnosticInfo }) => {
-      return (
+      return item.status.level >= minLevel ? (
         <div key={key} style={style}>
           <NodeRow
             info={item}
@@ -200,14 +202,22 @@ function DiagnosticSummary(props: Props): JSX.Element {
             onClickPin={togglePinned}
           />
         </div>
+      ) : (
+        ReactNull
       );
     },
-    [pinnedIds, showDetails, togglePinned],
+    [minLevel, pinnedIds, showDetails, togglePinned],
   );
 
   const hardwareFilter = (
     <LegacyInput
-      style={{ width: "100%", padding: "0", background: "transparent", opacity: "0.5" }}
+      style={{
+        width: "100%",
+        padding: "0",
+        background: "transparent",
+        opacity: "0.5",
+        marginLeft: "10px",
+      }}
       value={hardwareIdFilter}
       placeholder={"Filter hardware id"}
       onChange={(e) => saveConfig({ hardwareIdFilter: e.target.value })}
@@ -278,9 +288,42 @@ function DiagnosticSummary(props: Props): JSX.Element {
     );
   }, [diagnostics, hardwareIdFilter, pinnedIds, renderRow, sortByLevel, topicToRender]);
 
+  const renderOption = (option: ISelectableOption | undefined) =>
+    option ? (
+      <div
+        className={cx({
+          [classes.ok]: option.text === "ok",
+          [classes.warn]: option.text === "warn",
+          [classes.error]: option.text === "error",
+          [classes.stale]: option.text === "stale",
+        })}
+      >
+        &gt;= {option?.text.toUpperCase() ?? ""}
+      </div>
+    ) : (
+      ReactNull
+    );
+
   return (
     <Flex col className={classes.panel}>
       <PanelToolbar helpContent={helpContent} additionalIcons={topicToRenderMenu}>
+        <Dropdown
+          styles={{ root: { minWidth: "100px" } }}
+          onRenderOption={renderOption}
+          onRenderTitle={(option: IDropdownOption[] | undefined) =>
+            option ? <>{option.map(renderOption)}</> : ReactNull
+          }
+          onChange={(_ev, option) => {
+            if (option) {
+              saveConfig({ minLevel: option.key as number });
+            }
+          }}
+          options={[0, 1, 2, 3].map((key: number) => ({
+            key,
+            text: LEVEL_NAMES[key] ?? "",
+          }))}
+          selectedKey={minLevel}
+        />
         {hardwareFilter}
       </PanelToolbar>
       <Flex col>{summary}</Flex>
@@ -293,6 +336,7 @@ const configSchema: PanelConfigSchema<Config> = [
 ];
 
 const defaultConfig: Config = {
+  minLevel: 0,
   pinnedIds: [],
   hardwareIdFilter: "",
   topicToRender: DIAGNOSTIC_TOPIC,

@@ -68,6 +68,7 @@ export function WithPinnedNodes(): JSX.Element {
     <PanelSetup fixture={fixture}>
       <DiagnosticSummary
         overrideConfig={{
+          minLevel: 0,
           pinnedIds: [
             getDiagnosticId("hardware_id1", "name1"),
             getDiagnosticId("hardware_id4", "name4"),
@@ -85,6 +86,7 @@ export function WithoutSorting(): JSX.Element {
     <PanelSetup fixture={fixture}>
       <DiagnosticSummary
         overrideConfig={{
+          minLevel: 0,
           pinnedIds: [],
           topicToRender: "/diagnostics",
           hardwareIdFilter: "",
@@ -100,6 +102,7 @@ export function Filtered(): JSX.Element {
     <PanelSetup fixture={fixture}>
       <DiagnosticSummary
         overrideConfig={{
+          minLevel: 0,
           pinnedIds: [],
           topicToRender: "/diagnostics",
           hardwareIdFilter: "filter",
