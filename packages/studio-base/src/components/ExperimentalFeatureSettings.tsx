@@ -36,7 +36,7 @@ const features: Feature[] = [
   {
     key: AppSetting.SHOW_DEBUG_PANELS,
     name: "Studio debug panels",
-    description: <>Show Foxglove Studio debug panels in the add panel list.</>,
+    description: <>Show Foxglove Studio debug panels in the &ldquo;Add panel&rdquo; list.</>,
   },
   {
     key: AppSetting.ENABLE_DRAWING_POLYGONS,
@@ -54,6 +54,13 @@ const features: Feature[] = [
     description: <>Enable team layout sharing when signed in to Foxglove Studio.</>,
   },
 ];
+if (process.env.NODE_ENV === "development") {
+  features.push({
+    key: AppSetting.ENABLE_LAYOUT_DEBUGGING,
+    name: "Layout debugging",
+    description: <>Show extra controls for developing and debugging layout storage.</>,
+  });
+}
 
 function ExperimentalFeatureItem(props: { feature: Feature }) {
   const theme = useTheme();

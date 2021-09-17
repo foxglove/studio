@@ -43,6 +43,7 @@ import { Layout, layoutIsShared } from "@foxglove/studio-base/services/ILayoutSt
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
 
 import LayoutSection from "./LayoutSection";
+import helpContent from "./index.help.md";
 import showOpenFilePicker from "./showOpenFilePicker";
 import { debugBorder } from "./styles";
 
@@ -70,7 +71,7 @@ export default function LayoutBrowser({
   const { openAccountSettings } = useWorkspace();
   const styles = useStyles();
   const confirm = useConfirm();
-  const openUnsavedChangesPrompt = useUnsavedChangesPrompt();
+  const { unsavedChangesPrompt, openUnsavedChangesPrompt } = useUnsavedChangesPrompt();
 
   const currentLayoutId = useCurrentLayoutSelector((state) => state.selectedLayout?.id);
   const { setSelectedLayoutId } = useCurrentLayoutActions();
@@ -195,7 +196,7 @@ export default function LayoutBrowser({
       const newLayout = await layoutManager.saveNewLayout({
         name: `${item.name} copy`,
         data: item.working?.data ?? item.baseline.data,
-        permission: "creator_write",
+        permission: "CREATOR_WRITE",
       });
       await onSelectLayout(newLayout);
       void analytics.logEvent(AppEvent.LAYOUT_DUPLICATE, { permission: item.permission });
@@ -239,7 +240,7 @@ export default function LayoutBrowser({
     const newLayout = await layoutManager.saveNewLayout({
       name,
       data: state as PanelsState,
-      permission: "creator_write",
+      permission: "CREATOR_WRITE",
     });
     void onSelectLayout(newLayout);
 
@@ -259,7 +260,7 @@ export default function LayoutBrowser({
     async (item: Layout) => {
       const name = await prompt({
         title: "Share a copy with your team",
-        subText: "Team layouts can be used and changed by members of your team.",
+        subText: "Team layouts can be used and changed by other members of your team.",
         initialValue: item.name,
         label: "Layout name",
       });
@@ -267,7 +268,7 @@ export default function LayoutBrowser({
         const newLayout = await layoutManager.saveNewLayout({
           name,
           data: item.working?.data ?? item.baseline.data,
-          permission: "org_write",
+          permission: "ORG_WRITE",
         });
         void analytics.logEvent(AppEvent.LAYOUT_SHARE, { permission: item.permission });
         await onSelectLayout(newLayout);
@@ -367,7 +368,7 @@ export default function LayoutBrowser({
     const newLayout = await layoutManager.saveNewLayout({
       name: layoutName,
       data,
-      permission: "creator_write",
+      permission: "CREATOR_WRITE",
     });
     void onSelectLayout(newLayout);
     void analytics.logEvent(AppEvent.LAYOUT_IMPORT);
@@ -386,6 +387,7 @@ export default function LayoutBrowser({
   return (
     <SidebarContent
       title="Layouts"
+      helpContent={helpContent}
       noPadding
       trailingItems={[
         (layouts.loading || isBusy) && <Spinner key="spinner" />,
@@ -414,19 +416,13 @@ export default function LayoutBrowser({
           iconProps={{ iconName: "OpenFile" }}
           onClick={importLayout}
           ariaLabel="Import layout"
-          styles={{
-            root: {
-              marginRight: `-${theme.spacing.s1}`,
-            },
-            icon: {
-              height: 20,
-            },
-          }}
+          styles={{ icon: { height: 20 } }}
         >
           {importLayoutTooltip.tooltip}
         </IconButton>,
       ]}
     >
+      {unsavedChangesPrompt}
       <Stack verticalFill>
         <Stack.Item>
           <LayoutSection
