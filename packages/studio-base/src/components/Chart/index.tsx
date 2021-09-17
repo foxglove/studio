@@ -74,6 +74,12 @@ function rpcMouseEvent(event: React.MouseEvent<HTMLCanvasElement>) {
   };
 }
 
+type RpcSend = <T extends unknown>(
+  topic: string,
+  payload?: Record<string, unknown>,
+  transferables?: (Transferable | OffscreenCanvas)[],
+) => Promise<T>;
+
 // Chart component renders data using workers with chartjs offscreen canvas
 function Chart(props: Props): JSX.Element {
   const [id] = useState(() => uuidv4());
@@ -91,21 +97,14 @@ function Chart(props: Props): JSX.Element {
 
   const { type, data, options, width, height, onChartUpdate } = props;
 
-  type RpcSend = <T extends unknown>(
-    topic: string,
-    payload?: Record<string, unknown>,
-    transferables?: (Transferable | OffscreenCanvas)[],
-  ) => Promise<T>;
-
   const rpcSendRef = useRef<RpcSend | undefined>();
-  const rpcSend = rpcSendRef.current;
 
   useLayoutEffect(() => {
     if (initialized.current) {
       if (process.env.NODE_ENV === "development") {
         throw new Error("Chart does not support hot-reloading - please reload the panel");
       } else {
-        throw new Error("Chart has re-initialized expectedly");
+        throw new Error("Chart has re-initialized unexpectedly");
       }
     }
 
@@ -197,7 +196,7 @@ function Chart(props: Props): JSX.Element {
   }, [data, height, options, width]);
 
   const { error: updateError } = useAsync(async () => {
-    if (!rpcSend) {
+    if (!rpcSendRef.current) {
       return;
     }
 
@@ -220,7 +219,7 @@ function Chart(props: Props): JSX.Element {
       initialized.current = true;
 
       const offscreenCanvas = canvas.transferControlToOffscreen();
-      const scales = await rpcSend<RpcScales>(
+      const scales = await rpcSendRef.current<RpcScales>(
         "initialize",
         {
           node: offscreenCanvas,
@@ -248,14 +247,14 @@ function Chart(props: Props): JSX.Element {
       return;
     }
 
-    const scales = await rpcSend<RpcScales>("update", newUpdateMessage);
+    const scales = await rpcSendRef.current<RpcScales>("update", newUpdateMessage);
     if (!isMounted()) {
       return;
     }
 
     maybeUpdateScales(scales);
     onChartUpdate?.();
-  }, [getNewUpdateMessage, rpcSend, isMounted, maybeUpdateScales, onChartUpdate, type]);
+  }, [getNewUpdateMessage, isMounted, maybeUpdateScales, onChartUpdate, type]);
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
@@ -268,12 +267,12 @@ function Chart(props: Props): JSX.Element {
     hammerManager.add(new Hammer.Pan({ threshold }));
 
     hammerManager.on("panstart", async (event) => {
-      if (!rpcSend) {
+      if (!rpcSendRef.current) {
         return;
       }
 
       const boundingRect = event.target.getBoundingClientRect();
-      await rpcSend<RpcScales>("panstart", {
+      await rpcSendRef.current<RpcScales>("panstart", {
         event: {
           cancelable: false,
           deltaY: event.deltaY,
@@ -290,12 +289,12 @@ function Chart(props: Props): JSX.Element {
     });
 
     hammerManager.on("panmove", async (event) => {
-      if (!rpcSend) {
+      if (!rpcSendRef.current) {
         return;
       }
 
       const boundingRect = event.target.getBoundingClientRect();
-      const scales = await rpcSend<RpcScales>("panmove", {
+      const scales = await rpcSendRef.current<RpcScales>("panmove", {
         event: {
           cancelable: false,
           deltaY: event.deltaY,
@@ -309,12 +308,12 @@ function Chart(props: Props): JSX.Element {
     });
 
     hammerManager.on("panend", async (event) => {
-      if (!rpcSend) {
+      if (!rpcSendRef.current) {
         return;
       }
 
       const boundingRect = event.target.getBoundingClientRect();
-      const scales = await rpcSend<RpcScales>("panend", {
+      const scales = await rpcSendRef.current<RpcScales>("panend", {
         event: {
           cancelable: false,
           deltaY: event.deltaY,
@@ -330,16 +329,16 @@ function Chart(props: Props): JSX.Element {
     return () => {
       hammerManager.destroy();
     };
-  }, [maybeUpdateScales, panEnabled, props.options.plugins?.zoom?.pan?.threshold, rpcSend]);
+  }, [maybeUpdateScales, panEnabled, props.options.plugins?.zoom?.pan?.threshold]);
 
   const onWheel = useCallback(
     async (event: React.WheelEvent<HTMLCanvasElement>) => {
-      if (!zoomEnabled || !rpcSend) {
+      if (!zoomEnabled || !rpcSendRef.current) {
         return;
       }
 
       const boundingRect = event.currentTarget.getBoundingClientRect();
-      const scales = await rpcSend<RpcScales>("wheel", {
+      const scales = await rpcSendRef.current<RpcScales>("wheel", {
         event: {
           cancelable: false,
           deltaY: event.deltaY,
@@ -353,36 +352,33 @@ function Chart(props: Props): JSX.Element {
       });
       maybeUpdateScales(scales, { userInteraction: true });
     },
-    [zoomEnabled, rpcSend, maybeUpdateScales],
+    [zoomEnabled, maybeUpdateScales],
   );
 
   const onMouseDown = useCallback(
     async (event: React.MouseEvent<HTMLCanvasElement>) => {
-      if (!rpcSend) {
+      if (!rpcSendRef.current) {
         return;
       }
 
-      const scales = await rpcSend<RpcScales>("mousedown", {
+      const scales = await rpcSendRef.current<RpcScales>("mousedown", {
         event: rpcMouseEvent(event),
       });
 
       maybeUpdateScales(scales);
     },
-    [maybeUpdateScales, rpcSend],
+    [maybeUpdateScales],
   );
 
-  const onMouseUp = useCallback(
-    async (event: React.MouseEvent<HTMLCanvasElement>) => {
-      if (!rpcSend) {
-        return;
-      }
+  const onMouseUp = useCallback(async (event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!rpcSendRef.current) {
+      return;
+    }
 
-      return await rpcSend("mouseup", {
-        event: rpcMouseEvent(event),
-      });
-    },
-    [rpcSend],
-  );
+    return await rpcSendRef.current("mouseup", {
+      event: rpcMouseEvent(event),
+    });
+  }, []);
 
   // Since hover events are handled via rpc, we might get a response back when we've
   // already hovered away from the chart. We gate calling onHover by whether the mouse is still
@@ -393,11 +389,11 @@ function Chart(props: Props): JSX.Element {
   const onMouseMove = useCallback(
     async (event: React.MouseEvent<HTMLCanvasElement>) => {
       if (onHover && mousePresentRef.current) {
-        if (!rpcSend) {
+        if (!rpcSendRef.current) {
           return;
         }
 
-        const elements = await rpcSend<RpcElement[]>("getElementsAtEvent", {
+        const elements = await rpcSendRef.current<RpcElement[]>("getElementsAtEvent", {
           event: rpcMouseEvent(event),
         });
 
@@ -408,7 +404,7 @@ function Chart(props: Props): JSX.Element {
         onHover(elements);
       }
     },
-    [onHover, rpcSend, isMounted],
+    [onHover, isMounted],
   );
 
   const onMouseEnter = useCallback(() => {
@@ -422,7 +418,7 @@ function Chart(props: Props): JSX.Element {
 
   const onClick = useCallback(
     async (event: React.MouseEvent<HTMLCanvasElement>): Promise<void> => {
-      if (!props.onClick || !rpcSend) {
+      if (!props.onClick || !rpcSendRef.current) {
         return;
       }
 
@@ -432,7 +428,7 @@ function Chart(props: Props): JSX.Element {
 
       // maybe we should forward the click event and add support for datalabel listeners
       // the rpc channel doesn't have a way to send rpc back...
-      const datalabel = await rpcSend("getDatalabelAtEvent", {
+      const datalabel = await rpcSendRef.current("getDatalabelAtEvent", {
         event: { x: mouseX, y: mouseY, type: "click" },
       });
 
@@ -463,7 +459,7 @@ function Chart(props: Props): JSX.Element {
         y: yVal,
       });
     },
-    [isMounted, props, rpcSend],
+    [isMounted, props],
   );
 
   if (updateError) {
