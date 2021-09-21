@@ -158,7 +158,7 @@ const Item = (props: ItemProps): JSX.Element => {
       <div className={classes.contentWrapper}>
         {children}
         {checked && !isDropdown && (
-          <Icon size={iconSize} style={{ marginLeft: "5px" }}>
+          <Icon size={iconSize} style={{ marginLeft: 5 }}>
             <CheckCircleIcon />
           </Icon>
         )}
