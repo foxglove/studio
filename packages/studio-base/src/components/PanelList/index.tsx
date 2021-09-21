@@ -59,11 +59,11 @@ const classes = mergeStyleSets({
     borderRadius: 4,
   },
   searchInput: {
-    backgroundColor: colors.DARK5,
-    padding: 8,
+    backgroundColor: `${colors.DARK5} !important`,
+    padding: "8px !important",
+    margin: "0 !important",
     width: "100%",
     minWidth: 0,
-    margin: 0,
 
     ":hover, :focus": {
       backgroundColor: colors.DARK5,
