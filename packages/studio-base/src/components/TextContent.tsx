@@ -57,9 +57,6 @@ const classes = mergeStyleSets({
       marginLeft: "1.5em",
       marginBottom: "1em",
     },
-    p: {
-      margin: "0 0 1em",
-    },
     "p, ul": {
       ":last-child": {
         marginBottom: "0",
