@@ -25,12 +25,10 @@ import { useLocalStorage, useMountedState } from "react-use";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
-import { fromDate } from "@foxglove/rostime";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import { MessagePipelineProvider } from "@foxglove/studio-base/components/MessagePipeline";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
-import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
 import { useCurrentLayoutSelector } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import PlayerSelectionContext, {
   PlayerSelection,
@@ -47,13 +45,10 @@ import Ros2Player from "@foxglove/studio-base/players/Ros2Player";
 import UserNodePlayer from "@foxglove/studio-base/players/UserNodePlayer";
 import { BuildPlayerOptions } from "@foxglove/studio-base/players/buildPlayer";
 import { Player } from "@foxglove/studio-base/players/types";
-import { CoreDataProviders } from "@foxglove/studio-base/randomAccessDataProviders/constants";
 import { getLocalRosbag2Descriptor } from "@foxglove/studio-base/randomAccessDataProviders/standardDataProviderDescriptors";
-import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 import { UserNodes } from "@foxglove/studio-base/types/panels";
 import Storage from "@foxglove/studio-base/util/Storage";
 import { AppError } from "@foxglove/studio-base/util/errors";
-import { getSeekToTime } from "@foxglove/studio-base/util/time";
 import { parseInputUrl } from "@foxglove/studio-base/util/url";
 
 const log = Logger.getLogger(__filename);
@@ -68,15 +63,6 @@ type FactoryOptions = {
   playerOptions: BuildPlayerOptions;
   prompt: ReturnType<typeof usePrompt>;
   storage: Storage;
-  consoleApi: ConsoleApi;
-};
-
-type FoxgloveDataPlatformOptions = {
-  start: string;
-  end: string;
-  seek?: string;
-  org: string;
-  deviceId: string;
 };
 
 async function localBagFileSource(options: FactoryOptions): Promise<Player | undefined> {
@@ -178,61 +164,6 @@ async function remoteBagFileSource(options: FactoryOptions): Promise<Player | un
 
   const { buildPlayerFromBagURLs } = await import("@foxglove/studio-base/players/buildPlayer");
   return buildPlayerFromBagURLs([url], options.playerOptions);
-}
-
-async function foxgloveDataPlatformSource(options: FactoryOptions): Promise<Player | undefined> {
-  const storageCacheKey = `studio.source.${options.source.name}`;
-
-  // // load the player on-demand
-  // const { default: FoxgloveDataPlatformPlayer } = await import(
-  //   "@foxglove/studio-base/players/FoxgloveDataPlatformPlayer"
-  // );
-
-  let params: FoxgloveDataPlatformOptions | undefined;
-
-  const restore = Boolean(options.sourceOptions.restore ?? false);
-  if (restore) {
-    params = options.storage.getItem<FoxgloveDataPlatformOptions>(storageCacheKey);
-  } else if (typeof options.sourceOptions.start === "string") {
-    params = options.sourceOptions as FoxgloveDataPlatformOptions;
-    if (!params.start || !params.end || !params.deviceId) {
-      throw new Error(
-        `Missing required FoxgloveDataPlatform parameters in ${JSON.stringify(
-          options.sourceOptions,
-        )}`,
-      );
-    }
-  }
-
-  if (!params) {
-    return undefined;
-  }
-
-  options.storage.setItem(storageCacheKey, params);
-
-  const { default: RandomAccessPlayer } = await import(
-    "@foxglove/studio-base/players/RandomAccessPlayer"
-  );
-  return new RandomAccessPlayer(
-    {
-      name: CoreDataProviders.MemoryCacheDataProvider,
-      args: { unlimitedCache: false },
-      children: [
-        {
-          label: `device: ${params.deviceId}, start: ${params.start}, end: ${params.end}`,
-          name: CoreDataProviders.FoxgloveDataPlatformDataProvider,
-          args: { ...params, consoleApi: options.consoleApi },
-          children: [],
-        },
-      ],
-    },
-    {
-      metricsCollector: options.playerOptions.metricsCollector,
-      seekToTime: params.seek
-        ? { type: "absolute", time: fromDate(new Date(params.seek)) }
-        : getSeekToTime(),
-    },
-  );
 }
 
 async function rosbridgeSource(options: FactoryOptions): Promise<Player | undefined> {
@@ -423,7 +354,6 @@ export default function PlayerManager({
   playerSources: PlayerSourceDefinition[];
 }>): JSX.Element {
   useWarnImmediateReRender();
-  const consoleApi = useConsoleApi();
 
   const { setUserNodeDiagnostics, addUserNodeLogs, setUserNodeRosLib } = useUserNodeState();
   const userNodeActions = useShallowMemo({
@@ -485,8 +415,6 @@ export default function PlayerManager({
   // requested player.
   const lookupPlayerBuilderFactory = useCallback((definition: PlayerSourceDefinition) => {
     switch (definition.type) {
-      case "foxglove-data-platform":
-        return foxgloveDataPlatformSource;
       case "ros1-local-bagfile":
         return localBagFileSource;
       case "ros2-local-bagfile":
@@ -539,7 +467,6 @@ export default function PlayerManager({
           sourceOptions: { ...params, rosHostname },
           playerOptions: buildPlayerOptions,
           prompt,
-          consoleApi,
           storage,
         });
         if (newBasePlayer && isMounted()) {
@@ -555,7 +482,6 @@ export default function PlayerManager({
     [
       addToast,
       buildPlayerOptions,
-      consoleApi,
       isMounted,
       lookupPlayerBuilderFactory,
       metricsCollector,

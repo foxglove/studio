@@ -327,7 +327,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
     this._totalNs = Number(toNanoSec(subtractTimes(result.end, result.start))) + 1; // +1 since times are inclusive.
 
     this._memCacheBlockSizeNs = Math.ceil(
-      Math.max(MIN_MEM_CACHE_BLOCK_SIZE_NS, this._totalNs / MAX_BLOCKS, 15e9 /*FIXME*/),
+      Math.max(MIN_MEM_CACHE_BLOCK_SIZE_NS, this._totalNs / MAX_BLOCKS),
     );
     this._readAheadBlocks = Math.ceil(READ_AHEAD_NS / this._memCacheBlockSizeNs);
 

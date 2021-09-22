@@ -111,7 +111,6 @@ export default function ConnectionList(): JSX.Element {
             iconName = "Flow";
             break;
           case "ros1-remote-bagfile":
-          case "foxglove-data-platform":
             iconName = "FileASPX";
             break;
           case "velodyne-device":

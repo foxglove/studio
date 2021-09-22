@@ -309,9 +309,9 @@ export default class BagDataProvider implements RandomAccessDataProvider {
             throw error;
           }
         },
-        lz4: (buffer: Uint8Array, size: number) => {
+        lz4: (...args: unknown[]) => {
           try {
-            return decompressLZ4(buffer, size);
+            return decompressLZ4(...args);
           } catch (error) {
             reportMalformedError("lz4 decompression", error);
             throw error;

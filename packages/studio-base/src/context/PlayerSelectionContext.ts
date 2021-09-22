@@ -5,7 +5,6 @@
 import { createContext, useContext } from "react";
 
 type SourceTypes =
-  | "foxglove-data-platform"
   | "ros1-local-bagfile"
   | "ros2-local-bagfile"
   | "ros1-socket"
@@ -33,13 +32,6 @@ type HttpSourceParams = {
   url?: string;
 };
 
-type FoxgloveDataPlatformSourceParams = {
-  start?: string;
-  end?: string;
-  seek?: string;
-  deviceId?: string;
-};
-
 type SpecializedPlayerSource<T extends SourceTypes> = Omit<PlayerSourceDefinition, "type"> & {
   type: T;
 };
@@ -48,10 +40,6 @@ interface SelectSourceFunction {
   (definition: SpecializedPlayerSource<"ros1-local-bagfile">, params?: FileSourceParams): void;
   (definition: SpecializedPlayerSource<"ros2-local-bagfile">, params?: FolderSourceParams): void;
   (definition: SpecializedPlayerSource<"ros1-remote-bagfile">, params?: HttpSourceParams): void;
-  (
-    definition: SpecializedPlayerSource<"foxglove-data-platform">,
-    params?: FoxgloveDataPlatformSourceParams,
-  ): void;
   (definition: PlayerSourceDefinition, params?: never): void;
 }
 

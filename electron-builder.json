@@ -31,11 +31,6 @@
         "mimeType": "application/octet-stream"
       },
       {
-        "ext": "mcap",
-        "name": "Message Capture File",
-        "mimeType": "application/octet-stream"
-      },
-      {
         "ext": "foxe",
         "name": "Foxglove Studio Extension",
         "mimeType": "application/zip"
@@ -59,11 +54,6 @@
       {
         "ext": "bag",
         "name": "ROS Bag File",
-        "icon": "resources/icon/BagIcon.ico"
-      },
-      {
-        "ext": "mcap",
-        "name": "Message Capture File",
         "icon": "resources/icon/BagIcon.ico"
       },
       {
@@ -116,15 +106,6 @@
           "LSItemContentTypes": ["org.ros.bag"]
         },
         {
-          "CFBundleTypeExtensions": ["mcap"],
-          "CFBundleTypeIconFile": "McapIcon",
-          "CFBundleTypeName": "Message Capture File",
-          "CFBundleTypeRole": "Viewer",
-          "LSHandlerRank": "Default",
-          "CFBundleTypeIconSystemGenerated": 1,
-          "LSItemContentTypes": ["dev.foxglove.mcap"]
-        },
-        {
           "CFBundleTypeExtensions": ["foxe"],
           "CFBundleTypeIconFile": "FoxeIcon",
           "CFBundleTypeName": "Foxglove Studio Extension File",
@@ -165,13 +146,6 @@
           "UTTypeIcons": { "UTTypeIconText": "bag" },
           "UTTypeIdentifier": "org.ros.bag",
           "UTTypeTagSpecification": { "public.filename-extension": "bag" }
-        },
-        {
-          "UTTypeConformsTo": ["public.data"],
-          "UTTypeDescription": "Message Capture File",
-          "UTTypeIcons": { "UTTypeIconText": "mcap" },
-          "UTTypeIdentifier": "dev.foxglove.mcap",
-          "UTTypeTagSpecification": { "public.filename-extension": "mcap" }
         },
         {
           "UTTypeConformsTo": ["public.data", "public.archive", "public.zip-archive"],

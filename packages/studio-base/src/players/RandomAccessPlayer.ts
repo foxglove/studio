@@ -161,7 +161,6 @@ export default class RandomAccessPlayer implements Player {
   }
 
   private _setError(message: string, error?: Error): void {
-    console.error(message, error);
     this._hasError = true;
     this._problems.set("global-error", {
       severity: "error",

@@ -46,21 +46,6 @@ export function buildPlayerFromDescriptor(
 export function buildPlayerFromFiles(files: File[], options: BuildPlayerOptions): Player {
   const name = files.map((file) => String(file.name)).join(", ");
   if (files.length === 1) {
-    const file = files[0]!;
-    if (file.name.endsWith(".mcap")) {
-      return new RandomAccessPlayer(
-        {
-          name: CoreDataProviders.McapBlobDataProvider,
-          filePath: (file as { path?: string }).path, // File.path is added by Electron
-          args: { blob: file },
-          children: [],
-        },
-        {
-          metricsCollector: options.metricsCollector,
-          seekToTime: getSeekToTime(),
-        },
-      );
-    }
     return buildPlayerFromDescriptor(name, getLocalBagDescriptor(files[0] as File), options);
   } else if (files.length === 2) {
     return buildPlayerFromDescriptor(
