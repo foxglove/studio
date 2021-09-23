@@ -69,12 +69,17 @@ async function validate(
         let parsedDefinitions;
         let messageDeserializer;
         if (record.schemaFormat === "ros1") {
-          parsedDefinitions = parseMessageDefinition(new TextDecoder().decode(record.schema));
+          parsedDefinitions = parseMessageDefinition(
+            new TextDecoder().decode(record.schemaDefinition),
+          );
           messageDeserializer = new ROS1LazyMessageReader(parsedDefinitions);
         } else if (record.schemaFormat === "ros2") {
-          parsedDefinitions = parseMessageDefinition(new TextDecoder().decode(record.schema), {
-            ros2: true,
-          });
+          parsedDefinitions = parseMessageDefinition(
+            new TextDecoder().decode(record.schemaDefinition),
+            {
+              ros2: true,
+            },
+          );
           messageDeserializer = new ROS2MessageReader(parsedDefinitions);
         } else {
           throw new Error(`unsupported schema format ${record.schemaFormat}`);

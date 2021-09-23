@@ -10,10 +10,11 @@ export type ChannelInfo = {
   type: "ChannelInfo";
   id: number;
   topic: string;
-  serializationFormat: string;
+  encoding: string;
+  schemaName: string;
   schemaFormat: string;
-  schema: ArrayBuffer;
-  data: ArrayBuffer;
+  schemaDefinition: ArrayBuffer;
+  userData: ArrayBuffer;
 };
 export type Message = {
   type: "Message";
