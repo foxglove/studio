@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { crc32 } from "@foxglove/crc";
+
 import ByteStorage from "./ByteStorage";
 import { MCAP_MAGIC } from "./constants";
 import { parseMagic, parseRecord } from "./parse";
@@ -102,7 +104,12 @@ export default class McapReader {
             }
             buffer = decompress(buffer, record.decompressedSize);
           }
-          //FIXME: check crc32
+          const chunkCrc = crc32(
+            new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength),
+          );
+          if (chunkCrc !== record.decompressedCrc) {
+            throw new Error(`Incorrect chunk CRC ${chunkCrc} (expected ${record.decompressedCrc})`);
+          }
           let chunkOffset = 0;
           for (
             let chunkResult;

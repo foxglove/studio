@@ -22,6 +22,7 @@
     "validate": "ts-node --project tsconfig.cjs.json scripts/validate.ts"
   },
   "devDependencies": {
+    "@foxglove/crc": "github:foxglove/crc#f1be09d91fdc99c68cb14271f63553a03717f370",
     "@foxglove/rosmsg": "2.0.0",
     "@foxglove/rosmsg-serialization": "1.2.0",
     "@foxglove/rosmsg2-serialization": "1.0.2",
