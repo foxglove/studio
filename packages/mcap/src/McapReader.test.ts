@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { crc32 } from "@foxglove/crc";
+
 import McapReader from "./McapReader";
 import { MCAP_MAGIC, RecordType } from "./constants";
 
@@ -191,8 +193,8 @@ describe("McapReader", () => {
         formatVersion,
 
         ...record(RecordType.CHUNK, [
-          ...uint64LE(0n), // decompressed size
-          ...uint32LE(0), // decompressed crc32
+          ...uint64LE(1n), // decompressed size
+          ...uint32LE(crc32(new Uint8Array([RecordType.CHANNEL_INFO]))), // decompressed crc32
           ...string(""), // compression
 
           RecordType.CHANNEL_INFO, // truncated record
@@ -219,7 +221,8 @@ describe("McapReader", () => {
         ...record(RecordType.CHANNEL_INFO, [
           ...uint32LE(1), // channel id
           ...string("mytopic"), // topic
-          ...string("utf12"), // serialization format
+          ...string("utf12"), // encoding
+          ...string("some data"), // schema name
           ...string("none"), // schema format
           ...uint32LE(0), // empty schema
           ...[1, 2, 3], // channel data
@@ -237,10 +240,11 @@ describe("McapReader", () => {
       type: "ChannelInfo",
       id: 1,
       topic: "mytopic",
-      serializationFormat: "utf12",
+      encoding: "utf12",
+      schemaName: "some data",
       schemaFormat: "none",
-      schema: new ArrayBuffer(0),
-      data: new Uint8Array([1, 2, 3]).buffer,
+      schemaDefinition: new ArrayBuffer(0),
+      userData: new Uint8Array([1, 2, 3]).buffer,
     });
     expect(reader.nextRecord()).toEqual({ type: "Footer", indexPos: 0n, indexCrc: 0 });
     expect(reader.done()).toBe(true);
@@ -250,7 +254,8 @@ describe("McapReader", () => {
     const channelInfo = record(RecordType.CHANNEL_INFO, [
       ...uint32LE(1), // channel id
       ...string("mytopic"), // topic
-      ...string("utf12"), // serialization format
+      ...string("utf12"), // encoding
+      ...string("some data"), // schema name
       ...string("none"), // schema format
       ...uint32LE(0), // empty schema
       ...[1, 2, 3], // channel data
@@ -266,7 +271,7 @@ describe("McapReader", () => {
 
         ...record(RecordType.CHUNK, [
           ...uint64LE(0n), // decompressed size
-          ...uint32LE(0), // decompressed crc32
+          ...uint32LE(crc32(channelInfo)), // decompressed crc32
           ...string(compressed ? "xyz" : ""), // compression
           ...(compressed ? [] : channelInfo),
         ]),
@@ -283,10 +288,11 @@ describe("McapReader", () => {
       type: "ChannelInfo",
       id: 1,
       topic: "mytopic",
-      serializationFormat: "utf12",
+      encoding: "utf12",
+      schemaName: "some data",
       schemaFormat: "none",
-      schema: new ArrayBuffer(0),
-      data: new Uint8Array([1, 2, 3]).buffer,
+      schemaDefinition: new ArrayBuffer(0),
+      userData: new Uint8Array([1, 2, 3]).buffer,
     });
     expect(reader.nextRecord()).toEqual({ type: "Footer", indexPos: 0n, indexCrc: 0 });
     expect(reader.done()).toBe(true);
