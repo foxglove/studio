@@ -19,11 +19,6 @@ function log(...data: unknown[]) {
   console.log(...data);
 }
 
-function die(message: string) {
-  process.stderr.write(message);
-  process.exit(1);
-}
-
 function formatBytes(totalBytes: number) {
   const units = ["B", "kiB", "MiB", "GiB", "TiB"];
   let bytes = totalBytes;
@@ -155,7 +150,7 @@ async function validate(
   });
 
   if (!reader.done()) {
-    die(`File read incomplete; ${reader.bytesRemaining()} bytes remain after parsing`);
+    throw new Error(`File read incomplete; ${reader.bytesRemaining()} bytes remain after parsing`);
   }
 
   const durationMs = performance.now() - startTime;
