@@ -2,9 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { McapMagic } from ".";
 import { MCAP_MAGIC, RecordType } from "./constants";
-import { McapRecord } from "./types";
+import { McapMagic, McapRecord } from "./types";
 
 /**
  * Parse a MCAP magic string and format version at `startOffset` in `view`.
