@@ -4,7 +4,7 @@
 
 import { crc32 } from "@foxglove/crc";
 
-import ByteStorage from "./ByteStorage";
+import StreamBuffer from "./StreamBuffer";
 import { MCAP_MAGIC } from "./constants";
 import { parseMagic, parseRecord } from "./parse";
 import { McapRecord } from "./types";
@@ -29,7 +29,7 @@ type McapReaderOptions = {
  * A streaming reader for Message Capture files.
  */
 export default class McapReader {
-  private storage = new ByteStorage(MCAP_MAGIC.length * 2);
+  private buffer = new StreamBuffer(MCAP_MAGIC.length * 2);
   private decompressHandlers;
   private includeChunks;
   private doneReading = false;
@@ -45,14 +45,14 @@ export default class McapReader {
   }
 
   bytesRemaining(): number {
-    return this.storage.bytesRemaining();
+    return this.buffer.bytesRemaining();
   }
 
   append(data: Uint8Array): void {
     if (this.doneReading) {
       throw new Error("Already done reading");
     }
-    this.storage.append(data);
+    this.buffer.append(data);
   }
 
   nextRecord(): McapRecord | undefined {
@@ -69,20 +69,20 @@ export default class McapReader {
   private *read(): Generator<McapRecord | undefined, McapRecord | undefined, void> {
     {
       let magic, usedBytes;
-      while ((({ magic, usedBytes } = parseMagic(this.storage.view, 0)), !magic)) {
+      while ((({ magic, usedBytes } = parseMagic(this.buffer.view, 0)), !magic)) {
         yield;
       }
-      this.storage.consume(usedBytes);
+      this.buffer.consume(usedBytes);
     }
 
     for (;;) {
       let record;
       {
         let usedBytes;
-        while ((({ record, usedBytes } = parseRecord(this.storage.view, 0)), !record)) {
+        while ((({ record, usedBytes } = parseRecord(this.buffer.view, 0)), !record)) {
           yield;
         }
-        this.storage.consume(usedBytes);
+        this.buffer.consume(usedBytes);
       }
       switch (record.type) {
         case "ChannelInfo":
@@ -135,14 +135,14 @@ export default class McapReader {
         case "Footer":
           {
             let magic, usedBytes;
-            while ((({ magic, usedBytes } = parseMagic(this.storage.view, 0)), !magic)) {
+            while ((({ magic, usedBytes } = parseMagic(this.buffer.view, 0)), !magic)) {
               yield;
             }
-            this.storage.consume(usedBytes);
+            this.buffer.consume(usedBytes);
           }
-          if (this.storage.bytesRemaining() !== 0) {
+          if (this.buffer.bytesRemaining() !== 0) {
             throw new Error(
-              `${this.storage.bytesRemaining()} bytes remaining after MCAP footer and trailing magic`,
+              `${this.buffer.bytesRemaining()} bytes remaining after MCAP footer and trailing magic`,
             );
           }
           return record;
