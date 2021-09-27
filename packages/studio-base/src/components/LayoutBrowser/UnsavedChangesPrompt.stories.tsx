@@ -16,7 +16,7 @@ export default {
 const dummyLayout: Layout = {
   id: "dummy-id" as LayoutID,
   name: "Example layout",
-  permission: "org_write",
+  permission: "ORG_WRITE",
   baseline: {
     savedAt: new Date(10).toISOString() as ISO8601Timestamp,
     data: {
@@ -32,12 +32,19 @@ const dummyLayout: Layout = {
 };
 
 export function Default(): JSX.Element {
-  return <UnsavedChangesPrompt layout={dummyLayout} onComplete={action("onComplete")} />;
+  return <UnsavedChangesPrompt isOnline layout={dummyLayout} onComplete={action("onComplete")} />;
+}
+
+export function Offline(): JSX.Element {
+  return (
+    <UnsavedChangesPrompt isOnline={false} layout={dummyLayout} onComplete={action("onComplete")} />
+  );
 }
 
 export function Overwrite(): JSX.Element {
   return (
     <UnsavedChangesPrompt
+      isOnline
       layout={dummyLayout}
       onComplete={action("onComplete")}
       defaultSelectedKey="overwrite"
@@ -48,6 +55,7 @@ export function Overwrite(): JSX.Element {
 export function MakePersonal(): JSX.Element {
   return (
     <UnsavedChangesPrompt
+      isOnline
       layout={dummyLayout}
       onComplete={action("onComplete")}
       defaultSelectedKey="makePersonal"
@@ -58,6 +66,7 @@ export function MakePersonal(): JSX.Element {
 export function MakePersonalWithEmptyField(): JSX.Element {
   return (
     <UnsavedChangesPrompt
+      isOnline
       layout={dummyLayout}
       onComplete={action("onComplete")}
       defaultSelectedKey="makePersonal"

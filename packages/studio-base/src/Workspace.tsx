@@ -12,7 +12,15 @@
 
 import { makeStyles, Stack } from "@fluentui/react";
 import moment from "moment";
-import { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+  useLayoutEffect,
+  useContext,
+} from "react";
 import { useToasts } from "react-toast-notifications";
 import { useMount, useMountedState } from "react-use";
 
@@ -20,11 +28,12 @@ import Log from "@foxglove/log";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import AccountSettings from "@foxglove/studio-base/components/AccountSettingsSidebar/AccountSettings";
 import ConnectionList from "@foxglove/studio-base/components/ConnectionList";
+import connectionHelpContent from "@foxglove/studio-base/components/ConnectionList/index.help.md";
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
 import DropOverlay from "@foxglove/studio-base/components/DropOverlay";
 import ExtensionsSidebar from "@foxglove/studio-base/components/ExtensionsSidebar";
 import GlobalVariablesTable from "@foxglove/studio-base/components/GlobalVariablesTable";
-import variablesHelp from "@foxglove/studio-base/components/GlobalVariablesTable/index.help.md";
+import variablesHelpContent from "@foxglove/studio-base/components/GlobalVariablesTable/index.help.md";
 import HelpModal from "@foxglove/studio-base/components/HelpModal";
 import LayoutBrowser from "@foxglove/studio-base/components/LayoutBrowser";
 import messagePathHelp from "@foxglove/studio-base/components/MessagePathSyntax/index.help.md";
@@ -35,6 +44,7 @@ import {
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelList from "@foxglove/studio-base/components/PanelList";
+import panelsHelpContent from "@foxglove/studio-base/components/PanelList/index.help.md";
 import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
 import PlaybackControls from "@foxglove/studio-base/components/PlaybackControls";
 import Preferences from "@foxglove/studio-base/components/Preferences";
@@ -44,6 +54,7 @@ import Sidebar, { SidebarItem } from "@foxglove/studio-base/components/Sidebar";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import { useAppConfiguration } from "@foxglove/studio-base/context/AppConfigurationContext";
 import { useAssets } from "@foxglove/studio-base/context/AssetsContext";
+import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
 import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { useExtensionLoader } from "@foxglove/studio-base/context/ExtensionLoaderContext";
@@ -89,7 +100,7 @@ type SidebarItemKey =
 
 function Connection() {
   return (
-    <SidebarContent title="Connection">
+    <SidebarContent title="Connection" helpContent={connectionHelpContent}>
       <ConnectionList />
     </SidebarContent>
   );
@@ -99,7 +110,7 @@ function AddPanel() {
   const addPanel = useAddPanel();
 
   return (
-    <SidebarContent noPadding title="Add panel">
+    <SidebarContent noPadding title="Add panel" helpContent={panelsHelpContent}>
       <PanelList onPanelSelect={addPanel} />
     </SidebarContent>
   );
@@ -107,7 +118,7 @@ function AddPanel() {
 
 function Variables() {
   return (
-    <SidebarContent title="Variables" helpContent={variablesHelp}>
+    <SidebarContent title="Variables" helpContent={variablesHelpContent}>
       <GlobalVariablesTable />
     </SidebarContent>
   );
@@ -139,6 +150,11 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerCapabilities = useMessagePipeline(selectPlayerCapabilities);
   const playerProblems = useMessagePipeline(selectPlayerProblems);
+
+  const [enableSharedLayouts = false] = useAppConfigurationValue<boolean>(
+    AppSetting.ENABLE_CONSOLE_API_LAYOUTS,
+  );
+  const supportsAccountSettings = useContext(ConsoleApiContext) != undefined && enableSharedLayouts;
 
   // we use requestBackfill to signal when a player changes for RemountOnValueChange below
   // see comment below above the RemountOnValueChange component
@@ -182,7 +198,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     const newLayout = await layoutStorage.saveNewLayout({
       name: welcomeLayout.name,
       data: welcomeLayout.data,
-      permission: "creator_write",
+      permission: "CREATOR_WRITE",
     });
     if (isMounted()) {
       setSelectedLayoutId(newLayout.id);
@@ -381,13 +397,9 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     () => ({
       panelSettingsOpen: selectedSidebarItem === "panel-settings",
       openPanelSettings: () => setSelectedSidebarItem("panel-settings"),
-      openAccountSettings: () => setSelectedSidebarItem("account"),
+      openAccountSettings: () => supportsAccountSettings && setSelectedSidebarItem("account"),
     }),
-    [selectedSidebarItem],
-  );
-
-  const [enableSharedLayouts = false] = useAppConfigurationValue<boolean>(
-    AppSetting.ENABLE_CONSOLE_API_LAYOUTS,
+    [selectedSidebarItem, supportsAccountSettings],
   );
 
   const { currentUser } = useCurrentUser();
@@ -418,7 +430,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       ["extensions", { iconName: "AddIn", title: "Extensions", component: ExtensionsSidebar }],
     ]);
 
-    return enableSharedLayouts
+    return supportsAccountSettings
       ? new Map([
           ...SIDEBAR_ITEMS,
           [
@@ -431,11 +443,11 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           ],
         ])
       : SIDEBAR_ITEMS;
-  }, [enableSharedLayouts, playerProblems, currentUser]);
+  }, [supportsAccountSettings, playerProblems, currentUser]);
 
   const sidebarBottomItems: readonly SidebarItemKey[] = useMemo(() => {
-    return enableSharedLayouts ? ["account", "preferences"] : ["preferences"];
-  }, [enableSharedLayouts]);
+    return supportsAccountSettings ? ["account", "preferences"] : ["preferences"];
+  }, [supportsAccountSettings]);
 
   return (
     <MultiProvider

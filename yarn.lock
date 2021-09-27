@@ -2112,6 +2112,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@foxglove/crc@npm:0.0.3":
+  version: 0.0.3
+  resolution: "@foxglove/crc@npm:0.0.3"
+  checksum: 2eee0e45780e3289c4a190fa909e5977643667e19a21b945a109977b89427b877d8e12ebf91821653d69bdb0390e58540e1c9bb906aefcc7dd818c64f131f071
+  languageName: node
+  linkType: hard
+
 "@foxglove/den@workspace:*, @foxglove/den@workspace:packages/den":
   version: 0.0.0-use.local
   resolution: "@foxglove/den@workspace:packages/den"
@@ -2169,6 +2176,23 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/log@workspace:packages/log"
   dependencies:
+    typescript: 4.4.3
+  languageName: unknown
+  linkType: soft
+
+"@foxglove/mcap@workspace:packages/mcap":
+  version: 0.0.0-use.local
+  resolution: "@foxglove/mcap@workspace:packages/mcap"
+  dependencies:
+    "@foxglove/crc": 0.0.3
+    "@foxglove/rosmsg": 2.0.0
+    "@foxglove/rosmsg-serialization": 1.2.0
+    "@foxglove/rosmsg2-serialization": 1.0.2
+    "@types/lodash": ^4
+    commander: 8.2.0
+    eventemitter3: 4.0.7
+    lodash: 4.17.21
+    ts-node: 10.2.1
     typescript: 4.4.3
   languageName: unknown
   linkType: soft
@@ -2259,16 +2283,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/rosmsg-serialization@npm:1.1.3, @foxglove/rosmsg-serialization@npm:^1.1.2":
-  version: 1.1.3
-  resolution: "@foxglove/rosmsg-serialization@npm:1.1.3"
+"@foxglove/rosmsg-serialization@npm:1.2.0, @foxglove/rosmsg-serialization@npm:^1.1.2":
+  version: 1.2.0
+  resolution: "@foxglove/rosmsg-serialization@npm:1.2.0"
   dependencies:
     "@foxglove/rosmsg": ^2.0.0
-  checksum: cb64edbc5b1d53ac964027808c8d7b88d8804405427dc0e3ccf4dadb8a475da001c6b000ee4f5c8ee259cff06757e1891fbadb5d1708dad8eae0393fa78880c7
+  checksum: c806644d96a4bb71aff904e2e0dfac622a39136db26415123e43262371943527cea142ef25bebf804b513994b1a99bf6594aabd100f68bb70bd9abfaaa611fdc
   languageName: node
   linkType: hard
 
-"@foxglove/rosmsg2-serialization@npm:^1.0.2":
+"@foxglove/rosmsg2-serialization@npm:1.0.2, @foxglove/rosmsg2-serialization@npm:^1.0.2":
   version: 1.0.2
   resolution: "@foxglove/rosmsg2-serialization@npm:1.0.2"
   dependencies:
@@ -2324,7 +2348,7 @@ __metadata:
     "@foxglove/rosmsg": 2.0.0
     "@foxglove/rosmsg-msgs-common": 1.0.3
     "@foxglove/rosmsg-msgs-foxglove": 2.0.2
-    "@foxglove/rosmsg-serialization": 1.1.3
+    "@foxglove/rosmsg-serialization": 1.2.0
     "@foxglove/rostime": 1.1.0
     "@foxglove/studio": "workspace:*"
     "@foxglove/velodyne-cloud": 1.0.0
@@ -5257,10 +5281,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:*":
-  version: 4.14.172
-  resolution: "@types/lodash@npm:4.14.172"
-  checksum: 5fc51ea40d7e455bd1c760bcc60c9e81f82d85988666d4d4969bd8311367c63bbf1fe2be48755ba87836710e45fff94014ec164ebe6ccaa72815014981152434
+"@types/lodash@npm:*, @types/lodash@npm:^4":
+  version: 4.14.173
+  resolution: "@types/lodash@npm:4.14.173"
+  checksum: 9e97ef5816299e5470db1cb32a93e981af60f74f18a35d045ed4caf224a065df96bfae6e444ec96aa392fc01258592b965d840ae042eef77ef719a578c7daef8
   languageName: node
   linkType: hard
 
@@ -8976,6 +9000,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"commander@npm:8.2.0":
+  version: 8.2.0
+  resolution: "commander@npm:8.2.0"
+  checksum: e868805bc266777f7a9c8a740e15b9e02b8148d8251f577ea9b9ef373ac0bdeb77b9b60cfc033592c9e1affea89993be08c13c623f0c619f9bf152c0e4d12cb0
+  languageName: node
+  linkType: hard
+
 "commander@npm:^2.19.0, commander@npm:^2.20.0":
   version: 2.20.3
   resolution: "commander@npm:2.20.3"
@@ -11595,7 +11626,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eventemitter3@npm:^4.0.0, eventemitter3@npm:^4.0.7":
+"eventemitter3@npm:4.0.7, eventemitter3@npm:^4.0.0, eventemitter3@npm:^4.0.7":
   version: 4.0.7
   resolution: "eventemitter3@npm:4.0.7"
   checksum: 1875311c42fcfe9c707b2712c32664a245629b42bb0a5a84439762dd0fd637fc54d078155ea83c2af9e0323c9ac13687e03cfba79b03af9f40c89b4960099374
@@ -12410,7 +12441,6 @@ __metadata:
     jest: 27.2.0
     jest-canvas-mock: 2.3.1
     license-checker: 25.0.1
-    node-machine-id: 1.1.12
     playwright: 1.14.1
     pngjs: 6.0.0
     prettier: 2.4.0
@@ -17472,13 +17502,6 @@ fsevents@^1.2.7:
     moment: ^2.18.1
     request: ">=2.76.0 <3.0.0"
   checksum: 7071604755a35fb4def96dad5f72374fb48cee72044f618baf878ba29736f4d514df151ffb3d32b253b1f4b162316568ae52b68f263c58eeeb4964cd432027e1
-  languageName: node
-  linkType: hard
-
-"node-machine-id@npm:1.1.12":
-  version: 1.1.12
-  resolution: "node-machine-id@npm:1.1.12"
-  checksum: e23088a0fb4a77a1d6484b7f09a22992fd3e0054d4f2e427692b4c7081e6cf30118ba07b6113b6c89f1ce46fd26ec5ab1d76dcaf6c10317717889124511283a5
   languageName: node
   linkType: hard
 

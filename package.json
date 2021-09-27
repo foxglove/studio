@@ -1,6 +1,6 @@
 {
   "name": "foxglove-studio",
-  "version": "0.18.0-dev",
+  "version": "0.18.2-dev",
   "description": "Integrated robotics visualization and debugging.",
   "productName": "Foxglove Studio",
   "productDescription": "Foxglove Studio is an highly customizable and extensible visualization and display tool for robotics.",
@@ -105,7 +105,6 @@
     "jest": "27.2.0",
     "jest-canvas-mock": "2.3.1",
     "license-checker": "25.0.1",
-    "node-machine-id": "1.1.12",
     "playwright": "1.14.1",
     "pngjs": "6.0.0",
     "prettier": "2.4.0",

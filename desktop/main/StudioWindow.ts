@@ -15,7 +15,6 @@ import {
 import path from "path";
 
 import Logger from "@foxglove/log";
-import colors from "@foxglove/studio-base/src/styles/colors.module.scss";
 
 import pkgInfo from "../../package.json";
 import getDevModeIcon from "./getDevModeIcon";
@@ -61,7 +60,7 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
       // Access-Control-Allow-Origin check
       webSecurity: isProduction,
     },
-    backgroundColor: colors.background,
+    backgroundColor: "#121217",
   };
   if (!isProduction) {
     const devIcon = getDevModeIcon();
@@ -252,17 +251,26 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
         click: () => browserWindow.webContents.send("open-welcome-layout"),
       },
       {
-        label: "Message Path Syntax",
+        label: "Message path syntax",
         click: () => browserWindow.webContents.send("open-message-path-syntax-help"),
       },
       {
-        label: "Keyboard Shortcuts",
+        label: "Keyboard shortcuts",
         accelerator: "CommandOrControl+/",
         click: () => browserWindow.webContents.send("open-keyboard-shortcuts"),
       },
       {
-        label: "Learn More",
+        label: "Learn more",
         click: async () => await shell.openExternal("https://foxglove.dev"),
+      },
+      { type: "separator" } as const,
+      {
+        label: "License",
+        click: async () => await shell.openExternal("https://foxglove.dev/legal/studio-license"),
+      },
+      {
+        label: "Privacy",
+        click: async () => await shell.openExternal("https://foxglove.dev/legal/privacy"),
       },
       ...(isMac
         ? []
