@@ -12,7 +12,7 @@ export type ChannelInfo = {
   topic: string;
   encoding: string;
   schemaName: string;
-  schemaDefinition: ArrayBuffer;
+  schema: ArrayBuffer;
   data: ArrayBuffer;
 };
 export type Message = {

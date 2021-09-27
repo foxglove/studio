@@ -64,17 +64,12 @@ async function validate(
         let parsedDefinitions;
         let messageDeserializer;
         if (record.encoding === "ros1") {
-          parsedDefinitions = parseMessageDefinition(
-            new TextDecoder().decode(record.schemaDefinition),
-          );
+          parsedDefinitions = parseMessageDefinition(new TextDecoder().decode(record.schema));
           messageDeserializer = new ROS1LazyMessageReader(parsedDefinitions);
         } else if (record.encoding === "ros2") {
-          parsedDefinitions = parseMessageDefinition(
-            new TextDecoder().decode(record.schemaDefinition),
-            {
-              ros2: true,
-            },
-          );
+          parsedDefinitions = parseMessageDefinition(new TextDecoder().decode(record.schema), {
+            ros2: true,
+          });
           messageDeserializer = new ROS2MessageReader(parsedDefinitions);
         } else {
           throw new Error(`unsupported encoding ${record.encoding}`);

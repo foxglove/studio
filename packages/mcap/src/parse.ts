@@ -96,13 +96,13 @@ export function parseRecord(
         new DataView(view.buffer, view.byteOffset + offset, schemaNameLen),
       );
       offset += schemaNameLen;
-      const schemaDefinitionLen = view.getUint32(offset, true);
+      const schemaLen = view.getUint32(offset, true);
       offset += 4;
-      const schemaDefinition = view.buffer.slice(
+      const schema = view.buffer.slice(
         view.byteOffset + offset,
-        view.byteOffset + offset + schemaDefinitionLen,
+        view.byteOffset + offset + schemaLen,
       );
-      offset += schemaDefinitionLen;
+      offset += schemaLen;
       const data = view.buffer.slice(view.byteOffset + offset, view.byteOffset + recordEndOffset);
 
       const record: McapRecord = {
@@ -111,7 +111,7 @@ export function parseRecord(
         topic,
         encoding,
         schemaName,
-        schemaDefinition,
+        schema,
         data,
       };
       return { record, usedBytes: recordEndOffset - startOffset };
