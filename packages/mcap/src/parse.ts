@@ -109,6 +109,12 @@ export function parseRecord(
         view.byteOffset + offset + schemaDefinitionLen,
       );
       offset += schemaDefinitionLen;
+      const dataTypeLen = view.getUint32(offset, true);
+      offset += 4;
+      const dataType = new TextDecoder().decode(
+        view.buffer.slice(view.byteOffset + offset, view.byteOffset + offset + dataTypeLen),
+      );
+      offset += dataTypeLen;
       const data = view.buffer.slice(view.byteOffset + offset, view.byteOffset + recordEndOffset);
 
       const record: McapRecord = {
@@ -119,7 +125,8 @@ export function parseRecord(
         schemaName,
         schemaFormat,
         schemaDefinition,
-        userData: data,
+        dataType,
+        data,
       };
       return { record, usedBytes: recordEndOffset - startOffset };
     }

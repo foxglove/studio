@@ -14,7 +14,8 @@ export type ChannelInfo = {
   schemaName: string;
   schemaFormat: string;
   schemaDefinition: ArrayBuffer;
-  userData: ArrayBuffer;
+  dataType: string;
+  data: ArrayBuffer;
 };
 export type Message = {
   type: "Message";
