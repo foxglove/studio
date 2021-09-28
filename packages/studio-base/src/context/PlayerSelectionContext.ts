@@ -36,9 +36,8 @@ type HttpSourceParams = {
 type FoxgloveDataPlatformSourceParams = {
   start?: string;
   end?: string;
-  seek?: string;
-  org?: string;
-  deviceid?: string;
+  seekTo?: string;
+  deviceId?: string;
 };
 
 type SpecializedPlayerSource<T extends SourceTypes> = Omit<PlayerSourceDefinition, "type"> & {

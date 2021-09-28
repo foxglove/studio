@@ -5,7 +5,8 @@
 import { v4 as uuidv4 } from "uuid";
 
 import Logger from "@foxglove/log";
-import { Time } from "@foxglove/rostime";
+import { parse as parseMessageDefinition, RosMsgDefinition } from "@foxglove/rosmsg";
+import { fromDate, Time, toDate } from "@foxglove/rostime";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
   AdvertiseOptions,
@@ -19,39 +20,44 @@ import {
   SubscribePayload,
   Topic,
 } from "@foxglove/studio-base/players/types";
+import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
+import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 
 const log = Logger.getLogger(__filename);
 
-const CAPABILITIES: string[] = [];
+const CAPABILITIES: string[] = ["playbackControl"];
 
 type FoxgloveDataPlatformPlayerOpts = {
+  consoleApi: ConsoleApi;
   params: {
     start: string;
     end: string;
     seek?: string;
-    org: string;
-    deviceid: string;
+    deviceId: string;
   };
   metricsCollector: PlayerMetricsCollectorInterface;
 };
 
+const ZERO_TIME = Object.freeze({ sec: 0, nsec: 0 });
+
 export default class FoxgloveDataPlatformPlayer implements Player {
   private _id: string = uuidv4(); // Unique ID for this player
+  private _name: string;
   private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState()
   private _totalBytesReceived = 0;
   private _closed = false; // Whether the player has been completely closed using close()
   private _isPlaying = false;
   private _speed = 1;
-  private _start?: Time;
-  private _end?: Time;
+  private _start: Time;
+  private _end: Time;
+  private _consoleApi: ConsoleApi;
+  private _deviceId: string;
   private _currentTime?: Time;
   private _lastSeekTime?: number;
-  private _providerTopics?: Topic[];
-  private _providerDatatypes: RosDatatypes = new Map();
-  private _publishedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of publisher IDs publishing each topic
-  private _subscribedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of subscriber IDs subscribed to each topic
+  private _topics: Topic[] = [];
+  private _datatypes: RosDatatypes = new Map();
   private _metricsCollector: PlayerMetricsCollectorInterface;
   private _presence: PlayerPresence = PlayerPresence.INITIALIZING;
 
@@ -59,11 +65,19 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   private _problems: PlayerProblem[] = [];
   private _problemsById = new Map<string, PlayerProblem>();
 
-  constructor({ params, metricsCollector }: FoxgloveDataPlatformPlayerOpts) {
+  constructor({ params, metricsCollector, consoleApi }: FoxgloveDataPlatformPlayerOpts) {
     log.info(`initializing FoxgloveDataPlatformPlayer ${JSON.stringify(params)}`);
     this._metricsCollector = metricsCollector;
     this._metricsCollector.playerConstructed();
-    void this._open();
+    this._start = fromDate(new Date(params.start));
+    this._end = fromDate(new Date(params.end));
+    this._deviceId = params.deviceId;
+    this._name = `${this._deviceId}, ${formatTimeRaw(this._start)} to ${formatTimeRaw(this._end)}`;
+    this._consoleApi = consoleApi;
+    this._open().catch((error) => {
+      this._presence = PlayerPresence.ERROR;
+      this._addProblem("open-failed", { message: error.message, error, severity: "error" });
+    });
   }
 
   private _open = async (): Promise<void> => {
@@ -71,6 +85,49 @@ export default class FoxgloveDataPlatformPlayer implements Player {
       return;
     }
     this._presence = PlayerPresence.INITIALIZING;
+    this._emitState();
+
+    const rawTopics = await this._consoleApi.topics({
+      deviceId: this._deviceId,
+      start: toDate(this._start).toISOString(),
+      end: toDate(this._end).toISOString(),
+      includeSchemas: true,
+    });
+    if (rawTopics.length === 0) {
+      this._presence = PlayerPresence.ERROR;
+      this._addProblem("no-data", {
+        message: `No data available for ${this._deviceId} between ${formatTimeRaw(
+          this._start,
+        )} and ${formatTimeRaw(this._end)}.`,
+        severity: "error",
+      });
+      return;
+    }
+
+    const topics: Topic[] = [];
+    const datatypes: RosDatatypes = new Map();
+    for (const { topic, version, serializationFormat, schema } of rawTopics) {
+      const datatypeName = version; //FIXME
+      if (schema == undefined) {
+        throw new Error(`missing requested schema for ${topic}`);
+      }
+      topics.push({ name: topic, datatype: datatypeName });
+      const parsedDefinitions = parseMessageDefinition(schema, { ros2: false /*FIXME*/ });
+      parsedDefinitions.forEach(({ name, definitions }, index) => {
+        // The first definition usually doesn't have an explicit name,
+        // so we get the name from the datatype.
+        if (index === 0) {
+          datatypes.set(datatypeName, { name: datatypeName, definitions });
+        } else if (name != undefined) {
+          datatypes.set(name, { name, definitions });
+        }
+      });
+    }
+    this._topics = topics;
+    this._datatypes = datatypes;
+
+    this._presence = PlayerPresence.PRESENT;
+    this._emitState();
   };
 
   private _addProblem(
@@ -103,7 +160,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     }
 
     return this._listener({
-      name: "FoxgloveDataPlatform",
+      name: this._name,
       presence: this._presence,
       progress: {},
       capabilities: CAPABILITIES,
@@ -114,14 +171,14 @@ export default class FoxgloveDataPlatformPlayer implements Player {
         messages: [],
         totalBytesReceived: this._totalBytesReceived,
         messageOrder: "receiveTime",
-        startTime: this._start ?? { sec: 0, nsec: 0 },
-        endTime: this._end ?? { sec: 0, nsec: 0 },
-        currentTime: this._currentTime ?? { sec: 0, nsec: 0 },
+        startTime: this._start ?? ZERO_TIME,
+        endTime: this._end ?? ZERO_TIME,
+        currentTime: this._currentTime ?? ZERO_TIME,
         isPlaying: this._isPlaying,
         speed: this._speed,
         lastSeekTime: this._lastSeekTime ?? 0,
-        topics: [],
-        datatypes: this._providerDatatypes,
+        topics: this._topics,
+        datatypes: this._datatypes,
         publishedTopics: undefined,
         subscribedTopics: undefined,
         services: undefined,
@@ -142,19 +199,21 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     this._totalBytesReceived = 0;
   }
 
-  setSubscriptions(_subscriptions: SubscribePayload[]): void {}
+  setSubscriptions(_subscriptions: SubscribePayload[]): void {
+    log.debug("setSubscriptions", _subscriptions);
+  }
 
-  setPublishers(_publishers: AdvertiseOptions[]): void {
-    // no-op
+  setPublishers(publishers: AdvertiseOptions[]): void {
+    log.warn(`Publishing is not supported in ${this.constructor.name}`, publishers);
   }
 
   // Modify a remote parameter such as a rosparam.
   setParameter(_key: string, _value: ParameterValue): void {
-    throw new Error(`Parameter modification is not supported for VelodynePlayer`);
+    throw new Error(`Parameter modification is not supported in ${this.constructor.name}`);
   }
 
   publish(_request: PublishPayload): void {
-    throw new Error(`Publishing is not supported for VelodynePlayer`);
+    throw new Error(`Publishing is not supported in ${this.constructor.name}`);
   }
 
   startPlayback(): void {

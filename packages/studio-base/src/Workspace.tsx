@@ -357,14 +357,13 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       } else if (type === "foxglove-data-platform") {
         const start = url.searchParams.get("start") ?? "";
         const end = url.searchParams.get("end") ?? "";
-        const seek = url.searchParams.get("seek") ?? undefined;
-        const org = url.searchParams.get("org");
-        const deviceid = url.searchParams.get("deviceid");
-        if (!org || !deviceid) {
-          log.warn(`Missing org or deviceid param in ${url}`);
+        const seekTo = url.searchParams.get("seekTo") ?? undefined;
+        const deviceId = url.searchParams.get("deviceId");
+        if (!deviceId) {
+          log.warn(`Missing deviceId param in ${url}`);
           return;
         }
-        if (!isISO8601(start) || !isISO8601(end) || (seek && !isISO8601(seek))) {
+        if (!isISO8601(start) || !isISO8601(end) || (seekTo && !isISO8601(seekTo))) {
           log.warn(`Missing or invalid ISO8601 timestamp(s) in ${url}`);
           return;
         }
@@ -373,7 +372,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
             name: "Foxglove Data Platform",
             type: "foxglove-data-platform",
           },
-          { start, end, seek, org, deviceid },
+          { start, end, seekTo, deviceId },
         );
       } else {
         log.warn(`Unknown deep link type ${url}`);
