@@ -69,7 +69,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     log.info(`initializing FoxgloveDataPlatformPlayer ${JSON.stringify(params)}`);
     this._metricsCollector = metricsCollector;
     this._metricsCollector.playerConstructed();
-    this._start = fromDate(new Date(params.start));
+    this._start = fromDate(new Date(params.start)); // FIXME: https://github.com/foxglove/data-platform/issues/150
     this._end = fromDate(new Date(params.end));
     this._deviceId = params.deviceId;
     this._name = `${this._deviceId}, ${formatTimeRaw(this._start)} to ${formatTimeRaw(this._end)}`;
@@ -106,6 +106,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
 
     const topics: Topic[] = [];
     const datatypes: RosDatatypes = new Map();
+    // FIXME: https://github.com/foxglove/data-platform/issues/149
     for (const { topic, version, serializationFormat, schema } of rawTopics) {
       const datatypeName = version; //FIXME
       if (schema == undefined) {
