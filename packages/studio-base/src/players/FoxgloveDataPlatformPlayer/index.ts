@@ -8,6 +8,7 @@ import Logger from "@foxglove/log";
 import { parse as parseMessageDefinition, RosMsgDefinition } from "@foxglove/rosmsg";
 import { fromDate, Time, toDate } from "@foxglove/rostime";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
+import MessageMemoryCache from "@foxglove/studio-base/players/FoxgloveDataPlatformPlayer/MessageMemoryCache";
 import {
   AdvertiseOptions,
   ParameterValue,
@@ -60,6 +61,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   private _datatypes: RosDatatypes = new Map();
   private _metricsCollector: PlayerMetricsCollectorInterface;
   private _presence: PlayerPresence = PlayerPresence.INITIALIZING;
+  private _preloadedMessages: MessageMemoryCache;
 
   // track issues within the player
   private _problems: PlayerProblem[] = [];
@@ -74,6 +76,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     this._deviceId = params.deviceId;
     this._name = `${this._deviceId}, ${formatTimeRaw(this._start)} to ${formatTimeRaw(this._end)}`;
     this._consoleApi = consoleApi;
+    this._preloadedMessages = new MessageMemoryCache({ start: this._start, end: this._end });
     this._open().catch((error) => {
       this._presence = PlayerPresence.ERROR;
       this._addProblem("open-failed", { message: error.message, error, severity: "error" });
@@ -218,11 +221,13 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   }
 
   startPlayback(): void {
-    // no-op
+    this._isPlaying = true;
+    this._emitState();
   }
 
   pausePlayback(): void {
-    // no-op
+    this._isPlaying = false;
+    this._emitState();
   }
 
   seekPlayback(_time: Time, _backfillDuration?: Time): void {
