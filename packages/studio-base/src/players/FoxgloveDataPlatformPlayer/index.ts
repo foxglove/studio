@@ -5,10 +5,18 @@
 import { v4 as uuidv4 } from "uuid";
 
 import Logger from "@foxglove/log";
-import { parse as parseMessageDefinition, RosMsgDefinition } from "@foxglove/rosmsg";
-import { fromDate, Time, toDate } from "@foxglove/rostime";
+import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
+import {
+  add,
+  clampTime,
+  fromDate,
+  fromSec,
+  subtract,
+  Time,
+  toDate,
+  toSec,
+} from "@foxglove/rostime";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import MessageMemoryCache from "@foxglove/studio-base/players/FoxgloveDataPlatformPlayer/MessageMemoryCache";
 import {
   AdvertiseOptions,
   ParameterValue,
@@ -20,11 +28,16 @@ import {
   PublishPayload,
   SubscribePayload,
   Topic,
+  Progress,
 } from "@foxglove/studio-base/players/types";
 import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
 import { formatTimeRaw } from "@foxglove/studio-base/util/time";
+
+import MessageMemoryCache from "./MessageMemoryCache";
+import collateMessageStream from "./collateMessageStream";
+import streamMessages from "./streamMessages";
 
 const log = Logger.getLogger(__filename);
 
@@ -43,6 +56,9 @@ type FoxgloveDataPlatformPlayerOpts = {
 
 const ZERO_TIME = Object.freeze({ sec: 0, nsec: 0 });
 
+const PRELOAD_THRESHOLD_SECS = 5;
+const PRELOAD_DURATION_SECS = 15;
+
 export default class FoxgloveDataPlatformPlayer implements Player {
   private _id: string = uuidv4(); // Unique ID for this player
   private _name: string;
@@ -55,13 +71,16 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   private _end: Time;
   private _consoleApi: ConsoleApi;
   private _deviceId: string;
-  private _currentTime?: Time;
+  private _currentTime: Time;
   private _lastSeekTime?: number;
   private _topics: Topic[] = [];
   private _datatypes: RosDatatypes = new Map();
   private _metricsCollector: PlayerMetricsCollectorInterface;
   private _presence: PlayerPresence = PlayerPresence.INITIALIZING;
   private _preloadedMessages: MessageMemoryCache;
+  private _currentPreloadTask?: AbortController;
+  private _requestedTopics: string[] = [];
+  private _progress: Progress = {};
 
   // track issues within the player
   private _problems: PlayerProblem[] = [];
@@ -73,6 +92,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     this._metricsCollector.playerConstructed();
     this._start = fromDate(new Date(params.start)); // FIXME: https://github.com/foxglove/data-platform/issues/150
     this._end = fromDate(new Date(params.end));
+    this._currentTime = this._start;
     this._deviceId = params.deviceId;
     this._name = `${this._deviceId}, ${formatTimeRaw(this._start)} to ${formatTimeRaw(this._end)}`;
     this._consoleApi = consoleApi;
@@ -166,7 +186,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     return this._listener({
       name: this._name,
       presence: this._presence,
-      progress: {},
+      progress: this._progress,
       capabilities: CAPABILITIES,
       playerId: this._id,
       problems: this._problems,
@@ -177,7 +197,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
         messageOrder: "receiveTime",
         startTime: this._start ?? ZERO_TIME,
         endTime: this._end ?? ZERO_TIME,
-        currentTime: this._currentTime ?? ZERO_TIME,
+        currentTime: this._currentTime,
         isPlaying: this._isPlaying,
         speed: this._speed,
         lastSeekTime: this._lastSeekTime ?? 0,
@@ -203,8 +223,63 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     this._totalBytesReceived = 0;
   }
 
-  setSubscriptions(_subscriptions: SubscribePayload[]): void {
-    log.debug("setSubscriptions", _subscriptions);
+  setSubscriptions(subscriptions: SubscribePayload[]): void {
+    log.debug("setSubscriptions", subscriptions);
+    this._requestedTopics = Array.from(new Set(subscriptions.map(({ topic }) => topic)));
+    this._clearPreloadedData();
+    this._startPreloadTaskIfNeeded();
+    this._emitState();
+  }
+
+  private _clearPreloadedData() {
+    this._preloadedMessages.clear();
+    this._currentPreloadTask?.abort();
+  }
+  private _startPreloadTaskIfNeeded() {
+    const preloadedExtent = this._preloadedMessages.fullyLoadedExtent(this._currentTime);
+    const shouldPreload =
+      this._requestedTopics.length > 0 &&
+      (!preloadedExtent ||
+        toSec(subtract(preloadedExtent.end, this._currentTime)) > PRELOAD_THRESHOLD_SECS);
+    if (!shouldPreload) {
+      return;
+    }
+
+    const startTime = clampTime(preloadedExtent?.end ?? this._currentTime, this._start, this._end);
+    const endTime = clampTime(
+      add(startTime, fromSec(PRELOAD_DURATION_SECS)),
+      this._start,
+      this._end,
+    );
+    this._currentPreloadTask = new AbortController();
+    const signal = this._currentPreloadTask.signal;
+    (async () => {
+      const stream = streamMessages(this._consoleApi, signal, {
+        deviceId: this._deviceId,
+        start: startTime,
+        end: endTime,
+        topics: this._requestedTopics,
+      });
+
+      for await (const { messages, range } of collateMessageStream(stream, {
+        start: startTime,
+        end: endTime,
+      })) {
+        log.debug("Adding preloaded chunk", range, messages);
+        if (signal.aborted) {
+          break;
+        }
+        this._preloadedMessages.insert(messages, range);
+        this._emitState();
+      }
+    })().catch((error) => {
+      this._addProblem("stream-error", { message: error.message, error, severity: "error" });
+    });
+
+    this._progress = {
+      fullyLoadedFractionRanges: this._preloadedMessages.fullyLoadedFractionRanges(),
+    };
+    this._emitState();
   }
 
   setPublishers(publishers: AdvertiseOptions[]): void {

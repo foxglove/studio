@@ -85,6 +85,26 @@ export default class MessageMemoryCache {
   }
 
   /**
+   * @returns The maximal fully loaded range that contains `targetTime`.
+   */
+  fullyLoadedExtent(targetTime: Time): TimeRange | undefined {
+    let lo = 0;
+    let hi = this.loadedRanges.length;
+    while (lo < hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      const midRange = this.loadedRanges[mid]!;
+      if (!isLessThan(midRange.range.start, targetTime)) {
+        hi = mid;
+      } else if (!isGreaterThan(midRange.range.end, targetTime)) {
+        lo = mid + 1;
+      } else {
+        return midRange.range;
+      }
+    }
+    return undefined;
+  }
+
+  /**
    * Add `messages` to the cache. It is assumed that the given messages are the only `messages` in
    * the `coveredRange`, so the range will be considered fully cached.
    *
