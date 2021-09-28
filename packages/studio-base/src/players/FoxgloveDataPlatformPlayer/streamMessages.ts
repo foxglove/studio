@@ -34,7 +34,7 @@ export default async function* streamMessages(
   if (signal.aborted) {
     return;
   }
-  const response = await fetch(mcapUrl, { signal });
+  const response = await fetch(mcapUrl, { signal }); //FIXME: handle AbortError
   if (response.status === 404) {
     return;
   } else if (response.status !== 200) {

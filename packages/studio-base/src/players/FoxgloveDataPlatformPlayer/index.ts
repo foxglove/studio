@@ -233,6 +233,9 @@ export default class FoxgloveDataPlatformPlayer implements Player {
 
   private _clearPreloadedData() {
     this._preloadedMessages.clear();
+    this._progress = {
+      fullyLoadedFractionRanges: this._preloadedMessages.fullyLoadedFractionRanges(),
+    };
     this._currentPreloadTask?.abort();
   }
   private _startPreloadTaskIfNeeded() {
@@ -240,7 +243,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     const shouldPreload =
       this._requestedTopics.length > 0 &&
       (!preloadedExtent ||
-        toSec(subtract(preloadedExtent.end, this._currentTime)) > PRELOAD_THRESHOLD_SECS);
+        toSec(subtract(preloadedExtent.end, this._currentTime)) < PRELOAD_THRESHOLD_SECS);
     if (!shouldPreload) {
       return;
     }
@@ -270,15 +273,15 @@ export default class FoxgloveDataPlatformPlayer implements Player {
           break;
         }
         this._preloadedMessages.insert(messages, range);
+        this._progress = {
+          fullyLoadedFractionRanges: this._preloadedMessages.fullyLoadedFractionRanges(),
+        };
         this._emitState();
       }
     })().catch((error) => {
       this._addProblem("stream-error", { message: error.message, error, severity: "error" });
     });
 
-    this._progress = {
-      fullyLoadedFractionRanges: this._preloadedMessages.fullyLoadedFractionRanges(),
-    };
     this._emitState();
   }
 
@@ -305,8 +308,11 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     this._emitState();
   }
 
-  seekPlayback(_time: Time, _backfillDuration?: Time): void {
-    // no-op
+  seekPlayback(time: Time, _backfillDuration?: Time): void {
+    this._currentTime = time;
+    this._currentPreloadTask?.abort();
+    this._startPreloadTaskIfNeeded();
+    this._emitState();
   }
 
   setPlaybackSpeed(_speedFraction: number): void {
