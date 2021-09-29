@@ -118,10 +118,10 @@ export default async function* streamMessages(
     reader.append(result.value);
     for (let record; (record = reader.nextRecord()); ) {
       processRecord(record);
-      if (messages.length > 0) {
-        yield messages;
-        messages = [];
-      }
+    }
+    if (messages.length > 0) {
+      yield messages;
+      messages = [];
     }
   }
   if (!reader.done()) {

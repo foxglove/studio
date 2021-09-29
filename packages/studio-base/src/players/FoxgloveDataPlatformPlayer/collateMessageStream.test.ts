@@ -63,6 +63,42 @@ describe("collateMessageStream", () => {
     ]);
   });
 
+  it("handles messages one by one", async () => {
+    await expect(
+      gather(
+        collateMessageStream(
+          [
+            [{ topic: "", receiveTime: fromSec(0.5), message: 0 }],
+            [{ topic: "", receiveTime: fromSec(0.6), message: 1 }],
+            [{ topic: "", receiveTime: fromSec(0.7), message: 2 }],
+            [{ topic: "", receiveTime: fromSec(0.8), message: 3 }],
+          ],
+          {
+            start: fromSec(0),
+            end: fromSec(1),
+          },
+        ),
+      ),
+    ).resolves.toEqual([
+      {
+        messages: [{ topic: "", receiveTime: fromSec(0.5), message: 0 }],
+        range: { start: fromSec(0), end: fromSec(0.6) },
+      },
+      {
+        messages: [{ topic: "", receiveTime: fromSec(0.6), message: 1 }],
+        range: { start: fromSec(0.6), end: fromSec(0.7) },
+      },
+      {
+        messages: [{ topic: "", receiveTime: fromSec(0.7), message: 2 }],
+        range: { start: fromSec(0.7), end: fromSec(0.8) },
+      },
+      {
+        messages: [{ topic: "", receiveTime: fromSec(0.8), message: 3 }],
+        range: { start: fromSec(0.8), end: fromSec(1) },
+      },
+    ]);
+  });
+
   it("handles non-initial chunk having all same receiveTime", async () => {
     await expect(
       gather(
@@ -126,9 +162,12 @@ describe("collateMessageStream", () => {
           { topic: "", receiveTime: fromSec(0.6), message: 2 },
           { topic: "", receiveTime: fromSec(0.6), message: 3 },
           { topic: "", receiveTime: fromSec(0.6), message: 4 },
-          { topic: "", receiveTime: fromSec(0.7), message: 5 },
         ],
-        range: { start: fromSec(0.6), end: fromSec(1) },
+        range: { start: fromSec(0.6), end: fromSec(0.7) },
+      },
+      {
+        messages: [{ topic: "", receiveTime: fromSec(0.7), message: 5 }],
+        range: { start: fromSec(0.7), end: fromSec(1) },
       },
     ]);
   });

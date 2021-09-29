@@ -37,7 +37,11 @@ export default async function* collateMessageStream(
     while (indexToKeep > 0 && areEqual(messages[indexToKeep - 1]!.receiveTime, receiveTimeToKeep)) {
       indexToKeep--;
     }
-    if (indexToKeep === 0) {
+    if (
+      indexToKeep === 0 &&
+      (unsentMessages.length === 0 ||
+        areEqual(receiveTimeToKeep, unsentMessages[unsentMessages.length - 1]!.receiveTime))
+    ) {
       unsentMessages.push(...messages);
     } else {
       unsentMessages.push(...messages.slice(0, indexToKeep));
