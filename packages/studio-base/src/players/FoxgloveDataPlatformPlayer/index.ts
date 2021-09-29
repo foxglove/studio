@@ -10,6 +10,7 @@ import {
   add,
   clampTime,
   fromDate,
+  fromMillis,
   fromSec,
   subtract,
   Time,
@@ -30,9 +31,11 @@ import {
   Topic,
   Progress,
 } from "@foxglove/studio-base/players/types";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
 import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
+import signal, { Signal } from "@foxglove/studio-base/util/signal";
 import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 
 import MessageMemoryCache from "./MessageMemoryCache";
@@ -81,6 +84,8 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   private _currentPreloadTask?: AbortController;
   private _requestedTopics: string[] = [];
   private _progress: Progress = {};
+  private _loadedMoreMessages?: Signal<void>;
+  private _nextFrame: MessageEvent<unknown>[] = [];
 
   // track issues within the player
   private _problems: PlayerProblem[] = [];
@@ -183,6 +188,11 @@ export default class FoxgloveDataPlatformPlayer implements Player {
       return Promise.resolve();
     }
 
+    const messages = this._nextFrame;
+    if (messages.length > 0) {
+      this._nextFrame = [];
+    }
+
     return this._listener({
       name: this._name,
       presence: this._presence,
@@ -192,7 +202,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
       problems: this._problems,
 
       activeData: {
-        messages: [],
+        messages,
         totalBytesReceived: this._totalBytesReceived,
         messageOrder: "receiveTime",
         startTime: this._start ?? ZERO_TIME,
@@ -231,6 +241,31 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     this._emitState();
   }
 
+  private _runPlaybackLoop = debouncePromise(async () => {
+    while (this._isPlaying) {
+      await this._emitState.currentPromise;
+      const frameDurationMs = 80; //FIXME: adaptive? support changing playback rate?
+      const startTime = this._currentTime;
+      const endTime = clampTime(
+        add(startTime, fromMillis(frameDurationMs)),
+        this._start,
+        this._end,
+      );
+      this._startPreloadTaskIfNeeded();
+      let messages;
+      while (
+        !(messages = this._preloadedMessages.getMessages({ start: startTime, end: endTime }))
+      ) {
+        log.debug("Waiting for more messages");
+        // Wait for new messages to be loaded
+        await (this._loadedMoreMessages = signal());
+      }
+      this._nextFrame = messages;
+      this._currentTime = endTime;
+      this._emitState();
+    }
+  });
+
   private _clearPreloadedData() {
     this._preloadedMessages.clear();
     this._progress = {
@@ -238,7 +273,11 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     };
     this._currentPreloadTask?.abort();
   }
+
   private _startPreloadTaskIfNeeded() {
+    if (this._currentPreloadTask) {
+      return;
+    }
     const preloadedExtent = this._preloadedMessages.fullyLoadedExtent(this._currentTime);
     const shouldPreload =
       this._requestedTopics.length > 0 &&
@@ -255,9 +294,9 @@ export default class FoxgloveDataPlatformPlayer implements Player {
       this._end,
     );
     this._currentPreloadTask = new AbortController();
-    const signal = this._currentPreloadTask.signal;
+    const abortSignal = this._currentPreloadTask.signal;
     (async () => {
-      const stream = streamMessages(this._consoleApi, signal, {
+      const stream = streamMessages(this._consoleApi, abortSignal, {
         deviceId: this._deviceId,
         start: startTime,
         end: endTime,
@@ -269,18 +308,25 @@ export default class FoxgloveDataPlatformPlayer implements Player {
         end: endTime,
       })) {
         log.debug("Adding preloaded chunk", range, messages);
-        if (signal.aborted) {
+        if (abortSignal.aborted) {
           break;
         }
         this._preloadedMessages.insert(messages, range);
         this._progress = {
           fullyLoadedFractionRanges: this._preloadedMessages.fullyLoadedFractionRanges(),
         };
+        this._loadedMoreMessages?.resolve();
+        this._loadedMoreMessages = undefined;
         this._emitState();
       }
-    })().catch((error) => {
-      this._addProblem("stream-error", { message: error.message, error, severity: "error" });
-    });
+    })()
+      .catch((error) => {
+        log.error(error);
+        this._addProblem("stream-error", { message: error.message, error, severity: "error" });
+      })
+      .finally(() => {
+        this._currentPreloadTask = undefined;
+      });
 
     this._emitState();
   }
@@ -300,6 +346,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
 
   startPlayback(): void {
     this._isPlaying = true;
+    this._runPlaybackLoop();
     this._emitState();
   }
 
