@@ -67,6 +67,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   private _name: string;
   private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState()
   private _totalBytesReceived = 0;
+  private _initialized = false;
   private _closed = false; // Whether the player has been completely closed using close()
   private _isPlaying = false;
   private _speed = 1;
@@ -161,7 +162,9 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     this._datatypes = datatypes;
 
     this._presence = PlayerPresence.PRESENT;
+    this._initialized = true;
     this._emitState();
+    this._startPreloadTaskIfNeeded();
   };
 
   private _addProblem(
@@ -285,6 +288,9 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   }
 
   private _startPreloadTaskIfNeeded() {
+    if (!this._initialized) {
+      return;
+    }
     if (this._currentPreloadTask) {
       return;
     }
@@ -307,8 +313,11 @@ export default class FoxgloveDataPlatformPlayer implements Player {
       this._preloadedMessages.fullyLoadedExtent(proposedEndTime)?.start ?? proposedEndTime;
 
     const thisTask = new AbortController();
+    thisTask.signal.addEventListener("abort", () => {
+      log.debug("Aborting preload task", startTime, endTime);
+    });
     this._currentPreloadTask = thisTask;
-    log.debug("Starting preload task");
+    log.debug("Starting preload task", startTime, endTime);
     (async () => {
       const stream = streamMessages(this._consoleApi, thisTask.signal, {
         deviceId: this._deviceId,
@@ -321,10 +330,10 @@ export default class FoxgloveDataPlatformPlayer implements Player {
         start: startTime,
         end: endTime,
       })) {
-        log.debug("Adding preloaded chunk", range, messages);
         if (thisTask.signal.aborted) {
           break;
         }
+        log.debug("Adding preloaded chunk", startTime, endTime, range, messages);
         this._preloadedMessages.insert(messages, range);
         this._progress = {
           fullyLoadedFractionRanges: this._preloadedMessages.fullyLoadedFractionRanges(),
@@ -336,7 +345,6 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     })()
       .catch((error) => {
         if (error.name === "AbortError") {
-          log.debug("Preload task aborted");
           return;
         }
         log.error(error);
@@ -376,6 +384,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   }
 
   seekPlayback(time: Time, _backfillDuration?: Time): void {
+    log.debug("Seek", time);
     this._currentTime = time;
     this._lastSeekTime = Date.now();
     this._nextFrame = [];
