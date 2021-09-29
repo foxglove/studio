@@ -76,7 +76,6 @@ export default class MessageMemoryCache {
    * displayed visually in the playback bar.
    */
   fullyLoadedFractionRanges(): Range[] {
-    //FIXME: only recreate array when loadedRanges changes?
     const totalSeconds = secondsBetween(this.minTime, this.maxTime);
     return this.loadedRanges.map(({ range }) => ({
       start: secondsBetween(this.minTime, range.start) / totalSeconds,
