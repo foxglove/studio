@@ -93,7 +93,7 @@ export default class MessageMemoryCache {
     while (lo < hi) {
       const mid = Math.floor((lo + hi) / 2);
       const midRange = this.loadedRanges[mid]!;
-      if (!isLessThan(midRange.range.start, targetTime)) {
+      if (isGreaterThan(midRange.range.start, targetTime)) {
         hi = mid;
       } else if (!isGreaterThan(midRange.range.end, targetTime)) {
         lo = mid + 1;

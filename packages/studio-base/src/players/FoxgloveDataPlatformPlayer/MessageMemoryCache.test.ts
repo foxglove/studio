@@ -55,6 +55,32 @@ describe("MessageMemoryCache", () => {
     },
   );
 
+  it.each(
+    [0, 1, 2, 3, 4].flatMap((leading) => [0, 1, 2, 3, 4].map((trailing) => [leading, trailing])),
+  )(
+    "returns correct loaded extent (%s leading and %s trailing ranges)",
+    (leadingRanges, trailingRanges) => {
+      const cache = new MessageMemoryCache({
+        start: { sec: 0, nsec: 0 },
+        end: { sec: 5, nsec: 0 },
+      });
+      cache.insert([], { start: fromSec(1), end: fromSec(2) });
+      // Test with extra ranges at the beginning and end to ensure the binary search algorithm works correctly.
+      for (let i = 0; i < leadingRanges; i++) {
+        cache.insert([], { start: { sec: 0, nsec: i }, end: { sec: 0, nsec: i + 1 } });
+      }
+      for (let i = 0; i < trailingRanges; i++) {
+        cache.insert([], { start: { sec: 4, nsec: i }, end: { sec: 4, nsec: i + 1 } });
+      }
+
+      expect(cache.fullyLoadedExtent(fromSec(0.5))).toBeUndefined();
+      expect(cache.fullyLoadedExtent(fromSec(1))).toEqual({ start: fromSec(1), end: fromSec(2) });
+      expect(cache.fullyLoadedExtent(fromSec(1.5))).toEqual({ start: fromSec(1), end: fromSec(2) });
+      expect(cache.fullyLoadedExtent(fromSec(2))).toBeUndefined();
+      expect(cache.fullyLoadedExtent(fromSec(2.5))).toBeUndefined();
+    },
+  );
+
   it("merges inserted range with previous range", () => {
     const cache = new MessageMemoryCache({ start: fromSec(0), end: fromSec(5) });
 
