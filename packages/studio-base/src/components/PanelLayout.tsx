@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Spinner, SpinnerSize, mergeStyles } from "@fluentui/react";
+import { Spinner, SpinnerSize } from "@fluentui/react";
 import React, {
   useCallback,
   useMemo,
@@ -43,110 +43,8 @@ import { PanelComponent, usePanelCatalog } from "@foxglove/studio-base/context/P
 import { EmptyDropTarget } from "@foxglove/studio-base/panels/Tab/EmptyDropTarget";
 import { MosaicDropResult, PanelConfig } from "@foxglove/studio-base/types/panels";
 import { getPanelIdForType, getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import ErrorBoundary from "./ErrorBoundary";
-
-const mosaicStyles = () =>
-  mergeStyles({
-    ":global(.mosaic)": {
-      ".mosaic-root": {
-        top: 0,
-        left: 0,
-        bottom: 0,
-        right: 0,
-      },
-      ".mosaic-tile": {
-        margin: 1,
-      },
-      ".mosaic-window": {
-        boxShadow: "none",
-        width: "100%",
-
-        // we use custom toolbars
-        ".mosaic-window-toolbar": {
-          display: "none",
-        },
-      },
-      ".mosaic-preview": {
-        maxHeight: "none",
-
-        // we use custom toolbars
-        ".mosaic-window-toolbar": {
-          display: "none",
-        },
-      },
-      ".mosaic-window-body": {
-        flex: "1 1 auto",
-        display: "flex",
-        background: "unset",
-        zIndex: "unset",
-      },
-      ".mosaic-window-title": {
-        fontSize: "12px",
-        lineHeight: "30px",
-        paddingLeft: "5px",
-        color: colors.GREY,
-      },
-      ".mosaic-split": {
-        background: "none",
-        zIndex: 99,
-
-        ".mosaic-split-line": {
-          boxShadow: `0 0 0 1px ${colors.DARK3}`,
-        },
-        ":hover .mosaic-split-line": {
-          boxShadow: `0 0 0 1px ${colors.GREY}`,
-        },
-        "&.-row": {
-          marginTop: 2,
-        },
-      },
-
-      "&.borderless": {
-        ".mosaic-split": {
-          opacity: 0,
-
-          "&:hover": {
-            opacity: 1,
-          },
-        },
-        ".mosaic-tile": {
-          margin: 0,
-        },
-      },
-      ".mosaic-window-controls": {
-        ".separator": {
-          borderLeft: `1px solid ${colors.DIVIDER}`,
-        },
-        ".pt-button": {
-          outline: "none",
-          cursor: "pointer",
-          backgroundColor: "transparent",
-          borderColor: "transparent",
-          color: colors.TEXT_CONTROL,
-
-          ":active, :focus": {
-            outline: "none",
-          },
-
-          ":before": {
-            cursor: "pointer",
-            backgroundColor: "transparent",
-            borderColor: "transparent",
-            color: colors.TEXT_CONTROL,
-          },
-          ":hover:before": {
-            color: colors.TEXT_CONTROL_HOVER,
-          },
-        },
-      },
-      ".drop-target-container .drop-target": {
-        backgroundColor: colors.TEXT_DISABLED,
-        border: `2px solid ${colors.TEXT_MUTED}`,
-      },
-    },
-  });
 
 type Props = {
   layout?: MosaicNode<string>;
@@ -191,8 +89,6 @@ function TabMosaicWrapper({ tabId, children }: PropsWithChildren<{ tabId?: strin
 }
 
 export function UnconnectedPanelLayout(props: Props): React.ReactElement {
-  mosaicStyles();
-
   const { savePanelConfigs } = useCurrentLayoutActions();
   const mosaicId = usePanelMosaicId();
   const { layout, onChange, tabId } = props;
