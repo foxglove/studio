@@ -242,9 +242,10 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   }
 
   private _runPlaybackLoop = debouncePromise(async () => {
-    while (this._isPlaying) {
+    mainLoop: while (this._isPlaying) {
       await this._emitState.currentPromise;
       const frameDurationMs = 80; //FIXME: adaptive? support changing playback rate?
+      const lastSeekTime = this._lastSeekTime;
       const startTime = this._currentTime;
       const endTime = clampTime(
         add(startTime, fromMillis(frameDurationMs)),
@@ -259,6 +260,9 @@ export default class FoxgloveDataPlatformPlayer implements Player {
         log.debug("Waiting for more messages");
         // Wait for new messages to be loaded
         await (this._loadedMoreMessages = signal());
+        if (this._lastSeekTime !== lastSeekTime) {
+          continue mainLoop;
+        }
       }
       this._nextFrame = messages;
       this._currentTime = endTime;
@@ -272,6 +276,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
       fullyLoadedFractionRanges: this._preloadedMessages.fullyLoadedFractionRanges(),
     };
     this._currentPreloadTask?.abort();
+    this._currentPreloadTask = undefined;
   }
 
   private _startPreloadTaskIfNeeded() {
@@ -288,15 +293,19 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     }
 
     const startTime = clampTime(preloadedExtent?.end ?? this._currentTime, this._start, this._end);
-    const endTime = clampTime(
+    const proposedEndTime = clampTime(
       add(startTime, fromSec(PRELOAD_DURATION_SECS)),
       this._start,
       this._end,
     );
-    this._currentPreloadTask = new AbortController();
-    const abortSignal = this._currentPreloadTask.signal;
+    const endTime =
+      this._preloadedMessages.fullyLoadedExtent(proposedEndTime)?.start ?? proposedEndTime;
+
+    const thisTask = new AbortController();
+    this._currentPreloadTask = thisTask;
+    log.debug("Starting preload task");
     (async () => {
-      const stream = streamMessages(this._consoleApi, abortSignal, {
+      const stream = streamMessages(this._consoleApi, thisTask.signal, {
         deviceId: this._deviceId,
         start: startTime,
         end: endTime,
@@ -308,7 +317,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
         end: endTime,
       })) {
         log.debug("Adding preloaded chunk", range, messages);
-        if (abortSignal.aborted) {
+        if (thisTask.signal.aborted) {
           break;
         }
         this._preloadedMessages.insert(messages, range);
@@ -321,11 +330,17 @@ export default class FoxgloveDataPlatformPlayer implements Player {
       }
     })()
       .catch((error) => {
+        if (error.name === "AbortError") {
+          log.debug("Preload task aborted");
+          return;
+        }
         log.error(error);
         this._addProblem("stream-error", { message: error.message, error, severity: "error" });
       })
       .finally(() => {
-        this._currentPreloadTask = undefined;
+        if (this._currentPreloadTask === thisTask) {
+          this._currentPreloadTask = undefined;
+        }
       });
 
     this._emitState();
@@ -357,7 +372,10 @@ export default class FoxgloveDataPlatformPlayer implements Player {
 
   seekPlayback(time: Time, _backfillDuration?: Time): void {
     this._currentTime = time;
+    this._lastSeekTime = Date.now();
+    this._nextFrame = [];
     this._currentPreloadTask?.abort();
+    this._currentPreloadTask = undefined;
     this._startPreloadTaskIfNeeded();
     this._emitState();
   }
