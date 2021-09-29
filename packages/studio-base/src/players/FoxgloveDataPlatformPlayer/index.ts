@@ -9,8 +9,8 @@ import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
 import {
   add,
   clampTime,
-  fromDate,
   fromMillis,
+  fromRFC3339String,
   fromSec,
   subtract,
   Time,
@@ -95,8 +95,13 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     log.info(`initializing FoxgloveDataPlatformPlayer ${JSON.stringify(params)}`);
     this._metricsCollector = metricsCollector;
     this._metricsCollector.playerConstructed();
-    this._start = fromDate(new Date(params.start)); // FIXME: https://github.com/foxglove/data-platform/issues/150
-    this._end = fromDate(new Date(params.end));
+    const start = fromRFC3339String(params.start);
+    const end = fromRFC3339String(params.end);
+    if (!start || !end) {
+      throw new Error(`Invalid start/end time: ${start}, ${end}`);
+    }
+    this._start = start;
+    this._end = end;
     this._currentTime = this._start;
     this._deviceId = params.deviceId;
     this._name = `${this._deviceId}, ${formatTimeRaw(this._start)} to ${formatTimeRaw(this._end)}`;

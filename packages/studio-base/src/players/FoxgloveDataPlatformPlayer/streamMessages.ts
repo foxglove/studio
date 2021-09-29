@@ -10,7 +10,7 @@ import { ChannelInfo, McapReader, McapRecord } from "@foxglove/mcap";
 import { parse as parseMessageDefinition, RosMsgDefinition } from "@foxglove/rosmsg";
 import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
 import { MessageReader as ROS2MessageReader } from "@foxglove/rosmsg2-serialization";
-import { isTimeInRangeInclusive, Time, toDate } from "@foxglove/rostime";
+import { isTimeInRangeInclusive, Time, toRFC3339String } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 
@@ -27,8 +27,8 @@ export default async function* streamMessages(
   const startTimer = performance.now();
   const { link: mcapUrl } = await api.stream({
     deviceId: params.deviceId,
-    start: toDate(params.start).toISOString(), //FIXME
-    end: toDate(params.end).toISOString(), //FIXME
+    start: toRFC3339String(params.start),
+    end: toRFC3339String(params.end),
     topics: params.topics,
   });
   if (signal.aborted) {
