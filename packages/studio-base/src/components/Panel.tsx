@@ -50,7 +50,6 @@ import ErrorBoundary, { ErrorRendererProps } from "@foxglove/studio-base/compone
 import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
-import { LegacyButton } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import {
@@ -70,8 +69,6 @@ import {
   updateTabPanelLayout,
 } from "@foxglove/studio-base/util/layout";
 import { colors, spacing } from "@foxglove/studio-base/util/sharedStyleConstants";
-
-import styles from "./Panel.module.scss";
 
 const classes = mergeStyleSets({
   root: {
@@ -132,8 +129,57 @@ const classes = mergeStyleSets({
       transition: "opacity 0.05s ease-out",
     },
   },
+  actionsOverlay: {
+    cursor: "pointer",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 100000, // highest level within panel
+    display: "none",
+    flexDirection: "column",
+    justifyContent: "flex-start",
+    alignItems: "flex-end",
+    fontSize: "14px",
+    paddingTop: "24px",
 
-  quickActionsOverlay: {},
+    ".mosaic-window:hover &": {
+      backgroundColor: "rgba(45, 45, 51, 1)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexWrap: "wrap",
+    },
+    // for screenshot tests
+    ".hoverForScreenshot": {
+      backgroundColor: "rgba(45, 45, 51, 1)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexWrap: "wrap",
+    },
+
+    div: {
+      width: "100%",
+      padding: "6px 0",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexWrap: "wrap",
+    },
+
+    svg: {
+      marginRight: "4px",
+      width: "24px",
+      height: "24px",
+      fill: "white",
+    },
+    p: {
+      fontSize: "12px",
+      color: colors.TEXT_MUTED,
+    },
+  },
   quickActionsOverlayButton: {
     width: 72,
     height: 72,
@@ -154,8 +200,6 @@ const classes = mergeStyleSets({
       background: "rgba(110, 81, 238, 0.8)",
     },
   },
-
-  tabActionsOverlay: {},
   tabActionsOverlayButton: {
     margin: "4px",
     flex: "none",
@@ -175,64 +219,6 @@ const classes = mergeStyleSets({
       background: "rgba(110, 81, 238, 0.8)",
     },
   },
-
-  // .tabActionsOverlay,
-  // .quickActionsOverlay {
-  //   cursor: pointer;
-  //   position: absolute;
-  //   top: 0;
-  //   left: 0;
-  //   right: 0;
-  //   bottom: 0;
-  //   z-index: 100000; // highest level within panel
-  //   display: none;
-
-  //   .root:hover > &,
-  //   // for screenshot tests
-  //   &:global(.hoverForScreenshot) {
-  //     background-color: rgba(45, 45, 51, 1);
-  //     display: flex;
-  //     align-items: center;
-  //     justify-content: center;
-  //     flex-wrap: wrap;
-  //   }
-
-  //   flex-direction: column;
-  //   justify-content: flex-start;
-  //   align-items: flex-end;
-  //   font-size: 14px;
-  //   padding-top: 24px;
-
-  //   div {
-  //     width: 100%;
-  //     padding: 6px 0;
-  //     display: flex;
-  //     align-items: center;
-  //     justify-content: center;
-  //     flex-wrap: wrap;
-  //   }
-
-  //   svg {
-  //     margin-right: 4px;
-  //     width: 24px;
-  //     height: 24px;
-  //     fill: white;
-  //   }
-
-  //   p {
-  //     font-size: 12px;
-  //     color: $text-muted;
-  //   }
-  // }
-
-  // .tabActionsOverlay button {
-  //   width: 145px;
-  //   height: 40px;
-  //   display: flex;
-  //   flex-direction: row;
-  //   justify-content: space-between;
-  // }
-
   exitFullScreen: {
     position: "fixed",
     top: 75,
@@ -242,9 +228,9 @@ const classes = mergeStyleSets({
     backgroundColor: colors.DARK3,
     display: "none",
 
-    // ".root:hover &": {
-    //   display: "block",
-    // },
+    ".mosaic-window:hover &": {
+      display: "block",
+    },
     ".hoverForScreenshot &": {
       display: "block",
     },
@@ -698,7 +684,7 @@ export default function Panel<
             }}
           >
             {isSelected && !fullScreen && numSelectedPanelsIfSelected > 1 && (
-              <div data-tab-options className={classes.tabActionsOverlay}>
+              <div data-tab-options className={classes.actionsOverlay}>
                 <Button
                   className={classes.tabActionsOverlayButton}
                   style={{ backgroundColor: colors.BLUE }}
@@ -719,7 +705,7 @@ export default function Panel<
             )}
             {type !== TAB_PANEL_TYPE && quickActionsKeyPressed && !fullScreen && (
               <div
-                className={styles.quickActionsOverlay}
+                className={classes.actionsOverlay}
                 ref={(el) => {
                   quickActionsOverlayRef.current = el;
                   connectOverlayDragSource(el);
