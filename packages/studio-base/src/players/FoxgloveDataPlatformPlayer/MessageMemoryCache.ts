@@ -110,7 +110,7 @@ export default class MessageMemoryCache {
    * @param messages The newly loaded messages.
    * @param coveredRange The time range covered by the new messages. Must not be empty or overlap any already loaded ranges.
    */
-  insert(messages: MessageEvent<unknown>[], coveredRange: TimeRange): void {
+  insert(coveredRange: TimeRange, messages: MessageEvent<unknown>[]): void {
     if (!isLessThan(coveredRange.start, coveredRange.end)) {
       throw new Error("Inserted range must not be empty");
     }

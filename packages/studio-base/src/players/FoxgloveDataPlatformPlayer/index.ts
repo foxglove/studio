@@ -348,7 +348,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
           break;
         }
         log.debug("Adding preloaded chunk in", range, "with", messages.length, "messages");
-        this._preloadedMessages.insert(messages, range);
+        this._preloadedMessages.insert(range, messages);
         this._progress = {
           fullyLoadedFractionRanges: this._preloadedMessages.fullyLoadedFractionRanges(),
         };

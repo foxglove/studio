@@ -17,40 +17,40 @@ describe("MessageMemoryCache", () => {
         start: { sec: 0, nsec: 0 },
         end: { sec: 5, nsec: 0 },
       });
-      cache.insert([], { start: { sec: 1, nsec: 0 }, end: { sec: 2, nsec: 0 } });
+      cache.insert({ start: { sec: 1, nsec: 0 }, end: { sec: 2, nsec: 0 } }, []);
       // Test with extra ranges at the beginning and end to ensure the binary search algorithm works correctly.
       for (let i = 0; i < leadingRanges; i++) {
-        cache.insert([], { start: { sec: 0, nsec: i }, end: { sec: 0, nsec: i + 1 } });
+        cache.insert({ start: { sec: 0, nsec: i }, end: { sec: 0, nsec: i + 1 } }, []);
       }
       for (let i = 0; i < trailingRanges; i++) {
-        cache.insert([], { start: { sec: 4, nsec: i }, end: { sec: 4, nsec: i + 1 } });
+        cache.insert({ start: { sec: 4, nsec: i }, end: { sec: 4, nsec: i + 1 } }, []);
       }
 
       expect(() =>
-        cache.insert([], { start: { sec: 1, nsec: 0 }, end: { sec: 0, nsec: 500_000_000 } }),
+        cache.insert({ start: { sec: 1, nsec: 0 }, end: { sec: 0, nsec: 500_000_000 } }, []),
       ).toThrow("must not be empty");
       expect(() =>
-        cache.insert([], { start: { sec: 1, nsec: 0 }, end: { sec: 1, nsec: 0 } }),
+        cache.insert({ start: { sec: 1, nsec: 0 }, end: { sec: 1, nsec: 0 } }, []),
       ).toThrow("must not be empty");
 
       expect(() =>
-        cache.insert([], { start: { sec: 1, nsec: 0 }, end: { sec: 1, nsec: 1 } }),
+        cache.insert({ start: { sec: 1, nsec: 0 }, end: { sec: 1, nsec: 1 } }, []),
       ).toThrow("overlaps an existing range");
       expect(() =>
-        cache.insert([], { start: { sec: 1, nsec: 0 }, end: { sec: 2, nsec: 0 } }),
+        cache.insert({ start: { sec: 1, nsec: 0 }, end: { sec: 2, nsec: 0 } }, []),
       ).toThrow("overlaps an existing range");
       expect(() =>
-        cache.insert([], { start: { sec: 1, nsec: 0 }, end: { sec: 3, nsec: 0 } }),
+        cache.insert({ start: { sec: 1, nsec: 0 }, end: { sec: 3, nsec: 0 } }, []),
       ).toThrow("overlaps an existing range");
       expect(() =>
-        cache.insert([], { start: { sec: 1, nsec: 999_999_999 }, end: { sec: 3, nsec: 0 } }),
+        cache.insert({ start: { sec: 1, nsec: 999_999_999 }, end: { sec: 3, nsec: 0 } }, []),
       ).toThrow("overlaps an existing range");
 
       expect(() =>
-        cache.insert([], { start: { sec: 2, nsec: 0 }, end: { sec: 3, nsec: 0 } }),
+        cache.insert({ start: { sec: 2, nsec: 0 }, end: { sec: 3, nsec: 0 } }, []),
       ).not.toThrow();
       expect(() =>
-        cache.insert([], { start: { sec: 0, nsec: 500_000_000 }, end: { sec: 1, nsec: 0 } }),
+        cache.insert({ start: { sec: 0, nsec: 500_000_000 }, end: { sec: 1, nsec: 0 } }, []),
       ).not.toThrow();
     },
   );
@@ -64,13 +64,13 @@ describe("MessageMemoryCache", () => {
         start: { sec: 0, nsec: 0 },
         end: { sec: 5, nsec: 0 },
       });
-      cache.insert([], { start: fromSec(1), end: fromSec(2) });
+      cache.insert({ start: fromSec(1), end: fromSec(2) }, []);
       // Test with extra ranges at the beginning and end to ensure the binary search algorithm works correctly.
       for (let i = 0; i < leadingRanges; i++) {
-        cache.insert([], { start: { sec: 0, nsec: i }, end: { sec: 0, nsec: i + 1 } });
+        cache.insert({ start: { sec: 0, nsec: i }, end: { sec: 0, nsec: i + 1 } }, []);
       }
       for (let i = 0; i < trailingRanges; i++) {
-        cache.insert([], { start: { sec: 4, nsec: i }, end: { sec: 4, nsec: i + 1 } });
+        cache.insert({ start: { sec: 4, nsec: i }, end: { sec: 4, nsec: i + 1 } }, []);
       }
 
       expect(cache.fullyLoadedExtent(fromSec(0.5))).toBeUndefined();
@@ -84,14 +84,12 @@ describe("MessageMemoryCache", () => {
   it("merges inserted range with previous range", () => {
     const cache = new MessageMemoryCache({ start: fromSec(0), end: fromSec(5) });
 
-    cache.insert([{ topic: "", receiveTime: fromSec(1), message: "a" }], {
-      start: fromSec(1),
-      end: fromSec(2),
-    });
-    cache.insert([{ topic: "", receiveTime: fromSec(2), message: "b" }], {
-      start: fromSec(2),
-      end: fromSec(3),
-    });
+    cache.insert({ start: fromSec(1), end: fromSec(2) }, [
+      { topic: "", receiveTime: fromSec(1), message: "a" },
+    ]);
+    cache.insert({ start: fromSec(2), end: fromSec(3) }, [
+      { topic: "", receiveTime: fromSec(2), message: "b" },
+    ]);
 
     expect(cache.fullyLoadedRanges()).toEqual([{ start: fromSec(1), end: fromSec(3) }]);
     expect(cache.getMessages({ start: fromSec(1), end: fromSec(3) })).toEqual([
@@ -103,14 +101,12 @@ describe("MessageMemoryCache", () => {
   it("merges inserted range with next range", () => {
     const cache = new MessageMemoryCache({ start: fromSec(0), end: fromSec(5) });
 
-    cache.insert([{ topic: "", receiveTime: fromSec(2), message: "b" }], {
-      start: fromSec(2),
-      end: fromSec(3),
-    });
-    cache.insert([{ topic: "", receiveTime: fromSec(1), message: "a" }], {
-      start: fromSec(1),
-      end: fromSec(2),
-    });
+    cache.insert({ start: fromSec(2), end: fromSec(3) }, [
+      { topic: "", receiveTime: fromSec(2), message: "b" },
+    ]);
+    cache.insert({ start: fromSec(1), end: fromSec(2) }, [
+      { topic: "", receiveTime: fromSec(1), message: "a" },
+    ]);
 
     expect(cache.fullyLoadedRanges()).toEqual([{ start: fromSec(1), end: fromSec(3) }]);
     expect(cache.getMessages({ start: fromSec(1), end: fromSec(3) })).toEqual([
@@ -122,18 +118,15 @@ describe("MessageMemoryCache", () => {
   it("merges inserted range with previous and next ranges", () => {
     const cache = new MessageMemoryCache({ start: fromSec(0), end: fromSec(5) });
 
-    cache.insert([{ topic: "", receiveTime: fromSec(2), message: "c" }], {
-      start: fromSec(2),
-      end: fromSec(3),
-    });
-    cache.insert([{ topic: "", receiveTime: fromSec(0), message: "a" }], {
-      start: fromSec(0),
-      end: fromSec(1),
-    });
-    cache.insert([{ topic: "", receiveTime: fromSec(1), message: "b" }], {
-      start: fromSec(1),
-      end: fromSec(2),
-    });
+    cache.insert({ start: fromSec(2), end: fromSec(3) }, [
+      { topic: "", receiveTime: fromSec(2), message: "c" },
+    ]);
+    cache.insert({ start: fromSec(0), end: fromSec(1) }, [
+      { topic: "", receiveTime: fromSec(0), message: "a" },
+    ]);
+    cache.insert({ start: fromSec(1), end: fromSec(2) }, [
+      { topic: "", receiveTime: fromSec(1), message: "b" },
+    ]);
 
     expect(cache.fullyLoadedRanges()).toEqual([{ start: fromSec(0), end: fromSec(3) }]);
     expect(cache.getMessages({ start: fromSec(0), end: fromSec(3) })).toEqual([
@@ -155,10 +148,9 @@ describe("MessageMemoryCache", () => {
     for (const permutation of permutations(ranges)) {
       const cache = new MessageMemoryCache({ start: fromSec(0), end: fromSec(11) });
       for (const [start, end] of permutation) {
-        cache.insert([{ topic: "", receiveTime: fromSec(start), message: { start, end } }], {
-          start: fromSec(start),
-          end: fromSec(end),
-        });
+        cache.insert({ start: fromSec(start), end: fromSec(end) }, [
+          { topic: "", receiveTime: fromSec(start), message: { start, end } },
+        ]);
       }
       expect(cache.fullyLoadedRanges()).toEqual(
         ranges.map(([start, end]) => ({ start: fromSec(start), end: fromSec(end) })),
@@ -178,10 +170,9 @@ describe("MessageMemoryCache", () => {
     for (const permutation of permutations(ranges)) {
       const cache = new MessageMemoryCache({ start: fromSec(0), end: fromSec(6) });
       for (const [start, end] of permutation) {
-        cache.insert([{ topic: "", receiveTime: fromSec(start), message: { start, end } }], {
-          start: fromSec(start),
-          end: fromSec(end),
-        });
+        cache.insert({ start: fromSec(start), end: fromSec(end) }, [
+          { topic: "", receiveTime: fromSec(start), message: { start, end } },
+        ]);
       }
       expect(cache.fullyLoadedRanges()).toEqual([{ start: fromSec(0), end: fromSec(6) }]);
       expect(cache.getMessages({ start: fromSec(0), end: fromSec(6) })).toEqual([
@@ -217,7 +208,7 @@ describe("MessageMemoryCache", () => {
         messages.push({ topic: "", receiveTime: { sec: 2, nsec: i }, message: `trailing-${i}` });
       }
 
-      cache.insert(messages, { start: fromSec(0), end: fromSec(2) });
+      cache.insert({ start: fromSec(0), end: fromSec(2) }, messages);
       expect(cache.getMessages({ start: { sec: 1, nsec: 1 }, end: { sec: 1, nsec: 5 } })).toEqual([
         { topic: "", receiveTime: { sec: 1, nsec: 1 }, message: "1" },
         { topic: "", receiveTime: { sec: 1, nsec: 2 }, message: "2" },
