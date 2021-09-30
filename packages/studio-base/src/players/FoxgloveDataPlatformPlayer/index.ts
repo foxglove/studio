@@ -140,14 +140,22 @@ export default class FoxgloveDataPlatformPlayer implements Player {
 
     const topics: Topic[] = [];
     const datatypes: RosDatatypes = new Map();
-    // FIXME: https://github.com/foxglove/data-platform/issues/149
     for (const { topic, version, serializationFormat, schema } of rawTopics) {
-      const datatypeName = version; //FIXME
+      if (serializationFormat !== "ros1" && serializationFormat !== "ros2") {
+        this._addProblem("bad-encoding", {
+          message: `Unsupported encoding for ${topic}: ${serializationFormat}`,
+          severity: "error",
+        });
+        return;
+      }
+      const datatypeName = version; // TODO: replace with schemaName
       if (schema == undefined) {
         throw new Error(`missing requested schema for ${topic}`);
       }
       topics.push({ name: topic, datatype: datatypeName });
-      const parsedDefinitions = parseMessageDefinition(schema, { ros2: false /*FIXME*/ });
+      const parsedDefinitions = parseMessageDefinition(schema, {
+        ros2: serializationFormat === "ros2",
+      });
       parsedDefinitions.forEach(({ name, definitions }, index) => {
         // The first definition usually doesn't have an explicit name,
         // so we get the name from the datatype.
