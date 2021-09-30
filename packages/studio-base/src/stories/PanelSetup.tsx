@@ -122,7 +122,7 @@ export const MosaicWrapper = ({ children }: { children: React.ReactNode }): JSX.
   return (
     <DndProvider backend={HTML5Backend}>
       <Mosaic
-        className="none"
+        className="mosaic-foxglove"
         initialValue="mock"
         renderTile={(_id, path) => {
           return (

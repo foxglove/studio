@@ -76,7 +76,6 @@ const mosaicStyles = () =>
           marginTop: 2,
         },
       },
-
       "&.borderless": {
         ".mosaic-split": {
           opacity: 0,
