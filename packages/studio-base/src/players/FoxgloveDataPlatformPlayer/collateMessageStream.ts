@@ -22,16 +22,6 @@ export default async function* collateMessageStream(
     if (messages.length === 0) {
       continue;
     }
-    const lastReceiveTime = messages[messages.length - 1]!.receiveTime;
-    if (
-      unsentMessages.length > 0 &&
-      areEqual(lastReceiveTime, unsentMessages[unsentMessages.length - 1]!.receiveTime)
-    ) {
-      // Edge case: all new messages have the same receiveTime as the unsent messages
-      unsentMessages.push(...messages);
-      continue;
-    }
-
     let indexToKeep = messages.length - 1;
     const receiveTimeToKeep = messages[indexToKeep]!.receiveTime;
     while (indexToKeep > 0 && areEqual(messages[indexToKeep - 1]!.receiveTime, receiveTimeToKeep)) {
