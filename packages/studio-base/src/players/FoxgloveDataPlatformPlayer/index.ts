@@ -236,6 +236,8 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   close(): void {
     this._closed = true;
     this._metricsCollector.close();
+    this._currentPreloadTask?.abort();
+    this._currentPreloadTask = undefined;
     this._totalBytesReceived = 0;
   }
 
@@ -300,7 +302,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   }
 
   private _startPreloadTaskIfNeeded() {
-    if (!this._initialized) {
+    if (!this._initialized || this._closed) {
       return;
     }
     if (this._currentPreloadTask) {
