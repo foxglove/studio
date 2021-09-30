@@ -20,18 +20,18 @@ import {
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
   AdvertiseOptions,
+  MessageEvent,
   ParameterValue,
   Player,
   PlayerMetricsCollectorInterface,
   PlayerPresence,
-  PlayerState,
   PlayerProblem,
+  PlayerState,
+  Progress,
   PublishPayload,
   SubscribePayload,
   Topic,
-  Progress,
 } from "@foxglove/studio-base/players/types";
-import { MessageEvent } from "@foxglove/studio-base/players/types";
 import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import debouncePromise from "@foxglove/studio-base/util/debouncePromise";

@@ -11,7 +11,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { makeStyles, Stack } from "@fluentui/react";
-import moment from "moment";
 import {
   useState,
   useEffect,
@@ -25,6 +24,7 @@ import { useToasts } from "react-toast-notifications";
 import { useMount, useMountedState } from "react-use";
 
 import Log from "@foxglove/log";
+import { fromRFC3339String } from "@foxglove/rostime";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import AccountSettings from "@foxglove/studio-base/components/AccountSettingsSidebar/AccountSettings";
 import ConnectionList from "@foxglove/studio-base/components/ConnectionList";
@@ -122,10 +122,6 @@ function Variables() {
       <GlobalVariablesTable />
     </SidebarContent>
   );
-}
-
-function isISO8601(str: string): boolean {
-  return moment(str, moment.ISO_8601, true).isValid();
 }
 
 // file types we support for drag/drop
@@ -363,8 +359,12 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           log.warn(`Missing deviceId param in ${url}`);
           return;
         }
-        if (!isISO8601(start) || !isISO8601(end) || (seekTo && !isISO8601(seekTo))) {
-          log.warn(`Missing or invalid ISO8601 timestamp(s) in ${url}`);
+        if (
+          !fromRFC3339String(start) ||
+          !fromRFC3339String(end) ||
+          (seekTo && !fromRFC3339String(seekTo))
+        ) {
+          log.warn(`Missing or invalid timestamp(s) in ${url}`);
           return;
         }
         selectSource(
