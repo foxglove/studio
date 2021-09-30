@@ -250,16 +250,28 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   }
 
   private _runPlaybackLoop = debouncePromise(async () => {
+    let lastTickEndTime: number | undefined;
+    let lastReadMs: number | undefined;
     mainLoop: while (this._isPlaying) {
       await this._emitState.currentPromise;
-      const frameDurationMs = 80; //FIXME: adaptive? support changing playback rate?
+
+      // compute how long of a time range we want to read by taking into account
+      // the time since our last read and how fast we're currently playing back
+      const msSinceLastTick =
+        lastTickEndTime != undefined ? performance.now() - lastTickEndTime : 20;
+
+      // Read at most 300ms worth of messages, otherwise things can get out of control if rendering
+      // is very slow. Also, smooth over the range that we request, so that a single slow frame won't
+      // cause the next frame to also be unnecessarily slow by increasing the frame size.
+      let readMs = Math.min(msSinceLastTick * this._speed, 300);
+      if (lastReadMs != undefined) {
+        readMs = lastReadMs * 0.9 + readMs * 0.1;
+      }
+      lastReadMs = readMs;
+
       const lastSeekTime = this._lastSeekTime;
       const startTime = this._currentTime;
-      const endTime = clampTime(
-        add(startTime, fromMillis(frameDurationMs)),
-        this._start,
-        this._end,
-      );
+      const endTime = clampTime(add(startTime, fromMillis(readMs)), this._start, this._end);
       this._startPreloadTaskIfNeeded();
       let messages;
       while (
@@ -269,9 +281,11 @@ export default class FoxgloveDataPlatformPlayer implements Player {
         // Wait for new messages to be loaded
         await (this._loadedMoreMessages = signal());
         if (this._lastSeekTime !== lastSeekTime) {
+          lastTickEndTime = undefined;
           continue mainLoop;
         }
       }
+      lastTickEndTime = performance.now();
       this._nextFrame = messages;
       this._currentTime = endTime;
       this._emitState();
@@ -333,7 +347,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
         if (thisTask.signal.aborted) {
           break;
         }
-        log.debug("Adding preloaded chunk", startTime, endTime, range, messages);
+        log.debug("Adding preloaded chunk in", range, "with", messages.length, "messages");
         this._preloadedMessages.insert(messages, range);
         this._progress = {
           fullyLoadedFractionRanges: this._preloadedMessages.fullyLoadedFractionRanges(),
@@ -373,12 +387,20 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   }
 
   startPlayback(): void {
+    if (this._isPlaying) {
+      return;
+    }
+    this._metricsCollector.play(this._speed);
     this._isPlaying = true;
     this._runPlaybackLoop();
     this._emitState();
   }
 
   pausePlayback(): void {
+    if (!this._isPlaying) {
+      return;
+    }
+    this._metricsCollector.pause();
     this._isPlaying = false;
     this._emitState();
   }
@@ -394,8 +416,10 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     this._emitState();
   }
 
-  setPlaybackSpeed(_speedFraction: number): void {
-    // no-op
+  setPlaybackSpeed(speed: number): void {
+    this._speed = speed;
+    this._metricsCollector.setSpeed(speed);
+    this._emitState();
   }
 
   requestBackfill(): void {

@@ -10,7 +10,7 @@ import { ChannelInfo, McapReader, McapRecord } from "@foxglove/mcap";
 import { parse as parseMessageDefinition, RosMsgDefinition } from "@foxglove/rosmsg";
 import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
 import { MessageReader as ROS2MessageReader } from "@foxglove/rosmsg2-serialization";
-import { isTimeInRangeInclusive, Time, toRFC3339String } from "@foxglove/rostime";
+import { fromNanoSec, isTimeInRangeInclusive, Time, toRFC3339String } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 
@@ -92,10 +92,7 @@ export default async function* streamMessages(
         if (!channelInfo) {
           throw new Error(`message for channel ${record.channelId} with no prior channel info`);
         }
-        const receiveTime = {
-          sec: Number(record.timestamp / 1_000_000_000n),
-          nsec: Number(record.timestamp % 1_000_000_000n),
-        };
+        const receiveTime = fromNanoSec(record.timestamp);
         if (isTimeInRangeInclusive(receiveTime, params.start, params.end)) {
           totalMessages++;
           messages.push({
