@@ -166,7 +166,7 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
       layout != undefined || layout === "" ? (
         <MosaicWithoutDragDropContext
           renderTile={renderTile}
-          className="mosaic-foxglove"
+          className="mosaic-foxglove-theme" // prevent the default mosaic theme from being applied
           resize={{ minimumPaneSizePercentage: 2 }}
           value={layout}
           onChange={(newLayout) => onChange(newLayout ?? undefined)}
