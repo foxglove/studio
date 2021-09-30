@@ -59,10 +59,10 @@ type FoxgloveDataPlatformPlayerOpts = {
 
 const ZERO_TIME = Object.freeze({ sec: 0, nsec: 0 });
 
-const PRELOAD_THRESHOLD_SECS = 5;
-const PRELOAD_DURATION_SECS = 15;
-
 export default class FoxgloveDataPlatformPlayer implements Player {
+  private readonly _preloadThresholdSecs = 5;
+  private readonly _preloadDurationSecs = 15;
+
   private _id: string = uuidv4(); // Unique ID for this player
   private _name: string;
   private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState()
@@ -312,14 +312,14 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     const shouldPreload =
       this._requestedTopics.length > 0 &&
       (!preloadedExtent ||
-        toSec(subtract(preloadedExtent.end, this._currentTime)) < PRELOAD_THRESHOLD_SECS);
+        toSec(subtract(preloadedExtent.end, this._currentTime)) < this._preloadThresholdSecs);
     if (!shouldPreload) {
       return;
     }
 
     const startTime = clampTime(preloadedExtent?.end ?? this._currentTime, this._start, this._end);
     const proposedEndTime = clampTime(
-      add(startTime, fromSec(PRELOAD_DURATION_SECS)),
+      add(startTime, fromSec(this._preloadDurationSecs)),
       this._start,
       this._end,
     );
