@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { fromSec } from "@foxglove/rostime";
-import permutations from "@foxglove/studio-base/util/permutations";
+import permutations from "@foxglove/studio-base/test/permutations";
 
 import MessageMemoryCache from "./MessageMemoryCache";
 

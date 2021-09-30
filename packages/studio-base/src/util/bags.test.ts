@@ -12,9 +12,9 @@
 //   You may not use this file except in compliance with the License.
 
 import { Time, fromSec } from "@foxglove/rostime";
+import permutations from "@foxglove/studio-base/test/permutations";
 
 import { getBagChunksOverlapCount } from "./bags";
-import permutations from "./permutations";
 
 const expectChunkOverlaps = (
   elements: { startTime: Time; endTime: Time }[],
