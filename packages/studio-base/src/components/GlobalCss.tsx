@@ -26,6 +26,12 @@ const mosaicStyles = () =>
         ".mosaic-window-toolbar": {
           display: "none",
         },
+        ".mosaic-window-body": {
+          flex: "1 1 auto",
+          display: "flex",
+          background: "unset",
+          zIndex: "unset",
+        },
       },
       ".mosaic-preview": {
         maxHeight: "none",
@@ -34,6 +40,15 @@ const mosaicStyles = () =>
         ".mosaic-window-toolbar": {
           display: "none",
         },
+        ".mosaic-window-body": {
+          flex: "1 1 auto",
+          display: "flex",
+          background: "unset",
+          zIndex: "unset",
+        },
+      },
+      ".mosaic-window-toolbar": {
+        display: "none",
       },
       ".mosaic-window-body": {
         flex: "1 1 auto",
