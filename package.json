@@ -122,5 +122,8 @@
     "webpack-cli": "4.8.0",
     "webpack-dev-server": "3.11.2",
     "webpack-hot-middleware": "2.25.0"
+  },
+  "dependencies": {
+    "@auth0/auth0-spa-js": "1.18.0"
   }
 }

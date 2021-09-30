@@ -83,6 +83,7 @@ class ConsoleApi {
   }
 
   async signin(args: SigninArgs): Promise<Session> {
+    console.log("idToken signin");
     return await this.post<Session>("/v1/signin", args);
   }
 
@@ -156,6 +157,7 @@ class ConsoleApi {
     } = {},
   ): Promise<ApiResponse<T>> {
     const fullUrl = `${this._baseUrl}${url}`;
+    console.log("idToken fullUrl", fullUrl);
 
     const headers: Record<string, string> = {};
     if (this._authHeader != undefined) {
