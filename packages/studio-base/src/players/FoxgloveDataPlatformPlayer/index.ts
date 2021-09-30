@@ -140,27 +140,24 @@ export default class FoxgloveDataPlatformPlayer implements Player {
 
     const topics: Topic[] = [];
     const datatypes: RosDatatypes = new Map();
-    for (const { topic, version, serializationFormat, schema } of rawTopics) {
-      if (serializationFormat !== "ros1" && serializationFormat !== "ros2") {
+    for (const { topic, encoding, schema, schemaName } of rawTopics) {
+      if (encoding !== "ros1" && encoding !== "ros2") {
         this._addProblem("bad-encoding", {
-          message: `Unsupported encoding for ${topic}: ${serializationFormat}`,
+          message: `Unsupported encoding for ${topic}: ${encoding}`,
           severity: "error",
         });
         return;
       }
-      const datatypeName = version; // TODO: replace with schemaName
       if (schema == undefined) {
         throw new Error(`missing requested schema for ${topic}`);
       }
-      topics.push({ name: topic, datatype: datatypeName });
-      const parsedDefinitions = parseMessageDefinition(schema, {
-        ros2: serializationFormat === "ros2",
-      });
+      topics.push({ name: topic, datatype: schemaName });
+      const parsedDefinitions = parseMessageDefinition(schema, { ros2: encoding === "ros2" });
       parsedDefinitions.forEach(({ name, definitions }, index) => {
         // The first definition usually doesn't have an explicit name,
         // so we get the name from the datatype.
         if (index === 0) {
-          datatypes.set(datatypeName, { name: datatypeName, definitions });
+          datatypes.set(schemaName, { name: schemaName, definitions });
         } else if (name != undefined) {
           datatypes.set(name, { name, definitions });
         }

@@ -48,9 +48,10 @@ type TokenResponse = {
 };
 
 type TopicResponse = {
-  schema?: string;
-  serializationFormat: string;
   topic: string;
+  encoding: string;
+  schemaName: string;
+  schema?: string;
   version: string;
 };
 
