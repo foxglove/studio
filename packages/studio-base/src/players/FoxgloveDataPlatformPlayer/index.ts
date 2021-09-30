@@ -187,16 +187,6 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     }
   }
 
-  private _clearProblem(id: string, { skipEmit = false }: { skipEmit?: boolean } = {}): void {
-    if (!this._problemsById.delete(id)) {
-      return;
-    }
-    this._problems = Array.from(this._problemsById.values());
-    if (!skipEmit) {
-      this._emitState();
-    }
-  }
-
   // Potentially performance-sensitive; await can be expensive
   // eslint-disable-next-line @typescript-eslint/promise-function-async
   private _emitState = debouncePromise(() => {
