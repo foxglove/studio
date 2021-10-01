@@ -17,8 +17,6 @@ import { makeConfiguration } from "@foxglove/studio-base/util/makeConfiguration"
 import signal from "@foxglove/studio-base/util/signal";
 import waitForFonts from "@foxglove/studio-base/util/waitForFonts";
 
-import "./styles.scss";
-
 let loaded = false;
 
 function WithContextProviders(Child: Story, ctx: StoryContext): JSX.Element {
