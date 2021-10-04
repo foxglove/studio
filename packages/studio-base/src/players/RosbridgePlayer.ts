@@ -104,10 +104,10 @@ export default class RosbridgePlayer implements Player {
     this.#url = url;
     this.#start = fromMillis(Date.now());
     this.#metricsCollector.playerConstructed();
-    this._open();
+    this.#open();
   }
 
-  _open = (): void => {
+  #open = (): void => {
     if (this.#closed) {
       return;
     }
@@ -129,7 +129,7 @@ export default class RosbridgePlayer implements Player {
       this.#rosClient = rosClient;
 
       this._setupPublishers();
-      void this._requestTopics();
+      void this.#requestTopics();
     });
 
     rosClient.on("error", (err) => {
@@ -139,7 +139,7 @@ export default class RosbridgePlayer implements Player {
           message: "Rosbridge error",
           error: err,
         });
-        this._emitState();
+        this.#emitState();
       }
     });
 
@@ -162,14 +162,14 @@ export default class RosbridgePlayer implements Player {
         tip: `Check that the rosbridge WebSocket server at ${this.#url} is reachable.`,
       });
 
-      this._emitState();
+      this.#emitState();
 
       // Try connecting again.
-      setTimeout(this._open, 3000);
+      setTimeout(this.#open, 3000);
     });
   };
 
-  _requestTopics = async (): Promise<void> => {
+  #requestTopics = async (): Promise<void> => {
     // clear problems before each topics request so we don't have stale problems from previous failed requests
     this.#problems.removeProblems((id) => id.startsWith("requestTopics:"));
 
@@ -283,16 +283,16 @@ export default class RosbridgePlayer implements Player {
         error,
       });
     } finally {
-      this._emitState();
+      this.#emitState();
 
       // Regardless of what happens, request topics again in a little bit.
-      this.#requestTopicsTimeout = setTimeout(this._requestTopics, 3000);
+      this.#requestTopicsTimeout = setTimeout(this.#requestTopics, 3000);
     }
   };
 
   // Potentially performance-sensitive; await can be expensive
   // eslint-disable-next-line @typescript-eslint/promise-function-async
-  _emitState = debouncePromise(() => {
+  #emitState = debouncePromise(() => {
     if (!this.#listener || this.#closed) {
       return Promise.resolve();
     }
@@ -315,7 +315,7 @@ export default class RosbridgePlayer implements Player {
       if (this.#emitTimer != undefined) {
         clearTimeout(this.#emitTimer);
       }
-      this.#emitTimer = setTimeout(this._emitState, 100);
+      this.#emitTimer = setTimeout(this.#emitState, 100);
     }
 
     const currentTime = this._getCurrentTime();
@@ -353,7 +353,7 @@ export default class RosbridgePlayer implements Player {
 
   setListener(listener: (arg0: PlayerState) => Promise<void>): void {
     this.#listener = listener;
-    this._emitState();
+    this.#emitState();
   }
 
   close(): void {
@@ -429,7 +429,7 @@ export default class RosbridgePlayer implements Player {
                   `Cannot read ${msgSize} byte message from ${bytes.byteLength} byte buffer`,
                 ),
               });
-              this._emitState();
+              this.#emitState();
               return;
             }
           }
@@ -459,7 +459,7 @@ export default class RosbridgePlayer implements Player {
           });
         }
 
-        this._emitState();
+        this.#emitState();
       });
       this.#topicSubscriptions.set(topicName, topic);
     }

@@ -33,8 +33,8 @@ import {
 } from "@foxglove/studio-base/randomAccessDataProviders/types";
 
 export default class RenameDataProvider implements RandomAccessDataProvider {
-  _provider: RandomAccessDataProvider;
-  _prefix: string;
+  #provider: RandomAccessDataProvider;
+  #prefix: string;
 
   constructor(
     args: { prefix?: string },
@@ -48,12 +48,12 @@ export default class RenameDataProvider implements RandomAccessDataProvider {
     if (args.prefix && !args.prefix.startsWith("/")) {
       throw new Error(`Prefix must have a leading forward slash: ${JSON.stringify(args.prefix)}`);
     }
-    this._provider = getDataProvider(child);
-    this._prefix = args.prefix ?? "";
+    this.#provider = getDataProvider(child);
+    this.#prefix = args.prefix ?? "";
   }
 
   async initialize(extensionPoint: ExtensionPoint): Promise<InitializationResult> {
-    const result = await this._provider.initialize({
+    const result = await this.#provider.initialize({
       ...extensionPoint,
       progressCallback: (progress: Progress) => {
         extensionPoint.progressCallback({
@@ -61,7 +61,7 @@ export default class RenameDataProvider implements RandomAccessDataProvider {
           // because we might miss an important mapping!
           fullyLoadedFractionRanges: progress.fullyLoadedFractionRanges,
           messageCache: progress.messageCache
-            ? this._mapMessageCache(progress.messageCache)
+            ? this.#mapMessageCache(progress.messageCache)
             : undefined,
         });
       },
@@ -71,7 +71,7 @@ export default class RenameDataProvider implements RandomAccessDataProvider {
     const convertTopicNameKey = <T>(objWithTopicNameKeys: Record<string, T>) => {
       const topicKeyResult: Record<string, T> = {};
       for (const [topicName, value] of Object.entries(objWithTopicNameKeys)) {
-        topicKeyResult[`${this._prefix}${topicName}`] = value;
+        topicKeyResult[`${this.#prefix}${topicName}`] = value;
       }
       return topicKeyResult;
     };
@@ -104,7 +104,7 @@ export default class RenameDataProvider implements RandomAccessDataProvider {
       topics: filterMap(result.topics, (topic: Topic) => ({
         // Only map fields that we know are correctly mapped. Don't just splat in `...topic` here
         // because we might miss an important mapping!
-        name: `${this._prefix}${topic.name}`,
+        name: `${this.#prefix}${topic.name}`,
         originalTopic: topic.name,
         datatype: topic.datatype, // TODO(JP): We might want to map datatypes with a prefix in the future, to avoid collisions.
         numMessages: topic.numMessages,
@@ -114,13 +114,13 @@ export default class RenameDataProvider implements RandomAccessDataProvider {
   }
 
   async close(): Promise<void> {
-    return await this._provider.close();
+    return await this.#provider.close();
   }
 
-  _mapMessage = <T>(message: MessageEvent<T>): MessageEvent<T> => ({
+  #mapMessage = <T>(message: MessageEvent<T>): MessageEvent<T> => ({
     // Only map fields that we know are correctly mapped. Don't just splat in `...message` here
     // because we might miss an important mapping!
-    topic: `${this._prefix}${message.topic}`,
+    topic: `${this.#prefix}${message.topic}`,
     receiveTime: message.receiveTime,
     message: message.message,
   });
@@ -131,41 +131,41 @@ export default class RenameDataProvider implements RandomAccessDataProvider {
       const originalTopics = topics[type];
       if (originalTopics) {
         childTopics[type] = originalTopics.map((topic) => {
-          if (!topic.startsWith(this._prefix)) {
+          if (!topic.startsWith(this.#prefix)) {
             throw new Error(
               "RenameDataProvider#getMessages called with topic that doesn't match prefix",
             );
           }
-          return topic.slice(this._prefix.length);
+          return topic.slice(this.#prefix.length);
         });
       }
     }
-    const messages = await this._provider.getMessages(start, end, childTopics);
+    const messages = await this.#provider.getMessages(start, end, childTopics);
     const { parsedMessages, rosBinaryMessages } = messages;
 
     return {
-      parsedMessages: parsedMessages?.map(this._mapMessage),
-      rosBinaryMessages: rosBinaryMessages?.map(this._mapMessage),
+      parsedMessages: parsedMessages?.map(this.#mapMessage),
+      rosBinaryMessages: rosBinaryMessages?.map(this.#mapMessage),
     };
   }
 
-  _mapMessageCache = memoizeWeak(
+  #mapMessageCache = memoizeWeak(
     (messageCache: BlockCache): BlockCache => ({
       // Note: don't just map(this._mapBlock) because map also passes the array and defeats the
       // memoization.
-      blocks: messageCache.blocks.map((block) => this._mapBlock(block)),
+      blocks: messageCache.blocks.map((block) => this.#mapBlock(block)),
       startTime: messageCache.startTime,
     }),
   );
 
-  _mapBlock = memoizeWeak((block?: MemoryCacheBlock): MemoryCacheBlock | undefined => {
+  #mapBlock = memoizeWeak((block?: MemoryCacheBlock): MemoryCacheBlock | undefined => {
     if (!block) {
       return;
     }
 
     const messagesByTopic: Record<string, MessageEvent<unknown>[]> = {};
     for (const [topicName, topicMessages] of Object.entries(block.messagesByTopic)) {
-      messagesByTopic[`${this._prefix}${topicName}`] = topicMessages.map(this._mapMessage);
+      messagesByTopic[`${this.#prefix}${topicName}`] = topicMessages.map(this.#mapMessage);
     }
     return { messagesByTopic, sizeInBytes: block.sizeInBytes };
   });

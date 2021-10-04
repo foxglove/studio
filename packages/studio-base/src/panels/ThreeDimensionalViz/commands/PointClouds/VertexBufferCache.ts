@@ -17,32 +17,32 @@ import { MemoizedVertexBuffer, VertexBuffer } from "./types";
 // We keep track of both the current and the previous frames to tell
 // which vertex buffer are not used anymore and need to be deleted.
 export default class VertexBufferCache {
-  _current = new Map<Float32Array, MemoizedVertexBuffer>();
-  _previous = new Map<Float32Array, MemoizedVertexBuffer>();
+  #current = new Map<Float32Array, MemoizedVertexBuffer>();
+  #previous = new Map<Float32Array, MemoizedVertexBuffer>();
 
   // Call this method before rendering to initialize
   // the cache for the current frame.
   onPreRender(): void {
-    this._previous = this._current;
-    this._current = new Map<Float32Array, MemoizedVertexBuffer>();
+    this.#previous = this.#current;
+    this.#current = new Map<Float32Array, MemoizedVertexBuffer>();
   }
 
   // Get a vertex buffer from the cache.
   get(key: VertexBuffer): MemoizedVertexBuffer | undefined {
     const { buffer } = key;
-    let existing = this._current.get(buffer);
+    let existing = this.#current.get(buffer);
     if (existing) {
       // The vertex buffer exists in the current frame
       return existing;
     }
-    existing = this._previous.get(buffer);
+    existing = this.#previous.get(buffer);
     if (existing) {
       // The vertex buffer was not used in the current frame yet
       // but there is valid cached instance in the previous frame.
       // Move the cached value to the current frame to prevent it
       // from being deleted when executing onPostRender().
       this.set(key, existing);
-      this._previous.delete(buffer);
+      this.#previous.delete(buffer);
       return existing;
     }
     // The vertex buffer has not being cached neither in the current
@@ -52,7 +52,7 @@ export default class VertexBufferCache {
 
   // Set a cached value for a vertex buffer
   set(key: VertexBuffer, value: MemoizedVertexBuffer): void {
-    const existing = this._current.get(key.buffer);
+    const existing = this.#current.get(key.buffer);
     if (existing) {
       if (existing === value) {
         // Nothing to do
@@ -61,18 +61,18 @@ export default class VertexBufferCache {
       // A vertex buffer should not change in the same frame,
       // but if it does, we need override the existing cached value
       // and delete it's buffer.
-      this._deleteBuffer(existing);
+      this.#deleteBuffer(existing);
     }
-    this._current.set(key.buffer, value);
+    this.#current.set(key.buffer, value);
   }
 
   // Call this function after rendering a frame to delete unused buffers
   onPostRender(): void {
-    this._previous.forEach(this._deleteBuffer);
-    this._previous.clear();
+    this.#previous.forEach(this.#deleteBuffer);
+    this.#previous.clear();
   }
 
-  _deleteBuffer = (cached: MemoizedVertexBuffer): void => {
+  #deleteBuffer = (cached: MemoizedVertexBuffer): void => {
     const { buffer } = cached;
     // Destroy GPU buffer
     buffer?.destroy();

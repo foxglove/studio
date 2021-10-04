@@ -56,18 +56,18 @@ type GetMessages = (
 
 // ts-prune-ignore-next
 export default class TestProvider implements RandomAccessDataProvider {
-  _start: Time;
-  _end: Time;
-  _topics: Topic[];
-  _datatypes: RosDatatypes;
+  #start: Time;
+  #end: Time;
+  #topics: Topic[];
+  #datatypes: RosDatatypes;
   extensionPoint?: ExtensionPoint;
   closed: boolean = false;
 
   constructor({ getMessages, topics }: { getMessages?: GetMessages; topics?: Topic[] } = {}) {
-    this._start = defaultStart;
-    this._end = defaultEnd;
-    this._topics = topics ?? defaultTopics;
-    this._datatypes = datatypes;
+    this.#start = defaultStart;
+    this.#end = defaultEnd;
+    this.#topics = topics ?? defaultTopics;
+    this.#datatypes = datatypes;
     if (getMessages) {
       this.getMessages = getMessages;
     }
@@ -76,14 +76,14 @@ export default class TestProvider implements RandomAccessDataProvider {
   async initialize(extensionPoint: ExtensionPoint): Promise<InitializationResult> {
     this.extensionPoint = extensionPoint;
     return {
-      start: this._start,
-      end: this._end,
-      topics: this._topics,
+      start: this.#start,
+      end: this.#end,
+      topics: this.#topics,
       connections: [],
       providesParsedMessages: true,
       messageDefinitions: {
         type: "parsed",
-        datatypes: this._datatypes,
+        datatypes: this.#datatypes,
         messageDefinitionsByTopic: {},
         parsedMessageDefinitionsByTopic: {},
       },

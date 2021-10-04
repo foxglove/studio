@@ -146,12 +146,12 @@ export default class UserNodePlayer implements Player {
     };
   }
 
-  _getTopics = memoizeWeak((topics: readonly Topic[], nodeTopics: readonly Topic[]): Topic[] => [
+  #getTopics = memoizeWeak((topics: readonly Topic[], nodeTopics: readonly Topic[]): Topic[] => [
     ...topics,
     ...nodeTopics,
   ]);
 
-  _getDatatypes = memoizeWeak(
+  #getDatatypes = memoizeWeak(
     (datatypes: RosDatatypes, nodeDatatypes: readonly RosDatatypes[]): RosDatatypes => {
       return nodeDatatypes.reduce(
         (allDatatypes, userNodeDatatypes) => new Map([...allDatatypes, ...userNodeDatatypes]),
@@ -172,7 +172,7 @@ export default class UserNodePlayer implements Player {
 
   // When updating nodes while paused, we seek to the current time
   // (i.e. invoke _getMessages with an empty array) to refresh messages
-  _getMessages = async (
+  #getMessages = async (
     parsedMessages: readonly MessageEvent<unknown>[],
     globalVariables: GlobalVariables,
     nodeRegistrations: readonly NodeRegistration[],
@@ -609,9 +609,9 @@ export default class UserNodePlayer implements Player {
         this.requestBackfill();
       }
 
-      const allDatatypes = this._getDatatypes(datatypes, this.#memoizedNodeDatatypes);
+      const allDatatypes = this.#getDatatypes(datatypes, this.#memoizedNodeDatatypes);
 
-      const { parsedMessages } = await this._getMessages(
+      const { parsedMessages } = await this.#getMessages(
         messages,
         this.#globalVariables,
         this.#nodeRegistrations,
@@ -622,7 +622,7 @@ export default class UserNodePlayer implements Player {
         activeData: {
           ...activeData,
           messages: parsedMessages,
-          topics: this._getTopics(topics, this.#memoizedNodeTopics),
+          topics: this.#getTopics(topics, this.#memoizedNodeTopics),
           datatypes: allDatatypes,
         },
       };

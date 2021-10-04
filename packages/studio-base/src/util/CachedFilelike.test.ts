@@ -18,21 +18,21 @@ import delay from "@foxglove/studio-base/util/delay";
 import CachedFilelike, { FileReader, FileStream } from "./CachedFilelike";
 
 class InMemoryFileReader implements FileReader {
-  _buffer: Buffer;
+  #buffer: Buffer;
 
   constructor(bufferObj: Buffer) {
-    this._buffer = bufferObj;
+    this.#buffer = bufferObj;
   }
 
   async open() {
-    return { size: this._buffer.byteLength };
+    return { size: this.#buffer.byteLength };
   }
 
   fetch(offset: number, length: number): FileStream {
     return {
       on: (type: "data" | "error", callback: ((_: Buffer) => void) & ((_: Error) => void)) => {
         if (type === "data") {
-          setTimeout(() => callback(this._buffer.slice(offset, offset + length)));
+          setTimeout(() => callback(this.#buffer.slice(offset, offset + length)));
         }
       },
       destroy() {

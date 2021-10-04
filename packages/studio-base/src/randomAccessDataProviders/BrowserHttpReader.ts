@@ -16,10 +16,10 @@ import FetchReader from "@foxglove/studio-base/util/FetchReader";
 
 // A file reader that reads from a remote HTTP URL, for usage in the browser (not for node.js).
 export default class BrowserHttpReader implements FileReader {
-  _url: string;
+  #url: string;
 
   constructor(url: string) {
-    this._url = url;
+    this.#url = url;
   }
 
   async open(): Promise<{ size: number; identifier?: string }> {
@@ -32,22 +32,22 @@ export default class BrowserHttpReader implements FileReader {
       // file size without making Content-Range a CORS header, therefore making all this a bit less
       // robust.
       const controller = new AbortController();
-      response = await fetch(this._url, { signal: controller.signal });
+      response = await fetch(this.#url, { signal: controller.signal });
       controller.abort();
     } catch (error) {
-      throw new Error(`Fetching remote file failed. <${this._url}> ${error}`);
+      throw new Error(`Fetching remote file failed. <${this.#url}> ${error}`);
     }
     if (!response.ok) {
       throw new Error(
-        `Fetching remote file failed. <${this._url}> Status code: ${response.status}.`,
+        `Fetching remote file failed. <${this.#url}> Status code: ${response.status}.`,
       );
     }
     if (response.headers.get("accept-ranges") !== "bytes") {
-      throw new Error(`Remote file does not support HTTP Range Requests. <${this._url}>`);
+      throw new Error(`Remote file does not support HTTP Range Requests. <${this.#url}>`);
     }
     const size = response.headers.get("content-length");
     if (size == undefined) {
-      throw new Error(`Remote file is missing file size. <${this._url}>`);
+      throw new Error(`Remote file is missing file size. <${this.#url}>`);
     }
     return {
       size: parseInt(size),
@@ -58,6 +58,6 @@ export default class BrowserHttpReader implements FileReader {
 
   fetch(offset: number, length: number): FileStream {
     const headers = new Headers({ range: `bytes=${offset}-${offset + (length - 1)}` });
-    return new FetchReader(this._url, { headers }) as FileStream;
+    return new FetchReader(this.#url, { headers }) as FileStream;
   }
 }

@@ -60,50 +60,50 @@ export function instrumentTreeWithApiCheckerDataProvider(
 }
 
 export default class ApiCheckerDataProvider implements RandomAccessDataProvider {
-  _name: string;
-  _provider?: RandomAccessDataProvider;
-  _initializationResult?: InitializationResult;
-  _topicNames: string[] = [];
-  _closed: boolean = false;
-  _isRoot: boolean;
+  #name: string;
+  #provider?: RandomAccessDataProvider;
+  #initializationResult?: InitializationResult;
+  #topicNames: string[] = [];
+  #closed: boolean = false;
+  #isRoot: boolean;
 
   constructor(
     args: { name: string; isRoot: boolean },
     children: RandomAccessDataProviderDescriptor[],
     getDataProvider: GetDataProvider,
   ) {
-    this._name = args.name;
-    this._isRoot = args.isRoot;
+    this.#name = args.name;
+    this.#isRoot = args.isRoot;
     const child = children[0];
     if (children.length !== 1 || !child) {
       this._warn(`Required exactly 1 child, but received ${children.length}`);
       return;
     }
-    this._provider = getDataProvider(child);
+    this.#provider = getDataProvider(child);
   }
 
   async initialize(extensionPoint: ExtensionPoint): Promise<InitializationResult> {
-    if (this._initializationResult) {
+    if (this.#initializationResult) {
       this._warn("initialize was called for a second time");
     }
-    if (!this._provider) {
+    if (!this.#provider) {
       throw new Error("Provider not initialized");
     }
-    const initializationResult = await this._provider.initialize(extensionPoint);
-    this._initializationResult = initializationResult;
+    const initializationResult = await this.#provider.initialize(extensionPoint);
+    this.#initializationResult = initializationResult;
 
     if (initializationResult.topics.length === 0) {
       this._warn(
         "No topics returned at all; should have thrown error instead (with details of why this is happening)",
       );
     }
-    if (this._isRoot && initializationResult.messageDefinitions.type !== "parsed") {
+    if (this.#isRoot && initializationResult.messageDefinitions.type !== "parsed") {
       this._warn(
         `Root data provider should return parsed message definitions but instead returned raw`,
       );
     }
     for (const topic of initializationResult.topics) {
-      this._topicNames.push(topic.name);
+      this.#topicNames.push(topic.name);
       if (initializationResult.messageDefinitions.type === "raw") {
         if (
           !initializationResult.providesParsedMessages &&
@@ -131,7 +131,7 @@ export default class ApiCheckerDataProvider implements RandomAccessDataProvider 
     end: Time,
     subscriptions: GetMessagesTopics,
   ): Promise<GetMessagesResult> {
-    if (!this._provider) {
+    if (!this.#provider) {
       throw new Error("Provider not initialized");
     }
     if (!Number.isInteger(start.sec) || !Number.isInteger(start.nsec)) {
@@ -140,7 +140,7 @@ export default class ApiCheckerDataProvider implements RandomAccessDataProvider 
     if (!Number.isInteger(end.sec) || !Number.isInteger(end.nsec)) {
       this._warn(`end time ${JSON.stringify(end)} must only contain integers`);
     }
-    const initRes = this._initializationResult;
+    const initRes = this.#initializationResult;
     if (!initRes) {
       this._warn("getMessages was called before initialize finished");
       // Need to return, otherwise we can't refer to initRes later, and this is a really bad violation anyway.
@@ -175,17 +175,17 @@ export default class ApiCheckerDataProvider implements RandomAccessDataProvider 
     }
     for (const messageType of MESSAGE_FORMATS) {
       for (const topic of subscriptions[messageType] ?? []) {
-        if (!this._topicNames.includes(topic)) {
+        if (!this.#topicNames.includes(topic)) {
           this._warn(
             `Requested topic (${topic}) is not in the list of topics published by "initialize" (${JSON.stringify(
-              this._topicNames,
+              this.#topicNames,
             )})`,
           );
         }
       }
     }
 
-    const providerResult = await this._provider?.getMessages(start, end, subscriptions);
+    const providerResult = await this.#provider?.getMessages(start, end, subscriptions);
 
     for (const messageType of MESSAGE_FORMATS) {
       const messages = providerResult[messageType];
@@ -230,18 +230,18 @@ export default class ApiCheckerDataProvider implements RandomAccessDataProvider 
   }
 
   async close(): Promise<void> {
-    if (!this._initializationResult) {
+    if (!this.#initializationResult) {
       this._warn("close was called before initialize finished");
     }
-    if (this._closed) {
+    if (this.#closed) {
       this._warn("close was called twice");
     }
-    this._closed = true;
-    return await this._provider?.close();
+    this.#closed = true;
+    return await this.#provider?.close();
   }
 
   _warn(message: string): void {
-    const prefixedMessage = `ApiCheckerDataProvider(${this._name}): ${message}`;
+    const prefixedMessage = `ApiCheckerDataProvider(${this.#name}): ${message}`;
     sendNotification("Internal data provider assertion failed", prefixedMessage, "app", "warn");
 
     if (process.env.NODE_ENV !== "production") {

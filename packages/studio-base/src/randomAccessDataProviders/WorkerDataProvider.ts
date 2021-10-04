@@ -38,9 +38,9 @@ if (process.env.NODE_ENV !== "test") {
 // Wraps the underlying RandomAccessDataProviderDescriptor tree in a Web Worker, therefore allowing
 // `getMessages` calls to get resolved in parallel to the main thread.
 export default class WorkerDataProvider implements RandomAccessDataProvider {
-  _worker?: Worker;
-  _provider?: RpcDataProvider;
-  _child?: RandomAccessDataProviderDescriptor;
+  #worker?: Worker;
+  #provider?: RpcDataProvider;
+  #child?: RandomAccessDataProviderDescriptor;
 
   constructor(_args: unknown, children: RandomAccessDataProviderDescriptor[]) {
     if (children.length !== 1) {
@@ -48,36 +48,36 @@ export default class WorkerDataProvider implements RandomAccessDataProvider {
     }
     const child = children[0];
     if (child) {
-      this._child = child;
+      this.#child = child;
     }
   }
 
   async initialize(extensionPoint: ExtensionPoint): Promise<InitializationResult> {
     if (preinitializedWorkers.length > 0) {
-      this._worker = preinitializedWorkers.pop();
+      this.#worker = preinitializedWorkers.pop();
     } else {
-      this._worker = WorkerDataProviderWorker();
+      this.#worker = WorkerDataProviderWorker();
     }
 
-    if (!this._worker || !this._child) {
+    if (!this.#worker || !this.#child) {
       throw new Error("WorderDataProvider failed to initialize");
     }
 
-    this._provider = new RpcDataProvider(new Rpc(this._worker), [this._child]);
-    return await this._provider.initialize(extensionPoint);
+    this.#provider = new RpcDataProvider(new Rpc(this.#worker), [this.#child]);
+    return await this.#provider.initialize(extensionPoint);
   }
 
   // Potentially performance-sensitive; await can be expensive
   // eslint-disable-next-line @typescript-eslint/promise-function-async
   getMessages(start: Time, end: Time, topics: GetMessagesTopics): Promise<GetMessagesResult> {
-    if (!this._provider) {
+    if (!this.#provider) {
       throw new Error("WorkerDataProvieder not initialized");
     }
-    return this._provider.getMessages(start, end, topics);
+    return this.#provider.getMessages(start, end, topics);
   }
 
   async close(): Promise<void> {
-    await this._provider?.close();
-    this._worker?.terminate();
+    await this.#provider?.close();
+    this.#worker?.terminate();
   }
 }

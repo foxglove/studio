@@ -53,41 +53,41 @@ const getTopicsWithHeader = memoizeWeak((topics: Topic[], datatypes: RosDatatype
 });
 
 export default class OrderedStampPlayer implements Player {
-  _player: UserNodePlayer;
-  _messageOrder: TimestampMethod;
+  #player: UserNodePlayer;
+  #messageOrder: TimestampMethod;
   // When messageOrder is "headerStamp", contains buffered, unsorted messages with receiveTime "in
   // the near future". Only messages with headers are stored.
-  _messageBuffer: MessageEvent<StampedMessage>[] = [];
+  #messageBuffer: MessageEvent<StampedMessage>[] = [];
   // Used to invalidate the cache. (Also signals subscription changes etc).
-  _lastSeekId?: number = undefined;
+  #lastSeekId?: number = undefined;
   // Our best guess of "now" in case we need to force a backfill.
-  _currentTime?: Time = undefined;
-  _topicsWithoutHeadersSinceSeek = new Set<string>();
+  #currentTime?: Time = undefined;
+  #topicsWithoutHeadersSinceSeek = new Set<string>();
 
   constructor(player: UserNodePlayer, messageOrder: TimestampMethod) {
-    this._player = player;
-    this._messageOrder = messageOrder;
+    this.#player = player;
+    this.#messageOrder = messageOrder;
   }
 
   setListener(listener: (arg0: PlayerState) => Promise<void>): void {
     // Potentially performance-sensitive; await can be expensive
     // eslint-disable-next-line @typescript-eslint/promise-function-async
-    this._player.setListener((state: PlayerState) => {
+    this.#player.setListener((state: PlayerState) => {
       const { activeData } = state;
       if (!activeData) {
         // No new messages since last time.
         return listener(state);
       }
-      if (this._messageOrder === "receiveTime") {
+      if (this.#messageOrder === "receiveTime") {
         // Set "now" to seek to in case messageOrder changes.
-        this._currentTime = activeData.currentTime;
+        this.#currentTime = activeData.currentTime;
         return listener(state);
       }
 
-      if (activeData.lastSeekTime !== this._lastSeekId) {
-        this._messageBuffer = [];
-        this._lastSeekId = activeData.lastSeekTime;
-        this._topicsWithoutHeadersSinceSeek = new Set<string>();
+      if (activeData.lastSeekTime !== this.#lastSeekId) {
+        this.#messageBuffer = [];
+        this.#lastSeekId = activeData.lastSeekTime;
+        this.#topicsWithoutHeadersSinceSeek = new Set<string>();
       }
 
       // Only store messages with a header stamp.
@@ -101,7 +101,7 @@ export default class OrderedStampPlayer implements Player {
         topicsWithoutHeaders.add(topic);
       });
 
-      const extendedMessageBuffer = [...this._messageBuffer, ...newMessagesWithHeaders];
+      const extendedMessageBuffer = [...this.#messageBuffer, ...newMessagesWithHeaders];
       // output messages older than this threshold (ie, send all messages up until the threshold
       // time)
       const thresholdTime = {
@@ -112,12 +112,12 @@ export default class OrderedStampPlayer implements Player {
         isLessThan(message.message.header.stamp, thresholdTime),
       );
 
-      this._messageBuffer = newMessageBuffer;
+      this.#messageBuffer = newMessageBuffer;
 
       messages.sort((a, b) => compare(a.message.header.stamp, b.message.header.stamp));
 
       const currentTime = clampTime(thresholdTime, activeData.startTime, activeData.endTime);
-      this._currentTime = currentTime;
+      this.#currentTime = currentTime;
       const topicsWithHeader = getTopicsWithHeader(activeData.topics, activeData.datatypes);
 
       let problems: PlayerProblem[] | undefined = undefined;
@@ -152,19 +152,19 @@ export default class OrderedStampPlayer implements Player {
   }
 
   setSubscriptions = (subscriptions: SubscribePayload[]): void =>
-    this._player.setSubscriptions(subscriptions);
-  close = (): void => this._player.close();
-  setPublishers = (publishers: AdvertiseOptions[]): void => this._player.setPublishers(publishers);
+    this.#player.setSubscriptions(subscriptions);
+  close = (): void => this.#player.close();
+  setPublishers = (publishers: AdvertiseOptions[]): void => this.#player.setPublishers(publishers);
   setParameter = (key: string, value: ParameterValue): void =>
-    this._player.setParameter(key, value);
-  publish = (request: PublishPayload): void => this._player.publish(request);
-  startPlayback = (): void => this._player.startPlayback();
-  pausePlayback = (): void => this._player.pausePlayback();
-  setPlaybackSpeed = (speed: number): void => this._player.setPlaybackSpeed(speed);
+    this.#player.setParameter(key, value);
+  publish = (request: PublishPayload): void => this.#player.publish(request);
+  startPlayback = (): void => this.#player.startPlayback();
+  pausePlayback = (): void => this.#player.pausePlayback();
+  setPlaybackSpeed = (speed: number): void => this.#player.setPlaybackSpeed(speed);
   seekPlayback = (time: Time, backfillDuration?: Time): void => {
     // Add a second to the backfill duration requested downstream, to give us extra data to reorder.
-    if (this._messageOrder === "receiveTime") {
-      return this._player.seekPlayback(time, backfillDuration);
+    if (this.#messageOrder === "receiveTime") {
+      return this.#player.seekPlayback(time, backfillDuration);
     }
     if (backfillDuration) {
       throw new Error("BackfillDuration not supported by OrderedStampPlayer.");
@@ -173,11 +173,11 @@ export default class OrderedStampPlayer implements Player {
     // messages with receive times between 10s and 11s.
     // Add backfilling for our translation buffer.
     const seekLocation = add(time, { sec: BUFFER_DURATION_SECS, nsec: 0 });
-    this._player.seekPlayback(seekLocation, { sec: BUFFER_DURATION_SECS, nsec: 0 });
+    this.#player.seekPlayback(seekLocation, { sec: BUFFER_DURATION_SECS, nsec: 0 });
   };
   requestBackfill(): void {
-    if (!this._currentTime || this._messageOrder === "receiveTime") {
-      return this._player.requestBackfill();
+    if (!this.#currentTime || this.#messageOrder === "receiveTime") {
+      return this.#player.requestBackfill();
     }
 
     // If we are sorting messages by header stamps, let seekPlayback
@@ -187,25 +187,25 @@ export default class OrderedStampPlayer implements Player {
     // does not have easy access to that state without tracking it itself.
     // This shouldn't matter in practice because the next emit() will
     // populate the panels regardless of requestBackfill() getting called.
-    this.seekPlayback(this._currentTime);
+    this.seekPlayback(this.#currentTime);
   }
   async setUserNodes(nodes: UserNodes): Promise<void> {
-    return await this._player.setUserNodes(nodes);
+    return await this.#player.setUserNodes(nodes);
   }
   setGlobalVariables(globalVariables: GlobalVariables): void {
-    this._player.setGlobalVariables(globalVariables);
+    this.#player.setGlobalVariables(globalVariables);
     // So that downstream players can re-send messages that depend on global
     // variable state.
     this.requestBackfill();
   }
   setMessageOrder(order: TimestampMethod): void {
-    if (this._messageOrder !== order) {
-      this._messageOrder = order;
+    if (this.#messageOrder !== order) {
+      this.#messageOrder = order;
       // Seek to invalidate the cache. Don't just requestBackfill(), because it needs to work while
       // we're playing too.
-      if (this._currentTime) {
+      if (this.#currentTime) {
         // Cache invalidation will be handled inside the seek/playback logic.
-        this.seekPlayback(this._currentTime);
+        this.seekPlayback(this.#currentTime);
       }
     }
   }

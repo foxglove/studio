@@ -67,24 +67,24 @@ function maybeWriteLocalStorageCache(
 
 class ParseMessageDefinitionCache {
   // Used because we may load extraneous definitions that we need to clear.
-  _usedMd5Sums = new Set<string>();
-  _stringDefinitionsToParsedDefinitions: {
+  #usedMd5Sums = new Set<string>();
+  #stringDefinitionsToParsedDefinitions: {
     [key: string]: RosMsgDefinition[];
   } = {};
-  _md5SumsToParsedDefinitions: {
+  #md5SumsToParsedDefinitions: {
     [key: string]: RosMsgDefinition[];
   } = {};
-  _hashesToParsedDefinitions: {
+  #hashesToParsedDefinitions: {
     [key: string]: RosMsgDefinition[];
   } = {};
-  _localStorageCacheDisabled = false;
+  #localStorageCacheDisabled = false;
 
   constructor() {
     const hashesToParsedDefinitionsEntries = storage
       .keys()
       .filter((key) => key.startsWith(STORAGE_ITEM_KEY_PREFIX))
       .map((key) => [key.substring(STORAGE_ITEM_KEY_PREFIX.length), storage.getItem(key)]);
-    this._md5SumsToParsedDefinitions = fromPairs(hashesToParsedDefinitionsEntries);
+    this.#md5SumsToParsedDefinitions = fromPairs(hashesToParsedDefinitionsEntries);
   }
 
   parseMessageDefinition(messageDefinition: string, md5Sum?: string): RosMsgDefinition[] {
@@ -98,23 +98,23 @@ class ParseMessageDefinitionCache {
 
     // If we don't have it stored, we have to parse it.
     const parsedDefinition =
-      this._stringDefinitionsToParsedDefinitions[messageDefinition] ??
+      this.#stringDefinitionsToParsedDefinitions[messageDefinition] ??
       parseMessageDefinition(messageDefinition);
-    this._stringDefinitionsToParsedDefinitions[messageDefinition] = parsedDefinition;
+    this.#stringDefinitionsToParsedDefinitions[messageDefinition] = parsedDefinition;
     if (md5Sum != undefined) {
-      this._hashesToParsedDefinitions[md5Sum] = parsedDefinition;
-      if (!this._localStorageCacheDisabled) {
-        this._md5SumsToParsedDefinitions[md5Sum] = parsedDefinition;
+      this.#hashesToParsedDefinitions[md5Sum] = parsedDefinition;
+      if (!this.#localStorageCacheDisabled) {
+        this.#md5SumsToParsedDefinitions[md5Sum] = parsedDefinition;
         try {
           maybeWriteLocalStorageCache(
             md5Sum,
             parsedDefinition,
-            Object.keys(this._md5SumsToParsedDefinitions),
-            [...this._usedMd5Sums],
+            Object.keys(this.#md5SumsToParsedDefinitions),
+            [...this.#usedMd5Sums],
           );
         } catch (e) {
           sendNotification("Unable to save message definition to localStorage", e, "user", "warn");
-          this._localStorageCacheDisabled = true;
+          this.#localStorageCacheDisabled = true;
         }
       }
     }
@@ -122,15 +122,15 @@ class ParseMessageDefinitionCache {
   }
 
   getStoredDefinition(md5Sum: string): RosMsgDefinition[] | undefined {
-    this._usedMd5Sums.add(md5Sum);
+    this.#usedMd5Sums.add(md5Sum);
 
-    if (this._hashesToParsedDefinitions[md5Sum]) {
-      return this._hashesToParsedDefinitions[md5Sum];
+    if (this.#hashesToParsedDefinitions[md5Sum]) {
+      return this.#hashesToParsedDefinitions[md5Sum];
     }
-    if (this._md5SumsToParsedDefinitions[md5Sum]) {
-      const parsedDefinition = this._md5SumsToParsedDefinitions[md5Sum];
+    if (this.#md5SumsToParsedDefinitions[md5Sum]) {
+      const parsedDefinition = this.#md5SumsToParsedDefinitions[md5Sum];
       if (parsedDefinition) {
-        this._hashesToParsedDefinitions[md5Sum] = parsedDefinition;
+        this.#hashesToParsedDefinitions[md5Sum] = parsedDefinition;
       }
       return parsedDefinition;
     }
@@ -138,10 +138,10 @@ class ParseMessageDefinitionCache {
   }
 
   getMd5sForStoredDefinitions(): string[] {
-    if (this._localStorageCacheDisabled) {
+    if (this.#localStorageCacheDisabled) {
       return [];
     }
-    return Object.keys(this._md5SumsToParsedDefinitions);
+    return Object.keys(this.#md5SumsToParsedDefinitions);
   }
 }
 

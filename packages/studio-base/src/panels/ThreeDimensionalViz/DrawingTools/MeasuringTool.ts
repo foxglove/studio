@@ -54,11 +54,11 @@ export default class MeasuringTool extends React.Component<Props> {
     });
   };
 
-  _canvasMouseDownHandler = (e: MouseEvent, _clickInfo: ReglClickInfo): void => {
+  #canvasMouseDownHandler = (e: MouseEvent, _clickInfo: ReglClickInfo): void => {
     this.mouseDownCoords = [e.clientX, e.clientY];
   };
 
-  _canvasMouseUpHandler = (e: MouseEvent, _clickInfo: ReglClickInfo): void => {
+  #canvasMouseUpHandler = (e: MouseEvent, _clickInfo: ReglClickInfo): void => {
     const mouseUpCoords = [e.clientX, e.clientY];
     const { measureState, measurePoints, onMeasureInfoChange } = this.props;
 
@@ -77,7 +77,7 @@ export default class MeasuringTool extends React.Component<Props> {
     }
   };
 
-  _canvasMouseMoveHandler = (_e: MouseEvent, clickInfo: ReglClickInfo): void => {
+  #canvasMouseMoveHandler = (_e: MouseEvent, clickInfo: ReglClickInfo): void => {
     const { measureState, measurePoints, onMeasureInfoChange } = this.props;
     switch (measureState) {
       case "place-start":
@@ -109,7 +109,7 @@ export default class MeasuringTool extends React.Component<Props> {
       return undefined;
     }
 
-    return this._canvasMouseMoveHandler;
+    return this.#canvasMouseMoveHandler;
   }
 
   get onMouseUp(): ((arg0: MouseEvent, arg1: ReglClickInfo) => void) | undefined {
@@ -117,7 +117,7 @@ export default class MeasuringTool extends React.Component<Props> {
       return undefined;
     }
 
-    return this._canvasMouseUpHandler;
+    return this.#canvasMouseUpHandler;
   }
 
   get onMouseDown(): ((arg0: MouseEvent, arg1: ReglClickInfo) => void) | undefined {
@@ -125,7 +125,7 @@ export default class MeasuringTool extends React.Component<Props> {
       return undefined;
     }
 
-    return this._canvasMouseDownHandler;
+    return this.#canvasMouseDownHandler;
   }
 
   get measureActive(): boolean {

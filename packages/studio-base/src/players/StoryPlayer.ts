@@ -38,15 +38,15 @@ const getBagDescriptor = async (url?: string) => {
 const NOOP_PROVIDER = [{ name: "noop", args: {}, children: [] }];
 
 export default class StoryPlayer implements Player {
-  _parsedSubscribedTopics: string[] = [];
-  _bags: string[] = [];
+  #parsedSubscribedTopics: string[] = [];
+  #bags: string[] = [];
   constructor(bags: string[]) {
-    this._bags = bags;
+    this.#bags = bags;
   }
   setListener(listener: (arg0: PlayerState) => Promise<void>): void {
     void (async () => {
       const bagDescriptors = await Promise.all(
-        this._bags.map(async (file, i) => {
+        this.#bags.map(async (file, i) => {
           const bagDescriptor = await getBagDescriptor(file);
           return {
             name: "",
@@ -74,7 +74,7 @@ export default class StoryPlayer implements Player {
         })
         .then(async ({ topics, start, end, messageDefinitions }) => {
           const { parsedMessages = [] } = await provider.getMessages(start, end, {
-            parsedMessages: this._parsedSubscribedTopics,
+            parsedMessages: this.#parsedSubscribedTopics,
           });
 
           if (messageDefinitions.type === "raw") {
@@ -106,7 +106,7 @@ export default class StoryPlayer implements Player {
   }
 
   setSubscriptions(subscriptions: SubscribePayload[]): void {
-    this._parsedSubscribedTopics = subscriptions.map(({ topic }) => topic);
+    this.#parsedSubscribedTopics = subscriptions.map(({ topic }) => topic);
   }
 
   close = noop;

@@ -17,24 +17,24 @@ const DEFAULT_LOCAL_STORAGE__QUOTA = 5000000;
 
 export default class MemoryStorage {
   // Use `__` to mark the fields as internal so we can filter them out in Storage when getting keys using Object.keys(storage).
-  _internal_items: Record<string, string> = {};
-  _internal_quota: number;
+  #internal_items: Record<string, string> = {};
+  #internal_quota: number;
   [key: string]: unknown;
 
   constructor(quota?: number) {
-    this._internal_quota = quota ?? DEFAULT_LOCAL_STORAGE__QUOTA;
+    this.#internal_quota = quota ?? DEFAULT_LOCAL_STORAGE__QUOTA;
   }
 
   clear(): void {
-    this._internal_items = {};
+    this.#internal_items = {};
   }
 
   getItem(key: string): string | undefined {
-    return this._internal_items[key];
+    return this.#internal_items[key];
   }
 
   _getUsedSize(): number {
-    return Object.keys(this._internal_items).reduce((memo, key) => {
+    return Object.keys(this.#internal_items).reduce((memo, key) => {
       return memo + new Blob([this.getItem(key)!]).size;
     }, 0);
   }
@@ -42,15 +42,15 @@ export default class MemoryStorage {
   setItem(key: string, value: string): void {
     const valueByteSize = new Blob([value]).size;
     const newSize = this._getUsedSize() + valueByteSize;
-    if (newSize > this._internal_quota) {
+    if (newSize > this.#internal_quota) {
       throw new Error("Exceeded storage limit");
     }
-    this._internal_items[key] = value;
+    this.#internal_items[key] = value;
     this[key] = value;
   }
 
   removeItem(key: string): void {
-    delete this._internal_items[key];
+    delete this.#internal_items[key];
     delete this[key];
   }
 }

@@ -227,30 +227,30 @@ type ProcessedInitializationResult = Readonly<{
 // A RandomAccessDataProvider that combines multiple underlying RandomAccessDataProviders, optionally adding topic prefixes
 // or removing certain topics.
 export default class CombinedDataProvider implements RandomAccessDataProvider {
-  _providers: RandomAccessDataProvider[];
+  #providers: RandomAccessDataProvider[];
   // Initialization result will be undefined for providers that don't successfully initialize.
-  _initializationResultsPerProvider: (ProcessedInitializationResult | undefined)[] = [];
-  _progressPerProvider: (Progress | undefined)[];
-  _extensionPoint?: ExtensionPoint;
+  #initializationResultsPerProvider: (ProcessedInitializationResult | undefined)[] = [];
+  #progressPerProvider: (Progress | undefined)[];
+  #extensionPoint?: ExtensionPoint;
 
   constructor(
     _: unknown,
     children: RandomAccessDataProviderDescriptor[],
     getDataProvider: GetDataProvider,
   ) {
-    this._providers = children.map((descriptor) =>
+    this.#providers = children.map((descriptor) =>
       process.env.NODE_ENV === "test" && descriptor.name === "TestProvider"
         ? descriptor.args.provider
         : getDataProvider(descriptor),
     );
     // initialize progress to an empty range for each provider
-    this._progressPerProvider = children.map((__) => undefined);
+    this.#progressPerProvider = children.map((__) => undefined);
   }
 
   async initialize(extensionPoint: ExtensionPoint): Promise<InitializationResult> {
-    this._extensionPoint = extensionPoint;
+    this.#extensionPoint = extensionPoint;
 
-    const providerInitializePromises = this._providers.map(async (provider, idx) => {
+    const providerInitializePromises = this.#providers.map(async (provider, idx) => {
       return await provider.initialize({
         ...extensionPoint,
         progressCallback: (progress: Progress) => {
@@ -262,7 +262,7 @@ export default class CombinedDataProvider implements RandomAccessDataProvider {
     const results = filterMap(initializeOutcomes, (result) => {
       return result.status === "fulfilled" ? result.value : undefined;
     });
-    this._initializationResultsPerProvider = initializeOutcomes.map((outcome) => {
+    this.#initializationResultsPerProvider = initializeOutcomes.map((outcome) => {
       if (outcome.status === "fulfilled") {
         const { start, end, topics } = outcome.value;
         return { start, end, topicSet: new Set(topics.map((t) => t.name)) };
@@ -277,8 +277,8 @@ export default class CombinedDataProvider implements RandomAccessDataProvider {
     }
 
     // Any providers that didn't report progress in `initialize` are assumed fully loaded
-    this._progressPerProvider.forEach((p, i) => {
-      this._progressPerProvider[i] = p ?? fullyLoadedProgress();
+    this.#progressPerProvider.forEach((p, i) => {
+      this.#progressPerProvider[i] = p ?? fullyLoadedProgress();
     });
 
     const start = sortTimes(results.map((result) => result.start)).shift();
@@ -310,13 +310,13 @@ export default class CombinedDataProvider implements RandomAccessDataProvider {
   }
 
   async close(): Promise<void> {
-    await Promise.all(this._providers.map(async (provider) => await provider.close()));
+    await Promise.all(this.#providers.map(async (provider) => await provider.close()));
   }
 
   async getMessages(start: Time, end: Time, topics: GetMessagesTopics): Promise<GetMessagesResult> {
     const messagesPerProvider = await Promise.all(
-      this._providers.map(async (provider, index) => {
-        const initializationResult = this._initializationResultsPerProvider[index];
+      this.#providers.map(async (provider, index) => {
+        const initializationResult = this.#initializationResultsPerProvider[index];
         if (initializationResult == undefined) {
           return { parsedMessages: undefined, rosBinaryMessages: undefined };
         }
@@ -373,10 +373,10 @@ export default class CombinedDataProvider implements RandomAccessDataProvider {
   }
 
   _updateProgressForChild(providerIdx: number, progress: Progress): void {
-    this._progressPerProvider[providerIdx] = progress;
+    this.#progressPerProvider[providerIdx] = progress;
     // Assume empty for unreported progress
-    const cleanProgresses = this._progressPerProvider.map((p) => p ?? emptyProgress());
+    const cleanProgresses = this.#progressPerProvider.map((p) => p ?? emptyProgress());
     const intersected = intersectProgress(cleanProgresses);
-    this._extensionPoint?.progressCallback(intersected);
+    this.#extensionPoint?.progressCallback(intersected);
   }
 }

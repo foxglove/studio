@@ -46,11 +46,11 @@ class MockRosClient {
     workerInstance = this;
   }
 
-  _topics: string[] = [];
-  _types: string[] = [];
-  _typedefs_full_text: string[] = [];
-  _connectCallback?: () => void;
-  _messages: any[] = [];
+  #topics: string[] = [];
+  #types: string[] = [];
+  #typedefs_full_text: string[] = [];
+  #connectCallback?: () => void;
+  #messages: any[] = [];
 
   setup({
     topics = [],
@@ -63,17 +63,17 @@ class MockRosClient {
     typedefs?: string[];
     messages?: any[];
   }) {
-    this._topics = topics;
-    this._types = types;
-    this._typedefs_full_text = typedefs;
-    this._messages = messages;
+    this.#topics = topics;
+    this.#types = types;
+    this.#typedefs_full_text = typedefs;
+    this.#messages = messages;
 
-    this._connectCallback?.();
+    this.#connectCallback?.();
   }
 
   on(op: string, callback: () => void) {
     if (op === "connection") {
-      this._connectCallback = callback;
+      this.#connectCallback = callback;
     }
   }
 
@@ -83,14 +83,14 @@ class MockRosClient {
 
   getTopicsAndRawTypes(callback: (...args: unknown[]) => void) {
     callback({
-      topics: this._topics,
-      types: this._types,
-      typedefs_full_text: this._typedefs_full_text,
+      topics: this.#topics,
+      types: this.#types,
+      typedefs_full_text: this.#typedefs_full_text,
     });
   }
 
   getMessagesByTopicName(topicName: string): { message: unknown }[] {
-    return this._messages.filter(({ topic }) => topic === topicName);
+    return this.#messages.filter(({ topic }) => topic === topicName);
   }
 
   getNodes(callback: (nodes: string[]) => void, _errCb: (error: Error) => void) {

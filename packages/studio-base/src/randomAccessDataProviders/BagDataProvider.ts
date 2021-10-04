@@ -85,18 +85,18 @@ const mergeStats = (a: TimedDataThroughput, b: TimedDataThroughput): TimedDataTh
 
 // A FileReader that "spies" on data callbacks. Used to log data consumed.
 class LogMetricsReader {
-  _reader: FileReader;
-  _extensionPoint: ExtensionPoint;
+  #reader: FileReader;
+  #extensionPoint: ExtensionPoint;
   constructor(reader: FileReader, extensionPoint: ExtensionPoint) {
-    this._reader = reader;
-    this._extensionPoint = extensionPoint;
+    this.#reader = reader;
+    this.#extensionPoint = extensionPoint;
   }
   async open() {
-    return await this._reader.open();
+    return await this.#reader.open();
   }
   fetch(offset: number, length: number) {
-    const stream = this._reader.fetch(offset, length);
-    stream.on("data", getReportMetadataForChunk(this._extensionPoint));
+    const stream = this.#reader.fetch(offset, length);
+    stream.on("data", getReportMetadataForChunk(this.#extensionPoint));
     return stream;
   }
 }
@@ -105,22 +105,22 @@ class LogMetricsReader {
 // `BrowserHttpReader` for how to set up a remote server to be able to directly stream from it.
 // Returns raw messages that still need to be parsed by `ParseMessagesDataProvider`.
 export default class BagDataProvider implements RandomAccessDataProvider {
-  _options: Options;
-  _bag?: Bag;
-  _lastPerformanceStatsToLog?: TimedDataThroughput;
-  _extensionPoint?: ExtensionPoint;
+  #options: Options;
+  #bag?: Bag;
+  #lastPerformanceStatsToLog?: TimedDataThroughput;
+  #extensionPoint?: ExtensionPoint;
   #bzip2?: Bzip2;
 
   constructor(options: Options, children: RandomAccessDataProviderDescriptor[]) {
     if (children.length > 0) {
       throw new Error("BagDataProvider cannot have children");
     }
-    this._options = options;
+    this.#options = options;
   }
 
   async initialize(extensionPoint: ExtensionPoint): Promise<InitializationResult> {
-    this._extensionPoint = extensionPoint;
-    const { bagPath, cacheSizeInBytes } = this._options;
+    this.#extensionPoint = extensionPoint;
+    const { bagPath, cacheSizeInBytes } = this.#options;
     await decompressLZ4.isLoaded;
     this.#bzip2 = await Bzip2.init();
 
@@ -152,17 +152,17 @@ export default class BagDataProvider implements RandomAccessDataProvider {
           return await new Promise(() => {}); // Just never finish initializing.
         }
 
-        this._bag = new Bag(new BagReader(remoteReader));
+        this.#bag = new Bag(new BagReader(remoteReader));
 
         try {
-          await this._bag.open();
+          await this.#bag.open();
         } catch (err) {
           sendNotification("Opening remote bag failed", (err as Error).message, "user", "error");
           return await new Promise(() => {}); // Just never finish initializing.
         }
       } else {
-        this._bag = new Bag(new BagReader(new BlobReader(bagPath.file)));
-        await this._bag.open();
+        this.#bag = new Bag(new BagReader(new BlobReader(bagPath.file)));
+        await this.#bag.open();
       }
     } catch (err) {
       // Errors in this section come from invalid user data, so we don't want them to be reported as
@@ -170,13 +170,13 @@ export default class BagDataProvider implements RandomAccessDataProvider {
       throw new UserError(err);
     }
 
-    const { startTime, endTime, chunkInfos } = this._bag;
+    const { startTime, endTime, chunkInfos } = this.#bag;
     const connections: Connection[] = [];
     const emptyConnections: {
       // eslint-disable-next-line no-restricted-syntax
       [K in keyof Connection]?: Connection[K] | null;
     }[] = [];
-    for (const [connId, connection] of this._bag.connections) {
+    for (const [connId, connection] of this.#bag.connections) {
       const { messageDefinition, md5sum, topic, type, callerid } = connection;
       if (md5sum && topic && type) {
         connections.push({
@@ -243,33 +243,33 @@ export default class BagDataProvider implements RandomAccessDataProvider {
     };
   }
 
-  _logStats = (): void => {
-    if (this._extensionPoint == undefined || this._lastPerformanceStatsToLog == undefined) {
+  #logStats = (): void => {
+    if (this.#extensionPoint == undefined || this.#lastPerformanceStatsToLog == undefined) {
       return;
     }
-    this._extensionPoint.reportMetadataCallback(this._lastPerformanceStatsToLog.data);
-    this._lastPerformanceStatsToLog = undefined;
+    this.#extensionPoint.reportMetadataCallback(this.#lastPerformanceStatsToLog.data);
+    this.#lastPerformanceStatsToLog = undefined;
   };
 
   // Logs some stats if it has been more than a second since the last call.
-  _debouncedLogStats = debounce(this._logStats, 1000, { leading: false, trailing: true });
+  #debouncedLogStats = debounce(this.#logStats, 1000, { leading: false, trailing: true });
 
   _queueStats(stats: TimedDataThroughput): void {
     if (
-      this._lastPerformanceStatsToLog != undefined &&
-      statsAreAdjacent(this._lastPerformanceStatsToLog, stats)
+      this.#lastPerformanceStatsToLog != undefined &&
+      statsAreAdjacent(this.#lastPerformanceStatsToLog, stats)
     ) {
       // The common case: The next bit of data will be next to the last one. For remote bags we'll
       // reuse the connection.
-      this._lastPerformanceStatsToLog = mergeStats(this._lastPerformanceStatsToLog, stats);
+      this.#lastPerformanceStatsToLog = mergeStats(this.#lastPerformanceStatsToLog, stats);
     } else {
       // For the initial load, or after a seek, a fresh connectionwill be made for remote bags.
       // Eagerly log any stats we know are "done".
-      this._logStats();
-      this._lastPerformanceStatsToLog = stats;
+      this.#logStats();
+      this.#lastPerformanceStatsToLog = stats;
     }
     // Kick the can down the road whether it's new or existing.
-    this._debouncedLogStats();
+    this.#debouncedLogStats();
   }
 
   async getMessages(
@@ -320,7 +320,7 @@ export default class BagDataProvider implements RandomAccessDataProvider {
       },
     };
     try {
-      await this._bag?.readMessages(options, onMessage);
+      await this.#bag?.readMessages(options, onMessage);
     } catch (error) {
       reportMalformedError("bag parsing", error);
       throw error;

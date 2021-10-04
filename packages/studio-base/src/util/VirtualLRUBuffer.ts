@@ -44,30 +44,30 @@ import { isRangeCoveredByRanges, Range } from "./ranges";
 
 export default class VirtualLRUBuffer {
   byteLength: number; // How many bytes does this buffer represent.
-  _blocks: Buffer[] = []; // Actual `Buffer` for each block.
+  #blocks: Buffer[] = []; // Actual `Buffer` for each block.
   // How many bytes is each block. This used to work up to 2GiB minus a byte, and now seems to crash
   // past 2GiB minus 4KiB. Default to 1GiB so we don't get caught out next time the limit drops.
-  _blockSize: number = Math.trunc(buffer.kMaxLength / 2);
-  _numberOfBlocks: number = Infinity; // How many blocks are we allowed to have at any time.
-  _lastAccessedBlockIndices: number[] = []; // Indexes of blocks, from least to most recently accessed.
-  _rangesWithData: Range[] = []; // Ranges for which we have data copied in (and have not been evicted).
+  #blockSize: number = Math.trunc(buffer.kMaxLength / 2);
+  #numberOfBlocks: number = Infinity; // How many blocks are we allowed to have at any time.
+  #lastAccessedBlockIndices: number[] = []; // Indexes of blocks, from least to most recently accessed.
+  #rangesWithData: Range[] = []; // Ranges for which we have data copied in (and have not been evicted).
 
   constructor(options: { size: number; blockSize?: number; numberOfBlocks?: number }) {
     this.byteLength = options.size;
-    this._blockSize = options.blockSize ?? this._blockSize;
-    this._numberOfBlocks = options.numberOfBlocks ?? this._numberOfBlocks;
+    this.#blockSize = options.blockSize ?? this.#blockSize;
+    this.#numberOfBlocks = options.numberOfBlocks ?? this.#numberOfBlocks;
   }
 
   // Check if the range between `start` (inclusive) and `end` (exclusive) fully contains data
   // copied in through `VirtualLRUBuffer#copyFrom`.
   hasData(start: number, end: number): boolean {
-    return isRangeCoveredByRanges({ start, end }, this._rangesWithData);
+    return isRangeCoveredByRanges({ start, end }, this.#rangesWithData);
   }
 
   // Get the minimal number of start-end pairs for which `VirtualLRUBuffer#hasData` will return true.
   // The array is sorted by `start`.
   getRangesWithData(): Range[] {
-    return this._rangesWithData;
+    return this.#rangesWithData;
   }
 
   // Copy data from the `source` buffer to the byte at `targetStart` in the VirtualLRUBuffer.
@@ -89,7 +89,7 @@ export default class VirtualLRUBuffer {
       position += remainingBytesInBlock;
     }
 
-    this._rangesWithData = simplify(unify([range], this._rangesWithData));
+    this.#rangesWithData = simplify(unify([range], this.#rangesWithData));
   }
 
   // Get a slice of data. Throws if `VirtualLRUBuffer#hasData(start, end)` is false, so be sure to check
@@ -127,40 +127,40 @@ export default class VirtualLRUBuffer {
 
   // Get a reference to a block, and mark it as most recently used. Might evict older blocks.
   _getBlock(index: number): Buffer {
-    if (!this._blocks[index]) {
+    if (!this.#blocks[index]) {
       // If a block is not allocated yet, do so.
-      let size = this._blockSize;
-      if ((index + 1) * this._blockSize > this.byteLength) {
-        size = this.byteLength % this._blockSize; // Trim the last block to match the total size.
+      let size = this.#blockSize;
+      if ((index + 1) * this.#blockSize > this.byteLength) {
+        size = this.byteLength % this.#blockSize; // Trim the last block to match the total size.
       }
       // It's okay to use `allocUnsafe` because we don't allow reading data from ranges that have
       // not explicitly be filled using `VirtualLRUBuffer#copyFrom`.
-      this._blocks[index] = buffer.Buffer.allocUnsafe(size);
+      this.#blocks[index] = buffer.Buffer.allocUnsafe(size);
     }
     // Put the current index to the end of the list, while avoiding duplicates.
-    this._lastAccessedBlockIndices = [
-      ...this._lastAccessedBlockIndices.filter((idx) => idx !== index),
+    this.#lastAccessedBlockIndices = [
+      ...this.#lastAccessedBlockIndices.filter((idx) => idx !== index),
       index,
     ];
-    if (this._lastAccessedBlockIndices.length > this._numberOfBlocks) {
+    if (this.#lastAccessedBlockIndices.length > this.#numberOfBlocks) {
       // If we have too many blocks, remove the least recently used one.
       // Note that we don't reuse blocks, since other code might still hold a reference to it
       // via the `VirtualLRUBuffer#slice` method.
       // TODO(JP): It might be worth measuring if under typical use it's faster to reuse blocks and always
       // copy to a new buffer in `VirtualLRUBuffer#slice` (less garbage collection), or if the current method
       // is better (faster slicing).
-      const deleteIndex = this._lastAccessedBlockIndices.shift();
+      const deleteIndex = this.#lastAccessedBlockIndices.shift();
       if (deleteIndex != undefined) {
-        delete this._blocks[deleteIndex];
+        delete this.#blocks[deleteIndex];
         // Remove the range that we evicted from `_rangesWithData`, since the range doesn't have data now.
-        this._rangesWithData = simplify(
-          substract(this._rangesWithData, [
-            { start: deleteIndex * this._blockSize, end: (deleteIndex + 1) * this._blockSize },
+        this.#rangesWithData = simplify(
+          substract(this.#rangesWithData, [
+            { start: deleteIndex * this.#blockSize, end: (deleteIndex + 1) * this.#blockSize },
           ]),
         );
       }
     }
-    const block = this._blocks[index];
+    const block = this.#blocks[index];
     if (!block) {
       throw new Error("invariant violation - no block at index");
     }
@@ -174,8 +174,8 @@ export default class VirtualLRUBuffer {
     if (position < 0 || position >= this.byteLength) {
       throw new Error("VirtualLRUBuffer#_calculatePosition invalid input");
     }
-    const blockIndex = Math.floor(position / this._blockSize);
-    const positionInBlock = position - blockIndex * this._blockSize;
+    const blockIndex = Math.floor(position / this.#blockSize);
+    const positionInBlock = position - blockIndex * this.#blockSize;
     const remainingBytesInBlock = this._getBlock(blockIndex).byteLength - positionInBlock;
     return { blockIndex, positionInBlock, remainingBytesInBlock };
   }

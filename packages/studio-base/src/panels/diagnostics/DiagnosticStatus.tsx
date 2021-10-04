@@ -190,7 +190,7 @@ const getFormattedKeyValues = createSelector(
 
 // component to display a single diagnostic status
 class DiagnosticStatus extends React.Component<Props, unknown> {
-  _tableRef = React.createRef<HTMLTableElement>();
+  #tableRef = React.createRef<HTMLTableElement>();
 
   static defaultProps = {
     splitFraction: 0.5,
@@ -212,27 +212,26 @@ class DiagnosticStatus extends React.Component<Props, unknown> {
     }
   }
 
-  _resizeMouseDown = (event: React.MouseEvent<Element>): void => {
+  #resizeMouseDown = (event: React.MouseEvent<Element>): void => {
     event.preventDefault();
-    window.addEventListener("mousemove", this._resizeMouseMove);
-    window.addEventListener("mouseup", this._resizeMouseUp);
+    window.addEventListener("mousemove", this.#resizeMouseMove);
+    window.addEventListener("mouseup", this.#resizeMouseUp);
   };
 
-  _resizeMouseUp = (): void => {
-    window.removeEventListener("mousemove", this._resizeMouseMove);
+  #resizeMouseUp = (): void => {
+    window.removeEventListener("mousemove", this.#resizeMouseMove);
   };
 
-  _resizeMouseMove = (event: MouseEvent): void => {
+  #resizeMouseMove = (event: MouseEvent): void => {
     const {
-      _tableRef,
       props: { onChangeSplitFraction },
     } = this;
 
-    if (!_tableRef.current) {
+    if (!this.#tableRef.current) {
       return;
     }
 
-    const { left, right } = _tableRef.current.getBoundingClientRect();
+    const { left, right } = this.#tableRef.current.getBoundingClientRect();
     const splitFraction = clamp(
       (event.clientX - left) / (right - left),
       MIN_SPLIT_FRACTION,
@@ -242,8 +241,8 @@ class DiagnosticStatus extends React.Component<Props, unknown> {
   };
 
   override componentWillUnmount(): void {
-    window.removeEventListener("mousemove", this._resizeMouseMove);
-    window.removeEventListener("mouseup", this._resizeMouseUp);
+    window.removeEventListener("mousemove", this.#resizeMouseMove);
+    window.removeEventListener("mouseup", this.#resizeMouseUp);
   }
 
   _renderKeyValueCell(
@@ -262,7 +261,7 @@ class DiagnosticStatus extends React.Component<Props, unknown> {
     );
   }
 
-  _renderKeyValueSections = (): React.ReactNode => {
+  #renderKeyValueSections = (): React.ReactNode => {
     const { info, topicToRender, openSiblingPanel, collapsedSections } = this.props;
     const formattedKeyVals: FormattedKeyValue[] = getFormattedKeyValues(info.status);
     let inCollapsedSection = false;
@@ -332,12 +331,12 @@ class DiagnosticStatus extends React.Component<Props, unknown> {
     });
   };
 
-  _getSectionsCollapsedForCurrentName = (): { name: string; section: string }[] => {
+  #getSectionsCollapsedForCurrentName = (): { name: string; section: string }[] => {
     const { collapsedSections, info } = this.props;
     return collapsedSections.filter(({ name }) => name === info.status.name);
   };
 
-  _getSectionsThatCanBeCollapsed = (): FormattedKeyValue[] => {
+  #getSectionsThatCanBeCollapsed = (): FormattedKeyValue[] => {
     const { info } = this.props;
     const formattedKeyVals = getFormattedKeyValues(info.status);
     return formattedKeyVals.filter(({ key, value }) => {
@@ -347,12 +346,12 @@ class DiagnosticStatus extends React.Component<Props, unknown> {
     });
   };
 
-  _toggleSections = (): void => {
+  #toggleSections = (): void => {
     const { saveConfig, collapsedSections, info } = this.props;
     const newSectionsForCurrentName =
-      this._getSectionsCollapsedForCurrentName().length > 0
+      this.#getSectionsCollapsedForCurrentName().length > 0
         ? []
-        : this._getSectionsThatCanBeCollapsed().map(({ key, value }) => ({
+        : this.#getSectionsThatCanBeCollapsed().map(({ key, value }) => ({
             name: info.status.name,
             section: `${key}${value}`,
           }));
@@ -380,10 +379,10 @@ class DiagnosticStatus extends React.Component<Props, unknown> {
         <div
           className={classes.resizeHandle}
           style={{ left: `${100 * splitFraction}%` }}
-          onMouseDown={this._resizeMouseDown}
+          onMouseDown={this.#resizeMouseDown}
           data-test-resizehandle
         />
-        <table className={classes.table} ref={this._tableRef}>
+        <table className={classes.table} ref={this.#tableRef}>
           <tbody>
             {/* Use a dummy row to fix the column widths */}
             <tr style={{ height: 0 }}>
@@ -429,22 +428,22 @@ class DiagnosticStatus extends React.Component<Props, unknown> {
                       <DotsHorizontalIcon />
                     </Icon>
                   </div>
-                  {this._getSectionsThatCanBeCollapsed().length > 0 && (
+                  {this.#getSectionsThatCanBeCollapsed().length > 0 && (
                     <div
                       style={{ color: "white", cursor: "pointer" }}
-                      onClick={this._toggleSections}
+                      onClick={this.#toggleSections}
                     >
                       <Icon
                         size="medium"
                         fade
                         style={{ padding: 4 }}
                         tooltip={
-                          this._getSectionsCollapsedForCurrentName().length > 0
+                          this.#getSectionsCollapsedForCurrentName().length > 0
                             ? "Expand all"
                             : "Collapse all"
                         }
                       >
-                        {this._getSectionsCollapsedForCurrentName().length > 0 ? (
+                        {this.#getSectionsCollapsedForCurrentName().length > 0 ? (
                           <ChevronUpIcon />
                         ) : (
                           <ChevronDownIcon />
@@ -455,7 +454,7 @@ class DiagnosticStatus extends React.Component<Props, unknown> {
                 </Flex>
               </td>
             </tr>
-            {this._renderKeyValueSections()}
+            {this.#renderKeyValueSections()}
           </tbody>
         </table>
       </div>

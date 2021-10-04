@@ -26,12 +26,12 @@ type ErrorsByTopic = {
   [topicName: string]: string[];
 };
 class MockTransform {
-  _values: { id: string }[];
+  #values: { id: string }[];
   constructor({ tfs }: { tfs: { id: string }[] }) {
-    this._values = tfs;
+    this.#values = tfs;
   }
   values() {
-    return this._values;
+    return this.#values;
   }
 }
 

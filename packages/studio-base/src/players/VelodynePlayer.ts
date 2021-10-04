@@ -111,7 +111,7 @@ export default class VelodynePlayer implements Player {
           tip: "Check that your are connected to the same local network (subnet) as the Velodyne sensor",
         });
       });
-      this.#socket.on("message", this._handleMessage);
+      this.#socket.on("message", this.#handleMessage);
     } else {
       try {
         await this.#socket.close();
@@ -133,7 +133,7 @@ export default class VelodynePlayer implements Player {
     }
   };
 
-  _handleMessage = (data: Uint8Array, rinfo: UdpRemoteInfo): void => {
+  #handleMessage = (data: Uint8Array, rinfo: UdpRemoteInfo): void => {
     const receiveTime = fromMillis(Date.now());
     const date = toDate(receiveTime);
     date.setMinutes(0, 0, 0);

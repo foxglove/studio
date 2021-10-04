@@ -48,23 +48,23 @@ type State = {
 };
 
 class Example extends Component<Props, State> {
-  _intervalId?: ReturnType<typeof setInterval>;
+  #intervalId?: ReturnType<typeof setInterval>;
   override state = { items: generateData(MSG_BATCH_SIZE), paused: true };
 
   override componentDidMount() {
     if (!this.state.paused) {
-      this._startTimer();
+      this.#startTimer();
     }
   }
 
   override componentWillUnmount() {
-    if (this._intervalId) {
-      clearInterval(this._intervalId);
+    if (this.#intervalId) {
+      clearInterval(this.#intervalId);
     }
   }
 
-  _startTimer = () => {
-    this._intervalId = setInterval(() => {
+  #startTimer = () => {
+    this.#intervalId = setInterval(() => {
       const newData = generateData(MSG_BATCH_SIZE);
       const items = [...this.state.items, ...newData];
       this.setState({ items });
@@ -74,11 +74,11 @@ class Example extends Component<Props, State> {
   togglePause = () => {
     const paused = !this.state.paused;
     if (paused) {
-      if (this._intervalId) {
-        clearInterval(this._intervalId);
+      if (this.#intervalId) {
+        clearInterval(this.#intervalId);
       }
     } else {
-      this._startTimer();
+      this.#startTimer();
     }
     this.setState({ paused });
   };

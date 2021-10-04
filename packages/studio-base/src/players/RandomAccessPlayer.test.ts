@@ -49,27 +49,27 @@ const playerOptions: RandomAccessPlayerOptions = {
 type PlayerStateWithoutPlayerId = Omit<PlayerState, "playerId">;
 
 class MessageStore {
-  _messages: PlayerStateWithoutPlayerId[] = [];
+  #messages: PlayerStateWithoutPlayerId[] = [];
   done: Promise<PlayerStateWithoutPlayerId[]>;
-  _expected: number;
-  _resolve: (arg0: PlayerStateWithoutPlayerId[]) => void = () => {
+  #expected: number;
+  #resolve: (arg0: PlayerStateWithoutPlayerId[]) => void = () => {
     // no-op
   };
   constructor(expected: number) {
-    this._expected = expected;
+    this.#expected = expected;
     this.done = new Promise((resolve) => {
-      this._resolve = resolve;
+      this.#resolve = resolve;
     });
   }
 
   add = async (message: PlayerState): Promise<void> => {
-    this._messages.push(omit(message, ["playerId"]));
-    if (this._messages.length === this._expected) {
-      this._resolve(this._messages);
+    this.#messages.push(omit(message, ["playerId"]));
+    if (this.#messages.length === this.#expected) {
+      this.#resolve(this.#messages);
     }
-    if (this._messages.length > this._expected) {
+    if (this.#messages.length > this.#expected) {
       const error = new Error(
-        `Expected: ${this._expected} messages, received: ${this._messages.length}`,
+        `Expected: ${this.#expected} messages, received: ${this.#messages.length}`,
       );
       this.done = Promise.reject(error);
       throw error;
@@ -77,10 +77,10 @@ class MessageStore {
   };
 
   reset = (expected: number): void => {
-    this._expected = expected;
-    this._messages = [];
+    this.#expected = expected;
+    this.#messages = [];
     this.done = new Promise((resolve) => {
-      this._resolve = resolve;
+      this.#resolve = resolve;
     });
   };
 }
@@ -1353,11 +1353,11 @@ describe("RandomAccessPlayer", () => {
 
   describe("metrics collecting", () => {
     class TestMetricsCollector implements PlayerMetricsCollectorInterface {
-      _initialized: number = 0;
-      _played: number = 0;
-      _paused: number = 0;
-      _seeked: number = 0;
-      _speed: number[] = [];
+      #initialized: number = 0;
+      #played: number = 0;
+      #paused: number = 0;
+      #seeked: number = 0;
+      #speed: number[] = [];
 
       setProperty(_key: string, _value: string | number | boolean): void {
         // no-op
@@ -1366,19 +1366,19 @@ describe("RandomAccessPlayer", () => {
         // no-op
       }
       initialized(): void {
-        this._initialized++;
+        this.#initialized++;
       }
       play(_speed: number): void {
-        this._played++;
+        this.#played++;
       }
       seek(_time: Time): void {
-        this._seeked++;
+        this.#seeked++;
       }
       setSpeed(speed: number): void {
-        this._speed.push(speed);
+        this.#speed.push(speed);
       }
       pause(): void {
-        this._paused++;
+        this.#paused++;
       }
       setSubscriptions(): void {
         // no-op
@@ -1403,11 +1403,11 @@ describe("RandomAccessPlayer", () => {
       }
       stats() {
         return {
-          initialized: this._initialized,
-          played: this._played,
-          paused: this._paused,
-          seeked: this._seeked,
-          speed: this._speed,
+          initialized: this.#initialized,
+          played: this.#played,
+          paused: this.#paused,
+          seeked: this.#seeked,
+          speed: this.#speed,
         };
       }
       recordTimeToFirstMsgs(): void {

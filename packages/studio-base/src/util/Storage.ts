@@ -32,29 +32,29 @@ export function clearBustStorageFnsMap(): void {
 
 // Small wrapper around localStorage for convenience.
 export default class Storage {
-  _backingStore: BackingStore;
+  #backingStore: BackingStore;
 
   constructor(backingStore: BackingStore = window.localStorage) {
-    this._backingStore = backingStore;
+    this.#backingStore = backingStore;
   }
 
   // The registered bustStorageFn will be called when the storage quota is reached.
   registerBustStorageFn(bustStorageFn: BustStorageFn): void {
-    const bustStorageFns = bustStorageFnsMap.get(this._backingStore) ?? [];
-    bustStorageFnsMap.set(this._backingStore, [...bustStorageFns, bustStorageFn]);
+    const bustStorageFns = bustStorageFnsMap.get(this.#backingStore) ?? [];
+    bustStorageFnsMap.set(this.#backingStore, [...bustStorageFns, bustStorageFn]);
   }
 
   clear(): void {
-    this._backingStore.clear();
+    this.#backingStore.clear();
   }
 
   keys(): string[] {
     // Filter out internal keys for MemoryStorage instances.
-    return Object.keys(this._backingStore).filter((key) => !key.startsWith("_internal_"));
+    return Object.keys(this.#backingStore).filter((key) => !key.startsWith("_internal_"));
   }
 
   getItem<T>(key: string): T | undefined {
-    const val = this._backingStore.getItem(key);
+    const val = this.#backingStore.getItem(key);
 
     // if a non-json value gets into local storage we should ignore it
     try {
@@ -70,26 +70,26 @@ export default class Storage {
   }
 
   _bustStorage(): void {
-    const bustStorageFns = bustStorageFnsMap.get(this._backingStore) ?? [];
+    const bustStorageFns = bustStorageFnsMap.get(this.#backingStore) ?? [];
     for (const bustStorageFn of bustStorageFns) {
-      bustStorageFn(this._backingStore, this.keys());
+      bustStorageFn(this.#backingStore, this.keys());
     }
   }
 
   setItem(key: string, value: unknown, bustStorageFn?: BustStorageFn): void {
     const strValue = JSON.stringify(value);
     try {
-      this._backingStore.setItem(key, strValue);
+      this.#backingStore.setItem(key, strValue);
     } catch {
       // If there is a bustStorageFn when setItem, we should call it first to bust the lower priority caches.
       if (bustStorageFn) {
-        bustStorageFn(this._backingStore, this.keys());
+        bustStorageFn(this.#backingStore, this.keys());
       } else {
         this._bustStorage();
       }
       let err;
       try {
-        this._backingStore.setItem(key, strValue);
+        this.#backingStore.setItem(key, strValue);
       } catch (e) {
         err = e;
         if (bustStorageFn) {
@@ -97,7 +97,7 @@ export default class Storage {
           this._bustStorage();
           try {
             // Try writing again.
-            this._backingStore.setItem(key, strValue);
+            this.#backingStore.setItem(key, strValue);
           } catch (e1) {
             err = e1;
           }
@@ -110,6 +110,6 @@ export default class Storage {
   }
 
   removeItem(key: string): void {
-    this._backingStore.removeItem(key);
+    this.#backingStore.removeItem(key);
   }
 }

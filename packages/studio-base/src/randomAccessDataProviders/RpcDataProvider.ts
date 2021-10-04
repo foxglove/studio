@@ -29,17 +29,17 @@ import { setupMainThreadRpc } from "@foxglove/studio-base/util/RpcMainThreadUtil
 // RpcDataProviderRemote, where we instantiate the rest of the RandomAccessDataProviderDescriptor tree.
 // See WorkerDataProvider for an example.
 export default class RpcDataProvider implements RandomAccessDataProvider {
-  _rpc: Rpc;
-  _childDescriptor: RandomAccessDataProviderDescriptor;
+  #rpc: Rpc;
+  #childDescriptor: RandomAccessDataProviderDescriptor;
 
   constructor(rpc: Rpc, children: RandomAccessDataProviderDescriptor[]) {
-    this._rpc = rpc;
-    setupMainThreadRpc(this._rpc);
+    this.#rpc = rpc;
+    setupMainThreadRpc(this.#rpc);
     const child = children[0];
     if (children.length !== 1 || !child) {
       throw new Error(`RpcDataProvider requires exactly 1 child, but received ${children.length}`);
     }
-    this._childDescriptor = child;
+    this.#childDescriptor = child;
   }
 
   async initialize(extensionPoint: ExtensionPoint): Promise<InitializationResult> {
@@ -48,7 +48,7 @@ export default class RpcDataProvider implements RandomAccessDataProvider {
     type ExtensionPointParams<K> = K extends keyof ExtensionPoint
       ? { type: K; data: Parameters<ExtensionPoint[K]>[0] }
       : never;
-    this._rpc.receive(
+    this.#rpc.receive(
       "extensionPointCallback",
       (value: ExtensionPointParams<keyof ExtensionPoint>) => {
         switch (value.type) {
@@ -68,14 +68,14 @@ export default class RpcDataProvider implements RandomAccessDataProvider {
         return undefined;
       },
     );
-    return await this._rpc.send("initialize", { childDescriptor: this._childDescriptor });
+    return await this.#rpc.send("initialize", { childDescriptor: this.#childDescriptor });
   }
 
   async getMessages(start: Time, end: Time, topics: GetMessagesTopics): Promise<GetMessagesResult> {
     if (topics.parsedMessages) {
       throw new Error("RpcDataProvider only supports rosBinaryMessages");
     }
-    const rpcRes = await this._rpc.send<{ messages: GetMessagesResult["rosBinaryMessages"] }>(
+    const rpcRes = await this.#rpc.send<{ messages: GetMessagesResult["rosBinaryMessages"] }>(
       "getMessages",
       {
         start,
@@ -90,6 +90,6 @@ export default class RpcDataProvider implements RandomAccessDataProvider {
   }
 
   async close(): Promise<void> {
-    return await this._rpc.send("close");
+    return await this.#rpc.send("close");
   }
 }

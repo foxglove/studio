@@ -77,8 +77,7 @@ describe("WebWorkerManager", () => {
     expect(webWorkerManager.testing_getWorkerState("3")?.listenerIds).toEqual(["3"]);
     webWorkerManager.unregisterWorkerListener("2");
     webWorkerManager.unregisterWorkerListener("3");
-    // eslint-disable-next-line no-underscore-dangle
-    expect(webWorkerManager._workerStates).toEqual([undefined, undefined]);
+    expect(webWorkerManager.testing_workerCount()).toEqual(0);
   });
 
   it("throws when registering an ID twice", () => {

@@ -19,17 +19,17 @@ import { renderImage } from "./renderImage";
 import { Dimensions, RawMarkerData, RenderOptions } from "./util";
 
 class ImageCanvasWorker {
-  _idToCanvas: {
+  #idToCanvas: {
     [key: string]: OffscreenCanvas;
   } = {};
-  _rpc: Rpc;
+  #rpc: Rpc;
 
   constructor(rpc: Rpc) {
     setupWorker(rpc);
-    this._rpc = rpc;
+    this.#rpc = rpc;
 
     rpc.receive("initialize", async ({ id, canvas }: { id: string; canvas: OffscreenCanvas }) => {
-      this._idToCanvas[id] = canvas;
+      this.#idToCanvas[id] = canvas;
     });
 
     rpc.receive(
@@ -57,7 +57,7 @@ class ImageCanvasWorker {
           options,
         } = args;
 
-        const canvas = this._idToCanvas[id];
+        const canvas = this.#idToCanvas[id];
         if (!canvas) {
           return Promise.resolve(undefined);
         }

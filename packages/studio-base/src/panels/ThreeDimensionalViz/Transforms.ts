@@ -35,7 +35,7 @@ export class Transform {
   id: string;
   matrix: mat4 = mat4.create();
   parent?: Transform;
-  _hasValidMatrix: boolean = false;
+  #hasValidMatrix: boolean = false;
 
   constructor(id: string) {
     this.id = stripLeadingSlash(id);
@@ -47,11 +47,11 @@ export class Transform {
       quat.set(tempOrient, orientation.x, orientation.y, orientation.z, orientation.w),
       vec3.set(tempPos, position.x, position.y, position.z),
     );
-    this._hasValidMatrix = true;
+    this.#hasValidMatrix = true;
   }
 
   isValid(rootId: string): boolean {
-    return this._hasValidMatrix || this.id === rootId;
+    return this.#hasValidMatrix || this.id === rootId;
   }
 
   isChildOfTransform(unsanitizedRootId: string): boolean {

@@ -15,31 +15,31 @@ import { Readable } from "stream";
 // A node.js-style readable stream wrapper for the Streams API:
 // https://developer.mozilla.org/en-US/docs/Web/API/Streams_API
 export default class FetchReader extends Readable {
-  _response: Promise<Response>;
-  _reader?: ReadableStreamReader<Uint8Array>;
-  _controller: AbortController;
-  _aborted: boolean = false;
-  _url: string;
+  #response: Promise<Response>;
+  #reader?: ReadableStreamReader<Uint8Array>;
+  #controller: AbortController;
+  #aborted: boolean = false;
+  #url: string;
 
   constructor(url: string, options?: RequestInit) {
     super();
-    this._url = url;
-    this._controller = new AbortController();
-    this._response = fetch(url, { ...options, signal: this._controller.signal });
+    this.#url = url;
+    this.#controller = new AbortController();
+    this.#response = fetch(url, { ...options, signal: this.#controller.signal });
   }
 
   // you can only call getReader once on a response body
   // so keep a local copy of the reader and return it after the first call to get a reader
   async _getReader(): Promise<ReadableStreamReader<Uint8Array> | undefined> {
-    if (this._reader) {
-      return this._reader;
+    if (this.#reader) {
+      return this.#reader;
     }
     let data: Response;
     try {
-      data = await this._response;
+      data = await this.#response;
     } catch (err) {
       setImmediate(() => {
-        this.emit("error", new Error(`Request failed, fetch failed: ${this._url}`));
+        this.emit("error", new Error(`Request failed, fetch failed: ${this.#url}`));
       });
       return undefined;
     }
@@ -49,7 +49,7 @@ export default class FetchReader extends Readable {
         this.emit(
           "error",
           new Error(
-            `Bad response status code (${data.status}): ${this._url}. x-request-id: ${requestId}`,
+            `Bad response status code (${data.status}): ${this.#url}. x-request-id: ${requestId}`,
           ),
         );
       });
@@ -60,7 +60,7 @@ export default class FetchReader extends Readable {
       setImmediate(() => {
         this.emit(
           "error",
-          new Error(`Request succeeded, but failed to return a body: ${this._url}`),
+          new Error(`Request succeeded, but failed to return a body: ${this.#url}`),
         );
       });
       return undefined;
@@ -71,15 +71,15 @@ export default class FetchReader extends Readable {
       // When a stream is closed or errors, any reader it is locked to is released.
       // If the getReader method is called on an already locked stream, an exception will be thrown.
       // This is caused by server-side errors, but we should catch it anyway.
-      this._reader = data.body.getReader();
+      this.#reader = data.body.getReader();
     } catch (err) {
       setImmediate(() => {
-        this.emit("error", new Error(`Request succeeded, but failed to stream: ${this._url}`));
+        this.emit("error", new Error(`Request succeeded, but failed to stream: ${this.#url}`));
       });
       return undefined;
     }
 
-    return this._reader;
+    return this.#reader;
   }
 
   override _read(): void {
@@ -106,7 +106,7 @@ export default class FetchReader extends Readable {
           })
           .catch((err) => {
             // canceling the xhr request causes the promise to reject
-            if (this._aborted) {
+            if (this.#aborted) {
               // Null has a special meaning for streams
               // eslint-disable-next-line no-restricted-syntax
               this.push(null);
@@ -122,7 +122,7 @@ export default class FetchReader extends Readable {
 
   // aborts the xhr request if user calls stream.destroy()
   override _destroy(): void {
-    this._aborted = true;
-    this._controller.abort();
+    this.#aborted = true;
+    this.#controller.abort();
   }
 }

@@ -237,34 +237,34 @@ export function getPrefetchStartPoint(uncachedRanges: Range[], cursorPosition: n
 // unparsed ROS messages. The messages are evicted from this in-memory cache based on some constants
 // defined at the top of this file.
 export default class MemoryCacheDataProvider implements RandomAccessDataProvider {
-  _id: string;
-  _provider: RandomAccessDataProvider;
-  _extensionPoint?: ExtensionPoint;
+  #id: string;
+  #provider: RandomAccessDataProvider;
+  #extensionPoint?: ExtensionPoint;
 
   // The actual blocks that contain the messages. Blocks have a set "width" in terms of nanoseconds
   // since the start time of the bag. If a block has some messages for a topic, then by definition
   // it has *all* messages for that topic and timespan.
-  _blocks: (MemoryCacheBlock | undefined)[] = [];
+  #blocks: (MemoryCacheBlock | undefined)[] = [];
 
   // The start time of the bag. Used for computing from and to nanoseconds since the start.
-  _startTime: Time = { sec: 0, nsec: 0 };
+  #startTime: Time = { sec: 0, nsec: 0 };
 
   // The topics that we were most recently asked to load.
   // This is always set by the last `getMessages` call.
-  _preloadTopics: string[] = [];
+  #preloadTopics: string[] = [];
 
   // Total length of the data in nanoseconds. Used to compute progress with.
-  _totalNs: number = 0;
+  #totalNs: number = 0;
 
   // The current "connection", which represents the range that we're downloading.
-  _currentConnection?: {
+  #currentConnection?: {
     id: string;
     topics: string[];
     remainingBlockRange: Range;
   };
 
   // The read requests we've received via `getMessages`.
-  _readRequests: {
+  #readRequests: {
     // Actual range of messages, in nanoseconds since `this._startTime`.
     timeRange: Range;
     // The range of blocks.
@@ -276,23 +276,23 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
   // Recently requested ranges of blocks, sorted by most recent to least recent. There should never
   // be any overlapping ranges. Ranges *are* allowed to cover blocks that haven't been downloaded
   // (yet).
-  _recentBlockRanges: Range[] = [];
+  #recentBlockRanges: Range[] = [];
 
   // The end time of the last callback that we've resolved. This is useful for preloading new data
   // around this time.
-  _lastResolvedCallbackEnd?: number;
+  #lastResolvedCallbackEnd?: number;
 
   // When we log a "block too large" error, we only want to do that once, to prevent
   // spamming errors.
-  _loggedTooLargeError: boolean = false;
+  #loggedTooLargeError: boolean = false;
 
   // If we're configured to use an unlimited cache, we try to just load as much as possible and
   // never evict anything.
-  _cacheSizeBytes: number;
-  _readAheadBlocks: number = 0;
-  _memCacheBlockSizeNs: number = 0;
+  #cacheSizeBytes: number;
+  #readAheadBlocks: number = 0;
+  #memCacheBlockSizeNs: number = 0;
 
-  _lazyMessageReadersByTopic = new Map<string, LazyMessageReader>();
+  #lazyMessageReadersByTopic = new Map<string, LazyMessageReader>();
 
   constructor(
     {
@@ -305,8 +305,8 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
     children: RandomAccessDataProviderDescriptor[],
     getDataProvider: GetDataProvider,
   ) {
-    this._id = id;
-    this._cacheSizeBytes = unlimitedCache ? Infinity : DEFAULT_CACHE_SIZE_BYTES;
+    this.#id = id;
+    this.#cacheSizeBytes = unlimitedCache ? Infinity : DEFAULT_CACHE_SIZE_BYTES;
     const child = children[0];
     if (children.length !== 1 || !child) {
       throw new Error(
@@ -314,39 +314,39 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
       );
     }
 
-    this._provider = getDataProvider(child);
+    this.#provider = getDataProvider(child);
   }
 
   async initialize(extensionPoint: ExtensionPoint): Promise<InitializationResult> {
-    this._extensionPoint = extensionPoint;
-    const result = await this._provider.initialize({
+    this.#extensionPoint = extensionPoint;
+    const result = await this.#provider.initialize({
       ...extensionPoint,
       progressCallback: () => {},
     });
-    this._startTime = result.start;
-    this._totalNs = Number(toNanoSec(subtractTimes(result.end, result.start))) + 1; // +1 since times are inclusive.
+    this.#startTime = result.start;
+    this.#totalNs = Number(toNanoSec(subtractTimes(result.end, result.start))) + 1; // +1 since times are inclusive.
 
-    this._memCacheBlockSizeNs = Math.ceil(
-      Math.max(MIN_MEM_CACHE_BLOCK_SIZE_NS, this._totalNs / MAX_BLOCKS),
+    this.#memCacheBlockSizeNs = Math.ceil(
+      Math.max(MIN_MEM_CACHE_BLOCK_SIZE_NS, this.#totalNs / MAX_BLOCKS),
     );
-    this._readAheadBlocks = Math.ceil(READ_AHEAD_NS / this._memCacheBlockSizeNs);
+    this.#readAheadBlocks = Math.ceil(READ_AHEAD_NS / this.#memCacheBlockSizeNs);
 
-    if (this._totalNs > Number.MAX_SAFE_INTEGER * 0.9) {
+    if (this.#totalNs > Number.MAX_SAFE_INTEGER * 0.9) {
       throw new Error("Time range is too long to be supported");
     }
 
-    const blockCount = Math.ceil(this._totalNs / this._memCacheBlockSizeNs);
-    this._blocks = Array.from({ length: blockCount });
+    const blockCount = Math.ceil(this.#totalNs / this.#memCacheBlockSizeNs);
+    this.#blocks = Array.from({ length: blockCount });
 
     const msgDefs = result.messageDefinitions;
     if (msgDefs.type === "parsed") {
       for (const [topic, msgDef] of Object.entries(msgDefs.parsedMessageDefinitionsByTopic)) {
-        this._lazyMessageReadersByTopic.set(topic, new LazyMessageReader(msgDef));
+        this.#lazyMessageReadersByTopic.set(topic, new LazyMessageReader(msgDef));
       }
     } else if (msgDefs.type === "raw") {
       for (const [topic, rawMsgDef] of Object.entries(msgDefs.messageDefinitionsByTopic)) {
         const msgDef = parseMessageDefinition(rawMsgDef);
-        this._lazyMessageReadersByTopic.set(topic, new LazyMessageReader(msgDef));
+        this.#lazyMessageReadersByTopic.set(topic, new LazyMessageReader(msgDef));
       }
     }
 
@@ -364,18 +364,18 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
   ): Promise<GetMessagesResult> {
     // We might have a new set of topics.
     const topics = getNormalizedTopics(subscriptions.parsedMessages ?? []);
-    this._preloadTopics = topics; // Push a new entry to `this._readRequests`, and call `this._updateState()`.
+    this.#preloadTopics = topics; // Push a new entry to `this._readRequests`, and call `this._updateState()`.
 
     const timeRange = {
-      start: Number(toNanoSec(subtractTimes(startTime, this._startTime))),
-      end: Number(toNanoSec(subtractTimes(endTime, this._startTime))) + 1, // `Range` defines `end` as exclusive.
+      start: Number(toNanoSec(subtractTimes(startTime, this.#startTime))),
+      end: Number(toNanoSec(subtractTimes(endTime, this.#startTime))) + 1, // `Range` defines `end` as exclusive.
     };
     const blockRange = {
-      start: Math.floor(timeRange.start / this._memCacheBlockSizeNs),
-      end: Math.floor((timeRange.end - 1) / this._memCacheBlockSizeNs) + 1, // `Range` defines `end` as exclusive.
+      start: Math.floor(timeRange.start / this.#memCacheBlockSizeNs),
+      end: Math.floor((timeRange.end - 1) / this.#memCacheBlockSizeNs) + 1, // `Range` defines `end` as exclusive.
     };
     return new Promise((resolve) => {
-      this._readRequests.push({
+      this.#readRequests.push({
         timeRange,
         blockRange,
         topics,
@@ -387,23 +387,23 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
   }
 
   async close(): Promise<void> {
-    delete this._currentConnection; // Make sure that the current "connection" loop stops executing.
+    this.#currentConnection = undefined; // Make sure that the current "connection" loop stops executing.
 
-    return await this._provider.close();
+    return await this.#provider.close();
   }
 
   // We're primarily interested in the topics for the first outstanding read request, and after that
   // we're interested in preloading topics (based on the *last* read request).
   _getCurrentTopics(): string[] {
-    if (this._readRequests[0]) {
-      return this._readRequests[0].topics;
+    if (this.#readRequests[0]) {
+      return this.#readRequests[0].topics;
     }
 
-    return this._preloadTopics;
+    return this.#preloadTopics;
   }
 
   _resolveFinishedReadRequests(): void {
-    this._readRequests = this._readRequests.filter(({ timeRange, blockRange, topics, resolve }) => {
+    this.#readRequests = this.#readRequests.filter(({ timeRange, blockRange, topics, resolve }) => {
       if (topics.length === 0) {
         resolve({
           parsedMessages: [],
@@ -414,7 +414,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
 
       // If any of the requested blocks are not fully downloaded yet, bail out.
       for (let blockIndex = blockRange.start; blockIndex < blockRange.end; blockIndex++) {
-        const block = this._blocks[blockIndex];
+        const block = this.#blocks[blockIndex];
 
         if (!block) {
           return true;
@@ -432,7 +432,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
       const messages = [];
 
       for (let blockIndex = blockRange.start; blockIndex < blockRange.end; blockIndex++) {
-        const block = this._blocks[blockIndex];
+        const block = this.#blocks[blockIndex];
 
         if (!block) {
           throw new Error("Block should have been available, but it was not");
@@ -446,7 +446,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
           }
 
           for (const message of messagesFromBlock) {
-            const messageTime = toNanoSec(subtractTimes(message.receiveTime, this._startTime));
+            const messageTime = toNanoSec(subtractTimes(message.receiveTime, this.#startTime));
 
             if (
               timeRange.start <=
@@ -465,7 +465,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
         parsedMessages: messages.sort((a, b) => compare(a.receiveTime, b.receiveTime)),
         rosBinaryMessages: undefined,
       });
-      this._lastResolvedCallbackEnd = blockRange.end;
+      this.#lastResolvedCallbackEnd = blockRange.end;
       return false;
     });
   }
@@ -476,11 +476,11 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
     this._resolveFinishedReadRequests();
 
     if (
-      this._currentConnection &&
-      !isEqual(this._currentConnection.topics, this._getCurrentTopics())
+      this.#currentConnection &&
+      !isEqual(this.#currentConnection.topics, this._getCurrentTopics())
     ) {
       // If we have a different set of topics, stop the current "connection", and refresh everything.
-      delete this._currentConnection;
+      this.#currentConnection = undefined;
     }
 
     // Then see if we need to set a new connection based on the new connection and read requests state.
@@ -489,14 +489,14 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
 
   _getNewConnection(): Range | undefined {
     const connectionForReadRange = getNewConnection({
-      currentRemainingRange: this._currentConnection
-        ? this._currentConnection.remainingBlockRange
+      currentRemainingRange: this.#currentConnection
+        ? this.#currentConnection.remainingBlockRange
         : undefined,
-      readRequestRange: this._readRequests[0] ? this._readRequests[0].blockRange : undefined,
+      readRequestRange: this.#readRequests[0] ? this.#readRequests[0].blockRange : undefined,
       downloadedRanges: this._getDownloadedBlockRanges(),
-      lastResolvedCallbackEnd: this._lastResolvedCallbackEnd,
-      cacheSize: this._readAheadBlocks,
-      fileSize: this._blocks.length,
+      lastResolvedCallbackEnd: this.#lastResolvedCallbackEnd,
+      cacheSize: this.#readAheadBlocks,
+      fileSize: this.#blocks.length,
       continueDownloadingThreshold: 10, // Somewhat arbitrary number to not create new connections all the time.
     });
 
@@ -504,9 +504,9 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
       return connectionForReadRange;
     }
 
-    const cacheBytesUsed = sum(filterMap(this._blocks, (block) => block?.sizeInBytes));
+    const cacheBytesUsed = sum(filterMap(this.#blocks, (block) => block?.sizeInBytes));
 
-    if (!this._currentConnection && cacheBytesUsed < this._cacheSizeBytes) {
+    if (!this.#currentConnection && cacheBytesUsed < this.#cacheSizeBytes) {
       // All read requests have been served, but we have free cache space available. Cache something
       // useful if possible.
       return this._getPrefetchRange();
@@ -519,7 +519,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
   _getPrefetchRange(): Range | undefined {
     const bounds = {
       start: 0,
-      end: this._blocks.length,
+      end: this.#blocks.length,
     };
     const uncachedRanges = missingRanges(bounds, this._getDownloadedBlockRanges());
 
@@ -527,7 +527,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
       return undefined; // We have loaded the whole file.
     }
 
-    const prefetchStart = getPrefetchStartPoint(uncachedRanges, this._lastResolvedCallbackEnd ?? 0);
+    const prefetchStart = getPrefetchStartPoint(uncachedRanges, this.#lastResolvedCallbackEnd ?? 0);
     // Just request a single block. We know there's at least one there, and we don't want to cause
     // blocks that are actually useful to be evicted because of our prefetching. We could consider
     // a "low priority" connection that aborts as soon as there's memory pressure.
@@ -550,7 +550,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
       const connectionSuccess = await this._setConnection(newConnection).catch((err) => {
         sendNotification(
           `MemoryCacheDataProvider connection ${
-            this._currentConnection ? this._currentConnection.id : ""
+            this.#currentConnection ? this.#currentConnection.id : ""
           }`,
           err?.message ?? "<unknown error>",
           "app",
@@ -570,55 +570,55 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
   // completed successfully, or whether we were interrupted by another connection.
   async _setConnection(blockRange: Range): Promise<boolean> {
     if (this._getCurrentTopics().length === 0) {
-      delete this._currentConnection;
+      this.#currentConnection = undefined;
       return true;
     }
 
     const id = uuidv4();
-    this._currentConnection = {
+    this.#currentConnection = {
       id,
       topics: this._getCurrentTopics(),
       remainingBlockRange: blockRange,
     }; // Merge the new `blockRange` into `_recentBlockRanges`, which upholds the invariant that
     // these ranges are never overlapping.
 
-    this._recentBlockRanges = mergeNewRangeIntoUnsortedNonOverlappingList(
+    this.#recentBlockRanges = mergeNewRangeIntoUnsortedNonOverlappingList(
       blockRange,
-      this._recentBlockRanges,
+      this.#recentBlockRanges,
     );
 
     const isCurrent = () => {
-      return this._currentConnection?.id === id;
+      return this.#currentConnection?.id === id;
     };
 
     // Just loop infinitely, but break if the connection is not current any more.
     for (;;) {
-      const currentConnection = this._currentConnection;
+      const currentConnection = this.#currentConnection;
       if (!isCurrent()) {
         return false;
       }
 
       const currentBlockIndex: number = currentConnection.remainingBlockRange.start;
       // Only request topics that we don't already have.
-      const topics = this._blocks[currentBlockIndex]
+      const topics = this.#blocks[currentBlockIndex]
         ? currentConnection.topics.filter(
-            (topic) => !this._blocks[currentBlockIndex]?.messagesByTopic[topic],
+            (topic) => !this.#blocks[currentBlockIndex]?.messagesByTopic[topic],
           )
         : currentConnection.topics;
       // Get messages from the underlying provider.
       const startTime = addTimes(
-        this._startTime,
-        fromNanoSec(BigInt(currentBlockIndex * this._memCacheBlockSizeNs)),
+        this.#startTime,
+        fromNanoSec(BigInt(currentBlockIndex * this.#memCacheBlockSizeNs)),
       );
       const endTime = addTimes(
-        this._startTime,
+        this.#startTime,
         fromNanoSec(
-          BigInt(Math.min(this._totalNs, (currentBlockIndex + 1) * this._memCacheBlockSizeNs) - 1),
+          BigInt(Math.min(this.#totalNs, (currentBlockIndex + 1) * this.#memCacheBlockSizeNs) - 1),
         ), // endTime is inclusive.
       );
       const messages =
         topics.length > 0
-          ? await this._provider.getMessages(startTime, endTime, {
+          ? await this.#provider.getMessages(startTime, endTime, {
               rosBinaryMessages: topics,
             })
           : {
@@ -641,7 +641,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
         return false;
       }
 
-      const existingBlock = this._blocks[currentBlockIndex] ?? EMPTY_BLOCK;
+      const existingBlock = this.#blocks[currentBlockIndex] ?? EMPTY_BLOCK;
       const messagesByTopic = { ...existingBlock.messagesByTopic };
       let sizeInBytes = existingBlock.sizeInBytes;
       // Fill up the block with messages.
@@ -650,7 +650,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
       }
 
       for (const rosBinaryMessage of rosBinaryMessages ?? []) {
-        const lazyReader = this._lazyMessageReadersByTopic.get(rosBinaryMessage.topic);
+        const lazyReader = this.#lazyMessageReadersByTopic.get(rosBinaryMessage.topic);
         if (!lazyReader) {
           continue;
         }
@@ -686,13 +686,13 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
         });
       }
 
-      if (sizeInBytes > MAX_BLOCK_SIZE_BYTES && !this._loggedTooLargeError) {
-        this._loggedTooLargeError = true;
+      if (sizeInBytes > MAX_BLOCK_SIZE_BYTES && !this.#loggedTooLargeError) {
+        this.#loggedTooLargeError = true;
 
         sendNotification(
           "Very large block found",
           `A very large block (${Math.round(
-            this._memCacheBlockSizeNs / 1e6,
+            this.#memCacheBlockSizeNs / 1e6,
           )}ms) was found: ${Math.round(
             sizeInBytes / 1e6,
           )}MB. Too much data can cause performance problems and even crashes. Please fix this where the data is being generated.`,
@@ -701,14 +701,14 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
         );
       }
 
-      this._blocks = this._blocks.slice(0, currentBlockIndex).concat(
+      this.#blocks = this.#blocks.slice(0, currentBlockIndex).concat(
         [
           {
             messagesByTopic,
             sizeInBytes,
           },
         ],
-        this._blocks.slice(currentBlockIndex + 1),
+        this.#blocks.slice(currentBlockIndex + 1),
       );
       // Now `this._recentBlockRanges` and `this._blocks` have been updated, so we can resolve
       // requests, purge the cache and report progress.
@@ -728,8 +728,8 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
       }
 
       // Otherwise, update the `remainingBlockRange`.
-      this._currentConnection = {
-        ...this._currentConnection,
+      this.#currentConnection = {
+        ...this.#currentConnection,
         remainingBlockRange: {
           start: currentBlockIndex + 1,
           end: blockRange.end,
@@ -738,7 +738,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
     }
 
     // Connection successfully completed.
-    delete this._currentConnection;
+    this.#currentConnection = undefined;
     return true;
   }
 
@@ -747,7 +747,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
     const topics: string[] = this._getCurrentTopics();
 
     return simplify(
-      filterMap(this._blocks, (block, blockIndex) => {
+      filterMap(this.#blocks, (block, blockIndex) => {
         if (!block) {
           return;
         }
@@ -767,7 +767,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
   }
 
   _purgeOldBlocks(): void {
-    if (this._cacheSizeBytes === Infinity) {
+    if (this.#cacheSizeBytes === Infinity) {
       return;
     }
 
@@ -775,51 +775,51 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
     // we're actively trying to fill it.
     // If we don't have open read requests, don't evict blocks in the read-ahead range (ahead of the
     // playback cursor) because we'll automatically try to refetch that data immediately after.
-    let badEvictionRange = this._readRequests[0]?.blockRange;
+    let badEvictionRange = this.#readRequests[0]?.blockRange;
 
-    if (!badEvictionRange && this._lastResolvedCallbackEnd != undefined) {
+    if (!badEvictionRange && this.#lastResolvedCallbackEnd != undefined) {
       badEvictionRange = {
-        start: this._lastResolvedCallbackEnd,
-        end: this._lastResolvedCallbackEnd + this._readAheadBlocks,
+        start: this.#lastResolvedCallbackEnd,
+        end: this.#lastResolvedCallbackEnd + this.#readAheadBlocks,
       };
     }
 
     // Call the getBlocksToKeep helper.
     const { blockIndexesToKeep, newRecentRanges } = getBlocksToKeep({
-      recentBlockRanges: this._recentBlockRanges,
-      blockSizesInBytes: this._blocks.map((block) => block?.sizeInBytes ?? 0),
-      maxCacheSizeInBytes: this._cacheSizeBytes,
+      recentBlockRanges: this.#recentBlockRanges,
+      blockSizesInBytes: this.#blocks.map((block) => block?.sizeInBytes ?? 0),
+      maxCacheSizeInBytes: this.#cacheSizeBytes,
       badEvictionRange,
     });
 
     // Update our state.
-    this._recentBlockRanges = newRecentRanges;
-    const newBlocks: (MemoryCacheBlock | undefined)[] = Array.from({ length: this._blocks.length });
+    this.#recentBlockRanges = newRecentRanges;
+    const newBlocks: (MemoryCacheBlock | undefined)[] = Array.from({ length: this.#blocks.length });
 
-    for (let blockIndex = 0; blockIndex < this._blocks.length; blockIndex++) {
-      if (this._blocks[blockIndex] && blockIndexesToKeep.has(blockIndex)) {
-        newBlocks[blockIndex] = this._blocks[blockIndex];
+    for (let blockIndex = 0; blockIndex < this.#blocks.length; blockIndex++) {
+      if (this.#blocks[blockIndex] && blockIndexesToKeep.has(blockIndex)) {
+        newBlocks[blockIndex] = this.#blocks[blockIndex];
       }
     }
 
-    this._blocks = newBlocks;
+    this.#blocks = newBlocks;
   }
 
   _updateProgress(): void {
-    this._extensionPoint?.progressCallback({
+    this.#extensionPoint?.progressCallback({
       fullyLoadedFractionRanges: this._getDownloadedBlockRanges().map((range) => ({
         // Convert block ranges into fractions.
-        start: range.start / this._blocks.length,
-        end: range.end / this._blocks.length,
+        start: range.start / this.#blocks.length,
+        end: range.end / this.#blocks.length,
       })),
       messageCache: {
-        blocks: this._blocks,
-        startTime: this._startTime,
+        blocks: this.#blocks,
+        startTime: this.#startTime,
       },
     });
   }
 
   setCacheSizeBytesInTests(cacheSizeBytes: number): void {
-    this._cacheSizeBytes = cacheSizeBytes;
+    this.#cacheSizeBytes = cacheSizeBytes;
   }
 }
