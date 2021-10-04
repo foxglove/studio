@@ -22,11 +22,9 @@ class ImageCanvasWorker {
   #idToCanvas: {
     [key: string]: OffscreenCanvas;
   } = {};
-  #rpc: Rpc;
 
   constructor(rpc: Rpc) {
     setupWorker(rpc);
-    this.#rpc = rpc;
 
     rpc.receive("initialize", async ({ id, canvas }: { id: string; canvas: OffscreenCanvas }) => {
       this.#idToCanvas[id] = canvas;

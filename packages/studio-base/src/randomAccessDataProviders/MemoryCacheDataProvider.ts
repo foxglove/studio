@@ -237,7 +237,6 @@ export function getPrefetchStartPoint(uncachedRanges: Range[], cursorPosition: n
 // unparsed ROS messages. The messages are evicted from this in-memory cache based on some constants
 // defined at the top of this file.
 export default class MemoryCacheDataProvider implements RandomAccessDataProvider {
-  #id: string;
   #provider: RandomAccessDataProvider;
   #extensionPoint?: ExtensionPoint;
 
@@ -295,17 +294,10 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
   #lazyMessageReadersByTopic = new Map<string, LazyMessageReader>();
 
   constructor(
-    {
-      id,
-      unlimitedCache = false,
-    }: {
-      id: string;
-      unlimitedCache?: boolean;
-    },
+    { unlimitedCache = false }: { unlimitedCache?: boolean },
     children: RandomAccessDataProviderDescriptor[],
     getDataProvider: GetDataProvider,
   ) {
-    this.#id = id;
     this.#cacheSizeBytes = unlimitedCache ? Infinity : DEFAULT_CACHE_SIZE_BYTES;
     const child = children[0];
     if (children.length !== 1 || !child) {

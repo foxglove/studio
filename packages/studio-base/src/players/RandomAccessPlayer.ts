@@ -98,7 +98,6 @@ export default class RandomAccessPlayer implements Player {
   #filePath?: string;
   #provider: RandomAccessDataProvider;
   #isPlaying: boolean = false;
-  #wasPlayingBeforeTabSwitch = false;
   #listener?: (arg0: PlayerState) => Promise<void>;
   #speed: number = 0.2;
   #start: Time = { sec: 0, nsec: 0 };
