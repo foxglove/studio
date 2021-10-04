@@ -19,10 +19,10 @@ import { renderImage } from "./renderImage";
 import { Dimensions, RawMarkerData, RenderOptions } from "./util";
 
 class ImageCanvasWorker {
-  _idToCanvas: {
+  private _idToCanvas: {
     [key: string]: OffscreenCanvas;
   } = {};
-  _rpc: Rpc;
+  private _rpc: Rpc;
 
   constructor(rpc: Rpc) {
     setupWorker(rpc);
