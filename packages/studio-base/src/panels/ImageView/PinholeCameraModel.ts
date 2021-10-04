@@ -25,7 +25,7 @@ type DistortionState = typeof DISTORTION_STATE[keyof typeof DISTORTION_STATE];
 // fromCameraInfo() and unrectifyPoint()
 // http://docs.ros.org/diamondback/api/image_geometry/html/c++/pinhole__camera__model_8cpp_source.html
 export default class PinholeCameraModel {
-  private _distortionState: DistortionState = DISTORTION_STATE.NONE;
+  #distortionState: DistortionState = DISTORTION_STATE.NONE;
   D: readonly number[] = [];
   K: readonly number[] = [];
   P: readonly number[] = [];
@@ -41,7 +41,7 @@ export default class PinholeCameraModel {
     //                  of distortion_model is one of the union values
     if (distortion_model === "") {
       // Allow CameraInfo with no model to indicate no distortion
-      this._distortionState = DISTORTION_STATE.NONE;
+      this.#distortionState = DISTORTION_STATE.NONE;
       return;
     }
 
@@ -68,7 +68,7 @@ export default class PinholeCameraModel {
 
     // Figure out how to handle the distortion
     if (distortion_model === "plumb_bob" || distortion_model === "rational_polynomial") {
-      this._distortionState = D[0] === 0.0 ? DISTORTION_STATE.NONE : DISTORTION_STATE.CALIBRATED;
+      this.#distortionState = D[0] === 0.0 ? DISTORTION_STATE.NONE : DISTORTION_STATE.CALIBRATED;
     } else {
       throw new Error(
         "Failed to initialize camera model: distortion_model is unknown, only plumb_bob and rational_polynomial are supported.",
@@ -81,7 +81,7 @@ export default class PinholeCameraModel {
   }
 
   unrectifyPoint({ x: rectX, y: rectY }: Point): { x: number; y: number } {
-    if (this._distortionState === DISTORTION_STATE.NONE) {
+    if (this.#distortionState === DISTORTION_STATE.NONE) {
       return { x: rectX, y: rectY };
     }
 

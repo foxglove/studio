@@ -58,17 +58,17 @@ function getMessagesFromLoadedRange(messages: MessageEvent<unknown>[], requestRa
  * An in-memory cache of preloaded messages over a time range.
  */
 export default class MessageMemoryCache {
-  private minTime: Time;
-  private maxTime: Time;
-  private loadedRanges: { range: TimeRange; messages: MessageEvent<unknown>[] }[] = [];
+  #minTime: Time;
+  #maxTime: Time;
+  #loadedRanges: { range: TimeRange; messages: MessageEvent<unknown>[] }[] = [];
 
   constructor(totalRange: TimeRange) {
-    this.minTime = totalRange.start;
-    this.maxTime = totalRange.end;
+    this.#minTime = totalRange.start;
+    this.#maxTime = totalRange.end;
   }
 
   fullyLoadedRanges(): TimeRange[] {
-    return this.loadedRanges.map(({ range }) => range);
+    return this.#loadedRanges.map(({ range }) => range);
   }
 
   /**
@@ -76,10 +76,10 @@ export default class MessageMemoryCache {
    * displayed visually in the playback bar.
    */
   fullyLoadedFractionRanges(): Range[] {
-    const totalSeconds = secondsBetween(this.minTime, this.maxTime);
-    return this.loadedRanges.map(({ range }) => ({
-      start: secondsBetween(this.minTime, range.start) / totalSeconds,
-      end: secondsBetween(this.minTime, range.end) / totalSeconds,
+    const totalSeconds = secondsBetween(this.#minTime, this.#maxTime);
+    return this.#loadedRanges.map(({ range }) => ({
+      start: secondsBetween(this.#minTime, range.start) / totalSeconds,
+      end: secondsBetween(this.#minTime, range.end) / totalSeconds,
     }));
   }
 
@@ -88,10 +88,10 @@ export default class MessageMemoryCache {
    */
   fullyLoadedExtent(targetTime: Time): TimeRange | undefined {
     let lo = 0;
-    let hi = this.loadedRanges.length;
+    let hi = this.#loadedRanges.length;
     while (lo < hi) {
       const mid = Math.floor((lo + hi) / 2);
-      const midRange = this.loadedRanges[mid]!;
+      const midRange = this.#loadedRanges[mid]!;
       if (isGreaterThan(midRange.range.start, targetTime)) {
         hi = mid;
       } else if (!isGreaterThan(midRange.range.end, targetTime)) {
@@ -115,15 +115,15 @@ export default class MessageMemoryCache {
       throw new Error("Inserted range must not be empty");
     }
     if (
-      isLessThan(coveredRange.start, this.minTime) ||
-      isGreaterThan(coveredRange.end, this.maxTime)
+      isLessThan(coveredRange.start, this.#minTime) ||
+      isGreaterThan(coveredRange.end, this.#maxTime)
     ) {
       throw new Error(
         `Inserting messages in ${rangeToString(
           coveredRange,
         )} which extends outside cache range ${rangeToString({
-          start: this.minTime,
-          end: this.maxTime,
+          start: this.#minTime,
+          end: this.#maxTime,
         })}`,
       );
     }
@@ -132,10 +132,10 @@ export default class MessageMemoryCache {
     let insertionIdx;
     {
       let lo = 0;
-      let hi = this.loadedRanges.length;
+      let hi = this.#loadedRanges.length;
       while (lo < hi) {
         const mid = Math.floor((lo + hi) / 2);
-        const midRange = this.loadedRanges[mid]!;
+        const midRange = this.#loadedRanges[mid]!;
         if (!isLessThan(midRange.range.start, coveredRange.end)) {
           hi = mid;
         } else if (!isGreaterThan(midRange.range.end, coveredRange.start)) {
@@ -158,31 +158,31 @@ export default class MessageMemoryCache {
     let insertMessages;
     const mergeBefore =
       insertionIdx > 0 &&
-      areEqual(this.loadedRanges[insertionIdx - 1]!.range.end, coveredRange.start);
+      areEqual(this.#loadedRanges[insertionIdx - 1]!.range.end, coveredRange.start);
     const mergeAfter =
-      insertionIdx < this.loadedRanges.length &&
-      areEqual(this.loadedRanges[insertionIdx]!.range.start, coveredRange.end);
+      insertionIdx < this.#loadedRanges.length &&
+      areEqual(this.#loadedRanges[insertionIdx]!.range.start, coveredRange.end);
     if (mergeBefore && mergeAfter) {
       spliceIdx = insertionIdx - 1;
       deleteCount = 2;
-      insertStart = this.loadedRanges[insertionIdx - 1]!.range.start;
-      insertEnd = this.loadedRanges[insertionIdx]!.range.end;
-      insertMessages = this.loadedRanges[insertionIdx - 1]!.messages.concat(
+      insertStart = this.#loadedRanges[insertionIdx - 1]!.range.start;
+      insertEnd = this.#loadedRanges[insertionIdx]!.range.end;
+      insertMessages = this.#loadedRanges[insertionIdx - 1]!.messages.concat(
         messages,
-        this.loadedRanges[insertionIdx]!.messages,
+        this.#loadedRanges[insertionIdx]!.messages,
       );
     } else if (mergeBefore) {
       spliceIdx = insertionIdx - 1;
       deleteCount = 1;
-      insertStart = this.loadedRanges[insertionIdx - 1]!.range.start;
+      insertStart = this.#loadedRanges[insertionIdx - 1]!.range.start;
       insertEnd = coveredRange.end;
-      insertMessages = this.loadedRanges[insertionIdx - 1]!.messages.concat(messages);
+      insertMessages = this.#loadedRanges[insertionIdx - 1]!.messages.concat(messages);
     } else if (mergeAfter) {
       spliceIdx = insertionIdx;
       deleteCount = 1;
       insertStart = coveredRange.start;
-      insertEnd = this.loadedRanges[insertionIdx]!.range.end;
-      insertMessages = messages.concat(this.loadedRanges[insertionIdx]!.messages);
+      insertEnd = this.#loadedRanges[insertionIdx]!.range.end;
+      insertMessages = messages.concat(this.#loadedRanges[insertionIdx]!.messages);
     } else {
       spliceIdx = insertionIdx;
       deleteCount = 0;
@@ -190,7 +190,7 @@ export default class MessageMemoryCache {
       insertEnd = coveredRange.end;
       insertMessages = messages;
     }
-    this.loadedRanges.splice(spliceIdx, deleteCount, {
+    this.#loadedRanges.splice(spliceIdx, deleteCount, {
       range: { start: insertStart, end: insertEnd },
       messages: insertMessages,
     });
@@ -198,7 +198,7 @@ export default class MessageMemoryCache {
 
   /** Remove all messages and preloaded ranges. */
   clear(): void {
-    this.loadedRanges = [];
+    this.#loadedRanges = [];
   }
 
   /**
@@ -206,10 +206,10 @@ export default class MessageMemoryCache {
    */
   getMessages(requestRange: TimeRange): MessageEvent<unknown>[] | undefined {
     let lo = 0;
-    let hi = this.loadedRanges.length;
+    let hi = this.#loadedRanges.length;
     while (lo < hi) {
       const mid = Math.floor((lo + hi) / 2);
-      const midRange = this.loadedRanges[mid]!;
+      const midRange = this.#loadedRanges[mid]!;
       if (!isLessThan(midRange.range.start, requestRange.end)) {
         hi = mid;
       } else if (!isGreaterThan(midRange.range.end, requestRange.start)) {

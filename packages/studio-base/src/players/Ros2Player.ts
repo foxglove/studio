@@ -51,73 +51,73 @@ type Ros2PlayerOpts = {
 
 // Connects to a ROS 2 network using RTPS over UDP, discovering peers via UDP multicast.
 export default class Ros2Player implements Player {
-  private _domainId: number; // ROS 2 DDS (RTPS) domain
-  private _rosNode?: RosNode; // Our ROS node when we're connected.
-  private _id: string = uuidv4(); // Unique ID for this player.
-  private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
-  private _closed = false; // Whether the player has been completely closed using close().
-  private _providerTopics?: Topic[]; // Topics as advertised by peers
-  private _providerDatatypes = new Map<string, RosMsgDefinition>(); // All known ROS 2 message definitions.
-  private _publishedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of publisher IDs publishing each topic.
-  private _subscribedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of subscriber IDs subscribed to each topic.
+  #domainId: number; // ROS 2 DDS (RTPS) domain
+  #rosNode?: RosNode; // Our ROS node when we're connected.
+  #id: string = uuidv4(); // Unique ID for this player.
+  #listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
+  #closed = false; // Whether the player has been completely closed using close().
+  #providerTopics?: Topic[]; // Topics as advertised by peers
+  #providerDatatypes = new Map<string, RosMsgDefinition>(); // All known ROS 2 message definitions.
+  #publishedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of publisher IDs publishing each topic.
+  #subscribedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of subscriber IDs subscribed to each topic.
   // private _services = new Map<string, Set<string>>(); // A map of service names to service provider IDs that provide each service.
   // private _parameters = new Map<string, ParameterValue>(); // rosparams
-  private _start?: Time; // The time at which we started playing.
+  #start?: Time; // The time at which we started playing.
   // private _clockTime?: Time; // The most recent published `/clock` time, if available
   // private _clockReceived: Time = { sec: 0, nsec: 0 }; // The local time when `_clockTime` was last received
-  private _requestedSubscriptions: SubscribePayload[] = []; // Requested subscriptions by setSubscriptions()
-  private _parsedMessages: MessageEvent<unknown>[] = []; // Queue of messages that we'll send in next _emitState() call.
-  private _messageOrder: TimestampMethod = "receiveTime";
-  private _requestTopicsTimeout?: ReturnType<typeof setTimeout>; // setTimeout() handle for _requestTopics().
-  private _hasReceivedMessage = false;
-  private _metricsCollector: PlayerMetricsCollectorInterface;
-  private _presence: PlayerPresence = PlayerPresence.INITIALIZING;
-  private _problems = new PlayerProblemManager();
-  private _emitTimer?: ReturnType<typeof setTimeout>;
+  #requestedSubscriptions: SubscribePayload[] = []; // Requested subscriptions by setSubscriptions()
+  #parsedMessages: MessageEvent<unknown>[] = []; // Queue of messages that we'll send in next _emitState() call.
+  #messageOrder: TimestampMethod = "receiveTime";
+  #requestTopicsTimeout?: ReturnType<typeof setTimeout>; // setTimeout() handle for _requestTopics().
+  #hasReceivedMessage = false;
+  #metricsCollector: PlayerMetricsCollectorInterface;
+  #presence: PlayerPresence = PlayerPresence.INITIALIZING;
+  #problems = new PlayerProblemManager();
+  #emitTimer?: ReturnType<typeof setTimeout>;
 
   constructor({ domainId, metricsCollector }: Ros2PlayerOpts) {
     log.info(`initializing Ros2Player (domainId=${domainId})`);
-    this._domainId = domainId;
-    this._metricsCollector = metricsCollector;
-    this._start = fromMillis(Date.now());
-    this._metricsCollector.playerConstructed();
+    this.#domainId = domainId;
+    this.#metricsCollector = metricsCollector;
+    this.#start = fromMillis(Date.now());
+    this.#metricsCollector.playerConstructed();
 
     // The ros1ToRos2Type() hack can be removed when @foxglove/rosmsg-msgs-* packages are updated to
     // natively support ROS 2
     for (const dataType in commonDefs) {
       const msgDef = (commonDefs as Record<string, RosMsgDefinition>)[dataType]!;
-      this._providerDatatypes.set(dataType, msgDef);
-      this._providerDatatypes.set(ros1ToRos2Type(dataType), msgDef);
+      this.#providerDatatypes.set(dataType, msgDef);
+      this.#providerDatatypes.set(ros1ToRos2Type(dataType), msgDef);
     }
     for (const dataType in foxgloveDefs) {
       const msgDef = (foxgloveDefs as Record<string, RosMsgDefinition>)[dataType]!;
-      this._providerDatatypes.set(dataType, msgDef);
-      this._providerDatatypes.set(ros1ToRos2Type(dataType), msgDef);
+      this.#providerDatatypes.set(dataType, msgDef);
+      this.#providerDatatypes.set(ros1ToRos2Type(dataType), msgDef);
     }
 
-    void this._open();
+    void this.#open();
   }
 
-  private _open = async (): Promise<void> => {
+  #open = async (): Promise<void> => {
     const os = OsContextSingleton;
-    if (this._closed || os == undefined) {
+    if (this.#closed || os == undefined) {
       return;
     }
-    this._presence = PlayerPresence.INITIALIZING;
+    this.#presence = PlayerPresence.INITIALIZING;
 
     const net = await Sockets.Create();
     // eslint-disable-next-line @typescript-eslint/promise-function-async
     const udpSocketCreate = () => net.createUdpSocket();
 
-    if (this._rosNode == undefined) {
+    if (this.#rosNode == undefined) {
       const rosNode = new RosNode({
         name: "/foxglovestudio",
-        domainId: this._domainId,
+        domainId: this.#domainId,
         udpSocketCreate,
         getNetworkInterfaces: os.getNetworkInterfaces,
         log: rosLog,
       });
-      this._rosNode = rosNode;
+      this.#rosNode = rosNode;
 
       // rosNode.on("paramUpdate", ({ key, value, prevValue, callerId }) => {
       //   log.debug("paramUpdate", key, value, prevValue, callerId);
@@ -125,9 +125,9 @@ export default class Ros2Player implements Player {
       // });
     }
 
-    await this._rosNode.start();
-    await this._requestTopics();
-    this._presence = PlayerPresence.PRESENT;
+    await this.#rosNode.start();
+    await this.#requestTopics();
+    this.#presence = PlayerPresence.PRESENT;
   };
 
   private _addProblem(
@@ -135,9 +135,9 @@ export default class Ros2Player implements Player {
     problem: PlayerProblem,
     { skipEmit = false }: { skipEmit?: boolean } = {},
   ): void {
-    this._problems.addProblem(id, problem);
+    this.#problems.addProblem(id, problem);
     if (!skipEmit) {
-      this._emitState();
+      this.#emitState();
     }
   }
 
@@ -151,23 +151,23 @@ export default class Ros2Player implements Player {
 
   private _clearPublishProblems({ skipEmit = false }: { skipEmit?: boolean } = {}) {
     if (
-      this._problems.removeProblems(
+      this.#problems.removeProblems(
         (id) =>
           id.startsWith("msgdef:") || id.startsWith("advertise:") || id.startsWith("publish:"),
       )
     ) {
       if (!skipEmit) {
-        this._emitState();
+        this.#emitState();
       }
     }
   }
 
-  private _requestTopics = async (): Promise<void> => {
-    if (this._requestTopicsTimeout) {
-      clearTimeout(this._requestTopicsTimeout);
+  #requestTopics = async (): Promise<void> => {
+    if (this.#requestTopicsTimeout) {
+      clearTimeout(this.#requestTopicsTimeout);
     }
-    const rosNode = this._rosNode;
-    if (!rosNode || this._closed) {
+    const rosNode = this.#rosNode;
+    if (!rosNode || this.#closed) {
       return;
     }
 
@@ -177,16 +177,16 @@ export default class Ros2Player implements Player {
       // Sort them for easy comparison
       const sortedTopics: Topic[] = sortBy(topics, "name");
 
-      if (this._providerTopics == undefined) {
-        this._metricsCollector.initialized();
+      if (this.#providerTopics == undefined) {
+        this.#metricsCollector.initialized();
       }
 
-      if (!isEqual(sortedTopics, this._providerTopics)) {
-        this._providerTopics = sortedTopics;
+      if (!isEqual(sortedTopics, this.#providerTopics)) {
+        this.#providerTopics = sortedTopics;
       }
 
       // Try subscribing again, since we might now be able to subscribe to some new topics.
-      this.setSubscriptions(this._requestedSubscriptions);
+      this.setSubscriptions(this.#requestedSubscriptions);
 
       // Subscribe to all parameters
       // try {
@@ -212,10 +212,10 @@ export default class Ros2Player implements Player {
       // Fetch the full graph topology
       await this._updateConnectionGraph(rosNode);
 
-      this._presence = PlayerPresence.PRESENT;
-      this._emitState();
+      this.#presence = PlayerPresence.PRESENT;
+      this.#emitState();
     } catch (error) {
-      this._presence = PlayerPresence.INITIALIZING;
+      this.#presence = PlayerPresence.INITIALIZING;
       this._addProblem(
         Problem.Connection,
         {
@@ -228,53 +228,53 @@ export default class Ros2Player implements Player {
       );
     } finally {
       // Regardless of what happens, request topics again in a little bit.
-      this._requestTopicsTimeout = setTimeout(this._requestTopics, 3000);
+      this.#requestTopicsTimeout = setTimeout(this.#requestTopics, 3000);
     }
   };
 
   // Potentially performance-sensitive; await can be expensive
   // eslint-disable-next-line @typescript-eslint/promise-function-async
-  private _emitState = debouncePromise(() => {
-    if (!this._listener || this._closed) {
+  #emitState = debouncePromise(() => {
+    if (!this.#listener || this.#closed) {
       return Promise.resolve();
     }
 
-    const providerTopics = this._providerTopics;
-    const start = this._start;
+    const providerTopics = this.#providerTopics;
+    const start = this.#start;
     if (!providerTopics || !start) {
-      return this._listener({
-        presence: this._presence,
+      return this.#listener({
+        presence: this.#presence,
         progress: {},
         capabilities: CAPABILITIES,
-        playerId: this._id,
-        problems: this._problems.problems(),
+        playerId: this.#id,
+        problems: this.#problems.problems(),
         activeData: undefined,
       });
     }
 
     // Time is always moving forward even if we don't get messages from the server.
     // If we are not connected, don't emit updates since we are not longer getting new data
-    if (this._presence === PlayerPresence.PRESENT) {
-      if (this._emitTimer != undefined) {
-        clearTimeout(this._emitTimer);
+    if (this.#presence === PlayerPresence.PRESENT) {
+      if (this.#emitTimer != undefined) {
+        clearTimeout(this.#emitTimer);
       }
-      this._emitTimer = setTimeout(this._emitState, 100);
+      this.#emitTimer = setTimeout(this.#emitState, 100);
     }
 
     const currentTime = this._getCurrentTime();
-    const messages = this._parsedMessages;
-    this._parsedMessages = [];
-    return this._listener({
-      presence: this._presence,
+    const messages = this.#parsedMessages;
+    this.#parsedMessages = [];
+    return this.#listener({
+      presence: this.#presence,
       progress: {},
       capabilities: CAPABILITIES,
-      playerId: this._id,
-      problems: this._problems.problems(),
+      playerId: this.#id,
+      problems: this.#problems.problems(),
 
       activeData: {
         messages,
-        totalBytesReceived: this._rosNode?.receivedBytes() ?? 0,
-        messageOrder: this._messageOrder,
+        totalBytesReceived: this.#rosNode?.receivedBytes() ?? 0,
+        messageOrder: this.#messageOrder,
         startTime: start,
         endTime: currentTime,
         currentTime,
@@ -284,9 +284,9 @@ export default class Ros2Player implements Player {
         // that we don't accidentally hit falsy checks.
         lastSeekTime: 1,
         topics: providerTopics,
-        datatypes: this._providerDatatypes,
-        publishedTopics: this._publishedTopics,
-        subscribedTopics: this._subscribedTopics,
+        datatypes: this.#providerDatatypes,
+        publishedTopics: this.#publishedTopics,
+        subscribedTopics: this.#subscribedTopics,
         // services: this._services,
         // parameters: this._parameters,
         parsedMessageDefinitionsByTopic: {},
@@ -295,27 +295,27 @@ export default class Ros2Player implements Player {
   });
 
   setListener(listener: (arg0: PlayerState) => Promise<void>): void {
-    this._listener = listener;
-    this._emitState();
+    this.#listener = listener;
+    this.#emitState();
   }
 
   close(): void {
-    this._closed = true;
-    if (this._rosNode) {
-      void this._rosNode.shutdown();
+    this.#closed = true;
+    if (this.#rosNode) {
+      void this.#rosNode.shutdown();
     }
-    if (this._emitTimer != undefined) {
-      clearTimeout(this._emitTimer);
-      this._emitTimer = undefined;
+    if (this.#emitTimer != undefined) {
+      clearTimeout(this.#emitTimer);
+      this.#emitTimer = undefined;
     }
-    this._metricsCollector.close();
-    this._hasReceivedMessage = false;
+    this.#metricsCollector.close();
+    this.#hasReceivedMessage = false;
   }
 
   setSubscriptions(subscriptions: SubscribePayload[]): void {
-    this._requestedSubscriptions = subscriptions;
+    this.#requestedSubscriptions = subscriptions;
 
-    if (!this._rosNode || this._closed) {
+    if (!this.#rosNode || this.#closed) {
       return;
     }
 
@@ -323,7 +323,7 @@ export default class Ros2Player implements Player {
     this._addInternalSubscriptions(subscriptions);
 
     // See what topics we actually can subscribe to.
-    const availableTopicsByTopicName = getTopicsByTopicName(this._providerTopics ?? []);
+    const availableTopicsByTopicName = getTopicsByTopicName(this.#providerTopics ?? []);
     const topicNames = subscriptions
       .map(({ topic }) => topic)
       .filter((topicName) => availableTopicsByTopicName[topicName]);
@@ -331,7 +331,7 @@ export default class Ros2Player implements Player {
     // Subscribe to all topics that we aren't subscribed to yet.
     for (const topicName of topicNames) {
       const availTopic = availableTopicsByTopicName[topicName];
-      if (!availTopic || this._rosNode.subscriptions.has(topicName)) {
+      if (!availTopic || this.#rosNode.subscriptions.has(topicName)) {
         continue;
       }
 
@@ -340,7 +340,7 @@ export default class Ros2Player implements Player {
       // Try to retrieve the ROS message definition for this topic
       let msgDefinition: RosMsgDefinition[] | undefined;
       try {
-        msgDefinition = rosDatatypesToMessageDefinition(this._providerDatatypes, dataType);
+        msgDefinition = rosDatatypesToMessageDefinition(this.#providerDatatypes, dataType);
       } catch (error) {
         this._addProblem(`msgdef:${topicName}`, {
           severity: "warn",
@@ -349,24 +349,24 @@ export default class Ros2Player implements Player {
         });
       }
 
-      const subscription = this._rosNode.subscribe({ topic: topicName, dataType, msgDefinition });
+      const subscription = this.#rosNode.subscribe({ topic: topicName, dataType, msgDefinition });
 
       subscription.on("message", (timestamp, message, _data, _pub) =>
-        this._handleMessage(topicName, timestamp, message, true),
+        this.#handleMessage(topicName, timestamp, message, true),
       );
     }
 
     // Unsubscribe from topics that we are subscribed to but shouldn't be.
-    for (const topicName of this._rosNode.subscriptions.keys()) {
+    for (const topicName of this.#rosNode.subscriptions.keys()) {
       if (!topicNames.includes(topicName)) {
         {
-          this._rosNode.unsubscribe(topicName);
+          this.#rosNode.unsubscribe(topicName);
         }
       }
     }
   }
 
-  private _handleMessage = (
+  #handleMessage = (
     topic: string,
     timestamp: Time,
     message: unknown,
@@ -374,27 +374,27 @@ export default class Ros2Player implements Player {
     // eslint-disable-next-line @foxglove/no-boolean-parameters
     external: boolean,
   ): void => {
-    if (this._providerTopics == undefined) {
+    if (this.#providerTopics == undefined) {
       return;
     }
 
     // const receiveTime = fromMillis(Date.now());
     const receiveTime = timestamp;
 
-    if (external && !this._hasReceivedMessage) {
-      this._hasReceivedMessage = true;
-      this._metricsCollector.recordTimeToFirstMsgs();
+    if (external && !this.#hasReceivedMessage) {
+      this.#hasReceivedMessage = true;
+      this.#metricsCollector.recordTimeToFirstMsgs();
     }
 
     const msg: MessageEvent<unknown> = { topic, receiveTime, message };
-    this._parsedMessages.push(msg);
+    this.#parsedMessages.push(msg);
     this._handleInternalMessage(msg);
 
-    this._emitState();
+    this.#emitState();
   };
 
   setPublishers(_publishers: AdvertiseOptions[]): void {
-    if (!this._rosNode || this._closed) {
+    if (!this.#rosNode || this.#closed) {
       return;
     }
 
@@ -451,7 +451,7 @@ export default class Ros2Player implements Player {
     //   );
     // }
 
-    this._emitState();
+    this.#emitState();
   }
 
   setParameter(_key: string, _value: ParameterValue): void {

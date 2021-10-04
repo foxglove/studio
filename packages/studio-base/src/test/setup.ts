@@ -43,10 +43,10 @@ global.React = require("react");
 
 // Jest does not include ResizeObserver.
 class ResizeObserverMock {
-  private _callback: ResizeObserverCallback;
+  #callback: ResizeObserverCallback;
 
   constructor(callback: ResizeObserverCallback) {
-    this._callback = callback;
+    this.#callback = callback;
   }
 
   disconnect() {}
@@ -55,7 +55,7 @@ class ResizeObserverMock {
     const entry = {
       contentRect: { width: 150, height: 150 },
     };
-    this._callback([entry as ResizeObserverEntry], this);
+    this.#callback([entry as ResizeObserverEntry], this);
   }
 
   unobserve() {}

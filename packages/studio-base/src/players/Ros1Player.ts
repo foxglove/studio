@@ -65,50 +65,50 @@ type Ros1PlayerOpts = {
 // Connects to `rosmaster` instance using `@foxglove/ros1`. Currently doesn't support seeking or
 // showing simulated time, so current time from Date.now() is always used instead.
 export default class Ros1Player implements Player {
-  private _url: string; // rosmaster URL.
-  private _hostname?: string; // ROS_HOSTNAME
-  private _rosNode?: RosNode; // Our ROS node when we're connected.
-  private _id: string = uuidv4(); // Unique ID for this player.
-  private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
-  private _closed: boolean = false; // Whether the player has been completely closed using close().
-  private _providerTopics?: Topic[]; // Topics as advertised by rosmaster.
-  private _providerDatatypes: RosDatatypes = new Map(); // All ROS message definitions received from subscriptions and set by publishers.
-  private _publishedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of publisher IDs publishing each topic.
-  private _subscribedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of subscriber IDs subscribed to each topic.
-  private _services = new Map<string, Set<string>>(); // A map of service names to service provider IDs that provide each service.
-  private _parameters = new Map<string, ParameterValue>(); // rosparams
-  private _start?: Time; // The time at which we started playing.
-  private _clockTime?: Time; // The most recent published `/clock` time, if available
-  private _clockReceived: Time = { sec: 0, nsec: 0 }; // The local time when `_clockTime` was last received
-  private _requestedSubscriptions: SubscribePayload[] = []; // Requested subscriptions by setSubscriptions()
-  private _parsedMessages: MessageEvent<unknown>[] = []; // Queue of messages that we'll send in next _emitState() call.
-  private _messageOrder: TimestampMethod = "receiveTime";
-  private _requestTopicsTimeout?: ReturnType<typeof setTimeout>; // setTimeout() handle for _requestTopics().
-  private _hasReceivedMessage = false;
-  private _metricsCollector: PlayerMetricsCollectorInterface;
-  private _presence: PlayerPresence = PlayerPresence.INITIALIZING;
-  private _problems = new PlayerProblemManager();
-  private _emitTimer?: ReturnType<typeof setTimeout>;
+  #url: string; // rosmaster URL.
+  #hostname?: string; // ROS_HOSTNAME
+  #rosNode?: RosNode; // Our ROS node when we're connected.
+  #id: string = uuidv4(); // Unique ID for this player.
+  #listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
+  #closed: boolean = false; // Whether the player has been completely closed using close().
+  #providerTopics?: Topic[]; // Topics as advertised by rosmaster.
+  #providerDatatypes: RosDatatypes = new Map(); // All ROS message definitions received from subscriptions and set by publishers.
+  #publishedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of publisher IDs publishing each topic.
+  #subscribedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of subscriber IDs subscribed to each topic.
+  #services = new Map<string, Set<string>>(); // A map of service names to service provider IDs that provide each service.
+  #parameters = new Map<string, ParameterValue>(); // rosparams
+  #start?: Time; // The time at which we started playing.
+  #clockTime?: Time; // The most recent published `/clock` time, if available
+  #clockReceived: Time = { sec: 0, nsec: 0 }; // The local time when `_clockTime` was last received
+  #requestedSubscriptions: SubscribePayload[] = []; // Requested subscriptions by setSubscriptions()
+  #parsedMessages: MessageEvent<unknown>[] = []; // Queue of messages that we'll send in next _emitState() call.
+  #messageOrder: TimestampMethod = "receiveTime";
+  #requestTopicsTimeout?: ReturnType<typeof setTimeout>; // setTimeout() handle for _requestTopics().
+  #hasReceivedMessage = false;
+  #metricsCollector: PlayerMetricsCollectorInterface;
+  #presence: PlayerPresence = PlayerPresence.INITIALIZING;
+  #problems = new PlayerProblemManager();
+  #emitTimer?: ReturnType<typeof setTimeout>;
 
   constructor({ url, hostname, metricsCollector }: Ros1PlayerOpts) {
     log.info(`initializing Ros1Player (url=${url})`);
-    this._metricsCollector = metricsCollector;
-    this._url = url;
-    this._hostname = hostname;
-    this._start = fromMillis(Date.now());
-    this._metricsCollector.playerConstructed();
-    void this._open();
+    this.#metricsCollector = metricsCollector;
+    this.#url = url;
+    this.#hostname = hostname;
+    this.#start = fromMillis(Date.now());
+    this.#metricsCollector.playerConstructed();
+    void this.#open();
   }
 
-  private _open = async (): Promise<void> => {
+  #open = async (): Promise<void> => {
     const os = OsContextSingleton;
-    if (this._closed || os == undefined) {
+    if (this.#closed || os == undefined) {
       return;
     }
-    this._presence = PlayerPresence.INITIALIZING;
+    this.#presence = PlayerPresence.INITIALIZING;
 
     const hostname =
-      this._hostname ??
+      this.#hostname ??
       RosNode.GetRosHostname(os.getEnvVar, os.getHostname, os.getNetworkInterfaces);
 
     const net = await Sockets.Create();
@@ -119,22 +119,22 @@ export default class Ros1Player implements Player {
     const tcpServer = await net.createServer();
     void tcpServer.listen(undefined, hostname, 10);
 
-    if (this._rosNode == undefined) {
+    if (this.#rosNode == undefined) {
       const rosNode = new RosNode({
         name: "/foxglovestudio",
         hostname,
         pid: os.pid,
-        rosMasterUri: this._url,
+        rosMasterUri: this.#url,
         httpServer: httpServer as unknown as HttpServer,
         tcpSocketCreate,
         tcpServer,
         log: rosLog,
       });
-      this._rosNode = rosNode;
+      this.#rosNode = rosNode;
 
       rosNode.on("paramUpdate", ({ key, value, prevValue, callerId }) => {
         log.debug("paramUpdate", key, value, prevValue, callerId);
-        this._parameters = new Map(rosNode.parameters);
+        this.#parameters = new Map(rosNode.parameters);
       });
       rosNode.on("error", (error) => {
         this._addProblem(Problem.Node, {
@@ -146,9 +146,9 @@ export default class Ros1Player implements Player {
       });
     }
 
-    await this._rosNode.start();
-    await this._requestTopics();
-    this._presence = PlayerPresence.PRESENT;
+    await this.#rosNode.start();
+    await this.#requestTopics();
+    this.#presence = PlayerPresence.PRESENT;
   };
 
   private _addProblem(
@@ -156,39 +156,39 @@ export default class Ros1Player implements Player {
     problem: PlayerProblem,
     { skipEmit = false }: { skipEmit?: boolean } = {},
   ): void {
-    this._problems.addProblem(id, problem);
+    this.#problems.addProblem(id, problem);
     if (!skipEmit) {
-      this._emitState();
+      this.#emitState();
     }
   }
 
   private _clearProblem(id: string, { skipEmit = false }: { skipEmit?: boolean } = {}): void {
-    if (this._problems.removeProblem(id)) {
+    if (this.#problems.removeProblem(id)) {
       if (!skipEmit) {
-        this._emitState();
+        this.#emitState();
       }
     }
   }
 
   private _clearPublishProblems({ skipEmit = false }: { skipEmit?: boolean } = {}) {
     if (
-      this._problems.removeProblems(
+      this.#problems.removeProblems(
         (id) =>
           id.startsWith("msgdef:") || id.startsWith("advertise:") || id.startsWith("publish:"),
       )
     ) {
       if (!skipEmit) {
-        this._emitState();
+        this.#emitState();
       }
     }
   }
 
-  private _requestTopics = async (): Promise<void> => {
-    if (this._requestTopicsTimeout) {
-      clearTimeout(this._requestTopicsTimeout);
+  #requestTopics = async (): Promise<void> => {
+    if (this.#requestTopicsTimeout) {
+      clearTimeout(this.#requestTopicsTimeout);
     }
-    const rosNode = this._rosNode;
-    if (!rosNode || this._closed) {
+    const rosNode = this.#rosNode;
+    if (!rosNode || this.#closed) {
       return;
     }
 
@@ -198,23 +198,23 @@ export default class Ros1Player implements Player {
       // Sort them for easy comparison
       const sortedTopics: Topic[] = sortBy(topics, "name");
 
-      if (this._providerTopics == undefined) {
-        this._metricsCollector.initialized();
+      if (this.#providerTopics == undefined) {
+        this.#metricsCollector.initialized();
       }
 
-      if (!isEqual(sortedTopics, this._providerTopics)) {
-        this._providerTopics = sortedTopics;
+      if (!isEqual(sortedTopics, this.#providerTopics)) {
+        this.#providerTopics = sortedTopics;
       }
 
       // Try subscribing again, since we might now be able to subscribe to some new topics.
-      this.setSubscriptions(this._requestedSubscriptions);
+      this.setSubscriptions(this.#requestedSubscriptions);
 
       // Subscribe to all parameters
       try {
         const params = await rosNode.subscribeAllParams();
-        if (!isEqual(params, this._parameters)) {
-          this._parameters = new Map();
-          params.forEach((value, key) => this._parameters.set(key, value));
+        if (!isEqual(params, this.#parameters)) {
+          this.#parameters = new Map();
+          params.forEach((value, key) => this.#parameters.set(key, value));
         }
         this._clearProblem(Problem.Parameters, { skipEmit: true });
       } catch (error) {
@@ -223,7 +223,7 @@ export default class Ros1Player implements Player {
           {
             severity: "warn",
             message: "ROS parameter fetch failed",
-            tip: `Ensure that roscore is running and accessible at: ${this._url}`,
+            tip: `Ensure that roscore is running and accessible at: ${this.#url}`,
             error,
           },
           { skipEmit: true },
@@ -233,71 +233,71 @@ export default class Ros1Player implements Player {
       // Fetch the full graph topology
       await this._updateConnectionGraph(rosNode);
 
-      this._presence = PlayerPresence.PRESENT;
-      this._emitState();
+      this.#presence = PlayerPresence.PRESENT;
+      this.#emitState();
     } catch (error) {
-      this._presence = PlayerPresence.INITIALIZING;
+      this.#presence = PlayerPresence.INITIALIZING;
       this._addProblem(
         Problem.Connection,
         {
           severity: "error",
           message: "ROS connection failed",
-          tip: `Ensure that roscore is running and accessible at: ${this._url}`,
+          tip: `Ensure that roscore is running and accessible at: ${this.#url}`,
           error,
         },
         { skipEmit: false },
       );
     } finally {
       // Regardless of what happens, request topics again in a little bit.
-      this._requestTopicsTimeout = setTimeout(this._requestTopics, 3000);
+      this.#requestTopicsTimeout = setTimeout(this.#requestTopics, 3000);
     }
   };
 
   // Potentially performance-sensitive; await can be expensive
   // eslint-disable-next-line @typescript-eslint/promise-function-async
-  private _emitState = debouncePromise(() => {
-    if (!this._listener || this._closed) {
+  #emitState = debouncePromise(() => {
+    if (!this.#listener || this.#closed) {
       return Promise.resolve();
     }
 
-    const providerTopics = this._providerTopics;
-    const start = this._start;
+    const providerTopics = this.#providerTopics;
+    const start = this.#start;
     if (!providerTopics || !start) {
-      return this._listener({
-        name: this._url,
-        presence: this._presence,
+      return this.#listener({
+        name: this.#url,
+        presence: this.#presence,
         progress: {},
         capabilities: CAPABILITIES,
-        playerId: this._id,
-        problems: this._problems.problems(),
+        playerId: this.#id,
+        problems: this.#problems.problems(),
         activeData: undefined,
       });
     }
 
     // Time is always moving forward even if we don't get messages from the server.
     // If we are not connected, don't emit updates since we are not longer getting new data
-    if (this._presence === PlayerPresence.PRESENT) {
-      if (this._emitTimer != undefined) {
-        clearTimeout(this._emitTimer);
+    if (this.#presence === PlayerPresence.PRESENT) {
+      if (this.#emitTimer != undefined) {
+        clearTimeout(this.#emitTimer);
       }
-      this._emitTimer = setTimeout(this._emitState, 100);
+      this.#emitTimer = setTimeout(this.#emitState, 100);
     }
 
     const currentTime = this._getCurrentTime();
-    const messages = this._parsedMessages;
-    this._parsedMessages = [];
-    return this._listener({
-      name: this._url,
-      presence: this._presence,
+    const messages = this.#parsedMessages;
+    this.#parsedMessages = [];
+    return this.#listener({
+      name: this.#url,
+      presence: this.#presence,
       progress: {},
       capabilities: CAPABILITIES,
-      playerId: this._id,
-      problems: this._problems.problems(),
+      playerId: this.#id,
+      problems: this.#problems.problems(),
 
       activeData: {
         messages,
-        totalBytesReceived: this._rosNode?.receivedBytes() ?? 0,
-        messageOrder: this._messageOrder,
+        totalBytesReceived: this.#rosNode?.receivedBytes() ?? 0,
+        messageOrder: this.#messageOrder,
         startTime: start,
         endTime: currentTime,
         currentTime,
@@ -307,38 +307,38 @@ export default class Ros1Player implements Player {
         // that we don't accidentally hit falsy checks.
         lastSeekTime: 1,
         topics: providerTopics,
-        datatypes: this._providerDatatypes,
-        publishedTopics: this._publishedTopics,
-        subscribedTopics: this._subscribedTopics,
-        services: this._services,
-        parameters: this._parameters,
+        datatypes: this.#providerDatatypes,
+        publishedTopics: this.#publishedTopics,
+        subscribedTopics: this.#subscribedTopics,
+        services: this.#services,
+        parameters: this.#parameters,
         parsedMessageDefinitionsByTopic: {},
       },
     });
   });
 
   setListener(listener: (arg0: PlayerState) => Promise<void>): void {
-    this._listener = listener;
-    this._emitState();
+    this.#listener = listener;
+    this.#emitState();
   }
 
   close(): void {
-    this._closed = true;
-    if (this._rosNode) {
-      this._rosNode.shutdown();
+    this.#closed = true;
+    if (this.#rosNode) {
+      this.#rosNode.shutdown();
     }
-    if (this._emitTimer != undefined) {
-      clearTimeout(this._emitTimer);
-      this._emitTimer = undefined;
+    if (this.#emitTimer != undefined) {
+      clearTimeout(this.#emitTimer);
+      this.#emitTimer = undefined;
     }
-    this._metricsCollector.close();
-    this._hasReceivedMessage = false;
+    this.#metricsCollector.close();
+    this.#hasReceivedMessage = false;
   }
 
   setSubscriptions(subscriptions: SubscribePayload[]): void {
-    this._requestedSubscriptions = subscriptions;
+    this.#requestedSubscriptions = subscriptions;
 
-    if (!this._rosNode || this._closed) {
+    if (!this.#rosNode || this.#closed) {
       return;
     }
 
@@ -346,7 +346,7 @@ export default class Ros1Player implements Player {
     this._addInternalSubscriptions(subscriptions);
 
     // See what topics we actually can subscribe to.
-    const availableTopicsByTopicName = getTopicsByTopicName(this._providerTopics ?? []);
+    const availableTopicsByTopicName = getTopicsByTopicName(this.#providerTopics ?? []);
     const topicNames = subscriptions
       .map(({ topic }) => topic)
       .filter((topicName) => availableTopicsByTopicName[topicName]);
@@ -354,21 +354,21 @@ export default class Ros1Player implements Player {
     // Subscribe to all topics that we aren't subscribed to yet.
     for (const topicName of topicNames) {
       const availTopic = availableTopicsByTopicName[topicName];
-      if (!availTopic || this._rosNode.subscriptions.has(topicName)) {
+      if (!availTopic || this.#rosNode.subscriptions.has(topicName)) {
         continue;
       }
 
       const { datatype } = availTopic;
-      const subscription = this._rosNode.subscribe({ topic: topicName, dataType: datatype });
+      const subscription = this.#rosNode.subscribe({ topic: topicName, dataType: datatype });
 
       subscription.on("header", (_header, msgdef, _reader) => {
         // We have to create a new object instead of just updating _providerDatatypes to support
         // shallow memo
-        const newDatatypes = this._getRosDatatypes(datatype, msgdef);
-        this._providerDatatypes = new Map([...this._providerDatatypes, ...newDatatypes]);
+        const newDatatypes = this.#getRosDatatypes(datatype, msgdef);
+        this.#providerDatatypes = new Map([...this.#providerDatatypes, ...newDatatypes]);
       });
       subscription.on("message", (message, _data, _pub) =>
-        this._handleMessage(topicName, message, true),
+        this.#handleMessage(topicName, message, true),
       );
       subscription.on("error", (error) => {
         this._addProblem(`subscribe:${topicName}`, {
@@ -381,42 +381,42 @@ export default class Ros1Player implements Player {
     }
 
     // Unsubscribe from topics that we are subscribed to but shouldn't be.
-    for (const topicName of this._rosNode.subscriptions.keys()) {
+    for (const topicName of this.#rosNode.subscriptions.keys()) {
       if (!topicNames.includes(topicName)) {
         {
-          this._rosNode.unsubscribe(topicName);
+          this.#rosNode.unsubscribe(topicName);
         }
       }
     }
   }
 
-  private _handleMessage = (
+  #handleMessage = (
     topic: string,
     message: unknown,
     // This is a hot path so we avoid extra object allocation from a parameters struct
     // eslint-disable-next-line @foxglove/no-boolean-parameters
     external: boolean,
   ): void => {
-    if (this._providerTopics == undefined) {
+    if (this.#providerTopics == undefined) {
       return;
     }
 
     const receiveTime = fromMillis(Date.now());
 
-    if (external && !this._hasReceivedMessage) {
-      this._hasReceivedMessage = true;
-      this._metricsCollector.recordTimeToFirstMsgs();
+    if (external && !this.#hasReceivedMessage) {
+      this.#hasReceivedMessage = true;
+      this.#metricsCollector.recordTimeToFirstMsgs();
     }
 
     const msg: MessageEvent<unknown> = { topic, receiveTime, message };
-    this._parsedMessages.push(msg);
+    this.#parsedMessages.push(msg);
     this._handleInternalMessage(msg);
 
-    this._emitState();
+    this.#emitState();
   };
 
   setPublishers(publishers: AdvertiseOptions[]): void {
-    if (!this._rosNode || this._closed) {
+    if (!this.#rosNode || this.#closed) {
       return;
     }
 
@@ -427,17 +427,17 @@ export default class Ros1Player implements Player {
     this._clearPublishProblems({ skipEmit: true });
 
     // Unadvertise any topics that were previously published and no longer appear in the list
-    for (const topic of this._rosNode.publications.keys()) {
+    for (const topic of this.#rosNode.publications.keys()) {
       if (!topics.has(topic)) {
-        this._rosNode.unadvertise(topic);
+        this.#rosNode.unadvertise(topic);
       }
     }
 
     // Unadvertise any topics where the dataType changed
     for (const { topic, datatype } of validPublishers) {
-      const existingPub = this._rosNode.publications.get(topic);
+      const existingPub = this.#rosNode.publications.get(topic);
       if (existingPub != undefined && existingPub.dataType !== datatype) {
-        this._rosNode.unadvertise(topic);
+        this.#rosNode.unadvertise(topic);
       }
     }
 
@@ -445,7 +445,7 @@ export default class Ros1Player implements Player {
     for (const advertiseOptions of validPublishers) {
       const { topic, datatype: dataType, options } = advertiseOptions;
 
-      if (this._rosNode.publications.has(topic)) {
+      if (this.#rosNode.publications.has(topic)) {
         continue;
       }
 
@@ -470,7 +470,7 @@ export default class Ros1Player implements Player {
       }
 
       // Advertise this topic to ROS as being published by us
-      this._rosNode.advertise({ topic, dataType, messageDefinition: msgdef }).catch((error) =>
+      this.#rosNode.advertise({ topic, dataType, messageDefinition: msgdef }).catch((error) =>
         this._addProblem(advertiseProblemId, {
           severity: "error",
           message: `Failed to advertise "${topic}"`,
@@ -479,20 +479,20 @@ export default class Ros1Player implements Player {
       );
     }
 
-    this._emitState();
+    this.#emitState();
   }
 
   setParameter(key: string, value: ParameterValue): void {
     log.debug(`Ros1Player.setParameter(key=${key}, value=${value})`);
-    this._rosNode?.setParameter(key, value);
+    this.#rosNode?.setParameter(key, value);
   }
 
   publish({ topic, msg }: PublishPayload): void {
     const problemId = `publish:${topic}`;
 
-    if (this._rosNode != undefined) {
-      if (this._rosNode.isAdvertising(topic)) {
-        this._rosNode
+    if (this.#rosNode != undefined) {
+      if (this.#rosNode.isAdvertising(topic)) {
+        this.#rosNode
           .publish(topic, msg)
           .then(() => this._clearProblem(problemId))
           .catch((error) =>
@@ -532,10 +532,7 @@ export default class Ros1Player implements Player {
     // no-op
   }
 
-  private _getRosDatatypes = (
-    datatype: string,
-    messageDefinition: RosMsgDefinition[],
-  ): RosDatatypes => {
+  #getRosDatatypes = (datatype: string, messageDefinition: RosMsgDefinition[]): RosDatatypes => {
     const typesByName: RosDatatypes = new Map();
     for (const def of messageDefinition) {
       // The first definition usually doesn't have an explicit name so we use the datatype
@@ -567,12 +564,12 @@ export default class Ros1Player implements Player {
         return;
       }
 
-      if (this._clockTime == undefined) {
-        this._start = time;
+      if (this.#clockTime == undefined) {
+        this.#start = time;
       }
 
-      this._clockTime = time;
-      this._clockReceived = msg.receiveTime;
+      this.#clockTime = time;
+      this.#clockReceived = msg.receiveTime;
     }
   }
 
@@ -580,13 +577,13 @@ export default class Ros1Player implements Player {
     try {
       const graph = await rosNode.getSystemState();
       if (
-        !isEqual(this._publishedTopics, graph.publishers) ||
-        !isEqual(this._subscribedTopics, graph.subscribers) ||
-        !isEqual(this._services, graph.services)
+        !isEqual(this.#publishedTopics, graph.publishers) ||
+        !isEqual(this.#subscribedTopics, graph.subscribers) ||
+        !isEqual(this.#services, graph.services)
       ) {
-        this._publishedTopics = graph.publishers;
-        this._subscribedTopics = graph.subscribers;
-        this._services = graph.services;
+        this.#publishedTopics = graph.publishers;
+        this.#subscribedTopics = graph.subscribers;
+        this.#services = graph.services;
       }
       this._clearProblem(Problem.Graph, { skipEmit: true });
     } catch (error) {
@@ -596,24 +593,26 @@ export default class Ros1Player implements Player {
           severity: "warn",
           message: "Unable to update connection graph",
           tip: `The connection graph contains information about publishers and subscribers. A
-stale graph may result in missing topics you expect. Ensure that roscore is reachable at ${this._url}.`,
+stale graph may result in missing topics you expect. Ensure that roscore is reachable at ${
+            this.#url
+          }.`,
           error,
         },
         { skipEmit: true },
       );
-      this._publishedTopics = new Map();
-      this._subscribedTopics = new Map();
-      this._services = new Map();
+      this.#publishedTopics = new Map();
+      this.#subscribedTopics = new Map();
+      this.#services = new Map();
     }
   }
 
   private _getCurrentTime(): Time {
     const now = fromMillis(Date.now());
-    if (this._clockTime == undefined) {
+    if (this.#clockTime == undefined) {
       return now;
     }
 
-    const delta = subtractTimes(now, this._clockReceived);
-    return addTimes(this._clockTime, delta);
+    const delta = subtractTimes(now, this.#clockReceived);
+    return addTimes(this.#clockTime, delta);
   }
 }

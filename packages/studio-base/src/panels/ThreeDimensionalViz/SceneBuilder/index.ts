@@ -468,10 +468,7 @@ export default class SceneBuilder implements MarkerProvider {
     return pose;
   };
 
-  private _consumeMarkerArray = (
-    topic: string,
-    message: { markers: readonly BaseMarker[] },
-  ): void => {
+  #consumeMarkerArray = (topic: string, message: { markers: readonly BaseMarker[] }): void => {
     for (const marker of message.markers) {
       this._consumeMarker(topic, marker);
     }
@@ -712,10 +709,10 @@ export default class SceneBuilder implements MarkerProvider {
       header: { frame_id: "", stamp: msg.receiveTime, seq: 0 },
       color: { r: color.r / 255, g: color.g / 255, b: color.b / 255, a: color.a ?? 1 },
     };
-    this._consumeNonMarkerMessage(msg.topic, newMessage, 110);
+    this.#consumeNonMarkerMessage(msg.topic, newMessage, 110);
   };
 
-  private _consumeNonMarkerMessage = (
+  #consumeNonMarkerMessage = (
     topic: string,
     drawData: StampedMessage,
     type: number,
@@ -788,7 +785,7 @@ export default class SceneBuilder implements MarkerProvider {
     }
     for (const topic of this.topicsToRender) {
       try {
-        this._consumeTopic(topic);
+        this.#consumeTopic(topic);
       } catch (error) {
         log.error(error);
         this._setTopicError(topic, error.toString());
@@ -807,7 +804,7 @@ export default class SceneBuilder implements MarkerProvider {
         break;
       case "visualization_msgs/MarkerArray":
       case "visualization_msgs/msg/MarkerArray":
-        this._consumeMarkerArray(topic, message as { markers: BaseMarker[] });
+        this.#consumeMarkerArray(topic, message as { markers: BaseMarker[] });
 
         break;
       case "geometry_msgs/PoseStamped":
@@ -846,24 +843,24 @@ export default class SceneBuilder implements MarkerProvider {
           scale: { x: 0.2 },
           color: topicSettings?.overrideColor ?? { r: 0.5, g: 0.5, b: 1, a: 1 },
         };
-        this._consumeNonMarkerMessage(topic, newMessage, 4 /* line strip */, message);
+        this.#consumeNonMarkerMessage(topic, newMessage, 4 /* line strip */, message);
         break;
       }
       case "sensor_msgs/PointCloud2":
       case "sensor_msgs/msg/PointCloud2":
-        this._consumeNonMarkerMessage(topic, message as StampedMessage, 102);
+        this.#consumeNonMarkerMessage(topic, message as StampedMessage, 102);
         break;
       case "velodyne_msgs/VelodyneScan":
       case "velodyne_msgs/msg/VelodyneScan": {
         const converted = this._velodyneCloudConverter.decode(message as VelodyneScan);
         if (converted) {
-          this._consumeNonMarkerMessage(topic, converted, 102);
+          this.#consumeNonMarkerMessage(topic, converted, 102);
         }
         break;
       }
       case "sensor_msgs/LaserScan":
       case "sensor_msgs/msg/LaserScan":
-        this._consumeNonMarkerMessage(topic, message as StampedMessage, 104);
+        this.#consumeNonMarkerMessage(topic, message as StampedMessage, 104);
         break;
       case "std_msgs/ColorRGBA":
       case "std_msgs/msg/ColorRGBA":
@@ -884,7 +881,7 @@ export default class SceneBuilder implements MarkerProvider {
           scale: { x: 0.2 },
           color: { r: 0, g: 1, b: 0, a: 1 },
         };
-        this._consumeNonMarkerMessage(
+        this.#consumeNonMarkerMessage(
           topic,
           newMessage,
           4,
@@ -902,7 +899,7 @@ export default class SceneBuilder implements MarkerProvider {
     }
   };
 
-  private _consumeTopic = (topic: string) => {
+  #consumeTopic = (topic: string): void => {
     if (!this.frame) {
       return;
     }

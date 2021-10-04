@@ -60,7 +60,7 @@ async function updateOrFetchLayout(
  * A wrapper around ILayoutStorage for a particular namespace.
  */
 class NamespacedLayoutStorage {
-  private migration: Promise<void>;
+  #migration: Promise<void>;
   constructor(
     private storage: ILayoutStorage,
     private namespace: string,
@@ -69,7 +69,7 @@ class NamespacedLayoutStorage {
       importFromNamespace,
     }: { migrateUnnamespacedLayouts: boolean; importFromNamespace: string | undefined },
   ) {
-    this.migration = (async function () {
+    this.#migration = (async function () {
       if (migrateUnnamespacedLayouts) {
         await storage
           .migrateUnnamespacedLayouts?.(namespace)
@@ -88,19 +88,19 @@ class NamespacedLayoutStorage {
   }
 
   async list(): Promise<readonly Layout[]> {
-    await this.migration;
+    await this.#migration;
     return await this.storage.list(this.namespace);
   }
   async get(id: LayoutID): Promise<Layout | undefined> {
-    await this.migration;
+    await this.#migration;
     return await this.storage.get(this.namespace, id);
   }
   async put(layout: Layout): Promise<Layout> {
-    await this.migration;
+    await this.#migration;
     return await this.storage.put(this.namespace, layout);
   }
   async delete(id: LayoutID): Promise<void> {
-    await this.migration;
+    await this.#migration;
     await this.storage.delete(this.namespace, id);
   }
 }
@@ -114,14 +114,14 @@ export default class LayoutManager implements ILayoutManager {
    * and then writing a single layout, or writing one and deleting another) from getting
    * interleaved.
    */
-  private local: MutexLocked<NamespacedLayoutStorage>;
-  private remote: IRemoteLayoutStorage | undefined;
+  #local: MutexLocked<NamespacedLayoutStorage>;
+  #remote: IRemoteLayoutStorage | undefined;
 
   readonly supportsSharing: boolean;
 
-  private emitter = new EventEmitter<LayoutManagerEventTypes>();
+  #emitter = new EventEmitter<LayoutManagerEventTypes>();
 
-  private busyCount = 0;
+  #busyCount = 0;
 
   /**
    * A decorator to emit busy events before and after an async operation so the UI can show that the
@@ -135,19 +135,19 @@ export default class LayoutManager implements ILayoutManager {
     const method = descriptor.value!;
     descriptor.value = async function (...args) {
       try {
-        this.busyCount++;
-        this.emitter.emit("busychange");
+        this.#busyCount++;
+        this.#emitter.emit("busychange");
         return await method.apply(this, args);
       } finally {
-        this.busyCount--;
-        this.emitter.emit("busychange");
+        this.#busyCount--;
+        this.#emitter.emit("busychange");
       }
     };
   }
 
   // eslint-disable-next-line no-restricted-syntax
   get isBusy(): boolean {
-    return this.busyCount > 0;
+    return this.#busyCount > 0;
   }
 
   isOnline = false;
@@ -155,7 +155,7 @@ export default class LayoutManager implements ILayoutManager {
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   setOnline(online: boolean): void {
     this.isOnline = online;
-    this.emitter.emit("onlinechange");
+    this.#emitter.emit("onlinechange");
   }
 
   constructor({
@@ -165,7 +165,7 @@ export default class LayoutManager implements ILayoutManager {
     local: ILayoutStorage;
     remote: IRemoteLayoutStorage | undefined;
   }) {
-    this.local = new MutexLocked(
+    this.#local = new MutexLocked(
       new NamespacedLayoutStorage(
         local,
         remote
@@ -179,7 +179,7 @@ export default class LayoutManager implements ILayoutManager {
         },
       ),
     );
-    this.remote = remote;
+    this.#remote = remote;
     this.supportsSharing = remote != undefined;
   }
 
@@ -187,28 +187,28 @@ export default class LayoutManager implements ILayoutManager {
     name: E,
     listener: EventListener<LayoutManagerEventTypes, E>,
   ): void {
-    this.emitter.on(name, listener);
+    this.#emitter.on(name, listener);
   }
   off<E extends EventNames<LayoutManagerEventTypes>>(
     name: E,
     listener: EventListener<LayoutManagerEventTypes, E>,
   ): void {
-    this.emitter.off(name, listener);
+    this.#emitter.off(name, listener);
   }
 
   private notifyChangeListeners(event: { updatedLayout: Layout | undefined }) {
-    queueMicrotask(() => this.emitter.emit("change", event));
+    queueMicrotask(() => this.#emitter.emit("change", event));
   }
 
   async getLayouts(): Promise<readonly Layout[]> {
-    return await this.local.runExclusive(async (local) => {
+    return await this.#local.runExclusive(async (local) => {
       const layouts = await local.list();
       return layouts.filter((layout) => !layoutAppearsDeleted(layout));
     });
   }
 
   async getLayout(id: LayoutID): Promise<Layout | undefined> {
-    return await this.local.runExclusive(async (local) => {
+    return await this.#local.runExclusive(async (local) => {
       const layout = await local.get(id);
       return layout && !layoutAppearsDeleted(layout) ? layout : undefined;
     });
@@ -225,20 +225,20 @@ export default class LayoutManager implements ILayoutManager {
     permission: LayoutPermission;
   }): Promise<Layout> {
     if (layoutPermissionIsShared(permission)) {
-      if (!this.remote) {
+      if (!this.#remote) {
         throw new Error("Shared layouts are not supported without remote layout storage");
       }
       if (!this.isOnline) {
         throw new Error("Cannot share a layout while offline");
       }
-      const newLayout = await this.remote.saveNewLayout({
+      const newLayout = await this.#remote.saveNewLayout({
         id: uuidv4() as LayoutID,
         name,
         data,
         permission,
         savedAt: new Date().toISOString() as ISO8601Timestamp,
       });
-      const result = await this.local.runExclusive(
+      const result = await this.#local.runExclusive(
         async (local) =>
           await local.put({
             id: newLayout.id,
@@ -253,7 +253,7 @@ export default class LayoutManager implements ILayoutManager {
       return result;
     }
 
-    const newLayout = await this.local.runExclusive(
+    const newLayout = await this.#local.runExclusive(
       async (local) =>
         await local.put({
           id: uuidv4() as LayoutID,
@@ -261,7 +261,7 @@ export default class LayoutManager implements ILayoutManager {
           permission,
           baseline: { data, savedAt: new Date().toISOString() as ISO8601Timestamp },
           working: undefined,
-          syncInfo: this.remote ? { status: "new", lastRemoteSavedAt: undefined } : undefined,
+          syncInfo: this.#remote ? { status: "new", lastRemoteSavedAt: undefined } : undefined,
         }),
     );
     this.notifyChangeListeners({ updatedLayout: newLayout });
@@ -279,21 +279,21 @@ export default class LayoutManager implements ILayoutManager {
     data: PanelsState | undefined;
   }): Promise<Layout> {
     const now = new Date().toISOString() as ISO8601Timestamp;
-    const localLayout = await this.local.runExclusive(async (local) => await local.get(id));
+    const localLayout = await this.#local.runExclusive(async (local) => await local.get(id));
     if (!localLayout) {
       throw new Error(`Cannot update layout ${id} because it does not exist`);
     }
 
     // Renames of shared layouts go directly to the server
     if (name != undefined && layoutIsShared(localLayout)) {
-      if (!this.remote) {
+      if (!this.#remote) {
         throw new Error("Shared layouts are not supported without remote layout storage");
       }
       if (!this.isOnline) {
         throw new Error("Cannot update a shared layout while offline");
       }
-      const updatedBaseline = await updateOrFetchLayout(this.remote, { id, name, savedAt: now });
-      const result = await this.local.runExclusive(
+      const updatedBaseline = await updateOrFetchLayout(this.#remote, { id, name, savedAt: now });
+      const result = await this.#local.runExclusive(
         async (local) =>
           await local.put({
             ...localLayout,
@@ -306,7 +306,7 @@ export default class LayoutManager implements ILayoutManager {
       this.notifyChangeListeners({ updatedLayout: result });
       return result;
     } else {
-      const result = await this.local.runExclusive(
+      const result = await this.#local.runExclusive(
         async (local) =>
           await local.put({
             ...localLayout,
@@ -315,7 +315,7 @@ export default class LayoutManager implements ILayoutManager {
 
             // If the name is being changed, we will need to upload to the server
             syncInfo:
-              this.remote &&
+              this.#remote &&
               name != undefined &&
               localLayout.syncInfo &&
               localLayout.syncInfo?.status !== "new"
@@ -330,23 +330,23 @@ export default class LayoutManager implements ILayoutManager {
 
   @LayoutManager.withBusyStatus
   async deleteLayout({ id }: { id: LayoutID }): Promise<void> {
-    const localLayout = await this.local.runExclusive(async (local) => await local.get(id));
+    const localLayout = await this.#local.runExclusive(async (local) => await local.get(id));
     if (!localLayout) {
       throw new Error(`Cannot update layout ${id} because it does not exist`);
     }
     if (layoutIsShared(localLayout)) {
-      if (!this.remote) {
+      if (!this.#remote) {
         throw new Error("Shared layouts are not supported without remote layout storage");
       }
       if (localLayout.syncInfo?.status !== "remotely-deleted") {
         if (!this.isOnline) {
           throw new Error("Cannot delete a shared layout while offline");
         }
-        await this.remote.deleteLayout(id);
+        await this.#remote.deleteLayout(id);
       }
     }
-    await this.local.runExclusive(async (local) => {
-      if (this.remote && !layoutIsShared(localLayout)) {
+    await this.#local.runExclusive(async (local) => {
+      if (this.#remote && !layoutIsShared(localLayout)) {
         await local.put({
           ...localLayout,
           working: {
@@ -368,24 +368,24 @@ export default class LayoutManager implements ILayoutManager {
 
   @LayoutManager.withBusyStatus
   async overwriteLayout({ id }: { id: LayoutID }): Promise<Layout> {
-    const localLayout = await this.local.runExclusive(async (local) => await local.get(id));
+    const localLayout = await this.#local.runExclusive(async (local) => await local.get(id));
     if (!localLayout) {
       throw new Error(`Cannot overwrite layout ${id} because it does not exist`);
     }
     const now = new Date().toISOString() as ISO8601Timestamp;
     if (layoutIsShared(localLayout)) {
-      if (!this.remote) {
+      if (!this.#remote) {
         throw new Error("Shared layouts are not supported without remote layout storage");
       }
       if (!this.isOnline) {
         throw new Error("Cannot save a shared layout while offline");
       }
-      const updatedBaseline = await updateOrFetchLayout(this.remote, {
+      const updatedBaseline = await updateOrFetchLayout(this.#remote, {
         id,
         data: localLayout.working?.data ?? localLayout.baseline.data,
         savedAt: now,
       });
-      const result = await this.local.runExclusive(
+      const result = await this.#local.runExclusive(
         async (local) =>
           await local.put({
             ...localLayout,
@@ -397,7 +397,7 @@ export default class LayoutManager implements ILayoutManager {
       this.notifyChangeListeners({ updatedLayout: result });
       return result;
     } else {
-      const result = await this.local.runExclusive(
+      const result = await this.#local.runExclusive(
         async (local) =>
           await local.put({
             ...localLayout,
@@ -406,7 +406,7 @@ export default class LayoutManager implements ILayoutManager {
               savedAt: now,
             },
             working: undefined,
-            syncInfo: this.remote
+            syncInfo: this.#remote
               ? { status: "updated", lastRemoteSavedAt: localLayout.syncInfo?.lastRemoteSavedAt }
               : localLayout.syncInfo,
           }),
@@ -418,7 +418,7 @@ export default class LayoutManager implements ILayoutManager {
 
   @LayoutManager.withBusyStatus
   async revertLayout({ id }: { id: LayoutID }): Promise<Layout> {
-    const result = await this.local.runExclusive(async (local) => {
+    const result = await this.#local.runExclusive(async (local) => {
       const layout = await local.get(id);
       if (!layout) {
         throw new Error(`Cannot revert layout id ${id} because it does not exist`);
@@ -435,7 +435,7 @@ export default class LayoutManager implements ILayoutManager {
   @LayoutManager.withBusyStatus
   async makePersonalCopy({ id, name }: { id: LayoutID; name: string }): Promise<Layout> {
     const now = new Date().toISOString() as ISO8601Timestamp;
-    const result = await this.local.runExclusive(async (local) => {
+    const result = await this.#local.runExclusive(async (local) => {
       const layout = await local.get(id);
       if (!layout) {
         throw new Error(`Cannot make a personal copy of layout id ${id} because it does not exist`);
@@ -456,7 +456,7 @@ export default class LayoutManager implements ILayoutManager {
   }
 
   /** Ensures at most one sync operation is in progress at a time */
-  private currentSync?: Promise<void>;
+  #currentSync?: Promise<void>;
 
   /**
    * Attempt to synchronize the local cache with remote storage. At minimum this incurs a fetch of
@@ -465,30 +465,30 @@ export default class LayoutManager implements ILayoutManager {
    */
   @LayoutManager.withBusyStatus
   async syncWithRemote(): Promise<void> {
-    if (this.currentSync) {
+    if (this.#currentSync) {
       log.debug("Layout sync is already in progress");
-      return await this.currentSync;
+      return await this.#currentSync;
     }
     const start = performance.now();
     try {
       log.debug("Starting layout sync");
-      this.currentSync = this.syncWithRemoteImpl();
-      await this.currentSync;
+      this.#currentSync = this.syncWithRemoteImpl();
+      await this.#currentSync;
       this.notifyChangeListeners({ updatedLayout: undefined });
     } finally {
-      this.currentSync = undefined;
+      this.#currentSync = undefined;
       log.debug(`Completed sync in ${((performance.now() - start) / 1000).toFixed(2)}s`);
     }
   }
 
   private async syncWithRemoteImpl(): Promise<void> {
-    if (!this.remote || !this.isOnline) {
+    if (!this.#remote || !this.isOnline) {
       return;
     }
 
     const [localLayouts, remoteLayouts] = await Promise.all([
-      this.local.runExclusive(async (local) => await local.list()),
-      this.remote.getLayouts(),
+      this.#local.runExclusive(async (local) => await local.list()),
+      this.#remote.getLayouts(),
     ]);
 
     const syncOperations = computeLayoutSyncOperations(localLayouts, remoteLayouts);
@@ -505,7 +505,7 @@ export default class LayoutManager implements ILayoutManager {
   private async performLocalSyncOperations(
     operations: readonly (SyncOperation & { local: true })[],
   ): Promise<void> {
-    await this.local.runExclusive(async (local) => {
+    await this.#local.runExclusive(async (local) => {
       for (const operation of operations) {
         switch (operation.type) {
           case "mark-deleted": {
@@ -560,7 +560,7 @@ export default class LayoutManager implements ILayoutManager {
   private async performRemoteSyncOperations(
     operations: readonly (SyncOperation & { local: false })[],
   ): Promise<void> {
-    const { remote } = this;
+    const remote = this.#remote;
     if (!remote) {
       return;
     }
@@ -622,7 +622,7 @@ export default class LayoutManager implements ILayoutManager {
       }),
     );
 
-    await this.local.runExclusive(async (local) => {
+    await this.#local.runExclusive(async (local) => {
       for (const cleanup of cleanups) {
         cleanup(local);
       }

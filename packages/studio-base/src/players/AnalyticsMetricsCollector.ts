@@ -18,11 +18,11 @@ type EventData = { [key: string]: string | number | boolean };
 export default class AnalyticsMetricsCollector implements PlayerMetricsCollectorInterface {
   metadata: EventData = {};
   playerType?: PlayerSourceDefinition;
-  private _analytics: IAnalytics;
+  #analytics: IAnalytics;
 
   constructor(analytics: IAnalytics) {
     log.debug("New AnalyticsMetricsCollector");
-    this._analytics = analytics;
+    this.#analytics = analytics;
   }
 
   setProperty(key: string, value: string | number | boolean): void {
@@ -30,7 +30,7 @@ export default class AnalyticsMetricsCollector implements PlayerMetricsCollector
   }
 
   logEvent(event: AppEvent, data?: EventData): void {
-    void this._analytics.logEvent(event, { ...this.metadata, ...data });
+    void this.#analytics.logEvent(event, { ...this.metadata, ...data });
   }
 
   playerConstructed(): void {

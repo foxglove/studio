@@ -24,28 +24,28 @@ import { FOXGLOVE_GRID_TOPIC } from "@foxglove/studio-base/util/globalConstants"
 
 export default class GridBuilder implements MarkerProvider {
   grid: InstancedLineListMarker;
-  private _visible = true;
-  private _settings: GridSettings = {};
+  #visible = true;
+  #settings: GridSettings = {};
 
   constructor() {
-    this.grid = GridBuilder.BuildGrid(this._settings);
+    this.grid = GridBuilder.BuildGrid(this.#settings);
   }
 
   renderMarkers = (add: MarkerCollector): void => {
-    if (this._visible) {
+    if (this.#visible) {
       add.instancedLineList(this.grid);
     }
   };
 
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   setVisible(isVisible: boolean): void {
-    this._visible = isVisible;
+    this.#visible = isVisible;
   }
 
   setSettingsByKey(settings: TopicSettingsCollection): void {
     const newSettings = settings[`t:${FOXGLOVE_GRID_TOPIC}`] ?? {};
-    if (!isEqual(newSettings, this._settings)) {
-      this._settings = newSettings;
+    if (!isEqual(newSettings, this.#settings)) {
+      this.#settings = newSettings;
       this.grid = GridBuilder.BuildGrid(newSettings);
     }
   }

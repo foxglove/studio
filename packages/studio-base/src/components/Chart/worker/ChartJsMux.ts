@@ -82,14 +82,14 @@ Chart.register(
 // Since we use a capped number of web-workers, a single web-worker may be running multiple chartjs instances
 // The ChartJsWorkerMux forwards an rpc request for a specific chartjs instance id to the appropriate instance
 export default class ChartJsMux {
-  private _rpc: Rpc;
-  private _managers = new Map<string, ChartJSManager>();
+  #rpc: Rpc;
+  #managers = new Map<string, ChartJSManager>();
 
   constructor(rpc: Rpc) {
-    this._rpc = rpc;
+    this.#rpc = rpc;
 
-    if (this._rpc instanceof Rpc) {
-      setupWorker(this._rpc);
+    if (this.#rpc instanceof Rpc) {
+      setupWorker(this.#rpc);
     }
 
     // create a new chartjs instance
@@ -97,7 +97,7 @@ export default class ChartJsMux {
     rpc.receive("initialize", (args: InitOpts) => {
       args.fontLoaded = fontLoaded;
       const manager = new ChartJSManager(args);
-      this._managers.set(args.id, manager);
+      this.#managers.set(args.id, manager);
       return manager.getScales();
     });
     rpc.receive("wheel", (args: RpcEvent<WheelEvent>) => this._getChart(args.id).wheel(args.event));
@@ -122,10 +122,10 @@ export default class ChartJsMux {
 
     rpc.receive("update", (args: RpcUpdateEvent) => this._getChart(args.id).update(args));
     rpc.receive("destroy", (args: RpcEvent<void>) => {
-      const manager = this._managers.get(args.id);
+      const manager = this.#managers.get(args.id);
       if (manager) {
         manager.destroy();
-        this._managers.delete(args.id);
+        this.#managers.delete(args.id);
       }
     });
     rpc.receive("getElementsAtEvent", (args: RpcEvent<MouseEvent>) =>
@@ -137,7 +137,7 @@ export default class ChartJsMux {
   }
 
   private _getChart(id: string): ChartJSManager {
-    const chart = this._managers.get(id);
+    const chart = this.#managers.get(id);
     if (!chart) {
       throw new Error(`Could not find chart with id ${id}`);
     }

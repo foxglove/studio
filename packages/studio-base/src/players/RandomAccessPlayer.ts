@@ -94,8 +94,8 @@ export type RandomAccessPlayerOptions = {
 
 // A `Player` that wraps around a tree of `RandomAccessDataProviders`.
 export default class RandomAccessPlayer implements Player {
-  private _label?: string;
-  private _filePath?: string;
+  #label?: string;
+  #filePath?: string;
   _provider: RandomAccessDataProvider;
   _isPlaying: boolean = false;
   _wasPlayingBeforeTabSwitch = false;
@@ -148,8 +148,8 @@ export default class RandomAccessPlayer implements Player {
     providerDescriptor: RandomAccessDataProviderDescriptor,
     { metricsCollector, seekToTime }: RandomAccessPlayerOptions,
   ) {
-    this._label = providerDescriptor.label;
-    this._filePath = providerDescriptor.filePath;
+    this.#label = providerDescriptor.label;
+    this.#filePath = providerDescriptor.filePath;
     if (process.env.NODE_ENV === "test" && providerDescriptor.name === "TestProvider") {
       this._provider = providerDescriptor.args.provider;
     } else {
@@ -266,8 +266,8 @@ export default class RandomAccessPlayer implements Player {
 
     if (this._hasError) {
       return this._listener({
-        name: this._label,
-        filePath: this._filePath,
+        name: this.#label,
+        filePath: this.#filePath,
         presence: PlayerPresence.ERROR,
         progress: {},
         capabilities: [],
@@ -313,8 +313,8 @@ export default class RandomAccessPlayer implements Player {
     }
 
     const data: PlayerState = {
-      name: this._label,
-      filePath: this._filePath,
+      name: this.#label,
+      filePath: this.#filePath,
       presence: this._reconnecting
         ? PlayerPresence.RECONNECTING
         : this._initializing

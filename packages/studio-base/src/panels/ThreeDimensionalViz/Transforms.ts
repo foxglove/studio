@@ -136,33 +136,33 @@ export class Transform {
 }
 
 class TfStore {
-  private _storage = new Map<string, Transform>();
+  #storage = new Map<string, Transform>();
 
   get(unsanitizedKey: string): Transform {
     const key = stripLeadingSlash(unsanitizedKey);
-    let result = this._storage.get(key);
+    let result = this.#storage.get(key);
     if (result) {
       return result;
     }
     result = new Transform(key);
-    this._storage.set(key, result);
+    this.#storage.set(key, result);
     return result;
   }
 
   getMaybe(key: string): Transform | undefined {
-    return this._storage.get(stripLeadingSlash(key));
+    return this.#storage.get(stripLeadingSlash(key));
   }
 
   has(key: string): boolean {
-    return this._storage.has(stripLeadingSlash(key));
+    return this.#storage.has(stripLeadingSlash(key));
   }
 
   values(): Array<Transform> {
-    return Array.from(this._storage.values());
+    return Array.from(this.#storage.values());
   }
 
   entries(): Readonly<Map<string, Transform>> {
-    return this._storage;
+    return this.#storage;
   }
 }
 

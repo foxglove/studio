@@ -65,10 +65,10 @@ type ZoomableChart = Chart & {
 };
 
 export default class ChartJSManager {
-  private _chartInstance?: Chart;
-  private _fakeNodeEvents = new EventEmitter();
-  private _fakeDocumentEvents = new EventEmitter();
-  private _lastDatalabelClickContext?: DatalabelContext;
+  #chartInstance?: Chart;
+  #fakeNodeEvents = new EventEmitter();
+  #fakeDocumentEvents = new EventEmitter();
+  #lastDatalabelClickContext?: DatalabelContext;
 
   constructor(initOpts: InitOpts) {
     log.info(`new ChartJSManager(id=${initOpts.id})`);
@@ -88,11 +88,11 @@ export default class ChartJSManager {
     log.debug(`ChartJSManager(${id}) init, default font "${font.family}" status=${font.status}`);
 
     const fakeNode = {
-      addEventListener: addEventListener(this._fakeNodeEvents),
-      removeEventListener: removeEventListener(this._fakeNodeEvents),
+      addEventListener: addEventListener(this.#fakeNodeEvents),
+      removeEventListener: removeEventListener(this.#fakeNodeEvents),
       ownerDocument: {
-        addEventListener: addEventListener(this._fakeDocumentEvents),
-        removeEventListener: removeEventListener(this._fakeDocumentEvents),
+        addEventListener: addEventListener(this.#fakeDocumentEvents),
+        removeEventListener: removeEventListener(this.#fakeDocumentEvents),
       },
     };
 
@@ -126,55 +126,55 @@ export default class ChartJSManager {
     });
 
     ZoomPlugin.start = origZoomStart;
-    this._chartInstance = chartInstance;
+    this.#chartInstance = chartInstance;
   }
 
   wheel(event: WheelEvent): RpcScales {
     const target = event.target as Element & { boundingClientRect: DOMRect };
     target.getBoundingClientRect = () => target.boundingClientRect;
-    this._fakeNodeEvents.emit("wheel", event);
+    this.#fakeNodeEvents.emit("wheel", event);
     return this.getScales();
   }
 
   mousedown(event: MouseEvent): RpcScales {
     const target = event.target as Element & { boundingClientRect: DOMRect };
     target.getBoundingClientRect = () => target.boundingClientRect;
-    this._fakeNodeEvents.emit("mousedown", event);
+    this.#fakeNodeEvents.emit("mousedown", event);
     return this.getScales();
   }
 
   mousemove(event: MouseEvent): RpcScales {
     const target = event.target as Element & { boundingClientRect: DOMRect };
     target.getBoundingClientRect = () => target.boundingClientRect;
-    this._fakeNodeEvents.emit("mousemove", event);
+    this.#fakeNodeEvents.emit("mousemove", event);
     return this.getScales();
   }
 
   mouseup(event: MouseEvent): RpcScales {
     const target = event.target as Element & { boundingClientRect: DOMRect };
     target.getBoundingClientRect = () => target.boundingClientRect;
-    this._fakeDocumentEvents.emit("mouseup", event);
+    this.#fakeDocumentEvents.emit("mouseup", event);
     return this.getScales();
   }
 
   panstart(event: HammerInput): RpcScales {
     const target = event.target as HTMLElement & { boundingClientRect: DOMRect };
     target.getBoundingClientRect = () => target.boundingClientRect;
-    (this._chartInstance as ZoomableChart)?.$zoom.panStartHandler(event);
+    (this.#chartInstance as ZoomableChart)?.$zoom.panStartHandler(event);
     return this.getScales();
   }
 
   panmove(event: HammerInput): RpcScales {
     const target = event.target as HTMLElement & { boundingClientRect: DOMRect };
     target.getBoundingClientRect = () => target.boundingClientRect;
-    (this._chartInstance as ZoomableChart)?.$zoom.panHandler(event);
+    (this.#chartInstance as ZoomableChart)?.$zoom.panHandler(event);
     return this.getScales();
   }
 
   panend(event: HammerInput): RpcScales {
     const target = event.target as HTMLElement & { boundingClientRect: DOMRect };
     target.getBoundingClientRect = () => target.boundingClientRect;
-    (this._chartInstance as ZoomableChart)?.$zoom.panEndHandler(event);
+    (this.#chartInstance as ZoomableChart)?.$zoom.panEndHandler(event);
     return this.getScales();
   }
 
@@ -189,7 +189,7 @@ export default class ChartJSManager {
     height?: number;
     data?: ChartData;
   }): RpcScales {
-    const instance = this._chartInstance;
+    const instance = this.#chartInstance;
     if (instance == undefined) {
       return {};
     }
@@ -244,7 +244,7 @@ export default class ChartJSManager {
   }
 
   destroy(): void {
-    this._chartInstance?.destroy();
+    this.#chartInstance?.destroy();
   }
 
   getElementsAtEvent({ event }: { event: MouseEvent }): RpcElement[] {
@@ -257,17 +257,17 @@ export default class ChartJSManager {
     // ev is cast to any because the typings for getElementsAtEventForMode are wrong
     // ev is specified as a dom Event - but the implementation does not require it for the basic platform
     const elements =
-      this._chartInstance?.getElementsAtEventForMode(
+      this.#chartInstance?.getElementsAtEventForMode(
         ev as unknown as Event,
-        this._chartInstance.options.interaction?.mode ?? "intersect",
-        this._chartInstance.options.interaction ?? {},
+        this.#chartInstance.options.interaction?.mode ?? "intersect",
+        this.#chartInstance.options.interaction ?? {},
         false,
       ) ?? [];
 
     const out = new Array<RpcElement>();
 
     for (const element of elements) {
-      const data = this._chartInstance?.data.datasets[element.datasetIndex]?.data[element.index];
+      const data = this.#chartInstance?.data.datasets[element.datasetIndex]?.data[element.index];
       if (data == undefined || typeof data === "number") {
         continue;
       }
@@ -298,11 +298,11 @@ export default class ChartJSManager {
   }
 
   getDatalabelAtEvent({ event }: { event: Event }): unknown {
-    this._chartInstance?.notifyPlugins("beforeEvent", { event });
+    this.#chartInstance?.notifyPlugins("beforeEvent", { event });
 
     // clear the stored click context - we have consumed it
-    const context = this._lastDatalabelClickContext;
-    this._lastDatalabelClickContext = undefined;
+    const context = this.#lastDatalabelClickContext;
+    this.#lastDatalabelClickContext = undefined;
 
     return context?.dataset.data[context.dataIndex];
   }
@@ -313,7 +313,7 @@ export default class ChartJSManager {
     const scales: RpcScales = {};
 
     // fill our rpc scales - we only support x and y scales for now
-    const xScale = this._chartInstance?.scales.x;
+    const xScale = this.#chartInstance?.scales.x;
     if (xScale) {
       scales.x = {
         pixelMin: xScale.left,
@@ -323,7 +323,7 @@ export default class ChartJSManager {
       };
     }
 
-    const yScale = this._chartInstance?.scales.y;
+    const yScale = this.#chartInstance?.scales.y;
     if (yScale) {
       scales.y = {
         pixelMin: yScale.bottom,
@@ -344,7 +344,7 @@ export default class ChartJSManager {
       // maybe we contribute a patch upstream with the explanation for web-worker use
       config.plugins.datalabels.listeners = {
         click: (context: DatalabelContext) => {
-          this._lastDatalabelClickContext = context;
+          this.#lastDatalabelClickContext = context;
         },
       };
 

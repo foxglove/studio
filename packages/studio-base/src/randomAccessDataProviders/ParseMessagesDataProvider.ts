@@ -30,9 +30,9 @@ import {
 // be the case when using the MemoryCacheDataProvider.
 export default class ParseMessagesDataProvider implements RandomAccessDataProvider {
   // Underlying RandomAccessDataProvider.
-  private _provider: RandomAccessDataProvider;
+  #provider: RandomAccessDataProvider;
 
-  private _datatypeNamesByTopic: {
+  #datatypeNamesByTopic: {
     [topic: string]: string;
   } = {};
 
@@ -47,11 +47,11 @@ export default class ParseMessagesDataProvider implements RandomAccessDataProvid
         `Incorrect number of children to ParseMessagesDataProvider: ${children.length}`,
       );
     }
-    this._provider = getDataProvider(child);
+    this.#provider = getDataProvider(child);
   }
 
   async initialize(extensionPoint: ExtensionPoint): Promise<InitializationResult> {
-    const result = await this._provider.initialize(extensionPoint);
+    const result = await this.#provider.initialize(extensionPoint);
     const { topics } = result;
     if (result.providesParsedMessages) {
       throw new Error(
@@ -64,7 +64,7 @@ export default class ParseMessagesDataProvider implements RandomAccessDataProvid
         : rawMessageDefinitionsToParsed(result.messageDefinitions, topics);
 
     topics.forEach(({ name, datatype }) => {
-      this._datatypeNamesByTopic[name] = datatype;
+      this.#datatypeNamesByTopic[name] = datatype;
     });
     // Initialize the readers asynchronously - we can load data without having the readers ready to parse it.
     return { ...result, providesParsedMessages: true, messageDefinitions };
@@ -74,7 +74,7 @@ export default class ParseMessagesDataProvider implements RandomAccessDataProvid
     // Kick off the request to the data provder to get the messages
     // This might trigger some background reading so we can do some other work before waiting
 
-    const { parsedMessages, rosBinaryMessages } = await this._provider.getMessages(start, end, {
+    const { parsedMessages, rosBinaryMessages } = await this.#provider.getMessages(start, end, {
       parsedMessages: topics.parsedMessages,
       rosBinaryMessages: topics.rosBinaryMessages,
     });
@@ -86,6 +86,6 @@ export default class ParseMessagesDataProvider implements RandomAccessDataProvid
   }
 
   async close(): Promise<void> {
-    return await this._provider.close();
+    return await this.#provider.close();
   }
 }

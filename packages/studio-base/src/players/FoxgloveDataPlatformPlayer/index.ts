@@ -60,79 +60,79 @@ type FoxgloveDataPlatformPlayerOpts = {
 const ZERO_TIME = Object.freeze({ sec: 0, nsec: 0 });
 
 export default class FoxgloveDataPlatformPlayer implements Player {
-  private readonly _preloadThresholdSecs = 5;
-  private readonly _preloadDurationSecs = 15;
+  readonly #preloadThresholdSecs = 5;
+  readonly #preloadDurationSecs = 15;
 
-  private _id: string = uuidv4(); // Unique ID for this player
-  private _name: string;
-  private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState()
-  private _totalBytesReceived = 0;
-  private _initialized = false;
-  private _closed = false; // Whether the player has been completely closed using close()
-  private _isPlaying = false;
-  private _speed = 1;
-  private _start: Time;
-  private _end: Time;
-  private _consoleApi: ConsoleApi;
-  private _deviceId: string;
-  private _currentTime: Time;
-  private _lastSeekTime?: number;
-  private _topics: Topic[] = [];
-  private _datatypes: RosDatatypes = new Map();
-  private _metricsCollector: PlayerMetricsCollectorInterface;
-  private _presence: PlayerPresence = PlayerPresence.INITIALIZING;
-  private _preloadedMessages: MessageMemoryCache;
-  private _currentPreloadTask?: AbortController;
-  private _requestedTopics: string[] = [];
-  private _progress: Progress = {};
-  private _loadedMoreMessages?: Signal<void>;
-  private _nextFrame: MessageEvent<unknown>[] = [];
+  #id: string = uuidv4(); // Unique ID for this player
+  #name: string;
+  #listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState()
+  #totalBytesReceived = 0;
+  #initialized = false;
+  #closed = false; // Whether the player has been completely closed using close()
+  #isPlaying = false;
+  #speed = 1;
+  #start: Time;
+  #end: Time;
+  #consoleApi: ConsoleApi;
+  #deviceId: string;
+  #currentTime: Time;
+  #lastSeekTime?: number;
+  #topics: Topic[] = [];
+  #datatypes: RosDatatypes = new Map();
+  #metricsCollector: PlayerMetricsCollectorInterface;
+  #presence: PlayerPresence = PlayerPresence.INITIALIZING;
+  #preloadedMessages: MessageMemoryCache;
+  #currentPreloadTask?: AbortController;
+  #requestedTopics: string[] = [];
+  #progress: Progress = {};
+  #loadedMoreMessages?: Signal<void>;
+  #nextFrame: MessageEvent<unknown>[] = [];
 
   // track issues within the player
-  private _problems: PlayerProblem[] = [];
-  private _problemsById = new Map<string, PlayerProblem>();
+  #problems: PlayerProblem[] = [];
+  #problemsById = new Map<string, PlayerProblem>();
 
   constructor({ params, metricsCollector, consoleApi }: FoxgloveDataPlatformPlayerOpts) {
     log.info(`initializing FoxgloveDataPlatformPlayer ${JSON.stringify(params)}`);
-    this._metricsCollector = metricsCollector;
-    this._metricsCollector.playerConstructed();
+    this.#metricsCollector = metricsCollector;
+    this.#metricsCollector.playerConstructed();
     const start = fromRFC3339String(params.start);
     const end = fromRFC3339String(params.end);
     if (!start || !end) {
       throw new Error(`Invalid start/end time: ${start}, ${end}`);
     }
-    this._start = start;
-    this._end = end;
-    this._currentTime = this._start;
-    this._deviceId = params.deviceId;
-    this._name = `${this._deviceId}, ${formatTimeRaw(this._start)} to ${formatTimeRaw(this._end)}`;
-    this._consoleApi = consoleApi;
-    this._preloadedMessages = new MessageMemoryCache({ start: this._start, end: this._end });
-    this._open().catch((error) => {
-      this._presence = PlayerPresence.ERROR;
+    this.#start = start;
+    this.#end = end;
+    this.#currentTime = this.#start;
+    this.#deviceId = params.deviceId;
+    this.#name = `${this.#deviceId}, ${formatTimeRaw(this.#start)} to ${formatTimeRaw(this.#end)}`;
+    this.#consoleApi = consoleApi;
+    this.#preloadedMessages = new MessageMemoryCache({ start: this.#start, end: this.#end });
+    this.#open().catch((error) => {
+      this.#presence = PlayerPresence.ERROR;
       this._addProblem("open-failed", { message: error.message, error, severity: "error" });
     });
   }
 
-  private _open = async (): Promise<void> => {
-    if (this._closed) {
+  #open = async (): Promise<void> => {
+    if (this.#closed) {
       return;
     }
-    this._presence = PlayerPresence.INITIALIZING;
-    this._emitState();
+    this.#presence = PlayerPresence.INITIALIZING;
+    this.#emitState();
 
-    const rawTopics = await this._consoleApi.topics({
-      deviceId: this._deviceId,
-      start: toDate(this._start).toISOString(),
-      end: toDate(this._end).toISOString(),
+    const rawTopics = await this.#consoleApi.topics({
+      deviceId: this.#deviceId,
+      start: toDate(this.#start).toISOString(),
+      end: toDate(this.#end).toISOString(),
       includeSchemas: true,
     });
     if (rawTopics.length === 0) {
-      this._presence = PlayerPresence.ERROR;
+      this.#presence = PlayerPresence.ERROR;
       this._addProblem("no-data", {
-        message: `No data available for ${this._deviceId} between ${formatTimeRaw(
-          this._start,
-        )} and ${formatTimeRaw(this._end)}.`,
+        message: `No data available for ${this.#deviceId} between ${formatTimeRaw(
+          this.#start,
+        )} and ${formatTimeRaw(this.#end)}.`,
         severity: "error",
       });
       return;
@@ -163,12 +163,12 @@ export default class FoxgloveDataPlatformPlayer implements Player {
         }
       });
     }
-    this._topics = topics;
-    this._datatypes = datatypes;
+    this.#topics = topics;
+    this.#datatypes = datatypes;
 
-    this._presence = PlayerPresence.PRESENT;
-    this._initialized = true;
-    this._emitState();
+    this.#presence = PlayerPresence.PRESENT;
+    this.#initialized = true;
+    this.#emitState();
     this._startPreloadTaskIfNeeded();
   };
 
@@ -177,45 +177,45 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     problem: PlayerProblem,
     { skipEmit = false }: { skipEmit?: boolean } = {},
   ): void {
-    this._problemsById.set(id, problem);
-    this._problems = Array.from(this._problemsById.values());
+    this.#problemsById.set(id, problem);
+    this.#problems = Array.from(this.#problemsById.values());
     if (!skipEmit) {
-      this._emitState();
+      this.#emitState();
     }
   }
 
   // Potentially performance-sensitive; await can be expensive
   // eslint-disable-next-line @typescript-eslint/promise-function-async
-  private _emitState = debouncePromise(() => {
-    if (!this._listener || this._closed) {
+  #emitState = debouncePromise(() => {
+    if (!this.#listener || this.#closed) {
       return Promise.resolve();
     }
 
-    const messages = this._nextFrame;
+    const messages = this.#nextFrame;
     if (messages.length > 0) {
-      this._nextFrame = [];
+      this.#nextFrame = [];
     }
 
-    return this._listener({
-      name: this._name,
-      presence: this._presence,
-      progress: this._progress,
+    return this.#listener({
+      name: this.#name,
+      presence: this.#presence,
+      progress: this.#progress,
       capabilities: CAPABILITIES,
-      playerId: this._id,
-      problems: this._problems,
+      playerId: this.#id,
+      problems: this.#problems,
 
       activeData: {
         messages,
-        totalBytesReceived: this._totalBytesReceived,
+        totalBytesReceived: this.#totalBytesReceived,
         messageOrder: "receiveTime",
-        startTime: this._start ?? ZERO_TIME,
-        endTime: this._end ?? ZERO_TIME,
-        currentTime: this._currentTime,
-        isPlaying: this._isPlaying,
-        speed: this._speed,
-        lastSeekTime: this._lastSeekTime ?? 0,
-        topics: this._topics,
-        datatypes: this._datatypes,
+        startTime: this.#start ?? ZERO_TIME,
+        endTime: this.#end ?? ZERO_TIME,
+        currentTime: this.#currentTime,
+        isPlaying: this.#isPlaying,
+        speed: this.#speed,
+        lastSeekTime: this.#lastSeekTime ?? 0,
+        topics: this.#topics,
+        datatypes: this.#datatypes,
         publishedTopics: undefined,
         subscribedTopics: undefined,
         services: undefined,
@@ -226,31 +226,31 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   });
 
   setListener(listener: (arg0: PlayerState) => Promise<void>): void {
-    this._listener = listener;
-    this._emitState();
+    this.#listener = listener;
+    this.#emitState();
   }
 
   close(): void {
-    this._closed = true;
-    this._metricsCollector.close();
-    this._currentPreloadTask?.abort();
-    this._currentPreloadTask = undefined;
-    this._totalBytesReceived = 0;
+    this.#closed = true;
+    this.#metricsCollector.close();
+    this.#currentPreloadTask?.abort();
+    this.#currentPreloadTask = undefined;
+    this.#totalBytesReceived = 0;
   }
 
   setSubscriptions(subscriptions: SubscribePayload[]): void {
     log.debug("setSubscriptions", subscriptions);
-    this._requestedTopics = Array.from(new Set(subscriptions.map(({ topic }) => topic)));
+    this.#requestedTopics = Array.from(new Set(subscriptions.map(({ topic }) => topic)));
     this._clearPreloadedData();
     this._startPreloadTaskIfNeeded();
-    this._emitState();
+    this.#emitState();
   }
 
-  private _runPlaybackLoop = debouncePromise(async () => {
+  #runPlaybackLoop = debouncePromise(async () => {
     let lastTickEndTime: number | undefined;
     let lastReadMs: number | undefined;
-    mainLoop: while (this._isPlaying) {
-      await this._emitState.currentPromise;
+    mainLoop: while (this.#isPlaying) {
+      await this.#emitState.currentPromise;
 
       // compute how long of a time range we want to read by taking into account
       // the time since our last read and how fast we're currently playing back
@@ -260,81 +260,81 @@ export default class FoxgloveDataPlatformPlayer implements Player {
       // Read at most 300ms worth of messages, otherwise things can get out of control if rendering
       // is very slow. Also, smooth over the range that we request, so that a single slow frame won't
       // cause the next frame to also be unnecessarily slow by increasing the frame size.
-      let readMs = Math.min(msSinceLastTick * this._speed, 300);
+      let readMs = Math.min(msSinceLastTick * this.#speed, 300);
       if (lastReadMs != undefined) {
         readMs = lastReadMs * 0.9 + readMs * 0.1;
       }
       lastReadMs = readMs;
 
-      const lastSeekTime = this._lastSeekTime;
-      const startTime = this._currentTime;
-      const endTime = clampTime(add(startTime, fromMillis(readMs)), this._start, this._end);
+      const lastSeekTime = this.#lastSeekTime;
+      const startTime = this.#currentTime;
+      const endTime = clampTime(add(startTime, fromMillis(readMs)), this.#start, this.#end);
       this._startPreloadTaskIfNeeded();
       let messages;
       while (
-        !(messages = this._preloadedMessages.getMessages({ start: startTime, end: endTime }))
+        !(messages = this.#preloadedMessages.getMessages({ start: startTime, end: endTime }))
       ) {
         log.debug("Waiting for more messages");
         // Wait for new messages to be loaded
-        await (this._loadedMoreMessages = signal());
-        if (this._lastSeekTime !== lastSeekTime) {
+        await (this.#loadedMoreMessages = signal());
+        if (this.#lastSeekTime !== lastSeekTime) {
           lastTickEndTime = undefined;
           continue mainLoop;
         }
       }
       lastTickEndTime = performance.now();
-      this._nextFrame = messages;
-      this._currentTime = endTime;
-      this._emitState();
+      this.#nextFrame = messages;
+      this.#currentTime = endTime;
+      this.#emitState();
     }
   });
 
   private _clearPreloadedData() {
-    this._preloadedMessages.clear();
-    this._progress = {
-      fullyLoadedFractionRanges: this._preloadedMessages.fullyLoadedFractionRanges(),
+    this.#preloadedMessages.clear();
+    this.#progress = {
+      fullyLoadedFractionRanges: this.#preloadedMessages.fullyLoadedFractionRanges(),
     };
-    this._currentPreloadTask?.abort();
-    this._currentPreloadTask = undefined;
+    this.#currentPreloadTask?.abort();
+    this.#currentPreloadTask = undefined;
   }
 
   private _startPreloadTaskIfNeeded() {
-    if (!this._initialized || this._closed) {
+    if (!this.#initialized || this.#closed) {
       return;
     }
-    if (this._currentPreloadTask) {
+    if (this.#currentPreloadTask) {
       return;
     }
-    const preloadedExtent = this._preloadedMessages.fullyLoadedExtent(this._currentTime);
+    const preloadedExtent = this.#preloadedMessages.fullyLoadedExtent(this.#currentTime);
     const shouldPreload =
-      this._requestedTopics.length > 0 &&
+      this.#requestedTopics.length > 0 &&
       (!preloadedExtent ||
-        toSec(subtract(preloadedExtent.end, this._currentTime)) < this._preloadThresholdSecs);
+        toSec(subtract(preloadedExtent.end, this.#currentTime)) < this.#preloadThresholdSecs);
     if (!shouldPreload) {
       return;
     }
 
-    const startTime = clampTime(preloadedExtent?.end ?? this._currentTime, this._start, this._end);
+    const startTime = clampTime(preloadedExtent?.end ?? this.#currentTime, this.#start, this.#end);
     const proposedEndTime = clampTime(
-      add(startTime, fromSec(this._preloadDurationSecs)),
-      this._start,
-      this._end,
+      add(startTime, fromSec(this.#preloadDurationSecs)),
+      this.#start,
+      this.#end,
     );
     const endTime =
-      this._preloadedMessages.fullyLoadedExtent(proposedEndTime)?.start ?? proposedEndTime;
+      this.#preloadedMessages.fullyLoadedExtent(proposedEndTime)?.start ?? proposedEndTime;
 
     const thisTask = new AbortController();
     thisTask.signal.addEventListener("abort", () => {
       log.debug("Aborting preload task", startTime, endTime);
     });
-    this._currentPreloadTask = thisTask;
+    this.#currentPreloadTask = thisTask;
     log.debug("Starting preload task", startTime, endTime);
     (async () => {
-      const stream = streamMessages(this._consoleApi, thisTask.signal, {
-        deviceId: this._deviceId,
+      const stream = streamMessages(this.#consoleApi, thisTask.signal, {
+        deviceId: this.#deviceId,
         start: startTime,
         end: endTime,
-        topics: this._requestedTopics,
+        topics: this.#requestedTopics,
       });
 
       for await (const { messages, range } of collateMessageStream(stream, {
@@ -345,13 +345,13 @@ export default class FoxgloveDataPlatformPlayer implements Player {
           break;
         }
         log.debug("Adding preloaded chunk in", range, "with", messages.length, "messages");
-        this._preloadedMessages.insert(range, messages);
-        this._progress = {
-          fullyLoadedFractionRanges: this._preloadedMessages.fullyLoadedFractionRanges(),
+        this.#preloadedMessages.insert(range, messages);
+        this.#progress = {
+          fullyLoadedFractionRanges: this.#preloadedMessages.fullyLoadedFractionRanges(),
         };
-        this._loadedMoreMessages?.resolve();
-        this._loadedMoreMessages = undefined;
-        this._emitState();
+        this.#loadedMoreMessages?.resolve();
+        this.#loadedMoreMessages = undefined;
+        this.#emitState();
       }
     })()
       .catch((error) => {
@@ -362,12 +362,12 @@ export default class FoxgloveDataPlatformPlayer implements Player {
         this._addProblem("stream-error", { message: error.message, error, severity: "error" });
       })
       .finally(() => {
-        if (this._currentPreloadTask === thisTask) {
-          this._currentPreloadTask = undefined;
+        if (this.#currentPreloadTask === thisTask) {
+          this.#currentPreloadTask = undefined;
         }
       });
 
-    this._emitState();
+    this.#emitState();
   }
 
   setPublishers(publishers: AdvertiseOptions[]): void {
@@ -384,39 +384,39 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   }
 
   startPlayback(): void {
-    if (this._isPlaying) {
+    if (this.#isPlaying) {
       return;
     }
-    this._metricsCollector.play(this._speed);
-    this._isPlaying = true;
-    this._runPlaybackLoop();
-    this._emitState();
+    this.#metricsCollector.play(this.#speed);
+    this.#isPlaying = true;
+    this.#runPlaybackLoop();
+    this.#emitState();
   }
 
   pausePlayback(): void {
-    if (!this._isPlaying) {
+    if (!this.#isPlaying) {
       return;
     }
-    this._metricsCollector.pause();
-    this._isPlaying = false;
-    this._emitState();
+    this.#metricsCollector.pause();
+    this.#isPlaying = false;
+    this.#emitState();
   }
 
   seekPlayback(time: Time, _backfillDuration?: Time): void {
     log.debug("Seek", time);
-    this._currentTime = time;
-    this._lastSeekTime = Date.now();
-    this._nextFrame = [];
-    this._currentPreloadTask?.abort();
-    this._currentPreloadTask = undefined;
+    this.#currentTime = time;
+    this.#lastSeekTime = Date.now();
+    this.#nextFrame = [];
+    this.#currentPreloadTask?.abort();
+    this.#currentPreloadTask = undefined;
     this._startPreloadTaskIfNeeded();
-    this._emitState();
+    this.#emitState();
   }
 
   setPlaybackSpeed(speed: number): void {
-    this._speed = speed;
-    this._metricsCollector.setSpeed(speed);
-    this._emitState();
+    this.#speed = speed;
+    this.#metricsCollector.setSpeed(speed);
+    this.#emitState();
   }
 
   requestBackfill(): void {

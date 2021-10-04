@@ -71,15 +71,15 @@ export type ConsoleApiLayout = {
 type ApiResponse<T> = { status: number; json: T };
 
 class ConsoleApi {
-  private _baseUrl: string;
-  private _authHeader?: string;
+  #baseUrl: string;
+  #authHeader?: string;
 
   constructor(baseUrl: string) {
-    this._baseUrl = baseUrl;
+    this.#baseUrl = baseUrl;
   }
 
   setAuthHeader(header: string): void {
-    this._authHeader = header;
+    this.#authHeader = header;
   }
 
   async orgs(): Promise<Org[]> {
@@ -163,11 +163,11 @@ class ConsoleApi {
       allowedStatuses?: number[];
     } = {},
   ): Promise<ApiResponse<T>> {
-    const fullUrl = `${this._baseUrl}${url}`;
+    const fullUrl = `${this.#baseUrl}${url}`;
 
     const headers: Record<string, string> = {};
-    if (this._authHeader != undefined) {
-      headers["Authorization"] = this._authHeader;
+    if (this.#authHeader != undefined) {
+      headers["Authorization"] = this.#authHeader;
     }
     const fullConfig = { ...config, headers: { ...headers, ...config?.headers } };
 

@@ -30,29 +30,29 @@ type BagFolderPath = { type: "folder"; folder: FileSystemDirectoryHandle | strin
 type Options = { bagFolderPath: BagFolderPath };
 
 export default class Rosbag2DataProvider implements RandomAccessDataProvider {
-  private options_: Options;
-  private bag_?: Rosbag2;
+  #options_: Options;
+  #bag_?: Rosbag2;
 
   constructor(options: Options, children: RandomAccessDataProviderDescriptor[]) {
     if (children.length > 0) {
       throw new Error("Rosbag2DataProvider cannot have children");
     }
-    this.options_ = options;
+    this.#options_ = options;
   }
 
   async initialize(_extensionPoint: ExtensionPoint): Promise<InitializationResult> {
-    const folder = this.options_.bagFolderPath.folder;
+    const folder = this.#options_.bagFolderPath.folder;
     if (folder instanceof FileSystemDirectoryHandle) {
       const res = await fetch(new URL("sql.js/dist/sql-wasm.wasm", import.meta.url).toString());
       const sqlWasm = await (await res.blob()).arrayBuffer();
-      this.bag_ = await openFileSystemDirectoryHandle(folder, sqlWasm);
+      this.#bag_ = await openFileSystemDirectoryHandle(folder, sqlWasm);
     } else {
       throw new Error("Opening ROS2 bags via the native interface is not implemented yet");
     }
 
-    const [start, end] = await this.bag_.timeRange();
-    const topicDefs = await this.bag_.readTopics();
-    const messageCounts = await this.bag_.messageCounts();
+    const [start, end] = await this.#bag_.timeRange();
+    const topicDefs = await this.#bag_.readTopics();
+    const messageCounts = await this.#bag_.messageCounts();
 
     const problems: RandomAccessDataProviderProblem[] = [];
     const topics: Topic[] = [];
@@ -114,7 +114,7 @@ export default class Rosbag2DataProvider implements RandomAccessDataProvider {
     end: Time,
     subscriptions: GetMessagesTopics,
   ): Promise<GetMessagesResult> {
-    if (this.bag_ == undefined) {
+    if (this.#bag_ == undefined) {
       throw new Error(`Rosbag2DataProvider is not initialized`);
     }
 
@@ -124,7 +124,7 @@ export default class Rosbag2DataProvider implements RandomAccessDataProvider {
     }
 
     const parsedMessages: MessageEvent<unknown>[] = [];
-    for await (const msg of this.bag_.readMessages({ startTime: start, endTime: end, topics })) {
+    for await (const msg of this.#bag_.readMessages({ startTime: start, endTime: end, topics })) {
       parsedMessages.push({
         topic: msg.topic.name,
         receiveTime: msg.timestamp,
@@ -136,6 +136,6 @@ export default class Rosbag2DataProvider implements RandomAccessDataProvider {
   }
 
   async close(): Promise<void> {
-    await this.bag_?.close();
+    await this.#bag_?.close();
   }
 }

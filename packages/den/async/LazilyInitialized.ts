@@ -9,18 +9,18 @@
 export default class LazilyInitialized<T> {
   // The promise and compute function are held separately so the function can be garbage collected
   // when it is no longer needed.
-  private state: { promise: Promise<T> } | { promise?: undefined; compute: () => Promise<T> };
+  #state: { promise: Promise<T> } | { promise?: undefined; compute: () => Promise<T> };
 
   constructor(compute: () => Promise<T>) {
-    this.state = { compute };
+    this.#state = { compute };
   }
 
   async get(): Promise<T> {
-    if (this.state.promise) {
-      return await this.state.promise;
+    if (this.#state.promise) {
+      return await this.#state.promise;
     }
-    const promise = this.state.compute();
-    this.state = { promise };
+    const promise = this.#state.compute();
+    this.#state = { promise };
     return await promise;
   }
 }

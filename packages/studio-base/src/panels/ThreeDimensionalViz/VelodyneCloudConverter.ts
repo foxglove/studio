@@ -14,7 +14,7 @@ import { Calibration, Model, PointCloud, RawPacket, Transformer } from "@foxglov
 // objects which are an amalgamation of VelodyneScan and PointCloud2 ROS
 // messages plus marker-like SceneBuilder annotations
 export default class VelodyneCloudConverter {
-  private _transformers = new Map<Model, Transformer>();
+  #transformers = new Map<Model, Transformer>();
 
   decode(scan: VelodyneScan): VelodyneScanDecoded | undefined {
     if (scan.packets.length === 0) {
@@ -58,13 +58,13 @@ export default class VelodyneCloudConverter {
   }
 
   getTransformer(model: Model): Transformer {
-    let transformer = this._transformers.get(model);
+    let transformer = this.#transformers.get(model);
     if (transformer != undefined) {
       return transformer;
     }
 
     transformer = new Transformer(new Calibration(model));
-    this._transformers.set(model, transformer);
+    this.#transformers.set(model, transformer);
     return transformer;
   }
 }

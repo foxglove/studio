@@ -44,25 +44,25 @@ type McapReaderOptions = {
  * ```
  */
 export default class McapReader {
-  private buffer = new StreamBuffer(MCAP_MAGIC.length * 2);
-  private decompressHandlers;
-  private includeChunks;
-  private doneReading = false;
-  private generator = this.read();
+  #buffer = new StreamBuffer(MCAP_MAGIC.length * 2);
+  #decompressHandlers;
+  #includeChunks;
+  #doneReading = false;
+  #generator = this.read();
 
   constructor({ includeChunks = false, decompressHandlers = {} }: McapReaderOptions = {}) {
-    this.includeChunks = includeChunks;
-    this.decompressHandlers = decompressHandlers;
+    this.#includeChunks = includeChunks;
+    this.#decompressHandlers = decompressHandlers;
   }
 
   /** @returns True if a valid, complete mcap file has been parsed. */
   done(): boolean {
-    return this.doneReading;
+    return this.#doneReading;
   }
 
   /** @returns The number of bytes that have been received by `append()` but not yet parsed. */
   bytesRemaining(): number {
-    return this.buffer.bytesRemaining();
+    return this.#buffer.bytesRemaining();
   }
 
   /**
@@ -70,10 +70,10 @@ export default class McapReader {
    * call `nextRecord()` again to parse any records that are now available.
    */
   append(data: Uint8Array): void {
-    if (this.doneReading) {
+    if (this.#doneReading) {
       throw new Error("Already done reading");
     }
-    this.buffer.append(data);
+    this.#buffer.append(data);
   }
 
   /**
@@ -84,12 +84,12 @@ export default class McapReader {
    * reader is in an unspecified state and should no longer be used.
    */
   nextRecord(): McapRecord | undefined {
-    if (this.doneReading) {
+    if (this.#doneReading) {
       return undefined;
     }
-    const result = this.generator.next();
+    const result = this.#generator.next();
     if (result.done === true) {
-      this.doneReading = true;
+      this.#doneReading = true;
     }
     return result.value;
   }
@@ -97,20 +97,20 @@ export default class McapReader {
   private *read(): Generator<McapRecord | undefined, McapRecord | undefined, void> {
     {
       let magic, usedBytes;
-      while ((({ magic, usedBytes } = parseMagic(this.buffer.view, 0)), !magic)) {
+      while ((({ magic, usedBytes } = parseMagic(this.#buffer.view, 0)), !magic)) {
         yield;
       }
-      this.buffer.consume(usedBytes);
+      this.#buffer.consume(usedBytes);
     }
 
     for (;;) {
       let record;
       {
         let usedBytes;
-        while ((({ record, usedBytes } = parseRecord(this.buffer.view, 0)), !record)) {
+        while ((({ record, usedBytes } = parseRecord(this.#buffer.view, 0)), !record)) {
           yield;
         }
-        this.buffer.consume(usedBytes);
+        this.#buffer.consume(usedBytes);
       }
       switch (record.type) {
         case "ChannelInfo":
@@ -121,12 +121,12 @@ export default class McapReader {
           break;
 
         case "Chunk": {
-          if (this.includeChunks) {
+          if (this.#includeChunks) {
             yield record;
           }
           let buffer = new Uint8Array(record.data);
           if (record.compression !== "") {
-            const decompress = this.decompressHandlers[record.compression];
+            const decompress = this.#decompressHandlers[record.compression];
             if (!decompress) {
               throw new Error(`Unsupported compression ${record.compression}`);
             }
@@ -162,14 +162,14 @@ export default class McapReader {
         case "Footer":
           {
             let magic, usedBytes;
-            while ((({ magic, usedBytes } = parseMagic(this.buffer.view, 0)), !magic)) {
+            while ((({ magic, usedBytes } = parseMagic(this.#buffer.view, 0)), !magic)) {
               yield;
             }
-            this.buffer.consume(usedBytes);
+            this.#buffer.consume(usedBytes);
           }
-          if (this.buffer.bytesRemaining() !== 0) {
+          if (this.#buffer.bytesRemaining() !== 0) {
             throw new Error(
-              `${this.buffer.bytesRemaining()} bytes remaining after MCAP footer and trailing magic`,
+              `${this.#buffer.bytesRemaining()} bytes remaining after MCAP footer and trailing magic`,
             );
           }
           return record;
