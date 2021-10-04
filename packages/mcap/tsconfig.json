@@ -2,8 +2,10 @@
   "extends": "@foxglove/tsconfig/base",
   "include": ["./**/*"],
   "compilerOptions": {
+    "module": "esnext",
+    "target": "esnext",
     "rootDir": ".",
     "outDir": "./dist",
-    "lib": ["es2020", "dom"]
+    "lib": ["esnext", "dom"]
   }
 }

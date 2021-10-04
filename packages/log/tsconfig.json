@@ -2,6 +2,8 @@
   "extends": "@foxglove/tsconfig/base",
   "include": ["./src/**/*"],
   "compilerOptions": {
+    "module": "esnext",
+    "target": "esnext",
     "rootDir": "./src",
     "outDir": "./dist"
   }

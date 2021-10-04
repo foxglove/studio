@@ -4,6 +4,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "module": "commonjs",
-    "lib": ["es2020"]
+    "target": "esnext",
+    "lib": ["esnext"]
   }
 }

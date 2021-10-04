@@ -2,9 +2,11 @@
   "extends": "@foxglove/tsconfig/base",
   "include": ["./**/*", "../common/*", "../../package.json"],
   "compilerOptions": {
+    "module": "esnext",
+    "target": "esnext",
     "rootDir": "../../",
     "noEmit": true,
-    "lib": ["dom", "es2020"],
+    "lib": ["dom", "esnext"],
     "useUnknownInCatchVariables": false
   }
 }

@@ -2,10 +2,12 @@
   "extends": "@foxglove/tsconfig/base",
   "include": ["./src/**/*", "./src/**/*.json", "./src/.storybook/**/*", "../package.json"],
   "compilerOptions": {
+    "module": "esnext",
+    "target": "esnext",
     "rootDir": "./src",
     "baseUrl": "./src",
     "jsx": "react-jsx",
-    "lib": ["dom", "dom.iterable", "es2020", "webworker"],
+    "lib": ["dom", "dom.iterable", "esnext", "webworker"],
     "declarationMap": false,
     "sourceMap": false,
     "paths": {

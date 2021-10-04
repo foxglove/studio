@@ -187,7 +187,7 @@ export function makeConfig(
     },
     optimization: {
       removeAvailableModules: true,
-      minimizer: [new ESBuildMinifyPlugin({ target: "es2020" })],
+      minimizer: [new ESBuildMinifyPlugin({ target: "esnext" })],
     },
     plugins: [
       new CircularDependencyPlugin({

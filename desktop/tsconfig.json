@@ -3,6 +3,7 @@
   "include": ["*.ts", "common/**/*", "integration-test/**/*.ts", "../package.json"],
   "compilerOptions": {
     "module": "commonjs",
+    "target": "esnext",
     "noEmit": true
   }
 }

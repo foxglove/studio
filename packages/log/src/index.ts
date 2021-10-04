@@ -11,34 +11,34 @@ class Logger {
   // default logger has an empty name
   static default = new Logger("");
 
-  private _name: string;
-  private _enabled = true;
+  #name: string;
+  #enabled = true;
 
   // all new loggers are created from the default logger
   private constructor(name: string) {
-    this._name = name;
-    this._updateHandlers();
+    this.#name = name;
+    this.#updateHandlers();
 
     channels.set(name, this);
   }
 
   // fully qualified name for the logger
   name() {
-    return this._name;
+    return this.#name;
   }
 
   isEnabled() {
-    return this._enabled;
+    return this.#enabled;
   }
 
   enable() {
-    this._enabled = true;
-    this._updateHandlers();
+    this.#enabled = true;
+    this.#updateHandlers();
   }
 
   disable() {
-    this._enabled = false;
-    this._updateHandlers();
+    this.#enabled = false;
+    this.#updateHandlers();
   }
 
   debug(..._args: unknown[]) {}
@@ -49,7 +49,7 @@ class Logger {
   // create a new logger under this logger's namespace
   getLogger(name: string): Logger {
     const shortName = name.replace(/^.+\.(asar|webpack)[\\/\\]/, "");
-    const channelName = this._name.length > 0 ? `${this._name}.${shortName}` : shortName;
+    const channelName = this.#name.length > 0 ? `${this.#name}.${shortName}` : shortName;
     const existing = channels.get(channelName);
     if (existing) {
       return existing;
@@ -65,9 +65,9 @@ class Logger {
     return Array.from(channels.values());
   }
 
-  private _updateHandlers() {
-    if (this._enabled) {
-      const prefix = this._name.length > 0 ? `[${this._name}]` : "";
+  #updateHandlers() {
+    if (this.#enabled) {
+      const prefix = this.#name.length > 0 ? `[${this.#name}]` : "";
       this.debug = console.debug.bind(global.console, `${prefix}`);
       this.info = console.info.bind(global.console, `${prefix}`);
       this.warn = console.warn.bind(global.console, `${prefix}`);

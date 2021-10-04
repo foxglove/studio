@@ -88,6 +88,7 @@ overrides:
     parserOptions:
       project: ./tsconfig.eslint.json
     rules:
+      "@foxglove/no-private-identifier": off
       "@typescript-eslint/ban-ts-comment":
         - error
         - ts-expect-error: allow-with-description

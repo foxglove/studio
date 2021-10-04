@@ -3,6 +3,7 @@
   "include": ["*.ts"],
   "compilerOptions": {
     "module": "commonjs",
+    "target": "esnext",
     "noEmit": true,
     "experimentalDecorators": true
   }
