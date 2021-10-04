@@ -35,6 +35,10 @@ export default class WebWorkerManager<W extends Channel> {
     this._allListeners = new Set();
   }
 
+  testing_workerCount(): number {
+    return this._workerStates.filter(Boolean).length;
+  }
+
   testing_getWorkerState(id: string): WorkerListenerState<W> | undefined {
     return this._workerStates.find((workerState) => workerState?.listenerIds.includes(id));
   }

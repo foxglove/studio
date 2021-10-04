@@ -62,7 +62,6 @@ export default class OrderedStampPlayer implements Player {
   private _lastSeekId?: number = undefined;
   // Our best guess of "now" in case we need to force a backfill.
   private _currentTime?: Time = undefined;
-  private _topicsWithoutHeadersSinceSeek = new Set<string>();
 
   constructor(player: UserNodePlayer, messageOrder: TimestampMethod) {
     this._player = player;
@@ -87,7 +86,6 @@ export default class OrderedStampPlayer implements Player {
       if (activeData.lastSeekTime !== this._lastSeekId) {
         this._messageBuffer = [];
         this._lastSeekId = activeData.lastSeekTime;
-        this._topicsWithoutHeadersSinceSeek = new Set<string>();
       }
 
       // Only store messages with a header stamp.
