@@ -2,8 +2,15 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Map as LeafMap, TileLayer, Control, LatLngBounds, CircleMarker } from "leaflet";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  Map as LeafMap,
+  TileLayer,
+  Control,
+  LatLngBounds,
+  CircleMarker,
+  FeatureGroup,
+} from "leaflet";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 import { toSec } from "@foxglove/rostime";
@@ -49,23 +56,54 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   // onRender will setRenderDone to a done callback which we can invoke after we've rendered
   const [renderDone, setRenderDone] = useState<() => void>(() => () => {});
 
-  // Subscribe to relevant topics
-  useEffect(() => {
-    // The map only supports sensor_msgs/NavSatFix
-    const eligibleTopics = topics
+  const eligibleTopics = useMemo(() => {
+    return topics
       .filter(
         (topic) =>
           topic.datatype === "sensor_msgs/NavSatFix" ||
           topic.datatype === "sensor_msgs/msg/NavSatFix",
       )
       .map((topic) => topic.name);
+  }, [topics]);
 
+  // Subscribe to relevant topics
+  useEffect(() => {
     context.subscribe(eligibleTopics);
-
     return () => {
       context.unsubscribeAll();
     };
-  }, [context, topics]);
+  }, [context, eligibleTopics]);
+
+  // layers for each topic
+
+  // fixme - for each topic, we need the feature group (so we can add more layers)
+  // we also need the active point color and the all points color
+  const topicLayers = useMemo(() => {
+    const topicLayerMap = new Map<string, FeatureGroup>();
+    for (const topic of eligibleTopics) {
+      const layer = new FeatureGroup();
+      topicLayerMap.set(topic, layer);
+    }
+    return topicLayerMap;
+  }, [eligibleTopics]);
+
+  // layer controls for user selection between map, satellite and topics
+  const layerControl = useMemo(() => new Control.Layers(), []);
+
+  useLayoutEffect(() => {
+    const topicLayerEntries = [...topicLayers.entries()];
+    for (const entry of topicLayerEntries) {
+      layerControl.addOverlay(entry[1], entry[0]);
+      currentMap?.addLayer(entry[1]);
+    }
+
+    return () => {
+      for (const entry of topicLayerEntries) {
+        layerControl.removeLayer(entry[1]);
+        currentMap?.removeLayer(entry[1]);
+      }
+    };
+  }, [currentMap, layerControl, topicLayers]);
 
   // During the initial mount we setup our context render handler
   useLayoutEffect(() => {
@@ -90,6 +128,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     );
 
     const map = new LeafMap(mapContainerRef.current, {
+      // sets the tile layer as the default
       layers: [tileLayer],
     });
 
@@ -97,7 +136,6 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     map.setView([0, 0], 10);
 
     // layer controls for user selection between satellite and map
-    const layerControl = new Control.Layers();
     layerControl.addBaseLayer(tileLayer, "map");
     layerControl.addBaseLayer(satelliteLayer, "satellite");
     layerControl.setPosition("topleft");
@@ -137,7 +175,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       map.remove();
       context.onRender = undefined;
     };
-  }, [context]);
+  }, [context, layerControl]);
 
   const onHover = useCallback(
     (messageEvent?: MessageEvent<NavSatFixMsg>) => {
@@ -192,6 +230,8 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     });
   }, [allNavMessages, navMessages]);
 
+  // fixme - all markers to the all nav messages layer
+  // these have a different color - can we do that at the layer level? or marker level?
   // create a filtered marker layer for all nav messages
   useEffect(() => {
     if (!currentMap) {
@@ -220,18 +260,45 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       return;
     }
 
-    const pointLayer = FilteredPointLayer({
-      map: currentMap,
-      navSatMessageEvents: navMessages,
-      bounds: filterBounds ?? currentMap.getBounds(),
-      color: "#ec1515",
-    });
+    // group nav messages by topic
+    // fixme - alternatively, we can change FilteredPointLayer to be a function
+    // that returns a marker if within bounds
+    const byTopic = new Map<string, MessageEvent<NavSatFixMsg>[]>();
+    for (const msgEvent of navMessages) {
+      const msgEvents = byTopic.get(msgEvent.topic) ?? [];
+      msgEvents.push(msgEvent);
+      byTopic.set(msgEvent.topic, msgEvents);
+    }
 
-    currentMap?.addLayer(pointLayer);
+    for (const [topic, events] of byTopic) {
+      const topicLayer = topicLayers.get(topic);
+      if (!topicLayer) {
+        // If we get a message for a topic we did not subscribe to - something bad has happened.
+        // We'll pretend like it didn't happen and move along.
+        continue;
+      }
+
+      // fixme - maybe this should return a marker if message in bounds or undefined otherwise
+      // we then manage adding the marker to the topic layer ourselves?
+      // alternatively, we create two feature groups - and add markers to that
+      const pointLayer = FilteredPointLayer({
+        map: currentMap,
+        navSatMessageEvents: events,
+        bounds: filterBounds ?? currentMap.getBounds(),
+        color: "#ec1515",
+      });
+
+      topicLayer.addLayer(pointLayer);
+    }
+
+    // when the messages change, we need to clear any layers from the group
+
+    //currentMap?.addLayer(pointLayer);
     return () => {
-      currentMap?.removeLayer(pointLayer);
+      // fixme - remove old points from the group
+      //currentMap?.removeLayer(pointLayer);
     };
-  }, [currentMap, filterBounds, navMessages]);
+  }, [currentMap, filterBounds, navMessages, topicLayers]);
 
   // create a marker for the closest gps message to our current preview time
   useEffect(() => {
