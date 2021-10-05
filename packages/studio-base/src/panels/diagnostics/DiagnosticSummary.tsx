@@ -170,7 +170,6 @@ type Props = {
 
 function DiagnosticSummary(props: Props): JSX.Element {
   const theme = useTheme();
-
   const dropdownStyles = useMemo(
     () =>
       ({
