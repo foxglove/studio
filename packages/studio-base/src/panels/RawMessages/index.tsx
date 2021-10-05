@@ -375,7 +375,6 @@ function RawMessages(props: Props) {
           showFullMessageForDiff,
         })
       : {};
-    const diffLabelTexts = Object.values(diffLabels).map(({ labelText }) => labelText);
 
     const CheckboxComponent = showFullMessageForDiff
       ? CheckboxMarkedIcon
