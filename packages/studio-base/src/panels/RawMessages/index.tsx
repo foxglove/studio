@@ -444,6 +444,9 @@ function RawMessages(props: Props) {
                 );
               }}
               postprocessValue={(rawVal: unknown) => {
+                if (rawVal == undefined) {
+                  return rawVal;
+                }
                 const idValue = (rawVal as Record<string, unknown>)[diffLabels.ID.labelText];
                 const addedValue = (rawVal as Record<string, unknown>)[diffLabels.ADDED.labelText];
                 const changedValue = (rawVal as Record<string, unknown>)[
