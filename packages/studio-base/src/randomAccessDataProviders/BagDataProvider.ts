@@ -85,8 +85,8 @@ const mergeStats = (a: TimedDataThroughput, b: TimedDataThroughput): TimedDataTh
 
 // A FileReader that "spies" on data callbacks. Used to log data consumed.
 class LogMetricsReader {
-  _reader: FileReader;
-  _extensionPoint: ExtensionPoint;
+  private _reader: FileReader;
+  private _extensionPoint: ExtensionPoint;
   constructor(reader: FileReader, extensionPoint: ExtensionPoint) {
     this._reader = reader;
     this._extensionPoint = extensionPoint;
@@ -105,10 +105,10 @@ class LogMetricsReader {
 // `BrowserHttpReader` for how to set up a remote server to be able to directly stream from it.
 // Returns raw messages that still need to be parsed by `ParseMessagesDataProvider`.
 export default class BagDataProvider implements RandomAccessDataProvider {
-  _options: Options;
-  _bag?: Bag;
-  _lastPerformanceStatsToLog?: TimedDataThroughput;
-  _extensionPoint?: ExtensionPoint;
+  private _options: Options;
+  private _bag?: Bag;
+  private _lastPerformanceStatsToLog?: TimedDataThroughput;
+  private _extensionPoint?: ExtensionPoint;
   private bzip2?: Bzip2;
 
   constructor(options: Options, children: RandomAccessDataProviderDescriptor[]) {
@@ -222,10 +222,8 @@ export default class BagDataProvider implements RandomAccessDataProvider {
     }
 
     const messageDefinitionsByTopic: Record<string, string> = {};
-    const messageDefinitionMd5SumByTopic: Record<string, string> = {};
     for (const connection of connections) {
       messageDefinitionsByTopic[connection.topic] = connection.messageDefinition;
-      messageDefinitionMd5SumByTopic[connection.topic] = connection.md5sum;
     }
 
     return {
@@ -236,14 +234,13 @@ export default class BagDataProvider implements RandomAccessDataProvider {
       messageDefinitions: {
         type: "raw",
         messageDefinitionsByTopic,
-        messageDefinitionMd5SumByTopic,
       },
       providesParsedMessages: false,
       problems: [],
     };
   }
 
-  _logStats = (): void => {
+  private _logStats = (): void => {
     if (this._extensionPoint == undefined || this._lastPerformanceStatsToLog == undefined) {
       return;
     }
@@ -252,9 +249,9 @@ export default class BagDataProvider implements RandomAccessDataProvider {
   };
 
   // Logs some stats if it has been more than a second since the last call.
-  _debouncedLogStats = debounce(this._logStats, 1000, { leading: false, trailing: true });
+  private _debouncedLogStats = debounce(this._logStats, 1000, { leading: false, trailing: true });
 
-  _queueStats(stats: TimedDataThroughput): void {
+  private _queueStats(stats: TimedDataThroughput): void {
     if (
       this._lastPerformanceStatsToLog != undefined &&
       statsAreAdjacent(this._lastPerformanceStatsToLog, stats)
