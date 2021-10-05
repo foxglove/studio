@@ -445,18 +445,24 @@ function RawMessages(props: Props) {
                 );
               }}
               postprocessValue={(rawVal: unknown) => {
-                const val = maybeDeepParse(rawVal);
+                const idValue = (rawVal as Record<string, unknown>)[diffLabels.ID.labelText];
+                const addedValue = (rawVal as Record<string, unknown>)[diffLabels.ADDED.labelText];
+                const changedValue = (rawVal as Record<string, unknown>)[
+                  diffLabels.CHANGED.labelText
+                ];
+                const deletedValue = (rawVal as Record<string, unknown>)[
+                  diffLabels.DELETED.labelText
+                ];
                 if (
-                  typeof val === "object" &&
-                  val != undefined &&
-                  Object.keys(val).length === 1 &&
-                  (diffLabelTexts as string[]).includes(Object.keys(val)[0] as string)
+                  (addedValue != undefined ? 1 : 0) +
+                    (changedValue != undefined ? 1 : 0) +
+                    (deletedValue != undefined ? 1 : 0) ===
+                    1 &&
+                  idValue == undefined
                 ) {
-                  if (Object.keys(val)[0] !== diffLabels.ID.labelText) {
-                    return Object.values(val)[0];
-                  }
+                  return addedValue ?? changedValue ?? deletedValue;
                 }
-                return val;
+                return maybeDeepParse(rawVal);
               }}
               theme={{
                 ...jsonTreeTheme,
