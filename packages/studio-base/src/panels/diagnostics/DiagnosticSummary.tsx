@@ -183,7 +183,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
     title: {
       backgroundColor: "transparent",
       fontSize: theme.fonts.small.fontSize,
-      borderColor: "transparent",
+      borderColor: theme.semanticColors.bodyDivider,
       lineHeight: 24,
       height: 24,
     },
