@@ -79,7 +79,7 @@ const MessageCount = styled.td`
   padding: 2px 0;
   text-align: right;
   white-space: nowrap;
-  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
   padding: 0 10px 0 4px;
   color: #888;
   vertical-align: baseline;
