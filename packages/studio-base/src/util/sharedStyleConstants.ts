@@ -151,6 +151,6 @@ export const rounded = {
 };
 
 export const fonts = {
-  SANS_SERIF: `"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Ubuntu", sans-serif`,
-  MONOSPACE: `"IBM Plex Mono", monospace`,
+  SANS_SERIF: "'Inter', sans-serif",
+  MONOSPACE: "'IBM Plex Mono', monospace",
 };
