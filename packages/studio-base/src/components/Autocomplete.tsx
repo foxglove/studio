@@ -56,7 +56,6 @@ const classes = mergeStyleSets({
     padding: 0,
     textAlign: "left",
     fontFamily: fonts.SANS_SERIF,
-    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, 'tnum'`,
 
     "&.disabled, &[disabled]": {
       color: colors.TEXT_INPUT_DISABLED,

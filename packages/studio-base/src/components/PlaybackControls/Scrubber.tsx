@@ -86,7 +86,7 @@ const useStyles = makeStyles((theme) => ({
     display: "inline-block",
   },
   tooltipValue: {
-    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "tnum", "zero"`,
+    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
     opacity: 0.7,
   },
 }));

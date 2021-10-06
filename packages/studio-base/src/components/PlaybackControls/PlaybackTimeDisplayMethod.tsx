@@ -83,7 +83,7 @@ const PlaybackTimeDisplayMethod = ({
         field: {
           margin: 0,
           whiteSpace: "nowrap",
-          fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, 'zero', 'tnum'`,
+          fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, 'zero'`,
 
           ":hover": {
             borderRadius: 2,

@@ -109,7 +109,7 @@ const classes = mergeStyleSets({
   container: {
     paddingLeft: "0.5em",
     fontFamily: fonts.SANS_SERIF,
-    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, 'zero', 'tnum'`,
+    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
   },
   iconWrapper: {
     display: "inline",
