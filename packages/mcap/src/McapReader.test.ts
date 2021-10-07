@@ -330,6 +330,75 @@ describe("McapReader", () => {
     );
   });
 
+  it("parses message and returns reference-equal channel info on the same channel in different chunks", () => {
+    const channelInfo = record(RecordType.CHANNEL_INFO, [
+      ...uint32LE(42), // channel id
+      ...string("mytopic"), // topic
+      ...string("utf12"), // encoding
+      ...string("some data"), // schema name
+      ...string("stuff"), // schema
+      ...[1, 2, 3], // channel data
+    ]);
+    const message = record(RecordType.MESSAGE, [
+      ...uint32LE(42), // channel id
+      ...uint64LE(1n), // timestamp
+    ]);
+    const reader = new McapReader();
+    reader.append(
+      new Uint8Array([
+        ...MCAP_MAGIC,
+        formatVersion,
+
+        ...record(RecordType.CHUNK, [
+          ...uint64LE(0n), // decompressed size
+          ...uint32LE(crc32(new Uint8Array([...channelInfo, ...message]))), // decompressed crc32
+          ...string(""), // compression
+          ...channelInfo,
+          ...message,
+        ]),
+
+        ...record(RecordType.CHUNK, [
+          ...uint64LE(0n), // decompressed size
+          ...uint32LE(crc32(new Uint8Array([...channelInfo, ...message]))), // decompressed crc32
+          ...string(""), // compression
+          ...channelInfo,
+          ...message,
+        ]),
+
+        ...record(RecordType.FOOTER, [
+          ...uint64LE(0n), // index pos
+          ...uint32LE(0), // index crc
+        ]),
+        ...MCAP_MAGIC,
+        formatVersion,
+      ]),
+    );
+    const expectedChannelInfo = {
+      type: "ChannelInfo",
+      id: 42,
+      topic: "mytopic",
+      encoding: "utf12",
+      schemaName: "some data",
+      schema: "stuff",
+      data: new Uint8Array([1, 2, 3]).buffer,
+    };
+    const actualChannelInfo = reader.nextRecord();
+    expect(actualChannelInfo).toEqual(expectedChannelInfo);
+    expect(reader.nextRecord()).toEqual({
+      type: "Message",
+      channelInfo: expectedChannelInfo,
+      timestamp: 1n,
+      data: new ArrayBuffer(0),
+    });
+    expect(reader.nextRecord()).toBe(actualChannelInfo);
+    expect(reader.nextRecord()).toEqual({
+      type: "Message",
+      channelInfo: expectedChannelInfo,
+      timestamp: 1n,
+      data: new ArrayBuffer(0),
+    });
+  });
+
   it("parses channel info at top level", () => {
     const reader = new McapReader();
     reader.append(

@@ -122,6 +122,7 @@ export function parseRecord(
         schema,
         data,
       };
+      channelInfosSeenInThisChunk.add(id);
       const existingInfo = channelInfosById.get(id);
       if (existingInfo) {
         if (!isEqual(existingInfo, record)) {
@@ -130,7 +131,6 @@ export function parseRecord(
         return { record: existingInfo, usedBytes: recordEndOffset - startOffset };
       } else {
         channelInfosById.set(id, record);
-        channelInfosSeenInThisChunk.add(id);
         return { record, usedBytes: recordEndOffset - startOffset };
       }
     }
