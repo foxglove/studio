@@ -7,8 +7,10 @@ import { useAsync, useLocalStorage } from "react-use";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
+import DeviceCodeDialog from "@foxglove/studio-base/components/DeviceCodeDialog";
 import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
 import CurrentUserContext, { User } from "@foxglove/studio-base/context/CurrentUserContext";
+import { Session } from "@foxglove/studio-base/services/ConsoleApi";
 
 const log = Logger.getLogger(__filename);
 
@@ -24,6 +26,7 @@ export default function ConsoleApiCurrentUserProvider(
   const api = useConsoleApi();
   const [bearerToken, setBearerToken, removeBearerToken] =
     useLocalStorage<string>("fox.bearer-token");
+  const [modalOpen, setModalOpen] = useState(false);
 
   // We want to support starting the app while offline. Various children components of the provider
   // use the presence of the user as an indicator of sign-in state. We cache the user to provide a
@@ -75,11 +78,32 @@ export default function ConsoleApiCurrentUserProvider(
     await api.signout();
   }, [api, removeBearerToken, removeCachedCurrentUser]);
 
-  const value = useShallowMemo({ currentUser: cachedCurrentUser, setBearerToken, signOut });
+  const onClose = useCallback(
+    (session?: Session) => {
+      setModalOpen(false);
+      if (session != undefined) {
+        setBearerToken(session.bearerToken);
+      }
+    },
+    [setBearerToken],
+  );
 
+  const signIn = useCallback(() => {
+    setModalOpen(true);
+  }, []);
+
+  const value = useShallowMemo({ currentUser: cachedCurrentUser, signIn, signOut });
+
+  // On mount we start loading a profile. To avoid rendering children without a profile and then
+  // again with a profile after load, we render nothing until the first load is complete.
   if (!completedFirstLoad) {
     return <></>;
   }
 
-  return <CurrentUserContext.Provider value={value}>{props.children}</CurrentUserContext.Provider>;
+  return (
+    <>
+      {modalOpen && <DeviceCodeDialog onClose={onClose} />}
+      <CurrentUserContext.Provider value={value}>{props.children}</CurrentUserContext.Provider>
+    </>
+  );
 }
