@@ -6,8 +6,7 @@ import { PropsWithChildren, useCallback, useEffect, useState } from "react";
 import { useAsync } from "react-use";
 
 import { useShallowMemo } from "@foxglove/hooks";
-import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
-import CurrentUserContext, { User } from "@foxglove/studio-base/context/CurrentUserContext";
+import { useConsoleApi, CurrentUserContext, User } from "@foxglove/studio-base";
 
 /**
  * ConsoleApiCookieUserProvider provides a CurrentUserContext
