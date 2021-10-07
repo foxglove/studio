@@ -20,7 +20,7 @@ import {
   ConsoleApiRemoteLayoutStorageProvider,
 } from "@foxglove/studio-base";
 
-import ConsoleApiCookieUserProvider from "./components/ConsoleApiCookieUserProvider";
+import ConsoleApiCookieUserProvider from "./components/ConsoleApiCookieCurrentUserProvider";
 import LocalStorageAppConfigurationProvider from "./components/LocalStorageAppConfigurationProvider";
 import LocalStorageLayoutStorageProvider from "./components/LocalStorageLayoutStorageProvider";
 import ExtensionLoaderProvider from "./providers/ExtensionLoaderProvider";
