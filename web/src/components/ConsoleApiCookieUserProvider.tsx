@@ -14,7 +14,7 @@ import CurrentUserContext, { User } from "@foxglove/studio-base/context/CurrentU
  *
  * On mount, it loads the current user profile if there is a session.
  */
-export default function ConsoleApiCookieUserProvider(
+export default function ConsoleApiCookieCurrentUserProvider(
   props: PropsWithChildren<unknown>,
 ): JSX.Element {
   const api = useConsoleApi();
