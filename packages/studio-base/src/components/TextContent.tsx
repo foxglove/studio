@@ -29,6 +29,10 @@ const useStyles = makeStyles((theme) => ({
 
     "h1, h2, h3, h4, h5, h6": {
       color: theme.semanticColors.bodyText,
+
+      ":first-child": {
+        marginTop: 0,
+      },
     },
     h1: {
       ...theme.fonts.xxLarge,
