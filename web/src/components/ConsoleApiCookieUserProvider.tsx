@@ -28,7 +28,7 @@ export default function ConsoleApiCookieUserProvider(
     if (document.cookie.includes("fox.signedin")) {
       return await api.me();
     }
-    return await Promise.resolve(undefined);
+    return undefined;
   }, [api]);
 
   useEffect(() => {
