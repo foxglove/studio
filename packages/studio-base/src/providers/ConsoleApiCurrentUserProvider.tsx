@@ -15,10 +15,10 @@ import { Session } from "@foxglove/studio-base/services/ConsoleApi";
 const log = Logger.getLogger(__filename);
 
 /**
- * CurrentUserProvider attempts to load the current user's profile if there is an authenticated
+ * ConsoleApiCurrentUserProvider attempts to load the current user's profile if there is an authenticated
  * session.
  *
- * The provider also exposes function to set and clear the current session token.
+ * ConsoleApiCurrentUserProvider provides a CurrentUserContext
  */
 export default function ConsoleApiCurrentUserProvider(
   props: PropsWithChildren<unknown>,
