@@ -211,6 +211,125 @@ describe("McapReader", () => {
     expect(() => reader.nextRecord()).toThrow("bytes remaining in chunk");
   });
 
+  it("rejects message at top level with no prior channel info", () => {
+    const reader = new McapReader();
+    reader.append(
+      new Uint8Array([
+        ...MCAP_MAGIC,
+        formatVersion,
+
+        ...record(RecordType.MESSAGE, [
+          ...uint32LE(42), // channel id
+          ...uint64LE(0n), // timestamp
+        ]),
+
+        ...record(RecordType.FOOTER, [
+          ...uint64LE(0n), // index pos
+          ...uint32LE(0), // index crc
+        ]),
+        ...MCAP_MAGIC,
+        formatVersion,
+      ]),
+    );
+    expect(() => reader.nextRecord()).toThrow(
+      "Encountered message on channel 42 without prior channel info",
+    );
+  });
+
+  it("rejects message in chunk with no prior channel info", () => {
+    const message = record(RecordType.MESSAGE, [
+      ...uint32LE(42), // channel id
+      ...uint64LE(0n), // timestamp
+    ]);
+    const reader = new McapReader();
+    reader.append(
+      new Uint8Array([
+        ...MCAP_MAGIC,
+        formatVersion,
+
+        ...record(RecordType.CHUNK, [
+          ...uint64LE(0n), // decompressed size
+          ...uint32LE(crc32(message)), // decompressed crc32
+          ...string(""), // compression
+          ...message,
+        ]),
+
+        ...record(RecordType.FOOTER, [
+          ...uint64LE(0n), // index pos
+          ...uint32LE(0), // index crc
+        ]),
+        ...MCAP_MAGIC,
+        formatVersion,
+      ]),
+    );
+    expect(() => reader.nextRecord()).toThrow(
+      "Encountered message on channel 42 without prior channel info",
+    );
+  });
+
+  it("rejects message in chunk with no prior channel info in the same chunk", () => {
+    const channelInfo = record(RecordType.CHANNEL_INFO, [
+      ...uint32LE(42), // channel id
+      ...string("mytopic"), // topic
+      ...string("utf12"), // encoding
+      ...string("some data"), // schema name
+      ...string("stuff"), // schema
+      ...[1, 2, 3], // channel data
+    ]);
+    const message = record(RecordType.MESSAGE, [
+      ...uint32LE(42), // channel id
+      ...uint64LE(1n), // timestamp
+    ]);
+    const reader = new McapReader();
+    reader.append(
+      new Uint8Array([
+        ...MCAP_MAGIC,
+        formatVersion,
+
+        ...record(RecordType.CHUNK, [
+          ...uint64LE(0n), // decompressed size
+          ...uint32LE(crc32(new Uint8Array([...channelInfo, ...message]))), // decompressed crc32
+          ...string(""), // compression
+          ...channelInfo,
+          ...message,
+        ]),
+
+        ...record(RecordType.CHUNK, [
+          ...uint64LE(0n), // decompressed size
+          ...uint32LE(crc32(message)), // decompressed crc32
+          ...string(""), // compression
+          ...message,
+        ]),
+
+        ...record(RecordType.FOOTER, [
+          ...uint64LE(0n), // index pos
+          ...uint32LE(0), // index crc
+        ]),
+        ...MCAP_MAGIC,
+        formatVersion,
+      ]),
+    );
+    const expectedChannelInfo = {
+      type: "ChannelInfo",
+      id: 42,
+      topic: "mytopic",
+      encoding: "utf12",
+      schemaName: "some data",
+      schema: "stuff",
+      data: new Uint8Array([1, 2, 3]).buffer,
+    };
+    expect(reader.nextRecord()).toEqual(expectedChannelInfo);
+    expect(reader.nextRecord()).toEqual({
+      type: "Message",
+      channelInfo: expectedChannelInfo,
+      timestamp: 1n,
+      data: new ArrayBuffer(0),
+    });
+    expect(() => reader.nextRecord()).toThrow(
+      "Encountered message on channel 42 without prior channel info in this chunk",
+    );
+  });
+
   it("parses channel info at top level", () => {
     const reader = new McapReader();
     reader.append(

@@ -57,7 +57,8 @@ export default async function* streamMessages({
   if (response.status === 404) {
     return;
   } else if (response.status !== 200) {
-    throw new Error(`Unexpected response status ${response.status} for ${mcapUrl}`);
+    log.error(`${response.status} response for`, mcapUrl, response);
+    throw new Error(`Unexpected response status ${response.status}`);
   }
   if (!response.body) {
     throw new Error("Unable to stream response body");
