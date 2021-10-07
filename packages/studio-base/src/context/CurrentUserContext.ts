@@ -15,7 +15,6 @@ export interface User {
 
 export interface CurrentUser {
   currentUser: User | undefined;
-  //setBearerToken: (token: string) => void;
   signIn: () => void;
   signOut: () => Promise<void>;
 }
