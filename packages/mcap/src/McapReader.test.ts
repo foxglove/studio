@@ -410,4 +410,127 @@ describe("McapReader", () => {
     expect(reader.nextRecord()).toEqual({ type: "Footer", indexPos: 0n, indexCrc: 0 });
     expect(reader.done()).toBe(true);
   });
+
+  describe.each(["unchunked file", "same chunk", "different chunks"] as const)(
+    "rejects channel info with the same id in %s",
+    (testType) => {
+      it.each([
+        {
+          key: "topic",
+          channelInfo2: record(RecordType.CHANNEL_INFO, [
+            ...uint32LE(42), // channel id
+            ...string("XXXXXXXX"), // topic
+            ...string("utf12"), // encoding
+            ...string("some data"), // schema name
+            ...string("stuff"), // schema
+            ...[1, 2, 3], // channel data
+          ]),
+        },
+        {
+          key: "encoding",
+          channelInfo2: record(RecordType.CHANNEL_INFO, [
+            ...uint32LE(42), // channel id
+            ...string("mytopic"), // topic
+            ...string("XXXXXXXX"), // encoding
+            ...string("some data"), // schema name
+            ...string("stuff"), // schema
+            ...[1, 2, 3], // channel data
+          ]),
+        },
+        {
+          key: "schema name",
+          channelInfo2: record(RecordType.CHANNEL_INFO, [
+            ...uint32LE(42), // channel id
+            ...string("mytopic"), // topic
+            ...string("utf12"), // encoding
+            ...string("XXXXXXXX"), // schema name
+            ...string("stuff"), // schema
+            ...[1, 2, 3], // channel data
+          ]),
+        },
+        {
+          key: "schema",
+          channelInfo2: record(RecordType.CHANNEL_INFO, [
+            ...uint32LE(42), // channel id
+            ...string("mytopic"), // topic
+            ...string("utf12"), // encoding
+            ...string("some data"), // schema name
+            ...string("XXXXXXXX"), // schema
+            ...[1, 2, 3], // channel data
+          ]),
+        },
+        {
+          key: "data",
+          channelInfo2: record(RecordType.CHANNEL_INFO, [
+            ...uint32LE(42), // channel id
+            ...string("mytopic"), // topic
+            ...string("utf12"), // encoding
+            ...string("some data"), // schema name
+            ...string("stuff"), // schema
+            ...[0xff], // channel data
+          ]),
+        },
+      ])("differing in $key", ({ channelInfo2 }) => {
+        const channelInfo = record(RecordType.CHANNEL_INFO, [
+          ...uint32LE(42), // channel id
+          ...string("mytopic"), // topic
+          ...string("utf12"), // encoding
+          ...string("some data"), // schema name
+          ...string("stuff"), // schema
+          ...[1, 2, 3], // channel data
+        ]);
+        const reader = new McapReader();
+        reader.append(
+          new Uint8Array([
+            ...MCAP_MAGIC,
+            formatVersion,
+
+            ...(testType === "unchunked file"
+              ? [...channelInfo, ...channelInfo2]
+              : testType === "same chunk"
+              ? record(RecordType.CHUNK, [
+                  ...uint64LE(0n), // decompressed size
+                  ...uint32LE(crc32(new Uint8Array([...channelInfo, ...channelInfo2]))), // decompressed crc32
+                  ...string(""), // compression
+                  ...channelInfo,
+                  ...channelInfo2,
+                ])
+              : testType === "different chunks"
+              ? [
+                  ...record(RecordType.CHUNK, [
+                    ...uint64LE(0n), // decompressed size
+                    ...uint32LE(crc32(new Uint8Array(channelInfo))), // decompressed crc32
+                    ...string(""), // compression
+                    ...channelInfo,
+                  ]),
+                  ...record(RecordType.CHUNK, [
+                    ...uint64LE(0n), // decompressed size
+                    ...uint32LE(crc32(new Uint8Array(channelInfo2))), // decompressed crc32
+                    ...string(""), // compression
+                    ...channelInfo2,
+                  ]),
+                ]
+              : []),
+
+            ...record(RecordType.FOOTER, [
+              ...uint64LE(0n), // index pos
+              ...uint32LE(0), // index crc
+            ]),
+            ...MCAP_MAGIC,
+            formatVersion,
+          ]),
+        );
+        expect(reader.nextRecord()).toEqual({
+          type: "ChannelInfo",
+          id: 42,
+          topic: "mytopic",
+          encoding: "utf12",
+          schemaName: "some data",
+          schema: "stuff",
+          data: new Uint8Array([1, 2, 3]).buffer,
+        });
+        expect(() => reader.nextRecord()).toThrow("differing channel infos for 42");
+      });
+    },
+  );
 });
