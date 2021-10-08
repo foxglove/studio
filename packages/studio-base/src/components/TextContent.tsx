@@ -69,10 +69,6 @@ const useStyles = makeStyles((theme) => ({
     },
     "p, ul": {
       margin: `${theme.spacing.s1} 0`,
-
-      ":last-child": {
-        marginBottom: "0",
-      },
     },
     "td, th": {
       padding: theme.spacing.s2,
