@@ -9,8 +9,11 @@ import {
   LatLngBounds,
   CircleMarker,
   FeatureGroup,
+  LayersControlEvent,
+  LayerGroup,
 } from "leaflet";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useLatest } from "react-use";
 import { useDebouncedCallback } from "use-debounce";
 
 import { toSec } from "@foxglove/rostime";
@@ -26,6 +29,7 @@ import { NavSatFixMsg, Point } from "./types";
 // Persisted panel state
 type Config = {
   zoomLevel?: number;
+  disabledTopics?: [];
 };
 
 type MapPanelProps = {
@@ -47,6 +51,12 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   // Panel state management to track the list of available topics
   const [topics, setTopics] = useState<readonly Topic[]>([]);
 
+  // Disabled topics is the set of topics the user has unchecked in the layer control
+  // Track disabled topics rather than enabled so any new topics display by default
+  const [disabledTopics, setDisabledTopics] = useState(
+    () => new Set<string>(config.disabledTopics),
+  );
+
   // Panel state management to track the current preview time
   const [previewTime, setPreviewTime] = useState<number | undefined>();
 
@@ -66,23 +76,34 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       .map((topic) => topic.name);
   }, [topics]);
 
-  // Subscribe to relevant topics
+  // Subscribe to eligible and enabled topics
   useEffect(() => {
-    context.subscribe(eligibleTopics);
+    const eligibleEnabled = eligibleTopics.filter((topic) => !disabledTopics.has(topic));
+    context.subscribe(eligibleEnabled);
     return () => {
       context.unsubscribeAll();
     };
-  }, [context, eligibleTopics]);
+  }, [context, disabledTopics, eligibleTopics]);
 
-  // layers for each topic
+  type TopicGroups = {
+    topicGroup: LayerGroup;
+    currentFrame: FeatureGroup;
+    allFrames: FeatureGroup;
+  };
 
-  // fixme - for each topic, we need the feature group (so we can add more layers)
-  // we also need the active point color and the all points color
+  // topic layers is a map of topic -> two feature groups
+  // A feature group for all messages markers, and a feature group for current frame markers
   const topicLayers = useMemo(() => {
-    const topicLayerMap = new Map<string, FeatureGroup>();
+    const topicLayerMap = new Map<string, TopicGroups>();
     for (const topic of eligibleTopics) {
-      const layer = new FeatureGroup();
-      topicLayerMap.set(topic, layer);
+      const allFrames = new FeatureGroup();
+      const currentFrame = new FeatureGroup();
+      const topicGroup = new LayerGroup([allFrames, currentFrame]);
+      topicLayerMap.set(topic, {
+        topicGroup,
+        allFrames,
+        currentFrame,
+      });
     }
     return topicLayerMap;
   }, [eligibleTopics]);
@@ -90,20 +111,35 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   // layer controls for user selection between map, satellite and topics
   const layerControl = useMemo(() => new Control.Layers(), []);
 
+  // toggling layers changes the disabledTopics list, but we don't want to re-run this effect
+  // because the layer controls have already updated the map with active/inactive layers
+  const disabledTopicsLatest = useLatest(disabledTopics);
   useLayoutEffect(() => {
+    if (!currentMap) {
+      return;
+    }
+
     const topicLayerEntries = [...topicLayers.entries()];
     for (const entry of topicLayerEntries) {
-      layerControl.addOverlay(entry[1], entry[0]);
-      currentMap?.addLayer(entry[1]);
+      const topic = entry[0];
+      const featureGroups = entry[1];
+      layerControl.addOverlay(featureGroups.topicGroup, topic);
+
+      // if the topic does not appear in the disabled topics list, add to map so it displays
+      if (!disabledTopicsLatest.current.has(topic)) {
+        currentMap.addLayer(featureGroups.topicGroup);
+      }
     }
 
     return () => {
       for (const entry of topicLayerEntries) {
-        layerControl.removeLayer(entry[1]);
-        currentMap?.removeLayer(entry[1]);
+        const featureGroups = entry[1];
+
+        layerControl.removeLayer(featureGroups.topicGroup);
+        currentMap.removeLayer(featureGroups.topicGroup);
       }
     };
-  }, [currentMap, layerControl, topicLayers]);
+  }, [currentMap, disabledTopicsLatest, layerControl, topicLayers]);
 
   // During the initial mount we setup our context render handler
   useLayoutEffect(() => {
@@ -148,6 +184,30 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     context.watch("currentFrame");
     context.watch("allFrames");
     context.watch("previewTime");
+
+    // layer is added (checked) - remove from disabled list
+    map.on("overlayadd", (ev: LayersControlEvent) => {
+      const topic = ev.name;
+      setDisabledTopics((prevDisabled) => {
+        if (!prevDisabled.has(topic)) {
+          return prevDisabled;
+        }
+        prevDisabled.delete(topic);
+        return new Set(prevDisabled);
+      });
+    });
+
+    // layer is removed (unckecked) - add to disabled topics list
+    map.on("overlayremove", (ev: LayersControlEvent) => {
+      const topic = ev.name;
+      setDisabledTopics((prevDisabled) => {
+        if (prevDisabled.has(topic)) {
+          return prevDisabled;
+        }
+        prevDisabled.add(topic);
+        return new Set(prevDisabled);
+      });
+    });
 
     // The render event handler updates the state for our messages an triggers a component render
     //
@@ -230,28 +290,40 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     });
   }, [allNavMessages, navMessages]);
 
-  // fixme - all markers to the all nav messages layer
-  // these have a different color - can we do that at the layer level? or marker level?
-  // create a filtered marker layer for all nav messages
   useEffect(() => {
     if (!currentMap) {
       return;
     }
 
-    const pointLayer = FilteredPointLayer({
-      map: currentMap,
-      navSatMessageEvents: allNavMessages,
-      bounds: filterBounds ?? currentMap.getBounds(),
-      color: "#6771ef",
-      onHover,
-      onClick,
-    });
+    // Group messages by topic to render into layers by topic
+    const byTopic = new Map<string, MessageEvent<NavSatFixMsg>[]>();
+    for (const msgEvent of allNavMessages) {
+      const msgEvents = byTopic.get(msgEvent.topic) ?? [];
+      msgEvents.push(msgEvent);
+      byTopic.set(msgEvent.topic, msgEvents);
+    }
 
-    currentMap?.addLayer(pointLayer);
-    return () => {
-      currentMap?.removeLayer(pointLayer);
-    };
-  }, [allNavMessages, currentMap, filterBounds, onClick, onHover]);
+    for (const [topic, events] of byTopic) {
+      const topicLayer = topicLayers.get(topic);
+      if (!topicLayer) {
+        // If we get a message for a topic we did not subscribe to - something bad has happened.
+        // We'll pretend like it didn't happen and move along.
+        continue;
+      }
+
+      const pointLayer = FilteredPointLayer({
+        map: currentMap,
+        navSatMessageEvents: events,
+        bounds: filterBounds ?? currentMap.getBounds(),
+        color: "#6771ef",
+        onHover,
+        onClick,
+      });
+
+      topicLayer.allFrames.clearLayers();
+      topicLayer.allFrames.addLayer(pointLayer);
+    }
+  }, [allNavMessages, currentMap, filterBounds, onClick, onHover, topicLayers]);
 
   // create a filtered marker layer for the current nav messages
   // this effect is added after the allNavMessages so the layer appears above
@@ -260,9 +332,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       return;
     }
 
-    // group nav messages by topic
-    // fixme - alternatively, we can change FilteredPointLayer to be a function
-    // that returns a marker if within bounds
+    // Group messages by topic to render into layers by topic
     const byTopic = new Map<string, MessageEvent<NavSatFixMsg>[]>();
     for (const msgEvent of navMessages) {
       const msgEvents = byTopic.get(msgEvent.topic) ?? [];
@@ -278,9 +348,6 @@ function MapPanel(props: MapPanelProps): JSX.Element {
         continue;
       }
 
-      // fixme - maybe this should return a marker if message in bounds or undefined otherwise
-      // we then manage adding the marker to the topic layer ourselves?
-      // alternatively, we create two feature groups - and add markers to that
       const pointLayer = FilteredPointLayer({
         map: currentMap,
         navSatMessageEvents: events,
@@ -288,16 +355,10 @@ function MapPanel(props: MapPanelProps): JSX.Element {
         color: "#ec1515",
       });
 
-      topicLayer.addLayer(pointLayer);
+      // clear any previous layers to only display the current frame
+      topicLayer.currentFrame.clearLayers();
+      topicLayer.currentFrame.addLayer(pointLayer);
     }
-
-    // when the messages change, we need to clear any layers from the group
-
-    //currentMap?.addLayer(pointLayer);
-    return () => {
-      // fixme - remove old points from the group
-      //currentMap?.removeLayer(pointLayer);
-    };
   }, [currentMap, filterBounds, navMessages, topicLayers]);
 
   // create a marker for the closest gps message to our current preview time
@@ -355,6 +416,12 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       currentMap.off("zoom", zoomChange);
     };
   }, [context, currentMap]);
+
+  useEffect(() => {
+    context.saveState({
+      disabledTopics: Array.from(disabledTopics),
+    });
+  }, [context, disabledTopics]);
 
   // we don't want to invoke filtering on every user map move so we rate limit to 100ms
   const moveHandler = useDebouncedCallback(
