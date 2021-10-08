@@ -55,6 +55,12 @@ type TopicResponse = {
   version: string;
 };
 
+type CoverageResponse = {
+  deviceId: string;
+  start: string;
+  end: string;
+};
+
 export type LayoutID = string & { __brand: "LayoutID" };
 export type ISO8601Timestamp = string & { __brand: "ISO8601Timestamp" };
 
@@ -169,7 +175,11 @@ class ConsoleApi {
     if (this._authHeader != undefined) {
       headers["Authorization"] = this._authHeader;
     }
-    const fullConfig = { ...config, headers: { ...headers, ...config?.headers } };
+    const fullConfig: RequestInit = {
+      ...config,
+      credentials: "include",
+      headers: { ...headers, ...config?.headers },
+    };
 
     const res = await fetch(fullUrl, fullConfig);
     if (res.status !== 200 && !allowedStatuses.includes(res.status)) {
@@ -233,6 +243,14 @@ class ConsoleApi {
 
   async deleteLayout(id: LayoutID): Promise<boolean> {
     return (await this.delete(`/v1/layouts/${id}`)).status === 200;
+  }
+
+  async coverage(params: {
+    deviceId: string;
+    start: string;
+    end: string;
+  }): Promise<CoverageResponse[]> {
+    return await this.get<CoverageResponse[]>("/v1/data/coverage", params);
   }
 
   async topics(params: {

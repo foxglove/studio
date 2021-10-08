@@ -12,12 +12,12 @@ export type ChannelInfo = {
   topic: string;
   encoding: string;
   schemaName: string;
-  schema: ArrayBuffer;
+  schema: string;
   data: ArrayBuffer;
 };
 export type Message = {
   type: "Message";
-  channelId: number;
+  channelInfo: ChannelInfo;
   timestamp: bigint;
   data: ArrayBuffer;
 };

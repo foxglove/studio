@@ -57,17 +57,17 @@ async function validate(
         const existingInfo = channelInfoById.get(record.id);
         if (existingInfo) {
           if (!isEqual(existingInfo.info, record)) {
-            throw new Error(`differing channel infos for for ${record.id}`);
+            throw new Error(`differing channel infos for ${record.id}`);
           }
           break;
         }
         let parsedDefinitions;
         let messageDeserializer;
         if (record.encoding === "ros1") {
-          parsedDefinitions = parseMessageDefinition(new TextDecoder().decode(record.schema));
+          parsedDefinitions = parseMessageDefinition(record.schema);
           messageDeserializer = new ROS1LazyMessageReader(parsedDefinitions);
         } else if (record.encoding === "ros2") {
-          parsedDefinitions = parseMessageDefinition(new TextDecoder().decode(record.schema), {
+          parsedDefinitions = parseMessageDefinition(record.schema, {
             ros2: true,
           });
           messageDeserializer = new ROS2MessageReader(parsedDefinitions);
@@ -79,24 +79,26 @@ async function validate(
       }
 
       case "Message": {
-        const channelInfo = channelInfoById.get(record.channelId);
+        const channelInfo = channelInfoById.get(record.channelInfo.id);
         if (!channelInfo) {
-          throw new Error(`message for channel ${record.channelId} with no prior channel info`);
+          throw new Error(
+            `message for channel ${record.channelInfo.id} with no prior channel info`,
+          );
         }
         if (deserialize) {
           let message: unknown;
           if (channelInfo.messageDeserializer instanceof ROS1LazyMessageReader) {
-            const size = channelInfo.messageDeserializer.size(new Uint8Array(record.data));
+            const size = channelInfo.messageDeserializer.size(new DataView(record.data));
             if (size !== record.data.byteLength) {
               throw new Error(
                 `Message size ${size} should match buffer length ${record.data.byteLength}`,
               );
             }
             message = channelInfo.messageDeserializer
-              .readMessage(new Uint8Array(record.data))
+              .readMessage(new DataView(record.data))
               .toJSON();
           } else {
-            message = channelInfo.messageDeserializer.readMessage(new Uint8Array(record.data));
+            message = channelInfo.messageDeserializer.readMessage(new DataView(record.data));
           }
           if (dump) {
             log(message);
@@ -155,10 +157,12 @@ async function validate(
 }
 
 program
-  .argument("<file>", "path to mcap file")
+  .argument("<file...>", "path to mcap file(s)")
   .option("--deserialize", "deserialize message contents", false)
   .option("--dump", "dump message contents to stdout", false)
-  .action((file: string, options: { deserialize: boolean; dump: boolean }) => {
-    validate(file, options).catch(console.error);
+  .action(async (files: string[], options: { deserialize: boolean; dump: boolean }) => {
+    for (const file of files) {
+      await validate(file, options).catch(console.error);
+    }
   })
   .parse();
