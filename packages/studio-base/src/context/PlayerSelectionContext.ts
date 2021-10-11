@@ -4,61 +4,44 @@
 
 import { createContext, useContext } from "react";
 
-type SourceTypes =
-  | "foxglove-data-platform"
-  | "ros1-local-bagfile"
-  | "ros2-local-bagfile"
-  | "ros1-socket"
-  | "ros2-socket"
-  | "rosbridge-websocket"
-  | "ros1-remote-bagfile"
-  | "velodyne-device";
+import { PromptOptions } from "@foxglove/studio-base/hooks/usePrompt";
+import { Player } from "@foxglove/studio-base/players/types";
 
-export type PlayerSourceDefinition = {
-  name: string;
-  type: SourceTypes;
+export type DataSource = {
+  id: string;
+  displayName: string;
+  iconName?: string;
   disabledReason?: string | JSX.Element;
   badgeText?: string;
+
+  // If data source initialization supports "Open File" workflow, this property lists the supported
+  // file types
+  supportedFileTypes?: string[];
+
+  supportsOpenDirectory?: boolean;
+
+  promptOptions?: (previousValue?: string) => PromptOptions;
+
+  // Initialize a player from the data source
+  initialize: (args?: Record<string, unknown>) => Player | undefined;
 };
 
-type FileSourceParams = {
-  files?: File[];
+export type SourceSelection = {
+  id: string;
+  args?: unknown;
 };
 
-type FolderSourceParams = {
-  folder?: string;
-};
-
-type HttpSourceParams = {
-  url?: string;
-};
-
-type FoxgloveDataPlatformSourceParams = {
-  start?: string;
-  end?: string;
-  seekTo?: string;
-  deviceId?: string;
-};
-
-type SpecializedPlayerSource<T extends SourceTypes> = Omit<PlayerSourceDefinition, "type"> & {
-  type: T;
-};
-
-interface SelectSourceFunction {
-  (definition: SpecializedPlayerSource<"ros1-local-bagfile">, params?: FileSourceParams): void;
-  (definition: SpecializedPlayerSource<"ros2-local-bagfile">, params?: FolderSourceParams): void;
-  (definition: SpecializedPlayerSource<"ros1-remote-bagfile">, params?: HttpSourceParams): void;
-  (
-    definition: SpecializedPlayerSource<"foxglove-data-platform">,
-    params?: FoxgloveDataPlatformSourceParams,
-  ): void;
-  (definition: PlayerSourceDefinition, params?: never): void;
-}
-
-// PlayerSelection provides the user with a select function and the items to select
+/**
+ * PlayerSelectionContext exposes the available data sources and a function to set the current data source
+ */
 export interface PlayerSelection {
-  selectSource: SelectSourceFunction;
-  availableSources: PlayerSourceDefinition[];
+  selectSource: (sourceId: string, args?: Record<string, unknown>) => void;
+
+  /** Currently selected data source */
+  selectedSource?: DataSource;
+
+  /** List of available data sources */
+  availableSources: DataSource[];
 }
 
 const PlayerSelectionContext = createContext<PlayerSelection>({

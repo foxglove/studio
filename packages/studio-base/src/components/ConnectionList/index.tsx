@@ -11,11 +11,7 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import NotificationModal from "@foxglove/studio-base/components/NotificationModal";
 import ModalContext from "@foxglove/studio-base/context/ModalContext";
-import {
-  PlayerSourceDefinition,
-  usePlayerSelection,
-} from "@foxglove/studio-base/context/PlayerSelectionContext";
-import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
+import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { PlayerPresence, PlayerProblem } from "@foxglove/studio-base/players/types";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
@@ -40,7 +36,6 @@ const useStyles = makeStyles((theme) => ({
 
 export default function ConnectionList(): JSX.Element {
   const { selectSource, availableSources } = usePlayerSelection();
-  const confirm = useConfirm();
   const modalHost = useContext(ModalContext);
   const styles = useStyles();
 
@@ -49,23 +44,6 @@ export default function ConnectionList(): JSX.Element {
   const playerName = useMessagePipeline(selectPlayerName);
 
   const theme = useTheme();
-
-  const onSourceClick = useCallback(
-    (source: PlayerSourceDefinition) => {
-      if (source.disabledReason != undefined) {
-        void confirm({
-          title: "Unsupported Connection",
-          prompt: source.disabledReason,
-          variant: "primary",
-          cancel: false,
-        });
-        return;
-      }
-
-      selectSource(source);
-    },
-    [confirm, selectSource],
-  );
 
   const showProblemModal = useCallback(
     (problem: PlayerProblem) => {
@@ -95,31 +73,9 @@ export default function ConnectionList(): JSX.Element {
           : playerName}
       </Text>
       {availableSources.map((source) => {
-        let iconName: RegisteredIconNames;
-        switch (source.type) {
-          case "ros1-local-bagfile":
-            iconName = "OpenFile";
-            break;
-          case "ros2-local-bagfile":
-            iconName = "OpenFolder";
-            break;
-          case "ros1-socket":
-          case "ros2-socket":
-            iconName = "studio.ROS";
-            break;
-          case "rosbridge-websocket":
-            iconName = "Flow";
-            break;
-          case "foxglove-data-platform":
-          case "ros1-remote-bagfile":
-            iconName = "FileASPX";
-            break;
-          case "velodyne-device":
-            iconName = "GenericScan";
-            break;
-        }
+        const iconName: RegisteredIconNames = source.iconName as RegisteredIconNames;
         return (
-          <div key={source.name}>
+          <div key={source.id}>
             <ActionButton
               styles={{
                 root: {
@@ -136,9 +92,9 @@ export default function ConnectionList(): JSX.Element {
                 iconName,
                 styles: { root: { "& span": { verticalAlign: "baseline" } } },
               }}
-              onClick={() => onSourceClick(source)}
+              onClick={() => selectSource(source.id)}
             >
-              {source.name}
+              {source.displayName}
               {source.badgeText && <span className={styles.badge}>{source.badgeText}</span>}
             </ActionButton>
           </div>

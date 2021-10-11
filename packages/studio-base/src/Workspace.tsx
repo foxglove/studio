@@ -194,12 +194,9 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     if (isMounted()) {
       setSelectedLayoutId(newLayout.id);
       if (props.demoBagUrl) {
-        selectSource(
-          { name: "Demo Bag", type: "ros1-remote-bagfile" },
-          {
-            url: props.demoBagUrl,
-          },
-        );
+        selectSource("ros1-remote-bagfile", {
+          url: props.demoBagUrl,
+        });
       }
     }
   }, [layoutStorage, isMounted, setSelectedLayoutId, props.demoBagUrl, selectSource]);
@@ -297,12 +294,9 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         } else {
           previousFiles.current = otherFiles;
         }
-        selectSource(
-          { name: "ROS 1 Bag File (local)", type: "ros1-local-bagfile" },
-          {
-            files: previousFiles.current,
-          },
-        );
+        selectSource("ros1-local-bagfile", {
+          files: previousFiles.current,
+        });
       }
     },
     [addToast, extensionLoader, loadFromFile, selectSource],
@@ -339,10 +333,8 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           return;
         }
         selectSource(
-          {
-            name: "ROS 1 Bag File (HTTP)",
-            type: "ros1-remote-bagfile",
-          },
+          "ros1-remote-bagfile",
+
           { url: bagUrl },
         );
       } else if (type === "foxglove-data-platform") {
@@ -362,13 +354,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           log.warn(`Missing or invalid timestamp(s) in ${url}`);
           return;
         }
-        selectSource(
-          {
-            name: "Foxglove Data Platform",
-            type: "foxglove-data-platform",
-          },
-          { start, end, seekTo, deviceId },
-        );
+        selectSource("foxglove-data-platform", { start, end, seekTo, deviceId });
       } else {
         log.warn(`Unknown deep link type ${url}`);
       }
