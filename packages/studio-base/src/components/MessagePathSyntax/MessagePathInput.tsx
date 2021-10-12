@@ -15,8 +15,9 @@ import { mergeStyleSets } from "@fluentui/merge-styles";
 import MenuDownIcon from "@mdi/svg/svg/menu-down.svg";
 import cx from "classnames";
 import { flatten, flatMap, partition } from "lodash";
-import { CSSProperties, useCallback, useMemo } from "react";
+import { createContext, CSSProperties, useCallback, useContext, useEffect, useMemo } from "react";
 
+import Logger from "@foxglove/log";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import Autocomplete from "@foxglove/studio-base/components/Autocomplete";
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
@@ -39,6 +40,8 @@ import {
   validTerminatingStructureItem,
 } from "./messagePathsForDatatype";
 import parseRosPath from "./parseRosPath";
+
+const log = Logger.getLogger(__filename);
 
 const classes = mergeStyleSets({
   root: {
@@ -111,6 +114,34 @@ function topicHasNoHeaderStamp(topic: Topic, datatypes: RosDatatypes): boolean {
     !structureTraversalResult.valid ||
     !validTerminatingStructureItem(structureTraversalResult.structureItem, ["time"])
   );
+}
+
+// Get a list of Message Path strings for all of the fields (recursively) in a list of topics
+function getFieldPaths(topics: readonly Topic[], datatypes: RosDatatypes): string[] {
+  const output: string[] = [];
+  for (const topic of topics) {
+    addFieldPathsForType(topic.name, topic.datatype, datatypes, output);
+  }
+  return output;
+}
+
+function addFieldPathsForType(
+  curPath: string,
+  typeName: string,
+  datatypes: RosDatatypes,
+  output: string[],
+): void {
+  const msgdef = datatypes.get(typeName);
+  if (msgdef) {
+    for (const field of msgdef.definitions) {
+      if (field.isConstant !== true) {
+        output.push(`${curPath}.${field.name}`);
+        if (field.isComplex === true) {
+          addFieldPathsForType(`${curPath}.${field.name}`, field.type, datatypes, output);
+        }
+      }
+    }
+  }
 }
 
 export function tryToSetDefaultGlobalVar(
@@ -200,6 +231,16 @@ type MessagePathInputBaseProps = {
   timestampMethod?: TimestampMethod;
   onTimestampMethodChange?: (arg0: TimestampMethod, index?: number) => void;
 };
+
+const SearchDatabase = createContext<{
+  topicNamesAutocompleteItems: string[];
+  topicNamesAndFieldsAutocompleteItems: string[];
+  topics: readonly Topic[];
+}>({
+  topicNamesAutocompleteItems: [],
+  topicNamesAndFieldsAutocompleteItems: [],
+  topics: [],
+});
 
 export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
   props: MessagePathInputBaseProps,
@@ -307,6 +348,27 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     return getFirstInvalidVariableFromRosPath(rosPath, globalVariables, setGlobalVariables);
   }, [globalVariables, rosPath, setGlobalVariables]);
 
+  const searchDatabase = useContext(SearchDatabase);
+
+  useEffect(() => {
+    if (searchDatabase.topics === topics) {
+      return;
+    }
+    const startTime = performance.now();
+    searchDatabase.topics = topics;
+    searchDatabase.topicNamesAutocompleteItems = getTopicNames(topics);
+    searchDatabase.topicNamesAndFieldsAutocompleteItems =
+      searchDatabase.topicNamesAutocompleteItems.concat(getFieldPaths(topics, datatypes));
+    log.debug(
+      `MessagePathInput search database updated with ${
+        searchDatabase.topicNamesAndFieldsAutocompleteItems.length
+      } entries from ${topics.length} topics in ${(performance.now() - startTime).toFixed(2)}ms`,
+    );
+  }, [datatypes, searchDatabase, topics]);
+
+  const topicNamesAutocompleteItems = searchDatabase.topicNamesAutocompleteItems;
+  const topicNamesAndFieldsAutocompleteItems = searchDatabase.topicNamesAndFieldsAutocompleteItems;
+
   const autocompleteType = useMemo(() => {
     if (!rosPath) {
       return "topicName";
@@ -335,11 +397,19 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
         autocompleteRange: { start: 0, end: Infinity },
       };
     } else if (autocompleteType === "topicName") {
-      return {
-        autocompleteItems: getTopicNames(topics),
-        autocompleteFilterText: path,
-        autocompleteRange: { start: 0, end: Infinity },
-      };
+      if (path[0] === ".") {
+        return {
+          autocompleteItems: topicNamesAndFieldsAutocompleteItems,
+          autocompleteFilterText: path,
+          autocompleteRange: { start: 0, end: Infinity },
+        };
+      } else {
+        return {
+          autocompleteItems: topicNamesAutocompleteItems,
+          autocompleteFilterText: path,
+          autocompleteRange: { start: 0, end: Infinity },
+        };
+      }
     } else if (autocompleteType === "messagePath" && topic && rosPath) {
       if (
         structureTraversalResult &&
@@ -417,17 +487,18 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     };
   }, [
     disableAutocomplete,
-    datatypes,
-    globalVariables,
-    path,
-    rosPath,
-    topic,
-    topics,
     autocompleteType,
+    topic,
+    rosPath,
+    invalidGlobalVariablesVariable,
+    path,
+    topicNamesAndFieldsAutocompleteItems,
+    topicNamesAutocompleteItems,
+    structureTraversalResult,
+    datatypes,
     validTypes,
     noMultiSlices,
-    invalidGlobalVariablesVariable,
-    structureTraversalResult,
+    globalVariables,
   ]);
 
   const noHeaderStamp = useMemo(() => {
