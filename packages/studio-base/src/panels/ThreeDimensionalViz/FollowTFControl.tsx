@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { IconButton, Stack } from "@fluentui/react";
-import { sortBy, debounce, merge } from "lodash";
+import { sortBy, debounce } from "lodash";
 import React, { memo, createRef, useCallback, useState } from "react";
 import shallowequal from "shallowequal";
 
@@ -21,20 +21,6 @@ import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import Transforms, { Transform } from "./Transforms";
-
-const iconButtonStyles = {
-  rootHovered: { backgroundColor: "transparent" },
-  rootPressed: { backgroundColor: "transparent" },
-  icon: {
-    color: "white",
-
-    svg: {
-      fill: "currentColor",
-      height: "1em",
-      width: "1em",
-    },
-  },
-};
 
 type TfTreeNode = {
   tf: Transform;
@@ -269,14 +255,44 @@ const FollowTFControl = memo<Props>((props: Props) => {
           elementRef={frameListButton.ref}
           onClick={openFrameList}
           iconProps={{ iconName: showFrameList ? "MenuDown" : "MenuLeft" }}
-          styles={merge({ root: { width: 16 } }, iconButtonStyles)}
+          styles={{
+            // FIXME: use merge to reduce the number of styles
+            root: { width: 16 },
+            rootHovered: { backgroundColor: "transparent" },
+            rootPressed: { backgroundColor: "transparent" },
+            rootDisabled: { backgroundColor: "transparent" },
+
+            icon: {
+              color: "white",
+
+              svg: {
+                fill: "currentColor",
+                height: "1em",
+                width: "1em",
+              },
+            },
+          }}
         />
       )}
       <IconButton
         elementRef={followButton.ref}
         onClick={onClickFollowButton}
         iconProps={{ iconName: followOrientation ? "CompassOutline" : "CrosshairsGps" }}
-        styles={merge({ icon: { color: tfToFollow ? colors.ACCENT : "white" } }, iconButtonStyles)}
+        styles={{
+          // FIXME: use merge to reduce the number of styles
+          rootHovered: { backgroundColor: "transparent" },
+          rootPressed: { backgroundColor: "transparent" },
+          rootDisabled: { backgroundColor: "transparent" },
+
+          icon: {
+            color: tfToFollow ? colors.ACCENT : "white",
+            svg: {
+              fill: "currentColor",
+              height: "1em",
+              width: "1em",
+            },
+          },
+        }}
       />
     </Stack>
   );

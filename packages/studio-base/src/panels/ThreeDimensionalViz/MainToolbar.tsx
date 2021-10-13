@@ -1,26 +1,13 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-//
-// This file incorporates work covered by the following copyright and
-// permission notice:
-//
-//   Copyright 2018-2021 Cruise LLC
-//
-//   This source code is licensed under the Apache License, Version 2.0,
-//   found at http://www.apache.org/licenses/LICENSE-2.0
-//   You may not use this file except in compliance with the License.
 
-import BugIcon from "@mdi/svg/svg/bug.svg";
-import RulerIcon from "@mdi/svg/svg/ruler.svg";
-import Video3dIcon from "@mdi/svg/svg/video-3d.svg";
+import { IconButton, Stack } from "@fluentui/react";
 
-import Button from "@foxglove/studio-base/components/Button";
-import Icon from "@foxglove/studio-base/components/Icon";
+import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import MeasuringTool, {
   MeasureInfo,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/DrawingTools/MeasuringTool";
-import styles from "@foxglove/studio-base/panels/ThreeDimensionalViz/sharedStyles";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 type Props = {
@@ -40,46 +27,106 @@ function MainToolbar({
   onToggleDebug,
   perspective = false,
 }: Props) {
-  const cameraModeTip = perspective ? "Switch to 2D camera" : "Switch to 3D camera";
   const measureActive = measureState === "place-start" || measureState === "place-finish";
+
+  const toggleCameraButton = useTooltip({
+    contents: perspective ? "Switch to 2D camera" : "Switch to 3D camera",
+  });
+  const measuringToolButton = useTooltip({
+    contents: perspective
+      ? "Switch to 2D camera to measure distance"
+      : measureActive
+      ? "Cancel Measuring"
+      : "Measure Distance",
+  });
+  const debugButton = useTooltip({
+    contents: debug ? "Disable Debug" : "Enable Debug",
+  });
+
   return (
-    <div className={styles.buttons}>
-      <Button className={styles.iconButton} tooltip={cameraModeTip} onClick={onToggleCameraMode}>
-        <Icon
-          style={{ color: perspective ? colors.ACCENT : "white" }}
-          dataTest={`MainToolbar-toggleCameraMode`}
-        >
-          <Video3dIcon />
-        </Icon>
-      </Button>
-      <Button
-        className={styles.iconButton}
+    <Stack
+      grow={0}
+      styles={{
+        root: {
+          backgroundColor: colors.DARK3,
+          borderRadius: 4,
+          boxShadow: "0 0px 32px rgba(8, 8, 10, 0.6)",
+          flexShrink: 0,
+          marginBottom: 10,
+          pointerEvents: "auto",
+        },
+      }}
+    >
+      {toggleCameraButton.tooltip}
+      <IconButton
+        onClick={onToggleCameraMode}
+        elementRef={toggleCameraButton.ref}
+        data-text="MainToolbar-toggleCameraMode"
+        iconProps={{ iconName: "Video3d" }}
+        styles={{
+          // FIXME: use merge to reduce the number of styles
+          rootHovered: { backgroundColor: "transparent" },
+          rootPressed: { backgroundColor: "transparent" },
+          rootDisabled: { backgroundColor: "transparent" },
+          icon: {
+            color: perspective ? colors.ACCENT : "white",
+
+            svg: {
+              fill: "currentColor",
+              height: "1em",
+              width: "1em",
+            },
+          },
+        }}
+      />
+      {measuringToolButton.tooltip}
+      <IconButton
         disabled={perspective}
-        tooltip={
-          perspective
-            ? "Switch to 2D camera to measure distance"
-            : measureActive
-            ? "Cancel Measuring"
-            : "Measure Distance"
-        }
         onClick={measuringTool ? measuringTool.toggleMeasureState : undefined}
-      >
-        <Icon
-          style={{
+        elementRef={measuringToolButton.ref}
+        iconProps={{ iconName: "Ruler" }}
+        styles={{
+          // FIXME: use merge to reduce the number of styles
+          rootHovered: { backgroundColor: "transparent" },
+          rootPressed: { backgroundColor: "transparent" },
+          rootDisabled: { backgroundColor: "transparent" },
+          icon: {
             color: measureActive ? colors.ACCENT : perspective ? undefined : "white",
-          }}
-        >
-          <RulerIcon />
-        </Icon>
-      </Button>
+
+            svg: {
+              fill: "currentColor",
+              height: "1em",
+              width: "1em",
+            },
+          },
+        }}
+      />
       {process.env.NODE_ENV === "development" && (
-        <Button className={styles.iconButton} tooltip="Debug" onClick={onToggleDebug}>
-          <Icon style={{ color: debug ? colors.ACCENT : "white" }}>
-            <BugIcon />
-          </Icon>
-        </Button>
+        <>
+          {debugButton.tooltip}
+          <IconButton
+            onClick={onToggleDebug}
+            elementRef={debugButton.ref}
+            iconProps={{ iconName: "Bug" }}
+            styles={{
+              // FIXME: use merge to reduce the number of styles
+              rootHovered: { backgroundColor: "transparent" },
+              rootPressed: { backgroundColor: "transparent" },
+              rootDisabled: { backgroundColor: "transparent" },
+              icon: {
+                color: debug ? colors.ACCENT : "white",
+
+                svg: {
+                  fill: "currentColor",
+                  height: "1em",
+                  width: "1em",
+                },
+              },
+            }}
+          />
+        </>
       )}
-    </div>
+    </Stack>
   );
 }
 

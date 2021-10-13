@@ -15,6 +15,7 @@ declare global {
     | "BracesFilled"
     | "Blockhead"
     | "BlockheadFilled"
+    | "Bug"
     | "Cancel"
     | "CheckMark"
     | "ChevronDown"
@@ -70,6 +71,7 @@ declare global {
     | "Refresh"
     | "RemoveFromTrash"
     | "Rename"
+    | "Ruler"
     | "Settings"
     | "SettingsFilled"
     | "Share"
@@ -79,6 +81,7 @@ declare global {
     | "Undo"
     | "Upload"
     | "Variable2"
+    | "Video3d"
     | "Warning"
     | never; // never has no effect here other than keeping the semicolon on a separate line for easier conflict resolution
 }

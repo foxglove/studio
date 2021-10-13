@@ -18,6 +18,7 @@ import {
 } from "@fluentui/react-icons";
 import * as Icons from "@fluentui/react-icons-mdl2";
 import { registerIcons, unregisterIcons } from "@fluentui/style-utilities";
+import BugIcon from "@mdi/svg/svg/bug.svg";
 import CogIcon from "@mdi/svg/svg/cog.svg";
 import CompassOutlineIcon from "@mdi/svg/svg/navigation.svg";
 import CrosshairsGpsIcon from "@mdi/svg/svg/crosshairs-gps.svg";
@@ -27,6 +28,8 @@ import HelpCircleIcon from "@mdi/svg/svg/help-circle-outline.svg";
 import MenuDownIcon from "@mdi/svg/svg/menu-down.svg";
 import MenuLeftIcon from "@mdi/svg/svg/menu-left.svg";
 import PlusCircleOutlineIcon from "@mdi/svg/svg/plus-circle-outline.svg";
+import RulerIcon from "@mdi/svg/svg/ruler.svg";
+import Video3dIcon from "@mdi/svg/svg/video-3d.svg";
 import { useLayoutEffect, useState } from "react";
 import { ThemeProvider as StyledThemeProvider } from "styled-components";
 
@@ -46,6 +49,7 @@ const icons: {
   BracesFilled: <Braces20Filled />,
   Blockhead: <BlockheadIcon />,
   BlockheadFilled: <BlockheadFilledIcon />,
+  Bug: <BugIcon />,
   Cancel: <Icons.CancelIcon />,
   CheckMark: <Icons.CheckMarkIcon />,
   ChevronDown: <Icons.ChevronDownIcon />,
@@ -101,6 +105,7 @@ const icons: {
   Refresh: <Icons.RefreshIcon />,
   RemoveFromTrash: <Icons.RemoveFromTrashIcon />,
   Rename: <Icons.RenameIcon />,
+  Ruler: <RulerIcon />,
   Settings: <Settings20Regular />,
   SettingsFilled: <Settings20Filled />,
   Share: <Icons.ShareIcon />,
@@ -110,6 +115,7 @@ const icons: {
   Undo: <Icons.UndoIcon />,
   Upload: <Icons.UploadIcon />,
   Variable2: <Icons.Variable2Icon />,
+  Video3d: <Video3dIcon />,
   Warning: <Icons.WarningIcon />,
   "studio.ROS": <RosIcon />,
 };
