@@ -22,11 +22,11 @@ export default styled.span`
   align-items: center;
   word-break: normal;
 
-  .icon {
+  span.icon {
     color: ${colors.BLUE};
     width: 18px;
     height: 18px;
-    fontsize: 18px;
+    font-size: 18px;
     display: inline-block;
   }
   .link-icon {
