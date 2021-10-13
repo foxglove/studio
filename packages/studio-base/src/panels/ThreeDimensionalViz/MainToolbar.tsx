@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { IconButton, Stack } from "@fluentui/react";
+import { IconButton, Stack, useTheme } from "@fluentui/react";
 
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import MeasuringTool, {
@@ -27,6 +27,7 @@ function MainToolbar({
   onToggleDebug,
   perspective = false,
 }: Props) {
+  const theme = useTheme();
   const measureActive = measureState === "place-start" || measureState === "place-finish";
 
   const toggleCameraButton = useTooltip({
@@ -49,10 +50,8 @@ function MainToolbar({
       styles={{
         root: {
           backgroundColor: colors.DARK3,
-          borderRadius: 4,
-          boxShadow: "0 0px 32px rgba(8, 8, 10, 0.6)",
+          borderRadius: theme.effects.roundedCorner2,
           flexShrink: 0,
-          marginBottom: 10,
           pointerEvents: "auto",
         },
       }}

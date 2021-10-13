@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { IconButton, Stack } from "@fluentui/react";
+import { IconButton, Stack, useTheme } from "@fluentui/react";
 import { sortBy, debounce } from "lodash";
 import React, { memo, createRef, useCallback, useState } from "react";
 import shallowequal from "shallowequal";
@@ -208,6 +208,7 @@ const FollowTFControl = memo<Props>((props: Props) => {
 
   const followButton = useTooltip({ contents: getFollowButtonTooltip() });
   const frameListButton = useTooltip({ contents: "Select a frame to follow…" });
+  const theme = useTheme();
 
   return (
     <Stack
@@ -218,6 +219,9 @@ const FollowTFControl = memo<Props>((props: Props) => {
       verticalAlign="center"
       styles={{
         root: {
+          backgroundColor: colors.DARK3,
+          borderRadius: theme.effects.roundedCorner2,
+          pointerEvents: "auto",
           color: tfToFollow ? undefined : colors.TEXT_MUTED,
           position: "relative",
         },
