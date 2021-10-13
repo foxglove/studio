@@ -15,7 +15,7 @@ import { mergeStyleSets } from "@fluentui/merge-styles";
 import MenuDownIcon from "@mdi/svg/svg/menu-down.svg";
 import cx from "classnames";
 import { flatten, flatMap, partition } from "lodash";
-import { createContext, CSSProperties, useCallback, useContext, useEffect, useMemo } from "react";
+import { CSSProperties, useCallback, useMemo } from "react";
 
 import Logger from "@foxglove/log";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
@@ -232,15 +232,15 @@ type MessagePathInputBaseProps = {
   onTimestampMethodChange?: (arg0: TimestampMethod, index?: number) => void;
 };
 
-const SearchDatabase = createContext<{
+const SearchDatabase: {
   topicNamesAutocompleteItems: string[];
   topicNamesAndFieldsAutocompleteItems: string[];
   topics: readonly Topic[];
-}>({
+} = {
   topicNamesAutocompleteItems: [],
   topicNamesAndFieldsAutocompleteItems: [],
   topics: [],
-});
+};
 
 export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
   props: MessagePathInputBaseProps,
@@ -348,26 +348,21 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     return getFirstInvalidVariableFromRosPath(rosPath, globalVariables, setGlobalVariables);
   }, [globalVariables, rosPath, setGlobalVariables]);
 
-  const searchDatabase = useContext(SearchDatabase);
-
-  useEffect(() => {
-    if (searchDatabase.topics === topics) {
-      return;
-    }
+  if (SearchDatabase.topics !== topics) {
     const startTime = performance.now();
-    searchDatabase.topics = topics;
-    searchDatabase.topicNamesAutocompleteItems = getTopicNames(topics);
-    searchDatabase.topicNamesAndFieldsAutocompleteItems =
-      searchDatabase.topicNamesAutocompleteItems.concat(getFieldPaths(topics, datatypes));
+    SearchDatabase.topics = topics;
+    SearchDatabase.topicNamesAutocompleteItems = getTopicNames(topics);
+    SearchDatabase.topicNamesAndFieldsAutocompleteItems =
+      SearchDatabase.topicNamesAutocompleteItems.concat(getFieldPaths(topics, datatypes));
     log.debug(
       `MessagePathInput search database updated with ${
-        searchDatabase.topicNamesAndFieldsAutocompleteItems.length
+        SearchDatabase.topicNamesAndFieldsAutocompleteItems.length
       } entries from ${topics.length} topics in ${(performance.now() - startTime).toFixed(2)}ms`,
     );
-  }, [datatypes, searchDatabase, topics]);
+  }
 
-  const topicNamesAutocompleteItems = searchDatabase.topicNamesAutocompleteItems;
-  const topicNamesAndFieldsAutocompleteItems = searchDatabase.topicNamesAndFieldsAutocompleteItems;
+  const topicNamesAutocompleteItems = SearchDatabase.topicNamesAutocompleteItems;
+  const topicNamesAndFieldsAutocompleteItems = SearchDatabase.topicNamesAndFieldsAutocompleteItems;
 
   const autocompleteType = useMemo(() => {
     if (!rosPath) {
