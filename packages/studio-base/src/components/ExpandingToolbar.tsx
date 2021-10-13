@@ -127,6 +127,9 @@ export default function ExpandingToolbar<T extends string>({
             rootHovered: { backgroundColor: colors.DARK3 },
             rootPressed: { backgroundColor: colors.DARK3 },
             rootDisabled: { backgroundColor: colors.DARK3 },
+            rootChecked: { backgroundColor: colors.DARK3 },
+            rootCheckedHovered: { backgroundColor: colors.DARK3 },
+            rootCheckedPressed: { backgroundColor: colors.DARK3 },
             ...iconStyles,
           }}
         />
