@@ -11,22 +11,30 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import CrosshairsGpsIcon from "@mdi/svg/svg/crosshairs-gps.svg";
-import MenuDownIcon from "@mdi/svg/svg/menu-down.svg";
-import MenuLeftIcon from "@mdi/svg/svg/menu-left.svg";
-import CompassOutlineIcon from "@mdi/svg/svg/navigation.svg";
-import { sortBy, debounce } from "lodash";
+import { IconButton, Stack } from "@fluentui/react";
+import { sortBy, debounce, merge } from "lodash";
 import React, { memo, createRef, useCallback, useState } from "react";
 import shallowequal from "shallowequal";
-import styled from "styled-components";
 
 import Autocomplete from "@foxglove/studio-base/components/Autocomplete";
-import Button from "@foxglove/studio-base/components/Button";
-import Icon from "@foxglove/studio-base/components/Icon";
-import styles from "@foxglove/studio-base/panels/ThreeDimensionalViz/sharedStyles";
+import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import Transforms, { Transform } from "./Transforms";
+
+const iconButtonStyles = {
+  rootHovered: { backgroundColor: "transparent" },
+  rootPressed: { backgroundColor: "transparent" },
+  icon: {
+    color: "white",
+
+    svg: {
+      fill: "currentColor",
+      height: "1em",
+      width: "1em",
+    },
+  },
+};
 
 type TfTreeNode = {
   tf: Transform;
@@ -104,13 +112,6 @@ function* getDescendants(nodes: TfTreeNode[]): Iterable<TfTreeNode> {
 function getItemText(node: TfTreeNode | { tf: { id: string }; depth: number }) {
   return "".padEnd(node.depth * 4) + node.tf.id;
 }
-
-const Container = styled.div`
-  display: flex;
-  flex: 1 1 auto;
-  align-items: center;
-  position: relative;
-`;
 
 const arePropsEqual = (prevProps: Props, nextProps: Props) => {
   if (!nextProps.tfToFollow) {
@@ -219,11 +220,22 @@ const FollowTFControl = memo<Props>((props: Props) => {
     ? { tf: new Transform(selectedFrameId), children: [], depth: 0 }
     : undefined;
 
+  const followButton = useTooltip({ contents: getFollowButtonTooltip() });
+  const frameListButton = useTooltip({ contents: "Select a frame to follow…" });
+
   return (
-    <Container
+    <Stack
+      horizontal
+      grow={1}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeaveDebounced}
-      style={{ color: tfToFollow ? undefined : colors.TEXT_MUTED }}
+      verticalAlign="center"
+      styles={{
+        root: {
+          color: tfToFollow ? undefined : colors.TEXT_MUTED,
+          position: "relative",
+        },
+      }}
     >
       {showFrameList && (
         <Autocomplete
@@ -250,31 +262,24 @@ const FollowTFControl = memo<Props>((props: Props) => {
           }}
         />
       )}
-      {showFrameList ? (
-        <Icon onClick={openFrameList}>
-          <MenuDownIcon />
-        </Icon>
-      ) : hovering ? (
-        <Icon
-          tooltip={"Select Another Frame\u2026"}
+      {frameListButton.tooltip}
+      {followButton.tooltip}
+      {(hovering || showFrameList) && (
+        <IconButton
+          elementRef={frameListButton.ref}
           onClick={openFrameList}
-          tooltipProps={{ placement: "top" }}
-          style={{ color: "white" }}
-        >
-          <MenuLeftIcon />
-        </Icon>
-      ) : undefined}
-      <Button
-        className={styles.iconButton}
-        tooltipProps={{ placement: "top" }}
+          iconProps={{ iconName: showFrameList ? "MenuDown" : "MenuLeft" }}
+          styles={merge({ root: { width: 16 } }, iconButtonStyles)}
+        />
+      )}
+      <IconButton
+        elementRef={followButton.ref}
         onClick={onClickFollowButton}
-        tooltip={getFollowButtonTooltip()}
-      >
-        <Icon style={{ color: tfToFollow ? colors.ACCENT : "white" }}>
-          {followOrientation ? <CompassOutlineIcon /> : <CrosshairsGpsIcon />}
-        </Icon>
-      </Button>
-    </Container>
+        iconProps={{ iconName: followOrientation ? "CompassOutline" : "CrosshairsGps" }}
+        styles={merge({ icon: { color: tfToFollow ? colors.ACCENT : "white" } }, iconButtonStyles)}
+      />
+    </Stack>
   );
 }, arePropsEqual);
+
 export default FollowTFControl;
