@@ -280,7 +280,7 @@ const SearchText = React.memo<SearchTextComponentProps>(function SearchText({
   if (!searchTextOpen) {
     return (
       <>
-        {/* FIXME: Tooltip causes jump */}
+        {/* fix me Tooltip causes jump */}
         {/* {searchButton.tooltip} */}
         <IconButton
           elementRef={searchButton.ref}
@@ -372,7 +372,6 @@ const SearchText = React.memo<SearchTextComponentProps>(function SearchText({
         onClick={() => toggleSearchTextOpen(false)}
         iconProps={{ iconName: "Close" }}
         styles={{
-          // FIXME: use merge to reduce the number of styles
           rootHovered: { backgroundColor: "transparent" },
           rootPressed: { backgroundColor: "transparent" },
           rootDisabled: { backgroundColor: "transparent" },

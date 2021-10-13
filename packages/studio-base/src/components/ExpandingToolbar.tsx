@@ -102,7 +102,7 @@ export default function ExpandingToolbar<T extends string>({
   const expanded = selectedTab != undefined;
   const expandingToolbarButton = useTooltip({
     contents: tooltip,
-    // FIXME: Tooltip causes jump
+    // fix me: Tooltip causes jump
   });
   if (!expanded) {
     let selectedTabLocal: T | undefined = selectedTab;
