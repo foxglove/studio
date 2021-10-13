@@ -16,7 +16,6 @@ import ArrowLeftRightIcon from "@mdi/svg/svg/arrow-left-right.svg";
 import ArrowUpDownIcon from "@mdi/svg/svg/arrow-up-down.svg";
 import FitToPageIcon from "@mdi/svg/svg/fit-to-page-outline.svg";
 import ServiceIcon from "@mdi/svg/svg/rectangle-outline.svg";
-import TopicIcon from "@mdi/svg/svg/rhombus.svg";
 import Cytoscape from "cytoscape";
 import { useCallback, useMemo, useRef, useState } from "react";
 import textMetrics from "text-metrics";
@@ -352,10 +351,6 @@ function TopicGraph() {
     return `Showing ${(topicVisibilityToLabelMap[topicVisibility] ?? "").toLowerCase()}`;
   }, [topicVisibility]);
 
-  const topicButtonColor = useMemo(() => {
-    return topicVisibility === "none" ? "white" : colors.LIGHT_PURPLE;
-  }, [topicVisibility]);
-
   const toggleShowServices = useCallback(() => {
     graph.current?.resetUserPanZoom();
     setShowServices(!showServices);
@@ -396,14 +391,10 @@ function TopicGraph() {
           </Button>
         </div>
         <ExpandingToolbar
+          checked={topicVisibility !== "none"}
           dataTest="set-topic-visibility"
           tooltip={topicVisibilityTooltip}
-          icon={
-            <Icon style={{ color: topicButtonColor }}>
-              <TopicIcon />
-            </Icon>
-          }
-          className={styles.buttons}
+          iconName="Topic"
           selectedTab={selectedTab}
           onSelectTab={(newSelectedTab) => {
             setSelectedTab(newSelectedTab);

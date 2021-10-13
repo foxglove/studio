@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { IconButton, Stack, TextField, useTheme } from "@fluentui/react";
+import { IButtonStyles, IconButton, Stack, TextField, useTheme } from "@fluentui/react";
 import { vec3 } from "gl-matrix";
 import { range, throttle } from "lodash";
 import { useState, useRef, useEffect, useCallback, KeyboardEvent } from "react";
@@ -210,6 +210,26 @@ export const useSearchMatches = ({
   ]);
 };
 
+const iconStyle = {
+  icon: {
+    color: "white",
+
+    svg: {
+      fill: "currentColor",
+      height: "1em",
+      width: "1em",
+    },
+  },
+} as Partial<IButtonStyles>;
+
+const arrowButtonStyles = {
+  icon: { height: 18, fontSize: 10 },
+  root: { backgroundColor: "transparent", width: 18 },
+  rootHovered: { backgroundColor: "transparent" },
+  rootPressed: { backgroundColor: "transparent" },
+  rootDisabled: { backgroundColor: "transparent" },
+} as Partial<IButtonStyles>;
+
 const SearchText = React.memo<SearchTextComponentProps>(function SearchText({
   searchTextOpen,
   toggleSearchTextOpen,
@@ -260,26 +280,18 @@ const SearchText = React.memo<SearchTextComponentProps>(function SearchText({
   if (!searchTextOpen) {
     return (
       <>
+        {/* FIXME: Tooltip causes jump */}
         {/* {searchButton.tooltip} */}
         <IconButton
           elementRef={searchButton.ref}
           iconProps={{ iconName: "Search" }}
           onClick={() => toggleSearchTextOpen(!searchTextOpen)}
           styles={{
-            // FIXME: use merge to reduce the number of styles
             root: { backgroundColor: colors.DARK3, pointerEvents: "auto" },
             rootHovered: { backgroundColor: colors.DARK3 },
             rootPressed: { backgroundColor: colors.DARK3 },
             rootDisabled: { backgroundColor: colors.DARK3 },
-            icon: {
-              color: "white",
-
-              svg: {
-                fill: "currentColor",
-                height: "1em",
-                width: "1em",
-              },
-            },
+            ...iconStyle,
           }}
         />
       </>
@@ -314,12 +326,7 @@ const SearchText = React.memo<SearchTextComponentProps>(function SearchText({
             left: theme.spacing.s1,
             right: "auto",
             fontSize: 18,
-
-            svg: {
-              fill: "currentColor",
-              height: "1em",
-              width: "1em",
-            },
+            ...iconStyle,
           },
           field: {
             padding: `0 ${theme.spacing.s1} 0 ${theme.spacing.l2}`,
@@ -352,25 +359,13 @@ const SearchText = React.memo<SearchTextComponentProps>(function SearchText({
           iconProps={{ iconName: "ChevronUpSmall" }}
           onClick={() => iterateCurrentIndex(-1)}
           disabled={!hasMatches || searchTextMatches.length === selectedMatchIndex + 1}
-          styles={{
-            icon: { height: 18, fontSize: 10 },
-            root: { backgroundColor: "transparent", width: 18 },
-            rootHovered: { backgroundColor: "transparent" },
-            rootPressed: { backgroundColor: "transparent" },
-            rootDisabled: { backgroundColor: "transparent" },
-          }}
+          styles={arrowButtonStyles}
         />
         <IconButton
           iconProps={{ iconName: "ChevronDownSmall" }}
           onClick={() => iterateCurrentIndex(1)}
           disabled={!hasMatches || selectedMatchIndex === 0}
-          styles={{
-            icon: { height: 18, fontSize: 10 },
-            root: { backgroundColor: "transparent", width: 18 },
-            rootHovered: { backgroundColor: "transparent" },
-            rootPressed: { backgroundColor: "transparent" },
-            rootDisabled: { backgroundColor: "transparent" },
-          }}
+          styles={arrowButtonStyles}
         />
       </Stack>
       <IconButton
@@ -381,15 +376,7 @@ const SearchText = React.memo<SearchTextComponentProps>(function SearchText({
           rootHovered: { backgroundColor: "transparent" },
           rootPressed: { backgroundColor: "transparent" },
           rootDisabled: { backgroundColor: "transparent" },
-          icon: {
-            color: "white",
-
-            svg: {
-              fill: "currentColor",
-              height: "1em",
-              width: "1em",
-            },
-          },
+          ...iconStyle,
         }}
       />
     </Stack>

@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { IconButton, Stack, useTheme } from "@fluentui/react";
+import { IButtonStyles, IconButton, Stack, useTheme } from "@fluentui/react";
 import { sortBy, debounce } from "lodash";
 import React, { memo, createRef, useCallback, useState } from "react";
 import shallowequal from "shallowequal";
@@ -34,6 +34,22 @@ type TfTree = {
     [key: string]: TfTreeNode;
   };
 };
+
+const iconButtonStyles = {
+  rootHovered: { backgroundColor: "transparent" },
+  rootPressed: { backgroundColor: "transparent" },
+  rootDisabled: { backgroundColor: "transparent" },
+  iconChecked: { color: colors.ACCENT },
+  icon: {
+    color: "white",
+
+    svg: {
+      fill: "currentColor",
+      height: "1em",
+      width: "1em",
+    },
+  },
+} as Partial<IButtonStyles>;
 
 const treeNodeToTfId = (node: TfTreeNode) => node.tf.id;
 
@@ -260,43 +276,17 @@ const FollowTFControl = memo<Props>((props: Props) => {
           onClick={openFrameList}
           iconProps={{ iconName: showFrameList ? "MenuDown" : "MenuLeft" }}
           styles={{
-            // FIXME: use merge to reduce the number of styles
+            ...iconButtonStyles,
             root: { width: 16 },
-            rootHovered: { backgroundColor: "transparent" },
-            rootPressed: { backgroundColor: "transparent" },
-            rootDisabled: { backgroundColor: "transparent" },
-
-            icon: {
-              color: "white",
-
-              svg: {
-                fill: "currentColor",
-                height: "1em",
-                width: "1em",
-              },
-            },
           }}
         />
       )}
       <IconButton
+        checked={tfToFollow != undefined}
         elementRef={followButton.ref}
         onClick={onClickFollowButton}
         iconProps={{ iconName: followOrientation ? "CompassOutline" : "CrosshairsGps" }}
-        styles={{
-          // FIXME: use merge to reduce the number of styles
-          rootHovered: { backgroundColor: "transparent" },
-          rootPressed: { backgroundColor: "transparent" },
-          rootDisabled: { backgroundColor: "transparent" },
-
-          icon: {
-            color: tfToFollow ? colors.ACCENT : "white",
-            svg: {
-              fill: "currentColor",
-              height: "1em",
-              width: "1em",
-            },
-          },
-        }}
+        styles={iconButtonStyles}
       />
     </Stack>
   );

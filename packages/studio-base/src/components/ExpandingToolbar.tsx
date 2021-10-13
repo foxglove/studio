@@ -11,34 +11,19 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { mergeStyleSets } from "@fluentui/merge-styles";
-import ArrowCollapseIcon from "@mdi/svg/svg/arrow-collapse.svg";
+import { IButtonStyles, IconButton, mergeStyleSets, Stack, useTheme } from "@fluentui/react";
 import cx from "classnames";
 import { ReactElement } from "react";
 
 import Button from "@foxglove/studio-base/components/Button";
 import Flex from "@foxglove/studio-base/components/Flex";
-import Icon from "@foxglove/studio-base/components/Icon";
+import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 const PANE_WIDTH = 268;
 const PANE_HEIGHT = 240;
 
 const classes = mergeStyleSets({
-  expandButton: {
-    backgroundColor: "transparent !important",
-    border: "none !important",
-    padding: "8px 4px !important",
-  },
-  iconButton: {
-    fontFamily: "sans-serif !important",
-    backgroundColor: "transparent !important",
-    border: "none !important",
-    padding: "8px 4px !important",
-    alignItems: "start !important",
-    marginRight: "4px !important",
-    marginLeft: "4px !important",
-  },
   tab: {
     margin: "0",
     paddingLeft: "8px !important",
@@ -62,7 +47,7 @@ const classes = mergeStyleSets({
     justifyContent: "space-between",
   },
   tabBody: {
-    backgroundColor: colors.DARK,
+    backgroundColor: colors.DARK1,
     padding: "4px 12px 12px 12px",
   },
 });
@@ -80,9 +65,9 @@ export function ToolGroupFixedSizePane({
 }
 
 type Props<T extends string> = {
+  checked?: boolean;
   children: React.ReactElement<typeof ToolGroup>[] | React.ReactElement<typeof ToolGroup>;
-  className?: string;
-  icon: React.ReactNode;
+  iconName: RegisteredIconNames;
   onSelectTab: (name: T | undefined) => void;
   selectedTab?: T; // collapse the toolbar if selectedTab is undefined
   tooltip: string;
@@ -90,17 +75,35 @@ type Props<T extends string> = {
   dataTest?: string;
 };
 
+const iconStyles = {
+  iconChecked: { color: colors.ACCENT },
+  icon: {
+    color: "white",
+
+    svg: {
+      fill: "currentColor",
+      height: "1em",
+      width: "1em",
+    },
+  },
+} as Partial<IButtonStyles>;
+
 export default function ExpandingToolbar<T extends string>({
   children,
-  className,
-  icon,
+  checked,
+  iconName,
   onSelectTab,
   selectedTab,
   tooltip,
   style,
   dataTest,
 }: Props<T>): JSX.Element {
+  const theme = useTheme();
   const expanded = selectedTab != undefined;
+  const expandingToolbarButton = useTooltip({
+    contents: tooltip,
+    // FIXME: Tooltip causes jump
+  });
   if (!expanded) {
     let selectedTabLocal: T | undefined = selectedTab;
     // default to the first child's name if no tab is selected
@@ -109,16 +112,25 @@ export default function ExpandingToolbar<T extends string>({
         selectedTabLocal = child.props.name as T;
       }
     });
+
     return (
-      <div data-test={dataTest} className={className}>
-        <Button
-          className={classes.iconButton}
-          tooltip={tooltip}
+      <>
+        {/* {expandingToolbarButton.tooltip} */}
+        <IconButton
+          checked={checked}
+          elementRef={expandingToolbarButton.ref}
           onClick={() => onSelectTab(selectedTabLocal)}
-        >
-          <Icon dataTest={`ExpandingToolbar-${tooltip}`}>{icon}</Icon>
-        </Button>
-      </div>
+          iconProps={{ iconName }}
+          data-test={`ExpandingToolbar-${tooltip}`}
+          styles={{
+            root: { backgroundColor: colors.DARK3, pointerEvents: "auto" },
+            rootHovered: { backgroundColor: colors.DARK3 },
+            rootPressed: { backgroundColor: colors.DARK3 },
+            rootDisabled: { backgroundColor: colors.DARK3 },
+            ...iconStyles,
+          }}
+        />
+      </>
     );
   }
   let selectedChild: ReactElement | undefined;
@@ -128,7 +140,20 @@ export default function ExpandingToolbar<T extends string>({
     }
   });
   return (
-    <div data-test={dataTest} className={className}>
+    <Stack
+      data-test={dataTest}
+      grow={0}
+      styles={{
+        root: {
+          backgroundColor: colors.DARK3,
+          borderRadius: theme.effects.roundedCorner2,
+          boxShadow: theme.effects.elevation16,
+          overflow: "hidden",
+          pointerEvents: "auto",
+          flexShrink: 0,
+        },
+      }}
+    >
       <Flex row className={classes.tabBar}>
         <Flex row>
           {React.Children.map(children, (child) => {
@@ -144,15 +169,21 @@ export default function ExpandingToolbar<T extends string>({
             );
           })}
         </Flex>
-        <Button className={classes.expandButton} onClick={() => onSelectTab(undefined)}>
-          <Icon>
-            <ArrowCollapseIcon />
-          </Icon>
-        </Button>
+        <IconButton
+          onClick={() => onSelectTab(undefined)}
+          iconProps={{ iconName: "ArrowCollapse" }}
+          styles={{
+            root: { backgroundColor: "transparent" },
+            rootHovered: { backgroundColor: "transparent" },
+            rootPressed: { backgroundColor: "transparent" },
+            rootDisabled: { backgroundColor: "transparent" },
+            ...iconStyles,
+          }}
+        />
       </Flex>
       <div className={classes.tabBody} style={style}>
         {selectedChild}
       </div>
-    </div>
+    </Stack>
   );
 }

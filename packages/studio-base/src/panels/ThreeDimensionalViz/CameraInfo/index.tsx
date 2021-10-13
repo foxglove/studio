@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import CameraControlIcon from "@mdi/svg/svg/camera-control.svg";
 import { vec3 } from "gl-matrix";
 import { isEqual } from "lodash";
 import { CameraState, cameraStateSelectors, Vec3 } from "regl-worldview";
@@ -20,7 +19,6 @@ import styled from "styled-components";
 import Button from "@foxglove/studio-base/components/Button";
 import ExpandingToolbar, { ToolGroup } from "@foxglove/studio-base/components/ExpandingToolbar";
 import Flex from "@foxglove/studio-base/components/Flex";
-import Icon from "@foxglove/studio-base/components/Icon";
 import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import Tooltip from "@foxglove/studio-base/components/Tooltip";
@@ -150,12 +148,8 @@ export default function CameraInfo({
   return (
     <ExpandingToolbar
       tooltip="Camera"
-      icon={
-        <Icon style={{ color: autoSyncCameraState ? colors.ACCENT : "white" }}>
-          <CameraControlIcon />
-        </Icon>
-      }
-      className={styles.buttons}
+      iconName="CameraControl"
+      checked={autoSyncCameraState}
       selectedTab={selectedTab}
       onSelectTab={(newSelectedTab) => setSelectedTab(newSelectedTab)}
     >

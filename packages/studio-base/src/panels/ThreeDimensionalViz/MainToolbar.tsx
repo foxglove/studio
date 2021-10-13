@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { IconButton, Stack, useTheme } from "@fluentui/react";
+import { IconButton, IButtonStyles, Stack, useTheme } from "@fluentui/react";
 
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import MeasuringTool, {
@@ -18,6 +18,27 @@ type Props = {
   onToggleCameraMode: () => void;
   onToggleDebug: () => void;
 };
+
+const iconButtonStyles = {
+  rootHovered: { backgroundColor: "transparent" },
+  rootPressed: { backgroundColor: "transparent" },
+  rootDisabled: { backgroundColor: "transparent" },
+
+  rootChecked: { backgroundColor: "transparent" },
+  rootCheckedHovered: { backgroundColor: "transparent" },
+  rootCheckedPressed: { backgroundColor: "transparent" },
+
+  iconChecked: { color: colors.ACCENT },
+  icon: {
+    color: "white",
+
+    svg: {
+      fill: "currentColor",
+      height: "1em",
+      width: "1em",
+    },
+  },
+} as Partial<IButtonStyles>;
 
 function MainToolbar({
   measuringTool,
@@ -58,70 +79,31 @@ function MainToolbar({
     >
       {toggleCameraButton.tooltip}
       <IconButton
+        checked={perspective}
         onClick={onToggleCameraMode}
         elementRef={toggleCameraButton.ref}
         data-text="MainToolbar-toggleCameraMode"
         iconProps={{ iconName: "Video3d" }}
-        styles={{
-          // FIXME: use merge to reduce the number of styles
-          rootHovered: { backgroundColor: "transparent" },
-          rootPressed: { backgroundColor: "transparent" },
-          rootDisabled: { backgroundColor: "transparent" },
-          icon: {
-            color: perspective ? colors.ACCENT : "white",
-
-            svg: {
-              fill: "currentColor",
-              height: "1em",
-              width: "1em",
-            },
-          },
-        }}
+        styles={iconButtonStyles}
       />
       {measuringToolButton.tooltip}
       <IconButton
+        checked={measureActive}
         disabled={perspective}
         onClick={measuringTool ? measuringTool.toggleMeasureState : undefined}
         elementRef={measuringToolButton.ref}
         iconProps={{ iconName: "Ruler" }}
-        styles={{
-          // FIXME: use merge to reduce the number of styles
-          rootHovered: { backgroundColor: "transparent" },
-          rootPressed: { backgroundColor: "transparent" },
-          rootDisabled: { backgroundColor: "transparent" },
-          icon: {
-            color: measureActive ? colors.ACCENT : perspective ? undefined : "white",
-
-            svg: {
-              fill: "currentColor",
-              height: "1em",
-              width: "1em",
-            },
-          },
-        }}
+        styles={iconButtonStyles}
       />
       {process.env.NODE_ENV === "development" && (
         <>
           {debugButton.tooltip}
           <IconButton
+            checked={debug}
             onClick={onToggleDebug}
             elementRef={debugButton.ref}
             iconProps={{ iconName: "Bug" }}
-            styles={{
-              // FIXME: use merge to reduce the number of styles
-              rootHovered: { backgroundColor: "transparent" },
-              rootPressed: { backgroundColor: "transparent" },
-              rootDisabled: { backgroundColor: "transparent" },
-              icon: {
-                color: debug ? colors.ACCENT : "white",
-
-                svg: {
-                  fill: "currentColor",
-                  height: "1em",
-                  width: "1em",
-                },
-              },
-            }}
+            styles={iconButtonStyles}
           />
         </>
       )}
