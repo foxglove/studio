@@ -280,8 +280,6 @@ const SearchText = React.memo<SearchTextComponentProps>(function SearchText({
   if (!searchTextOpen) {
     return (
       <>
-        {/* fix me Tooltip causes jump */}
-        {/* {searchButton.tooltip} */}
         <IconButton
           elementRef={searchButton.ref}
           iconProps={{ iconName: "Search" }}
@@ -294,6 +292,7 @@ const SearchText = React.memo<SearchTextComponentProps>(function SearchText({
             ...iconStyle,
           }}
         />
+        {searchButton.tooltip}
       </>
     );
   }

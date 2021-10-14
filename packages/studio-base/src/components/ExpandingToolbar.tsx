@@ -78,7 +78,6 @@ export default function ExpandingToolbar<T extends string>({
 
   const expandingToolbarButton = useTooltip({
     contents: tooltip,
-    // fix me: Tooltip causes jump
   });
 
   if (!expanded) {
@@ -92,7 +91,7 @@ export default function ExpandingToolbar<T extends string>({
 
     return (
       <>
-        {/* {expandingToolbarButton.tooltip} */}
+        {expandingToolbarButton.tooltip}
         <IconButton
           checked={checked}
           elementRef={expandingToolbarButton.ref}

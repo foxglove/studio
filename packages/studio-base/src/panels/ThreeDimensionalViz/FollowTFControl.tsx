@@ -189,16 +189,12 @@ const FollowTFControl = memo<Props>((props: Props) => {
     [setLastSelectedFrame, getDefaultFollowTransformFrame, onFollowChange, followOrientation],
   );
 
-  // const openFrameList = useCallback(
-  //   (event: SyntheticEvent<Element>) => {
-  //     event.preventDefault();
-  //     setForceShowFrameList(true);
-  //     if (autocomplete.current) {
-  //       autocomplete.current.focus();
-  //     }
-  //   },
-  //   [setForceShowFrameList, autocomplete],
-  // );
+  const openFrameList = useCallback(() => {
+    setForceShowFrameList(true);
+    if (autocomplete.current) {
+      autocomplete.current.focus();
+    }
+  }, [setForceShowFrameList, autocomplete]);
 
   // slight delay to prevent the arrow from disappearing when you're trying to click it
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -273,7 +269,7 @@ const FollowTFControl = memo<Props>((props: Props) => {
       {(hovering || showFrameList) && (
         <IconButton
           elementRef={frameListButton.ref}
-          // onClick={openFrameList}
+          onClick={openFrameList}
           iconProps={{ iconName: showFrameList ? "MenuDown" : "MenuLeft" }}
           styles={{
             ...iconButtonStyles,

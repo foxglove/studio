@@ -100,15 +100,16 @@ function LayoutToolbar({
         styles={{
           root: {
             position: "absolute",
-            top: theme.spacing.l2,
-            right: theme.spacing.s1,
+            top: `calc(${theme.spacing.l2} + ${theme.spacing.s1})`,
+            right: theme.spacing.m,
             zIndex: 101,
             display: "flex",
             flexDirection: "column",
             alignItems: "flex-end",
-
             // allow mouse events to pass through the empty space in this container element
             pointerEvents: "none",
+
+            "> :empty": { margin: 0 },
           },
         }}
         tokens={{ childrenGap: theme.spacing.s1 }}
