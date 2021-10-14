@@ -18,6 +18,7 @@ import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanel
 import { Topic } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 import { basicDatatypes } from "@foxglove/studio-base/util/datatypes";
+import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import MessagePathInput from "./MessagePathInput";
 
@@ -114,6 +115,7 @@ const clickInput = (el: HTMLDivElement) => {
 
 function MessagePathInputStory(props: { path: string; prioritizedDatatype?: string }) {
   const [path, setPath] = React.useState(props.path);
+  const [timestampMethod, setTimestampMethod] = React.useState<TimestampMethod>("receiveTime");
 
   return (
     <MockPanelContextProvider>
@@ -124,7 +126,8 @@ function MessagePathInputStory(props: { path: string; prioritizedDatatype?: stri
             path={path}
             prioritizedDatatype={props.prioritizedDatatype}
             onChange={(newPath) => setPath(newPath)}
-            timestampMethod="receiveTime"
+            onTimestampMethodChange={setTimestampMethod}
+            timestampMethod={timestampMethod}
           />
         </Flex>
       </PanelSetup>
@@ -134,6 +137,7 @@ function MessagePathInputStory(props: { path: string; prioritizedDatatype?: stri
 
 function MessagePathPerformanceStory(props: { path: string; prioritizedDatatype?: string }) {
   const [path, setPath] = React.useState(props.path);
+  const [timestampMethod, setTimestampMethod] = React.useState<TimestampMethod>("receiveTime");
 
   return (
     <MockPanelContextProvider>
@@ -144,7 +148,8 @@ function MessagePathPerformanceStory(props: { path: string; prioritizedDatatype?
             path={path}
             prioritizedDatatype={props.prioritizedDatatype}
             onChange={(newPath) => setPath(newPath)}
-            timestampMethod="receiveTime"
+            onTimestampMethodChange={setTimestampMethod}
+            timestampMethod={timestampMethod}
           />
         </Flex>
       </PanelSetup>

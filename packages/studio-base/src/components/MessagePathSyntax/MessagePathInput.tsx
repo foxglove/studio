@@ -246,8 +246,8 @@ const dropdownStyles = {
     height: 24,
     padding: "0 2px 0 4px",
     cursor: "pointer",
+    minWidth: 120,
   },
-  label: { fontWeight: 400 },
   rootHovered: {
     color: colors.TEXT_CONTROL,
     padding: "0 2px 0 4px",
@@ -261,6 +261,7 @@ const dropdownStyles = {
   rootExpanded: { backgroundColor: "transparent" },
   rootExpandedHovered: { backgroundColor: "transparent" },
   rootPressed: { backgroundColor: "transparent" },
+  label: { fontWeight: 400 },
   menuIcon: {
     fontSize: "1em",
     height: "1em",
@@ -350,6 +351,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
   );
 
   const onTimestampMethodChangeProp = props.onTimestampMethodChange;
+
   const onTimestampMethodChange = useCallback(
     (value: TimestampMethod) => {
       onTimestampMethodChangeProp?.(value, props.index);
@@ -390,7 +392,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     [topicNamesAutocompleteItems, topics, datatypes],
   );
 
-  const [topicsOnly, setTopicsOnly] = useState<boolean>(true);
+  const [topicsOnly, setTopicsOnly] = useState<boolean>(false);
 
   const autocompleteType = useMemo(() => {
     if (!rosPath) {
@@ -582,7 +584,6 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
       tokens={{ childrenGap: 2 }}
     >
       <Stack.Item grow>
-        {timestampButton.tooltip}
         <Autocomplete
           items={orderedAutocompleteItems}
           filterText={autocompleteFilterText}
@@ -618,47 +619,50 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
         />
       </Stack.Item>
       {timestampMethod != undefined && (
-        <Stack.Item>
-          <DefaultButton
-            elementRef={timestampButton.ref}
-            checked={timestampMethod === "headerStamp" && noHeaderStamp}
-            text={timestampMethod === "receiveTime" ? "(receive time)" : "(header.stamp)"}
-            menuIconProps={{ iconName: "MenuDown" }}
-            menuProps={{
-              styles: ({ theme }) => ({
-                subComponentStyles: {
-                  menuItem: {
-                    root: { height: 24 },
-                    label: { fontSize: theme.fonts.small.fontSize },
-                    secondaryText: { fontSize: theme.fonts.small.fontSize },
+        <>
+          <Stack.Item>
+            {timestampButton.tooltip}
+            <DefaultButton
+              elementRef={timestampButton.ref}
+              checked={timestampMethod === "headerStamp" && noHeaderStamp}
+              text={timestampMethod === "receiveTime" ? "(receive time)" : "(header.stamp)"}
+              menuIconProps={{ iconName: "MenuDown" }}
+              menuProps={{
+                styles: ({ theme }) => ({
+                  subComponentStyles: {
+                    menuItem: {
+                      root: { height: 24 },
+                      label: { fontSize: theme.fonts.small.fontSize },
+                      secondaryText: { fontSize: theme.fonts.small.fontSize },
+                    },
                   },
-                },
-              }),
-              items: [
-                {
-                  key: "receiveTime",
-                  text: "receive time",
-                  onClick: () => onTimestampMethodChange("receiveTime"),
-                },
-                {
-                  key: "headerStamp",
-                  text: "header.stamp",
-                  onClick: () => onTimestampMethodChange("headerStamp"),
-                },
-              ],
-            }}
-            styles={dropdownStyles}
-          />
-        </Stack.Item>
+                }),
+                items: [
+                  {
+                    key: "receiveTime",
+                    text: "receive time",
+                    onClick: () => onTimestampMethodChange("receiveTime"),
+                  },
+                  {
+                    key: "headerStamp",
+                    text: "header.stamp",
+                    onClick: () => onTimestampMethodChange("headerStamp"),
+                  },
+                ],
+              }}
+              styles={dropdownStyles}
+            />
+          </Stack.Item>
+          <Stack.Item>
+            {helpButton.tooltip}
+            <IconButton
+              elementRef={helpButton.ref}
+              iconProps={{ iconName: "HelpCircle" }}
+              styles={iconButtonStyles}
+            />
+          </Stack.Item>
+        </>
       )}
-      <Stack.Item>
-        {helpButton.tooltip}
-        <IconButton
-          elementRef={helpButton.ref}
-          iconProps={{ iconName: "HelpCircle" }}
-          styles={iconButtonStyles}
-        />
-      </Stack.Item>
     </Stack>
   );
 });

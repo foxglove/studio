@@ -167,7 +167,11 @@ const HighlightChars = (props: { str: string; indices: Set<number> }) => {
 
   const nodes = chars.map((char, i) => {
     if (props.indices.has(i)) {
-      return <b key={i}>{char}</b>;
+      return (
+        <b key={i} style={{ color: colors.HIGHLIGHT }}>
+          {char}
+        </b>
+      );
     } else {
       return char;
     }
