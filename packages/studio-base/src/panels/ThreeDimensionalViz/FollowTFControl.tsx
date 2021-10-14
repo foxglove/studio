@@ -264,19 +264,21 @@ const FollowTFControl = memo<Props>((props: Props) => {
           }}
         />
       )}
-      {frameListButton.tooltip}
-      {followButton.tooltip}
       {(hovering || showFrameList) && (
-        <IconButton
-          elementRef={frameListButton.ref}
-          onClick={openFrameList}
-          iconProps={{ iconName: showFrameList ? "MenuDown" : "MenuLeft" }}
-          styles={{
-            ...iconButtonStyles,
-            root: { width: 16 },
-          }}
-        />
+        <>
+          {frameListButton.tooltip}
+          <IconButton
+            elementRef={frameListButton.ref}
+            onClick={openFrameList}
+            iconProps={{ iconName: showFrameList ? "MenuDown" : "MenuLeft" }}
+            styles={{
+              ...iconButtonStyles,
+              root: { width: 16 },
+            }}
+          />
+        </>
       )}
+      {followButton.tooltip}
       <IconButton
         checked={tfToFollow != undefined}
         elementRef={followButton.ref}

@@ -108,8 +108,6 @@ function LayoutToolbar({
             alignItems: "flex-end",
             // allow mouse events to pass through the empty space in this container element
             pointerEvents: "none",
-
-            "> :empty": { margin: 0 },
           },
         }}
         tokens={{ childrenGap: theme.spacing.s1 }}

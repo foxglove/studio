@@ -87,7 +87,7 @@ export default function TopicTreeSwitcher({
               rootCheckedPressed: { backgroundColor: "transparent" },
               iconChecked: { color: colors.ACCENT },
               icon: {
-                color: colors.LIGHT,
+                color: colors.LIGHT1,
 
                 svg: {
                   fill: "currentColor",

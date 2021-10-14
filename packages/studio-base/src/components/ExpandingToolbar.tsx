@@ -90,7 +90,7 @@ export default function ExpandingToolbar<T extends string>({
     });
 
     return (
-      <>
+      <div>
         {expandingToolbarButton.tooltip}
         <IconButton
           checked={checked}
@@ -109,7 +109,7 @@ export default function ExpandingToolbar<T extends string>({
             ...iconStyles,
           }}
         />
-      </>
+      </div>
     );
   }
   let selectedChild: ReactElement | undefined;
