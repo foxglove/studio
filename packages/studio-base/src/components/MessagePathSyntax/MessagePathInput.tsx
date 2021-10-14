@@ -17,7 +17,6 @@ import { CSSProperties, useCallback, useMemo, useState } from "react";
 
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import Autocomplete from "@foxglove/studio-base/components/Autocomplete";
-import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconButton";
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import useGlobalVariables, {
   GlobalVariables,
@@ -213,21 +212,29 @@ const iconButtonStyles = {
     height: 24,
     width: 24,
     cursor: "pointer",
+    color: colors.TEXT_MUTED,
   },
-  rootHovered: { backgroundColor: colors.DARK2 },
+  rootHovered: {
+    backgroundColor: colors.DARK2,
+    color: colors.TEXT_BRIGHT,
+  },
   rootPressed: { backgroundColor: colors.DARK2 },
   rootChecked: {
     height: 24,
     width: 24,
     backgroundColor: "transparent",
+    color: colors.PRIMARY,
   },
-  rootCheckedHovered: { backgroundColor: colors.DARK2 },
+  rootCheckedHovered: {
+    backgroundColor: colors.DARK2,
+    color: colors.PRIMARY,
+  },
   rootCheckedDisabled: { backgroundColor: "transparent" },
   rootCheckedPressed: { backgroundColor: colors.DARK2 },
-  iconHovered: { color: colors.TEXT_BRIGHT },
-  iconChecked: { color: colors.PRIMARY },
+  iconHovered: { color: "inherit" },
+  iconChecked: { color: "inherit" },
   icon: {
-    color: colors.TEXT_MUTED,
+    color: "inherit",
 
     svg: {
       height: "1em",
