@@ -7,8 +7,7 @@ import decompressLZ4 from "wasm-lz4";
 import { McapReader, McapRecord } from "@foxglove/mcap";
 import { Bag, BagReader } from "@foxglove/rosbag";
 import { BlobReader } from "@foxglove/rosbag/web";
-import { fromNanoSec, isLessThan, isGreaterThan } from "@foxglove/rostime";
-import { Time } from "@foxglove/rostime";
+import { Time, fromNanoSec, isLessThan, isGreaterThan } from "@foxglove/rostime";
 
 export type TopicInfo = {
   topic: string;
