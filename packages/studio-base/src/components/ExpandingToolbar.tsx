@@ -150,7 +150,7 @@ export default function ExpandingToolbar<T extends string>({
         root: {
           backgroundColor: colors.DARK3,
           borderRadius: theme.effects.roundedCorner2,
-          boxShadow: theme.effects.elevation16,
+          boxShadow: theme.effects.elevation64,
           overflow: "hidden",
           pointerEvents: "auto",
           flexShrink: 0,
