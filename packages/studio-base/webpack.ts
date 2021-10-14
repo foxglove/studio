@@ -191,12 +191,10 @@ export function makeConfig(
           test: /[\\/]fonts[\\/]DefaultFontStyles.js$/,
           loader: "string-replace-loader",
           options: {
-            multiple: [
-              {
-                search: "registerDefaultFontFaces(_getFontBaseUrl());",
-                replace: "",
-              },
-            ],
+            search: "registerDefaultFontFaces(_getFontBaseUrl());",
+            replace: "",
+            // https://github.com/Va1/string-replace-loader#strict-mode-replacement
+            strict: true,
           },
         },
       ],
