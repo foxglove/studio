@@ -17,7 +17,6 @@ import cx from "classnames";
 import { flatten, flatMap, partition } from "lodash";
 import { CSSProperties, useCallback, useMemo } from "react";
 
-import Logger from "@foxglove/log";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import Autocomplete from "@foxglove/studio-base/components/Autocomplete";
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
@@ -40,8 +39,6 @@ import {
   validTerminatingStructureItem,
 } from "./messagePathsForDatatype";
 import parseRosPath from "./parseRosPath";
-
-const log = Logger.getLogger(__filename);
 
 const classes = mergeStyleSets({
   root: {
@@ -232,16 +229,6 @@ type MessagePathInputBaseProps = {
   onTimestampMethodChange?: (arg0: TimestampMethod, index?: number) => void;
 };
 
-const SearchDatabase: {
-  topicNamesAutocompleteItems: string[];
-  topicNamesAndFieldsAutocompleteItems: string[];
-  topics: readonly Topic[];
-} = {
-  topicNamesAutocompleteItems: [],
-  topicNamesAndFieldsAutocompleteItems: [],
-  topics: [],
-};
-
 export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
   props: MessagePathInputBaseProps,
 ) {
@@ -348,21 +335,15 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     return getFirstInvalidVariableFromRosPath(rosPath, globalVariables, setGlobalVariables);
   }, [globalVariables, rosPath, setGlobalVariables]);
 
-  if (SearchDatabase.topics !== topics) {
-    const startTime = performance.now();
-    SearchDatabase.topics = topics;
-    SearchDatabase.topicNamesAutocompleteItems = getTopicNames(topics);
-    SearchDatabase.topicNamesAndFieldsAutocompleteItems =
-      SearchDatabase.topicNamesAutocompleteItems.concat(getFieldPaths(topics, datatypes));
-    log.debug(
-      `MessagePathInput search database updated with ${
-        SearchDatabase.topicNamesAndFieldsAutocompleteItems.length
-      } entries from ${topics.length} topics in ${(performance.now() - startTime).toFixed(2)}ms`,
-    );
-  }
+  const topicNamesAutocompleteItems = useMemo(() => getTopicNames(topics), [topics]);
 
-  const topicNamesAutocompleteItems = SearchDatabase.topicNamesAutocompleteItems;
-  const topicNamesAndFieldsAutocompleteItems = SearchDatabase.topicNamesAndFieldsAutocompleteItems;
+  const topicNamesAndFieldsAutocompleteItems = useMemo(
+    () => topicNamesAutocompleteItems.concat(getFieldPaths(topics, datatypes)),
+    [topicNamesAutocompleteItems, topics, datatypes],
+  );
+
+  // FIXME: Set this based on a toggle button in the UI
+  const topicsOnly = false;
 
   const autocompleteType = useMemo(() => {
     if (!rosPath) {
@@ -392,19 +373,14 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
         autocompleteRange: { start: 0, end: Infinity },
       };
     } else if (autocompleteType === "topicName") {
-      if (path[0] === ".") {
-        return {
-          autocompleteItems: topicNamesAndFieldsAutocompleteItems,
-          autocompleteFilterText: path,
-          autocompleteRange: { start: 0, end: Infinity },
-        };
-      } else {
-        return {
-          autocompleteItems: topicNamesAutocompleteItems,
-          autocompleteFilterText: path,
-          autocompleteRange: { start: 0, end: Infinity },
-        };
-      }
+      // If the path is empty, return topic names only to show the full list of topics. Otherwise,
+      // use the full set of topic names and field paths to autocomplete
+      return {
+        autocompleteItems:
+          topicsOnly || !path ? topicNamesAutocompleteItems : topicNamesAndFieldsAutocompleteItems,
+        autocompleteFilterText: path,
+        autocompleteRange: { start: 0, end: Infinity },
+      };
     } else if (autocompleteType === "messagePath" && topic && rosPath) {
       if (
         structureTraversalResult &&
