@@ -225,7 +225,7 @@ const iconButtonStyles = {
   rootCheckedDisabled: { backgroundColor: "transparent" },
   rootCheckedPressed: { backgroundColor: colors.DARK2 },
   iconHovered: { color: colors.TEXT_BRIGHT },
-  iconChecked: { color: colors.ACCENT },
+  iconChecked: { color: colors.PRIMARY },
   icon: {
     color: colors.TEXT_MUTED,
 
@@ -607,13 +607,12 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
       </Stack.Item>
       <Stack.Item>
         {objectFilterButton.tooltip}
-        <HoverableIconButton
+        <IconButton
           elementRef={objectFilterButton.ref}
           onClick={() => setTopicsOnly(!topicsOnly)}
           checked={!topicsOnly}
           iconProps={{
-            iconName: topicsOnly ? "Braces" : "BracesFilled",
-            iconNameActive: "BracesFilled",
+            iconName: "BracesFilled",
           }}
           styles={iconButtonStyles}
         />
