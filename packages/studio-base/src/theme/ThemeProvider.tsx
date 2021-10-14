@@ -34,9 +34,11 @@ import DatabaseIcon from "@mdi/svg/svg/database.svg";
 import DragIcon from "@mdi/svg/svg/drag.svg";
 import FitToPageIcon from "@mdi/svg/svg/fit-to-page-outline.svg";
 import HelpCircleIcon from "@mdi/svg/svg/help-circle-outline.svg";
+import LayersIcon from "@mdi/svg/svg/layers.svg";
 import MenuDownIcon from "@mdi/svg/svg/menu-down.svg";
 import MenuLeftIcon from "@mdi/svg/svg/menu-left.svg";
 import PencilIcon from "@mdi/svg/svg/pencil.svg";
+import PinIcon from "@mdi/svg/svg/pin.svg";
 import PlusCircleOutlineIcon from "@mdi/svg/svg/plus-circle-outline.svg";
 import RulerIcon from "@mdi/svg/svg/ruler.svg";
 import SearchIcon from "@mdi/svg/svg/magnify.svg";
@@ -105,6 +107,7 @@ const icons: {
   GenericScan: <Icons.GenericScanIcon />,
   HelpCircle: <HelpCircleIcon />,
   Info: <Icons.InfoIcon />,
+  Layers: <LayersIcon />,
   LocationDot: <Icons.LocationDotIcon />,
   Loop: <LoopIcon strokeWidth={1.375} />,
   LoopFilled: <LoopIcon strokeWidth={1.875} />,
@@ -119,6 +122,7 @@ const icons: {
   Pause: <Pause20Regular />,
   PauseFilled: <Pause20Filled />,
   Pencil: <PencilIcon />,
+  Pin: <PinIcon />,
   Play: <Play20Regular />,
   PlayFilled: <Play20Filled />,
   PlusCircleOutline: <PlusCircleOutlineIcon />,

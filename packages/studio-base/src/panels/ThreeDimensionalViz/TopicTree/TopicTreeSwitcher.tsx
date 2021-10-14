@@ -11,28 +11,17 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import LayersIcon from "@mdi/svg/svg/layers.svg";
-import PinIcon from "@mdi/svg/svg/pin.svg";
+import { IconButton, Stack } from "@fluentui/react";
 import { useCallback } from "react";
 import styled from "styled-components";
 
-import Icon from "@foxglove/studio-base/components/Icon";
 import KeyboardShortcut from "@foxglove/studio-base/components/KeyboardShortcut";
-import Tooltip from "@foxglove/studio-base/components/Tooltip";
+import Tooltip, { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { Save3DConfig } from "../index";
 
 export const SWITCHER_HEIGHT = 30;
-const STopicTreeSwitcher = styled.div`
-  width: 28px;
-  display: flex;
-  height: ${SWITCHER_HEIGHT}px;
-  position: relative;
-
-  // We have to re-enable pointer-events here because they are disabled in STopicTreeWrapper
-  pointer-events: auto;
-`;
 
 const SErrorsBadge = styled.div`
   position: absolute;
@@ -42,17 +31,6 @@ const SErrorsBadge = styled.div`
   height: 10px;
   border-radius: 5px;
   background-color: ${colors.RED};
-`;
-
-/* TODO(Audrey): stay consistent with other buttons in the 3D panel, will consolidate later. */
-const SIconWrapper = styled.div`
-  width: 28px;
-  border-radius: 4px;
-  padding: 4px;
-  position: absolute;
-  top: 0;
-  left: 0;
-  font-family: sans-serif;
 `;
 
 type Props = {
@@ -72,54 +50,82 @@ export default function TopicTreeSwitcher({
   showErrorBadge,
 }: Props): JSX.Element {
   const onClick = useCallback(() => setShowTopicTree((shown) => !shown), [setShowTopicTree]);
+
+  const pinButton = useTooltip({ placement: "top", contents: "Pin topic picker" });
+  const topicButton = useTooltip({ placement: "top", contents: <KeyboardShortcut keys={["T"]} /> });
+
   return (
-    <STopicTreeSwitcher>
-      <SIconWrapper
-        style={{
-          backgroundColor: "#2d2c33",
-          opacity: renderTopicTree ? 0 : 1,
-          transition: `all 0.15s ease-out ${renderTopicTree ? 0 : 0.2}s`,
+    <>
+      {renderTopicTree ? pinButton.tooltip : topicButton.tooltip}
+      <Stack
+        horizontal
+        styles={{
+          root: {
+            position: "relative",
+            pointerEvents: "auto",
+          },
         }}
       >
-        <Icon
-          tooltipProps={{ placement: "top", contents: <KeyboardShortcut keys={["T"]} /> }}
-          dataTest="open-topic-picker"
-          active={renderTopicTree}
-          fade
-          size="medium"
-          onClick={onClick}
-        >
-          <LayersIcon />
-        </Icon>
-      </SIconWrapper>
-      <SIconWrapper
-        style={{
-          transform: `translate(0px,${renderTopicTree ? 0 : -28}px)`,
-          opacity: renderTopicTree ? 1 : 0,
-          transition: `all 0.25s ease-in-out`,
-          pointerEvents: renderTopicTree ? "unset" : "none",
-        }}
-      >
-        <Icon
-          tooltipProps={{ placement: "top", contents: "Pin topic picker" }}
-          size="small"
-          fade
-          active={pinTopics}
-          onClick={() => {
-            // Keep TopicTree open after unpin.
-            setShowTopicTree(true);
-            saveConfig({ pinTopics: !pinTopics });
-          }}
-          style={{ color: pinTopics ? colors.HIGHLIGHT : colors.LIGHT }}
-        >
-          <PinIcon />
-        </Icon>
-      </SIconWrapper>
-      {showErrorBadge && (
-        <Tooltip contents="Errors found in selected topics/namespaces" placement="top">
-          <SErrorsBadge />
-        </Tooltip>
-      )}
-    </STopicTreeSwitcher>
+        {renderTopicTree ? (
+          <IconButton
+            elementRef={pinButton.ref}
+            onClick={() => {
+              // Keep TopicTree open after unpin.
+              setShowTopicTree(true);
+              saveConfig({ pinTopics: !pinTopics });
+            }}
+            data-test="open-topic-picker"
+            iconProps={{ iconName: "Pin" }}
+            checked={pinTopics}
+            styles={{
+              root: { backgroundColor: "transparent" },
+              rootHovered: { backgroundColor: "transparent" },
+              rootPressed: { backgroundColor: "transparent" },
+              rootDisabled: { backgroundColor: "transparent" },
+              rootChecked: { backgroundColor: "transparent" },
+              rootCheckedHovered: { backgroundColor: "transparent" },
+              rootCheckedPressed: { backgroundColor: "transparent" },
+              iconChecked: { color: colors.ACCENT },
+              icon: {
+                color: colors.LIGHT,
+
+                svg: {
+                  fill: "currentColor",
+                  height: "1em",
+                  width: "1em",
+                },
+              },
+            }}
+          />
+        ) : (
+          <IconButton
+            elementRef={topicButton.ref}
+            onClick={onClick}
+            iconProps={{ iconName: "Layers" }}
+            styles={{
+              root: { backgroundColor: colors.DARK3 },
+              rootHovered: { backgroundColor: colors.DARK3 },
+              rootPressed: { backgroundColor: colors.DARK3 },
+              rootDisabled: { backgroundColor: colors.DARK3 },
+              iconChecked: { color: colors.ACCENT },
+              icon: {
+                color: "white",
+
+                svg: {
+                  fill: "currentColor",
+                  height: "1em",
+                  width: "1em",
+                },
+              },
+            }}
+          />
+        )}
+        {showErrorBadge && (
+          <Tooltip contents="Errors found in selected topics/namespaces" placement="top">
+            <SErrorsBadge />
+          </Tooltip>
+        )}
+      </Stack>
+    </>
   );
 }
