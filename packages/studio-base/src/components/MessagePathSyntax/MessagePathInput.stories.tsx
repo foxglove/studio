@@ -120,7 +120,7 @@ function MessagePathInputStory(props: { path: string; prioritizedDatatype?: stri
       <PanelSetup fixture={fixture} onMount={clickInput}>
         <Flex style={{ margin: "10px" }}>
           <MessagePathInput
-            autoSize
+            autoSize={false}
             path={path}
             prioritizedDatatype={props.prioritizedDatatype}
             onChange={(newPath) => setPath(newPath)}
@@ -140,7 +140,7 @@ function MessagePathPerformanceStory(props: { path: string; prioritizedDatatype?
       <PanelSetup fixture={heavyFixture} onMount={clickInput}>
         <Flex style={{ margin: "10px" }}>
           <MessagePathInput
-            autoSize
+            autoSize={false}
             path={path}
             prioritizedDatatype={props.prioritizedDatatype}
             onChange={(newPath) => setPath(newPath)}

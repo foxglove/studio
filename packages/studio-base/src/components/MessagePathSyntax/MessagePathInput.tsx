@@ -11,17 +11,14 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { mergeStyleSets } from "@fluentui/merge-styles";
-import MenuDownIcon from "@mdi/svg/svg/menu-down.svg";
-import cx from "classnames";
+import { DefaultButton, IButtonStyles, IconButton, Stack, makeStyles } from "@fluentui/react";
 import { flatten, flatMap, partition } from "lodash";
-import { CSSProperties, useCallback, useMemo } from "react";
+import { CSSProperties, useCallback, useMemo, useState } from "react";
 
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import Autocomplete from "@foxglove/studio-base/components/Autocomplete";
-import Dropdown from "@foxglove/studio-base/components/Dropdown";
-import Icon from "@foxglove/studio-base/components/Icon";
-import Tooltip from "@foxglove/studio-base/components/Tooltip";
+import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconButton";
+import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import useGlobalVariables, {
   GlobalVariables,
 } from "@foxglove/studio-base/hooks/useGlobalVariables";
@@ -40,41 +37,22 @@ import {
 } from "./messagePathsForDatatype";
 import parseRosPath from "./parseRosPath";
 
-const classes = mergeStyleSets({
-  root: {
-    display: "flex",
-    flex: "1 1 auto",
-    minWidth: 0,
-    justifyContent: "space-between",
-  },
-  container: {
-    flexShrink: 100,
-    minWidth: 20,
-    whiteSpace: "nowrap",
-  },
-  icon: {
-    position: "relative",
-    top: 2,
-    marginLeft: 2,
-  },
-  dropdown: {
-    cursor: "pointer",
-    paddingLeft: 2,
-    color: colors.TEXT_MUTED,
+const useStyles = makeStyles({
+  helpTooltip: {
+    margin: 0,
+    lineHeight: "1.3",
 
-    "&:hover": {
-      color: colors.TEXT_NORMAL,
+    dd: {
+      margin: "2px 0",
     },
-  },
-  dropdownError: {
-    color: colors.RED2,
-  },
-  error: {
-    color: colors.RED2,
-  },
-  tooltip: {
-    maxWidth: 200,
-    lineHeight: "normal",
+    dt: {
+      fontWeight: 700,
+      marginTop: 6,
+
+      ":first-of-type": {
+        marginTop: 0,
+      },
+    },
   },
 });
 
@@ -224,14 +202,84 @@ type MessagePathInputBaseProps = {
   inputStyle?: CSSProperties;
   disableAutocomplete?: boolean; // Treat this as a normal input, with no autocomplete.
   prioritizedDatatype?: string;
-
   timestampMethod?: TimestampMethod;
   onTimestampMethodChange?: (arg0: TimestampMethod, index?: number) => void;
 };
 
+const iconButtonStyles = {
+  root: {
+    backgroundColor: "transparent",
+    fontSize: 20,
+    height: 24,
+    width: 24,
+    cursor: "pointer",
+  },
+  rootHovered: { backgroundColor: colors.DARK2 },
+  rootPressed: { backgroundColor: colors.DARK2 },
+  rootChecked: {
+    height: 24,
+    width: 24,
+    backgroundColor: "transparent",
+  },
+  rootCheckedHovered: { backgroundColor: colors.DARK2 },
+  rootCheckedDisabled: { backgroundColor: "transparent" },
+  rootCheckedPressed: { backgroundColor: colors.DARK2 },
+  iconHovered: { color: colors.TEXT_BRIGHT },
+  iconChecked: { color: colors.ACCENT },
+  icon: {
+    color: colors.TEXT_MUTED,
+
+    svg: {
+      height: "1em",
+      width: "1em",
+      display: "block",
+      fill: "currentColor",
+    },
+  },
+} as Partial<IButtonStyles>;
+
+const dropdownStyles = {
+  root: {
+    color: colors.TEXT_MUTED,
+    borderColor: "transparent",
+    fontSize: 12,
+    height: 24,
+    padding: "0 2px 0 4px",
+    cursor: "pointer",
+  },
+  label: { fontWeight: 400 },
+  rootHovered: {
+    color: colors.TEXT_CONTROL,
+    padding: "0 2px 0 4px",
+    backgroundColor: colors.DARK2,
+  },
+  rootChecked: {
+    color: colors.RED2,
+    backgroundColor: "transparent",
+  },
+  rootCheckedHovered: { backgroundColor: "transparent" },
+  rootExpanded: { backgroundColor: "transparent" },
+  rootExpandedHovered: { backgroundColor: "transparent" },
+  rootPressed: { backgroundColor: "transparent" },
+  menuIcon: {
+    fontSize: "1em",
+    height: "1em",
+    color: "inherit",
+    marginLeft: 0,
+
+    svg: {
+      fill: "currentColor",
+      height: "1em",
+      width: "1em",
+      display: "block",
+    },
+  },
+} as Partial<IButtonStyles>;
+
 export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
   props: MessagePathInputBaseProps,
 ) {
+  const classes = useStyles();
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
   const { datatypes, topics } = PanelAPI.useDataSourceInfo();
 
@@ -342,8 +390,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     [topicNamesAutocompleteItems, topics, datatypes],
   );
 
-  // FIXME: Set this based on a toggle button in the UI
-  const topicsOnly = false;
+  const [topicsOnly, setTopicsOnly] = useState<boolean>(true);
 
   const autocompleteType = useMemo(() => {
     if (!rosPath) {
@@ -462,9 +509,10 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     topic,
     rosPath,
     invalidGlobalVariablesVariable,
+    topicsOnly,
     path,
-    topicNamesAndFieldsAutocompleteItems,
     topicNamesAutocompleteItems,
+    topicNamesAndFieldsAutocompleteItems,
     structureTraversalResult,
     datatypes,
     validTypes,
@@ -496,85 +544,121 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     usesUnsupportedMathModifier ||
     (autocompleteType != undefined && !disableAutocomplete && path.length > 0);
 
-  return (
-    <div className={classes.root}>
-      <Autocomplete
-        items={orderedAutocompleteItems}
-        filterText={autocompleteFilterText}
-        value={path}
-        onChange={onChange}
-        onSelect={(value: string, _item: unknown, autocomplete: Autocomplete<string>) =>
-          onSelect(value, autocomplete, autocompleteType, autocompleteRange)
-        }
-        hasError={hasError}
-        autocompleteKey={autocompleteType}
-        placeholder={
-          placeholder != undefined && placeholder !== "" ? placeholder : "/some/topic.msgs[0].field"
-        }
-        autoSize={autoSize}
-        inputStyle={inputStyle} // Disable autoselect since people often construct complex queries, and it's very annoying
-        // to have the entire input selected whenever you want to make a change to a part it.
-        disableAutoSelect
-      />
+  const objectFilterButton = useTooltip({
+    contents: "Match field names",
+  });
 
+  const timestampButton = useTooltip({
+    contents: noHeaderStamp
+      ? "header.stamp is not present in this topic"
+      : "Timestamp used for x-axis",
+    placement: "top",
+  });
+
+  const helpButton = useTooltip({
+    contents: (
+      <dl className={classes.helpTooltip}>
+        <dt>receive time</dt>
+        <dd>ROS-time at which the message was received and recorded.</dd>
+
+        <dt>header.stamp</dt>
+        <dd>
+          Value of the header.stamp field. Can mean different things for different topics. Be sure
+          you know what this value means before using it.
+        </dd>
+      </dl>
+    ),
+    placement: "top",
+  });
+
+  return (
+    <Stack
+      horizontal
+      horizontalAlign="space-between"
+      verticalAlign="center"
+      grow
+      disableShrink
+      styles={{ root: { minWidth: 0, ".ms-layer:empty": { margin: 0 } } }}
+      tokens={{ childrenGap: 2 }}
+    >
+      <Stack.Item grow>
+        {timestampButton.tooltip}
+        <Autocomplete
+          items={orderedAutocompleteItems}
+          filterText={autocompleteFilterText}
+          value={path}
+          onChange={onChange}
+          onSelect={(value: string, _item: unknown, autocomplete: Autocomplete<string>) =>
+            onSelect(value, autocomplete, autocompleteType, autocompleteRange)
+          }
+          hasError={hasError}
+          autocompleteKey={autocompleteType}
+          placeholder={
+            placeholder != undefined && placeholder !== ""
+              ? placeholder
+              : "/some/topic.msgs[0].field"
+          }
+          autoSize={autoSize}
+          inputStyle={inputStyle} // Disable autoselect since people often construct complex queries, and it's very annoying
+          // to have the entire input selected whenever you want to make a change to a part it.
+          disableAutoSelect
+        />
+      </Stack.Item>
+      <Stack.Item>
+        {objectFilterButton.tooltip}
+        <HoverableIconButton
+          elementRef={objectFilterButton.ref}
+          onClick={() => setTopicsOnly(!topicsOnly)}
+          checked={!topicsOnly}
+          iconProps={{
+            iconName: topicsOnly ? "Braces" : "BracesFilled",
+            iconNameActive: "BracesFilled",
+          }}
+          styles={iconButtonStyles}
+        />
+      </Stack.Item>
       {timestampMethod != undefined && (
-        <div className={classes.container}>
-          <Dropdown
-            onChange={onTimestampMethodChange}
-            value={timestampMethod}
-            toggleComponent={
-              <Tooltip contents="Timestamp used for x-axis" placement="top">
-                <div
-                  className={cx({
-                    [classes.dropdown]: true,
-                    [classes.dropdownError]: timestampMethod === "headerStamp" && noHeaderStamp,
-                  })}
-                >
-                  {timestampMethod === "receiveTime" ? "(receive time)" : "(header.stamp)"}
-                  <Icon className={classes.icon}>
-                    <MenuDownIcon />
-                  </Icon>
-                </div>
-              </Tooltip>
-            }
-          >
-            <Tooltip
-              {
-                ...{
-                  value: "receiveTime",
-                }
-                // weird spread syntax used to overcome error with "value" property.
-                // "value" is needed for Dropdown but does not exist on Tooltip
-              }
-              placement="right"
-              contents="ROS-time at which the message was received and recorded"
-            >
-              <span>receive time</span>
-            </Tooltip>
-            <Tooltip
-              {
-                ...{
-                  value: "headerStamp",
-                }
-                // weird spread syntax used to overcome error with "value" property.
-                // "value" is needed for Dropdown but does not exist on Tooltip
-              }
-              placement="bottom"
-              contents={
-                <div className={classes.tooltip}>
-                  Value of the header.stamp field. Can mean different things for different topics.
-                  Be sure you know what this value means before using it.
-                  {noHeaderStamp && (
-                    <div className={classes.error}>(header.stamp is not present in this topic)</div>
-                  )}
-                </div>
-              }
-            >
-              <span className={cx({ [classes.error]: noHeaderStamp })}>header.stamp</span>
-            </Tooltip>
-          </Dropdown>
-        </div>
+        <Stack.Item>
+          <DefaultButton
+            elementRef={timestampButton.ref}
+            checked={timestampMethod === "headerStamp" && noHeaderStamp}
+            text={timestampMethod === "receiveTime" ? "(receive time)" : "(header.stamp)"}
+            menuIconProps={{ iconName: "MenuDown" }}
+            menuProps={{
+              styles: ({ theme }) => ({
+                subComponentStyles: {
+                  menuItem: {
+                    root: { height: 24 },
+                    label: { fontSize: theme.fonts.small.fontSize },
+                    secondaryText: { fontSize: theme.fonts.small.fontSize },
+                  },
+                },
+              }),
+              items: [
+                {
+                  key: "receiveTime",
+                  text: "receive time",
+                  onClick: () => onTimestampMethodChange("receiveTime"),
+                },
+                {
+                  key: "headerStamp",
+                  text: "header.stamp",
+                  onClick: () => onTimestampMethodChange("headerStamp"),
+                },
+              ],
+            }}
+            styles={dropdownStyles}
+          />
+        </Stack.Item>
       )}
-    </div>
+      <Stack.Item>
+        {helpButton.tooltip}
+        <IconButton
+          elementRef={helpButton.ref}
+          iconProps={{ iconName: "HelpCircle" }}
+          styles={iconButtonStyles}
+        />
+      </Stack.Item>
+    </Stack>
   );
 });
