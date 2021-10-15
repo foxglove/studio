@@ -437,7 +437,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
       // use the full set of topic names and field paths to autocomplete
       return {
         autocompleteItems:
-          enableFieldMatching || path
+          enableFieldMatching && path
             ? topicNamesAndFieldsAutocompleteItems
             : topicNamesAutocompleteItems,
         autocompleteFilterText: path,
