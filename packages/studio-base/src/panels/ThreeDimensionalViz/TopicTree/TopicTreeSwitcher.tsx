@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { IconButton, Stack, makeStyles } from "@fluentui/react";
+import { IconButton, makeStyles } from "@fluentui/react";
 import cx from "classnames";
 import { useCallback } from "react";
 
@@ -18,7 +18,11 @@ const BADGE_SIZE = 10;
 const BADGE_RADIUS = BADGE_SIZE / 2;
 const BADGE_OFFSET = 2;
 
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
+  root: {
+    position: "relative",
+    pointerEvents: "auto",
+  },
   badge: {
     ":before": {
       content: '""',
@@ -28,11 +32,11 @@ const useStyles = makeStyles({
       width: BADGE_SIZE,
       height: BADGE_SIZE,
       borderRadius: BADGE_RADIUS,
-      backgroundColor: colors.RED,
+      backgroundColor: theme.semanticColors.errorBackground,
       zIndex: 101,
     },
   },
-});
+}));
 
 type Props = {
   pinTopics: boolean;
@@ -64,83 +68,73 @@ export default function TopicTreeSwitcher({
   });
 
   return (
-    <>
+    <div className={classes.root}>
       {renderTopicTree ? pinButton.tooltip : topicButton.tooltip}
-      <Stack
-        horizontal
+      <IconButton
+        elementRef={pinButton.ref}
+        onClick={() => {
+          // Keep TopicTree open after unpin.
+          setShowTopicTree(true);
+          saveConfig({ pinTopics: !pinTopics });
+        }}
+        data-test="open-topic-picker"
+        iconProps={{ iconName: "Pin" }}
+        checked={pinTopics}
+        styles={{
+          root: {
+            transform: `translateY(${renderTopicTree ? 0 : -100}%)`,
+            backgroundColor: "transparent",
+            opacity: renderTopicTree ? 1 : 0,
+            transition: "opacity 0.25s ease-in-out, transform 0.25s ease-in-out",
+            pointerEvents: renderTopicTree ? "auto" : "none",
+          },
+          rootHovered: { backgroundColor: "transparent" },
+          rootPressed: { backgroundColor: "transparent" },
+          rootDisabled: { backgroundColor: "transparent" },
+          rootChecked: { backgroundColor: "transparent" },
+          rootCheckedHovered: { backgroundColor: "transparent" },
+          rootCheckedPressed: { backgroundColor: "transparent" },
+          iconChecked: { color: colors.HIGHLIGHT },
+          icon: {
+            color: colors.LIGHT1,
+
+            svg: {
+              fill: "currentColor",
+              height: "1em",
+              width: "1em",
+            },
+          },
+        }}
+      />
+      <IconButton
+        className={cx({ [classes.badge]: showErrorBadge })}
+        elementRef={topicButton.ref}
+        onClick={onClick}
+        iconProps={{ iconName: "Layers" }}
         styles={{
           root: {
             position: "relative",
-            pointerEvents: "auto",
+            transform: "translateX(-100%)",
+            backgroundColor: colors.DARK3,
+            opacity: renderTopicTree ? 0 : 1,
+            transition: `opacity 0.15s ease-out ${renderTopicTree ? 0 : 0.2}s`,
+            pointerEvents: renderTopicTree ? "none" : "auto",
+          },
+          rootHovered: { backgroundColor: colors.DARK3 },
+          rootPressed: { backgroundColor: colors.DARK3 },
+          rootDisabled: { backgroundColor: colors.DARK3 },
+          iconChecked: { color: colors.ACCENT },
+          icon: {
+            color: "white",
+
+            svg: {
+              fill: "currentColor",
+              height: "1em",
+              width: "1em",
+            },
           },
         }}
-      >
-        <IconButton
-          elementRef={pinButton.ref}
-          onClick={() => {
-            // Keep TopicTree open after unpin.
-            setShowTopicTree(true);
-            saveConfig({ pinTopics: !pinTopics });
-          }}
-          data-test="open-topic-picker"
-          iconProps={{ iconName: "Pin" }}
-          checked={pinTopics}
-          styles={{
-            root: {
-              transform: `translateY(${renderTopicTree ? 0 : -100}%)`,
-              backgroundColor: "transparent",
-              opacity: renderTopicTree ? 1 : 0,
-              transition: "opacity 0.25s ease-in-out, transform 0.25s ease-in-out",
-              pointerEvents: renderTopicTree ? "auto" : "none",
-            },
-            rootHovered: { backgroundColor: "transparent" },
-            rootPressed: { backgroundColor: "transparent" },
-            rootDisabled: { backgroundColor: "transparent" },
-            rootChecked: { backgroundColor: "transparent" },
-            rootCheckedHovered: { backgroundColor: "transparent" },
-            rootCheckedPressed: { backgroundColor: "transparent" },
-            iconChecked: { color: colors.HIGHLIGHT },
-            icon: {
-              color: colors.LIGHT1,
-
-              svg: {
-                fill: "currentColor",
-                height: "1em",
-                width: "1em",
-              },
-            },
-          }}
-        />
-        <IconButton
-          className={cx({ [classes.badge]: showErrorBadge })}
-          elementRef={topicButton.ref}
-          onClick={onClick}
-          iconProps={{ iconName: "Layers" }}
-          styles={{
-            root: {
-              position: "relative",
-              transform: "translateX(-100%)",
-              backgroundColor: colors.DARK3,
-              opacity: renderTopicTree ? 0 : 1,
-              transition: `opacity 0.15s ease-out ${renderTopicTree ? 0 : 0.2}s`,
-              pointerEvents: renderTopicTree ? "none" : "auto",
-            },
-            rootHovered: { backgroundColor: colors.DARK3 },
-            rootPressed: { backgroundColor: colors.DARK3 },
-            rootDisabled: { backgroundColor: colors.DARK3 },
-            iconChecked: { color: colors.ACCENT },
-            icon: {
-              color: "white",
-
-              svg: {
-                fill: "currentColor",
-                height: "1em",
-                width: "1em",
-              },
-            },
-          }}
-        />
-      </Stack>
-    </>
+      />
+    </div>
   );
 }
