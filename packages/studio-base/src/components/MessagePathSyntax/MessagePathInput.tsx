@@ -13,14 +13,16 @@
 
 import { DefaultButton, IButtonStyles, IconButton, Stack, makeStyles } from "@fluentui/react";
 import { flatten, flatMap, partition } from "lodash";
-import { CSSProperties, useCallback, useMemo, useState } from "react";
+import { CSSProperties, useCallback, useMemo } from "react";
 
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import Autocomplete from "@foxglove/studio-base/components/Autocomplete";
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import useGlobalVariables, {
   GlobalVariables,
 } from "@foxglove/studio-base/hooks/useGlobalVariables";
+import { useAppConfigurationValue } from "@foxglove/studio-base/index";
 import { Topic } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { getTopicNames, getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
@@ -399,7 +401,9 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     [topicNamesAutocompleteItems, topics, datatypes],
   );
 
-  const [topicsOnly, setTopicsOnly] = useState<boolean>(false);
+  const [enableFieldMatching = false] = useAppConfigurationValue<boolean>(
+    AppSetting.ENABLE_FIELD_MATCHING,
+  );
 
   const autocompleteType = useMemo(() => {
     if (!rosPath) {
@@ -433,7 +437,9 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
       // use the full set of topic names and field paths to autocomplete
       return {
         autocompleteItems:
-          topicsOnly || !path ? topicNamesAutocompleteItems : topicNamesAndFieldsAutocompleteItems,
+          enableFieldMatching || path
+            ? topicNamesAndFieldsAutocompleteItems
+            : topicNamesAutocompleteItems,
         autocompleteFilterText: path,
         autocompleteRange: { start: 0, end: Infinity },
       };
@@ -518,7 +524,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     topic,
     rosPath,
     invalidGlobalVariablesVariable,
-    topicsOnly,
+    enableFieldMatching,
     path,
     topicNamesAutocompleteItems,
     topicNamesAndFieldsAutocompleteItems,
@@ -552,10 +558,6 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
   const hasError =
     usesUnsupportedMathModifier ||
     (autocompleteType != undefined && !disableAutocomplete && path.length > 0);
-
-  const objectFilterButton = useTooltip({
-    contents: "Match field names",
-  });
 
   const timestampButton = useTooltip({
     contents: noHeaderStamp
@@ -610,18 +612,6 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
           inputStyle={inputStyle} // Disable autoselect since people often construct complex queries, and it's very annoying
           // to have the entire input selected whenever you want to make a change to a part it.
           disableAutoSelect
-        />
-      </Stack.Item>
-      <Stack.Item>
-        {objectFilterButton.tooltip}
-        <IconButton
-          elementRef={objectFilterButton.ref}
-          onClick={() => setTopicsOnly(!topicsOnly)}
-          checked={!topicsOnly}
-          iconProps={{
-            iconName: "BracesFilled",
-          }}
-          styles={iconButtonStyles}
         />
       </Stack.Item>
       {timestampMethod != undefined && (
