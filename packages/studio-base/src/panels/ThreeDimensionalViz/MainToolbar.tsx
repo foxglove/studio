@@ -28,7 +28,7 @@ const iconButtonStyles = {
   rootCheckedHovered: { backgroundColor: "transparent" },
   rootCheckedPressed: { backgroundColor: "transparent" },
 
-  iconChecked: { color: colors.ACCENT },
+  iconChecked: { color: colors.HIGHLIGHT },
   icon: {
     color: "white",
 

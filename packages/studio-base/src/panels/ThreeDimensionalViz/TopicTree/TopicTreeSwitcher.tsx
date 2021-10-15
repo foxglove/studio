@@ -25,8 +25,8 @@ export const SWITCHER_HEIGHT = 30;
 
 const SErrorsBadge = styled.div`
   position: absolute;
-  top: -4px;
-  left: 24px;
+  top: -3px;
+  left: 27px;
   width: 10px;
   height: 10px;
   border-radius: 5px;
@@ -85,7 +85,7 @@ export default function TopicTreeSwitcher({
               rootChecked: { backgroundColor: "transparent" },
               rootCheckedHovered: { backgroundColor: "transparent" },
               rootCheckedPressed: { backgroundColor: "transparent" },
-              iconChecked: { color: colors.ACCENT },
+              iconChecked: { color: colors.HIGHLIGHT },
               icon: {
                 color: colors.LIGHT1,
 

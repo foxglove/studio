@@ -321,11 +321,18 @@ const SearchText = React.memo<SearchTextComponentProps>(function SearchText({
         value={searchText}
         styles={{
           icon: {
+            color: theme.semanticColors.inputText,
             lineHeight: 0,
             left: theme.spacing.s1,
             right: "auto",
             fontSize: 18,
             ...iconStyle,
+
+            svg: {
+              fill: "currentColor",
+              height: "1em",
+              width: "1em",
+            },
           },
           field: {
             padding: `0 ${theme.spacing.s1} 0 ${theme.spacing.l2}`,
