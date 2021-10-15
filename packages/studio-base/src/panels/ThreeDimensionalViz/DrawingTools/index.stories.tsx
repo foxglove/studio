@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { storiesOf } from "@storybook/react";
+import { CSSProperties } from "react";
 import { PolygonBuilder } from "regl-worldview";
 
 import { pointsToPolygons } from "@foxglove/studio-base/panels/ThreeDimensionalViz/utils/drawToolUtils";
