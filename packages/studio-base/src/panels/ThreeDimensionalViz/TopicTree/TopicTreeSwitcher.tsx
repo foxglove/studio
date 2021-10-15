@@ -1,37 +1,38 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-//
-// This file incorporates work covered by the following copyright and
-// permission notice:
-//
-//   Copyright 2018-2021 Cruise LLC
-//
-//   This source code is licensed under the Apache License, Version 2.0,
-//   found at http://www.apache.org/licenses/LICENSE-2.0
-//   You may not use this file except in compliance with the License.
 
-import { IconButton, Stack } from "@fluentui/react";
+import { IconButton, Stack, makeStyles } from "@fluentui/react";
+import cx from "classnames";
 import { useCallback } from "react";
-import styled from "styled-components";
 
 import KeyboardShortcut from "@foxglove/studio-base/components/KeyboardShortcut";
-import Tooltip, { useTooltip } from "@foxglove/studio-base/components/Tooltip";
+import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { Save3DConfig } from "../index";
 
 export const SWITCHER_HEIGHT = 30;
 
-const SErrorsBadge = styled.div`
-  position: absolute;
-  top: -3px;
-  left: 27px;
-  width: 10px;
-  height: 10px;
-  border-radius: 5px;
-  background-color: ${colors.RED};
-`;
+const BADGE_SIZE = 10;
+const BADGE_RADIUS = BADGE_SIZE / 2;
+const BADGE_OFFSET = 2;
+
+const useStyles = makeStyles({
+  badge: {
+    ":before": {
+      content: '""',
+      position: "absolute",
+      top: -BADGE_RADIUS + BADGE_OFFSET,
+      right: -BADGE_RADIUS + BADGE_OFFSET,
+      width: BADGE_SIZE,
+      height: BADGE_SIZE,
+      borderRadius: BADGE_RADIUS,
+      backgroundColor: colors.RED,
+      zIndex: 101,
+    },
+  },
+});
 
 type Props = {
   pinTopics: boolean;
@@ -49,10 +50,18 @@ export default function TopicTreeSwitcher({
   setShowTopicTree,
   showErrorBadge,
 }: Props): JSX.Element {
+  const classes = useStyles();
   const onClick = useCallback(() => setShowTopicTree((shown) => !shown), [setShowTopicTree]);
 
   const pinButton = useTooltip({ placement: "top", contents: "Pin topic picker" });
-  const topicButton = useTooltip({ placement: "top", contents: <KeyboardShortcut keys={["T"]} /> });
+  const topicButton = useTooltip({
+    placement: "top",
+    contents: showErrorBadge ? (
+      "Errors found in selected topics/namespaces"
+    ) : (
+      <KeyboardShortcut keys={["T"]} />
+    ),
+  });
 
   return (
     <>
@@ -78,7 +87,7 @@ export default function TopicTreeSwitcher({
           checked={pinTopics}
           styles={{
             root: {
-              transform: `translateY(${renderTopicTree ? 0 : -28}px)`,
+              transform: `translateY(${renderTopicTree ? 0 : -100}%)`,
               backgroundColor: "transparent",
               opacity: renderTopicTree ? 1 : 0,
               transition: "opacity 0.25s ease-in-out, transform 0.25s ease-in-out",
@@ -103,13 +112,14 @@ export default function TopicTreeSwitcher({
           }}
         />
         <IconButton
+          className={cx({ [classes.badge]: showErrorBadge })}
           elementRef={topicButton.ref}
           onClick={onClick}
           iconProps={{ iconName: "Layers" }}
           styles={{
             root: {
               position: "relative",
-              left: -28,
+              transform: "translateX(-100%)",
               backgroundColor: colors.DARK3,
               opacity: renderTopicTree ? 0 : 1,
               transition: `opacity 0.15s ease-out ${renderTopicTree ? 0 : 0.2}s`,
@@ -130,11 +140,6 @@ export default function TopicTreeSwitcher({
             },
           }}
         />
-        {showErrorBadge && (
-          <Tooltip contents="Errors found in selected topics/namespaces" placement="top">
-            <SErrorsBadge />
-          </Tooltip>
-        )}
       </Stack>
     </>
   );
