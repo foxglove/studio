@@ -66,60 +66,70 @@ export default function TopicTreeSwitcher({
           },
         }}
       >
-        {renderTopicTree ? (
-          <IconButton
-            elementRef={pinButton.ref}
-            onClick={() => {
-              // Keep TopicTree open after unpin.
-              setShowTopicTree(true);
-              saveConfig({ pinTopics: !pinTopics });
-            }}
-            data-test="open-topic-picker"
-            iconProps={{ iconName: "Pin" }}
-            checked={pinTopics}
-            styles={{
-              root: { backgroundColor: "transparent" },
-              rootHovered: { backgroundColor: "transparent" },
-              rootPressed: { backgroundColor: "transparent" },
-              rootDisabled: { backgroundColor: "transparent" },
-              rootChecked: { backgroundColor: "transparent" },
-              rootCheckedHovered: { backgroundColor: "transparent" },
-              rootCheckedPressed: { backgroundColor: "transparent" },
-              iconChecked: { color: colors.HIGHLIGHT },
-              icon: {
-                color: colors.LIGHT1,
+        <IconButton
+          elementRef={pinButton.ref}
+          onClick={() => {
+            // Keep TopicTree open after unpin.
+            setShowTopicTree(true);
+            saveConfig({ pinTopics: !pinTopics });
+          }}
+          data-test="open-topic-picker"
+          iconProps={{ iconName: "Pin" }}
+          checked={pinTopics}
+          styles={{
+            root: {
+              transform: `translateY(${renderTopicTree ? 0 : -28}px)`,
+              backgroundColor: "transparent",
+              opacity: renderTopicTree ? 1 : 0,
+              transition: "opacity 0.25s ease-in-out, transform 0.25s ease-in-out",
+              pointerEvents: renderTopicTree ? "auto" : "none",
+            },
+            rootHovered: { backgroundColor: "transparent" },
+            rootPressed: { backgroundColor: "transparent" },
+            rootDisabled: { backgroundColor: "transparent" },
+            rootChecked: { backgroundColor: "transparent" },
+            rootCheckedHovered: { backgroundColor: "transparent" },
+            rootCheckedPressed: { backgroundColor: "transparent" },
+            iconChecked: { color: colors.HIGHLIGHT },
+            icon: {
+              color: colors.LIGHT1,
 
-                svg: {
-                  fill: "currentColor",
-                  height: "1em",
-                  width: "1em",
-                },
+              svg: {
+                fill: "currentColor",
+                height: "1em",
+                width: "1em",
               },
-            }}
-          />
-        ) : (
-          <IconButton
-            elementRef={topicButton.ref}
-            onClick={onClick}
-            iconProps={{ iconName: "Layers" }}
-            styles={{
-              root: { backgroundColor: colors.DARK3 },
-              rootHovered: { backgroundColor: colors.DARK3 },
-              rootPressed: { backgroundColor: colors.DARK3 },
-              rootDisabled: { backgroundColor: colors.DARK3 },
-              iconChecked: { color: colors.ACCENT },
-              icon: {
-                color: "white",
+            },
+          }}
+        />
+        <IconButton
+          elementRef={topicButton.ref}
+          onClick={onClick}
+          iconProps={{ iconName: "Layers" }}
+          styles={{
+            root: {
+              position: "relative",
+              left: -28,
+              backgroundColor: colors.DARK3,
+              opacity: renderTopicTree ? 0 : 1,
+              transition: `opacity 0.15s ease-out ${renderTopicTree ? 0 : 0.2}s`,
+              pointerEvents: renderTopicTree ? "none" : "auto",
+            },
+            rootHovered: { backgroundColor: colors.DARK3 },
+            rootPressed: { backgroundColor: colors.DARK3 },
+            rootDisabled: { backgroundColor: colors.DARK3 },
+            iconChecked: { color: colors.ACCENT },
+            icon: {
+              color: "white",
 
-                svg: {
-                  fill: "currentColor",
-                  height: "1em",
-                  width: "1em",
-                },
+              svg: {
+                fill: "currentColor",
+                height: "1em",
+                width: "1em",
               },
-            }}
-          />
-        )}
+            },
+          }}
+        />
         {showErrorBadge && (
           <Tooltip contents="Errors found in selected topics/namespaces" placement="top">
             <SErrorsBadge />
