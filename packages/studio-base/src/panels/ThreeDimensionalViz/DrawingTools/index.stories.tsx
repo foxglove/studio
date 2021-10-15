@@ -15,6 +15,7 @@ import { storiesOf } from "@storybook/react";
 import { PolygonBuilder } from "regl-worldview";
 
 import { pointsToPolygons } from "@foxglove/studio-base/panels/ThreeDimensionalViz/utils/drawToolUtils";
+import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import DrawingTools, { POLYGON_TAB_TYPE } from "./index";
 
@@ -31,9 +32,13 @@ const polygons = pointsToPolygons([
   ],
 ]);
 
-const containerStyle = {
-  margin: 8,
-  display: "inline-block",
+const containerStyle: CSSProperties = {
+  padding: 8,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-end",
+  backgroundColor: colors.DARK,
+  height: "100%",
 };
 
 const DEFAULT_PROPS = {
