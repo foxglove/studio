@@ -23,7 +23,6 @@ const useStyles = makeStyles((theme) => ({
     overflowX: "hidden",
     overflowY: "auto",
     padding: theme.spacing.s1,
-    margin: `0 ${theme.spacing.s2}`,
     maxHeight: PANE_HEIGHT,
   },
 }));
@@ -144,7 +143,6 @@ export default function ExpandingToolbar<T extends string>({
             height: 32,
           },
           itemContainer: {
-            padding: theme.spacing.s2,
             backgroundColor: theme.semanticColors.bodyBackground,
           },
         }}
