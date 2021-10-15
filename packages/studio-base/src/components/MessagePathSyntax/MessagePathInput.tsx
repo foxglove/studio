@@ -19,10 +19,10 @@ import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import Autocomplete from "@foxglove/studio-base/components/Autocomplete";
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import useGlobalVariables, {
   GlobalVariables,
 } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import { useAppConfigurationValue } from "@foxglove/studio-base/index";
 import { Topic } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { getTopicNames, getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
