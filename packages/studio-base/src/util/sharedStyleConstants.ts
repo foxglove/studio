@@ -151,8 +151,8 @@ export const rounded = {
 };
 
 export const fonts = {
-  MONOSPACE: "'IBM Plex Mono', monospace",
-  SANS_SERIF: "'Inter', sans-serif",
+  MONOSPACE: "'IBM Plex Mono'",
+  SANS_SERIF: "'Inter'",
   SANS_SERIF_FEATURE_SETTINGS:
     // enable font features https://rsms.me/inter/lab
     "'cv08', 'cv10', 'tnum'",
