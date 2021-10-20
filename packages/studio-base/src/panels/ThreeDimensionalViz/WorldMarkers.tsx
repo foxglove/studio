@@ -23,7 +23,6 @@ import {
   Lines,
   createInstancedGetChildrenForHitmap,
 } from "regl-worldview";
-import styled from "styled-components";
 
 import { Interactive } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/types";
 import { GLTextMarker } from "@foxglove/studio-base/panels/ThreeDimensionalViz/SearchText";
@@ -55,20 +54,10 @@ import {
   MeshMarker,
 } from "@foxglove/studio-base/types/Messages";
 import { ReglColor } from "@foxglove/studio-base/util/colorUtils";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import glTextAtlasLoader, { TextAtlas } from "./utils/glTextAtlasLoader";
 import { groupLinesIntoInstancedLineLists } from "./utils/groupingUtils";
 
-export const SIconWrapper = styled.div`
-  position: absolute;
-  color: ${colors.LIGHT};
-  box-shadow: 0px 0px 12px rgba(23, 34, 40, 0.7);
-  overflow: hidden;
-  pointer-events: none;
-  top: 0;
-  left: 0;
-`;
 export type MarkerWithInteractionData = Interactive<BaseMarker>;
 
 export type InteractiveMarkersByType = {
