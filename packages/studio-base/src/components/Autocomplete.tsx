@@ -83,6 +83,7 @@ const classes = mergeStyleSets({
     lineHeight: ROW_HEIGHT - 10,
     overflowWrap: "break-word",
     color: colors.TEXT_NORMAL,
+    whiteSpace: "pre",
   },
   itemSelected: {
     backgroundColor: colors.DARK5,
@@ -364,7 +365,7 @@ export default class Autocomplete<T = unknown> extends PureComponent<
           fuzzy: filterText.length > 2 ? "v2" : false,
           sort: sortWhenFiltering,
           limit: MAX_ITEMS,
-          selector: getItemText as (item: unknown) => string,
+          selector: getItemText as (_: unknown) => string, // Fzf selector TS type seems to be wrong?
         }).find(filterText)
       : items.map((item) => itemToFzfResult(item));
 
