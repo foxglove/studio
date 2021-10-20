@@ -11,8 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import CubeOutline from "@mdi/svg/svg/cube-outline.svg";
-import { clamp } from "lodash";
 import { useMemo, useState, useEffect } from "react";
 import {
   Arrows,
@@ -23,9 +21,7 @@ import {
   Spheres,
   Triangles,
   Lines,
-  FilledPolygons,
   createInstancedGetChildrenForHitmap,
-  Overlay,
 } from "regl-worldview";
 import styled from "styled-components";
 
@@ -55,7 +51,6 @@ import {
   SphereListMarker,
   SphereMarker,
   TextMarker,
-  OverlayIconMarker,
   ColorMarker,
   MeshMarker,
 } from "@foxglove/studio-base/types/Messages";
@@ -64,9 +59,6 @@ import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import glTextAtlasLoader, { TextAtlas } from "./utils/glTextAtlasLoader";
 import { groupLinesIntoInstancedLineLists } from "./utils/groupingUtils";
-
-const ICON_WRAPPER_SIZE = 24;
-const ICON_SIZE = 14;
 
 export const SIconWrapper = styled.div`
   position: absolute;
@@ -85,7 +77,6 @@ export type InteractiveMarkersByType = {
   cube: Interactive<CubeMarker>[];
   cubeList: Interactive<CubeListMarker>[];
   cylinder: Interactive<CylinderMarker>[];
-  filledPolygon: Interactive<SphereMarker>[];
   glText: Interactive<GLTextMarker>[];
   grid: Interactive<BaseMarker>[];
   instancedLineList: Interactive<BaseMarker>[];
@@ -94,7 +85,6 @@ export type InteractiveMarkersByType = {
   lineList: Interactive<LineListMarker>[];
   lineStrip: Interactive<LineStripMarker>[];
   mesh: Interactive<MeshMarker>[];
-  overlayIcon: Interactive<OverlayIconMarker>[];
   pointcloud: Interactive<SphereMarker>[];
   points: Interactive<PointsMarker>[];
   poseMarker: Interactive<BaseMarker>[];
@@ -129,41 +119,6 @@ export type WorldMarkerProps = {
   diffModeEnabled: boolean;
 };
 
-const MIN_SCALE = 0.6;
-const MIN_DISTANCE = 50;
-const MAX_DISTANCE = 100;
-
-// The icons will scale according to camera distance between MIN_DISTANCE and MAX_DISTANCE, from 100% to MIN_SCALE.
-function getIconScaleByCameraDistance(distance: number): number {
-  const effectiveIconDistance = clamp(distance, MIN_DISTANCE, MAX_DISTANCE);
-  return (
-    1 - ((effectiveIconDistance - MIN_DISTANCE) * (1 - MIN_SCALE)) / (MAX_DISTANCE - MIN_DISTANCE)
-  );
-}
-
-function getIconStyles(distance: number): {
-  iconWrapperStyles: {
-    [attr: string]: string | number;
-  };
-  scaledIconSize: number;
-  scaledIconWrapperSize: number;
-} {
-  const scale = getIconScaleByCameraDistance(distance);
-  const scaledIconWrapperSize = Math.round(scale * ICON_WRAPPER_SIZE);
-  const scaledIconSize = Math.round(scale * ICON_SIZE);
-  const padding = Math.floor((scaledIconWrapperSize - scaledIconSize) / 2);
-  return {
-    iconWrapperStyles: {
-      padding,
-      width: scaledIconWrapperSize,
-      height: scaledIconWrapperSize,
-      borderRadius: scaledIconWrapperSize,
-    },
-    scaledIconSize,
-    scaledIconWrapperSize,
-  };
-}
-
 // Average a list of color markers into a single output color value. The returned value is the
 // mean RGB and max(alpha)
 function averageMarkerColor(colorMarkers: ColorMarker[]): ReglColor {
@@ -196,7 +151,6 @@ export default function WorldMarkers({
   layerIndex,
   markersByType,
   clearCachedMarkers,
-  cameraDistance,
 }: WorldMarkerProps): JSX.Element {
   const getChildrenForHitmap = useMemo(() => createInstancedGetChildrenForHitmap(1), []);
   const {
@@ -205,7 +159,6 @@ export default function WorldMarkers({
     cube,
     cubeList,
     cylinder,
-    filledPolygon,
     glText,
     grid,
     instancedLineList,
@@ -214,7 +167,6 @@ export default function WorldMarkers({
     lineList,
     lineStrip,
     mesh,
-    overlayIcon,
     pointcloud,
     points,
     poseMarker,
@@ -243,12 +195,6 @@ export default function WorldMarkers({
 
   // Group all line strips and line lists into as few markers as possible
   const groupedLines = groupLinesIntoInstancedLineLists([...lineList, ...lineStrip]);
-
-  // Render smaller icons when camera is zoomed out.
-  const { iconWrapperStyles, scaledIconWrapperSize, scaledIconSize } = useMemo(
-    () => getIconStyles(cameraDistance),
-    [cameraDistance],
-  );
 
   const backdropColor = useMemo((): ReglColor => averageMarkerColor(color), [color]);
 
@@ -283,53 +229,11 @@ export default function WorldMarkers({
           {glText}
         </GLText>
       )}
-      <FilledPolygons layerIndex={layerIndex}>{filledPolygon}</FilledPolygons>
       <Lines getChildrenForHitmap={getChildrenForHitmap} layerIndex={layerIndex}>
         {[...instancedLineList, ...groupedLines]}
       </Lines>
       <LinedConvexHulls layerIndex={layerIndex}>{linedConvexHull}</LinedConvexHulls>
       <MeshMarkers layerIndex={layerIndex} markers={mesh}></MeshMarkers>
-      <Overlay<Interactive<OverlayIconMarker>>
-        renderItem={({ item, coordinates, index, dimension: { width, height } }) => {
-          if (!coordinates) {
-            return ReactNull;
-          }
-          const [left, top] = coordinates;
-          if (left < -10 || top < -10 || left > width + 10 || top > height + 10) {
-            return ReactNull; // Don't render anything that's too far outside of the canvas
-          }
-          const originalMsg = item.interactionData?.originalMessage ?? {};
-          const parsedMsg = originalMsg;
-
-          const metadata = parsedMsg?.metadata;
-          if (metadata == undefined) {
-            return;
-          }
-          const { markerStyle = {}, iconOffset: { x = 0, y = 0 } = {} } = metadata as {
-            markerStyle?: React.CSSProperties;
-            iconOffset?: { x: number; y: number };
-          };
-
-          return (
-            <SIconWrapper
-              key={index}
-              style={{
-                ...markerStyle,
-                ...iconWrapperStyles,
-                transform: `translate(${(left - scaledIconWrapperSize / 2 + x).toFixed()}px,${(
-                  top -
-                  scaledIconWrapperSize / 2 +
-                  y
-                ).toFixed()}px)`,
-              }}
-            >
-              <CubeOutline fill="white" width={scaledIconSize} height={scaledIconSize} />
-            </SIconWrapper>
-          );
-        }}
-      >
-        {overlayIcon}
-      </Overlay>
     </>
   );
 }
