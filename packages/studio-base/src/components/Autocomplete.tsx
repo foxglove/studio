@@ -152,9 +152,9 @@ function defaultGetText(name: string) {
 
 const EMPTY_SET = new Set<number>();
 
-function itemToFzfResult<T>(item: T, getItemText: (item: T) => string): FzfResultItem<string> {
+function itemToFzfResult<T>(item: T): FzfResultItem<T> {
   return {
-    item: getItemText(item),
+    item,
     score: 0,
     positions: EMPTY_SET,
     start: 0,
@@ -359,13 +359,14 @@ export default class Autocomplete<T = unknown> extends PureComponent<
       menuStyle = {},
       inputStyle = {},
     } = this.props;
-    const autocompleteItems: FzfResultItem<string>[] = filterText
-      ? new Fzf(items.map(getItemText), {
+    const autocompleteItems: FzfResultItem<T>[] = filterText
+      ? new Fzf(items, {
           fuzzy: filterText.length > 2 ? "v2" : false,
           sort: sortWhenFiltering,
           limit: MAX_ITEMS,
+          selector: getItemText as (item: unknown) => string,
         }).find(filterText)
-      : items.map((item) => itemToFzfResult(item, getItemText));
+      : items.map((item) => itemToFzfResult(item));
 
     const { hasError = autocompleteItems.length === 0 && value?.length } = this.props;
 
@@ -379,9 +380,9 @@ export default class Autocomplete<T = unknown> extends PureComponent<
       <ReactAutocomplete
         open={open}
         items={autocompleteItems}
-        getItemValue={(item: FzfResultItem<string>) => item.item}
-        renderItem={(item: FzfResultItem<string>, isHighlighted) => {
-          const itemValue = item.item;
+        getItemValue={(item: FzfResultItem<T>) => getItemValue(item.item)}
+        renderItem={(item: FzfResultItem<T>, isHighlighted) => {
+          const itemValue = getItemValue(item.item);
           return (
             <div
               key={itemValue}
@@ -393,7 +394,7 @@ export default class Autocomplete<T = unknown> extends PureComponent<
                   selectedItemValue != undefined && itemValue === selectedItemValue,
               })}
             >
-              <HighlightChars str={item.item} indices={item.positions} />
+              <HighlightChars str={getItemText(item.item)} indices={item.positions} />
             </div>
           );
         }}
@@ -437,8 +438,9 @@ export default class Autocomplete<T = unknown> extends PureComponent<
 
           // The longest string might not be the widest (e.g. "|||" vs "www"), but this is
           // quite a bit faster, so we throw in a nice padding and call it good enough! :-)
-          const longestItem = maxBy(autocompleteItems, (item) => item.item.length);
-          const width = 50 + (longestItem != undefined ? measureText(longestItem.item) : 0);
+          const longestItem = maxBy(autocompleteItems, (item) => getItemText(item.item).length);
+          const width =
+            50 + (longestItem != undefined ? measureText(getItemText(longestItem.item)) : 0);
           const maxHeight = `calc(100vh - 10px - ${style.top}px)`;
 
           return (
