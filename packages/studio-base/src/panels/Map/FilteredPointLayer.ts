@@ -1,7 +1,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import { Map, LatLngBounds, FeatureGroup, CircleMarker, PathOptions } from "leaflet";
+import { Map, LatLngBounds, FeatureGroup, Circle, CircleMarker, PathOptions } from "leaflet";
 import { eigs } from "mathjs";
 
 import { MessageEvent } from "@foxglove/studio-base/players/types";
@@ -68,13 +68,13 @@ function FilteredPointLayer(args: Args): FeatureGroup {
     if (args.showAccuracy === true) {
       const accuracy = getAccuracy(messageEvent.message);
       if (accuracy != undefined) {
-        const accuracyMarker = new PointMarker([lat, lon], {
-          ...defaultStyle,
+        const accuracyCircle = new Circle([lat, lon], {
+          stroke: false,
+          color: args.color,
           fillOpacity: 0.2,
           radius: accuracy,
         });
-        accuracyMarker.messageEvent = messageEvent;
-        accuracyMarker.addTo(markersLayer);
+        accuracyCircle.addTo(markersLayer);
       }
     }
   }
@@ -115,17 +115,16 @@ function getAccuracy(msg: NavSatFixMsg): number | undefined {
     }
     case NavSatFixPositionCovarianceType.COVARIANCE_TYPE_APPROXIMATED:
     case NavSatFixPositionCovarianceType.COVARIANCE_TYPE_KNOWN: {
-      // Flip row-major to column-major
-      const Kr = msg.position_covariance;
-      const Kc = [
-        [Kr[0], Kr[3], Kr[6]],
-        [Kr[1], Kr[4], Kr[7]],
-        [Kr[2], Kr[5], Kr[8]],
+      const K = msg.position_covariance;
+      const Klatlon = [
+        [K[0], K[1], K[2]],
+        [K[3], K[4], K[5]],
+        [0, 0, 0],
       ];
       // Compute the eigenvalues of the covariance matrix. They will be sorted
       // in ascending order, so the largest value is eigenvalues[2]
       try {
-        const eigenvalues = eigs(Kc).values as [number, number, number];
+        const eigenvalues = eigs(Klatlon).values as [number, number, number];
         return Math.sqrt(eigenvalues[2]);
       } catch (err) {
         return undefined;
