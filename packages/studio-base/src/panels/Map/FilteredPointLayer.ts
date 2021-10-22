@@ -2,10 +2,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 import { Map, LatLngBounds, FeatureGroup, CircleMarker, PathOptions } from "leaflet";
+import { eigs } from "mathjs";
 
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 
-import { NavSatFixMsg } from "./types";
+import { NavSatFixMsg, NavSatFixPositionCovarianceType } from "./types";
 
 export const POINT_MARKER_RADIUS = 3;
 
@@ -13,6 +14,7 @@ type Args = {
   map: Map;
   bounds: LatLngBounds;
   color: string;
+  showAccuracy?: boolean;
   navSatMessageEvents: readonly MessageEvent<NavSatFixMsg>[];
   onHover?: (event: MessageEvent<NavSatFixMsg> | undefined) => void;
   onClick?: (event: MessageEvent<NavSatFixMsg>) => void;
@@ -62,6 +64,19 @@ function FilteredPointLayer(args: Args): FeatureGroup {
     const marker = new PointMarker([lat, lon], { ...defaultStyle, radius: POINT_MARKER_RADIUS });
     marker.messageEvent = messageEvent;
     marker.addTo(markersLayer);
+
+    if (args.showAccuracy === true) {
+      const accuracy = getAccuracy(messageEvent.message);
+      if (accuracy != undefined) {
+        const accuracyMarker = new PointMarker([lat, lon], {
+          ...defaultStyle,
+          fillOpacity: 0.2,
+          radius: accuracy,
+        });
+        accuracyMarker.messageEvent = messageEvent;
+        accuracyMarker.addTo(markersLayer);
+      }
+    }
   }
 
   if (args.onHover) {
@@ -87,6 +102,36 @@ function FilteredPointLayer(args: Args): FeatureGroup {
   }
 
   return markersLayer;
+}
+
+function getAccuracy(msg: NavSatFixMsg): number | undefined {
+  switch (msg.position_covariance_type) {
+    case NavSatFixPositionCovarianceType.COVARIANCE_TYPE_UNKNOWN:
+      return undefined;
+    case NavSatFixPositionCovarianceType.COVARIANCE_TYPE_DIAGONAL_KNOWN: {
+      const eastVariance = msg.position_covariance[0];
+      const northVariance = msg.position_covariance[4];
+      return Math.sqrt(Math.max(eastVariance, northVariance));
+    }
+    case NavSatFixPositionCovarianceType.COVARIANCE_TYPE_APPROXIMATED:
+    case NavSatFixPositionCovarianceType.COVARIANCE_TYPE_KNOWN: {
+      // Flip row-major to column-major
+      const Kr = msg.position_covariance;
+      const Kc = [
+        [Kr[0], Kr[3], Kr[6]],
+        [Kr[1], Kr[4], Kr[7]],
+        [Kr[2], Kr[5], Kr[8]],
+      ];
+      // Compute the eigenvalues of the covariance matrix. They will be sorted
+      // in ascending order, so the largest value is eigenvalues[2]
+      try {
+        const eigenvalues = eigs(Kc).values as [number, number, number];
+        return Math.sqrt(eigenvalues[2]);
+      } catch (err) {
+        return undefined;
+      }
+    }
+  }
 }
 
 export default FilteredPointLayer;
