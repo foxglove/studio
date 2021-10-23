@@ -130,14 +130,12 @@ function WelcomePanel() {
             errorMessage={emailError}
           />
           <Checkbox
-            label={`Send me updates about Foxglove Studio`}
+            label="Send me updates about Foxglove Studio"
             checked={subscribeChecked}
             onChange={(_event, newValue) => newValue != undefined && setSubscribeChecked(newValue)}
           />
           <Checkbox
-            data-test="slack-invite"
-            inputProps={{ "data-test": "slack-invite" } as React.ButtonHTMLAttributes<HTMLElement>}
-            label={`Invite me to the Slack community`}
+            label="Invite me to the Slack community"
             checked={slackInviteChecked}
             onChange={(_event, newValue) =>
               newValue != undefined && setSlackInviteChecked(newValue)
