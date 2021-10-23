@@ -203,7 +203,10 @@ function PanelActionsDropdown({
         key: "change-panel",
         text: "Change panel",
         onClick: openSettings,
-        iconProps: { iconName: "ShapeSubtract" },
+        iconProps: {
+          iconName: "ShapeSubtract",
+          styles: { root: { height: 24, marginLeft: 2, marginRight: 6 } },
+        },
         subMenuProps: {
           items: [{ key: "dummy" }],
           // eslint-disable-next-line react/display-name
@@ -222,19 +225,28 @@ function PanelActionsDropdown({
           key: "fullscreen",
           text: "Fullscreen",
           onClick: panelContext?.enterFullscreen,
-          iconProps: { iconName: "FullScreenMaximize" },
+          iconProps: {
+            iconName: "FullScreenMaximize",
+            styles: { root: { height: 24, marginLeft: 2, marginRight: 6 } },
+          },
         },
         {
           key: "hsplit",
           text: "Split horizontal",
           onClick: () => split(panelContext?.id, "column"),
-          iconProps: { iconName: "SplitHorizontal" },
+          iconProps: {
+            iconName: "SplitHorizontal",
+            styles: { root: { height: 24, marginLeft: 2, marginRight: 6 } },
+          },
         },
         {
           key: "vsplit",
           text: "Split vertical",
           onClick: () => split(panelContext?.id, "row"),
-          iconProps: { iconName: "SplitVertical" },
+          iconProps: {
+            iconName: "SplitVertical",
+            styles: { root: { height: 24, marginLeft: 2, marginRight: 6 } },
+          },
         },
       );
     }
