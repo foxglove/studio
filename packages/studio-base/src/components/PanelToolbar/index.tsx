@@ -255,6 +255,7 @@ function PanelActionsDropdown({
       text: "Remove panel",
       onClick: close,
       iconProps: { iconName: "Delete" },
+      "data-test": "panel-settings-remove",
     });
     return items;
   }, [
