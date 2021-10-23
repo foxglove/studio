@@ -209,7 +209,6 @@ function PanelActionsDropdown({
         },
         subMenuProps: {
           items: [{ key: "dummy" }],
-          // eslint-disable-next-line react/display-name
           onRenderMenuList: () => (
             <PanelList
               selectedPanelTitle={panelContext?.title}
