@@ -24,7 +24,7 @@ type MeshMarkerProps = CommonCommandProps & {
 };
 
 async function loadModel(url: string): Promise<GlbModel | undefined> {
-  const GLB_MAGIC = 0x46546c67;
+  const GLB_MAGIC = 0x676c5446; // "glTF"
 
   const response = await fetch(url);
   const buffer = await response.arrayBuffer();
