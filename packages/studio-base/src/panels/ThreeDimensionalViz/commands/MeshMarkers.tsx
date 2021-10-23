@@ -15,7 +15,7 @@ import { ReactElement, useMemo } from "react";
 import { CommonCommandProps, GLTFScene, parseGLB } from "@foxglove/regl-worldview";
 import { rewritePackageUrl } from "@foxglove/studio-base/context/AssetsContext";
 import { GlbModel } from "@foxglove/studio-base/panels/ThreeDimensionalViz/utils/GlbModel";
-import { parseStlToGlb } from "@foxglove/studio-base/panels/ThreeDimensionalViz/utils/parseStl";
+import { parseStlToGlb } from "@foxglove/studio-base/panels/ThreeDimensionalViz/utils/parseStlToGlb";
 import { MeshMarker } from "@foxglove/studio-base/types/Messages";
 
 type MeshMarkerProps = CommonCommandProps & {
