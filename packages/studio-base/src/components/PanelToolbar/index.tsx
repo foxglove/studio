@@ -198,6 +198,7 @@ function PanelActionsDropdown({
         text: "Panel settings",
         onClick: openSettings,
         iconProps: { iconName: "SingleColumnEdit" },
+        disabled: !(panelContext?.hasSettings ?? false),
       },
       {
         key: "change-panel",
@@ -261,6 +262,7 @@ function PanelActionsDropdown({
     isUnknownPanel,
     openSettings,
     panelContext?.enterFullscreen,
+    panelContext?.hasSettings,
     panelContext?.id,
     panelContext?.title,
     split,
