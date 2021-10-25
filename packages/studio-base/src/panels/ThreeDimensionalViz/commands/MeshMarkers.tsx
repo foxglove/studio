@@ -11,25 +11,46 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import { ReactElement, useMemo } from "react";
-import { CommonCommandProps, GLTFScene, parseGLB } from "regl-worldview";
 
+import { CommonCommandProps, GLTFScene, parseGLB } from "@foxglove/regl-worldview";
+import { rewritePackageUrl } from "@foxglove/studio-base/context/AssetsContext";
+import { GlbModel } from "@foxglove/studio-base/panels/ThreeDimensionalViz/utils/GlbModel";
+import { parseStlToGlb } from "@foxglove/studio-base/panels/ThreeDimensionalViz/utils/parseStlToGlb";
 import { MeshMarker } from "@foxglove/studio-base/types/Messages";
 
 type MeshMarkerProps = CommonCommandProps & {
   markers: MeshMarker[];
+  basePath?: string;
 };
 
-async function loadModel(url: string): Promise<unknown> {
+async function loadModel(url: string): Promise<GlbModel | undefined> {
+  const GLB_MAGIC = 0x676c5446; // "glTF"
+
   const response = await fetch(url);
   const buffer = await response.arrayBuffer();
-  const model = await parseGLB(buffer);
-  return model;
+  if (buffer.byteLength < 4) {
+    return undefined;
+  }
+  const view = new DataView(buffer);
+
+  // Check if this is a glTF .glb file
+  if (GLB_MAGIC === view.getUint32(0, false)) {
+    return (await parseGLB(buffer)) as GlbModel;
+  }
+
+  // STL binary files don't have a header, so we have to rely on the file extension
+  if (url.endsWith(".stl")) {
+    return parseStlToGlb(buffer);
+  }
+
+  // No Collada .dae support yet
+  return undefined;
 }
 
 class ModelCache {
-  private models = new Map<string, Promise<unknown>>();
+  private models = new Map<string, Promise<GlbModel | undefined>>();
 
-  async load(url: string): Promise<unknown> {
+  async load(url: string): Promise<GlbModel | undefined> {
     let promise = this.models.get(url);
     if (promise) {
       return await promise;
@@ -40,24 +61,25 @@ class ModelCache {
   }
 }
 
-function MeshMarkers({ markers, layerIndex }: MeshMarkerProps): ReactElement {
+function MeshMarkers({ markers, layerIndex, basePath }: MeshMarkerProps): ReactElement {
   const models: React.ReactNode[] = [];
 
   const modelCache = useMemo(() => new ModelCache(), []);
 
-  markers.forEach((marker, idx) => {
+  for (let i = 0; i < markers.length; i++) {
+    const marker = markers[i]!;
     const { pose, mesh_resource, scale } = marker;
+    if (mesh_resource == undefined || mesh_resource.length === 0) {
+      continue;
+    }
+    const url = rewritePackageUrl(mesh_resource, basePath);
 
     models.push(
-      <GLTFScene
-        key={idx}
-        layerIndex={layerIndex}
-        model={async () => await modelCache.load(mesh_resource)}
-      >
+      <GLTFScene key={i} layerIndex={layerIndex} model={async () => await modelCache.load(url)}>
         {{ pose, scale, interactionData: undefined }}
       </GLTFScene>,
     );
-  });
+  }
 
   return <>{...models}</>;
 }

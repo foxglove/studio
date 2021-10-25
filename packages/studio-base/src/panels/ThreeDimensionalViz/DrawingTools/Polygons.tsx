@@ -11,9 +11,9 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { PolygonBuilder, Polygon } from "regl-worldview";
 import styled from "styled-components";
 
+import { PolygonBuilder, Polygon } from "@foxglove/regl-worldview";
 import Button from "@foxglove/studio-base/components/Button";
 import ValidatedInput from "@foxglove/studio-base/components/ValidatedInput";
 import {
@@ -54,7 +54,7 @@ export default function Polygons({ onSetPolygons, polygonBuilder }: Props): JSX.
   polygonBuilder.onChange = polygonBuilderOnChange;
 
   return (
-    <>
+    <div style={{ padding: 8 }}>
       <ValidatedInput
         value={polygonPoints}
         onChange={(newPolygonPoints) => {
@@ -85,6 +85,6 @@ export default function Polygons({ onSetPolygons, polygonBuilder }: Props): JSX.
           Start drawing by holding <b>ctrl</b> and clicking on the 3D panel.
         </em>
       </p>
-    </>
+    </div>
   );
 }

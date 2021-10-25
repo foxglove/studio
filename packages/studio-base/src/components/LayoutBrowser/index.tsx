@@ -382,7 +382,7 @@ export default function LayoutBrowser({
         (layouts.loading || isBusy) && <Spinner key="spinner" />,
         !isOnline && (
           <IconBase
-            iconName="CloudOfflineFilled"
+            iconName="CloudOffFilled"
             styles={{ root: { color: theme.palette.themeLighterAlt } }}
           />
         ),
