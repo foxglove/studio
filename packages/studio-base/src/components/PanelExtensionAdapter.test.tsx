@@ -41,7 +41,7 @@ describe("PanelExtensionAdapter", () => {
 
   it("should support advertising on a topic", (done) => {
     const initPanel = (context: PanelExtensionContext) => {
-      context.advertise("/some/topic", "some_datatype");
+      context.advertise?.("/some/topic", "some_datatype");
     };
 
     mount(
@@ -77,8 +77,8 @@ describe("PanelExtensionAdapter", () => {
     let count = 0;
 
     const initPanel = (context: PanelExtensionContext) => {
-      context.advertise("/some/topic", "some_datatype");
-      context.advertise("/another/topic", "another_datatype");
+      context.advertise?.("/some/topic", "some_datatype");
+      context.advertise?.("/another/topic", "another_datatype");
     };
 
     mount(
@@ -135,8 +135,8 @@ describe("PanelExtensionAdapter", () => {
     expect.assertions(3);
 
     const initPanel = (context: PanelExtensionContext) => {
-      context.advertise("/some/topic", "some_datatype");
-      context.publish("/some/topic", {
+      context.advertise?.("/some/topic", "some_datatype");
+      context.publish?.("/some/topic", {
         foo: "bar",
       });
     };
@@ -177,9 +177,9 @@ describe("PanelExtensionAdapter", () => {
     let count = 0;
 
     const initPanel = (context: PanelExtensionContext) => {
-      context.advertise("/some/topic", "some_datatype");
-      context.advertise("/another/topic", "another_datatype");
-      context.unadvertise("/some/topic");
+      context.advertise?.("/some/topic", "some_datatype");
+      context.advertise?.("/another/topic", "another_datatype");
+      context.unadvertise?.("/some/topic");
     };
 
     mount(
@@ -250,7 +250,7 @@ describe("PanelExtensionAdapter", () => {
 
     const initPanel = (context: PanelExtensionContext) => {
       expect(context).toBeDefined();
-      context.advertise("/some/topic", "some_datatype");
+      context.advertise?.("/some/topic", "some_datatype");
     };
 
     const fixture: Fixture = {
