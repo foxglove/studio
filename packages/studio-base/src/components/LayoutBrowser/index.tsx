@@ -365,13 +365,11 @@ export default function LayoutBrowser({
   const layoutDebug = useContext(LayoutStorageDebuggingContext);
   const supportsSignIn = useContext(ConsoleApiContext) != undefined;
 
-  const [hideSignInPrompt = false] = useAppConfigurationValue<boolean>(
+  const [hideSignInPrompt = false, setHideSignInPrompt] = useAppConfigurationValue<boolean>(
     AppSetting.HIDE_SIGN_IN_PROMPT,
   );
 
-  const [showSignInPrompt, setShowSignInPrompt] = useState<boolean>(
-    supportsSignIn && !layoutManager.supportsSharing && !hideSignInPrompt,
-  );
+  const showSignInPrompt = supportsSignIn && !layoutManager.supportsSharing && !hideSignInPrompt;
 
   return (
     <SidebarContent
@@ -454,7 +452,7 @@ export default function LayoutBrowser({
           )}
         </Stack.Item>
         <div style={{ flexGrow: 1 }} />
-        {showSignInPrompt && <SignInPrompt onDismiss={() => setShowSignInPrompt(false)} />}
+        {showSignInPrompt && <SignInPrompt onDismiss={() => void setHideSignInPrompt(true)} />}
         {layoutDebug?.syncNow && (
           <Stack
             styles={{

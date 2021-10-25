@@ -56,7 +56,7 @@ export default function SignInPrompt(props: SignInPromptProps): JSX.Element {
         <IconBase
           className={classes.dismiss}
           aria-label="Dismiss"
-          aria-role="button"
+          role="button"
           onClick={(event) => {
             event.stopPropagation();
             onDismiss();
