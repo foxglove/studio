@@ -168,7 +168,8 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
         const promptOptions = foundSource.promptOptions(argUrl ?? previousPromptValue);
         try {
-          const url = await prompt(promptOptions);
+          // If the arg url is specified we don't need to prompt
+          const url = argUrl ?? (await prompt(promptOptions));
           if (!url) {
             return;
           }
