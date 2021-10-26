@@ -26,6 +26,9 @@ export default {
   ],
 };
 
-export const EmptyState = (): JSX.Element => {
+export const Unconfigured = (): JSX.Element => {
   return <TeleopPanel />;
+};
+export const WithTopic = (): JSX.Element => {
+  return <TeleopPanel overrideConfig={{ topic: "/abc" }} />;
 };
