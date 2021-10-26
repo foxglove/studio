@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import RandomAccessPlayer from "@foxglove/studio-base/players/RandomAccessPlayer";
+import { BuildPlayerOptions } from "@foxglove/studio-base/players/buildPlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 import { RandomAccessDataProviderDescriptor } from "@foxglove/studio-base/randomAccessDataProviders/types";
 import { getSeekToTime } from "@foxglove/studio-base/util/time";
@@ -11,10 +12,10 @@ import { getSeekToTime } from "@foxglove/studio-base/util/time";
 // MemoryCache with Rosbag2DataProvider currently (they only support ROS1 binary messages)
 export function buildRosbag2PlayerFromDescriptor(
   rootDescriptor: RandomAccessDataProviderDescriptor,
+  options: BuildPlayerOptions,
 ): Player {
   return new RandomAccessPlayer(rootDescriptor, {
-    // fixme
-    //metricsCollector: options.metricsCollector,
+    metricsCollector: options.metricsCollector,
     seekToTime: getSeekToTime(),
   });
 }

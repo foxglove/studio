@@ -14,6 +14,7 @@
 import {
   PropsWithChildren,
   useCallback,
+  useContext,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -25,16 +26,21 @@ import { useLocalStorage } from "react-use";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { MessagePipelineProvider } from "@foxglove/studio-base/components/MessagePipeline";
+import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
 import { useCurrentLayoutSelector } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import PlayerSelectionContext, {
-  DataSource,
+  IPlayerFactory,
   PlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { useUserNodeState } from "@foxglove/studio-base/context/UserNodeStateContext";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { usePrompt } from "@foxglove/studio-base/hooks/usePrompt";
 import useWarnImmediateReRender from "@foxglove/studio-base/hooks/useWarnImmediateReRender";
+import AnalyticsMetricsCollector from "@foxglove/studio-base/players/AnalyticsMetricsCollector";
 import OrderedStampPlayer from "@foxglove/studio-base/players/OrderedStampPlayer";
 import UserNodePlayer from "@foxglove/studio-base/players/UserNodePlayer";
 import { Player } from "@foxglove/studio-base/players/types";
@@ -48,7 +54,7 @@ const EMPTY_USER_NODES: UserNodes = Object.freeze({});
 const EMPTY_GLOBAL_VARIABLES: GlobalVariables = Object.freeze({});
 
 type PlayerManagerProps = {
-  playerSources: DataSource[];
+  playerSources: IPlayerFactory[];
 };
 
 export default function PlayerManager(props: PropsWithChildren<PlayerManagerProps>): JSX.Element {
@@ -64,6 +70,24 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   });
 
   const prompt = usePrompt();
+
+  // When we implement per-data-connector UI settings we will move this into the ROS 1 Socket data
+  // connector. As a workaround, we read this from our app settings and provide this to
+  // initialization args for all connectors.
+  const [rosHostname] = useAppConfigurationValue<string>(AppSetting.ROS1_ROS_HOSTNAME);
+
+  const analytics = useAnalytics();
+  const metricsCollector = useMemo(() => new AnalyticsMetricsCollector(analytics), [analytics]);
+
+  // When we implmenent per-data-connector UI settings we will move this into the appropriate
+  // data sources. We might also consider this a studio responsibility and handle generically for
+  // all data sources.
+  const [unlimitedMemoryCache = false] = useAppConfigurationValue<boolean>(
+    AppSetting.UNLIMITED_MEMORY_CACHE,
+  );
+
+  // When we implement per-data-connector UI settings we will move this into the foxglove data platform source.
+  const consoleApi = useContext(ConsoleApiContext);
 
   const messageOrder = useCurrentLayoutSelector(
     (state) => state.selectedLayout?.data?.playbackConfig.messageOrder,
@@ -108,7 +132,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
     args?: Record<string, unknown>;
   }>("studio.playermanager.selected-source.v2");
 
-  const [selectedSource, setSelectedSource] = useState<DataSource | undefined>();
+  const [selectedSource, setSelectedSource] = useState<IPlayerFactory | undefined>();
 
   const selectSource = useCallback(
     async (sourceId: string, args?: Record<string, unknown>) => {
@@ -157,59 +181,92 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
             args: {
               ...args,
               url,
+              rosHostname,
+              metricsCollector,
+              unlimitedMemoryCache,
             },
           });
 
-          const newPlayer = foundSource.initialize({ url });
+          const newPlayer = foundSource.initialize({ url, metricsCollector, unlimitedMemoryCache });
           setBasePlayer(newPlayer);
         } catch (error) {
-          // no-op
+          addToast(error.message, { appearance: "error" });
         }
+
+        return;
       }
 
       if (foundSource.supportsOpenDirectory === true) {
         try {
           const folder = await showDirectoryPicker();
-          const newPlayer = foundSource.initialize({ folder });
+          const newPlayer = foundSource.initialize({
+            folder,
+            metricsCollector,
+            unlimitedMemoryCache,
+          });
           setBasePlayer(newPlayer);
         } catch (error) {
           if (error.name === "AbortError") {
             return undefined;
           }
-          throw error;
+          addToast(error.message, { appearance: "error" });
         }
 
         return;
       }
 
       const supportedFileTypes = foundSource.supportedFileTypes;
-      if (supportedFileTypes == undefined) {
+      if (supportedFileTypes != undefined) {
+        try {
+          const [fileHandle] = await showOpenFilePicker({
+            types: [
+              {
+                description: foundSource.displayName,
+                accept: { "application/octet-stream": supportedFileTypes },
+              },
+            ],
+          });
+          const file = await fileHandle.getFile();
+
+          const newPlayer = foundSource.initialize({
+            file,
+            metricsCollector,
+            unlimitedMemoryCache,
+          });
+          setBasePlayer(newPlayer);
+        } catch (error) {
+          if (error.name === "AbortError") {
+            return;
+          }
+          addToast(error.message, { appearance: "error" });
+        }
+
         return;
       }
 
       try {
-        const [fileHandle] = await showOpenFilePicker({
-          types: [
-            {
-              description: foundSource.displayName,
-              accept: { "application/octet-stream": supportedFileTypes },
-            },
-          ],
+        const newPlayer = foundSource.initialize({
+          ...args,
+          consoleApi,
+          metricsCollector,
+          unlimitedMemoryCache,
         });
-        const file = await fileHandle.getFile();
-
-        const newPlayer = foundSource.initialize({ file });
         setBasePlayer(newPlayer);
       } catch (error) {
-        if (error.name === "AbortError") {
-          return;
-        }
-        throw error;
+        addToast(error.message, { appearance: "error" });
       }
-
-      return;
     },
-    [addToast, playerSources, prompt, removeSavedSource, setSavedSource],
+    [
+      addToast,
+      consoleApi,
+      metricsCollector,
+      playerSources,
+      prompt,
+      removeSavedSource,
+      rosHostname,
+      setSavedSource,
+      unlimitedMemoryCache,
+    ],
   );
 
   // restore the saved source on first mount
@@ -220,7 +277,11 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
         return;
       }
 
-      const initializedBasePlayer = foundSource.initialize(savedSource.args);
+      const initializedBasePlayer = foundSource.initialize({
+        ...savedSource.args,
+        metricsCollector,
+        unlimitedMemoryCache,
+      });
       setBasePlayer(initializedBasePlayer);
     }
     // we only run the layout effect on first mount - never again even if the saved source changes

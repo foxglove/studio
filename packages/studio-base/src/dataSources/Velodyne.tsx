@@ -2,18 +2,20 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { DataSource } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import {
+  IPlayerFactory,
+  PlayerFactoryInitializeArgs,
+} from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { PromptOptions } from "@foxglove/studio-base/hooks/usePrompt";
-import NoopMetricsCollector from "@foxglove/studio-base/players/NoopMetricsCollector";
 import VelodynePlayer, {
   DEFAULT_VELODYNE_PORT,
 } from "@foxglove/studio-base/players/VelodynePlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 
-class Velodyne implements DataSource {
+class Velodyne implements IPlayerFactory {
   id = "velodyne-device";
   displayName = "Velodyne LIDAR";
-  iconName = "GenericScan";
+  iconName: IPlayerFactory["iconName"] = "GenericScan";
 
   promptOptions(previousValue?: string): PromptOptions {
     return {
@@ -32,16 +34,14 @@ class Velodyne implements DataSource {
     };
   }
 
-  initialize(args?: Record<string, unknown>): Player | undefined {
+  initialize(args: PlayerFactoryInitializeArgs): Player | undefined {
     // velodyne uses the url arg as the port
-    const port = args?.["url"] as number | undefined;
+    const port = args.url as number | undefined;
     if (port == undefined) {
       return;
     }
 
-    // fixme
-    const metrics = new NoopMetricsCollector();
-    return new VelodynePlayer({ port, metricsCollector: metrics });
+    return new VelodynePlayer({ port, metricsCollector: args.metricsCollector });
   }
 }
 

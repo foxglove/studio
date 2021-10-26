@@ -5,12 +5,23 @@
 import { createContext, useContext } from "react";
 
 import { PromptOptions } from "@foxglove/studio-base/hooks/usePrompt";
-import { Player } from "@foxglove/studio-base/players/types";
+import { Player, PlayerMetricsCollectorInterface } from "@foxglove/studio-base/players/types";
+import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 
-export type DataSource = {
+export type PlayerFactoryInitializeArgs = {
+  metricsCollector: PlayerMetricsCollectorInterface;
+  unlimitedMemoryCache: boolean;
+  rosHostname?: string;
+  folder?: FileSystemDirectoryHandle;
+  file?: File;
+  url?: string;
+  consoleApi?: ConsoleApi;
+} & Record<string, unknown>;
+
+export interface IPlayerFactory {
   id: string;
   displayName: string;
-  iconName?: string;
+  iconName?: RegisteredIconNames;
   disabledReason?: string | JSX.Element;
   badgeText?: string;
 
@@ -22,9 +33,9 @@ export type DataSource = {
 
   promptOptions?: (previousValue?: string) => PromptOptions;
 
-  // Initialize a player from the data source
-  initialize: (args?: Record<string, unknown>) => Player | undefined;
-};
+  // Initialize a player.
+  initialize: (args: PlayerFactoryInitializeArgs) => Player | undefined;
+}
 
 export type SourceSelection = {
   id: string;
@@ -38,10 +49,10 @@ export interface PlayerSelection {
   selectSource: (sourceId: string, args?: Record<string, unknown>) => void;
 
   /** Currently selected data source */
-  selectedSource?: DataSource;
+  selectedSource?: IPlayerFactory;
 
   /** List of available data sources */
-  availableSources: DataSource[];
+  availableSources: IPlayerFactory[];
 }
 
 const PlayerSelectionContext = createContext<PlayerSelection>({

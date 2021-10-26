@@ -2,16 +2,18 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { DataSource } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import {
+  IPlayerFactory,
+  PlayerFactoryInitializeArgs,
+} from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { PromptOptions } from "@foxglove/studio-base/hooks/usePrompt";
-import NoopMetricsCollector from "@foxglove/studio-base/players/NoopMetricsCollector";
 import Ros2Player from "@foxglove/studio-base/players/Ros2Player";
 import { Player } from "@foxglove/studio-base/players/types";
 
-class Ros2Socket implements DataSource {
+class Ros2Socket implements IPlayerFactory {
   id = "ros2-socket";
   displayName = "ROS 2";
-  iconName = "studio.ROS";
+  iconName: IPlayerFactory["iconName"] = "studio.ROS";
 
   promptOptions(previousValue?: string): PromptOptions {
     return {
@@ -28,8 +30,8 @@ class Ros2Socket implements DataSource {
     };
   }
 
-  initialize(args?: Record<string, unknown>): Player | undefined {
-    const url = args?.["url"] as string | undefined;
+  initialize(args: PlayerFactoryInitializeArgs): Player | undefined {
+    const url = args.url;
     if (!url) {
       return;
     }
@@ -37,9 +39,7 @@ class Ros2Socket implements DataSource {
     const domainIdStr = url;
     const domainId = parseInt(domainIdStr);
 
-    // fixme
-    const metrics = new NoopMetricsCollector();
-    return new Ros2Player({ domainId, metricsCollector: metrics });
+    return new Ros2Player({ domainId, metricsCollector: args.metricsCollector });
   }
 }
 

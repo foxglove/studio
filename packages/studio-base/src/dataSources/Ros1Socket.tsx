@@ -3,17 +3,19 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
-import { DataSource } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import {
+  IPlayerFactory,
+  PlayerFactoryInitializeArgs,
+} from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { PromptOptions } from "@foxglove/studio-base/hooks/usePrompt";
-import NoopMetricsCollector from "@foxglove/studio-base/players/NoopMetricsCollector";
 import Ros1Player from "@foxglove/studio-base/players/Ros1Player";
 import { Player } from "@foxglove/studio-base/players/types";
 import { parseInputUrl } from "@foxglove/studio-base/util/url";
 
-class Ros1Socket implements DataSource {
+class Ros1Socket implements IPlayerFactory {
   id = "ros1-socket";
   displayName = "ROS 1";
-  iconName = "studio.ROS";
+  iconName: IPlayerFactory["iconName"] = "studio.ROS";
 
   promptOptions(previousValue?: string): PromptOptions {
     const os = OsContextSingleton; // workaround for https://github.com/webpack/webpack/issues/12960
@@ -38,23 +40,17 @@ class Ros1Socket implements DataSource {
     };
   }
 
-  initialize(args?: Record<string, unknown>): Player | undefined {
-    const url = args?.["url"] as string | undefined;
+  initialize(args: PlayerFactoryInitializeArgs): Player | undefined {
+    const url = args.url;
     if (!url) {
       return;
     }
 
-    // how??
-    // fixme
-    //const hostname = options.sourceOptions.rosHostname as string | undefined;
-    const hostname = "localhost";
-
-    // fixme
-    const metrics = new NoopMetricsCollector();
+    const hostname = args?.rosHostname ?? "localhost";
     return new Ros1Player({
       url,
       hostname,
-      metricsCollector: metrics,
+      metricsCollector: args.metricsCollector,
     });
   }
 }

@@ -2,17 +2,19 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { DataSource } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import {
+  IPlayerFactory,
+  PlayerFactoryInitializeArgs,
+} from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { PromptOptions } from "@foxglove/studio-base/hooks/usePrompt";
-import NoopMetricsCollector from "@foxglove/studio-base/players/NoopMetricsCollector";
 import { buildPlayerFromBagURLs } from "@foxglove/studio-base/players/buildPlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 import { parseInputUrl } from "@foxglove/studio-base/util/url";
 
-class Ros1RemoteBag implements DataSource {
+class Ros1RemoteBag implements IPlayerFactory {
   id = "ros1-remote-bagfile";
   displayName = "ROS 1 Bag (remote)";
-  iconName = "FileASPX";
+  iconName: IPlayerFactory["iconName"] = "FileASPX";
 
   promptOptions(previousValue?: string): PromptOptions {
     return {
@@ -35,18 +37,15 @@ class Ros1RemoteBag implements DataSource {
     };
   }
 
-  initialize(args?: Record<string, unknown>): Player | undefined {
-    const url = args?.["url"] as string | undefined;
+  initialize(args: PlayerFactoryInitializeArgs): Player | undefined {
+    const url = args.url;
     if (!url) {
       return;
     }
 
-    // fixme
-    const metrics = new NoopMetricsCollector();
     return buildPlayerFromBagURLs([url], {
-      // fixme - where to get this from? app settings?
-      unlimitedMemoryCache: false,
-      metricsCollector: metrics,
+      unlimitedMemoryCache: args.unlimitedMemoryCache,
+      metricsCollector: args.metricsCollector,
     });
   }
 }
