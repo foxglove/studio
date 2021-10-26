@@ -11,7 +11,7 @@ import { buildPlayerFromBagURLs } from "@foxglove/studio-base/players/buildPlaye
 import { Player } from "@foxglove/studio-base/players/types";
 import { parseInputUrl } from "@foxglove/studio-base/util/url";
 
-class Ros1RemoteBag implements IPlayerFactory {
+class Ros1RemoteBagPlayerFactory implements IPlayerFactory {
   id = "ros1-remote-bagfile";
   displayName = "ROS 1 Bag (remote)";
   iconName: IPlayerFactory["iconName"] = "FileASPX";
@@ -50,4 +50,4 @@ class Ros1RemoteBag implements IPlayerFactory {
   }
 }
 
-export default Ros1RemoteBag;
+export default Ros1RemoteBagPlayerFactory;

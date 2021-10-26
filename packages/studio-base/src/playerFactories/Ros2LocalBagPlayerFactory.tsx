@@ -10,7 +10,7 @@ import { buildRosbag2PlayerFromDescriptor } from "@foxglove/studio-base/players/
 import { Player } from "@foxglove/studio-base/players/types";
 import { getLocalRosbag2Descriptor } from "@foxglove/studio-base/randomAccessDataProviders/standardDataProviderDescriptors";
 
-class Ros2LocalBag implements IPlayerFactory {
+class Ros2LocalBagPlayerFactory implements IPlayerFactory {
   id = "ros2-local-bagfile";
   displayName = "ROS 2 Bag (local)";
   iconName: IPlayerFactory["iconName"] = "OpenFolder";
@@ -30,4 +30,4 @@ class Ros2LocalBag implements IPlayerFactory {
   }
 }
 
-export default Ros2LocalBag;
+export default Ros2LocalBagPlayerFactory;

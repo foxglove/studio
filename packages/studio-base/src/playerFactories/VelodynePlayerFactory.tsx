@@ -12,7 +12,7 @@ import VelodynePlayer, {
 } from "@foxglove/studio-base/players/VelodynePlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 
-class Velodyne implements IPlayerFactory {
+class VelodynePlayerFactory implements IPlayerFactory {
   id = "velodyne-device";
   displayName = "Velodyne LIDAR";
   iconName: IPlayerFactory["iconName"] = "GenericScan";
@@ -45,4 +45,4 @@ class Velodyne implements IPlayerFactory {
   }
 }
 
-export default Velodyne;
+export default VelodynePlayerFactory;

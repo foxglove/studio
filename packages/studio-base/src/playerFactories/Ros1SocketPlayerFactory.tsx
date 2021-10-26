@@ -12,7 +12,7 @@ import Ros1Player from "@foxglove/studio-base/players/Ros1Player";
 import { Player } from "@foxglove/studio-base/players/types";
 import { parseInputUrl } from "@foxglove/studio-base/util/url";
 
-class Ros1Socket implements IPlayerFactory {
+class Ros1SocketPlayerFactory implements IPlayerFactory {
   id = "ros1-socket";
   displayName = "ROS 1";
   iconName: IPlayerFactory["iconName"] = "studio.ROS";
@@ -55,4 +55,4 @@ class Ros1Socket implements IPlayerFactory {
   }
 }
 
-export default Ros1Socket;
+export default Ros1SocketPlayerFactory;

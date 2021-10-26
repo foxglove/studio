@@ -9,7 +9,7 @@ import {
 import { buildPlayerFromFiles } from "@foxglove/studio-base/players/buildPlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 
-class Ros1LocalBag implements IPlayerFactory {
+class Ros1LocalBagPlayerFactory implements IPlayerFactory {
   id = "ros1-local-bagfile";
   displayName = "ROS 1 Bag (local)";
   iconName: IPlayerFactory["iconName"] = "OpenFile";
@@ -28,4 +28,4 @@ class Ros1LocalBag implements IPlayerFactory {
   }
 }
 
-export default Ros1LocalBag;
+export default Ros1LocalBagPlayerFactory;

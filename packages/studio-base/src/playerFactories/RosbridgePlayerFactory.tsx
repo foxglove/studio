@@ -11,7 +11,7 @@ import RosbridgePlayer from "@foxglove/studio-base/players/RosbridgePlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 import { parseInputUrl } from "@foxglove/studio-base/util/url";
 
-class Rosbridge implements IPlayerFactory {
+class RosbridgePlayerFactory implements IPlayerFactory {
   id = "rosbridge-websockete";
   displayName = "Rosbridge (ROS 1 & 2)";
   iconName: IPlayerFactory["iconName"] = "Flow";
@@ -50,4 +50,4 @@ class Rosbridge implements IPlayerFactory {
   }
 }
 
-export default Rosbridge;
+export default RosbridgePlayerFactory;

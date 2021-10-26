@@ -10,7 +10,7 @@ import { PromptOptions } from "@foxglove/studio-base/hooks/usePrompt";
 import Ros2Player from "@foxglove/studio-base/players/Ros2Player";
 import { Player } from "@foxglove/studio-base/players/types";
 
-class Ros2Socket implements IPlayerFactory {
+class Ros2SocketPlayerFactory implements IPlayerFactory {
   id = "ros2-socket";
   displayName = "ROS 2";
   iconName: IPlayerFactory["iconName"] = "studio.ROS";
@@ -43,4 +43,4 @@ class Ros2Socket implements IPlayerFactory {
   }
 }
 
-export default Ros2Socket;
+export default Ros2SocketPlayerFactory;

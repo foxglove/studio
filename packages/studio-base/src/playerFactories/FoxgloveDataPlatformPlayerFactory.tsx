@@ -16,7 +16,7 @@ type FoxgloveDataPlatformOptions = {
   deviceId: string;
 };
 
-class FoxgloveDataPlatform implements IPlayerFactory {
+class FoxgloveDataPlatformPlayerFactory implements IPlayerFactory {
   id = "foxglove-data-platform";
   displayName = "Foxglove Data Platform";
   iconName: IPlayerFactory["iconName"] = "FileASPX";
@@ -49,4 +49,4 @@ class FoxgloveDataPlatform implements IPlayerFactory {
   }
 }
 
-export default FoxgloveDataPlatform;
+export default FoxgloveDataPlatformPlayerFactory;
