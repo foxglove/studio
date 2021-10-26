@@ -8,6 +8,7 @@ import { mount } from "enzyme";
 
 import { PanelExtensionContext } from "@foxglove/studio";
 import PanelExtensionAdapter from "@foxglove/studio-base/components/PanelExtensionAdapter";
+import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
@@ -48,6 +49,7 @@ describe("PanelExtensionAdapter", () => {
       <ThemeProvider>
         <PanelSetup
           fixture={{
+            capabilities: [PlayerCapabilities.advertise],
             topics: [],
             datatypes: new Map(),
             frame: {},
@@ -85,6 +87,7 @@ describe("PanelExtensionAdapter", () => {
       <ThemeProvider>
         <PanelSetup
           fixture={{
+            capabilities: [PlayerCapabilities.advertise],
             topics: [],
             datatypes: new Map(),
             frame: {},
@@ -145,6 +148,7 @@ describe("PanelExtensionAdapter", () => {
       <ThemeProvider>
         <PanelSetup
           fixture={{
+            capabilities: [PlayerCapabilities.advertise],
             topics: [],
             datatypes: new Map(),
             frame: {},
@@ -186,6 +190,7 @@ describe("PanelExtensionAdapter", () => {
       <ThemeProvider>
         <PanelSetup
           fixture={{
+            capabilities: [PlayerCapabilities.advertise],
             topics: [],
             datatypes: new Map(),
             frame: {},
@@ -254,6 +259,7 @@ describe("PanelExtensionAdapter", () => {
     };
 
     const fixture: Fixture = {
+      capabilities: [PlayerCapabilities.advertise],
       topics: [],
       datatypes: new Map(),
       frame: {},
