@@ -20,6 +20,7 @@ class FoxgloveDataPlatformPlayerFactory implements IPlayerFactory {
   id = "foxglove-data-platform";
   displayName = "Foxglove Data Platform";
   iconName: IPlayerFactory["iconName"] = "FileASPX";
+  hidden = true;
 
   initialize(args: PlayerFactoryInitializeArgs): Player | undefined {
     if (!args.consoleApi) {

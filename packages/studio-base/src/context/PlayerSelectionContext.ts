@@ -24,6 +24,7 @@ export interface IPlayerFactory {
   iconName?: RegisteredIconNames;
   disabledReason?: string | JSX.Element;
   badgeText?: string;
+  hidden?: boolean;
 
   // If data source initialization supports "Open File" workflow, this property lists the supported
   // file types

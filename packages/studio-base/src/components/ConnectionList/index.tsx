@@ -73,6 +73,10 @@ export default function ConnectionList(): JSX.Element {
           : playerName}
       </Text>
       {availableSources.map((source) => {
+        if (source.hidden === true) {
+          return ReactNull;
+        }
+
         const iconName: RegisteredIconNames = source.iconName as RegisteredIconNames;
         return (
           <div key={source.id}>
