@@ -255,6 +255,8 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       } catch (error) {
         addToast(error.message, { appearance: "error" });
       }
+
+      return;
     },
     [
       addToast,
