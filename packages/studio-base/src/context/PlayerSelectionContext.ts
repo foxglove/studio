@@ -38,11 +38,6 @@ export interface IPlayerFactory {
   initialize: (args: PlayerFactoryInitializeArgs) => Player | undefined;
 }
 
-export type SourceSelection = {
-  id: string;
-  args?: unknown;
-};
-
 /**
  * PlayerSelectionContext exposes the available data sources and a function to set the current data source
  */
