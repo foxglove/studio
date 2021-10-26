@@ -11,7 +11,11 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import NotificationModal from "@foxglove/studio-base/components/NotificationModal";
 import ModalContext from "@foxglove/studio-base/context/ModalContext";
-import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import {
+  IPlayerFactory,
+  usePlayerSelection,
+} from "@foxglove/studio-base/context/PlayerSelectionContext";
+import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
 import { PlayerPresence, PlayerProblem } from "@foxglove/studio-base/players/types";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
@@ -36,6 +40,7 @@ const useStyles = makeStyles((theme) => ({
 
 export default function ConnectionList(): JSX.Element {
   const { selectSource, availableSources } = usePlayerSelection();
+  const confirm = useConfirm();
   const modalHost = useContext(ModalContext);
   const styles = useStyles();
 
@@ -44,6 +49,23 @@ export default function ConnectionList(): JSX.Element {
   const playerName = useMessagePipeline(selectPlayerName);
 
   const theme = useTheme();
+
+  const onSourceClick = useCallback(
+    (source: IPlayerFactory) => {
+      if (source.disabledReason != undefined) {
+        void confirm({
+          title: "Unsupported Connection",
+          prompt: source.disabledReason,
+          variant: "primary",
+          cancel: false,
+        });
+        return;
+      }
+
+      selectSource(source.id);
+    },
+    [confirm, selectSource],
+  );
 
   const showProblemModal = useCallback(
     (problem: PlayerProblem) => {
@@ -96,7 +118,7 @@ export default function ConnectionList(): JSX.Element {
                 iconName,
                 styles: { root: { "& span": { verticalAlign: "baseline" } } },
               }}
-              onClick={() => selectSource(source.id)}
+              onClick={() => onSourceClick(source)}
             >
               {source.displayName}
               {source.badgeText && <span className={styles.badge}>{source.badgeText}</span>}
