@@ -14,7 +14,7 @@ import { getSeekToTime } from "@foxglove/studio-base/util/time";
 
 export type BuildPlayerOptions = {
   unlimitedMemoryCache: boolean;
-  metricsCollector?: PlayerMetricsCollectorInterface;
+  metricsCollector: PlayerMetricsCollectorInterface;
 };
 
 export function buildPlayerFromDescriptor(
