@@ -98,6 +98,7 @@ export default function ConnectionList(): JSX.Element {
         let iconName: RegisteredIconNames;
         switch (source.type) {
           case "ros1-local-bagfile":
+          case "ulog-local-file":
             iconName = "OpenFile";
             break;
           case "ros2-local-bagfile":

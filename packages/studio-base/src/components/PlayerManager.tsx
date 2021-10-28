@@ -47,7 +47,10 @@ import Ros2Player from "@foxglove/studio-base/players/Ros2Player";
 import UserNodePlayer from "@foxglove/studio-base/players/UserNodePlayer";
 import { BuildPlayerOptions } from "@foxglove/studio-base/players/buildPlayer";
 import { Player } from "@foxglove/studio-base/players/types";
-import { getLocalRosbag2Descriptor } from "@foxglove/studio-base/randomAccessDataProviders/standardDataProviderDescriptors";
+import {
+  getLocalRosbag2Descriptor,
+  getLocalUlogDescriptor,
+} from "@foxglove/studio-base/randomAccessDataProviders/standardDataProviderDescriptors";
 import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 import { UserNodes } from "@foxglove/studio-base/types/panels";
 import Storage from "@foxglove/studio-base/util/Storage";
@@ -127,10 +130,36 @@ async function localRosbag2FolderSource(options: FactoryOptions): Promise<Player
     throw error;
   }
 
-  const { buildRosbag2PlayerFromDescriptor } = await import(
-    "@foxglove/studio-base/players/buildRosbag2Player"
+  const { buildNonRos1PlayerFromDescriptor } = await import(
+    "@foxglove/studio-base/players/buildNonRos1Player"
   );
-  return buildRosbag2PlayerFromDescriptor(getLocalRosbag2Descriptor(folder), options.playerOptions);
+  return buildNonRos1PlayerFromDescriptor(getLocalRosbag2Descriptor(folder), options.playerOptions);
+}
+
+async function localUlogFileSource(options: FactoryOptions): Promise<Player | undefined> {
+  let file: File;
+
+  const restore = Boolean(options.sourceOptions.restore ?? false);
+  if (restore) {
+    return undefined;
+  }
+
+  try {
+    const [fileHandle] = await showOpenFilePicker({
+      types: [{ accept: { "application/octet-stream": [".ulg", ".ulog"] } }],
+    });
+    file = await fileHandle.getFile();
+  } catch (error) {
+    if (error.name === "AbortError") {
+      return undefined;
+    }
+    throw error;
+  }
+
+  const { buildNonRos1PlayerFromDescriptor } = await import(
+    "@foxglove/studio-base/players/buildNonRos1Player"
+  );
+  return buildNonRos1PlayerFromDescriptor(getLocalUlogDescriptor(file), options.playerOptions);
 }
 
 async function remoteBagFileSource(options: FactoryOptions): Promise<Player | undefined> {
@@ -480,6 +509,8 @@ export default function PlayerManager({
         return rosbridgeSource;
       case "ros1-remote-bagfile":
         return remoteBagFileSource;
+      case "ulog-local-file":
+        return localUlogFileSource;
       case "velodyne-device":
         return velodyneSource;
       default:

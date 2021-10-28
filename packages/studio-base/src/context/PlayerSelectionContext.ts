@@ -12,6 +12,7 @@ type SourceTypes =
   | "ros2-socket"
   | "rosbridge-websocket"
   | "ros1-remote-bagfile"
+  | "ulog-local-file"
   | "velodyne-device";
 
 export type PlayerSourceDefinition = {
@@ -46,6 +47,7 @@ type SpecializedPlayerSource<T extends SourceTypes> = Omit<PlayerSourceDefinitio
 
 interface SelectSourceFunction {
   (definition: SpecializedPlayerSource<"ros1-local-bagfile">, params?: FileSourceParams): void;
+  (definition: SpecializedPlayerSource<"ulog-local-file">, params?: FileSourceParams): void;
   (definition: SpecializedPlayerSource<"ros2-local-bagfile">, params?: FolderSourceParams): void;
   (definition: SpecializedPlayerSource<"ros1-remote-bagfile">, params?: HttpSourceParams): void;
   (

@@ -63,6 +63,10 @@ export default function Root(): ReactElement {
       type: "ros2-local-bagfile",
     },
     {
+      name: "PX4 ULog (local)",
+      type: "ulog-local-file",
+    },
+    {
       name: "Velodyne LIDAR",
       type: "velodyne-device",
     },

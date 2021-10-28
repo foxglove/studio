@@ -85,7 +85,11 @@ if (SEEK_ON_START_NS >= SEEK_BACK_NANOSECONDS) {
 
 export const SEEK_START_DELAY_MS = 100;
 
-const capabilities = [PlayerCapabilities.setSpeed, PlayerCapabilities.playbackControl];
+const capabilities = [
+  PlayerCapabilities.setSpeed,
+  PlayerCapabilities.playbackControl,
+  PlayerCapabilities.getParameters,
+];
 
 export type RandomAccessPlayerOptions = {
   metricsCollector?: PlayerMetricsCollectorInterface;
@@ -119,6 +123,7 @@ export default class RandomAccessPlayer implements Player {
   private _providerTopics: Topic[] = [];
   private _providerConnections: Connection[] = [];
   private _providerDatatypes: RosDatatypes = new Map();
+  private _providerParameters: Map<string, ParameterValue> | undefined;
   private _metricsCollector: PlayerMetricsCollectorInterface;
   private _initializing: boolean = true;
   private _initialized: boolean = false;
@@ -215,7 +220,16 @@ export default class RandomAccessPlayer implements Player {
           }
         },
       })
-      .then(({ start, end, topics, connections, messageDefinitions, providesParsedMessages }) => {
+      .then((result) => {
+        const {
+          start,
+          end,
+          topics,
+          connections,
+          parameters,
+          messageDefinitions,
+          providesParsedMessages,
+        } = result;
         if (!providesParsedMessages) {
           this._setError("Incorrect message format");
           return;
@@ -234,6 +248,7 @@ export default class RandomAccessPlayer implements Player {
         this._providerTopics = topics;
         this._providerConnections = connections;
         this._providerDatatypes = parsedMessageDefinitions.datatypes;
+        this._providerParameters = parameters;
         this._parsedMessageDefinitionsByTopic =
           parsedMessageDefinitions.parsedMessageDefinitionsByTopic;
         this._initializing = false;
@@ -337,6 +352,7 @@ export default class RandomAccessPlayer implements Player {
             lastSeekTime: this._lastSeekEmitTime,
             topics: this._providerTopics,
             datatypes: this._providerDatatypes,
+            parameters: this._providerParameters,
             publishedTopics,
             parsedMessageDefinitionsByTopic: this._parsedMessageDefinitionsByTopic,
           },
