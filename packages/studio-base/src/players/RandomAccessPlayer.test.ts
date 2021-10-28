@@ -110,7 +110,11 @@ describe("RandomAccessPlayer", () => {
     expect(messages).toEqual([
       {
         activeData: undefined,
-        capabilities: [PlayerCapabilities.setSpeed, PlayerCapabilities.playbackControl],
+        capabilities: [
+          PlayerCapabilities.setSpeed,
+          PlayerCapabilities.playbackControl,
+          PlayerCapabilities.getParameters,
+        ],
         presence: PlayerPresence.INITIALIZING,
         progress: {},
       },
@@ -138,7 +142,11 @@ describe("RandomAccessPlayer", () => {
           parsedMessageDefinitionsByTopic: {},
           publishedTopics: new Map<string, Set<string>>(),
         },
-        capabilities: [PlayerCapabilities.setSpeed, PlayerCapabilities.playbackControl],
+        capabilities: [
+          PlayerCapabilities.setSpeed,
+          PlayerCapabilities.playbackControl,
+          PlayerCapabilities.getParameters,
+        ],
         presence: PlayerPresence.PRESENT,
         progress: {},
       },
