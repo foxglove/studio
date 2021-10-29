@@ -83,9 +83,16 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor: colors.DARK2,
       padding: theme.spacing.s1,
       borderRadius: theme.effects.roundedCorner2,
+
+      code: {
+        backgroundColor: "transparent",
+      },
     },
     code: {
       fontFamily: fonts.MONOSPACE,
+      padding: theme.spacing.s2,
+      backgroundColor: theme.semanticColors.bodyBackgroundHovered,
+      borderRadius: "0.2em",
     },
   },
 }));
