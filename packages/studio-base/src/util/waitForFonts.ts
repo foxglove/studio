@@ -11,13 +11,10 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-// Workaround for code using measureText during initial render. Even if the font data is available
-// immediately (because we use a data: url), Chrome doesn't parse/load it until it's "used" on the
-// page, which we can trigger by adding a dummy element with some text.
-//
-// Without waiting, initial measureText calls have the wrong result, and the font sometimes doesn't
-// appear in screenshot tests.
-
+/**
+ * Wait for the browser to load custom fonts that have already been added to the document (via CSS
+ * or the FontFace API) and generic font families.
+ */
 export default async function waitForFonts(): Promise<unknown> {
   return await Promise.all([...document.fonts].map(async (font) => await font.load()));
 }

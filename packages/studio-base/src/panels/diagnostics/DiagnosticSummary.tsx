@@ -217,16 +217,17 @@ function DiagnosticSummary(props: Props): JSX.Element {
 
   const showDetails = useCallback(
     (info: DiagnosticInfo) => {
-      openSiblingPanel(
-        "DiagnosticStatusPanel",
-        () =>
+      openSiblingPanel({
+        panelType: "DiagnosticStatusPanel",
+        siblingConfigCreator: () =>
           ({
             selectedHardwareId: info.status.hardware_id,
             selectedName: info.status.name,
             topicToRender,
             collapsedSections: [],
           } as DiagnosticStatusConfig),
-      );
+        updateIfExists: true,
+      });
     },
     [topicToRender, openSiblingPanel],
   );
@@ -352,8 +353,8 @@ function DiagnosticSummary(props: Props): JSX.Element {
         <Dropdown
           styles={dropdownStyles}
           onRenderOption={renderOption}
-          onRenderTitle={(option: IDropdownOption[] | undefined) =>
-            option ? <>{option.map(renderOption)}</> : ReactNull
+          onRenderTitle={(options: IDropdownOption[] | undefined) =>
+            options?.[0] ? renderOption(options[0]) : ReactNull
           }
           onChange={(_ev, option) => {
             if (option) {
