@@ -79,6 +79,10 @@ export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX
       type: "ros2-local-bagfile",
     },
     {
+      name: "PX4 ULog (local)",
+      type: "ulog-local-file",
+    },
+    {
       name: "Velodyne LIDAR",
       type: "velodyne-device",
       disabledReason: (
