@@ -8,7 +8,7 @@ import {
   App,
   ErrorBoundary,
   MultiProvider,
-  IPlayerFactory,
+  IDataSourceFactory,
   ThemeProvider,
   UserProfileLocalStorageProvider,
   StudioToastProvider,
@@ -17,14 +17,14 @@ import {
   ConsoleApi,
   ConsoleApiContext,
   ConsoleApiRemoteLayoutStorageProvider,
-  Ros1LocalBagPlayerFactory,
-  Ros2LocalBagPlayerFactory,
-  RosbridgePlayerFactory,
-  VelodynePlayerFactory,
-  Ros1RemoteBagPlayerFactory,
-  Ros1SocketPlayerFactory,
-  Ros2SocketPlayerFactory,
-  FoxgloveDataPlatformPlayerFactory,
+  Ros1LocalBagDataSourceFactory,
+  Ros2LocalBagDataSourceFactory,
+  RosbridgeDataSourceFactory,
+  VelodyneDataSourceFactory,
+  Ros1RemoteBagDataSourceFactory,
+  Ros1SocketDataSourceFactory,
+  Ros2SocketDataSourceFactory,
+  FoxgloveDataPlatformDataSourceFactory,
 } from "@foxglove/studio-base";
 
 import { Desktop } from "../common/types";
@@ -39,15 +39,15 @@ const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo
 
 const desktopBridge = (global as unknown as { desktopBridge: Desktop }).desktopBridge;
 
-const dataSources: IPlayerFactory[] = [
-  new Ros1SocketPlayerFactory(),
-  new Ros1LocalBagPlayerFactory(),
-  new Ros1RemoteBagPlayerFactory(),
-  new Ros2SocketPlayerFactory(),
-  new Ros2LocalBagPlayerFactory(),
-  new RosbridgePlayerFactory(),
-  new VelodynePlayerFactory(),
-  new FoxgloveDataPlatformPlayerFactory(),
+const dataSources: IDataSourceFactory[] = [
+  new Ros1SocketDataSourceFactory(),
+  new Ros1LocalBagDataSourceFactory(),
+  new Ros1RemoteBagDataSourceFactory(),
+  new Ros2SocketDataSourceFactory(),
+  new Ros2LocalBagDataSourceFactory(),
+  new RosbridgeDataSourceFactory(),
+  new VelodyneDataSourceFactory(),
+  new FoxgloveDataPlatformDataSourceFactory(),
 ];
 
 export default function Root(): ReactElement {

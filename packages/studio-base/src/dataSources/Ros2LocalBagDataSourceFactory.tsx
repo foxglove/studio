@@ -3,21 +3,21 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  IPlayerFactory,
-  PlayerFactoryInitializeArgs,
+  IDataSourceFactory,
+  DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { buildRosbag2PlayerFromDescriptor } from "@foxglove/studio-base/players/buildRosbag2Player";
 import { Player } from "@foxglove/studio-base/players/types";
 import { getLocalRosbag2Descriptor } from "@foxglove/studio-base/randomAccessDataProviders/standardDataProviderDescriptors";
 
-class Ros2LocalBagPlayerFactory implements IPlayerFactory {
+class Ros2LocalBagDataSourceFactory implements IDataSourceFactory {
   id = "ros2-local-bagfile";
   displayName = "ROS 2 Bag (local)";
-  iconName: IPlayerFactory["iconName"] = "OpenFolder";
+  iconName: IDataSourceFactory["iconName"] = "OpenFolder";
 
   supportsOpenDirectory = true;
 
-  initialize(args: PlayerFactoryInitializeArgs): Player | undefined {
+  initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
     const folder = args.folder;
     if (!folder) {
       return;
@@ -30,4 +30,4 @@ class Ros2LocalBagPlayerFactory implements IPlayerFactory {
   }
 }
 
-export default Ros2LocalBagPlayerFactory;
+export default Ros2LocalBagDataSourceFactory;

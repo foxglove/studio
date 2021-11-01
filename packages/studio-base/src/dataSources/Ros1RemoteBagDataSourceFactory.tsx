@@ -3,18 +3,18 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  IPlayerFactory,
-  PlayerFactoryInitializeArgs,
+  IDataSourceFactory,
+  DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { PromptOptions } from "@foxglove/studio-base/hooks/usePrompt";
 import { buildPlayerFromBagURLs } from "@foxglove/studio-base/players/buildPlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 import { parseInputUrl } from "@foxglove/studio-base/util/url";
 
-class Ros1RemoteBagPlayerFactory implements IPlayerFactory {
+class Ros1RemoteBagDataSourceFactory implements IDataSourceFactory {
   id = "ros1-remote-bagfile";
   displayName = "ROS 1 Bag (remote)";
-  iconName: IPlayerFactory["iconName"] = "FileASPX";
+  iconName: IDataSourceFactory["iconName"] = "FileASPX";
 
   promptOptions(previousValue?: string): PromptOptions {
     return {
@@ -37,7 +37,7 @@ class Ros1RemoteBagPlayerFactory implements IPlayerFactory {
     };
   }
 
-  initialize(args: PlayerFactoryInitializeArgs): Player | undefined {
+  initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
     const url = args.url;
     if (!url) {
       return;
@@ -50,4 +50,4 @@ class Ros1RemoteBagPlayerFactory implements IPlayerFactory {
   }
 }
 
-export default Ros1RemoteBagPlayerFactory;
+export default Ros1RemoteBagDataSourceFactory;

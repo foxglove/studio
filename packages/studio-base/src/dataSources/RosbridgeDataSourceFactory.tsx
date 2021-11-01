@@ -3,18 +3,18 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  IPlayerFactory,
-  PlayerFactoryInitializeArgs,
+  IDataSourceFactory,
+  DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { PromptOptions } from "@foxglove/studio-base/hooks/usePrompt";
 import RosbridgePlayer from "@foxglove/studio-base/players/RosbridgePlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 import { parseInputUrl } from "@foxglove/studio-base/util/url";
 
-class RosbridgePlayerFactory implements IPlayerFactory {
+class RosbridgeDataSourceFactory implements IDataSourceFactory {
   id = "rosbridge-websockete";
   displayName = "Rosbridge (ROS 1 & 2)";
-  iconName: IPlayerFactory["iconName"] = "Flow";
+  iconName: IDataSourceFactory["iconName"] = "Flow";
 
   promptOptions(previousValue?: string): PromptOptions {
     return {
@@ -37,7 +37,7 @@ class RosbridgePlayerFactory implements IPlayerFactory {
     };
   }
 
-  initialize(args: PlayerFactoryInitializeArgs): Player | undefined {
+  initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
     const url = args.url;
     if (!url) {
       return;
@@ -50,4 +50,4 @@ class RosbridgePlayerFactory implements IPlayerFactory {
   }
 }
 
-export default RosbridgePlayerFactory;
+export default RosbridgeDataSourceFactory;

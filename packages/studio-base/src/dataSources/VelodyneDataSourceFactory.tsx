@@ -3,8 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  IPlayerFactory,
-  PlayerFactoryInitializeArgs,
+  IDataSourceFactory,
+  DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { PromptOptions } from "@foxglove/studio-base/hooks/usePrompt";
 import VelodynePlayer, {
@@ -12,10 +12,10 @@ import VelodynePlayer, {
 } from "@foxglove/studio-base/players/VelodynePlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 
-class VelodynePlayerFactory implements IPlayerFactory {
+class VelodyneDataSourceFactory implements IDataSourceFactory {
   id = "velodyne-device";
   displayName = "Velodyne LIDAR";
-  iconName: IPlayerFactory["iconName"] = "GenericScan";
+  iconName: IDataSourceFactory["iconName"] = "GenericScan";
 
   promptOptions(previousValue?: string): PromptOptions {
     return {
@@ -34,7 +34,7 @@ class VelodynePlayerFactory implements IPlayerFactory {
     };
   }
 
-  initialize(args: PlayerFactoryInitializeArgs): Player | undefined {
+  initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
     // velodyne uses the url arg as the port
     const port = args.url as number | undefined;
     if (port == undefined) {
@@ -45,4 +45,4 @@ class VelodynePlayerFactory implements IPlayerFactory {
   }
 }
 
-export default VelodynePlayerFactory;
+export default VelodyneDataSourceFactory;

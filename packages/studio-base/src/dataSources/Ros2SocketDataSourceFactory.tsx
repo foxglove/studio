@@ -3,17 +3,17 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  IPlayerFactory,
-  PlayerFactoryInitializeArgs,
+  IDataSourceFactory,
+  DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { PromptOptions } from "@foxglove/studio-base/hooks/usePrompt";
 import Ros2Player from "@foxglove/studio-base/players/Ros2Player";
 import { Player } from "@foxglove/studio-base/players/types";
 
-class Ros2SocketPlayerFactory implements IPlayerFactory {
+class Ros2SocketDataSourceFactory implements IDataSourceFactory {
   id = "ros2-socket";
   displayName = "ROS 2";
-  iconName: IPlayerFactory["iconName"] = "studio.ROS";
+  iconName: IDataSourceFactory["iconName"] = "studio.ROS";
 
   promptOptions(previousValue?: string): PromptOptions {
     return {
@@ -30,7 +30,7 @@ class Ros2SocketPlayerFactory implements IPlayerFactory {
     };
   }
 
-  initialize(args: PlayerFactoryInitializeArgs): Player | undefined {
+  initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
     const url = args.url;
     if (!url) {
       return;
@@ -43,4 +43,4 @@ class Ros2SocketPlayerFactory implements IPlayerFactory {
   }
 }
 
-export default Ros2SocketPlayerFactory;
+export default Ros2SocketDataSourceFactory;

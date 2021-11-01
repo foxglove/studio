@@ -3,8 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  IPlayerFactory,
-  PlayerFactoryInitializeArgs,
+  IDataSourceFactory,
+  DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import FoxgloveDataPlatformPlayer from "@foxglove/studio-base/players/FoxgloveDataPlatformPlayer";
 import { Player } from "@foxglove/studio-base/players/types";
@@ -16,13 +16,13 @@ type FoxgloveDataPlatformOptions = {
   deviceId: string;
 };
 
-class FoxgloveDataPlatformPlayerFactory implements IPlayerFactory {
+class FoxgloveDataPlatformDataSourceFactory implements IDataSourceFactory {
   id = "foxglove-data-platform";
   displayName = "Foxglove Data Platform";
-  iconName: IPlayerFactory["iconName"] = "FileASPX";
+  iconName: IDataSourceFactory["iconName"] = "FileASPX";
   hidden = true;
 
-  initialize(args: PlayerFactoryInitializeArgs): Player | undefined {
+  initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
     if (!args.consoleApi) {
       return;
     }
@@ -50,4 +50,4 @@ class FoxgloveDataPlatformPlayerFactory implements IPlayerFactory {
   }
 }
 
-export default FoxgloveDataPlatformPlayerFactory;
+export default FoxgloveDataPlatformDataSourceFactory;

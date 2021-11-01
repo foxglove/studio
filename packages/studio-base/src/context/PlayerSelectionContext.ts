@@ -8,7 +8,7 @@ import { PromptOptions } from "@foxglove/studio-base/hooks/usePrompt";
 import { Player, PlayerMetricsCollectorInterface } from "@foxglove/studio-base/players/types";
 import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 
-export type PlayerFactoryInitializeArgs = {
+export type DataSourceFactoryInitializeArgs = {
   metricsCollector: PlayerMetricsCollectorInterface;
   unlimitedMemoryCache: boolean;
   rosHostname?: string;
@@ -18,7 +18,7 @@ export type PlayerFactoryInitializeArgs = {
   consoleApi?: ConsoleApi;
 } & Record<string, unknown>;
 
-export interface IPlayerFactory {
+export interface IDataSourceFactory {
   id: string;
   displayName: string;
   iconName?: RegisteredIconNames;
@@ -35,7 +35,7 @@ export interface IPlayerFactory {
   promptOptions?: (previousValue?: string) => PromptOptions;
 
   // Initialize a player.
-  initialize: (args: PlayerFactoryInitializeArgs) => Player | undefined;
+  initialize: (args: DataSourceFactoryInitializeArgs) => Player | undefined;
 }
 
 /**
@@ -45,10 +45,10 @@ export interface PlayerSelection {
   selectSource: (sourceId: string, args?: Record<string, unknown>) => void;
 
   /** Currently selected data source */
-  selectedSource?: IPlayerFactory;
+  selectedSource?: IDataSourceFactory;
 
   /** List of available data sources */
-  availableSources: IPlayerFactory[];
+  availableSources: IDataSourceFactory[];
 }
 
 const PlayerSelectionContext = createContext<PlayerSelection>({

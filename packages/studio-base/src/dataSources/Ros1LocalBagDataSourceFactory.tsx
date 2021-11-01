@@ -3,19 +3,19 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import {
-  IPlayerFactory,
-  PlayerFactoryInitializeArgs,
+  IDataSourceFactory,
+  DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { buildPlayerFromFiles } from "@foxglove/studio-base/players/buildPlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 
-class Ros1LocalBagPlayerFactory implements IPlayerFactory {
+class Ros1LocalBagDataSourceFactory implements IDataSourceFactory {
   id = "ros1-local-bagfile";
   displayName = "ROS 1 Bag (local)";
-  iconName: IPlayerFactory["iconName"] = "OpenFile";
+  iconName: IDataSourceFactory["iconName"] = "OpenFile";
   supportedFileTypes = [".bag"];
 
-  initialize(args: PlayerFactoryInitializeArgs): Player | undefined {
+  initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
     const file = args.file;
     if (!file) {
       return;
@@ -28,4 +28,4 @@ class Ros1LocalBagPlayerFactory implements IPlayerFactory {
   }
 }
 
-export default Ros1LocalBagPlayerFactory;
+export default Ros1LocalBagDataSourceFactory;

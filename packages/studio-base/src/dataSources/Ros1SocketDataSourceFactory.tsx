@@ -4,18 +4,18 @@
 
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import {
-  IPlayerFactory,
-  PlayerFactoryInitializeArgs,
+  IDataSourceFactory,
+  DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { PromptOptions } from "@foxglove/studio-base/hooks/usePrompt";
 import Ros1Player from "@foxglove/studio-base/players/Ros1Player";
 import { Player } from "@foxglove/studio-base/players/types";
 import { parseInputUrl } from "@foxglove/studio-base/util/url";
 
-class Ros1SocketPlayerFactory implements IPlayerFactory {
+class Ros1SocketDataSourceFactory implements IDataSourceFactory {
   id = "ros1-socket";
   displayName = "ROS 1";
-  iconName: IPlayerFactory["iconName"] = "studio.ROS";
+  iconName: IDataSourceFactory["iconName"] = "studio.ROS";
 
   promptOptions(previousValue?: string): PromptOptions {
     const os = OsContextSingleton; // workaround for https://github.com/webpack/webpack/issues/12960
@@ -40,7 +40,7 @@ class Ros1SocketPlayerFactory implements IPlayerFactory {
     };
   }
 
-  initialize(args: PlayerFactoryInitializeArgs): Player | undefined {
+  initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {
     const url = args.url;
     if (!url) {
       return;
@@ -55,4 +55,4 @@ class Ros1SocketPlayerFactory implements IPlayerFactory {
   }
 }
 
-export default Ros1SocketPlayerFactory;
+export default Ros1SocketDataSourceFactory;

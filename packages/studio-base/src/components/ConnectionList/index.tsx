@@ -12,7 +12,7 @@ import {
 import NotificationModal from "@foxglove/studio-base/components/NotificationModal";
 import ModalContext from "@foxglove/studio-base/context/ModalContext";
 import {
-  IPlayerFactory,
+  IDataSourceFactory,
   usePlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
@@ -51,7 +51,7 @@ export default function ConnectionList(): JSX.Element {
   const theme = useTheme();
 
   const onSourceClick = useCallback(
-    (source: IPlayerFactory) => {
+    (source: IDataSourceFactory) => {
       if (source.disabledReason != undefined) {
         void confirm({
           title: "Unsupported Connection",

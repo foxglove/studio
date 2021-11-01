@@ -32,7 +32,7 @@ import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
 import { useCurrentLayoutSelector } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import PlayerSelectionContext, {
-  IPlayerFactory,
+  IDataSourceFactory,
   PlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { useUserNodeState } from "@foxglove/studio-base/context/UserNodeStateContext";
@@ -54,7 +54,7 @@ const EMPTY_USER_NODES: UserNodes = Object.freeze({});
 const EMPTY_GLOBAL_VARIABLES: GlobalVariables = Object.freeze({});
 
 type PlayerManagerProps = {
-  playerSources: IPlayerFactory[];
+  playerSources: IDataSourceFactory[];
 };
 
 export default function PlayerManager(props: PropsWithChildren<PlayerManagerProps>): JSX.Element {
@@ -132,7 +132,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
     args?: Record<string, unknown>;
   }>("studio.playermanager.selected-source.v2");
 
-  const [selectedSource, setSelectedSource] = useState<IPlayerFactory | undefined>();
+  const [selectedSource, setSelectedSource] = useState<IDataSourceFactory | undefined>();
 
   const selectSource = useCallback(
     async (sourceId: string, args?: Record<string, unknown>) => {

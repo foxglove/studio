@@ -8,7 +8,7 @@ import {
   App,
   ErrorBoundary,
   MultiProvider,
-  IPlayerFactory,
+  IDataSourceFactory,
   ThemeProvider,
   UserProfileLocalStorageProvider,
   StudioToastProvider,
@@ -17,32 +17,32 @@ import {
   ConsoleApi,
   ConsoleApiContext,
   ConsoleApiRemoteLayoutStorageProvider,
-  Ros1LocalBagPlayerFactory,
-  Ros2LocalBagPlayerFactory,
-  RosbridgePlayerFactory,
-  Ros1RemoteBagPlayerFactory,
-  FoxgloveDataPlatformPlayerFactory,
+  Ros1LocalBagDataSourceFactory,
+  Ros2LocalBagDataSourceFactory,
+  RosbridgeDataSourceFactory,
+  Ros1RemoteBagDataSourceFactory,
+  FoxgloveDataPlatformDataSourceFactory,
 } from "@foxglove/studio-base";
 
 import ConsoleApiCookieUserProvider from "./components/ConsoleApiCookieCurrentUserProvider";
 import LocalStorageAppConfigurationProvider from "./components/LocalStorageAppConfigurationProvider";
 import LocalStorageLayoutStorageProvider from "./components/LocalStorageLayoutStorageProvider";
-import Ros1UnavailablePlayerFactory from "./playerFactories/Ros1UnavailablePlayerFactory";
-import Ros2UnavailablePlayerFactory from "./playerFactories/Ros2UnavailablePlayerFactory";
-import VelodyneUnavailablePlayerFactory from "./playerFactories/VelodyneUnavailablePlayerFactory";
+import Ros1UnavailableDataSourceFactory from "./dataSources/Ros1UnavailableDataSourceFactory";
+import Ros2UnavailableDataSourceFactory from "./dataSources/Ros2UnavailableDataSourceFactory";
+import VelodyneUnavailableDataSourceFactory from "./dataSources/VelodyneUnavailableDataSourceFactory";
 import ExtensionLoaderProvider from "./providers/ExtensionLoaderProvider";
 
 const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
 
-const dataSources: IPlayerFactory[] = [
-  new Ros1UnavailablePlayerFactory(),
-  new Ros1LocalBagPlayerFactory(),
-  new Ros1RemoteBagPlayerFactory(),
-  new Ros2UnavailablePlayerFactory(),
-  new Ros2LocalBagPlayerFactory(),
-  new RosbridgePlayerFactory(),
-  new VelodyneUnavailablePlayerFactory(),
-  new FoxgloveDataPlatformPlayerFactory(),
+const dataSources: IDataSourceFactory[] = [
+  new Ros1UnavailableDataSourceFactory(),
+  new Ros1LocalBagDataSourceFactory(),
+  new Ros1RemoteBagDataSourceFactory(),
+  new Ros2UnavailableDataSourceFactory(),
+  new Ros2LocalBagDataSourceFactory(),
+  new RosbridgeDataSourceFactory(),
+  new VelodyneUnavailableDataSourceFactory(),
+  new FoxgloveDataPlatformDataSourceFactory(),
 ];
 
 export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX.Element {
