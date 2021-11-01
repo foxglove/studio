@@ -98,11 +98,11 @@ function getPartialTheme({ inverted }: { inverted: boolean }): PartialTheme {
         styles: ({ theme }: ITooltipStyleProps): Partial<ITooltipStyles> => ({
           root: {
             padding: 6,
-            background: theme.palette.neutralDark,
+            background: theme.palette.neutralLighter,
           },
           content: {
-            background: theme.palette.neutralDark,
-            color: theme.palette.neutralLight,
+            background: theme.palette.neutralLighter,
+            color: theme.palette.neutralDark,
           },
         }),
       },

@@ -79,7 +79,6 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   tooltipTitle: {
-    color: theme.semanticColors.bodyBackground,
     width: "70px",
     textAlign: "right",
     marginRight: theme.spacing.s2,
