@@ -85,12 +85,6 @@ if (SEEK_ON_START_NS >= SEEK_BACK_NANOSECONDS) {
 
 export const SEEK_START_DELAY_MS = 100;
 
-const capabilities = [
-  PlayerCapabilities.setSpeed,
-  PlayerCapabilities.playbackControl,
-  PlayerCapabilities.getParameters,
-];
-
 export type RandomAccessPlayerOptions = {
   metricsCollector?: PlayerMetricsCollectorInterface;
   seekToTime: SeekToTimeSpec;
@@ -124,6 +118,7 @@ export default class RandomAccessPlayer implements Player {
   private _providerConnections: Connection[] = [];
   private _providerDatatypes: RosDatatypes = new Map();
   private _providerParameters: Map<string, ParameterValue> | undefined;
+  private _capabilities: string[] = [];
   private _metricsCollector: PlayerMetricsCollectorInterface;
   private _initializing: boolean = true;
   private _initialized: boolean = false;
@@ -249,6 +244,10 @@ export default class RandomAccessPlayer implements Player {
         this._providerConnections = connections;
         this._providerDatatypes = parsedMessageDefinitions.datatypes;
         this._providerParameters = parameters;
+        this._capabilities = [PlayerCapabilities.setSpeed, PlayerCapabilities.playbackControl];
+        if (parameters) {
+          this._capabilities.push(PlayerCapabilities.getParameters);
+        }
         this._parsedMessageDefinitionsByTopic =
           parsedMessageDefinitions.parsedMessageDefinitionsByTopic;
         this._initializing = false;
@@ -284,7 +283,7 @@ export default class RandomAccessPlayer implements Player {
         filePath: this._filePath,
         presence: PlayerPresence.ERROR,
         progress: {},
-        capabilities: [],
+        capabilities: this._capabilities,
         playerId: this._id,
         activeData: undefined,
         problems: Array.from(this._problems.values()),
@@ -335,7 +334,7 @@ export default class RandomAccessPlayer implements Player {
         ? PlayerPresence.INITIALIZING
         : PlayerPresence.PRESENT,
       progress: this._progress,
-      capabilities,
+      capabilities: this._capabilities,
       playerId: this._id,
       problems: this._problems.size > 0 ? Array.from(this._problems.values()) : undefined,
       activeData: this._initializing
