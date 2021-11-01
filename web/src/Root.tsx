@@ -2,14 +2,13 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Link } from "@fluentui/react";
 import { useMemo } from "react";
 
 import {
   App,
   ErrorBoundary,
   MultiProvider,
-  PlayerSourceDefinition,
+  IDataSourceFactory,
   ThemeProvider,
   UserProfileLocalStorageProvider,
   StudioToastProvider,
@@ -18,84 +17,35 @@ import {
   ConsoleApi,
   ConsoleApiContext,
   ConsoleApiRemoteLayoutStorageProvider,
+  Ros1LocalBagDataSourceFactory,
+  Ros2LocalBagDataSourceFactory,
+  RosbridgeDataSourceFactory,
+  Ros1RemoteBagDataSourceFactory,
+  FoxgloveDataPlatformDataSourceFactory,
 } from "@foxglove/studio-base";
 
 import ConsoleApiCookieUserProvider from "./components/ConsoleApiCookieCurrentUserProvider";
 import LocalStorageAppConfigurationProvider from "./components/LocalStorageAppConfigurationProvider";
 import LocalStorageLayoutStorageProvider from "./components/LocalStorageLayoutStorageProvider";
+import Ros1UnavailableDataSourceFactory from "./dataSources/Ros1UnavailableDataSourceFactory";
+import Ros2UnavailableDataSourceFactory from "./dataSources/Ros2UnavailableDataSourceFactory";
+import VelodyneUnavailableDataSourceFactory from "./dataSources/VelodyneUnavailableDataSourceFactory";
 import ExtensionLoaderProvider from "./providers/ExtensionLoaderProvider";
 
 const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
 
-export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX.Element {
-  const playerSources: PlayerSourceDefinition[] = [
-    {
-      name: "ROS 1",
-      type: "ros1-socket",
-      disabledReason: (
-        <>
-          ROS 1 Native connections are only available in our desktop app.&nbsp;
-          <Link href="https://foxglove.dev/download" target="_blank" rel="noreferrer">
-            Download it here.
-          </Link>
-        </>
-      ),
-    },
-    {
-      name: "ROS 1 Rosbridge",
-      type: "rosbridge-websocket",
-    },
-    {
-      name: "ROS 1 Bag (local)",
-      type: "ros1-local-bagfile",
-    },
-    {
-      name: "ROS 1 Bag (remote)",
-      type: "ros1-remote-bagfile",
-    },
-    {
-      name: "ROS 2",
-      type: "ros2-socket",
-      badgeText: "beta",
-      disabledReason: (
-        <>
-          ROS 2 Native connections are only available in our desktop app.&nbsp;
-          <Link href="https://foxglove.dev/download" target="_blank" rel="noreferrer">
-            Download it here.
-          </Link>
-        </>
-      ),
-    },
-    {
-      name: "ROS 2 Rosbridge",
-      type: "rosbridge-websocket",
-    },
-    {
-      name: "ROS 2 Bag (local)",
-      type: "ros2-local-bagfile",
-    },
-    {
-      name: "ROS 2 Bag (local)",
-      type: "ros2-local-bagfile",
-    },
-    {
-      name: "PX4 ULog (local)",
-      type: "ulog-local-file",
-    },
-    {
-      name: "Velodyne LIDAR",
-      type: "velodyne-device",
-      disabledReason: (
-        <>
-          Velodyne connections are only available in our desktop app.&nbsp;
-          <Link href="https://foxglove.dev/download" target="_blank" rel="noreferrer">
-            Download it here.
-          </Link>
-        </>
-      ),
-    },
-  ];
+const dataSources: IDataSourceFactory[] = [
+  new Ros1UnavailableDataSourceFactory(),
+  new Ros1LocalBagDataSourceFactory(),
+  new Ros1RemoteBagDataSourceFactory(),
+  new Ros2UnavailableDataSourceFactory(),
+  new Ros2LocalBagDataSourceFactory(),
+  new RosbridgeDataSourceFactory(),
+  new VelodyneUnavailableDataSourceFactory(),
+  new FoxgloveDataPlatformDataSourceFactory(),
+];
 
+export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX.Element {
   const api = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);
 
   const providers = [
@@ -120,7 +70,7 @@ export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX
             <App
               loadWelcomeLayout={loadWelcomeLayout}
               demoBagUrl={DEMO_BAG_URL}
-              availableSources={playerSources}
+              availableSources={dataSources}
             />
           </MultiProvider>
         </ErrorBoundary>
