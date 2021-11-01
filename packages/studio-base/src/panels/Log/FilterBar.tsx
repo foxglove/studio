@@ -23,7 +23,7 @@ import ClipboardOutlineIcon from "@mdi/svg/svg/clipboard-outline.svg";
 import cx from "classnames";
 
 import Icon from "@foxglove/studio-base/components/Icon";
-import logStyles from "@foxglove/studio-base/panels/Rosout/logStyles";
+import logStyles from "@foxglove/studio-base/panels/Log/logStyles";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import clipboard from "@foxglove/studio-base/util/clipboard";
 
@@ -110,7 +110,7 @@ export default function FilterBar(props: FilterBarProps): JSX.Element {
       <Stack grow>
         <TagPicker
           inputProps={{
-            placeholder: "Node name or message text",
+            placeholder: "Search filter",
           }}
           styles={{
             text: { minWidth: 0 },
@@ -150,7 +150,7 @@ export default function FilterBar(props: FilterBarProps): JSX.Element {
             onClick={() => {
               void clipboard.copy(JSON.stringify(props.messages, undefined, 2));
             }}
-            tooltip="Copy rosout to clipboard"
+            tooltip="Copy log to clipboard"
           >
             <ClipboardOutlineIcon />
           </Icon>
