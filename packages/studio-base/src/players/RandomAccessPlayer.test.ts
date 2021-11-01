@@ -110,11 +110,7 @@ describe("RandomAccessPlayer", () => {
     expect(messages).toEqual([
       {
         activeData: undefined,
-        capabilities: [
-          PlayerCapabilities.setSpeed,
-          PlayerCapabilities.playbackControl,
-          PlayerCapabilities.getParameters,
-        ],
+        capabilities: [],
         presence: PlayerPresence.INITIALIZING,
         progress: {},
       },
@@ -142,17 +138,11 @@ describe("RandomAccessPlayer", () => {
           parsedMessageDefinitionsByTopic: {},
           publishedTopics: new Map<string, Set<string>>(),
         },
-        capabilities: [
-          PlayerCapabilities.setSpeed,
-          PlayerCapabilities.playbackControl,
-          PlayerCapabilities.getParameters,
-        ],
+        capabilities: [PlayerCapabilities.setSpeed, PlayerCapabilities.playbackControl],
         presence: PlayerPresence.PRESENT,
         progress: {},
       },
     ]);
-    // make sure capabilities don't change from one message to another
-    expect(messages[0]?.capabilities).toBe(messages[1]?.capabilities);
 
     source.close();
   });
