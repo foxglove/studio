@@ -33,6 +33,7 @@ import {
 import { BlobReader } from "@foxglove/ulog/web";
 
 const CHUNK_SIZE = 1024 * 1024;
+const LOG_TOPIC = "Log";
 
 const log = Logger.getLogger(__filename);
 
@@ -75,7 +76,7 @@ export default class UlogDataProvider implements RandomAccessDataProvider {
     const header = this._ulog.header!;
 
     topics.push({
-      name: "/rosout",
+      name: LOG_TOPIC,
       datatype: "rosgraph_msgs/Log",
       numMessages: this._ulog.logCount() ?? 0,
     });
@@ -172,9 +173,9 @@ export default class UlogDataProvider implements RandomAccessDataProvider {
         }
       } else if (msg.type === MessageType.Log || msg.type === MessageType.LogTagged) {
         const receiveTime = fromMicros(Number(msg.timestamp));
-        if (topics.includes("/rosout") && isTimeInRangeInclusive(receiveTime, start, end)) {
+        if (topics.includes(LOG_TOPIC) && isTimeInRangeInclusive(receiveTime, start, end)) {
           parsedMessages.push({
-            topic: "/rosout",
+            topic: LOG_TOPIC,
             receiveTime,
             message: {
               file: "",
