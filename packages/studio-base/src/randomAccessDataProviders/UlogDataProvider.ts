@@ -148,7 +148,7 @@ export default class UlogDataProvider implements RandomAccessDataProvider {
       throw new Error(`UlogDataProvider is not initialized`);
     }
 
-    log.debug(`getMessages(${start.sec}, ${end.sec}, ${subscriptions.parsedMessages})`);
+    // log.debug(`getMessages(${start.sec}, ${end.sec}, ${subscriptions.parsedMessages})`);
 
     const topics = subscriptions.parsedMessages;
     if (topics == undefined || topics.length === 0) {
