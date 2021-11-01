@@ -33,6 +33,8 @@ import {
 } from "@foxglove/ulog";
 import { BlobReader } from "@foxglove/ulog/web";
 
+const CHUNK_SIZE = 1024 * 1024;
+
 const log = Logger.getLogger(__filename);
 
 type UlogPath = { type: "file"; file: Blob };
@@ -55,7 +57,7 @@ export default class UlogDataProvider implements RandomAccessDataProvider {
     log.debug(`initialize(${bytes} bytes)`);
 
     const startTime = performance.now();
-    this._ulog = new ULog(new BlobReader(file));
+    this._ulog = new ULog(new BlobReader(file), { chunkSize: CHUNK_SIZE });
     await this._ulog.open();
     const durationMs = performance.now() - startTime;
     log.debug(
