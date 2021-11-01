@@ -24,7 +24,6 @@ import {
   InitializationResult,
 } from "@foxglove/studio-base/randomAccessDataProviders/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
-import formatByteSize from "@foxglove/studio-base/util/formatByteSize";
 import {
   LogLevel,
   MessageDefinition as UlogMsgDefinition,
@@ -60,9 +59,7 @@ export default class UlogDataProvider implements RandomAccessDataProvider {
     this._ulog = new ULog(new BlobReader(file), { chunkSize: CHUNK_SIZE });
     await this._ulog.open();
     const durationMs = performance.now() - startTime;
-    log.debug(
-      `opened in ${durationMs.toFixed(2)}ms (${formatByteSize(bytes / (durationMs / 1000))}/sec)`,
-    );
+    log.debug(`opened in ${durationMs.toFixed(2)}ms`);
 
     const counts = this._ulog.dataMessageCounts()!;
     const timeRange = this._ulog.timeRange() ?? [0n, 0n];
