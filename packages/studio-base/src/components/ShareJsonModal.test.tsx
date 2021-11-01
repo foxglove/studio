@@ -70,7 +70,7 @@ describe("<ShareJsonModal />", () => {
 
   it("fires no error when resetting an actual layout to default", (done) => {
     const pass = (value: any) => {
-      expect(value.layout).toEqual("Log!cuuf9u");
+      expect(value.layout).toEqual("RosOut!cuuf9u");
       done();
     };
     const wrapper = mount(
@@ -89,7 +89,7 @@ describe("<ShareJsonModal />", () => {
       </ThemeProvider>,
     );
     const newValue = JSON.stringify({
-      layout: "Log!cuuf9u",
+      layout: "RosOut!cuuf9u",
       savedProps: {},
       globalVariables: {},
     });

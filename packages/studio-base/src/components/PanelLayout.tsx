@@ -95,7 +95,7 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
   const { layout, onChange, tabId } = props;
   const createTile = useCallback(
     (config?: { type?: string; panelConfig?: PanelConfig }) => {
-      const defaultPanelType = "Log";
+      const defaultPanelType = "RosOut";
       const type = config?.type ? config.type : defaultPanelType;
       const id = getPanelIdForType(type);
       if (config?.panelConfig) {

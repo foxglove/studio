@@ -5,7 +5,7 @@
 import LogMessage from "./LogMessage";
 
 export default {
-  title: "panels/Log/LogMessage",
+  title: "panels/Rosout/LogMessage",
   component: LogMessage,
 };
 

@@ -107,7 +107,7 @@ class Example extends Component<Props, State> {
 }
 
 export default {
-  title: "panels/Log/LogList",
+  title: "panels/Rosout/LogList",
   component: LogList,
 };
 

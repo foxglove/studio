@@ -30,7 +30,7 @@ import { RosgraphMsgs$Log } from "./types";
 type Config = {
   searchTerms: string[];
   minLogLevel: number;
-  topicToRender?: string;
+  topicToRender: string;
 };
 
 type Props = {
@@ -38,10 +38,7 @@ type Props = {
   saveConfig: (arg0: Config) => void;
 };
 
-const ROS1_LOG = "rosgraph_msgs/Log";
-const ROS2_LOG = "rcl_interfaces/msg/Log";
-
-const LogPanel = React.memo(({ config, saveConfig }: Props) => {
+const RosoutPanel = React.memo(({ config, saveConfig }: Props) => {
   const { topics } = PanelAPI.useDataSourceInfo();
   const { minLogLevel, searchTerms } = config;
 
@@ -51,17 +48,6 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
     },
     [config, saveConfig],
   );
-
-  const defaultTopicToRender = useMemo(
-    () =>
-      topics.find((topic) => topic.datatype === ROS1_LOG || topic.datatype === ROS2_LOG)?.name ??
-      "/rosout",
-    [topics],
-  );
-
-  if (config.topicToRender == undefined) {
-    config.topicToRender = defaultTopicToRender;
-  }
 
   const { [config.topicToRender]: messages = [] } = PanelAPI.useMessagesByTopic({
     topics: [config.topicToRender],
@@ -85,8 +71,8 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
       topicToRender={config.topicToRender}
       onChange={(topicToRender) => saveConfig({ ...config, topicToRender })}
       topics={topics}
-      allowedDatatypes={[ROS1_LOG, ROS2_LOG]}
-      defaultTopicToRender={defaultTopicToRender}
+      allowedDatatypes={["rosgraph_msgs/Log", "rcl_interfaces/msg/Log"]}
+      defaultTopicToRender={"/rosout"}
     />
   );
 
@@ -115,11 +101,11 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
   );
 });
 
-LogPanel.displayName = "Log";
+RosoutPanel.displayName = "Rosout";
 
 export default Panel(
-  Object.assign(LogPanel, {
-    defaultConfig: { searchTerms: [], minLogLevel: 1 } as Config,
-    panelType: "Log",
+  Object.assign(RosoutPanel, {
+    defaultConfig: { searchTerms: [], minLogLevel: 1, topicToRender: "/rosout" } as Config,
+    panelType: "RosOut",
   }),
 );

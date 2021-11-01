@@ -23,7 +23,7 @@ const builtin: PanelInfo[] = [
   { title: "Plot", type: "Plot", module: async () => await import("./Plot") },
   { title: "Publish", type: "Publish", module: async () => await import("./Publish") },
   { title: "Raw Messages", type: "RawMessages", module: async () => await import("./RawMessages") },
-  { title: "Log", type: "Log", module: async () => await import("./Log") },
+  { title: "Rosout", type: "RosOut", module: async () => await import("./Rosout") },
   {
     title: "State Transitions",
     type: "StateTransitions",

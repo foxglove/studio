@@ -206,7 +206,7 @@ describe("layout", () => {
       expect(
         getPanelIdsInsideTabPanels([], {
           "Tab!a": {
-            tabs: [{ layout: "Image!a" }, { layout: { first: "Image!b", second: "Log!a" } }],
+            tabs: [{ layout: "Image!a" }, { layout: { first: "Image!b", second: "RosOut!a" } }],
           },
           "Image!a": { foo: "bar" },
           "Image!b": { foo: "baz" },
@@ -219,13 +219,13 @@ describe("layout", () => {
           "Tab!a": {
             tabs: [
               { layout: "Image!a" },
-              { layout: { direction: "row", first: "Image!b", second: "Log!a" } },
+              { layout: { direction: "row", first: "Image!b", second: "RosOut!a" } },
             ],
           },
           "Image!a": { foo: "bar" },
           "Image!b": { foo: "baz" },
         }),
-      ).toEqual(["Image!a", "Image!b", "Log!a"]);
+      ).toEqual(["Image!a", "Image!b", "RosOut!a"]);
     });
     it("gets nested panels in multiple specified tab panels' tabs", () => {
       expect(
@@ -233,7 +233,7 @@ describe("layout", () => {
           "Tab!a": {
             tabs: [
               { layout: "Image!a" },
-              { layout: { direction: "row", first: "Image!b", second: "Log!a" } },
+              { layout: { direction: "row", first: "Image!b", second: "RosOut!a" } },
             ],
           },
           "Tab!b": { tabs: [{ layout: "Image!c" }, { layout: "Image!d" }] },
@@ -242,7 +242,7 @@ describe("layout", () => {
           "Image!c": { foo: "bar" },
           "Image!d": { foo: "baz" },
         }),
-      ).toEqual(["Image!a", "Image!b", "Log!a", "Image!c", "Image!d"]);
+      ).toEqual(["Image!a", "Image!b", "RosOut!a", "Image!c", "Image!d"]);
     });
   });
 
@@ -496,19 +496,19 @@ describe("layout", () => {
   describe("updateTabPanelLayout", () => {
     it("correctly updates active tab's layout with single panel", () => {
       expect(
-        updateTabPanelLayout("Log!abc", {
+        updateTabPanelLayout("RosOut!abc", {
           tabs: [{ title: "A", layout: undefined }],
           activeTabIdx: 0,
         }),
       ).toEqual({
         activeTabIdx: 0,
-        tabs: [{ layout: "Log!abc", title: "A" }],
+        tabs: [{ layout: "RosOut!abc", title: "A" }],
       });
       expect(
-        updateTabPanelLayout("Log!abc", {
+        updateTabPanelLayout("RosOut!abc", {
           tabs: [
             { title: "A", layout: undefined },
-            { title: "B", layout: "Log!def" },
+            { title: "B", layout: "RosOut!def" },
           ],
           activeTabIdx: 1,
         }),
@@ -516,13 +516,13 @@ describe("layout", () => {
         activeTabIdx: 1,
         tabs: [
           { title: "A", layout: undefined },
-          { layout: "Log!abc", title: "B" },
+          { layout: "RosOut!abc", title: "B" },
         ],
       });
     });
     it("correctly updates active tab's layout with multiple panels", () => {
       const newLayout: MosaicNode<string> = {
-        first: "Log!abc",
+        first: "RosOut!abc",
         second: "Audio!abc",
         direction: "row",
       };
@@ -539,7 +539,7 @@ describe("layout", () => {
         updateTabPanelLayout(newLayout, {
           tabs: [
             { title: "A", layout: undefined },
-            { title: "B", layout: "Log!def" },
+            { title: "B", layout: "RosOut!def" },
           ],
           activeTabIdx: 1,
         }),
@@ -552,9 +552,9 @@ describe("layout", () => {
       });
     });
     it("creates a new tab if there isn't one active", () => {
-      expect(updateTabPanelLayout("Log!abc", { tabs: [], activeTabIdx: -1 })).toEqual({
+      expect(updateTabPanelLayout("RosOut!abc", { tabs: [], activeTabIdx: -1 })).toEqual({
         activeTabIdx: 0,
-        tabs: [{ layout: "Log!abc", title: "1" }],
+        tabs: [{ layout: "RosOut!abc", title: "1" }],
       });
     });
   });
