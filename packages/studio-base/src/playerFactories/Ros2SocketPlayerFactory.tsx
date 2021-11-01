@@ -17,7 +17,7 @@ class Ros2SocketPlayerFactory implements IPlayerFactory {
 
   promptOptions(previousValue?: string): PromptOptions {
     return {
-      title: "ROS 2 DomainId",
+      title: "ROS_DOMAIN_ID",
       placeholder: "0",
       initialValue: previousValue ?? "0",
       transformer: (str) => {
