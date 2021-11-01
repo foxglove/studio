@@ -44,34 +44,94 @@ import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import {
   ChartDefaultView,
+  TimeBasedChartTooltipData,
   getTooltipItemForMessageHistoryItem,
   TooltipItem,
 } from "@foxglove/studio-base/components/TimeBasedChart";
 import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/src/components/Chart";
-import { PanelConfig, PanelConfigSchema } from "@foxglove/studio-base/types/panels";
+import {
+  OpenSiblingPanel,
+  PanelConfig,
+  PanelConfigSchema,
+} from "@foxglove/studio-base/types/panels";
+import { downloadFiles } from "@foxglove/studio-base/util/download";
+import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 
 import PlotChart from "./PlotChart";
 import PlotLegend from "./PlotLegend";
 import { getDatasetsAndTooltips } from "./datasets";
 import helpContent from "./index.help.md";
-import { PlotDataByPath } from "./internalTypes";
-import { PlotConfig } from "./types";
+import { DataSet, PlotDataByPath } from "./internalTypes";
+import { PlotConfig, PlotXAxisVal } from "./types";
 
 export { plotableRosTypes } from "./types";
 export type { PlotConfig, PlotXAxisVal } from "./types";
 
-export function openSiblingPlotPanel(
-  openSiblingPanel: (type: string, cb: (config: PanelConfig) => PanelConfig) => void,
-  topicName: string,
-): void {
-  openSiblingPanel("Plot", (config: PanelConfig) => ({
-    ...config,
-    paths: uniq(
-      (config as PlotConfig).paths
-        .concat([{ value: topicName, enabled: true, timestampMethod: "receiveTime" }])
-        .filter(({ value }) => value),
-    ),
-  }));
+export function openSiblingPlotPanel(openSiblingPanel: OpenSiblingPanel, topicName: string): void {
+  openSiblingPanel({
+    panelType: "Plot",
+    updateIfExists: true,
+    siblingConfigCreator: (config: PanelConfig) => ({
+      ...config,
+      paths: uniq(
+        (config as PlotConfig).paths
+          .concat([{ value: topicName, enabled: true, timestampMethod: "receiveTime" }])
+          .filter(({ value }) => value),
+      ),
+    }),
+  });
+}
+
+function getCSVRow(
+  data: { x: number; y: number },
+  label?: string,
+  tooltips?: TimeBasedChartTooltipData[],
+) {
+  const { x, y } = data ?? {};
+  const tooltip = (tooltips ?? []).find(
+    (_tooltip) => _tooltip.path === label && _tooltip.x === x && _tooltip.y === y,
+  );
+  if (!tooltip) {
+    throw new Error("Cannot find tooltip for dataset: this should never happen");
+  }
+  const { receiveTime, headerStamp } = tooltip.item;
+  const receiveTimeFloat = formatTimeRaw(receiveTime);
+  const stampTime = headerStamp ? formatTimeRaw(headerStamp) : "";
+  return [x, receiveTimeFloat, stampTime, label, y];
+}
+
+const getCVSColName = (xAxisVal: PlotXAxisVal): string =>
+  ({
+    timestamp: "elapsed time",
+    index: "index",
+    custom: "x value",
+    currentCustom: "x value",
+  }[xAxisVal]);
+
+function getCSVData(
+  datasets: DataSet[],
+  tooltips: TimeBasedChartTooltipData[],
+  xAxisVal: PlotXAxisVal,
+): string {
+  const headLine = [getCVSColName(xAxisVal), "receive time", "header.stamp", "topic", "value"];
+  const combinedLines = [];
+  combinedLines.push(headLine);
+  datasets.forEach((dataset) => {
+    dataset.data.forEach((data) => {
+      combinedLines.push(getCSVRow(data as { x: number; y: number }, dataset.label, tooltips));
+    });
+  });
+  return combinedLines.join("\n");
+}
+
+function downloadCSV(
+  datasets: DataSet[],
+  tooltips: TimeBasedChartTooltipData[],
+  xAxisVal: PlotXAxisVal,
+) {
+  const csvData = getCSVData(datasets, tooltips, xAxisVal);
+  const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
+  downloadFiles([{ blob, fileName: `plot_data.csv` }]);
 }
 
 type Props = {
@@ -377,6 +437,7 @@ function Plot(props: Props) {
         xAxisVal={xAxisVal}
         xAxisPath={xAxisPath}
         pathsWithMismatchedDataLengths={pathsWithMismatchedDataLengths}
+        onDownload={() => downloadCSV(datasets, tooltips, xAxisVal)}
       />
     </Flex>
   );
@@ -387,7 +448,7 @@ const configSchema: PanelConfigSchema<PlotConfig> = [
   {
     key: "isSynced",
     type: "toggle",
-    title: "Sync to other Plot panels with a timestamp-based x-axis",
+    title: "Sync with other timestamp-based plots",
   },
   { key: "maxYValue", type: "number", title: "Y max", placeholder: "auto", allowEmpty: true },
   { key: "minYValue", type: "number", title: "Y min", placeholder: "auto", allowEmpty: true },

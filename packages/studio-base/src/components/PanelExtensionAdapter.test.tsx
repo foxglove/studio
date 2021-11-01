@@ -7,7 +7,9 @@
 import { mount } from "enzyme";
 
 import { PanelExtensionContext } from "@foxglove/studio";
+import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
 import PanelExtensionAdapter from "@foxglove/studio-base/components/PanelExtensionAdapter";
+import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import PanelSetup, { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
@@ -26,9 +28,15 @@ describe("PanelExtensionAdapter", () => {
     const Wrapper = () => {
       return (
         <ThemeProvider>
-          <PanelSetup>
-            <PanelExtensionAdapter config={config} saveConfig={saveConfig} initPanel={initPanel} />
-          </PanelSetup>
+          <MockPanelContextProvider>
+            <PanelSetup>
+              <PanelExtensionAdapter
+                config={config}
+                saveConfig={saveConfig}
+                initPanel={initPanel}
+              />
+            </PanelSetup>
+          </MockPanelContextProvider>
         </ThemeProvider>
       );
     };
@@ -41,34 +49,37 @@ describe("PanelExtensionAdapter", () => {
 
   it("should support advertising on a topic", (done) => {
     const initPanel = (context: PanelExtensionContext) => {
-      context.advertise("/some/topic", "some_datatype");
+      context.advertise?.("/some/topic", "some_datatype");
     };
 
     mount(
       <ThemeProvider>
-        <PanelSetup
-          fixture={{
-            topics: [],
-            datatypes: new Map(),
-            frame: {},
-            layout: "UnknownPanel!4co6n9d",
-            setPublishers: (id, advertisements) => {
-              expect(id).toBeDefined();
-              expect(advertisements).toEqual(
-                expect.arrayContaining([
-                  {
-                    topic: "/some/topic",
-                    datatype: "some_datatype",
-                    options: undefined,
-                  },
-                ]),
-              );
-              done();
-            },
-          }}
-        >
-          <PanelExtensionAdapter config={{}} saveConfig={() => {}} initPanel={initPanel} />
-        </PanelSetup>
+        <MockPanelContextProvider>
+          <PanelSetup
+            fixture={{
+              capabilities: [PlayerCapabilities.advertise],
+              topics: [],
+              datatypes: new Map(),
+              frame: {},
+              layout: "UnknownPanel!4co6n9d",
+              setPublishers: (id, advertisements) => {
+                expect(id).toBeDefined();
+                expect(advertisements).toEqual(
+                  expect.arrayContaining([
+                    {
+                      topic: "/some/topic",
+                      datatype: "some_datatype",
+                      options: undefined,
+                    },
+                  ]),
+                );
+                done();
+              },
+            }}
+          >
+            <PanelExtensionAdapter config={{}} saveConfig={() => {}} initPanel={initPanel} />
+          </PanelSetup>
+        </MockPanelContextProvider>
       </ThemeProvider>,
     );
   });
@@ -77,56 +88,59 @@ describe("PanelExtensionAdapter", () => {
     let count = 0;
 
     const initPanel = (context: PanelExtensionContext) => {
-      context.advertise("/some/topic", "some_datatype");
-      context.advertise("/another/topic", "another_datatype");
+      context.advertise?.("/some/topic", "some_datatype");
+      context.advertise?.("/another/topic", "another_datatype");
     };
 
     mount(
       <ThemeProvider>
-        <PanelSetup
-          fixture={{
-            topics: [],
-            datatypes: new Map(),
-            frame: {},
-            layout: "UnknownPanel!4co6n9d",
-            setPublishers: (id, advertisements) => {
-              expect(id).toBeDefined();
-              ++count;
+        <MockPanelContextProvider>
+          <PanelSetup
+            fixture={{
+              capabilities: [PlayerCapabilities.advertise],
+              topics: [],
+              datatypes: new Map(),
+              frame: {},
+              layout: "UnknownPanel!4co6n9d",
+              setPublishers: (id, advertisements) => {
+                expect(id).toBeDefined();
+                ++count;
 
-              if (count === 1) {
-                // eslint-disable-next-line jest/no-conditional-expect
-                expect(advertisements).toEqual(
-                  expect.arrayContaining([
-                    {
-                      topic: "/some/topic",
-                      datatype: "some_datatype",
-                      options: undefined,
-                    },
-                  ]),
-                );
-              } else if (count === 2) {
-                // eslint-disable-next-line jest/no-conditional-expect
-                expect(advertisements).toEqual(
-                  expect.arrayContaining([
-                    {
-                      topic: "/some/topic",
-                      datatype: "some_datatype",
-                      options: undefined,
-                    },
-                    {
-                      topic: "/another/topic",
-                      datatype: "another_datatype",
-                      options: undefined,
-                    },
-                  ]),
-                );
-                done();
-              }
-            },
-          }}
-        >
-          <PanelExtensionAdapter config={{}} saveConfig={() => {}} initPanel={initPanel} />
-        </PanelSetup>
+                if (count === 1) {
+                  // eslint-disable-next-line jest/no-conditional-expect
+                  expect(advertisements).toEqual(
+                    expect.arrayContaining([
+                      {
+                        topic: "/some/topic",
+                        datatype: "some_datatype",
+                        options: undefined,
+                      },
+                    ]),
+                  );
+                } else if (count === 2) {
+                  // eslint-disable-next-line jest/no-conditional-expect
+                  expect(advertisements).toEqual(
+                    expect.arrayContaining([
+                      {
+                        topic: "/some/topic",
+                        datatype: "some_datatype",
+                        options: undefined,
+                      },
+                      {
+                        topic: "/another/topic",
+                        datatype: "another_datatype",
+                        options: undefined,
+                      },
+                    ]),
+                  );
+                  done();
+                }
+              },
+            }}
+          >
+            <PanelExtensionAdapter config={{}} saveConfig={() => {}} initPanel={initPanel} />
+          </PanelSetup>
+        </MockPanelContextProvider>
       </ThemeProvider>,
     );
   });
@@ -135,40 +149,43 @@ describe("PanelExtensionAdapter", () => {
     expect.assertions(3);
 
     const initPanel = (context: PanelExtensionContext) => {
-      context.advertise("/some/topic", "some_datatype");
-      context.publish("/some/topic", {
+      context.advertise?.("/some/topic", "some_datatype");
+      context.publish?.("/some/topic", {
         foo: "bar",
       });
     };
 
     mount(
       <ThemeProvider>
-        <PanelSetup
-          fixture={{
-            topics: [],
-            datatypes: new Map(),
-            frame: {},
-            layout: "UnknownPanel!4co6n9d",
-            setPublishers: (id, advertisements) => {
-              expect(id).toBeDefined();
-              expect(advertisements).toEqual(
-                expect.arrayContaining([
-                  {
-                    topic: "/some/topic",
-                    datatype: "some_datatype",
-                    options: undefined,
-                  },
-                ]),
-              );
-            },
-            publish: (request) => {
-              expect(request).toEqual({ topic: "/some/topic", msg: { foo: "bar" } });
-              done();
-            },
-          }}
-        >
-          <PanelExtensionAdapter config={{}} saveConfig={() => {}} initPanel={initPanel} />
-        </PanelSetup>
+        <MockPanelContextProvider>
+          <PanelSetup
+            fixture={{
+              capabilities: [PlayerCapabilities.advertise],
+              topics: [],
+              datatypes: new Map(),
+              frame: {},
+              layout: "UnknownPanel!4co6n9d",
+              setPublishers: (id, advertisements) => {
+                expect(id).toBeDefined();
+                expect(advertisements).toEqual(
+                  expect.arrayContaining([
+                    {
+                      topic: "/some/topic",
+                      datatype: "some_datatype",
+                      options: undefined,
+                    },
+                  ]),
+                );
+              },
+              publish: (request) => {
+                expect(request).toEqual({ topic: "/some/topic", msg: { foo: "bar" } });
+                done();
+              },
+            }}
+          >
+            <PanelExtensionAdapter config={{}} saveConfig={() => {}} initPanel={initPanel} />
+          </PanelSetup>
+        </MockPanelContextProvider>
       </ThemeProvider>,
     );
   });
@@ -177,69 +194,72 @@ describe("PanelExtensionAdapter", () => {
     let count = 0;
 
     const initPanel = (context: PanelExtensionContext) => {
-      context.advertise("/some/topic", "some_datatype");
-      context.advertise("/another/topic", "another_datatype");
-      context.unadvertise("/some/topic");
+      context.advertise?.("/some/topic", "some_datatype");
+      context.advertise?.("/another/topic", "another_datatype");
+      context.unadvertise?.("/some/topic");
     };
 
     mount(
       <ThemeProvider>
-        <PanelSetup
-          fixture={{
-            topics: [],
-            datatypes: new Map(),
-            frame: {},
-            layout: "UnknownPanel!4co6n9d",
-            setPublishers: (id, advertisements) => {
-              expect(id).toBeDefined();
-              ++count;
+        <MockPanelContextProvider>
+          <PanelSetup
+            fixture={{
+              capabilities: [PlayerCapabilities.advertise],
+              topics: [],
+              datatypes: new Map(),
+              frame: {},
+              layout: "UnknownPanel!4co6n9d",
+              setPublishers: (id, advertisements) => {
+                expect(id).toBeDefined();
+                ++count;
 
-              if (count === 1) {
-                // eslint-disable-next-line jest/no-conditional-expect
-                expect(advertisements).toEqual(
-                  expect.arrayContaining([
-                    {
-                      topic: "/some/topic",
-                      datatype: "some_datatype",
-                      options: undefined,
-                    },
-                  ]),
-                );
-              } else if (count === 2) {
-                // eslint-disable-next-line jest/no-conditional-expect
-                expect(advertisements).toEqual(
-                  expect.arrayContaining([
-                    {
-                      topic: "/some/topic",
-                      datatype: "some_datatype",
-                      options: undefined,
-                    },
-                    {
-                      topic: "/another/topic",
-                      datatype: "another_datatype",
-                      options: undefined,
-                    },
-                  ]),
-                );
-              } else if (count === 3) {
-                // eslint-disable-next-line jest/no-conditional-expect
-                expect(advertisements).toEqual(
-                  expect.arrayContaining([
-                    {
-                      topic: "/another/topic",
-                      datatype: "another_datatype",
-                      options: undefined,
-                    },
-                  ]),
-                );
+                if (count === 1) {
+                  // eslint-disable-next-line jest/no-conditional-expect
+                  expect(advertisements).toEqual(
+                    expect.arrayContaining([
+                      {
+                        topic: "/some/topic",
+                        datatype: "some_datatype",
+                        options: undefined,
+                      },
+                    ]),
+                  );
+                } else if (count === 2) {
+                  // eslint-disable-next-line jest/no-conditional-expect
+                  expect(advertisements).toEqual(
+                    expect.arrayContaining([
+                      {
+                        topic: "/some/topic",
+                        datatype: "some_datatype",
+                        options: undefined,
+                      },
+                      {
+                        topic: "/another/topic",
+                        datatype: "another_datatype",
+                        options: undefined,
+                      },
+                    ]),
+                  );
+                } else if (count === 3) {
+                  // eslint-disable-next-line jest/no-conditional-expect
+                  expect(advertisements).toEqual(
+                    expect.arrayContaining([
+                      {
+                        topic: "/another/topic",
+                        datatype: "another_datatype",
+                        options: undefined,
+                      },
+                    ]),
+                  );
 
-                done();
-              }
-            },
-          }}
-        >
-          <PanelExtensionAdapter config={{}} saveConfig={() => {}} initPanel={initPanel} />
-        </PanelSetup>
+                  done();
+                }
+              },
+            }}
+          >
+            <PanelExtensionAdapter config={{}} saveConfig={() => {}} initPanel={initPanel} />
+          </PanelSetup>
+        </MockPanelContextProvider>
       </ThemeProvider>,
     );
   });
@@ -250,10 +270,11 @@ describe("PanelExtensionAdapter", () => {
 
     const initPanel = (context: PanelExtensionContext) => {
       expect(context).toBeDefined();
-      context.advertise("/some/topic", "some_datatype");
+      context.advertise?.("/some/topic", "some_datatype");
     };
 
     const fixture: Fixture = {
+      capabilities: [PlayerCapabilities.advertise],
       topics: [],
       datatypes: new Map(),
       frame: {},
@@ -287,20 +308,75 @@ describe("PanelExtensionAdapter", () => {
     const Wrapper = ({ mounted = true }: { mounted?: boolean }) => {
       return (
         <ThemeProvider>
-          <PanelSetup fixture={fixture}>
-            {mounted && (
-              <PanelExtensionAdapter
-                config={config}
-                saveConfig={saveConfig}
-                initPanel={initPanel}
-              />
-            )}
-          </PanelSetup>
+          <MockPanelContextProvider>
+            <PanelSetup fixture={fixture}>
+              {mounted && (
+                <PanelExtensionAdapter
+                  config={config}
+                  saveConfig={saveConfig}
+                  initPanel={initPanel}
+                />
+              )}
+            </PanelSetup>
+          </MockPanelContextProvider>
         </ThemeProvider>
       );
     };
 
     const handle = mount(<Wrapper mounted />);
     handle.setProps({ mounted: false });
+  });
+
+  it("supports adding new panels to the layout", (done) => {
+    expect.assertions(3);
+
+    const openSiblingPanel = jest.fn();
+    const config = {};
+    const saveConfig = () => {};
+
+    const initPanel = (context: PanelExtensionContext) => {
+      expect(context).toBeDefined();
+
+      expect(() =>
+        context.layout.addPanel({
+          position: "foo" as "sibling",
+          type: "X",
+          updateIfExists: true,
+          getState: () => undefined,
+        }),
+      ).toThrow();
+
+      context.layout.addPanel({
+        position: "sibling",
+        type: "X",
+        updateIfExists: true,
+        getState: () => undefined,
+      });
+      expect(openSiblingPanel.mock.calls).toEqual([
+        [{ panelType: "X", updateIfExists: true, siblingConfigCreator: expect.any(Function) }],
+      ]);
+      done();
+    };
+
+    const Wrapper = () => {
+      return (
+        <ThemeProvider>
+          <MockPanelContextProvider openSiblingPanel={openSiblingPanel}>
+            <PanelSetup>
+              <PanelExtensionAdapter
+                config={config}
+                saveConfig={saveConfig}
+                initPanel={initPanel}
+              />
+            </PanelSetup>
+          </MockPanelContextProvider>
+        </ThemeProvider>
+      );
+    };
+
+    const handle = mount(<Wrapper />);
+
+    // force a re-render to make sure we call init panel once
+    handle.setProps({});
   });
 });
