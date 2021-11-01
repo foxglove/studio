@@ -220,8 +220,7 @@ function logLevelToRosout(level: LogLevel): number {
 }
 
 function messageIdToTopic(msgId: number, ulog: ULog): string | undefined {
-  const msgDef = ulog.subscriptions.get(msgId);
-  return msgDef ? "/" + msgDef.name : undefined;
+  return ulog.subscriptions.get(msgId)?.name;
 }
 
 function messageDefinitionToRos(msgDef: UlogMsgDefinition): RosMsgDefinition {
