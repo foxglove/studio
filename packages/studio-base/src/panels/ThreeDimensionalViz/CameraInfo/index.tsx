@@ -35,7 +35,6 @@ import {
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/threeDimensionalVizUtils";
 import { ThreeDimensionalVizConfig } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
 import clipboard from "@foxglove/studio-base/util/clipboard";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { point2DValidator, cameraStateValidator } from "@foxglove/studio-base/util/validators";
 
 export const CAMERA_TAB_TYPE = "Camera";

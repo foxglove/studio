@@ -15,7 +15,7 @@ import { makeStyles } from "@fluentui/react";
 import { useContext, useRef } from "react";
 
 import { WorldviewReactContext, WorldviewContextType } from "@foxglove/regl-worldview";
-import { colors, fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 type Stats = {
   bufferCount: number;

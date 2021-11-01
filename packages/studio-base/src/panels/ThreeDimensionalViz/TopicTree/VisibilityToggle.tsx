@@ -26,7 +26,6 @@ import { ROW_HEIGHT } from "./constants";
 
 export const TOPIC_ROW_PADDING = 3;
 
-const DEFAULT_COLOR = colors.LIGHT1;
 export const DISABLED_COLOR = colors.TEXT_MUTED;
 export const TOGGLE_WRAPPER_SIZE = 24;
 
