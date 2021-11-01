@@ -4,6 +4,7 @@
 
 import { Link } from "@fluentui/react";
 import { useMemo } from "react";
+import { useMedia } from "react-use";
 
 import {
   App,
@@ -18,6 +19,8 @@ import {
   ConsoleApi,
   ConsoleApiContext,
   ConsoleApiRemoteLayoutStorageProvider,
+  AppSetting,
+  useAppConfigurationValue,
 } from "@foxglove/studio-base";
 
 import ConsoleApiCookieUserProvider from "./components/ConsoleApiCookieCurrentUserProvider";
@@ -26,6 +29,13 @@ import LocalStorageLayoutStorageProvider from "./components/LocalStorageLayoutSt
 import ExtensionLoaderProvider from "./providers/ExtensionLoaderProvider";
 
 const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
+
+function ColorSchemeThemeProvider({ children }: React.PropsWithChildren<unknown>): JSX.Element {
+  const [colorScheme] = useAppConfigurationValue<string>(AppSetting.COLOR_SCHEME);
+  const systemSetting = useMedia("(prefers-color-scheme: dark)");
+  const isDark = colorScheme === "dark" || (colorScheme === "system" && systemSetting);
+  return <ThemeProvider isDark={isDark}>{children}</ThemeProvider>;
+}
 
 export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX.Element {
   const playerSources: PlayerSourceDefinition[] = [
@@ -93,6 +103,7 @@ export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX
   const providers = [
     /* eslint-disable react/jsx-key */
     <LocalStorageAppConfigurationProvider />,
+    <ColorSchemeThemeProvider />,
     <ConsoleApiContext.Provider value={api} />,
     <ConsoleApiCookieUserProvider />,
     <ConsoleApiRemoteLayoutStorageProvider />,
@@ -104,7 +115,7 @@ export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX
   ];
 
   return (
-    <ThemeProvider>
+    <>
       <GlobalCss />
       <CssBaseline>
         <ErrorBoundary>
@@ -117,6 +128,6 @@ export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX
           </MultiProvider>
         </ErrorBoundary>
       </CssBaseline>
-    </ThemeProvider>
+    </>
   );
 }

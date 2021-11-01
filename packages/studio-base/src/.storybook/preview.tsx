@@ -44,7 +44,7 @@ function WithContextProviders(Child: Story, ctx: StoryContext): JSX.Element {
     /* eslint-enable react/jsx-key */
   ];
   return (
-    <ThemeProvider>
+    <ThemeProvider isDark={true /*FIXME?*/}>
       <GlobalCss />
       <CssBaseline>
         <MultiProvider providers={providers}>

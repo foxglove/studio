@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { ReactElement, useMemo } from "react";
+import { useMedia } from "react-use";
 
 import {
   App,
@@ -22,6 +23,7 @@ import {
 import { Desktop } from "../common/types";
 import ConsoleApiCurrentUserProvider from "./components/ConsoleApiCurrentUserProvider";
 import NativeAppMenuProvider from "./components/NativeAppMenuProvider";
+import NativeColorSchemeAdapter from "./components/NativeColorSchemeAdapter";
 import NativeStorageAppConfigurationProvider from "./components/NativeStorageAppConfigurationProvider";
 import NativeStorageLayoutStorageProvider from "./components/NativeStorageLayoutStorageProvider";
 import NativeWindowProvider from "./components/NativeWindowProvider";
@@ -87,12 +89,17 @@ export default function Root(): ReactElement {
 
   const deepLinks = useMemo(() => desktopBridge.getDeepLinks(), []);
 
+  // In Electron, the app theme setting is used to set `nativeTheme.themeSource`, which Chromium
+  // uses to inform the prefers-color-scheme query, so we don't need to read the app setting here.
+  const isDark = useMedia("(prefers-color-scheme: dark)");
+
   return (
-    <ThemeProvider>
+    <ThemeProvider isDark={isDark}>
       <GlobalCss />
       <CssBaseline>
         <ErrorBoundary>
           <MultiProvider providers={providers}>
+            <NativeColorSchemeAdapter />
             <App demoBagUrl={DEMO_BAG_URL} deepLinks={deepLinks} availableSources={playerSources} />
           </MultiProvider>
         </ErrorBoundary>
