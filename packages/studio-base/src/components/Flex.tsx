@@ -36,12 +36,11 @@ const useStyles = makeStyles((theme) => ({
   reverse: {
     flexDirection: "row-reverse",
   },
-  col: {
-    flexDirection: "column",
-  },
-  colReverse: {
-    flexDirection: "column-reverse",
-  },
+  // when the theme changes dynamically, the main flex rule above move later in the
+  // generated style tag (order is not preserved), so we need the specificity to be higher
+  // FIXME: is there a different/better workaround?
+  col: { flexDirection: "column !important" },
+  colReverse: { flexDirection: "column-reverse !important" },
   clip: {
     overflow: "hidden",
   },

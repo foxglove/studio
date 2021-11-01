@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { useTheme } from "@fluentui/react";
 import { vec3 } from "gl-matrix";
 import { isEqual } from "lodash";
 import styled from "styled-components";
@@ -116,6 +117,7 @@ export default function CameraInfo({
   autoSyncCameraState,
   defaultSelectedTab,
 }: CameraInfoProps): JSX.Element {
+  const theme = useTheme();
   const [selectedTab, setSelectedTab] = React.useState(defaultSelectedTab);
   const { updatePanelConfigs, saveConfig } = usePanelContext();
   const [edit, setEdit] = React.useState<boolean>(false);
@@ -219,7 +221,11 @@ export default function CameraInfo({
                     </SValue>
                   </SRow>
                   <SRow style={{ marginBottom: 8 }}>
-                    <SLabel style={cameraState.perspective ? { color: colors.TEXT_MUTED } : {}}>
+                    <SLabel
+                      style={
+                        cameraState.perspective ? { color: theme.semanticColors.disabledText } : {}
+                      }
+                    >
                       Show crosshair:
                     </SLabel>
                     <SValue>

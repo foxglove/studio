@@ -41,7 +41,7 @@ const SEmptyStateText = styled.div`
   margin: 16px 72px;
   text-align: center;
   line-height: 1.5;
-  color: rgba(247, 247, 243, 0.3);
+  color: ${({ theme }) => theme.semanticColors.disabledText};
 `;
 
 const SPickAPanelText = styled.div`
