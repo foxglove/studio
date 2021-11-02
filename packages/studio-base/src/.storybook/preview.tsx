@@ -55,9 +55,16 @@ function WithContextProviders(Child: Story, ctx: StoryContext): JSX.Element {
         width: "100%",
       }}
     >
-      <ThemeProvider isDark>
-        <GlobalCss />
-      </ThemeProvider>
+      {
+        // We need to render exactly 1 copy of GlobalCss, so the body background and font color may
+        // not match the theme when rendering both color schemes in one story. If this is a problem
+        // for some story that depends on inheriting body styles, you can split the story into one
+        // per color scheme.
+        <ThemeProvider isDark={colorScheme === "dark" || colorScheme.startsWith("both")}>
+          <GlobalCss />
+        </ThemeProvider>
+      }
+
       {(colorScheme === "light" || colorScheme.startsWith("both")) && (
         // Set a transform to make this the root for position:fixed elements
         <div style={{ position: "relative", transform: "scale(1)", flexGrow: 1 }}>
