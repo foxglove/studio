@@ -118,6 +118,7 @@ export default {
       // additional delay for any final clicks or renders
       delay: 100,
     },
+    colorScheme: "dark",
   },
 };
 

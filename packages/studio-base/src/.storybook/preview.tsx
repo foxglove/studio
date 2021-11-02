@@ -34,6 +34,9 @@ function WithContextProviders(Child: Story, ctx: StoryContext): JSX.Element {
 
   const config = makeConfiguration();
 
+  const colorScheme: "dark" | "light" | "both-row" | "both-column" =
+    ctx.parameters.colorScheme ?? "both-row";
+
   const providers = [
     /* eslint-disable react/jsx-key */
     <AppConfigurationContext.Provider value={config} />,
@@ -44,14 +47,42 @@ function WithContextProviders(Child: Story, ctx: StoryContext): JSX.Element {
     /* eslint-enable react/jsx-key */
   ];
   return (
-    <ThemeProvider isDark={true /*FIXME?*/}>
-      <GlobalCss />
-      <CssBaseline>
-        <MultiProvider providers={providers}>
-          <Child />
-        </MultiProvider>
-      </CssBaseline>
-    </ThemeProvider>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: colorScheme === "both-column" ? "column" : "row",
+        height: "100%",
+        width: "100%",
+      }}
+    >
+      <ThemeProvider isDark>
+        <GlobalCss />
+      </ThemeProvider>
+      {(colorScheme === "light" || colorScheme.startsWith("both")) && (
+        // Set a transform to make this the root for position:fixed elements
+        <div style={{ position: "relative", transform: "scale(1)", flexGrow: 1 }}>
+          <ThemeProvider isDark={false}>
+            <CssBaseline>
+              <MultiProvider providers={providers}>
+                <Child />
+              </MultiProvider>
+            </CssBaseline>
+          </ThemeProvider>
+        </div>
+      )}
+      {(colorScheme === "dark" || colorScheme.startsWith("both")) && (
+        // Set a transform to make this the root for position:fixed elements
+        <div style={{ position: "relative", transform: "scale(1)", flexGrow: 1 }}>
+          <ThemeProvider isDark={true}>
+            <CssBaseline>
+              <MultiProvider providers={providers}>
+                <Child />
+              </MultiProvider>
+            </CssBaseline>
+          </ThemeProvider>
+        </div>
+      )}
+    </div>
   );
 }
 

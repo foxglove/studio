@@ -11,6 +11,7 @@ import { Layout, LayoutID, ISO8601Timestamp } from "@foxglove/studio-base/servic
 export default {
   title: "components/LayoutBrowser/UnsavedChangesPrompt",
   component: UnsavedChangesPrompt,
+  parameters: { colorScheme: "dark" },
 };
 
 const dummyLayout: Layout = {
@@ -34,6 +35,8 @@ const dummyLayout: Layout = {
 export function Default(): JSX.Element {
   return <UnsavedChangesPrompt isOnline layout={dummyLayout} onComplete={action("onComplete")} />;
 }
+export const DefaultLight = Default.bind(undefined);
+DefaultLight.parameters = { colorScheme: "light" };
 
 export function Offline(): JSX.Element {
   return (
