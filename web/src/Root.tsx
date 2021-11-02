@@ -25,6 +25,7 @@ import {
   RosbridgeDataSourceFactory,
   Ros1RemoteBagDataSourceFactory,
   FoxgloveDataPlatformDataSourceFactory,
+  UlogLocalDataSourceFactory,
 } from "@foxglove/studio-base";
 
 import ConsoleApiCookieUserProvider from "./components/ConsoleApiCookieCurrentUserProvider";
@@ -44,6 +45,7 @@ const dataSources: IDataSourceFactory[] = [
   new Ros2UnavailableDataSourceFactory(),
   new Ros2LocalBagDataSourceFactory(),
   new RosbridgeDataSourceFactory(),
+  new UlogLocalDataSourceFactory(),
   new VelodyneUnavailableDataSourceFactory(),
   new FoxgloveDataPlatformDataSourceFactory(),
 ];
