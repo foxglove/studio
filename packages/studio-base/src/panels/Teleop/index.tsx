@@ -15,7 +15,7 @@ import helpContent from "./index.help.md";
 
 function initPanel(context: PanelExtensionContext) {
   ReactDOM.render(
-    <ThemeProvider isDark={true /*FIXME*/}>
+    <ThemeProvider>
       <TeleopPanel context={context} />
     </ThemeProvider>,
     context.panelElement,

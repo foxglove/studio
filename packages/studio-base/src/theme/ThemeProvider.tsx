@@ -22,9 +22,6 @@ import {
   SplitHorizontal20Regular,
   SplitVertical20Regular,
   FullScreenMaximize20Regular,
-  WeatherSunny20Regular,
-  WeatherMoon20Filled,
-  CircleHalfFill20Regular,
 } from "@fluentui/react-icons";
 import * as Icons from "@fluentui/react-icons-mdl2";
 import { registerIcons, unregisterIcons } from "@fluentui/style-utilities";
@@ -68,7 +65,7 @@ import BlockheadFilledIcon from "@foxglove/studio-base/components/BlockheadFille
 import BlockheadIcon from "@foxglove/studio-base/components/BlockheadIcon";
 import LoopIcon from "@foxglove/studio-base/components/LoopIcon";
 import RosIcon from "@foxglove/studio-base/components/RosIcon";
-import { darkTheme, lightTheme } from "@foxglove/studio-base/theme";
+import theme from "@foxglove/studio-base/theme";
 
 const icons: {
   // This makes it a type error to forget to add an icon here once it has been added to RegisteredIconNames.
@@ -99,7 +96,6 @@ const icons: {
   ChevronLeft: <Icons.ChevronLeftIcon />,
   ChevronRight: <Icons.ChevronRightIcon />,
   ChevronUpSmall: <Icons.ChevronUpSmallIcon />,
-  CircleHalfFill: <CircleHalfFill20Regular />,
   CirclePlus: <Icons.CirclePlusIcon />,
   Clear: <Icons.ClearIcon />,
   ClearSelection: <Icons.ClearSelectionIcon />,
@@ -178,8 +174,6 @@ const icons: {
   Variable2: <Icons.Variable2Icon />,
   Video3d: <Video3dIcon />,
   Warning: <Icons.WarningIcon />,
-  WeatherSunny: <WeatherSunny20Regular />,
-  WeatherMoon: <WeatherMoon20Filled />,
   "studio.ROS": <RosIcon />,
 };
 
@@ -191,8 +185,7 @@ ThemeContainer.displayName = "ThemeContainer";
 
 export default function ThemeProvider({
   children,
-  isDark,
-}: React.PropsWithChildren<{ isDark: boolean }>): React.ReactElement | ReactNull {
+}: React.PropsWithChildren<unknown>): React.ReactElement | ReactNull {
   // Icons need to be registered before other components are rendered. But we need to register them in an effect so that hot module reloading can run cleanups in the right order when the ThemeProvider is replaced. So we render nothing until after we've registered them.
   const [iconsRegistered, setIconsRegistered] = useState(false);
   useLayoutEffect(() => {
@@ -207,8 +200,6 @@ export default function ThemeProvider({
   if (!iconsRegistered) {
     return ReactNull;
   }
-
-  const theme = isDark ? darkTheme : lightTheme;
 
   return (
     <FluentThemeProvider

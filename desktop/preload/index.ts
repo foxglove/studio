@@ -102,9 +102,6 @@ const desktopBridge: Desktop = {
   async setRepresentedFilename(path: string | undefined) {
     await ipcRenderer.invoke("setRepresentedFilename", path);
   },
-  async updateNativeColorScheme() {
-    await ipcRenderer.invoke("updateNativeColorScheme");
-  },
   getDeepLinks(): string[] {
     return window.process.argv.filter((arg) => arg.startsWith("foxglove://"));
   },

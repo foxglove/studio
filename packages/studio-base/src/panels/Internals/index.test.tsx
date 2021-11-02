@@ -42,7 +42,7 @@ describe("<Internals>", () => {
     }
     const contextFn = jest.fn().mockReturnValue(ReactNull);
     const wrapper = mount(
-      <ThemeProvider isDark>
+      <ThemeProvider>
         <PanelSetup
           fixture={{
             topics: [{ name: "/foo", datatype: "foo_msgs/Foo" }],
@@ -60,7 +60,7 @@ describe("<Internals>", () => {
 
     const anotherContextFn = jest.fn().mockReturnValue(ReactNull);
     const wrapperWithSubscriber = mount(
-      <ThemeProvider isDark>
+      <ThemeProvider>
         <PanelSetup
           fixture={{
             topics: [{ name: "/foo", datatype: "foo_msgs/Foo" }],
@@ -91,7 +91,7 @@ describe("<Internals>", () => {
           topics: [{ name: "/foo", datatype: "foo_msgs/Foo" }],
         }}
       >
-        <ThemeProvider isDark>
+        <ThemeProvider>
           <Internals />
           <Subscriber topic="/foo" />
         </ThemeProvider>

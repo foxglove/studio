@@ -34,7 +34,7 @@ const log = Logger.getLogger(__filename);
 type ClearableMenu = Menu & { clear: () => void };
 
 function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
-  const { crashReportingEnabled, telemetryEnabled } = getTelemetrySettings();
+  const [allowCrashReporting, allowTelemetry] = getTelemetrySettings();
 
   const preloadPath = path.join(app.getAppPath(), "main", "preload.js");
 
@@ -50,8 +50,8 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
       preload: preloadPath,
       nodeIntegration: false,
       additionalArguments: [
-        `--allowCrashReporting=${crashReportingEnabled ? "1" : "0"}`,
-        `--allowTelemetry=${telemetryEnabled ? "1" : "0"}`,
+        `--allowCrashReporting=${allowCrashReporting ? "1" : "0"}`,
+        `--allowTelemetry=${allowTelemetry ? "1" : "0"}`,
         ...deepLinks,
       ],
       // Disable webSecurity in development so we can make XML-RPC calls, load
