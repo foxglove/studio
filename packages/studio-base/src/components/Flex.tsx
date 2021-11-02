@@ -36,9 +36,9 @@ const useStyles = makeStyles((theme) => ({
   reverse: {
     flexDirection: "row-reverse",
   },
-  // when the theme changes dynamically, the main flex rule above move later in the
+  // when the theme changes dynamically, the main flex rule above moves later in the
   // generated style tag (order is not preserved), so we need the specificity to be higher
-  // FIXME: is there a different/better workaround?
+  // https://github.com/microsoft/fluentui/issues/20452
   col: { flexDirection: "column !important" },
   colReverse: { flexDirection: "column-reverse !important" },
   clip: {
