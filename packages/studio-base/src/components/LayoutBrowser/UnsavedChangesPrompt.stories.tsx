@@ -35,8 +35,9 @@ const dummyLayout: Layout = {
 export function Default(): JSX.Element {
   return <UnsavedChangesPrompt isOnline layout={dummyLayout} onComplete={action("onComplete")} />;
 }
-export const DefaultLight = Default.bind(undefined);
-DefaultLight.parameters = { colorScheme: "light" };
+export const DefaultLight = Object.assign(Default.bind(undefined), {
+  parameters: { colorScheme: "light" },
+});
 
 export function Offline(): JSX.Element {
   return (
