@@ -14,11 +14,10 @@ html, body {
   width: 100%;
 
   // https://github.com/necolas/normalize.css/blob/master/normalize.css#L12
-  // Provided as a string (rather than number) to prevent mergeStyles from appending "px"
-  line-height: "1.15";
+  line-height: 1.15;
 }
 *, *:before, *:after {
-  box-sizing: "inherit";
+  box-sizing: inherit;
 }
 body {
   background: ${({ theme }) => theme.semanticColors.bodyBackground};

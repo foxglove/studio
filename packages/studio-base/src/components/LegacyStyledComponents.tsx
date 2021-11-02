@@ -10,7 +10,7 @@ import { fonts, colors, spacing } from "@foxglove/studio-base/util/sharedStyleCo
  * @deprecated The LegacyButton should not be used for new features. use fluentui/react instead
  */
 export const LegacyButton = styled.button`
-  background-color: ${({ theme }) => theme.semanticColors.buttonBackground};
+  background-color: ${({ theme }) => theme.palette.neutralLight};
   border-radius: 4px;
   border: none;
   color: ${({ theme }) => theme.semanticColors.buttonText};
@@ -34,7 +34,7 @@ export const LegacyButton = styled.button`
     background-color: ${colors.RED};
   }
   &.is-warning {
-    background-color: ${({ theme }) => theme.semanticColors.buttonBackground};
+    background-color: ${colors.ORANGE};
   }
   &:not(.disabled):not(:disabled):not(.ms-Button):hover {
     cursor: pointer;
