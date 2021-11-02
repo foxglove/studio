@@ -32,6 +32,8 @@ function getPartialTheme({ inverted }: { inverted: boolean }): PartialTheme {
       fontFeatureSettings: fonts.SANS_SERIF_FEATURE_SETTINGS,
     },
     semanticColors: {
+      menuBackground: inverted ? "#242424" : "#f3f3f3",
+      menuItemBackgroundHovered: inverted ? "#2e2e2e" : "#e1e1e1",
       errorBackground: colors.RED1,
       warningBackground: colors.YELLOW1,
     },

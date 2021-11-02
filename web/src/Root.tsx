@@ -62,8 +62,6 @@ export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX
 
   const providers = [
     /* eslint-disable react/jsx-key */
-    <LocalStorageAppConfigurationProvider />,
-    <ColorSchemeThemeProvider />,
     <ConsoleApiContext.Provider value={api} />,
     <ConsoleApiCookieUserProvider />,
     <ConsoleApiRemoteLayoutStorageProvider />,
@@ -75,19 +73,21 @@ export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX
   ];
 
   return (
-    <>
-      <GlobalCss />
-      <CssBaseline>
-        <ErrorBoundary>
-          <MultiProvider providers={providers}>
-            <App
-              loadWelcomeLayout={loadWelcomeLayout}
-              demoBagUrl={DEMO_BAG_URL}
-              availableSources={dataSources}
-            />
-          </MultiProvider>
-        </ErrorBoundary>
-      </CssBaseline>
-    </>
+    <LocalStorageAppConfigurationProvider>
+      <ColorSchemeThemeProvider>
+        <GlobalCss />
+        <CssBaseline>
+          <ErrorBoundary>
+            <MultiProvider providers={providers}>
+              <App
+                loadWelcomeLayout={loadWelcomeLayout}
+                demoBagUrl={DEMO_BAG_URL}
+                availableSources={dataSources}
+              />
+            </MultiProvider>
+          </ErrorBoundary>
+        </CssBaseline>
+      </ColorSchemeThemeProvider>
+    </LocalStorageAppConfigurationProvider>
   );
 }
