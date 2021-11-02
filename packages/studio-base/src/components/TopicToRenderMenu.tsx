@@ -31,7 +31,7 @@ type Props = {
   defaultTopicToRender: string;
 };
 
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
   topic: {
     display: "flex",
     cursor: "pointer",
@@ -61,9 +61,9 @@ const useStyles = makeStyles({
     color: colors.ORANGE,
   },
   iconActive: {
-    color: colors.LIGHT1,
+    color: theme.palette.neutralPrimary,
   },
-});
+}));
 
 export default function TopicToRenderMenu({
   onChange,

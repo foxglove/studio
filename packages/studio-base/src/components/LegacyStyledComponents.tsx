@@ -88,10 +88,10 @@ export const LegacyInput = styled.input`
  * @deprecated The LegacyTextarea should not be used for new features. use fluentui/react instead
  */
 export const LegacyTextarea = styled.textarea`
-  background-color: ${colors.DARK};
+  background-color: ${({ theme }) => theme.semanticColors.inputBackground};
   border-radius: 4px;
-  border: 2px solid ${colors.TEXT_NORMAL};
-  color: ${colors.TEXT_NORMAL};
+  border: 2px solid ${({ theme }) => theme.semanticColors.inputBorder};
+  color: ${({ theme }) => theme.semanticColors.inputText};
   font: inherit;
   line-height: 1.4;
   font-family: ${fonts.MONOSPACE};
@@ -101,12 +101,11 @@ export const LegacyTextarea = styled.textarea`
   text-align: left;
 
   &:focus {
-    background-color: black;
+    border-color: ${({ theme }) => theme.semanticColors.inputFocusBorderAlt};
     outline: none;
   }
   &.disabled {
-    background-color: ${colors.BACKGROUND_DISABLED};
-    color: ${colors.TEXT_INPUT_DISABLED};
+    color: ${({ theme }) => theme.semanticColors.disabledText};
   }
 `;
 

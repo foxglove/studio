@@ -79,8 +79,11 @@ const useStyles = makeStyles((theme) => ({
         right: 0,
 
         ".drop-target-container .drop-target": {
-          backgroundColor: colors.TEXT_DISABLED,
-          border: `2px solid ${colors.TEXT_MUTED}`,
+          backgroundColor: theme.palette.neutralQuaternary,
+          border: `2px solid ${theme.palette.neutralDark}`,
+        },
+        ".drop-target-container .drop-target-hover": {
+          opacity: 0.3,
         },
       },
       ".mosaic-tile": {

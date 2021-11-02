@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { makeStyles } from "@fluentui/react";
+import { makeStyles, useTheme } from "@fluentui/react";
 import CheckboxBlankOutlineIcon from "@mdi/svg/svg/checkbox-blank-outline.svg";
 import CheckboxMarkedIcon from "@mdi/svg/svg/checkbox-marked.svg";
 import CloseIcon from "@mdi/svg/svg/close.svg";
@@ -341,6 +341,7 @@ function ImageView(props: Props) {
     transformMarkers,
     customMarkerTopicOptions = NO_CUSTOM_OPTIONS,
   } = config;
+  const theme = useTheme();
   const { topics } = PanelAPI.useDataSourceInfo();
   const cameraTopicFullObject = useMemo(
     () => getTopicsByTopicName(topics)[cameraTopic],
@@ -676,7 +677,9 @@ function ImageView(props: Props) {
           fade
           size="medium"
         >
-          <WavesIcon style={{ color: transformMarkers ? colors.ORANGE2 : colors.TEXT_BRIGHT }} />
+          <WavesIcon
+            style={{ color: transformMarkers ? colors.ORANGE2 : theme.semanticColors.disabledText }}
+          />
         </Icon>
       </BottomBar>
     );

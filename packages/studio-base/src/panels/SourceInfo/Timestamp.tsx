@@ -52,7 +52,7 @@ const RosTimeWrapper = styled.div`
 
 const RelativeTimeWrapper = styled.div`
   display: inline-block;
-  color: ${colors.GREY};
+  color: ${({ theme }) => theme.palette.neutralSecondary};
   margin: 0 8px;
 `;
 
