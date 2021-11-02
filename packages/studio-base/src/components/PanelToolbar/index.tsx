@@ -72,7 +72,7 @@ const useStyles = makeStyles((theme) => ({
     flex: "0 0 auto",
     flexDirection: "row",
     justifyContent: "flex-end",
-    backgroundColor: theme.palette.neutralLighter,
+    backgroundColor: theme.palette.neutralLighterAlt,
     padding: PANEL_TOOLBAR_SPACING,
 
     "&.floating": {
@@ -91,7 +91,7 @@ const useStyles = makeStyles((theme) => ({
       },
       "&.hasChildren": {
         left: 0,
-        backgroundColor: theme.palette.neutralLighter,
+        backgroundColor: theme.palette.neutralLighterAlt,
       },
       "&:not(.hasChildren) > *": {
         backgroundColor: theme.palette.neutralLighterAlt,
