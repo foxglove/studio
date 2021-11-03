@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { useLayoutEffect, useState } from "react";
 import ReactDOM from "react-dom";
 
 import { PanelExtensionContext } from "@foxglove/studio";
@@ -13,11 +14,22 @@ import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import TeleopPanel from "./TeleopPanel";
 import helpContent from "./index.help.md";
 
+function ExtensionThemeProvider({
+  context,
+  children,
+}: React.PropsWithChildren<{ context: PanelExtensionContext }>) {
+  const [scheme, setScheme] = useState(context.initialColorScheme);
+  useLayoutEffect(() => {
+    context.onColorSchemeChange = setScheme;
+  }, [context]);
+  return <ThemeProvider isDark={scheme === "dark"}>{children}</ThemeProvider>;
+}
+
 function initPanel(context: PanelExtensionContext) {
   ReactDOM.render(
-    <ThemeProvider isDark>
+    <ExtensionThemeProvider context={context}>
       <TeleopPanel context={context} />
-    </ThemeProvider>,
+    </ExtensionThemeProvider>,
     context.panelElement,
   );
 }
