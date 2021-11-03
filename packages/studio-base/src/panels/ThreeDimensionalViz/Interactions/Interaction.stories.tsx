@@ -27,20 +27,19 @@ import PanelSetup, { triggerInputChange } from "@foxglove/studio-base/stories/Pa
 import { ScreenshotSizedContainer } from "@foxglove/studio-base/stories/storyHelpers";
 import { simulateDragClick } from "@foxglove/studio-base/test/mouseEventsHelper";
 import delay from "@foxglove/studio-base/util/delay";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 import tick from "@foxglove/studio-base/util/tick";
 
 import Interactions, { OBJECT_TAB_TYPE, LINKED_VARIABLES_TAB_TYPE } from "./Interactions";
 import useLinkedGlobalVariables from "./useLinkedGlobalVariables";
 
 const SWrapper = styled.div`
-  background: ${colors.DARK};
+  background: ${({ theme }) => theme.palette.neutralLighterAlt};
   display: flex;
   flex-wrap: wrap;
   height: 100%;
 `;
 const SP = styled.p`
-  color: ${colors.TEXT_MUTED};
+  color: ${({ theme }) => theme.semanticColors.disabledText};
 `;
 
 const markerObject = {
