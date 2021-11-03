@@ -81,7 +81,7 @@ const useStyles = makeStyles((theme) => ({
       whiteSpace: "pre-wrap",
       fontFamily: fonts.MONOSPACE,
       backgroundColor: colors.DARK2,
-      padding: theme.spacing.s1,
+      padding: theme.spacing.s2,
       borderRadius: theme.effects.roundedCorner2,
 
       code: {
