@@ -211,15 +211,16 @@ function selectEndTime(ctx: MessagePipelineContext) {
 
 function Plot(props: Props) {
   const { saveConfig, config } = props;
+
   const {
-    title,
+    title = defaultConfig.title,
     followingViewWidth,
-    paths: yAxisPaths,
-    minYValue,
-    maxYValue,
-    showLegend,
-    isSynced,
-    xAxisVal,
+    paths: yAxisPaths = defaultConfig.paths,
+    minYValue = defaultConfig.minYValue,
+    maxYValue = defaultConfig.maxYValue,
+    showLegend = defaultConfig.showLegend,
+    isSynced = defaultConfig.isSynced,
+    xAxisVal = defaultConfig.xAxisVal,
     xAxisPath,
   } = config;
 
