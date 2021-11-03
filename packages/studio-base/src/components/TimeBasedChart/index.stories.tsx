@@ -95,6 +95,7 @@ export default {
     chromatic: {
       delay: 50,
     },
+    colorScheme: "dark",
   },
 };
 
@@ -107,6 +108,9 @@ export function Simple(): JSX.Element {
     </div>
   );
 }
+export const SimpleLight = Object.assign(Simple.bind(undefined), {
+  parameters: { colorScheme: "light" },
+});
 
 // zoom and update without resetting zoom
 export function CanZoomAndUpdate(): JSX.Element {
