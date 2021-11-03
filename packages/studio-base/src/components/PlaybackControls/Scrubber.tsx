@@ -36,7 +36,7 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: theme.palette.neutralLighterAlt,
   },
   fullWidthBarActive: {
-    backgroundColor: theme.palette.neutralLight,
+    backgroundColor: theme.palette.neutralQuaternary,
   },
   marker: {
     backgroundColor: "white",

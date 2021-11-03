@@ -32,7 +32,7 @@ export function ProgressPlot(props: ProgressProps): JSX.Element {
     (context: CanvasRenderingContext2D, width: number, height: number) => {
       context.clearRect(0, 0, width, height);
       if (fullyLoadedFractionRanges) {
-        context.fillStyle = theme.palette.neutralLighterAlt;
+        context.fillStyle = theme.palette.neutralLight;
         const invertedRanges = complement({ start: 0, end: 1 }, fullyLoadedFractionRanges);
         for (const range of invertedRanges) {
           const start = width * range.start;
@@ -41,7 +41,7 @@ export function ProgressPlot(props: ProgressProps): JSX.Element {
         }
       }
     },
-    [fullyLoadedFractionRanges, theme.palette.neutralLighterAlt],
+    [fullyLoadedFractionRanges, theme.palette.neutralLight],
   );
 
   return (

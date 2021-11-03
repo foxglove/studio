@@ -62,7 +62,7 @@ export const LegacyButton = styled.button`
  * @deprecated The LegacyInput should not be used for new features. use fluentui/react instead
  */
 export const LegacyInput = styled.input`
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: ${({ theme }) => theme.palette.neutralLighter};
   border-radius: 4px;
   border: none;
   color: ${({ theme }) => theme.semanticColors.inputText};
@@ -79,7 +79,7 @@ export const LegacyInput = styled.input`
     background-color: ${({ theme }) => theme.semanticColors.buttonBackgroundDisabled};
   }
   &:focus {
-    background-color: rgba(255, 255, 255, 0.075);
+    background-color: ${({ theme }) => theme.palette.neutralLighterAlt};
     outline: none;
   }
 `;

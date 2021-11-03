@@ -101,6 +101,17 @@ storiesOf("components/GradientPicker", module)
     { colorScheme: "dark" },
   )
   .add(
+    "change min color light",
+    () => (
+      <Story
+        initialMinColor={{ r: 1, g: 0, b: 0, a: 1 }}
+        initialMaxColor={{ r: 0, g: 0, b: 1, a: 1 }}
+        changeMinColorAfterMount
+      />
+    ),
+    { colorScheme: "light" },
+  )
+  .add(
     "change max color",
     () => (
       <Story
