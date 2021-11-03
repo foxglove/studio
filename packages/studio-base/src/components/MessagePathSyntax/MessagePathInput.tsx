@@ -17,7 +17,7 @@ import { CSSProperties, useCallback, useMemo } from "react";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
-import Autocomplete from "@foxglove/studio-base/components/Autocomplete";
+import Autocomplete, { IAutocomplete } from "@foxglove/studio-base/components/Autocomplete";
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import useGlobalVariables, {
@@ -327,7 +327,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
   const onSelect = useCallback(
     (
       rawValue: string,
-      autocomplete: Autocomplete<string>,
+      autocomplete: IAutocomplete,
       autocompleteType: ("topicName" | "messagePath" | "globalVariables") | undefined,
       autocompleteRange: { start: number; end: number },
     ) => {
@@ -598,7 +598,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
           filterText={autocompleteFilterText}
           value={path}
           onChange={onChange}
-          onSelect={(value: string, _item: unknown, autocomplete: Autocomplete<string>) =>
+          onSelect={(value: string, _item: unknown, autocomplete: IAutocomplete) =>
             onSelect(value, autocomplete, autocompleteType, autocompleteRange)
           }
           hasError={hasError}
