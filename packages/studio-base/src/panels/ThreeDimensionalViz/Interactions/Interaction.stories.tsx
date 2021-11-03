@@ -193,65 +193,64 @@ function PanelSetupWithData({
   );
 }
 
+function DefaultStory() {
+  return (
+    <SWrapper>
+      <PanelSetupWithData title="Link Tab">
+        <Interactions
+          {...(sharedProps as any)}
+          selectedObject={undefined}
+          interactionsTabType={LINKED_VARIABLES_TAB_TYPE}
+        />
+      </PanelSetupWithData>
+      <PanelSetupWithData title="Default without clicked object">
+        <Interactions
+          {...(sharedProps as any)}
+          selectedObject={undefined}
+          interactionsTabType={OBJECT_TAB_TYPE}
+        />
+      </PanelSetupWithData>
+      <PanelSetupWithData title="With interactionData">
+        <Interactions {...(sharedProps as any)} />
+      </PanelSetupWithData>
+      <PanelSetupWithData
+        title="Clicked link button"
+        onMount={(el) => {
+          const btn = el.querySelector("[data-test='link-id']");
+          if (btn) {
+            (btn as any).click();
+          }
+        }}
+      >
+        <Interactions
+          {...(sharedProps as any)}
+          selectedObject={{ ...selectedObject, interactionData: { topic: "/foo/bar" } }}
+        />
+      </PanelSetupWithData>
+      <PanelSetupWithData
+        title="Add link to existing linked global variable"
+        onMount={(el) => {
+          const btn = el.querySelector("[data-test='link-scale']");
+          if (btn) {
+            (btn as any).click();
+          }
+        }}
+      >
+        <Interactions
+          {...(sharedProps as any)}
+          selectedObject={{ ...selectedObject, interactionData: { topic: "/foo/bar" } }}
+        />
+      </PanelSetupWithData>
+    </SWrapper>
+  );
+}
+
 storiesOf("panels/ThreeDimensionalViz/Interactions/Interaction", module)
   .addParameters({
     chromatic: { viewport: { width: 1001, height: 1101 } },
   })
-  .add(
-    "default",
-    () => {
-      return (
-        <SWrapper>
-          <PanelSetupWithData title="Link Tab">
-            <Interactions
-              {...(sharedProps as any)}
-              selectedObject={undefined}
-              interactionsTabType={LINKED_VARIABLES_TAB_TYPE}
-            />
-          </PanelSetupWithData>
-          <PanelSetupWithData title="Default without clicked object">
-            <Interactions
-              {...(sharedProps as any)}
-              selectedObject={undefined}
-              interactionsTabType={OBJECT_TAB_TYPE}
-            />
-          </PanelSetupWithData>
-          <PanelSetupWithData title="With interactionData">
-            <Interactions {...(sharedProps as any)} />
-          </PanelSetupWithData>
-          <PanelSetupWithData
-            title="Clicked link button"
-            onMount={(el) => {
-              const btn = el.querySelector("[data-test='link-id']");
-              if (btn) {
-                (btn as any).click();
-              }
-            }}
-          >
-            <Interactions
-              {...(sharedProps as any)}
-              selectedObject={{ ...selectedObject, interactionData: { topic: "/foo/bar" } }}
-            />
-          </PanelSetupWithData>
-          <PanelSetupWithData
-            title="Add link to existing linked global variable"
-            onMount={(el) => {
-              const btn = el.querySelector("[data-test='link-scale']");
-              if (btn) {
-                (btn as any).click();
-              }
-            }}
-          >
-            <Interactions
-              {...(sharedProps as any)}
-              selectedObject={{ ...selectedObject, interactionData: { topic: "/foo/bar" } }}
-            />
-          </PanelSetupWithData>
-        </SWrapper>
-      );
-    },
-    { colorScheme: "both-column" },
-  )
+  .add("default", DefaultStory, { colorScheme: "dark" })
+  .add("default light", DefaultStory, { colorScheme: "light" })
   .add("instanced interactionData", () => {
     return (
       <SWrapper>
