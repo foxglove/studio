@@ -140,10 +140,10 @@ const useStyles = makeStyles((theme) => ({
         zIndex: 99,
 
         ".mosaic-split-line": {
-          boxShadow: `0 0 0 1px ${theme.palette.neutralLight}`,
+          boxShadow: `0 0 0 1px ${theme.palette.neutralLighter}`,
         },
         ":hover .mosaic-split-line": {
-          boxShadow: `0 0 0 1px ${theme.palette.neutralTertiary}`,
+          boxShadow: `0 0 0 1px ${theme.palette.neutralQuaternary}`,
         },
         "&.-row": {
           marginTop: 2,
