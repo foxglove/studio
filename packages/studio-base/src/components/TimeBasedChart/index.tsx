@@ -488,7 +488,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         family: fonts.MONOSPACE,
         size: 10,
       },
-      color: theme.palette.blackTranslucent40,
+      color: theme.palette.neutralSecondary,
       maxRotation: 0,
     };
 
@@ -504,7 +504,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     };
 
     return scale;
-  }, [theme.palette.blackTranslucent40, theme.palette.neutralLighter, xAxes, minX, maxX]);
+  }, [theme.palette.neutralSecondary, theme.palette.neutralLighter, xAxes, minX, maxX]);
 
   const yScale = useMemo<ScaleOptions>(() => {
     const defaultYTicksSettings: ScaleOptions["ticks"] = {
@@ -512,7 +512,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         family: fonts.MONOSPACE,
         size: 10,
       },
-      color: theme.palette.blackTranslucent40,
+      color: theme.palette.neutralSecondary,
       padding: 0,
     };
 
@@ -544,7 +544,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         ...yAxes.ticks,
       },
     } as ScaleOptions;
-  }, [datasetBounds.y, yAxes, hasUserPannedOrZoomed, theme.palette.blackTranslucent40]);
+  }, [datasetBounds.y, yAxes, hasUserPannedOrZoomed, theme.palette.neutralSecondary]);
 
   const datasetBoundsRef = useRef(datasetBounds);
   datasetBoundsRef.current = datasetBounds;
