@@ -11,7 +11,14 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { DefaultButton, IButtonStyles, IconButton, Stack, makeStyles } from "@fluentui/react";
+import {
+  DefaultButton,
+  IButtonStyles,
+  IconButton,
+  Stack,
+  makeStyles,
+  useTheme,
+} from "@fluentui/react";
 import { flatten, flatMap, partition } from "lodash";
 import { CSSProperties, useCallback, useMemo } from "react";
 
@@ -26,7 +33,6 @@ import useGlobalVariables, {
 import { Topic } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { getTopicNames, getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import { RosPath, RosPrimitive } from "./constants";
@@ -207,91 +213,79 @@ type MessagePathInputBaseProps = {
   onTimestampMethodChange?: (arg0: TimestampMethod, index?: number) => void;
 };
 
-const iconButtonStyles = {
-  root: {
-    backgroundColor: "transparent",
-    fontSize: 20,
-    height: 24,
-    width: 24,
-    cursor: "pointer",
-    color: colors.TEXT_MUTED,
-  },
-  rootHovered: {
-    backgroundColor: colors.DARK2,
-    color: colors.TEXT_BRIGHT,
-  },
-  rootPressed: { backgroundColor: colors.DARK2 },
-  rootChecked: {
-    height: 24,
-    width: 24,
-    backgroundColor: "transparent",
-    color: colors.PRIMARY,
-  },
-  rootCheckedHovered: {
-    backgroundColor: colors.DARK2,
-    color: colors.PRIMARY,
-  },
-  rootCheckedDisabled: { backgroundColor: "transparent" },
-  rootCheckedPressed: { backgroundColor: colors.DARK2 },
-  iconHovered: { color: "inherit" },
-  iconChecked: { color: "inherit" },
-  icon: {
-    color: "inherit",
-
-    svg: {
-      height: "1em",
-      width: "1em",
-      display: "block",
-      fill: "currentColor",
-    },
-  },
-} as Partial<IButtonStyles>;
-
-const dropdownStyles = {
-  root: {
-    color: colors.TEXT_MUTED,
-    borderColor: "transparent",
-    fontSize: 12,
-    height: 24,
-    padding: "0 2px 0 4px",
-    cursor: "pointer",
-    minWidth: 120,
-  },
-  rootHovered: {
-    color: colors.TEXT_CONTROL,
-    padding: "0 2px 0 4px",
-    backgroundColor: colors.DARK2,
-  },
-  rootChecked: {
-    color: colors.RED2,
-    backgroundColor: "transparent",
-  },
-  rootCheckedHovered: { backgroundColor: "transparent" },
-  rootExpanded: { backgroundColor: "transparent" },
-  rootExpandedHovered: { backgroundColor: "transparent" },
-  rootPressed: { backgroundColor: "transparent" },
-  label: { fontWeight: 400 },
-  menuIcon: {
-    fontSize: "1em",
-    height: "1em",
-    color: "inherit",
-    marginLeft: 0,
-
-    svg: {
-      fill: "currentColor",
-      height: "1em",
-      width: "1em",
-      display: "block",
-    },
-  },
-} as Partial<IButtonStyles>;
-
 export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
   props: MessagePathInputBaseProps,
 ) {
   const classes = useStyles();
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
   const { datatypes, topics } = PanelAPI.useDataSourceInfo();
+  const theme = useTheme();
+
+  const dropdownStyles: Partial<IButtonStyles> = useMemo(
+    () => ({
+      root: {
+        backgroundColor: "transparent",
+        color: theme.semanticColors.disabledText,
+        borderColor: "transparent",
+        fontSize: 12,
+        height: 24,
+        padding: "0 2px 0 4px",
+        cursor: "pointer",
+        minWidth: 120,
+      },
+      rootHovered: {
+        color: theme.semanticColors.buttonText,
+        padding: "0 2px 0 4px",
+        backgroundColor: theme.semanticColors.buttonBackgroundHovered,
+      },
+      rootPressed: { backgroundColor: theme.semanticColors.buttonBackgroundPressed },
+      label: { fontWeight: 400 },
+      menuIcon: {
+        fontSize: "1em",
+        height: "1em",
+        color: "inherit",
+        marginLeft: 0,
+
+        svg: {
+          fill: "currentColor",
+          height: "1em",
+          width: "1em",
+          display: "block",
+        },
+      },
+    }),
+    [theme],
+  );
+
+  const iconButtonStyles: Partial<IButtonStyles> = useMemo(
+    () => ({
+      root: {
+        backgroundColor: "transparent",
+        fontSize: 20,
+        height: 24,
+        width: 24,
+        cursor: "pointer",
+        color: theme.semanticColors.disabledText,
+      },
+      rootHovered: {
+        backgroundColor: theme.semanticColors.buttonBackgroundHovered,
+        color: theme.semanticColors.buttonTextHovered,
+      },
+      rootPressed: { backgroundColor: theme.semanticColors.buttonBackgroundPressed },
+      iconHovered: { color: "inherit" },
+      icon: {
+        color: "inherit",
+
+        svg: {
+          height: "1em",
+          width: "1em",
+          display: "block",
+          fill: "currentColor",
+        },
+      },
+    }),
+    [theme],
+  );
 
   const {
     supportsMathModifiers,
@@ -624,7 +618,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
               text={timestampMethod === "receiveTime" ? "(receive time)" : "(header.stamp)"}
               menuIconProps={{ iconName: "MenuDown" }}
               menuProps={{
-                styles: ({ theme }) => ({
+                styles: {
                   subComponentStyles: {
                     menuItem: {
                       root: { height: 24 },
@@ -632,7 +626,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
                       secondaryText: { fontSize: theme.fonts.small.fontSize },
                     },
                   },
-                }),
+                },
                 items: [
                   {
                     key: "receiveTime",

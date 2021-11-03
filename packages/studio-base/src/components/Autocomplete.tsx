@@ -50,7 +50,7 @@ const useStyles = makeStyles((theme) => ({
     background: "transparent !important",
     borderRadius: 0,
     border: "none",
-    color: "inherit",
+    color: theme.semanticColors.inputText,
     flexGrow: 1,
     fontSize: "1rem",
     margin: 0,
@@ -70,7 +70,7 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   inputError: {
-    color: colors.RED2,
+    color: `${colors.RED2} !important`,
   },
   inputPlaceholder: {
     color: theme.semanticColors.inputPlaceholderText,
