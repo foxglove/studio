@@ -21,7 +21,7 @@ type Props = React.PropsWithChildren<{
 
 const useStyles = makeStyles((theme) => ({
   container: {
-    backgroundColor: theme.palette.neutralLight,
+    backgroundColor: theme.semanticColors.menuBackground,
     borderRadius: 4,
     padding: 0,
     boxShadow: theme.effects.elevation64,

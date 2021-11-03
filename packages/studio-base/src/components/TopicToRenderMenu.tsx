@@ -37,9 +37,10 @@ const useStyles = makeStyles((theme) => ({
     cursor: "pointer",
     padding: 8,
     height: 32,
-  },
-  topicSelected: {
-    backgroundColor: colors.BACKGROUND_CONTROL_SELECTED,
+    color: theme.semanticColors.menuItemText,
+    ":hover": {
+      backgroundColor: theme.semanticColors.menuItemBackgroundHovered,
+    },
   },
   topicLabel: {
     flex: "flex-start",
@@ -50,7 +51,7 @@ const useStyles = makeStyles((theme) => ({
     flex: "flex-end",
 
     svg: {
-      fill: "white",
+      fill: theme.semanticColors.menuIcon,
       width: 15,
       height: 15,
     },
@@ -110,9 +111,7 @@ export default function TopicToRenderMenu({
     >
       {renderTopics.map((topic) => (
         <div
-          className={cx(styles.topic, {
-            [styles.topicSelected]: topicToRender === topic,
-          })}
+          className={styles.topic}
           key={topic}
           onClick={() => {
             onChange(topic);
