@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Story, StoryContext } from "@storybook/react";
+import { useMemo, useRef } from "react";
 import { ToastProvider } from "react-toast-notifications";
 
 import { AppConfigurationContext } from "@foxglove/studio-base";
@@ -21,6 +22,34 @@ import "./styles.css";
 
 let loaded = false;
 
+// When rendering 2 copies of a story for dark/light theme, the ready signal should be received from
+// both before invoking the storybook ready signal. Each signal should be called at most once so
+// rather than keeping a counter of total calls we keep two separate booleans.
+function useCombinedReadySignal(
+  readySignal: (() => void) | undefined,
+): [(() => void) | undefined, (() => void) | undefined] {
+  const ready1 = useRef(false);
+  const ready2 = useRef(false);
+
+  return useMemo(() => {
+    function makeSignal(readyRef: typeof ready1) {
+      if (!readySignal) {
+        return undefined;
+      }
+      return () => {
+        if (readyRef.current) {
+          throw new Error("Ready signal called more than once");
+        }
+        readyRef.current = true;
+        if (ready1.current && ready2.current) {
+          readySignal();
+        }
+      };
+    }
+    return [makeSignal(ready1), makeSignal(ready2)];
+  }, [readySignal]);
+}
+
 function WithContextProviders(Child: Story, ctx: StoryContext): JSX.Element {
   if (ctx.parameters?.useReadySignal === true) {
     const sig = signal();
@@ -30,12 +59,15 @@ function WithContextProviders(Child: Story, ctx: StoryContext): JSX.Element {
     };
   }
 
-  const readySignal = ctx.parameters.readySignal;
+  const readySignal: (() => void) | undefined = ctx.parameters.readySignal;
 
   const config = makeConfiguration();
 
   const colorScheme: "dark" | "light" | "both-row" | "both-column" =
     ctx.parameters.colorScheme ?? "both-row";
+
+  const needsCombinedReadySignal = colorScheme.startsWith("both");
+  const [readySignal1, readySignal2] = useCombinedReadySignal(readySignal);
 
   const providers = [
     /* eslint-disable react/jsx-key */
@@ -68,25 +100,33 @@ function WithContextProviders(Child: Story, ctx: StoryContext): JSX.Element {
       {(colorScheme === "light" || colorScheme.startsWith("both")) && (
         // Set a transform to make this the root for position:fixed elements
         <div style={{ position: "relative", transform: "scale(1)", flexGrow: 1 }}>
-          <ThemeProvider isDark={false}>
-            <CssBaseline>
-              <MultiProvider providers={providers}>
-                <Child />
-              </MultiProvider>
-            </CssBaseline>
-          </ThemeProvider>
+          <ReadySignalContext.Provider
+            value={needsCombinedReadySignal ? readySignal1 : readySignal}
+          >
+            <ThemeProvider isDark={false}>
+              <CssBaseline>
+                <MultiProvider providers={providers}>
+                  <Child />
+                </MultiProvider>
+              </CssBaseline>
+            </ThemeProvider>
+          </ReadySignalContext.Provider>
         </div>
       )}
       {(colorScheme === "dark" || colorScheme.startsWith("both")) && (
         // Set a transform to make this the root for position:fixed elements
         <div style={{ position: "relative", transform: "scale(1)", flexGrow: 1 }}>
-          <ThemeProvider isDark={true}>
-            <CssBaseline>
-              <MultiProvider providers={providers}>
-                <Child />
-              </MultiProvider>
-            </CssBaseline>
-          </ThemeProvider>
+          <ReadySignalContext.Provider
+            value={needsCombinedReadySignal ? readySignal2 : readySignal}
+          >
+            <ThemeProvider isDark={true}>
+              <CssBaseline>
+                <MultiProvider providers={providers}>
+                  <Child />
+                </MultiProvider>
+              </CssBaseline>
+            </ThemeProvider>
+          </ReadySignalContext.Provider>
         </div>
       )}
     </div>
