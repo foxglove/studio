@@ -3,15 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { useTheme } from "@fluentui/react";
-import {
-  CSSProperties,
-  RefCallback,
-  useCallback,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { CSSProperties, RefCallback, useCallback, useMemo, useRef, useState } from "react";
 import { v4 as uuid } from "uuid";
 
 import Logger from "@foxglove/log";
@@ -135,6 +127,8 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   const hoverValueRef = useRef<typeof hoverValue>();
   hoverValueRef.current = hoverValue;
 
+  const colorScheme = useTheme().isInverted ? "dark" : "light";
+
   const renderPanel = useCallback(() => {
     rafRequestedRef.current = false;
 
@@ -222,6 +216,13 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       }
     }
 
+    if (watchedFieldsRef.current.has("colorScheme")) {
+      if (colorScheme !== renderState.colorScheme) {
+        shouldRender = true;
+        renderState.colorScheme = colorScheme;
+      }
+    }
+
     if (!shouldRender) {
       return;
     }
@@ -242,7 +243,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     } catch (err) {
       setError(err);
     }
-  }, [renderFn]);
+  }, [colorScheme, renderFn]);
 
   const messagePipelineSelector = useCallback(
     (ctx: MessagePipelineContext) => {
@@ -259,15 +260,6 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   );
 
   useMessagePipeline(messagePipelineSelector);
-
-  const colorScheme = useTheme().isInverted ? "dark" : "light";
-  const initialColorSchemeRef = useRef<typeof colorScheme>(colorScheme);
-  const [colorSchemeHandler, setColorSchemeHandler] = useState<
-    ((colorScheme: "light" | "dark") => void) | undefined
-  >();
-  useLayoutEffect(() => {
-    colorSchemeHandler?.(colorScheme);
-  }, [colorScheme, colorSchemeHandler]);
 
   type PartialPanelExtensionContext = Omit<PanelExtensionContext, "panelElement">;
   const partialExtensionContext = useMemo<PartialPanelExtensionContext>(() => {
@@ -291,8 +283,6 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       saveState: saveConfig,
 
       layout,
-
-      initialColorScheme: initialColorSchemeRef.current,
 
       seekPlayback: capabilities.includes(PlayerCapabilities.playbackControl)
         ? (stamp: number) => seekPlayback(fromSec(stamp))
@@ -418,11 +408,6 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
         // eslint-disable-next-line no-restricted-syntax
         set onRender(renderFunction: RenderFn | undefined) {
           setRenderFn(() => renderFunction);
-        },
-
-        // eslint-disable-next-line no-restricted-syntax
-        set onColorSchemeChange(callback: (colorScheme: "dark" | "light") => void) {
-          setColorSchemeHandler(() => callback);
         },
       };
 

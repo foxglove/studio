@@ -82,6 +82,9 @@ declare module "@foxglove/studio" {
      * to other panels where the user is currently hovering and allow them to render accordingly.
      */
     previewTime?: number | undefined;
+
+    /** The color scheme currently in use throughout the app. */
+    colorScheme?: "dark" | "light";
   }
 
   export type PanelExtensionContext = {
@@ -97,14 +100,6 @@ declare module "@foxglove/studio" {
 
     /** Actions the panel may perform related to the user's current layout. */
     readonly layout: LayoutActions;
-
-    /**
-     * The color scheme currently in use when the extension is initialized. Subscribe to further updates via `onColorSchemeChange`.
-     */
-    readonly initialColorScheme: "dark" | "light";
-
-    /** Set this to a function to receive notifications when the active color scheme changes. */
-    onColorSchemeChange?: (colorScheme: "dark" | "light") => void;
 
     /**
      * Subscribe to updates on this field within the render state. Render will only be invoked when
