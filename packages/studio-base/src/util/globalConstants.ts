@@ -63,11 +63,11 @@ export function useJsonTreeTheme(): Pick<
   const theme = useTheme();
   return {
     base00: "transparent", // bg
-    base07: theme.palette.blueMid, // text
+    base07: theme.isInverted ? theme.palette.blueLight : theme.palette.blue, // text
     base0B: theme.palette.orangeLighter, // string & date, item string
     base09: theme.palette.tealLight, // # & boolean
     base08: theme.palette.red, // null, undefined, function, & symbol
-    base0D: theme.palette.blue, // label & arrow
+    base0D: theme.isInverted ? theme.palette.blueLight : theme.palette.blue, // label & arrow
     base03: theme.palette.neutralTertiary, // item string expanded
   };
 }
