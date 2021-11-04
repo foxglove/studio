@@ -121,6 +121,7 @@ function ObjectDetailsInner({ interactionData, objectToDisplay }: Props) {
         <Tree
           data={objectToDisplay}
           shouldExpandNode={(_markerKeyPath, _data, level) => level < 2}
+          invertTheme={false}
           postprocessValue={maybePlainObject}
           theme={{ ...jsonTreeTheme, tree: { margin: 0 } }}
           hideRoot
@@ -140,6 +141,7 @@ function ObjectDetailsInner({ interactionData, objectToDisplay }: Props) {
       <Tree
         data={sortedDataObject}
         shouldExpandNode={() => false}
+        invertTheme={false}
         theme={{ ...jsonTreeTheme, tree: { margin: 0, whiteSpace: "pre-line" } }}
         hideRoot
         getItemString={getItemString}

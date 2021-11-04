@@ -79,7 +79,7 @@ const LogsSection = ({ nodeId, logs, clearLogs }: Props): ReactElement => {
               style={{ padding: renderTreeObj ? "0px 3px" : "6px 3px 3px" }}
             >
               {renderTreeObj ? (
-                <Tree hideRoot data={value} theme={jsonTreeTheme} />
+                <Tree hideRoot data={value} invertTheme={false} theme={jsonTreeTheme} />
               ) : (
                 <span style={{ color: valueColorMap[typeof value] ?? colors.LIGHT }}>
                   {value == undefined || value === false
