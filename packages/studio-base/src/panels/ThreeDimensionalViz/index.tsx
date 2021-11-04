@@ -59,6 +59,24 @@ function BaseRenderer(props: Props): JSX.Element {
     saveConfig,
     config: { autoSyncCameraState = false, followOrientation = false, followTf },
   } = props;
+
+  // Migrate old colorOverrideBySourceIdxByVariable field to new colorOverrideByVariable The new
+  // field drops the "BySourceIdx" which powered the base/feature branch feature that no longer
+  // exists.
+  for (const [variable, colorOverrideByColumn] of Object.entries(
+    config.colorOverrideBySourceIdxByVariable ?? {},
+  )) {
+    config.colorOverrideByVariable ??= {};
+    if (variable in config.colorOverrideByVariable) {
+      continue;
+    }
+
+    const prevColorOverride = colorOverrideByColumn[0];
+    if (prevColorOverride) {
+      config.colorOverrideByVariable[variable] = prevColorOverride;
+    }
+  }
+
   const { updatePanelConfigs } = React.useContext(PanelContext) ?? {};
 
   const { topics } = useDataSourceInfo();
