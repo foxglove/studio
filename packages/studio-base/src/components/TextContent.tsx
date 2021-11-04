@@ -18,7 +18,7 @@ import rehypeRaw from "rehype-raw";
 import { CSSProperties } from "styled-components";
 
 import LinkHandlerContext from "@foxglove/studio-base/context/LinkHandlerContext";
-import { colors, fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -80,12 +80,13 @@ const useStyles = makeStyles((theme) => ({
     pre: {
       whiteSpace: "pre-wrap",
       fontFamily: fonts.MONOSPACE,
-      backgroundColor: colors.DARK2,
+      backgroundColor: theme.semanticColors.bodyBackgroundHovered,
       padding: "2px 4px",
       borderRadius: theme.effects.roundedCorner2,
 
       code: {
         backgroundColor: "transparent",
+        padding: 0,
       },
     },
     code: {
