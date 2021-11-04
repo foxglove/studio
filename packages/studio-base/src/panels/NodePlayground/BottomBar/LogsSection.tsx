@@ -17,7 +17,7 @@ import styled from "styled-components";
 
 import { LegacyButton } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { UserNodeLog } from "@foxglove/studio-base/players/UserNodePlayer/types";
-import { jsonTreeTheme } from "@foxglove/studio-base/util/globalConstants";
+import { useJsonTreeTheme } from "@foxglove/studio-base/util/globalConstants";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 const SListItem = styled.li`
@@ -37,15 +37,15 @@ type Props = {
   clearLogs: (nodeId: string) => void;
 };
 
-const valueColorMap: Record<string, string> = {
-  string: jsonTreeTheme.base0B,
-  number: jsonTreeTheme.base09,
-  boolean: jsonTreeTheme.base09,
-  object: jsonTreeTheme.base08, // null
-  undefined: jsonTreeTheme.base08,
-};
-
 const LogsSection = ({ nodeId, logs, clearLogs }: Props): ReactElement => {
+  const jsonTreeTheme = useJsonTreeTheme();
+  const valueColorMap: Record<string, string> = {
+    string: jsonTreeTheme.base0B,
+    number: jsonTreeTheme.base09,
+    boolean: jsonTreeTheme.base09,
+    object: jsonTreeTheme.base08, // null
+    undefined: jsonTreeTheme.base08,
+  };
   if (logs.length === 0) {
     return (
       <>
@@ -79,7 +79,7 @@ const LogsSection = ({ nodeId, logs, clearLogs }: Props): ReactElement => {
               style={{ padding: renderTreeObj ? "0px 3px" : "6px 3px 3px" }}
             >
               {renderTreeObj ? (
-                <Tree hideRoot data={value} invertTheme={false} theme={jsonTreeTheme} />
+                <Tree hideRoot data={value} theme={jsonTreeTheme} />
               ) : (
                 <span style={{ color: valueColorMap[typeof value] ?? colors.LIGHT }}>
                   {value == undefined || value === false

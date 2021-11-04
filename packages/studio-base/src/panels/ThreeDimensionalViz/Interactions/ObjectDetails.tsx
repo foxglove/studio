@@ -22,7 +22,7 @@ import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem
 import useGetItemStringWithTimezone from "@foxglove/studio-base/components/JsonTree/useGetItemStringWithTimezone";
 import styles from "@foxglove/studio-base/panels/ThreeDimensionalViz/sharedStyles";
 import { getInstanceObj } from "@foxglove/studio-base/panels/ThreeDimensionalViz/threeDimensionalVizUtils";
-import { jsonTreeTheme } from "@foxglove/studio-base/util/globalConstants";
+import { useJsonTreeTheme } from "@foxglove/studio-base/util/globalConstants";
 
 import GlobalVariableLink from "./GlobalVariableLink/index";
 import { InteractionData } from "./types";
@@ -101,6 +101,7 @@ function maybePlainObject(rawVal: unknown) {
 }
 
 function ObjectDetailsInner({ interactionData, objectToDisplay }: Props) {
+  const jsonTreeTheme = useJsonTreeTheme();
   const topic = interactionData?.topic ?? "";
 
   // object to display may not be a plain-ole-data
@@ -120,7 +121,6 @@ function ObjectDetailsInner({ interactionData, objectToDisplay }: Props) {
         <Tree
           data={objectToDisplay}
           shouldExpandNode={(_markerKeyPath, _data, level) => level < 2}
-          invertTheme={false}
           postprocessValue={maybePlainObject}
           theme={{ ...jsonTreeTheme, tree: { margin: 0 } }}
           hideRoot
@@ -140,7 +140,6 @@ function ObjectDetailsInner({ interactionData, objectToDisplay }: Props) {
       <Tree
         data={sortedDataObject}
         shouldExpandNode={() => false}
-        invertTheme={false}
         theme={{ ...jsonTreeTheme, tree: { margin: 0, whiteSpace: "pre-line" } }}
         hideRoot
         getItemString={getItemString}
