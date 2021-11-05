@@ -6,6 +6,6 @@ You can also superimpose markers on the images, from topics with a [`foxglove_ms
 
 ## Shortcuts
 
-- <kbd>Scroll</kbd> – Zoom in/out
+<kbd>Scroll</kbd> – Zoom in/out
 
 [Learn more](https://foxglove.dev/docs/panels/image).
