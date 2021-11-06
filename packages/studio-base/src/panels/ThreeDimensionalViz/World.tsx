@@ -47,6 +47,7 @@ import {
   TextMarker,
 } from "@foxglove/studio-base/types/Messages";
 import { MarkerCollector, MarkerProvider } from "@foxglove/studio-base/types/Scene";
+import { ReglColor } from "@foxglove/studio-base/util/colorUtils";
 
 type Props = WorldSearchTextProps & {
   autoTextBackgroundColor: boolean;
@@ -161,8 +162,11 @@ function World(
     }),
   };
 
+  const color = averageMarkerColor(markersByType.color);
+
   return (
     <Worldview
+      backgroundColor={color}
       cameraState={cameraState}
       enableStackedObjectEvents={!isPlaying}
       hideDebug={inScreenshotTests()}
@@ -179,7 +183,7 @@ function World(
       ref={ref}
       contextAttributes={{ preserveDrawingBuffer: true }}
     >
-      {children}
+      {/* {children}
       <WrappedWorldMarkers
         {...{
           autoTextBackgroundColor,
@@ -189,9 +193,36 @@ function World(
           cameraDistance: cameraState.distance ?? DEFAULT_CAMERA_STATE.distance,
           diffModeEnabled,
         }}
-      />
+      /> */}
     </Worldview>
   );
+}
+
+// Average a list of color markers into a single output color value. The returned value is the
+// mean RGB and max(alpha)
+function averageMarkerColor(colorMarkers: ColorMarker[]): ReglColor {
+  let count = 0;
+  const sum = colorMarkers.reduce(
+    (prev, cur) => {
+      if (cur.color == undefined) {
+        return prev;
+      }
+      prev[0] += cur.color.r;
+      prev[1] += cur.color.g;
+      prev[2] += cur.color.b;
+      prev[3] = Math.max(prev[3], cur.color.a);
+      ++count;
+      return prev;
+    },
+    [0, 1, 0, 1] as ReglColor,
+  );
+  if (count <= 1) {
+    return sum;
+  }
+  for (let i = 0; i < 3; i++) {
+    sum[i] /= count;
+  }
+  return sum;
 }
 
 export default forwardRef<typeof Worldview, Props>(World);

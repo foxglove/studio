@@ -27,7 +27,6 @@ import {
 import { Interactive } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/types";
 import { GLTextMarker } from "@foxglove/studio-base/panels/ThreeDimensionalViz/SearchText";
 import {
-  Cover,
   OccupancyGrids,
   LaserScans,
   PointClouds,
@@ -53,7 +52,6 @@ import {
   ColorMarker,
   MeshMarker,
 } from "@foxglove/studio-base/types/Messages";
-import { ReglColor } from "@foxglove/studio-base/util/colorUtils";
 
 import glTextAtlasLoader, { TextAtlas } from "./utils/glTextAtlasLoader";
 import { groupLinesIntoInstancedLineLists } from "./utils/groupingUtils";
@@ -108,33 +106,6 @@ export type WorldMarkerProps = {
   diffModeEnabled: boolean;
 };
 
-// Average a list of color markers into a single output color value. The returned value is the
-// mean RGB and max(alpha)
-function averageMarkerColor(colorMarkers: ColorMarker[]): ReglColor {
-  let count = 0;
-  const sum = colorMarkers.reduce(
-    (prev, cur) => {
-      if (cur.color == undefined) {
-        return prev;
-      }
-      prev[0] += cur.color.r;
-      prev[1] += cur.color.g;
-      prev[2] += cur.color.b;
-      prev[3] = Math.max(prev[3], cur.color.a);
-      ++count;
-      return prev;
-    },
-    [0, 0, 0, 0] as ReglColor,
-  );
-  if (count <= 1) {
-    return sum;
-  }
-  for (let i = 0; i < 3; i++) {
-    sum[i] /= count;
-  }
-  return sum;
-}
-
 export default function WorldMarkers({
   autoTextBackgroundColor,
   layerIndex,
@@ -144,7 +115,6 @@ export default function WorldMarkers({
   const getChildrenForHitmap = useMemo(() => createInstancedGetChildrenForHitmap(1), []);
   const {
     arrow,
-    color,
     cube,
     cubeList,
     cylinder,
@@ -185,11 +155,8 @@ export default function WorldMarkers({
   // Group all line strips and line lists into as few markers as possible
   const groupedLines = groupLinesIntoInstancedLineLists([...lineList, ...lineStrip]);
 
-  const backdropColor = useMemo((): ReglColor => averageMarkerColor(color), [color]);
-
   return (
     <>
-      <Cover color={backdropColor} />
       <OccupancyGrids layerIndex={(layerIndex as number) + LAYER_INDEX_OCCUPANCY_GRIDS}>
         {grid}
       </OccupancyGrids>
