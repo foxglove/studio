@@ -41,6 +41,7 @@ import {
   updateTree,
   MosaicNode,
 } from "react-mosaic-component";
+import { useToasts } from "react-toast-notifications";
 import { useMountedState } from "react-use";
 
 import { useShallowMemo } from "@foxglove/hooks";
@@ -313,6 +314,7 @@ export default function Panel<
     const classes = useStyles();
     const theme = useTheme();
     const isMounted = useMountedState();
+    const { addToast } = useToasts();
 
     const { mosaicActions } = useContext(MosaicContext);
     const { mosaicWindowActions }: { mosaicWindowActions: MosaicWindowActions } =
@@ -386,6 +388,9 @@ export default function Panel<
         }
         const siblingPanel = panelCatalog.getPanelByType(panelType);
         if (!siblingPanel) {
+          addToast(`Unknown panel type: ${panelType}`, {
+            appearance: "error",
+          });
           return;
         }
 
