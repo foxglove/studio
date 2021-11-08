@@ -17,6 +17,8 @@ import { ColorOverrideBySourceIdxByVariable } from "@foxglove/studio-base/panels
 import { TopicDisplayMode } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/types";
 
 export type ThreeDimensionalVizConfig = {
+  useThemeBackgroundColor: boolean;
+  customBackgroundColor: string;
   enableShortDisplayNames?: boolean;
   autoTextBackgroundColor?: boolean;
   cameraState: Partial<CameraState>;

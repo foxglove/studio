@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { mergeStyleSets } from "@fluentui/react";
+import { mergeStyleSets, useTheme } from "@fluentui/react";
 import { groupBy } from "lodash";
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
@@ -228,6 +228,8 @@ export default function Layout({
     settingsByKey,
     colorOverrideBySourceIdxByVariable,
     disableAutoOpenClickedObject = false,
+    useThemeBackgroundColor,
+    customBackgroundColor,
   },
 }: Props): React.ReactElement {
   const [filterText, setFilterText] = useState(""); // Topic tree text for filtering to see certain topics.
@@ -780,6 +782,11 @@ export default function Layout({
     refreshMode: "debounce",
   });
 
+  const theme = useTheme();
+  const canvasBackgroundColor = useThemeBackgroundColor
+    ? theme.palette.neutralLight
+    : customBackgroundColor;
+
   return (
     <ThreeDimensionalVizContext.Provider value={threeDimensionalVizContextValue}>
       <TopicTreeContext.Provider value={topicTreeData}>
@@ -848,6 +855,7 @@ export default function Layout({
           <div className={styles.world}>
             <World
               key={`${callbackInputsRef.current.autoSyncCameraState ? "synced" : "not-synced"}`}
+              canvasBackgroundColor={canvasBackgroundColor}
               autoTextBackgroundColor={autoTextBackgroundColor}
               cameraState={cameraState}
               isPlaying={isPlaying}
