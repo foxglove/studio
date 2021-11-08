@@ -784,7 +784,9 @@ export default function Layout({
 
   const theme = useTheme();
   const canvasBackgroundColor = useThemeBackgroundColor
-    ? theme.palette.neutralLight
+    ? theme.isInverted
+      ? "#000000"
+      : "#303030"
     : customBackgroundColor;
 
   return (
