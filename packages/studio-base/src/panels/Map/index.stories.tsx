@@ -27,8 +27,9 @@ OFFSET_MESSAGE.latitude += 0.1;
 OFFSET_MESSAGE.longitude += 0.1;
 
 export default {
-  title: "panels/Map/index",
+  title: "panels/Map",
   component: MapPanel,
+  parameters: { colorScheme: "dark" },
   decorators: [
     (StoryComponent: Story, { parameters }: StoryContext): JSX.Element => {
       return (

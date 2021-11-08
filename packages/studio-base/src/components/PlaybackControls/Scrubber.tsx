@@ -36,7 +36,7 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: theme.palette.neutralLighterAlt,
   },
   fullWidthBarActive: {
-    backgroundColor: theme.palette.neutralLight,
+    backgroundColor: theme.palette.neutralQuaternary,
   },
   marker: {
     backgroundColor: "white",
@@ -79,7 +79,6 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   tooltipTitle: {
-    color: theme.semanticColors.bodyBackground,
     width: "70px",
     textAlign: "right",
     marginRight: theme.spacing.s2,
@@ -132,7 +131,7 @@ export default function Scrubber(props: Props): JSX.Element {
       const timeFromStart = subtractTimes(stamp, latestStartTime.current);
 
       const tooltipItems = [
-        { title: "ROS", value: formatTimeRaw(stamp) },
+        { title: "SEC", value: formatTimeRaw(stamp) },
         { title: "Time", value: formatTime(stamp) },
         { title: "Elapsed", value: `${toSec(timeFromStart).toFixed(9)} sec` },
       ];

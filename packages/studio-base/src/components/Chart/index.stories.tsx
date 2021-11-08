@@ -111,13 +111,14 @@ if (propsWithDatalabels.data.datasets[0]?.datalabels) {
 const divStyle = { width: 600, height: 800, background: "black" };
 
 export default {
-  title: "components/Chart/index",
+  title: "components/Chart",
   component: ChartComponent,
   parameters: {
     chromatic: {
       // additional delay for any final clicks or renders
       delay: 100,
     },
+    colorScheme: "dark",
   },
 };
 
@@ -155,7 +156,7 @@ export const AllowsClickingOnDatalabels: Story = (_args) => {
   const doClick = useCallback(() => {
     if (clickedDatalabel == undefined) {
       const [canvas] = document.getElementsByTagName("canvas");
-      TestUtils.Simulate.click(canvas!, { clientX: 245, clientY: 419 });
+      TestUtils.Simulate.click(canvas!, { clientX: 245, clientY: 429 });
     }
   }, [clickedDatalabel]);
 

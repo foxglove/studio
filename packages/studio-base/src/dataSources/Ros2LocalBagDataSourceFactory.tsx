@@ -6,7 +6,7 @@ import {
   IDataSourceFactory,
   DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import { buildRosbag2PlayerFromDescriptor } from "@foxglove/studio-base/players/buildRosbag2Player";
+import { buildNonRos1PlayerFromDescriptor } from "@foxglove/studio-base/players/buildNonRos1Player";
 import { Player } from "@foxglove/studio-base/players/types";
 import { getLocalRosbag2Descriptor } from "@foxglove/studio-base/randomAccessDataProviders/standardDataProviderDescriptors";
 
@@ -23,7 +23,7 @@ class Ros2LocalBagDataSourceFactory implements IDataSourceFactory {
       return;
     }
 
-    return buildRosbag2PlayerFromDescriptor(getLocalRosbag2Descriptor(folder), {
+    return buildNonRos1PlayerFromDescriptor(getLocalRosbag2Descriptor(folder), {
       metricsCollector: args.metricsCollector,
       unlimitedMemoryCache: args.unlimitedMemoryCache,
     });

@@ -21,7 +21,6 @@ import { useMemo } from "react";
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import Icon from "@foxglove/studio-base/components/Icon";
 import { Topic } from "@foxglove/studio-base/players/types";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 type Props = {
   onChange: (topic: string) => void;
@@ -31,15 +30,16 @@ type Props = {
   defaultTopicToRender: string;
 };
 
-const useStyles = makeStyles({
+const useStyles = makeStyles((theme) => ({
   topic: {
     display: "flex",
     cursor: "pointer",
     padding: 8,
     height: 32,
-  },
-  topicSelected: {
-    backgroundColor: colors.BACKGROUND_CONTROL_SELECTED,
+    color: theme.semanticColors.menuItemText,
+    ":hover": {
+      backgroundColor: theme.semanticColors.menuItemBackgroundHovered,
+    },
   },
   topicLabel: {
     flex: "flex-start",
@@ -50,7 +50,7 @@ const useStyles = makeStyles({
     flex: "flex-end",
 
     svg: {
-      fill: "white",
+      fill: theme.semanticColors.menuIcon,
       width: 15,
       height: 15,
     },
@@ -58,12 +58,12 @@ const useStyles = makeStyles({
   icon: {
     fontSize: 14,
     margin: "0 0.2em",
-    color: colors.ORANGE,
+    color: theme.semanticColors.warningBackground,
   },
   iconActive: {
-    color: colors.LIGHT1,
+    color: theme.palette.neutralPrimary,
   },
-});
+}));
 
 export default function TopicToRenderMenu({
   onChange,
@@ -110,9 +110,7 @@ export default function TopicToRenderMenu({
     >
       {renderTopics.map((topic) => (
         <div
-          className={cx(styles.topic, {
-            [styles.topicSelected]: topicToRender === topic,
-          })}
+          className={styles.topic}
           key={topic}
           onClick={() => {
             onChange(topic);

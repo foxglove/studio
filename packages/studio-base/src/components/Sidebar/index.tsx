@@ -192,11 +192,14 @@ export default function Sidebar<K extends string>({
     <Stack horizontal verticalFill style={{ overflow: "hidden" }}>
       <Stack
         verticalAlign="space-between"
-        style={{
-          width: BUTTON_SIZE,
-          flexShrink: 0,
-          boxSizing: "content-box",
-          borderRight: `1px solid ${theme.semanticColors.bodyDivider}`,
+        styles={{
+          root: {
+            width: BUTTON_SIZE,
+            flexShrink: 0,
+            boxSizing: "content-box",
+            borderRight: `1px solid ${theme.semanticColors.bodyDivider}`,
+            backgroundColor: theme.palette.neutralLighterAlt,
+          },
         }}
       >
         <ResizeGroup
@@ -220,7 +223,20 @@ export default function Sidebar<K extends string>({
           onChange={(value) => value != undefined && setMosaicValue(value)}
           renderTile={(id) => (
             <ErrorBoundary>
-              {id === "children" ? (children as JSX.Element) : <SelectedComponent />}
+              {id === "children" ? (
+                (children as JSX.Element)
+              ) : (
+                <div
+                  style={{
+                    backgroundColor: theme.palette.neutralLighterAlt,
+                    // This box-shadow ensures the background color extends all the way to the
+                    // divider despite the default 1px margin around .mosaic-tile.
+                    boxShadow: `0 0 0 1px ${theme.palette.neutralLighterAlt}`,
+                  }}
+                >
+                  <SelectedComponent />
+                </div>
+              )}
             </ErrorBoundary>
           )}
           resize={{ minimumPaneSizePercentage: 10 }}

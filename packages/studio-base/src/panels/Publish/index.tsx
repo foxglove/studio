@@ -16,7 +16,7 @@ import styled from "styled-components";
 
 import { useRethrow } from "@foxglove/hooks";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
-import Autocomplete from "@foxglove/studio-base/components/Autocomplete";
+import Autocomplete, { IAutocomplete } from "@foxglove/studio-base/components/Autocomplete";
 import Button from "@foxglove/studio-base/components/Button";
 import Flex from "@foxglove/studio-base/components/Flex";
 import { LegacyTextarea } from "@foxglove/studio-base/components/LegacyStyledComponents";
@@ -26,7 +26,6 @@ import PanelToolbarLabel from "@foxglove/studio-base/components/PanelToolbarLabe
 import usePublisher from "@foxglove/studio-base/hooks/usePublisher";
 import { PlayerCapabilities, Topic } from "@foxglove/studio-base/players/types";
 import { PanelConfigSchema } from "@foxglove/studio-base/types/panels";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import buildSampleMessage from "./buildSampleMessage";
 import helpContent from "./index.help.md";
@@ -62,7 +61,7 @@ const SErrorText = styled.div`
   display: flex;
   align-items: center;
   padding: 4px;
-  color: ${colors.RED2};
+  color: ${({ theme }) => theme.semanticColors.errorBackground};
 `;
 
 const SSpan = styled.span`
@@ -147,7 +146,7 @@ function Publish(props: Props) {
 
   // when a known topic is selected, also fill in its datatype
   const onSelectTopic = useCallback(
-    (name: string, topic: Topic, autocomplete: Autocomplete<Topic>) => {
+    (name: string, topic: Topic, autocomplete: IAutocomplete) => {
       saveConfig({ topicName: name, datatype: topic.datatype });
       autocomplete.blur();
     },
@@ -155,7 +154,7 @@ function Publish(props: Props) {
   );
 
   const onSelectDatatype = useCallback(
-    (newDatatype: string, _value: unknown, autocomplete: Autocomplete<string>) => {
+    (newDatatype: string, _value: unknown, autocomplete: IAutocomplete) => {
       saveConfig({ datatype: newDatatype });
       autocomplete.blur();
     },

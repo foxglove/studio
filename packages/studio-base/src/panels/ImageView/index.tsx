@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { mergeStyleSets } from "@fluentui/merge-styles";
+import { makeStyles, useTheme } from "@fluentui/react";
 import CheckboxBlankOutlineIcon from "@mdi/svg/svg/checkbox-blank-outline.svg";
 import CheckboxMarkedIcon from "@mdi/svg/svg/checkbox-marked.svg";
 import CloseIcon from "@mdi/svg/svg/close.svg";
@@ -42,7 +42,6 @@ import { CameraInfo, StampedMessage } from "@foxglove/studio-base/types/Messages
 import { PanelConfigSchema, SaveConfig } from "@foxglove/studio-base/types/panels";
 import naturalSort from "@foxglove/studio-base/util/naturalSort";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { getSynchronizingReducers } from "@foxglove/studio-base/util/synchronizeMessages";
 import { formatTimeRaw, getTimestampForMessage } from "@foxglove/studio-base/util/time";
 import toggle from "@foxglove/studio-base/util/toggle";
@@ -85,7 +84,7 @@ type Props = {
   saveConfig: SaveImagePanelConfig;
 };
 
-const classes = mergeStyleSets({
+const useStyles = makeStyles((theme) => ({
   controls: {
     display: "flex",
     flexWrap: "wrap",
@@ -135,7 +134,7 @@ const classes = mergeStyleSets({
   emptyStateWrapper: {
     width: "100%",
     height: "100%",
-    background: colors.DARK2,
+    background: theme.palette.neutralLighterAlt,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -149,7 +148,7 @@ const classes = mergeStyleSets({
     fontSize: 10,
     fontStyle: "italic",
   },
-});
+}));
 
 const TopicTimestamp = ({
   text,
@@ -159,24 +158,29 @@ const TopicTimestamp = ({
   style?: {
     [key: string]: string;
   };
-}) =>
-  text === "" ? (
+}) => {
+  const classes = useStyles();
+  return text === "" ? (
     ReactNull
   ) : (
     <span className={classes.topicTimestamp} style={styleObj}>
       {text}
     </span>
   );
+};
 
-const BottomBar = ({ children }: { children?: React.ReactNode }) => (
-  <div
-    className={cx(classes.bottomBar, {
-      inScreenshotTests: inScreenshotTests(),
-    })}
-  >
-    {children}
-  </div>
-);
+const BottomBar = ({ children }: { children?: React.ReactNode }) => {
+  const classes = useStyles();
+  return (
+    <div
+      className={cx(classes.bottomBar, {
+        inScreenshotTests: inScreenshotTests(),
+      })}
+    >
+      {children}
+    </div>
+  );
+};
 
 const ToggleComponent = ({
   text,
@@ -187,6 +191,7 @@ const ToggleComponent = ({
   disabled?: boolean;
   dataTest?: string;
 }) => {
+  const classes = useStyles();
   return (
     <LegacyButton
       style={{ maxWidth: "100%", padding: "4px 8px" }}
@@ -205,7 +210,7 @@ const canTransformMarkersByTopic = (topic: string) => !topic.includes("rect");
 
 // Group image topics by the first component of their name
 
-function renderEmptyState({
+function ImageEmptyState({
   cameraTopic,
   markerTopics,
   shouldSynchronize,
@@ -218,6 +223,7 @@ function renderEmptyState({
     [topic: string]: readonly MessageEvent<unknown>[];
   };
 }) {
+  const classes = useStyles();
   if (cameraTopic === "") {
     return (
       <div className={classes.emptyStateWrapper}>
@@ -326,6 +332,7 @@ const AddTopic = ({
 const NO_CUSTOM_OPTIONS: string[] = [];
 
 function ImageView(props: Props) {
+  const classes = useStyles();
   const { config, saveConfig } = props;
   const {
     cameraTopic,
@@ -333,6 +340,7 @@ function ImageView(props: Props) {
     transformMarkers,
     customMarkerTopicOptions = NO_CUSTOM_OPTIONS,
   } = config;
+  const theme = useTheme();
   const { topics } = PanelAPI.useDataSourceInfo();
   const cameraTopicFullObject = useMemo(
     () => getTopicsByTopicName(topics)[cameraTopic],
@@ -478,7 +486,7 @@ function ImageView(props: Props) {
         {items}
       </Dropdown>
     );
-  }, [cameraTopic, imageTopicsByNamespace, onChangeCameraTopic]);
+  }, [cameraTopic, classes.dropdown, imageTopicsByNamespace, onChangeCameraTopic]);
 
   const cameraInfoTopic = getCameraInfoTopic(cameraTopic);
   const cameraInfo = PanelAPI.useMessageReducer<CameraInfo | undefined>({
@@ -591,6 +599,8 @@ function ImageView(props: Props) {
   }, [
     addTopicsMenu,
     availableAndEnabledMarkerTopics,
+    classes.dropdown,
+    classes.dropdownItem,
     customMarkerTopicOptions,
     enabledMarkerTopics,
     onToggleMarkerName,
@@ -635,7 +645,7 @@ function ImageView(props: Props) {
         </div>
       </PanelToolbar>
     );
-  }, [imageTopicDropdown, markerDropdown, cameraTopic]);
+  }, [cameraTopic, classes.controls, imageTopicDropdown, markerDropdown]);
 
   const renderBottomBar = () => {
     const canTransformMarkers = canTransformMarkersByTopic(cameraTopic);
@@ -666,7 +676,13 @@ function ImageView(props: Props) {
           fade
           size="medium"
         >
-          <WavesIcon style={{ color: transformMarkers ? colors.ORANGE2 : colors.TEXT_BRIGHT }} />
+          <WavesIcon
+            style={{
+              color: transformMarkers
+                ? theme.semanticColors.warningBackground
+                : theme.semanticColors.disabledText,
+            }}
+          />
         </Icon>
       </BottomBar>
     );
@@ -678,13 +694,14 @@ function ImageView(props: Props) {
     <Flex col clip>
       {toolbar}
       {/* If rendered, EmptyState will hide the always-present ImageCanvas */}
-      {showEmptyState &&
-        renderEmptyState({
-          cameraTopic,
-          markerTopics: enabledMarkerTopics,
-          shouldSynchronize,
-          messagesByTopic,
-        })}
+      {showEmptyState && (
+        <ImageEmptyState
+          cameraTopic={cameraTopic}
+          markerTopics={enabledMarkerTopics}
+          shouldSynchronize={shouldSynchronize}
+          messagesByTopic={messagesByTopic}
+        />
+      )}
       {/* Always render the ImageCanvas because it's expensive to unmount and start up. */}
       {imageMessageToRender && (
         <ImageCanvas

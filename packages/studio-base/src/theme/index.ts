@@ -16,6 +16,7 @@ import {
   IToggleStyles,
   ITooltipStyleProps,
   ITooltipStyles,
+  PartialTheme,
 } from "@fluentui/react";
 import { createTheme } from "@fluentui/theme";
 
@@ -24,163 +25,168 @@ import { colors, fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 const THEME_HUE = 247;
 
 // https://aka.ms/themedesigner
-export default createTheme({
-  defaultFontStyle: {
-    fontFamily: fonts.SANS_SERIF,
-    fontFeatureSettings: fonts.SANS_SERIF_FEATURE_SETTINGS,
-  },
-  semanticColors: {
-    menuBackground: "#242429",
-    menuItemBackgroundHovered: "#2e2e39",
-    errorBackground: colors.RED1,
-    warningBackground: colors.YELLOW1,
-  },
-  components: {
-    ColorPicker: {
-      styles: {
-        root: { maxWidth: 250 },
-        colorRectangle: { minWidth: 100, minHeight: 100 },
-        table: {
-          // We need to remove table styles from global.scss, but for now, changing them
-          // to e.g. "#root td" messes with the styling in various places because the
-          // selector becomes more specific. So for now, just disable them directly here.
-          "tr, th, td, tr:hover th, tr:hover td": {
-            border: "none",
-            background: "none",
-            cursor: "unset",
-          },
-        },
-      } as IColorPickerStyles,
+function getPartialTheme({ inverted }: { inverted: boolean }): PartialTheme {
+  return {
+    defaultFontStyle: {
+      fontFamily: fonts.SANS_SERIF,
+      fontFeatureSettings: fonts.SANS_SERIF_FEATURE_SETTINGS,
     },
-    ContextualMenu: {
-      styles: {
-        subComponentStyles: {
-          menuItem: {
-            // Improve menu item icon/text alignment - this may not be necessary if we choose a
-            // different font in the future.
-            icon: {
-              marginTop: -4,
+    semanticColors: {
+      menuBackground: inverted ? "#242424" : "#f3f3f3",
+      menuItemBackgroundHovered: inverted ? "#2e2e2e" : "#e1e1e1",
+      errorBackground: colors.RED1,
+      warningBackground: colors.YELLOW1,
+    },
+    components: {
+      ColorPicker: {
+        styles: {
+          root: { maxWidth: 250 },
+          colorRectangle: { minWidth: 100, minHeight: 100 },
+          table: {
+            // We need to remove table styles from global.scss, but for now, changing them
+            // to e.g. "#root td" messes with the styling in various places because the
+            // selector becomes more specific. So for now, just disable them directly here.
+            "tr, th, td, tr:hover th, tr:hover td": {
+              border: "none",
+              background: "none",
+              cursor: "unset",
             },
-          } as Partial<IContextualMenuItemStyles>,
-        },
-      } as IContextualMenuStyles,
-    },
-    Overlay: {
-      styles: {
-        root: {
-          "-webkit-app-region": "drag",
-        },
-      } as Partial<IOverlayStyles>,
-    },
-    Modal: {
-      styles: {
-        main: {
-          "-webkit-app-region": "no-drag",
-          minHeight: "unset",
-        },
-      } as Partial<IModalStyles>,
-    },
-    ComboBox: {
-      // Style hacks that can be removed when we eventually clean up our global styles from global.scss
-      // which currently has margin: $control-margin;
-      styles: {
-        input: {
-          margin: 0,
-        },
-        root: {
-          ".ms-ComboBox-CaretDown-button": {
+          },
+        } as IColorPickerStyles,
+      },
+      ContextualMenu: {
+        styles: {
+          subComponentStyles: {
+            menuItem: {
+              // Improve menu item icon/text alignment - this may not be necessary if we choose a
+              // different font in the future.
+              icon: {
+                marginTop: -4,
+              },
+            } as Partial<IContextualMenuItemStyles>,
+          },
+        } as IContextualMenuStyles,
+      },
+      Overlay: {
+        styles: {
+          root: {
+            "-webkit-app-region": "drag",
+          },
+        } as Partial<IOverlayStyles>,
+      },
+      Modal: {
+        styles: {
+          main: {
+            "-webkit-app-region": "no-drag",
+            minHeight: "unset",
+          },
+        } as Partial<IModalStyles>,
+      },
+      ComboBox: {
+        // Style hacks that can be removed when we eventually clean up our global styles from global.scss
+        // which currently has margin: $control-margin;
+        styles: {
+          input: {
             margin: 0,
           },
-        },
-      } as Partial<IComboBoxStyles>,
+          root: {
+            ".ms-ComboBox-CaretDown-button": {
+              margin: 0,
+            },
+          },
+        } as Partial<IComboBoxStyles>,
+      },
+      Tooltip: {
+        styles: ({ theme }: ITooltipStyleProps): Partial<ITooltipStyles> => ({
+          root: {
+            padding: 6,
+            background: theme.palette.neutralLighter,
+          },
+          content: {
+            background: theme.palette.neutralLighter,
+            color: theme.palette.neutralDark,
+          },
+        }),
+      },
+      // Prevent Layer from overriding root styles - similar to `applyTo="none"` on ThemeProvider.
+      // https://github.com/microsoft/fluentui/issues/17701
+      Layer: {
+        styles: {
+          root: {
+            fontFamily: "",
+            WebkitFontSmoothing: "",
+            fontSize: "",
+            fontWeight: "",
+            color: "",
+          },
+          content: {
+            fontFamily: "",
+            WebkitFontSmoothing: "",
+            fontSize: "",
+            fontWeight: "",
+            color: "",
+          },
+        } as ILayerStyles,
+      },
+      Toggle: {
+        styles: {
+          container: {
+            alignItems: "baseline",
+          },
+        } as IToggleStyles,
+      },
+      Spinner: {
+        styles: {
+          circle: {
+            animationTimingFunction: "linear",
+            borderWidth: 2,
+          },
+        } as Partial<ISpinnerStyles>,
+      },
     },
-    Tooltip: {
-      styles: ({ theme }: ITooltipStyleProps): Partial<ITooltipStyles> => ({
-        root: {
-          padding: 6,
-          background: theme.palette.neutralDark,
-        },
-        content: {
-          background: theme.palette.neutralDark,
-          color: theme.palette.neutralLight,
-        },
-      }),
+    isInverted: inverted,
+    palette: {
+      ...themeColors({ inverted }),
+      ...neutralColors({ inverted }),
+      white: inverted ? "#121217" : "#fdfdfd",
+      black: inverted ? "#fdfdfd" : "#121217",
+      whiteTranslucent40: inverted ? "#12121766" : "#fdfdfd66",
+      blackTranslucent40: inverted ? "#fdfdfd66" : "#12121766",
     },
-    // Prevent Layer from overriding root styles - similar to `applyTo="none"` on ThemeProvider.
-    // https://github.com/microsoft/fluentui/issues/17701
-    Layer: {
-      styles: {
-        root: {
-          fontFamily: "",
-          WebkitFontSmoothing: "",
-          fontSize: "",
-          fontWeight: "",
-          color: "",
-        },
-        content: {
-          fontFamily: "",
-          WebkitFontSmoothing: "",
-          fontSize: "",
-          fontWeight: "",
-          color: "",
-        },
-      } as ILayerStyles,
-    },
-    Toggle: {
-      styles: {
-        container: {
-          alignItems: "baseline",
-        },
-      } as IToggleStyles,
-    },
-    Spinner: {
-      styles: {
-        circle: {
-          animationTimingFunction: "linear",
-          borderWidth: 2,
-        },
-      } as Partial<ISpinnerStyles>,
-    },
-  },
-  isInverted: true,
-  palette: {
-    ...themeColors(),
-    ...neutralColors(),
-    black: "#fdfdfd",
-    white: "#121217",
-    blackTranslucent40: "#fdfdfd66",
-    whiteTranslucent40: "#12121766",
-  },
-});
-
-function themeColors(): Partial<IPalette> {
-  const keys: (keyof IPalette)[] = [
-    "themeDarker",
-    "themeDark",
-    "themeDarkAlt",
-    "themePrimary",
-    "themeSecondary",
-    "themeTertiary",
-    "themeLight",
-    "themeLighter",
-    "themeLighterAlt",
-  ];
-  keys.reverse(); // reverse because our theme is inverted
-
-  const result: Partial<IPalette> = Object.fromEntries(
-    keys.map((key, i) => {
-      const ratio = i / (keys.length - 1);
-      return [
-        key,
-        "#" +
-          getColorFromRGBA(hsl2rgb(THEME_HUE, Math.min(20 + ratio * 75, 75), 40 + ratio * 57)).hex,
-      ];
-    }),
-  );
-  return result;
+  };
 }
 
-function neutralColors(): Partial<IPalette> {
+export const lightTheme = createTheme(getPartialTheme({ inverted: false }));
+export const darkTheme = createTheme(getPartialTheme({ inverted: true }));
+
+function themeColors({ inverted }: { inverted: boolean }): Partial<IPalette> {
+  // Generated from https://aka.ms/themedesigner
+  return inverted
+    ? {
+        themePrimary: "#9480ed",
+        themeLighterAlt: "#060509",
+        themeLighter: "#181426",
+        themeLight: "#2c2647",
+        themeTertiary: "#594d8e",
+        themeSecondary: "#8271d1",
+        themeDarkAlt: "#9e8cef",
+        themeDark: "#ad9df1",
+        themeDarker: "#c1b6f5",
+      }
+    : {
+        themePrimary: "#744ce0",
+        themeLighterAlt: "#f9f7fe",
+        themeLighter: "#e7e0fa",
+        themeLight: "#d2c5f6",
+        themeTertiary: "#a88fed",
+        themeSecondary: "#8360e4",
+        themeDarkAlt: "#6845ca",
+        themeDark: "#583aab",
+        themeDarker: "#412b7e",
+      };
+}
+
+function neutralColors({ inverted }: { inverted: boolean }): Partial<IPalette> {
   const keys: (keyof IPalette)[] = [
     "neutralDark",
     "neutralPrimary",
@@ -195,7 +201,9 @@ function neutralColors(): Partial<IPalette> {
     "neutralLighter",
     "neutralLighterAlt",
   ];
-  keys.reverse(); // reverse because our theme is inverted
+  if (inverted) {
+    keys.reverse();
+  }
 
   const result: Partial<IPalette> = Object.fromEntries(
     keys.map((key, i) => {

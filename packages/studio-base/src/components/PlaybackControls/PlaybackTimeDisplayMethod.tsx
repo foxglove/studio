@@ -26,6 +26,7 @@ import {
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { TimeDisplayMethod } from "@foxglove/studio-base/types/panels";
 import {
   formatDate,
   formatTime,
@@ -52,23 +53,28 @@ const PlaybackTimeDisplayMethod = ({
   isPlaying: boolean;
 }): JSX.Element => {
   const timestampInputRef = useRef<HTMLInputElement>(ReactNull);
-  const timeDisplayMethod = useCurrentLayoutSelector(
-    (state) => state.selectedLayout?.data?.playbackConfig.timeDisplayMethod ?? "ROS",
-  );
+  const timeDisplayMethod: TimeDisplayMethod = useCurrentLayoutSelector((state) => {
+    const method = state.selectedLayout?.data?.playbackConfig.timeDisplayMethod ?? "TOD";
+    return method === "TOD" ? "TOD" : "SEC";
+  });
   const { setPlaybackConfig } = useCurrentLayoutActions();
   const setTimeDisplayMethod = useCallback(
-    (newTimeDisplayMethod: "ROS" | "TOD") =>
+    (newTimeDisplayMethod: TimeDisplayMethod) =>
       setPlaybackConfig({ timeDisplayMethod: newTimeDisplayMethod }),
     [setPlaybackConfig],
   );
-  const currentTimeString = useMemo(() => {
-    if (currentTime) {
-      return timeDisplayMethod === "ROS"
-        ? formatTimeRaw(currentTime)
-        : formatTime(currentTime, timezone);
-    }
-    return undefined;
-  }, [currentTime, timeDisplayMethod, timezone]);
+  const timeRawString = useMemo(
+    () => (currentTime ? formatTimeRaw(currentTime) : undefined),
+    [currentTime],
+  );
+  const timeOfDayString = useMemo(
+    () => (currentTime ? formatTime(currentTime, timezone) : undefined),
+    [currentTime, timezone],
+  );
+  const currentTimeString = useMemo(
+    () => (timeDisplayMethod === "SEC" ? timeRawString : timeOfDayString),
+    [timeRawString, timeOfDayString, timeDisplayMethod],
+  );
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [inputText, setInputText] = useState<string | undefined>(currentTimeString ?? undefined);
   const [hasError, setHasError] = useState<boolean>(false);
@@ -82,16 +88,25 @@ const PlaybackTimeDisplayMethod = ({
         },
         field: {
           margin: 0,
+          padding: 0,
           whiteSpace: "nowrap",
           fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, 'zero'`,
+          backgroundColor: "transparent",
 
           ":hover": {
             borderRadius: 2,
-            backgroundColor: theme.semanticColors.buttonBackgroundHovered,
+            backgroundColor: theme.semanticColors.inputBackground,
+          },
+          ":focus": {
+            backgroundColor: theme.semanticColors.inputBackground,
           },
         },
         fieldGroup: {
           border: "none",
+          backgroundColor: "transparent",
+          // The flex-sizing does not correctly calculate the <input> field width for all font
+          // sizes, so we increase the width to compensate
+          width: "102%",
         },
         icon: {
           height: 20,
@@ -211,33 +226,35 @@ const PlaybackTimeDisplayMethod = ({
             {
               canCheck: true,
               key: "TOD",
-              text: "Time of day (TOD)",
+              text: timeOfDayString ? timeOfDayString : "Time of Day",
               isChecked: timeDisplayMethod === "TOD",
               onClick: () => setTimeDisplayMethod("TOD"),
             },
             {
               canCheck: true,
-              key: "ROS",
-              text: "ROS time",
-              isChecked: timeDisplayMethod === "ROS",
-              onClick: () => setTimeDisplayMethod("ROS"),
+              key: "SEC",
+              text: timeRawString ? timeRawString : "Seconds",
+              isChecked: timeDisplayMethod === "SEC",
+              onClick: () => setTimeDisplayMethod("SEC"),
             },
           ],
         }}
         styles={{
           root: {
             border: "none",
-            padding: theme.spacing.s1,
-            minWidth: "50px",
+            background: theme.semanticColors.buttonBackgroundHovered,
+            padding: 0,
+            minWidth: "24px",
+          },
+          rootHovered: {
+            background: theme.semanticColors.buttonBackgroundPressed,
           },
           label: theme.fonts.small,
           menuIcon: {
             fontSize: theme.fonts.tiny.fontSize,
           },
         }}
-      >
-        {timeDisplayMethod}
-      </DefaultButton>
+      ></DefaultButton>
     </Stack>
   );
 };

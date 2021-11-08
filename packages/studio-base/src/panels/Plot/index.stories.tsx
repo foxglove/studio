@@ -324,7 +324,7 @@ const exampleConfig: PlotConfig = {
 };
 
 export default {
-  title: "panels/Plot/index",
+  title: "panels/Plot",
   component: Plot,
   parameters: {
     chromatic: { delay: 50 },
@@ -440,6 +440,7 @@ export function LineGraphAfterZoom(): JSX.Element {
 }
 LineGraphAfterZoom.parameters = {
   useReadySignal: true,
+  colorScheme: "dark",
 };
 
 TimestampMethodHeaderStamp.storyName = "timestampMethod: headerStamp";

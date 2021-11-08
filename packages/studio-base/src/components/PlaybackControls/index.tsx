@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Stack, IButtonStyles, useTheme, StackItem } from "@fluentui/react";
+import { Stack, IButtonStyles, useTheme, StackItem, makeStyles } from "@fluentui/react";
 import { merge } from "lodash";
 import { useCallback, useMemo, useState } from "react";
 
@@ -24,7 +24,6 @@ import {
   useMessagePipeline,
   useMessagePipelineGetter,
 } from "@foxglove/studio-base/components/MessagePipeline";
-import HelpButton from "@foxglove/studio-base/components/PanelToolbar/HelpButton";
 import {
   jumpSeek,
   DIRECTION,
@@ -35,7 +34,6 @@ import Tooltip from "@foxglove/studio-base/components/Tooltip";
 import PlaybackTimeDisplay from "./PlaybackTimeDisplay";
 import RepeatAdapter from "./RepeatAdapter";
 import Scrubber from "./Scrubber";
-import helpContent from "./index.help.md";
 
 const selectPause = (ctx: MessagePipelineContext) => ctx.pausePlayback;
 const selectPlay = (ctx: MessagePipelineContext) => ctx.startPlayback;
@@ -45,8 +43,16 @@ const selectIsPlaying = (ctx: MessagePipelineContext) =>
   ctx.playerState.activeData?.isPlaying === true;
 const selectIsActive = (ctx: MessagePipelineContext) => !!ctx.playerState.activeData;
 
+const useStyles = makeStyles((theme) => ({
+  root: {
+    backgroundColor: theme.palette.neutralLighterAlt,
+    borderTop: `1px solid ${theme.palette.neutralLighter}`,
+  },
+}));
+
 export default function PlaybackControls(): JSX.Element {
   const theme = useTheme();
+  const styles = useStyles();
   const [repeat, setRepeat] = useState(false);
 
   const pause = useMessagePipeline(selectPause);
@@ -106,7 +112,6 @@ export default function PlaybackControls(): JSX.Element {
   const iconButtonStyles: IButtonStyles = {
     icon: { height: 20 },
     root: {
-      margin: 0, // Remove this when global.scss goes away
       color: theme.semanticColors.buttonText,
     },
     rootChecked: {
@@ -143,7 +148,7 @@ export default function PlaybackControls(): JSX.Element {
     } as IButtonStyles);
 
   return (
-    <div>
+    <>
       <RepeatAdapter
         play={play}
         pause={pause}
@@ -155,6 +160,7 @@ export default function PlaybackControls(): JSX.Element {
       <Stack
         horizontal
         verticalAlign="center"
+        className={styles.root}
         tokens={{
           childrenGap: theme.spacing.s1,
           padding: theme.spacing.s1,
@@ -247,9 +253,8 @@ export default function PlaybackControls(): JSX.Element {
               />
             </Tooltip>
           </StackItem>
-          <HelpButton iconStyle={{ width: "18px", height: "18px" }}>{helpContent}</HelpButton>
         </Stack>
       </Stack>
-    </div>
+    </>
   );
 }
