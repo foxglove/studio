@@ -59,12 +59,10 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
     [topics],
   );
 
-  if (config.topicToRender == undefined) {
-    config.topicToRender = defaultTopicToRender;
-  }
+  const topicToRender = config.topicToRender ?? defaultTopicToRender;
 
-  const { [config.topicToRender]: messages = [] } = PanelAPI.useMessagesByTopic({
-    topics: [config.topicToRender],
+  const { [topicToRender]: messages = [] } = PanelAPI.useMessagesByTopic({
+    topics: [topicToRender],
     historySize: 100000,
   }) as { [key: string]: MessageEvent<RosgraphMsgs$Log>[] };
 
@@ -82,8 +80,8 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
 
   const topicToRenderMenu = (
     <TopicToRenderMenu
-      topicToRender={config.topicToRender}
-      onChange={(topicToRender) => saveConfig({ ...config, topicToRender })}
+      topicToRender={topicToRender}
+      onChange={(newTopicToRender) => saveConfig({ ...config, topicToRender: newTopicToRender })}
       topics={topics}
       allowedDatatypes={[ROS1_LOG, ROS2_LOG]}
       defaultTopicToRender={defaultTopicToRender}
