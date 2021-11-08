@@ -301,12 +301,12 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
   // autocompletes. We pass an instance of an `AutocompleteController` to `onSelect` in case
   // the user of this component wants to call `blur()`.
   const onSelect = useCallback(
-    (value: string, item: FzfResultItem<T>): void => {
+    (textValue: string, item: FzfResultItem<T>): void => {
       if (autocomplete.current?.refs.input) {
         (autocomplete.current.refs.input as HTMLInputElement).focus();
         setFocused(true);
         setValue(undefined);
-        onSelectCallback(value, item.item, { setSelectionRange, focus, blur });
+        onSelectCallback(textValue, item.item, { setSelectionRange, focus, blur });
       }
     },
     [onSelectCallback, blur, focus, setSelectionRange],
