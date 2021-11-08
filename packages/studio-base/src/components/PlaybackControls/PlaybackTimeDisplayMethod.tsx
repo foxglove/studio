@@ -104,6 +104,8 @@ const PlaybackTimeDisplayMethod = ({
         fieldGroup: {
           border: "none",
           backgroundColor: "transparent",
+          // The flex-sizing does not correctly calculate the <input> field width for all font
+          // sizes, so we increase the width to compensate
           width: "102%",
         },
         icon: {
