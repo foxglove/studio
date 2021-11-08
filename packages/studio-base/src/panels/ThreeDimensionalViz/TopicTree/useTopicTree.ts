@@ -43,17 +43,16 @@ export function generateNodeKey({
   name?: string;
   namespace?: string;
 }): string {
-  const prefixedTopicName = topicName ? topicName : undefined;
   if (namespace) {
-    if (prefixedTopicName) {
-      return `ns:${prefixedTopicName}:${namespace}`;
+    if (topicName) {
+      return `ns:${topicName}:${namespace}`;
     }
     throw new Error(
       "Incorrect input for generating the node key. If a namespace is present, then the topicName must be present",
     );
   }
-  if (prefixedTopicName) {
-    return `t:${prefixedTopicName}`;
+  if (topicName) {
+    return `t:${topicName}`;
   }
   if (name) {
     return `name:${name}`;
@@ -399,13 +398,12 @@ export default function useTopicTree({
     ({ topicName, namespace }: { topicName: string; namespace: string }) => {
       const prefixedNamespaceKey = generateNodeKey({ topicName, namespace });
 
-      const prefixedTopicName = topicName;
       const isNamespaceCheckedByDefault = getIsNamespaceCheckedByDefault(topicName);
 
       let newCheckedKeys;
       if (isNamespaceCheckedByDefault) {
         // Add all other namespaces under the topic to the checked keys.
-        const allNsKeys = (availableNamespacesByTopic[prefixedTopicName] ?? []).map((ns) =>
+        const allNsKeys = (availableNamespacesByTopic[topicName] ?? []).map((ns) =>
           generateNodeKey({ topicName, namespace: ns }),
         );
         const otherNamespaceKeys = difference(allNsKeys, [prefixedNamespaceKey]);
@@ -416,7 +414,7 @@ export default function useTopicTree({
 
       saveConfig({
         checkedKeys: newCheckedKeys,
-        modifiedNamespaceTopics: uniq([...modifiedNamespaceTopics, prefixedTopicName]),
+        modifiedNamespaceTopics: uniq([...modifiedNamespaceTopics, topicName]),
       });
     },
     [

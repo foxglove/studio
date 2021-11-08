@@ -55,27 +55,38 @@ function selectIsPlaying(ctx: MessagePipelineContext) {
 
 function BaseRenderer(props: Props): JSX.Element {
   const {
-    config,
+    config: savedConfig,
     saveConfig,
     config: { autoSyncCameraState = false, followOrientation = false, followTf },
   } = props;
 
-  // Migrate old colorOverrideBySourceIdxByVariable field to new colorOverrideByVariable The new
-  // field drops the "BySourceIdx" which powered the base/feature branch feature that no longer
-  // exists.
-  for (const [variable, colorOverrideByColumn] of Object.entries(
-    config.colorOverrideBySourceIdxByVariable ?? {},
-  )) {
-    config.colorOverrideByVariable ??= {};
-    if (variable in config.colorOverrideByVariable) {
-      continue;
+  const config = useMemo<ThreeDimensionalVizConfig>(() => {
+    // Migrate old colorOverrideBySourceIdxByVariable field to new colorOverrideByVariable The new
+    // field drops the "BySourceIdx" which powered the base/feature branch feature that no longer
+    // exists.
+    const colorOverrideByVariable: NonNullable<
+      ThreeDimensionalVizConfig["colorOverrideByVariable"]
+    > = {
+      ...savedConfig.colorOverrideByVariable,
+    };
+    for (const [variable, colorOverrideByColumn] of Object.entries(
+      savedConfig.colorOverrideBySourceIdxByVariable ?? {},
+    )) {
+      if (variable in colorOverrideByVariable) {
+        continue;
+      }
+
+      const prevColorOverride = colorOverrideByColumn[0];
+      if (prevColorOverride) {
+        colorOverrideByVariable[variable] = prevColorOverride;
+      }
     }
 
-    const prevColorOverride = colorOverrideByColumn[0];
-    if (prevColorOverride) {
-      config.colorOverrideByVariable[variable] = prevColorOverride;
-    }
-  }
+    return {
+      colorOverrideByVariable,
+      ...savedConfig,
+    };
+  }, [savedConfig]);
 
   const { updatePanelConfigs } = React.useContext(PanelContext) ?? {};
 

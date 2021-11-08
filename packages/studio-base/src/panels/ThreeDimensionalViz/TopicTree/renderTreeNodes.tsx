@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { uniq } from "lodash";
 import styled from "styled-components";
 
 import { filterMap } from "@foxglove/den/collection";
@@ -94,8 +93,7 @@ export function getNamespaceNodes({
   const baseNamespacesSet = new Set(
     (topicName.length !== 0 && availableNamespacesByTopic[topicName]) || [],
   );
-  const uniqueNamespaces = uniq([...Array.from(baseNamespacesSet)]);
-  return filterMap(uniqueNamespaces, (namespace) => {
+  return filterMap(Array.from(baseNamespacesSet), (namespace) => {
     const namespaceKey = generateNodeKey({ topicName, namespace });
     const topicNodeKey = node.key;
     let overrideColor: Color | undefined = undefined;
