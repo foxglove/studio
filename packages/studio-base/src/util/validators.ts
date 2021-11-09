@@ -150,17 +150,6 @@ const isPolygons = (value: unknown): string | undefined => {
   }
 };
 
-// validate the polygons must be a nested array of xy points
-export const polygonPointsValidator = (jsonData?: unknown): ValidationResult | undefined => {
-  if (jsonData == undefined || jsonData === "" || isEqual(jsonData, []) || isEqual(jsonData, {})) {
-    return undefined;
-  }
-  const rules = { polygons: [isPolygons] };
-  const validator = createValidator(rules);
-  const result = validator({ polygons: jsonData });
-  return Object.keys(result).length === 0 ? undefined : result.polygons;
-};
-
 export const point2DValidator = (jsonData?: unknown): ValidationResult | undefined => {
   const data = (typeof jsonData !== "object" ? {} : jsonData ?? {}) as Record<string, unknown>;
   const rules = { x: [isRequired, isNumber], y: [isRequired, isNumber] };
