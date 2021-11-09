@@ -170,8 +170,8 @@ describe("ApiCheckerDataProvider", () => {
       );
       expect(result.rosBinaryMessages).toBe(undefined);
       expect(result.parsedMessages).toEqual([
-        { message: 0, receiveTime: { nsec: 0, sec: 100 }, topic: "/some_topic" },
-        { message: 1, receiveTime: { nsec: 0, sec: 105 }, topic: "/some_topic" },
+        { message: 0, receiveTime: { nsec: 0, sec: 100 }, topic: "/some_topic", sizeInBytes: 0 },
+        { message: 1, receiveTime: { nsec: 0, sec: 105 }, topic: "/some_topic", sizeInBytes: 0 },
       ]);
     });
 

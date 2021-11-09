@@ -68,10 +68,6 @@ export type MemoryCacheBlock = {
   };
   readonly sizeInBytes: number;
 };
-export type BlockCache = {
-  blocks: readonly (MemoryCacheBlock | undefined)[];
-  startTime: Time;
-};
 const EMPTY_BLOCK: MemoryCacheBlock = {
   messagesByTopic: {},
   sizeInBytes: 0,

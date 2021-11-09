@@ -233,6 +233,8 @@ export function getPrefetchStartPoint(uncachedRanges: Range[], cursorPosition: n
   return uncachedRanges[0]?.start ?? 0;
 }
 
+// This retains MessageEvents in memory from an underlying RandomAccessDataProvider. The messages
+// are evicted from this in-memory cache based on some constants defined at the top of this file.
 export default class MemoryCacheDataProvider implements RandomAccessDataProvider {
   private _provider: RandomAccessDataProvider;
   private _extensionPoint?: ExtensionPoint;

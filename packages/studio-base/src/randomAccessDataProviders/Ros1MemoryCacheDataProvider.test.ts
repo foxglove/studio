@@ -349,6 +349,7 @@ describe("MemoryCacheDataProvider", () => {
         topic: item.topic,
         receiveTime: item.receiveTime,
         message: {},
+        sizeInBytes: 0,
       })),
     );
   });
