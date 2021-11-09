@@ -40,7 +40,7 @@ export type SidebarItem = {
   iconName: IIconProps["iconName"];
   title: string;
   badge?: Badge;
-  component: React.ComponentType;
+  component?: React.ComponentType;
 };
 
 const useStyles = makeStyles({
@@ -107,7 +107,18 @@ export default function Sidebar<K extends string>({
         throw new Error(`Missing sidebar item ${key}`);
       }
       const { title, iconName } = item;
-      return (
+      return key === "website" ? (
+        <a href="https://foxglove.dev" target="_blank" rel="noreferrer">
+          <SidebarButton
+            dataSidebarKey={key}
+            key={key}
+            selected={selectedKey === key}
+            title={title}
+            iconProps={{ iconName }}
+            badge={item.badge}
+          />
+        </a>
+      ) : (
         <SidebarButton
           dataSidebarKey={key}
           key={key}

@@ -98,7 +98,8 @@ type SidebarItemKey =
   | "extensions"
   | "account"
   | "layouts"
-  | "preferences";
+  | "preferences"
+  | "website";
 
 function Connection() {
   return (
@@ -437,6 +438,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       ["variables", { iconName: "Variable2", title: "Variables", component: Variables }],
       ["preferences", { iconName: "Settings", title: "Preferences", component: Preferences }],
       ["extensions", { iconName: "AddIn", title: "Extensions", component: ExtensionsSidebar }],
+      ["website", { iconName: "OpenInNewWindow", title: "Open website" }],
     ]);
 
     return supportsAccountSettings
@@ -455,7 +457,9 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   }, [supportsAccountSettings, playerProblems, currentUser]);
 
   const sidebarBottomItems: readonly SidebarItemKey[] = useMemo(() => {
-    return supportsAccountSettings ? ["account", "preferences"] : ["preferences"];
+    return supportsAccountSettings
+      ? ["website", "account", "preferences"]
+      : ["website", "preferences"];
   }, [supportsAccountSettings]);
 
   return (
