@@ -384,34 +384,20 @@ export default function Panel<
         if (!panelsState) {
           return;
         }
-        const siblingPanel = panelCatalog.getPanelByType(panelType);
-        // No panel exists for the requested panel type.
-        // Make a panel anyway to show an unknown panel placeholder to inform the user.
-        if (!siblingPanel) {
-          const ownPath = mosaicWindowActions.getPath();
-          const newPanelPath = ownPath.concat("second");
-          void mosaicWindowActions.split({ type: panelType }).then(() => {
-            const newPanelId = getNodeAtPath(mosaicActions.getRoot(), newPanelPath) as string;
-            savePanelConfigs({
-              configs: [
-                {
-                  id: newPanelId,
-                  config: {},
-                  defaultConfig: {},
-                },
-              ],
-            });
-          });
-          return;
-        }
-
-        const siblingModule = await siblingPanel.module();
-        if (!isMounted()) {
-          return;
-        }
-
-        const siblingDefaultConfig = siblingModule.default.defaultConfig;
         const ownPath = mosaicWindowActions.getPath();
+
+        let siblingDefaultConfig: PanelConfig = {};
+
+        const siblingPanelInfo = panelCatalog.getPanelByType(panelType);
+        // If we can lookup the sibling panel type, try to load the default config from the panel module
+        if (siblingPanelInfo) {
+          const siblingModule = await siblingPanelInfo.module();
+          if (!isMounted()) {
+            return;
+          }
+
+          siblingDefaultConfig = siblingModule.default.defaultConfig;
+        }
 
         // Try to find a sibling panel and update it with the `siblingConfig`
         if (updateIfExists) {
