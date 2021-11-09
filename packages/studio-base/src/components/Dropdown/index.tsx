@@ -155,7 +155,7 @@ export default class Dropdown<T> extends React.Component<Props<T>, State> {
       borderTopRightRadius: flatEdges && position !== "above" ? "0" : undefined,
       borderBottomLeftRadius: flatEdges && position === "above" ? "0" : undefined,
       borderBottomRightRadius: flatEdges && position === "above" ? "0" : undefined,
-      ...(position === "above" ? { marginBottom: 4, borderRadius: 4 } : {}),
+      ...(position === "above" ? { marginBottom: 4, borderRadius: 2 } : {}),
       ...menuStyle,
     };
     return (

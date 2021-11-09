@@ -11,7 +11,7 @@ import { fonts, spacing } from "@foxglove/studio-base/util/sharedStyleConstants"
  */
 export const LegacyButton = styled.button`
   background-color: ${({ theme }) => theme.palette.neutralLighter};
-  border-radius: 4px;
+  border-radius: 2px;
   border: none;
   color: ${({ theme }) => theme.semanticColors.buttonText};
   font: inherit;
