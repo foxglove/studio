@@ -34,6 +34,8 @@ function blockScrollEventPropagation(event: Event) {
 export function useCalloutDismissalBlocker(): void {
   useEffect(() => {
     window.addEventListener("scroll", blockScrollEventPropagation, { capture: true });
-    return () => window.removeEventListener("scroll", blockScrollEventPropagation);
+
+    return () =>
+      window.removeEventListener("scroll", blockScrollEventPropagation, { capture: true });
   }, []);
 }
