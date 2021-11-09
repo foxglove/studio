@@ -2,7 +2,16 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { on } from "@fluentui/utilities";
+import { useEffect } from "react";
+
+function blockScrollEventPropagation(event: Event) {
+  if (
+    event.target instanceof HTMLElement &&
+    event.target.classList.contains("ReactVirtualized__List")
+  ) {
+    event.stopImmediatePropagation();
+  }
+}
 
 /**
  * Installs a window level handler to get ahead of FluentUI's global
@@ -10,20 +19,11 @@ import { on } from "@fluentui/utilities";
  * scroll events from auto-scrolling windows like the log from dismissing
  * open widgets.
  *
- * This should probably be considered to be a temporary woraround.
+ * This should probably be considered to be a temporary workaround.
  */
 export function useCalloutDismissalBlocker(): void {
-  on(
-    window,
-    "scroll",
-    (e) => {
-      if (
-        e.target instanceof HTMLElement &&
-        e.target.classList.contains("ReactVirtualized__List")
-      ) {
-        e.stopImmediatePropagation();
-      }
-    },
-    true,
-  );
+  useEffect(() => {
+    window.addEventListener("scroll", blockScrollEventPropagation, { capture: true });
+    return () => window.removeEventListener("scroll", blockScrollEventPropagation);
+  }, []);
 }
