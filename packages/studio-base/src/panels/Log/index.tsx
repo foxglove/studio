@@ -90,7 +90,7 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
 
   return (
     <Stack verticalFill>
-      <PanelToolbar floating helpContent={helpContent} additionalIcons={topicToRenderMenu}>
+      <PanelToolbar helpContent={helpContent} additionalIcons={topicToRenderMenu}>
         <FilterBar
           searchTerms={searchTermsSet}
           minLogLevel={minLogLevel}
