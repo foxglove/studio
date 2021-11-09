@@ -1,34 +1,40 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
+//
+// This file incorporates work covered by the following copyright and
+// permission notice:
+//
+//   Copyright 2019-2021 Cruise LLC
+//
+//   This source code is licensed under the Apache License, Version 2.0,
+//   found at http://www.apache.org/licenses/LICENSE-2.0
+//   You may not use this file except in compliance with the License.
 
 import { simplify } from "intervals-fn";
 import { isEqual, sum, uniq } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
-import { add as addTimes, toNanoSec, fromNanoSec } from "@foxglove/rostime";
-import { filterMap } from "@foxglove/studio-base/../../den/collection";
+import { filterMap } from "@foxglove/den/collection";
+import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
+import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
 import {
-  subtractTimes,
+  Time,
+  add as addTimes,
   compare,
-} from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/time";
-import { Time } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/types";
-import {
-  MemoryCacheBlock,
-  MIN_MEM_CACHE_BLOCK_SIZE_NS,
-  MAX_BLOCKS,
-  getPrefetchStartPoint,
-  MAX_BLOCK_SIZE_BYTES,
-  getBlocksToKeep,
-} from "@foxglove/studio-base/randomAccessDataProviders/MemoryCacheDataProvider";
+  fromNanoSec,
+  subtract as subtractTimes,
+  toNanoSec,
+} from "@foxglove/rostime";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
 import {
   RandomAccessDataProvider,
-  ExtensionPoint,
-  GetMessagesResult,
   RandomAccessDataProviderDescriptor,
+  ExtensionPoint,
   GetDataProvider,
-  InitializationResult,
+  GetMessagesResult,
   GetMessagesTopics,
+  InitializationResult,
 } from "@foxglove/studio-base/randomAccessDataProviders/types";
 import { getNewConnection } from "@foxglove/studio-base/util/getNewConnection";
 import {
@@ -38,31 +44,208 @@ import {
 } from "@foxglove/studio-base/util/ranges";
 import sendNotification from "@foxglove/studio-base/util/sendNotification";
 
+// I (JP) mostly just made these numbers up. It might be worth experimenting with different values
+// for these, but it seems to work reasonably well in my tests.
+export const MIN_MEM_CACHE_BLOCK_SIZE_NS = 0.1e9; // Messages are laid out in blocks with a fixed number of milliseconds.
+
+// Preloading algorithms get too slow when there are too many blocks. For very long bags, use longer
+// blocks. Adaptive block sizing is simpler than using a tree structure for immutable updates but
+// less flexible, so we may want to move away from a single-level block structure in the future.
+export const MAX_BLOCKS = 400;
+const READ_AHEAD_NS = 3e9; // Number of nanoseconds to read ahead from the last `getMessages` call.
+export const MAX_BLOCK_SIZE_BYTES = 50e6; // Number of bytes in a block before we show an error.
+
+// Number of bytes that we aim to keep in the cache.
+// Setting this to higher than 1.5GB caused the renderer process to crash on linux on certain bags.
+// See: https://github.com/foxglove/studio/pull/1733
+const DEFAULT_CACHE_SIZE_BYTES = 1.0e9;
+
+// For each memory block we store the actual messages (grouped by topic), and a total byte size of
+// the underlying ArrayBuffers.
+export type MemoryCacheBlock = {
+  readonly messagesByTopic: {
+    readonly [topic: string]: MessageEvent<unknown>[];
+  };
+  readonly sizeInBytes: number;
+};
+export type BlockCache = {
+  blocks: readonly (MemoryCacheBlock | undefined)[];
+  startTime: Time;
+};
 const EMPTY_BLOCK: MemoryCacheBlock = {
   messagesByTopic: {},
   sizeInBytes: 0,
 };
 
-// Preloading algorithms get too slow when there are too many blocks. For very long logs, use longer
-// blocks. Adaptive block sizing is simpler than using a tree structure for immutable updates but
-// less flexible, so we may want to move away from a single-level block structure in the future.
-const READ_AHEAD_NS = 3e9; // Number of nanoseconds to read ahead from the last `getMessages` call.
+function getNormalizedTopics(topics: readonly string[]): string[] {
+  return uniq(topics).sort();
+}
 
-// Number of bytes that we aim to keep in the cache.
-// Setting this to higher than 1.5GB caused the renderer process to crash on linux on certain logs.
-// See: https://github.com/foxglove/studio/pull/1733
-const DEFAULT_CACHE_SIZE_BYTES = 1.0e9;
+// Get the blocks to keep for the current cache purge, given the most recently accessed ranges, the
+// blocks byte sizes, the minimum number of blocks to always keep, and the maximum cache size.
+//
+// Exported for tests.
+export function getBlocksToKeep({
+  recentBlockRanges,
+  blockSizesInBytes,
+  maxCacheSizeInBytes,
+  badEvictionRange,
+}: {
+  // The most recently requested block ranges, ordered from most recent to least recent.
+  recentBlockRanges: Range[];
+  // For each block, its size, if it exists. Note that it's allowed for a `recentBlockRange` to
+  // not have all blocks actually available (i.e. a seek happened before the whole range was
+  // downloaded).
+  blockSizesInBytes: (number | undefined)[];
+  // The maximum cache size in bytes.
+  maxCacheSizeInBytes: number;
+  // A block index to avoid evicting blocks from near.
+  badEvictionRange?: Range;
+}): {
+  blockIndexesToKeep: Set<number>;
+  newRecentRanges: Range[];
+} {
+  let cacheSizeInBytes = 0;
+  const blockIndexesToKeep = new Set<number>();
 
-export default class MessageMemoryCacheDataProvider implements RandomAccessDataProvider {
+  // Always keep the badEvictionRange
+  if (badEvictionRange) {
+    for (let blockIndex = badEvictionRange.start; blockIndex < badEvictionRange.end; ++blockIndex) {
+      const sizeInBytes = blockSizesInBytes[blockIndex];
+
+      if (sizeInBytes != undefined && !blockIndexesToKeep.has(blockIndex)) {
+        blockIndexesToKeep.add(blockIndex);
+        cacheSizeInBytes += sizeInBytes;
+      }
+    }
+  }
+
+  // Go through all the ranges, from most to least recent.
+  for (let blockRangeIndex = 0; blockRangeIndex < recentBlockRanges.length; blockRangeIndex++) {
+    const blockRange = recentBlockRanges[blockRangeIndex] as Range;
+    // Work through blocks from highest priority to lowest. Break and discard low-priority blocks if
+    // we exceed our memory budget.
+    const { startIndex, endIndex, increment } = getBlocksToKeepDirection(
+      blockRange,
+      badEvictionRange?.start,
+    );
+
+    for (let blockIndex = startIndex; blockIndex !== endIndex; blockIndex += increment) {
+      // If we don't have size, there are no blocks to keep!
+      const sizeInBytes = blockSizesInBytes[blockIndex];
+
+      if (sizeInBytes == undefined) {
+        continue;
+      }
+
+      // Then always add the block. But only add to `cacheSizeInBytes` if we didn't already count it.
+      if (!blockIndexesToKeep.has(blockIndex)) {
+        blockIndexesToKeep.add(blockIndex);
+        cacheSizeInBytes += sizeInBytes;
+      }
+
+      // Terminate if we have exceeded `maxCacheSizeInBytes`.
+      if (cacheSizeInBytes > maxCacheSizeInBytes) {
+        const newRecentRangesExcludingBadEvictionRange = [
+          ...recentBlockRanges.slice(0, blockRangeIndex),
+          increment > 0
+            ? {
+                start: 0,
+                end: blockIndex + 1,
+              }
+            : {
+                start: blockIndex,
+                end: blockRange.end,
+              },
+        ];
+        const newRecentRanges =
+          badEvictionRange == undefined
+            ? newRecentRangesExcludingBadEvictionRange
+            : mergeNewRangeIntoUnsortedNonOverlappingList(
+                badEvictionRange,
+                newRecentRangesExcludingBadEvictionRange,
+              );
+        return {
+          blockIndexesToKeep,
+          // Adjust the oldest `newRecentRanges`.
+          newRecentRanges,
+        };
+      }
+    }
+  }
+
+  return {
+    blockIndexesToKeep,
+    newRecentRanges: recentBlockRanges,
+  };
+}
+
+// Helper to identify which end of a block range is most appropriate to evict when there is an open
+// read request.
+// Note: This function would work slightly better if it took a `badEvictionRange` instead of a
+// `badEvictionLocation`, but it's more complex and only manifests in quite uncommon use-cases.
+
+function getBlocksToKeepDirection(
+  blockRange: Range,
+  badEvictionLocation: number | undefined,
+): {
+  startIndex: number;
+  endIndex: number;
+  increment: number;
+} {
+  if (
+    badEvictionLocation != undefined &&
+    Math.abs(badEvictionLocation - blockRange.start) <
+      Math.abs(badEvictionLocation - blockRange.end)
+  ) {
+    // Read request is closer to the start of the block than the end. Keep blocks from the start
+    // with highest priority.
+    return {
+      startIndex: blockRange.start,
+      endIndex: blockRange.end,
+      increment: 1,
+    };
+  }
+
+  // In most cases, keep blocks from the end with highest priority.
+  return {
+    startIndex: blockRange.end - 1,
+    endIndex: blockRange.start - 1,
+    increment: -1,
+  };
+}
+
+// Get the best place to start prefetching a block, given the uncached ranges and the cursor position.
+// In order of preference, we would like to prefetch:
+// - The leftmost uncached block to the right of the cursor, or
+// - The leftmost uncached block to the left of the cursor, if one does not exist to the right.
+//
+// Exported for tests.
+export function getPrefetchStartPoint(uncachedRanges: Range[], cursorPosition: number): number {
+  uncachedRanges.sort((a, b) => {
+    if (a.start < cursorPosition !== b.start < cursorPosition) {
+      // On different sides of the cursor. `a` comes first if it's to the right.
+      return a.start < cursorPosition ? 1 : -1;
+    }
+
+    return a.start - b.start;
+  });
+  return uncachedRanges[0]?.start ?? 0;
+}
+
+// This fills up the memory with messages from an underlying RandomAccessDataProvider. The messages have to be
+// unparsed ROS messages. The messages are evicted from this in-memory cache based on some constants
+// defined at the top of this file.
+export default class Ros1MemoryCacheDataProvider implements RandomAccessDataProvider {
   private _provider: RandomAccessDataProvider;
   private _extensionPoint?: ExtensionPoint;
 
   // The actual blocks that contain the messages. Blocks have a set "width" in terms of nanoseconds
-  // since the start time of the log. If a block has some messages for a topic, then by definition
+  // since the start time of the bag. If a block has some messages for a topic, then by definition
   // it has *all* messages for that topic and timespan.
   private _blocks: (MemoryCacheBlock | undefined)[] = [];
 
-  // The start time of the log. Used for computing from and to nanoseconds since the start.
+  // The start time of the bag. Used for computing from and to nanoseconds since the start.
   private _startTime: Time = { sec: 0, nsec: 0 };
 
   // The topics that we were most recently asked to load.
@@ -108,6 +291,8 @@ export default class MessageMemoryCacheDataProvider implements RandomAccessDataP
   private _readAheadBlocks: number = 0;
   private _memCacheBlockSizeNs: number = 0;
 
+  private _lazyMessageReadersByTopic = new Map<string, LazyMessageReader>();
+
   constructor(
     { unlimitedCache = false }: { unlimitedCache?: boolean },
     children: RandomAccessDataProviderDescriptor[],
@@ -117,7 +302,7 @@ export default class MessageMemoryCacheDataProvider implements RandomAccessDataP
     const child = children[0];
     if (children.length !== 1 || !child) {
       throw new Error(
-        `Incorrect number of children to MessageMemoryCacheDataProvider: ${children.length}`,
+        `Incorrect number of children to MemoryCacheDataProvider: ${children.length}`,
       );
     }
 
@@ -144,6 +329,18 @@ export default class MessageMemoryCacheDataProvider implements RandomAccessDataP
 
     const blockCount = Math.ceil(this._totalNs / this._memCacheBlockSizeNs);
     this._blocks = Array.from({ length: blockCount });
+
+    const msgDefs = result.messageDefinitions;
+    if (msgDefs.type === "parsed") {
+      for (const [topic, msgDef] of Object.entries(msgDefs.parsedMessageDefinitionsByTopic)) {
+        this._lazyMessageReadersByTopic.set(topic, new LazyMessageReader(msgDef));
+      }
+    } else if (msgDefs.type === "raw") {
+      for (const [topic, rawMsgDef] of Object.entries(msgDefs.messageDefinitionsByTopic)) {
+        const msgDef = parseMessageDefinition(rawMsgDef);
+        this._lazyMessageReadersByTopic.set(topic, new LazyMessageReader(msgDef));
+      }
+    }
 
     this._updateProgress();
 
@@ -200,7 +397,10 @@ export default class MessageMemoryCacheDataProvider implements RandomAccessDataP
   private _resolveFinishedReadRequests(): void {
     this._readRequests = this._readRequests.filter(({ timeRange, blockRange, topics, resolve }) => {
       if (topics.length === 0) {
-        resolve({ parsedMessages: [] });
+        resolve({
+          parsedMessages: [],
+          rosBinaryMessages: undefined,
+        });
         return false;
       }
 
@@ -253,7 +453,10 @@ export default class MessageMemoryCacheDataProvider implements RandomAccessDataP
         }
       }
 
-      resolve({ parsedMessages: messages.sort((a, b) => compare(a.receiveTime, b.receiveTime)) });
+      resolve({
+        parsedMessages: messages.sort((a, b) => compare(a.receiveTime, b.receiveTime)),
+        rosBinaryMessages: undefined,
+      });
       this._lastResolvedCallbackEnd = blockRange.end;
       return false;
     });
@@ -281,7 +484,7 @@ export default class MessageMemoryCacheDataProvider implements RandomAccessDataP
       currentRemainingRange: this._currentConnection
         ? this._currentConnection.remainingBlockRange
         : undefined,
-      readRequestRange: this._readRequests[0]?.blockRange,
+      readRequestRange: this._readRequests[0] ? this._readRequests[0].blockRange : undefined,
       downloadedRanges: this._getDownloadedBlockRanges(),
       lastResolvedCallbackEnd: this._lastResolvedCallbackEnd,
       cacheSize: this._readAheadBlocks,
@@ -338,7 +541,7 @@ export default class MessageMemoryCacheDataProvider implements RandomAccessDataP
 
       const connectionSuccess = await this._setConnection(newConnection).catch((err) => {
         sendNotification(
-          `MessageMemoryCacheDataProvider connection ${
+          `MemoryCacheDataProvider connection ${
             this._currentConnection ? this._currentConnection.id : ""
           }`,
           err?.message ?? "<unknown error>",
@@ -407,9 +610,23 @@ export default class MessageMemoryCacheDataProvider implements RandomAccessDataP
       );
       const messages =
         topics.length > 0
-          ? await this._provider.getMessages(startTime, endTime, { parsedMessages: topics })
-          : { parsedMessages: [] };
-      const { parsedMessages = [] } = messages;
+          ? await this._provider.getMessages(startTime, endTime, {
+              rosBinaryMessages: topics,
+            })
+          : {
+              rosBinaryMessages: [],
+              parsedMessages: undefined,
+            };
+      const { rosBinaryMessages, parsedMessages } = messages;
+
+      if (parsedMessages != undefined) {
+        const types = (Object.keys(messages) as (keyof typeof messages)[])
+          .filter((type) => messages[type] != undefined)
+          .join("\n");
+        sendNotification("MemoryCacheDataProvider got bad message types", types, "app", "error");
+        // Do not retry.
+        return false;
+      }
 
       // If we're not current any more, discard the messages, because otherwise we might write duplicate messages.
       if (!isCurrent()) {
@@ -424,9 +641,42 @@ export default class MessageMemoryCacheDataProvider implements RandomAccessDataP
         messagesByTopic[topic] = [];
       }
 
-      for (const parsedMessage of parsedMessages) {
-        sizeInBytes += parsedMessage.sizeInBytes;
-        messagesByTopic[parsedMessage.topic]?.push(parsedMessage);
+      for (const rosBinaryMessage of rosBinaryMessages ?? []) {
+        const lazyReader = this._lazyMessageReadersByTopic.get(rosBinaryMessage.topic);
+        if (!lazyReader) {
+          continue;
+        }
+
+        sizeInBytes += rosBinaryMessage.message.byteLength;
+
+        const bytes = new Uint8Array(rosBinaryMessage.message);
+
+        try {
+          const msgSize = lazyReader.size(bytes);
+          if (msgSize > bytes.byteLength) {
+            sendNotification(
+              `Message buffer not large enough on ${rosBinaryMessage.topic}`,
+              `Cannot read ${msgSize} byte message from ${bytes.byteLength} byte buffer`,
+              "user",
+              "error",
+            );
+          }
+        } catch (error) {
+          sendNotification(
+            `Message size parsing failed on ${rosBinaryMessage.topic}`,
+            error,
+            "user",
+            "error",
+          );
+        }
+
+        const lazyMsg = lazyReader.readMessage(bytes);
+        messagesByTopic[rosBinaryMessage.topic]?.push({
+          topic: rosBinaryMessage.topic,
+          receiveTime: rosBinaryMessage.receiveTime,
+          message: lazyMsg,
+          sizeInBytes: rosBinaryMessage.sizeInBytes,
+        });
       }
 
       if (sizeInBytes > MAX_BLOCK_SIZE_BYTES && !this._loggedTooLargeError) {
@@ -565,8 +815,4 @@ export default class MessageMemoryCacheDataProvider implements RandomAccessDataP
   setCacheSizeBytesInTests(cacheSizeBytes: number): void {
     this._cacheSizeBytes = cacheSizeBytes;
   }
-}
-
-function getNormalizedTopics(topics: readonly string[]): string[] {
-  return uniq(topics).sort();
 }

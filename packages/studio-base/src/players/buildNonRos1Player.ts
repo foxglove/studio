@@ -9,8 +9,8 @@ import { CoreDataProviders } from "@foxglove/studio-base/randomAccessDataProvide
 import { RandomAccessDataProviderDescriptor } from "@foxglove/studio-base/randomAccessDataProviders/types";
 import { getSeekToTime } from "@foxglove/studio-base/util/time";
 
-// This is separate from buildPlayerFromDescriptor because we can't use ParseMessages and
-// MemoryCache with non-ROS1 DataProviders currently (they only support ROS1 binary messages)
+// This is separate from buildPlayerFromDescriptor because we can't use ParseMessages
+// with non-ROS1 DataProviders
 export function buildNonRos1PlayerFromDescriptor(
   name: string,
   childDescriptor: RandomAccessDataProviderDescriptor,
@@ -19,7 +19,7 @@ export function buildNonRos1PlayerFromDescriptor(
   const rootDescriptor: RandomAccessDataProviderDescriptor = {
     label: name,
     filePath: childDescriptor.filePath,
-    name: CoreDataProviders.MessageMemoryCacheDataProvider,
+    name: CoreDataProviders.MemoryCacheDataProvider,
     args: { unlimitedCache: options.unlimitedMemoryCache },
     children: [childDescriptor],
   };

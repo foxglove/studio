@@ -16,8 +16,8 @@ import ApiCheckerDataProvider, {
 } from "@foxglove/studio-base/randomAccessDataProviders/ApiCheckerDataProvider";
 import BagDataProvider from "@foxglove/studio-base/randomAccessDataProviders/BagDataProvider";
 import MemoryCacheDataProvider from "@foxglove/studio-base/randomAccessDataProviders/MemoryCacheDataProvider";
-import MessageMemoryCacheDataProvider from "@foxglove/studio-base/randomAccessDataProviders/MessageMemoryCacheDataProvider";
 import ParseMessagesDataProvider from "@foxglove/studio-base/randomAccessDataProviders/ParseMessagesDataProvider";
+import Ros1MemoryCacheDataProvider from "@foxglove/studio-base/randomAccessDataProviders/Ros1MemoryCacheDataProvider";
 import Rosbag2DataProvider from "@foxglove/studio-base/randomAccessDataProviders/Rosbag2DataProvider";
 import UlogDataProvider from "@foxglove/studio-base/randomAccessDataProviders/UlogDataProvider";
 import WorkerDataProvider from "@foxglove/studio-base/randomAccessDataProviders/WorkerDataProvider";
@@ -31,8 +31,8 @@ const getDataProviderBase = createGetDataProvider({
   ApiCheckerDataProvider,
   BagDataProvider,
   MemoryCacheDataProvider,
-  MessageMemoryCacheDataProvider,
   ParseMessagesDataProvider,
+  Ros1MemoryCacheDataProvider,
   Rosbag2DataProvider,
   UlogDataProvider,
   WorkerDataProvider,
