@@ -192,12 +192,12 @@ describe("MessageMemoryCache", () => {
       }
       expect(cache.fullyLoadedRanges()).toEqual([{ start: fromSec(0), end: fromSec(6) }]);
       expect(cache.getMessages({ start: fromSec(0), end: fromSec(6) })).toEqual([
-        { topic: "", receiveTime: fromSec(0), message: { start: 0, end: 1 } },
-        { topic: "", receiveTime: fromSec(1), message: { start: 1, end: 2 } },
-        { topic: "", receiveTime: fromSec(2), message: { start: 2, end: 3 } },
-        { topic: "", receiveTime: fromSec(3), message: { start: 3, end: 4 } },
-        { topic: "", receiveTime: fromSec(4), message: { start: 4, end: 5 } },
-        { topic: "", receiveTime: fromSec(5), message: { start: 5, end: 6 } },
+        { topic: "", receiveTime: fromSec(0), message: { start: 0, end: 1 }, sizeInBytes: 0 },
+        { topic: "", receiveTime: fromSec(1), message: { start: 1, end: 2 }, sizeInBytes: 0 },
+        { topic: "", receiveTime: fromSec(2), message: { start: 2, end: 3 }, sizeInBytes: 0 },
+        { topic: "", receiveTime: fromSec(3), message: { start: 3, end: 4 }, sizeInBytes: 0 },
+        { topic: "", receiveTime: fromSec(4), message: { start: 4, end: 5 }, sizeInBytes: 0 },
+        { topic: "", receiveTime: fromSec(5), message: { start: 5, end: 6 }, sizeInBytes: 0 },
       ]);
     }
   });

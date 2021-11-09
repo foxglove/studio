@@ -81,6 +81,7 @@ describe("useFrame", () => {
         topic: "/some/topic",
         receiveTime: { sec: 100, nsec: 0 },
         message: { index: 0 },
+        sizeInBytes: 0,
       },
     ]);
 
@@ -92,6 +93,7 @@ describe("useFrame", () => {
         topic: "/some/topic",
         receiveTime: { sec: 100, nsec: 0 },
         message: { index: 0 },
+        sizeInBytes: 0,
       },
     ]);
   });
@@ -126,6 +128,7 @@ describe("useFrame", () => {
         topic: "/some/topic",
         receiveTime: { sec: 100, nsec: 0 },
         message: { index: 0 },
+        sizeInBytes: 0,
       },
     ]);
 
@@ -138,6 +141,7 @@ describe("useFrame", () => {
         topic: "/some/topic",
         receiveTime: { sec: 101, nsec: 0 },
         message: { index: 1 },
+        sizeInBytes: 0,
       },
     ]);
   });
