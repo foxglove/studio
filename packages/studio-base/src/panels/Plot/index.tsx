@@ -145,7 +145,7 @@ const getPlotDataByPath = (itemsByPath: MessageDataItemsByPath): PlotDataByPath 
   Object.entries(itemsByPath).forEach(([path, items]) => {
     ret[path] = [
       items.map((messageAndData) => {
-        const headerStamp = getTimestampForMessage(messageAndData.message);
+        const headerStamp = getTimestampForMessage(messageAndData.message.message);
         return {
           queriedData: messageAndData.queriedData,
           receiveTime: messageAndData.message.receiveTime,
@@ -335,10 +335,9 @@ function Plot(props: Props) {
             accumulated[path] = [[plotDataItem]];
           } else {
             const plotDataPath = (accumulated[path] ??= [[]]);
-            // PlotDataPaths have 2d arrays of tooltip items to accomodate blocks which may have gaps
-            // so each continuous set of blocks forms one set of tooltip items.
-            // For streaming messages we treat this as one continuous set of items and always add
-            // to the first "range"
+            // PlotDataPaths have 2d arrays of items to accomodate blocks which may have gaps so
+            // each continuous set of blocks forms one continuous line. For streaming messages we
+            // treat this as one continuous set of items and always add to the first "range"
             plotDataPath[0]!.push(plotDataItem);
           }
         }

@@ -51,11 +51,9 @@ export default function messagesToDatasets(args: Args): DatasetInfo {
     }
 
     for (const itemByPath of messages) {
-      const headerStamp = getTimestampForMessage(itemByPath.message);
+      const headerStamp = getTimestampForMessage(itemByPath.message.message);
       const timestamp =
-        path.timestampMethod === "headerStamp"
-          ? getTimestampForMessage(itemByPath.message)
-          : itemByPath.message.receiveTime;
+        path.timestampMethod === "headerStamp" ? headerStamp : itemByPath.message.receiveTime;
       if (!timestamp) {
         continue;
       }
