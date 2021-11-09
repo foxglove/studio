@@ -425,8 +425,7 @@ export default class MessageMemoryCacheDataProvider implements RandomAccessDataP
       }
 
       for (const parsedMessage of parsedMessages) {
-        // FIXME: Implement a sizeInBytes heuristic for parsed messages or drop this
-        sizeInBytes += 512;
+        sizeInBytes += parsedMessage.sizeInBytes;
         messagesByTopic[parsedMessage.topic]?.push(parsedMessage);
       }
 

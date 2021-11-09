@@ -675,6 +675,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
           topic: rosBinaryMessage.topic,
           receiveTime: rosBinaryMessage.receiveTime,
           message: lazyMsg,
+          sizeInBytes: bytes.byteLength,
         });
       }
 
