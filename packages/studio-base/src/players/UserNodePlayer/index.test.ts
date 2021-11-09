@@ -99,6 +99,7 @@ const upstreamFirst = {
   message: {
     payload: "bar",
   },
+  sizeInBytes: 0,
 };
 
 const upstreamSecond = {
@@ -107,6 +108,7 @@ const upstreamSecond = {
   message: {
     payload: "baz",
   },
+  sizeInBytes: 0,
 };
 
 const setListenerHelper = (player: UserNodePlayer, numPromises: number = 1) => {

@@ -27,10 +27,13 @@ describe("collateMessageStream", () => {
   it("handles all messages having same receiveTime", async () => {
     await expect(
       gather(
-        collateMessageStream([[{ topic: "", receiveTime: fromSec(0.5), message: 0 }]], {
-          start: fromSec(0),
-          end: fromSec(1),
-        }),
+        collateMessageStream(
+          [[{ topic: "", receiveTime: fromSec(0.5), message: 0, sizeInBytes: 0 }]],
+          {
+            start: fromSec(0),
+            end: fromSec(1),
+          },
+        ),
       ),
     ).resolves.toEqual([
       {
@@ -43,9 +46,9 @@ describe("collateMessageStream", () => {
         collateMessageStream(
           [
             [
-              { topic: "", receiveTime: fromSec(0.5), message: 0 },
-              { topic: "", receiveTime: fromSec(0.5), message: 1 },
-              { topic: "", receiveTime: fromSec(0.5), message: 2 },
+              { topic: "", receiveTime: fromSec(0.5), message: 0, sizeInBytes: 0 },
+              { topic: "", receiveTime: fromSec(0.5), message: 1, sizeInBytes: 0 },
+              { topic: "", receiveTime: fromSec(0.5), message: 2, sizeInBytes: 0 },
             ],
           ],
           { start: fromSec(0), end: fromSec(1) },
@@ -68,10 +71,10 @@ describe("collateMessageStream", () => {
       gather(
         collateMessageStream(
           [
-            [{ topic: "", receiveTime: fromSec(0.5), message: 0 }],
-            [{ topic: "", receiveTime: fromSec(0.6), message: 1 }],
-            [{ topic: "", receiveTime: fromSec(0.7), message: 2 }],
-            [{ topic: "", receiveTime: fromSec(0.8), message: 3 }],
+            [{ topic: "", receiveTime: fromSec(0.5), message: 0, sizeInBytes: 0 }],
+            [{ topic: "", receiveTime: fromSec(0.6), message: 1, sizeInBytes: 0 }],
+            [{ topic: "", receiveTime: fromSec(0.7), message: 2, sizeInBytes: 0 }],
+            [{ topic: "", receiveTime: fromSec(0.8), message: 3, sizeInBytes: 0 }],
           ],
           {
             start: fromSec(0),
@@ -105,13 +108,13 @@ describe("collateMessageStream", () => {
         collateMessageStream(
           [
             [
-              { topic: "", receiveTime: fromSec(0.5), message: 0 },
-              { topic: "", receiveTime: fromSec(0.6), message: 1 },
+              { topic: "", receiveTime: fromSec(0.5), message: 0, sizeInBytes: 0 },
+              { topic: "", receiveTime: fromSec(0.6), message: 1, sizeInBytes: 0 },
             ],
             [
-              { topic: "", receiveTime: fromSec(0.6), message: 2 },
-              { topic: "", receiveTime: fromSec(0.6), message: 3 },
-              { topic: "", receiveTime: fromSec(0.6), message: 4 },
+              { topic: "", receiveTime: fromSec(0.6), message: 2, sizeInBytes: 0 },
+              { topic: "", receiveTime: fromSec(0.6), message: 3, sizeInBytes: 0 },
+              { topic: "", receiveTime: fromSec(0.6), message: 4, sizeInBytes: 0 },
             ],
           ],
           { start: fromSec(0), end: fromSec(1) },
@@ -138,15 +141,15 @@ describe("collateMessageStream", () => {
         collateMessageStream(
           [
             [
-              { topic: "", receiveTime: fromSec(0.5), message: 0 },
-              { topic: "", receiveTime: fromSec(0.6), message: 1 },
+              { topic: "", receiveTime: fromSec(0.5), message: 0, sizeInBytes: 0 },
+              { topic: "", receiveTime: fromSec(0.6), message: 1, sizeInBytes: 0 },
             ],
             [
-              { topic: "", receiveTime: fromSec(0.6), message: 2 },
-              { topic: "", receiveTime: fromSec(0.6), message: 3 },
-              { topic: "", receiveTime: fromSec(0.6), message: 4 },
+              { topic: "", receiveTime: fromSec(0.6), message: 2, sizeInBytes: 0 },
+              { topic: "", receiveTime: fromSec(0.6), message: 3, sizeInBytes: 0 },
+              { topic: "", receiveTime: fromSec(0.6), message: 4, sizeInBytes: 0 },
             ],
-            [{ topic: "", receiveTime: fromSec(0.7), message: 5 }],
+            [{ topic: "", receiveTime: fromSec(0.7), message: 5, sizeInBytes: 0 }],
           ],
           { start: fromSec(0), end: fromSec(1) },
         ),
