@@ -77,7 +77,6 @@ export type TimeBasedChartTooltipData = {
   value: number | bigint | boolean | string;
   constantName?: string;
   startTime: Time;
-  source?: number;
 };
 
 const SRoot = styled.div`
