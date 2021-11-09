@@ -41,7 +41,6 @@ import {
   updateTree,
   MosaicNode,
 } from "react-mosaic-component";
-import { useToasts } from "react-toast-notifications";
 import { useMountedState } from "react-use";
 
 import { useShallowMemo } from "@foxglove/hooks";
@@ -314,7 +313,6 @@ export default function Panel<
     const classes = useStyles();
     const theme = useTheme();
     const isMounted = useMountedState();
-    const { addToast } = useToasts();
 
     const { mosaicActions } = useContext(MosaicContext);
     const { mosaicWindowActions }: { mosaicWindowActions: MosaicWindowActions } =
@@ -387,9 +385,22 @@ export default function Panel<
           return;
         }
         const siblingPanel = panelCatalog.getPanelByType(panelType);
+        // No panel exists for the requested panel type.
+        // Make a panel anyway to show an unknown panel placeholder to inform the user.
         if (!siblingPanel) {
-          addToast(`Unknown panel type: ${panelType}`, {
-            appearance: "error",
+          const ownPath = mosaicWindowActions.getPath();
+          const newPanelPath = ownPath.concat("second");
+          void mosaicWindowActions.split({ type: panelType }).then(() => {
+            const newPanelId = getNodeAtPath(mosaicActions.getRoot(), newPanelPath) as string;
+            savePanelConfigs({
+              configs: [
+                {
+                  id: newPanelId,
+                  config: {},
+                  defaultConfig: {},
+                },
+              ],
+            });
           });
           return;
         }
