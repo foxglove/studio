@@ -39,11 +39,6 @@ const features: Feature[] = [
     description: <>Show Foxglove Studio debug panels in the &ldquo;Add panel&rdquo; list.</>,
   },
   {
-    key: AppSetting.ENABLE_FIELD_MATCHING,
-    name: "Include fields names in message path search",
-    description: <>Match field names as well as topics in message path autocomplete search</>,
-  },
-  {
     key: AppSetting.ENABLE_LEGACY_PLOT_PANEL,
     name: "Legacy Plot panel",
     description: <>Enable the Legacy Plot panel.</>,
