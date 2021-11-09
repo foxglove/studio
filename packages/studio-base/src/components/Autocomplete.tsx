@@ -193,6 +193,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
 ): JSX.Element {
   // References
   const autocomplete = useRef<ReactAutocomplete>(ReactNull);
+  const ignoreBlur = useRef<boolean>(false);
 
   // Context
   const classes = useStyles();
@@ -201,7 +202,6 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
   const [showAllItems, setShowAllItems] = useState<boolean>(false);
   const [stateValue, setValue] = useState<string | undefined>(undefined);
   const [focused, setFocused] = useState<boolean>(false);
-  const [stateIgnoreBlur, setIgnoreBlur] = useState<boolean>(false);
 
   const getItemText = useMemo(
     () => props.getItemText ?? defaultGetText("getItemText"),
@@ -247,11 +247,13 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
   );
 
   const hasError = props.hasError ?? (autocompleteItems.length === 0 && value?.length);
+
   const open = focused && autocompleteItems.length > 0;
-  const ignoreBlur = open ? stateIgnoreBlur : false;
+  if (!open) {
+    ignoreBlur.current = false;
+  }
 
   const selectedItemValue = selectedItem != undefined ? getItemValue(selectedItem) : undefined;
-
   const setSelectionRange = useCallback((selectionStart: number, selectionEnd: number): void => {
     if (autocomplete.current?.refs.input) {
       (autocomplete.current.refs.input as HTMLInputElement).setSelectionRange(
@@ -272,7 +274,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
     if (autocomplete.current?.refs.input) {
       (autocomplete.current.refs.input as HTMLInputElement).blur();
     }
-    setIgnoreBlur(false);
+    ignoreBlur.current = false;
     setFocused(false);
     if (onBlurCallback) {
       onBlurCallback();
@@ -298,7 +300,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
   );
 
   // Make sure the input field gets focused again after selecting, in case we're doing multiple
-  // autocompletes. We pass an instance of an `AutocompleteController` to `onSelect` in case
+  // autocompletes. We pass an instance of an `IAutocomplete` to `onSelect` in case
   // the user of this component wants to call `blur()`.
   const onSelect = useCallback(
     (textValue: string, { item }: FzfResultItem<T>): void => {
@@ -325,7 +327,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
   }, [clearOnFocus]);
 
   const onBlur = useCallback((): void => {
-    if (ignoreBlur) {
+    if (ignoreBlur.current) {
       return;
     }
     if (
@@ -488,7 +490,10 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
           >
             {/* Have to wrap onMouseEnter and onMouseLeave in a separate <div>, as react-autocomplete
              * would override them on the root <div>. */}
-            <div onMouseEnter={() => setIgnoreBlur(true)} onMouseLeave={() => setIgnoreBlur(false)}>
+            <div
+              onMouseEnter={() => (ignoreBlur.current = true)}
+              onMouseLeave={() => (ignoreBlur.current = false)}
+            >
               {menuItemsToShow}
             </div>
           </div>
