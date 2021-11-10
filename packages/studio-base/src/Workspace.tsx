@@ -438,7 +438,10 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       ["variables", { iconName: "Variable2", title: "Variables", component: Variables }],
       ["preferences", { iconName: "Settings", title: "Preferences", component: Preferences }],
       ["extensions", { iconName: "AddIn", title: "Extensions", component: ExtensionsSidebar }],
-      ["website", { iconName: "OpenInNewWindow", title: "Open website" }],
+      [
+        "website",
+        { iconName: "OpenInNewWindow", title: "Open website", url: "https://foxglove.dev" },
+      ],
     ]);
 
     return supportsAccountSettings

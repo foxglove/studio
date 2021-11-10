@@ -41,6 +41,7 @@ export type SidebarItem = {
   title: string;
   badge?: Badge;
   component?: React.ComponentType;
+  url?: string;
 };
 
 const useStyles = makeStyles({
@@ -106,9 +107,9 @@ export default function Sidebar<K extends string>({
       if (!item) {
         throw new Error(`Missing sidebar item ${key}`);
       }
-      const { title, iconName } = item;
-      return key === "website" ? (
-        <a href="https://foxglove.dev" target="_blank" rel="noreferrer">
+      const { title, iconName, url } = item;
+      return url ? (
+        <a href={url} target="_blank" rel="noreferrer">
           <SidebarButton
             dataSidebarKey={key}
             key={key}
