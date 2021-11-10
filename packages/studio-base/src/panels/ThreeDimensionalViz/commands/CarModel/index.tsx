@@ -15,22 +15,29 @@ import { vec3 } from "gl-matrix";
 import { GLTFScene, parseGLB, Pose, Scale, CommonCommandProps } from "@foxglove/regl-worldview";
 import { InteractionData } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/types";
 import carModelURL from "@foxglove/studio-base/panels/ThreeDimensionalViz/commands/CarModel/carModel.glb";
+import { GlbModel } from "@foxglove/studio-base/panels/ThreeDimensionalViz/utils/GlbModel";
 
-async function loadCarModel() {
+const DEFAULT_COLOR = [36 / 255, 142 / 255, 255 / 255, 1];
+
+async function loadCarModel(): Promise<GlbModel> {
   const response = await fetch(carModelURL);
   if (!response.ok) {
     throw new Error(`unable to load car model: ${response.status}`);
   }
-  const model = await parseGLB(await response.arrayBuffer());
-  const nodes = [...model.json.nodes];
+  const model = (await parseGLB(await response.arrayBuffer())) as GlbModel;
+  const nodes = [...model.json.nodes!];
 
   // overwrite the translation component of the root node so the car's center is its rear axle
   const translation: vec3 = [0, 0, 0];
-  vec3.lerp(translation, model.json.accessors[1].min, model.json.accessors[1].max, 0.5);
-  vec3.scale(translation, translation, -nodes[0].scale[0]);
+  const a = model.json.accessors![1]!.min! as [number, number, number];
+  const b = model.json.accessors![1]!.max! as [number, number, number];
+  vec3.lerp(translation, a, b, 0.5);
+  vec3.scale(translation, translation, -nodes[0]!.scale![0]!);
   translation[1] += 56.075834;
   translation[2] += 136.19549;
   nodes[0] = { ...nodes[0], translation };
+  // scale is 0.01 because the model's units are centimeters
+  nodes.push({ name: "car", children: [0], scale: [0.01, 0.01, 0.01] });
 
   return {
     ...model,
@@ -38,11 +45,18 @@ async function loadCarModel() {
       ...model.json,
       nodes,
 
-      // change sampler minFilter to avoid blurry textures
-      samplers: model.json.samplers.map((sampler: Record<string, unknown>) => ({
-        ...sampler,
-        minFilter: WebGLRenderingContext.LINEAR,
+      // Modify all materials to an untextured solid blue color
+      materials: model.json.materials!.map((material) => ({
+        ...material,
+        pbrMetallicRoughness: {
+          baseColorFactor: DEFAULT_COLOR,
+          metallicFactor: 0,
+          roughnessFactor: 1,
+        },
       })),
+
+      // Use our scaled-down car node as the scene root
+      scenes: [{ nodes: [nodes.length - 1] }],
     },
   };
 }
@@ -56,9 +70,8 @@ type Props = CommonCommandProps & {
   };
 };
 
-// default scale is 0.01 because the model's units are centimeters
 export default function CarModel({
-  children: { pose, alpha = 1, scale = { x: 0.01, y: 0.01, z: 0.01 }, interactionData },
+  children: { pose, alpha = 1, scale = { x: 1, y: 1, z: 1 }, interactionData },
   layerIndex,
 }: Props): JSX.Element {
   return (

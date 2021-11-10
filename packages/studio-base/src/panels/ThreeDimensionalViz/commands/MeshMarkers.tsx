@@ -16,6 +16,7 @@ import { CommonCommandProps, GLTFScene, parseGLB } from "@foxglove/regl-worldvie
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { rewritePackageUrl } from "@foxglove/studio-base/context/AssetsContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
+import CarModel from "@foxglove/studio-base/panels/ThreeDimensionalViz/commands/CarModel";
 import { GlbModel } from "@foxglove/studio-base/panels/ThreeDimensionalViz/utils/GlbModel";
 import { parseDaeToGlb } from "@foxglove/studio-base/panels/ThreeDimensionalViz/utils/parseDaeToGlb";
 import { parseStlToGlb } from "@foxglove/studio-base/panels/ThreeDimensionalViz/utils/parseStlToGlb";
@@ -74,17 +75,28 @@ function MeshMarkers({ markers, layerIndex }: MeshMarkerProps): ReactElement {
 
   for (let i = 0; i < markers.length; i++) {
     const marker = markers[i]!;
-    const { pose, mesh_resource, scale } = marker;
-    if (mesh_resource == undefined || mesh_resource.length === 0) {
+    const { pose, mesh_resource, scale, color } = marker;
+    if (mesh_resource == undefined) {
       continue;
     }
     const url = rewritePackageUrl(mesh_resource, { rosPackagePath });
+    const alpha = (color?.a ?? 0) > 0 ? color!.a : 1;
 
-    models.push(
-      <GLTFScene key={i} layerIndex={layerIndex} model={async () => await modelCache.load(url)}>
-        {{ pose, scale, interactionData: undefined }}
-      </GLTFScene>,
-    );
+    if (url) {
+      // Load and cache the given "mesh_resource" URL
+      models.push(
+        <GLTFScene key={i} layerIndex={layerIndex} model={async () => await modelCache.load(url)}>
+          {{ pose, scale, alpha, interactionData: undefined }}
+        </GLTFScene>,
+      );
+    } else {
+      // "mesh_resource" was not provided, use the default CarModel
+      models.push(
+        <CarModel key={i} layerIndex={layerIndex}>
+          {{ pose, scale, alpha, interactionData: undefined }}
+        </CarModel>,
+      );
+    }
   }
 
   return <>{...models}</>;
