@@ -32,7 +32,6 @@ const tooltipData: TimeBasedChartTooltipData = {
     receiveTime: { sec: 1396293889, nsec: 214366 },
   },
   path: "/turtle1/pose.x",
-  datasetKey: "0",
   value: 5.544444561004639,
   startTime: { sec: 1396293889, nsec: 156763 },
 };

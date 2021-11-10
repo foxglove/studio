@@ -39,7 +39,6 @@ export function derivative(
       y: point.y,
       item: previousTooltip.item,
       path: `${previousTooltip.path}.@derivative`,
-      datasetKey: previousTooltip.datasetKey,
       value,
       constantName: undefined,
       startTime: previousTooltip.startTime,

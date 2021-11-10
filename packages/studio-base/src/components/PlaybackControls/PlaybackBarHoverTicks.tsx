@@ -14,13 +14,15 @@ import { useMemo } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import styled, { css } from "styled-components";
 
-import { toSec } from "@foxglove/rostime";
+import { add, fromSec, toSec } from "@foxglove/rostime";
 import { RpcScales } from "@foxglove/studio-base/components/Chart/types";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import HoverBar from "@foxglove/studio-base/components/TimeBasedChart/HoverBar";
+import { useHoverValue } from "@foxglove/studio-base/context/HoverValueContext";
+import { formatTime } from "@foxglove/studio-base/util/formatTime";
 
 const sharedTickStyles = css`
   position: absolute;
@@ -46,6 +48,17 @@ const BottomTick = styled.div`
   border-bottom: 5px solid #f7be00;
 `;
 
+const TimeLabel = styled.div`
+  position: absolute;
+  left: 0;
+  top: 0px;
+  font-size: 12px;
+  color: #f7be00;
+  backgroundcolor: blue;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+`;
+
 function getStartTime(ctx: MessagePipelineContext) {
   return ctx.playerState.activeData?.startTime;
 }
@@ -61,6 +74,7 @@ type Props = {
 export default function PlaybackBarHoverTicks({ componentId }: Props): JSX.Element {
   const startTime = useMessagePipeline(getStartTime);
   const endTime = useMessagePipeline(getEndTime);
+  const hoverValue = useHoverValue({ componentId, isTimestampScale: true });
 
   // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
   // and existing resize observation.
@@ -70,6 +84,14 @@ export default function PlaybackBarHoverTicks({ componentId }: Props): JSX.Eleme
     refreshMode: "debounce",
     refreshRate: 0,
   });
+
+  const hoverTimeDisplay = useMemo(() => {
+    if (!hoverValue || hoverValue.type !== "PLAYBACK_SECONDS" || !startTime) {
+      return undefined;
+    }
+    const stamp = add(startTime, fromSec(hoverValue.value));
+    return formatTime(stamp);
+  }, [hoverValue, startTime]);
 
   const scaleBounds = useMemo<RpcScales | undefined>(() => {
     if (startTime == undefined || endTime == undefined) {
@@ -89,6 +111,7 @@ export default function PlaybackBarHoverTicks({ componentId }: Props): JSX.Eleme
     <div ref={ref} style={{ width: "100%" }}>
       {scaleBounds && (
         <HoverBar componentId={componentId} scales={scaleBounds} isTimestampScale>
+          {hoverValue != undefined && <TimeLabel>{hoverTimeDisplay}</TimeLabel>}
           <TopTick />
           <BottomTick />
         </HoverBar>

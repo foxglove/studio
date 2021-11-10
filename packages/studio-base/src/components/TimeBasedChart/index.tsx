@@ -59,7 +59,6 @@ export type TooltipItem = {
 export type TimeBasedChartTooltipData = {
   x: number | bigint;
   y: number | bigint;
-  datasetKey?: string;
   item: TooltipItem;
   path: string;
   value: number | bigint | boolean | string;
@@ -282,35 +281,58 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     [setHasVerticalExclusiveZoom, setHasBothAxesZoom],
   );
 
+  const mouseYRef = useRef<number | undefined>(undefined);
+
   // We use a custom tooltip so we can style it more nicely, and so that it can break
   // out of the bounds of the canvas, in case the panel is small.
   const [activeTooltip, setActiveTooltip] = useState<{
     x: number;
     y: number;
-    data: TimeBasedChartTooltipData;
+    data: TimeBasedChartTooltipData[];
   }>();
   const updateTooltip = useCallback(
-    (element?: RpcElement) => {
-      if (!element) {
+    (elements: RpcElement[]) => {
+      if (elements.length === 0 || mouseYRef.current == undefined) {
         return setActiveTooltip(undefined);
       }
 
-      // Locate the tooltip for our data
-      // We do a lazy linear find for now - a perf on this vs map lookups might be useful
-      // Note then you need to make keys from x/y points
-      const tooltipData = tooltips?.find(
-        (item) => Number(item.x) === element.data?.x && Number(item.y) === element.data?.y,
-      );
-      if (!tooltipData) {
+      // fixme - delete fields from TimeBasedChartTooltipData that are not needed
+      const tooltipItems: { item: TimeBasedChartTooltipData; element: RpcElement }[] = [];
+
+      // fixme - can we avoid looping all tooltips and use map lookup x/y strings?
+      for (const item of tooltips ?? []) {
+        const foundElement = elements.find(
+          (element) => Number(item.x) === element.data?.x && Number(item.y) === element.data?.y,
+        );
+
+        if (!foundElement) {
+          continue;
+        }
+
+        // lookup dataset color by path
+        // this is actually hard now cause we only know about datasets, not their names...
+        // item.path;
+
+        // could have chartjs send back the dataset index, or the color itself
+
+        tooltipItems.push({
+          item,
+          element: foundElement,
+        });
+      }
+
+      if (tooltipItems.length === 0) {
         return setActiveTooltip(undefined);
       }
+
+      const element = tooltipItems[0]!.element;
 
       const canvasRect = canvasContainer.current?.getBoundingClientRect();
       if (canvasRect) {
         setActiveTooltip({
           x: canvasRect.left + element.view.x,
-          y: canvasRect.top + element.view.y,
-          data: tooltipData,
+          y: canvasRect.top + mouseYRef.current,
+          data: tooltipItems.map((item) => item.item),
         });
       }
     },
@@ -341,6 +363,10 @@ export default function TimeBasedChart(props: Props): JSX.Element {
       }
 
       const canvasContainerRect = canvasContainer.current.getBoundingClientRect();
+
+      // tooltip vertical placement align with the cursor y value
+      mouseYRef.current = event.pageY - canvasContainerRect.top;
+
       const mouseX = event.pageX - canvasContainerRect.left;
       const pixels = xScale.pixelMax - xScale.pixelMin;
       const range = xScale.max - xScale.min;
@@ -679,7 +705,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     (elements: RpcElement[]) => {
       // onHover could fire after component unmounts so we need to guard with mounted checks
       if (isMounted()) {
-        updateTooltip(elements[0]);
+        updateTooltip(elements);
       }
     },
     [isMounted, updateTooltip],
@@ -767,7 +793,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
   const tooltipContent = useMemo(() => {
     return activeTooltip ? (
-      <TimeBasedChartTooltipContent tooltip={activeTooltip.data} />
+      <TimeBasedChartTooltipContent content={activeTooltip.data} />
     ) : undefined;
   }, [activeTooltip]);
 
@@ -805,6 +831,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
       <Tooltip
         shown
         noPointerEvents={true}
+        placement={"right"}
         targetPosition={{ x: activeTooltip?.x ?? 0, y: activeTooltip?.y ?? 0 }}
         contents={tooltipContent}
       />
