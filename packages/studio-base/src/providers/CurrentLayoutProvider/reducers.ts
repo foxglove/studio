@@ -340,7 +340,7 @@ const addPanel = (
   let layout: MosaicNode<string> | undefined;
   if (tabId != undefined) {
     const tabPanelConfig = panelsState.configById[tabId] as TabPanelConfig | undefined;
-    layout = tabPanelConfig?.tabs[tabPanelConfig.activeTabIdx]?.layout;
+    layout = tabPanelConfig?.tabs?.[tabPanelConfig.activeTabIdx]?.layout;
   } else {
     layout = panelsState.layout;
   }
