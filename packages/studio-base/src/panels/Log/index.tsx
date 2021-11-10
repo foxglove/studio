@@ -102,8 +102,8 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
       <Stack grow>
         <LogList
           items={filteredMessages}
-          renderRow={({ item, style, key, index, ref }) => (
-            <div ref={ref} key={key} style={index === 0 ? { ...style, paddingTop: 36 } : style}>
+          renderRow={({ item, style, key, ref }) => (
+            <div ref={ref} key={key} style={style}>
               <LogMessage msg={item.message} />
             </div>
           )}
