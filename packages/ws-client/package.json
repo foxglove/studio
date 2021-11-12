@@ -1,6 +1,6 @@
 {
-  "name": "@foxglove/mcap",
-  "description": "Message Capture file reading support in TypeScript",
+  "name": "@foxglove/ws-client",
+  "description": "Foxglove Studio WebSocket protocol client",
   "license": "MPL-2.0",
   "private": true,
   "repository": {
@@ -18,19 +18,16 @@
     "src"
   ],
   "scripts": {
-    "prepack": "tsc -b",
-    "validate": "ts-node --project tsconfig.cjs.json scripts/validate.ts"
+    "prepack": "tsc -b"
   },
   "devDependencies": {
-    "@foxglove/crc": "0.0.3",
-    "@foxglove/rosmsg": "^3.0.0",
-    "@foxglove/rosmsg-serialization": "^1.2.3",
-    "@foxglove/rosmsg2-serialization": "^1.0.4",
     "@types/lodash": "^4.14.176",
     "commander": "8.3.0",
     "lodash": "4.17.21",
     "ts-node": "10.4.0",
     "typescript": "4.4.4"
   },
-  "dependencies": {}
+  "dependencies": {
+    "eventemitter3": "4.0.7"
+  }
 }
