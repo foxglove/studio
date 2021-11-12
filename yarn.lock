@@ -2138,7 +2138,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/log@workspace:packages/log":
+"@foxglove/log@workspace:*, @foxglove/log@workspace:packages/log":
   version: 0.0.0-use.local
   resolution: "@foxglove/log@workspace:packages/log"
   dependencies:
@@ -2156,7 +2156,6 @@ __metadata:
     "@foxglove/rosmsg2-serialization": ^1.0.4
     "@types/lodash": ^4.14.176
     commander: 8.3.0
-    eventemitter3: 4.0.7
     lodash: 4.17.21
     ts-node: 10.4.0
     typescript: 4.4.4
@@ -2524,6 +2523,20 @@ __metadata:
   checksum: 48492b02fbea537bf5483c320effe5ebfebb4c79ab95ac3ff95c2ff52668b5e57c74d598038edce5ea0b0a35d8b917b73e9fa5a3c9a95750663db4beca9241e0
   languageName: node
   linkType: hard
+
+"@foxglove/ws-client@workspace:packages/ws-client":
+  version: 0.0.0-use.local
+  resolution: "@foxglove/ws-client@workspace:packages/ws-client"
+  dependencies:
+    "@foxglove/log": "workspace:*"
+    "@types/lodash": ^4.14.176
+    commander: 8.3.0
+    eventemitter3: 4.0.7
+    lodash: 4.17.21
+    ts-node: 10.4.0
+    typescript: 4.4.4
+  languageName: unknown
+  linkType: soft
 
 "@foxglove/xmlrpc@npm:^1.1.5":
   version: 1.1.5

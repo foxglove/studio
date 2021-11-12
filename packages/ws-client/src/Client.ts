@@ -4,8 +4,12 @@
 
 import { EventEmitter } from "eventemitter3";
 
-import { parseServerMessage, serializeClientMessage } from "./parse";
-import { ClientMessage, ClientOpcode } from "./types";
+import Logger from "@foxglove/log";
+
+import { parseServerMessage } from "./parse";
+import { ClientMessage, ClientOpcode, ServerMessage, ServerOpcode } from "./types";
+
+const log = Logger.getLogger(__filename);
 
 export default class Client {
   static SUPPORTED_SUBPROTOCOL = "x-foxglove-1";
@@ -13,7 +17,6 @@ export default class Client {
   private ws!: WebSocket;
   private url: string;
   private nextSubscriptionId = 0;
-  private scratchBuffer = new ArrayBuffer(4096);
 
   constructor({ url }: { url: string }) {
     this.url = url;
@@ -32,9 +35,26 @@ export default class Client {
       }
     };
     this.ws.onmessage = (event: MessageEvent<ArrayBuffer | string>) => {
+      let message: ServerMessage;
       if (event.data instanceof ArrayBuffer) {
-        const message = parseServerMessage(event.data);
+        message = parseServerMessage(event.data);
+      } else {
+        message = JSON.parse(event.data);
       }
+
+      switch (message.op) {
+        case ServerOpcode.SERVER_INFO:
+          return;
+        case ServerOpcode.STATUS_MESSAGE:
+          return;
+        case ServerOpcode.CHANNEL_LIST:
+          return;
+        case ServerOpcode.SUBSCRIPTION_ACK:
+          return;
+        case ServerOpcode.MESSAGE_DATA:
+          return;
+      }
+      throw new Error(`Unrecognized server opcode: ${op.toString(16)}`);
     };
     this.ws.onclose = (event) => {};
   }
@@ -56,9 +76,7 @@ export default class Client {
     };
   }
 
-  serialize(message: ClientMessage): DataView {
-    const view = serializeClientMessage(message, this.scratchBuffer);
-    this.scratchBuffer = view.buffer;
-    return view;
+  private serialize(message: ClientMessage): string {
+    return JSON.stringify(message);
   }
 }
