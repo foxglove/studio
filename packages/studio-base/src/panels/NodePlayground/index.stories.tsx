@@ -277,20 +277,6 @@ storiesOf("panels/NodePlayground", module)
       </PanelSetup>
     );
   })
-  .add("sidebar open - docs explorer", () => {
-    return (
-      <PanelSetup
-        fixture={{ ...fixture, userNodes }}
-        onMount={(el) => {
-          setTimeout(() => {
-            el.querySelectorAll<HTMLElement>("[data-test=docs-explorer]")[0]!.click();
-          }, SIDEBAR_OPEN_CLICK_TIMEOUT);
-        }}
-      >
-        <NodePlayground overrideConfig={{ selectedNodeId: "nodeId1" }} />
-      </PanelSetup>
-    );
-  })
   .add("sidebar open - utils explorer - selected utility", () => {
     return (
       <PanelSetup
