@@ -16,7 +16,6 @@ import { PanelInfo, usePanelCatalog } from "@foxglove/studio-base/context/PanelC
 const productLinks = [
   { text: "Foxglove Studio", url: "https://foxglove.dev/studio" },
   { text: "Foxglove Data Platform", url: "https://foxglove.dev/data-platform" },
-  { text: "Browse paid plans", url: "https://foxglove.dev/pricing" },
 ];
 
 const resourceLinks = [
@@ -84,8 +83,9 @@ export default function HelpSidebar(): JSX.Element {
           ? undefined
           : [
               <Icon
+                key="back-arrow"
                 size="small"
-                style={{ marginRight: "10px" }}
+                style={{ marginRight: "5px" }}
                 onClick={() => setIsHomeView(true)}
               >
                 <ChevronLeftIcon />
@@ -169,10 +169,6 @@ export default function HelpSidebar(): JSX.Element {
                 ))}
               </Stack>
             </Stack.Item>
-
-            <Text>
-              Learn more at <Link href="https://foxglove.dev">foxglove.dev</Link>.
-            </Text>
           </Stack>
         )}
       </Stack>
