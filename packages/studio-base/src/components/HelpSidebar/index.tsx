@@ -13,16 +13,16 @@ import TextContent from "@foxglove/studio-base/components/TextContent";
 import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PanelInfo, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 
+const productLinks = [
+  { text: "Foxglove Studio", url: "https://foxglove.dev/studio" },
+  { text: "Foxglove Data Platform", url: "https://foxglove.dev/data-platform" },
+  { text: "Browse paid plans", url: "https://foxglove.dev/pricing" },
+];
+
 const resourceLinks = [
   { text: "Download app", url: "https://foxglove.dev/download" },
   { text: "Read docs", url: "https://foxglove.dev/docs" },
   { text: "Join our community", url: "https://foxglove.dev/community" },
-  { text: "Browse paid plans", url: "https://foxglove.dev/pricing" },
-];
-
-const productLinks = [
-  { text: "Foxglove Studio", url: "https://foxglove.dev/studio" },
-  { text: "Foxglove Data Platform", url: "https://foxglove.dev/data-platform" },
 ];
 
 const legalLinks = [
@@ -99,22 +99,32 @@ export default function HelpSidebar(): JSX.Element {
         {isHomeView && (
           <Stack tokens={{ childrenGap: theme.spacing.m }}>
             <Stack.Item>
-              <Text styles={styles.subheader}>External Resources</Text>
+              <Text styles={styles.subheader}>Panels</Text>
               <Stack tokens={{ padding: `${theme.spacing.m} 0`, childrenGap: theme.spacing.s1 }}>
-                {resourceLinks.map((link) => (
-                  <Link key={link.text} href={link.url} styles={styles.link}>
-                    {link.text}
+                {sortedPanels.map(({ title, type }) => (
+                  <Link
+                    key={title}
+                    style={{ color: theme.semanticColors.bodyText }}
+                    onClick={() => setPanelDocToDisplay(type)}
+                    styles={styles.link}
+                  >
+                    {title}
                   </Link>
                 ))}
               </Stack>
             </Stack.Item>
 
             <Stack.Item>
-              <Text styles={styles.subheader}>Panels</Text>
+              <Text styles={styles.subheader}>External Resources</Text>
               <Stack tokens={{ padding: `${theme.spacing.m} 0`, childrenGap: theme.spacing.s1 }}>
-                {sortedPanels.map(({ title, type }) => (
-                  <Link key={title} onClick={() => setPanelDocToDisplay(type)}>
-                    {title}
+                {resourceLinks.map((link) => (
+                  <Link
+                    key={link.text}
+                    style={{ color: theme.semanticColors.bodyText }}
+                    href={link.url}
+                    styles={styles.link}
+                  >
+                    {link.text}
                   </Link>
                 ))}
               </Stack>
@@ -124,7 +134,12 @@ export default function HelpSidebar(): JSX.Element {
               <Text styles={styles.subheader}>Products</Text>
               <Stack tokens={{ padding: `${theme.spacing.m} 0`, childrenGap: theme.spacing.s1 }}>
                 {productLinks.map((link) => (
-                  <Link key={link.text} href={link.url} styles={styles.link}>
+                  <Link
+                    key={link.text}
+                    style={{ color: theme.semanticColors.bodyText }}
+                    href={link.url}
+                    styles={styles.link}
+                  >
                     {link.text}
                   </Link>
                 ))}
@@ -135,7 +150,12 @@ export default function HelpSidebar(): JSX.Element {
               <Text styles={styles.subheader}>Legal</Text>
               <Stack tokens={{ padding: `${theme.spacing.m} 0`, childrenGap: theme.spacing.s1 }}>
                 {legalLinks.map((link) => (
-                  <Link key={link.text} href={link.url} styles={styles.link}>
+                  <Link
+                    key={link.text}
+                    style={{ color: theme.semanticColors.bodyText }}
+                    href={link.url}
+                    styles={styles.link}
+                  >
                     {link.text}
                   </Link>
                 ))}
