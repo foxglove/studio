@@ -78,17 +78,25 @@ export default function HelpSidebar(): JSX.Element {
   });
 
   return (
-    <SidebarContent title="Help">
+    <SidebarContent
+      leadingItems={
+        isHomeView
+          ? undefined
+          : [
+              <Icon
+                size="small"
+                style={{ marginRight: "10px" }}
+                onClick={() => setIsHomeView(true)}
+              >
+                <ChevronLeftIcon />
+              </Icon>,
+            ]
+      }
+      title={isHomeView ? "Help" : panelInfo?.title ? panelInfo.title : ""}
+    >
       <Stack>
         {!isHomeView && (
           <Stack tokens={{ childrenGap: theme.spacing.s2 }}>
-            <Icon
-              size="medium"
-              style={{ position: "absolute", top: "18px", right: "18px" }}
-              onClick={() => setIsHomeView(true)}
-            >
-              <ChevronLeftIcon />
-            </Icon>
             {panelInfo?.help != undefined ? (
               <TextContent allowMarkdownHtml={true}>{panelInfo?.help}</TextContent>
             ) : (

@@ -1,5 +1,3 @@
-# 3D
-
 Display visualization markers with any of the following datatypes in a 2D or 3D scene. Click any given marker in the scene to display its relevant details in a dialog box.
 
 ## Shortcuts
