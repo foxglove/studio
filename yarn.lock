@@ -2531,7 +2531,6 @@ __metadata:
     "@foxglove/log": "workspace:*"
     "@types/lodash": ^4.14.176
     commander: 8.3.0
-    eventemitter3: 4.0.7
     lodash: 4.17.21
     ts-node: 10.4.0
     typescript: 4.4.4
@@ -11307,7 +11306,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eventemitter3@npm:4.0.7, eventemitter3@npm:^4.0.0, eventemitter3@npm:^4.0.7":
+"eventemitter3@npm:^4.0.0, eventemitter3@npm:^4.0.7":
   version: 4.0.7
   resolution: "eventemitter3@npm:4.0.7"
   checksum: 1875311c42fcfe9c707b2712c32664a245629b42bb0a5a84439762dd0fd637fc54d078155ea83c2af9e0323c9ac13687e03cfba79b03af9f40c89b4960099374

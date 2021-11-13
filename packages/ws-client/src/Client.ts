@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { EventEmitter } from "eventemitter3";
+import WebSocket from "ws";
 
 import Logger from "@foxglove/log";
 
@@ -26,21 +26,25 @@ export default class Client {
   private reconnect() {
     this.ws = new WebSocket(this.url, [Client.SUPPORTED_SUBPROTOCOL]);
     this.ws.binaryType = "arraybuffer";
-    this.ws.onerror = (event) => {};
-    this.ws.onopen = (event) => {
+    this.ws.onerror = (event) => {
+      log.error("onerror", event.error);
+    };
+    this.ws.onopen = (_event) => {
+      log.info("onopen");
       if (this.ws.protocol !== Client.SUPPORTED_SUBPROTOCOL) {
         throw new Error(
           `Expected subprotocol ${Client.SUPPORTED_SUBPROTOCOL}, got '${this.ws.protocol}'`,
         );
       }
     };
-    this.ws.onmessage = (event: MessageEvent<ArrayBuffer | string>) => {
+    this.ws.onmessage = (event /*: MessageEvent<ArrayBuffer | string>*/) => {
       let message: ServerMessage;
       if (event.data instanceof ArrayBuffer) {
         message = parseServerMessage(event.data);
       } else {
-        message = JSON.parse(event.data);
+        message = JSON.parse(event.data as string);
       }
+      log.info("onmessage", message);
 
       switch (message.op) {
         case ServerOpcode.SERVER_INFO:
@@ -54,9 +58,11 @@ export default class Client {
         case ServerOpcode.MESSAGE_DATA:
           return;
       }
-      throw new Error(`Unrecognized server opcode: ${op.toString(16)}`);
+      throw new Error(`Unrecognized server opcode: ${(message as { op: unknown }).op}`);
     };
-    this.ws.onclose = (event) => {};
+    this.ws.onclose = (event) => {
+      log.error("onclose", { code: event.code, reason: event.reason, wasClean: event.wasClean });
+    };
   }
 
   close(): void {

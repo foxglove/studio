@@ -35,7 +35,7 @@ export type ClientMessage = ListChannels | Subscribe | Unsubscribe;
 
 export type ServerInfo = {
   op: ServerOpcode.SERVER_INFO;
-  id: string;
+  name: string;
   capabilities: string[];
 };
 export type StatusMessage = {
