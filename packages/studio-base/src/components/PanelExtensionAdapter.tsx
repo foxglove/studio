@@ -13,6 +13,7 @@ import {
   ExtensionPanelRegistration,
   MessageEvent,
   PanelExtensionContext,
+  ParameterValue,
   RenderState,
   Topic,
 } from "@foxglove/studio";
@@ -30,7 +31,6 @@ import {
 } from "@foxglove/studio-base/context/HoverValueContext";
 import {
   AdvertiseOptions,
-  ParameterValue,
   PlayerCapabilities,
   PlayerState,
 } from "@foxglove/studio-base/players/types";

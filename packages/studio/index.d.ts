@@ -3,7 +3,18 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 declare module "@foxglove/studio" {
-  export { ParameterValue } from "@foxglove/studio-base/players/types";
+  // Valid types for parameter data (such as rosparams)
+  export type ParameterValue =
+    | undefined
+    | boolean
+    | number
+    | string
+    | Date
+    | Uint8Array
+    | ParameterValue[]
+    | ParameterStruct;
+
+  export type ParameterStruct = Record<string, ParameterValue>;
 
   export interface Time {
     sec: number;
