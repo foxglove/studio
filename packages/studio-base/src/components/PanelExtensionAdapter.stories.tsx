@@ -61,9 +61,8 @@ function SimplePanel({ context }: { context: PanelExtensionContext }) {
       }
       done();
     };
-  });
+  }, [context]);
 
-  context.watch("parameters");
   return (
     <div>
       <h2>Simple Panel</h2>
