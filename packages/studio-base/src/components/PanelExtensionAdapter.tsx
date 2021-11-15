@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { useTheme } from "@fluentui/react";
+import { isEqual } from "lodash";
 import { CSSProperties, RefCallback, useCallback, useMemo, useRef, useState } from "react";
 import { v4 as uuid } from "uuid";
 
@@ -29,6 +30,7 @@ import {
 } from "@foxglove/studio-base/context/HoverValueContext";
 import {
   AdvertiseOptions,
+  ParameterValue,
   PlayerCapabilities,
   PlayerState,
 } from "@foxglove/studio-base/players/types";
@@ -47,6 +49,8 @@ type PanelExtensionAdapterProps = {
   /** Help document for the panel */
   help?: string;
 };
+
+const EmptyParameters = new Map<string, ParameterValue>();
 
 const EmptyTopics: readonly Topic[] = [];
 
@@ -163,6 +167,14 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       if (renderState.currentFrame?.length !== 0 || currentFrame?.length !== 0) {
         shouldRender = true;
         renderState.currentFrame = currentFrame;
+      }
+    }
+
+    if (watchedFieldsRef.current.has("parameters")) {
+      const parameters = playerState.activeData?.parameters ?? EmptyParameters;
+      if (!isEqual(parameters, renderState.parameters)) {
+        shouldRender = true;
+        renderState.parameters = Object.fromEntries(parameters);
       }
     }
 

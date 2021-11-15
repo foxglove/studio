@@ -3,6 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 declare module "@foxglove/studio" {
+  export { ParameterValue } from "@foxglove/studio-base/players/types";
+
   export interface Time {
     sec: number;
     nsec: number;
@@ -68,6 +70,11 @@ declare module "@foxglove/studio" {
      * All available messages. Best-effort list of all available messages.
      */
     allFrames?: readonly MessageEvent<unknown>[];
+
+    /**
+     * Map of current parameter values.
+     */
+    parameters?: readonly Record<string, ParameterValue>;
 
     /**
      * List of available topics. This list includes subscribed and unsubscribed topics.
