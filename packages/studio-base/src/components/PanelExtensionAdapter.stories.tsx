@@ -56,7 +56,7 @@ function SimplePanel({ context }: { context: PanelExtensionContext }) {
   useLayoutEffect(() => {
     context.watch("parameters");
     context.onRender = (renderState: RenderState, done) => {
-      if (renderState.parameters) {
+      if (renderState.parameters != undefined) {
         setParameters(renderState.parameters);
       }
       done();
