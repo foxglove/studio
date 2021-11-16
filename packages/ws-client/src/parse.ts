@@ -15,7 +15,7 @@ export function parseServerMessage(buffer: ArrayBuffer): ServerMessage {
     case ServerOpcode.SERVER_INFO:
     case ServerOpcode.STATUS_MESSAGE:
     case ServerOpcode.CHANNEL_LIST:
-    case ServerOpcode.SUBSCRIPTION_ACK:
+      // case ServerOpcode.SUBSCRIPTION_ACK:
       throw new Error(`Opcode ${op} should be sent as JSON rather than binary`);
 
     case ServerOpcode.MESSAGE_DATA: {

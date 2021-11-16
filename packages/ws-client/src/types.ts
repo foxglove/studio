@@ -12,9 +12,19 @@ export enum ServerOpcode {
   SERVER_INFO = 0x80,
   STATUS_MESSAGE = 0x81,
   CHANNEL_LIST = 0x82,
-  SUBSCRIPTION_ACK = 0x83,
+  // SUBSCRIPTION_ACK = 0x83,
   MESSAGE_DATA = 0x85,
 }
+
+export type ChannelId = number;
+export type Channel = {
+  id: ChannelId;
+  topic: string;
+  encoding: string;
+  schemaName: string;
+  schema: string;
+};
+export type ClientSubscriptionId = number;
 
 export type ListChannels = {
   op: ClientOpcode.LIST_CHANNELS;
@@ -22,13 +32,13 @@ export type ListChannels = {
 export type Subscribe = {
   op: ClientOpcode.SUBSCRIBE;
   subscriptions: Array<{
-    clientSubscriptionId: number;
-    topic: string;
+    clientSubscriptionId: ClientSubscriptionId;
+    channel: ChannelId;
   }>;
 };
 export type Unsubscribe = {
   op: ClientOpcode.UNSUBSCRIBE;
-  unsubscriptions: number[];
+  unsubscriptions: ClientSubscriptionId[];
 };
 
 export type ClientMessage = ListChannels | Subscribe | Unsubscribe;
@@ -45,22 +55,17 @@ export type StatusMessage = {
 };
 export type ChannelList = {
   op: ServerOpcode.CHANNEL_LIST;
-  channels: Array<{
-    topic: string;
-    encoding: string;
-    schemaName: string;
-    schema: string;
-  }>;
+  channels: Channel[];
 };
-export type SubscriptionAck = {
-  op: ServerOpcode.SUBSCRIPTION_ACK;
-  subscriptions: Array<{
-    clientSubscriptionId: number;
-    encoding: string;
-    schemaName: string;
-    schema: string;
-  }>;
-};
+// export type SubscriptionAck = {
+//   op: ServerOpcode.SUBSCRIPTION_ACK;
+//   subscriptions: Array<{
+//     clientSubscriptionId: number;
+//     encoding: string;
+//     schemaName: string;
+//     schema: string;
+//   }>;
+// };
 export type MessageData = {
   op: ServerOpcode.MESSAGE_DATA;
   clientSubscriptionId: number;
@@ -72,5 +77,5 @@ export type ServerMessage =
   | ServerInfo
   | StatusMessage
   | ChannelList
-  | SubscriptionAck
+  // | SubscriptionAck
   | MessageData;
