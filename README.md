@@ -30,6 +30,8 @@ Visit [foxglove.dev/download](https://foxglove.dev/download) or [GitHub Releases
 
 Foxglove Studio is primarily written in TypeScript – contributions are welcome!
 
+> All contributors will need to agree to our [Contributor License Agreement](https://github.com/foxglove/cla)
+
 **Supported development environments:** Linux, Windows, macOS
 
 **Dependencies:**
@@ -52,6 +54,9 @@ $ yarn start        # launch electron
 
 # To launch the browser app:
 $ yarn web:serve
+
+# To launch the storybook:
+$ yarn storybook
 
 # Advanced usage: running webpack and electron on different computers (or VMs) on the same network
 $ yarn serve --host 192.168.xxx.yyy         # the address where electron can reach the webpack dev server
