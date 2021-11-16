@@ -25,6 +25,7 @@ import {
   RosbridgeDataSourceFactory,
   Ros1RemoteBagDataSourceFactory,
   FoxgloveDataPlatformDataSourceFactory,
+  FoxgloveWebSocketDataSourceFactory,
   UlogLocalDataSourceFactory,
 } from "@foxglove/studio-base";
 
@@ -48,6 +49,7 @@ const dataSources: IDataSourceFactory[] = [
   new UlogLocalDataSourceFactory(),
   new VelodyneUnavailableDataSourceFactory(),
   new FoxgloveDataPlatformDataSourceFactory(),
+  new FoxgloveWebSocketDataSourceFactory(),
 ];
 
 function ColorSchemeThemeProvider({ children }: React.PropsWithChildren<unknown>): JSX.Element {

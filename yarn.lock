@@ -2345,6 +2345,7 @@ __metadata:
     "@foxglove/studio": "workspace:*"
     "@foxglove/ulog": 2.1.1
     "@foxglove/velodyne-cloud": 1.0.0
+    "@foxglove/ws-client": "workspace:*"
     "@mdi/svg": 6.3.95
     "@sentry/core": 6.13.3
     "@sentry/types": 6.13.3
@@ -2373,6 +2374,7 @@ __metadata:
     "@types/offscreencanvas": 2019.6.4
     "@types/prettier": 2.4.1
     "@types/promise-queue": 2.2.0
+    "@types/protobufjs": "workspace:*"
     "@types/react": 17.0.31
     "@types/react-autocomplete": 1.8.6
     "@types/react-dom": 17.0.10
@@ -2400,6 +2402,7 @@ __metadata:
     amplitude-js: 8.8.0
     argparse: 2.0.1
     async-mutex: 0.3.2
+    base64-arraybuffer: 1.0.1
     browserify-zlib: 0.2.0
     chart.js: 3.5.1
     chartjs-plugin-annotation: 1.0.2
@@ -2438,6 +2441,7 @@ __metadata:
     path-browserify: 1.0.1
     prettier: 2.4.1
     promise-queue: 2.2.5
+    protobufjs: 6.11.2
     quickhull3d: 2.0.5
     rc-tree: 5.2.1
     react: 17.0.2
@@ -2524,13 +2528,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/ws-client@workspace:packages/ws-client":
+"@foxglove/ws-client@workspace:*, @foxglove/ws-client@workspace:packages/ws-client":
   version: 0.0.0-use.local
   resolution: "@foxglove/ws-client@workspace:packages/ws-client"
   dependencies:
     "@foxglove/log": "workspace:*"
     "@types/lodash": ^4.14.176
+    "@types/protobufjs": "workspace:*"
     commander: 8.3.0
+    eventemitter3: 4.0.7
     lodash: 4.17.21
     protobufjs: 6.11.2
     ts-node: 10.4.0
@@ -5442,6 +5448,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/protobufjs@workspace:*, @types/protobufjs@workspace:packages/@types/protobufjs":
+  version: 0.0.0-use.local
+  resolution: "@types/protobufjs@workspace:packages/@types/protobufjs"
+  languageName: unknown
+  linkType: soft
+
 "@types/q@npm:^1.5.1":
   version: 1.5.5
   resolution: "@types/q@npm:1.5.5"
@@ -7545,6 +7557,13 @@ __metadata:
   version: 0.1.4
   resolution: "base64-arraybuffer@npm:0.1.4"
   checksum: d249a929e27b2430d7ba1527e91a36e14da37ae2f80e350c4d696a038257718f8da07577e820e7262f86a0ecd573c283db10c46502080f53ae11bfdd99b6a029
+  languageName: node
+  linkType: hard
+
+"base64-arraybuffer@npm:1.0.1":
+  version: 1.0.1
+  resolution: "base64-arraybuffer@npm:1.0.1"
+  checksum: 04b6fe6818b1c79774fa8aea169063521ad177f2ba04d2a4a0f00fca297d516319b551a3cda76050263da751b4ffb07d939fc1b5eb155f0e429659733e60afb0
   languageName: node
   linkType: hard
 
@@ -11387,7 +11406,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eventemitter3@npm:^4.0.0, eventemitter3@npm:^4.0.7":
+"eventemitter3@npm:4.0.7, eventemitter3@npm:^4.0.0, eventemitter3@npm:^4.0.7":
   version: 4.0.7
   resolution: "eventemitter3@npm:4.0.7"
   checksum: 1875311c42fcfe9c707b2712c32664a245629b42bb0a5a84439762dd0fd637fc54d078155ea83c2af9e0323c9ac13687e03cfba79b03af9f40c89b4960099374

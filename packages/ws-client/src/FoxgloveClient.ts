@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { EventEmitter, EventNames, EventListener } from "eventemitter3";
 import WebSocket from "ws";
 
 import Logger from "@foxglove/log";
@@ -19,12 +20,6 @@ import {
 
 const log = Logger.getLogger(__filename);
 
-type OnMessageHandler = (event: {
-  topic: string;
-  timestamp: bigint;
-  message: unknown;
-  sizeInBytes: number;
-}) => void;
 type Deserializer = (data: DataView) => unknown;
 type ResolvedSubscription = {
   id: ClientSubscriptionId;
@@ -32,12 +27,24 @@ type ResolvedSubscription = {
   deserializer: Deserializer;
 };
 
+type EventTypes = {
+  open: () => void;
+  message: (event: {
+    topic: string;
+    timestamp: bigint;
+    message: unknown;
+    sizeInBytes: number;
+  }) => void;
+  error: (error: Error) => void;
+  channelListUpdate: (channels: ReadonlyMap<string, Channel>) => void;
+};
+
 export default class FoxgloveClient {
   static SUPPORTED_SUBPROTOCOL = "x-foxglove-1";
 
+  private emitter = new EventEmitter<EventTypes>();
   private ws!: WebSocket;
   private url: string;
-  private onMessage: OnMessageHandler;
   private createDeserializer: (channel: Channel) => Deserializer;
   private nextSubscriptionId = 0;
   private channelsByTopic = new Map<string, Channel>();
@@ -49,31 +56,37 @@ export default class FoxgloveClient {
   constructor({
     url,
     createDeserializer,
-    onMessage,
   }: {
     url: string;
     createDeserializer: (channel: Channel) => Deserializer;
-    onMessage: OnMessageHandler;
   }) {
     this.url = url;
     this.createDeserializer = createDeserializer;
-    this.onMessage = onMessage;
     this.reconnect();
+  }
+
+  on<E extends EventNames<EventTypes>>(name: E, listener: EventListener<EventTypes, E>): void {
+    this.emitter.on(name, listener);
+  }
+  off<E extends EventNames<EventTypes>>(name: E, listener: EventListener<EventTypes, E>): void {
+    this.emitter.off(name, listener);
   }
 
   private reconnect() {
     this.ws = new WebSocket(this.url, [FoxgloveClient.SUPPORTED_SUBPROTOCOL]);
     this.ws.binaryType = "arraybuffer";
     this.ws.onerror = (event) => {
-      log.error("onerror", event.error);
+      log.debug("onerror", event.error);
+      this.emitter.emit("error", event.error);
     };
     this.ws.onopen = (_event) => {
-      log.info("onopen");
+      log.debug("onopen");
       if (this.ws.protocol !== FoxgloveClient.SUPPORTED_SUBPROTOCOL) {
         throw new Error(
           `Expected subprotocol ${FoxgloveClient.SUPPORTED_SUBPROTOCOL}, got '${this.ws.protocol}'`,
         );
       }
+      this.emitter.emit("open");
     };
     this.ws.onmessage = (event /*: MessageEvent<ArrayBuffer | string>*/) => {
       let message: ServerMessage;
@@ -82,7 +95,7 @@ export default class FoxgloveClient {
       } else {
         message = JSON.parse(event.data as string);
       }
-      log.info("onmessage", message);
+      log.debug("onmessage", message);
 
       switch (message.op) {
         case ServerOpcode.SERVER_INFO:
@@ -109,6 +122,7 @@ export default class FoxgloveClient {
           this.processUnresolvedSubscriptions();
           // TODO: what to do if a subscribed topic disappears and reappears with a different
           // schema?
+          this.emitter.emit("channelListUpdate", this.channelsByTopic);
           return;
         }
 
@@ -118,7 +132,7 @@ export default class FoxgloveClient {
             log.warn(`Received message for unknown subscription ${message.clientSubscriptionId}`);
             return;
           }
-          this.onMessage({
+          this.emitter.emit("message", {
             topic: sub.channel.topic,
             timestamp: message.timestamp,
             message: sub.deserializer(message.data),

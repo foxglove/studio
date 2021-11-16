@@ -26,6 +26,7 @@ import {
   Ros1SocketDataSourceFactory,
   Ros2SocketDataSourceFactory,
   FoxgloveDataPlatformDataSourceFactory,
+  FoxgloveWebSocketDataSourceFactory,
   UlogLocalDataSourceFactory,
 } from "@foxglove/studio-base";
 
@@ -52,6 +53,7 @@ const dataSources: IDataSourceFactory[] = [
   new UlogLocalDataSourceFactory(),
   new VelodyneDataSourceFactory(),
   new FoxgloveDataPlatformDataSourceFactory(),
+  new FoxgloveWebSocketDataSourceFactory(),
 ];
 
 export default function Root(): ReactElement {

@@ -23,7 +23,9 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.176",
+    "@types/protobufjs": "workspace:*",
     "commander": "8.3.0",
+    "eventemitter3": "4.0.7",
     "lodash": "4.17.21",
     "protobufjs": "6.11.2",
     "ts-node": "10.4.0",
