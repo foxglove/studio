@@ -85,7 +85,7 @@ declare module "@foxglove/studio" {
     /**
      * Map of current parameter values.
      */
-    parameters?: readonly ParameterStruct;
+    parameters?: Map<string, ParameterValue>;
 
     /**
      * List of available topics. This list includes subscribed and unsubscribed topics.

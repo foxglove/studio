@@ -174,7 +174,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       const parameters = playerState.activeData?.parameters ?? EmptyParameters;
       if (!isEqual(parameters, renderState.parameters)) {
         shouldRender = true;
-        renderState.parameters = Object.fromEntries(parameters);
+        renderState.parameters = parameters;
       }
     }
 
