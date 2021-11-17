@@ -360,6 +360,12 @@ export default class RandomAccessPlayer implements Player {
             publishedTopics,
             parsedMessageDefinitionsByTopic: this._parsedMessageDefinitionsByTopic,
           },
+      urlState: this._label
+        ? {
+            type: "ros1-remote-bagfile",
+            url: this._label,
+          }
+        : undefined,
     };
 
     return this._listener(data);

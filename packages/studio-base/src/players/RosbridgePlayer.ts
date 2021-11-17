@@ -329,6 +329,10 @@ export default class RosbridgePlayer implements Player {
       capabilities: CAPABILITIES,
       playerId: this._id,
       problems: this._problems.problems(),
+      urlState: {
+        type: "rosbridge-websocket",
+        url: this._url,
+      },
 
       activeData: {
         messages,

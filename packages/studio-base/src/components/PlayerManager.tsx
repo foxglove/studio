@@ -45,6 +45,7 @@ import UserNodePlayer from "@foxglove/studio-base/players/UserNodePlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 import { UserNodes } from "@foxglove/studio-base/types/panels";
 import Storage from "@foxglove/studio-base/util/Storage";
+import { windowHasValidURLState } from "@foxglove/studio-base/util/appURLState";
 
 const log = Logger.getLogger(__filename);
 
@@ -276,8 +277,13 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
     ],
   );
 
-  // restore the saved source on first mount
+  // Restore the saved source on first mount unless our url specifies a source.
   useLayoutEffect(() => {
+    // The URL encodes a valid session state. Defer to the URL state.
+    if (windowHasValidURLState()) {
+      return;
+    }
+
     if (savedSource) {
       const foundSource = playerSources.find((source) => source.id === savedSource.id);
       if (!foundSource) {
