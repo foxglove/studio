@@ -7,7 +7,7 @@ import {
   DataSourceFactoryInitializeArgs,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { PromptOptions } from "@foxglove/studio-base/hooks/usePrompt";
-import RosbridgePlayer from "@foxglove/studio-base/players/RosbridgePlayer";
+import FoxgloveWebSocketPlayer from "@foxglove/studio-base/players/FoxgloveWebSocketPlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 import { parseInputUrl } from "@foxglove/studio-base/util/url";
 
@@ -43,7 +43,7 @@ export default class FoxgloveWebSocketDataSourceFactory implements IDataSourceFa
       return;
     }
 
-    return new RosbridgePlayer({
+    return new FoxgloveWebSocketPlayer({
       url,
       metricsCollector: args.metricsCollector,
     });

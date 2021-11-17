@@ -44,6 +44,7 @@ const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo
 const desktopBridge = (global as unknown as { desktopBridge: Desktop }).desktopBridge;
 
 const dataSources: IDataSourceFactory[] = [
+  new FoxgloveWebSocketDataSourceFactory(),
   new Ros1SocketDataSourceFactory(),
   new Ros1LocalBagDataSourceFactory(),
   new Ros1RemoteBagDataSourceFactory(),
@@ -53,7 +54,6 @@ const dataSources: IDataSourceFactory[] = [
   new UlogLocalDataSourceFactory(),
   new VelodyneDataSourceFactory(),
   new FoxgloveDataPlatformDataSourceFactory(),
-  new FoxgloveWebSocketDataSourceFactory(),
 ];
 
 export default function Root(): ReactElement {

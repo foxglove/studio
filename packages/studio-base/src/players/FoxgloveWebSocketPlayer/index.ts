@@ -11,13 +11,13 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import base64 from "base64-arraybuffer";
+import * as base64 from "base64-arraybuffer";
 import protobufjs from "protobufjs";
 import { FileDescriptorSet } from "protobufjs/ext/descriptor";
 import { v4 as uuidv4 } from "uuid";
 
 import Log from "@foxglove/log";
-import { Time, fromMillis } from "@foxglove/rostime";
+import { Time, fromMillis, fromNanoSec } from "@foxglove/rostime";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
   MessageEvent,
@@ -28,6 +28,7 @@ import {
   Topic,
   PlayerPresence,
   PlayerMetricsCollectorInterface,
+  AdvertiseOptions,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
@@ -86,7 +87,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
       const type = root.lookupType(channel.schemaName);
       return (data: DataView) => {
         try {
-          type.decode(new Uint8Array(data.buffer, data.byteOffset, data.byteLength));
+          return type.decode(new Uint8Array(data.buffer, data.byteOffset, data.byteLength));
         } catch (error) {
           this._problems.addProblem(`message:${channel.topic}`, {
             severity: "error",
@@ -94,6 +95,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
             error,
           });
           this._emitState();
+          throw error;
         }
       };
     } catch (error) {
@@ -118,8 +120,18 @@ export default class FoxgloveWebSocketPlayer implements Player {
     log.info(`Opening connection to ${this._url}`);
 
     const client = new FoxgloveClient({
-      url: this._url,
+      // url: this._url,
+      ws: new WebSocket(this._url, [FoxgloveClient.SUPPORTED_SUBPROTOCOL]),
       createDeserializer: this._createDeserializer.bind(this),
+    });
+
+    client.on("open", () => {
+      if (this._closed) {
+        return;
+      }
+      this._presence = PlayerPresence.PRESENT;
+      this._problems.removeProblem("ws:connection-failed");
+      this._client = client;
     });
 
     client.on("channelListUpdate", (channels) => {
@@ -127,7 +139,11 @@ export default class FoxgloveWebSocketPlayer implements Player {
         name: topic,
         datatype: channel.schemaName,
       }));
-      // this._datatypes = //FIXME
+      this._datatypes = new Map(
+        Array.from(channels.values(), (channel) => {
+          return [channel.schemaName, { name: channel.schemaName, definitions: [] }];
+        }),
+      ); //FIXME
       this._emitState();
     });
 
@@ -136,6 +152,20 @@ export default class FoxgloveWebSocketPlayer implements Player {
         severity: "warn",
         message: "Foxglove WebSocket error",
         error: err,
+      });
+      this._emitState();
+    });
+
+    client.on("message", ({ topic, timestamp, message, sizeInBytes }) => {
+      if (!this._hasReceivedMessage) {
+        this._hasReceivedMessage = true;
+        this._metricsCollector.recordTimeToFirstMsgs();
+      }
+      this._parsedMessages.push({
+        topic,
+        receiveTime: fromNanoSec(timestamp),
+        message,
+        sizeInBytes,
       });
       this._emitState();
     });
@@ -173,8 +203,8 @@ export default class FoxgloveWebSocketPlayer implements Player {
       return Promise.resolve();
     }
 
-    const { _topics: _providerTopics, _datatypes: _providerDatatypes, _start } = this;
-    if (!_providerTopics || !_providerDatatypes || !_start) {
+    const { _topics, _datatypes, _start } = this;
+    if (!_topics || !_datatypes || !_start) {
       return this._listener({
         name: this._url,
         presence: this._presence,
@@ -218,8 +248,8 @@ export default class FoxgloveWebSocketPlayer implements Player {
         // We don't support seeking, so we need to set this to any fixed value. Just avoid 0 so
         // that we don't accidentally hit falsy checks.
         lastSeekTime: 1,
-        topics: _providerTopics,
-        datatypes: _providerDatatypes,
+        topics: _topics,
+        datatypes: _datatypes,
         parsedMessageDefinitionsByTopic: {}, //FIXME
       },
     });
@@ -276,8 +306,10 @@ export default class FoxgloveWebSocketPlayer implements Player {
     }
   }
 
-  setPublishers(): void {
-    throw new Error("Publishing is not supported by the Foxglove WebSocket connection");
+  setPublishers(publishers: AdvertiseOptions[]): void {
+    if (publishers.length > 0) {
+      throw new Error("Publishing is not supported by the Foxglove WebSocket connection");
+    }
   }
 
   setParameter(): void {

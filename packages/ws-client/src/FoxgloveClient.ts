@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { EventEmitter, EventNames, EventListener } from "eventemitter3";
-import WebSocket from "ws";
+// import WebSocket from "ws";
 
 import Logger from "@foxglove/log";
 
@@ -44,7 +44,7 @@ export default class FoxgloveClient {
 
   private emitter = new EventEmitter<EventTypes>();
   private ws!: WebSocket;
-  private url: string;
+  // private url: string;
   private createDeserializer: (channel: Channel) => Deserializer;
   private nextSubscriptionId = 0;
   private channelsByTopic = new Map<string, Channel>();
@@ -54,13 +54,13 @@ export default class FoxgloveClient {
   private resolvedSubscriptionsById = new Map<ClientSubscriptionId, ResolvedSubscription>();
 
   constructor({
-    url,
+    ws,
     createDeserializer,
   }: {
-    url: string;
+    ws: WebSocket;
     createDeserializer: (channel: Channel) => Deserializer;
   }) {
-    this.url = url;
+    this.ws = ws;
     this.createDeserializer = createDeserializer;
     this.reconnect();
   }
@@ -73,11 +73,11 @@ export default class FoxgloveClient {
   }
 
   private reconnect() {
-    this.ws = new WebSocket(this.url, [FoxgloveClient.SUPPORTED_SUBPROTOCOL]);
+    // this.ws = new WebSocket(this.url, [FoxgloveClient.SUPPORTED_SUBPROTOCOL]);
     this.ws.binaryType = "arraybuffer";
     this.ws.onerror = (event) => {
-      log.debug("onerror", event.error);
-      this.emitter.emit("error", event.error);
+      log.debug("onerror", (event as unknown as { error: Error }).error);
+      this.emitter.emit("error", (event as unknown as { error: Error }).error);
     };
     this.ws.onopen = (_event) => {
       log.debug("onopen");

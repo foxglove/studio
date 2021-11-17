@@ -40,6 +40,7 @@ import ExtensionLoaderProvider from "./providers/ExtensionLoaderProvider";
 const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
 
 const dataSources: IDataSourceFactory[] = [
+  new FoxgloveWebSocketDataSourceFactory(),
   new Ros1UnavailableDataSourceFactory(),
   new Ros1LocalBagDataSourceFactory(),
   new Ros1RemoteBagDataSourceFactory(),
@@ -49,7 +50,6 @@ const dataSources: IDataSourceFactory[] = [
   new UlogLocalDataSourceFactory(),
   new VelodyneUnavailableDataSourceFactory(),
   new FoxgloveDataPlatformDataSourceFactory(),
-  new FoxgloveWebSocketDataSourceFactory(),
 ];
 
 function ColorSchemeThemeProvider({ children }: React.PropsWithChildren<unknown>): JSX.Element {
