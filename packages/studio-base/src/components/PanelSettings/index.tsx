@@ -126,7 +126,7 @@ export default function PanelSettings(): JSX.Element {
     <SidebarContent title={`${panelInfo.title} panel settings`}>
       {shareModal}
       <Stack tokens={{ childrenGap: theme.spacing.m }}>
-        {panelInfo?.help ?? (
+        {panelInfo?.help != undefined ? (
           <Stack.Item>
             <Text styles={{ root: { color: theme.palette.neutralTertiary } }}>
               See docs{" "}
@@ -141,7 +141,7 @@ export default function PanelSettings(): JSX.Element {
               .
             </Text>
           </Stack.Item>
-        )}
+        ) : undefined}
         <Stack.Item>
           {schema ? (
             <StrictMode>
