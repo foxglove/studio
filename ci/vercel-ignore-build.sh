@@ -4,15 +4,17 @@
 # step feature to only deploy the main branch.
 # https://vercel.com/support/articles/how-do-i-use-the-ignored-build-step-field-on-vercel#with-environment-variables
 
-echo "VERCEL_GIT_COMMIT_REF: $VERCEL_GIT_COMMIT_REF"
+# To deploy only on the main branch, uncomment the code below.
 
-if [[ "$VERCEL_GIT_COMMIT_REF" == "main"  ]] ; then
-  # Proceed with the build
-  echo "✅ - Deploy"
-  exit 1;
-
-else
-  # Don't build
-  echo "🛑 - Build cancelled"
-  exit 0;
-fi
+# echo "VERCEL_GIT_COMMIT_REF: $VERCEL_GIT_COMMIT_REF"
+#
+# if [[ "$VERCEL_GIT_COMMIT_REF" == "main"  ]] ; then
+#   # Proceed with the build
+#   echo "✅ - Deploy"
+#   exit 1;
+#
+# else
+#   # Don't build
+#   echo "🛑 - Build cancelled"
+#   exit 0;
+# fi
