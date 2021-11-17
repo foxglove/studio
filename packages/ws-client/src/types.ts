@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 export enum ClientOpcode {
-  LIST_CHANNELS = 0x02,
+  // LIST_CHANNELS = 0x02,
   SUBSCRIBE = 0x03,
   UNSUBSCRIBE = 0x04,
 }
@@ -26,9 +26,9 @@ export type Channel = {
 };
 export type ClientSubscriptionId = number;
 
-export type ListChannels = {
-  op: ClientOpcode.LIST_CHANNELS;
-};
+// export type ListChannels = {
+//   op: ClientOpcode.LIST_CHANNELS;
+// };
 export type Subscribe = {
   op: ClientOpcode.SUBSCRIBE;
   subscriptions: Array<{
@@ -41,7 +41,7 @@ export type Unsubscribe = {
   unsubscriptions: ClientSubscriptionId[];
 };
 
-export type ClientMessage = ListChannels | Subscribe | Unsubscribe;
+export type ClientMessage = Subscribe | Unsubscribe;
 
 export type ServerInfo = {
   op: ServerOpcode.SERVER_INFO;
