@@ -3,7 +3,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { useTheme } from "@fluentui/react";
-import { isEqual } from "lodash";
 import { CSSProperties, RefCallback, useCallback, useMemo, useRef, useState } from "react";
 import { v4 as uuid } from "uuid";
 
@@ -172,7 +171,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
     if (watchedFieldsRef.current.has("parameters")) {
       const parameters = playerState.activeData?.parameters ?? EmptyParameters;
-      if (!isEqual(parameters, renderState.parameters)) {
+      if (parameters !== renderState.parameters) {
         shouldRender = true;
         renderState.parameters = parameters;
       }
