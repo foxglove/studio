@@ -47,7 +47,7 @@
     "@foxglove/studio": "workspace:*",
     "@foxglove/ulog": "2.1.1",
     "@foxglove/velodyne-cloud": "1.0.0",
-    "@foxglove/websocket": "github:foxglove/ws-server-example-python#workspace=@foxglove/websocket&commit=13c0e4cc0aeefbeabfce3e35d93555c6e4148a60",
+    "@foxglove/ws-protocol": "github:foxglove/ws-protocol#workspace=@foxglove/ws-protocol&commit=2b96b534f1e9350234b5ed5da711e0509542babc",
     "@mdi/svg": "6.3.95",
     "@sentry/core": "6.13.3",
     "@sentry/types": "6.13.3",

@@ -2345,7 +2345,7 @@ __metadata:
     "@foxglove/studio": "workspace:*"
     "@foxglove/ulog": 2.1.1
     "@foxglove/velodyne-cloud": 1.0.0
-    "@foxglove/websocket": "github:foxglove/ws-server-example-python#workspace=@foxglove/websocket&commit=13c0e4cc0aeefbeabfce3e35d93555c6e4148a60"
+    "@foxglove/ws-protocol": "github:foxglove/ws-protocol#workspace=@foxglove/ws-protocol&commit=2b96b534f1e9350234b5ed5da711e0509542babc"
     "@mdi/svg": 6.3.95
     "@sentry/core": 6.13.3
     "@sentry/types": 6.13.3
@@ -2528,12 +2528,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/websocket@github:foxglove/ws-server-example-python#workspace=@foxglove/websocket&commit=13c0e4cc0aeefbeabfce3e35d93555c6e4148a60":
+"@foxglove/ws-protocol@github:foxglove/ws-protocol#workspace=@foxglove/ws-protocol&commit=2b96b534f1e9350234b5ed5da711e0509542babc":
   version: 0.0.1
-  resolution: "@foxglove/websocket@https://github.com/foxglove/ws-server-example-python.git#workspace=%40foxglove%2Fwebsocket&commit=13c0e4cc0aeefbeabfce3e35d93555c6e4148a60"
+  resolution: "@foxglove/ws-protocol@https://github.com/foxglove/ws-protocol.git#workspace=%40foxglove%2Fws-protocol&commit=2b96b534f1e9350234b5ed5da711e0509542babc"
   dependencies:
     tslib: ^2
-  checksum: cdf9007814e4e328bd4818c7eaff5ae7f374a9c3efb59ebb35112352c33a013cda247bbfd21bb33f8234d4dbab66c3664b5b3eb4072780ffa1753303b62cdd2f
+  checksum: 50f274051a2f929e04a75e95279f3ca20658ceeebd74ffc31bee899f710f40c61659a1dd177bec761a13977351f512c8e30e8329787093b58770897f4fe949ad
   languageName: node
   linkType: hard
 

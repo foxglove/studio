@@ -34,7 +34,7 @@ import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
-import { Channel, FoxgloveClient } from "@foxglove/websocket";
+import { Channel, FoxgloveClient } from "@foxglove/ws-protocol";
 
 const log = Log.getLogger(__dirname);
 
