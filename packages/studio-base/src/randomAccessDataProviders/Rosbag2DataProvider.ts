@@ -65,7 +65,7 @@ export default class Rosbag2DataProvider implements RandomAccessDataProvider {
       const parsedMsgdef = ROS2_TO_DEFINITIONS.get(topicDef.type);
       if (parsedMsgdef == undefined) {
         problems.push({
-          severity: "warning",
+          severity: "warn",
           message: `Topic "${topicDef.name}" has unrecognized datatype "${topicDef.type}"`,
         });
         continue;
