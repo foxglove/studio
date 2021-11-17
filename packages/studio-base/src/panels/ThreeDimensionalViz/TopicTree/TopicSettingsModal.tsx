@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { ContextualMenu, DefaultButton, Dialog, DialogFooter } from "@fluentui/react";
+import { DefaultButton, Dialog, DialogFooter } from "@fluentui/react";
 import { isEmpty, omit } from "lodash";
 import React, { useCallback } from "react";
 
