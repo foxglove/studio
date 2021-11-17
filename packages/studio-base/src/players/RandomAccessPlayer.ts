@@ -252,8 +252,8 @@ export default class RandomAccessPlayer implements Player {
         this._parsedMessageDefinitionsByTopic =
           parsedMessageDefinitions.parsedMessageDefinitionsByTopic;
         this._initializing = false;
-        problems.forEach(({ message, severity, error, tip }, i) => {
-          this._problems.set(`initialization-${i}`, { message, severity, error, tip });
+        problems.forEach((problem, i) => {
+          this._problems.set(`initialization-${i}`, problem);
         });
         this._reportInitialized();
 
