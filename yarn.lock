@@ -2138,7 +2138,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/log@workspace:*, @foxglove/log@workspace:packages/log":
+"@foxglove/log@workspace:packages/log":
   version: 0.0.0-use.local
   resolution: "@foxglove/log@workspace:packages/log"
   dependencies:
@@ -2345,7 +2345,7 @@ __metadata:
     "@foxglove/studio": "workspace:*"
     "@foxglove/ulog": 2.1.1
     "@foxglove/velodyne-cloud": 1.0.0
-    "@foxglove/ws-client": "workspace:*"
+    "@foxglove/websocket": "github:foxglove/ws-server-example-python#workspace=@foxglove/websocket&commit=13c0e4cc0aeefbeabfce3e35d93555c6e4148a60"
     "@mdi/svg": 6.3.95
     "@sentry/core": 6.13.3
     "@sentry/types": 6.13.3
@@ -2528,21 +2528,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/ws-client@workspace:*, @foxglove/ws-client@workspace:packages/ws-client":
-  version: 0.0.0-use.local
-  resolution: "@foxglove/ws-client@workspace:packages/ws-client"
+"@foxglove/websocket@github:foxglove/ws-server-example-python#workspace=@foxglove/websocket&commit=13c0e4cc0aeefbeabfce3e35d93555c6e4148a60":
+  version: 0.0.1
+  resolution: "@foxglove/websocket@https://github.com/foxglove/ws-server-example-python.git#workspace=%40foxglove%2Fwebsocket&commit=13c0e4cc0aeefbeabfce3e35d93555c6e4148a60"
   dependencies:
-    "@foxglove/log": "workspace:*"
-    "@types/lodash": ^4.14.176
-    "@types/protobufjs": "workspace:*"
-    commander: 8.3.0
-    eventemitter3: 4.0.7
-    lodash: 4.17.21
-    protobufjs: 6.11.2
-    ts-node: 10.4.0
-    typescript: 4.4.4
-  languageName: unknown
-  linkType: soft
+    tslib: ^2
+  checksum: cdf9007814e4e328bd4818c7eaff5ae7f374a9c3efb59ebb35112352c33a013cda247bbfd21bb33f8234d4dbab66c3664b5b3eb4072780ffa1753303b62cdd2f
+  languageName: node
+  linkType: hard
 
 "@foxglove/xmlrpc@npm:^1.1.5":
   version: 1.1.5
@@ -11406,7 +11399,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eventemitter3@npm:4.0.7, eventemitter3@npm:^4.0.0, eventemitter3@npm:^4.0.7":
+"eventemitter3@npm:^4.0.0, eventemitter3@npm:^4.0.7":
   version: 4.0.7
   resolution: "eventemitter3@npm:4.0.7"
   checksum: 1875311c42fcfe9c707b2712c32664a245629b42bb0a5a84439762dd0fd637fc54d078155ea83c2af9e0323c9ac13687e03cfba79b03af9f40c89b4960099374
@@ -22470,7 +22463,7 @@ resolve@^2.0.0-next.3:
   languageName: node
   linkType: hard
 
-"tslib@npm:2.3.1, tslib@npm:^2.0.0, tslib@npm:^2.0.1, tslib@npm:^2.0.3, tslib@npm:^2.1.0, tslib@npm:^2.2.0, tslib@npm:^2.3.0, tslib@npm:^2.3.1":
+"tslib@npm:2.3.1, tslib@npm:^2, tslib@npm:^2.0.0, tslib@npm:^2.0.1, tslib@npm:^2.0.3, tslib@npm:^2.1.0, tslib@npm:^2.2.0, tslib@npm:^2.3.0, tslib@npm:^2.3.1":
   version: 2.3.1
   resolution: "tslib@npm:2.3.1"
   checksum: de17a98d4614481f7fcb5cd53ffc1aaf8654313be0291e1bfaee4b4bb31a20494b7d218ff2e15017883e8ea9626599b3b0e0229c18383ba9dce89da2adf15cb9
