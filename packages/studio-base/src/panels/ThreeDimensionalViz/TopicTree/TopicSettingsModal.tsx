@@ -131,14 +131,6 @@ function TopicSettingsModal({
       }}
       maxWidth={480}
       minWidth={480}
-      modalProps={{
-        isModeless: true,
-        dragOptions: {
-          moveMenuItemText: "Move",
-          closeMenuItemText: "Close",
-          menu: ContextualMenu,
-        },
-      }}
     >
       <MainEditor
         collectorMessage={sceneBuilderMessage}
