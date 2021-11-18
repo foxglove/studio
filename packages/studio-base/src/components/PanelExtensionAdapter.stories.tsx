@@ -51,13 +51,13 @@ export const CatchRenderError = (): JSX.Element => {
 };
 
 function SimplePanel({ context }: { context: PanelExtensionContext }) {
-  const [parameters, setParameters] = useState<Record<string, ParameterValue>>({});
+  const [parameters, setParameters] = useState<Map<string, ParameterValue>>(new Map());
 
   useLayoutEffect(() => {
     context.watch("parameters");
     context.onRender = (renderState: RenderState, done) => {
       if (renderState.parameters != undefined) {
-        setParameters(renderState.parameters);
+        setParameters(renderState.parameters ?? new Map());
       }
       done();
     };
@@ -67,7 +67,7 @@ function SimplePanel({ context }: { context: PanelExtensionContext }) {
     <div>
       <h2>Simple Panel</h2>
       <h3>Parameters</h3>
-      <div>{JSON.stringify(parameters)}</div>
+      <div>{JSON.stringify(Array.from(parameters))}</div>
     </div>
   );
 }
