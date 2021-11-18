@@ -28,6 +28,9 @@ import {
   FoxgloveDataPlatformDataSourceFactory,
   FoxgloveWebSocketDataSourceFactory,
   UlogLocalDataSourceFactory,
+  McapLocalDataSourceFactory,
+  useAppConfigurationValue,
+  AppSetting,
 } from "@foxglove/studio-base";
 
 import { Desktop } from "../common/types";
@@ -43,18 +46,37 @@ const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo
 
 const desktopBridge = (global as unknown as { desktopBridge: Desktop }).desktopBridge;
 
-const dataSources: IDataSourceFactory[] = [
-  new FoxgloveWebSocketDataSourceFactory(),
-  new Ros1SocketDataSourceFactory(),
-  new Ros1LocalBagDataSourceFactory(),
-  new Ros1RemoteBagDataSourceFactory(),
-  new Ros2SocketDataSourceFactory(),
-  new Ros2LocalBagDataSourceFactory(),
-  new RosbridgeDataSourceFactory(),
-  new UlogLocalDataSourceFactory(),
-  new VelodyneDataSourceFactory(),
-  new FoxgloveDataPlatformDataSourceFactory(),
-];
+// useAppConfiguration requires the AppConfigurationContext which is setup in Root
+// AppWrapper is used to make a functional component so we can use the context
+function AppWrapper() {
+  const [isMcapDataSourceEnabled] = useAppConfigurationValue(AppSetting.MCAP_DATA_SOURCE);
+
+  const deepLinks = useMemo(() => desktopBridge.getDeepLinks(), []);
+
+  const dataSources: IDataSourceFactory[] = useMemo(() => {
+    const sources = [
+      new FoxgloveWebSocketDataSourceFactory(),
+      new Ros1SocketDataSourceFactory(),
+      new Ros1LocalBagDataSourceFactory(),
+      new Ros1RemoteBagDataSourceFactory(),
+      new Ros2SocketDataSourceFactory(),
+      new Ros2LocalBagDataSourceFactory(),
+      new RosbridgeDataSourceFactory(),
+      new UlogLocalDataSourceFactory(),
+      new VelodyneDataSourceFactory(),
+
+      new FoxgloveDataPlatformDataSourceFactory(),
+    ];
+
+    if (isMcapDataSourceEnabled === true) {
+      sources.push(new McapLocalDataSourceFactory());
+    }
+
+    return sources;
+  }, [isMcapDataSourceEnabled]);
+
+  return <App demoBagUrl={DEMO_BAG_URL} deepLinks={deepLinks} availableSources={dataSources} />;
+}
 
 export default function Root(): ReactElement {
   const api = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);
@@ -74,8 +96,6 @@ export default function Root(): ReactElement {
     /* eslint-enable react/jsx-key */
   ];
 
-  const deepLinks = useMemo(() => desktopBridge.getDeepLinks(), []);
-
   // In Electron, the app theme setting is used to set `nativeTheme.themeSource`, which Chromium
   // uses to inform the prefers-color-scheme query, so we don't need to read the app setting here.
   const isDark = useMedia("(prefers-color-scheme: dark)");
@@ -87,7 +107,7 @@ export default function Root(): ReactElement {
         <ErrorBoundary>
           <MultiProvider providers={providers}>
             <NativeColorSchemeAdapter />
-            <App demoBagUrl={DEMO_BAG_URL} deepLinks={deepLinks} availableSources={dataSources} />
+            <AppWrapper />
           </MultiProvider>
         </ErrorBoundary>
       </CssBaseline>
