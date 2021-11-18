@@ -11,11 +11,15 @@ type CustomPaletteOptions = {
 export const dark: PaletteOptions & CustomPaletteOptions = {
   name: "dark",
   mode: "dark",
-  primary: { main: "#6f3be8" },
-  secondary: { main: "#8B67E9" },
+  primary: { main: "#9480ed" },
+  secondary: { main: "#b1b1b1" },
+  text: {
+    primary: "#e1e1e4",
+    secondary: "#bbbac0",
+  },
   background: {
-    default: "#121212",
-    paper: "#1E1E1E",
+    default: "#121217",
+    paper: "#27272b",
   },
   grey: {
     50: "#121212",
@@ -39,10 +43,14 @@ export const light: PaletteOptions & CustomPaletteOptions = {
   name: "light",
   mode: "light",
   primary: { main: "#6f3be8" },
-  secondary: { main: "#8b65e4" },
+  secondary: { main: "#808080" },
+  background: {
+    default: "#ffffff",
+    paper: "#f4f4f5",
+  },
   text: {
     primary: "#393939",
-    secondary: "#39393999",
+    secondary: "#5d5c65",
   },
   grey: {
     50: "#fafafa",
