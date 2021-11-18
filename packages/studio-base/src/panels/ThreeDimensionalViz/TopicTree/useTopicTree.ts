@@ -22,6 +22,8 @@ import { TOPIC_DISPLAY_MODES } from "@foxglove/studio-base/panels/ThreeDimension
 import {
   FOXGLOVE_GRID_DATATYPE,
   FOXGLOVE_GRID_TOPIC,
+  URDF_TOPIC,
+  URDF_DATATYPE,
 } from "@foxglove/studio-base/util/globalConstants";
 
 import {
@@ -86,6 +88,16 @@ export function generateTreeNode(
       type: "topic",
       topicName: FOXGLOVE_GRID_TOPIC,
       datatype: FOXGLOVE_GRID_DATATYPE,
+      key,
+      name,
+      available: true,
+      providerAvailable: true,
+    };
+  } else if (key === `t:${URDF_TOPIC}`) {
+    return {
+      type: "topic",
+      topicName: URDF_TOPIC,
+      datatype: URDF_DATATYPE,
       key,
       name,
       available: true,
