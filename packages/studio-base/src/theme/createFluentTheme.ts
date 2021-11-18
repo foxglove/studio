@@ -35,8 +35,8 @@ export default function createFluentTheme({
   });
 }
 
-export const lightTheme = createFluentTheme({ isInverted: false });
-export const darkTheme = createFluentTheme({ isInverted: true });
+export const lightFluentTheme = createFluentTheme({ isInverted: false });
+export const darkFluentTheme = createFluentTheme({ isInverted: true });
 
 function themeColors({ isInverted }: { isInverted: boolean }): Partial<IPalette> {
   // Generated from https://aka.ms/themedesigner
