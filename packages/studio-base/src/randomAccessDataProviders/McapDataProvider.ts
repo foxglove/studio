@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { isEqual } from "lodash";
-import { parse as protoParse, Type as ReflectedType } from "protobufjs";
+import protobufjs from "protobufjs";
 import decompressLZ4 from "wasm-lz4";
 
 import { ChannelInfo, McapReader, McapRecord } from "@foxglove/mcap";
@@ -53,7 +53,7 @@ export default class McapDataProvider implements RandomAccessDataProvider {
       number,
       {
         info: ChannelInfo;
-        messageDeserializer: ROS2MessageReader | LazyMessageReader | ReflectedType;
+        messageDeserializer: ROS2MessageReader | LazyMessageReader | protobufjs.Type;
       }
     >();
 
@@ -82,7 +82,7 @@ export default class McapDataProvider implements RandomAccessDataProvider {
             });
             messageDeserializer = new ROS2MessageReader(parsedDefinitions);
           } else if (record.encoding === "protobuf") {
-            const MsgRoot = protoParse(record.schema);
+            const MsgRoot = protobufjs.parse(record.schema);
             const Deserializer = MsgRoot.root.lookupType(record.schemaName);
             messageDeserializer = Deserializer;
           } else {
@@ -111,7 +111,7 @@ export default class McapDataProvider implements RandomAccessDataProvider {
             endTime = receiveTime;
           }
 
-          if (channelInfo.messageDeserializer instanceof ReflectedType) {
+          if (channelInfo.messageDeserializer instanceof protobufjs.Type) {
             const protoMsg = channelInfo.messageDeserializer.decode(new Uint8Array(record.data));
             messages.push({
               topic: channelInfo.info.topic,
