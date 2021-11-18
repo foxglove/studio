@@ -50,10 +50,8 @@ export default class FoxgloveWebSocketPlayer implements Player {
   private _datatypes?: RosDatatypes; // Datatypes as published by the WebSocket.
   private _start?: Time; // The time at which we started playing.
   private _topicSubscriptions = new Set<string>();
-  private _requestedSubscriptions: SubscribePayload[] = []; // Requested subscriptions by setSubscriptions()
   private _parsedMessages: MessageEvent<unknown>[] = []; // Queue of messages that we'll send in next _emitState() call.
   private _messageOrder: TimestampMethod = "receiveTime";
-  private _parsedTopics: Set<string> = new Set();
   private _receivedBytes: number = 0;
   private _metricsCollector: PlayerMetricsCollectorInterface;
   private _hasReceivedMessage = false;
@@ -274,13 +272,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
   }
 
   setSubscriptions(subscriptions: SubscribePayload[]): void {
-    this._requestedSubscriptions = subscriptions;
-
     if (!this._client || this._closed) {
       return;
     }
-
-    this._parsedTopics = new Set(subscriptions.map(({ topic }) => topic));
 
     // See what topics we actually can subscribe to.
     const availableTopicsByTopicName = getTopicsByTopicName(this._topics ?? []);
