@@ -135,7 +135,7 @@ export default function PanelSettings({
     <SidebarContent title={`${panelInfo.title} panel settings`}>
       {shareModal}
       <Stack tokens={{ childrenGap: theme.spacing.m }}>
-        {panelInfo?.help != undefined ? (
+        {panelInfo?.help != undefined && (
           <Stack.Item>
             <Text styles={{ root: { color: theme.palette.neutralTertiary } }}>
               See docs{" "}
@@ -150,7 +150,7 @@ export default function PanelSettings({
               .
             </Text>
           </Stack.Item>
-        ) : undefined}
+        )}
         <Stack.Item>
           {schema ? (
             <StrictMode>
