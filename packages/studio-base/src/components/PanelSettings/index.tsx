@@ -22,9 +22,18 @@ import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
 import SchemaEditor from "./SchemaEditor";
 
-export default function PanelSettings(): JSX.Element {
+export default function PanelSettings({
+  selectedPanelIdsForTests,
+}: React.PropsWithChildren<{
+  selectedPanelIdsForTests?: readonly string[];
+}>): JSX.Element {
   const selectedLayoutId = useCurrentLayoutSelector((state) => state.selectedLayout?.id);
-  const { selectedPanelIds, setSelectedPanelIds, setPanelDocToDisplay } = useSelectedPanels();
+  const {
+    selectedPanelIds: originalSelectedPanelIds,
+    setSelectedPanelIds,
+    setPanelDocToDisplay,
+  } = useSelectedPanels();
+  const selectedPanelIds = selectedPanelIdsForTests ?? originalSelectedPanelIds;
   const { openLayoutBrowser, openHelp } = useWorkspace();
   const selectedPanelId = useMemo(
     () => (selectedPanelIds.length === 1 ? selectedPanelIds[0] : undefined),
