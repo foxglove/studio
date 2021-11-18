@@ -2345,7 +2345,7 @@ __metadata:
     "@foxglove/studio": "workspace:*"
     "@foxglove/ulog": 2.1.1
     "@foxglove/velodyne-cloud": 1.0.0
-    "@foxglove/ws-protocol": "github:foxglove/ws-protocol#workspace=@foxglove/ws-protocol&commit=2b96b534f1e9350234b5ed5da711e0509542babc"
+    "@foxglove/ws-protocol": "github:foxglove/ws-protocol#workspace=@foxglove/ws-protocol&commit=df733909b53ea3105f804e979d1b50f212ff11f9"
     "@mdi/svg": 6.3.95
     "@sentry/core": 6.13.3
     "@sentry/types": 6.13.3
@@ -2402,7 +2402,6 @@ __metadata:
     amplitude-js: 8.8.0
     argparse: 2.0.1
     async-mutex: 0.3.2
-    base64-arraybuffer: 1.0.1
     browserify-zlib: 0.2.0
     chart.js: 3.5.1
     chartjs-plugin-annotation: 1.0.2
@@ -2528,12 +2527,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/ws-protocol@github:foxglove/ws-protocol#workspace=@foxglove/ws-protocol&commit=2b96b534f1e9350234b5ed5da711e0509542babc":
+"@foxglove/ws-protocol@github:foxglove/ws-protocol#workspace=@foxglove/ws-protocol&commit=df733909b53ea3105f804e979d1b50f212ff11f9":
   version: 0.0.1
-  resolution: "@foxglove/ws-protocol@https://github.com/foxglove/ws-protocol.git#workspace=%40foxglove%2Fws-protocol&commit=2b96b534f1e9350234b5ed5da711e0509542babc"
+  resolution: "@foxglove/ws-protocol@https://github.com/foxglove/ws-protocol.git#workspace=%40foxglove%2Fws-protocol&commit=df733909b53ea3105f804e979d1b50f212ff11f9"
   dependencies:
+    eventemitter3: ^4.0.7
+    long: ^5.1.0
+    protobufjs: ^6.11.2
     tslib: ^2
-  checksum: 50f274051a2f929e04a75e95279f3ca20658ceeebd74ffc31bee899f710f40c61659a1dd177bec761a13977351f512c8e30e8329787093b58770897f4fe949ad
+  checksum: 64343a0bdf6a63740a60c350aa9a141d2b89c0f7b90d9e0b910fd528f0169dde4b808531bafba888936a1ae2f9dedfff53afb60cc91ae4bc10f1f2bf3faec285
   languageName: node
   linkType: hard
 
@@ -7550,13 +7552,6 @@ __metadata:
   version: 0.1.4
   resolution: "base64-arraybuffer@npm:0.1.4"
   checksum: d249a929e27b2430d7ba1527e91a36e14da37ae2f80e350c4d696a038257718f8da07577e820e7262f86a0ecd573c283db10c46502080f53ae11bfdd99b6a029
-  languageName: node
-  linkType: hard
-
-"base64-arraybuffer@npm:1.0.1":
-  version: 1.0.1
-  resolution: "base64-arraybuffer@npm:1.0.1"
-  checksum: 04b6fe6818b1c79774fa8aea169063521ad177f2ba04d2a4a0f00fca297d516319b551a3cda76050263da751b4ffb07d939fc1b5eb155f0e429659733e60afb0
   languageName: node
   linkType: hard
 
@@ -15865,6 +15860,13 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"long@npm:^5.1.0":
+  version: 5.1.0
+  resolution: "long@npm:5.1.0"
+  checksum: bcf3c7cc204c1ab88f760f70ab8078abacd7fd2b5929e5c76b57149bbe22b788eb88dc0b6abb8e6b27fe87b21f59655d470e5265fcd39fef9ebd0a5d6b19abf6
+  languageName: node
+  linkType: hard
+
 "loose-envify@npm:^1.0.0, loose-envify@npm:^1.1.0, loose-envify@npm:^1.4.0":
   version: 1.4.0
   resolution: "loose-envify@npm:1.4.0"
@@ -18527,7 +18529,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"protobufjs@npm:6.11.2":
+"protobufjs@npm:6.11.2, protobufjs@npm:^6.11.2":
   version: 6.11.2
   resolution: "protobufjs@npm:6.11.2"
   dependencies:
