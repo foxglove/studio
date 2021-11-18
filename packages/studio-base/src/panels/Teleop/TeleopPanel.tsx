@@ -2,13 +2,13 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Dialog, DialogFooter, PrimaryButton, Stack, useTheme } from "@fluentui/react";
+import { Dialog, DialogFooter, PrimaryButton, Stack } from "@fluentui/react";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 
 import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
 import { PanelExtensionContext, Topic } from "@foxglove/studio";
 import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconButton";
-// import { darkTheme, lightTheme } from "@foxglove/studio-base/theme";
+import { createFluentTheme } from "@foxglove/studio-base/theme";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
 import DirectionalPad, { DirectionalPadAction } from "./DirectionalPad";
@@ -180,7 +180,11 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
   }, [renderDone]);
 
   const enabled = Boolean(context.publish && config.publishRate > 0 && currentTopic);
-  const theme = useTheme();
+
+  const theme =
+    colorScheme === "dark"
+      ? createFluentTheme({ isInverted: true })
+      : createFluentTheme({ isInverted: false });
 
   return (
     <ThemeProvider isDark={colorScheme === "dark"}>
