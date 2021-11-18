@@ -7,7 +7,7 @@ import { ThemeProvider as MuiThemeProvider } from "@mui/material";
 import { useLayoutEffect, useState } from "react";
 import { ThemeProvider as StyledThemeProvider } from "styled-components";
 
-import { createTheme } from "@foxglove/studio-base/theme";
+import { createMuiTheme, createFluentTheme } from "@foxglove/studio-base/theme";
 
 import icons from "./icons";
 
@@ -36,18 +36,19 @@ export default function ThemeProvider({
     return ReactNull;
   }
 
-  const theme = createTheme(isDark ? "dark" : "light");
+  const muiTheme = createMuiTheme(isDark ? "dark" : "light");
+  const fluentTheme = createFluentTheme({ isInverted: isDark });
 
   return (
-    <MuiThemeProvider theme={theme.mui}>
+    <MuiThemeProvider theme={muiTheme}>
       <FluentThemeProvider
         as={ThemeContainer}
         applyTo="none" // skip default global styles for now
-        theme={theme.fluent}
+        theme={fluentTheme}
       >
         <StyledThemeProvider
           // Expose the same theme to styled-components - see types/styled-components.d.ts for type definitions
-          theme={theme.fluent}
+          theme={fluentTheme}
         >
           {children}
         </StyledThemeProvider>
