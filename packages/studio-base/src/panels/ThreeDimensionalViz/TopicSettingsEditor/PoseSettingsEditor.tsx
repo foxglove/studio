@@ -13,7 +13,6 @@
 
 import ColorPicker from "@foxglove/studio-base/components/ColorPicker";
 import Flex from "@foxglove/studio-base/components/Flex";
-import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { Color, PoseStamped } from "@foxglove/studio-base/types/Messages";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
@@ -93,11 +92,6 @@ export default function PoseSettingsEditor(
     }
   }, [onFieldChange, onSettingsChange, settings]);
 
-  const badModelTypeSetting = React.useMemo(
-    () => !["arrow"].includes(settings.modelType!),
-    [settings],
-  );
-
   if (!message) {
     return (
       <div style={{ color: colors.TEXT_MUTED }}>
@@ -106,34 +100,7 @@ export default function PoseSettingsEditor(
     );
   }
 
-  return (
-    <Flex col>
-      <SLabel>Rendered Car</SLabel>
-      <div
-        style={{ display: "flex", margin: "4px", flexDirection: "column" }}
-        onChange={(e) => {
-          onSettingsChange({
-            ...settings,
-            modelType: (e.target as HTMLFormElement).value,
-            alpha: undefined,
-          });
-        }}
-      >
-        {[{ value: "arrow", title: "Arrow" }].map(({ value, title }) => (
-          <div key={value} style={{ marginBottom: "4px", display: "flex" }}>
-            <LegacyInput
-              type="radio"
-              value={value}
-              checked={settings.modelType === value || (value === "arrow" && badModelTypeSetting)}
-            />
-            <label>{title}</label>
-          </div>
-        ))}
-      </div>
-
-      {settingsByCarType}
-    </Flex>
-  );
+  return <Flex col>{settingsByCarType}</Flex>;
 }
 
 PoseSettingsEditor.canEditNamespaceOverrideColor = true;
