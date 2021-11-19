@@ -85,12 +85,7 @@ export default class UrdfBuilder implements MarkerProvider {
   }
 
   setTransforms = (transforms: Transforms, rootTransformID: string | undefined): void => {
-    // Just checking transforms === this._transforms will sometimes return false
-    // even though they are the same object. The storage comparison consistently works
-    if (
-      transforms.storage === this._transforms?.storage &&
-      rootTransformID === this._rootTransformID
-    ) {
+    if (transforms === this._transforms && rootTransformID === this._rootTransformID) {
       return;
     }
     this._transforms = transforms;
@@ -152,24 +147,22 @@ export default class UrdfBuilder implements MarkerProvider {
       return;
     }
 
-    log.debug(
-      `Rendering ${this._urdf.joints.size} joints and ${this._urdf.links.size} links from URDF`,
-    );
-
     for (const joint of this._urdf.joints.values()) {
-      const tf: TF = {
-        header: {
-          frame_id: joint.parent,
-          stamp: { sec: 0, nsec: 0 },
-          seq: 0,
-        },
-        child_frame_id: joint.child,
-        transform: {
-          translation: joint.origin.xyz,
-          rotation: eulerToQuaternion(joint.origin.rpy),
-        },
-      };
-      this._transforms.consume(tf);
+      if (!this._transforms.has(joint.child)) {
+        const tf: TF = {
+          header: {
+            frame_id: joint.parent,
+            stamp: { sec: 0, nsec: 0 },
+            seq: 0,
+          },
+          child_frame_id: joint.child,
+          transform: {
+            translation: joint.origin.xyz,
+            rotation: eulerToQuaternion(joint.origin.rpy),
+          },
+        };
+        this._transforms.consume(tf);
+      }
     }
 
     this.createMarkers(this._urdf);
