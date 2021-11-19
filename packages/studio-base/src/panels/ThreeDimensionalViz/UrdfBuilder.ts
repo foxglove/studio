@@ -85,6 +85,9 @@ export default class UrdfBuilder implements MarkerProvider {
   }
 
   setTransforms = (transforms: Transforms, rootTransformID: string | undefined): void => {
+    if (transforms === this._transforms && rootTransformID === this._rootTransformID) {
+      return;
+    }
     this._transforms = transforms;
     this._rootTransformID = rootTransformID;
     this.update();
