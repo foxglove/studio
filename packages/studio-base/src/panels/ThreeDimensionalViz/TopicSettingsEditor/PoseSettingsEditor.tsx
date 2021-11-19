@@ -34,59 +34,6 @@ export default function PoseSettingsEditor(
 ): JSX.Element {
   const { message, settings, onFieldChange, onSettingsChange } = props;
 
-  const settingsByCarType = React.useMemo(() => {
-    const currentShaftWidth = settings.size?.shaftWidth ?? 2;
-    const currentHeadWidth = settings.size?.headWidth ?? 2;
-    const currentHeadLength = settings.size?.headLength ?? 0.1;
-
-    return (
-      <Flex col>
-        <SLabel>Color</SLabel>
-        <ColorPicker
-          color={settings.overrideColor}
-          onChange={(newColor) => onFieldChange("overrideColor", newColor)}
-          alphaType="alpha"
-        />
-        <SLabel>Shaft width</SLabel>
-        <SInput
-          type="number"
-          value={currentShaftWidth}
-          placeholder="2"
-          onChange={(e) =>
-            onSettingsChange({
-              ...settings,
-              size: { ...settings.size, shaftWidth: parseFloat(e.target.value) },
-            })
-          }
-        />
-        <SLabel>Head width</SLabel>
-        <SInput
-          type="number"
-          value={currentHeadWidth}
-          placeholder="2"
-          onChange={(e) =>
-            onSettingsChange({
-              ...settings,
-              size: { ...settings.size, headWidth: parseFloat(e.target.value) },
-            })
-          }
-        />
-        <SLabel>Head length</SLabel>
-        <SInput
-          type="number"
-          value={currentHeadLength}
-          placeholder="0.1"
-          onChange={(e) =>
-            onSettingsChange({
-              ...settings,
-              size: { ...settings.size, headLength: parseFloat(e.target.value) },
-            })
-          }
-        />
-      </Flex>
-    );
-  }, [onFieldChange, onSettingsChange, settings]);
-
   if (!message) {
     return (
       <div style={{ color: colors.TEXT_MUTED }}>
@@ -95,7 +42,56 @@ export default function PoseSettingsEditor(
     );
   }
 
-  return <Flex col>{settingsByCarType}</Flex>;
+  const currentShaftWidth = settings.size?.shaftWidth ?? 2;
+  const currentHeadWidth = settings.size?.headWidth ?? 2;
+  const currentHeadLength = settings.size?.headLength ?? 0.1;
+
+  return (
+    <Flex col>
+      <SLabel>Color</SLabel>
+      <ColorPicker
+        color={settings.overrideColor}
+        onChange={(newColor) => onFieldChange("overrideColor", newColor)}
+        alphaType="alpha"
+      />
+      <SLabel>Shaft width</SLabel>
+      <SInput
+        type="number"
+        value={currentShaftWidth}
+        placeholder="2"
+        onChange={(e) =>
+          onSettingsChange({
+            ...settings,
+            size: { ...settings.size, shaftWidth: parseFloat(e.target.value) },
+          })
+        }
+      />
+      <SLabel>Head width</SLabel>
+      <SInput
+        type="number"
+        value={currentHeadWidth}
+        placeholder="2"
+        onChange={(e) =>
+          onSettingsChange({
+            ...settings,
+            size: { ...settings.size, headWidth: parseFloat(e.target.value) },
+          })
+        }
+      />
+      <SLabel>Head length</SLabel>
+      <SInput
+        type="number"
+        value={currentHeadLength}
+        placeholder="0.1"
+        onChange={(e) =>
+          onSettingsChange({
+            ...settings,
+            size: { ...settings.size, headLength: parseFloat(e.target.value) },
+          })
+        }
+      />
+    </Flex>
+  );
 }
 
 PoseSettingsEditor.canEditNamespaceOverrideColor = true;
