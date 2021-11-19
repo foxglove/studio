@@ -79,36 +79,15 @@ export default class UrdfBuilder implements MarkerProvider {
     }
   };
 
-  updateTransforms(transforms: Transforms): void {
-    if (!this._urdf) {
-      return;
-    }
-
-    for (const joint of this._urdf.joints.values()) {
-      const tf: TF = {
-        header: {
-          frame_id: joint.parent,
-          stamp: { sec: 0, nsec: 0 },
-          seq: 0,
-        },
-        child_frame_id: joint.child,
-        transform: {
-          translation: joint.origin.xyz,
-          rotation: eulerToQuaternion(joint.origin.rpy),
-        },
-      };
-      transforms.consume(tf);
-    }
-  }
-
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   setVisible(isVisible: boolean): void {
     this._visible = isVisible;
   }
 
-  setTransforms = (transforms: Transforms, rootTransformID: string): void => {
+  setTransforms = (transforms: Transforms, rootTransformID: string | undefined): void => {
     this._transforms = transforms;
     this._rootTransformID = rootTransformID;
+    this.update();
   };
 
   setSettingsByKey(settings: TopicSettingsCollection, rosPackagePath: string | undefined): void {
@@ -133,6 +112,7 @@ export default class UrdfBuilder implements MarkerProvider {
     let text: string;
     try {
       const fetchUrl = rewritePackageUrl(url, { rosPackagePath });
+      log.debug(`Fetching URDF from ${fetchUrl}`);
       const res = await fetch(fetchUrl);
       text = await res.text();
     } catch (err) {
@@ -146,14 +126,48 @@ export default class UrdfBuilder implements MarkerProvider {
     const fileFetcher = getFileFetch(rosPackagePath);
 
     try {
+      log.debug(`Parsing ${text.length} byte URDF`);
       this._urdf = await parseRobot(text, fileFetcher);
-      this.createMarkers(this._urdf);
+      this.update();
     } catch (err) {
       throw new Error(`Failed to parse URDF from "${url}": ${err}`);
     }
   }
 
-  createMarkers(urdf: UrdfRobot): void {
+  private update(): void {
+    this._boxes = [];
+    this._spheres = [];
+    this._cylinders = [];
+    this._meshes = [];
+
+    if (!this._urdf || !this._transforms) {
+      return;
+    }
+
+    log.debug(
+      `Rendering ${this._urdf.joints.size} joints and ${this._urdf.links.size} links from URDF`,
+    );
+
+    for (const joint of this._urdf.joints.values()) {
+      const tf: TF = {
+        header: {
+          frame_id: joint.parent,
+          stamp: { sec: 0, nsec: 0 },
+          seq: 0,
+        },
+        child_frame_id: joint.child,
+        transform: {
+          translation: joint.origin.xyz,
+          rotation: eulerToQuaternion(joint.origin.rpy),
+        },
+      };
+      this._transforms.consume(tf);
+    }
+
+    this.createMarkers(this._urdf);
+  }
+
+  private createMarkers(urdf: UrdfRobot): void {
     if (!this._transforms || !this._rootTransformID) {
       return;
     }
@@ -168,30 +182,50 @@ export default class UrdfBuilder implements MarkerProvider {
       let i = 0;
       for (const visual of link.visuals) {
         const id = `${link.name}-visual${i++}-${visual.geometry.geometryType}`;
-        const localPose = {
-          position: visual.origin.xyz,
-          orientation: eulerToQuaternion(visual.origin.rpy),
-        };
-        const pose = tfs.apply(emptyPose(), localPose, frame_id, rootTf);
-        if (!pose) {
-          continue;
-        }
+        this.addMarker(ns, id, frame_id, tfs, rootTf, visual, urdf);
+      }
 
-        switch (visual.geometry.geometryType) {
-          case "box":
-            this._boxes.push(UrdfBuilder.BuildBox(ns, id, visual, urdf, frame_id, pose));
-            break;
-          case "sphere":
-            this._spheres.push(UrdfBuilder.BuildSphere(ns, id, visual, urdf, frame_id, pose));
-            break;
-          case "cylinder":
-            this._cylinders.push(UrdfBuilder.BuildCylinder(ns, id, visual, urdf, frame_id, pose));
-            break;
-          case "mesh":
-            this._meshes.push(UrdfBuilder.BuildMesh(ns, id, visual, urdf, frame_id, pose));
-            break;
+      if (link.visuals.length === 0 && link.colliders.length > 0) {
+        // If there are no visuals, but there are colliders, render those instead
+        for (const collider of link.colliders) {
+          const id = `${link.name}-collider${i++}-${collider.geometry.geometryType}`;
+          this.addMarker(ns, id, frame_id, tfs, rootTf, collider, urdf);
         }
       }
+    }
+  }
+
+  private addMarker(
+    ns: string,
+    id: string,
+    frame_id: string,
+    tfs: Transforms,
+    rootTf: string,
+    visual: UrdfVisual,
+    robot: UrdfRobot,
+  ): void {
+    const localPose = {
+      position: visual.origin.xyz,
+      orientation: eulerToQuaternion(visual.origin.rpy),
+    };
+    const pose = tfs.apply(emptyPose(), localPose, frame_id, rootTf);
+    if (!pose) {
+      return;
+    }
+
+    switch (visual.geometry.geometryType) {
+      case "box":
+        this._boxes.push(UrdfBuilder.BuildBox(ns, id, visual, robot, frame_id, pose));
+        break;
+      case "sphere":
+        this._spheres.push(UrdfBuilder.BuildSphere(ns, id, visual, robot, frame_id, pose));
+        break;
+      case "cylinder":
+        this._cylinders.push(UrdfBuilder.BuildCylinder(ns, id, visual, robot, frame_id, pose));
+        break;
+      case "mesh":
+        this._meshes.push(UrdfBuilder.BuildMesh(ns, id, visual, robot, frame_id, pose));
+        break;
     }
   }
 

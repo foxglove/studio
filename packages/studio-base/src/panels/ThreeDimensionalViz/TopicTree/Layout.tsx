@@ -475,14 +475,13 @@ export default function Layout({
 
     sceneBuilder.setPlayerId(playerId);
 
+    urdfBuilder.setTransforms(transforms, rootTf);
     if (rootTf) {
-      urdfBuilder.setTransforms(transforms, rootTf);
       sceneBuilder.setTransforms(transforms, rootTf);
     }
 
     urdfBuilder.setVisible(selectedTopicNames.includes(URDF_TOPIC));
     urdfBuilder.setSettingsByKey(settingsByKey, rosPackagePath);
-    urdfBuilder.updateTransforms(transforms);
 
     // Toggle scene builder topics based on visible topic nodes in the tree
     const topicsByTopicName = getTopicsByTopicName(topics);
