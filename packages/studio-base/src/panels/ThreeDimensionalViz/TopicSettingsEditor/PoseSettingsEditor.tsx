@@ -27,7 +27,6 @@ export type PoseSettings = {
     headWidth?: number;
     shaftWidth?: number;
   };
-  modelType?: "arrow";
 };
 
 export default function PoseSettingsEditor(
@@ -36,60 +35,56 @@ export default function PoseSettingsEditor(
   const { message, settings, onFieldChange, onSettingsChange } = props;
 
   const settingsByCarType = React.useMemo(() => {
-    switch (settings.modelType) {
-      case "arrow":
-      default: {
-        const currentShaftWidth = settings.size?.shaftWidth ?? 2;
-        const currentHeadWidth = settings.size?.headWidth ?? 2;
-        const currentHeadLength = settings.size?.headLength ?? 0.1;
-        return (
-          <Flex col>
-            <SLabel>Color</SLabel>
-            <ColorPicker
-              color={settings.overrideColor}
-              onChange={(newColor) => onFieldChange("overrideColor", newColor)}
-              alphaType="alpha"
-            />
-            <SLabel>Shaft width</SLabel>
-            <SInput
-              type="number"
-              value={currentShaftWidth}
-              placeholder="2"
-              onChange={(e) =>
-                onSettingsChange({
-                  ...settings,
-                  size: { ...settings.size, shaftWidth: parseFloat(e.target.value) },
-                })
-              }
-            />
-            <SLabel>Head width</SLabel>
-            <SInput
-              type="number"
-              value={currentHeadWidth}
-              placeholder="2"
-              onChange={(e) =>
-                onSettingsChange({
-                  ...settings,
-                  size: { ...settings.size, headWidth: parseFloat(e.target.value) },
-                })
-              }
-            />
-            <SLabel>Head length</SLabel>
-            <SInput
-              type="number"
-              value={currentHeadLength}
-              placeholder="0.1"
-              onChange={(e) =>
-                onSettingsChange({
-                  ...settings,
-                  size: { ...settings.size, headLength: parseFloat(e.target.value) },
-                })
-              }
-            />
-          </Flex>
-        );
-      }
-    }
+    const currentShaftWidth = settings.size?.shaftWidth ?? 2;
+    const currentHeadWidth = settings.size?.headWidth ?? 2;
+    const currentHeadLength = settings.size?.headLength ?? 0.1;
+
+    return (
+      <Flex col>
+        <SLabel>Color</SLabel>
+        <ColorPicker
+          color={settings.overrideColor}
+          onChange={(newColor) => onFieldChange("overrideColor", newColor)}
+          alphaType="alpha"
+        />
+        <SLabel>Shaft width</SLabel>
+        <SInput
+          type="number"
+          value={currentShaftWidth}
+          placeholder="2"
+          onChange={(e) =>
+            onSettingsChange({
+              ...settings,
+              size: { ...settings.size, shaftWidth: parseFloat(e.target.value) },
+            })
+          }
+        />
+        <SLabel>Head width</SLabel>
+        <SInput
+          type="number"
+          value={currentHeadWidth}
+          placeholder="2"
+          onChange={(e) =>
+            onSettingsChange({
+              ...settings,
+              size: { ...settings.size, headWidth: parseFloat(e.target.value) },
+            })
+          }
+        />
+        <SLabel>Head length</SLabel>
+        <SInput
+          type="number"
+          value={currentHeadLength}
+          placeholder="0.1"
+          onChange={(e) =>
+            onSettingsChange({
+              ...settings,
+              size: { ...settings.size, headLength: parseFloat(e.target.value) },
+            })
+          }
+        />
+      </Flex>
+    );
   }, [onFieldChange, onSettingsChange, settings]);
 
   if (!message) {
