@@ -85,7 +85,12 @@ export default class UrdfBuilder implements MarkerProvider {
   }
 
   setTransforms = (transforms: Transforms, rootTransformID: string | undefined): void => {
-    if (transforms === this._transforms && rootTransformID === this._rootTransformID) {
+    // Just checking transforms === this._transforms will sometimes return false
+    // even though they are the same object. The storage comparison consistently works
+    if (
+      transforms.storage === this._transforms?.storage &&
+      rootTransformID === this._rootTransformID
+    ) {
       return;
     }
     this._transforms = transforms;
