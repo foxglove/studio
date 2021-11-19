@@ -1189,6 +1189,53 @@ describe("layout reducers", () => {
         ],
       });
     });
+    it("handles dragging non-Tab panel from Tab to nested Tab", () => {
+      const originalLayout = "Tab!a";
+      const originalSavedProps = {
+        "Tab!a": {
+          activeTabIdx: 0,
+          tabs: [{ title: "A", layout: { first: "Plot!a", second: "Tab!b", direction: "row" } }],
+        },
+        "Tab!b": {
+          activeTabIdx: 0,
+          tabs: [{ title: "B", layout: "RawMessages!a" }],
+        },
+      };
+      let panels: PanelsState = {
+        ...emptyLayout,
+        layout: originalLayout,
+        configById: originalSavedProps,
+      };
+      panels = panelsReducer(panels, {
+        type: "START_DRAG",
+        payload: { sourceTabId: "Tab!a", path: ["first"] },
+      });
+      panels = panelsReducer(panels, {
+        type: "END_DRAG",
+        payload: {
+          originalLayout,
+          originalSavedProps,
+          panelId: "Plot!a",
+          sourceTabId: "Tab!a",
+          targetTabId: "Tab!b",
+          position: "right",
+          destinationPath: [],
+          ownPath: ["first"],
+        },
+      });
+      const { layout, configById } = panels;
+      expect(layout).toEqual("Tab!a");
+      expect(configById["Tab!a"]).toEqual({
+        activeTabIdx: 0,
+        tabs: [{ title: "A", layout: "Tab!b" }],
+      });
+      expect(configById["Tab!b"]).toEqual({
+        activeTabIdx: 0,
+        tabs: [
+          { title: "B", layout: { first: "RawMessages!a", second: "Plot!a", direction: "row" } },
+        ],
+      });
+    });
     it("handles dragging Tab panels between Tab panels", () => {
       const originalLayout = {
         first: "Tab!a",

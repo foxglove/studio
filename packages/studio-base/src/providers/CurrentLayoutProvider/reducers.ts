@@ -613,7 +613,12 @@ const dragToTabFromTab = (
     trimConfigById: false,
   });
   newPanelsState = savePanelConfigs(newPanelsState, {
-    configs: [...fromTabConfigs, ...toTabConfigs, ...sourceTabChildConfigs],
+    configs: [
+      ...fromTabConfigs,
+      ...toTabConfigs,
+      // if the target tab is inside the source tab, make sure not to overwrite it with its old config
+      ...sourceTabChildConfigs.filter(({ id }) => id !== targetTabId),
+    ],
   });
   return newPanelsState;
 };
