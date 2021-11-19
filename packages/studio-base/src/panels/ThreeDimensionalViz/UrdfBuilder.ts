@@ -18,7 +18,6 @@ import {
   UrdfGeometryCylinder,
   UrdfGeometryMesh,
   UrdfGeometrySphere,
-  UrdfJoint,
   UrdfRobot,
   UrdfVisual,
   parseRobot,
@@ -33,13 +32,17 @@ import {
   CubeMarker,
   CylinderMarker,
   MeshMarker,
+  MutablePose,
   SphereMarker,
   TF,
 } from "@foxglove/studio-base/types/Messages";
 import { MarkerProvider, MarkerCollector } from "@foxglove/studio-base/types/Scene";
+import { emptyPose } from "@foxglove/studio-base/util/Pose";
 import { URDF_TOPIC } from "@foxglove/studio-base/util/globalConstants";
 
 export const DEFAULT_COLOR: Color = { r: 36 / 255, g: 142 / 255, b: 255 / 255, a: 1 };
+
+const TIME_ZERO = { sec: 0, nsec: 0 };
 
 type Vector3 = { x: number; y: number; z: number };
 type Quaternion = { x: number; y: number; z: number; w: number };
@@ -54,6 +57,8 @@ export default class UrdfBuilder implements MarkerProvider {
   private _meshes: MeshMarker[] = [];
   private _visible = true;
   private _settings: UrdfSettings = {};
+  private _transforms?: Transforms;
+  private _rootTransformID?: string;
 
   constructor() {}
 
@@ -101,6 +106,11 @@ export default class UrdfBuilder implements MarkerProvider {
     this._visible = isVisible;
   }
 
+  setTransforms = (transforms: Transforms, rootTransformID: string): void => {
+    this._transforms = transforms;
+    this._rootTransformID = rootTransformID;
+  };
+
   setSettingsByKey(settings: TopicSettingsCollection, rosPackagePath: string | undefined): void {
     const newSettings = settings[`t:${URDF_TOPIC}`] ?? {};
     if (!isEqual(newSettings, this._settings)) {
@@ -144,115 +154,135 @@ export default class UrdfBuilder implements MarkerProvider {
   }
 
   createMarkers(urdf: UrdfRobot): void {
-    const childToJoint = new Map<string, UrdfJoint>();
-    for (const joint of urdf.joints.values()) {
-      childToJoint.set(joint.child, joint);
+    if (!this._transforms || !this._rootTransformID) {
+      return;
     }
 
+    const tfs = this._transforms;
+    const rootTf = this._rootTransformID;
+    const ns = `urdf-${urdf.name}`;
+
     for (const link of urdf.links.values()) {
-      const joint = childToJoint.get(link.name);
-      if (!joint) {
-        log.warn(`No joint found for link ${link.name}`);
-        continue;
-      }
+      const frame_id = link.name;
 
       let i = 0;
       for (const visual of link.visuals) {
         const id = `${link.name}-visual${i++}-${visual.geometry.geometryType}`;
+        const localPose = {
+          position: visual.origin.xyz,
+          orientation: eulerToQuaternion(visual.origin.rpy),
+        };
+        const pose = tfs.apply(emptyPose(), localPose, frame_id, rootTf);
+        if (!pose) {
+          continue;
+        }
+
         switch (visual.geometry.geometryType) {
           case "box":
-            this._boxes.push(UrdfBuilder.BuildBox(id, visual, joint));
+            this._boxes.push(UrdfBuilder.BuildBox(ns, id, visual, urdf, frame_id, pose));
             break;
           case "sphere":
-            this._spheres.push(UrdfBuilder.BuildSphere(id, visual, joint));
+            this._spheres.push(UrdfBuilder.BuildSphere(ns, id, visual, urdf, frame_id, pose));
             break;
           case "cylinder":
-            this._cylinders.push(UrdfBuilder.BuildCylinder(id, visual, joint));
+            this._cylinders.push(UrdfBuilder.BuildCylinder(ns, id, visual, urdf, frame_id, pose));
             break;
           case "mesh":
-            this._meshes.push(UrdfBuilder.BuildMesh(id, visual, joint));
+            this._meshes.push(UrdfBuilder.BuildMesh(ns, id, visual, urdf, frame_id, pose));
             break;
         }
       }
     }
   }
 
-  static BuildBox(id: string, visual: UrdfVisual, joint: UrdfJoint): CubeMarker {
+  static BuildBox(
+    ns: string,
+    id: string,
+    visual: UrdfVisual,
+    robot: UrdfRobot,
+    frame_id: string,
+    pose: MutablePose,
+  ): CubeMarker {
     const box = visual.geometry as UrdfGeometryBox;
     const marker: CubeMarker = {
       type: 1,
-      header: { frame_id: joint.parent, stamp: { sec: 0, nsec: 0 }, seq: 0 },
-      ns: "urdf-box",
+      header: { frame_id, stamp: TIME_ZERO, seq: 0 },
+      ns,
       id,
       action: 0,
-      pose: {
-        position: visual.origin.xyz,
-        orientation: { x: 0, y: 0, z: 0, w: 1 }, // Convert Euler rpy to quaternion
-      },
+      pose,
       scale: box.size,
-      color: visual.material?.color ?? DEFAULT_COLOR,
-      frame_locked: false,
-      // scaleInvariant: true,
+      color: getColor(visual, robot),
+      frame_locked: true,
     };
     return marker;
   }
 
-  static BuildSphere(id: string, visual: UrdfVisual, joint: UrdfJoint): SphereMarker {
+  static BuildSphere(
+    ns: string,
+    id: string,
+    visual: UrdfVisual,
+    robot: UrdfRobot,
+    frame_id: string,
+    pose: MutablePose,
+  ): SphereMarker {
     const sphere = visual.geometry as UrdfGeometrySphere;
     const marker: SphereMarker = {
       type: 2,
-      header: { frame_id: joint.parent, stamp: { sec: 0, nsec: 0 }, seq: 0 },
-      ns: "urdf-sphere",
+      header: { frame_id, stamp: TIME_ZERO, seq: 0 },
+      ns,
       id,
       action: 0,
-      pose: {
-        position: visual.origin.xyz,
-        orientation: { x: 0, y: 0, z: 0, w: 1 }, // Convert Euler rpy to quaternion
-      },
-      scale: { x: sphere.radius, y: sphere.radius, z: sphere.radius },
-      color: visual.material?.color ?? DEFAULT_COLOR,
-      frame_locked: false,
-      // scaleInvariant: true,
+      pose,
+      scale: { x: sphere.radius * 2, y: sphere.radius * 2, z: sphere.radius * 2 },
+      color: getColor(visual, robot),
+      frame_locked: true,
     };
     return marker;
   }
 
-  static BuildCylinder(id: string, visual: UrdfVisual, joint: UrdfJoint): CylinderMarker {
+  static BuildCylinder(
+    ns: string,
+    id: string,
+    visual: UrdfVisual,
+    robot: UrdfRobot,
+    frame_id: string,
+    pose: MutablePose,
+  ): CylinderMarker {
     const cylinder = visual.geometry as UrdfGeometryCylinder;
     const marker: CylinderMarker = {
       type: 3,
-      header: { frame_id: joint.parent, stamp: { sec: 0, nsec: 0 }, seq: 0 },
-      ns: "urdf-cylinder",
+      header: { frame_id, stamp: TIME_ZERO, seq: 0 },
+      ns,
       id,
       action: 0,
-      pose: {
-        position: visual.origin.xyz,
-        orientation: { x: 0, y: 0, z: 0, w: 1 }, // Convert Euler rpy to quaternion
-      },
-      scale: { x: cylinder.radius, y: cylinder.length, z: cylinder.radius },
-      color: visual.material?.color ?? DEFAULT_COLOR,
-      frame_locked: false,
-      // scaleInvariant: true,
+      pose,
+      scale: { x: cylinder.radius * 2, y: cylinder.radius * 2, z: cylinder.length },
+      color: getColor(visual, robot),
+      frame_locked: true,
     };
     return marker;
   }
 
-  static BuildMesh(id: string, visual: UrdfVisual, joint: UrdfJoint): MeshMarker {
+  static BuildMesh(
+    ns: string,
+    id: string,
+    visual: UrdfVisual,
+    robot: UrdfRobot,
+    frame_id: string,
+    pose: MutablePose,
+  ): MeshMarker {
     const mesh = visual.geometry as UrdfGeometryMesh;
     const marker: MeshMarker = {
       type: 10,
-      header: { frame_id: joint.parent, stamp: { sec: 0, nsec: 0 }, seq: 0 },
-      ns: "urdf-mesh",
+      header: { frame_id, stamp: TIME_ZERO, seq: 0 },
+      ns,
       id,
       action: 0,
-      pose: {
-        position: visual.origin.xyz,
-        orientation: { x: 0, y: 0, z: 0, w: 1 }, // Convert Euler rpy to quaternion
-      },
+      pose,
       scale: mesh.scale ?? { x: 1, y: 1, z: 1 },
-      color: visual.material?.color ?? DEFAULT_COLOR,
-      frame_locked: false,
-      // scaleInvariant: true,
+      color: getColor(visual, robot),
+      frame_locked: true,
       mesh_resource: mesh.filename,
       mesh_use_embedded_materials: true,
     };
@@ -305,4 +335,17 @@ function eulerToQuaternion(rpy: Vector3): Quaternion {
   const z = sy * cr * cp - cy * sr * sp;
 
   return { x, y, z, w };
+}
+
+function getColor(visual: UrdfVisual, robot: UrdfRobot): Color {
+  if (!visual.material) {
+    return DEFAULT_COLOR;
+  }
+  if (visual.material.color) {
+    return visual.material.color;
+  }
+  if (visual.material.name) {
+    return robot.materials.get(visual.material.name)?.color ?? DEFAULT_COLOR;
+  }
+  return DEFAULT_COLOR;
 }

@@ -469,10 +469,6 @@ export default function Layout({
     gridBuilder.setVisible(selectedTopicNames.includes(FOXGLOVE_GRID_TOPIC));
     gridBuilder.setSettingsByKey(settingsByKey);
 
-    urdfBuilder.setVisible(selectedTopicNames.includes(URDF_TOPIC));
-    urdfBuilder.setSettingsByKey(settingsByKey, rosPackagePath);
-    urdfBuilder.updateTransforms(transforms);
-
     if (resetFrame) {
       sceneBuilder.clear();
     }
@@ -480,8 +476,13 @@ export default function Layout({
     sceneBuilder.setPlayerId(playerId);
 
     if (rootTf) {
+      urdfBuilder.setTransforms(transforms, rootTf);
       sceneBuilder.setTransforms(transforms, rootTf);
     }
+
+    urdfBuilder.setVisible(selectedTopicNames.includes(URDF_TOPIC));
+    urdfBuilder.setSettingsByKey(settingsByKey, rosPackagePath);
+    urdfBuilder.updateTransforms(transforms);
 
     // Toggle scene builder topics based on visible topic nodes in the tree
     const topicsByTopicName = getTopicsByTopicName(topics);
