@@ -103,6 +103,21 @@ export function generateTreeNode(
       available: true,
       providerAvailable: true,
     };
+  } else if (topicName === "/tf") {
+    // Mark transforms as always available, since they can be created and displayed even without any
+    // messages or topics present (such as loading from a URDF)
+    const datatype = datatypesByTopic[topicName] ?? "tf2_msgs/TFMessage";
+    return {
+      type: "topic",
+      key,
+      topicName,
+      available: true,
+      providerAvailable,
+      ...(parentKey ? { parentKey } : undefined),
+      ...(name ? { name } : undefined),
+      ...(datatype ? { datatype } : undefined),
+      ...(description ? { description } : undefined),
+    };
   } else if (topicName) {
     const datatype = datatypesByTopic[topicName];
     return {
@@ -181,10 +196,6 @@ export default function useTopicTree({
   const rootTreeNode = useMemo((): TreeNode => {
     const topicNames = providerTopics.map((topic) => topic.name);
     const availableTopicsNamesSet = new Set(topicNames);
-
-    // Mark transforms as always available, since they can be created and displayed even without any
-    // messages or topics present (such as loading from a URDF)
-    availableTopicsNamesSet.add("/tf");
 
     // Precompute uncategorized topics to add to the transformedTreeConfig before generating the TreeNodes.
     const uncategorizedTopicNames = difference([...availableTopicsNamesSet], topicTreeTopics);
