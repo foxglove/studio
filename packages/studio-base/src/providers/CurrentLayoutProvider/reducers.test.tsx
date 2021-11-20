@@ -913,17 +913,19 @@ describe("layout reducers", () => {
   });
 
   describe("handles dragging panels", () => {
-    it("does not remove panel from single-panel layout when starting drag", () => {
-      let panels: PanelsState = {
+    it("disallows dragging from single-panel layout", () => {
+      const panels: PanelsState = {
         ...emptyLayout,
         layout: "Audio!a",
       };
-      panels = panelsReducer(panels, {
-        type: "START_DRAG",
-        payload: { sourceTabId: undefined, path: [] },
-      });
-      expect(panels.layout).toEqual("Audio!a");
+      expect(() =>
+        panelsReducer(panels, {
+          type: "START_DRAG",
+          payload: { sourceTabId: undefined, path: [] },
+        }),
+      ).toThrow("Can't drag the top-level panel of a layout");
     });
+
     it("hides panel from multi-panel layout when starting drag", () => {
       let panels: PanelsState = {
         ...emptyLayout,
@@ -1290,30 +1292,6 @@ describe("layout reducers", () => {
         tabs: [{ title: "B", layout: "Tab!c" }],
       });
       expect(configById["Tab!c"]).toEqual(tabCConfig);
-    });
-    it("handles drags in single-panel layouts", () => {
-      let panels: PanelsState = {
-        ...emptyLayout,
-        layout: "Audio!a",
-      };
-      panels = panelsReducer(panels, {
-        type: "START_DRAG",
-        payload: { sourceTabId: undefined, path: [] },
-      });
-      panels = panelsReducer(panels, {
-        type: "END_DRAG",
-        payload: {
-          originalLayout: "Audio!a",
-          originalSavedProps: {},
-          panelId: "Audio!a",
-          sourceTabId: undefined,
-          targetTabId: undefined,
-          position: "right",
-          destinationPath: [],
-          ownPath: [],
-        },
-      });
-      expect(panels.layout).toEqual("Audio!a");
     });
     it("handles drags in multi-panel layouts", () => {
       const originalLayout = {

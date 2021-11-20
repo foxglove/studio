@@ -348,6 +348,7 @@ export default function Panel<
     const [fullScreen, setFullscreen] = useState(false);
     const [fullScreenLocked, setFullscreenLocked] = useState(false);
     const panelCatalog = usePanelCatalog();
+    const isTopLevelPanel = mosaicWindowActions.getPath().length === 0 && tabId == undefined;
 
     const type = PanelComponent.panelType;
     const title = useMemo(
@@ -682,7 +683,8 @@ export default function Panel<
             hasSettings: PanelComponent.configSchema != undefined,
             tabId,
             supportsStrictMode: PanelComponent.supportsStrictMode ?? true,
-            connectToolbarDragHandle,
+            // disallow dragging the root panel in a layout
+            connectToolbarDragHandle: isTopLevelPanel ? undefined : connectToolbarDragHandle,
           }}
         >
           <KeyListener global keyUpHandlers={keyUpHandlers} keyDownHandlers={keyDownHandlers} />
@@ -697,8 +699,11 @@ export default function Panel<
             dataTest={`panel-mouseenter-container ${childId ?? ""}`}
             clip
             ref={(el) => {
-              connectOverlayDragPreview(el);
-              connectToolbarDragPreview(el);
+              // disallow dragging the root panel in a layout
+              if (!isTopLevelPanel) {
+                connectOverlayDragPreview(el);
+                connectToolbarDragPreview(el);
+              }
             }}
           >
             {isSelected && !fullScreen && numSelectedPanelsIfSelected > 1 && (
@@ -726,7 +731,10 @@ export default function Panel<
                 className={classes.actionsOverlay}
                 ref={(el) => {
                   quickActionsOverlayRef.current = el;
-                  connectOverlayDragSource(el);
+                  // disallow dragging the root panel in a layout
+                  if (!isTopLevelPanel) {
+                    connectOverlayDragSource(el);
+                  }
                 }}
                 data-panel-overlay
               >
