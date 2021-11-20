@@ -182,6 +182,10 @@ export default function useTopicTree({
     const topicNames = providerTopics.map((topic) => topic.name);
     const availableTopicsNamesSet = new Set(topicNames);
 
+    // Mark transforms as always available, since they can be created and displayed even without any
+    // messages or topics present (such as loading from a URDF)
+    availableTopicsNamesSet.add("/tf");
+
     // Precompute uncategorized topics to add to the transformedTreeConfig before generating the TreeNodes.
     const uncategorizedTopicNames = difference([...availableTopicsNamesSet], topicTreeTopics);
     const datatypesByTopic = mapValues(keyBy(providerTopics, "name"), (item) => item.datatype);
