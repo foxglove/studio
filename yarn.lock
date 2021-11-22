@@ -2396,7 +2396,6 @@ __metadata:
     amplitude-js: 8.8.0
     argparse: 2.0.1
     async-mutex: 0.3.2
-    base64-arraybuffer: 1.0.1
     browserify-zlib: 0.2.0
     chart.js: 3.5.1
     chartjs-plugin-annotation: 1.0.2
@@ -7545,13 +7544,6 @@ __metadata:
   version: 0.1.4
   resolution: "base64-arraybuffer@npm:0.1.4"
   checksum: d249a929e27b2430d7ba1527e91a36e14da37ae2f80e350c4d696a038257718f8da07577e820e7262f86a0ecd573c283db10c46502080f53ae11bfdd99b6a029
-  languageName: node
-  linkType: hard
-
-"base64-arraybuffer@npm:1.0.1":
-  version: 1.0.1
-  resolution: "base64-arraybuffer@npm:1.0.1"
-  checksum: 04b6fe6818b1c79774fa8aea169063521ad177f2ba04d2a4a0f00fca297d516319b551a3cda76050263da751b4ffb07d939fc1b5eb155f0e429659733e60afb0
   languageName: node
   linkType: hard
 

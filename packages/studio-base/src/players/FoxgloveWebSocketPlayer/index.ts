@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import * as base64 from "base64-arraybuffer";
+import * as base64 from "@protobufjs/base64";
 import protobufjs from "protobufjs";
 import { FileDescriptorSet } from "protobufjs/ext/descriptor";
 import { v4 as uuidv4 } from "uuid";
@@ -79,9 +79,11 @@ export default class FoxgloveWebSocketPlayer implements Player {
       if (channel.encoding !== "protobuf") {
         throw new Error(`Unsupported encoding ${channel.encoding}`);
       }
-      const root = protobufjs.Root.fromDescriptor(
-        FileDescriptorSet.decode(new Uint8Array(base64.decode(channel.schema))),
-      );
+      const decodedSchema = new Uint8Array(base64.length(channel.schema));
+      if (base64.decode(channel.schema, decodedSchema, 0) !== decodedSchema.byteLength) {
+        throw new Error(`Failed to decode base64 schema on ${channel.topic}`);
+      }
+      const root = protobufjs.Root.fromDescriptor(FileDescriptorSet.decode(decodedSchema));
       const type = root.lookupType(channel.schemaName);
       return (data: ArrayBufferView) => {
         try {
