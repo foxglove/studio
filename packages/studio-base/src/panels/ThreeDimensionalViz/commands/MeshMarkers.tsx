@@ -55,7 +55,7 @@ async function loadModel(url: string): Promise<GlbModel | undefined> {
   }
 
   // STL binary files don't have a header, so we have to rely on the file extension
-  if (/\.stla$/i.test(url)) {
+  if (/\.stl$/i.test(url)) {
     return parseStlToGlb(buffer);
   }
 
