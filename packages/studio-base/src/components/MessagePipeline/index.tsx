@@ -15,7 +15,7 @@ import { debounce, flatten, groupBy } from "lodash";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import { Time } from "@foxglove/rostime";
-import { MessageEvent } from "@foxglove/studio";
+import { MessageEvent, ParameterValue } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import useContextSelector from "@foxglove/studio-base/hooks/useContextSelector";
@@ -24,7 +24,6 @@ import useSelectableContextGetter from "@foxglove/studio-base/hooks/useSelectabl
 import {
   AdvertiseOptions,
   Frame,
-  ParameterValue,
   Player,
   PlayerPresence,
   PlayerState,
@@ -38,8 +37,8 @@ import createSelectableContext from "@foxglove/studio-base/util/createSelectable
 import { requestThrottledAnimationFrame } from "@foxglove/studio-base/util/requestThrottledAnimationFrame";
 import signal from "@foxglove/studio-base/util/signal";
 
+import MessageOrderTracker from "./MessageOrderTracker";
 import { pauseFrameForPromises, FramePromise } from "./pauseFrameForPromise";
-import warnOnOutOfSyncMessages from "./warnOnOutOfSyncMessages";
 
 const { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } = React;
 
@@ -186,14 +185,17 @@ export function MessagePipelineProvider({
       waitingForPromises: false,
     };
 
+    const messageOrderTracker = new MessageOrderTracker();
     player.setListener(async (newPlayerState: PlayerState) => {
-      warnOnOutOfSyncMessages(newPlayerState);
       if (currentPlayer.current !== player) {
         return undefined;
       }
       if (playerTickState.current.resolveFn) {
         throw new Error("New playerState was emitted before last playerState was rendered.");
       }
+
+      // check for any out-of-order or out-of-sync messages
+      messageOrderTracker.update(newPlayerState);
 
       const promise = new Promise<void>((resolve) => {
         playerTickState.current.resolveFn = resolve;
