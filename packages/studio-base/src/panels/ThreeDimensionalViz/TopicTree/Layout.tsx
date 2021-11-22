@@ -22,6 +22,7 @@ import { useShallowMemo } from "@foxglove/hooks";
 import { Worldview, CameraState, ReglClickInfo, MouseEventObject } from "@foxglove/regl-worldview";
 import { Time } from "@foxglove/rostime";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
@@ -75,7 +76,11 @@ import { ThreeDimensionalVizConfig } from "@foxglove/studio-base/panels/ThreeDim
 import { Frame, Topic } from "@foxglove/studio-base/players/types";
 import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
 import { Color, Marker } from "@foxglove/studio-base/types/Messages";
-import { FOXGLOVE_GRID_TOPIC, URDF_TOPIC } from "@foxglove/studio-base/util/globalConstants";
+import {
+  FOXGLOVE_GRID_TOPIC,
+  ROBOT_DESCRIPTION_PARAM,
+  URDF_TOPIC,
+} from "@foxglove/studio-base/util/globalConstants";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 
 type EventName = "onDoubleClick" | "onMouseMove" | "onMouseDown" | "onMouseUp";
@@ -465,6 +470,8 @@ export default function Layout({
 
   const [rosPackagePath] = useAppConfigurationValue<string>(AppSetting.ROS_PACKAGE_PATH);
 
+  const [robotDescriptionParam] = PanelAPI.useParameter<string>(ROBOT_DESCRIPTION_PARAM);
+
   useMemo(() => {
     gridBuilder.setVisible(selectedTopicNames.includes(FOXGLOVE_GRID_TOPIC));
     gridBuilder.setSettingsByKey(settingsByKey);
@@ -480,6 +487,7 @@ export default function Layout({
       sceneBuilder.setTransforms(transforms, rootTf);
     }
 
+    urdfBuilder.setUrdfData(robotDescriptionParam, rosPackagePath);
     urdfBuilder.setVisible(selectedTopicNames.includes(URDF_TOPIC));
     urdfBuilder.setSettingsByKey(settingsByKey, rosPackagePath);
 
@@ -511,6 +519,7 @@ export default function Layout({
     highlightMarkerMatchers,
     playerId,
     resetFrame,
+    robotDescriptionParam,
     rootTf,
     rosPackagePath,
     sceneBuilder,

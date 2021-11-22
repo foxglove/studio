@@ -57,6 +57,7 @@ export default class UrdfBuilder implements MarkerProvider {
   private _meshes: MeshMarker[] = [];
   private _visible = true;
   private _settings: UrdfSettings = {};
+  private _urdfData?: string;
   private _transforms?: Transforms;
   private _rootTransformID?: string;
 
@@ -93,15 +94,26 @@ export default class UrdfBuilder implements MarkerProvider {
     this.update();
   };
 
+  setUrdfData(urdfData: string | undefined, rosPackagePath: string | undefined): void {
+    if (this._urdfData !== urdfData) {
+      this._urdfData = urdfData;
+
+      // Only parse the /robot_description URDF if an override URL is not set
+      if (!this._settings.urdfUrl) {
+        this.clearMarkers();
+
+        if (urdfData) {
+          void this.parseUrdf(urdfData, rosPackagePath);
+        }
+      }
+    }
+  }
+
   setSettingsByKey(settings: TopicSettingsCollection, rosPackagePath: string | undefined): void {
     const newSettings = settings[`t:${URDF_TOPIC}`] ?? {};
     if (!isEqual(newSettings, this._settings)) {
       this._settings = newSettings;
-
-      this._boxes = [];
-      this._spheres = [];
-      this._cylinders = [];
-      this._meshes = [];
+      this.clearMarkers();
 
       if (this._settings.urdfUrl && isUrdfUrlValid(this._settings.urdfUrl)) {
         void this.fetchUrdf(this._settings.urdfUrl, rosPackagePath);
@@ -126,6 +138,10 @@ export default class UrdfBuilder implements MarkerProvider {
       throw new Error(`Did noy fetch any URDF data from "${url}"`);
     }
 
+    await this.parseUrdf(text, rosPackagePath);
+  }
+
+  async parseUrdf(text: string, rosPackagePath: string | undefined): Promise<void> {
     const fileFetcher = getFileFetch(rosPackagePath);
 
     try {
@@ -133,15 +149,12 @@ export default class UrdfBuilder implements MarkerProvider {
       this._urdf = await parseRobot(text, fileFetcher);
       this.update();
     } catch (err) {
-      throw new Error(`Failed to parse URDF from "${url}": ${err}`);
+      throw new Error(`Failed to parse ${text.length} byte URDF: ${err}`);
     }
   }
 
   private update(): void {
-    this._boxes = [];
-    this._spheres = [];
-    this._cylinders = [];
-    this._meshes = [];
+    this.clearMarkers();
 
     if (!this._urdf || !this._transforms) {
       return;
@@ -166,6 +179,13 @@ export default class UrdfBuilder implements MarkerProvider {
     }
 
     this.createMarkers(this._urdf);
+  }
+
+  private clearMarkers(): void {
+    this._boxes = [];
+    this._spheres = [];
+    this._cylinders = [];
+    this._meshes = [];
   }
 
   private createMarkers(urdf: UrdfRobot): void {
