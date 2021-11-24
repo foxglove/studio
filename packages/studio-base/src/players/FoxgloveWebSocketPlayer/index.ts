@@ -134,7 +134,8 @@ function parseChannel(channel: Channel): ParsedChannel {
 
 export default class FoxgloveWebSocketPlayer implements Player {
   private _url: string; // WebSocket URL.
-  private _client?: FoxgloveClient; // The roslibjs client when we're connected.
+  private _name: string;
+  private _client?: FoxgloveClient; // The client when we're connected.
   private _id: string = uuidv4(); // Unique ID for this player.
   private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
   private _closed: boolean = false; // Whether the player has been completely closed using close().
@@ -167,6 +168,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     this._presence = PlayerPresence.INITIALIZING;
     this._metricsCollector = metricsCollector;
     this._url = url;
+    this._name = url;
     this._metricsCollector.playerConstructed();
     this._open();
   }
@@ -178,7 +180,6 @@ export default class FoxgloveWebSocketPlayer implements Player {
     if (this._client != undefined) {
       throw new Error(`Attempted to open a second Foxglove WebSocket connection`);
     }
-    this._problems.removeProblem("ws:connection-failed");
     log.info(`Opening connection to ${this._url}`);
 
     const client = new FoxgloveClient({
@@ -191,7 +192,46 @@ export default class FoxgloveWebSocketPlayer implements Player {
       }
       this._presence = PlayerPresence.PRESENT;
       this._problems.removeProblem("ws:connection-failed");
+      this._problems.removeProblem("ws:error");
+      this._channelsById.clear();
+      this._channelsByTopic.clear();
       this._client = client;
+    });
+
+    client.on("error", (err) => {
+      log.error(err);
+    });
+
+    client.on("close", (event) => {
+      log.info("Connection closed:", event);
+      this._presence = PlayerPresence.RECONNECTING;
+
+      for (const topic of this._resolvedSubscriptionsByTopic.keys()) {
+        this._unresolvedSubscriptions.add(topic);
+      }
+      this._resolvedSubscriptionsById.clear();
+      this._resolvedSubscriptionsByTopic.clear();
+      delete this._client;
+
+      this._problems.addProblem("ws:connection-failed", {
+        severity: "error",
+        message: "Connection failed",
+        tip: `Check that the WebSocket server at ${this._url} is reachable.`,
+      });
+
+      this._emitState();
+
+      // Try connecting again.
+      setTimeout(this._open, 3000);
+    });
+
+    client.on("serverInfo", (event) => {
+      this._name = `${this._url}\n${event.name}`;
+      this._emitState();
+    });
+
+    client.on("status", (event) => {
+      log.info("Status:", event);
     });
 
     client.on("advertise", (newChannels) => {
@@ -250,15 +290,6 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this._emitState();
     });
 
-    client.on("error", (err) => {
-      this._problems.addProblem("ws:error", {
-        severity: "warn",
-        message: "Foxglove WebSocket error",
-        error: err,
-      });
-      this._emitState();
-    });
-
     client.on("message", ({ subscriptionId, timestamp, data }) => {
       if (!this._hasReceivedMessage) {
         this._hasReceivedMessage = true;
@@ -287,31 +318,6 @@ export default class FoxgloveWebSocketPlayer implements Player {
       }
       this._emitState();
     });
-
-    // client.on("close", () => {
-    //   this._presence = PlayerPresence.RECONNECTING;
-
-    //   if (this._requestTopicsTimeout) {
-    //     clearTimeout(this._requestTopicsTimeout);
-    //   }
-    //   for (const [topicName, topic] of this._topicSubscriptions) {
-    //     topic.unsubscribe();
-    //     this._topicSubscriptions.delete(topicName);
-    //   }
-    //   client.close(); // ensure the underlying worker is cleaned up
-    //   delete this._client;
-
-    //   this._problems.addProblem("ws:connection-failed", {
-    //     severity: "error",
-    //     message: "Connection failed",
-    //     tip: `Check that the rosbridge WebSocket server at ${this._url} is reachable.`,
-    //   });
-
-    //   this._emitState();
-
-    //   // Try connecting again.
-    //   setTimeout(this._open, 3000);
-    // });
   };
 
   private _updateTopicsAndDatatypes() {
@@ -338,7 +344,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     const { _topics, _datatypes } = this;
     if (!_topics || !_datatypes) {
       return this._listener({
-        name: this._url,
+        name: this._name,
         presence: this._presence,
         progress: {},
         capabilities: CAPABILITIES,
@@ -363,7 +369,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     const messages = this._parsedMessages;
     this._parsedMessages = [];
     return this._listener({
-      name: this._url,
+      name: this._name,
       presence: this._presence,
       progress: {},
       capabilities: CAPABILITIES,
