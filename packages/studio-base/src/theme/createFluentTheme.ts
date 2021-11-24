@@ -4,7 +4,7 @@
 
 import { getColorFromRGBA, hsl2rgb, ITheme, createTheme, IPalette } from "@fluentui/react";
 
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { colors, fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import fluentComponents from "./fluentComponents";
 
@@ -20,6 +20,12 @@ export default function createFluentTheme({
       defaultFontStyle: {
         fontFamily: fonts.SANS_SERIF,
         fontFeatureSettings: fonts.SANS_SERIF_FEATURE_SETTINGS,
+      },
+      semanticColors: {
+        menuBackground: isInverted ? "#242424" : "#f3f3f3",
+        menuItemBackgroundHovered: isInverted ? "#2e2e2e" : "#e1e1e1",
+        errorBackground: colors.RED1,
+        warningBackground: colors.YELLOW1,
       },
       palette: {
         ...themeColors({ isInverted }),
