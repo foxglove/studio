@@ -8,7 +8,6 @@ import { FileDescriptorSet } from "protobufjs/ext/descriptor";
 import { v4 as uuidv4 } from "uuid";
 
 import Log from "@foxglove/log";
-import { RosMsgField } from "@foxglove/rosmsg";
 import { Time, fromNanoSec, isLessThan } from "@foxglove/rostime";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
@@ -27,6 +26,8 @@ import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 import { Channel, ChannelId, FoxgloveClient, SubscriptionId } from "@foxglove/ws-protocol";
 
+import protobufDefinitionsToDatatypes from "./protobufDefinitionsToDatatypes";
+
 const log = Log.getLogger(__dirname);
 
 const CAPABILITIES = [PlayerCapabilities.advertise];
@@ -40,77 +41,20 @@ type ParsedChannel = {
   datatypes: RosDatatypes;
 };
 
-function protobufScalarToRosPrimitive(type: string): string {
-  switch (type) {
-    case "double":
-      return "float64";
-    case "float":
-      return "float32";
-    case "int32":
-    case "sint32":
-    case "sfixed32":
-      return "int32";
-    case "uint32":
-    case "fixed32":
-      return "uint32";
-    case "int64":
-    case "sint64":
-    case "sfixed64":
-      return "int64";
-    case "uint64":
-    case "fixed64":
-      return "uint64";
-    case "bool":
-      return "bool";
-    case "string":
-      return "string";
-  }
-  throw new Error(`Expected protobuf scalar type, got ${type}`);
-}
-
-function addDefinitions(datatypes: RosDatatypes, type: protobufjs.Type) {
-  const definitions: RosMsgField[] = [];
-  for (const field of type.fieldsArray) {
-    if (field.resolvedType instanceof protobufjs.Enum) {
-      for (const [name, value] of Object.entries(field.resolvedType.values)) {
-        // Note: names from different enums might conflict. The player API will need to be updated
-        // to associate fields with enums (similar to the __foxglove_enum annotation hack).
-        // https://github.com/foxglove/studio/issues/2214
-        definitions.push({ name, type: "int32", isConstant: true, value });
-      }
-    } else if (field.resolvedType) {
-      definitions.push({
-        type: field.resolvedType.fullName,
-        name: field.name,
-        isComplex: true,
-        isArray: field.repeated,
-      });
-      addDefinitions(datatypes, field.resolvedType);
-    } else if (field.type === "bytes") {
-      if (field.repeated) {
-        throw new Error("Repeated bytes are not currently supported");
-      }
-      definitions.push({ type: "uint8", name: field.name, isArray: true });
-    } else {
-      definitions.push({
-        type: protobufScalarToRosPrimitive(field.type),
-        name: field.name,
-        isArray: field.repeated,
-      });
-    }
-  }
-  datatypes.set(type.fullName, { definitions });
-}
-
 function parseChannel(channel: Channel): ParsedChannel {
-  if (channel.encoding !== "protobuf") {
+  let root: protobufjs.Root;
+  if (channel.encoding === "protobuf.binary") {
+    const decodedSchema = new Uint8Array(base64.length(channel.schema));
+    if (base64.decode(channel.schema, decodedSchema, 0) !== decodedSchema.byteLength) {
+      throw new Error(`Failed to decode base64 schema on ${channel.topic}`);
+    }
+    root = protobufjs.Root.fromDescriptor(FileDescriptorSet.decode(decodedSchema));
+  } else if (channel.encoding === "protobuf") {
+    root = protobufjs.parse(channel.schema).root;
+  } else {
     throw new Error(`Unsupported encoding ${channel.encoding}`);
   }
-  const decodedSchema = new Uint8Array(base64.length(channel.schema));
-  if (base64.decode(channel.schema, decodedSchema, 0) !== decodedSchema.byteLength) {
-    throw new Error(`Failed to decode base64 schema on ${channel.topic}`);
-  }
-  const root = protobufjs.Root.fromDescriptor(FileDescriptorSet.decode(decodedSchema)).resolveAll();
+  root.resolveAll();
   const type = root.lookupType(channel.schemaName);
 
   const deserializer = (data: ArrayBufferView) => {
@@ -118,7 +62,7 @@ function parseChannel(channel: Channel): ParsedChannel {
   };
 
   const datatypes: RosDatatypes = new Map();
-  addDefinitions(datatypes, type);
+  protobufDefinitionsToDatatypes(datatypes, type);
 
   return { channel, fullSchemaName: type.fullName, deserializer, datatypes };
 }
@@ -182,8 +126,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
         return;
       }
       this._presence = PlayerPresence.PRESENT;
-      this._problems.removeProblem("ws:connection-failed");
-      this._problems.removeProblem("ws:error");
+      this._problems.clear();
       this._channelsById.clear();
       this._channelsByTopic.clear();
       this._client = client;
