@@ -73,7 +73,6 @@ function protobufScalarToRosPrimitive(type: string): string {
       return "bool";
     case "string":
       return "string";
-    case "bytes":
   }
   throw new Error(`Expected protobuf scalar type, got ${type}`);
 }
@@ -96,6 +95,11 @@ function addDefinitions(datatypes: RosDatatypes, type: protobufjs.Type) {
         isArray: field.repeated,
       });
       addDefinitions(datatypes, field.resolvedType);
+    } else if (field.type === "bytes") {
+      if (field.repeated) {
+        throw new Error("Repeated bytes are not currently supported");
+      }
+      definitions.push({ type: "uint8", name: field.name, isArray: true });
     } else {
       definitions.push({
         type: protobufScalarToRosPrimitive(field.type),
