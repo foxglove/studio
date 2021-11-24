@@ -2339,7 +2339,7 @@ __metadata:
     "@foxglove/studio": "workspace:*"
     "@foxglove/ulog": 2.1.1
     "@foxglove/velodyne-cloud": 1.0.0
-    "@foxglove/ws-protocol": "github:foxglove/ws-protocol#workspace=@foxglove/ws-protocol&commit=421ea913d94edfee4f62055cb1fab82d5a931fa1"
+    "@foxglove/ws-protocol": 0.0.1
     "@mdi/svg": 6.3.95
     "@sentry/core": 6.13.3
     "@sentry/types": 6.13.3
@@ -2521,9 +2521,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/ws-protocol@github:foxglove/ws-protocol#workspace=@foxglove/ws-protocol&commit=421ea913d94edfee4f62055cb1fab82d5a931fa1":
+"@foxglove/ws-protocol@npm:0.0.1":
   version: 0.0.1
-  resolution: "@foxglove/ws-protocol@https://github.com/foxglove/ws-protocol.git#workspace=%40foxglove%2Fws-protocol&commit=421ea913d94edfee4f62055cb1fab82d5a931fa1"
+  resolution: "@foxglove/ws-protocol@npm:0.0.1"
   dependencies:
     eventemitter3: ^4.0.7
     tslib: ^2
