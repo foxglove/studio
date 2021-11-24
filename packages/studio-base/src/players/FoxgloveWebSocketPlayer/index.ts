@@ -17,7 +17,8 @@ import { FileDescriptorSet } from "protobufjs/ext/descriptor";
 import { v4 as uuidv4 } from "uuid";
 
 import Log from "@foxglove/log";
-import { Time, fromMillis, fromNanoSec } from "@foxglove/rostime";
+import { RosMsgField } from "@foxglove/rosmsg";
+import { Time, fromNanoSec, isLessThan } from "@foxglove/rostime";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
   MessageEvent,
@@ -32,13 +33,100 @@ import {
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
-import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
-import { Channel, FoxgloveClient } from "@foxglove/ws-protocol";
+import { Channel, ChannelId, FoxgloveClient, SubscriptionId } from "@foxglove/ws-protocol";
 
 const log = Log.getLogger(__dirname);
 
 const CAPABILITIES = [PlayerCapabilities.advertise];
+
+const ZERO_TIME = Object.freeze({ sec: 0, nsec: 0 });
+
+type ParsedChannel = {
+  channel: Channel;
+  fullSchemaName: string;
+  deserializer: (data: ArrayBufferView) => unknown;
+  datatypes: RosDatatypes;
+};
+
+function protobufScalarToRosPrimitive(type: string): string {
+  switch (type) {
+    case "double":
+      return "float64";
+    case "float":
+      return "float32";
+    case "int32":
+    case "sint32":
+    case "sfixed32":
+      return "int32";
+    case "uint32":
+    case "fixed32":
+      return "uint32";
+    case "int64":
+    case "sint64":
+    case "sfixed64":
+      return "int64";
+    case "uint64":
+    case "fixed64":
+      return "uint64";
+    case "bool":
+      return "bool";
+    case "string":
+      return "string";
+    case "bytes":
+  }
+  throw new Error(`Expected protobuf scalar type, got ${type}`);
+}
+
+function addDefinitions(datatypes: RosDatatypes, type: protobufjs.Type) {
+  const definitions: RosMsgField[] = [];
+  for (const field of type.fieldsArray) {
+    if (field.resolvedType instanceof protobufjs.Enum) {
+      for (const [name, value] of Object.entries(field.resolvedType.values)) {
+        // Note: names from different enums might conflict. The player API will need to be updated
+        // to associate fields with enums (similar to the __foxglove_enum annotation hack).
+        // https://github.com/foxglove/studio/issues/2214
+        definitions.push({ name, type: "int32", isConstant: true, value });
+      }
+    } else if (field.resolvedType) {
+      definitions.push({
+        type: field.resolvedType.fullName,
+        name: field.name,
+        isComplex: true,
+        isArray: field.repeated,
+      });
+      addDefinitions(datatypes, field.resolvedType);
+    } else {
+      definitions.push({
+        type: protobufScalarToRosPrimitive(field.type),
+        name: field.name,
+        isArray: field.repeated,
+      });
+    }
+  }
+  datatypes.set(type.fullName, { definitions });
+}
+
+function parseChannel(channel: Channel): ParsedChannel {
+  if (channel.encoding !== "protobuf") {
+    throw new Error(`Unsupported encoding ${channel.encoding}`);
+  }
+  const decodedSchema = new Uint8Array(base64.length(channel.schema));
+  if (base64.decode(channel.schema, decodedSchema, 0) !== decodedSchema.byteLength) {
+    throw new Error(`Failed to decode base64 schema on ${channel.topic}`);
+  }
+  const root = protobufjs.Root.fromDescriptor(FileDescriptorSet.decode(decodedSchema)).resolveAll();
+  const type = root.lookupType(channel.schemaName);
+
+  const deserializer = (data: ArrayBufferView) => {
+    return type.decode(new Uint8Array(data.buffer, data.byteOffset, data.byteLength));
+  };
+
+  const datatypes: RosDatatypes = new Map();
+  addDefinitions(datatypes, type);
+
+  return { channel, fullSchemaName: type.fullName, deserializer, datatypes };
+}
 
 export default class FoxgloveWebSocketPlayer implements Player {
   private _url: string; // WebSocket URL.
@@ -49,7 +137,6 @@ export default class FoxgloveWebSocketPlayer implements Player {
   private _topics?: Topic[]; // Topics as published by the WebSocket.
   private _datatypes?: RosDatatypes; // Datatypes as published by the WebSocket.
   private _start?: Time; // The time at which we started playing.
-  private _topicSubscriptions = new Set<string>();
   private _parsedMessages: MessageEvent<unknown>[] = []; // Queue of messages that we'll send in next _emitState() call.
   private _messageOrder: TimestampMethod = "receiveTime";
   private _receivedBytes: number = 0;
@@ -57,7 +144,14 @@ export default class FoxgloveWebSocketPlayer implements Player {
   private _hasReceivedMessage = false;
   private _presence: PlayerPresence = PlayerPresence.NOT_PRESENT;
   private _problems = new PlayerProblemManager();
-  private _emitTimer?: ReturnType<typeof setTimeout>;
+  private _lastSeekTime = 0;
+  private _currentTime?: Time;
+
+  private _unresolvedSubscriptions = new Set<string>();
+  private _resolvedSubscriptionsByTopic = new Map<string, SubscriptionId>();
+  private _resolvedSubscriptionsById = new Map<SubscriptionId, ParsedChannel>();
+  private _channelsByTopic = new Map<string, ParsedChannel>();
+  private _channelsById = new Map<ChannelId, ParsedChannel>();
 
   constructor({
     url,
@@ -69,44 +163,8 @@ export default class FoxgloveWebSocketPlayer implements Player {
     this._presence = PlayerPresence.INITIALIZING;
     this._metricsCollector = metricsCollector;
     this._url = url;
-    this._start = fromMillis(Date.now());
     this._metricsCollector.playerConstructed();
     this._open();
-  }
-
-  private _createDeserializer(channel: Channel) {
-    try {
-      if (channel.encoding !== "protobuf") {
-        throw new Error(`Unsupported encoding ${channel.encoding}`);
-      }
-      const decodedSchema = new Uint8Array(base64.length(channel.schema));
-      if (base64.decode(channel.schema, decodedSchema, 0) !== decodedSchema.byteLength) {
-        throw new Error(`Failed to decode base64 schema on ${channel.topic}`);
-      }
-      const root = protobufjs.Root.fromDescriptor(FileDescriptorSet.decode(decodedSchema));
-      const type = root.lookupType(channel.schemaName);
-      return (data: ArrayBufferView) => {
-        try {
-          return type.decode(new Uint8Array(data.buffer, data.byteOffset, data.byteLength));
-        } catch (error) {
-          this._problems.addProblem(`message:${channel.topic}`, {
-            severity: "error",
-            message: `Failed to parse message on ${channel.topic}`,
-            error,
-          });
-          this._emitState();
-          throw error;
-        }
-      };
-    } catch (error) {
-      this._problems.addProblem(`schema:${channel.topic}`, {
-        severity: "error",
-        message: `Failed to parse channel schema on ${channel.topic}`,
-        error,
-      });
-      this._emitState();
-      throw error;
-    }
   }
 
   private _open = (): void => {
@@ -120,9 +178,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     log.info(`Opening connection to ${this._url}`);
 
     const client = new FoxgloveClient({
-      // url: this._url,
       ws: new WebSocket(this._url, [FoxgloveClient.SUPPORTED_SUBPROTOCOL]),
-      createDeserializer: this._createDeserializer.bind(this),
     });
 
     client.on("open", () => {
@@ -134,16 +190,59 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this._client = client;
     });
 
-    client.on("channelListUpdate", (channels) => {
-      this._topics = Array.from(channels.entries(), ([topic, channel]) => ({
-        name: topic,
-        datatype: channel.schemaName,
-      }));
-      this._datatypes = new Map(
-        Array.from(channels.values(), (channel) => {
-          return [channel.schemaName, { name: channel.schemaName, definitions: [] }];
-        }),
-      ); //FIXME
+    client.on("advertise", (newChannels) => {
+      for (const channel of newChannels) {
+        let parsedChannel;
+        try {
+          parsedChannel = parseChannel(channel);
+        } catch (error) {
+          this._problems.addProblem(`schema:${channel.topic}`, {
+            severity: "error",
+            message: `Failed to parse channel schema on ${channel.topic}`,
+            error,
+          });
+          this._emitState();
+          continue;
+        }
+        const existingChannel = this._channelsByTopic.get(channel.topic);
+        if (existingChannel) {
+          this._problems.addProblem(`duplicate-topic:${channel.topic}`, {
+            severity: "error",
+            message: `Multiple channels advertise the same topic: ${channel.topic} (${existingChannel.channel.id} and ${channel.id})`,
+          });
+          this._emitState();
+          continue;
+        }
+        this._channelsById.set(channel.id, parsedChannel);
+        this._channelsByTopic.set(channel.topic, parsedChannel);
+      }
+      this._updateTopicsAndDatatypes();
+      this._emitState();
+      this._processUnresolvedSubscriptions();
+    });
+
+    client.on("unadvertise", (removedChannels) => {
+      for (const id of removedChannels) {
+        const chanInfo = this._channelsById.get(id);
+        if (!chanInfo) {
+          this._problems.addProblem(`unadvertise:${id}`, {
+            severity: "error",
+            message: `Server unadvertised channel ${id} that was not advertised`,
+          });
+          this._emitState();
+          continue;
+        }
+        for (const [subId, { channel }] of this._resolvedSubscriptionsById) {
+          if (channel.id === id) {
+            this._resolvedSubscriptionsById.delete(subId);
+            this._resolvedSubscriptionsByTopic.delete(channel.topic);
+            client.unsubscribe(subId); // TODO: batch
+          }
+        }
+        this._channelsById.delete(id);
+        this._channelsByTopic.delete(chanInfo.channel.topic);
+      }
+      this._updateTopicsAndDatatypes();
       this._emitState();
     });
 
@@ -156,17 +255,32 @@ export default class FoxgloveWebSocketPlayer implements Player {
       this._emitState();
     });
 
-    client.on("message", ({ topic, timestamp, message, sizeInBytes }) => {
+    client.on("message", ({ subscriptionId, timestamp, data }) => {
       if (!this._hasReceivedMessage) {
         this._hasReceivedMessage = true;
         this._metricsCollector.recordTimeToFirstMsgs();
       }
-      this._parsedMessages.push({
-        topic,
-        receiveTime: fromNanoSec(timestamp),
-        message,
-        sizeInBytes,
-      });
+      const chanInfo = this._resolvedSubscriptionsById.get(subscriptionId);
+      if (!chanInfo) {
+        throw new Error(`Received message on unknown subscription ${subscriptionId}`);
+      }
+
+      try {
+        this._parsedMessages.push({
+          topic: chanInfo.channel.topic,
+          receiveTime: fromNanoSec(timestamp),
+          message: chanInfo.deserializer(data),
+          sizeInBytes: data.byteLength,
+        });
+      } catch (error) {
+        this._problems.addProblem(`message:${chanInfo.channel.topic}`, {
+          severity: "error",
+          message: `Failed to parse message on ${chanInfo.channel.topic}`,
+          error,
+        });
+        this._emitState();
+        throw error;
+      }
       this._emitState();
     });
 
@@ -196,6 +310,20 @@ export default class FoxgloveWebSocketPlayer implements Player {
     // });
   };
 
+  private _updateTopicsAndDatatypes() {
+    this._topics = Array.from(this._channelsById.values(), (chanInfo) => ({
+      name: chanInfo.channel.topic,
+      datatype: chanInfo.fullSchemaName,
+    }));
+    this._datatypes = new Map();
+    for (const { datatypes } of this._channelsById.values()) {
+      for (const [name, types] of datatypes) {
+        this._datatypes.set(name, types);
+      }
+    }
+    this._emitState();
+  }
+
   // Potentially performance-sensitive; await can be expensive
   // eslint-disable-next-line @typescript-eslint/promise-function-async
   private _emitState = debouncePromise(() => {
@@ -203,8 +331,8 @@ export default class FoxgloveWebSocketPlayer implements Player {
       return Promise.resolve();
     }
 
-    const { _topics, _datatypes, _start } = this;
-    if (!_topics || !_datatypes || !_start) {
+    const { _topics, _datatypes } = this;
+    if (!_topics || !_datatypes) {
       return this._listener({
         name: this._url,
         presence: this._presence,
@@ -216,16 +344,18 @@ export default class FoxgloveWebSocketPlayer implements Player {
       });
     }
 
-    // When connected
-    // Time is always moving forward even if we don't get messages from the server.
-    if (this._presence === PlayerPresence.PRESENT) {
-      if (this._emitTimer != undefined) {
-        clearTimeout(this._emitTimer);
-      }
-      this._emitTimer = setTimeout(this._emitState, 100);
+    const currentTime =
+      this._parsedMessages.length > 0
+        ? this._parsedMessages[this._parsedMessages.length - 1]!.receiveTime
+        : this._currentTime;
+    if (!this._start) {
+      this._start = currentTime;
     }
+    if (currentTime && this._currentTime && isLessThan(currentTime, this._currentTime)) {
+      ++this._lastSeekTime;
+    }
+    this._currentTime = currentTime;
 
-    const currentTime = this._getCurrentTime();
     const messages = this._parsedMessages;
     this._parsedMessages = [];
     return this._listener({
@@ -240,17 +370,15 @@ export default class FoxgloveWebSocketPlayer implements Player {
         messages,
         totalBytesReceived: this._receivedBytes,
         messageOrder: this._messageOrder,
-        startTime: _start,
-        endTime: currentTime,
-        currentTime,
+        startTime: this._start ?? ZERO_TIME,
+        endTime: currentTime ?? ZERO_TIME,
+        currentTime: currentTime ?? ZERO_TIME,
         isPlaying: true,
         speed: 1,
-        // We don't support seeking, so we need to set this to any fixed value. Just avoid 0 so
-        // that we don't accidentally hit falsy checks.
-        lastSeekTime: 1,
+        lastSeekTime: this._lastSeekTime,
         topics: _topics,
         datatypes: _datatypes,
-        parsedMessageDefinitionsByTopic: {}, //FIXME
+        parsedMessageDefinitionsByTopic: {},
       },
     });
   });
@@ -265,10 +393,6 @@ export default class FoxgloveWebSocketPlayer implements Player {
     if (this._client) {
       this._client.close();
     }
-    if (this._emitTimer != undefined) {
-      clearTimeout(this._emitTimer);
-      this._emitTimer = undefined;
-    }
     this._metricsCollector.close();
     this._hasReceivedMessage = false;
   }
@@ -277,27 +401,42 @@ export default class FoxgloveWebSocketPlayer implements Player {
     if (!this._client || this._closed) {
       return;
     }
+    const newTopics = new Set(subscriptions.map(({ topic }) => topic));
 
-    // See what topics we actually can subscribe to.
-    const availableTopicsByTopicName = getTopicsByTopicName(this._topics ?? []);
-    const topicNames = subscriptions
-      .map(({ topic }) => topic)
-      .filter((topicName) => availableTopicsByTopicName[topicName]);
-
-    // Subscribe to all topics that we aren't subscribed to yet.
-    for (const topicName of topicNames) {
-      if (this._topicSubscriptions.has(topicName)) {
-        continue;
+    for (const topic of newTopics) {
+      if (!this._resolvedSubscriptionsByTopic.has(topic)) {
+        this._unresolvedSubscriptions.add(topic);
       }
-      this._client.subscribe(topicName);
-      this._topicSubscriptions.add(topicName);
     }
 
-    // Unsubscribe from topics that we are subscribed to but shouldn't be.
-    for (const topicName of this._topicSubscriptions) {
-      if (!topicNames.includes(topicName)) {
-        this._client.unsubscribe(topicName);
-        this._topicSubscriptions.delete(topicName);
+    for (const [topic, subId] of this._resolvedSubscriptionsByTopic) {
+      if (!newTopics.has(topic)) {
+        this._client.unsubscribe(subId); // TODO: batch?
+        this._resolvedSubscriptionsByTopic.delete(topic);
+        this._resolvedSubscriptionsById.delete(subId);
+      }
+    }
+    for (const topic of this._unresolvedSubscriptions) {
+      if (!newTopics.has(topic)) {
+        this._unresolvedSubscriptions.delete(topic);
+      }
+    }
+
+    this._processUnresolvedSubscriptions();
+  }
+
+  private _processUnresolvedSubscriptions() {
+    if (!this._client) {
+      return;
+    }
+
+    for (const topic of this._unresolvedSubscriptions) {
+      const chanInfo = this._channelsByTopic.get(topic);
+      if (chanInfo) {
+        const subId = this._client.subscribe(chanInfo.channel.id); //TODO: batch?
+        this._unresolvedSubscriptions.delete(topic);
+        this._resolvedSubscriptionsByTopic.set(topic, subId);
+        this._resolvedSubscriptionsById.set(subId, chanInfo);
       }
     }
   }
@@ -328,8 +467,4 @@ export default class FoxgloveWebSocketPlayer implements Player {
   setPlaybackSpeed(_speedFraction: number): void {}
   requestBackfill(): void {}
   setGlobalVariables(): void {}
-
-  private _getCurrentTime(): Time {
-    return fromMillis(Date.now());
-  }
 }
