@@ -6,4 +6,4 @@ You can also superimpose markers on the images, from topics with a [`foxglove_ms
 
 <kbd>Scroll</kbd> – Zoom in/out
 
-[Jump to docs](https://foxglove.dev/docs/panels/image).
+[View docs](https://foxglove.dev/docs/panels/image).

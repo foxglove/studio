@@ -131,9 +131,10 @@ export default function HelpSidebar({
             <Stack.Item>
               <Text styles={styles.subheader}>Panels</Text>
               <Stack tokens={{ padding: `${theme.spacing.m} 0`, childrenGap: theme.spacing.s1 }}>
-                {sortedPanels.map(({ title, help }) => (
+                {sortedPanels.map(({ title, type, help }) => (
                   <Link
                     key={title}
+                    data-test={type}
                     style={{ color: theme.semanticColors.bodyText }}
                     onClick={() => setHelpInfo({ title, content: help })}
                     styles={styles.link}

@@ -11,18 +11,11 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useCallback, useRef } from "react";
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
+import { createContext, useCallback, useRef } from "react";
 
 import { useShallowMemo } from "@foxglove/hooks";
-import HelpInfoContext, {
-  IHelpInfo,
-  HelpInfo,
-} from "@foxglove/studio-base/context/HelpInfoContext";
+import { IHelpInfo, HelpInfo } from "@foxglove/studio-base/context/HelpInfoContext";
 import { PanelCatalog, PanelInfo } from "@foxglove/studio-base/context/PanelCatalogContext";
-import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
-import { DEFAULT_HELP_INFO } from "@foxglove/studio-base/providers/HelpInfoProvider";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import { PanelConfigSchemaEntry } from "@foxglove/studio-base/types/panels";
 
@@ -60,17 +53,9 @@ class MockPanelCatalog implements PanelCatalog {
   }
 }
 
-function MockHelpInfoProvider({
-  isEmpty,
-  children,
-}: {
-  isEmpty?: boolean;
-  children: React.ReactNode;
-}): JSX.Element {
-  const isHelpInfoSet = isEmpty == undefined ? false : isEmpty;
-  const helpInfo = useRef<HelpInfo>(
-    isHelpInfoSet ? DEFAULT_HELP_INFO : { title: "Some title", content: <>Some help content</> },
-  );
+const MockHelpInfoContext = createContext<IHelpInfo | undefined>(undefined);
+function MockHelpInfoProvider({ children }: React.PropsWithChildren<unknown>): JSX.Element {
+  const helpInfo = useRef<HelpInfo>({ title: "Some title", content: <>Some help content</> });
   const helpInfoListeners = useRef(new Set<(_: HelpInfo) => void>());
 
   const getHelpInfo = useCallback((): HelpInfo => helpInfo.current, []);
@@ -88,25 +73,21 @@ function MockHelpInfoProvider({
     removeHelpInfoListener: useCallback(() => {}, []),
   });
 
-  return <HelpInfoContext.Provider value={value}>{children}</HelpInfoContext.Provider>;
+  return <MockHelpInfoContext.Provider value={value}>{children}</MockHelpInfoContext.Provider>;
 }
 
 export function Home(): JSX.Element {
   return (
     <div style={{ margin: 30, height: 400 }}>
-      <DndProvider backend={HTML5Backend}>
-        <MockHelpInfoProvider isEmpty={true}>
-          <MockCurrentLayoutProvider>
-            <PanelSetup
-              panelCatalog={new MockPanelCatalog()}
-              fixture={{ topics: [], datatypes: new Map(), frame: {}, layout: "Sample2!4co6n9d" }}
-              omitDragAndDrop
-            >
-              <HelpSidebar />
-            </PanelSetup>
-          </MockCurrentLayoutProvider>
+      <PanelSetup
+        panelCatalog={new MockPanelCatalog()}
+        fixture={{ topics: [], datatypes: new Map(), frame: {}, layout: "Sample2!4co6n9d" }}
+        omitDragAndDrop
+      >
+        <MockHelpInfoProvider>
+          <HelpSidebar />
         </MockHelpInfoProvider>
-      </DndProvider>
+      </PanelSetup>
     </div>
   );
 }
@@ -114,19 +95,24 @@ export function Home(): JSX.Element {
 export function PanelView(): JSX.Element {
   return (
     <div style={{ margin: 30, height: 400 }}>
-      <DndProvider backend={HTML5Backend}>
+      <PanelSetup
+        onMount={() => {
+          const buttonsForPanel = document.querySelectorAll("[data-test=Sample2]") as any;
+
+          for (const buttonForPanel of buttonsForPanel) {
+            if (buttonForPanel != undefined) {
+              buttonForPanel.click();
+            }
+          }
+        }}
+        panelCatalog={new MockPanelCatalog()}
+        fixture={{ topics: [], datatypes: new Map(), frame: {}, layout: "Sample2!4co6n9d" }}
+        omitDragAndDrop
+      >
         <MockHelpInfoProvider>
-          <MockCurrentLayoutProvider>
-            <PanelSetup
-              panelCatalog={new MockPanelCatalog()}
-              fixture={{ topics: [], datatypes: new Map(), frame: {}, layout: "Sample2!4co6n9d" }}
-              omitDragAndDrop
-            >
-              <HelpSidebar isHomeViewForTests={false} />
-            </PanelSetup>
-          </MockCurrentLayoutProvider>
+          <HelpSidebar />
         </MockHelpInfoProvider>
-      </DndProvider>
+      </PanelSetup>
     </div>
   );
 }

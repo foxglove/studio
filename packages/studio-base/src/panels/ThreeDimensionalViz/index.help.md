@@ -78,4 +78,4 @@ Display visualization markers with any of the following datatypes in a 2D or 3D 
 - [`std_msgs/msg/ColorRGBA`](https://github.com/ros2/common_interfaces/blob/master/std_msgs/msg/ColorRGBA.msg)
 - or any datatype suffixed with `/Color` or `/ColorRGBA` and containing `r`, `g`, `b` fields
 
-[Jump to docs](https://foxglove.dev/docs/panels/3d).
+[View docs](https://foxglove.dev/docs/panels/3d).
