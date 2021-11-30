@@ -8,4 +8,4 @@ Group related panels into tabs to organize your layout and save space.
 
 <kbd>Cmd</kbd> + <kbd>a</kbd> – Select all panels in the current layout
 
-[View docs](https://foxglove.dev/docs/panels/tab).
+<a href="https://foxglove.dev/docs/panels/tab" target="_blank">View docs</a>.

@@ -27,4 +27,4 @@ To debug your code, invoke `log(someValue, anotherValue)` to print non-function 
 
 You can write more complex nodes that output custom datatypes or listen to multiple input topics. You can even reference [variables](https://foxglove.dev/docs/app-concepts/variables) or import the utility functions listed in the sidebar's "Utilities" tab.
 
-[View docs](https://foxglove.dev/docs/panels/node-playground).
+<a href="https://foxglove.dev/docs/panels/node-playground" target="_blank">View docs</a>.
