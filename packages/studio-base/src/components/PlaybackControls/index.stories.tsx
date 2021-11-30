@@ -99,18 +99,26 @@ export default {
 
 export const Playing: Story = () => {
   return (
-    <Wrapper isPlaying>
-      <PlaybackControls />
-    </Wrapper>
+    <PlaybackControls
+      isPlaying={true}
+      getTimeInfo={() => ({})}
+      play={action("play")}
+      pause={action("pause")}
+      seek={action("seek")}
+    />
   );
 };
 Playing.parameters = { colorScheme: "both-column" };
 
 export const Paused: Story = () => {
   return (
-    <Wrapper>
-      <PlaybackControls />
-    </Wrapper>
+    <PlaybackControls
+      isPlaying={false}
+      getTimeInfo={() => ({})}
+      play={action("play")}
+      pause={action("pause")}
+      seek={action("seek")}
+    />
   );
 };
 Paused.parameters = { colorScheme: "both-column" };
@@ -126,7 +134,13 @@ export const DownloadProgressByRanges: Story = () => {
   };
   return (
     <Wrapper progress={player.progress}>
-      <PlaybackControls />
+      <PlaybackControls
+        isPlaying
+        getTimeInfo={() => ({})}
+        play={action("play")}
+        pause={action("pause")}
+        seek={action("seek")}
+      />
     </Wrapper>
   );
 };
@@ -146,7 +160,13 @@ export const HoverTicks: Story = () => {
 
   return (
     <Wrapper activeData={player.activeData}>
-      <PlaybackControls />
+      <PlaybackControls
+        isPlaying
+        getTimeInfo={() => ({})}
+        play={action("play")}
+        pause={action("pause")}
+        seek={action("seek")}
+      />
     </Wrapper>
   );
 };
