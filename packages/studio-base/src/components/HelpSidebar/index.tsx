@@ -128,6 +128,7 @@ export default function HelpSidebar({
                     {links.map(({ title, url, content }: HelpInfo) => (
                       <Link
                         key={title}
+                        data-test={title}
                         style={{ color: theme.semanticColors.bodyText }}
                         href={url ?? ""}
                         onClick={() => (url ? undefined : setHelpInfo({ title, content }))}
