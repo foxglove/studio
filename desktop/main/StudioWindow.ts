@@ -15,6 +15,7 @@ import {
 import path from "path";
 
 import Logger from "@foxglove/log";
+import menuSections from "@foxglove/studio-base/src/util/menuSections";
 
 import pkgInfo from "../../package.json";
 import getDevModeIcon from "./getDevModeIcon";
@@ -242,6 +243,16 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
     });
   };
 
+  const sidebarItems = [
+    ...Array.from(menuSections).map(([_key, { subheader, links }]) => ({
+      label: subheader,
+      submenu: links.map(({ title, url }) => ({
+        label: title,
+        click: async () => await shell.openExternal(url ? url : ""),
+      })),
+    })),
+  ];
+
   menuTemplate.push({
     role: "help",
     submenu: [
@@ -249,12 +260,9 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
         label: "Welcome",
         click: () => browserWindow.webContents.send("open-welcome-layout"),
       },
+      ...sidebarItems,
       {
         label: "Learn more",
-        click: () => browserWindow.webContents.send("open-help"),
-      },
-      {
-        label: "Visit website",
         click: async () => await shell.openExternal("https://foxglove.dev"),
       },
       ...(isMac

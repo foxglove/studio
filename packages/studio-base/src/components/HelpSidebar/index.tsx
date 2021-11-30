@@ -15,7 +15,7 @@ import TextContent from "@foxglove/studio-base/components/TextContent";
 import { useHelpInfo, HelpInfo } from "@foxglove/studio-base/context/HelpInfoContext";
 import { PanelInfo, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { DEFAULT_HELP_INFO } from "@foxglove/studio-base/providers/HelpInfoProvider";
-import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
+import menuSections, { SectionKey } from "@foxglove/studio-base/util/menuSections";
 
 export const MESSAGE_PATH_SYNTAX_HELP_INFO = {
   title: "Message path syntax",
@@ -44,51 +44,6 @@ const useComponentStyles = (theme: ITheme) =>
     [theme],
   );
 
-type SectionKey = "app" | "panels" | "resources" | "product" | "legal";
-const staticSections: Map<SectionKey, { subheader: string; links: HelpInfo[] }> = new Map([
-  [
-    "app",
-    {
-      subheader: "App",
-      links: [
-        MESSAGE_PATH_SYNTAX_HELP_INFO,
-        { title: "Keyboard shortcuts", content: KeyboardShortcutHelp },
-      ],
-    },
-  ],
-  [
-    "resources",
-    {
-      subheader: "External Resources",
-      links: [
-        ...(isDesktopApp() ? [] : [{ title: "Desktop app", url: "https://foxglove.dev/download" }]),
-        { title: "Read docs", url: "https://foxglove.dev/docs" },
-        { title: "Join our community", url: "https://foxglove.dev/community" },
-      ],
-    },
-  ],
-  [
-    "product",
-    {
-      subheader: "Product",
-      links: [
-        { title: "Foxglove Studio", url: "https://foxglove.dev/studio" },
-        { title: "Foxglove Data Platform", url: "https://foxglove.dev/data-platform" },
-      ],
-    },
-  ],
-  [
-    "legal",
-    {
-      subheader: "Legal",
-      links: [
-        { title: "License", url: "https://foxglove.dev/legal/studio-license" },
-        { title: "Privacy", url: "https://foxglove.dev/legal/privacy" },
-      ],
-    },
-  ],
-]);
-
 export default function HelpSidebar({
   isHomeViewForTests,
 }: React.PropsWithChildren<{
@@ -110,11 +65,20 @@ export default function HelpSidebar({
   const sections: Map<SectionKey, { subheader: string; links: HelpInfo[] } | undefined> = useMemo(
     () =>
       new Map([
-        ["app", staticSections.get("app")],
+        [
+          "app",
+          {
+            subheader: "App",
+            links: [
+              MESSAGE_PATH_SYNTAX_HELP_INFO,
+              { title: "Keyboard shortcuts", content: KeyboardShortcutHelp },
+            ],
+          },
+        ],
         ["panels", { subheader: "Panels", links: sortedPanelLinks }],
-        ["resources", staticSections.get("resources")],
-        ["product", staticSections.get("product")],
-        ["legal", staticSections.get("legal")],
+        ["resources", menuSections.get("resources")],
+        ["product", menuSections.get("product")],
+        ["legal", menuSections.get("legal")],
       ]),
     [sortedPanelLinks],
   );
