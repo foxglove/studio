@@ -99,26 +99,30 @@ export default {
 
 export const Playing: Story = () => {
   return (
-    <PlaybackControls
-      isPlaying={true}
-      getTimeInfo={() => ({})}
-      play={action("play")}
-      pause={action("pause")}
-      seek={action("seek")}
-    />
+    <Wrapper isPlaying>
+      <PlaybackControls
+        isPlaying={true}
+        getTimeInfo={() => ({})}
+        play={action("play")}
+        pause={action("pause")}
+        seek={action("seek")}
+      />
+    </Wrapper>
   );
 };
 Playing.parameters = { colorScheme: "both-column" };
 
 export const Paused: Story = () => {
   return (
-    <PlaybackControls
-      isPlaying={false}
-      getTimeInfo={() => ({})}
-      play={action("play")}
-      pause={action("pause")}
-      seek={action("seek")}
-    />
+    <Wrapper>
+      <PlaybackControls
+        isPlaying={false}
+        getTimeInfo={() => ({})}
+        play={action("play")}
+        pause={action("pause")}
+        seek={action("seek")}
+      />
+    </Wrapper>
   );
 };
 Paused.parameters = { colorScheme: "both-column" };
