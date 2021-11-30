@@ -4,4 +4,4 @@ Select a [`sensor_msgs/JointState`](https://docs.ros.org/en/noetic/api/sensor_ms
 
 When connected to a live ROS system, the panel will also display the `/robot_description` parameter.
 
-<a href="https://foxglove.dev/docs/panels/urdf-viewer" target="_blank">View docs</a>.
+[View docs](https://foxglove.dev/docs/panels/urdf-viewer).

@@ -2,4 +2,4 @@ Publish messages on a given topic back to your ROS stack.
 
 To use this panel, you must be connected to your robot via a native or Rosbridge connection.
 
-<a href="https://foxglove.dev/docs/panels/publish" target="_blank">View docs</a>.
+[View docs](https://foxglove.dev/docs/panels/publish).

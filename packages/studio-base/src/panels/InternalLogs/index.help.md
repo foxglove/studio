@@ -2,4 +2,4 @@ Specify the channels for which to display internal logs. Displayed only when the
 
 Internal logs can be viewed in the app's Developer Tools console.
 
-<a href="https://foxglove.dev/docs/panels/studio-logs" target="_blank">View docs</a>.
+[View docs](https://foxglove.dev/docs/panels/studio-logs).
