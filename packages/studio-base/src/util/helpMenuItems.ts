@@ -4,8 +4,8 @@
 import { HelpInfo } from "../context/HelpInfoContext";
 import isDesktopApp from "./isDesktopApp";
 
-export type SectionKey = "app" | "panels" | "resources" | "product" | "legal";
-const menuSections: Map<SectionKey, { subheader: string; links: HelpInfo[] }> = new Map([
+export type SectionKey = "app" | "panels" | "resources" | "products" | "legal";
+const helpMenuItems: Map<SectionKey, { subheader: string; links: HelpInfo[] }> = new Map([
   [
     "resources",
     {
@@ -18,9 +18,9 @@ const menuSections: Map<SectionKey, { subheader: string; links: HelpInfo[] }> = 
     },
   ],
   [
-    "product",
+    "products",
     {
-      subheader: "Product",
+      subheader: "Products",
       links: [
         { title: "Foxglove Studio", url: "https://foxglove.dev/studio" },
         { title: "Foxglove Data Platform", url: "https://foxglove.dev/data-platform" },
@@ -32,11 +32,11 @@ const menuSections: Map<SectionKey, { subheader: string; links: HelpInfo[] }> = 
     {
       subheader: "Legal",
       links: [
-        { title: "License", url: "https://foxglove.dev/legal/studio-license" },
-        { title: "Privacy", url: "https://foxglove.dev/legal/privacy" },
+        { title: "License terms", url: "https://foxglove.dev/legal/studio-license" },
+        { title: "Privacy policy", url: "https://foxglove.dev/legal/privacy" },
       ],
     },
   ],
 ]);
 
-export default menuSections;
+export default helpMenuItems;

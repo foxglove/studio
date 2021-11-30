@@ -15,7 +15,7 @@ import {
 import path from "path";
 
 import Logger from "@foxglove/log";
-import menuSections from "@foxglove/studio-base/src/util/menuSections";
+import { helpMenuItems } from "@foxglove/studio-base";
 
 import pkgInfo from "../../package.json";
 import getDevModeIcon from "./getDevModeIcon";
@@ -29,6 +29,11 @@ const isProduction = process.env.NODE_ENV === "production";
 const rendererPath = MAIN_WINDOW_WEBPACK_ENTRY;
 
 const closeMenuItem: MenuItemConstructorOptions = isMac ? { role: "close" } : { role: "quit" };
+const getTitleCase = (baseString: string): string =>
+  baseString
+    .split(" ")
+    .map((word) => `${word[0]?.toUpperCase()}${word.substring(1)}`)
+    .join(" ");
 
 const log = Logger.getLogger(__filename);
 
@@ -243,15 +248,15 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
     });
   };
 
-  const sidebarItems = [
-    ...Array.from(menuSections).map(([_key, { subheader, links }]) => ({
-      label: subheader,
-      submenu: links.map(({ title, url }) => ({
-        label: title,
-        click: async () => await shell.openExternal(url ? url : ""),
-      })),
+  const helpSidebarItems = Array.from(helpMenuItems.values(), ({ subheader, links }) => ({
+    label: getTitleCase(subheader),
+    submenu: links.map(({ title, url }) => ({
+      label: getTitleCase(title),
+      click: url
+        ? async () => await shell.openExternal(url)
+        : () => browserWindow.webContents.send("open-help"),
     })),
-  ];
+  }));
 
   menuTemplate.push({
     role: "help",
@@ -260,9 +265,9 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
         label: "Welcome",
         click: () => browserWindow.webContents.send("open-welcome-layout"),
       },
-      ...sidebarItems,
+      ...helpSidebarItems,
       {
-        label: "Learn more",
+        label: "Learn More",
         click: async () => await shell.openExternal("https://foxglove.dev"),
       },
       ...(isMac

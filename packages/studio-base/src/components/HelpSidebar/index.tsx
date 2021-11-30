@@ -15,7 +15,7 @@ import TextContent from "@foxglove/studio-base/components/TextContent";
 import { useHelpInfo, HelpInfo } from "@foxglove/studio-base/context/HelpInfoContext";
 import { PanelInfo, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { DEFAULT_HELP_INFO } from "@foxglove/studio-base/providers/HelpInfoProvider";
-import menuSections, { SectionKey } from "@foxglove/studio-base/util/menuSections";
+import helpMenuItems, { SectionKey } from "@foxglove/studio-base/util/helpMenuItems";
 
 export const MESSAGE_PATH_SYNTAX_HELP_INFO = {
   title: "Message path syntax",
@@ -76,9 +76,9 @@ export default function HelpSidebar({
           },
         ],
         ["panels", { subheader: "Panels", links: sortedPanelLinks }],
-        ["resources", menuSections.get("resources")],
-        ["product", menuSections.get("product")],
-        ["legal", menuSections.get("legal")],
+        ["resources", helpMenuItems.get("resources")],
+        ["products", helpMenuItems.get("products")],
+        ["legal", helpMenuItems.get("legal")],
       ]),
     [sortedPanelLinks],
   );
