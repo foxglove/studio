@@ -15,12 +15,47 @@ import TextContent from "@foxglove/studio-base/components/TextContent";
 import { useHelpInfo, HelpInfo } from "@foxglove/studio-base/context/HelpInfoContext";
 import { PanelInfo, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { DEFAULT_HELP_INFO } from "@foxglove/studio-base/providers/HelpInfoProvider";
-import helpMenuItems, { SectionKey } from "@foxglove/studio-base/util/helpMenuItems";
+import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 export const MESSAGE_PATH_SYNTAX_HELP_INFO = {
   title: "Message path syntax",
   content: MesssagePathSyntaxHelp,
 };
+
+type SectionKey = "app" | "panels" | "resources" | "products" | "legal";
+const helpMenuItems: Map<SectionKey, { subheader: string; links: HelpInfo[] }> = new Map([
+  [
+    "resources",
+    {
+      subheader: "External resources",
+      links: [
+        ...(isDesktopApp() ? [] : [{ title: "Desktop app", url: "https://foxglove.dev/download" }]),
+        { title: "Read docs", url: "https://foxglove.dev/docs" },
+        { title: "Join our community", url: "https://foxglove.dev/community" },
+      ],
+    },
+  ],
+  [
+    "products",
+    {
+      subheader: "Products",
+      links: [
+        { title: "Foxglove Studio", url: "https://foxglove.dev/studio" },
+        { title: "Foxglove Data Platform", url: "https://foxglove.dev/data-platform" },
+      ],
+    },
+  ],
+  [
+    "legal",
+    {
+      subheader: "Legal",
+      links: [
+        { title: "License terms", url: "https://foxglove.dev/legal/studio-license" },
+        { title: "Privacy policy", url: "https://foxglove.dev/legal/privacy" },
+      ],
+    },
+  ],
+]);
 
 const useComponentStyles = (theme: ITheme) =>
   useMemo(

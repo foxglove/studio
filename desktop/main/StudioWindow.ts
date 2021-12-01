@@ -15,7 +15,6 @@ import {
 import path from "path";
 
 import Logger from "@foxglove/log";
-import { helpMenuItems } from "@foxglove/studio-base";
 
 import pkgInfo from "../../package.json";
 import getDevModeIcon from "./getDevModeIcon";
@@ -29,13 +28,52 @@ const isProduction = process.env.NODE_ENV === "production";
 const rendererPath = MAIN_WINDOW_WEBPACK_ENTRY;
 
 const closeMenuItem: MenuItemConstructorOptions = isMac ? { role: "close" } : { role: "quit" };
+const log = Logger.getLogger(__filename);
+
+type SectionKey = "app" | "panels" | "resources" | "products" | "legal";
+type HelpInfo = {
+  title: string;
+  content?: React.ReactNode;
+  url?: string;
+};
+const helpMenuItems: Map<SectionKey, { subheader: string; links: HelpInfo[] }> = new Map([
+  [
+    "resources",
+    {
+      subheader: "External resources",
+      links: [
+        { title: "Read docs", url: "https://foxglove.dev/docs" },
+        { title: "Join our community", url: "https://foxglove.dev/community" },
+      ],
+    },
+  ],
+  [
+    "products",
+    {
+      subheader: "Products",
+      links: [
+        { title: "Foxglove Studio", url: "https://foxglove.dev/studio" },
+        { title: "Foxglove Data Platform", url: "https://foxglove.dev/data-platform" },
+      ],
+    },
+  ],
+  [
+    "legal",
+    {
+      subheader: "Legal",
+      links: [
+        { title: "License terms", url: "https://foxglove.dev/legal/studio-license" },
+        { title: "Privacy policy", url: "https://foxglove.dev/legal/privacy" },
+      ],
+    },
+  ],
+]);
+
 const getTitleCase = (baseString: string): string =>
   baseString
     .split(" ")
     .map((word) => `${word[0]?.toUpperCase()}${word.substring(1)}`)
     .join(" ");
-
-const log = Logger.getLogger(__filename);
 
 type ClearableMenu = Menu & { clear: () => void };
 

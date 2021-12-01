@@ -35,7 +35,6 @@ export type { NativeWindow } from "./context/NativeWindowContext";
 export type { IDataSourceFactory } from "./context/PlayerSelectionContext";
 export { default as ThemeProvider } from "./theme/ThemeProvider";
 export { default as installDevtoolsFormatters } from "./util/installDevtoolsFormatters";
-export { default as helpMenuItems } from "./util/helpMenuItems";
 export { default as overwriteFetch } from "./util/overwriteFetch";
 export { default as waitForFonts } from "./util/waitForFonts";
 export { default as UserProfileLocalStorageProvider } from "./providers/UserProfileLocalStorageProvider";
