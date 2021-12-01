@@ -223,6 +223,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     client.on("message", ({ subscriptionId, timestamp, data }) => {
       if (!this._hasReceivedMessage) {
         this._hasReceivedMessage = true;
+        this._metricsCollector.initialized({ isDemoBag: false });
         this._metricsCollector.recordTimeToFirstMsgs();
       }
       const chanInfo = this._resolvedSubscriptionsById.get(subscriptionId);

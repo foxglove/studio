@@ -199,7 +199,7 @@ export default class Ros1Player implements Player {
       const sortedTopics: Topic[] = sortBy(topics, "name");
 
       if (this._providerTopics == undefined) {
-        this._metricsCollector.initialized();
+        this._metricsCollector.initialized({ isDemoBag: false });
       }
 
       if (!isEqual(sortedTopics, this._providerTopics)) {

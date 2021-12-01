@@ -248,7 +248,7 @@ export default class RosbridgePlayer implements Player {
       }
 
       if (this._providerTopics == undefined) {
-        this._metricsCollector.initialized();
+        this._metricsCollector.initialized({ isDemoBag: false });
       }
 
       this._providerTopics = sortedTopics;

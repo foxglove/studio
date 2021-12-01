@@ -35,8 +35,8 @@ export default class AnalyticsMetricsCollector implements PlayerMetricsCollector
     this.logEvent(AppEvent.PLAYER_CONSTRUCTED);
   }
 
-  initialized(): void {
-    this.logEvent(AppEvent.PLAYER_INITIALIZED);
+  initialized(args: { isDemoBag: boolean }): void {
+    this.logEvent(AppEvent.PLAYER_INITIALIZED, args);
   }
 
   play(speed: number): void {
