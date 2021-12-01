@@ -125,7 +125,6 @@ export default class FoxgloveDataPlatformPlayer implements Player {
       this._presence = PlayerPresence.ERROR;
       this._addProblem("open-failed", { message: error.message, error, severity: "error" });
     });
-    this._metricsCollector.initialized();
   }
 
   private _open = async (): Promise<void> => {
@@ -225,6 +224,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     this._initialized = {
       preloadedMessages: new MessageMemoryCache({ start: this._start, end: this._end }),
     };
+    this._metricsCollector.initialized();
     this._emitState();
     this._startPreloadTaskIfNeeded();
   };
