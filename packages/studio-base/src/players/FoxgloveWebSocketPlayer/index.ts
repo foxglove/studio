@@ -241,6 +241,10 @@ export default class FoxgloveWebSocketPlayer implements Player {
           ++this._lastSeekTime;
           this._parsedMessages = [];
         }
+        this._currentTime = receiveTime;
+        if (!this._start) {
+          this._start = receiveTime;
+        }
         this._parsedMessages.push({
           topic: chanInfo.channel.topic,
           receiveTime,
@@ -294,18 +298,6 @@ export default class FoxgloveWebSocketPlayer implements Player {
       });
     }
 
-    const currentTime =
-      this._parsedMessages.length > 0
-        ? this._parsedMessages[this._parsedMessages.length - 1]!.receiveTime
-        : this._currentTime;
-    if (!this._start) {
-      this._start = currentTime;
-    }
-    if (currentTime && this._currentTime && isLessThan(currentTime, this._currentTime)) {
-      ++this._lastSeekTime;
-    }
-    this._currentTime = currentTime;
-
     const messages = this._parsedMessages;
     this._parsedMessages = [];
     return this._listener({
@@ -321,8 +313,8 @@ export default class FoxgloveWebSocketPlayer implements Player {
         totalBytesReceived: this._receivedBytes,
         messageOrder: this._messageOrder,
         startTime: this._start ?? ZERO_TIME,
-        endTime: currentTime ?? ZERO_TIME,
-        currentTime: currentTime ?? ZERO_TIME,
+        endTime: this._currentTime ?? ZERO_TIME,
+        currentTime: this._currentTime ?? ZERO_TIME,
         isPlaying: true,
         speed: 1,
         lastSeekTime: this._lastSeekTime,
