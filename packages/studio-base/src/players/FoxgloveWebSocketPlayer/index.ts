@@ -231,9 +231,19 @@ export default class FoxgloveWebSocketPlayer implements Player {
       }
 
       try {
+        const receiveTime = fromNanoSec(timestamp);
+        // If time goes backwards, increment lastSeekTime and discard unemitted messages from before
+        // the discontinuity. This prevents us from queueing an unbounded number of messages when
+        // servers loop over the same recorded data multiple times. However, for now the queue can
+        // still grow unboundedly in a live system if the listener is not processing messages (such
+        // as when the app is hidden/backgrounded).
+        if (this._currentTime && isLessThan(receiveTime, this._currentTime)) {
+          ++this._lastSeekTime;
+          this._parsedMessages = [];
+        }
         this._parsedMessages.push({
           topic: chanInfo.channel.topic,
-          receiveTime: fromNanoSec(timestamp),
+          receiveTime,
           message: chanInfo.deserializer(data),
           sizeInBytes: data.byteLength,
         });
