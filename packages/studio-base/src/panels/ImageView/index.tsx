@@ -368,7 +368,6 @@ function ImageView(props: Props) {
       "foxglove_msgs/msg/ImageMarkerArray",
       "studio_msgs/ImageMarkerArray",
       "studio_msgs/msg/ImageMarkerArray",
-      "studio_msgs/msg/ImageMarkerArray",
       "visualization_msgs/ImageMarkerArray",
       "visualization_msgs/msg/ImageMarkerArray",
       "ros.visualization_msgs.ImageMarkerArray",
