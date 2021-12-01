@@ -3,11 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 // Events that are forwarded from the main process
-export type ForwardedMenuEvent =
-  | "open-preferences"
-  | "open-keyboard-shortcuts"
-  | "open-message-path-syntax-help"
-  | "open-welcome-layout";
+export type ForwardedMenuEvent = "open-preferences" | "open-help" | "open-welcome-layout";
 
 interface NativeMenuBridge {
   // Events from the native window are available in the main process but not the renderer, so we forward them through the bridge.
@@ -50,6 +46,12 @@ type DesktopExtension = {
 interface Desktop {
   /** https://www.electronjs.org/docs/tutorial/represented-file */
   setRepresentedFilename(path: string | undefined): Promise<void>;
+
+  /**
+   * Notify the app that the color scheme setting has changed and the native theme may need to be
+   * updated.
+   */
+  updateNativeColorScheme(): Promise<void>;
 
   // Get an array of deep links provided on app launch
   getDeepLinks: () => string[];

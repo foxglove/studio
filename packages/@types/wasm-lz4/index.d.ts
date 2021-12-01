@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 declare module "wasm-lz4" {
-  function decompress(...args: unknown[]): Buffer;
+  function decompress(buffer: Uint8Array, size: number): Buffer;
   namespace decompress {
     const isLoaded: Promise<boolean>;
   }

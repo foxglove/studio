@@ -391,7 +391,9 @@ export const constructDatatypes = (
   const getRosMsgField = (
     name: string,
     tsNode: ts.Node,
+    // eslint-disable-next-line @foxglove/no-boolean-parameters
     isArray: boolean = false,
+    // eslint-disable-next-line @foxglove/no-boolean-parameters
     isComplex: boolean = false,
     typeMap: TypeMap = {},
     innerDepth: number = 1,
@@ -633,7 +635,7 @@ export const constructDatatypes = (
         throw new DatatypeExtractionError(noNestedAny);
 
       default:
-        throw new Error("Unhandled node kind.");
+        throw new Error(`Unhandled node kind (${tsNode.kind}) for field (${name})`);
     }
   };
 

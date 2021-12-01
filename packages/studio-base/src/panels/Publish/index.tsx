@@ -16,7 +16,7 @@ import styled from "styled-components";
 
 import { useRethrow } from "@foxglove/hooks";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
-import Autocomplete from "@foxglove/studio-base/components/Autocomplete";
+import Autocomplete, { IAutocomplete } from "@foxglove/studio-base/components/Autocomplete";
 import Button from "@foxglove/studio-base/components/Button";
 import Flex from "@foxglove/studio-base/components/Flex";
 import { LegacyTextarea } from "@foxglove/studio-base/components/LegacyStyledComponents";
@@ -26,12 +26,11 @@ import PanelToolbarLabel from "@foxglove/studio-base/components/PanelToolbarLabe
 import usePublisher from "@foxglove/studio-base/hooks/usePublisher";
 import { PlayerCapabilities, Topic } from "@foxglove/studio-base/players/types";
 import { PanelConfigSchema } from "@foxglove/studio-base/types/panels";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import buildSampleMessage from "./buildSampleMessage";
 import helpContent from "./index.help.md";
 
-type Config = {
+type Config = Partial<{
   topicName: string;
   datatype: string;
   buttonText: string;
@@ -39,11 +38,11 @@ type Config = {
   buttonColor: string;
   advancedView: boolean;
   value: string;
-};
+}>;
 
 type Props = {
   config: Config;
-  saveConfig: (arg0: Partial<Config>) => void;
+  saveConfig: (config: Partial<Config>) => void;
 };
 
 const STextArea = styled(LegacyTextarea)`
@@ -62,7 +61,7 @@ const SErrorText = styled.div`
   display: flex;
   align-items: center;
   padding: 4px;
-  color: ${colors.RED2};
+  color: ${({ theme }) => theme.semanticColors.errorBackground};
 `;
 
 const SSpan = styled.span`
@@ -101,7 +100,15 @@ function parseInput(value: string): { error?: string; parsedObject?: unknown } {
 function Publish(props: Props) {
   const { topics, datatypes, capabilities } = useDataSourceInfo();
   const {
-    config: { topicName, datatype, buttonText, buttonTooltip, buttonColor, advancedView, value },
+    config: {
+      topicName = "",
+      datatype = "",
+      buttonText = "Publish",
+      buttonTooltip = "",
+      buttonColor = "#00A871",
+      advancedView = true,
+      value = "",
+    },
     saveConfig,
   } = props;
 
@@ -139,7 +146,7 @@ function Publish(props: Props) {
 
   // when a known topic is selected, also fill in its datatype
   const onSelectTopic = useCallback(
-    (name: string, topic: Topic, autocomplete: Autocomplete<Topic>) => {
+    (name: string, topic: Topic, autocomplete: IAutocomplete) => {
       saveConfig({ topicName: name, datatype: topic.datatype });
       autocomplete.blur();
     },
@@ -147,7 +154,7 @@ function Publish(props: Props) {
   );
 
   const onSelectDatatype = useCallback(
-    (newDatatype: string, _value: unknown, autocomplete: Autocomplete<string>) => {
+    (newDatatype: string, _value: unknown, autocomplete: IAutocomplete) => {
       saveConfig({ datatype: newDatatype });
       autocomplete.blur();
     },
@@ -172,48 +179,48 @@ function Publish(props: Props) {
   );
 
   const canPublish = capabilities.includes(PlayerCapabilities.advertise);
-  const buttonRowStyle = advancedView
+
+  const showAdvancedView = advancedView;
+  const buttonRowStyle = showAdvancedView
     ? { flex: "0 0 auto" }
     : { flex: "0 0 auto", justifyContent: "center" };
 
   return (
     <Flex col style={{ height: "100%", padding: "12px" }}>
       <PanelToolbar helpContent={helpContent} floating />
-      {advancedView && (
-        <SRow>
-          <SSpan>Topic:</SSpan>
-          <Autocomplete
-            placeholder="Choose a topic"
-            items={[...topics]}
-            hasError={false}
-            onChange={onChangeTopic}
-            onSelect={onSelectTopic}
-            selectedItem={{ name: topicName, datatype: "" }}
-            getItemText={getTopicName}
-            getItemValue={getTopicName}
-          />
-        </SRow>
-      )}
-      {advancedView && (
-        <SRow>
-          <PanelToolbarLabel>Datatype:</PanelToolbarLabel>
-          <Autocomplete
-            clearOnFocus
-            placeholder="Choose a datatype"
-            items={datatypeNames}
-            onSelect={onSelectDatatype}
-            selectedItem={datatype}
-          />
-        </SRow>
-      )}
-      {advancedView && (
-        <STextAreaContainer>
-          <STextArea
-            placeholder="Enter message content as JSON"
-            value={value}
-            onChange={onChange}
-          />
-        </STextAreaContainer>
+      {showAdvancedView && (
+        <>
+          <SRow>
+            <SSpan>Topic:</SSpan>
+            <Autocomplete
+              placeholder="Choose a topic"
+              items={[...topics]}
+              hasError={false}
+              onChange={onChangeTopic}
+              onSelect={onSelectTopic}
+              selectedItem={{ name: topicName, datatype: "" }}
+              getItemText={getTopicName}
+              getItemValue={getTopicName}
+            />
+          </SRow>
+          <SRow>
+            <PanelToolbarLabel>Datatype:</PanelToolbarLabel>
+            <Autocomplete
+              clearOnFocus
+              placeholder="Choose a datatype"
+              items={datatypeNames}
+              onSelect={onSelectDatatype}
+              selectedItem={datatype}
+            />
+          </SRow>
+          <STextAreaContainer>
+            <STextArea
+              placeholder="Enter message content as JSON"
+              value={value}
+              onChange={onChange}
+            />
+          </STextAreaContainer>
+        </>
       )}
       <Flex row style={buttonRowStyle}>
         {error && <SErrorText>{error}</SErrorText>}

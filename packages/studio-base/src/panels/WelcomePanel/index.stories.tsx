@@ -14,7 +14,7 @@ import SubscribeContext, { SubscribeNewsletterFn } from "./SubscribeContext";
 import WelcomePanel from "./index";
 
 export default {
-  title: "panels/WelcomePanel/index",
+  title: "panels/WelcomePanel",
   component: WelcomePanel,
 };
 
@@ -60,13 +60,9 @@ function Example({
   const onMount = useCallback(() => {
     const input = wrapper.current?.querySelector("input");
     const button = wrapper.current?.querySelector("[data-test='welcome-content'] button");
-    const inviteCheckbox = wrapper.current?.querySelector("[data-test='slack-invite']");
-    if (!input || !button || !inviteCheckbox) {
+    if (!input || !button) {
       throw new Error("missing required elements");
     }
-
-    // Uncheck invite to slack so submitting doesn't open a new window
-    ReactTestUtils.Simulate.click(inviteCheckbox);
 
     input.value = "test@example.com";
     ReactTestUtils.Simulate.change(input);

@@ -18,9 +18,8 @@ import {
   useClearHoverValue,
   useSetHoverValue,
 } from "@foxglove/studio-base/context/HoverValueContext";
-import { formatTime } from "@foxglove/studio-base/util/formatTime";
+import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
-import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 
 import PlaybackBarHoverTicks from "./PlaybackBarHoverTicks";
 import { ProgressPlot } from "./ProgressPlot";
@@ -36,7 +35,7 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: theme.palette.neutralLighterAlt,
   },
   fullWidthBarActive: {
-    backgroundColor: theme.palette.neutralLight,
+    backgroundColor: theme.palette.neutralQuaternary,
   },
   marker: {
     backgroundColor: "white",
@@ -67,26 +66,24 @@ const useStyles = makeStyles((theme) => ({
     },
   },
   tooltip: {
-    fontFamily: fonts.MONOSPACE,
+    fontFamily: fonts.SANS_SERIF,
     whiteSpace: "nowrap",
+  },
+  tooltipRow: {
+    paddingBottom: theme.spacing.s2,
 
-    "> div": {
-      paddingBottom: theme.spacing.s2,
-
-      "&:last-child": {
-        paddingBottom: 0,
-      },
+    "&:last-child": {
+      paddingBottom: 0,
     },
   },
   tooltipTitle: {
-    color: theme.semanticColors.bodyBackground,
-    width: "70px",
+    width: "50px",
     textAlign: "right",
     marginRight: theme.spacing.s2,
     display: "inline-block",
   },
   tooltipValue: {
-    fontFamily: fonts.MONOSPACE,
+    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
     opacity: 0.7,
   },
 }));
@@ -105,6 +102,8 @@ export default function Scrubber(props: Props): JSX.Element {
 
   const [hoverComponentId] = useState<string>(() => uuidv4());
   const el = useRef<HTMLDivElement>(ReactNull);
+
+  const { formatTime, timeFormat } = useAppTimeFormat();
 
   const startTime = useMessagePipeline(selectStartTime);
   const currentTime = useMessagePipeline(selectCurrentTime);
@@ -131,16 +130,23 @@ export default function Scrubber(props: Props): JSX.Element {
       const stamp = fromSec(value);
       const timeFromStart = subtractTimes(stamp, latestStartTime.current);
 
-      const tooltipItems = [
-        { title: "ROS", value: formatTimeRaw(stamp) },
-        { title: "Time", value: formatTime(stamp) },
-        { title: "Elapsed", value: `${toSec(timeFromStart).toFixed(9)} sec` },
-      ];
+      const tooltipItems = [];
+
+      switch (timeFormat) {
+        case "TOD":
+          tooltipItems.push({ title: "Time", value: formatTime(stamp) });
+          break;
+        case "SEC":
+          tooltipItems.push({ title: "SEC", value: formatTime(stamp) });
+          break;
+      }
+
+      tooltipItems.push({ title: "Elapsed", value: `${toSec(timeFromStart).toFixed(9)} sec` });
 
       const tip = (
         <div className={classes.tooltip}>
           {tooltipItems.map((item) => (
-            <div key={item.title}>
+            <div key={item.title} className={classes.tooltipRow}>
               <span className={classes.tooltipTitle}>{item.title}:</span>
               <span className={classes.tooltipValue}>{item.value}</span>
             </div>
@@ -154,7 +160,7 @@ export default function Scrubber(props: Props): JSX.Element {
         value: toSec(timeFromStart),
       });
     },
-    [latestStartTime, classes, setHoverValue, hoverComponentId],
+    [latestStartTime, classes, setHoverValue, hoverComponentId, formatTime, timeFormat],
   );
 
   const clearHoverValue = useClearHoverValue();
@@ -220,7 +226,10 @@ export default function Scrubber(props: Props): JSX.Element {
           renderSlider={renderSlider}
         />
       </div>
-      <PlaybackBarHoverTicks componentId={hoverComponentId} />
+      <PlaybackBarHoverTicks
+        componentId={hoverComponentId}
+        displayHoverTime={tooltipState == undefined}
+      />
     </>
   );
 }

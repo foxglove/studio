@@ -13,8 +13,8 @@
 
 import { uniq, omit, debounce } from "lodash";
 import React, { useCallback, useMemo, useState, useRef, useEffect } from "react";
-import { CameraState } from "regl-worldview";
 
+import { CameraState } from "@foxglove/regl-worldview";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import {
   MessagePipelineContext,
@@ -55,10 +55,39 @@ function selectIsPlaying(ctx: MessagePipelineContext) {
 
 function BaseRenderer(props: Props): JSX.Element {
   const {
-    config,
+    config: savedConfig,
     saveConfig,
     config: { autoSyncCameraState = false, followOrientation = false, followTf },
   } = props;
+
+  const config = useMemo<ThreeDimensionalVizConfig>(() => {
+    // Migrate old colorOverrideBySourceIdxByVariable field to new colorOverrideByVariable The new
+    // field drops the "BySourceIdx" which powered the base/feature branch feature that no longer
+    // exists.
+    const colorOverrideByVariable: NonNullable<
+      ThreeDimensionalVizConfig["colorOverrideByVariable"]
+    > = {
+      ...savedConfig.colorOverrideByVariable,
+    };
+    for (const [variable, colorOverrideByColumn] of Object.entries(
+      savedConfig.colorOverrideBySourceIdxByVariable ?? {},
+    )) {
+      if (variable in colorOverrideByVariable) {
+        continue;
+      }
+
+      const prevColorOverride = colorOverrideByColumn[0];
+      if (prevColorOverride) {
+        colorOverrideByVariable[variable] = prevColorOverride;
+      }
+    }
+
+    return {
+      colorOverrideByVariable,
+      ...savedConfig,
+    };
+  }, [savedConfig]);
+
   const { updatePanelConfigs } = React.useContext(PanelContext) ?? {};
 
   const { topics } = useDataSourceInfo();
@@ -107,6 +136,7 @@ function BaseRenderer(props: Props): JSX.Element {
     configFollowTf: config.followTf,
   };
   const onFollowChange = useCallback(
+    // eslint-disable-next-line @foxglove/no-boolean-parameters
     (newFollowTf?: string | false, newFollowOrientation?: boolean) => {
       const {
         configCameraState: prevCameraState,
@@ -207,6 +237,12 @@ const configSchema: PanelConfigSchema<ThreeDimensionalVizConfig> = [
     type: "toggle",
     title: "Automatically apply dark/light background color to text",
   },
+  {
+    key: "useThemeBackgroundColor",
+    type: "toggle",
+    title: "Automatically determine background color based on the color scheme",
+  },
+  { key: "customBackgroundColor", type: "color", title: "Background color" },
 ];
 
 BaseRenderer.displayName = "ThreeDimensionalViz";
@@ -223,6 +259,8 @@ BaseRenderer.defaultConfig = {
   autoSyncCameraState: false,
   autoTextBackgroundColor: true,
   diffModeEnabled: true,
+  useThemeBackgroundColor: true,
+  customBackgroundColor: "#000000",
 } as ThreeDimensionalVizConfig;
 BaseRenderer.supportsStrictMode = false;
 BaseRenderer.configSchema = configSchema;

@@ -13,18 +13,21 @@
 
 import { storiesOf } from "@storybook/react";
 
-import HelpModal from "@foxglove/studio-base/components/HelpModal";
+import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
+import TextContent from "@foxglove/studio-base/components/TextContent";
 
-const stories = storiesOf("Help pages", module);
+const stories = storiesOf("Help pages", module).addParameters({ colorScheme: "dark" });
 
 export function makeHelpPageStories(req: ReturnType<typeof require.context>): void {
   const helpData = req.keys().map((name: any) => ({ name, data: req(name) }));
 
   helpData.forEach(({ name, data }: any) => {
     stories.add(name, () => (
-      <HelpModal onRequestClose={() => {}}>
-        {data.default != undefined ? React.createElement(data.default) : data}
-      </HelpModal>
+      <SidebarContent title={name}>
+        <TextContent allowMarkdownHtml={true}>
+          {data.default != undefined ? data.default : data}
+        </TextContent>
+      </SidebarContent>
     ));
   });
 }

@@ -12,39 +12,53 @@ type User = {
 };
 
 type SigninArgs = {
-  id_token: string;
+  idToken: string;
 };
 
 type Session = {
-  bearer_token: string;
+  bearerToken: string;
 };
 
 type Org = {
   id: string;
   slug: string;
-  display_name?: string;
+  displayName?: string;
 };
 
 type DeviceCodeArgs = {
-  client_id: string;
+  clientId: string;
 };
 
 type DeviceCodeResponse = {
-  device_code: string;
-  user_code: string;
-  verification_uri: string;
-  expires_in: number;
+  deviceCode: string;
+  userCode: string;
+  verificationUri: string;
+  expiresIn: number;
   interval: number;
 };
 
 type TokenArgs = {
-  device_code: string;
-  client_id: string;
+  deviceCode: string;
+  clientId: string;
 };
 
 type TokenResponse = {
-  access_token: string;
-  id_token: string;
+  accessToken: string;
+  idToken: string;
+};
+
+type TopicResponse = {
+  topic: string;
+  encoding: string;
+  schemaName: string;
+  schema?: string;
+  version: string;
+};
+
+type CoverageResponse = {
+  deviceId: string;
+  start: string;
+  end: string;
 };
 
 export type LayoutID = string & { __brand: "LayoutID" };
@@ -53,10 +67,10 @@ export type ISO8601Timestamp = string & { __brand: "ISO8601Timestamp" };
 export type ConsoleApiLayout = {
   id: LayoutID;
   name: string;
-  created_at: ISO8601Timestamp;
-  updated_at: ISO8601Timestamp;
-  saved_at?: ISO8601Timestamp;
-  permission: "creator_write" | "org_read" | "org_write";
+  createdAt: ISO8601Timestamp;
+  updatedAt: ISO8601Timestamp;
+  savedAt?: ISO8601Timestamp;
+  permission: "CREATOR_WRITE" | "ORG_READ" | "ORG_WRITE";
   data?: Record<string, unknown>;
 };
 
@@ -92,14 +106,14 @@ class ConsoleApi {
 
   async deviceCode(args: DeviceCodeArgs): Promise<DeviceCodeResponse> {
     return await this.post<DeviceCodeResponse>("/v1/auth/device-code", {
-      client_id: args.client_id,
+      clientId: args.clientId,
     });
   }
 
   async token(args: TokenArgs): Promise<TokenResponse> {
     return await this.post<TokenResponse>("/v1/auth/token", {
-      device_code: args.device_code,
-      client_id: args.client_id,
+      deviceCode: args.deviceCode,
+      clientId: args.clientId,
     });
   }
 
@@ -161,7 +175,11 @@ class ConsoleApi {
     if (this._authHeader != undefined) {
       headers["Authorization"] = this._authHeader;
     }
-    const fullConfig = { ...config, headers: { ...headers, ...config?.headers } };
+    const fullConfig: RequestInit = {
+      ...config,
+      credentials: "include",
+      headers: { ...headers, ...config?.headers },
+    };
 
     const res = await fetch(fullUrl, fullConfig);
     if (res.status !== 200 && !allowedStatuses.includes(res.status)) {
@@ -182,7 +200,7 @@ class ConsoleApi {
 
   async getLayouts(options: { includeData: boolean }): Promise<readonly ConsoleApiLayout[]> {
     return await this.get<ConsoleApiLayout[]>("/v1/layouts", {
-      include_data: options.includeData ? "true" : "false",
+      includeData: options.includeData ? "true" : "false",
     });
   }
 
@@ -191,15 +209,15 @@ class ConsoleApi {
     options: { includeData: boolean },
   ): Promise<ConsoleApiLayout | undefined> {
     return await this.get<ConsoleApiLayout>(`/v1/layouts/${id}`, {
-      include_data: options.includeData ? "true" : "false",
+      includeData: options.includeData ? "true" : "false",
     });
   }
 
   async createLayout(layout: {
     id: LayoutID | undefined;
-    saved_at: ISO8601Timestamp | undefined;
+    savedAt: ISO8601Timestamp | undefined;
     name: string | undefined;
-    permission: "creator_write" | "org_read" | "org_write" | undefined;
+    permission: "CREATOR_WRITE" | "ORG_READ" | "ORG_WRITE" | undefined;
     data: Record<string, unknown> | undefined;
   }): Promise<ConsoleApiLayout> {
     return await this.post<ConsoleApiLayout>("/v1/layouts", layout);
@@ -207,9 +225,9 @@ class ConsoleApi {
 
   async updateLayout(layout: {
     id: LayoutID;
-    saved_at: ISO8601Timestamp;
+    savedAt: ISO8601Timestamp;
     name: string | undefined;
-    permission: "creator_write" | "org_read" | "org_write" | undefined;
+    permission: "CREATOR_WRITE" | "ORG_READ" | "ORG_WRITE" | undefined;
     data: Record<string, unknown> | undefined;
   }): Promise<{ status: "success"; newLayout: ConsoleApiLayout } | { status: "conflict" }> {
     const { status, json: newLayout } = await this.patch<ConsoleApiLayout>(
@@ -225,6 +243,40 @@ class ConsoleApi {
 
   async deleteLayout(id: LayoutID): Promise<boolean> {
     return (await this.delete(`/v1/layouts/${id}`)).status === 200;
+  }
+
+  async coverage(params: {
+    deviceId: string;
+    start: string;
+    end: string;
+  }): Promise<CoverageResponse[]> {
+    return await this.get<CoverageResponse[]>("/v1/data/coverage", params);
+  }
+
+  async topics(params: {
+    deviceId: string;
+    start: string;
+    end: string;
+    includeSchemas?: boolean;
+  }): Promise<readonly TopicResponse[]> {
+    return (
+      await this.get<TopicResponse[]>("/v1/data/topics", {
+        ...params,
+        includeSchemas: params.includeSchemas ?? false ? "true" : "false",
+      })
+    ).map((topic) => ({
+      ...topic,
+      schema: topic.schema != undefined ? atob(topic.schema) : undefined,
+    }));
+  }
+
+  async stream(params: {
+    deviceId: string;
+    start: string;
+    end: string;
+    topics: readonly string[];
+  }): Promise<{ link: string }> {
+    return await this.post<{ link: string }>("/v1/data/stream", params);
   }
 }
 

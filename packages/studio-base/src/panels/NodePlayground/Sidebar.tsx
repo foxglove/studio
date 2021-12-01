@@ -20,11 +20,9 @@ import styled from "styled-components";
 
 import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
-import TextContent from "@foxglove/studio-base/components/TextContent";
 import { Explorer } from "@foxglove/studio-base/panels/NodePlayground";
 import TemplateIcon from "@foxglove/studio-base/panels/NodePlayground/assets/file-document-edit.svg";
 import HammerWrenchIcon from "@foxglove/studio-base/panels/NodePlayground/assets/hammer-wrench.svg";
-import nodePlaygroundDocs from "@foxglove/studio-base/panels/NodePlayground/index.help.md";
 import { Script } from "@foxglove/studio-base/panels/NodePlayground/script";
 import { getNodeProjectConfig } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/projectConfig";
 import templates from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/templates";
@@ -42,9 +40,10 @@ const MenuWrapper = styled.div`
   }
 `;
 
-const ExplorerWrapper = styled.div`
+const ExplorerWrapper = styled.div<{ useThemeColors: boolean; show: boolean }>`
   display: ${({ show }: { show: boolean }) => (show ? "initial" : "none")};
-  background-color: ${colors.GRAY2};
+  background-color: ${({ useThemeColors, theme }) =>
+    useThemeColors ? theme.palette.neutralLighterAlt : colors.GRAY2};
   max-width: 325px;
   min-width: 275px;
   overflow: auto;
@@ -58,6 +57,7 @@ const ListItem = styled.li`
   justify-content: space-between;
   word-break: break-all;
   align-items: center;
+  color: ${colors.LIGHT1};
   background-color: ${({ selected }: { selected: boolean }) =>
     selected ? colors.DARK9 : "transparent"};
   > span {
@@ -84,18 +84,9 @@ const TemplateItem = styled.li`
     display: block;
     margin: 3px 0;
   }
+  color: ${colors.LIGHT1};
   &:hover {
     background-color: ${colors.DARK9};
-  }
-`;
-
-const SFlex = styled.div`
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-
-  pre {
-    white-space: pre-wrap;
   }
 `;
 
@@ -134,7 +125,6 @@ type Props = {
   deleteNode: (nodeId: string) => void;
   userNodes: UserNodes;
   selectedNodeId?: string;
-  otherMarkdownDocsForTest?: string;
   explorer: Explorer;
   updateExplorer: (explorer: Explorer) => void;
   setScriptOverride: (script: Script, maxDepth?: number) => void;
@@ -173,7 +163,6 @@ const Sidebar = ({
   selectNode,
   deleteNode,
   selectedNodeId,
-  otherMarkdownDocsForTest,
   explorer,
   updateExplorer,
   setScriptOverride,
@@ -181,7 +170,6 @@ const Sidebar = ({
   addNewNode,
 }: Props): React.ReactElement => {
   const nodesSelected = explorer === "nodes";
-  const docsSelected = explorer === "docs";
   const utilsSelected = explorer === "utils";
   const templatesSelected = explorer === "templates";
 
@@ -216,14 +204,6 @@ const Sidebar = ({
           selectedNodeId={selectedNodeId}
         />
       ),
-      docs: (
-        <SFlex>
-          <SidebarTitle title="Docs" collapse={() => updateExplorer(undefined)} />
-          <TextContent style={{ backgroundColor: "transparent" }}>
-            {otherMarkdownDocsForTest ?? nodePlaygroundDocs}
-          </TextContent>
-        </SFlex>
-      ),
       utils: (
         <Flex col style={{ position: "relative" }}>
           <SidebarTitle
@@ -242,7 +222,6 @@ const Sidebar = ({
           ))}
         </Flex>
       ),
-
       templates: (
         <Flex col>
           <SidebarTitle
@@ -263,7 +242,6 @@ const Sidebar = ({
       addNewNode,
       deleteNode,
       gotoUtils,
-      otherMarkdownDocsForTest,
       script,
       selectNode,
       selectedNodeId,
@@ -280,7 +258,7 @@ const Sidebar = ({
           onClick={() => updateExplorer(nodesSelected ? undefined : "nodes")}
           size="large"
           tooltip="Nodes"
-          style={{ color: nodesSelected ? "inherit" : colors.DARK9, position: "relative" }}
+          style={{ color: nodesSelected ? colors.LIGHT1 : colors.DARK9, position: "relative" }}
         >
           <FileMultipleIcon />
         </Icon>
@@ -289,7 +267,7 @@ const Sidebar = ({
           onClick={() => updateExplorer(utilsSelected ? undefined : "utils")}
           size="large"
           tooltip="Utilities"
-          style={{ color: utilsSelected ? "inherit" : colors.DARK9 }}
+          style={{ color: utilsSelected ? colors.LIGHT1 : colors.DARK9 }}
         >
           <HammerWrenchIcon />
         </Icon>
@@ -298,21 +276,12 @@ const Sidebar = ({
           onClick={() => updateExplorer(templatesSelected ? undefined : "templates")}
           size="large"
           tooltip="Templates"
-          style={{ color: templatesSelected ? "inherit" : colors.DARK9 }}
+          style={{ color: templatesSelected ? colors.LIGHT1 : colors.DARK9 }}
         >
           <TemplateIcon />
         </Icon>
-        <Icon
-          dataTest="docs-explorer"
-          onClick={() => updateExplorer(docsSelected ? undefined : "docs")}
-          size="large"
-          tooltip="Docs"
-          style={{ color: docsSelected ? "inherit" : colors.DARK9 }}
-        >
-          <HelpCircleIcon />
-        </Icon>
       </MenuWrapper>
-      <ExplorerWrapper show={explorer != undefined}>
+      <ExplorerWrapper useThemeColors={false} show={explorer != undefined}>
         {explorer != undefined && explorers[explorer]}
       </ExplorerWrapper>
     </>

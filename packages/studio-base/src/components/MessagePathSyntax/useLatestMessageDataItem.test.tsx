@@ -32,16 +32,19 @@ const fixtureMessages: MessageEvent<unknown>[] = [
     topic: "/topic",
     receiveTime: { sec: 0, nsec: 0 },
     message: { value: 0 },
+    sizeInBytes: 0,
   },
   {
     topic: "/topic",
     receiveTime: { sec: 1, nsec: 0 },
     message: { value: 1 },
+    sizeInBytes: 0,
   },
   {
     topic: "/topic",
     receiveTime: { sec: 2, nsec: 0 },
     message: { value: 2 },
+    sizeInBytes: 0,
   },
 ];
 
@@ -76,13 +79,13 @@ describe("useLatestMessageDataItem", () => {
       },
     });
     expect(result.all).toEqual([
-      { message: fixtureMessages[0], queriedData: [{ path: "/topic.value", value: 0 }] },
+      { messageEvent: fixtureMessages[0], queriedData: [{ path: "/topic.value", value: 0 }] },
     ]);
 
     rerender({ path: "/topic.value", messages: [fixtureMessages[1]!, fixtureMessages[2]!] });
     expect(result.all).toEqual([
-      { message: fixtureMessages[0], queriedData: [{ path: "/topic.value", value: 0 }] },
-      { message: fixtureMessages[2], queriedData: [{ path: "/topic.value", value: 2 }] },
+      { messageEvent: fixtureMessages[0], queriedData: [{ path: "/topic.value", value: 0 }] },
+      { messageEvent: fixtureMessages[2], queriedData: [{ path: "/topic.value", value: 2 }] },
     ]);
   });
 
@@ -104,7 +107,10 @@ describe("useLatestMessageDataItem", () => {
       },
     });
     expect(result.all).toEqual([
-      { message: fixtureMessages[1], queriedData: [{ path: "/topic{value==1}.value", value: 1 }] },
+      {
+        messageEvent: fixtureMessages[1],
+        queriedData: [{ path: "/topic{value==1}.value", value: 1 }],
+      },
     ]);
   });
 
@@ -129,11 +135,11 @@ describe("useLatestMessageDataItem", () => {
     rerender({ path: "/topic{value==1}" });
     expect(result.all).toEqual([
       {
-        message: fixtureMessages[1],
+        messageEvent: fixtureMessages[1],
         queriedData: [{ path: "/topic{value==1}.value", value: 1 }],
       },
       {
-        message: fixtureMessages[1],
+        messageEvent: fixtureMessages[1],
         queriedData: [{ path: "/topic{value==1}", value: fixtureMessages[1]?.message }],
       },
     ]);

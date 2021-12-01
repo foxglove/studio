@@ -3,6 +3,19 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 declare module "@foxglove/studio" {
+  // Valid types for parameter data (such as rosparams)
+  export type ParameterValue =
+    | undefined
+    | boolean
+    | number
+    | string
+    | Date
+    | Uint8Array
+    | ParameterValue[]
+    | ParameterStruct;
+
+  export type ParameterStruct = Record<string, ParameterValue>;
+
   export interface Time {
     sec: number;
     nsec: number;
@@ -23,7 +36,40 @@ declare module "@foxglove/studio" {
     topic: string;
     receiveTime: Time;
     message: T;
+    sizeInBytes: number;
   }>;
+
+  export interface LayoutActions {
+    /** Open a new panel or update an existing panel in the layout.  */
+    addPanel(params: {
+      /**
+       * Where to position the panel. Currently, only "sibling" is supported which indicates the
+       * new panel will be adjacent to the calling panel.
+       */
+      position: "sibling";
+
+      /**
+       * The type of panel to open. For internal panels, this corresponds to the `static panelType`.
+       * For extension panels, this `"extensionName.panelName"` where extensionName is the `name`
+       * field from the extension's package.json, and panelName is the name provided to
+       * `registerPanel()`.
+       */
+      type: string;
+
+      /**
+       * Whether to update an existing sibling panel of the same type, if it already exists. If
+       * false, a new panel will always be added.
+       */
+      updateIfExists: boolean;
+
+      /**
+       * A function that returns the state for the new panel. If updating an existing panel, the
+       * existing state will be passed in.
+       * @see `updateIfExists`
+       */
+      getState(existingState?: unknown): unknown;
+    }): void;
+  }
 
   export interface RenderState {
     /**
@@ -35,6 +81,11 @@ declare module "@foxglove/studio" {
      * All available messages. Best-effort list of all available messages.
      */
     allFrames?: readonly MessageEvent<unknown>[];
+
+    /**
+     * Map of current parameter values.
+     */
+    parameters?: Map<string, ParameterValue>;
 
     /**
      * List of available topics. This list includes subscribed and unsubscribed topics.
@@ -50,6 +101,9 @@ declare module "@foxglove/studio" {
      * to other panels where the user is currently hovering and allow them to render accordingly.
      */
     previewTime?: number | undefined;
+
+    /** The color scheme currently in use throughout the app. */
+    colorScheme?: "dark" | "light";
   }
 
   export type PanelExtensionContext = {
@@ -62,6 +116,9 @@ declare module "@foxglove/studio" {
      * Initial panel state
      */
     readonly initialState: unknown;
+
+    /** Actions the panel may perform related to the user's current layout. */
+    readonly layout: LayoutActions;
 
     /**
      * Subscribe to updates on this field within the render state. Render will only be invoked when
@@ -102,12 +159,12 @@ declare module "@foxglove/studio" {
      *
      * The options object is passed to the current data source for additional configuration.
      */
-    advertise(topic: string, datatype: string, options?: Record<string, unknown>): void;
+    advertise?(topic: string, datatype: string, options?: Record<string, unknown>): void;
 
     /**
      * Indicate that you no longer want to advertise on this topic.
      */
-    unadvertise(topic: string): void;
+    unadvertise?(topic: string): void;
 
     /**
      * Publish a message on a given topic. You must first advertise on the topic before publishing.
@@ -115,7 +172,7 @@ declare module "@foxglove/studio" {
      * @param topic The name of the topic to publish the message on
      * @param message The message to publish
      */
-    publish(topic: string, message: unknown): void;
+    publish?(topic: string, message: unknown): void;
 
     /**
      * Process render events for the panel. Each render event receives a render state and a done callback.

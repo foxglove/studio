@@ -4,7 +4,6 @@
 
 import { init as initSentry } from "@sentry/electron";
 import { contextBridge, ipcRenderer } from "electron";
-import { machineId } from "node-machine-id";
 import os from "os";
 import { join as pathJoin } from "path";
 
@@ -73,10 +72,6 @@ window.addEventListener(
 
 const localFileStorage = new LocalFileStorage();
 
-// machineId() can sometimes take 500-2000ms on macOS
-// we fetch it early so that it is ready for Analytics.ts
-const machineIdPromise = machineId();
-
 const ctx: OsContext = {
   platform: process.platform,
   pid: process.pid,
@@ -98,9 +93,6 @@ const ctx: OsContext = {
     }
     return output;
   },
-  getMachineId: async (): Promise<string> => {
-    return await machineIdPromise;
-  },
   getAppVersion: (): string => {
     return pkgInfo.version;
   },
@@ -109,6 +101,9 @@ const ctx: OsContext = {
 const desktopBridge: Desktop = {
   async setRepresentedFilename(path: string | undefined) {
     await ipcRenderer.invoke("setRepresentedFilename", path);
+  },
+  async updateNativeColorScheme() {
+    await ipcRenderer.invoke("updateNativeColorScheme");
   },
   getDeepLinks(): string[] {
     return window.process.argv.filter((arg) => arg.startsWith("foxglove://"));

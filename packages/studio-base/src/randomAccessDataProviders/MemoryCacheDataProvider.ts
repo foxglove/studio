@@ -16,8 +16,6 @@ import { isEqual, sum, uniq } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
 import { filterMap } from "@foxglove/den/collection";
-import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
-import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
 import {
   Time,
   add as addTimes,
@@ -48,7 +46,7 @@ import sendNotification from "@foxglove/studio-base/util/sendNotification";
 // for these, but it seems to work reasonably well in my tests.
 export const MIN_MEM_CACHE_BLOCK_SIZE_NS = 0.1e9; // Messages are laid out in blocks with a fixed number of milliseconds.
 
-// Preloading algorithms get too slow when there are too many blocks. For very long bags, use longer
+// Preloading algorithms get too slow when there are too many blocks. For very long logs, use longer
 // blocks. Adaptive block sizing is simpler than using a tree structure for immutable updates but
 // less flexible, so we may want to move away from a single-level block structure in the future.
 export const MAX_BLOCKS = 400;
@@ -56,7 +54,7 @@ const READ_AHEAD_NS = 3e9; // Number of nanoseconds to read ahead from the last 
 export const MAX_BLOCK_SIZE_BYTES = 50e6; // Number of bytes in a block before we show an error.
 
 // Number of bytes that we aim to keep in the cache.
-// Setting this to higher than 1.5GB caused the renderer process to crash on linux on certain bags.
+// Setting this to higher than 1.5GB caused the renderer process to crash on linux on certain logs.
 // See: https://github.com/foxglove/studio/pull/1733
 const DEFAULT_CACHE_SIZE_BYTES = 1.0e9;
 
@@ -68,10 +66,12 @@ export type MemoryCacheBlock = {
   };
   readonly sizeInBytes: number;
 };
+
 export type BlockCache = {
   blocks: readonly (MemoryCacheBlock | undefined)[];
   startTime: Time;
 };
+
 const EMPTY_BLOCK: MemoryCacheBlock = {
   messagesByTopic: {},
   sizeInBytes: 0,
@@ -233,38 +233,36 @@ export function getPrefetchStartPoint(uncachedRanges: Range[], cursorPosition: n
   return uncachedRanges[0]?.start ?? 0;
 }
 
-// This fills up the memory with messages from an underlying RandomAccessDataProvider. The messages have to be
-// unparsed ROS messages. The messages are evicted from this in-memory cache based on some constants
-// defined at the top of this file.
+// This retains MessageEvents in memory from an underlying RandomAccessDataProvider. The messages
+// are evicted from this in-memory cache based on some constants defined at the top of this file.
 export default class MemoryCacheDataProvider implements RandomAccessDataProvider {
-  _id: string;
-  _provider: RandomAccessDataProvider;
-  _extensionPoint?: ExtensionPoint;
+  private _provider: RandomAccessDataProvider;
+  private _extensionPoint?: ExtensionPoint;
 
   // The actual blocks that contain the messages. Blocks have a set "width" in terms of nanoseconds
-  // since the start time of the bag. If a block has some messages for a topic, then by definition
+  // since the start time of the log. If a block has some messages for a topic, then by definition
   // it has *all* messages for that topic and timespan.
-  _blocks: (MemoryCacheBlock | undefined)[] = [];
+  private _blocks: (MemoryCacheBlock | undefined)[] = [];
 
-  // The start time of the bag. Used for computing from and to nanoseconds since the start.
-  _startTime: Time = { sec: 0, nsec: 0 };
+  // The start time of the log. Used for computing from and to nanoseconds since the start.
+  private _startTime: Time = { sec: 0, nsec: 0 };
 
   // The topics that we were most recently asked to load.
   // This is always set by the last `getMessages` call.
-  _preloadTopics: string[] = [];
+  private _preloadTopics: string[] = [];
 
   // Total length of the data in nanoseconds. Used to compute progress with.
-  _totalNs: number = 0;
+  private _totalNs: number = 0;
 
   // The current "connection", which represents the range that we're downloading.
-  _currentConnection?: {
+  private _currentConnection?: {
     id: string;
     topics: string[];
     remainingBlockRange: Range;
   };
 
   // The read requests we've received via `getMessages`.
-  _readRequests: {
+  private _readRequests: {
     // Actual range of messages, in nanoseconds since `this._startTime`.
     timeRange: Range;
     // The range of blocks.
@@ -276,36 +274,27 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
   // Recently requested ranges of blocks, sorted by most recent to least recent. There should never
   // be any overlapping ranges. Ranges *are* allowed to cover blocks that haven't been downloaded
   // (yet).
-  _recentBlockRanges: Range[] = [];
+  private _recentBlockRanges: Range[] = [];
 
   // The end time of the last callback that we've resolved. This is useful for preloading new data
   // around this time.
-  _lastResolvedCallbackEnd?: number;
+  private _lastResolvedCallbackEnd?: number;
 
   // When we log a "block too large" error, we only want to do that once, to prevent
   // spamming errors.
-  _loggedTooLargeError: boolean = false;
+  private _loggedTooLargeError: boolean = false;
 
   // If we're configured to use an unlimited cache, we try to just load as much as possible and
   // never evict anything.
-  _cacheSizeBytes: number;
-  _readAheadBlocks: number = 0;
-  _memCacheBlockSizeNs: number = 0;
-
-  _lazyMessageReadersByTopic = new Map<string, LazyMessageReader>();
+  private _cacheSizeBytes: number;
+  private _readAheadBlocks: number = 0;
+  private _memCacheBlockSizeNs: number = 0;
 
   constructor(
-    {
-      id,
-      unlimitedCache = false,
-    }: {
-      id: string;
-      unlimitedCache?: boolean;
-    },
+    { unlimitedCache = false }: { unlimitedCache?: boolean },
     children: RandomAccessDataProviderDescriptor[],
     getDataProvider: GetDataProvider,
   ) {
-    this._id = id;
     this._cacheSizeBytes = unlimitedCache ? Infinity : DEFAULT_CACHE_SIZE_BYTES;
     const child = children[0];
     if (children.length !== 1 || !child) {
@@ -337,18 +326,6 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
 
     const blockCount = Math.ceil(this._totalNs / this._memCacheBlockSizeNs);
     this._blocks = Array.from({ length: blockCount });
-
-    const msgDefs = result.messageDefinitions;
-    if (msgDefs.type === "parsed") {
-      for (const [topic, msgDef] of Object.entries(msgDefs.parsedMessageDefinitionsByTopic)) {
-        this._lazyMessageReadersByTopic.set(topic, new LazyMessageReader(msgDef));
-      }
-    } else if (msgDefs.type === "raw") {
-      for (const [topic, rawMsgDef] of Object.entries(msgDefs.messageDefinitionsByTopic)) {
-        const msgDef = parseMessageDefinition(rawMsgDef);
-        this._lazyMessageReadersByTopic.set(topic, new LazyMessageReader(msgDef));
-      }
-    }
 
     this._updateProgress();
 
@@ -394,7 +371,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
 
   // We're primarily interested in the topics for the first outstanding read request, and after that
   // we're interested in preloading topics (based on the *last* read request).
-  _getCurrentTopics(): string[] {
+  private _getCurrentTopics(): string[] {
     if (this._readRequests[0]) {
       return this._readRequests[0].topics;
     }
@@ -402,13 +379,10 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
     return this._preloadTopics;
   }
 
-  _resolveFinishedReadRequests(): void {
+  private _resolveFinishedReadRequests(): void {
     this._readRequests = this._readRequests.filter(({ timeRange, blockRange, topics, resolve }) => {
       if (topics.length === 0) {
-        resolve({
-          parsedMessages: [],
-          rosBinaryMessages: undefined,
-        });
+        resolve({ parsedMessages: [] });
         return false;
       }
 
@@ -461,17 +435,14 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
         }
       }
 
-      resolve({
-        parsedMessages: messages.sort((a, b) => compare(a.receiveTime, b.receiveTime)),
-        rosBinaryMessages: undefined,
-      });
+      resolve({ parsedMessages: messages.sort((a, b) => compare(a.receiveTime, b.receiveTime)) });
       this._lastResolvedCallbackEnd = blockRange.end;
       return false;
     });
   }
 
   // Gets called any time our "connection", read requests, or topics change.
-  _updateState(): void {
+  private _updateState(): void {
     // First, see if there are any read requests that we can resolve now.
     this._resolveFinishedReadRequests();
 
@@ -487,12 +458,12 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
     void this._maybeRunNewConnections();
   }
 
-  _getNewConnection(): Range | undefined {
+  private _getNewConnection(): Range | undefined {
     const connectionForReadRange = getNewConnection({
       currentRemainingRange: this._currentConnection
         ? this._currentConnection.remainingBlockRange
         : undefined,
-      readRequestRange: this._readRequests[0] ? this._readRequests[0].blockRange : undefined,
+      readRequestRange: this._readRequests[0]?.blockRange,
       downloadedRanges: this._getDownloadedBlockRanges(),
       lastResolvedCallbackEnd: this._lastResolvedCallbackEnd,
       cacheSize: this._readAheadBlocks,
@@ -516,7 +487,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
     return undefined;
   }
 
-  _getPrefetchRange(): Range | undefined {
+  private _getPrefetchRange(): Range | undefined {
     const bounds = {
       start: 0,
       end: this._blocks.length,
@@ -537,7 +508,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
     };
   }
 
-  async _maybeRunNewConnections(): Promise<void> {
+  private async _maybeRunNewConnections(): Promise<void> {
     for (;;) {
       const newConnection = this._getNewConnection();
 
@@ -568,7 +539,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
 
   // Replace the current connection with a new one, spanning a certain range of blocks. Return whether we
   // completed successfully, or whether we were interrupted by another connection.
-  async _setConnection(blockRange: Range): Promise<boolean> {
+  private async _setConnection(blockRange: Range): Promise<boolean> {
     if (this._getCurrentTopics().length === 0) {
       delete this._currentConnection;
       return true;
@@ -618,23 +589,9 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
       );
       const messages =
         topics.length > 0
-          ? await this._provider.getMessages(startTime, endTime, {
-              rosBinaryMessages: topics,
-            })
-          : {
-              rosBinaryMessages: [],
-              parsedMessages: undefined,
-            };
-      const { rosBinaryMessages, parsedMessages } = messages;
-
-      if (parsedMessages != undefined) {
-        const types = (Object.keys(messages) as (keyof typeof messages)[])
-          .filter((type) => messages[type] != undefined)
-          .join("\n");
-        sendNotification("MemoryCacheDataProvider got bad message types", types, "app", "error");
-        // Do not retry.
-        return false;
-      }
+          ? await this._provider.getMessages(startTime, endTime, { parsedMessages: topics })
+          : { parsedMessages: [] };
+      const { parsedMessages = [] } = messages;
 
       // If we're not current any more, discard the messages, because otherwise we might write duplicate messages.
       if (!isCurrent()) {
@@ -649,41 +606,9 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
         messagesByTopic[topic] = [];
       }
 
-      for (const rosBinaryMessage of rosBinaryMessages ?? []) {
-        const lazyReader = this._lazyMessageReadersByTopic.get(rosBinaryMessage.topic);
-        if (!lazyReader) {
-          continue;
-        }
-
-        sizeInBytes += rosBinaryMessage.message.byteLength;
-
-        const bytes = new Uint8Array(rosBinaryMessage.message);
-
-        try {
-          const msgSize = lazyReader.size(bytes);
-          if (msgSize > bytes.byteLength) {
-            sendNotification(
-              `Message buffer not large enough on ${rosBinaryMessage.topic}`,
-              `Cannot read ${msgSize} byte message from ${bytes.byteLength} byte buffer`,
-              "user",
-              "error",
-            );
-          }
-        } catch (error) {
-          sendNotification(
-            `Message size parsing failed on ${rosBinaryMessage.topic}`,
-            error,
-            "user",
-            "error",
-          );
-        }
-
-        const lazyMsg = lazyReader.readMessage(bytes);
-        messagesByTopic[rosBinaryMessage.topic]?.push({
-          topic: rosBinaryMessage.topic,
-          receiveTime: rosBinaryMessage.receiveTime,
-          message: lazyMsg,
-        });
+      for (const parsedMessage of parsedMessages) {
+        sizeInBytes += parsedMessage.sizeInBytes;
+        messagesByTopic[parsedMessage.topic]?.push(parsedMessage);
       }
 
       if (sizeInBytes > MAX_BLOCK_SIZE_BYTES && !this._loggedTooLargeError) {
@@ -743,7 +668,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
   }
 
   // For the relevant downloaded ranges, we look at `this._blocks` and the most relevant topics.
-  _getDownloadedBlockRanges(): Range[] {
+  private _getDownloadedBlockRanges(): Range[] {
     const topics: string[] = this._getCurrentTopics();
 
     return simplify(
@@ -766,7 +691,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
     );
   }
 
-  _purgeOldBlocks(): void {
+  private _purgeOldBlocks(): void {
     if (this._cacheSizeBytes === Infinity) {
       return;
     }
@@ -805,7 +730,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
     this._blocks = newBlocks;
   }
 
-  _updateProgress(): void {
+  private _updateProgress(): void {
     this._extensionPoint?.progressCallback({
       fullyLoadedFractionRanges: this._getDownloadedBlockRanges().map((range) => ({
         // Convert block ranges into fractions.

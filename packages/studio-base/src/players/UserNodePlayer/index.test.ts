@@ -23,12 +23,10 @@ import {
 } from "@foxglove/studio-base/players/UserNodePlayer/types";
 import { PlayerStateActiveData } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
-import Storage from "@foxglove/studio-base/util/Storage";
 import { basicDatatypes } from "@foxglove/studio-base/util/datatypes";
 import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 import signal from "@foxglove/studio-base/util/signal";
 
-const storage = new Storage();
 const nodeId = "nodeId";
 
 const nodeUserCode = `
@@ -101,6 +99,7 @@ const upstreamFirst = {
   message: {
     payload: "bar",
   },
+  sizeInBytes: 0,
 };
 
 const upstreamSecond = {
@@ -109,6 +108,7 @@ const upstreamSecond = {
   message: {
     payload: "baz",
   },
+  sizeInBytes: 0,
 };
 
 const setListenerHelper = (player: UserNodePlayer, numPromises: number = 1) => {
@@ -143,10 +143,6 @@ UserNodePlayer.CreateNodeTransformWorker = () => {
 };
 
 describe("UserNodePlayer", () => {
-  afterAll(() => {
-    storage.clear();
-  });
-
   describe("default player behavior", () => {
     it("subscribes to underlying topics when node topics are subscribed", () => {
       const fakePlayer = new FakePlayer();
@@ -446,6 +442,7 @@ describe("UserNodePlayer", () => {
           topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
           receiveTime: upstreamFirst.receiveTime,
           message: { custom_np_field: "abc", value: "bar" },
+          sizeInBytes: 0,
         },
       ]);
     });
@@ -576,6 +573,7 @@ describe("UserNodePlayer", () => {
           topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
           receiveTime: upstreamFirst.receiveTime,
           message: { a: 1, b: 0.7483314773547883, g: 0.7483314773547883, r: 1 },
+          sizeInBytes: 0,
         },
       ]);
     });
@@ -636,6 +634,7 @@ describe("UserNodePlayer", () => {
           topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
           receiveTime: upstreamSecond.receiveTime,
           message: { custom_np_field: "abc", value: "baz" },
+          sizeInBytes: 0,
         },
       ]);
     });
@@ -743,11 +742,13 @@ describe("UserNodePlayer", () => {
           topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
           receiveTime: upstreamFirst.receiveTime,
           message: { custom_np_field: "abc", value: "bar" },
+          sizeInBytes: 0,
         },
         {
           topic: `${DEFAULT_STUDIO_NODE_PREFIX}2`,
           receiveTime: upstreamFirst.receiveTime,
           message: { custom_np_field: "abc", value: "bar" },
+          sizeInBytes: 0,
         },
       ]);
     });
@@ -832,7 +833,7 @@ describe("UserNodePlayer", () => {
             }
             return { num: 42 };
           };`,
-        error: "TypeError: Cannot read property 'message' of undefined",
+        error: expect.stringMatching(/^TypeError:/),
       },
       {
         code: `
@@ -843,7 +844,7 @@ describe("UserNodePlayer", () => {
           export default (messages: any): { num: number } => {
             return { num: 42 };
           };`,
-        error: "TypeError: Cannot read property 'bad' of undefined",
+        error: expect.stringMatching(/^TypeError:/),
       },
       {
         code: `
@@ -1255,6 +1256,7 @@ describe("UserNodePlayer", () => {
             topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
             receiveTime: upstreamFirst.receiveTime,
             message: { custom_np_field: "aaa", value: "aaa" },
+            sizeInBytes: 0,
           },
         ]);
 
@@ -1268,6 +1270,7 @@ describe("UserNodePlayer", () => {
             topic: `${DEFAULT_STUDIO_NODE_PREFIX}1`,
             receiveTime: upstreamFirst.receiveTime,
             message: { custom_np_field: "bbb", value: "bbb" },
+            sizeInBytes: 0,
           },
         ]);
       });
@@ -1310,6 +1313,7 @@ describe("UserNodePlayer", () => {
             topic: `${DEFAULT_STUDIO_NODE_PREFIX}0`,
             receiveTime: upstreamFirst.receiveTime,
             message: { key: sourceIndex },
+            sizeInBytes: 0,
           },
         ]);
       };

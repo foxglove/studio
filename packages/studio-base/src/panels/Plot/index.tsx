@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { useTheme } from "@fluentui/react";
 import { compact, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
 import { useEffect, useCallback, useMemo, ComponentProps } from "react";
@@ -44,34 +45,40 @@ import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import {
   ChartDefaultView,
-  getTooltipItemForMessageHistoryItem,
-  TooltipItem,
+  TimeBasedChartTooltipData,
 } from "@foxglove/studio-base/components/TimeBasedChart";
 import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/src/components/Chart";
-import { PanelConfig, PanelConfigSchema } from "@foxglove/studio-base/types/panels";
+import {
+  OpenSiblingPanel,
+  PanelConfig,
+  PanelConfigSchema,
+} from "@foxglove/studio-base/types/panels";
+import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import PlotChart from "./PlotChart";
 import PlotLegend from "./PlotLegend";
-import { getDatasetsAndTooltips } from "./datasets";
+import { downloadCSV } from "./csv";
+import { getDatasets } from "./datasets";
 import helpContent from "./index.help.md";
-import { PlotDataByPath } from "./internalTypes";
+import { PlotDataByPath, PlotDataItem } from "./internalTypes";
 import { PlotConfig } from "./types";
 
 export { plotableRosTypes } from "./types";
 export type { PlotConfig, PlotXAxisVal } from "./types";
 
-export function openSiblingPlotPanel(
-  openSiblingPanel: (type: string, cb: (config: PanelConfig) => PanelConfig) => void,
-  topicName: string,
-): void {
-  openSiblingPanel("Plot", (config: PanelConfig) => ({
-    ...config,
-    paths: uniq(
-      (config as PlotConfig).paths
-        .concat([{ value: topicName, enabled: true, timestampMethod: "receiveTime" }])
-        .filter(({ value }) => value),
-    ),
-  }));
+export function openSiblingPlotPanel(openSiblingPanel: OpenSiblingPanel, topicName: string): void {
+  openSiblingPanel({
+    panelType: "Plot",
+    updateIfExists: true,
+    siblingConfigCreator: (config: PanelConfig) => ({
+      ...config,
+      paths: uniq(
+        (config as PlotConfig).paths
+          .concat([{ value: topicName, enabled: true, timestampMethod: "receiveTime" }])
+          .filter(({ value }) => value),
+      ),
+    }),
+  });
 }
 
 type Props = {
@@ -84,7 +91,16 @@ type Props = {
 const getPlotDataByPath = (itemsByPath: MessageDataItemsByPath): PlotDataByPath => {
   const ret: PlotDataByPath = {};
   Object.entries(itemsByPath).forEach(([path, items]) => {
-    ret[path] = [items.map(getTooltipItemForMessageHistoryItem)];
+    ret[path] = [
+      items.map((messageAndData) => {
+        const headerStamp = getTimestampForMessage(messageAndData.messageEvent.message);
+        return {
+          queriedData: messageAndData.queriedData,
+          receiveTime: messageAndData.messageEvent.receiveTime,
+          headerStamp,
+        };
+      }),
+    ];
   });
   return ret;
 };
@@ -104,7 +120,7 @@ function getBlockItemsByPath(
   decodeMessagePathsForMessagesByTopic: (_: MessageBlock) => MessageDataItemsByPath,
   blocks: readonly MessageBlock[],
 ) {
-  const ret: Record<string, TooltipItem[][]> = {};
+  const ret: Record<string, PlotDataItem[][]> = {};
   const lastBlockIndexForPath: Record<string, number> = {};
   blocks.forEach((block, i: number) => {
     const messagePathItemsForBlock: PlotDataByPath = getMessagePathItemsForBlock(
@@ -158,9 +174,11 @@ function Plot(props: Props) {
     minYValue,
     maxYValue,
     showLegend,
+    isSynced,
     xAxisVal,
     xAxisPath,
   } = config;
+  const theme = useTheme();
 
   useEffect(() => {
     if (yAxisPaths.length === 0) {
@@ -254,20 +272,21 @@ function Plot(props: Props) {
             continue;
           }
 
-          const tooltipItem = getTooltipItemForMessageHistoryItem({
-            message: msgEvent,
+          const headerStamp = getTimestampForMessage(msgEvent.message);
+          const plotDataItem = {
             queriedData: dataItem,
-          });
+            receiveTime: msgEvent.receiveTime,
+            headerStamp,
+          };
 
           if (showSingleCurrentMessage) {
-            accumulated[path] = [[tooltipItem]];
+            accumulated[path] = [[plotDataItem]];
           } else {
             const plotDataPath = (accumulated[path] ??= [[]]);
-            // PlotDataPaths have 2d arrays of tooltip items to accomodate blocks which may have gaps
-            // so each continuous set of blocks forms one set of tooltip items.
-            // For streaming messages we treat this as one continuous set of items and always add
-            // to the first "range"
-            plotDataPath[0]!.push(tooltipItem);
+            // PlotDataPaths have 2d arrays of items to accomodate blocks which may have gaps so
+            // each continuous set of blocks forms one continuous line. For streaming messages we
+            // treat this as one continuous set of items and always add to the first "range"
+            plotDataPath[0]!.push(plotDataItem);
           }
         }
       }
@@ -313,9 +332,9 @@ function Plot(props: Props) {
 
   const blocks = useBlocksByTopic(subscribeTopics);
 
-  // This memoization isn't quite ideal: getDatasetsAndTooltips is a bit expensive
-  // with lots of preloaded data, and when we preload a new block we re-generate the datasets for
-  // the whole timeline. We could try to use block memoization here.
+  // This memoization isn't quite ideal: getDatasets is a bit expensive with lots of preloaded data,
+  // and when we preload a new block we re-generate the datasets for the whole timeline. We could
+  // try to use block memoization here.
   const plotDataForBlocks = useMemo(() => {
     if (showSingleCurrentMessage) {
       return {};
@@ -323,27 +342,47 @@ function Plot(props: Props) {
     return getBlockItemsByPath(decodeMessagePathsForMessagesByTopic, blocks);
   }, [blocks, decodeMessagePathsForMessagesByTopic, showSingleCurrentMessage]);
 
-  // Keep disabled paths when passing into getDatasetsAndTooltips, because we still want
+  // Keep disabled paths when passing into getDatasets, because we still want
   // easy access to the history when turning the disabled paths back on.
-  const { datasets, tooltips, pathsWithMismatchedDataLengths } = useMemo(() => {
+  const { datasets, pathsWithMismatchedDataLengths } = useMemo(() => {
     const allPlotData = { ...filteredPlotData, ...plotDataForBlocks };
 
-    return getDatasetsAndTooltips(
-      yAxisPaths,
-      allPlotData,
-      startTime ?? ZERO_TIME,
+    return getDatasets({
+      paths: yAxisPaths,
+      itemsByPath: allPlotData,
+      startTime: startTime ?? ZERO_TIME,
       xAxisVal,
       xAxisPath,
-    );
-  }, [filteredPlotData, plotDataForBlocks, yAxisPaths, startTime, xAxisVal, xAxisPath]);
+      invertedTheme: theme.isInverted,
+    });
+  }, [
+    filteredPlotData,
+    plotDataForBlocks,
+    yAxisPaths,
+    startTime,
+    xAxisVal,
+    xAxisPath,
+    theme.isInverted,
+  ]);
+
+  const tooltips = useMemo(() => {
+    const allTooltips: TimeBasedChartTooltipData[] = [];
+    for (const dataset of datasets) {
+      for (const datum of dataset.data) {
+        allTooltips.push(datum);
+      }
+    }
+    return allTooltips;
+  }, [datasets]);
 
   const messagePipeline = useMessagePipelineGetter();
   const onClick = useCallback<NonNullable<ComponentProps<typeof PlotChart>["onClick"]>>(
-    (params: OnChartClickArgs) => {
-      const seekSeconds = params.x;
-      const { startTime: start } = messagePipeline().playerState.activeData ?? {};
-      const { seekPlayback } = messagePipeline();
-      if (!start || seekSeconds == undefined || xAxisVal !== "timestamp") {
+    ({ x: seekSeconds }: OnChartClickArgs) => {
+      const {
+        seekPlayback,
+        playerState: { activeData: { startTime: start } = {} },
+      } = messagePipeline();
+      if (!seekPlayback || !start || seekSeconds == undefined || xAxisVal !== "timestamp") {
         return;
       }
       // The player validates and clamps the time.
@@ -356,9 +395,9 @@ function Plot(props: Props) {
   return (
     <Flex col clip center style={{ position: "relative" }}>
       <PanelToolbar helpContent={helpContent} floating />
-      <div>{title ?? "Untitled"}</div>
+      {title && <div>{title}</div>}
       <PlotChart
-        isSynced={xAxisVal === "timestamp"}
+        isSynced={xAxisVal === "timestamp" && isSynced}
         paths={yAxisPaths}
         minYValue={parseFloat((minYValue ?? "")?.toString())}
         maxYValue={parseFloat((maxYValue ?? "")?.toString())}
@@ -376,6 +415,7 @@ function Plot(props: Props) {
         xAxisVal={xAxisVal}
         xAxisPath={xAxisPath}
         pathsWithMismatchedDataLengths={pathsWithMismatchedDataLengths}
+        onDownload={() => downloadCSV(datasets, xAxisVal)}
       />
     </Flex>
   );
@@ -383,6 +423,11 @@ function Plot(props: Props) {
 
 const configSchema: PanelConfigSchema<PlotConfig> = [
   { key: "title", type: "text", title: "Title", placeholder: "Untitled" },
+  {
+    key: "isSynced",
+    type: "toggle",
+    title: "Sync with other timestamp-based plots",
+  },
   { key: "maxYValue", type: "number", title: "Y max", placeholder: "auto", allowEmpty: true },
   { key: "minYValue", type: "number", title: "Y min", placeholder: "auto", allowEmpty: true },
   {
@@ -401,6 +446,7 @@ const defaultConfig: PlotConfig = {
   minYValue: "",
   maxYValue: "",
   showLegend: true,
+  isSynced: true,
   xAxisVal: "timestamp",
 };
 

@@ -10,15 +10,15 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { Color } from "regl-worldview";
 
+import { Color } from "@foxglove/regl-worldview";
+import { TOPIC_DISPLAY_MODES } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/constants";
 import { Topic } from "@foxglove/studio-base/players/types";
 import { Namespace } from "@foxglove/studio-base/types/Messages";
 
 import { Save3DConfig } from "../index";
-import { TopicDisplayMode as DisplayMode } from "./TopicViewModeSelector";
 
-export type TopicDisplayMode = DisplayMode;
+export type TopicDisplayMode = keyof typeof TOPIC_DISPLAY_MODES;
 export type TopicTreeConfig = {
   name?: string;
   // displayName is only used to maintain TopicGroups flow type.
@@ -43,26 +43,25 @@ export type TreeGroupNode = {
   type: "group";
   name: string;
   key: string;
-  featureKey: string;
   parentKey?: string;
-  availableByColumn: boolean[];
+  available: boolean;
   // Whether the data providers are available. If it is and the current node is not available, we'll show
   // the node name being striked through in the UI.
   providerAvailable: boolean;
   children: TreeNode[];
   description?: undefined;
 };
+
 export type TreeTopicNode = {
   type: "topic";
   topicName: string;
   key: string;
-  featureKey: string;
   parentKey?: string;
   name?: string;
   datatype?: string;
   description?: string;
   providerAvailable: boolean;
-  availableByColumn: boolean[];
+  available: boolean;
   children?: undefined;
 };
 
@@ -108,27 +107,14 @@ export type UseTreeInput = {
   uncategorizedGroupName: string;
 };
 
-export type GetIsTreeNodeVisibleInScene = (
-  topicNode: TreeNode,
-  columnIndex: number,
-  namespaceKey?: string,
-) => boolean;
+export type GetIsTreeNodeVisibleInScene = (topicNode: TreeNode, namespaceKey?: string) => boolean;
 export type GetIsTreeNodeVisibleInTree = (key: string) => boolean;
 export type SetCurrentEditingTopic = (arg0?: Topic) => void;
 export type ToggleNode = (nodeKey: string, namespaceParentTopicName?: string) => void;
-export type ToggleNodeByColumn = (
-  nodeKey: string,
-  columnIndex: number,
-  namespaceParentTopicName?: string,
-) => void;
-export type ToggleNamespaceChecked = (arg0: {
-  topicName: string;
-  namespace: string;
-  columnIndex: number;
-}) => void;
-export type GetIsNamespaceCheckedByDefault = (topicName: string, columnIndex: number) => boolean;
+export type ToggleNamespaceChecked = (arg0: { topicName: string; namespace: string }) => void;
+export type GetIsNamespaceCheckedByDefault = (topicName: string) => boolean;
 export type DerivedCustomSettings = {
-  overrideColorByColumn?: (Color | undefined)[];
+  overrideColor?: Color;
   isDefaultSettings?: boolean;
 };
 export type DerivedCustomSettingsByKey = {
@@ -147,16 +133,15 @@ export type UseTreeOutput = {
   getIsTreeNodeVisibleInScene: GetIsTreeNodeVisibleInScene;
   getIsTreeNodeVisibleInTree: GetIsTreeNodeVisibleInTree;
   getIsNamespaceCheckedByDefault: GetIsNamespaceCheckedByDefault;
-  hasFeatureColumn: boolean;
   // For testing.
   nodesByKey: {
     [key: string]: TreeNode;
   };
   onNamespaceOverrideColorChange: OnNamespaceOverrideColorChange;
-  toggleCheckAllAncestors: ToggleNodeByColumn;
-  toggleCheckAllDescendants: ToggleNodeByColumn;
+  toggleCheckAllAncestors: ToggleNode;
+  toggleCheckAllDescendants: ToggleNode;
   toggleNamespaceChecked: ToggleNamespaceChecked;
-  toggleNodeChecked: ToggleNodeByColumn;
+  toggleNodeChecked: ToggleNode;
   toggleNodeExpanded: ToggleNode;
   rootTreeNode: TreeNode;
   selectedNamespacesByTopic: {

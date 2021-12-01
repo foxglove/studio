@@ -40,6 +40,8 @@ export const LEVEL_NAMES: { [key: number]: string } = {
   3: "stale",
 };
 
+export const KNOWN_LEVELS = [0, 1, 2, 3];
+
 interface ToString {
   toString(): string;
 }
@@ -138,5 +140,9 @@ export const filterAndSortDiagnostics = (
     return sortBy(unpinnedNodes, (info) => info.displayName.replace(/^\//, ""));
   }
   // fuzzyFilter sorts by match accuracy.
-  return fuzzyFilter(unpinnedNodes, hardwareIdFilter, ({ displayName }) => displayName);
+  return fuzzyFilter({
+    options: unpinnedNodes,
+    filter: hardwareIdFilter,
+    getText: ({ displayName }) => displayName,
+  });
 };

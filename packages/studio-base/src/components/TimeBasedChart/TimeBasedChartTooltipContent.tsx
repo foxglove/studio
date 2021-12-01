@@ -11,68 +11,80 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { makeStyles } from "@fluentui/react";
 import { PropsWithChildren } from "react";
 
-import { subtract as subtractTimes, toSec } from "@foxglove/rostime";
-import { formatTime } from "@foxglove/studio-base/util/formatTime";
-import { formatTimeRaw } from "@foxglove/studio-base/util/time";
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-import styles from "./TimeBasedChartTooltipContent.module.scss";
 import { TimeBasedChartTooltipData } from "./index";
 
 type Props = {
-  tooltip: TimeBasedChartTooltipData;
+  content: TimeBasedChartTooltipData[];
 };
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    fontFamily: fonts.MONOSPACE,
+    fontSize: 11,
+    lineHeight: "1.4",
+    overflowWrap: "break-word",
+  },
+  multiValueItem: {
+    paddingBottom: theme.spacing.s2,
+  },
+  path: {
+    whiteSpace: "nowrap",
+    color: theme.palette.neutralTertiary,
+  },
+}));
 
 export default function TimeBasedChartTooltipContent(
   props: PropsWithChildren<Props>,
 ): React.ReactElement {
-  const { tooltip } = props;
-  const value = typeof tooltip.value === "string" ? tooltip.value : JSON.stringify(tooltip.value);
-  const { receiveTime, headerStamp } = tooltip.item;
+  const { content } = props;
+  const classes = useStyles();
+
+  // If only one value is present we don't show the series name since it is the only series present
+  if (content.length === 1) {
+    return (
+      <div className={classes.root} data-test="TimeBasedChartTooltipContent">
+        {content.map((item, idx) => {
+          const value =
+            typeof item.value === "string"
+              ? item.value
+              : typeof item.value === "bigint"
+              ? item.value.toString()
+              : JSON.stringify(item.value);
+          return (
+            <div key={idx}>
+              {value}
+              {item.constantName != undefined ? ` (${item.constantName})` : ""}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
-    <div className={styles.root} data-test="TimeBasedChartTooltipContent">
-      <div>
-        <span className={styles.title}>Value:&nbsp;</span>
-        {tooltip.constantName != undefined ? `${tooltip.constantName} (${value})` : value}
-      </div>
-      <div>
-        <span className={styles.title}>Path:&nbsp;</span>
-        {tooltip.path}
-      </div>
-      {tooltip.source != undefined && (
-        <div>
-          <span className={styles.title}>Source:&nbsp;</span>
-          {tooltip.source}
-        </div>
-      )}
-      <table>
-        <tbody>
-          <tr>
-            <th />
-            <th>receive time</th>
-            {headerStamp && <th>header.stamp</th>}
-          </tr>
-          <tr>
-            <th>ROS</th>
-            <td>{formatTimeRaw(receiveTime)}</td>
-            {headerStamp && <td>{formatTimeRaw(headerStamp)}</td>}
-          </tr>
-          <tr>
-            <th>Time</th>
-            {<td>{formatTime(receiveTime)}</td>}
-            {headerStamp && <td>{formatTime(headerStamp)}</td>}
-          </tr>
-          <tr>
-            <th>Elapsed</th>
-            <td>{toSec(subtractTimes(receiveTime, tooltip.startTime)).toFixed(9)} sec</td>
-            {headerStamp && (
-              <td>{toSec(subtractTimes(headerStamp, tooltip.startTime)).toFixed(9)} sec</td>
-            )}
-          </tr>
-        </tbody>
-      </table>
+    <div className={classes.root} data-test="TimeBasedChartTooltipContent">
+      {content.map((item, idx) => {
+        const value =
+          typeof item.value === "string"
+            ? item.value
+            : typeof item.value === "bigint"
+            ? item.value.toString()
+            : JSON.stringify(item.value);
+        return (
+          <div key={idx} className={classes.multiValueItem}>
+            <div className={classes.path}>{item.path}</div>
+            <div>
+              {value}
+              {item.constantName != undefined ? ` (${item.constantName})` : ""}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

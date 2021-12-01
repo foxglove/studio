@@ -3,11 +3,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 import {
   DefaultButton,
+  IconBase,
   IconButton,
-  Link,
-  makeStyles,
   Spinner,
   Stack,
+  Toggle,
   useTheme,
 } from "@fluentui/react";
 import { partition } from "lodash";
@@ -19,9 +19,12 @@ import { useMountedState } from "react-use";
 import useAsyncFn from "react-use/lib/useAsyncFn";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import SignInPrompt from "@foxglove/studio-base/components/LayoutBrowser/SignInPrompt";
+import { useUnsavedChangesPrompt } from "@foxglove/studio-base/components/LayoutBrowser/UnsavedChangesPrompt";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
+import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
 import {
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
@@ -29,7 +32,6 @@ import {
 import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import LayoutStorageDebuggingContext from "@foxglove/studio-base/context/LayoutStorageDebuggingContext";
-import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import useCallbackWithToast from "@foxglove/studio-base/hooks/useCallbackWithToast";
 import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
@@ -40,18 +42,9 @@ import { Layout, layoutIsShared } from "@foxglove/studio-base/services/ILayoutSt
 import { downloadTextFile } from "@foxglove/studio-base/util/download";
 
 import LayoutSection from "./LayoutSection";
+import helpContent from "./index.help.md";
 import showOpenFilePicker from "./showOpenFilePicker";
 import { debugBorder } from "./styles";
-
-const useStyles = makeStyles((theme) => ({
-  signInPrompt: {
-    fontSize: theme.fonts.smallPlus.fontSize,
-    padding: theme.spacing.s1,
-    backgroundColor: theme.palette.themeLighterAlt,
-    position: "sticky",
-    bottom: 0,
-  },
-}));
 
 export default function LayoutBrowser({
   currentDateForStorybook,
@@ -65,18 +58,24 @@ export default function LayoutBrowser({
   const prompt = usePrompt();
   const analytics = useAnalytics();
   const confirm = useConfirm();
-  const { openAccountSettings } = useWorkspace();
-  const styles = useStyles();
+  const { unsavedChangesPrompt, openUnsavedChangesPrompt } = useUnsavedChangesPrompt();
 
   const currentLayoutId = useCurrentLayoutSelector((state) => state.selectedLayout?.id);
   const { setSelectedLayoutId } = useCurrentLayoutActions();
 
   const [isBusy, setIsBusy] = useState(layoutManager.isBusy);
+  const [isOnline, setIsOnline] = useState(layoutManager.isOnline);
   useLayoutEffect(() => {
-    const listener = () => setIsBusy(layoutManager.isBusy);
-    listener();
-    layoutManager.on("busychange", listener);
-    return () => layoutManager.off("busychange", listener);
+    const busyListener = () => setIsBusy(layoutManager.isBusy);
+    const onlineListener = () => setIsOnline(layoutManager.isOnline);
+    busyListener();
+    onlineListener();
+    layoutManager.on("busychange", busyListener);
+    layoutManager.on("onlinechange", onlineListener);
+    return () => {
+      layoutManager.off("busychange", busyListener);
+      layoutManager.off("onlinechange", onlineListener);
+    };
   }, [layoutManager]);
 
   const [layouts, reloadLayouts] = useAsyncFn(
@@ -105,10 +104,13 @@ export default function LayoutBrowser({
     void reloadLayouts();
   }, [reloadLayouts]);
 
+  /**
+   * Don't allow the user to switch away from a personal layout if they have unsaved changes. This
+   * currently has a race condition because of the throttled save in CurrentLayoutProvider -- it's
+   * possible to make changes and switch layouts before they're sent to the layout manager.
+   * @returns true if the original action should continue, false otherwise
+   */
   const promptForUnsavedChanges = useCallback(async () => {
-    // Don't allow the user to switch away from a personal layout if they have unsaved changes. This
-    // currently has a race condition because of the throttled save in CurrentLayoutProvider -- it's
-    // possible to make changes and switch layouts before they're sent to the layout manager.
     const currentLayout =
       currentLayoutId != undefined ? await layoutManager.getLayout(currentLayoutId) : undefined;
     if (
@@ -116,20 +118,45 @@ export default function LayoutBrowser({
       layoutIsShared(currentLayout) &&
       currentLayout.working != undefined
     ) {
-      await confirm({
-        title: `“${currentLayout.name}” has been modified`,
-        prompt: "Save or discard your changes before switching layouts.",
-        ok: "Fine",
-        cancel: "Do Not Sell My Personal Information",
-      });
+      const result = await openUnsavedChangesPrompt(currentLayout);
+      switch (result.type) {
+        case "cancel":
+          return false;
+        case "discard":
+          await layoutManager.revertLayout({ id: currentLayout.id });
+          void analytics.logEvent(AppEvent.LAYOUT_REVERT, {
+            permission: currentLayout.permission,
+            context: "UnsavedChangesPrompt",
+          });
+          return true;
+        case "overwrite":
+          await layoutManager.overwriteLayout({ id: currentLayout.id });
+          void analytics.logEvent(AppEvent.LAYOUT_OVERWRITE, {
+            permission: currentLayout.permission,
+            context: "UnsavedChangesPrompt",
+          });
+          return true;
+        case "makePersonal":
+          // We don't use onMakePersonalCopy() here because it might need to prompt for unsaved changes, and we don't want to select the newly created layout
+          await layoutManager.makePersonalCopy({
+            id: currentLayout.id,
+            name: result.name,
+          });
+          void analytics.logEvent(AppEvent.LAYOUT_MAKE_PERSONAL_COPY, {
+            permission: currentLayout.permission,
+            syncStatus: currentLayout.syncInfo?.status,
+            context: "UnsavedChangesPrompt",
+          });
+          return true;
+      }
       return false;
     }
     return true;
-  }, [confirm, currentLayoutId, layoutManager]);
+  }, [analytics, currentLayoutId, layoutManager, openUnsavedChangesPrompt]);
 
   const onSelectLayout = useCallbackWithToast(
-    async (item: Layout, selectedViaClick?: boolean) => {
-      if (selectedViaClick === true) {
+    async (item: Layout, { selectedViaClick = false }: { selectedViaClick?: boolean } = {}) => {
+      if (selectedViaClick) {
         if (!(await promptForUnsavedChanges())) {
           return;
         }
@@ -156,7 +183,7 @@ export default function LayoutBrowser({
       const newLayout = await layoutManager.saveNewLayout({
         name: `${item.name} copy`,
         data: item.working?.data ?? item.baseline.data,
-        permission: "creator_write",
+        permission: "CREATOR_WRITE",
       });
       await onSelectLayout(newLayout);
       void analytics.logEvent(AppEvent.LAYOUT_DUPLICATE, { permission: item.permission });
@@ -200,7 +227,7 @@ export default function LayoutBrowser({
     const newLayout = await layoutManager.saveNewLayout({
       name,
       data: state as PanelsState,
-      permission: "creator_write",
+      permission: "CREATOR_WRITE",
     });
     void onSelectLayout(newLayout);
 
@@ -220,7 +247,7 @@ export default function LayoutBrowser({
     async (item: Layout) => {
       const name = await prompt({
         title: "Share a copy with your team",
-        subText: "Team layouts can be used and changed by members of your team.",
+        subText: "Team layouts can be used and changed by other members of your team.",
         initialValue: item.name,
         label: "Layout name",
       });
@@ -228,7 +255,7 @@ export default function LayoutBrowser({
         const newLayout = await layoutManager.saveNewLayout({
           name,
           data: item.working?.data ?? item.baseline.data,
-          permission: "org_write",
+          permission: "ORG_WRITE",
         });
         void analytics.logEvent(AppEvent.LAYOUT_SHARE, { permission: item.permission });
         await onSelectLayout(newLayout);
@@ -239,20 +266,38 @@ export default function LayoutBrowser({
 
   const onOverwriteLayout = useCallbackWithToast(
     async (item: Layout) => {
-      // CurrentLayoutProvider automatically updates in its layout change listener
+      if (layoutIsShared(item)) {
+        const response = await confirm({
+          title: `Update “${item.name}”?`,
+          prompt:
+            "Your changes will overwrite this layout for all team members. This cannot be undone.",
+          ok: "Save",
+        });
+        if (response !== "ok") {
+          return;
+        }
+      }
       await layoutManager.overwriteLayout({ id: item.id });
       void analytics.logEvent(AppEvent.LAYOUT_OVERWRITE, { permission: item.permission });
     },
-    [analytics, layoutManager],
+    [analytics, confirm, layoutManager],
   );
 
   const onRevertLayout = useCallbackWithToast(
     async (item: Layout) => {
-      // CurrentLayoutProvider automatically updates in its layout change listener
+      const response = await confirm({
+        title: `Revert “${item.name}”?`,
+        prompt: "Your changes will be permantly deleted. This cannot be undone.",
+        ok: "Discard changes",
+        variant: "danger",
+      });
+      if (response !== "ok") {
+        return;
+      }
       await layoutManager.revertLayout({ id: item.id });
       void analytics.logEvent(AppEvent.LAYOUT_REVERT, { permission: item.permission });
     },
-    [analytics, layoutManager],
+    [analytics, confirm, layoutManager],
   );
 
   const onMakePersonalCopy = useCallbackWithToast(
@@ -308,7 +353,7 @@ export default function LayoutBrowser({
     const newLayout = await layoutManager.saveNewLayout({
       name: layoutName,
       data,
-      permission: "creator_write",
+      permission: "CREATOR_WRITE",
     });
     void onSelectLayout(newLayout);
     void analytics.logEvent(AppEvent.LAYOUT_IMPORT);
@@ -318,18 +363,27 @@ export default function LayoutBrowser({
   const importLayoutTooltip = useTooltip({ contents: "Import layout" });
 
   const layoutDebug = useContext(LayoutStorageDebuggingContext);
+  const supportsSignIn = useContext(ConsoleApiContext) != undefined;
 
-  const [enableSharedLayouts = false] = useAppConfigurationValue<boolean>(
-    AppSetting.ENABLE_CONSOLE_API_LAYOUTS,
+  const [hideSignInPrompt = false, setHideSignInPrompt] = useAppConfigurationValue<boolean>(
+    AppSetting.HIDE_SIGN_IN_PROMPT,
   );
-  const showSignInPrompt = enableSharedLayouts && !layoutManager.supportsSharing;
+
+  const showSignInPrompt = supportsSignIn && !layoutManager.supportsSharing && !hideSignInPrompt;
 
   return (
     <SidebarContent
       title="Layouts"
+      helpContent={helpContent}
       noPadding
       trailingItems={[
         (layouts.loading || isBusy) && <Spinner key="spinner" />,
+        !isOnline && (
+          <IconBase
+            iconName="CloudOffFilled"
+            styles={{ root: { color: theme.palette.themeLighterAlt } }}
+          />
+        ),
         <IconButton
           key="add-layout"
           elementRef={createLayoutTooltip.ref}
@@ -338,12 +392,8 @@ export default function LayoutBrowser({
           ariaLabel="Create new layout"
           data-test="add-layout"
           styles={{
-            icon: {
-              height: 20,
-            },
-            root: {
-              margin: `0 ${theme.spacing.s2}`,
-            },
+            icon: { height: 20 },
+            root: { margin: `0 ${theme.spacing.s2}` },
           }}
         >
           {createLayoutTooltip.tooltip}
@@ -355,18 +405,15 @@ export default function LayoutBrowser({
           onClick={importLayout}
           ariaLabel="Import layout"
           styles={{
-            root: {
-              marginRight: `-${theme.spacing.s1}`,
-            },
-            icon: {
-              height: 20,
-            },
+            icon: { height: 20 },
+            root: { marginRight: theme.spacing.s1 },
           }}
         >
           {importLayoutTooltip.tooltip}
         </IconButton>,
       ]}
     >
+      {unsavedChangesPrompt}
       <Stack verticalFill>
         <Stack.Item>
           <LayoutSection
@@ -405,12 +452,7 @@ export default function LayoutBrowser({
           )}
         </Stack.Item>
         <div style={{ flexGrow: 1 }} />
-        {showSignInPrompt && (
-          <Stack.Item className={styles.signInPrompt}>
-            <Link onClick={openAccountSettings}>Sign in</Link> to sync layouts across multiple
-            devices, and share them with team members.
-          </Stack.Item>
-        )}
+        {showSignInPrompt && <SignInPrompt onDismiss={() => void setHideSignInPrompt(true)} />}
         {layoutDebug?.syncNow && (
           <Stack
             styles={{
@@ -430,7 +472,7 @@ export default function LayoutBrowser({
               <Stack disableShrink horizontal tokens={{ childrenGap: theme.spacing.s1 }}>
                 <Stack.Item grow>
                   <DefaultButton
-                    text="Sync now"
+                    text="Sync"
                     onClick={async () => {
                       await layoutDebug.syncNow?.();
                       await reloadLayouts();
@@ -444,6 +486,12 @@ export default function LayoutBrowser({
                     }}
                   />
                 </Stack.Item>
+                <Toggle
+                  checked={layoutManager.isOnline}
+                  onText="Online"
+                  offText="Offline"
+                  onChange={(_, checked) => checked != undefined && layoutDebug.setOnline(checked)}
+                />
               </Stack>
             </Stack.Item>
           </Stack>

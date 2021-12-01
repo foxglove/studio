@@ -11,16 +11,13 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useCallback, useContext, useMemo } from "react";
-import { Color } from "regl-worldview";
+import { useCallback, useContext } from "react";
 
+import { Color } from "@foxglove/regl-worldview";
 import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
 import { ThreeDimensionalVizContext } from "@foxglove/studio-base/panels/ThreeDimensionalViz/ThreeDimensionalVizContext";
 import { TREE_SPACING } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/constants";
 import { TopicTreeContext } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/useTopicTree";
-import { TRANSFORM_TOPIC } from "@foxglove/studio-base/panels/ThreeDimensionalViz/constants";
-import { SECOND_SOURCE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
-import { joinTopics } from "@foxglove/studio-base/util/topicUtils";
 
 import NamespaceMenu from "./NamespaceMenu";
 import NodeName from "./NodeName";
@@ -39,68 +36,57 @@ const OUTER_LEFT_MARGIN = 12;
 const INNER_LEFT_MARGIN = 8;
 
 export type NamespaceNode = {
-  availableByColumn: boolean[];
-  checkedByColumn: boolean[];
-  featureKey: string;
-  hasNamespaceOverrideColorChangedByColumn: boolean[];
+  available: boolean;
+  checked: boolean;
+  hasNamespaceOverrideColorChanged: boolean;
   key: string;
   namespace: string;
-  overrideColorByColumn?: (Color | undefined)[];
-  visibleInSceneByColumn: boolean[];
+  overrideColor?: Color;
+  visibleInScene: boolean;
 };
 
 type Props = {
   children: NamespaceNode[];
   filterText: string;
   getIsTreeNodeVisibleInTree: GetIsTreeNodeVisibleInTree;
-  hasFeatureColumn: boolean;
   isXSWidth: boolean;
   onNamespaceOverrideColorChange: OnNamespaceOverrideColorChange;
   topicNode: TreeTopicNode;
   width: number;
-  diffModeEnabled: boolean;
 };
 
 function NamespaceNodeRow({
   nodeKey,
-  hasNamespaceOverrideColorChangedByColumn,
+  hasNamespaceOverrideColorChanged,
   namespace,
-  checkedByColumn,
-  availableByColumn,
-  overrideColorByColumn,
-  visibleInSceneByColumn,
+  checked,
+  available,
+  overrideColor,
+  visibleInScene,
   rowWidth,
   isXSWidth,
   maxNodeNameLen,
   filterText,
   topicNodeAvailable,
-  unavailableTooltip,
-  hasFeatureColumn,
   topicName,
   onNamespaceOverrideColorChange,
-  diffModeEnabled,
 }: {
   nodeKey: string;
-  featureKey: string;
-  hasNamespaceOverrideColorChangedByColumn: boolean[];
+  hasNamespaceOverrideColorChanged: boolean;
   namespace: string;
-  availableByColumn: boolean[];
-  checkedByColumn: boolean[];
-  overrideColorByColumn?: (Color | undefined)[];
-  visibleInSceneByColumn: boolean[];
+  available: boolean;
+  checked: boolean;
+  overrideColor?: Color;
+  visibleInScene: boolean;
   rowWidth: number;
   isXSWidth: boolean;
   maxNodeNameLen: number;
   filterText: string;
   topicNodeAvailable: boolean;
-  unavailableTooltip: string;
-  hasFeatureColumn: boolean;
   topicName: string;
-  diffModeEnabled: boolean;
   onNamespaceOverrideColorChange: OnNamespaceOverrideColorChange;
 }) {
-  const nodeVisibleInScene =
-    (visibleInSceneByColumn[0] ?? false) || (visibleInSceneByColumn[1] ?? false);
+  const nodeVisibleInScene = visibleInScene ?? false;
 
   const { setHoveredMarkerMatchers } = useContext(ThreeDimensionalVizContext);
   const { toggleCheckAllAncestors, toggleNamespaceChecked } = useGuaranteedContext(
@@ -109,14 +95,11 @@ function NamespaceNodeRow({
   );
 
   const updateHoveredMarkerMatchers = useCallback(
-    (columnIndex: number, visible: boolean) => {
+    // eslint-disable-next-line @foxglove/no-boolean-parameters
+    (visible: boolean) => {
       if (visible) {
-        const topic = [topicName, joinTopics(SECOND_SOURCE_PREFIX, topicName)][columnIndex];
-        if (!topic) {
-          return;
-        }
         setHoveredMarkerMatchers([
-          { topic, checks: [{ markerKeyPath: ["ns"], value: namespace }] },
+          { topic: topicName, checks: [{ markerKeyPath: ["ns"], value: namespace }] },
         ]);
       }
     },
@@ -124,39 +107,15 @@ function NamespaceNodeRow({
   );
 
   const onMouseLeave = useCallback(() => setHoveredMarkerMatchers([]), [setHoveredMarkerMatchers]);
-  const mouseEventHandlersByColumnIdx = useMemo(() => {
-    return new Array(2).fill(0).map((_topic, columnIndex) => ({
-      onMouseEnter: () => updateHoveredMarkerMatchers(columnIndex, true),
-      onMouseLeave,
-    }));
-  }, [updateHoveredMarkerMatchers, onMouseLeave]);
 
-  const onToggle = useCallback(
-    (columnIndex: number) => {
-      toggleNamespaceChecked({ topicName, namespace, columnIndex });
-      updateHoveredMarkerMatchers(columnIndex, !(visibleInSceneByColumn[columnIndex] ?? false));
-    },
-    [
-      toggleNamespaceChecked,
-      topicName,
-      namespace,
-      updateHoveredMarkerMatchers,
-      visibleInSceneByColumn,
-    ],
-  );
-  const onAltToggle = useCallback(
-    (columnIndex: number) => {
-      toggleCheckAllAncestors(nodeKey, columnIndex, topicName);
-      updateHoveredMarkerMatchers(columnIndex, !(visibleInSceneByColumn[columnIndex] ?? false));
-    },
-    [
-      toggleCheckAllAncestors,
-      nodeKey,
-      topicName,
-      updateHoveredMarkerMatchers,
-      visibleInSceneByColumn,
-    ],
-  );
+  const onToggle = useCallback(() => {
+    toggleNamespaceChecked({ topicName, namespace });
+    updateHoveredMarkerMatchers(!(visibleInScene ?? false));
+  }, [toggleNamespaceChecked, topicName, namespace, updateHoveredMarkerMatchers, visibleInScene]);
+  const onAltToggle = useCallback(() => {
+    toggleCheckAllAncestors(nodeKey, topicName);
+    updateHoveredMarkerMatchers(!(visibleInScene ?? false));
+  }, [toggleCheckAllAncestors, nodeKey, topicName, updateHoveredMarkerMatchers, visibleInScene]);
 
   return (
     <STreeNodeRow
@@ -191,34 +150,28 @@ function NamespaceNodeRow({
       </SLeft>
       <SRightActions>
         <SToggles>
-          {availableByColumn.map((available, columnIndex) => (
-            <VisibilityToggle // Some namespaces are statically available. But we want to make sure the parent topic is also available
-              // before showing it as available.
-              available={topicNodeAvailable && available}
-              checked={checkedByColumn[columnIndex] ?? false}
-              dataTest={`visibility-toggle~${nodeKey}~column${columnIndex}`}
-              key={columnIndex}
-              onAltToggle={() => onAltToggle(columnIndex)}
-              onToggle={() => onToggle(columnIndex)}
-              overrideColor={overrideColorByColumn?.[columnIndex]}
-              size="SMALL"
-              unavailableTooltip={unavailableTooltip}
-              visibleInScene={visibleInSceneByColumn[columnIndex] ?? false}
-              {...mouseEventHandlersByColumnIdx[columnIndex]}
-              diffModeEnabled={diffModeEnabled}
-              columnIndex={columnIndex}
-            />
-          ))}
+          <VisibilityToggle
+            // Some namespaces are statically available. But we want to make sure the parent topic is also available
+            // before showing it as available.
+            available={topicNodeAvailable && available}
+            checked={checked ?? false}
+            dataTest={`visibility-toggle~${nodeKey}`}
+            onAltToggle={() => onAltToggle()}
+            onToggle={() => onToggle()}
+            overrideColor={overrideColor}
+            size="SMALL"
+            visibleInScene={visibleInScene ?? false}
+            onMouseEnter={() => updateHoveredMarkerMatchers(true)}
+            onMouseLeave={onMouseLeave}
+          />
         </SToggles>
         <NamespaceMenu
-          disableBaseColumn={!(availableByColumn[0] ?? false)}
-          disableFeatureColumn={!(availableByColumn[1] ?? false)}
-          hasFeatureColumn={hasFeatureColumn && (availableByColumn[1] ?? false)}
-          hasNamespaceOverrideColorChangedByColumn={hasNamespaceOverrideColorChangedByColumn}
+          disableBaseColumn={!(available ?? false)}
+          hasNamespaceOverrideColorChanged={hasNamespaceOverrideColorChanged}
           namespace={namespace}
           nodeKey={nodeKey}
           onNamespaceOverrideColorChange={onNamespaceOverrideColorChange}
-          overrideColorByColumn={overrideColorByColumn}
+          overrideColor={overrideColor}
           providerAvailable={topicNodeAvailable}
           topicName={topicName}
         />
@@ -232,36 +185,24 @@ export default function renderNamespaceNodes({
   children,
   filterText,
   getIsTreeNodeVisibleInTree,
-  hasFeatureColumn,
   isXSWidth,
   onNamespaceOverrideColorChange,
   topicNode,
   width,
-  diffModeEnabled,
 }: Props): TreeUINode[] {
   const rowWidth = width - (isXSWidth ? 0 : TREE_SPACING * 2) - OUTER_LEFT_MARGIN;
-  const topicNodeAvailable = topicNode.availableByColumn.some((value) => value);
-  const togglesWidth = hasFeatureColumn ? TOGGLE_WRAPPER_SIZE * 2 : TOGGLE_WRAPPER_SIZE;
-  const rightActionWidth = topicNodeAvailable ? togglesWidth + ICON_SIZE : ICON_SIZE;
+  const togglesWidth = TOGGLE_WRAPPER_SIZE;
+  const rightActionWidth = topicNode.available ? togglesWidth + ICON_SIZE : ICON_SIZE;
   const maxNodeNameLen = rowWidth - rightActionWidth - INNER_LEFT_MARGIN * 2;
-
-  // TODO(Audrey): remove the special tooltip once we add 2nd bag support for map and tf namespaces.
-  const unavailableTooltip =
-    topicNode.topicName === TRANSFORM_TOPIC || topicNode.topicName === "/metadata"
-      ? "Unsupported"
-      : "Unavailable";
 
   const commonRowProps = {
     rowWidth,
     isXSWidth,
     maxNodeNameLen,
     filterText,
-    topicNodeAvailable,
+    topicNodeAvailable: topicNode.available,
     onNamespaceOverrideColorChange,
-    unavailableTooltip,
-    hasFeatureColumn,
     topicName: topicNode.topicName,
-    diffModeEnabled,
   };
 
   return children
@@ -269,24 +210,22 @@ export default function renderNamespaceNodes({
     .map(
       ({
         key,
-        featureKey,
-        hasNamespaceOverrideColorChangedByColumn,
+        hasNamespaceOverrideColorChanged,
         namespace,
-        checkedByColumn,
-        availableByColumn,
-        overrideColorByColumn,
-        visibleInSceneByColumn,
+        checked,
+        available,
+        overrideColor,
+        visibleInScene,
       }) => {
         const title = (
           <NamespaceNodeRow
             {...{
-              featureKey,
-              hasNamespaceOverrideColorChangedByColumn,
+              hasNamespaceOverrideColorChanged,
               namespace,
-              checkedByColumn,
-              availableByColumn,
-              overrideColorByColumn,
-              visibleInSceneByColumn,
+              checked,
+              available,
+              overrideColor,
+              visibleInScene,
               nodeKey: key,
               ...commonRowProps,
             }}

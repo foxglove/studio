@@ -67,10 +67,11 @@ import {
   getPathFromNode,
 } from "@foxglove/studio-base/util/layout";
 
+import { isTabPanelConfig } from "../../util/layout";
+
 export const defaultPlaybackConfig: PlaybackConfig = {
   speed: 1.0,
   messageOrder: "receiveTime",
-  timeDisplayMethod: "ROS",
 };
 
 function changePanelLayout(
@@ -339,8 +340,10 @@ const addPanel = (
   }
   let layout: MosaicNode<string> | undefined;
   if (tabId != undefined) {
-    const tabPanelConfig = panelsState.configById[tabId] as TabPanelConfig | undefined;
-    layout = tabPanelConfig?.tabs[tabPanelConfig.activeTabIdx]?.layout;
+    const tabPanelConfig = panelsState.configById[tabId];
+    if (isTabPanelConfig(tabPanelConfig)) {
+      layout = tabPanelConfig.tabs[tabPanelConfig.activeTabIdx]?.layout;
+    }
   } else {
     layout = panelsState.layout;
   }
@@ -610,7 +613,12 @@ const dragToTabFromTab = (
     trimConfigById: false,
   });
   newPanelsState = savePanelConfigs(newPanelsState, {
-    configs: [...fromTabConfigs, ...toTabConfigs, ...sourceTabChildConfigs],
+    configs: [
+      ...fromTabConfigs,
+      ...toTabConfigs,
+      // if the target tab is inside the source tab, make sure not to overwrite it with its old config
+      ...sourceTabChildConfigs.filter(({ id }) => id !== targetTabId),
+    ],
   });
   return newPanelsState;
 };
@@ -644,7 +652,7 @@ const startDrag = (
       configs: [{ id: sourceTabId, config: updateTabPanelLayout(undefined, sourceTabConfig) }],
     });
   }
-  return panelsState;
+  throw new Error("Can't drag the top-level panel of a layout");
 };
 
 const endDrag = (panelsState: PanelsState, dragPayload: EndDragPayload): PanelsState => {
@@ -738,10 +746,6 @@ const endDrag = (panelsState: PanelsState, dragPayload: EndDragPayload): PanelsS
       sourceTabConfig,
       sourceTabChildConfigs,
     });
-  }
-
-  if (typeof originalLayout === "string") {
-    return changePanelLayout(panelsState, { layout: originalLayout, trimConfigById: false });
   }
 
   if (position != undefined && destinationPath != undefined && !isEqual(destinationPath, ownPath)) {

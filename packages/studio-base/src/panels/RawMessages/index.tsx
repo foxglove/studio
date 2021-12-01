@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { mergeStyleSets } from "@fluentui/react";
+import { mergeStyleSets, useTheme } from "@fluentui/react";
 import CheckboxBlankOutlineIcon from "@mdi/svg/svg/checkbox-blank-outline.svg";
 import CheckboxMarkedIcon from "@mdi/svg/svg/checkbox-marked.svg";
 import PlusMinusIcon from "@mdi/svg/svg/plus-minus.svg";
@@ -52,9 +52,10 @@ import Tooltip from "@foxglove/studio-base/components/Tooltip";
 import getDiff, {
   diffLabels,
   diffLabelsByLabelText,
+  DiffObject,
 } from "@foxglove/studio-base/panels/RawMessages/getDiff";
 import { Topic } from "@foxglove/studio-base/players/types";
-import { jsonTreeTheme, SECOND_SOURCE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
+import { useJsonTreeTheme } from "@foxglove/studio-base/util/globalConstants";
 import { enumValuesByDatatypeAndField } from "@foxglove/studio-base/util/selectors";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
@@ -72,10 +73,9 @@ import { DATA_ARRAY_PREVIEW_LIMIT, getItemStringForDiff } from "./utils";
 
 export const CUSTOM_METHOD = "custom";
 export const PREV_MSG_METHOD = "previous message";
-export const OTHER_SOURCE_METHOD = "other source";
 export type RawMessagesConfig = {
   topicPath: string;
-  diffMethod: "custom" | "previous message" | "other source";
+  diffMethod: "custom" | "previous message";
   diffTopicPath: string;
   diffEnabled: boolean;
   showFullMessageForDiff: boolean;
@@ -109,7 +109,7 @@ const classes = mergeStyleSets({
   container: {
     paddingLeft: "0.5em",
     fontFamily: fonts.SANS_SERIF,
-    fontFeatureSettings: "tnum", // Use fixed width numbers (important for numbers that update during playback)
+    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
   },
   iconWrapper: {
     display: "inline",
@@ -128,12 +128,22 @@ const classes = mergeStyleSets({
 });
 
 function RawMessages(props: Props) {
+  const theme = useTheme();
+  const jsonTreeTheme = useJsonTreeTheme();
   const { config, saveConfig } = props;
   const { openSiblingPanel } = usePanelContext();
   const { topicPath, diffMethod, diffTopicPath, diffEnabled, showFullMessageForDiff } = config;
   const { topics, datatypes } = useDataSourceInfo();
 
-  const getItemString = useGetItemStringWithTimezone();
+  const defaultGetItemString = useGetItemStringWithTimezone();
+  const getItemString = useMemo(
+    () =>
+      diffEnabled
+        ? (type: string, data: DiffObject, itemType: React.ReactNode) =>
+            getItemStringForDiff({ type, data, itemType, isInverted: theme.isInverted })
+        : defaultGetItemString,
+    [defaultGetItemString, diffEnabled, theme.isInverted],
+  );
 
   const topicRosPath: RosPath | undefined = useMemo(() => parseRosPath(topicPath), [topicPath]);
   const topic: Topic | undefined = useMemo(
@@ -163,19 +173,13 @@ function RawMessages(props: Props) {
   const prevTickMsg = consecutiveMsgs?.[consecutiveMsgs.length - 2];
   const [prevTickObj, currTickObj] = [
     prevTickMsg && {
-      message: prevTickMsg,
+      messageEvent: prevTickMsg,
       queriedData: cachedGetMessagePathDataItems(topicPath, prevTickMsg) ?? [],
     },
     useLatestMessageDataItem(topicPath),
   ];
 
-  const otherSourceTopic = topicName.startsWith(SECOND_SOURCE_PREFIX)
-    ? topicName.replace(SECOND_SOURCE_PREFIX, "")
-    : `${SECOND_SOURCE_PREFIX}${topicName}`;
-  const inOtherSourceDiffMode = diffEnabled && diffMethod === OTHER_SOURCE_METHOD;
-  const diffTopicObj = useLatestMessageDataItem(
-    diffEnabled ? (inOtherSourceDiffMode ? otherSourceTopic : diffTopicPath) : "",
-  );
+  const diffTopicObj = useLatestMessageDataItem(diffEnabled ? diffTopicPath : "");
 
   const inTimetickDiffMode = diffEnabled && diffMethod === PREV_MSG_METHOD;
   const baseItem = inTimetickDiffMode ? prevTickObj : currTickObj;
@@ -345,11 +349,6 @@ function RawMessages(props: Props) {
         <EmptyState>{`Waiting to diff next messages from "${topicPath}" and "${diffTopicPath}"`}</EmptyState>
       );
     }
-    if (diffEnabled && diffMethod === OTHER_SOURCE_METHOD && (!baseItem || !diffItem)) {
-      return (
-        <EmptyState>{`Waiting to diff next messages from "${topicPath}" and "${otherSourceTopic}"`}</EmptyState>
-      );
-    }
     if (!baseItem) {
       return <EmptyState>Waiting for next message</EmptyState>;
     }
@@ -368,9 +367,13 @@ function RawMessages(props: Props) {
     // json parse/stringify round trip is used to deep parse data and diff data which may be lazy messages
     // lazy messages have non-enumerable getters but do have a toJSON method to turn themselves into an object
     const diff = diffEnabled
-      ? getDiff(maybeDeepParse(data), maybeDeepParse(diffData), undefined, showFullMessageForDiff)
+      ? getDiff({
+          before: maybeDeepParse(data),
+          after: maybeDeepParse(diffData),
+          idLabel: undefined,
+          showFullMessageForDiff,
+        })
       : {};
-    const diffLabelTexts = Object.values(diffLabels).map(({ labelText }) => labelText);
 
     const CheckboxComponent = showFullMessageForDiff
       ? CheckboxMarkedIcon
@@ -382,9 +385,9 @@ function RawMessages(props: Props) {
           data={data}
           diffData={diffData}
           diff={diff}
-          message={baseItem.message}
+          message={baseItem.messageEvent}
           {...(topic ? { datatype: topic.datatype } : undefined)}
-          {...(diffItem ? { diffMessage: diffItem.message } : undefined)}
+          {...(diffItem ? { diffMessage: diffItem.messageEvent } : undefined)}
         />
         {shouldDisplaySingleVal ? (
           <div className={classes.singleVal}>
@@ -412,7 +415,7 @@ function RawMessages(props: Props) {
               shouldExpandNode={shouldExpandNode}
               hideRoot
               invertTheme={false}
-              getItemString={diffEnabled ? getItemStringForDiff : getItemString}
+              getItemString={getItemString}
               valueRenderer={(valueAsString, value, ...keyPath) => {
                 if (diffEnabled) {
                   return renderDiffLabel(valueAsString, value);
@@ -440,18 +443,27 @@ function RawMessages(props: Props) {
                 );
               }}
               postprocessValue={(rawVal: unknown) => {
-                const val = maybeDeepParse(rawVal);
-                if (
-                  typeof val === "object" &&
-                  val != undefined &&
-                  Object.keys(val).length === 1 &&
-                  (diffLabelTexts as string[]).includes(Object.keys(val)[0] as string)
-                ) {
-                  if (Object.keys(val)[0] !== diffLabels.ID.labelText) {
-                    return Object.values(val)[0];
-                  }
+                if (rawVal == undefined) {
+                  return rawVal;
                 }
-                return val;
+                const idValue = (rawVal as Record<string, unknown>)[diffLabels.ID.labelText];
+                const addedValue = (rawVal as Record<string, unknown>)[diffLabels.ADDED.labelText];
+                const changedValue = (rawVal as Record<string, unknown>)[
+                  diffLabels.CHANGED.labelText
+                ];
+                const deletedValue = (rawVal as Record<string, unknown>)[
+                  diffLabels.DELETED.labelText
+                ];
+                if (
+                  (addedValue != undefined ? 1 : 0) +
+                    (changedValue != undefined ? 1 : 0) +
+                    (deletedValue != undefined ? 1 : 0) ===
+                    1 &&
+                  idValue == undefined
+                ) {
+                  return addedValue ?? changedValue ?? deletedValue;
+                }
+                return maybeDeepParse(rawVal);
               }}
               theme={{
                 ...jsonTreeTheme,
@@ -469,16 +481,22 @@ function RawMessages(props: Props) {
                   let backgroundColor;
                   let textDecoration;
                   if (diffLabelsByLabelText[keyPath[0]]) {
-                    // @ts-expect-error backgroundColor is not a property?
-                    backgroundColor = diffLabelsByLabelText[keyPath[0]].backgroundColor;
+                    backgroundColor = theme.isInverted
+                      ? // @ts-expect-error backgroundColor is not a property?
+                        diffLabelsByLabelText[keyPath[0]].invertedBackgroundColor
+                      : // @ts-expect-error backgroundColor is not a property?
+                        diffLabelsByLabelText[keyPath[0]].backgroundColor;
                     textDecoration =
                       keyPath[0] === diffLabels.DELETED.labelText ? "line-through" : "none";
                   }
                   const nestedObj = get(diff, keyPath.slice().reverse(), {});
                   const nestedObjKey = Object.keys(nestedObj)[0];
                   if (nestedObjKey != undefined && diffLabelsByLabelText[nestedObjKey]) {
-                    // @ts-expect-error backgroundColor is not a property?
-                    backgroundColor = diffLabelsByLabelText[nestedObjKey].backgroundColor;
+                    backgroundColor = theme.isInverted
+                      ? // @ts-expect-error backgroundColor is not a property?
+                        diffLabelsByLabelText[nestedObjKey].invertedBackgroundColor
+                      : // @ts-expect-error backgroundColor is not a property?
+                        diffLabelsByLabelText[nestedObjKey].backgroundColor;
                     textDecoration =
                       nestedObjKey === diffLabels.DELETED.labelText ? "line-through" : "none";
                   }
@@ -506,8 +524,11 @@ function RawMessages(props: Props) {
                   const nestedObj = get(diff, keyPath.slice().reverse(), {});
                   const nestedObjKey = Object.keys(nestedObj)[0];
                   if (nestedObjKey != undefined && diffLabelsByLabelText[nestedObjKey]) {
-                    // @ts-expect-error backgroundColor is not a property?
-                    backgroundColor = diffLabelsByLabelText[nestedObjKey].backgroundColor;
+                    backgroundColor = theme.isInverted
+                      ? // @ts-expect-error backgroundColor is not a property?
+                        diffLabelsByLabelText[nestedObjKey].invertedBackgroundColor
+                      : // @ts-expect-error backgroundColor is not a property?
+                        diffLabelsByLabelText[nestedObjKey].backgroundColor;
                     textDecoration =
                       nestedObjKey === diffLabels.DELETED.labelText ? "line-through" : "none";
                   }
@@ -528,23 +549,24 @@ function RawMessages(props: Props) {
       </Flex>
     );
   }, [
-    baseItem,
-    diffEnabled,
-    diffItem,
-    diffMethod,
-    diffTopicPath,
     expandAll,
-    expandedFields,
-    onLabelClick,
-    otherSourceTopic,
-    rootStructureItem,
-    saveConfig,
+    topicPath,
+    diffEnabled,
+    diffMethod,
+    baseItem,
+    diffItem,
     showFullMessageForDiff,
     topic,
-    topicPath,
-    valueRenderer,
-    renderDiffLabel,
     getItemString,
+    jsonTreeTheme,
+    expandedFields,
+    diffTopicPath,
+    saveConfig,
+    onLabelClick,
+    valueRenderer,
+    rootStructureItem,
+    renderDiffLabel,
+    theme.isInverted,
   ]);
 
   return (
@@ -581,9 +603,6 @@ function RawMessages(props: Props) {
                   >
                     <DropdownItem value={PREV_MSG_METHOD}>
                       <span>{PREV_MSG_METHOD}</span>
-                    </DropdownItem>
-                    <DropdownItem value={OTHER_SOURCE_METHOD}>
-                      <span>{OTHER_SOURCE_METHOD}</span>
                     </DropdownItem>
                     <DropdownItem value={CUSTOM_METHOD}>
                       <span>custom</span>

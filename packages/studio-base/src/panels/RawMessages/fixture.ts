@@ -12,14 +12,12 @@
 //   You may not use this file except in compliance with the License.
 
 import { Fixture } from "@foxglove/studio-base/stories/PanelSetup";
-import { SECOND_SOURCE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 
 // ts-prune-ignore-next
 export const fixture = {
   topics: [
     { name: "/msgs/big_topic", datatype: "msgs/big_topic" },
     { name: "/foo", datatype: "std_msgs/String" },
-    { name: `${SECOND_SOURCE_PREFIX}/foo`, datatype: "std_msgs/String" },
     { name: "/baz/num", datatype: "baz/num" },
     { name: "/baz/bigint", datatype: "baz/bigint" },
     { name: "/baz/text", datatype: "baz/text" },
@@ -39,6 +37,8 @@ export const fixture = {
             count: 0,
             time: { nsec: 627658424, sec: 1526191529 },
             valid: true,
+            str: "a string",
+            nothing: undefined,
           },
           timestamp_example_1: { sec: 0, nsec: 0 },
           timestamp_example_2: { sec: 1, nsec: 1 },
@@ -49,6 +49,7 @@ export const fixture = {
           some_long_data: new Uint8ClampedArray(2000),
           some_float_data: new Float64Array(10),
         },
+        sizeInBytes: 0,
       },
     ],
     "/foo": [
@@ -60,6 +61,7 @@ export const fixture = {
           some_deleted_key: "GONE",
           some_id_example_2: { some_id: 0 },
         },
+        sizeInBytes: 0,
       },
       {
         topic: "/foo",
@@ -68,17 +70,7 @@ export const fixture = {
           some_array: ["a", "b", "c", "d", "e", "f"],
           some_id_example_2: { some_id: 123 },
         },
-      },
-    ],
-    [`${SECOND_SOURCE_PREFIX}/foo`]: [
-      {
-        topic: `${SECOND_SOURCE_PREFIX}/foo`,
-        receiveTime: { sec: 123, nsec: 456789011 },
-        message: {
-          some_array: ["a", "f", "n", "o", "p"],
-          some_deleted_key: "BYE",
-          some_id_example_2: { some_id: 567 },
-        },
+        sizeInBytes: 0,
       },
     ],
     "/baz/num": [
@@ -86,6 +78,7 @@ export const fixture = {
         topic: "/baz/num",
         receiveTime: { sec: 123, nsec: 456789012 },
         message: { value: 3425363211 },
+        sizeInBytes: 0,
       },
     ],
     "/baz/bigint": [
@@ -93,11 +86,13 @@ export const fixture = {
         topic: "/baz/bigint",
         receiveTime: { sec: 123, nsec: 456789012 },
         message: { value: 18446744073709551615n },
+        sizeInBytes: 0,
       },
       {
         topic: "/baz/bigint",
         receiveTime: { sec: 123, nsec: 456789013 },
         message: { value: 18446744073709551616n },
+        sizeInBytes: 0,
       },
     ],
     "/baz/text": [
@@ -112,6 +107,7 @@ export const fixture = {
             .map((_, i) => `this is line ${i} of the text`)
             .join("\n"),
         },
+        sizeInBytes: 0,
       },
     ],
     "/baz/array": [
@@ -119,6 +115,7 @@ export const fixture = {
         topic: "/baz/array",
         receiveTime: { sec: 123, nsec: 456789012 },
         message: { value: [false] },
+        sizeInBytes: 0,
       },
     ],
     "/baz/array/obj": [
@@ -126,6 +123,7 @@ export const fixture = {
         topic: "/baz/array/obj",
         receiveTime: { sec: 123, nsec: 456789012 },
         message: { value: [{ a: "b", c: "d", e: "f" }] },
+        sizeInBytes: 0,
       },
     ],
     "/geometry/types": [
@@ -143,6 +141,7 @@ export const fixture = {
             z: 3.0,
           },
         },
+        sizeInBytes: 0,
       },
     ],
   },
@@ -246,6 +245,7 @@ export const enumFixture = {
         message: {
           value: 2,
         },
+        sizeInBytes: 0,
       },
     ],
   },
@@ -296,6 +296,7 @@ export const enumAdvancedFixture = {
         topic: "/baz/enum_advanced",
         receiveTime: { sec: 123, nsec: 456789012 },
         message: exampleMessage,
+        sizeInBytes: 0,
       },
     ],
   },
@@ -319,6 +320,7 @@ export const withMissingData = {
         message: {
           value: undefined,
         },
+        sizeInBytes: 0,
       },
     ],
   },
@@ -341,6 +343,7 @@ export const topicsToDiffFixture: Fixture = {
           toBeDeletedVal: "Bye!",
           toBeDeletedObj: { a: 1, b: 2, c: 3 },
         },
+        sizeInBytes: 0,
       },
     ],
     "/another/baz/enum_advanced": [
@@ -382,6 +385,7 @@ export const topicsWithIdsToDiffFixture = {
             { ...exampleMessage, id: 2 },
           ],
         },
+        sizeInBytes: 0,
       },
     ],
     "/another/baz/enum_advanced_array": [
@@ -394,6 +398,7 @@ export const topicsWithIdsToDiffFixture = {
             { ...exampleMessage, state: 2, color: 3, newField: "hello", id: 1 },
           ],
         },
+        sizeInBytes: 0,
       },
     ],
   },
@@ -415,16 +420,19 @@ export const multipleNumberMessagesFixture = {
         topic: "/multiple_number_messages",
         receiveTime: { sec: 123, nsec: 1 },
         message: { value: 1 },
+        sizeInBytes: 0,
       },
       {
         topic: "/multiple_number_messages",
         receiveTime: { sec: 123, nsec: 2 },
         message: { value: 2 },
+        sizeInBytes: 0,
       },
       {
         topic: "/multiple_number_messages",
         receiveTime: { sec: 123, nsec: 3 },
         message: { value: 3 },
+        sizeInBytes: 0,
       },
     ],
   },

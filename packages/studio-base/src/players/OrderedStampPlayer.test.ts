@@ -39,6 +39,7 @@ function makeMessage(
       },
     },
     receiveTime: fromSec(receiveTime),
+    sizeInBytes: 0,
   };
 }
 
@@ -54,7 +55,7 @@ const dummyDatatypeWithHeader: RosDatatypes = new Map(
   }),
 );
 
-function getState(hasHeaderStamp?: boolean): PlayerStateActiveData {
+function getState({ hasHeaderStamp }: { hasHeaderStamp?: boolean } = {}): PlayerStateActiveData {
   return {
     messages: [],
     messageOrder: "receiveTime",
@@ -145,7 +146,7 @@ describe("OrderedStampPlayer", () => {
     const upstreamMessages = [makeMessage(undefined, 9.5, "/dummy_no_header_topic"), msg];
     await fakePlayer.emit({
       activeData: {
-        ...getState(true),
+        ...getState({ hasHeaderStamp: true }),
         topics: oldTopics,
         currentTime: fromSec(10),
         messages: upstreamMessages,

@@ -15,7 +15,6 @@ import {
 import path from "path";
 
 import Logger from "@foxglove/log";
-import colors from "@foxglove/studio-base/src/styles/colors.module.scss";
 
 import pkgInfo from "../../package.json";
 import getDevModeIcon from "./getDevModeIcon";
@@ -29,13 +28,57 @@ const isProduction = process.env.NODE_ENV === "production";
 const rendererPath = MAIN_WINDOW_WEBPACK_ENTRY;
 
 const closeMenuItem: MenuItemConstructorOptions = isMac ? { role: "close" } : { role: "quit" };
-
 const log = Logger.getLogger(__filename);
+
+type SectionKey = "app" | "panels" | "resources" | "products" | "legal";
+type HelpInfo = {
+  title: string;
+  content?: React.ReactNode;
+  url?: string;
+};
+const helpMenuItems: Map<SectionKey, { subheader: string; links: HelpInfo[] }> = new Map([
+  [
+    "resources",
+    {
+      subheader: "External resources",
+      links: [
+        { title: "Read docs", url: "https://foxglove.dev/docs" },
+        { title: "Join our community", url: "https://foxglove.dev/community" },
+      ],
+    },
+  ],
+  [
+    "products",
+    {
+      subheader: "Products",
+      links: [
+        { title: "Foxglove Studio", url: "https://foxglove.dev/studio" },
+        { title: "Foxglove Data Platform", url: "https://foxglove.dev/data-platform" },
+      ],
+    },
+  ],
+  [
+    "legal",
+    {
+      subheader: "Legal",
+      links: [
+        { title: "License terms", url: "https://foxglove.dev/legal/studio-license" },
+        { title: "Privacy policy", url: "https://foxglove.dev/legal/privacy" },
+      ],
+    },
+  ],
+]);
+
+const getTitleCase = (baseString: string): string =>
+  baseString
+    .split(" ")
+    .map((word) => `${word[0]?.toUpperCase()}${word.substring(1)}`)
+    .join(" ");
 
 type ClearableMenu = Menu & { clear: () => void };
 
 function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
-  const [allowCrashReporting, allowTelemetry] = getTelemetrySettings();
+  const { crashReportingEnabled, telemetryEnabled } = getTelemetrySettings();
 
   const preloadPath = path.join(app.getAppPath(), "main", "preload.js");
 
@@ -51,8 +94,8 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
       preload: preloadPath,
       nodeIntegration: false,
       additionalArguments: [
-        `--allowCrashReporting=${allowCrashReporting ? "1" : "0"}`,
-        `--allowTelemetry=${allowTelemetry ? "1" : "0"}`,
+        `--allowCrashReporting=${crashReportingEnabled ? "1" : "0"}`,
+        `--allowTelemetry=${telemetryEnabled ? "1" : "0"}`,
         ...deepLinks,
       ],
       // Disable webSecurity in development so we can make XML-RPC calls, load
@@ -61,7 +104,6 @@ function newStudioWindow(deepLinks: string[] = []): BrowserWindow {
       // Access-Control-Allow-Origin check
       webSecurity: isProduction,
     },
-    backgroundColor: colors.background,
   };
   if (!isProduction) {
     const devIcon = getDevModeIcon();
@@ -244,6 +286,16 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
     });
   };
 
+  const helpSidebarItems = Array.from(helpMenuItems.values(), ({ subheader, links }) => ({
+    label: getTitleCase(subheader),
+    submenu: links.map(({ title, url }) => ({
+      label: getTitleCase(title),
+      click: url
+        ? async () => await shell.openExternal(url)
+        : () => browserWindow.webContents.send("open-help"),
+    })),
+  }));
+
   menuTemplate.push({
     role: "help",
     submenu: [
@@ -251,15 +303,7 @@ function buildMenu(browserWindow: BrowserWindow): Menu {
         label: "Welcome",
         click: () => browserWindow.webContents.send("open-welcome-layout"),
       },
-      {
-        label: "Message Path Syntax",
-        click: () => browserWindow.webContents.send("open-message-path-syntax-help"),
-      },
-      {
-        label: "Keyboard Shortcuts",
-        accelerator: "CommandOrControl+/",
-        click: () => browserWindow.webContents.send("open-keyboard-shortcuts"),
-      },
+      ...helpSidebarItems,
       {
         label: "Learn More",
         click: async () => await shell.openExternal("https://foxglove.dev"),

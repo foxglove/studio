@@ -16,12 +16,12 @@ import {
   subtract as subtractTimes,
   toSec,
 } from "@foxglove/rostime";
+import { ParameterValue } from "@foxglove/studio";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
   AdvertiseOptions,
   MessageEvent,
-  ParameterValue,
   Player,
   PlayerCapabilities,
   PlayerMetricsCollectorInterface,
@@ -151,14 +151,18 @@ export default class Ros1Player implements Player {
     this._presence = PlayerPresence.PRESENT;
   };
 
-  private _addProblem(id: string, problem: PlayerProblem, skipEmit = false): void {
+  private _addProblem(
+    id: string,
+    problem: PlayerProblem,
+    { skipEmit = false }: { skipEmit?: boolean } = {},
+  ): void {
     this._problems.addProblem(id, problem);
     if (!skipEmit) {
       this._emitState();
     }
   }
 
-  private _clearProblem(id: string, skipEmit = false): void {
+  private _clearProblem(id: string, { skipEmit = false }: { skipEmit?: boolean } = {}): void {
     if (this._problems.removeProblem(id)) {
       if (!skipEmit) {
         this._emitState();
@@ -166,7 +170,7 @@ export default class Ros1Player implements Player {
     }
   }
 
-  private _clearPublishProblems(skipEmit = false) {
+  private _clearPublishProblems({ skipEmit = false }: { skipEmit?: boolean } = {}) {
     if (
       this._problems.removeProblems(
         (id) =>
@@ -212,7 +216,7 @@ export default class Ros1Player implements Player {
           this._parameters = new Map();
           params.forEach((value, key) => this._parameters.set(key, value));
         }
-        this._clearProblem(Problem.Parameters, true);
+        this._clearProblem(Problem.Parameters, { skipEmit: true });
       } catch (error) {
         this._addProblem(
           Problem.Parameters,
@@ -222,7 +226,7 @@ export default class Ros1Player implements Player {
             tip: `Ensure that roscore is running and accessible at: ${this._url}`,
             error,
           },
-          true,
+          { skipEmit: true },
         );
       }
 
@@ -241,7 +245,7 @@ export default class Ros1Player implements Player {
           tip: `Ensure that roscore is running and accessible at: ${this._url}`,
           error,
         },
-        false,
+        { skipEmit: false },
       );
     } finally {
       // Regardless of what happens, request topics again in a little bit.
@@ -363,8 +367,8 @@ export default class Ros1Player implements Player {
         const newDatatypes = this._getRosDatatypes(datatype, msgdef);
         this._providerDatatypes = new Map([...this._providerDatatypes, ...newDatatypes]);
       });
-      subscription.on("message", (message, _data, _pub) =>
-        this._handleMessage(topicName, message, true),
+      subscription.on("message", (message, data, _pub) =>
+        this._handleMessage(topicName, message, data.byteLength, true),
       );
       subscription.on("error", (error) => {
         this._addProblem(`subscribe:${topicName}`, {
@@ -386,7 +390,14 @@ export default class Ros1Player implements Player {
     }
   }
 
-  private _handleMessage = (topic: string, message: unknown, external: boolean): void => {
+  private _handleMessage = (
+    topic: string,
+    message: unknown,
+    sizeInBytes: number,
+    // This is a hot path so we avoid extra object allocation from a parameters struct
+    // eslint-disable-next-line @foxglove/no-boolean-parameters
+    external: boolean,
+  ): void => {
     if (this._providerTopics == undefined) {
       return;
     }
@@ -398,7 +409,7 @@ export default class Ros1Player implements Player {
       this._metricsCollector.recordTimeToFirstMsgs();
     }
 
-    const msg: MessageEvent<unknown> = { topic, receiveTime, message };
+    const msg: MessageEvent<unknown> = { topic, receiveTime, message, sizeInBytes };
     this._parsedMessages.push(msg);
     this._handleInternalMessage(msg);
 
@@ -414,7 +425,7 @@ export default class Ros1Player implements Player {
     const topics = new Set<string>(validPublishers.map(({ topic }) => topic));
 
     // Clear all problems related to publishing
-    this._clearPublishProblems(true);
+    this._clearPublishProblems({ skipEmit: true });
 
     // Unadvertise any topics that were previously published and no longer appear in the list
     for (const topic of this._rosNode.publications.keys()) {
@@ -503,18 +514,6 @@ export default class Ros1Player implements Player {
   }
 
   // Bunch of unsupported stuff. Just don't do anything for these.
-  startPlayback(): void {
-    // no-op
-  }
-  pausePlayback(): void {
-    // no-op
-  }
-  seekPlayback(_time: Time): void {
-    // no-op
-  }
-  setPlaybackSpeed(_speedFraction: number): void {
-    // no-op
-  }
   requestBackfill(): void {
     // no-op
   }
@@ -578,7 +577,7 @@ export default class Ros1Player implements Player {
         this._subscribedTopics = graph.subscribers;
         this._services = graph.services;
       }
-      this._clearProblem(Problem.Graph, true);
+      this._clearProblem(Problem.Graph, { skipEmit: true });
     } catch (error) {
       this._addProblem(
         Problem.Graph,
@@ -589,7 +588,7 @@ export default class Ros1Player implements Player {
 stale graph may result in missing topics you expect. Ensure that roscore is reachable at ${this._url}.`,
           error,
         },
-        true,
+        { skipEmit: true },
       );
       this._publishedTopics = new Map();
       this._subscribedTopics = new Map();

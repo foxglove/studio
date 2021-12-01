@@ -13,7 +13,7 @@ import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import { JointState } from "@foxglove/studio-base/types/Messages";
 
 export default {
-  title: "panels/URDFViewer/index",
+  title: "panels/URDFViewer",
   component: URDFViewer,
 };
 
@@ -67,6 +67,7 @@ export function JointPositionFromTopic(): JSX.Element {
       velocity: [0],
       effort: [0],
     },
+    sizeInBytes: 0,
   };
   return (
     <ExampleAssetsProvider>

@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { DefaultButton, Stack, Text, useTheme } from "@fluentui/react";
+import { DefaultButton, Link, Stack, Text, useTheme } from "@fluentui/react";
 import { StrictMode, useMemo, useState } from "react";
 import { useAsync, useUnmount } from "react-use";
 
@@ -11,17 +11,27 @@ import ShareJsonModal from "@foxglove/studio-base/components/ShareJsonModal";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import {
   useCurrentLayoutActions,
+  useCurrentLayoutSelector,
   useSelectedPanels,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useHelpInfo } from "@foxglove/studio-base/context/HelpInfoContext";
 import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
+import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import { PanelConfig } from "@foxglove/studio-base/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
 import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
 import SchemaEditor from "./SchemaEditor";
 
-export default function PanelSettings(): JSX.Element {
-  const { selectedPanelIds, setSelectedPanelIds } = useSelectedPanels();
+export default function PanelSettings({
+  selectedPanelIdsForTests,
+}: React.PropsWithChildren<{
+  selectedPanelIdsForTests?: readonly string[];
+}>): JSX.Element {
+  const selectedLayoutId = useCurrentLayoutSelector((state) => state.selectedLayout?.id);
+  const { selectedPanelIds: originalSelectedPanelIds, setSelectedPanelIds } = useSelectedPanels();
+  const selectedPanelIds = selectedPanelIdsForTests ?? originalSelectedPanelIds;
+  const { openLayoutBrowser, openHelp } = useWorkspace();
   const selectedPanelId = useMemo(
     () => (selectedPanelIds.length === 1 ? selectedPanelIds[0] : undefined),
     [selectedPanelIds],
@@ -44,6 +54,7 @@ export default function PanelSettings(): JSX.Element {
     () => (panelType != undefined ? panelCatalog.getPanelByType(panelType) : undefined),
     [panelCatalog, panelType],
   );
+  const { setHelpInfo } = useHelpInfo();
 
   const [showShareModal, setShowShareModal] = useState(false);
   const shareModal = useMemo(() => {
@@ -84,6 +95,15 @@ export default function PanelSettings(): JSX.Element {
     );
   }
 
+  if (selectedLayoutId == undefined) {
+    return (
+      <SidebarContent title="Panel settings">
+        <Text styles={{ root: { color: theme.palette.neutralTertiary } }}>
+          <Link onClick={openLayoutBrowser}>Select a layout</Link> to get started!
+        </Text>
+      </SidebarContent>
+    );
+  }
   if (selectedPanelId == undefined) {
     return (
       <SidebarContent title="Panel settings">
@@ -103,7 +123,7 @@ export default function PanelSettings(): JSX.Element {
     return (
       <SidebarContent title="Panel settings">
         <Text styles={{ root: { color: theme.palette.neutralTertiary } }}>
-          loading panel settings...
+          Loading panel settings...
         </Text>
       </SidebarContent>
     );
@@ -113,6 +133,22 @@ export default function PanelSettings(): JSX.Element {
     <SidebarContent title={`${panelInfo.title} panel settings`}>
       {shareModal}
       <Stack tokens={{ childrenGap: theme.spacing.m }}>
+        {panelInfo?.help != undefined && (
+          <Stack.Item>
+            <Text styles={{ root: { color: theme.palette.neutralTertiary } }}>
+              See docs{" "}
+              <Link
+                onClick={() => {
+                  setHelpInfo({ title: panelInfo?.type, content: panelInfo?.help });
+                  openHelp();
+                }}
+              >
+                here
+              </Link>
+              .
+            </Text>
+          </Stack.Item>
+        )}
         <Stack.Item>
           {schema ? (
             <StrictMode>

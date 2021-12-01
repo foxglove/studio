@@ -11,89 +11,128 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { makeStyles, useTheme } from "@fluentui/react";
 import ChartLineVariantIcon from "@mdi/svg/svg/chart-line-variant.svg";
 import DotsHorizontalIcon from "@mdi/svg/svg/dots-horizontal.svg";
 import ChevronDownIcon from "@mdi/svg/svg/unfold-less-horizontal.svg";
 import ChevronUpIcon from "@mdi/svg/svg/unfold-more-horizontal.svg";
 import cx from "classnames";
 import { clamp } from "lodash";
-import { ReactElement } from "react";
+import { ReactElement, useCallback, useEffect, useRef, useState } from "react";
 import { createSelector } from "reselect";
 import sanitizeHtml from "sanitize-html";
-import styled from "styled-components";
 
 import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
-import { LegacyTable } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import Tooltip from "@foxglove/studio-base/components/Tooltip";
 import { openSiblingPlotPanel } from "@foxglove/studio-base/panels/Plot";
 import { openSiblingStateTransitionsPanel } from "@foxglove/studio-base/panels/StateTransitions";
 import { Config } from "@foxglove/studio-base/panels/diagnostics/DiagnosticStatusPanel";
-import { PanelConfig } from "@foxglove/studio-base/types/panels";
+import { OpenSiblingPanel } from "@foxglove/studio-base/types/panels";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-import style from "./DiagnosticStatus.module.scss";
 import { LEVEL_NAMES, DiagnosticInfo, KeyValue, DiagnosticStatusMessage } from "./util";
 
 const MIN_SPLIT_FRACTION = 0.1;
 
 type Props = {
   info: DiagnosticInfo;
-  splitFraction: number;
+  splitFraction: number | undefined;
   onChangeSplitFraction: (arg0: number) => void;
   topicToRender: string;
-  openSiblingPanel: (type: string, cb: (arg0: PanelConfig) => PanelConfig) => void;
+  openSiblingPanel: OpenSiblingPanel;
   collapsedSections: { name: string; section: string }[];
   saveConfig: (arg0: Partial<Config>) => void;
 };
 
-const ResizeHandle = styled.div.attrs<{ splitFraction: number }>(({ splitFraction }) => ({
-  style: { left: `${100 * splitFraction}%` },
-}))<{ splitFraction: number }>`
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 12px;
-  margin-left: -6px;
-  cursor: col-resize;
-  :hover,
-  :active,
-  :focus {
-    outline: none;
-    ::after {
-      content: "";
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 6px;
-      margin-left: -2px;
-      width: 4px;
-      background-color: ${colors.DIVIDER};
-    }
-  }
-`;
+const useStyles = makeStyles((theme) => ({
+  table: {
+    tableLayout: "fixed",
+    width: "100%",
+    lineHeight: "1.3em",
+    whiteSpace: "pre-line",
+    overflowWrap: "break-word",
+    textAlign: "left",
+    border: "none",
 
-const KeyValueTable = styled(LegacyTable)`
-  table-layout: fixed;
-  width: 100%;
-  line-height: 1.3em;
-  white-space: pre-line;
-  overflow-wrap: break-word;
-  text-align: left;
-  tr:nth-child(odd) {
-    background-color: #222;
-  }
-  td {
-    border: none;
-    padding: 1px 3px;
-  }
-  /* nested table styles */
-  table {
-    th {
-      font-weight: bold;
-    }
-  }
-`;
+    td: {
+      border: "none",
+      padding: "1px 3px",
+    },
+    "td, th": {
+      lineHeight: "1.3em",
+    },
+  },
+  name: {
+    fontWeight: "bold",
+  },
+  sectionHeader: {
+    color: colors.HIGHLIGHT,
+    textAlign: "center !important",
+    fontSize: "1.2em",
+    padding: 4,
+    cursor: "pointer",
+    border: "none",
+  },
+
+  // Status classes
+  ok: { color: `${theme.semanticColors.successIcon} !important` },
+  warn: { color: `${theme.semanticColors.warningBackground} !important` },
+  error: { color: `${theme.semanticColors.errorBackground} !important` },
+  stale: { color: `${theme.semanticColors.infoIcon} !important` },
+  unknown: { color: `${theme.semanticColors.errorBackground} !important` },
+
+  collapsedSection: {
+    textAlign: "center",
+    color: theme.semanticColors.errorBackground,
+  },
+  interactiveRow: {
+    cursor: "pointer",
+
+    ":nth-child(odd)": {
+      backgroundColor: theme.palette.neutralLighterAlt,
+    },
+    ":hover": {
+      backgroundColor: theme.palette.neutralLighter,
+
+      ".icon": {
+        visibility: "visible",
+      },
+    },
+  },
+  icon: {
+    color: theme.palette.themePrimary,
+    marginLeft: 4,
+    visibility: "hidden",
+
+    "> svg": {
+      verticalAlign: -2,
+    },
+  },
+  resizeHandle: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: 12,
+    marginLeft: -6,
+    cursor: "col-resize",
+
+    ":hover, :active, :focus": {
+      outline: "none",
+
+      "::after": {
+        content: '""',
+        position: "absolute",
+        top: 0,
+        bottom: 0,
+        left: 6,
+        marginLeft: -2,
+        width: 4,
+        backgroundColor: "rgba(127, 127, 127, 0.4)",
+      },
+    },
+  },
+}));
 
 type FormattedKeyValue = {
   key: string;
@@ -150,82 +189,96 @@ const getFormattedKeyValues = createSelector(
 );
 
 // component to display a single diagnostic status
-class DiagnosticStatus extends React.Component<Props, unknown> {
-  _tableRef = React.createRef<HTMLTableElement>();
+export default function DiagnosticStatus(props: Props): JSX.Element {
+  const {
+    saveConfig,
+    collapsedSections,
+    onChangeSplitFraction,
+    info,
+    topicToRender,
+    openSiblingPanel,
+    splitFraction = 0.5,
+  } = props;
+  const tableRef = useRef<HTMLTableElement>(ReactNull);
+  const classes = useStyles();
+  const theme = useTheme();
 
-  static defaultProps = {
-    splitFraction: 0.5,
-  };
+  const onClickSection = useCallback(
+    (sectionObj: { name: string; section: string }): void => {
+      const clickedSelectionIsCollapsed = collapsedSections.find(
+        ({ name, section }) => name === sectionObj.name && section === sectionObj.section,
+      );
+      if (clickedSelectionIsCollapsed) {
+        saveConfig({
+          collapsedSections: collapsedSections.filter(
+            ({ name, section }) => name !== sectionObj.name || section !== sectionObj.section,
+          ),
+        });
+      } else {
+        saveConfig({ collapsedSections: [...collapsedSections, sectionObj] });
+      }
+    },
+    [collapsedSections, saveConfig],
+  );
 
-  _onClickSection(sectionObj: { name: string; section: string }): void {
-    const { collapsedSections, saveConfig } = this.props;
-    const clickedSelectionIsCollapsed = collapsedSections.find(
-      ({ name, section }) => name === sectionObj.name && section === sectionObj.section,
-    );
-    if (clickedSelectionIsCollapsed) {
-      saveConfig({
-        collapsedSections: collapsedSections.filter(
-          ({ name, section }) => name !== sectionObj.name || section !== sectionObj.section,
-        ),
-      });
-    } else {
-      saveConfig({ collapsedSections: [...collapsedSections, sectionObj] });
-    }
-  }
-
-  _resizeMouseDown = (event: React.MouseEvent<Element>): void => {
+  const resizeMouseDown = useCallback((event: React.MouseEvent<Element>) => {
+    setResizing(true);
     event.preventDefault();
-    window.addEventListener("mousemove", this._resizeMouseMove);
-    window.addEventListener("mouseup", this._resizeMouseUp);
-  };
+  }, []);
 
-  _resizeMouseUp = (): void => {
-    window.removeEventListener("mousemove", this._resizeMouseMove);
-  };
+  const resizeMouseUp = useCallback(() => setResizing(false), []);
 
-  _resizeMouseMove = (event: MouseEvent): void => {
-    const {
-      _tableRef,
-      props: { onChangeSplitFraction },
-    } = this;
+  const resizeMouseMove = useCallback(
+    (event: MouseEvent) => {
+      if (!tableRef.current) {
+        return;
+      }
 
-    if (!_tableRef.current) {
-      return;
+      const { left, right } = tableRef.current.getBoundingClientRect();
+      const newSplitFraction = clamp(
+        (event.clientX - left) / (right - left),
+        MIN_SPLIT_FRACTION,
+        1 - MIN_SPLIT_FRACTION,
+      );
+      onChangeSplitFraction(newSplitFraction);
+    },
+    [onChangeSplitFraction],
+  );
+
+  const [resizing, setResizing] = useState(false);
+  useEffect(() => {
+    if (resizing) {
+      window.addEventListener("mousemove", resizeMouseMove);
+      window.addEventListener("mouseup", resizeMouseUp);
+      return () => {
+        window.removeEventListener("mousemove", resizeMouseMove);
+        window.removeEventListener("mouseup", resizeMouseUp);
+      };
+    } else {
+      return undefined;
     }
+  }, [resizeMouseMove, resizeMouseUp, resizing]);
 
-    const { left, right } = _tableRef.current.getBoundingClientRect();
-    const splitFraction = clamp(
-      (event.clientX - left) / (right - left),
-      MIN_SPLIT_FRACTION,
-      1 - MIN_SPLIT_FRACTION,
-    );
-    onChangeSplitFraction(splitFraction);
-  };
+  const renderKeyValueCell = useCallback(
+    (
+      html: { __html: string } | undefined,
+      str: string,
+      openPlotPanelIconElem?: React.ReactNode,
+    ): ReactElement => {
+      if (html) {
+        return <td dangerouslySetInnerHTML={html} />;
+      }
+      return (
+        <td>
+          {str ? str : "\xa0"}
+          {openPlotPanelIconElem}
+        </td>
+      );
+    },
+    [],
+  );
 
-  override componentWillUnmount(): void {
-    window.removeEventListener("mousemove", this._resizeMouseMove);
-    window.removeEventListener("mouseup", this._resizeMouseUp);
-  }
-
-  _renderKeyValueCell(
-    _cls: string,
-    html: { __html: string } | undefined,
-    str: string,
-    openPlotPanelIconElem?: React.ReactNode,
-  ): ReactElement {
-    if (html) {
-      return <td className={style.valueCell} dangerouslySetInnerHTML={html} />;
-    }
-    return (
-      <td className={style.valueCell}>
-        {str ? str : "\xa0"}
-        {openPlotPanelIconElem}
-      </td>
-    );
-  }
-
-  _renderKeyValueSections = (): React.ReactNode => {
-    const { info, topicToRender, openSiblingPanel, collapsedSections } = this.props;
+  const renderKeyValueSections = useCallback((): React.ReactNode => {
     const formattedKeyVals: FormattedKeyValue[] = getFormattedKeyValues(info.status);
     let inCollapsedSection = false;
     let ellipsisShown = false;
@@ -239,8 +292,8 @@ class DiagnosticStatus extends React.Component<Props, unknown> {
         );
         ellipsisShown = false;
         return (
-          <tr key={idx} className={style.section} onClick={() => this._onClickSection(sectionObj)}>
-            <th colSpan={2}>
+          <tr key={idx} onClick={() => onClickSection(sectionObj)}>
+            <th className={classes.sectionHeader} colSpan={2}>
               {key}
               {value}
             </th>
@@ -253,7 +306,7 @@ class DiagnosticStatus extends React.Component<Props, unknown> {
         ellipsisShown = true;
         return (
           <tr key={idx}>
-            <td colSpan={2} className={style.collapsedSection}>
+            <td colSpan={2} className={classes.collapsedSection}>
               &hellip;
             </td>
           </tr>
@@ -268,7 +321,7 @@ class DiagnosticStatus extends React.Component<Props, unknown> {
           <Icon
             fade
             dataTest="open-plot-icon"
-            className={style.plotIcon}
+            className={classes.icon}
             onClick={() => openSiblingPlotPanel(openSiblingPanel, valuePath)}
             tooltip="Line chart"
           >
@@ -277,7 +330,7 @@ class DiagnosticStatus extends React.Component<Props, unknown> {
         ) : (
           <Icon
             fade
-            className={style.stateTransitionsIcon}
+            className={classes.icon}
             onClick={() => openSiblingStateTransitionsPanel(openSiblingPanel, valuePath)}
             tooltip="State Transitions"
           >
@@ -286,137 +339,147 @@ class DiagnosticStatus extends React.Component<Props, unknown> {
         );
       }
       return (
-        <tr key={idx} className={style.row}>
-          {this._renderKeyValueCell(style.keyCell as string, keyHtml, key)}
-          {this._renderKeyValueCell(
-            style.valueCell as string,
-            valueHtml,
-            value,
-            openPlotPanelIconElem,
-          )}
+        <tr className={classes.interactiveRow} key={idx}>
+          {renderKeyValueCell(keyHtml, key)}
+          {renderKeyValueCell(valueHtml, value, openPlotPanelIconElem)}
         </tr>
       );
     });
-  };
+  }, [
+    classes,
+    collapsedSections,
+    info.status,
+    onClickSection,
+    openSiblingPanel,
+    renderKeyValueCell,
+    topicToRender,
+  ]);
 
-  _getSectionsCollapsedForCurrentName = (): { name: string; section: string }[] => {
-    const { collapsedSections, info } = this.props;
+  const getSectionsCollapsedForCurrentName = useCallback((): {
+    name: string;
+    section: string;
+  }[] => {
     return collapsedSections.filter(({ name }) => name === info.status.name);
-  };
+  }, [collapsedSections, info.status.name]);
 
-  _getSectionsThatCanBeCollapsed = (): FormattedKeyValue[] => {
-    const { info } = this.props;
+  const getSectionsThatCanBeCollapsed = useCallback((): FormattedKeyValue[] => {
     const formattedKeyVals = getFormattedKeyValues(info.status);
     return formattedKeyVals.filter(({ key, value }) => {
       const keyIsSection = value.length === 0 && (key.startsWith("==") || key.startsWith("--"));
       const valIsSection = key.length === 0 && (value.startsWith("==") || value.startsWith("--"));
       return keyIsSection || valIsSection;
     });
-  };
+  }, [info.status]);
 
-  _toggleSections = (): void => {
-    const { saveConfig, collapsedSections, info } = this.props;
+  const toggleSections = useCallback((): void => {
     const newSectionsForCurrentName =
-      this._getSectionsCollapsedForCurrentName().length > 0
+      getSectionsCollapsedForCurrentName().length > 0
         ? []
-        : this._getSectionsThatCanBeCollapsed().map(({ key, value }) => ({
+        : getSectionsThatCanBeCollapsed().map(({ key, value }) => ({
             name: info.status.name,
             section: `${key}${value}`,
           }));
     const otherSections = collapsedSections.filter(({ name }) => name !== info.status.name);
     saveConfig({ collapsedSections: newSectionsForCurrentName.concat(otherSections) });
-  };
+  }, [
+    collapsedSections,
+    getSectionsCollapsedForCurrentName,
+    getSectionsThatCanBeCollapsed,
+    info.status.name,
+    saveConfig,
+  ]);
 
-  override render(): JSX.Element {
-    const {
-      info: { status, displayName },
-      splitFraction,
-      openSiblingPanel,
-      topicToRender,
-    } = this.props;
-    const statusClass = style[`status-${LEVEL_NAMES[status.level] ?? "unknown"}`];
+  const statusClass = cx({
+    [classes.ok]: LEVEL_NAMES[info.status.level] === "ok",
+    [classes.error]: LEVEL_NAMES[info.status.level] === "error",
+    [classes.warn]: LEVEL_NAMES[info.status.level] === "warn",
+    [classes.stale]: LEVEL_NAMES[info.status.level] === "stale",
+    [classes.unknown]: LEVEL_NAMES[info.status.level] === "unknown",
+  });
 
-    return (
-      <div>
-        <ResizeHandle
-          data-test-resizehandle
-          splitFraction={splitFraction}
-          onMouseDown={this._resizeMouseDown}
-        />
-        <KeyValueTable ref={this._tableRef}>
-          <tbody>
-            {/* Use a dummy row to fix the column widths */}
-            <tr style={{ height: 0 }}>
-              <td style={{ padding: 0, width: `${100 * splitFraction}%`, borderRight: "none" }} />
-              <td style={{ padding: 0, borderLeft: "none" }} />
-            </tr>
-            <tr className={cx(style.section, statusClass)}>
-              <th data-test="DiagnosticStatus-display-name" colSpan={2}>
-                <Tooltip
-                  placement="bottom"
-                  contents={
-                    <div>
-                      Hardware ID: <code>{status.hardware_id}</code>
-                      <br />
-                      Name: <code>{status.name}</code>
-                    </div>
-                  }
-                >
-                  <span>{displayName}</span>
-                </Tooltip>
-              </th>
-            </tr>
-            <tr className={cx(style.row, statusClass)}>
-              <td colSpan={2}>
-                <Flex style={{ justifyContent: "space-between" }}>
+  return (
+    <div>
+      <div
+        className={classes.resizeHandle}
+        style={{ left: `${100 * splitFraction}%` }}
+        onMouseDown={resizeMouseDown}
+        data-test-resizehandle
+      />
+      <table className={classes.table} ref={tableRef}>
+        <tbody>
+          {/* Use a dummy row to fix the column widths */}
+          <tr style={{ height: 0 }}>
+            <td style={{ padding: 0, width: `${100 * splitFraction}%`, borderRight: "none" }} />
+            <td style={{ padding: 0, borderLeft: "none" }} />
+          </tr>
+          <tr>
+            <th
+              className={cx(classes.sectionHeader, statusClass)}
+              data-test="DiagnosticStatus-display-name"
+              colSpan={2}
+            >
+              <Tooltip
+                placement="bottom"
+                contents={
                   <div>
-                    {status.message}{" "}
+                    Hardware ID: <code>{info.status.hardware_id}</code>
+                    <br />
+                    Name: <code>{info.status.name}</code>
+                  </div>
+                }
+              >
+                <span>{info.displayName}</span>
+              </Tooltip>
+            </th>
+          </tr>
+          <tr className={cx(classes.interactiveRow, statusClass)}>
+            <td colSpan={2}>
+              <Flex style={{ justifyContent: "space-between" }}>
+                <div>
+                  {info.status.message}{" "}
+                  <Icon
+                    fade
+                    className={classes.icon}
+                    onClick={() =>
+                      openSiblingStateTransitionsPanel(
+                        openSiblingPanel,
+                        `${topicToRender}.status[:]{hardware_id=="${info.status.hardware_id}"}{name=="${info.status.name}"}.message`,
+                      )
+                    }
+                    tooltip="State Transitions"
+                  >
+                    <DotsHorizontalIcon />
+                  </Icon>
+                </div>
+                {getSectionsThatCanBeCollapsed().length > 0 && (
+                  <div
+                    style={{ color: theme.semanticColors.bodyText, cursor: "pointer" }}
+                    onClick={toggleSections}
+                  >
                     <Icon
+                      size="medium"
                       fade
-                      className={style.stateTransitionsIcon}
-                      onClick={() =>
-                        openSiblingStateTransitionsPanel(
-                          openSiblingPanel,
-                          `${topicToRender}.status[:]{hardware_id=="${status.hardware_id}"}{name=="${status.name}"}.message`,
-                        )
+                      style={{ padding: 4 }}
+                      tooltip={
+                        getSectionsCollapsedForCurrentName().length > 0
+                          ? "Expand all"
+                          : "Collapse all"
                       }
-                      tooltip="State Transitions"
                     >
-                      <DotsHorizontalIcon />
+                      {getSectionsCollapsedForCurrentName().length > 0 ? (
+                        <ChevronUpIcon />
+                      ) : (
+                        <ChevronDownIcon />
+                      )}
                     </Icon>
                   </div>
-                  {this._getSectionsThatCanBeCollapsed().length > 0 && (
-                    <div
-                      style={{ color: "white", cursor: "pointer" }}
-                      onClick={this._toggleSections}
-                    >
-                      <Icon
-                        size="medium"
-                        fade
-                        style={{ padding: 4 }}
-                        tooltip={
-                          this._getSectionsCollapsedForCurrentName().length > 0
-                            ? "Expand all"
-                            : "Collapse all"
-                        }
-                      >
-                        {this._getSectionsCollapsedForCurrentName().length > 0 ? (
-                          <ChevronUpIcon />
-                        ) : (
-                          <ChevronDownIcon />
-                        )}
-                      </Icon>
-                    </div>
-                  )}
-                </Flex>
-              </td>
-            </tr>
-            {this._renderKeyValueSections()}
-          </tbody>
-        </KeyValueTable>
-      </div>
-    );
-  }
+                )}
+              </Flex>
+            </td>
+          </tr>
+          {renderKeyValueSections()}
+        </tbody>
+      </table>
+    </div>
+  );
 }
-
-export default DiagnosticStatus;

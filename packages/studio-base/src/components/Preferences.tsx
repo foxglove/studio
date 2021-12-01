@@ -3,7 +3,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 import {
   Checkbox,
+  ChoiceGroup,
   DirectionalHint,
+  IChoiceGroupOption,
   IComboBoxOption,
   SelectableOptionMenuItemType,
   Stack,
@@ -21,7 +23,9 @@ import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import { ExperimentalFeatureSettings } from "@foxglove/studio-base/components/ExperimentalFeatureSettings";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
+import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
+import { TimeDisplayMethod } from "@foxglove/studio-base/types/panels";
 import fuzzyFilter from "@foxglove/studio-base/util/fuzzyFilter";
 
 const MESSAGE_RATES = [1, 3, 5, 10, 15, 20, 30, 60];
@@ -38,15 +42,41 @@ function formatTimezone(name: string) {
   return `${name} (${zoneAbbr}, ${offsetStr})`;
 }
 
+function ColorSchemeSettings(): JSX.Element {
+  const [colorScheme = "dark", setColorScheme] = useAppConfigurationValue<string>(
+    AppSetting.COLOR_SCHEME,
+  );
+  const options: IChoiceGroupOption[] = useMemo(
+    () => [
+      { key: "light", text: "Light", iconProps: { iconName: "WeatherSunny" } },
+      { key: "dark", text: "Dark", iconProps: { iconName: "WeatherMoon" } },
+      { key: "system", text: "Follow system", iconProps: { iconName: "CircleHalfFill" } },
+    ],
+    [],
+  );
+  return (
+    <ChoiceGroup
+      label="Color scheme"
+      options={options}
+      selectedKey={colorScheme}
+      onChange={(_event, option) => {
+        if (option != undefined) {
+          void setColorScheme(option.key);
+        }
+      }}
+    />
+  );
+}
+
 function TimezoneSettings(): React.ReactElement {
-  type Option = IComboBoxOption & { data: string };
+  type Option = Omit<IComboBoxOption, "data"> & { data: string | undefined };
 
   const [timezone, setTimezone] = useAppConfigurationValue<string>(AppSetting.TIMEZONE);
   const detectItem = useMemo(
     () => ({
       key: "detect",
       text: `Detect from system: ${formatTimezone(moment.tz.guess())}`,
-      data: "",
+      data: undefined,
     }),
     [],
   );
@@ -73,22 +103,30 @@ function TimezoneSettings(): React.ReactElement {
   const itemsByData = useMemo(() => {
     const map = new Map<string, Option>();
     for (const item of fixedItems) {
-      map.set(item.data, item);
+      if (item.data != undefined) {
+        map.set(item.data, item);
+      }
     }
     for (const item of timezoneItems) {
-      map.set(item.data, item);
+      if (item.data != undefined) {
+        map.set(item.data, item);
+      }
     }
     return map;
   }, [fixedItems, timezoneItems]);
 
   const selectedItem = useMemo(
-    () => itemsByData.get(timezone ?? "") ?? detectItem,
+    () => (timezone != undefined && itemsByData.get(timezone)) || detectItem,
     [itemsByData, timezone, detectItem],
   );
 
   const [filterText, setFilterText] = useState<string>("");
   const filteredItems = useMemo(() => {
-    const matchingItems = fuzzyFilter(timezoneItems, filterText, (item) => item.text);
+    const matchingItems = fuzzyFilter({
+      options: timezoneItems,
+      filter: filterText,
+      getText: (item) => item.text,
+    });
     return [...fixedItems, ...matchingItems];
   }, [fixedItems, timezoneItems, filterText]);
 
@@ -115,6 +153,33 @@ function TimezoneSettings(): React.ReactElement {
         }
       }}
       onPendingValueChanged={onPendingValueChanged}
+      calloutProps={{
+        directionalHint: DirectionalHint.bottomLeftEdge,
+        directionalHintFixed: true,
+      }}
+    />
+  );
+}
+
+function TimeFormat(): React.ReactElement {
+  const { timeFormat, setTimeFormat } = useAppTimeFormat();
+  const entries: Array<{ key: TimeDisplayMethod; text: string }> = [
+    { key: "SEC", text: "Seconds" },
+    { key: "TOD", text: "Local" },
+  ];
+
+  return (
+    <VirtualizedComboBox
+      label="Timestamp format:"
+      options={entries}
+      autoComplete="on"
+      openOnKeyboardFocus
+      selectedKey={timeFormat}
+      onChange={(_event, option) => {
+        if (option) {
+          void setTimeFormat(String(option.key) as TimeDisplayMethod);
+        }
+      }}
       calloutProps={{
         directionalHint: DirectionalHint.bottomLeftEdge,
         directionalHintFixed: true,
@@ -174,6 +239,24 @@ function RosHostname(): React.ReactElement {
   );
 }
 
+function RosPackagePath(): React.ReactElement {
+  const [rosPackagePath, setRosPackagePath] = useAppConfigurationValue<string>(
+    AppSetting.ROS_PACKAGE_PATH,
+  );
+
+  const os = OsContextSingleton;
+  const rosPackagePathPlaceholder = useMemo(() => os?.getEnvVar("ROS_PACKAGE_PATH"), [os]);
+
+  return (
+    <TextField
+      label="ROS_PACKAGE_PATH"
+      placeholder={rosPackagePathPlaceholder}
+      value={rosPackagePath ?? ""}
+      onChange={(_event, newValue) => void setRosPackagePath(newValue ? newValue : undefined)}
+    />
+  );
+}
+
 function SectionHeader({ children }: React.PropsWithChildren<unknown>) {
   const theme = useTheme();
   return (
@@ -208,13 +291,27 @@ export default function Preferences(): React.ReactElement {
           <SectionHeader>General</SectionHeader>
           <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
             <Stack.Item>
+              <ColorSchemeSettings />
+            </Stack.Item>
+            <Stack.Item>
               <TimezoneSettings />
+            </Stack.Item>
+            <Stack.Item>
+              <TimeFormat />
             </Stack.Item>
             <Stack.Item>
               <MessageFramerate />
             </Stack.Item>
+          </Stack>
+        </Stack.Item>
+        <Stack.Item>
+          <SectionHeader>ROS</SectionHeader>
+          <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
             <Stack.Item>
               <RosHostname />
+            </Stack.Item>
+            <Stack.Item>
+              <RosPackagePath />
             </Stack.Item>
           </Stack>
         </Stack.Item>
@@ -237,7 +334,7 @@ export default function Preferences(): React.ReactElement {
           </Stack>
         </Stack.Item>
         <Stack.Item>
-          <SectionHeader>Experimental Features</SectionHeader>
+          <SectionHeader>Experimental features</SectionHeader>
           <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
             <Text style={{ color: theme.palette.neutralSecondary }}>
               These features are unstable and not recommended for daily use.

@@ -7,11 +7,11 @@ import { v4 as uuidv4 } from "uuid";
 import { Sockets, UdpRemoteInfo, UdpSocketRenderer } from "@foxglove/electron-socket/renderer";
 import Logger from "@foxglove/log";
 import { Time, fromMillis, add as addTimes, toDate, fromDate, fromMicros } from "@foxglove/rostime";
+import { ParameterValue } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
   AdvertiseOptions,
   MessageEvent,
-  ParameterValue,
   Player,
   PlayerMetricsCollectorInterface,
   PlayerPresence,
@@ -133,7 +133,7 @@ export default class VelodynePlayer implements Player {
     }
   };
 
-  _handleMessage = (data: Uint8Array, rinfo: UdpRemoteInfo): void => {
+  private _handleMessage = (data: Uint8Array, rinfo: UdpRemoteInfo): void => {
     const receiveTime = fromMillis(Date.now());
     const date = toDate(receiveTime);
     date.setMinutes(0, 0, 0);
@@ -141,7 +141,7 @@ export default class VelodynePlayer implements Player {
 
     this._totalBytesReceived += data.byteLength;
     this._presence = PlayerPresence.PRESENT;
-    this._clearProblem(PROBLEM_SOCKET_ERROR, true);
+    this._clearProblem(PROBLEM_SOCKET_ERROR, { skipEmit: true });
 
     if (this._seq === 0) {
       this._metricsCollector.recordTimeToFirstMsgs();
@@ -160,7 +160,8 @@ export default class VelodynePlayer implements Player {
         packets: this._packets.map((raw) => rawPacketToRos(raw, topOfHour)),
       };
 
-      const msg: MessageEvent<unknown> = { topic: TOPIC, receiveTime, message };
+      const sizeInBytes = this._packets.reduce((acc, packet) => acc + packet.data.byteLength, 0);
+      const msg: MessageEvent<unknown> = { topic: TOPIC, receiveTime, message, sizeInBytes };
       this._parsedMessages.push(msg);
       this._packets = [];
 
@@ -168,7 +169,11 @@ export default class VelodynePlayer implements Player {
     }
   };
 
-  private _addProblem(id: string, problem: PlayerProblem, skipEmit = false): void {
+  private _addProblem(
+    id: string,
+    problem: PlayerProblem,
+    { skipEmit = false }: { skipEmit?: boolean } = {},
+  ): void {
     this._problemsById.set(id, problem);
     this._problems = Array.from(this._problemsById.values());
     if (!skipEmit) {
@@ -176,7 +181,7 @@ export default class VelodynePlayer implements Player {
     }
   }
 
-  private _clearProblem(id: string, skipEmit = false): void {
+  private _clearProblem(id: string, { skipEmit = false }: { skipEmit?: boolean } = {}): void {
     if (!this._problemsById.delete(id)) {
       return;
     }
@@ -271,22 +276,6 @@ export default class VelodynePlayer implements Player {
 
   publish(_request: PublishPayload): void {
     throw new Error(`Publishing is not supported for VelodynePlayer`);
-  }
-
-  startPlayback(): void {
-    // no-op
-  }
-
-  pausePlayback(): void {
-    // no-op
-  }
-
-  seekPlayback(_time: Time, _backfillDuration?: Time): void {
-    // no-op
-  }
-
-  setPlaybackSpeed(_speedFraction: number): void {
-    // no-op
   }
 
   requestBackfill(): void {

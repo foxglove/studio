@@ -16,7 +16,10 @@ import { storiesOf } from "@storybook/react";
 import Table from "@foxglove/studio-base/panels/Table";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
-const makeArrayData = (length = 50, nestArray = true): unknown => {
+const makeArrayData = ({
+  length = 50,
+  nestArray = true,
+}: { length?: number; nestArray?: boolean } = {}): unknown => {
   return new Array(length).fill(0).map((_, i) => {
     return {
       val: i,
@@ -27,7 +30,7 @@ const makeArrayData = (length = 50, nestArray = true): unknown => {
       obj: {
         date: new Date(`2020-01-${i}`),
       },
-      arr: nestArray ? makeArrayData(5, false) : [],
+      arr: nestArray ? makeArrayData({ length: 5, nestArray: false }) : [],
       primitiveArray: [1, 2, 3, 4, 5],
     };
   });
@@ -48,12 +51,13 @@ const fixture = {
         topic: "/my_arr",
         receiveTime: { sec: 1, nsec: 0 },
         message: { array: makeArrayData() },
+        sizeInBytes: 0,
       },
     ],
   },
 };
 
-storiesOf("panels/Table/index", module)
+storiesOf("panels/Table", module)
   .add("no topic path", () => {
     return (
       <PanelSetup fixture={{ frame: {}, topics: [] }}>
@@ -75,94 +79,118 @@ storiesOf("panels/Table/index", module)
       </PanelSetup>
     );
   })
-  .add("expand rows", () => {
-    return (
-      <PanelSetup
-        fixture={fixture}
-        onMount={() => {
-          setImmediate(() => {
-            (
-              document.querySelectorAll("[data-test=expand-row-0]")[0] as HTMLTableCellElement
-            ).click();
-          });
-        }}
-      >
-        <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
-      </PanelSetup>
-    );
-  })
-  .add("expand cells with nested objects", () => {
-    return (
-      <PanelSetup
-        fixture={fixture}
-        onMount={() => {
-          setImmediate(() => {
-            (
-              document.querySelectorAll("[data-test=expand-cell-obj-0]")[0] as HTMLTableCellElement
-            ).click();
-          });
-        }}
-      >
-        <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
-      </PanelSetup>
-    );
-  })
-  .add("expand cells with nested arrays", () => {
-    return (
-      <PanelSetup
-        fixture={fixture}
-        onMount={() => {
-          setImmediate(() => {
-            (
-              document.querySelectorAll("[data-test=expand-cell-arr-0]")[0] as HTMLTableCellElement
-            ).click();
-          });
-        }}
-      >
-        <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
-      </PanelSetup>
-    );
-  })
-  .add("expand nested cells", () => {
-    return (
-      <PanelSetup
-        fixture={fixture}
-        onMount={() => {
-          setImmediate(() => {
-            (
-              document.querySelectorAll("[data-test=expand-row-0]")[0] as HTMLTableCellElement
-            ).click();
-            (
-              document.querySelectorAll(
-                "[data-test=expand-cell-arr-obj-0]",
-              )[0] as HTMLTableCellElement
-            ).click();
-          });
-        }}
-      >
-        <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
-      </PanelSetup>
-    );
-  })
-  .add("expand multiple rows", () => {
-    return (
-      <PanelSetup
-        fixture={fixture}
-        onMount={() => {
-          setImmediate(() => {
-            (
-              document.querySelectorAll("[data-test=expand-row-0]")[0] as HTMLTableCellElement
-            ).click();
-            (
-              document.querySelectorAll("[data-test=expand-row-1]")[0] as HTMLTableCellElement
-            ).click();
-          });
-        }}
-      >
-        <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
-      </PanelSetup>
-    );
-  })
+  .add(
+    "expand rows",
+    () => {
+      return (
+        <PanelSetup
+          fixture={fixture}
+          onMount={() => {
+            setImmediate(() => {
+              (
+                document.querySelectorAll("[data-test=expand-row-0]")[0] as HTMLTableCellElement
+              ).click();
+            });
+          }}
+        >
+          <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
+        </PanelSetup>
+      );
+    },
+    { colorScheme: "dark" },
+  )
+  .add(
+    "expand cells with nested objects",
+    () => {
+      return (
+        <PanelSetup
+          fixture={fixture}
+          onMount={() => {
+            setImmediate(() => {
+              (
+                document.querySelectorAll(
+                  "[data-test=expand-cell-obj-0]",
+                )[0] as HTMLTableCellElement
+              ).click();
+            });
+          }}
+        >
+          <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
+        </PanelSetup>
+      );
+    },
+    { colorScheme: "dark" },
+  )
+  .add(
+    "expand cells with nested arrays",
+    () => {
+      return (
+        <PanelSetup
+          fixture={fixture}
+          onMount={() => {
+            setImmediate(() => {
+              (
+                document.querySelectorAll(
+                  "[data-test=expand-cell-arr-0]",
+                )[0] as HTMLTableCellElement
+              ).click();
+            });
+          }}
+        >
+          <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
+        </PanelSetup>
+      );
+    },
+    { colorScheme: "dark" },
+  )
+  .add(
+    "expand nested cells",
+    () => {
+      return (
+        <PanelSetup
+          fixture={fixture}
+          onMount={() => {
+            setImmediate(() => {
+              (
+                document.querySelectorAll("[data-test=expand-row-0]")[0] as HTMLTableCellElement
+              ).click();
+              (
+                document.querySelectorAll(
+                  "[data-test=expand-cell-arr-obj-0]",
+                )[0] as HTMLTableCellElement
+              ).click();
+            });
+          }}
+        >
+          <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
+        </PanelSetup>
+      );
+    },
+    { colorScheme: "dark" },
+  )
+  .add(
+    "expand multiple rows",
+    () => {
+      return (
+        <PanelSetup
+          fixture={fixture}
+          onMount={() => {
+            setImmediate(() => {
+              (
+                document.querySelectorAll("[data-test=expand-row-0]")[0] as HTMLTableCellElement
+              ).click();
+              (
+                document.querySelectorAll("[data-test=expand-row-1]")[0] as HTMLTableCellElement
+              ).click();
+            });
+          }}
+        >
+          <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
+        </PanelSetup>
+      );
+    },
+    { colorScheme: "dark" },
+  )
   .add("filtering", () => {
     return (
       <PanelSetup fixture={fixture}>
@@ -170,25 +198,33 @@ storiesOf("panels/Table/index", module)
       </PanelSetup>
     );
   })
-  .add("sorting", () => {
-    return (
-      <PanelSetup
-        fixture={fixture}
-        onMount={() => {
-          setImmediate(() => {
-            (
-              document.querySelectorAll("[data-test=column-header-val]")[0] as HTMLTableCellElement
-            ).click();
-            (
-              document.querySelectorAll("[data-test=column-header-val]")[0] as HTMLTableCellElement
-            ).click();
-          });
-        }}
-      >
-        <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
-      </PanelSetup>
-    );
-  })
+  .add(
+    "sorting",
+    () => {
+      return (
+        <PanelSetup
+          fixture={fixture}
+          onMount={() => {
+            setImmediate(() => {
+              (
+                document.querySelectorAll(
+                  "[data-test=column-header-val]",
+                )[0] as HTMLTableCellElement
+              ).click();
+              (
+                document.querySelectorAll(
+                  "[data-test=column-header-val]",
+                )[0] as HTMLTableCellElement
+              ).click();
+            });
+          }}
+        >
+          <Table overrideConfig={{ topicPath: "/my_arr.array" }} />
+        </PanelSetup>
+      );
+    },
+    { colorScheme: "dark" },
+  )
   .add("handles primitives", () => {
     return (
       <PanelSetup fixture={fixture}>

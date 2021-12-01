@@ -22,7 +22,10 @@ import * as PanelAPI from ".";
 
 describe("useMessageReducer", () => {
   // Create a helper component that exposes restore, addMessage, and the results of the hook for mocking
-  function createTest(useAddMessage: boolean = true, useAddMessages: boolean = false) {
+  function createTest({
+    useAddMessage = true,
+    useAddMessages = false,
+  }: { useAddMessage?: boolean; useAddMessages?: boolean } = {}) {
     function Test({
       topics,
       addMessagesOverride,
@@ -77,7 +80,7 @@ describe("useMessageReducer", () => {
   ])(
     "requires exactly one 'add' callback (%p)",
     async ({ useAddMessage, useAddMessages, shouldThrow }) => {
-      const Test = createTest(useAddMessage, useAddMessages);
+      const Test = createTest({ useAddMessage, useAddMessages });
       mount(
         <MockMessagePipelineProvider>
           <Test topics={["/foo"]} />
@@ -98,6 +101,7 @@ describe("useMessageReducer", () => {
       topic: "/foo",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 2 },
+      sizeInBytes: 0,
     };
 
     const root = mount(
@@ -115,7 +119,7 @@ describe("useMessageReducer", () => {
   });
 
   it("calls restore to initialize and addMessages for initial messages", async () => {
-    const Test = createTest(false, true);
+    const Test = createTest({ useAddMessage: false, useAddMessages: true });
 
     Test.restore.mockReturnValue(1);
     Test.addMessages.mockImplementation((_, msgs) => msgs[msgs.length - 1].message.value);
@@ -124,6 +128,7 @@ describe("useMessageReducer", () => {
       topic: "/foo",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 2 },
+      sizeInBytes: 0,
     };
 
     const root = mount(
@@ -150,11 +155,13 @@ describe("useMessageReducer", () => {
       topic: "/foo",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 2 },
+      sizeInBytes: 0,
     };
     const message2 = {
       topic: "/bar",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 3 },
+      sizeInBytes: 0,
     };
 
     const root = mount(
@@ -189,7 +196,7 @@ describe("useMessageReducer", () => {
   });
 
   it("calls addMessages for messages added later", async () => {
-    const Test = createTest(false, true);
+    const Test = createTest({ useAddMessage: false, useAddMessages: true });
 
     Test.restore.mockReturnValue(1);
     Test.addMessages.mockImplementation((_prevValue, msgs) => msgs[msgs.length - 1].message.value);
@@ -198,16 +205,19 @@ describe("useMessageReducer", () => {
       topic: "/foo",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 2 },
+      sizeInBytes: 0,
     };
     const message2 = {
       topic: "/bar",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 3 },
+      sizeInBytes: 0,
     };
     const message3 = {
       topic: "/bar",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 4 },
+      sizeInBytes: 0,
     };
 
     const root = mount(
@@ -279,6 +289,7 @@ describe("useMessageReducer", () => {
       topic: "/foo",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 2 },
+      sizeInBytes: 0,
     };
 
     const root = mount(
@@ -312,11 +323,13 @@ describe("useMessageReducer", () => {
       topic: "/foo",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 2 },
+      sizeInBytes: 0,
     };
     const message2 = {
       topic: "/bar",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 3 },
+      sizeInBytes: 0,
     };
 
     const root = mount(
@@ -348,11 +361,13 @@ describe("useMessageReducer", () => {
       topic: "/foo",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 2 },
+      sizeInBytes: 0,
     };
     const message2 = {
       topic: "/bar",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 3 },
+      sizeInBytes: 0,
     };
 
     const root = mount(
@@ -389,6 +404,7 @@ describe("useMessageReducer", () => {
       topic: "/foo",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 2 },
+      sizeInBytes: 0,
     };
 
     const root = mount(
@@ -475,7 +491,7 @@ describe("useMessageReducer", () => {
   });
 
   it("restore called when addMessages changes", async () => {
-    const Test = createTest(false, true);
+    const Test = createTest({ useAddMessage: false, useAddMessages: true });
 
     Test.restore.mockReturnValue(1);
     Test.addMessages.mockImplementation((_, msgs) => msgs[msgs.length - 1].message.value);
@@ -484,6 +500,7 @@ describe("useMessageReducer", () => {
       topic: "/foo",
       receiveTime: { sec: 0, nsec: 0 },
       message: { value: 2 },
+      sizeInBytes: 0,
     };
 
     const root = mount(

@@ -11,23 +11,148 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { IconButton, ITheme, makeStyles } from "@fluentui/react";
 import AlertCircleIcon from "@mdi/svg/svg/alert-circle.svg";
 import MenuIcon from "@mdi/svg/svg/menu.svg";
 import cx from "classnames";
 import { last } from "lodash";
 import { Fragment, useCallback, useMemo } from "react";
+import tinycolor from "tinycolor2";
 
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
 import Icon from "@foxglove/studio-base/components/Icon";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
+import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import { lineColors } from "@foxglove/studio-base/util/plotColors";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
-import styles from "./PlotLegend.module.scss";
 import { PlotPath, BasePlotPath, isReferenceLinePlotPathType } from "./internalTypes";
 import { plotableRosTypes, PlotConfig, PlotXAxisVal } from "./types";
+
+const stylesForButtonsDisplayedOnHover = (theme: ITheme) =>
+  ({
+    visibility: "hidden",
+    padding: 6,
+    cursor: "pointer",
+    position: "absolute",
+    top: 0,
+    height: 25,
+    width: 25,
+    borderRadius: theme.effects.roundedCorner2,
+    userSelect: "none",
+    background: tinycolor(theme.palette.neutralLight).setAlpha(0.75).toRgbString(),
+
+    ":hover": {
+      background: tinycolor(theme.palette.neutralLight).setAlpha(0.75).toRgbString(),
+    },
+    ".mosaic-window:hover &": {
+      visibility: "initial",
+    },
+  } as const);
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    position: "absolute",
+    left: 65,
+    top: 6,
+    background: tinycolor(theme.palette.neutralLight).setAlpha(0.25).toRgbString(),
+    color: theme.semanticColors.bodySubtext,
+    maxWidth: "calc(100% - 65px - 25px)",
+
+    ":hover": {
+      background: tinycolor(theme.palette.neutralLight).setAlpha(0.5).toRgbString(),
+    },
+  },
+  dropdown: {
+    backgroundColor: "transparent !important",
+    padding: "3px !important",
+  },
+  addLine: {
+    display: "none",
+    content: "+ add line",
+    position: "absolute",
+    background: tinycolor(theme.palette.neutralLight).setAlpha(0.5).toRgbString(),
+    left: 0,
+    right: 0,
+    bottom: 0,
+    transform: "translateY(100%)",
+    padding: 6,
+    cursor: "pointer",
+    textAlign: "center",
+
+    ":hover": {
+      background: tinycolor(theme.palette.neutralLight).setAlpha(0.75).toRgbString(),
+    },
+    ".mosaic-window:hover &": {
+      display: "block",
+    },
+  },
+  item: {
+    display: "flex",
+    padding: "0 5px",
+    height: 20,
+    lineHeight: 20,
+    position: "relative",
+
+    ":hover": {
+      background: tinycolor(theme.palette.neutralLight).setAlpha(0.75).toRgbString(),
+
+      "[data-item-remove]": {
+        visibility: "initial",
+      },
+    },
+  },
+  itemIconContainer: {
+    display: "inline-block",
+    width: 22,
+    height: 20,
+    lineHeight: 0,
+    cursor: "pointer",
+    flexShrink: 0,
+
+    ":hover": {
+      background: theme.palette.neutralLight,
+    },
+  },
+  itemIcon: {
+    display: "inline-block",
+    width: 15,
+    borderBottom: "2px solid currentColor",
+    height: 0,
+    verticalAlign: "middle",
+    position: "relative",
+    top: "calc(50% - 1px)",
+  },
+  download: { ...stylesForButtonsDisplayedOnHover(theme), left: -60 },
+  legendToggle: { ...stylesForButtonsDisplayedOnHover(theme), left: -30 },
+  itemRemove: {
+    visibility: "hidden",
+    padding: "0 6px",
+    cursor: "pointer",
+    position: "absolute",
+    right: -21,
+    background: "transparent",
+    height: 20,
+    lineHeight: 20,
+    userSelect: "none",
+
+    ":hover": {
+      background: tinycolor(theme.palette.neutralLight).setAlpha(0.75).toRgbString(),
+    },
+  },
+  itemInput: {
+    overflow: "hidden",
+    width: "100%",
+    display: "flex",
+  },
+  itemInputDisabled: {
+    input: {
+      textDecoration: "line-through",
+    },
+  },
+}));
 
 type PlotLegendProps = {
   paths: PlotPath[];
@@ -36,6 +161,7 @@ type PlotLegendProps = {
   xAxisVal: PlotXAxisVal;
   xAxisPath?: BasePlotPath;
   pathsWithMismatchedDataLengths: string[];
+  onDownload: () => void;
 };
 
 const shortXAxisLabel = (path: PlotXAxisVal): string => {
@@ -53,9 +179,17 @@ const shortXAxisLabel = (path: PlotXAxisVal): string => {
 };
 
 export default function PlotLegend(props: PlotLegendProps): JSX.Element {
-  const { paths, saveConfig, showLegend, xAxisVal, xAxisPath, pathsWithMismatchedDataLengths } =
-    props;
+  const {
+    paths,
+    saveConfig,
+    showLegend,
+    xAxisVal,
+    xAxisPath,
+    pathsWithMismatchedDataLengths,
+    onDownload,
+  } = props;
   const lastPath = last(paths);
+  const classes = useStyles();
 
   const onInputChange = useCallback(
     (value: string, index?: number) => {
@@ -95,10 +229,12 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element {
     [saveConfig],
   );
 
+  const downloadCSVTooltip = useTooltip({ contents: "Download plot data as CSV" });
+
   if (!showLegend) {
     return (
-      <div className={styles.root}>
-        <Icon className={styles.legendToggle} onClick={toggleToShowLegend}>
+      <div className={classes.root}>
+        <Icon className={classes.legendToggle} onClick={toggleToShowLegend}>
           <MenuIcon />
         </Icon>
       </div>
@@ -106,20 +242,30 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element {
   }
 
   return (
-    <div className={styles.root}>
-      <Icon className={styles.legendToggle} onClick={toggleToHideLegend}>
+    <div className={classes.root}>
+      <IconButton
+        className={classes.download}
+        elementRef={downloadCSVTooltip.ref}
+        iconProps={{ iconName: "Download" }}
+        onClick={onDownload}
+        ariaLabel="Download plot data as CSV"
+        styles={{ icon: { height: 20 } }}
+      >
+        {downloadCSVTooltip.tooltip}
+      </IconButton>
+      <Icon className={classes.legendToggle} onClick={toggleToHideLegend}>
         <MenuIcon />
       </Icon>
-      <div className={styles.item}>
+      <div className={classes.item}>
         x:
         <div
-          className={styles.itemIconContainer}
+          className={classes.itemIconContainer}
           style={{ width: "auto", lineHeight: "normal", zIndex: 2 }}
         >
           <Dropdown
             value={xAxisVal}
             text={shortXAxisLabel(xAxisVal)}
-            btnClassname={styles.dropdown}
+            btnClassname={classes.dropdown}
             onChange={(newXAxisVal) => saveConfig({ xAxisVal: newXAxisVal })}
             noPortal
           >
@@ -138,9 +284,8 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element {
           </Dropdown>
         </div>
         <div
-          className={cx({
-            [styles.itemInput!]: true,
-            [styles.itemInputDisabled!]: xAxisPath?.enabled !== true,
+          className={cx(classes.itemInput, {
+            [classes.itemInputDisabled]: xAxisPath?.enabled !== true,
           })}
         >
           {(xAxisVal === "custom" || xAxisVal === "currentCustom") && (
@@ -171,10 +316,10 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element {
 
         return (
           <Fragment key={index}>
-            <div className={styles.item}>
+            <div className={classes.item}>
               y:
               <div
-                className={styles.itemIconContainer}
+                className={classes.itemIconContainer}
                 style={{ zIndex: 1 }}
                 onClick={() => {
                   const newPaths = paths.slice();
@@ -186,14 +331,13 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element {
                 }}
               >
                 <div
-                  className={styles.itemIcon}
+                  className={classes.itemIcon}
                   style={{ color: path.enabled ? lineColors[index % lineColors.length] : "#777" }}
                 />
               </div>
               <div
-                className={cx({
-                  [styles.itemInput!]: true,
-                  [styles.itemInputDisabled!]: !path.enabled,
+                className={cx(classes.itemInput, {
+                  [classes.itemInputDisabled]: !path.enabled,
                 })}
               >
                 <MessagePathInput
@@ -221,7 +365,8 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element {
                 )}
               </div>
               <div
-                className={styles.itemRemove}
+                data-item-remove
+                className={classes.itemRemove}
                 onClick={() => {
                   const newPaths = paths.slice();
                   newPaths.splice(index, 1);
@@ -235,7 +380,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element {
         );
       })}
       <div
-        className={styles.addLine}
+        className={classes.addLine}
         onClick={() =>
           saveConfig({
             paths: [

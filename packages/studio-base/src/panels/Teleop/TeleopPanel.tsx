@@ -2,12 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Dialog, DialogFooter, PrimaryButton, Stack, useTheme } from "@fluentui/react";
+import { Dialog, DialogFooter, PrimaryButton, Stack } from "@fluentui/react";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 
 import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
 import { PanelExtensionContext, Topic } from "@foxglove/studio";
 import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconButton";
+import { darkTheme, lightTheme } from "@foxglove/studio-base/theme";
+import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
 import DirectionalPad, { DirectionalPadAction } from "./DirectionalPad";
 import Settings from "./Settings";
@@ -20,7 +22,6 @@ type TeleopPanelProps = {
 function TeleopPanel(props: TeleopPanelProps): JSX.Element {
   const { context } = props;
   const { saveState } = context;
-  const theme = useTheme();
 
   const [currentAction, setCurrentAction] = useState<DirectionalPadAction | undefined>();
 
@@ -60,13 +61,17 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
 
   // setup context render handler and render done handling
   const [renderDone, setRenderDone] = useState<() => void>(() => () => {});
+  const [colorScheme, setColorScheme] = useState<"dark" | "light">("light");
   useLayoutEffect(() => {
     context.watch("topics");
+    context.watch("colorScheme");
 
     context.onRender = (renderState, done) => {
       setRenderDone(() => done);
-
       setTopics(renderState.topics);
+      if (renderState.colorScheme) {
+        setColorScheme(renderState.colorScheme);
+      }
     };
   }, [context]);
 
@@ -77,7 +82,7 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
       return;
     }
 
-    context.advertise(currentTopic, "geometry_msgs/Twist", {
+    context.advertise?.(currentTopic, "geometry_msgs/Twist", {
       datatypes: new Map([
         ["geometry_msgs/Vector3", commonDefs["geometry_msgs/Vector3"]],
         ["geometry_msgs/Twist", commonDefs["geometry_msgs/Twist"]],
@@ -85,7 +90,7 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
     });
 
     return () => {
-      context.unadvertise(currentTopic);
+      context.unadvertise?.(currentTopic);
     };
   }, [context, currentTopic]);
 
@@ -160,9 +165,9 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
     }
 
     const intervalMs = (1000 * 1) / config.publishRate;
-    context.publish(currentTopic, message);
+    context.publish?.(currentTopic, message);
     const intervalHandle = setInterval(() => {
-      context.publish(currentTopic, message);
+      context.publish?.(currentTopic, message);
     }, intervalMs);
 
     return () => {
@@ -174,15 +179,18 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
     renderDone();
   }, [renderDone]);
 
+  const enabled = Boolean(context.publish && config.publishRate > 0 && currentTopic);
+  const theme = colorScheme === "dark" ? darkTheme : lightTheme;
+
   return (
-    <>
+    <ThemeProvider isDark={colorScheme === "dark"}>
       <Stack
         verticalFill
         verticalAlign="center"
         horizontalAlign="center"
         tokens={{ padding: `min(5%, ${theme.spacing.s1})` }}
       >
-        <DirectionalPad onAction={setCurrentAction} />
+        <DirectionalPad onAction={setCurrentAction} disabled={!enabled} />
       </Stack>
       <Stack styles={{ root: { position: "absolute", top: 0, left: 0, margin: theme.spacing.s1 } }}>
         <HoverableIconButton
@@ -214,7 +222,7 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
           <PrimaryButton onClick={() => setShowSettings(false)}>Done</PrimaryButton>
         </DialogFooter>
       </Dialog>
-    </>
+    </ThemeProvider>
   );
 }
 

@@ -13,7 +13,8 @@
 
 import { storiesOf } from "@storybook/react";
 import { useState, useCallback, useRef } from "react";
-import { Color } from "regl-worldview";
+
+import { Color } from "@foxglove/regl-worldview";
 
 import VisibilityToggle, { Size, TOGGLE_SIZE_CONFIG } from "./VisibilityToggle";
 
@@ -26,8 +27,6 @@ function Example({
   visibleInScene = false,
   showFocused = false,
   showToggled = false,
-  diffModeEnabled = false,
-  columnIndex = 0,
 }: {
   available: boolean;
   checked?: boolean;
@@ -37,8 +36,6 @@ function Example({
   visibleInScene?: boolean;
   showFocused?: boolean;
   showToggled?: boolean;
-  diffModeEnabled?: boolean;
-  columnIndex?: number;
 }) {
   const [checked, setChecked] = useState(defaultChecked);
   const onToggle = useCallback(() => {
@@ -72,8 +69,6 @@ function Example({
         size={size}
         overrideColor={overrideColor}
         dataTest="myToggle"
-        diffModeEnabled={diffModeEnabled}
-        columnIndex={columnIndex}
       />
     </div>
   );
@@ -135,60 +130,61 @@ storiesOf("panels/ThreeDimensionalViz/TopicTree/VisibilityToggle", module)
       </div>
     );
   })
-  .add("focused when checked is false", () => {
-    return (
-      <Example
-        available
-        showFocused
-        visibleInScene
-        title="checked: false, visibleInScene: true, show focused state"
-      />
-    );
-  })
-  .add("focused state when checked is true", () => {
-    return (
-      <Example
-        available
-        showFocused
-        checked
-        visibleInScene
-        title="checked: true, visibleInScene: true, show focused state"
-      />
-    );
-  })
-  .add("diff mode", () => {
-    return (
-      <div>
+  .add(
+    "focused when checked is false",
+    () => {
+      return (
         <Example
           available
+          showFocused
+          visibleInScene
+          title="checked: false, visibleInScene: true, show focused state"
+        />
+      );
+    },
+    { colorScheme: "dark" },
+  )
+  .add(
+    "focused state when checked is true",
+    () => {
+      return (
+        <Example
+          available
+          showFocused
           checked
           visibleInScene
-          diffModeEnabled={true}
-          columnIndex={0}
-          title="diffModeEnabled: true, checked: true, columnIndex: 0"
+          title="checked: true, visibleInScene: true, show focused state"
         />
+      );
+    },
+    { colorScheme: "dark" },
+  )
+  .add(
+    "focused when checked is false light",
+    () => {
+      return (
         <Example
           available
+          showFocused
+          visibleInScene
+          title="checked: false, visibleInScene: true, show focused state"
+        />
+      );
+    },
+    { colorScheme: "light" },
+  )
+  .add(
+    "focused state when checked is true light",
+    () => {
+      return (
+        <Example
+          available
+          showFocused
           checked
           visibleInScene
-          diffModeEnabled={true}
-          columnIndex={1}
-          title="diffModeEnabled: true, checked: true, columnIndex: 1"
+          title="checked: true, visibleInScene: true, show focused state"
         />
-        <Example
-          available
-          visibleInScene
-          diffModeEnabled={true}
-          columnIndex={0}
-          title="diffModeEnabled: true, checked: false, columnIndex: 0"
-        />
-        <Example
-          available
-          visibleInScene
-          diffModeEnabled={true}
-          columnIndex={1}
-          title="diffModeEnabled: true, checked: false, columnIndex: 1"
-        />
-      </div>
-    );
-  });
+      );
+    },
+    { colorScheme: "light" },
+  );

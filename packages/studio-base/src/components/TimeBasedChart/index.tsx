@@ -10,6 +10,7 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
+import { useTheme } from "@fluentui/react";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { AnnotationOptions } from "chartjs-plugin-annotation";
 import { ZoomOptions } from "chartjs-plugin-zoom/types/options";
@@ -29,15 +30,10 @@ import { v4 as uuidv4 } from "uuid";
 
 import { filterMap } from "@foxglove/den/collection";
 import Logger from "@foxglove/log";
-import { Time } from "@foxglove/rostime";
 import Button from "@foxglove/studio-base/components/Button";
 import ChartComponent from "@foxglove/studio-base/components/Chart/index";
 import { RpcElement, RpcScales } from "@foxglove/studio-base/components/Chart/types";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
-import {
-  MessageAndData,
-  MessagePathDataItem,
-} from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import TimeBasedChartLegend from "@foxglove/studio-base/components/TimeBasedChart/TimeBasedChartLegend";
 import makeGlobalState from "@foxglove/studio-base/components/TimeBasedChart/makeGlobalState";
@@ -47,36 +43,19 @@ import {
   useSetHoverValue,
 } from "@foxglove/studio-base/context/HoverValueContext";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
-import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import HoverBar from "./HoverBar";
 import TimeBasedChartTooltipContent from "./TimeBasedChartTooltipContent";
-import downsample from "./downsample";
+import { downsampleTimeseries, downsampleScatter } from "./downsample";
 
 const log = Logger.getLogger(__filename);
 
-export type TooltipItem = {
-  queriedData: MessagePathDataItem[];
-  receiveTime: Time;
-  headerStamp?: Time;
-};
-
-export const getTooltipItemForMessageHistoryItem = (item: MessageAndData): TooltipItem => {
-  const { message } = item.message;
-  const headerStamp = getTimestampForMessage(message);
-  return { queriedData: item.queriedData, receiveTime: item.message.receiveTime, headerStamp };
-};
-
 export type TimeBasedChartTooltipData = {
-  x: number;
-  y: number;
-  datasetKey?: string;
-  item: TooltipItem;
+  x: number | bigint;
+  y: number | bigint;
   path: string;
-  value: number | boolean | string;
+  value: number | bigint | boolean | string;
   constantName?: string;
-  startTime: Time;
-  source?: number;
 };
 
 const SRoot = styled.div`
@@ -177,6 +156,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
   const { labels, datasets } = data;
 
+  const theme = useTheme();
   const componentId = useMemo(() => uuidv4(), []);
   const isMounted = useMountedState();
   const canvasContainer = useRef<HTMLDivElement>(ReactNull);
@@ -293,39 +273,69 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     [setHasVerticalExclusiveZoom, setHasBothAxesZoom],
   );
 
+  const mouseYRef = useRef<number | undefined>(undefined);
+
+  // Tooltip lookup via x/y string key to find tooltips on hover without iterating entire array
+  const tooltipLookup = useMemo(() => {
+    const tooltipMap = new Map<string, TimeBasedChartTooltipData>();
+    if (!tooltips) {
+      return tooltipMap;
+    }
+
+    for (const tooltip of tooltips) {
+      const key = `${tooltip.x}:${tooltip.y}`;
+      tooltipMap.set(key, tooltip);
+    }
+    return tooltipMap;
+  }, [tooltips]);
+
   // We use a custom tooltip so we can style it more nicely, and so that it can break
   // out of the bounds of the canvas, in case the panel is small.
   const [activeTooltip, setActiveTooltip] = useState<{
     x: number;
     y: number;
-    data: TimeBasedChartTooltipData;
+    data: TimeBasedChartTooltipData[];
   }>();
   const updateTooltip = useCallback(
-    (element?: RpcElement) => {
-      if (!element) {
+    (elements: RpcElement[]) => {
+      if (elements.length === 0 || mouseYRef.current == undefined) {
         return setActiveTooltip(undefined);
       }
 
-      // Locate the tooltip for our data
-      // We do a lazy linear find for now - a perf on this vs map lookups might be useful
-      // Note then you need to make keys from x/y points
-      const tooltipData = tooltips?.find(
-        (item) => item.x === element.data?.x && item.y === element.data?.y,
-      );
-      if (!tooltipData) {
+      const tooltipItems: { item: TimeBasedChartTooltipData; element: RpcElement }[] = [];
+
+      for (const element of elements) {
+        if (!element.data) {
+          continue;
+        }
+        const key = `${element.data.x}:${element.data.y}`;
+        const foundTooltip = tooltipLookup.get(key);
+        if (!foundTooltip) {
+          continue;
+        }
+
+        tooltipItems.push({
+          item: foundTooltip,
+          element,
+        });
+      }
+
+      if (tooltipItems.length === 0) {
         return setActiveTooltip(undefined);
       }
+
+      const element = tooltipItems[0]!.element;
 
       const canvasRect = canvasContainer.current?.getBoundingClientRect();
       if (canvasRect) {
         setActiveTooltip({
           x: canvasRect.left + element.view.x,
-          y: canvasRect.top + element.view.y,
-          data: tooltipData,
+          y: canvasRect.top + mouseYRef.current,
+          data: tooltipItems.map((item) => item.item),
         });
       }
     },
-    [tooltips],
+    [tooltipLookup],
   );
 
   const setHoverValue = useSetHoverValue();
@@ -352,6 +362,10 @@ export default function TimeBasedChart(props: Props): JSX.Element {
       }
 
       const canvasContainerRect = canvasContainer.current.getBoundingClientRect();
+
+      // tooltip vertical placement align with the cursor y value
+      mouseYRef.current = event.pageY - canvasContainerRect.top;
+
       const mouseX = event.pageX - canvasContainerRect.left;
       const pixels = xScale.pixelMax - xScale.pixelMin;
       const range = xScale.max - xScale.min;
@@ -486,12 +500,12 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         family: fonts.MONOSPACE,
         size: 10,
       },
-      color: "#eee",
+      color: theme.palette.neutralSecondary,
       maxRotation: 0,
     };
 
     const scale = {
-      grid: { color: "rgba(255, 255, 255, 0.2)" },
+      grid: { color: theme.palette.neutralLighter },
       ...xAxes,
       min: minX,
       max: maxX,
@@ -502,7 +516,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     };
 
     return scale;
-  }, [maxX, minX, xAxes]);
+  }, [theme.palette.neutralSecondary, theme.palette.neutralLighter, xAxes, minX, maxX]);
 
   const yScale = useMemo<ScaleOptions>(() => {
     const defaultYTicksSettings: ScaleOptions["ticks"] = {
@@ -510,7 +524,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         family: fonts.MONOSPACE,
         size: 10,
       },
-      color: "#eee",
+      color: theme.palette.neutralSecondary,
       padding: 0,
     };
 
@@ -542,7 +556,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         ...yAxes.ticks,
       },
     } as ScaleOptions;
-  }, [datasetBounds.y, yAxes, hasUserPannedOrZoomed]);
+  }, [datasetBounds.y, yAxes, hasUserPannedOrZoomed, theme.palette.neutralSecondary]);
 
   const datasetBoundsRef = useRef(datasetBounds);
   datasetBoundsRef.current = datasetBounds;
@@ -609,7 +623,10 @@ export default function TimeBasedChart(props: Props): JSX.Element {
           return dataset;
         }
 
-        const downsampled = downsample(dataset, bounds);
+        const downsampled =
+          dataset.showLine !== true
+            ? downsampleScatter(dataset, bounds)
+            : downsampleTimeseries(dataset, bounds);
         // NaN item values are now allowed, instead we convert these to undefined entries
         // which will create _gaps_ in the line
         const nanToNulldata = downsampled.data.map((item) => {
@@ -687,7 +704,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     (elements: RpcElement[]) => {
       // onHover could fire after component unmounts so we need to guard with mounted checks
       if (isMounted()) {
-        updateTooltip(elements[0]);
+        updateTooltip(elements);
       }
     },
     [isMounted, updateTooltip],
@@ -697,6 +714,10 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     (scales: RpcScales, { userInteraction }: { userInteraction: boolean }) => {
       if (!isMounted()) {
         return;
+      }
+
+      if (userInteraction) {
+        setHasUserPannedOrZoomed(true);
       }
 
       currentScalesRef.current = scales;
@@ -709,8 +730,8 @@ export default function TimeBasedChart(props: Props): JSX.Element {
       }
 
       // the change is a result of user interaction on our chart
-      // we definitely set the sync scale value so other charts follow our zoom/pan behavior
-      if (userInteraction) {
+      // we set the sync scale value so other synced charts follow our zoom/pan behavior
+      if (userInteraction && isSynced) {
         setGlobalBounds({
           min: scales.x.min,
           max: scales.x.max,
@@ -771,7 +792,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
   const tooltipContent = useMemo(() => {
     return activeTooltip ? (
-      <TimeBasedChartTooltipContent tooltip={activeTooltip.data} />
+      <TimeBasedChartTooltipContent content={activeTooltip.data} />
     ) : undefined;
   }, [activeTooltip]);
 
@@ -809,6 +830,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
       <Tooltip
         shown
         noPointerEvents={true}
+        placement={"right"}
         targetPosition={{ x: activeTooltip?.x ?? 0, y: activeTooltip?.y ?? 0 }}
         contents={tooltipContent}
       />

@@ -22,10 +22,7 @@ import {
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 
 import { Time, isTimeInRangeInclusive } from "@foxglove/rostime";
-import {
-  useCurrentLayoutActions,
-  useCurrentLayoutSelector,
-} from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
 import {
   formatDate,
   formatTime,
@@ -52,23 +49,19 @@ const PlaybackTimeDisplayMethod = ({
   isPlaying: boolean;
 }): JSX.Element => {
   const timestampInputRef = useRef<HTMLInputElement>(ReactNull);
-  const timeDisplayMethod = useCurrentLayoutSelector(
-    (state) => state.selectedLayout?.data?.playbackConfig.timeDisplayMethod ?? "ROS",
+  const timeFormat = useAppTimeFormat();
+  const timeRawString = useMemo(
+    () => (currentTime ? formatTimeRaw(currentTime) : undefined),
+    [currentTime],
   );
-  const { setPlaybackConfig } = useCurrentLayoutActions();
-  const setTimeDisplayMethod = useCallback(
-    (newTimeDisplayMethod: "ROS" | "TOD") =>
-      setPlaybackConfig({ timeDisplayMethod: newTimeDisplayMethod }),
-    [setPlaybackConfig],
+  const timeOfDayString = useMemo(
+    () => (currentTime ? formatTime(currentTime, timezone) : undefined),
+    [currentTime, timezone],
   );
-  const currentTimeString = useMemo(() => {
-    if (currentTime) {
-      return timeDisplayMethod === "ROS"
-        ? formatTimeRaw(currentTime)
-        : formatTime(currentTime, timezone);
-    }
-    return undefined;
-  }, [currentTime, timeDisplayMethod, timezone]);
+  const currentTimeString = useMemo(
+    () => (timeFormat.timeFormat === "SEC" ? timeRawString : timeOfDayString),
+    [timeFormat.timeFormat, timeRawString, timeOfDayString],
+  );
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [inputText, setInputText] = useState<string | undefined>(currentTimeString ?? undefined);
   const [hasError, setHasError] = useState<boolean>(false);
@@ -82,16 +75,25 @@ const PlaybackTimeDisplayMethod = ({
         },
         field: {
           margin: 0,
+          padding: 0,
           whiteSpace: "nowrap",
-          fontFamily: fonts.MONOSPACE,
+          fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, 'zero'`,
+          backgroundColor: "transparent",
 
           ":hover": {
             borderRadius: 2,
-            backgroundColor: theme.semanticColors.buttonBackgroundHovered,
+            backgroundColor: theme.semanticColors.inputBackground,
+          },
+          ":focus": {
+            backgroundColor: theme.semanticColors.inputBackground,
           },
         },
         fieldGroup: {
           border: "none",
+          backgroundColor: "transparent",
+          // The flex-sizing does not correctly calculate the <input> field width for all font
+          // sizes, so we increase the width to compensate
+          width: "102%",
         },
         icon: {
           height: 20,
@@ -139,21 +141,12 @@ const PlaybackTimeDisplayMethod = ({
         isTimeInRangeInclusive(validTimeAndMethod.time, startTime, endTime)
       ) {
         onSeek(validTimeAndMethod.time);
-        if (validTimeAndMethod.method !== timeDisplayMethod) {
-          setTimeDisplayMethod(validTimeAndMethod.method);
+        if (validTimeAndMethod.method !== timeFormat.timeFormat) {
+          void timeFormat.setTimeFormat(validTimeAndMethod.method);
         }
       }
     },
-    [
-      currentTime,
-      endTime,
-      inputText,
-      onSeek,
-      setTimeDisplayMethod,
-      startTime,
-      timeDisplayMethod,
-      timezone,
-    ],
+    [inputText, startTime, currentTime, endTime, timezone, onSeek, timeFormat],
   );
 
   useEffect(() => {
@@ -211,34 +204,35 @@ const PlaybackTimeDisplayMethod = ({
             {
               canCheck: true,
               key: "TOD",
-              text: "Time of day (TOD)",
-              isChecked: timeDisplayMethod === "TOD",
-              onClick: () => setTimeDisplayMethod("TOD"),
+              text: timeOfDayString ? timeOfDayString : "Time of Day",
+              isChecked: timeFormat.timeFormat === "TOD",
+              onClick: () => void timeFormat.setTimeFormat("TOD"),
             },
             {
               canCheck: true,
-              key: "ROS",
-              text: "ROS time",
-              isChecked: timeDisplayMethod === "ROS",
-              onClick: () => setTimeDisplayMethod("ROS"),
+              key: "SEC",
+              text: timeRawString ? timeRawString : "Seconds",
+              isChecked: timeFormat.timeFormat === "SEC",
+              onClick: () => void timeFormat.setTimeFormat("SEC"),
             },
           ],
         }}
         styles={{
           root: {
             border: "none",
-            padding: theme.spacing.s1,
-            margin: 0, // Remove this once global.scss has gone away
-            minWidth: "50px",
+            background: theme.semanticColors.buttonBackgroundHovered,
+            padding: 0,
+            minWidth: "24px",
+          },
+          rootHovered: {
+            background: theme.semanticColors.buttonBackgroundPressed,
           },
           label: theme.fonts.small,
           menuIcon: {
             fontSize: theme.fonts.tiny.fontSize,
           },
         }}
-      >
-        {timeDisplayMethod}
-      </DefaultButton>
+      ></DefaultButton>
     </Stack>
   );
 };

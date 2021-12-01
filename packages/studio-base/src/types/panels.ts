@@ -26,10 +26,11 @@ export type PanelConfig = {
   [key: string]: unknown;
 };
 
+export type TimeDisplayMethod = "SEC" | "TOD";
+
 export type PlaybackConfig = {
   speed: number;
   messageOrder: TimestampMethod;
-  timeDisplayMethod: "ROS" | "TOD";
 };
 
 export type UserNode = { name: string; sourceCode: string };
@@ -43,7 +44,11 @@ export type SavedProps = {
   [panelId: string]: PanelConfig;
 };
 
-export type OpenSiblingPanel = (type: string, cb: (config: PanelConfig) => PanelConfig) => void;
+export type OpenSiblingPanel = (params: {
+  panelType: string;
+  siblingConfigCreator: (config: PanelConfig) => PanelConfig;
+  updateIfExists: boolean;
+}) => void;
 
 type KeyPathsOfImpl<T, Prefix extends string> =
   // return never when given any/unknown

@@ -11,21 +11,12 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { ContextualMenu } from "@fluentui/react";
+import { ContextualMenu, makeStyles } from "@fluentui/react";
 import MagnifyIcon from "@mdi/svg/svg/magnify.svg";
 import cx from "classnames";
-import {
-  useCallback,
-  useLayoutEffect,
-  useRef,
-  MouseEvent,
-  useState,
-  CSSProperties,
-  useMemo,
-} from "react";
+import { useCallback, useLayoutEffect, useRef, MouseEvent, useState, useMemo } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { useAsync } from "react-use";
-import styled from "styled-components";
 import usePanZoom from "use-pan-and-zoom";
 import { v4 as uuidv4 } from "uuid";
 
@@ -36,10 +27,8 @@ import { MessageEvent, Topic } from "@foxglove/studio-base/players/types";
 import { CompressedImage, Image } from "@foxglove/studio-base/types/Messages";
 import WebWorkerManager from "@foxglove/studio-base/util/WebWorkerManager";
 import { downloadFiles } from "@foxglove/studio-base/util/download";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
-import styles from "./ImageCanvas.module.scss";
 import { Config, SaveImagePanelConfig } from "./index";
 import { renderImage } from "./renderImage";
 import { Dimensions, RawMarkerData, RenderOptions } from "./util";
@@ -55,17 +44,100 @@ type Props = {
   renderInMainThread?: boolean;
 };
 
-const SErrorMessage = styled.div`
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  position: absolute;
-  align-items: center;
-  justify-content: center;
-  color: ${colors.RED2};
-`;
+const useStyles = makeStyles((theme) => ({
+  root: {
+    overflow: "hidden",
+    width: "100%",
+    height: "100%",
+    position: "relative",
+
+    "&:hover > [data-zoom-menu]": {
+      display: "block",
+    },
+    "&:hover > [data-magnify-icon]": {
+      display: "block",
+    },
+  },
+  magnify: {
+    position: "absolute !important" as unknown as "absolute",
+    bottom: 5,
+    left: 0,
+    zIndex: 102,
+    opacity: 1,
+    backgroundColor: `${theme.palette.neutralLight} !important`,
+    display: "none",
+
+    ".hoverScreenshot &": {
+      display: "block",
+    },
+    svg: {
+      width: 16,
+      height: 16,
+      fill: theme.semanticColors.bodyText,
+      float: "left",
+    },
+    span: {
+      color: "orange",
+      float: "right",
+      paddingLeft: 3,
+    },
+  },
+  zoomContextMenu: {
+    position: "absolute",
+    bottom: 45,
+    left: 0,
+    zIndex: 102,
+    opacity: 1,
+    backgroundColor: theme.semanticColors.menuBackground,
+    width: 145,
+    borderRadius: "4%",
+    display: "none",
+    boxShadow: theme.effects.elevation64,
+
+    ".hoverScreenshot &": {
+      display: "block",
+    },
+  },
+  round: {
+    margin: 0,
+    padding: "1px 5px 1px 5px",
+    borderRadius: "100%",
+  },
+  borderBottom: {
+    borderBottom: `1px solid ${theme.palette.neutralLighter}`,
+  },
+  menuItem: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "8px 12px 8px 12px",
+  },
+  notInteractive: {
+    opacity: 0.5,
+  },
+  errorMessage: {
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    display: "flex",
+    position: "absolute",
+    alignItems: "center",
+    justifyContent: "center",
+    color: theme.semanticColors.errorText,
+  },
+  canvas: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    imageRendering: "pixelated",
+  },
+  canvasImageRenderingSmooth: {
+    imageRendering: "auto",
+  },
+}));
 
 const webWorkerManager = new WebWorkerManager(() => {
   return new Worker(new URL("ImageCanvas.worker", import.meta.url));
@@ -93,6 +165,7 @@ export default function ImageCanvas(props: Props): JSX.Element {
     onStartRenderImage,
   } = props;
   const { mode } = config;
+  const classes = useStyles();
 
   // generic errors within the panel
   const [error, setError] = useState<Error | undefined>();
@@ -362,22 +435,22 @@ export default function ImageCanvas(props: Props): JSX.Element {
 
   const zoomContextMenu = useMemo(() => {
     return (
-      <div className={styles.zoomContextMenu} data-zoom-menu>
-        <div className={cx(styles.menuItem, styles.notInteractive)}>
+      <div className={classes.zoomContextMenu} data-zoom-menu>
+        <div className={cx(classes.menuItem, classes.notInteractive)}>
           Scroll or use the buttons below to zoom
         </div>
-        <div className={cx(styles.menuItem, styles.borderBottom)}>
-          <LegacyButton className={styles.round} onClick={zoomOut} data-panel-minus-zoom>
+        <div className={cx(classes.menuItem, classes.borderBottom)}>
+          <LegacyButton className={classes.round} onClick={zoomOut} data-panel-minus-zoom>
             -
           </LegacyButton>
-          <LegacyButton className={styles.round} onClick={zoomIn} data-panel-add-zoom>
+          <LegacyButton className={classes.round} onClick={zoomIn} data-panel-add-zoom>
             +
           </LegacyButton>
         </div>
-        <Item className={styles.borderBottom} onClick={onZoom100} dataTest={"hundred-zoom"}>
+        <Item className={classes.borderBottom} onClick={onZoom100} dataTest={"hundred-zoom"}>
           Zoom to 100%
         </Item>
-        <Item className={styles.borderBottom} onClick={onZoomFit} dataTest={"fit-zoom"}>
+        <Item className={classes.borderBottom} onClick={onZoomFit} dataTest={"fit-zoom"}>
           Zoom to fit
         </Item>
         <Item onClick={onZoomFill} dataTest={"fill-zoom"}>
@@ -385,7 +458,18 @@ export default function ImageCanvas(props: Props): JSX.Element {
         </Item>
       </div>
     );
-  }, [onZoom100, onZoomFill, onZoomFit, zoomIn, zoomOut]);
+  }, [
+    classes.borderBottom,
+    classes.menuItem,
+    classes.notInteractive,
+    classes.round,
+    classes.zoomContextMenu,
+    onZoom100,
+    onZoomFill,
+    onZoomFit,
+    zoomIn,
+    zoomOut,
+  ]);
 
   const [contextMenuEvent, setContextMenuEvent] = useState<
     MouseEvent<HTMLCanvasElement>["nativeEvent"] | undefined
@@ -452,24 +536,17 @@ export default function ImageCanvas(props: Props): JSX.Element {
     };
   }, [onZoom100, zoomIn, zoomOut]);
 
-  const style: CSSProperties = {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    imageRendering: config.smooth === true ? "auto" : "pixelated",
-  };
-
   return (
-    <div ref={rootRef} className={styles.root}>
+    <div ref={rootRef} className={classes.root}>
       <KeyListener keyDownHandlers={keyDownHandlers} />
-      {error && <SErrorMessage>Error: {error.message}</SErrorMessage>}
-      {renderError && <SErrorMessage>Error: {renderError.message}</SErrorMessage>}
+      {error && <div className={classes.errorMessage}>Error: {error.message}</div>}
+      {renderError && <div className={classes.errorMessage}>Error: {renderError.message}</div>}
       <canvas
         onContextMenu={onCanvasContextMenu}
         {...panZoomHandlers}
-        style={style}
+        className={cx(classes.canvas, {
+          [classes.canvasImageRenderingSmooth]: config.smooth === true,
+        })}
         ref={canvasRef}
       />
       {contextMenuEvent && (
@@ -481,7 +558,7 @@ export default function ImageCanvas(props: Props): JSX.Element {
       )}
       {openZoomContext && zoomContextMenu}
       <LegacyButton
-        className={styles.magnify}
+        className={classes.magnify}
         onClick={() => setOpenZoomContext((old) => !old)}
         data-magnify-icon
       >

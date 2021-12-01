@@ -13,21 +13,17 @@
 
 import { DefaultButton, Dialog, DialogFooter } from "@fluentui/react";
 import { isEmpty, omit } from "lodash";
-import Tabs, { TabPane } from "rc-tabs";
 import React, { useCallback } from "react";
 
 import ErrorBoundary from "@foxglove/studio-base/components/ErrorBoundary";
-import { RenderToBodyComponent } from "@foxglove/studio-base/components/RenderToBodyComponent";
 import { topicSettingsEditorForDatatype } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor";
 import { Topic } from "@foxglove/studio-base/players/types";
-import { SECOND_SOURCE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 
 import { Save3DConfig } from "../index";
 
 function MainEditor({
   datatype,
   collectorMessage,
-  columnIndex: _columnIndex,
   onFieldChange,
   onSettingsChange,
   setCurrentEditingTopic,
@@ -36,7 +32,6 @@ function MainEditor({
 }: {
   datatype: string;
   collectorMessage: unknown;
-  columnIndex: number;
   onFieldChange: (fieldName: string, value: unknown) => void;
   onSettingsChange: (
     settings:
@@ -74,7 +69,6 @@ function MainEditor({
 
 type Props = {
   currentEditingTopic: Topic;
-  hasFeatureColumn: boolean;
   saveConfig: Save3DConfig;
   sceneBuilderMessage: unknown;
   setCurrentEditingTopic: (arg0?: Topic) => void;
@@ -86,7 +80,6 @@ type Props = {
 function TopicSettingsModal({
   currentEditingTopic,
   currentEditingTopic: { datatype, name: topicName },
-  hasFeatureColumn,
   saveConfig,
   sceneBuilderMessage,
   setCurrentEditingTopic,
@@ -127,57 +120,28 @@ function TopicSettingsModal({
     [onSettingsChange],
   );
 
-  const columnIndex = topicName.startsWith(SECOND_SOURCE_PREFIX) ? 1 : 0;
-  const nonPrefixedTopic =
-    columnIndex === 1 ? topicName.substr(SECOND_SOURCE_PREFIX.length) : topicName;
-
-  const editorElem = (
-    <MainEditor
-      collectorMessage={sceneBuilderMessage}
-      columnIndex={columnIndex}
-      datatype={datatype}
-      onFieldChange={onFieldChange}
-      onSettingsChange={onSettingsChange}
-      settings={settingsByKey[topicSettingsKey] ?? {}}
-      topicName={nonPrefixedTopic}
-      setCurrentEditingTopic={setCurrentEditingTopic}
-    />
-  );
-
   return (
-    <RenderToBodyComponent>
-      <Dialog
-        isOpen
-        onDismiss={() => setCurrentEditingTopic(undefined)}
-        dialogContentProps={{
-          title: currentEditingTopic.name,
-          subText: currentEditingTopic.datatype,
-          showCloseButton: true,
-        }}
-        maxWidth={480}
-        minWidth={480}
-      >
-        {hasFeatureColumn ? (
-          <Tabs
-            activeKey={`${columnIndex}`}
-            onChange={(newKey) => {
-              const newEditingTopicName =
-                newKey === "0" ? nonPrefixedTopic : `${SECOND_SOURCE_PREFIX}${nonPrefixedTopic}`;
-              setCurrentEditingTopic({ datatype, name: newEditingTopicName });
-            }}
-          >
-            <TabPane tab={"base"} key={"0"}>
-              {editorElem}
-            </TabPane>
-            <TabPane tab={SECOND_SOURCE_PREFIX} key={"1"}>
-              {editorElem}
-            </TabPane>
-          </Tabs>
-        ) : (
-          editorElem
-        )}
-      </Dialog>
-    </RenderToBodyComponent>
+    <Dialog
+      isOpen
+      onDismiss={() => setCurrentEditingTopic(undefined)}
+      dialogContentProps={{
+        title: currentEditingTopic.name,
+        subText: currentEditingTopic.datatype,
+        showCloseButton: true,
+      }}
+      maxWidth={480}
+      minWidth={480}
+    >
+      <MainEditor
+        collectorMessage={sceneBuilderMessage}
+        datatype={datatype}
+        onFieldChange={onFieldChange}
+        onSettingsChange={onSettingsChange}
+        settings={settingsByKey[topicSettingsKey] ?? {}}
+        topicName={topicName}
+        setCurrentEditingTopic={setCurrentEditingTopic}
+      />
+    </Dialog>
   );
 }
 

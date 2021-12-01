@@ -15,7 +15,7 @@ import { debounce, isEqual } from "lodash";
 import decompressLZ4 from "wasm-lz4";
 
 import Logger from "@foxglove/log";
-import { Bag, BagReader } from "@foxglove/rosbag";
+import { Bag } from "@foxglove/rosbag";
 import { BlobReader } from "@foxglove/rosbag/web";
 import { Time, add, compare, fromMillis, subtract as subtractTimes } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
@@ -85,8 +85,8 @@ const mergeStats = (a: TimedDataThroughput, b: TimedDataThroughput): TimedDataTh
 
 // A FileReader that "spies" on data callbacks. Used to log data consumed.
 class LogMetricsReader {
-  _reader: FileReader;
-  _extensionPoint: ExtensionPoint;
+  private _reader: FileReader;
+  private _extensionPoint: ExtensionPoint;
   constructor(reader: FileReader, extensionPoint: ExtensionPoint) {
     this._reader = reader;
     this._extensionPoint = extensionPoint;
@@ -105,10 +105,10 @@ class LogMetricsReader {
 // `BrowserHttpReader` for how to set up a remote server to be able to directly stream from it.
 // Returns raw messages that still need to be parsed by `ParseMessagesDataProvider`.
 export default class BagDataProvider implements RandomAccessDataProvider {
-  _options: Options;
-  _bag?: Bag;
-  _lastPerformanceStatsToLog?: TimedDataThroughput;
-  _extensionPoint?: ExtensionPoint;
+  private _options: Options;
+  private _bag?: Bag;
+  private _lastPerformanceStatsToLog?: TimedDataThroughput;
+  private _extensionPoint?: ExtensionPoint;
   private bzip2?: Bzip2;
 
   constructor(options: Options, children: RandomAccessDataProviderDescriptor[]) {
@@ -133,6 +133,7 @@ export default class BagDataProvider implements RandomAccessDataProvider {
           logFn: (message) => {
             log.info(`CachedFilelike: ${message}`);
           },
+          // eslint-disable-next-line @foxglove/no-boolean-parameters
           keepReconnectingCallback: (reconnecting: boolean) => {
             extensionPoint.reportMetadataCallback({
               type: "updateReconnecting",
@@ -151,7 +152,7 @@ export default class BagDataProvider implements RandomAccessDataProvider {
           return await new Promise(() => {}); // Just never finish initializing.
         }
 
-        this._bag = new Bag(new BagReader(remoteReader));
+        this._bag = new Bag(remoteReader);
 
         try {
           await this._bag.open();
@@ -160,7 +161,7 @@ export default class BagDataProvider implements RandomAccessDataProvider {
           return await new Promise(() => {}); // Just never finish initializing.
         }
       } else {
-        this._bag = new Bag(new BagReader(new BlobReader(bagPath.file)));
+        this._bag = new Bag(new BlobReader(bagPath.file));
         await this._bag.open();
       }
     } catch (err) {
@@ -221,10 +222,8 @@ export default class BagDataProvider implements RandomAccessDataProvider {
     }
 
     const messageDefinitionsByTopic: Record<string, string> = {};
-    const messageDefinitionMd5SumByTopic: Record<string, string> = {};
     for (const connection of connections) {
       messageDefinitionsByTopic[connection.topic] = connection.messageDefinition;
-      messageDefinitionMd5SumByTopic[connection.topic] = connection.md5sum;
     }
 
     return {
@@ -235,14 +234,13 @@ export default class BagDataProvider implements RandomAccessDataProvider {
       messageDefinitions: {
         type: "raw",
         messageDefinitionsByTopic,
-        messageDefinitionMd5SumByTopic,
       },
       providesParsedMessages: false,
       problems: [],
     };
   }
 
-  _logStats = (): void => {
+  private _logStats = (): void => {
     if (this._extensionPoint == undefined || this._lastPerformanceStatsToLog == undefined) {
       return;
     }
@@ -251,9 +249,9 @@ export default class BagDataProvider implements RandomAccessDataProvider {
   };
 
   // Logs some stats if it has been more than a second since the last call.
-  _debouncedLogStats = debounce(this._logStats, 1000, { leading: false, trailing: true });
+  private _debouncedLogStats = debounce(this._logStats, 1000, { leading: false, trailing: true });
 
-  _queueStats(stats: TimedDataThroughput): void {
+  private _queueStats(stats: TimedDataThroughput): void {
     if (
       this._lastPerformanceStatsToLog != undefined &&
       statsAreAdjacent(this._lastPerformanceStatsToLog, stats)
@@ -287,6 +285,7 @@ export default class BagDataProvider implements RandomAccessDataProvider {
         topic,
         receiveTime: timestamp,
         message: data.buffer.slice(data.byteOffset, data.byteOffset + data.length),
+        sizeInBytes: data.length,
       });
       totalSizeOfMessages += data.length;
       numberOfMessages += 1;
@@ -308,9 +307,9 @@ export default class BagDataProvider implements RandomAccessDataProvider {
             throw error;
           }
         },
-        lz4: (...args: unknown[]) => {
+        lz4: (buffer: Uint8Array, size: number) => {
           try {
-            return decompressLZ4(...args);
+            return decompressLZ4(buffer, size);
           } catch (error) {
             reportMalformedError("lz4 decompression", error);
             throw error;

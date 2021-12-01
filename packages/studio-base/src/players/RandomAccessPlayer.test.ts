@@ -49,10 +49,10 @@ const playerOptions: RandomAccessPlayerOptions = {
 type PlayerStateWithoutPlayerId = Omit<PlayerState, "playerId">;
 
 class MessageStore {
-  _messages: PlayerStateWithoutPlayerId[] = [];
+  private _messages: PlayerStateWithoutPlayerId[] = [];
   done: Promise<PlayerStateWithoutPlayerId[]>;
-  _expected: number;
-  _resolve: (arg0: PlayerStateWithoutPlayerId[]) => void = () => {
+  private _expected: number;
+  private _resolve: (arg0: PlayerStateWithoutPlayerId[]) => void = () => {
     // no-op
   };
   constructor(expected: number) {
@@ -110,7 +110,7 @@ describe("RandomAccessPlayer", () => {
     expect(messages).toEqual([
       {
         activeData: undefined,
-        capabilities: [PlayerCapabilities.setSpeed, PlayerCapabilities.playbackControl],
+        capabilities: [],
         presence: PlayerPresence.INITIALIZING,
         progress: {},
       },
@@ -143,8 +143,6 @@ describe("RandomAccessPlayer", () => {
         progress: {},
       },
     ]);
-    // make sure capabilities don't change from one message to another
-    expect(messages[0]?.capabilities).toBe(messages[1]?.capabilities);
 
     source.close();
   });
@@ -161,6 +159,46 @@ describe("RandomAccessPlayer", () => {
     expect(messages[1].activeData.currentTime).toEqual(
       add({ sec: 10, nsec: 0 }, fromNanoSec(SEEK_ON_START_NS)),
     );
+
+    source.close();
+  });
+
+  // Seeking while loading messages for a previous seek cancels the previous seek
+  it("a new seek during existing seek cancels existing seek", async () => {
+    const provider = new TestProvider();
+    const source = new RandomAccessPlayer(
+      { name: "TestProvider", args: { provider }, children: [] },
+      { ...playerOptions, seekToTime: getSeekToTime() },
+    );
+    const store = new MessageStore(2);
+    source.setListener(store.add);
+
+    await store.done;
+
+    const emptyMessages = async (): Promise<GetMessagesResult> => {
+      return {};
+    };
+
+    provider.getMessages = emptyMessages;
+
+    store.reset(1);
+    source.setSubscriptions([{ topic: "/foo/bar" }]);
+    source.requestBackfill();
+
+    await store.done;
+
+    // This replicates behavior of seeking during a processing sync
+    provider.getMessages = async (): Promise<GetMessagesResult> => {
+      provider.getMessages = emptyMessages;
+      source.seekPlayback({ sec: 11, nsec: 0 });
+      return {};
+    };
+
+    store.reset(1);
+    source.seekPlayback({ sec: 11, nsec: 0 });
+
+    const messages: any = await store.done;
+    expect(messages[0]!.activeData.currentTime).toEqual({ sec: 11, nsec: 0 });
 
     source.close();
   });
@@ -297,6 +335,7 @@ describe("RandomAccessPlayer", () => {
               topic: "/foo/bar",
               receiveTime: { sec: 10, nsec: 2 },
               message: { payload: "foo bar" },
+              sizeInBytes: 0,
             },
           ];
           return { ...getMessagesResult, parsedMessages };
@@ -340,6 +379,7 @@ describe("RandomAccessPlayer", () => {
             topic: "/foo/bar",
             receiveTime: { sec: 10, nsec: 2 },
             message: { payload: "foo bar" },
+            sizeInBytes: 0,
           },
         ],
       },
@@ -464,6 +504,7 @@ describe("RandomAccessPlayer", () => {
               topic: "/foo/bar",
               receiveTime: { sec: 10, nsec: 0 },
               message: { payload: "foo bar" },
+              sizeInBytes: 0,
             },
           ];
           return { ...getMessagesResult, parsedMessages };
@@ -508,6 +549,7 @@ describe("RandomAccessPlayer", () => {
             topic: "/foo/bar",
             receiveTime: { sec: 10, nsec: 0 },
             message: { payload: "foo bar" },
+            sizeInBytes: 0,
           },
         ],
       }, // this is the 'pause' messages payload - should be empty:
@@ -538,6 +580,7 @@ describe("RandomAccessPlayer", () => {
           expect(end).toEqual({ sec: 10, nsec: 0 });
           return getMessagesResult;
         case 2: {
+          // from starting playback (tick)
           expect(start).toEqual({ sec: 10, nsec: 0 });
           expect(end).toEqual({ sec: 10, nsec: 4000000 });
           const parsedMessages: MessageEvent<unknown>[] = [
@@ -545,6 +588,7 @@ describe("RandomAccessPlayer", () => {
               topic: "/foo/bar",
               receiveTime: { sec: 10, nsec: 0 },
               message: { payload: "foo bar" },
+              sizeInBytes: 0,
             },
           ];
           await delay(10);
@@ -630,6 +674,7 @@ describe("RandomAccessPlayer", () => {
               topic: "/foo/bar",
               receiveTime: { sec: 10, nsec: 5 },
               message: { payload: "foo bar" },
+              sizeInBytes: 0,
             },
           ];
           return { ...getMessagesResult, parsedMessages };
@@ -664,6 +709,7 @@ describe("RandomAccessPlayer", () => {
             topic: "/foo/bar",
             receiveTime: { sec: 10, nsec: 5 },
             message: { payload: "foo bar" },
+            sizeInBytes: 0,
           },
         ],
       },
@@ -696,6 +742,7 @@ describe("RandomAccessPlayer", () => {
               topic: "/foo/bar",
               receiveTime: { sec: 10, nsec: 5 },
               message: { payload: "foo bar" },
+              sizeInBytes: 0,
             },
           ];
           return { ...getMessagesResult, parsedMessages };
@@ -739,6 +786,7 @@ describe("RandomAccessPlayer", () => {
             topic: "/foo/bar",
             receiveTime: { sec: 10, nsec: 5 },
             message: { payload: "foo bar" },
+            sizeInBytes: 0,
           },
         ],
         isPlaying: true,
@@ -774,6 +822,7 @@ describe("RandomAccessPlayer", () => {
               topic: "/foo/bar",
               receiveTime: { sec: 10, nsec: 5 },
               message: { payload: "foo bar" },
+              sizeInBytes: 0,
             },
           ];
           return { ...getMessagesResult, parsedMessages };
@@ -788,6 +837,7 @@ describe("RandomAccessPlayer", () => {
                 topic: "/foo/bar",
                 receiveTime: { sec: 10, nsec: 101 },
                 message: { payload: "baz" },
+                sizeInBytes: 0,
               },
             ],
           };
@@ -821,6 +871,7 @@ describe("RandomAccessPlayer", () => {
           topic: "/foo/bar",
           receiveTime: { sec: 10, nsec: 5 },
           message: { payload: "foo bar" },
+          sizeInBytes: 0,
         },
       ],
     ]);
@@ -843,6 +894,7 @@ describe("RandomAccessPlayer", () => {
           topic: "/foo/bar",
           receiveTime: { sec: 10, nsec: 101 },
           message: { payload: "baz" },
+          sizeInBytes: 0,
         },
       ],
       [],
@@ -884,6 +936,7 @@ describe("RandomAccessPlayer", () => {
                 topic: "/foo/bar",
                 receiveTime: { sec: 20, nsec: 50 },
                 message: { payload: "baz" },
+                sizeInBytes: 0,
               },
             ],
           };
@@ -931,6 +984,7 @@ describe("RandomAccessPlayer", () => {
           topic: "/foo/bar",
           receiveTime: { sec: 20, nsec: 50 },
           message: { payload: "baz" },
+          sizeInBytes: 0,
         },
       ],
       [], // pausePlayback
@@ -941,6 +995,7 @@ describe("RandomAccessPlayer", () => {
       topic: "/foo/bar",
       receiveTime: { sec: 10, nsec: 5 },
       message: { payload: "foo bar" },
+      sizeInBytes: 0,
     };
     backfillPromiseCallback({ ...getMessagesResult, parsedMessages: [result] });
     await delay(10);
@@ -994,7 +1049,7 @@ describe("RandomAccessPlayer", () => {
     lastGetMessagesCall.resolve(getMessagesResult);
     expect(lastGetMessagesCall).toEqual({
       start: { sec: 10, nsec: 0 }, // Clamped to start
-      end: { sec: 10, nsec: 1 }, // Clamped to start
+      end: { sec: 10, nsec: 0 }, // Clamped to start
       topics: { parsedMessages: ["/foo/bar"] },
       resolve: expect.any(Function),
     });
@@ -1087,21 +1142,25 @@ describe("RandomAccessPlayer", () => {
         topic: "/foo/bar",
         receiveTime: { sec: 10, nsec: 0 },
         message: { payload: "foo bar 1" },
+        sizeInBytes: 0,
       },
       {
         topic: "/baz",
         receiveTime: { sec: 10, nsec: 500 },
         message: { payload: "baz 1" },
+        sizeInBytes: 0,
       },
       {
         topic: "/baz",
         receiveTime: { sec: 10, nsec: 5000 },
         message: { payload: "baz 2" },
+        sizeInBytes: 0,
       },
       {
         topic: "/foo/bar",
         receiveTime: { sec: 10, nsec: 9000000 },
         message: { payload: "foo bar 2" },
+        sizeInBytes: 0,
       },
     ];
     let resolve: any;
@@ -1144,21 +1203,25 @@ describe("RandomAccessPlayer", () => {
         topic: "/foo/bar",
         receiveTime: { sec: 10, nsec: 0 },
         message: { payload: "foo bar 1" },
+        sizeInBytes: 0,
       },
       {
         topic: "/baz",
         receiveTime: { sec: 10, nsec: 500 },
         message: { payload: "baz 1" },
+        sizeInBytes: 0,
       },
       {
         topic: "/baz",
         receiveTime: { sec: 10, nsec: 5000 },
         message: { payload: "baz 2" },
+        sizeInBytes: 0,
       },
       {
         topic: "/foo/bar",
         receiveTime: { sec: 10, nsec: 9000000 },
         message: { payload: "foo bar 2" },
+        sizeInBytes: 0,
       },
     ]);
 
@@ -1207,7 +1270,7 @@ describe("RandomAccessPlayer", () => {
         problems: [
           {
             error: new Error("fake initialization failure"),
-            message: "Error initializing player",
+            message: "Error initializing player: fake initialization failure",
             severity: "error",
           },
         ],
@@ -1353,11 +1416,11 @@ describe("RandomAccessPlayer", () => {
 
   describe("metrics collecting", () => {
     class TestMetricsCollector implements PlayerMetricsCollectorInterface {
-      _initialized: number = 0;
-      _played: number = 0;
-      _paused: number = 0;
-      _seeked: number = 0;
-      _speed: number[] = [];
+      private _initialized: number = 0;
+      private _played: number = 0;
+      private _paused: number = 0;
+      private _seeked: number = 0;
+      private _speed: number[] = [];
 
       setProperty(_key: string, _value: string | number | boolean): void {
         // no-op

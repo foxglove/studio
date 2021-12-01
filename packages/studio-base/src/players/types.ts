@@ -13,7 +13,7 @@
 
 import { RosMsgDefinition } from "@foxglove/rosmsg";
 import { Time } from "@foxglove/rostime";
-import type { MessageEvent } from "@foxglove/studio";
+import type { MessageEvent, ParameterValue } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { BlockCache } from "@foxglove/studio-base/randomAccessDataProviders/MemoryCacheDataProvider";
 import {
@@ -35,19 +35,6 @@ export type MessageDefinitionsByTopic = {
 export type ParsedMessageDefinitionsByTopic = {
   [topic: string]: RosMsgDefinition[];
 };
-
-// Valid types for parameter data (such as rosparams)
-export type ParameterValue =
-  | undefined
-  | boolean
-  | number
-  | string
-  | Date
-  | Uint8Array
-  | ParameterValue[]
-  | ParameterStruct;
-
-export type ParameterStruct = { [key: string]: ParameterValue };
 
 // A `Player` is a class that manages playback state. It manages subscriptions,
 // current time, which topics and datatypes are available, and so on.
@@ -71,14 +58,14 @@ export interface Player {
   // If the Player supports publishing (i.e. PlayerState#capabilities contains
   // PlayerCapabilities.advertise), publish a message.
   publish(request: PublishPayload): void;
-  // Basic playback controls.
-  startPlayback(): void;
-  pausePlayback(): void;
-  seekPlayback(time: Time, backfillDuration?: Time): void;
+  // Basic playback controls. Available if `capabilities` contains PlayerCapabilities.playbackControl.
+  startPlayback?(): void;
+  pausePlayback?(): void;
+  seekPlayback?(time: Time, backfillDuration?: Time): void;
   // Seek to a particular time. Might trigger backfilling.
   // If the Player supports non-real-time speeds (i.e. PlayerState#capabilities contains
   // PlayerCapabilities.setSpeed), set that speed. E.g. 1.0 is real time, 0.2 is 20% of real time.
-  setPlaybackSpeed(speedFraction: number): void;
+  setPlaybackSpeed?(speedFraction: number): void;
   // Request a backfill for Players that support it. Allowed to be a no-op if the player does not
   // support backfilling, or if it's already playing (in which case we'd get new messages soon anyway).
   // This is currently called after subscriptions changed. We do our best in the MessagePipeline to
@@ -220,9 +207,6 @@ export type Topic = {
   name: string;
   // Name of the datatype (see `type PlayerStateActiveData` for details).
   datatype: string;
-  // The original topic name, if the topic name was at some point renamed, e.g. in
-  // RenameDataProvider.
-  originalTopic?: string;
   // The number of messages present on the topic. Valid only for sources with a fixed number of
   // messages, such as bags.
   numMessages?: number;
@@ -262,13 +246,6 @@ export type Frame = {
 export type SubscribePayload = {
   // The topic name to subscribe to.
   topic: string;
-
-  // A particular requested encoding.
-  // TODO(JP): Remove and derive from `scale` (= "image/compressed").
-  encoding?: string;
-
-  // Currently only used for images. Used for compressing the image.
-  scale?: number;
 
   // Optionally, where the request came from. Used in the "Internals" panel to improve debugging.
   requester?: { type: "panel" | "node" | "other"; name: string };
@@ -320,7 +297,7 @@ export interface PlayerMetricsCollectorInterface {
   close(): void;
   setSubscriptions(subscriptions: SubscribePayload[]): void;
   recordBytesReceived(bytes: number): void;
-  recordPlaybackTime(time: Time, stillLoadingData: boolean): void;
+  recordPlaybackTime(time: Time, params: { stillLoadingData: boolean }): void;
   recordDataProviderPerformance(metadata: AverageThroughput): void;
   recordUncachedRangeRequest(): void;
   recordTimeToFirstMsgs(): void;

@@ -88,12 +88,13 @@ const fixture = {
       topic: "/some/topic/with/state",
       receiveTime: message.header.stamp,
       message: { ...message, data: { value: idx } },
+      sizeInBytes: 0,
     })),
   },
 };
 
 export default {
-  title: "panels/StateTransitions/index",
+  title: "panels/StateTransitions",
   component: StateTransitions,
   parameters: {
     chromatic: {
@@ -202,6 +203,7 @@ const messageCache: BlockCache = {
           topic: "/blocks",
           receiveTime: message.header.stamp,
           message: { ...message, data: { value: idx } },
+          sizeInBytes: 0,
         })),
       },
     },
@@ -212,6 +214,7 @@ const messageCache: BlockCache = {
           topic: "/blocks",
           receiveTime: message.header.stamp,
           message: { ...message, data: { value: idx } },
+          sizeInBytes: 0,
         })),
       },
     },
@@ -226,6 +229,7 @@ const messageCache: BlockCache = {
           topic: "/blocks",
           receiveTime: message.header.stamp,
           message: { ...message, data: { value: idx } },
+          sizeInBytes: 0,
         })),
       },
     },
@@ -246,6 +250,7 @@ export function Blocks(): JSX.Element {
         overrideConfig={{
           paths: [
             { value: "/some/topic/with/state.state", timestampMethod: "receiveTime" },
+            { value: "/blocks.state", timestampMethod: "receiveTime" },
             { value: "/blocks.state", timestampMethod: "receiveTime" },
           ],
         }}

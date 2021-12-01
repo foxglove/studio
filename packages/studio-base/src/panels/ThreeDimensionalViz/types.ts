@@ -11,13 +11,27 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { CameraState } from "regl-worldview";
-
+import { CameraState } from "@foxglove/regl-worldview";
 import { TopicSettingsCollection } from "@foxglove/studio-base/panels/ThreeDimensionalViz/SceneBuilder";
-import { ColorOverrideBySourceIdxByVariable } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/Layout";
+import {
+  ColorOverrideByVariable,
+  ColorOverride,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/Layout";
 import { TopicDisplayMode } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/types";
 
+/** @deprecated */
+type ColorOverrideBySourceIdxByVariable = Record<string, ColorOverride[]>;
+
+/**
+ * Config items which existed in previous versions. Used to migrate to new versions
+ * @deprecated */
+type PreviousThreeDimensionalVizConfig = {
+  colorOverrideBySourceIdxByVariable?: ColorOverrideBySourceIdxByVariable;
+};
+
 export type ThreeDimensionalVizConfig = {
+  useThemeBackgroundColor: boolean;
+  customBackgroundColor: string;
   enableShortDisplayNames?: boolean;
   autoTextBackgroundColor?: boolean;
   cameraState: Partial<CameraState>;
@@ -33,6 +47,6 @@ export type ThreeDimensionalVizConfig = {
   checkedKeys: string[];
   settingsByKey: TopicSettingsCollection;
   autoSyncCameraState?: boolean;
-  colorOverrideBySourceIdxByVariable?: ColorOverrideBySourceIdxByVariable;
+  colorOverrideByVariable?: ColorOverrideByVariable;
   disableAutoOpenClickedObject?: boolean;
-};
+} & PreviousThreeDimensionalVizConfig;

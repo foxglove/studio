@@ -10,48 +10,65 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { makeStyles, Stack } from "@fluentui/react";
-import { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from "react";
+import { Link, makeStyles, Stack, Text, useTheme } from "@fluentui/react";
+import { extname } from "path";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+  useLayoutEffect,
+  useContext,
+} from "react";
 import { useToasts } from "react-toast-notifications";
 import { useMount, useMountedState } from "react-use";
 
 import Log from "@foxglove/log";
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import { fromRFC3339String } from "@foxglove/rostime";
 import AccountSettings from "@foxglove/studio-base/components/AccountSettingsSidebar/AccountSettings";
 import ConnectionList from "@foxglove/studio-base/components/ConnectionList";
+import connectionHelpContent from "@foxglove/studio-base/components/ConnectionList/index.help.md";
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
 import DropOverlay from "@foxglove/studio-base/components/DropOverlay";
 import ExtensionsSidebar from "@foxglove/studio-base/components/ExtensionsSidebar";
 import GlobalVariablesTable from "@foxglove/studio-base/components/GlobalVariablesTable";
-import variablesHelp from "@foxglove/studio-base/components/GlobalVariablesTable/index.help.md";
-import HelpModal from "@foxglove/studio-base/components/HelpModal";
+import variablesHelpContent from "@foxglove/studio-base/components/GlobalVariablesTable/index.help.md";
+import HelpSidebar, {
+  MESSAGE_PATH_SYNTAX_HELP_INFO,
+} from "@foxglove/studio-base/components/HelpSidebar";
 import LayoutBrowser from "@foxglove/studio-base/components/LayoutBrowser";
-import messagePathHelp from "@foxglove/studio-base/components/MessagePathSyntax/index.help.md";
 import {
   MessagePipelineContext,
   useMessagePipeline,
+  useMessagePipelineGetter,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import PanelList from "@foxglove/studio-base/components/PanelList";
+import panelsHelpContent from "@foxglove/studio-base/components/PanelList/index.help.md";
 import PanelSettings from "@foxglove/studio-base/components/PanelSettings";
 import PlaybackControls from "@foxglove/studio-base/components/PlaybackControls";
 import Preferences from "@foxglove/studio-base/components/Preferences";
 import RemountOnValueChange from "@foxglove/studio-base/components/RemountOnValueChange";
-import ShortcutsModal from "@foxglove/studio-base/components/ShortcutsModal";
 import Sidebar, { SidebarItem } from "@foxglove/studio-base/components/Sidebar";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import { useAppConfiguration } from "@foxglove/studio-base/context/AppConfigurationContext";
 import { useAssets } from "@foxglove/studio-base/context/AssetsContext";
-import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
+import {
+  useCurrentLayoutActions,
+  useCurrentLayoutSelector,
+} from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { useExtensionLoader } from "@foxglove/studio-base/context/ExtensionLoaderContext";
+import { useHelpInfo } from "@foxglove/studio-base/context/HelpInfoContext";
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import LinkHandlerContext from "@foxglove/studio-base/context/LinkHandlerContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import { WorkspaceContext } from "@foxglove/studio-base/context/WorkspaceContext";
+import { useWorkspace, WorkspaceContext } from "@foxglove/studio-base/context/WorkspaceContext";
 import useAddPanel from "@foxglove/studio-base/hooks/useAddPanel";
-import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
+import { useCalloutDismissalBlocker } from "@foxglove/studio-base/hooks/useCalloutDismissalBlocker";
 import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFilesToOpen";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
@@ -84,11 +101,12 @@ type SidebarItemKey =
   | "extensions"
   | "account"
   | "layouts"
-  | "preferences";
+  | "preferences"
+  | "help";
 
 function Connection() {
   return (
-    <SidebarContent title="Connection">
+    <SidebarContent title="Connection" helpContent={connectionHelpContent}>
       <ConnectionList />
     </SidebarContent>
   );
@@ -96,24 +114,34 @@ function Connection() {
 
 function AddPanel() {
   const addPanel = useAddPanel();
+  const { openLayoutBrowser } = useWorkspace();
+  const theme = useTheme();
+  const selectedLayoutId = useCurrentLayoutSelector((state) => state.selectedLayout?.id);
 
   return (
-    <SidebarContent noPadding title="Add panel">
-      <PanelList onPanelSelect={addPanel} />
+    <SidebarContent
+      noPadding={selectedLayoutId != undefined}
+      title="Add panel"
+      helpContent={panelsHelpContent}
+    >
+      {selectedLayoutId == undefined ? (
+        <Text styles={{ root: { color: theme.palette.neutralTertiary } }}>
+          <Link onClick={openLayoutBrowser}>Select a layout</Link> to get started!
+        </Text>
+      ) : (
+        <PanelList onPanelSelect={addPanel} />
+      )}
     </SidebarContent>
   );
 }
 
 function Variables() {
   return (
-    <SidebarContent title="Variables" helpContent={variablesHelp}>
+    <SidebarContent title="Variables" helpContent={variablesHelpContent}>
       <GlobalVariablesTable />
     </SidebarContent>
   );
 }
-
-// file types we support for drag/drop
-const allowedDropExtensions = [".bag", ".foxe", ".urdf", ".xacro"];
 
 type WorkspaceProps = {
   loadWelcomeLayout?: boolean;
@@ -122,18 +150,33 @@ type WorkspaceProps = {
 };
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
-const selectPlayerCapabilities = ({ playerState }: MessagePipelineContext) =>
-  playerState.capabilities;
 const selectRequestBackfill = ({ requestBackfill }: MessagePipelineContext) => requestBackfill;
 const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
+const selectIsPlaying = (ctx: MessagePipelineContext) =>
+  ctx.playerState.activeData?.isPlaying === true;
+const selectPause = (ctx: MessagePipelineContext) => ctx.pausePlayback;
+const selectPlay = (ctx: MessagePipelineContext) => ctx.startPlayback;
+const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
 
 export default function Workspace(props: WorkspaceProps): JSX.Element {
   const classes = useStyles();
   const containerRef = useRef<HTMLDivElement>(ReactNull);
-  const { selectSource } = usePlayerSelection();
+  const { availableSources, selectSource } = usePlayerSelection();
   const playerPresence = useMessagePipeline(selectPlayerPresence);
-  const playerCapabilities = useMessagePipeline(selectPlayerCapabilities);
   const playerProblems = useMessagePipeline(selectPlayerProblems);
+
+  // file types we support for drag/drop
+  const allowedDropExtensions = useMemo(() => {
+    const extensions = [".foxe", ".urdf", ".xacro"];
+    for (const source of availableSources) {
+      if (source.supportedFileTypes) {
+        extensions.push(...source.supportedFileTypes);
+      }
+    }
+    return extensions;
+  }, [availableSources]);
+
+  const supportsAccountSettings = useContext(ConsoleApiContext) != undefined;
 
   // we use requestBackfill to signal when a player changes for RemountOnValueChange below
   // see comment below above the RemountOnValueChange component
@@ -160,13 +203,10 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       return;
     }
 
-    if (selectedSidebarItem === "connection" && playerPresence !== PlayerPresence.NOT_PRESENT) {
+    if (selectedSidebarItem === "connection" && playerPresence === PlayerPresence.PRESENT) {
       setSelectedSidebarItem(undefined);
     }
   }, [selectedSidebarItem, playerPresence]);
-
-  const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
-  const [messagePathSyntaxModalOpen, setMessagePathSyntaxModalOpen] = useState(false);
 
   const isMounted = useMountedState();
 
@@ -177,27 +217,30 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     const newLayout = await layoutStorage.saveNewLayout({
       name: welcomeLayout.name,
       data: welcomeLayout.data,
-      permission: "creator_write",
+      permission: "CREATOR_WRITE",
     });
     if (isMounted()) {
       setSelectedLayoutId(newLayout.id);
       if (props.demoBagUrl) {
-        selectSource(
-          { name: "Demo Bag", type: "ros1-remote-bagfile" },
-          {
-            url: props.demoBagUrl,
-          },
-        );
+        selectSource("ros1-remote-bagfile", {
+          url: props.demoBagUrl,
+        });
       }
     }
   }, [layoutStorage, isMounted, setSelectedLayoutId, props.demoBagUrl, selectSource]);
 
-  const handleInternalLink = useCallback((event: React.MouseEvent, href: string) => {
-    if (href === "#help:message-path-syntax") {
-      event.preventDefault();
-      setMessagePathSyntaxModalOpen(true);
-    }
-  }, []);
+  const { setHelpInfo } = useHelpInfo();
+
+  const handleInternalLink = useCallback(
+    (event: React.MouseEvent, href: string) => {
+      if (href === "#help:message-path-syntax") {
+        event.preventDefault();
+        setSelectedSidebarItem("help");
+        setHelpInfo(MESSAGE_PATH_SYNTAX_HELP_INFO);
+      }
+    },
+    [setHelpInfo],
+  );
 
   useEffect(() => {
     // Focus on page load to enable keyboard interaction.
@@ -206,21 +249,20 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     }
   }, []);
 
+  useCalloutDismissalBlocker();
+
   useNativeAppMenuEvent(
     "open-preferences",
     useCallback(() => {
-      setSelectedSidebarItem((item) => (item === "preferences" ? undefined : "preferences"));
+      setSelectedSidebarItem("preferences");
     }, []),
   );
 
   useNativeAppMenuEvent(
-    "open-message-path-syntax-help",
-    useCallback(() => setMessagePathSyntaxModalOpen(true), []),
-  );
-
-  useNativeAppMenuEvent(
-    "open-keyboard-shortcuts",
-    useCallback(() => setShortcutsModalOpen(true), []),
+    "open-help",
+    useCallback(() => {
+      setSelectedSidebarItem("help");
+    }, []),
   );
 
   useNativeAppMenuEvent("open-welcome-layout", openWelcomeLayout);
@@ -239,16 +281,12 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     })();
   });
 
-  // previously loaded files are tracked so support the "add bag" feature which loads a second bag
-  // file when the user presses shift during a drag/drop
-  const previousFiles = useRef<File[]>([]);
-
   const { loadFromFile } = useAssets();
 
   const extensionLoader = useExtensionLoader();
 
   const openFiles = useCallback(
-    async (files: FileList, { shiftPressed }: { shiftPressed: boolean }) => {
+    async (files: FileList) => {
       const otherFiles: File[] = [];
       for (const file of files) {
         // electron extends File with a `path` field which is not available in browsers
@@ -280,27 +318,31 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       }
 
       if (otherFiles.length > 0) {
-        if (shiftPressed) {
-          previousFiles.current = previousFiles.current.concat(otherFiles);
-        } else {
-          previousFiles.current = otherFiles;
+        // Look for a source that supports the dragged file extensions
+        for (const source of availableSources) {
+          const filteredFiles = otherFiles.filter((file) => {
+            const ext = extname(file.name);
+            return source.supportedFileTypes?.includes(ext);
+          });
+
+          // select the first source that has files that match the supported extensions
+          if (filteredFiles.length > 0) {
+            selectSource(source.id, {
+              files: otherFiles,
+            });
+            break;
+          }
         }
-        selectSource(
-          { name: "ROS 1 Bag File (local)", type: "ros1-local-bagfile" },
-          {
-            files: previousFiles.current,
-          },
-        );
       }
     },
-    [addToast, extensionLoader, loadFromFile, selectSource],
+    [addToast, availableSources, extensionLoader, loadFromFile, selectSource],
   );
 
   // files the main thread told us to open
   const filesToOpen = useElectronFilesToOpen();
   useEffect(() => {
     if (filesToOpen) {
-      void openFiles(filesToOpen, { shiftPressed: false });
+      void openFiles(filesToOpen);
     }
   }, [filesToOpen, openFiles]);
 
@@ -319,45 +361,60 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         return;
       }
 
-      // only support rosbag urls
       const type = url.searchParams.get("type");
-      const bagUrl = url.searchParams.get("url");
-      if (type !== "rosbag" || bagUrl == undefined) {
-        return;
+      if (type === "rosbag") {
+        const bagUrl = url.searchParams.get("url");
+        if (!bagUrl) {
+          log.warn(`Missing rosbag url param in ${url}`);
+          return;
+        }
+        selectSource(
+          "ros1-remote-bagfile",
+
+          { url: bagUrl },
+        );
+      } else if (type === "foxglove-data-platform") {
+        const start = url.searchParams.get("start") ?? "";
+        const end = url.searchParams.get("end") ?? "";
+        const seekTo = url.searchParams.get("seekTo") ?? undefined;
+        const deviceId = url.searchParams.get("deviceId");
+        if (!deviceId) {
+          log.warn(`Missing deviceId param in ${url}`);
+          return;
+        }
+        if (
+          !fromRFC3339String(start) ||
+          !fromRFC3339String(end) ||
+          (seekTo && !fromRFC3339String(seekTo))
+        ) {
+          log.warn(`Missing or invalid timestamp(s) in ${url}`);
+          return;
+        }
+        selectSource("foxglove-data-platform", { start, end, seekTo, deviceId });
+      } else {
+        log.warn(`Unknown deep link type ${url}`);
       }
-      selectSource(
-        {
-          name: "ROS 1 Bag File (HTTP)",
-          type: "ros1-remote-bagfile",
-        },
-        { url: bagUrl },
-      );
     } catch (err) {
       log.error(err);
     }
   }, [props.deepLinks, selectSource]);
 
   const dropHandler = useCallback(
-    ({ files, shiftPressed }: { files: FileList; shiftPressed: boolean }) => {
-      void openFiles(files, { shiftPressed });
+    ({ files }: { files: FileList }) => {
+      void openFiles(files);
     },
     [openFiles],
   );
-
-  const showPlaybackControls =
-    playerPresence === PlayerPresence.NOT_PRESENT || playerCapabilities.includes("playbackControl");
 
   const workspaceActions = useMemo(
     () => ({
       panelSettingsOpen: selectedSidebarItem === "panel-settings",
       openPanelSettings: () => setSelectedSidebarItem("panel-settings"),
-      openAccountSettings: () => setSelectedSidebarItem("account"),
+      openHelp: () => setSelectedSidebarItem("help"),
+      openAccountSettings: () => supportsAccountSettings && setSelectedSidebarItem("account"),
+      openLayoutBrowser: () => setSelectedSidebarItem("layouts"),
     }),
-    [selectedSidebarItem],
-  );
-
-  const [enableSharedLayouts = false] = useAppConfigurationValue<boolean>(
-    AppSetting.ENABLE_CONSOLE_API_LAYOUTS,
+    [selectedSidebarItem, supportsAccountSettings],
   );
 
   const { currentUser } = useCurrentUser();
@@ -386,9 +443,10 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       ["variables", { iconName: "Variable2", title: "Variables", component: Variables }],
       ["preferences", { iconName: "Settings", title: "Preferences", component: Preferences }],
       ["extensions", { iconName: "AddIn", title: "Extensions", component: ExtensionsSidebar }],
+      ["help", { iconName: "QuestionCircle", title: "Help", component: HelpSidebar }],
     ]);
 
-    return enableSharedLayouts
+    return supportsAccountSettings
       ? new Map([
           ...SIDEBAR_ITEMS,
           [
@@ -401,11 +459,21 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           ],
         ])
       : SIDEBAR_ITEMS;
-  }, [enableSharedLayouts, playerProblems, currentUser]);
+  }, [supportsAccountSettings, playerProblems, currentUser]);
 
   const sidebarBottomItems: readonly SidebarItemKey[] = useMemo(() => {
-    return enableSharedLayouts ? ["account", "preferences"] : ["preferences"];
-  }, [enableSharedLayouts]);
+    return supportsAccountSettings ? ["help", "account", "preferences"] : ["help", "preferences"];
+  }, [supportsAccountSettings]);
+
+  const play = useMessagePipeline(selectPlay);
+  const pause = useMessagePipeline(selectPause);
+  const seek = useMessagePipeline(selectSeek);
+  const isPlaying = useMessagePipeline(selectIsPlaying);
+  const getMessagePipeline = useMessagePipelineGetter();
+  const getTimeInfo = useCallback(
+    () => getMessagePipeline().playerState.activeData ?? {},
+    [getMessagePipeline],
+  );
 
   return (
     <MultiProvider
@@ -422,14 +490,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         </DropOverlay>
       </DocumentDropListener>
       <div className={classes.container} ref={containerRef} tabIndex={0}>
-        {shortcutsModalOpen && (
-          <ShortcutsModal onRequestClose={() => setShortcutsModalOpen(false)} />
-        )}
-        {messagePathSyntaxModalOpen && (
-          <HelpModal onRequestClose={() => setMessagePathSyntaxModalOpen(false)}>
-            {messagePathHelp}
-          </HelpModal>
-        )}
         <Sidebar
           items={sidebarItems}
           bottomItems={sidebarBottomItems}
@@ -440,9 +500,15 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           <RemountOnValueChange value={requestBackfill}>
             <Stack>
               <PanelLayout />
-              {showPlaybackControls && (
+              {play && pause && seek && (
                 <Stack.Item disableShrink>
-                  <PlaybackControls />
+                  <PlaybackControls
+                    play={play}
+                    pause={pause}
+                    seek={seek}
+                    isPlaying={isPlaying}
+                    getTimeInfo={getTimeInfo}
+                  />
                 </Stack.Item>
               )}
             </Stack>

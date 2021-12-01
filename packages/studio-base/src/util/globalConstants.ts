@@ -10,15 +10,18 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { useTheme } from "@fluentui/react";
+import type { Base16Theme } from "base16";
 
 export const DEFAULT_STUDIO_NODE_PREFIX = "/studio_node/";
 
 export const DIAGNOSTIC_TOPIC = "/diagnostics";
-export const SECOND_SOURCE_PREFIX = "/studio_source_2";
 
 export const FOXGLOVE_GRID_TOPIC = "/foxglove/grid";
 export const FOXGLOVE_GRID_DATATYPE = "foxglove/Grid";
+
+export const URDF_TOPIC = "/robot_description";
+export const URDF_DATATYPE = "foxglove/RobotDescription";
 
 export const ROBOT_DESCRIPTION_PARAM = "/robot_description";
 
@@ -52,19 +55,23 @@ export const MARKER_MSG_TYPES = {
   TEXT_VIEW_FACING: 9,
   MESH_RESOURCE: 10,
   TRIANGLE_LIST: 11,
-  FILLED_POLYGON: 107,
   INSTANCED_LINE_LIST: 108,
-  OVERLAY_ICON: 109,
 } as const;
 
-export const jsonTreeTheme = {
-  base00: "transparent", // bg
-  base07: colors.BLUEL1, // text
-  base0B: colors.YELLOW1, // string & date, item string
-  base09: colors.REDL1, // # & boolean
-  base08: colors.RED, // null, undefined, function, & symbol
-  base0D: colors.BLUEL1, // label & arrow
-  base03: colors.DARK9, // item string expanded
-};
+export function useJsonTreeTheme(): Pick<
+  Base16Theme,
+  "base00" | "base07" | "base0B" | "base09" | "base08" | "base0D" | "base03"
+> {
+  const theme = useTheme();
+  return {
+    base00: "transparent", // bg
+    base07: theme.isInverted ? theme.palette.blueLight : theme.palette.blue, // text
+    base0B: theme.palette.orangeLighter, // string & date, item string
+    base09: theme.palette.tealLight, // # & boolean
+    base08: theme.palette.red, // null, undefined, function, & symbol
+    base0D: theme.isInverted ? theme.palette.blueLight : theme.palette.blue, // label & arrow
+    base03: theme.palette.neutralTertiary, // item string expanded
+  };
+}
 
 export const TAB_PANEL_TYPE = "Tab";

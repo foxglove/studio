@@ -16,11 +16,12 @@ import AnalyticsProvider from "@foxglove/studio-base/context/AnalyticsProvider";
 import { AssetsProvider } from "@foxglove/studio-base/context/AssetsContext";
 import { HoverValueProvider } from "@foxglove/studio-base/context/HoverValueContext";
 import ModalHost from "@foxglove/studio-base/context/ModalHost";
-import { PlayerSourceDefinition } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import { IDataSourceFactory } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { UserNodeStateProvider } from "@foxglove/studio-base/context/UserNodeStateContext";
 import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
 import ExtensionMarketplaceProvider from "@foxglove/studio-base/providers/ExtensionMarketplaceProvider";
 import ExtensionRegistryProvider from "@foxglove/studio-base/providers/ExtensionRegistryProvider";
+import HelpInfoProvider from "@foxglove/studio-base/providers/HelpInfoProvider";
 import LayoutManagerProvider from "@foxglove/studio-base/providers/LayoutManagerProvider";
 import PanelCatalogProvider from "@foxglove/studio-base/providers/PanelCatalogProvider";
 import URDFAssetLoader from "@foxglove/studio-base/services/URDFAssetLoader";
@@ -31,7 +32,7 @@ type AppProps = {
    * on first launch and not subsequent launches.
    */
   loadWelcomeLayout?: boolean;
-  availableSources: PlayerSourceDefinition[];
+  availableSources: IDataSourceFactory[];
   demoBagUrl?: string;
   deepLinks?: string[];
 };
@@ -41,10 +42,11 @@ export default function App(props: AppProps): JSX.Element {
 
   const providers = [
     /* eslint-disable react/jsx-key */
-    <AnalyticsProvider />,
+    <AnalyticsProvider amplitudeApiKey={process.env.AMPLITUDE_API_KEY} />,
     <LayoutManagerProvider />,
     <ModalHost />, // render modal elements inside the ThemeProvider
     <AssetsProvider loaders={assetLoaders} />,
+    <HelpInfoProvider />,
     <HoverValueProvider />,
     <UserNodeStateProvider />,
     <CurrentLayoutProvider />,

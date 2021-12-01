@@ -2,14 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Link } from "@fluentui/react";
 import { useMemo } from "react";
+import { useMedia } from "react-use";
 
 import {
   App,
   ErrorBoundary,
   MultiProvider,
-  PlayerSourceDefinition,
+  IDataSourceFactory,
   ThemeProvider,
   UserProfileLocalStorageProvider,
   StudioToastProvider,
@@ -18,83 +18,84 @@ import {
   ConsoleApi,
   ConsoleApiContext,
   ConsoleApiRemoteLayoutStorageProvider,
-  ConsoleApiCurrentUserProvider,
+  AppSetting,
+  useAppConfigurationValue,
+  Ros1LocalBagDataSourceFactory,
+  Ros2LocalBagDataSourceFactory,
+  RosbridgeDataSourceFactory,
+  Ros1RemoteBagDataSourceFactory,
+  FoxgloveDataPlatformDataSourceFactory,
+  FoxgloveWebSocketDataSourceFactory,
+  UlogLocalDataSourceFactory,
+  McapLocalDataSourceFactory,
 } from "@foxglove/studio-base";
 
+import ConsoleApiCookieUserProvider from "./components/ConsoleApiCookieCurrentUserProvider";
 import LocalStorageAppConfigurationProvider from "./components/LocalStorageAppConfigurationProvider";
 import LocalStorageLayoutStorageProvider from "./components/LocalStorageLayoutStorageProvider";
+import Ros1UnavailableDataSourceFactory from "./dataSources/Ros1UnavailableDataSourceFactory";
+import Ros2UnavailableDataSourceFactory from "./dataSources/Ros2UnavailableDataSourceFactory";
+import VelodyneUnavailableDataSourceFactory from "./dataSources/VelodyneUnavailableDataSourceFactory";
 import ExtensionLoaderProvider from "./providers/ExtensionLoaderProvider";
 
 const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
 
-export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX.Element {
-  const playerSources: PlayerSourceDefinition[] = [
-    {
-      name: "ROS 1",
-      type: "ros1-socket",
-      disabledReason: (
-        <>
-          ROS 1 Native connections are only available in our desktop app.&nbsp;
-          <Link href="https://foxglove.dev/download" target="_blank" rel="noreferrer">
-            Download it here.
-          </Link>
-        </>
-      ),
-    },
-    {
-      name: "ROS 1 Rosbridge",
-      type: "rosbridge-websocket",
-    },
-    {
-      name: "ROS 1 Bag (local)",
-      type: "ros1-local-bagfile",
-    },
-    {
-      name: "ROS 1 Bag (remote)",
-      type: "ros1-remote-bagfile",
-    },
-    {
-      name: "ROS 2",
-      type: "ros2-socket",
-      badgeText: "beta",
-      disabledReason: (
-        <>
-          ROS 2 Native connections are only available in our desktop app.&nbsp;
-          <Link href="https://foxglove.dev/download" target="_blank" rel="noreferrer">
-            Download it here.
-          </Link>
-        </>
-      ),
-    },
-    {
-      name: "ROS 2 Rosbridge",
-      type: "rosbridge-websocket",
-    },
-    {
-      name: "ROS 2 Bag (local)",
-      type: "ros2-local-bagfile",
-    },
-    {
-      name: "Velodyne LIDAR",
-      type: "velodyne-device",
-      disabledReason: (
-        <>
-          Velodyne connections are only available in our desktop app.&nbsp;
-          <Link href="https://foxglove.dev/download" target="_blank" rel="noreferrer">
-            Download it here.
-          </Link>
-        </>
-      ),
-    },
-  ];
+// useAppConfiguration requires the AppConfigurationContext which is setup in Root
+// AppWrapper is used to make a functional component so we can use the context
+function AppWrapper({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }) {
+  const [enableMcapDataSource = false] = useAppConfigurationValue<boolean>(
+    AppSetting.ENABLE_MCAP_DATA_SOURCE,
+  );
+  const [enableWebSocketDataSource = false] = useAppConfigurationValue<boolean>(
+    AppSetting.ENABLE_WEBSOCKET_DATA_SOURCE,
+  );
 
+  const dataSources: IDataSourceFactory[] = useMemo(() => {
+    const sources = [
+      new Ros1UnavailableDataSourceFactory(),
+      new Ros1LocalBagDataSourceFactory(),
+      new Ros1RemoteBagDataSourceFactory(),
+      new Ros2UnavailableDataSourceFactory(),
+      new Ros2LocalBagDataSourceFactory(),
+      new RosbridgeDataSourceFactory(),
+      new UlogLocalDataSourceFactory(),
+      new VelodyneUnavailableDataSourceFactory(),
+      new FoxgloveDataPlatformDataSourceFactory(),
+    ];
+
+    if (enableWebSocketDataSource) {
+      sources.unshift(new FoxgloveWebSocketDataSourceFactory());
+    }
+    if (enableMcapDataSource) {
+      sources.push(new McapLocalDataSourceFactory());
+    }
+
+    return sources;
+  }, [enableMcapDataSource, enableWebSocketDataSource]);
+
+  return (
+    <App
+      loadWelcomeLayout={loadWelcomeLayout}
+      demoBagUrl={DEMO_BAG_URL}
+      availableSources={dataSources}
+    />
+  );
+}
+
+function ColorSchemeThemeProvider({ children }: React.PropsWithChildren<unknown>): JSX.Element {
+  const [colorScheme = "dark"] = useAppConfigurationValue<string>(AppSetting.COLOR_SCHEME);
+  const systemSetting = useMedia("(prefers-color-scheme: dark)");
+  const isDark = colorScheme === "dark" || (colorScheme === "system" && systemSetting);
+  return <ThemeProvider isDark={isDark}>{children}</ThemeProvider>;
+}
+
+export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX.Element {
   const api = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);
 
   const providers = [
     /* eslint-disable react/jsx-key */
-    <LocalStorageAppConfigurationProvider />,
     <ConsoleApiContext.Provider value={api} />,
-    <ConsoleApiCurrentUserProvider />,
+    <ConsoleApiCookieUserProvider />,
     <ConsoleApiRemoteLayoutStorageProvider />,
     <StudioToastProvider />,
     <LocalStorageLayoutStorageProvider />,
@@ -104,19 +105,17 @@ export function Root({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }): JSX
   ];
 
   return (
-    <ThemeProvider>
-      <GlobalCss />
-      <CssBaseline>
-        <ErrorBoundary>
-          <MultiProvider providers={providers}>
-            <App
-              loadWelcomeLayout={loadWelcomeLayout}
-              demoBagUrl={DEMO_BAG_URL}
-              availableSources={playerSources}
-            />
-          </MultiProvider>
-        </ErrorBoundary>
-      </CssBaseline>
-    </ThemeProvider>
+    <LocalStorageAppConfigurationProvider>
+      <ColorSchemeThemeProvider>
+        <GlobalCss />
+        <CssBaseline>
+          <ErrorBoundary>
+            <MultiProvider providers={providers}>
+              <AppWrapper loadWelcomeLayout={loadWelcomeLayout} />
+            </MultiProvider>
+          </ErrorBoundary>
+        </CssBaseline>
+      </ColorSchemeThemeProvider>
+    </LocalStorageAppConfigurationProvider>
   );
 }

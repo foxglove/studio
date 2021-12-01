@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Time } from "@foxglove/rostime";
+import { ParameterValue } from "@foxglove/studio";
 import {
   Progress,
   Topic,
@@ -50,7 +51,7 @@ import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 // RandomAccessDataProviders have a strict API which is enforced automatically in ApiCheckerDataProvider.
 
 export type RandomAccessDataProviderProblem = {
-  severity: "error" | "warning";
+  severity: "error" | "warn";
   message: string;
   error?: Error;
   tip?: string;
@@ -81,10 +82,6 @@ export type MessageDefinitions =
       // available through the data provider in binary format, either directly through getMessages calls
       // or indirectly through the player progress mechanism.
       messageDefinitionsByTopic: MessageDefinitionsByTopic;
-      // Optional, the md5 sum of the message definition by topic.
-      messageDefinitionMd5SumByTopic?: {
-        [key: string]: string;
-      };
     }>
   | ParsedMessageDefinitions;
 
@@ -112,9 +109,7 @@ export interface RandomAccessDataProviderConstructor {
     // The arguments to this particular RandomAccessDataProvider; typically an object.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     args: any,
-    // The children we should instantiate below. Many RandomAccessDataProviders cannot have any children (leaf
-    // nodes in the tree), many require exactly one child, and the `CombinedDataProvider` can take
-    // an arbitrary number of children.
+    // The children we should instantiate within the provider
     children: RandomAccessDataProviderDescriptor[],
     // The function to instantiate the children (different in e.g. Web Workers).
     getDataProvider: GetDataProvider,
@@ -126,6 +121,7 @@ export type InitializationResult = {
   end: Time; // Inclusive (time of last message).
   topics: Topic[];
   connections: Connection[];
+  parameters?: Map<string, ParameterValue>;
 
   // Signals whether the messages returned from calls to getMessages are parsed into Javascript
   // objects or are returned in ROS binary format.

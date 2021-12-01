@@ -15,6 +15,7 @@ import { vec3 } from "gl-matrix";
 // eslint-disable-next-line no-restricted-imports
 import { mergeWith, get } from "lodash";
 import { useRef } from "react";
+
 import {
   CameraState,
   Vec3,
@@ -22,8 +23,7 @@ import {
   MouseEventObject,
   cameraStateSelectors,
   DEFAULT_CAMERA_STATE,
-} from "regl-worldview";
-
+} from "@foxglove/regl-worldview";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { InteractionData } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/types";
 import { LinkedGlobalVariables } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
@@ -159,6 +159,7 @@ export function getUpdatedGlobalVariablesBySelectedObject(
 function getEquivalentOffsetsWithoutTarget(
   offsets: { readonly targetOffset: Vec3; readonly thetaOffset: number },
   targetPose: { readonly target: Vec3; readonly targetOrientation: Vec4 },
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
   followOrientation: boolean = false,
 ): { targetOffset: Vec3; thetaOffset: number } {
   const heading = followOrientation

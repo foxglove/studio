@@ -27,6 +27,7 @@ import {
   subtract as subtractTimes,
   toSec,
 } from "@foxglove/rostime";
+import { ParameterValue } from "@foxglove/studio";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
   AdvertiseOptions,
@@ -40,7 +41,6 @@ import {
   ParsedMessageDefinitionsByTopic,
   PlayerPresence,
   PlayerMetricsCollectorInterface,
-  ParameterValue,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { bagConnectionsToDatatypes } from "@foxglove/studio-base/util/bagConnectionsHelper";
@@ -107,7 +107,7 @@ export default class RosbridgePlayer implements Player {
     this._open();
   }
 
-  _open = (): void => {
+  private _open = (): void => {
     if (this._closed) {
       return;
     }
@@ -169,7 +169,7 @@ export default class RosbridgePlayer implements Player {
     });
   };
 
-  _requestTopics = async (): Promise<void> => {
+  private _requestTopics = async (): Promise<void> => {
     // clear problems before each topics request so we don't have stale problems from previous failed requests
     this._problems.removeProblems((id) => id.startsWith("requestTopics:"));
 
@@ -292,7 +292,7 @@ export default class RosbridgePlayer implements Player {
 
   // Potentially performance-sensitive; await can be expensive
   // eslint-disable-next-line @typescript-eslint/promise-function-async
-  _emitState = debouncePromise(() => {
+  private _emitState = debouncePromise(() => {
     if (!this._listener || this._closed) {
       return Promise.resolve();
     }
@@ -447,6 +447,7 @@ export default class RosbridgePlayer implements Player {
               topic: topicName,
               receiveTime,
               message: innerMessage,
+              sizeInBytes: bytes.byteLength,
             };
             this._parsedMessages.push(msg);
             this._handleInternalMessage(msg);

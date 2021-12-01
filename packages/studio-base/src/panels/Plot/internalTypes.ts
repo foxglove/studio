@@ -11,9 +11,10 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { ComponentProps } from "react";
+import { ChartDataset } from "chart.js";
 
-import TimeBasedChart, { TooltipItem } from "@foxglove/studio-base/components/TimeBasedChart";
+import { Time } from "@foxglove/rostime";
+import { MessagePathDataItem } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 export type BasePlotPath = {
@@ -25,15 +26,26 @@ export type PlotPath = BasePlotPath & {
   timestampMethod: TimestampMethod;
 };
 
-export type PlotChartPoint = {
+export type Datum = {
   x: number;
   y: number;
+  receiveTime: Time;
+  headerStamp?: Time;
+  path: string;
+  value: number | bigint | boolean | string;
+  constantName?: string;
 };
 
-export type DataSet = ComponentProps<typeof TimeBasedChart>["data"]["datasets"][0];
+export type DataSet = ChartDataset<"scatter", Datum[]>;
+
+export type PlotDataItem = {
+  queriedData: MessagePathDataItem[];
+  receiveTime: Time;
+  headerStamp?: Time;
+};
 
 export type PlotDataByPath = {
-  [path: string]: TooltipItem[][];
+  [path: string]: PlotDataItem[][];
 };
 
 // A "reference line" plot path is a numeric value. It creates a horizontal line on the plot at the specified value.

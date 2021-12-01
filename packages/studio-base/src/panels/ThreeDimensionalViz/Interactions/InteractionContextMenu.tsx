@@ -12,9 +12,9 @@
 //   You may not use this file except in compliance with the License.
 
 import { useCallback, useContext, useEffect } from "react";
-import { MouseEventObject } from "regl-worldview";
 import styled from "styled-components";
 
+import { MouseEventObject } from "@foxglove/regl-worldview";
 import {
   Interactive,
   SelectedObject,
@@ -31,6 +31,7 @@ import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 const SInteractionContextMenu = styled.div`
   position: fixed;
   width: 240px;
+  color: ${colors.LIGHT1};
   background: ${colors.DARK4};
   opacity: 0.9;
   z-index: 101; /* above the Text marker */

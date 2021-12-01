@@ -14,7 +14,7 @@ import {
   ContextualMenu,
 } from "@fluentui/react";
 import cx from "classnames";
-import { useCallback, useContext, useState } from "react";
+import { useCallback, useContext, useLayoutEffect, useState } from "react";
 import { useMountedState } from "react-use";
 
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
@@ -29,8 +29,8 @@ const useStyles = makeStyles((theme) => ({
     cursor: "pointer",
     paddingLeft: theme.spacing.m,
     paddingRight: theme.spacing.s1,
-    borderBottom: `1px solid ${theme.semanticColors.bodyBackground}`,
-    borderTop: `1px solid ${theme.semanticColors.bodyBackground}`,
+    marginBottom: 1,
+    marginTop: 1,
 
     ":hover": {
       background: theme.semanticColors.menuItemBackgroundHovered,
@@ -103,7 +103,7 @@ export default function LayoutRow({
 }: {
   layout: Layout;
   selected: boolean;
-  onSelect: (item: Layout, selectedViaClick?: boolean) => void;
+  onSelect: (item: Layout, params?: { selectedViaClick?: boolean }) => void;
   onRename: (item: Layout, newName: string) => void;
   onDuplicate: (item: Layout) => void;
   onDelete: (item: Layout) => void;
@@ -126,13 +126,19 @@ export default function LayoutRow({
   const onMenuDismissed = useCallback(() => setMenuOpen(false), []);
 
   const layoutDebug = useContext(LayoutStorageDebuggingContext);
-  const layoutStorage = useLayoutManager();
+  const layoutManager = useLayoutManager();
   const deletedOnServer = layout.syncInfo?.status === "remotely-deleted";
   const hasModifications = layout.working != undefined;
 
-  // const saveAction = useCallback(() => {
-  //   onSave(layout);
-  // }, [layout, onSave]);
+  const [isOnline, setIsOnline] = useState(layoutManager.isOnline);
+  useLayoutEffect(() => {
+    const onlineListener = () => setIsOnline(layoutManager.isOnline);
+    onlineListener();
+    layoutManager.on("onlinechange", onlineListener);
+    return () => {
+      layoutManager.off("onlinechange", onlineListener);
+    };
+  }, [layoutManager]);
 
   const overwriteAction = useCallback(() => {
     onOverwrite(layout);
@@ -151,7 +157,7 @@ export default function LayoutRow({
 
   const onClick = useCallback(() => {
     if (!selected) {
-      onSelect(layout, true);
+      onSelect(layout, { selectedViaClick: true });
     }
   }, [layout, onSelect, selected]);
 
@@ -217,36 +223,39 @@ export default function LayoutRow({
       iconProps: { iconName: "Rename" },
       onClick: renameAction,
       ["data-test"]: "rename-layout",
+      disabled: layoutIsShared(layout) && !isOnline,
+      secondaryText: layoutIsShared(layout) && !isOnline ? "Offline" : undefined,
     },
-    {
+    // For shared layouts, duplicate first requires saving or discarding changes
+    !(layoutIsShared(layout) && hasModifications) && {
       key: "duplicate",
       text:
-        layoutStorage.supportsSharing && layoutIsShared(layout)
+        layoutManager.supportsSharing && layoutIsShared(layout)
           ? "Make a personal copy"
-          : "Make a copy",
+          : "Duplicate",
       iconProps: { iconName: "Copy" },
       onClick: duplicateAction,
       ["data-test"]: "duplicate-layout",
-      // Duplicate first requires saving or discarding changes
-      disabled: hasModifications && layoutIsShared(layout),
     },
-    layoutStorage.supportsSharing &&
+    layoutManager.supportsSharing &&
       !layoutIsShared(layout) && {
         key: "share",
-        text: "Share with team",
+        text: "Share with team…",
         iconProps: { iconName: "Share" },
         onClick: shareAction,
+        disabled: !isOnline,
+        secondaryText: !isOnline ? "Offline" : undefined,
       },
     {
       key: "export",
-      text: "Export as JSON",
+      text: "Export…",
       iconProps: { iconName: "DownloadDocument" },
       onClick: exportAction,
     },
     { key: "divider_1", itemType: ContextualMenuItemType.Divider },
     {
       key: "delete",
-      text: "Delete…",
+      text: "Delete",
       iconProps: {
         iconName: "Delete",
         styles: { root: { color: theme.semanticColors.errorText } },
@@ -260,23 +269,24 @@ export default function LayoutRow({
     const sectionItems: IContextualMenuItem[] = [
       {
         key: "overwrite",
-        text: "Save changes",
+        text: "Save",
         iconProps: { iconName: "Upload" },
         onClick: overwriteAction,
-        disabled: deletedOnServer,
+        disabled: deletedOnServer || (layoutIsShared(layout) && !isOnline),
+        secondaryText: layoutIsShared(layout) && !isOnline ? "Offline" : undefined,
       },
       {
         key: "revert",
-        text: "Revert to last saved version",
+        text: "Revert",
         iconProps: { iconName: "Undo" },
         onClick: revertAction,
         disabled: deletedOnServer,
       },
     ];
     if (layoutIsShared(layout)) {
-      sectionItems.unshift({
+      sectionItems.push({
         key: "copy_to_personal",
-        text: "Save as a personal copy",
+        text: "Make a personal copy",
         iconProps: { iconName: "DependencyAdd" },
         onClick: makePersonalCopyAction,
       });

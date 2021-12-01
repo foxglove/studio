@@ -4,12 +4,19 @@
 
 import { storiesOf } from "@storybook/react";
 
-import { ParameterValue, PlayerCapabilities } from "@foxglove/studio-base/players/types";
+import { ParameterValue } from "@foxglove/studio";
+import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 import Parameters from "./index";
 
-const getFixture = (getParameters: boolean, setParameters: boolean) => {
+const getFixture = ({
+  getParameters,
+  setParameters,
+}: {
+  getParameters: boolean;
+  setParameters: boolean;
+}) => {
   const capabilities: string[] = [];
   if (getParameters) {
     capabilities.push(PlayerCapabilities.getParameters);
@@ -39,17 +46,17 @@ const getFixture = (getParameters: boolean, setParameters: boolean) => {
   };
 };
 
-storiesOf("panels/Parameters/index", module)
+storiesOf("panels/Parameters", module)
   .add("default", () => {
     return (
-      <PanelSetup fixture={getFixture(false, false)}>
+      <PanelSetup fixture={getFixture({ getParameters: false, setParameters: false })}>
         <Parameters />
       </PanelSetup>
     );
   })
   .add("with parameters", () => {
     return (
-      <PanelSetup fixture={getFixture(true, false)}>
+      <PanelSetup fixture={getFixture({ getParameters: true, setParameters: false })}>
         <Parameters />
       </PanelSetup>
     );

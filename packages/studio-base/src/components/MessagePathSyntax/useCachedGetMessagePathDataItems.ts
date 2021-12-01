@@ -80,13 +80,13 @@ export function useCachedGetMessagePathDataItems(
       weakMap: WeakMap<MessageEvent<unknown>, MessagePathDataItem[] | undefined>;
     };
   }>({});
-  if (useChangeDetector([providerTopics, datatypes], true)) {
+  if (useChangeDetector([providerTopics, datatypes], { initiallyTrue: true })) {
     cachesByPath.current = {};
   }
   // When the filled in paths changed, then that means that either the path string changed, or a
   // relevant global variable changed. Delete the caches for where the `filledInPath` doesn't match
   // any more.
-  if (useChangeDetector([memoizedFilledInPaths], false)) {
+  if (useChangeDetector([memoizedFilledInPaths], { initiallyTrue: false })) {
     for (const [path, current] of Object.entries(cachesByPath.current)) {
       const filledInPath = memoizedFilledInPaths[path];
       if (!filledInPath || !isEqual(current.filledInPath, filledInPath)) {
@@ -346,7 +346,10 @@ export function getMessagePathDataItems(
   return queriedData;
 }
 
-export type MessageAndData = { message: MessageEvent<unknown>; queriedData: MessagePathDataItem[] };
+export type MessageAndData = {
+  messageEvent: MessageEvent<unknown>;
+  queriedData: MessagePathDataItem[];
+};
 
 export type MessageDataItemsByPath = {
   readonly [key: string]: readonly MessageAndData[];
@@ -387,7 +390,7 @@ export function useDecodeMessagePathsForMessagesByTopic(
           // Add the item (if it exists) to the array.
           const queriedData = cachedGetMessagePathDataItems(path, message);
           if (queriedData) {
-            messagesForThisPath.push({ message, queriedData });
+            messagesForThisPath.push({ messageEvent: message, queriedData });
           }
         }
       }

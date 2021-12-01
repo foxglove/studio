@@ -23,6 +23,7 @@ import {
   percentOf,
   subtract as subtractTimes,
 } from "@foxglove/rostime";
+import { ParameterValue } from "@foxglove/studio";
 import NoopMetricsCollector from "@foxglove/studio-base/players/NoopMetricsCollector";
 import {
   AdvertiseOptions,
@@ -37,7 +38,6 @@ import {
   Topic,
   ParsedMessageDefinitionsByTopic,
   PlayerPresence,
-  ParameterValue,
   PlayerProblem,
 } from "@foxglove/studio-base/players/types";
 import { rootGetDataProvider } from "@foxglove/studio-base/randomAccessDataProviders/rootGetDataProvider";
@@ -85,8 +85,6 @@ if (SEEK_ON_START_NS >= SEEK_BACK_NANOSECONDS) {
 
 export const SEEK_START_DELAY_MS = 100;
 
-const capabilities = [PlayerCapabilities.setSpeed, PlayerCapabilities.playbackControl];
-
 export type RandomAccessPlayerOptions = {
   metricsCollector?: PlayerMetricsCollectorInterface;
   seekToTime: SeekToTimeSpec;
@@ -96,53 +94,54 @@ export type RandomAccessPlayerOptions = {
 export default class RandomAccessPlayer implements Player {
   private _label?: string;
   private _filePath?: string;
-  _provider: RandomAccessDataProvider;
-  _isPlaying: boolean = false;
-  _wasPlayingBeforeTabSwitch = false;
-  _listener?: (arg0: PlayerState) => Promise<void>;
-  _speed: number = 0.2;
-  _start: Time = { sec: 0, nsec: 0 };
-  _end: Time = { sec: 0, nsec: 0 };
+  private _provider: RandomAccessDataProvider;
+  private _isPlaying: boolean = false;
+  private _listener?: (arg0: PlayerState) => Promise<void>;
+  private _speed: number = 0.2;
+  private _start: Time = { sec: 0, nsec: 0 };
+  private _end: Time = { sec: 0, nsec: 0 };
   // next read start time indicates where to start reading for the next tick
   // after a tick read, it is set to 1nsec past the end of the read operation (preparing for the next tick)
-  _nextReadStartTime: Time = { sec: 0, nsec: 0 };
-  _lastTickMillis?: number;
+  private _nextReadStartTime: Time = { sec: 0, nsec: 0 };
+  private _lastTickMillis?: number;
   // The last time a "seek" was started. This is used to cancel async operations, such as seeks or ticks, when a seek
   // happens while they are ocurring.
-  _lastSeekStartTime: number = Date.now();
+  private _lastSeekStartTime: number = Date.now();
   // This is the "lastSeekTime" emitted in the playerState. It is not the same as the _lastSeekStartTime because we can
   // start a seek and not end up emitting it, or emit something else while we are requesting messages for the seek. The
   // RandomAccessDataProvider's `progressCallback` can cause an emit at any time, for example.
   // We only want to set the "lastSeekTime" exactly when we emit the messages coming from the seek.
-  _lastSeekEmitTime: number = this._lastSeekStartTime;
-  _cancelSeekBackfill: boolean = false;
-  _parsedSubscribedTopics: Set<string> = new Set();
-  _providerTopics: Topic[] = [];
-  _providerConnections: Connection[] = [];
-  _providerDatatypes: RosDatatypes = new Map();
-  _metricsCollector: PlayerMetricsCollectorInterface;
-  _initializing: boolean = true;
-  _initialized: boolean = false;
-  _reconnecting: boolean = false;
-  _progress: Progress = Object.freeze({});
-  _id: string = uuidv4();
-  _messages: MessageEvent<unknown>[] = [];
-  _receivedBytes: number = 0;
-  _messageOrder: TimestampMethod = "receiveTime";
-  _hasError = false;
-  _closed = false;
-  _seekToTime: SeekToTimeSpec;
-  _lastRangeMillis?: number;
-  _parsedMessageDefinitionsByTopic: ParsedMessageDefinitionsByTopic = {};
+  private _lastSeekEmitTime: number = this._lastSeekStartTime;
+  private _cancelSeekBackfill: boolean = false;
+  private _parsedSubscribedTopics: Set<string> = new Set();
+  private _providerTopics: Topic[] = [];
+  private _providerConnections: Connection[] = [];
+  private _providerDatatypes: RosDatatypes = new Map();
+  private _providerParameters: Map<string, ParameterValue> | undefined;
+  private _capabilities: string[] = [];
+  private _metricsCollector: PlayerMetricsCollectorInterface;
+  private _initializing: boolean = true;
+  private _initialized: boolean = false;
+  private _reconnecting: boolean = false;
+  private _progress: Progress = Object.freeze({});
+  private _id: string = uuidv4();
+  private _messages: MessageEvent<unknown>[] = [];
+  private _receivedBytes: number = 0;
+  private _messageOrder: TimestampMethod = "receiveTime";
+  private _hasError = false;
+  private _closed = false;
+  private _seekToTime: SeekToTimeSpec;
+  private _lastRangeMillis?: number;
+  private _parsedMessageDefinitionsByTopic: ParsedMessageDefinitionsByTopic = {};
 
   // To keep reference equality for downstream user memoization cache the currentTime provided in the last activeData update
   // See additional comments below where _currentTime is set
-  _currentTime?: Time;
+  private _currentTime?: Time;
 
   // The problem store holds problems based on keys (which may be hard-coded problem types or topics)
   // The overall player may be healthy, but individual topics may have warnings or errors.
   // These are set/cleared in the store to track the current set of problems
-  _problems = new Map<string, PlayerProblem>();
+  private _problems = new Map<string, PlayerProblem>();
 
   constructor(
     providerDescriptor: RandomAccessDataProviderDescriptor,
@@ -216,7 +215,17 @@ export default class RandomAccessPlayer implements Player {
           }
         },
       })
-      .then(({ start, end, topics, connections, messageDefinitions, providesParsedMessages }) => {
+      .then((result) => {
+        const {
+          start,
+          end,
+          topics,
+          connections,
+          parameters,
+          messageDefinitions,
+          providesParsedMessages,
+          problems,
+        } = result;
         if (!providesParsedMessages) {
           this._setError("Incorrect message format");
           return;
@@ -235,9 +244,17 @@ export default class RandomAccessPlayer implements Player {
         this._providerTopics = topics;
         this._providerConnections = connections;
         this._providerDatatypes = parsedMessageDefinitions.datatypes;
+        this._providerParameters = parameters;
+        this._capabilities = [PlayerCapabilities.setSpeed, PlayerCapabilities.playbackControl];
+        if (parameters) {
+          this._capabilities.push(PlayerCapabilities.getParameters);
+        }
         this._parsedMessageDefinitionsByTopic =
           parsedMessageDefinitions.parsedMessageDefinitionsByTopic;
         this._initializing = false;
+        problems.forEach((problem, i) => {
+          this._problems.set(`initialization-${i}`, problem);
+        });
         this._reportInitialized();
 
         // Wait a bit until panels have had the chance to subscribe to topics before we start
@@ -253,13 +270,13 @@ export default class RandomAccessPlayer implements Player {
         }, SEEK_START_DELAY_MS);
       })
       .catch((error: Error) => {
-        this._setError("Error initializing player", error);
+        this._setError(`Error initializing player: ${error.message}`, error);
       });
   }
 
   // Potentially performance-sensitive; await can be expensive
   // eslint-disable-next-line @typescript-eslint/promise-function-async
-  _emitState = debouncePromise(() => {
+  private _emitState = debouncePromise(() => {
     if (!this._listener) {
       return Promise.resolve();
     }
@@ -270,7 +287,7 @@ export default class RandomAccessPlayer implements Player {
         filePath: this._filePath,
         presence: PlayerPresence.ERROR,
         progress: {},
-        capabilities: [],
+        capabilities: this._capabilities,
         playerId: this._id,
         activeData: undefined,
         problems: Array.from(this._problems.values()),
@@ -321,7 +338,7 @@ export default class RandomAccessPlayer implements Player {
         ? PlayerPresence.INITIALIZING
         : PlayerPresence.PRESENT,
       progress: this._progress,
-      capabilities,
+      capabilities: this._capabilities,
       playerId: this._id,
       problems: this._problems.size > 0 ? Array.from(this._problems.values()) : undefined,
       activeData: this._initializing
@@ -338,6 +355,7 @@ export default class RandomAccessPlayer implements Player {
             lastSeekTime: this._lastSeekEmitTime,
             topics: this._providerTopics,
             datatypes: this._providerDatatypes,
+            parameters: this._providerParameters,
             publishedTopics,
             parsedMessageDefinitionsByTopic: this._parsedMessageDefinitionsByTopic,
           },
@@ -346,7 +364,7 @@ export default class RandomAccessPlayer implements Player {
     return this._listener(data);
   });
 
-  async _tick(): Promise<void> {
+  private async _tick(): Promise<void> {
     if (this._initializing || !this._isPlaying || this._hasError) {
       return;
     }
@@ -391,7 +409,7 @@ export default class RandomAccessPlayer implements Player {
       return;
     }
 
-    // our read finished and we didn't seed during the read, prepare for the next tick
+    // our read finished and we didn't seek during the read, prepare for the next tick
     // we need to do this after checking for seek changes since seek time may have changed
     this._nextReadStartTime = add(end, { sec: 0, nsec: 1 });
 
@@ -405,7 +423,7 @@ export default class RandomAccessPlayer implements Player {
     this._emitState();
   }
 
-  _read = debouncePromise(async () => {
+  private _read = debouncePromise(async () => {
     try {
       while (this._isPlaying && !this._hasError) {
         const start = Date.now();
@@ -422,7 +440,10 @@ export default class RandomAccessPlayer implements Player {
     }
   });
 
-  async _getMessages(start: Time, end: Time): Promise<{ parsedMessages: MessageEvent<unknown>[] }> {
+  private async _getMessages(
+    start: Time,
+    end: Time,
+  ): Promise<{ parsedMessages: MessageEvent<unknown>[] }> {
     const parsedTopics = getSanitizedTopics(this._parsedSubscribedTopics, this._providerTopics);
     if (parsedTopics.length === 0) {
       return { parsedMessages: [] };
@@ -452,7 +473,10 @@ export default class RandomAccessPlayer implements Player {
     if (parsedMessages.length > 0) {
       this._metricsCollector.recordTimeToFirstMsgs();
     }
-    const filterMessages = (msgs: readonly MessageEvent<unknown>[], topics: string[]) =>
+    const filterMessages = (
+      msgs: readonly MessageEvent<unknown>[],
+      topics: string[],
+    ): MessageEvent<unknown>[] =>
       filterMap(msgs, (message) => {
         this._problems.delete(message.topic);
 
@@ -483,6 +507,7 @@ export default class RandomAccessPlayer implements Player {
           topic: message.topic,
           receiveTime: message.receiveTime,
           message: message.message,
+          sizeInBytes: message.sizeInBytes,
         };
       });
     return {
@@ -518,7 +543,7 @@ export default class RandomAccessPlayer implements Player {
     this._emitState();
   }
 
-  _reportInitialized(): void {
+  private _reportInitialized(): void {
     if (this._initializing || this._initialized) {
       return;
     }
@@ -526,17 +551,28 @@ export default class RandomAccessPlayer implements Player {
     this._initialized = true;
   }
 
-  _setNextReadStartTime(time: Time): void {
-    this._metricsCollector.recordPlaybackTime(time, !this.hasCachedRange(this._start, this._end));
+  private _setNextReadStartTime(time: Time): void {
+    this._metricsCollector.recordPlaybackTime(time, {
+      stillLoadingData: !this.hasCachedRange(this._start, this._end),
+    });
     this._nextReadStartTime = clampTime(time, this._start, this._end);
   }
 
-  _seekPlaybackInternal = debouncePromise(async (backfillDuration?: Time) => {
+  private _seekPlaybackInternal = debouncePromise(async (backfillDuration?: Time) => {
+    // track seek time so _tick can know if a seek happened while reading messages in a tick
     const seekTime = Date.now();
     this._lastSeekStartTime = seekTime;
+
     this._cancelSeekBackfill = false;
     // cancel any queued _emitState that might later emit messages from before we seeked
     this._messages = [];
+
+    // If a backfill duration is provided, we always perform the backfill even if playing
+    // If a backfill duration is not provided, we only perform the backfill when paused
+    if (this._isPlaying && !backfillDuration) {
+      this._lastSeekEmitTime = seekTime;
+      return;
+    }
 
     // backfill includes the current time we've seek'd to
     // playback after backfill will load messages after the seek time
@@ -556,25 +592,26 @@ export default class RandomAccessPlayer implements Player {
       this._end,
     );
 
-    // Only getMessages if we have some messages to get.
-    if (backfillDuration || !this._isPlaying) {
-      const { parsedMessages: messages } = await this._getMessages(backfillStart, backfillEnd);
-      // Only emit the messages if we haven't seeked again / emitted messages since we
-      // started loading them. Note that for the latter part just checking for `isPlaying`
-      // is not enough because the user might have started playback and then paused again!
-      // Therefore we really need something like `this._cancelSeekBackfill`.
-      if (this._lastSeekStartTime === seekTime && !this._cancelSeekBackfill) {
-        // similar to _tick(), we set the next start time past where we have read
-        // this happens after reading and confirming that playback or other seeking hasn't happened
-        this._nextReadStartTime = add(backfillEnd, { sec: 0, nsec: 1 });
+    const prevNextReadStartTime = this._nextReadStartTime;
+    const { parsedMessages: messages } = await this._getMessages(backfillStart, backfillEnd);
 
-        this._messages = messages;
-        this._lastSeekEmitTime = seekTime;
-        this._emitState();
-      }
-    } else {
-      // If we are playing, make sure we set this emit time so that consumers will know that we seeked.
+    // If the read time was altered (another seek request), then ignore messages from this seek
+    if (prevNextReadStartTime !== this._nextReadStartTime) {
+      return;
+    }
+
+    // Only emit the messages if we haven't seeked again / emitted messages since we
+    // started loading them. Note that for the latter part just checking for `isPlaying`
+    // is not enough because the user might have started playback and then paused again!
+    // Therefore we really need something like `this._cancelSeekBackfill`.
+    if (!this._cancelSeekBackfill) {
+      // similar to _tick(), we set the next start time past where we have read
+      // this happens after reading and confirming that playback or other seeking hasn't happened
+      this._nextReadStartTime = add(backfillEnd, { sec: 0, nsec: 1 });
+
+      this._messages = messages;
       this._lastSeekEmitTime = seekTime;
+      this._emitState();
     }
   });
 
@@ -583,6 +620,7 @@ export default class RandomAccessPlayer implements Player {
     if (!this._initialized) {
       return;
     }
+
     this._metricsCollector.seek(time);
     this._setNextReadStartTime(time);
     this._seekPlaybackInternal(backfillDuration);

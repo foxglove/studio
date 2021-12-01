@@ -10,13 +10,13 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
+import { makeStyles, useTheme } from "@fluentui/react";
 import MagnifyIcon from "@mdi/svg/svg/magnify.svg";
 import fuzzySort from "fuzzysort";
 import { isEmpty } from "lodash";
 import { useEffect, useMemo } from "react";
 import { useDrag } from "react-dnd";
 import { MosaicDragType, MosaicPath } from "react-mosaic-component";
-import styled from "styled-components";
 
 import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
@@ -36,43 +36,48 @@ import {
 } from "@foxglove/studio-base/types/panels";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-import styles from "./index.module.scss";
+const useStyles = makeStyles((theme) => ({
+  root: {
+    height: "100%",
+  },
+  container: {
+    padding: 16,
+  },
+  item: {
+    cursor: "grab",
+  },
+  sticky: {
+    color: colors.LIGHT,
+    position: "sticky",
+    top: 0,
+    zIndex: 2,
+  },
+  searchInputContainer: {
+    paddingLeft: 8,
+    backgroundColor: theme.semanticColors.inputBackground,
+    borderRadius: 4,
+    border: `1px solid ${theme.semanticColors.inputBorder}`,
+  },
+  searchInput: {
+    backgroundColor: `${theme.semanticColors.inputBackground} !important`,
+    padding: "8px !important",
+    margin: "0 !important",
+    width: "100%",
+    minWidth: 0,
 
-const StickyDiv = styled.div`
-  color: ${colors.LIGHT};
-  position: sticky;
-  top: 0;
-  z-index: 2;
-`;
-
-const SSearchInputContainer = styled(Flex)`
-  padding-left: 8px;
-  background-color: ${colors.DARK5};
-  border-radius: 4px;
-`;
-
-const SSearchInput = styled(LegacyInput)`
-  background-color: ${colors.DARK5};
-  padding: 8px;
-  width: 100%;
-  min-width: 0;
-  margin: 0;
-
-  &:hover,
-  &:focus {
-    background-color: ${colors.DARK5};
-  }
-`;
-
-const SScrollContainer = styled.div`
-  overflow-y: auto;
-  height: 100%;
-`;
-
-const SEmptyState = styled.div`
-  padding: 8px 16px;
-  opacity: 0.4;
-`;
+    ":hover, :focus": {
+      backgroundColor: theme.semanticColors.inputBackground,
+    },
+  },
+  scrollContainer: {
+    overflowY: "auto",
+    height: "100%",
+  },
+  noResults: {
+    padding: "8px 16px",
+    opacity: 0.4,
+  },
+}));
 
 type DropDescription = {
   type: string;
@@ -82,6 +87,7 @@ type DropDescription = {
   path?: MosaicPath;
   tabId?: string;
 };
+
 type PanelItemProps = {
   panel: {
     type: string;
@@ -106,6 +112,7 @@ function DraggablePanelItem({
   highlighted,
   mosaicId,
 }: PanelItemProps) {
+  const classes = useStyles();
   const scrollRef = React.useRef<HTMLDivElement>(ReactNull);
   const [, drag] = useDrag<unknown, MosaicDropResult, never>({
     type: MosaicDragType.WINDOW,
@@ -154,7 +161,7 @@ function DraggablePanelItem({
           onClick={onClick}
           checked={checked}
           highlighted={highlighted}
-          className={styles.item}
+          className={classes.item}
           dataTest={`panel-menu-item ${panel.title}`}
         >
           <TextHighlight targetStr={panel.title} searchText={searchQuery} />
@@ -200,6 +207,8 @@ function verifyPanels(panels: readonly PanelInfo[]) {
 }
 
 function PanelList(props: Props): JSX.Element {
+  const theme = useTheme();
+  const classes = useStyles();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [highlightedPanelIdx, setHighlightedPanelIdx] = React.useState<number | undefined>();
   const { onPanelSelect, selectedPanelTitle } = props;
@@ -320,14 +329,15 @@ function PanelList(props: Props): JSX.Element {
   );
 
   return (
-    <div style={{ height: "100%", overflow: "hidden" }}>
-      <StickyDiv>
-        <div style={{ padding: "16px" }}>
-          <SSearchInputContainer center>
-            <Icon style={{ color: colors.LIGHT, opacity: 0.3 }}>
+    <div className={classes.root}>
+      <div className={classes.sticky}>
+        <div className={classes.container}>
+          <Flex center className={classes.searchInputContainer}>
+            <Icon style={{ color: theme.semanticColors.inputIcon }}>
               <MagnifyIcon />
             </Icon>
-            <SSearchInput
+            <LegacyInput
+              className={classes.searchInput}
               placeholder="Search panels"
               value={searchQuery}
               onChange={handleSearchChange}
@@ -336,13 +346,13 @@ function PanelList(props: Props): JSX.Element {
               onFocus={() => setHighlightedPanelIdx(0)}
               autoFocus
             />
-          </SSearchInputContainer>
+          </Flex>
         </div>
-      </StickyDiv>
-      <SScrollContainer>
-        {noResults && <SEmptyState>No panels match search criteria.</SEmptyState>}
+      </div>
+      <div className={classes.scrollContainer}>
+        {noResults && <div className={classes.noResults}>No panels match search criteria.</div>}
         {allFilteredPanels.map(displayPanelListItem)}
-      </SScrollContainer>
+      </div>
     </div>
   );
 }

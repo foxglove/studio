@@ -11,6 +11,14 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import {
+  Dropdown,
+  IDropdownOption,
+  IDropdownStyles,
+  ISelectableOption,
+  makeStyles,
+  useTheme,
+} from "@fluentui/react";
 import PinIcon from "@mdi/svg/svg/pin.svg";
 import cx from "classnames";
 import { compact } from "lodash";
@@ -27,20 +35,20 @@ import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import TopicToRenderMenu from "@foxglove/studio-base/components/TopicToRenderMenu";
+import { Config as DiagnosticStatusConfig } from "@foxglove/studio-base/panels/diagnostics/DiagnosticStatusPanel";
+import helpContent from "@foxglove/studio-base/panels/diagnostics/DiagnosticSummary.help.md";
+import useDiagnostics from "@foxglove/studio-base/panels/diagnostics/useDiagnostics";
 import { PanelConfigSchema } from "@foxglove/studio-base/types/panels";
 import { DIAGNOSTIC_TOPIC } from "@foxglove/studio-base/util/globalConstants";
 import toggle from "@foxglove/studio-base/util/toggle";
 
-import { Config as DiagnosticStatusConfig } from "./DiagnosticStatusPanel";
-import helpContent from "./DiagnosticSummary.help.md";
-import styles from "./DiagnosticSummary.module.scss";
-import useDiagnostics from "./useDiagnostics";
 import {
   DiagnosticId,
   DiagnosticInfo,
   getDiagnosticsByLevel,
   filterAndSortDiagnostics,
   LEVEL_NAMES,
+  KNOWN_LEVELS,
 } from "./util";
 
 type NodeRowProps = {
@@ -49,42 +57,93 @@ type NodeRowProps = {
   onClick: (info: DiagnosticInfo) => void;
   onClickPin: (info: DiagnosticInfo) => void;
 };
-class NodeRow extends React.PureComponent<NodeRowProps> {
-  onClick = () => {
-    const { info, onClick } = this.props;
+
+const useStyles = makeStyles((theme) => ({
+  ok: { color: theme.semanticColors.successIcon },
+  warn: { color: theme.semanticColors.warningBackground },
+  error: { color: theme.semanticColors.errorBackground },
+  stale: { color: theme.semanticColors.infoIcon },
+  pinIcon: {
+    marginRight: 4,
+    marginLeft: 4,
+    verticalAlign: "middle",
+    visibility: "hidden",
+
+    svg: {
+      fontSize: 16,
+      position: "relative",
+      top: -1,
+    },
+  },
+  pinIconActive: {
+    visibility: "visible",
+  },
+  nodeRow: {
+    textDecoration: "none",
+    cursor: "pointer",
+    userSelect: "none",
+    display: "flex",
+    alignItems: "center",
+    padding: 0,
+    lineHeight: "24px",
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
+
+    "&:hover": {
+      backgroundColor: theme.semanticColors.listItemBackgroundHovered,
+
+      "> .icon": {
+        visibility: "visible",
+      },
+    },
+  },
+}));
+
+const NodeRow = React.memo(function NodeRow(props: NodeRowProps) {
+  const handleClick = useCallback(() => {
+    const info = props.info;
+    const onClick = props.onClick;
     onClick(info);
-  };
-  onClickPin = () => {
-    const { info, onClickPin } = this.props;
+  }, [props.onClick, props.info]);
+  const handleClickPin = useCallback(() => {
+    const info = props.info;
+    const onClickPin = props.onClickPin;
     onClickPin(info);
-  };
+  }, [props.onClickPin, props.info]);
 
-  override render() {
-    const { info, isPinned } = this.props;
-    const levelName = LEVEL_NAMES[info.status.level];
-
-    return (
-      <div
-        className={cx(levelName != undefined ? styles[levelName] : undefined, styles.nodeRow)}
-        onClick={this.onClick}
-        data-test-diagnostic-row
+  const { info, isPinned } = props;
+  const levelName = LEVEL_NAMES[info.status.level];
+  const classes = useStyles();
+  return (
+    <div className={classes.nodeRow} onClick={handleClick} data-test-diagnostic-row>
+      <Icon
+        fade={!isPinned}
+        onClick={handleClickPin}
+        className={cx(classes.pinIcon, {
+          [classes.pinIconActive]: isPinned,
+        })}
       >
-        <Icon
-          fade={!isPinned}
-          onClick={this.onClickPin}
-          className={cx(styles.pinIcon, { [styles.pinned!]: isPinned })}
-        >
-          <PinIcon />
-        </Icon>
-        <span>{info.displayName}</span>
-        {" – "}
-        <span className={styles.message}>{info.status.message}</span>
+        <PinIcon />
+      </Icon>
+      <div>{info.displayName}</div>
+      &nbsp;–&nbsp;
+      <div
+        className={cx({
+          [classes.ok]: levelName === "ok",
+          [classes.warn]: levelName === "warn",
+          [classes.error]: levelName === "error",
+          [classes.stale]: levelName === "stale",
+        })}
+      >
+        {info.status.message}
       </div>
-    );
-  }
-}
+    </div>
+  );
+});
 
 type Config = {
+  minLevel: number;
   pinnedIds: DiagnosticId[];
   topicToRender: string;
   hardwareIdFilter: string;
@@ -96,9 +155,44 @@ type Props = {
 };
 
 function DiagnosticSummary(props: Props): JSX.Element {
+  const theme = useTheme();
+  const classes = useStyles();
+  const dropdownStyles = useMemo(
+    () =>
+      ({
+        root: {
+          minWidth: "100px",
+        },
+        caretDownWrapper: {
+          top: 0,
+          lineHeight: 24,
+          height: 24,
+        },
+        title: {
+          backgroundColor: "transparent",
+          fontSize: theme.fonts.small.fontSize,
+          borderColor: theme.semanticColors.bodyDivider,
+          lineHeight: 24,
+          height: 24,
+        },
+        dropdownItemSelected: {
+          fontSize: theme.fonts.small.fontSize,
+          lineHeight: 24,
+          height: 24,
+          minHeight: 24,
+        },
+        dropdownItem: {
+          lineHeight: 24,
+          height: 24,
+          minHeight: 24,
+          fontSize: theme.fonts.small.fontSize,
+        },
+      } as Partial<IDropdownStyles>),
+    [theme],
+  );
   const { config, saveConfig } = props;
   const { topics } = useDataSourceInfo();
-  const { topicToRender, pinnedIds, hardwareIdFilter, sortByLevel = true } = config;
+  const { minLevel, topicToRender, pinnedIds, hardwareIdFilter, sortByLevel = true } = config;
   const { openSiblingPanel } = usePanelContext();
 
   const togglePinned = useCallback(
@@ -110,16 +204,17 @@ function DiagnosticSummary(props: Props): JSX.Element {
 
   const showDetails = useCallback(
     (info: DiagnosticInfo) => {
-      openSiblingPanel(
-        "DiagnosticStatusPanel",
-        () =>
+      openSiblingPanel({
+        panelType: "DiagnosticStatusPanel",
+        siblingConfigCreator: () =>
           ({
             selectedHardwareId: info.status.hardware_id,
             selectedName: info.status.name,
             topicToRender,
             collapsedSections: [],
           } as DiagnosticStatusConfig),
-      );
+        updateIfExists: true,
+      });
     },
     [topicToRender, openSiblingPanel],
   );
@@ -143,9 +238,16 @@ function DiagnosticSummary(props: Props): JSX.Element {
 
   const hardwareFilter = (
     <LegacyInput
-      style={{ width: "100%", padding: "0", background: "transparent", opacity: "0.5" }}
+      style={{
+        width: "100%",
+        padding: "0",
+        backgroundColor: "transparent",
+        opacity: "0.5",
+        marginLeft: "10px",
+        fontSize: "12px",
+      }}
       value={hardwareIdFilter}
-      placeholder={"Filter hardware id"}
+      placeholder="Filter hardware id"
       onChange={(e) => saveConfig({ hardwareIdFilter: e.target.value })}
     />
   );
@@ -193,7 +295,9 @@ function DiagnosticSummary(props: Props): JSX.Element {
           pinnedIds,
         );
 
-    const nodes: DiagnosticInfo[] = [...compact(pinnedNodes), ...sortedNodes];
+    const nodes: DiagnosticInfo[] = [...compact(pinnedNodes), ...sortedNodes].filter(
+      ({ status }) => status.level >= minLevel,
+    );
     if (nodes.length === 0) {
       return ReactNull;
     }
@@ -212,11 +316,41 @@ function DiagnosticSummary(props: Props): JSX.Element {
         )}
       </AutoSizer>
     );
-  }, [diagnostics, hardwareIdFilter, pinnedIds, renderRow, sortByLevel, topicToRender]);
+  }, [diagnostics, hardwareIdFilter, pinnedIds, renderRow, sortByLevel, minLevel, topicToRender]);
+
+  const renderOption = (option: ISelectableOption | undefined) =>
+    option ? (
+      <div
+        className={cx({
+          [classes.ok]: option.text === "ok",
+          [classes.warn]: option.text === "warn",
+          [classes.error]: option.text === "error",
+          [classes.stale]: option.text === "stale",
+        })}
+      >
+        &gt;= {option?.text.toUpperCase() ?? ""}
+      </div>
+    ) : (
+      ReactNull
+    );
 
   return (
-    <Flex col className={styles.panel}>
+    <Flex col>
       <PanelToolbar helpContent={helpContent} additionalIcons={topicToRenderMenu}>
+        <Dropdown
+          styles={dropdownStyles}
+          onRenderOption={renderOption}
+          onRenderTitle={(options: IDropdownOption[] | undefined) =>
+            options?.[0] ? renderOption(options[0]) : ReactNull
+          }
+          onChange={(_ev, option) => {
+            if (option) {
+              saveConfig({ minLevel: option.key as number });
+            }
+          }}
+          options={KNOWN_LEVELS.map((key: number) => ({ key, text: LEVEL_NAMES[key] ?? "" }))}
+          selectedKey={minLevel}
+        />
         {hardwareFilter}
       </PanelToolbar>
       <Flex col>{summary}</Flex>
@@ -229,6 +363,7 @@ const configSchema: PanelConfigSchema<Config> = [
 ];
 
 const defaultConfig: Config = {
+  minLevel: 0,
   pinnedIds: [],
   hardwareIdFilter: "",
   topicToRender: DIAGNOSTIC_TOPIC,

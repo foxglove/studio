@@ -13,11 +13,13 @@
 
 import { action } from "@storybook/addon-actions";
 import { Story } from "@storybook/react";
+import { useLayoutEffect } from "react";
 
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import AppConfigurationContext, {
   AppConfiguration,
 } from "@foxglove/studio-base/context/AppConfigurationContext";
+import { useSetHoverValue } from "@foxglove/studio-base/context/HoverValueContext";
 import {
   PlayerCapabilities,
   PlayerPresence,
@@ -84,7 +86,7 @@ function Wrapper({
           startPlayback={action("play")}
           progress={progress}
         >
-          <div style={{ padding: 20, margin: 100 }}>{children}</div>
+          <div style={{ padding: 20, margin: 20 }}>{children}</div>
         </MockMessagePipelineProvider>
       </MockCurrentLayoutProvider>
     </AppConfigurationContext.Provider>
@@ -98,18 +100,32 @@ export default {
 export const Playing: Story = () => {
   return (
     <Wrapper isPlaying>
-      <PlaybackControls />
+      <PlaybackControls
+        isPlaying={true}
+        getTimeInfo={() => ({})}
+        play={action("play")}
+        pause={action("pause")}
+        seek={action("seek")}
+      />
     </Wrapper>
   );
 };
+Playing.parameters = { colorScheme: "both-column" };
 
 export const Paused: Story = () => {
   return (
     <Wrapper>
-      <PlaybackControls />
+      <PlaybackControls
+        isPlaying={false}
+        getTimeInfo={() => ({})}
+        play={action("play")}
+        pause={action("pause")}
+        seek={action("seek")}
+      />
     </Wrapper>
   );
 };
+Paused.parameters = { colorScheme: "both-column" };
 
 export const DownloadProgressByRanges: Story = () => {
   const player = getPlayerState();
@@ -122,7 +138,40 @@ export const DownloadProgressByRanges: Story = () => {
   };
   return (
     <Wrapper progress={player.progress}>
-      <PlaybackControls />
+      <PlaybackControls
+        isPlaying
+        getTimeInfo={() => ({})}
+        play={action("play")}
+        pause={action("pause")}
+        seek={action("seek")}
+      />
     </Wrapper>
   );
 };
+DownloadProgressByRanges.parameters = { colorScheme: "both-column" };
+
+export const HoverTicks: Story = () => {
+  const player = getPlayerState();
+  const setHoverValue = useSetHoverValue();
+
+  useLayoutEffect(() => {
+    setHoverValue({
+      type: "PLAYBACK_SECONDS",
+      value: 0.5,
+      componentId: "story",
+    });
+  }, [setHoverValue]);
+
+  return (
+    <Wrapper activeData={player.activeData}>
+      <PlaybackControls
+        isPlaying
+        getTimeInfo={() => ({})}
+        play={action("play")}
+        pause={action("pause")}
+        seek={action("seek")}
+      />
+    </Wrapper>
+  );
+};
+HoverTicks.parameters = { colorScheme: "both-column" };

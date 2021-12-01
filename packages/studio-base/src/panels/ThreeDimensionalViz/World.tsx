@@ -11,9 +11,15 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { forwardRef } from "react";
-import { Worldview, CameraState, MouseHandler, DEFAULT_CAMERA_STATE } from "regl-worldview";
+import { getColorFromString } from "@fluentui/react";
+import { forwardRef, useMemo } from "react";
 
+import {
+  Worldview,
+  CameraState,
+  MouseHandler,
+  DEFAULT_CAMERA_STATE,
+} from "@foxglove/regl-worldview";
 import { Interactive } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/types";
 import {
   WorldSearchTextProps,
@@ -24,7 +30,6 @@ import WorldMarkers, {
   MarkerWithInteractionData,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/WorldMarkers";
 import { LAYER_INDEX_DEFAULT_BASE } from "@foxglove/studio-base/panels/ThreeDimensionalViz/constants";
-import { withDiffMode } from "@foxglove/studio-base/panels/ThreeDimensionalViz/utils/diffModeUtils";
 import withHighlights from "@foxglove/studio-base/panels/ThreeDimensionalViz/withHighlights";
 import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
 import {
@@ -35,7 +40,7 @@ import {
   CylinderMarker,
   LineListMarker,
   LineStripMarker,
-  OverlayIconMarker,
+  MeshMarker,
   PointsMarker,
   SphereListMarker,
   SphereMarker,
@@ -45,6 +50,7 @@ import { MarkerCollector, MarkerProvider } from "@foxglove/studio-base/types/Sce
 
 type Props = WorldSearchTextProps & {
   autoTextBackgroundColor: boolean;
+  canvasBackgroundColor: string;
   cameraState: CameraState;
   children?: React.ReactNode;
   isPlaying: boolean;
@@ -55,7 +61,6 @@ type Props = WorldSearchTextProps & {
   onMouseDown?: MouseHandler;
   onMouseMove?: MouseHandler;
   onMouseUp?: MouseHandler;
-  diffModeEnabled: boolean;
 };
 
 function getMarkers(markerProviders: MarkerProvider[]): InteractiveMarkersByType {
@@ -65,7 +70,6 @@ function getMarkers(markerProviders: MarkerProvider[]): InteractiveMarkersByType
     cube: [],
     cubeList: [],
     cylinder: [],
-    filledPolygon: [],
     glText: [],
     grid: [],
     instancedLineList: [],
@@ -73,7 +77,7 @@ function getMarkers(markerProviders: MarkerProvider[]): InteractiveMarkersByType
     linedConvexHull: [],
     lineList: [],
     lineStrip: [],
-    overlayIcon: [],
+    mesh: [],
     pointcloud: [],
     points: [],
     poseMarker: [],
@@ -92,7 +96,6 @@ function getMarkers(markerProviders: MarkerProvider[]): InteractiveMarkersByType
     cube: (o) => markers.cube.push(o as Interactive<CubeMarker>),
     cubeList: (o) => markers.cubeList.push(o as Interactive<CubeListMarker>),
     cylinder: (o) => markers.cylinder.push(o as Interactive<CylinderMarker>),
-    filledPolygon: (o) => markers.filledPolygon.push(o as unknown as Interactive<SphereMarker>),
     grid: (o) => markers.grid.push(o as unknown as Interactive<BaseMarker>),
     instancedLineList: (o) =>
       markers.instancedLineList.push(o as unknown as Interactive<BaseMarker>),
@@ -101,7 +104,7 @@ function getMarkers(markerProviders: MarkerProvider[]): InteractiveMarkersByType
       markers.linedConvexHull.push(o as unknown as Interactive<LineListMarker | LineStripMarker>),
     lineList: (o) => markers.lineList.push(o as Interactive<LineListMarker>),
     lineStrip: (o) => markers.lineStrip.push(o as Interactive<LineStripMarker>),
-    overlayIcon: (o) => markers.overlayIcon.push(o as Interactive<OverlayIconMarker>),
+    mesh: (o) => markers.mesh.push(o as Interactive<MeshMarker>),
     pointcloud: (o) => markers.pointcloud.push(o as unknown as Interactive<SphereMarker>),
     points: (o) => markers.points.push(o as Interactive<PointsMarker>),
     poseMarker: (o) => markers.poseMarker.push(o as unknown as Interactive<BaseMarker>),
@@ -119,15 +122,15 @@ function getMarkers(markerProviders: MarkerProvider[]): InteractiveMarkersByType
 }
 
 // Wrap the WorldMarkers in HoC(s)
-const WrappedWorldMarkers = withHighlights(withDiffMode(WorldMarkers));
+const WrappedWorldMarkers = withHighlights(WorldMarkers);
 
 function World(
   {
     onClick,
     autoTextBackgroundColor,
+    canvasBackgroundColor,
     children,
     onCameraStateChange,
-    diffModeEnabled,
     cameraState,
     isPlaying,
     markerProviders,
@@ -158,8 +161,14 @@ function World(
     }),
   };
 
+  const backgroundColor = useMemo(() => {
+    const { r, g, b, a } = getColorFromString(canvasBackgroundColor) ?? { r: 0, g: 0, b: 0, a: 1 };
+    return [r / 255, g / 255, b / 255, (a ?? 100) / 100];
+  }, [canvasBackgroundColor]);
+
   return (
     <Worldview
+      backgroundColor={backgroundColor}
       cameraState={cameraState}
       enableStackedObjectEvents={!isPlaying}
       hideDebug={inScreenshotTests()}
@@ -184,7 +193,6 @@ function World(
           layerIndex: LAYER_INDEX_DEFAULT_BASE,
           clearCachedMarkers: false,
           cameraDistance: cameraState.distance ?? DEFAULT_CAMERA_STATE.distance,
-          diffModeEnabled,
         }}
       />
     </Worldview>

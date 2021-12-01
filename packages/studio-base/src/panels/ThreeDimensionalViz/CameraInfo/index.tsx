@@ -11,20 +11,19 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import CameraControlIcon from "@mdi/svg/svg/camera-control.svg";
+import { useTheme } from "@fluentui/react";
 import { vec3 } from "gl-matrix";
 import { isEqual } from "lodash";
-import { CameraState, cameraStateSelectors, Vec3 } from "regl-worldview";
 import styled from "styled-components";
 
+import { CameraState, cameraStateSelectors, Vec3 } from "@foxglove/regl-worldview";
 import Button from "@foxglove/studio-base/components/Button";
 import ExpandingToolbar, { ToolGroup } from "@foxglove/studio-base/components/ExpandingToolbar";
 import Flex from "@foxglove/studio-base/components/Flex";
-import Icon from "@foxglove/studio-base/components/Icon";
+import JsonInput from "@foxglove/studio-base/components/JsonInput";
 import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import Tooltip from "@foxglove/studio-base/components/Tooltip";
-import { JsonInput } from "@foxglove/studio-base/components/ValidatedInput";
 import {
   SValue,
   SLabel,
@@ -36,7 +35,6 @@ import {
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/threeDimensionalVizUtils";
 import { ThreeDimensionalVizConfig } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
 import clipboard from "@foxglove/studio-base/util/clipboard";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { point2DValidator, cameraStateValidator } from "@foxglove/studio-base/util/validators";
 
 export const CAMERA_TAB_TYPE = "Camera";
@@ -118,6 +116,7 @@ export default function CameraInfo({
   autoSyncCameraState,
   defaultSelectedTab,
 }: CameraInfoProps): JSX.Element {
+  const theme = useTheme();
   const [selectedTab, setSelectedTab] = React.useState(defaultSelectedTab);
   const { updatePanelConfigs, saveConfig } = usePanelContext();
   const [edit, setEdit] = React.useState<boolean>(false);
@@ -150,18 +149,14 @@ export default function CameraInfo({
   return (
     <ExpandingToolbar
       tooltip="Camera"
-      icon={
-        <Icon style={{ color: autoSyncCameraState ? colors.ACCENT : "white" }}>
-          <CameraControlIcon />
-        </Icon>
-      }
-      className={styles.buttons}
+      iconName="CameraControl"
+      checked={autoSyncCameraState}
       selectedTab={selectedTab}
       onSelectTab={(newSelectedTab) => setSelectedTab(newSelectedTab)}
     >
       <ToolGroup name={CAMERA_TAB_TYPE}>
-        <Flex col style={{ minWidth: DEFAULT_CAMERA_INFO_WIDTH }}>
-          <Flex row reverse>
+        <>
+          <Flex row reverse style={{ padding: "4px 4px 0" }}>
             <Button
               className={styles.button}
               tooltip="Copy cameraState"
@@ -192,90 +187,99 @@ export default function CameraInfo({
               Sync
             </Button>
           </Flex>
-          {edit && !isPlaying ? (
-            <JsonInput
-              value={cameraState}
-              onChange={(newCameraState) => saveConfig({ cameraState: newCameraState })}
-              dataValidator={cameraStateValidator}
-            />
-          ) : (
-            <Flex col>
-              <CameraStateInfo cameraState={cameraState} onAlignXYAxis={onAlignXYAxis} />
+          <Flex col style={{ minWidth: DEFAULT_CAMERA_INFO_WIDTH, padding: 8 }}>
+            {edit && !isPlaying ? (
+              <JsonInput
+                value={cameraState}
+                onChange={(newCameraState) => saveConfig({ cameraState: newCameraState })}
+                dataValidator={cameraStateValidator}
+              />
+            ) : (
               <Flex col>
-                <SRow style={{ marginBottom: 8 }}>
-                  <Tooltip
-                    placement="top"
-                    contents="Automatically sync camera across all 3D panels"
-                  >
-                    <SLabel>Auto sync:</SLabel>
-                  </Tooltip>
-                  <SValue>
-                    <LegacyInput
-                      type="checkbox"
-                      checked={autoSyncCameraState}
-                      onChange={() =>
-                        updatePanelConfigs("3D Panel", (config) => ({
-                          ...config,
-                          cameraState,
-                          autoSyncCameraState: !autoSyncCameraState,
-                        }))
-                      }
-                    />
-                  </SValue>
-                </SRow>
-                <SRow style={{ marginBottom: 8 }}>
-                  <SLabel style={cameraState.perspective ? { color: colors.TEXT_MUTED } : {}}>
-                    Show crosshair:
-                  </SLabel>
-                  <SValue>
-                    <LegacyInput
-                      type="checkbox"
-                      disabled={cameraState.perspective}
-                      checked={showCrosshair}
-                      onChange={() => saveConfig({ showCrosshair: !showCrosshair })}
-                    />
-                  </SValue>
-                </SRow>
-                {showCrosshair && !cameraState.perspective && (
-                  <SRow style={{ paddingLeft: LABEL_WIDTH, marginBottom: 8 }}>
+                <CameraStateInfo cameraState={cameraState} onAlignXYAxis={onAlignXYAxis} />
+                <Flex col>
+                  <SRow style={{ marginBottom: 8 }}>
+                    <Tooltip
+                      placement="top"
+                      contents="Automatically sync camera across all 3D panels"
+                    >
+                      <SLabel>Auto sync:</SLabel>
+                    </Tooltip>
                     <SValue>
-                      <JsonInput
-                        inputStyle={{ width: 140 }}
-                        value={{ x: camPos2DTrimmed[0], y: camPos2DTrimmed[1] }}
-                        onChange={(data) => {
-                          const point = data as { x: number; y: number };
-                          const newPos: vec3 = [point.x, point.y, 0];
-                          // extract the targetOffset by subtracting from the target and un-rotating by heading
-                          const newTargetOffset = vec3.rotateZ(
-                            [0, 0, 0],
-                            vec3.sub(TEMP_VEC3, newPos, cameraState.target),
-                            ZERO_VEC3,
-                            cameraStateSelectors.targetHeading(cameraState),
-                          ) as Vec3;
-                          if (!isEqual(cameraState.targetOffset, newTargetOffset)) {
-                            onCameraStateChange({ ...cameraState, targetOffset: newTargetOffset });
-                          }
-                        }}
-                        dataValidator={point2DValidator}
+                      <LegacyInput
+                        type="checkbox"
+                        checked={autoSyncCameraState}
+                        onChange={() =>
+                          updatePanelConfigs("3D Panel", (config) => ({
+                            ...config,
+                            cameraState,
+                            autoSyncCameraState: !autoSyncCameraState,
+                          }))
+                        }
                       />
                     </SValue>
                   </SRow>
+                  <SRow style={{ marginBottom: 8 }}>
+                    <SLabel
+                      style={
+                        cameraState.perspective ? { color: theme.semanticColors.disabledText } : {}
+                      }
+                    >
+                      Show crosshair:
+                    </SLabel>
+                    <SValue>
+                      <LegacyInput
+                        type="checkbox"
+                        disabled={cameraState.perspective}
+                        checked={showCrosshair}
+                        onChange={() => saveConfig({ showCrosshair: !showCrosshair })}
+                      />
+                    </SValue>
+                  </SRow>
+                  {showCrosshair && !cameraState.perspective && (
+                    <SRow style={{ paddingLeft: LABEL_WIDTH, marginBottom: 8 }}>
+                      <SValue>
+                        <JsonInput
+                          inputStyle={{ width: 140 }}
+                          value={{ x: camPos2DTrimmed[0], y: camPos2DTrimmed[1] }}
+                          onChange={(data) => {
+                            const point = data as { x: number; y: number };
+                            const newPos: vec3 = [point.x, point.y, 0];
+                            // extract the targetOffset by subtracting from the target and un-rotating by heading
+                            const newTargetOffset = vec3.rotateZ(
+                              [0, 0, 0],
+                              vec3.sub(TEMP_VEC3, newPos, cameraState.target),
+                              ZERO_VEC3,
+                              cameraStateSelectors.targetHeading(cameraState),
+                            ) as Vec3;
+                            if (!isEqual(cameraState.targetOffset, newTargetOffset)) {
+                              onCameraStateChange({
+                                ...cameraState,
+                                targetOffset: newTargetOffset,
+                              });
+                            }
+                          }}
+                          dataValidator={point2DValidator}
+                        />
+                      </SValue>
+                    </SRow>
+                  )}
+                </Flex>
+                {typeof followTf === "string" && followTf.length > 0 ? (
+                  <SRow>
+                    <SLabel>Following frame:</SLabel>
+                    <SValue>
+                      <code>{followTf}</code>
+                      {followOrientation && " with orientation"}
+                    </SValue>
+                  </SRow>
+                ) : (
+                  <p>Locked to map</p>
                 )}
               </Flex>
-              {typeof followTf === "string" && followTf.length > 0 ? (
-                <SRow>
-                  <SLabel>Following frame:</SLabel>
-                  <SValue>
-                    <code>{followTf}</code>
-                    {followOrientation && " with orientation"}
-                  </SValue>
-                </SRow>
-              ) : (
-                <p>Locked to map</p>
-              )}
-            </Flex>
-          )}
-        </Flex>
+            )}
+          </Flex>
+        </>
       </ToolGroup>
     </ExpandingToolbar>
   );

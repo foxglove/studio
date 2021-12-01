@@ -13,12 +13,13 @@
 export const CoreDataProviders = {
   ApiCheckerDataProvider: "ApiCheckerDataProvider",
   BagDataProvider: "BagDataProvider",
-  CombinedDataProvider: "CombinedDataProvider",
   MemoryCacheDataProvider: "MemoryCacheDataProvider",
   ParseMessagesDataProvider: "ParseMessagesDataProvider",
-  RenameDataProvider: "RenameDataProvider",
+  Ros1MemoryCacheDataProvider: "Ros1MemoryCacheDataProvider",
   Rosbag2DataProvider: "Rosbag2DataProvider",
   RpcDataProvider: "RpcDataProvider",
+  UlogDataProvider: "UlogDataProvider",
+  McapDataProvider: "McapDataProvider",
   WorkerDataProvider: "WorkerDataProvider",
 };
 export const MESSAGE_FORMATS = ["rosBinaryMessages", "parsedMessages"] as const;

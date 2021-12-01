@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Spinner, SpinnerSize } from "@fluentui/react";
+import { Link, Spinner, SpinnerSize } from "@fluentui/react";
 import React, {
   useCallback,
   useMemo,
@@ -40,13 +40,12 @@ import {
   usePanelMosaicId,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PanelComponent, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
+import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import { EmptyDropTarget } from "@foxglove/studio-base/panels/Tab/EmptyDropTarget";
 import { MosaicDropResult, PanelConfig } from "@foxglove/studio-base/types/panels";
 import { getPanelIdForType, getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
 import ErrorBoundary from "./ErrorBoundary";
-
-import "./PanelLayout.scss";
 
 type Props = {
   layout?: MosaicNode<string>;
@@ -148,7 +147,7 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
           <Suspense
             fallback={
               <EmptyState>
-                <Spinner size={SpinnerSize.small} />
+                <Spinner size={SpinnerSize.large} />
               </EmptyState>
             }
           >
@@ -168,7 +167,7 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
       layout != undefined || layout === "" ? (
         <MosaicWithoutDragDropContext
           renderTile={renderTile}
-          className={"none"}
+          className="mosaic-foxglove-theme" // prevent the default mosaic theme from being applied
           resize={{ minimumPaneSizePercentage: 2 }}
           value={layout}
           onChange={(newLayout) => onChange(newLayout ?? undefined)}
@@ -185,6 +184,7 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
 
 export default function PanelLayout(): JSX.Element {
   const { changePanelLayout } = useCurrentLayoutActions();
+  const { openLayoutBrowser } = useWorkspace();
   const layoutLoading = useCurrentLayoutSelector((state) => state.selectedLayout?.loading);
   const selectedLayout = useCurrentLayoutSelector((state) => state.selectedLayout);
   const onChange = useCallback(
@@ -204,6 +204,10 @@ export default function PanelLayout(): JSX.Element {
       </EmptyState>
     );
   } else {
-    return <EmptyState>Select a layout in the sidebar to get started!</EmptyState>;
+    return (
+      <EmptyState>
+        <Link onClick={openLayoutBrowser}>Select a layout</Link> in the sidebar to get started!
+      </EmptyState>
+    );
   }
 }

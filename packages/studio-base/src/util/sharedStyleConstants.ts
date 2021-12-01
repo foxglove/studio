@@ -75,7 +75,7 @@ const robotStylesColors = {
 
 export const colors = {
   ...robotStylesColors,
-  PRIMARY: robotStylesColors.PURPLE,
+  PRIMARY: "#a197ea",
   HIGHLIGHT: "#29bee7",
   HIGHLIGHT_MUTED: "#29bee744",
   HOVER_BACKGROUND_COLOR: tinyColor(robotStylesColors.PURPLE).setAlpha(0.2).toRgbString(),
@@ -91,21 +91,7 @@ export const colors = {
   DIFF_MODE_SOURCE_BOTH: robotStylesColors.DARK7,
   CYAN: "#00ffff",
 
-  BACKGROUND: "#121217",
-  BACKGROUND_CONTROL: "rgba(247, 247, 243, 0.1)",
-  BACKGROUND_CONTROL_SELECTED: "rgba(59, 46, 118, 0.6)",
-
-  TEXT_BRIGHT: "rgba(247, 247, 243, 0.88)",
-  TEXT_NORMAL: "rgba(247, 247, 243, 0.77)",
-  TEXT_DISABLED: "rgba(247, 247, 243, 0.15)",
   TEXT_MUTED: "rgba(247, 247, 243, 0.3)",
-  TEXT_CONTROL: "rgba(247, 247, 243, 0.77)",
-  TEXT_CONTROL_HOVER: "rgba(247, 247, 243, 1)",
-
-  TEXT_INPUT: "rgba(0, 0, 0, 0.8)",
-  TEXT_INPUT_DISABLED: "rgba(0, 0, 0, 0.3)",
-
-  MENU_ITEM_SELECTED: "rgba(45, 45, 51, 1)",
 
   DIVIDER: "rgba(247, 247, 243, 0.1)",
 
@@ -123,6 +109,7 @@ export const spacing = {
   TOP_BAR_HEIGHT: "36px",
   PANEL_TOOLBAR_HEIGHT: "26px",
   PANEL_TOOLBAR_SPACING: "4px",
+  PLAYBACK_CONTROL_HEIGHT: "50px",
 };
 
 export const textSize = {
@@ -145,6 +132,15 @@ export const rounded = {
 };
 
 export const fonts = {
-  SANS_SERIF: `-apple-system, BlinkMacSystemFont, "Segoe UI", "Ubuntu", "Roboto", sans-serif`,
-  MONOSPACE: `"Roboto Mono"`,
+  // We explicitly avoid fallback fonts (such as 'monospace') here to work around a bug in
+  // Chrome/Chromium on Windows that causes crashes when multiple Workers try to access fonts that
+  // have not yet been loaded. There is a race against the internal DirectWrite font cache which
+  // ends up crashing in DWriteFontFamily::GetFirstMatchingFont() or DWriteFont::Create().
+  //
+  // https://bugs.chromium.org/p/chromium/issues/detail?id=1261577
+  MONOSPACE: "'IBM Plex Mono'",
+  SANS_SERIF: "'Inter'",
+  SANS_SERIF_FEATURE_SETTINGS:
+    // enable font features https://rsms.me/inter/lab
+    "'cv08', 'cv10', 'tnum'",
 };

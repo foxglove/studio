@@ -41,8 +41,8 @@ import {
   ChartData,
   OnClickArg as OnChartClickArgs,
 } from "@foxglove/studio-base/src/components/Chart";
-import { PanelConfig } from "@foxglove/studio-base/types/panels";
-import { colors, fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { OpenSiblingPanel, PanelConfig } from "@foxglove/studio-base/types/panels";
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import helpContent from "./index.help.md";
@@ -95,8 +95,6 @@ const SChartContainerInner = styled.div`
   margin-top: 10px;
 `;
 
-const inputColor = tinycolor(colors.DARK3).setAlpha(0.7).toHexString();
-const inputColorBright = tinycolor(colors.DARK3).lighten(8).toHexString();
 const inputLeft = 20;
 const SInputContainer = styled.div<{ shrink: boolean }>`
   display: flex;
@@ -111,7 +109,7 @@ const SInputContainer = styled.div<{ shrink: boolean }>`
   line-height: 20px;
 
   &:hover {
-    background: ${inputColor};
+    background: ${({ theme }) => tinycolor(theme.palette.neutralLight).setAlpha(0.5).toRgbString()};
   }
 
   // Move over the first input on hover for the toolbar.
@@ -131,11 +129,12 @@ const SInputDelete = styled.div`
   height: 20px;
   line-height: 20px;
   padding: 0 6px;
-  background: ${inputColor};
+  background: ${({ theme }) => tinycolor(theme.palette.neutralLight).setAlpha(0.5).toRgbString()};
   cursor: pointer;
 
   &:hover {
-    background: ${inputColorBright};
+    background: ${({ theme }) =>
+      tinycolor(theme.palette.neutralLight).setAlpha(0.75).toRgbString()};
   }
 
   ${SInputContainer}:hover & {
@@ -175,18 +174,22 @@ const plugins: ChartOptions["plugins"] = {
 export type StateTransitionConfig = { paths: StateTransitionPath[] };
 
 export function openSiblingStateTransitionsPanel(
-  openSiblingPanel: (type: string, cb: (config: PanelConfig) => PanelConfig) => void,
+  openSiblingPanel: OpenSiblingPanel,
   topicName: string,
 ): void {
-  openSiblingPanel("StateTransitions", (config: PanelConfig) => {
-    return {
-      ...config,
-      paths: uniq(
-        (config as StateTransitionConfig).paths.concat([
-          { value: topicName, timestampMethod: "receiveTime" },
-        ]),
-      ),
-    };
+  openSiblingPanel({
+    panelType: "StateTransitions",
+    updateIfExists: true,
+    siblingConfigCreator: (config: PanelConfig) => {
+      return {
+        ...config,
+        paths: uniq(
+          (config as StateTransitionConfig).paths.concat([
+            { value: topicName, timestampMethod: "receiveTime" },
+          ]),
+        ),
+      };
+    },
   });
 }
 
@@ -270,8 +273,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       };
     }
 
-    let pathIndex = 0;
-    for (const path of paths) {
+    paths.forEach((path, pathIndex) => {
       // y axis values are set based on the path we are rendering
       // negative makes each path render below the previous
       const y = (pathIndex + 1) * 6 * -1;
@@ -296,7 +298,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
       // display the messages from blocks.
       const haveBlocksForPath = blocksForPath.some((item) => item != undefined);
       if (haveBlocksForPath) {
-        continue;
+        return;
       }
 
       const items = itemsByPath[path.value];
@@ -311,9 +313,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
         outDatasets.push(...newDataSets);
         outTooltips.push(...newTooltips);
       }
-
-      ++pathIndex;
-    }
+    });
 
     return {
       datasets: outDatasets,
@@ -352,9 +352,11 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
   const messagePipeline = useMessagePipelineGetter();
   const onClick = useCallback(
     ({ x: seekSeconds }: OnChartClickArgs) => {
-      const { startTime: start } = messagePipeline().playerState.activeData ?? {};
-      const { seekPlayback } = messagePipeline();
-      if (seekSeconds == undefined || start == undefined) {
+      const {
+        seekPlayback,
+        playerState: { activeData: { startTime: start } = {} },
+      } = messagePipeline();
+      if (!seekPlayback || seekSeconds == undefined || start == undefined) {
         return;
       }
       const seekTime = addTimes(start, fromSec(seekSeconds));

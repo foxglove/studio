@@ -117,6 +117,7 @@ export type BaseMarker = Readonly<
     frame_locked?: boolean; // TODO: required
     text?: string;
     mesh_resource?: string; // TODO: required
+    mesh_use_embedded_materials?: boolean;
     primitive?: string;
     metadata?: Readonly<Record<string, unknown>>;
   }
@@ -141,20 +142,6 @@ export type ArrowMarker = Readonly<
     // used for hard-coded arrows with geometry_msgs/PoseStamped
     // not part of the original ros message
     size?: ArrowSize;
-  }
->;
-
-type IconMetadata = {
-  markerStyle: {
-    [att: string]: string | number;
-  };
-  name: string;
-  iconOffset: { x: number; y: number };
-};
-export type OverlayIconMarker = Readonly<
-  BaseMarker & {
-    type: 109;
-    metadata: IconMetadata;
   }
 >;
 
@@ -220,10 +207,11 @@ export type TextMarker = Readonly<
 >;
 
 export type MeshMarker = Readonly<
-  BaseMarker &
-    MultiPointMarker & {
-      type: 11;
-    }
+  BaseMarker & {
+    type: 10;
+    mesh_resource: string;
+    mesh_use_embedded_materials: boolean;
+  }
 >;
 
 type NavMsgs$MapMetaData = Readonly<{
@@ -262,13 +250,6 @@ export type TriangleListMarker = Readonly<
     }
 >;
 
-export type FilledPolygonMarker = Readonly<
-  BaseMarker &
-    MultiPointMarker & {
-      type: 107;
-    }
->;
-
 export type InstancedLineListMarker = Readonly<
   BaseMarker &
     MultiPointMarker & {
@@ -296,9 +277,9 @@ export type Marker =
   | CubeListMarker
   | PointsMarker
   | TextMarker
+  | MeshMarker
   | TriangleListMarker
   | MeshMarker
-  | FilledPolygonMarker
   | InstancedLineListMarker
   | ColorMarker;
 

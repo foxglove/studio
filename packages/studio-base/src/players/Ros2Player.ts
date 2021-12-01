@@ -12,12 +12,12 @@ import { RosMsgDefinition } from "@foxglove/rosmsg";
 import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
 import { definitions as foxgloveDefs } from "@foxglove/rosmsg-msgs-foxglove";
 import { Time, fromMillis } from "@foxglove/rostime";
+import { ParameterValue } from "@foxglove/studio";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
   AdvertiseOptions,
   MessageEvent,
-  ParameterValue,
   Player,
   PlayerMetricsCollectorInterface,
   PlayerPresence,
@@ -130,7 +130,11 @@ export default class Ros2Player implements Player {
     this._presence = PlayerPresence.PRESENT;
   };
 
-  private _addProblem(id: string, problem: PlayerProblem, skipEmit = false): void {
+  private _addProblem(
+    id: string,
+    problem: PlayerProblem,
+    { skipEmit = false }: { skipEmit?: boolean } = {},
+  ): void {
     this._problems.addProblem(id, problem);
     if (!skipEmit) {
       this._emitState();
@@ -145,7 +149,7 @@ export default class Ros2Player implements Player {
   //   }
   // }
 
-  private _clearPublishProblems(skipEmit = false) {
+  private _clearPublishProblems({ skipEmit = false }: { skipEmit?: boolean } = {}) {
     if (
       this._problems.removeProblems(
         (id) =>
@@ -220,7 +224,7 @@ export default class Ros2Player implements Player {
           tip: `Ensure a ROS 2 DDS system is running on the local network and UDP multicast is supported`,
           error,
         },
-        false,
+        { skipEmit: false },
       );
     } finally {
       // Regardless of what happens, request topics again in a little bit.
@@ -347,8 +351,8 @@ export default class Ros2Player implements Player {
 
       const subscription = this._rosNode.subscribe({ topic: topicName, dataType, msgDefinition });
 
-      subscription.on("message", (timestamp, message, _data, _pub) =>
-        this._handleMessage(topicName, timestamp, message, true),
+      subscription.on("message", (timestamp, message, data, _pub) =>
+        this._handleMessage(topicName, timestamp, message, data.byteLength, true),
       );
     }
 
@@ -366,6 +370,9 @@ export default class Ros2Player implements Player {
     topic: string,
     timestamp: Time,
     message: unknown,
+    sizeInBytes: number,
+    // This is a hot path so we avoid extra object allocation from a parameters struct
+    // eslint-disable-next-line @foxglove/no-boolean-parameters
     external: boolean,
   ): void => {
     if (this._providerTopics == undefined) {
@@ -380,7 +387,7 @@ export default class Ros2Player implements Player {
       this._metricsCollector.recordTimeToFirstMsgs();
     }
 
-    const msg: MessageEvent<unknown> = { topic, receiveTime, message };
+    const msg: MessageEvent<unknown> = { topic, receiveTime, message, sizeInBytes };
     this._parsedMessages.push(msg);
     this._handleInternalMessage(msg);
 
@@ -396,7 +403,7 @@ export default class Ros2Player implements Player {
     // const topics = new Set<string>(validPublishers.map(({ topic }) => topic));
 
     // Clear all problems related to publishing
-    this._clearPublishProblems(true);
+    this._clearPublishProblems({ skipEmit: false });
 
     // Unadvertise any topics that were previously published and no longer appear in the list
     // for (const topic of this._rosNode.publications.keys()) {
@@ -478,18 +485,6 @@ export default class Ros2Player implements Player {
   }
 
   // Bunch of unsupported stuff. Just don't do anything for these.
-  startPlayback(): void {
-    // no-op
-  }
-  pausePlayback(): void {
-    // no-op
-  }
-  seekPlayback(_time: Time): void {
-    // no-op
-  }
-  setPlaybackSpeed(_speedFraction: number): void {
-    // no-op
-  }
   requestBackfill(): void {
     // no-op
   }

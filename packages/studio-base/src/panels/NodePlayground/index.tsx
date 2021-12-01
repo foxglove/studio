@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Link, Stack } from "@fluentui/react";
+import { Link, Spinner, SpinnerSize, Stack } from "@fluentui/react";
 import ArrowLeftIcon from "@mdi/svg/svg/arrow-left.svg";
 import PlusIcon from "@mdi/svg/svg/plus.svg";
 import { Suspense } from "react";
@@ -24,13 +24,14 @@ import Icon from "@foxglove/studio-base/components/Icon";
 import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import SpinningLoadingIcon from "@foxglove/studio-base/components/SpinningLoadingIcon";
 import TextContent from "@foxglove/studio-base/components/TextContent";
 import {
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useHelpInfo } from "@foxglove/studio-base/context/HelpInfoContext";
 import { useUserNodeState } from "@foxglove/studio-base/context/UserNodeStateContext";
+import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import BottomBar from "@foxglove/studio-base/panels/NodePlayground/BottomBar";
 import Sidebar from "@foxglove/studio-base/panels/NodePlayground/Sidebar";
 import Playground from "@foxglove/studio-base/panels/NodePlayground/playground-icon.svg";
@@ -39,6 +40,7 @@ import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalCon
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import Config from "./Config";
+import helpContent from "./index.help.md";
 import { Script } from "./script";
 
 const Editor = React.lazy(
@@ -90,15 +92,11 @@ const SWelcomeScreen = styled.div`
   }
 `;
 
-export type Explorer = undefined | "docs" | "nodes" | "utils" | "templates";
+export type Explorer = undefined | "nodes" | "utils" | "templates";
 
-const WelcomeScreen = ({
-  addNewNode,
-  updateExplorer,
-}: {
-  addNewNode: (code?: string) => void;
-  updateExplorer: (explorer: Explorer) => void;
-}) => {
+const WelcomeScreen = ({ addNewNode }: { addNewNode: (code?: string) => void }) => {
+  const { setHelpInfo } = useHelpInfo();
+  const { openHelp } = useWorkspace();
   return (
     <SWelcomeScreen>
       <Playground />
@@ -108,7 +106,8 @@ const WelcomeScreen = ({
           href=""
           onClick={(e) => {
             e.preventDefault();
-            updateExplorer("docs");
+            setHelpInfo({ title: "NodePlayground", content: helpContent });
+            openHelp();
           }}
         >
           docs
@@ -166,6 +165,7 @@ function NodePlayground(props: Props) {
     borderRadius: 0,
     margin: 0,
     backgroundColor: colors.DARK2,
+    color: colors.LIGHT2,
     padding: "4px 20px",
     width: `${inputTitle.length + 4}ch`, // Width based on character count of title + padding
   };
@@ -237,7 +237,7 @@ function NodePlayground(props: Props) {
 
   return (
     <Stack verticalFill>
-      <PanelToolbar floating />
+      <PanelToolbar floating helpContent={helpContent} />
       <Stack horizontal verticalFill>
         <Sidebar
           explorer={explorer}
@@ -318,9 +318,7 @@ function NodePlayground(props: Props) {
           </Flex>
 
           <Stack grow style={{ overflow: "hidden " }}>
-            {selectedNodeId == undefined && (
-              <WelcomeScreen addNewNode={addNewNode} updateExplorer={updateExplorer} />
-            )}
+            {selectedNodeId == undefined && <WelcomeScreen addNewNode={addNewNode} />}
             <div
               style={{
                 flexGrow: 1,
@@ -333,9 +331,7 @@ function NodePlayground(props: Props) {
               <Suspense
                 fallback={
                   <Flex center style={{ width: "100%", height: "100%" }}>
-                    <Icon size="large">
-                      <SpinningLoadingIcon />
-                    </Icon>
+                    <Spinner size={SpinnerSize.large} />
                   </Flex>
                 }
               >

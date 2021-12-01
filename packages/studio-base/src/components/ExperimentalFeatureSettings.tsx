@@ -36,12 +36,7 @@ const features: Feature[] = [
   {
     key: AppSetting.SHOW_DEBUG_PANELS,
     name: "Studio debug panels",
-    description: <>Show Foxglove Studio debug panels in the add panel list.</>,
-  },
-  {
-    key: AppSetting.ENABLE_DRAWING_POLYGONS,
-    name: "Drawing polygons in 3D panel",
-    description: <>Show sidebar control to draw polygons in the 3D panel.</>,
+    description: <>Show Foxglove Studio debug panels in the &ldquo;Add panel&rdquo; list.</>,
   },
   {
     key: AppSetting.ENABLE_LEGACY_PLOT_PANEL,
@@ -49,11 +44,23 @@ const features: Feature[] = [
     description: <>Enable the Legacy Plot panel.</>,
   },
   {
-    key: AppSetting.ENABLE_CONSOLE_API_LAYOUTS,
-    name: "Team shared layouts",
-    description: <>Enable team layout sharing when signed in to Foxglove Studio.</>,
+    key: AppSetting.ENABLE_MCAP_DATA_SOURCE,
+    name: "Mcap Data Source",
+    description: <>Enable the Mcap data source.</>,
+  },
+  {
+    key: AppSetting.ENABLE_WEBSOCKET_DATA_SOURCE,
+    name: "Foxglove WebSocket Data Source",
+    description: <>Enable the Foxglove WebSocket data source.</>,
   },
 ];
+if (process.env.NODE_ENV === "development") {
+  features.push({
+    key: AppSetting.ENABLE_LAYOUT_DEBUGGING,
+    name: "Layout debugging",
+    description: <>Show extra controls for developing and debugging layout storage.</>,
+  });
+}
 
 function ExperimentalFeatureItem(props: { feature: Feature }) {
   const theme = useTheme();

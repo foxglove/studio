@@ -13,9 +13,11 @@
 import { isEqual, groupBy, partition } from "lodash";
 import memoizeWeak from "memoize-weak";
 import shallowequal from "shallowequal";
+import { v4 as uuidv4 } from "uuid";
 
 import Log from "@foxglove/log";
 import { Time, compare } from "@foxglove/rostime";
+import { ParameterValue } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import {
   Diagnostic,
@@ -37,7 +39,6 @@ import {
   PublishPayload,
   SubscribePayload,
   Topic,
-  ParameterValue,
   MessageEvent,
   PlayerProblem,
 } from "@foxglove/studio-base/players/types";
@@ -118,7 +119,12 @@ export default class UserNodePlayer implements Player {
 
   // exposed as a static to allow testing to mock/replace
   static CreateNodeRuntimeWorker = (): SharedWorker => {
-    return new SharedWorker(new URL("./nodeRuntimeWorker/index", import.meta.url));
+    return new SharedWorker(new URL("./nodeRuntimeWorker/index", import.meta.url), {
+      // Although we are using SharedWorkers, each nodeRuntimeWorker uses a single global variable
+      // for the compiled `nodeCallback` function, so we need a separate worker per user node. We
+      // achieve this by passing in a unique name.
+      name: uuidv4(),
+    });
   };
 
   constructor(player: Player, userNodeActions: UserNodeActions) {
@@ -146,12 +152,11 @@ export default class UserNodePlayer implements Player {
     };
   }
 
-  _getTopics = memoizeWeak((topics: readonly Topic[], nodeTopics: readonly Topic[]): Topic[] => [
-    ...topics,
-    ...nodeTopics,
-  ]);
+  private _getTopics = memoizeWeak(
+    (topics: readonly Topic[], nodeTopics: readonly Topic[]): Topic[] => [...topics, ...nodeTopics],
+  );
 
-  _getDatatypes = memoizeWeak(
+  private _getDatatypes = memoizeWeak(
     (datatypes: RosDatatypes, nodeDatatypes: readonly RosDatatypes[]): RosDatatypes => {
       return nodeDatatypes.reduce(
         (allDatatypes, userNodeDatatypes) => new Map([...allDatatypes, ...userNodeDatatypes]),
@@ -172,7 +177,7 @@ export default class UserNodePlayer implements Player {
 
   // When updating nodes while paused, we seek to the current time
   // (i.e. invoke _getMessages with an empty array) to refresh messages
-  _getMessages = async (
+  private _getMessages = async (
     parsedMessages: readonly MessageEvent<unknown>[],
     globalVariables: GlobalVariables,
     nodeRegistrations: readonly NodeRegistration[],
@@ -237,7 +242,7 @@ export default class UserNodePlayer implements Player {
       this.setSubscriptions(this._subscriptions);
       const { currentTime, isPlaying = false } = this._lastPlayerStateActiveData ?? {};
       if (currentTime && !isPlaying) {
-        this._player.seekPlayback(currentTime);
+        this._player.seekPlayback?.(currentTime);
       }
     });
   }
@@ -277,7 +282,9 @@ export default class UserNodePlayer implements Player {
     // problems for specific userspace nodes independently of other userspace nodes.
     const problemKey = `node-id-${nodeId}`;
 
-    const processMessage = async (msgEvent: MessageEvent<unknown>) => {
+    const processMessage = async (
+      msgEvent: MessageEvent<unknown>,
+    ): Promise<MessageEvent<unknown> | undefined> => {
       // We allow _resetWorkers to "cancel" the processing by creating a new signal every time we process a message
       terminateSignal = signal<void>();
 
@@ -404,6 +411,7 @@ export default class UserNodePlayer implements Player {
         topic: outputTopic,
         receiveTime: msgEvent.receiveTime,
         message: result.message,
+        sizeInBytes: msgEvent.sizeInBytes,
       };
     };
 
@@ -484,7 +492,7 @@ export default class UserNodePlayer implements Player {
   //
   // For the time being, resetWorkers is a catchall for these circumstances. As
   // performance bottlenecks are identified, it will be subject to change.
-  async _resetWorkers(): Promise<void> {
+  private async _resetWorkers(): Promise<void> {
     if (!this._lastPlayerStateActiveData) {
       return;
     }
@@ -561,7 +569,7 @@ export default class UserNodePlayer implements Player {
     pending.resolve();
   }
 
-  async _getRosLib(): Promise<string> {
+  private async _getRosLib(): Promise<string> {
     if (!this._lastPlayerStateActiveData) {
       throw new Error("_getRosLib was called before `_lastPlayerStateActiveData` set");
     }
@@ -724,10 +732,10 @@ export default class UserNodePlayer implements Player {
   setParameter = (key: string, value: ParameterValue): void =>
     this._player.setParameter(key, value);
   publish = (request: PublishPayload): void => this._player.publish(request);
-  startPlayback = (): void => this._player.startPlayback();
-  pausePlayback = (): void => this._player.pausePlayback();
-  setPlaybackSpeed = (speed: number): void => this._player.setPlaybackSpeed(speed);
+  startPlayback = (): void => this._player.startPlayback?.();
+  pausePlayback = (): void => this._player.pausePlayback?.();
+  setPlaybackSpeed = (speed: number): void => this._player.setPlaybackSpeed?.(speed);
   seekPlayback = (time: Time, backfillDuration?: Time): void =>
-    this._player.seekPlayback(time, backfillDuration);
+    this._player.seekPlayback?.(time, backfillDuration);
   requestBackfill = (): void => this._player.requestBackfill();
 }

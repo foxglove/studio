@@ -12,8 +12,14 @@
 //   You may not use this file except in compliance with the License.
 
 import type REGL from "regl";
-import { Command, withPose, pointToVec3, defaultBlend, CommonCommandProps } from "regl-worldview";
 
+import {
+  Command,
+  withPose,
+  pointToVec3,
+  defaultBlend,
+  CommonCommandProps,
+} from "@foxglove/regl-worldview";
 import {
   defaultMapPalette,
   TextureCache,
@@ -70,7 +76,7 @@ const occupancyGrids = (regl: REGL.Regl) => {
       float planeHeight = height * resolution;
 
       // rotate the point by the ogrid orientation & scale the point by the plane vertex dimensions
-      vec3 position = rotate(point, orientation) * vec3(planeWidth, planeHeight, 1.);
+      vec3 position = rotate(point * vec3(planeWidth, planeHeight, 1.), orientation);
 
       // move the vertex by the marker offset
       vec3 loc = applyPose(position + offset);

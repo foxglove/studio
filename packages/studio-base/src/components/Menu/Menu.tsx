@@ -11,26 +11,50 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { makeStyles } from "@fluentui/react";
 import cx from "classnames";
-
-import styles from "./index.module.scss";
 
 type Props = React.PropsWithChildren<{
   className?: string;
   style?: React.CSSProperties;
 }>;
 
+const useStyles = makeStyles((theme) => ({
+  container: {
+    backgroundColor: theme.semanticColors.menuBackground,
+    borderRadius: 4,
+    padding: 0,
+    boxShadow: theme.effects.elevation64,
+    overflow: "hidden",
+    pointerEvents: "auto",
+    flexShrink: 0,
+    minWidth: 50,
+    flex: "0 0 auto",
+    overflowY: "auto",
+    maxHeight: "100%",
+
+    hr: {
+      padding: 0,
+      backgroundColor: theme.semanticColors.bodyDivider,
+    },
+    a: {
+      textDecoration: "none",
+    },
+  },
+}));
+
 // a small component which wraps its children in menu styles
 // and provides a helper { Item } component which can be used
 // to render typical menu items with text & an icon
-export default class Menu extends React.PureComponent<Props> {
-  override render(): JSX.Element {
-    const { children, className, style } = this.props;
-    const classes = cx(styles.container, className);
-    return (
-      <div className={classes} style={style}>
-        {children}
-      </div>
-    );
-  }
+export default function Menu({
+  className,
+  style,
+  children,
+}: React.PropsWithChildren<Props>): JSX.Element {
+  const styles = useStyles();
+  return (
+    <div className={cx(styles.container, className)} style={style}>
+      {children}
+    </div>
+  );
 }

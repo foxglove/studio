@@ -54,7 +54,6 @@ const SGlobalVariablesTable = styled.div`
   display: flex;
   flex-direction: column;
   white-space: nowrap;
-  color: ${sharedColors.LIGHT};
 
   table {
     width: calc(100% + 1px);
@@ -75,27 +74,23 @@ const SGlobalVariablesTable = styled.div`
   tr:first-child th {
     border: none;
     text-align: left;
-    color: rgba(255, 255, 255, 0.6);
   }
 
   td {
     input {
       background: none !important;
-      color: inherit;
+      color: ${({ theme }) => theme.semanticColors.inputText};
       width: 100%;
       min-width: 5em;
       padding: 0;
       border: 0;
       font: inherit;
       font-family: ${fonts.SANS_SERIF};
-      font-feature-settings: "tnum";
+      font-feature-settings: ${fonts.SANS_SERIF_FEATURE_SETTINGS};
       font-size: 100%;
     }
     input:focus {
       outline: none;
-    }
-    &:last-child {
-      color: rgba(255, 255, 255, 0.6);
     }
   }
 `;
@@ -104,7 +99,6 @@ const SIconWrapper = styled.span<{ isOpen?: boolean }>`
   display: inline-block;
   cursor: pointer;
   padding: 0;
-  color: ${sharedColors.LIGHT};
 
   svg {
     opacity: ${({ isOpen = false }) => (isOpen ? 1 : undefined)};

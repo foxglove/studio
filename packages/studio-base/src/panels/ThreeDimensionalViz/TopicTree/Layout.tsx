@@ -11,37 +11,25 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { mergeStyleSets } from "@fluentui/react";
+import { mergeStyleSets, useTheme } from "@fluentui/react";
 import { groupBy } from "lodash";
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
-import {
-  Worldview,
-  PolygonBuilder,
-  DrawPolygons,
-  CameraState,
-  ReglClickInfo,
-  MouseEventObject,
-  Polygon,
-} from "regl-worldview";
 import { useDebouncedCallback } from "use-debounce";
 
 import { filterMap } from "@foxglove/den/collection";
 import { useShallowMemo } from "@foxglove/hooks";
+import { Worldview, CameraState, ReglClickInfo, MouseEventObject } from "@foxglove/regl-worldview";
 import { Time } from "@foxglove/rostime";
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { Save3DConfig } from "@foxglove/studio-base/panels/ThreeDimensionalViz";
 import DebugStats from "@foxglove/studio-base/panels/ThreeDimensionalViz/DebugStats";
-import {
-  POLYGON_TAB_TYPE,
-  DrawingTabType,
-} from "@foxglove/studio-base/panels/ThreeDimensionalViz/DrawingTools";
-import MeasuringTool, {
-  MeasureInfo,
-} from "@foxglove/studio-base/panels/ThreeDimensionalViz/DrawingTools/MeasuringTool";
 import GridBuilder from "@foxglove/studio-base/panels/ThreeDimensionalViz/GridBuilder";
 import {
   InteractionContextMenu,
@@ -50,6 +38,9 @@ import {
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions";
 import useLinkedGlobalVariables from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
 import LayoutToolbar from "@foxglove/studio-base/panels/ThreeDimensionalViz/LayoutToolbar";
+import MeasuringTool, {
+  MeasureInfo,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/MeasuringTool";
 import SceneBuilder from "@foxglove/studio-base/panels/ThreeDimensionalViz/SceneBuilder";
 import sceneBuilderHooks from "@foxglove/studio-base/panels/ThreeDimensionalViz/SceneBuilder/defaultHooks";
 import { useSearchText } from "@foxglove/studio-base/panels/ThreeDimensionalViz/SearchText";
@@ -59,13 +50,16 @@ import {
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/ThreeDimensionalVizContext";
 import TopicSettingsModal from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/TopicSettingsModal";
 import TopicTree from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/TopicTree";
-import { TOPIC_DISPLAY_MODES } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/TopicViewModeSelector";
-import { TopicDisplayMode } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/types";
+import { TOPIC_DISPLAY_MODES } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/constants";
 import useSceneBuilderAndTransformsData from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/useSceneBuilderAndTransformsData";
+import useTopicTree, {
+  TopicTreeContext,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/useTopicTree";
 import Transforms, {
   DEFAULT_ROOT_FRAME_IDS,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Transforms";
 import TransformsBuilder from "@foxglove/studio-base/panels/ThreeDimensionalViz/TransformsBuilder";
+import UrdfBuilder from "@foxglove/studio-base/panels/ThreeDimensionalViz/UrdfBuilder";
 import World from "@foxglove/studio-base/panels/ThreeDimensionalViz/World";
 import {
   TF_DATATYPES,
@@ -84,12 +78,10 @@ import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
 import { Color, Marker } from "@foxglove/studio-base/types/Messages";
 import {
   FOXGLOVE_GRID_TOPIC,
-  SECOND_SOURCE_PREFIX,
+  ROBOT_DESCRIPTION_PARAM,
+  URDF_TOPIC,
 } from "@foxglove/studio-base/util/globalConstants";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
-import { joinTopics } from "@foxglove/studio-base/util/topicUtils";
-
-import useTopicTree, { TopicTreeContext } from "./useTopicTree";
 
 type EventName = "onDoubleClick" | "onMouseMove" | "onMouseDown" | "onMouseUp";
 export type ClickedPosition = { clientX: number; clientY: number };
@@ -100,6 +92,7 @@ export type LayoutToolbarSharedProps = {
   followTf?: string | false;
   onAlignXYAxis: () => void;
   onCameraStateChange: (arg0: CameraState) => void;
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
   onFollowChange: (followTf?: string | false, followOrientation?: boolean) => void;
   saveConfig: Save3DConfig;
   targetPose?: TargetPose;
@@ -142,7 +135,7 @@ export type ColorOverride = {
   color?: Color;
   active?: boolean;
 };
-export type ColorOverrideBySourceIdxByVariable = Record<GlobalVariableName, ColorOverride[]>;
+export type ColorOverrideByVariable = Record<GlobalVariableName, ColorOverride>;
 
 const styles = mergeStyleSets({
   container: {
@@ -220,13 +213,14 @@ export default function Layout({
     flattenMarkers = false,
     modifiedNamespaceTopics,
     pinTopics,
-    diffModeEnabled,
     showCrosshair,
     autoSyncCameraState = false,
-    topicDisplayMode = TOPIC_DISPLAY_MODES.SHOW_ALL.value as TopicDisplayMode,
+    topicDisplayMode = TOPIC_DISPLAY_MODES.SHOW_ALL.value,
     settingsByKey,
-    colorOverrideBySourceIdxByVariable,
+    colorOverrideByVariable,
     disableAutoOpenClickedObject = false,
+    useThemeBackgroundColor,
+    customBackgroundColor,
   },
 }: Props): React.ReactElement {
   const [filterText, setFilterText] = useState(""); // Topic tree text for filtering to see certain topics.
@@ -235,7 +229,6 @@ export default function Layout({
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
   const [debug, setDebug] = useState(false);
   const [showTopicTree, setShowTopicTree] = useState<boolean>(false);
-  const [polygonBuilder, setPolygonBuilder] = useState(() => new PolygonBuilder());
   const [measureInfo, setMeasureInfo] = useState<MeasureInfo>({
     measureState: "idle",
     measurePoints: { start: undefined, end: undefined },
@@ -253,7 +246,6 @@ export default function Layout({
   // used for updating DrawPolygon during mouse move and scenebuilder namespace change.
   const [_, forceUpdate] = useReducer((x: number) => x + 1, 0);
   const measuringElRef = useRef<MeasuringTool>(ReactNull);
-  const [drawingTabType, setDrawingTabType] = useState<DrawingTabType | undefined>(undefined);
   const [interactionsTabType, setInteractionsTabType] = useState<TabType | undefined>(undefined);
 
   const [selectionState, setSelectionState] = useState<UserSelectionState>({
@@ -268,17 +260,15 @@ export default function Layout({
   const [hoveredMarkerMatchers, setHoveredMarkerMatchers] = useState<MarkerMatcher[]>([]);
   const setHoveredMarkerMatchersDebounced = useDebouncedCallback(setHoveredMarkerMatchers, 100);
 
-  const isDrawing = useMemo(
-    () => measureInfo.measureState !== "idle" || drawingTabType === POLYGON_TAB_TYPE,
-    [drawingTabType, measureInfo.measureState],
-  );
+  const isDrawing = useMemo(() => measureInfo.measureState !== "idle", [measureInfo.measureState]);
 
   // initialize the GridBuilder, SceneBuilder, and TransformsBuilder
-  const { gridBuilder, sceneBuilder, transformsBuilder } = useMemo(
+  const { gridBuilder, sceneBuilder, transformsBuilder, urdfBuilder } = useMemo(
     () => ({
       gridBuilder: new GridBuilder(),
       sceneBuilder: new SceneBuilder(sceneBuilderHooks),
       transformsBuilder: new TransformsBuilder(),
+      urdfBuilder: new UrdfBuilder(),
     }),
     [],
   );
@@ -305,6 +295,12 @@ export default function Layout({
             topicName: FOXGLOVE_GRID_TOPIC,
             children: [],
             description: "Draws a reference grid.",
+          },
+          {
+            name: "3D Model",
+            topicName: URDF_TOPIC,
+            children: [],
+            description: "Visualize a 3D model",
           },
           {
             name: "TF",
@@ -360,7 +356,6 @@ export default function Layout({
     getIsNamespaceCheckedByDefault,
     getIsTreeNodeVisibleInScene,
     getIsTreeNodeVisibleInTree,
-    hasFeatureColumn,
     onNamespaceOverrideColorChange,
     rootTreeNode,
     sceneErrorsByKey,
@@ -425,32 +420,29 @@ export default function Layout({
   const colorOverrideMarkerMatchers = useMemo(() => {
     // Transform linkedGlobalVariables and overridesByGlobalVariable into markerMatchers for SceneBuilder
     const linkedGlobalVariablesByName = groupBy(linkedGlobalVariables, ({ name }) => name);
-    return Object.keys(
-      colorOverrideBySourceIdxByVariable ?? ({} as ColorOverrideBySourceIdxByVariable),
-    ).reduce((activeColorOverrideMatchers, name) => {
-      return (colorOverrideBySourceIdxByVariable?.[name] ?? ([] as ColorOverride[])).flatMap(
-        (override, i) =>
-          override?.active ?? false
-            ? [
-                ...activeColorOverrideMatchers,
-                ...(linkedGlobalVariablesByName[name] ?? []).map(({ topic, markerKeyPath }) => {
-                  const baseTopic = topic.replace(SECOND_SOURCE_PREFIX, "");
-                  return {
-                    topic: i === 0 ? baseTopic : joinTopics(SECOND_SOURCE_PREFIX, baseTopic),
-                    checks: [
-                      {
-                        markerKeyPath,
-                        value: globalVariables[name],
-                      },
-                    ],
-                    color: override.color,
-                  };
-                }),
-              ]
-            : activeColorOverrideMatchers,
-      );
+
+    const variables = Object.entries(colorOverrideByVariable ?? {});
+    return variables.reduce((activeColorOverrideMatchers, [variable, override]) => {
+      return override?.active ?? false
+        ? [
+            ...activeColorOverrideMatchers,
+            ...(linkedGlobalVariablesByName[variable] ?? []).map(({ topic, markerKeyPath }) => {
+              const baseTopic = topic;
+              return {
+                topic: baseTopic,
+                checks: [
+                  {
+                    markerKeyPath,
+                    value: globalVariables[variable],
+                  },
+                ],
+                color: override.color,
+              };
+            }),
+          ]
+        : activeColorOverrideMatchers;
     }, [] as MarkerMatcher[]);
-  }, [colorOverrideBySourceIdxByVariable, globalVariables, linkedGlobalVariables]);
+  }, [colorOverrideByVariable, globalVariables, linkedGlobalVariables]);
 
   const rootTf = useMemo(() => {
     // If the user specified a followTf we will only return the root frame from their followTf
@@ -476,6 +468,10 @@ export default function Layout({
     return firstFrameId != undefined ? tfStore.get(firstFrameId)?.rootTransform().id : undefined;
   }, [transforms, followTf]);
 
+  const [rosPackagePath] = useAppConfigurationValue<string>(AppSetting.ROS_PACKAGE_PATH);
+
+  const [robotDescriptionParam] = PanelAPI.useParameter<string>(ROBOT_DESCRIPTION_PARAM);
+
   useMemo(() => {
     gridBuilder.setVisible(selectedTopicNames.includes(FOXGLOVE_GRID_TOPIC));
     gridBuilder.setSettingsByKey(settingsByKey);
@@ -486,9 +482,14 @@ export default function Layout({
 
     sceneBuilder.setPlayerId(playerId);
 
+    urdfBuilder.setTransforms(transforms, rootTf);
     if (rootTf) {
       sceneBuilder.setTransforms(transforms, rootTf);
     }
+
+    urdfBuilder.setUrdfData(robotDescriptionParam, rosPackagePath);
+    urdfBuilder.setVisible(selectedTopicNames.includes(URDF_TOPIC));
+    urdfBuilder.setSettingsByKey(settingsByKey, rosPackagePath);
 
     // Toggle scene builder topics based on visible topic nodes in the tree
     const topicsByTopicName = getTopicsByTopicName(topics);
@@ -518,7 +519,9 @@ export default function Layout({
     highlightMarkerMatchers,
     playerId,
     resetFrame,
+    robotDescriptionParam,
     rootTf,
+    rosPackagePath,
     sceneBuilder,
     selectedNamespacesByTopic,
     selectedTopicNames,
@@ -526,22 +529,13 @@ export default function Layout({
     topics,
     transforms,
     transformsBuilder,
+    urdfBuilder,
   ]);
-
-  const handleDrawPolygons = useCallback(
-    (eventName: EventName, ev: React.MouseEvent, args: ReglClickInfo) => {
-      polygonBuilder[eventName](ev, args);
-      forceUpdate();
-    },
-    [polygonBuilder],
-  );
 
   // use callbackInputsRef to prevent unnecessary callback changes
   const callbackInputsRef = useRef({
     cameraState,
     debug,
-    drawingTabType,
-    handleDrawPolygons,
     showTopicTree,
     saveConfig,
     selectionState,
@@ -552,8 +546,6 @@ export default function Layout({
   callbackInputsRef.current = {
     cameraState,
     debug,
-    drawingTabType,
-    handleDrawPolygons,
     showTopicTree,
     saveConfig,
     selectionState,
@@ -562,31 +554,22 @@ export default function Layout({
     isDrawing,
   };
 
-  const setColorOverrideBySourceIdxByVariable = useCallback(
-    (newValue: ColorOverrideBySourceIdxByVariable) => {
-      callbackInputsRef.current.saveConfig({
-        colorOverrideBySourceIdxByVariable: newValue,
-      });
-    },
-    [],
-  );
+  const setColorOverrideByVariable = useCallback((newValue: ColorOverrideByVariable) => {
+    callbackInputsRef.current.saveConfig({
+      colorOverrideByVariable: newValue,
+    });
+  }, []);
 
   const handleEvent = useCallback(
     (eventName: EventName, ev: React.MouseEvent, args?: ReglClickInfo) => {
       if (!args) {
         return;
       }
-      const {
-        drawingTabType: currentDrawingTabType,
-        handleDrawPolygons: currentHandleDrawPolygons,
-      } = callbackInputsRef.current;
       const measuringHandler =
         eventName === "onDoubleClick" ? undefined : measuringElRef.current?.[eventName];
       const measureActive = measuringElRef.current?.measureActive ?? false;
       if (measuringHandler && measureActive) {
         return measuringHandler(ev.nativeEvent, args);
-      } else if (currentDrawingTabType === POLYGON_TAB_TYPE) {
-        currentHandleDrawPolygons(eventName, ev, args);
       }
     },
     [],
@@ -639,7 +622,6 @@ export default function Layout({
     onMouseDown,
     onMouseMove,
     onMouseUp,
-    onSetPolygons,
     toggleCameraMode,
     toggleDebug,
   } = useMemo(() => {
@@ -684,7 +666,6 @@ export default function Layout({
       onMouseMove: (ev: React.MouseEvent, args?: ReglClickInfo) =>
         handleEvent("onMouseMove", ev, args),
       onMouseUp: (ev: React.MouseEvent, args?: ReglClickInfo) => handleEvent("onMouseUp", ev, args),
-      onSetPolygons: (polygons: Polygon[]) => setPolygonBuilder(new PolygonBuilder(polygons)),
       toggleDebug: () => setDebug(!callbackInputsRef.current.debug),
       toggleCameraMode: () => {
         const { cameraState: currentCameraState, saveConfig: currentSaveConfig } =
@@ -717,7 +698,6 @@ export default function Layout({
       Escape: (e) => {
         e.preventDefault();
         setShowTopicTree(false);
-        setDrawingTabType(undefined);
         searchTextProps.toggleSearchTextOpen(false);
         if (document.activeElement && document.activeElement === containerRef.current) {
           (document.activeElement as HTMLElement).blur();
@@ -747,8 +727,8 @@ export default function Layout({
   }, [pinTopics, saveConfig, searchTextProps, toggleCameraMode]);
 
   const markerProviders = useMemo(
-    () => [gridBuilder, sceneBuilder, transformsBuilder],
-    [gridBuilder, sceneBuilder, transformsBuilder],
+    () => [gridBuilder, sceneBuilder, transformsBuilder, urdfBuilder],
+    [gridBuilder, sceneBuilder, transformsBuilder, urdfBuilder],
   );
 
   const cursorType = isDrawing ? "crosshair" : "";
@@ -756,15 +736,11 @@ export default function Layout({
   // Memoize the threeDimensionalVizContextValue to avoid returning a new object every time
   const threeDimensionalVizContextValue = useMemo(
     () => ({
-      setColorOverrideBySourceIdxByVariable,
+      setColorOverrideByVariable,
       setHoveredMarkerMatchers: setHoveredMarkerMatchersDebounced,
-      colorOverrideBySourceIdxByVariable: colorOverrideBySourceIdxByVariable ?? {},
+      colorOverrideByVariable: colorOverrideByVariable ?? {},
     }),
-    [
-      colorOverrideBySourceIdxByVariable,
-      setColorOverrideBySourceIdxByVariable,
-      setHoveredMarkerMatchersDebounced,
-    ],
+    [colorOverrideByVariable, setColorOverrideByVariable, setHoveredMarkerMatchersDebounced],
   );
 
   // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
@@ -778,6 +754,13 @@ export default function Layout({
     refreshRate: 0,
     refreshMode: "debounce",
   });
+
+  const theme = useTheme();
+  const canvasBackgroundColor = useThemeBackgroundColor
+    ? theme.isInverted
+      ? "#000000"
+      : "#303030"
+    : customBackgroundColor;
 
   return (
     <ThreeDimensionalVizContext.Provider value={threeDimensionalVizContextValue}>
@@ -807,18 +790,15 @@ export default function Layout({
                 checkedKeys={checkedKeys}
                 containerHeight={containerHeight ?? 0}
                 containerWidth={containerWidth ?? 0}
-                settingsByKey={settingsByKey}
                 derivedCustomSettingsByKey={derivedCustomSettingsByKey}
                 expandedKeys={expandedKeys}
                 filterText={filterText}
                 getIsNamespaceCheckedByDefault={getIsNamespaceCheckedByDefault}
                 getIsTreeNodeVisibleInScene={getIsTreeNodeVisibleInScene}
                 getIsTreeNodeVisibleInTree={getIsTreeNodeVisibleInTree}
-                hasFeatureColumn={hasFeatureColumn}
                 onExitTopicTreeFocus={onExitTopicTreeFocus}
                 onNamespaceOverrideColorChange={onNamespaceOverrideColorChange}
                 pinTopics={pinTopics}
-                diffModeEnabled={diffModeEnabled}
                 rootTreeNode={rootTreeNode}
                 saveConfig={saveConfig}
                 sceneErrorsByKey={sceneErrorsByKey}
@@ -833,7 +813,6 @@ export default function Layout({
               {currentEditingTopic && (
                 <TopicSettingsModal
                   currentEditingTopic={currentEditingTopic}
-                  hasFeatureColumn={hasFeatureColumn}
                   setCurrentEditingTopic={setCurrentEditingTopic}
                   sceneBuilderMessage={
                     sceneBuilder.collectors[currentEditingTopic.name]?.getMessages()[0]
@@ -847,12 +826,12 @@ export default function Layout({
           <div className={styles.world}>
             <World
               key={`${callbackInputsRef.current.autoSyncCameraState ? "synced" : "not-synced"}`}
+              canvasBackgroundColor={canvasBackgroundColor}
               autoTextBackgroundColor={autoTextBackgroundColor}
               cameraState={cameraState}
               isPlaying={isPlaying}
               markerProviders={markerProviders}
               onCameraStateChange={onCameraStateChange}
-              diffModeEnabled={hasFeatureColumn && diffModeEnabled}
               onClick={onClick}
               onDoubleClick={onDoubleClick}
               onMouseDown={onMouseDown}
@@ -865,7 +844,6 @@ export default function Layout({
               selectedMatchIndex={selectedMatchIndex}
             >
               {children}
-              <DrawPolygons>{polygonBuilder.polygons}</DrawPolygons>
               <div>
                 <LayoutToolbar
                   cameraState={cameraState}
@@ -881,11 +859,8 @@ export default function Layout({
                   onCameraStateChange={onCameraStateChange}
                   autoSyncCameraState={!!autoSyncCameraState}
                   onFollowChange={onFollowChange}
-                  onSetDrawingTabType={setDrawingTabType}
-                  onSetPolygons={onSetPolygons}
                   onToggleCameraMode={toggleCameraMode}
                   onToggleDebug={toggleDebug}
-                  polygonBuilder={polygonBuilder}
                   saveConfig={saveConfig}
                   selectedObject={selectedObject}
                   setMeasureInfo={setMeasureInfo}

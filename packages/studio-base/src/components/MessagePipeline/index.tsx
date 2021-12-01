@@ -15,7 +15,7 @@ import { debounce, flatten, groupBy } from "lodash";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import { Time } from "@foxglove/rostime";
-import { MessageEvent } from "@foxglove/studio";
+import { MessageEvent, ParameterValue } from "@foxglove/studio";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import useContextSelector from "@foxglove/studio-base/hooks/useContextSelector";
@@ -24,8 +24,8 @@ import useSelectableContextGetter from "@foxglove/studio-base/hooks/useSelectabl
 import {
   AdvertiseOptions,
   Frame,
-  ParameterValue,
   Player,
+  PlayerCapabilities,
   PlayerPresence,
   PlayerState,
   PlayerStateActiveData,
@@ -38,8 +38,8 @@ import createSelectableContext from "@foxglove/studio-base/util/createSelectable
 import { requestThrottledAnimationFrame } from "@foxglove/studio-base/util/requestThrottledAnimationFrame";
 import signal from "@foxglove/studio-base/util/signal";
 
+import MessageOrderTracker from "./MessageOrderTracker";
 import { pauseFrameForPromises, FramePromise } from "./pauseFrameForPromise";
-import warnOnOutOfSyncMessages from "./warnOnOutOfSyncMessages";
 
 const { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } = React;
 
@@ -55,10 +55,10 @@ export type MessagePipelineContext = {
   setPublishers: (id: string, publishersForId: AdvertiseOptions[]) => void;
   setParameter: (key: string, value: ParameterValue) => void;
   publish: (request: PublishPayload) => void;
-  startPlayback: () => void;
-  pausePlayback: () => void;
-  setPlaybackSpeed: (speed: number) => void;
-  seekPlayback: (time: Time) => void;
+  startPlayback?: () => void;
+  pausePlayback?: () => void;
+  setPlaybackSpeed?: (speed: number) => void;
+  seekPlayback?: (time: Time) => void;
   // Don't render the next frame until the returned function has been called.
   pauseFrame: (name: string) => ResumeFrame;
   requestBackfill: () => void;
@@ -186,14 +186,17 @@ export function MessagePipelineProvider({
       waitingForPromises: false,
     };
 
+    const messageOrderTracker = new MessageOrderTracker();
     player.setListener(async (newPlayerState: PlayerState) => {
-      warnOnOutOfSyncMessages(newPlayerState);
       if (currentPlayer.current !== player) {
         return undefined;
       }
       if (playerTickState.current.resolveFn) {
         throw new Error("New playerState was emitted before last playerState was rendered.");
       }
+
+      // check for any out-of-order or out-of-sync messages
+      messageOrderTracker.update(newPlayerState);
 
       const promise = new Promise<void>((resolve) => {
         playerTickState.current.resolveFn = resolve;
@@ -237,6 +240,7 @@ export function MessagePipelineProvider({
     () => rawPlayerState.activeData?.datatypes ?? new Map(),
     [rawPlayerState.activeData?.datatypes],
   );
+  const capabilities = useShallowMemo(rawPlayerState.capabilities);
   const setSubscriptions = useCallback(
     (id: string, subscriptionsForId: SubscribePayload[]) => {
       setAllSubscriptions((previousSubscriptions) => {
@@ -259,15 +263,33 @@ export function MessagePipelineProvider({
     (request: PublishPayload) => (player ? player.publish(request) : undefined),
     [player],
   );
-  const startPlayback = useCallback(() => (player ? player.startPlayback() : undefined), [player]);
-  const pausePlayback = useCallback(() => (player ? player.pausePlayback() : undefined), [player]);
-  const setPlaybackSpeed = useCallback(
-    (speed: number) => (player ? player.setPlaybackSpeed(speed) : undefined),
-    [player],
+  const startPlayback = useMemo(
+    () =>
+      capabilities.includes(PlayerCapabilities.playbackControl)
+        ? player?.startPlayback?.bind(player)
+        : undefined,
+    [player, capabilities],
   );
-  const seekPlayback = useCallback(
-    (time: Time) => (player ? player.seekPlayback(time) : undefined),
-    [player],
+  const pausePlayback = useMemo(
+    () =>
+      capabilities.includes(PlayerCapabilities.playbackControl)
+        ? player?.pausePlayback?.bind(player)
+        : undefined,
+    [player, capabilities],
+  );
+  const seekPlayback = useMemo(
+    () =>
+      capabilities.includes(PlayerCapabilities.playbackControl)
+        ? player?.seekPlayback?.bind(player)
+        : undefined,
+    [player, capabilities],
+  );
+  const setPlaybackSpeed = useMemo(
+    () =>
+      capabilities.includes(PlayerCapabilities.setSpeed)
+        ? player?.setPlaybackSpeed?.bind(player)
+        : undefined,
+    [player, capabilities],
   );
   const pauseFrame = useCallback((name: string) => {
     const promise = signal();

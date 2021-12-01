@@ -7,11 +7,9 @@ import stringHash from "string-hash";
 import { Time, toSec, subtract as subtractTimes } from "@foxglove/rostime";
 import { ChartData } from "@foxglove/studio-base/components/Chart";
 import { MessageAndData } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
-import {
-  getTooltipItemForMessageHistoryItem,
-  TimeBasedChartTooltipData,
-} from "@foxglove/studio-base/components/TimeBasedChart";
+import { TimeBasedChartTooltipData } from "@foxglove/studio-base/components/TimeBasedChart";
 import { darkColor, lineColors } from "@foxglove/studio-base/util/plotColors";
+import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 import { grey } from "@foxglove/studio-base/util/toolsColorScheme";
 
 import positiveModulo from "./positiveModulo";
@@ -40,7 +38,7 @@ export default function messagesToDatasets(args: Args): DatasetInfo {
     tooltips: [],
   };
 
-  let prevQueryValue: string | number | boolean | undefined;
+  let prevQueryValue: string | number | bigint | boolean | undefined;
   let previousTimestamp: Time | undefined;
   let currentData: ChartData["datasets"][0]["data"] = [];
 
@@ -53,15 +51,15 @@ export default function messagesToDatasets(args: Args): DatasetInfo {
     }
 
     for (const itemByPath of messages) {
-      const item = getTooltipItemForMessageHistoryItem(itemByPath);
+      const headerStamp = getTimestampForMessage(itemByPath.messageEvent.message);
       const timestamp =
-        path.timestampMethod === "headerStamp" ? item.headerStamp : item.receiveTime;
+        path.timestampMethod === "headerStamp" ? headerStamp : itemByPath.messageEvent.receiveTime;
       if (!timestamp) {
         continue;
       }
 
-      const queriedData = item.queriedData[0];
-      if (item.queriedData.length !== 1 || !queriedData) {
+      const queriedData = itemByPath.queriedData[0];
+      if (itemByPath.queriedData.length !== 1 || !queriedData) {
         continue;
       }
 
@@ -82,7 +80,12 @@ export default function messagesToDatasets(args: Args): DatasetInfo {
         continue;
       }
 
-      if (typeof value !== "number" && typeof value !== "boolean" && typeof value !== "string") {
+      if (
+        typeof value !== "number" &&
+        typeof value !== "bigint" &&
+        typeof value !== "boolean" &&
+        typeof value !== "string"
+      ) {
         continue;
       }
 
@@ -98,11 +101,9 @@ export default function messagesToDatasets(args: Args): DatasetInfo {
       const tooltip: TimeBasedChartTooltipData = {
         x,
         y,
-        item,
         path: path.value,
         value,
         constantName,
-        startTime,
       };
       info.tooltips.unshift(tooltip);
 

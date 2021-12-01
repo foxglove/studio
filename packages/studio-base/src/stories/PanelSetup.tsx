@@ -26,6 +26,7 @@ import {
   useCurrentLayoutActions,
   useSelectedPanels,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { HoverValueProvider } from "@foxglove/studio-base/context/HoverValueContext";
 import PanelCatalogContext, {
   PanelCatalog,
   PanelInfo,
@@ -46,6 +47,7 @@ import {
   AdvertiseOptions,
 } from "@foxglove/studio-base/players/types";
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
+import HelpInfoProvider from "@foxglove/studio-base/providers/HelpInfoProvider";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { PanelConfigSchemaEntry, SavedProps, UserNodes } from "@foxglove/studio-base/types/panels";
 
@@ -122,7 +124,7 @@ export const MosaicWrapper = ({ children }: { children: React.ReactNode }): JSX.
   return (
     <DndProvider backend={HTML5Backend}>
       <Mosaic
-        className="none"
+        className="mosaic-foxglove-theme" // prevent the default mosaic theme from being applied
         initialValue="mock"
         renderTile={(_id, path) => {
           return (
@@ -284,9 +286,13 @@ function UnconnectedPanelSetup(props: Props): JSX.Element | ReactNull {
 export default function PanelSetup(props: Props): JSX.Element {
   return (
     <UserNodeStateProvider>
-      <MockCurrentLayoutProvider>
-        <UnconnectedPanelSetup {...props} />
-      </MockCurrentLayoutProvider>
+      <HoverValueProvider>
+        <MockCurrentLayoutProvider>
+          <HelpInfoProvider>
+            <UnconnectedPanelSetup {...props} />
+          </HelpInfoProvider>
+        </MockCurrentLayoutProvider>
+      </HoverValueProvider>
     </UserNodeStateProvider>
   );
 }
