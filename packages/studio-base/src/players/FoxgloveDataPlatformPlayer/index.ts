@@ -125,7 +125,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
       this._presence = PlayerPresence.ERROR;
       this._addProblem("open-failed", { message: error.message, error, severity: "error" });
     });
-    this._metricsCollector.initialized({ isDemoBag: false });
+    this._metricsCollector.initialized();
   }
 
   private _open = async (): Promise<void> => {

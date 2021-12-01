@@ -144,7 +144,7 @@ export default class VelodynePlayer implements Player {
     this._clearProblem(PROBLEM_SOCKET_ERROR, { skipEmit: true });
 
     if (this._seq === 0) {
-      this._metricsCollector.initialized({ isDemoBag: false });
+      this._metricsCollector.initialized();
       this._metricsCollector.recordTimeToFirstMsgs();
     }
 
