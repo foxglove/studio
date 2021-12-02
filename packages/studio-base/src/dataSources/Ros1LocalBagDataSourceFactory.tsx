@@ -21,6 +21,8 @@ class Ros1LocalBagDataSourceFactory implements IDataSourceFactory {
       return;
     }
 
+    args.metricsCollector.setProperty("player", this.id);
+
     return buildPlayerFromFiles([file], {
       unlimitedMemoryCache: args.unlimitedMemoryCache,
       metricsCollector: args.metricsCollector,

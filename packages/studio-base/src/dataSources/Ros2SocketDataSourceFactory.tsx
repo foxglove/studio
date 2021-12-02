@@ -39,6 +39,8 @@ class Ros2SocketDataSourceFactory implements IDataSourceFactory {
     const domainIdStr = url;
     const domainId = parseInt(domainIdStr);
 
+    args.metricsCollector.setProperty("player", this.id);
+
     return new Ros2Player({ domainId, metricsCollector: args.metricsCollector });
   }
 }

@@ -31,6 +31,8 @@ class McapLocalDataSourceFactory implements IDataSourceFactory {
       children: [],
     };
 
+    args.metricsCollector.setProperty("player", this.id);
+
     return buildNonRos1PlayerFromDescriptor(file.name, descriptor, {
       metricsCollector: args.metricsCollector,
       unlimitedMemoryCache: args.unlimitedMemoryCache,
