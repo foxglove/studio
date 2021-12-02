@@ -391,10 +391,14 @@ class StudioWindow {
   }
 
   addInputSource(name: string): void {
+    // A "Foxglove Data Platform" connection is triggered by opening a URL from console
+    // Not currently a connection that can be started from inside Foxglove Studio
     const unsupportedInputSourceNames = ["Foxglove Data Platform"];
     if (unsupportedInputSourceNames.includes(name)) {
       return;
     }
+
+    // Electron menus require a preceding & to escape the & char
     const formattedName = name
       .split("")
       .map((char) => (char === "&" ? "&&" : char))
