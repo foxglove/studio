@@ -9,6 +9,11 @@ import { MutablePose, Pose } from "@foxglove/studio-base/types/Messages";
 const tempMat: mat4 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 const tempScale: vec3 = [0, 0, 0];
 
+/**
+ * Transform represents a position and rotation in 3D space. It can be set and
+ * accessed using either Vec3/Quat or Mat4, and these different representations
+ * are automatically kept in sync.
+ */
 export class Transform {
   private _position: vec3;
   private _rotation: quat;

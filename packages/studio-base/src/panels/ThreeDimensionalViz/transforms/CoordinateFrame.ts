@@ -36,6 +36,12 @@ const tempUpper: TimeAndTransform = [
 const tempTransform = new Transform(vec3.create(), quat.create());
 const tempMatrix = mat4.create();
 
+/**
+ * CoordinateFrame is a named 3D coordinate frame with an optional parent frame
+ * and a history of transforms from this frame to its parent. The parent/child
+ * hierarchy and transform history allow points to be transformed from one
+ * coordinate frame to another while interpolating over time.
+ */
 export class CoordinateFrame {
   readonly id: string;
   maxStorageTime: Duration;

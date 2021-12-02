@@ -7,6 +7,10 @@ import { Time } from "@foxglove/rostime";
 import { CoordinateFrame } from "./CoordinateFrame";
 import { Transform } from "./Transform";
 
+/**
+ * TransformTree is a collection of coordinate frames with convenience methods
+ * for getting and creating frames and adding transforms between frames.
+ */
 export class TransformTree {
   private _frames = new Map<string, CoordinateFrame>();
 
