@@ -237,6 +237,11 @@ export default class TransformsBuilder implements MarkerProvider {
     rootFrame: CoordinateFrame,
     time: Time,
   ): void {
+    // If rootFrame_T_frame is invalid at the given time, don't draw anything
+    if (!rootFrame.apply(unusedPose, unusedPose, frame, time)) {
+      return;
+    }
+
     const markersForTransform: Marker[] = getAxesArrowMarkers(id, frame, rootFrame, time);
     const arrowMarker = getArrowToParentMarker(id, frame, rootFrame, time);
     if (arrowMarker) {

@@ -745,7 +745,7 @@ export default class SceneBuilder implements MarkerProvider {
     }
     const sourcePose = emptyPose();
     const frameId = drawData.header.frame_id;
-    let pose = this.transforms?.apply(
+    const pose = this.transforms?.apply(
       sourcePose,
       sourcePose,
       this.rootTransformID,
@@ -757,9 +757,8 @@ export default class SceneBuilder implements MarkerProvider {
       if (frameId.length > 0 && !(this.transforms?.hasFrame(frameId) ?? false)) {
         const error = this._addError(this.errors.topicsMissingTransforms, topic);
         error.frameIds.add(drawData.header.frame_id);
-        return;
       }
-      pose = sourcePose;
+      return;
     }
 
     // some callers of _consumeNonMarkerMessage provide LazyMessages and others provide regular objects
@@ -984,7 +983,9 @@ export default class SceneBuilder implements MarkerProvider {
 
         // Interpolate the pose for frame_locked markers
         if (marker.frame_locked === true) {
-          updatePose(marker, this.transforms, this.rootTransformID, time);
+          if (!updatePose(marker, this.transforms, this.rootTransformID, time)) {
+            continue;
+          }
         }
 
         // Highlight if marker matches any of this topic's highlightMarkerMatchers; dim other markers
