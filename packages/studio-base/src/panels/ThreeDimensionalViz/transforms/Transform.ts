@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { mat4, vec3, quat } from "gl-matrix";
+import { mat4, vec3, quat, ReadonlyMat4, ReadonlyVec3, ReadonlyQuat } from "gl-matrix";
 
 import { MutablePose, Pose } from "@foxglove/studio-base/types/Messages";
 
@@ -20,33 +20,33 @@ export class Transform {
     this._matrix = mat4.fromRotationTranslation(mat4.create(), this._rotation, this._position);
   }
 
-  position(): Readonly<vec3> {
+  position(): ReadonlyVec3 {
     return this._position;
   }
 
-  rotation(): Readonly<quat> {
+  rotation(): ReadonlyQuat {
     return this._rotation;
   }
 
-  matrix(): Readonly<mat4> {
+  matrix(): ReadonlyMat4 {
     return this._matrix;
   }
 
-  setPosition(position: vec3): this {
-    this._position = position;
+  setPosition(position: ReadonlyVec3): this {
+    vec3.copy(this._position, position);
     mat4.fromRotationTranslation(this._matrix, this._rotation, this._position);
     return this;
   }
 
-  setRotation(rotation: quat): this {
-    this._rotation = rotation;
+  setRotation(rotation: ReadonlyQuat): this {
+    quat.copy(this._rotation, rotation);
     mat4.fromRotationTranslation(this._matrix, this._rotation, this._position);
     return this;
   }
 
-  setPositionRotation(position: vec3, rotation: quat): this {
-    this._position = position;
-    this._rotation = rotation;
+  setPositionRotation(position: ReadonlyVec3, rotation: ReadonlyQuat): this {
+    vec3.copy(this._position, position);
+    quat.copy(this._rotation, rotation);
     mat4.fromRotationTranslation(this._matrix, this._rotation, this._position);
     return this;
   }
@@ -64,9 +64,9 @@ export class Transform {
     return this;
   }
 
-  setMatrix(matrix: mat4): this {
-    this._matrix = matrix;
-    mat4.getTranslation(this._position, this._matrix);
+  setMatrix(matrix: ReadonlyMat4): this {
+    mat4.copy(this._matrix, matrix);
+    mat4.getTranslation(this._position, matrix);
 
     // Normalize the values in the matrix by the scale. This ensures that we get the correct rotation
     // out even if the scale isn't 1 in each axis. The logic from this comes from the threejs
