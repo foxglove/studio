@@ -391,14 +391,22 @@ class StudioWindow {
   }
 
   addInputSource(name: string): void {
-    this._inputSources.add(name);
+    const unsupportedInputSourceNames = ["Foxglove Data Platform"];
+    if (unsupportedInputSourceNames.includes(name)) {
+      return;
+    }
+    const formattedName = name
+      .split("")
+      .map((char) => (char === "&" ? "&&" : char))
+      .join("");
+    this._inputSources.add(formattedName);
 
     const fileMenu = this._menu.getMenuItemById("fileMenu");
     if (!fileMenu) {
       return;
     }
 
-    const existingItem = fileMenu.submenu?.getMenuItemById(name);
+    const existingItem = fileMenu.submenu?.getMenuItemById(formattedName);
     // If the item already exists, we can silently return
     // The existing click handler will support the new item since they have the same name
     if (existingItem) {
