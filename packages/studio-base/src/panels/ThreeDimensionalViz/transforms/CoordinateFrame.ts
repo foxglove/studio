@@ -246,7 +246,7 @@ export class CoordinateFrame {
         return false;
       }
       CoordinateFrame.Interpolate(undefined, tempTransform, tempLower, tempUpper, time);
-      mat4.multiply(out, tempTransform.matrix(), out); // FIXME: Check this
+      mat4.multiply(out, tempTransform.matrix(), out);
 
       if (curFrame._parent == undefined) {
         throw new Error(`Frame "${parentFrame.id}" is not a parent of "${childFrame.id}"`);
@@ -262,6 +262,7 @@ export class CoordinateFrame {
     input: Pose,
     parent: CoordinateFrame,
     child: CoordinateFrame,
+    // eslint-disable-next-line @foxglove/no-boolean-parameters
     invert: boolean,
     time: Time,
     maxDelta: Duration,
@@ -270,11 +271,25 @@ export class CoordinateFrame {
       return false;
     }
     if (invert) {
-      mat4.invert(tempMatrix, tempMatrix);
+      // Remove the translation component, leaving only a rotation matrix
+      const x = tempMatrix[12];
+      const y = tempMatrix[13];
+      const z = tempMatrix[14];
+      tempMatrix[12] = 0;
+      tempMatrix[13] = 0;
+      tempMatrix[14] = 0;
+
+      // The transpose of a rotation matrix is its inverse
+      mat4.transpose(tempMatrix, tempMatrix);
+
+      // The negatation of the translation is its inverse
+      tempMatrix[12] = -x;
+      tempMatrix[13] = -y;
+      tempMatrix[14] = -z;
     }
 
     tempTransform.setPose(input);
-    mat4.multiply(tempMatrix, tempTransform.matrix(), tempMatrix); // FIXME: Check this
+    mat4.multiply(tempMatrix, tempMatrix, tempTransform.matrix());
     tempTransform.setMatrix(tempMatrix);
     tempTransform.toPose(out);
     return true;
