@@ -87,7 +87,7 @@ export class CoordinateFrame {
   }
 
   setParent(parent: CoordinateFrame): void {
-    if (this._parent) {
+    if (this._parent && this._parent !== parent) {
       throw new Error(
         `Cannot reparent frame "${this.id}" from "${this._parent.id}" to "${parent.id}"`,
       );
