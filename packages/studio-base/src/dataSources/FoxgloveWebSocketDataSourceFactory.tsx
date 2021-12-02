@@ -43,8 +43,6 @@ export default class FoxgloveWebSocketDataSourceFactory implements IDataSourceFa
       return;
     }
 
-    args.metricsCollector.setProperty("player", this.id);
-
     return new FoxgloveWebSocketPlayer({
       url,
       metricsCollector: args.metricsCollector,

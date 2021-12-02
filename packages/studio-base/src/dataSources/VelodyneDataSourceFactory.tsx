@@ -41,8 +41,6 @@ class VelodyneDataSourceFactory implements IDataSourceFactory {
       return;
     }
 
-    args.metricsCollector.setProperty("player", this.id);
-
     return new VelodynePlayer({ port, metricsCollector: args.metricsCollector });
   }
 }

@@ -42,8 +42,6 @@ class FoxgloveDataPlatformDataSourceFactory implements IDataSourceFactory {
       seek: args.seek as string | undefined,
     };
 
-    args.metricsCollector.setProperty("player", this.id);
-
     return new FoxgloveDataPlatformPlayer({
       params,
       consoleApi: args.consoleApi,

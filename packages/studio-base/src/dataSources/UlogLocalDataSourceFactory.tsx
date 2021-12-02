@@ -22,8 +22,6 @@ class UlogLocalDataSourceFactory implements IDataSourceFactory {
       return;
     }
 
-    args.metricsCollector.setProperty("player", this.id);
-
     return buildNonRos1PlayerFromDescriptor(file.name, getLocalUlogDescriptor(file), {
       metricsCollector: args.metricsCollector,
       unlimitedMemoryCache: args.unlimitedMemoryCache,

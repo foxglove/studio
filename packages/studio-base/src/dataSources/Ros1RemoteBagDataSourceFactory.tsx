@@ -43,8 +43,6 @@ class Ros1RemoteBagDataSourceFactory implements IDataSourceFactory {
       return;
     }
 
-    args.metricsCollector.setProperty("player", this.id);
-
     return buildPlayerFromBagURLs([url], {
       unlimitedMemoryCache: args.unlimitedMemoryCache,
       metricsCollector: args.metricsCollector,
