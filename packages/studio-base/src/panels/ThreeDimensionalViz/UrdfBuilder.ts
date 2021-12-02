@@ -416,5 +416,5 @@ function updatePose(
   if (!frame || !rootFrame) {
     return false;
   }
-  return rootFrame.apply(marker.pose, marker.pose, frame, currentTime);
+  return rootFrame.apply(marker.pose, marker.pose, frame, currentTime) != undefined;
 }

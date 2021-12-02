@@ -2,13 +2,12 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { quat, vec3 } from "gl-matrix";
-
-import { Time } from "@foxglove/rostime";
+import { Duration, Time } from "@foxglove/rostime";
 import { MutablePose, Pose, TF } from "@foxglove/studio-base/types/Messages";
 
 import { CoordinateFrame } from "./CoordinateFrame";
 import { Transform } from "./Transform";
+import { quatFromValues, vec3FromValues } from "./geometry";
 
 /**
  * TransformTree is a collection of coordinate frames with convenience methods
@@ -35,9 +34,10 @@ export class TransformTree {
   addTransformMessage(tf: TF): void {
     const t = tf.transform.translation;
     const q = tf.transform.rotation;
-    const position: vec3 = [t.x, t.y, t.z];
-    const rotation: quat = [q.x, q.y, q.z, q.w];
-    const transform = new Transform(position, rotation);
+    const transform = new Transform(
+      vec3FromValues(t.x, t.y, t.z),
+      quatFromValues(q.x, q.y, q.z, q.w),
+    );
     this.addTransform(tf.child_frame_id, tf.header.frame_id, tf.header.stamp, transform);
   }
 
@@ -68,16 +68,11 @@ export class TransformTree {
     frameId: string,
     srcFrameId: string,
     time: Time,
+    maxDelta: Duration = { sec: 1, nsec: 0 },
   ): MutablePose | undefined {
     const frame = this.frame(frameId);
     const srcFrame = this.frame(srcFrameId);
-    if (!frame || !srcFrame) {
-      return undefined;
-    }
-    if (!frame.apply(output, original, srcFrame, time)) {
-      return undefined;
-    }
-    return output;
+    return frame && srcFrame ? frame.apply(output, original, srcFrame, time, maxDelta) : undefined;
   }
 
   static Clone(tree: TransformTree): TransformTree {

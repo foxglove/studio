@@ -4,7 +4,7 @@
 
 /* eslint-disable no-underscore-dangle */
 
-import { mat4, quat, vec3 } from "gl-matrix";
+import { mat4 } from "gl-matrix";
 
 import { AVLTree } from "@foxglove/avl";
 import {
@@ -20,21 +20,16 @@ import {
 import { MutablePose, Pose } from "@foxglove/studio-base/types/Messages";
 
 import { Transform } from "./Transform";
+import { mat4Identity } from "./geometry";
 
-type TimeAndTransform = [time: Time, transform: Transform];
+export type TimeAndTransform = [time: Time, transform: Transform];
 
 const DEFAULT_MAX_STORAGE_TIME: Duration = { sec: 10, nsec: 0 };
 
-const tempLower: TimeAndTransform = [
-  { sec: 0, nsec: 0 },
-  new Transform(vec3.create(), quat.create()),
-];
-const tempUpper: TimeAndTransform = [
-  { sec: 0, nsec: 0 },
-  new Transform(vec3.create(), quat.create()),
-];
-const tempTransform = new Transform(vec3.create(), quat.create());
-const tempMatrix = mat4.create();
+const tempLower: TimeAndTransform = [{ sec: 0, nsec: 0 }, Transform.Identity()];
+const tempUpper: TimeAndTransform = [{ sec: 0, nsec: 0 }, Transform.Identity()];
+const tempTransform = Transform.Identity();
+const tempMatrix = mat4Identity();
 
 /**
  * CoordinateFrame is a named 3D coordinate frame with an optional parent frame
@@ -57,9 +52,6 @@ export class CoordinateFrame {
     this.id = id;
     this._parent = parent;
     this.maxStorageTime = maxStorageTime;
-    if (parent) {
-      this.setParent(parent);
-    }
   }
 
   parent(): CoordinateFrame | undefined {
@@ -188,18 +180,22 @@ export class CoordinateFrame {
     srcFrame: CoordinateFrame,
     time: Time,
     maxDelta: Duration = { sec: 1, nsec: 0 },
-  ): boolean {
+  ): MutablePose | undefined {
     if (srcFrame === this) {
       // Identity transform
       out.position = input.position;
       out.orientation = input.orientation;
-      return true;
+      return out;
     } else if (srcFrame.hasParent(this.id)) {
       // This frame is a parent of the source frame
-      return CoordinateFrame.Apply(out, input, this, srcFrame, false, time, maxDelta);
+      return CoordinateFrame.Apply(out, input, this, srcFrame, false, time, maxDelta)
+        ? out
+        : undefined;
     } else if (this.hasParent(srcFrame.id)) {
       // This frame is a child of the source frame
-      return CoordinateFrame.Apply(out, input, srcFrame, this, true, time, maxDelta);
+      return CoordinateFrame.Apply(out, input, srcFrame, this, true, time, maxDelta)
+        ? out
+        : undefined;
     }
 
     // Check if the two frames share a common parent
@@ -210,14 +206,16 @@ export class CoordinateFrame {
         // Common parent found. Apply transforms from the source frame to the common parent,
         // then apply transforms from the common parent to this frame
         if (!CoordinateFrame.Apply(out, input, commonParent, srcFrame, false, time, maxDelta)) {
-          return false;
+          return undefined;
         }
-        return CoordinateFrame.Apply(out, out, commonParent, this, true, time, maxDelta);
+        return CoordinateFrame.Apply(out, out, commonParent, this, true, time, maxDelta)
+          ? out
+          : undefined;
       }
       curSrcFrame = curSrcFrame._parent;
     }
 
-    return false;
+    return undefined;
   }
 
   static Interpolate(

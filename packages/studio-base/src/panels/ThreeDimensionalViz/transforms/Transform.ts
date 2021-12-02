@@ -6,8 +6,10 @@ import { mat4, vec3, quat, ReadonlyMat4, ReadonlyVec3, ReadonlyQuat } from "gl-m
 
 import { MutablePose, Pose } from "@foxglove/studio-base/types/Messages";
 
-const tempMat: mat4 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-const tempScale: vec3 = [0, 0, 0];
+import { mat4Identity, quatIdentity, vec3Identity } from "./geometry";
+
+const tempMat = mat4Identity();
+const tempScale = vec3Identity();
 
 /**
  * Transform represents a position and rotation in 3D space. It can be set and
@@ -22,7 +24,7 @@ export class Transform {
   constructor(position: vec3, rotation: quat) {
     this._position = position;
     this._rotation = rotation;
-    this._matrix = mat4.fromRotationTranslation(mat4.create(), this._rotation, this._position);
+    this._matrix = mat4.fromRotationTranslation(mat4Identity(), this._rotation, this._position);
   }
 
   position(): ReadonlyVec3 {
@@ -107,6 +109,10 @@ export class Transform {
     out.orientation.y = this._rotation[1];
     out.orientation.z = this._rotation[2];
     out.orientation.w = this._rotation[3];
+  }
+
+  static Identity(): Transform {
+    return new Transform(vec3Identity(), quatIdentity());
   }
 
   static Interpolate(out: Transform, a: Transform, b: Transform, t: number): void {

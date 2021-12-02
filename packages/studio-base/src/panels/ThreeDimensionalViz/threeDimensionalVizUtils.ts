@@ -55,12 +55,9 @@ export function getTargetPose(
     if (frame) {
       const pose: MutablePose | undefined = emptyPose();
       if (frame.root().apply(pose, pose, frame, time)) {
-        const { x: px, y: py, z: pz } = pose.position;
-        const { x: ox, y: oy, z: oz, w: ow } = pose.orientation;
-        return {
-          target: [px, py, pz],
-          targetOrientation: [ox, oy, oz, ow],
-        };
+        const p = pose.position;
+        const o = pose.orientation;
+        return { target: [p.x, p.y, p.z], targetOrientation: [o.x, o.y, o.z, o.w] };
       }
     }
   }

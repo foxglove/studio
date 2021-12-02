@@ -29,6 +29,8 @@ import { MarkerProvider, MarkerCollector } from "@foxglove/studio-base/types/Sce
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
 import { MARKER_MSG_TYPES } from "@foxglove/studio-base/util/globalConstants";
 
+import { vec3FromValues } from "./transforms";
+
 const defaultArrowMarker = {
   id: "",
   header: {
@@ -45,7 +47,7 @@ const defaultArrowMarker = {
 };
 
 const defaultArrowScale = { x: 0.2, y: 0.02, z: 0.02 };
-const unitXVector = vec3.fromValues(1, 0, 0);
+const unitXVector = vec3FromValues(1, 0, 0);
 const unusedPose = emptyPose();
 
 type Axis = ArrowMarker & {
@@ -61,7 +63,7 @@ const originAxes: Axis[] = [
     pose: emptyPose(),
     id: "X",
     color: { r: 1, g: 0, b: 0, a: 1 },
-    unitVector: vec3.fromValues(1, 0, 0),
+    unitVector: vec3FromValues(1, 0, 0),
   } as Axis,
   {
     ...defaultArrowMarker,
@@ -69,7 +71,7 @@ const originAxes: Axis[] = [
     pose: emptyPose(),
     id: "Y",
     color: { r: 0, g: 1, b: 0, a: 1 },
-    unitVector: vec3.fromValues(0, 1, 0),
+    unitVector: vec3FromValues(0, 1, 0),
   } as Axis,
   {
     ...defaultArrowMarker,
@@ -77,7 +79,7 @@ const originAxes: Axis[] = [
     pose: emptyPose(),
     id: "Z",
     color: { r: 0, g: 0, b: 1, a: 1 },
-    unitVector: vec3.fromValues(0, 0, 1),
+    unitVector: vec3FromValues(0, 0, 1),
   } as Axis,
 ];
 
