@@ -4,7 +4,7 @@
 
 // import { mat4, quat, vec3 } from "gl-matrix";
 
-import { MutablePose } from "@foxglove/studio-base/types/Messages";
+import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
 import { Transform } from "./Transform";
 import { TransformTree } from "./TransformTree";
@@ -36,6 +36,7 @@ describe("TransformTree", () => {
 
   it("point-in-time transformation", () => {
     const TIME_ZERO = { sec: 0, nsec: 0 };
+    const EMPTY_POSE = emptyPose();
 
     const tree = new TransformTree();
     const map_T_odom = new Transform([0, 0, 0], [0, 0, 0, 1]);
@@ -52,13 +53,13 @@ describe("TransformTree", () => {
     const map = tree.frame("map")!;
     const output = emptyPose();
     expect(map.apply(output, emptyPose(), baseLink, TIME_ZERO, TIME_ZERO)).toBe(true);
-    expect(output.position).toEqual({ x: 0, y: 0, z: 0 });
-    expect(output.orientation).toEqual({ x: 0, y: 0, z: 0, w: 1 });
+    expect(output.position).toEqual(EMPTY_POSE.position);
+    expect(output.orientation).toEqual(EMPTY_POSE.orientation);
 
     // Identity transforms from map -> odom -> base_link
     expect(baseLink.apply(output, emptyPose(), map, TIME_ZERO, TIME_ZERO)).toBe(true);
-    expect(output.position).toEqual({ x: 0, y: 0, z: 0 });
-    expect(output.orientation).toEqual({ x: 0, y: 0, z: 0, w: 1 });
+    expect(output.position).toEqual(EMPTY_POSE.position);
+    expect(output.orientation).toEqual(EMPTY_POSE.orientation);
 
     // Can't reparent base_link -> map after base_link -> odom already exists
     expect(() => tree.addTransform("base_link", "map", TIME_ZERO, odom_T_baseLink)).toThrow();
@@ -88,7 +89,3 @@ describe("TransformTree", () => {
     expect(output.orientation).toEqual({ x: 0, y: 1, z: 0, w: 0 });
   });
 });
-
-function emptyPose(): MutablePose {
-  return { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } };
-}

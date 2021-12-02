@@ -326,7 +326,7 @@ describe("groupLineStripsIntoInstancedLineLists", () => {
         action: 0,
         ns: "bar",
         scale: { x: 1, y: 1, z: 1 },
-        pose: { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } },
+        pose: emptyPose(),
         colors: [COLORS.RED, COLORS.RED],
         points: [
           { x: 0, y: 0, z: 0 },
@@ -394,7 +394,7 @@ describe("groupLineStripsIntoInstancedLineLists", () => {
         action: 0,
         ns: "bar",
         scale: { x: 1, y: 1, z: 1 },
-        pose: { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } },
+        pose: emptyPose(),
         colors: [COLORS.RED, COLORS.RED],
         points: [
           { x: 0, y: 0, z: 0 },
@@ -427,7 +427,7 @@ describe("groupLineStripsIntoInstancedLineLists", () => {
         action: 0,
         ns: "bar",
         scale: { x: 1, y: 1, z: 1 },
-        pose: { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } },
+        pose: emptyPose(),
         colors: [COLORS.RED, COLORS.RED],
         points: [
           { x: 0, y: 0, z: 0 },

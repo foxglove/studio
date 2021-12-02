@@ -4,6 +4,8 @@
 
 import { mat4, quat, vec3 } from "gl-matrix";
 
+import { emptyPose } from "@foxglove/studio-base/util/Pose";
+
 import { Transform } from "./Transform";
 
 describe("Transform", () => {
@@ -96,7 +98,7 @@ describe("Transform", () => {
 
   it("toPose", () => {
     const tf = new Transform(vec3.fromValues(1, 2, 3), quat.fromValues(4, 5, 6, 7));
-    const pose = { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } };
+    const pose = emptyPose();
     tf.toPose(pose);
     expect(pose.position).toEqual({ x: 1, y: 2, z: 3 });
     expect(pose.orientation).toEqual({ x: 4, y: 5, z: 6, w: 7 });

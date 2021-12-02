@@ -26,6 +26,7 @@ import {
   Point,
 } from "@foxglove/studio-base/types/Messages";
 import { MarkerProvider, MarkerCollector } from "@foxglove/studio-base/types/Scene";
+import { emptyPose } from "@foxglove/studio-base/util/Pose";
 import { MARKER_MSG_TYPES } from "@foxglove/studio-base/util/globalConstants";
 
 const defaultArrowMarker = {
@@ -44,13 +45,8 @@ const defaultArrowMarker = {
 };
 
 const defaultArrowScale = { x: 0.2, y: 0.02, z: 0.02 };
-
-const getOriginPose = (): MutablePose => ({
-  position: { x: 0, y: 0, z: 0 },
-  orientation: { x: 0, y: 0, z: 0, w: 1 },
-});
-
 const unitXVector = vec3.fromValues(1, 0, 0);
+const unusedPose = emptyPose();
 
 type Axis = ArrowMarker & {
   id: string;
@@ -62,10 +58,7 @@ const originAxes: Axis[] = [
   {
     ...defaultArrowMarker,
     scale: { ...defaultArrowScale },
-    pose: {
-      position: { x: 0, y: 0, z: 0 },
-      orientation: { x: 0, y: 0, z: 0, w: 1 },
-    },
+    pose: emptyPose(),
     id: "X",
     color: { r: 1, g: 0, b: 0, a: 1 },
     unitVector: vec3.fromValues(1, 0, 0),
@@ -73,10 +66,7 @@ const originAxes: Axis[] = [
   {
     ...defaultArrowMarker,
     scale: { ...defaultArrowScale },
-    pose: {
-      position: { x: 0, y: 0, z: 0 },
-      orientation: { x: 0, y: 0, z: 0, w: 1 },
-    },
+    pose: emptyPose(),
     id: "Y",
     color: { r: 0, g: 1, b: 0, a: 1 },
     unitVector: vec3.fromValues(0, 1, 0),
@@ -84,10 +74,7 @@ const originAxes: Axis[] = [
   {
     ...defaultArrowMarker,
     scale: { ...defaultArrowScale },
-    pose: {
-      position: { x: 0, y: 0, z: 0 },
-      orientation: { x: 0, y: 0, z: 0, w: 1 },
-    },
+    pose: emptyPose(),
     id: "Z",
     color: { r: 0, g: 0, b: 1, a: 1 },
     unitVector: vec3.fromValues(0, 0, 1),
@@ -140,7 +127,7 @@ const getAxisTextMarker = (
   rootFrame: CoordinateFrame,
   time: Time,
 ): Marker => {
-  const textPose = getOriginPose();
+  const textPose = emptyPose();
   rootFrame.apply(textPose, textPose, frame, time);
   // Lower it a little in world coordinates so it appears slightly below the axis origin (like in rviz).
   textPose.position.z = textPose.position.z - 0.02;
@@ -204,10 +191,7 @@ export const getArrowToParentMarker = (
 
   return {
     ...defaultArrowMarker,
-    pose: {
-      position: { x: 0, y: 0, z: 0 },
-      orientation: { x: 0, y: 0, z: 0, w: 1 },
-    },
+    pose: emptyPose(),
     id: `${id}-childToParentArrow`,
     color: { r: 1, g: 1, b: 0, a: 1 },
     points: [childPose.position, parentPose.position],
