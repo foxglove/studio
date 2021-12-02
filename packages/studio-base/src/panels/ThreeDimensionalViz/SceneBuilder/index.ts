@@ -21,8 +21,8 @@ import {
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/types";
 import MessageCollector from "@foxglove/studio-base/panels/ThreeDimensionalViz/SceneBuilder/MessageCollector";
 import { MarkerMatcher } from "@foxglove/studio-base/panels/ThreeDimensionalViz/ThreeDimensionalVizContext";
-import Transforms from "@foxglove/studio-base/panels/ThreeDimensionalViz/Transforms";
 import VelodyneCloudConverter from "@foxglove/studio-base/panels/ThreeDimensionalViz/VelodyneCloudConverter";
+import { TransformTree } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
 import { Topic, Frame, MessageEvent, RosObject } from "@foxglove/studio-base/players/types";
 import {
   Color,
@@ -97,7 +97,7 @@ type MarkerMatchersByTopic = {
 const missingTransformMessage = (
   rootTransformId: string,
   error: ErrorDetails,
-  transforms: Transforms,
+  transforms: TransformTree,
 ): string => {
   const frameIds = [...error.frameIds].sort().join(",");
   const s = error.frameIds.size === 1 ? "" : "s"; // for plural
@@ -105,7 +105,7 @@ const missingTransformMessage = (
     frameIds.length > 0
       ? `missing transforms from frame${s} <${frameIds}> to root frame <${rootTransformId}>`
       : `missing transform <${rootTransformId}>`;
-  if (transforms.empty) {
+  if (transforms.frames().size === 0) {
     return msg + ". No transforms found";
   }
   return msg;
@@ -113,7 +113,7 @@ const missingTransformMessage = (
 
 export function getSceneErrorsByTopic(
   sceneErrors: SceneErrors,
-  transforms: Transforms,
+  transforms: TransformTree,
 ): {
   [topicName: string]: string[];
 } {
@@ -171,12 +171,26 @@ export function filterOutSupersededMessages<T extends Pick<MessageEvent<unknown>
   return filteredMessages;
 }
 
+function updatePose(
+  marker: Marker,
+  transforms: TransformTree,
+  rootFrameId: string,
+  currentTime: Time,
+): boolean {
+  const frame = transforms.frame(marker.header.frame_id);
+  const rootFrame = transforms.frame(rootFrameId);
+  if (!frame || !rootFrame) {
+    return false;
+  }
+  return rootFrame.apply(marker.pose, marker.pose, frame, currentTime);
+}
+
 export default class SceneBuilder implements MarkerProvider {
   topicsByName: {
     [topicName: string]: Topic;
   } = {};
   markers: Marker[] = [];
-  transforms?: Transforms;
+  transforms?: TransformTree;
   rootTransformID?: string;
   frame?: Frame;
   // TODO(JP): Get rid of these two different variables `errors` and `errorsByTopic` which we
@@ -236,7 +250,7 @@ export default class SceneBuilder implements MarkerProvider {
     this._hooks = hooks;
   }
 
-  setTransforms = (transforms: Transforms, rootTransformID: string): void => {
+  setTransforms = (transforms: TransformTree, rootTransformID: string): void => {
     this.transforms = transforms;
     this.rootTransformID = rootTransformID;
     this.errors.rootTransformID = rootTransformID;
@@ -453,11 +467,12 @@ export default class SceneBuilder implements MarkerProvider {
     badFrameError.namespaces.add(namespace);
     badFrameError.frameIds.add(frame_id);
 
-    const pose = (this.transforms as Transforms).apply(
+    const pose = this.transforms?.apply(
       emptyPose(),
       marker.pose,
+      this.rootTransformID!,
       frame_id,
-      this.rootTransformID as string,
+      marker.header.stamp,
     );
     if (!pose) {
       const topicMissingError = this._addError(this.errors.topicsMissingTransforms, topic);
@@ -650,10 +665,11 @@ export default class SceneBuilder implements MarkerProvider {
 
     let pose: MutablePose | undefined = emptyPose();
     if (this.transforms) {
-      if (this.rootTransformID == undefined) {
+      const rootFrameId = this.rootTransformID;
+      if (rootFrameId == undefined) {
         throw new Error("missing rootTransformId");
       }
-      pose = this.transforms.apply(pose, pose, frame_id, this.rootTransformID);
+      pose = this.transforms.apply(pose, pose, rootFrameId, frame_id, message.header.stamp);
     }
     if (!pose) {
       const error = this._addError(this.errors.topicsMissingTransforms, topic);
@@ -728,15 +744,17 @@ export default class SceneBuilder implements MarkerProvider {
       throw new Error("missing rootTransformId");
     }
     const sourcePose = emptyPose();
+    const frameId = drawData.header.frame_id;
     let pose = this.transforms?.apply(
       sourcePose,
       sourcePose,
-      drawData.header.frame_id,
       this.rootTransformID,
+      frameId,
+      drawData.header.stamp,
     );
     if (!pose) {
       // Don't error on frame_id="", interpret it as an identity transform
-      if (drawData.header.frame_id.length > 0) {
+      if (frameId.length > 0 && !(this.transforms?.hasFrame(frameId) ?? false)) {
         const error = this._addError(this.errors.topicsMissingTransforms, topic);
         error.frameIds.add(drawData.header.frame_id);
         return;
@@ -945,7 +963,11 @@ export default class SceneBuilder implements MarkerProvider {
     };
   }
 
-  renderMarkers(add: MarkerCollector): void {
+  renderMarkers(add: MarkerCollector, time: Time): void {
+    if (!this.transforms || !this.rootTransformID) {
+      return;
+    }
+
     for (const topic of Object.values(this.topicsByName)) {
       const collector = this.collectors[topic.name];
       if (!collector) {
@@ -958,6 +980,11 @@ export default class SceneBuilder implements MarkerProvider {
           if (!this.namespaceIsEnabled(topic.name, marker.ns)) {
             continue;
           }
+        }
+
+        // Interpolate the pose for frame_locked markers
+        if (marker.frame_locked === true) {
+          updatePose(marker, this.transforms, this.rootTransformID, time);
         }
 
         // Highlight if marker matches any of this topic's highlightMarkerMatchers; dim other markers

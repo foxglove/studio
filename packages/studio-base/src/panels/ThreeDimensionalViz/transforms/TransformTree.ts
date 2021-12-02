@@ -2,7 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { quat, vec3 } from "gl-matrix";
+
 import { Time } from "@foxglove/rostime";
+import { MutablePose, Pose, TF } from "@foxglove/studio-base/types/Messages";
 
 import { CoordinateFrame } from "./CoordinateFrame";
 import { Transform } from "./Transform";
@@ -29,6 +32,15 @@ export class TransformTree {
     frame.addTransform(time, transform);
   }
 
+  addTransformMessage(tf: TF): void {
+    const t = tf.transform.translation;
+    const q = tf.transform.rotation;
+    const position: vec3 = [t.x, t.y, t.z];
+    const rotation: quat = [q.x, q.y, q.z, q.w];
+    const transform = new Transform(position, rotation);
+    this.addTransform(tf.child_frame_id, tf.header.frame_id, tf.header.stamp, transform);
+  }
+
   hasFrame(id: string): boolean {
     return this._frames.has(id);
   }
@@ -48,5 +60,30 @@ export class TransformTree {
 
   frames(): ReadonlyMap<string, CoordinateFrame> {
     return this._frames;
+  }
+
+  apply(
+    output: MutablePose,
+    original: Pose,
+    frameId: string,
+    srcFrameId: string,
+    time: Time,
+  ): MutablePose | undefined {
+    const frame = this.frame(frameId);
+    const srcFrame = this.frame(srcFrameId);
+    if (!frame || !srcFrame) {
+      return undefined;
+    }
+    if (!frame.apply(output, original, srcFrame, time)) {
+      return undefined;
+    }
+    return output;
+  }
+
+  static Clone(tree: TransformTree): TransformTree {
+    const newTree = new TransformTree();
+    // eslint-disable-next-line no-underscore-dangle
+    newTree._frames = tree._frames;
+    return newTree;
   }
 }

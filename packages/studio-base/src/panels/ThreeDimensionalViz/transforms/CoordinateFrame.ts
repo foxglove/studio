@@ -47,7 +47,7 @@ export class CoordinateFrame {
   maxStorageTime: Duration;
 
   private _parent?: CoordinateFrame;
-  private _transforms: AVLTree<Time, Transform> = new AVLTree<Time, Transform>();
+  private _transforms: AVLTree<Time, Transform> = new AVLTree<Time, Transform>(compare);
 
   constructor(
     id: string,
@@ -64,6 +64,15 @@ export class CoordinateFrame {
 
   parent(): CoordinateFrame | undefined {
     return this._parent;
+  }
+
+  root(): CoordinateFrame {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let root: CoordinateFrame = this;
+    while (root._parent) {
+      root = root._parent;
+    }
+    return root;
   }
 
   hasParent(id: string): boolean {
