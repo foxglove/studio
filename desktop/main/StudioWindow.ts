@@ -458,17 +458,36 @@ class StudioWindow {
       }),
     );
 
-    for (const sourceName of this._inputSources) {
-      fileMenu.submenu?.append(
-        new MenuItem({
-          label: `Open ${sourceName}`,
+    fileMenu.submenu?.append(
+      new MenuItem({
+        label: "Open Connection",
+        submenu: Array.from(this._inputSources).map((sourceName) => ({
+          label: sourceName,
           click: async () => {
             await simulateUserClick(browserWindow);
             browserWindow.webContents.send("menu.click-input-source", sourceName);
           },
+        })),
+      }),
+    );
+
+    const fileMenuItems = [
+      { label: "View Layouts", event: "open-layouts" },
+      { label: "Add Panel", event: "open-add-panel" },
+      { label: "Edit Panel Settings", event: "open-panel-settings" },
+      { label: "Set Variables", event: "open-variables" },
+      { label: "Install Extensions", event: "open-extensions" },
+      { label: "Log In", event: "open-account" },
+    ];
+
+    fileMenuItems.forEach(({ label, event }) =>
+      fileMenu.submenu?.append(
+        new MenuItem({
+          label,
+          click: () => browserWindow.webContents.send(event),
         }),
-      );
-    }
+      ),
+    );
 
     if (!isMac) {
       fileMenu.submenu?.append(

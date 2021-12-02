@@ -4,6 +4,7 @@
 
 import { isEqual } from "lodash";
 import protobufjs from "protobufjs";
+import descriptor from "protobufjs/ext/descriptor";
 import decompressLZ4 from "wasm-lz4";
 
 import { ChannelInfo, McapReader, McapRecord } from "@foxglove/mcap";
@@ -73,16 +74,21 @@ export default class McapDataProvider implements RandomAccessDataProvider {
             break;
           }
           let messageDeserializer;
-          if (record.schema === "ros1") {
+          if (record.encoding === "ros1") {
             const parsedDefinitions = parseMessageDefinition(record.schema);
             messageDeserializer = new LazyMessageReader(parsedDefinitions);
-          } else if (record.schema === "ros2") {
+          } else if (record.encoding === "ros2") {
             const parsedDefinitions = parseMessageDefinition(record.schema, {
               ros2: true,
             });
             messageDeserializer = new ROS2MessageReader(parsedDefinitions);
           } else if (record.encoding === "protobuf") {
-            const MsgRoot = protobufjs.parse(record.schema);
+            const decodedByteLength = protobufjs.util.base64.length(record.schema);
+            const arr = new Uint8Array(decodedByteLength);
+            protobufjs.util.base64.decode(record.schema, arr, 0);
+
+            const descriptorMsg = descriptor.FileDescriptorSet.decode(arr);
+            const MsgRoot = protobufjs.Root.fromDescriptor(descriptorMsg);
             const Deserializer = MsgRoot.root.lookupType(record.schemaName);
             messageDeserializer = Deserializer;
           } else {
@@ -116,7 +122,7 @@ export default class McapDataProvider implements RandomAccessDataProvider {
             messages.push({
               topic: channelInfo.info.topic,
               receiveTime,
-              message: protoMsg.toJSON(),
+              message: channelInfo.messageDeserializer.toObject(protoMsg),
               sizeInBytes: record.data.byteLength,
             });
           } else {
