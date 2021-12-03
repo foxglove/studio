@@ -30,7 +30,9 @@ class MockTransform {
   private _frames = new Map<string, CoordinateFrame>();
   constructor({ tfs }: { tfs: { id: string }[] }) {
     for (const tf of tfs) {
-      this._frames.set(tf.id, new CoordinateFrame(tf.id, undefined));
+      if (tf.id) {
+        this._frames.set(tf.id, new CoordinateFrame(tf.id, undefined));
+      }
     }
   }
   frames() {
