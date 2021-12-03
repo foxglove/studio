@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { makeStyles } from "@fluentui/react";
+import { Layer, makeStyles } from "@fluentui/react";
 import cx from "classnames";
 import { Fzf, FzfResultItem } from "fzf";
 import { maxBy } from "lodash";
@@ -24,7 +24,6 @@ import React, {
   useImperativeHandle,
 } from "react";
 import ReactAutocomplete from "react-autocomplete";
-import { createPortal } from "react-dom";
 import textMetrics from "text-metrics";
 
 import { colors, fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -500,7 +499,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
         );
       }}
       // @ts-expect-error renderMenuWrapper added in the fork but we don't have typings for it
-      renderMenuWrapper={(menu: React.ReactNode) => createPortal(menu, document.body)}
+      renderMenuWrapper={(menu: React.ReactNode) => <Layer>{menu}</Layer>}
       ref={autocomplete}
       wrapperStyle={{ flex: "1 1 auto", overflow: "hidden", marginLeft: 6 }}
     />
