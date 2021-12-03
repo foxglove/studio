@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 /* eslint-disable no-underscore-dangle */
+/* eslint-disable @foxglove/no-boolean-parameters */
 
 import { mat4 } from "gl-matrix";
 
@@ -49,6 +50,9 @@ export class CoordinateFrame {
     parent: CoordinateFrame | undefined,
     maxStorageTime: Duration = DEFAULT_MAX_STORAGE_TIME,
   ) {
+    if (id.length === 0) {
+      throw new Error("CoordinateFrame ID cannot be empty");
+    }
     this.id = id;
     this._parent = parent;
     this.maxStorageTime = maxStorageTime;
@@ -134,12 +138,12 @@ export class CoordinateFrame {
    * @returns True if the search was successful
    */
   findClosestTransforms(
-    // perf-sensitive: function params instead of options object to avoid allocations
     outLower: TimeAndTransform,
     outUpper: TimeAndTransform,
     time: Time,
     maxDelta: Duration,
   ): boolean {
+    // perf-sensitive: function params instead of options object to avoid allocations
     if (this._transforms.size === 0) {
       return false;
     }
@@ -222,13 +226,13 @@ export class CoordinateFrame {
    * @returns A reference to `out` on success, otherwise undefined
    */
   apply(
-    // perf-sensitive: function params instead of options object to avoid allocations
     out: MutablePose,
     input: Pose,
     srcFrame: CoordinateFrame,
     time: Time,
     maxDelta: Duration = { sec: 1, nsec: 0 },
   ): MutablePose | undefined {
+    // perf-sensitive: function params instead of options object to avoid allocations
     if (srcFrame === this) {
       // Identity transform
       out.position = input.position;
@@ -276,13 +280,13 @@ export class CoordinateFrame {
    * @returns
    */
   static Interpolate(
-    // perf-sensitive: function params instead of options object to avoid allocations
     outTime: Time | undefined,
     outTf: Transform,
     lower: TimeAndTransform,
     upper: TimeAndTransform,
     time: Time,
   ): void {
+    // perf-sensitive: function params instead of options object to avoid allocations
     const [lowerTime, lowerTf] = lower;
     const [upperTime, upperTf] = upper;
 
@@ -315,13 +319,13 @@ export class CoordinateFrame {
    * @returns True on success
    */
   static GetTransformMatrix(
-    // perf-sensitive: function params instead of options object to avoid allocations
     out: mat4,
     parentFrame: CoordinateFrame,
     childFrame: CoordinateFrame,
     time: Time,
     maxDelta: Duration,
   ): boolean {
+    // perf-sensitive: function params instead of options object to avoid allocations
     mat4.identity(out);
 
     let curFrame = childFrame;
@@ -358,16 +362,15 @@ export class CoordinateFrame {
    * @returns True on success
    */
   static Apply(
-    // perf-sensitive: function params instead of options object to avoid allocations
     out: MutablePose,
     input: Pose,
     parent: CoordinateFrame,
     child: CoordinateFrame,
-    // eslint-disable-next-line @foxglove/no-boolean-parameters
     invert: boolean,
     time: Time,
     maxDelta: Duration,
   ): boolean {
+    // perf-sensitive: function params instead of options object to avoid allocations
     if (!CoordinateFrame.GetTransformMatrix(tempMatrix, parent, child, time, maxDelta)) {
       return false;
     }
