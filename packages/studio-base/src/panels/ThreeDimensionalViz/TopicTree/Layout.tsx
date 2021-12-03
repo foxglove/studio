@@ -489,13 +489,7 @@ export default function Layout({
       sceneBuilder.clear();
     }
 
-    sceneBuilder.setPlayerId(playerId);
-
     urdfBuilder.setTransforms(transforms, rootTf);
-    if (rootTf) {
-      sceneBuilder.setTransforms(transforms, rootTf);
-    }
-
     urdfBuilder.setUrdfData(robotDescriptionParam, rosPackagePath);
     urdfBuilder.setVisible(selectedTopicNames.includes(URDF_TOPIC));
     urdfBuilder.setSettingsByKey(settingsByKey, rosPackagePath);
@@ -504,6 +498,8 @@ export default function Layout({
     const topicsByTopicName = getTopicsByTopicName(topics);
     const selectedTopics = filterMap(selectedTopicNames, (name) => topicsByTopicName[name]);
 
+    sceneBuilder.setPlayerId(playerId);
+    sceneBuilder.setTransforms(transforms, rootTf);
     sceneBuilder.setFlattenMarkers(flattenMarkers);
     sceneBuilder.setSelectedNamespacesByTopic(selectedNamespacesByTopic);
     sceneBuilder.setSettingsByKey(settingsByKey);
@@ -515,9 +511,7 @@ export default function Layout({
     sceneBuilder.render();
 
     // update the transforms and set the selected ones to render
-    if (rootTf) {
-      transformsBuilder.setTransforms(transforms, rootTf);
-    }
+    transformsBuilder.setTransforms(transforms, rootTf);
     transformsBuilder.setSelectedTransforms(selectedNamespacesByTopic[TRANSFORM_TOPIC] ?? []);
   }, [
     colorOverrideMarkerMatchers,

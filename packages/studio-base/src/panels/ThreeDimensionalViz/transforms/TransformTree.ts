@@ -68,7 +68,7 @@ export class TransformTree {
     frameId: string,
     srcFrameId: string,
     time: Time,
-    maxDelta: Duration = { sec: 1, nsec: 0 },
+    maxDelta?: Duration,
   ): MutablePose | undefined {
     const frame = this.frame(frameId);
     const srcFrame = this.frame(srcFrameId);

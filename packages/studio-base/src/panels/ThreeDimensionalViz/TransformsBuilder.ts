@@ -209,7 +209,7 @@ export default class TransformsBuilder implements MarkerProvider {
   rootTransformID?: string;
   selections: string[] = [];
 
-  setTransforms = (transforms: TransformTree, rootTransformID: string): void => {
+  setTransforms = (transforms: TransformTree, rootTransformID: string | undefined): void => {
     this.transforms = transforms;
     this.rootTransformID = rootTransformID;
   };
