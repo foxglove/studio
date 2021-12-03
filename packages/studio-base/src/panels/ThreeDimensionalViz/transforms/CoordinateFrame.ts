@@ -58,6 +58,10 @@ export class CoordinateFrame {
     return this._parent;
   }
 
+  /**
+   * Returns the top-most frame by walking up each parent frame. If the current
+   * frame does not have a parent, the current frame is returned.
+   */
   root(): CoordinateFrame {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     let root: CoordinateFrame = this;
@@ -67,17 +71,10 @@ export class CoordinateFrame {
     return root;
   }
 
-  hasParent(id: string): boolean {
-    let parent: CoordinateFrame | undefined = this._parent;
-    while (parent) {
-      if (parent.id === id) {
-        return true;
-      }
-      parent = parent._parent;
-    }
-    return false;
-  }
-
+  /**
+   * Set the parent frame for this frame. If the parent frame is already set to
+   * a different frame, an error is thrown.
+   */
   setParent(parent: CoordinateFrame): void {
     if (this._parent && this._parent !== parent) {
       throw new Error(
@@ -87,6 +84,12 @@ export class CoordinateFrame {
     this._parent = parent;
   }
 
+  /**
+   * Search for an ancestor frame with the given ID by walking up the chain of
+   * parent frames, starting at the current frame.
+   * @param id Frame ID to search for
+   * @returns The ancestor frame, or undefined if not found
+   */
   findAncestor(id: string): CoordinateFrame | undefined {
     let ancestor: CoordinateFrame | undefined = this._parent;
     while (ancestor) {
@@ -98,6 +101,13 @@ export class CoordinateFrame {
     return undefined;
   }
 
+  /**
+   * Add a transform to the transform history maintained by this frame. The
+   * difference between the newest and oldest timestamps cannot be more than
+   * `this.maxStorageTime`, so this addition may purge older transforms.
+   *
+   * If a transform with an identical timestamp already exists, it is replaced.
+   */
   addTransform(time: Time, transform: Transform): void {
     this._transforms.set(time, transform);
 
@@ -109,7 +119,22 @@ export class CoordinateFrame {
     }
   }
 
+  /**
+   * Find the closest transform(s) in the transform history to the given time.
+   * Note that if an exact match is found, both `outLower` and `outUpper` will
+   * be set to the same transform.
+   * @param outLower This will be set to the found transform with the closest
+   *   timestamp <= the given time
+   * @param outUpper This will be set to the found transform with the closest
+   *   timestamp >= the given time
+   * @param time Time to search for
+   * @param maxDelta The time parameter can exceed the bounds of the transform
+   *   history by up to this amount and still clamp to the oldest or newest
+   *   transform
+   * @returns True if the search was successful
+   */
   findClosestTransforms(
+    // perf-sensitive: function params instead of options object to avoid allocations
     outLower: TimeAndTransform,
     outUpper: TimeAndTransform,
     time: Time,
@@ -174,7 +199,30 @@ export class CoordinateFrame {
     return true;
   }
 
+  /**
+   * Compute the transform from `srcFrame` to this frame at the given time,
+   * represented as a pose object. If srcFrame has a transform translation at
+   * the given time of <1, 0, 0>, then <1, 0, 0> will be returned. That
+   * translation can be applied to a point in `srcFrame` to move it into this
+   * frame.
+   *
+   * Transforms can go up through multiple parents, down through one or more
+   * children, or both as long as the transforms share a common ancestor.
+   *
+   * A common variable naming convention for the returned pose is
+   * `thisFrame_T_srcFrame` which is read right-to-left as "the translation that
+   * moves a point from `srcFrame` to `thisFrame`".
+   * @param out Output pose, this will be modified with the result on success
+   * @param input Input pose that exists in `srcFrame`
+   * @param srcFrame Coordinate frame we are transforming from
+   * @param time Time to compute the transform at
+   * @param maxDelta The time parameter can exceed the bounds of the transform
+   *   history by up to this amount and still clamp to the oldest or newest
+   *   transform
+   * @returns A reference to `out` on success, otherwise undefined
+   */
   apply(
+    // perf-sensitive: function params instead of options object to avoid allocations
     out: MutablePose,
     input: Pose,
     srcFrame: CoordinateFrame,
@@ -186,12 +234,12 @@ export class CoordinateFrame {
       out.position = input.position;
       out.orientation = input.orientation;
       return out;
-    } else if (srcFrame.hasParent(this.id)) {
+    } else if (srcFrame.findAncestor(this.id)) {
       // This frame is a parent of the source frame
       return CoordinateFrame.Apply(out, input, this, srcFrame, false, time, maxDelta)
         ? out
         : undefined;
-    } else if (this.hasParent(srcFrame.id)) {
+    } else if (this.findAncestor(srcFrame.id)) {
       // This frame is a child of the source frame
       return CoordinateFrame.Apply(out, input, srcFrame, this, true, time, maxDelta)
         ? out
@@ -218,7 +266,17 @@ export class CoordinateFrame {
     return undefined;
   }
 
+  /**
+   * Interpolate between two [time, transform] pairs.
+   * @param outTime Optional output parameter for the interpolated time
+   * @param outTf Output parameter for the interpolated transform
+   * @param lower Start [time, transform]
+   * @param upper End [time, transform]
+   * @param time Interpolant in the range [lower[0], upper[0]]
+   * @returns
+   */
   static Interpolate(
+    // perf-sensitive: function params instead of options object to avoid allocations
     outTime: Time | undefined,
     outTf: Transform,
     lower: TimeAndTransform,
@@ -244,7 +302,20 @@ export class CoordinateFrame {
     Transform.Interpolate(outTf, lowerTf, upperTf, fraction);
   }
 
+  /**
+   * Get the transform `parentFrame_T_childFrame` (from child to parent) at the
+   * given time.
+   * @param out Output transform matrix
+   * @param parentFrame Parent destination frame
+   * @param childFrame Child source frame
+   * @param time Time to transform at
+   * @param maxDelta The time parameter can exceed the bounds of the transform
+   *   history by up to this amount and still clamp to the oldest or newest
+   *   transform
+   * @returns True on success
+   */
   static GetTransformMatrix(
+    // perf-sensitive: function params instead of options object to avoid allocations
     out: mat4,
     parentFrame: CoordinateFrame,
     childFrame: CoordinateFrame,
@@ -270,7 +341,24 @@ export class CoordinateFrame {
     return true;
   }
 
+  /**
+   * Apply the transform from `child` to `parent` at the given time to the given
+   * input pose. The transform can optionally be inverted, to go from `parent`
+   * to `child`.
+   * @param out Output pose, this will be modified with the result on success
+   * @param input Input pose that exists in `child`, or `parent` if `invert` is
+   *   true
+   * @param parent Parent frame
+   * @param child Child frame
+   * @invert Whether to invert the transform (go from parent to child)
+   * @param time Time to compute the transform at
+   * @param maxDelta The time parameter can exceed the bounds of the transform
+   *   history by up to this amount and still clamp to the oldest or newest
+   *   transform
+   * @returns True on success
+   */
   static Apply(
+    // perf-sensitive: function params instead of options object to avoid allocations
     out: MutablePose,
     input: Pose,
     parent: CoordinateFrame,

@@ -115,12 +115,24 @@ export class Transform {
     return new Transform(vec3Identity(), quatIdentity());
   }
 
-  static Interpolate(out: Transform, a: Transform, b: Transform, t: number): void {
+  /**
+   * Interpolate between two rigid body transforms using linear interpolation on
+   * the translation vector and spherical linear interpolation on the rotation
+   * quaternion.
+   *
+   * @param out Output transform to store the result in
+   * @param a Start transform
+   * @param b End transform
+   * @param t Interpolant in the range [0, 1]
+   * @returns A reference to `out`
+   */
+  static Interpolate(out: Transform, a: Transform, b: Transform, t: number): Transform {
     // eslint-disable-next-line no-underscore-dangle
     vec3.lerp(out._position, a.position(), b.position(), t);
     // eslint-disable-next-line no-underscore-dangle
     quat.slerp(out._rotation, a.rotation(), b.rotation(), t);
     // eslint-disable-next-line no-underscore-dangle
     out.setPositionRotation(out._position, out._rotation);
+    return out;
   }
 }

@@ -25,7 +25,6 @@ describe("TransformTree", () => {
     const baseLink = tree.getOrCreateFrame("base_link");
     expect(baseLink.id).toBe("base_link");
     expect(baseLink.parent()).toBeUndefined();
-    expect(baseLink.hasParent("base_link")).toBe(false);
     expect(baseLink.maxStorageTime).toEqual({ sec: 10, nsec: 0 });
     expect(baseLink.findAncestor("base_link")).toBeUndefined();
 

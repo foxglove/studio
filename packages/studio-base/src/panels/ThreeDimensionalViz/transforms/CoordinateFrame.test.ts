@@ -4,6 +4,7 @@
 
 import { fromSec } from "@foxglove/rostime";
 import { mat4Identity } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
+import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
 import { CoordinateFrame, TimeAndTransform } from "./CoordinateFrame";
 import { Transform } from "./Transform";
@@ -22,7 +23,6 @@ describe("CoordinateFrame", () => {
     expect(baseLink.maxStorageTime).toEqual({ sec: 1, nsec: 2 });
     expect(baseLink.parent()).toBe(odom);
     expect(baseLink.findAncestor("odom")).toBe(odom);
-    expect(baseLink.hasParent("odom")).toBe(true);
     expect(baseLink.root()).toBe(odom);
 
     expect(odom.parent()).toBeUndefined();
@@ -171,5 +171,17 @@ describe("CoordinateFrame", () => {
     ).toBe(true);
     expect(lower).toEqual([{ sec: 0, nsec: 10 }, TF3]);
     expect(upper).toEqual([{ sec: 0, nsec: 12 }, TF4]);
+  });
+
+  it("apply", () => {
+    const parent = new CoordinateFrame("parent", undefined);
+    parent.addTransform({ sec: 0, nsec: 0 }, new Transform([0, 1, 0], [0, 0, 0, 1]));
+    const child = new CoordinateFrame("child", parent);
+    child.addTransform({ sec: 0, nsec: 0 }, new Transform([1, 0, 0], [0, 0, 0, 1]));
+
+    const out = emptyPose();
+    expect(parent.apply(out, emptyPose(), child, { sec: 0, nsec: 0 })).toBeDefined();
+    expect(out.position).toEqual({ x: 1, y: 0, z: 0 });
+    expect(out.orientation).toEqual({ x: 0, y: 0, z: 0, w: 1 });
   });
 });
