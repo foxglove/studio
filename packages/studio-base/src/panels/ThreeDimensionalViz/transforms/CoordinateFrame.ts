@@ -50,9 +50,6 @@ export class CoordinateFrame {
     parent: CoordinateFrame | undefined,
     maxStorageTime: Duration = DEFAULT_MAX_STORAGE_TIME,
   ) {
-    if (id.length === 0) {
-      throw new Error("CoordinateFrame ID cannot be empty");
-    }
     this.id = id;
     this._parent = parent;
     this.maxStorageTime = maxStorageTime;
