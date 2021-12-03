@@ -89,10 +89,10 @@ describe("app state encoding", () => {
     );
   });
 
-  it("encodes url based states", () => {
+  describe("url states", () => {
     const layoutId = "123" as LayoutID;
     const time = undefined;
-    const states: Array<AppURLState> = [
+    it.each<AppURLState>([
       { layoutId, time, ds: "ros1", dsParams: { url: "http://example.com:11311/test.bag" } },
       { layoutId, time, ds: "ros2", dsParams: { url: "http://example.com:11311/test.bag" } },
       {
@@ -107,8 +107,7 @@ describe("app state encoding", () => {
         ds: "rosbridge-websocket",
         dsParams: { url: "ws://foxglove.dev:9090/test.bag" },
       },
-    ];
-    states.forEach((state) => {
+    ])("encodes url state", (state) => {
       const url = state.dsParams?.url;
       const encodededURL = encodeAppURLState(baseURL(), state).href;
       expect(encodededURL).toEqual(
