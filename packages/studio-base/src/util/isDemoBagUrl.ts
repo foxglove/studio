@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
+export const DEMO_BAG_URL = "https://storage.googleapis.com/foxglove-public-assets/demo.bag";
 const isDemoBagUrl = (label: string): boolean => label === DEMO_BAG_URL;
 
 export default isDemoBagUrl;
