@@ -60,13 +60,7 @@ function parseChannel(channel: Channel): ParsedChannel {
   const datatypes: RosDatatypes = new Map();
   protobufDefinitionsToDatatypes(datatypes, type);
 
-  return {
-    channel,
-    // fullName is a fully qualified name but includes a leading dot. Remove the leading dot.
-    fullSchemaName: type.fullName.replace(/^\./, ""),
-    deserializer,
-    datatypes,
-  };
+  return { channel, fullSchemaName: type.fullName, deserializer, datatypes };
 }
 
 export default class FoxgloveWebSocketPlayer implements Player {
