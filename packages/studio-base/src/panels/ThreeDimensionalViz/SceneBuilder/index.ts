@@ -188,7 +188,8 @@ function updatePose(
   if (!frame || !rootFrame) {
     return false;
   }
-  return rootFrame.apply(marker.pose, marker.pose, frame, currentTime) != undefined;
+  const time = marker.frame_locked === true ? currentTime : marker.header.stamp;
+  return rootFrame.apply(marker.pose, marker.pose, frame, time) != undefined;
 }
 
 export default class SceneBuilder implements MarkerProvider {
@@ -997,11 +998,9 @@ export default class SceneBuilder implements MarkerProvider {
           }
         }
 
-        // Interpolate the pose for frame_locked markers
-        if (marker.frame_locked === true) {
-          if (!updatePose(marker, this.transforms, this.rootTransformID, time)) {
-            continue;
-          }
+        // Update the pose
+        if (!updatePose(marker, this.transforms, this.rootTransformID, time)) {
+          continue;
         }
 
         // Highlight if marker matches any of this topic's highlightMarkerMatchers; dim other markers
