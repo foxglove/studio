@@ -14,7 +14,6 @@
 import { RosMsgDefinition } from "@foxglove/rosmsg";
 import { Time } from "@foxglove/rostime";
 import type { MessageEvent, ParameterValue } from "@foxglove/studio";
-import { FoxgloveDataPlatformOptions } from "@foxglove/studio-base/dataSources/FoxgloveDataPlatformDataSourceFactory";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { BlockCache } from "@foxglove/studio-base/randomAccessDataProviders/MemoryCacheDataProvider";
 import {
@@ -95,12 +94,7 @@ export type PlayerProblem = {
   tip?: string;
 };
 
-export type PlayerURLState =
-  | { type: "foxglove-data-platform"; options: FoxgloveDataPlatformOptions }
-  | { type: "ros1"; url: string }
-  | { type: "ros2"; url: string }
-  | { type: "rosbridge-websocket"; url: string }
-  | { type: "ros1-remote-bagfile"; url: string };
+export type PlayerURLState = Record<string, string>;
 
 export type PlayerState = {
   // Information about the player's presence or connection status, for the UI to show a loading indicator.

@@ -68,24 +68,22 @@ export function useInitialDeepLinkState(deepLinks: string[]): void {
     }
 
     try {
-      if (appUrlState.type === "foxglove-data-platform") {
-        selectSource(appUrlState.type, appUrlState.options);
-      } else if (
-        appUrlState.type === "ros1" ||
-        appUrlState.type === "ros2" ||
-        appUrlState.type === "ros1-remote-bagfile" ||
-        appUrlState.type === "rosbridge-websocket"
-      ) {
-        selectSource(appUrlState.type, appUrlState);
-      }
-
-      if (appUrlState.layoutId != undefined) {
-        setSelectedLayoutId(appUrlState.layoutId);
-      }
+      selectSource(appUrlState.ds, appUrlState.dsParams);
     } catch (err) {
       log.error(err);
     }
-  }, [appUrlState, selectSource, setSelectedLayoutId]);
+  }, [appUrlState, selectSource]);
+
+  // Select layout from deeplink URL if present.
+  useEffect(() => {
+    if (appUrlState == undefined) {
+      return;
+    }
+
+    if (appUrlState.layoutId != undefined) {
+      setSelectedLayoutId(appUrlState.layoutId);
+    }
+  }, [appUrlState, setSelectedLayoutId]);
 
   // Sync to url time once our source has loaded and playback control is available.
   // seekPlayback will be undefined until the new source has loaded.

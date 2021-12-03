@@ -4,8 +4,11 @@
 
 import { Time, toRFC3339String } from "@foxglove/rostime";
 import { LayoutID } from "@foxglove/studio-base/index";
-import { PlayerURLState } from "@foxglove/studio-base/players/types";
-import { encodeAppURLState, parseAppURLState } from "@foxglove/studio-base/util/appURLState";
+import {
+  AppURLState,
+  encodeAppURLState,
+  parseAppURLState,
+} from "@foxglove/studio-base/util/appURLState";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 jest.mock("@foxglove/studio-base/util/isDesktopApp", () => ({
@@ -29,38 +32,40 @@ describe("app state url parser", () => {
 
     it("parses rosbag data state urls", () => {
       const url = urlBuilder();
-      url.searchParams.append("type", "ros1-remote-bagfile");
-      url.searchParams.append("url", "http://example.com");
+      url.searchParams.append("ds", "ros1-remote-bagfile");
+      url.searchParams.append("ds.url", "http://example.com");
 
       expect(parseAppURLState(url)).toMatchObject({
-        type: "ros1-remote-bagfile",
-        url: "http://example.com",
+        ds: "ros1-remote-bagfile",
+        dsParams: {
+          url: "http://example.com",
+        },
       });
-    });
-
-    it("rejects incomplete state urls", () => {
-      const url = urlBuilder();
-      url.searchParams.append("type", "foxglove-data-platform");
-      url.searchParams.append("start", toRFC3339String({ sec: new Date().getTime(), nsec: 0 }));
-
-      expect(() => parseAppURLState(url)).toThrow(Error);
     });
 
     it("parses data platform state urls", () => {
       const now: Time = { sec: new Date().getTime(), nsec: 0 };
+      const time = toRFC3339String({ sec: now.sec + 500, nsec: 0 });
+      const start = toRFC3339String(now);
+      const end = toRFC3339String({ sec: now.sec + 1000, nsec: 0 });
       const url = urlBuilder();
-      url.searchParams.append("type", "foxglove-data-platform");
-      url.searchParams.append("start", toRFC3339String(now));
-      url.searchParams.append("time", toRFC3339String({ sec: now.sec + 500, nsec: 0 }));
-      url.searchParams.append("end", toRFC3339String({ sec: now.sec + 1000, nsec: 0 }));
-      url.searchParams.append("deviceId", "dummy");
+      url.searchParams.append("ds", "foxglove-data-platform");
       url.searchParams.append("layoutId", "1234");
+      url.searchParams.append("time", time);
+      url.searchParams.append("ds.deviceId", "dummy");
+      url.searchParams.append("ds.start", start);
+      url.searchParams.append("ds.end", end);
 
       const parsed = parseAppURLState(url);
       expect(parsed).toMatchObject({
         layoutId: "1234",
+        ds: "foxglove-data-platform",
         time: { sec: now.sec + 500, nsec: 0 },
-        type: "foxglove-data-platform",
+        dsParams: {
+          deviceId: "dummy",
+          start,
+          end,
+        },
       });
     });
   });
@@ -74,28 +79,42 @@ describe("app state encoding", () => {
       encodeAppURLState(baseURL(), {
         layoutId: "123" as LayoutID,
         time: undefined,
-        type: "ros1-remote-bagfile",
-        url: "http://foxglove.dev/test.bag",
+        ds: "ros1-remote-bagfile",
+        dsParams: {
+          url: "http://foxglove.dev/test.bag",
+        },
       }).href,
     ).toEqual(
-      "http://example.com/?layoutId=123&type=ros1-remote-bagfile&url=http%3A%2F%2Ffoxglove.dev%2Ftest.bag",
+      "http://example.com/?ds=ros1-remote-bagfile&ds.url=http%3A%2F%2Ffoxglove.dev%2Ftest.bag&layoutId=123",
     );
   });
 
   it("encodes url based states", () => {
-    const states: PlayerURLState[] = [
-      { type: "ros1", url: "http://example.com:11311/test.bag" },
-      { type: "ros2", url: "http://example.com:11311/test.bag" },
-      { type: "ros1-remote-bagfile", url: "http://example.com/test.bag" },
-      { type: "rosbridge-websocket", url: "ws://foxglove.dev:9090/test.bag" },
+    const layoutId = "123" as LayoutID;
+    const time = undefined;
+    const states: Array<AppURLState> = [
+      { layoutId, time, ds: "ros1", dsParams: { url: "http://example.com:11311/test.bag" } },
+      { layoutId, time, ds: "ros2", dsParams: { url: "http://example.com:11311/test.bag" } },
+      {
+        layoutId,
+        time,
+        ds: "ros1-remote-bagfile",
+        dsParams: { url: "http://example.com/test.bag" },
+      },
+      {
+        layoutId,
+        time,
+        ds: "rosbridge-websocket",
+        dsParams: { url: "ws://foxglove.dev:9090/test.bag" },
+      },
     ];
     states.forEach((state) => {
-      const url = "url" in state ? state.url : "";
-      expect(
-        encodeAppURLState(baseURL(), { layoutId: "123" as LayoutID, time: undefined, ...state })
-          .href,
-      ).toEqual(
-        `http://example.com/?layoutId=123&type=${state.type}&url=${encodeURIComponent(url)}`,
+      const url = state.dsParams?.url;
+      const encodededURL = encodeAppURLState(baseURL(), state).href;
+      expect(encodededURL).toEqual(
+        `http://example.com/?ds=${state.ds}&ds.url=${encodeURIComponent(
+          url ?? "",
+        )}&layoutId=${layoutId}`,
       );
     });
   });

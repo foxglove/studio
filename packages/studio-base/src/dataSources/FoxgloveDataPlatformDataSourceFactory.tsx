@@ -9,7 +9,7 @@ import {
 import FoxgloveDataPlatformPlayer from "@foxglove/studio-base/players/FoxgloveDataPlatformPlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 
-export type FoxgloveDataPlatformOptions = {
+type FoxgloveDataPlatformOptions = {
   start: string;
   end: string;
   seek?: string;

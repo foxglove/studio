@@ -297,6 +297,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
         unlimitedMemoryCache,
       });
       setBasePlayer(initializedBasePlayer);
+      setSelectedSource(() => foundSource);
     }
     // we only run the layout effect on first mount - never again even if the saved source changes
     // eslint-disable-next-line react-hooks/exhaustive-deps

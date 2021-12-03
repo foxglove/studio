@@ -261,12 +261,9 @@ export default class FoxgloveDataPlatformPlayer implements Player {
       playerId: this._id,
       problems: this._problems,
       urlState: {
-        type: "foxglove-data-platform",
-        options: {
-          start: toRFC3339String(this._start ?? ZERO_TIME),
-          end: toRFC3339String(this._end ?? ZERO_TIME),
-          deviceId: this._deviceId,
-        },
+        start: toRFC3339String(this._start ?? ZERO_TIME),
+        end: toRFC3339String(this._end ?? ZERO_TIME),
+        deviceId: this._deviceId,
       },
 
       activeData: {

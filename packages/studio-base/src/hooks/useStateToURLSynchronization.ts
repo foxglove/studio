@@ -10,6 +10,7 @@ import {
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import { useCurrentLayoutSelector } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import useDeepMemo from "@foxglove/studio-base/hooks/useDeepMemo";
 import { encodeAppURLState } from "@foxglove/studio-base/util/appURLState";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
@@ -20,6 +21,7 @@ const selectUrlState = (ctx: MessagePipelineContext) => ctx.playerState.urlState
 const debouncedURLUpdate = debounce(
   (url: URL) => window.history.replaceState(undefined, "", url.href),
   500,
+  { leading: true },
 );
 
 /**
@@ -30,6 +32,7 @@ export function useStateToURLSynchronization(): void {
   const urlState = useMessagePipeline(selectUrlState);
   const layoutId = useCurrentLayoutSelector((layout) => layout.selectedLayout?.id);
   const stableUrlState = useDeepMemo(urlState);
+  const { selectedSource } = usePlayerSelection();
 
   useEffect(() => {
     // Electron has its own concept of what the app URL is. If we want to do anything
@@ -39,17 +42,18 @@ export function useStateToURLSynchronization(): void {
       return;
     }
 
-    if (!stableUrlState) {
+    if (!stableUrlState || !selectedSource) {
       return;
     }
 
     const url = encodeAppURLState(new URL(window.location.href), {
+      ds: selectedSource.id,
       layoutId,
       time: currentTime,
-      ...stableUrlState,
+      dsParams: stableUrlState,
     });
 
     // Debounce updates to avoid spamming changes to the address bar.
     debouncedURLUpdate(url);
-  }, [currentTime, layoutId, stableUrlState]);
+  }, [currentTime, layoutId, selectedSource, stableUrlState]);
 }
