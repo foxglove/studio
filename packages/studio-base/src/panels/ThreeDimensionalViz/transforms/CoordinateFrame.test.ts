@@ -2,12 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { fromSec } from "@foxglove/rostime";
-import { mat4Identity } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
+import { fromSec, Time } from "@foxglove/rostime";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
-import { CoordinateFrame, TimeAndTransform } from "./CoordinateFrame";
+import { CoordinateFrame } from "./CoordinateFrame";
 import { Transform } from "./Transform";
+import { mat4Identity } from "./geometry";
+
+type TimeAndTransform = [time: Time, transform: Transform];
 
 describe("CoordinateFrame", () => {
   it("construction and traversal", () => {

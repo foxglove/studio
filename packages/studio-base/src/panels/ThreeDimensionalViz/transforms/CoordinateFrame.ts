@@ -22,7 +22,7 @@ import { MutablePose, Pose } from "@foxglove/studio-base/types/Messages";
 import { Transform } from "./Transform";
 import { mat4Identity } from "./geometry";
 
-export type TimeAndTransform = [time: Time, transform: Transform];
+type TimeAndTransform = [time: Time, transform: Transform];
 
 const DEFAULT_MAX_STORAGE_TIME: Duration = { sec: 10, nsec: 0 };
 
