@@ -63,7 +63,7 @@ function Example({
       const input = wrapper.current?.querySelector("input");
       const button = wrapper.current?.querySelector("[data-test='welcome-content'] button");
       if (!input || !button) {
-        await delay(10);
+        await delay(100);
         continue;
       }
 
