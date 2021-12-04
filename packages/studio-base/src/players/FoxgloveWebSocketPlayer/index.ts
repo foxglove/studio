@@ -26,7 +26,7 @@ import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 import { Channel, ChannelId, FoxgloveClient, SubscriptionId } from "@foxglove/ws-protocol";
 
-import protobufDefinitionsToDatatypes from "./protobufDefinitionsToDatatypes";
+import protobufDefinitionsToDatatypes, { stripLeadingDot } from "./protobufDefinitionsToDatatypes";
 
 const log = Log.getLogger(__dirname);
 
@@ -60,7 +60,13 @@ function parseChannel(channel: Channel): ParsedChannel {
   const datatypes: RosDatatypes = new Map();
   protobufDefinitionsToDatatypes(datatypes, type);
 
-  return { channel, fullSchemaName: type.fullName, deserializer, datatypes };
+  return {
+    channel,
+    // fullName is a fully qualified name but includes a leading dot. Remove the leading dot.
+    fullSchemaName: stripLeadingDot(type.fullName),
+    deserializer,
+    datatypes,
+  };
 }
 
 export default class FoxgloveWebSocketPlayer implements Player {
@@ -223,6 +229,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     client.on("message", ({ subscriptionId, timestamp, data }) => {
       if (!this._hasReceivedMessage) {
         this._hasReceivedMessage = true;
+        this._metricsCollector.initialized();
         this._metricsCollector.recordTimeToFirstMsgs();
       }
       const chanInfo = this._resolvedSubscriptionsById.get(subscriptionId);
