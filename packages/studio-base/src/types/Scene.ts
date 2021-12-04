@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 import { Time } from "@foxglove/rostime";
 import {
-  Pose,
   ArrowMarker,
   CubeMarker,
   SphereMarker,
@@ -32,12 +31,6 @@ import {
   PoseStamped,
   MeshMarker,
 } from "@foxglove/studio-base/types/Messages";
-import Bounds from "@foxglove/studio-base/util/Bounds";
-
-export type Scene = {
-  flattenedZHeightPose?: Pose;
-  bounds: Bounds;
-};
 
 export interface MarkerCollector {
   arrow(arg0: ArrowMarker): void;

@@ -92,6 +92,7 @@ describe("groupLineStripsIntoInstancedLineLists", () => {
             id: "foo",
             ns: "bar",
             type: MARKER_MSG_TYPES.LINE_STRIP,
+            frame_locked: false,
             scale: { x: 1.0, y: 1.0, z: 1.0 },
             points: [
               { x: 0, y: 0, z: 0 },
@@ -111,6 +112,7 @@ describe("groupLineStripsIntoInstancedLineLists", () => {
         poses: [{ orientation: { w: 1, x: 1, y: 1, z: 1 }, position: { x: 0, y: 0, z: 0 } }],
         scale: { x: 1, y: 1, z: 1 },
         type: MARKER_MSG_TYPES.LINE_STRIP,
+        frame_locked: false,
         primitive: "line strip",
       },
     ]);
@@ -140,6 +142,7 @@ describe("groupLineStripsIntoInstancedLineLists", () => {
             id: "foo",
             ns: "bar",
             type: MARKER_MSG_TYPES.LINE_STRIP,
+            frame_locked: false,
             scale: { x: 1.0, y: 1.0, z: 1.0 },
             points: [
               { x: 0, y: 0, z: 0 },
@@ -155,6 +158,7 @@ describe("groupLineStripsIntoInstancedLineLists", () => {
             id: "foo",
             ns: "bar",
             type: MARKER_MSG_TYPES.LINE_STRIP,
+            frame_locked: false,
             scale: { x: 1.0, y: 1.0, z: 1.0 },
             points: [
               { x: 0, y: 0, z: 0 },
@@ -178,6 +182,7 @@ describe("groupLineStripsIntoInstancedLineLists", () => {
         ],
         scale: { x: 1, y: 1, z: 1 },
         type: MARKER_MSG_TYPES.LINE_STRIP,
+        frame_locked: false,
         primitive: "line strip",
       },
     ]);
@@ -289,6 +294,7 @@ describe("groupLineStripsIntoInstancedLineLists", () => {
             id: "foo",
             ns: "bar",
             type: MARKER_MSG_TYPES.LINE_STRIP,
+            frame_locked: false,
             scale: { x: 1.0, y: 1.0, z: 1.0 },
             points: [
               { x: 0, y: 0, z: 0 },
@@ -307,6 +313,7 @@ describe("groupLineStripsIntoInstancedLineLists", () => {
         poses: [{ orientation: { w: 1, x: 1, y: 1, z: 1 }, position: { x: 0, y: 0, z: 0 } }],
         scale: { x: 1, y: 1, z: 1 },
         type: MARKER_MSG_TYPES.LINE_STRIP,
+        frame_locked: false,
         primitive: "line strip",
       },
     ]);
@@ -349,6 +356,7 @@ describe("groupLineStripsIntoInstancedLineLists", () => {
             pose: { position: { x: 0, y: 0, z: 0 }, orientation: { w: 1, x: 1, y: 1, z: 1 } },
             color: COLORS.RED,
             type: MARKER_MSG_TYPES.LINE_LIST,
+            frame_locked: false,
           },
           {
             id: "foo",
@@ -363,10 +371,12 @@ describe("groupLineStripsIntoInstancedLineLists", () => {
             pose: { position: { x: 0, y: 0, z: 0 }, orientation: { w: 1, x: 1, y: 1, z: 1 } },
             color: COLORS.RED,
             type: MARKER_MSG_TYPES.LINE_LIST,
+            frame_locked: false,
           },
         ],
         id: "ns:bar_type:5_scalex:1_scaley:1_scalez:1",
         type: MARKER_MSG_TYPES.INSTANCED_LINE_LIST,
+        frame_locked: false,
         primitive: "lines",
       },
     ]);
@@ -418,10 +428,12 @@ describe("groupLineStripsIntoInstancedLineLists", () => {
             pose: { position: { x: 0, y: 0, z: 0 }, orientation: { w: 1, x: 1, y: 1, z: 1 } },
             color: COLORS.RED,
             type: MARKER_MSG_TYPES.LINE_STRIP,
+            frame_locked: false,
           },
         ],
         id: "ns:bar_type:4_scalex:1_scaley:1_scalez:1",
         type: MARKER_MSG_TYPES.LINE_STRIP,
+        frame_locked: false,
         primitive: "line strip",
       },
       {
@@ -450,6 +462,7 @@ describe("groupLineStripsIntoInstancedLineLists", () => {
             pose: { position: { x: 0, y: 0, z: 0 }, orientation: { w: 1, x: 1, y: 1, z: 1 } },
             color: COLORS.RED,
             type: MARKER_MSG_TYPES.LINE_LIST,
+            frame_locked: false,
           },
           {
             id: "foo",
@@ -464,10 +477,12 @@ describe("groupLineStripsIntoInstancedLineLists", () => {
             pose: { position: { x: 0, y: 0, z: 0 }, orientation: { w: 1, x: 1, y: 1, z: 1 } },
             color: COLORS.RED,
             type: MARKER_MSG_TYPES.LINE_LIST,
+            frame_locked: false,
           },
         ],
         id: "ns:bar_type:5_scalex:1_scaley:1_scalez:1",
         type: MARKER_MSG_TYPES.INSTANCED_LINE_LIST,
+        frame_locked: false,
         primitive: "lines",
       },
     ]);
