@@ -201,6 +201,7 @@ export const getArrowToParentMarker = (
       y: 0.01,
       z: 0.05,
     },
+    frame_locked: true,
   } as ArrowMarker;
 };
 

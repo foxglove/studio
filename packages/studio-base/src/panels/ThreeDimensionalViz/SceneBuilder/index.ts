@@ -187,7 +187,7 @@ function computeMarkerPose(
   if (!frame || !rootFrame) {
     return undefined;
   }
-  const time = marker.frame_locked === true ? currentTime : marker.header.stamp;
+  const time = marker.frame_locked ? currentTime : marker.header.stamp;
   return rootFrame.apply(emptyPose(), marker.pose, frame, time);
 }
 
@@ -501,16 +501,7 @@ export default class SceneBuilder implements MarkerProvider {
     }
 
     const points = (message as unknown as { points: MutablePoint[] }).points;
-
-    const parsedPoints = [];
-    if (points.length > 0) {
-      for (const point of points) {
-        const x = point.x;
-        const y = point.y;
-        const z = point.z;
-        parsedPoints.push({ x, y, z });
-      }
-    }
+    const parsedPoints = points.map((p) => ({ x: p.x, y: p.y, z: p.z }));
 
     // HACK(jacob): rather than hard-coding this, we should
     //  (a) produce this visualization dynamically from a non-marker topic
@@ -562,6 +553,7 @@ export default class SceneBuilder implements MarkerProvider {
       ns: string;
       header: Header;
       action: 0 | 1 | 2 | 3;
+      frame_locked: boolean;
       text?: string;
       poses?: readonly Pose[];
       closed?: boolean;
@@ -581,6 +573,7 @@ export default class SceneBuilder implements MarkerProvider {
       ns: message.ns,
       header: message.header,
       action: message.action,
+      frame_locked: message.frame_locked,
       mesh_resource: message.mesh_resource,
       mesh_use_embedded_materials: message.mesh_use_embedded_materials,
     };
@@ -700,8 +693,7 @@ export default class SceneBuilder implements MarkerProvider {
       drawData.header.stamp,
     );
     if (!pose) {
-      // Don't error on frame_id="", interpret it as an identity transform
-      if (frameId.length > 0 && !(this.transforms?.hasFrame(frameId) ?? false)) {
+      if (!(this.transforms?.hasFrame(frameId) ?? false)) {
         const error = this._addError(this.errors.topicsMissingTransforms, topic);
         error.frameIds.add(drawData.header.frame_id);
       }
