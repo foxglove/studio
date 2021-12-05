@@ -76,7 +76,6 @@ const buildSyntheticArrowMarker = (
 export type ErrorDetails = { frameIds: Set<string>; namespaces: Set<string> };
 
 export type SceneErrors = {
-  topicsMissingFrameIds: Map<string, ErrorDetails>;
   topicsMissingTransforms: Map<string, ErrorDetails>;
   topicsWithError: Map<string, string>;
   rootTransformID: string;
@@ -126,9 +125,6 @@ export function getSceneErrorsByTopic(
   // errors related to missing frame ids and transform ids
   sceneErrors.topicsMissingTransforms.forEach((err, topic) => {
     addError(topic, missingTransformMessage(sceneErrors.rootTransformID, err, transforms));
-  });
-  sceneErrors.topicsMissingFrameIds.forEach((_err, topic) => {
-    addError(topic, "missing frame id");
   });
   return res;
 }
@@ -202,7 +198,6 @@ export default class SceneBuilder implements MarkerProvider {
   // have to keep in sync.
   errors: SceneErrors = {
     rootTransformID: "",
-    topicsMissingFrameIds: new Map(),
     topicsMissingTransforms: new Map(),
     topicsWithError: new Map(),
   };
@@ -274,7 +269,6 @@ export default class SceneBuilder implements MarkerProvider {
     if (this._playerId !== playerId) {
       this.errors = {
         rootTransformID: "",
-        topicsMissingFrameIds: new Map(),
         topicsMissingTransforms: new Map(),
         topicsWithError: new Map(),
       };
@@ -381,12 +375,8 @@ export default class SceneBuilder implements MarkerProvider {
   }
 
   hasErrors(): boolean {
-    const { topicsMissingFrameIds, topicsMissingTransforms, topicsWithError } = this.errors;
-    return (
-      topicsMissingFrameIds.size !== 0 ||
-      topicsMissingTransforms.size !== 0 ||
-      topicsWithError.size !== 0
-    );
+    const { topicsMissingTransforms, topicsWithError } = this.errors;
+    return topicsMissingTransforms.size !== 0 || topicsWithError.size !== 0;
   }
 
   setOnForceUpdate(callback: () => void): void {
@@ -583,11 +573,6 @@ export default class SceneBuilder implements MarkerProvider {
 
   private _consumeOccupancyGrid = (topic: string, message: NavMsgs$OccupancyGrid): void => {
     const { frame_id } = message.header;
-
-    if (frame_id.length === 0) {
-      this._addError(this.errors.topicsMissingFrameIds, topic);
-      return;
-    }
 
     let pose: MutablePose | undefined = emptyPose();
     if (this.transforms) {
@@ -858,7 +843,6 @@ export default class SceneBuilder implements MarkerProvider {
       return;
     }
 
-    this.errors.topicsMissingFrameIds.delete(topic);
     this.errors.topicsMissingTransforms.delete(topic);
     this.errors.topicsWithError.delete(topic);
     this.collectors[topic] ??= new MessageCollector();
