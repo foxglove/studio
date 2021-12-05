@@ -78,7 +78,6 @@ export type ErrorDetails = { frameIds: Set<string>; namespaces: Set<string> };
 export type SceneErrors = {
   topicsMissingFrameIds: Map<string, ErrorDetails>;
   topicsMissingTransforms: Map<string, ErrorDetails>;
-  topicsWithBadFrameIds: Map<string, ErrorDetails>;
   topicsWithError: Map<string, string>;
   rootTransformID: string;
 };
@@ -205,7 +204,6 @@ export default class SceneBuilder implements MarkerProvider {
     rootTransformID: "",
     topicsMissingFrameIds: new Map(),
     topicsMissingTransforms: new Map(),
-    topicsWithBadFrameIds: new Map(),
     topicsWithError: new Map(),
   };
   errorsByTopic: {
@@ -278,7 +276,6 @@ export default class SceneBuilder implements MarkerProvider {
         rootTransformID: "",
         topicsMissingFrameIds: new Map(),
         topicsMissingTransforms: new Map(),
-        topicsWithBadFrameIds: new Map(),
         topicsWithError: new Map(),
       };
       this._updateErrorsByTopic();
@@ -384,16 +381,10 @@ export default class SceneBuilder implements MarkerProvider {
   }
 
   hasErrors(): boolean {
-    const {
-      topicsMissingFrameIds,
-      topicsMissingTransforms,
-      topicsWithBadFrameIds,
-      topicsWithError,
-    } = this.errors;
+    const { topicsMissingFrameIds, topicsMissingTransforms, topicsWithError } = this.errors;
     return (
       topicsMissingFrameIds.size !== 0 ||
       topicsMissingTransforms.size !== 0 ||
-      topicsWithBadFrameIds.size !== 0 ||
       topicsWithError.size !== 0
     );
   }
@@ -596,11 +587,6 @@ export default class SceneBuilder implements MarkerProvider {
     if (frame_id.length === 0) {
       this._addError(this.errors.topicsMissingFrameIds, topic);
       return;
-    }
-
-    if (frame_id !== this.rootTransformID) {
-      const error = this._addError(this.errors.topicsWithBadFrameIds, topic);
-      error.frameIds.add(frame_id);
     }
 
     let pose: MutablePose | undefined = emptyPose();
@@ -874,7 +860,6 @@ export default class SceneBuilder implements MarkerProvider {
 
     this.errors.topicsMissingFrameIds.delete(topic);
     this.errors.topicsMissingTransforms.delete(topic);
-    this.errors.topicsWithBadFrameIds.delete(topic);
     this.errors.topicsWithError.delete(topic);
     this.collectors[topic] ??= new MessageCollector();
     this.collectors[topic]?.setClock(this._clock ?? { sec: 0, nsec: 0 });
