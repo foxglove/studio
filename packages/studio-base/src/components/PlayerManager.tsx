@@ -192,7 +192,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
           const newPlayer = foundSource.initialize({ url, metricsCollector, unlimitedMemoryCache });
           setBasePlayer(newPlayer);
         } catch (error) {
-          addToast(error.message, { appearance: "error" });
+          addToast((error as Error).message, { appearance: "error" });
         }
 
         return;
@@ -211,7 +211,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
           if (error.name === "AbortError") {
             return undefined;
           }
-          addToast(error.message, { appearance: "error" });
+          addToast((error as Error).message, { appearance: "error" });
         }
 
         return;
@@ -244,7 +244,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
           if (error.name === "AbortError") {
             return;
           }
-          addToast(error.message, { appearance: "error" });
+          addToast((error as Error).message, { appearance: "error" });
         }
 
         return;
@@ -259,7 +259,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
         });
         setBasePlayer(newPlayer);
       } catch (error) {
-        addToast(error.message, { appearance: "error" });
+        addToast((error as Error).message, { appearance: "error" });
       }
 
       return;
