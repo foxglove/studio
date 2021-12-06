@@ -123,7 +123,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
     player?.setMessageOrder(messageOrder ?? DEFAULT_MESSAGE_ORDER);
   }, [player, messageOrder]);
   useLayoutEffect(() => {
-    player?.setUserNodes(userNodes ?? EMPTY_USER_NODES);
+    void player?.setUserNodes(userNodes ?? EMPTY_USER_NODES);
   }, [player, userNodes]);
 
   const { addToast } = useToasts();

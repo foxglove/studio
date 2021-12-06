@@ -485,7 +485,7 @@ export default class Ros1Player implements Player {
 
   setParameter(key: string, value: ParameterValue): void {
     log.debug(`Ros1Player.setParameter(key=${key}, value=${value})`);
-    this._rosNode?.setParameter(key, value);
+    void this._rosNode?.setParameter(key, value);
   }
 
   publish({ topic, msg }: PublishPayload): void {
