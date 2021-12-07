@@ -105,7 +105,7 @@ export default {
 
 OnePath.parameters = { useReadySignal: true };
 export function OnePath(): JSX.Element {
-  const readySignal = useReadySignal({ count: 2 });
+  const readySignal = useReadySignal({ count: 1 });
   const pauseFrame = useCallback(() => readySignal, [readySignal]);
   return (
     <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
@@ -120,7 +120,7 @@ export function OnePath(): JSX.Element {
 
 MultiplePaths.parameters = { useReadySignal: true };
 export function MultiplePaths(): JSX.Element {
-  const readySignal = useReadySignal({ count: 2 });
+  const readySignal = useReadySignal({ count: 1 });
   const pauseFrame = useCallback(() => readySignal, [readySignal]);
   return (
     <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
@@ -138,7 +138,7 @@ export function MultiplePaths(): JSX.Element {
 
 MultiplePathsWithHover.parameters = { useReadySignal: true };
 export function MultiplePathsWithHover(): JSX.Element {
-  const readySignal = useReadySignal({ count: 2 });
+  const readySignal = useReadySignal({ count: 1 });
   const pauseFrame = useCallback(() => readySignal, [readySignal]);
   return (
     <PanelSetup
@@ -166,7 +166,7 @@ export function MultiplePathsWithHover(): JSX.Element {
 
 LongPath.parameters = { useReadySignal: true };
 export function LongPath(): JSX.Element {
-  const readySignal = useReadySignal({ count: 2 });
+  const readySignal = useReadySignal({ count: 1 });
   const pauseFrame = useCallback(() => readySignal, [readySignal]);
   return (
     <PanelSetup fixture={fixture} pauseFrame={pauseFrame} style={{ maxWidth: 100 }}>
@@ -181,7 +181,7 @@ export function LongPath(): JSX.Element {
 
 JsonPath.parameters = { useReadySignal: true };
 export function JsonPath(): JSX.Element {
-  const readySignal = useReadySignal({ count: 2 });
+  const readySignal = useReadySignal({ count: 1 });
   const pauseFrame = useCallback(() => readySignal, [readySignal]);
   return (
     <PanelSetup fixture={fixture} pauseFrame={pauseFrame}>
@@ -239,7 +239,7 @@ const messageCache: BlockCache = {
 
 Blocks.parameters = { useReadySignal: true };
 export function Blocks(): JSX.Element {
-  const readySignal = useReadySignal({ count: 2 });
+  const readySignal = useReadySignal({ count: 1 });
   const pauseFrame = useCallback(() => readySignal, [readySignal]);
 
   const blockFixture = { ...fixture, progress: { messageCache } };
