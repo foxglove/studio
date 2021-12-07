@@ -20,36 +20,21 @@ import {
 import { TransformTree } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
 import { Frame, MessageEvent, Topic } from "@foxglove/studio-base/players/types";
 import { MarkerArray, StampedMessage, TF } from "@foxglove/studio-base/types/Messages";
-import sendNotification from "@foxglove/studio-base/util/sendNotification";
 
 type TfMessage = { transforms: TF[] };
 
-function consumeTfs(
-  tfs: MessageEvent<TfMessage>[],
-  transforms: TransformTree,
-  topic: string,
-): void {
+function consumeTfs(tfs: MessageEvent<TfMessage>[], transforms: TransformTree): void {
   for (const { message } of tfs) {
     const parsedMessage = message;
     for (const tf of parsedMessage.transforms) {
-      try {
-        transforms.addTransformMessage(tf);
-      } catch (e) {
-        const err = e as Error;
-        sendNotification(`Invalid transform on "${topic}"`, err.message, "user", "error");
-      }
+      transforms.addTransformMessage(tf);
     }
   }
 }
 
-function consumeSingleTfs(tfs: MessageEvent<TF>[], transforms: TransformTree, topic: string): void {
+function consumeSingleTfs(tfs: MessageEvent<TF>[], transforms: TransformTree): void {
   for (const { message } of tfs) {
-    try {
-      transforms.addTransformMessage(message);
-    } catch (e) {
-      const err = e as Error;
-      sendNotification(`Invalid transform on ${topic}`, err.message, "user", "error");
-    }
+    transforms.addTransformMessage(message);
   }
 }
 
@@ -111,10 +96,10 @@ function useTransforms(topics: readonly Topic[], frame: Frame, reset: boolean): 
 
       // Process all TF topics (ex: /tf and /tf_static)
       if (TF_DATATYPES.includes(datatype)) {
-        consumeTfs(msgs as MessageEvent<TfMessage>[], transforms, topic);
+        consumeTfs(msgs as MessageEvent<TfMessage>[], transforms);
         updated = true;
       } else if (TRANSFORM_STAMPED_DATATYPES.includes(datatype)) {
-        consumeSingleTfs(msgs as MessageEvent<TF>[], transforms, topic);
+        consumeSingleTfs(msgs as MessageEvent<TF>[], transforms);
         updated = true;
       }
     }
