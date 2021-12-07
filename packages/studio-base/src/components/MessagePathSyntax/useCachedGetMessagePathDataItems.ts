@@ -71,6 +71,10 @@ export function useCachedGetMessagePathDataItems(
     [key: string]: RosPath;
   }>(unmemoizedFilledInPaths);
 
+  // Filter down topics and datatypes to only the ones we need to process the requested paths, so
+  // our result can be dependent on the relevant topics only. Without this, adding topics/datatypes
+  // dynamically would result in panels clearing out when their message reducers change as a result
+  // of the change in topics/datatypes identity from the player.
   const unmemoizedRelevantTopics = useMemo(() => {
     const topicsByName = getTopicsByTopicName(providerTopics);
     const seenNames = new Set<string>();
