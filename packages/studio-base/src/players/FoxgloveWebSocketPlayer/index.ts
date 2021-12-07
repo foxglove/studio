@@ -25,7 +25,7 @@ import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 import { Channel, ChannelId, FoxgloveClient, SubscriptionId } from "@foxglove/ws-protocol";
 
-import jsonSchemaToDatatypes from "./parseJsonSchema";
+import parseJsonSchema from "./parseJsonSchema";
 import protobufDefinitionsToDatatypes, { stripLeadingDot } from "./protobufDefinitionsToDatatypes";
 
 const log = Log.getLogger(__dirname);
@@ -54,7 +54,7 @@ function parseChannel(channel: Channel): ParsedChannel {
       if (typeof schema !== "object") {
         throw new Error(`Invalid schema for channel ${channel.id}, expected JSON object`);
       }
-      const { datatypes: parsedDatatypes, postprocessValue } = jsonSchemaToDatatypes(
+      const { datatypes: parsedDatatypes, postprocessValue } = parseJsonSchema(
         schema as Record<string, unknown>,
         channel.schemaName,
       );
