@@ -74,13 +74,11 @@ export class CoordinateFrame {
 
   /**
    * Set the parent frame for this frame. If the parent frame is already set to
-   * a different frame, an error is thrown.
+   * a different frame, the transform history is cleared.
    */
   setParent(parent: CoordinateFrame): void {
     if (this._parent && this._parent !== parent) {
-      throw new Error(
-        `Cannot reparent frame "${this.id}" from "${this._parent.id}" to "${parent.id}"`,
-      );
+      this._transforms.clear();
     }
     this._parent = parent;
   }
