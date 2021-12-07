@@ -24,7 +24,7 @@ export class TransformTree {
       frame.setParent(this.getOrCreateFrame(parentFrameId));
     } else if (curParentFrame.id !== parentFrameId) {
       throw new Error(
-        `Received "${frameId}"->"${parentFrameId}" transform but parent "${curParentFrame.id}" already exists`,
+        `Received <${parentFrameId}> <- <${frameId}> transform but <${curParentFrame.id}> <- <${frameId}> already exists`,
       );
     }
 
