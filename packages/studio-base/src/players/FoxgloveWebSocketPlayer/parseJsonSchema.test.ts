@@ -173,7 +173,7 @@ describe("parseJsonSchema", () => {
       value: {
         bin: protobufjs.util.base64.encode(new Uint8Array([0xa1, 0xb2, 0xc3]), 0, 3),
         nested: {
-          bin2: protobufjs.util.base64.encode(new Uint8Array([0xa1, 0xb2, 0xc3]), 0, 3),
+          bin2: protobufjs.util.base64.encode(new Uint8Array([0xd4, 0xe5, 0xf6]), 0, 3),
           bar: [
             { bin3: protobufjs.util.base64.encode(new Uint8Array([0, 1, 0xfe, 0xff]), 0, 4) },
             { bin3: protobufjs.util.base64.encode(new Uint8Array([2, 3, 0xfe, 0xff]), 0, 4) },
@@ -183,7 +183,7 @@ describe("parseJsonSchema", () => {
       expectedValue: {
         bin: new Uint8Array([0xa1, 0xb2, 0xc3]),
         nested: {
-          bin2: new Uint8Array([0xa1, 0xb2, 0xc3]),
+          bin2: new Uint8Array([0xd4, 0xe5, 0xf6]),
           bar: [
             { bin3: new Uint8Array([0, 1, 0xfe, 0xff]) },
             { bin3: new Uint8Array([2, 3, 0xfe, 0xff]) },
