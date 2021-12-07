@@ -27,6 +27,7 @@ import { MessageEvent, Topic } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import {
   enumValuesByDatatypeAndField,
+  extractTypeFromStudioEnumAnnotation,
   getTopicsByTopicName,
 } from "@foxglove/studio-base/util/selectors";
 
@@ -103,7 +104,10 @@ export function useCachedGetMessagePathDataItems(
       if (type) {
         relevantDatatypes.set(datatypeName, type);
         for (const field of type.definitions) {
-          if (field.isComplex === true) {
+          if (
+            field.isComplex === true ||
+            extractTypeFromStudioEnumAnnotation(field.name) != undefined
+          ) {
             addRelevantDatatype(field.type);
           }
         }
