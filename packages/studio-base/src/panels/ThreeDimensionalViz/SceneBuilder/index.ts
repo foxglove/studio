@@ -634,7 +634,7 @@ export default class SceneBuilder implements MarkerProvider {
     originalMessage?: unknown,
   ): void => {
     if (this.renderFrameId == undefined) {
-      throw new Error("missing renderFrameId");
+      throw new Error("No camera frame selected");
     }
 
     // some callers of _consumeNonMarkerMessage provide LazyMessages and others provide regular objects
