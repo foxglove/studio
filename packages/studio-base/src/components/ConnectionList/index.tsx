@@ -3,8 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { ActionButton, Icon, makeStyles, Text, useTheme } from "@fluentui/react";
-import { useCallback, useContext, useMemo } from "react";
-import styled from "styled-components";
+import { useCallback, useContext } from "react";
 
 import {
   MessagePipelineContext,
@@ -18,7 +17,6 @@ import {
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
 import { PlayerPresence, PlayerProblem } from "@foxglove/studio-base/players/types";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 const selectPlayerProblems = (ctx: MessagePipelineContext) => ctx.playerState.problems;
@@ -37,20 +35,19 @@ const useStyles = makeStyles((theme) => ({
     marginLeft: "10px",
     borderRadius: 100,
   },
+  divider: {
+    width: "100%",
+    height: 1,
+    border: 0,
+    backgroundColor: theme.semanticColors.bodyDivider,
+  },
 }));
 
-const Divider = styled.hr`
-  width: 100%;
-  height: 1px;
-  border: 0;
-  background-color: ${colors.DIVIDER};
-`;
-
 export default function ConnectionList(): JSX.Element {
-  const { selectSource, selectRecent, availableSources, recentSources } = usePlayerSelection();
+  const { selectSource, availableSources } = usePlayerSelection();
   const confirm = useConfirm();
   const modalHost = useContext(ModalContext);
-  const styles = useStyles();
+  const classes = useStyles();
 
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? emptyArray;
   const playerPresence = useMessagePipeline(selectPlayerPresence);
@@ -92,39 +89,6 @@ export default function ConnectionList(): JSX.Element {
     [modalHost],
   );
 
-  const recentSourcesElement = useMemo(() => {
-    if (recentSources.length === 0) {
-      return ReactNull;
-    }
-
-    return (
-      <>
-        {recentSources.map((recent) => {
-          return (
-            <div key={recent.id}>
-              <ActionButton
-                styles={{
-                  label: {
-                    textAlign: "left",
-                    whiteSpace: "nowrap",
-                    textOverflow: "ellipsis",
-                  },
-                }}
-                onClick={() => {
-                  selectRecent(recent.id);
-                }}
-              >
-                {recent.displayName}
-              </ActionButton>
-            </div>
-          );
-        })}
-
-        <Divider />
-      </>
-    );
-  }, [recentSources, selectRecent]);
-
   return (
     <>
       <Text
@@ -135,7 +99,6 @@ export default function ConnectionList(): JSX.Element {
           ? "Not connected. Choose a data source below to get started."
           : playerName}
       </Text>
-      {recentSourcesElement}
       {availableSources.map((source) => {
         if (source.hidden === true) {
           return ReactNull;
@@ -163,13 +126,13 @@ export default function ConnectionList(): JSX.Element {
               onClick={() => onSourceClick(source)}
             >
               {source.displayName}
-              {source.badgeText && <span className={styles.badge}>{source.badgeText}</span>}
+              {source.badgeText && <span className={classes.badge}>{source.badgeText}</span>}
             </ActionButton>
           </div>
         );
       })}
 
-      {playerProblems.length > 0 && <Divider />}
+      {playerProblems.length > 0 && <hr className={classes.divider} />}
       {playerProblems.map((problem, idx) => {
         const iconName = problem.severity === "error" ? "Error" : "Warning";
         const color =
