@@ -57,6 +57,8 @@ const CAPABILITIES = [PlayerCapabilities.advertise];
 // support raw ROS messages; instead we use the CBOR compression provided by roslibjs, which
 // unmarshalls into plain JS objects.
 export default class RosbridgePlayer implements Player {
+  readonly displayName: string;
+
   private _url: string; // WebSocket URL.
   private _rosClient?: roslib.Ros; // The roslibjs client when we're connected.
   private _id: string = uuidv4(); // Unique ID for this player.
@@ -99,6 +101,7 @@ export default class RosbridgePlayer implements Player {
     url: string;
     metricsCollector: PlayerMetricsCollectorInterface;
   }) {
+    this.displayName = `Rosbridge ${url}`;
     this._presence = PlayerPresence.INITIALIZING;
     this._metricsCollector = metricsCollector;
     this._url = url;

@@ -39,21 +39,37 @@ export interface IDataSourceFactory {
 }
 
 /**
+ * Recently selected source information
+ *
+ * The _id_ is opaque and up to the PlayerSelectionContext implementation to specify.
+ */
+export type RecentSource = {
+  id: string;
+  displayName: string;
+};
+
+/**
  * PlayerSelectionContext exposes the available data sources and a function to set the current data source
  */
 export interface PlayerSelection {
   selectSource: (sourceId: string, args?: Record<string, unknown>) => void;
+  selectRecent: (recentId: string) => void;
 
   /** Currently selected data source */
   selectedSource?: IDataSourceFactory;
 
   /** List of available data sources */
   availableSources: IDataSourceFactory[];
+
+  /** Recently selected sources */
+  recentSources: RecentSource[];
 }
 
 const PlayerSelectionContext = createContext<PlayerSelection>({
   selectSource: () => {},
+  selectRecent: () => {},
   availableSources: [],
+  recentSources: [],
 });
 
 export function usePlayerSelection(): PlayerSelection {

@@ -3,7 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { ActionButton, Icon, makeStyles, Text, useTheme } from "@fluentui/react";
-import { useCallback, useContext } from "react";
+import { useCallback, useContext, useMemo } from "react";
+import styled from "styled-components";
 
 import {
   MessagePipelineContext,
@@ -38,8 +39,15 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const Divider = styled.hr`
+  width: 100%;
+  height: 1px;
+  border: 0;
+  background-color: ${colors.DIVIDER};
+`;
+
 export default function ConnectionList(): JSX.Element {
-  const { selectSource, availableSources } = usePlayerSelection();
+  const { selectSource, selectRecent, availableSources, recentSources } = usePlayerSelection();
   const confirm = useConfirm();
   const modalHost = useContext(ModalContext);
   const styles = useStyles();
@@ -84,6 +92,39 @@ export default function ConnectionList(): JSX.Element {
     [modalHost],
   );
 
+  const recentSourcesElement = useMemo(() => {
+    if (recentSources.length === 0) {
+      return ReactNull;
+    }
+
+    return (
+      <>
+        {recentSources.map((recent) => {
+          return (
+            <div key={recent.id}>
+              <ActionButton
+                styles={{
+                  label: {
+                    textAlign: "left",
+                    whiteSpace: "nowrap",
+                    textOverflow: "ellipsis",
+                  },
+                }}
+                onClick={() => {
+                  selectRecent(recent.id);
+                }}
+              >
+                {recent.displayName}
+              </ActionButton>
+            </div>
+          );
+        })}
+
+        <Divider />
+      </>
+    );
+  }, [recentSources, selectRecent]);
+
   return (
     <>
       <Text
@@ -94,6 +135,7 @@ export default function ConnectionList(): JSX.Element {
           ? "Not connected. Choose a data source below to get started."
           : playerName}
       </Text>
+      {recentSourcesElement}
       {availableSources.map((source) => {
         if (source.hidden === true) {
           return ReactNull;
@@ -127,9 +169,7 @@ export default function ConnectionList(): JSX.Element {
         );
       })}
 
-      {playerProblems.length > 0 && (
-        <hr style={{ width: "100%", height: "1px", border: 0, backgroundColor: colors.DIVIDER }} />
-      )}
+      {playerProblems.length > 0 && <Divider />}
       {playerProblems.map((problem, idx) => {
         const iconName = problem.severity === "error" ? "Error" : "Warning";
         const color =

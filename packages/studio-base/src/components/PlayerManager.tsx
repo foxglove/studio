@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { set as idbSet, get as idbGet, createStore as idbCreateStore } from "idb-keyval";
 import {
   PropsWithChildren,
   useCallback,
@@ -21,7 +22,8 @@ import {
   useState,
 } from "react";
 import { useToasts } from "react-toast-notifications";
-import { useLocalStorage } from "react-use";
+import { useAsync, useLocalStorage } from "react-use";
+import { v4 as uuid } from "uuid";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
@@ -45,7 +47,6 @@ import UserNodePlayer from "@foxglove/studio-base/players/UserNodePlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 import { UserNodes } from "@foxglove/studio-base/types/panels";
 import Storage from "@foxglove/studio-base/util/Storage";
-import { windowHasValidURLState } from "@foxglove/studio-base/util/appURLState";
 
 const log = Logger.getLogger(__filename);
 
@@ -56,6 +57,15 @@ const EMPTY_GLOBAL_VARIABLES: GlobalVariables = Object.freeze({});
 type PlayerManagerProps = {
   playerSources: IDataSourceFactory[];
 };
+
+type RecentRecord = {
+  id: string;
+  sourceId: string;
+  displayName: string;
+  args?: Record<string, unknown>;
+};
+
+const customStore = idbCreateStore("foxglove-recents", "custom-store-name");
 
 export default function PlayerManager(props: PropsWithChildren<PlayerManagerProps>): JSX.Element {
   const { children, playerSources } = props;
@@ -127,24 +137,119 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   }, [player, userNodes]);
 
   const { addToast } = useToasts();
-  const [savedSource, setSavedSource, removeSavedSource] = useLocalStorage<{
-    id: string;
-    args?: Record<string, unknown>;
-  }>("studio.playermanager.selected-source.v2");
+  const [_saveSource, _setSavedSource, removeSavedSource] = useLocalStorage<unknown>(
+    "studio.playermanager.selected-source.v2",
+  );
 
   const [selectedSource, setSelectedSource] = useState<IDataSourceFactory | undefined>();
+
+  const { value: savedRecents } = useAsync(async () => {
+    const untypedRecents = await idbGet("recents", customStore);
+    return untypedRecents as RecentRecord[];
+  }, []);
+
+  const [recents, setRecents] = useState<RecentRecord[]>([]);
+
+  useLayoutEffect(() => {
+    if (!savedRecents) {
+      return;
+    }
+    setRecents(savedRecents);
+  }, [savedRecents]);
+
+  const saveRecents = useCallback((recentRecords: RecentRecord[]) => {
+    idbSet("recents", recentRecords, customStore).catch((err) => {
+      console.error(err);
+    });
+  }, []);
+
+  // Add a new recent entry
+  const addRecent = useCallback(
+    (record: Omit<RecentRecord, "id">) => {
+      const newRecord: RecentRecord = {
+        id: uuid(),
+        ...record,
+      };
+
+      setRecents((prevRecents) => {
+        // To keep only the latest 5 recent items, we remove any items index 4+
+        prevRecents.splice(4, 100);
+        prevRecents.unshift(newRecord);
+
+        saveRecents(prevRecents);
+        return [...prevRecents];
+      });
+    },
+    [saveRecents],
+  );
+
+  // Select a recent entry by id
+  const selectRecent = useCallback(
+    (recentId: string) => {
+      // find the recent from the list and initialize
+      const foundRecent = recents.find((value) => value.id === recentId);
+      if (!foundRecent) {
+        addToast(`Failed to restore recent: ${recentId}`, {
+          appearance: "error",
+        });
+        return;
+      }
+
+      const sourceId = foundRecent.sourceId;
+      const foundSource = playerSources.find((source) => source.id === sourceId);
+      if (!foundSource) {
+        addToast(`Unknown data source: ${sourceId}`, {
+          appearance: "error",
+        });
+        return;
+      }
+
+      metricsCollector.setProperty("player", sourceId);
+      setSelectedSource(() => foundSource);
+
+      try {
+        const initArgs = {
+          metricsCollector,
+          unlimitedMemoryCache,
+          ...foundRecent.args,
+        };
+
+        const newPlayer = foundSource.initialize(initArgs);
+        setBasePlayer(newPlayer);
+
+        setRecents((prevRecents) => {
+          const recentIdx = recents.findIndex((value) => value.id === recentId);
+          if (recentIdx < 0) {
+            return prevRecents;
+          }
+          prevRecents.splice(recentIdx, 1);
+          prevRecents.unshift(foundRecent);
+
+          saveRecents(prevRecents);
+          return [...prevRecents];
+        });
+      } catch (err) {
+        addToast((err as Error).message, { appearance: "error" });
+      }
+    },
+    [recents, playerSources, metricsCollector, addToast, unlimitedMemoryCache, saveRecents],
+  );
+
+  // Make a RecentSources array for the PlayerSelectionContext
+  const recentSources = useMemo(() => {
+    return recents.map((item) => {
+      return { id: item.id, displayName: item.displayName };
+    });
+  }, [recents]);
 
   const selectSource = useCallback(
     async (sourceId: string, args?: Record<string, unknown>) => {
       log.debug(`Select Source: ${sourceId}`);
 
+      // empty string sourceId
       if (!sourceId) {
-        removeSavedSource();
-        setSelectedSource(undefined);
         return;
       }
-
-      removeSavedSource();
 
       const foundSource = playerSources.find((source) => source.id === sourceId);
       if (!foundSource) {
@@ -175,22 +280,23 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
             return;
           }
 
+          const allArgs = {
+            ...args,
+            rosHostname,
+            url,
+          };
+
           new Storage().setItem(previousPromptCacheKey, url);
-
-          // only url based sources are saved as the selected source
-          setSavedSource({
-            id: sourceId,
-            args: {
-              ...args,
-              url,
-              rosHostname,
-              metricsCollector,
-              unlimitedMemoryCache,
-            },
-          });
-
           const newPlayer = foundSource.initialize({ url, metricsCollector, unlimitedMemoryCache });
           setBasePlayer(newPlayer);
+
+          if (newPlayer?.displayName) {
+            addRecent({
+              sourceId,
+              displayName: newPlayer.displayName,
+              args: allArgs,
+            });
+          }
         } catch (error) {
           addToast((error as Error).message, { appearance: "error" });
         }
@@ -201,12 +307,25 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       if (foundSource.supportsOpenDirectory === true) {
         try {
           const folder = await showDirectoryPicker();
+          const allArgs = {
+            ...args,
+            folder,
+          };
+
           const newPlayer = foundSource.initialize({
             folder,
             metricsCollector,
             unlimitedMemoryCache,
           });
           setBasePlayer(newPlayer);
+
+          if (newPlayer?.displayName) {
+            addRecent({
+              sourceId,
+              displayName: newPlayer.displayName,
+              args: allArgs,
+            });
+          }
         } catch (error) {
           if (error.name === "AbortError") {
             return undefined;
@@ -234,12 +353,26 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
             file = await fileHandle.getFile();
           }
 
+          const allArgs = {
+            ...args,
+            file,
+          };
+
           const newPlayer = foundSource.initialize({
             file,
             metricsCollector,
             unlimitedMemoryCache,
           });
+
           setBasePlayer(newPlayer);
+
+          if (newPlayer?.displayName) {
+            addRecent({
+              sourceId,
+              displayName: newPlayer.displayName,
+              args: allArgs,
+            });
+          }
         } catch (error) {
           if (error.name === "AbortError") {
             return;
@@ -265,48 +398,30 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       return;
     },
     [
+      addRecent,
       addToast,
       consoleApi,
       metricsCollector,
       playerSources,
       prompt,
-      removeSavedSource,
       rosHostname,
-      setSavedSource,
       unlimitedMemoryCache,
     ],
   );
 
-  // Restore the saved source on first mount unless our url specifies a source.
+  // Prior to storing recents in indexeddb we stored some selected source state in localstorage.
+  // This effect clears the localstorage values to tidy up. We should remove it after some time
+  // 2021/12/07
   useLayoutEffect(() => {
-    // The URL encodes a valid session state. Defer to the URL state.
-    if (windowHasValidURLState()) {
-      return;
-    }
-
-    if (savedSource) {
-      const foundSource = playerSources.find((source) => source.id === savedSource.id);
-      if (!foundSource) {
-        return;
-      }
-      metricsCollector.setProperty("player", savedSource.id);
-
-      const initializedBasePlayer = foundSource.initialize({
-        ...savedSource.args,
-        metricsCollector,
-        unlimitedMemoryCache,
-      });
-      setBasePlayer(initializedBasePlayer);
-      setSelectedSource(() => foundSource);
-    }
-    // we only run the layout effect on first mount - never again even if the saved source changes
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    removeSavedSource();
+  }, [removeSavedSource]);
 
   const value: PlayerSelection = {
     selectSource,
+    selectRecent,
     selectedSource,
     availableSources: playerSources,
+    recentSources,
   };
 
   return (

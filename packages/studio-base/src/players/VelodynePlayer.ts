@@ -67,6 +67,8 @@ type VelodynePlayerOpts = {
 };
 
 export default class VelodynePlayer implements Player {
+  readonly displayName: string;
+
   private _id: string = uuidv4(); // Unique ID for this player
   private _port: number; // Listening UDP port
   private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState()
@@ -86,6 +88,7 @@ export default class VelodynePlayer implements Player {
   private _problemsById = new Map<string, PlayerProblem>();
 
   constructor({ port, metricsCollector }: VelodynePlayerOpts) {
+    this.displayName = `Velodyne port=${port}`;
     this._port = port ?? DEFAULT_VELODYNE_PORT;
     log.info(`initializing VelodynePlayer on port ${this._port}`);
     this._metricsCollector = metricsCollector;
