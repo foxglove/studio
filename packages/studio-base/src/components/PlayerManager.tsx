@@ -205,7 +205,8 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
           let file = fileList[0];
 
           if (!file) {
-            const [fileHandle] = await showOpenFilePicker({
+            const res = await showOpenFilePicker({
+              multiple: foundSource.supportsMultiFile,
               types: [
                 {
                   description: foundSource.displayName,
@@ -213,7 +214,11 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
                 },
               ],
             });
-            file = await fileHandle.getFile();
+            for (const fileHandle of res) {
+              const curFile = await fileHandle.getFile();
+              file ??= curFile;
+              fileList.push(curFile);
+            }
           }
 
           const multiFile = foundSource.supportsMultiFile === true && fileList.length > 1;
