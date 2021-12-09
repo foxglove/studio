@@ -123,6 +123,7 @@ function SourceInfo() {
               onRender: (topic) => (
                 <CopyText
                   copyText={topic.name}
+                  textProps={{ variant: "small" }}
                   tooltip={`Click to copy topic name ${topic.name} to clipboard.`}
                 >
                   {topic.name}
@@ -140,6 +141,7 @@ function SourceInfo() {
               onRender: (topic) => (
                 <CopyText
                   copyText={topic.datatype}
+                  textProps={{ variant: "small" }}
                   tooltip={`Click to copy topic name ${topic.datatype} to clipboard.`}
                 >
                   {topic.name}

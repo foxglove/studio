@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { IconButton, Stack, makeStyles, useTheme } from "@fluentui/react";
+import { IconButton, Text, ITextProps, Stack, makeStyles, useTheme } from "@fluentui/react";
 
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import clipboard from "@foxglove/studio-base/util/clipboard";
@@ -20,11 +20,17 @@ const useStyles = makeStyles({
 
 type Props = {
   copyText: string;
+  textProps?: ITextProps;
   tooltip: string;
   children: React.ReactNode;
 };
 
-export default function CopyText({ copyText, tooltip, children }: Props): JSX.Element | ReactNull {
+export default function CopyText({
+  copyText,
+  textProps,
+  tooltip,
+  children,
+}: Props): JSX.Element | ReactNull {
   const classes = useStyles();
   const theme = useTheme();
   const button = useTooltip({ contents: tooltip });
@@ -60,7 +66,7 @@ export default function CopyText({ copyText, tooltip, children }: Props): JSX.El
           },
         }}
       >
-        {children != undefined ? children : copyText}
+        <Text {...textProps}>{children != undefined ? children : copyText}</Text>
       </Stack.Item>
       {button.tooltip}
       <IconButton
