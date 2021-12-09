@@ -148,7 +148,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
     if (!initialRecents) {
       return;
     }
-    console.log(initialRecents);
     setRecents(initialRecents);
   }, [initialRecents]);
 
@@ -300,13 +299,12 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
           const newPlayer = foundSource.initialize({ url, metricsCollector, unlimitedMemoryCache });
           setBasePlayer(newPlayer);
 
-          if (newPlayer?.displayName) {
-            addRecent({
-              sourceId,
-              title: newPlayer.displayName,
-              extra: allArgs,
-            });
-          }
+          addRecent({
+            sourceId,
+            title: url,
+            label: foundSource.displayName,
+            extra: allArgs,
+          });
         } catch (error) {
           addToast((error as Error).message, { appearance: "error" });
         }
@@ -353,13 +351,16 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
           setBasePlayer(newPlayer);
 
-          if (newPlayer?.displayName) {
-            addRecent({
-              sourceId,
-              title: newPlayer.displayName,
-              extra: allArgs,
-            });
+          // When we come up with a reasonable display name for multifile recents we can add support
+          if (multiFile || !file) {
+            return;
           }
+
+          addRecent({
+            sourceId,
+            title: file.name,
+            extra: allArgs,
+          });
         } catch (error) {
           if (error.name === "AbortError") {
             return;
