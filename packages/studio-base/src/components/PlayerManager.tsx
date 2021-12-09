@@ -236,7 +236,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   // Make a RecentSources array for the PlayerSelectionContext
   const recentSources = useMemo(() => {
     return recents.map((item) => {
-      return { id: item.id, displayName: item.title };
+      return { id: item.id, title: item.title, label: item.label };
     });
   }, [recents]);
 
@@ -317,10 +317,12 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       const supportedFileTypes = foundSource.supportedFileTypes;
       if (supportedFileTypes != undefined) {
         try {
-          let file = (args?.files as File[] | undefined)?.[0];
+          const fileList = (args?.files as File[] | undefined) ?? [];
+          let file = fileList[0];
 
           if (!file) {
-            const [fileHandle] = await showOpenFilePicker({
+            const res = await showOpenFilePicker({
+              multiple: foundSource.supportsMultiFile,
               types: [
                 {
                   description: foundSource.displayName,
@@ -328,16 +330,23 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
                 },
               ],
             });
-            file = await fileHandle.getFile();
+            for (const fileHandle of res) {
+              const curFile = await fileHandle.getFile();
+              file ??= curFile;
+              fileList.push(curFile);
+            }
           }
 
           const allArgs = {
             ...args,
             file,
+            fileList,
           };
+          const multiFile = foundSource.supportsMultiFile === true && fileList.length > 1;
 
           const newPlayer = foundSource.initialize({
-            file,
+            file: multiFile ? undefined : file,
+            files: multiFile ? fileList : undefined,
             metricsCollector,
             unlimitedMemoryCache,
           });
