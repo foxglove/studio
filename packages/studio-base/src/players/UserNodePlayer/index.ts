@@ -77,8 +77,6 @@ function maybePlainObject(rawVal: unknown) {
 // 1 - Do we convert them all over to the new node format / Typescript? What about imported libraries?
 // 2 - Do we keep them in the old format for a while and support both formats?
 export default class UserNodePlayer implements Player {
-  readonly displayName?: string;
-
   private _player: Player;
 
   private _nodeRegistrations: readonly NodeRegistration[] = [];
@@ -130,7 +128,6 @@ export default class UserNodePlayer implements Player {
   };
 
   constructor(player: Player, userNodeActions: UserNodeActions) {
-    this.displayName = player.displayName;
     this._player = player;
     this._player.setListener(async (state) => await this._onPlayerState(state));
     const { setUserNodeDiagnostics, addUserNodeLogs, setUserNodeRosLib } = userNodeActions;

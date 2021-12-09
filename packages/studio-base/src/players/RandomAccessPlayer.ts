@@ -93,8 +93,6 @@ export type RandomAccessPlayerOptions = {
 
 // A `Player` that wraps around a tree of `RandomAccessDataProviders`.
 export default class RandomAccessPlayer implements Player {
-  readonly displayName?: string;
-
   private _label?: string;
   private _filePath?: string;
   private _provider: RandomAccessDataProvider;
@@ -150,8 +148,6 @@ export default class RandomAccessPlayer implements Player {
     providerDescriptor: RandomAccessDataProviderDescriptor,
     { metricsCollector, seekToTime }: RandomAccessPlayerOptions,
   ) {
-    this.displayName = providerDescriptor.label;
-
     this._label = providerDescriptor.label;
     this._filePath = providerDescriptor.filePath;
     if (process.env.NODE_ENV === "test" && providerDescriptor.name === "TestProvider") {

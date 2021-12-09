@@ -41,11 +41,12 @@ export interface IDataSourceFactory {
 /**
  * Recently selected source information
  *
- * The _id_ is opaque and up to the PlayerSelectionContext implementation to specify.
+ * The _id_ is opaque and up to the PlayerSelectionContext implementation.
  */
 export type RecentSource = {
   id: string;
-  displayName: string;
+  title: string;
+  label?: string;
 };
 
 /**

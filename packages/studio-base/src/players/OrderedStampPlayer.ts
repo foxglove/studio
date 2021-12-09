@@ -55,8 +55,6 @@ const getTopicsWithHeader = memoizeWeak((topics: Topic[], datatypes: RosDatatype
 });
 
 export default class OrderedStampPlayer implements Player {
-  readonly displayName?: string;
-
   private _player: UserNodePlayer;
   private _messageOrder: TimestampMethod;
   // When messageOrder is "headerStamp", contains buffered, unsorted messages with receiveTime "in
@@ -68,7 +66,6 @@ export default class OrderedStampPlayer implements Player {
   private _currentTime?: Time = undefined;
 
   constructor(player: UserNodePlayer, messageOrder: TimestampMethod) {
-    this.displayName = player.displayName;
     this._player = player;
     this._messageOrder = messageOrder;
   }

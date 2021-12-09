@@ -65,8 +65,6 @@ type Ros1PlayerOpts = {
 // Connects to `rosmaster` instance using `@foxglove/ros1`. Currently doesn't support seeking or
 // showing simulated time, so current time from Date.now() is always used instead.
 export default class Ros1Player implements Player {
-  readonly displayName: string;
-
   private _url: string; // rosmaster URL.
   private _hostname?: string; // ROS_HOSTNAME
   private _rosNode?: RosNode; // Our ROS node when we're connected.
@@ -99,7 +97,6 @@ export default class Ros1Player implements Player {
     this._hostname = hostname;
     this._start = fromMillis(Date.now());
     this._metricsCollector.playerConstructed();
-    this.displayName = `ROS1 ${this._url}`;
     void this._open();
   }
 

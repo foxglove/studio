@@ -51,8 +51,6 @@ type Ros2PlayerOpts = {
 
 // Connects to a ROS 2 network using RTPS over UDP, discovering peers via UDP multicast.
 export default class Ros2Player implements Player {
-  readonly displayName: string;
-
   private _domainId: number; // ROS 2 DDS (RTPS) domain
   private _rosNode?: RosNode; // Our ROS node when we're connected.
   private _id: string = uuidv4(); // Unique ID for this player.
@@ -79,7 +77,6 @@ export default class Ros2Player implements Player {
 
   constructor({ domainId, metricsCollector }: Ros2PlayerOpts) {
     log.info(`initializing Ros2Player (domainId=${domainId})`);
-    this.displayName = `ROS2 DomainId=${domainId}`;
     this._domainId = domainId;
     this._metricsCollector = metricsCollector;
     this._start = fromMillis(Date.now());

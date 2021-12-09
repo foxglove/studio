@@ -41,8 +41,6 @@ export type ParsedMessageDefinitionsByTopic = {
 // For more details, see the types below.
 
 export interface Player {
-  displayName?: string;
-
   // The main way to get information out the player is to set a listener. This listener will be
   // called whenever the PlayerState changes, so that we can render the new state to the UI. Users
   // should return a promise from the listener that resolves when the UI has finished updating, so

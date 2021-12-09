@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { set as idbSet, get as idbGet, createStore as idbCreateStore } from "idb-keyval";
 import {
   PropsWithChildren,
   useCallback,
@@ -23,7 +22,6 @@ import {
 } from "react";
 import { useToasts } from "react-toast-notifications";
 import { useAsync, useLocalStorage } from "react-use";
-import { v4 as uuid } from "uuid";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
@@ -46,6 +44,10 @@ import OrderedStampPlayer from "@foxglove/studio-base/players/OrderedStampPlayer
 import UserNodePlayer from "@foxglove/studio-base/players/UserNodePlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 import { UserNodes } from "@foxglove/studio-base/types/panels";
+import {
+  IndexedDbRecentsStore,
+  RecentRecord,
+} from "@foxglove/studio-base/util/IndexedDbRecentsStore";
 import Storage from "@foxglove/studio-base/util/Storage";
 import { windowHasValidURLState } from "@foxglove/studio-base/util/appURLState";
 
@@ -59,19 +61,12 @@ type PlayerManagerProps = {
   playerSources: IDataSourceFactory[];
 };
 
-type RecentRecord = {
-  id: string;
-  sourceId: string;
-  displayName: string;
-  args?: Record<string, unknown>;
-};
-
-const customStore = idbCreateStore("foxglove-recents", "custom-store-name");
-
 export default function PlayerManager(props: PropsWithChildren<PlayerManagerProps>): JSX.Element {
   const { children, playerSources } = props;
 
   useWarnImmediateReRender();
+
+  const recentsStore = useMemo(() => new IndexedDbRecentsStore(), []);
 
   const { setUserNodeDiagnostics, addUserNodeLogs, setUserNodeRosLib } = useUserNodeState();
   const userNodeActions = useShallowMemo({
@@ -145,31 +140,32 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
   const [selectedSource, setSelectedSource] = useState<IDataSourceFactory | undefined>();
 
-  const { value: savedRecents } = useAsync(async () => {
-    const untypedRecents = await idbGet("recents", customStore);
-    return untypedRecents as RecentRecord[];
-  }, []);
-
+  const { value: initialRecents } = useAsync(async () => await recentsStore.get(), [recentsStore]);
   const [recents, setRecents] = useState<RecentRecord[]>([]);
 
+  // Set the first load records from the store to the state
   useLayoutEffect(() => {
-    if (!savedRecents) {
+    if (!initialRecents) {
       return;
     }
-    setRecents(savedRecents);
-  }, [savedRecents]);
+    console.log(initialRecents);
+    setRecents(initialRecents);
+  }, [initialRecents]);
 
-  const saveRecents = useCallback((recentRecords: RecentRecord[]) => {
-    idbSet("recents", recentRecords, customStore).catch((err) => {
-      console.error(err);
-    });
-  }, []);
+  const saveRecents = useCallback(
+    (recentRecords: RecentRecord[]) => {
+      recentsStore.set(recentRecords).catch((err) => {
+        log.error(err);
+      });
+    },
+    [recentsStore],
+  );
 
   // Add a new recent entry
   const addRecent = useCallback(
     (record: Omit<RecentRecord, "id">) => {
       const newRecord: RecentRecord = {
-        id: uuid(),
+        id: IndexedDbRecentsStore.GenerateRecordId(),
         ...record,
       };
 
@@ -213,7 +209,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
         const initArgs = {
           metricsCollector,
           unlimitedMemoryCache,
-          ...foundRecent.args,
+          ...foundRecent.extra,
         };
 
         const newPlayer = foundSource.initialize(initArgs);
@@ -240,7 +236,7 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   // Make a RecentSources array for the PlayerSelectionContext
   const recentSources = useMemo(() => {
     return recents.map((item) => {
-      return { id: item.id, displayName: item.displayName };
+      return { id: item.id, displayName: item.title };
     });
   }, [recents]);
 
@@ -307,43 +303,11 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
           if (newPlayer?.displayName) {
             addRecent({
               sourceId,
-              displayName: newPlayer.displayName,
-              args: allArgs,
+              title: newPlayer.displayName,
+              extra: allArgs,
             });
           }
         } catch (error) {
-          addToast((error as Error).message, { appearance: "error" });
-        }
-
-        return;
-      }
-
-      if (foundSource.supportsOpenDirectory === true) {
-        try {
-          const folder = await showDirectoryPicker();
-          const allArgs = {
-            ...args,
-            folder,
-          };
-
-          const newPlayer = foundSource.initialize({
-            folder,
-            metricsCollector,
-            unlimitedMemoryCache,
-          });
-          setBasePlayer(newPlayer);
-
-          if (newPlayer?.displayName) {
-            addRecent({
-              sourceId,
-              displayName: newPlayer.displayName,
-              args: allArgs,
-            });
-          }
-        } catch (error) {
-          if (error.name === "AbortError") {
-            return undefined;
-          }
           addToast((error as Error).message, { appearance: "error" });
         }
 
@@ -383,8 +347,8 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
           if (newPlayer?.displayName) {
             addRecent({
               sourceId,
-              displayName: newPlayer.displayName,
-              args: allArgs,
+              title: newPlayer.displayName,
+              extra: allArgs,
             });
           }
         } catch (error) {
