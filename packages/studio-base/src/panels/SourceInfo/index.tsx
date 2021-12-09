@@ -79,11 +79,11 @@ function SourceInfo() {
         >
           <Stack tokens={{ childrenGap: theme.spacing.s2 }}>
             <Text styles={subheaderStyles}>Start time</Text>
-            <Timestamp horizontal time={startTime} />
+            <Timestamp time={startTime} />
           </Stack>
           <Stack tokens={{ childrenGap: theme.spacing.s2 }}>
             <Text styles={subheaderStyles}>End Time</Text>
-            <Timestamp horizontal time={endTime} />
+            <Timestamp time={endTime} />
           </Stack>
           <Stack tokens={{ childrenGap: theme.spacing.s2 }}>
             <Text styles={subheaderStyles}>Duration</Text>

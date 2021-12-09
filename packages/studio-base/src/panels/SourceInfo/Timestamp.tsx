@@ -13,10 +13,9 @@ import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 type Props = {
   time: Time;
   timezone?: string;
-  horizontal?: boolean;
 };
 
-export default function Timestamp({ horizontal = false, time, timezone }: Props): JSX.Element {
+export default function Timestamp({ time, timezone }: Props): JSX.Element {
   const theme = useTheme();
   const rawTime = formatTimeRaw(time);
 
@@ -45,7 +44,7 @@ export default function Timestamp({ horizontal = false, time, timezone }: Props)
   const date = formatDate(time, timezone);
 
   return (
-    <Stack horizontal={horizontal} tokens={{ childrenGap: theme.spacing.s2 }}>
+    <Stack tokens={{ childrenGap: theme.spacing.s2 }}>
       <Stack horizontal verticalAlign="center" tokens={{ childrenGap: theme.spacing.s2 }}>
         <Text
           variant="small"
