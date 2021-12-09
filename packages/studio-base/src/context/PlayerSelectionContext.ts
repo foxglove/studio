@@ -19,13 +19,21 @@ export type DataSourceFactoryInitializeArgs = {
   consoleApi?: ConsoleApi;
 } & Record<string, unknown>;
 
+export type DataSourceFactoryType = "file" | "remote-file" | "connection";
+
 export interface IDataSourceFactory {
   id: string;
+  type: DataSourceFactoryType;
   displayName: string;
   iconName?: RegisteredIconNames;
   disabledReason?: string | JSX.Element;
   badgeText?: string;
   hidden?: boolean;
+
+  formConfig?: {
+    // Initialization args are populated with keys of the _id_ field
+    fields: { id: string; label: string; defaultValue?: string; placeholder?: string }[];
+  };
 
   // If data source initialization supports "Open File" workflow, this property lists the supported
   // file types

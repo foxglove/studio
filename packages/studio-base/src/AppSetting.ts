@@ -19,4 +19,5 @@ export enum AppSetting {
   COLOR_SCHEME = "colorScheme",
   ENABLE_MCAP_DATA_SOURCE = "sources.mcap",
   ENABLE_WEBSOCKET_DATA_SOURCE = "experimental.sources.websocket",
+  OPEN_DIALOG = "ui.open-dialog",
 }

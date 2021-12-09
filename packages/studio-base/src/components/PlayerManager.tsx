@@ -82,6 +82,8 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   // initialization args for all connectors.
   const [rosHostname] = useAppConfigurationValue<string>(AppSetting.ROS1_ROS_HOSTNAME);
 
+  const [enableOpenDialog] = useAppConfigurationValue(AppSetting.OPEN_DIALOG);
+
   const analytics = useAnalytics();
   const metricsCollector = useMemo(() => new AnalyticsMetricsCollector(analytics), [analytics]);
 
@@ -263,6 +265,24 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       metricsCollector.setProperty("player", sourceId);
       setSelectedSource(() => foundSource);
 
+      // When using the open dialog we handle source args within the open dialog and can build the
+      // player without further prompts
+      if (enableOpenDialog === true) {
+        try {
+          const newPlayer = foundSource.initialize({
+            ...args,
+            consoleApi,
+            metricsCollector,
+            unlimitedMemoryCache,
+          });
+          setBasePlayer(newPlayer);
+        } catch (error) {
+          addToast((error as Error).message, { appearance: "error" });
+        }
+
+        return;
+      }
+
       if (foundSource.promptOptions) {
         let argUrl: string | undefined;
         if (typeof args?.url === "string") {
@@ -396,11 +416,17 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       rosHostname,
       setSavedSource,
       unlimitedMemoryCache,
+      enableOpenDialog,
     ],
   );
 
   // Restore the saved source on first mount unless our url specifies a source.
   useLayoutEffect(() => {
+    // with open dialog enabled we don't restore any data source
+    if (enableOpenDialog === true) {
+      return;
+    }
+
     // The URL encodes a valid session state. Defer to the URL state.
     if (windowHasValidURLState()) {
       return;

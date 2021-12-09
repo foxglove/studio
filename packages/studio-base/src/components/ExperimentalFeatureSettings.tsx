@@ -53,6 +53,11 @@ const features: Feature[] = [
     name: "Foxglove WebSocket Data Source",
     description: <>Enable the Foxglove WebSocket data source.</>,
   },
+  {
+    key: AppSetting.OPEN_DIALOG,
+    name: "Open Dialog",
+    description: <>Use the new open dialog for selecting data sources.</>,
+  },
 ];
 if (process.env.NODE_ENV === "development") {
   features.push({
