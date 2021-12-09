@@ -11,12 +11,14 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import ChevronRightIcon from "@mdi/svg/svg/chevron-right.svg";
+import { useMemo } from "react";
 import styled from "styled-components";
 
 import { Time } from "@foxglove/rostime";
 import CopyText from "@foxglove/studio-base/components/CopyText";
 import Icon from "@foxglove/studio-base/components/Icon";
-import { formatDate, formatTime } from "@foxglove/studio-base/util/formatTime";
+import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
+import { formatDate } from "@foxglove/studio-base/util/formatTime";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 
@@ -44,12 +46,6 @@ const TimestampWrapper = styled.div`
   flex: 0 0 auto;
 `;
 
-const RosTimeWrapper = styled.div`
-  display: inline-block;
-  color: ${({ theme }) => theme.palette.neutralTertiary};
-  margin: 0 8px;
-`;
-
 const RelativeTimeWrapper = styled.div`
   display: inline-block;
   color: ${({ theme }) => theme.palette.neutralSecondary};
@@ -61,33 +57,29 @@ const TimeWrapper = styled.div`
   margin: 0 8px;
 `;
 
-const ROSText = styled.div`
-  color: ${({ theme }) => theme.palette.neutralTertiary};
-`;
-
 type Props = {
   time: Time;
   timezone?: string;
 };
 
 export default function Timestamp({ time, timezone }: Props): JSX.Element {
-  const rawTime = formatTimeRaw(time);
+  const { formatTime } = useAppTimeFormat();
+  const currentTimeStr = useMemo(() => formatTime(time), [time, formatTime]);
+  const rawTimeStr = useMemo(() => formatTimeRaw(time), [time]);
+  const date = useMemo(() => formatDate(time, timezone), [time, timezone]);
 
   if (!isAbsoluteTime(time)) {
     return (
       <SRoot>
         <TimestampWrapper>
-          <RelativeTimeWrapper>{rawTime}</RelativeTimeWrapper>
-          <CopyText copyText={rawTime} tooltip="Copy time to clipboard">
+          <RelativeTimeWrapper>{rawTimeStr}</RelativeTimeWrapper>
+          <CopyText copyText={rawTimeStr} tooltip="Copy time to clipboard">
             sec
           </CopyText>
         </TimestampWrapper>
       </SRoot>
     );
   }
-
-  const currentTimeStr = formatTime(time, timezone);
-  const date = formatDate(time, timezone);
 
   return (
     <SRoot>
@@ -99,12 +91,6 @@ export default function Timestamp({ time, timezone }: Props): JSX.Element {
         <TimeWrapper>
           <span>{currentTimeStr}</span>
         </TimeWrapper>
-        <RosTimeWrapper>
-          <span>{rawTime}</span>
-        </RosTimeWrapper>
-        <CopyText copyText={rawTime} tooltip="Copy ROS time to clipboard">
-          <ROSText>ROS</ROSText>
-        </CopyText>
       </TimestampWrapper>
     </SRoot>
   );
