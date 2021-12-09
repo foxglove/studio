@@ -198,29 +198,11 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
         return;
       }
 
-      if (foundSource.supportsOpenDirectory === true) {
-        try {
-          const folder = await showDirectoryPicker();
-          const newPlayer = foundSource.initialize({
-            folder,
-            metricsCollector,
-            unlimitedMemoryCache,
-          });
-          setBasePlayer(newPlayer);
-        } catch (error) {
-          if (error.name === "AbortError") {
-            return undefined;
-          }
-          addToast((error as Error).message, { appearance: "error" });
-        }
-
-        return;
-      }
-
       const supportedFileTypes = foundSource.supportedFileTypes;
       if (supportedFileTypes != undefined) {
         try {
-          let file = (args?.files as File[] | undefined)?.[0];
+          const fileList = (args?.files as File[] | undefined) ?? [];
+          let file = fileList[0];
 
           if (!file) {
             const [fileHandle] = await showOpenFilePicker({
@@ -234,8 +216,11 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
             file = await fileHandle.getFile();
           }
 
+          const multiFile = foundSource.supportsMultiFile === true && fileList.length > 1;
+
           const newPlayer = foundSource.initialize({
-            file,
+            file: multiFile ? undefined : file,
+            files: multiFile ? fileList : undefined,
             metricsCollector,
             unlimitedMemoryCache,
           });
