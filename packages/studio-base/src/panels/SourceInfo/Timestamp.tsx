@@ -3,10 +3,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Stack, Icon, Text, useTheme } from "@fluentui/react";
+import { useMemo } from "react";
 
 import { Time } from "@foxglove/rostime";
-import CopyText from "@foxglove/studio-base/components/CopyText";
-import { formatDate, formatTime } from "@foxglove/studio-base/util/formatTime";
+import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
+import { formatDate } from "@foxglove/studio-base/util/formatTime";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 
@@ -17,7 +18,10 @@ type Props = {
 
 export default function Timestamp({ time, timezone }: Props): JSX.Element {
   const theme = useTheme();
-  const rawTime = formatTimeRaw(time);
+  const { formatTime } = useAppTimeFormat();
+  const currentTimeStr = useMemo(() => formatTime(time), [time, formatTime]);
+  const rawTimeStr = useMemo(() => formatTimeRaw(time), [time]);
+  const date = useMemo(() => formatDate(time, timezone), [time, timezone]);
 
   if (!isAbsoluteTime(time)) {
     return (
@@ -31,17 +35,11 @@ export default function Timestamp({ time, timezone }: Props): JSX.Element {
             },
           }}
         >
-          {rawTime}
+          {rawTimeStr}
         </Text>
-        <CopyText copyText={rawTime} tooltip="Copy time to clipboard">
-          sec
-        </CopyText>
       </Stack>
     );
   }
-
-  const currentTimeStr = formatTime(time, timezone);
-  const date = formatDate(time, timezone);
 
   return (
     <Stack tokens={{ childrenGap: theme.spacing.s2 }}>
@@ -78,21 +76,6 @@ export default function Timestamp({ time, timezone }: Props): JSX.Element {
             {currentTimeStr}
           </Text>
         </Stack>
-      </Stack>
-      <Stack horizontal verticalAlign="center">
-        <CopyText copyText={rawTime} tooltip="Copy ROS time to clipboard">
-          <Text
-            variant="small"
-            styles={{
-              root: {
-                fontFamily: fonts.MONOSPACE,
-                color: theme.palette.neutralTertiary,
-              },
-            }}
-          >
-            {rawTime} ROS
-          </Text>
-        </CopyText>
       </Stack>
     </Stack>
   );
