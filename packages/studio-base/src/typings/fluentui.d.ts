@@ -38,6 +38,7 @@ declare global {
     | "CirclePlus"
     | "Clear"
     | "ClearSelection"
+    | "Clipboard"
     | "ClipboardList"
     | "Close"
     | "CloudOffFilled"
