@@ -47,6 +47,7 @@ import UserNodePlayer from "@foxglove/studio-base/players/UserNodePlayer";
 import { Player } from "@foxglove/studio-base/players/types";
 import { UserNodes } from "@foxglove/studio-base/types/panels";
 import Storage from "@foxglove/studio-base/util/Storage";
+import { windowHasValidURLState } from "@foxglove/studio-base/util/appURLState";
 
 const log = Logger.getLogger(__filename);
 
@@ -137,9 +138,10 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   }, [player, userNodes]);
 
   const { addToast } = useToasts();
-  const [_saveSource, _setSavedSource, removeSavedSource] = useLocalStorage<unknown>(
-    "studio.playermanager.selected-source.v2",
-  );
+  const [savedSource, setSavedSource, removeSavedSource] = useLocalStorage<{
+    id: string;
+    args?: Record<string, unknown>;
+  }>("studio.playermanager.selected-source.v2");
 
   const [selectedSource, setSelectedSource] = useState<IDataSourceFactory | undefined>();
 
@@ -248,8 +250,12 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
       // empty string sourceId
       if (!sourceId) {
+        removeSavedSource();
+        setSelectedSource(undefined);
         return;
       }
+
+      removeSavedSource();
 
       const foundSource = playerSources.find((source) => source.id === sourceId);
       if (!foundSource) {
@@ -280,11 +286,19 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
             return;
           }
 
+          new Storage().setItem(previousPromptCacheKey, url);
+
           const allArgs = {
             ...args,
             rosHostname,
             url,
           };
+
+          // only url based sources are saved as the selected source
+          setSavedSource({
+            id: sourceId,
+            args: allArgs,
+          });
 
           new Storage().setItem(previousPromptCacheKey, url);
           const newPlayer = foundSource.initialize({ url, metricsCollector, unlimitedMemoryCache });
@@ -404,17 +418,38 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       metricsCollector,
       playerSources,
       prompt,
+      removeSavedSource,
       rosHostname,
+      setSavedSource,
       unlimitedMemoryCache,
     ],
   );
 
-  // Prior to storing recents in indexeddb we stored some selected source state in localstorage.
-  // This effect clears the localstorage values to tidy up. We should remove it after some time
-  // 2021/12/07
+  // Restore the saved source on first mount unless our url specifies a source.
   useLayoutEffect(() => {
-    removeSavedSource();
-  }, [removeSavedSource]);
+    // The URL encodes a valid session state. Defer to the URL state.
+    if (windowHasValidURLState()) {
+      return;
+    }
+
+    if (savedSource) {
+      const foundSource = playerSources.find((source) => source.id === savedSource.id);
+      if (!foundSource) {
+        return;
+      }
+      metricsCollector.setProperty("player", savedSource.id);
+
+      const initializedBasePlayer = foundSource.initialize({
+        ...savedSource.args,
+        metricsCollector,
+        unlimitedMemoryCache,
+      });
+      setBasePlayer(initializedBasePlayer);
+      setSelectedSource(() => foundSource);
+    }
+    // we only run the layout effect on first mount - never again even if the saved source changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const value: PlayerSelection = {
     selectSource,
