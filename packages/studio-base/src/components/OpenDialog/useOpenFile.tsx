@@ -50,6 +50,6 @@ export function useOpenFile(sources: IDataSourceFactory[]): () => Promise<void> 
       throw new Error(`Cannot find source to handle ${file.name}`);
     }
 
-    selectSource(foundSource.id, { type: "file", handles: [fileHandle] });
+    selectSource(foundSource.id, { type: "file", files: [file] });
   }, [allExtensions, selectSource, sources]);
 }

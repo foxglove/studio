@@ -66,7 +66,6 @@ type DataSourceArgsCommon = {
 type FileDataSourceArgs = DataSourceArgsCommon & {
   type: "file";
   files?: File[];
-  handles?: FileSystemFileHandle[];
 };
 
 type ConnectionDataSourceArgs = DataSourceArgsCommon & {

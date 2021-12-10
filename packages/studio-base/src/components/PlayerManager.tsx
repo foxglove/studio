@@ -236,7 +236,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
               break;
             }
             case "file": {
-              const handles = args.handles;
               const files = args.files;
 
               // files we can try loading immediately
@@ -261,43 +260,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
                 setBasePlayer(newPlayer);
                 return;
-              }
-
-              if (handles) {
-                let file: File | undefined;
-                const fileList: File[] = [];
-
-                for (const fileHandle of handles) {
-                  const permissions = await fileHandle.queryPermission({
-                    mode: "read",
-                  });
-                  if (permissions !== "granted") {
-                    await fileHandle.requestPermission({ mode: "read" });
-                  }
-                  const curFile = await fileHandle.getFile();
-                  file ??= curFile;
-                  fileList.push(curFile);
-                }
-                const multiFile = foundSource.supportsMultiFile === true && fileList.length > 1;
-
-                const newPlayer = foundSource.initialize({
-                  file: multiFile ? undefined : file,
-                  files: multiFile ? fileList : undefined,
-                  metricsCollector,
-                  unlimitedMemoryCache,
-                });
-
-                setBasePlayer(newPlayer);
-
-                if (file && args.skipRecents !== true) {
-                  addRecent({
-                    id: IndexedDbRecentsStore.GenerateRecordId(),
-                    type: "files",
-                    sourceId,
-                    title: file.name,
-                    handles,
-                  });
-                }
               }
 
               break;
@@ -391,23 +353,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
           });
 
           setBasePlayer(newPlayer);
-
-          // When we come up with a reasonable display name for multifile recents we can add support
-          if (multiFile || !file) {
-            return;
-          }
-
-          // We can only add recents when we have handles
-          // It is incorrect to put the File objects in indexeddb since that will store the entire file
-          if (handles) {
-            addRecent({
-              id: IndexedDbRecentsStore.GenerateRecordId(),
-              type: "files",
-              sourceId,
-              title: file.name,
-              handles,
-            });
-          }
         } catch (error) {
           if (error.name === "AbortError") {
             return;
@@ -419,23 +364,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       }
 
       addToast("Unable to initialize player", { appearance: "error" });
-
-      // fixme - test data platform
-      /*
-      try {
-        const newPlayer = foundSource.initialize({
-          ...args,
-          consoleApi,
-          metricsCollector,
-          unlimitedMemoryCache,
-        });
-        setBasePlayer(newPlayer);
-      } catch (error) {
-        addToast((error as Error).message, { appearance: "error" });
-      }
-
-      return;
-      */
     },
     [
       addRecent,
@@ -464,14 +392,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       }
 
       switch (foundRecent.type) {
-        case "files": {
-          void selectSource(foundRecent.sourceId, {
-            skipRecents: true,
-            type: "file",
-            handles: foundRecent.handles,
-          });
-          break;
-        }
         case "connection": {
           void selectSource(foundRecent.sourceId, {
             skipRecents: true,

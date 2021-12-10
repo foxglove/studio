@@ -19,19 +19,13 @@ type RecentRecordCommon = {
   label?: string;
 };
 
-type RecentFilesRecord = RecentRecordCommon & {
-  type: "files";
-  // file handles we are able to restore
-  handles: FileSystemFileHandle[];
-};
-
 type RecentConnectionRecord = RecentRecordCommon & {
   type: "connection";
   // Optional arguments stored with the recent entry
   extra?: Record<string, string | undefined>;
 };
 
-export type RecentRecord = RecentFilesRecord | RecentConnectionRecord;
+export type RecentRecord = RecentConnectionRecord;
 
 /**
  * IndexedDbRecentStore provides load/save operations for retrieving recent records from indexeddb
