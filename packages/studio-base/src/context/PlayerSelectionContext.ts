@@ -58,11 +58,29 @@ export type RecentSource = {
   label?: string;
 };
 
+type DataSourceArgsCommon = {
+  skipRecents?: boolean;
+};
+
+// File data sources accept either file instances or handles
+type FileDataSourceArgs = DataSourceArgsCommon & {
+  type: "file";
+  files?: File[];
+  handles?: FileSystemFileHandle[];
+};
+
+type ConnectionDataSourceArgs = DataSourceArgsCommon & {
+  type: "connection";
+  params?: Record<string, string | undefined>;
+};
+
+export type DataSourceArgs = FileDataSourceArgs | ConnectionDataSourceArgs;
+
 /**
  * PlayerSelectionContext exposes the available data sources and a function to set the current data source
  */
 export interface PlayerSelection {
-  selectSource: (sourceId: string, args?: Record<string, unknown>) => void;
+  selectSource: (sourceId: string, args?: DataSourceArgs) => void;
   selectRecent: (recentId: string) => void;
 
   /** Currently selected data source */

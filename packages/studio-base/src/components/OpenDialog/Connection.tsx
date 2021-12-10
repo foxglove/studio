@@ -47,7 +47,7 @@ export default function Connection(props: ConnectionProps): JSX.Element {
     if (!availableSource) {
       return;
     }
-    selectSource(availableSource.id, fieldValues);
+    selectSource(availableSource.id, { type: "connection", params: fieldValues });
   }, [availableSource, fieldValues, selectSource]);
 
   return (

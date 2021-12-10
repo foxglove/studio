@@ -5,7 +5,7 @@
 import { set as idbSet, get as idbGet, createStore as idbCreateStore, UseStore } from "idb-keyval";
 import { v4 as uuid } from "uuid";
 
-export type RecentRecord = {
+type RecentRecordCommon = {
   // Record id - use IndexedDbRecentsStore.GenerateRecordId() to generate
   id: string;
 
@@ -17,10 +17,21 @@ export type RecentRecord = {
 
   // Optional label for the recent record
   label?: string;
-
-  // Optional arguments stored with the recent entry
-  extra?: Record<string, unknown>;
 };
+
+type RecentFilesRecord = RecentRecordCommon & {
+  type: "files";
+  // file handles we are able to restore
+  handles: FileSystemFileHandle[];
+};
+
+type RecentConnectionRecord = RecentRecordCommon & {
+  type: "connection";
+  // Optional arguments stored with the recent entry
+  extra?: Record<string, string | undefined>;
+};
+
+export type RecentRecord = RecentFilesRecord | RecentConnectionRecord;
 
 /**
  * IndexedDbRecentStore provides load/save operations for retrieving recent records from indexeddb
