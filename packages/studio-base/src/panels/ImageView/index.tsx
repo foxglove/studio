@@ -362,7 +362,7 @@ function ImageView(props: Props) {
   // If no cameraTopic is selected, automatically select the first available image topic
   useEffect(() => {
     if (cameraTopic == undefined || cameraTopic === "") {
-      if (allImageTopics[0]) {
+      if (allImageTopics[0] && allImageTopics[0].name !== "") {
         saveConfig({ cameraTopic: allImageTopics[0].name });
       }
     }
