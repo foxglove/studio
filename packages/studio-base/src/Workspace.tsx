@@ -516,7 +516,9 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           </RemountOnValueChange>
         </Sidebar>
       </div>
-      {enableOpenDialog === true && showOpenDialog && <OpenDialog />}
+      {enableOpenDialog === true && showOpenDialog && (
+        <OpenDialog onDismiss={() => setShowOpenDialog(false)} />
+      )}
     </MultiProvider>
   );
 }

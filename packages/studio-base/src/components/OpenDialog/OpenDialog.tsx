@@ -13,8 +13,10 @@ import Start from "./Start";
 import { OpenDialogViews } from "./types";
 import { useOpenFile } from "./useOpenFile";
 
-export default function OpenDialog(props: { activeView?: OpenDialogViews }): JSX.Element {
-  const { activeView: defaultActiveView } = props;
+type OpenDialogProps = { activeView?: OpenDialogViews; onDismiss?: () => void };
+
+export default function OpenDialog(props: OpenDialogProps): JSX.Element {
+  const { activeView: defaultActiveView, onDismiss } = props;
   const { availableSources } = usePlayerSelection();
 
   const [activeView, setActiveView] = useState<OpenDialogViews>(defaultActiveView ?? "start");
@@ -102,6 +104,7 @@ export default function OpenDialog(props: { activeView?: OpenDialogViews }): JSX
           },
         },
       }}
+      onDismiss={onDismiss}
       dialogContentProps={{
         showCloseButton: true,
         title: view.title,
