@@ -67,7 +67,8 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
           title: "Open new connection",
           component: (
             <Connection
-              onCancel={() => onSelectView("start")}
+              onBack={() => onSelectView("start")}
+              onCancel={onDismiss}
               availableSources={connectionSources}
             />
           ),
@@ -75,7 +76,7 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
       case "remote":
         return {
           title: "Open a file from a remote location",
-          component: <Remote onCancel={() => onSelectView("start")} />,
+          component: <Remote onBack={() => onSelectView("start")} onCancel={onDismiss} />,
         };
 
       default:
@@ -84,7 +85,7 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
           component: <Start onSelectView={onSelectView} supportedFileExtensions={allExtensions} />,
         };
     }
-  }, [activeView, allExtensions, connectionSources, onSelectView]);
+  }, [activeView, allExtensions, connectionSources, onDismiss, onSelectView]);
 
   return (
     <Dialog

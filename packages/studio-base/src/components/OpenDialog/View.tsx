@@ -6,12 +6,13 @@ import { ActionButton, DefaultButton, PrimaryButton, Stack, useTheme } from "@fl
 import { PropsWithChildren } from "react";
 
 type ViewProps = {
-  onCancel: () => void;
+  onBack?: () => void;
+  onCancel?: () => void;
   onOpen: () => void;
 };
 
 export default function View(props: PropsWithChildren<ViewProps>): JSX.Element {
-  const { onCancel, onOpen } = props;
+  const { onCancel, onOpen, onBack } = props;
   const theme = useTheme();
 
   return (
@@ -25,7 +26,7 @@ export default function View(props: PropsWithChildren<ViewProps>): JSX.Element {
       <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
         <ActionButton
           iconProps={{ iconName: "ChevronLeft" }}
-          onClick={onCancel}
+          onClick={onBack}
           styles={{
             root: { color: theme.palette.themePrimary, padding: 0 },
             icon: { svg: { height: "1em", width: "1em" } },

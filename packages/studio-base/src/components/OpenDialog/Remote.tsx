@@ -8,18 +8,19 @@ import { useCallback } from "react";
 import View from "./View";
 
 type RemoteProps = {
-  onCancel: () => void;
+  onBack?: () => void;
+  onCancel?: () => void;
 };
 
 export default function Remote(props: RemoteProps): JSX.Element {
-  const { onCancel } = props;
+  const { onCancel, onBack } = props;
 
   const theme = useTheme();
 
   const onOpen = useCallback(() => {}, []);
 
   return (
-    <View onCancel={onCancel} onOpen={onOpen}>
+    <View onBack={onBack} onCancel={onCancel} onOpen={onOpen}>
       <Stack tokens={{ childrenGap: theme.spacing.m }}>
         <TextField
           label="Remote file URL"

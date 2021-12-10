@@ -13,12 +13,13 @@ import {
 import View from "./View";
 
 type ConnectionProps = {
-  onCancel: () => void;
+  onBack?: () => void;
+  onCancel?: () => void;
   availableSources: IDataSourceFactory[];
 };
 
 export default function Connection(props: ConnectionProps): JSX.Element {
-  const { availableSources, onCancel } = props;
+  const { availableSources, onCancel, onBack } = props;
 
   const { selectSource } = usePlayerSelection();
   const theme = useTheme();
@@ -50,7 +51,7 @@ export default function Connection(props: ConnectionProps): JSX.Element {
   }, [availableSource, fieldValues, selectSource]);
 
   return (
-    <View onCancel={onCancel} onOpen={onOpen}>
+    <View onBack={onBack} onCancel={onCancel} onOpen={onOpen}>
       <Stack grow verticalFill horizontal tokens={{ childrenGap: theme.spacing.l2 }}>
         <Stack
           verticalFill
