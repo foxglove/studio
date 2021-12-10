@@ -18,6 +18,10 @@ export default class FoxgloveWebSocketDataSourceFactory implements IDataSourceFa
   badgeText = "beta";
   iconName: IDataSourceFactory["iconName"] = "Flow";
 
+  formConfig = {
+    fields: [{ id: "url", label: "Websocket URL", defaultValue: "ws://localhost:9090" }],
+  };
+
   promptOptions(previousValue?: string): PromptOptions {
     return {
       title: "WebSocket connection",

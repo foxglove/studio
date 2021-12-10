@@ -55,6 +55,10 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
     });
   }, [availableSources]);
 
+  const remoteFileSources = useMemo(() => {
+    return availableSources.filter((source) => source.type === "remote-file");
+  }, [availableSources]);
+
   const view = useMemo(() => {
     switch (activeView) {
       case "demo":
@@ -76,7 +80,13 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
       case "remote":
         return {
           title: "Open a file from a remote location",
-          component: <Remote onBack={() => onSelectView("start")} onCancel={onDismiss} />,
+          component: (
+            <Remote
+              onBack={() => onSelectView("start")}
+              onCancel={onDismiss}
+              availableSources={remoteFileSources}
+            />
+          ),
         };
 
       default:
@@ -85,7 +95,7 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
           component: <Start onSelectView={onSelectView} supportedFileExtensions={allExtensions} />,
         };
     }
-  }, [activeView, allExtensions, connectionSources, onDismiss, onSelectView]);
+  }, [activeView, allExtensions, connectionSources, onDismiss, onSelectView, remoteFileSources]);
 
   return (
     <Dialog

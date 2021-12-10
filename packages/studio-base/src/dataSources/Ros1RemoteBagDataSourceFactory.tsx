@@ -16,6 +16,7 @@ class Ros1RemoteBagDataSourceFactory implements IDataSourceFactory {
   type: IDataSourceFactory["type"] = "remote-file";
   displayName = "ROS 1 Bag (remote)";
   iconName: IDataSourceFactory["iconName"] = "FileASPX";
+  supportedFileTypes = [".bag"];
 
   promptOptions(previousValue?: string): PromptOptions {
     return {
