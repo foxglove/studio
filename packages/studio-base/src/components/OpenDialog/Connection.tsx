@@ -25,9 +25,16 @@ export default function Connection(props: ConnectionProps): JSX.Element {
   const theme = useTheme();
   const [selectedConnectionIdx, setSelectedConnectionIdx] = useState<number>(0);
 
-  const availableSource = useMemo(
-    () => availableSources[selectedConnectionIdx],
-    [availableSources, selectedConnectionIdx],
+  // List enabled sources before disabled sources so the default selected item is an available source
+  const enabledSourcesFirst = useMemo(() => {
+    const enabledSources = availableSources.filter((source) => source.disabledReason == undefined);
+    const disabledSources = availableSources.filter((source) => source.disabledReason);
+    return [...enabledSources, ...disabledSources];
+  }, [availableSources]);
+
+  const selectedSource = useMemo(
+    () => enabledSourcesFirst[selectedConnectionIdx],
+    [enabledSourcesFirst, selectedConnectionIdx],
   );
 
   const [fieldValues, setFieldValues] = useState<Record<string, string | undefined>>({});
@@ -35,20 +42,20 @@ export default function Connection(props: ConnectionProps): JSX.Element {
   // clear field values when the user changes the source tab
   useLayoutEffect(() => {
     const defaultFieldValues: Record<string, string | undefined> = {};
-    for (const field of availableSource?.formConfig?.fields ?? []) {
+    for (const field of selectedSource?.formConfig?.fields ?? []) {
       if (field.defaultValue != undefined) {
         defaultFieldValues[field.id] = field.defaultValue;
       }
     }
     setFieldValues(defaultFieldValues);
-  }, [availableSource]);
+  }, [selectedSource]);
 
   const onOpen = useCallback(() => {
-    if (!availableSource) {
+    if (!selectedSource) {
       return;
     }
-    selectSource(availableSource.id, { type: "connection", params: fieldValues });
-  }, [availableSource, fieldValues, selectSource]);
+    selectSource(selectedSource.id, { type: "connection", params: fieldValues });
+  }, [selectedSource, fieldValues, selectSource]);
 
   return (
     <View onBack={onBack} onCancel={onCancel} onOpen={onOpen}>
@@ -59,7 +66,7 @@ export default function Connection(props: ConnectionProps): JSX.Element {
             root: { marginLeft: `-${theme.spacing.s1}` },
           }}
         >
-          {availableSources.map((source, idx) => {
+          {enabledSourcesFirst.map((source, idx) => {
             const { id, iconName, displayName } = source;
             return (
               <ActionButton
@@ -78,16 +85,13 @@ export default function Connection(props: ConnectionProps): JSX.Element {
             );
           })}
         </Stack>
-        <Stack
-          grow
-          verticalFill
-          key={availableSource?.id}
-          tokens={{ childrenGap: theme.spacing.m }}
-        >
-          {availableSource?.formConfig != undefined && (
+        <Stack grow verticalFill key={selectedSource?.id} tokens={{ childrenGap: theme.spacing.m }}>
+          {selectedSource?.disabledReason}
+          {selectedSource?.formConfig != undefined && (
             <Stack grow verticalAlign="space-between">
               <Stack tokens={{ childrenGap: theme.spacing.m }}>
-                {availableSource?.formConfig.fields.map((field) => (
+                {selectedSource?.disabledReason}
+                {selectedSource?.formConfig.fields.map((field) => (
                   <TextField
                     key={field.label}
                     label={field.label}
