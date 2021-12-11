@@ -49,11 +49,6 @@ const features: Feature[] = [
     description: <>Enable the Mcap data source.</>,
   },
   {
-    key: AppSetting.ENABLE_WEBSOCKET_DATA_SOURCE,
-    name: "Foxglove WebSocket Data Source",
-    description: <>Enable the Foxglove WebSocket data source.</>,
-  },
-  {
     key: AppSetting.OPEN_DIALOG,
     name: "Open Dialog",
     description: <>Use the new open dialog for selecting data sources.</>,

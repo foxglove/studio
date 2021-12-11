@@ -15,7 +15,6 @@ export default class FoxgloveWebSocketDataSourceFactory implements IDataSourceFa
   id = "foxglove-websocket";
   type: IDataSourceFactory["type"] = "connection";
   displayName = "Foxglove WebSocket";
-  badgeText = "beta";
   iconName: IDataSourceFactory["iconName"] = "Flow";
 
   formConfig = {
