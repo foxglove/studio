@@ -6,7 +6,6 @@ import {
   ActionButton,
   DefaultButton,
   Icon,
-  ITextStyles,
   makeStyles,
   Stack,
   Text,
@@ -20,7 +19,6 @@ import {
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import NotificationModal from "@foxglove/studio-base/components/NotificationModal";
-import Timestamp from "@foxglove/studio-base/components/Timestamp";
 import ModalContext from "@foxglove/studio-base/context/ModalContext";
 import {
   IDataSourceFactory,
@@ -28,10 +26,9 @@ import {
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
-import { subtractTimes } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/time";
 import { PlayerPresence, PlayerProblem } from "@foxglove/studio-base/players/types";
-import { formatDuration } from "@foxglove/studio-base/util/formatTime";
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+
+import { DataSourceInfo } from "./DataSourceInfo";
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 const selectPlayerProblems = (ctx: MessagePipelineContext) => ctx.playerState.problems;
@@ -71,28 +68,9 @@ export default function ConnectionList(props: Props): JSX.Element {
   const theme = useTheme();
   const classes = useStyles();
 
-  const subheaderStyles = useMemo(
-    () =>
-      ({
-        root: {
-          fontVariant: "small-caps",
-          textTransform: "lowercase",
-          color: theme.palette.neutralSecondaryAlt,
-          letterSpacing: "0.5px",
-          position: "sticky",
-          top: 0,
-        },
-      } as ITextStyles),
-    [theme],
-  );
-
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? emptyArray;
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const playerName = useMessagePipeline(selectPlayerName);
-  const startTime = useMessagePipeline(
-    useCallback((ctx) => ctx.playerState.activeData?.startTime, []),
-  );
-  const endTime = useMessagePipeline(useCallback((ctx) => ctx.playerState.activeData?.endTime, []));
 
   const onSourceClick = useCallback(
     (source: IDataSourceFactory) => {
@@ -192,87 +170,15 @@ export default function ConnectionList(props: Props): JSX.Element {
     theme.spacing.l1,
   ]);
 
-  // When we are using the enable open dialog, we want to display the data source info
-  const dataSourceInfo = useMemo(() => {
-    if (enableOpenDialog !== true) {
-      return;
-    }
-
-    // fixme - put in an internal component so we don't render parent as source changes
-    return (
-      <Stack tokens={{ childrenGap: theme.spacing.m }}>
-        <DefaultButton onClick={onOpen}>Open new data source</DefaultButton>
-        <Stack
-          tokens={{
-            childrenGap: theme.spacing.m,
-          }}
-          styles={{
-            root: {
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-            },
-          }}
-        >
-          <Stack horizontal verticalAlign="center">
-            <Stack grow tokens={{ childrenGap: theme.spacing.s2 }}>
-              <Text styles={subheaderStyles}>Current Connection</Text>
-              <Text styles={{ root: { color: theme.palette.neutralSecondary } }}>{playerName}</Text>
-            </Stack>
-          </Stack>
-
-          <Stack tokens={{ childrenGap: theme.spacing.s2 }}>
-            <Text styles={subheaderStyles}>Start time</Text>
-            {startTime ? (
-              <Timestamp time={startTime} />
-            ) : (
-              <Text variant="small">Waiting for data…</Text>
-            )}
-          </Stack>
-
-          <Stack tokens={{ childrenGap: theme.spacing.s2 }}>
-            <Text styles={subheaderStyles}>End time</Text>
-            {endTime ? (
-              <Timestamp time={endTime} />
-            ) : (
-              <Text variant="small">Waiting for data…</Text>
-            )}
-          </Stack>
-
-          <Stack tokens={{ childrenGap: theme.spacing.s2 }}>
-            <Text styles={subheaderStyles}>Duration</Text>
-            <Text
-              variant="small"
-              styles={{
-                root: {
-                  fontFamily: fonts.MONOSPACE,
-                  color: theme.palette.neutralSecondary,
-                },
-              }}
-            >
-              {startTime && endTime
-                ? formatDuration(subtractTimes(endTime, startTime))
-                : "Waiting for data…"}
-            </Text>
-          </Stack>
-        </Stack>
-      </Stack>
-    );
-  }, [
-    enableOpenDialog,
-    endTime,
-    onOpen,
-    playerName,
-    startTime,
-    subheaderStyles,
-    theme.palette.neutralSecondary,
-    theme.spacing.m,
-    theme.spacing.s2,
-  ]);
-
   return (
     <>
       {sourcesListElements}
-      {dataSourceInfo}
+      {enableOpenDialog === true && (
+        <Stack tokens={{ childrenGap: theme.spacing.m }}>
+          <DefaultButton onClick={onOpen}>Open new data source</DefaultButton>
+          <DataSourceInfo />
+        </Stack>
+      )}
       {playerProblems.length > 0 && <hr className={classes.divider} />}
       {playerProblems.map((problem, idx) => {
         const iconName = problem.severity === "error" ? "Error" : "Warning";
