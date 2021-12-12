@@ -16,12 +16,14 @@ import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
+const selectPlayerName = (ctx: MessagePipelineContext) => ctx.playerState.name;
 
 function DataSourceInfo(): JSX.Element {
   const theme = useTheme();
 
   const startTime = useMessagePipeline(selectStartTime);
   const endTime = useMessagePipeline(selectEndTime);
+  const playerName = useMessagePipeline(selectPlayerName);
 
   const subheaderStyles = useMemo(
     () =>
