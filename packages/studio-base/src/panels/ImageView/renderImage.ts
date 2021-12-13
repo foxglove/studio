@@ -405,13 +405,17 @@ function paintMarker(
     case ImageMarkerType.TEXT: {
       // TEXT (our own extension on visualization_msgs/Marker)
       const { x, y } = maybeUnrectifyPoint(cameraModel, marker.position);
+      const text = marker.text?.data ?? "";
+      if (!text) {
+        break;
+      }
 
       const fontSize = marker.scale * 12;
       const padding = 4 * marker.scale;
       ctx.font = `${fontSize}px sans-serif`;
       ctx.textBaseline = "bottom";
       if (marker.filled) {
-        const metrics = ctx.measureText(marker.text.data);
+        const metrics = ctx.measureText(text);
         const height =
           "fontBoundingBoxAscent" in metrics
             ? metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent
@@ -420,7 +424,7 @@ function paintMarker(
         ctx.fillRect(x, y - height, Math.ceil(metrics.width + 2 * padding), Math.ceil(height));
       }
       ctx.fillStyle = toRGBA(marker.outline_color);
-      ctx.fillText(marker.text.data, x + padding, y);
+      ctx.fillText(text, x + padding, y);
       break;
     }
 

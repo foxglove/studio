@@ -411,7 +411,7 @@ export type ImageMarker = Readonly<{
   outline_colors: Colors;
   // `text` is not part of visualization_msgs/ImageMarker, but we include it to
   // support existing frameworks that have extended this message definition
-  text: { data: string };
+  text?: { data: string };
 }>;
 
 export type ImageMarkerArray = Readonly<{
