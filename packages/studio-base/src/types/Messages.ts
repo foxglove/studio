@@ -385,6 +385,9 @@ export enum ImageMarkerType {
   LINE_LIST = 2,
   POLYGON = 3,
   POINTS = 4,
+  // TEXT is not part of visualization_msgs/ImageMarker, but we include it to
+  // support existing frameworks that have extended this message definition
+  TEXT = 5,
 }
 
 export enum ImageMarkerAction {
@@ -406,6 +409,9 @@ export type ImageMarker = Readonly<{
   lifetime: Duration;
   points: Points;
   outline_colors: Colors;
+  // `text` is not part of visualization_msgs/ImageMarker, but we include it to
+  // support existing frameworks that have extended this message definition
+  text: { data: string };
 }>;
 
 export type ImageMarkerArray = Readonly<{

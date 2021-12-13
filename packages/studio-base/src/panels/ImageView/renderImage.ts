@@ -402,6 +402,28 @@ function paintMarker(
       break;
     }
 
+    case ImageMarkerType.TEXT: {
+      // TEXT (our own extension on visualization_msgs/Marker)
+      const { x, y } = maybeUnrectifyPoint(cameraModel, marker.position);
+
+      const fontSize = marker.scale * 12;
+      const padding = 4 * marker.scale;
+      ctx.font = `${fontSize}px sans-serif`;
+      ctx.textBaseline = "bottom";
+      if (marker.filled) {
+        const metrics = ctx.measureText(marker.text.data);
+        const height =
+          "fontBoundingBoxAscent" in metrics
+            ? metrics.fontBoundingBoxAscent + metrics.fontBoundingBoxDescent
+            : fontSize * 1.2;
+        ctx.fillStyle = toRGBA(marker.fill_color);
+        ctx.fillRect(x, y - height, Math.ceil(metrics.width + 2 * padding), Math.ceil(height));
+      }
+      ctx.fillStyle = toRGBA(marker.outline_color);
+      ctx.fillText(marker.text.data, x + padding, y);
+      break;
+    }
+
     default: {
       sendNotification(
         `Unrecognized ImageMarker type ${marker.type}`,
