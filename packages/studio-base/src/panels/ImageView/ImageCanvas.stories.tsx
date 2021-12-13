@@ -101,8 +101,6 @@ function marker(
       fill_color: { r: 0, g: 0, b: 0, a: 0 },
       points: [],
       outline_colors: [],
-      text: { data: "" },
-      thickness: 0,
       ...props,
       type,
     },
@@ -126,17 +124,14 @@ const markers = [
   marker(0, {
     position: { x: 40, y: 20, z: 0 },
     scale: 5,
-    thickness: 2,
     outline_color: { r: 1, g: 0.5, b: 0, a: 1 },
   }),
   marker(0, {
     position: { x: 55, y: 20, z: 0 },
     scale: 5,
-    thickness: -1,
     outline_color: { r: 1, g: 0, b: 1, a: 1 },
   }),
   marker(1, {
-    thickness: 1,
     points: [
       { x: 40, y: 20, z: 0 },
       { x: 40, y: 30, z: 0 },
@@ -145,27 +140,22 @@ const markers = [
     outline_color: { r: 0, g: 0, b: 1, a: 1 },
   }), // line strip
   marker(1, {
-    thickness: 2,
     points: makeLines(0),
     outline_color: { r: 1, g: 1, b: 1, a: 1 },
   }), // line list
   marker(2, {
-    thickness: 2,
     points: makeLines(50),
     outline_color: { r: 0.5, g: 0.5, b: 1, a: 1 },
   }), // polygon
   marker(3, {
-    thickness: 2,
     points: makeLines(100),
     outline_color: { r: 0.5, g: 0.5, b: 1, a: 1 },
   }),
   marker(3, {
-    thickness: -10,
     points: makeLines(150),
     outline_color: { r: 0.5, g: 1, b: 0.5, a: 1 },
   }),
   marker(3, {
-    thickness: -10,
     points: [
       { x: 100, y: 20, z: 0 },
       { x: 120, y: 20, z: 0 },
@@ -175,7 +165,6 @@ const markers = [
     outline_color: { r: 0.5, g: 1, b: 0.5, a: 1 },
   }),
   marker(3, {
-    thickness: 1,
     points: [
       { x: 100, y: 20, z: 0 },
       { x: 120, y: 20, z: 0 },
@@ -185,7 +174,6 @@ const markers = [
     outline_color: { r: 0, g: 0, b: 0, a: 1 },
   }),
   marker(3, {
-    thickness: -10,
     points: [
       { x: 150, y: 20, z: 0 },
       { x: 170, y: 20, z: 0 },
@@ -218,31 +206,15 @@ const markers = [
       a: 1,
     })),
     fill_color: { r: 0, g: 0, b: 1, a: 1 },
-  }), // text
-  marker(5, {
-    text: { data: "Hello!" },
-    position: { x: 30, y: 100, z: 0 },
-    scale: 1,
-    outline_color: { r: 1, g: 0.5, b: 0.5, a: 1 },
-  }),
-  marker(5, {
-    text: { data: "Hello!" },
-    position: { x: 130, y: 100, z: 0 },
-    scale: 1,
-    outline_color: { r: 1, g: 0.5, b: 0.5, a: 1 },
-    filled: true,
-    fill_color: { r: 50 / 255, g: 50 / 255, b: 50 / 255, a: 1 },
   }),
   marker(0, {
     position: { x: 30, y: 100, z: 0 },
     scale: 2,
-    thickness: -1,
     outline_color: { r: 1, g: 1, b: 0, a: 1 },
   }),
   marker(0, {
     position: { x: 130, y: 100, z: 0 },
     scale: 2,
-    thickness: -1,
     outline_color: { r: 1, g: 1, b: 0, a: 1 },
   }),
 ];
