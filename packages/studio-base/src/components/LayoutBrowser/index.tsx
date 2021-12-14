@@ -420,7 +420,7 @@ export default function LayoutBrowser({
         >
           {importLayoutTooltip.tooltip}
         </IconButton>,
-      ]}
+      ].filter(Boolean)}
     >
       {unsavedChangesPrompt}
       <Stack verticalFill>

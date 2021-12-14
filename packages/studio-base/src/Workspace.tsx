@@ -429,15 +429,22 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           title="Data sources"
           helpContent={connectionHelpContent}
           trailingItems={[
-            <IconButton
-              key="add-connection"
-              iconProps={{ iconName: "Add" }}
-              styles={{ icon: { height: 20 } }}
-              onClick={() => {
-                setShowOpenDialog(true);
-              }}
-            />,
-          ]}
+            enableOpenDialog === true && (
+              <IconButton
+                key="add-connection"
+                iconProps={{ iconName: "Add" }}
+                styles={{
+                  icon: {
+                    svg: { height: "1em", width: "1em" },
+                    "> span": { display: "flex" },
+                  },
+                }}
+                onClick={() => {
+                  setShowOpenDialog(true);
+                }}
+              />
+            ),
+          ].filter(Boolean)}
         >
           <ConnectionList />
         </SidebarContent>
@@ -482,7 +489,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           ],
         ])
       : SIDEBAR_ITEMS;
-  }, [playerProblems, supportsAccountSettings, currentUser]);
+  }, [playerProblems, supportsAccountSettings, currentUser, enableOpenDialog]);
 
   const sidebarBottomItems: readonly SidebarItemKey[] = useMemo(() => {
     return supportsAccountSettings ? ["help", "account", "preferences"] : ["help", "preferences"];
