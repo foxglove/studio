@@ -193,10 +193,24 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   // when the user wants to select a new connection we track whether the sidebar item opened
   const userSelectSidebarItem = useRef(false);
 
-  const selectSidebarItem = useCallback((item: SidebarItemKey | undefined) => {
-    userSelectSidebarItem.current = true;
-    setSelectedSidebarItem(item);
-  }, []);
+  const selectSidebarItem = useCallback(
+    (item: SidebarItemKey | undefined) => {
+      userSelectSidebarItem.current = true;
+      setSelectedSidebarItem(item);
+
+      // When activating the connection sidebar and no player is present we automatically trigger
+      // the open dialog.
+      if (item === "connection" && !isPlayerPresent) {
+        setShowOpenDialog(true);
+      }
+    },
+    [isPlayerPresent],
+  );
+
+  // When a player is activated, hide the open dialog. When a player is gone, show the open dialog.
+  useLayoutEffect(() => {
+    setShowOpenDialog(!isPlayerPresent);
+  }, [isPlayerPresent]);
 
   // Automatically close the connection sidebar when a connection is chosen
   useLayoutEffect(() => {
@@ -214,15 +228,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       setSelectedSidebarItem(undefined);
     }
   }, [selectedSidebarItem, playerPresence, enableOpenDialog]);
-
-  // When activating the connection sidebar and no player is present we automatically trigger
-  // the open dialog.
-  useLayoutEffect(() => {
-    if (selectedSidebarItem === "connection" && !isPlayerPresent) {
-      setShowOpenDialog(true);
-      return;
-    }
-  }, [isPlayerPresent, selectedSidebarItem]);
 
   const isMounted = useMountedState();
 

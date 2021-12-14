@@ -209,6 +209,17 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       metricsCollector.setProperty("player", sourceId);
       setSelectedSource(() => foundSource);
 
+      // Demo sources don't need args or prompts to initialize
+      if (foundSource.type === "demo") {
+        const newPlayer = foundSource.initialize({
+          consoleApi,
+          metricsCollector,
+          unlimitedMemoryCache,
+        });
+        setBasePlayer(newPlayer);
+        return;
+      }
+
       // If args is provided we try to initialize with no prompts
       if (args) {
         try {
