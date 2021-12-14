@@ -55,6 +55,7 @@ export function SidebarContent({
         root: {
           maxHeight: "100%",
           overflow: "auto",
+          paddingBottom: "16px",
         },
       }}
       tokens={{

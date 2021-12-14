@@ -13,7 +13,7 @@ type SignInPromptProps = {
 const useStyles = makeStyles((theme) => ({
   root: {
     backgroundColor: theme.palette.themeLighterAlt,
-    position: "sticky",
+    position: "absolute",
     bottom: 0,
   },
   text: {
