@@ -10,7 +10,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Link, makeStyles, Stack, Text, useTheme } from "@fluentui/react";
+import { Link, IconButton, makeStyles, Stack, Text, useTheme } from "@fluentui/react";
 import { extname } from "path";
 import {
   useState,
@@ -425,12 +425,20 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const sidebarItems = useMemo<Map<SidebarItemKey, SidebarItem>>(() => {
     function Connection() {
       return (
-        <SidebarContent title="Data Sources" helpContent={connectionHelpContent}>
-          <ConnectionList
-            onOpen={() => {
-              setShowOpenDialog(true);
-            }}
-          />
+        <SidebarContent
+          title="Data Sources"
+          helpContent={connectionHelpContent}
+          trailingItems={[
+            <IconButton
+              key="add-connection"
+              iconProps={{ iconName: "Add" }}
+              onClick={() => {
+                setShowOpenDialog(true);
+              }}
+            />,
+          ]}
+        >
+          <ConnectionList />
         </SidebarContent>
       );
     }
