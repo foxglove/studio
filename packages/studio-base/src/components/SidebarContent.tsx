@@ -75,11 +75,7 @@ export function SidebarContent({
         horizontalAlign="space-between"
         verticalAlign="center"
         tokens={{ padding: theme.spacing.m }}
-        styles={{
-          root: {
-            minHeight: 56,
-          },
-        }}
+        styles={{ root: { minHeight: 56 } }}
       >
         {leadingItems && (
           <Stack horizontal verticalAlign="center">
