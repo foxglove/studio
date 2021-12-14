@@ -426,7 +426,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     function Connection() {
       return (
         <SidebarContent
-          title="Data Sources"
+          title="Data sources"
           helpContent={connectionHelpContent}
           trailingItems={[
             <IconButton
@@ -443,20 +443,19 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       );
     }
 
-    const connectionItem: SidebarItem = {
-      iconName: "DataManagementSettings",
-      title: "Connection",
-      component: Connection,
-    };
-
-    if (playerProblems && playerProblems.length > 0) {
-      connectionItem.badge = {
-        count: playerProblems.length,
-      };
-    }
-
     const SIDEBAR_ITEMS = new Map<SidebarItemKey, SidebarItem>([
-      ["connection", connectionItem],
+      [
+        "connection",
+        {
+          iconName: "DataManagementSettings",
+          title: "Data sources",
+          component: Connection,
+          badge:
+            playerProblems && playerProblems.length > 0
+              ? { count: playerProblems.length }
+              : undefined,
+        },
+      ],
       ["layouts", { iconName: "FiveTileGrid", title: "Layouts", component: LayoutBrowser }],
       ["add-panel", { iconName: "RectangularClipping", title: "Add panel", component: AddPanel }],
       [
