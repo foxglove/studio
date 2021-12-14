@@ -186,6 +186,12 @@ function computeMarkerPose(
   return frame.apply(emptyPose(), marker.pose, srcFrame, time);
 }
 
+function poseClone(pose: Pose): MutablePose {
+  const p = pose.position;
+  const o = pose.orientation;
+  return { position: { x: p.x, y: p.y, z: p.z }, orientation: { x: o.x, y: o.y, z: o.z, w: o.w } };
+}
+
 export default class SceneBuilder implements MarkerProvider {
   topicsByName: {
     [topicName: string]: Topic;
@@ -573,10 +579,6 @@ export default class SceneBuilder implements MarkerProvider {
     const type = 101;
     const name = `${topic}/${type}`;
 
-    // set ogrid texture & alpha based on current rviz settings
-    // in the future these will be customizable via the UI
-    const [alpha, map] = this._hooks.getOccupancyGridValues(topic);
-
     const { header, info, data } = message;
     const mappedMessage = {
       header: {
@@ -592,25 +594,16 @@ export default class SceneBuilder implements MarkerProvider {
         origin: info.origin,
       },
       data,
-      alpha,
-      map,
       type,
       name,
-      pose: emptyPose(),
+      pose: poseClone(info.origin),
+      frame_locked: true,
       interactionData: { topic, originalMessage: message },
     };
 
     // if we neeed to flatten the ogrid clone the position and change the z to match the flattenedZHeightPose
-    if (mappedMessage.info.origin.position.z === 0 && this.flattenedZHeightPose && this.flatten) {
-      const originalInfo = mappedMessage.info;
-      const originalPosition = originalInfo.origin.position;
-      mappedMessage.info = {
-        ...originalInfo,
-        origin: {
-          ...originalInfo.origin,
-          position: { ...originalPosition, z: this.flattenedZHeightPose.position.z },
-        },
-      };
+    if (mappedMessage.pose.position.z === 0 && this.flattenedZHeightPose && this.flatten) {
+      mappedMessage.pose.position.z = this.flattenedZHeightPose.position.z;
     }
     this.collectors[topic]!.addNonMarker(topic, mappedMessage as unknown as Interactive<unknown>);
   };
@@ -719,9 +712,7 @@ export default class SceneBuilder implements MarkerProvider {
       case "nav_msgs/OccupancyGrid":
       case "nav_msgs/msg/OccupancyGrid":
       case "ros.nav_msgs.OccupancyGrid":
-        // flatten btn: set empty z values to be at the same level as the flattenedZHeightPose
         this._consumeOccupancyGrid(topic, message as NavMsgs$OccupancyGrid);
-
         break;
       case "nav_msgs/Path":
       case "nav_msgs/msg/Path":
@@ -936,7 +927,9 @@ export default class SceneBuilder implements MarkerProvider {
       case 110: // ColorMarker
         marker = { ...marker, pose };
         break;
-      case 101: // OccupancyGridMessage - needs special handling
+      case 101: // OccupancyGridMessage
+        marker = { ...marker, pose };
+        break;
       case 104: // LaserScan - needs special handling
       default:
         break;
