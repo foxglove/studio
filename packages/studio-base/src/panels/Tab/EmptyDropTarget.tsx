@@ -80,7 +80,7 @@ export const EmptyDropTarget = ({ tabId }: Props): JSX.Element => {
         horizontalAlign="center"
         verticalFill
         verticalAlign="center"
-        tokens={{ childrenGap: theme.spacing.l1, padding: theme.spacing.m }}
+        tokens={{ childrenGap: theme.spacing.m, padding: theme.spacing.m }}
       >
         <EmptyBoxIcon />
 
