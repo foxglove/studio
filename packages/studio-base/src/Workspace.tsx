@@ -432,6 +432,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
             <IconButton
               key="add-connection"
               iconProps={{ iconName: "Add" }}
+              styles={{ icon: { height: 20 } }}
               onClick={() => {
                 setShowOpenDialog(true);
               }}
@@ -481,7 +482,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           ],
         ])
       : SIDEBAR_ITEMS;
-  }, [supportsAccountSettings, playerProblems, currentUser]);
+  }, [playerProblems, supportsAccountSettings, currentUser]);
 
   const sidebarBottomItems: readonly SidebarItemKey[] = useMemo(() => {
     return supportsAccountSettings ? ["help", "account", "preferences"] : ["help", "preferences"];
