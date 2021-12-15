@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { IButtonStyles, IconButton, Stack, useTheme } from "@fluentui/react";
-import { sortBy, debounce } from "lodash";
+import { sortBy } from "lodash";
 import { memo, useCallback, useState, useMemo, useRef } from "react";
 import shallowequal from "shallowequal";
 
@@ -117,8 +117,7 @@ const arePropsEqual = (prevProps: Props, nextProps: Props) => {
 
 const FollowTFControl = memo<Props>(function FollowTFControl(props: Props) {
   const { transforms, tfToFollow, followOrientation, onFollowChange } = props;
-  const [forceShowFrameList, setForceShowFrameList] = useState(false);
-  const [hovering, setHovering] = useState(false);
+  const [, setForceShowFrameList] = useState(false);
   const [lastSelectedFrame, setLastSelectedFrame] = useState<string | undefined>(undefined);
   const theme = useTheme();
 
@@ -208,23 +207,6 @@ const FollowTFControl = memo<Props>(function FollowTFControl(props: Props) {
     autocomplete.current?.focus();
   }, [setForceShowFrameList, autocomplete]);
 
-  // slight delay to prevent the arrow from disappearing when you're trying to click it
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const onMouseLeaveDebounced = useCallback(
-    debounce(() => {
-      setHovering(false);
-    }, 200),
-    [setHovering],
-  );
-
-  const onMouseEnter = useCallback(() => {
-    onMouseLeaveDebounced.cancel();
-    setHovering(true);
-  }, [onMouseLeaveDebounced, setHovering]);
-
-  const followingCustomFrame = !!tfToFollow && tfToFollow !== getDefaultFollowTransformFrame();
-  const showFrameList =
-    lastSelectedFrame != undefined || forceShowFrameList || followingCustomFrame;
   const selectedFrameId = tfToFollow ?? lastSelectedFrame;
   const selectedFrame = selectedFrameId ? transforms.frame(selectedFrameId) : undefined;
   const selectedItem: TfTreeNode | undefined = selectedFrame
@@ -238,8 +220,6 @@ const FollowTFControl = memo<Props>(function FollowTFControl(props: Props) {
     <Stack
       horizontal
       grow={1}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeaveDebounced}
       verticalAlign="center"
       styles={{
         root: {
@@ -270,23 +250,18 @@ const FollowTFControl = memo<Props>(function FollowTFControl(props: Props) {
           // breaks selection
           marginTop: 4,
         }}
-        onBlur={() => {
-          setForceShowFrameList(false);
-          setHovering(false);
+        onBlur={() => setForceShowFrameList(false)}
+      />
+      {frameListButton.tooltip}
+      <IconButton
+        elementRef={frameListButton.ref}
+        onClick={openFrameList}
+        iconProps={{ iconName: "MenuDown" }}
+        styles={{
+          ...iconButtonStyles,
+          root: { width: 16 },
         }}
       />
-      <>
-        {frameListButton.tooltip}
-        <IconButton
-          elementRef={frameListButton.ref}
-          onClick={openFrameList}
-          iconProps={{ iconName: "MenuDown" }}
-          styles={{
-            ...iconButtonStyles,
-            root: { width: 16 },
-          }}
-        />
-      </>
       {followButton.tooltip}
       <IconButton
         checked={tfToFollow != undefined}
