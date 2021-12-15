@@ -252,45 +252,41 @@ const FollowTFControl = memo<Props>(function FollowTFControl(props: Props) {
         },
       }}
     >
-      {showFrameList && (
-        <Autocomplete
-          ref={autocomplete}
-          items={allNodes}
-          getItemValue={treeNodeToTfId}
-          getItemText={getItemText}
-          selectedItem={selectedItem}
-          placeholder={selectedItem ? getItemText(selectedItem) : "choose a target frame"}
-          onSelect={onSelectFrame}
-          sortWhenFiltering={false}
-          minWidth={0}
-          clearOnFocus
-          autoSize
-          menuStyle={{
-            // bump the menu down to reduce likelihood of it appearing while the mouse is
-            // already over it, which causes onMouseEnter not to be delivered correctly and
-            // breaks selection
-            marginTop: 4,
-          }}
-          onBlur={() => {
-            setForceShowFrameList(false);
-            setHovering(false);
+      <Autocomplete
+        ref={autocomplete}
+        items={allNodes}
+        getItemValue={treeNodeToTfId}
+        getItemText={getItemText}
+        selectedItem={selectedItem}
+        placeholder={selectedItem ? getItemText(selectedItem) : "choose a target frame"}
+        onSelect={onSelectFrame}
+        sortWhenFiltering={false}
+        minWidth={0}
+        clearOnFocus
+        autoSize
+        menuStyle={{
+          // bump the menu down to reduce likelihood of it appearing while the mouse is
+          // already over it, which causes onMouseEnter not to be delivered correctly and
+          // breaks selection
+          marginTop: 4,
+        }}
+        onBlur={() => {
+          setForceShowFrameList(false);
+          setHovering(false);
+        }}
+      />
+      <>
+        {frameListButton.tooltip}
+        <IconButton
+          elementRef={frameListButton.ref}
+          onClick={openFrameList}
+          iconProps={{ iconName: "MenuDown" }}
+          styles={{
+            ...iconButtonStyles,
+            root: { width: 16 },
           }}
         />
-      )}
-      {(hovering || showFrameList) && (
-        <>
-          {frameListButton.tooltip}
-          <IconButton
-            elementRef={frameListButton.ref}
-            onClick={openFrameList}
-            iconProps={{ iconName: showFrameList ? "MenuDown" : "MenuLeft" }}
-            styles={{
-              ...iconButtonStyles,
-              root: { width: 16 },
-            }}
-          />
-        </>
-      )}
+      </>
       {followButton.tooltip}
       <IconButton
         checked={tfToFollow != undefined}
