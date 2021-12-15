@@ -95,13 +95,13 @@ function getProvider(
 }
 
 describe("MemoryCacheDataProvider", () => {
-  it("initialize passes through underlying provider result", async () => {
+  it("initialize passes through underlying provider result and parsed messages", async () => {
     const { provider, memoryDataProvider } = getProvider(generateMessages());
     const initializeSpy = jest.spyOn(memoryDataProvider, "initialize");
 
     const result = await provider.initialize(mockExtensionPoint().extensionPoint);
     const expected = await initializeSpy.mock.results[0]?.value;
-    expect(result).toEqual(expected);
+    expect(result).toEqual({ ...expected, providesParsedMessages: true });
   });
 
   it("suppresses the underlying progress updates, and only publishes its own", async () => {
