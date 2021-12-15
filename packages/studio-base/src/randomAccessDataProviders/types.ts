@@ -75,6 +75,7 @@ export type ParsedMessageDefinitions = Readonly<{
   messageDefinitionsByTopic: MessageDefinitionsByTopic;
   parsedMessageDefinitionsByTopic: ParsedMessageDefinitionsByTopic;
 }>;
+
 export type MessageDefinitions =
   | Readonly<{
       type: "raw";
@@ -102,18 +103,6 @@ export interface RandomAccessDataProvider {
   // Close the provider (e.g. close any connections to a server). Must be called only after
   // `initialize` has finished.
   close(): Promise<void>;
-}
-
-export interface RandomAccessDataProviderConstructor {
-  new (
-    // The arguments to this particular RandomAccessDataProvider; typically an object.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    args: any,
-    // The children we should instantiate within the provider
-    children: RandomAccessDataProviderDescriptor[],
-    // The function to instantiate the children (different in e.g. Web Workers).
-    getDataProvider: GetDataProvider,
-  ): RandomAccessDataProvider;
 }
 
 export type InitializationResult = {
@@ -194,19 +183,3 @@ export type Connection = {
   type: string;
   callerid: string;
 };
-
-// RandomAccessDataProviders can be instantiated using a RandomAccessDataProviderDescriptor and a GetDataProvider function.
-// Because the descriptor is a plain JavaScript object, it can be sent over an Rpc Channel, which
-// means that you can describe a chain of data providers that includes a Worker or a WebSocket.
-export type RandomAccessDataProviderDescriptor = {
-  label?: string;
-  filePath?: string;
-  name: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  args: any;
-  children: RandomAccessDataProviderDescriptor[];
-};
-
-export type GetDataProvider = (
-  arg0: RandomAccessDataProviderDescriptor,
-) => RandomAccessDataProvider;
