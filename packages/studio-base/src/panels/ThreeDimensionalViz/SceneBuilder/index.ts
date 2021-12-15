@@ -47,7 +47,7 @@ import {
   PointCloud2,
 } from "@foxglove/studio-base/types/Messages";
 import { MarkerProvider, MarkerCollector } from "@foxglove/studio-base/types/Scene";
-import { emptyPose } from "@foxglove/studio-base/util/Pose";
+import { clonePose, emptyPose } from "@foxglove/studio-base/util/Pose";
 import naturalSort from "@foxglove/studio-base/util/naturalSort";
 
 import { ThreeDimensionalVizHooks } from "./types";
@@ -176,7 +176,7 @@ function computeMarkerPose(
   transforms: TransformTree,
   renderFrameId: string,
   currentTime: Time,
-): MutablePose | undefined {
+): Pose | undefined {
   const srcFrame = transforms.frame(marker.header.frame_id);
   const frame = transforms.frame(renderFrameId);
   if (!srcFrame || !frame) {
@@ -184,12 +184,6 @@ function computeMarkerPose(
   }
   const time = marker.frame_locked ? currentTime : marker.header.stamp;
   return frame.apply(emptyPose(), marker.pose, srcFrame, time);
-}
-
-function poseClone(pose: Pose): MutablePose {
-  const p = pose.position;
-  const o = pose.orientation;
-  return { position: { x: p.x, y: p.y, z: p.z }, orientation: { x: o.x, y: o.y, z: o.z, w: o.w } };
 }
 
 export default class SceneBuilder implements MarkerProvider {
@@ -596,7 +590,7 @@ export default class SceneBuilder implements MarkerProvider {
       data,
       type,
       name,
-      pose: poseClone(info.origin),
+      pose: clonePose(info.origin),
       frame_locked: true,
       interactionData: { topic, originalMessage: message },
     };
