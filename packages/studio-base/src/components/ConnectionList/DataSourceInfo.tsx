@@ -54,7 +54,7 @@ function DataSourceInfo(): JSX.Element {
     >
       <Stack horizontal verticalAlign="center">
         <Stack grow tokens={{ childrenGap: theme.spacing.s2 }}>
-          <Text styles={subheaderStyles}>Current Connection</Text>
+          <Text styles={subheaderStyles}>Current data source</Text>
           <Text styles={{ root: { color: theme.palette.neutralSecondary } }}>
             {playerName ?? "Select a data source"}
           </Text>
@@ -67,7 +67,7 @@ function DataSourceInfo(): JSX.Element {
           <Timestamp time={startTime} />
         ) : (
           <Text variant="small" styles={{ root: { color: theme.palette.neutralSecondary } }}>
-            Waiting for data…
+            00:00:00
           </Text>
         )}
       </Stack>
@@ -78,7 +78,7 @@ function DataSourceInfo(): JSX.Element {
           <Timestamp time={endTime} />
         ) : (
           <Text variant="small" styles={{ root: { color: theme.palette.neutralSecondary } }}>
-            Waiting for data…
+            00:00:00
           </Text>
         )}
       </Stack>
@@ -94,9 +94,7 @@ function DataSourceInfo(): JSX.Element {
             },
           }}
         >
-          {startTime && endTime
-            ? formatDuration(subtractTimes(endTime, startTime))
-            : "Waiting for data…"}
+          {startTime && endTime ? formatDuration(subtractTimes(endTime, startTime)) : "00:00:00"}
         </Text>
       </Stack>
     </Stack>
