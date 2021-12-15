@@ -46,12 +46,6 @@ const DEFAULT_COLOR_FIELDS = ["intensity", "i"];
 // Decode a marker and generate position and color buffers for rendering
 // The resulting marker should be memoized for better performance
 export function decodeMarker(marker: PointCloudMarker): DecodedMarker {
-  // Throw an error on big endian data until we support rendering
-  // it correctly.
-  if (marker.is_bigendian) {
-    throw new Error("Unsupported big endian point cloud data.");
-  }
-
   const {
     fields = [],
     settings = {},

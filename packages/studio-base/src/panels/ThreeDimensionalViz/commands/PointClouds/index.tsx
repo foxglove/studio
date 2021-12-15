@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import type REGL from "regl";
 
 import { filterMap } from "@foxglove/den/collection";
@@ -24,10 +24,6 @@ import {
   vec4ToRGBA,
   BaseShape,
 } from "@foxglove/regl-worldview";
-import {
-  MessagePipelineContext,
-  useMessagePipeline,
-} from "@foxglove/studio-base/components/MessagePipeline";
 import {
   DEFAULT_FLAT_COLOR,
   DEFAULT_MIN_COLOR,
@@ -451,43 +447,18 @@ type Props = CommonCommandProps & {
   clearCachedMarkers?: boolean;
 };
 
-const selectPlayerId = (ctx: MessagePipelineContext) => ctx.playerState.playerId;
-
 export default function PointClouds({
   children,
   clearCachedMarkers,
   ...rest
 }: Props): React.ReactElement {
-  const playerId = useMessagePipeline(selectPlayerId);
   const [command] = useState(() => makePointCloudCommand());
   const markerCache = useRef(new Map<Uint8Array, MemoizedMarker>());
-  const errorCache = useRef(new Set<string>());
-
-  // Clear our error cache when the player changes.
-  useEffect(() => {
-    errorCache.current.clear();
-  }, [playerId]);
-
-  // These errors can occur per-message so we avoid error spam by only showing
-  // the same error message once.
-  // TODO: Find a way to indicate these in the topic tree instead.
-  const handleError = useCallback((err: unknown) => {
-    if (!(err instanceof Error)) {
-      return;
-    }
-
-    if (!errorCache.current.has(err.message)) {
-      sendNotification("Point cloud decoding failed", err, "user", "error");
-      errorCache.current.add(err.message);
-    }
-  }, []);
-
   try {
     markerCache.current = updateMarkerCache(markerCache.current, children as PointCloudMarker[]);
   } catch (err) {
-    handleError(err);
+    sendNotification("Point cloud decoding failed", err, "user", "error");
   }
-
   const decodedMarkers = !(clearCachedMarkers ?? false)
     ? [...markerCache.current.values()].map((decoded) => decoded.marker)
     : (children as PointCloudMarker[])
@@ -495,12 +466,11 @@ export default function PointClouds({
           try {
             return decodeMarker(m);
           } catch (err) {
-            handleError(err);
+            sendNotification("Point cloud decoding failed", err, "user", "error");
             return undefined;
           }
         })
         .filter((m) => m != undefined);
-
   return (
     <Command getChildrenForHitmap={instancedGetChildrenForHitmap} {...rest} reglCommand={command}>
       {decodedMarkers}
