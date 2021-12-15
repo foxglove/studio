@@ -248,6 +248,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
             this._resolvedSubscriptionsById.delete(subId);
             this._resolvedSubscriptionsByTopic.delete(channel.topic);
             client.unsubscribe(subId); // TODO: batch
+            this._unresolvedSubscriptions.add(channel.topic);
           }
         }
         this._channelsById.delete(id);
@@ -351,6 +352,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
       capabilities: CAPABILITIES,
       playerId: this._id,
       problems: this._problems.problems(),
+      urlState: {
+        url: this._url,
+      },
 
       activeData: {
         messages,

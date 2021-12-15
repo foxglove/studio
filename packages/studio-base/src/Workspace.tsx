@@ -75,6 +75,7 @@ import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFiles
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import welcomeLayout from "@foxglove/studio-base/layouts/welcomeLayout";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
+import { windowHasValidURLState } from "@foxglove/studio-base/util/appURLState";
 
 const useStyles = makeStyles({
   container: {
@@ -198,6 +199,11 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     setSelectedSidebarItem(item);
   }, []);
 
+  // When a player is activated, hide the open dialog. When a player is gone, show the open dialog.
+  useLayoutEffect(() => {
+    setShowOpenDialog(!isPlayerPresent);
+  }, [isPlayerPresent]);
+
   // Automatically close the connection sidebar when a connection is chosen
   useLayoutEffect(() => {
     // When using the open dialog feature we don't automatically do anything with the connection sidebar
@@ -214,15 +220,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
       setSelectedSidebarItem(undefined);
     }
   }, [selectedSidebarItem, playerPresence, enableOpenDialog]);
-
-  // When activating the connection sidebar and no player is present we automatically trigger
-  // the open dialog.
-  useLayoutEffect(() => {
-    if (selectedSidebarItem === "connection" && !isPlayerPresent) {
-      setShowOpenDialog(true);
-      return;
-    }
-  }, [isPlayerPresent, selectedSidebarItem]);
 
   const isMounted = useMountedState();
 
@@ -322,7 +319,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const appConfiguration = useAppConfiguration();
   const { addToast } = useToasts();
 
-  // Show welcome layout on first run
+  // Show welcome layout on first run unless we have a valid URL state.
   useMount(() => {
     // When using the open dialog, the welcome layout is triggered by vieweing demo data
     if (enableOpenDialog === true) {
@@ -330,6 +327,10 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     }
 
     void (async () => {
+      if (windowHasValidURLState()) {
+        return;
+      }
+
       const welcomeLayoutShown = appConfiguration.get("onboarding.welcome-layout.shown");
       if (welcomeLayoutShown !== true || props.loadWelcomeLayout === true) {
         await appConfiguration.set("onboarding.welcome-layout.shown", true);
