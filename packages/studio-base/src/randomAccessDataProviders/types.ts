@@ -39,17 +39,6 @@ import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 // and the topics and data types. It then allows for requesting messages for arbitrary time ranges
 // within, though it is the caller's responsibility to request small enough time ranges, since in
 // general RandomAccessDataProviders give no guarantees of how fast they return the data.
-//
-// The properties of immutability and idempotence make it very easy to compose different
-// RandomAccessDataProviders. For example, you can have a BagDataProvider which reads from a ROS bag, but which
-// takes a bit of time to decompress the ROS bag. So you might wrap it in a WorkerDataProvider,
-// which puts its children in a Web Worker, therefore allowing the decompression to happen in
-// parallel to the main thread. And you might wrap that in turn in a MemoryCacheDataProvider, which
-// does some in-memory read-ahead caching based on the most recent time range that was requested.
-// These trees of RandomAccessDataProviders are described by `RandomAccessDataProviderDescriptor`.
-//
-// RandomAccessDataProviders have a strict API which is enforced automatically in ApiCheckerDataProvider.
-
 export type RandomAccessDataProviderProblem = {
   severity: "error" | "warn";
   message: string;
