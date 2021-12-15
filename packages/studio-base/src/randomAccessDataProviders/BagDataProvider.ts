@@ -102,7 +102,7 @@ class LogMetricsReader {
 
 // Read from a ROS Bag. `bagPath` can either represent a local file, or a remote bag. See
 // `BrowserHttpReader` for how to set up a remote server to be able to directly stream from it.
-// Returns raw messages that still need to be parsed by `ParseMessagesDataProvider`.
+// Returns raw messages that still need to be parsed downstream.
 export default class BagDataProvider implements RandomAccessDataProvider {
   private _options: Options;
   private _bag?: Bag;
