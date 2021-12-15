@@ -20,7 +20,7 @@ export type DataSourceFactoryInitializeArgs = {
   consoleApi?: ConsoleApi;
 } & Record<string, unknown>;
 
-export type DataSourceFactoryType = "file" | "remote-file" | "connection" | "demo";
+export type DataSourceFactoryType = "file" | "remote-file" | "connection" | "sample";
 
 export interface IDataSourceFactory {
   id: string;
@@ -30,7 +30,8 @@ export interface IDataSourceFactory {
   disabledReason?: string | JSX.Element;
   badgeText?: string;
   hidden?: boolean;
-  layout?: PanelsState;
+
+  sampleLayout?: PanelsState;
 
   formConfig?: {
     // Initialization args are populated with keys of the _id_ field

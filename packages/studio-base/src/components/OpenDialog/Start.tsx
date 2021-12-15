@@ -65,9 +65,9 @@ export default function Start(props: IStartProps): JSX.Element {
         onClick: () => onSelectView("connection"),
       },
       {
-        id: "demo-data",
+        id: "sample-data",
         children: "Explore sample data",
-        secondaryText: "New to Studio? Have a play with demo data",
+        secondaryText: "New to Studio? View some sample data",
         iconProps: { iconName: "BookStar" },
         onClick: () => onSelectView("demo"),
       },

@@ -9,14 +9,14 @@ import {
 import { buildPlayerFromBagURLs } from "@foxglove/studio-base/players/buildPlayer";
 import { DEMO_BAG_URL } from "@foxglove/studio-base/util/isDemoBagUrl";
 
-class DemoOneDataSourceFactory implements IDataSourceFactory {
-  id = "demo-one";
-  type: IDataSourceFactory["type"] = "demo";
-  displayName = "Demo One";
+class SampleUdacityDataSourceFactory implements IDataSourceFactory {
+  id = "sample-udacity";
+  type: IDataSourceFactory["type"] = "sample";
+  displayName = "Sample: Udacity";
   iconName: IDataSourceFactory["iconName"] = "FileASPX";
   hidden = true;
 
-  layout: IDataSourceFactory["layout"] = {
+  sampleLayout: IDataSourceFactory["sampleLayout"] = {
     layout: {
       first: {
         first: {
@@ -187,4 +187,4 @@ class DemoOneDataSourceFactory implements IDataSourceFactory {
   }
 }
 
-export default DemoOneDataSourceFactory;
+export default SampleUdacityDataSourceFactory;

@@ -31,7 +31,7 @@ import {
   McapLocalDataSourceFactory,
   useAppConfigurationValue,
   AppSetting,
-  DemoOneDataSourceFactory,
+  SampleUdacityDataSourceFactory,
 } from "@foxglove/studio-base";
 import { DEMO_BAG_URL } from "@foxglove/studio-base/util/isDemoBagUrl";
 
@@ -66,7 +66,7 @@ function AppWrapper() {
       new UlogLocalDataSourceFactory(),
       new VelodyneDataSourceFactory(),
       new FoxgloveDataPlatformDataSourceFactory(),
-      new DemoOneDataSourceFactory(),
+      new SampleUdacityDataSourceFactory(),
     ];
 
     if (enableMcapDataSource) {

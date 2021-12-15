@@ -28,7 +28,7 @@ import {
   FoxgloveWebSocketDataSourceFactory,
   UlogLocalDataSourceFactory,
   McapLocalDataSourceFactory,
-  DemoOneDataSourceFactory,
+  SampleUdacityDataSourceFactory,
 } from "@foxglove/studio-base";
 import { DEMO_BAG_URL } from "@foxglove/studio-base/util/isDemoBagUrl";
 
@@ -59,7 +59,7 @@ function AppWrapper({ loadWelcomeLayout }: { loadWelcomeLayout: boolean }) {
       new UlogLocalDataSourceFactory(),
       new VelodyneUnavailableDataSourceFactory(),
       new FoxgloveDataPlatformDataSourceFactory(),
-      new DemoOneDataSourceFactory(),
+      new SampleUdacityDataSourceFactory(),
     ];
 
     if (enableMcapDataSource) {

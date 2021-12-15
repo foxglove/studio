@@ -4,10 +4,7 @@
 
 import { Dialog, Stack, useTheme } from "@fluentui/react";
 import { useCallback, useMemo, useState } from "react";
-import { useMountedState } from "react-use";
 
-import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 
 import Connection from "./Connection";
@@ -24,18 +21,14 @@ type OpenDialogProps = {
 export default function OpenDialog(props: OpenDialogProps): JSX.Element {
   const { activeView: defaultActiveView, onDismiss } = props;
   const { availableSources, selectSource } = usePlayerSelection();
-  const layoutStorage = useLayoutManager();
-  const { setSelectedLayoutId } = useCurrentLayoutActions();
 
   const [activeView, setActiveView] = useState<OpenDialogViews>(defaultActiveView ?? "start");
   const theme = useTheme();
 
   const openFile = useOpenFile(availableSources);
 
-  const isMounted = useMountedState();
-
-  const firstDemoSource = useMemo(() => {
-    return availableSources.find((source) => source.type === "demo");
+  const firstSampleSource = useMemo(() => {
+    return availableSources.find((source) => source.type === "sample");
   }, [availableSources]);
 
   const onSelectView = useCallback(
@@ -47,28 +40,13 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
         return;
       }
 
-      if (view === "demo" && firstDemoSource && firstDemoSource.layout) {
-        layoutStorage
-          .saveNewLayout({
-            name: firstDemoSource.displayName,
-            data: firstDemoSource.layout,
-            permission: "CREATOR_WRITE",
-          })
-          .then((newLayout) => {
-            if (!isMounted()) {
-              return;
-            }
-            setSelectedLayoutId(newLayout.id);
-            selectSource(firstDemoSource.id);
-          })
-          .catch((err) => {
-            throw err;
-          });
+      if (view === "demo" && firstSampleSource) {
+        selectSource(firstSampleSource.id);
       }
 
       setActiveView(view);
     },
-    [firstDemoSource, isMounted, layoutStorage, openFile, selectSource, setSelectedLayoutId],
+    [firstSampleSource, openFile, selectSource],
   );
 
   const allExtensions = useMemo(() => {
