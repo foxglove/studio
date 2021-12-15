@@ -68,6 +68,7 @@ const buildSyntheticArrowMarker = (
   header: message.header,
   type: 103,
   pose,
+  frame_locked: true,
   scale: { x: 2, y: 2, z: 0.1 },
   color: getSyntheticArrowMarkerColor(topic),
   interactionData: { topic, originalMessage: message },
@@ -591,7 +592,7 @@ export default class SceneBuilder implements MarkerProvider {
       type,
       name,
       pose: clonePose(info.origin),
-      frame_locked: true,
+      frame_locked: false,
       interactionData: { topic, originalMessage: message },
     };
 
@@ -916,7 +917,7 @@ export default class SceneBuilder implements MarkerProvider {
       case 10: // MeshMarker
       case 11: // TriangleListMarker
       case 102: // PointCloud2
-      case 103: // (unknown!)
+      case 103: // PoseStamped
       case 108: // InstanceLineListMarker
       case 110: // ColorMarker
         marker = { ...marker, pose };
