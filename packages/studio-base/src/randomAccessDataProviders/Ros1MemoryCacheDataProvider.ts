@@ -17,7 +17,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { filterMap } from "@foxglove/den/collection";
 import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
-import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
+import { MessageReader } from "@foxglove/rosmsg-serialization";
 import {
   Time,
   add as addTimes,
@@ -286,7 +286,7 @@ export default class Ros1MemoryCacheDataProvider implements RandomAccessDataProv
   private _readAheadBlocks: number = 0;
   private _memCacheBlockSizeNs: number = 0;
 
-  private _lazyMessageReadersByTopic = new Map<string, LazyMessageReader>();
+  private _lazyMessageReadersByTopic = new Map<string, MessageReader>();
 
   constructor(
     provider: RandomAccessDataProvider,
@@ -320,12 +320,12 @@ export default class Ros1MemoryCacheDataProvider implements RandomAccessDataProv
     const msgDefs = result.messageDefinitions;
     if (msgDefs.type === "parsed") {
       for (const [topic, msgDef] of Object.entries(msgDefs.parsedMessageDefinitionsByTopic)) {
-        this._lazyMessageReadersByTopic.set(topic, new LazyMessageReader(msgDef));
+        this._lazyMessageReadersByTopic.set(topic, new MessageReader(msgDef));
       }
     } else if (msgDefs.type === "raw") {
       for (const [topic, rawMsgDef] of Object.entries(msgDefs.messageDefinitionsByTopic)) {
         const msgDef = parseMessageDefinition(rawMsgDef);
-        this._lazyMessageReadersByTopic.set(topic, new LazyMessageReader(msgDef));
+        this._lazyMessageReadersByTopic.set(topic, new MessageReader(msgDef));
       }
     }
 
@@ -643,24 +643,24 @@ export default class Ros1MemoryCacheDataProvider implements RandomAccessDataProv
 
         const bytes = new Uint8Array(rosBinaryMessage.message);
 
-        try {
-          const msgSize = lazyReader.size(bytes);
-          if (msgSize > bytes.byteLength) {
-            sendNotification(
-              `Message buffer not large enough on ${rosBinaryMessage.topic}`,
-              `Cannot read ${msgSize} byte message from ${bytes.byteLength} byte buffer`,
-              "user",
-              "error",
-            );
-          }
-        } catch (error) {
-          sendNotification(
-            `Message size parsing failed on ${rosBinaryMessage.topic}`,
-            error,
-            "user",
-            "error",
-          );
-        }
+        // try {
+        //   const msgSize = lazyReader.size(bytes);
+        //   if (msgSize > bytes.byteLength) {
+        //     sendNotification(
+        //       `Message buffer not large enough on ${rosBinaryMessage.topic}`,
+        //       `Cannot read ${msgSize} byte message from ${bytes.byteLength} byte buffer`,
+        //       "user",
+        //       "error",
+        //     );
+        //   }
+        // } catch (error) {
+        //   sendNotification(
+        //     `Message size parsing failed on ${rosBinaryMessage.topic}`,
+        //     error,
+        //     "user",
+        //     "error",
+        //   );
+        // }
 
         const lazyMsg = lazyReader.readMessage(bytes);
         messagesByTopic[rosBinaryMessage.topic]?.push({
