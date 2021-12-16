@@ -101,6 +101,7 @@ function SourceInfo() {
           </Stack>
         </Stack>
         <DetailsList
+          compact
           checkboxVisibility={CheckboxVisibility.hidden}
           disableSelectionZone
           enableUpdateAnimations={false}
