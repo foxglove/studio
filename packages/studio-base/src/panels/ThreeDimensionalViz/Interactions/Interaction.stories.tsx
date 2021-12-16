@@ -22,12 +22,7 @@ import {
   POINT_CLOUD_MESSAGE,
   POINT_CLOUD_WITH_ADDITIONAL_FIELDS,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/commands/PointClouds/fixture/pointCloudData";
-import { MarkerStory } from "@foxglove/studio-base/panels/ThreeDimensionalViz/stories/MarkerStory";
 import PanelSetup, { triggerInputChange } from "@foxglove/studio-base/stories/PanelSetup";
-import { ScreenshotSizedContainer } from "@foxglove/studio-base/stories/storyHelpers";
-import { simulateDragClick } from "@foxglove/studio-base/test/mouseEventsHelper";
-import delay from "@foxglove/studio-base/util/delay";
-import tick from "@foxglove/studio-base/util/tick";
 
 import Interactions, { OBJECT_TAB_TYPE, LINKED_VARIABLES_TAB_TYPE } from "./Interactions";
 import useLinkedGlobalVariables from "./useLinkedGlobalVariables";
