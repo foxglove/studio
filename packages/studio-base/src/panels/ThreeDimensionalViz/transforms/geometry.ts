@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import type { vec3, quat, mat4 } from "gl-matrix";
+import type { vec3, quat, mat4, ReadonlyMat4 } from "gl-matrix";
 
 // Helper functions for constructing geometry primitives that can be used with
 // gl-matrix. These methods are preferred over the gl-matrix equivalents since
@@ -87,4 +87,55 @@ export function mat4Clone(m: mat4): mat4 {
     m[14],
     m[15],
   ];
+}
+
+/**
+ * Returns a quaternion representing the rotational component of a
+ * transformation matrix. The matrix scaling must be precomputed and passed in
+ * @param out Quaternion to receive the rotation component
+ * @param mat Matrix to be decomposed (input)
+ * @param scaling Scaling of the matrix (input)
+ * @return out
+ */
+export function getRotationWithScaling(out: quat, mat: ReadonlyMat4, scaling: vec3): quat {
+  const is1 = 1 / scaling[0];
+  const is2 = 1 / scaling[1];
+  const is3 = 1 / scaling[2];
+  const sm11 = mat[0] * is1;
+  const sm12 = mat[1] * is2;
+  const sm13 = mat[2] * is3;
+  const sm21 = mat[4] * is1;
+  const sm22 = mat[5] * is2;
+  const sm23 = mat[6] * is3;
+  const sm31 = mat[8] * is1;
+  const sm32 = mat[9] * is2;
+  const sm33 = mat[10] * is3;
+  const trace = sm11 + sm22 + sm33;
+  let S = 0;
+  if (trace > 0) {
+    S = Math.sqrt(trace + 1.0) * 2;
+    out[3] = 0.25 * S;
+    out[0] = (sm23 - sm32) / S;
+    out[1] = (sm31 - sm13) / S;
+    out[2] = (sm12 - sm21) / S;
+  } else if (sm11 > sm22 && sm11 > sm33) {
+    S = Math.sqrt(1.0 + sm11 - sm22 - sm33) * 2;
+    out[3] = (sm23 - sm32) / S;
+    out[0] = 0.25 * S;
+    out[1] = (sm12 + sm21) / S;
+    out[2] = (sm31 + sm13) / S;
+  } else if (sm22 > sm33) {
+    S = Math.sqrt(1.0 + sm22 - sm11 - sm33) * 2;
+    out[3] = (sm31 - sm13) / S;
+    out[0] = (sm12 + sm21) / S;
+    out[1] = 0.25 * S;
+    out[2] = (sm23 + sm32) / S;
+  } else {
+    S = Math.sqrt(1.0 + sm33 - sm11 - sm22) * 2;
+    out[3] = (sm12 - sm21) / S;
+    out[0] = (sm31 + sm13) / S;
+    out[1] = (sm23 + sm32) / S;
+    out[2] = 0.25 * S;
+  }
+  return out;
 }
