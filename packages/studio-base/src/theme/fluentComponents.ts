@@ -14,6 +14,7 @@ import {
   IModalStyles,
   IOverlayStyles,
   ISpinnerStyles,
+  ITextFieldStyles,
   IToggleStyles,
   ITooltipStyleProps,
   ITooltipStyles,
