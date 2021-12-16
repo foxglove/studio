@@ -75,7 +75,7 @@ function SourceInfo() {
               backgroundColor: theme.semanticColors.bodyBackground,
             },
           }}
-          tokens={{ padding: theme.spacing.m, childrenGap: theme.spacing.m }}
+          tokens={{ padding: 12, childrenGap: theme.spacing.s1 }}
         >
           <Stack tokens={{ childrenGap: theme.spacing.s2 }}>
             <Text styles={subheaderStyles}>Start time</Text>
