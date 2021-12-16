@@ -50,6 +50,7 @@ export default function Timestamp({ time, timezone }: Props): JSX.Element {
             root: {
               fontFamily: fonts.MONOSPACE,
               color: theme.palette.neutralSecondary,
+              whiteSpace: "nowrap",
             },
           }}
         >
