@@ -544,7 +544,7 @@ export default class SceneBuilder implements MarkerProvider {
       type: (message as unknown as { type: number }).type,
       scale: message.scale,
       lifetime,
-      pose: message.pose,
+      pose: clonePose(message.pose),
       interactionData,
       color: overrideColor ?? color,
       colors: overrideColor ? [] : message.colors,
