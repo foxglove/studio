@@ -65,29 +65,33 @@ type Props = WorldSearchTextProps & {
   onMouseUp?: MouseHandler;
 };
 
+const markers: InteractiveMarkersByType = {
+  arrow: [],
+  color: [],
+  cube: [],
+  cubeList: [],
+  cylinder: [],
+  glText: [],
+  grid: [],
+  instancedLineList: [],
+  laserScan: [],
+  linedConvexHull: [],
+  lineList: [],
+  lineStrip: [],
+  mesh: [],
+  pointcloud: [],
+  points: [],
+  poseMarker: [],
+  sphere: [],
+  sphereList: [],
+  text: [],
+  triangleList: [],
+};
+
 function getMarkers(markerProviders: MarkerProvider[], time: Time): InteractiveMarkersByType {
-  const markers: InteractiveMarkersByType = {
-    arrow: [],
-    color: [],
-    cube: [],
-    cubeList: [],
-    cylinder: [],
-    glText: [],
-    grid: [],
-    instancedLineList: [],
-    laserScan: [],
-    linedConvexHull: [],
-    lineList: [],
-    lineStrip: [],
-    mesh: [],
-    pointcloud: [],
-    points: [],
-    poseMarker: [],
-    sphere: [],
-    sphereList: [],
-    text: [],
-    triangleList: [],
-  };
+  for (const key in markers) {
+    (markers as Record<string, unknown[]>)[key]!.length = 0;
+  }
 
   // These casts seem wrong - some type definitions around MarkerProvider or MarkerCollector are not
   // compatible with interactive markers. Ideally interactive markers would not require mutating
@@ -150,12 +154,11 @@ function World(
   ref: typeof Worldview,
 ) {
   const markersByType = getMarkers(markerProviders, currentTime);
-  const { text = [] } = markersByType;
   const processedMarkersByType = {
     ...markersByType,
     text: [],
     glText: useGLText({
-      text,
+      text: markersByType.text ?? [],
       setSearchTextMatches,
       searchText,
       searchTextOpen,
