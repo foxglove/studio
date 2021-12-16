@@ -117,7 +117,6 @@ const arePropsEqual = (prevProps: Props, nextProps: Props) => {
 
 const FollowTFControl = memo<Props>(function FollowTFControl(props: Props) {
   const { transforms, tfToFollow, followOrientation, onFollowChange } = props;
-  const [, setForceShowFrameList] = useState(false);
   const [lastSelectedFrame, setLastSelectedFrame] = useState<string | undefined>(undefined);
   const theme = useTheme();
 
@@ -203,9 +202,8 @@ const FollowTFControl = memo<Props>(function FollowTFControl(props: Props) {
   );
 
   const openFrameList = useCallback(() => {
-    setForceShowFrameList(true);
     autocomplete.current?.focus();
-  }, [setForceShowFrameList, autocomplete]);
+  }, [autocomplete]);
 
   const selectedFrameId = tfToFollow ?? lastSelectedFrame;
   const selectedFrame = selectedFrameId ? transforms.frame(selectedFrameId) : undefined;
@@ -250,7 +248,6 @@ const FollowTFControl = memo<Props>(function FollowTFControl(props: Props) {
           // breaks selection
           marginTop: 4,
         }}
-        onBlur={() => setForceShowFrameList(false)}
       />
       {frameListButton.tooltip}
       <IconButton
