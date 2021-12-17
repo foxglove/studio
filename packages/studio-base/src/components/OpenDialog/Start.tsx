@@ -6,6 +6,7 @@ import { CompoundButton, Stack, Text, IButtonProps, useTheme } from "@fluentui/r
 import { useMemo } from "react";
 
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import TextMiddleTruncate from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/TextMiddleTruncate";
 
 import ActionList from "./ActionList";
 import { OpenDialogViews } from "./types";
@@ -102,14 +103,48 @@ export default function Start(props: IStartProps): JSX.Element {
 
   const recentItems: IButtonProps[] = useMemo(() => {
     return recentSources.map((recent) => {
-      const fullTitle = recent.label ? `${recent.title} · ${recent.label}` : recent.title;
       return {
         id: recent.id,
-        children: fullTitle,
+        children: (
+          <Stack
+            horizontal
+            styles={{
+              root: {
+                overflow: "hidden",
+
+                ":hover": { color: theme.palette.themeDark },
+              },
+            }}
+          >
+            <Text
+              variant="small"
+              styles={{
+                root: {
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  color: "inherit",
+                  paddingRight: theme.spacing.s1,
+                },
+              }}
+            >
+              <TextMiddleTruncate text={recent.title} />
+            </Text>
+            {recent.label && (
+              <Text
+                variant="small"
+                styles={{
+                  root: { whiteSpace: "nowrap", color: theme.palette.neutralSecondaryAlt },
+                }}
+              >
+                {recent.label}
+              </Text>
+            )}
+          </Stack>
+        ),
         onClick: () => selectRecent(recent.id),
       };
     });
-  }, [recentSources, selectRecent]);
+  }, [recentSources, selectRecent, theme]);
 
   return (
     <>

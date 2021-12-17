@@ -37,7 +37,7 @@ export default function ActionList(props: IActionListProps): JSX.Element {
           overflow: "hidden",
         },
         labelHovered: {
-          color: theme.semanticColors.primaryButtonBackgroundPressed,
+          color: theme.palette.themeDark,
         },
       } as Partial<IButtonStyles>),
     [theme],
