@@ -33,8 +33,17 @@ export async function parseDaeToGlb(buffer: ArrayBuffer): Promise<GlbModel> {
       const material = (child as THREE.Mesh).material;
       const materials = Array.isArray(material) ? material : [material];
       for (const mat of materials) {
+        const lambert = mat as THREE.MeshLambertMaterial;
         // eslint-disable-next-line no-restricted-syntax
-        (mat as THREE.MeshPhongMaterial).map = null;
+        lambert.map = null;
+        // eslint-disable-next-line no-restricted-syntax
+        lambert.emissiveMap = null;
+        // eslint-disable-next-line no-restricted-syntax
+        lambert.lightMap = null;
+        // eslint-disable-next-line no-restricted-syntax
+        lambert.specularMap = null;
+        // eslint-disable-next-line no-restricted-syntax
+        (lambert as unknown as { normalMap: THREE.Texture | null }).normalMap = null;
       }
     }
   });
