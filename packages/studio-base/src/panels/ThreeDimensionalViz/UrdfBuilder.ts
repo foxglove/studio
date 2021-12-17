@@ -42,7 +42,7 @@ import {
   SphereMarker,
 } from "@foxglove/studio-base/types/Messages";
 import { MarkerProvider, MarkerCollector } from "@foxglove/studio-base/types/Scene";
-import { emptyPose } from "@foxglove/studio-base/util/Pose";
+import { clonePose, emptyPose } from "@foxglove/studio-base/util/Pose";
 import { URDF_TOPIC } from "@foxglove/studio-base/util/globalConstants";
 import sendNotification from "@foxglove/studio-base/util/sendNotification";
 
@@ -426,7 +426,7 @@ function updatePose(
 
   // Store the original pose on the marker
   const markerWithOrigPose = marker as Marker & { origPose?: MutablePose };
-  markerWithOrigPose.origPose ??= marker.pose;
+  markerWithOrigPose.origPose ??= clonePose(marker.pose);
 
   return frame.apply(marker.pose, markerWithOrigPose.origPose, srcFrame, currentTime) != undefined;
 }
