@@ -41,6 +41,30 @@ export default function Start(props: IStartProps): JSX.Element {
   const theme = useTheme();
   const { recentSources, selectRecent } = usePlayerSelection();
 
+  const buttonStyles = useMemo(
+    () => ({
+      root: {
+        width: 340,
+        maxWidth: "none",
+      },
+      rootHovered: { backgroundColor: theme.palette.neutralLighterAlt },
+      rootPressed: { backgroundColor: theme.palette.neutralLighter },
+      flexContainer: { alignItems: "center" },
+      descriptionHovered: { color: theme.semanticColors.bodySubtext },
+      icon: {
+        marginRight: theme.spacing.m,
+        marginLeft: theme.spacing.s1,
+        color: theme.palette.themePrimary,
+
+        svg: { height: "1em", width: "1em" },
+      },
+      labelHovered: {
+        color: theme.palette.themePrimary,
+      },
+    }),
+    [theme],
+  );
+
   const startItems: IButtonProps[] = useMemo(
     () => [
       {
@@ -96,30 +120,7 @@ export default function Start(props: IStartProps): JSX.Element {
           </Text>
           <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
             {startItems.map(({ id, ...item }) => (
-              <CompoundButton
-                {...item}
-                key={id}
-                id={id}
-                styles={{
-                  root: {
-                    width: 340,
-                    maxWidth: "none",
-                  },
-                  flexContainer: {
-                    alignItems: "center",
-                  },
-                  icon: {
-                    marginRight: theme.spacing.m,
-                    marginLeft: theme.spacing.s1,
-                    color: theme.palette.themePrimary,
-
-                    svg: { height: "1em", width: "1em" },
-                  },
-                  labelHovered: {
-                    color: theme.palette.themePrimary,
-                  },
-                }}
-              />
+              <CompoundButton {...item} key={id} id={id} styles={buttonStyles} />
             ))}
           </Stack>
         </Stack>
