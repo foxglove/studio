@@ -127,14 +127,10 @@ export function groupLinesIntoInstancedLineLists(
           // The next strip will deal with connecting it with its first point (see above).
           // By repeating the last point in the strip we ensure gradients look
           // correctly in the final rendered image.
-          allPoints.push(allPoints[allPoints.length - 1]!);
-          allPoints.push(INFINITE_POSITION);
-          allColors.push(INFINITE_COLOR);
-          allColors.push(INFINITE_COLOR);
-          poses.push(INFINITE_POSE);
-          poses.push(INFINITE_POSE);
-          metadataByIndex.push(INFINITE_METADATA);
-          metadataByIndex.push(INFINITE_METADATA);
+          allPoints.push(allPoints[allPoints.length - 1]!, INFINITE_POSITION);
+          allColors.push(INFINITE_COLOR, INFINITE_COLOR);
+          poses.push(INFINITE_POSE, INFINITE_POSE);
+          metadataByIndex.push(INFINITE_METADATA, INFINITE_METADATA);
         }
       } else {
         // If the marker is already a line list, just add the points to the list, validating that points
