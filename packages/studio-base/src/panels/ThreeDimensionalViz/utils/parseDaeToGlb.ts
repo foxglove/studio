@@ -94,7 +94,7 @@ function patchGlb(glb: GlbModel): void {
   // THREE.js uses Y-up, while we follow the ROS [REP-0103](https://www.ros.org/reps/rep-0103.html)
   // convention of Z-up
   for (const node of glb.json.nodes ?? []) {
-    node.rotation = [-Math.SQRT1_2, 0, 0, Math.SQRT1_2];
+    node.rotation = [-0.5, -0.5, -0.5, 0.5];
   }
 }
 
