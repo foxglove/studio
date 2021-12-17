@@ -803,6 +803,16 @@ export default class SceneBuilder implements MarkerProvider {
       return;
     }
 
+    // SceneBuilder fully parses all of the messages it consumes, and sometimes
+    // repeatedly so via lastSeenMessages. All incoming lazy messages are
+    // converted into fully parsed messages here
+    for (let i = 0; i < messages.length; i++) {
+      const event = messages[i] as { message: { toJSON?: () => unknown } };
+      if ("toJSON" in event.message) {
+        (event.message as unknown) = event.message.toJSON!();
+      }
+    }
+
     this.errors.topicsMissingTransforms.delete(topic);
     this.errors.topicsWithError.delete(topic);
     this.collectors[topic] ??= new MessageCollector();
