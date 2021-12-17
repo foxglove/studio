@@ -56,6 +56,7 @@ export default function Start(props: IStartProps): JSX.Element {
         marginLeft: theme.spacing.s1,
         color: theme.palette.themePrimary,
 
+        "> span": { display: "flex" },
         svg: { height: "1em", width: "1em" },
       },
       labelHovered: {
