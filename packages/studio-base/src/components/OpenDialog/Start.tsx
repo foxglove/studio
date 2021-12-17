@@ -127,7 +127,7 @@ export default function Start(props: IStartProps): JSX.Element {
 
         {/* Right column */}
         <Stack grow tokens={{ childrenGap: theme.spacing.l1 }} styles={{ root: { minWidth: 0 } }}>
-          <ActionList title="Recent" items={recentItems} />
+          {recentItems.length > 0 && <ActionList title="Recent" items={recentItems} />}
           <ActionList title="Help" items={HELP_ITEMS} />
         </Stack>
       </Stack>

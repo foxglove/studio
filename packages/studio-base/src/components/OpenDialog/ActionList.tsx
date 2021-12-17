@@ -46,12 +46,7 @@ export default function ActionList(props: IActionListProps): JSX.Element {
   return (
     <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
       {title != undefined && (
-        <Text
-          variant="large"
-          styles={{
-            root: { color: theme.semanticColors.bodySubtext },
-          }}
-        >
+        <Text variant="large" styles={{ root: { color: theme.semanticColors.bodySubtext } }}>
           {title}
         </Text>
       )}
