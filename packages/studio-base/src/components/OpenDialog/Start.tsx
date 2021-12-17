@@ -13,13 +13,13 @@ import { OpenDialogViews } from "./types";
 const HELP_ITEMS: IButtonProps[] = [
   {
     id: "slack",
-    href: "https://join.slack.com/t/foxglove/shared_invite/zt-n60289dv-jb2WxEesFUT1k56AHGNaug",
+    href: "https://foxglove.dev/slack&utm_source=studio&utm_medium=open-dialog",
     target: "_blank",
     children: "Join our Slack community",
   },
   {
     id: "docs",
-    href: "https://foxglove.dev/docs",
+    href: "https://foxglove.dev/docs&utm_source=studio&utm_medium=open-dialog",
     target: "_blank",
     children: "Browse the documentation",
   },
