@@ -29,6 +29,7 @@ export class Transform {
   constructor(position: vec3, rotation: quat) {
     this._position = position;
     this._rotation = rotation;
+    quat.normalize(this._rotation, this._rotation);
     this._matrix = mat4.fromRotationTranslation(mat4Identity(), this._rotation, this._position);
   }
 
@@ -51,7 +52,7 @@ export class Transform {
   }
 
   setRotation(rotation: ReadonlyQuat): this {
-    quat.copy(this._rotation, rotation);
+    quat.normalize(this._rotation, rotation);
     mat4.fromRotationTranslation(this._matrix, this._rotation, this._position);
     return this;
   }
@@ -63,7 +64,7 @@ export class Transform {
    */
   setPositionRotation(position: ReadonlyVec3, rotation: ReadonlyQuat): this {
     vec3.copy(this._position, position);
-    quat.copy(this._rotation, rotation);
+    quat.normalize(this._rotation, rotation);
     mat4.fromRotationTranslation(this._matrix, this._rotation, this._position);
     return this;
   }
@@ -80,6 +81,7 @@ export class Transform {
       pose.orientation.z,
       pose.orientation.w,
     );
+    quat.normalize(this._rotation, this._rotation);
     mat4.fromRotationTranslation(this._matrix, this._rotation, this._position);
     return this;
   }
@@ -91,7 +93,11 @@ export class Transform {
     // Ensure the matrix has no scaling
     mat4.getScaling(tempScale, matrix);
     if (!approxEq(tempScale[0], 1) || !approxEq(tempScale[1], 1) || !approxEq(tempScale[2], 1)) {
-      throw new Error(`setMatrix given a matrix with non-unit scale: ${mat4.str(matrix)}`);
+      throw new Error(
+        `setMatrix given a matrix with non-unit scale [${tempScale[0]}, ${tempScale[1]}, ${
+          tempScale[2]
+        }]: ${mat4.str(matrix)}`,
+      );
     }
 
     mat4.copy(this._matrix, matrix);
