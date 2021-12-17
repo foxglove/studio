@@ -116,7 +116,7 @@ export default function Start(props: IStartProps): JSX.Element {
         {/* Left column */}
         <Stack grow tokens={{ childrenGap: theme.spacing.m }}>
           <Text variant="large" styles={{ root: { color: theme.semanticColors.bodySubtext } }}>
-            Start
+            Open data source
           </Text>
           <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
             {startItems.map(({ id, ...item }) => (

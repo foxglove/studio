@@ -102,7 +102,7 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
         };
       default:
         return {
-          title: "Open new data source",
+          title: "Get started",
           component: <Start onSelectView={onSelectView} supportedFileExtensions={allExtensions} />,
         };
     }
@@ -116,7 +116,7 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
       modalProps={{
         styles: {
           main: {
-            minHeight: 520,
+            minHeight: 480,
             display: "flex",
             flexDirection: "column",
           },
