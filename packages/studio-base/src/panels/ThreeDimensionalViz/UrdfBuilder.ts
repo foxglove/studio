@@ -72,20 +72,24 @@ export default class UrdfBuilder implements MarkerProvider {
   renderMarkers = (add: MarkerCollector, time: Time): void => {
     if (this._visible && this._transforms && this._renderFrameId) {
       for (const box of this._boxes) {
-        updatePose(box, this._transforms, this._renderFrameId, time);
-        add.cube(box);
+        if (updatePose(box, this._transforms, this._renderFrameId, time)) {
+          add.cube(box);
+        }
       }
       for (const sphere of this._spheres) {
-        updatePose(sphere, this._transforms, this._renderFrameId, time);
-        add.sphere(sphere);
+        if (updatePose(sphere, this._transforms, this._renderFrameId, time)) {
+          add.sphere(sphere);
+        }
       }
       for (const cylinder of this._cylinders) {
-        updatePose(cylinder, this._transforms, this._renderFrameId, time);
-        add.cylinder(cylinder);
+        if (updatePose(cylinder, this._transforms, this._renderFrameId, time)) {
+          add.cylinder(cylinder);
+        }
       }
       for (const mesh of this._meshes) {
-        updatePose(mesh, this._transforms, this._renderFrameId, time);
-        add.mesh(mesh);
+        if (updatePose(mesh, this._transforms, this._renderFrameId, time)) {
+          add.mesh(mesh);
+        }
       }
     }
   };
