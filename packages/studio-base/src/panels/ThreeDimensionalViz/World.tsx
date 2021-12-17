@@ -128,6 +128,8 @@ function World(
   }: Props,
   ref: typeof Worldview,
 ) {
+  // Building these arrays every frame is expensive, so we instantiate once and
+  // clear them each time to reduce allocations
   const markersRef = useRef<InteractiveMarkersByType | undefined>(undefined);
   markersRef.current ??= {
     arrow: [],
