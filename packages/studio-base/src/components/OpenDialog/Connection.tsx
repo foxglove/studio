@@ -77,6 +77,9 @@ export default function Connection(props: ConnectionProps): JSX.Element {
                 styles={{
                   root: { minWidth: 240 },
                   rootChecked: { backgroundColor: theme.semanticColors.bodyBackgroundHovered },
+                  icon: {
+                    "> span": { display: "flex" },
+                  },
                   iconChecked: { color: theme.palette.themePrimary },
                 }}
               >
