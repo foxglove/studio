@@ -11,8 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { TextField } from "@fluentui/react";
-import { Link, Text } from "@fluentui/react";
+import { Link, Text, TextField } from "@fluentui/react";
 
 import Flex from "@foxglove/studio-base/components/Flex";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
