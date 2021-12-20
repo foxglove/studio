@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { TextField } from "@fluentui/react";
+import { Link, Text } from "@fluentui/react";
 
 import Flex from "@foxglove/studio-base/components/Flex";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
@@ -44,6 +45,15 @@ export default function UrdfSettingsEditor(
           onFieldChange("urdfUrl", newValue);
         }}
       />
+      {!supportsPackageUrl && (
+        <Text block as="p">
+          For ROS users, we also support package:// URLs (loaded from the local filesystem) in our{" "}
+          <Link href="https://foxglove.dev/download" target="_blank" rel="noreferrer">
+            desktop app
+          </Link>
+          .
+        </Text>
+      )}
     </Flex>
   );
 }
