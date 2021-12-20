@@ -8,7 +8,7 @@ import { PropsWithChildren } from "react";
 type ViewProps = {
   onBack?: () => void;
   onCancel?: () => void;
-  onOpen: () => void;
+  onOpen?: () => void;
 };
 
 export default function View(props: PropsWithChildren<ViewProps>): JSX.Element {
@@ -16,30 +16,37 @@ export default function View(props: PropsWithChildren<ViewProps>): JSX.Element {
   const theme = useTheme();
 
   return (
-    <Stack
-      grow
-      verticalFill
-      verticalAlign="space-between"
-      tokens={{ childrenGap: theme.spacing.m }}
-    >
-      {props.children}
+    <>
+      <Stack
+        grow
+        verticalFill
+        verticalAlign="space-between"
+        tokens={{ childrenGap: theme.spacing.m }}
+        styles={{
+          root: { "@media (min-height: 512px)": { overflow: "hidden" } },
+        }}
+      >
+        {props.children}
+      </Stack>
       <Stack horizontal horizontalAlign="space-between" verticalAlign="center">
         <ActionButton
           iconProps={{ iconName: "ChevronLeft" }}
           onClick={onBack}
           styles={{
             root: { color: theme.palette.themePrimary, padding: 0 },
-            icon: { svg: { height: "1em", width: "1em" } },
+            icon: { svg: { height: "1em", width: "1em" }, "> span": { display: "flex" } },
           }}
         >
           Back
         </ActionButton>
         <Stack horizontal tokens={{ childrenGap: theme.spacing.m }}>
           <DefaultButton onClick={onCancel}>Cancel</DefaultButton>
-          <PrimaryButton onClick={onOpen}>Open</PrimaryButton>
+          <PrimaryButton onClick={onOpen} disabled={onOpen == undefined}>
+            Open
+          </PrimaryButton>
         </Stack>
       </Stack>
-    </Stack>
+    </>
   );
 
   return <>{props.children}</>;

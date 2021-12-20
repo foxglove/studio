@@ -42,7 +42,7 @@ import {
   SphereMarker,
 } from "@foxglove/studio-base/types/Messages";
 import { MarkerProvider, MarkerCollector } from "@foxglove/studio-base/types/Scene";
-import { emptyPose } from "@foxglove/studio-base/util/Pose";
+import { clonePose } from "@foxglove/studio-base/util/Pose";
 import { URDF_TOPIC } from "@foxglove/studio-base/util/globalConstants";
 import sendNotification from "@foxglove/studio-base/util/sendNotification";
 
@@ -72,20 +72,24 @@ export default class UrdfBuilder implements MarkerProvider {
   renderMarkers = (add: MarkerCollector, time: Time): void => {
     if (this._visible && this._transforms && this._renderFrameId) {
       for (const box of this._boxes) {
-        updatePose(box, this._transforms, this._renderFrameId, time);
-        add.cube(box);
+        if (updatePose(box, this._transforms, this._renderFrameId, time)) {
+          add.cube(box);
+        }
       }
       for (const sphere of this._spheres) {
-        updatePose(sphere, this._transforms, this._renderFrameId, time);
-        add.sphere(sphere);
+        if (updatePose(sphere, this._transforms, this._renderFrameId, time)) {
+          add.sphere(sphere);
+        }
       }
       for (const cylinder of this._cylinders) {
-        updatePose(cylinder, this._transforms, this._renderFrameId, time);
-        add.cylinder(cylinder);
+        if (updatePose(cylinder, this._transforms, this._renderFrameId, time)) {
+          add.cylinder(cylinder);
+        }
       }
       for (const mesh of this._meshes) {
-        updatePose(mesh, this._transforms, this._renderFrameId, time);
-        add.mesh(mesh);
+        if (updatePose(mesh, this._transforms, this._renderFrameId, time)) {
+          add.mesh(mesh);
+        }
       }
     }
   };
@@ -200,9 +204,8 @@ export default class UrdfBuilder implements MarkerProvider {
       return;
     }
 
-    const tfs = this._transforms;
-    const renderFrameId = this._renderFrameId;
     const ns = `urdf-${urdf.name}`;
+    log.debug(`Creating URDF markers for ${urdf.name}`);
 
     for (const link of urdf.links.values()) {
       const frame_id = link.name;
@@ -210,14 +213,14 @@ export default class UrdfBuilder implements MarkerProvider {
       let i = 0;
       for (const visual of link.visuals) {
         const id = `${link.name}-visual${i++}-${visual.geometry.geometryType}`;
-        this.addMarker(ns, id, frame_id, tfs, renderFrameId, visual, urdf);
+        this.addMarker(ns, id, frame_id, visual, urdf);
       }
 
       if (link.visuals.length === 0 && link.colliders.length > 0) {
         // If there are no visuals, but there are colliders, render those instead
         for (const collider of link.colliders) {
           const id = `${link.name}-collider${i++}-${collider.geometry.geometryType}`;
-          this.addMarker(ns, id, frame_id, tfs, renderFrameId, collider, urdf);
+          this.addMarker(ns, id, frame_id, collider, urdf);
         }
       }
     }
@@ -227,19 +230,14 @@ export default class UrdfBuilder implements MarkerProvider {
     ns: string,
     id: string,
     frame_id: string,
-    tfs: TransformTree,
-    renderFrameId: string,
     visual: UrdfVisual,
     robot: UrdfRobot,
   ): void {
-    const localPose = {
-      position: visual.origin.xyz,
+    const xyz = visual.origin.xyz;
+    const pose = {
+      position: { x: xyz.x, y: xyz.y, z: xyz.z },
       orientation: eulerToQuaternion(visual.origin.rpy),
     };
-    const pose = tfs.apply(emptyPose(), localPose, renderFrameId, frame_id, TIME_ZERO);
-    if (!pose) {
-      return;
-    }
 
     switch (visual.geometry.geometryType) {
       case "box":
@@ -426,7 +424,7 @@ function updatePose(
 
   // Store the original pose on the marker
   const markerWithOrigPose = marker as Marker & { origPose?: MutablePose };
-  markerWithOrigPose.origPose ??= marker.pose;
+  markerWithOrigPose.origPose ??= clonePose(marker.pose);
 
   return frame.apply(marker.pose, markerWithOrigPose.origPose, srcFrame, currentTime) != undefined;
 }

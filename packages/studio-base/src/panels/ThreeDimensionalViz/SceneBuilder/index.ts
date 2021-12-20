@@ -33,7 +33,6 @@ import {
   MutablePose,
   Pose,
   StampedMessage,
-  MutablePoint,
   BaseMarker,
   PoseStamped,
   VelodyneScan,
@@ -50,8 +49,6 @@ import { MarkerProvider, MarkerCollector } from "@foxglove/studio-base/types/Sce
 import { clonePose, emptyPose } from "@foxglove/studio-base/util/Pose";
 import naturalSort from "@foxglove/studio-base/util/naturalSort";
 
-import { ThreeDimensionalVizHooks } from "./types";
-
 const log = Log.getLogger(__filename);
 
 export type TopicSettingsCollection = {
@@ -60,17 +57,13 @@ export type TopicSettingsCollection = {
 
 // builds a syntehtic arrow marker from a geometry_msgs/PoseStamped
 // these pose sizes were manually configured in rviz; for now we hard-code them here
-const buildSyntheticArrowMarker = (
-  { topic, message }: MessageEvent<PoseStamped>,
-  pose: Pose,
-  getSyntheticArrowMarkerColor: (arg0: string) => Color,
-) => ({
+const buildSyntheticArrowMarker = ({ topic, message }: MessageEvent<PoseStamped>, pose: Pose) => ({
   header: message.header,
   type: 103,
   pose,
   frame_locked: true,
   scale: { x: 2, y: 2, z: 0.1 },
-  color: getSyntheticArrowMarkerColor(topic),
+  color: { r: 0, g: 0, b: 1, a: 0.5 },
   interactionData: { topic, originalMessage: message },
 });
 
@@ -102,7 +95,7 @@ const missingTransformMessage = (
   }
   const frameIds = [...error.frameIds].sort().join(`>, <`);
   const s = error.frameIds.size > 1 ? "s" : ""; // for plural
-  const msg = `missing transform${s} from frame${s} <${frameIds}> to frame <${renderFrameId}>`;
+  const msg = `Missing transform${s} from frame${s} <${frameIds}> to frame <${renderFrameId}>`;
   if (transforms.frames().size === 0) {
     return msg + ". No transforms found";
   }
@@ -222,8 +215,6 @@ export default class SceneBuilder implements MarkerProvider {
   // When not-empty, override the color of matching markers
   private _colorOverrideMarkerMatchersByTopic: MarkerMatchersByTopic = {};
 
-  private _hooks: ThreeDimensionalVizHooks;
-
   // Decodes `velodyne_msgs/VelodyneScan` ROS messages into
   // `VelodyneScanDecoded` objects that mimic `PointCloud2` and can be rendered
   // as point clouds
@@ -239,15 +230,13 @@ export default class SceneBuilder implements MarkerProvider {
   // or because a prop affecting its rendering was changed
   topicsToRender: Set<string> = new Set();
 
-  // stored message arrays allowing used to re-render topics even when the latest
+  // stored message arrays allowing us to re-render topics even when the latest
   // frame does not not contain that topic
   lastSeenMessages: {
     [key: string]: MessageEvent<unknown>[];
   } = {};
 
-  constructor(hooks: ThreeDimensionalVizHooks) {
-    this._hooks = hooks;
-  }
+  constructor() {}
 
   setTransforms = (transforms: TransformTree, renderFrameId: string | undefined): void => {
     this.transforms = transforms;
@@ -480,13 +469,7 @@ export default class SceneBuilder implements MarkerProvider {
         return;
     }
 
-    const points = (message as unknown as { points: MutablePoint[] }).points;
-    const parsedPoints = points.map((p) => ({ x: p.x, y: p.y, z: p.z }));
-
-    // HACK(jacob): rather than hard-coding this, we should
-    //  (a) produce this visualization dynamically from a non-marker topic
-    //  (b) fix translucency so it looks correct (harder)
-    const color = this._hooks.getMarkerColor(topic, message.color!);
+    const color = message.color ?? { r: 0, g: 0, b: 0, a: 0 };
 
     // Allow topic settings to override marker color (see MarkerSettingsEditor.js)
     let { overrideColor } = (this._settingsByKey[`ns:${topic}:${namespace}`] ??
@@ -515,7 +498,7 @@ export default class SceneBuilder implements MarkerProvider {
     const interactionData: InteractionData = {
       topic,
       highlighted,
-      originalMessage: message as unknown as RosObject,
+      originalMessage: message as RosObject,
     };
     const lifetime = message.lifetime;
 
@@ -528,7 +511,7 @@ export default class SceneBuilder implements MarkerProvider {
       interactionData: InteractionData;
       color?: Color;
       colors?: readonly Color[];
-      points: Point[];
+      points?: Point[];
       id: string | number;
       ns: string;
       header: Header;
@@ -548,7 +531,7 @@ export default class SceneBuilder implements MarkerProvider {
       interactionData,
       color: overrideColor ?? color,
       colors: overrideColor ? [] : message.colors,
-      points: parsedPoints,
+      points: message.points,
       id: message.id,
       ns: message.ns,
       header: message.header,
@@ -710,11 +693,7 @@ export default class SceneBuilder implements MarkerProvider {
         const pose = poseMsg.message.pose;
         this.collectors[topic]!.addNonMarker(
           topic,
-          buildSyntheticArrowMarker(
-            poseMsg,
-            pose,
-            this._hooks.getSyntheticArrowMarkerColor,
-          ) as Interactive<unknown>,
+          buildSyntheticArrowMarker(poseMsg, pose) as Interactive<unknown>,
         );
         break;
       }
