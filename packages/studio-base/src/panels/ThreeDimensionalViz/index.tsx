@@ -28,6 +28,10 @@ import {
   useTransformedCameraState,
   getNewCameraStateOnFollowChange,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/threeDimensionalVizUtils";
+import {
+  CoordinateFrame,
+  DEFAULT_FRAME_IDS,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
 import { ThreeDimensionalVizConfig } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
 import { PanelConfigSchema, SaveConfig } from "@foxglove/studio-base/types/panels";
 

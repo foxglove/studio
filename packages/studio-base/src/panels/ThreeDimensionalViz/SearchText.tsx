@@ -159,6 +159,7 @@ export const useSearchMatches = ({
   currentMatch,
   onCameraStateChange,
   renderFrameId,
+  fixedFrameId,
   currentTime,
   searchTextOpen,
   transforms,
@@ -167,6 +168,7 @@ export const useSearchMatches = ({
   currentMatch?: GLTextMarker;
   onCameraStateChange: (arg0: CameraState) => void;
   renderFrameId?: string;
+  fixedFrameId?: string;
   currentTime: Time;
   searchTextOpen: boolean;
   transforms: TransformTree;
@@ -174,7 +176,13 @@ export const useSearchMatches = ({
   const hasCurrentMatchChanged = useDeepChangeDetector([currentMatch], { initiallyTrue: true });
 
   useEffect(() => {
-    if (!currentMatch || !searchTextOpen || !renderFrameId || !hasCurrentMatchChanged) {
+    if (
+      !currentMatch ||
+      !searchTextOpen ||
+      renderFrameId == undefined ||
+      fixedFrameId == undefined ||
+      !hasCurrentMatchChanged
+    ) {
       return;
     }
 
@@ -182,10 +190,12 @@ export const useSearchMatches = ({
       { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 0 } },
       currentMatch.pose,
       renderFrameId,
+      fixedFrameId,
       currentMatch.header.frame_id,
       currentTime,
+      currentTime,
     );
-    if (!output) {
+    if (output == undefined) {
       return;
     }
     const {
@@ -205,6 +215,7 @@ export const useSearchMatches = ({
     cameraState,
     currentMatch,
     currentTime,
+    fixedFrameId,
     hasCurrentMatchChanged,
     onCameraStateChange,
     renderFrameId,
