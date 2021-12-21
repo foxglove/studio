@@ -23,6 +23,7 @@ import useDeepChangeDetector from "@foxglove/studio-base/hooks/useDeepChangeDete
 import { Interactive } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/types";
 import { TransformTree } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
 import { TextMarker, Color } from "@foxglove/studio-base/types/Messages";
+import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
 export const YELLOW = { r: 1, b: 0, g: 1, a: 1 };
 export const ORANGE = { r: 0.97, g: 0.58, b: 0.02, a: 1 };
@@ -149,6 +150,7 @@ type SearchTextComponentProps = SearchTextProps & {
   onCameraStateChange: (arg0: CameraState) => void;
   cameraState: CameraState;
   renderFrameId?: string;
+  fixedFrameId?: string;
   currentTime: Time;
   transforms: TransformTree;
 };
@@ -176,18 +178,15 @@ export const useSearchMatches = ({
   const hasCurrentMatchChanged = useDeepChangeDetector([currentMatch], { initiallyTrue: true });
 
   useEffect(() => {
-    if (
-      !currentMatch ||
-      !searchTextOpen ||
-      renderFrameId == undefined ||
-      fixedFrameId == undefined ||
-      !hasCurrentMatchChanged
-    ) {
+    if (!currentMatch || !searchTextOpen || renderFrameId == undefined || !hasCurrentMatchChanged) {
       return;
+    }
+    if (fixedFrameId == undefined) {
+      throw new Error(`renderFrameId="${renderFrameId}" but fixedFrame is undefined`);
     }
 
     const output = transforms.apply(
-      { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 0 } },
+      emptyPose(),
       currentMatch.pose,
       renderFrameId,
       fixedFrameId,
@@ -245,6 +244,7 @@ const SearchText = React.memo<SearchTextComponentProps>(function SearchText({
   cameraState,
   transforms,
   renderFrameId,
+  fixedFrameId,
   currentTime,
 }: SearchTextComponentProps) {
   const theme = useTheme();
@@ -274,6 +274,7 @@ const SearchText = React.memo<SearchTextComponentProps>(function SearchText({
     currentMatch,
     onCameraStateChange,
     renderFrameId,
+    fixedFrameId,
     currentTime,
     searchTextOpen,
     transforms,

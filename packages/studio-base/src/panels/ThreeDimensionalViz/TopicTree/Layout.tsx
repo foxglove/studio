@@ -850,6 +850,7 @@ export default function Layout({
                   targetPose={targetPose}
                   transforms={transforms}
                   renderFrameId={renderFrame.id}
+                  fixedFrameId={fixedFrame.id}
                   currentTime={currentTime}
                   {...searchTextProps}
                 />
