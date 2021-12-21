@@ -45,7 +45,7 @@ export function updateMarkerCache(
 
     // Update the marker pose unconditionally since it can change per-frame even
     // when we don't need to do a full point cloud decode
-    (decoded.marker as { pose?: Pose }).pose = marker.pose;
+    decoded.marker.pose = marker.pose;
 
     markerCache.set(marker.data, decoded);
   });
