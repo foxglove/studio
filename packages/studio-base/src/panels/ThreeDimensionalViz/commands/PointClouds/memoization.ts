@@ -13,8 +13,6 @@
 
 import { isEqual } from "lodash";
 
-import { Pose } from "@foxglove/studio-base/types/Messages";
-
 import { decodeMarker } from "./decodeMarker";
 import { MemoizedMarker, PointCloudMarker } from "./types";
 
