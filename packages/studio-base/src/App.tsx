@@ -10,7 +10,6 @@ import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import Workspace from "@foxglove/studio-base/Workspace";
 import DocumentTitleAdapter from "@foxglove/studio-base/components/DocumentTitleAdapter";
 import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
-import { NativeFileMenuPlayerSelection } from "@foxglove/studio-base/components/NativeFileMenuPlayerSelection";
 import PlayerManager from "@foxglove/studio-base/components/PlayerManager";
 import SendNotificationToastAdapter from "@foxglove/studio-base/components/SendNotificationToastAdapter";
 import AnalyticsProvider from "@foxglove/studio-base/context/AnalyticsProvider";
@@ -37,9 +36,7 @@ type AppProps = {
    * Set to true to force loading the welcome layout for demo mode. Normally the demo is only shown
    * on first launch and not subsequent launches.
    */
-  loadWelcomeLayout?: boolean;
   availableSources: IDataSourceFactory[];
-  demoBagUrl?: string;
   deepLinks?: string[];
 };
 
@@ -66,15 +63,10 @@ function AppContent(props: AppProps): JSX.Element {
     <MultiProvider providers={providers}>
       <DocumentTitleAdapter />
       <SendNotificationToastAdapter />
-      <NativeFileMenuPlayerSelection />
       <DndProvider backend={HTML5Backend}>
         <Suspense fallback={<></>}>
           <PanelCatalogProvider>
-            <Workspace
-              loadWelcomeLayout={props.loadWelcomeLayout}
-              demoBagUrl={props.demoBagUrl}
-              deepLinks={props.deepLinks}
-            />
+            <Workspace deepLinks={props.deepLinks} />
           </PanelCatalogProvider>
         </Suspense>
       </DndProvider>

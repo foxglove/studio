@@ -42,7 +42,6 @@ import MeasuringTool, {
   MeasureInfo,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/MeasuringTool";
 import SceneBuilder from "@foxglove/studio-base/panels/ThreeDimensionalViz/SceneBuilder";
-import sceneBuilderHooks from "@foxglove/studio-base/panels/ThreeDimensionalViz/SceneBuilder/defaultHooks";
 import { useSearchText } from "@foxglove/studio-base/panels/ThreeDimensionalViz/SearchText";
 import {
   MarkerMatcher,
@@ -280,7 +279,7 @@ export default function Layout({
   const { gridBuilder, sceneBuilder, transformsBuilder, urdfBuilder } = useMemo(
     () => ({
       gridBuilder: new GridBuilder(),
-      sceneBuilder: new SceneBuilder(sceneBuilderHooks),
+      sceneBuilder: new SceneBuilder(),
       transformsBuilder: new TransformsBuilder(),
       urdfBuilder: new UrdfBuilder(),
     }),
@@ -670,19 +669,21 @@ export default function Layout({
     const handlers: {
       [key: string]: (e: KeyboardEvent) => void;
     } = {
-      "3": () => {
+      "3": (ev) => {
+        if (ev.metaKey || ev.ctrlKey) {
+          return false;
+        }
         toggleCameraMode();
+        return true;
       },
-      Escape: (e) => {
-        e.preventDefault();
+      Escape: () => {
         setShowTopicTree(false);
         searchTextProps.toggleSearchTextOpen(false);
         if (document.activeElement && document.activeElement === containerRef.current) {
           (document.activeElement as HTMLElement).blur();
         }
       },
-      t: (e) => {
-        e.preventDefault();
+      t: () => {
         // Unpin before enabling keyboard toggle open/close.
         if (pinTopics) {
           saveConfig({ pinTopics: false });
@@ -692,12 +693,14 @@ export default function Layout({
       },
       f: (e: KeyboardEvent) => {
         if (e.ctrlKey || e.metaKey) {
-          e.preventDefault();
           searchTextProps.toggleSearchTextOpen(true);
           if (!searchTextProps.searchInputRef.current) {
-            return;
+            return true;
           }
           searchTextProps.searchInputRef.current.select();
+          return true;
+        } else {
+          return false;
         }
       },
     };

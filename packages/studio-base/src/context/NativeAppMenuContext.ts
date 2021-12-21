@@ -5,6 +5,9 @@
 import { createContext, useContext } from "react";
 
 export type NativeAppMenuEvent =
+  | "open-file"
+  | "open-remote-file"
+  | "open-sample-data"
   | "open-layouts"
   | "open-add-panel"
   | "open-panel-settings"
@@ -12,8 +15,7 @@ export type NativeAppMenuEvent =
   | "open-extensions"
   | "open-help"
   | "open-account"
-  | "open-preferences"
-  | "open-welcome-layout";
+  | "open-preferences";
 
 type Handler = () => void;
 

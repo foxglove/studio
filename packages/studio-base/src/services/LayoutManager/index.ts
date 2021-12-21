@@ -12,6 +12,7 @@ import { PanelsState } from "@foxglove/studio-base/context/CurrentLayoutContext/
 import { ISO8601Timestamp } from "@foxglove/studio-base/services/ConsoleApi";
 import {
   ILayoutManager,
+  LayoutManagerChangeEvent,
   LayoutManagerEventTypes,
 } from "@foxglove/studio-base/services/ILayoutManager";
 import {
@@ -196,7 +197,7 @@ export default class LayoutManager implements ILayoutManager {
     this.emitter.off(name, listener);
   }
 
-  private notifyChangeListeners(event: { updatedLayout: Layout | undefined }) {
+  private notifyChangeListeners(event: LayoutManagerChangeEvent) {
     queueMicrotask(() => this.emitter.emit("change", event));
   }
 
@@ -249,7 +250,7 @@ export default class LayoutManager implements ILayoutManager {
             syncInfo: { status: "tracked", lastRemoteSavedAt: newLayout.savedAt },
           }),
       );
-      this.notifyChangeListeners({ updatedLayout: undefined });
+      this.notifyChangeListeners({ type: "change", updatedLayout: undefined });
       return result;
     }
 
@@ -264,7 +265,7 @@ export default class LayoutManager implements ILayoutManager {
           syncInfo: this.remote ? { status: "new", lastRemoteSavedAt: undefined } : undefined,
         }),
     );
-    this.notifyChangeListeners({ updatedLayout: newLayout });
+    this.notifyChangeListeners({ type: "change", updatedLayout: newLayout });
     return newLayout;
   }
 
@@ -303,9 +304,14 @@ export default class LayoutManager implements ILayoutManager {
             syncInfo: { status: "tracked", lastRemoteSavedAt: updatedBaseline.savedAt },
           }),
       );
-      this.notifyChangeListeners({ updatedLayout: result });
+      this.notifyChangeListeners({ type: "change", updatedLayout: result });
       return result;
     } else {
+      const isRename =
+        this.remote != undefined &&
+        name != undefined &&
+        localLayout.syncInfo != undefined &&
+        localLayout.syncInfo?.status !== "new";
       const result = await this.local.runExclusive(
         async (local) =>
           await local.put({
@@ -313,17 +319,14 @@ export default class LayoutManager implements ILayoutManager {
             name: name ?? localLayout.name,
             working: data != undefined ? { data, savedAt: now } : localLayout.working,
 
-            // If the name is being changed, we will need to upload to the server
-            syncInfo:
-              this.remote &&
-              name != undefined &&
-              localLayout.syncInfo &&
-              localLayout.syncInfo?.status !== "new"
-                ? { status: "updated", lastRemoteSavedAt: localLayout.syncInfo?.lastRemoteSavedAt }
-                : localLayout.syncInfo,
+            // If the name is being changed, we will need to upload to the server with a new savedAt
+            baseline: isRename ? { ...localLayout.baseline, savedAt: now } : localLayout.baseline,
+            syncInfo: isRename
+              ? { status: "updated", lastRemoteSavedAt: localLayout.syncInfo?.lastRemoteSavedAt }
+              : localLayout.syncInfo,
           }),
       );
-      this.notifyChangeListeners({ updatedLayout: result });
+      this.notifyChangeListeners({ type: "change", updatedLayout: result });
       return result;
     }
   }
@@ -363,7 +366,7 @@ export default class LayoutManager implements ILayoutManager {
         await local.delete(id);
       }
     });
-    this.notifyChangeListeners({ updatedLayout: undefined });
+    this.notifyChangeListeners({ type: "delete", layoutId: id });
   }
 
   @LayoutManager.withBusyStatus
@@ -394,7 +397,7 @@ export default class LayoutManager implements ILayoutManager {
             syncInfo: { status: "tracked", lastRemoteSavedAt: updatedBaseline.savedAt },
           }),
       );
-      this.notifyChangeListeners({ updatedLayout: result });
+      this.notifyChangeListeners({ type: "change", updatedLayout: result });
       return result;
     } else {
       const result = await this.local.runExclusive(
@@ -411,7 +414,7 @@ export default class LayoutManager implements ILayoutManager {
               : localLayout.syncInfo,
           }),
       );
-      this.notifyChangeListeners({ updatedLayout: result });
+      this.notifyChangeListeners({ type: "change", updatedLayout: result });
       return result;
     }
   }
@@ -428,7 +431,7 @@ export default class LayoutManager implements ILayoutManager {
         working: undefined,
       });
     });
-    this.notifyChangeListeners({ updatedLayout: result });
+    this.notifyChangeListeners({ type: "change", updatedLayout: result });
     return result;
   }
 
@@ -451,7 +454,7 @@ export default class LayoutManager implements ILayoutManager {
       await local.put({ ...layout, working: undefined });
       return newLayout;
     });
-    this.notifyChangeListeners({ updatedLayout: undefined });
+    this.notifyChangeListeners({ type: "change", updatedLayout: undefined });
     return result;
   }
 
@@ -474,7 +477,7 @@ export default class LayoutManager implements ILayoutManager {
       log.debug("Starting layout sync");
       this.currentSync = this.syncWithRemoteImpl(abortSignal);
       await this.currentSync;
-      this.notifyChangeListeners({ updatedLayout: undefined });
+      this.notifyChangeListeners({ type: "change", updatedLayout: undefined });
     } finally {
       this.currentSync = undefined;
       log.debug(`Completed sync in ${((performance.now() - start) / 1000).toFixed(2)}s`);
@@ -527,6 +530,7 @@ export default class LayoutManager implements ILayoutManager {
 
           case "delete-local":
             await local.delete(operation.localLayout.id);
+            this.notifyChangeListeners({ type: "delete", layoutId: operation.localLayout.id });
             break;
 
           case "add-to-cache": {
