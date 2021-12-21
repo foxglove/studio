@@ -19,7 +19,7 @@ import { DEFAULT_CAMERA_STATE, Lines, Worldview } from "@foxglove/regl-worldview
 import { TopicSettingsCollection } from "@foxglove/studio-base/panels/ThreeDimensionalViz/SceneBuilder";
 import { GridSettings } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor/GridSettingsEditor";
 import { CoordinateFrame } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
-import { useTransforms } from "@foxglove/studio-base/panels/ThreeDimensionalViz/useTransforms";
+import useTransforms from "@foxglove/studio-base/panels/ThreeDimensionalViz/useTransforms";
 import {
   ArrowMarker,
   ColorMarker,
