@@ -123,6 +123,27 @@ describe("TransformTree", () => {
     expect(output.orientation).toEqual({ x: 0, y: 1, z: 0, w: 0 });
   });
 
+  it("across-time transformation", () => {
+    const T1 = { sec: 1, nsec: 0 };
+
+    const tree = new TransformTree();
+    const map_T_odom = new Transform([1, 2, 3], [0, 0, 0, 1]);
+    const map_T_odom_t1 = new Transform([4, 5, 6], [0, 0, 0, 1]);
+    const odom_T_baseLink = new Transform([10, 20, 30], [0, 0, 0, 1]);
+    tree.addTransform("base_link", "odom", TIME_ZERO, odom_T_baseLink);
+    tree.addTransform("odom", "map", TIME_ZERO, map_T_odom);
+    tree.addTransform("odom", "map", T1, map_T_odom_t1);
+
+    const input = { position: { x: 100, y: 200, z: 300 }, orientation: { x: 0, y: 0, z: 0, w: 1 } };
+    const output = emptyPose();
+    expect(tree.apply(output, input, "odom", "map", "base_link", T1, TIME_ZERO)).toBeDefined();
+
+    expect(output).toEqual({
+      position: { x: 107, y: 217, z: 327 },
+      orientation: { x: 0, y: 0, z: 0, w: 1 },
+    });
+  });
+
   it("reparents", () => {
     const T2 = { sec: 2, nsec: 0 };
 
