@@ -13,6 +13,8 @@
 
 import { isEqual } from "lodash";
 
+import { Pose } from "@foxglove/studio-base/types/Messages";
+
 import { decodeMarker } from "./decodeMarker";
 import { MemoizedMarker, PointCloudMarker } from "./types";
 
@@ -40,6 +42,11 @@ export function updateMarkerCache(
         hitmapColors: marker.hitmapColors,
       };
     }
+
+    // Update the marker pose unconditionally since it can change per-frame even
+    // when we don't need to do a full point cloud decode
+    (decoded.marker as { pose?: Pose }).pose = marker.pose;
+
     markerCache.set(marker.data, decoded);
   });
   return markerCache;
