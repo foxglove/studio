@@ -36,7 +36,7 @@ function makeColor(hex: string, alpha?: number) {
   return color;
 }
 
-type PassFailMarker = CubeMarker & { description?: string };
+type PassFailMarker = CubeMarker;
 
 type MarkerArgs = {
   id: number;
@@ -70,8 +70,7 @@ function makePass({
     receiveTime,
     message: {
       header: { seq: 0, stamp, frame_id },
-      description,
-      id: `pass${id}`,
+      id: `pass${id}${description ? `: ${description}` : ""}`,
       ns,
       type: 1,
       action: 0,
@@ -103,8 +102,7 @@ function makeFail({
     receiveTime,
     message: {
       header: { seq: 0, stamp, frame_id },
-      description,
-      id: `fail${id}`,
+      id: `fail${id}${description ? `: ${description}` : ""}`,
       ns,
       type: 1,
       action: 0,
