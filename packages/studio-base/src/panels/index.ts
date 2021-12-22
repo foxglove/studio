@@ -38,21 +38,21 @@ const builtin: PanelInfo[] = [
   {
     title: `Diagnostics – Detail`,
     type: "DiagnosticStatusPanel",
-    description: "Display data for a given diagnostics node.",
+    description: "Display data for a given ROS diagnostics node.",
     help: DiagnosticStatusPanelHelp,
     module: async () => await import("./diagnostics/DiagnosticStatusPanel"),
   },
   {
     title: `Diagnostics – Summary`,
     type: "DiagnosticSummary",
-    description: "Display the status of diagnostics nodes.",
+    description: "Display the status of ROS diagnostics nodes.",
     help: DiagnosticSummaryHelp,
     module: async () => await import("./diagnostics/DiagnosticSummary"),
   },
   {
     title: "Image",
     type: "ImageViewPanel",
-    description: "Display camera feed images.",
+    description: "Display image topic messages.",
     help: ImageViewHelp,
     module: async () => await import("./ImageView"),
   },
@@ -87,14 +87,14 @@ const builtin: PanelInfo[] = [
   {
     title: "Publish",
     type: "Publish",
-    description: "Publish data over a life connection.",
+    description: "Publish messages to the data source.",
     help: PublishHelp,
     module: async () => await import("./Publish"),
   },
   {
     title: "Raw Messages",
     type: "RawMessages",
-    description: "Display topic messages as JSON.",
+    description: "Display topic messages as collapsible trees.",
     help: RawMessagesHelp,
     module: async () => await import("./RawMessages"),
   },
@@ -136,14 +136,14 @@ const builtin: PanelInfo[] = [
   {
     title: "Data Source Info",
     type: "SourceInfo",
-    description: "View time and topic information for the data source.",
+    description: "View data source details like topics, datatypes, and duration.",
     help: SourceInfoHelp,
     module: async () => await import("./SourceInfo"),
   },
   {
     title: "Variable Slider",
     type: "GlobalVariableSliderPanel",
-    description: "Quickly update numerical variable values for a layout.",
+    description: "Update numerical variable values for a layout.",
     help: GlobalVariableSliderHelp,
     module: async () => await import("./GlobalVariableSlider"),
   },
@@ -199,7 +199,6 @@ const legacyPlot: PanelInfo[] = [
   {
     title: "Legacy Plot",
     type: "LegacyPlot",
-    description: "Specify the channels of internal logs to display for debugging.",
     module: async () => await import("./LegacyPlot"),
   },
 ];
