@@ -140,7 +140,6 @@ export function useMessageReducer<T>(props: Params<T>): T {
 
   const state = useRef<
     | Readonly<{
-        requestedTopicsSet: Set<string>;
         messageEvents: PlayerStateActiveData["messages"] | undefined;
         lastSeekTime: number | undefined;
         reducedValue: T;
@@ -192,7 +191,6 @@ export function useMessageReducer<T>(props: Params<T>): T {
         }
 
         state.current = {
-          requestedTopicsSet,
           messageEvents,
           lastSeekTime,
           reducedValue: newReducedValue,
