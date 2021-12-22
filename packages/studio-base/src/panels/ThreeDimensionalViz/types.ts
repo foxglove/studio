@@ -35,8 +35,8 @@ export type ThreeDimensionalVizConfig = {
   enableShortDisplayNames?: boolean;
   autoTextBackgroundColor?: boolean;
   cameraState: Partial<CameraState>;
-  followTf?: string | false;
-  followOrientation?: boolean;
+  followTf?: string;
+  followMode?: "follow" | "follow-orientation" | "no-follow";
   modifiedNamespaceTopics?: string[];
   pinTopics: boolean;
   diffModeEnabled: boolean;
@@ -50,3 +50,5 @@ export type ThreeDimensionalVizConfig = {
   colorOverrideByVariable?: ColorOverrideByVariable;
   disableAutoOpenClickedObject?: boolean;
 } & PreviousThreeDimensionalVizConfig;
+
+export type FollowMode = "follow" | "follow-orientation" | "no-follow";
