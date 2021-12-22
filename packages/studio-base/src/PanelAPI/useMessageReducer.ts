@@ -140,6 +140,7 @@ export function useMessageReducer<T>(props: Params<T>): T {
 
   const state = useRef<
     | Readonly<{
+        requestedTopicsSet: Set<string>;
         messageEvents: PlayerStateActiveData["messages"] | undefined;
         lastSeekTime: number | undefined;
         reducedValue: T;
@@ -176,7 +177,8 @@ export function useMessageReducer<T>(props: Params<T>): T {
         if (
           messageEvents &&
           messageEvents.length > 0 &&
-          messageEvents !== state.current?.messageEvents
+          (messageEvents !== state.current?.messageEvents ||
+            requestedTopicsSet !== state.current?.requestedTopicsSet)
         ) {
           const filtered = messageEvents.filter(({ topic }) => requestedTopicsSet.has(topic));
           if (addMessages) {
@@ -191,6 +193,7 @@ export function useMessageReducer<T>(props: Params<T>): T {
         }
 
         state.current = {
+          requestedTopicsSet,
           messageEvents,
           lastSeekTime,
           reducedValue: newReducedValue,

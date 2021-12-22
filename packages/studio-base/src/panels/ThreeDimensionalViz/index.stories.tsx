@@ -147,3 +147,5 @@ export function TransformInterpolation(): JSX.Element {
     </PanelSetup>
   );
 }
+
+TransformInterpolation.parameters = { colorScheme: "dark" };
