@@ -4,6 +4,7 @@
 
 import { RosMsgDefinition } from "@foxglove/rosmsg";
 import { MessageEvent, Topic } from "@foxglove/studio";
+import useDelayedFixture from "@foxglove/studio-base/panels/ThreeDimensionalViz/stories/useDelayedFixture";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import { CubeMarker, TF } from "@foxglove/studio-base/types/Messages";
 
@@ -173,34 +174,18 @@ export function TransformInterpolation(): JSX.Element {
     sizeInBytes: 0,
   };
 
-  return (
-    <PanelSetup
-      fixture={{
-        datatypes,
-        topics,
-        frame: {
-          "/markers": [cube1, cube2],
-          "/tf": [tf_t1, tf_t3],
-        },
-        capabilities: [],
-        activeData: {
-          datatypes,
-          topics,
-          startTime: { sec: 0, nsec: 0 },
-          endTime: { sec: 10, nsec: 0 },
-          currentTime: { sec: 2, nsec: 0 },
-          messages: [cube1, cube2, tf_t1, tf_t3],
+  const fixture = useDelayedFixture({
+    datatypes,
+    topics,
+    frame: {
+      "/markers": [cube1, cube2],
+      "/tf": [tf_t1, tf_t3],
+    },
+    capabilities: [],
+  });
 
-          // Some or all of this can probably be removed once this is working
-          messageOrder: "receiveTime",
-          isPlaying: true,
-          speed: 1,
-          lastSeekTime: 1,
-          parsedMessageDefinitionsByTopic: {},
-          totalBytesReceived: 0,
-        },
-      }}
-    >
+  return (
+    <PanelSetup fixture={fixture}>
       <ThreeDimensionalViz
         overrideConfig={{
           ...ThreeDimensionalViz.defaultConfig,

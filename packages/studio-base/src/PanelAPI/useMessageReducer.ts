@@ -177,8 +177,7 @@ export function useMessageReducer<T>(props: Params<T>): T {
         if (
           messageEvents &&
           messageEvents.length > 0 &&
-          (messageEvents !== state.current?.messageEvents ||
-            requestedTopicsSet !== state.current?.requestedTopicsSet)
+          messageEvents !== state.current?.messageEvents
         ) {
           const filtered = messageEvents.filter(({ topic }) => requestedTopicsSet.has(topic));
           if (addMessages) {
