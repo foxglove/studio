@@ -182,6 +182,9 @@ export function TransformInterpolation(): JSX.Element {
       "/tf": [tf_t1, tf_t3],
     },
     capabilities: [],
+    activeData: {
+      currentTime: { sec: 2, nsec: 0 },
+    },
   });
 
   return (
