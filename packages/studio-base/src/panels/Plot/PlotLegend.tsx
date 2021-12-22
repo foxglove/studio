@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { IconButton, ITheme, makeStyles } from "@fluentui/react";
+import { makeStyles } from "@fluentui/react";
 import AlertCircleIcon from "@mdi/svg/svg/alert-circle.svg";
 import MenuIcon from "@mdi/svg/svg/menu.svg";
 import cx from "classnames";
@@ -21,9 +21,9 @@ import tinycolor from "tinycolor2";
 
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
+import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
-import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import { lineColors } from "@foxglove/studio-base/util/plotColors";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
@@ -31,62 +31,25 @@ import { TimestampMethod } from "@foxglove/studio-base/util/time";
 import { PlotPath, BasePlotPath, isReferenceLinePlotPathType } from "./internalTypes";
 import { plotableRosTypes, PlotConfig, PlotXAxisVal } from "./types";
 
-const stylesForButtonsDisplayedOnHover = (theme: ITheme) =>
-  ({
-    visibility: "hidden",
-    padding: 6,
-    cursor: "pointer",
-    position: "absolute",
-    top: 0,
-    height: 25,
-    width: 25,
-    borderRadius: theme.effects.roundedCorner2,
-    userSelect: "none",
-    background: tinycolor(theme.palette.neutralLight).setAlpha(0.75).toRgbString(),
-
-    ":hover": {
-      background: tinycolor(theme.palette.neutralLight).setAlpha(0.75).toRgbString(),
-    },
-    ".mosaic-window:hover &": {
-      visibility: "initial",
-    },
-  } as const);
-
 const useStyles = makeStyles((theme) => ({
   root: {
-    position: "absolute",
-    left: 65,
-    top: 6,
     background: tinycolor(theme.palette.neutralLight).setAlpha(0.25).toRgbString(),
     color: theme.semanticColors.bodySubtext,
-    maxWidth: "calc(100% - 65px - 25px)",
-
-    ":hover": {
-      background: tinycolor(theme.palette.neutralLight).setAlpha(0.5).toRgbString(),
-    },
   },
   dropdown: {
     backgroundColor: "transparent !important",
     padding: "3px !important",
   },
-  addLine: {
-    display: "none",
-    content: "+ add line",
-    position: "absolute",
+  fullLengthButton: {
     background: tinycolor(theme.palette.neutralLight).setAlpha(0.5).toRgbString(),
-    left: 0,
-    right: 0,
-    bottom: 0,
-    transform: "translateY(100%)",
     padding: 6,
+    margin: 5,
+    borderRadius: theme.effects.roundedCorner2,
     cursor: "pointer",
     textAlign: "center",
 
     ":hover": {
       background: tinycolor(theme.palette.neutralLight).setAlpha(0.75).toRgbString(),
-    },
-    ".mosaic-window:hover &": {
-      display: "block",
     },
   },
   item: {
@@ -125,14 +88,20 @@ const useStyles = makeStyles((theme) => ({
     position: "relative",
     top: "calc(50% - 1px)",
   },
-  download: { ...stylesForButtonsDisplayedOnHover(theme), left: -60 },
-  legendToggle: { ...stylesForButtonsDisplayedOnHover(theme), left: -30 },
+  legendToggle: {
+    padding: 6,
+    cursor: "pointer",
+    userSelect: "none",
+    background: "transparent",
+
+    ":hover": {
+      background: tinycolor(theme.palette.neutralLight).setAlpha(0.5).toRgbString(),
+    },
+  },
   itemRemove: {
     visibility: "hidden",
     padding: "0 6px",
     cursor: "pointer",
-    position: "absolute",
-    right: -21,
     background: "transparent",
     height: 20,
     lineHeight: 20,
@@ -229,12 +198,14 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element {
     [saveConfig],
   );
 
-  const downloadCSVTooltip = useTooltip({ contents: "Download plot data as CSV" });
-
   if (!showLegend) {
     return (
       <div className={classes.root}>
-        <Icon className={classes.legendToggle} onClick={toggleToShowLegend}>
+        <Icon
+          className={classes.legendToggle}
+          style={{ display: "block", height: "100%" }}
+          onClick={toggleToShowLegend}
+        >
           <MenuIcon />
         </Icon>
       </div>
@@ -242,161 +213,163 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element {
   }
 
   return (
-    <div className={classes.root}>
-      <IconButton
-        className={classes.download}
-        elementRef={downloadCSVTooltip.ref}
-        iconProps={{ iconName: "Download" }}
-        onClick={onDownload}
-        ariaLabel="Download plot data as CSV"
-        styles={{ icon: { height: 20 } }}
+    <Flex className={classes.root}>
+      <Icon
+        className={classes.legendToggle}
+        style={{ display: "block", height: "100%" }}
+        onClick={toggleToHideLegend}
       >
-        {downloadCSVTooltip.tooltip}
-      </IconButton>
-      <Icon className={classes.legendToggle} onClick={toggleToHideLegend}>
         <MenuIcon />
       </Icon>
-      <div className={classes.item}>
-        x:
-        <div
-          className={classes.itemIconContainer}
-          style={{ width: "auto", lineHeight: "normal", zIndex: 2 }}
-        >
-          <Dropdown
-            value={xAxisVal}
-            text={shortXAxisLabel(xAxisVal)}
-            btnClassname={classes.dropdown}
-            onChange={(newXAxisVal) => saveConfig({ xAxisVal: newXAxisVal })}
-            noPortal
+      <div>
+        <div className={classes.item}>
+          x:
+          <div
+            className={classes.itemIconContainer}
+            style={{ width: "auto", lineHeight: "normal", zIndex: 2 }}
           >
-            <DropdownItem value="timestamp">
-              <span>timestamp</span>
-            </DropdownItem>
-            <DropdownItem value="index">
-              <span>index</span>
-            </DropdownItem>
-            <DropdownItem value="currentCustom">
-              <span>msg path (current)</span>
-            </DropdownItem>
-            <DropdownItem value="custom">
-              <span>msg path (accumulated)</span>
-            </DropdownItem>
-          </Dropdown>
+            <Dropdown
+              value={xAxisVal}
+              text={shortXAxisLabel(xAxisVal)}
+              btnClassname={classes.dropdown}
+              onChange={(newXAxisVal) => saveConfig({ xAxisVal: newXAxisVal })}
+              noPortal
+            >
+              <DropdownItem value="timestamp">
+                <span>timestamp</span>
+              </DropdownItem>
+              <DropdownItem value="index">
+                <span>index</span>
+              </DropdownItem>
+              <DropdownItem value="currentCustom">
+                <span>msg path (current)</span>
+              </DropdownItem>
+              <DropdownItem value="custom">
+                <span>msg path (accumulated)</span>
+              </DropdownItem>
+            </Dropdown>
+          </div>
+          <div
+            className={cx(classes.itemInput, {
+              [classes.itemInputDisabled]: xAxisPath?.enabled !== true,
+            })}
+          >
+            {(xAxisVal === "custom" || xAxisVal === "currentCustom") && (
+              <MessagePathInput
+                path={xAxisPath?.value ? xAxisPath.value : "/"}
+                onChange={(newXAxisPath) =>
+                  saveConfig({
+                    xAxisPath: {
+                      value: newXAxisPath,
+                      enabled: xAxisPath ? xAxisPath.enabled : true,
+                    },
+                  })
+                }
+                validTypes={plotableRosTypes}
+                placeholder="Enter a topic name or a number"
+                disableAutocomplete={xAxisPath && isReferenceLinePlotPathType(xAxisPath)}
+                autoSize
+              />
+            )}
+          </div>
         </div>
-        <div
-          className={cx(classes.itemInput, {
-            [classes.itemInputDisabled]: xAxisPath?.enabled !== true,
-          })}
-        >
-          {(xAxisVal === "custom" || xAxisVal === "currentCustom") && (
-            <MessagePathInput
-              path={xAxisPath?.value ? xAxisPath.value : "/"}
-              onChange={(newXAxisPath) =>
-                saveConfig({
-                  xAxisPath: { value: newXAxisPath, enabled: xAxisPath ? xAxisPath.enabled : true },
-                })
-              }
-              validTypes={plotableRosTypes}
-              placeholder="Enter a topic name or a number"
-              disableAutocomplete={xAxisPath && isReferenceLinePlotPathType(xAxisPath)}
-              autoSize
-            />
-          )}
-        </div>
-      </div>
-      {paths.map((path: PlotPath, index: number) => {
-        const isReferenceLinePlotPath = isReferenceLinePlotPathType(path);
-        let timestampMethod;
-        // Only allow chosing the timestamp method if it is applicable (not a reference line) and there is at least
-        // one character typed.
-        if (!isReferenceLinePlotPath && path.value.length > 0) {
-          timestampMethod = path.timestampMethod;
-        }
-        const hasMismatchedDataLength = pathsWithMismatchedDataLengths.includes(path.value);
+        {paths.map((path: PlotPath, index: number) => {
+          const isReferenceLinePlotPath = isReferenceLinePlotPathType(path);
+          let timestampMethod;
+          // Only allow chosing the timestamp method if it is applicable (not a reference line) and there is at least
+          // one character typed.
+          if (!isReferenceLinePlotPath && path.value.length > 0) {
+            timestampMethod = path.timestampMethod;
+          }
+          const hasMismatchedDataLength = pathsWithMismatchedDataLengths.includes(path.value);
 
-        return (
-          <Fragment key={index}>
-            <div className={classes.item}>
-              y:
-              <div
-                className={classes.itemIconContainer}
-                style={{ zIndex: 1 }}
-                onClick={() => {
-                  const newPaths = paths.slice();
-                  const newPath = newPaths[index];
-                  if (newPath) {
-                    newPaths[index] = { ...newPath, enabled: !newPath.enabled };
-                  }
-                  saveConfig({ paths: newPaths });
-                }}
-              >
+          return (
+            <Fragment key={index}>
+              <div className={classes.item}>
+                y:
                 <div
-                  className={classes.itemIcon}
-                  style={{ color: path.enabled ? lineColors[index % lineColors.length] : "#777" }}
-                />
+                  className={classes.itemIconContainer}
+                  style={{ zIndex: 1 }}
+                  onClick={() => {
+                    const newPaths = paths.slice();
+                    const newPath = newPaths[index];
+                    if (newPath) {
+                      newPaths[index] = { ...newPath, enabled: !newPath.enabled };
+                    }
+                    saveConfig({ paths: newPaths });
+                  }}
+                >
+                  <div
+                    className={classes.itemIcon}
+                    style={{ color: path.enabled ? lineColors[index % lineColors.length] : "#777" }}
+                  />
+                </div>
+                <div
+                  className={cx(classes.itemInput, {
+                    [classes.itemInputDisabled]: !path.enabled,
+                  })}
+                >
+                  <MessagePathInput
+                    supportsMathModifiers
+                    path={path.value}
+                    onChange={onInputChange}
+                    onTimestampMethodChange={onInputTimestampMethodChange}
+                    validTypes={plotableRosTypes}
+                    placeholder="Enter a topic name or a number"
+                    index={index}
+                    autoSize
+                    disableAutocomplete={isReferenceLinePlotPath}
+                    {...(xAxisVal === "timestamp" ? { timestampMethod } : undefined)}
+                  />
+                  {hasMismatchedDataLength && (
+                    <Icon
+                      style={{ color: colors.RED }}
+                      clickable={false}
+                      size="small"
+                      tooltipProps={{ placement: "top" }}
+                      tooltip="Mismatch in the number of elements in x-axis and y-axis messages"
+                    >
+                      <AlertCircleIcon />
+                    </Icon>
+                  )}
+                </div>
+                <div
+                  data-item-remove
+                  className={classes.itemRemove}
+                  onClick={() => {
+                    const newPaths = paths.slice();
+                    newPaths.splice(index, 1);
+                    saveConfig({ paths: newPaths });
+                  }}
+                >
+                  ✕
+                </div>
               </div>
-              <div
-                className={cx(classes.itemInput, {
-                  [classes.itemInputDisabled]: !path.enabled,
-                })}
-              >
-                <MessagePathInput
-                  supportsMathModifiers
-                  path={path.value}
-                  onChange={onInputChange}
-                  onTimestampMethodChange={onInputTimestampMethodChange}
-                  validTypes={plotableRosTypes}
-                  placeholder="Enter a topic name or a number"
-                  index={index}
-                  autoSize
-                  disableAutocomplete={isReferenceLinePlotPath}
-                  {...(xAxisVal === "timestamp" ? { timestampMethod } : undefined)}
-                />
-                {hasMismatchedDataLength && (
-                  <Icon
-                    style={{ color: colors.RED }}
-                    clickable={false}
-                    size="small"
-                    tooltipProps={{ placement: "top" }}
-                    tooltip="Mismatch in the number of elements in x-axis and y-axis messages"
-                  >
-                    <AlertCircleIcon />
-                  </Icon>
-                )}
-              </div>
-              <div
-                data-item-remove
-                className={classes.itemRemove}
-                onClick={() => {
-                  const newPaths = paths.slice();
-                  newPaths.splice(index, 1);
-                  saveConfig({ paths: newPaths });
-                }}
-              >
-                ✕
-              </div>
-            </div>
-          </Fragment>
-        );
-      })}
-      <div
-        className={classes.addLine}
-        onClick={() =>
-          saveConfig({
-            paths: [
-              ...paths,
-              {
-                value: "",
-                enabled: true,
-                // For convenience, default to the `timestampMethod` of the last path.
-                timestampMethod: lastPath ? lastPath.timestampMethod : "receiveTime",
-              },
-            ],
-          })
-        }
-      >
-        + add line
+            </Fragment>
+          );
+        })}
+        <div
+          className={classes.fullLengthButton}
+          onClick={() =>
+            saveConfig({
+              paths: [
+                ...paths,
+                {
+                  value: "",
+                  enabled: true,
+                  // For convenience, default to the `timestampMethod` of the last path.
+                  timestampMethod: lastPath ? lastPath.timestampMethod : "receiveTime",
+                },
+              ],
+            })
+          }
+        >
+          + add line
+        </div>
+        <div className={classes.fullLengthButton} onClick={onDownload}>
+          Download plot data as CSV
+        </div>
       </div>
-    </div>
+    </Flex>
   );
 }

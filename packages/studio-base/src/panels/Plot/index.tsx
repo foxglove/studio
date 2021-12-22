@@ -396,27 +396,29 @@ function Plot(props: Props) {
     <Flex col clip center style={{ position: "relative" }}>
       <PanelToolbar helpContent={helpContent} floating />
       {title && <div>{title}</div>}
-      <PlotChart
-        isSynced={xAxisVal === "timestamp" && isSynced}
-        paths={yAxisPaths}
-        minYValue={parseFloat((minYValue ?? "")?.toString())}
-        maxYValue={parseFloat((maxYValue ?? "")?.toString())}
-        datasets={datasets}
-        tooltips={tooltips}
-        xAxisVal={xAxisVal}
-        currentTime={currentTimeSinceStart}
-        onClick={onClick}
-        defaultView={defaultView}
-      />
-      <PlotLegend
-        paths={yAxisPaths}
-        saveConfig={saveConfig}
-        showLegend={showLegend}
-        xAxisVal={xAxisVal}
-        xAxisPath={xAxisPath}
-        pathsWithMismatchedDataLengths={pathsWithMismatchedDataLengths}
-        onDownload={() => downloadCSV(datasets, xAxisVal)}
-      />
+      <Flex style={{ width: "100%", height: "100%" }}>
+        <PlotLegend
+          paths={yAxisPaths}
+          saveConfig={saveConfig}
+          showLegend={showLegend}
+          xAxisVal={xAxisVal}
+          xAxisPath={xAxisPath}
+          pathsWithMismatchedDataLengths={pathsWithMismatchedDataLengths}
+          onDownload={() => downloadCSV(datasets, xAxisVal)}
+        />
+        <PlotChart
+          isSynced={xAxisVal === "timestamp" && isSynced}
+          paths={yAxisPaths}
+          minYValue={parseFloat((minYValue ?? "")?.toString())}
+          maxYValue={parseFloat((maxYValue ?? "")?.toString())}
+          datasets={datasets}
+          tooltips={tooltips}
+          xAxisVal={xAxisVal}
+          currentTime={currentTimeSinceStart}
+          onClick={onClick}
+          defaultView={defaultView}
+        />
+      </Flex>
     </Flex>
   );
 }
