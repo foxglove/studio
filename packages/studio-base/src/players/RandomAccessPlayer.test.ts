@@ -35,10 +35,12 @@ import { getSeekToTime, SEEK_ON_START_NS } from "@foxglove/studio-base/util/time
 
 import RandomAccessPlayer, {
   RandomAccessPlayerOptions,
-  SEEK_BACK_NANOSECONDS,
+  DEFAULT_SEEK_BACK_NANOSECONDS,
   SEEK_START_DELAY_MS,
 } from "./RandomAccessPlayer";
 import TestProvider from "./TestProvider";
+
+const SEEK_BACK_NANOSECONDS = Number(DEFAULT_SEEK_BACK_NANOSECONDS);
 
 // By default seek to the start of the bag, since that makes things a bit simpler to reason about.
 const playerOptions: RandomAccessPlayerOptions = {
