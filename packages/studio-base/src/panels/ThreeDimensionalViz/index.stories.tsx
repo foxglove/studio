@@ -341,8 +341,8 @@ export function Markers(): JSX.Element {
       ],
       colors: [
         makeColor("#f44336", 0.5),
-        makeColor("#4caf50", 0.5),
-        makeColor("#2196f3", 0.5),
+        makeColor("#4caf50", 1),
+        makeColor("#2196f3", 1),
         makeColor("#ffeb3b", 0.5),
       ],
       lifetime: { sec: 0, nsec: 0 },
@@ -377,8 +377,8 @@ export function Markers(): JSX.Element {
       colors: [
         makeColor("#f44336", 0.5),
         makeColor("#4caf50", 0.5),
-        makeColor("#2196f3", 0.5),
-        makeColor("#ffeb3b", 0.5),
+        makeColor("#2196f3", 1),
+        makeColor("#ffeb3b", 1),
         makeColor("#e81e63", 0.5),
         makeColor("#3f51b5", 0.5),
       ],
@@ -547,7 +547,7 @@ export function Markers(): JSX.Element {
           expandedKeys: ["name:Topics", "t:/markers", `t:${FOXGLOVE_GRID_TOPIC}`],
           followTf: "",
           cameraState: {
-            distance: 5,
+            distance: 5.5,
             perspective: true,
             phi: 0.5,
             targetOffset: [0, 0, 0],
