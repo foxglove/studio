@@ -168,7 +168,7 @@ export default function ImageCanvas(props: Props): JSX.Element {
   useLayoutEffect(() => {
     if (props.renderInMainThread !== true && !supportsOffscreenCanvas) {
       addToast(
-        "Your browser does not support rendering images in a backaground thread. Performance may be degraded.",
+        "Your browser does not support rendering images in a background thread. Performance may be degraded.",
         { appearance: "warning", autoDismiss: true },
       );
     }
