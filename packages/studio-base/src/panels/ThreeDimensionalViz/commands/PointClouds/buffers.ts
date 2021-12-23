@@ -222,7 +222,7 @@ export function createColorBuffer({
     });
   }
 
-  const colorFieldName = colorMode.colorField ?? fields.rgba ? "rgba" : "rgb";
+  const colorFieldName = colorMode.colorField ?? (fields.rgba ? "rgba" : "rgb");
   const colorField = fields[colorFieldName];
   if (!colorField) {
     throw new Error(`Cannot create color buffer without ${colorFieldName} field`);
