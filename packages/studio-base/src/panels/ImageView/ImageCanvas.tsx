@@ -154,16 +154,12 @@ type RenderImage = (args: {
   options?: RenderOptions;
 }) => Promise<Dimensions | undefined>;
 
+const supportsOffscreenCanvas =
+  typeof HTMLCanvasElement.prototype.transferControlToOffscreen === "function";
+
 export default function ImageCanvas(props: Props): JSX.Element {
-  const {
-    rawMarkerData,
-    topic,
-    image,
-    config,
-    saveConfig,
-    renderInMainThread,
-    onStartRenderImage,
-  } = props;
+  const { rawMarkerData, topic, image, config, saveConfig, onStartRenderImage } = props;
+  const renderInMainThread = (props.renderInMainThread ?? false) || !supportsOffscreenCanvas;
   const { mode } = config;
   const classes = useStyles();
 
@@ -201,7 +197,7 @@ export default function ImageCanvas(props: Props): JSX.Element {
 
     const id = uuidv4();
 
-    if (renderInMainThread === true) {
+    if (renderInMainThread) {
       // Potentially performance-sensitive; await can be expensive
       // eslint-disable-next-line @typescript-eslint/promise-function-async
       const renderInMain = (args: {
@@ -299,7 +295,7 @@ export default function ImageCanvas(props: Props): JSX.Element {
     }
 
     return () => {
-      if (renderInMainThread === true) {
+      if (renderInMainThread) {
         return;
       }
 
