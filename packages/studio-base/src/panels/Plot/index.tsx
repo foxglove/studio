@@ -396,7 +396,7 @@ function Plot(props: Props) {
     <Flex col clip center style={{ position: "relative" }}>
       <PanelToolbar helpContent={helpContent} floating />
       {title && <div>{title}</div>}
-      <Flex style={{ width: "100%", height: "100%" }}>
+      <Flex style={{ width: "100%", height: "100%", overflow: "scroll" }}>
         <PlotLegend
           paths={yAxisPaths}
           saveConfig={saveConfig}
