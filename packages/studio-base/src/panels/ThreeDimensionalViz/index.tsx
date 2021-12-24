@@ -34,7 +34,10 @@ import {
   CoordinateFrame,
   DEFAULT_FRAME_IDS,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
-import { ThreeDimensionalVizConfig } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
+import {
+  FollowMode,
+  ThreeDimensionalVizConfig,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
 import { MutablePose } from "@foxglove/studio-base/types/Messages";
 import { PanelConfigSchema, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
@@ -240,7 +243,7 @@ function BaseRenderer(props: Props): JSX.Element {
     configFollowTf: config.followTf,
   };
   const onFollowChange = useCallbackWithToast(
-    (newFollowTf?: string, newFollowMode?: "follow" | "no-follow" | "follow-orientation") => {
+    (newFollowTf?: string, newFollowMode?: FollowMode) => {
       const { configFollowMode: prevFollowMode, configFollowTf: prevFollowTf } =
         callbackInputsRef.current;
       const newCameraState = getNewCameraStateOnFollowChange({

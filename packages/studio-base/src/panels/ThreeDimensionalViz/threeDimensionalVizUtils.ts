@@ -166,27 +166,24 @@ export function getNewCameraStateOnFollowChange({
 }: {
   prevCameraState: Partial<CameraState>;
   prevFollowTf?: string;
-  prevFollowMode?: "follow" | "follow-orientation" | "no-follow";
+  prevFollowMode?: FollowMode;
   newFollowTf?: string;
-  newFollowMode?: "follow" | "follow-orientation" | "no-follow";
+  newFollowMode?: FollowMode;
 }): Partial<CameraState> {
   // Neither the followTf or followMode changed, there is nothing to updated with the camera state
   if (newFollowMode === prevFollowMode && prevFollowTf === newFollowTf) {
     return prevCameraState;
   }
 
-  const newCameraState = { ...prevCameraState };
-
-  // if the follow frames changed
-  // - reset offset to snap to the frame
+  // Any change in the follow tf resets the target offset so we snap to the new follow tf
   if (newFollowTf !== prevFollowTf) {
-    newCameraState.targetOffset = [0, 0, 0];
+    return { ...prevCameraState, targetOffset: [0, 0, 0] };
   }
 
   // When entering a follow mode, reset the camera so it snaps to the frame we are rendering
   if (prevFollowMode === "no-follow" && newFollowMode !== "no-follow") {
-    newCameraState.targetOffset = [0, 0, 0];
+    return { ...prevCameraState, targetOffset: [0, 0, 0] };
   }
 
-  return newCameraState;
+  return prevCameraState;
 }
