@@ -217,11 +217,6 @@ function BaseRenderer(props: Props): JSX.Element {
       if (prevFollowMode === "follow-orientation" && newFollowMode !== "follow-orientation") {
         const renderId = renderFrameLatest.current.id;
 
-        const zero: MutablePose = {
-          position: { x: 0, y: 0, z: 0 },
-          orientation: { x: 0, y: 0, z: 0, w: 1 },
-        };
-
         // get the current root frame for the render frame we are _currently_ following but want to stop following
         const rootFrameForFollow = transformsLatest.current.frame(renderId)?.root();
         if (!rootFrameForFollow) {
@@ -229,9 +224,10 @@ function BaseRenderer(props: Props): JSX.Element {
         }
 
         // calculate the pose of our current render frame in our root frame
-        const rootFramePose = rootFrameForFollow.applyLocal(
-          emptyPose(),
-          zero,
+        let rootFramePose: MutablePose | undefined = emptyPose();
+        rootFramePose = rootFrameForFollow.applyLocal(
+          rootFramePose,
+          rootFramePose,
           renderFrameLatest.current,
           currentTimeLatest.current,
         );
