@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Dialog, IOverlayProps, Layer, Modal, Overlay, Stack, useTheme } from "@fluentui/react";
+import { Dialog, Overlay, Stack, useTheme } from "@fluentui/react";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 
 import Snow from "@foxglove/studio-base/Snow";
