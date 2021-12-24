@@ -304,6 +304,7 @@ function BaseRenderer(props: Props): JSX.Element {
           // return early with no save
           return;
         }
+        // fixme: also need to do this whenever (unfollowPoseSnapshot.current==undefined && newFollowMode==='no-follow'), such as after refreshing the app
         unfollowPoseSnapshot.current = fakeFramePose;
       }
 

@@ -58,51 +58,25 @@ export function useTransformedCameraState({
 }): { transformedCameraState: CameraState; targetPose?: TargetPose } {
   const transformedCameraState = { ...configCameraState };
   const targetPose = getTargetPose(followTf, transforms);
-  // Store last seen target pose because the target may become available/unavailable over time as
-  // the player changes, and we want to avoid moving the camera when it disappears.
-  const lastTargetPoseRef = useRef<TargetPose | undefined>();
-  const lastTargetPose = lastTargetPoseRef.current;
 
   // fixme - undefined? skip?
   if (poseDelta) {
-    const originalTargetOffset = transformedCameraState.targetOffset;
-
-    if (originalTargetOffset) {
-      transformedCameraState.targetOffset = [
-        originalTargetOffset[0] + poseDelta.position.x,
-        originalTargetOffset[1] + poseDelta.position.y,
-        originalTargetOffset[2] + poseDelta.position.z,
-      ];
-    }
-
-    const originalTargetOrientation = transformedCameraState.targetOrientation;
-
-    if (originalTargetOrientation) {
-      const outVec: vec4 = [0, 0, 0, 0];
-      quat.multiply(outVec, originalTargetOrientation, [
-        poseDelta.orientation.x,
-        poseDelta.orientation.y,
-        poseDelta.orientation.z,
-        poseDelta.orientation.w,
-      ]);
-      transformedCameraState.targetOrientation = outVec;
-    }
-  }
-
-  // Recompute cameraState based on the new inputs at each render
-  if (targetPose) {
-    lastTargetPoseRef.current = targetPose;
-    transformedCameraState.target = targetPose.target;
-    if (followMode === "follow-orientation") {
-      transformedCameraState.targetOrientation = targetPose.targetOrientation;
-    }
-  } else if (followTf && lastTargetPose) {
-    // If follow is enabled but no target is available (such as when seeking), keep the camera
-    // position the same as it would have been by reusing the last seen target pose.
-    transformedCameraState.target = lastTargetPose.target;
-    if (followMode === "follow-orientation") {
-      transformedCameraState.targetOrientation = lastTargetPose.targetOrientation;
-    }
+    transformedCameraState.target = [
+      poseDelta.position.x,
+      poseDelta.position.y,
+      poseDelta.position.z,
+    ];
+    transformedCameraState.targetOrientation = [
+      poseDelta.orientation.x,
+      poseDelta.orientation.y,
+      poseDelta.orientation.z,
+      poseDelta.orientation.w,
+    ];
+  } else {
+    // TODO: implement difference between follow and follow-orientation
+    void followMode;
+    transformedCameraState.target = targetPose?.target;
+    transformedCameraState.targetOrientation = targetPose?.targetOrientation;
   }
 
   const mergedCameraState = mergeWith(
@@ -111,7 +85,7 @@ export function useTransformedCameraState({
     (objVal, srcVal) => objVal ?? srcVal,
   );
 
-  return { transformedCameraState: mergedCameraState, targetPose: targetPose ?? lastTargetPose };
+  return { transformedCameraState: mergedCameraState, targetPose };
 }
 
 export const getInstanceObj = (marker: unknown, idx: number): unknown => {
