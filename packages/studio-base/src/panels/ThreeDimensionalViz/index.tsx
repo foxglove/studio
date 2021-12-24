@@ -244,7 +244,7 @@ function BaseRenderer(props: Props): JSX.Element {
           );
           return;
         }
-        // fixme: also need to do this whenever (unfollowPoseSnapshot.current==undefined && newFollowMode==='no-follow'), such as after refreshing the app
+        // fixme: also need to do this whenever (unfollowPoseSnapshot.current==undefined && newFollowMode!=='follow-orientation'), such as after refreshing the app
         unfollowPoseSnapshot.current = rootFramePose;
       }
 
