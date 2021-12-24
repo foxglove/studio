@@ -23,6 +23,7 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
+import useCallbackWithToast from "@foxglove/studio-base/hooks/useCallbackWithToast";
 import Layout from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/Layout";
 import helpContent from "@foxglove/studio-base/panels/ThreeDimensionalViz/index.help.md";
 import {
@@ -37,7 +38,6 @@ import { ThreeDimensionalVizConfig } from "@foxglove/studio-base/panels/ThreeDim
 import { MutablePose } from "@foxglove/studio-base/types/Messages";
 import { PanelConfigSchema, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
-import sendNotification from "@foxglove/studio-base/util/sendNotification";
 
 import useFrame from "./useFrame";
 import useTransforms from "./useTransforms";
@@ -192,7 +192,7 @@ function BaseRenderer(props: Props): JSX.Element {
     configFollowMode: config.followMode,
     configFollowTf: config.followTf,
   };
-  const onFollowChange = useCallback(
+  const onFollowChange = useCallbackWithToast(
     (newFollowTf?: string, newFollowMode?: "follow" | "no-follow" | "follow-orientation") => {
       const {
         configFollowMode: prevFollowMode,
@@ -213,7 +213,8 @@ function BaseRenderer(props: Props): JSX.Element {
         unfollowPoseSnapshot.current = undefined;
       }
 
-      // When activating
+      // When activating follow (follow position) or no-follow we record a snapshot of the render frame
+      // in the root frame.
       if (prevFollowMode === "follow-orientation" && newFollowMode !== "follow-orientation") {
         const renderId = renderFrameLatest.current.id;
 
@@ -232,13 +233,9 @@ function BaseRenderer(props: Props): JSX.Element {
           currentTimeLatest.current,
         );
         if (!rootFramePose) {
-          sendNotification(
-            "Transform to the root frame failed",
+          throw new Error(
             `Could not transform [${renderId}] to the root frame [${rootFrameForFollow.id}]`,
-            "user",
-            "error",
           );
-          return;
         }
         // fixme: also need to do this whenever (unfollowPoseSnapshot.current==undefined && newFollowMode!=='follow-orientation'), such as after refreshing the app
         unfollowPoseSnapshot.current = rootFramePose;
