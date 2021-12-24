@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { quat, vec4 } from "gl-matrix";
 import { uniq, omit, debounce } from "lodash";
 import React, { useCallback, useMemo, useState, useRef, useEffect } from "react";
 import { useLatest } from "react-use";
@@ -38,6 +37,7 @@ import { ThreeDimensionalVizConfig } from "@foxglove/studio-base/panels/ThreeDim
 import { MutablePose } from "@foxglove/studio-base/types/Messages";
 import { PanelConfigSchema, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
+import sendNotification from "@foxglove/studio-base/util/sendNotification";
 
 import useFrame from "./useFrame";
 import useTransforms from "./useTransforms";
@@ -153,7 +153,6 @@ function BaseRenderer(props: Props): JSX.Element {
   // unfollowPoseSnapshot has the pose of the follow frame in the fixed frame when following was
   // turned off.
   const unfollowPoseSnapshot = useRef<MutablePose | undefined>();
-  console.log({ unfollowSnap: unfollowPoseSnapshot.current });
 
   // We always orient the camera to the render frame. The render frame continues to move relative to
   // the fixed frame, but we want to keep the camera stationary. We calculate the location of the
@@ -166,17 +165,13 @@ function BaseRenderer(props: Props): JSX.Element {
     ? renderFrame.applyLocal(emptyPose(), unfollowPoseSnapshot.current, fixedFrame, currentTime)
     : undefined;
 
-  console.log({ poseInRender: poseInRenderRef.current });
-
   const { transformedCameraState, targetPose } = useTransformedCameraState({
     configCameraState,
     followTf,
     followMode,
     transforms,
-    poseDelta: poseInRenderRef.current,
+    poseInRenderFrame: poseInRenderRef.current,
   });
-
-  console.log({ transformedCameraState, targetPose });
 
   const renderFrameLatest = useLatest(renderFrame);
   const currentTimeLatest = useLatest(currentTime);
@@ -213,15 +208,13 @@ function BaseRenderer(props: Props): JSX.Element {
         newFollowMode,
       });
 
-      console.log({ newFollowMode });
-
-      // When entering a follow mode, we no longer transform the camera state
-      if (prevFollowMode === "no-follow" && newFollowMode !== "no-follow") {
+      // When entering follow-orientation mode, we no longer transform the camera state
+      if (prevFollowMode !== "follow-orientation" && newFollowMode === "follow-orientation") {
         unfollowPoseSnapshot.current = undefined;
       }
 
       // When activating
-      if (prevFollowMode !== "no-follow" && newFollowMode === "no-follow") {
+      if (prevFollowMode === "follow-orientation" && newFollowMode !== "follow-orientation") {
         const renderId = renderFrameLatest.current.id;
 
         const zero: MutablePose = {
@@ -232,26 +225,27 @@ function BaseRenderer(props: Props): JSX.Element {
         // get the current root frame for the render frame we are _currently_ following but want to stop following
         const rootFrameForFollow = transformsLatest.current.frame(renderId)?.root();
         if (!rootFrameForFollow) {
-          // fixme this is an assertion because we shouldn't have been able to have a renderId and not look it up
-          console.log(`frame does not exist: ${renderId}`);
-          return;
+          throw new Error(`Could not find frame [${renderId}]`);
         }
 
-        // calculate the pose of our current render frame in our fixed frame
-        const fakeFramePose = rootFrameForFollow.applyLocal(
+        // calculate the pose of our current render frame in our root frame
+        const rootFramePose = rootFrameForFollow.applyLocal(
           emptyPose(),
           zero,
           renderFrameLatest.current,
           currentTimeLatest.current,
         );
-        if (!fakeFramePose) {
-          // fixme - toast?
-          console.log(`could not transform ${renderId} to ${rootFrameForFollow.id}`);
-          // return early with no save
+        if (!rootFramePose) {
+          sendNotification(
+            "Transform to the root frame failed",
+            `Could not transform [${renderId}] to the root frame [${rootFrameForFollow.id}]`,
+            "user",
+            "error",
+          );
           return;
         }
         // fixme: also need to do this whenever (unfollowPoseSnapshot.current==undefined && newFollowMode==='no-follow'), such as after refreshing the app
-        unfollowPoseSnapshot.current = fakeFramePose;
+        unfollowPoseSnapshot.current = rootFramePose;
       }
 
       saveConfig({
