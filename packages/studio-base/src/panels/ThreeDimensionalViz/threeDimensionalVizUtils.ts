@@ -45,6 +45,8 @@ function getTargetPose(
 }
 
 function invertOrientation(out: MutableVec4, orientation: quat): Vec4 {
+  // For normalized quaternions, the conjugate is faster than inverse and
+  // produces the same result
   quat.conjugate(out, orientation);
   return out;
 }
