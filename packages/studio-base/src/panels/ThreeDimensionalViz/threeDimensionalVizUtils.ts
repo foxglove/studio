@@ -61,17 +61,21 @@ export function useTransformedCameraState({
 
   // fixme - undefined? skip?
   if (poseDelta) {
-    transformedCameraState.target = [
-      poseDelta.position.x,
-      poseDelta.position.y,
-      poseDelta.position.z,
-    ];
-    transformedCameraState.targetOrientation = [
+    const poseDeltaOrientation: quat = [
       poseDelta.orientation.x,
       poseDelta.orientation.y,
       poseDelta.orientation.z,
       poseDelta.orientation.w,
     ];
+    const poseDeltaOrientationInv: quat = [0, 0, 0, 1];
+    quat.conjugate(poseDeltaOrientationInv, poseDeltaOrientation);
+    // transformedCameraState.
+    transformedCameraState.target = [
+      poseDelta.position.x,
+      poseDelta.position.y,
+      poseDelta.position.z,
+    ];
+    transformedCameraState.targetOrientation = poseDeltaOrientationInv;
   } else {
     // TODO: implement difference between follow and follow-orientation
     void followMode;
