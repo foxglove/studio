@@ -155,8 +155,6 @@ function BaseRenderer(props: Props): JSX.Element {
   const unfollowPoseSnapshot = useRef<MutablePose | undefined>();
   console.log({ unfollowSnap: unfollowPoseSnapshot.current });
 
-  const poseInRenderSnapshot = useRef<MutablePose | undefined>();
-
   // We always orient the camera to the render frame. The render frame continues to move relative to
   // the fixed frame, but we want to keep the camera stationary. We calculate the location of the
   // snapshot pose in render frame coordinates.
@@ -168,67 +166,15 @@ function BaseRenderer(props: Props): JSX.Element {
     ? renderFrame.applyLocal(emptyPose(), unfollowPoseSnapshot.current, fixedFrame, currentTime)
     : undefined;
 
-  // The poseDelta is applied on the configCameraState to produce a new camera state.
-  // This new camera state adjust the camera for no-follow mode.
-  let poseDelta: MutablePose | undefined;
-
-  // compute the delta between our last pose in render snapshot and our latest post in render
-  if (poseInRenderRef.current && poseInRenderSnapshot.current) {
-    poseDelta = emptyPose();
-    const poseInRender = poseInRenderRef.current;
-    const prevP = poseInRenderSnapshot.current.position;
-    const prevO = poseInRenderSnapshot.current.orientation;
-    poseDelta.position.x = poseInRender.position.x - prevP.x;
-    poseDelta.position.y = poseInRender.position.y - prevP.y;
-    poseDelta.position.z = poseInRender.position.z - prevP.z;
-
-    // fixme - need to compute the delta of the orientation to apply to camera state
-    const outVec: vec4 = [0, 0, 0, 0];
-    const conjugate: quat = [0, 0, 0, 0];
-    const prevOrientiation: quat = [prevO.x, prevO.y, prevO.z, prevO.w];
-    const currOrientiation: quat = [
-      poseInRenderRef.current.orientation.x,
-      poseInRenderRef.current.orientation.y,
-      poseInRenderRef.current.orientation.z,
-      poseInRenderRef.current.orientation.w,
-    ];
-    quat.conjugate(conjugate, currOrientiation);
-    quat.multiply(outVec, prevOrientiation, conjugate);
-    poseDelta.orientation.x = outVec[0];
-    poseDelta.orientation.y = outVec[1];
-    poseDelta.orientation.z = outVec[2];
-    poseDelta.orientation.w = outVec[3];
-  }
-
-  // if we don't have a poseInRender snapshot - take the current poseInRender
-  if (!poseInRenderSnapshot.current) {
-    poseInRenderSnapshot.current = poseInRenderRef.current;
-  }
-
-  console.log({ poseInRender: poseInRenderRef.current, poseDelta });
-
-  // store the un-transformed camera state
-  //
+  console.log({ poseInRender: poseInRenderRef.current });
 
   const { transformedCameraState, targetPose } = useTransformedCameraState({
     configCameraState,
     followTf,
     followMode,
     transforms,
-    poseDelta,
+    poseDelta: poseInRenderRef.current,
   });
-
-  // Store the pose we used to transform the camera state. When saving a new state
-  //const transformedCameraPoseRef = useRef<MutablePose | undefined>();
-  //transformedCameraPoseRef.current = poseInRender;
-
-  const prevCameraState = useRef<CameraState | undefined>();
-  prevCameraState.current = transformedCameraState;
-
-  // fixme - return any applied pose transformation so we can store in a ref
-  // the reverse transformation is applied before saving the camera state
-  // alternatively - we could look at the new camera state and apply the change to the snapshot
-  // so we adjust the snapshot pose?
 
   console.log({ transformedCameraState, targetPose });
 
@@ -343,10 +289,6 @@ function BaseRenderer(props: Props): JSX.Element {
 
   const onCameraStateChange = useCallback(
     (newCameraState: CameraState) => {
-      // The newCameraState includes our transformed camera state so we need to reset our pose snapshot
-      // in the render frame so the next camera state transform doesn't apply already saved transforms
-      poseInRenderSnapshot.current = poseInRenderRef.current;
-
       const newCurrentCameraState = omit(newCameraState, ["target", "targetOrientation"]);
       setConfigCameraState(newCurrentCameraState);
 
