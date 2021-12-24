@@ -29,16 +29,16 @@ import { TransformTree } from "@foxglove/studio-base/panels/ThreeDimensionalViz/
 import { FollowMode } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
 import { InstancedLineListMarker, MutablePose } from "@foxglove/studio-base/types/Messages";
 
-export type TargetPose = { target: Vec3; targetOrientation: Vec4 };
+type TargetPose = { target: Vec3; targetOrientation: Vec4 };
 
 type MutableVec4 = [number, number, number, number];
 
 // Get the camera target position and orientation
 function getTargetPose(
-  followTf: string | false | undefined,
+  followTf: string | undefined,
   transforms: TransformTree,
 ): TargetPose | undefined {
-  if (typeof followTf === "string" && transforms.hasFrame(followTf)) {
+  if (followTf != undefined && transforms.hasFrame(followTf)) {
     return { target: [0, 0, 0], targetOrientation: [0, 0, 0, 1] };
   }
   return undefined;
@@ -63,7 +63,7 @@ export function useTransformedCameraState({
   followMode: FollowMode;
   transforms: TransformTree;
   poseInRenderFrame?: MutablePose;
-}): { transformedCameraState: CameraState; targetPose?: TargetPose } {
+}): CameraState {
   const transformedCameraState = { ...configCameraState };
   const targetPose = getTargetPose(followTf, transforms);
 
@@ -109,7 +109,7 @@ export function useTransformedCameraState({
     (objVal, srcVal) => objVal ?? srcVal,
   );
 
-  return { transformedCameraState: mergedCameraState, targetPose };
+  return mergedCameraState;
 }
 
 export const getInstanceObj = (marker: unknown, idx: number): unknown => {
@@ -159,14 +159,12 @@ export function getUpdatedGlobalVariablesBySelectedObject(
 
 export function getNewCameraStateOnFollowChange({
   prevCameraState,
-  prevTargetPose,
   prevFollowTf,
   prevFollowMode = "follow",
   newFollowTf,
   newFollowMode = "follow",
 }: {
   prevCameraState: Partial<CameraState>;
-  prevTargetPose?: TargetPose;
   prevFollowTf?: string;
   prevFollowMode?: "follow" | "follow-orientation" | "no-follow";
   newFollowTf?: string;
@@ -183,10 +181,6 @@ export function getNewCameraStateOnFollowChange({
   // - reset offset to snap to the frame
   if (newFollowTf !== prevFollowTf) {
     newCameraState.targetOffset = [0, 0, 0];
-  }
-
-  if (!prevTargetPose) {
-    return newCameraState;
   }
 
   // When entering a follow mode, reset the camera so it snaps to the frame we are rendering

@@ -165,7 +165,7 @@ function BaseRenderer(props: Props): JSX.Element {
     ? renderFrame.applyLocal(emptyPose(), unfollowPoseSnapshot.current, fixedFrame, currentTime)
     : undefined;
 
-  const { transformedCameraState, targetPose } = useTransformedCameraState({
+  const transformedCameraState = useTransformedCameraState({
     configCameraState,
     followTf,
     followMode,
@@ -230,27 +230,21 @@ function BaseRenderer(props: Props): JSX.Element {
   const callbackInputsRef = useRef({
     transformedCameraState,
     configCameraState,
-    targetPose,
     configFollowMode: config.followMode,
     configFollowTf: config.followTf,
   });
   callbackInputsRef.current = {
     transformedCameraState,
     configCameraState,
-    targetPose,
     configFollowMode: config.followMode,
     configFollowTf: config.followTf,
   };
   const onFollowChange = useCallbackWithToast(
     (newFollowTf?: string, newFollowMode?: "follow" | "no-follow" | "follow-orientation") => {
-      const {
-        configFollowMode: prevFollowMode,
-        configFollowTf: prevFollowTf,
-        targetPose: prevTargetPose,
-      } = callbackInputsRef.current;
+      const { configFollowMode: prevFollowMode, configFollowTf: prevFollowTf } =
+        callbackInputsRef.current;
       const newCameraState = getNewCameraStateOnFollowChange({
         prevCameraState: callbackInputsRef.current.configCameraState,
-        prevTargetPose,
         prevFollowTf,
         prevFollowMode,
         newFollowTf,
@@ -358,7 +352,6 @@ function BaseRenderer(props: Props): JSX.Element {
       onFollowChange={onFollowChange}
       saveConfig={saveConfig}
       topics={topics}
-      targetPose={targetPose}
       transforms={transforms}
       setSubscriptions={setSubscriptions}
     />
