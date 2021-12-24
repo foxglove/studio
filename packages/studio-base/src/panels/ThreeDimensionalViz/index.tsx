@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { uniq, omit, debounce } from "lodash";
-import React, { useCallback, useMemo, useState, useRef, useEffect } from "react";
+import React, { useCallback, useMemo, useState, useRef, useEffect, useLayoutEffect } from "react";
 import { useLatest } from "react-use";
 
 import { CameraState } from "@foxglove/regl-worldview";
@@ -177,6 +177,55 @@ function BaseRenderer(props: Props): JSX.Element {
   const currentTimeLatest = useLatest(currentTime);
   const transformsLatest = useLatest(transforms);
 
+  // When the fixed frame changes, we clear any unfollow pose. The next effect will attempt to set
+  // a new unfollowPoseSnapshot if we are able to detect one for the new fixed frame.
+  useLayoutEffect(() => {
+    unfollowPoseSnapshot.current = undefined;
+  }, [fixedFrame]);
+
+  // When starting up in no-follow or partial follow, we try to initialize the unfollowPoseSnapshot
+  // to the location of the follow frame within its root frame.
+  //
+  // This effect depends on fixedFrame, transforms, followTf so it runs repeatedly during
+  // initialization until a stable unfollowPoseSnapshot is obtained.
+  useLayoutEffect(() => {
+    // Bail if
+    if (followMode === "follow-orientation") {
+      return;
+    }
+
+    // Bail if we already have an unfollow pose or don't have a follow frame to looku[]
+    if (unfollowPoseSnapshot.current || followTf == undefined) {
+      return;
+    }
+
+    // get the current root frame for the render frame we are _currently_ following but want to stop following
+    const followFrame = transforms.frame(followTf);
+    if (!followFrame) {
+      return;
+    }
+
+    // Bail if the fixed frame is the follow frame. There is no need to set the unfollow pose snapshot
+    // in this case.
+    if (fixedFrame.id === followFrame.id) {
+      unfollowPoseSnapshot.current = undefined;
+      return;
+    }
+
+    // calculate the pose of our follow frame in our root frame
+    let rootFramePose: MutablePose | undefined = emptyPose();
+    rootFramePose = fixedFrame.applyLocal(
+      rootFramePose,
+      rootFramePose,
+      followFrame,
+      currentTimeLatest.current,
+    );
+    if (!rootFramePose) {
+      return;
+    }
+    unfollowPoseSnapshot.current = rootFramePose;
+  }, [followTf, followMode, transforms, fixedFrame, currentTimeLatest]);
+
   // use callbackInputsRef to make sure the input changes don't trigger `onFollowChange` or `onAlignXYAxis` to change
   const callbackInputsRef = useRef({
     transformedCameraState,
@@ -237,7 +286,6 @@ function BaseRenderer(props: Props): JSX.Element {
             `Could not transform [${renderId}] to the root frame [${rootFrameForFollow.id}]`,
           );
         }
-        // fixme: also need to do this whenever (unfollowPoseSnapshot.current==undefined && newFollowMode!=='follow-orientation'), such as after refreshing the app
         unfollowPoseSnapshot.current = rootFramePose;
       }
 
