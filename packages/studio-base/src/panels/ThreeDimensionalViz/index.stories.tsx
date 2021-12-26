@@ -1048,7 +1048,7 @@ export function NavMsgs_Path(): JSX.Element {
           ],
           followTf: "base_link",
           cameraState: {
-            distance: 8.25,
+            distance: 15,
             perspective: true,
             phi: 1,
             targetOffset: [0, 2, 0],
