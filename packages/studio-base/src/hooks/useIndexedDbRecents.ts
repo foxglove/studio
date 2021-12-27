@@ -57,10 +57,10 @@ interface IRecentsStore {
 function useIndexedDbRecents(): IRecentsStore {
   const idbStore = useMemo(() => idbCreateStore("foxglove-recents", "recents"), []);
 
-  const { value: initialRecents } = useAsync(async () => {
-    const untypedRecents = await idbGet(IDB_KEY, idbStore);
-    return untypedRecents as RecentRecord[];
-  }, [idbStore]);
+  const { value: initialRecents } = useAsync(
+    async () => await idbGet<RecentRecord[]>(IDB_KEY, idbStore),
+    [idbStore],
+  );
 
   const [recents, setRecents] = useState<RecentRecord[]>([]);
 
