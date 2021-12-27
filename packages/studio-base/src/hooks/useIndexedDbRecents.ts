@@ -13,6 +13,7 @@ import Logger from "@foxglove/log";
 const log = Logger.getLogger(__filename);
 
 const IDB_KEY = "recents";
+const IDB_STORE = idbCreateStore("foxglove-recents", "recents");
 
 type RecentRecordCommon = {
   // Record id - use IndexedDbRecentsStore.GenerateRecordId() to generate
@@ -55,11 +56,9 @@ interface IRecentsStore {
 }
 
 function useIndexedDbRecents(): IRecentsStore {
-  const idbStore = useMemo(() => idbCreateStore("foxglove-recents", "recents"), []);
-
   const { value: initialRecents } = useAsync(
-    async () => await idbGet<RecentRecord[]>(IDB_KEY, idbStore),
-    [idbStore],
+    async () => await idbGet<RecentRecord[]>(IDB_KEY, IDB_STORE),
+    [],
   );
 
   const [recents, setRecents] = useState<RecentRecord[]>([]);
@@ -113,10 +112,10 @@ function useIndexedDbRecents(): IRecentsStore {
     }
 
     setRecents(recentsToSave);
-    idbSet(IDB_KEY, recentsToSave, idbStore).catch((err) => {
+    idbSet(IDB_KEY, recentsToSave, IDB_STORE).catch((err) => {
       log.error(err);
     });
-  }, [idbStore, initialRecents]);
+  }, [initialRecents]);
 
   // Set the first load records from the store to the state
   useLayoutEffect(() => {
