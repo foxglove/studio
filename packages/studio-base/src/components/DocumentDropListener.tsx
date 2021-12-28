@@ -19,13 +19,13 @@ import { useToasts } from "react-toast-notifications";
 type Props = {
   children: React.ReactNode; // Shown when dragging in a file.
   allowedExtensions?: string[];
-  filesSelected?: (arg: { files: File[]; shiftPressed: boolean }) => void;
+  onDrop?: (event: { files?: File[]; handle?: FileSystemFileHandle }) => void;
 };
 
 export default function DocumentDropListener(props: Props): JSX.Element {
   const [hovering, setHovering] = useState(false);
 
-  const { filesSelected, allowedExtensions } = props;
+  const { onDrop: onDropProp, allowedExtensions } = props;
 
   const { addToast } = useToasts();
 
@@ -35,6 +35,18 @@ export default function DocumentDropListener(props: Props): JSX.Element {
 
       if (!ev.dataTransfer) {
         return;
+      }
+
+      const dataTransferItems = ev.dataTransfer.items;
+      if (dataTransferItems.length === 1) {
+        const item = dataTransferItems[0]!;
+        const fileSystemHandle = await item.getAsFileSystemHandle();
+        if (fileSystemHandle?.kind === "file") {
+          ev.preventDefault();
+          ev.stopPropagation();
+          onDropProp?.({ handle: fileSystemHandle });
+          return;
+        }
       }
 
       const allFiles: File[] = [];
@@ -106,9 +118,9 @@ export default function DocumentDropListener(props: Props): JSX.Element {
 
       ev.preventDefault();
       ev.stopPropagation();
-      filesSelected?.({ files, shiftPressed: ev.shiftKey });
+      onDropProp?.({ files });
     },
-    [addToast, filesSelected, allowedExtensions],
+    [addToast, onDropProp, allowedExtensions],
   );
 
   const onDragOver = useCallback(
@@ -150,7 +162,7 @@ export default function DocumentDropListener(props: Props): JSX.Element {
         style={{ display: "none" }}
         onChange={(event) => {
           if (event.target.files) {
-            props.filesSelected?.({ files: Array.from(event.target.files), shiftPressed: false });
+            props.onDrop?.({ files: Array.from(event.target.files) });
           }
         }}
         data-puppeteer-file-upload

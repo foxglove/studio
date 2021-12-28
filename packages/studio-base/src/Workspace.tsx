@@ -155,7 +155,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const allowedDropExtensions = useMemo(() => {
     const extensions = [".foxe", ".urdf", ".xacro"];
     for (const source of availableSources) {
-      if (source.supportedFileTypes) {
+      if (source.type === "file" && source.supportedFileTypes) {
         extensions.push(...source.supportedFileTypes);
       }
     }
@@ -328,6 +328,48 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const extensionLoader = useExtensionLoader();
 
+  const openHandle = useCallback(
+    async (handle: FileSystemFileHandle) => {
+      const file = await handle.getFile();
+      // electron extends File with a `path` field which is not available in browsers
+      const basePath = (file as { path?: string }).path ?? "";
+
+      if (file.name.endsWith(".foxe")) {
+        // Extension installation
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const data = new Uint8Array(arrayBuffer);
+          const extension = await extensionLoader.installExtension(data);
+          addToast(`Installed extension ${extension.id}`, { appearance: "success" });
+        } catch (err) {
+          addToast(`Failed to install extension ${file.name}: ${err.message}`, {
+            appearance: "error",
+          });
+        }
+      } else {
+        try {
+          if (await loadFromFile(file, { basePath })) {
+            return;
+          }
+        } catch (err) {
+          addToast(`Failed to load ${file.name}`, {
+            appearance: "error",
+          });
+        }
+      }
+
+      // Look for a source that supports the file extensions
+      const matchedSource = availableSources.find((source) => {
+        const ext = extname(file.name);
+        return source.supportedFileTypes?.includes(ext);
+      });
+      if (matchedSource) {
+        selectSource(matchedSource.id, { type: "file", handle });
+      }
+    },
+    [addToast, availableSources, extensionLoader, loadFromFile, selectSource],
+  );
+
   const openFiles = useCallback(
     async (files: File[]) => {
       const otherFiles: File[] = [];
@@ -388,10 +430,14 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   }, [filesToOpen, openFiles]);
 
   const dropHandler = useCallback(
-    ({ files }: { files: File[] }) => {
-      void openFiles(files);
+    (event: { files?: File[]; handle?: FileSystemFileHandle }) => {
+      if (event.files) {
+        void openFiles(event.files);
+      } else if (event.handle) {
+        void openHandle(event.handle);
+      }
     },
-    [openFiles],
+    [openFiles, openHandle],
   );
 
   const workspaceActions = useMemo(
@@ -489,7 +535,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           onDismiss={() => setShowOpenDialog(undefined)}
         />
       )}
-      <DocumentDropListener filesSelected={dropHandler} allowedExtensions={allowedDropExtensions}>
+      <DocumentDropListener onDrop={dropHandler} allowedExtensions={allowedDropExtensions}>
         <DropOverlay>
           <div className={classes.dropzone}>Drop a file here</div>
         </DropOverlay>
