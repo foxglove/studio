@@ -23,6 +23,7 @@ import {
 } from "react";
 import { useToasts } from "react-toast-notifications";
 
+import Logger from "@foxglove/log";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import AccountSettings from "@foxglove/studio-base/components/AccountSettingsSidebar/AccountSettings";
 import { DataSourceSidebar } from "@foxglove/studio-base/components/DataSourceSidebar";
@@ -71,6 +72,8 @@ import { useCalloutDismissalBlocker } from "@foxglove/studio-base/hooks/useCallo
 import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFilesToOpen";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
+
+const log = Logger.getLogger(__filename);
 
 const useStyles = makeStyles({
   container: {
@@ -330,6 +333,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const openHandle = useCallback(
     async (handle: FileSystemFileHandle) => {
+      log.debug("open handle", handle);
       const file = await handle.getFile();
       // electron extends File with a `path` field which is not available in browsers
       const basePath = (file as { path?: string }).path ?? "";
@@ -373,6 +377,8 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const openFiles = useCallback(
     async (files: File[]) => {
       const otherFiles: File[] = [];
+      log.debug("open files", files);
+
       for (const file of files) {
         // electron extends File with a `path` field which is not available in browsers
         const basePath = (file as { path?: string }).path ?? "";
@@ -430,11 +436,15 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   }, [filesToOpen, openFiles]);
 
   const dropHandler = useCallback(
-    (event: { files?: File[]; handle?: FileSystemFileHandle }) => {
-      if (event.files) {
+    (event: { files?: File[]; handles?: FileSystemFileHandle[] }) => {
+      const handle = event.handles?.[0];
+      // When selecting sources with handles we can only select with a single handle since we haven't
+      // written the code to store multiple handles for recents. When there are multiple handles, we
+      // fall back to opening regular files.
+      if (handle && event.handles?.length === 1) {
+        void openHandle(handle);
+      } else if (event.files) {
         void openFiles(event.files);
-      } else if (event.handle) {
-        void openHandle(event.handle);
       }
     },
     [openFiles, openHandle],
