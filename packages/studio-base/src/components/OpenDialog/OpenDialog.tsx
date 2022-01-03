@@ -159,6 +159,8 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
         styles: {
           content: {
             overflow: "hidden",
+            // Keep a consistent height for the dialog so changing views does not change the height
+            height: 520,
             display: "flex",
             flexDirection: "column",
             padding: theme.spacing.l1,
