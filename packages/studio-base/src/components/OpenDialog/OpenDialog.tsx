@@ -165,14 +165,14 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
             flexDirection: "column",
             padding: theme.spacing.l1,
 
-            "@media (max-height: 512px)": { overflowY: "auto" },
+            "@media (max-height: 552px)": { overflowY: "auto" },
           },
           inner: {
             flex: 1,
             display: "flex",
             flexDirection: "column",
 
-            "@media (min-height: 512px)": { overflow: "hidden" },
+            "@media (min-height: 552px)": { overflow: "hidden" },
           },
           innerContent: {
             height: "100%",
@@ -180,7 +180,7 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
             flexDirection: "column",
             flex: 1,
 
-            "@media (min-height: 512px)": { overflow: "hidden" },
+            "@media (min-height: 552px)": { overflow: "hidden" },
           },
         },
       }}
