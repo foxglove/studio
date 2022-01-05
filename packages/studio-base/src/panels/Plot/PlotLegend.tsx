@@ -31,7 +31,23 @@ import { TimestampMethod } from "@foxglove/studio-base/util/time";
 import { PlotPath, BasePlotPath, isReferenceLinePlotPathType } from "./internalTypes";
 import { plotableRosTypes, PlotConfig, PlotXAxisVal } from "./types";
 
+export const defaultDrawerWidth = 240;
+const minDrawerWidth = 25;
+const maxDrawerWidth = 500;
+
 const useStyles = makeStyles((theme) => ({
+  dragger: {
+    width: "2px",
+    cursor: "ew-resize",
+    padding: "2px 0 0",
+    borderTop: `1px solid ${theme.palette.neutralLighter}`,
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 100,
+    backgroundColor: theme.palette.neutralLighter,
+  },
   root: {
     background: tinycolor(theme.palette.neutralLight).setAlpha(0.25).toRgbString(),
     color: theme.semanticColors.bodySubtext,
@@ -146,6 +162,8 @@ const shortXAxisLabel = (path: PlotXAxisVal): string => {
 export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactNull {
   const { paths, saveConfig, showLegend, xAxisVal, xAxisPath, pathsWithMismatchedDataLengths } =
     props;
+  const [drawerWidth, setDrawerWidth] = React.useState(defaultDrawerWidth);
+
   const lastPath = last(paths);
   const classes = useStyles();
 
@@ -184,8 +202,35 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
     [showLegend, saveConfig],
   );
 
+  const handleMouseMove = useCallback(
+    // eslint-disable-next-line no-restricted-syntax
+    (legendDrawer: HTMLElement | null) => (e: MouseEvent) => {
+      if (!legendDrawer) {
+        return;
+      }
+      const container = legendDrawer.getBoundingClientRect();
+      const newWidth = e.clientX - container.left;
+      if (newWidth > minDrawerWidth && newWidth < maxDrawerWidth) {
+        setDrawerWidth(newWidth);
+      }
+    },
+    [],
+  );
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    document.addEventListener("mouseup", handleMouseUp, true);
+    const drawerContainer = (e.target as Node).parentElement;
+    document.addEventListener("mousemove", handleMouseMove(drawerContainer), true);
+  };
+
+  const handleMouseUp = () => {
+    document.removeEventListener("mouseup", handleMouseUp, true);
+    // eslint-disable-next-line no-restricted-syntax
+    document.removeEventListener("mousemove", handleMouseMove(null), true);
+  };
+
   return (
-    <Flex className={classes.root} style={{ flex: 1 }}>
+    <Flex className={classes.root} style={{ flex: 1, position: "relative" }}>
       <Icon
         className={classes.legendToggle}
         style={{ display: "block", height: "100%" }}
@@ -194,149 +239,159 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
         <MenuIcon />
       </Icon>
       {showLegend ? (
-        <Stack grow tokens={{ childrenGap: 4 }}>
-          <div className={classes.item}>
-            x:
-            <div
-              className={classes.itemIconContainer}
-              style={{ width: "auto", lineHeight: "normal", zIndex: 2 }}
-            >
-              <Dropdown
-                value={xAxisVal}
-                text={shortXAxisLabel(xAxisVal)}
-                btnClassname={classes.dropdown}
-                onChange={(newXAxisVal) => saveConfig({ xAxisVal: newXAxisVal })}
-                noPortal
+        <>
+          <div onMouseDown={handleMouseDown} className={classes.dragger} />
+          <Stack
+            grow
+            tokens={{ childrenGap: 4 }}
+            style={{ width: drawerWidth, overflow: "hidden" }}
+          >
+            <div className={classes.item}>
+              x:
+              <div
+                className={classes.itemIconContainer}
+                style={{ width: "auto", lineHeight: "normal", zIndex: 2 }}
               >
-                <DropdownItem value="timestamp">
-                  <span>timestamp</span>
-                </DropdownItem>
-                <DropdownItem value="index">
-                  <span>index</span>
-                </DropdownItem>
-                <DropdownItem value="currentCustom">
-                  <span>msg path (current)</span>
-                </DropdownItem>
-                <DropdownItem value="custom">
-                  <span>msg path (accumulated)</span>
-                </DropdownItem>
-              </Dropdown>
-            </div>
-            <div
-              className={cx(classes.itemInput, {
-                [classes.itemInputDisabled]: xAxisPath?.enabled !== true,
-              })}
-            >
-              {(xAxisVal === "custom" || xAxisVal === "currentCustom") && (
-                <MessagePathInput
-                  path={xAxisPath?.value ? xAxisPath.value : "/"}
-                  onChange={(newXAxisPath) =>
-                    saveConfig({
-                      xAxisPath: {
-                        value: newXAxisPath,
-                        enabled: xAxisPath ? xAxisPath.enabled : true,
-                      },
-                    })
-                  }
-                  validTypes={plotableRosTypes}
-                  placeholder="Enter a topic name or a number"
-                  disableAutocomplete={xAxisPath && isReferenceLinePlotPathType(xAxisPath)}
-                  autoSize
-                />
-              )}
-            </div>
-          </div>
-          {paths.map((path: PlotPath, index: number) => {
-            const isReferenceLinePlotPath = isReferenceLinePlotPathType(path);
-            let timestampMethod;
-            // Only allow chosing the timestamp method if it is applicable (not a reference line) and there is at least
-            // one character typed.
-            if (!isReferenceLinePlotPath && path.value.length > 0) {
-              timestampMethod = path.timestampMethod;
-            }
-            const hasMismatchedDataLength = pathsWithMismatchedDataLengths.includes(path.value);
-
-            return (
-              <div key={index} className={classes.item}>
-                <div
-                  className={classes.itemIconContainer}
-                  style={{ zIndex: 1 }}
-                  onClick={() => {
-                    const newPaths = paths.slice();
-                    const newPath = newPaths[index];
-                    if (newPath) {
-                      newPaths[index] = { ...newPath, enabled: !newPath.enabled };
-                    }
-                    saveConfig({ paths: newPaths });
-                  }}
+                <Dropdown
+                  value={xAxisVal}
+                  text={shortXAxisLabel(xAxisVal)}
+                  btnClassname={classes.dropdown}
+                  onChange={(newXAxisVal) => saveConfig({ xAxisVal: newXAxisVal })}
+                  noPortal
                 >
-                  <div
-                    className={classes.itemIcon}
-                    style={{ color: path.enabled ? lineColors[index % lineColors.length] : "#777" }}
-                  />
-                </div>
-                <div
-                  className={cx(classes.itemInput, {
-                    [classes.itemInputDisabled]: !path.enabled,
-                  })}
-                >
+                  <DropdownItem value="timestamp">
+                    <span>timestamp</span>
+                  </DropdownItem>
+                  <DropdownItem value="index">
+                    <span>index</span>
+                  </DropdownItem>
+                  <DropdownItem value="currentCustom">
+                    <span>msg path (current)</span>
+                  </DropdownItem>
+                  <DropdownItem value="custom">
+                    <span>msg path (accumulated)</span>
+                  </DropdownItem>
+                </Dropdown>
+              </div>
+              <div
+                className={cx(classes.itemInput, {
+                  [classes.itemInputDisabled]: xAxisPath?.enabled !== true,
+                })}
+              >
+                {(xAxisVal === "custom" || xAxisVal === "currentCustom") && (
                   <MessagePathInput
-                    supportsMathModifiers
-                    path={path.value}
-                    onChange={onInputChange}
-                    onTimestampMethodChange={onInputTimestampMethodChange}
+                    path={xAxisPath?.value ? xAxisPath.value : "/"}
+                    onChange={(newXAxisPath) =>
+                      saveConfig({
+                        xAxisPath: {
+                          value: newXAxisPath,
+                          enabled: xAxisPath ? xAxisPath.enabled : true,
+                        },
+                      })
+                    }
                     validTypes={plotableRosTypes}
                     placeholder="Enter a topic name or a number"
-                    index={index}
+                    disableAutocomplete={xAxisPath && isReferenceLinePlotPathType(xAxisPath)}
                     autoSize
-                    disableAutocomplete={isReferenceLinePlotPath}
-                    {...(xAxisVal === "timestamp" ? { timestampMethod } : undefined)}
                   />
-                  {hasMismatchedDataLength && (
-                    <Icon
-                      style={{ color: colors.RED }}
-                      clickable={false}
-                      size="small"
-                      tooltipProps={{ placement: "top" }}
-                      tooltip="Mismatch in the number of elements in x-axis and y-axis messages"
-                    >
-                      <AlertCircleIcon />
-                    </Icon>
-                  )}
-                </div>
-                <Icon
-                  data-item-remove
-                  className={classes.itemRemove}
-                  onClick={() => {
-                    const newPaths = paths.slice();
-                    newPaths.splice(index, 1);
-                    saveConfig({ paths: newPaths });
-                  }}
-                >
-                  <CloseIcon />
-                </Icon>
+                )}
               </div>
-            );
-          })}
-          <div
-            className={classes.fullLengthButton}
-            onClick={() =>
-              saveConfig({
-                paths: [
-                  ...paths,
-                  {
-                    value: "",
-                    enabled: true,
-                    // For convenience, default to the `timestampMethod` of the last path.
-                    timestampMethod: lastPath ? lastPath.timestampMethod : "receiveTime",
-                  },
-                ],
-              })
-            }
-          >
-            + add line
-          </div>
-        </Stack>
+            </div>
+            {paths.map((path: PlotPath, index: number) => {
+              const isReferenceLinePlotPath = isReferenceLinePlotPathType(path);
+              let timestampMethod;
+              // Only allow chosing the timestamp method if it is applicable (not a reference line) and there is at least
+              // one character typed.
+              if (!isReferenceLinePlotPath && path.value.length > 0) {
+                timestampMethod = path.timestampMethod;
+              }
+              const hasMismatchedDataLength = pathsWithMismatchedDataLengths.includes(path.value);
+
+              return (
+                <div key={index} className={classes.item}>
+                  <div
+                    className={classes.itemIconContainer}
+                    style={{ zIndex: 1 }}
+                    onClick={() => {
+                      const newPaths = paths.slice();
+                      const newPath = newPaths[index];
+                      if (newPath) {
+                        newPaths[index] = { ...newPath, enabled: !newPath.enabled };
+                      }
+                      saveConfig({ paths: newPaths });
+                    }}
+                  >
+                    <div
+                      className={classes.itemIcon}
+                      style={{
+                        color: path.enabled ? lineColors[index % lineColors.length] : "#777",
+                      }}
+                    />
+                  </div>
+                  <div
+                    className={cx(classes.itemInput, {
+                      [classes.itemInputDisabled]: !path.enabled,
+                    })}
+                  >
+                    <MessagePathInput
+                      supportsMathModifiers
+                      path={path.value}
+                      onChange={onInputChange}
+                      onTimestampMethodChange={onInputTimestampMethodChange}
+                      validTypes={plotableRosTypes}
+                      placeholder="Enter a topic name or a number"
+                      index={index}
+                      autoSize
+                      disableAutocomplete={isReferenceLinePlotPath}
+                      {...(xAxisVal === "timestamp" ? { timestampMethod } : undefined)}
+                    />
+                    {hasMismatchedDataLength && (
+                      <Icon
+                        style={{ color: colors.RED }}
+                        clickable={false}
+                        size="small"
+                        tooltipProps={{ placement: "top" }}
+                        tooltip="Mismatch in the number of elements in x-axis and y-axis messages"
+                      >
+                        <AlertCircleIcon />
+                      </Icon>
+                    )}
+                  </div>
+                  <Icon
+                    data-item-remove
+                    className={classes.itemRemove}
+                    onClick={() => {
+                      const newPaths = paths.slice();
+                      newPaths.splice(index, 1);
+                      saveConfig({ paths: newPaths });
+                    }}
+                  >
+                    <CloseIcon />
+                  </Icon>
+                </div>
+              );
+            })}
+            <div
+              className={classes.fullLengthButton}
+              style={{ minWidth: "100px" }}
+              onClick={() =>
+                saveConfig({
+                  paths: [
+                    ...paths,
+                    {
+                      value: "",
+                      enabled: true,
+                      // For convenience, default to the `timestampMethod` of the last path.
+                      timestampMethod: lastPath ? lastPath.timestampMethod : "receiveTime",
+                    },
+                  ],
+                })
+              }
+            >
+              + add line
+            </div>
+          </Stack>
+        </>
       ) : undefined}
     </Flex>
   );
