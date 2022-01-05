@@ -11,11 +11,22 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useTheme } from "@fluentui/react";
+import { makeStyles, useTheme } from "@fluentui/react";
+import DownloadOutlineIcon from "@mdi/svg/svg/download-outline.svg";
+import MenuIcon from "@mdi/svg/svg/menu.svg";
 import { compact, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
-import { useEffect, useCallback, useMemo, ComponentProps } from "react";
+import { useState, useEffect, useCallback, useMemo, ComponentProps } from "react";
+import {
+  MosaicWithoutDragDropContext,
+  MosaicWindow,
+  MosaicPath,
+  MosaicNode,
+} from "react-mosaic-component";
+import tinycolor from "tinycolor2";
+import { v4 as uuidv4 } from "uuid";
 
+import "react-mosaic-component/react-mosaic-component.css";
 import { filterMap } from "@foxglove/den/collection";
 import {
   Time,
@@ -28,6 +39,7 @@ import { MessageEvent } from "@foxglove/studio";
 import { useBlocksByTopic, useMessageReducer } from "@foxglove/studio-base/PanelAPI";
 import { MessageBlock } from "@foxglove/studio-base/PanelAPI/useBlocksByTopic";
 import Flex from "@foxglove/studio-base/components/Flex";
+import Icon from "@foxglove/studio-base/components/Icon";
 import parseRosPath, {
   getTopicsFromPaths,
 } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
@@ -65,6 +77,30 @@ import { PlotConfig } from "./types";
 
 export { plotableRosTypes } from "./types";
 export type { PlotConfig, PlotXAxisVal } from "./types";
+
+const baseLayout: MosaicNode<string> = {
+  direction: "row",
+  first: "legend",
+  second: "plot",
+  splitPercentage: 30,
+};
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    background: tinycolor(theme.palette.neutralLight).setAlpha(0.25).toRgbString(),
+    color: theme.semanticColors.bodySubtext,
+  },
+  legendToggle: {
+    padding: 6,
+    cursor: "pointer",
+    userSelect: "none",
+    background: "transparent",
+
+    ":hover": {
+      background: tinycolor(theme.palette.neutralLight).setAlpha(0.5).toRgbString(),
+    },
+  },
+}));
 
 export function openSiblingPlotPanel(openSiblingPanel: OpenSiblingPanel, topicName: string): void {
   openSiblingPanel({
@@ -179,6 +215,7 @@ function Plot(props: Props) {
     xAxisPath,
   } = config;
   const theme = useTheme();
+  const classes = useStyles();
 
   useEffect(() => {
     if (yAxisPaths.length === 0) {
@@ -392,11 +429,9 @@ function Plot(props: Props) {
     [messagePipeline, xAxisVal],
   );
 
-  return (
-    <Flex col clip center style={{ position: "relative" }}>
-      <PanelToolbar helpContent={helpContent} floating />
-      {title && <div>{title}</div>}
-      <Flex style={{ width: "100%", height: "100%", overflow: "scroll" }}>
+  const getMemoizedLegend = useCallback(
+    (setLayout: (layout: MosaicNode<string>) => void) =>
+      showLegend ? (
         <PlotLegend
           paths={yAxisPaths}
           saveConfig={saveConfig}
@@ -404,21 +439,130 @@ function Plot(props: Props) {
           xAxisVal={xAxisVal}
           xAxisPath={xAxisPath}
           pathsWithMismatchedDataLengths={pathsWithMismatchedDataLengths}
-          onDownload={() => downloadCSV(datasets, xAxisVal)}
+          setLayout={setLayout}
         />
-        <PlotChart
-          isSynced={xAxisVal === "timestamp" && isSynced}
-          paths={yAxisPaths}
-          minYValue={parseFloat((minYValue ?? "")?.toString())}
-          maxYValue={parseFloat((maxYValue ?? "")?.toString())}
-          datasets={datasets}
-          tooltips={tooltips}
-          xAxisVal={xAxisVal}
-          currentTime={currentTimeSinceStart}
-          onClick={onClick}
-          defaultView={defaultView}
-        />
+      ) : (
+        ReactNull
+      ),
+    [pathsWithMismatchedDataLengths, saveConfig, showLegend, xAxisPath, xAxisVal, yAxisPaths],
+  );
+
+  const toggleLegend = useCallback(() => {
+    setLayout(showLegend ? "plot" : baseLayout);
+    saveConfig({ showLegend: !showLegend });
+  }, [showLegend, saveConfig]);
+
+  const memoizedPlot = useMemo(
+    () => (
+      <Flex>
+        {showLegend ? undefined : (
+          <div className={classes.root}>
+            <Icon
+              className={classes.legendToggle}
+              style={{ display: "block", height: "100%" }}
+              onClick={toggleLegend}
+            >
+              <MenuIcon />
+            </Icon>
+          </div>
+        )}
+        <Flex col center>
+          {title && <div>{title}</div>}
+          <PlotChart
+            isSynced={xAxisVal === "timestamp" && isSynced}
+            paths={yAxisPaths}
+            minYValue={parseFloat((minYValue ?? "")?.toString())}
+            maxYValue={parseFloat((maxYValue ?? "")?.toString())}
+            datasets={datasets}
+            tooltips={tooltips}
+            xAxisVal={xAxisVal}
+            currentTime={currentTimeSinceStart}
+            onClick={onClick}
+            defaultView={defaultView}
+          />
+        </Flex>
       </Flex>
+    ),
+    [
+      classes.legendToggle,
+      classes.root,
+      currentTimeSinceStart,
+      datasets,
+      defaultView,
+      isSynced,
+      maxYValue,
+      minYValue,
+      onClick,
+      showLegend,
+      title,
+      toggleLegend,
+      tooltips,
+      xAxisVal,
+      yAxisPaths,
+    ],
+  );
+
+  const renderTile = useCallback(
+    (id: string, path: MosaicPath) => {
+      if (id == undefined || typeof id !== "string") {
+        return <></>;
+      }
+
+      const Tile = ({
+        childId,
+        setLayout,
+      }: {
+        childId: string;
+        setLayout: (layout: MosaicNode<string>) => void;
+      }) => (childId === "legend" ? getMemoizedLegend(setLayout) : memoizedPlot);
+
+      return (
+        <MosaicWindow
+          title=""
+          key={id}
+          path={path}
+          renderPreview={() => undefined as unknown as JSX.Element}
+        >
+          <Tile childId={id} setLayout={setLayout} />
+        </MosaicWindow>
+      );
+    },
+    [memoizedPlot, getMemoizedLegend],
+  );
+
+  // eslint-disable-next-line no-restricted-syntax
+  const [layout, setLayout] = useState<MosaicNode<string> | null>(baseLayout);
+
+  const [mosaicId] = useState(() => uuidv4());
+  const bodyToRender = useMemo(
+    () => (
+      <MosaicWithoutDragDropContext
+        renderTile={renderTile}
+        className="mosaic-foxglove-theme"
+        resize={{ minimumPaneSizePercentage: 2 }}
+        value={layout}
+        onChange={setLayout}
+        mosaicId={mosaicId}
+      />
+    ),
+    [layout, mosaicId, renderTile],
+  );
+  return (
+    <Flex col clip center style={{ position: "relative" }}>
+      <PanelToolbar
+        helpContent={helpContent}
+        additionalIcons={
+          <Icon
+            fade
+            onClick={() => downloadCSV(datasets, xAxisVal)}
+            tooltip="Download plot data as CSV"
+          >
+            <DownloadOutlineIcon />
+          </Icon>
+        }
+        floating
+      />
+      {bodyToRender}
     </Flex>
   );
 }

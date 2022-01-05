@@ -10,13 +10,14 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-
-import { makeStyles } from "@fluentui/react";
+import { makeStyles, Stack } from "@fluentui/react";
 import AlertCircleIcon from "@mdi/svg/svg/alert-circle.svg";
+import CloseIcon from "@mdi/svg/svg/close.svg";
 import MenuIcon from "@mdi/svg/svg/menu.svg";
 import cx from "classnames";
 import { last } from "lodash";
-import { Fragment, useCallback, useMemo } from "react";
+import { useCallback } from "react";
+import { MosaicNode } from "react-mosaic-component";
 import tinycolor from "tinycolor2";
 
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
@@ -100,12 +101,9 @@ const useStyles = makeStyles((theme) => ({
   },
   itemRemove: {
     visibility: "hidden",
-    padding: "0 6px",
+    padding: "2px",
     cursor: "pointer",
     background: "transparent",
-    height: 20,
-    lineHeight: 20,
-    userSelect: "none",
 
     ":hover": {
       background: tinycolor(theme.palette.neutralLight).setAlpha(0.75).toRgbString(),
@@ -130,7 +128,7 @@ type PlotLegendProps = {
   xAxisVal: PlotXAxisVal;
   xAxisPath?: BasePlotPath;
   pathsWithMismatchedDataLengths: string[];
-  onDownload: () => void;
+  setLayout: (layout: MosaicNode<string>) => void;
 };
 
 const shortXAxisLabel = (path: PlotXAxisVal): string => {
@@ -147,16 +145,9 @@ const shortXAxisLabel = (path: PlotXAxisVal): string => {
   throw new Error(`unknown path: ${path}`);
 };
 
-export default function PlotLegend(props: PlotLegendProps): JSX.Element {
-  const {
-    paths,
-    saveConfig,
-    showLegend,
-    xAxisVal,
-    xAxisPath,
-    pathsWithMismatchedDataLengths,
-    onDownload,
-  } = props;
+export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactNull {
+  const { paths, saveConfig, setLayout, xAxisVal, xAxisPath, pathsWithMismatchedDataLengths } =
+    props;
   const lastPath = last(paths);
   const classes = useStyles();
 
@@ -190,38 +181,21 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element {
     [paths, saveConfig],
   );
 
-  const { toggleToHideLegend, toggleToShowLegend } = useMemo(
-    () => ({
-      toggleToHideLegend: () => saveConfig({ showLegend: false }),
-      toggleToShowLegend: () => saveConfig({ showLegend: true }),
-    }),
-    [saveConfig],
-  );
-
-  if (!showLegend) {
-    return (
-      <div className={classes.root}>
-        <Icon
-          className={classes.legendToggle}
-          style={{ display: "block", height: "100%" }}
-          onClick={toggleToShowLegend}
-        >
-          <MenuIcon />
-        </Icon>
-      </div>
-    );
-  }
+  const hideLegend = useCallback(() => {
+    setLayout("plot");
+    saveConfig({ showLegend: false });
+  }, [setLayout, saveConfig]);
 
   return (
-    <Flex className={classes.root}>
+    <Flex className={classes.root} style={{ flex: 1 }}>
       <Icon
         className={classes.legendToggle}
         style={{ display: "block", height: "100%" }}
-        onClick={toggleToHideLegend}
+        onClick={hideLegend}
       >
         <MenuIcon />
       </Icon>
-      <div>
+      <Stack grow tokens={{ childrenGap: 4 }}>
         <div className={classes.item}>
           x:
           <div
@@ -284,68 +258,65 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element {
           const hasMismatchedDataLength = pathsWithMismatchedDataLengths.includes(path.value);
 
           return (
-            <Fragment key={index}>
-              <div className={classes.item}>
-                y:
+            <div key={index} className={classes.item}>
+              <div
+                className={classes.itemIconContainer}
+                style={{ zIndex: 1 }}
+                onClick={() => {
+                  const newPaths = paths.slice();
+                  const newPath = newPaths[index];
+                  if (newPath) {
+                    newPaths[index] = { ...newPath, enabled: !newPath.enabled };
+                  }
+                  saveConfig({ paths: newPaths });
+                }}
+              >
                 <div
-                  className={classes.itemIconContainer}
-                  style={{ zIndex: 1 }}
-                  onClick={() => {
-                    const newPaths = paths.slice();
-                    const newPath = newPaths[index];
-                    if (newPath) {
-                      newPaths[index] = { ...newPath, enabled: !newPath.enabled };
-                    }
-                    saveConfig({ paths: newPaths });
-                  }}
-                >
-                  <div
-                    className={classes.itemIcon}
-                    style={{ color: path.enabled ? lineColors[index % lineColors.length] : "#777" }}
-                  />
-                </div>
-                <div
-                  className={cx(classes.itemInput, {
-                    [classes.itemInputDisabled]: !path.enabled,
-                  })}
-                >
-                  <MessagePathInput
-                    supportsMathModifiers
-                    path={path.value}
-                    onChange={onInputChange}
-                    onTimestampMethodChange={onInputTimestampMethodChange}
-                    validTypes={plotableRosTypes}
-                    placeholder="Enter a topic name or a number"
-                    index={index}
-                    autoSize
-                    disableAutocomplete={isReferenceLinePlotPath}
-                    {...(xAxisVal === "timestamp" ? { timestampMethod } : undefined)}
-                  />
-                  {hasMismatchedDataLength && (
-                    <Icon
-                      style={{ color: colors.RED }}
-                      clickable={false}
-                      size="small"
-                      tooltipProps={{ placement: "top" }}
-                      tooltip="Mismatch in the number of elements in x-axis and y-axis messages"
-                    >
-                      <AlertCircleIcon />
-                    </Icon>
-                  )}
-                </div>
-                <div
-                  data-item-remove
-                  className={classes.itemRemove}
-                  onClick={() => {
-                    const newPaths = paths.slice();
-                    newPaths.splice(index, 1);
-                    saveConfig({ paths: newPaths });
-                  }}
-                >
-                  ✕
-                </div>
+                  className={classes.itemIcon}
+                  style={{ color: path.enabled ? lineColors[index % lineColors.length] : "#777" }}
+                />
               </div>
-            </Fragment>
+              <div
+                className={cx(classes.itemInput, {
+                  [classes.itemInputDisabled]: !path.enabled,
+                })}
+              >
+                <MessagePathInput
+                  supportsMathModifiers
+                  path={path.value}
+                  onChange={onInputChange}
+                  onTimestampMethodChange={onInputTimestampMethodChange}
+                  validTypes={plotableRosTypes}
+                  placeholder="Enter a topic name or a number"
+                  index={index}
+                  autoSize
+                  disableAutocomplete={isReferenceLinePlotPath}
+                  {...(xAxisVal === "timestamp" ? { timestampMethod } : undefined)}
+                />
+                {hasMismatchedDataLength && (
+                  <Icon
+                    style={{ color: colors.RED }}
+                    clickable={false}
+                    size="small"
+                    tooltipProps={{ placement: "top" }}
+                    tooltip="Mismatch in the number of elements in x-axis and y-axis messages"
+                  >
+                    <AlertCircleIcon />
+                  </Icon>
+                )}
+              </div>
+              <Icon
+                data-item-remove
+                className={classes.itemRemove}
+                onClick={() => {
+                  const newPaths = paths.slice();
+                  newPaths.splice(index, 1);
+                  saveConfig({ paths: newPaths });
+                }}
+              >
+                <CloseIcon />
+              </Icon>
+            </div>
           );
         })}
         <div
@@ -366,10 +337,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element {
         >
           + add line
         </div>
-        <div className={classes.fullLengthButton} onClick={onDownload}>
-          Download plot data as CSV
-        </div>
-      </div>
+      </Stack>
     </Flex>
   );
 }

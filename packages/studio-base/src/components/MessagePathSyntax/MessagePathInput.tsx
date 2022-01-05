@@ -11,14 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import {
-  DefaultButton,
-  IButtonStyles,
-  IconButton,
-  Stack,
-  makeStyles,
-  useTheme,
-} from "@fluentui/react";
+import { IconButton, IButtonStyles, Stack, useTheme } from "@fluentui/react";
 import { flatten, flatMap, partition } from "lodash";
 import { CSSProperties, useCallback, useMemo } from "react";
 
@@ -42,25 +35,6 @@ import {
   validTerminatingStructureItem,
 } from "./messagePathsForDatatype";
 import parseRosPath from "./parseRosPath";
-
-const useStyles = makeStyles({
-  helpTooltip: {
-    margin: 0,
-    lineHeight: "1.3",
-
-    dd: {
-      margin: "2px 0",
-    },
-    dt: {
-      fontWeight: 700,
-      marginTop: 6,
-
-      ":first-of-type": {
-        marginTop: 0,
-      },
-    },
-  },
-});
 
 // To show an input field with an autocomplete so the user can enter message paths, use:
 //
@@ -216,7 +190,6 @@ type MessagePathInputBaseProps = {
 export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
   props: MessagePathInputBaseProps,
 ) {
-  const classes = useStyles();
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
   const { datatypes, topics } = PanelAPI.useDataSourceInfo();
   const theme = useTheme();
@@ -231,7 +204,6 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
         height: 24,
         padding: "0 2px 0 4px",
         cursor: "pointer",
-        minWidth: 120,
       },
       rootHovered: {
         color: theme.semanticColors.buttonText,
@@ -239,7 +211,6 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
         backgroundColor: theme.semanticColors.buttonBackgroundHovered,
       },
       rootPressed: { backgroundColor: theme.semanticColors.buttonBackgroundPressed },
-      label: { fontWeight: 400 },
       menuIcon: {
         fontSize: "1em",
         height: "1em",
@@ -251,36 +222,6 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
           height: "1em",
           width: "1em",
           display: "block",
-        },
-      },
-    }),
-    [theme],
-  );
-
-  const iconButtonStyles: Partial<IButtonStyles> = useMemo(
-    () => ({
-      root: {
-        backgroundColor: "transparent",
-        fontSize: 20,
-        height: 24,
-        width: 24,
-        cursor: "pointer",
-        color: theme.semanticColors.disabledText,
-      },
-      rootHovered: {
-        backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-        color: theme.semanticColors.buttonTextHovered,
-      },
-      rootPressed: { backgroundColor: theme.semanticColors.buttonBackgroundPressed },
-      iconHovered: { color: "inherit" },
-      icon: {
-        color: "inherit",
-
-        svg: {
-          height: "1em",
-          width: "1em",
-          display: "block",
-          fill: "currentColor",
         },
       },
     }),
@@ -559,22 +500,6 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     placement: "top",
   });
 
-  const helpButton = useTooltip({
-    contents: (
-      <dl className={classes.helpTooltip}>
-        <dt>receive time</dt>
-        <dd>ROS-time at which the message was received and recorded.</dd>
-
-        <dt>header.stamp</dt>
-        <dd>
-          Value of the header.stamp field. Can mean different things for different topics. Be sure
-          you know what this value means before using it.
-        </dd>
-      </dl>
-    ),
-    placement: "top",
-  });
-
   return (
     <Stack
       horizontal
@@ -608,49 +533,43 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
         />
       </Stack.Item>
       {timestampMethod != undefined && (
-        <>
-          <Stack.Item>
-            {timestampButton.tooltip}
-            <DefaultButton
-              elementRef={timestampButton.ref}
-              checked={timestampMethod === "headerStamp" && noHeaderStamp}
-              text={timestampMethod === "receiveTime" ? "(receive time)" : "(header.stamp)"}
-              menuIconProps={{ iconName: "MenuDown" }}
-              menuProps={{
-                styles: {
-                  subComponentStyles: {
-                    menuItem: {
-                      root: { height: 24 },
-                      label: { fontSize: theme.fonts.small.fontSize },
-                      secondaryText: { fontSize: theme.fonts.small.fontSize },
-                    },
+        <Stack.Item>
+          {timestampButton.tooltip}
+          <IconButton
+            elementRef={timestampButton.ref}
+            checked={timestampMethod === "headerStamp" && noHeaderStamp}
+            menuIconProps={{ iconName: "ClockOutline" }}
+            menuProps={{
+              styles: {
+                root: { overflow: "hidden" },
+                subComponentStyles: {
+                  menuItem: {
+                    root: { height: 24 },
+                    label: { fontSize: theme.fonts.small.fontSize },
+                    secondaryText: { fontSize: theme.fonts.small.fontSize },
                   },
                 },
-                items: [
-                  {
-                    key: "receiveTime",
-                    text: "receive time",
-                    onClick: () => onTimestampMethodChange("receiveTime"),
-                  },
-                  {
-                    key: "headerStamp",
-                    text: "header.stamp",
-                    onClick: () => onTimestampMethodChange("headerStamp"),
-                  },
-                ],
-              }}
-              styles={dropdownStyles}
-            />
-          </Stack.Item>
-          <Stack.Item>
-            {helpButton.tooltip}
-            <IconButton
-              elementRef={helpButton.ref}
-              iconProps={{ iconName: "HelpCircle" }}
-              styles={iconButtonStyles}
-            />
-          </Stack.Item>
-        </>
+              },
+              items: [
+                {
+                  key: "receiveTime",
+                  text: "receive time",
+                  canCheck: true,
+                  checked: timestampMethod === "receiveTime",
+                  onClick: () => onTimestampMethodChange("receiveTime"),
+                },
+                {
+                  key: "headerStamp",
+                  text: "header.stamp",
+                  canCheck: true,
+                  checked: timestampMethod === "headerStamp",
+                  onClick: () => onTimestampMethodChange("headerStamp"),
+                },
+              ],
+            }}
+            styles={dropdownStyles}
+          />
+        </Stack.Item>
       )}
     </Stack>
   );
