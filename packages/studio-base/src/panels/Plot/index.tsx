@@ -11,22 +11,12 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { makeStyles, useTheme } from "@fluentui/react";
+import { useTheme } from "@fluentui/react";
 import DownloadOutlineIcon from "@mdi/svg/svg/download-outline.svg";
-import MenuIcon from "@mdi/svg/svg/menu.svg";
 import { compact, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
-import { useState, useEffect, useCallback, useMemo, ComponentProps } from "react";
-import {
-  MosaicWithoutDragDropContext,
-  MosaicWindow,
-  MosaicPath,
-  MosaicNode,
-} from "react-mosaic-component";
-import tinycolor from "tinycolor2";
-import { v4 as uuidv4 } from "uuid";
+import { useEffect, useCallback, useMemo, ComponentProps } from "react";
 
-import "react-mosaic-component/react-mosaic-component.css";
 import { filterMap } from "@foxglove/den/collection";
 import {
   Time,
@@ -77,30 +67,6 @@ import { PlotConfig } from "./types";
 
 export { plotableRosTypes } from "./types";
 export type { PlotConfig, PlotXAxisVal } from "./types";
-
-const baseLayout: MosaicNode<string> = {
-  direction: "row",
-  first: "legend",
-  second: "plot",
-  splitPercentage: 30,
-};
-
-const useStyles = makeStyles((theme) => ({
-  root: {
-    background: tinycolor(theme.palette.neutralLight).setAlpha(0.25).toRgbString(),
-    color: theme.semanticColors.bodySubtext,
-  },
-  legendToggle: {
-    padding: 6,
-    cursor: "pointer",
-    userSelect: "none",
-    background: "transparent",
-
-    ":hover": {
-      background: tinycolor(theme.palette.neutralLight).setAlpha(0.5).toRgbString(),
-    },
-  },
-}));
 
 export function openSiblingPlotPanel(openSiblingPanel: OpenSiblingPanel, topicName: string): void {
   openSiblingPanel({
@@ -215,7 +181,6 @@ function Plot(props: Props) {
     xAxisPath,
   } = config;
   const theme = useTheme();
-  const classes = useStyles();
 
   useEffect(() => {
     if (yAxisPaths.length === 0) {
@@ -429,9 +394,22 @@ function Plot(props: Props) {
     [messagePipeline, xAxisVal],
   );
 
-  const getMemoizedLegend = useCallback(
-    (setLayout: (layout: MosaicNode<string>) => void) =>
-      showLegend ? (
+  return (
+    <Flex col clip center style={{ position: "relative" }}>
+      <PanelToolbar
+        helpContent={helpContent}
+        additionalIcons={
+          <Icon
+            fade
+            onClick={() => downloadCSV(datasets, xAxisVal)}
+            tooltip="Download plot data as CSV"
+          >
+            <DownloadOutlineIcon />
+          </Icon>
+        }
+        floating
+      />
+      <Flex style={{ width: "100%", height: "100%" }}>
         <PlotLegend
           paths={yAxisPaths}
           saveConfig={saveConfig}
@@ -439,33 +417,7 @@ function Plot(props: Props) {
           xAxisVal={xAxisVal}
           xAxisPath={xAxisPath}
           pathsWithMismatchedDataLengths={pathsWithMismatchedDataLengths}
-          setLayout={setLayout}
         />
-      ) : (
-        ReactNull
-      ),
-    [pathsWithMismatchedDataLengths, saveConfig, showLegend, xAxisPath, xAxisVal, yAxisPaths],
-  );
-
-  const toggleLegend = useCallback(() => {
-    setLayout(showLegend ? "plot" : baseLayout);
-    saveConfig({ showLegend: !showLegend });
-  }, [showLegend, saveConfig]);
-
-  const memoizedPlot = useMemo(
-    () => (
-      <Flex>
-        {showLegend ? undefined : (
-          <div className={classes.root}>
-            <Icon
-              className={classes.legendToggle}
-              style={{ display: "block", height: "100%" }}
-              onClick={toggleLegend}
-            >
-              <MenuIcon />
-            </Icon>
-          </div>
-        )}
         <Flex col center>
           {title && <div>{title}</div>}
           <PlotChart
@@ -482,87 +434,6 @@ function Plot(props: Props) {
           />
         </Flex>
       </Flex>
-    ),
-    [
-      classes.legendToggle,
-      classes.root,
-      currentTimeSinceStart,
-      datasets,
-      defaultView,
-      isSynced,
-      maxYValue,
-      minYValue,
-      onClick,
-      showLegend,
-      title,
-      toggleLegend,
-      tooltips,
-      xAxisVal,
-      yAxisPaths,
-    ],
-  );
-
-  const renderTile = useCallback(
-    (id: string, path: MosaicPath) => {
-      if (id == undefined || typeof id !== "string") {
-        return <></>;
-      }
-
-      const Tile = ({
-        childId,
-        setLayout,
-      }: {
-        childId: string;
-        setLayout: (layout: MosaicNode<string>) => void;
-      }) => (childId === "legend" ? getMemoizedLegend(setLayout) : memoizedPlot);
-
-      return (
-        <MosaicWindow
-          title=""
-          key={id}
-          path={path}
-          renderPreview={() => undefined as unknown as JSX.Element}
-        >
-          <Tile childId={id} setLayout={setLayout} />
-        </MosaicWindow>
-      );
-    },
-    [memoizedPlot, getMemoizedLegend],
-  );
-
-  // eslint-disable-next-line no-restricted-syntax
-  const [layout, setLayout] = useState<MosaicNode<string> | null>(baseLayout);
-
-  const [mosaicId] = useState(() => uuidv4());
-  const bodyToRender = useMemo(
-    () => (
-      <MosaicWithoutDragDropContext
-        renderTile={renderTile}
-        className="mosaic-foxglove-theme"
-        resize={{ minimumPaneSizePercentage: 2 }}
-        value={layout}
-        onChange={setLayout}
-        mosaicId={mosaicId}
-      />
-    ),
-    [layout, mosaicId, renderTile],
-  );
-  return (
-    <Flex col clip center style={{ position: "relative" }}>
-      <PanelToolbar
-        helpContent={helpContent}
-        additionalIcons={
-          <Icon
-            fade
-            onClick={() => downloadCSV(datasets, xAxisVal)}
-            tooltip="Download plot data as CSV"
-          >
-            <DownloadOutlineIcon />
-          </Icon>
-        }
-        floating
-      />
-      {bodyToRender}
     </Flex>
   );
 }
