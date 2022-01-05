@@ -16,7 +16,7 @@ import CloseIcon from "@mdi/svg/svg/close.svg";
 import MenuIcon from "@mdi/svg/svg/menu.svg";
 import cx from "classnames";
 import { last } from "lodash";
-import { useCallback } from "react";
+import { useCallback, useState, useRef } from "react";
 import tinycolor from "tinycolor2";
 
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
@@ -162,7 +162,7 @@ const shortXAxisLabel = (path: PlotXAxisVal): string => {
 export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactNull {
   const { paths, saveConfig, showLegend, xAxisVal, xAxisPath, pathsWithMismatchedDataLengths } =
     props;
-  const [drawerWidth, setDrawerWidth] = React.useState(defaultDrawerWidth);
+  const [drawerWidth, setDrawerWidth] = useState(defaultDrawerWidth);
 
   const lastPath = last(paths);
   const classes = useStyles();
@@ -202,31 +202,28 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
     [showLegend, saveConfig],
   );
 
+  const originalWrapper = useRef<DOMRect | undefined>(undefined);
   const handleMouseMove = useCallback(
-    // eslint-disable-next-line no-restricted-syntax
-    (legendDrawer: HTMLElement | null) => (e: MouseEvent) => {
-      if (!legendDrawer) {
-        return;
-      }
-      const container = legendDrawer.getBoundingClientRect();
-      const newWidth = e.clientX - container.left;
+    (e: MouseEvent) => {
+      const offsetLeft = originalWrapper.current?.left ?? 0;
+      const newWidth = e.clientX - offsetLeft;
       if (newWidth > minDrawerWidth && newWidth < maxDrawerWidth) {
         setDrawerWidth(newWidth);
       }
     },
-    [],
+    [originalWrapper],
   );
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    originalWrapper.current = (e.target as Node).parentElement?.getBoundingClientRect() as DOMRect;
     document.addEventListener("mouseup", handleMouseUp, true);
-    const drawerContainer = (e.target as Node).parentElement;
-    document.addEventListener("mousemove", handleMouseMove(drawerContainer), true);
+    document.addEventListener("mousemove", handleMouseMove, true);
   };
 
   const handleMouseUp = () => {
+    originalWrapper.current = undefined;
     document.removeEventListener("mouseup", handleMouseUp, true);
-    // eslint-disable-next-line no-restricted-syntax
-    document.removeEventListener("mousemove", handleMouseMove(null), true);
+    document.removeEventListener("mousemove", handleMouseMove, true);
   };
 
   return (
