@@ -140,10 +140,11 @@ export default class Ros1Player implements Player {
     }
 
     await this._rosNode.start();
-    await this._requestTopics();
 
     // Process any advertise requests made before our node was ready.
     this.setPublishers(this._requestedPublishers);
+
+    await this._requestTopics();
 
     this._presence = PlayerPresence.PRESENT;
   };
