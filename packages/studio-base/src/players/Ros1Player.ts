@@ -110,7 +110,7 @@ export default class Ros1Player implements Player {
       return await net.createSocket(options.host, options.port);
     };
     const tcpServer = await net.createServer();
-    void tcpServer.listen(undefined, hostname, 10);
+    await tcpServer.listen(undefined, hostname, 10);
 
     if (this._rosNode == undefined) {
       const rosNode = new RosNode({
