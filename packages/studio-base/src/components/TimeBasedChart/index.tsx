@@ -13,7 +13,7 @@
 import { useTheme } from "@fluentui/react";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { AnnotationOptions } from "chartjs-plugin-annotation";
-import { ZoomOptions } from "chartjs-plugin-zoom/types/options";
+import type { ZoomOptions } from "@foxglove/chartjs-plugin-zoom/types/options";
 import React, {
   useEffect,
   useCallback,
