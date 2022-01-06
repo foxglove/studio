@@ -2,7 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
+import { useMount } from "react-use";
 
 import Log from "@foxglove/log";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
@@ -51,7 +52,7 @@ export function useInitialDeepLinkState(deepLinks: string[]): void {
   // Set a sessionStorage preference for web if we have a stable URL state.
   // This allows us to avoid asking for the preference immediately on
   // launch of an empty session and makes refreshes do the right thing.
-  useEffect(() => {
+  useMount(() => {
     if (isDesktopApp()) {
       return;
     }
@@ -59,10 +60,10 @@ export function useInitialDeepLinkState(deepLinks: string[]): void {
     if (stableUrlState && !launchPreference) {
       setLaunchPreference("web");
     }
-  }, [launchPreference, setLaunchPreference, stableUrlState]);
+  });
 
   // Load app state from deeplink url if present.
-  useEffect(() => {
+  useMount(() => {
     if (appUrlState == undefined) {
       return;
     }
@@ -70,10 +71,10 @@ export function useInitialDeepLinkState(deepLinks: string[]): void {
     if (appUrlState.ds && appUrlState.dsParams) {
       selectSource(appUrlState.ds, { type: "connection", params: appUrlState.dsParams });
     }
-  }, [appUrlState, selectSource]);
+  });
 
   // Select layout from deeplink URL if present.
-  useEffect(() => {
+  useMount(() => {
     if (appUrlState == undefined) {
       return;
     }
@@ -81,15 +82,15 @@ export function useInitialDeepLinkState(deepLinks: string[]): void {
     if (appUrlState.layoutId != undefined) {
       setSelectedLayoutId(appUrlState.layoutId);
     }
-  }, [appUrlState, setSelectedLayoutId]);
+  });
 
   // Sync to url time once our source has loaded and playback control is available.
   // seekPlayback will be undefined until the new source has loaded.
-  useEffect(() => {
+  useMount(() => {
     if (appUrlState?.time == undefined || !seekPlayback) {
       return;
     }
 
     seekPlayback(appUrlState.time);
-  }, [appUrlState, seekPlayback]);
+  });
 }
