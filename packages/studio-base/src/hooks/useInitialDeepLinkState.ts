@@ -69,14 +69,8 @@ export function useInitialDeepLinkState(deepLinks: string[]): void {
     }
 
     if (appUrlState.ds && appUrlState.dsParams) {
+      console.log("select source", appUrlState);
       selectSource(appUrlState.ds, { type: "connection", params: appUrlState.dsParams });
-    }
-  });
-
-  // Select layout from deeplink URL if present.
-  useMount(() => {
-    if (appUrlState == undefined) {
-      return;
     }
 
     if (appUrlState.layoutId != undefined) {
@@ -86,6 +80,7 @@ export function useInitialDeepLinkState(deepLinks: string[]): void {
 
   // Sync to url time once our source has loaded and playback control is available.
   // seekPlayback will be undefined until the new source has loaded.
+  // fixme - only set first time? what if the source doesn't support seek?
   useMount(() => {
     if (appUrlState?.time == undefined || !seekPlayback) {
       return;

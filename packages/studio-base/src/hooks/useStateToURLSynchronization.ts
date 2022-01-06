@@ -21,11 +21,27 @@ const selectCanSeek = (ctx: MessagePipelineContext) =>
 const selectCurrentTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.currentTime;
 const selectUrlState = (ctx: MessagePipelineContext) => ctx.playerState.urlState;
 
+// when we go to update the url, we should use the latest version of the url
+// we should also cancel this
 const debouncedURLUpdate = debounce(
-  (url: URL) => window.history.replaceState(undefined, "", url.href),
+  (url: URL) => {
+    console.log("set url", url);
+    window.history.replaceState(undefined, "", url.href);
+  },
   500,
   { leading: true },
 );
+
+// during startup
+// we have some state captured in the url
+// our first pass into this hook gives us empty values
+// cause we have not yet started
+// then the other hook - initialdeeplinkstate runs and sets the source
+// and now we have a source set but have an empty url
+
+// stableUrlState isn't available?
+
+// a source is selected, but
 
 /**
  * Syncs our current player, layout and other state with the URL in the address bar.
@@ -38,7 +54,10 @@ export function useStateToURLSynchronization(): void {
   const stableUrlState = useDeepMemo(urlState);
   const { selectedSource } = usePlayerSelection();
 
+  console.log({ urlState, stableUrlState });
+
   useEffect(() => {
+    console.log({ canSeek, currentTime, layoutId, selectedSource, stableUrlState });
     // Electron has its own concept of what the app URL is. If we want to do anything
     // here for desktop we'll need to find some other method of encoding the state
     // like perhaps the URL hash.
