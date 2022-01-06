@@ -993,7 +993,7 @@ export function Marker_PointCloud2_Alignment(): JSX.Element {
           ],
           settingsByKey: {
             "t:/pointcloud": {
-              pointSize: 20,
+              pointSize: 30,
             },
           },
           followTf: "base_link",
