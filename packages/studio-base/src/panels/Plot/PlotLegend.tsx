@@ -10,23 +10,20 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { makeStyles, Stack } from "@fluentui/react";
-import AlertCircleIcon from "@mdi/svg/svg/alert-circle.svg";
-import CloseIcon from "@mdi/svg/svg/close.svg";
+import { Stack } from "@fluentui/react";
 import MenuIcon from "@mdi/svg/svg/menu.svg";
 import cx from "classnames";
 import { last } from "lodash";
-import { useCallback, useState, useRef } from "react";
-import tinycolor from "tinycolor2";
+import { ComponentProps, useCallback, useState, useRef } from "react";
 
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
 import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
-import { lineColors } from "@foxglove/studio-base/util/plotColors";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
-import { TimestampMethod } from "@foxglove/studio-base/util/time";
+import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
+import PlotLegendRow from "@foxglove/studio-base/panels/Plot/PlotLegendRow";
+import usePlotStyles from "@foxglove/studio-base/panels/Plot/usePlotStyles";
 
 import { PlotPath, BasePlotPath, isReferenceLinePlotPathType } from "./internalTypes";
 import { plotableRosTypes, PlotConfig, PlotXAxisVal } from "./types";
@@ -35,109 +32,10 @@ export const defaultDrawerWidth = 240;
 const minDrawerWidth = 25;
 const maxDrawerWidth = 500;
 
-const useStyles = makeStyles((theme) => ({
-  dragger: {
-    width: "2px",
-    cursor: "ew-resize",
-    padding: "2px 0 0",
-    borderTop: `1px solid ${theme.palette.neutralLighter}`,
-    position: "absolute",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 100,
-    backgroundColor: theme.palette.neutralLighter,
-  },
-  root: {
-    background: tinycolor(theme.palette.neutralLight).setAlpha(0.25).toRgbString(),
-    color: theme.semanticColors.bodySubtext,
-  },
-  dropdown: {
-    backgroundColor: "transparent !important",
-    padding: "3px !important",
-  },
-  fullLengthButton: {
-    background: tinycolor(theme.palette.neutralLight).setAlpha(0.5).toRgbString(),
-    padding: 6,
-    margin: 5,
-    borderRadius: theme.effects.roundedCorner2,
-    cursor: "pointer",
-    textAlign: "center",
-
-    ":hover": {
-      background: tinycolor(theme.palette.neutralLight).setAlpha(0.75).toRgbString(),
-    },
-  },
-  item: {
-    display: "flex",
-    padding: "0 5px",
-    height: 20,
-    lineHeight: 20,
-    position: "relative",
-
-    ":hover": {
-      background: tinycolor(theme.palette.neutralLight).setAlpha(0.75).toRgbString(),
-
-      "[data-item-remove]": {
-        visibility: "initial",
-      },
-    },
-  },
-  itemIconContainer: {
-    display: "inline-block",
-    width: 22,
-    height: 20,
-    lineHeight: 0,
-    cursor: "pointer",
-    flexShrink: 0,
-
-    ":hover": {
-      background: theme.palette.neutralLight,
-    },
-  },
-  itemIcon: {
-    display: "inline-block",
-    width: 15,
-    borderBottom: "2px solid currentColor",
-    height: 0,
-    verticalAlign: "middle",
-    position: "relative",
-    top: "calc(50% - 1px)",
-  },
-  legendToggle: {
-    padding: 6,
-    cursor: "pointer",
-    userSelect: "none",
-    background: "transparent",
-
-    ":hover": {
-      background: tinycolor(theme.palette.neutralLight).setAlpha(0.5).toRgbString(),
-    },
-  },
-  itemRemove: {
-    visibility: "hidden",
-    padding: "2px",
-    cursor: "pointer",
-    background: "transparent",
-
-    ":hover": {
-      background: tinycolor(theme.palette.neutralLight).setAlpha(0.75).toRgbString(),
-    },
-  },
-  itemInput: {
-    overflow: "hidden",
-    width: "100%",
-    display: "flex",
-  },
-  itemInputDisabled: {
-    input: {
-      textDecoration: "line-through",
-    },
-  },
-}));
-
 type PlotLegendProps = {
   paths: PlotPath[];
+  datasets: ComponentProps<typeof TimeBasedChart>["data"]["datasets"];
+  currentTime?: number;
   saveConfig: (arg0: Partial<PlotConfig>) => void;
   showLegend: boolean;
   xAxisVal: PlotXAxisVal;
@@ -160,42 +58,20 @@ const shortXAxisLabel = (path: PlotXAxisVal): string => {
 };
 
 export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactNull {
-  const { paths, saveConfig, showLegend, xAxisVal, xAxisPath, pathsWithMismatchedDataLengths } =
-    props;
+  const {
+    paths,
+    datasets,
+    currentTime,
+    saveConfig,
+    showLegend,
+    xAxisVal,
+    xAxisPath,
+    pathsWithMismatchedDataLengths,
+  } = props;
   const [drawerWidth, setDrawerWidth] = useState(defaultDrawerWidth);
 
   const lastPath = last(paths);
-  const classes = useStyles();
-
-  const onInputChange = useCallback(
-    (value: string, index?: number) => {
-      if (index == undefined) {
-        throw new Error("index not set");
-      }
-      const newPaths = paths.slice();
-      const newPath = newPaths[index];
-      if (newPath) {
-        newPaths[index] = { ...newPath, value: value.trim() };
-      }
-      saveConfig({ paths: newPaths });
-    },
-    [paths, saveConfig],
-  );
-
-  const onInputTimestampMethodChange = useCallback(
-    (value: TimestampMethod, index?: number) => {
-      if (index == undefined) {
-        throw new Error("index not set");
-      }
-      const newPaths = paths.slice();
-      const newPath = newPaths[index];
-      if (newPath) {
-        newPaths[index] = { ...newPath, timestampMethod: value };
-      }
-      saveConfig({ paths: newPaths });
-    },
-    [paths, saveConfig],
-  );
+  const classes = usePlotStyles();
 
   const toggleLegend = useCallback(
     () => saveConfig({ showLegend: !showLegend }),
@@ -295,77 +171,19 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
               </div>
             </div>
             {paths.map((path: PlotPath, index: number) => {
-              const isReferenceLinePlotPath = isReferenceLinePlotPathType(path);
-              let timestampMethod;
-              // Only allow chosing the timestamp method if it is applicable (not a reference line) and there is at least
-              // one character typed.
-              if (!isReferenceLinePlotPath && path.value.length > 0) {
-                timestampMethod = path.timestampMethod;
-              }
               const hasMismatchedDataLength = pathsWithMismatchedDataLengths.includes(path.value);
-
               return (
-                <div key={index} className={classes.item}>
-                  <div
-                    className={classes.itemIconContainer}
-                    style={{ zIndex: 1 }}
-                    onClick={() => {
-                      const newPaths = paths.slice();
-                      const newPath = newPaths[index];
-                      if (newPath) {
-                        newPaths[index] = { ...newPath, enabled: !newPath.enabled };
-                      }
-                      saveConfig({ paths: newPaths });
-                    }}
-                  >
-                    <div
-                      className={classes.itemIcon}
-                      style={{
-                        color: path.enabled ? lineColors[index % lineColors.length] : "#777",
-                      }}
-                    />
-                  </div>
-                  <div
-                    className={cx(classes.itemInput, {
-                      [classes.itemInputDisabled]: !path.enabled,
-                    })}
-                  >
-                    <MessagePathInput
-                      supportsMathModifiers
-                      path={path.value}
-                      onChange={onInputChange}
-                      onTimestampMethodChange={onInputTimestampMethodChange}
-                      validTypes={plotableRosTypes}
-                      placeholder="Enter a topic name or a number"
-                      index={index}
-                      autoSize
-                      disableAutocomplete={isReferenceLinePlotPath}
-                      {...(xAxisVal === "timestamp" ? { timestampMethod } : undefined)}
-                    />
-                    {hasMismatchedDataLength && (
-                      <Icon
-                        style={{ color: colors.RED }}
-                        clickable={false}
-                        size="small"
-                        tooltipProps={{ placement: "top" }}
-                        tooltip="Mismatch in the number of elements in x-axis and y-axis messages"
-                      >
-                        <AlertCircleIcon />
-                      </Icon>
-                    )}
-                  </div>
-                  <Icon
-                    data-item-remove
-                    className={classes.itemRemove}
-                    onClick={() => {
-                      const newPaths = paths.slice();
-                      newPaths.splice(index, 1);
-                      saveConfig({ paths: newPaths });
-                    }}
-                  >
-                    <CloseIcon />
-                  </Icon>
-                </div>
+                <PlotLegendRow
+                  key={index}
+                  index={index}
+                  xAxisVal={xAxisVal}
+                  path={path}
+                  paths={paths}
+                  hasMismatchedDataLength={hasMismatchedDataLength}
+                  datasets={datasets}
+                  currentTime={currentTime}
+                  saveConfig={saveConfig}
+                />
               );
             })}
             <div

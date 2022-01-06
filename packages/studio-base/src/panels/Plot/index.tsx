@@ -412,6 +412,8 @@ function Plot(props: Props) {
       <Flex style={{ width: "100%", height: "100%" }}>
         <PlotLegend
           paths={yAxisPaths}
+          datasets={datasets}
+          currentTime={currentTimeSinceStart}
           saveConfig={saveConfig}
           showLegend={showLegend}
           xAxisVal={xAxisVal}
