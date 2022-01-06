@@ -54,8 +54,8 @@ async function loadModel(url: string): Promise<GlbModel | undefined> {
     return (await parseGLB(buffer)) as GlbModel;
   }
 
-  // STL binary files don't have a header, so we have to rely on the file extension
-  if (/\.stl$/i.test(url)) {
+  // STL binary files don't have a header, so we have to rely on the MIME type or file extension
+  if (response.headers.get("content-type") === "application/sla" || /\.stl$/i.test(url)) {
     return parseStlToGlb(buffer);
   }
 

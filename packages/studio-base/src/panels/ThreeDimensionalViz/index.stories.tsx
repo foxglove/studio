@@ -1579,7 +1579,7 @@ export function STLMeshMarkers(): JSX.Element {
       },
       scale: { x: 0.5, y: 0.5, z: 0.5 },
       color: makeColor("#8bc34a", 0.5),
-      mesh_resource: `data:text/plain;utf8,solid AssimpScene
+      mesh_resource: encodeURI(`data:application/sla;utf8,solid AssimpScene
   facet normal 0 0 -1 outer loop vertex -0.5 -0.5 -0.5 vertex -0.5 0.5 -0.5 vertex 0.5 0.5 -0.5 endloop endfacet
   facet normal 0 0 -1 outer loop vertex 0.5 0.5 -0.5 vertex 0.5 -0.5 -0.5 vertex -0.5 -0.5 -0.5 endloop endfacet
   facet normal 0 0 1 outer loop vertex 0.5 -0.5 0.5 vertex 0.5 0.5 0.5 vertex -0.5 0.5 0.5 endloop endfacet
@@ -1592,7 +1592,7 @@ export function STLMeshMarkers(): JSX.Element {
   facet normal 0 -1 0 outer loop vertex -0.5 -0.5 -0.5 vertex 0.5 -0.5 -0.5 vertex 0.5 -0.5 0.5 endloop endfacet
   facet normal -1 0 0 outer loop vertex -0.5 -0.5 0.5 vertex -0.5 0.5 0.5 vertex -0.5 0.5 -0.5 endloop endfacet
   facet normal -1 0 0 outer loop vertex -0.5 0.5 -0.5 vertex -0.5 -0.5 -0.5 vertex -0.5 -0.5 0.5 endloop endfacet
-endsolid AssimpScene.stl`,
+endsolid AssimpScene`),
       mesh_use_embedded_materials: true,
       lifetime: { sec: 0, nsec: 0 },
     },
