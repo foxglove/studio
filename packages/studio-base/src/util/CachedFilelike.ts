@@ -71,7 +71,6 @@ export default class CachedFilelike implements Filelike {
   private _cacheSizeInBytes: number = Infinity;
   private _fileSize?: number;
   private _virtualBuffer: VirtualLRUBuffer;
-  private _logFn: (arg0: string) => void = (msg) => log.info(msg);
   private _closed: boolean = false;
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   private _keepReconnectingCallback?: (reconnecting: boolean) => void;
@@ -97,13 +96,11 @@ export default class CachedFilelike implements Filelike {
   constructor(options: {
     fileReader: FileReader;
     cacheSizeInBytes?: number;
-    logFn?: (arg0: string) => void;
     // eslint-disable-next-line @foxglove/no-boolean-parameters
     keepReconnectingCallback?: (reconnecting: boolean) => void;
   }) {
     this._fileReader = options.fileReader;
     this._cacheSizeInBytes = options.cacheSizeInBytes ?? this._cacheSizeInBytes;
-    this._logFn = options.logFn ?? this._logFn;
     this._keepReconnectingCallback = options.keepReconnectingCallback;
     this._virtualBuffer = new VirtualLRUBuffer({ size: 0 });
   }
@@ -128,7 +125,7 @@ export default class CachedFilelike implements Filelike {
         numberOfBlocks: Math.ceil(this._cacheSizeInBytes / CACHE_BLOCK_SIZE) + 2,
       });
     }
-    this._logFn(`Opening file with size ${bytesToMiB(this._fileSize)}MiB`);
+    log.info(`Opening file with size ${bytesToMiB(this._fileSize)}MiB`);
   }
 
   // Get the file size. Requires a call to `open()` or `read()` first.
@@ -147,7 +144,6 @@ export default class CachedFilelike implements Filelike {
     }
 
     const range = { start: offset, end: offset + length };
-    this._logFn(`Requested ${rangeToString(range)}`);
 
     if (offset < 0 || length < 0) {
       throw new Error("CachedFilelike#read invalid input");
@@ -182,16 +178,11 @@ export default class CachedFilelike implements Filelike {
     }
 
     // First, see if there are any read requests that we can resolve now.
-    this._readRequests = this._readRequests.filter(({ range, resolve, requestTime }) => {
+    this._readRequests = this._readRequests.filter(({ range, resolve }) => {
       if (!this._virtualBuffer.hasData(range.start, range.end)) {
         return true;
       }
 
-      this._logFn(
-        `Returned ${bytesToMiB(range.start)}-${bytesToMiB(range.end)}MiB in ${
-          Date.now() - requestTime
-        }ms`,
-      );
       this._lastResolvedCallbackEnd = range.end;
       const buffer = this._virtualBuffer.slice(range.start, range.end);
 
@@ -229,15 +220,13 @@ export default class CachedFilelike implements Filelike {
 
   // Replace the current connection with a new one, spanning a certain range.
   private _setConnection(range: Range): void {
-    this._logFn(`Setting new connection @ ${rangeToString(range)}`);
+    log.info(`Setting new connection @ ${rangeToString(range)}`);
 
     if (this._currentConnection) {
       // Destroy the current connection if there is one.
       const currentConnection = this._currentConnection;
       currentConnection.stream.destroy();
-      this._logFn(
-        `Destroyed current connection @ ${rangeToString(currentConnection.remainingRange)}`,
-      );
+      log.info(`Destroyed current connection @ ${rangeToString(currentConnection.remainingRange)}`);
     }
 
     // Start the stream, and update the current connection state.
@@ -261,7 +250,7 @@ export default class CachedFilelike implements Filelike {
         // serious error, we resolve all remaining callbacks with errors and close out.
         const lastErrorTime = this._lastErrorTime;
         if (lastErrorTime != undefined && Date.now() - lastErrorTime < 100) {
-          this._logFn(
+          log.error(
             `Connection @ ${rangeToString(
               range,
             )} threw another error; closing: ${error.toString()}`,
@@ -277,7 +266,7 @@ export default class CachedFilelike implements Filelike {
 
       // When we encounter an error there is usually a bad connection or timeout or so, so just
       // mark the current connection as destroyed, and try again.
-      this._logFn(
+      log.warn(
         `Connection @ ${rangeToString(range)} threw error; trying to continue: ${error.toString()}`,
       );
       this._lastErrorTime = Date.now();
@@ -316,7 +305,7 @@ export default class CachedFilelike implements Filelike {
 
         const mibibytes = bytesToMiB(bytesRead);
         const speed = round(mibibytes / sec, 2);
-        this._logFn(
+        log.debug(
           `Connection @ ${rangeToString(
             currentConnection.remainingRange,
           )} downloading at ${speed} MiB/s`,
@@ -325,7 +314,7 @@ export default class CachedFilelike implements Filelike {
 
       if (this._virtualBuffer.hasData(range.start, range.end)) {
         // If the requested range has been downloaded, we're done!
-        this._logFn(`Connection @ ${rangeToString(currentConnection.remainingRange)} finished!`);
+        log.info(`Connection @ ${rangeToString(currentConnection.remainingRange)} finished!`);
         stream.destroy();
         delete this._currentConnection;
       } else {
