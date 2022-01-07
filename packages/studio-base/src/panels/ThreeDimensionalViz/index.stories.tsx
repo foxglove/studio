@@ -321,7 +321,7 @@ export function Markers(): JSX.Element {
       header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "base_link" },
       child_frame_id: "sensor",
       transform: {
-        translation: { x: 0, y: 0, z: 1 },
+        translation: { x: 0, y: 1, z: 0 },
         rotation: QUAT_IDENTITY,
       },
     },
@@ -646,7 +646,7 @@ export function Markers(): JSX.Element {
             distance: 5.5,
             perspective: true,
             phi: 0.5,
-            targetOffset: [-0.75, 0.25, 0],
+            targetOffset: [-0.5, 0.75, 0],
             thetaOffset: -0.25,
             fovy: 0.75,
             near: 0.01,
