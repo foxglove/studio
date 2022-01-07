@@ -177,6 +177,7 @@ function Plot(props: Props) {
     maxYValue,
     showLegend,
     isSynced,
+    showTooltips,
     xAxisVal,
     xAxisPath,
   } = config;
@@ -368,6 +369,9 @@ function Plot(props: Props) {
   ]);
 
   const tooltips = useMemo(() => {
+    if (!showTooltips) {
+      return [];
+    }
     const allTooltips: TimeBasedChartTooltipData[] = [];
     for (const dataset of datasets) {
       for (const datum of dataset.data) {
@@ -375,7 +379,7 @@ function Plot(props: Props) {
       }
     }
     return allTooltips;
-  }, [datasets]);
+  }, [datasets, showTooltips]);
 
   const messagePipeline = useMessagePipelineGetter();
   const onClick = useCallback<NonNullable<ComponentProps<typeof PlotChart>["onClick"]>>(
@@ -447,6 +451,11 @@ const configSchema: PanelConfigSchema<PlotConfig> = [
     type: "toggle",
     title: "Sync with other timestamp-based plots",
   },
+  {
+    key: "showTooltips",
+    type: "toggle",
+    title: "Show tooltips",
+  },
   { key: "maxYValue", type: "number", title: "Y max", placeholder: "auto", allowEmpty: true },
   { key: "minYValue", type: "number", title: "Y min", placeholder: "auto", allowEmpty: true },
   {
@@ -466,6 +475,7 @@ const defaultConfig: PlotConfig = {
   maxYValue: "",
   showLegend: true,
   isSynced: true,
+  showTooltips: true,
   xAxisVal: "timestamp",
 };
 
