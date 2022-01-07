@@ -164,7 +164,7 @@ export default class UrdfBuilder extends EventEmitter<EventTypes> implements Mar
       log.debug(`Parsing ${text.length} byte URDF`);
       this._urdf = await parseRobot(text, fileFetcher);
 
-      const transforms = Array.from(this._urdf.joints.values()).map((joint) => {
+      const transforms = Array.from(this._urdf.joints.values(), (joint) => {
         const t = joint.origin.xyz;
         const q = eulerToQuaternion(joint.origin.rpy);
         const translation: vec3 = [t.x, t.y, t.z];

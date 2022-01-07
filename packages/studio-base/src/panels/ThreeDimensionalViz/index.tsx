@@ -351,7 +351,7 @@ function BaseRenderer(props: Props): JSX.Element {
   const urdfBuilder = useMemo(() => new UrdfBuilder(), []);
   useLayoutEffect(() => {
     const handle = (newTransforms: TransformLink[]) => {
-      setUrdfTransforms((existing) => [...existing, ...newTransforms]);
+      setUrdfTransforms((existing) => existing.concat(newTransforms));
     };
 
     urdfBuilder.on("transforms", handle);
