@@ -102,7 +102,7 @@ describe("<PointClouds />", () => {
       expect(buffer.length).toBe(6);
       expect(offset).toBe(0);
       expect(stride).toBe(3);
-      expect(Array.from(buffer)).toEqual([255, 225, 127, 255, 255, 127]);
+      expect(Array.from(buffer)).toEqual([127, 225, 255, 127, 255, 255]);
     });
 
     it("builds color buffer by extracting RGB data from big-endian PointCloud2", () => {
