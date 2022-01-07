@@ -181,7 +181,7 @@ export default class UrdfBuilder extends EventEmitter<EventTypes> implements Mar
       // createMarkers before emit so if the emit triggers a repaint the markers are ready
       this.createMarkers();
 
-      log.debug("Transforms from from urdf: ", transforms);
+      log.debug("Transforms from urdf: ", transforms);
       this.emit("transforms", transforms);
     } catch (err) {
       throw new Error(`Failed to parse ${text.length} byte URDF: ${err}`);
