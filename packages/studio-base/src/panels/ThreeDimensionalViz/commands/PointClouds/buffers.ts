@@ -189,14 +189,16 @@ export function createColorBuffer({
     // Extract colors from data
     const readers = isBigEndian
       ? [
+          // big-endian, read RGB from RGBA
           new Uint8Reader(data, rgbOffset + 0),
           new Uint8Reader(data, rgbOffset + 1),
           new Uint8Reader(data, rgbOffset + 2),
         ]
       : [
-          new Uint8Reader(data, rgbOffset + 1),
-          new Uint8Reader(data, rgbOffset + 2),
+          // little-endian, read RGB from ABGR
           new Uint8Reader(data, rgbOffset + 3),
+          new Uint8Reader(data, rgbOffset + 2),
+          new Uint8Reader(data, rgbOffset + 1),
         ];
     return extractValues({ data, readers, stride, pointCount });
   }
