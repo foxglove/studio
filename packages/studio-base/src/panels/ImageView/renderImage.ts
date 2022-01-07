@@ -56,6 +56,10 @@ export const IMAGE_DATATYPES = [
 // one error, you'd then get a whole bunch more, which is spammy.
 let hasLoggedCameraModelError: boolean = false;
 
+// Size threshold below which we do fast point rendering as rects.
+// Empirically 3 seems like a good threshold here.
+const FAST_POINT_SIZE_THRESHOlD = 3;
+
 // Given a canvas, an image message, and marker info, render the image to the canvas.
 export async function renderImage({
   canvas,
@@ -404,8 +408,11 @@ function paintMarker(
             : marker.outline_color.a > 0
             ? marker.outline_color
             : marker.fill_color;
+
+        // For points small enough to be visually indistinct at our current zoom level
+        // we do a fast render.
         const size = marker.scale * panZoom.scale;
-        if (size <= 3) {
+        if (size <= FAST_POINT_SIZE_THRESHOlD) {
           paintFastPoint(ctx, point, marker.scale, marker.scale, undefined, fillColor, cameraModel);
         } else {
           paintCircle(ctx, point, marker.scale, marker.scale, undefined, fillColor, cameraModel);
