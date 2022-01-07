@@ -13,7 +13,7 @@
 
 import { Color } from "@foxglove/regl-worldview";
 import { TOPIC_DISPLAY_MODES } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/constants";
-import { IImmutableTransformTree } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
+import { IImmutableCoordinateFrame } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
 import { Topic } from "@foxglove/studio-base/players/types";
 import { Namespace } from "@foxglove/studio-base/types/Messages";
 
@@ -74,7 +74,9 @@ export type UseSceneBuilderAndTransformsDataInput = {
     errorsByTopic: { [topicName: string]: string[] };
   };
   staticallyAvailableNamespacesByTopic: NamespacesByTopic;
-  transforms: IImmutableTransformTree;
+  transforms: {
+    frames(): ReadonlyMap<string, IImmutableCoordinateFrame>;
+  };
 };
 
 export type SceneErrorsByKey = {
