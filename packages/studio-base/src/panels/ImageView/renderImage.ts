@@ -268,7 +268,12 @@ function render({
   ctx.scale(bitmap.width / originalWidth, bitmap.height / originalHeight);
 
   try {
-    paintMarkers(ctx, markers as MessageEvent<ImageMarker | ImageMarkerArray>[], cameraModel);
+    paintMarkers(
+      ctx,
+      markers as MessageEvent<ImageMarker | ImageMarkerArray>[],
+      cameraModel,
+      panZoom,
+    );
   } catch (err) {
     console.warn("error painting markers:", err);
   } finally {
@@ -281,16 +286,17 @@ function paintMarkers(
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   messages: MessageEvent<ImageMarker | ImageMarkerArray>[],
   cameraModel: PinholeCameraModel | undefined,
+  panZoom: { x: number; y: number; scale: number },
 ) {
   for (const { message } of messages) {
     ctx.save();
     try {
       if (Array.isArray((message as Partial<ImageMarkerArray>).markers)) {
         for (const marker of (message as ImageMarkerArray).markers) {
-          paintMarker(ctx, marker, cameraModel);
+          paintMarker(ctx, marker, cameraModel, panZoom);
         }
       } else {
-        paintMarker(ctx, message as ImageMarker, cameraModel);
+        paintMarker(ctx, message as ImageMarker, cameraModel, panZoom);
       }
     } catch (e) {
       console.error("Unable to paint marker to ImageView", e, message);
@@ -304,6 +310,7 @@ function paintMarker(
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   marker: ImageMarker,
   cameraModel: PinholeCameraModel | undefined,
+  panZoom: { x: number; y: number; scale: number },
 ) {
   switch (marker.type) {
     case ImageMarkerType.CIRCLE: {
@@ -397,7 +404,12 @@ function paintMarker(
             : marker.outline_color.a > 0
             ? marker.outline_color
             : marker.fill_color;
-        paintCircle(ctx, point, marker.scale, marker.scale, undefined, fillColor, cameraModel);
+        const size = marker.scale * panZoom.scale;
+        if (size <= 3) {
+          paintFastPoint(ctx, point, marker.scale, marker.scale, undefined, fillColor, cameraModel);
+        } else {
+          paintCircle(ctx, point, marker.scale, marker.scale, undefined, fillColor, cameraModel);
+        }
       }
       break;
     }
@@ -495,5 +507,42 @@ function paintCircle(
     ctx.lineWidth = thickness;
     ctx.strokeStyle = toRGBA(outlineColor);
     ctx.stroke();
+  }
+}
+
+/**
+ * Renders small points as rectangles instead of circles for better performance.
+ */
+function paintFastPoint(
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  point: Point2D,
+  radius: number,
+  thickness: number,
+  outlineColor: Color | undefined,
+  fillColor: Color | undefined,
+  cameraModel: PinholeCameraModel | undefined,
+) {
+  // perf-sensitive: function params instead of options object to avoid allocations
+  const hasFill = fillColor != undefined && fillColor.a > 0;
+  const hasStroke = outlineColor != undefined && outlineColor.a > 0 && thickness > 0;
+
+  if (radius <= 0 || (!hasFill && !hasStroke)) {
+    return;
+  }
+
+  const { x, y } = maybeUnrectifyPoint(cameraModel, point);
+  const size = Math.round(radius * 2);
+  const rx = Math.round(x - size / 2);
+  const ry = Math.round(y - size / 2);
+
+  if (hasFill) {
+    ctx.fillStyle = toRGBA(fillColor);
+    ctx.fillRect(rx, ry, size, size);
+  }
+
+  if (hasStroke) {
+    ctx.lineWidth = thickness;
+    ctx.strokeStyle = toRGBA(outlineColor);
+    ctx.strokeRect(rx, ry, size, size);
   }
 }
