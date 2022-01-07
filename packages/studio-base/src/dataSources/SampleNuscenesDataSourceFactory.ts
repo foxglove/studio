@@ -370,7 +370,7 @@ class SampleNuscenesDataSourceFactory implements IDataSourceFactory {
     return new RandomAccessPlayer(messageCacheProvider, {
       metricsCollector: args.metricsCollector,
       seekToTime: getSeekToTime(),
-      name: "Sample: Nuscenes",
+      name: "Adapted from nuScenes dataset.\nCopyright © 2020 nuScenes.\nhttps://www.nuscenes.org/terms-of-use",
       // Use blank url params so the data source is set in the url
       urlParams: {},
     });
