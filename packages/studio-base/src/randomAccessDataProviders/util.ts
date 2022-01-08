@@ -23,7 +23,7 @@ const STALL_THRESHOLD_MS = 2000;
 const getMaybeLogStall = (
   extensionPoint: ExtensionPoint,
   stallThresholdMs: number,
-): ((arg0: Uint8Array) => void) => {
+): ((buffer: Uint8Array) => void) => {
   let firstDataReceivedTime: number;
   let lastDataReceivedTime: number;
   let bytesReceived = 0;
