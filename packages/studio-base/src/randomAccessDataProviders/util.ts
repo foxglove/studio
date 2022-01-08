@@ -94,7 +94,7 @@ const getLogThroughput = (extensionPoint: ExtensionPoint): ((buffer: Uint8Array)
 export const getReportMetadataForChunk = (
   extensionPoint: ExtensionPoint,
   stallThresholdMs: number = STALL_THRESHOLD_MS,
-): ((arg0: Uint8Array) => void) => {
+): ((buffer: Uint8Array) => void) => {
   const maybeLogStall = getMaybeLogStall(extensionPoint, stallThresholdMs);
   const logThroughput = getLogThroughput(extensionPoint);
   return (buffer: Uint8Array) => {
