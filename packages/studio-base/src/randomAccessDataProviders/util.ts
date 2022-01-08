@@ -82,7 +82,7 @@ export const debounceReduce = <A, T>({
   };
 };
 
-const getLogThroughput = (extensionPoint: ExtensionPoint): ((arg0: Uint8Array) => void) => {
+const getLogThroughput = (extensionPoint: ExtensionPoint): ((buffer: Uint8Array) => void) => {
   return debounceReduce({
     action: (bytes) => extensionPoint.reportMetadataCallback({ type: "received_bytes", bytes }),
     wait: 10,
