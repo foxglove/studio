@@ -32,7 +32,7 @@ import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import { Config, SaveImagePanelConfig } from "./index";
 import { renderImage } from "./renderImage";
-import { Dimensions, PixelData, RawMarkerData, RenderOptions, PanZoom, ZoomMode } from "./util";
+import { Dimensions, PixelData, RawMarkerData, RenderableCanvas, RenderArgs } from "./util";
 
 type OnFinishRenderImage = () => void;
 
@@ -146,16 +146,9 @@ const webWorkerManager = new WebWorkerManager(() => {
   return new Worker(new URL("ImageCanvas.worker", import.meta.url));
 }, 1);
 
-type RenderImage = (args: {
-  canvas: HTMLCanvasElement | OffscreenCanvas;
-  zoomMode: ZoomMode;
-  panZoom: PanZoom;
-  viewport: Dimensions;
-  imageMessage?: Image | CompressedImage;
-  imageMessageDatatype?: string;
-  rawMarkerData: RawMarkerData;
-  options?: RenderOptions;
-}) => Promise<Dimensions | undefined>;
+type RenderImage = (
+  args: RenderArgs & { canvas: RenderableCanvas; viewport: Dimensions },
+) => Promise<Dimensions | undefined>;
 
 const supportsOffscreenCanvas =
   typeof HTMLCanvasElement.prototype.transferControlToOffscreen === "function";
@@ -250,16 +243,22 @@ export default function ImageCanvas(props: Props): JSX.Element {
             ? {
                 data: imageMessage.data,
                 format: imageMessage.format,
+                header: imageMessage.header,
               }
             : {
                 data: imageMessage.data,
-                width: imageMessage.width,
-                height: imageMessage.height,
                 encoding: imageMessage.encoding,
+                header: imageMessage.header,
+                height: imageMessage.height,
                 is_bigendian: imageMessage.is_bigendian,
+                step: imageMessage.step,
+                width: imageMessage.width,
               };
 
-        return worker.send<Dimensions | undefined>("renderImage", {
+        return worker.send<
+          Dimensions | undefined,
+          RenderArgs & { id: string; viewport: Dimensions }
+        >("renderImage", {
           id,
           zoomMode: zoom,
           panZoom,

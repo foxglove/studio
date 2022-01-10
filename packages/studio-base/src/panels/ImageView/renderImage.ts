@@ -40,11 +40,12 @@ import {
 import {
   buildMarkerData,
   calculateZoomScale,
-  RawMarkerData,
   MarkerData,
+  PanZoom,
+  RenderableCanvas,
+  RenderArgs,
   RenderDimensions,
   RenderOptions,
-  PanZoom,
   ZoomMode,
 } from "./util";
 
@@ -69,7 +70,6 @@ let hasLoggedCameraModelError: boolean = false;
 // Size threshold below which we do fast point rendering as rects.
 // Empirically 3 seems like a good threshold here.
 const FAST_POINT_SIZE_THRESHOlD = 3;
-type RenderableCanvas = HTMLCanvasElement | OffscreenCanvas;
 
 // Given a canvas, an image message, and marker info, render the image to the canvas.
 export async function renderImage({
@@ -81,16 +81,9 @@ export async function renderImage({
   imageMessageDatatype,
   rawMarkerData,
   options,
-}: {
-  canvas: RenderableCanvas;
-  hitmapCanvas: RenderableCanvas | undefined;
-  zoomMode: ZoomMode;
-  panZoom: PanZoom;
-  imageMessage?: Image | CompressedImage;
-  imageMessageDatatype?: string;
-  rawMarkerData: RawMarkerData;
-  options?: RenderOptions;
-}): Promise<RenderDimensions | undefined> {
+}: RenderArgs & { canvas: RenderableCanvas; hitmapCanvas: RenderableCanvas | undefined }): Promise<
+  RenderDimensions | undefined
+> {
   if (!imageMessage || imageMessageDatatype == undefined) {
     clearCanvas(canvas);
     return undefined;

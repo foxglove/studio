@@ -12,25 +12,17 @@
 //   You may not use this file except in compliance with the License.
 
 import { MessageEvent } from "@foxglove/studio-base/players/types";
-import {
-  Image,
-  CompressedImage,
-  ImageMarker,
-  ImageMarkerArray,
-} from "@foxglove/studio-base/types/Messages";
+import { ImageMarker, ImageMarkerArray } from "@foxglove/studio-base/types/Messages";
 import Rpc, { Channel } from "@foxglove/studio-base/util/Rpc";
 import { setupWorker } from "@foxglove/studio-base/util/RpcWorkerUtils";
 
 import { renderImage } from "./renderImage";
 import {
   Dimensions,
-  idColorToIndex,
   flattenImageMarkers,
-  RawMarkerData,
+  idColorToIndex,
+  RenderArgs,
   RenderDimensions,
-  RenderOptions,
-  PanZoom,
-  ZoomMode,
 } from "./util";
 
 type RenderState = {
@@ -82,16 +74,9 @@ class ImageCanvasWorker {
       "renderImage",
       // Potentially performance-sensitive; await can be expensive
       // eslint-disable-next-line @typescript-eslint/promise-function-async
-      (args: {
-        id: string;
-        zoomMode: ZoomMode;
-        panZoom: PanZoom;
-        viewport: Dimensions;
-        imageMessage?: Image | CompressedImage;
-        imageMessageDatatype?: string;
-        rawMarkerData: RawMarkerData;
-        options: RenderOptions;
-      }): Promise<RenderDimensions | undefined> => {
+      (
+        args: RenderArgs & { id: string; viewport: Dimensions },
+      ): Promise<RenderDimensions | undefined> => {
         const {
           id,
           zoomMode,
