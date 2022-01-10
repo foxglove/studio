@@ -50,6 +50,9 @@ type Props = {
   // called when the chart scales have updated (happens for zoom/pan/reset)
   onScalesUpdate?: (scales: RpcScales, opt: { userInteraction: boolean }) => void;
 
+  // called when the chart is about to start rendering new data
+  onStartRender?: () => void;
+
   // called when the chart has finished updating with new data
   onChartUpdate?: () => void;
 
@@ -101,7 +104,7 @@ function Chart(props: Props): JSX.Element {
   const zoomEnabled = props.options.plugins?.zoom?.zoom?.enabled ?? false;
   const panEnabled = props.options.plugins?.zoom?.pan?.enabled ?? false;
 
-  const { type, data, options, width, height, onChartUpdate } = props;
+  const { type, data, options, width, height, onStartRender, onChartUpdate } = props;
 
   const sendWrapperRef = useRef<RpcSend | undefined>();
   const rpcSendRef = useRef<RpcSend | undefined>();
@@ -212,6 +215,10 @@ function Chart(props: Props): JSX.Element {
 
     return out;
   }, [data, height, options, width]);
+
+  useLayoutEffect(() => {
+    onStartRender?.();
+  }, [getNewUpdateMessage, onStartRender]);
 
   const { error: updateError } = useAsync(async () => {
     if (!sendWrapperRef.current) {
