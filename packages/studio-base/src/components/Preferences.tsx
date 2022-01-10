@@ -8,6 +8,7 @@ import {
   Dropdown,
   IChoiceGroupOption,
   IComboBoxOption,
+  IDropdownOption,
   SelectableOptionMenuItemType,
   Stack,
   Text,
@@ -245,6 +246,41 @@ function MessageFramerate(): React.ReactElement {
   );
 }
 
+function AutoUpdate(): React.ReactElement {
+  const [appUpdateMode, setAppUpdateMode] = useAppConfigurationValue<string>(
+    AppSetting.APP_UPDATE_MODE,
+  );
+
+  const entries: Array<IDropdownOption> = [
+    { key: "default", text: "default - periodically check for updates" },
+    { key: "start", text: "start - check for updates on startup" },
+    { key: "none", text: "none - never check for updates" },
+  ];
+
+  if (!isDesktopApp()) {
+    return <></>;
+  }
+
+  return (
+    <Dropdown
+      label="App update mode"
+      options={entries}
+      openOnKeyboardFocus
+      selectedKey={appUpdateMode}
+      defaultSelectedKey={"default"}
+      onChange={(_event, option) => {
+        if (option) {
+          void setAppUpdateMode(String(option.key));
+        }
+      }}
+      calloutProps={{
+        directionalHint: DirectionalHint.bottomLeftEdge,
+        directionalHintFixed: true,
+      }}
+    />
+  );
+}
+
 function RosPackagePath(): React.ReactElement {
   const [rosPackagePath, setRosPackagePath] = useAppConfigurationValue<string>(
     AppSetting.ROS_PACKAGE_PATH,
@@ -307,6 +343,9 @@ export default function Preferences(): React.ReactElement {
             </Stack.Item>
             <Stack.Item>
               <MessageFramerate />
+            </Stack.Item>
+            <Stack.Item>
+              <AutoUpdate />
             </Stack.Item>
             {!isDesktopApp() && (
               <Stack.Item>
