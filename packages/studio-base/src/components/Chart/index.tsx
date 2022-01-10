@@ -216,10 +216,6 @@ function Chart(props: Props): JSX.Element {
     return out;
   }, [data, height, options, width]);
 
-  useLayoutEffect(() => {
-    onStartRender?.();
-  }, [getNewUpdateMessage, onStartRender]);
-
   const { error: updateError } = useAsync(async () => {
     if (!sendWrapperRef.current) {
       return;
@@ -239,6 +235,7 @@ function Chart(props: Props): JSX.Element {
 
       initialized.current = true;
 
+      onStartRender?.();
       const offscreenCanvas =
         "transferControlToOffscreen" in canvas ? canvas.transferControlToOffscreen() : canvas;
       const scales = await sendWrapperRef.current<RpcScales>(
@@ -254,10 +251,6 @@ function Chart(props: Props): JSX.Element {
         },
         [offscreenCanvas],
       );
-
-      if (!isMounted()) {
-        return;
-      }
 
       // once we are initialized, we can allow other handlers to send to the rpc endpoint
       rpcSendRef.current = sendWrapperRef.current;
@@ -276,14 +269,11 @@ function Chart(props: Props): JSX.Element {
       return;
     }
 
+    onStartRender?.();
     const scales = await rpcSendRef.current<RpcScales>("update", newUpdateMessage);
-    if (!isMounted()) {
-      return;
-    }
-
     maybeUpdateScales(scales);
     onChartUpdate?.();
-  }, [getNewUpdateMessage, isMounted, maybeUpdateScales, onChartUpdate, type]);
+  }, [getNewUpdateMessage, maybeUpdateScales, onChartUpdate, onStartRender, type]);
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
