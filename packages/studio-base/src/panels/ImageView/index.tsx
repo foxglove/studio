@@ -70,15 +70,18 @@ type DefaultConfig = {
 };
 
 export type Config = DefaultConfig & {
-  transformMarkers: boolean;
-  mode?: ZoomMode;
-  smooth?: boolean;
-  zoom?: number;
-  pan?: { x: number; y: number };
-  zoomPercentage?: number;
-  minValue?: number;
+  flipHorizontal?: boolean;
+  flipVertical?: boolean;
   maxValue?: number;
+  minValue?: number;
+  mode?: ZoomMode;
+  pan?: { x: number; y: number };
+  rotation?: number;
   saveStoryConfig?: () => void;
+  smooth?: boolean;
+  transformMarkers: boolean;
+  zoom?: number;
+  zoomPercentage?: number;
 };
 
 export type SaveImagePanelConfig = SaveConfig<Config>;
@@ -686,6 +689,27 @@ const configSchema: PanelConfigSchema<Config> = [
     key: "smooth",
     type: "toggle",
     title: "Bilinear smoothing",
+  },
+  {
+    key: "flipHorizontal",
+    type: "toggle",
+    title: "Flip horizontally",
+  },
+  {
+    key: "flipVertical",
+    type: "toggle",
+    title: "Flip vertically",
+  },
+  {
+    key: "rotation",
+    type: "dropdown",
+    title: "Rotation",
+    options: [
+      { value: 0, text: "0°" },
+      { value: 90, text: "90°" },
+      { value: 180, text: "180°" },
+      { value: 270, text: "270°" },
+    ],
   },
   {
     key: "minValue",

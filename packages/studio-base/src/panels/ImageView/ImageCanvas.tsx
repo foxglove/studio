@@ -347,7 +347,10 @@ export default function ImageCanvas(props: Props): JSX.Element {
       return await doRenderImage({
         canvas: canvasRef.current ?? undefined,
         geometry: {
+          flipHorizontal: config.flipHorizontal ?? false,
+          flipVertical: config.flipVertical ?? false,
           panZoom: computedViewbox,
+          rotation: config.rotation ?? 0,
           viewport: { width: targetWidth, height: targetHeight },
           zoomMode: zoomMode ?? "fit",
         },
@@ -360,19 +363,20 @@ export default function ImageCanvas(props: Props): JSX.Element {
       finishRender();
     }
   }, [
-    doRenderImage,
-    width,
-    height,
+    config,
     devicePixelRatio,
-    panX,
-    panY,
-    scaleValue,
+    doRenderImage,
+    height,
     image?.message,
     onStartRenderImage,
-    zoomMode,
-    topic?.datatype,
+    panX,
+    panY,
     rawMarkerData,
     renderOptions,
+    scaleValue,
+    topic?.datatype,
+    width,
+    zoomMode,
   ]);
 
   const [openZoomContext, setOpenZoomContext] = useState(false);
@@ -481,9 +485,12 @@ export default function ImageCanvas(props: Props): JSX.Element {
       canvas: tempCanvas,
       hitmapCanvas: undefined,
       geometry: {
+        flipHorizontal: config.flipHorizontal ?? false,
+        flipVertical: config.flipVertical ?? false,
         panZoom: { x: 0, y: 0, scale: 1 },
-        zoomMode: "other",
+        rotation: config.rotation ?? 0,
         viewport: { width, height },
+        zoomMode: "other",
       },
       imageMessage,
       imageMessageDatatype: topic.datatype,
@@ -512,7 +519,7 @@ export default function ImageCanvas(props: Props): JSX.Element {
         downloadFiles([{ blob, fileName }]);
       }, "image/png");
     });
-  }, [image, topic, width, height, renderOptions]);
+  }, [image, topic, width, height, config, renderOptions]);
 
   function onCanvasClick(event: MouseEvent<HTMLCanvasElement>) {
     const boundingRect = event.currentTarget.getBoundingClientRect();

@@ -37,7 +37,10 @@ export type RenderOptions = {
 };
 
 export type RenderGeometry = {
+  flipVertical: boolean;
+  flipHorizontal: boolean;
   panZoom: PanZoom;
+  rotation: number;
   viewport: Dimensions;
   zoomMode: ZoomMode;
 };

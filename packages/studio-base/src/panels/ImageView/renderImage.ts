@@ -229,7 +229,11 @@ function render({
   imageSmoothing: boolean;
   markerData: MarkerData | undefined;
 }): RenderDimensions | undefined {
-  const bitmapDimensions = { width: bitmap.width, height: bitmap.height };
+  const bitmapDimensions =
+    geometry.rotation % 180 === 0
+      ? { width: bitmap.width, height: bitmap.height }
+      : { width: bitmap.height, height: bitmap.width };
+
   const canvasCtx = canvas.getContext("2d");
   if (!canvasCtx) {
     return;
@@ -242,7 +246,7 @@ function render({
   const viewportW = canvas.width;
   const viewportH = canvas.height;
 
-  const imageViewportScale = calculateZoomScale(bitmap, canvas, geometry.zoomMode);
+  const imageViewportScale = calculateZoomScale(bitmapDimensions, canvas, geometry.zoomMode);
 
   const ctx = new HitmapRenderContext(canvasCtx, hitmapCanvas);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -255,6 +259,18 @@ function render({
 
   ctx.scale(geometry.panZoom.scale, geometry.panZoom.scale);
   ctx.scale(imageViewportScale, imageViewportScale);
+
+  if (geometry.flipHorizontal) {
+    ctx.scale(-1, 1);
+  }
+
+  if (geometry.flipVertical) {
+    ctx.scale(1, -1);
+  }
+
+  if (geometry.rotation != undefined) {
+    ctx.rotate(geometry.rotation);
+  }
 
   // center the image in the viewport
   // also sets 0,0 as the upper left corner of the image since markers are drawn from 0,0 on the image
