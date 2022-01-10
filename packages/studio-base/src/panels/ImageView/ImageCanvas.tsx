@@ -147,7 +147,7 @@ const webWorkerManager = new WebWorkerManager(() => {
 }, 1);
 
 type RenderImage = (
-  args: RenderArgs & { canvas: RenderableCanvas; viewport: Dimensions },
+  args: RenderArgs & { canvas: RenderableCanvas },
 ) => Promise<Dimensions | undefined>;
 
 const supportsOffscreenCanvas =
@@ -202,8 +202,8 @@ export default function ImageCanvas(props: Props): JSX.Element {
       // Potentially performance-sensitive; await can be expensive
       // eslint-disable-next-line @typescript-eslint/promise-function-async
       const renderInMain: RenderImage = (args) => {
-        const targetWidth = args.viewport.width;
-        const targetHeight = args.viewport.height;
+        const targetWidth = args.geometry.viewport.width;
+        const targetHeight = args.geometry.viewport.height;
 
         if (targetWidth !== canvas.width) {
           canvas.width = targetWidth;
@@ -223,13 +223,11 @@ export default function ImageCanvas(props: Props): JSX.Element {
       // eslint-disable-next-line @typescript-eslint/promise-function-async
       const workerRender: RenderImage = (args) => {
         const {
-          zoomMode: zoom,
-          panZoom,
-          viewport,
+          geometry,
           imageMessage,
           imageMessageDatatype,
-          rawMarkerData: rawMarkers,
           options,
+          rawMarkerData: rawMarkers,
         } = args;
 
         if (!imageMessage) {
@@ -255,18 +253,13 @@ export default function ImageCanvas(props: Props): JSX.Element {
                 width: imageMessage.width,
               };
 
-        return worker.send<
-          Dimensions | undefined,
-          RenderArgs & { id: string; viewport: Dimensions }
-        >("renderImage", {
+        return worker.send<Dimensions | undefined, RenderArgs & { id: string }>("renderImage", {
+          geometry,
           id,
-          zoomMode: zoom,
-          panZoom,
-          viewport,
           imageMessage: msg,
           imageMessageDatatype,
-          rawMarkerData: JSON.parse(JSON.stringify(rawMarkers)),
           options,
+          rawMarkerData: JSON.parse(JSON.stringify(rawMarkers)),
         });
       };
 
@@ -353,9 +346,11 @@ export default function ImageCanvas(props: Props): JSX.Element {
     try {
       return await doRenderImage({
         canvas: canvasRef.current ?? undefined,
-        zoomMode: zoomMode ?? "fit",
-        panZoom: computedViewbox,
-        viewport: { width: targetWidth, height: targetHeight },
+        geometry: {
+          panZoom: computedViewbox,
+          viewport: { width: targetWidth, height: targetHeight },
+          zoomMode: zoomMode ?? "fit",
+        },
         imageMessage,
         imageMessageDatatype: topic?.datatype,
         rawMarkerData,
@@ -471,7 +466,7 @@ export default function ImageCanvas(props: Props): JSX.Element {
   const onDownloadImage = useCallback(() => {
     const canvas = canvasRef.current;
 
-    if (!canvas || !image || !topic) {
+    if (!canvas || !image || !topic || width == undefined || height == undefined) {
       return;
     }
 
@@ -485,8 +480,11 @@ export default function ImageCanvas(props: Props): JSX.Element {
     void renderImage({
       canvas: tempCanvas,
       hitmapCanvas: undefined,
-      zoomMode: "other",
-      panZoom: { x: 0, y: 0, scale: 1 },
+      geometry: {
+        panZoom: { x: 0, y: 0, scale: 1 },
+        zoomMode: "other",
+        viewport: { width, height },
+      },
       imageMessage,
       imageMessageDatatype: topic.datatype,
       rawMarkerData: { markers: [], transformMarkers: false },
@@ -514,7 +512,7 @@ export default function ImageCanvas(props: Props): JSX.Element {
         downloadFiles([{ blob, fileName }]);
       }, "image/png");
     });
-  }, [image, topic, renderOptions]);
+  }, [image, topic, width, height, renderOptions]);
 
   function onCanvasClick(event: MouseEvent<HTMLCanvasElement>) {
     const boundingRect = event.currentTarget.getBoundingClientRect();

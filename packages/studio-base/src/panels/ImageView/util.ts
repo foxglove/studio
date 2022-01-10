@@ -36,13 +36,18 @@ export type RenderOptions = {
   resizeCanvas?: boolean;
 };
 
+export type RenderGeometry = {
+  panZoom: PanZoom;
+  viewport: Dimensions;
+  zoomMode: ZoomMode;
+};
+
 export type RenderArgs = {
   imageMessage?: Image | CompressedImage;
   imageMessageDatatype?: string;
+  geometry: RenderGeometry;
   options?: RenderOptions;
-  panZoom: PanZoom;
   rawMarkerData: RawMarkerData;
-  zoomMode: ZoomMode;
 };
 
 export type Dimensions = { width: number; height: number };

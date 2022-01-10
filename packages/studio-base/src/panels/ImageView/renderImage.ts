@@ -45,8 +45,8 @@ import {
   RenderableCanvas,
   RenderArgs,
   RenderDimensions,
+  RenderGeometry,
   RenderOptions,
-  ZoomMode,
 } from "./util";
 
 const UNCOMPRESSED_IMAGE_DATATYPES = [
@@ -75,8 +75,7 @@ const FAST_POINT_SIZE_THRESHOlD = 3;
 export async function renderImage({
   canvas,
   hitmapCanvas,
-  zoomMode,
-  panZoom,
+  geometry,
   imageMessage,
   imageMessageDatatype,
   rawMarkerData,
@@ -111,9 +110,8 @@ export async function renderImage({
 
     const dimensions = render({
       canvas,
+      geometry,
       hitmapCanvas,
-      zoomMode,
-      panZoom,
       bitmap,
       imageSmoothing,
       markerData,
@@ -210,26 +208,24 @@ function decodeMessageToBitmap(
   return self.createImageBitmap(image);
 }
 
-function clearCanvas(canvas?: HTMLCanvasElement | OffscreenCanvas) {
+function clearCanvas(canvas?: RenderableCanvas) {
   if (canvas) {
     canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
   }
 }
 
 function render({
-  canvas,
-  hitmapCanvas,
-  zoomMode,
-  panZoom,
   bitmap,
+  canvas,
+  geometry,
+  hitmapCanvas,
   imageSmoothing,
   markerData,
 }: {
-  canvas: RenderableCanvas;
-  hitmapCanvas: RenderableCanvas | undefined;
-  zoomMode: ZoomMode;
-  panZoom: PanZoom;
   bitmap: ImageBitmap;
+  canvas: RenderableCanvas;
+  geometry: RenderGeometry;
+  hitmapCanvas: RenderableCanvas | undefined;
   imageSmoothing: boolean;
   markerData: MarkerData | undefined;
 }): RenderDimensions | undefined {
@@ -246,7 +242,7 @@ function render({
   const viewportW = canvas.width;
   const viewportH = canvas.height;
 
-  const imageViewportScale = calculateZoomScale(bitmap, canvas, zoomMode);
+  const imageViewportScale = calculateZoomScale(bitmap, canvas, geometry.zoomMode);
 
   const ctx = new HitmapRenderContext(canvasCtx, hitmapCanvas);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -255,9 +251,9 @@ function render({
 
   // translate x/y from the center of the canvas
   ctx.translate(viewportW / 2, viewportH / 2);
-  ctx.translate(panZoom.x, panZoom.y);
+  ctx.translate(geometry.panZoom.x, geometry.panZoom.y);
 
-  ctx.scale(panZoom.scale, panZoom.scale);
+  ctx.scale(geometry.panZoom.scale, geometry.panZoom.scale);
   ctx.scale(imageViewportScale, imageViewportScale);
 
   // center the image in the viewport
@@ -279,7 +275,7 @@ function render({
       ctx,
       markers as MessageEvent<ImageMarker | ImageMarkerArray>[],
       cameraModel,
-      panZoom,
+      geometry.panZoom,
     );
   } catch (err) {
     console.warn("error painting markers:", err);
