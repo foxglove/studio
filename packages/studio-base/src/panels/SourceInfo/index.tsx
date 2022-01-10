@@ -114,14 +114,15 @@ function SourceInfo() {
           checkboxVisibility={CheckboxVisibility.hidden}
           disableSelectionZone
           enableUpdateAnimations={false}
-          isHeaderVisible={false}
           items={detailListItems}
+          styles={{ root: { ".ms-DetailsHeader": { paddingTop: 0 } } }}
           columns={[
             {
               key: "name",
               name: "topic name",
               fieldName: "name",
-              minWidth: 300,
+              minWidth: 200,
+              isResizable: true,
               data: "string",
               isPadded: true,
               onRender: (topic) => (
@@ -138,7 +139,8 @@ function SourceInfo() {
               key: "datatype",
               name: "datatype",
               fieldName: "datatype",
-              minWidth: 300,
+              minWidth: 200,
+              isResizable: true,
               data: "string",
               isPadded: true,
               onRender: (topic) => (
