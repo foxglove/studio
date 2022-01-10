@@ -200,7 +200,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     return () => {
       onChartUpdate();
     };
-  }, [pauseFrame, onChartUpdate, whoami]);
+  }, [pauseFrame, onChartUpdate]);
 
   const hoverBar = useRef<HTMLDivElement>(ReactNull);
 
