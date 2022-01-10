@@ -121,8 +121,7 @@ function SourceInfo() {
               key: "name",
               name: "topic name",
               fieldName: "name",
-              minWidth: 100,
-              maxWidth: 500,
+              minWidth: 300,
               data: "string",
               isPadded: true,
               onRender: (topic) => (
@@ -139,8 +138,7 @@ function SourceInfo() {
               key: "datatype",
               name: "datatype",
               fieldName: "datatype",
-              minWidth: 100,
-              maxWidth: 500,
+              minWidth: 300,
               data: "string",
               isPadded: true,
               onRender: (topic) => (
