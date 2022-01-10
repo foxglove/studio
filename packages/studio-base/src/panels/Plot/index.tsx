@@ -68,6 +68,8 @@ import { PlotConfig } from "./types";
 export { plotableRosTypes } from "./types";
 export type { PlotConfig, PlotXAxisVal } from "./types";
 
+const defaultLegendWidth = 240;
+
 export function openSiblingPlotPanel(openSiblingPanel: OpenSiblingPanel, topicName: string): void {
   openSiblingPanel({
     panelType: "Plot",
@@ -177,9 +179,9 @@ function Plot(props: Props) {
     maxYValue,
     showLegend,
     isSynced,
-    showTooltips,
     xAxisVal,
     xAxisPath,
+    legendWidth,
   } = config;
   const theme = useTheme();
 
@@ -369,7 +371,7 @@ function Plot(props: Props) {
   ]);
 
   const tooltips = useMemo(() => {
-    if (!showTooltips) {
+    if (showLegend) {
       return [];
     }
     const allTooltips: TimeBasedChartTooltipData[] = [];
@@ -379,7 +381,7 @@ function Plot(props: Props) {
       }
     }
     return allTooltips;
-  }, [datasets, showTooltips]);
+  }, [datasets, showLegend]);
 
   const messagePipeline = useMessagePipelineGetter();
   const onClick = useCallback<NonNullable<ComponentProps<typeof PlotChart>["onClick"]>>(
@@ -423,6 +425,7 @@ function Plot(props: Props) {
           xAxisVal={xAxisVal}
           xAxisPath={xAxisPath}
           pathsWithMismatchedDataLengths={pathsWithMismatchedDataLengths}
+          legendWidth={legendWidth}
         />
         <Flex col center>
           {title && <div>{title}</div>}
@@ -451,11 +454,6 @@ const configSchema: PanelConfigSchema<PlotConfig> = [
     type: "toggle",
     title: "Sync with other timestamp-based plots",
   },
-  {
-    key: "showTooltips",
-    type: "toggle",
-    title: "Show tooltips",
-  },
   { key: "maxYValue", type: "number", title: "Y max", placeholder: "auto", allowEmpty: true },
   { key: "minYValue", type: "number", title: "Y min", placeholder: "auto", allowEmpty: true },
   {
@@ -475,8 +473,8 @@ const defaultConfig: PlotConfig = {
   maxYValue: "",
   showLegend: true,
   isSynced: true,
-  showTooltips: true,
   xAxisVal: "timestamp",
+  legendWidth: defaultLegendWidth,
 };
 
 export default Panel(

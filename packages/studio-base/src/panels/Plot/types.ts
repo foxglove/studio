@@ -18,10 +18,10 @@ export type PlotConfig = {
   maxYValue?: string | number;
   showLegend: boolean;
   isSynced: boolean;
-  showTooltips: boolean;
   xAxisVal: PlotXAxisVal;
   xAxisPath?: BasePlotPath;
   followingViewWidth?: number;
+  legendWidth: number;
 };
 
 export const plotableRosTypes = [

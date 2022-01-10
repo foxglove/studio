@@ -14,7 +14,7 @@ import { Stack } from "@fluentui/react";
 import MenuIcon from "@mdi/svg/svg/menu.svg";
 import cx from "classnames";
 import { last } from "lodash";
-import { ComponentProps, useCallback, useState, useRef } from "react";
+import { ComponentProps, useCallback, useRef } from "react";
 
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
@@ -28,9 +28,8 @@ import usePlotStyles from "@foxglove/studio-base/panels/Plot/usePlotStyles";
 import { PlotPath, BasePlotPath, isReferenceLinePlotPathType } from "./internalTypes";
 import { plotableRosTypes, PlotConfig, PlotXAxisVal } from "./types";
 
-export const defaultDrawerWidth = 240;
-const minDrawerWidth = 25;
-const maxDrawerWidth = 500;
+const minLegendWidth = 25;
+const maxLegendWidth = 500;
 
 type PlotLegendProps = {
   paths: PlotPath[];
@@ -41,6 +40,7 @@ type PlotLegendProps = {
   xAxisVal: PlotXAxisVal;
   xAxisPath?: BasePlotPath;
   pathsWithMismatchedDataLengths: string[];
+  legendWidth: number;
 };
 
 const shortXAxisLabel = (path: PlotXAxisVal): string => {
@@ -67,8 +67,8 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
     xAxisVal,
     xAxisPath,
     pathsWithMismatchedDataLengths,
+    legendWidth,
   } = props;
-  const [drawerWidth, setDrawerWidth] = useState(defaultDrawerWidth);
 
   const lastPath = last(paths);
   const classes = usePlotStyles();
@@ -83,11 +83,11 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
     (e: MouseEvent) => {
       const offsetLeft = originalWrapper.current?.left ?? 0;
       const newWidth = e.clientX - offsetLeft;
-      if (newWidth > minDrawerWidth && newWidth < maxDrawerWidth) {
-        setDrawerWidth(newWidth);
+      if (newWidth > minLegendWidth && newWidth < maxLegendWidth) {
+        saveConfig({ legendWidth: newWidth });
       }
     },
-    [originalWrapper],
+    [originalWrapper, saveConfig],
   );
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
@@ -117,7 +117,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
           <Stack
             grow
             tokens={{ childrenGap: 4 }}
-            style={{ width: drawerWidth, overflow: "hidden" }}
+            style={{ width: legendWidth, overflow: "scroll" }}
           >
             <div className={classes.item}>
               x:
