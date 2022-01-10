@@ -54,7 +54,7 @@ type Props = {
   onStartRender?: () => void;
 
   // called when the chart has finished updating with new data
-  onChartUpdate?: () => void;
+  onFinishRender?: () => void;
 
   // called when a user hovers over an element
   // uses the chart.options.hover configuration
@@ -104,7 +104,7 @@ function Chart(props: Props): JSX.Element {
   const zoomEnabled = props.options.plugins?.zoom?.zoom?.enabled ?? false;
   const panEnabled = props.options.plugins?.zoom?.pan?.enabled ?? false;
 
-  const { type, data, options, width, height, onStartRender, onChartUpdate } = props;
+  const { type, data, options, width, height, onStartRender, onFinishRender } = props;
 
   const sendWrapperRef = useRef<RpcSend | undefined>();
   const rpcSendRef = useRef<RpcSend | undefined>();
@@ -256,7 +256,7 @@ function Chart(props: Props): JSX.Element {
       rpcSendRef.current = sendWrapperRef.current;
 
       maybeUpdateScales(scales);
-      onChartUpdate?.();
+      onFinishRender?.();
       return;
     }
 
@@ -272,8 +272,8 @@ function Chart(props: Props): JSX.Element {
     onStartRender?.();
     const scales = await rpcSendRef.current<RpcScales>("update", newUpdateMessage);
     maybeUpdateScales(scales);
-    onChartUpdate?.();
-  }, [getNewUpdateMessage, maybeUpdateScales, onChartUpdate, onStartRender, type]);
+    onFinishRender?.();
+  }, [getNewUpdateMessage, maybeUpdateScales, onFinishRender, onStartRender, type]);
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;

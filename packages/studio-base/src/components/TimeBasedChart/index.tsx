@@ -167,9 +167,9 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     useCallback((messagePipeline) => messagePipeline.pauseFrame, []),
   );
 
-  // when data changes, we pause and wait for onChartUpdate to resume
   const resumeFrame = useRef<() => void | undefined>();
 
+  // when data changes, we pause and wait for onFinishRender to resume
   const onStartRender = useCallback(() => {
     if (resumeFrame.current) {
       if (process.env.NODE_ENV === "development") {
@@ -185,7 +185,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
   // resumes any paused frames
   // since we render in a web-worker we need to pause/resume the message pipeline to keep
   // our plot rendeirng in-sync with data rendered elsewhere in the app
-  const onChartUpdate = useCallback(() => {
+  const onFinishRender = useCallback(() => {
     const current = resumeFrame.current;
     resumeFrame.current = undefined;
 
@@ -198,9 +198,9 @@ export default function TimeBasedChart(props: Props): JSX.Element {
   useEffect(() => {
     // cleanup paused frames on unmount or dataset changes
     return () => {
-      onChartUpdate();
+      onFinishRender();
     };
-  }, [pauseFrame, onChartUpdate]);
+  }, [pauseFrame, onFinishRender]);
 
   const hoverBar = useRef<HTMLDivElement>(ReactNull);
 
@@ -815,12 +815,12 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     onClick: props.onClick,
     onScalesUpdate,
     onStartRender,
-    onChartUpdate,
+    onFinishRender,
     onHover,
   };
 
   // avoid rendering if width/height are 0 - usually on initial mount
-  // so we don't trigger onChartUpdate if we know we will immediately resize
+  // so we don't trigger onFinishRender if we know we will immediately resize
   if (width === 0 || height === 0) {
     return <></>;
   }
