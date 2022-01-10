@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useCallback, useLayoutEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 import {
@@ -76,7 +76,7 @@ export function useStateToURLSynchronization(): void {
   // differ from our reference values, we update the unsavedAppState
   const referenceAppStateRef = useRef<AppURLState>({});
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     // Electron has its own concept of what the app URL is. If we want to do anything
     // here for desktop we'll need to find some other method of encoding the state
     // like perhaps the URL hash.

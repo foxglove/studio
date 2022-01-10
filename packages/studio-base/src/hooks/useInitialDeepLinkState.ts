@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useLayoutEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import Log from "@foxglove/log";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
@@ -51,7 +51,7 @@ export function useInitialDeepLinkState(deepLinks: string[]): void {
   // Set a sessionStorage preference for web if we have a stable URL state.
   // This allows us to avoid asking for the preference immediately on
   // launch of an empty session and makes refreshes do the right thing.
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (isDesktopApp()) {
       return;
     }
@@ -61,7 +61,7 @@ export function useInitialDeepLinkState(deepLinks: string[]): void {
     }
   }, [launchPreference, setLaunchPreference, stableUrlState]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const urlState = appUrlRef.current;
     if (!urlState) {
       return;
@@ -84,7 +84,7 @@ export function useInitialDeepLinkState(deepLinks: string[]): void {
     }
   }, [selectSource, setSelectedLayoutId]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const urlState = appUrlRef.current;
     if (urlState?.time == undefined || !seekPlayback) {
       return;
