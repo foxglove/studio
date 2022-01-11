@@ -6,12 +6,17 @@ import { captureException } from "@sentry/electron";
 import { autoUpdater } from "electron-updater";
 
 import Logger from "@foxglove/log";
+import { AppSetting } from "@foxglove/studio-base/src/AppSetting";
+
+import { getAppSetting } from "./settings";
 
 const log = Logger.getLogger(__filename);
 
-type AppUpdateMode = "none" | "default" | "start";
+function isNetworkError(err: unknown) {
+  if (!(err instanceof Error)) {
+    return false;
+  }
 
-function isNetworkError(err: Error) {
   return (
     err.message === "net::ERR_INTERNET_DISCONNECTED" ||
     err.message === "net::ERR_PROXY_CONNECTION_FAILED" ||
@@ -23,8 +28,7 @@ function isNetworkError(err: Error) {
 }
 
 class StudioAppUpdater {
-  private updateMode: AppUpdateMode | undefined;
-
+  private started: boolean = false;
   // Seconds to wait after app startup to check and download updates.
   // This gives the user time to disable app updates for new installations
   private initialUpdateDelaySec = 60 * 10;
@@ -35,50 +39,42 @@ class StudioAppUpdater {
   /**
    * Start the update process.
    */
-  start(updateMode: AppUpdateMode): void {
-    if (updateMode === "none") {
+  start(): void {
+    if (this.started) {
+      log.info(`StudioAppUpdater already running`);
       return;
     }
+    this.started = true;
 
-    if (this.updateMode != undefined) {
-      throw new Error("Cannot start StudioAppUpdater again");
-    }
-
-    this.updateMode = updateMode;
-    log.info(`Starting automatic updates with mode: ${this.updateMode}`);
-
-    if (this.updateMode === "start") {
-      this.checkForUpdatesAndNotify();
-    } else {
-      setTimeout(() => {
-        this.checkForUpdatesAndNotify();
-      }, this.initialUpdateDelaySec * 1000);
-    }
+    log.info(`Starting update loop`);
+    setTimeout(() => {
+      void this.maybeCheckForUpdates();
+    }, this.initialUpdateDelaySec * 1000);
   }
 
   // Check for updates and download.
   //
   // When using the "default" update mode, the app will continue to check for updates periodically
-  private checkForUpdatesAndNotify(): void {
-    log.info("Checking for updates");
-    autoUpdater
-      .checkForUpdatesAndNotify()
-      .catch((err: Error) => {
-        if (isNetworkError(err)) {
-          log.warn(`Network error checking for updates: ${err}`);
-        } else {
-          captureException(err);
-        }
-      })
-      .finally(() => {
-        // Only the default mode has periodic checking for updates
-        if (this.updateMode !== "default") {
-          return;
-        }
-        setTimeout(() => {
-          this.checkForUpdatesAndNotify();
-        }, this.updateCheckIntervalSec * 1000);
-      });
+  private async maybeCheckForUpdates(): Promise<void> {
+    try {
+      // The user may have changed the app update setting so we load it again
+      const appUpdatesEnabled = getAppSetting<boolean>(AppSetting.UPDATES_ENABLED);
+
+      if (appUpdatesEnabled ?? true) {
+        log.info("Checking for updates");
+        await autoUpdater.checkForUpdatesAndNotify();
+      }
+    } catch (err) {
+      if (isNetworkError(err)) {
+        log.warn(`Network error checking for updates: ${err}`);
+      } else {
+        captureException(err);
+      }
+    } finally {
+      setTimeout(() => {
+        void this.maybeCheckForUpdates();
+      }, this.updateCheckIntervalSec * 1000);
+    }
   }
 
   private static instance: StudioAppUpdater;

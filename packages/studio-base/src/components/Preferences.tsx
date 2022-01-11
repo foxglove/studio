@@ -8,7 +8,7 @@ import {
   Dropdown,
   IChoiceGroupOption,
   IComboBoxOption,
-  IDropdownOption,
+  Label,
   SelectableOptionMenuItemType,
   Stack,
   Text,
@@ -31,6 +31,8 @@ import fuzzyFilter from "@foxglove/studio-base/util/fuzzyFilter";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 const MESSAGE_RATES = [1, 3, 5, 10, 15, 20, 30, 60];
+
+const os = OsContextSingleton; // workaround for https://github.com/webpack/webpack/issues/12960
 
 function formatTimezone(name: string) {
   const tz = moment.tz(name);
@@ -247,37 +249,21 @@ function MessageFramerate(): React.ReactElement {
 }
 
 function AutoUpdate(): React.ReactElement {
-  const [appUpdateMode, setAppUpdateMode] = useAppConfigurationValue<string>(
-    AppSetting.APP_UPDATE_MODE,
+  const [updatesEnabled = true, setUpdatedEnabled] = useAppConfigurationValue<boolean>(
+    AppSetting.UPDATES_ENABLED,
   );
 
-  const entries: Array<IDropdownOption> = [
-    { key: "default", text: "default - periodically check for updates" },
-    { key: "start", text: "start - check for updates on startup" },
-    { key: "none", text: "none - never check for updates" },
-  ];
-
-  if (!isDesktopApp()) {
-    return <></>;
-  }
-
   return (
-    <Dropdown
-      label="App update mode"
-      options={entries}
-      openOnKeyboardFocus
-      selectedKey={appUpdateMode}
-      defaultSelectedKey={"default"}
-      onChange={(_event, option) => {
-        if (option) {
-          void setAppUpdateMode(String(option.key));
-        }
-      }}
-      calloutProps={{
-        directionalHint: DirectionalHint.bottomLeftEdge,
-        directionalHintFixed: true,
-      }}
-    />
+    <>
+      <Label>Updates:</Label>
+      <Checkbox
+        checked={updatesEnabled}
+        label="Automatically install updates"
+        onChange={(_, newValue) => {
+          void setUpdatedEnabled(newValue ?? true);
+        }}
+      />
+    </>
   );
 }
 
@@ -286,8 +272,7 @@ function RosPackagePath(): React.ReactElement {
     AppSetting.ROS_PACKAGE_PATH,
   );
 
-  const os = OsContextSingleton;
-  const rosPackagePathPlaceholder = useMemo(() => os?.getEnvVar("ROS_PACKAGE_PATH"), [os]);
+  const rosPackagePathPlaceholder = useMemo(() => os?.getEnvVar("ROS_PACKAGE_PATH"), []);
 
   return (
     <TextField
@@ -326,6 +311,13 @@ export default function Preferences(): React.ReactElement {
     AppSetting.TELEMETRY_ENABLED,
   );
 
+  // automatic updates are a desktop-only setting
+  //
+  // electron-updater does not provide a way to detect if we are on a supported update platform
+  // so we hard-code linux as an _unsupported_ auto-update platform since we cannot auto-update
+  // with our .deb package install method on linux.
+  const supportsAppUpdates = isDesktopApp() && os?.platform !== "linux";
+
   return (
     <SidebarContent title="Preferences">
       <Stack tokens={{ childrenGap: 30 }}>
@@ -344,9 +336,11 @@ export default function Preferences(): React.ReactElement {
             <Stack.Item>
               <MessageFramerate />
             </Stack.Item>
-            <Stack.Item>
-              <AutoUpdate />
-            </Stack.Item>
+            {supportsAppUpdates && (
+              <Stack.Item>
+                <AutoUpdate />
+              </Stack.Item>
+            )}
             {!isDesktopApp() && (
               <Stack.Item>
                 <LaunchDefault />

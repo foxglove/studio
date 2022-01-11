@@ -216,18 +216,14 @@ function main() {
 
     registerRosPackageProtocolHandlers();
 
-    const appUpdateMode = getAppSetting<string>(AppSetting.APP_UPDATE_MODE);
-
     // Only production builds check for automatic updates
     if (process.env.NODE_ENV !== "production") {
       log.info("Automatic updates disabled (development environment)");
     } else if (/-(dev|nightly)/.test(pkgInfo.version)) {
       log.info("Automatic updates disabled (development version)");
-    } else if (appUpdateMode === "none") {
-      log.info("Automatic updates disabled via app settings");
     }
 
-    StudioAppUpdater.Instance().start(appUpdateMode === "default" ? "default" : "start");
+    StudioAppUpdater.Instance().start();
 
     app.setAboutPanelOptions({
       applicationName: pkgInfo.productName,
