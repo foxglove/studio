@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { ContextualMenu, IContextualMenuItem, makeStyles } from "@fluentui/react";
-import CogIcon from "@mdi/svg/svg/cog.svg";
+import MenuIcon from "@mdi/svg/svg/menu.svg";
 import { useCallback, useContext, useMemo, useRef } from "react";
 import { MosaicContext, MosaicNode, MosaicWindowContext } from "react-mosaic-component";
 
@@ -164,7 +164,7 @@ export function PanelActionsDropdown({ isOpen, setIsOpen, isUnknownPanel }: Prop
           onClick: () => {
             panelContext?.enterFullscreen();
           },
-          "data-test": "panel-settings-fullscreen",
+          "data-test": "panel-menu-fullscreen",
           iconProps: {
             iconName: "FullScreenMaximize",
             styles: { root: { height: 24, marginLeft: 2, marginRight: 6 } },
@@ -195,7 +195,7 @@ export function PanelActionsDropdown({ isOpen, setIsOpen, isUnknownPanel }: Prop
       text: "Remove panel",
       onClick: close,
       iconProps: { iconName: "Delete" },
-      "data-test": "panel-settings-remove",
+      "data-test": "panel-menu-remove",
     });
     return items;
   }, [close, isUnknownPanel, openSettings, panelContext, split, swap]);
@@ -215,13 +215,8 @@ export function PanelActionsDropdown({ isOpen, setIsOpen, isUnknownPanel }: Prop
         target={buttonRef}
         onDismiss={() => setIsOpen(false)}
       />
-      <Icon
-        fade
-        tooltip="Panel settings"
-        dataTest="panel-settings"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <CogIcon className={styles.icon} />
+      <Icon fade tooltip="More" dataTest="panel-menu" onClick={() => setIsOpen(!isOpen)}>
+        <MenuIcon className={styles.icon} />
       </Icon>
     </div>
   );
