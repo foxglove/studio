@@ -878,7 +878,6 @@ export default class SceneBuilder implements MarkerProvider {
 
         const settings = this._settingsByKey[`t:${topic.name}`];
         if (settings) {
-          // fixme - should avoid mucking settings
           (marker as { settings?: unknown }).settings = settings;
         }
         this._addMarkerToCollector(add, topic, marker, pose);
