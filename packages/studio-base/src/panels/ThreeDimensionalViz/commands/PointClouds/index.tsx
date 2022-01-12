@@ -40,7 +40,6 @@ import { MemoizedMarker, MemoizedVertexBuffer, PointCloudMarker, VertexBuffer } 
 
 const COLOR_MODE_FLAT = 0;
 const COLOR_MODE_RGB = 1;
-const COLOR_MODE_BGR = -1;
 const COLOR_MODE_GRADIENT = 2;
 const COLOR_MODE_RAINBOW = 3;
 const COLOR_MODE_TURBO = 4;
@@ -135,7 +134,8 @@ vec3 turboColor() {
   const vec2 kGreenVec2 = vec2(4.27729857, 2.82956604);
   const vec2 kBlueVec2 = vec2(-89.90310912, 27.34824973);
 
-  float x = clamp(getFieldValue_UNORM(), 0.0, 1.0);
+  // Clamp the input between [0.0, 1.0], then scale to the range [0.01, 1.0]
+  float x = clamp(getFieldValue_UNORM(), 0.0, 1.0) * 0.99 + 0.01;
   vec4 v4 = vec4(1.0, x, x * x, x * x * x);
   vec2 v2 = v4.zw * v4.z;
   return vec3(
@@ -183,9 +183,7 @@ void main () {
   vec3 p = applyPose(position);
   gl_Position = projection * view * vec4(p, 1);
 
-  if (colorMode == ${COLOR_MODE_BGR}) {
-    fragColor = color.bgr;
-  } else if (colorMode == ${COLOR_MODE_RGB}) {
+  if (colorMode == ${COLOR_MODE_RGB}) {
     fragColor = color;
   }
 }
@@ -212,7 +210,7 @@ void main () {
 `;
 
 function getEffectiveColorMode(props: DecodedMarker) {
-  const { settings, is_bigendian, hitmapColors, blend } = props;
+  const { settings, hitmapColors, blend } = props;
   if (hitmapColors) {
     // We're providing a colors array in RGB format
     return COLOR_MODE_RGB;
@@ -233,7 +231,7 @@ function getEffectiveColorMode(props: DecodedMarker) {
   } else if (colorMode.mode === "turbo") {
     return COLOR_MODE_TURBO;
   }
-  return is_bigendian ? COLOR_MODE_RGB : COLOR_MODE_BGR;
+  return COLOR_MODE_RGB;
 }
 
 // Implements a custom caching mechanism for vertex buffers.
@@ -291,9 +289,7 @@ const makePointCloudCommand = () => {
       primitive: "points",
       vert: (_context, props) => {
         const mode = getEffectiveColorMode(props);
-        return mode === COLOR_MODE_RGB || mode === COLOR_MODE_BGR
-          ? vertexShaderForRgbColor
-          : vertexShaderForSingleColor;
+        return mode === COLOR_MODE_RGB ? vertexShaderForRgbColor : vertexShaderForSingleColor;
       },
       frag: fragmentShader,
       attributes: {

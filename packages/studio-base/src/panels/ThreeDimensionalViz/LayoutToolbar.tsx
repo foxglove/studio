@@ -20,6 +20,7 @@ import Crosshair from "@foxglove/studio-base/panels/ThreeDimensionalViz/Crosshai
 import FollowTFControl from "@foxglove/studio-base/panels/ThreeDimensionalViz/FollowTFControl";
 import Interactions from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions";
 import { TabType } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/Interactions";
+import { LayoutToolbarSharedProps } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Layout";
 import MainToolbar from "@foxglove/studio-base/panels/ThreeDimensionalViz/MainToolbar";
 import MeasureMarker from "@foxglove/studio-base/panels/ThreeDimensionalViz/MeasureMarker";
 import MeasuringTool, {
@@ -28,7 +29,6 @@ import MeasuringTool, {
 import SearchText, {
   SearchTextProps,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/SearchText";
-import { LayoutToolbarSharedProps } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/Layout";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 type Props = LayoutToolbarSharedProps &
@@ -41,6 +41,7 @@ type Props = LayoutToolbarSharedProps &
     onToggleCameraMode: () => void;
     onToggleDebug: () => void;
     renderFrameId?: string;
+    fixedFrameId?: string;
     currentTime: Time;
     selectedObject?: MouseEventObject;
     setInteractionsTabType: (arg0?: TabType) => void;
@@ -52,7 +53,7 @@ function LayoutToolbar({
   autoSyncCameraState,
   cameraState,
   debug,
-  followOrientation,
+  followMode,
   followTf,
   interactionsTabType,
   isPlaying,
@@ -64,6 +65,7 @@ function LayoutToolbar({
   onToggleCameraMode,
   onToggleDebug,
   renderFrameId,
+  fixedFrameId,
   searchInputRef,
   searchText,
   searchTextMatches,
@@ -76,7 +78,6 @@ function LayoutToolbar({
   setSearchTextMatches,
   setSelectedMatchIndex,
   showCrosshair = false,
-  targetPose,
   toggleSearchTextOpen,
   transforms,
   currentTime,
@@ -108,8 +109,8 @@ function LayoutToolbar({
       >
         <FollowTFControl
           transforms={transforms}
-          tfToFollow={typeof followTf === "string" && followTf.length > 0 ? followTf : undefined}
-          followOrientation={followOrientation}
+          followTf={followTf}
+          followMode={followMode}
           onFollowChange={onFollowChange}
         />
         <SearchText
@@ -126,6 +127,7 @@ function LayoutToolbar({
           cameraState={cameraState}
           transforms={transforms}
           renderFrameId={renderFrameId}
+          fixedFrameId={fixedFrameId}
           currentTime={currentTime}
         />
         <Stack
@@ -155,8 +157,7 @@ function LayoutToolbar({
         />
         <CameraInfo
           cameraState={cameraState}
-          targetPose={targetPose}
-          followOrientation={followOrientation}
+          followMode={followMode}
           followTf={followTf}
           isPlaying={isPlaying}
           onAlignXYAxis={onAlignXYAxis}

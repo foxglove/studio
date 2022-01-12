@@ -154,18 +154,15 @@ type RenderImage = (args: {
   options?: RenderOptions;
 }) => Promise<Dimensions | undefined>;
 
+const supportsOffscreenCanvas =
+  typeof HTMLCanvasElement.prototype.transferControlToOffscreen === "function";
+
 export default function ImageCanvas(props: Props): JSX.Element {
-  const {
-    rawMarkerData,
-    topic,
-    image,
-    config,
-    saveConfig,
-    renderInMainThread,
-    onStartRenderImage,
-  } = props;
+  const { rawMarkerData, topic, image, config, saveConfig, onStartRenderImage } = props;
   const { mode } = config;
   const classes = useStyles();
+
+  const renderInMainThread = (props.renderInMainThread ?? false) || !supportsOffscreenCanvas;
 
   // generic errors within the panel
   const [error, setError] = useState<Error | undefined>();
@@ -201,7 +198,7 @@ export default function ImageCanvas(props: Props): JSX.Element {
 
     const id = uuidv4();
 
-    if (renderInMainThread === true) {
+    if (renderInMainThread) {
       // Potentially performance-sensitive; await can be expensive
       // eslint-disable-next-line @typescript-eslint/promise-function-async
       const renderInMain = (args: {
@@ -299,7 +296,7 @@ export default function ImageCanvas(props: Props): JSX.Element {
     }
 
     return () => {
-      if (renderInMainThread === true) {
+      if (renderInMainThread) {
         return;
       }
 
@@ -317,6 +314,7 @@ export default function ImageCanvas(props: Props): JSX.Element {
     setContainer,
     panZoomHandlers,
   } = usePanZoom({
+    minZoom: 0.5,
     initialPan: config.pan,
     initialZoom: config.zoom,
   });
@@ -348,12 +346,12 @@ export default function ImageCanvas(props: Props): JSX.Element {
 
     // can't set width/height of canvas after transferring control to offscreen
     // so we need to send the width/height to rpc
-    const targetWidth = width * devicePixelRatio;
-    const targetHeight = height * devicePixelRatio;
+    const targetWidth = Math.floor(width * devicePixelRatio);
+    const targetHeight = Math.floor(height * devicePixelRatio);
 
     const computedViewbox = {
-      x: panX * devicePixelRatio,
-      y: panY * devicePixelRatio,
+      x: Math.floor(panX * devicePixelRatio),
+      y: Math.floor(panY * devicePixelRatio),
       scale: scaleValue,
     };
 

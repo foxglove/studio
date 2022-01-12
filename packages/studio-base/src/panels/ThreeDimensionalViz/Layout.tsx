@@ -63,16 +63,18 @@ import {
   TRANSFORM_TOPIC,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/constants";
 import {
-  TargetPose,
   getInteractionData,
   getObject,
   getUpdatedGlobalVariablesBySelectedObject,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/threeDimensionalVizUtils";
 import {
-  DEFAULT_FRAME_IDS,
-  TransformTree,
+  IImmutableCoordinateFrame,
+  IImmutableTransformTree,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
-import { ThreeDimensionalVizConfig } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
+import {
+  FollowMode,
+  ThreeDimensionalVizConfig,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
 import { Frame, Topic } from "@foxglove/studio-base/players/types";
 import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
 import { Color, Marker } from "@foxglove/studio-base/types/Messages";
@@ -88,20 +90,18 @@ export type ClickedPosition = { clientX: number; clientY: number };
 
 export type LayoutToolbarSharedProps = {
   cameraState: CameraState;
-  followOrientation: boolean;
-  followTf?: string | false;
+  followMode: "follow" | "no-follow" | "follow-orientation";
+  followTf?: string;
   onAlignXYAxis: () => void;
   onCameraStateChange: (arg0: CameraState) => void;
-  // eslint-disable-next-line @foxglove/no-boolean-parameters
-  onFollowChange: (followTf?: string | false, followOrientation?: boolean) => void;
+  onFollowChange: (followTf?: string, followMode?: FollowMode) => void;
   saveConfig: Save3DConfig;
-  targetPose?: TargetPose;
-  transforms: TransformTree;
+  transforms: IImmutableTransformTree;
   isPlaying?: boolean;
 };
 
 export type LayoutTopicSettingsSharedProps = {
-  transforms: TransformTree;
+  transforms: IImmutableTransformTree;
   topics: readonly Topic[];
   saveConfig: Save3DConfig;
 };
@@ -109,16 +109,18 @@ export type LayoutTopicSettingsSharedProps = {
 type Props = LayoutToolbarSharedProps &
   LayoutTopicSettingsSharedProps & {
     children?: React.ReactNode;
+    renderFrame: IImmutableCoordinateFrame;
+    fixedFrame: IImmutableCoordinateFrame;
     currentTime: Time;
     resetFrame: boolean;
     frame: Frame;
     helpContent: React.ReactNode | string;
     isPlaying?: boolean;
     config: ThreeDimensionalVizConfig;
+    urdfBuilder: UrdfBuilder;
     saveConfig: Save3DConfig;
     setSubscriptions: (subscriptions: string[]) => void;
     topics: readonly Topic[];
-    transforms: TransformTree;
   };
 
 export type UserSelectionState = {
@@ -201,8 +203,10 @@ function isTopicRenderable(topic: Topic): boolean {
 export default function Layout({
   cameraState,
   children,
+  renderFrame,
+  fixedFrame,
   currentTime,
-  followOrientation,
+  followMode,
   followTf,
   resetFrame,
   frame,
@@ -213,9 +217,9 @@ export default function Layout({
   onFollowChange,
   saveConfig,
   topics,
-  targetPose,
   transforms,
   setSubscriptions,
+  urdfBuilder,
   config: {
     autoTextBackgroundColor = false,
     checkedKeys,
@@ -272,13 +276,11 @@ export default function Layout({
 
   const isDrawing = useMemo(() => measureInfo.measureState !== "idle", [measureInfo.measureState]);
 
-  // initialize the GridBuilder, SceneBuilder, and TransformsBuilder
-  const { gridBuilder, sceneBuilder, transformsBuilder, urdfBuilder } = useMemo(
+  const { gridBuilder, sceneBuilder, transformsBuilder } = useMemo(
     () => ({
       gridBuilder: new GridBuilder(),
       sceneBuilder: new SceneBuilder(),
       transformsBuilder: new TransformsBuilder(),
-      urdfBuilder: new UrdfBuilder(),
     }),
     [],
   );
@@ -454,26 +456,7 @@ export default function Layout({
     }, [] as MarkerMatcher[]);
   }, [colorOverrideByVariable, globalVariables, linkedGlobalVariables]);
 
-  const renderFrameId = useMemo(() => {
-    // If the user specified a followTf, do not fall back to any other frame
-    if (typeof followTf === "string") {
-      return transforms.hasFrame(followTf) ? followTf : undefined;
-    }
-
-    // Try the conventional list of transform ids
-    for (const frameId of DEFAULT_FRAME_IDS) {
-      if (transforms.hasFrame(frameId)) {
-        return frameId;
-      }
-    }
-
-    // Fall back to the root of the first transform (lexicographically), if any
-    const firstFrameId = Array.from(transforms.frames().keys()).sort()[0];
-    return firstFrameId != undefined ? transforms.frame(firstFrameId)?.root().id : undefined;
-  }, [transforms, followTf]);
-
   const [rosPackagePath] = useAppConfigurationValue<string>(AppSetting.ROS_PACKAGE_PATH);
-
   const [robotDescriptionParam] = PanelAPI.useParameter<string>(ROBOT_DESCRIPTION_PARAM);
 
   useMemo(() => {
@@ -484,7 +467,6 @@ export default function Layout({
       sceneBuilder.clear();
     }
 
-    urdfBuilder.setTransforms(transforms, renderFrameId);
     urdfBuilder.setUrdfData(robotDescriptionParam, rosPackagePath);
     urdfBuilder.setVisible(selectedTopicNames.includes(URDF_TOPIC));
     urdfBuilder.setSettingsByKey(settingsByKey, rosPackagePath);
@@ -494,7 +476,6 @@ export default function Layout({
     const selectedTopics = filterMap(selectedTopicNames, (name) => topicsByTopicName[name]);
 
     sceneBuilder.setPlayerId(playerId);
-    sceneBuilder.setTransforms(transforms, renderFrameId);
     sceneBuilder.setFlattenMarkers(flattenMarkers);
     sceneBuilder.setSelectedNamespacesByTopic(selectedNamespacesByTopic);
     sceneBuilder.setSettingsByKey(settingsByKey);
@@ -506,7 +487,6 @@ export default function Layout({
     sceneBuilder.render();
 
     // update the transforms and set the selected ones to render
-    transformsBuilder.setTransforms(transforms, renderFrameId);
     transformsBuilder.setSelectedTransforms(selectedNamespacesByTopic[TRANSFORM_TOPIC] ?? []);
   }, [
     colorOverrideMarkerMatchers,
@@ -518,14 +498,12 @@ export default function Layout({
     playerId,
     resetFrame,
     robotDescriptionParam,
-    renderFrameId,
     rosPackagePath,
     sceneBuilder,
     selectedNamespacesByTopic,
     selectedTopicNames,
     settingsByKey,
     topics,
-    transforms,
     transformsBuilder,
     urdfBuilder,
   ]);
@@ -624,22 +602,15 @@ export default function Layout({
     toggleDebug,
   } = useMemo(() => {
     return {
-      onClick: (ev: React.MouseEvent, args?: ReglClickInfo) => {
+      onClick: (_ev: React.MouseEvent, args?: ReglClickInfo) => {
         // Don't set any clicked objects when measuring distance or drawing polygons.
         if (callbackInputsRef.current.isDrawing) {
           return;
         }
         const newClickedObjects =
           (args?.objects as MouseEventObject[] | undefined) ?? ([] as MouseEventObject[]);
-        const newClickedPosition = { clientX: ev.clientX, clientY: ev.clientY };
         const newSelectedObject = newClickedObjects.length === 1 ? newClickedObjects[0] : undefined;
 
-        // Select the object directly if there is only one or open up context menu if there are many.
-        setSelectionState({
-          ...callbackInputsRef.current.selectionState,
-          clickedObjects: newClickedObjects,
-          clickedPosition: newClickedPosition,
-        });
         selectObject(newSelectedObject);
       },
       onControlsOverlayClick: (ev: React.MouseEvent<HTMLDivElement>) => {
@@ -832,6 +803,9 @@ export default function Layout({
               autoTextBackgroundColor={autoTextBackgroundColor}
               cameraState={cameraState}
               isPlaying={isPlaying}
+              transforms={transforms}
+              renderFrame={renderFrame}
+              fixedFrame={fixedFrame}
               currentTime={currentTime}
               markerProviders={markerProviders}
               onCameraStateChange={onCameraStateChange}
@@ -853,7 +827,7 @@ export default function Layout({
                   interactionsTabType={interactionsTabType}
                   setInteractionsTabType={setInteractionsTabType}
                   debug={debug}
-                  followOrientation={followOrientation}
+                  followMode={followMode}
                   followTf={followTf}
                   isPlaying={isPlaying}
                   measureInfo={measureInfo}
@@ -868,9 +842,9 @@ export default function Layout({
                   selectedObject={selectedObject}
                   setMeasureInfo={setMeasureInfo}
                   showCrosshair={showCrosshair}
-                  targetPose={targetPose}
                   transforms={transforms}
-                  renderFrameId={renderFrameId}
+                  renderFrameId={renderFrame.id}
+                  fixedFrameId={fixedFrame.id}
                   currentTime={currentTime}
                   {...searchTextProps}
                 />

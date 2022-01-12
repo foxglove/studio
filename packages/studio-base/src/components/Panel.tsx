@@ -229,7 +229,6 @@ type Props<Config> = {
 export interface PanelStatics<Config> {
   panelType: string;
   defaultConfig: Config;
-  supportsStrictMode?: boolean;
   configSchema?: PanelConfigSchema<Config>;
 }
 
@@ -415,7 +414,7 @@ export default function Panel<
         if (panelSettingsOpen) {
           // Allow clicking with no modifiers to select a panel (and deselect others) when panel settings are open
           e.stopPropagation(); // select the deepest clicked panel, not parent tab panels
-          setSelectedPanelIds(isSelected ? [] : [childId]);
+          setSelectedPanelIds([childId]);
         } else if (e.metaKey || shiftKeyPressed || isSelected) {
           e.stopPropagation(); // select the deepest clicked panel, not parent tab panels
           togglePanelSelected(childId, tabId);
@@ -624,7 +623,6 @@ export default function Panel<
             isFullscreen: fullScreen,
             hasSettings: PanelComponent.configSchema != undefined,
             tabId,
-            supportsStrictMode: PanelComponent.supportsStrictMode ?? true,
             // disallow dragging the root panel in a layout
             connectToolbarDragHandle: isTopLevelPanel ? undefined : connectToolbarDragHandle,
           }}
@@ -683,11 +681,7 @@ export default function Panel<
               </ActionsOverlay>
             )}
             <PanelErrorBoundary onRemovePanel={removePanel} onResetPanel={resetPanel}>
-              {PanelComponent.supportsStrictMode ?? true ? (
-                <React.StrictMode>{child}</React.StrictMode>
-              ) : (
-                child
-              )}
+              <React.StrictMode>{child}</React.StrictMode>
             </PanelErrorBoundary>
             {process.env.NODE_ENV !== "production" && (
               <div className={classes.perfInfo} ref={perfInfo} />

@@ -18,6 +18,8 @@ import styled from "styled-components";
 import { DEFAULT_CAMERA_STATE, Lines, Worldview } from "@foxglove/regl-worldview";
 import { TopicSettingsCollection } from "@foxglove/studio-base/panels/ThreeDimensionalViz/SceneBuilder";
 import { GridSettings } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor/GridSettingsEditor";
+import { CoordinateFrame } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
+import useTransforms from "@foxglove/studio-base/panels/ThreeDimensionalViz/useTransforms";
 import {
   ArrowMarker,
   ColorMarker,
@@ -37,10 +39,10 @@ import {
   TextMarker,
   TriangleListMarker,
 } from "@foxglove/studio-base/types/Messages";
-import { MarkerCollector } from "@foxglove/studio-base/types/Scene";
 import { FOXGLOVE_GRID_TOPIC } from "@foxglove/studio-base/util/globalConstants";
 
 import GridBuilder from "./GridBuilder";
+import { MarkerCollector } from "./types";
 
 const SExpectedResult = styled.div`
   position: fixed;
@@ -73,17 +75,31 @@ class MockMarkerCollector implements MarkerCollector {
   grid(_arg0: OccupancyGridMessage): void {}
   pointcloud(_arg0: PointCloud): void {}
   laserScan(_arg0: LaserScan): void {}
-  linedConvexHull(_arg0: LineListMarker | LineStripMarker): void {}
   instancedLineList(arg0: InstancedLineListMarker): void {
     this.data.instancedLineList.push(arg0);
   }
 }
 
+const renderFrame = new CoordinateFrame("map", undefined);
+const fixedFrame = renderFrame;
+
 storiesOf("panels/ThreeDimensionalViz/GridBuilder", module)
   .add("renders the default grid", () => {
+    const transforms = useTransforms({
+      topics: [],
+      frame: {},
+      reset: false,
+      urdfTransforms: [],
+    });
     const collector = new MockMarkerCollector();
     const gridBuilder = new GridBuilder();
-    gridBuilder.renderMarkers(collector, { sec: 0, nsec: 0 });
+    gridBuilder.renderMarkers({
+      add: collector,
+      renderFrame,
+      fixedFrame,
+      transforms,
+      time: { sec: 0, nsec: 0 },
+    });
 
     return (
       <div style={{ width: 640, height: 480 }}>
@@ -103,6 +119,7 @@ storiesOf("panels/ThreeDimensionalViz/GridBuilder", module)
     );
   })
   .add("renders a customized grid", () => {
+    const transforms = useTransforms({ topics: [], frame: {}, reset: false, urdfTransforms: [] });
     const collector = new MockMarkerCollector();
     const gridBuilder = new GridBuilder();
     const settings: GridSettings = {
@@ -115,7 +132,13 @@ storiesOf("panels/ThreeDimensionalViz/GridBuilder", module)
     const topicSettings: TopicSettingsCollection = {};
     topicSettings[`t:${FOXGLOVE_GRID_TOPIC}`] = settings;
     gridBuilder.setSettingsByKey(topicSettings);
-    gridBuilder.renderMarkers(collector, { sec: 0, nsec: 0 });
+    gridBuilder.renderMarkers({
+      add: collector,
+      renderFrame,
+      fixedFrame,
+      transforms,
+      time: { sec: 0, nsec: 0 },
+    });
 
     return (
       <div style={{ width: 640, height: 480 }}>

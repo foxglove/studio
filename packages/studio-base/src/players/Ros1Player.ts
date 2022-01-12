@@ -72,6 +72,7 @@ export default class Ros1Player implements Player {
   private _parameters = new Map<string, ParameterValue>(); // rosparams
   private _start?: Time; // The time at which we started playing.
   private _clockTime?: Time; // The most recent published `/clock` time, if available
+  private _requestedPublishers: AdvertiseOptions[] = []; // Requested publishers by setPublishers()
   private _requestedSubscriptions: SubscribePayload[] = []; // Requested subscriptions by setSubscriptions()
   private _parsedMessages: MessageEvent<unknown>[] = []; // Queue of messages that we'll send in next _emitState() call.
   private _messageOrder: TimestampMethod = "receiveTime";
@@ -109,11 +110,11 @@ export default class Ros1Player implements Player {
       return await net.createSocket(options.host, options.port);
     };
     const tcpServer = await net.createServer();
-    void tcpServer.listen(undefined, hostname, 10);
+    await tcpServer.listen(undefined, hostname, 10);
 
     if (this._rosNode == undefined) {
       const rosNode = new RosNode({
-        name: "/foxglovestudio",
+        name: `/foxglovestudio_${os.pid}`,
         hostname,
         pid: os.pid,
         rosMasterUri: this._url,
@@ -139,7 +140,14 @@ export default class Ros1Player implements Player {
     }
 
     await this._rosNode.start();
+
+    // Process any advertise requests made before our node was ready.
+    this.setPublishers(this._requestedPublishers);
+
+    // Request topics *after* setting publishers in case we want to subscribe
+    // to topics we are publishing.
     await this._requestTopics();
+
     this._presence = PlayerPresence.PRESENT;
   };
 
@@ -409,6 +417,8 @@ export default class Ros1Player implements Player {
   };
 
   setPublishers(publishers: AdvertiseOptions[]): void {
+    this._requestedPublishers = publishers;
+
     if (!this._rosNode || this._closed) {
       return;
     }

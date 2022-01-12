@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { omit, difference, isEmpty, isNil } from "lodash";
+import { difference, isEmpty, isNil } from "lodash";
 
 import { toRGBA, Color } from "@foxglove/regl-worldview";
 import {
@@ -20,6 +20,7 @@ import {
   DEFAULT_MAX_COLOR,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor/PointCloudSettingsEditor";
 import { DecodedMarker } from "@foxglove/studio-base/panels/ThreeDimensionalViz/commands/PointClouds/decodeMarker";
+import { RosObject } from "@foxglove/studio-base/players/types";
 import { PointCloud2, PointField } from "@foxglove/studio-base/types/Messages";
 
 import {
@@ -64,7 +65,7 @@ export function getClickedInfo(
   maybeFullyDecodedMarker: Omit<DecodedMarker, "data">,
   instanceIndex: number | undefined,
 ): ClickedInfo | undefined {
-  const { positionBuffer, colorBuffer, fields, settings, is_bigendian } = maybeFullyDecodedMarker;
+  const { positionBuffer, colorBuffer, fields, settings } = maybeFullyDecodedMarker;
   if (
     isEmpty(positionBuffer) ||
     isNil(instanceIndex) ||
@@ -89,13 +90,6 @@ export function getClickedInfo(
         // of 1 as well.
         1.0,
       ];
-      if (!is_bigendian) {
-        // When data uses little endianess, colors are in BGR format
-        // and we must swap R and B channels to display them correclty.
-        const temp = clickedPointColor[2] as number;
-        clickedPointColor[2] = clickedPointColor[0] as number;
-        clickedPointColor[0] = temp;
-      }
     } else if (colorMode.mode === "gradient" && colorBuffer) {
       const { minColorValue, maxColorValue } = maybeFullyDecodedMarker as MinMaxColors;
       const colorFieldValue = getVertexValue(colorBuffer, pointIndex);
@@ -161,8 +155,10 @@ export function getAdditionalFieldNames(fields: readonly PointField[]): string[]
 
 export function decodeAdditionalFields<T extends PointCloud2>(
   marker: T,
-): Omit<T, "data"> & Record<string, unknown> {
-  const { fields, data, width, row_step, height, point_step } = marker;
+): Omit<T, "data"> & RosObject {
+  const { data, ...markerRest } = marker;
+  const { fields, width, row_step, height, point_step } = markerRest;
+
   const offsets = getFieldOffsetsAndReaders(data, fields);
 
   let pointCount = 0;
@@ -188,7 +184,7 @@ export function decodeAdditionalFields<T extends PointCloud2>(
   }
 
   return {
-    ...omit(marker, "data"), // no need to include data since all fields have been decoded
+    ...markerRest, // no need to include data since all fields have been decoded
     ...otherFieldsValues,
   };
 }

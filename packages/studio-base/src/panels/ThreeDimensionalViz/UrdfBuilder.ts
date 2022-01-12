@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { EventEmitter } from "eventemitter3";
 import { quat, vec3 } from "gl-matrix";
 import { isEqual } from "lodash";
 
@@ -29,8 +30,9 @@ import { rewritePackageUrl } from "@foxglove/studio-base/context/AssetsContext";
 import { TopicSettingsCollection } from "@foxglove/studio-base/panels/ThreeDimensionalViz/SceneBuilder";
 import { UrdfSettings } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor/UrdfSettingsEditor";
 import {
+  IImmutableCoordinateFrame,
+  IImmutableTransformTree,
   Transform,
-  TransformTree,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
 import {
   Color,
@@ -41,10 +43,11 @@ import {
   MutablePose,
   SphereMarker,
 } from "@foxglove/studio-base/types/Messages";
-import { MarkerProvider, MarkerCollector } from "@foxglove/studio-base/types/Scene";
 import { clonePose } from "@foxglove/studio-base/util/Pose";
 import { URDF_TOPIC } from "@foxglove/studio-base/util/globalConstants";
 import sendNotification from "@foxglove/studio-base/util/sendNotification";
+
+import { MarkerProvider, RenderMarkerArgs, TransformLink } from "./types";
 
 export const DEFAULT_COLOR: Color = { r: 36 / 255, g: 142 / 255, b: 255 / 255, a: 1 };
 
@@ -55,7 +58,11 @@ type Quaternion = { x: number; y: number; z: number; w: number };
 
 const log = Logger.getLogger(__filename);
 
-export default class UrdfBuilder implements MarkerProvider {
+type EventTypes = {
+  transforms: (transforms: TransformLink[]) => void;
+};
+
+export default class UrdfBuilder extends EventEmitter<EventTypes> implements MarkerProvider {
   private _urdf?: UrdfRobot;
   private _boxes: CubeMarker[] = [];
   private _spheres: SphereMarker[] = [];
@@ -64,32 +71,30 @@ export default class UrdfBuilder implements MarkerProvider {
   private _visible = true;
   private _settings: UrdfSettings = {};
   private _urdfData?: string;
-  private _transforms?: TransformTree;
-  private _renderFrameId?: string;
 
-  constructor() {}
+  renderMarkers = ({ add, transforms, renderFrame, fixedFrame, time }: RenderMarkerArgs): void => {
+    if (!this._visible) {
+      return;
+    }
 
-  renderMarkers = (add: MarkerCollector, time: Time): void => {
-    if (this._visible && this._transforms && this._renderFrameId) {
-      for (const box of this._boxes) {
-        if (updatePose(box, this._transforms, this._renderFrameId, time)) {
-          add.cube(box);
-        }
+    for (const box of this._boxes) {
+      if (updatePose(box, transforms, renderFrame, fixedFrame, time)) {
+        add.cube(box);
       }
-      for (const sphere of this._spheres) {
-        if (updatePose(sphere, this._transforms, this._renderFrameId, time)) {
-          add.sphere(sphere);
-        }
+    }
+    for (const sphere of this._spheres) {
+      if (updatePose(sphere, transforms, renderFrame, fixedFrame, time)) {
+        add.sphere(sphere);
       }
-      for (const cylinder of this._cylinders) {
-        if (updatePose(cylinder, this._transforms, this._renderFrameId, time)) {
-          add.cylinder(cylinder);
-        }
+    }
+    for (const cylinder of this._cylinders) {
+      if (updatePose(cylinder, transforms, renderFrame, fixedFrame, time)) {
+        add.cylinder(cylinder);
       }
-      for (const mesh of this._meshes) {
-        if (updatePose(mesh, this._transforms, this._renderFrameId, time)) {
-          add.mesh(mesh);
-        }
+    }
+    for (const mesh of this._meshes) {
+      if (updatePose(mesh, transforms, renderFrame, fixedFrame, time)) {
+        add.mesh(mesh);
       }
     }
   };
@@ -98,15 +103,6 @@ export default class UrdfBuilder implements MarkerProvider {
   setVisible(isVisible: boolean): void {
     this._visible = isVisible;
   }
-
-  setTransforms = (transforms: TransformTree, renderFrameId: string | undefined): void => {
-    if (transforms === this._transforms && renderFrameId === this._renderFrameId) {
-      return;
-    }
-    this._transforms = transforms;
-    this._renderFrameId = renderFrameId;
-    this.update();
-  };
 
   setUrdfData(urdfData: string | undefined, rosPackagePath: string | undefined): void {
     if (this._urdfData !== urdfData) {
@@ -155,7 +151,7 @@ export default class UrdfBuilder implements MarkerProvider {
     }
 
     if (!text) {
-      throw new Error(`Did noy fetch any URDF data from "${url}"`);
+      throw new Error(`Did not fetch any URDF data from "${url}"`);
     }
 
     await this.parseUrdf(text, rosPackagePath);
@@ -167,40 +163,36 @@ export default class UrdfBuilder implements MarkerProvider {
     try {
       log.debug(`Parsing ${text.length} byte URDF`);
       this._urdf = await parseRobot(text, fileFetcher);
-      this.update();
+
+      const transforms = Array.from(this._urdf.joints.values(), (joint) => {
+        const t = joint.origin.xyz;
+        const q = eulerToQuaternion(joint.origin.rpy);
+        const translation: vec3 = [t.x, t.y, t.z];
+        const rotation: quat = [q.x, q.y, q.z, q.w];
+        const transform = new Transform(translation, rotation);
+        const transformLink: TransformLink = {
+          parent: joint.parent,
+          child: joint.child,
+          transform,
+        };
+        return transformLink;
+      });
+
+      // createMarkers before emit so if the emit triggers a repaint the markers are ready
+      this.createMarkers();
+
+      log.debug("Transforms from urdf: ", transforms);
+      this.emit("transforms", transforms);
     } catch (err) {
       throw new Error(`Failed to parse ${text.length} byte URDF: ${err}`);
     }
   }
 
-  private update(): void {
+  createMarkers(): void {
     this.clearMarkers();
 
-    if (!this._urdf || !this._transforms) {
-      return;
-    }
-
-    for (const joint of this._urdf.joints.values()) {
-      const t = joint.origin.xyz;
-      const q = eulerToQuaternion(joint.origin.rpy);
-      const translation: vec3 = [t.x, t.y, t.z];
-      const rotation: quat = [q.x, q.y, q.z, q.w];
-      const tf = new Transform(translation, rotation);
-      this._transforms.addTransform(joint.child, joint.parent, TIME_ZERO, tf);
-    }
-
-    this.createMarkers(this._urdf);
-  }
-
-  private clearMarkers(): void {
-    this._boxes = [];
-    this._spheres = [];
-    this._cylinders = [];
-    this._meshes = [];
-  }
-
-  private createMarkers(urdf: UrdfRobot): void {
-    if (!this._transforms || !this._renderFrameId) {
+    const urdf = this._urdf;
+    if (!urdf) {
       return;
     }
 
@@ -224,6 +216,13 @@ export default class UrdfBuilder implements MarkerProvider {
         }
       }
     }
+  }
+
+  private clearMarkers(): void {
+    this._boxes = [];
+    this._spheres = [];
+    this._cylinders = [];
+    this._meshes = [];
   }
 
   private addMarker(
@@ -412,13 +411,13 @@ function getColor(visual: UrdfVisual, robot: UrdfRobot): Color {
 
 function updatePose(
   marker: Marker,
-  transforms: TransformTree,
-  frameId: string,
-  currentTime: Time,
+  transforms: IImmutableTransformTree,
+  renderFrame: IImmutableCoordinateFrame,
+  fixedFrame: IImmutableCoordinateFrame,
+  time: Time,
 ): boolean {
   const srcFrame = transforms.frame(marker.header.frame_id);
-  const frame = transforms.frame(frameId);
-  if (!srcFrame || !frame) {
+  if (!srcFrame) {
     return false;
   }
 
@@ -426,5 +425,8 @@ function updatePose(
   const markerWithOrigPose = marker as Marker & { origPose?: MutablePose };
   markerWithOrigPose.origPose ??= clonePose(marker.pose);
 
-  return frame.apply(marker.pose, markerWithOrigPose.origPose, srcFrame, currentTime) != undefined;
+  return (
+    renderFrame.apply(marker.pose, markerWithOrigPose.origPose, fixedFrame, srcFrame, time, time) !=
+    undefined
+  );
 }

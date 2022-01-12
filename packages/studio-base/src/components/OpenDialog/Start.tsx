@@ -2,10 +2,12 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { CompoundButton, Stack, Text, IButtonProps, useTheme } from "@fluentui/react";
+import { CompoundButton, Stack, Text, IButtonProps, useTheme, Checkbox } from "@fluentui/react";
 import { useMemo } from "react";
 
+import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
+import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import TextMiddleTruncate from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/TextMiddleTruncate";
 
 import ActionList from "./ActionList";
@@ -42,6 +44,10 @@ export default function Start(props: IStartProps): JSX.Element {
   const theme = useTheme();
   const { recentSources, selectRecent } = usePlayerSelection();
 
+  const [showOnStartup = true, setShowOnStartup] = useAppConfigurationValue<boolean>(
+    AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,
+  );
+
   const buttonStyles = useMemo(
     () => ({
       root: {
@@ -67,19 +73,24 @@ export default function Start(props: IStartProps): JSX.Element {
     [theme],
   );
 
+  const supportedLocalFiles = useMemo(
+    () => Array.from(new Set(supportedFileExtensions)).join(", "),
+    [supportedFileExtensions],
+  );
+
   const startItems: IButtonProps[] = useMemo(
     () => [
       {
         id: "open-local-file",
         children: "Open local file",
-        secondaryText: `Supports ${supportedFileExtensions.join(", ")} files`,
+        secondaryText: `Supports ${supportedLocalFiles} files`,
         iconProps: { iconName: "OpenFile" },
         onClick: () => onSelectView("file"),
       },
       {
         id: "open-url",
         children: "Open file from URL",
-        secondaryText: "Load a file via HTTP/HTTPS",
+        secondaryText: "Load a file via HTTP(S)",
         iconProps: { iconName: "FileASPX" },
         onClick: () => onSelectView("remote"),
       },
@@ -93,12 +104,12 @@ export default function Start(props: IStartProps): JSX.Element {
       {
         id: "sample-data",
         children: "Explore sample data",
-        secondaryText: "New to Studio? View some sample data",
+        secondaryText: "New to Foxglove Studio? Start here!",
         iconProps: { iconName: "BookStar" },
         onClick: () => onSelectView("demo"),
       },
     ],
-    [onSelectView, supportedFileExtensions],
+    [onSelectView, supportedLocalFiles],
   );
 
   const recentItems: IButtonProps[] = useMemo(() => {
@@ -147,7 +158,7 @@ export default function Start(props: IStartProps): JSX.Element {
   }, [recentSources, selectRecent, theme]);
 
   return (
-    <>
+    <Stack tokens={{ childrenGap: theme.spacing.l1 }}>
       <Stack horizontal tokens={{ childrenGap: theme.spacing.l2 }}>
         {/* Left column */}
         <Stack grow tokens={{ childrenGap: theme.spacing.m }}>
@@ -167,6 +178,13 @@ export default function Start(props: IStartProps): JSX.Element {
           <ActionList title="Help" items={HELP_ITEMS} />
         </Stack>
       </Stack>
-    </>
+      <Checkbox
+        label="Show on startup"
+        checked={showOnStartup}
+        onChange={async (_, checked) => {
+          await setShowOnStartup(checked);
+        }}
+      />
+    </Stack>
   );
 }

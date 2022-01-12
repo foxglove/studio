@@ -29,11 +29,11 @@ import {
   SLabel,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/styling";
 import styles from "@foxglove/studio-base/panels/ThreeDimensionalViz/sharedStyles";
+import { getNewCameraStateOnFollowChange } from "@foxglove/studio-base/panels/ThreeDimensionalViz/threeDimensionalVizUtils";
 import {
-  getNewCameraStateOnFollowChange,
-  TargetPose,
-} from "@foxglove/studio-base/panels/ThreeDimensionalViz/threeDimensionalVizUtils";
-import { ThreeDimensionalVizConfig } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
+  FollowMode,
+  ThreeDimensionalVizConfig,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
 import clipboard from "@foxglove/studio-base/util/clipboard";
 import { point2DValidator, cameraStateValidator } from "@foxglove/studio-base/util/validators";
 
@@ -55,8 +55,8 @@ type CameraStateInfoProps = {
 };
 
 export type CameraInfoPropsWithoutCameraState = {
-  followOrientation: boolean;
-  followTf?: string | false;
+  followMode: FollowMode;
+  followTf?: string;
   isPlaying?: boolean;
   onAlignXYAxis: () => void;
   onCameraStateChange: (arg0: CameraState) => void;
@@ -65,9 +65,8 @@ export type CameraInfoPropsWithoutCameraState = {
   defaultSelectedTab?: string;
 };
 
-type CameraInfoProps = {
+export type CameraInfoProps = {
   cameraState: CameraState;
-  targetPose?: TargetPose;
 } & CameraInfoPropsWithoutCameraState;
 
 function CameraStateInfo({ cameraState, onAlignXYAxis }: CameraStateInfoProps) {
@@ -106,8 +105,7 @@ function CameraStateInfo({ cameraState, onAlignXYAxis }: CameraStateInfoProps) {
 
 export default function CameraInfo({
   cameraState,
-  targetPose,
-  followOrientation,
+  followMode,
   followTf,
   isPlaying = false,
   onAlignXYAxis,
@@ -136,11 +134,10 @@ export default function CameraInfo({
       // Transform the camera state by whichever TF or orientation the other panels are following.
       const newCameraState = getNewCameraStateOnFollowChange({
         prevCameraState: cameraState,
-        prevTargetPose: targetPose,
         prevFollowTf: followTf,
-        prevFollowOrientation: followOrientation,
+        prevFollowMode: followMode,
         newFollowTf: (config as ThreeDimensionalVizConfig).followTf,
-        newFollowOrientation: (config as ThreeDimensionalVizConfig).followOrientation,
+        newFollowMode: (config as ThreeDimensionalVizConfig).followMode,
       });
       return { ...config, cameraState: newCameraState };
     });
@@ -265,16 +262,15 @@ export default function CameraInfo({
                     </SRow>
                   )}
                 </Flex>
-                {typeof followTf === "string" && followTf.length > 0 ? (
+                {followMode === "no-follow" && <p>Not following</p>}
+                {followMode !== "no-follow" && (
                   <SRow>
                     <SLabel>Following frame:</SLabel>
                     <SValue>
                       <code>{followTf}</code>
-                      {followOrientation && " with orientation"}
+                      {followMode === "follow-orientation" && " with orientation"}
                     </SValue>
                   </SRow>
-                ) : (
-                  <p>Locked to map</p>
                 )}
               </Flex>
             )}

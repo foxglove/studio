@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import { ContextualMenu, IContextualMenuItem, makeStyles } from "@fluentui/react";
-import AlertIcon from "@mdi/svg/svg/alert.svg";
 import CogIcon from "@mdi/svg/svg/cog.svg";
 import DragIcon from "@mdi/svg/svg/drag.svg";
 import FullscreenExitIcon from "@mdi/svg/svg/fullscreen-exit.svg";
@@ -32,7 +31,6 @@ import {
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useHelpInfo } from "@foxglove/studio-base/context/HelpInfoContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 type Props = {
   children?: React.ReactNode;
@@ -172,6 +170,12 @@ function PanelActionsDropdown({
   const swap = useCallback(
     (id?: string) =>
       ({ type, config, relatedConfigs }: PanelSelection) => {
+        // Reselecting current panel type is a no-op.
+        if (type === panelContext?.type) {
+          setIsOpen(false);
+          return;
+        }
+
         swapPanel({
           tabId,
           originalId: id ?? "",
@@ -182,7 +186,7 @@ function PanelActionsDropdown({
           relatedConfigs,
         });
       },
-    [mosaicActions, mosaicWindowActions, swapPanel, tabId],
+    [mosaicActions, mosaicWindowActions, panelContext?.type, setIsOpen, swapPanel, tabId],
   );
 
   const { openPanelSettings } = useWorkspace();
@@ -366,12 +370,7 @@ export default React.memo<Props>(function PanelToolbar({
   backgroundColor,
 }: Props) {
   const styles = useStyles();
-  const {
-    supportsStrictMode = true,
-    isFullscreen,
-    enterFullscreen,
-    exitFullscreen,
-  } = useContext(PanelContext) ?? {};
+  const { isFullscreen, enterFullscreen, exitFullscreen } = useContext(PanelContext) ?? {};
   const [menuOpen, setMenuOpen] = useState(false);
 
   const panelContext = useContext(PanelContext);
@@ -385,15 +384,6 @@ export default React.memo<Props>(function PanelToolbar({
     return (
       <>
         {additionalIcons}
-        {!supportsStrictMode && process.env.NODE_ENV !== "production" && (
-          <Icon
-            clickable={false}
-            style={{ color: colors.YELLOW }}
-            tooltip="[DEV MODE ONLY] React Strict Mode is not enabled for this panel. Please remove supportsStrictMode=false from the panel component and manually test this panel for regressions!"
-          >
-            <AlertIcon />
-          </Icon>
-        )}
         {Boolean(helpContent) && (
           <Icon
             tooltip="Help"
@@ -427,7 +417,6 @@ export default React.memo<Props>(function PanelToolbar({
     panelContext?.title,
     helpContent,
     styles.icon,
-    supportsStrictMode,
     isFullscreen,
     enterFullscreen,
     exitFullscreen,

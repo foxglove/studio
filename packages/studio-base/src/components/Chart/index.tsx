@@ -6,7 +6,7 @@
 // Since we don't use the modules directly in this file, we need to load the types as references
 // so typescript will have the merged declarations.
 /// <reference types="chartjs-plugin-datalabels" />
-/// <reference types="chartjs-plugin-zoom" />
+/// <reference types="@foxglove/chartjs-plugin-zoom" />
 
 import { ChartOptions, ChartData as ChartJsChartData, ScatterDataPoint } from "chart.js";
 import Hammer from "hammerjs";
@@ -16,6 +16,8 @@ import { v4 as uuidv4 } from "uuid";
 
 import Logger from "@foxglove/log";
 import { RpcElement, RpcScales } from "@foxglove/studio-base/components/Chart/types";
+import ChartJsMux from "@foxglove/studio-base/components/Chart/worker/ChartJsMux";
+import Rpc, { createLinkedChannels } from "@foxglove/studio-base/util/Rpc";
 import WebWorkerManager from "@foxglove/studio-base/util/WebWorkerManager";
 
 const log = Logger.getLogger(__filename);
@@ -48,8 +50,11 @@ type Props = {
   // called when the chart scales have updated (happens for zoom/pan/reset)
   onScalesUpdate?: (scales: RpcScales, opt: { userInteraction: boolean }) => void;
 
+  // called when the chart is about to start rendering new data
+  onStartRender?: () => void;
+
   // called when the chart has finished updating with new data
-  onChartUpdate?: () => void;
+  onFinishRender?: () => void;
 
   // called when a user hovers over an element
   // uses the chart.options.hover configuration
@@ -81,6 +86,10 @@ type RpcSend = <T>(
 ) => Promise<T>;
 
 // Chart component renders data using workers with chartjs offscreen canvas
+
+const supportsOffscreenCanvas =
+  typeof HTMLCanvasElement.prototype.transferControlToOffscreen === "function";
+
 function Chart(props: Props): JSX.Element {
   const [id] = useState(() => uuidv4());
 
@@ -95,7 +104,7 @@ function Chart(props: Props): JSX.Element {
   const zoomEnabled = props.options.plugins?.zoom?.zoom?.enabled ?? false;
   const panEnabled = props.options.plugins?.zoom?.pan?.enabled ?? false;
 
-  const { type, data, options, width, height, onChartUpdate } = props;
+  const { type, data, options, width, height, onStartRender, onFinishRender } = props;
 
   const sendWrapperRef = useRef<RpcSend | undefined>();
   const rpcSendRef = useRef<RpcSend | undefined>();
@@ -110,7 +119,14 @@ function Chart(props: Props): JSX.Element {
     }
 
     log.info(`Register Chart ${id}`);
-    const rpc = webWorkerManager.registerWorkerListener(id);
+    let rpc: Rpc;
+    if (supportsOffscreenCanvas) {
+      rpc = webWorkerManager.registerWorkerListener(id);
+    } else {
+      const { local, remote } = createLinkedChannels();
+      new ChartJsMux(new Rpc(remote));
+      rpc = new Rpc(local);
+    }
 
     // helper function to send rpc to our worker - all invocations need an _id_ so we inject it here
     const sendWrapper = async <T,>(
@@ -128,7 +144,9 @@ function Chart(props: Props): JSX.Element {
       log.info(`Unregister chart ${id}`);
       rpcSendRef.current = undefined;
       void sendWrapper("destroy");
-      webWorkerManager.unregisterWorkerListener(id);
+      if (supportsOffscreenCanvas) {
+        webWorkerManager.unregisterWorkerListener(id);
+      }
     };
   }, [id]);
 
@@ -210,10 +228,6 @@ function Chart(props: Props): JSX.Element {
         return;
       }
 
-      if (!("transferControlToOffscreen" in canvas)) {
-        throw new Error("Chart requires browsers with offscreen canvas support");
-      }
-
       const newUpdateMessage = getNewUpdateMessage();
       if (!newUpdateMessage) {
         return;
@@ -221,7 +235,9 @@ function Chart(props: Props): JSX.Element {
 
       initialized.current = true;
 
-      const offscreenCanvas = canvas.transferControlToOffscreen();
+      onStartRender?.();
+      const offscreenCanvas =
+        "transferControlToOffscreen" in canvas ? canvas.transferControlToOffscreen() : canvas;
       const scales = await sendWrapperRef.current<RpcScales>(
         "initialize",
         {
@@ -236,15 +252,11 @@ function Chart(props: Props): JSX.Element {
         [offscreenCanvas],
       );
 
-      if (!isMounted()) {
-        return;
-      }
-
       // once we are initialized, we can allow other handlers to send to the rpc endpoint
       rpcSendRef.current = sendWrapperRef.current;
 
       maybeUpdateScales(scales);
-      onChartUpdate?.();
+      onFinishRender?.();
       return;
     }
 
@@ -257,14 +269,11 @@ function Chart(props: Props): JSX.Element {
       return;
     }
 
+    onStartRender?.();
     const scales = await rpcSendRef.current<RpcScales>("update", newUpdateMessage);
-    if (!isMounted()) {
-      return;
-    }
-
     maybeUpdateScales(scales);
-    onChartUpdate?.();
-  }, [getNewUpdateMessage, isMounted, maybeUpdateScales, onChartUpdate, type]);
+    onFinishRender?.();
+  }, [getNewUpdateMessage, maybeUpdateScales, onFinishRender, onStartRender, type]);
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;

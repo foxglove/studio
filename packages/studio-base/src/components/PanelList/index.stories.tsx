@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { useTheme } from "@fluentui/react";
 import { storiesOf } from "@storybook/react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
@@ -49,14 +50,12 @@ const allPanels: PanelInfo[] = [
     type: "Sample1",
     module: async () => ({ default: MockPanel1 }),
     config: { text: "def" },
-    preconfigured: true,
   },
   {
     title: "Preconfigured Panel BBB",
     type: "Sample2",
     module: async () => ({ default: MockPanel1 }),
     config: { num: 456 },
-    preconfigured: true,
   },
 ];
 
@@ -73,7 +72,7 @@ class MockPanelCatalog implements PanelCatalog {
     return allPanels;
   }
   getPanelByType(type: string): PanelInfo | undefined {
-    return allPanels.find((panel) => panel.preconfigured !== true && panel.type === type);
+    return allPanels.find((panel) => !panel.config && panel.type === type);
   }
 }
 
@@ -83,34 +82,37 @@ const PanelListWithInteractions = ({
 }: {
   inputValue?: string;
   events?: TestUtils.SyntheticEventData[];
-}) => (
-  <div
-    style={{ margin: 50, height: 480 }}
-    ref={(el) => {
-      if (el) {
-        const input: HTMLInputElement | undefined = el.querySelector("input") as any;
-        if (input) {
-          input.focus();
-          if (inputValue != undefined) {
-            input.value = inputValue;
-            TestUtils.Simulate.change(input);
+}) => {
+  const theme = useTheme();
+  return (
+    <div
+      style={{ margin: 50, height: 480, backgroundColor: theme.palette.neutralLighterAlt }}
+      ref={(el) => {
+        if (el) {
+          const input: HTMLInputElement | undefined = el.querySelector("input") as any;
+          if (input) {
+            input.focus();
+            if (inputValue != undefined) {
+              input.value = inputValue;
+              TestUtils.Simulate.change(input);
+            }
+            setTimeout(() => {
+              events.forEach((event) => {
+                TestUtils.Simulate.keyDown(input, event);
+              });
+            }, 100);
           }
-          setTimeout(() => {
-            events.forEach((event) => {
-              TestUtils.Simulate.keyDown(input, event);
-            });
-          }, 100);
         }
-      }
-    }}
-  >
-    <PanelList
-      onPanelSelect={() => {
-        // no-op
       }}
-    />
-  </div>
-);
+    >
+      <PanelList
+        onPanelSelect={() => {
+          // no-op
+        }}
+      />
+    </div>
+  );
+};
 
 const arrowDown = { key: "ArrowDown", code: "ArrowDown", keyCode: 40 };
 const arrowUp = { key: "ArrowUp", code: "ArrowUp", keyCode: 91 };
@@ -132,11 +134,14 @@ storiesOf("components/PanelList", module)
       </DndProvider>
     );
   })
-  .add("panel list", () => (
-    <div style={{ margin: 50, height: 480 }}>
-      <PanelList onPanelSelect={() => {}} />
-    </div>
-  ))
+  .add("panel list", () => {
+    const theme = useTheme();
+    return (
+      <div style={{ margin: 50, height: 480, backgroundColor: theme.palette.neutralLighterAlt }}>
+        <PanelList onPanelSelect={() => {}} />
+      </div>
+    );
+  })
   .add("filtered panel list", () => <PanelListWithInteractions inputValue="AAA" />)
   .add("filtered panel list light", () => <PanelListWithInteractions inputValue="AAA" />, {
     colorScheme: "light",

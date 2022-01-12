@@ -8,6 +8,7 @@ import {
   Dropdown,
   IChoiceGroupOption,
   IComboBoxOption,
+  Label,
   SelectableOptionMenuItemType,
   Stack,
   Text,
@@ -19,7 +20,6 @@ import moment from "moment-timezone";
 import { useCallback, useMemo, useState } from "react";
 
 import { filterMap } from "@foxglove/den/collection";
-import { RosNode } from "@foxglove/ros1";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import { ExperimentalFeatureSettings } from "@foxglove/studio-base/components/ExperimentalFeatureSettings";
@@ -31,6 +31,8 @@ import fuzzyFilter from "@foxglove/studio-base/util/fuzzyFilter";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 const MESSAGE_RATES = [1, 3, 5, 10, 15, 20, 30, 60];
+
+const os = OsContextSingleton; // workaround for https://github.com/webpack/webpack/issues/12960
 
 function formatTimezone(name: string) {
   const tz = moment.tz(name);
@@ -246,27 +248,22 @@ function MessageFramerate(): React.ReactElement {
   );
 }
 
-function RosHostname(): React.ReactElement {
-  const [rosHostname, setRosHostname] = useAppConfigurationValue<string>(
-    AppSetting.ROS1_ROS_HOSTNAME,
-  );
-
-  const os = OsContextSingleton;
-  const rosHostnamePlaceholder = useMemo(
-    () =>
-      os != undefined
-        ? RosNode.GetRosHostname(os.getEnvVar, os.getHostname, os.getNetworkInterfaces)
-        : "localhost",
-    [os],
+function AutoUpdate(): React.ReactElement {
+  const [updatesEnabled = true, setUpdatedEnabled] = useAppConfigurationValue<boolean>(
+    AppSetting.UPDATES_ENABLED,
   );
 
   return (
-    <TextField
-      label="ROS_HOSTNAME"
-      placeholder={rosHostnamePlaceholder}
-      value={rosHostname ?? ""}
-      onChange={(_event, newValue) => void setRosHostname(newValue ? newValue : undefined)}
-    />
+    <>
+      <Label>Updates:</Label>
+      <Checkbox
+        checked={updatesEnabled}
+        label="Automatically install updates"
+        onChange={(_, newValue) => {
+          void setUpdatedEnabled(newValue ?? true);
+        }}
+      />
+    </>
   );
 }
 
@@ -275,8 +272,7 @@ function RosPackagePath(): React.ReactElement {
     AppSetting.ROS_PACKAGE_PATH,
   );
 
-  const os = OsContextSingleton;
-  const rosPackagePathPlaceholder = useMemo(() => os?.getEnvVar("ROS_PACKAGE_PATH"), [os]);
+  const rosPackagePathPlaceholder = useMemo(() => os?.getEnvVar("ROS_PACKAGE_PATH"), []);
 
   return (
     <TextField
@@ -315,6 +311,13 @@ export default function Preferences(): React.ReactElement {
     AppSetting.TELEMETRY_ENABLED,
   );
 
+  // automatic updates are a desktop-only setting
+  //
+  // electron-updater does not provide a way to detect if we are on a supported update platform
+  // so we hard-code linux as an _unsupported_ auto-update platform since we cannot auto-update
+  // with our .deb package install method on linux.
+  const supportsAppUpdates = isDesktopApp() && os?.platform !== "linux";
+
   return (
     <SidebarContent title="Preferences">
       <Stack tokens={{ childrenGap: 30 }}>
@@ -333,6 +336,11 @@ export default function Preferences(): React.ReactElement {
             <Stack.Item>
               <MessageFramerate />
             </Stack.Item>
+            {supportsAppUpdates && (
+              <Stack.Item>
+                <AutoUpdate />
+              </Stack.Item>
+            )}
             {!isDesktopApp() && (
               <Stack.Item>
                 <LaunchDefault />
@@ -343,9 +351,6 @@ export default function Preferences(): React.ReactElement {
         <Stack.Item>
           <SectionHeader>ROS</SectionHeader>
           <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
-            <Stack.Item>
-              <RosHostname />
-            </Stack.Item>
             <Stack.Item>
               <RosPackagePath />
             </Stack.Item>
