@@ -241,7 +241,11 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
           {legendContent}
         </SidebarWrapper>
       ) : undefined}
-      {showLegend && !showSidebar ? <Flex col>{legendContent}</Flex> : undefined}
+      {showLegend && !showSidebar ? (
+        <Flex col style={{ overflow: "hidden" }}>
+          {legendContent}
+        </Flex>
+      ) : undefined}
     </Flex>
   );
 }

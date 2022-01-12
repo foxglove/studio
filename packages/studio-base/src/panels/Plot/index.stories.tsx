@@ -325,6 +325,8 @@ const exampleConfig: PlotConfig = {
   xAxisVal: "timestamp",
   showLegend: true,
   isSynced: true,
+  showSidebar: false,
+  sidebarWidth: 0,
 };
 
 function PlotWrapper(props: {
