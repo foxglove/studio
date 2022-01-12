@@ -2,17 +2,22 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Alert, AlertTitle, Theme, Typography, Link } from "@mui/material";
+import { AlertTitle, Theme, Typography, Link, Stack } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { ErrorInfo, useMemo, useState } from "react";
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
-    overflow: "hidden",
     display: "flex",
     flexDirection: "column",
     height: "100%",
     padding: theme.spacing(2),
+  },
+  alertContainer: {
+    display: "flex",
+    flexDirection: "column",
+    flexGrow: 1,
+    overflow: "hidden",
   },
   errorDetailHeader: {
     fontWeight: "bold",
@@ -25,10 +30,9 @@ const useStyles = makeStyles((theme: Theme) => ({
   errorDetailContainer: {
     flexGrow: 2,
     overflowY: "auto",
-    marginTop: 0,
-    padding: theme.spacing(1),
   },
   actions: {
+    paddingTop: theme.spacing(2),
     textAlign: "right",
   },
 }));
@@ -106,21 +110,32 @@ function ErrorDisplay(props: ErrorDisplayProps): JSX.Element {
 
   return (
     <div className={styles.root}>
-      <div>
-        <Alert severity="error" variant="filled" onClose={props.onDismiss}>
-          <AlertTitle>{props.title ?? "The app encountered an unexpected error"}</AlertTitle>
-          {error?.message} -{" "}
-          <Link
-            color="inherit"
-            underline="always"
-            onClick={() => setShowErrorDetails(!showErrorDetails)}
-            sx={{ cursor: "pointer" }}
-          >
-            {showErrorDetails ? "Hide" : "Show"} details
-          </Link>
-        </Alert>
+      <div className={styles.alertContainer}>
+        <Typography variant="h4">
+          {props.title ?? "The app encountered an unexpected error"}
+        </Typography>
+        <AlertTitle></AlertTitle>
+        <Typography variant="body1">
+          <Stack spacing={2}>
+            <div>
+              <p>Something went wrong in the panel. Click Dismiss to continue using the panel.</p>
+              <p>If the issue persists try resetting the panel or removing the panel entirely.</p>
+            </div>
+            <div>
+              {error?.message} -{" "}
+              <Link
+                color="inherit"
+                underline="always"
+                onClick={() => setShowErrorDetails(!showErrorDetails)}
+                sx={{ cursor: "pointer" }}
+              >
+                {showErrorDetails ? "Hide" : "Show"} details
+              </Link>
+            </div>
+          </Stack>
+        </Typography>
+        <div className={styles.errorDetailContainer}>{errorDetails}</div>
       </div>
-      <div className={styles.errorDetailContainer}>{errorDetails}</div>
       <div className={styles.actions}>{props.actions}</div>
     </div>
   );

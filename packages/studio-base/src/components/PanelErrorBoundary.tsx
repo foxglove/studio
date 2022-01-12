@@ -41,11 +41,28 @@ export default class PanelErrorBoundary extends Component<PropsWithChildren<Prop
             <>
               <Stack direction="row" spacing={1}>
                 <Box sx={{ flexGrow: 1 }} />
-                <Button variant="text" color="error" onClick={this.props.onResetPanel}>
+                <Button
+                  variant="text"
+                  title="remove the panel"
+                  color="error"
+                  onClick={this.props.onRemovePanel}
+                >
+                  Remove Panel
+                </Button>
+                <Button
+                  variant="outlined"
+                  title="reset panel settings to default values"
+                  color="error"
+                  onClick={this.props.onResetPanel}
+                >
                   Reset Panel
                 </Button>
-                <Button variant="outlined" color="error" onClick={this.props.onRemovePanel}>
-                  Remove Panel
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  onClick={() => this.setState({ currentError: undefined })}
+                >
+                  Dismiss
                 </Button>
               </Stack>
             </>
