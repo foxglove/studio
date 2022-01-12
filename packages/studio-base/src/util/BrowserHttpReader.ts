@@ -40,7 +40,7 @@ export default class BrowserHttpReader implements FileReader {
 
       if (!isDesktopApp()) {
         errMsg +=
-          "Sometimes this is due to a CORS configuration error on the server. Make sure CORS is enabled.";
+          "\n\nSometimes this is due to a CORS configuration error on the server. Make sure CORS is enabled.";
       }
 
       throw new Error(errMsg);
