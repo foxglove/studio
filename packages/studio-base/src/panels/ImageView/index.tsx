@@ -674,13 +674,14 @@ function ImageView(props: Props) {
 
 const defaultConfig: Config = {
   cameraTopic: "",
-  enabledMarkerTopics: [],
   customMarkerTopicOptions: [],
-  transformMarkers: false,
-  synchronize: false,
+  enabledMarkerTopics: [],
   mode: "fit",
-  zoom: 1,
   pan: { x: 0, y: 0 },
+  rotation: 0,
+  synchronize: false,
+  transformMarkers: false,
+  zoom: 1,
 };
 
 const configSchema: PanelConfigSchema<Config> = [
