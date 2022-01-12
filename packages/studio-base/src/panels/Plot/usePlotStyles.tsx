@@ -41,6 +41,7 @@ const usePlotStyles = makeStyles((theme) => ({
     padding: "3px !important",
   },
   fullLengthButton: {
+    display: "none",
     background: tinycolor(theme.palette.neutralLight).setAlpha(0.5).toRgbString(),
     padding: 6,
     margin: 5,
@@ -50,6 +51,10 @@ const usePlotStyles = makeStyles((theme) => ({
 
     ":hover": {
       background: tinycolor(theme.palette.neutralLight).setAlpha(0.75).toRgbString(),
+    },
+
+    ".mosaic-window:hover &": {
+      display: "block",
     },
   },
   floatingLegendToggle: {
