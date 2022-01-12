@@ -14,7 +14,7 @@ import { Stack } from "@fluentui/react";
 import MenuIcon from "@mdi/svg/svg/menu.svg";
 import cx from "classnames";
 import { last } from "lodash";
-import { ComponentProps, useCallback, useRef } from "react";
+import { ComponentProps, useCallback, useMemo, useRef } from "react";
 
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
@@ -40,7 +40,8 @@ type PlotLegendProps = {
   xAxisVal: PlotXAxisVal;
   xAxisPath?: BasePlotPath;
   pathsWithMismatchedDataLengths: string[];
-  legendWidth: number;
+  sidebarWidth: number;
+  showSidebar: boolean;
 };
 
 const shortXAxisLabel = (path: PlotXAxisVal): string => {
@@ -57,34 +58,20 @@ const shortXAxisLabel = (path: PlotXAxisVal): string => {
   throw new Error(`unknown path: ${path}`);
 };
 
-export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactNull {
-  const {
-    paths,
-    datasets,
-    currentTime,
-    saveConfig,
-    showLegend,
-    xAxisVal,
-    xAxisPath,
-    pathsWithMismatchedDataLengths,
-    legendWidth,
-  } = props;
-
-  const lastPath = last(paths);
-  const classes = usePlotStyles();
-
-  const toggleLegend = useCallback(
-    () => saveConfig({ showLegend: !showLegend }),
-    [showLegend, saveConfig],
-  );
-
+function SidebarWrapper(props: {
+  classes: { [key: string]: string };
+  sidebarWidth: number;
+  saveConfig: (arg0: Partial<PlotConfig>) => void;
+  children: JSX.Element | undefined;
+}): JSX.Element | ReactNull {
+  const { classes, sidebarWidth, saveConfig } = props;
   const originalWrapper = useRef<DOMRect | undefined>(undefined);
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       const offsetLeft = originalWrapper.current?.left ?? 0;
       const newWidth = e.clientX - offsetLeft;
       if (newWidth > minLegendWidth && newWidth < maxLegendWidth) {
-        saveConfig({ legendWidth: newWidth });
+        saveConfig({ sidebarWidth: newWidth });
       }
     },
     [originalWrapper, saveConfig],
@@ -103,111 +90,158 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
   };
 
   return (
-    <Flex className={classes.root} style={{ flex: 1, position: "relative" }}>
+    <>
+      <div onMouseDown={handleMouseDown} className={classes.dragger} />
+      <Stack grow tokens={{ childrenGap: 4 }} style={{ width: sidebarWidth, overflow: "scroll" }}>
+        {props.children}
+      </Stack>
+    </>
+  );
+}
+
+export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactNull {
+  const {
+    paths,
+    datasets,
+    currentTime,
+    saveConfig,
+    showLegend,
+    xAxisVal,
+    xAxisPath,
+    pathsWithMismatchedDataLengths,
+    sidebarWidth,
+    showSidebar,
+  } = props;
+
+  const lastPath = last(paths);
+  const classes = usePlotStyles();
+
+  const toggleLegend = useCallback(
+    () => saveConfig({ showLegend: !showLegend }),
+    [showLegend, saveConfig],
+  );
+
+  const legendContent = useMemo(
+    () =>
+      showLegend ? (
+        <>
+          <div className={classes.item}>
+            x:
+            <div
+              className={classes.itemIconContainer}
+              style={{ width: "auto", lineHeight: "normal", zIndex: 2 }}
+            >
+              <Dropdown
+                value={xAxisVal}
+                text={shortXAxisLabel(xAxisVal)}
+                btnClassname={classes.dropdown}
+                onChange={(newXAxisVal) => saveConfig({ xAxisVal: newXAxisVal })}
+                noPortal
+              >
+                <DropdownItem value="timestamp">
+                  <span>timestamp</span>
+                </DropdownItem>
+                <DropdownItem value="index">
+                  <span>index</span>
+                </DropdownItem>
+                <DropdownItem value="currentCustom">
+                  <span>msg path (current)</span>
+                </DropdownItem>
+                <DropdownItem value="custom">
+                  <span>msg path (accumulated)</span>
+                </DropdownItem>
+              </Dropdown>
+            </div>
+            <div
+              className={cx(classes.itemInput, {
+                [classes.itemInputDisabled]: xAxisPath?.enabled !== true,
+              })}
+            >
+              {(xAxisVal === "custom" || xAxisVal === "currentCustom") && (
+                <MessagePathInput
+                  path={xAxisPath?.value ? xAxisPath.value : "/"}
+                  onChange={(newXAxisPath) =>
+                    saveConfig({
+                      xAxisPath: {
+                        value: newXAxisPath,
+                        enabled: xAxisPath ? xAxisPath.enabled : true,
+                      },
+                    })
+                  }
+                  validTypes={plotableRosTypes}
+                  placeholder="Enter a topic name or a number"
+                  disableAutocomplete={xAxisPath && isReferenceLinePlotPathType(xAxisPath)}
+                  autoSize
+                />
+              )}
+            </div>
+          </div>
+          {paths.map((path: PlotPath, index: number) => {
+            const hasMismatchedDataLength = pathsWithMismatchedDataLengths.includes(path.value);
+            return (
+              <PlotLegendRow
+                key={index}
+                index={index}
+                xAxisVal={xAxisVal}
+                path={path}
+                paths={paths}
+                hasMismatchedDataLength={hasMismatchedDataLength}
+                datasets={datasets}
+                currentTime={currentTime}
+                saveConfig={saveConfig}
+              />
+            );
+          })}
+          <div
+            className={classes.fullLengthButton}
+            style={{ minWidth: "100px" }}
+            onClick={() =>
+              saveConfig({
+                paths: [
+                  ...paths,
+                  {
+                    value: "",
+                    enabled: true,
+                    // For convenience, default to the `timestampMethod` of the last path.
+                    timestampMethod: lastPath ? lastPath.timestampMethod : "receiveTime",
+                  },
+                ],
+              })
+            }
+          >
+            + add line
+          </div>
+        </>
+      ) : undefined,
+    [
+      classes,
+      currentTime,
+      datasets,
+      lastPath,
+      paths,
+      pathsWithMismatchedDataLengths,
+      saveConfig,
+      showLegend,
+      xAxisPath,
+      xAxisVal,
+    ],
+  );
+
+  return (
+    <Flex className={showSidebar ? classes.root : classes.floatingRoot}>
       <Icon
-        className={classes.legendToggle}
-        style={{ display: "block", height: "100%" }}
+        className={showSidebar ? classes.legendToggle : classes.floatingLegendToggle}
+        style={showSidebar ? { display: "block", height: "100%" } : undefined}
         onClick={toggleLegend}
       >
         <MenuIcon />
       </Icon>
-      {showLegend ? (
-        <>
-          <div onMouseDown={handleMouseDown} className={classes.dragger} />
-          <Stack
-            grow
-            tokens={{ childrenGap: 4 }}
-            style={{ width: legendWidth, overflow: "scroll" }}
-          >
-            <div className={classes.item}>
-              x:
-              <div
-                className={classes.itemIconContainer}
-                style={{ width: "auto", lineHeight: "normal", zIndex: 2 }}
-              >
-                <Dropdown
-                  value={xAxisVal}
-                  text={shortXAxisLabel(xAxisVal)}
-                  btnClassname={classes.dropdown}
-                  onChange={(newXAxisVal) => saveConfig({ xAxisVal: newXAxisVal })}
-                  noPortal
-                >
-                  <DropdownItem value="timestamp">
-                    <span>timestamp</span>
-                  </DropdownItem>
-                  <DropdownItem value="index">
-                    <span>index</span>
-                  </DropdownItem>
-                  <DropdownItem value="currentCustom">
-                    <span>msg path (current)</span>
-                  </DropdownItem>
-                  <DropdownItem value="custom">
-                    <span>msg path (accumulated)</span>
-                  </DropdownItem>
-                </Dropdown>
-              </div>
-              <div
-                className={cx(classes.itemInput, {
-                  [classes.itemInputDisabled]: xAxisPath?.enabled !== true,
-                })}
-              >
-                {(xAxisVal === "custom" || xAxisVal === "currentCustom") && (
-                  <MessagePathInput
-                    path={xAxisPath?.value ? xAxisPath.value : "/"}
-                    onChange={(newXAxisPath) =>
-                      saveConfig({
-                        xAxisPath: {
-                          value: newXAxisPath,
-                          enabled: xAxisPath ? xAxisPath.enabled : true,
-                        },
-                      })
-                    }
-                    validTypes={plotableRosTypes}
-                    placeholder="Enter a topic name or a number"
-                    disableAutocomplete={xAxisPath && isReferenceLinePlotPathType(xAxisPath)}
-                    autoSize
-                  />
-                )}
-              </div>
-            </div>
-            {paths.map((path: PlotPath, index: number) => {
-              const hasMismatchedDataLength = pathsWithMismatchedDataLengths.includes(path.value);
-              return (
-                <PlotLegendRow
-                  key={index}
-                  index={index}
-                  xAxisVal={xAxisVal}
-                  path={path}
-                  paths={paths}
-                  hasMismatchedDataLength={hasMismatchedDataLength}
-                  datasets={datasets}
-                  currentTime={currentTime}
-                  saveConfig={saveConfig}
-                />
-              );
-            })}
-            <div
-              className={classes.fullLengthButton}
-              style={{ minWidth: "100px" }}
-              onClick={() =>
-                saveConfig({
-                  paths: [
-                    ...paths,
-                    {
-                      value: "",
-                      enabled: true,
-                      // For convenience, default to the `timestampMethod` of the last path.
-                      timestampMethod: lastPath ? lastPath.timestampMethod : "receiveTime",
-                    },
-                  ],
-                })
-              }
-            >
-              + add line
-            </div>
-          </Stack>
-        </>
+      {showLegend && showSidebar ? (
+        <SidebarWrapper classes={classes} sidebarWidth={sidebarWidth} saveConfig={saveConfig}>
+          {legendContent}
+        </SidebarWrapper>
       ) : undefined}
+      {showLegend && !showSidebar ? <Flex col>{legendContent}</Flex> : undefined}
     </Flex>
   );
 }

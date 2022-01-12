@@ -68,7 +68,7 @@ import { PlotConfig } from "./types";
 export { plotableRosTypes } from "./types";
 export type { PlotConfig, PlotXAxisVal } from "./types";
 
-const defaultLegendWidth = 240;
+const defaultSidebarWidth = 240;
 
 export function openSiblingPlotPanel(openSiblingPanel: OpenSiblingPanel, topicName: string): void {
   openSiblingPanel({
@@ -178,10 +178,11 @@ function Plot(props: Props) {
     minYValue,
     maxYValue,
     showLegend,
+    showSidebar,
     isSynced,
     xAxisVal,
     xAxisPath,
-    legendWidth,
+    sidebarWidth,
   } = config;
   const theme = useTheme();
 
@@ -401,7 +402,7 @@ function Plot(props: Props) {
   );
 
   return (
-    <Flex col clip center style={{ position: "relative" }}>
+    <Flex col clip center style={{ width: "100%", height: "100%", position: "relative" }}>
       <PanelToolbar
         helpContent={helpContent}
         additionalIcons={
@@ -425,7 +426,8 @@ function Plot(props: Props) {
           xAxisVal={xAxisVal}
           xAxisPath={xAxisPath}
           pathsWithMismatchedDataLengths={pathsWithMismatchedDataLengths}
-          legendWidth={legendWidth}
+          showSidebar={showSidebar}
+          sidebarWidth={sidebarWidth}
         />
         <Flex col center>
           {title && <div>{title}</div>}
@@ -454,6 +456,11 @@ const configSchema: PanelConfigSchema<PlotConfig> = [
     type: "toggle",
     title: "Sync with other timestamp-based plots",
   },
+  {
+    key: "showSidebar",
+    type: "toggle",
+    title: "Display legend in collapsible sidebar",
+  },
   { key: "maxYValue", type: "number", title: "Y max", placeholder: "auto", allowEmpty: true },
   { key: "minYValue", type: "number", title: "Y min", placeholder: "auto", allowEmpty: true },
   {
@@ -472,9 +479,10 @@ const defaultConfig: PlotConfig = {
   minYValue: "",
   maxYValue: "",
   showLegend: true,
+  showSidebar: false,
   isSynced: true,
   xAxisVal: "timestamp",
-  legendWidth: defaultLegendWidth,
+  sidebarWidth: defaultSidebarWidth,
 };
 
 export default Panel(

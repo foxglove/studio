@@ -18,7 +18,21 @@ const usePlotStyles = makeStyles((theme) => ({
     zIndex: 100,
     backgroundColor: theme.palette.neutralLighter,
   },
+  floatingRoot: {
+    cursor: "pointer",
+    position: "absolute",
+    left: 40,
+    top: 6,
+    background: tinycolor(theme.palette.neutralLight).setAlpha(0.25).toRgbString(),
+    color: theme.semanticColors.bodySubtext,
+    maxWidth: "calc(100% - 65px - 25px)",
+
+    ":hover": {
+      background: tinycolor(theme.palette.neutralLight).setAlpha(0.5).toRgbString(),
+    },
+  },
   root: {
+    position: "relative",
     background: tinycolor(theme.palette.neutralLight).setAlpha(0.25).toRgbString(),
     color: theme.semanticColors.bodySubtext,
   },
@@ -36,6 +50,27 @@ const usePlotStyles = makeStyles((theme) => ({
 
     ":hover": {
       background: tinycolor(theme.palette.neutralLight).setAlpha(0.75).toRgbString(),
+    },
+  },
+  floatingLegendToggle: {
+    zIndex: 1,
+    visibility: "hidden",
+    padding: 6,
+    cursor: "pointer",
+    position: "absolute",
+    top: 0,
+    left: -30,
+    height: 25,
+    width: 25,
+    borderRadius: theme.effects.roundedCorner2,
+    userSelect: "none",
+    background: tinycolor(theme.palette.neutralLight).setAlpha(0.75).toRgbString(),
+
+    ":hover": {
+      background: tinycolor(theme.palette.neutralLight).setAlpha(0.75).toRgbString(),
+    },
+    ".mosaic-window:hover &": {
+      visibility: "initial",
     },
   },
   legendToggle: {
