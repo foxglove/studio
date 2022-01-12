@@ -92,7 +92,7 @@ function SidebarWrapper(props: {
   return (
     <>
       <div onMouseDown={handleMouseDown} className={classes.dragger} />
-      <Stack grow tokens={{ childrenGap: 4 }} style={{ width: sidebarWidth, overflow: "scroll" }}>
+      <Stack grow tokens={{ childrenGap: 4 }} style={{ width: sidebarWidth, overflow: "auto" }}>
         {props.children}
       </Stack>
     </>
@@ -242,7 +242,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
         </SidebarWrapper>
       ) : undefined}
       {showLegend && !showSidebar ? (
-        <Flex col style={{ overflow: "hidden" }}>
+        <Flex col style={{ overflow: "hidden", zIndex: 1 }}>
           {legendContent}
         </Flex>
       ) : undefined}

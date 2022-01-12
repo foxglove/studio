@@ -177,6 +177,8 @@ function Plot(props: Props) {
     paths: yAxisPaths,
     minYValue,
     maxYValue,
+    showXAxisLabels,
+    showYAxisLabels,
     showLegend,
     showSidebar,
     isSynced,
@@ -429,13 +431,15 @@ function Plot(props: Props) {
           showSidebar={showSidebar}
           sidebarWidth={sidebarWidth}
         />
-        <Flex col center>
+        <Flex col center style={{ overflow: "hidden" }}>
           {title && <div>{title}</div>}
           <PlotChart
             isSynced={xAxisVal === "timestamp" && isSynced}
             paths={yAxisPaths}
             minYValue={parseFloat((minYValue ?? "")?.toString())}
             maxYValue={parseFloat((maxYValue ?? "")?.toString())}
+            showXAxisLabels={showXAxisLabels}
+            showYAxisLabels={showYAxisLabels}
             datasets={datasets}
             tooltips={tooltips}
             xAxisVal={xAxisVal}
@@ -461,6 +465,16 @@ const configSchema: PanelConfigSchema<PlotConfig> = [
     type: "toggle",
     title: "Display legend in collapsible sidebar",
   },
+  {
+    key: "showXAxisLabels",
+    type: "toggle",
+    title: "Show x-axis labels",
+  },
+  {
+    key: "showYAxisLabels",
+    type: "toggle",
+    title: "Show y-axis labels",
+  },
   { key: "maxYValue", type: "number", title: "Y max", placeholder: "auto", allowEmpty: true },
   { key: "minYValue", type: "number", title: "Y min", placeholder: "auto", allowEmpty: true },
   {
@@ -478,6 +492,8 @@ const defaultConfig: PlotConfig = {
   paths: [{ value: "", enabled: true, timestampMethod: "receiveTime" }],
   minYValue: "",
   maxYValue: "",
+  showXAxisLabels: true,
+  showYAxisLabels: true,
   showLegend: true,
   showSidebar: false,
   isSynced: true,

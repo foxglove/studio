@@ -326,6 +326,8 @@ const exampleConfig: PlotConfig = {
   showLegend: true,
   isSynced: true,
   showSidebar: false,
+  showXAxisLabels: true,
+  showYAxisLabels: true,
   sidebarWidth: 0,
 };
 

@@ -18,6 +18,8 @@ export type PlotConfig = {
   maxYValue?: string | number;
   showLegend: boolean;
   showSidebar: boolean;
+  showXAxisLabels: boolean;
+  showYAxisLabels: boolean;
   isSynced: boolean;
   xAxisVal: PlotXAxisVal;
   xAxisPath?: BasePlotPath;
