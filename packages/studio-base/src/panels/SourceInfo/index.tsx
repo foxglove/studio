@@ -115,7 +115,13 @@ function SourceInfo() {
           disableSelectionZone
           enableUpdateAnimations={false}
           items={detailListItems}
-          styles={{ root: { ".ms-DetailsHeader": { paddingTop: 0 } } }}
+          styles={{
+            root: {
+              ".ms-DetailsHeader": { paddingTop: 0, height: 32, lineHeight: 32 },
+              ".ms-DetailsHeader-cell": { height: 32 },
+              ".ms-DetailsHeader-cellName": { ...theme.fonts.smallPlus, fontWeight: "bold" },
+            },
+          }}
           columns={[
             {
               key: "name",
