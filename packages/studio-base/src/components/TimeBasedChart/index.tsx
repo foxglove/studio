@@ -456,7 +456,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
     // If we're the source of global bounds then use our current values
     // to avoid scale feedback jitter.
-    if (globalBounds?.sourceId === componentId) {
+    if (globalBounds?.sourceId === componentId && globalBounds.userInteraction) {
       return { min: undefined, max: undefined };
     }
 
