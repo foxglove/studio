@@ -66,7 +66,7 @@ export function JSONInput(props: {
         }
       }}
       onChange={(e) => {
-        // we've updated out own value and don't want to use any intermediate value
+        // we've updated our own value and don't want to use any intermediate value
         lastPropValueRef.current = undefined;
         setInternalValue(e.target.value);
         const newParsedValue = parseJson(e.target.value);
