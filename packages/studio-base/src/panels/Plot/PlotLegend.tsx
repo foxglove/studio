@@ -10,20 +10,19 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { Stack } from "@fluentui/react";
-import MenuIcon from "@mdi/svg/svg/menu.svg";
+
+import { Add as AddIcon, Menu as MenuIcon } from "@mui/icons-material";
+import { Box, Button, IconButton, List, Stack, Theme, alpha } from "@mui/material";
+import { createStyles, makeStyles } from "@mui/styles";
 import cx from "classnames";
 import { last } from "lodash";
 import { ComponentProps, useCallback, useMemo, useRef } from "react";
 
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
-import Flex from "@foxglove/studio-base/components/Flex";
-import Icon from "@foxglove/studio-base/components/Icon";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
 import PlotLegendRow from "@foxglove/studio-base/panels/Plot/PlotLegendRow";
-import usePlotStyles from "@foxglove/studio-base/panels/Plot/usePlotStyles";
 
 import { PlotPath, BasePlotPath, isReferenceLinePlotPathType } from "./internalTypes";
 import { plotableRosTypes, PlotConfig, PlotXAxisVal } from "./types";
@@ -58,13 +57,53 @@ const shortXAxisLabel = (path: PlotXAxisVal): string => {
   throw new Error(`unknown path: ${path}`);
 };
 
+const useStyles = makeStyles((theme: Theme) =>
+  createStyles({
+    dropdown: {
+      backgroundColor: "transparent !important",
+      padding: "4px !important",
+    },
+    root: {
+      position: "relative",
+      background: alpha(theme.palette.background.paper, 0.8),
+      color: theme.palette.text.secondary,
+    },
+    floatingRoot: {
+      cursor: "pointer",
+      position: "absolute",
+      left: 72,
+      top: 6,
+      maxWidth: "calc(100% - 65px - 25px)",
+      zIndex: 4,
+    },
+    legendToggle: {
+      padding: 6,
+      cursor: "pointer",
+      userSelect: "none",
+      background: theme.palette.background.paper,
+    },
+    floatingLegendToggle: {
+      zIndex: 1,
+      visibility: "hidden",
+      position: "absolute",
+      top: 0,
+      marginLeft: -36,
+      borderRadius: theme.shape.borderRadius,
+      background: theme.palette.background.paper,
+
+      ".mosaic-window:hover &": {
+        visibility: "initial",
+      },
+    },
+  }),
+);
+
 function SidebarWrapper(props: {
-  classes: { [key: string]: string };
   sidebarWidth: number;
   saveConfig: (arg0: Partial<PlotConfig>) => void;
   children: JSX.Element | undefined;
 }): JSX.Element | ReactNull {
-  const { classes, sidebarWidth, saveConfig } = props;
+  const { sidebarWidth, saveConfig } = props;
   const originalWrapper = useRef<DOMRect | undefined>(undefined);
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
@@ -90,12 +129,25 @@ function SidebarWrapper(props: {
   };
 
   return (
-    <>
-      <div onMouseDown={handleMouseDown} className={classes.dragger} />
-      <Stack grow tokens={{ childrenGap: 4 }} style={{ width: sidebarWidth, overflow: "auto" }}>
+    <Stack direction="row" height="100%">
+      <Stack flexGrow={1} spacing={0.5} sx={{ width: sidebarWidth, overflow: "auto" }}>
         {props.children}
       </Stack>
-    </>
+      <Box
+        onMouseDown={handleMouseDown}
+        sx={{
+          width: 4,
+          cursor: "ew-resize",
+          userSelect: "none",
+          bgcolor: "action.hover",
+          marginLeft: 0.5,
+
+          "&:hover": {
+            bgcolor: "action.focus",
+          },
+        }}
+      />
+    </Stack>
   );
 }
 
@@ -114,7 +166,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
   } = props;
 
   const lastPath = last(paths);
-  const classes = usePlotStyles();
+  const classes = useStyles();
 
   const toggleLegend = useCallback(
     () => saveConfig({ showLegend: !showLegend }),
@@ -124,39 +176,35 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
   const legendContent = useMemo(
     () =>
       showLegend ? (
-        <>
-          <div className={classes.item}>
-            x:
-            <div
-              className={classes.itemIconContainer}
-              style={{ width: "auto", lineHeight: "normal", zIndex: 2 }}
-            >
+        <Stack>
+          <Stack
+            direction="row"
+            alignItems="center"
+            padding={0.25}
+            sx={{
+              height: 26,
+              position: "relative",
+
+              ":hover": {
+                bgcolor: "action.hover",
+              },
+            }}
+          >
+            <Box sx={{ zIndex: 2, height: 20, "&:hover": { bgcolor: "action.hover" } }}>
               <Dropdown
                 value={xAxisVal}
-                text={shortXAxisLabel(xAxisVal)}
+                text={`x: ${shortXAxisLabel(xAxisVal)}`}
                 btnClassname={classes.dropdown}
                 onChange={(newXAxisVal) => saveConfig({ xAxisVal: newXAxisVal })}
                 noPortal
               >
-                <DropdownItem value="timestamp">
-                  <span>timestamp</span>
-                </DropdownItem>
-                <DropdownItem value="index">
-                  <span>index</span>
-                </DropdownItem>
-                <DropdownItem value="currentCustom">
-                  <span>msg path (current)</span>
-                </DropdownItem>
-                <DropdownItem value="custom">
-                  <span>msg path (accumulated)</span>
-                </DropdownItem>
+                <DropdownItem value="timestamp">timestamp</DropdownItem>
+                <DropdownItem value="index">index</DropdownItem>
+                <DropdownItem value="currentCustom">msg path (current)</DropdownItem>
+                <DropdownItem value="custom">msg path (accumulated)</DropdownItem>
               </Dropdown>
-            </div>
-            <div
-              className={cx(classes.itemInput, {
-                [classes.itemInputDisabled]: xAxisPath?.enabled !== true,
-              })}
-            >
+            </Box>
+            <Stack direction="row" overflow="hidden">
               {(xAxisVal === "custom" || xAxisVal === "currentCustom") && (
                 <MessagePathInput
                   path={xAxisPath?.value ? xAxisPath.value : "/"}
@@ -174,27 +222,30 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
                   autoSize
                 />
               )}
-            </div>
-          </div>
-          {paths.map((path: PlotPath, index: number) => {
-            const hasMismatchedDataLength = pathsWithMismatchedDataLengths.includes(path.value);
-            return (
-              <PlotLegendRow
-                key={index}
-                index={index}
-                xAxisVal={xAxisVal}
-                path={path}
-                paths={paths}
-                hasMismatchedDataLength={hasMismatchedDataLength}
-                datasets={datasets}
-                currentTime={currentTime}
-                saveConfig={saveConfig}
-              />
-            );
-          })}
-          <div
-            className={classes.fullLengthButton}
-            style={{ minWidth: "100px" }}
+            </Stack>
+          </Stack>
+          <List dense disablePadding>
+            {paths.map((path: PlotPath, index: number) => {
+              const hasMismatchedDataLength = pathsWithMismatchedDataLengths.includes(path.value);
+              return (
+                <PlotLegendRow
+                  key={index}
+                  index={index}
+                  xAxisVal={xAxisVal}
+                  path={path}
+                  paths={paths}
+                  hasMismatchedDataLength={hasMismatchedDataLength}
+                  datasets={datasets}
+                  currentTime={currentTime}
+                  saveConfig={saveConfig}
+                />
+              );
+            })}
+          </List>
+          <Button
+            size="small"
+            fullWidth
+            startIcon={<AddIcon />}
             onClick={() =>
               saveConfig({
                 paths: [
@@ -208,10 +259,11 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
                 ],
               })
             }
+            sx={{ minWidth: 100, bgcolor: "action.hover", margin: 0.5 }}
           >
-            + add line
-          </div>
-        </>
+            Add line
+          </Button>
+        </Stack>
       ) : undefined,
     [
       classes,
@@ -228,24 +280,28 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
   );
 
   return (
-    <Flex className={showSidebar ? classes.root : classes.floatingRoot}>
-      <Icon
-        className={showSidebar ? classes.legendToggle : classes.floatingLegendToggle}
-        style={showSidebar ? { display: "block", height: "100%" } : undefined}
+    <Stack
+      direction="row"
+      alignItems="flex-start"
+      className={cx(classes.root, { [classes.floatingRoot]: !showSidebar })}
+    >
+      <IconButton
+        disableRipple
         onClick={toggleLegend}
+        sx={showSidebar ? { height: "100%", alignItems: "flex-start" } : undefined}
+        className={cx(classes.legendToggle, { [classes.floatingLegendToggle]: !showSidebar })}
       >
-        <MenuIcon />
-      </Icon>
-      {showLegend && showSidebar ? (
-        <SidebarWrapper classes={classes} sidebarWidth={sidebarWidth} saveConfig={saveConfig}>
-          {legendContent}
-        </SidebarWrapper>
+        <MenuIcon fontSize="small" />
+      </IconButton>
+      {showLegend ? (
+        showSidebar ? (
+          <SidebarWrapper sidebarWidth={sidebarWidth} saveConfig={saveConfig}>
+            {legendContent}
+          </SidebarWrapper>
+        ) : (
+          <Stack sx={{ overflow: "hidden", zIndex: 1 }}>{legendContent}</Stack>
+        )
       ) : undefined}
-      {showLegend && !showSidebar ? (
-        <Flex col style={{ overflow: "hidden", zIndex: 1 }}>
-          {legendContent}
-        </Flex>
-      ) : undefined}
-    </Flex>
+    </Stack>
   );
 }

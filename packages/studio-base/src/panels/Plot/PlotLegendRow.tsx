@@ -1,21 +1,25 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import { useTheme } from "@fluentui/react";
-import AlertCircleIcon from "@mdi/svg/svg/alert-circle.svg";
-import CloseIcon from "@mdi/svg/svg/close.svg";
-import cx from "classnames";
+
+import { useTheme as useFluentUITheme } from "@fluentui/react";
+import { Close as CloseIcon, Error as ErrorIcon, Remove as RemoveIcon } from "@mui/icons-material";
+import {
+  IconButton,
+  ListItem,
+  ListItemIcon,
+  ListItemSecondaryAction,
+  ListItemText,
+  Stack,
+  Tooltip,
+} from "@mui/material";
 import { ComponentProps, useCallback, useMemo, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import Flex from "@foxglove/studio-base/components/Flex";
-import Icon from "@foxglove/studio-base/components/Icon";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
 import { useHoverValue } from "@foxglove/studio-base/context/HoverValueContext";
-import usePlotStyles from "@foxglove/studio-base/panels/Plot/usePlotStyles";
 import { lineColors } from "@foxglove/studio-base/util/plotColors";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import { PlotPath, isReferenceLinePlotPathType } from "./internalTypes";
@@ -42,8 +46,6 @@ export default function PlotLegendRow({
   currentTime,
   saveConfig,
 }: PlotLegendRowProps): JSX.Element {
-  const classes = usePlotStyles();
-
   const correspondingData = useMemo(
     () => datasets.find((set) => set.label === path?.value)?.data ?? [],
     [datasets, path?.value],
@@ -55,7 +57,7 @@ export default function PlotLegendRow({
     isTimestampScale: true,
   });
 
-  const theme = useTheme();
+  const fluentUITheme = useFluentUITheme();
   const currentDisplay = useMemo(() => {
     const timeToCompare = hoverValue?.value ?? currentTime;
 
@@ -66,8 +68,11 @@ export default function PlotLegendRow({
       }
       value = pt.y;
     }
-    return { value, color: hoverValue?.value != undefined ? theme.palette.yellowDark : "inherit" };
-  }, [hoverValue, correspondingData, currentTime, theme.palette.yellowDark]);
+    return {
+      value,
+      color: hoverValue?.value != undefined ? fluentUITheme.palette.yellowDark : "inherit",
+    };
+  }, [hoverValue, correspondingData, currentTime, fluentUITheme]);
 
   const isReferenceLinePlotPath = isReferenceLinePlotPathType(path);
   let timestampMethod;
@@ -108,31 +113,59 @@ export default function PlotLegendRow({
   );
 
   return (
-    <div className={classes.item}>
-      <div
-        className={classes.itemIconContainer}
-        style={{ zIndex: 1 }}
-        onClick={() => {
-          const newPaths = paths.slice();
-          const newPath = newPaths[index];
-          if (newPath) {
-            newPaths[index] = { ...newPath, enabled: !newPath.enabled };
-          }
-          saveConfig({ paths: newPaths });
+    <ListItem
+      disableGutters
+      disablePadding
+      sx={{
+        height: 26,
+        alignItems: "center",
+
+        "&:hover, &:focus-within": {
+          bgcolor: "action.hover",
+
+          "+ .MuiListItemSecondaryAction-root": {
+            visibility: "visible",
+          },
+          "& .MuiListItemIcon-root .MuiIconButton-root": {
+            bgcolor: "action.hover",
+          },
+        },
+      }}
+    >
+      <ListItemIcon sx={{ minWidth: "auto" }}>
+        <IconButton
+          centerRipple={false}
+          size="small"
+          sx={{ zIndex: 1, padding: 0.125, marginLeft: 0.25 }}
+          title="Toggle visibility"
+          onClick={() => {
+            const newPaths = paths.slice();
+            const newPath = newPaths[index];
+            if (newPath) {
+              newPaths[index] = { ...newPath, enabled: !newPath.enabled };
+            }
+            saveConfig({ paths: newPaths });
+          }}
+        >
+          <RemoveIcon
+            sx={{ color: path.enabled ? lineColors[index % lineColors.length] : "#777" }}
+          />
+        </IconButton>
+      </ListItemIcon>
+      <ListItemText
+        disableTypography
+        sx={{
+          minWidth: 0,
+          flex: 1,
+          overflow: "hidden",
+          whiteSpace: "nowrap",
+          textOverflow: "ellipsis",
         }}
       >
-        <div
-          className={classes.itemIcon}
-          style={{
-            color: path.enabled ? lineColors[index % lineColors.length] : "#777",
-          }}
-        />
-      </div>
-      <Flex style={{ justifyContent: "space-between" }}>
-        <div
-          className={cx(classes.itemInput, {
-            [classes.itemInputDisabled]: !path.enabled,
-          })}
+        <Stack
+          direction="row"
+          overflow="hidden"
+          sx={{ input: { textDecoration: !path.enabled ? "line-through" : "none" } }}
         >
           <MessagePathInput
             supportsMathModifiers
@@ -147,32 +180,50 @@ export default function PlotLegendRow({
             {...(xAxisVal === "timestamp" ? { timestampMethod } : undefined)}
           />
           {hasMismatchedDataLength && (
-            <Icon
-              style={{ color: colors.RED }}
-              clickable={false}
-              size="small"
-              tooltipProps={{ placement: "top" }}
-              tooltip="Mismatch in the number of elements in x-axis and y-axis messages"
+            <Tooltip
+              placement="top"
+              title="Mismatch in the number of elements in x-axis and y-axis messages"
             >
-              <AlertCircleIcon />
-            </Icon>
+              <ErrorIcon fontSize="small" sx={{ color: "error.main" }} />
+            </Tooltip>
           )}
-        </div>
-        <div>
-          <span style={{ color: currentDisplay.color }}>{currentDisplay.value}</span>
-          <Icon
-            data-item-remove
-            className={classes.itemRemove}
+        </Stack>
+      </ListItemText>
+      <ListItemText
+        sx={{
+          color: currentDisplay.color,
+          flex: 1,
+          overflow: "hidden",
+          whiteSpace: "nowrap",
+          textOverflow: "ellipsis",
+        }}
+        primaryTypographyProps={{ variant: "body2", align: "right" }}
+      >
+        {currentDisplay.value}
+      </ListItemText>
+      <ListItemSecondaryAction
+        sx={{
+          visibility: "hidden",
+          padding: 0.5,
+
+          "&:hover": { visibility: "visible" },
+        }}
+      >
+        <Stack direction="row">
+          <IconButton
+            size="small"
+            title={`Remove ${path.value}`}
+            sx={{ padding: 0.25, color: "text.secondary", "&:hover": { color: "text.primary" } }}
             onClick={() => {
               const newPaths = paths.slice();
               newPaths.splice(index, 1);
               saveConfig({ paths: newPaths });
             }}
           >
-            <CloseIcon />
-          </Icon>
-        </div>
-      </Flex>
-    </div>
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Stack>
+      </ListItemSecondaryAction>
+    </ListItem>
   );
 }

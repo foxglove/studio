@@ -510,7 +510,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
       styles={{ root: { minWidth: 0, ".ms-layer:empty": { margin: 0 } } }}
       tokens={{ childrenGap: 2 }}
     >
-      <Stack.Item grow>
+      <Stack.Item grow disableShrink>
         <Autocomplete
           items={orderedAutocompleteItems}
           filterText={autocompleteFilterText}
