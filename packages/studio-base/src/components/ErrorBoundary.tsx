@@ -50,13 +50,13 @@ export default class ErrorBoundary extends Component<PropsWithChildren<Props>, S
           errorInfo={this.state.currentError?.errorInfo}
           content={
             <p>
-              Something went wrong in the app. Click{" "}
+              Something went wrong in the app.{" "}
               <Link
                 sx={{ cursor: "pointer" }}
                 color="inherit"
                 onClick={() => this.setState({ currentError: undefined })}
               >
-                Dismiss
+                Dismiss this error
               </Link>{" "}
               to continue using the app. If the issue persists try restarting the app.
             </p>

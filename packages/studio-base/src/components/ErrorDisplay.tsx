@@ -121,7 +121,6 @@ function ErrorDisplay(props: ErrorDisplayProps): JSX.Element {
           <div>
             <Link
               color="secondary"
-              underline="none"
               onClick={() => setShowErrorDetails(!showErrorDetails)}
               sx={{ cursor: "pointer" }}
             >

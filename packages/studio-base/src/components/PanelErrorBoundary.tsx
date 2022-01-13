@@ -38,13 +38,13 @@ export default class PanelErrorBoundary extends Component<PropsWithChildren<Prop
           errorInfo={this.state.currentError?.errorInfo}
           content={
             <p>
-              Something went wrong in the panel. Click{" "}
+              Something went wrong in the panel.{" "}
               <Link
                 sx={{ cursor: "pointer" }}
                 color="inherit"
                 onClick={() => this.setState({ currentError: undefined })}
               >
-                Dismiss
+                Dismiss this error
               </Link>{" "}
               to continue using the panel. If the issue persists try resetting the panel.
             </p>
