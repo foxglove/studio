@@ -182,7 +182,9 @@ export default React.memo<Props>(function PanelToolbar({
       >
         {children}
         <PanelToolbarControls
-          showControls={showToolbar || mousePresent}
+          showControls={showToolbar}
+          mousePresent={mousePresent}
+          floating={floating}
           showPanelName={(width ?? 0) > 360}
           additionalIcons={additionalIconsWithHelp}
           isUnknownPanel={!!isUnknownPanel}
