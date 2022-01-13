@@ -25,15 +25,17 @@ import { LegacyButton } from "@foxglove/studio-base/components/LegacyStyledCompo
 import { Item } from "@foxglove/studio-base/components/Menu";
 import { MessageEvent, Topic } from "@foxglove/studio-base/players/types";
 import { CompressedImage, Image } from "@foxglove/studio-base/types/Messages";
+import Rpc from "@foxglove/studio-base/util/Rpc";
 import WebWorkerManager from "@foxglove/studio-base/util/WebWorkerManager";
 import { downloadFiles } from "@foxglove/studio-base/util/download";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import { Config, SaveImagePanelConfig } from "./index";
 import { renderImage } from "./renderImage";
-import { Dimensions, RawMarkerData, RenderOptions } from "./util";
+import { Dimensions, PixelData, RawMarkerData, RenderableCanvas, RenderArgs } from "./util";
 
 type OnFinishRenderImage = () => void;
+
 type Props = {
   topic?: Topic;
   image?: MessageEvent<unknown>;
@@ -42,6 +44,7 @@ type Props = {
   saveConfig: SaveImagePanelConfig;
   onStartRenderImage: () => OnFinishRenderImage;
   renderInMainThread?: boolean;
+  setActivePixelData: (data: PixelData | undefined) => void;
 };
 
 const useStyles = makeStyles((theme) => ({
@@ -143,16 +146,9 @@ const webWorkerManager = new WebWorkerManager(() => {
   return new Worker(new URL("ImageCanvas.worker", import.meta.url));
 }, 1);
 
-type RenderImage = (args: {
-  canvas: HTMLCanvasElement | OffscreenCanvas;
-  zoomMode: "fit" | "fill" | "other";
-  panZoom: { x: number; y: number; scale: number };
-  viewport: { width: number; height: number };
-  imageMessage?: Image | CompressedImage;
-  imageMessageDatatype?: string;
-  rawMarkerData: RawMarkerData;
-  options?: RenderOptions;
-}) => Promise<Dimensions | undefined>;
+type RenderImage = (
+  args: RenderArgs & { canvas: RenderableCanvas },
+) => Promise<Dimensions | undefined>;
 
 const supportsOffscreenCanvas =
   typeof HTMLCanvasElement.prototype.transferControlToOffscreen === "function";
@@ -189,6 +185,10 @@ export default function ImageCanvas(props: Props): JSX.Element {
   // the canvas can only be transferred once, so we keep the transfer around
   const transfferedCanvasRef = useRef<OffscreenCanvas | undefined>(undefined);
 
+  const workerRef = useRef<Rpc | undefined>();
+
+  const [workerId] = useState(uuidv4());
+
   // setup the render function to render in the main thread or in the worker
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
@@ -196,23 +196,14 @@ export default function ImageCanvas(props: Props): JSX.Element {
       return;
     }
 
-    const id = uuidv4();
+    const id = workerId;
 
     if (renderInMainThread) {
       // Potentially performance-sensitive; await can be expensive
       // eslint-disable-next-line @typescript-eslint/promise-function-async
-      const renderInMain = (args: {
-        canvas: HTMLCanvasElement | OffscreenCanvas;
-        zoomMode: "fit" | "fill" | "other";
-        panZoom: { x: number; y: number; scale: number };
-        viewport: { width: number; height: number };
-        imageMessage?: Image | CompressedImage;
-        imageMessageDatatype?: string;
-        rawMarkerData: RawMarkerData;
-        options?: RenderOptions;
-      }) => {
-        const targetWidth = args.viewport.width;
-        const targetHeight = args.viewport.height;
+      const renderInMain: RenderImage = (args) => {
+        const targetWidth = args.geometry.viewport.width;
+        const targetHeight = args.geometry.viewport.height;
 
         if (targetWidth !== canvas.width) {
           canvas.width = targetWidth;
@@ -220,33 +211,23 @@ export default function ImageCanvas(props: Props): JSX.Element {
         if (targetHeight !== canvas.height) {
           canvas.height = targetHeight;
         }
-        return renderImage(args);
+        return renderImage({ ...args, hitmapCanvas: undefined });
       };
 
       setDoRenderImage(() => renderInMain);
     } else {
       const worker = webWorkerManager.registerWorkerListener(id);
+      workerRef.current = worker;
 
       // Potentially performance-sensitive; await can be expensive
       // eslint-disable-next-line @typescript-eslint/promise-function-async
-      const workerRender = (args: {
-        canvas: HTMLCanvasElement | OffscreenCanvas;
-        zoomMode: "fit" | "fill" | "other";
-        panZoom: { x: number; y: number; scale: number };
-        viewport: { width: number; height: number };
-        imageMessage?: Image | CompressedImage;
-        imageMessageDatatype?: string;
-        rawMarkerData: RawMarkerData;
-        options?: RenderOptions;
-      }) => {
+      const workerRender: RenderImage = (args) => {
         const {
-          zoomMode: zoom,
-          panZoom,
-          viewport,
+          geometry,
           imageMessage,
           imageMessageDatatype,
-          rawMarkerData: rawMarkers,
           options,
+          rawMarkerData: rawMarkers,
         } = args;
 
         if (!imageMessage) {
@@ -260,24 +241,25 @@ export default function ImageCanvas(props: Props): JSX.Element {
             ? {
                 data: imageMessage.data,
                 format: imageMessage.format,
+                header: imageMessage.header,
               }
             : {
                 data: imageMessage.data,
-                width: imageMessage.width,
-                height: imageMessage.height,
                 encoding: imageMessage.encoding,
+                header: imageMessage.header,
+                height: imageMessage.height,
                 is_bigendian: imageMessage.is_bigendian,
+                step: imageMessage.step,
+                width: imageMessage.width,
               };
 
-        return worker.send<Dimensions | undefined>("renderImage", {
+        return worker.send<Dimensions | undefined, RenderArgs & { id: string }>("renderImage", {
+          geometry,
           id,
-          zoomMode: zoom,
-          panZoom,
-          viewport,
           imageMessage: msg,
           imageMessageDatatype,
-          rawMarkerData: JSON.parse(JSON.stringify(rawMarkers)),
           options,
+          rawMarkerData: JSON.parse(JSON.stringify(rawMarkers)),
         });
       };
 
@@ -302,7 +284,7 @@ export default function ImageCanvas(props: Props): JSX.Element {
 
       webWorkerManager.unregisterWorkerListener(id);
     };
-  }, [renderInMainThread]);
+  }, [renderInMainThread, workerId]);
 
   const {
     setPan,
@@ -364,9 +346,14 @@ export default function ImageCanvas(props: Props): JSX.Element {
     try {
       return await doRenderImage({
         canvas: canvasRef.current ?? undefined,
-        zoomMode: zoomMode ?? "fit",
-        panZoom: computedViewbox,
-        viewport: { width: targetWidth, height: targetHeight },
+        geometry: {
+          flipHorizontal: config.flipHorizontal ?? false,
+          flipVertical: config.flipVertical ?? false,
+          panZoom: computedViewbox,
+          rotation: config.rotation ?? 0,
+          viewport: { width: targetWidth, height: targetHeight },
+          zoomMode: zoomMode ?? "fit",
+        },
         imageMessage,
         imageMessageDatatype: topic?.datatype,
         rawMarkerData,
@@ -376,19 +363,20 @@ export default function ImageCanvas(props: Props): JSX.Element {
       finishRender();
     }
   }, [
-    doRenderImage,
-    width,
-    height,
+    config,
     devicePixelRatio,
-    panX,
-    panY,
-    scaleValue,
+    doRenderImage,
+    height,
     image?.message,
     onStartRenderImage,
-    zoomMode,
-    topic?.datatype,
+    panX,
+    panY,
     rawMarkerData,
     renderOptions,
+    scaleValue,
+    topic?.datatype,
+    width,
+    zoomMode,
   ]);
 
   const [openZoomContext, setOpenZoomContext] = useState(false);
@@ -482,7 +470,7 @@ export default function ImageCanvas(props: Props): JSX.Element {
   const onDownloadImage = useCallback(() => {
     const canvas = canvasRef.current;
 
-    if (!canvas || !image || !topic) {
+    if (!canvas || !image || !topic || width == undefined || height == undefined) {
       return;
     }
 
@@ -495,8 +483,15 @@ export default function ImageCanvas(props: Props): JSX.Element {
     const tempCanvas = document.createElement("canvas");
     void renderImage({
       canvas: tempCanvas,
-      zoomMode: "other",
-      panZoom: { x: 0, y: 0, scale: 1 },
+      hitmapCanvas: undefined,
+      geometry: {
+        flipHorizontal: config.flipHorizontal ?? false,
+        flipVertical: config.flipVertical ?? false,
+        panZoom: { x: 0, y: 0, scale: 1 },
+        rotation: config.rotation ?? 0,
+        viewport: { width, height },
+        zoomMode: "other",
+      },
       imageMessage,
       imageMessageDatatype: topic.datatype,
       rawMarkerData: { markers: [], transformMarkers: false },
@@ -524,7 +519,24 @@ export default function ImageCanvas(props: Props): JSX.Element {
         downloadFiles([{ blob, fileName }]);
       }, "image/png");
     });
-  }, [image, topic, renderOptions]);
+  }, [image, topic, width, height, config, renderOptions]);
+
+  function onCanvasClick(event: MouseEvent<HTMLCanvasElement>) {
+    const boundingRect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - boundingRect.x;
+    const y = event.clientY - boundingRect.y;
+    void workerRef.current
+      ?.send<PixelData | undefined>("mouseMove", {
+        id: workerId,
+        x: x * devicePixelRatio,
+        y: y * devicePixelRatio,
+      })
+      .then((r) => {
+        if (r?.marker) {
+          props.setActivePixelData(r);
+        }
+      });
+  }
 
   const keyDownHandlers = useMemo(() => {
     return {
@@ -545,6 +557,7 @@ export default function ImageCanvas(props: Props): JSX.Element {
         className={cx(classes.canvas, {
           [classes.canvasImageRenderingSmooth]: config.smooth === true,
         })}
+        onClick={onCanvasClick}
         ref={canvasRef}
       />
       {contextMenuEvent && (

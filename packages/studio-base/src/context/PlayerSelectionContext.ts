@@ -11,7 +11,6 @@ import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 export type DataSourceFactoryInitializeArgs = {
   metricsCollector: PlayerMetricsCollectorInterface;
   unlimitedMemoryCache: boolean;
-  rosHostname?: string;
   folder?: FileSystemDirectoryHandle;
   file?: File;
   files?: File[];
@@ -95,6 +94,7 @@ const PlayerSelectionContext = createContext<PlayerSelection>({
   availableSources: [],
   recentSources: [],
 });
+PlayerSelectionContext.displayName = "PlayerSelectionContext";
 
 export function usePlayerSelection(): PlayerSelection {
   return useContext(PlayerSelectionContext);
