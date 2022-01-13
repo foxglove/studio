@@ -32,6 +32,7 @@ export type SelectableContextHandle<T> = {
 export type SelectableContext<T> = {
   readonly Provider: ComponentType<{ value: T; children?: ReactNode }>;
   readonly _ctx: Context<SelectableContextHandle<T> | undefined>;
+  displayName?: string;
 };
 
 // Create a context for use with useContextSelector
@@ -74,5 +75,14 @@ export default function createSelectableContext<T>(): SelectableContext<T> {
   return {
     Provider,
     _ctx: ctx,
+
+    // eslint-disable-next-line no-restricted-syntax
+    get displayName() {
+      return ctx.displayName;
+    },
+    // eslint-disable-next-line no-restricted-syntax
+    set displayName(value) {
+      ctx.displayName = value;
+    },
   };
 }

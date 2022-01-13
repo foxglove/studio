@@ -95,6 +95,7 @@ const PlayerSelectionContext = createContext<PlayerSelection>({
   availableSources: [],
   recentSources: [],
 });
+PlayerSelectionContext.displayName = "PlayerSelectionContext";
 
 export function usePlayerSelection(): PlayerSelection {
   return useContext(PlayerSelectionContext);
