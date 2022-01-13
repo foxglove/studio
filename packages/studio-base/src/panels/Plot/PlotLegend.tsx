@@ -140,7 +140,6 @@ function SidebarWrapper(props: {
           cursor: "ew-resize",
           userSelect: "none",
           bgcolor: "action.hover",
-          marginLeft: 0.5,
 
           "&:hover": {
             bgcolor: "action.focus",
@@ -259,7 +258,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
                 ],
               })
             }
-            sx={{ minWidth: 100, bgcolor: "action.hover", margin: 0.5 }}
+            sx={{ minWidth: 100, bgcolor: "action.hover" }}
           >
             Add line
           </Button>
@@ -286,7 +285,6 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
       className={cx(classes.root, { [classes.floatingRoot]: !showSidebar })}
     >
       <IconButton
-        disableRipple
         onClick={toggleLegend}
         sx={showSidebar ? { height: "100%", alignItems: "flex-start" } : undefined}
         className={cx(classes.legendToggle, { [classes.floatingLegendToggle]: !showSidebar })}
