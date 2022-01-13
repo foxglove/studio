@@ -27,13 +27,14 @@ import { usePanelMousePresence } from "@foxglove/studio-base/hooks/usePanelMouse
 import { PanelToolbarControls } from "./PanelToolbarControls";
 
 type Props = {
+  additionalIcons?: React.ReactNode;
+  alwaysVisible?: boolean;
+  backgroundColor?: string;
   children?: React.ReactNode;
   floating?: boolean;
   helpContent?: React.ReactNode;
-  additionalIcons?: React.ReactNode;
   hideToolbars?: boolean;
   isUnknownPanel?: boolean;
-  backgroundColor?: string;
 };
 
 const PANEL_TOOLBAR_HEIGHT = 26;
@@ -88,12 +89,13 @@ const useStyles = makeStyles((theme) => ({
 // and has a place to add custom controls via it's children property
 export default React.memo<Props>(function PanelToolbar({
   additionalIcons,
+  alwaysVisible = false,
+  backgroundColor,
   children,
   floating = false,
   helpContent,
   hideToolbars = false,
   isUnknownPanel = false,
-  backgroundColor,
 }: Props) {
   const styles = useStyles();
   const { isFullscreen, enterFullscreen, exitFullscreen } = useContext(PanelContext) ?? {};
@@ -164,7 +166,7 @@ export default React.memo<Props>(function PanelToolbar({
   const containerRef = useRef<HTMLDivElement>(ReactNull);
 
   const mousePresent = usePanelMousePresence(containerRef);
-  const shouldShow = floating ? showToolbar || mousePresent : true;
+  const shouldShow = alwaysVisible || (floating ? showToolbar || mousePresent : true);
 
   if (hideToolbars) {
     return ReactNull;
@@ -182,7 +184,7 @@ export default React.memo<Props>(function PanelToolbar({
       >
         {children}
         <PanelToolbarControls
-          showControls={showToolbar}
+          showControls={showToolbar || alwaysVisible}
           mousePresent={mousePresent}
           floating={floating}
           showPanelName={(width ?? 0) > 360}

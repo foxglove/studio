@@ -25,15 +25,15 @@ const PANEL_TOOLBAR_HEIGHT = 26;
 const PANEL_TOOLBAR_SPACING = 4;
 
 type PanelToolbarControlsProps = {
-  floating?: boolean;
   additionalIcons?: React.ReactNode;
+  floating?: boolean;
+  isUnknownPanel: boolean;
   menuOpen: boolean;
   mousePresent?: boolean;
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   setMenuOpen: (_: boolean) => void;
   showControls?: boolean;
   showPanelName?: boolean;
-  isUnknownPanel: boolean;
 };
 
 const useStyles = makeStyles({
