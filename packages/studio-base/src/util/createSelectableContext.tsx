@@ -72,17 +72,20 @@ export default function createSelectableContext<T>(): SelectableContext<T> {
     return <ctx.Provider value={handle}>{children}</ctx.Provider>;
   }
 
+  let displayName: string | undefined;
   return {
     Provider,
     _ctx: ctx,
 
     // eslint-disable-next-line no-restricted-syntax
     get displayName() {
-      return ctx.displayName;
+      return displayName;
     },
     // eslint-disable-next-line no-restricted-syntax
     set displayName(value) {
-      ctx.displayName = value;
+      displayName = value;
+      ctx.displayName = `${value}.Impl`;
+      Object.assign(Provider, { displayName: `${value}.Provider` });
     },
   };
 }
