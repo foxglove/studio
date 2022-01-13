@@ -25,7 +25,6 @@ const PANEL_TOOLBAR_HEIGHT = 26;
 const PANEL_TOOLBAR_SPACING = 4;
 
 type PanelToolbarControlsProps = {
-  floating?: boolean;
   additionalIcons?: React.ReactNode;
   menuOpen: boolean;
   // eslint-disable-next-line @foxglove/no-boolean-parameters
@@ -71,7 +70,6 @@ export const PanelToolbarControls = React.memo(function PanelToolbarControls({
   setMenuOpen,
   additionalIcons,
   showControls = false,
-  floating = false,
   isUnknownPanel,
   showPanelName = false,
 }: PanelToolbarControlsProps) {
@@ -79,12 +77,7 @@ export const PanelToolbarControls = React.memo(function PanelToolbarControls({
   const styles = useStyles();
 
   return (
-    <div
-      style={showControls ? { display: "flex" } : {}}
-      className={cx(styles.iconContainer, {
-        panelToolbarHovered: !floating,
-      })}
-    >
+    <div style={{ display: showControls ? "flex" : "none" }} className={cx(styles.iconContainer)}>
       {showPanelName && panelContext && (
         <div className={styles.panelName}>{panelContext.title}</div>
       )}

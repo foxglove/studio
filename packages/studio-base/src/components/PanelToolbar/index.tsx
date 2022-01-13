@@ -15,13 +15,14 @@ import FullscreenExitIcon from "@mdi/svg/svg/fullscreen-exit.svg";
 import FullscreenIcon from "@mdi/svg/svg/fullscreen.svg";
 import HelpCircleOutlineIcon from "@mdi/svg/svg/help-circle-outline.svg";
 import cx from "classnames";
-import { useContext, useState, useMemo } from "react";
+import { useContext, useState, useMemo, useRef } from "react";
 import { useResizeDetector } from "react-resize-detector";
 
 import Icon from "@foxglove/studio-base/components/Icon";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import { useHelpInfo } from "@foxglove/studio-base/context/HelpInfoContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
+import { usePanelMousePresence } from "@foxglove/studio-base/hooks/usePanelMousePresence";
 
 import { PanelToolbarControls } from "./PanelToolbarControls";
 
@@ -156,28 +157,32 @@ export default React.memo<Props>(function PanelToolbar({
     refreshMode: "debounce",
   });
 
-  if (hideToolbars) {
-    return ReactNull;
-  }
-
   // floating toolbars only show when hovered - but hovering over a context menu would hide the toolbar
   // showToolbar is used to force-show elements even if not hovered
   const showToolbar = menuOpen || !!isUnknownPanel;
 
+  const containerRef = useRef<HTMLDivElement>(ReactNull);
+
+  const mousePresent = usePanelMousePresence(containerRef);
+  const shouldShow = floating ? showToolbar || mousePresent : true;
+
+  if (hideToolbars) {
+    return ReactNull;
+  }
+
   return (
     <div ref={sizeRef}>
       <div
+        ref={containerRef}
         className={cx(styles.panelToolbarContainer, {
-          panelToolbarHovered: floating,
           floating,
           hasChildren: Boolean(children),
         })}
-        style={showToolbar ? { display: "flex", backgroundColor } : { backgroundColor }}
+        style={{ backgroundColor, display: shouldShow ? "flex" : "none" }}
       >
         {children}
         <PanelToolbarControls
-          showControls={showToolbar}
-          floating={floating}
+          showControls={showToolbar || mousePresent}
           showPanelName={(width ?? 0) > 360}
           additionalIcons={additionalIconsWithHelp}
           isUnknownPanel={!!isUnknownPanel}
