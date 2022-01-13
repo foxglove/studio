@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Box, Button, Stack } from "@mui/material";
+import { Box, Button, Link, Stack } from "@mui/material";
 import { captureException } from "@sentry/core";
 import { Component, ErrorInfo, PropsWithChildren, ReactNode } from "react";
 
@@ -36,7 +36,19 @@ export default class PanelErrorBoundary extends Component<PropsWithChildren<Prop
           title="The panel encountered an unexpected error"
           error={this.state.currentError?.error}
           errorInfo={this.state.currentError?.errorInfo}
-          onDismiss={() => this.setState({ currentError: undefined })}
+          content={
+            <p>
+              Something went wrong in the panel. Click{" "}
+              <Link
+                sx={{ cursor: "pointer" }}
+                color="inherit"
+                onClick={() => this.setState({ currentError: undefined })}
+              >
+                Dismiss
+              </Link>{" "}
+              to continue using the panel. If the issue persists try resetting the panel.
+            </p>
+          }
           actions={
             <>
               <Stack direction="row" spacing={1}>
