@@ -11,11 +11,10 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { IList, List, Stack } from "@fluentui/react";
+import { IconButton, IList, List, Stack } from "@fluentui/react";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
-import Button from "@foxglove/studio-base/components/Button";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import TopicToRenderMenu from "@foxglove/studio-base/components/TopicToRenderMenu";
@@ -117,7 +116,7 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
     div.scrollTop = div.scrollHeight;
   }
 
-  function onResetView() {
+  function scrollToBottomAction() {
     setHasUserScrolled(false);
     scrollByUpdate.current = true;
     scrollToBottom();
@@ -154,7 +153,7 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
         />
       </PanelToolbar>
       <Stack grow style={{ overflow: "hidden" }}>
-        <div ref={divRef} style={{ height: "100%", overflow: "scroll" }}>
+        <div ref={divRef} style={{ height: "100%", overflow: "auto" }}>
           {/* items property wants a mutable array but filteredMessages is readonly */}
           <List
             componentRef={listRef}
@@ -180,7 +179,11 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
       </Stack>
       {hasUserScrolled && (
         <div style={{ position: "absolute", bottom: 10, right: 10 }}>
-          <Button onClick={onResetView}>reset view</Button>
+          <IconButton
+            iconProps={{ iconName: "DoubleChevronDown" }}
+            title="Scroll to bottom"
+            onClick={scrollToBottomAction}
+          />
         </div>
       )}
     </Stack>
