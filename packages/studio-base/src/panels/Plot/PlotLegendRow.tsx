@@ -5,6 +5,7 @@
 import { useTheme as useFluentUITheme } from "@fluentui/react";
 import { Close as CloseIcon, Error as ErrorIcon, Remove as RemoveIcon } from "@mui/icons-material";
 import {
+  Box,
   IconButton,
   ListItem,
   ListItemIcon,
@@ -156,17 +157,10 @@ export default function PlotLegendRow({
         disableTypography
         sx={{
           minWidth: 0,
-          flex: 1,
-          overflow: "hidden",
-          whiteSpace: "nowrap",
-          textOverflow: "ellipsis",
+          flexGrow: 0,
         }}
       >
-        <Stack
-          direction="row"
-          overflow="hidden"
-          sx={{ input: { textDecoration: !path.enabled ? "line-through" : "none" } }}
-        >
+        <Box sx={{ input: { textDecoration: !path.enabled ? "line-through" : "none" } }}>
           <MessagePathInput
             supportsMathModifiers
             path={path.value}
@@ -187,20 +181,19 @@ export default function PlotLegendRow({
               <ErrorIcon fontSize="small" sx={{ color: "error.main" }} />
             </Tooltip>
           )}
-        </Stack>
+        </Box>
       </ListItemText>
-      <ListItemText
-        sx={{
-          color: currentDisplay.color,
-          flex: 1,
-          overflow: "hidden",
-          whiteSpace: "nowrap",
-          textOverflow: "ellipsis",
-        }}
-        primaryTypographyProps={{ variant: "body2", align: "right" }}
-      >
-        {currentDisplay.value}
-      </ListItemText>
+      {currentDisplay.value != undefined && (
+        <ListItemText
+          sx={{
+            color: currentDisplay.color,
+            minWidth: 128,
+          }}
+          primaryTypographyProps={{ variant: "body2", align: "right" }}
+        >
+          {currentDisplay.value}
+        </ListItemText>
+      )}
       <ListItemSecondaryAction
         sx={{
           visibility: "hidden",

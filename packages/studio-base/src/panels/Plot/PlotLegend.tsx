@@ -11,7 +11,12 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Add as AddIcon, Menu as MenuIcon } from "@mui/icons-material";
+import {
+  Add as AddIcon,
+  Menu as MenuIcon,
+  KeyboardArrowLeft as KeyboardArrowLeftIcon,
+  KeyboardArrowRight as KeyboardArrowRightIcon,
+} from "@mui/icons-material";
 import { Box, Button, IconButton, List, Stack, Theme, alpha } from "@mui/material";
 import { createStyles, makeStyles } from "@mui/styles";
 import cx from "classnames";
@@ -65,35 +70,41 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     root: {
       position: "relative",
-      background: alpha(theme.palette.background.paper, 0.8),
       color: theme.palette.text.secondary,
+      backgroundColor: theme.palette.background.paper,
+      borderTop: `${theme.palette.background.default} solid 1px`,
     },
     floatingRoot: {
       cursor: "pointer",
       position: "absolute",
-      left: 72,
-      top: 6,
-      maxWidth: "calc(100% - 65px - 25px)",
+      left: theme.spacing(6),
+      top: theme.spacing(2),
+      maxWidth: "calc(100% - 64px)",
+      backgroundColor: "transparent",
+      borderTop: "none",
       zIndex: 4,
     },
     legendToggle: {
-      padding: 6,
       cursor: "pointer",
       userSelect: "none",
-      background: theme.palette.background.paper,
+      height: "100%",
+      backgroundColor: theme.palette.background.paper,
     },
     floatingLegendToggle: {
+      marginRight: theme.spacing(0.25),
       zIndex: 1,
       visibility: "hidden",
       position: "absolute",
       top: 0,
-      marginLeft: -36,
+      marginLeft: theme.spacing(-4),
       borderRadius: theme.shape.borderRadius,
-      background: theme.palette.background.paper,
+      backgroundColor: theme.palette.action.focus,
+      height: "inherit",
 
-      ".mosaic-window:hover &": {
-        visibility: "initial",
+      "&:hover": {
+        backgroundColor: theme.palette.background.paper,
       },
+      ".mosaic-window:hover &": { visibility: "initial" },
     },
   }),
 );
@@ -172,10 +183,26 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
     [showLegend, saveConfig],
   );
 
+  const legendIcon = useMemo(
+    () =>
+      showSidebar ? (
+        showLegend ? (
+          <KeyboardArrowLeftIcon fontSize="small" />
+        ) : (
+          <KeyboardArrowRightIcon fontSize="small" />
+        )
+      ) : (
+        <MenuIcon fontSize="small" />
+      ),
+    [showLegend, showSidebar],
+  );
+
   const legendContent = useMemo(
     () =>
       showLegend ? (
-        <Stack>
+        <Stack
+          sx={(theme) => ({ resize: "both", bgcolor: alpha(theme.palette.background.paper, 0.8) })}
+        >
           <Stack
             direction="row"
             alignItems="center"
@@ -241,27 +268,29 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
               );
             })}
           </List>
-          <Button
-            size="small"
-            fullWidth
-            startIcon={<AddIcon />}
-            onClick={() =>
-              saveConfig({
-                paths: [
-                  ...paths,
-                  {
-                    value: "",
-                    enabled: true,
-                    // For convenience, default to the `timestampMethod` of the last path.
-                    timestampMethod: lastPath ? lastPath.timestampMethod : "receiveTime",
-                  },
-                ],
-              })
-            }
-            sx={{ minWidth: 100, bgcolor: "action.hover" }}
-          >
-            Add line
-          </Button>
+          <Box padding={0.5}>
+            <Button
+              size="small"
+              fullWidth
+              startIcon={<AddIcon />}
+              onClick={() =>
+                saveConfig({
+                  paths: [
+                    ...paths,
+                    {
+                      value: "",
+                      enabled: true,
+                      // For convenience, default to the `timestampMethod` of the last path.
+                      timestampMethod: lastPath ? lastPath.timestampMethod : "receiveTime",
+                    },
+                  ],
+                })
+              }
+              sx={{ minWidth: 100, bgcolor: "action.hover" }}
+            >
+              Add line
+            </Button>
+          </Box>
         </Stack>
       ) : undefined,
     [
@@ -285,11 +314,20 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
       className={cx(classes.root, { [classes.floatingRoot]: !showSidebar })}
     >
       <IconButton
+        disableRipple={showSidebar}
+        size="small"
         onClick={toggleLegend}
-        sx={showSidebar ? { height: "100%", alignItems: "flex-start" } : undefined}
         className={cx(classes.legendToggle, { [classes.floatingLegendToggle]: !showSidebar })}
+        sx={{
+          bgcolor: "action.focus",
+          padding: showSidebar ? "0" : undefined,
+
+          "&:hover": {
+            bgcolor: "action.focus",
+          },
+        }}
       >
-        <MenuIcon fontSize="small" />
+        {legendIcon}
       </IconButton>
       {showLegend ? (
         showSidebar ? (
