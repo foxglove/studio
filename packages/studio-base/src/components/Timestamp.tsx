@@ -16,6 +16,7 @@ type Props = {
   horizontal?: boolean;
   time: Time;
   timezone?: string;
+  wrap?: boolean;
 };
 
 const DURATION_20_YEARS_SEC = 20 * 365 * 24 * 60 * 60;
@@ -26,7 +27,7 @@ function isAbsoluteTime(time: Time): boolean {
 }
 
 export default function Timestamp(props: Props): JSX.Element {
-  const { disableDate = false, horizontal = false, time, timezone } = props;
+  const { disableDate = false, horizontal = false, time, timezone, wrap } = props;
   const theme = useTheme();
   const { formatTime } = useAppTimeFormat();
   const currentTimeStr = useMemo(() => formatTime(time), [time, formatTime]);
@@ -55,8 +56,9 @@ export default function Timestamp(props: Props): JSX.Element {
     <Stack tokens={{ childrenGap: theme.spacing.s2 }}>
       <Stack
         horizontal={horizontal}
-        verticalAlign="center"
         tokens={{ childrenGap: theme.spacing.s2 }}
+        verticalAlign="center"
+        wrap={wrap}
       >
         {!disableDate && (
           <>
