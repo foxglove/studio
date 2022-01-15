@@ -170,7 +170,7 @@ export default class Ros2Player implements Player {
       for (const [topic, endpoints] of rosNode.getPublishedTopics().entries()) {
         const dataTypes = new Set<string>();
         for (const endpoint of endpoints) {
-          dataTypes.add(endpoint.dataType);
+          dataTypes.add(endpoint.rosDataType);
         }
         const dataType = dataTypes.values().next().value as string;
         if (dataTypes.size > 1) {
@@ -184,6 +184,8 @@ export default class Ros2Player implements Player {
         } else {
           this._problems.removeProblem(`subscription:${topic}`);
         }
+
+        topics.push({ name: topic, datatype: dataType });
       }
 
       // Sort them for easy comparison
@@ -276,6 +278,7 @@ export default class Ros2Player implements Player {
       presence: this._presence,
       progress: {},
       capabilities: CAPABILITIES,
+      name: "ROS2",
       playerId: this._id,
       problems: this._problems.problems(),
 
