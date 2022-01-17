@@ -147,13 +147,13 @@ function SidebarWrapper(props: {
       <Box
         onMouseDown={handleMouseDown}
         sx={{
-          width: 4,
+          width: 2,
           cursor: "ew-resize",
           userSelect: "none",
           bgcolor: "action.hover",
 
           "&:hover": {
-            bgcolor: "action.focus",
+            bgcolor: "action.selected",
           },
         }}
       />
@@ -187,12 +187,12 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
     () =>
       showSidebar ? (
         showLegend ? (
-          <KeyboardArrowLeftIcon fontSize="small" />
+          <KeyboardArrowLeftIcon fontSize="inherit" />
         ) : (
-          <KeyboardArrowRightIcon fontSize="small" />
+          <KeyboardArrowRightIcon fontSize="inherit" />
         )
       ) : (
-        <MenuIcon fontSize="small" />
+        <MenuIcon fontSize="inherit" />
       ),
     [showLegend, showSidebar],
   );
@@ -319,7 +319,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
         onClick={toggleLegend}
         className={cx(classes.legendToggle, { [classes.floatingLegendToggle]: !showSidebar })}
         sx={{
-          bgcolor: "action.focus",
+          bgcolor: "action.hover",
           padding: showSidebar ? "0" : undefined,
 
           "&:hover": {
