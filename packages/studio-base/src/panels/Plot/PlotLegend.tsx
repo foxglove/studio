@@ -77,12 +77,12 @@ const useStyles = makeStyles((theme: Theme) =>
     floatingRoot: {
       cursor: "pointer",
       position: "absolute",
-      left: theme.spacing(6),
-      top: theme.spacing(2),
-      maxWidth: "calc(100% - 64px)",
+      left: theme.spacing(4),
+      top: theme.spacing(1),
+      bottom: theme.spacing(3),
+      maxWidth: `calc(100% - ${theme.spacing(8)})`,
       backgroundColor: "transparent",
       borderTop: "none",
-      zIndex: 4,
     },
     legendToggle: {
       cursor: "pointer",
@@ -94,9 +94,6 @@ const useStyles = makeStyles((theme: Theme) =>
       marginRight: theme.spacing(0.25),
       zIndex: 1,
       visibility: "hidden",
-      position: "absolute",
-      top: 0,
-      marginLeft: theme.spacing(-4),
       borderRadius: theme.shape.borderRadius,
       backgroundColor: theme.palette.action.focus,
       height: "inherit",
@@ -201,7 +198,11 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
     () =>
       showLegend ? (
         <Stack
-          sx={(theme) => ({ resize: "both", bgcolor: alpha(theme.palette.background.paper, 0.8) })}
+          sx={(theme) => ({
+            bgcolor: alpha(theme.palette.background.paper, 0.8),
+            maxHeight: "100%",
+            overflow: "auto",
+          })}
         >
           <Stack
             direction="row"
@@ -209,14 +210,20 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
             padding={0.25}
             sx={{
               height: 26,
-              position: "relative",
-
-              ":hover": {
-                bgcolor: "action.hover",
-              },
+              position: "sticky",
+              top: 0,
+              bgcolor: "background.paper",
+              zIndex: 3,
             }}
           >
-            <Box sx={{ zIndex: 2, height: 20, "&:hover": { bgcolor: "action.hover" } }}>
+            <Box
+              sx={{
+                zIndex: 4,
+                height: 20,
+
+                "&:hover": { bgcolor: "action.hover" },
+              }}
+            >
               <Dropdown
                 value={xAxisVal}
                 text={`x: ${shortXAxisLabel(xAxisVal)}`}
@@ -312,6 +319,9 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
       direction="row"
       alignItems="flex-start"
       className={cx(classes.root, { [classes.floatingRoot]: !showSidebar })}
+      sx={{
+        pointerEvents: "visibleFill",
+      }}
     >
       <IconButton
         disableRipple={showSidebar}
@@ -335,7 +345,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
             {legendContent}
           </SidebarWrapper>
         ) : (
-          <Stack sx={{ overflow: "hidden", zIndex: 1 }}>{legendContent}</Stack>
+          <Stack sx={{ overflow: "hidden", height: "100%", zIndex: 1 }}>{legendContent}</Stack>
         )
       ) : undefined}
     </Stack>

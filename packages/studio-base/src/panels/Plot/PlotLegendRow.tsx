@@ -137,7 +137,7 @@ export default function PlotLegendRow({
         <IconButton
           centerRipple={false}
           size="small"
-          sx={{ zIndex: 1, padding: 0.125, marginLeft: 0.25 }}
+          sx={{ padding: 0.125, marginLeft: 0.25 }}
           title="Toggle visibility"
           onClick={() => {
             const newPaths = paths.slice();
