@@ -2,14 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import {
-  CompoundButton,
-  Stack,
-  Text,
-  IButtonProps,
-  useTheme,
-  Checkbox,
-} from "@fluentui/react";
+import { CompoundButton, Stack, Text, IButtonProps, useTheme, Checkbox } from "@fluentui/react";
 import { useMemo } from "react";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
@@ -51,8 +44,9 @@ export default function Start(props: IStartProps): JSX.Element {
   const theme = useTheme();
   const { recentSources, selectRecent } = usePlayerSelection();
 
-  const [showOnStartup = true, setShowOnStartup] =
-    useAppConfigurationValue<boolean>(AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP);
+  const [showOnStartup = true, setShowOnStartup] = useAppConfigurationValue<boolean>(
+    AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,
+  );
 
   const buttonStyles = useMemo(
     () => ({
@@ -76,12 +70,12 @@ export default function Start(props: IStartProps): JSX.Element {
         color: theme.palette.themePrimary,
       },
     }),
-    [theme]
+    [theme],
   );
 
   const supportedLocalFiles = useMemo(
     () => Array.from(new Set(supportedFileExtensions)).join(", "),
-    [supportedFileExtensions]
+    [supportedFileExtensions],
   );
 
   const startItems: IButtonProps[] = useMemo(
@@ -115,7 +109,7 @@ export default function Start(props: IStartProps): JSX.Element {
         onClick: () => onSelectView("demo"),
       },
     ],
-    [onSelectView, supportedLocalFiles]
+    [onSelectView, supportedLocalFiles],
   );
 
   const recentItems: IButtonProps[] = useMemo(() => {
@@ -171,33 +165,19 @@ export default function Start(props: IStartProps): JSX.Element {
       <Stack horizontal tokens={{ childrenGap: theme.spacing.l2 }}>
         {/* Left column */}
         <Stack grow tokens={{ childrenGap: theme.spacing.m }}>
-          <Text
-            variant="large"
-            styles={{ root: { color: theme.semanticColors.bodySubtext } }}
-          >
+          <Text variant="large" styles={{ root: { color: theme.semanticColors.bodySubtext } }}>
             Open data source
           </Text>
           <Stack tokens={{ childrenGap: theme.spacing.s1 }}>
             {startItems.map(({ id, ...item }) => (
-              <CompoundButton
-                {...item}
-                key={id}
-                id={id}
-                styles={buttonStyles}
-              />
+              <CompoundButton {...item} key={id} id={id} styles={buttonStyles} />
             ))}
           </Stack>
         </Stack>
 
         {/* Right column */}
-        <Stack
-          grow
-          tokens={{ childrenGap: theme.spacing.l1 }}
-          styles={{ root: { minWidth: 0 } }}
-        >
-          {recentItems.length > 0 && (
-            <ActionList title="Recent" items={recentItems} />
-          )}
+        <Stack grow tokens={{ childrenGap: theme.spacing.l1 }} styles={{ root: { minWidth: 0 } }}>
+          {recentItems.length > 0 && <ActionList title="Recent" items={recentItems} />}
           <ActionList title="Help" items={HELP_ITEMS} />
         </Stack>
       </Stack>
