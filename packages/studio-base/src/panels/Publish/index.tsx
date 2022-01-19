@@ -186,7 +186,13 @@ function Publish(props: Props) {
       <PanelToolbar helpContent={helpContent} floating />
       {showAdvancedView && (
         <>
-          <Stack spacing={1} direction="row" flexShrink={0} sx={{ lineHeight: "24px" }}>
+          <Stack
+            alignItems="center"
+            spacing={1}
+            direction="row"
+            flexShrink={0}
+            sx={{ lineHeight: "24px" }}
+          >
             <SSpan>Topic:</SSpan>
             <Autocomplete
               placeholder="Choose a topic"
@@ -200,12 +206,11 @@ function Publish(props: Props) {
             />
           </Stack>
           <Stack
+            alignItems="center"
             spacing={1}
             direction="row"
             flexShrink={0}
-            sx={{
-              lineHeight: "24px",
-            }}
+            sx={{ lineHeight: "24px" }}
           >
             <PanelToolbarLabel>Datatype:</PanelToolbarLabel>
             <Autocomplete
