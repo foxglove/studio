@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { DefaultButton, IButtonStyles, IconButton, makeStyles, useTheme } from "@fluentui/react";
-import { Box, Stack } from "@mui/material";
+import { Stack } from "@mui/material";
 import { flatten, flatMap, partition } from "lodash";
 import { CSSProperties, useCallback, useMemo } from "react";
 
@@ -579,7 +579,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
       minWidth={0}
       spacing={0.25}
     >
-      <Box flexGrow={1}>
+      <Stack direction="row" alignItems="center" flexGrow={1}>
         <Autocomplete
           items={orderedAutocompleteItems}
           filterText={autocompleteFilterText}
@@ -600,7 +600,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
           // to have the entire input selected whenever you want to make a change to a part it.
           disableAutoSelect
         />
-      </Box>
+      </Stack>
       {timestampMethod != undefined && (
         <>
           <div>
