@@ -11,9 +11,9 @@ export default {
 
 function ColorStory({ colors }: { colors: [string, string][] }) {
   return (
-    <Stack flexWrap="wrap" spacing={1} padding={2} sx={{ overflowX: "auto" }}>
+    <Stack flexWrap="wrap" padding={2} sx={{ overflowX: "auto" }}>
       {colors.map(([name, color]) => (
-        <Stack key={name} direction="row" alignItems="center" spacing={1}>
+        <Stack key={name} direction="row" alignItems="center" spacing={1} padding={0.5}>
           <Box
             key={name}
             sx={({ spacing }) => ({ bgcolor: color, width: spacing(4), height: spacing(4) })}
