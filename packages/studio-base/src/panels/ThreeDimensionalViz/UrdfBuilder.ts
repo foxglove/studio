@@ -44,6 +44,7 @@ import {
   SphereMarker,
 } from "@foxglove/studio-base/types/Messages";
 import { clonePose } from "@foxglove/studio-base/util/Pose";
+import { Quaternion, Vector3 } from "@foxglove/studio-base/util/geometry";
 import { URDF_TOPIC } from "@foxglove/studio-base/util/globalConstants";
 import sendNotification from "@foxglove/studio-base/util/sendNotification";
 
@@ -52,9 +53,6 @@ import { MarkerProvider, RenderMarkerArgs, TransformLink } from "./types";
 export const DEFAULT_COLOR: Color = { r: 36 / 255, g: 142 / 255, b: 255 / 255, a: 1 };
 
 const TIME_ZERO = { sec: 0, nsec: 0 };
-
-type Vector3 = { x: number; y: number; z: number };
-type Quaternion = { x: number; y: number; z: number; w: number };
 
 const log = Logger.getLogger(__filename);
 

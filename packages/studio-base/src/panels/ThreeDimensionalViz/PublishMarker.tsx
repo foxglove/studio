@@ -12,9 +12,14 @@
 //   You may not use this file except in compliance with the License.
 
 import { Lines, Spheres, Point } from "@foxglove/regl-worldview";
+import { PublishClickType } from "@foxglove/studio-base/panels/ThreeDimensionalViz/InteractionState";
 
 type Props = {
-  points: { start?: Point; end?: Point };
+  points: {
+    start?: Point;
+    end?: Point;
+    type: PublishClickType;
+  };
 };
 
 const sphereSize: number = 0.3;
@@ -24,18 +29,26 @@ const defaultSphere = Object.freeze({
   type: 2,
   action: 0,
   scale: { x: sphereSize, y: sphereSize, z: 0.1 },
-  color: { r: 1, g: 0.2, b: 0, a: 1 },
+  color: { r: 0, g: 1, b: 1, a: 1 },
 });
 const defaultPose = Object.freeze({ orientation: { x: 0, y: 0, z: 0, w: 1 } });
 
-export default function MeasureMarker({ points: { start, end } }: Props): JSX.Element {
+const colors: Record<PublishClickType, { r: number; g: number; b: number; a: number }> = {
+  pose: { r: 0, g: 1, b: 1, a: 1 },
+  goal: { r: 1, g: 0, b: 1, a: 1 },
+  point: { r: 1, g: 1, b: 0, a: 1 },
+};
+
+export function PublishMarker({ points: { start, end, type } }: Props): JSX.Element {
   const spheres = [];
   const lines = [];
+
   if (start) {
     const startPoint = { ...start };
 
     spheres.push({
       ...defaultSphere,
+      color: colors[type],
       id: "_measure_start",
       pose: { position: startPoint, ...defaultPose },
     });
@@ -46,6 +59,7 @@ export default function MeasureMarker({ points: { start, end } }: Props): JSX.El
         ...defaultSphere,
         id: "_measure_line",
         points: [start, end],
+        color: colors[type],
         pose: { ...defaultPose, position: { x: 0, y: 0, z: 0 } },
         scale: { x: lineSize, y: 1, z: 1 },
         type: 4,
@@ -54,6 +68,7 @@ export default function MeasureMarker({ points: { start, end } }: Props): JSX.El
       spheres.push({
         ...defaultSphere,
         id: "_measure_end",
+        color: colors[type],
         pose: { position: endPoint, ...defaultPose },
       });
     }

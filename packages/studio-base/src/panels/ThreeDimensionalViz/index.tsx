@@ -407,24 +407,48 @@ const configSchema: PanelConfigSchema<ThreeDimensionalVizConfig> = [
     type: "toggle",
     title: "Ignore <up_axis> in Collada meshes",
   },
+  { key: "clickToPublishGoalTopic", type: "text", title: "Click to publish goal topic" },
+  { key: "clickToPublishPointTopic", type: "text", title: "Click to publish point topic" },
+  { key: "clickToPublishPoseTopic", type: "text", title: "Click to publish pose topic" },
+  {
+    key: "clickToPublishPoseXDeviation",
+    type: "number",
+    title: "Click to publish pose topic X std Deviation",
+  },
+  {
+    key: "clickToPublishPoseYDeviation",
+    type: "number",
+    title: "Click to publish pose topic Y std Deviation",
+  },
+  {
+    key: "clickToPublishPoseThetaDeviation",
+    type: "number",
+    title: "Click to publish pose topic Theta std Deviation",
+  },
 ];
 
 BaseRenderer.displayName = "ThreeDimensionalViz";
 BaseRenderer.panelType = "3D Panel";
 BaseRenderer.defaultConfig = {
-  checkedKeys: ["name:Topics"],
-  expandedKeys: ["name:Topics"],
-  followTf: undefined,
-  followMode: "follow",
+  autoSyncCameraState: false,
+  autoTextBackgroundColor: true,
   cameraState: {},
+  checkedKeys: ["name:Topics"],
+  clickToPublishGoalTopic: "/move_base_simple/goal",
+  clickToPublishPointTopic: "/clicked_point",
+  clickToPublishPoseTopic: "/initialpose",
+  clickToPublishPoseXDeviation: 0.5,
+  clickToPublishPoseYDeviation: 0.5,
+  clickToPublishPoseThetaDeviation: Math.PI / 12,
+  customBackgroundColor: "#000000",
+  diffModeEnabled: true,
+  expandedKeys: ["name:Topics"],
+  followMode: "follow",
+  followTf: undefined,
   modifiedNamespaceTopics: [],
   pinTopics: false,
   settingsByKey: {},
-  autoSyncCameraState: false,
-  autoTextBackgroundColor: true,
-  diffModeEnabled: true,
   useThemeBackgroundColor: true,
-  customBackgroundColor: "#000000",
 } as ThreeDimensionalVizConfig;
 BaseRenderer.configSchema = configSchema;
 
