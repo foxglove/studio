@@ -5,7 +5,6 @@
 import { useTheme as useFluentUITheme } from "@fluentui/react";
 import { Close as CloseIcon, Error as ErrorIcon, Remove as RemoveIcon } from "@mui/icons-material";
 import {
-  Box,
   IconButton,
   ListItem,
   ListItemIcon,
@@ -13,6 +12,7 @@ import {
   ListItemText,
   Stack,
   Tooltip,
+  Typography,
 } from "@mui/material";
 import { ComponentProps, useCallback, useMemo, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
@@ -120,12 +120,14 @@ export default function PlotLegendRow({
       sx={{
         height: 26,
         alignItems: "center",
+        paddingRight: 4,
 
         "&:hover, &:focus-within": {
           bgcolor: "action.hover",
 
           "+ .MuiListItemSecondaryAction-root": {
             visibility: "visible",
+            bgcolor: "background.paper",
           },
           "& .MuiListItemIcon-root .MuiIconButton-root": {
             bgcolor: "action.hover",
@@ -160,7 +162,14 @@ export default function PlotLegendRow({
           flexGrow: 0,
         }}
       >
-        <Box sx={{ input: { textDecoration: !path.enabled ? "line-through" : "none" } }}>
+        <Stack
+          direction="row"
+          alignItems="center"
+          spacing={1}
+          sx={{
+            input: { textDecoration: !path.enabled ? "line-through" : "none" },
+          }}
+        >
           <MessagePathInput
             supportsMathModifiers
             path={path.value}
@@ -173,6 +182,16 @@ export default function PlotLegendRow({
             disableAutocomplete={isReferenceLinePlotPath}
             {...(xAxisVal === "timestamp" ? { timestampMethod } : undefined)}
           />
+          {currentDisplay.value != undefined && (
+            <Typography
+              component="div"
+              variant="body2"
+              align="right"
+              sx={{ color: currentDisplay.color, width: 150 }}
+            >
+              {currentDisplay.value}
+            </Typography>
+          )}
           {hasMismatchedDataLength && (
             <Tooltip
               placement="top"
@@ -181,25 +200,17 @@ export default function PlotLegendRow({
               <ErrorIcon fontSize="small" sx={{ color: "error.main" }} />
             </Tooltip>
           )}
-        </Box>
+        </Stack>
       </ListItemText>
-      {currentDisplay.value != undefined && (
-        <ListItemText
-          sx={{
-            color: currentDisplay.color,
-            minWidth: 128,
-          }}
-          primaryTypographyProps={{ variant: "body2", align: "right" }}
-        >
-          {currentDisplay.value}
-        </ListItemText>
-      )}
       <ListItemSecondaryAction
         sx={{
           visibility: "hidden",
           padding: 0.5,
 
-          "&:hover": { visibility: "visible" },
+          "&:hover": {
+            visibility: "visible",
+            backgroundColor: "background.paper",
+          },
         }}
       >
         <Stack direction="row">

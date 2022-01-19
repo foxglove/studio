@@ -83,6 +83,7 @@ const useStyles = makeStyles((theme: Theme) =>
       maxWidth: `calc(100% - ${theme.spacing(8)})`,
       backgroundColor: "transparent",
       borderTop: "none",
+      pointerEvents: "none",
     },
     legendToggle: {
       cursor: "pointer",
@@ -143,24 +144,18 @@ function SidebarWrapper(props: {
       </Stack>
       <Box
         onMouseDown={handleMouseDown}
-        sx={{
+        sx={(theme) => ({
           cursor: "ew-resize",
           userSelect: "none",
-        }}
-      >
-        <Box
-          sx={{
-            width: 2,
-            height: "100%",
-            marginLeft: "2px",
-            bgcolor: "action.hover",
+          width: theme.spacing(0.5),
+          height: "100%",
+          borderRight: `2px solid ${theme.palette.action.hover}`,
 
-            "&:hover": {
-              bgcolor: "action.selected",
-            },
-          }}
-        />
-      </Box>
+          "&:hover": {
+            borderRightColor: theme.palette.action.selected,
+          },
+        })}
+      />
     </Stack>
   );
 }
@@ -209,6 +204,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
             bgcolor: alpha(theme.palette.background.paper, 0.8),
             maxHeight: "100%",
             overflow: "auto",
+            pointerEvents: "auto",
           })}
         >
           <Stack
@@ -326,9 +322,6 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
       direction="row"
       alignItems="flex-start"
       className={cx(classes.root, { [classes.floatingRoot]: !showSidebar })}
-      sx={{
-        pointerEvents: "visibleFill",
-      }}
     >
       <IconButton
         disableRipple={showSidebar}
@@ -338,6 +331,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
         sx={{
           bgcolor: "action.hover",
           padding: showSidebar ? "0" : undefined,
+          pointerEvents: "auto",
 
           "&:hover": {
             bgcolor: "action.focus",

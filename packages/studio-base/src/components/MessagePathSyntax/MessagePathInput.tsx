@@ -507,7 +507,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
       verticalAlign="center"
       grow
       disableShrink
-      styles={{ root: { minWidth: 0, ".ms-layer:empty": { margin: 0 } } }}
+      styles={{ root: { ".ms-layer:empty": { margin: 0 } } }}
       tokens={{ childrenGap: 2 }}
     >
       <Stack.Item grow disableShrink>
