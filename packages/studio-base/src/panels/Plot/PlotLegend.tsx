@@ -144,16 +144,23 @@ function SidebarWrapper(props: {
       <Box
         onMouseDown={handleMouseDown}
         sx={{
-          width: 2,
           cursor: "ew-resize",
           userSelect: "none",
-          bgcolor: "action.hover",
-
-          "&:hover": {
-            bgcolor: "action.selected",
-          },
         }}
-      />
+      >
+        <Box
+          sx={{
+            width: 2,
+            height: "100%",
+            marginLeft: "2px",
+            bgcolor: "action.hover",
+
+            "&:hover": {
+              bgcolor: "action.selected",
+            },
+          }}
+        />
+      </Box>
     </Stack>
   );
 }
