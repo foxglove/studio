@@ -442,7 +442,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
           ...inputStyle,
           fontFamily,
           fontSize,
-          paddingLeft: 6,
+          paddingLeft: 4,
           width: autoSize
             ? Math.max(
                 measureText(value != undefined && value.length > 0 ? value : placeholder ?? ""),
