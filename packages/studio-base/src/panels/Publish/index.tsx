@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { Stack } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import styled from "styled-components";
 
@@ -66,11 +67,6 @@ const SErrorText = styled.div`
 
 const SSpan = styled.span`
   opacity: 0.8;
-`;
-const SRow = styled.div`
-  display: flex;
-  line-height: 24px;
-  flex-shrink: 0;
 `;
 
 function getTopicName(topic: Topic): string {
@@ -190,7 +186,7 @@ function Publish(props: Props) {
       <PanelToolbar helpContent={helpContent} floating />
       {showAdvancedView && (
         <>
-          <SRow>
+          <Stack spacing={1} direction="row" flexShrink={0} sx={{ lineHeight: "24px" }}>
             <SSpan>Topic:</SSpan>
             <Autocomplete
               placeholder="Choose a topic"
@@ -202,8 +198,15 @@ function Publish(props: Props) {
               getItemText={getTopicName}
               getItemValue={getTopicName}
             />
-          </SRow>
-          <SRow>
+          </Stack>
+          <Stack
+            spacing={1}
+            direction="row"
+            flexShrink={0}
+            sx={{
+              lineHeight: "24px",
+            }}
+          >
             <PanelToolbarLabel>Datatype:</PanelToolbarLabel>
             <Autocomplete
               clearOnFocus
@@ -212,7 +215,7 @@ function Publish(props: Props) {
               onSelect={onSelectDatatype}
               selectedItem={datatype}
             />
-          </SRow>
+          </Stack>
           <STextAreaContainer>
             <STextArea
               placeholder="Enter message content as JSON"
