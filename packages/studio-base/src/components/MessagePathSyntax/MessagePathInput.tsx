@@ -579,7 +579,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
       minWidth={0}
       spacing={0.25}
     >
-      <Stack direction="row" alignItems="center" flexGrow={1} height={20}>
+      <Stack direction="row" alignItems="center" flexGrow={1}>
         <Autocomplete
           items={orderedAutocompleteItems}
           filterText={autocompleteFilterText}
