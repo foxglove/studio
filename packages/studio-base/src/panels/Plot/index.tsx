@@ -375,7 +375,7 @@ function Plot(props: Props) {
   ]);
 
   const tooltips = useMemo(() => {
-    if (showLegend) {
+    if (showLegend && showPlotValuesInLegend) {
       return [];
     }
     const allTooltips: TimeBasedChartTooltipData[] = [];
