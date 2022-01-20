@@ -133,6 +133,7 @@ function DiagnosticStatusPanel(props: Props) {
         <Autocomplete
           disablePortal
           blurOnSelect={true}
+          disabled={autocompleteOptions.length === 0}
           options={autocompleteOptions}
           value={selectedAutocompleteOption ?? ReactNull}
           noOptionsText={noOptionsText}
