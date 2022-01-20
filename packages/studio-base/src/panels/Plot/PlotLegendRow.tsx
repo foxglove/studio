@@ -26,6 +26,7 @@ type PlotLegendRowProps = {
   datasets: ComponentProps<typeof TimeBasedChart>["data"]["datasets"];
   currentTime?: number;
   saveConfig: (arg0: Partial<PlotConfig>) => void;
+  showPlotValuesInLegend: boolean;
 };
 
 export default function PlotLegendRow({
@@ -37,6 +38,7 @@ export default function PlotLegendRow({
   datasets,
   currentTime,
   saveConfig,
+  showPlotValuesInLegend,
 }: PlotLegendRowProps): JSX.Element {
   const correspondingData = useMemo(
     () => datasets.find((set) => set.label === path?.value)?.data ?? [],
@@ -185,7 +187,7 @@ export default function PlotLegendRow({
         )}
       </Box>
       <Box display="flex" alignItems="center" padding={0.25}>
-        {currentDisplay.value != undefined && (
+        {currentDisplay.value != undefined && showPlotValuesInLegend && (
           <Typography
             component="div"
             variant="body2"

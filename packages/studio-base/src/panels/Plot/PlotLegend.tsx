@@ -46,6 +46,7 @@ type PlotLegendProps = {
   pathsWithMismatchedDataLengths: string[];
   sidebarWidth: number;
   showSidebar: boolean;
+  showPlotValuesInLegend: boolean;
 };
 
 const shortXAxisLabel = (path: PlotXAxisVal): string => {
@@ -172,6 +173,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
     pathsWithMismatchedDataLengths,
     sidebarWidth,
     showSidebar,
+    showPlotValuesInLegend,
   } = props;
 
   const lastPath = last(paths);
@@ -282,6 +284,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
                   datasets={datasets}
                   currentTime={currentTime}
                   saveConfig={saveConfig}
+                  showPlotValuesInLegend={showPlotValuesInLegend}
                 />
               );
             })}
@@ -312,7 +315,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
         </Stack>
       ) : undefined,
     [
-      classes,
+      classes.dropdown,
       currentTime,
       datasets,
       lastPath,
@@ -321,6 +324,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
       saveConfig,
       showLegend,
       showSidebar,
+      showPlotValuesInLegend,
       xAxisPath,
       xAxisVal,
     ],

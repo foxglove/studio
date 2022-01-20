@@ -181,6 +181,7 @@ function Plot(props: Props) {
     showYAxisLabels,
     showLegend,
     showSidebar,
+    showPlotValuesInLegend,
     isSynced,
     xAxisVal,
     xAxisPath,
@@ -429,6 +430,7 @@ function Plot(props: Props) {
           xAxisPath={xAxisPath}
           pathsWithMismatchedDataLengths={pathsWithMismatchedDataLengths}
           showSidebar={showSidebar}
+          showPlotValuesInLegend={showPlotValuesInLegend}
           sidebarWidth={sidebarWidth}
         />
         <Flex col center style={{ overflow: "hidden" }}>
@@ -466,6 +468,11 @@ const configSchema: PanelConfigSchema<PlotConfig> = [
     title: "Display legend in collapsible sidebar",
   },
   {
+    key: "showPlotValuesInLegend",
+    type: "toggle",
+    title: "Show plot values in legend",
+  },
+  {
     key: "showXAxisLabels",
     type: "toggle",
     title: "Show x-axis labels",
@@ -496,6 +503,7 @@ const defaultConfig: PlotConfig = {
   showYAxisLabels: true,
   showLegend: true,
   showSidebar: false,
+  showPlotValuesInLegend: false,
   isSynced: true,
   xAxisVal: "timestamp",
   sidebarWidth: defaultSidebarWidth,
