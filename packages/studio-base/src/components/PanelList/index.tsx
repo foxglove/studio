@@ -12,17 +12,16 @@
 //   You may not use this file except in compliance with the License.
 import { makeStyles, useTheme } from "@fluentui/react";
 import MagnifyIcon from "@mdi/svg/svg/magnify.svg";
-import { Stack, Typography } from "@mui/material";
 import fuzzySort from "fuzzysort";
 import { isEmpty } from "lodash";
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useDrag } from "react-dnd";
 import { MosaicDragType, MosaicPath } from "react-mosaic-component";
+import styled from "styled-components";
 
 import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
 import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
-import { Item } from "@foxglove/studio-base/components/Menu";
 import TextHighlight from "@foxglove/studio-base/components/TextHighlight";
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import {
@@ -38,6 +37,19 @@ import {
 } from "@foxglove/studio-base/types/panels";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
+const PanelChip = styled.div<{ checked: boolean; highlighted: boolean }>`
+  cursor: grab;
+  border: 1px solid ${({ theme }) => theme.palette.neutralTertiary};
+  border-radius: ${({ theme }) => theme.effects.roundedCorner4};
+  padding: ${({ theme }) => theme.spacing.s1};
+  max-width: 140px;
+  overflow: hidden;
+
+  img {
+    max-width: 100%;
+  }
+`;
+
 const useStyles = makeStyles((theme) => ({
   root: {
     height: "100%",
@@ -45,9 +57,6 @@ const useStyles = makeStyles((theme) => ({
   container: {
     padding: 16,
     backgroundImage: `linear-gradient(to top, transparent, ${theme.palette.neutralLighterAlt} ${theme.spacing.s1})`,
-  },
-  item: {
-    cursor: "grab",
   },
   sticky: {
     color: colors.LIGHT,
@@ -74,6 +83,10 @@ const useStyles = makeStyles((theme) => ({
   },
   scrollContainer: {
     overflowY: "auto",
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, 140px)",
+    gridGap: theme.spacing.s1,
+    padding: theme.spacing.s1,
   },
   noResults: {
     padding: "8px 16px",
@@ -112,13 +125,12 @@ function DraggablePanelItem({
   panel,
   onClick,
   onDrop,
-  checked,
-  highlighted,
+  checked = false,
+  highlighted = false,
   mosaicId,
 }: PanelItemProps) {
-  const classes = useStyles();
   const scrollRef = React.useRef<HTMLDivElement>(ReactNull);
-  const [, drag] = useDrag<unknown, MosaicDropResult, never>({
+  const [, connectDragSource] = useDrag<unknown, MosaicDropResult, never>({
     type: MosaicDragType.WINDOW,
     // mosaicId is needed for react-mosaic to accept the drop
     item: () => ({ mosaicId }),
@@ -140,7 +152,7 @@ function DraggablePanelItem({
   });
 
   React.useEffect(() => {
-    if (highlighted === true && scrollRef.current) {
+    if (highlighted && scrollRef.current) {
       const highlightedItem = scrollRef.current.getBoundingClientRect();
       const scrollContainer = scrollRef.current.parentElement?.parentElement?.parentElement;
       if (scrollContainer) {
@@ -159,39 +171,23 @@ function DraggablePanelItem({
   }, [highlighted]);
 
   const { ref: tooltipRef, tooltip } = useTooltip({
-    contents: (
-      <Stack width={200}>
-        {panel.thumbnail != undefined && <img src={panel.thumbnail} alt={panel.title} />}
-        <Stack padding={1} spacing={0.5}>
-          <Typography variant="body2" style={{ fontWeight: "bold" }}>
-            {panel.title}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {panel.description}
-          </Typography>
-        </Stack>
-      </Stack>
-    ),
-    placement: "right",
+    contents: panel.description,
     delay: 200,
   });
+  const mergedRef = useCallback(
+    (el: HTMLDivElement | ReactNull) => {
+      connectDragSource(el);
+      tooltipRef(el);
+      scrollRef.current = el;
+    },
+    [connectDragSource, tooltipRef, scrollRef],
+  );
   return (
-    <div ref={drag}>
-      <div ref={tooltipRef}>
-        <div ref={scrollRef}>
-          {tooltip}
-          <Item
-            onClick={onClick}
-            checked={checked}
-            highlighted={highlighted}
-            className={classes.item}
-            dataTest={`panel-menu-item ${panel.title}`}
-          >
-            <TextHighlight targetStr={panel.title} searchText={searchQuery} />
-          </Item>
-        </div>
-      </div>
-    </div>
+    <PanelChip ref={mergedRef} onClick={onClick} checked={checked} highlighted={highlighted}>
+      {tooltip}
+      {panel.thumbnail && <img src={panel.thumbnail} alt={panel.title} />}
+      <TextHighlight targetStr={panel.title} searchText={searchQuery} />
+    </PanelChip>
   );
 }
 
@@ -328,12 +324,13 @@ function PanelList(props: Props): JSX.Element {
   );
 
   const displayPanelListItem = React.useCallback(
-    ({ title, type, description, config, relatedConfigs, thumbnail }: PanelInfo) => {
+    (panelInfo: PanelInfo) => {
+      const { title, type, config, relatedConfigs } = panelInfo;
       return (
         <DraggablePanelItem
           key={`${type}-${title}`}
           mosaicId={mosaicId}
-          panel={{ type, title, description, config, relatedConfigs, thumbnail }}
+          panel={panelInfo}
           onDrop={onPanelMenuItemDrop}
           onClick={() => onPanelSelect({ type, config, relatedConfigs })}
           checked={title === selectedPanelTitle}
