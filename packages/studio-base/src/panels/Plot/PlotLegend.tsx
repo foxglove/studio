@@ -33,7 +33,7 @@ import { PlotPath, BasePlotPath, isReferenceLinePlotPathType } from "./internalT
 import { plotableRosTypes, PlotConfig, PlotXAxisVal } from "./types";
 
 const minLegendWidth = 25;
-const maxLegendWidth = 500;
+const maxLegendWidth = 800;
 
 type PlotLegendProps = {
   paths: PlotPath[];
@@ -202,9 +202,9 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
         <Stack
           sx={(theme) => ({
             bgcolor: alpha(theme.palette.background.paper, 0.8),
-            maxHeight: "100%",
             overflow: "auto",
             pointerEvents: "auto",
+            [showSidebar ? "height" : "maxHeight"]: "100%",
           })}
         >
           <Stack
@@ -215,6 +215,8 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
               height: 26,
               position: "sticky",
               top: 0,
+              left: 0,
+              right: 0,
               bgcolor: "background.paper",
               zIndex: 3,
             }}
@@ -260,7 +262,13 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
               )}
             </Stack>
           </Stack>
-          <List dense disablePadding>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "auto minmax(max-content, 1fr) minmax(max-content, 1fr) auto",
+              alignItems: "stretch",
+            }}
+          >
             {paths.map((path: PlotPath, index: number) => {
               const hasMismatchedDataLength = pathsWithMismatchedDataLengths.includes(path.value);
               return (
@@ -277,8 +285,8 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
                 />
               );
             })}
-          </List>
-          <Box padding={0.5}>
+          </Box>
+          <Box padding={0.5} position="sticky" right={0} left={0} gridColumn="span 4">
             <Button
               size="small"
               fullWidth
@@ -312,6 +320,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
       pathsWithMismatchedDataLengths,
       saveConfig,
       showLegend,
+      showSidebar,
       xAxisPath,
       xAxisVal,
     ],

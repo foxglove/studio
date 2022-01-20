@@ -4,16 +4,7 @@
 
 import { useTheme as useFluentUITheme } from "@fluentui/react";
 import { Close as CloseIcon, Error as ErrorIcon, Remove as RemoveIcon } from "@mui/icons-material";
-import {
-  IconButton,
-  ListItem,
-  ListItemIcon,
-  ListItemSecondaryAction,
-  ListItemText,
-  Stack,
-  Tooltip,
-  Typography,
-} from "@mui/material";
+import { Box, IconButton, Tooltip, Typography } from "@mui/material";
 import { ComponentProps, useCallback, useMemo, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
@@ -114,32 +105,39 @@ export default function PlotLegendRow({
   );
 
   return (
-    <ListItem
-      disableGutters
-      disablePadding
+    <Box
+      display="contents"
       sx={{
-        height: 26,
-        alignItems: "center",
-        paddingRight: 4,
-
         "&:hover, &:focus-within": {
-          bgcolor: "action.hover",
-
-          "+ .MuiListItemSecondaryAction-root": {
-            visibility: "visible",
-            bgcolor: "background.paper",
+          "& .MuiIconButton-root": {
+            bgcolor: "action.hover",
           },
-          "& .MuiListItemIcon-root .MuiIconButton-root": {
+          "& > *:last-child": {
+            visibility: "visible",
+          },
+          "& > *": {
             bgcolor: "action.hover",
           },
         },
       }}
     >
-      <ListItemIcon sx={{ minWidth: "auto" }}>
+      <Box
+        sx={({ palette }) => ({
+          padding: 0.25,
+          position: "sticky",
+          left: 0,
+          // creates an opaque background for the sticky element
+          backgroundImage: `linear-gradient(${palette.background.paper}, ${palette.background.paper})`,
+          backgroundBlendMode: "overlay",
+        })}
+      >
         <IconButton
           centerRipple={false}
           size="small"
-          sx={{ padding: 0.125, marginLeft: 0.25 }}
+          sx={{
+            padding: 0.125,
+            marginLeft: 0.25,
+          }}
           title="Toggle visibility"
           onClick={() => {
             const newPaths = paths.slice();
@@ -154,80 +152,77 @@ export default function PlotLegendRow({
             sx={{ color: path.enabled ? lineColors[index % lineColors.length] : "#777" }}
           />
         </IconButton>
-      </ListItemIcon>
-      <ListItemText
-        disableTypography
+      </Box>
+      <Box
+        display="flex"
+        alignItems="center"
+        padding={0.25}
         sx={{
-          minWidth: 0,
-          flexGrow: 0,
-        }}
-      >
-        <Stack
-          direction="row"
-          alignItems="center"
-          spacing={1}
-          sx={{
-            input: { textDecoration: !path.enabled ? "line-through" : "none" },
-          }}
-        >
-          <MessagePathInput
-            supportsMathModifiers
-            path={path.value}
-            onChange={onInputChange}
-            onTimestampMethodChange={onInputTimestampMethodChange}
-            validTypes={plotableRosTypes}
-            placeholder="Enter a topic name or a number"
-            index={index}
-            autoSize
-            disableAutocomplete={isReferenceLinePlotPath}
-            {...(xAxisVal === "timestamp" ? { timestampMethod } : undefined)}
-          />
-          {currentDisplay.value != undefined && (
-            <Typography
-              component="div"
-              variant="body2"
-              align="right"
-              sx={{ color: currentDisplay.color, width: 150 }}
-            >
-              {currentDisplay.value}
-            </Typography>
-          )}
-          {hasMismatchedDataLength && (
-            <Tooltip
-              placement="top"
-              title="Mismatch in the number of elements in x-axis and y-axis messages"
-            >
-              <ErrorIcon fontSize="small" sx={{ color: "error.main" }} />
-            </Tooltip>
-          )}
-        </Stack>
-      </ListItemText>
-      <ListItemSecondaryAction
-        sx={{
-          visibility: "hidden",
-          padding: 0.5,
-
-          "&:hover": {
-            visibility: "visible",
-            backgroundColor: "background.paper",
+          input: {
+            textDecoration: !path.enabled ? "line-through" : "none",
           },
         }}
       >
-        <Stack direction="row">
-          <IconButton
-            size="small"
-            title={`Remove ${path.value}`}
-            sx={{ padding: 0.25, color: "text.secondary", "&:hover": { color: "text.primary" } }}
-            onClick={() => {
-              const newPaths = paths.slice();
-              newPaths.splice(index, 1);
-              saveConfig({ paths: newPaths });
-            }}
+        <MessagePathInput
+          supportsMathModifiers
+          path={path.value}
+          onChange={onInputChange}
+          onTimestampMethodChange={onInputTimestampMethodChange}
+          validTypes={plotableRosTypes}
+          placeholder="Enter a topic name or a number"
+          index={index}
+          autoSize
+          disableAutocomplete={isReferenceLinePlotPath}
+          {...(xAxisVal === "timestamp" ? { timestampMethod } : undefined)}
+        />
+        {hasMismatchedDataLength && (
+          <Tooltip
+            placement="top"
+            title="Mismatch in the number of elements in x-axis and y-axis messages"
           >
-            <CloseIcon fontSize="small" />
-          </IconButton>
-        </Stack>
-      </ListItemSecondaryAction>
-    </ListItem>
+            <ErrorIcon fontSize="small" sx={{ color: "error.main" }} />
+          </Tooltip>
+        )}
+      </Box>
+      <Box display="flex" alignItems="center" padding={0.25}>
+        {currentDisplay.value != undefined && (
+          <Typography
+            component="div"
+            variant="body2"
+            align="right"
+            sx={{ color: currentDisplay.color, width: 150 }}
+          >
+            {currentDisplay.value}
+          </Typography>
+        )}
+      </Box>
+
+      <Box
+        display="flex"
+        alignItems="center"
+        padding={0.25}
+        visibility="hidden"
+        position="sticky"
+        right={0}
+        sx={({ palette }) => ({
+          // creates an opaque background for the sticky element
+          backgroundImage: `linear-gradient(${palette.background.paper}, ${palette.background.paper})`,
+          backgroundBlendMode: "overlay",
+        })}
+      >
+        <IconButton
+          size="small"
+          title={`Remove ${path.value}`}
+          sx={{ padding: 0.25, color: "text.secondary", "&:hover": { color: "text.primary" } }}
+          onClick={() => {
+            const newPaths = paths.slice();
+            newPaths.splice(index, 1);
+            saveConfig({ paths: newPaths });
+          }}
+        >
+          <CloseIcon fontSize="small" />
+        </IconButton>
+      </Box>
+    </Box>
   );
 }
