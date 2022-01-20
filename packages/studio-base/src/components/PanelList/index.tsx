@@ -21,6 +21,7 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Paper,
 } from "@mui/material";
 import fuzzySort from "fuzzysort";
 import { isEmpty } from "lodash";
@@ -67,7 +68,7 @@ const useStyles = makeStyles((theme) => ({
     paddingLeft: 8,
     marginBottom: theme.spacing.s1,
     backgroundColor: theme.semanticColors.inputBackground,
-    borderRadius: 4,
+    borderRadius: theme.effects.roundedCorner2,
     border: `1px solid ${theme.semanticColors.inputBorder}`,
   },
   searchInput: {
@@ -184,6 +185,7 @@ function DraggablePanelItem({
     },
     [connectDragSource, tooltipRef, scrollRef],
   );
+  const { isInverted } = useTheme();
   switch (mode) {
     case "grid":
       return (
@@ -214,18 +216,36 @@ function DraggablePanelItem({
             sx={{
               cursor: "grab",
               backgroundColor: highlighted ? (theme) => theme.palette.action.focus : undefined,
+              paddingY: 0.5,
             }}
           >
-            {tooltip}
-            {panel.thumbnail && (
-              <ListItemIcon sx={{ height: (theme) => theme.spacing(3) }}>
-                <img src={panel.thumbnail} alt={panel.title} />
-              </ListItemIcon>
-            )}
+            <ListItemIcon sx={{ width: 64, paddingRight: 1 }}>
+              {panel.thumbnail ? (
+                <Paper
+                  variant="outlined"
+                  component="img"
+                  src={panel.thumbnail}
+                  alt={panel.title}
+                  sx={{
+                    borderRadius: 1,
+                    maxWidth: "100%",
+                    // show border only in dark mode to avoid thumbnails blending into the background
+                    border: isInverted ? undefined : "none",
+                  }}
+                />
+              ) : (
+                <Paper variant="outlined" sx={{ borderRadius: 1, height: 42, width: "100%" }} />
+              )}
+            </ListItemIcon>
             <ListItemText
-              inset={panel.thumbnail == undefined}
-              primaryTypographyProps={{ fontWeight: checked ? "bold" : undefined }}
               primary={<TextHighlight targetStr={panel.title} searchText={searchQuery} />}
+              primaryTypographyProps={{ fontWeight: checked ? "bold" : undefined }}
+              secondary={panel.description}
+              secondaryTypographyProps={{
+                variant: "caption",
+                marginTop: "0 !important", // overrides CssBaseline
+                lineHeight: 1.2,
+              }}
             />
           </ListItemButton>
         </ListItem>
