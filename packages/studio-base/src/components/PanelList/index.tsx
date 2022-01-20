@@ -19,9 +19,9 @@ import {
   List,
   ListItem,
   ListItemButton,
-  ListItemIcon,
   ListItemText,
-  Paper,
+  Stack,
+  Typography,
 } from "@mui/material";
 import fuzzySort from "fuzzysort";
 import { isEmpty } from "lodash";
@@ -174,7 +174,23 @@ function DraggablePanelItem({
   }, [highlighted]);
 
   const { ref: tooltipRef, tooltip } = useTooltip({
-    contents: panel.description,
+    contents:
+      mode === "grid" ? (
+        panel.description
+      ) : (
+        <Stack width={200}>
+          {panel.thumbnail != undefined && <img src={panel.thumbnail} alt={panel.title} />}
+          <Stack padding={1} spacing={0.5}>
+            <Typography variant="body2" style={{ fontWeight: "bold" }}>
+              {panel.title}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {panel.description}
+            </Typography>
+          </Stack>
+        </Stack>
+      ),
+    placement: mode === "grid" ? undefined : "right",
     delay: 200,
   });
   const mergedRef = useCallback(
@@ -185,7 +201,6 @@ function DraggablePanelItem({
     },
     [connectDragSource, tooltipRef, scrollRef],
   );
-  const { isInverted } = useTheme();
   switch (mode) {
     case "grid":
       return (
@@ -209,6 +224,7 @@ function DraggablePanelItem({
     case "list":
       return (
         <ListItem disableGutters disablePadding>
+          {tooltip}
           <ListItemButton
             disabled={checked}
             ref={mergedRef}
@@ -216,36 +232,12 @@ function DraggablePanelItem({
             sx={{
               cursor: "grab",
               backgroundColor: highlighted ? (theme) => theme.palette.action.focus : undefined,
-              paddingY: 0.5,
+              paddingY: 0.25,
             }}
           >
-            <ListItemIcon sx={{ width: 64, paddingRight: 1 }}>
-              {panel.thumbnail ? (
-                <Paper
-                  variant="outlined"
-                  component="img"
-                  src={panel.thumbnail}
-                  alt={panel.title}
-                  sx={{
-                    borderRadius: 1,
-                    maxWidth: "100%",
-                    // show border only in dark mode to avoid thumbnails blending into the background
-                    border: isInverted ? undefined : "none",
-                  }}
-                />
-              ) : (
-                <Paper variant="outlined" sx={{ borderRadius: 1, height: 42, width: "100%" }} />
-              )}
-            </ListItemIcon>
             <ListItemText
               primary={<TextHighlight targetStr={panel.title} searchText={searchQuery} />}
               primaryTypographyProps={{ fontWeight: checked ? "bold" : undefined }}
-              secondary={panel.description}
-              secondaryTypographyProps={{
-                variant: "caption",
-                marginTop: "0 !important", // overrides CssBaseline
-                lineHeight: 1.2,
-              }}
             />
           </ListItemButton>
         </ListItem>
