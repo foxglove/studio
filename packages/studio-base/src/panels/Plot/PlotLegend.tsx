@@ -17,7 +17,7 @@ import {
   KeyboardArrowLeft as KeyboardArrowLeftIcon,
   KeyboardArrowRight as KeyboardArrowRightIcon,
 } from "@mui/icons-material";
-import { Box, Button, IconButton, List, Stack, Theme, alpha } from "@mui/material";
+import { Box, Button, IconButton, Stack, Theme, alpha } from "@mui/material";
 import { createStyles, makeStyles } from "@mui/styles";
 import cx from "classnames";
 import { last } from "lodash";
