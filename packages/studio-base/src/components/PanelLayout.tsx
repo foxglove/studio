@@ -41,7 +41,7 @@ import {
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PanelComponent, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
-import { EmptyDropTarget } from "@foxglove/studio-base/panels/Tab/EmptyDropTarget";
+import { EmptyPanelLayout } from "@foxglove/studio-base/components/EmptyPanelLayout";
 import { MosaicDropResult, PanelConfig } from "@foxglove/studio-base/types/panels";
 import { getPanelIdForType, getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
@@ -174,7 +174,7 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
           mosaicId={mosaicId}
         />
       ) : (
-        <EmptyDropTarget tabId={tabId} />
+        <EmptyPanelLayout tabId={tabId} />
       ),
     [layout, mosaicId, onChange, renderTile, tabId],
   );

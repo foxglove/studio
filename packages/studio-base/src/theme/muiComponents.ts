@@ -74,11 +74,6 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         },
       },
     },
-    MuiCard: {
-      defaultProps: {
-        variant: "outlined",
-      },
-    },
     MuiCardContent: {
       styleOverrides: {
         root: {
@@ -102,16 +97,14 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         },
       },
     },
-    MuiListItemIcon: {
-      styleOverrides: {
-        root: { minWidth: theme.spacing(6) },
-      },
-    },
     MuiPaper: {
       defaultProps: {
         elevation: 2,
         square: true,
       },
+    },
+    MuiListItemButton: {
+      defaultProps: { disableRipple: true },
     },
     MuiLink: {
       defaultProps: {

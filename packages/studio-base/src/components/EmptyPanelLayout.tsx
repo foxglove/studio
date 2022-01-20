@@ -11,15 +11,13 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Link, Stack, Text, makeStyles, useTheme } from "@fluentui/react";
+import { makeStyles } from "@fluentui/react";
+import { Link, Stack, Typography } from "@mui/material";
 import cx from "classnames";
 import { useCallback } from "react";
 import { useDrop } from "react-dnd";
 import { MosaicDragType } from "react-mosaic-component";
 
-import ChildToggle from "@foxglove/studio-base/components/ChildToggle";
-import EmptyBoxIcon from "@foxglove/studio-base/components/EmptyBoxIcon";
-import Menu from "@foxglove/studio-base/components/Menu";
 import PanelList, { PanelSelection } from "@foxglove/studio-base/components/PanelList";
 import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { MosaicDropResult } from "@foxglove/studio-base/types/panels";
@@ -45,8 +43,7 @@ type Props = {
   tabId?: string;
 };
 
-export const EmptyDropTarget = ({ tabId }: Props): JSX.Element => {
-  const theme = useTheme();
+export const EmptyPanelLayout = ({ tabId }: Props): JSX.Element => {
   const classes = useStyles();
   const { addPanel } = useCurrentLayoutActions();
 
@@ -77,35 +74,21 @@ export const EmptyDropTarget = ({ tabId }: Props): JSX.Element => {
       })}
     >
       <Stack
-        horizontalAlign="center"
-        verticalFill
-        verticalAlign="center"
-        tokens={{ childrenGap: theme.spacing.m, padding: theme.spacing.m }}
+        sx={{
+          width: "100%",
+          height: "100%",
+          overflowY: "auto",
+        }}
       >
-        <EmptyBoxIcon />
-
-        <Text
-          variant="mediumPlus"
-          styles={{
-            root: {
-              color: theme.semanticColors.disabledText,
-              textAlign: "center",
-              lineHeight: "1.5",
-            },
-          }}
-        >
-          Nothing here yet.
-          <br />
-          <ChildToggle position="below" style={{ display: "inline-flex" }}>
-            <Link underline data-test="pick-a-panel">
-              Pick a panel
+        <Stack sx={{ paddingBottom: (theme) => theme.spacing(2) }}>
+          <Typography sx={{ paddingX: (theme) => theme.spacing(2) }}>
+            Select a panel below to begin creating your layout.{" "}
+            <Link target="_blank" href="https://foxglove.dev/docs/app-concepts/layouts">
+              Learn more
             </Link>
-            <Menu style={{ backgroundColor: theme.palette.neutralLighterAlt }}>
-              <PanelList onPanelSelect={onPanelSelect} />
-            </Menu>
-          </ChildToggle>{" "}
-          or drag one in to get started.
-        </Text>
+          </Typography>
+          <PanelList mode="grid" onPanelSelect={onPanelSelect} />
+        </Stack>
       </Stack>
     </div>
   );

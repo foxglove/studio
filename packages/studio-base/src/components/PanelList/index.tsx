@@ -12,12 +12,21 @@
 //   You may not use this file except in compliance with the License.
 import { makeStyles, useTheme } from "@fluentui/react";
 import MagnifyIcon from "@mdi/svg/svg/magnify.svg";
+import {
+  Card,
+  CardContent,
+  CardMedia,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+} from "@mui/material";
 import fuzzySort from "fuzzysort";
 import { isEmpty } from "lodash";
 import { useCallback, useEffect, useMemo } from "react";
 import { useDrag } from "react-dnd";
 import { MosaicDragType, MosaicPath } from "react-mosaic-component";
-import styled from "styled-components";
 
 import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
@@ -37,35 +46,26 @@ import {
 } from "@foxglove/studio-base/types/panels";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-const PanelChip = styled.div<{ checked: boolean; highlighted: boolean }>`
-  cursor: grab;
-  border: 1px solid ${({ theme }) => theme.palette.neutralTertiary};
-  border-radius: ${({ theme }) => theme.effects.roundedCorner4};
-  padding: ${({ theme }) => theme.spacing.s1};
-  max-width: 140px;
-  overflow: hidden;
-
-  img {
-    max-width: 100%;
-  }
-`;
-
 const useStyles = makeStyles((theme) => ({
   root: {
     height: "100%",
   },
   container: {
-    padding: 16,
-    backgroundImage: `linear-gradient(to top, transparent, ${theme.palette.neutralLighterAlt} ${theme.spacing.s1})`,
+    // Allow space for the background image (set below) to extend above/below the field
+    paddingTop: theme.spacing.s1,
+    paddingBottom: theme.spacing.s1,
+    paddingLeft: theme.spacing.m,
+    paddingRight: theme.spacing.m,
   },
   sticky: {
     color: colors.LIGHT,
     position: "sticky",
-    top: 0,
+    top: 0, // space is added by container.paddingTop
     zIndex: 2,
   },
   searchInputContainer: {
     paddingLeft: 8,
+    marginBottom: theme.spacing.s1,
     backgroundColor: theme.semanticColors.inputBackground,
     borderRadius: 4,
     border: `1px solid ${theme.semanticColors.inputBorder}`,
@@ -81,12 +81,12 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor: theme.semanticColors.inputBackground,
     },
   },
-  scrollContainer: {
-    overflowY: "auto",
+  grid: {
+    paddingLeft: theme.spacing.m,
+    paddingRight: theme.spacing.m,
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, 140px)",
-    gridGap: theme.spacing.s1,
-    padding: theme.spacing.s1,
+    gridGap: theme.spacing.m,
   },
   noResults: {
     padding: "8px 16px",
@@ -104,6 +104,7 @@ type DropDescription = {
 };
 
 type PanelItemProps = {
+  mode?: "grid" | "list";
   panel: {
     type: string;
     title: string;
@@ -121,6 +122,7 @@ type PanelItemProps = {
 };
 
 function DraggablePanelItem({
+  mode = "list",
   searchQuery,
   panel,
   onClick,
@@ -129,7 +131,7 @@ function DraggablePanelItem({
   highlighted = false,
   mosaicId,
 }: PanelItemProps) {
-  const scrollRef = React.useRef<HTMLDivElement>(ReactNull);
+  const scrollRef = React.useRef<HTMLElement>(ReactNull);
   const [, connectDragSource] = useDrag<unknown, MosaicDropResult, never>({
     type: MosaicDragType.WINDOW,
     // mosaicId is needed for react-mosaic to accept the drop
@@ -175,20 +177,60 @@ function DraggablePanelItem({
     delay: 200,
   });
   const mergedRef = useCallback(
-    (el: HTMLDivElement | ReactNull) => {
+    (el: HTMLElement | ReactNull) => {
       connectDragSource(el);
       tooltipRef(el);
       scrollRef.current = el;
     },
     [connectDragSource, tooltipRef, scrollRef],
   );
-  return (
-    <PanelChip ref={mergedRef} onClick={onClick} checked={checked} highlighted={highlighted}>
-      {tooltip}
-      {panel.thumbnail && <img src={panel.thumbnail} alt={panel.title} />}
-      <TextHighlight targetStr={panel.title} searchText={searchQuery} />
-    </PanelChip>
-  );
+  switch (mode) {
+    case "grid":
+      return (
+        <Card
+          ref={mergedRef}
+          onClick={onClick}
+          sx={{ cursor: "grab" }}
+          square={false}
+          elevation={4}
+        >
+          {tooltip}
+          {panel.thumbnail && (
+            <CardMedia component="img" image={panel.thumbnail} alt={panel.title} />
+          )}
+          <CardContent>
+            <TextHighlight targetStr={panel.title} searchText={searchQuery} />
+          </CardContent>
+        </Card>
+      );
+
+    case "list":
+      return (
+        <ListItem disableGutters disablePadding>
+          <ListItemButton
+            disabled={checked}
+            ref={mergedRef}
+            onClick={onClick}
+            sx={{
+              cursor: "grab",
+              backgroundColor: highlighted ? (theme) => theme.palette.action.focus : undefined,
+            }}
+          >
+            {tooltip}
+            {panel.thumbnail && (
+              <ListItemIcon sx={{ height: (theme) => theme.spacing(3) }}>
+                <img src={panel.thumbnail} alt={panel.title} />
+              </ListItemIcon>
+            )}
+            <ListItemText
+              inset={panel.thumbnail == undefined}
+              primaryTypographyProps={{ fontWeight: checked ? "bold" : undefined }}
+              primary={<TextHighlight targetStr={panel.title} searchText={searchQuery} />}
+            />
+          </ListItemButton>
+        </ListItem>
+      );
+  }
 }
 
 export type PanelSelection = {
@@ -199,8 +241,10 @@ export type PanelSelection = {
   };
 };
 type Props = {
+  mode?: "grid" | "list";
   onPanelSelect: (arg0: PanelSelection) => void;
   selectedPanelTitle?: string;
+  backgroundColor?: string;
 };
 
 // sanity checks to help panel authors debug issues
@@ -231,7 +275,7 @@ function PanelList(props: Props): JSX.Element {
   const classes = useStyles();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [highlightedPanelIdx, setHighlightedPanelIdx] = React.useState<number | undefined>();
-  const { onPanelSelect, selectedPanelTitle } = props;
+  const { mode, onPanelSelect, selectedPanelTitle } = props;
 
   const { dropPanel } = useCurrentLayoutActions();
   const mosaicId = usePanelMosaicId();
@@ -307,6 +351,9 @@ function PanelList(props: Props): JSX.Element {
 
   const onKeyDown = React.useCallback(
     (e: React.KeyboardEvent) => {
+      if (mode === "grid") {
+        return;
+      }
       if (e.key === "ArrowDown" && highlightedPanelIdx != undefined) {
         setHighlightedPanelIdx((highlightedPanelIdx + 1) % allFilteredPanels.length);
       } else if (e.key === "ArrowUp" && highlightedPanelIdx != undefined) {
@@ -320,7 +367,7 @@ function PanelList(props: Props): JSX.Element {
         });
       }
     },
-    [allFilteredPanels.length, highlightedPanel, highlightedPanelIdx, onPanelSelect],
+    [allFilteredPanels.length, highlightedPanel, highlightedPanelIdx, mode, onPanelSelect],
   );
 
   const displayPanelListItem = React.useCallback(
@@ -328,6 +375,7 @@ function PanelList(props: Props): JSX.Element {
       const { title, type, config, relatedConfigs } = panelInfo;
       return (
         <DraggablePanelItem
+          mode={mode}
           key={`${type}-${title}`}
           mosaicId={mosaicId}
           panel={panelInfo}
@@ -340,6 +388,7 @@ function PanelList(props: Props): JSX.Element {
       );
     },
     [
+      mode,
       highlightedPanel,
       mosaicId,
       onPanelMenuItemDrop,
@@ -352,7 +401,14 @@ function PanelList(props: Props): JSX.Element {
   return (
     <div className={classes.root}>
       <div className={classes.sticky}>
-        <div className={classes.container}>
+        <div
+          className={classes.container}
+          style={{
+            backgroundImage: `linear-gradient(to top, transparent, ${
+              props.backgroundColor ?? theme.semanticColors.bodyBackground
+            } ${theme.spacing.s1})`,
+          }}
+        >
           <Flex center className={classes.searchInputContainer}>
             <Icon style={{ color: theme.semanticColors.inputIcon }}>
               <MagnifyIcon />
@@ -370,10 +426,12 @@ function PanelList(props: Props): JSX.Element {
           </Flex>
         </div>
       </div>
-      <div className={classes.scrollContainer}>
-        {noResults && <div className={classes.noResults}>No panels match search criteria.</div>}
-        {allFilteredPanels.map(displayPanelListItem)}
-      </div>
+      {mode === "grid" ? (
+        <div className={classes.grid}>{allFilteredPanels.map(displayPanelListItem)}</div>
+      ) : (
+        <List>{allFilteredPanels.map(displayPanelListItem)}</List>
+      )}
+      {noResults && <div className={classes.noResults}>No panels match search criteria.</div>}
     </div>
   );
 }
