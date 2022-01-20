@@ -56,7 +56,7 @@ export default function PlaybackControls({
   const [repeat, setRepeat] = useState(false);
   const stopAtTime = useRef<Time | undefined>(undefined);
 
-  // See comments below in ArrowRight handler for how seeking is handled
+  // See comments below in seekForwardAction for how seeking is handled
   useMessagePipeline(
     useCallback(
       (ctx) => {
