@@ -194,7 +194,7 @@ function DraggablePanelItem({
           onClick={onClick}
           sx={{ cursor: "grab" }}
           square={false}
-          elevation={4}
+          elevation={2}
         >
           {tooltip}
           {panel.thumbnail && (

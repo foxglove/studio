@@ -82,7 +82,7 @@ export const EmptyPanelLayout = ({ tabId }: Props): JSX.Element => {
       >
         <Stack sx={{ paddingBottom: (theme) => theme.spacing(2) }}>
           <Typography sx={{ paddingX: (theme) => theme.spacing(2) }}>
-            Select a panel below to begin creating your layout.{" "}
+            Select a panel below to add it to your layout.{" "}
             <Link target="_blank" href="https://foxglove.dev/docs/app-concepts/layouts">
               Learn more
             </Link>
