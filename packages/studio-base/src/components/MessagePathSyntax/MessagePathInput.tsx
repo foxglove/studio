@@ -11,21 +11,19 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { IconButton, IButtonStyles, Stack, useTheme } from "@fluentui/react";
+import { Stack } from "@fluentui/react";
 import { flatten, flatMap, partition } from "lodash";
 import { CSSProperties, useCallback, useMemo } from "react";
 
 import { RosMsgField } from "@foxglove/rosmsg";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import Autocomplete, { IAutocomplete } from "@foxglove/studio-base/components/Autocomplete";
-import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import useGlobalVariables, {
   GlobalVariables,
 } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { Topic } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { getTopicNames, getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
-import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import { RosPath, RosPrimitive } from "./constants";
 import {
@@ -35,41 +33,6 @@ import {
   validTerminatingStructureItem,
 } from "./messagePathsForDatatype";
 import parseRosPath from "./parseRosPath";
-
-// To show an input field with an autocomplete so the user can enter message paths, use:
-//
-//  <MessagePathInput path={this.state.path} onChange={path => this.setState({ path })} />
-//
-// To limit the autocomplete items to only certain types of values, you can use
-//
-//  <MessagePathInput types={["message", "array", "primitives"]} />
-//
-// Or use actual ROS primitive types:
-//
-//  <MessagePathInput types={["uint16", "float64"]} />
-//
-// If you don't use timestamps, you might want to hide the warning icon that we show when selecting
-// a topic that has no header: `<MessagePathInput hideTimestampWarning>`.
-//
-// If you are rendering many input fields, you might want to use `<MessagePathInput index={5}>`,
-// which gets passed down to `<MessagePathInput onChange>` as the second parameter, so you can
-// avoid creating anonymous functions on every render (which will prevent the component from
-// rendering unnecessarily).
-
-function topicHasNoHeaderStamp(topic: Topic, datatypes: RosDatatypes): boolean {
-  const structureTraversalResult = traverseStructure(
-    messagePathStructures(datatypes)[topic.datatype],
-    [
-      { type: "name", name: "header" },
-      { type: "name", name: "stamp" },
-    ],
-  );
-
-  return (
-    !structureTraversalResult.valid ||
-    !validTerminatingStructureItem(structureTraversalResult.structureItem, ["time"])
-  );
-}
 
 // Get a list of Message Path strings for all of the fields (recursively) in a list of topics
 function getFieldPaths(
@@ -183,8 +146,6 @@ type MessagePathInputBaseProps = {
   inputStyle?: CSSProperties;
   disableAutocomplete?: boolean; // Treat this as a normal input, with no autocomplete.
   prioritizedDatatype?: string;
-  timestampMethod?: TimestampMethod;
-  onTimestampMethodChange?: (arg0: TimestampMethod, index?: number) => void;
 };
 
 export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
@@ -192,41 +153,6 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
 ) {
   const { globalVariables, setGlobalVariables } = useGlobalVariables();
   const { datatypes, topics } = PanelAPI.useDataSourceInfo();
-  const theme = useTheme();
-
-  const dropdownStyles: Partial<IButtonStyles> = useMemo(
-    () => ({
-      root: {
-        backgroundColor: "transparent",
-        color: theme.semanticColors.disabledText,
-        borderColor: "transparent",
-        fontSize: 12,
-        height: 24,
-        padding: "0 2px 0 4px",
-        cursor: "pointer",
-      },
-      rootHovered: {
-        color: theme.semanticColors.buttonText,
-        padding: "0 2px 0 4px",
-        backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-      },
-      rootPressed: { backgroundColor: theme.semanticColors.buttonBackgroundPressed },
-      menuIcon: {
-        fontSize: "1em",
-        height: "1em",
-        color: "inherit",
-        marginLeft: 0,
-
-        svg: {
-          fill: "currentColor",
-          height: "1em",
-          width: "1em",
-          display: "block",
-        },
-      },
-    }),
-    [theme],
-  );
 
   const {
     supportsMathModifiers,
@@ -236,7 +162,6 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     autoSize,
     placeholder,
     noMultiSlices,
-    timestampMethod,
     inputStyle,
     disableAutocomplete = false,
   } = props;
@@ -297,15 +222,6 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
       }
     },
     [onChangeProp, path, props.index, topicFields, validTypes],
-  );
-
-  const onTimestampMethodChangeProp = props.onTimestampMethodChange;
-
-  const onTimestampMethodChange = useCallback(
-    (value: TimestampMethod) => {
-      onTimestampMethodChangeProp?.(value, props.index);
-    },
-    [onTimestampMethodChangeProp, props.index],
   );
 
   const rosPath = useMemo(() => parseRosPath(path), [path]);
@@ -469,10 +385,6 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     globalVariables,
   ]);
 
-  const noHeaderStamp = useMemo(() => {
-    return topic ? topicHasNoHeaderStamp(topic, datatypes) : false;
-  }, [datatypes, topic]);
-
   const orderedAutocompleteItems = useMemo(() => {
     if (prioritizedDatatype == undefined) {
       return autocompleteItems;
@@ -492,13 +404,6 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
   const hasError =
     usesUnsupportedMathModifier ||
     (autocompleteType != undefined && !disableAutocomplete && path.length > 0);
-
-  const timestampButton = useTooltip({
-    contents: noHeaderStamp
-      ? "header.stamp is not present in this topic"
-      : "Timestamp used for x-axis",
-    placement: "top",
-  });
 
   return (
     <Stack
@@ -532,44 +437,6 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
           disableAutoSelect
         />
       </Stack.Item>
-      {timestampMethod != undefined && (
-        <Stack.Item>
-          {timestampButton.tooltip}
-          <IconButton
-            elementRef={timestampButton.ref}
-            checked={timestampMethod === "headerStamp" && noHeaderStamp}
-            menuIconProps={{ iconName: "ClockOutline" }}
-            menuProps={{
-              styles: {
-                subComponentStyles: {
-                  menuItem: {
-                    root: { height: 24 },
-                    label: { fontSize: theme.fonts.small.fontSize },
-                    secondaryText: { fontSize: theme.fonts.small.fontSize },
-                  },
-                },
-              },
-              items: [
-                {
-                  key: "receiveTime",
-                  text: "receive time",
-                  canCheck: true,
-                  checked: timestampMethod === "receiveTime",
-                  onClick: () => onTimestampMethodChange("receiveTime"),
-                },
-                {
-                  key: "headerStamp",
-                  text: "header.stamp",
-                  canCheck: true,
-                  checked: timestampMethod === "headerStamp",
-                  onClick: () => onTimestampMethodChange("headerStamp"),
-                },
-              ],
-            }}
-            styles={dropdownStyles}
-          />
-        </Stack.Item>
-      )}
     </Stack>
   );
 });
