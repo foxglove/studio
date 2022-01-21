@@ -11,9 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { makeStyles } from "@fluentui/react";
+import { useTheme } from "@fluentui/react";
 import { Link, Stack, Typography } from "@mui/material";
-import cx from "classnames";
 import { useCallback } from "react";
 import { useDrop } from "react-dnd";
 import { MosaicDragType } from "react-mosaic-component";
@@ -23,28 +22,12 @@ import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLa
 import { MosaicDropResult } from "@foxglove/studio-base/types/panels";
 import { getPanelIdForType } from "@foxglove/studio-base/util/layout";
 
-const useStyles = makeStyles((theme) => ({
-  dropzone: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    flexDirection: "column",
-    width: "100%",
-    height: "100%",
-    border: "1px solid transparent",
-  },
-  dropzoneOver: {
-    backgroundColor: theme.palette.neutralLighterAlt,
-    borderColor: theme.palette.neutralLight,
-  },
-}));
-
 type Props = {
   tabId?: string;
 };
 
 export const EmptyPanelLayout = ({ tabId }: Props): JSX.Element => {
-  const classes = useStyles();
+  const fluentUiTheme = useTheme();
   const { addPanel } = useCurrentLayoutActions();
 
   const [{ isOver }, drop] = useDrop<unknown, MosaicDropResult, { isOver: boolean }>({
@@ -66,30 +49,32 @@ export const EmptyPanelLayout = ({ tabId }: Props): JSX.Element => {
   );
 
   return (
-    <div
+    <Stack
       ref={drop}
       data-test="empty-drop-target"
-      className={cx(classes.dropzone, {
-        [classes.dropzoneOver]: isOver,
-      })}
+      sx={{
+        width: "100%",
+        height: "100%",
+        border: "1px solid",
+        borderColor: isOver ? fluentUiTheme.palette.neutralLight : "transparent",
+        backgroundColor: isOver ? fluentUiTheme.palette.neutralLighterAlt : "transparent",
+      }}
     >
-      <Stack
-        sx={{
-          width: "100%",
-          height: "100%",
-          overflowY: "auto",
-        }}
-      >
-        <Stack sx={{ paddingBottom: (theme) => theme.spacing(2) }}>
-          <Typography sx={{ paddingX: (theme) => theme.spacing(2) }}>
+      <Stack width="100%" height="100%" sx={{ overflowY: "auto" }}>
+        <Stack paddingBottom={2}>
+          <Typography variant="body2" paddingX={2} paddingTop={2}>
             Select a panel below to add it to your layout.{" "}
-            <Link target="_blank" href="https://foxglove.dev/docs/app-concepts/layouts">
+            <Link
+              color="primary"
+              target="_blank"
+              href="https://foxglove.dev/docs/app-concepts/layouts"
+            >
               Learn more
             </Link>
           </Typography>
           <PanelList mode="grid" onPanelSelect={onPanelSelect} />
         </Stack>
       </Stack>
-    </div>
+    </Stack>
   );
 };

@@ -74,11 +74,17 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         },
       },
     },
+    MuiCard: {
+      defaultProps: {
+        variant: "outlined",
+        square: false,
+      },
+    },
     MuiCardContent: {
       styleOverrides: {
         root: {
           "&:last-child": {
-            paddingBottom: undefined,
+            paddingBottom: theme.spacing(2),
           },
         },
       },

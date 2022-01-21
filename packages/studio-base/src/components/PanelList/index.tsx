@@ -13,9 +13,12 @@
 import { makeStyles, useTheme } from "@fluentui/react";
 import MagnifyIcon from "@mdi/svg/svg/magnify.svg";
 import {
+  Box,
   Card,
+  CardActionArea,
   CardContent,
   CardMedia,
+  Container,
   List,
   ListItem,
   ListItemButton,
@@ -29,7 +32,6 @@ import { useCallback, useEffect, useMemo } from "react";
 import { useDrag } from "react-dnd";
 import { MosaicDragType, MosaicPath } from "react-mosaic-component";
 
-import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
 import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import TextHighlight from "@foxglove/studio-base/components/TextHighlight";
@@ -45,32 +47,8 @@ import {
   SavedProps,
   MosaicDropResult,
 } from "@foxglove/studio-base/types/panels";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 const useStyles = makeStyles((theme) => ({
-  root: {
-    height: "100%",
-  },
-  container: {
-    // Allow space for the background image (set below) to extend above/below the field
-    paddingTop: theme.spacing.s1,
-    paddingBottom: theme.spacing.s1,
-    paddingLeft: theme.spacing.m,
-    paddingRight: theme.spacing.m,
-  },
-  sticky: {
-    color: colors.LIGHT,
-    position: "sticky",
-    top: 0, // space is added by container.paddingTop
-    zIndex: 2,
-  },
-  searchInputContainer: {
-    paddingLeft: 8,
-    marginBottom: theme.spacing.s1,
-    backgroundColor: theme.semanticColors.inputBackground,
-    borderRadius: theme.effects.roundedCorner2,
-    border: `1px solid ${theme.semanticColors.inputBorder}`,
-  },
   searchInput: {
     backgroundColor: `${theme.semanticColors.inputBackground} !important`,
     padding: "8px !important",
@@ -81,17 +59,6 @@ const useStyles = makeStyles((theme) => ({
     ":hover, :focus": {
       backgroundColor: theme.semanticColors.inputBackground,
     },
-  },
-  grid: {
-    paddingLeft: theme.spacing.m,
-    paddingRight: theme.spacing.m,
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, 140px)",
-    gridGap: theme.spacing.m,
-  },
-  noResults: {
-    padding: "8px 16px",
-    opacity: 0.4,
   },
 }));
 
@@ -204,21 +171,42 @@ function DraggablePanelItem({
   switch (mode) {
     case "grid":
       return (
-        <Card
-          ref={mergedRef}
-          onClick={onClick}
-          sx={{ cursor: "grab" }}
-          square={false}
-          elevation={2}
+        <Box
+          sx={{
+            gridColumn: {
+              xs: "span 30",
+              sm: "span 15",
+              md: "span 10",
+              lg: "span 6",
+              xl: "span 5",
+            },
+          }}
         >
-          {tooltip}
-          {panel.thumbnail && (
-            <CardMedia component="img" image={panel.thumbnail} alt={panel.title} />
-          )}
-          <CardContent>
-            <TextHighlight targetStr={panel.title} searchText={searchQuery} />
-          </CardContent>
-        </Card>
+          <Card sx={{ height: "100%" }}>
+            <CardActionArea
+              component={Stack}
+              ref={mergedRef}
+              onClick={onClick}
+              sx={{ cursor: "grab", height: "100%" }}
+            >
+              {panel.thumbnail != undefined ? (
+                <CardMedia component="img" image={panel.thumbnail} alt={panel.title} />
+              ) : (
+                <Box
+                  sx={{ paddingBottom: `${(200 / 280) * 100}%`, bgcolor: "background.default" }}
+                />
+              )}
+              <CardContent sx={{ flex: 1 }}>
+                <Typography variant="subtitle2" gutterBottom>
+                  <TextHighlight targetStr={panel.title} searchText={searchQuery} />
+                </Typography>
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                  {panel.description}
+                </Typography>
+              </CardContent>
+            </CardActionArea>
+          </Card>
+        </Box>
       );
 
     case "list":
@@ -411,40 +399,66 @@ function PanelList(props: Props): JSX.Element {
   );
 
   return (
-    <div className={classes.root}>
-      <div className={classes.sticky}>
-        <div
-          className={classes.container}
-          style={{
-            backgroundImage: `linear-gradient(to top, transparent, ${
-              props.backgroundColor ?? theme.semanticColors.bodyBackground
-            } ${theme.spacing.s1})`,
+    <Box height="100%">
+      <Box
+        position="sticky"
+        top={0}
+        zIndex={2}
+        padding={2}
+        sx={{
+          backgroundImage: `linear-gradient(to top, transparent, ${
+            props.backgroundColor ?? theme.semanticColors.bodyBackground
+          } ${theme.spacing.s1})`,
+        }}
+      >
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="center"
+          sx={{
+            paddingLeft: 1,
+            marginBottom: 1,
+            backgroundColor: theme.semanticColors.inputBackground,
+            borderRadius: "shape.borderRadius",
+            border: `1px solid ${theme.semanticColors.inputBorder}`,
           }}
         >
-          <Flex center className={classes.searchInputContainer}>
-            <Icon style={{ color: theme.semanticColors.inputIcon }}>
-              <MagnifyIcon />
-            </Icon>
-            <LegacyInput
-              className={classes.searchInput}
-              placeholder="Search panels"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              onKeyDown={onKeyDown}
-              onBlur={() => setHighlightedPanelIdx(undefined)}
-              onFocus={() => setHighlightedPanelIdx(0)}
-              autoFocus
-            />
-          </Flex>
-        </div>
-      </div>
+          <Icon style={{ color: theme.semanticColors.inputIcon }}>
+            <MagnifyIcon />
+          </Icon>
+          <LegacyInput
+            className={classes.searchInput}
+            placeholder="Search panels"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            onKeyDown={onKeyDown}
+            onBlur={() => setHighlightedPanelIdx(undefined)}
+            onFocus={() => setHighlightedPanelIdx(0)}
+            autoFocus
+          />
+        </Stack>
+      </Box>
       {mode === "grid" ? (
-        <div className={classes.grid}>{allFilteredPanels.map(displayPanelListItem)}</div>
+        <Container maxWidth={false}>
+          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(30, 1fr)", gap: 2 }}>
+            {allFilteredPanels.map(displayPanelListItem)}
+          </Box>
+        </Container>
       ) : (
-        <List>{allFilteredPanels.map(displayPanelListItem)}</List>
+        <List disablePadding>{allFilteredPanels.map(displayPanelListItem)}</List>
       )}
-      {noResults && <div className={classes.noResults}>No panels match search criteria.</div>}
-    </div>
+      {noResults && (
+        <Stack
+          alignItems="center"
+          justifyContent="center"
+          paddingX={1}
+          paddingY={2}
+          color="text.secondary"
+        >
+          No panels match search criteria.
+        </Stack>
+      )}
+    </Box>
   );
 }
 
