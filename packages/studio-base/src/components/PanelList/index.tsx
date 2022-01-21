@@ -172,7 +172,12 @@ function DraggablePanelItem({
     case "grid":
       return (
         <Card sx={{ height: "100%" }}>
-          <CardActionArea component={Stack} ref={mergedRef} onClick={onClick}>
+          <CardActionArea
+            component={Stack}
+            ref={mergedRef}
+            onClick={onClick}
+            sx={{ height: "100%" }}
+          >
             {panel.thumbnail != undefined ? (
               <CardMedia component="img" image={panel.thumbnail} alt={panel.title} />
             ) : (
