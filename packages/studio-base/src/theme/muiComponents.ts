@@ -80,6 +80,11 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         square: false,
       },
     },
+    MuiCardActionArea: {
+      defaultProps: {
+        disableRipple: true,
+      },
+    },
     MuiCardContent: {
       styleOverrides: {
         root: {

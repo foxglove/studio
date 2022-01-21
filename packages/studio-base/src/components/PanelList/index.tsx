@@ -172,12 +172,7 @@ function DraggablePanelItem({
     case "grid":
       return (
         <Card sx={{ height: "100%" }}>
-          <CardActionArea
-            component={Stack}
-            ref={mergedRef}
-            onClick={onClick}
-            sx={{ cursor: "grab", height: "100%" }}
-          >
+          <CardActionArea component={Stack} ref={mergedRef} onClick={onClick}>
             {panel.thumbnail != undefined ? (
               <CardMedia component="img" image={panel.thumbnail} alt={panel.title} />
             ) : (
@@ -429,7 +424,6 @@ function PanelList(props: Props): JSX.Element {
           <Box
             sx={{
               display: "grid",
-              justifyContent: "center",
               gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
               columnGap: { xs: 0, sm: 2 },
               rowGap: 2,
