@@ -4,7 +4,9 @@
 
 import decompressLZ4 from "wasm-lz4";
 
+import Logger from "@foxglove/log";
 import {
+  Mcap0IndexedReader,
   Mcap0StreamReader,
   McapPre0To0StreamReader,
   Mcap0Types,
@@ -15,10 +17,12 @@ import { Bag } from "@foxglove/rosbag";
 import { BlobReader } from "@foxglove/rosbag/web";
 import { Time, fromNanoSec, isLessThan, isGreaterThan } from "@foxglove/rostime";
 
+const log = Logger.getLogger(__filename);
+
 export type TopicInfo = {
   topic: string;
   datatype: string;
-  numMessages: number;
+  numMessages: bigint;
   numConnections: number;
 };
 
@@ -26,21 +30,23 @@ export type FileInfo = {
   loadMoreInfo?: () => Promise<FileInfo>;
   fileType?: string | undefined;
   numChunks?: number;
-  totalMessages?: number;
+  numAttachments?: number;
+  totalMessages?: bigint;
   startTime?: Time | undefined;
   endTime?: Time | undefined;
   topics?: TopicInfo[];
+  compressionTypes?: string[];
 };
 
 export async function getBagInfo(file: File): Promise<FileInfo> {
   const bag = new Bag(new BlobReader(file));
   await bag.open();
-  const numMessagesByConnectionIndex = Array.from(bag.connections.values(), () => 0);
-  let totalMessages = 0;
+  const numMessagesByConnectionIndex = Array.from(bag.connections.values(), () => 0n);
+  let totalMessages = 0n;
   for (const chunk of bag.chunkInfos) {
     for (const { conn, count } of chunk.connections) {
-      numMessagesByConnectionIndex[conn] += count;
-      totalMessages += count;
+      numMessagesByConnectionIndex[conn] += BigInt(count);
+      totalMessages += BigInt(count);
     }
   }
 
@@ -51,13 +57,13 @@ export async function getBagInfo(file: File): Promise<FileInfo> {
       if (info.datatype !== datatype) {
         info.datatype = "(multiple)";
       }
-      info.numMessages += numMessagesByConnectionIndex[conn] ?? 0;
+      info.numMessages += numMessagesByConnectionIndex[conn] ?? 0n;
       info.numConnections++;
     } else {
       topicInfosByTopic.set(topic, {
         topic,
         datatype: datatype ?? "(unknown)",
-        numMessages: numMessagesByConnectionIndex[conn] ?? 0,
+        numMessages: numMessagesByConnectionIndex[conn] ?? 0n,
         numConnections: 1,
       });
     }
@@ -81,33 +87,105 @@ export async function getMcapInfo(file: File): Promise<FileInfo> {
   const decompressHandlers: Mcap0Types.DecompressHandlers = {
     lz4: (buffer, decompressedSize) => decompressLZ4(buffer, Number(decompressedSize)),
   };
-  let mcapStreamReader: Mcap0Types.McapStreamReader;
   switch (mcapVersion) {
     case undefined:
       throw new Error("Not a valid MCAP file");
     case "0":
       // Try indexed read
-      mcapStreamReader = new Mcap0StreamReader({
-        includeChunks: true,
-        decompressHandlers,
-        validateCrcs: true,
-      });
+      try {
+        return await getIndexedMcapInfo(file, decompressHandlers);
+      } catch (error) {
+        log.info("Failed to read MCAP file as indexed:", error);
+      }
+
       return {
-        loadMoreInfo: async () => await getStreamedMcapInfo(file, mcapStreamReader, "MCAP v0"),
-        fileType: "MCAP v0",
+        fileType: "MCAP v0, unindexed",
+        loadMoreInfo: async () =>
+          await getStreamedMcapInfo(
+            file,
+            new Mcap0StreamReader({
+              includeChunks: true,
+              decompressHandlers,
+              validateCrcs: true,
+            }),
+            "MCAP v0, unindexed",
+          ),
       };
 
     case "pre0":
-      mcapStreamReader = new McapPre0To0StreamReader({
-        includeChunks: true,
-        validateChunkCrcs: false,
-        decompressHandlers,
-      });
       return {
-        loadMoreInfo: async () => await getStreamedMcapInfo(file, mcapStreamReader, "MCAP pre-v0"),
         fileType: "MCAP pre-v0",
+        loadMoreInfo: async () =>
+          await getStreamedMcapInfo(
+            file,
+            new McapPre0To0StreamReader({
+              includeChunks: true,
+              validateChunkCrcs: false,
+              decompressHandlers,
+            }),
+            "MCAP pre-v0",
+          ),
       };
   }
+}
+
+async function getIndexedMcapInfo(file: File, decompressHandlers: Mcap0Types.DecompressHandlers) {
+  const reader = await Mcap0IndexedReader.Initialize({
+    readable: {
+      size: async () => BigInt(file.size),
+      read: async (offset, length) => {
+        if (offset + length > Number.MAX_SAFE_INTEGER) {
+          throw new Error(`Read too large: offset ${offset}, length ${length}`);
+        }
+        const buffer = await file.slice(Number(offset), Number(offset + length)).arrayBuffer();
+        return new Uint8Array(buffer);
+      },
+    },
+    decompressHandlers,
+  });
+
+  const topicInfosByTopic = new Map<string, TopicInfo>();
+  for (const channel of reader.channelInfosById.values()) {
+    const info = topicInfosByTopic.get(channel.topicName);
+    if (info != undefined) {
+      if (info.datatype !== channel.schemaName) {
+        info.datatype = "(multiple)";
+      }
+      info.numMessages += reader.statistics?.channelMessageCounts.get(channel.channelId) ?? 0n;
+      info.numConnections++;
+    } else {
+      topicInfosByTopic.set(channel.topicName, {
+        topic: channel.topicName,
+        datatype: channel.schemaName ?? "(unknown)",
+        numMessages: reader.statistics?.channelMessageCounts.get(channel.channelId) ?? 0n,
+        numConnections: 1,
+      });
+    }
+  }
+  const topics = [...topicInfosByTopic.values()].sort((a, b) => a.topic.localeCompare(b.topic));
+
+  let startTime: bigint | undefined;
+  let endTime: bigint | undefined;
+  const compressionTypes = new Set<string>();
+  for (const chunk of reader.chunkIndexes) {
+    compressionTypes.add(chunk.compression === "" ? "(none)" : chunk.compression);
+    if (startTime == undefined || chunk.startTime < startTime) {
+      startTime = chunk.startTime;
+    }
+    if (endTime == undefined || chunk.endTime > endTime) {
+      endTime = chunk.endTime;
+    }
+  }
+  return {
+    fileType: "MCAP v0, indexed",
+    numChunks: reader.chunkIndexes.length,
+    numAttachments: reader.attachmentIndexes.length,
+    totalMessages: reader.statistics?.messageCount,
+    startTime: startTime != undefined ? fromNanoSec(startTime) : undefined,
+    endTime: endTime != undefined ? fromNanoSec(endTime) : undefined,
+    topics,
+    compressionTypes: Array.from(compressionTypes).sort((a, b) => a.localeCompare(b)),
+  };
 }
 
 async function getStreamedMcapInfo(
@@ -115,7 +193,7 @@ async function getStreamedMcapInfo(
   mcapStreamReader: Mcap0Types.McapStreamReader,
   fileType: string,
 ): Promise<FileInfo> {
-  let totalMessages = 0;
+  let totalMessages = 0n;
   let numChunks = 0;
   let startTime: Time | undefined;
   let endTime: Time | undefined;
@@ -146,7 +224,7 @@ async function getStreamedMcapInfo(
           topicInfosByTopic.set(record.topicName, {
             topic: record.topicName,
             datatype: record.schemaName,
-            numMessages: 0,
+            numMessages: 0n,
             numConnections: 1,
             connectionIds: new Set([record.channelId]),
           });

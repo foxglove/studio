@@ -13,7 +13,6 @@ import Logger from "@foxglove/log";
 
 import FileInfoDisplay from "./FileInfoDisplay";
 import Flash from "./Flash";
-import Spinner from "./Spinner";
 import { getBagInfo, getMcapInfo } from "./getInfo";
 
 const log = Logger.getLogger(__filename);
@@ -51,6 +50,12 @@ const GlobalStyle = createGlobalStyle`
   code,
   tt {
     font-family: ui-monospace, monospace;
+  }
+  a {
+    color:  #476ebd;
+    @media (prefers-color-scheme: dark) {
+      color: #99b5ed;
+    }
   }
 `;
 
@@ -138,7 +143,13 @@ function Root(): JSX.Element {
       {loadMoreInfo && !shouldLoadMoreInfo && (
         <Flash type="info">
           This file cannot be summarized without a full scan.{" "}
-          <a href="#" onClick={() => setShouldLoadMoreInfo(true)}>
+          <a
+            href="#"
+            onClick={(event) => {
+              event.preventDefault();
+              setShouldLoadMoreInfo(true);
+            }}
+          >
             Scan now
           </a>
         </Flash>

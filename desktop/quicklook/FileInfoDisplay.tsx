@@ -135,11 +135,11 @@ function TopicRow({ info: { topic, datatype, numMessages, numConnections } }: { 
   );
 }
 
-function formatCount(count: number | undefined, noun: string): string | undefined {
+function formatCount(count: number | bigint | undefined, noun: string): string | undefined {
   if (count == undefined) {
     return undefined;
   }
-  return `${count.toLocaleString()} ${noun}${count === 1 ? "" : "s"}`;
+  return `${count.toLocaleString()} ${noun}${count === 1 || count === 1n ? "" : "s"}`;
 }
 
 export default function FileInfoDisplay({
@@ -175,11 +175,20 @@ export default function FileInfoDisplay({
                 formatCount(fileInfo.topics?.length, "topic"),
                 formatCount(fileInfo.numChunks, "chunk"),
                 formatCount(fileInfo.totalMessages, "message"),
+                formatCount(fileInfo.numAttachments, "attachment"),
                 formatByteSize(fileStats.size),
               ]
                 .filter(Boolean)
                 .join(", ")}
           </SummaryRow>
+          {fileInfo?.compressionTypes && (
+            <SummaryRow>
+              Compression:{" "}
+              {fileInfo.compressionTypes.length === 0
+                ? "(none)"
+                : fileInfo.compressionTypes.join(", ")}
+            </SummaryRow>
+          )}
           {fileInfo?.startTime && (
             <SummaryRow style={{ fontVariantNumeric: "tabular-nums" }}>
               <TimeLabel>Start:</TimeLabel>
