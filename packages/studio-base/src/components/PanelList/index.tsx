@@ -180,7 +180,9 @@ function DraggablePanelItem({
             )}
             <CardContent sx={{ flex: 1 }}>
               <Typography variant="subtitle2" gutterBottom>
-                <TextHighlight targetStr={panel.title} searchText={searchQuery} />
+                <span data-test={`panel-menu-item ${panel.title}`}>
+                  <TextHighlight targetStr={panel.title} searchText={searchQuery} />
+                </span>
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
                 {panel.description}
@@ -205,7 +207,11 @@ function DraggablePanelItem({
             }}
           >
             <ListItemText
-              primary={<TextHighlight targetStr={panel.title} searchText={searchQuery} />}
+              primary={
+                <span data-test={`panel-menu-item ${panel.title}`}>
+                  <TextHighlight targetStr={panel.title} searchText={searchQuery} />
+                </span>
+              }
               primaryTypographyProps={{ fontWeight: checked ? "bold" : undefined }}
             />
           </ListItemButton>
