@@ -385,7 +385,7 @@ function Plot(props: Props) {
       }
     }
     return allTooltips;
-  }, [datasets, showLegend]);
+  }, [datasets, showLegend, showPlotValuesInLegend]);
 
   const messagePipeline = useMessagePipelineGetter();
   const onClick = useCallback<NonNullable<ComponentProps<typeof PlotChart>["onClick"]>>(
