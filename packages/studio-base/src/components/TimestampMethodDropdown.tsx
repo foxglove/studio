@@ -148,6 +148,7 @@ export default function TimestampMethodDropdown(props: Props): JSX.Element {
       </MuiIconButton>
       <Menu
         id="timestamp-method-menu"
+        disablePortal
         anchorEl={anchorEl}
         open={open}
         onClose={() => setAnchorEl(undefined)}
