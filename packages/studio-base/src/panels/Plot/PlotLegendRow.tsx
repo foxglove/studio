@@ -186,8 +186,8 @@ export default function PlotLegendRow({
           </Tooltip>
         )}
       </Box>
-      <Box display="flex" alignItems="center" padding={0.25}>
-        {currentDisplay.value != undefined && showPlotValuesInLegend && (
+      {currentDisplay.value != undefined && showPlotValuesInLegend && (
+        <Box display="flex" alignItems="center" padding={0.25}>
           <Typography
             component="div"
             variant="body2"
@@ -196,8 +196,8 @@ export default function PlotLegendRow({
           >
             {currentDisplay.value}
           </Typography>
-        )}
-      </Box>
+        </Box>
+      )}
 
       <Box
         display="flex"

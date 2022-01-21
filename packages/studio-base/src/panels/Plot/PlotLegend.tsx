@@ -267,7 +267,14 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: "auto minmax(max-content, 1fr) minmax(max-content, 1fr) auto",
+              gridTemplateColumns: [
+                "auto",
+                "minmax(max-content, 1fr)",
+                showPlotValuesInLegend && "minmax(max-content, 1fr)",
+                "auto",
+              ]
+                .filter(Boolean)
+                .join(" "),
               alignItems: "stretch",
             }}
           >
