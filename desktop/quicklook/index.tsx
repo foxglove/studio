@@ -123,6 +123,10 @@ function Root(): JSX.Element {
     if (!shouldLoadMoreInfo) {
       return undefined;
     }
+    // yield to allow the browser to begin animating the Pulse text before we lock up the main event
+    // loop with parsing
+    await Promise.resolve();
+
     return await loadMoreInfo?.();
   }, [shouldLoadMoreInfo, loadMoreInfo]);
 
