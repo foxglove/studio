@@ -4,7 +4,13 @@
 
 import decompressLZ4 from "wasm-lz4";
 
-import { McapReader, McapRecord } from "@foxglove/mcap";
+import {
+  Mcap0StreamReader,
+  McapPre0To0StreamReader,
+  Mcap0Types,
+  detectVersion,
+  DETECT_VERSION_BYTES_REQUIRED,
+} from "@foxglove/mcap";
 import { Bag } from "@foxglove/rosbag";
 import { BlobReader } from "@foxglove/rosbag/web";
 import { Time, fromNanoSec, isLessThan, isGreaterThan } from "@foxglove/rostime";
@@ -17,11 +23,13 @@ export type TopicInfo = {
 };
 
 export type FileInfo = {
-  numChunks: number;
-  totalMessages: number;
-  startTime: Time | undefined;
-  endTime: Time | undefined;
-  topics: TopicInfo[];
+  loadMoreInfo?: () => Promise<FileInfo>;
+  fileType?: string | undefined;
+  numChunks?: number;
+  totalMessages?: number;
+  startTime?: Time | undefined;
+  endTime?: Time | undefined;
+  topics?: TopicInfo[];
 };
 
 export async function getBagInfo(file: File): Promise<FileInfo> {
@@ -56,6 +64,7 @@ export async function getBagInfo(file: File): Promise<FileInfo> {
   }
   const topics = [...topicInfosByTopic.values()].sort((a, b) => a.topic.localeCompare(b.topic));
   return {
+    fileType: undefined,
     totalMessages,
     numChunks: bag.chunkInfos.length,
     startTime: bag.startTime ?? undefined,
@@ -65,21 +74,55 @@ export async function getBagInfo(file: File): Promise<FileInfo> {
 }
 
 export async function getMcapInfo(file: File): Promise<FileInfo> {
-  const reader = new McapReader({
-    includeChunks: true,
-    validateChunkCrcs: false,
-    decompressHandlers: {
-      lz4: (buffer, decompressedSize) => decompressLZ4(buffer, Number(decompressedSize)),
-    },
-  });
+  const mcapVersion = detectVersion(
+    new DataView(await file.slice(0, DETECT_VERSION_BYTES_REQUIRED).arrayBuffer()),
+  );
 
+  const decompressHandlers: Mcap0Types.DecompressHandlers = {
+    lz4: (buffer, decompressedSize) => decompressLZ4(buffer, Number(decompressedSize)),
+  };
+  let mcapStreamReader: Mcap0Types.McapStreamReader;
+  switch (mcapVersion) {
+    case undefined:
+      throw new Error("Not a valid MCAP file");
+    case "0":
+      // Try indexed read
+      mcapStreamReader = new Mcap0StreamReader({
+        includeChunks: true,
+        decompressHandlers,
+        validateCrcs: true,
+      });
+      return {
+        loadMoreInfo: async () => await getStreamedMcapInfo(file, mcapStreamReader, "MCAP v0"),
+        fileType: "MCAP v0",
+      };
+
+    case "pre0":
+      mcapStreamReader = new McapPre0To0StreamReader({
+        includeChunks: true,
+        validateChunkCrcs: false,
+        decompressHandlers,
+      });
+      return {
+        loadMoreInfo: async () => await getStreamedMcapInfo(file, mcapStreamReader, "MCAP pre-v0"),
+        fileType: "MCAP pre-v0",
+      };
+  }
+}
+
+async function getStreamedMcapInfo(
+  file: File,
+  mcapStreamReader: Mcap0Types.McapStreamReader,
+  fileType: string,
+): Promise<FileInfo> {
   let totalMessages = 0;
   let numChunks = 0;
   let startTime: Time | undefined;
   let endTime: Time | undefined;
   const topicInfosByTopic = new Map<string, TopicInfo & { connectionIds: Set<number> }>();
+  const channelInfosById = new Map<number, Mcap0Types.TypedMcapRecords["ChannelInfo"]>();
 
-  function processRecord(record: McapRecord) {
+  function processRecord(record: Mcap0Types.TypedMcapRecord) {
     switch (record.type) {
       default:
         return;
@@ -89,34 +132,38 @@ export async function getMcapInfo(file: File): Promise<FileInfo> {
         return;
 
       case "ChannelInfo": {
-        const info = topicInfosByTopic.get(record.topic);
+        channelInfosById.set(record.channelId, record);
+        const info = topicInfosByTopic.get(record.topicName);
         if (info != undefined) {
           if (info.datatype !== record.schemaName) {
             info.datatype = "(multiple)";
           }
-          if (!info.connectionIds.has(record.id)) {
-            info.connectionIds.add(record.id);
+          if (!info.connectionIds.has(record.channelId)) {
+            info.connectionIds.add(record.channelId);
             info.numConnections++;
           }
         } else {
-          topicInfosByTopic.set(record.topic, {
-            topic: record.topic,
+          topicInfosByTopic.set(record.topicName, {
+            topic: record.topicName,
             datatype: record.schemaName,
             numMessages: 0,
             numConnections: 1,
-            connectionIds: new Set([record.id]),
+            connectionIds: new Set([record.channelId]),
           });
         }
         return;
       }
 
       case "Message": {
-        const info = topicInfosByTopic.get(record.channelInfo.topic);
-        if (info != undefined) {
-          info.numMessages++;
+        const channel = channelInfosById.get(record.channelId);
+        if (channel) {
+          const info = topicInfosByTopic.get(channel.topicName);
+          if (info != undefined) {
+            info.numMessages++;
+          }
         }
         totalMessages++;
-        const timestamp = fromNanoSec(record.timestamp);
+        const timestamp = fromNanoSec(record.recordTime);
         if (!startTime || isLessThan(timestamp, startTime)) {
           startTime = timestamp;
         }
@@ -130,14 +177,15 @@ export async function getMcapInfo(file: File): Promise<FileInfo> {
 
   const streamReader = file.stream().getReader() as ReadableStreamDefaultReader<Uint8Array>;
   for (let result; (result = await streamReader.read()), !result.done; ) {
-    reader.append(result.value);
-    for (let record; (record = reader.nextRecord()); ) {
+    mcapStreamReader.append(result.value);
+    for (let record; (record = mcapStreamReader.nextRecord()); ) {
       processRecord(record);
     }
   }
 
   const topics = [...topicInfosByTopic.values()].sort((a, b) => a.topic.localeCompare(b.topic));
   return {
+    fileType,
     totalMessages,
     numChunks,
     startTime,

@@ -7,12 +7,13 @@
 import { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import { useAsync } from "react-use";
-import { createGlobalStyle } from "styled-components";
+import styled, { createGlobalStyle, keyframes } from "styled-components";
 
 import Logger from "@foxglove/log";
 
-import ErrorInfo from "./ErrorInfo";
 import FileInfoDisplay from "./FileInfoDisplay";
+import Flash from "./Flash";
+import Spinner from "./Spinner";
 import { getBagInfo, getMcapInfo } from "./getInfo";
 
 const log = Logger.getLogger(__filename);
@@ -53,6 +54,18 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
+const pulse = keyframes`
+  from {
+    opacity: 0.25;
+  }
+  to {
+    opacity: 1;
+  }
+`;
+const Pulse = styled.div`
+  animation: ${pulse} 1s linear alternate infinite;
+`;
+
 function Root(): JSX.Element {
   const [previewedFile, setPreviewedFile] = useState<File | undefined>();
 
@@ -64,6 +77,7 @@ function Root(): JSX.Element {
         e.dataTransfer.dropEffect = "copy";
       }
       if (e.type === "drop" && e.dataTransfer?.files[0]) {
+        setShouldLoadMoreInfo(false);
         setPreviewedFile(e.dataTransfer.files[0]);
       }
     };
@@ -98,11 +112,37 @@ function Root(): JSX.Element {
   }, [previewedFile]);
   useEffect(() => state.error && console.error(state.error), [state.error]);
 
+  const loadMoreInfo = state.value?.fileInfo?.loadMoreInfo;
+  const [shouldLoadMoreInfo, setShouldLoadMoreInfo] = useState(false);
+  const moreInfo = useAsync(async () => {
+    if (!shouldLoadMoreInfo) {
+      return undefined;
+    }
+    return await loadMoreInfo?.();
+  }, [shouldLoadMoreInfo, loadMoreInfo]);
+
+  const fileStats = state.value?.fileStats;
+  const fileInfo = moreInfo?.value ?? state.value?.fileInfo;
+  const fileError = moreInfo?.error ?? state.value?.error;
+
   return (
     <div>
       {state.loading && "Loading…"}
-      {state.error && <ErrorInfo>{state.error.toString()}</ErrorInfo>}
-      {state.value && <FileInfoDisplay {...state.value} />}
+      {state.error && <Flash type="error">{state.error.toString()}</Flash>}
+      {fileStats && <FileInfoDisplay fileStats={fileStats} fileInfo={fileInfo} error={fileError} />}
+      {loadMoreInfo && moreInfo.loading && (
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <Pulse>Loading…</Pulse>
+        </div>
+      )}
+      {loadMoreInfo && !shouldLoadMoreInfo && (
+        <Flash type="info">
+          This file cannot be summarized without a full scan.{" "}
+          <a href="#" onClick={() => setShouldLoadMoreInfo(true)}>
+            Scan now
+          </a>
+        </Flash>
+      )}
     </div>
   );
 }

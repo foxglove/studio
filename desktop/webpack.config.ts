@@ -76,4 +76,8 @@ const devServerConfig: WebpackConfiguration = {
   ],
 };
 
-export default [devServerConfig, main, preload, renderer, quicklook];
+export default [devServerConfig, quicklook];
+void main;
+void preload;
+void renderer;
+// export default [devServerConfig, main, preload, renderer, quicklook];

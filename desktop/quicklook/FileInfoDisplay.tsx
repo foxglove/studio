@@ -10,7 +10,7 @@ import { Time, toDate } from "@foxglove/rostime";
 
 import bagIcon from "../../resources/icon/BagIcon.png";
 import mcapIcon from "../../resources/icon/McapIcon.png";
-import ErrorInfo from "./ErrorInfo";
+import Flash from "./Flash";
 import formatByteSize from "./formatByteSize";
 import { FileInfo, TopicInfo } from "./getInfo";
 
@@ -44,6 +44,17 @@ const FileName = styled(SummaryRow)`
   -webkit-box-orient: vertical;
   word-break: break-all;
   overflow: hidden;
+`;
+
+const IconContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const FileType = styled.span`
+  font-size: 10px;
+  opacity: 0.25;
 `;
 
 const TimeLabel = styled.span`
@@ -124,6 +135,13 @@ function TopicRow({ info: { topic, datatype, numMessages, numConnections } }: { 
   );
 }
 
+function formatCount(count: number | undefined, noun: string): string | undefined {
+  if (count == undefined) {
+    return undefined;
+  }
+  return `${count.toLocaleString()} ${noun}${count === 1 ? "" : "s"}`;
+}
+
 export default function FileInfoDisplay({
   fileStats,
   fileInfo,
@@ -145,21 +163,22 @@ export default function FileInfoDisplay({
           marginBottom: 16,
         }}
       >
-        <img src={fileStats.name.endsWith(".mcap") ? mcapIcon : bagIcon} style={{ width: 128 }} />
+        <IconContainer>
+          <img src={fileStats.name.endsWith(".mcap") ? mcapIcon : bagIcon} style={{ width: 128 }} />
+          {fileInfo?.fileType && <FileType>{fileInfo.fileType}</FileType>}
+        </IconContainer>
         <div style={{ display: "flex", flexDirection: "column", minWidth: 300, flex: "1 1 0" }}>
           <FileName>{fileStats.name}</FileName>
           <SummaryRow>
-            {fileInfo && (
-              <>
-                {fileInfo.topics.length.toLocaleString()}{" "}
-                {fileInfo.topics.length === 1 ? "topic" : "topics"},{" "}
-                {fileInfo.numChunks.toLocaleString()}{" "}
-                {fileInfo.numChunks === 1 ? "chunk" : "chunks"},{" "}
-                {fileInfo.totalMessages.toLocaleString()}{" "}
-                {fileInfo.totalMessages === 1 ? "message" : "messages"},{" "}
-              </>
-            )}
-            {formatByteSize(fileStats.size)}
+            {fileInfo &&
+              [
+                formatCount(fileInfo.topics?.length, "topic"),
+                formatCount(fileInfo.numChunks, "chunk"),
+                formatCount(fileInfo.totalMessages, "message"),
+                formatByteSize(fileStats.size),
+              ]
+                .filter(Boolean)
+                .join(", ")}
           </SummaryRow>
           {fileInfo?.startTime && (
             <SummaryRow style={{ fontVariantNumeric: "tabular-nums" }}>
@@ -175,10 +194,10 @@ export default function FileInfoDisplay({
           )}
         </div>
       </div>
-      {error && <ErrorInfo>{error.toString()}</ErrorInfo>}
+      {error && <Flash type="error">{error.toString()}</Flash>}
       <TopicList>
         <tbody>
-          {fileInfo?.topics.map((topicInfo, i) => (
+          {fileInfo?.topics?.map((topicInfo, i) => (
             <TopicRow key={i} info={topicInfo} />
           ))}
         </tbody>
