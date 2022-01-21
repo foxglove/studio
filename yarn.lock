@@ -2619,7 +2619,7 @@ __metadata:
     react-hover-observer: 2.1.1
     react-input-autosize: 3.0.0
     react-is: 17.0.2
-    react-json-tree: 0.15.1
+    react-json-tree: "patch:react-json-tree@npm:0.15.1#../../patches/react-json-tree.patch"
     react-markdown: 7.1.2
     react-monaco-editor: 0.46.0
     react-mosaic-component: 5.0.0
@@ -20464,6 +20464,20 @@ __metadata:
     "@types/react": ^16.3.0 || ^17.0.0
     react: ^16.3.0 || ^17.0.0
   checksum: 11402e34d73e409ddc48a03cb4176a2780c381ef219bcb54d527283e1b3ac70737e260f2e45b491452d0326d5b2a4175e0d09593446413805b94464a5f77590e
+  languageName: node
+  linkType: hard
+
+"react-json-tree@patch:react-json-tree@npm:0.15.1#../../patches/react-json-tree.patch::locator=%40foxglove%2Fstudio-base%40workspace%3Apackages%2Fstudio-base":
+  version: 0.15.1
+  resolution: "react-json-tree@patch:react-json-tree@npm%3A0.15.1#../../patches/react-json-tree.patch::version=0.15.1&hash=c5fd14&locator=%40foxglove%2Fstudio-base%40workspace%3Apackages%2Fstudio-base"
+  dependencies:
+    "@types/prop-types": ^15.7.4
+    prop-types: ^15.7.2
+    react-base16-styling: ^0.8.1
+  peerDependencies:
+    "@types/react": ^16.3.0 || ^17.0.0
+    react: ^16.3.0 || ^17.0.0
+  checksum: 9a7301c0b80154211f86337c772df7f0d51aa2d5d9d51ef54b9b6fb0e87ade04ec48bb202ebb246b833421354863c9b582365a57c8e59344abd877ede26311dd
   languageName: node
   linkType: hard
 
