@@ -168,7 +168,7 @@ async function getIndexedMcapInfo(file: File, decompressHandlers: Mcap0Types.Dec
   let endTime: bigint | undefined;
   const compressionTypes = new Set<string>();
   for (const chunk of reader.chunkIndexes) {
-    compressionTypes.add(chunk.compression === "" ? "(none)" : chunk.compression);
+    compressionTypes.add(chunk.compression);
     if (startTime == undefined || chunk.startTime < startTime) {
       startTime = chunk.startTime;
     }
@@ -195,19 +195,23 @@ async function getStreamedMcapInfo(
 ): Promise<FileInfo> {
   let totalMessages = 0n;
   let numChunks = 0;
+  let numAttachments = 0;
   let startTime: Time | undefined;
   let endTime: Time | undefined;
+  const compressionTypes = new Set<string>();
   const topicInfosByTopic = new Map<string, TopicInfo & { connectionIds: Set<number> }>();
   const channelInfosById = new Map<number, Mcap0Types.TypedMcapRecords["ChannelInfo"]>();
 
   function processRecord(record: Mcap0Types.TypedMcapRecord) {
     switch (record.type) {
-      default:
-        return;
-
       case "Chunk":
         numChunks++;
+        compressionTypes.add(record.compression);
         return;
+
+      case "Attachment":
+        numAttachments++;
+        break;
 
       case "ChannelInfo": {
         channelInfosById.set(record.channelId, record);
@@ -250,6 +254,15 @@ async function getStreamedMcapInfo(
         }
         return;
       }
+
+      case "AttachmentIndex":
+      case "Statistics":
+      case "Unknown":
+      case "Header":
+      case "Footer":
+      case "MessageIndex":
+      case "ChunkIndex":
+        break;
     }
   }
 
@@ -264,10 +277,12 @@ async function getStreamedMcapInfo(
   const topics = [...topicInfosByTopic.values()].sort((a, b) => a.topic.localeCompare(b.topic));
   return {
     fileType,
-    totalMessages,
     numChunks,
+    numAttachments,
+    totalMessages,
     startTime,
     endTime,
     topics,
+    compressionTypes: Array.from(compressionTypes).sort((a, b) => a.localeCompare(b)),
   };
 }

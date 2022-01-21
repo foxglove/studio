@@ -185,8 +185,8 @@ export default function FileInfoDisplay({
             <SummaryRow>
               Compression:{" "}
               {fileInfo.compressionTypes.length === 0
-                ? "(none)"
-                : fileInfo.compressionTypes.join(", ")}
+                ? "none"
+                : fileInfo.compressionTypes.filter(Boolean).join(", ")}
             </SummaryRow>
           )}
           {fileInfo?.startTime && (
