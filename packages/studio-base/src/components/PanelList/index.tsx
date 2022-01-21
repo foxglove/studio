@@ -171,42 +171,28 @@ function DraggablePanelItem({
   switch (mode) {
     case "grid":
       return (
-        <Box
-          sx={{
-            gridColumn: {
-              xs: "span 30",
-              sm: "span 15",
-              md: "span 10",
-              lg: "span 6",
-              xl: "span 5",
-            },
-          }}
-        >
-          <Card sx={{ height: "100%" }}>
-            <CardActionArea
-              component={Stack}
-              ref={mergedRef}
-              onClick={onClick}
-              sx={{ cursor: "grab", height: "100%" }}
-            >
-              {panel.thumbnail != undefined ? (
-                <CardMedia component="img" image={panel.thumbnail} alt={panel.title} />
-              ) : (
-                <Box
-                  sx={{ paddingBottom: `${(200 / 280) * 100}%`, bgcolor: "background.default" }}
-                />
-              )}
-              <CardContent sx={{ flex: 1 }}>
-                <Typography variant="subtitle2" gutterBottom>
-                  <TextHighlight targetStr={panel.title} searchText={searchQuery} />
-                </Typography>
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  {panel.description}
-                </Typography>
-              </CardContent>
-            </CardActionArea>
-          </Card>
-        </Box>
+        <Card sx={{ height: "100%" }}>
+          <CardActionArea
+            component={Stack}
+            ref={mergedRef}
+            onClick={onClick}
+            sx={{ cursor: "grab", height: "100%" }}
+          >
+            {panel.thumbnail != undefined ? (
+              <CardMedia component="img" image={panel.thumbnail} alt={panel.title} />
+            ) : (
+              <Box sx={{ paddingBottom: `${(200 / 280) * 100}%`, bgcolor: "background.default" }} />
+            )}
+            <CardContent sx={{ flex: 1 }}>
+              <Typography variant="subtitle2" gutterBottom>
+                <TextHighlight targetStr={panel.title} searchText={searchQuery} />
+              </Typography>
+              <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                {panel.description}
+              </Typography>
+            </CardContent>
+          </CardActionArea>
+        </Card>
       );
 
     case "list":
@@ -440,7 +426,15 @@ function PanelList(props: Props): JSX.Element {
       </Box>
       {mode === "grid" ? (
         <Container maxWidth={false}>
-          <Box sx={{ display: "grid", gridTemplateColumns: "repeat(30, 1fr)", gap: 2 }}>
+          <Box
+            sx={{
+              display: "grid",
+              justifyContent: "center",
+              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+              columnGap: { xs: 0, sm: 2 },
+              rowGap: 2,
+            }}
+          >
             {allFilteredPanels.map(displayPanelListItem)}
           </Box>
         </Container>
