@@ -27,7 +27,7 @@ export type TopicInfo = {
 };
 
 export type FileInfo = {
-  loadMoreInfo?: () => Promise<FileInfo>;
+  loadMoreInfo?: (reportProgress: (progress: number) => void) => Promise<FileInfo>;
   fileType?: string | undefined;
   numChunks?: number;
   numAttachments?: number;
@@ -100,7 +100,7 @@ export async function getMcapInfo(file: File): Promise<FileInfo> {
 
       return {
         fileType: "MCAP v0, unindexed",
-        loadMoreInfo: async () =>
+        loadMoreInfo: async (reportProgress) =>
           await getStreamedMcapInfo(
             file,
             new Mcap0StreamReader({
@@ -109,13 +109,14 @@ export async function getMcapInfo(file: File): Promise<FileInfo> {
               validateCrcs: true,
             }),
             "MCAP v0, unindexed",
+            reportProgress,
           ),
       };
 
     case "pre0":
       return {
         fileType: "MCAP pre-v0",
-        loadMoreInfo: async () =>
+        loadMoreInfo: async (reportProgress) =>
           await getStreamedMcapInfo(
             file,
             new McapPre0To0StreamReader({
@@ -124,6 +125,7 @@ export async function getMcapInfo(file: File): Promise<FileInfo> {
               decompressHandlers,
             }),
             "MCAP pre-v0",
+            reportProgress,
           ),
       };
   }
@@ -192,6 +194,7 @@ async function getStreamedMcapInfo(
   file: File,
   mcapStreamReader: Mcap0Types.McapStreamReader,
   fileType: string,
+  reportProgress: (progress: number) => void,
 ): Promise<FileInfo> {
   let totalMessages = 0n;
   let numChunks = 0;
@@ -266,12 +269,18 @@ async function getStreamedMcapInfo(
     }
   }
 
-  const streamReader = file.stream().getReader() as ReadableStreamDefaultReader<Uint8Array>;
-  for (let result; (result = await streamReader.read()), !result.done; ) {
-    mcapStreamReader.append(result.value);
+  // Use file.slice() rather than file.stream().getReader().read() because the latter has terrible
+  // performance in Safari (~50x slower than Chrome).
+  const chunkSize = 1024 * 1024;
+  let bytesRead = 0;
+  for (let offset = 0; offset < file.size; offset += chunkSize) {
+    const buffer = await file.slice(offset, offset + chunkSize).arrayBuffer();
+    mcapStreamReader.append(new Uint8Array(buffer));
     for (let record; (record = mcapStreamReader.nextRecord()); ) {
       processRecord(record);
     }
+    bytesRead += buffer.byteLength;
+    reportProgress(bytesRead / file.size);
   }
 
   const topics = [...topicInfosByTopic.values()].sort((a, b) => a.topic.localeCompare(b.topic));
