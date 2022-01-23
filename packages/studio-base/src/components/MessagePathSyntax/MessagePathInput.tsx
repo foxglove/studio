@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Stack } from "@fluentui/react";
 import { flatten, flatMap, partition } from "lodash";
 import { CSSProperties, useCallback, useMemo } from "react";
 
@@ -33,6 +32,26 @@ import {
   validTerminatingStructureItem,
 } from "./messagePathsForDatatype";
 import parseRosPath from "./parseRosPath";
+
+// To show an input field with an autocomplete so the user can enter message paths, use:
+//
+//  <MessagePathInput path={this.state.path} onChange={path => this.setState({ path })} />
+//
+// To limit the autocomplete items to only certain types of values, you can use
+//
+//  <MessagePathInput types={["message", "array", "primitives"]} />
+//
+// Or use actual ROS primitive types:
+//
+//  <MessagePathInput types={["uint16", "float64"]} />
+//
+// If you don't use timestamps, you might want to hide the warning icon that we show when selecting
+// a topic that has no header: `<MessagePathInput hideTimestampWarning>`.
+//
+// If you are rendering many input fields, you might want to use `<MessagePathInput index={5}>`,
+// which gets passed down to `<MessagePathInput onChange>` as the second parameter, so you can
+// avoid creating anonymous functions on every render (which will prevent the component from
+// rendering unnecessarily).
 
 // Get a list of Message Path strings for all of the fields (recursively) in a list of topics
 function getFieldPaths(
@@ -406,37 +425,23 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     (autocompleteType != undefined && !disableAutocomplete && path.length > 0);
 
   return (
-    <Stack
-      horizontal
-      horizontalAlign="space-between"
-      verticalAlign="center"
-      grow
-      disableShrink
-      styles={{ root: { ".ms-layer:empty": { margin: 0 } } }}
-      tokens={{ childrenGap: 2 }}
-    >
-      <Stack.Item grow disableShrink>
-        <Autocomplete
-          items={orderedAutocompleteItems}
-          filterText={autocompleteFilterText}
-          value={path}
-          onChange={onChange}
-          onSelect={(value, _item, autocomplete) =>
-            onSelect(value, autocomplete, autocompleteType, autocompleteRange)
-          }
-          hasError={hasError}
-          autocompleteKey={autocompleteType}
-          placeholder={
-            placeholder != undefined && placeholder !== ""
-              ? placeholder
-              : "/some/topic.msgs[0].field"
-          }
-          autoSize={autoSize}
-          inputStyle={inputStyle} // Disable autoselect since people often construct complex queries, and it's very annoying
-          // to have the entire input selected whenever you want to make a change to a part it.
-          disableAutoSelect
-        />
-      </Stack.Item>
-    </Stack>
+    <Autocomplete
+      items={orderedAutocompleteItems}
+      filterText={autocompleteFilterText}
+      value={path}
+      onChange={onChange}
+      onSelect={(value, _item, autocomplete) =>
+        onSelect(value, autocomplete, autocompleteType, autocompleteRange)
+      }
+      hasError={hasError}
+      autocompleteKey={autocompleteType}
+      placeholder={
+        placeholder != undefined && placeholder !== "" ? placeholder : "/some/topic.msgs[0].field"
+      }
+      autoSize={autoSize}
+      inputStyle={inputStyle} // Disable autoselect since people often construct complex queries, and it's very annoying
+      // to have the entire input selected whenever you want to make a change to a part it.
+      disableAutoSelect
+    />
   );
 });

@@ -2,9 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { IconButton, IButtonStyles, useTheme } from "@fluentui/react";
 import { AccessTime as AccessTimeIcon, Check as CheckIcon } from "@mui/icons-material";
-import { IconButton as MuiIconButton, Menu, MenuItem } from "@mui/material";
+import { IconButton, Menu, MenuItem } from "@mui/material";
 import { useCallback, useMemo } from "react";
 
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
@@ -17,26 +16,6 @@ import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/par
 import { Topic } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
-
-// To show an input field with an autocomplete so the user can enter message paths, use:
-//
-//  <MessagePathInput path={this.state.path} onChange={path => this.setState({ path })} />
-//
-// To limit the autocomplete items to only certain types of values, you can use
-//
-//  <MessagePathInput types={["message", "array", "primitives"]} />
-//
-// Or use actual ROS primitive types:
-//
-//  <MessagePathInput types={["uint16", "float64"]} />
-//
-// If you don't use timestamps, you might want to hide the warning icon that we show when selecting
-// a topic that has no header: `<MessagePathInput hideTimestampWarning>`.
-//
-// If you are rendering many input fields, you might want to use `<MessagePathInput index={5}>`,
-// which gets passed down to `<MessagePathInput onChange>` as the second parameter, so you can
-// avoid creating anonymous functions on every render (which will prevent the component from
-// rendering unnecessarily).
 
 function topicHasNoHeaderStamp(topic: Topic, datatypes: RosDatatypes): boolean {
   const structureTraversalResult = traverseStructure(
@@ -69,40 +48,7 @@ export default function TimestampMethodDropdown(props: Props): JSX.Element {
   };
 
   const { path, timestampMethod } = props;
-  const theme = useTheme();
-  const dropdownStyles: Partial<IButtonStyles> = useMemo(
-    () => ({
-      root: {
-        backgroundColor: "transparent",
-        color: theme.semanticColors.disabledText,
-        borderColor: "transparent",
-        fontSize: 12,
-        height: 24,
-        padding: "0 2px 0 4px",
-        cursor: "pointer",
-      },
-      rootHovered: {
-        color: theme.semanticColors.buttonText,
-        padding: "0 2px 0 4px",
-        backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-      },
-      rootPressed: { backgroundColor: theme.semanticColors.buttonBackgroundPressed },
-      menuIcon: {
-        fontSize: "1em",
-        height: "1em",
-        color: "inherit",
-        marginLeft: 0,
 
-        svg: {
-          fill: "currentColor",
-          height: "1em",
-          width: "1em",
-          display: "block",
-        },
-      },
-    }),
-    [theme],
-  );
   const { datatypes, topics } = PanelAPI.useDataSourceInfo();
   const rosPath = useMemo(() => parseRosPath(path), [path]);
 
@@ -135,7 +81,7 @@ export default function TimestampMethodDropdown(props: Props): JSX.Element {
 
   return (
     <>
-      <MuiIconButton
+      <IconButton
         size="small"
         id="timestamp-method-button"
         aria-controls={open ? "basic-menu" : undefined}
@@ -145,7 +91,7 @@ export default function TimestampMethodDropdown(props: Props): JSX.Element {
         sx={{ padding: 0.375, color: "text.secondary", "&:hover": { color: "text.primary" } }}
       >
         <AccessTimeIcon fontSize="inherit" />
-      </MuiIconButton>
+      </IconButton>
       <Menu
         id="timestamp-method-menu"
         disablePortal
@@ -159,6 +105,7 @@ export default function TimestampMethodDropdown(props: Props): JSX.Element {
         {items.map((item) => (
           <MenuItem
             key={item.value}
+            disabled={noHeaderStamp && item.value === "headerStamp"}
             selected={timestampMethod === item.value}
             onClick={() => {
               onTimestampMethodChange(item.value);
