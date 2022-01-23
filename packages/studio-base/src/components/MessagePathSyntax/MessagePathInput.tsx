@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { Stack } from "@mui/material";
 import { flatten, flatMap, partition } from "lodash";
 import { CSSProperties, useCallback, useMemo } from "react";
 
@@ -425,23 +426,32 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     (autocompleteType != undefined && !disableAutocomplete && path.length > 0);
 
   return (
-    <Autocomplete
-      items={orderedAutocompleteItems}
-      filterText={autocompleteFilterText}
-      value={path}
-      onChange={onChange}
-      onSelect={(value, _item, autocomplete) =>
-        onSelect(value, autocomplete, autocompleteType, autocompleteRange)
-      }
-      hasError={hasError}
-      autocompleteKey={autocompleteType}
-      placeholder={
-        placeholder != undefined && placeholder !== "" ? placeholder : "/some/topic.msgs[0].field"
-      }
-      autoSize={autoSize}
-      inputStyle={inputStyle} // Disable autoselect since people often construct complex queries, and it's very annoying
-      // to have the entire input selected whenever you want to make a change to a part it.
-      disableAutoSelect
-    />
+    <Stack
+      direction="row"
+      justifyContent="space-between"
+      alignItems="center"
+      flexGrow={1}
+      flexShrink={0}
+      spacing={0.25}
+    >
+      <Autocomplete
+        items={orderedAutocompleteItems}
+        filterText={autocompleteFilterText}
+        value={path}
+        onChange={onChange}
+        onSelect={(value, _item, autocomplete) =>
+          onSelect(value, autocomplete, autocompleteType, autocompleteRange)
+        }
+        hasError={hasError}
+        autocompleteKey={autocompleteType}
+        placeholder={
+          placeholder != undefined && placeholder !== "" ? placeholder : "/some/topic.msgs[0].field"
+        }
+        autoSize={autoSize}
+        inputStyle={inputStyle} // Disable autoselect since people often construct complex queries, and it's very annoying
+        // to have the entire input selected whenever you want to make a change to a part it.
+        disableAutoSelect
+      />
+    </Stack>
   );
 });

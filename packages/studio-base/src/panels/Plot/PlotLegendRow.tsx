@@ -116,7 +116,7 @@ export default function PlotLegendRow({
             bgcolor: "action.hover",
           },
           "& > *:last-child": {
-            visibility: "visible",
+            opacity: 1,
           },
           "& > *": {
             bgcolor: "action.hover",
@@ -204,13 +204,17 @@ export default function PlotLegendRow({
         alignItems="center"
         padding={0.25}
         spacing={0.25}
-        visibility="hidden"
         position="sticky"
         right={0}
         sx={({ palette }) => ({
+          opacity: 0,
           // creates an opaque background for the sticky element
           backgroundImage: `linear-gradient(${palette.background.paper}, ${palette.background.paper})`,
           backgroundBlendMode: "overlay",
+
+          "&:hover": {
+            opacity: 1,
+          },
         })}
       >
         <TimestampMethodDropdown

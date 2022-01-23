@@ -74,7 +74,7 @@ export default function TimestampMethodDropdown(props: Props): JSX.Element {
     [onTimestampMethodChangeProp, props.index],
   );
 
-  const items = [
+  const timestampMethods = [
     { label: "Receive time", value: "recieveTime" },
     { label: "header.stamp", value: "headerStamp" },
   ] as { label: string; value: TimestampMethod }[];
@@ -100,20 +100,26 @@ export default function TimestampMethodDropdown(props: Props): JSX.Element {
         onClose={() => setAnchorEl(undefined)}
         MenuListProps={{
           "aria-labelledby": "timestamp-method-button",
+          dense: true,
+        }}
+        sx={{
+          zIndex: 100000,
         }}
       >
-        {items.map((item) => (
+        {timestampMethods.map((method) => (
           <MenuItem
-            key={item.value}
-            disabled={noHeaderStamp && item.value === "headerStamp"}
-            selected={timestampMethod === item.value}
+            key={method.value}
+            disabled={noHeaderStamp && method.value === "headerStamp"}
+            selected={timestampMethod === method.value}
             onClick={() => {
-              onTimestampMethodChange(item.value);
+              onTimestampMethodChange(method.value);
               setAnchorEl(undefined);
             }}
           >
-            {item.label}
-            {timestampMethod === item.value && <CheckIcon fontSize="inherit" />}
+            {method.label}
+            {timestampMethod === method.value && (
+              <CheckIcon fontSize="small" sx={{ marginLeft: 2 }} />
+            )}
           </MenuItem>
         ))}
       </Menu>

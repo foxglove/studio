@@ -207,6 +207,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
             overflow: "auto",
             pointerEvents: "auto",
             [showSidebar ? "height" : "maxHeight"]: "100%",
+            position: "relative",
           })}
         >
           <Stack
