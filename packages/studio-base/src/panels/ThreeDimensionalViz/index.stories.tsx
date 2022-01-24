@@ -866,6 +866,102 @@ export function ArrowMarkers(): JSX.Element {
   );
 }
 
+SphereWithStaticTransform.parameters = { colorScheme: "dark" };
+export function SphereWithStaticTransform(): JSX.Element {
+  const topics: Topic[] = [
+    { name: "/tf", datatype: "geometry_msgs/TransformStamped" },
+    { name: "/sphere", datatype: "visualization_msgs/Marker" },
+  ];
+
+  const tf1: MessageEvent<TF> = {
+    topic: "/tf",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "camera_link" },
+      child_frame_id: "camera_color_frame",
+      transform: {
+        translation: { x: 0, y: 0, z: 0 },
+        rotation: QUAT_IDENTITY,
+      },
+    },
+    sizeInBytes: 0,
+  };
+
+  const tf2: MessageEvent<TF> = {
+    topic: "/tf",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "camera_color_frame" },
+      child_frame_id: "camera_color_optical_frame",
+      transform: {
+        translation: { x: 0.5, y: 0, z: 0 },
+        rotation: QUAT_IDENTITY,
+      },
+    },
+    sizeInBytes: 0,
+  };
+
+  const sphere: MessageEvent<SphereListMarker> = {
+    topic: "/sphere",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "camera_color_optical_frame" },
+      id: "sphere",
+      ns: "",
+      type: 7,
+      action: 0,
+      frame_locked: false,
+      pose: {
+        position: { x: 0.5, y: 0, z: 0 },
+        orientation: { x: 0, y: 0, z: 0, w: 1 },
+      },
+      points: [{ x: 0, y: 0, z: 0 }],
+      scale: { x: 0.1, y: 0.1, z: 0.1 },
+      color: makeColor("#f44336", 0.5),
+      lifetime: { sec: 0, nsec: 0 },
+    },
+    sizeInBytes: 0,
+  };
+
+  const fixture = useDelayedFixture({
+    datatypes,
+    topics,
+    frame: {
+      "/tf": [tf1, tf2],
+      "/sphere": [sphere],
+    },
+    capabilities: [],
+    activeData: {
+      currentTime: { sec: 0, nsec: 0 },
+    },
+  });
+
+  return (
+    <PanelSetup fixture={fixture}>
+      <ThreeDimensionalViz
+        overrideConfig={{
+          ...ThreeDimensionalViz.defaultConfig,
+          checkedKeys: ["name:Topics", "t:/sphere", "t:/tf", `t:${FOXGLOVE_GRID_TOPIC}`],
+          expandedKeys: ["name:Topics", "t:/sphere", "t:/tf", `t:${FOXGLOVE_GRID_TOPIC}`],
+          followTf: "camera_link",
+          cameraState: {
+            distance: 5,
+            perspective: true,
+            phi: 0.83,
+            targetOffset: [-0.094, 0.85, 0],
+            thetaOffset: -0.29,
+            fovy: 0.75,
+            near: 0.01,
+            far: 5000,
+            target: [0, 0, 0],
+            targetOrientation: [0, 0, 0, 1],
+          },
+        }}
+      />
+    </PanelSetup>
+  );
+}
+
 TransformInterpolation.parameters = { colorScheme: "dark" };
 export function TransformInterpolation(): JSX.Element {
   const topics: Topic[] = [
