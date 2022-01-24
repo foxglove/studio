@@ -221,6 +221,7 @@ export default function PlotLegendRow({
           path={path.value}
           onTimestampMethodChange={onInputTimestampMethodChange}
           index={index}
+          disabled={!path.value}
           timestampMethod={xAxisVal === "timestamp" ? timestampMethod : undefined}
         />
         <IconButton

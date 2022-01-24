@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { AccessTime as AccessTimeIcon, Check as CheckIcon } from "@mui/icons-material";
-import { IconButton, Menu, MenuItem } from "@mui/material";
+import { IconButton, IconButtonProps, Menu, MenuItem } from "@mui/material";
 import { useCallback, useMemo } from "react";
 
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
@@ -37,7 +37,7 @@ type Props = {
   index?: number; // Optional index field which gets passed to `onChange` (so you don't have to create anonymous functions)
   timestampMethod?: TimestampMethod;
   onTimestampMethodChange?: (arg0: TimestampMethod, index?: number) => void;
-};
+} & IconButtonProps;
 
 export default function TimestampMethodDropdown(props: Props): JSX.Element {
   const [anchorEl, setAnchorEl] = React.useState<undefined | HTMLElement>(undefined);
@@ -47,7 +47,7 @@ export default function TimestampMethodDropdown(props: Props): JSX.Element {
     setAnchorEl(event.currentTarget);
   };
 
-  const { path, timestampMethod } = props;
+  const { path, timestampMethod, ...rest } = props;
 
   const { datatypes, topics } = PanelAPI.useDataSourceInfo();
   const rosPath = useMemo(() => parseRosPath(path), [path]);
@@ -89,21 +89,19 @@ export default function TimestampMethodDropdown(props: Props): JSX.Element {
         aria-expanded={open ? "true" : undefined}
         onClick={handleClick}
         sx={{ padding: 0.375, color: "text.secondary", "&:hover": { color: "text.primary" } }}
+        {...rest}
       >
         <AccessTimeIcon fontSize="inherit" />
       </IconButton>
       <Menu
         id="timestamp-method-menu"
-        disablePortal
         anchorEl={anchorEl}
         open={open}
         onClose={() => setAnchorEl(undefined)}
         MenuListProps={{
           "aria-labelledby": "timestamp-method-button",
           dense: true,
-        }}
-        sx={{
-          zIndex: 100000,
+          disablePadding: true,
         }}
       >
         {timestampMethods.map((method) => (
