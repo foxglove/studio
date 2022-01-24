@@ -880,8 +880,17 @@ export function SphereWithStaticTransform(): JSX.Element {
       header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "camera_link" },
       child_frame_id: "camera_aligned_depth_to_color_frame",
       transform: {
-        translation: { x: 0, y: 0, z: 0 },
-        rotation: QUAT_IDENTITY,
+        translation: {
+          x: -0.0003675934858620167,
+          y: -0.05918709188699722,
+          z: 0.00029044150141999125,
+        },
+        rotation: {
+          x: 0.0010303286835551262,
+          y: -0.002234778832644224,
+          z: 0.0018944572657346725,
+          w: 0.9999951720237732,
+        },
       },
     },
     sizeInBytes: 0,
@@ -898,8 +907,13 @@ export function SphereWithStaticTransform(): JSX.Element {
       },
       child_frame_id: "camera_color_optical_frame",
       transform: {
-        translation: { x: 0.5, y: 0, z: 0 },
-        rotation: QUAT_IDENTITY,
+        translation: { x: 0, y: 0, z: 0 },
+        rotation: {
+          x: -0.5,
+          y: 0.5,
+          z: -0.5,
+          w: 0.5,
+        },
       },
     },
     sizeInBytes: 0,
@@ -916,10 +930,16 @@ export function SphereWithStaticTransform(): JSX.Element {
       action: 0,
       frame_locked: false,
       pose: {
-        position: { x: 0.5, y: 0, z: 0 },
+        position: { x: 0, y: 0, z: 0 },
         orientation: { x: 0, y: 0, z: 0, w: 1 },
       },
-      points: [{ x: 0, y: 0, z: 0 }],
+      points: [
+        {
+          x: -0.22289721353359226,
+          y: -0.10708471275270251,
+          z: 0.6890000000000001,
+        },
+      ],
       scale: { x: 0.1, y: 0.1, z: 0.1 },
       color: makeColor("#f44336", 0.5),
       lifetime: { sec: 0, nsec: 0 },
