@@ -869,45 +869,18 @@ export function ArrowMarkers(): JSX.Element {
 SphereWithStaticTransform.parameters = { colorScheme: "dark" };
 export function SphereWithStaticTransform(): JSX.Element {
   const topics: Topic[] = [
-    { name: "/tf_static", datatype: "geometry_msgs/TransformStamped" },
+    { name: "/tf", datatype: "geometry_msgs/TransformStamped" },
     { name: "/sphere", datatype: "visualization_msgs/Marker" },
   ];
 
   const tf1: MessageEvent<TF> = {
-    topic: "/tf_static",
+    topic: "/tf",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
       header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "camera_link" },
-      child_frame_id: "camera_aligned_depth_to_color_frame",
-      transform: {
-        translation: {
-          x: -0.0003675934858620167,
-          y: -0.05918709188699722,
-          z: 0.00029044150141999125,
-        },
-        rotation: {
-          x: 0.0010303286835551262,
-          y: -0.002234778832644224,
-          z: 0.0018944572657346725,
-          w: 0.9999951720237732,
-        },
-      },
-    },
-    sizeInBytes: 0,
-  };
-
-  const tf2: MessageEvent<TF> = {
-    topic: "/tf_static",
-    receiveTime: { sec: 10, nsec: 0 },
-    message: {
-      header: {
-        seq: 0,
-        stamp: { sec: 0, nsec: 0 },
-        frame_id: "camera_aligned_depth_to_color_frame",
-      },
       child_frame_id: "camera_color_optical_frame",
       transform: {
-        translation: { x: 0, y: 0, z: 0 },
+        translation: { x: 0.5, y: -0.5, z: 0 },
         rotation: {
           x: -0.5,
           y: 0.5,
@@ -935,9 +908,9 @@ export function SphereWithStaticTransform(): JSX.Element {
       },
       points: [
         {
-          x: -0.22289721353359226,
-          y: -0.10708471275270251,
-          z: 0.6890000000000001,
+          x: 0,
+          y: 0,
+          z: 0.5,
         },
       ],
       scale: { x: 0.1, y: 0.1, z: 0.1 },
@@ -951,7 +924,7 @@ export function SphereWithStaticTransform(): JSX.Element {
     datatypes,
     topics,
     frame: {
-      "/tf_static": [tf1, tf2],
+      "/tf": [tf1],
       "/sphere": [sphere],
     },
     capabilities: [],
@@ -965,26 +938,14 @@ export function SphereWithStaticTransform(): JSX.Element {
       <ThreeDimensionalViz
         overrideConfig={{
           ...ThreeDimensionalViz.defaultConfig,
-          checkedKeys: [
-            "name:Topics",
-            "t:/sphere",
-            "t:/tf",
-            "t:/tf_static",
-            `t:${FOXGLOVE_GRID_TOPIC}`,
-          ],
-          expandedKeys: [
-            "name:Topics",
-            "t:/sphere",
-            "t:/tf",
-            "t:/tf_static",
-            `t:${FOXGLOVE_GRID_TOPIC}`,
-          ],
+          checkedKeys: ["name:Topics", "t:/sphere", "t:/tf", `t:${FOXGLOVE_GRID_TOPIC}`],
+          expandedKeys: ["name:Topics", "t:/sphere", "t:/tf", `t:${FOXGLOVE_GRID_TOPIC}`],
           followTf: "camera_link",
           cameraState: {
-            distance: 5,
+            distance: 4,
             perspective: true,
-            phi: 0.83,
-            targetOffset: [-0.094, 0.85, 0],
+            phi: 1.2,
+            targetOffset: [0, 0, 0],
             thetaOffset: -0.29,
             fovy: 0.75,
             near: 0.01,
