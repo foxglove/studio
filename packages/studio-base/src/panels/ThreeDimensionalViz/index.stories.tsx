@@ -869,16 +869,16 @@ export function ArrowMarkers(): JSX.Element {
 SphereWithStaticTransform.parameters = { colorScheme: "dark" };
 export function SphereWithStaticTransform(): JSX.Element {
   const topics: Topic[] = [
-    { name: "/tf", datatype: "geometry_msgs/TransformStamped" },
+    { name: "/tf_static", datatype: "geometry_msgs/TransformStamped" },
     { name: "/sphere", datatype: "visualization_msgs/Marker" },
   ];
 
   const tf1: MessageEvent<TF> = {
-    topic: "/tf",
+    topic: "/tf_static",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
       header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "camera_link" },
-      child_frame_id: "camera_color_frame",
+      child_frame_id: "camera_aligned_depth_to_color_frame",
       transform: {
         translation: { x: 0, y: 0, z: 0 },
         rotation: QUAT_IDENTITY,
@@ -888,10 +888,14 @@ export function SphereWithStaticTransform(): JSX.Element {
   };
 
   const tf2: MessageEvent<TF> = {
-    topic: "/tf",
+    topic: "/tf_static",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
-      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "camera_color_frame" },
+      header: {
+        seq: 0,
+        stamp: { sec: 0, nsec: 0 },
+        frame_id: "camera_aligned_depth_to_color_frame",
+      },
       child_frame_id: "camera_color_optical_frame",
       transform: {
         translation: { x: 0.5, y: 0, z: 0 },
@@ -927,7 +931,7 @@ export function SphereWithStaticTransform(): JSX.Element {
     datatypes,
     topics,
     frame: {
-      "/tf": [tf1, tf2],
+      "/tf_static": [tf1, tf2],
       "/sphere": [sphere],
     },
     capabilities: [],
@@ -941,8 +945,20 @@ export function SphereWithStaticTransform(): JSX.Element {
       <ThreeDimensionalViz
         overrideConfig={{
           ...ThreeDimensionalViz.defaultConfig,
-          checkedKeys: ["name:Topics", "t:/sphere", "t:/tf", `t:${FOXGLOVE_GRID_TOPIC}`],
-          expandedKeys: ["name:Topics", "t:/sphere", "t:/tf", `t:${FOXGLOVE_GRID_TOPIC}`],
+          checkedKeys: [
+            "name:Topics",
+            "t:/sphere",
+            "t:/tf",
+            "t:/tf_static",
+            `t:${FOXGLOVE_GRID_TOPIC}`,
+          ],
+          expandedKeys: [
+            "name:Topics",
+            "t:/sphere",
+            "t:/tf",
+            "t:/tf_static",
+            `t:${FOXGLOVE_GRID_TOPIC}`,
+          ],
           followTf: "camera_link",
           cameraState: {
             distance: 5,
