@@ -2,10 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { IconButton, IButtonStyles, Stack, useTheme } from "@fluentui/react";
+import { IconButton, IButtonStyles, Stack, useTheme, ActionButton, Theme } from "@fluentui/react";
 import { styled as mstyled } from "@mui/system";
 import cx from "classnames";
-import { useCallback, useState } from "react";
+import { ReactNode, useCallback, useState } from "react";
 import { ReactElement } from "react-markdown/lib/react-markdown";
 import { useLongPress } from "react-use";
 
@@ -29,21 +29,71 @@ const PublishClickIcons: Record<PublishClickType, RegisteredIconNames> = {
   pose: "ArrowExpandUp",
 };
 
-const ClickToolSubmenu = mstyled("div")`
-display: flex;
-transform: translateX(100%);
-transition: transform 80ms;
+function makeIconButtonStyles(theme: Theme): Partial<IButtonStyles> {
+  return {
+    root: {
+      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
+      borderRadius: 0,
+    },
+    rootHovered: {
+      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
+    },
+    rootPressed: {
+      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
+    },
+    rootDisabled: {
+      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
+    },
+    rootChecked: {
+      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
+    },
+    rootCheckedHovered: {
+      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
+    },
+    rootCheckedPressed: {
+      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
+    },
 
-&.open {
-  transform: translateX(0);
+    iconChecked: { color: colors.HIGHLIGHT },
+    icon: {
+      color: theme.semanticColors.bodyText,
+      svg: {
+        fill: "currentColor",
+        height: "1em",
+        width: "1em",
+      },
+    },
+  };
 }
-`;
+
+function ClickToolSubmenu({ children, open }: { children: ReactNode; open: boolean }) {
+  const theme = useTheme();
+
+  return (
+    <div
+      style={{
+        backgroundColor: theme.semanticColors.buttonBackgroundHovered,
+        borderRadius: theme.effects.roundedCorner2,
+        display: open ? "block" : "none",
+        position: "absolute",
+        left: 0,
+        top: 0,
+        overflow: "hidden",
+        transform: "translateX(calc(-100% - 4px))",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 
 function ExpansionIndicator(): ReactElement {
   return (
     <span
       style={{
-        borderBottom: "6px solid white",
+        borderBottomWidth: 6,
+        borderBottomStyle: "solid",
+        borderBottomColor: "currentcolor",
         borderRight: "6px solid transparent",
         bottom: 0,
         height: 0,
@@ -52,6 +102,26 @@ function ExpansionIndicator(): ReactElement {
         width: 0,
       }}
     />
+  );
+}
+
+function PublishToolSelectionButton({
+  iconName,
+  onClick,
+  text,
+}: {
+  iconName: RegisteredIconNames;
+  onClick: () => void;
+  text: string;
+}) {
+  const theme = useTheme();
+
+  return (
+    <div style={{ display: "flex" }}>
+      <ActionButton iconProps={{ iconName }} onClick={onClick} styles={makeIconButtonStyles(theme)}>
+        <span style={{ fontSize: 12, whiteSpace: "nowrap" }}>{text}</span>
+      </ActionButton>
+    </div>
   );
 }
 
@@ -103,40 +173,7 @@ function MainToolbar({
     contents: debug ? "Disable debug" : "Enable debug",
   });
 
-  const iconButtonStyles: Partial<IButtonStyles> = {
-    root: {
-      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-      borderRadius: 0,
-    },
-    rootHovered: {
-      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-    },
-    rootPressed: {
-      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-    },
-    rootDisabled: {
-      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-    },
-    rootChecked: {
-      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-    },
-    rootCheckedHovered: {
-      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-    },
-    rootCheckedPressed: {
-      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-    },
-
-    iconChecked: { color: colors.HIGHLIGHT },
-    icon: {
-      color: theme.semanticColors.bodyText,
-      svg: {
-        fill: "currentColor",
-        height: "1em",
-        width: "1em",
-      },
-    },
-  };
+  const iconButtonStyles = makeIconButtonStyles(theme);
 
   const selectedPublishClickIconName = PublishClickIcons[activePublishClickType];
 
@@ -185,30 +222,23 @@ function MainToolbar({
         iconProps={{ iconName: "Ruler" }}
         styles={iconButtonStyles}
       />
-      <Stack horizontal style={{ overflow: "hidden", position: "relative" }}>
-        <ClickToolSubmenu className={cx({ open: clickMenuExpanded })}>
-          {publishPoseToolButton.tooltip}
-          <IconButton
+      <Stack horizontal style={{ position: "relative" }}>
+        <ClickToolSubmenu open={clickMenuExpanded}>
+          <PublishToolSelectionButton
+            iconName="ArrowExpandUp"
             onClick={() => selectPublishClickToolType("pose")}
-            elementRef={publishPoseToolButton.ref}
-            iconProps={{ iconName: "ArrowExpandUp" }}
-            styles={iconButtonStyles}
+            text="Click to publish pose tool"
           />
-          {publishGoalToolButton.tooltip}
-          <IconButton
+          <PublishToolSelectionButton
+            iconName="ArrowCollapseUp"
             onClick={() => selectPublishClickToolType("goal")}
-            elementRef={publishGoalToolButton.ref}
-            iconProps={{ iconName: "ArrowCollapseUp" }}
-            styles={iconButtonStyles}
+            text="Click to publish goal tool"
           />
-          {publishPointToolButton.tooltip}
-          <IconButton
+          <PublishToolSelectionButton
+            iconName="MapMarker"
             onClick={() => selectPublishClickToolType("point")}
-            elementRef={publishPointToolButton.ref}
-            iconProps={{ iconName: "MapMarker" }}
-            styles={iconButtonStyles}
+            text="Click to publish point tool"
           />
-          <ExpansionIndicator />
         </ClickToolSubmenu>
         <div style={{ position: "relative" }}>
           <IconButton
@@ -219,7 +249,7 @@ function MainToolbar({
             onClick={selectPublishClickTool}
             styles={iconButtonStyles}
           />
-          {!clickMenuExpanded && <ExpansionIndicator />}
+          <ExpansionIndicator />
         </div>
       </Stack>
       {process.env.NODE_ENV === "development" && (
