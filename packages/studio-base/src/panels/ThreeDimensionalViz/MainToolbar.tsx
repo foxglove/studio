@@ -10,7 +10,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import FlagIcon from "@mui/icons-material/Flag";
 import GoalIcon from "@mui/icons-material/SportsScore";
 import { Box, IconButton, ListItemText, Menu, MenuItem, Paper, Stack } from "@mui/material";
-import { ReactNode, useCallback, useState } from "react";
+import { ReactNode, useCallback, useRef, useState } from "react";
 import { useLongPress } from "react-use";
 
 import {
@@ -41,6 +41,7 @@ function MainToolbar({
 }: Props) {
   const [clickMenuExpanded, setClickMenuExpanded] = useState(false);
   const [activePublishClickType, setActivePublishClickType] = useState<PublishClickType>("point");
+  const publickClickButtonRef = useRef<HTMLElement>(ReactNull);
 
   const onLongPress = useCallback(() => {
     setClickMenuExpanded(true);
@@ -52,15 +53,12 @@ function MainToolbar({
   const selectPublishClickToolType = (type: PublishClickType) => {
     setActivePublishClickType(type);
     setClickMenuExpanded(false);
+    dispatch({ action: "select-tool", tool: "publish-click", type });
   };
 
   const selectPublishClickTool = () => {
     if (!clickMenuExpanded) {
-      dispatch({
-        action: "select-tool",
-        tool: "publish-click",
-        type: activePublishClickType,
-      });
+      dispatch({ action: "select-tool", tool: "publish-click", type: activePublishClickType });
     }
   };
 
@@ -100,6 +98,7 @@ function MainToolbar({
                 ? "Click to cancel"
                 : "Click to publish"
             }
+            ref={(r) => (publickClickButtonRef.current = r)}
             onClick={selectPublishClickTool}
             id="publish-button"
             aria-controls={clickMenuExpanded ? "publish-menu" : undefined}
@@ -132,6 +131,16 @@ function MainToolbar({
           </IconButton>
           <Menu
             id="publish-menu"
+            anchorEl={publickClickButtonRef.current}
+            anchorOrigin={{
+              vertical: "bottom",
+              horizontal: "left",
+            }}
+            transformOrigin={{
+              vertical: "top",
+              horizontal: "right",
+            }}
+            sx={{ transform: "translateY(-8px) translateX(-4px)" }}
             open={clickMenuExpanded}
             onClose={() => setClickMenuExpanded(false)}
             MenuListProps={{
