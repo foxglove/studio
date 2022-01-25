@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Text } from "@fluentui/react";
 import RulerIcon from "@mdi/svg/svg/ruler.svg";
 import Video3dIcon from "@mdi/svg/svg/video-3d.svg";
 import AddLocationIcon from "@mui/icons-material/AddLocation";
@@ -9,7 +10,16 @@ import BugReportIcon from "@mui/icons-material/BugReport";
 import CheckIcon from "@mui/icons-material/Check";
 import FlagIcon from "@mui/icons-material/Flag";
 import GoalIcon from "@mui/icons-material/SportsScore";
-import { Box, IconButton, ListItemText, Menu, MenuItem, Paper, Stack } from "@mui/material";
+import {
+  Box,
+  IconButton,
+  ListItemText,
+  Menu,
+  MenuItem,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { ReactNode, useCallback, useRef, useState } from "react";
 import { useLongPress } from "react-use";
 
@@ -17,6 +27,7 @@ import {
   InteractionStateProps,
   PublishClickType,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/InteractionState";
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 type Props = InteractionStateProps & {
   debug: boolean;
@@ -86,8 +97,23 @@ function MainToolbar({
           sx={{
             color:
               !perspective && interactionState.tool.name === "measure" ? "info.main" : "inherit",
+            position: "relative",
           }}
         >
+          {interactionState.measure?.distance != undefined && (
+            <Typography
+              sx={{
+                color: "white",
+                left: -6,
+                fontSize: 12,
+                position: "absolute",
+                top: "50%",
+                transform: "translate(-100%, -50%)",
+              }}
+            >
+              {interactionState.measure.distance.toFixed(2)}m
+            </Typography>
+          )}
           <RulerIcon />
         </IconButton>
         <Stack direction="row" position="relative">

@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Stack, Text, useTheme } from "@fluentui/react";
+import { Stack, useTheme } from "@fluentui/react";
 
 import { MouseEventObject } from "@foxglove/regl-worldview";
 import { Time } from "@foxglove/rostime";
@@ -34,7 +34,6 @@ import {
   MouseEventHandlerProps,
   ThreeDimensionalVizConfig,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 type Props = InteractionStateProps &
   LayoutToolbarSharedProps &
@@ -137,11 +136,6 @@ function LayoutToolbar({
           styles={{ root: { position: "relative" } }}
           tokens={{ childrenGap: theme.spacing.s1 }}
         >
-          {interactionState.measure?.distance != undefined && (
-            <Text variant="small" styles={{ root: { fontFamily: fonts.MONOSPACE } }}>
-              {interactionState.measure.distance.toFixed(2)}m
-            </Text>
-          )}
           <MainToolbar
             debug={debug}
             interactionState={interactionState}
