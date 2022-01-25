@@ -148,7 +148,7 @@ function MainToolbar({
                 primaryTypographyProps={{ variant: "body2" }}
                 sx={{ marginX: 1 }}
               />
-              {activePublishClickType === "pose" ? <CheckIcon /> : <Box width={24} height={24} />}
+              {activePublishClickType === "pose" ? <CheckIcon /> : <Box width={20} height={20} />}
             </MenuItem>
             <MenuItem
               selected={activePublishClickType === "goal"}
@@ -160,7 +160,7 @@ function MainToolbar({
                 primaryTypographyProps={{ variant: "body2" }}
                 sx={{ marginX: 1 }}
               />
-              {activePublishClickType === "goal" ? <CheckIcon /> : <Box width={24} height={24} />}
+              {activePublishClickType === "goal" ? <CheckIcon /> : <Box width={20} height={20} />}
             </MenuItem>
             <MenuItem
               selected={activePublishClickType === "point"}
@@ -172,7 +172,7 @@ function MainToolbar({
                 primaryTypographyProps={{ variant: "body2" }}
                 sx={{ marginX: 1 }}
               />
-              {activePublishClickType === "point" ? <CheckIcon /> : <Box width={24} height={24} />}
+              {activePublishClickType === "point" ? <CheckIcon /> : <Box width={20} height={20} />}
             </MenuItem>
           </Menu>
         </Stack>
