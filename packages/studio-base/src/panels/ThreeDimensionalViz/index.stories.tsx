@@ -892,12 +892,12 @@ export function SphereWithStaticTransform(): JSX.Element {
     sizeInBytes: 0,
   };
 
-  const sphere: MessageEvent<SphereListMarker> = {
+  const sphere1: MessageEvent<SphereListMarker> = {
     topic: "/sphere",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
       header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "camera_color_optical_frame" },
-      id: "sphere",
+      id: "sphere1",
       ns: "",
       type: 7,
       action: 0,
@@ -920,12 +920,40 @@ export function SphereWithStaticTransform(): JSX.Element {
     sizeInBytes: 0,
   };
 
+  const sphere2: MessageEvent<SphereListMarker> = {
+    topic: "/sphere",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "camera_color_optical_frame" },
+      id: "sphere2",
+      ns: "",
+      type: 7,
+      action: 0,
+      frame_locked: false,
+      pose: {
+        position: { x: 0, y: 0, z: 0.5 },
+        orientation: { x: 0, y: 0, z: 0, w: 1 },
+      },
+      points: [
+        {
+          x: 0,
+          y: 0,
+          z: 0,
+        },
+      ],
+      scale: { x: 0.1, y: 0.1, z: 0.1 },
+      color: makeColor("#00aacc", 0.5),
+      lifetime: { sec: 0, nsec: 0 },
+    },
+    sizeInBytes: 0,
+  };
+
   const fixture = useDelayedFixture({
     datatypes,
     topics,
     frame: {
       "/tf": [tf1],
-      "/sphere": [sphere],
+      "/sphere": [sphere1, sphere2],
     },
     capabilities: [],
     activeData: {
