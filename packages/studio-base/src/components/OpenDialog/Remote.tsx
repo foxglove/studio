@@ -20,14 +20,6 @@ type RemoteProps = {
   availableSources: IDataSourceFactory[];
 };
 
-function maybeParseURL(urlString: string): undefined | URL {
-  try {
-    return new URL(urlString);
-  } catch {
-    return undefined;
-  }
-}
-
 export default function Remote(props: RemoteProps): JSX.Element {
   const { onCancel, onBack, availableSources } = props;
 
@@ -40,28 +32,32 @@ export default function Remote(props: RemoteProps): JSX.Element {
       return;
     }
 
-    const parsedUrl = maybeParseURL(currentUrl);
-    const extension = parsedUrl ? path.extname(parsedUrl.pathname) : undefined;
-    if (extension == undefined || extension.length === 0) {
-      setErrorMessage("URL must end with a filename and extension");
-      return;
-    }
+    try {
+      const parsedUrl = new URL(currentUrl);
+      const extension = path.extname(parsedUrl.pathname);
+      if (extension.length === 0) {
+        setErrorMessage("URL must end with a filename and extension");
+        return;
+      }
 
-    // find remote supporting this extension
-    const foundSource = availableSources.find((source) => {
-      return source.type === "remote-file" && source.supportedFileTypes?.includes(extension);
-    });
-    if (!foundSource) {
-      setErrorMessage(`No remote data sources available for ${extension} files`);
-      return;
-    }
+      // find remote supporting this extension
+      const foundSource = availableSources.find((source) => {
+        return source.type === "remote-file" && source.supportedFileTypes?.includes(extension);
+      });
+      if (!foundSource) {
+        setErrorMessage(`No remote data sources available for ${extension} files`);
+        return;
+      }
 
-    selectSource(foundSource.id, {
-      type: "connection",
-      params: {
-        url: currentUrl,
-      },
-    });
+      selectSource(foundSource.id, {
+        type: "connection",
+        params: {
+          url: currentUrl,
+        },
+      });
+    } catch (error) {
+      setErrorMessage(`"${currentUrl}" is not a valid url`);
+    }
   }, [availableSources, currentUrl, selectSource]);
 
   return (
