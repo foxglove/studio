@@ -4,12 +4,13 @@
 
 import { useTheme as useFluentUITheme } from "@fluentui/react";
 import { Close as CloseIcon, Error as ErrorIcon, Remove as RemoveIcon } from "@mui/icons-material";
-import { Box, IconButton, Tooltip, Typography } from "@mui/material";
+import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/material";
 import { ComponentProps, useCallback, useMemo, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
+import TimestampMethodDropdown from "@foxglove/studio-base/components/TimestampMethodDropdown";
 import { useHoverValue } from "@foxglove/studio-base/context/HoverValueContext";
 import { lineColors } from "@foxglove/studio-base/util/plotColors";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
@@ -115,7 +116,7 @@ export default function PlotLegendRow({
             bgcolor: "action.hover",
           },
           "& > *:last-child": {
-            visibility: "visible",
+            opacity: 1,
           },
           "& > *": {
             bgcolor: "action.hover",
@@ -169,7 +170,6 @@ export default function PlotLegendRow({
           supportsMathModifiers
           path={path.value}
           onChange={onInputChange}
-          onTimestampMethodChange={onInputTimestampMethodChange}
           validTypes={plotableRosTypes}
           placeholder="Enter a topic name or a number"
           index={index}
@@ -199,19 +199,31 @@ export default function PlotLegendRow({
         </Box>
       )}
 
-      <Box
-        display="flex"
+      <Stack
+        direction="row"
         alignItems="center"
         padding={0.25}
-        visibility="hidden"
+        spacing={0.25}
         position="sticky"
         right={0}
         sx={({ palette }) => ({
+          opacity: 0,
           // creates an opaque background for the sticky element
           backgroundImage: `linear-gradient(${palette.background.paper}, ${palette.background.paper})`,
           backgroundBlendMode: "overlay",
+
+          "&:hover": {
+            opacity: 1,
+          },
         })}
       >
+        <TimestampMethodDropdown
+          path={path.value}
+          onTimestampMethodChange={onInputTimestampMethodChange}
+          index={index}
+          disabled={!path.value}
+          timestampMethod={xAxisVal === "timestamp" ? timestampMethod : undefined}
+        />
         <IconButton
           size="small"
           title={`Remove ${path.value}`}
@@ -224,7 +236,7 @@ export default function PlotLegendRow({
         >
           <CloseIcon fontSize="small" />
         </IconButton>
-      </Box>
+      </Stack>
     </Box>
   );
 }

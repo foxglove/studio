@@ -85,6 +85,7 @@ const useStyles = makeStyles((theme: Theme) =>
       backgroundColor: "transparent",
       borderTop: "none",
       pointerEvents: "none",
+      zIndex: theme.zIndex.mobileStepper,
     },
     legendToggle: {
       cursor: "pointer",
@@ -94,7 +95,6 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     floatingLegendToggle: {
       marginRight: theme.spacing(0.25),
-      zIndex: 1,
       visibility: "hidden",
       borderRadius: theme.shape.borderRadius,
       backgroundColor: theme.palette.action.focus,
@@ -207,21 +207,22 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
             overflow: "auto",
             pointerEvents: "auto",
             [showSidebar ? "height" : "maxHeight"]: "100%",
+            position: "relative",
           })}
         >
           <Stack
             direction="row"
             alignItems="center"
             padding={0.25}
-            sx={{
+            sx={(theme) => ({
               height: 26,
               position: "sticky",
               top: 0,
               left: 0,
               right: 0,
               bgcolor: "background.paper",
-              zIndex: 3,
-            }}
+              zIndex: theme.zIndex.mobileStepper + 1,
+            })}
           >
             <Box
               sx={{
@@ -266,6 +267,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
           </Stack>
           <Box
             sx={{
+              position: "relative",
               display: "grid",
               gridTemplateColumns: [
                 "auto",
@@ -296,7 +298,17 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
               );
             })}
           </Box>
-          <Box padding={0.5} position="sticky" right={0} left={0} gridColumn="span 4">
+          <Box
+            padding={0.5}
+            gridColumn="span 4"
+            sx={{
+              ...(showSidebar && {
+                position: "sticky",
+                right: 0,
+                left: 0,
+              }),
+            }}
+          >
             <Button
               size="small"
               fullWidth
@@ -366,7 +378,9 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
             {legendContent}
           </SidebarWrapper>
         ) : (
-          <Stack sx={{ overflow: "hidden", height: "100%", zIndex: 1 }}>{legendContent}</Stack>
+          <Stack overflow="hidden" height="100%">
+            {legendContent}
+          </Stack>
         )
       ) : undefined}
     </Stack>
