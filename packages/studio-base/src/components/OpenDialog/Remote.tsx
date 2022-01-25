@@ -41,7 +41,12 @@ export default function Remote(props: RemoteProps): JSX.Element {
     }
 
     const parsedUrl = maybeParseURL(currentUrl);
-    const extension = parsedUrl ? path.extname(parsedUrl.pathname) : undefined;
+    if (!parsedUrl) {
+      setErrorMessage(`${currentUrl} is not a valid URL`);
+      return;
+    }
+
+    const extension = path.extname(parsedUrl.pathname);
     if (extension == undefined || extension.length === 0) {
       setErrorMessage("URL must end with a filename and extension");
       return;
