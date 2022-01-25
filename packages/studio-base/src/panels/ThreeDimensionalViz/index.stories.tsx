@@ -866,8 +866,8 @@ export function ArrowMarkers(): JSX.Element {
   );
 }
 
-SphereWithStaticTransform.parameters = { colorScheme: "dark" };
-export function SphereWithStaticTransform(): JSX.Element {
+SphereListPointsTransform.parameters = { colorScheme: "dark" };
+export function SphereListPointsTransform(): JSX.Element {
   function makeSphere(id: string, color: string, scale: number) {
     return {
       topic: "/sphere",
@@ -965,8 +965,8 @@ export function SphereWithStaticTransform(): JSX.Element {
             distance: 4,
             perspective: true,
             phi: 1.2,
-            targetOffset: [0, 0, 0],
-            thetaOffset: -0.29,
+            targetOffset: [0.5, 0, 0],
+            thetaOffset: -0.5,
             fovy: 0.75,
             near: 0.01,
             far: 5000,
