@@ -17,6 +17,7 @@ import CheckboxMarkedIcon from "@mdi/svg/svg/checkbox-marked.svg";
 import PlusMinusIcon from "@mdi/svg/svg/plus-minus.svg";
 import LessIcon from "@mdi/svg/svg/unfold-less-horizontal.svg";
 import MoreIcon from "@mdi/svg/svg/unfold-more-horizontal.svg";
+import { Stack } from "@mui/material";
 // eslint-disable-next-line no-restricted-imports
 import { first, isEqual, get, last } from "lodash";
 import { useState, useCallback, useMemo } from "react";
@@ -106,11 +107,6 @@ function maybeDeepParse(val: unknown) {
 }
 
 const classes = mergeStyleSets({
-  container: {
-    paddingLeft: "0.5em",
-    fontFamily: fonts.SANS_SERIF,
-    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
-  },
   iconWrapper: {
     display: "inline",
     paddingRight: 40, // To make it so the icons appear when you move the mouse somewhat close.
@@ -380,7 +376,15 @@ function RawMessages(props: Props) {
       : CheckboxBlankOutlineIcon;
 
     return (
-      <Flex col clip scroll className={classes.container}>
+      <Stack
+        flex="auto"
+        overflow="hidden auto"
+        paddingLeft={0.5}
+        sx={{
+          fontFamily: fonts.SANS_SERIF,
+          fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
+        }}
+      >
         <Metadata
           data={data}
           diffData={diffData}
@@ -550,7 +554,7 @@ function RawMessages(props: Props) {
             />
           </>
         )}
-      </Flex>
+      </Stack>
     );
   }, [
     expandAll,
@@ -574,7 +578,7 @@ function RawMessages(props: Props) {
   ]);
 
   return (
-    <Flex col clip style={{ position: "relative" }}>
+    <Stack flex="auto" overflow="hidden" position="relative">
       <PanelToolbar helpContent={helpContent}>
         <Icon tooltip="Toggle diff" size="medium" fade onClick={onToggleDiff} active={diffEnabled}>
           <PlusMinusIcon />
@@ -628,7 +632,7 @@ function RawMessages(props: Props) {
         </div>
       </PanelToolbar>
       {renderSingleTopicOrDiffOutput()}
-    </Flex>
+    </Stack>
   );
 }
 

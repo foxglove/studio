@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { Stack } from "@mui/material";
 import { storiesOf } from "@storybook/react";
 import styled from "styled-components";
 
@@ -33,6 +34,7 @@ const SWrapper = styled.div`
   flex-wrap: wrap;
   height: 100%;
 `;
+
 const SP = styled.p`
   color: ${({ theme }) => theme.semanticColors.disabledText};
 `;
@@ -176,10 +178,10 @@ function PanelSetupWithData({
         >
           <p>{title}</p>
           <Flex>
-            <Flex col style={{ flex: 1 }}>
+            <Stack flex={1}>
               {showGlobalVariables && <GlobalVariablesDisplay />}
               {showLinkedGlobalVariables && <LinkedGlobalVariablesDisplay />}
-            </Flex>
+            </Stack>
             {children}
           </Flex>
         </div>

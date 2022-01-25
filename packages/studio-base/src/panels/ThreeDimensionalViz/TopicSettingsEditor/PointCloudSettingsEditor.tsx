@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { Box, Stack } from "@mui/material";
 import React from "react";
 import styled from "styled-components";
 
@@ -157,7 +158,7 @@ export default function PointCloudSettingsEditor(
   }
 
   return (
-    <Flex col>
+    <Stack flex="auto">
       <CommonPointSettings settings={settings} defaultPointSize={2} onFieldChange={onFieldChange} />
       <CommonDecaySettings settings={settings} onFieldChange={onFieldChange} />
 
@@ -227,7 +228,7 @@ export default function PointCloudSettingsEditor(
       </Flex>
 
       {isMappedColorMode(colorMode) && (
-        <Flex col style={{ marginBottom: "8px" }}>
+        <Stack flex="auto" marginBottom={1}>
           <SLabel>Value range</SLabel>
           <Flex row style={{ marginLeft: "8px" }}>
             <Flex row style={{ flex: "1 1 100%", alignItems: "baseline", marginRight: "20px" }}>
@@ -291,10 +292,10 @@ export default function PointCloudSettingsEditor(
               { id: "gradient", label: "Custom gradient" },
             ]}
           />
-        </Flex>
+        </Stack>
       )}
       {colorMode.mode === "gradient" && (
-        <div style={{ margin: "8px" }}>
+        <Box margin={1}>
           <GradientPicker
             minColor={colorMode.minColor ?? DEFAULT_MIN_COLOR}
             maxColor={colorMode.maxColor ?? DEFAULT_MAX_COLOR}
@@ -306,9 +307,9 @@ export default function PointCloudSettingsEditor(
               )
             }
           />
-        </div>
+        </Box>
       )}
-    </Flex>
+    </Stack>
   );
 }
 

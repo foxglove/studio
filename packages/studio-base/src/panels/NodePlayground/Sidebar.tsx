@@ -15,6 +15,7 @@ import ArrowLeftBoldIcon from "@mdi/svg/svg/arrow-left-bold.svg";
 import DeleteIcon from "@mdi/svg/svg/delete.svg";
 import FileMultipleIcon from "@mdi/svg/svg/file-multiple.svg";
 import HelpCircleIcon from "@mdi/svg/svg/help-circle.svg";
+import { Stack } from "@mui/material";
 import * as monacoApi from "monaco-editor/esm/vs/editor/editor.api";
 import styled from "styled-components";
 
@@ -100,7 +101,7 @@ type NodesListProps = {
 
 const NodesList = ({ nodes, selectNode, deleteNode, collapse, selectedNodeId }: NodesListProps) => {
   return (
-    <Flex col>
+    <Stack flex="auto">
       <SidebarTitle title="Nodes" collapse={collapse} />
       {Object.keys(nodes).map((nodeId) => {
         return (
@@ -116,7 +117,7 @@ const NodesList = ({ nodes, selectNode, deleteNode, collapse, selectedNodeId }: 
           </ListItem>
         );
       })}
-    </Flex>
+    </Stack>
   );
 };
 
@@ -205,7 +206,7 @@ const Sidebar = ({
         />
       ),
       utils: (
-        <Flex col style={{ position: "relative" }}>
+        <Stack flex="auto" position="relative">
           <SidebarTitle
             collapse={() => updateExplorer(undefined)}
             title="Utilities"
@@ -220,10 +221,10 @@ const Sidebar = ({
               {fileName}
             </ListItem>
           ))}
-        </Flex>
+        </Stack>
       ),
       templates: (
-        <Flex col>
+        <Stack flex="auto">
           <SidebarTitle
             title="Templates"
             tooltip={"Create nodes from these templates"}
@@ -235,7 +236,7 @@ const Sidebar = ({
               <span>{description}</span>
             </TemplateItem>
           ))}
-        </Flex>
+        </Stack>
       ),
     }),
     [

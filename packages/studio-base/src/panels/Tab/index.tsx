@@ -10,6 +10,8 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
+
+import { Stack } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { MosaicNode } from "react-mosaic-component";
 import styled from "styled-components";
@@ -105,7 +107,7 @@ function Tab({ config, saveConfig }: Props) {
     !draggingTabState.isOver;
 
   return (
-    <Flex col clip>
+    <Stack flex="auto" overflow="hidden">
       <TabbedToolbar
         panelId={panelId}
         tabs={tabs}
@@ -127,7 +129,7 @@ function Tab({ config, saveConfig }: Props) {
         )}
         {preventTabDrop && <SPanelCover />}
       </Flex>
-    </Flex>
+    </Stack>
   );
 }
 

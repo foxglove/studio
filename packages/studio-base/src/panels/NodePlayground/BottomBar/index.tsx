@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 import { useTheme } from "@fluentui/react";
+import { Box, Stack } from "@mui/material";
 import { useState, useRef, useEffect, ReactElement } from "react";
 import styled from "styled-components";
 
@@ -73,7 +74,7 @@ const BottomBar = ({ nodeId, isSaved, save, diagnostics, logs }: Props): ReactEl
   }, [autoScroll, logs]);
 
   return (
-    <Flex col style={{ backgroundColor: colors.DARK1, position: "relative" }}>
+    <Stack flex="auto" bgcolor={colors.DARK1} position="relative">
       <Flex
         row
         start
@@ -129,7 +130,7 @@ const BottomBar = ({ nodeId, isSaved, save, diagnostics, logs }: Props): ReactEl
           {isSaved ? "saved" : "save"}
         </Button>
       </Flex>
-      <div
+      <Box
         ref={scrollContainer}
         onScroll={({ currentTarget }) => {
           const scrolledUp =
@@ -140,7 +141,7 @@ const BottomBar = ({ nodeId, isSaved, save, diagnostics, logs }: Props): ReactEl
             setAutoScroll(true);
           }
         }}
-        style={{
+        sx={{
           overflowY: bottomBarDisplay !== "closed" ? "scroll" : "auto",
           height: bottomBarDisplay !== "closed" ? 150 : 0,
           color: colors.DARK9,
@@ -150,8 +151,8 @@ const BottomBar = ({ nodeId, isSaved, save, diagnostics, logs }: Props): ReactEl
         {bottomBarDisplay === "logs" && (
           <LogsSection nodeId={nodeId} logs={logs} clearLogs={clearUserNodeLogs} />
         )}
-      </div>
-    </Flex>
+      </Box>
+    </Stack>
   );
 };
 

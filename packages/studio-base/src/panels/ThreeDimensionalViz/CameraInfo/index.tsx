@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { useTheme } from "@fluentui/react";
+import { Stack } from "@mui/material";
 import { vec3 } from "gl-matrix";
 import { isEqual } from "lodash";
 import styled from "styled-components";
@@ -184,7 +185,7 @@ export default function CameraInfo({
               Sync
             </Button>
           </Flex>
-          <Flex col style={{ minWidth: DEFAULT_CAMERA_INFO_WIDTH, padding: 8 }}>
+          <Stack flex="auto" minWidth={DEFAULT_CAMERA_INFO_WIDTH} padding={1}>
             {edit && !isPlaying ? (
               <JsonInput
                 value={cameraState}
@@ -192,9 +193,9 @@ export default function CameraInfo({
                 dataValidator={cameraStateValidator}
               />
             ) : (
-              <Flex col>
+              <Stack flex="auto">
                 <CameraStateInfo cameraState={cameraState} onAlignXYAxis={onAlignXYAxis} />
-                <Flex col>
+                <Stack flex="auto">
                   <SRow style={{ marginBottom: 8 }}>
                     <Tooltip
                       placement="top"
@@ -261,7 +262,7 @@ export default function CameraInfo({
                       </SValue>
                     </SRow>
                   )}
-                </Flex>
+                </Stack>
                 {followMode === "no-follow" && <p>Not following</p>}
                 {followMode !== "no-follow" && (
                   <SRow>
@@ -272,9 +273,9 @@ export default function CameraInfo({
                     </SValue>
                   </SRow>
                 )}
-              </Flex>
+              </Stack>
             )}
-          </Flex>
+          </Stack>
         </>
       </ToolGroup>
     </ExpandingToolbar>
