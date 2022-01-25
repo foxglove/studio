@@ -47,7 +47,7 @@ export default function TimestampMethodDropdown(props: Props): JSX.Element {
     setAnchorEl(event.currentTarget);
   };
 
-  const { path, timestampMethod, ...rest } = props;
+  const { path, timestampMethod = "receiveTime", ...rest } = props;
 
   const { datatypes, topics } = PanelAPI.useDataSourceInfo();
   const rosPath = useMemo(() => parseRosPath(path), [path]);
