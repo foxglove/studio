@@ -2,19 +2,21 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { IconButton, IButtonStyles, Stack, useTheme, ActionButton, Theme } from "@fluentui/react";
-import { styled as mstyled } from "@mui/system";
-import cx from "classnames";
+import RulerIcon from "@mdi/svg/svg/ruler.svg";
+import Video3dIcon from "@mdi/svg/svg/video-3d.svg";
+import AddLocationIcon from "@mui/icons-material/AddLocation";
+import BugReportIcon from "@mui/icons-material/BugReport";
+import CheckIcon from "@mui/icons-material/Check";
+import FlagIcon from "@mui/icons-material/Flag";
+import GoalIcon from "@mui/icons-material/SportsScore";
+import { Box, IconButton, ListItemText, Menu, MenuItem, Paper, Stack } from "@mui/material";
 import { ReactNode, useCallback, useState } from "react";
-import { ReactElement } from "react-markdown/lib/react-markdown";
 import { useLongPress } from "react-use";
 
-import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import {
   InteractionStateProps,
   PublishClickType,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/InteractionState";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 type Props = InteractionStateProps & {
   debug: boolean;
@@ -23,107 +25,11 @@ type Props = InteractionStateProps & {
   perspective: boolean;
 };
 
-const PublishClickIcons: Record<PublishClickType, RegisteredIconNames> = {
-  goal: "ArrowCollapseUp",
-  point: "MapMarker",
-  pose: "ArrowExpandUp",
+const PublishClickIcons: Record<PublishClickType, ReactNode> = {
+  goal: <GoalIcon />,
+  point: <AddLocationIcon />,
+  pose: <FlagIcon />,
 };
-
-function makeIconButtonStyles(theme: Theme): Partial<IButtonStyles> {
-  return {
-    root: {
-      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-      borderRadius: 0,
-    },
-    rootHovered: {
-      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-    },
-    rootPressed: {
-      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-    },
-    rootDisabled: {
-      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-    },
-    rootChecked: {
-      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-    },
-    rootCheckedHovered: {
-      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-    },
-    rootCheckedPressed: {
-      backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-    },
-
-    iconChecked: { color: colors.HIGHLIGHT },
-    icon: {
-      color: theme.semanticColors.bodyText,
-      svg: {
-        fill: "currentColor",
-        height: "1em",
-        width: "1em",
-      },
-    },
-  };
-}
-
-function ClickToolSubmenu({ children, open }: { children: ReactNode; open: boolean }) {
-  const theme = useTheme();
-
-  return (
-    <div
-      style={{
-        backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-        borderRadius: theme.effects.roundedCorner2,
-        display: open ? "block" : "none",
-        position: "absolute",
-        left: 0,
-        top: 0,
-        overflow: "hidden",
-        transform: "translateX(calc(-100% - 4px))",
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-function ExpansionIndicator(): ReactElement {
-  return (
-    <span
-      style={{
-        borderBottomWidth: 6,
-        borderBottomStyle: "solid",
-        borderBottomColor: "currentcolor",
-        borderRight: "6px solid transparent",
-        bottom: 0,
-        height: 0,
-        left: 0,
-        position: "absolute",
-        width: 0,
-      }}
-    />
-  );
-}
-
-function PublishToolSelectionButton({
-  iconName,
-  onClick,
-  text,
-}: {
-  iconName: RegisteredIconNames;
-  onClick: () => void;
-  text: string;
-}) {
-  const theme = useTheme();
-
-  return (
-    <div style={{ display: "flex" }}>
-      <ActionButton iconProps={{ iconName }} onClick={onClick} styles={makeIconButtonStyles(theme)}>
-        <span style={{ fontSize: 12, whiteSpace: "nowrap" }}>{text}</span>
-      </ActionButton>
-    </div>
-  );
-}
 
 function MainToolbar({
   debug,
@@ -133,7 +39,6 @@ function MainToolbar({
   onToggleDebug,
   perspective = false,
 }: Props) {
-  const theme = useTheme();
   const [clickMenuExpanded, setClickMenuExpanded] = useState(false);
   const [activePublishClickType, setActivePublishClickType] = useState<PublishClickType>("point");
 
@@ -141,48 +46,15 @@ function MainToolbar({
     setClickMenuExpanded(true);
   }, []);
   const longPressEvent = useLongPress(onLongPress);
-  const toggleCameraButton = useTooltip({
-    contents: perspective ? "Switch to 2D camera" : "Switch to 3D camera",
-  });
-  const measuringToolButton = useTooltip({
-    contents: perspective
-      ? "Switch to 2D camera to measure distance"
-      : interactionState.tool.name === "measure"
-      ? "Cancel measuring"
-      : "Measure distance",
-  });
-  const publishGoalToolButton = useTooltip({
-    contents:
-      interactionState.publish?.type === "goal"
-        ? "Cancel goal publishing"
-        : "Click to publish goal",
-  });
-  const publishPoseToolButton = useTooltip({
-    contents:
-      interactionState.publish?.type === "pose"
-        ? "Cancel pose publishing"
-        : "Click to publish pose",
-  });
-  const publishPointToolButton = useTooltip({
-    contents:
-      interactionState.publish?.type === "point"
-        ? "Cancel point publishing"
-        : "Click to publish point",
-  });
-  const debugButton = useTooltip({
-    contents: debug ? "Disable debug" : "Enable debug",
-  });
-
-  const iconButtonStyles = makeIconButtonStyles(theme);
 
   const selectedPublishClickIconName = PublishClickIcons[activePublishClickType];
 
-  function selectPublishClickToolType(type: PublishClickType) {
+  const selectPublishClickToolType = (type: PublishClickType) => {
     setActivePublishClickType(type);
     setClickMenuExpanded(false);
-  }
+  };
 
-  function selectPublishClickTool() {
+  const selectPublishClickTool = () => {
     if (!clickMenuExpanded) {
       dispatch({
         action: "select-tool",
@@ -190,81 +62,132 @@ function MainToolbar({
         type: activePublishClickType,
       });
     }
-  }
+  };
 
   return (
-    <Stack
-      grow={0}
-      styles={{
-        root: {
-          alignItems: "flex-end",
-          borderRadius: theme.effects.roundedCorner2,
-          flexShrink: 0,
-          pointerEvents: "auto",
-        },
-      }}
-    >
-      {toggleCameraButton.tooltip}
-      <IconButton
-        checked={perspective}
-        onClick={onToggleCameraMode}
-        elementRef={toggleCameraButton.ref}
-        data-text="MainToolbar-toggleCameraMode"
-        iconProps={{ iconName: "Video3d" }}
-        styles={iconButtonStyles}
-      />
-      {measuringToolButton.tooltip}
-      <IconButton
-        checked={interactionState.tool.name === "measure"}
-        disabled={perspective}
-        onClick={() => dispatch({ action: "select-tool", tool: "measure" })}
-        elementRef={measuringToolButton.ref}
-        iconProps={{ iconName: "Ruler" }}
-        styles={iconButtonStyles}
-      />
-      <Stack horizontal style={{ position: "relative" }}>
-        <ClickToolSubmenu open={clickMenuExpanded}>
-          <PublishToolSelectionButton
-            iconName="ArrowExpandUp"
-            onClick={() => selectPublishClickToolType("pose")}
-            text="Click to publish pose tool"
-          />
-          <PublishToolSelectionButton
-            iconName="ArrowCollapseUp"
-            onClick={() => selectPublishClickToolType("goal")}
-            text="Click to publish goal tool"
-          />
-          <PublishToolSelectionButton
-            iconName="MapMarker"
-            onClick={() => selectPublishClickToolType("point")}
-            text="Click to publish point tool"
-          />
-        </ClickToolSubmenu>
-        <div style={{ position: "relative" }}>
+    <Paper square={false} sx={{ pointerEvents: "auto" }}>
+      <Stack alignItems="flex-end" flexGrow={0} flexShrink={0}>
+        <IconButton
+          title={perspective ? "Switch to 2D camera" : "Switch to 3D camera"}
+          data-text="MainToolbar-toggleCameraMode"
+          sx={{ color: perspective ? "info.main" : "inherit" }}
+          onClick={onToggleCameraMode}
+        >
+          <Video3dIcon />
+        </IconButton>
+        <IconButton
+          title={
+            perspective
+              ? "Switch to 2D camera to measure distance"
+              : interactionState.tool.name === "measure"
+              ? "Cancel measuring"
+              : "Measure distance"
+          }
+          disabled={perspective}
+          onClick={() => dispatch({ action: "select-tool", tool: "measure" })}
+          sx={{
+            color:
+              !perspective && interactionState.tool.name === "measure" ? "info.main" : "inherit",
+          }}
+        >
+          <RulerIcon />
+        </IconButton>
+        <Stack direction="row" position="relative">
           <IconButton
             {...longPressEvent}
-            checked={interactionState.tool.name === "publish-click"}
-            disabled={perspective}
-            iconProps={{ iconName: selectedPublishClickIconName }}
+            title={
+              interactionState.tool.name === "publish-click"
+                ? "Click to cancel"
+                : "Click to publish"
+            }
             onClick={selectPublishClickTool}
-            styles={iconButtonStyles}
-          />
-          <ExpansionIndicator />
-        </div>
-      </Stack>
-      {process.env.NODE_ENV === "development" && (
-        <>
-          {debugButton.tooltip}
+            id="publish-button"
+            aria-controls={clickMenuExpanded ? "publish-menu" : undefined}
+            aria-haspopup="true"
+            aria-expanded={clickMenuExpanded ? "true" : undefined}
+            disabled={perspective}
+            sx={(theme) => ({
+              position: "relative",
+              color:
+                !perspective && interactionState.tool.name === "publish-click"
+                  ? "info.main"
+                  : "inherit",
+
+              "&:after": {
+                content: perspective ? "none" : "''",
+                borderBottom: `6px solid ${
+                  perspective ? theme.palette.text.disabled : theme.palette.text.primary
+                }`,
+                borderRight: "6px solid transparent",
+                bottom: 0,
+                left: 0,
+                height: 0,
+                width: 0,
+                margin: 0.25,
+                position: "absolute",
+              },
+            })}
+          >
+            {selectedPublishClickIconName}
+          </IconButton>
+          <Menu
+            id="publish-menu"
+            open={clickMenuExpanded}
+            onClose={() => setClickMenuExpanded(false)}
+            MenuListProps={{
+              "aria-labelledby": "publish-button",
+            }}
+          >
+            <MenuItem
+              selected={activePublishClickType === "pose"}
+              onClick={() => selectPublishClickToolType("pose")}
+            >
+              <FlagIcon />
+              <ListItemText
+                primary="Publish pose estimate"
+                primaryTypographyProps={{ variant: "body2" }}
+                sx={{ marginX: 1 }}
+              />
+              {activePublishClickType === "pose" ? <CheckIcon /> : <Box width={24} height={24} />}
+            </MenuItem>
+            <MenuItem
+              selected={activePublishClickType === "goal"}
+              onClick={() => selectPublishClickToolType("goal")}
+            >
+              <GoalIcon />
+              <ListItemText
+                primary="Publish goal"
+                primaryTypographyProps={{ variant: "body2" }}
+                sx={{ marginX: 1 }}
+              />
+              {activePublishClickType === "goal" ? <CheckIcon /> : <Box width={24} height={24} />}
+            </MenuItem>
+            <MenuItem
+              selected={activePublishClickType === "point"}
+              onClick={() => selectPublishClickToolType("point")}
+            >
+              <AddLocationIcon />
+              <ListItemText
+                primary="Publish point"
+                primaryTypographyProps={{ variant: "body2" }}
+                sx={{ marginX: 1 }}
+              />
+              {activePublishClickType === "point" ? <CheckIcon /> : <Box width={24} height={24} />}
+            </MenuItem>
+          </Menu>
+        </Stack>
+
+        {process.env.NODE_ENV === "development" && (
           <IconButton
-            checked={debug}
+            title={debug ? "Disable debug" : "Enable debug"}
+            sx={{ color: debug ? "info.main" : "inherit" }}
             onClick={onToggleDebug}
-            elementRef={debugButton.ref}
-            iconProps={{ iconName: "Bug" }}
-            styles={iconButtonStyles}
-          />
-        </>
-      )}
-    </Stack>
+          >
+            <BugReportIcon />
+          </IconButton>
+        )}
+      </Stack>
+    </Paper>
   );
 }
 

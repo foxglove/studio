@@ -1563,7 +1563,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.0.0, @babel/runtime@npm:^7.1.2, @babel/runtime@npm:^7.10.1, @babel/runtime@npm:^7.10.2, @babel/runtime@npm:^7.11.1, @babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.13.10, @babel/runtime@npm:^7.14.0, @babel/runtime@npm:^7.14.8, @babel/runtime@npm:^7.16.3, @babel/runtime@npm:^7.16.5, @babel/runtime@npm:^7.3.1, @babel/runtime@npm:^7.3.4, @babel/runtime@npm:^7.5.0, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.7.2, @babel/runtime@npm:^7.7.6, @babel/runtime@npm:^7.8.3, @babel/runtime@npm:^7.8.4, @babel/runtime@npm:^7.8.7, @babel/runtime@npm:^7.9.2":
+"@babel/runtime@npm:^7.0.0, @babel/runtime@npm:^7.1.2, @babel/runtime@npm:^7.10.1, @babel/runtime@npm:^7.10.2, @babel/runtime@npm:^7.11.1, @babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.13.10, @babel/runtime@npm:^7.14.0, @babel/runtime@npm:^7.14.8, @babel/runtime@npm:^7.16.3, @babel/runtime@npm:^7.16.5, @babel/runtime@npm:^7.16.7, @babel/runtime@npm:^7.3.1, @babel/runtime@npm:^7.3.4, @babel/runtime@npm:^7.5.0, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.7.2, @babel/runtime@npm:^7.7.6, @babel/runtime@npm:^7.8.3, @babel/runtime@npm:^7.8.4, @babel/runtime@npm:^7.8.7, @babel/runtime@npm:^7.9.2":
   version: 7.16.7
   resolution: "@babel/runtime@npm:7.16.7"
   dependencies:
@@ -2512,6 +2512,7 @@ __metadata:
     "@foxglove/velodyne-cloud": 1.0.0
     "@foxglove/ws-protocol": 0.0.8
     "@mdi/svg": 6.5.95
+    "@mui/icons-material": 5.3.1
     "@mui/material": 5.2.7
     "@mui/styles": 5.2.3
     "@sentry/core": 6.16.1
@@ -3149,6 +3150,22 @@ __metadata:
     "@types/react":
       optional: true
   checksum: 641c6d3ddcfc1962d4ebe21587761f728c6eb3d5b0d4063c70321c8c99cc2392c4350cc03e310fb997c98e412616f63028a85f133e9f44e6b1b60917955c95ac
+  languageName: node
+  linkType: hard
+
+"@mui/icons-material@npm:5.3.1":
+  version: 5.3.1
+  resolution: "@mui/icons-material@npm:5.3.1"
+  dependencies:
+    "@babel/runtime": ^7.16.7
+  peerDependencies:
+    "@mui/material": ^5.0.0
+    "@types/react": ^16.8.6 || ^17.0.0
+    react: ^17.0.0
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  checksum: b9073a0432734466fa61c0493505e36e8eb663cd58f006590bc8be932c218ff58d666cef20b50d9265afa8ab3579bd35c6a5ca1a158d07d55dc9680d544159cb
   languageName: node
   linkType: hard
 
