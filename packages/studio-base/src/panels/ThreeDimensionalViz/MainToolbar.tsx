@@ -19,7 +19,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { ReactNode, useCallback, useRef, useState } from "react";
+import { ReactElement, ReactNode, useCallback, useRef, useState } from "react";
 import { useLongPress } from "react-use";
 
 import {
@@ -48,6 +48,32 @@ const PublishClickIcons: Record<PublishClickType, ReactNode> = {
 const canPublishSelector = (context: MessagePipelineContext) =>
   context.playerState.capabilities.includes(PlayerCapabilities.advertise);
 
+const IconStyle = {
+  "& svg, & svg:not(.MuiSvgIcon-root)": {
+    fontSize: "1rem",
+  },
+};
+
+function ClickToExpandIndicator({ perspective }: { perspective: boolean }): ReactElement {
+  return (
+    <Box
+      sx={(theme) => ({
+        content: perspective ? "none" : "''",
+        borderBottom: `6px solid ${
+          perspective ? theme.palette.text.disabled : theme.palette.text.primary
+        }`,
+        borderRight: "6px solid transparent",
+        bottom: 0,
+        left: 0,
+        height: 0,
+        width: 0,
+        margin: 0.25,
+        position: "absolute",
+      })}
+    />
+  );
+}
+
 function MainToolbar({
   debug,
   interactionState,
@@ -67,7 +93,7 @@ function MainToolbar({
   }, []);
   const longPressEvent = useLongPress(onLongPress);
 
-  const selectedPublishClickIconName = PublishClickIcons[activePublishClickType];
+  const selectedPublishClickIcon = PublishClickIcons[activePublishClickType];
 
   const selectPublishClickToolType = (type: PublishClickType) => {
     setActivePublishClickType(type);
@@ -87,7 +113,7 @@ function MainToolbar({
         <IconButton
           title={perspective ? "Switch to 2D camera" : "Switch to 3D camera"}
           data-text="MainToolbar-toggleCameraMode"
-          sx={{ color: perspective ? "info.main" : "inherit" }}
+          sx={{ ...IconStyle, color: perspective ? "info.main" : "inherit" }}
           onClick={onToggleCameraMode}
         >
           <Video3dIcon />
@@ -103,6 +129,7 @@ function MainToolbar({
           disabled={perspective}
           onClick={() => dispatch({ action: "select-tool", tool: "measure" })}
           sx={{
+            ...IconStyle,
             color:
               !perspective && interactionState.tool.name === "measure" ? "info.main" : "inherit",
             position: "relative",
@@ -141,29 +168,17 @@ function MainToolbar({
               aria-haspopup="true"
               aria-expanded={clickMenuExpanded ? "true" : undefined}
               disabled={perspective}
-              sx={(theme) => ({
+              sx={{
+                ...IconStyle,
                 position: "relative",
                 color:
                   !perspective && interactionState.tool.name === "publish-click"
                     ? "info.main"
                     : "inherit",
-
-                "&:after": {
-                  content: perspective ? "none" : "''",
-                  borderBottom: `6px solid ${
-                    perspective ? theme.palette.text.disabled : theme.palette.text.primary
-                  }`,
-                  borderRight: "6px solid transparent",
-                  bottom: 0,
-                  left: 0,
-                  height: 0,
-                  width: 0,
-                  margin: 0.25,
-                  position: "absolute",
-                },
-              })}
+              }}
             >
-              {selectedPublishClickIconName}
+              {selectedPublishClickIcon}
+              <ClickToExpandIndicator perspective={perspective} />
             </IconButton>
             <Menu
               id="publish-menu"
@@ -230,7 +245,7 @@ function MainToolbar({
         {process.env.NODE_ENV === "development" && (
           <IconButton
             title={debug ? "Disable debug" : "Enable debug"}
-            sx={{ color: debug ? "info.main" : "inherit" }}
+            sx={{ ...IconStyle, color: debug ? "info.main" : "inherit" }}
             onClick={onToggleDebug}
           >
             <BugReportIcon />
