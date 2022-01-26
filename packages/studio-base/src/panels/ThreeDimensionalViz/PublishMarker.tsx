@@ -40,7 +40,7 @@ export function PublishMarker({ points: { start, end, type } }: Props): JSX.Elem
         position: { x: 0, y: 0, z: 0 },
       },
       points: [start, end ?? start],
-      scale: { x: 0.5, y: 1.5, z: 1 },
+      scale: { x: 0.25, y: 0.5, z: 0.5 },
       color: colors[type],
       type: 0,
     };

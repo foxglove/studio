@@ -100,7 +100,7 @@ const publishSelector = (ctx: MessagePipelineContext) => ctx.publish;
 const setPublishersSelector = (ctx: MessagePipelineContext) => ctx.setPublishers;
 
 function normalizeEndpoint(a: Point, b: Point): Point {
-  const indicatorLength = 8;
+  const indicatorLength = 4;
   const delta = { x: b.x - a.x, y: b.y - a.y, z: b.z - a.z };
   const deltaLength = Math.hypot(delta.x, delta.y, delta.z);
   const factor = indicatorLength / deltaLength;
