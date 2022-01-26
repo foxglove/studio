@@ -4,6 +4,7 @@
 
 import RulerIcon from "@mdi/svg/svg/ruler.svg";
 import Video3dIcon from "@mdi/svg/svg/video-3d.svg";
+import { Settings } from "@mui/icons-material";
 import AddLocationIcon from "@mui/icons-material/AddLocation";
 import BugReportIcon from "@mui/icons-material/BugReport";
 import CheckIcon from "@mui/icons-material/Check";
@@ -19,13 +20,16 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { ReactElement, ReactNode, useCallback, useRef, useState } from "react";
+import { ReactElement, ReactNode, useCallback, useContext, useRef, useState } from "react";
 import { useLongPress } from "react-use";
 
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
+import PanelContext from "@foxglove/studio-base/components/PanelContext";
+import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import {
   InteractionStateProps,
   PublishClickType,
@@ -87,6 +91,9 @@ function MainToolbar({
   const [clickMenuExpanded, setClickMenuExpanded] = useState(false);
   const [activePublishClickType, setActivePublishClickType] = useState<PublishClickType>("point");
   const publickClickButtonRef = useRef<HTMLElement>(ReactNull);
+  const { setSelectedPanelIds } = useSelectedPanels();
+
+  const panelContext = useContext(PanelContext);
 
   const onLongPress = useCallback(() => {
     setClickMenuExpanded(true);
@@ -106,6 +113,15 @@ function MainToolbar({
       dispatch({ action: "select-tool", tool: "publish-click", type: activePublishClickType });
     }
   };
+
+  const { openPanelSettings } = useWorkspace();
+  const openSettings = useCallback(() => {
+    if (panelContext?.id != undefined) {
+      setSelectedPanelIds([panelContext.id]);
+      openPanelSettings();
+      setClickMenuExpanded(false);
+    }
+  }, [setSelectedPanelIds, openPanelSettings, panelContext?.id]);
 
   return (
     <Paper square={false} sx={{ pointerEvents: "auto" }}>
@@ -237,6 +253,14 @@ function MainToolbar({
                 ) : (
                   <Box width={20} height={20} />
                 )}
+              </MenuItem>
+              <MenuItem onClick={openSettings}>
+                <Settings />
+                <ListItemText
+                  primary="Settings..."
+                  primaryTypographyProps={{ variant: "body2" }}
+                  sx={{ marginX: 1 }}
+                />
               </MenuItem>
             </Menu>
           </Stack>
