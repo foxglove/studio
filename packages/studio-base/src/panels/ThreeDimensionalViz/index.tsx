@@ -409,21 +409,21 @@ const configSchema: PanelConfigSchema<ThreeDimensionalVizConfig> = [
   },
   { key: "clickToPublishGoalTopic", type: "text", title: "Click to publish goal topic" },
   { key: "clickToPublishPointTopic", type: "text", title: "Click to publish point topic" },
-  { key: "clickToPublishPoseTopic", type: "text", title: "Click to publish pose topic" },
+  { key: "clickToPublishPoseTopic", type: "text", title: "Click to publish pose estimate topic" },
   {
     key: "clickToPublishPoseXDeviation",
     type: "number",
-    title: "Click to publish pose topic X std Deviation",
+    title: "Pose estimate X std deviation",
   },
   {
     key: "clickToPublishPoseYDeviation",
     type: "number",
-    title: "Click to publish pose topic Y std Deviation",
+    title: "Pose estimate Y std deviation",
   },
   {
     key: "clickToPublishPoseThetaDeviation",
     type: "number",
-    title: "Click to publish pose topic Theta std Deviation",
+    title: "Pose estimate Theta std deviation",
   },
 ];
 
