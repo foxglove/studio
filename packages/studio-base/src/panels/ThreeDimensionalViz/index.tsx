@@ -408,6 +408,7 @@ const configSchema: PanelConfigSchema<ThreeDimensionalVizConfig> = [
     title: "Ignore <up_axis> in Collada meshes",
   },
   { key: "clickToPublishGoalTopic", type: "text", title: "Click to publish goal topic" },
+  { key: "clickToPublishGoalTopic", type: "text", title: "Click to publish pose topic" },
   { key: "clickToPublishPointTopic", type: "text", title: "Click to publish point topic" },
   { key: "clickToPublishPoseTopic", type: "text", title: "Click to publish pose estimate topic" },
   {

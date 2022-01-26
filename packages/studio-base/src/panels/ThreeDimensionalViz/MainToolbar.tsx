@@ -216,7 +216,7 @@ function MainToolbar({
               >
                 <GoalIcon />
                 <ListItemText
-                  primary="Publish goal"
+                  primary="Publish pose"
                   primaryTypographyProps={{ variant: "body2" }}
                   sx={{ marginX: 1 }}
                 />
