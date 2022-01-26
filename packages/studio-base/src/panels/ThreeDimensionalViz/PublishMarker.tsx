@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Lines, Spheres, Point } from "@foxglove/regl-worldview";
+import { Point, Arrows } from "@foxglove/regl-worldview";
 import { PublishClickType } from "@foxglove/studio-base/panels/ThreeDimensionalViz/InteractionState";
 
 type Props = {
@@ -22,62 +22,30 @@ type Props = {
   };
 };
 
-const sphereSize: number = 0.3;
-const lineSize: number = 0.1;
-
-const defaultSphere = Object.freeze({
-  type: 2,
-  action: 0,
-  scale: { x: sphereSize, y: sphereSize, z: 0.1 },
-  color: { r: 0, g: 1, b: 1, a: 1 },
-});
-const defaultPose = Object.freeze({ orientation: { x: 0, y: 0, z: 0, w: 1 } });
-
 const colors: Record<PublishClickType, { r: number; g: number; b: number; a: number }> = {
   pose: { r: 0, g: 1, b: 1, a: 1 },
   goal: { r: 1, g: 0, b: 1, a: 1 },
   point: { r: 1, g: 1, b: 0, a: 1 },
-};
+} as const;
 
 export function PublishMarker({ points: { start, end, type } }: Props): JSX.Element {
-  const spheres = [];
-  const lines = [];
+  const arrows = [];
 
   if (start) {
-    const startPoint = { ...start };
-
-    spheres.push({
-      ...defaultSphere,
+    const arrow = {
+      action: 0,
+      id: "_publish_click",
+      pose: {
+        orientation: { x: 0, y: 0, z: 0, w: 1 },
+        position: { x: 0, y: 0, z: 0 },
+      },
+      points: [start, end ?? start],
+      scale: { x: 0.5, y: 1.5, z: 1 },
       color: colors[type],
-      id: "_measure_start",
-      pose: { position: startPoint, ...defaultPose },
-    });
-
-    if (end) {
-      const endPoint = { ...end };
-      lines.push({
-        ...defaultSphere,
-        id: "_measure_line",
-        points: [start, end],
-        color: colors[type],
-        pose: { ...defaultPose, position: { x: 0, y: 0, z: 0 } },
-        scale: { x: lineSize, y: 1, z: 1 },
-        type: 4,
-      });
-
-      spheres.push({
-        ...defaultSphere,
-        id: "_measure_end",
-        color: colors[type],
-        pose: { position: endPoint, ...defaultPose },
-      });
-    }
+      type: 0,
+    };
+    arrows.push(arrow);
   }
 
-  return (
-    <>
-      {lines.length > 0 && <Lines>{lines}</Lines>}
-      {spheres.length > 0 && <Spheres>{spheres}</Spheres>}
-    </>
-  );
+  return <Arrows>{arrows}</Arrows>;
 }

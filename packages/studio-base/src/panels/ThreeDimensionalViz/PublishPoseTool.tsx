@@ -99,6 +99,18 @@ const DefaultTopics = {
 const publishSelector = (ctx: MessagePipelineContext) => ctx.publish;
 const setPublishersSelector = (ctx: MessagePipelineContext) => ctx.setPublishers;
 
+function normalizeEndpoint(a: Point, b: Point): Point {
+  const indicatorLength = 8;
+  const delta = { x: b.x - a.x, y: b.y - a.y, z: b.z - a.z };
+  const deltaLength = Math.hypot(delta.x, delta.y, delta.z);
+  const factor = indicatorLength / deltaLength;
+  return {
+    x: a.x + delta.x * factor,
+    y: a.y + delta.y * factor,
+    z: a.z + delta.z * factor,
+  };
+}
+
 export function PublishPoseTool(props: Props): ReactElement {
   const {
     addMouseEventHandler,
@@ -159,15 +171,17 @@ export function PublishPoseTool(props: Props): ReactElement {
 
         dispatch({ action: "select-tool", tool: "idle" });
       } else if (publish?.type === "goal" && publish?.start && publish?.end) {
-        const message = makeGoalMessage(topics.goal, publish.start, publish.end, frameId);
+        const normalEnd = normalizeEndpoint(publish.start, publish.end);
+        const message = makeGoalMessage(topics.goal, publish.start, normalEnd, frameId);
         publishMessage(message);
 
         dispatch({ action: "select-tool", tool: "idle" });
       } else if (publish?.type === "pose" && publish?.start && publish?.end) {
+        const normalEnd = normalizeEndpoint(publish.start, publish.end);
         const message = makePoseMessage(
           topics.pose,
           publish.start,
-          publish.end,
+          normalEnd,
           frameId,
           config.clickToPublishPoseXDeviation,
           config.clickToPublishPoseYDeviation,
@@ -202,7 +216,8 @@ export function PublishPoseTool(props: Props): ReactElement {
 
       const point = reglClickToPoint(click);
       if (point) {
-        dispatch({ action: "publish-click-update", point });
+        const normalPoint = normalizeEndpoint(publish.start, point);
+        dispatch({ action: "publish-click-update", point: normalPoint });
       }
     },
     [dispatch, publish],
