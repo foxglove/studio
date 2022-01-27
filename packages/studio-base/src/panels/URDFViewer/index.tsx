@@ -201,7 +201,7 @@ function URDFViewer({ config, saveConfig }: Props) {
   }, [assets, robotDescriptionAsset]);
 
   return (
-    <Stack overflow="hidden">
+    <Stack flex="auto" overflow="hidden">
       <PanelToolbar helpContent={helpContent}>
         <Stack direction="row" flexGrow={1} alignItems="baseline">
           <Toggle
