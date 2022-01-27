@@ -279,10 +279,7 @@ export default function Layout({
   const [hoveredMarkerMatchers, setHoveredMarkerMatchers] = useState<MarkerMatcher[]>([]);
   const setHoveredMarkerMatchersDebounced = useDebouncedCallback(setHoveredMarkerMatchers, 100);
 
-  const isDrawing = useMemo(
-    () => interactionState.tool.name !== "idle",
-    [interactionState.tool.name],
-  );
+  const isDrawing = useMemo(() => interactionState.tool !== "idle", [interactionState.tool]);
 
   const { gridBuilder, sceneBuilder, transformsBuilder } = useMemo(
     () => ({

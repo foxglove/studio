@@ -29,13 +29,16 @@ import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import {
-  InteractionStateProps,
-  PublishClickType,
+  InteractionState,
+  InteractionStateDispatch,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/InteractionState";
+import { PublishClickType } from "@foxglove/studio-base/panels/ThreeDimensionalViz/PublishClickTool";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 
-type Props = InteractionStateProps & {
+type Props = {
   debug: boolean;
+  interactionState: InteractionState;
+  interactionStateDispatch: InteractionStateDispatch;
   onToggleCameraMode: () => void;
   onToggleDebug: () => void;
   perspective: boolean;
@@ -177,7 +180,7 @@ function MainToolbar({
           title={
             perspective
               ? "Switch to 2D camera to measure distance"
-              : interactionState.tool.name === "measure"
+              : interactionState.tool === "measure"
               ? "Cancel measuring"
               : "Measure distance"
           }
@@ -185,12 +188,11 @@ function MainToolbar({
           onClick={() => dispatch({ action: "select-tool", tool: "measure" })}
           sx={{
             ...IconStyle,
-            color:
-              !perspective && interactionState.tool.name === "measure" ? "info.main" : "inherit",
+            color: !perspective && interactionState.tool === "measure" ? "info.main" : "inherit",
             position: "relative",
           }}
         >
-          {interactionState.measure?.distance != undefined && (
+          {interactionState.measure?.state === "finish" && (
             <Typography
               sx={{
                 color: "white",
@@ -212,9 +214,7 @@ function MainToolbar({
             <IconButton
               {...longPressEvent}
               title={
-                interactionState.tool.name === "publish-click"
-                  ? "Click to cancel"
-                  : "Click to publish"
+                interactionState.tool === "publish-click" ? "Click to cancel" : "Click to publish"
               }
               ref={(r) => (publickClickButtonRef.current = r)}
               onClick={selectPublishClickTool}
@@ -227,7 +227,7 @@ function MainToolbar({
                 ...IconStyle,
                 position: "relative",
                 color:
-                  !perspective && interactionState.tool.name === "publish-click"
+                  !perspective && interactionState.tool === "publish-click"
                     ? "info.main"
                     : "inherit",
               }}

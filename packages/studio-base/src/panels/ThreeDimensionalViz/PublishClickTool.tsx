@@ -23,7 +23,13 @@ import {
   makeCovarianceArray,
 } from "@foxglove/studio-base/util/geometry";
 
-type Props = InteractionStateProps &
+export type PublishClickType = "pose" | "goal" | "point";
+
+export type PublishClickState =
+  | { state: "start"; start?: Point; end?: Point; type: PublishClickType }
+  | { state: "finish"; start: Point; end: Point; type: PublishClickType };
+
+type Props = InteractionStateProps<"publish"> &
   MouseEventHandlerProps & {
     config: ThreeDimensionalVizConfig;
     frameId: string;
@@ -40,7 +46,7 @@ function makePointMessage(topic: string, point: Point, frameId: string) {
   };
 }
 
-function makeGoalMessage(topic: string, start: Point, end: Point, frameId: string) {
+function makePoseMessage(topic: string, start: Point, end: Point, frameId: string) {
   const time = fromDate(new Date());
   return {
     topic,
@@ -54,7 +60,7 @@ function makeGoalMessage(topic: string, start: Point, end: Point, frameId: strin
   };
 }
 
-function makePoseMessage(
+function makePoseEstimateMessage(
   topic: string,
   start: Point,
   end: Point,
@@ -100,7 +106,7 @@ const publishSelector = (ctx: MessagePipelineContext) => ctx.publish;
 const setPublishersSelector = (ctx: MessagePipelineContext) => ctx.setPublishers;
 
 function normalizeEndpoint(a: Point, b: Point): Point {
-  const indicatorLength = 4;
+  const indicatorLength = 2;
   const delta = { x: b.x - a.x, y: b.y - a.y, z: b.z - a.z };
   const deltaLength = Math.hypot(delta.x, delta.y, delta.z);
   const factor = indicatorLength / deltaLength;
@@ -111,13 +117,13 @@ function normalizeEndpoint(a: Point, b: Point): Point {
   };
 }
 
-export function PublishPoseTool(props: Props): ReactElement {
+export function PublishClickTool(props: Props): ReactElement {
   const {
     addMouseEventHandler,
     config,
     frameId,
-    interactionState: { publish },
     interactionStateDispatch: dispatch,
+    publish,
     removeMouseEventHandler,
   } = props;
 
@@ -161,24 +167,29 @@ export function PublishPoseTool(props: Props): ReactElement {
   const upHandler = useCallback(
     (_ev: React.MouseEvent, click: ReglClickInfo) => {
       const point = reglClickToPoint(click);
-      if (!point) {
+      if (!point || !publish) {
         return;
       }
 
-      if (publish?.type === "point") {
+      if (publish.type === "point") {
         const message = makePointMessage(topics.point, point, frameId);
         publishMessage(message);
 
         dispatch({ action: "select-tool", tool: "idle" });
-      } else if (publish?.type === "goal" && publish?.start && publish?.end) {
+      } else if (publish.state === "start") {
+        dispatch({
+          action: "publish-click-update",
+          state: { ...publish, state: "finish", start: point, end: point },
+        });
+      } else if (publish.type === "goal") {
         const normalEnd = normalizeEndpoint(publish.start, publish.end);
-        const message = makeGoalMessage(topics.goal, publish.start, normalEnd, frameId);
+        const message = makePoseMessage(topics.goal, publish.start, normalEnd, frameId);
         publishMessage(message);
 
         dispatch({ action: "select-tool", tool: "idle" });
-      } else if (publish?.type === "pose" && publish?.start && publish?.end) {
+      } else if (publish.type === "pose") {
         const normalEnd = normalizeEndpoint(publish.start, publish.end);
-        const message = makePoseMessage(
+        const message = makePoseEstimateMessage(
           topics.pose,
           publish.start,
           normalEnd,
@@ -191,7 +202,7 @@ export function PublishPoseTool(props: Props): ReactElement {
 
         dispatch({ action: "select-tool", tool: "idle" });
       } else {
-        dispatch({ action: "publish-click-start", point });
+        dispatch({ action: "publish-click-update", state: { ...publish, state: "finish" } });
       }
     },
     [
@@ -210,14 +221,16 @@ export function PublishPoseTool(props: Props): ReactElement {
 
   const moveHandler = useCallback(
     (_ev: React.MouseEvent, click: ReglClickInfo) => {
-      if (!publish?.start) {
+      const point = reglClickToPoint(click);
+      if (!point || !publish) {
         return;
       }
 
-      const point = reglClickToPoint(click);
-      if (point) {
+      if (publish.state === "start") {
+        dispatch({ action: "publish-click-update", state: { ...publish, start: point } });
+      } else {
         const normalPoint = normalizeEndpoint(publish.start, point);
-        dispatch({ action: "publish-click-update", point: normalPoint });
+        dispatch({ action: "publish-click-update", state: { ...publish, end: normalPoint } });
       }
     },
     [dispatch, publish],

@@ -19,15 +19,18 @@ import { Time } from "@foxglove/rostime";
 import CameraInfo from "@foxglove/studio-base/panels/ThreeDimensionalViz/CameraInfo";
 import Crosshair from "@foxglove/studio-base/panels/ThreeDimensionalViz/Crosshair";
 import FollowTFControl from "@foxglove/studio-base/panels/ThreeDimensionalViz/FollowTFControl";
-import { InteractionStateProps } from "@foxglove/studio-base/panels/ThreeDimensionalViz/InteractionState";
+import {
+  InteractionState,
+  InteractionStateDispatch,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/InteractionState";
 import Interactions from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions";
 import { TabType } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/Interactions";
 import { LayoutToolbarSharedProps } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Layout";
 import MainToolbar from "@foxglove/studio-base/panels/ThreeDimensionalViz/MainToolbar";
 import MeasureMarker from "@foxglove/studio-base/panels/ThreeDimensionalViz/MeasureMarker";
 import { MeasuringTool } from "@foxglove/studio-base/panels/ThreeDimensionalViz/MeasuringTool";
+import { PublishClickTool } from "@foxglove/studio-base/panels/ThreeDimensionalViz/PublishClickTool";
 import { PublishMarker } from "@foxglove/studio-base/panels/ThreeDimensionalViz/PublishMarker";
-import { PublishPoseTool } from "@foxglove/studio-base/panels/ThreeDimensionalViz/PublishPoseTool";
 import SearchText, {
   SearchTextProps,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/SearchText";
@@ -36,8 +39,7 @@ import {
   ThreeDimensionalVizConfig,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
 
-type Props = InteractionStateProps &
-  LayoutToolbarSharedProps &
+type Props = LayoutToolbarSharedProps &
   MouseEventHandlerProps &
   SearchTextProps & {
     autoSyncCameraState: boolean;
@@ -45,6 +47,8 @@ type Props = InteractionStateProps &
     currentTime: Time;
     debug: boolean;
     fixedFrameId?: string;
+    interactionState: InteractionState;
+    interactionStateDispatch: InteractionStateDispatch;
     interactionsTabType?: TabType;
     onToggleCameraMode: () => void;
     onToggleDebug: () => void;
@@ -156,25 +160,27 @@ function LayoutToolbar({
       {cameraState.perspective === false && showCrosshair && (
         <Crosshair cameraState={cameraState} />
       )}
-      {interactionState.tool.name === "measure" && (
+      {interactionState.tool === "measure" && (
         <MeasuringTool
           addMouseEventHandler={addMouseEventHandler}
-          interactionState={interactionState}
           interactionStateDispatch={interactionStateDispatch}
+          measure={interactionState.measure}
           removeMouseEventHandler={removeMouseEventHandler}
         />
       )}
-      {interactionState.tool.name === "publish-click" && fixedFrameId && (
-        <PublishPoseTool
+      {interactionState.tool === "publish-click" && fixedFrameId && (
+        <PublishClickTool
           addMouseEventHandler={addMouseEventHandler}
           config={config}
-          frameId={fixedFrameId}
-          interactionState={interactionState}
           interactionStateDispatch={interactionStateDispatch}
+          frameId={fixedFrameId}
+          publish={interactionState.publish}
           removeMouseEventHandler={removeMouseEventHandler}
         />
       )}
-      {interactionState.measure != undefined && <MeasureMarker points={interactionState.measure} />}
+      {interactionState.measure != undefined && (
+        <MeasureMarker measure={interactionState.measure} />
+      )}
       {interactionState.publish != undefined && (
         <PublishMarker publish={interactionState.publish} />
       )}

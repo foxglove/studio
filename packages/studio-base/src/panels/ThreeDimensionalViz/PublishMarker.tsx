@@ -11,41 +11,57 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Point, Arrows } from "@foxglove/regl-worldview";
-import { PublishClickType } from "@foxglove/studio-base/panels/ThreeDimensionalViz/InteractionState";
+import { ReactElement } from "react";
 
-type Props = {
-  points: {
-    start?: Point;
-    end?: Point;
-    type: PublishClickType;
-  };
-};
+import { Arrows, Spheres } from "@foxglove/regl-worldview";
+import {
+  PublishClickState,
+  PublishClickType,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/PublishClickTool";
 
-const colors: Record<PublishClickType, { r: number; g: number; b: number; a: number }> = {
+const Colors: Record<PublishClickType, { r: number; g: number; b: number; a: number }> = {
   pose: { r: 0, g: 1, b: 1, a: 1 },
   goal: { r: 1, g: 0, b: 1, a: 1 },
   point: { r: 1, g: 1, b: 0, a: 1 },
 } as const;
 
-export function PublishMarker({ points: { start, end, type } }: Props): JSX.Element {
+export function PublishMarker({ publish }: { publish: PublishClickState }): ReactElement {
   const arrows = [];
+  const spheres = [];
 
-  if (start) {
-    const arrow = {
+  if (publish.type === "point") {
+    if (publish.start) {
+      spheres.push({
+        action: 0,
+        color: Colors[publish.type],
+        id: "_publish-click-sphere",
+        pose: {
+          orientation: { x: 0, y: 0, z: 0, w: 1 },
+          position: publish.start,
+        },
+        scale: { x: 0.3, y: 0.3, z: 0.1 },
+        type: 2,
+      });
+    }
+  } else if (publish.start && publish.end) {
+    arrows.push({
       action: 0,
-      id: "_publish_click",
+      color: Colors[publish.type],
+      id: "_publish-click-arrow",
+      points: [publish.start, publish.end],
       pose: {
         orientation: { x: 0, y: 0, z: 0, w: 1 },
         position: { x: 0, y: 0, z: 0 },
       },
-      points: [start, end ?? start],
-      scale: { x: 0.25, y: 0.5, z: 0.5 },
-      color: colors[type],
+      scale: { x: 0.125, y: 0.25, z: 0.25 },
       type: 0,
-    };
-    arrows.push(arrow);
+    });
   }
 
-  return <Arrows>{arrows}</Arrows>;
+  return (
+    <>
+      {spheres.length > 0 && <Spheres>{spheres}</Spheres>}
+      {arrows.length > 0 && <Arrows>{arrows}</Arrows>}
+    </>
+  );
 }

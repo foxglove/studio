@@ -5,40 +5,39 @@
 import { Draft, Immutable } from "immer";
 import { Dispatch } from "react";
 
-import { distanceBetweenPoints, Point } from "@foxglove/studio-base/util/geometry";
+import { MeasuringState } from "@foxglove/studio-base/panels/ThreeDimensionalViz/MeasuringTool";
+import {
+  PublishClickState,
+  PublishClickType,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/PublishClickTool";
 
-export type PublishClickType = "pose" | "goal" | "point";
+type InteractionTool = "idle" | "measure" | "publish-click";
 
-type InteractionToolState = { name: "idle" } | { name: "measure" } | { name: "publish-click" };
-
-type InteractionState = Immutable<{
-  measure: { start?: Point; end?: Point; distance?: number };
-  publish: undefined | { start?: Point; end?: Point; type: PublishClickType };
-  tool: InteractionToolState;
+export type InteractionState = Immutable<{
+  measure: undefined | MeasuringState;
+  publish: undefined | PublishClickState;
+  tool: InteractionTool;
 }>;
 
+export type InteractionStateDispatch = Dispatch<InteractionStateAction>;
+
 type InteractionStateAction =
-  | { action: "measure-click"; point: Point }
-  | { action: "measure-update"; point: Point }
-  | { action: "publish-click-start"; point: Point }
-  | { action: "publish-click-update"; point: Point }
+  | { action: "measure-update"; state: MeasuringState }
+  | { action: "publish-click-update"; state: PublishClickState }
   | { action: "reset" }
   | { action: "select-tool"; tool: "idle" }
   | { action: "select-tool"; tool: "measure" }
   | { action: "select-tool"; tool: "publish-click"; type: PublishClickType };
 
-type InteractionStateDispatch = Dispatch<InteractionStateAction>;
-
-export type InteractionStateProps = {
-  interactionState: Readonly<InteractionState>;
+export type InteractionStateProps<K extends keyof InteractionState> = Pick<InteractionState, K> & {
   interactionStateDispatch: InteractionStateDispatch;
 };
 
 export function makeInitialInteractionState(): InteractionState {
   return {
-    measure: {},
+    measure: undefined,
     publish: undefined,
-    tool: { name: "idle" },
+    tool: "idle",
   };
 }
 
@@ -50,47 +49,32 @@ export function interactionStateReducer(
     case "reset":
       return makeInitialInteractionState();
     case "select-tool":
-      if (action.tool === draft.tool.name || action.tool === "idle") {
+      if (action.tool === "idle") {
         draft.publish = undefined;
-        draft.tool = { name: "idle" };
+        draft.tool = "idle";
       } else if (action.tool === "measure") {
-        draft.measure = {};
-        draft.tool = { name: action.tool };
+        if (draft.tool === "measure") {
+          draft.tool = "idle";
+        } else {
+          draft.measure = { state: "start" };
+          draft.tool = "measure";
+        }
       } else if (action.tool === "publish-click") {
-        draft.publish = { type: action.type };
-        draft.tool = { name: action.tool };
-      }
-      break;
-
-    case "measure-click":
-      draft.measure.end = action.point;
-      if (draft.measure.start) {
-        draft.measure.distance = distanceBetweenPoints(draft.measure.start, action.point);
+        if (draft.tool === "publish-click" && draft.publish?.type === action.type) {
+          draft.tool = "idle";
+        } else {
+          draft.publish = { state: "start", type: action.type };
+          draft.tool = "publish-click";
+        }
       }
       break;
 
     case "measure-update":
-      if (draft.measure.end) {
-        draft.measure.end = action.point;
-        if (draft.measure.start) {
-          draft.measure.distance = distanceBetweenPoints(draft.measure.start, action.point);
-        }
-      } else {
-        draft.measure.start = action.point;
-      }
-      break;
-
-    case "publish-click-start":
-      if (draft.publish) {
-        draft.publish.start = action.point;
-      }
+      draft.measure = action.state;
       break;
 
     case "publish-click-update":
-      if (draft.publish) {
-        draft.publish.end = action.point;
-      }
-      break;
+      draft.publish = action.state;
   }
 
   return draft;

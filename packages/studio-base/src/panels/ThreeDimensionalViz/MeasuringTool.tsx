@@ -7,29 +7,40 @@ import { ReactElement, useCallback, useEffect } from "react";
 import { ReglClickInfo } from "@foxglove/regl-worldview";
 import { InteractionStateProps } from "@foxglove/studio-base/panels/ThreeDimensionalViz/InteractionState";
 import { MouseEventHandlerProps } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
-import { reglClickToPoint } from "@foxglove/studio-base/util/geometry";
+import {
+  distanceBetweenPoints,
+  Point,
+  reglClickToPoint,
+} from "@foxglove/studio-base/util/geometry";
 
-type Props = InteractionStateProps & MouseEventHandlerProps;
+type Props = InteractionStateProps<"measure"> & MouseEventHandlerProps;
+
+export type MeasuringState =
+  | { state: "start"; start?: Point }
+  | { state: "finish"; start: Point; end: Point; distance: number };
 
 export function MeasuringTool(props: Props): ReactElement {
   const {
     addMouseEventHandler,
     removeMouseEventHandler,
-    interactionState: { measure },
+    measure,
     interactionStateDispatch: dispatch,
   } = props;
 
   const upHandler = useCallback(
     (_ev: React.MouseEvent, click: ReglClickInfo) => {
       const point = reglClickToPoint(click);
-      if (!point) {
+      if (!point || !measure) {
         return;
       }
 
-      if (measure?.end) {
-        dispatch({ action: "select-tool", tool: "idle" });
+      if (measure.state === "start") {
+        dispatch({
+          action: "measure-update",
+          state: { state: "finish", start: point, end: point, distance: 0 },
+        });
       } else {
-        dispatch({ action: "measure-click", point });
+        dispatch({ action: "select-tool", tool: "idle" });
       }
     },
     [dispatch, measure],
@@ -38,13 +49,18 @@ export function MeasuringTool(props: Props): ReactElement {
   const moveHandler = useCallback(
     (_ev: React.MouseEvent, click: ReglClickInfo) => {
       const point = reglClickToPoint(click);
-      if (!point) {
+      if (!point || !measure) {
         return;
       }
 
-      dispatch({ action: "measure-update", point });
+      if (measure.state === "start") {
+        dispatch({ action: "measure-update", state: { state: "start", start: point } });
+      } else {
+        const distance = distanceBetweenPoints(measure.start, point);
+        dispatch({ action: "measure-update", state: { ...measure, end: point, distance } });
+      }
     },
-    [dispatch],
+    [dispatch, measure],
   );
 
   useEffect(() => {
