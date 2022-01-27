@@ -95,12 +95,12 @@ function UncontrolledChildToggleStory({ defaultIsOpen }: { defaultIsOpen?: boole
   const [isOpen, setIsOpen] = useState(defaultIsOpen ?? false);
   const icon = isOpen ? <MinusCircleIcon /> : <PlusCircleIcon />;
   return (
-    <div style={{ margin: MARGIN, border: "1px solid gray" }}>
+    <Box margin={MARGIN} border="1px solid gray">
       <ChildToggle position="right" onToggle={setIsOpen} defaultIsOpen={defaultIsOpen}>
         <Icon>{icon}</Icon>
         <Block>this opens right-aligned of the icon</Block>
       </ChildToggle>
-    </div>
+    </Box>
   );
 }
 storiesOf("components/ChildToggle", module)
