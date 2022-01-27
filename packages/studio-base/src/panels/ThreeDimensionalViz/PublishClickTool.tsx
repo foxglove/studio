@@ -4,6 +4,7 @@
 
 import { ReactElement, useCallback, useEffect, useMemo } from "react";
 
+import Logger from "@foxglove/log";
 import { ReglClickInfo } from "@foxglove/regl-worldview";
 import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
 import { fromDate } from "@foxglove/rostime";
@@ -16,12 +17,15 @@ import {
   MouseEventHandlerProps,
   ThreeDimensionalVizConfig,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
+import { PublishPayload } from "@foxglove/studio-base/players/types";
 import {
   reglClickToPoint,
   Point,
   quaternionFromPoints,
   makeCovarianceArray,
 } from "@foxglove/studio-base/util/geometry";
+
+const log = Logger.getLogger(__filename);
 
 export type PublishClickType = "pose" | "goal" | "point";
 
@@ -130,6 +134,17 @@ export function PublishClickTool(props: Props): ReactElement {
   const publishMessage = useMessagePipeline(publishSelector);
   const setPublishers = useMessagePipeline(setPublishersSelector);
 
+  const safePublishMessage = useCallback(
+    (message: PublishPayload) => {
+      try {
+        publishMessage(message);
+      } catch (error) {
+        log.info(error);
+      }
+    },
+    [publishMessage],
+  );
+
   const topics = useMemo(() => {
     return {
       goal: config.clickToPublishGoalTopic ?? DefaultTopics.goal,
@@ -173,7 +188,7 @@ export function PublishClickTool(props: Props): ReactElement {
 
       if (publish.type === "point") {
         const message = makePointMessage(topics.point, point, frameId);
-        publishMessage(message);
+        safePublishMessage(message);
 
         dispatch({ action: "select-tool", tool: "idle" });
       } else if (publish.state === "start") {
@@ -184,7 +199,7 @@ export function PublishClickTool(props: Props): ReactElement {
       } else if (publish.type === "goal") {
         const normalEnd = normalizeEndpoint(publish.start, publish.end);
         const message = makePoseMessage(topics.goal, publish.start, normalEnd, frameId);
-        publishMessage(message);
+        safePublishMessage(message);
 
         dispatch({ action: "select-tool", tool: "idle" });
       } else if (publish.type === "pose") {
@@ -198,7 +213,7 @@ export function PublishClickTool(props: Props): ReactElement {
           config.clickToPublishPoseYDeviation,
           config.clickToPublishPoseThetaDeviation,
         );
-        publishMessage(message);
+        safePublishMessage(message);
 
         dispatch({ action: "select-tool", tool: "idle" });
       } else {
@@ -212,7 +227,7 @@ export function PublishClickTool(props: Props): ReactElement {
       dispatch,
       frameId,
       publish,
-      publishMessage,
+      safePublishMessage,
       topics.goal,
       topics.point,
       topics.pose,
