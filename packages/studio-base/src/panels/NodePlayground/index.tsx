@@ -265,14 +265,7 @@ function NodePlayground(props: Props) {
           addNewNode={addNewNode}
         />
         <Stack flexGrow={1} height="100%" overflow="hidden">
-          <Stack
-            direction="row"
-            flex="auto"
-            flexGrow={0}
-            alignItems="flex-start"
-            bgcolor={colors.DARK1}
-            justifyContent="center"
-          >
+          <Stack direction="row" alignItems="flex-start" bgcolor={colors.DARK1}>
             {scriptBackStack.length > 1 && (
               <Icon
                 size="large"
