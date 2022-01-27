@@ -15,7 +15,6 @@ import { Stack } from "@mui/material";
 import { storiesOf } from "@storybook/react";
 import styled from "styled-components";
 
-import Flex from "@foxglove/studio-base/components/Flex";
 import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { decodeMarker } from "@foxglove/studio-base/panels/ThreeDimensionalViz/commands/PointClouds/decodeMarker";
@@ -177,13 +176,13 @@ function PanelSetupWithData({
           }}
         >
           <p>{title}</p>
-          <Flex>
+          <Stack direction="row" flex="auto">
             <Stack flex={1}>
               {showGlobalVariables && <GlobalVariablesDisplay />}
               {showLinkedGlobalVariables && <LinkedGlobalVariablesDisplay />}
             </Stack>
             {children}
-          </Flex>
+          </Stack>
         </div>
       </MockPanelContextProvider>
     </PanelSetup>

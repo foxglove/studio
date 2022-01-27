@@ -28,7 +28,6 @@ import { useDataSourceInfo, useMessagesByTopic } from "@foxglove/studio-base/Pan
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
-import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
 import useGetItemStringWithTimezone from "@foxglove/studio-base/components/JsonTree/useGetItemStringWithTimezone";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
@@ -600,7 +599,7 @@ function RawMessages(props: Props) {
             inputStyle={{ height: 20 }}
           />
           {diffEnabled && (
-            <Flex>
+            <Stack direction="row" flex="auto">
               <Tooltip contents="Diff method" placement="top">
                 <>
                   <Dropdown
@@ -627,7 +626,7 @@ function RawMessages(props: Props) {
                   {...(topic ? { prioritizedDatatype: topic.datatype } : {})}
                 />
               ) : undefined}
-            </Flex>
+            </Stack>
           )}
         </div>
       </PanelToolbar>

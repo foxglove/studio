@@ -17,7 +17,6 @@ import { MosaicNode } from "react-mosaic-component";
 import styled from "styled-components";
 
 import { EmptyPanelLayout } from "@foxglove/studio-base/components/EmptyPanelLayout";
-import Flex from "@foxglove/studio-base/components/Flex";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import { UnconnectedPanelLayout } from "@foxglove/studio-base/components/PanelLayout";
@@ -115,7 +114,7 @@ function Tab({ config, saveConfig }: Props) {
         activeTabIdx={activeTabIdx}
         setDraggingTabState={setDraggingTabState}
       />
-      <Flex style={{ position: "relative" }} clip>
+      <Stack direction="row" flex="auto" overflow="hidden" position="relative">
         {activeLayout != undefined ? (
           <TabDndContext.Provider value={{ preventTabDrop }}>
             <UnconnectedPanelLayout
@@ -128,7 +127,7 @@ function Tab({ config, saveConfig }: Props) {
           <EmptyPanelLayout tabId={panelId} />
         )}
         {preventTabDrop && <SPanelCover />}
-      </Flex>
+      </Stack>
     </Stack>
   );
 }

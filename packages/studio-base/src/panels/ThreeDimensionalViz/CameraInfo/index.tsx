@@ -20,7 +20,6 @@ import styled from "styled-components";
 import { CameraState, cameraStateSelectors, Vec3 } from "@foxglove/regl-worldview";
 import Button from "@foxglove/studio-base/components/Button";
 import ExpandingToolbar, { ToolGroup } from "@foxglove/studio-base/components/ExpandingToolbar";
-import Flex from "@foxglove/studio-base/components/Flex";
 import JsonInput from "@foxglove/studio-base/components/JsonInput";
 import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
@@ -154,7 +153,7 @@ export default function CameraInfo({
     >
       <ToolGroup name={CAMERA_TAB_TYPE}>
         <>
-          <Flex row reverse style={{ padding: "4px 4px 0" }}>
+          <Stack direction="row-reverse" paddingTop={0.5} paddingRight={0.5}>
             <Button
               className={styles.button}
               tooltip="Copy cameraState"
@@ -184,7 +183,7 @@ export default function CameraInfo({
             >
               Sync
             </Button>
-          </Flex>
+          </Stack>
           <Stack flex="auto" minWidth={DEFAULT_CAMERA_INFO_WIDTH} padding={1}>
             {edit && !isPlaying ? (
               <JsonInput

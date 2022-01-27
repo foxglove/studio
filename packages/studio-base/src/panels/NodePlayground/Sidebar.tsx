@@ -19,7 +19,6 @@ import { Stack } from "@mui/material";
 import * as monacoApi from "monaco-editor/esm/vs/editor/editor.api";
 import styled from "styled-components";
 
-import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
 import { Explorer } from "@foxglove/studio-base/panels/NodePlayground";
 import TemplateIcon from "@foxglove/studio-base/panels/NodePlayground/assets/file-document-edit.svg";
@@ -144,19 +143,19 @@ const SidebarTitle = ({
   tooltip?: string;
   collapse: () => void;
 }) => (
-  <Flex row style={{ alignItems: "center", color: colors.DARK9, padding: "5px" }}>
+  <Stack direction="row" alignItems="center" color={colors.DARK9} padding={0.625}>
     <h3>{title}</h3>
     {tooltip && (
       <Icon style={{ cursor: "unset", marginLeft: "5px" }} size="xsmall" tooltip={tooltip}>
         <HelpCircleIcon />
       </Icon>
     )}
-    <div style={{ display: "flex", justifyContent: "flex-end", flexGrow: 1 }}>
+    <Stack direction="row" justifyContent="flex-end" flex="auto">
       <Icon onClick={collapse} size="medium" tooltip={"collapse"}>
         <ArrowLeftBoldIcon />
       </Icon>
-    </div>
-  </Flex>
+    </Stack>
+  </Stack>
 );
 
 const Sidebar = ({
