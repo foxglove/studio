@@ -166,7 +166,7 @@ function MainToolbar({
   }, [setSelectedPanelIds, openPanelSettings, panelContext?.id]);
 
   return (
-    <Paper square={false} sx={{ pointerEvents: "auto" }}>
+    <Paper square={false} elevation={4} sx={{ pointerEvents: "auto" }}>
       <Stack alignItems="flex-end" flexGrow={0} flexShrink={0}>
         <IconButton
           title={perspective ? "Switch to 2D camera" : "Switch to 3D camera"}

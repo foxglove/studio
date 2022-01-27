@@ -197,7 +197,7 @@ const FollowTFControl = memo<Props>(function FollowTFControl(props: Props) {
   const active = useMemo(() => transforms.frames().size > 0, [transforms]);
 
   return (
-    <Paper square={false} sx={{ pointerEvents: "auto" }}>
+    <Paper square={false} elevation={4} sx={{ pointerEvents: "auto" }}>
       <Stack
         direction="row"
         flexGrow={1}

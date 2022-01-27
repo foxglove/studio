@@ -81,7 +81,7 @@ export default function ExpandingToolbar<T extends string>({
     });
 
     return (
-      <Paper square={false}>
+      <Paper square={false} elevation={4}>
         {expandingToolbarButton.tooltip}
         <IconButton
           checked={checked}
@@ -115,7 +115,7 @@ export default function ExpandingToolbar<T extends string>({
   });
 
   return (
-    <Paper square={false} sx={{ pointerEvents: "auto" }}>
+    <Paper square={false} elevation={4} sx={{ pointerEvents: "auto" }}>
       <Stack
         data-test={dataTest}
         sx={{

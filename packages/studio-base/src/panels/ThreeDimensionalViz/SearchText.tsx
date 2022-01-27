@@ -292,7 +292,7 @@ const SearchText = React.memo<SearchTextComponentProps>(function SearchText({
 
   if (!searchTextOpen) {
     return (
-      <Paper square={false}>
+      <Paper square={false} elevation={4}>
         {searchButton.tooltip}
         <IconButton
           elementRef={searchButton.ref}
@@ -315,7 +315,7 @@ const SearchText = React.memo<SearchTextComponentProps>(function SearchText({
   }
 
   return (
-    <Paper square={false} sx={{ pointerEvents: "auto" }}>
+    <Paper square={false} elevation={4} sx={{ pointerEvents: "auto" }}>
       <Stack
         direction="row"
         alignItems="center"
