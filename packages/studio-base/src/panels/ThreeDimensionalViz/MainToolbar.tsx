@@ -78,6 +78,20 @@ function ClickToExpandIndicator({ perspective }: { perspective: boolean }): Reac
   );
 }
 
+function PopupMenuItemLabel({ text }: { text: string }): ReactElement {
+  return (
+    <ListItemText
+      primary={text}
+      primaryTypographyProps={{ variant: "body2" }}
+      sx={{ marginX: 1 }}
+    />
+  );
+}
+
+function PopupMenuItemCheckbox({ checked }: { checked: boolean }): ReactElement {
+  return <CheckIcon sx={{ visibility: checked ? "visible" : "hidden" }} />;
+}
+
 function MainToolbar({
   debug,
   interactionState,
@@ -199,14 +213,8 @@ function MainToolbar({
             <Menu
               id="publish-menu"
               anchorEl={publickClickButtonRef.current}
-              anchorOrigin={{
-                vertical: "bottom",
-                horizontal: "left",
-              }}
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
+              anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
               sx={{ transform: "translateY(-8px) translateX(-4px)" }}
               open={clickMenuExpanded}
               onClose={() => setClickMenuExpanded(false)}
@@ -219,48 +227,28 @@ function MainToolbar({
                 onClick={() => selectPublishClickToolType("pose")}
               >
                 <FlagIcon />
-                <ListItemText
-                  primary="Publish pose estimate"
-                  primaryTypographyProps={{ variant: "body2" }}
-                  sx={{ marginX: 1 }}
-                />
-                {activePublishClickType === "pose" ? <CheckIcon /> : <Box width={20} height={20} />}
+                <PopupMenuItemLabel text="Publish pose estimate" />
+                <PopupMenuItemCheckbox checked={activePublishClickType === "pose"} />
               </MenuItem>
               <MenuItem
                 selected={activePublishClickType === "goal"}
                 onClick={() => selectPublishClickToolType("goal")}
               >
                 <GoalIcon />
-                <ListItemText
-                  primary="Publish pose"
-                  primaryTypographyProps={{ variant: "body2" }}
-                  sx={{ marginX: 1 }}
-                />
-                {activePublishClickType === "goal" ? <CheckIcon /> : <Box width={20} height={20} />}
+                <PopupMenuItemLabel text="Publish pose" />
+                <PopupMenuItemCheckbox checked={activePublishClickType === "goal"} />
               </MenuItem>
               <MenuItem
                 selected={activePublishClickType === "point"}
                 onClick={() => selectPublishClickToolType("point")}
               >
                 <AddLocationIcon />
-                <ListItemText
-                  primary="Publish point"
-                  primaryTypographyProps={{ variant: "body2" }}
-                  sx={{ marginX: 1 }}
-                />
-                {activePublishClickType === "point" ? (
-                  <CheckIcon />
-                ) : (
-                  <Box width={20} height={20} />
-                )}
+                <PopupMenuItemLabel text="Publish point" />
+                <PopupMenuItemCheckbox checked={activePublishClickType === "point"} />
               </MenuItem>
               <MenuItem onClick={openSettings}>
                 <Settings />
-                <ListItemText
-                  primary="Settings..."
-                  primaryTypographyProps={{ variant: "body2" }}
-                  sx={{ marginX: 1 }}
-                />
+                <PopupMenuItemLabel text="Publish settings..." />
               </MenuItem>
             </Menu>
           </Stack>
