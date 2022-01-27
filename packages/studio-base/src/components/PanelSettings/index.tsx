@@ -4,7 +4,7 @@
 
 import { DefaultButton, Link, Text, useTheme } from "@fluentui/react";
 import { Stack } from "@mui/material";
-import { StrictMode, useMemo, useEffect, useState } from "react";
+import { StrictMode, useMemo, useState } from "react";
 import { useAsync, useUnmount } from "react-use";
 
 import { useConfigById } from "@foxglove/studio-base/PanelAPI";
@@ -79,16 +79,6 @@ export default function PanelSettings({
   }, [selectedPanelId, showShareModal, getCurrentLayout, savePanelConfigs]);
 
   const [config, saveConfig] = useConfigById<Record<string, unknown>>(selectedPanelId);
-  const [configWithDefaults, setConfigWithDefaults] = useState(config);
-
-  useEffect(() => {
-    panelInfo
-      ?.module()
-      .then((result): void =>
-        setConfigWithDefaults({ ...result?.default.defaultConfig, ...config }),
-      )
-      .catch((): void => {});
-  }, [config, panelInfo]);
 
   const { value: schema, error } = useAsync(async () => {
     if (panelInfo?.type == undefined) {
@@ -161,13 +151,9 @@ export default function PanelSettings({
           </div>
         )}
         <div>
-          {schema && configWithDefaults ? (
+          {schema ? (
             <StrictMode>
-              <SchemaEditor
-                configSchema={schema}
-                config={configWithDefaults}
-                saveConfig={saveConfig}
-              />
+              <SchemaEditor configSchema={schema} config={config} saveConfig={saveConfig} />
             </StrictMode>
           ) : (
             <Text styles={{ root: { color: theme.palette.neutralTertiary } }}>
