@@ -377,7 +377,7 @@ function TopicGraph() {
           pointerEvents: "none",
         }}
       >
-        <Paper square={false} sx={{ pointerEvents: "auto" }}>
+        <Paper square={false} elevation={4} sx={{ pointerEvents: "auto" }}>
           <Stack flex="0 0" sx={{ pointerEvents: "auto" }}>
             <IconButton
               elementRef={fitToPageButton.ref}
