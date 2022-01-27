@@ -754,7 +754,7 @@ export function ArrowMarkers(): JSX.Element {
       child_frame_id: "sensor",
       transform: {
         translation: { x: 0, y: 0, z: 1 },
-        rotation: QUAT_IDENTITY,
+        rotation: { x: 0.383, y: 0, z: 0, w: 0.924 },
       },
     },
     sizeInBytes: 0,
@@ -816,7 +816,7 @@ export function ArrowMarkers(): JSX.Element {
         position: { x: 1, y: 1, z: -1 },
         orientation: QUAT_IDENTITY,
       },
-      scale: { x: 0.05, y: 0.05, z: 1 },
+      scale: { x: 0.05, y: 0.1, z: 0.25 },
       points: [
         { x: 0, y: 0, z: 0 },
         { x: 0, y: 0, z: 1 },
