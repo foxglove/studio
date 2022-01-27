@@ -7,7 +7,7 @@ import { ReactElement, useCallback, useEffect } from "react";
 import { ReglClickInfo } from "@foxglove/regl-worldview";
 import { InteractionStateProps } from "@foxglove/studio-base/panels/ThreeDimensionalViz/InteractionState";
 import { MouseEventHandlerProps } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
-import { distanceBetweenPoints, reglClickToPoint } from "@foxglove/studio-base/util/geometry";
+import { reglClickToPoint } from "@foxglove/studio-base/util/geometry";
 
 type Props = InteractionStateProps & MouseEventHandlerProps;
 
@@ -26,10 +26,10 @@ export function MeasuringTool(props: Props): ReactElement {
         return;
       }
 
-      if (measure) {
+      if (measure?.end) {
         dispatch({ action: "select-tool", tool: "idle" });
       } else {
-        dispatch({ action: "measure-start", point });
+        dispatch({ action: "measure-click", point });
       }
     },
     [dispatch, measure],
@@ -37,18 +37,14 @@ export function MeasuringTool(props: Props): ReactElement {
 
   const moveHandler = useCallback(
     (_ev: React.MouseEvent, click: ReglClickInfo) => {
-      if (!measure) {
+      const point = reglClickToPoint(click);
+      if (!point) {
         return;
       }
 
-      const point = reglClickToPoint(click);
-      const start = measure.start;
-      if (point) {
-        const distance = distanceBetweenPoints(start, point);
-        dispatch({ action: "measure-update", distance, point });
-      }
+      dispatch({ action: "measure-update", point });
     },
-    [dispatch, measure],
+    [dispatch],
   );
 
   useEffect(() => {

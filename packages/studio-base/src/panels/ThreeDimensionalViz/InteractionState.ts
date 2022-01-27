@@ -5,21 +5,21 @@
 import { Draft, Immutable } from "immer";
 import { Dispatch } from "react";
 
-import { Point } from "@foxglove/studio-base/util/geometry";
+import { distanceBetweenPoints, Point } from "@foxglove/studio-base/util/geometry";
 
 export type PublishClickType = "pose" | "goal" | "point";
 
 type InteractionToolState = { name: "idle" } | { name: "measure" } | { name: "publish-click" };
 
 type InteractionState = Immutable<{
-  measure: undefined | { start: Point; end: Point; distance: number };
+  measure: { start?: Point; end?: Point; distance?: number };
   publish: undefined | { start?: Point; end?: Point; type: PublishClickType };
   tool: InteractionToolState;
 }>;
 
 type InteractionStateAction =
-  | { action: "measure-start"; point: Point }
-  | { action: "measure-update"; point: Point; distance: number }
+  | { action: "measure-click"; point: Point }
+  | { action: "measure-update"; point: Point }
   | { action: "publish-click-start"; point: Point }
   | { action: "publish-click-update"; point: Point }
   | { action: "reset" }
@@ -36,7 +36,7 @@ export type InteractionStateProps = {
 
 export function makeInitialInteractionState(): InteractionState {
   return {
-    measure: undefined,
+    measure: {},
     publish: undefined,
     tool: { name: "idle" },
   };
@@ -54,7 +54,7 @@ export function interactionStateReducer(
         draft.publish = undefined;
         draft.tool = { name: "idle" };
       } else if (action.tool === "measure") {
-        draft.measure = undefined;
+        draft.measure = {};
         draft.tool = { name: action.tool };
       } else if (action.tool === "publish-click") {
         draft.publish = { type: action.type };
@@ -62,18 +62,21 @@ export function interactionStateReducer(
       }
       break;
 
-    case "measure-start":
-      draft.measure = {
-        start: action.point,
-        end: action.point,
-        distance: 0,
-      };
+    case "measure-click":
+      draft.measure.end = action.point;
+      if (draft.measure.start) {
+        draft.measure.distance = distanceBetweenPoints(draft.measure.start, action.point);
+      }
       break;
 
     case "measure-update":
-      if (draft.measure) {
+      if (draft.measure.end) {
         draft.measure.end = action.point;
-        draft.measure.distance = action.distance;
+        if (draft.measure.start) {
+          draft.measure.distance = distanceBetweenPoints(draft.measure.start, action.point);
+        }
+      } else {
+        draft.measure.start = action.point;
       }
       break;
 
