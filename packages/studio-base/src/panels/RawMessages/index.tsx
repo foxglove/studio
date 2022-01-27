@@ -378,7 +378,7 @@ function RawMessages(props: Props) {
       <Stack
         flex="auto"
         overflow="hidden auto"
-        paddingLeft={0.5}
+        paddingLeft={0.75}
         sx={{
           fontFamily: fonts.SANS_SERIF,
           fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, "zero"`,
