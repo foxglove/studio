@@ -61,6 +61,7 @@ export function interactionStateReducer(
         }
       } else if (action.tool === "publish-click") {
         if (draft.tool === "publish-click" && draft.publish?.type === action.type) {
+          draft.publish = undefined;
           draft.tool = "idle";
         } else {
           draft.publish = { state: "start", type: action.type };
