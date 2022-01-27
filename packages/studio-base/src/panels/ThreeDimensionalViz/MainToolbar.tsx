@@ -273,7 +273,7 @@ function MainToolbar({
               </MenuItem>
               <MenuItem onClick={openSettings}>
                 <Settings />
-                <PopupMenuItemLabel text="Publish settings..." />
+                <PopupMenuItemLabel text="Edit settings…" />
               </MenuItem>
             </Menu>
           </Stack>
