@@ -51,6 +51,7 @@ import {
   SphereMarker,
   TextMarker,
 } from "@foxglove/studio-base/types/Messages";
+import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 
 import { MarkerCollector, MarkerProvider } from "./types";
 import withHighlights from "./withHighlights";
@@ -235,6 +236,8 @@ function World(
           layerIndex: LAYER_INDEX_DEFAULT_BASE,
           clearCachedMarkers: false,
           cameraDistance: cameraState.distance ?? DEFAULT_CAMERA_STATE.distance,
+          cameraDistance:
+            mightActuallyBePartial(cameraState).distance ?? DEFAULT_CAMERA_STATE.distance,
           loadModelOptions,
         }}
       />
