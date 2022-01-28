@@ -235,7 +235,6 @@ function World(
           markersByType: processedMarkersByType,
           layerIndex: LAYER_INDEX_DEFAULT_BASE,
           clearCachedMarkers: false,
-          cameraDistance: cameraState.distance ?? DEFAULT_CAMERA_STATE.distance,
           cameraDistance:
             mightActuallyBePartial(cameraState).distance ?? DEFAULT_CAMERA_STATE.distance,
           loadModelOptions,
