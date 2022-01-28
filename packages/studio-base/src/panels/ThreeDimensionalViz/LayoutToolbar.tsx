@@ -157,9 +157,7 @@ function LayoutToolbar({
           autoSyncCameraState={autoSyncCameraState}
         />
       </Stack>
-      {cameraState.perspective === false && showCrosshair && (
-        <Crosshair cameraState={cameraState} />
-      )}
+      {!cameraState.perspective && showCrosshair && <Crosshair cameraState={cameraState} />}
       {interactionState.tool === "measure" && (
         <MeasuringTool
           addMouseEventHandler={addMouseEventHandler}

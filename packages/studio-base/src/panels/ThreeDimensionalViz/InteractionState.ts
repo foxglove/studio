@@ -49,24 +49,28 @@ export function interactionStateReducer(
     case "reset":
       return makeInitialInteractionState();
     case "select-tool":
-      if (action.tool === "idle") {
-        draft.publish = undefined;
-        draft.tool = "idle";
-      } else if (action.tool === "measure") {
-        if (draft.tool === "measure") {
-          draft.tool = "idle";
-        } else {
-          draft.measure = { state: "start" };
-          draft.tool = "measure";
-        }
-      } else if (action.tool === "publish-click") {
-        if (draft.tool === "publish-click" && draft.publish?.type === action.type) {
+      switch (action.tool) {
+        case "idle":
           draft.publish = undefined;
           draft.tool = "idle";
-        } else {
-          draft.publish = { state: "start", type: action.type };
-          draft.tool = "publish-click";
-        }
+          break;
+        case "measure":
+          if (draft.tool === "measure") {
+            draft.tool = "idle";
+          } else {
+            draft.measure = { state: "start" };
+            draft.tool = "measure";
+          }
+          break;
+        case "publish-click":
+          if (draft.tool === "publish-click" && draft.publish?.type === action.type) {
+            draft.publish = undefined;
+            draft.tool = "idle";
+          } else {
+            draft.publish = { state: "start", type: action.type };
+            draft.tool = "publish-click";
+          }
+          break;
       }
       break;
 

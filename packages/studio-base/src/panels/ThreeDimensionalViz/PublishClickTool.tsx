@@ -35,7 +35,7 @@ export type PublishClickState =
 
 type Props = InteractionStateProps<"publish"> &
   MouseEventHandlerProps & {
-    config: ThreeDimensionalVizConfig;
+    config: Partial<ThreeDimensionalVizConfig>;
     frameId: string;
   };
 
@@ -191,33 +191,37 @@ export function PublishClickTool(props: Props): ReactElement {
         safePublishMessage(message);
 
         dispatch({ action: "select-tool", tool: "idle" });
-      } else if (publish.state === "start") {
+        return;
+      }
+
+      if (publish.state === "start") {
         dispatch({
           action: "publish-click-update",
           state: { ...publish, state: "finish", start: point, end: point },
         });
-      } else if (publish.type === "goal") {
+        return;
+      }
+
+      if (publish.type === "goal") {
         const normalEnd = normalizeEndpoint(publish.start, publish.end);
         const message = makePoseMessage(topics.goal, publish.start, normalEnd, frameId);
         safePublishMessage(message);
 
         dispatch({ action: "select-tool", tool: "idle" });
-      } else if (publish.type === "pose") {
+      } else {
         const normalEnd = normalizeEndpoint(publish.start, publish.end);
         const message = makePoseEstimateMessage(
           topics.pose,
           publish.start,
           normalEnd,
           frameId,
-          config.clickToPublishPoseXDeviation,
-          config.clickToPublishPoseYDeviation,
-          config.clickToPublishPoseThetaDeviation,
+          config.clickToPublishPoseXDeviation ?? 0,
+          config.clickToPublishPoseYDeviation ?? 0,
+          config.clickToPublishPoseThetaDeviation ?? 0,
         );
         safePublishMessage(message);
 
         dispatch({ action: "select-tool", tool: "idle" });
-      } else {
-        dispatch({ action: "publish-click-update", state: { ...publish, state: "finish" } });
       }
     },
     [
