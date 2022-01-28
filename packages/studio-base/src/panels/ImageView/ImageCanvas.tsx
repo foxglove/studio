@@ -251,7 +251,7 @@ export default function ImageCanvas(props: Props): JSX.Element {
           imageMessage: msg,
           imageMessageDatatype,
           options,
-          rawMarkerData: JSON.parse(JSON.stringify(rawMarkers)),
+          rawMarkerData: JSON.parse(JSON.stringify(rawMarkers) ?? ""),
         });
       };
 
@@ -337,7 +337,7 @@ export default function ImageCanvas(props: Props): JSX.Element {
     const finishRender = onStartRenderImage();
     try {
       return await doRenderImage({
-        canvas: canvasRef.current ?? undefined,
+        canvas: canvasRef.current,
         geometry: {
           flipHorizontal: config.flipHorizontal ?? false,
           flipVertical: config.flipVertical ?? false,

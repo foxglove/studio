@@ -129,7 +129,7 @@ export function ValidatedInputBase({
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const val = e.currentTarget?.value;
+      const val = e.currentTarget.value;
       if (!isEditing) {
         setIsEditing(true);
       }
@@ -174,8 +174,9 @@ export function ValidatedInputBase({
 
 export default function JsonInput(props: BaseProps): JSX.Element {
   function stringify(val: unknown) {
-    return JSON.stringify(val, undefined, 2);
+    return JSON.stringify(val, undefined, 2) ?? "";
   }
+
   return (
     <SEditBox>
       <ValidatedInputBase parse={JSON.parse} stringify={stringify} {...props} />

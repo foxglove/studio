@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { Box, Stack } from "@mui/material";
 import React from "react";
 import styled from "styled-components";
 
@@ -18,13 +19,13 @@ import { Color } from "@foxglove/regl-worldview";
 import ColorPicker from "@foxglove/studio-base/components/ColorPicker";
 import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
 import Dropdown from "@foxglove/studio-base/components/Dropdown/index";
-import Flex from "@foxglove/studio-base/components/Flex";
 import GradientPicker from "@foxglove/studio-base/components/GradientPicker";
 import Radio from "@foxglove/studio-base/components/Radio";
 import SegmentedControl from "@foxglove/studio-base/components/SegmentedControl";
 import CommonPointSettings from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor/CommonPointSettings";
 import { TopicSettingsEditorProps } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor/types";
 import { PointCloud2 } from "@foxglove/studio-base/types/Messages";
+import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 
 import CommonDecaySettings from "./CommonDecaySettings";
 import { SLabel, SInput } from "./common";
@@ -100,12 +101,6 @@ const SValueRangeInput = styled(SInput).attrs({ type: "number", placeholder: "au
   flex: 1 1 auto;
 `;
 
-const SegmentedControlWrapper = styled.div`
-  min-width: 152px;
-  display: flex;
-  align-items: center;
-`;
-
 function isMappedColorMode(mode: ColorMode): mode is MappedColorMode {
   return mode.mode === "turbo" || mode.mode === "rainbow" || mode.mode === "gradient";
 }
@@ -140,10 +135,10 @@ export default function PointCloudSettingsEditor(
 ): React.ReactElement {
   const { message, settings = {}, onFieldChange, onSettingsChange } = props;
 
-  const hasRGB = message?.fields?.some(({ name }) => name === "rgb") ?? false;
+  const hasRGB = message?.fields.some(({ name }) => name === "rgb") ?? false;
   const defaultColorField =
-    message?.fields?.find(({ name }) => DEFAULT_COLOR_FIELDS.includes(name))?.name ??
-    message?.fields?.find(({ name }) => name !== "rgb")?.name;
+    message?.fields.find(({ name }) => DEFAULT_COLOR_FIELDS.includes(name))?.name ??
+    message?.fields.find(({ name }) => name !== "rgb")?.name;
   const colorMode: ColorMode =
     settings.colorMode ??
     (hasRGB
@@ -157,13 +152,13 @@ export default function PointCloudSettingsEditor(
   }
 
   return (
-    <Flex col>
+    <Stack flex="auto">
       <CommonPointSettings settings={settings} defaultPointSize={2} onFieldChange={onFieldChange} />
       <CommonDecaySettings settings={settings} onFieldChange={onFieldChange} />
 
       <SLabel>Color by</SLabel>
-      <Flex row style={{ justifyContent: "space-between", marginBottom: "8px" }}>
-        <SegmentedControlWrapper>
+      <Stack direction="row" flex="auto" justifyContent="space-between" marginBottom={1}>
+        <Box minWidth={152} display="flex" alignItems="center">
           <SegmentedControl
             selectedId={colorMode.mode === "flat" ? "flat" : "data"}
             onChange={(id) =>
@@ -190,8 +185,8 @@ export default function PointCloudSettingsEditor(
               { id: "data", label: "Point data" },
             ]}
           />
-        </SegmentedControlWrapper>
-        <Flex row style={{ margin: "2px 0 2px 12px", alignItems: "center" }}>
+        </Box>
+        <Stack direction="row" flex="auto" alignItems="center" marginY={0.25} marginLeft={1.5}>
           {colorMode.mode === "flat" ? ( // For flat mode, pick a single color
             <ColorPicker
               color={colorMode.flatColor}
@@ -223,14 +218,14 @@ export default function PointCloudSettingsEditor(
                   ))}
             </Dropdown>
           )}
-        </Flex>
-      </Flex>
+        </Stack>
+      </Stack>
 
       {isMappedColorMode(colorMode) && (
-        <Flex col style={{ marginBottom: "8px" }}>
+        <Stack flex="auto" marginBottom={1}>
           <SLabel>Value range</SLabel>
-          <Flex row style={{ marginLeft: "8px" }}>
-            <Flex row style={{ flex: "1 1 100%", alignItems: "baseline", marginRight: "20px" }}>
+          <Stack direction="row" flex="auto" marginLeft={1}>
+            <Stack direction="row" flex="1 1 100%" alignItems="baseline" marginRight={2.5}>
               Min
               <SValueRangeInput
                 value={colorMode.minValue ?? ""}
@@ -242,8 +237,8 @@ export default function PointCloudSettingsEditor(
                   )
                 }
               />
-            </Flex>
-            <Flex row style={{ flex: "1 1 100%", alignItems: "baseline" }}>
+            </Stack>
+            <Stack direction="row" flex="1 1 100%" alignItems="baseline">
               Max
               <SValueRangeInput
                 value={colorMode.maxValue ?? ""}
@@ -255,8 +250,8 @@ export default function PointCloudSettingsEditor(
                   )
                 }
               />
-            </Flex>
-          </Flex>
+            </Stack>
+          </Stack>
           <Radio
             selectedId={colorMode.mode}
             onChange={(id) =>
@@ -291,13 +286,13 @@ export default function PointCloudSettingsEditor(
               { id: "gradient", label: "Custom gradient" },
             ]}
           />
-        </Flex>
+        </Stack>
       )}
       {colorMode.mode === "gradient" && (
-        <div style={{ margin: "8px" }}>
+        <Box margin={1}>
           <GradientPicker
-            minColor={colorMode.minColor ?? DEFAULT_MIN_COLOR}
-            maxColor={colorMode.maxColor ?? DEFAULT_MAX_COLOR}
+            minColor={mightActuallyBePartial(colorMode).minColor ?? DEFAULT_MIN_COLOR}
+            maxColor={mightActuallyBePartial(colorMode).maxColor ?? DEFAULT_MAX_COLOR}
             onChange={({ minColor, maxColor }) =>
               onColorModeChange((prevColorMode) =>
                 prevColorMode.mode === "gradient"
@@ -306,9 +301,9 @@ export default function PointCloudSettingsEditor(
               )
             }
           />
-        </div>
+        </Box>
       )}
-    </Flex>
+    </Stack>
   );
 }
 
