@@ -96,12 +96,12 @@ export type ThreeDimensionalVizConfig = {
   autoTextBackgroundColor?: boolean;
   cameraState: Partial<CameraState>;
   checkedKeys: string[];
-  clickToPublishGoalTopic: string;
-  clickToPublishPointTopic: string;
   clickToPublishPoseTopic: string;
-  clickToPublishPoseXDeviation: number;
-  clickToPublishPoseYDeviation: number;
-  clickToPublishPoseThetaDeviation: number;
+  clickToPublishPointTopic: string;
+  clickToPublishPoseEstimateTopic: string;
+  clickToPublishPoseEstimateXDeviation: number;
+  clickToPublishPoseEstimateYDeviation: number;
+  clickToPublishPoseEstimateThetaDeviation: number;
   colorOverrideByVariable?: ColorOverrideByVariable;
   customBackgroundColor: string;
   diffModeEnabled: boolean;

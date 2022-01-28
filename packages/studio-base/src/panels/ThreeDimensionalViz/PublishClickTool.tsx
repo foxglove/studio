@@ -21,13 +21,14 @@ import { PublishPayload } from "@foxglove/studio-base/players/types";
 import {
   reglClickToPoint,
   Point,
-  quaternionFromPoints,
   makeCovarianceArray,
+  eulerToQuaternion,
+  Quaternion,
 } from "@foxglove/studio-base/util/geometry";
 
 const log = Logger.getLogger(__filename);
 
-export type PublishClickType = "pose" | "goal" | "point";
+export type PublishClickType = "pose_estimate" | "goal" | "point";
 
 export type PublishClickState =
   | { state: "start"; start?: Point; end?: Point; type: PublishClickType }
@@ -38,6 +39,11 @@ type Props = InteractionStateProps<"publish"> &
     config: Partial<ThreeDimensionalVizConfig>;
     frameId: string;
   };
+
+function quaternionFromPoints(a: Point, b: Point): Quaternion {
+  const theta = Math.atan2(b.y - a.y, b.x - a.x);
+  return eulerToQuaternion({ x: 0, y: 0, z: theta });
+}
 
 function makePointMessage(topic: string, point: Point, frameId: string) {
   const time = fromDate(new Date());
@@ -147,14 +153,14 @@ export function PublishClickTool(props: Props): ReactElement {
 
   const topics = useMemo(() => {
     return {
-      goal: config.clickToPublishGoalTopic ?? DefaultTopics.goal,
+      goal: config.clickToPublishPoseTopic ?? DefaultTopics.goal,
       point: config.clickToPublishPointTopic ?? DefaultTopics.point,
-      pose: config.clickToPublishPoseTopic ?? DefaultTopics.pose,
+      pose: config.clickToPublishPoseEstimateTopic ?? DefaultTopics.pose,
     };
   }, [
-    config.clickToPublishGoalTopic,
-    config.clickToPublishPointTopic,
     config.clickToPublishPoseTopic,
+    config.clickToPublishPointTopic,
+    config.clickToPublishPoseEstimateTopic,
   ]);
 
   useEffect(() => {
@@ -215,9 +221,9 @@ export function PublishClickTool(props: Props): ReactElement {
           publish.start,
           normalEnd,
           frameId,
-          config.clickToPublishPoseXDeviation ?? 0,
-          config.clickToPublishPoseYDeviation ?? 0,
-          config.clickToPublishPoseThetaDeviation ?? 0,
+          config.clickToPublishPoseEstimateXDeviation ?? 0,
+          config.clickToPublishPoseEstimateYDeviation ?? 0,
+          config.clickToPublishPoseEstimateThetaDeviation ?? 0,
         );
         safePublishMessage(message);
 
@@ -225,9 +231,9 @@ export function PublishClickTool(props: Props): ReactElement {
       }
     },
     [
-      config.clickToPublishPoseThetaDeviation,
-      config.clickToPublishPoseXDeviation,
-      config.clickToPublishPoseYDeviation,
+      config.clickToPublishPoseEstimateThetaDeviation,
+      config.clickToPublishPoseEstimateXDeviation,
+      config.clickToPublishPoseEstimateYDeviation,
       dispatch,
       frameId,
       publish,

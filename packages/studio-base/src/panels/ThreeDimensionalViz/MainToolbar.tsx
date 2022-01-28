@@ -61,7 +61,7 @@ const PublishClickIcons: Record<PublishClickType, ReactNode> = {
       </g>
     </SvgIcon>
   ),
-  pose: (
+  pose_estimate: (
     <SvgIcon viewBox="0 0 24 24">
       <g>
         <path
@@ -248,12 +248,12 @@ function MainToolbar({
               }}
             >
               <MenuItem
-                selected={activePublishClickType === "pose"}
-                onClick={() => selectPublishClickToolType("pose")}
+                selected={activePublishClickType === "pose_estimate"}
+                onClick={() => selectPublishClickToolType("pose_estimate")}
               >
-                {PublishClickIcons["pose"]}
+                {PublishClickIcons.pose_estimate}
                 <PopupMenuItemLabel text="Publish pose estimate" />
-                <PopupMenuItemCheckbox checked={activePublishClickType === "pose"} />
+                <PopupMenuItemCheckbox checked={activePublishClickType === "pose_estimate"} />
               </MenuItem>
               <MenuItem
                 selected={activePublishClickType === "goal"}

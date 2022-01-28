@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ReactElement, useCallback, useEffect } from "react";
+import { useCallback, useEffect } from "react";
 
 import { ReglClickInfo } from "@foxglove/regl-worldview";
 import { InteractionStateProps } from "@foxglove/studio-base/panels/ThreeDimensionalViz/InteractionState";
@@ -19,7 +19,7 @@ export type MeasuringState =
   | { state: "start"; start?: Point }
   | { state: "finish"; start: Point; end: Point; distance: number };
 
-export function MeasuringTool(props: Props): ReactElement {
+export function MeasuringTool(props: Props): JSX.Element {
   const {
     addMouseEventHandler,
     removeMouseEventHandler,
@@ -73,5 +73,5 @@ export function MeasuringTool(props: Props): ReactElement {
     };
   }, [addMouseEventHandler, moveHandler, removeMouseEventHandler, upHandler]);
 
-  return ReactNull;
+  return <div style={{ display: "none" }} />;
 }

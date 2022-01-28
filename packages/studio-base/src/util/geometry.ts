@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ReglClickInfo, Vec3 } from "@foxglove/regl-worldview";
+import { ReglClickInfo, vec3ToPoint } from "@foxglove/regl-worldview";
 
 export type Point = { x: number; y: number; z: number };
 
@@ -42,16 +42,7 @@ export function makeCovarianceArray(x: number, y: number, theta: number): number
   return covariance;
 }
 
-export function quaternionFromPoints(a: Point, b: Point): Quaternion {
-  const theta = Math.atan2(b.y - a.y, b.x - a.x);
-  return eulerToQuaternion({ x: 0, y: 0, z: theta });
-}
-
 export function reglClickToPoint(click: ReglClickInfo): Point | undefined {
   const intersection = click.ray.planeIntersection([0, 0, 0], [0, 0, 1]);
   return intersection ? vec3ToPoint(intersection) : undefined;
-}
-
-export function vec3ToPoint(v: Vec3): Point {
-  return { x: v[0], y: v[1], z: v[2] };
 }

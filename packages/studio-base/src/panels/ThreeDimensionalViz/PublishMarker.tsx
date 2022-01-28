@@ -20,7 +20,7 @@ import {
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/PublishClickTool";
 
 const Colors: Record<PublishClickType, { r: number; g: number; b: number; a: number }> = {
-  pose: { r: 0, g: 1, b: 1, a: 1 },
+  pose_estimate: { r: 0, g: 1, b: 1, a: 1 },
   goal: { r: 1, g: 0, b: 1, a: 1 },
   point: { r: 1, g: 1, b: 0, a: 1 },
 } as const;
