@@ -30,6 +30,7 @@ import WorldMarkers, {
   InteractiveMarkersByType,
   MarkerWithInteractionData,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/WorldMarkers";
+import { LoadModelOptions } from "@foxglove/studio-base/panels/ThreeDimensionalViz/commands/MeshMarkers";
 import { LAYER_INDEX_DEFAULT_BASE } from "@foxglove/studio-base/panels/ThreeDimensionalViz/constants";
 import {
   IImmutableCoordinateFrame,
@@ -71,6 +72,7 @@ type Props = WorldSearchTextProps & {
   onMouseDown?: MouseHandler;
   onMouseMove?: MouseHandler;
   onMouseUp?: MouseHandler;
+  loadModelOptions: LoadModelOptions;
 };
 
 function getMarkers({
@@ -145,6 +147,7 @@ function World(
     searchTextOpen,
     selectedMatchIndex,
     searchTextMatches,
+    loadModelOptions,
   }: Props,
   ref: typeof Worldview,
 ) {
@@ -232,6 +235,7 @@ function World(
           layerIndex: LAYER_INDEX_DEFAULT_BASE,
           clearCachedMarkers: false,
           cameraDistance: cameraState.distance ?? DEFAULT_CAMERA_STATE.distance,
+          loadModelOptions,
         }}
       />
     </Worldview>
