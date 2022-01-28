@@ -60,14 +60,14 @@ function compareMessageEventsByTime(
 ): number {
   const timeA = getTimestampForMessage(a.message);
   const timeB = getTimestampForMessage(b.message);
-  if (timeA == undefined && timeB == undefined) {
-    return 0;
-  }
-  if (timeA == undefined) {
-    return -1;
-  }
-  if (timeB == undefined) {
-    return 1;
+  if (timeA == undefined || timeB == undefined) {
+    if (timeA == undefined && timeB == undefined) {
+      return 0;
+    } else if (timeA == undefined) {
+      return -1;
+    } else {
+      return 1;
+    }
   }
   return compare(timeA, timeB);
 }
