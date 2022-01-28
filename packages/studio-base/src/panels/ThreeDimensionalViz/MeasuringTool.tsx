@@ -73,5 +73,5 @@ export function MeasuringTool(props: Props): ReactElement {
     };
   }, [addMouseEventHandler, moveHandler, removeMouseEventHandler, upHandler]);
 
-  return <div style={{ display: "none" }} />;
+  return ReactNull;
 }
