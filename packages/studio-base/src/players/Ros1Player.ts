@@ -342,6 +342,18 @@ export default class Ros1Player implements Player {
       return;
     }
 
+    // Unsubscribe from all topics.
+    // When a panel subscribes to an existing topic, we want it to receive the last message on the
+    // topic. This is especially important for topics like `/tf_static` which publish a latching
+    // message once.
+    //
+    // Rather than maintaining a cache of the last message on every subscribed topic, we perform an
+    // unsubscribe/re-subscribe cycle. This causes us to establish new subscriptions to all our
+    // topics. With the new subscriptions, latching publishers will re-send their last message.
+    for (const topicName of this._rosNode.subscriptions.keys()) {
+      this._rosNode.unsubscribe(topicName);
+    }
+
     // Subscribe to additional topics used by Ros1Player itself
     this._addInternalSubscriptions(subscriptions);
 
@@ -378,15 +390,6 @@ export default class Ros1Player implements Player {
           error,
         });
       });
-    }
-
-    // Unsubscribe from topics that we are subscribed to but shouldn't be.
-    for (const topicName of this._rosNode.subscriptions.keys()) {
-      if (!topicNames.includes(topicName)) {
-        {
-          this._rosNode.unsubscribe(topicName);
-        }
-      }
     }
   }
 
