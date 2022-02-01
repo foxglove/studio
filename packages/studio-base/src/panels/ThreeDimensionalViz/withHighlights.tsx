@@ -14,6 +14,7 @@
 import { partition } from "lodash";
 import { ComponentType } from "react";
 
+import { Interactive } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/types";
 import {
   InteractiveMarkersByType,
   WorldMarkerProps,
@@ -40,7 +41,8 @@ const withHighlights = (
     Object.entries(markersByType).forEach(([type, markers]) => {
       const [highlightedMarkers, nonHighlightedMarkers] = partition(
         markers,
-        (marker) => mightActuallyBePartial(marker).interactionData?.highlighted,
+        (marker: Interactive<unknown>) =>
+          mightActuallyBePartial(marker).interactionData?.highlighted,
       );
 
       (highlightedMarkersByType as Record<string, unknown>)[type] = highlightedMarkers;
