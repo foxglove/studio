@@ -995,7 +995,7 @@ export default class SceneBuilder implements MarkerProvider {
         if (missingFields.length > 0) {
           this._setTopicError(
             topic.name,
-            `Missing required fields entry for field names: ${missingFields}`,
+            `Point cloud is missing required fields: ${missingFields}`,
           );
           return;
         }
