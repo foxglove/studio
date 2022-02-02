@@ -407,20 +407,23 @@ function Chart(props: Props): JSX.Element {
 
   const { onHover } = props;
   const onMouseMove = useCallback(
-    (event: React.MouseEvent<HTMLCanvasElement>) => {
-      mousePresentRef.current = true; // Mouse must be present if we get the move event.
+    async (event: React.MouseEvent<HTMLCanvasElement>) => {
+      mousePresentRef.current = true; // The mouse must be present if we're getting this event.
+
       if (onHover == undefined || rpcSendRef.current == undefined) {
         return;
       }
 
-      void rpcSendRef
-        .current<RpcElement[]>("getElementsAtEvent", { event: rpcMouseEvent(event) })
-        .then((elements) => {
-          // Check again if mouse has left the canvas while waiting for the RPC call.
-          if (isMounted() && mousePresentRef.current) {
-            onHover(elements);
-          }
-        });
+      const elements = await rpcSendRef.current<RpcElement[]>("getElementsAtEvent", {
+        event: rpcMouseEvent(event),
+      });
+
+      // Check mouse presence again in case the mouse has left the canvas while we
+      // were waiting for the RPC call.
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (isMounted() && mousePresentRef.current) {
+        onHover(elements);
+      }
     },
     [onHover, isMounted],
   );
