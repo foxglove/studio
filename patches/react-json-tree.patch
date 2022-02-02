@@ -28,8 +28,8 @@ index a60c350ca0932a94b3c73d163bceb0a276724508..c803f507b3f8187ab6708b52ce30ca1c
  export declare type JSONValueNodeCircularPropsProvidedByJSONNode = SharedCircularPropsProvidedByJSONTree & JSONValueNodeCircularPropsPassedThroughJSONTree;
  interface JSONNestedNodeCircularPropsPassedThroughJSONTree {
      shouldExpandNode: (keyPath: (string | number)[], data: any, level: number) => boolean;
-+    onExpand?: (data: unknown, level: number, keyPath: (string | number)[]);
-+    onCollapse?: (data: unknown, level: number, keyPath: (string | number)[]);
++    onExpand?: (data: unknown, level: number, keyPath: (string | number)[]) => void;
++    onCollapse?: (data: unknown, level: number, keyPath: (string | number)[]) => void;
      hideRoot: boolean;
      getItemString: (nodeType: string, data: any, itemType: React.ReactNode, itemString: string, keyPath: (string | number)[]) => React.ReactNode;
      postprocessValue: (value: any) => any;
