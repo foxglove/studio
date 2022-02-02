@@ -60,7 +60,6 @@ const withHighlights = (
           }}
         />
         <Cover
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
           color={[0, 0, 0, hasHighlightedMarkers ? 0.6 : 0]}
           layerIndex={LAYER_INDEX_HIGHLIGHT_OVERLAY}
           overwriteDepthBuffer
