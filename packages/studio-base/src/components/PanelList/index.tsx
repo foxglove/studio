@@ -360,6 +360,11 @@ function PanelList(props: Props): JSX.Element {
         });
       } else if (e.key === "ArrowUp") {
         setHighlightedPanelIdx((existing) => {
+          // nothing to highlight if there are no entries
+          if (allFilteredPanels.length <= 0) {
+            return undefined;
+          }
+
           if (existing == undefined) {
             return allFilteredPanels.length - 1;
           }
