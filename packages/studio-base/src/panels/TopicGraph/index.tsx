@@ -11,7 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Stack, IconButton, IButtonStyles, useTheme } from "@fluentui/react";
+import { IconButton, IButtonStyles, useTheme } from "@fluentui/react";
+import { Paper, Stack } from "@mui/material";
 import Cytoscape from "cytoscape";
 import { useCallback, useMemo, useRef, useState } from "react";
 import textMetrics from "text-metrics";
@@ -336,7 +337,7 @@ function TopicGraph() {
   }, [lrOrientation]);
 
   const topicVisibilityTooltip: string = useMemo(() => {
-    return `Showing ${(topicVisibilityToLabelMap[topicVisibility] ?? "").toLowerCase()}`;
+    return `Showing ${topicVisibilityToLabelMap[topicVisibility].toLowerCase()}`;
   }, [topicVisibility]);
 
   const toggleShowServices = useCallback(() => {
@@ -366,53 +367,40 @@ function TopicGraph() {
       {servicesButton.tooltip}
       <PanelToolbar floating helpContent={helpContent} />
       <Stack
-        styles={{
-          root: {
-            position: "absolute",
-            top: theme.spacing.l2,
-            right: theme.spacing.s1,
-            zIndex: 101,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-end",
-
-            // allow mouse events to pass through the empty space in this container element
-            pointerEvents: "none",
-          },
+        spacing={1}
+        sx={{
+          position: "absolute",
+          top: theme.spacing.l2,
+          right: theme.spacing.s1,
+          zIndex: 101,
+          // allow mouse events to pass through the empty space in this container element
+          pointerEvents: "none",
         }}
-        tokens={{ childrenGap: theme.spacing.s1 }}
       >
-        <Stack
-          grow={0}
-          styles={{
-            root: {
-              backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-              borderRadius: theme.effects.roundedCorner2,
-              flexShrink: 0,
-              pointerEvents: "auto",
-            },
-          }}
-        >
-          <IconButton
-            elementRef={fitToPageButton.ref}
-            onClick={onZoomFit}
-            iconProps={{ iconName: "FitToPage" }}
-            styles={iconButtonStyles}
-          />
-          <IconButton
-            elementRef={orientationButton.ref}
-            onClick={toggleOrientation}
-            iconProps={{ iconName: lrOrientation ? "ArrowLeftRight" : "ArrowUpDown" }}
-            styles={iconButtonStyles}
-          />
-          <IconButton
-            checked={showServices}
-            elementRef={servicesButton.ref}
-            iconProps={{ iconName: "Service" }}
-            onClick={toggleShowServices}
-            styles={iconButtonStyles}
-          />
-        </Stack>
+        <Paper square={false} elevation={4} sx={{ pointerEvents: "auto" }}>
+          <Stack flex="0 0" sx={{ pointerEvents: "auto" }}>
+            <IconButton
+              elementRef={fitToPageButton.ref}
+              onClick={onZoomFit}
+              iconProps={{ iconName: "FitToPage" }}
+              styles={iconButtonStyles}
+            />
+            <IconButton
+              elementRef={orientationButton.ref}
+              onClick={toggleOrientation}
+              iconProps={{ iconName: lrOrientation ? "ArrowLeftRight" : "ArrowUpDown" }}
+              styles={iconButtonStyles}
+            />
+            <IconButton
+              checked={showServices}
+              elementRef={servicesButton.ref}
+              iconProps={{ iconName: "Service" }}
+              onClick={toggleShowServices}
+              styles={iconButtonStyles}
+            />
+          </Stack>
+        </Paper>
+
         <ExpandingToolbar
           checked={topicVisibility !== "none"}
           dataTest="set-topic-visibility"
@@ -430,9 +418,9 @@ function TopicGraph() {
                 graph.current?.resetUserPanZoom();
                 setTopicVisibility(id as TopicVisibility);
               }}
-              options={Object.keys(topicVisibilityToLabelMap).map((id) => ({
+              options={Object.entries(topicVisibilityToLabelMap).map(([id, label]) => ({
                 id,
-                label: topicVisibilityToLabelMap[id as TopicVisibility] ?? "",
+                label,
               }))}
             />
           </ToolGroup>

@@ -13,15 +13,15 @@
 
 import { isEqual } from "lodash";
 
-import { Time } from "@foxglove/rostime";
 import { TopicSettingsCollection } from "@foxglove/studio-base/panels/ThreeDimensionalViz/SceneBuilder";
 import {
   DEFAULT_GRID_COLOR,
   GridSettings,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor/GridSettingsEditor";
 import { Point, InstancedLineListMarker } from "@foxglove/studio-base/types/Messages";
-import { MarkerProvider, MarkerCollector } from "@foxglove/studio-base/types/Scene";
 import { FOXGLOVE_GRID_TOPIC } from "@foxglove/studio-base/util/globalConstants";
+
+import { MarkerProvider, RenderMarkerArgs } from "./types";
 
 export default class GridBuilder implements MarkerProvider {
   grid: InstancedLineListMarker;
@@ -32,9 +32,9 @@ export default class GridBuilder implements MarkerProvider {
     this.grid = GridBuilder.BuildGrid(this._settings);
   }
 
-  renderMarkers = (add: MarkerCollector, _time: Time): void => {
+  renderMarkers = (args: RenderMarkerArgs): void => {
     if (this._visible) {
-      add.instancedLineList(this.grid);
+      args.add.instancedLineList(this.grid);
     }
   };
 

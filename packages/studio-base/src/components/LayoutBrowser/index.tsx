@@ -1,7 +1,9 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-import { DefaultButton, IconButton, Spinner, Stack, Toggle, useTheme } from "@fluentui/react";
+
+import { DefaultButton, IconButton, Spinner, Toggle, useTheme } from "@fluentui/react";
+import { Box, Stack } from "@mui/material";
 import { partition } from "lodash";
 import moment from "moment";
 import path from "path";
@@ -231,7 +233,7 @@ export default function LayoutBrowser({
 
   const onExportLayout = useCallbackWithToast(
     async (item: Layout) => {
-      const content = JSON.stringify(item.working?.data ?? item.baseline.data, undefined, 2);
+      const content = JSON.stringify(item.working?.data ?? item.baseline.data, undefined, 2) ?? "";
       downloadTextFile(content, `${item.name}.json`);
       void analytics.logEvent(AppEvent.LAYOUT_EXPORT, { permission: item.permission });
     },
@@ -426,8 +428,8 @@ export default function LayoutBrowser({
       ].filter(Boolean)}
     >
       {unsavedChangesPrompt}
-      <Stack verticalFill>
-        <Stack.Item>
+      <Stack height="100%">
+        <div>
           <LayoutSection
             title={layoutManager.supportsSharing ? "Personal" : undefined}
             emptyText="Add a new layout to get started with Foxglove Studio!"
@@ -443,8 +445,8 @@ export default function LayoutBrowser({
             onRevert={onRevertLayout}
             onMakePersonalCopy={onMakePersonalCopy}
           />
-        </Stack.Item>
-        <Stack.Item>
+        </div>
+        <div>
           {layoutManager.supportsSharing && (
             <LayoutSection
               title="Team"
@@ -462,31 +464,29 @@ export default function LayoutBrowser({
               onMakePersonalCopy={onMakePersonalCopy}
             />
           )}
-        </Stack.Item>
+        </div>
         <div style={{ flexGrow: 1 }} />
         {showSignInPrompt && <SignInPrompt onDismiss={() => void setHideSignInPrompt(true)} />}
         {layoutDebug?.syncNow && (
           <Stack
-            styles={{
-              root: {
-                position: "sticky",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                background: theme.semanticColors.bodyBackground,
-                padding: theme.spacing.s1,
-                ...debugBorder,
-              },
+            spacing={0.5}
+            sx={{
+              position: "sticky",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              background: theme.semanticColors.bodyBackground,
+              padding: theme.spacing.s1,
+              ...debugBorder,
             }}
-            tokens={{ childrenGap: theme.spacing.s1 }}
           >
-            <Stack.Item grow align="stretch">
-              <Stack disableShrink horizontal tokens={{ childrenGap: theme.spacing.s1 }}>
-                <Stack.Item grow>
+            <Box flexGrow={1} alignSelf="stretch">
+              <Stack direction="row" flexShrink={0} spacing={1}>
+                <Box flexGrow={1}>
                   <DefaultButton
                     text="Sync"
                     onClick={async () => {
-                      await layoutDebug.syncNow?.();
+                      await layoutDebug.syncNow();
                       await reloadLayouts();
                     }}
                     styles={{
@@ -497,7 +497,7 @@ export default function LayoutBrowser({
                       },
                     }}
                   />
-                </Stack.Item>
+                </Box>
                 <Toggle
                   checked={layoutManager.isOnline}
                   onText="Online"
@@ -505,7 +505,7 @@ export default function LayoutBrowser({
                   onChange={(_, checked) => checked != undefined && layoutDebug.setOnline(checked)}
                 />
               </Stack>
-            </Stack.Item>
+            </Box>
           </Stack>
         )}
       </Stack>

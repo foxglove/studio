@@ -15,6 +15,7 @@ import { useToasts } from "react-toast-notifications";
 
 import { CommonCommandProps, GLTFScene, parseGLB } from "@foxglove/regl-worldview";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
+import RemountOnValueChange from "@foxglove/studio-base/components/RemountOnValueChange";
 import { rewritePackageUrl } from "@foxglove/studio-base/context/AssetsContext";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import notFoundModelURL from "@foxglove/studio-base/panels/ThreeDimensionalViz/commands/404.glb";
@@ -25,6 +26,7 @@ import { MeshMarker } from "@foxglove/studio-base/types/Messages";
 
 type MeshMarkerProps = CommonCommandProps & {
   markers: MeshMarker[];
+  loadModelOptions: LoadModelOptions;
 };
 
 async function loadNotFoundModel(): Promise<GlbModel> {
@@ -35,17 +37,26 @@ async function loadNotFoundModel(): Promise<GlbModel> {
   return (await parseGLB(await response.arrayBuffer())) as GlbModel;
 }
 
-async function loadModel(url: string): Promise<GlbModel | undefined> {
+// https://github.com/Ultimaker/Cura/issues/4141
+const STL_MIME_TYPES = ["model/stl", "model/x.stl-ascii", "model/x.stl-binary", "application/sla"];
+
+export type LoadModelOptions = {
+  ignoreColladaUpAxis?: boolean;
+};
+async function loadModel(url: string, options: LoadModelOptions): Promise<GlbModel | undefined> {
   const GLB_MAGIC = 0x676c5446; // "glTF"
 
   const response = await fetch(url);
-  if (response.status !== 200) {
-    throw new Error(`Error ${response.status} loading model from ${url}`);
+  if (!response.ok) {
+    const errMsg = response.statusText;
+    throw new Error(
+      `Error ${response.status}${errMsg ? ` (${errMsg})` : ``} loading model from <${url}>`,
+    );
   }
 
   const buffer = await response.arrayBuffer();
   if (buffer.byteLength < 4) {
-    throw new Error(`${buffer.byteLength} bytes received`);
+    throw new Error(`${buffer.byteLength} bytes received loading model from <${url}>`);
   }
   const view = new DataView(buffer);
 
@@ -54,13 +65,14 @@ async function loadModel(url: string): Promise<GlbModel | undefined> {
     return (await parseGLB(buffer)) as GlbModel;
   }
 
-  // STL binary files don't have a header, so we have to rely on the file extension
-  if (/\.stl$/i.test(url)) {
+  // STL binary files don't have a header, so we have to rely on the MIME type or file extension
+  const contentType = response.headers.get("content-type");
+  if ((contentType != undefined && STL_MIME_TYPES.includes(contentType)) || /\.stl$/i.test(url)) {
     return parseStlToGlb(buffer);
   }
 
   if (/\.dae$/i.test(url)) {
-    return await parseDaeToGlb(buffer);
+    return await parseDaeToGlb(buffer, options);
   }
 
   throw new Error(`Unknown mesh resource type at ${url}`);
@@ -69,12 +81,14 @@ async function loadModel(url: string): Promise<GlbModel | undefined> {
 class ModelCache {
   private models = new Map<string, Promise<GlbModel | undefined>>();
 
+  constructor(private loadModelOptions: LoadModelOptions) {}
+
   async load(url: string, reportError: (_: Error) => void): Promise<GlbModel | undefined> {
     let promise = this.models.get(url);
     if (promise) {
       return await promise;
     }
-    promise = loadModel(url).catch(async (err) => {
+    promise = loadModel(url, this.loadModelOptions).catch(async (err) => {
       reportError(err as Error);
       return await loadNotFoundModel();
     });
@@ -83,10 +97,10 @@ class ModelCache {
   }
 }
 
-function MeshMarkers({ markers, layerIndex }: MeshMarkerProps): ReactElement {
+function MeshMarkers({ markers, loadModelOptions, layerIndex }: MeshMarkerProps): ReactElement {
   const models: React.ReactNode[] = [];
 
-  const modelCache = useMemo(() => new ModelCache(), []);
+  const modelCache = useMemo(() => new ModelCache(loadModelOptions), [loadModelOptions]);
   const [rosPackagePath] = useAppConfigurationValue<string>(AppSetting.ROS_PACKAGE_PATH);
   const { addToast } = useToasts();
   const reportError = useCallback(
@@ -98,15 +112,19 @@ function MeshMarkers({ markers, layerIndex }: MeshMarkerProps): ReactElement {
 
   for (let i = 0; i < markers.length; i++) {
     const marker = markers[i]!;
-    const { mesh_resource, color } = marker;
+    const { mesh_resource, mesh_use_embedded_materials, color } = marker;
     if (!mesh_resource) {
       continue;
     }
     const url = rewritePackageUrl(mesh_resource, { rosPackagePath });
     const alpha = (color?.a ?? 0) > 0 ? color!.a : 1;
 
-    const newMarker = { ...marker, alpha };
-    delete newMarker.color;
+    const newMarker = {
+      ...marker,
+      alpha,
+      overrideColor: mesh_use_embedded_materials ? undefined : color,
+    };
+    delete newMarker.color; // color field is used for hitmap
 
     models.push(
       <GLTFScene
@@ -119,7 +137,7 @@ function MeshMarkers({ markers, layerIndex }: MeshMarkerProps): ReactElement {
     );
   }
 
-  return <>{...models}</>;
+  return <RemountOnValueChange value={modelCache}>{...models}</RemountOnValueChange>;
 }
 
 export default MeshMarkers;

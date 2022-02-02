@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { omit, difference, isEmpty, isNil } from "lodash";
+import { difference, isEmpty, isNil } from "lodash";
 
 import { toRGBA, Color } from "@foxglove/regl-worldview";
 import {
@@ -20,7 +20,9 @@ import {
   DEFAULT_MAX_COLOR,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor/PointCloudSettingsEditor";
 import { DecodedMarker } from "@foxglove/studio-base/panels/ThreeDimensionalViz/commands/PointClouds/decodeMarker";
+import { RosObject } from "@foxglove/studio-base/players/types";
 import { PointCloud2, PointField } from "@foxglove/studio-base/types/Messages";
+import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 
 import {
   getVertexValues,
@@ -64,7 +66,7 @@ export function getClickedInfo(
   maybeFullyDecodedMarker: Omit<DecodedMarker, "data">,
   instanceIndex: number | undefined,
 ): ClickedInfo | undefined {
-  const { positionBuffer, colorBuffer, fields, settings, is_bigendian } = maybeFullyDecodedMarker;
+  const { positionBuffer, colorBuffer, fields, settings } = maybeFullyDecodedMarker;
   if (
     isEmpty(positionBuffer) ||
     isNil(instanceIndex) ||
@@ -73,13 +75,13 @@ export function getClickedInfo(
     return undefined;
   }
 
-  const pointIndex = instanceIndex ?? 0;
+  const pointIndex = instanceIndex;
 
   // Extract [x, y, z] from position buffer;
   const clickedPoint = getVertexValues(positionBuffer, pointIndex, 3);
 
   let clickedPointColor: number[] = [];
-  const colorMode = settings?.colorMode;
+  const colorMode = mightActuallyBePartial(settings).colorMode;
   if (colorMode != undefined) {
     if (colorMode.mode === "rgb" && colorBuffer) {
       // Extract [r, g, b, a] from colors buffer
@@ -89,19 +91,12 @@ export function getClickedInfo(
         // of 1 as well.
         1.0,
       ];
-      if (!is_bigendian) {
-        // When data uses little endianess, colors are in BGR format
-        // and we must swap R and B channels to display them correclty.
-        const temp = clickedPointColor[2] as number;
-        clickedPointColor[2] = clickedPointColor[0] as number;
-        clickedPointColor[0] = temp;
-      }
     } else if (colorMode.mode === "gradient" && colorBuffer) {
       const { minColorValue, maxColorValue } = maybeFullyDecodedMarker as MinMaxColors;
       const colorFieldValue = getVertexValue(colorBuffer, pointIndex);
       const colorFieldRange = getRange(minColorValue, maxColorValue);
       const pct = Math.max(0, Math.min((colorFieldValue - minColorValue) / colorFieldRange, 1));
-      const { minColor, maxColor } = colorMode;
+      const { minColor, maxColor } = mightActuallyBePartial(colorMode);
       const parsedMinColor = toRgba(minColor ?? DEFAULT_MIN_COLOR);
       const parsedMaxColor = toRgba(maxColor ?? DEFAULT_MAX_COLOR);
       clickedPointColor = [
@@ -118,7 +113,7 @@ export function getClickedInfo(
       clickedPointColor = [0, 0, 0, 1];
       setRainbowColor(clickedPointColor, 0, pct);
     } else if (colorMode.mode === "flat") {
-      clickedPointColor = toRgba(colorMode.flatColor ?? DEFAULT_FLAT_COLOR);
+      clickedPointColor = toRgba(mightActuallyBePartial(colorMode).flatColor ?? DEFAULT_FLAT_COLOR);
     }
   }
 
@@ -161,8 +156,10 @@ export function getAdditionalFieldNames(fields: readonly PointField[]): string[]
 
 export function decodeAdditionalFields<T extends PointCloud2>(
   marker: T,
-): Omit<T, "data"> & Record<string, unknown> {
-  const { fields, data, width, row_step, height, point_step } = marker;
+): Omit<T, "data"> & RosObject {
+  const { data, ...markerRest } = marker;
+  const { fields, width, row_step, height, point_step } = markerRest;
+
   const offsets = getFieldOffsetsAndReaders(data, fields);
 
   let pointCount = 0;
@@ -188,7 +185,7 @@ export function decodeAdditionalFields<T extends PointCloud2>(
   }
 
   return {
-    ...omit(marker, "data"), // no need to include data since all fields have been decoded
+    ...markerRest, // no need to include data since all fields have been decoded
     ...otherFieldsValues,
   };
 }

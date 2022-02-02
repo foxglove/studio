@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { MessageBar, MessageBarType, Stack, useTheme, makeStyles } from "@fluentui/react";
+import { makeStyles } from "@fluentui/react";
 import BorderAllIcon from "@mdi/svg/svg/border-all.svg";
 import ExpandAllOutlineIcon from "@mdi/svg/svg/expand-all-outline.svg";
 import GridLargeIcon from "@mdi/svg/svg/grid-large.svg";
@@ -44,11 +44,11 @@ import styled from "styled-components";
 import { useShallowMemo } from "@foxglove/hooks";
 import { useConfigById } from "@foxglove/studio-base/PanelAPI";
 import Button from "@foxglove/studio-base/components/Button";
-import ErrorBoundary, { ErrorRendererProps } from "@foxglove/studio-base/components/ErrorBoundary";
 import Icon from "@foxglove/studio-base/components/Icon";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
-import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import PanelErrorBoundary from "@foxglove/studio-base/components/PanelErrorBoundary";
+import { PanelRoot } from "@foxglove/studio-base/components/PanelRoot";
 import {
   useCurrentLayoutActions,
   useSelectedPanels,
@@ -70,47 +70,7 @@ import {
   getPathFromNode,
   updateTabPanelLayout,
 } from "@foxglove/studio-base/util/layout";
-import { colors, spacing } from "@foxglove/studio-base/util/sharedStyleConstants";
-
-const PanelRoot = styled.div<{ fullscreen: boolean; selected: boolean }>`
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  overflow: hidden;
-  z-index: ${({ fullscreen }) => (fullscreen ? 10000 : 1)};
-  background-color: ${({ theme }) => (theme.isInverted ? colors.DARK : colors.LIGHT)};
-  position: ${({ fullscreen }) => (fullscreen ? "fixed" : "relative")};
-  border: ${({ fullscreen }) => (fullscreen ? "4px solid rgba(110, 81, 238, 0.3)" : "none")};
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: ${({ fullscreen }) => (fullscreen ? spacing.PLAYBACK_CONTROL_HEIGHT : 0)};
-
-  // To use css to hide/show toolbars on hover we use a global panelToolbar class
-  // because the PanelToolbar component is currently added within each panels render
-  // function rather than handling by the panel HOC
-
-  .panelToolbarHovered {
-    display: none;
-  }
-  :hover .panelToolbarHovered {
-    display: flex;
-  }
-  :after {
-    content: "";
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    opacity: ${({ selected }) => (selected ? 1 : 0)};
-    border: 1px solid ${colors.ACCENT};
-    position: absolute;
-    pointer-events: none;
-    transition: ${({ selected }) =>
-      selected ? "opacity 0.125s ease-out" : "opacity 0.05s ease-out"};
-    z-index: 100000;
-  }
-`;
+import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 const ActionsOverlay = styled.div`
   cursor: pointer;
@@ -230,7 +190,6 @@ type Props<Config> = {
 export interface PanelStatics<Config> {
   panelType: string;
   defaultConfig: Config;
-  supportsStrictMode?: boolean;
   configSchema?: PanelConfigSchema<Config>;
 }
 
@@ -239,25 +198,6 @@ type ComponentConstructorType<P> = { displayName?: string } & (
   | { new (props: P): React.Component<unknown, unknown> }
   | { (props: P): React.ReactElement<unknown> | ReactNull }
 );
-
-function ErrorToolbar(errorProps: ErrorRendererProps): JSX.Element {
-  const theme = useTheme();
-  return (
-    <Stack style={{ overflow: "hidden" }}>
-      <PanelToolbar backgroundColor={theme.semanticColors.errorBackground}>
-        <MessageBar
-          messageBarType={MessageBarType.error}
-          dismissIconProps={{ iconName: "Refresh" }}
-          dismissButtonAriaLabel="Reset"
-          onDismiss={errorProps.onDismiss}
-        >
-          {errorProps.error.toString()}
-        </MessageBar>
-      </PanelToolbar>
-      {errorProps.defaultRenderErrorDetails(errorProps)}
-    </Stack>
-  );
-}
 
 // HOC that wraps panel in an error boundary and flex box.
 // Gives panel a `config` and `saveConfig`.
@@ -324,6 +264,10 @@ export default function Panel<
 
     const defaultConfig = PanelComponent.defaultConfig;
     const [savedConfig, saveConfig] = useConfigById<Config>(childId);
+
+    const resetPanel = useCallback(() => {
+      saveConfig(defaultConfig);
+    }, [defaultConfig, saveConfig]);
 
     // PanelSettings needs useConfigById to return a config
     // If there is no saved config (or it is an empty object), we save the default config provided
@@ -431,7 +375,7 @@ export default function Panel<
         if (panelSettingsOpen) {
           // Allow clicking with no modifiers to select a panel (and deselect others) when panel settings are open
           e.stopPropagation(); // select the deepest clicked panel, not parent tab panels
-          setSelectedPanelIds(isSelected ? [] : [childId]);
+          setSelectedPanelIds([childId]);
         } else if (e.metaKey || shiftKeyPressed || isSelected) {
           e.stopPropagation(); // select the deepest clicked panel, not parent tab panels
           togglePanelSelected(childId, tabId);
@@ -542,6 +486,8 @@ export default function Panel<
       [cmdKeyPressed, parentPanelContext],
     );
 
+    // We use two separate sets of key handlers because the panel context and exitFullScreen
+    // change often and invalidate our key handlers during user interactions.
     const { keyUpHandlers, keyDownHandlers } = useMemo(
       () => ({
         keyUpHandlers: {
@@ -560,11 +506,17 @@ export default function Panel<
           "`": () => setQuickActionsKeyPressed(true),
           "~": () => setQuickActionsKeyPressed(true),
           Shift: () => setShiftKeyPressed(true),
-          Escape: () => exitFullscreen(),
           Meta: () => setCmdKeyPressed(true),
         },
       }),
-      [selectAllPanels, cmdKeyPressed, exitFullscreen],
+      [selectAllPanels, cmdKeyPressed],
+    );
+
+    const fullScreenKeyHandlers = useMemo(
+      () => ({
+        Escape: () => exitFullscreen(),
+      }),
+      [exitFullscreen],
     );
 
     /* Ensure user exits full-screen mode when leaving window, even if key is still pressed down */
@@ -640,12 +592,12 @@ export default function Panel<
             isFullscreen: fullScreen,
             hasSettings: PanelComponent.configSchema != undefined,
             tabId,
-            supportsStrictMode: PanelComponent.supportsStrictMode ?? true,
             // disallow dragging the root panel in a layout
             connectToolbarDragHandle: isTopLevelPanel ? undefined : connectToolbarDragHandle,
           }}
         >
           <KeyListener global keyUpHandlers={keyUpHandlers} keyDownHandlers={keyDownHandlers} />
+          <KeyListener global keyDownHandlers={fullScreenKeyHandlers} />
           <PanelRoot
             onClick={onPanelRootClick}
             onMouseMove={onMouseMove}
@@ -698,13 +650,9 @@ export default function Panel<
                 </div>
               </ActionsOverlay>
             )}
-            <ErrorBoundary renderError={(errorProps) => <ErrorToolbar {...errorProps} />}>
-              {PanelComponent.supportsStrictMode ?? true ? (
-                <React.StrictMode>{child}</React.StrictMode>
-              ) : (
-                child
-              )}
-            </ErrorBoundary>
+            <PanelErrorBoundary onRemovePanel={removePanel} onResetPanel={resetPanel}>
+              <React.StrictMode>{child}</React.StrictMode>
+            </PanelErrorBoundary>
             {process.env.NODE_ENV !== "production" && (
               <div className={classes.perfInfo} ref={perfInfo} />
             )}

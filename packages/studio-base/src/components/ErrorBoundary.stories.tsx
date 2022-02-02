@@ -11,11 +11,11 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { storiesOf } from "@storybook/react";
+import { Story } from "@storybook/react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 
-import ErrorBoundary, { HideErrorSourceLocations } from "./ErrorBoundary";
+import ErrorBoundary from "./ErrorBoundary";
 
 class Broken extends React.Component {
   override render() {
@@ -30,14 +30,16 @@ class Broken extends React.Component {
   }
 }
 
-storiesOf("components/ErrorBoundary", module).add("examples", () => {
+export default {
+  title: "components/ErrorBoundary",
+};
+
+export const Default: Story = () => {
   return (
     <DndProvider backend={HTML5Backend}>
-      <HideErrorSourceLocations.Provider value={true}>
-        <ErrorBoundary>
-          <Broken />
-        </ErrorBoundary>
-      </HideErrorSourceLocations.Provider>
+      <ErrorBoundary>
+        <Broken />
+      </ErrorBoundary>
     </DndProvider>
   );
-});
+};

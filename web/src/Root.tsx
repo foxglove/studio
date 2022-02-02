@@ -28,11 +28,12 @@ import {
   FoxgloveWebSocketDataSourceFactory,
   UlogLocalDataSourceFactory,
   McapLocalDataSourceFactory,
-  SampleUdacityDataSourceFactory,
+  SampleNuscenesDataSourceFactory,
+  AppConfiguration,
+  AppConfigurationContext,
 } from "@foxglove/studio-base";
 
 import ConsoleApiCookieUserProvider from "./components/ConsoleApiCookieCurrentUserProvider";
-import LocalStorageAppConfigurationProvider from "./components/LocalStorageAppConfigurationProvider";
 import LocalStorageLayoutStorageProvider from "./components/LocalStorageLayoutStorageProvider";
 import Ros1UnavailableDataSourceFactory from "./dataSources/Ros1UnavailableDataSourceFactory";
 import Ros2UnavailableDataSourceFactory from "./dataSources/Ros2UnavailableDataSourceFactory";
@@ -58,7 +59,7 @@ function AppWrapper() {
       new UlogLocalDataSourceFactory(),
       new VelodyneUnavailableDataSourceFactory(),
       new FoxgloveDataPlatformDataSourceFactory(),
-      new SampleUdacityDataSourceFactory(),
+      new SampleNuscenesDataSourceFactory(),
     ];
 
     if (enableMcapDataSource) {
@@ -78,7 +79,7 @@ function ColorSchemeThemeProvider({ children }: React.PropsWithChildren<unknown>
   return <ThemeProvider isDark={isDark}>{children}</ThemeProvider>;
 }
 
-export function Root(): JSX.Element {
+export function Root({ appConfiguration }: { appConfiguration: AppConfiguration }): JSX.Element {
   const api = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);
 
   const providers = [
@@ -94,7 +95,7 @@ export function Root(): JSX.Element {
   ];
 
   return (
-    <LocalStorageAppConfigurationProvider defaults={{ [AppSetting.OPEN_DIALOG]: true }}>
+    <AppConfigurationContext.Provider value={appConfiguration}>
       <ColorSchemeThemeProvider>
         <GlobalCss />
         <CssBaseline>
@@ -105,6 +106,6 @@ export function Root(): JSX.Element {
           </ErrorBoundary>
         </CssBaseline>
       </ColorSchemeThemeProvider>
-    </LocalStorageAppConfigurationProvider>
+    </AppConfigurationContext.Provider>
   );
 }

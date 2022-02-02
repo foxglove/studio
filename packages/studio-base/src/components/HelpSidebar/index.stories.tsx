@@ -42,18 +42,19 @@ class MockPanelCatalog implements PanelCatalog {
     if (!info) {
       return undefined;
     }
-    const module = await info?.module();
+    const module = await info.module();
     return module.default.configSchema;
   }
   getPanels(): readonly PanelInfo[] {
     return allPanels;
   }
   getPanelByType(type: string): PanelInfo | undefined {
-    return allPanels.find((panel) => panel.preconfigured !== true && panel.type === type);
+    return allPanels.find((panel) => !panel.config && panel.type === type);
   }
 }
 
 const MockHelpInfoContext = createContext<IHelpInfo | undefined>(undefined);
+MockHelpInfoContext.displayName = "MockHelpInfoContext";
 function MockHelpInfoProvider({ children }: React.PropsWithChildren<unknown>): JSX.Element {
   const helpInfo = useRef<HelpInfo>({ title: "Some title", content: <>Some help content</> });
   const helpInfoListeners = useRef(new Set<(_: HelpInfo) => void>());

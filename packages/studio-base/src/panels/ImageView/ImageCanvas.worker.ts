@@ -11,72 +11,95 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Image, CompressedImage } from "@foxglove/studio-base/types/Messages";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
+import { ImageMarker, ImageMarkerArray } from "@foxglove/studio-base/types/Messages";
 import Rpc, { Channel } from "@foxglove/studio-base/util/Rpc";
 import { setupWorker } from "@foxglove/studio-base/util/RpcWorkerUtils";
 
 import { renderImage } from "./renderImage";
-import { Dimensions, RawMarkerData, RenderOptions } from "./util";
+import { flattenImageMarkers, idColorToIndex, RenderArgs, RenderDimensions } from "./util";
+
+type RenderState = {
+  canvas: OffscreenCanvas;
+  dimensions?: RenderDimensions;
+  hitmap: OffscreenCanvas;
+  markers: ImageMarker[];
+};
 
 class ImageCanvasWorker {
-  private _idToCanvas: {
-    [key: string]: OffscreenCanvas;
-  } = {};
+  private readonly _renderStates: Record<string, RenderState> = {};
 
   constructor(rpc: Rpc) {
     setupWorker(rpc);
 
     rpc.receive("initialize", async ({ id, canvas }: { id: string; canvas: OffscreenCanvas }) => {
-      this._idToCanvas[id] = canvas;
+      this._renderStates[id] = {
+        canvas,
+        hitmap: new OffscreenCanvas(canvas.width, canvas.height),
+        markers: [],
+      };
+    });
+
+    rpc.receive("mouseMove", async ({ id, x, y }: { id: string; x: number; y: number }) => {
+      const state = this._renderStates[id];
+      if (!state) {
+        return undefined;
+      }
+
+      const matrix = (state.dimensions?.transform ?? new DOMMatrix()).inverse();
+      const point = new DOMPoint(x, y).matrixTransform(matrix);
+      const pixel = state.canvas.getContext("2d")?.getImageData(x, y, 1, 1);
+      const hit = state.hitmap.getContext("2d")?.getImageData(x, y, 1, 1);
+      const markerIndex = hit ? idColorToIndex(hit.data) : undefined;
+
+      if (pixel) {
+        return {
+          color: { r: pixel.data[0], g: pixel.data[1], b: pixel.data[2], a: pixel.data[3] },
+          position: { x: Math.round(point.x), y: Math.round(point.y) },
+          markerIndex,
+          marker: markerIndex != undefined ? state.markers[markerIndex] : undefined,
+        };
+      } else {
+        return undefined;
+      }
     });
 
     rpc.receive(
       "renderImage",
       // Potentially performance-sensitive; await can be expensive
       // eslint-disable-next-line @typescript-eslint/promise-function-async
-      (args: {
-        id: string;
-        zoomMode: "fit" | "fill" | "other";
-        panZoom: { x: number; y: number; scale: number };
-        viewport: { width: number; height: number };
-        imageMessage?: Image | CompressedImage;
-        imageMessageDatatype?: string;
-        rawMarkerData: RawMarkerData;
-        options: RenderOptions;
-      }): Promise<Dimensions | undefined> => {
-        const {
-          id,
-          zoomMode,
-          panZoom,
-          viewport,
-          imageMessage,
-          imageMessageDatatype,
-          rawMarkerData,
-          options,
-        } = args;
+      (args: RenderArgs & { id: string }): Promise<RenderDimensions | undefined> => {
+        const { id, geometry, imageMessage, imageMessageDatatype, rawMarkerData, options } = args;
 
-        const canvas = this._idToCanvas[id];
-        if (!canvas) {
+        const render = this._renderStates[id];
+        if (!render) {
           return Promise.resolve(undefined);
         }
 
-        if (canvas.width !== viewport.width) {
-          canvas.width = viewport.width;
+        if (render.canvas.width !== geometry.viewport.width) {
+          render.canvas.width = geometry.viewport.width;
+          render.hitmap.width = geometry.viewport.width;
         }
 
-        if (canvas.height !== viewport.height) {
-          canvas.height = viewport.height;
+        if (render.canvas.height !== geometry.viewport.height) {
+          render.canvas.height = geometry.viewport.height;
+          render.hitmap.height = geometry.viewport.height;
         }
+
+        // Flatten markers because we need to be able to index into them for hitmapping.
+        render.markers = flattenImageMarkers(
+          rawMarkerData.markers as MessageEvent<ImageMarker | ImageMarkerArray>[],
+        );
 
         return renderImage({
-          canvas,
-          zoomMode,
-          panZoom,
+          canvas: render.canvas,
+          geometry,
+          hitmapCanvas: render.hitmap,
           imageMessage,
           imageMessageDatatype,
-          rawMarkerData,
           options,
-        });
+          rawMarkerData,
+        }).then((dimensions) => (render.dimensions = dimensions));
       },
     );
   }

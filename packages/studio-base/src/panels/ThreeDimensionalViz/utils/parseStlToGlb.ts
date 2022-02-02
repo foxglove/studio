@@ -5,6 +5,8 @@
 // The STL parsing logic is adapted from the MIT licensed ts-three-stl-loader at
 // <https://github.com/GarrettCannon/ts-three-stl-loader/blob/8db9d94fb609aa010555b70f99c37083c2ca0814/src/index.ts>
 
+import { quat } from "gl-matrix";
+
 import { GlbModel } from "@foxglove/studio-base/panels/ThreeDimensionalViz/utils/GlbModel";
 import type { GlTf } from "@foxglove/studio-base/panels/ThreeDimensionalViz/utils/gltf";
 
@@ -12,7 +14,7 @@ type Vector3 = [number, number, number];
 type StlData = {
   position: Float32Array;
   normal: Float32Array;
-  indices: Uint16Array;
+  indices: Uint32Array;
   minPosition: Vector3;
   maxPosition: Vector3;
   minNormal: Vector3;
@@ -50,7 +52,7 @@ export function parseStlToGlb(buffer: ArrayBuffer): GlbModel | undefined {
       },
       {
         bufferView: 2,
-        componentType: WebGLRenderingContext.UNSIGNED_SHORT,
+        componentType: WebGLRenderingContext.UNSIGNED_INT,
         count: stlData.indices.length,
         type: "SCALAR",
         min: [0],
@@ -78,7 +80,17 @@ export function parseStlToGlb(buffer: ArrayBuffer): GlbModel | undefined {
       },
     ],
     meshes: [{ primitives: [{ attributes: { POSITION: 0, NORMAL: 1 }, indices: 2, material: 0 }] }],
-    nodes: [{ mesh: 0, rotation: [-Math.SQRT1_2, 0, 0, Math.SQRT1_2] }], // Z-up to Y-up
+    nodes: [
+      {
+        mesh: 0,
+        // Z-up to Y-up
+        rotation: quat.rotateZ(
+          [0, 0, 0, 0],
+          quat.rotateX([0, 0, 0, 0], [0, 0, 0, 1], -Math.PI / 2),
+          -Math.PI / 2,
+        ) as [number, number, number, number],
+      },
+    ],
     scene: 0,
     scenes: [{ nodes: [0] }],
   };
@@ -132,19 +144,18 @@ function parseBinary(data: ArrayBuffer): StlData | undefined {
   const header = textDecoder.decode(data.slice(0, 80));
   const scale = getScale(header);
 
-  const reader = new DataView(data);
-  const maxFaces = reader.getUint32(80, true);
-  const faceCount = Math.min(Math.floor((data.byteLength - 84) / 50), maxFaces);
-  const vertexCount = faceCount * 3;
-  const floatCount = vertexCount * 3;
-
   const dataOffset = 84;
   const faceLength = 12 * 4 + 2;
+  const reader = new DataView(data);
+  const maxFaces = reader.getUint32(80, true);
+  const faceCount = Math.min(Math.floor((data.byteLength - dataOffset) / faceLength), maxFaces);
+  const vertexCount = faceCount * 3;
+  const floatCount = vertexCount * 3;
 
   const stlData: StlData = {
     position: new Float32Array(floatCount),
     normal: new Float32Array(floatCount),
-    indices: new Uint16Array(vertexCount),
+    indices: new Uint32Array(vertexCount),
     minPosition: [Infinity, Infinity, Infinity],
     maxPosition: [-Infinity, -Infinity, -Infinity],
     minNormal: [Infinity, Infinity, Infinity],
@@ -245,14 +256,14 @@ function parseAscii(data: string): StlData | undefined {
 
       vertices.push(vertexX, vertexY, vertexZ);
       normals.push(normal.x, normal.y, normal.z);
-      indices.push(i++, i++, i++);
+      indices.push(i++);
     }
   }
 
   return {
     position: new Float32Array(vertices),
     normal: new Float32Array(normals),
-    indices: new Uint16Array(indices),
+    indices: new Uint32Array(indices),
     minPosition,
     maxPosition,
     minNormal,

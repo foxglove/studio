@@ -30,7 +30,9 @@ import {
   WeatherSunny20Regular,
 } from "@fluentui/react-icons";
 import * as Icons from "@fluentui/react-icons-mdl2";
+import ArrowCollapseUpIcon from "@mdi/svg/svg/arrow-collapse-up.svg";
 import ArrowCollapseIcon from "@mdi/svg/svg/arrow-collapse.svg";
+import ArrowExpandUpIcon from "@mdi/svg/svg/arrow-expand-up.svg";
 import ArrowLeftRightIcon from "@mdi/svg/svg/arrow-left-right.svg";
 import ArrowLeftIcon from "@mdi/svg/svg/arrow-left.svg";
 import ArrowRightIcon from "@mdi/svg/svg/arrow-right.svg";
@@ -39,6 +41,7 @@ import BugIcon from "@mdi/svg/svg/bug.svg";
 import CameraControlIcon from "@mdi/svg/svg/camera-control.svg";
 import ArrowDownIcon from "@mdi/svg/svg/chevron-down.svg";
 import ArrowUpIcon from "@mdi/svg/svg/chevron-up.svg";
+import ClockOutlineIcon from "@mdi/svg/svg/clock-outline.svg";
 import CloseIcon from "@mdi/svg/svg/close.svg";
 import CogIcon from "@mdi/svg/svg/cog.svg";
 import CrosshairsGpsIcon from "@mdi/svg/svg/crosshairs-gps.svg";
@@ -50,6 +53,7 @@ import HelpCircleIcon from "@mdi/svg/svg/help-circle-outline.svg";
 import HelpCircleFilledIcon from "@mdi/svg/svg/help-circle.svg";
 import LayersIcon from "@mdi/svg/svg/layers.svg";
 import SearchIcon from "@mdi/svg/svg/magnify.svg";
+import MapMarkerIcon from "@mdi/svg/svg/map-marker.svg";
 import MenuDownIcon from "@mdi/svg/svg/menu-down.svg";
 import MenuLeftIcon from "@mdi/svg/svg/menu-left.svg";
 import CompassOutlineIcon from "@mdi/svg/svg/navigation.svg";
@@ -77,7 +81,9 @@ const icons: {
   Add: <Icons.AddIcon />,
   AddIn: <Icons.AddInIcon />,
   ArrowCollapse: <ArrowCollapseIcon />,
+  ArrowCollapseUp: <ArrowCollapseUpIcon />,
   ArrowDown: <ArrowDownIcon />,
+  ArrowExpandUp: <ArrowExpandUpIcon />,
   ArrowLeft: <ArrowLeftIcon />,
   ArrowLeftRight: <ArrowLeftRightIcon />,
   ArrowRight: <ArrowRightIcon />,
@@ -106,6 +112,7 @@ const icons: {
   ClearSelection: <Icons.ClearSelectionIcon />,
   Clipboard: <Clipboard16Regular />,
   ClipboardList: <Icons.ClipboardListIcon />,
+  ClockOutline: <ClockOutlineIcon />,
   Close: <CloseIcon />,
   CloudOffFilled: <CloudOff24Filled />,
   CodeEdit: <Icons.CodeEditIcon />,
@@ -119,6 +126,7 @@ const icons: {
   DataManagementSettings: <Icons.DataManagementSettingsIcon />,
   Delete: <Icons.DeleteIcon />,
   DependencyAdd: <Icons.DependencyAddIcon />,
+  DoubleChevronDown: <Icons.DoubleChevronDownIcon />,
   Download: <Icons.DownloadIcon />,
   DownloadDocument: <Icons.DownloadDocumentIcon />,
   Drag: <DragIcon />,
@@ -138,6 +146,7 @@ const icons: {
   LocationDot: <Icons.LocationDotIcon />,
   Loop: <LoopIcon strokeWidth={1.375} />,
   LoopFilled: <LoopIcon strokeWidth={1.875} />,
+  MapMarker: <MapMarkerIcon />,
   MenuDown: <MenuDownIcon />,
   MenuLeft: <MenuLeftIcon />,
   More: <Icons.MoreIcon />,

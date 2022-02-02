@@ -12,11 +12,11 @@
 //   You may not use this file except in compliance with the License.
 import { Callout, DefaultButton, IconButton } from "@fluentui/react";
 import CloseIcon from "@mdi/svg/svg/close.svg";
+import { Stack } from "@mui/material";
 import { partition, pick, union, without } from "lodash";
 import { useEffect, useMemo, useCallback, useRef, useState, ReactElement } from "react";
 import styled, { css, FlattenSimpleInterpolation, keyframes } from "styled-components";
 
-import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
 import { LegacyTable } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import Menu, { Item } from "@foxglove/studio-base/components/Menu";
@@ -26,7 +26,6 @@ import { ValidatedResizingInput } from "@foxglove/studio-base/components/input/V
 import useGlobalVariables, {
   GlobalVariables,
 } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import { usePreviousValue } from "@foxglove/studio-base/hooks/usePreviousValue";
 import useLinkedGlobalVariables from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/useLinkedGlobalVariables";
 import { colors as sharedColors, fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
@@ -198,13 +197,13 @@ function LinkedGlobalVariableRow({ name }: { name: string }): ReactElement {
       <td>${name}</td>
       <td width="100%">
         <JSONInput
-          value={JSON.stringify(globalVariables[name] ?? "")}
+          value={JSON.stringify(globalVariables[name]) ?? ""}
           onChange={(newVal) => setGlobalVariables({ [name]: newVal })}
         />
       </td>
       <td>
-        <Flex center style={{ justifyContent: "space-between" }}>
-          <Flex style={{ marginRight: 16 }}>
+        <Stack direction="row" flex="auto" alignItems="center" justifyContent="space-between">
+          <Stack direction="row" flex="auto" marginRight={2}>
             {linkedTopicPaths.length > 1 && <span>({linkedTopicPaths.length})</span>}
 
             <Tooltip
@@ -227,7 +226,7 @@ function LinkedGlobalVariableRow({ name }: { name: string }): ReactElement {
                 {linkedTopicPaths.length > 0 ? <bdi>{linkedTopicPaths.join(", ")}</bdi> : "--"}
               </SLinkedTopicsSpan>
             </Tooltip>
-          </Flex>
+          </Stack>
           <IconButton
             elementRef={moreButton}
             iconProps={{ iconName: "MoreVertical" }}
@@ -249,7 +248,7 @@ function LinkedGlobalVariableRow({ name }: { name: string }): ReactElement {
               </Callout>
             )}
           </IconButton>
-        </Flex>
+        </Stack>
       </td>
     </>
   );
@@ -271,13 +270,12 @@ function GlobalVariablesTable(): ReactElement {
     return () => clearTimeout(timeoutId);
   }, []);
 
-  const previousGlobalVariables = usePreviousValue(globalVariables);
-  const previousGlobalVariablesRef = useRef<GlobalVariables | undefined>(previousGlobalVariables);
-  previousGlobalVariablesRef.current = previousGlobalVariables;
+  const previousGlobalVariablesRef = useRef<GlobalVariables | undefined>(globalVariables);
 
   const [changedVariables, setChangedVariables] = useState<string[]>([]);
   useEffect(() => {
     if (skipAnimation.current || isActiveElementEditable()) {
+      previousGlobalVariablesRef.current = globalVariables;
       return;
     }
     const newChangedVariables = union(
@@ -289,6 +287,7 @@ function GlobalVariablesTable(): ReactElement {
     });
 
     setChangedVariables(newChangedVariables);
+    previousGlobalVariablesRef.current = globalVariables;
     const timerId = setTimeout(() => setChangedVariables([]), ANIMATION_RESET_DELAY_MS);
     return () => clearTimeout(timerId);
   }, [globalVariables, skipAnimation]);
@@ -340,31 +339,36 @@ function GlobalVariablesTable(): ReactElement {
                   dataTest={`global-variable-value-input-${JSON.stringify(
                     globalVariables[name] ?? "",
                   )}`}
-                  value={JSON.stringify(globalVariables[name] ?? "")}
+                  value={JSON.stringify(globalVariables[name]) ?? ""}
                   onChange={(newVal) => setGlobalVariables({ [name]: newVal })}
                 />
               </td>
               <td width="100%">
-                <Flex center style={{ justifyContent: "space-between" }}>
+                <Stack
+                  direction="row"
+                  flex="auto"
+                  alignItems="center"
+                  justifyContent="space-between"
+                >
                   --
                   <SIconWrapper onClick={() => setGlobalVariables({ [name]: undefined })}>
                     <Icon size="small">
                       <CloseIcon />
                     </Icon>
                   </SIconWrapper>
-                </Flex>
+                </Stack>
               </td>
             </SAnimatedRow>
           ))}
         </tbody>
       </LegacyTable>
-      <Flex style={{ marginTop: 20 }}>
+      <Stack direction="row" flex="auto" marginTop={2.5}>
         <DefaultButton
           text="Add variable"
           disabled={globalVariables[""] != undefined}
           onClick={() => setGlobalVariables({ "": "" })}
         />
-      </Flex>
+      </Stack>
     </SGlobalVariablesTable>
   );
 }

@@ -13,9 +13,7 @@
 
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
-import { createGlobalStyle } from "styled-components";
 
-import { HideErrorSourceLocations } from "@foxglove/studio-base/components/ErrorBoundary";
 import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
@@ -72,14 +70,14 @@ class MockPanelCatalog implements PanelCatalog {
     if (!info) {
       return undefined;
     }
-    const module = await info?.module();
+    const module = await info.module();
     return module.default.configSchema;
   }
   getPanels(): readonly PanelInfo[] {
     return allPanels;
   }
   getPanelByType(type: string): PanelInfo | undefined {
-    return allPanels.find((panel) => panel.preconfigured !== true && panel.type === type);
+    return allPanels.find((panel) => !panel.config && panel.type === type);
   }
 }
 
@@ -95,7 +93,7 @@ export const PanelNotFound = (): JSX.Element => {
       <PanelSetup
         onMount={() => {
           setTimeout(() => {
-            (document.querySelectorAll("[data-test=panel-settings]")[0] as any).click();
+            (document.querySelectorAll("[data-test=panel-menu]")[0] as any).click();
           }, DEFAULT_CLICK_DELAY);
         }}
         fixture={{ topics: [], datatypes: new Map(), frame: {}, layout: "UnknownPanel!4co6n9d" }}
@@ -111,25 +109,16 @@ export const PanelNotFoundLight = Object.assign(PanelNotFound.bind(undefined), {
   parameters: { colorScheme: "light" },
 });
 
-const PanelToolbarShown = createGlobalStyle`
-  .panelToolbarHovered {
-    display: flex !important;
-  }
-`;
-
 export const PanelWithError = (): JSX.Element => {
   return (
     <DndProvider backend={HTML5Backend}>
-      <HideErrorSourceLocations.Provider value={true}>
-        <PanelToolbarShown />
-        <PanelSetup
-          panelCatalog={new MockPanelCatalog()}
-          fixture={{ topics: [], datatypes: new Map(), frame: {}, layout: "Sample2!4co6n9d" }}
-          omitDragAndDrop
-        >
-          <PanelLayout />
-        </PanelSetup>
-      </HideErrorSourceLocations.Provider>
+      <PanelSetup
+        panelCatalog={new MockPanelCatalog()}
+        fixture={{ topics: [], datatypes: new Map(), frame: {}, layout: "Sample2!4co6n9d" }}
+        omitDragAndDrop
+      >
+        <PanelLayout />
+      </PanelSetup>
     </DndProvider>
   );
 };
@@ -140,8 +129,8 @@ export const RemoveUnknownPanel = (): JSX.Element => {
       <PanelSetup
         onMount={() => {
           setTimeout(() => {
-            (document.querySelectorAll("[data-test=panel-settings]")[0] as any).click();
-            (document.querySelectorAll("[data-test=panel-settings-remove]")[0] as any).click();
+            (document.querySelectorAll("[data-test=panel-menu]")[0] as any).click();
+            (document.querySelectorAll("[data-test=panel-menu-remove]")[0] as any).click();
           }, DEFAULT_CLICK_DELAY);
         }}
         fixture={{ topics: [], datatypes: new Map(), frame: {}, layout: "UnknownPanel!4co6n9d" }}
@@ -189,8 +178,7 @@ export const FullScreen = (): JSX.Element => {
         omitDragAndDrop
         onMount={() => {
           setTimeout(() => {
-            (document.querySelectorAll("[data-test=panel-settings]")[0] as any).click();
-            (document.querySelectorAll("[data-test=panel-settings-fullscreen]")[0] as any).click();
+            (document.querySelectorAll("[data-test=panel-toolbar-fullscreen]")[0] as any).click();
           }, DEFAULT_CLICK_DELAY);
         }}
       >

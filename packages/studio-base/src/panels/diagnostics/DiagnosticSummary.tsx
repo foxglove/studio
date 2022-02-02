@@ -20,6 +20,7 @@ import {
   useTheme,
 } from "@fluentui/react";
 import PinIcon from "@mdi/svg/svg/pin.svg";
+import { Stack } from "@mui/material";
 import cx from "classnames";
 import { compact } from "lodash";
 import { useCallback, useMemo } from "react";
@@ -28,7 +29,6 @@ import { List, AutoSizer, ListRowProps } from "react-virtualized";
 import { filterMap } from "@foxglove/den/collection";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
-import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
 import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import Panel from "@foxglove/studio-base/components/Panel";
@@ -247,7 +247,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
         fontSize: "12px",
       }}
       value={hardwareIdFilter}
-      placeholder="Filter hardware id"
+      placeholder="Filter"
       onChange={(e) => saveConfig({ hardwareIdFilter: e.target.value })}
     />
   );
@@ -268,7 +268,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
 
   const diagnostics = useDiagnostics(topicToRender);
   const summary = useMemo(() => {
-    if (diagnostics.diagnosticsByNameByTrimmedHardwareId.size === 0) {
+    if (diagnostics.size === 0) {
       return (
         <EmptyState>
           Waiting for <code>{topicToRender}</code> messages
@@ -280,8 +280,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
       if (name == undefined || trimmedHardwareId == undefined) {
         return;
       }
-      const diagnosticsByName =
-        diagnostics.diagnosticsByNameByTrimmedHardwareId.get(trimmedHardwareId);
+      const diagnosticsByName = diagnostics.get(trimmedHardwareId);
       return diagnosticsByName?.get(name);
     });
 
@@ -332,14 +331,14 @@ function DiagnosticSummary(props: Props): JSX.Element {
           [classes.stale]: option.text === "stale",
         })}
       >
-        &gt;= {option?.text.toUpperCase() ?? ""}
+        &gt;= {option.text.toUpperCase()}
       </div>
     ) : (
       ReactNull
     );
 
   return (
-    <Flex col>
+    <Stack flex="auto">
       <PanelToolbar helpContent={helpContent} additionalIcons={topicToRenderMenu}>
         <Dropdown
           styles={dropdownStyles}
@@ -357,8 +356,8 @@ function DiagnosticSummary(props: Props): JSX.Element {
         />
         {hardwareFilter}
       </PanelToolbar>
-      <Flex col>{summary}</Flex>
-    </Flex>
+      <Stack flex="auto">{summary}</Stack>
+    </Stack>
   );
 }
 
@@ -377,7 +376,6 @@ export default Panel(
   Object.assign(DiagnosticSummary, {
     panelType: "DiagnosticSummary",
     defaultConfig,
-    supportsStrictMode: false,
     configSchema,
   }),
 );

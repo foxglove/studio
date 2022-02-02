@@ -2,36 +2,21 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import {
-  ITextStyles,
-  DetailsList,
-  makeStyles,
-  Stack,
-  Text,
-  useTheme,
-  CheckboxVisibility,
-} from "@fluentui/react";
+import { ITextStyles, DetailsList, Text, useTheme, CheckboxVisibility } from "@fluentui/react";
+import { Box, Stack } from "@mui/material";
 import { useCallback, useMemo } from "react";
 
 import { subtract as subtractTimes, toSec } from "@foxglove/rostime";
 import { Topic } from "@foxglove/studio";
 import CopyText from "@foxglove/studio-base/components/CopyText";
+import Duration from "@foxglove/studio-base/components/Duration";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import Timestamp from "@foxglove/studio-base/components/Timestamp";
-import { formatDuration } from "@foxglove/studio-base/util/formatTime";
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import helpContent from "./index.help.md";
-
-const useStyles = makeStyles(() => ({
-  container: {
-    overflowX: "hidden",
-    overflowY: "auto",
-  },
-}));
 
 function SourceInfo() {
   const topics = useMessagePipeline(useCallback((ctx) => ctx.playerState.activeData?.topics, []));
@@ -39,7 +24,6 @@ function SourceInfo() {
     useCallback((ctx) => ctx.playerState.activeData?.startTime, []),
   );
   const endTime = useMessagePipeline(useCallback((ctx) => ctx.playerState.activeData?.endTime, []));
-  const classes = useStyles();
   const theme = useTheme();
   const subheaderStyles = useMemo(
     () =>
@@ -54,6 +38,15 @@ function SourceInfo() {
     [theme],
   );
 
+  const detailListItems = useMemo<(Topic & { key: string })[]>(() => {
+    return (
+      topics?.map((topic) => ({
+        key: topic.name,
+        ...topic,
+      })) ?? []
+    );
+  }, [topics]);
+
   if (!startTime || !endTime) {
     return (
       <>
@@ -67,37 +60,26 @@ function SourceInfo() {
   return (
     <>
       <PanelToolbar helpContent={helpContent} floating />
-      <div className={classes.container}>
+      <Box overflow="hidden auto">
         <Stack
-          styles={{
-            root: {
-              borderBottom: `2px solid ${theme.semanticColors.bodyDivider}`,
-              backgroundColor: theme.semanticColors.bodyBackground,
-            },
+          sx={{
+            borderBottom: `2px solid ${theme.semanticColors.bodyDivider}`,
+            backgroundColor: theme.semanticColors.bodyBackground,
           }}
-          tokens={{ padding: 12, childrenGap: theme.spacing.s1 }}
+          padding={1.5}
+          spacing={1}
         >
-          <Stack tokens={{ childrenGap: theme.spacing.s2 }}>
+          <Stack spacing={0.5}>
             <Text styles={subheaderStyles}>Start time</Text>
             <Timestamp horizontal time={startTime} />
           </Stack>
-          <Stack tokens={{ childrenGap: theme.spacing.s2 }}>
+          <Stack spacing={0.5}>
             <Text styles={subheaderStyles}>End Time</Text>
             <Timestamp horizontal time={endTime} />
           </Stack>
-          <Stack tokens={{ childrenGap: theme.spacing.s2 }}>
+          <Stack spacing={0.5}>
             <Text styles={subheaderStyles}>Duration</Text>
-            <Text
-              variant="small"
-              styles={{
-                root: {
-                  fontFamily: fonts.MONOSPACE,
-                  color: theme.palette.neutralSecondary,
-                },
-              }}
-            >
-              {formatDuration(duration)}
-            </Text>
+            <Duration duration={duration} />
           </Stack>
         </Stack>
         <DetailsList
@@ -105,20 +87,21 @@ function SourceInfo() {
           checkboxVisibility={CheckboxVisibility.hidden}
           disableSelectionZone
           enableUpdateAnimations={false}
-          isHeaderVisible={false}
-          items={
-            topics?.map((topic) => ({
-              key: topic.name,
-              ...topic,
-            })) as Topic[]
-          }
+          items={detailListItems}
+          styles={{
+            root: {
+              ".ms-DetailsHeader": { paddingTop: 0, height: 32, lineHeight: 32 },
+              ".ms-DetailsHeader-cell": { height: 32 },
+              ".ms-DetailsHeader-cellName": { ...theme.fonts.smallPlus, fontWeight: "bold" },
+            },
+          }}
           columns={[
             {
               key: "name",
-              name: "topic name",
+              name: "Topic name",
               fieldName: "name",
-              minWidth: 100,
-              maxWidth: 500,
+              minWidth: 0,
+              isResizable: true,
               data: "string",
               isPadded: true,
               onRender: (topic) => (
@@ -133,10 +116,10 @@ function SourceInfo() {
             },
             {
               key: "datatype",
-              name: "datatype",
+              name: "Datatype",
               fieldName: "datatype",
-              minWidth: 100,
-              maxWidth: 500,
+              minWidth: 0,
+              isResizable: true,
               data: "string",
               isPadded: true,
               onRender: (topic) => (
@@ -145,13 +128,13 @@ function SourceInfo() {
                   textProps={{ variant: "small" }}
                   tooltip={`Click to copy topic name ${topic.datatype} to clipboard.`}
                 >
-                  {topic.name}
+                  {topic.datatype}
                 </CopyText>
               ),
             },
             {
               key: "numMessages",
-              name: "message count",
+              name: "Message count",
               fieldName: "numMessages",
               minWidth: 0,
               data: "number",
@@ -159,7 +142,7 @@ function SourceInfo() {
             },
             {
               key: "frequency",
-              name: "frequency",
+              name: "Frequency",
               minWidth: 0,
               onRender: (topic) =>
                 topic.numMessages != undefined
@@ -168,13 +151,12 @@ function SourceInfo() {
             },
           ]}
         />
-      </div>
+      </Box>
     </>
   );
 }
 
 SourceInfo.panelType = "SourceInfo";
 SourceInfo.defaultConfig = {};
-SourceInfo.supportsStrictMode = true;
 
 export default Panel(SourceInfo);

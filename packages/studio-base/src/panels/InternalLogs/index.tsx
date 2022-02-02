@@ -2,11 +2,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Checkbox } from "@fluentui/react";
+import { Stack } from "@mui/material";
 import { useMemo } from "react";
 
 import log from "@foxglove/log";
-import Checkbox from "@foxglove/studio-base/components/Checkbox";
-import Flex from "@foxglove/studio-base/components/Flex";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 
@@ -43,34 +43,35 @@ function InternalLogs(props: Props) {
   }, [disabledChannels]);
 
   return (
-    <Flex col>
-      <PanelToolbar helpContent={helpContent} />
-      <Flex col>
+    <Stack maxWidth="100%" sx={{ overflowY: "auto" }}>
+      <PanelToolbar floating helpContent={helpContent} />
+      <Stack padding={1} spacing={1}>
         {channels.map((logger) => {
           const label = logger.name().length === 0 ? "default" : logger.name();
           return (
-            <div key={label}>
-              <Checkbox
-                checked={logger.isEnabled()}
-                label={label}
-                onChange={(newChecked) => {
-                  // track disabled channels so loggers are on by default
-                  if (newChecked) {
-                    disabledChannels.delete(label);
-                  } else {
-                    disabledChannels.add(label);
-                  }
+            <Checkbox
+              key={label}
+              label={label}
+              styles={{ label: { wordBreak: "break-word" } }}
+              checked={logger.isEnabled()}
+              // eslint-disable-next-line @foxglove/no-boolean-parameters
+              onChange={(_event, newChecked = false) => {
+                // track disabled channels so loggers are on by default
+                if (newChecked) {
+                  disabledChannels.delete(label);
+                } else {
+                  disabledChannels.add(label);
+                }
 
-                  props.saveConfig({
-                    disabledChannels: Array.from(disabledChannels.values()),
-                  });
-                }}
-              />
-            </div>
+                props.saveConfig({
+                  disabledChannels: Array.from(disabledChannels.values()),
+                });
+              }}
+            />
           );
         })}
-      </Flex>
-    </Flex>
+      </Stack>
+    </Stack>
   );
 }
 
@@ -78,6 +79,5 @@ InternalLogs.panelType = "InternalLogs";
 InternalLogs.defaultConfig = {
   disabledChannels: [],
 } as Config;
-InternalLogs.supportsStrictMode = false;
 
 export default Panel(InternalLogs);

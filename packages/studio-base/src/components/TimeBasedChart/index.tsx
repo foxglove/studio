@@ -13,7 +13,6 @@
 import { useTheme } from "@fluentui/react";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { AnnotationOptions } from "chartjs-plugin-annotation";
-import { ZoomOptions } from "chartjs-plugin-zoom/types/options";
 import React, {
   useEffect,
   useCallback,
@@ -28,6 +27,7 @@ import styled from "styled-components";
 import { useDebouncedCallback } from "use-debounce";
 import { v4 as uuidv4 } from "uuid";
 
+import type { ZoomOptions } from "@foxglove/chartjs-plugin-zoom/types/options";
 import { filterMap } from "@foxglove/den/collection";
 import Logger from "@foxglove/log";
 import Button from "@foxglove/studio-base/components/Button";
@@ -126,6 +126,7 @@ export type Props = {
   // If the x axis represents playback time ("timestamp"), the hover cursor will be synced.
   // Note, this setting should not be used for other time values.
   xAxisIsPlaybackTime: boolean;
+  showXAxisLabels: boolean;
   plugins?: ChartOptions["plugins"];
   currentTime?: number;
   defaultView?: ChartDefaultView;
@@ -152,6 +153,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     defaultView,
     currentTime,
     xAxisIsPlaybackTime,
+    showXAxisLabels,
   } = props;
 
   const { labels, datasets } = data;
@@ -167,13 +169,25 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     useCallback((messagePipeline) => messagePipeline.pauseFrame, []),
   );
 
-  // when data changes, we pause and wait for onChartUpdate to resume
   const resumeFrame = useRef<() => void | undefined>();
+
+  // when data changes, we pause and wait for onFinishRender to resume
+  const onStartRender = useCallback(() => {
+    if (resumeFrame.current) {
+      if (process.env.NODE_ENV === "development") {
+        log.warn("force resumed paused frame");
+      }
+      resumeFrame.current();
+    }
+    // during streaming the message pipeline should not give us any more data until we finish
+    // rendering this update
+    resumeFrame.current = pauseFrame("TimeBasedChart");
+  }, [pauseFrame]);
 
   // resumes any paused frames
   // since we render in a web-worker we need to pause/resume the message pipeline to keep
   // our plot rendeirng in-sync with data rendered elsewhere in the app
-  const onChartUpdate = useCallback(() => {
+  const onFinishRender = useCallback(() => {
     const current = resumeFrame.current;
     resumeFrame.current = undefined;
 
@@ -183,18 +197,18 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     }
   }, []);
 
+  useEffect(() => {
+    // cleanup paused frames on unmount or dataset changes
+    return () => {
+      onFinishRender();
+    };
+  }, [pauseFrame, onFinishRender]);
+
   const hoverBar = useRef<HTMLDivElement>(ReactNull);
 
   const [globalBounds, setGlobalBounds] = useGlobalXBounds({ enabled: isSynced });
 
   const linesToHide = useMemo(() => props.linesToHide ?? {}, [props.linesToHide]);
-
-  useEffect(() => {
-    // cleanup paused frames on unmount or dataset changes
-    return () => {
-      onChartUpdate();
-    };
-  }, [pauseFrame, onChartUpdate]);
 
   // some callbacks don't need to re-create when the current scales change, so we keep a ref
   const currentScalesRef = useRef<RpcScales | undefined>(undefined);
@@ -442,6 +456,12 @@ export default function TimeBasedChart(props: Props): JSX.Element {
       return { min: undefined, max: undefined };
     }
 
+    // If we're the source of global bounds then use our current values
+    // to avoid scale feedback jitter.
+    if (globalBounds?.sourceId === componentId && globalBounds.userInteraction) {
+      return { min: undefined, max: undefined };
+    }
+
     let min: number | undefined;
     let max: number | undefined;
 
@@ -479,6 +499,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
     return { min, max };
   }, [
+    componentId,
     currentTime,
     datasetBounds.x.max,
     datasetBounds.x.min,
@@ -503,13 +524,21 @@ export default function TimeBasedChart(props: Props): JSX.Element {
       min: minX,
       max: maxX,
       ticks: {
+        display: showXAxisLabels,
         ...defaultXTicksSettings,
         ...xAxes?.ticks,
       },
     };
 
     return scale;
-  }, [theme.palette.neutralSecondary, theme.palette.neutralLighter, xAxes, minX, maxX]);
+  }, [
+    theme.palette.neutralSecondary,
+    showXAxisLabels,
+    theme.palette.neutralLighter,
+    xAxes,
+    minX,
+    maxX,
+  ]);
 
   const yScale = useMemo<ScaleOptions>(() => {
     const defaultYTicksSettings: ScaleOptions["ticks"] = {
@@ -521,22 +550,15 @@ export default function TimeBasedChart(props: Props): JSX.Element {
       padding: 0,
     };
 
-    let minY;
-    let maxY;
+    let { min: minY, max: maxY } = yAxes;
 
-    if (!hasUserPannedOrZoomed) {
-      // we prefer user specified bounds over dataset bounds
-      minY = yAxes.min;
-      maxY = yAxes.max;
-
-      // chartjs doesn't like it when only one of min/max are specified for scales
-      // so if either is specified then we specify both
-      if (maxY == undefined && minY != undefined) {
-        maxY = datasetBounds.y.max;
-      }
-      if (minY == undefined && maxY != undefined) {
-        minY = datasetBounds.y.min;
-      }
+    // chartjs doesn't like it when only one of min/max are specified for scales
+    // so if either is specified then we specify both
+    if (maxY == undefined && minY != undefined) {
+      maxY = datasetBounds.y.max;
+    }
+    if (minY == undefined && maxY != undefined) {
+      minY = datasetBounds.y.min;
     }
 
     return {
@@ -549,7 +571,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         ...yAxes.ticks,
       },
     } as ScaleOptions;
-  }, [datasetBounds.y, yAxes, hasUserPannedOrZoomed, theme.palette.neutralSecondary]);
+  }, [datasetBounds.y, yAxes, theme.palette.neutralSecondary]);
 
   const datasetBoundsRef = useRef(datasetBounds);
   datasetBoundsRef.current = datasetBounds;
@@ -564,7 +586,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
             y: { min: number; max: number };
           }
         | undefined = undefined;
-      if (currentScales?.x && currentScales?.y) {
+      if (currentScales?.x && currentScales.y) {
         bounds = {
           width,
           height,
@@ -659,21 +681,11 @@ export default function TimeBasedChart(props: Props): JSX.Element {
   }, [invalidateDownsample, throttledDownsample, visibleDatasets]);
 
   const downsampledData = useMemo(() => {
-    if (resumeFrame.current) {
-      if (process.env.NODE_ENV === "development") {
-        log.warn("force resumed paused frame");
-      }
-      resumeFrame.current();
-    }
-    // during streaming the message pipeline should not give us any more data until we finish
-    // rendering this update
-    resumeFrame.current = pauseFrame("TimeBasedChart");
-
     return {
       labels,
       datasets: downsampledDatasets,
     };
-  }, [pauseFrame, labels, downsampledDatasets]);
+  }, [labels, downsampledDatasets]);
 
   const options = useMemo<ChartOptions>(() => {
     return {
@@ -718,13 +730,13 @@ export default function TimeBasedChart(props: Props): JSX.Element {
       queueDownsampleInvalidate();
 
       // chart indicated we got a scales update, we may need to update global bounds
-      if (!isSynced || !scales?.x) {
+      if (!isSynced || !scales.x) {
         return;
       }
 
       // the change is a result of user interaction on our chart
       // we set the sync scale value so other synced charts follow our zoom/pan behavior
-      if (userInteraction && isSynced) {
+      if (userInteraction) {
         setGlobalBounds({
           min: scales.x.min,
           max: scales.x.max,
@@ -738,7 +750,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
       // the sync value is conditionally set depending on the state of the existing sync value
       setGlobalBounds((old) => {
         // no scale from our plot, always use old value
-        const scalesX = scales?.x;
+        const scalesX = scales.x;
         if (!scalesX) {
           return old;
         }
@@ -812,12 +824,13 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     data: downsampledData,
     onClick: props.onClick,
     onScalesUpdate,
-    onChartUpdate,
+    onStartRender,
+    onFinishRender,
     onHover,
   };
 
   // avoid rendering if width/height are 0 - usually on initial mount
-  // so we don't trigger onChartUpdate if we know we will immediately resize
+  // so we don't trigger onFinishRender if we know we will immediately resize
   if (width === 0 || height === 0) {
     return <></>;
   }

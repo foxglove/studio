@@ -11,26 +11,27 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import React, { useCallback } from "react";
+import { Box, Stack } from "@mui/material";
+import React from "react";
 import styled from "styled-components";
 
 import { Color } from "@foxglove/regl-worldview";
 import ColorPicker from "@foxglove/studio-base/components/ColorPicker";
 import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
 import Dropdown from "@foxglove/studio-base/components/Dropdown/index";
-import Flex from "@foxglove/studio-base/components/Flex";
 import GradientPicker from "@foxglove/studio-base/components/GradientPicker";
 import Radio from "@foxglove/studio-base/components/Radio";
 import SegmentedControl from "@foxglove/studio-base/components/SegmentedControl";
 import CommonPointSettings from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor/CommonPointSettings";
 import { TopicSettingsEditorProps } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor/types";
 import { PointCloud2 } from "@foxglove/studio-base/types/Messages";
+import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 
 import CommonDecaySettings from "./CommonDecaySettings";
 import { SLabel, SInput } from "./common";
 import { turboColorString } from "./turboColor";
 
-export type ColorMode =
+type DirectColorMode =
   | {
       mode: "rgb";
       flatColor?: never;
@@ -48,7 +49,9 @@ export type ColorMode =
       maxColor?: never;
       minValue?: never;
       maxValue?: never;
-    }
+    };
+
+type MappedColorMode =
   | {
       mode: "gradient";
       flatColor?: never;
@@ -77,6 +80,8 @@ export type ColorMode =
       maxColor?: never;
     };
 
+export type ColorMode = DirectColorMode | MappedColorMode;
+
 export const DEFAULT_FLAT_COLOR = { r: 1, g: 1, b: 1, a: 1 };
 export const DEFAULT_MIN_COLOR = { r: 0, g: 0, b: 1, a: 1 };
 export const DEFAULT_MAX_COLOR = { r: 1, g: 0, b: 0, a: 1 };
@@ -96,11 +101,9 @@ const SValueRangeInput = styled(SInput).attrs({ type: "number", placeholder: "au
   flex: 1 1 auto;
 `;
 
-const SegmentedControlWrapper = styled.div`
-  min-width: 152px;
-  display: flex;
-  align-items: center;
-`;
+function isMappedColorMode(mode: ColorMode): mode is MappedColorMode {
+  return mode.mode === "turbo" || mode.mode === "rainbow" || mode.mode === "gradient";
+}
 
 const RainbowText = React.memo(function RainbowText({ children }: { children: string }) {
   return (
@@ -132,22 +135,10 @@ export default function PointCloudSettingsEditor(
 ): React.ReactElement {
   const { message, settings = {}, onFieldChange, onSettingsChange } = props;
 
-  const onColorModeChange = useCallback(
-    (
-      newValue: (ColorMode | undefined) | ((prevColorMode?: ColorMode) => ColorMode | undefined),
-    ) => {
-      onSettingsChange((newSettings) => ({
-        ...newSettings,
-        colorMode: typeof newValue === "function" ? newValue(newSettings.colorMode) : newValue,
-      }));
-    },
-    [onSettingsChange],
-  );
-
-  const hasRGB = message?.fields?.some(({ name }) => name === "rgb") ?? false;
+  const hasRGB = message?.fields.some(({ name }) => name === "rgb") ?? false;
   const defaultColorField =
-    message?.fields?.find(({ name }) => DEFAULT_COLOR_FIELDS.includes(name))?.name ??
-    message?.fields?.find(({ name }) => name !== "rgb")?.name;
+    message?.fields.find(({ name }) => DEFAULT_COLOR_FIELDS.includes(name))?.name ??
+    message?.fields.find(({ name }) => name !== "rgb")?.name;
   const colorMode: ColorMode =
     settings.colorMode ??
     (hasRGB
@@ -156,14 +147,18 @@ export default function PointCloudSettingsEditor(
       ? { mode: "turbo", colorField: defaultColorField }
       : { mode: "flat", flatColor: DEFAULT_FLAT_COLOR });
 
+  function onColorModeChange(newValueFn: (prevColorMode: ColorMode) => ColorMode | undefined) {
+    onSettingsChange((oldSettings) => ({ ...oldSettings, colorMode: newValueFn(colorMode) }));
+  }
+
   return (
-    <Flex col>
+    <Stack flex="auto">
       <CommonPointSettings settings={settings} defaultPointSize={2} onFieldChange={onFieldChange} />
       <CommonDecaySettings settings={settings} onFieldChange={onFieldChange} />
 
       <SLabel>Color by</SLabel>
-      <Flex row style={{ justifyContent: "space-between", marginBottom: "8px" }}>
-        <SegmentedControlWrapper>
+      <Stack direction="row" flex="auto" justifyContent="space-between" marginBottom={1}>
+        <Box minWidth={152} display="flex" alignItems="center">
           <SegmentedControl
             selectedId={colorMode.mode === "flat" ? "flat" : "data"}
             onChange={(id) =>
@@ -172,7 +167,7 @@ export default function PointCloudSettingsEditor(
                   return {
                     mode: "flat",
                     flatColor:
-                      prevColorMode && prevColorMode.mode === "gradient"
+                      prevColorMode.mode === "gradient"
                         ? prevColorMode.minColor
                         : DEFAULT_FLAT_COLOR,
                   };
@@ -190,12 +185,12 @@ export default function PointCloudSettingsEditor(
               { id: "data", label: "Point data" },
             ]}
           />
-        </SegmentedControlWrapper>
-        <Flex row style={{ margin: "2px 0 2px 12px", alignItems: "center" }}>
+        </Box>
+        <Stack direction="row" flex="auto" alignItems="center" marginY={0.25} marginLeft={1.5}>
           {colorMode.mode === "flat" ? ( // For flat mode, pick a single color
             <ColorPicker
               color={colorMode.flatColor}
-              onChange={(flatColor) => onColorModeChange({ mode: "flat", flatColor })}
+              onChange={(flatColor) => onColorModeChange(() => ({ mode: "flat", flatColor }))}
             /> // Otherwise, choose a field from the point cloud to color by
           ) : (
             <Dropdown
@@ -206,13 +201,7 @@ export default function PointCloudSettingsEditor(
                   if (value === "rgb") {
                     return { mode: "rgb" };
                   }
-                  if (prevColorMode?.mode === "gradient") {
-                    return { ...prevColorMode, colorField: value };
-                  }
-                  if (prevColorMode?.mode === "rainbow") {
-                    return { ...prevColorMode, colorField: value };
-                  }
-                  if (prevColorMode?.mode === "turbo") {
+                  if (isMappedColorMode(prevColorMode)) {
                     return { ...prevColorMode, colorField: value };
                   }
                   return { mode: "turbo", colorField: value };
@@ -229,55 +218,45 @@ export default function PointCloudSettingsEditor(
                   ))}
             </Dropdown>
           )}
-        </Flex>
-      </Flex>
+        </Stack>
+      </Stack>
 
-      {(colorMode.mode === "gradient" ||
-        colorMode.mode === "rainbow" ||
-        colorMode.mode === "turbo") && (
-        <Flex col style={{ marginBottom: "8px" }}>
+      {isMappedColorMode(colorMode) && (
+        <Stack flex="auto" marginBottom={1}>
           <SLabel>Value range</SLabel>
-          <Flex row style={{ marginLeft: "8px" }}>
-            <Flex row style={{ flex: "1 1 100%", alignItems: "baseline", marginRight: "20px" }}>
+          <Stack direction="row" flex="auto" marginLeft={1}>
+            <Stack direction="row" flex="1 1 100%" alignItems="baseline" marginRight={2.5}>
               Min
               <SValueRangeInput
                 value={colorMode.minValue ?? ""}
                 onChange={({ target: { value } }) =>
                   onColorModeChange((prevColorMode) =>
-                    prevColorMode?.mode === "gradient" ||
-                    prevColorMode?.mode === "rainbow" ||
-                    prevColorMode?.mode === "turbo"
+                    isMappedColorMode(prevColorMode)
                       ? { ...prevColorMode, minValue: value === "" ? undefined : +value }
                       : prevColorMode,
                   )
                 }
               />
-            </Flex>
-            <Flex row style={{ flex: "1 1 100%", alignItems: "baseline" }}>
+            </Stack>
+            <Stack direction="row" flex="1 1 100%" alignItems="baseline">
               Max
               <SValueRangeInput
                 value={colorMode.maxValue ?? ""}
                 onChange={({ target: { value } }) =>
                   onColorModeChange((prevColorMode) =>
-                    prevColorMode?.mode === "gradient" ||
-                    prevColorMode?.mode === "rainbow" ||
-                    prevColorMode?.mode === "turbo"
+                    isMappedColorMode(prevColorMode)
                       ? { ...prevColorMode, maxValue: value === "" ? undefined : +value }
                       : prevColorMode,
                   )
                 }
               />
-            </Flex>
-          </Flex>
+            </Stack>
+          </Stack>
           <Radio
             selectedId={colorMode.mode}
             onChange={(id) =>
               onColorModeChange((prevColorMode) => {
-                if (
-                  prevColorMode?.mode === "gradient" ||
-                  prevColorMode?.mode === "rainbow" ||
-                  prevColorMode?.mode === "turbo"
-                ) {
+                if (isMappedColorMode(prevColorMode)) {
                   const { colorField, minValue, maxValue } = prevColorMode;
                   return id === "rainbow"
                     ? { mode: "rainbow", colorField, minValue, maxValue }
@@ -298,34 +277,33 @@ export default function PointCloudSettingsEditor(
             options={[
               {
                 id: "turbo",
-                label: colorMode.mode === "turbo" ? <TurboText>Turbo</TurboText> : "Turbo",
+                label: <TurboText>Turbo</TurboText>,
               },
               {
                 id: "rainbow",
-                label:
-                  colorMode.mode === "rainbow" ? <RainbowText>Rainbow</RainbowText> : "Rainbow",
+                label: <RainbowText>Rainbow</RainbowText>,
               },
               { id: "gradient", label: "Custom gradient" },
             ]}
           />
-        </Flex>
+        </Stack>
       )}
       {colorMode.mode === "gradient" && (
-        <div style={{ margin: "8px" }}>
+        <Box margin={1}>
           <GradientPicker
-            minColor={colorMode.minColor ?? DEFAULT_MIN_COLOR}
-            maxColor={colorMode.maxColor ?? DEFAULT_MAX_COLOR}
+            minColor={mightActuallyBePartial(colorMode).minColor ?? DEFAULT_MIN_COLOR}
+            maxColor={mightActuallyBePartial(colorMode).maxColor ?? DEFAULT_MAX_COLOR}
             onChange={({ minColor, maxColor }) =>
               onColorModeChange((prevColorMode) =>
-                prevColorMode?.mode === "gradient"
+                prevColorMode.mode === "gradient"
                   ? { ...prevColorMode, minColor, maxColor }
                   : prevColorMode,
               )
             }
           />
-        </div>
+        </Box>
       )}
-    </Flex>
+    </Stack>
   );
 }
 

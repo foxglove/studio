@@ -13,8 +13,11 @@ on:
 
 jobs:
   bump:
-    name: Bump dev
+    name: Merge release branch
     runs-on: ubuntu-20.04
+
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout ${{ github.event.release.target_commitish || github.event.inputs.target_commitish }}
@@ -46,8 +49,67 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.FOXGLOVEBOT_GITHUB_TOKEN }}
 
+  apt:
+    name: Publish apt repo
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout ${{ github.event.release.target_commitish || github.event.inputs.target_commitish }}
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.release.target_commitish || github.event.inputs.target_commitish }}
+          token: ${{ secrets.FOXGLOVEBOT_GITHUB_TOKEN }}
+          lfs: true
+
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14.x
+          cache: yarn
+
+      - run: yarn install --immutable
+
+      - run: sudo apt-get install -qq aptly
+
+      - name: Run gpg1 --import
+        run: |
+          echo "$APT_PACKAGING_GPG_KEY" | gpg1 --import
+          set -x
+          gpg1 --list-keys
+          gpg1 --list-secret-keys
+        env:
+          APT_PACKAGING_GPG_KEY: ${{ secrets.APT_PACKAGING_GPG_KEY }}
+
+      - name: Download release binaries
+        working-directory: ci/apt
+        run: yarn ts-node downloadReleases.ts
+
+      - name: Build apt repo
+        working-directory: ci/apt
+        env:
+          GPG_KEY: B3D1019140FC8712243A16843134270966E8EFD7
+        run: |
+          set -x
+          aptly -config aptly.conf.json repo create -distribution stable stable
+          aptly -config aptly.conf.json repo add stable packages/*
+          aptly -config aptly.conf.json publish -gpg-key="$GPG_KEY" repo stable filesystem:public:studio
+
+      - name: Publish apt repo
+        env:
+          APT_GITHUB_REPO: https://github.com/foxglove/apt.foxglove.dev
+        run: |
+          set -x
+          git config user.name "Foxglove"
+          git config user.email "contact@foxglove.dev"
+          git lfs uninstall --local
+          sed -i '/filter=lfs/d' .gitattributes
+          git add ci/apt/public
+          git status
+          git commit -m "Publish apt repo"
+          git subtree split --prefix ci/apt/public --branch apt-gh-pages
+          git push --no-verify --force "$APT_GITHUB_REPO" apt-gh-pages:gh-pages
+
   npm:
-    name: NPM publish
+    name: Publish to NPM
     runs-on: ubuntu-20.04
 
     steps:
@@ -72,3 +134,50 @@ jobs:
       - run: npm publish ./packages/studio-base
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+
+  docker:
+    name: Publish to GHCR
+    runs-on: ubuntu-20.04
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout ${{ github.event.release.tag_name || github.event.inputs.tag_name }}
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.release.tag_name || github.event.inputs.tag_name }}
+          lfs: true
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Docker tags
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ github.event.release.tag_name || github.event.inputs.tag_name }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ github.event.release.tag_name || github.event.inputs.tag_name }}
+            latest
+
+      - name: Configure QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Configure Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

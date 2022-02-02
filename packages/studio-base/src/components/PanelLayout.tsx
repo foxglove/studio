@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Link, Spinner, SpinnerSize } from "@fluentui/react";
+import { Stack } from "@mui/material";
 import React, {
   useCallback,
   useMemo,
@@ -31,8 +32,8 @@ import {
 import "react-mosaic-component/react-mosaic-component.css";
 import styled from "styled-components";
 
+import { EmptyPanelLayout } from "@foxglove/studio-base/components/EmptyPanelLayout";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
-import Flex from "@foxglove/studio-base/components/Flex";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import {
   LayoutState,
@@ -42,7 +43,6 @@ import {
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { PanelComponent, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
-import { EmptyDropTarget } from "@foxglove/studio-base/panels/Tab/EmptyDropTarget";
 import { MosaicDropResult, PanelConfig } from "@foxglove/studio-base/types/panels";
 import { getPanelIdForType, getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
@@ -129,10 +129,10 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
         Panel = panelInfo
           ? React.lazy(panelInfo.module)
           : () => (
-              <Flex col center dataTest={id}>
+              <Stack flex="auto" alignItems="center" justifyContent="center" data-test={id}>
                 <PanelToolbar floating isUnknownPanel />
                 Unknown panel type: {type}.
-              </Flex>
+              </Stack>
             );
         panelCompoentCache.current.set(type, Panel);
       }
@@ -165,7 +165,7 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
   );
   const bodyToRender = useMemo(
     () =>
-      layout != undefined || layout === "" ? (
+      layout != undefined ? (
         <MosaicWithoutDragDropContext
           renderTile={renderTile}
           className="mosaic-foxglove-theme" // prevent the default mosaic theme from being applied
@@ -175,7 +175,7 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
           mosaicId={mosaicId}
         />
       ) : (
-        <EmptyDropTarget tabId={tabId} />
+        <EmptyPanelLayout tabId={tabId} />
       ),
     [layout, mosaicId, onChange, renderTile, tabId],
   );

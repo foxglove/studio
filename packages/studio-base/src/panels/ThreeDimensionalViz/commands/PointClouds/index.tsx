@@ -30,7 +30,7 @@ import {
   DEFAULT_MAX_COLOR,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor/PointCloudSettingsEditor";
 import { toRgba } from "@foxglove/studio-base/panels/ThreeDimensionalViz/commands/PointClouds/selection";
-import sendNotification from "@foxglove/studio-base/util/sendNotification";
+import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 
 import VertexBufferCache from "./VertexBufferCache";
 import { FLOAT_SIZE } from "./buffers";
@@ -40,7 +40,6 @@ import { MemoizedMarker, MemoizedVertexBuffer, PointCloudMarker, VertexBuffer } 
 
 const COLOR_MODE_FLAT = 0;
 const COLOR_MODE_RGB = 1;
-const COLOR_MODE_BGR = -1;
 const COLOR_MODE_GRADIENT = 2;
 const COLOR_MODE_RAINBOW = 3;
 const COLOR_MODE_TURBO = 4;
@@ -135,7 +134,8 @@ vec3 turboColor() {
   const vec2 kGreenVec2 = vec2(4.27729857, 2.82956604);
   const vec2 kBlueVec2 = vec2(-89.90310912, 27.34824973);
 
-  float x = clamp(getFieldValue_UNORM(), 0.0, 1.0);
+  // Clamp the input between [0.0, 1.0], then scale to the range [0.01, 1.0]
+  float x = clamp(getFieldValue_UNORM(), 0.0, 1.0) * 0.99 + 0.01;
   vec4 v4 = vec4(1.0, x, x * x, x * x * x);
   vec2 v2 = v4.zw * v4.z;
   return vec3(
@@ -183,9 +183,7 @@ void main () {
   vec3 p = applyPose(position);
   gl_Position = projection * view * vec4(p, 1);
 
-  if (colorMode == ${COLOR_MODE_BGR}) {
-    fragColor = color.bgr;
-  } else if (colorMode == ${COLOR_MODE_RGB}) {
+  if (colorMode == ${COLOR_MODE_RGB}) {
     fragColor = color;
   }
 }
@@ -212,7 +210,7 @@ void main () {
 `;
 
 function getEffectiveColorMode(props: DecodedMarker) {
-  const { settings, is_bigendian, hitmapColors, blend } = props;
+  const { settings, hitmapColors, blend } = props;
   if (hitmapColors) {
     // We're providing a colors array in RGB format
     return COLOR_MODE_RGB;
@@ -233,7 +231,7 @@ function getEffectiveColorMode(props: DecodedMarker) {
   } else if (colorMode.mode === "turbo") {
     return COLOR_MODE_TURBO;
   }
-  return is_bigendian ? COLOR_MODE_RGB : COLOR_MODE_BGR;
+  return COLOR_MODE_RGB;
 }
 
 // Implements a custom caching mechanism for vertex buffers.
@@ -291,9 +289,7 @@ const makePointCloudCommand = () => {
       primitive: "points",
       vert: (_context, props) => {
         const mode = getEffectiveColorMode(props);
-        return mode === COLOR_MODE_RGB || mode === COLOR_MODE_BGR
-          ? vertexShaderForRgbColor
-          : vertexShaderForSingleColor;
+        return mode === COLOR_MODE_RGB ? vertexShaderForRgbColor : vertexShaderForSingleColor;
       },
       frag: fragmentShader,
       attributes: {
@@ -302,7 +298,7 @@ const makePointCloudCommand = () => {
         },
         color: (_context, props) => {
           const { hitmapColors, settings, blend } = props;
-          const { colorMode } = settings;
+          const { colorMode } = mightActuallyBePartial(settings);
           if (hitmapColors) {
             // If colors are provided, we use those instead what is indicated by colorMode
             // This is a common scenario when rendering to the hitmap, for example.
@@ -332,11 +328,11 @@ const makePointCloudCommand = () => {
 
       uniforms: {
         pointSize: (_context, props) => {
-          return props.settings?.pointSize ?? 2;
+          return props.settings.pointSize ?? 2;
         },
         isCircle: (_context, props) => {
-          return props.settings?.pointShape != undefined
-            ? props.settings?.pointShape === "circle"
+          return props.settings.pointShape != undefined
+            ? props.settings.pointShape === "circle"
             : true;
         },
         colorMode: (_context, props) => getEffectiveColorMode(props),
@@ -447,30 +443,14 @@ type Props = CommonCommandProps & {
   clearCachedMarkers?: boolean;
 };
 
-export default function PointClouds({
-  children,
-  clearCachedMarkers,
-  ...rest
-}: Props): React.ReactElement {
+export default function PointClouds({ children, clearCachedMarkers, ...rest }: Props): JSX.Element {
   const [command] = useState(() => makePointCloudCommand());
   const markerCache = useRef(new Map<Uint8Array, MemoizedMarker>());
-  try {
-    markerCache.current = updateMarkerCache(markerCache.current, children as PointCloudMarker[]);
-  } catch (err) {
-    sendNotification("Point cloud decoding failed", err, "user", "error");
-  }
+  markerCache.current = updateMarkerCache(markerCache.current, children as PointCloudMarker[]);
+
   const decodedMarkers = !(clearCachedMarkers ?? false)
     ? [...markerCache.current.values()].map((decoded) => decoded.marker)
-    : (children as PointCloudMarker[])
-        .map((m) => {
-          try {
-            return decodeMarker(m);
-          } catch (err) {
-            sendNotification("Point cloud decoding failed", err, "user", "error");
-            return undefined;
-          }
-        })
-        .filter((m) => m != undefined);
+    : (children as PointCloudMarker[]).map(decodeMarker);
   return (
     <Command getChildrenForHitmap={instancedGetChildrenForHitmap} {...rest} reglCommand={command}>
       {decodedMarkers}

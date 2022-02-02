@@ -11,7 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { IButtonStyles, IconButton, Stack, TextField, useTheme } from "@fluentui/react";
+import { IButtonStyles, IconButton, TextField, useTheme } from "@fluentui/react";
+import { Paper, Stack } from "@mui/material";
 import { vec3 } from "gl-matrix";
 import { range, throttle } from "lodash";
 import { useState, useRef, useEffect, useCallback, KeyboardEvent } from "react";
@@ -21,8 +22,9 @@ import { Time } from "@foxglove/rostime";
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import useDeepChangeDetector from "@foxglove/studio-base/hooks/useDeepChangeDetector";
 import { Interactive } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/types";
-import { TransformTree } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
+import { IImmutableTransformTree } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
 import { TextMarker, Color } from "@foxglove/studio-base/types/Messages";
+import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
 export const YELLOW = { r: 1, b: 0, g: 1, a: 1 };
 export const ORANGE = { r: 0.97, g: 0.58, b: 0.02, a: 1 };
@@ -74,36 +76,31 @@ export const useGLText = ({
 }: WorldSearchTextProps & {
   text: Interactive<TextMarker>[];
 }): Interactive<GLTextMarker>[] => {
-  const glText: Interactive<GLTextMarker>[] = React.useMemo(() => {
-    let numMatches = 0;
-    return text.map((marker) => {
-      const scale = {
-        // RViz ignores scale.x/y for text and only uses z
-        x: marker.scale.z,
-        y: marker.scale.z,
-        z: marker.scale.z,
-      };
+  let numMatches = 0;
+  const glText: Interactive<GLTextMarker>[] = text.map((marker) => {
+    // RViz ignores scale.x/y for text and only uses z
+    const z = marker.scale.z;
+    const scale = { x: z, y: z, z };
 
-      if (searchText.length === 0 || !searchTextOpen) {
-        return { ...marker, scale };
-      }
-
-      const highlightedIndices = getHighlightedIndices(marker.text, searchText);
-
-      if (highlightedIndices.length > 0) {
-        numMatches += 1;
-        const highlightedMarker = {
-          ...marker,
-          scale,
-          highlightColor: selectedMatchIndex + 1 === numMatches ? ORANGE : YELLOW,
-          highlightedIndices,
-        };
-        return highlightedMarker;
-      }
-
+    if (searchText.length === 0 || !searchTextOpen) {
       return { ...marker, scale };
-    });
-  }, [searchText, searchTextOpen, selectedMatchIndex, text]);
+    }
+
+    const highlightedIndices = getHighlightedIndices(marker.text, searchText);
+
+    if (highlightedIndices.length > 0) {
+      numMatches += 1;
+      const highlightedMarker = {
+        ...marker,
+        scale,
+        highlightColor: selectedMatchIndex + 1 === numMatches ? ORANGE : YELLOW,
+        highlightedIndices,
+      };
+      return highlightedMarker;
+    }
+
+    return { ...marker, scale };
+  });
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const throttledSetSearchTextMatches = useCallback(
@@ -149,8 +146,9 @@ type SearchTextComponentProps = SearchTextProps & {
   onCameraStateChange: (arg0: CameraState) => void;
   cameraState: CameraState;
   renderFrameId?: string;
+  fixedFrameId?: string;
   currentTime: Time;
-  transforms: TransformTree;
+  transforms: IImmutableTransformTree;
 };
 
 // Exported for tests.
@@ -159,6 +157,7 @@ export const useSearchMatches = ({
   currentMatch,
   onCameraStateChange,
   renderFrameId,
+  fixedFrameId,
   currentTime,
   searchTextOpen,
   transforms,
@@ -167,25 +166,31 @@ export const useSearchMatches = ({
   currentMatch?: GLTextMarker;
   onCameraStateChange: (arg0: CameraState) => void;
   renderFrameId?: string;
+  fixedFrameId?: string;
   currentTime: Time;
   searchTextOpen: boolean;
-  transforms: TransformTree;
+  transforms: IImmutableTransformTree;
 }): void => {
   const hasCurrentMatchChanged = useDeepChangeDetector([currentMatch], { initiallyTrue: true });
 
   useEffect(() => {
-    if (!currentMatch || !searchTextOpen || !renderFrameId || !hasCurrentMatchChanged) {
+    if (!currentMatch || !searchTextOpen || renderFrameId == undefined || !hasCurrentMatchChanged) {
       return;
+    }
+    if (fixedFrameId == undefined) {
+      throw new Error(`renderFrameId="${renderFrameId}" but fixedFrame is undefined`);
     }
 
     const output = transforms.apply(
-      { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 0 } },
+      emptyPose(),
       currentMatch.pose,
       renderFrameId,
+      fixedFrameId,
       currentMatch.header.frame_id,
       currentTime,
+      currentTime,
     );
-    if (!output) {
+    if (output == undefined) {
       return;
     }
     const {
@@ -205,6 +210,7 @@ export const useSearchMatches = ({
     cameraState,
     currentMatch,
     currentTime,
+    fixedFrameId,
     hasCurrentMatchChanged,
     onCameraStateChange,
     renderFrameId,
@@ -234,6 +240,7 @@ const SearchText = React.memo<SearchTextComponentProps>(function SearchText({
   cameraState,
   transforms,
   renderFrameId,
+  fixedFrameId,
   currentTime,
 }: SearchTextComponentProps) {
   const theme = useTheme();
@@ -263,6 +270,7 @@ const SearchText = React.memo<SearchTextComponentProps>(function SearchText({
     currentMatch,
     onCameraStateChange,
     renderFrameId,
+    fixedFrameId,
     currentTime,
     searchTextOpen,
     transforms,
@@ -284,7 +292,7 @@ const SearchText = React.memo<SearchTextComponentProps>(function SearchText({
 
   if (!searchTextOpen) {
     return (
-      <div>
+      <Paper square={false} elevation={4}>
         {searchButton.tooltip}
         <IconButton
           elementRef={searchButton.ref}
@@ -293,106 +301,96 @@ const SearchText = React.memo<SearchTextComponentProps>(function SearchText({
           styles={{
             // see also ExpandingToolbar styles
             root: {
-              backgroundColor: theme.semanticColors.buttonBackgroundHovered,
+              backgroundColor: "transparent",
               pointerEvents: "auto",
             },
-            rootHovered: { backgroundColor: theme.semanticColors.buttonBackgroundHovered },
-            rootPressed: { backgroundColor: theme.semanticColors.buttonBackgroundHovered },
-            rootDisabled: { backgroundColor: theme.semanticColors.buttonBackgroundHovered },
+            rootHovered: { backgroundColor: "transparent" },
+            rootPressed: { backgroundColor: "transparent" },
+            rootDisabled: { backgroundColor: "transparent" },
             ...iconStyle,
           }}
         />
-      </div>
+      </Paper>
     );
   }
 
   return (
-    <Stack
-      horizontal
-      verticalAlign="center"
-      styles={{
-        root: {
-          pointerEvents: "auto",
-          backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-          borderRadius: theme.effects.roundedCorner2,
-          position: "relative",
-        },
-      }}
-    >
-      <TextField
-        autoFocus
-        iconProps={{ iconName: "Search" }}
-        elementRef={searchInputRef}
-        type="text"
-        placeholder="Find in scene"
-        spellCheck={false}
-        suffix={`${hasMatches ? selectedMatchIndex + 1 : "0"} of ${searchTextMatches.length}`}
-        value={searchText}
-        styles={{
-          icon: {
-            color: theme.semanticColors.inputText,
-            lineHeight: 0,
-            left: theme.spacing.s1,
-            right: "auto",
-            fontSize: 18,
-
-            svg: {
-              fill: "currentColor",
-              height: "1em",
-              width: "1em",
-            },
-          },
-          field: {
-            padding: `0 ${theme.spacing.s1} 0 ${theme.spacing.l2}`,
-
-            "::placeholder": { opacity: 0.6 },
-          },
-          suffix: { backgroundColor: "transparent" },
-        }}
-        onChange={(_, newValue) => setSearchText(newValue ?? "")}
-        onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-          if (e.key !== "Enter") {
-            return;
-          }
-          if (e.shiftKey) {
-            iterateCurrentIndex(-1);
-            return;
-          }
-          iterateCurrentIndex(1);
-        }}
-      />
+    <Paper square={false} elevation={4} sx={{ pointerEvents: "auto" }}>
       <Stack
-        horizontal
-        verticalAlign="center"
-        tokens={{
-          childrenGap: theme.spacing.s2,
-          padding: `0 0 0 ${theme.spacing.s2}`,
+        direction="row"
+        alignItems="center"
+        sx={{
+          position: "relative",
         }}
       >
-        <IconButton
-          iconProps={{ iconName: "ChevronUpSmall" }}
-          onClick={() => iterateCurrentIndex(-1)}
-          disabled={!hasMatches || searchTextMatches.length === selectedMatchIndex + 1}
-          styles={arrowButtonStyles}
+        <TextField
+          autoFocus
+          iconProps={{ iconName: "Search" }}
+          elementRef={searchInputRef}
+          type="text"
+          placeholder="Find in scene"
+          spellCheck={false}
+          suffix={`${hasMatches ? selectedMatchIndex + 1 : "0"} of ${searchTextMatches.length}`}
+          value={searchText}
+          styles={{
+            icon: {
+              color: theme.semanticColors.inputText,
+              lineHeight: 0,
+              left: theme.spacing.s1,
+              right: "auto",
+              fontSize: 18,
+
+              svg: {
+                fill: "currentColor",
+                height: "1em",
+                width: "1em",
+              },
+            },
+            field: {
+              padding: `0 ${theme.spacing.s1} 0 ${theme.spacing.l2}`,
+
+              "::placeholder": { opacity: 0.6 },
+            },
+            suffix: { backgroundColor: "transparent" },
+          }}
+          onChange={(_, newValue) => setSearchText(newValue ?? "")}
+          onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+            if (e.key !== "Enter") {
+              return;
+            }
+            if (e.shiftKey) {
+              iterateCurrentIndex(-1);
+              return;
+            }
+            iterateCurrentIndex(1);
+          }}
         />
+        <Stack direction="row" alignItems="center" paddingLeft={0.5} spacing={0.5}>
+          <IconButton
+            iconProps={{ iconName: "ChevronUpSmall" }}
+            onClick={() => iterateCurrentIndex(-1)}
+            disabled={!hasMatches || searchTextMatches.length === selectedMatchIndex + 1}
+            styles={arrowButtonStyles}
+          />
+          <IconButton
+            iconProps={{ iconName: "ChevronDownSmall" }}
+            onClick={() => iterateCurrentIndex(1)}
+            disabled={!hasMatches || selectedMatchIndex === 0}
+            styles={arrowButtonStyles}
+          />
+        </Stack>
         <IconButton
-          iconProps={{ iconName: "ChevronDownSmall" }}
-          onClick={() => iterateCurrentIndex(1)}
-          disabled={!hasMatches || selectedMatchIndex === 0}
-          styles={arrowButtonStyles}
+          onClick={() => toggleSearchTextOpen(false)}
+          iconProps={{ iconName: "Close" }}
+          styles={{
+            rootHovered: { backgroundColor: "transparent" },
+            rootPressed: { backgroundColor: "transparent" },
+            rootDisabled: { backgroundColor: "transparent" },
+            ...iconStyle,
+          }}
         />
       </Stack>
-      <IconButton
-        onClick={() => toggleSearchTextOpen(false)}
-        iconProps={{ iconName: "Close" }}
-        styles={{
-          rootHovered: { backgroundColor: "transparent" },
-          rootPressed: { backgroundColor: "transparent" },
-          rootDisabled: { backgroundColor: "transparent" },
-          ...iconStyle,
-        }}
-      />
-    </Stack>
+    </Paper>
   );
 });
 

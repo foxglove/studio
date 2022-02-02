@@ -12,7 +12,8 @@
 //   You may not use this file except in compliance with the License.
 
 import { uniq, omit, debounce } from "lodash";
-import React, { useCallback, useMemo, useState, useRef, useEffect } from "react";
+import React, { useCallback, useMemo, useState, useRef, useEffect, useLayoutEffect } from "react";
+import { useLatest } from "react-use";
 
 import { CameraState } from "@foxglove/regl-worldview";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
@@ -22,14 +23,26 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
-import Layout from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/Layout";
+import useCallbackWithToast from "@foxglove/studio-base/hooks/useCallbackWithToast";
+import Layout from "@foxglove/studio-base/panels/ThreeDimensionalViz/Layout";
+import UrdfBuilder from "@foxglove/studio-base/panels/ThreeDimensionalViz/UrdfBuilder";
 import helpContent from "@foxglove/studio-base/panels/ThreeDimensionalViz/index.help.md";
 import {
   useTransformedCameraState,
   getNewCameraStateOnFollowChange,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/threeDimensionalVizUtils";
-import { ThreeDimensionalVizConfig } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
+import {
+  CoordinateFrame,
+  IImmutableCoordinateFrame,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
+import {
+  FollowMode,
+  ThreeDimensionalVizConfig,
+  TransformLink,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
+import { MutablePose } from "@foxglove/studio-base/types/Messages";
 import { PanelConfigSchema, SaveConfig } from "@foxglove/studio-base/types/panels";
+import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
 import useFrame from "./useFrame";
 import useTransforms from "./useTransforms";
@@ -44,6 +57,8 @@ export type Props = {
   saveConfig: Save3DConfig;
 };
 
+const DEFAULT_FRAME_IDS = ["base_link", "odom", "map", "earth"];
+
 const TIME_ZERO = { sec: 0, nsec: 0 };
 
 function selectCurrentTime(ctx: MessagePipelineContext) {
@@ -55,12 +70,9 @@ function selectIsPlaying(ctx: MessagePipelineContext) {
 }
 
 function BaseRenderer(props: Props): JSX.Element {
-  const {
-    config: savedConfig,
-    saveConfig,
-    config: { autoSyncCameraState = false, followOrientation = false, followTf },
-  } = props;
+  const { config: savedConfig, saveConfig } = props;
 
+  // Migration and defaults for config
   const config = useMemo<ThreeDimensionalVizConfig>(() => {
     // Migrate old colorOverrideBySourceIdxByVariable field to new colorOverrideByVariable The new
     // field drops the "BySourceIdx" which powered the base/feature branch feature that no longer
@@ -83,11 +95,22 @@ function BaseRenderer(props: Props): JSX.Element {
       }
     }
 
+    // Previous 3d panel configurations had followTf as `string | boolean`
+    // We now require followTf to be a string. Clear any non-string value by unsetting followTf
+    const oldFollowTf = savedConfig.followTf;
+    if (oldFollowTf != undefined && typeof oldFollowTf !== "string") {
+      savedConfig.followTf = undefined;
+    }
+
+    savedConfig.followMode ??= "follow";
+
     return {
       colorOverrideByVariable,
       ...savedConfig,
     };
   }, [savedConfig]);
+
+  const { autoSyncCameraState = false, followMode = "follow", followTf } = config;
 
   const { updatePanelConfigs } = React.useContext(PanelContext) ?? {};
 
@@ -98,10 +121,42 @@ function BaseRenderer(props: Props): JSX.Element {
     setSubscribedTopics(uniq(newTopics));
   }, []);
 
+  const [urdfTransforms, setUrdfTransforms] = useState<TransformLink[]>([]);
+
   const { reset: resetFrame, frame } = useFrame(subscribedTopics);
-  const transforms = useTransforms(topics, frame, resetFrame);
+  const transforms = useTransforms({
+    topics,
+    frame,
+    reset: resetFrame,
+    urdfTransforms,
+  });
   const currentTime = useMessagePipeline(selectCurrentTime);
   const isPlaying = useMessagePipeline(selectIsPlaying);
+
+  const orphanedFrame = useMemo(() => new CoordinateFrame("(empty)", undefined), []);
+
+  const renderFrame = useMemo<IImmutableCoordinateFrame>(() => {
+    // If the user specified a followTf, do not fall back to any other (valid) frame
+    if (followTf) {
+      return transforms.frame(followTf) ?? new CoordinateFrame(followTf, undefined);
+    }
+
+    // Try the conventional list of transform ids
+    for (const frameId of DEFAULT_FRAME_IDS) {
+      const curFrame = transforms.frame(frameId);
+      if (curFrame) {
+        return curFrame;
+      }
+    }
+
+    // Fall back to the root of the first transform (lexicographically), if any
+    const firstFrameId = Array.from(transforms.frames().keys()).sort()[0];
+    return firstFrameId != undefined
+      ? transforms.frame(firstFrameId)?.root() ?? orphanedFrame
+      : orphanedFrame;
+  }, [followTf, transforms, orphanedFrame]);
+
+  const fixedFrame = useMemo(() => renderFrame.root(), [renderFrame]);
 
   // We use useState to store the cameraState instead of using config directly in order to
   // speed up the pan/rotate performance of the 3D panel. This allows us to update the cameraState
@@ -109,63 +164,152 @@ function BaseRenderer(props: Props): JSX.Element {
   const [configCameraState, setConfigCameraState] = useState(config.cameraState);
   useEffect(() => setConfigCameraState(config.cameraState), [config]);
 
-  const { transformedCameraState, targetPose } = useTransformedCameraState({
+  // unfollowPoseSnapshot has the pose of the follow frame in the fixed frame when following was
+  // turned off.
+  const unfollowPoseSnapshot = useRef<MutablePose | undefined>();
+
+  // We always orient the camera to the render frame. The render frame continues to move relative to
+  // the fixed frame, but we want to keep the camera stationary. We calculate the location of the
+  // snapshot pose in render frame coordinates.
+  //
+  // This new pose tells us where to place the camera within the render frame to create the
+  // appearance that the camera is stationary.
+  const poseInRenderRef = useRef<MutablePose | undefined>();
+  poseInRenderRef.current = unfollowPoseSnapshot.current
+    ? renderFrame.applyLocal(emptyPose(), unfollowPoseSnapshot.current, fixedFrame, currentTime)
+    : undefined;
+
+  const transformedCameraState = useTransformedCameraState({
     configCameraState,
     followTf,
-    followOrientation,
+    followMode,
     transforms,
+    poseInRenderFrame: poseInRenderRef.current,
   });
 
-  const onSetSubscriptions = useCallback(
-    (subscriptions: string[]) => setSubscriptions(subscriptions),
-    [setSubscriptions],
-  );
+  const renderFrameLatest = useLatest(renderFrame);
+  const currentTimeLatest = useLatest(currentTime);
+  const transformsLatest = useLatest(transforms);
+
+  // When the fixed frame changes, we clear any unfollow pose. The next effect will attempt to set
+  // a new unfollowPoseSnapshot if we are able to detect one for the new fixed frame.
+  useLayoutEffect(() => {
+    unfollowPoseSnapshot.current = undefined;
+  }, [fixedFrame]);
+
+  // When starting up in no-follow or partial follow, we try to initialize the unfollowPoseSnapshot
+  // to the location of the follow frame within its root frame.
+  //
+  // This effect depends on fixedFrame, transforms, followTf so it runs repeatedly during
+  // initialization until a stable unfollowPoseSnapshot is obtained.
+  useLayoutEffect(() => {
+    // Bail if
+    if (followMode === "follow-orientation") {
+      return;
+    }
+
+    // Bail if we already have an unfollow pose or don't have a follow frame to looku[]
+    if (unfollowPoseSnapshot.current || followTf == undefined) {
+      return;
+    }
+
+    // get the current root frame for the render frame we are _currently_ following but want to stop following
+    const followFrame = transforms.frame(followTf);
+    if (!followFrame) {
+      return;
+    }
+
+    // Bail if the fixed frame is the follow frame. There is no need to set the unfollow pose snapshot
+    // in this case.
+    if (fixedFrame.id === followFrame.id) {
+      unfollowPoseSnapshot.current = undefined;
+      return;
+    }
+
+    // calculate the pose of our follow frame in our root frame
+    let rootFramePose: MutablePose | undefined = emptyPose();
+    rootFramePose = fixedFrame.applyLocal(
+      rootFramePose,
+      rootFramePose,
+      followFrame,
+      currentTimeLatest.current,
+    );
+    if (!rootFramePose) {
+      return;
+    }
+    unfollowPoseSnapshot.current = rootFramePose;
+  }, [followTf, followMode, transforms, fixedFrame, currentTimeLatest]);
 
   // use callbackInputsRef to make sure the input changes don't trigger `onFollowChange` or `onAlignXYAxis` to change
   const callbackInputsRef = useRef({
     transformedCameraState,
     configCameraState,
-    targetPose,
-    configFollowOrientation: config.followOrientation,
+    configFollowMode: config.followMode,
     configFollowTf: config.followTf,
   });
   callbackInputsRef.current = {
     transformedCameraState,
     configCameraState,
-    targetPose,
-    configFollowOrientation: config.followOrientation,
+    configFollowMode: config.followMode,
     configFollowTf: config.followTf,
   };
-  const onFollowChange = useCallback(
-    // eslint-disable-next-line @foxglove/no-boolean-parameters
-    (newFollowTf?: string | false, newFollowOrientation?: boolean) => {
-      const {
-        configCameraState: prevCameraState,
-        configFollowOrientation: prevFollowOrientation,
-        configFollowTf: prevFollowTf,
-        targetPose: prevTargetPose,
-      } = callbackInputsRef.current;
+  const onFollowChange = useCallbackWithToast(
+    (newFollowTf?: string, newFollowMode?: FollowMode) => {
+      const { configFollowMode: prevFollowMode, configFollowTf: prevFollowTf } =
+        callbackInputsRef.current;
       const newCameraState = getNewCameraStateOnFollowChange({
-        prevCameraState,
-        prevTargetPose,
+        prevCameraState: callbackInputsRef.current.configCameraState,
         prevFollowTf,
-        prevFollowOrientation,
+        prevFollowMode,
         newFollowTf,
-        newFollowOrientation,
+        newFollowMode,
       });
+
+      // When entering follow-orientation mode, we no longer transform the camera state
+      if (prevFollowMode !== "follow-orientation" && newFollowMode === "follow-orientation") {
+        unfollowPoseSnapshot.current = undefined;
+      }
+
+      // When activating follow (follow position) or no-follow we record a snapshot of the render frame
+      // in the root frame.
+      if (prevFollowMode === "follow-orientation" && newFollowMode !== "follow-orientation") {
+        const renderId = renderFrameLatest.current.id;
+
+        // get the current root frame for the render frame we are _currently_ following but want to stop following
+        const rootFrameForFollow = transformsLatest.current.frame(renderId)?.root();
+        if (!rootFrameForFollow) {
+          throw new Error(`Could not find frame [${renderId}]`);
+        }
+
+        // calculate the pose of our current render frame in our root frame
+        let rootFramePose: MutablePose | undefined = emptyPose();
+        rootFramePose = rootFrameForFollow.applyLocal(
+          rootFramePose,
+          rootFramePose,
+          renderFrameLatest.current,
+          currentTimeLatest.current,
+        );
+        if (!rootFramePose) {
+          throw new Error(
+            `Could not transform [${renderId}] to the root frame [${rootFrameForFollow.id}]`,
+          );
+        }
+        unfollowPoseSnapshot.current = rootFramePose;
+      }
+
       saveConfig({
         followTf: newFollowTf,
-        followOrientation: newFollowOrientation,
+        followMode: newFollowMode,
         cameraState: newCameraState,
       });
     },
-    [saveConfig],
+    [currentTimeLatest, renderFrameLatest, saveConfig, transformsLatest],
   );
 
   const onAlignXYAxis = useCallback(
     () =>
       saveConfig({
-        followOrientation: false,
+        followMode: "follow",
         cameraState: {
           ...omit(callbackInputsRef.current.transformedCameraState, [
             "target",
@@ -204,25 +348,39 @@ function BaseRenderer(props: Props): JSX.Element {
     [autoSyncCameraState, saveCameraStateDebounced, updatePanelConfigs],
   );
 
+  const urdfBuilder = useMemo(() => new UrdfBuilder(), []);
+  useLayoutEffect(() => {
+    const handle = (newTransforms: TransformLink[]) => {
+      setUrdfTransforms((existing) => existing.concat(newTransforms));
+    };
+
+    urdfBuilder.on("transforms", handle);
+    return () => {
+      urdfBuilder.off("transforms", handle);
+    };
+  }, [urdfBuilder]);
+
   return (
     <Layout
       cameraState={transformedCameraState}
       config={config}
       currentTime={currentTime}
-      followOrientation={followOrientation}
-      followTf={followTf}
+      followMode={followMode}
+      followTf={renderFrame.id}
+      renderFrame={renderFrame}
+      fixedFrame={fixedFrame}
       resetFrame={resetFrame}
       frame={frame}
       helpContent={helpContent}
       isPlaying={isPlaying}
+      topics={topics}
+      transforms={transforms}
+      urdfBuilder={urdfBuilder}
       onAlignXYAxis={onAlignXYAxis}
       onCameraStateChange={onCameraStateChange}
       onFollowChange={onFollowChange}
       saveConfig={saveConfig}
-      topics={topics}
-      targetPose={targetPose}
-      transforms={transforms}
-      setSubscriptions={onSetSubscriptions}
+      setSubscriptions={setSubscriptions}
     />
   );
 }
@@ -244,26 +402,54 @@ const configSchema: PanelConfigSchema<ThreeDimensionalVizConfig> = [
     title: "Automatically determine background color based on the color scheme",
   },
   { key: "customBackgroundColor", type: "color", title: "Background color" },
+  {
+    key: "ignoreColladaUpAxis",
+    type: "toggle",
+    title: "Ignore <up_axis> in Collada meshes",
+  },
+  { key: "clickToPublishPoseEstimateTopic", type: "text", title: "Pose estimate topic" },
+  { key: "clickToPublishPoseTopic", type: "text", title: "Pose topic" },
+  { key: "clickToPublishPointTopic", type: "text", title: "Point topic" },
+  {
+    key: "clickToPublishPoseEstimateXDeviation",
+    type: "number",
+    title: "Pose estimate X std deviation",
+  },
+  {
+    key: "clickToPublishPoseEstimateYDeviation",
+    type: "number",
+    title: "Pose estimate Y std deviation",
+  },
+  {
+    key: "clickToPublishPoseEstimateThetaDeviation",
+    type: "number",
+    title: "Pose estimate Theta std deviation",
+  },
 ];
 
 BaseRenderer.displayName = "ThreeDimensionalViz";
 BaseRenderer.panelType = "3D Panel";
 BaseRenderer.defaultConfig = {
-  checkedKeys: ["name:Topics"],
-  expandedKeys: ["name:Topics"],
-  followTf: undefined,
-  followOrientation: false,
+  autoSyncCameraState: false,
+  autoTextBackgroundColor: true,
   cameraState: {},
+  checkedKeys: ["name:Topics"],
+  clickToPublishPoseTopic: "/move_base_simple/goal",
+  clickToPublishPointTopic: "/clicked_point",
+  clickToPublishPoseEstimateTopic: "/initialpose",
+  clickToPublishPoseEstimateXDeviation: 0.5,
+  clickToPublishPoseEstimateYDeviation: 0.5,
+  clickToPublishPoseEstimateThetaDeviation: Math.PI / 12,
+  customBackgroundColor: "#000000",
+  diffModeEnabled: true,
+  expandedKeys: ["name:Topics"],
+  followMode: "follow",
+  followTf: undefined,
   modifiedNamespaceTopics: [],
   pinTopics: false,
   settingsByKey: {},
-  autoSyncCameraState: false,
-  autoTextBackgroundColor: true,
-  diffModeEnabled: true,
   useThemeBackgroundColor: true,
-  customBackgroundColor: "#000000",
 } as ThreeDimensionalVizConfig;
-BaseRenderer.supportsStrictMode = false;
 BaseRenderer.configSchema = configSchema;
 
 export default Panel(BaseRenderer);

@@ -2,18 +2,19 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ITextStyles, Stack, Text, useTheme } from "@fluentui/react";
+import { ITextStyles, Text, useTheme } from "@fluentui/react";
+import { Stack } from "@mui/material";
 import { useMemo } from "react";
 
+import Duration from "@foxglove/studio-base/components/Duration";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Timestamp from "@foxglove/studio-base/components/Timestamp";
-import TextMiddleTruncate from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/TextMiddleTruncate";
 import { subtractTimes } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/time";
-import { formatDuration } from "@foxglove/studio-base/util/formatTime";
-import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+
+import { MultilineMiddleTruncate } from "./MultilineMiddleTruncate";
 
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
@@ -25,6 +26,8 @@ function DataSourceInfo(): JSX.Element {
   const startTime = useMessagePipeline(selectStartTime);
   const endTime = useMessagePipeline(selectEndTime);
   const playerName = useMessagePipeline(selectPlayerName);
+
+  const duration = startTime && endTime ? subtractTimes(endTime, startTime) : undefined;
 
   const subheaderStyles = useMemo(
     () =>
@@ -42,61 +45,47 @@ function DataSourceInfo(): JSX.Element {
   );
 
   return (
-    <Stack
-      tokens={{
-        childrenGap: theme.spacing.m,
-      }}
-      styles={{
-        root: {
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-        },
-      }}
-    >
-      <Stack horizontal verticalAlign="center">
-        <Stack grow tokens={{ childrenGap: theme.spacing.s2 }} styles={{ root: { minWidth: 0 } }}>
-          <Text styles={subheaderStyles}>Current data source</Text>
+    <Stack spacing={2} sx={{ whiteSpace: "nowrap", overflow: "hidden" }}>
+      <Stack direction="row" alignItems="center">
+        <Stack flexGrow={1} spacing={0.5} minWidth={0}>
+          <Text styles={subheaderStyles}>Current source</Text>
           <Text styles={{ root: { color: theme.palette.neutralSecondary } }}>
-            {playerName ? <TextMiddleTruncate text={playerName} /> : <>&mdash;</>}
+            {playerName ? <MultilineMiddleTruncate text={playerName} /> : <>&mdash;</>}
           </Text>
         </Stack>
       </Stack>
 
-      <Stack tokens={{ childrenGap: theme.spacing.s2 }}>
+      <Stack spacing={0.5}>
         <Text styles={subheaderStyles}>Start time</Text>
         {startTime ? (
           <Timestamp horizontal time={startTime} />
         ) : (
           <Text variant="small" styles={{ root: { color: theme.palette.neutralSecondary } }}>
-            00:00:00
+            &mdash;
           </Text>
         )}
       </Stack>
 
-      <Stack tokens={{ childrenGap: theme.spacing.s2 }}>
+      <Stack spacing={0.5}>
         <Text styles={subheaderStyles}>End time</Text>
         {endTime ? (
           <Timestamp horizontal time={endTime} />
         ) : (
           <Text variant="small" styles={{ root: { color: theme.palette.neutralSecondary } }}>
-            00:00:00
+            &mdash;
           </Text>
         )}
       </Stack>
 
-      <Stack tokens={{ childrenGap: theme.spacing.s2 }}>
+      <Stack spacing={0.5}>
         <Text styles={subheaderStyles}>Duration</Text>
-        <Text
-          variant="small"
-          styles={{
-            root: {
-              fontFamily: startTime && endTime ? fonts.MONOSPACE : undefined,
-              color: theme.palette.neutralSecondary,
-            },
-          }}
-        >
-          {startTime && endTime ? formatDuration(subtractTimes(endTime, startTime)) : "00:00:00"}
-        </Text>
+        {duration ? (
+          <Duration duration={duration} />
+        ) : (
+          <Text variant="small" styles={{ root: { color: theme.palette.neutralSecondary } }}>
+            &mdash;
+          </Text>
+        )}
       </Stack>
     </Stack>
   );

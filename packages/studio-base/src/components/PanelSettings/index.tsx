@@ -2,7 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { DefaultButton, Link, Stack, Text, useTheme } from "@fluentui/react";
+import { DefaultButton, Link, Text, useTheme } from "@fluentui/react";
+import { Stack } from "@mui/material";
 import { StrictMode, useMemo, useState } from "react";
 import { useAsync, useUnmount } from "react-use";
 
@@ -135,14 +136,14 @@ export default function PanelSettings({
   return (
     <SidebarContent title={`${panelInfo.title} panel settings`}>
       {shareModal}
-      <Stack tokens={{ childrenGap: theme.spacing.m }}>
-        {panelInfo?.help != undefined && (
-          <Stack.Item>
+      <Stack spacing={2} alignItems="flex-start">
+        {panelInfo.help != undefined && (
+          <div>
             <Text styles={{ root: { color: theme.palette.neutralTertiary } }}>
               See docs{" "}
               <Link
                 onClick={() => {
-                  setHelpInfo({ title: panelInfo?.type, content: panelInfo?.help });
+                  setHelpInfo({ title: panelInfo.type, content: panelInfo.help });
                   openHelp();
                 }}
               >
@@ -150,9 +151,9 @@ export default function PanelSettings({
               </Link>
               .
             </Text>
-          </Stack.Item>
+          </div>
         )}
-        <Stack.Item>
+        <div>
           {schema ? (
             <StrictMode>
               <SchemaEditor configSchema={schema} config={config} saveConfig={saveConfig} />
@@ -162,9 +163,9 @@ export default function PanelSettings({
               No additional settings available.
             </Text>
           )}
-        </Stack.Item>
+        </div>
         <div style={{ height: theme.spacing.m }} />
-        <Stack.Item>
+        <div>
           <DefaultButton
             text="Import/export settings…"
             styles={{ label: { fontWeight: "normal" } }}
@@ -175,8 +176,8 @@ export default function PanelSettings({
             onClick={() => setShowShareModal(true)}
             disabled={panelType === TAB_PANEL_TYPE}
           />
-        </Stack.Item>
-        <Stack.Item>
+        </div>
+        <div>
           <DefaultButton
             text="Reset to defaults"
             styles={{ label: { fontWeight: "normal" } }}
@@ -190,7 +191,7 @@ export default function PanelSettings({
               })
             }
           />
-        </Stack.Item>
+        </div>
       </Stack>
     </SidebarContent>
   );

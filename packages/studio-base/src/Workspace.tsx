@@ -10,7 +10,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Link, IconButton, makeStyles, Stack, Text, useTheme } from "@fluentui/react";
+import { Link, makeStyles, Text, useTheme } from "@fluentui/react";
+import { Box, Stack } from "@mui/material";
 import { extname } from "path";
 import {
   useState,
@@ -23,10 +24,10 @@ import {
 } from "react";
 import { useToasts } from "react-toast-notifications";
 
+import Logger from "@foxglove/log";
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import AccountSettings from "@foxglove/studio-base/components/AccountSettingsSidebar/AccountSettings";
-import ConnectionList from "@foxglove/studio-base/components/ConnectionList";
-import connectionHelpContent from "@foxglove/studio-base/components/ConnectionList/index.help.md";
+import { DataSourceSidebar } from "@foxglove/studio-base/components/DataSourceSidebar";
 import DocumentDropListener from "@foxglove/studio-base/components/DocumentDropListener";
 import DropOverlay from "@foxglove/studio-base/components/DropOverlay";
 import ExtensionsSidebar from "@foxglove/studio-base/components/ExtensionsSidebar";
@@ -76,6 +77,8 @@ import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFiles
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
+const log = Logger.getLogger(__filename);
+
 const useStyles = makeStyles({
   container: {
     width: "100%",
@@ -123,7 +126,7 @@ function AddPanel() {
           <Link onClick={openLayoutBrowser}>Select a layout</Link> to get started!
         </Text>
       ) : (
-        <PanelList onPanelSelect={addPanel} />
+        <PanelList onPanelSelect={addPanel} backgroundColor={theme.palette.neutralLighterAlt} />
       )}
     </SidebarContent>
   );
@@ -161,7 +164,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   const allowedDropExtensions = useMemo(() => {
     const extensions = [".foxe", ".urdf", ".xacro"];
     for (const source of availableSources) {
-      if (source.supportedFileTypes) {
+      if (source.type === "file" && source.supportedFileTypes) {
         extensions.push(...source.supportedFileTypes);
       }
     }
@@ -176,10 +179,15 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const isPlayerPresent = playerPresence !== PlayerPresence.NOT_PRESENT;
 
+  const [enableOpenDialog] = useAppConfigurationValue(AppSetting.OPEN_DIALOG);
+
+  const [showOpenDialogOnStartup = true] = useAppConfigurationValue<boolean>(
+    AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,
+  );
+
   const [showOpenDialog, setShowOpenDialog] = useState<
     { view: OpenDialogViews; activeDataSource?: IDataSourceFactory } | undefined
-  >(isPlayerPresent ? undefined : { view: "start" });
-  const [enableOpenDialog] = useAppConfigurationValue(AppSetting.OPEN_DIALOG);
+  >(isPlayerPresent || !showOpenDialogOnStartup ? undefined : { view: "start" });
 
   const [selectedSidebarItem, setSelectedSidebarItem] = useState<SidebarItemKey | undefined>(() => {
     // When using the open dialog ui - we always start with the connection sidebar open.
@@ -200,27 +208,15 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     setSelectedSidebarItem(item);
   }, []);
 
-  // When a player is activated, hide the open dialog. When a player is gone, show the open dialog.
+  // When a player is activated, hide the open dialog.
   useLayoutEffect(() => {
-    setShowOpenDialog(isPlayerPresent ? undefined : { view: "start" });
-  }, [isPlayerPresent]);
-
-  // Automatically close the connection sidebar when a connection is chosen
-  useLayoutEffect(() => {
-    // When using the open dialog feature we don't automatically do anything with the connection sidebar
-    if (enableOpenDialog === true) {
-      return;
+    if (
+      playerPresence === PlayerPresence.PRESENT ||
+      playerPresence === PlayerPresence.INITIALIZING
+    ) {
+      setShowOpenDialog(undefined);
     }
-
-    if (userSelectSidebarItem.current) {
-      userSelectSidebarItem.current = false;
-      return;
-    }
-
-    if (selectedSidebarItem === "connection" && playerPresence === PlayerPresence.PRESENT) {
-      setSelectedSidebarItem(undefined);
-    }
-  }, [selectedSidebarItem, playerPresence, enableOpenDialog]);
+  }, [playerPresence]);
 
   const { setHelpInfo } = useHelpInfo();
 
@@ -344,9 +340,56 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const extensionLoader = useExtensionLoader();
 
+  const openHandle = useCallback(
+    async (handle: FileSystemFileHandle) => {
+      log.debug("open handle", handle);
+      const file = await handle.getFile();
+      // electron extends File with a `path` field which is not available in browsers
+      const basePath = (file as { path?: string }).path ?? "";
+
+      if (file.name.endsWith(".foxe")) {
+        // Extension installation
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const data = new Uint8Array(arrayBuffer);
+          const extension = await extensionLoader.installExtension(data);
+          addToast(`Installed extension ${extension.id}`, { appearance: "success" });
+        } catch (err) {
+          log.error(err);
+          addToast(`Failed to install extension ${file.name}: ${err.message}`, {
+            appearance: "error",
+          });
+        }
+      } else {
+        try {
+          if (await loadFromFile(file, { basePath })) {
+            return;
+          }
+        } catch (err) {
+          log.error(err);
+          addToast(`Failed to load ${file.name}: ${err.message}`, {
+            appearance: "error",
+          });
+        }
+      }
+
+      // Look for a source that supports the file extensions
+      const matchedSource = availableSources.find((source) => {
+        const ext = extname(file.name);
+        return source.supportedFileTypes?.includes(ext);
+      });
+      if (matchedSource) {
+        selectSource(matchedSource.id, { type: "file", handle });
+      }
+    },
+    [addToast, availableSources, extensionLoader, loadFromFile, selectSource],
+  );
+
   const openFiles = useCallback(
     async (files: File[]) => {
       const otherFiles: File[] = [];
+      log.debug("open files", files);
+
       for (const file of files) {
         // electron extends File with a `path` field which is not available in browsers
         const basePath = (file as { path?: string }).path ?? "";
@@ -359,6 +402,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
             const extension = await extensionLoader.installExtension(data);
             addToast(`Installed extension ${extension.id}`, { appearance: "success" });
           } catch (err) {
+            log.error(err);
             addToast(`Failed to install extension ${file.name}: ${err.message}`, {
               appearance: "error",
             });
@@ -369,7 +413,8 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
               otherFiles.push(file);
             }
           } catch (err) {
-            addToast(`Failed to load ${file.name}`, {
+            log.error(err);
+            addToast(`Failed to load ${file.name}: ${err.message}`, {
               appearance: "error",
             });
           }
@@ -404,10 +449,18 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
   }, [filesToOpen, openFiles]);
 
   const dropHandler = useCallback(
-    ({ files }: { files: File[] }) => {
-      void openFiles(files);
+    (event: { files?: File[]; handles?: FileSystemFileHandle[] }) => {
+      const handle = event.handles?.[0];
+      // When selecting sources with handles we can only select with a single handle since we haven't
+      // written the code to store multiple handles for recents. When there are multiple handles, we
+      // fall back to opening regular files.
+      if (handle && event.handles?.length === 1) {
+        void openHandle(handle);
+      } else if (event.files) {
+        void openFiles(event.files);
+      }
     },
-    [openFiles],
+    [openFiles, openHandle],
   );
 
   const workspaceActions = useMemo(
@@ -423,42 +476,25 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const { currentUser } = useCurrentUser();
 
-  const sidebarItems = useMemo<Map<SidebarItemKey, SidebarItem>>(() => {
-    function Connection() {
+  // Since the _component_ field of a sidebar item entry is a component and accepts no additional
+  // props we need to wrap our DataSourceSidebar component to connect the open data source action to
+  // open the data source dialog.
+  const DataSourceSidebarItem = useMemo(() => {
+    return function DataSourceSidebarItemImpl() {
       return (
-        <SidebarContent
-          title="Data sources"
-          helpContent={connectionHelpContent}
-          trailingItems={[
-            enableOpenDialog === true && (
-              <IconButton
-                key="add-connection"
-                iconProps={{ iconName: "Add" }}
-                styles={{
-                  icon: {
-                    svg: { height: "1em", width: "1em" },
-                    "> span": { display: "flex" },
-                  },
-                }}
-                onClick={() => {
-                  setShowOpenDialog({ view: "start" });
-                }}
-              />
-            ),
-          ].filter(Boolean)}
-        >
-          <ConnectionList />
-        </SidebarContent>
+        <DataSourceSidebar onSelectDataSourceAction={() => setShowOpenDialog({ view: "start" })} />
       );
-    }
+    };
+  }, []);
 
+  const sidebarItems = useMemo<Map<SidebarItemKey, SidebarItem>>(() => {
     const SIDEBAR_ITEMS = new Map<SidebarItemKey, SidebarItem>([
       [
         "connection",
         {
           iconName: "DataManagementSettings",
-          title: "Data sources",
-          component: Connection,
+          title: "Data source",
+          component: DataSourceSidebarItem,
           badge:
             playerProblems && playerProblems.length > 0
               ? { count: playerProblems.length }
@@ -490,7 +526,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           ],
         ])
       : SIDEBAR_ITEMS;
-  }, [playerProblems, supportsAccountSettings, currentUser, enableOpenDialog]);
+  }, [DataSourceSidebarItem, playerProblems, supportsAccountSettings, currentUser]);
 
   const sidebarBottomItems: readonly SidebarItemKey[] = useMemo(() => {
     return supportsAccountSettings ? ["help", "account", "preferences"] : ["help", "preferences"];
@@ -517,12 +553,12 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     >
       {enableOpenDialog === true && showOpenDialog != undefined && (
         <OpenDialog
-          activeView={showOpenDialog?.view}
-          activeDataSource={showOpenDialog?.activeDataSource}
+          activeView={showOpenDialog.view}
+          activeDataSource={showOpenDialog.activeDataSource}
           onDismiss={() => setShowOpenDialog(undefined)}
         />
       )}
-      <DocumentDropListener filesSelected={dropHandler} allowedExtensions={allowedDropExtensions}>
+      <DocumentDropListener onDrop={dropHandler} allowedExtensions={allowedDropExtensions}>
         <DropOverlay>
           <div className={classes.dropzone}>Drop a file here</div>
         </DropOverlay>
@@ -540,7 +576,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
             <Stack>
               <PanelLayout />
               {play && pause && seek && (
-                <Stack.Item disableShrink>
+                <Box flexShrink={0}>
                   <PlaybackControls
                     play={play}
                     pause={pause}
@@ -548,7 +584,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
                     isPlaying={isPlaying}
                     getTimeInfo={getTimeInfo}
                   />
-                </Stack.Item>
+                </Box>
               )}
             </Stack>
           </RemountOnValueChange>

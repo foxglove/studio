@@ -2,16 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import {
-  Pivot,
-  PivotItem,
-  Stack,
-  IconButton,
-  makeStyles,
-  useTheme,
-  IButtonStyles,
-} from "@fluentui/react";
-import { ReactElement, useMemo } from "react";
+import { Pivot, PivotItem, IconButton, makeStyles, useTheme, IButtonStyles } from "@fluentui/react";
+import { Paper, Stack } from "@mui/material";
+import { ReactElement, ReactNode, useMemo } from "react";
 
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -31,11 +24,7 @@ export function ToolGroup<T>({ children }: { name: T; children: React.ReactEleme
   return children;
 }
 
-export function ToolGroupFixedSizePane({
-  children,
-}: {
-  children: React.ReactElement | React.ReactElement[];
-}): JSX.Element {
+export function ToolGroupFixedSizePane({ children }: { children: ReactNode }): JSX.Element {
   const classes = useStyles();
   return <div className={classes.toolGroupFixedSizePanel}>{children}</div>;
 }
@@ -92,7 +81,7 @@ export default function ExpandingToolbar<T extends string>({
     });
 
     return (
-      <div>
+      <Paper square={false} elevation={4}>
         {expandingToolbarButton.tooltip}
         <IconButton
           checked={checked}
@@ -102,19 +91,19 @@ export default function ExpandingToolbar<T extends string>({
           data-test={`ExpandingToolbar-${tooltip}`}
           styles={{
             root: {
-              backgroundColor: theme.semanticColors.buttonBackgroundHovered,
+              backgroundColor: "transparent",
               pointerEvents: "auto",
             },
-            rootHovered: { backgroundColor: theme.semanticColors.buttonBackgroundHovered },
-            rootPressed: { backgroundColor: theme.semanticColors.buttonBackgroundHovered },
-            rootDisabled: { backgroundColor: theme.semanticColors.buttonBackgroundHovered },
-            rootChecked: { backgroundColor: theme.semanticColors.buttonBackgroundHovered },
-            rootCheckedHovered: { backgroundColor: theme.semanticColors.buttonBackgroundHovered },
-            rootCheckedPressed: { backgroundColor: theme.semanticColors.buttonBackgroundHovered },
+            rootHovered: { backgroundColor: "transparent" },
+            rootPressed: { backgroundColor: "transparent" },
+            rootDisabled: { backgroundColor: "transparent" },
+            rootChecked: { backgroundColor: "transparent" },
+            rootCheckedHovered: { backgroundColor: "transparent" },
+            rootCheckedPressed: { backgroundColor: "transparent" },
             ...iconStyles,
           }}
         />
-      </div>
+      </Paper>
     );
   }
   let selectedChild: ReactElement | undefined;
@@ -126,53 +115,50 @@ export default function ExpandingToolbar<T extends string>({
   });
 
   return (
-    <Stack
-      data-test={dataTest}
-      styles={{
-        root: {
+    <Paper square={false} elevation={4} sx={{ pointerEvents: "auto" }}>
+      <Stack
+        data-test={dataTest}
+        sx={{
           position: "relative",
-          pointerEvents: "auto",
-          backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-          borderRadius: theme.effects.roundedCorner4,
           width: 280,
-        },
-      }}
-    >
-      <Pivot
-        styles={{
-          root: {
-            paddingRight: theme.spacing.l2,
-          },
-          link: {
-            fontSize: theme.fonts.small.fontSize,
-            marginRight: 0,
-            height: 32,
-          },
-          itemContainer: {
-            backgroundColor: theme.semanticColors.bodyBackground,
-          },
         }}
       >
-        {React.Children.map(children, (child) => {
-          return <PivotItem headerText={child.props.name}>{child}</PivotItem>;
-        })}
-      </Pivot>
-      <IconButton
-        onClick={() => onSelectTab(undefined)}
-        iconProps={{ iconName: "ArrowCollapse" }}
-        styles={{
-          root: {
-            backgroundColor: "transparent",
-            position: "absolute",
-            right: 0,
-            top: 0,
-          },
-          rootHovered: { backgroundColor: "transparent" },
-          rootPressed: { backgroundColor: "transparent" },
-          rootDisabled: { backgroundColor: "transparent" },
-          ...iconStyles,
-        }}
-      />
-    </Stack>
+        <Pivot
+          styles={{
+            root: {
+              paddingRight: theme.spacing.l2,
+            },
+            link: {
+              fontSize: theme.fonts.small.fontSize,
+              marginRight: 0,
+              height: 32,
+            },
+            itemContainer: {
+              backgroundColor: theme.semanticColors.bodyBackground,
+            },
+          }}
+        >
+          {React.Children.map(children, (child) => {
+            return <PivotItem headerText={child.props.name}>{child}</PivotItem>;
+          })}
+        </Pivot>
+        <IconButton
+          onClick={() => onSelectTab(undefined)}
+          iconProps={{ iconName: "ArrowCollapse" }}
+          styles={{
+            root: {
+              backgroundColor: "transparent",
+              position: "absolute",
+              right: 0,
+              top: 0,
+            },
+            rootHovered: { backgroundColor: "transparent" },
+            rootPressed: { backgroundColor: "transparent" },
+            rootDisabled: { backgroundColor: "transparent" },
+            ...iconStyles,
+          }}
+        />
+      </Stack>
+    </Paper>
   );
 }

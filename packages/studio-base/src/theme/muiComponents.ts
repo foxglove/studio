@@ -20,12 +20,12 @@ type MuiLabComponents = {
 };
 
 const iconHack = {
-  "& svg": {
+  "& svg:not(.MuiSvgIcon-root)": {
     fill: "currentColor",
     width: "1em",
     height: "1em",
     display: "inline-block",
-    fontSize: "1rem",
+    fontSize: "1.2857142857142856rem",
     transition: "fill 200ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
     flexShrink: 0,
     userSelect: "none",
@@ -77,13 +77,19 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
     MuiCard: {
       defaultProps: {
         variant: "outlined",
+        square: false,
+      },
+    },
+    MuiCardActionArea: {
+      defaultProps: {
+        disableRipple: true,
       },
     },
     MuiCardContent: {
       styleOverrides: {
         root: {
           "&:last-child": {
-            paddingBottom: undefined,
+            paddingBottom: theme.spacing(2),
           },
         },
       },
@@ -102,16 +108,14 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         },
       },
     },
-    MuiListItemIcon: {
-      styleOverrides: {
-        root: { minWidth: theme.spacing(6) },
-      },
-    },
     MuiPaper: {
       defaultProps: {
-        elevation: 0,
+        elevation: 2,
         square: true,
       },
+    },
+    MuiListItemButton: {
+      defaultProps: { disableRipple: true },
     },
     MuiLink: {
       defaultProps: {

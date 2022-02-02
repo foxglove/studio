@@ -11,8 +11,9 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { Stack } from "@mui/material";
 import { groupBy, sortBy } from "lodash";
-import { Fragment } from "react";
+import { Fragment, useCallback } from "react";
 import styled from "styled-components";
 
 import { filterMap } from "@foxglove/den/collection";
@@ -20,7 +21,6 @@ import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import Button from "@foxglove/studio-base/components/Button";
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
-import Flex from "@foxglove/studio-base/components/Flex";
 import { Item } from "@foxglove/studio-base/components/Menu";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
@@ -36,8 +36,6 @@ import { downloadTextFile } from "@foxglove/studio-base/util/download";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 
 import helpContent from "./index.help.md";
-
-const { useCallback } = React;
 
 const RECORD_ALL = "RECORD_ALL";
 
@@ -196,7 +194,7 @@ function Internals() {
         Press to start recording topic data for debug purposes. The latest messages on each topic
         will be kept and formatted into a fixture that can be used to create a test.
       </TextContent>
-      <Flex row wrap style={{ padding: "8px 0 32px" }}>
+      <Stack direction="row" flex="auto" flexWrap="wrap" paddingTop={1} paddingBottom={4}>
         <Button isPrimary small onClick={onRecordClick} data-test="internals-record-button">
           {recordingTopics ? `Recording ${recordingTopics.length} topics…` : "Record raw data"}
         </Button>
@@ -227,8 +225,8 @@ function Internals() {
             recordedData={recordedData}
           />
         )}
-      </Flex>
-      <Flex row>
+      </Stack>
+      <Stack direction="row" flex="auto">
         <section data-test="internals-subscriptions">
           <h1>Subscriptions</h1>
           {renderedSubscriptions}
@@ -237,12 +235,11 @@ function Internals() {
           <h1>Publishers</h1>
           {renderedPublishers}
         </section>
-      </Flex>
+      </Stack>
     </Container>
   );
 }
 Internals.panelType = "Internals";
 Internals.defaultConfig = {};
-Internals.supportsStrictMode = false;
 
 export default Panel(Internals);

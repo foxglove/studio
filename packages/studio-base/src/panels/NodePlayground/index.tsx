@@ -11,15 +11,15 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Link, Spinner, SpinnerSize, Stack } from "@fluentui/react";
+import { Link, Spinner, SpinnerSize } from "@fluentui/react";
 import ArrowLeftIcon from "@mdi/svg/svg/arrow-left.svg";
 import PlusIcon from "@mdi/svg/svg/plus.svg";
+import { Box, Stack } from "@mui/material";
 import { Suspense } from "react";
 import styled from "styled-components";
 import { v4 as uuidv4 } from "uuid";
 
 import Button from "@foxglove/studio-base/components/Button";
-import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
 import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import Panel from "@foxglove/studio-base/components/Panel";
@@ -140,8 +140,6 @@ function NodePlayground(props: Props) {
   const {
     state: { nodeStates: userNodeDiagnostics, rosLib },
   } = useUserNodeState();
-  // const userNodeDiagnostics = useSelector((state: any) => state.userNodes.userNodeDiagnostics);
-  // const rosLib = useSelector((state: State) => state.userNodes.rosLib);
 
   const { setUserNodes } = useCurrentLayoutActions();
 
@@ -156,7 +154,7 @@ function NodePlayground(props: Props) {
   const isCurrentScriptSelectedNode =
     !!selectedNode && !!currentScript && currentScript.filePath === selectedNode.name;
   const isNodeSaved =
-    !isCurrentScriptSelectedNode || currentScript?.code === selectedNode?.sourceCode;
+    !isCurrentScriptSelectedNode || currentScript.code === selectedNode.sourceCode;
   const selectedNodeLogs =
     (selectedNodeId != undefined ? userNodeDiagnostics[selectedNodeId]?.logs : undefined) ?? [];
 
@@ -228,8 +226,8 @@ function NodePlayground(props: Props) {
       // update code at top of backstack
       const backStack = [...scriptBackStack];
       if (backStack.length > 0) {
-        const script = backStack.pop()!;
-        if (!(script?.readOnly ?? false)) {
+        const script = backStack.pop();
+        if (script && !script.readOnly) {
           setScriptBackStack([...backStack, { ...script, code }]);
         }
       }
@@ -238,9 +236,9 @@ function NodePlayground(props: Props) {
   );
 
   return (
-    <Stack verticalFill>
+    <Stack height="100%">
       <PanelToolbar floating helpContent={helpContent} />
-      <Stack horizontal verticalFill>
+      <Stack direction="row" height="100%">
         <Sidebar
           explorer={explorer}
           updateExplorer={updateExplorer}
@@ -268,15 +266,8 @@ function NodePlayground(props: Props) {
           setScriptOverride={setScriptOverride}
           addNewNode={addNewNode}
         />
-        <Stack grow verticalFill style={{ overflow: "hidden" }}>
-          <Flex
-            start
-            style={{
-              flexGrow: 0,
-              backgroundColor: colors.DARK1,
-              alignItems: "center",
-            }}
-          >
+        <Stack flexGrow={1} height="100%" overflow="hidden">
+          <Stack direction="row" alignItems="center" bgcolor={colors.DARK1}>
             {scriptBackStack.length > 1 && (
               <Icon
                 size="large"
@@ -317,11 +308,11 @@ function NodePlayground(props: Props) {
             >
               <PlusIcon />
             </Icon>
-          </Flex>
+          </Stack>
 
-          <Stack grow style={{ overflow: "hidden " }}>
+          <Stack flexGrow={1} overflow="hidden ">
             {selectedNodeId == undefined && <WelcomeScreen addNewNode={addNewNode} />}
-            <div
+            <Box
               style={{
                 flexGrow: 1,
                 width: "100%",
@@ -332,9 +323,16 @@ function NodePlayground(props: Props) {
             >
               <Suspense
                 fallback={
-                  <Flex center style={{ width: "100%", height: "100%" }}>
+                  <Stack
+                    direction="row"
+                    flex="auto"
+                    alignItems="center"
+                    justifyContent="center"
+                    width="100%"
+                    height="100%"
+                  >
                     <Spinner size={SpinnerSize.large} />
-                  </Flex>
+                  </Stack>
                 }
               >
                 {editorForStorybook ?? (
@@ -348,7 +346,7 @@ function NodePlayground(props: Props) {
                   />
                 )}
               </Suspense>
-            </div>
+            </Box>
             <Stack>
               <BottomBar
                 nodeId={selectedNodeId}
@@ -377,7 +375,6 @@ export default Panel(
   Object.assign(NodePlayground, {
     panelType: "NodePlayground",
     defaultConfig,
-    supportsStrictMode: false,
     configSchema,
   }),
 );

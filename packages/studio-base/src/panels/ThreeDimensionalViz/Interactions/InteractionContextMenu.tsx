@@ -19,8 +19,8 @@ import {
   Interactive,
   SelectedObject,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/types";
+import { ClickedPosition } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Layout";
 import { ThreeDimensionalVizContext } from "@foxglove/studio-base/panels/ThreeDimensionalViz/ThreeDimensionalVizContext";
-import { ClickedPosition } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/Layout";
 import {
   getInteractionData,
   getObject,
@@ -114,7 +114,7 @@ function InteractionContextMenuItem({
   selectObject: (arg0?: SelectedObject) => void;
   interactiveObject?: MouseEventObject;
 }) {
-  const object = getObject(interactiveObject) as Interactive<BaseMarker>;
+  const object = getObject(interactiveObject) as Partial<Interactive<BaseMarker>>;
   const topic = getInteractionData(interactiveObject)?.topic;
   const menuText = (
     <>

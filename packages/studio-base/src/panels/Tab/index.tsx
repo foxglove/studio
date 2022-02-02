@@ -10,15 +10,16 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
+
+import { Stack } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import { MosaicNode } from "react-mosaic-component";
 import styled from "styled-components";
 
-import Flex from "@foxglove/studio-base/components/Flex";
+import { EmptyPanelLayout } from "@foxglove/studio-base/components/EmptyPanelLayout";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import { UnconnectedPanelLayout } from "@foxglove/studio-base/components/PanelLayout";
-import { EmptyDropTarget } from "@foxglove/studio-base/panels/Tab/EmptyDropTarget";
 import {
   DraggingTabPanelState,
   TabDndContext,
@@ -105,7 +106,7 @@ function Tab({ config, saveConfig }: Props) {
     !draggingTabState.isOver;
 
   return (
-    <Flex col>
+    <Stack flex="auto" overflow="hidden">
       <TabbedToolbar
         panelId={panelId}
         tabs={tabs}
@@ -113,11 +114,7 @@ function Tab({ config, saveConfig }: Props) {
         activeTabIdx={activeTabIdx}
         setDraggingTabState={setDraggingTabState}
       />
-      <Flex
-        style={{
-          position: "relative",
-        }}
-      >
+      <Stack direction="row" flex="auto" overflow="hidden" position="relative">
         {activeLayout != undefined ? (
           <TabDndContext.Provider value={{ preventTabDrop }}>
             <UnconnectedPanelLayout
@@ -127,16 +124,15 @@ function Tab({ config, saveConfig }: Props) {
             />
           </TabDndContext.Provider>
         ) : (
-          <EmptyDropTarget tabId={panelId} />
+          <EmptyPanelLayout tabId={panelId} />
         )}
         {preventTabDrop && <SPanelCover />}
-      </Flex>
-    </Flex>
+      </Stack>
+    </Stack>
   );
 }
 
 Tab.panelType = TAB_PANEL_TYPE;
 Tab.defaultConfig = DEFAULT_TAB_PANEL_CONFIG;
-Tab.supportsStrictMode = false;
 
 export default Panel(Tab);

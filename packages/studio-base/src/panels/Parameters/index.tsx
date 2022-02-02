@@ -12,7 +12,8 @@
 //   You may not use this file except in compliance with the License.
 
 import { union } from "lodash";
-import { ReactElement, useEffect, useMemo, useRef, useState } from "react";
+import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useDebouncedCallback } from "use-debounce";
 
 import { ParameterValue } from "@foxglove/studio";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
@@ -25,7 +26,6 @@ import {
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import { JSONInput } from "@foxglove/studio-base/components/input/JSONInput";
-import { usePreviousValue } from "@foxglove/studio-base/hooks/usePreviousValue";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
 
 import AnimatedRow from "./AnimatedRow";
@@ -52,8 +52,18 @@ function selectParameters(ctx: MessagePipelineContext) {
 
 function Parameters(): ReactElement {
   const capabilities = useMessagePipeline(selectCapabilities);
-  const setParameter = useMessagePipeline(selectSetParameter);
+  const setParameterUnbounced = useMessagePipeline(selectSetParameter);
   const parameters = useMessagePipeline(selectParameters);
+
+  const setParameter = useDebouncedCallback(
+    useCallback(
+      (name: string, value: ParameterValue) => {
+        setParameterUnbounced(name, value);
+      },
+      [setParameterUnbounced],
+    ),
+    200,
+  );
 
   const canGetParams = capabilities.includes(PlayerCapabilities.getParameters);
   const canSetParams = capabilities.includes(PlayerCapabilities.setParameters);
@@ -67,13 +77,12 @@ function Parameters(): ReactElement {
     return () => clearTimeout(timeoutId);
   }, []);
 
-  const previousParameters = usePreviousValue(parameters);
-  const previousParametersRef = useRef<Map<string, unknown> | undefined>(previousParameters);
-  previousParametersRef.current = previousParameters;
+  const previousParametersRef = useRef<Map<string, unknown> | undefined>(parameters);
 
   const [changedParameters, setChangedParameters] = useState<string[]>([]);
   useEffect(() => {
     if (skipAnimation.current || isActiveElementEditable()) {
+      previousParametersRef.current = parameters;
       return;
     }
     const newChangedParameters = union(
@@ -85,6 +94,7 @@ function Parameters(): ReactElement {
     });
 
     setChangedParameters(newChangedParameters);
+    previousParametersRef.current = parameters;
     const timerId = setTimeout(() => setChangedParameters([]), ANIMATION_RESET_DELAY_MS);
     return () => clearTimeout(timerId);
   }, [parameters, skipAnimation]);
@@ -112,7 +122,7 @@ function Parameters(): ReactElement {
             </thead>
             <tbody>
               {parameterNames.map((name) => {
-                const value = JSON.stringify(parameters.get(name) ?? "");
+                const value = JSON.stringify(parameters.get(name)) ?? "";
                 return (
                   <AnimatedRow
                     key={`parameter-${name}`}
@@ -125,7 +135,9 @@ function Parameters(): ReactElement {
                         <JSONInput
                           dataTest={`parameter-value-input-${value}`}
                           value={value}
-                          onChange={(newVal) => setParameter(name, newVal as ParameterValue)}
+                          onChange={(newVal) => {
+                            setParameter(name, newVal as ParameterValue);
+                          }}
                         />
                       ) : (
                         value
@@ -144,6 +156,5 @@ function Parameters(): ReactElement {
 
 Parameters.panelType = "Parameters";
 Parameters.defaultConfig = {};
-Parameters.supportsStrictMode = false;
 
 export default Panel(Parameters);

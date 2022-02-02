@@ -30,8 +30,12 @@ import WorldMarkers, {
   InteractiveMarkersByType,
   MarkerWithInteractionData,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/WorldMarkers";
+import { LoadModelOptions } from "@foxglove/studio-base/panels/ThreeDimensionalViz/commands/MeshMarkers";
 import { LAYER_INDEX_DEFAULT_BASE } from "@foxglove/studio-base/panels/ThreeDimensionalViz/constants";
-import withHighlights from "@foxglove/studio-base/panels/ThreeDimensionalViz/withHighlights";
+import {
+  IImmutableCoordinateFrame,
+  IImmutableTransformTree,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
 import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
 import {
   BaseMarker,
@@ -47,7 +51,10 @@ import {
   SphereMarker,
   TextMarker,
 } from "@foxglove/studio-base/types/Messages";
-import { MarkerCollector, MarkerProvider } from "@foxglove/studio-base/types/Scene";
+import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
+
+import { MarkerCollector, MarkerProvider } from "./types";
+import withHighlights from "./withHighlights";
 
 type Props = WorldSearchTextProps & {
   autoTextBackgroundColor: boolean;
@@ -55,6 +62,9 @@ type Props = WorldSearchTextProps & {
   cameraState: CameraState;
   children?: React.ReactNode;
   isPlaying: boolean;
+  transforms: IImmutableTransformTree;
+  renderFrame: IImmutableCoordinateFrame;
+  fixedFrame: IImmutableCoordinateFrame;
   currentTime: Time;
   markerProviders: MarkerProvider[];
   onCameraStateChange: (arg0: CameraState) => void;
@@ -63,13 +73,24 @@ type Props = WorldSearchTextProps & {
   onMouseDown?: MouseHandler;
   onMouseMove?: MouseHandler;
   onMouseUp?: MouseHandler;
+  loadModelOptions: LoadModelOptions;
 };
 
-function getMarkers(
-  markers: InteractiveMarkersByType,
-  markerProviders: MarkerProvider[],
-  time: Time,
-): void {
+function getMarkers({
+  markers,
+  markerProviders,
+  transforms,
+  renderFrame,
+  fixedFrame,
+  time,
+}: {
+  markers: InteractiveMarkersByType;
+  markerProviders: MarkerProvider[];
+  transforms: IImmutableTransformTree;
+  renderFrame: IImmutableCoordinateFrame;
+  fixedFrame: IImmutableCoordinateFrame;
+  time: Time;
+}): void {
   // These casts seem wrong - some type definitions around MarkerProvider or MarkerCollector are not
   // compatible with interactive markers. Ideally interactive markers would not require mutating
   // marker objects which would help avoid unsafe casting.
@@ -83,8 +104,6 @@ function getMarkers(
     instancedLineList: (o) =>
       markers.instancedLineList.push(o as unknown as Interactive<BaseMarker>),
     laserScan: (o) => markers.laserScan.push(o as unknown as Interactive<BaseMarker>),
-    linedConvexHull: (o) =>
-      markers.linedConvexHull.push(o as unknown as Interactive<LineListMarker | LineStripMarker>),
     lineList: (o) => markers.lineList.push(o as Interactive<LineListMarker>),
     lineStrip: (o) => markers.lineStrip.push(o as Interactive<LineStripMarker>),
     mesh: (o) => markers.mesh.push(o as Interactive<MeshMarker>),
@@ -97,8 +116,9 @@ function getMarkers(
     triangleList: (o) => markers.triangleList.push(o as unknown as MarkerWithInteractionData),
   };
 
+  const args = { add: collector, transforms, renderFrame, fixedFrame, time };
   for (const provider of markerProviders) {
-    provider.renderMarkers(collector, time);
+    provider.renderMarkers(args);
   }
 }
 
@@ -114,6 +134,9 @@ function World(
     onCameraStateChange,
     cameraState,
     isPlaying,
+    transforms,
+    renderFrame,
+    fixedFrame,
     currentTime,
     markerProviders,
     onDoubleClick,
@@ -125,6 +148,7 @@ function World(
     searchTextOpen,
     selectedMatchIndex,
     searchTextMatches,
+    loadModelOptions,
   }: Props,
   ref: typeof Worldview,
 ) {
@@ -141,7 +165,6 @@ function World(
     grid: [],
     instancedLineList: [],
     laserScan: [],
-    linedConvexHull: [],
     lineList: [],
     lineStrip: [],
     mesh: [],
@@ -157,7 +180,14 @@ function World(
     (markersRef.current as Record<string, unknown[]>)[key]!.length = 0;
   }
 
-  getMarkers(markersRef.current, markerProviders, currentTime);
+  getMarkers({
+    markers: markersRef.current,
+    markerProviders,
+    transforms,
+    renderFrame,
+    fixedFrame,
+    time: currentTime,
+  });
   const markersByType = markersRef.current;
   const { text = [] } = markersByType;
   const processedMarkersByType = {
@@ -184,7 +214,8 @@ function World(
       cameraState={cameraState}
       enableStackedObjectEvents={!isPlaying}
       hideDebug={inScreenshotTests()}
-      onCameraStateChange={onCameraStateChange} // Rendering the hitmap is an expensive operation and we want to avoid
+      onCameraStateChange={onCameraStateChange}
+      // Rendering the hitmap is an expensive operation and we want to avoid
       // doing it when the user is dragging the view with the mouse. By ignoring
       // these events, the only way to select an object is when receiving an "onClick" event.
       disableHitmapForEvents={["onMouseDown", "onMouseMove", "onMouseUp"]}
@@ -204,7 +235,9 @@ function World(
           markersByType: processedMarkersByType,
           layerIndex: LAYER_INDEX_DEFAULT_BASE,
           clearCachedMarkers: false,
-          cameraDistance: cameraState.distance ?? DEFAULT_CAMERA_STATE.distance,
+          cameraDistance:
+            mightActuallyBePartial(cameraState).distance ?? DEFAULT_CAMERA_STATE.distance,
+          loadModelOptions,
         }}
       />
     </Worldview>

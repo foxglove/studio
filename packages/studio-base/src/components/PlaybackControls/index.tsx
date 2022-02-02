@@ -11,14 +11,16 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Stack, IButtonStyles, useTheme, StackItem, makeStyles } from "@fluentui/react";
+import { IButtonStyles, useTheme } from "@fluentui/react";
+import { Stack } from "@mui/material";
 import { merge } from "lodash";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { compare, Time } from "@foxglove/rostime";
 import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconButton";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import MessageOrderControls from "@foxglove/studio-base/components/MessageOrderControls";
+import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import {
   jumpSeek,
   DIRECTION,
@@ -29,13 +31,6 @@ import Tooltip from "@foxglove/studio-base/components/Tooltip";
 import PlaybackTimeDisplay from "./PlaybackTimeDisplay";
 import RepeatAdapter from "./RepeatAdapter";
 import Scrubber from "./Scrubber";
-
-const useStyles = makeStyles((theme) => ({
-  root: {
-    backgroundColor: theme.palette.neutralLighterAlt,
-    borderTop: `1px solid ${theme.palette.neutralLighter}`,
-  },
-}));
 
 export default function PlaybackControls({
   play,
@@ -51,13 +46,32 @@ export default function PlaybackControls({
   getTimeInfo: () => { startTime?: Time; endTime?: Time; currentTime?: Time };
 }): JSX.Element {
   const theme = useTheme();
-  const styles = useStyles();
   const [repeat, setRepeat] = useState(false);
+  const stopAtTime = useRef<Time | undefined>(undefined);
+
+  // See comments below in seekForwardAction for how seeking is handled
+  useMessagePipeline(
+    useCallback(
+      (ctx) => {
+        const currentTime = ctx.playerState.activeData?.currentTime;
+        if (stopAtTime.current && currentTime && compare(currentTime, stopAtTime.current) >= 0) {
+          stopAtTime.current = undefined;
+          pause();
+        }
+      },
+      [pause],
+    ),
+  );
 
   const resumePlay = useCallback(() => {
     const { startTime: start, endTime: end, currentTime: current } = getTimeInfo();
     // if we are at the end, we need to go back to start
     if (current && end && start && compare(current, end) >= 0) {
+      // If the resume is a result of a forward seek and we are at the end, reset the stop marker
+      // to the start.
+      if (stopAtTime.current) {
+        stopAtTime.current = start;
+      }
       seek(start);
     }
     play();
@@ -68,6 +82,7 @@ export default function PlaybackControls({
   }, []);
 
   const togglePlayPause = useCallback(() => {
+    stopAtTime.current = undefined;
     if (isPlaying) {
       pause();
     } else {
@@ -75,25 +90,50 @@ export default function PlaybackControls({
     }
   }, [pause, resumePlay, isPlaying]);
 
+  const seekForwardAction = useCallback(
+    (ev?: KeyboardEvent) => {
+      const { currentTime } = getTimeInfo();
+      if (!currentTime) {
+        return;
+      }
+
+      // We implement forward seek by playing at least up to the desired seek time rather than
+      // the "jump" seek behavior of the backwards seek.
+      //
+      // Playing forward at least up to the desired seek time will play all messages to the panels
+      // which mirrors the behavior panels would expect when playing without stepping. This behavior
+      // is important for some message types which convey state information.
+      //
+      // i.e. Skipping coordinate frame messages may result in incorrectly rendered markers or
+      // missing markers altogther.
+      stopAtTime.current = jumpSeek(DIRECTION.FORWARD, currentTime, ev);
+      resumePlay();
+    },
+    [getTimeInfo, resumePlay],
+  );
+
+  const seekBackwardAction = useCallback(
+    (ev?: KeyboardEvent) => {
+      const { currentTime } = getTimeInfo();
+      if (!currentTime) {
+        return;
+      }
+      seek(jumpSeek(DIRECTION.BACKWARD, currentTime, ev));
+    },
+    [getTimeInfo, seek],
+  );
+
   const keyDownHandlers = useMemo(
     () => ({
       " ": togglePlayPause,
       ArrowLeft: (ev: KeyboardEvent) => {
-        const { currentTime } = getTimeInfo();
-        if (!currentTime) {
-          return;
-        }
-        seek(jumpSeek(DIRECTION.BACKWARD, currentTime, ev));
+        seekBackwardAction(ev);
       },
       ArrowRight: (ev: KeyboardEvent) => {
-        const { currentTime } = getTimeInfo();
-        if (!currentTime) {
-          return;
-        }
-        seek(jumpSeek(DIRECTION.FORWARD, currentTime, ev));
+        seekForwardAction(ev);
       },
     }),
-    [getTimeInfo, seek, togglePlayPause],
+    [seekBackwardAction, seekForwardAction, togglePlayPause],
   );
 
   const iconButtonStyles: IButtonStyles = {
@@ -145,29 +185,22 @@ export default function PlaybackControls({
       />
       <KeyListener global keyDownHandlers={keyDownHandlers} />
       <Stack
-        horizontal
-        verticalAlign="center"
-        className={styles.root}
-        tokens={{
-          childrenGap: theme.spacing.s1,
-          padding: theme.spacing.s1,
+        direction="row"
+        alignItems="center"
+        spacing={1}
+        padding={1}
+        sx={{
+          backgroundColor: theme.palette.neutralLighterAlt,
+          borderTop: `1px solid ${theme.palette.neutralLighter}`,
         }}
       >
-        <Stack horizontal verticalAlign="center" tokens={{ childrenGap: theme.spacing.s1 }}>
+        <Stack direction="row" alignItems="center" spacing={1}>
           <MessageOrderControls />
           <PlaybackSpeedControls />
         </Stack>
-        <Stack
-          horizontal
-          verticalAlign="center"
-          styles={{ root: { flex: 1 } }}
-          tokens={{
-            childrenGap: theme.spacing.s1,
-            padding: `0 ${theme.spacing.s2}`,
-          }}
-        >
-          <Stack horizontal verticalAlign="center" tokens={{ childrenGap: theme.spacing.s2 }}>
-            <StackItem>
+        <Stack direction="row" alignItems="center" flex={1} spacing={1} paddingX={0.5}>
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <div>
               <Tooltip contents="Loop playback">
                 <HoverableIconButton
                   checked={repeat}
@@ -181,8 +214,8 @@ export default function PlaybackControls({
                   })}
                 />
               </Tooltip>
-            </StackItem>
-            <StackItem>
+            </div>
+            <div>
               <HoverableIconButton
                 onClick={isPlaying ? pause : resumePlay}
                 iconProps={{
@@ -193,49 +226,34 @@ export default function PlaybackControls({
                   rootDisabled: { background: "transparent" },
                 })}
               />
-            </StackItem>
+            </div>
           </Stack>
-          <Stack
-            horizontal
-            grow={1}
-            verticalAlign="center"
-            styles={{ root: { height: "28px", position: "relative" } }}
-          >
-            <Scrubber onSeek={seek} />
-          </Stack>
+          <Scrubber onSeek={seek} />
           <PlaybackTimeDisplay onSeek={seek} onPause={pause} />
         </Stack>
-        <Stack horizontal verticalAlign="center" tokens={{ childrenGap: 2 }}>
-          <StackItem>
+        <Stack direction="row" alignItems="center" spacing={0.25}>
+          <div>
             <Tooltip contents="Seek backward">
               <HoverableIconButton
                 iconProps={{ iconName: "Previous", iconNameActive: "PreviousFilled" }}
                 onClick={() => {
-                  const { currentTime } = getTimeInfo();
-                  if (!currentTime) {
-                    return;
-                  }
-                  seek(jumpSeek(DIRECTION.BACKWARD, currentTime));
+                  seekBackwardAction();
                 }}
                 styles={merge(seekIconButttonStyles({ left: true }), iconButtonStyles)}
               />
             </Tooltip>
-          </StackItem>
-          <StackItem>
+          </div>
+          <div>
             <Tooltip contents="Seek forward">
               <HoverableIconButton
                 iconProps={{ iconName: "Next", iconNameActive: "NextFilled" }}
                 onClick={() => {
-                  const { currentTime } = getTimeInfo();
-                  if (!currentTime) {
-                    return;
-                  }
-                  seek(jumpSeek(DIRECTION.FORWARD, currentTime));
+                  seekForwardAction();
                 }}
                 styles={merge(seekIconButttonStyles({ right: true }), iconButtonStyles)}
               />
             </Tooltip>
-          </StackItem>
+          </div>
         </Stack>
       </Stack>
     </>

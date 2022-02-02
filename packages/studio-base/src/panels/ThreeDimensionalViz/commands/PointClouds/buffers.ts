@@ -13,6 +13,7 @@
 
 import { ColorMode } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor/PointCloudSettingsEditor";
 import { PointField } from "@foxglove/studio-base/types/Messages";
+import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 
 import { FieldReader, Uint8Reader, getReader } from "./readers";
 import { DATATYPE, VertexBuffer } from "./types";
@@ -48,11 +49,6 @@ export function reinterpretBufferToFloat(buffer: Uint8Array): Float32Array {
     const end = buffer.byteOffset + buffer.length;
     return new Float32Array(buffer.buffer.slice(buffer.byteOffset, end));
   }
-}
-
-// Expand a buffer of byte values, transforming each value into a float
-export function expandBufferToFloat(buffer: Uint8Array): Float32Array {
-  return new Float32Array(buffer);
 }
 
 // Utility function to get values from vertex buffers.
@@ -112,12 +108,7 @@ function extractValues({
   for (let i = 0; i < pointCount; i++) {
     const pointStart = i * stride;
     for (let j = 0; j < readers.length; j++) {
-      const reader = readers[j];
-      let value = Number.NaN;
-      if (reader != undefined) {
-        value = reader.read(pointStart);
-      }
-      buffer[i * COMPONENT_COUNT + j] = value;
+      buffer[i * COMPONENT_COUNT + j] = readers[j]?.read(pointStart) ?? Number.NaN;
     }
   }
   return {
@@ -175,12 +166,14 @@ export function createColorBuffer({
   colorMode,
   pointCount,
   stride,
+  isBigEndian,
 }: {
   data: Uint8Array;
   fields: FieldOffsetsAndReaders;
   colorMode: ColorMode;
   pointCount: number;
   stride: number;
+  isBigEndian: boolean;
 }): VertexBuffer | undefined {
   if (colorMode.mode === "flat") {
     // If color mode is "flat", we don't need a color buffer since
@@ -189,42 +182,33 @@ export function createColorBuffer({
   }
 
   if (colorMode.mode === "rgb") {
-    const rgbField = fields.rgb;
+    const rgbField = mightActuallyBePartial(fields.rgb ?? fields.rgba);
     if (!rgbField) {
-      throw new Error("Cannot create color buffer in rgb mode without an rgb field");
+      throw new Error("Cannot create color buffer in rgb mode without an rgb(a) field");
     }
     const rgbOffset = rgbField.offset ?? 0;
-    if (hasValidStride(FLOAT_SIZE * stride)) {
-      return {
-        // RGB colors are encoded in a single 4-byte tuple and unfortunately we cannot extract
-        // them in shaders by just reinterpreting the data buffer.
-        // In addition, the supported WebGL implementation constraints VBOs to be of type float,
-        // so we cannot send the data as is. Then, we're converting the data array into a float
-        // array, transforming each byte value into a float.
-        // We're definitely paying a memory cost here
-        buffer: expandBufferToFloat(data),
-        // No need to divide/multiply by sizeof(float) here since now every byte value
-        // in data array is transformed to a float value.
-        offset: rgbOffset, //< float values from the start of each vertex
-        stride, //< float values between vertices
-      };
-    }
-    // stride is too big. Extract colors from data
-    return extractValues({
-      data,
-      readers: [
-        new Uint8Reader(data, rgbOffset + 0),
-        new Uint8Reader(data, rgbOffset + 1),
-        new Uint8Reader(data, rgbOffset + 2),
-      ],
-      stride,
-      pointCount,
-    });
+    // Extract colors from data
+    const readers = isBigEndian
+      ? [
+          // big-endian, read RGB from RGBA
+          new Uint8Reader(data, rgbOffset + 0),
+          new Uint8Reader(data, rgbOffset + 1),
+          new Uint8Reader(data, rgbOffset + 2),
+        ]
+      : [
+          // little-endian, read RGB from ABGR
+          new Uint8Reader(data, rgbOffset + 3),
+          new Uint8Reader(data, rgbOffset + 2),
+          new Uint8Reader(data, rgbOffset + 1),
+        ];
+    return extractValues({ data, readers, stride, pointCount });
   }
 
-  const colorField = fields[colorMode.colorField ?? "rgb"];
+  const colorFieldName =
+    mightActuallyBePartial(colorMode).colorField ?? (fields.rgba ? "rgba" : "rgb");
+  const colorField = fields[colorFieldName];
   if (!colorField) {
-    throw new Error(`Cannot create color buffer without ${colorMode.colorField ?? "rgb"} field`);
+    throw new Error(`Cannot create color buffer without ${colorFieldName} field`);
   }
 
   // If the color is computed from any of the other float fields (i.e. x positions)

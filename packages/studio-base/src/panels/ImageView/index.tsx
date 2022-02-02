@@ -17,9 +17,10 @@ import CheckboxMarkedIcon from "@mdi/svg/svg/checkbox-marked.svg";
 import CloseIcon from "@mdi/svg/svg/close.svg";
 import MenuDownIcon from "@mdi/svg/svg/menu-down.svg";
 import WavesIcon from "@mdi/svg/svg/waves.svg";
+import { Stack } from "@mui/material";
 import cx from "classnames";
 import { last, uniq } from "lodash";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { filterMap } from "@foxglove/den/collection";
 import { useShallowMemo } from "@foxglove/hooks";
@@ -27,8 +28,6 @@ import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import Autocomplete from "@foxglove/studio-base/components/Autocomplete";
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
-import EmptyState from "@foxglove/studio-base/components/EmptyState";
-import Flex from "@foxglove/studio-base/components/Flex";
 import Icon from "@foxglove/studio-base/components/Icon";
 import { LegacyButton } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { Item, SubMenu } from "@foxglove/studio-base/components/Menu";
@@ -36,11 +35,13 @@ import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipe
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import useDeepMemo from "@foxglove/studio-base/hooks/useDeepMemo";
+import { Toolbar } from "@foxglove/studio-base/panels/ImageView/Toolbar";
 import { IMAGE_DATATYPES } from "@foxglove/studio-base/panels/ImageView/renderImage";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
 import { CameraInfo, StampedMessage } from "@foxglove/studio-base/types/Messages";
 import { PanelConfigSchema, SaveConfig } from "@foxglove/studio-base/types/panels";
+import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 import naturalSort from "@foxglove/studio-base/util/naturalSort";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import { getSynchronizingReducers } from "@foxglove/studio-base/util/synchronizeMessages";
@@ -48,6 +49,7 @@ import { formatTimeRaw, getTimestampForMessage } from "@foxglove/studio-base/uti
 import toggle from "@foxglove/studio-base/util/toggle";
 
 import ImageCanvas from "./ImageCanvas";
+import ImageEmptyState from "./ImageEmptyState";
 import helpContent from "./index.help.md";
 import {
   getCameraInfoTopic,
@@ -55,6 +57,8 @@ import {
   getRelatedMarkerTopics,
   getMarkerOptions,
   groupTopics,
+  PixelData,
+  ZoomMode,
 } from "./util";
 
 const { useMemo, useCallback } = React;
@@ -67,15 +71,18 @@ type DefaultConfig = {
 };
 
 export type Config = DefaultConfig & {
-  transformMarkers: boolean;
-  mode?: "fit" | "fill" | "other";
-  smooth?: boolean;
-  zoom?: number;
-  pan?: { x: number; y: number };
-  zoomPercentage?: number;
-  minValue?: number;
+  flipHorizontal?: boolean;
+  flipVertical?: boolean;
   maxValue?: number;
+  minValue?: number;
+  mode?: ZoomMode;
+  pan?: { x: number; y: number };
+  rotation?: number;
   saveStoryConfig?: () => void;
+  smooth?: boolean;
+  transformMarkers: boolean;
+  zoom?: number;
+  zoomPercentage?: number;
 };
 
 export type SaveImagePanelConfig = SaveConfig<Config>;
@@ -85,7 +92,7 @@ type Props = {
   saveConfig: SaveImagePanelConfig;
 };
 
-const useStyles = makeStyles((theme) => ({
+const useStyles = makeStyles(() => ({
   controls: {
     display: "flex",
     flexWrap: "wrap",
@@ -132,14 +139,6 @@ const useStyles = makeStyles((theme) => ({
   dropdownItem: {
     position: "relative",
   },
-  emptyStateWrapper: {
-    width: "100%",
-    height: "100%",
-    background: theme.palette.neutralLighterAlt,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
   toggleButton: {
     display: "flex",
     alignItems: "center",
@@ -148,6 +147,11 @@ const useStyles = makeStyles((theme) => ({
     padding: "0px 15px 0px 0px",
     fontSize: 10,
     fontStyle: "italic",
+  },
+  emptyStateContainer: {
+    width: "100%",
+    height: "100%",
+    position: "absolute",
   },
 }));
 
@@ -208,75 +212,6 @@ const ToggleComponent = ({
 };
 
 const canTransformMarkersByTopic = (topic: string) => !topic.includes("rect");
-
-// Group image topics by the first component of their name
-
-function ImageEmptyState({
-  cameraTopic,
-  markerTopics,
-  shouldSynchronize,
-  messagesByTopic,
-}: {
-  cameraTopic: string;
-  markerTopics: string[];
-  shouldSynchronize: boolean;
-  messagesByTopic: {
-    [topic: string]: readonly MessageEvent<unknown>[];
-  };
-}) {
-  const classes = useStyles();
-  if (cameraTopic === "") {
-    return (
-      <div className={classes.emptyStateWrapper}>
-        <EmptyState>Select a topic to view images</EmptyState>
-      </div>
-    );
-  }
-  return (
-    <div className={classes.emptyStateWrapper}>
-      <EmptyState>
-        Waiting for images {markerTopics.length > 0 && "and markers"} on:
-        <div>
-          <div>
-            <code>{cameraTopic}</code>
-          </div>
-          {markerTopics.sort().map((m) => (
-            <div key={m}>
-              <code>{m}</code>
-            </div>
-          ))}
-        </div>
-        {shouldSynchronize && (
-          <>
-            <p>
-              Synchronization is enabled, so all messages with <code>header.stamp</code>s must match
-              exactly.
-            </p>
-            <ul>
-              {Object.entries(messagesByTopic).map(([topic, topicMessages]) => (
-                <li key={topic}>
-                  <code>{topic}</code>:{" "}
-                  {topicMessages.length > 0
-                    ? topicMessages
-                        .map(
-                          (
-                            { message }, // In some cases, a user may have subscribed to a topic that does not include a header stamp.
-                          ) => {
-                            const stamp = getTimestampForMessage(message);
-                            return stamp != undefined ? formatTimeRaw(stamp) : "[ unknown ]";
-                          },
-                        )
-                        .join(", ")
-                    : "no messages"}
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-      </EmptyState>
-    </div>
-  );
-}
 
 function useOptionallySynchronizedMessages(
   // eslint-disable-next-line @foxglove/no-boolean-parameters
@@ -347,10 +282,11 @@ function ImageView(props: Props) {
     () => getTopicsByTopicName(topics)[cameraTopic],
     [cameraTopic, topics],
   );
+  const [activePixelData, setActivePixelData] = useState<PixelData | undefined>();
 
   // Namespaces represent marker topics based on the camera topic prefix (e.g. "/camera_front_medium")
   const { allCameraNamespaces, imageTopicsByNamespace, allImageTopics } = useMemo(() => {
-    const imageTopics = (topics ?? []).filter(({ datatype }) => IMAGE_DATATYPES.includes(datatype));
+    const imageTopics = topics.filter(({ datatype }) => IMAGE_DATATYPES.includes(datatype));
     const topicsByNamespace = groupTopics(imageTopics);
     return {
       allImageTopics: imageTopics,
@@ -361,12 +297,13 @@ function ImageView(props: Props) {
 
   // If no cameraTopic is selected, automatically select the first available image topic
   useEffect(() => {
-    if (cameraTopic == undefined || cameraTopic === "") {
+    const maybeCameraTopic = mightActuallyBePartial(config).cameraTopic;
+    if (maybeCameraTopic == undefined || maybeCameraTopic === "") {
       if (allImageTopics[0] && allImageTopics[0].name !== "") {
         saveConfig({ cameraTopic: allImageTopics[0].name });
       }
     }
-  }, [allImageTopics, cameraTopic, saveConfig]);
+  }, [allImageTopics, config, saveConfig]);
 
   const imageMarkerDatatypes = useMemo(
     () => [
@@ -704,42 +641,49 @@ function ImageView(props: Props) {
   const showEmptyState = !imageMessage || (shouldSynchronize && !synchronizedMessages);
 
   return (
-    <Flex col clip>
+    <Stack flex="auto" overflow="hidden" position="relative">
       {toolbar}
-      {/* If rendered, EmptyState will hide the always-present ImageCanvas */}
-      {showEmptyState && (
-        <ImageEmptyState
-          cameraTopic={cameraTopic}
-          markerTopics={enabledMarkerTopics}
-          shouldSynchronize={shouldSynchronize}
-          messagesByTopic={messagesByTopic}
-        />
-      )}
-      {/* Always render the ImageCanvas because it's expensive to unmount and start up. */}
-      {imageMessageToRender && (
-        <ImageCanvas
-          topic={cameraTopicFullObject}
-          image={imageMessageToRender}
-          rawMarkerData={rawMarkerData}
-          config={config}
-          saveConfig={saveConfig}
-          onStartRenderImage={onStartRenderImage}
-        />
-      )}
-      {!showEmptyState && renderBottomBar()}
-    </Flex>
+      <Stack width="100%" height="100%">
+        {/* Always render the ImageCanvas because it's expensive to unmount and start up. */}
+        {imageMessageToRender && (
+          <ImageCanvas
+            topic={cameraTopicFullObject}
+            image={imageMessageToRender}
+            rawMarkerData={rawMarkerData}
+            config={config}
+            saveConfig={saveConfig}
+            onStartRenderImage={onStartRenderImage}
+            setActivePixelData={setActivePixelData}
+          />
+        )}
+        {/* If rendered, EmptyState will hide the always-present ImageCanvas */}
+        {showEmptyState && (
+          <div className={classes.emptyStateContainer}>
+            <ImageEmptyState
+              cameraTopic={cameraTopic}
+              markerTopics={enabledMarkerTopics}
+              shouldSynchronize={shouldSynchronize}
+              messagesByTopic={messagesByTopic}
+            />
+          </div>
+        )}
+        {!showEmptyState && renderBottomBar()}
+      </Stack>
+      <Toolbar pixelData={activePixelData} />
+    </Stack>
   );
 }
 
 const defaultConfig: Config = {
   cameraTopic: "",
-  enabledMarkerTopics: [],
   customMarkerTopicOptions: [],
-  transformMarkers: false,
-  synchronize: false,
+  enabledMarkerTopics: [],
   mode: "fit",
-  zoom: 1,
   pan: { x: 0, y: 0 },
+  rotation: 0,
+  synchronize: false,
+  transformMarkers: false,
+  zoom: 1,
 };
 
 const configSchema: PanelConfigSchema<Config> = [
@@ -748,6 +692,27 @@ const configSchema: PanelConfigSchema<Config> = [
     key: "smooth",
     type: "toggle",
     title: "Bilinear smoothing",
+  },
+  {
+    key: "flipHorizontal",
+    type: "toggle",
+    title: "Flip horizontally",
+  },
+  {
+    key: "flipVertical",
+    type: "toggle",
+    title: "Flip vertically",
+  },
+  {
+    key: "rotation",
+    type: "dropdown",
+    title: "Rotation",
+    options: [
+      { value: 0, text: "0°" },
+      { value: 90, text: "90°" },
+      { value: 180, text: "180°" },
+      { value: 270, text: "270°" },
+    ],
   },
   {
     key: "minValue",
@@ -770,6 +735,5 @@ export default Panel(
     panelType: "ImageViewPanel",
     defaultConfig,
     configSchema,
-    supportsStrictMode: true,
   }),
 );

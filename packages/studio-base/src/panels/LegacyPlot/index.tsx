@@ -13,12 +13,12 @@
 
 import { useTheme } from "@fluentui/react";
 import { ChartOptions, ScaleOptions } from "chart.js";
-import { ZoomOptions } from "chartjs-plugin-zoom/types/options";
 import { flatten, pick, uniq } from "lodash";
 import { ComponentProps, useCallback, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import styled from "styled-components";
 
+import type { ZoomOptions } from "@foxglove/chartjs-plugin-zoom/types/options";
 import { filterMap } from "@foxglove/den/collection";
 import Button from "@foxglove/studio-base/components/Button";
 import ChartComponent from "@foxglove/studio-base/components/Chart";
@@ -87,7 +87,7 @@ type Config = {
 type Props = {
   config: Config;
   saveConfig: (arg0: Partial<Config>) => void;
-  onChartUpdate?: () => void;
+  onFinishRender?: () => void;
 };
 export type Line = {
   order?: number;
@@ -129,7 +129,7 @@ export type PlotMessage = {
 
 function TwoDimensionalPlot(props: Props) {
   const theme = useTheme();
-  const { config, saveConfig, onChartUpdate } = props;
+  const { config, saveConfig, onFinishRender } = props;
   const { path, minXVal, maxXVal, minYVal, maxYVal, pointRadiusOverride } = config;
   const [hasUserPannedOrZoomed, setHasUserPannedOrZoomed] = React.useState<boolean>(false);
   const [hasVerticalExclusiveZoom, setHasVerticalExclusiveZoom] = React.useState<boolean>(false);
@@ -151,7 +151,7 @@ function TwoDimensionalPlot(props: Props) {
       return [];
     }
 
-    const { lines = [], points = [], polygons = [] } = message ?? {};
+    const { lines = [], points = [], polygons = [] } = message;
 
     const linesDatasets = filterMap(lines, (line) => {
       const { data, ...picked } = pick(line, keysToPick);
@@ -449,7 +449,7 @@ function TwoDimensionalPlot(props: Props) {
               onScalesUpdate={onScaleBoundsUpdate}
               onHover={onHover}
               data={data}
-              onChartUpdate={onChartUpdate}
+              onFinishRender={onFinishRender}
             />
             {hasUserPannedOrZoomed && (
               <SResetZoom>

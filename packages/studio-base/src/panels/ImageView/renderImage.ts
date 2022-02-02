@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { HitmapRenderContext } from "@foxglove/studio-base/panels/ImageView/HitmapRenderContext";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import {
   Image,
@@ -36,7 +37,17 @@ import {
   decodeMono8,
   decodeMono16,
 } from "./decodings";
-import { buildMarkerData, Dimensions, RawMarkerData, MarkerData, RenderOptions } from "./util";
+import {
+  buildMarkerData,
+  calculateZoomScale,
+  MarkerData,
+  PanZoom,
+  RenderableCanvas,
+  RenderArgs,
+  RenderDimensions,
+  RenderGeometry,
+  RenderOptions,
+} from "./util";
 
 const UNCOMPRESSED_IMAGE_DATATYPES = [
   "sensor_msgs/Image",
@@ -56,24 +67,22 @@ export const IMAGE_DATATYPES = [
 // one error, you'd then get a whole bunch more, which is spammy.
 let hasLoggedCameraModelError: boolean = false;
 
+// Size threshold below which we do fast point rendering as rects.
+// Empirically 3 seems like a good threshold here.
+const FAST_POINT_SIZE_THRESHOlD = 3;
+
 // Given a canvas, an image message, and marker info, render the image to the canvas.
 export async function renderImage({
   canvas,
-  zoomMode,
-  panZoom,
+  hitmapCanvas,
+  geometry,
   imageMessage,
   imageMessageDatatype,
   rawMarkerData,
   options,
-}: {
-  canvas: HTMLCanvasElement | OffscreenCanvas;
-  zoomMode: "fit" | "fill" | "other";
-  panZoom: { x: number; y: number; scale: number };
-  imageMessage?: Image | CompressedImage;
-  imageMessageDatatype?: string;
-  rawMarkerData: RawMarkerData;
-  options?: RenderOptions;
-}): Promise<Dimensions | undefined> {
+}: RenderArgs & { canvas: RenderableCanvas; hitmapCanvas: RenderableCanvas | undefined }): Promise<
+  RenderDimensions | undefined
+> {
   if (!imageMessage || imageMessageDatatype == undefined) {
     clearCanvas(canvas);
     return undefined;
@@ -99,7 +108,14 @@ export async function renderImage({
       canvas.height = bitmap.height;
     }
 
-    const dimensions = render({ canvas, zoomMode, panZoom, bitmap, imageSmoothing, markerData });
+    const dimensions = render({
+      canvas,
+      geometry,
+      hitmapCanvas,
+      bitmap,
+      imageSmoothing,
+      markerData,
+    });
     bitmap.close();
     return dimensions;
   } catch (error) {
@@ -192,67 +208,67 @@ function decodeMessageToBitmap(
   return self.createImageBitmap(image);
 }
 
-function clearCanvas(canvas?: HTMLCanvasElement | OffscreenCanvas) {
+function clearCanvas(canvas?: RenderableCanvas) {
   if (canvas) {
     canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
   }
 }
 
 function render({
-  canvas,
-  zoomMode,
-  panZoom,
   bitmap,
+  canvas,
+  geometry,
+  hitmapCanvas,
   imageSmoothing,
   markerData,
 }: {
-  canvas: HTMLCanvasElement | OffscreenCanvas;
-  zoomMode: "fit" | "fill" | "other";
-  panZoom: { x: number; y: number; scale: number };
   bitmap: ImageBitmap;
+  canvas: RenderableCanvas;
+  geometry: RenderGeometry;
+  hitmapCanvas: RenderableCanvas | undefined;
   imageSmoothing: boolean;
   markerData: MarkerData | undefined;
-}): Dimensions | undefined {
-  const bitmapDimensions = { width: bitmap.width, height: bitmap.height };
-  const ctx = canvas.getContext("2d");
-  if (!ctx) {
+}): RenderDimensions | undefined {
+  const bitmapDimensions =
+    geometry.rotation % 180 === 0
+      ? { width: bitmap.width, height: bitmap.height }
+      : { width: bitmap.height, height: bitmap.width };
+
+  const canvasCtx = canvas.getContext("2d");
+  if (!canvasCtx) {
     return;
   }
 
-  ctx.imageSmoothingEnabled = imageSmoothing;
+  canvasCtx.imageSmoothingEnabled = imageSmoothing;
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
   const { markers = [], cameraModel } = markerData ?? {};
 
   const viewportW = canvas.width;
   const viewportH = canvas.height;
 
-  let imageViewportScale = viewportW / bitmap.width;
+  const imageViewportScale = calculateZoomScale(bitmapDimensions, canvas, geometry.zoomMode);
 
-  const calculatedHeight = bitmap.height * imageViewportScale;
-
-  // if we are trying to fit and the height exeeds viewport, we need to scale on height
-  if (zoomMode === "fit" && calculatedHeight > viewportH) {
-    imageViewportScale = viewportH / bitmap.height;
-  }
-
-  // if we are trying to fill and the height doesn't fill viewport, we need to scale on height
-  if (zoomMode === "fill" && calculatedHeight < viewportH) {
-    imageViewportScale = viewportH / bitmap.height;
-  }
-
-  if (zoomMode === "other") {
-    imageViewportScale = 1;
-  }
+  const ctx = new HitmapRenderContext(canvasCtx, hitmapCanvas);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   ctx.save();
 
   // translate x/y from the center of the canvas
   ctx.translate(viewportW / 2, viewportH / 2);
-  ctx.translate(panZoom.x, panZoom.y);
+  ctx.translate(geometry.panZoom.x, geometry.panZoom.y);
 
-  ctx.scale(panZoom.scale, panZoom.scale);
+  ctx.scale(geometry.panZoom.scale, geometry.panZoom.scale);
   ctx.scale(imageViewportScale, imageViewportScale);
+
+  if (geometry.flipHorizontal) {
+    ctx.scale(-1, 1);
+  }
+
+  if (geometry.flipVertical) {
+    ctx.scale(1, -1);
+  }
+
+  ctx.rotate(geometry.rotation);
 
   // center the image in the viewport
   // also sets 0,0 as the upper left corner of the image since markers are drawn from 0,0 on the image
@@ -266,31 +282,39 @@ function render({
   // These dimensions are used to scale the markers positions separately from the bitmap size
   const { originalWidth = bitmap.width, originalHeight = bitmap.height } = markerData ?? {};
   ctx.scale(bitmap.width / originalWidth, bitmap.height / originalHeight);
+  const transform = ctx.getTransform();
 
   try {
-    paintMarkers(ctx, markers as MessageEvent<ImageMarker | ImageMarkerArray>[], cameraModel);
+    paintMarkers(
+      ctx,
+      markers as MessageEvent<ImageMarker | ImageMarkerArray>[],
+      cameraModel,
+      geometry.panZoom,
+    );
   } catch (err) {
     console.warn("error painting markers:", err);
   } finally {
     ctx.restore();
   }
-  return bitmapDimensions;
+
+  return { ...bitmapDimensions, transform };
 }
 
 function paintMarkers(
-  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  ctx: HitmapRenderContext,
   messages: MessageEvent<ImageMarker | ImageMarkerArray>[],
   cameraModel: PinholeCameraModel | undefined,
+  panZoom: PanZoom,
 ) {
   for (const { message } of messages) {
     ctx.save();
     try {
-      if (Array.isArray((message as Partial<ImageMarkerArray>).markers)) {
-        for (const marker of (message as ImageMarkerArray).markers) {
-          paintMarker(ctx, marker, cameraModel);
+      if ("markers" in message && Array.isArray(message.markers)) {
+        for (const marker of message.markers) {
+          paintMarker(ctx, marker, cameraModel, panZoom);
         }
       } else {
-        paintMarker(ctx, message as ImageMarker, cameraModel);
+        paintMarker(ctx, message as ImageMarker, cameraModel, panZoom);
       }
     } catch (e) {
       console.error("Unable to paint marker to ImageView", e, message);
@@ -301,10 +325,13 @@ function paintMarkers(
 }
 
 function paintMarker(
-  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  ctx: HitmapRenderContext,
   marker: ImageMarker,
   cameraModel: PinholeCameraModel | undefined,
+  panZoom: PanZoom,
 ) {
+  ctx.startMarker();
+
   switch (marker.type) {
     case ImageMarkerType.CIRCLE: {
       paintCircle(
@@ -397,7 +424,15 @@ function paintMarker(
             : marker.outline_color.a > 0
             ? marker.outline_color
             : marker.fill_color;
-        paintCircle(ctx, point, marker.scale, marker.scale, undefined, fillColor, cameraModel);
+
+        // For points small enough to be visually indistinct at our current zoom level
+        // we do a fast render.
+        const size = marker.scale * panZoom.scale;
+        if (size <= FAST_POINT_SIZE_THRESHOlD) {
+          paintFastPoint(ctx, point, marker.scale, marker.scale, undefined, fillColor, cameraModel);
+        } else {
+          paintCircle(ctx, point, marker.scale, marker.scale, undefined, fillColor, cameraModel);
+        }
       }
       break;
     }
@@ -442,7 +477,7 @@ function paintMarker(
 }
 
 function paintLine(
-  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  ctx: HitmapRenderContext,
   pointA: Point2D,
   pointB: Point2D,
   thickness: number,
@@ -466,7 +501,7 @@ function paintLine(
 }
 
 function paintCircle(
-  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  ctx: HitmapRenderContext,
   point: Point2D,
   radius: number,
   thickness: number,
@@ -495,5 +530,42 @@ function paintCircle(
     ctx.lineWidth = thickness;
     ctx.strokeStyle = toRGBA(outlineColor);
     ctx.stroke();
+  }
+}
+
+/**
+ * Renders small points as rectangles instead of circles for better performance.
+ */
+function paintFastPoint(
+  ctx: HitmapRenderContext,
+  point: Point2D,
+  radius: number,
+  thickness: number,
+  outlineColor: Color | undefined,
+  fillColor: Color | undefined,
+  cameraModel: PinholeCameraModel | undefined,
+) {
+  // perf-sensitive: function params instead of options object to avoid allocations
+  const hasFill = fillColor != undefined && fillColor.a > 0;
+  const hasStroke = outlineColor != undefined && outlineColor.a > 0 && thickness > 0;
+
+  if (radius <= 0 || (!hasFill && !hasStroke)) {
+    return;
+  }
+
+  const { x, y } = maybeUnrectifyPoint(cameraModel, point);
+  const size = Math.round(radius * 2);
+  const rx = Math.round(x - size / 2);
+  const ry = Math.round(y - size / 2);
+
+  if (hasFill) {
+    ctx.fillStyle = toRGBA(fillColor);
+    ctx.fillRect(rx, ry, size, size);
+  }
+
+  if (hasStroke) {
+    ctx.lineWidth = thickness;
+    ctx.strokeStyle = toRGBA(outlineColor);
+    ctx.strokeRect(rx, ry, size, size);
   }
 }

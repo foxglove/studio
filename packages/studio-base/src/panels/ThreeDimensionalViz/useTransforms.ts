@@ -17,9 +17,15 @@ import {
   TF_DATATYPES,
   TRANSFORM_STAMPED_DATATYPES,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/constants";
-import { TransformTree } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
+import {
+  IImmutableTransformTree,
+  TransformTree,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
 import { Frame, MessageEvent, Topic } from "@foxglove/studio-base/players/types";
 import { MarkerArray, StampedMessage, TF } from "@foxglove/studio-base/types/Messages";
+import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
+
+import { TransformLink } from "./types";
 
 type TfMessage = { transforms: TF[] };
 
@@ -38,16 +44,29 @@ function consumeSingleTfs(tfs: MessageEvent<TF>[], transforms: TransformTree): v
   }
 }
 
+type Args = {
+  topics: readonly Topic[];
+  frame: Frame;
+  reset: boolean;
+  urdfTransforms: TransformLink[];
+};
+
 /**
- * useTransforms accumulates transforms from frames and returns a Transforms instance
+ * useTransforms accumulates transforms from frames and returns an IImmutableTransformTree instance.
  *
- * If there are new transforms from the frame, a new Transforms instance is returned. The new instance
- * contains all accumulated transforms.
+ * If there are new transforms from the frame, a new IImmutableTransformTree instance is returned.
+ * The new instance contains all accumulated transforms.
  *
- * If the frame is undefined, transform accumulation is reset and all existing transforms are discarded.
+ * If the reset arg is true, transform accumulation is reset and all existing transforms are
+ * discarded.
+ *
+ * NOTE: Immutability is important. All mutations of the transform tree must go through
+ * useTransforms to ensure a new instance of the tree is created when adding transforms. This is
+ * required for proper updates of react hook dependencies.
  */
-// eslint-disable-next-line @foxglove/no-boolean-parameters
-function useTransforms(topics: readonly Topic[], frame: Frame, reset: boolean): TransformTree {
+function useTransforms(args: Args): IImmutableTransformTree {
+  const { topics, frame, reset, urdfTransforms } = args;
+
   const topicsToDatatypes = useMemo(() => {
     return new Map<string, string>(topics.map((topic) => [topic.name, topic.datatype]));
   }, [topics]);
@@ -74,7 +93,7 @@ function useTransforms(topics: readonly Topic[], frame: Frame, reset: boolean): 
 
       for (const msg of msgs) {
         if ("header" in (msg.message as Partial<StampedMessage>)) {
-          const frameId = (msg.message as StampedMessage).header.frame_id;
+          const frameId = (msg.message as Partial<StampedMessage>).header?.frame_id;
           if (frameId != undefined) {
             transforms.getOrCreateFrame(frameId);
             updated = true;
@@ -85,7 +104,7 @@ function useTransforms(topics: readonly Topic[], frame: Frame, reset: boolean): 
         if ("markers" in (msg.message as Partial<MarkerArray>)) {
           const markers = (msg.message as MarkerArray).markers;
           for (const marker of markers) {
-            const frameId = marker.header.frame_id;
+            const frameId = mightActuallyBePartial(marker).header?.frame_id;
             if (frameId != undefined) {
               transforms.getOrCreateFrame(frameId);
               updated = true;
@@ -103,6 +122,12 @@ function useTransforms(topics: readonly Topic[], frame: Frame, reset: boolean): 
         updated = true;
       }
     }
+
+    for (const link of urdfTransforms) {
+      transforms.addTransform(link.child, link.parent, { sec: 0, nsec: 0 }, link.transform);
+      updated = true;
+    }
+
     if (!updated) {
       return transforms;
     }
@@ -111,7 +136,7 @@ function useTransforms(topics: readonly Topic[], frame: Frame, reset: boolean): 
     // This creates a new reference identity for the returned transforms so memoization can update
     const newTransforms = TransformTree.Clone(transforms);
     return (transformsRef.current = newTransforms);
-  }, [reset, frame, topicsToDatatypes]);
+  }, [reset, frame, topicsToDatatypes, urdfTransforms]);
 }
 
 export default useTransforms;

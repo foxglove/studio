@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { useTheme } from "@fluentui/react";
+import { Stack } from "@mui/material";
 import { vec3 } from "gl-matrix";
 import { isEqual } from "lodash";
 import styled from "styled-components";
@@ -19,7 +20,6 @@ import styled from "styled-components";
 import { CameraState, cameraStateSelectors, Vec3 } from "@foxglove/regl-worldview";
 import Button from "@foxglove/studio-base/components/Button";
 import ExpandingToolbar, { ToolGroup } from "@foxglove/studio-base/components/ExpandingToolbar";
-import Flex from "@foxglove/studio-base/components/Flex";
 import JsonInput from "@foxglove/studio-base/components/JsonInput";
 import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
@@ -29,11 +29,11 @@ import {
   SLabel,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/styling";
 import styles from "@foxglove/studio-base/panels/ThreeDimensionalViz/sharedStyles";
+import { getNewCameraStateOnFollowChange } from "@foxglove/studio-base/panels/ThreeDimensionalViz/threeDimensionalVizUtils";
 import {
-  getNewCameraStateOnFollowChange,
-  TargetPose,
-} from "@foxglove/studio-base/panels/ThreeDimensionalViz/threeDimensionalVizUtils";
-import { ThreeDimensionalVizConfig } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
+  FollowMode,
+  ThreeDimensionalVizConfig,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
 import clipboard from "@foxglove/studio-base/util/clipboard";
 import { point2DValidator, cameraStateValidator } from "@foxglove/studio-base/util/validators";
 
@@ -55,8 +55,8 @@ type CameraStateInfoProps = {
 };
 
 export type CameraInfoPropsWithoutCameraState = {
-  followOrientation: boolean;
-  followTf?: string | false;
+  followMode: FollowMode;
+  followTf?: string;
   isPlaying?: boolean;
   onAlignXYAxis: () => void;
   onCameraStateChange: (arg0: CameraState) => void;
@@ -65,9 +65,8 @@ export type CameraInfoPropsWithoutCameraState = {
   defaultSelectedTab?: string;
 };
 
-type CameraInfoProps = {
+export type CameraInfoProps = {
   cameraState: CameraState;
-  targetPose?: TargetPose;
 } & CameraInfoPropsWithoutCameraState;
 
 function CameraStateInfo({ cameraState, onAlignXYAxis }: CameraStateInfoProps) {
@@ -106,8 +105,7 @@ function CameraStateInfo({ cameraState, onAlignXYAxis }: CameraStateInfoProps) {
 
 export default function CameraInfo({
   cameraState,
-  targetPose,
-  followOrientation,
+  followMode,
   followTf,
   isPlaying = false,
   onAlignXYAxis,
@@ -136,11 +134,10 @@ export default function CameraInfo({
       // Transform the camera state by whichever TF or orientation the other panels are following.
       const newCameraState = getNewCameraStateOnFollowChange({
         prevCameraState: cameraState,
-        prevTargetPose: targetPose,
         prevFollowTf: followTf,
-        prevFollowOrientation: followOrientation,
+        prevFollowMode: followMode,
         newFollowTf: (config as ThreeDimensionalVizConfig).followTf,
-        newFollowOrientation: (config as ThreeDimensionalVizConfig).followOrientation,
+        newFollowMode: (config as ThreeDimensionalVizConfig).followMode,
       });
       return { ...config, cameraState: newCameraState };
     });
@@ -156,13 +153,13 @@ export default function CameraInfo({
     >
       <ToolGroup name={CAMERA_TAB_TYPE}>
         <>
-          <Flex row reverse style={{ padding: "4px 4px 0" }}>
+          <Stack direction="row-reverse" paddingTop={0.5} paddingRight={0.5}>
             <Button
               className={styles.button}
               tooltip="Copy cameraState"
               small
               onClick={() => {
-                void clipboard.copy(JSON.stringify(cameraState, undefined, 2));
+                void clipboard.copy(JSON.stringify(cameraState, undefined, 2) ?? "");
               }}
             >
               Copy
@@ -186,8 +183,8 @@ export default function CameraInfo({
             >
               Sync
             </Button>
-          </Flex>
-          <Flex col style={{ minWidth: DEFAULT_CAMERA_INFO_WIDTH, padding: 8 }}>
+          </Stack>
+          <Stack flex="auto" minWidth={DEFAULT_CAMERA_INFO_WIDTH} padding={1}>
             {edit && !isPlaying ? (
               <JsonInput
                 value={cameraState}
@@ -195,9 +192,9 @@ export default function CameraInfo({
                 dataValidator={cameraStateValidator}
               />
             ) : (
-              <Flex col>
+              <Stack flex="auto">
                 <CameraStateInfo cameraState={cameraState} onAlignXYAxis={onAlignXYAxis} />
-                <Flex col>
+                <Stack flex="auto">
                   <SRow style={{ marginBottom: 8 }}>
                     <Tooltip
                       placement="top"
@@ -264,21 +261,20 @@ export default function CameraInfo({
                       </SValue>
                     </SRow>
                   )}
-                </Flex>
-                {typeof followTf === "string" && followTf.length > 0 ? (
+                </Stack>
+                {followMode === "no-follow" && <p>Not following</p>}
+                {followMode !== "no-follow" && (
                   <SRow>
                     <SLabel>Following frame:</SLabel>
                     <SValue>
                       <code>{followTf}</code>
-                      {followOrientation && " with orientation"}
+                      {followMode === "follow-orientation" && " with orientation"}
                     </SValue>
                   </SRow>
-                ) : (
-                  <p>Locked to map</p>
                 )}
-              </Flex>
+              </Stack>
             )}
-          </Flex>
+          </Stack>
         </>
       </ToolGroup>
     </ExpandingToolbar>

@@ -181,12 +181,27 @@ export default class RosbridgePlayer implements Player {
       return;
     }
 
+    // getTopicsAndRawTypes might silently hang. When this happens, there is no indication to the user
+    // that the connection is doing anything and studio shows no errors and no data.
+    // This logic adds a warning after 5 seconds (picked arbitrarily) to display a notice to the user.
+    const topicsStallWarningTimeout = setTimeout(() => {
+      this._problems.addProblem("topicsAndRawTypesTimeout", {
+        severity: "warn",
+        message: "Taking too long to get topics and raw types.",
+      });
+
+      this._emitState();
+    }, 5000);
+
     try {
       const result = await new Promise<{
         topics: string[];
         types: string[];
         typedefs_full_text: string[];
       }>((resolve, reject) => rosClient.getTopicsAndRawTypes(resolve, reject));
+
+      clearTimeout(topicsStallWarningTimeout);
+      this._problems.removeProblem("topicsAndRawTypesTimeout");
 
       const topicsMissingDatatypes: string[] = [];
       const topics = [];
@@ -277,6 +292,9 @@ export default class RosbridgePlayer implements Player {
         this._services = new Map();
       }
     } catch (error) {
+      clearTimeout(topicsStallWarningTimeout);
+      this._problems.removeProblem("topicsAndRawTypesTimeout");
+
       this._problems.addProblem("requestTopics:error", {
         severity: "error",
         message: "Failed to fetch topics from rosbridge",
@@ -383,6 +401,20 @@ export default class RosbridgePlayer implements Player {
       return;
     }
 
+    // Unsubscribe from all topics. When a panel subscribes to an existing topic, we want it to
+    // receive the last message on the topic. This is especially important for topics like
+    // `/tf_static` which publish a latching message once.
+    //
+    // Rather than maintaining a cache of the last message on every subscribed topic within our RosbridgePlayer,
+    // we perform an unsubscribe/re-subscribe cycle. This makes rosbridge server drop its subscriptions
+    // and make new ones. When it does this, latching publishers will re-send their last message.
+    //
+    // Rosbridge server will forward that message and all panels will receive the latched message.
+    for (const [topicName, topic] of this._topicSubscriptions) {
+      topic.unsubscribe();
+      this._topicSubscriptions.delete(topicName);
+    }
+
     // Subscribe to additional topics used by Ros1Player itself
     this._addInternalSubscriptions(subscriptions);
 
@@ -394,11 +426,12 @@ export default class RosbridgePlayer implements Player {
       .map(({ topic }) => topic)
       .filter((topicName) => availableTopicsByTopicName[topicName]);
 
-    // Subscribe to all topics that we aren't subscribed to yet.
+    // Subscribe to topics
     for (const topicName of topicNames) {
       if (this._topicSubscriptions.has(topicName)) {
         continue;
       }
+
       const topic = new roslib.Topic({
         ros: this._rosClient,
         name: topicName,
@@ -470,14 +503,6 @@ export default class RosbridgePlayer implements Player {
         this._emitState();
       });
       this._topicSubscriptions.set(topicName, topic);
-    }
-
-    // Unsubscribe from topics that we are subscribed to but shouldn't be.
-    for (const [topicName, topic] of this._topicSubscriptions) {
-      if (!topicNames.includes(topicName)) {
-        topic.unsubscribe();
-        this._topicSubscriptions.delete(topicName);
-      }
     }
   }
 
@@ -562,7 +587,7 @@ export default class RosbridgePlayer implements Player {
   private _handleInternalMessage(msg: MessageEvent<unknown>): void {
     const maybeClockMsg = msg.message as { clock?: Time };
 
-    if (msg.topic === "/clock" && maybeClockMsg.clock && !isNaN(maybeClockMsg.clock?.sec)) {
+    if (msg.topic === "/clock" && maybeClockMsg.clock && !isNaN(maybeClockMsg.clock.sec)) {
       const time = maybeClockMsg.clock;
       const seconds = toSec(maybeClockMsg.clock);
       if (isNaN(seconds)) {

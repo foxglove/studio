@@ -23,10 +23,26 @@ type FixedExporter = {
   ) => void;
 };
 
-export async function parseDaeToGlb(buffer: ArrayBuffer): Promise<GlbModel> {
-  const loader = new ColladaLoader();
-  const text = new TextDecoder().decode(buffer);
-  const collada = loader.parse(text, "./model.dae");
+type ParseDaeOptions = {
+  ignoreColladaUpAxis?: boolean;
+};
+
+export async function parseDaeToGlb(
+  buffer: ArrayBuffer,
+  options: ParseDaeOptions,
+): Promise<GlbModel> {
+  let text = new TextDecoder().decode(buffer);
+  if (options.ignoreColladaUpAxis === true) {
+    const xml = new DOMParser().parseFromString(text, "application/xml");
+    xml.querySelectorAll("up_axis").forEach((node) => node.remove());
+    text = xml.documentElement.outerHTML;
+  }
+  const collada = new ColladaLoader().parse(text, "./model.dae");
+
+  // THREE.js uses Y-up, while we follow the ROS [REP-0103](https://www.ros.org/reps/rep-0103.html)
+  // convention of Z-up
+  collada.scene.rotateY(-Math.PI / 2);
+  collada.scene.rotateX(-Math.PI / 2);
 
   collada.scene.traverse((child) => {
     if (child.type === "Mesh") {
@@ -75,11 +91,14 @@ export async function parseDaeToGlb(buffer: ArrayBuffer): Promise<GlbModel> {
 function patchGlb(glb: GlbModel): void {
   // Change all the materials to a consistent shade of blue
   for (const material of glb.json.materials ?? []) {
-    material.pbrMetallicRoughness = {
+    material.pbrMetallicRoughness ??= {
       baseColorFactor: DEFAULT_COLOR,
       metallicFactor: 0,
       roughnessFactor: 1,
     };
+    if (material.pbrMetallicRoughness.baseColorFactor?.[3] === 0) {
+      material.pbrMetallicRoughness.baseColorFactor[3] = 1;
+    }
   }
 
   for (const mesh of glb.json.meshes ?? []) {
@@ -89,12 +108,6 @@ function patchGlb(glb: GlbModel): void {
         createIndices(primitive, glb);
       }
     }
-  }
-
-  // THREE.js uses Y-up, while we follow the ROS [REP-0103](https://www.ros.org/reps/rep-0103.html)
-  // convention of Z-up
-  for (const node of glb.json.nodes ?? []) {
-    node.rotation = [-0.5, -0.5, -0.5, 0.5];
   }
 }
 

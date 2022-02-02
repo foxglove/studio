@@ -24,7 +24,7 @@ export function updateMarkerCache(
   markers: PointCloudMarker[],
 ): Map<Uint8Array, MemoizedMarker> {
   const markerCache = new Map<Uint8Array, MemoizedMarker>();
-  markers.forEach((marker) => {
+  for (const marker of markers) {
     let decoded = existing.get(marker.data);
     // Check if a decoded marker already exists in cache. If not, decode it and save it for later use
     // Compare 'settings' by deep-equality since they may be change by user. Also, the instance is different when re-rendering Layout
@@ -40,8 +40,13 @@ export function updateMarkerCache(
         hitmapColors: marker.hitmapColors,
       };
     }
+
+    // Update the marker pose unconditionally since it can change per-frame even
+    // when we don't need to do a full point cloud decode
+    decoded.marker.pose = marker.pose;
+
     markerCache.set(marker.data, decoded);
-  });
+  }
   return markerCache;
 }
 

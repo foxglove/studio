@@ -11,13 +11,33 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { CameraState } from "@foxglove/regl-worldview";
-import { TopicSettingsCollection } from "@foxglove/studio-base/panels/ThreeDimensionalViz/SceneBuilder";
+import { CameraState, ReglClickInfo } from "@foxglove/regl-worldview";
+import { Time } from "@foxglove/rostime";
 import {
-  ColorOverrideByVariable,
-  ColorOverride,
-} from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/Layout";
-import { TopicDisplayMode } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicTree/types";
+  ArrowMarker,
+  CubeMarker,
+  SphereMarker,
+  CylinderMarker,
+  LineStripMarker,
+  LineListMarker,
+  CubeListMarker,
+  SphereListMarker,
+  PointsMarker,
+  TextMarker,
+  TriangleListMarker,
+  OccupancyGridMessage,
+  PointCloud,
+  LaserScan,
+  InstancedLineListMarker,
+  ColorMarker,
+  PoseStamped,
+  MeshMarker,
+} from "@foxglove/studio-base/types/Messages";
+
+import { ColorOverrideByVariable, ColorOverride } from "./Layout";
+import { TopicSettingsCollection } from "./SceneBuilder";
+import { TopicDisplayMode } from "./TopicTree/types";
+import { IImmutableCoordinateFrame, IImmutableTransformTree, Transform } from "./transforms";
 
 /** @deprecated */
 type ColorOverrideBySourceIdxByVariable = Record<string, ColorOverride[]>;
@@ -29,24 +49,84 @@ type PreviousThreeDimensionalVizConfig = {
   colorOverrideBySourceIdxByVariable?: ColorOverrideBySourceIdxByVariable;
 };
 
+export interface MarkerCollector {
+  arrow(arg0: ArrowMarker): void;
+  color(arg0: ColorMarker): void;
+  cube(arg0: CubeMarker): void;
+  cubeList(arg0: CubeListMarker): void;
+  sphere(arg0: SphereMarker): void;
+  sphereList(arg0: SphereListMarker): void;
+  cylinder(arg0: CylinderMarker): void;
+  poseMarker(arg0: PoseStamped): void;
+  lineStrip(arg0: LineStripMarker): void;
+  lineList(arg0: LineListMarker): void;
+  points(arg0: PointsMarker): void;
+  text(arg0: TextMarker): void;
+  mesh(arg0: MeshMarker): void;
+  triangleList(arg0: TriangleListMarker): void;
+  grid(arg0: OccupancyGridMessage): void;
+  pointcloud(arg0: PointCloud): void;
+  laserScan(arg0: LaserScan): void;
+  instancedLineList(arg0: InstancedLineListMarker): void;
+}
+
+export type MouseEventName = "onDoubleClick" | "onMouseMove" | "onMouseDown" | "onMouseUp";
+
+export type ReglMouseEventHandler = (ev: React.MouseEvent, click: ReglClickInfo) => void;
+
+export type MouseEventHandlerProps = {
+  addMouseEventHandler: (eventName: MouseEventName, handler: ReglMouseEventHandler) => void;
+  removeMouseEventHandler: (eventName: MouseEventName, handler: ReglMouseEventHandler) => void;
+};
+
+export type RenderMarkerArgs = {
+  add: MarkerCollector;
+  renderFrame: IImmutableCoordinateFrame;
+  fixedFrame: IImmutableCoordinateFrame;
+  transforms: IImmutableTransformTree;
+  time: Time;
+};
+
+export interface MarkerProvider {
+  renderMarkers(args: RenderMarkerArgs): void;
+}
+
 export type ThreeDimensionalVizConfig = {
-  useThemeBackgroundColor: boolean;
-  customBackgroundColor: string;
-  enableShortDisplayNames?: boolean;
+  autoSyncCameraState?: boolean;
   autoTextBackgroundColor?: boolean;
   cameraState: Partial<CameraState>;
-  followTf?: string | false;
-  followOrientation?: boolean;
+  checkedKeys: string[];
+  clickToPublishPoseTopic: string;
+  clickToPublishPointTopic: string;
+  clickToPublishPoseEstimateTopic: string;
+  clickToPublishPoseEstimateXDeviation: number;
+  clickToPublishPoseEstimateYDeviation: number;
+  clickToPublishPoseEstimateThetaDeviation: number;
+  colorOverrideByVariable?: ColorOverrideByVariable;
+  customBackgroundColor: string;
+  diffModeEnabled: boolean;
+  disableAutoOpenClickedObject?: boolean;
+  enableShortDisplayNames?: boolean;
+  expandedKeys: string[];
+  ignoreColladaUpAxis?: boolean;
+  flattenMarkers?: boolean;
+  followMode?: "follow" | "follow-orientation" | "no-follow";
+  followTf?: string;
   modifiedNamespaceTopics?: string[];
   pinTopics: boolean;
-  diffModeEnabled: boolean;
-  topicDisplayMode?: TopicDisplayMode;
-  flattenMarkers?: boolean;
-  showCrosshair?: boolean;
-  expandedKeys: string[];
-  checkedKeys: string[];
   settingsByKey: TopicSettingsCollection;
-  autoSyncCameraState?: boolean;
-  colorOverrideByVariable?: ColorOverrideByVariable;
-  disableAutoOpenClickedObject?: boolean;
+  showCrosshair?: boolean;
+  topicDisplayMode?: TopicDisplayMode;
+  useThemeBackgroundColor: boolean;
 } & PreviousThreeDimensionalVizConfig;
+
+/**
+ * TransformLink describes the transform between two coordinate frames.
+ */
+export type TransformLink = {
+  parent: string;
+  child: string;
+  transform: Transform;
+};
+
+export type FollowMode = "follow" | "follow-orientation" | "no-follow";
