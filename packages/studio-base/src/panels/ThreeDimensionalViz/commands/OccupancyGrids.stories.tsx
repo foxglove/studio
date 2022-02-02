@@ -63,7 +63,7 @@ export function Rotations(): JSX.Element {
       cameraMode="perspective"
       hideDebug
     >
-      <GlLineLists>{[GridBuilder.BuildGrid({ width: 20, subdivisions: 19 })]}</GlLineLists>
+      <GlLineLists glLineLists={[GridBuilder.BuildGrid({ width: 20, subdivisions: 19 })]} />
       <OccupancyGrids>
         {[
           makeGrid([-5, 5, 0], quat.rotateX(quat.create(), identity, 0)),

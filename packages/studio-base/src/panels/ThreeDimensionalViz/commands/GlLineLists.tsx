@@ -62,11 +62,13 @@ const rawCommand = (regl: REGL.Regl) => {
 };
 
 type Props = CommonCommandProps & {
-  // TypeScript doesn't allow us to pass an array variable if `children` is set to an array type here
-  // https://github.com/microsoft/TypeScript/issues/30711#issuecomment-485013588
-  children: React.ReactNode;
+  glLineLists: GlLineListMarker[];
 };
 
 export default function GlLineLists(props: Props): JSX.Element {
-  return <Command getChildrenForHitmap={undefined} {...props} reglCommand={rawCommand} />;
+  return (
+    <Command getChildrenForHitmap={undefined} {...props} reglCommand={rawCommand}>
+      {props.glLineLists}
+    </Command>
+  );
 }

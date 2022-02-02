@@ -226,7 +226,7 @@ export default function WorldMarkers({
         {[...instancedLineList, ...groupedLines]}
       </Lines>
       <MeshMarkers layerIndex={layerIndex} markers={mesh} loadModelOptions={loadModelOptions} />
-      <GlLineLists>{glLineList}</GlLineLists>
+      <GlLineLists glLineLists={glLineList} />
     </>
   );
 }

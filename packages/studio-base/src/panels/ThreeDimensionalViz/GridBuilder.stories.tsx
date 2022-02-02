@@ -115,7 +115,7 @@ storiesOf("panels/ThreeDimensionalViz/GridBuilder", module)
           onMouseMove={noop}
           onMouseUp={noop}
         >
-          <GlLineLists>{collector.data.glLineList}</GlLineLists>
+          <GlLineLists glLineLists={collector.data.glLineList} />
         </Worldview>
         <SExpectedResult>A 10x10 grid should be rendered</SExpectedResult>
       </div>
@@ -153,7 +153,7 @@ storiesOf("panels/ThreeDimensionalViz/GridBuilder", module)
           onMouseMove={noop}
           onMouseUp={noop}
         >
-          <GlLineLists>{collector.data.glLineList}</GlLineLists>
+          <GlLineLists glLineLists={collector.data.glLineList} />
         </Worldview>
         <SExpectedResult>A magenta rectangle should be rendered, offset down</SExpectedResult>
       </div>
