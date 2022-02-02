@@ -363,8 +363,7 @@ function PanelList(props: Props): JSX.Element {
           if (existing == undefined) {
             return allFilteredPanels.length - 1;
           }
-          const newIdx = (existing - 1) % (allFilteredPanels.length - 1);
-          return newIdx >= 0 ? newIdx : allFilteredPanels.length + newIdx;
+          return (existing - 1 + allFilteredPanels.length) % allFilteredPanels.length;
         });
       } else if (e.key === "Enter" && highlightedPanel) {
         onPanelSelect({
