@@ -33,11 +33,12 @@ function topicHasNoHeaderStamp(topic: Topic, datatypes: RosDatatypes): boolean {
 }
 
 type Props = {
+  iconButtonProps: IconButtonProps;
   path: string; // A path of the form `/topic.some_field[:]{id==42}.x`
   index?: number; // Optional index field which gets passed to `onChange` (so you don't have to create anonymous functions)
   timestampMethod?: TimestampMethod;
   onTimestampMethodChange?: (arg0: TimestampMethod, index?: number) => void;
-} & IconButtonProps;
+};
 
 export default function TimestampMethodDropdown(props: Props): JSX.Element {
   const [anchorEl, setAnchorEl] = React.useState<undefined | HTMLElement>(undefined);
@@ -47,7 +48,7 @@ export default function TimestampMethodDropdown(props: Props): JSX.Element {
     setAnchorEl(event.currentTarget);
   };
 
-  const { path, timestampMethod = "receiveTime", onTimestampMethodChange, ...rest } = props;
+  const { path, timestampMethod = "receiveTime", iconButtonProps } = props;
 
   const { datatypes, topics } = PanelAPI.useDataSourceInfo();
   const rosPath = useMemo(() => parseRosPath(path), [path]);
@@ -65,11 +66,13 @@ export default function TimestampMethodDropdown(props: Props): JSX.Element {
     return topic ? topicHasNoHeaderStamp(topic, datatypes) : false;
   }, [datatypes, topic]);
 
-  const onTimestampMethodChangeCallback = useCallback(
+  const onTimestampMethodChangeProp = props.onTimestampMethodChange;
+
+  const onTimestampMethodChange = useCallback(
     (value: TimestampMethod) => {
-      onTimestampMethodChange?.(value, props.index);
+      onTimestampMethodChangeProp?.(value, props.index);
     },
-    [onTimestampMethodChange, props.index],
+    [onTimestampMethodChangeProp, props.index],
   );
 
   const timestampMethods = [
@@ -87,7 +90,7 @@ export default function TimestampMethodDropdown(props: Props): JSX.Element {
         aria-expanded={open ? "true" : undefined}
         onClick={handleClick}
         sx={{ padding: 0.375, color: "text.secondary", "&:hover": { color: "text.primary" } }}
-        {...rest}
+        {...iconButtonProps}
       >
         <AccessTimeIcon fontSize="inherit" />
       </IconButton>
@@ -108,7 +111,7 @@ export default function TimestampMethodDropdown(props: Props): JSX.Element {
             disabled={noHeaderStamp && method.value === "headerStamp"}
             selected={timestampMethod === method.value}
             onClick={() => {
-              onTimestampMethodChangeCallback(method.value);
+              onTimestampMethodChange(method.value);
               setAnchorEl(undefined);
             }}
           >
