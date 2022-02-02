@@ -47,7 +47,7 @@ export default function TimestampMethodDropdown(props: Props): JSX.Element {
     setAnchorEl(event.currentTarget);
   };
 
-  const { path, timestampMethod = "receiveTime", ...rest } = props;
+  const { path, timestampMethod = "receiveTime", onTimestampMethodChange, ...rest } = props;
 
   const { datatypes, topics } = PanelAPI.useDataSourceInfo();
   const rosPath = useMemo(() => parseRosPath(path), [path]);
@@ -65,13 +65,11 @@ export default function TimestampMethodDropdown(props: Props): JSX.Element {
     return topic ? topicHasNoHeaderStamp(topic, datatypes) : false;
   }, [datatypes, topic]);
 
-  const onTimestampMethodChangeProp = props.onTimestampMethodChange;
-
-  const onTimestampMethodChange = useCallback(
+  const onTimestampMethodChangeCallback = useCallback(
     (value: TimestampMethod) => {
-      onTimestampMethodChangeProp?.(value, props.index);
+      onTimestampMethodChange?.(value, props.index);
     },
-    [onTimestampMethodChangeProp, props.index],
+    [onTimestampMethodChange, props.index],
   );
 
   const timestampMethods = [
@@ -110,7 +108,7 @@ export default function TimestampMethodDropdown(props: Props): JSX.Element {
             disabled={noHeaderStamp && method.value === "headerStamp"}
             selected={timestampMethod === method.value}
             onClick={() => {
-              onTimestampMethodChange(method.value);
+              onTimestampMethodChangeCallback(method.value);
               setAnchorEl(undefined);
             }}
           >
