@@ -20469,7 +20469,7 @@ __metadata:
 
 "react-json-tree@patch:react-json-tree@npm:0.15.1#../../patches/react-json-tree.patch::locator=%40foxglove%2Fstudio-base%40workspace%3Apackages%2Fstudio-base":
   version: 0.15.1
-  resolution: "react-json-tree@patch:react-json-tree@npm%3A0.15.1#../../patches/react-json-tree.patch::version=0.15.1&hash=c5fd14&locator=%40foxglove%2Fstudio-base%40workspace%3Apackages%2Fstudio-base"
+  resolution: "react-json-tree@patch:react-json-tree@npm%3A0.15.1#../../patches/react-json-tree.patch::version=0.15.1&hash=9ebe07&locator=%40foxglove%2Fstudio-base%40workspace%3Apackages%2Fstudio-base"
   dependencies:
     "@types/prop-types": ^15.7.4
     prop-types: ^15.7.2
@@ -20477,7 +20477,7 @@ __metadata:
   peerDependencies:
     "@types/react": ^16.3.0 || ^17.0.0
     react: ^16.3.0 || ^17.0.0
-  checksum: 9a7301c0b80154211f86337c772df7f0d51aa2d5d9d51ef54b9b6fb0e87ade04ec48bb202ebb246b833421354863c9b582365a57c8e59344abd877ede26311dd
+  checksum: 4b354e22d51b83d5d2ecb09c2cae48c9a59cd131e97496f0988c574e896073ef9e25dd10ac612c535c6e342cc15c20f5b645b3412556ac69d2c1528e4a020bb5
   languageName: node
   linkType: hard
 
