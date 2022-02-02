@@ -38,17 +38,16 @@ const withHighlights = (
     const nonHighlightedMarkersByType: Partial<InteractiveMarkersByType> = {};
 
     // Partition the markersByType into two sets: highlighted and non-highlighted
-    Object.entries(markersByType).forEach(([type, markers]) => {
-      const [highlightedMarkers, nonHighlightedMarkers] = partition(
+    for (const [type, markers] of Object.entries(markersByType)) {
+      const [highlightedMarkers, nonHighlightedMarkers] = partition<Interactive<unknown>>(
         markers,
-        (marker: Interactive<unknown>) =>
-          mightActuallyBePartial(marker).interactionData?.highlighted,
+        (marker) => mightActuallyBePartial(marker).interactionData?.highlighted,
       );
 
       (highlightedMarkersByType as Record<string, unknown>)[type] = highlightedMarkers;
       (nonHighlightedMarkersByType as Record<string, unknown>)[type] = nonHighlightedMarkers;
       hasHighlightedMarkers = hasHighlightedMarkers || highlightedMarkers.length > 0;
-    });
+    }
 
     return (
       <>
