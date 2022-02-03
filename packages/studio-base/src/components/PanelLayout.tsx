@@ -20,6 +20,7 @@ import React, {
   Suspense,
   useRef,
   LazyExoticComponent,
+  useEffect,
 } from "react";
 import { useDrop } from "react-dnd";
 import {
@@ -41,8 +42,10 @@ import {
   useCurrentLayoutSelector,
   usePanelMosaicId,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import { PanelComponent, usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
+import { PanelsState } from "@foxglove/studio-base/index";
 import { MosaicDropResult, PanelConfig } from "@foxglove/studio-base/types/panels";
 import { getPanelIdForType, getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
@@ -185,12 +188,51 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
 
 const selectedLayoutSelector = (state: LayoutState) => state.selectedLayout;
 
+const DefaultLayout: PanelsState = {
+  configById: {
+    "3D Panel!18i6zy7": {
+      pinTopics: true,
+    },
+    "RawMessages!os6rgs": {},
+    "ImageViewPanel!3mnp456": {},
+  },
+  globalVariables: {},
+  userNodes: {},
+  linkedGlobalVariables: [],
+  playbackConfig: {
+    messageOrder: "receiveTime",
+    speed: 1,
+  },
+  layout: {
+    first: "3D Panel!18i6zy7",
+    second: {
+      first: "ImageViewPanel!3mnp456",
+      second: "RawMessages!os6rgs",
+      direction: "column",
+      splitPercentage: 30,
+    },
+    direction: "row",
+    splitPercentage: 70,
+  },
+} as const;
+
 export default function PanelLayout(): JSX.Element {
   const { changePanelLayout } = useCurrentLayoutActions();
   const { openLayoutBrowser } = useWorkspace();
   const selectedLayout = useCurrentLayoutSelector(selectedLayoutSelector);
+  const layoutMangager = useLayoutManager();
+  const { setSelectedLayoutId } = useCurrentLayoutActions();
 
-  const layoutLoading = selectedLayout?.loading;
+  useEffect(() => {
+    // Create and select a default layout if no layout is active.
+    if (selectedLayout == undefined) {
+      void layoutMangager
+        .saveNewLayout({ name: "Default", data: DefaultLayout, permission: "CREATOR_WRITE" })
+        .then((layout) => setSelectedLayoutId(layout.id));
+    }
+  }, [layoutMangager, selectedLayout, setSelectedLayoutId]);
+
+  const layoutLoading = selectedLayout?.loading ?? false;
   const onChange = useCallback(
     (newLayout: MosaicNode<string> | undefined) => {
       if (newLayout != undefined) {
@@ -199,9 +241,10 @@ export default function PanelLayout(): JSX.Element {
     },
     [changePanelLayout],
   );
+
   if (selectedLayout?.data) {
     return <UnconnectedPanelLayout layout={selectedLayout.data.layout} onChange={onChange} />;
-  } else if (layoutLoading === true) {
+  } else if (layoutLoading) {
     return (
       <EmptyState>
         <Spinner size={SpinnerSize.large} />
