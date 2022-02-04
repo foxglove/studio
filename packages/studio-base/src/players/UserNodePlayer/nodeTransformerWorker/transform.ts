@@ -271,7 +271,7 @@ export const compile = (nodeData: NodeData): NodeData => {
   sourceCodeMap.set(nodeFileName, sourceCode);
   sourceCodeMap.set(projectConfig.rosLib.filePath, rosLib);
   // fixme
-  sourceCodeMap.set("/node_modules/data-source/index.d.ts", studioLib);
+  sourceCodeMap.set("/studio_node/data-source.ts", studioLib);
 
   projectConfig.utilityFiles.forEach((file) => sourceCodeMap.set(file.filePath, file.sourceCode));
   projectConfig.declarations.forEach((lib) => sourceCodeMap.set(lib.filePath, lib.sourceCode));
