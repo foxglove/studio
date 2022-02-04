@@ -3,7 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { PanelsState } from "@foxglove/studio-base/index";
+import { defaultPlaybackConfig } from "@foxglove/studio-base/providers/CurrentLayoutProvider/reducers";
 
+/**
+ * This is loaded when the user has no layout selected on application launch
+ * to avoid presenting the user with a blank layout.
+ */
 export const defaultLayout: PanelsState = {
   configById: {
     "3D Panel!18i6zy7": {
@@ -15,10 +20,7 @@ export const defaultLayout: PanelsState = {
   globalVariables: {},
   userNodes: {},
   linkedGlobalVariables: [],
-  playbackConfig: {
-    messageOrder: "receiveTime",
-    speed: 1,
-  },
+  playbackConfig: { ...defaultPlaybackConfig },
   layout: {
     first: "3D Panel!18i6zy7",
     second: {
