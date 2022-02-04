@@ -149,6 +149,7 @@ export default function MockMessagePipelineProvider(props: {
         datatypes: props.datatypes ?? NO_DATATYPES,
         subscriptions: flattenedSubscriptions,
         publishers: [],
+        messageEventsBySubscriberId: new Map(),
         setSubscriptions: props.setSubscriptions ?? setSubscriptions,
         setPublishers: props.setPublishers ?? noop,
         setParameter: props.setParameter ?? noop,

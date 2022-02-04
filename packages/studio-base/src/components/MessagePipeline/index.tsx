@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { debounce, flatten, groupBy } from "lodash";
+import { useLatest } from "react-use";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import { Time } from "@foxglove/rostime";
@@ -51,6 +52,7 @@ export type MessagePipelineContext = {
   datatypes: RosDatatypes;
   subscriptions: SubscribePayload[];
   publishers: AdvertiseOptions[];
+  messageEventsBySubscriberId: Map<string, MessageEvent<unknown>[]>;
   setSubscriptions: (id: string, subscriptionsForId: SubscribePayload[]) => void;
   setPublishers: (id: string, publishersForId: AdvertiseOptions[]) => void;
   setParameter: (key: string, value: ParameterValue) => void;
@@ -113,9 +115,7 @@ export function MessagePipelineProvider({
   const [rawPlayerState, setRawPlayerState] = useState<PlayerState>(defaultPlayerState);
   const lastActiveData = useRef<PlayerStateActiveData | undefined>(rawPlayerState.activeData);
   const lastTimeWhenActiveDataBecameSet = useRef<number | undefined>();
-  const [subscriptionsById, setAllSubscriptions] = useState<{
-    [key: string]: SubscribePayload[];
-  }>({});
+  const [subscriptionsById, setAllSubscriptions] = useState(new Map<string, SubscribePayload[]>());
   const [publishersById, setAllPublishers] = useState({});
   // This is the state of the current tick of the player.
   // This state is tied to the player, and should be replaced whenever the player changes.
@@ -127,8 +127,11 @@ export function MessagePipelineProvider({
     waitingForPromises: boolean;
   }>({ resolveFn: undefined, promisesToWaitFor: [], waitingForPromises: false });
 
+  const newTopicsBySubscriberId = useRef(new Map<string, Set<string>>());
+  const messageEventsBySubscriberId = useRef(new Map<string, MessageEvent<unknown>[]>());
+
   const subscriptions: SubscribePayload[] = useMemo(
-    () => flatten(Object.values(subscriptionsById)),
+    () => flatten(Array.from(subscriptionsById.values())),
     [subscriptionsById],
   );
   const publishers: AdvertiseOptions[] = useMemo(
@@ -175,6 +178,9 @@ export function MessagePipelineProvider({
     }, skipFrames);
   }, [rawPlayerState, skipFrames]);
 
+  const lastMessageEventByTopic = useRef(new Map<string, MessageEvent<unknown>>());
+
+  const subscriptionsByIdLatest = useLatest(subscriptionsById);
   useEffect(() => {
     currentPlayer.current = player;
     if (!player) {
@@ -190,6 +196,8 @@ export function MessagePipelineProvider({
     const messageOrderTracker = new MessageOrderTracker();
     player.setListener(async (newPlayerState: PlayerState) => {
       if (currentPlayer.current !== player) {
+        lastMessageEventByTopic.current.clear();
+        newTopicsBySubscriberId.current.clear();
         return undefined;
       }
       if (playerTickState.current.resolveFn) {
@@ -198,6 +206,70 @@ export function MessagePipelineProvider({
 
       // check for any out-of-order or out-of-sync messages
       messageOrderTracker.update(newPlayerState);
+
+      // Save the last message on every topic to send the last message
+      // to newly subscribed panels.
+      for (const msgEvent of newPlayerState.activeData?.messages ?? []) {
+        lastMessageEventByTopic.current.set(msgEvent.topic, msgEvent);
+      }
+
+      const messages = newPlayerState.activeData?.messages;
+      const subsById = subscriptionsByIdLatest.current;
+
+      // make a map of topics to subscriber ids
+      const topicToSubscriberIds = new Map<string, string[]>();
+      for (const [id, subs] of subsById) {
+        for (const subscription of subs) {
+          const topic = subscription.topic;
+
+          const ids = topicToSubscriberIds.get(topic) ?? [];
+          ids.push(id);
+          topicToSubscriberIds.set(topic, ids);
+        }
+      }
+
+      const seenTopics = new Set<string>();
+
+      // Put messages into per-subscriber queues
+      if (messages) {
+        for (const messageEvent of messages) {
+          seenTopics.add(messageEvent.topic);
+          const ids = topicToSubscriberIds.get(messageEvent.topic);
+          if (!ids) {
+            continue;
+          }
+
+          for (const id of ids) {
+            const subscriberMessageEvents = messageEventsBySubscriberId.current.get(id) ?? [];
+            subscriberMessageEvents.push(messageEvent);
+            messageEventsBySubscriberId.current.set(id, subscriberMessageEvents);
+          }
+        }
+      }
+
+      for (const id of subsById.keys()) {
+        const newTopics = newTopicsBySubscriberId.current.get(id);
+        if (!newTopics) {
+          continue;
+        }
+        for (const topic of newTopics) {
+          // If we had a message for this topic in the regular set of messages, we don't need to inject
+          // another message.
+          if (seenTopics.has(topic)) {
+            continue;
+          }
+          const msgEvent = lastMessageEventByTopic.current.get(topic);
+          if (msgEvent) {
+            const subscriberMessageEvents = messageEventsBySubscriberId.current.get(id) ?? [];
+            subscriberMessageEvents.push(msgEvent);
+            messageEventsBySubscriberId.current.set(id, subscriberMessageEvents);
+          }
+        }
+        // We've processed all new subscriber topics into message queues
+        newTopicsBySubscriberId.current.delete(id);
+      }
+
+      messageEventsBySubscriberId.current = new Map(messageEventsBySubscriberId.current);
 
       const promise = new Promise<void>((resolve) => {
         playerTickState.current.resolveFn = resolve;
@@ -230,7 +302,7 @@ export function MessagePipelineProvider({
         activeData: lastActiveData.current,
       });
     };
-  }, [player]);
+  }, [player, subscriptionsByIdLatest]);
 
   const topics: Topic[] | undefined = useShallowMemo(rawPlayerState.activeData?.topics);
   const messages: readonly MessageEvent<unknown>[] | undefined =
@@ -241,11 +313,31 @@ export function MessagePipelineProvider({
     () => rawPlayerState.activeData?.datatypes ?? new Map(),
     [rawPlayerState.activeData?.datatypes],
   );
+
   const capabilities = useShallowMemo(rawPlayerState.capabilities);
   const setSubscriptions = useCallback(
     (id: string, subscriptionsForId: SubscribePayload[]) => {
       setAllSubscriptions((previousSubscriptions) => {
-        return { ...previousSubscriptions, [id]: subscriptionsForId };
+        const previousSubscriptionById = previousSubscriptions.get(id);
+
+        // Record any _new_ topics for this subscriber into newTopicsBySubscriberId
+        const newTopics = newTopicsBySubscriberId.current.get(id);
+        if (!newTopics) {
+          newTopicsBySubscriberId.current.set(
+            id,
+            new Set(subscriptionsForId.map((sub) => sub.topic)),
+          );
+        } else if (previousSubscriptionById) {
+          const prevTopics = new Set(previousSubscriptionById.map((sub) => sub.topic));
+          for (const { topic: newTopic } of subscriptionsForId) {
+            if (!prevTopics.has(newTopic)) {
+              newTopics.add(newTopic);
+            }
+          }
+        }
+
+        previousSubscriptions.set(id, subscriptionsForId);
+        return new Map(previousSubscriptions);
       });
     },
     [setAllSubscriptions],
@@ -304,7 +396,7 @@ export function MessagePipelineProvider({
     [player],
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     let skipUpdate = false;
     void (async () => {
       // Wait for the current frame to finish rendering if needed
@@ -326,6 +418,7 @@ export function MessagePipelineProvider({
     <ContextInternal.Provider
       value={useShallowMemo({
         playerState: rawPlayerState,
+        messageEventsBySubscriberId: messageEventsBySubscriberId.current,
         subscriptions,
         publishers,
         frame,

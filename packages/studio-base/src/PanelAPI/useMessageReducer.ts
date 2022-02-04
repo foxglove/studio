@@ -126,7 +126,7 @@ export function useMessageReducer<T>(props: Params<T>): T {
       // - Call addMessage() or addMessages() if any new messages of interest have arrived
       // - Otherwise, return the previous reducedValue so that we don't trigger an unnecessary render.
       function selectReducedMessages(ctx: MessagePipelineContext): T {
-        const messageEvents = ctx.playerState.activeData?.messages;
+        const messageEvents = ctx.messageEventsBySubscriberId.get(id);
         const lastSeekTime = ctx.playerState.activeData?.lastSeekTime;
 
         let newReducedValue: T;
@@ -173,7 +173,7 @@ export function useMessageReducer<T>(props: Params<T>): T {
 
         return state.current.reducedValue;
       },
-      [addMessage, addMessages, restore, requestedTopicsSet],
+      [id, addMessage, addMessages, restore, requestedTopicsSet],
     ),
   );
 }

@@ -174,7 +174,8 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     const renderState: RenderState = prevRenderState.current;
 
     if (watchedFieldsRef.current.has("currentFrame")) {
-      const currentFrame = playerState?.activeData?.messages.filter((messageEvent) => {
+      const messageEvents = ctx?.messageEventsBySubscriberId.get(panelId);
+      const currentFrame = messageEvents?.filter((messageEvent) => {
         return subscribedTopicsRef.current.has(messageEvent.topic);
       });
       // If there are new frames we render
@@ -279,7 +280,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     } catch (err) {
       setError(err);
     }
-  }, [colorScheme, renderFn]);
+  }, [colorScheme, panelId, renderFn]);
 
   const queueRender = useCallback(() => {
     if (!renderFn || rafRequestedRef.current != undefined) {
