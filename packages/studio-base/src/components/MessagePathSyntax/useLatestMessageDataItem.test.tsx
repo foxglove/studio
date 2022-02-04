@@ -145,7 +145,7 @@ describe("useLatestMessageDataItem", () => {
     ]);
   });
 
-  it("updates when topics and datatypes becomes available", async () => {
+  it("restores previously received message when topics and datatypes becomes available", async () => {
     const { result, rerender } = renderHook(({ path }) => useLatestMessageDataItem(path), {
       initialProps: {
         path: "/topic{value==2}.value",
