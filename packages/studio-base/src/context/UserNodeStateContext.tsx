@@ -11,6 +11,7 @@ import { Diagnostic, UserNodeLog } from "@foxglove/studio-base/players/UserNodeP
 
 type UserNodeState = {
   rosLib: string;
+  studioLib: string;
   nodeStates: {
     [nodeId: string]: {
       diagnostics: readonly Diagnostic[];
@@ -26,13 +27,18 @@ export const UserNodeStateContext = createContext<
       addUserNodeLogs: (nodeId: string, logs: readonly UserNodeLog[]) => void;
       clearUserNodeLogs: (nodeId: string) => void;
       setUserNodeRosLib: (rosLib: string) => void;
+      setUserNodeStudioLib: (studioLib: string) => void;
     }
   | undefined
 >(undefined);
 UserNodeStateContext.displayName = "UserNodeStateContext";
 
 export function UserNodeStateProvider({ children }: React.PropsWithChildren<unknown>): JSX.Element {
-  const [state, setState] = useState<UserNodeState>({ rosLib: ros_lib_dts, nodeStates: {} });
+  const [state, setState] = useState<UserNodeState>({
+    rosLib: ros_lib_dts,
+    studioLib: "",
+    nodeStates: {},
+  });
 
   const setUserNodeDiagnostics = useCallback(
     (nodeId: string, diagnostics: readonly Diagnostic[]) => {
@@ -83,12 +89,17 @@ export function UserNodeStateProvider({ children }: React.PropsWithChildren<unkn
     setState((prevState) => ({ ...prevState, rosLib }));
   }, []);
 
+  const setUserNodeStudioLib = useCallback((studioLib: string) => {
+    setState((prevState) => ({ ...prevState, studioLib }));
+  }, []);
+
   const value = useShallowMemo({
     state,
     setUserNodeDiagnostics,
     addUserNodeLogs,
     clearUserNodeLogs,
     setUserNodeRosLib,
+    setUserNodeStudioLib,
   });
 
   return <UserNodeStateContext.Provider value={value}>{children}</UserNodeStateContext.Provider>;

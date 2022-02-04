@@ -31,11 +31,23 @@ const rosPrimitiveToTypescriptTypeMap = new Map<string, string>([
 export const typedArrayMap = new Map<string, string>([
   ["uint8", "Uint8Array"],
   ["int8", "Int8Array"],
+  ["int16", "Int16Array"],
+  ["uint16", "Uint16Array"],
+  ["int32", "Int32Array"],
+  ["uint32", "Uint32Array"],
+  ["int64", "BigInt64Array"],
+  ["uint64", "BigUint64Array"],
+  ["float32", "Float32Array"],
+  ["float64", "Float64Array"],
 ]);
+
+function safeString(str: string): string {
+  return JSON.stringify(str) as string;
+}
 
 export const generateTypesInterface = (datatypes: RosDatatypes): string => {
   const seenDatatypes = new Set();
-  let src = "declare interface Types {";
+  let src = "export type DataSourceTypes = {";
 
   for (const [datatype, definition] of datatypes) {
     // Avoid adding a repeating datatype name again.
@@ -53,41 +65,45 @@ export const generateTypesInterface = (datatypes: RosDatatypes): string => {
       const typedArray = typedArrayMap.get(type);
       const rosPrimitive = rosPrimitiveToTypescriptTypeMap.get(type);
 
+      const fieldName = safeString(field.name);
+
       if (isConstant === true) {
         src += `\n // ${field.name} = ${field.valueText}`;
       } else if (isArray === true) {
         if (typedArray) {
-          src += `\n${field.name}: ${typedArray},`;
+          src += `\n${fieldName}: ${typedArray},`;
         } else if (rosPrimitive) {
-          src += `\n${field.name}: ${rosPrimitive}[],`;
+          src += `\n${fieldName}: ${rosPrimitive}[],`;
         } else {
-          src += `\n${field.name}: Types["${type}"][],`;
+          src += `\n${fieldName}: DataSourceTypes[${safeString(type)}][],`;
         }
       } else {
         if (rosPrimitive) {
-          src += `\n${field.name}: ${rosPrimitive},`;
+          src += `\n${fieldName}: ${rosPrimitive},`;
         } else {
-          src += `\n${field.name}: Types["${type}"],`;
+          src += `\n${fieldName}: DataSourceTypes[${safeString(type)}],`;
         }
       }
     }
 
-    src += "\n};";
+    src += "\n},";
   }
 
-  src += "\n}\n";
+  src += "\n};";
 
   return src;
 };
 
 function generateTypesByTopicInterface(topics: Topic[]): string {
-  let src = "declare interface TypesByTopic {";
+  let src = "export type DataSourceTypesByTopic = {";
 
   for (const topic of topics) {
-    src += `"${topic.name}": MessageEvent<Types["${topic.datatype}"]>;`;
+    src += `${safeString(topic.name)}: MessageEvent<DataSourceTypes[${safeString(
+      topic.datatype,
+    )}]>,\n`;
   }
 
-  src += "\n}";
+  src += "\n};";
   return src;
 }
 
@@ -96,24 +112,22 @@ function generateStudioLib(args: Args): string {
   const types = generateTypesInterface(args.datatypes);
 
   const src = `
-type Time = {
-  sec: number;
-  nsec: number;
-}
+export type Time = {
+  sec: number,
+  nsec: number,
+};
 
-type Duration = Time;
+export type Duration = Time;
 
-declare interface MessageEvent<T> {
-  topic: T;
+export interface MessageEvent<T> {
+  topic: string;
   receiveTime: Time;
   message: T;
-}
+};
 
 ${types}
 
 ${typesByTopic}
-
-export { Types, TypesByTopic };
 `;
 
   return src;

@@ -19,6 +19,8 @@ import Log from "@foxglove/log";
 import { Time, compare } from "@foxglove/rostime";
 import { ParameterValue } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
+import { generateStudioLib } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/generateStudioLib";
+import { TransformArgs } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/types";
 import {
   Diagnostic,
   DiagnosticSeverity,
@@ -63,6 +65,7 @@ type UserNodeActions = {
   setUserNodeDiagnostics: (nodeId: string, diagnostics: readonly Diagnostic[]) => void;
   addUserNodeLogs: (nodeId: string, logs: readonly UserNodeLog[]) => void;
   setUserNodeRosLib: (rosLib: string) => void;
+  setUserNodeStudioLib: (studioLib: string) => void;
 };
 
 function maybePlainObject(rawVal: unknown) {
@@ -100,9 +103,11 @@ export default class UserNodePlayer implements Player {
   private _setRosLib: (rosLib: string, datatypes: RosDatatypes) => void;
   private _nodeTransformRpc?: Rpc;
   private _rosLib?: string;
+  private _studioLib?: string;
   private _rosLibDatatypes?: RosDatatypes; // the datatypes we last used to generate rosLib -- regenerate if they change
   private _globalVariables: GlobalVariables = {};
   private _pendingResetWorkers?: Promise<void>;
+  private _userNodeActions: UserNodeActions;
 
   // Player state changes when the child player invokes our player state listener
   // we may also emit state changes on internal errors
@@ -132,11 +137,9 @@ export default class UserNodePlayer implements Player {
 
   constructor(player: Player, userNodeActions: UserNodeActions) {
     this._player = player;
+    this._userNodeActions = userNodeActions;
     const { setUserNodeDiagnostics, addUserNodeLogs, setUserNodeRosLib } = userNodeActions;
 
-    // TODO(troy): can we make the below action flow better? Might be better to
-    // just add an id, and the thing you want to update? Instead of passing in
-    // objects?
     this._setUserNodeDiagnostics = (nodeId: string, diagnostics: readonly Diagnostic[]) => {
       setUserNodeDiagnostics(nodeId, diagnostics);
     };
@@ -270,8 +273,16 @@ export default class UserNodePlayer implements Player {
     const nodeDatatypes: RosDatatypes = new Map([...basicDatatypes, ...datatypes]);
 
     const rosLib = await this._getRosLib();
+    const studioLib = await this._getStudioLib();
     const { name, sourceCode } = userNode;
-    const transformMessage = { name, sourceCode, topics, rosLib, datatypes: nodeDatatypes };
+    const transformMessage: TransformArgs = {
+      name,
+      sourceCode,
+      topics,
+      rosLib,
+      studioLib,
+      datatypes: nodeDatatypes,
+    };
     const transformWorker = this._getTransformWorker();
     const nodeData = await transformWorker.send<NodeData>("transform", transformMessage);
     const { inputTopics, outputTopic, transpiledCode, projectCode, outputDatatype } = nodeData;
@@ -589,9 +600,33 @@ export default class UserNodePlayer implements Player {
       // Custom datatypes appear as the second array items to override any basicDatatype items
       datatypes: new Map([...basicDatatypes, ...datatypes]),
     });
+    // fixme - why is this in the getter?
     this._setRosLib(rosLib, datatypes);
 
     return rosLib;
+  }
+
+  private async _getStudioLib(): Promise<string> {
+    if (!this._lastPlayerStateActiveData) {
+      throw new Error("_getStudioLib was called before `_lastPlayerStateActiveData` set");
+    }
+    const { topics, datatypes } = this._lastPlayerStateActiveData;
+
+    // If datatypes have not changed, we can reuse the existing studioLib
+    // fixme - what if topics have changed??
+    if (this._studioLib != undefined && this._rosLibDatatypes === datatypes) {
+      return this._studioLib;
+    }
+
+    const studioLib = generateStudioLib({
+      topics,
+      // fixme - basic datatypes should be a separate object
+      datatypes: new Map(datatypes),
+    });
+
+    this._userNodeActions.setUserNodeStudioLib(studioLib);
+
+    return (this._studioLib = studioLib);
   }
 
   // invoked when our child player state changes

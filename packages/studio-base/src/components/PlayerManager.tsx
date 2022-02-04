@@ -67,11 +67,13 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
   useWarnImmediateReRender();
 
-  const { setUserNodeDiagnostics, addUserNodeLogs, setUserNodeRosLib } = useUserNodeState();
+  const { setUserNodeDiagnostics, addUserNodeLogs, setUserNodeRosLib, setUserNodeStudioLib } =
+    useUserNodeState();
   const userNodeActions = useShallowMemo({
     setUserNodeDiagnostics,
     addUserNodeLogs,
     setUserNodeRosLib,
+    setUserNodeStudioLib,
   });
 
   const isMounted = useMountedState();
