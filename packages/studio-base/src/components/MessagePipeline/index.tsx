@@ -222,6 +222,10 @@ export function MessagePipelineProvider({
 
       const seenTopics = new Set<string>();
 
+      // We need a new set of message arrays for each subscriber since downstream users rely
+      // on object instance reference checks to determine if there are new messages
+      const messagesForSubscribers = new Map<string, MessageEvent<unknown>[]>();
+
       // Put messages into per-subscriber queues
       if (messages) {
         for (const messageEvent of messages) {
@@ -236,9 +240,12 @@ export function MessagePipelineProvider({
           }
 
           for (const id of ids) {
-            const subscriberMessageEvents = messageEventsBySubscriberId.current.get(id) ?? [];
+            let subscriberMessageEvents = messagesForSubscribers.get(id);
+            if (!subscriberMessageEvents) {
+              subscriberMessageEvents = [];
+              messagesForSubscribers.set(id, subscriberMessageEvents);
+            }
             subscriberMessageEvents.push(messageEvent);
-            messageEventsBySubscriberId.current.set(id, subscriberMessageEvents);
           }
         }
       }
@@ -257,16 +264,17 @@ export function MessagePipelineProvider({
           }
           const msgEvent = lastMessageEventByTopic.current.get(topic);
           if (msgEvent) {
-            const subscriberMessageEvents = messageEventsBySubscriberId.current.get(id) ?? [];
-            subscriberMessageEvents.push(msgEvent);
-            messageEventsBySubscriberId.current.set(id, subscriberMessageEvents);
+            const subscriberMessageEvents = messagesForSubscribers.get(id) ?? [];
+            // the injected message is older than any new messages
+            subscriberMessageEvents.unshift(msgEvent);
+            messagesForSubscribers.set(id, subscriberMessageEvents);
           }
         }
         // We've processed all new subscriber topics into message queues
         newTopicsBySubscriberId.current.delete(id);
       }
 
-      messageEventsBySubscriberId.current = new Map(messageEventsBySubscriberId.current);
+      messageEventsBySubscriberId.current = messagesForSubscribers;
 
       const promise = new Promise<void>((resolve) => {
         playerTickState.current.resolveFn = resolve;
