@@ -71,7 +71,6 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
         },
         subscriptions: [],
         publishers: [],
-        frame: {},
         messageEventsBySubscriberId: new Map(),
         sortedTopics: [],
         datatypes: new Map(),
@@ -182,6 +181,65 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     await act(async () => await player.emit());
     // make sure subscriptions are reference equal when they don't change
     expect(result.current.subscriptions).toBe(lastSubscriptions);
+  });
+
+  // When a new subscription comes in on a topic, we inject the last message for the topic
+  // to the subscription. This allows panels to receive "latched" topics which the player won't
+  // send again itself.
+  it("emits the last message on a topic for new subscriptions", async () => {
+    const player = new FakePlayer();
+    const { result } = renderHook(Hook, {
+      wrapper: Wrapper,
+      initialProps: { player },
+    });
+    await act(
+      async () =>
+        await player.emit({
+          activeData: {
+            messages: [
+              {
+                topic: "/input/foo",
+                receiveTime: { sec: 0, nsec: 0 },
+                message: { foo: "bar" },
+                sizeInBytes: 0,
+              },
+            ],
+            messageOrder: "receiveTime",
+            currentTime: { sec: 0, nsec: 0 },
+            startTime: { sec: 0, nsec: 0 },
+            endTime: { sec: 1, nsec: 0 },
+            isPlaying: true,
+            speed: 0.2,
+            lastSeekTime: 1234,
+            topics: [{ name: "/input/foo", datatype: "foo" }],
+            datatypes: new Map(Object.entries({ foo: { definitions: [] } })),
+            parsedMessageDefinitionsByTopic: {},
+            totalBytesReceived: 1234,
+          },
+        }),
+    );
+
+    act(() => {
+      result.current.setSubscriptions("custom-id", [{ topic: "/input/foo" }]);
+    });
+    expect(result.current.subscriptions).toEqual([{ topic: "/input/foo" }]);
+
+    // Emit empty player state to process new subscriptions
+    await act(async () => await player.emit());
+
+    expect(result.current.messageEventsBySubscriberId.get("custom-id")).toEqual([
+      {
+        message: {
+          foo: "bar",
+        },
+        receiveTime: {
+          nsec: 0,
+          sec: 0,
+        },
+        sizeInBytes: 0,
+        topic: "/input/foo",
+      },
+    ]);
   });
 
   it("sets publishers", async () => {

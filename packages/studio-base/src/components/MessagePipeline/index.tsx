@@ -205,12 +205,6 @@ export function MessagePipelineProvider({
       // check for any out-of-order or out-of-sync messages
       messageOrderTracker.update(newPlayerState);
 
-      // Save the last message on every topic to send the last message
-      // to newly subscribed panels.
-      for (const msgEvent of newPlayerState.activeData?.messages ?? []) {
-        lastMessageEventByTopic.current.set(msgEvent.topic, msgEvent);
-      }
-
       const messages = newPlayerState.activeData?.messages;
       const subsById = subscriptionsByIdLatest.current;
 
@@ -231,6 +225,10 @@ export function MessagePipelineProvider({
       // Put messages into per-subscriber queues
       if (messages) {
         for (const messageEvent of messages) {
+          // Save the last message on every topic to send the last message
+          // to newly subscribed panels.
+          lastMessageEventByTopic.current.set(messageEvent.topic, messageEvent);
+
           seenTopics.add(messageEvent.topic);
           const ids = topicToSubscriberIds.get(messageEvent.topic);
           if (!ids) {
