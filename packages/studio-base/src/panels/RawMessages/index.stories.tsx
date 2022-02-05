@@ -38,12 +38,7 @@ const diffConfig = {
   diffTopicPath: "/another/baz/enum_advanced",
   diffEnabled: true,
 };
-const expandAll = () => {
-  const expandAllIcons = document.querySelectorAll<HTMLElement>("[data-test=expand-all]");
-  for (const icon of expandAllIcons) {
-    icon.click();
-  }
-};
+
 const scrollToBottom = () => {
   const scrollContainer = document.querySelectorAll(".Flex-module__scroll___3l7to")[0]!;
   scrollContainer.scrollTop = scrollContainer.scrollHeight;
@@ -171,15 +166,21 @@ storiesOf("panels/RawMessages", module)
   })
   .add("display diff", () => {
     return (
-      <PanelSetup fixture={topicsToDiffFixture} style={{ width: 500 }} onMount={expandAll}>
-        <RawMessages overrideConfig={{ ...diffConfig, showFullMessageForDiff: false } as any} />
+      <PanelSetup fixture={topicsToDiffFixture} style={{ width: 500 }}>
+        <RawMessages
+          overrideConfig={{ ...diffConfig, showFullMessageForDiff: false } as any}
+          defaultExpandAll
+        />
       </PanelSetup>
     );
   })
   .add("display full diff", () => {
     return (
-      <PanelSetup fixture={topicsToDiffFixture} style={{ width: 500 }} onMount={expandAll}>
-        <RawMessages overrideConfig={{ ...diffConfig, showFullMessageForDiff: true } as any} />
+      <PanelSetup fixture={topicsToDiffFixture} style={{ width: 500 }}>
+        <RawMessages
+          overrideConfig={{ ...diffConfig, showFullMessageForDiff: true } as any}
+          defaultExpandAll
+        />
       </PanelSetup>
     );
   })
@@ -191,8 +192,8 @@ storiesOf("panels/RawMessages", module)
       showFullMessageForDiff: false,
     };
     return (
-      <PanelSetup fixture={topicsWithIdsToDiffFixture} style={{ width: 380 }} onMount={expandAll}>
-        <RawMessages overrideConfig={config as any} />
+      <PanelSetup fixture={topicsWithIdsToDiffFixture} style={{ width: 380 }}>
+        <RawMessages overrideConfig={config as any} defaultExpandAll />
       </PanelSetup>
     );
   })
@@ -220,7 +221,7 @@ storiesOf("panels/RawMessages", module)
   })
   .add("diff consecutive messages", () => {
     return (
-      <PanelSetup fixture={fixture} style={{ width: 380 }} onMount={expandAll}>
+      <PanelSetup fixture={fixture} style={{ width: 380 }}>
         <RawMessages
           overrideConfig={{
             topicPath: "/foo",
@@ -229,13 +230,14 @@ storiesOf("panels/RawMessages", module)
             diffEnabled: true,
             showFullMessageForDiff: true,
           }}
+          defaultExpandAll
         />
       </PanelSetup>
     );
   })
   .add("diff consecutive messages with bigint", () => {
     return (
-      <PanelSetup fixture={fixture} style={{ width: 380 }} onMount={expandAll}>
+      <PanelSetup fixture={fixture} style={{ width: 380 }}>
         <RawMessages
           overrideConfig={{
             topicPath: "/baz/bigint",
@@ -244,13 +246,14 @@ storiesOf("panels/RawMessages", module)
             diffEnabled: true,
             showFullMessageForDiff: true,
           }}
+          defaultExpandAll
         />
       </PanelSetup>
     );
   })
   .add("display correct message when diff is disabled, even with diff method & topic set", () => {
     return (
-      <PanelSetup fixture={fixture} style={{ width: 380 }} onMount={expandAll}>
+      <PanelSetup fixture={fixture} style={{ width: 380 }}>
         <RawMessages
           overrideConfig={{
             topicPath: "/foo",
@@ -259,6 +262,7 @@ storiesOf("panels/RawMessages", module)
             diffEnabled: false,
             showFullMessageForDiff: true,
           }}
+          defaultExpandAll
         />
       </PanelSetup>
     );

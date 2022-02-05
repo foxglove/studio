@@ -23,7 +23,6 @@ import { first, isEqual, get, last } from "lodash";
 import { useState, useCallback, useMemo } from "react";
 import ReactHoverObserver from "react-hover-observer";
 import Tree from "react-json-tree";
-import { useLatest } from "react-use";
 
 import { useDataSourceInfo, useMessagesByTopic } from "@foxglove/studio-base/PanelAPI";
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
@@ -83,6 +82,7 @@ export type RawMessagesConfig = {
 };
 
 type Props = {
+  defaultExpandAll?: boolean;
   config: RawMessagesConfig;
   saveConfig: (arg0: Partial<RawMessagesConfig>) => void;
 };
@@ -157,7 +157,7 @@ function RawMessages(props: Props) {
   }, [datatypes, topic, topicRosPath]);
 
   // When expandAll is unset, we'll use expandedFields to get expanded info
-  const [expandAll, setExpandAll] = useState<boolean | undefined>(false);
+  const [expandAll, setExpandAll] = useState<boolean | undefined>(props.defaultExpandAll ?? false);
   const [expandedFields, setExpandedFields] = useState(() => new Set());
 
   const topicName = topicRosPath?.topicName ?? "";
@@ -197,11 +197,10 @@ function RawMessages(props: Props) {
     saveConfig({ diffEnabled: !diffEnabled });
   }, [diffEnabled, saveConfig]);
 
-  const expandedVal = useLatest(expandAll);
   const onToggleExpandAll = useCallback(() => {
     setExpandedFields(new Set());
-    setExpandAll(!(expandedVal.current ?? false));
-  }, [expandedVal]);
+    setExpandAll((currVal) => !(currVal ?? false));
+  }, []);
 
   const onLabelClick = useCallback(
     (keypath: (string | number)[]) => {
