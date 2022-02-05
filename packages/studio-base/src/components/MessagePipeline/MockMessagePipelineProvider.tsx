@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { flatten, groupBy } from "lodash";
+import { flatten } from "lodash";
 import { useCallback, useMemo, useRef, useState } from "react";
 
 import { useShallowMemo } from "@foxglove/hooks";
@@ -148,7 +148,6 @@ export default function MockMessagePipelineProvider(props: {
     <ContextInternal.Provider
       value={{
         playerState,
-        frame: groupBy(props.messages ?? [], "topic"),
         sortedTopics: (props.topics ?? []).sort(naturalSort("name")),
         datatypes: props.datatypes ?? NO_DATATYPES,
         subscriptions: flattenedSubscriptions,

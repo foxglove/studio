@@ -14,7 +14,11 @@
 import { useCallback, useRef } from "react";
 
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
-import { Frame, MessageEvent } from "@foxglove/studio-base/players/types";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
+
+export type Frame = {
+  [topic: string]: MessageEvent<unknown>[];
+};
 
 type FrameState = { reset: boolean; frame: Frame };
 

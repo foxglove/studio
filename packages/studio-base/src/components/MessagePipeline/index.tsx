@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { debounce, flatten, groupBy } from "lodash";
+import { debounce, flatten } from "lodash";
 import { useLatest } from "react-use";
 
 import { useShallowMemo } from "@foxglove/hooks";
@@ -24,7 +24,6 @@ import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables"
 import useSelectableContextGetter from "@foxglove/studio-base/hooks/useSelectableContextGetter";
 import {
   AdvertiseOptions,
-  Frame,
   Player,
   PlayerCapabilities,
   PlayerPresence,
@@ -47,7 +46,6 @@ const { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } = R
 type ResumeFrame = () => void;
 export type MessagePipelineContext = {
   playerState: PlayerState;
-  frame: Frame;
   sortedTopics: Topic[];
   datatypes: RosDatatypes;
   subscriptions: SubscribePayload[];
@@ -306,9 +304,6 @@ export function MessagePipelineProvider({
   }, [player, subscriptionsByIdLatest]);
 
   const topics: Topic[] | undefined = useShallowMemo(rawPlayerState.activeData?.topics);
-  const messages: readonly MessageEvent<unknown>[] | undefined =
-    rawPlayerState.activeData?.messages;
-  const frame = useMemo(() => groupBy(messages ?? [], "topic"), [messages]);
   const sortedTopics = useMemo(() => (topics ?? []).sort(), [topics]);
   const datatypes: RosDatatypes = useMemo(
     () => rawPlayerState.activeData?.datatypes ?? new Map(),
@@ -422,7 +417,6 @@ export function MessagePipelineProvider({
         messageEventsBySubscriberId: messageEventsBySubscriberId.current,
         subscriptions,
         publishers,
-        frame,
         sortedTopics,
         datatypes,
         setSubscriptions,
