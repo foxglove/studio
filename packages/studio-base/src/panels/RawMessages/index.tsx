@@ -23,6 +23,7 @@ import { first, isEqual, get, last } from "lodash";
 import { useState, useCallback, useMemo } from "react";
 import ReactHoverObserver from "react-hover-observer";
 import Tree from "react-json-tree";
+import { useLatest } from "react-use";
 
 import { useDataSourceInfo, useMessagesByTopic } from "@foxglove/studio-base/PanelAPI";
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
@@ -196,10 +197,11 @@ function RawMessages(props: Props) {
     saveConfig({ diffEnabled: !diffEnabled });
   }, [diffEnabled, saveConfig]);
 
+  const expandedVal = useLatest(expandAll);
   const onToggleExpandAll = useCallback(() => {
     setExpandedFields(new Set());
-    setExpandAll((currVal) => !(currVal ?? false));
-  }, []);
+    setExpandAll(!(expandedVal.current ?? false));
+  }, [expandedVal]);
 
   const onLabelClick = useCallback(
     (keypath: (string | number)[]) => {
@@ -588,6 +590,7 @@ function RawMessages(props: Props) {
           tooltip={expandAll ?? false ? "Collapse all" : "Expand all"}
           size="medium"
           fade
+          dataTest="expand-all"
           onClick={onToggleExpandAll}
           style={{ position: "relative", top: 1 }}
         >

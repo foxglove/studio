@@ -247,6 +247,7 @@ export function MessagePipelineProvider({
         }
       }
 
+      // Inject the last message on a topic to all new subscribers of the topic
       for (const id of subsById.keys()) {
         const newTopics = newTopicsBySubscriberId.current.get(id);
         if (!newTopics) {

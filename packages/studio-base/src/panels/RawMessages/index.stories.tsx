@@ -39,9 +39,9 @@ const diffConfig = {
   diffEnabled: true,
 };
 const expandAll = () => {
-  const allLabels = document.querySelectorAll("label");
-  for (const label of allLabels) {
-    label.click();
+  const expandAllIcons = document.querySelectorAll<HTMLElement>("[data-test=expand-all]");
+  for (const icon of expandAllIcons) {
+    icon.click();
   }
 };
 const scrollToBottom = () => {
@@ -64,7 +64,7 @@ storiesOf("panels/RawMessages", module)
       </PanelSetup>
     );
   })
-  .add("display big value – num", () => {
+  .add("display big value - num", () => {
     return (
       <PanelSetup fixture={fixture} style={{ width: 380 }}>
         <RawMessages overrideConfig={{ topicPath: "/baz/num.value", ...noDiffConfig } as any} />
@@ -85,14 +85,14 @@ storiesOf("panels/RawMessages", module)
       </PanelSetup>
     );
   })
-  .add("display big value – text", () => {
+  .add("display big value - text", () => {
     return (
       <PanelSetup fixture={fixture} style={{ width: 380 }}>
         <RawMessages overrideConfig={{ topicPath: "/baz/text.value", ...noDiffConfig } as any} />
       </PanelSetup>
     );
   })
-  .add("display big value – text truncated", () => {
+  .add("display big value - text truncated", () => {
     return (
       <PanelSetup
         fixture={fixture}
@@ -105,7 +105,7 @@ storiesOf("panels/RawMessages", module)
       </PanelSetup>
     );
   })
-  .add("display big value – text with newlines", () => {
+  .add("display big value - text with newlines", () => {
     return (
       <PanelSetup
         fixture={fixture}
@@ -118,7 +118,7 @@ storiesOf("panels/RawMessages", module)
       </PanelSetup>
     );
   })
-  .add("display big value – single element array", () => {
+  .add("display big value - single element array", () => {
     return (
       <PanelSetup fixture={fixture} style={{ width: 380 }}>
         <RawMessages overrideConfig={{ topicPath: "/baz/array.value", ...noDiffConfig } as any} />
