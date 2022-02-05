@@ -113,7 +113,7 @@ describe("useMessageReducer", () => {
     expect(Test.restore.mock.calls).toEqual([[undefined]]);
     expect(Test.addMessage.mock.calls).toEqual([[1, message]]);
     expect(Test.addMessages.mock.calls).toEqual([]);
-    expect(Test.result.mock.calls).toEqual([[2]]);
+    expect(Test.result.mock.calls).toEqual([[1], [2]]);
 
     root.unmount();
   });
@@ -140,7 +140,7 @@ describe("useMessageReducer", () => {
     expect(Test.restore.mock.calls).toEqual([[undefined]]);
     expect(Test.addMessage.mock.calls).toEqual([]);
     expect(Test.addMessages.mock.calls).toEqual([[1, [message]]]);
-    expect(Test.result.mock.calls).toEqual([[2]]);
+    expect(Test.result.mock.calls).toEqual([[1], [2]]);
 
     root.unmount();
   });
@@ -340,13 +340,13 @@ describe("useMessageReducer", () => {
 
     expect(Test.restore.mock.calls).toEqual([[undefined]]);
     expect(Test.addMessage.mock.calls).toEqual([[1, message1]]);
-    expect(Test.result.mock.calls).toEqual([[2]]);
+    expect(Test.result.mock.calls).toEqual([[1], [2]]);
 
     root.setProps({ messages: [message2] });
 
     expect(Test.restore.mock.calls).toEqual([[undefined]]);
     expect(Test.addMessage.mock.calls).toEqual([[1, message1]]);
-    expect(Test.result.mock.calls).toEqual([[2]]);
+    expect(Test.result.mock.calls).toEqual([[1], [2]]);
 
     root.unmount();
   });
@@ -378,7 +378,7 @@ describe("useMessageReducer", () => {
 
     expect(Test.restore.mock.calls).toEqual([[undefined]]);
     expect(Test.addMessage.mock.calls).toEqual([[1, message2]]);
-    expect(Test.result.mock.calls).toEqual([[3]]);
+    expect(Test.result.mock.calls).toEqual([[1], [3]]);
 
     // When topics change, we expect useMessageReducer NOT to call addMessage for pre-existing messages.
     // (If the player is playing, new messages will come in soon, and if it's paused, we'll backfill.)
@@ -389,7 +389,7 @@ describe("useMessageReducer", () => {
 
     expect(Test.restore.mock.calls).toEqual([[undefined]]);
     expect(Test.addMessage.mock.calls).toEqual([[1, message2]]);
-    expect(Test.result.mock.calls).toEqual([[3], [3]]);
+    expect(Test.result.mock.calls).toEqual([[1], [3], [3]]);
 
     root.unmount();
   });
@@ -415,14 +415,14 @@ describe("useMessageReducer", () => {
 
     expect(Test.restore.mock.calls).toEqual([[undefined]]);
     expect(Test.addMessage.mock.calls).toEqual([[1, message]]);
-    expect(Test.result.mock.calls).toEqual([[2]]);
+    expect(Test.result.mock.calls).toEqual([[1], [2]]);
 
     root.setProps({ topics: ["/foo", "/bar"] });
     root.setProps({ capabilities: ["some_capability"] });
 
     expect(Test.restore.mock.calls).toEqual([[undefined]]);
     expect(Test.addMessage.mock.calls).toEqual([[1, message]]);
-    expect(Test.result.mock.calls).toEqual([[2]]);
+    expect(Test.result.mock.calls).toEqual([[1], [2]]);
 
     root.unmount();
   });
@@ -510,7 +510,7 @@ describe("useMessageReducer", () => {
     );
 
     expect(Test.restore.mock.calls).toEqual([[undefined]]);
-    expect(Test.result.mock.calls).toEqual([[2]]);
+    expect(Test.result.mock.calls).toEqual([[1], [2]]);
     root.setProps({ children: <Test topics={["/foo"]} addMessagesOverride={jest.fn()} /> });
     expect(Test.restore.mock.calls).toEqual([[undefined], [2]]);
 

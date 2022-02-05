@@ -72,6 +72,7 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
         subscriptions: [],
         publishers: [],
         frame: {},
+        messageEventsBySubscriberId: new Map(),
         sortedTopics: [],
         datatypes: new Map(),
         setSubscriptions: expect.any(Function),

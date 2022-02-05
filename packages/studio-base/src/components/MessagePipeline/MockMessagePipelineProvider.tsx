@@ -85,8 +85,12 @@ export default function MockMessagePipelineProvider(props: {
     [allSubscriptions],
   );
   const setSubscriptions = useCallback(
-    (id: string, subs: SubscribePayload[]) => setAllSubscriptions((s) => ({ ...s, [id]: subs })),
-    [setAllSubscriptions],
+    (id: string, subs: SubscribePayload[]) => {
+      setAllSubscriptions((s) => ({ ...s, [id]: subs }));
+      const setSubs = props.setSubscriptions;
+      setSubs?.(id, subs);
+    },
+    [setAllSubscriptions, props.setSubscriptions],
   );
 
   const requestBackfill = useMemo(
@@ -149,8 +153,10 @@ export default function MockMessagePipelineProvider(props: {
         datatypes: props.datatypes ?? NO_DATATYPES,
         subscriptions: flattenedSubscriptions,
         publishers: [],
-        messageEventsBySubscriberId: new Map(),
-        setSubscriptions: props.setSubscriptions ?? setSubscriptions,
+        messageEventsBySubscriberId: new Map(
+          Object.keys(allSubscriptions).map((id) => [id, props.messages ?? []]),
+        ),
+        setSubscriptions,
         setPublishers: props.setPublishers ?? noop,
         setParameter: props.setParameter ?? noop,
         publish: props.publish ?? noop,

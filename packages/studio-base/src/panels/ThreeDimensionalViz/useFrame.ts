@@ -43,11 +43,14 @@ const useFrame = (topics: string[]): FrameState => {
     }, []),
     addMessages: useCallback(
       (prev: FrameState, messageEvents: readonly MessageEvent<unknown>[]) => {
+        // every call to addMessages returns a new reference to trigger a state update
+        const result: FrameState = { reset: prev.reset, frame: {} };
         if (returnedLastValueRef.current) {
           // after we've returned the value we can remove the reset flag and clear the frame
-          prev.reset = false;
-          prev.frame = {};
+          result.reset = false;
           returnedLastValueRef.current = false;
+        } else {
+          result.frame = { ...prev.frame };
         }
 
         for (const messageEvent of messageEvents) {
@@ -59,11 +62,10 @@ const useFrame = (topics: string[]): FrameState => {
             (maybeLazy.message as unknown) = maybeLazy.message.toJSON!();
           }
 
-          (prev.frame[messageEvent.topic] ??= []).push(messageEvent);
+          (result.frame[messageEvent.topic] ??= []).push(messageEvent);
         }
 
-        // every call to addMessages returns a new reference to trigger a state update
-        return { reset: prev.reset, frame: { ...prev.frame } };
+        return result;
       },
       [],
     ),
