@@ -20,13 +20,7 @@ import type { RosGraph } from "@foxglove/ros1";
 import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
 import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
 import { MessageReader as ROS2MessageReader } from "@foxglove/rosmsg2-serialization";
-import {
-  Time,
-  add as addTimes,
-  fromMillis,
-  subtract as subtractTimes,
-  toSec,
-} from "@foxglove/rostime";
+import { Time, fromMillis, toSec } from "@foxglove/rostime";
 import { ParameterValue } from "@foxglove/studio";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
 import {
@@ -597,13 +591,7 @@ export default class RosbridgePlayer implements Player {
   }
 
   private _getCurrentTime(): Time {
-    const now = fromMillis(Date.now());
-    if (this._clockTime == undefined) {
-      return now;
-    }
-
-    const delta = subtractTimes(now, this._clockReceived);
-    return addTimes(this._clockTime, delta);
+    return this._clockTime ?? fromMillis(Date.now());
   }
 
   private async _getSystemState(): Promise<RosGraph> {
