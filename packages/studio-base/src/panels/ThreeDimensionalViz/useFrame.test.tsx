@@ -59,8 +59,7 @@ describe("useFrame", () => {
 
     const { result, rerender } = renderHook(
       () => {
-        const ret = useFrame(["/some/topic"]);
-        return ret;
+        return useFrame(["/some/topic"]);
       },
       {
         initialProps: {
