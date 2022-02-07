@@ -35,7 +35,14 @@ class MessageOrderTracker {
   private lastMessageTopic?: string;
   private lastLastSeekTime?: number;
   private warningTimeout?: ReturnType<typeof setTimeout>;
-  private trackIncorrectMessages = false; // set this to true to debug out of order messages
+
+  /**
+   * Set this to `true` to debug out-of-order messages. It is disabled by default in production
+   * because logging messages to the console prevents them from getting garbage-collected as long as
+   * the console is not cleared.
+   */
+  private trackIncorrectMessages = false;
+
   private incorrectMessages: MessageEvent<unknown>[] = [];
 
   update(playerState: PlayerState): void {
