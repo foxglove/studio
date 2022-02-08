@@ -88,29 +88,29 @@ const useStyles = makeStyles((theme: Theme) =>
       pointerEvents: "auto",
     },
     inner: {
-      ".rc-tree li ul": {
+      "& .rc-tree li ul": {
         padding: 0,
         paddingLeft: SWITCHER_WIDTH,
       },
-      ".rc-tree-node-content-wrapper": {
+      "& .rc-tree-node-content-wrapper": {
         cursor: "unset",
       },
       /* Make the chevron icon transition nicely between pointing down and right. */
-      ".rc-tree-switcher": {
+      "& .rc-tree-switcher": {
         height: ROW_HEIGHT,
         transition: "transform 80ms ease-in-out",
       },
-      ".rc-tree-switcher_close": {
+      "& .rc-tree-switcher_close": {
         transform: "rotate(-90deg)",
       },
-      ".rc-tree-switcher_open": {
+      "& .rc-tree-switcher_open": {
         transform: "rotate(0deg)",
       },
       /* Hide the chevron switcher icon when it's not usable. */
-      ".rc-tree-switcher-noop": {
+      "& .rc-tree-switcher-noop": {
         visibility: "hidden",
       },
-      ".rc-tree-treenode": {
+      "& .rc-tree-treenode": {
         display: "flex",
         padding: 0,
 
@@ -121,23 +121,23 @@ const useStyles = makeStyles((theme: Theme) =>
           padding: `0 ${TREE_SPACING}px`,
         },
       },
-      ".rc-tree-treenode.rc-tree-treenode-disabled": {
+      "& .rc-tree-treenode.rc-tree-treenode-disabled": {
         color: theme.palette.action.disabled,
 
         cursor: "unset",
 
-        ".rc-tree-node-content-wrapper": {
+        "& .rc-tree-node-content-wrapper": {
           cursor: "unset",
         },
       },
-      ".rc-tree-indent": {
+      "& .rc-tree-indent": {
         width: "100%",
       },
-      ".rc-tree-indent-unit": {
+      "& .rc-tree-indent-unit": {
         width: 24,
       },
-      ".rc-tree-treenode-switcher-close, .rc-tree-treenode-switcher-open": {
-        ".rc-tree-node-content-wrapper": {
+      "& .rc-tree-treenode-switcher-close, .rc-tree-treenode-switcher-open": {
+        "& .rc-tree-node-content-wrapper": {
           padding: 0,
         },
       },
