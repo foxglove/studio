@@ -30,10 +30,10 @@ const useButtonStyles = fluentMakeStyles(({ semanticColors }) => ({
     stroke: semanticColors.buttonBorder,
     strokeWidth: 0.5,
 
-    ":hover": {
+    "&:hover": {
       fill: semanticColors.bodyBackgroundChecked,
 
-      "+ path": {
+      "& + path": {
         fill: semanticColors.buttonTextHovered,
       },
     },
@@ -43,10 +43,10 @@ const useButtonStyles = fluentMakeStyles(({ semanticColors }) => ({
     strokeWidth: 0,
 
     fill: semanticColors.buttonBackgroundDisabled,
-    ":hover": {
+    "&:hover": {
       fill: semanticColors.buttonBackgroundDisabled,
 
-      "+ path": {
+      "& + path": {
         fill: semanticColors.bodyBackground,
       },
     },
@@ -55,8 +55,8 @@ const useButtonStyles = fluentMakeStyles(({ semanticColors }) => ({
     fill: `${semanticColors.primaryButtonBackground} !important`,
     stroke: `${semanticColors.primaryButtonBackgroundPressed} !important`,
 
-    ":hover": {
-      "+ path": {
+    "&:hover": {
+      "& + path": {
         fill: semanticColors.buttonTextHovered,
       },
     },
@@ -77,10 +77,10 @@ const useStopButtonStyles = fluentMakeStyles(({ fonts, semanticColors }) => ({
     stroke: semanticColors.errorText,
     strokeWidth: 0.5,
 
-    ":hover": {
+    "&:hover": {
       stroke: semanticColors.buttonText,
 
-      "+ text": {
+      "& + text": {
         fill: semanticColors.buttonText,
       },
     },
@@ -90,7 +90,7 @@ const useStopButtonStyles = fluentMakeStyles(({ fonts, semanticColors }) => ({
     opacity: 0.4,
     stroke: semanticColors.errorBackground,
 
-    ":hover": {
+    "&:hover": {
       stroke: `${semanticColors.errorBackground} !important`,
     },
   },

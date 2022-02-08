@@ -88,7 +88,7 @@ const useStyles = makeStyles((theme: Theme) =>
       pointerEvents: "auto",
     },
     inner: {
-      "rc-tree li ul": {
+      ".rc-tree li ul": {
         padding: 0,
         paddingLeft: SWITCHER_WIDTH,
       },
@@ -114,7 +114,7 @@ const useStyles = makeStyles((theme: Theme) =>
         display: "flex",
         padding: 0,
 
-        ":hover": {
+        "&:hover": {
           background: theme.palette.action.hover,
         },
         ".isXSWidth &": {

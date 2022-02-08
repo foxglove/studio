@@ -93,7 +93,7 @@ const useStyles = makeStyles((theme) => ({
     "&:hover": {
       backgroundColor: theme.semanticColors.listItemBackgroundHovered,
 
-      "> .icon": {
+      "& > .icon": {
         visibility: "visible",
       },
     },
