@@ -63,7 +63,7 @@ const useStyles = makeStyles((theme: Theme) =>
     ok: { color: theme.palette.success.main },
     warn: { color: theme.palette.warning.main },
     error: { color: theme.palette.error.main },
-    stale: { color: theme.palette.info.main },
+    stale: { color: theme.palette.text.secondary },
     pinIcon: {
       marginRight: 4,
       marginLeft: 4,
