@@ -13,6 +13,7 @@
 
 import { flatten } from "lodash";
 import { useCallback, useMemo, useRef, useState } from "react";
+import { useLatest } from "react-use";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import { Time, isLessThan } from "@foxglove/rostime";
@@ -144,6 +145,33 @@ export default function MockMessagePipelineProvider(props: {
     ],
   );
 
+  // In the real pipeline, the messageEventsBySubscriberId only change
+  // on player listener callback - not on subscriber changes
+  //
+  // In tests, the first setSubscriptions call happens after we've already set props.messages
+  // So we have some special logic to detect the _first_ change of subscriptions
+  // and update messageEventsBySubscriberId.
+
+  const allSubsRef = useRef<typeof allSubscriptions>(allSubscriptions);
+  const firstChangeRef = useRef<boolean>(false);
+  if (allSubsRef.current !== allSubscriptions) {
+    firstChangeRef.current = true;
+  }
+  allSubsRef.current = allSubscriptions;
+
+  const latestAllSubs = useLatest(allSubscriptions);
+  const firstChange = firstChangeRef.current;
+  const messageEventsBySubscriberId = useMemo(() => {
+    void firstChange;
+    return new Map(
+      Object.entries(latestAllSubs.current).map(([id, payloads]) => [
+        id,
+        props.messages?.filter((msg) => payloads.find((payload) => payload.topic === msg.topic)) ??
+          [],
+      ]),
+    );
+  }, [firstChange, props.messages, latestAllSubs]);
+
   return (
     <ContextInternal.Provider
       value={{
@@ -152,9 +180,7 @@ export default function MockMessagePipelineProvider(props: {
         datatypes: props.datatypes ?? NO_DATATYPES,
         subscriptions: flattenedSubscriptions,
         publishers: [],
-        messageEventsBySubscriberId: new Map(
-          Object.keys(allSubscriptions).map((id) => [id, props.messages ?? []]),
-        ),
+        messageEventsBySubscriberId,
         setSubscriptions,
         setPublishers: props.setPublishers ?? noop,
         setParameter: props.setParameter ?? noop,
