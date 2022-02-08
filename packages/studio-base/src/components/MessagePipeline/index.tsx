@@ -12,7 +12,6 @@
 //   You may not use this file except in compliance with the License.
 
 import { debounce, flatten } from "lodash";
-import { useReducer } from "react";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import { Time } from "@foxglove/rostime";
@@ -38,6 +37,7 @@ import signal from "@foxglove/studio-base/util/signal";
 
 import MessageOrderTracker from "./MessageOrderTracker";
 import { pauseFrameForPromises, FramePromise } from "./pauseFrameForPromise";
+import { usePlayerState } from "./usePlayerState";
 
 const { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } = React;
 
@@ -91,163 +91,6 @@ function defaultPlayerState(): PlayerState {
   };
 }
 
-type InternalState = {
-  subscriptionsById: Map<string, SubscribePayload[]>;
-  subscriberIdsByTopic: Map<string, string[]>;
-  newTopicsBySubscriberId: Map<string, Set<string>>;
-  lastMessageEventByTopic: Map<string, MessageEvent<unknown>>;
-  messagesBySubscriberId: Map<string, MessageEvent<unknown>[]>;
-  playerState: PlayerState;
-  renderDone?: () => void;
-};
-
-type UpdateSubscriberAction = {
-  type: "update-subscriber";
-  id: string;
-  payloads: SubscribePayload[];
-};
-
-type UpdatePlayerStateAction = {
-  type: "update-player-state";
-  playerState: PlayerState;
-  renderDone?: () => void;
-};
-
-type Action = UpdateSubscriberAction | UpdatePlayerStateAction;
-
-function updateSubscriberAction(
-  prevSubscriberState: InternalState,
-  action: UpdateSubscriberAction,
-): InternalState {
-  const previousSubscriptionsById = prevSubscriberState.subscriptionsById;
-  const newTopicsBySubscriberId = prevSubscriberState.newTopicsBySubscriberId;
-
-  const previousSubscriptionById = previousSubscriptionsById.get(action.id);
-
-  // Record any _new_ topics for this subscriber into newTopicsBySubscriberId
-  const newTopics = newTopicsBySubscriberId.get(action.id);
-  if (!newTopics) {
-    const actionTopics = action.payloads.map((sub) => sub.topic);
-    newTopicsBySubscriberId.set(action.id, new Set(actionTopics));
-  } else if (previousSubscriptionById) {
-    const prevTopics = new Set(previousSubscriptionById.map((sub) => sub.topic));
-    for (const { topic: newTopic } of action.payloads) {
-      if (!prevTopics.has(newTopic)) {
-        newTopics.add(newTopic);
-      }
-    }
-  }
-
-  const newSubscriptionById = new Map(previousSubscriptionsById);
-  newSubscriptionById.set(action.id, action.payloads);
-
-  const subscriberIdsByTopic: InternalState["subscriberIdsByTopic"] = new Map();
-
-  // make a map of topics to subscriber ids
-  for (const [id, subs] of newSubscriptionById) {
-    for (const subscription of subs) {
-      const topic = subscription.topic;
-
-      const ids = subscriberIdsByTopic.get(topic) ?? [];
-      ids.push(id);
-      subscriberIdsByTopic.set(topic, ids);
-    }
-  }
-
-  return {
-    ...prevSubscriberState,
-    subscriptionsById: newSubscriptionById,
-    subscriberIdsByTopic,
-    newTopicsBySubscriberId: new Map(newTopicsBySubscriberId),
-  };
-}
-
-function updatePlayerStateAction(
-  prevSubscriberState: InternalState,
-  action: UpdatePlayerStateAction,
-): InternalState {
-  const messages = action.playerState.activeData?.messages;
-
-  const seenTopics = new Set<string>();
-
-  // We need a new set of message arrays for each subscriber since downstream users rely
-  // on object instance reference checks to determine if there are new messages
-  const messagesBySubscriberId = new Map<string, MessageEvent<unknown>[]>();
-
-  const subsById = prevSubscriberState.subscriptionsById;
-  const subscriberIdsByTopic = prevSubscriberState.subscriberIdsByTopic;
-
-  const lastMessageEventByTopic = prevSubscriberState.lastMessageEventByTopic;
-  const newTopicsBySubscriberId = new Map(prevSubscriberState.newTopicsBySubscriberId);
-
-  // Put messages into per-subscriber queues
-  if (messages) {
-    for (const messageEvent of messages) {
-      // Save the last message on every topic to send the last message
-      // to newly subscribed panels.
-      lastMessageEventByTopic.set(messageEvent.topic, messageEvent);
-
-      seenTopics.add(messageEvent.topic);
-      const ids = subscriberIdsByTopic.get(messageEvent.topic);
-      if (!ids) {
-        continue;
-      }
-
-      for (const id of ids) {
-        let subscriberMessageEvents = messagesBySubscriberId.get(id);
-        if (!subscriberMessageEvents) {
-          subscriberMessageEvents = [];
-          messagesBySubscriberId.set(id, subscriberMessageEvents);
-        }
-        subscriberMessageEvents.push(messageEvent);
-      }
-    }
-  }
-
-  // Inject the last message on a topic to all new subscribers of the topic
-  for (const id of subsById.keys()) {
-    const newTopics = newTopicsBySubscriberId.get(id);
-    if (!newTopics) {
-      continue;
-    }
-    for (const topic of newTopics) {
-      // If we had a message for this topic in the regular set of messages, we don't need to inject
-      // another message.
-      if (seenTopics.has(topic)) {
-        continue;
-      }
-      const msgEvent = lastMessageEventByTopic.get(topic);
-      if (msgEvent) {
-        const subscriberMessageEvents = messagesBySubscriberId.get(id) ?? [];
-        // the injected message is older than any new messages
-        subscriberMessageEvents.unshift(msgEvent);
-        messagesBySubscriberId.set(id, subscriberMessageEvents);
-      }
-    }
-    // We've processed all new subscriber topics into message queues
-    newTopicsBySubscriberId.delete(id);
-  }
-
-  return {
-    ...prevSubscriberState,
-    newTopicsBySubscriberId,
-    messagesBySubscriberId,
-    playerState: action.playerState,
-    renderDone: action.renderDone,
-  };
-}
-
-function reduce(prevSubscriberState: InternalState, action: Action): InternalState {
-  switch (action.type) {
-    case "update-player-state":
-      return updatePlayerStateAction(prevSubscriberState, action);
-    case "update-subscriber":
-      return updateSubscriberAction(prevSubscriberState, action);
-  }
-
-  return prevSubscriberState;
-}
-
 type ProviderProps = {
   children: React.ReactNode;
 
@@ -260,15 +103,6 @@ type ProviderProps = {
   globalVariables: GlobalVariables;
 };
 
-const initialInternalState: InternalState = {
-  subscriptionsById: new Map(),
-  subscriberIdsByTopic: new Map(),
-  newTopicsBySubscriberId: new Map(),
-  lastMessageEventByTopic: new Map(),
-  messagesBySubscriberId: new Map(),
-  playerState: defaultPlayerState(),
-};
-
 export function MessagePipelineProvider({
   children,
   player,
@@ -278,7 +112,7 @@ export function MessagePipelineProvider({
 
   const promisesToWaitForRef = useRef<FramePromise[]>([]);
 
-  const [state, updateState] = useReducer(reduce, initialInternalState);
+  const [state, updateState] = usePlayerState();
 
   const subscriptions: SubscribePayload[] = useMemo(
     () => flatten(Array.from(state.subscriptionsById.values())),
@@ -386,7 +220,7 @@ export function MessagePipelineProvider({
         renderDone: undefined,
       });
     };
-  }, [player]);
+  }, [player, updateState]);
 
   const topics: Topic[] | undefined = useShallowMemo(state.playerState.activeData?.topics);
   const sortedTopics = useMemo(() => (topics ?? []).sort(), [topics]);
@@ -396,9 +230,12 @@ export function MessagePipelineProvider({
   );
 
   const capabilities = useShallowMemo(state.playerState.capabilities);
-  const setSubscriptions = useCallback((id: string, payloads: SubscribePayload[]) => {
-    updateState({ type: "update-subscriber", id, payloads });
-  }, []);
+  const setSubscriptions = useCallback(
+    (id: string, payloads: SubscribePayload[]) => {
+      updateState({ type: "update-subscriber", id, payloads });
+    },
+    [updateState],
+  );
   const setPublishers = useCallback(
     (id: string, publishersForId: AdvertiseOptions[]) => {
       setAllPublishers((p) => ({ ...p, [id]: publishersForId }));
