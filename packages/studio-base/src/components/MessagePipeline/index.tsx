@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { debounce, flatten } from "lodash";
-import { useLatest } from "react-use";
+import { useReducer } from "react";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import { Time } from "@foxglove/rostime";
@@ -28,14 +28,12 @@ import {
   PlayerCapabilities,
   PlayerPresence,
   PlayerState,
-  PlayerStateActiveData,
   PublishPayload,
   SubscribePayload,
   Topic,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import createSelectableContext from "@foxglove/studio-base/util/createSelectableContext";
-import { requestThrottledAnimationFrame } from "@foxglove/studio-base/util/requestThrottledAnimationFrame";
 import signal from "@foxglove/studio-base/util/signal";
 
 import MessageOrderTracker from "./MessageOrderTracker";
@@ -93,6 +91,163 @@ function defaultPlayerState(): PlayerState {
   };
 }
 
+type InternalState = {
+  subscriptionsById: Map<string, SubscribePayload[]>;
+  subscriberIdsByTopic: Map<string, string[]>;
+  newTopicsBySubscriberId: Map<string, Set<string>>;
+  lastMessageEventByTopic: Map<string, MessageEvent<unknown>>;
+  messagesBySubscriberId: Map<string, MessageEvent<unknown>[]>;
+  playerState: PlayerState;
+  renderDone?: () => void;
+};
+
+type UpdateSubscriberAction = {
+  type: "update-subscriber";
+  id: string;
+  payloads: SubscribePayload[];
+};
+
+type UpdatePlayerStateAction = {
+  type: "update-player-state";
+  playerState: PlayerState;
+  renderDone?: () => void;
+};
+
+type Action = UpdateSubscriberAction | UpdatePlayerStateAction;
+
+function updateSubscriberAction(
+  prevSubscriberState: InternalState,
+  action: UpdateSubscriberAction,
+): InternalState {
+  const previousSubscriptionsById = prevSubscriberState.subscriptionsById;
+  const newTopicsBySubscriberId = prevSubscriberState.newTopicsBySubscriberId;
+
+  const previousSubscriptionById = previousSubscriptionsById.get(action.id);
+
+  // Record any _new_ topics for this subscriber into newTopicsBySubscriberId
+  const newTopics = newTopicsBySubscriberId.get(action.id);
+  if (!newTopics) {
+    const actionTopics = action.payloads.map((sub) => sub.topic);
+    newTopicsBySubscriberId.set(action.id, new Set(actionTopics));
+  } else if (previousSubscriptionById) {
+    const prevTopics = new Set(previousSubscriptionById.map((sub) => sub.topic));
+    for (const { topic: newTopic } of action.payloads) {
+      if (!prevTopics.has(newTopic)) {
+        newTopics.add(newTopic);
+      }
+    }
+  }
+
+  const newSubscriptionById = new Map(previousSubscriptionsById);
+  newSubscriptionById.set(action.id, action.payloads);
+
+  const subscriberIdsByTopic: InternalState["subscriberIdsByTopic"] = new Map();
+
+  // make a map of topics to subscriber ids
+  for (const [id, subs] of newSubscriptionById) {
+    for (const subscription of subs) {
+      const topic = subscription.topic;
+
+      const ids = subscriberIdsByTopic.get(topic) ?? [];
+      ids.push(id);
+      subscriberIdsByTopic.set(topic, ids);
+    }
+  }
+
+  return {
+    ...prevSubscriberState,
+    subscriptionsById: newSubscriptionById,
+    subscriberIdsByTopic,
+    newTopicsBySubscriberId: new Map(newTopicsBySubscriberId),
+  };
+}
+
+function updatePlayerStateAction(
+  prevSubscriberState: InternalState,
+  action: UpdatePlayerStateAction,
+): InternalState {
+  const messages = action.playerState.activeData?.messages;
+
+  const seenTopics = new Set<string>();
+
+  // We need a new set of message arrays for each subscriber since downstream users rely
+  // on object instance reference checks to determine if there are new messages
+  const messagesBySubscriberId = new Map<string, MessageEvent<unknown>[]>();
+
+  const subsById = prevSubscriberState.subscriptionsById;
+  const subscriberIdsByTopic = prevSubscriberState.subscriberIdsByTopic;
+
+  const lastMessageEventByTopic = prevSubscriberState.lastMessageEventByTopic;
+  const newTopicsBySubscriberId = new Map(prevSubscriberState.newTopicsBySubscriberId);
+
+  // Put messages into per-subscriber queues
+  if (messages) {
+    for (const messageEvent of messages) {
+      // Save the last message on every topic to send the last message
+      // to newly subscribed panels.
+      lastMessageEventByTopic.set(messageEvent.topic, messageEvent);
+
+      seenTopics.add(messageEvent.topic);
+      const ids = subscriberIdsByTopic.get(messageEvent.topic);
+      if (!ids) {
+        continue;
+      }
+
+      for (const id of ids) {
+        let subscriberMessageEvents = messagesBySubscriberId.get(id);
+        if (!subscriberMessageEvents) {
+          subscriberMessageEvents = [];
+          messagesBySubscriberId.set(id, subscriberMessageEvents);
+        }
+        subscriberMessageEvents.push(messageEvent);
+      }
+    }
+  }
+
+  // Inject the last message on a topic to all new subscribers of the topic
+  for (const id of subsById.keys()) {
+    const newTopics = newTopicsBySubscriberId.get(id);
+    if (!newTopics) {
+      continue;
+    }
+    for (const topic of newTopics) {
+      // If we had a message for this topic in the regular set of messages, we don't need to inject
+      // another message.
+      if (seenTopics.has(topic)) {
+        continue;
+      }
+      const msgEvent = lastMessageEventByTopic.get(topic);
+      if (msgEvent) {
+        const subscriberMessageEvents = messagesBySubscriberId.get(id) ?? [];
+        // the injected message is older than any new messages
+        subscriberMessageEvents.unshift(msgEvent);
+        messagesBySubscriberId.set(id, subscriberMessageEvents);
+      }
+    }
+    // We've processed all new subscriber topics into message queues
+    newTopicsBySubscriberId.delete(id);
+  }
+
+  return {
+    ...prevSubscriberState,
+    newTopicsBySubscriberId,
+    messagesBySubscriberId,
+    playerState: action.playerState,
+    renderDone: action.renderDone,
+  };
+}
+
+function reduce(prevSubscriberState: InternalState, action: Action): InternalState {
+  switch (action.type) {
+    case "update-player-state":
+      return updatePlayerStateAction(prevSubscriberState, action);
+    case "update-subscriber":
+      return updateSubscriberAction(prevSubscriberState, action);
+  }
+
+  return prevSubscriberState;
+}
+
 type ProviderProps = {
   children: React.ReactNode;
 
@@ -104,33 +259,30 @@ type ProviderProps = {
 
   globalVariables: GlobalVariables;
 };
+
+const initialInternalState: InternalState = {
+  subscriptionsById: new Map(),
+  subscriberIdsByTopic: new Map(),
+  newTopicsBySubscriberId: new Map(),
+  lastMessageEventByTopic: new Map(),
+  messagesBySubscriberId: new Map(),
+  playerState: defaultPlayerState(),
+};
+
 export function MessagePipelineProvider({
   children,
   player,
   globalVariables,
 }: ProviderProps): React.ReactElement {
-  const currentPlayer = useRef<Player | undefined>(undefined);
-  const [rawPlayerState, setRawPlayerState] = useState<PlayerState>(defaultPlayerState);
-  const lastActiveData = useRef<PlayerStateActiveData | undefined>(rawPlayerState.activeData);
-  const lastTimeWhenActiveDataBecameSet = useRef<number | undefined>();
-  const [subscriptionsById, setAllSubscriptions] = useState(new Map<string, SubscribePayload[]>());
   const [publishersById, setAllPublishers] = useState({});
-  // This is the state of the current tick of the player.
-  // This state is tied to the player, and should be replaced whenever the player changes.
-  const playerTickState = useRef<{
-    // Call this to resolve the current tick. If this doesn't exist, there isn't a tick currently rendering.
-    resolveFn?: () => void;
-    // Promises to halt the current tick for.
-    promisesToWaitFor: FramePromise[];
-    waitingForPromises: boolean;
-  }>({ resolveFn: undefined, promisesToWaitFor: [], waitingForPromises: false });
 
-  const newTopicsBySubscriberId = useRef(new Map<string, Set<string>>());
-  const messageEventsBySubscriberId = useRef(new Map<string, MessageEvent<unknown>[]>());
+  const promisesToWaitForRef = useRef<FramePromise[]>([]);
+
+  const [state, updateState] = useReducer(reduce, initialInternalState);
 
   const subscriptions: SubscribePayload[] = useMemo(
-    () => flatten(Array.from(subscriptionsById.values())),
-    [subscriptionsById],
+    () => flatten(Array.from(state.subscriptionsById.values())),
+    [state.subscriptionsById],
   );
   const publishers: AdvertiseOptions[] = useMemo(
     () => flatten(Object.values(publishersById)),
@@ -141,209 +293,112 @@ export function MessagePipelineProvider({
 
   // Slow down the message pipeline framerate to the given FPS if it is set to less than 60
   const [messageRate] = useAppConfigurationValue<number>(AppSetting.MESSAGE_RATE);
-  const skipFrames = 60 / (messageRate ?? 60) - 1;
 
-  // Delay the player listener promise until rendering has finished for the latest data.
+  // Tell listener the layout has completed
+  const signalRenderDone = state.renderDone;
   useLayoutEffect(() => {
-    // In certain cases like the player being replaced (reproduce by dragging a bag in while playing), we can
-    // replace the new playerTickState. We want to use one playerTickState throughout the entire tick, since it's
-    // implicitly tied to the player.
-    const currentPlayerTickState = playerTickState.current;
-    requestThrottledAnimationFrame(async () => {
-      if (currentPlayerTickState.resolveFn && !currentPlayerTickState.waitingForPromises) {
-        if (currentPlayerTickState.promisesToWaitFor.length > 0) {
-          // If we have finished rendering but we still have to wait for some promises wait for them here.
+    signalRenderDone?.();
+  }, [signalRenderDone]);
 
-          const promises = currentPlayerTickState.promisesToWaitFor;
-          currentPlayerTickState.promisesToWaitFor = [];
-          currentPlayerTickState.waitingForPromises = true;
-          // If `pauseFrame` is called while we are waiting for any other promises, they just wait for the frame
-          // after the current one.
-          await pauseFrameForPromises(promises);
+  const msPerFrameRef = useRef<number>(16);
+  msPerFrameRef.current = 1000 / (messageRate ?? 60);
 
-          currentPlayerTickState.waitingForPromises = false;
-          // https://github.com/microsoft/TypeScript/issues/43781
-          // eslint-disable-next-line @typescript-eslint/strict-boolean-expressions, @typescript-eslint/no-unnecessary-condition
-          if (currentPlayerTickState.resolveFn) {
-            currentPlayerTickState.resolveFn();
-            currentPlayerTickState.resolveFn = undefined;
-          }
-        } else {
-          currentPlayerTickState.resolveFn();
-          currentPlayerTickState.resolveFn = undefined;
-        }
-      }
-    }, skipFrames);
-  }, [rawPlayerState, skipFrames]);
-
-  const lastMessageEventByTopic = useRef(new Map<string, MessageEvent<unknown>>());
-
-  const subscriptionsByIdLatest = useLatest(subscriptionsById);
   useEffect(() => {
-    currentPlayer.current = player;
     if (!player) {
       return;
     }
-    // Create a new PlayerTickState when the player is replaced.
-    playerTickState.current = {
-      resolveFn: undefined,
-      promisesToWaitFor: [],
-      waitingForPromises: false,
-    };
+
+    let closed = false;
+    let resolveFn: undefined | (() => void);
 
     const messageOrderTracker = new MessageOrderTracker();
     player.setListener(async (newPlayerState: PlayerState) => {
-      if (currentPlayer.current !== player) {
-        lastMessageEventByTopic.current.clear();
-        newTopicsBySubscriberId.current.clear();
-        return undefined;
+      if (closed) {
+        return;
       }
-      if (playerTickState.current.resolveFn) {
+
+      if (resolveFn) {
         throw new Error("New playerState was emitted before last playerState was rendered.");
       }
 
       // check for any out-of-order or out-of-sync messages
       messageOrderTracker.update(newPlayerState);
 
-      const messages = newPlayerState.activeData?.messages;
-      const subsById = subscriptionsByIdLatest.current;
-
-      // make a map of topics to subscriber ids
-      const topicToSubscriberIds = new Map<string, string[]>();
-      for (const [id, subs] of subsById) {
-        for (const subscription of subs) {
-          const topic = subscription.topic;
-
-          const ids = topicToSubscriberIds.get(topic) ?? [];
-          ids.push(id);
-          topicToSubscriberIds.set(topic, ids);
-        }
-      }
-
-      const seenTopics = new Set<string>();
-
-      // We need a new set of message arrays for each subscriber since downstream users rely
-      // on object instance reference checks to determine if there are new messages
-      const messagesForSubscribers = new Map<string, MessageEvent<unknown>[]>();
-
-      // Put messages into per-subscriber queues
-      if (messages) {
-        for (const messageEvent of messages) {
-          // Save the last message on every topic to send the last message
-          // to newly subscribed panels.
-          lastMessageEventByTopic.current.set(messageEvent.topic, messageEvent);
-
-          seenTopics.add(messageEvent.topic);
-          const ids = topicToSubscriberIds.get(messageEvent.topic);
-          if (!ids) {
-            continue;
-          }
-
-          for (const id of ids) {
-            let subscriberMessageEvents = messagesForSubscribers.get(id);
-            if (!subscriberMessageEvents) {
-              subscriberMessageEvents = [];
-              messagesForSubscribers.set(id, subscriberMessageEvents);
-            }
-            subscriberMessageEvents.push(messageEvent);
-          }
-        }
-      }
-
-      // Inject the last message on a topic to all new subscribers of the topic
-      for (const id of subsById.keys()) {
-        const newTopics = newTopicsBySubscriberId.current.get(id);
-        if (!newTopics) {
-          continue;
-        }
-        for (const topic of newTopics) {
-          // If we had a message for this topic in the regular set of messages, we don't need to inject
-          // another message.
-          if (seenTopics.has(topic)) {
-            continue;
-          }
-          const msgEvent = lastMessageEventByTopic.current.get(topic);
-          if (msgEvent) {
-            const subscriberMessageEvents = messagesForSubscribers.get(id) ?? [];
-            // the injected message is older than any new messages
-            subscriberMessageEvents.unshift(msgEvent);
-            messagesForSubscribers.set(id, subscriberMessageEvents);
-          }
-        }
-        // We've processed all new subscriber topics into message queues
-        newTopicsBySubscriberId.current.delete(id);
-      }
-
-      messageEventsBySubscriberId.current = messagesForSubscribers;
-
       const promise = new Promise<void>((resolve) => {
-        playerTickState.current.resolveFn = resolve;
+        resolveFn = () => {
+          resolveFn = undefined;
+          resolve();
+        };
       });
-      setRawPlayerState((currentPlayerState) => {
-        if (currentPlayer.current !== player) {
-          // It's unclear how we can ever get here, but it looks like React
-          // doesn't properly order the `setRawPlayerState` call below. So we
-          // need this additional check. Unfortunately this is hard to test,
-          // so please make sure to manually test having an active player and
-          // disconnecting from it when changing this code. Without this line
-          // it will show the player as being in an active state even after
-          // explicitly disconnecting it.
-          return currentPlayerState;
+
+      // Track when we start the state update. This will pair when layout effect calls renderDone.
+      const start = Date.now();
+
+      // Render done is invoked by a layout effect once the component has rendered.
+      // After the component renders, we kick off an animation frame to give panels one
+      // animation frame to invoke pause.
+      let called = false;
+      function renderDone() {
+        if (called) {
+          return;
         }
-        if (!lastActiveData.current && newPlayerState.activeData) {
-          lastTimeWhenActiveDataBecameSet.current = Date.now();
-        }
-        lastActiveData.current = newPlayerState.activeData;
-        return newPlayerState;
+        called = true;
+
+        // Compute how much time remains before this frame is done
+        const delta = Date.now() - start;
+        const frameTime = Math.max(0, msPerFrameRef.current - delta);
+
+        // Panels have the remaining frame time to invoke pause
+        setTimeout(async () => {
+          if (closed) {
+            return;
+          }
+
+          const promisesToWaitFor = promisesToWaitForRef.current;
+          if (promisesToWaitFor.length > 0) {
+            promisesToWaitForRef.current = [];
+            await pauseFrameForPromises(promisesToWaitFor);
+          }
+
+          if (!resolveFn) {
+            return;
+          }
+          resolveFn();
+        }, frameTime);
+      }
+
+      updateState({
+        type: "update-player-state",
+        playerState: newPlayerState,
+        renderDone,
       });
 
       return await promise;
     });
     return () => {
-      currentPlayer.current = playerTickState.current.resolveFn = undefined;
+      closed = true;
+      resolveFn = undefined;
+
       player.close();
-      setRawPlayerState({
-        ...defaultPlayerState(),
-        activeData: lastActiveData.current,
+      updateState({
+        type: "update-player-state",
+        playerState: defaultPlayerState(),
+        renderDone: undefined,
       });
     };
-  }, [player, subscriptionsByIdLatest]);
+  }, [player]);
 
-  const topics: Topic[] | undefined = useShallowMemo(rawPlayerState.activeData?.topics);
+  const topics: Topic[] | undefined = useShallowMemo(state.playerState.activeData?.topics);
   const sortedTopics = useMemo(() => (topics ?? []).sort(), [topics]);
   const datatypes: RosDatatypes = useMemo(
-    () => rawPlayerState.activeData?.datatypes ?? new Map(),
-    [rawPlayerState.activeData?.datatypes],
+    () => state.playerState.activeData?.datatypes ?? new Map(),
+    [state.playerState.activeData?.datatypes],
   );
 
-  const capabilities = useShallowMemo(rawPlayerState.capabilities);
-  const setSubscriptions = useCallback(
-    (id: string, subscriptionsForId: SubscribePayload[]) => {
-      setAllSubscriptions((previousSubscriptions) => {
-        const previousSubscriptionById = previousSubscriptions.get(id);
-
-        // Record any _new_ topics for this subscriber into newTopicsBySubscriberId
-        const newTopics = newTopicsBySubscriberId.current.get(id);
-        if (!newTopics) {
-          newTopicsBySubscriberId.current.set(
-            id,
-            new Set(subscriptionsForId.map((sub) => sub.topic)),
-          );
-        } else if (previousSubscriptionById) {
-          const prevTopics = new Set(previousSubscriptionById.map((sub) => sub.topic));
-          for (const { topic: newTopic } of subscriptionsForId) {
-            if (!prevTopics.has(newTopic)) {
-              newTopics.add(newTopic);
-            }
-          }
-        }
-
-        previousSubscriptions.set(id, subscriptionsForId);
-        return new Map(previousSubscriptions);
-      });
-    },
-    [setAllSubscriptions],
-  );
+  const capabilities = useShallowMemo(state.playerState.capabilities);
+  const setSubscriptions = useCallback((id: string, payloads: SubscribePayload[]) => {
+    updateState({ type: "update-subscriber", id, payloads });
+  }, []);
   const setPublishers = useCallback(
     (id: string, publishersForId: AdvertiseOptions[]) => {
       setAllPublishers((p) => ({ ...p, [id]: publishersForId }));
@@ -388,7 +443,7 @@ export function MessagePipelineProvider({
   );
   const pauseFrame = useCallback((name: string) => {
     const promise = signal();
-    playerTickState.current.promisesToWaitFor.push({ name, promise });
+    promisesToWaitForRef.current.push({ name, promise });
     return () => {
       promise.resolve();
     };
@@ -399,28 +454,14 @@ export function MessagePipelineProvider({
   );
 
   useEffect(() => {
-    let skipUpdate = false;
-    void (async () => {
-      // Wait for the current frame to finish rendering if needed
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      await pauseFrameForPromises(playerTickState.current.promisesToWaitFor ?? []);
+    player?.setGlobalVariables(globalVariables);
+  }, [player, globalVariables]);
 
-      // If the globalVariables have already changed again while
-      // we waited for the frame to render, skip the update.
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (!skipUpdate && currentPlayer.current) {
-        currentPlayer.current.setGlobalVariables(globalVariables);
-      }
-    })();
-    return () => {
-      skipUpdate = true;
-    };
-  }, [globalVariables]);
   return (
     <ContextInternal.Provider
       value={useShallowMemo({
-        playerState: rawPlayerState,
-        messageEventsBySubscriberId: messageEventsBySubscriberId.current,
+        playerState: state.playerState,
+        messageEventsBySubscriberId: state.messagesBySubscriberId,
         subscriptions,
         publishers,
         sortedTopics,

@@ -15,21 +15,14 @@
 /* eslint-disable jest/no-conditional-expect */
 
 import { renderHook, RenderResult } from "@testing-library/react-hooks/dom";
-import { last } from "lodash";
 import { PropsWithChildren, useCallback, useState } from "react";
 import { act } from "react-dom/test-utils";
 
 import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurationContext";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import {
-  Player,
-  PlayerCapabilities,
-  PlayerPresence,
-  PlayerStateActiveData,
-} from "@foxglove/studio-base/players/types";
+import { Player, PlayerCapabilities, PlayerPresence } from "@foxglove/studio-base/players/types";
 import delay from "@foxglove/studio-base/util/delay";
 import { makeConfiguration } from "@foxglove/studio-base/util/makeConfiguration";
-import tick from "@foxglove/studio-base/util/tick";
 
 import { MessagePipelineProvider, useMessagePipeline, MessagePipelineContext } from ".";
 import FakePlayer from "./FakePlayer";
@@ -130,31 +123,6 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     await expect(async () => await player.emit()).rejects.toThrow(
       "New playerState was emitted before last playerState was rendered.",
     );
-  });
-
-  it("waits for the previous frame to finish before calling setGlobalVariables again", async () => {
-    const player = new FakePlayer();
-    const mockSetGlobalVariables = jest.spyOn(player, "setGlobalVariables");
-    const { result, rerender } = renderHook(Hook, {
-      wrapper: Wrapper,
-      initialProps: { player, globalVariables: {} },
-    });
-    await tick();
-    await tick();
-
-    expect(mockSetGlobalVariables.mock.calls).toEqual([[{}]]);
-    const onFrameRendered = result.current.pauseFrame("Wait");
-
-    // Pass in new globalVariables and make sure they aren't used until the frame is done
-    rerender({ player, globalVariables: { futureTime: 1 } });
-    await tick();
-    expect(mockSetGlobalVariables.mock.calls).toEqual([[{}]]);
-
-    // Once the frame is done, setGlobalVariables will be called with the new value
-    onFrameRendered();
-    await tick();
-    await tick();
-    expect(mockSetGlobalVariables.mock.calls).toEqual([[{}], [{ futureTime: 1 }]]);
   });
 
   it("sets subscriptions", async () => {
@@ -433,40 +401,6 @@ describe("MessagePipelineProvider/useMessagePipeline", () => {
     rerender({ player: player2 });
     expect(player2.subscriptions).toEqual([{ topic: "/studio/test" }, { topic: "/studio/test2" }]);
     expect(player2.publishers).toEqual([{ topic: "/studio/test", datatype: "test" }]);
-  });
-
-  it("keeps activeData when closing a player", async () => {
-    const player = new FakePlayer();
-    const { result, rerender } = renderHook(Hook, {
-      wrapper: Wrapper,
-      initialProps: { player },
-    });
-    const activeData: PlayerStateActiveData = {
-      messages: [],
-      messageOrder: "receiveTime",
-      currentTime: { sec: 0, nsec: 0 },
-      startTime: { sec: 0, nsec: 0 },
-      endTime: { sec: 1, nsec: 0 },
-      isPlaying: true,
-      speed: 0.2,
-      lastSeekTime: 1234,
-      topics: [{ name: "/input/foo", datatype: "foo" }],
-      datatypes: new Map(Object.entries({ foo: { definitions: [] } })),
-      parsedMessageDefinitionsByTopic: {},
-      totalBytesReceived: 1234,
-    };
-    await act(async () => await player.emit({ activeData }));
-    expect(result.all.length).toBe(2);
-
-    rerender({ player: undefined });
-    expect(result.all.length).toBe(4);
-    expect((last(result.all) as MessagePipelineContext).playerState).toEqual({
-      activeData,
-      capabilities: [],
-      presence: PlayerPresence.NOT_PRESENT,
-      playerId: "",
-      progress: {},
-    });
   });
 
   describe("pauseFrame", () => {
