@@ -245,7 +245,7 @@ export const validateOutputTopic = (nodeData: NodeData): NodeData => {
 // - Generate the AST
 // - Handle external libraries
 export const compile = (nodeData: NodeData): NodeData => {
-  const { sourceCode, rosLib, studioLib } = nodeData;
+  const { sourceCode, rosLib, dataSourceLib } = nodeData;
 
   // If a node name does not start with a forward slash, the compiler host will
   // not be able to match the correct filename.
@@ -270,8 +270,7 @@ export const compile = (nodeData: NodeData): NodeData => {
   const sourceCodeMap = new Map<string, string>();
   sourceCodeMap.set(nodeFileName, sourceCode);
   sourceCodeMap.set(projectConfig.rosLib.filePath, rosLib);
-  // fixme
-  sourceCodeMap.set("/studio_node/data-source.ts", studioLib);
+  sourceCodeMap.set("/studio_node/data-source.ts", dataSourceLib);
 
   projectConfig.utilityFiles.forEach((file) => sourceCodeMap.set(file.filePath, file.sourceCode));
   projectConfig.declarations.forEach((lib) => sourceCodeMap.set(lib.filePath, lib.sourceCode));
@@ -471,7 +470,7 @@ export const compose = (...transformers: NodeDataTransformer[]): NodeDataTransfo
 
 */
 const transform = (args: TransformArgs): NodeData => {
-  const { name, sourceCode, topics, rosLib, studioLib, datatypes } = args;
+  const { name, sourceCode, topics, rosLib, dataSourceLib, datatypes } = args;
 
   const transformer = compose(
     getOutputTopic,
@@ -488,7 +487,7 @@ const transform = (args: TransformArgs): NodeData => {
       name,
       sourceCode,
       rosLib,
-      studioLib,
+      dataSourceLib,
       transpiledCode: "",
       projectCode: undefined,
       inputTopics: [],

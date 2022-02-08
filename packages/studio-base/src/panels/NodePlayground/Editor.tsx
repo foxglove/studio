@@ -36,7 +36,7 @@ type Props = {
   setScriptCode: (code: string) => void;
   autoFormatOnSave: boolean;
   rosLib: string;
-  studioLib: string;
+  dataSourceLib: string;
 
   save: (code: string) => void;
   setScriptOverride: (script: Script) => void;
@@ -79,7 +79,7 @@ const Editor = ({
   save,
   setScriptOverride,
   rosLib,
-  studioLib,
+  dataSourceLib,
 }: Props): ReactElement | ReactNull => {
   const editorRef = React.useRef<CodeEditor>(ReactNull);
   const autoFormatOnSaveRef = React.useRef(autoFormatOnSave);
@@ -99,18 +99,11 @@ const Editor = ({
     const filePath = monacoApi.Uri.parse(`file:///studio_node/data-source.ts`);
     const model =
       monacoApi.editor.getModel(filePath) ??
-      monacoApi.editor.createModel(studioLib, "typescript", filePath);
+      monacoApi.editor.createModel(dataSourceLib, "typescript", filePath);
 
-    model.setValue(studioLib);
-
-    // fixme - run prettier? here? elsewhere?
+    model.setValue(dataSourceLib);
     model.updateOptions({ tabSize: 2 });
-
-    return () => {
-      // fixme - we don't need to dispose - just update
-      //model.dispose();
-    };
-  }, [studioLib]);
+  }, [dataSourceLib]);
 
   /*
   In order to support go-to across files we override the code editor service doOpenEditor method.

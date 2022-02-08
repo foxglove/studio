@@ -138,7 +138,7 @@ function NodePlayground(props: Props) {
 
   const userNodes = useCurrentLayoutSelector(userNodeSelector);
   const {
-    state: { nodeStates: userNodeDiagnostics, rosLib, studioLib },
+    state: { nodeStates: userNodeDiagnostics, rosLib, dataSourceLib },
   } = useUserNodeState();
 
   const { setUserNodes } = useCurrentLayoutActions();
@@ -184,7 +184,6 @@ function NodePlayground(props: Props) {
     (code?: string) => {
       const newNodeId = uuidv4();
       const sourceCode = code ?? skeletonBody;
-      // TODO: Add integration test for this flow.
       setUserNodes({
         [newNodeId]: {
           sourceCode,
@@ -342,7 +341,7 @@ function NodePlayground(props: Props) {
                     setScriptCode={setScriptCode}
                     setScriptOverride={setScriptOverride}
                     rosLib={rosLib}
-                    studioLib={studioLib}
+                    dataSourceLib={dataSourceLib}
                     save={saveNode}
                   />
                 )}

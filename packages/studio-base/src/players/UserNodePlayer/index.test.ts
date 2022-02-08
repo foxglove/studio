@@ -77,6 +77,7 @@ const defaultUserNodeActions = {
   setUserNodeDiagnostics: jest.fn(),
   addUserNodeLogs: jest.fn(),
   setUserNodeRosLib: jest.fn(),
+  setUserNodeDataSourceLib: jest.fn(),
 };
 
 const basicPlayerState: PlayerStateActiveData = {

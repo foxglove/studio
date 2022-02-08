@@ -10,6 +10,6 @@ export type TransformArgs = {
   sourceCode: string;
   topics: Topic[];
   rosLib: string;
-  studioLib: string;
+  dataSourceLib: string;
   datatypes: RosDatatypes;
 };

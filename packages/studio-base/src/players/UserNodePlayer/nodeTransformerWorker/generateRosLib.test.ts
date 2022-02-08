@@ -35,6 +35,7 @@ const baseNodeData: NodeData = {
   sourceFile: undefined,
   typeChecker: undefined,
   rosLib: "",
+  dataSourceLib: "",
   projectCode: new Map<string, string>(),
 };
 

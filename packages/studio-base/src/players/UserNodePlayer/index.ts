@@ -19,7 +19,9 @@ import Log from "@foxglove/log";
 import { Time, compare } from "@foxglove/rostime";
 import { ParameterValue } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import { generateStudioLib } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/generateStudioLib";
+import getPrettifiedCode from "@foxglove/studio-base/panels/NodePlayground/getPrettifiedCode";
+import { MemoizedLibGenerator } from "@foxglove/studio-base/players/UserNodePlayer/MemoizedLibGenerator";
+import { generateDataSourceLib } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/generateDataSourceLib";
 import { TransformArgs } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/types";
 import {
   Diagnostic,
@@ -65,7 +67,7 @@ type UserNodeActions = {
   setUserNodeDiagnostics: (nodeId: string, diagnostics: readonly Diagnostic[]) => void;
   addUserNodeLogs: (nodeId: string, logs: readonly UserNodeLog[]) => void;
   setUserNodeRosLib: (rosLib: string) => void;
-  setUserNodeStudioLib: (studioLib: string) => void;
+  setUserNodeDataSourceLib: (lib: string) => void;
 };
 
 function maybePlainObject(rawVal: unknown) {
@@ -94,20 +96,17 @@ export default class UserNodePlayer implements Player {
   // listener for state updates
   private _listener?: (arg0: PlayerState) => Promise<void>;
 
-  // TODO: FUTURE - Terminate unused workers (some sort of timeout, for whole array or per rpc)
   // Not sure if there is perf issue with unused workers (may just go idle) - requires more research
   private _unusedNodeRuntimeWorkers: Rpc[] = [];
   private _lastPlayerStateActiveData?: PlayerStateActiveData;
   private _setUserNodeDiagnostics: (nodeId: string, diagnostics: readonly Diagnostic[]) => void;
   private _addUserNodeLogs: (nodeId: string, logs: UserNodeLog[]) => void;
-  private _setRosLib: (rosLib: string, datatypes: RosDatatypes) => void;
   private _nodeTransformRpc?: Rpc;
-  private _rosLib?: string;
-  private _studioLib?: string;
-  private _rosLibDatatypes?: RosDatatypes; // the datatypes we last used to generate rosLib -- regenerate if they change
   private _globalVariables: GlobalVariables = {};
   private _pendingResetWorkers?: Promise<void>;
   private _userNodeActions: UserNodeActions;
+  private _rosLibGenerator: MemoizedLibGenerator;
+  private _dataSourceLibGenerator: MemoizedLibGenerator;
 
   // Player state changes when the child player invokes our player state listener
   // we may also emit state changes on internal errors
@@ -138,7 +137,7 @@ export default class UserNodePlayer implements Player {
   constructor(player: Player, userNodeActions: UserNodeActions) {
     this._player = player;
     this._userNodeActions = userNodeActions;
-    const { setUserNodeDiagnostics, addUserNodeLogs, setUserNodeRosLib } = userNodeActions;
+    const { setUserNodeDiagnostics, addUserNodeLogs } = userNodeActions;
 
     this._setUserNodeDiagnostics = (nodeId: string, diagnostics: readonly Diagnostic[]) => {
       setUserNodeDiagnostics(nodeId, diagnostics);
@@ -149,12 +148,24 @@ export default class UserNodePlayer implements Player {
       }
     };
 
-    this._setRosLib = (rosLib: string, datatypes: RosDatatypes) => {
-      this._rosLib = rosLib;
-      this._rosLibDatatypes = datatypes;
-      // We set this for the monaco editor to refer to it.
-      setUserNodeRosLib(rosLib);
-    };
+    this._dataSourceLibGenerator = new MemoizedLibGenerator(async (args) => {
+      const lib = generateDataSourceLib({
+        topics: args.topics,
+        datatypes: new Map(args.datatypes),
+      });
+
+      return await getPrettifiedCode(lib);
+    });
+
+    this._rosLibGenerator = new MemoizedLibGenerator(async (args) => {
+      const transformWorker = this._getTransformWorker();
+      return await transformWorker.send("generateRosLib", {
+        topics: args.topics,
+        // Include basic datatypes along with any custom datatypes.
+        // Custom datatypes appear as the second array items to override any basicDatatype items
+        datatypes: new Map([...basicDatatypes, ...args.datatypes]),
+      });
+    });
   }
 
   private _getTopics = memoizeWeak(
@@ -273,14 +284,14 @@ export default class UserNodePlayer implements Player {
     const nodeDatatypes: RosDatatypes = new Map([...basicDatatypes, ...datatypes]);
 
     const rosLib = await this._getRosLib();
-    const studioLib = await this._getStudioLib();
+    const dataSourceLib = await this._getDataSourceLib();
     const { name, sourceCode } = userNode;
     const transformMessage: TransformArgs = {
       name,
       sourceCode,
       topics,
       rosLib,
-      studioLib,
+      dataSourceLib,
       datatypes: nodeDatatypes,
     };
     const transformWorker = this._getTransformWorker();
@@ -586,47 +597,28 @@ export default class UserNodePlayer implements Player {
     if (!this._lastPlayerStateActiveData) {
       throw new Error("_getRosLib was called before `_lastPlayerStateActiveData` set");
     }
-    const { topics, datatypes } = this._lastPlayerStateActiveData;
 
-    // If datatypes have not changed, we can reuse the existing rosLib
-    if (this._rosLib != undefined && this._rosLibDatatypes === datatypes) {
-      return this._rosLib;
+    const { topics, datatypes } = this._lastPlayerStateActiveData;
+    const [didUpdate, lib] = await this._rosLibGenerator.update({ topics, datatypes });
+    if (didUpdate) {
+      this._userNodeActions.setUserNodeRosLib(lib);
     }
 
-    const transformWorker = this._getTransformWorker();
-    const rosLib: string = await transformWorker.send("generateRosLib", {
-      topics,
-      // Include basic datatypes along with any custom datatypes.
-      // Custom datatypes appear as the second array items to override any basicDatatype items
-      datatypes: new Map([...basicDatatypes, ...datatypes]),
-    });
-    // fixme - why is this in the getter?
-    this._setRosLib(rosLib, datatypes);
-
-    return rosLib;
+    return lib;
   }
 
-  private async _getStudioLib(): Promise<string> {
+  private async _getDataSourceLib(): Promise<string> {
     if (!this._lastPlayerStateActiveData) {
-      throw new Error("_getStudioLib was called before `_lastPlayerStateActiveData` set");
+      throw new Error("_getDataSourceLib was called before `_lastPlayerStateActiveData` set");
     }
+
     const { topics, datatypes } = this._lastPlayerStateActiveData;
-
-    // If datatypes have not changed, we can reuse the existing studioLib
-    // fixme - what if topics have changed??
-    if (this._studioLib != undefined && this._rosLibDatatypes === datatypes) {
-      return this._studioLib;
+    const [didUpdate, lib] = await this._dataSourceLibGenerator.update({ topics, datatypes });
+    if (didUpdate) {
+      this._userNodeActions.setUserNodeDataSourceLib(lib);
     }
 
-    const studioLib = generateStudioLib({
-      topics,
-      // fixme - basic datatypes should be a separate object
-      datatypes: new Map(datatypes),
-    });
-
-    this._userNodeActions.setUserNodeStudioLib(studioLib);
-
-    return (this._studioLib = studioLib);
+    return lib;
   }
 
   // invoked when our child player state changes
