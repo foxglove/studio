@@ -14,6 +14,7 @@
 /* eslint-disable jest/no-conditional-expect */
 
 import exampleDatatypes from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/fixtures/example-datatypes";
+import { generateEmptyDataSourceLib } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/generateDataSourceLib";
 import generateRosLib from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/generateRosLib";
 import {
   getOutputTopic,
@@ -54,6 +55,7 @@ const baseNodeData: NodeData = {
     topics: [{ name: "/some_topic", datatype: "std_msgs/ColorRGBA" }],
     datatypes: exampleDatatypes,
   }),
+  dataSourceLib: generateEmptyDataSourceLib(),
 };
 
 describe("pipeline", () => {
