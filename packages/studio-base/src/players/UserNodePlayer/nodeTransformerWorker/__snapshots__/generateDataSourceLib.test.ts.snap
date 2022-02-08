@@ -1,0 +1,97 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`generateDataSourceLib full 1`] = `
+"export type Time = {
+  sec: number;
+  nsec: number;
+};
+
+export type Duration = Time;
+
+/**
+ * MessageEvent contains a single message. The event has the topic, and the receive time.
+ */
+export interface MessageEvent<M, T = string> {
+  topic: T;
+  receiveTime: Time;
+  message: M;
+}
+
+/**
+ * DataSourceTypes enumerates the message type definitions for for all the types
+ * in the current data source.
+ *
+ * Use subtype notation to access the type by schema name:
+ *
+ * \`\`\`
+ * type Msg = DataSourceTypes[\\"geometry_msgs/Pose\\"];
+ * type Msg = DataSourceTypes[\\"pkg.geometry.Pose\\"];
+ * \`\`\`
+ */
+export type DataSourceTypes = {
+  \\"std_msgs/ColorRGBA\\": {
+    r: number;
+  };
+};
+
+/**
+ * MessageEventByTopic enumerates the MessageEvent types for all the topics in
+ * the current data source.
+ *
+ * Use subtype notation to access the MessageEvent type by topic name:
+ *
+ * \`\`\`
+ * type MsgEventFoo = MessageEventByTopic[\\"/foo\\"];
+ * \`\`\`
+ */
+export type MessageEventByTopic = {
+  \\"/my_topic\\": MessageEvent<DataSourceTypes[\\"std_msgs/ColorRGBA\\"], \\"/my_topic\\">;
+};
+"
+`;
+
+exports[`generateDataSourceLib generateDatatypesInterface should generate basic Datatypes interface 1`] = `
+"/**
+ * DataSourceTypes enumerates the message type definitions for for all the types
+ * in the current data source.
+ *
+ * Use subtype notation to access the type by schema name:
+ *
+ * \`\`\`
+ * type Msg = DataSourceTypes[\\"geometry_msgs/Pose\\"];
+ * type Msg = DataSourceTypes[\\"pkg.geometry.Pose\\"];
+ * \`\`\`
+ */
+export type DataSourceTypes = {
+  \\"std_msgs.ColorRGBA\\": {
+    r: number;
+    g: number;
+    b: number;
+    a: number;
+  };
+};
+"
+`;
+
+exports[`generateDataSourceLib generateDatatypesInterface should generate multiple datatypes in Datatypes interface 1`] = `
+"/**
+ * DataSourceTypes enumerates the message type definitions for for all the types
+ * in the current data source.
+ *
+ * Use subtype notation to access the type by schema name:
+ *
+ * \`\`\`
+ * type Msg = DataSourceTypes[\\"geometry_msgs/Pose\\"];
+ * type Msg = DataSourceTypes[\\"pkg.geometry.Pose\\"];
+ * \`\`\`
+ */
+export type DataSourceTypes = {
+  \\"pkg.foo.Bar\\": {
+    car: DataSourceTypes[\\"pkg.baz.Car\\"];
+  };
+  \\"pkg.baz.Car\\": {
+    points: Float32Array;
+  };
+};
+"
+`;
