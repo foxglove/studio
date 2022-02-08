@@ -3,39 +3,41 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Theme, Typography, Link, Stack, Divider } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { createStyles, makeStyles } from "@mui/styles";
 import { ErrorInfo, useMemo, useState } from "react";
 
-const useStyles = makeStyles((theme: Theme) => ({
-  root: {
-    display: "flex",
-    flexDirection: "column",
-    height: "100%",
-    padding: theme.spacing(2),
-  },
-  alertContainer: {
-    display: "flex",
-    flexDirection: "column",
-    flexGrow: 1,
-    overflow: "hidden",
-  },
-  errorDetailHeader: {
-    fontWeight: "bold",
-  },
-  errorDetailStack: {
-    fontSize: theme.typography.body2.fontSize,
-    lineHeight: "1.3em",
-    paddingLeft: theme.spacing(2),
-  },
-  errorDetailContainer: {
-    flexGrow: 2,
-    overflowY: "auto",
-  },
-  actions: {
-    paddingTop: theme.spacing(2),
-    textAlign: "right",
-  },
-}));
+const useStyles = makeStyles((theme: Theme) =>
+  createStyles({
+    root: {
+      display: "flex",
+      flexDirection: "column",
+      height: "100%",
+      padding: theme.spacing(2),
+    },
+    alertContainer: {
+      display: "flex",
+      flexDirection: "column",
+      flexGrow: 1,
+      overflow: "hidden",
+    },
+    errorDetailHeader: {
+      fontWeight: "bold",
+    },
+    errorDetailStack: {
+      fontSize: theme.typography.body2.fontSize,
+      lineHeight: "1.3em",
+      paddingLeft: theme.spacing(2),
+    },
+    errorDetailContainer: {
+      flexGrow: 2,
+      overflowY: "auto",
+    },
+    actions: {
+      paddingTop: theme.spacing(2),
+      textAlign: "right",
+    },
+  }),
+);
 
 function ErrorStacktrace({ stack }: { stack: string }) {
   const styles = useStyles();

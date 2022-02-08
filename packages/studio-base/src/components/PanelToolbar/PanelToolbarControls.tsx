@@ -11,8 +11,9 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { makeStyles } from "@fluentui/react";
 import DragIcon from "@mdi/svg/svg/drag.svg";
+import { Theme } from "@mui/material";
+import { createStyles, makeStyles } from "@mui/styles";
 import cx from "classnames";
 import { useContext } from "react";
 
@@ -35,29 +36,31 @@ type PanelToolbarControlsProps = {
   showControls?: boolean;
 };
 
-const useStyles = makeStyles({
-  iconContainer: {
-    paddingTop: PANEL_TOOLBAR_SPACING,
-    display: "flex",
-    flex: "0 0 auto",
-    alignItems: "center",
-    marginLeft: PANEL_TOOLBAR_SPACING,
-    flexDirection: "row",
-    minHeight: PANEL_TOOLBAR_HEIGHT - PANEL_TOOLBAR_SPACING,
-    padding: "2px 2px 2px 6px",
+const useStyles = makeStyles((theme: Theme) =>
+  createStyles({
+    iconContainer: {
+      paddingTop: PANEL_TOOLBAR_SPACING,
+      display: "flex",
+      flex: "0 0 auto",
+      alignItems: "center",
+      marginLeft: PANEL_TOOLBAR_SPACING,
+      flexDirection: "row",
+      minHeight: PANEL_TOOLBAR_HEIGHT - PANEL_TOOLBAR_SPACING,
+      padding: theme.spacing(0.25, 0.25, 0.25, 0.75),
 
-    svg: {
-      fontSize: 14,
+      svg: {
+        fontSize: 14,
+      },
     },
-  },
-  icon: {
-    fontSize: 14,
-    margin: "0 0.2em",
-  },
-  dragIcon: {
-    cursor: "move",
-  },
-});
+    icon: {
+      fontSize: 14,
+      margin: "0 0.2em",
+    },
+    dragIcon: {
+      cursor: "move",
+    },
+  }),
+);
 
 // Keep controls, which don't change often, in a pure component in order to avoid re-rendering the
 // whole PanelToolbar when only children change.

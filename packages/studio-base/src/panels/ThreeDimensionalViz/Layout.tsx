@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useTheme } from "@fluentui/react";
+import { useTheme } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { groupBy } from "lodash";
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
@@ -768,7 +768,7 @@ export default function Layout({
 
   const theme = useTheme();
   const canvasBackgroundColor = useThemeBackgroundColor
-    ? theme.isInverted
+    ? theme.palette.mode === "dark"
       ? "#000000"
       : "#303030"
     : customBackgroundColor;

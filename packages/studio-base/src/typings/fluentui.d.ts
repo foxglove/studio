@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { IStyleFunctionOrObject, IIconStyleProps, IIconStyles } from "@fluentui/react";
+import { Theme } from "@mui/material/styles";
 
 // Restrict TS types for icons to allow only the icon names we've registered.
 declare global {
@@ -145,4 +146,9 @@ declare module "@fluentui/react" {
     iconName?: RegisteredIconNames;
     styles?: IStyleFunctionOrObject<IIconStyleProps, IIconStyles>;
   }
+}
+
+// TODO: Move this into a mui.d.ts file
+declare module "@mui/styles/defaultTheme" {
+  type DefaultTheme = Theme;
 }
