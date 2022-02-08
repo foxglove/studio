@@ -39,7 +39,7 @@ function updateSubscriberAction(
   action: UpdateSubscriberAction,
 ): InternalState {
   const previousSubscriptionsById = prevSubscriberState.subscriptionsById;
-  const newTopicsBySubscriberId = prevSubscriberState.newTopicsBySubscriberId;
+  const newTopicsBySubscriberId = new Map(prevSubscriberState.newTopicsBySubscriberId);
 
   const previousSubscription = previousSubscriptionsById.get(action.id);
 
@@ -48,8 +48,8 @@ function updateSubscriberAction(
   if (!newTopics) {
     const actionTopics = action.payloads.map((sub) => sub.topic);
     newTopicsBySubscriberId.set(action.id, new Set(actionTopics));
-  } else if (previousSubscriptionById) {
-    const prevTopics = new Set(previousSubscriptionById.map((sub) => sub.topic));
+  } else if (previousSubscription) {
+    const prevTopics = new Set(previousSubscription.map((sub) => sub.topic));
     for (const { topic: newTopic } of action.payloads) {
       if (!prevTopics.has(newTopic)) {
         newTopics.add(newTopic);
@@ -58,12 +58,12 @@ function updateSubscriberAction(
   }
 
   const newSubscriptionsById = new Map(previousSubscriptionsById);
-  newSubscriptionById.set(action.id, action.payloads);
+  newSubscriptionsById.set(action.id, action.payloads);
 
   const subscriberIdsByTopic: InternalState["subscriberIdsByTopic"] = new Map();
 
   // make a map of topics to subscriber ids
-  for (const [id, subs] of newSubscriptionById) {
+  for (const [id, subs] of newSubscriptionsById) {
     for (const subscription of subs) {
       const topic = subscription.topic;
 
@@ -75,9 +75,9 @@ function updateSubscriberAction(
 
   return {
     ...prevSubscriberState,
-    subscriptionsById: newSubscriptionById,
+    subscriptionsById: newSubscriptionsById,
     subscriberIdsByTopic,
-    newTopicsBySubscriberId: new Map(newTopicsBySubscriberId),
+    newTopicsBySubscriberId,
   };
 }
 

@@ -87,7 +87,6 @@ export function useMessageReducer<T>(props: Params<T>): T {
   );
 
   const requestedTopics = useShallowMemo(props.topics);
-  const requestedTopicsSet = useMemo(() => new Set(requestedTopics), [requestedTopics]);
 
   const subscriptions = useMemo<SubscribePayload[]>(() => {
     const requester: SubscribePayload["requester"] =
@@ -147,16 +146,12 @@ export function useMessageReducer<T>(props: Params<T>): T {
           messageEvents.length > 0 &&
           messageEvents !== state.current?.messageEvents
         ) {
-          const filtered = messageEvents.filter((msgEvent) =>
-            requestedTopicsSet.has(msgEvent.topic),
-          );
-
           if (addMessages) {
-            if (filtered.length > 0) {
-              newReducedValue = addMessages(newReducedValue, filtered);
+            if (messageEvents.length > 0) {
+              newReducedValue = addMessages(newReducedValue, messageEvents);
             }
           } else if (addMessage) {
-            for (const messageEvent of filtered) {
+            for (const messageEvent of messageEvents) {
               newReducedValue = addMessage(newReducedValue, messageEvent);
             }
           }
@@ -173,7 +168,7 @@ export function useMessageReducer<T>(props: Params<T>): T {
 
         return state.current.reducedValue;
       },
-      [id, addMessage, addMessages, restore, requestedTopicsSet],
+      [id, addMessage, addMessages, restore],
     ),
   );
 }

@@ -414,28 +414,6 @@ describe("useMessagesByPath", () => {
     ]);
   });
 
-  it("ignores messages from non-subscribed topics", () => {
-    const { wrapper } = makeMessagePipelineWrapper();
-    const initialProps = {
-      paths: ["/some/other/topic"],
-      topics: [
-        { name: "/some/topic", datatype: "dummy" },
-        { name: "/some/other/topic", datatype: "dummy" },
-      ],
-      datatypes: fixture.datatypes,
-      messages: [fixture.messages[0]],
-    };
-    const { result, rerender } = renderHook(Hooks, {
-      wrapper,
-      initialProps,
-    });
-    rerender({ ...initialProps, messages: [fixture.messages[1], fixture.messages[2]] });
-
-    expect(
-      result.all.map((item) => (item instanceof Error ? undefined : item.messagesByPath)),
-    ).toEqual([{ "/some/other/topic": [] }, { "/some/other/topic": [] }]);
-  });
-
   it("return the same itemsByPath (identity) if the MessageHistory props did not change but children changed", () => {
     const { wrapper } = makeMessagePipelineWrapper();
     const { result, rerender } = renderHook(Hooks, {
