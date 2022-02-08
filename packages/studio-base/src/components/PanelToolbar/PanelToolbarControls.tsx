@@ -38,9 +38,9 @@ type PanelToolbarControlsProps = {
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
-    iconContainer: {
+    iconContainer: ({ shouldShow }: { shouldShow: boolean }) => ({
       paddingTop: PANEL_TOOLBAR_SPACING,
-      display: "flex",
+      display: shouldShow ? "flex" : "none",
       flex: "0 0 auto",
       alignItems: "center",
       marginLeft: PANEL_TOOLBAR_SPACING,
@@ -48,10 +48,10 @@ const useStyles = makeStyles((theme: Theme) =>
       minHeight: PANEL_TOOLBAR_HEIGHT - PANEL_TOOLBAR_SPACING,
       padding: theme.spacing(0.25, 0.25, 0.25, 0.75),
 
-      svg: {
+      "& .icon": {
         fontSize: 14,
       },
-    },
+    }),
     icon: {
       fontSize: 14,
       margin: "0 0.2em",
@@ -73,13 +73,12 @@ export const PanelToolbarControls = React.memo(function PanelToolbarControls({
   setMenuOpen,
   showControls = false,
 }: PanelToolbarControlsProps) {
-  const panelContext = useContext(PanelContext);
-  const styles = useStyles();
-
   const shouldShow = showControls ? true : floating ? true : mousePresent;
+  const panelContext = useContext(PanelContext);
+  const styles = useStyles({ shouldShow });
 
   return (
-    <div style={{ display: shouldShow ? "flex" : "none" }} className={cx(styles.iconContainer)}>
+    <div className={styles.iconContainer}>
       {additionalIcons}
       <PanelActionsDropdown
         isOpen={menuOpen}
