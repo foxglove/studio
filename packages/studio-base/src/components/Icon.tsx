@@ -38,7 +38,7 @@ function makeIconStyle(size: number) {
 
 const useStyles = makeStyles({
   icon: {
-    "> svg": {
+    "& > svg": {
       fill: "currentColor",
       width: "1em",
       height: "1em",
