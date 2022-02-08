@@ -57,7 +57,7 @@ function updateSubscriberAction(
     }
   }
 
-  const newSubscriptionById = new Map(previousSubscriptionsById);
+  const newSubscriptionsById = new Map(previousSubscriptionsById);
   newSubscriptionById.set(action.id, action.payloads);
 
   const subscriberIdsByTopic: InternalState["subscriberIdsByTopic"] = new Map();
