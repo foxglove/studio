@@ -41,7 +41,7 @@ function updateSubscriberAction(
   const previousSubscriptionsById = prevSubscriberState.subscriptionsById;
   const newTopicsBySubscriberId = prevSubscriberState.newTopicsBySubscriberId;
 
-  const previousSubscriptionById = previousSubscriptionsById.get(action.id);
+  const previousSubscription = previousSubscriptionsById.get(action.id);
 
   // Record any _new_ topics for this subscriber into newTopicsBySubscriberId
   const newTopics = newTopicsBySubscriberId.get(action.id);
