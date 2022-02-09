@@ -88,7 +88,7 @@ function makePlayers(initialOrder: TimestampMethod): {
         setUserNodeDiagnostics: jest.fn(),
         addUserNodeLogs: jest.fn(),
         setUserNodeRosLib: jest.fn(),
-        setUserNodeDataSourceLib: jest.fn(),
+        setUserNodeTypesLib: jest.fn(),
       }),
       initialOrder,
     ),
@@ -317,7 +317,7 @@ describe("OrderedStampPlayer", () => {
         setUserNodeDiagnostics: jest.fn(),
         addUserNodeLogs: jest.fn(),
         setUserNodeRosLib: jest.fn(),
-        setUserNodeDataSourceLib: jest.fn(),
+        setUserNodeTypesLib: jest.fn(),
       }),
       "headerStamp",
     );

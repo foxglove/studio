@@ -138,7 +138,7 @@ function NodePlayground(props: Props) {
 
   const userNodes = useCurrentLayoutSelector(userNodeSelector);
   const {
-    state: { nodeStates: userNodeDiagnostics, rosLib, dataSourceLib },
+    state: { nodeStates: userNodeDiagnostics, rosLib, typesLib },
   } = useUserNodeState();
 
   const { setUserNodes } = useCurrentLayoutActions();
@@ -341,7 +341,7 @@ function NodePlayground(props: Props) {
                     setScriptCode={setScriptCode}
                     setScriptOverride={setScriptOverride}
                     rosLib={rosLib}
-                    dataSourceLib={dataSourceLib}
+                    typesLib={typesLib}
                     save={saveNode}
                   />
                 )}

@@ -21,7 +21,7 @@ import { ParameterValue } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
 import getPrettifiedCode from "@foxglove/studio-base/panels/NodePlayground/getPrettifiedCode";
 import { MemoizedLibGenerator } from "@foxglove/studio-base/players/UserNodePlayer/MemoizedLibGenerator";
-import { generateDataSourceLib } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/generateDataSourceLib";
+import { generateTypesLib } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/generateTypesLib";
 import { TransformArgs } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/types";
 import {
   Diagnostic,
@@ -67,7 +67,7 @@ type UserNodeActions = {
   setUserNodeDiagnostics: (nodeId: string, diagnostics: readonly Diagnostic[]) => void;
   addUserNodeLogs: (nodeId: string, logs: readonly UserNodeLog[]) => void;
   setUserNodeRosLib: (rosLib: string) => void;
-  setUserNodeDataSourceLib: (lib: string) => void;
+  setUserNodeTypesLib: (lib: string) => void;
 };
 
 function maybePlainObject(rawVal: unknown) {
@@ -106,7 +106,7 @@ export default class UserNodePlayer implements Player {
   private _pendingResetWorkers?: Promise<void>;
   private _userNodeActions: UserNodeActions;
   private _rosLibGenerator: MemoizedLibGenerator;
-  private _dataSourceLibGenerator: MemoizedLibGenerator;
+  private _typesLibGenerator: MemoizedLibGenerator;
 
   // Player state changes when the child player invokes our player state listener
   // we may also emit state changes on internal errors
@@ -148,8 +148,8 @@ export default class UserNodePlayer implements Player {
       }
     };
 
-    this._dataSourceLibGenerator = new MemoizedLibGenerator(async (args) => {
-      const lib = generateDataSourceLib({
+    this._typesLibGenerator = new MemoizedLibGenerator(async (args) => {
+      const lib = generateTypesLib({
         topics: args.topics,
         datatypes: new Map(args.datatypes),
       });
@@ -284,14 +284,14 @@ export default class UserNodePlayer implements Player {
     const nodeDatatypes: RosDatatypes = new Map([...basicDatatypes, ...datatypes]);
 
     const rosLib = await this._getRosLib();
-    const dataSourceLib = await this._getDataSourceLib();
+    const typesLib = await this._getTypesLib();
     const { name, sourceCode } = userNode;
     const transformMessage: TransformArgs = {
       name,
       sourceCode,
       topics,
       rosLib,
-      dataSourceLib,
+      typesLib,
       datatypes: nodeDatatypes,
     };
     const transformWorker = this._getTransformWorker();
@@ -608,15 +608,15 @@ export default class UserNodePlayer implements Player {
     return lib;
   }
 
-  private async _getDataSourceLib(): Promise<string> {
+  private async _getTypesLib(): Promise<string> {
     if (!this._lastPlayerStateActiveData) {
-      throw new Error("_getDataSourceLib was called before `_lastPlayerStateActiveData` set");
+      throw new Error("_getTypesLib was called before `_lastPlayerStateActiveData` set");
     }
 
     const { topics, datatypes } = this._lastPlayerStateActiveData;
-    const [didUpdate, lib] = await this._dataSourceLibGenerator.update({ topics, datatypes });
+    const [didUpdate, lib] = await this._typesLibGenerator.update({ topics, datatypes });
     if (didUpdate) {
-      this._userNodeActions.setUserNodeDataSourceLib(lib);
+      this._userNodeActions.setUserNodeTypesLib(lib);
     }
 
     return lib;

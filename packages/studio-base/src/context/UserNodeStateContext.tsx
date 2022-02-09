@@ -6,13 +6,13 @@ import { createContext, useCallback, useState } from "react";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import useGuaranteedContext from "@foxglove/studio-base/hooks/useGuaranteedContext";
-import { generateEmptyDataSourceLib } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/generateDataSourceLib";
+import { generateEmptyTypesLib } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/generateTypesLib";
 import { ros_lib_dts } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/ros";
 import { Diagnostic, UserNodeLog } from "@foxglove/studio-base/players/UserNodePlayer/types";
 
 type UserNodeState = {
   rosLib: string;
-  dataSourceLib: string;
+  typesLib: string;
   nodeStates: {
     [nodeId: string]: {
       diagnostics: readonly Diagnostic[];
@@ -28,7 +28,7 @@ export const UserNodeStateContext = createContext<
       addUserNodeLogs: (nodeId: string, logs: readonly UserNodeLog[]) => void;
       clearUserNodeLogs: (nodeId: string) => void;
       setUserNodeRosLib: (rosLib: string) => void;
-      setUserNodeDataSourceLib: (lib: string) => void;
+      setUserNodeTypesLib: (lib: string) => void;
     }
   | undefined
 >(undefined);
@@ -37,7 +37,7 @@ UserNodeStateContext.displayName = "UserNodeStateContext";
 export function UserNodeStateProvider({ children }: React.PropsWithChildren<unknown>): JSX.Element {
   const [state, setState] = useState<UserNodeState>({
     rosLib: ros_lib_dts,
-    dataSourceLib: generateEmptyDataSourceLib(),
+    typesLib: generateEmptyTypesLib(),
     nodeStates: {},
   });
 
@@ -90,8 +90,8 @@ export function UserNodeStateProvider({ children }: React.PropsWithChildren<unkn
     setState((prevState) => ({ ...prevState, rosLib }));
   }, []);
 
-  const setUserNodeDataSourceLib = useCallback((dataSourceLib: string) => {
-    setState((prevState) => ({ ...prevState, dataSourceLib }));
+  const setUserNodeTypesLib = useCallback((typesLib: string) => {
+    setState((prevState) => ({ ...prevState, typesLib }));
   }, []);
 
   const value = useShallowMemo({
@@ -100,7 +100,7 @@ export function UserNodeStateProvider({ children }: React.PropsWithChildren<unkn
     addUserNodeLogs,
     clearUserNodeLogs,
     setUserNodeRosLib,
-    setUserNodeDataSourceLib,
+    setUserNodeTypesLib,
   });
 
   return <UserNodeStateContext.Provider value={value}>{children}</UserNodeStateContext.Provider>;

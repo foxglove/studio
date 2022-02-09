@@ -49,24 +49,19 @@ export const generateTypesInterface = (datatypes: RosDatatypes): string => {
   const seenDatatypes = new Set();
   let src = `
     /**
-     * DataSourceTypes enumerates the message type definitions for for all the types
+     * MessageTypeBySchemaName enumerates the message types for for all the schema names
      * in the current data source.
      *
-     * Use subtype notation to access the type by schema name:
-     *
-     * \`\`\`
-     * type Msg = DataSourceTypes["geometry_msgs/Pose"];
-     * type Msg = DataSourceTypes["pkg.geometry.Pose"];
-     * \`\`\`
+     * You probably want to use Message<...> instead.
      */
-    export type DataSourceTypes = {
+    export type MessageTypeBySchemaName = {
   `;
 
   for (const [datatype, definition] of datatypes) {
     // Avoid adding a repeating datatype name again.
     // We shouldn't have this happen so we add a comment indicating it happened.
     if (seenDatatypes.has(datatype)) {
-      src += `\n// ${datatype} appeared multiple times in datatypes`;
+      src += `\n// ${datatype} appeared multiple times`;
       continue;
     }
     seenDatatypes.add(datatype);
@@ -88,13 +83,13 @@ export const generateTypesInterface = (datatypes: RosDatatypes): string => {
         } else if (rosPrimitive) {
           src += `\n${fieldName}: ${rosPrimitive}[],`;
         } else {
-          src += `\n${fieldName}: DataSourceTypes[${safeString(type)}][],`;
+          src += `\n${fieldName}: MessageTypeBySchemaName[${safeString(type)}][],`;
         }
       } else {
         if (rosPrimitive) {
           src += `\n${fieldName}: ${rosPrimitive},`;
         } else {
-          src += `\n${fieldName}: DataSourceTypes[${safeString(type)}],`;
+          src += `\n${fieldName}: MessageTypeBySchemaName[${safeString(type)}],`;
         }
       }
     }
@@ -110,21 +105,15 @@ export const generateTypesInterface = (datatypes: RosDatatypes): string => {
 function generateTypesByTopicInterface(topics: Topic[]): string {
   let src = `
     /**
-     * MessageEventByTopic enumerates the MessageEvent types for all the topics in
+     * MessageTypeByTopic enumerates the Messages types for all the topics in
      * the current data source.
      *
-     * Use subtype notation to access the MessageEvent type by topic name:
-     *
-     * \`\`\`
-     * const point: MessageEventsByTopic["/points"] = {...}
-     * \`\`\`
+     * You probably want to use Input<"/my-topic"> instead of MessageTypeByTopic.
      */
-    export type MessageEventByTopic = {`;
+    export type MessageTypeByTopic = {`;
 
   for (const topic of topics) {
-    src += `${safeString(topic.name)}: MessageEvent<DataSourceTypes[${safeString(
-      topic.datatype,
-    )}], ${safeString(topic.name)}>,\n`;
+    src += `${safeString(topic.name)}: MessageTypeBySchemaName[${safeString(topic.datatype)}]\n`;
   }
 
   src += "\n};";
@@ -133,26 +122,23 @@ function generateTypesByTopicInterface(topics: Topic[]): string {
 
 function generateTypesLib(args: Args): string {
   const typesByTopic = generateTypesByTopicInterface(args.topics);
-  const types = generateTypesInterface(args.datatypes);
+  const typesBySchemaName = generateTypesInterface(args.datatypes);
 
   const src = `
-export type Time = {
+// NOTE:
+// This file is generated from the current data source.
+// It contains helper types for looking up message definitions by schema name or topic.
+//
+// You likely want to use the higher-level types in \`./types\` rather than the types in this file directly.
+
+type Time = {
   sec: number,
   nsec: number,
 };
 
-export type Duration = Time;
+type Duration = Time;
 
-/**
- * MessageEvent contains a single message. The event has the topic, and the receive time.
- */
-export interface MessageEvent<M, T = string> {
-  topic: T;
-  receiveTime: Time;
-  message: M;
-};
-
-${types}
+${typesBySchemaName}
 
 ${typesByTopic}
 `;

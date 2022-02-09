@@ -14,8 +14,8 @@
 /* eslint-disable jest/no-conditional-expect */
 
 import exampleDatatypes from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/fixtures/example-datatypes";
-import { generateEmptyDataSourceLib } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/generateDataSourceLib";
 import generateRosLib from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/generateRosLib";
+import { generateEmptyTypesLib } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/generateTypesLib";
 import {
   getOutputTopic,
   validateOutputTopic,
@@ -55,7 +55,7 @@ const baseNodeData: NodeData = {
     topics: [{ name: "/some_topic", datatype: "std_msgs/ColorRGBA" }],
     datatypes: exampleDatatypes,
   }),
-  dataSourceLib: generateEmptyDataSourceLib(),
+  typesLib: generateEmptyTypesLib(),
 };
 
 describe("pipeline", () => {
@@ -350,7 +350,9 @@ describe("pipeline", () => {
       `,
     ])("produces projectCode", (sourceCode) => {
       const { projectCode, diagnostics, transpiledCode } = compile({ ...baseNodeData, sourceCode });
-      expect(projectCode?.size).toEqual(rawUserUtils.length);
+      expect(projectCode?.size).toEqual(
+        rawUserUtils.length + 1 /* generatedTypes is added at runtime */,
+      );
       expect(typeof transpiledCode).toEqual("string");
       expect(diagnostics).toEqual([]);
     });
@@ -1495,9 +1497,51 @@ describe("pipeline", () => {
           };`,
         error: ErrorCodes.DatatypeExtraction.INVALID_INDEXED_ACCESS,
       },
+      {
+        // fixme
+        //only: true,
+        description: "Aliased generic return type",
+        sourceCode: `
+          type MessageBySchemaName = {
+            "std_msgs/Header": {
+              frame_id: string;
+            },
+            "foo": {
+              a: number;
+            },
+          };
+
+          type Message<T extends keyof MessageBySchemaName> = MessageBySchemaName[T];
+
+          export const inputs = [];
+          export const output = "${DEFAULT_STUDIO_NODE_PREFIX}";
+
+          type ReturnType = Message<"std_msgs/Header">;
+
+          const publisher = (message: any): ReturnType => {
+            return { frame_id: "foo" };
+          };
+          export default publisher;`,
+        datatypes: new Map(
+          Object.entries({
+            "/studio_node/main": {
+              definitions: [
+                {
+                  arrayLength: undefined,
+                  isArray: false,
+                  isComplex: false,
+                  name: "frame_id",
+                  type: "string",
+                },
+              ],
+            },
+          }),
+        ),
+        outputDatatype: "/studio_node/main",
+      },
     ];
 
-    describe("extracts datatypes from the return type of the publisher", () => {
+    describe.only("extracts datatypes from the return type of the publisher", () => {
       // Run all tests if no only/skip params have been specified.
       let filteredTestCases = testCases.filter(({ only }) => only === true);
       if (filteredTestCases.length === 0) {
