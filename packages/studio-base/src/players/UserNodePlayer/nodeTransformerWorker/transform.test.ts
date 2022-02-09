@@ -1413,7 +1413,7 @@ describe("pipeline", () => {
           export default (msg: any): MyAny => {
             return () => 1;
           };`,
-        error: ErrorCodes.DatatypeExtraction.NO_TYPEOF,
+        error: ErrorCodes.DatatypeExtraction.NO_FUNCTIONS,
       },
       {
         description: "Nested typeof func",
@@ -1482,7 +1482,7 @@ describe("pipeline", () => {
           export default (msg: any): Pos[keyof Pos] => {
             return { pos: { x: 1, y: 2 } };
           };`,
-        error: ErrorCodes.DatatypeExtraction.INVALID_INDEXED_ACCESS,
+        error: ErrorCodes.DatatypeExtraction.LIMITED_UNIONS,
       },
       {
         description: "Indexed access type with non-string index",
@@ -1491,7 +1491,7 @@ describe("pipeline", () => {
           export default (msg: any): Pos[3] => {
             throw new Error();
           };`,
-        error: ErrorCodes.DatatypeExtraction.INVALID_INDEXED_ACCESS,
+        error: ErrorCodes.DatatypeExtraction.BAD_TYPE_RETURN,
       },
     ];
 
