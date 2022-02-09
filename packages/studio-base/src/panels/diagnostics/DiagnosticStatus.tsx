@@ -93,12 +93,15 @@ const useStyles = makeStyles((theme: Theme) =>
       overflowWrap: "break-word",
       textAlign: "left",
       border: "none",
-      td: {
+
+      "& td": {
+        lineHeight: "1.3em",
         border: "none",
         padding: "1px 3px",
       },
-      "td, th": {
+      "& th": {
         lineHeight: "1.3em",
+        padding: "1px 3px",
       },
     },
     name: {
@@ -125,13 +128,14 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     interactiveRow: {
       cursor: "pointer",
+
       "&:nth-child(odd)": {
         backgroundColor: theme.palette.grey[50],
       },
       "&:hover": {
         backgroundColor: theme.palette.action.hover,
 
-        ".icon": {
+        "& .icon": {
           visibility: "visible",
         },
       },
@@ -152,8 +156,10 @@ const useStyles = makeStyles((theme: Theme) =>
       width: 12,
       marginLeft: -6,
       cursor: "col-resize",
+
       "&:hover, &:active, &:focus": {
         outline: "none",
+
         "&::after": {
           content: '""',
           position: "absolute",
