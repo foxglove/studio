@@ -166,8 +166,8 @@ function DiagnosticSummary(props: Props): JSX.Element {
         },
         caretDownWrapper: {
           top: 0,
-          lineHeight: 24,
-          height: 24,
+          lineHeight: 18,
+          height: 18,
         },
         title: {
           backgroundColor: "transparent",
