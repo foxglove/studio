@@ -116,7 +116,7 @@ function generateTypesByTopicInterface(topics: Topic[]): string {
      * Use subtype notation to access the MessageEvent type by topic name:
      *
      * \`\`\`
-     * type MsgEventFoo = MessageEventByTopic["/foo"];
+     * const point: MessageEventsByTopic["/points"] = {...}
      * \`\`\`
      */
     export type MessageEventByTopic = {`;
@@ -162,11 +162,7 @@ ${typesByTopic}
 
 let emptyLib: string | undefined;
 function generateEmptyDataSourceLib(): string {
-  if (emptyLib) {
-    return emptyLib;
-  }
-
-  return (emptyLib = generateDataSourceLib({ topics: [], datatypes: new Map() }));
+  return (emptyLib ??= generateDataSourceLib({ topics: [], datatypes: new Map() }));
 }
 
 export { generateDataSourceLib, generateEmptyDataSourceLib };
