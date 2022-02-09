@@ -107,6 +107,11 @@ const InteractionsBaseComponent = React.memo<PropsWithConfig>(function Interacti
             onChange={() =>
               saveConfig({ disableAutoOpenClickedObject: !disableAutoOpenClickedObject })
             }
+            styles={{
+              checkmark: { fontSize: 9, lineHeight: 14, ".is-checked &": { color: "#fff" } },
+              checkbox: { height: 14, width: 14, marginTop: 2 },
+              text: { fontSize: 12 },
+            }}
           />
         </ToolGroupFixedSizePane>
       </ToolGroup>
