@@ -78,6 +78,9 @@ export default function MockMessagePipelineProvider(props: {
     }
   }
 
+  // See comment for messageEventsBySubscriberId below on the purpose of this ref
+  const firstChangeRef = useRef<boolean>(false);
+
   const [allSubscriptions, setAllSubscriptions] = useState<{
     [key: string]: SubscribePayload[];
   }>({});
@@ -90,6 +93,9 @@ export default function MockMessagePipelineProvider(props: {
       setAllSubscriptions((sub) => ({ ...sub, [id]: subs }));
       const setSubs = props.setSubscriptions;
       setSubs?.(id, subs);
+      if (subs.length > 0) {
+        firstChangeRef.current = true;
+      }
     },
     [setAllSubscriptions, props.setSubscriptions],
   );
@@ -151,14 +157,6 @@ export default function MockMessagePipelineProvider(props: {
   // In tests, the first setSubscriptions call happens after we've already set props.messages
   // So we have some special logic to detect the _first_ change of subscriptions
   // and update messageEventsBySubscriberId.
-
-  const allSubsRef = useRef<typeof allSubscriptions>(allSubscriptions);
-  const firstChangeRef = useRef<boolean>(false);
-  if (allSubsRef.current !== allSubscriptions) {
-    firstChangeRef.current = true;
-  }
-  allSubsRef.current = allSubscriptions;
-
   const latestAllSubs = useLatest(allSubscriptions);
   const firstChange = firstChangeRef.current;
   const messageEventsBySubscriberId = useMemo(() => {
