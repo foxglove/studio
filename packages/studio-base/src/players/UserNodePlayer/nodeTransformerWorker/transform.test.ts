@@ -1159,6 +1159,46 @@ describe("pipeline", () => {
         datatypes: baseDatatypes,
         outputDatatype: "std_msgs/ColorRGBA",
       },
+      {
+        description: "Aliased generic return type",
+        sourceCode: `
+          type MessageBySchemaName = {
+            "std_msgs/Header": {
+              frame_id: string;
+            },
+            "foo": {
+              a: number;
+            },
+          };
+
+          type Message<T extends keyof MessageBySchemaName> = MessageBySchemaName[T];
+
+          export const inputs = [];
+          export const output = "${DEFAULT_STUDIO_NODE_PREFIX}";
+
+          type ReturnType = Message<"std_msgs/Header">;
+
+          const publisher = (message: any): ReturnType => {
+            return { frame_id: "foo" };
+          };
+          export default publisher;`,
+        datatypes: new Map(
+          Object.entries({
+            "/studio_node/main": {
+              definitions: [
+                {
+                  arrayLength: undefined,
+                  isArray: false,
+                  isComplex: false,
+                  name: "frame_id",
+                  type: "string",
+                },
+              ],
+            },
+          }),
+        ),
+        outputDatatype: "/studio_node/main",
+      },
       /*
       ERRORS
     */
@@ -1497,51 +1537,9 @@ describe("pipeline", () => {
           };`,
         error: ErrorCodes.DatatypeExtraction.BAD_TYPE_RETURN,
       },
-      {
-        // fixme
-        //only: true,
-        description: "Aliased generic return type",
-        sourceCode: `
-          type MessageBySchemaName = {
-            "std_msgs/Header": {
-              frame_id: string;
-            },
-            "foo": {
-              a: number;
-            },
-          };
-
-          type Message<T extends keyof MessageBySchemaName> = MessageBySchemaName[T];
-
-          export const inputs = [];
-          export const output = "${DEFAULT_STUDIO_NODE_PREFIX}";
-
-          type ReturnType = Message<"std_msgs/Header">;
-
-          const publisher = (message: any): ReturnType => {
-            return { frame_id: "foo" };
-          };
-          export default publisher;`,
-        datatypes: new Map(
-          Object.entries({
-            "/studio_node/main": {
-              definitions: [
-                {
-                  arrayLength: undefined,
-                  isArray: false,
-                  isComplex: false,
-                  name: "frame_id",
-                  type: "string",
-                },
-              ],
-            },
-          }),
-        ),
-        outputDatatype: "/studio_node/main",
-      },
     ];
 
-    describe.only("extracts datatypes from the return type of the publisher", () => {
+    describe("extracts datatypes from the return type of the publisher", () => {
       // Run all tests if no only/skip params have been specified.
       let filteredTestCases = testCases.filter(({ only }) => only === true);
       if (filteredTestCases.length === 0) {
