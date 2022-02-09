@@ -82,6 +82,7 @@ export type RawMessagesConfig = {
 };
 
 type Props = {
+  defaultExpandAll?: boolean;
   config: RawMessagesConfig;
   saveConfig: (arg0: Partial<RawMessagesConfig>) => void;
 };
@@ -156,7 +157,7 @@ function RawMessages(props: Props) {
   }, [datatypes, topic, topicRosPath]);
 
   // When expandAll is unset, we'll use expandedFields to get expanded info
-  const [expandAll, setExpandAll] = useState<boolean | undefined>(false);
+  const [expandAll, setExpandAll] = useState<boolean | undefined>(props.defaultExpandAll ?? false);
   const [expandedFields, setExpandedFields] = useState(() => new Set());
 
   const topicName = topicRosPath?.topicName ?? "";
@@ -166,13 +167,11 @@ function RawMessages(props: Props) {
   })[topicName];
   const cachedGetMessagePathDataItems = useCachedGetMessagePathDataItems([topicPath]);
   const prevTickMsg = consecutiveMsgs?.[consecutiveMsgs.length - 2];
-  const [prevTickObj, currTickObj] = [
-    prevTickMsg && {
-      messageEvent: prevTickMsg,
-      queriedData: cachedGetMessagePathDataItems(topicPath, prevTickMsg) ?? [],
-    },
-    useLatestMessageDataItem(topicPath),
-  ];
+  const prevTickObj = prevTickMsg && {
+    messageEvent: prevTickMsg,
+    queriedData: cachedGetMessagePathDataItems(topicPath, prevTickMsg) ?? [],
+  };
+  const currTickObj = useLatestMessageDataItem(topicPath);
 
   const diffTopicObj = useLatestMessageDataItem(diffEnabled ? diffTopicPath : "");
 
@@ -590,6 +589,7 @@ function RawMessages(props: Props) {
           tooltip={expandAll ?? false ? "Collapse all" : "Expand all"}
           size="medium"
           fade
+          dataTest="expand-all"
           onClick={onToggleExpandAll}
           style={{ position: "relative", top: 1 }}
         >
