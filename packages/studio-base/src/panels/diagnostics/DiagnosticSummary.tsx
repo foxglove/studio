@@ -70,7 +70,7 @@ const useStyles = makeStyles((theme: Theme) =>
       verticalAlign: "middle",
       visibility: "hidden",
 
-      svg: {
+      "& svg": {
         fontSize: 16,
         position: "relative",
         top: -1,
