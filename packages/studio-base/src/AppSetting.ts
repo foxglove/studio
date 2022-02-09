@@ -10,7 +10,7 @@ export enum AppSetting {
   MESSAGE_RATE = "messageRate",
   UPDATES_ENABLED = "updates.enabled",
 
-  //ROS
+  // ROS
   ROS_PACKAGE_PATH = "ros.ros_package_path",
 
   // Privacy
