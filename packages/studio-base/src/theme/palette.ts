@@ -13,7 +13,7 @@ export const dark: PaletteOptions & CustomPaletteOptions = {
   mode: "dark",
   primary: { main: "#9480ed" },
   secondary: { main: "#b1b1b1" },
-  error: { main: "#db3553" },
+  error: { main: "#f54966" },
   warning: { main: "#eba800" },
   success: { main: "#92c353" },
   info: { main: "#29bee7" },
