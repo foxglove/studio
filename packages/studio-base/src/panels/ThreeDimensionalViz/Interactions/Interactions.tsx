@@ -11,8 +11,9 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { Checkbox } from "@fluentui/react";
+
 import { MouseEventObject } from "@foxglove/regl-worldview";
-import Checkbox from "@foxglove/studio-base/components/Checkbox";
 import ExpandingToolbar, {
   ToolGroup,
   ToolGroupFixedSizePane,
