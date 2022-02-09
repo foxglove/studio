@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { ColorMode } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor/PointCloudSettingsEditor";
+import { ColorMode } from "@foxglove/studio-base/panels/ThreeDimensionalViz/utils/pointCloudColors";
 import { PointField } from "@foxglove/studio-base/types/Messages";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 
@@ -103,18 +103,17 @@ function extractValues({
   pointCount: number;
   stride: number;
 }): VertexBuffer {
-  const COMPONENT_COUNT = 3;
-  const buffer = new Float32Array(COMPONENT_COUNT * pointCount);
+  const buffer = new Float32Array(readers.length * pointCount);
   for (let i = 0; i < pointCount; i++) {
     const pointStart = i * stride;
     for (let j = 0; j < readers.length; j++) {
-      buffer[i * COMPONENT_COUNT + j] = readers[j]?.read(pointStart) ?? Number.NaN;
+      buffer[i * readers.length + j] = readers[j]?.read(pointStart) ?? Number.NaN;
     }
   }
   return {
     buffer,
     offset: 0,
-    stride: COMPONENT_COUNT,
+    stride: readers.length,
   };
 }
 
@@ -181,8 +180,8 @@ export function createColorBuffer({
     return undefined;
   }
 
-  if (colorMode.mode === "rgb") {
-    const rgbField = mightActuallyBePartial(fields.rgb ?? fields.rgba);
+  if (colorMode.mode === "rgb" || colorMode.mode === "rgba") {
+    const rgbField = mightActuallyBePartial(fields[colorMode.mode] ?? fields.rgb ?? fields.rgba);
     if (!rgbField) {
       throw new Error("Cannot create color buffer in rgb mode without an rgb(a) field");
     }
@@ -190,16 +189,18 @@ export function createColorBuffer({
     // Extract colors from data
     const readers = isBigEndian
       ? [
-          // big-endian, read RGB from RGBA
+          // big-endian, read RGBA from RGBA
           new Uint8Reader(data, rgbOffset + 0),
           new Uint8Reader(data, rgbOffset + 1),
           new Uint8Reader(data, rgbOffset + 2),
+          colorMode.mode === "rgba" ? new Uint8Reader(data, rgbOffset + 3) : { read: () => 255 },
         ]
       : [
-          // little-endian, read RGB from ABGR
+          // little-endian, read RGBA from ABGR
           new Uint8Reader(data, rgbOffset + 3),
           new Uint8Reader(data, rgbOffset + 2),
           new Uint8Reader(data, rgbOffset + 1),
+          colorMode.mode === "rgba" ? new Uint8Reader(data, rgbOffset + 0) : { read: () => 255 },
         ];
     return extractValues({ data, readers, stride, pointCount });
   }
