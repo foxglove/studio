@@ -236,20 +236,16 @@ export const findReturnType = (
     throw new DatatypeExtractionError(badTypeReturnError);
   }
 
-  switch (declaration.kind) {
-    case ts.SyntaxKind.InterfaceDeclaration:
-      return declaration as ts.InterfaceDeclaration;
-    case ts.SyntaxKind.TypeLiteral:
-      return declaration as ts.TypeLiteralNode;
-    case ts.SyntaxKind.MappedType:
-      throw new DatatypeExtractionError(noMappedTypes);
-    case ts.SyntaxKind.ClassDeclaration:
-      throw new DatatypeExtractionError(classError);
-    case ts.SyntaxKind.FunctionType:
-    case ts.SyntaxKind.ArrowFunction:
-    case ts.SyntaxKind.FunctionDeclaration:
-      throw new DatatypeExtractionError(functionError);
-    default:
+  if (ts.isTypeLiteralNode(declaration)) {
+    return declaration;
+  } else if (ts.isInterfaceDeclaration(declaration)) {
+    return declaration;
+  } else if (ts.isMappedTypeNode(declaration)) {
+    throw new DatatypeExtractionError(noMappedTypes);
+  } else if (ts.isClassDeclaration(declaration)) {
+    throw new DatatypeExtractionError(classError);
+  } else if (ts.isFunctionLike(declaration)) {
+    throw new DatatypeExtractionError(functionError);
   }
 
   throw new DatatypeExtractionError(badTypeReturnError);
