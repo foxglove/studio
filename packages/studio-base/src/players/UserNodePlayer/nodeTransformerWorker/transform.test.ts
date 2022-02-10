@@ -1155,6 +1155,81 @@ describe("pipeline", () => {
         datatypes: baseDatatypes,
         outputDatatype: "std_msgs/ColorRGBA",
       },
+      {
+        description: "Should handle deep subtype lookup",
+        sourceCode: `
+          import { Input } from "ros";
+
+          type MessageBySchemaName = {
+            "std_msgs/Header": {
+              frame_id: string;
+              seq: number;
+              stamp: {
+                sec: number,
+                nsec: number,
+              };
+            };
+            "pkg/Custom": {
+              header: MessageBySchemaName["std_msgs/Header"];
+            };
+          };
+
+          type Message<T extends keyof MessageBySchemaName> = MessageBySchemaName[T];
+
+          export const inputs = ["/some_topic"];
+          export const output = "/studio_node/sample";
+
+          type PoseStamped = Message<"pkg/Custom">;
+          type Output = PoseStamped;
+
+          const publisher = (message: Input<"/some_topic">): Output => {
+            return {
+              header: { frame_id: "foo", seq: 0, stamp: { sec: 0, nsec: 0 } },
+            };
+          };
+          export default publisher;`,
+        datatypes: new Map(
+          Object.entries({
+            "/studio_node/main": {
+              definitions: [
+                {
+                  arrayLength: undefined,
+                  isArray: false,
+                  isComplex: true,
+                  name: "header",
+                  type: "/studio_node/main/header",
+                },
+              ],
+            },
+            "/studio_node/main/header": {
+              definitions: [
+                {
+                  arrayLength: undefined,
+                  isArray: false,
+                  isComplex: false,
+                  name: "frame_id",
+                  type: "string",
+                },
+                {
+                  arrayLength: undefined,
+                  isArray: false,
+                  isComplex: false,
+                  name: "seq",
+                  type: "float64",
+                },
+                {
+                  arrayLength: undefined,
+                  isArray: false,
+                  isComplex: false,
+                  name: "stamp",
+                  type: "time",
+                },
+              ],
+            },
+          }),
+        ),
+        outputDatatype: "/studio_node/main",
+      },
       /*
       ERRORS
     */
