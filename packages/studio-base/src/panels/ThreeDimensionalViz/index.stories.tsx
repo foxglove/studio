@@ -1344,6 +1344,7 @@ export function Marker_PointCloud2_Alignment(): JSX.Element {
           settingsByKey: {
             "t:/pointcloud": {
               pointSize: 30,
+              colorMode: { mode: "rgba", rgbByteOrder: "abgr" },
             },
           },
           followTf: "base_link",
@@ -1794,6 +1795,7 @@ function SensorMsgs_PointCloud2({ rgbaFieldName }: { rgbaFieldName: string }): J
           settingsByKey: {
             "t:/pointcloud": {
               pointSize: 10,
+              colorMode: { mode: rgbaFieldName, rgbByteOrder: "abgr" },
             },
           },
           cameraState: {
