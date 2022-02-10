@@ -263,8 +263,8 @@ function Plot(props: Props) {
     return out;
   }, [allPaths]);
 
-  const restore = useCallback((): PlotDataByPath => {
-    return {};
+  const restore = useCallback((previous?: PlotDataByPath): PlotDataByPath => {
+    return previous ?? {};
   }, []);
 
   const addMessages = useCallback(
