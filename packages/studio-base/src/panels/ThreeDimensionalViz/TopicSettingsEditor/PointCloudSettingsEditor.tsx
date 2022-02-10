@@ -24,10 +24,12 @@ import SegmentedControl from "@foxglove/studio-base/components/SegmentedControl"
 import {
   DEFAULT_MAX_COLOR,
   DEFAULT_MIN_COLOR,
+  DEFAULT_RGB_BYTE_ORDER,
   getDefaultColorMode,
   ColorMode,
   isMappedColorMode,
   DEFAULT_FLAT_COLOR,
+  isRgbColorMode,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/utils/pointCloudColors";
 import { PointCloud2 } from "@foxglove/studio-base/types/Messages";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
@@ -160,6 +162,26 @@ export default function PointCloudSettingsEditor(
           )}
         </Stack>
       </Stack>
+
+      {isRgbColorMode(colorMode) && (
+        <Radio
+          selectedId={colorMode.rgbByteOrder ?? DEFAULT_RGB_BYTE_ORDER}
+          onChange={(id) =>
+            onColorModeChange((prevColorMode) => {
+              if (isRgbColorMode(prevColorMode)) {
+                const { mode } = prevColorMode;
+                return { rgbByteOrder: id, mode };
+              }
+              return prevColorMode;
+            })
+          }
+          options={[
+            { id: "rgba", label: "Byte order RGBA" },
+            { id: "abgr", label: "Byte order ABGR" },
+            { id: "bgra", label: "Byte order BGRA (RViz/PCL)" },
+          ]}
+        />
+      )}
 
       {isMappedColorMode(colorMode) && (
         <Stack flex="auto" marginBottom={1}>

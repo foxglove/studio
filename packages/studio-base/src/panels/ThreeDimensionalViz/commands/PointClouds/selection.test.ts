@@ -40,7 +40,7 @@ describe("<PointClouds />", () => {
         -2239, -706, -3,
       ]);
       expect((clickInfo?.clickedPointColor ?? []).map((v) => Math.floor(v))).toStrictEqual([
-        127, 255, 255, 255,
+        10, 255, 255, 255,
       ]);
       expect(clickInfo?.additionalFieldValues).toBeUndefined();
     });
@@ -53,7 +53,7 @@ describe("<PointClouds />", () => {
         -2239, -706, -3,
       ]);
       expect((clickInfo?.clickedPointColor ?? []).map((v) => Math.floor(v))).toStrictEqual([
-        127, 225, 255, 255,
+        10, 255, 230, 255,
       ]);
       expect(clickInfo?.additionalFieldValues).toBeUndefined();
     });

@@ -87,44 +87,40 @@ describe("<PointClouds />", () => {
   });
 
   describe("rgb/rgba colors", () => {
-    it("builds color buffer by extracting RGB data from PointCloud2", () => {
-      const result = decodeMarker({
-        ...POINT_CLOUD_MESSAGE,
-        settings: { colorMode: { mode: "rgb" } },
-      });
-      const { colorBuffer, data } = result;
-      expect(colorBuffer).not.toBeNullOrUndefined();
-      expect(data.length).toBe(96);
-      const { buffer, offset, stride } = colorBuffer ?? {};
-      if (!buffer) {
-        throw new Error("Buffer is undefined");
-      }
-      expect(buffer.length).toBe(2 * 4);
-      expect(offset).toBe(0);
-      expect(stride).toBe(4);
-      const alpha = 255;
-      expect(Array.from(buffer)).toEqual([127, 225, 255, alpha, 127, 255, 255, alpha]);
-    });
-
-    it("builds color buffer by extracting RGB data from big-endian PointCloud2", () => {
-      const result = decodeMarker({
-        ...POINT_CLOUD_MESSAGE,
-        settings: { colorMode: { mode: "rgb" } },
-        is_bigendian: true,
-      });
-      const { colorBuffer, data } = result;
-      expect(colorBuffer).not.toBeNullOrUndefined();
-      expect(data.length).toBe(96);
-      const { buffer, offset, stride } = colorBuffer ?? {};
-      if (!buffer) {
-        throw new Error("Buffer is undefined");
-      }
-      expect(buffer.length).toBe(2 * 4);
-      expect(offset).toBe(0);
-      expect(stride).toBe(4);
-      const alpha = 255;
-      expect(Array.from(buffer)).toEqual([10, 255, 225, alpha, 10, 255, 255, alpha]);
-    });
+    it.each(["rgba", "bgra", "abgr"] as const)(
+      "builds color buffer by extracting RGB data as %s from PointCloud2",
+      (rgbByteOrder) => {
+        const result = decodeMarker({
+          ...POINT_CLOUD_MESSAGE,
+          settings: { colorMode: { mode: "rgb", rgbByteOrder } },
+        });
+        const { colorBuffer, data } = result;
+        expect(colorBuffer).not.toBeNullOrUndefined();
+        expect(data.length).toBe(96);
+        const { buffer, offset, stride } = colorBuffer ?? {};
+        if (!buffer) {
+          throw new Error("Buffer is undefined");
+        }
+        expect(buffer.length).toBe(2 * 4);
+        expect(offset).toBe(0);
+        expect(stride).toBe(4);
+        const alpha = 255;
+        switch (rgbByteOrder) {
+          case "rgba":
+            // eslint-disable-next-line jest/no-conditional-expect
+            expect(Array.from(buffer)).toEqual([10, 255, 230, alpha, 10, 255, 255, alpha]);
+            break;
+          case "abgr":
+            // eslint-disable-next-line jest/no-conditional-expect
+            expect(Array.from(buffer)).toEqual([127, 230, 255, alpha, 127, 255, 255, alpha]);
+            break;
+          case "bgra":
+            // eslint-disable-next-line jest/no-conditional-expect
+            expect(Array.from(buffer)).toEqual([230, 255, 10, alpha, 255, 255, 10, alpha]);
+            break;
+        }
+      },
+    );
 
     const messageWithRGBA = {
       ...POINT_CLOUD_MESSAGE,
@@ -132,44 +128,39 @@ describe("<PointClouds />", () => {
         field.name === "rgb" ? { ...field, name: "rgba" } : field,
       ),
     };
-    it("builds color buffer by extracting RGBA data from PointCloud2", () => {
-      const result = decodeMarker({
-        ...messageWithRGBA,
-        settings: { colorMode: { mode: "rgba" } },
-      });
-      const { colorBuffer, data } = result;
-      expect(colorBuffer).not.toBeNullOrUndefined();
-      expect(data.length).toBe(96);
-      const { buffer, offset, stride } = colorBuffer ?? {};
-      if (!buffer) {
-        throw new Error("Buffer is undefined");
-      }
-      expect(buffer.length).toBe(2 * 4);
-      expect(offset).toBe(0);
-      expect(stride).toBe(4);
-      const alpha = 10;
-      expect(Array.from(buffer)).toEqual([127, 225, 255, alpha, 127, 255, 255, alpha]);
-    });
-
-    it("builds color buffer by extracting RGBA data from big-endian PointCloud2", () => {
-      const result = decodeMarker({
-        ...messageWithRGBA,
-        settings: { colorMode: { mode: "rgba" } },
-        is_bigendian: true,
-      });
-      const { colorBuffer, data } = result;
-      expect(colorBuffer).not.toBeNullOrUndefined();
-      expect(data.length).toBe(96);
-      const { buffer, offset, stride } = colorBuffer ?? {};
-      if (!buffer) {
-        throw new Error("Buffer is undefined");
-      }
-      expect(buffer.length).toBe(2 * 4);
-      expect(offset).toBe(0);
-      expect(stride).toBe(4);
-      const alpha = 127;
-      expect(Array.from(buffer)).toEqual([10, 255, 225, alpha, 10, 255, 255, alpha]);
-    });
+    it.each(["rgba", "bgra", "abgr"] as const)(
+      "builds color buffer by extracting RGBA data as %s from PointCloud2",
+      (rgbByteOrder) => {
+        const result = decodeMarker({
+          ...messageWithRGBA,
+          settings: { colorMode: { mode: "rgba", rgbByteOrder } },
+        });
+        const { colorBuffer, data } = result;
+        expect(colorBuffer).not.toBeNullOrUndefined();
+        expect(data.length).toBe(96);
+        const { buffer, offset, stride } = colorBuffer ?? {};
+        if (!buffer) {
+          throw new Error("Buffer is undefined");
+        }
+        expect(buffer.length).toBe(2 * 4);
+        expect(offset).toBe(0);
+        expect(stride).toBe(4);
+        switch (rgbByteOrder) {
+          case "rgba":
+            // eslint-disable-next-line jest/no-conditional-expect
+            expect(Array.from(buffer)).toEqual([10, 255, 230, 127, 10, 255, 255, 127]);
+            break;
+          case "abgr":
+            // eslint-disable-next-line jest/no-conditional-expect
+            expect(Array.from(buffer)).toEqual([127, 230, 255, 10, 127, 255, 255, 10]);
+            break;
+          case "bgra":
+            // eslint-disable-next-line jest/no-conditional-expect
+            expect(Array.from(buffer)).toEqual([230, 255, 10, 127, 255, 255, 10, 127]);
+            break;
+        }
+      },
+    );
   });
 
   describe("rainbow colors", () => {

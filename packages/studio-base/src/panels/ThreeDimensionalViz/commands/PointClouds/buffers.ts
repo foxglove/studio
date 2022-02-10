@@ -11,7 +11,10 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { ColorMode } from "@foxglove/studio-base/panels/ThreeDimensionalViz/utils/pointCloudColors";
+import {
+  ColorMode,
+  DEFAULT_RGB_BYTE_ORDER,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/utils/pointCloudColors";
 import { PointField } from "@foxglove/studio-base/types/Messages";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 
@@ -165,7 +168,6 @@ export function createColorBuffer({
   colorMode,
   pointCount,
   stride,
-  isBigEndian,
 }: {
   data: Uint8Array;
   fields: FieldOffsetsAndReaders;
@@ -187,21 +189,36 @@ export function createColorBuffer({
     }
     const rgbOffset = rgbField.offset ?? 0;
     // Extract colors from data
-    const readers = isBigEndian
-      ? [
-          // big-endian, read RGBA from RGBA
-          new Uint8Reader(data, rgbOffset + 0),
-          new Uint8Reader(data, rgbOffset + 1),
-          new Uint8Reader(data, rgbOffset + 2),
-          colorMode.mode === "rgba" ? new Uint8Reader(data, rgbOffset + 3) : { read: () => 255 },
-        ]
-      : [
-          // little-endian, read RGBA from ABGR
-          new Uint8Reader(data, rgbOffset + 3),
-          new Uint8Reader(data, rgbOffset + 2),
-          new Uint8Reader(data, rgbOffset + 1),
-          colorMode.mode === "rgba" ? new Uint8Reader(data, rgbOffset + 0) : { read: () => 255 },
-        ];
+    let aOffset = 0;
+    let rOffset = 0;
+    let gOffset = 0;
+    let bOffset = 0;
+    switch (colorMode.rgbByteOrder ?? DEFAULT_RGB_BYTE_ORDER) {
+      case "rgba":
+        rOffset = 0;
+        gOffset = 1;
+        bOffset = 2;
+        aOffset = 3;
+        break;
+      case "bgra":
+        bOffset = 0;
+        gOffset = 1;
+        rOffset = 2;
+        aOffset = 3;
+        break;
+      case "abgr":
+        aOffset = 0;
+        bOffset = 1;
+        gOffset = 2;
+        rOffset = 3;
+        break;
+    }
+    const readers = [
+      new Uint8Reader(data, rgbOffset + rOffset),
+      new Uint8Reader(data, rgbOffset + gOffset),
+      new Uint8Reader(data, rgbOffset + bOffset),
+      colorMode.mode === "rgba" ? new Uint8Reader(data, rgbOffset + aOffset) : { read: () => 255 },
+    ];
     return extractValues({ data, readers, stride, pointCount });
   }
 
