@@ -180,12 +180,12 @@ function Plot(props: Props) {
     showXAxisLabels,
     showYAxisLabels,
     showLegend,
-    showSidebar,
+    legendDisplay,
     showPlotValuesInLegend,
     isSynced,
     xAxisVal,
     xAxisPath,
-    sidebarWidth,
+    sidebarDimension,
   } = config;
   const theme = useTheme();
 
@@ -404,6 +404,11 @@ function Plot(props: Props) {
     [messagePipeline, xAxisVal],
   );
 
+  const stackDirection = useMemo(
+    () => (legendDisplay === "top" ? "column" : "row"),
+    [legendDisplay],
+  );
+
   return (
     <Stack
       flex="auto"
@@ -425,7 +430,7 @@ function Plot(props: Props) {
         }
         floating
       />
-      <Stack direction="row" flex="auto" width="100%" height="100%">
+      <Stack direction={stackDirection} flex="auto" width="100%" height="100%">
         <PlotLegend
           paths={yAxisPaths}
           datasets={datasets}
@@ -435,9 +440,9 @@ function Plot(props: Props) {
           xAxisVal={xAxisVal}
           xAxisPath={xAxisPath}
           pathsWithMismatchedDataLengths={pathsWithMismatchedDataLengths}
-          showSidebar={showSidebar}
+          legendDisplay={legendDisplay}
           showPlotValuesInLegend={showPlotValuesInLegend}
-          sidebarWidth={sidebarWidth}
+          sidebarDimension={sidebarDimension}
         />
         <Stack flex="auto" alignItems="center" justifyContent="center" overflow="hidden">
           {title && <div>{title}</div>}
@@ -469,9 +474,14 @@ const configSchema: PanelConfigSchema<PlotConfig> = [
     title: "Sync with other timestamp-based plots",
   },
   {
-    key: "showSidebar",
-    type: "toggle",
-    title: "Display legend in collapsible sidebar",
+    key: "legendDisplay",
+    type: "dropdown",
+    title: "Legend display",
+    options: [
+      { value: "superimposed", text: "superimposed on plot" },
+      { value: "left", text: "left" },
+      { value: "top", text: "top" },
+    ],
   },
   {
     key: "showPlotValuesInLegend",
@@ -508,11 +518,11 @@ const defaultConfig: PlotConfig = {
   showXAxisLabels: true,
   showYAxisLabels: true,
   showLegend: true,
-  showSidebar: false,
+  legendDisplay: "superimposed",
   showPlotValuesInLegend: false,
   isSynced: true,
   xAxisVal: "timestamp",
-  sidebarWidth: defaultSidebarWidth,
+  sidebarDimension: defaultSidebarWidth,
 };
 
 export default Panel(

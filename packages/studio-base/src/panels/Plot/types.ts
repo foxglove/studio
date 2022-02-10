@@ -17,7 +17,7 @@ export type PlotConfig = {
   minYValue?: string | number;
   maxYValue?: string | number;
   showLegend: boolean;
-  showSidebar: boolean;
+  legendDisplay: "superimposed" | "top" | "left";
   showPlotValuesInLegend: boolean;
   showXAxisLabels: boolean;
   showYAxisLabels: boolean;
@@ -25,7 +25,7 @@ export type PlotConfig = {
   xAxisVal: PlotXAxisVal;
   xAxisPath?: BasePlotPath;
   followingViewWidth?: number;
-  sidebarWidth: number;
+  sidebarDimension: number;
 };
 
 export const plotableRosTypes = [
