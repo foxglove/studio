@@ -302,17 +302,6 @@ export const constructDatatypes = (
         const typeLiteral = tsNode as ts.TypeLiteralNode;
         const symbolName = maybeSymbol(tsNode)?.name;
 
-        // The 'json' type is special because rosbagjs represents it as a primitive field
-        if (isNodeFromRosModule(typeLiteral) && symbolName === "json") {
-          return {
-            name,
-            type: "json",
-            isArray: false,
-            isComplex: false,
-            arrayLength: undefined,
-          };
-        }
-
         const messageDefinition =
           symbolName != undefined ? messageDefinitionMap[symbolName] : undefined;
 
@@ -524,8 +513,17 @@ export const constructDatatypes = (
       case ts.SyntaxKind.AnyKeyword:
         throw new DatatypeExtractionError(noNestedAny);
 
-      default:
-        throw new Error(`Unhandled node kind (${tsNode.kind}) for field (${name})`);
+      default: {
+        const locationType = checker.getTypeAtLocation(tsNode);
+
+        const symbol = locationType.symbol;
+        const declaration = symbol.declarations?.[0];
+        if (symbol.declarations?.length !== 1 || !declaration) {
+          throw new DatatypeExtractionError(badTypeReturnError);
+        }
+
+        return getRosMsgField(name, declaration, false, undefined, typeMap, innerDepth + 1);
+      }
     }
   };
 

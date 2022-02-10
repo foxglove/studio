@@ -1160,26 +1160,36 @@ describe("pipeline", () => {
         outputDatatype: "std_msgs/ColorRGBA",
       },
       {
-        description: "Aliased generic return type",
+        description: "Should handle deep subtype lookup",
         sourceCode: `
+          import { Input } from "ros";
+
           type MessageBySchemaName = {
             "std_msgs/Header": {
               frame_id: string;
-            },
-            "foo": {
-              a: number;
-            },
+              seq: number;
+              stamp: {
+                sec: number,
+                nsec: number,
+              };
+            };
+            "pkg/Custom": {
+              header: MessageBySchemaName["std_msgs/Header"];
+            };
           };
 
           type Message<T extends keyof MessageBySchemaName> = MessageBySchemaName[T];
 
-          export const inputs = [];
-          export const output = "${DEFAULT_STUDIO_NODE_PREFIX}";
+          export const inputs = ["/some_topic"];
+          export const output = "/studio_node/sample";
 
-          type ReturnType = Message<"std_msgs/Header">;
+          type PoseStamped = Message<"pkg/Custom">;
+          type Output = PoseStamped;
 
-          const publisher = (message: any): ReturnType => {
-            return { frame_id: "foo" };
+          const publisher = (message: Input<"/some_topic">): Output => {
+            return {
+              header: { frame_id: "foo", seq: 0, stamp: { sec: 0, nsec: 0 } },
+            };
           };
           export default publisher;`,
         datatypes: new Map(
@@ -1189,9 +1199,34 @@ describe("pipeline", () => {
                 {
                   arrayLength: undefined,
                   isArray: false,
+                  isComplex: true,
+                  name: "header",
+                  type: "/studio_node/main/header",
+                },
+              ],
+            },
+            "/studio_node/main/header": {
+              definitions: [
+                {
+                  arrayLength: undefined,
+                  isArray: false,
                   isComplex: false,
                   name: "frame_id",
                   type: "string",
+                },
+                {
+                  arrayLength: undefined,
+                  isArray: false,
+                  isComplex: false,
+                  name: "seq",
+                  type: "float64",
+                },
+                {
+                  arrayLength: undefined,
+                  isArray: false,
+                  isComplex: false,
+                  name: "stamp",
+                  type: "time",
                 },
               ],
             },
