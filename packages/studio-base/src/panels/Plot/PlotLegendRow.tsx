@@ -183,7 +183,7 @@ export default function PlotLegendRow({
           </Tooltip>
         )}
       </Box>
-      {currentDisplay.value != undefined && showPlotValuesInLegend && (
+      {showPlotValuesInLegend && (
         <Box display="flex" alignItems="center" padding={0.25}>
           <Typography
             component="div"
@@ -191,49 +191,50 @@ export default function PlotLegendRow({
             align="right"
             sx={{ color: currentDisplay.color, width: 150 }}
           >
-            {currentDisplay.value}
+            {currentDisplay.value ?? ""}
           </Typography>
         </Box>
       )}
+      <Box>
+        <Stack
+          direction="row"
+          alignItems="center"
+          padding={0.25}
+          spacing={0.25}
+          position="sticky"
+          right={0}
+          sx={({ palette }) => ({
+            opacity: 0,
+            // creates an opaque background for the sticky element
+            backgroundImage: `linear-gradient(${palette.background.paper}, ${palette.background.paper})`,
+            backgroundBlendMode: "overlay",
 
-      <Stack
-        direction="row"
-        alignItems="center"
-        padding={0.25}
-        spacing={0.25}
-        position="sticky"
-        right={0}
-        sx={({ palette }) => ({
-          opacity: 0,
-          // creates an opaque background for the sticky element
-          backgroundImage: `linear-gradient(${palette.background.paper}, ${palette.background.paper})`,
-          backgroundBlendMode: "overlay",
-
-          "&:hover": {
-            opacity: 1,
-          },
-        })}
-      >
-        <TimestampMethodDropdown
-          path={path.value}
-          onTimestampMethodChange={onInputTimestampMethodChange}
-          index={index}
-          iconButtonProps={{ disabled: !path.value }}
-          timestampMethod={xAxisVal === "timestamp" ? timestampMethod : undefined}
-        />
-        <IconButton
-          size="small"
-          title={`Remove ${path.value}`}
-          sx={{ padding: 0.25, color: "text.secondary", "&:hover": { color: "text.primary" } }}
-          onClick={() => {
-            const newPaths = paths.slice();
-            newPaths.splice(index, 1);
-            saveConfig({ paths: newPaths });
-          }}
+            "&:hover": {
+              opacity: 1,
+            },
+          })}
         >
-          <CloseIcon fontSize="small" />
-        </IconButton>
-      </Stack>
+          <TimestampMethodDropdown
+            path={path.value}
+            onTimestampMethodChange={onInputTimestampMethodChange}
+            index={index}
+            iconButtonProps={{ disabled: !path.value }}
+            timestampMethod={xAxisVal === "timestamp" ? timestampMethod : undefined}
+          />
+          <IconButton
+            size="small"
+            title={`Remove ${path.value}`}
+            sx={{ padding: 0.25, color: "text.secondary", "&:hover": { color: "text.primary" } }}
+            onClick={() => {
+              const newPaths = paths.slice();
+              newPaths.splice(index, 1);
+              saveConfig({ paths: newPaths });
+            }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Stack>
+      </Box>
     </Box>
   );
 }
