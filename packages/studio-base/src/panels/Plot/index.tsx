@@ -68,7 +68,7 @@ import { PlotConfig } from "./types";
 export { plotableRosTypes } from "./types";
 export type { PlotConfig, PlotXAxisVal } from "./types";
 
-const defaultSidebarWidth = 240;
+const defaultSidebarDimension = 240;
 
 export function openSiblingPlotPanel(openSiblingPanel: OpenSiblingPanel, topicName: string): void {
   openSiblingPanel({
@@ -180,12 +180,12 @@ function Plot(props: Props) {
     showXAxisLabels,
     showYAxisLabels,
     showLegend,
-    legendDisplay,
+    legendDisplay = config.showSidebar === true ? "left" : "superimposed",
     showPlotValuesInLegend,
     isSynced,
     xAxisVal,
     xAxisPath,
-    sidebarDimension,
+    sidebarDimension = config.sidebarWidth ?? defaultSidebarDimension,
   } = config;
   const theme = useTheme();
 
@@ -522,7 +522,7 @@ const defaultConfig: PlotConfig = {
   showPlotValuesInLegend: false,
   isSynced: true,
   xAxisVal: "timestamp",
-  sidebarDimension: defaultSidebarWidth,
+  sidebarDimension: defaultSidebarDimension,
 };
 
 export default Panel(
