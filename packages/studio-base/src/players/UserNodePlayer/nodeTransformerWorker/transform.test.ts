@@ -27,7 +27,6 @@ import {
   getInputTopics,
 } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/transform";
 import baseDatatypes from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/baseDatatypes";
-import rawUserUtils from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/rawUserUtils";
 import {
   DiagnosticSeverity,
   ErrorCodes,
