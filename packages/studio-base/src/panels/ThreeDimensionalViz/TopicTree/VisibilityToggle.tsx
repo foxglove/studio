@@ -21,7 +21,7 @@ const useStyles = makeStyles((theme: Theme) =>
       color: `${overrideRGB ?? theme.palette.action.active} !important`,
       position: "relative",
 
-      "&:hover": {
+      "&:hover, &:focus": {
         backgroundColor: theme.palette.action.hover,
 
         "& circle": {
@@ -38,11 +38,6 @@ const useStyles = makeStyles((theme: Theme) =>
       strokeWidth: 2,
       fill: checked ? "currentColor" : "none",
       fillOpacity: visibleInScene ? 0.8 : theme.palette.action.disabledOpacity,
-
-      "&:focus": {
-        strokeWidth: 2,
-        fill: checked ? "currentColor" : "none",
-      },
     }),
   }),
 );
