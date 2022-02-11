@@ -69,13 +69,21 @@ export default class McapDataProvider implements RandomAccessDataProvider {
       case "0": {
         const readable = new FileReadable(file);
         const reader = await Mcap0IndexedReader.Initialize({ readable, decompressHandlers });
+
+        let hasMissingSchemas = false;
+        for (const channel of reader.channelsById.values()) {
+          if (!reader.schemasById.has(channel.schemaId)) {
+            hasMissingSchemas = true;
+            break;
+          }
+        }
         if (
           reader.chunkIndexes.length === 0 ||
-          reader.schemasById.size === 0 ||
-          reader.channelInfosById.size === 0
+          reader.channelsById.size === 0 ||
+          hasMissingSchemas
         ) {
           throw new Error(
-            "Cannot read MCAP file because summary does not contain chunk indexes, schemas, and channel infos",
+            "Cannot read MCAP file because summary does not contain chunk indexes, schemas, and channels",
           );
           //FIXME: fallback to unindexed
         }

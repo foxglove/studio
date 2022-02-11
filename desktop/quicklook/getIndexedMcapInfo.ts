@@ -25,9 +25,16 @@ export default async function getIndexedMcapInfo(
     decompressHandlers,
   });
 
-  if (reader.channelsById.size === 0 || reader.schemasById.size === 0) {
+  let hasMissingSchemas = false;
+  for (const channel of reader.channelsById.values()) {
+    if (!reader.schemasById.has(channel.schemaId)) {
+      hasMissingSchemas = true;
+      break;
+    }
+  }
+  if (reader.channelsById.size === 0 || hasMissingSchemas) {
     throw new Error(
-      "Mcap summary does not contain channel info or schemas, cannot use indexed reading",
+      "MCAP summary does not contain channels or schemas, cannot use indexed reading",
     );
   }
 

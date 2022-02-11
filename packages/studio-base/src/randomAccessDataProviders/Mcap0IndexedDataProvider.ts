@@ -3,8 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Mcap0IndexedReader } from "@foxglove/mcap";
-import { Time, fromNanoSec } from "@foxglove/rostime";
-import { Topic } from "@foxglove/studio-base/players/types";
+import { Time, fromNanoSec, toNanoSec } from "@foxglove/rostime";
+import { Topic, MessageEvent } from "@foxglove/studio-base/players/types";
 import {
   Connection,
   ExtensionPoint,
@@ -16,19 +16,23 @@ import {
 } from "@foxglove/studio-base/randomAccessDataProviders/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
+type ChannelInfo = {
+  //TODO: share code with FoxgloveWebSocketPlayer
+};
+
 export default class Mcap0IndexedDataProvider implements RandomAccessDataProvider {
-  private messagesByChannel?: Map<number, MessageEvent<unknown>[]>;
+  private channelInfoById = new Map<number, ChannelInfo>();
 
   constructor(private reader: Mcap0IndexedReader) {}
   async initialize(_extensionPoint: ExtensionPoint): Promise<InitializationResult> {
     let startTime: bigint | undefined;
     let endTime: bigint | undefined;
     for (const chunk of this.reader.chunkIndexes) {
-      if (startTime == undefined || chunk.startTime < startTime) {
-        startTime = chunk.startTime;
+      if (startTime == undefined || chunk.messageStartTime < startTime) {
+        startTime = chunk.messageStartTime;
       }
-      if (endTime == undefined || chunk.endTime > endTime) {
-        endTime = chunk.endTime;
+      if (endTime == undefined || chunk.messageEndTime > endTime) {
+        endTime = chunk.messageEndTime;
       }
     }
 
@@ -37,7 +41,7 @@ export default class Mcap0IndexedDataProvider implements RandomAccessDataProvide
     const datatypes: RosDatatypes = new Map([["TODO", { definitions: [] }]]);
     const problems: RandomAccessDataProviderProblem[] = [];
 
-    for (const info of this.reader.channelInfosById.values()) {
+    for (const info of this.reader.channelsById.values()) {
       const schema = this.reader.schemasById.get(info.schemaId);
       if (schema == undefined) {
         problems.push({
@@ -71,10 +75,23 @@ export default class Mcap0IndexedDataProvider implements RandomAccessDataProvide
     end: Time,
     subscriptions: GetMessagesTopics,
   ): Promise<GetMessagesResult> {
+    if (subscriptions.encodedMessages) {
+      throw new Error(`${this.constructor.name} only provides parsed messages`);
+    }
     const parsedMessages: MessageEvent<unknown>[] = [];
-    for await (const message of this.reader.readMessages()) {
-      const channel = this.reader.channelInfosById.get(message.channelId);
+    for await (const message of this.reader.readMessages({
+      startTime: toNanoSec(start),
+      endTime: toNanoSec(end),
+      topics: subscriptions.parsedMessages,
+    })) {
+      const channelInfo = this.channelInfoById.get(message.channelId);
+      if (!channelInfo) {
+        throw new Error(``);
+      }
       const schema = this.reader.schemasById.get(channel.schemaId);
+      if (!schema) {
+        continue;
+      }
       parsedMessages.push(message);
     }
     return { parsedMessages };
