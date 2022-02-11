@@ -11,8 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Stack } from "@mui/material";
-import { Checkbox } from "@mui/material";
+import { Checkbox, Stack } from "@mui/material";
 
 import { Color } from "@foxglove/regl-worldview";
 import ColorPicker from "@foxglove/studio-base/components/ColorPicker";
