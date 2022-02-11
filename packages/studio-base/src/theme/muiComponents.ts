@@ -6,6 +6,11 @@ import { Theme, ThemeOptions } from "@mui/material/styles";
 import { CSSProperties } from "@mui/styles";
 
 type MuiLabComponents = {
+  MuiFocusVisible?: {
+    styleOverrides?: {
+      root?: CSSProperties;
+    };
+  };
   MuiToggleButton?: {
     styleOverrides?: {
       root?: CSSProperties;
@@ -36,6 +41,13 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
   const prefersDarkMode = theme.palette.mode === "dark";
 
   return {
+    MuiFocusVisible: {
+      styleOverrides: {
+        root: {
+          borderRadius: theme.shape.borderRadius,
+        },
+      },
+    },
     MuiCssBaseline: {
       styleOverrides: {
         "@global": {

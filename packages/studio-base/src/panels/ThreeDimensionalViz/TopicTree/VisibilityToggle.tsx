@@ -1,68 +1,53 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
-//
-// This file incorporates work covered by the following copyright and
-// permission notice:
-//
-//   Copyright 2018-2021 Cruise LLC
-//
-//   This source code is licensed under the Apache License, Version 2.0,
-//   found at http://www.apache.org/licenses/LICENSE-2.0
-//   You may not use this file except in compliance with the License.
 
-import { ITheme, useTheme } from "@fluentui/react";
-import BlockHelperIcon from "@mdi/svg/svg/block-helper.svg";
+import BlockIcon from "@mui/icons-material/Block";
+import { IconButton, SvgIcon, Tooltip, Theme } from "@mui/material";
+import { createStyles, makeStyles } from "@mui/styles";
+import cx from "classnames";
 import { useCallback } from "react";
-import styled from "styled-components";
-import tinyColor from "tinycolor2";
 
 import { Color } from "@foxglove/regl-worldview";
-import Icon from "@foxglove/studio-base/components/Icon";
 import { defaultedRGBStringFromColorObj } from "@foxglove/studio-base/util/colorUtils";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-import { ROW_HEIGHT } from "./constants";
+const useStyles = makeStyles((theme: Theme) =>
+  createStyles({
+    unavailable: {
+      cursor: "not-allowed",
+    },
+    button: ({ overrideRGB, size }: StyleProps) => ({
+      fontSize: size === "small" ? 10 : 12,
+      color: `${overrideRGB ?? theme.palette.action.active} !important`,
+      position: "relative",
 
-export const TOPIC_ROW_PADDING = 3;
+      "&:hover": {
+        backgroundColor: theme.palette.action.hover,
 
-export const TOGGLE_WRAPPER_SIZE = 24;
+        "& circle": {
+          stroke: overrideRGB ?? theme.palette.info.main,
+          strokeWidth: 4,
+        },
+      },
+      "&:active": {
+        color: theme.palette.info.main,
+      },
+    }),
+    circle: ({ checked, visibleInScene }: StyleProps) => ({
+      stroke: "currentColor",
+      strokeWidth: 2,
+      fill: checked ? "currentColor" : "none",
+      fillOpacity: visibleInScene ? 0.8 : theme.palette.action.disabledOpacity,
 
-export const TOGGLE_SIZE_CONFIG = {
-  NORMAL: { name: "NORMAL", size: 12 },
-  SMALL: { name: "SMALL", size: 10 },
-};
+      "&:focus": {
+        strokeWidth: 2,
+        fill: checked ? "currentColor" : "none",
+      },
+    }),
+  }),
+);
 
-const SToggle = styled.label`
-  width: ${TOGGLE_WRAPPER_SIZE}px;
-  height: ${TOGGLE_WRAPPER_SIZE}px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  cursor: pointer;
-  outline: 0;
-  span {
-    border: 1px solid ${({ theme }) => theme.palette.neutralLight} !important;
-  }
-  :hover {
-    background-color: rgba(255, 255, 255, 0.1);
-  }
-  :focus {
-    span {
-      border: 1px solid ${colors.BLUE} !important;
-    }
-  }
-`;
-
-const SSpan = styled.span`
-  :hover {
-    transform: scale(1.2);
-  }
-`;
-
-export type Size = keyof typeof TOGGLE_SIZE_CONFIG;
-type Props = {
+export type IVisibilityToggle = {
   available: boolean;
   checked: boolean;
   dataTest?: string;
@@ -72,63 +57,39 @@ type Props = {
   onMouseEnter?: (arg0: React.MouseEvent) => void;
   onMouseLeave?: (arg0: React.MouseEvent) => void;
   overrideColor?: Color;
-  size?: Size;
   visibleInScene: boolean;
+  size?: "small" | "normal";
 };
 
-function getStyles({
-  theme,
-  checked,
-  visibleInScene,
-  overrideColor,
-  size,
-}: {
-  theme: ITheme;
+type StyleProps = {
   checked: boolean;
+  overrideRGB?: string;
   visibleInScene: boolean;
-  overrideColor?: Color;
-  size?: Size;
-}): React.CSSProperties {
-  const sizeInNumber =
-    size === TOGGLE_SIZE_CONFIG.SMALL.name
-      ? TOGGLE_SIZE_CONFIG.SMALL.size
-      : TOGGLE_SIZE_CONFIG.NORMAL.size;
-  const styles: React.CSSProperties = {
-    width: sizeInNumber,
-    height: sizeInNumber,
-    borderRadius: sizeInNumber / 2,
-  };
-
-  const overrideRGB = defaultedRGBStringFromColorObj(overrideColor);
-  const { enabledColor, disabledColor } = overrideColor
-    ? {
-        enabledColor: overrideRGB,
-        disabledColor: tinyColor(overrideRGB).setAlpha(0.5).toRgbString(),
-      }
-    : { enabledColor: theme.palette.neutralLight, disabledColor: "transparent" };
-
-  const color = visibleInScene ? enabledColor : disabledColor;
-  if (checked) {
-    return { ...styles, background: color };
-  }
-  return { ...styles, border: `1px solid ${color}` };
-}
+  size?: IVisibilityToggle["size"];
+};
 
 // A toggle component that supports using tab key to focus and using space key to check/uncheck.
-export default function VisibilityToggle({
-  available,
-  checked,
-  dataTest,
-  onAltToggle,
-  onShiftToggle,
-  onToggle,
-  overrideColor,
-  size,
-  visibleInScene,
-  onMouseEnter,
-  onMouseLeave,
-}: Props): JSX.Element {
-  const theme = useTheme();
+export default function VisibilityToggle(props: IVisibilityToggle): JSX.Element {
+  const {
+    available,
+    checked,
+    dataTest,
+    onAltToggle,
+    onShiftToggle,
+    onToggle,
+    overrideColor,
+    visibleInScene,
+    onMouseEnter,
+    onMouseLeave,
+    size = "normal",
+  } = props;
+  const classes = useStyles({
+    checked,
+    overrideRGB: overrideColor ? defaultedRGBStringFromColorObj(overrideColor) : undefined,
+    visibleInScene,
+    size,
+  });
+
   // Handle shift + click/enter, option + click/enter, and click/enter.
   const onChange = useCallback(
     (e: React.MouseEvent | React.KeyboardEvent) => {
@@ -145,30 +106,22 @@ export default function VisibilityToggle({
 
   if (!available) {
     return (
-      <Icon
-        tooltipProps={{ placement: "top" }}
-        tooltip={"Unavailable"}
-        fade
-        size="small"
-        clickable={false}
-        style={{
-          fontSize: 10,
-          cursor: "not-allowed",
-          height: ROW_HEIGHT,
-          width: TOGGLE_WRAPPER_SIZE,
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          transition: "all 80ms ease-in-out",
-        }}
-      >
-        <BlockHelperIcon />
-      </Icon>
+      <Tooltip title="Unavailable" placement="top" arrow>
+        <IconButton
+          size="small"
+          className={cx(classes.button, classes.unavailable)}
+          data-test={dataTest}
+        >
+          <BlockIcon fontSize="inherit" color="inherit" />
+        </IconButton>
+      </Tooltip>
     );
   }
 
   return (
-    <SToggle
+    <IconButton
+      size="small"
+      className={classes.button}
       data-test={dataTest}
       tabIndex={0}
       onKeyDown={(e: React.KeyboardEvent) => {
@@ -180,15 +133,9 @@ export default function VisibilityToggle({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <SSpan
-        style={getStyles({
-          theme,
-          checked,
-          visibleInScene,
-          size,
-          overrideColor,
-        })}
-      />
-    </SToggle>
+      <SvgIcon fontSize="inherit">
+        <circle className={classes.circle} cx={12} cy={12} r={10} />
+      </SvgIcon>
+    </IconButton>
   );
 }

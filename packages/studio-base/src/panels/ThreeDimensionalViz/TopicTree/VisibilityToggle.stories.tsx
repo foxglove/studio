@@ -16,26 +16,26 @@ import { useState, useCallback, useRef } from "react";
 
 import { Color } from "@foxglove/regl-worldview";
 
-import VisibilityToggle, { Size, TOGGLE_SIZE_CONFIG } from "./VisibilityToggle";
+import VisibilityToggle, { IVisibilityToggle } from "./VisibilityToggle";
 
 function Example({
   available,
   checked: defaultChecked = false,
   overrideColor,
-  size,
   title,
   visibleInScene = false,
   showFocused = false,
   showToggled = false,
+  size,
 }: {
   available: boolean;
   checked?: boolean;
   overrideColor?: Color;
-  size?: Size;
   title: string;
   visibleInScene?: boolean;
   showFocused?: boolean;
   showToggled?: boolean;
+  size?: IVisibilityToggle["size"];
 }) {
   const [checked, setChecked] = useState(defaultChecked);
   const onToggle = useCallback(() => {
@@ -97,7 +97,7 @@ storiesOf("panels/ThreeDimensionalViz/TopicTree/VisibilityToggle", module)
           available
           checked
           visibleInScene
-          size={TOGGLE_SIZE_CONFIG.SMALL.name as any}
+          size="small"
           title="checked: true, visibleInScene: true, size: SMALL "
         />
         <Example

@@ -169,7 +169,7 @@ function StyleExpressionNode(props: {
             onAltToggle={() => updateSettingsForGlobalVariable(name, { active: !active, color })}
             onToggle={() => updateSettingsForGlobalVariable(name, { active: !active, color })}
             overrideColor={color}
-            size="SMALL"
+            size="small"
             visibleInScene={active}
             onMouseEnter={() =>
               setHoveredMarkerMatchers([{ topic, checks: [{ markerKeyPath, value }] }])
