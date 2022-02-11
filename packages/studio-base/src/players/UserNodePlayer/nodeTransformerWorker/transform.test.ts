@@ -349,12 +349,9 @@ describe("pipeline", () => {
       const x = norm({x:1, y:2, z:3});
       `,
     ])("produces projectCode", (sourceCode) => {
-      const { projectCode, diagnostics, transpiledCode } = compile({ ...baseNodeData, sourceCode });
-      expect(projectCode?.size).toEqual(
-        rawUserUtils.length + 1 /* generatedTypes is added at runtime */,
-      );
-      expect(typeof transpiledCode).toEqual("string");
+      const { diagnostics, transpiledCode } = compile({ ...baseNodeData, sourceCode });
       expect(diagnostics).toEqual([]);
+      expect(typeof transpiledCode).toEqual("string");
     });
   });
 

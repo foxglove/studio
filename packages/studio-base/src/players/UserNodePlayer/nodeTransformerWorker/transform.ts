@@ -38,6 +38,7 @@ import { Topic } from "@foxglove/studio-base/players/types";
 import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
 
 import { TransformArgs } from "./types";
+import generatedTypesLibSrc from "./typescript/userUtils/generatedTypes.ts?raw";
 
 export const hasTransformerErrors = (nodeData: NodeData): boolean =>
   nodeData.diagnostics.some(({ severity }) => severity === DiagnosticSeverity.Error);
@@ -270,7 +271,7 @@ export const compile = (nodeData: NodeData): NodeData => {
   const sourceCodeMap = new Map<string, string>();
   sourceCodeMap.set(nodeFileName, sourceCode);
   sourceCodeMap.set(projectConfig.rosLib.filePath, rosLib);
-  sourceCodeMap.set("/studio_node/generatedTypes.ts", typesLib);
+  sourceCodeMap.set("/studio_node/generatedTypes.ts", typesLib ? typesLib : generatedTypesLibSrc);
 
   projectConfig.utilityFiles.forEach((file) => sourceCodeMap.set(file.filePath, file.sourceCode));
   projectConfig.declarations.forEach((lib) => sourceCodeMap.set(lib.filePath, lib.sourceCode));
@@ -325,11 +326,7 @@ export const compile = (nodeData: NodeData): NodeData => {
     },
   };
 
-  const program = ts.createProgram(
-    [...projectConfig.utilityFiles.map((file) => file.filePath), nodeFileName],
-    options,
-    host,
-  );
+  const program = ts.createProgram([nodeFileName], options, host);
   program.emit();
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (!codeEmitted) {

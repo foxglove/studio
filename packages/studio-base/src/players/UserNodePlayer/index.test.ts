@@ -551,7 +551,11 @@ describe("UserNodePlayer", () => {
 
     it("provides access to './pointClouds' library for user input node code", async () => {
       const fakePlayer = new FakePlayer();
-      const userNodePlayer = new UserNodePlayer(fakePlayer, defaultUserNodeActions);
+      const mockSetNodeDiagnostics = jest.fn();
+      const userNodePlayer = new UserNodePlayer(fakePlayer, {
+        ...defaultUserNodeActions,
+        setUserNodeDiagnostics: mockSetNodeDiagnostics,
+      });
 
       const [done] = setListenerHelper(userNodePlayer);
 
@@ -570,12 +574,13 @@ describe("UserNodePlayer", () => {
           messageOrder: "receiveTime",
           currentTime: upstreamFirst.receiveTime,
           topics: [{ name: "/np_input", datatype: "std_msgs/Header" }],
-          datatypes: new Map(Object.entries({ foo: { definitions: [] } })),
+          datatypes: new Map(Object.entries({ "std_msgs/Header": { definitions: [] } })),
         },
       });
 
       const { messages }: any = await done;
 
+      expect(mockSetNodeDiagnostics).toHaveBeenCalledWith(nodeId, []);
       expect(messages).toEqual([
         upstreamFirst,
         {
