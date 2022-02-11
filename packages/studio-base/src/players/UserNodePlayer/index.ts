@@ -600,7 +600,7 @@ export default class UserNodePlayer implements Player {
     }
 
     const { topics, datatypes } = this._lastPlayerStateActiveData;
-    const [didUpdate, lib] = await this._rosLibGenerator.update({ topics, datatypes });
+    const { didUpdate, lib } = await this._rosLibGenerator.update({ topics, datatypes });
     if (didUpdate) {
       this._userNodeActions.setUserNodeRosLib(lib);
     }
@@ -614,7 +614,7 @@ export default class UserNodePlayer implements Player {
     }
 
     const { topics, datatypes } = this._lastPlayerStateActiveData;
-    const [didUpdate, lib] = await this._typesLibGenerator.update({ topics, datatypes });
+    const { didUpdate, lib } = await this._typesLibGenerator.update({ topics, datatypes });
     if (didUpdate) {
       this._userNodeActions.setUserNodeTypesLib(lib);
     }

@@ -27,20 +27,26 @@ class MemoizedLibGenerator {
     this.fn = fn;
   }
 
-  async update(args: Args): Promise<[boolean, string]> {
+  /**
+   * Update the library with new args.
+   * If the arg fields have changed, the generator function is run to make a new library.
+   *
+   * Return whether the cached value was updated and the cached value.
+   */
+  async update(args: Args): Promise<{ didUpdate: boolean; lib: string }> {
     if (
       args.topics === this.topics &&
       args.datatypes === this.datatypes &&
       this.cached != undefined
     ) {
-      return [false, this.cached];
+      return { didUpdate: false, lib: this.cached };
     }
 
     const lib = await this.fn(args);
     this.topics = args.topics;
     this.datatypes = args.datatypes;
     this.cached = lib;
-    return [true, lib];
+    return { didUpdate: true, lib };
   }
 }
 
