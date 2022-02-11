@@ -25,14 +25,14 @@ export default async function getIndexedMcapInfo(
     decompressHandlers,
   });
 
-  if (reader.channelInfosById.size === 0 || reader.schemasById.size === 0) {
+  if (reader.channelsById.size === 0 || reader.schemasById.size === 0) {
     throw new Error(
       "Mcap summary does not contain channel info or schemas, cannot use indexed reading",
     );
   }
 
   const topicInfosByTopic = new Map<string, TopicInfo>();
-  for (const channel of reader.channelInfosById.values()) {
+  for (const channel of reader.channelsById.values()) {
     const info = topicInfosByTopic.get(channel.topic);
     const schema = reader.schemasById.get(channel.schemaId);
     const numMessages = reader.statistics?.channelMessageCounts.get(channel.id);
@@ -60,11 +60,11 @@ export default async function getIndexedMcapInfo(
   const compressionTypes = new Set<string>();
   for (const chunk of reader.chunkIndexes) {
     compressionTypes.add(chunk.compression);
-    if (startTime == undefined || chunk.startTime < startTime) {
-      startTime = chunk.startTime;
+    if (startTime == undefined || chunk.messageStartTime < startTime) {
+      startTime = chunk.messageStartTime;
     }
-    if (endTime == undefined || chunk.endTime > endTime) {
-      endTime = chunk.endTime;
+    if (endTime == undefined || chunk.messageEndTime > endTime) {
+      endTime = chunk.messageEndTime;
     }
   }
   return {
