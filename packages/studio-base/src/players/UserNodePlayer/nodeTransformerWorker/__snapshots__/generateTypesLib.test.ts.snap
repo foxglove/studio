@@ -73,3 +73,18 @@ export type MessageTypeBySchemaName = {
 };
 "
 `;
+
+exports[`generateTypesLib generateDatatypesInterface should generate type with backslash 1`] = `
+"/**
+ * MessageTypeBySchemaName enumerates the message types for for all the schema names
+ * in the current data source.
+ *
+ * You probably want to use Message<...> instead.
+ */
+export type MessageTypeBySchemaName = {
+  \\"std_msgs\\\\\\\\ColorRGBA\\": {
+    r: number;
+  };
+};
+"
+`;

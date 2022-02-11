@@ -49,6 +49,23 @@ describe("generateTypesLib", () => {
       const prettified = await getPrettifiedCode(src);
       expect(prettified).toMatchSnapshot();
     });
+    it("should generate type with backslash", async () => {
+      const src = generateTypesInterface(
+        new Map(
+          Object.entries({
+            "std_msgs\\ColorRGBA": {
+              definitions: [{ type: "float32", name: "r", isArray: false, isComplex: false }],
+            },
+          }),
+        ),
+      );
+
+      const { diagnostics } = compile({ ...baseNodeData, sourceCode: src });
+      expect(diagnostics).toEqual([]);
+
+      const prettified = await getPrettifiedCode(src);
+      expect(prettified).toMatchSnapshot();
+    });
     it("should generate multiple datatypes in Datatypes interface", async () => {
       const src = generateTypesInterface(
         new Map(
