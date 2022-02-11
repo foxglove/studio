@@ -77,10 +77,12 @@ class MockMarkerCollector implements MarkerCollector {
   grid(_arg0: OccupancyGridMessage): void {}
   pointcloud(_arg0: PointCloud): void {}
   laserScan(_arg0: LaserScan): void {}
-  instancedLineList(_arg0: InstancedLineListMarker): void {}
+  linedConvexHull(_arg0: LineListMarker | LineStripMarker): void {}
+  instancedLineList(arg0: InstancedLineListMarker): void {
+    this.data.instancedLineList.push(arg0);
+  }
   glLineList(arg0: Readonly<{ color: Float32Array; points: Float32Array }>): void {
     this.data.glLineList.push(arg0);
-  }
 }
 
 const renderFrame = new CoordinateFrame("map", undefined);

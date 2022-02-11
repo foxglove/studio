@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Stack } from "@mui/material";
+import { Checkbox } from "@mui/material";
 
 import { Color } from "@foxglove/regl-worldview";
 import ColorPicker from "@foxglove/studio-base/components/ColorPicker";
@@ -22,6 +23,7 @@ import { SLabel, SDescription } from "./common";
 
 type MarkerSettings = {
   overrideColor?: Color;
+  overrideCommand?: string;
 };
 
 export default function MarkerSettingsEditor(
@@ -37,6 +39,19 @@ export default function MarkerSettingsEditor(
       <ColorPicker
         color={settings.overrideColor}
         onChange={(newColor) => onFieldChange("overrideColor", newColor)}
+      />
+      <SLabel>Line marker click events override</SLabel>
+      <SDescription>
+        Treating line markers as polygons. Clicking inside the lines in the marker selects the
+        marker. The default behavior for line markers requires the user to click exactly on the line
+        to select the line marker. <em>This option can reduce performance</em>.
+      </SDescription>
+      <Checkbox
+        checked={settings.overrideCommand === "LinedConvexHull"}
+        title="Allow clicking inside line markers that form polygons"
+        onChange={(_ev, checked) =>
+          onFieldChange("overrideCommand", checked ? "LinedConvexHull" : undefined)
+        }
       />
     </Stack>
   );
