@@ -15,7 +15,15 @@ import ArrowLeftBoldIcon from "@mdi/svg/svg/arrow-left-bold.svg";
 import DeleteIcon from "@mdi/svg/svg/delete.svg";
 import FileMultipleIcon from "@mdi/svg/svg/file-multiple.svg";
 import HelpCircleIcon from "@mdi/svg/svg/help-circle.svg";
-import { Stack } from "@mui/material";
+import {
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Stack,
+  IconButton,
+  ListSubheader,
+} from "@mui/material";
 import * as monacoApi from "monaco-editor/esm/vs/editor/editor.api";
 import styled from "styled-components";
 
@@ -49,47 +57,6 @@ const ExplorerWrapper = styled.div<{ useThemeColors: boolean; show: boolean }>`
   overflow: auto;
 `;
 
-const ListItem = styled.li`
-  padding: 5px;
-  cursor: pointer;
-  display: flex;
-  font-size: 14px;
-  justify-content: space-between;
-  word-break: break-all;
-  align-items: center;
-  color: ${colors.LIGHT1};
-  background-color: ${({ selected }: { selected: boolean }) =>
-    selected ? colors.DARK9 : "transparent"};
-  > span {
-    opacity: 0;
-  }
-  &:hover {
-    background-color: ${colors.DARK9};
-    span {
-      opacity: 1;
-    }
-  }
-`;
-
-const TemplateItem = styled.li`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 5px;
-  cursor: pointer;
-  display: flex;
-  font-size: 14px;
-  word-break: break-all;
-  > span {
-    display: block;
-    margin: 3px 0;
-  }
-  color: ${colors.LIGHT1};
-  &:hover {
-    background-color: ${colors.DARK9};
-  }
-`;
-
 type NodesListProps = {
   nodes: UserNodes;
   selectNode: (id: string) => void;
@@ -102,20 +69,26 @@ const NodesList = ({ nodes, selectNode, deleteNode, collapse, selectedNodeId }: 
   return (
     <Stack flex="auto">
       <SidebarTitle title="Nodes" collapse={collapse} />
-      {Object.keys(nodes).map((nodeId) => {
-        return (
-          <ListItem
-            key={nodeId}
-            selected={selectedNodeId === nodeId}
-            onClick={() => selectNode(nodeId)}
-          >
-            {nodes[nodeId]?.name}
-            <Icon onClick={() => deleteNode(nodeId)} size="medium">
-              <DeleteIcon />
-            </Icon>
-          </ListItem>
-        );
-      })}
+      <List>
+        {Object.keys(nodes).map((nodeId) => {
+          return (
+            <ListItem
+              disablePadding
+              key={nodeId}
+              selected={selectedNodeId === nodeId}
+              secondaryAction={
+                <IconButton onClick={() => deleteNode(nodeId)} edge="end" aria-label="delete">
+                  <DeleteIcon />
+                </IconButton>
+              }
+            >
+              <ListItemButton onClick={() => selectNode(nodeId)}>
+                <ListItemText primary={nodes[nodeId]?.name} />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
+      </List>
     </Stack>
   );
 };
@@ -211,21 +184,29 @@ const Sidebar = ({
             title="Utilities"
             tooltip={`You can import any of these modules into your node using the following syntax: 'import { .. } from "./pointClouds.ts".\n\nWant to contribute? Scroll to the bottom of the docs for details!`}
           />
-          {utilityFiles.map(({ fileName, filePath }) => (
+          <List>
+            {utilityFiles.map(({ fileName, filePath }) => (
+              <ListItem
+                disablePadding
+                key={filePath}
+                onClick={gotoUtils.bind(undefined, filePath)}
+                selected={script ? filePath === script.filePath : false}
+              >
+                <ListItemButton>
+                  <ListItemText primary={fileName} />
+                </ListItemButton>
+              </ListItem>
+            ))}
             <ListItem
-              key={filePath}
-              onClick={gotoUtils.bind(undefined, filePath)}
-              selected={script ? filePath === script.filePath : false}
+              disablePadding
+              onClick={gotoUtils.bind(undefined, "/studio_node/generatedTypes.ts")}
+              selected={script ? script.filePath === "/studio_node/generatedTypes.ts" : false}
             >
-              {fileName}
+              <ListItemButton>
+                <ListItemText primary="generatedTypes.ts" />
+              </ListItemButton>
             </ListItem>
-          ))}
-          <ListItem
-            onClick={gotoUtils.bind(undefined, "/studio_node/generatedTypes.ts")}
-            selected={script ? script.filePath === "/studio_node/generatedTypes.ts" : false}
-          >
-            generatedTypes.ts
-          </ListItem>
+          </List>
         </Stack>
       ),
       templates: (
@@ -235,12 +216,19 @@ const Sidebar = ({
             tooltip={"Create nodes from these templates"}
             collapse={() => updateExplorer(undefined)}
           />
-          {templates.map(({ name, description, template }, i) => (
-            <TemplateItem key={`${name}-${i}`} onClick={() => addNewNode(template)}>
-              <span style={{ fontWeight: "bold" }}>{name}</span>
-              <span>{description}</span>
-            </TemplateItem>
-          ))}
+          <List
+            subheader={
+              <ListSubheader component="div">Click a template to create a new node.</ListSubheader>
+            }
+          >
+            {templates.map(({ name, description, template }) => (
+              <ListItem disablePadding key={name} onClick={() => addNewNode(template)}>
+                <ListItemButton>
+                  <ListItemText primary={name} secondary={description} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
         </Stack>
       ),
     }),

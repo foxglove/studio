@@ -48,20 +48,37 @@ const Editor = React.lazy(
   async () => await import("@foxglove/studio-base/panels/NodePlayground/Editor"),
 );
 
-const skeletonBody = `import { Input, Messages } from "ros";
+const skeletonBody = `// The ./types module provides helper types for your Input events and messages.
+import { Input, Message } from "./types";
 
-type Output = {};
-type GlobalVariables = { id: number };
-
-export const inputs = [];
-export const output = "${DEFAULT_STUDIO_NODE_PREFIX}";
-
-// Populate 'Input' with a parameter to properly type your inputs, e.g. 'Input<"/your_input_topic">'
-const publisher = (message: Input<>, globalVars: GlobalVariables): Output => {
-  return {};
+// Your node can output well-known message types, any of your custom message types, or
+// complete custom message types.
+//
+// Use \`Message\` to access your data source types or well-known types
+// type Twist = Message<"geometry_msgs/Twist">;
+//
+// Conventionally, its common to pick some \`Output\` type for your node
+// and use that type name as the return type for your node function.
+// Here we've called the type \`Output\` but you can pick any type name.
+type Output = {
+  hello: string;
 };
 
-export default publisher;`;
+// These are the topics your node "subscribes" to. Studio will invoke your node function
+// with messages on these topics.
+export const inputs = ["/input/topic"];
+
+// Any output your node produces is "published" to this topic. This publication is local to studio.
+export const output = "/studio_node/output_topic";
+
+// This function is called with messages from your input topics.
+// The first argument is an event with the topic, receive time, and message.
+// Use the \`Input<...>\` helper to get the correct event type for your input topic messages.
+export default function node(event: Input<"/input/topic">): Output {
+  return {
+    hello: "world!",
+  };
+};`;
 
 type Props = {
   config: Config;

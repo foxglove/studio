@@ -1,25 +1,38 @@
-import { Input, Messages } from "ros";
+// This example shows how to publish a marker message from a node playground node.
+//
+// Publishing marker messages with a node playground script is a good way to visualize non-visual
+// data.
+//
+// Maybe you have a robot that calculates some projected paths and publishes this between two
+// systems as a message. You can make a node that visualizes this as markers and view them in the 3d
+// panel.
 
-import { Marker, MarkerTypes } from "./markers";
+import { Input, Message } from "./types";
+
+// The `./markers` utility provides a helper function to build a ros marker.
+import { buildRosMarker, MarkerTypes } from "./markers";
 
 type GlobalVariables = { id: number };
 
-export const inputs = [];
-export const output = "/studio_node/";
+export const inputs = ["/input/topic"];
+export const output = "/studio_node/my_custom_topic";
 
-// Populate 'Input' with a parameter to properly type your inputs, e.g. 'Input<"/your_input_topic">'
+// Our node will output a marker array which is a set of markers
+type Marker = Message<"visualization_msgs/Marker">;
+
+// If you want to output multiple markers for a single input message, use a MarkerArray.
+// The marker array message has one field `markers` which is an array of Marker messaages.
+// type MarkerArray = Message<"visualization_msgs/MarkerArray">;
+
 const publisher = (
-  message: Input<>,
-  globalVars: GlobalVariables,
-): Messages.visualization_msgs__MarkerArray => {
-  const markers: Marker[] = [
-    new Marker({
-      /* e.g 'type: MarkerTypes.ARROW' */
-    }),
-  ];
-  return {
-    markers,
-  };
+  event: Input<"/input/topic">,
+  globalVars: GlobalVariables
+): Marker => {
+  return buildRosMarker({
+      // Add any fields you want to set in the marker here
+      // Any fields you omit will use default values
+      // e.g 'type: MarkerTypes.ARROW' */
+  });
 };
 
 export default publisher;
