@@ -20,9 +20,10 @@ import {
 } from "@foxglove/studio-base/randomAccessDataProviders/types";
 
 import Mcap0IndexedDataProvider from "./Mcap0IndexedDataProvider";
+import Mcap0StreamedDataProvider from "./Mcap0StreamedDataProvider";
 import McapPre0DataProvider from "./McapPre0DataProvider";
 
-export type Options = { file: File };
+type Options = { file: File };
 
 class FileReadable {
   constructor(private file: File) {}
@@ -41,6 +42,27 @@ class FileReadable {
   }
 }
 
+const decompressHandlers: Mcap0Types.DecompressHandlers = {
+  lz4: (buffer, decompressedSize) => decompressLZ4(buffer, Number(decompressedSize)),
+};
+
+async function tryCreateIndexedReader(file: File) {
+  const readable = new FileReadable(file);
+  const reader = await Mcap0IndexedReader.Initialize({ readable, decompressHandlers });
+
+  let hasMissingSchemas = false;
+  for (const channel of reader.channelsById.values()) {
+    if (!reader.schemasById.has(channel.schemaId)) {
+      hasMissingSchemas = true;
+      break;
+    }
+  }
+  if (reader.chunkIndexes.length === 0 || reader.channelsById.size === 0 || hasMissingSchemas) {
+    throw new Error("Summary does not contain chunk indexes, schemas, and channels");
+  }
+  return reader;
+}
+
 /**
  * Detect the version of an mcap file and delegate to the corresponding provider version.
  */
@@ -56,41 +78,41 @@ export default class McapDataProvider implements RandomAccessDataProvider {
     const prefix = await file.slice(0, DETECT_VERSION_BYTES_REQUIRED).arrayBuffer();
 
     await decompressLZ4.isLoaded;
-    const decompressHandlers: Mcap0Types.DecompressHandlers = {
-      lz4: (buffer, decompressedSize) => decompressLZ4(buffer, Number(decompressedSize)),
-    };
 
     switch (detectVersion(new DataView(prefix))) {
       case undefined:
-        throw new Error("File is not valid MCAP");
+        throw new Error(
+          `File is not valid MCAP. Prefix bytes: <${Array.from(new Uint8Array(prefix), (byte) =>
+            byte.toString().padStart(2, "0"),
+          ).join(" ")}>`,
+        );
       case "pre0":
         this.provider = new McapPre0DataProvider(this.options);
-        break;
+        return await this.provider.initialize(extensionPoint);
       case "0": {
-        const readable = new FileReadable(file);
-        const reader = await Mcap0IndexedReader.Initialize({ readable, decompressHandlers });
-
-        let hasMissingSchemas = false;
-        for (const channel of reader.channelsById.values()) {
-          if (!reader.schemasById.has(channel.schemaId)) {
-            hasMissingSchemas = true;
-            break;
-          }
-        }
-        if (
-          reader.chunkIndexes.length === 0 ||
-          reader.channelsById.size === 0 ||
-          hasMissingSchemas
-        ) {
-          throw new Error(
-            "Cannot read MCAP file because summary does not contain chunk indexes, schemas, and channels",
-          );
-          //FIXME: fallback to unindexed
+        let reader: Mcap0IndexedReader;
+        try {
+          reader = await tryCreateIndexedReader(file);
+        } catch (error) {
+          // Fall back to unindexed (streamed) reading
+          this.provider = new Mcap0StreamedDataProvider(this.options);
+          const result = await this.provider.initialize(extensionPoint);
+          return {
+            ...result,
+            problems: [
+              ...result.problems,
+              {
+                message: "MCAP file is unindexed, falling back to streamed reading",
+                severity: "warn",
+                error,
+              },
+            ],
+          };
         }
         this.provider = new Mcap0IndexedDataProvider(reader);
+        return await this.provider.initialize(extensionPoint);
       }
     }
-    return await this.provider.initialize(extensionPoint);
   }
 
   async getMessages(
