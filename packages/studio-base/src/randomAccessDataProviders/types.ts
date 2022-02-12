@@ -19,6 +19,7 @@ import {
   MessageDefinitionsByTopic,
   ParsedMessageDefinitionsByTopic,
   MessageEvent,
+  PlayerProblem,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
@@ -54,6 +55,7 @@ export type GetMessagesTopics = Readonly<{
 export type GetMessagesResult = Readonly<{
   parsedMessages?: readonly MessageEvent<unknown>[];
   encodedMessages?: readonly MessageEvent<ArrayBuffer>[];
+  problems?: readonly PlayerProblem[];
 }>;
 
 export type ParsedMessageDefinitions = Readonly<{
@@ -61,7 +63,7 @@ export type ParsedMessageDefinitions = Readonly<{
   datatypes: RosDatatypes;
   // Note that these might not be "complete" - rely on the parsedMessageDefinitionsByTopic for the
   // complete list of message definitions!
-  messageDefinitionsByTopic: MessageDefinitionsByTopic;
+  messageDefinitionsByTopic: MessageDefinitionsByTopic; // FIXME: can this get the 🔪?
   parsedMessageDefinitionsByTopic: ParsedMessageDefinitionsByTopic;
 }>;
 

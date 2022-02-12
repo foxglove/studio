@@ -453,10 +453,15 @@ export default class RandomAccessPlayer implements Player {
     if (!this.hasCachedRange(start, end)) {
       this._metricsCollector.recordUncachedRangeRequest();
     }
-    const messages = await this._provider.getMessages(start, end, {
+    const { parsedMessages, problems } = await this._provider.getMessages(start, end, {
       parsedMessages: parsedTopics,
     });
-    const { parsedMessages } = messages;
+    if (problems) {
+      for (const problem of problems) {
+        // FIXME: expire?
+        this._problems.set(uuidv4(), problem);
+      }
+    }
     if (parsedMessages == undefined) {
       this._problems.set("bad-messages", {
         severity: "error",
