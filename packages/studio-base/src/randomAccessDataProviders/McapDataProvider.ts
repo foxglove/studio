@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import decompressLZ4 from "wasm-lz4";
+import { ZstdCodec, ZstdModule, ZstdSimple } from "zstd-codec";
 
 import {
   detectVersion,
@@ -25,6 +26,15 @@ import McapPre0DataProvider from "./McapPre0DataProvider";
 
 type Options = { file: File };
 
+let loadedZstdModule: ZstdModule | undefined;
+let loadedZstdSimple: ZstdSimple | undefined;
+const zstdPromise = new Promise<void>((resolve) => {
+  ZstdCodec.run((zstd) => {
+    loadedZstdModule = zstd;
+    resolve();
+  });
+});
+
 class FileReadable {
   constructor(private file: File) {}
   async size(): Promise<bigint> {
@@ -44,6 +54,15 @@ class FileReadable {
 
 const decompressHandlers: Mcap0Types.DecompressHandlers = {
   lz4: (buffer, decompressedSize) => decompressLZ4(buffer, Number(decompressedSize)),
+  zstd: (buffer, _decompressedSize) => {
+    if (!loadedZstdSimple) {
+      if (!loadedZstdModule) {
+        throw new Error("Zstd codec not initialized");
+      }
+      loadedZstdSimple = new loadedZstdModule.Simple();
+    }
+    return loadedZstdSimple.decompress(buffer);
+  },
 };
 
 async function tryCreateIndexedReader(file: File) {
@@ -78,6 +97,7 @@ export default class McapDataProvider implements RandomAccessDataProvider {
     const prefix = await file.slice(0, DETECT_VERSION_BYTES_REQUIRED).arrayBuffer();
 
     await decompressLZ4.isLoaded;
+    await zstdPromise;
 
     switch (detectVersion(new DataView(prefix))) {
       case undefined:
