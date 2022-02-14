@@ -43,7 +43,7 @@ async function tryCreateIndexedReader(file: File) {
 
   let hasMissingSchemas = false;
   for (const channel of reader.channelsById.values()) {
-    if (!reader.schemasById.has(channel.schemaId)) {
+    if (channel.schemaId !== 0 && !reader.schemasById.has(channel.schemaId)) {
       hasMissingSchemas = true;
       break;
     }

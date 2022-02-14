@@ -45,6 +45,13 @@ export default class Mcap0IndexedDataProvider implements RandomAccessDataProvide
     const problems: RandomAccessDataProviderProblem[] = [];
 
     for (const channel of this.reader.channelsById.values()) {
+      if (channel.schemaId === 0) {
+        problems.push({
+          severity: "error",
+          message: `Channel ${channel.id} has no schema; channels without schemas are not supported`,
+        });
+        continue;
+      }
       const schema = this.reader.schemasById.get(channel.schemaId);
       if (schema == undefined) {
         problems.push({

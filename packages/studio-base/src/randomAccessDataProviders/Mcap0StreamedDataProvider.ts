@@ -80,7 +80,9 @@ export default class Mcap0StreamedDataProvider implements RandomAccessDataProvid
             break;
           }
           if (record.schemaId === 0) {
-            throw new Error("Schemaless channels are not supported");
+            throw new Error(
+              `Channel ${record.id} has no schema; channels without schemas are not supported`,
+            );
           }
           const schema = schemasById.get(record.schemaId);
           if (!schema) {
