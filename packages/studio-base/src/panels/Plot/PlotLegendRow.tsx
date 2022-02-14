@@ -177,7 +177,7 @@ export default function PlotLegendRow({
 
   return (
     <div className={classes.root}>
-      <div className={classes.listItcon}>
+      <div className={classes.listIcon}>
         <IconButton
           className={classes.legendIconButton}
           centerRipple={false}
