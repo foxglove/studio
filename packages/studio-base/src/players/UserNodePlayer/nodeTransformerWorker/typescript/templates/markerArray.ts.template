@@ -24,15 +24,10 @@ type Marker = Message<"visualization_msgs/Marker">;
 // The marker array message has one field `markers` which is an array of Marker messaages.
 // type MarkerArray = Message<"visualization_msgs/MarkerArray">;
 
-const publisher = (
-  event: Input<"/input/topic">,
-  globalVars: GlobalVariables
-): Marker => {
+export default function node(event: Input<"/input/topic">, globalVars: GlobalVariables): Marker {
   return buildRosMarker({
       // Add any fields you want to set in the marker here
       // Any fields you omit will use default values
       // e.g 'type: MarkerTypes.ARROW' */
   });
 };
-
-export default publisher;

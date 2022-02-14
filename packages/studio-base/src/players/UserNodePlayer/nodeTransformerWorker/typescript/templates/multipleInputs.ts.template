@@ -15,7 +15,7 @@ export const output = "/studio_node/output_topic";
 // Make an InputEvent type alias. Since our node will get a message from either input topic, we need to enumerate the topics.
 type InputEvent = Input<"/input/topic"> | Input<"/input/another">;
 
-const publisher = (event: InputEvent, globalVars: GlobalVariables): Output => {
+export default function node(event: InputEvent, globalVars: GlobalVariables): Output {
   // Remember that your node will get messages on each topic, so you
   // need to figure out the topic to know what fields are available
   switch (event.topic) {
@@ -36,5 +36,3 @@ const publisher = (event: InputEvent, globalVars: GlobalVariables): Output => {
     topic: event.topic,
   };
 };
-
-export default publisher;
