@@ -54,7 +54,7 @@ const useStyles = makeStyles((theme: Theme) =>
         },
       },
     },
-    listItcon: {
+    listIcon: {
       padding: theme.spacing(0.25),
       position: "sticky",
       left: 0,
