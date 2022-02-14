@@ -60,11 +60,11 @@ type StyleProps = {
   checked: boolean;
   overrideRGB?: string;
   visibleInScene: boolean;
-  size?: IVisibilityToggle["size"];
+  size?: VisibilityToggleProps["size"];
 };
 
 // A toggle component that supports using tab key to focus and using space key to check/uncheck.
-export default function VisibilityToggle(props: IVisibilityToggle): JSX.Element {
+export default function VisibilityToggle(props: VisibilityToggleProps): JSX.Element {
   const {
     available,
     checked,

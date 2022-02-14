@@ -16,7 +16,7 @@ import { useState, useCallback, useRef } from "react";
 
 import { Color } from "@foxglove/regl-worldview";
 
-import VisibilityToggle, { IVisibilityToggle } from "./VisibilityToggle";
+import VisibilityToggle, { VisibilityToggleProps } from "./VisibilityToggle";
 
 function Example({
   available,
@@ -35,7 +35,7 @@ function Example({
   visibleInScene?: boolean;
   showFocused?: boolean;
   showToggled?: boolean;
-  size?: IVisibilityToggle["size"];
+  size?: VisibilityToggleProps["size"];
 }) {
   const [checked, setChecked] = useState(defaultChecked);
   const onToggle = useCallback(() => {
