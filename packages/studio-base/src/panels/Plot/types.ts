@@ -21,7 +21,7 @@ export type PlotConfig = DeprecatedPlotConfig & {
   minYValue?: string | number;
   maxYValue?: string | number;
   showLegend: boolean;
-  legendDisplay: "superimposed" | "top" | "left";
+  legendDisplay: "floating" | "top" | "left";
   showPlotValuesInLegend: boolean;
   showXAxisLabels: boolean;
   showYAxisLabels: boolean;

@@ -325,7 +325,7 @@ const exampleConfig: PlotConfig = {
   xAxisVal: "timestamp",
   showLegend: true,
   isSynced: true,
-  legendDisplay: "superimposed",
+  legendDisplay: "floating",
   showXAxisLabels: true,
   showYAxisLabels: true,
   showPlotValuesInLegend: false,

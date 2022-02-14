@@ -47,7 +47,7 @@ type PlotLegendProps = {
   xAxisPath?: BasePlotPath;
   pathsWithMismatchedDataLengths: string[];
   sidebarDimension: number;
-  legendDisplay: "superimposed" | "top" | "left";
+  legendDisplay: "floating" | "top" | "left";
   showPlotValuesInLegend: boolean;
 };
 
@@ -110,7 +110,7 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 function SidebarWrapper(props: {
-  position: "superimposed" | "top" | "left";
+  position: "floating" | "top" | "left";
   sidebarDimension: number;
   saveConfig: (arg0: Partial<PlotConfig>) => void;
   children: JSX.Element | undefined;
@@ -194,7 +194,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
     legendDisplay,
     showPlotValuesInLegend,
   } = props;
-  const isSidebar = useMemo(() => legendDisplay !== "superimposed", [legendDisplay]);
+  const isSidebar = useMemo(() => legendDisplay !== "floating", [legendDisplay]);
 
   const lastPath = last(paths);
   const classes = useStyles();
