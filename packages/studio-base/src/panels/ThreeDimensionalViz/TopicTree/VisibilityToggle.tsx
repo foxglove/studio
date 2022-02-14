@@ -21,16 +21,20 @@ const useStyles = makeStyles((theme: Theme) =>
       color: `${overrideRGB ?? theme.palette.action.active} !important`,
       position: "relative",
 
-      "&:hover, &:focus": {
+      "&.Mui-focusVisible": {
+        backgroundColor: theme.palette.action.active,
+        color: theme.palette.info.main,
+      },
+      "&:hover, &.Mui-focusVisible": {
         backgroundColor: theme.palette.action.hover,
 
         "& circle": {
           stroke: overrideRGB ?? theme.palette.info.main,
           strokeWidth: 4,
         },
-      },
-      "&:active": {
-        color: theme.palette.info.main,
+        "& .MuiTouchRipple-child": {
+          backgroundColor: theme.palette.action.focus,
+        },
       },
     }),
     circle: ({ checked, visibleInScene }: StyleProps) => ({
