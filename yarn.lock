@@ -2308,8 +2308,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@foxglove/mcap-support@workspace:packages/mcap-support"
   dependencies:
+    "@foxglove/wasm-bz2": 0.1.0
     "@protobufjs/base64": 1.1.2
     typescript: 4.5.5
+    wasm-lz4: 2.0.0
+    zstd-codec: 0.1.4
   languageName: unknown
   linkType: soft
 
@@ -2520,6 +2523,7 @@ __metadata:
     "@foxglove/studio": "workspace:*"
     "@foxglove/ulog": 2.1.2
     "@foxglove/velodyne-cloud": 1.0.0
+    "@foxglove/wasm-bz2": 0.1.0
     "@foxglove/ws-protocol": 0.0.8
     "@mdi/svg": 6.5.95
     "@mui/icons-material": 5.4.1
@@ -12878,7 +12882,6 @@ __metadata:
     "@babel/preset-typescript": 7.16.7
     "@foxglove/eslint-plugin": 0.19.0
     "@foxglove/tsconfig": 1.1.0
-    "@foxglove/wasm-bz2": 0.1.0
     "@octokit/rest": 18.12.0
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.4
     "@sentry/electron": 2.5.4

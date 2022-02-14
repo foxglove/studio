@@ -458,7 +458,9 @@ export default class RandomAccessPlayer implements Player {
     });
     if (problems) {
       for (const problem of problems) {
-        // FIXME: expire?
+        // The data provider getMessages() API does not provide a way to replace or clear problems,
+        // so we give each one a unique id. If this becomes annoying to users we can consider adding
+        // a way to manually or automatically clear out the list.
         this._problems.set(uuidv4(), problem);
       }
     }

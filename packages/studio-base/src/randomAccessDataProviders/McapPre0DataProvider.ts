@@ -5,9 +5,9 @@
 import { isEqual } from "lodash";
 import protobufjs from "protobufjs";
 import descriptor from "protobufjs/ext/descriptor";
-import decompressLZ4 from "wasm-lz4";
 
 import { McapPre0Reader as McapReader, McapPre0Types } from "@foxglove/mcap";
+import { loadDecompressHandlers } from "@foxglove/mcap-support";
 import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
 import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
 import { MessageReader as ROS2MessageReader } from "@foxglove/rosmsg2-serialization";
@@ -41,7 +41,7 @@ export default class McapPre0DataProvider implements RandomAccessDataProvider {
 
   async initialize(_extensionPoint: ExtensionPoint): Promise<InitializationResult> {
     const { file } = this.options;
-    await decompressLZ4.isLoaded;
+    const decompressHandlers = await loadDecompressHandlers();
 
     const streamReader = (file.stream() as ReadableStream<Uint8Array>).getReader();
 
@@ -134,11 +134,7 @@ export default class McapPre0DataProvider implements RandomAccessDataProvider {
       }
     }
 
-    const reader = new McapReader({
-      decompressHandlers: {
-        lz4: (buffer, decompressedSize) => decompressLZ4(buffer, Number(decompressedSize)),
-      },
-    });
+    const reader = new McapReader({ decompressHandlers });
     for (let result; (result = await streamReader.read()), !result.done; ) {
       reader.append(result.value);
       for (let record; (record = reader.nextRecord()); ) {

@@ -2,15 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import decompressLZ4 from "wasm-lz4";
-import { ZstdCodec, ZstdModule, ZstdStreaming } from "zstd-codec";
-
-import {
-  detectVersion,
-  DETECT_VERSION_BYTES_REQUIRED,
-  Mcap0IndexedReader,
-  Mcap0Types,
-} from "@foxglove/mcap";
+import { detectVersion, DETECT_VERSION_BYTES_REQUIRED, Mcap0IndexedReader } from "@foxglove/mcap";
+import { loadDecompressHandlers } from "@foxglove/mcap-support";
 import { Time } from "@foxglove/rostime";
 import {
   RandomAccessDataProvider,
@@ -25,15 +18,6 @@ import Mcap0StreamedDataProvider from "./Mcap0StreamedDataProvider";
 import McapPre0DataProvider from "./McapPre0DataProvider";
 
 type Options = { file: File };
-
-let loadedZstdModule: ZstdModule | undefined;
-let loadedZstdStreaming: ZstdStreaming | undefined;
-const zstdPromise = new Promise<void>((resolve) => {
-  ZstdCodec.run((zstd) => {
-    loadedZstdModule = zstd;
-    resolve();
-  });
-});
 
 class FileReadable {
   constructor(private file: File) {}
@@ -52,39 +36,9 @@ class FileReadable {
   }
 }
 
-const decompressHandlers: Mcap0Types.DecompressHandlers = {
-  lz4: (buffer, decompressedSize) => decompressLZ4(buffer, Number(decompressedSize)),
-
-  zstd: (buffer, decompressedSize) => {
-    if (!loadedZstdStreaming) {
-      if (!loadedZstdModule) {
-        throw new Error("Zstd codec not initialized");
-      }
-      loadedZstdStreaming = new loadedZstdModule.Streaming();
-    }
-    // We use streaming decompression because the zstd-codec package has a limited (and
-    // non-growable) amount of WASM memory, and does not currently support passing the
-    // decompressedSize into the simple one-shot decode() function.
-    // https://github.com/yoshihitoh/zstd-codec/issues/223
-    const result = loadedZstdStreaming.decompressChunks(
-      (function* () {
-        const chunkSize = 4 * 1024 * 1024;
-        const endOffset = buffer.byteOffset + buffer.byteLength;
-        for (let offset = buffer.byteOffset; offset < endOffset; offset += chunkSize) {
-          yield new Uint8Array(buffer.buffer, offset, Math.min(chunkSize, endOffset - offset));
-        }
-      })(),
-      Number(decompressedSize),
-    );
-    if (!result) {
-      throw new Error("Decompression failed");
-    }
-    return result;
-  },
-};
-
 async function tryCreateIndexedReader(file: File) {
   const readable = new FileReadable(file);
+  const decompressHandlers = await loadDecompressHandlers();
   const reader = await Mcap0IndexedReader.Initialize({ readable, decompressHandlers });
 
   let hasMissingSchemas = false;
@@ -113,9 +67,6 @@ export default class McapDataProvider implements RandomAccessDataProvider {
   async initialize(extensionPoint: ExtensionPoint): Promise<InitializationResult> {
     const { file } = this.options;
     const prefix = await file.slice(0, DETECT_VERSION_BYTES_REQUIRED).arrayBuffer();
-
-    await decompressLZ4.isLoaded;
-    await zstdPromise;
 
     switch (detectVersion(new DataView(prefix))) {
       case undefined:

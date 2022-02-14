@@ -132,8 +132,7 @@ export function parseChannel(channel: Channel): ParsedChannel {
     };
   }
 
-  //FIXME: not actually standardized?
-  if (channel.messageEncoding === "ros2") {
+  if (channel.messageEncoding === "cdr") {
     if (channel.schema?.encoding !== "ros2msg") {
       throw new Error(
         `Message encoding ${channel.messageEncoding} with ${

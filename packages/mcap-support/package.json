@@ -24,6 +24,9 @@
     "typescript": "4.5.5"
   },
   "dependencies": {
-    "@protobufjs/base64": "1.1.2"
+    "@foxglove/wasm-bz2": "0.1.0",
+    "@protobufjs/base64": "1.1.2",
+    "wasm-lz4": "2.0.0",
+    "zstd-codec": "0.1.4"
   }
 }

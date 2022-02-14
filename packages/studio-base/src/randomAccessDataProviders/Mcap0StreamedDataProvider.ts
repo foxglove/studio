@@ -3,14 +3,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { isEqual } from "lodash";
-import protobufjs from "protobufjs";
-import descriptor from "protobufjs/ext/descriptor";
-import decompressLZ4 from "wasm-lz4";
 
 import { Mcap0StreamReader, Mcap0Types } from "@foxglove/mcap";
-import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
-import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
-import { MessageReader as ROS2MessageReader } from "@foxglove/rosmsg2-serialization";
+import { loadDecompressHandlers, parseChannel, ParsedChannel } from "@foxglove/mcap-support";
 import {
   Time,
   compare,
@@ -43,9 +38,11 @@ export default class Mcap0StreamedDataProvider implements RandomAccessDataProvid
   async initialize(_extensionPoint: ExtensionPoint): Promise<InitializationResult> {
     const { file } = this.options;
     if (file.size > 1024 * 1024 * 1024) {
+      // This provider uses a simple approach of loading everything into memory up front, so we
+      // can't handle large files
       throw new Error("Unable to stream MCAP file; too large");
     }
-    await decompressLZ4.isLoaded;
+    const decompressHandlers = await loadDecompressHandlers();
 
     const streamReader = (file.stream() as ReadableStream<Uint8Array>).getReader();
 
@@ -53,11 +50,7 @@ export default class Mcap0StreamedDataProvider implements RandomAccessDataProvid
     const schemasById = new Map<number, Mcap0Types.TypedMcapRecords["Schema"]>();
     const channelInfoById = new Map<
       number,
-      {
-        channel: Mcap0Types.Channel;
-        schema: Mcap0Types.Schema;
-        messageDeserializer: ROS2MessageReader | LazyMessageReader | protobufjs.Type;
-      }
+      { channel: Mcap0Types.Channel; parsedChannel: ParsedChannel }
     >();
 
     let startTime: Time | undefined;
@@ -96,28 +89,8 @@ export default class Mcap0StreamedDataProvider implements RandomAccessDataProvid
             );
           }
 
-          //FIXME: use parseChannel
-          let messageDeserializer;
-          if (record.messageEncoding === "ros1" && schema.encoding === "ros1msg") {
-            const parsedDefinitions = parseMessageDefinition(new TextDecoder().decode(schema.data));
-            messageDeserializer = new LazyMessageReader(parsedDefinitions);
-          } else if (record.messageEncoding === "ros2" && schema.encoding === "ros2msg") {
-            const parsedDefinitions = parseMessageDefinition(
-              new TextDecoder().decode(schema.data),
-              {
-                ros2: true,
-              },
-            );
-            messageDeserializer = new ROS2MessageReader(parsedDefinitions);
-          } else if (record.messageEncoding === "protobuf" && schema.encoding === "proto") {
-            const descriptorMsg = descriptor.FileDescriptorSet.decode(schema.data);
-            const MsgRoot = protobufjs.Root.fromDescriptor(descriptorMsg);
-            const Deserializer = MsgRoot.root.lookupType(schema.name);
-            messageDeserializer = Deserializer;
-          } else {
-            throw new Error(`unsupported message encoding ${record.messageEncoding}`);
-          }
-          channelInfoById.set(record.id, { channel: record, schema, messageDeserializer });
+          const parsedChannel = parseChannel({ messageEncoding: record.messageEncoding, schema });
+          channelInfoById.set(record.id, { channel: record, parsedChannel });
           messagesByChannel.set(record.id, []);
           break;
         }
@@ -137,32 +110,18 @@ export default class Mcap0StreamedDataProvider implements RandomAccessDataProvid
             endTime = receiveTime;
           }
 
-          if (channelInfo.messageDeserializer instanceof protobufjs.Type) {
-            const protoMsg = channelInfo.messageDeserializer.decode(new Uint8Array(record.data));
-            messages.push({
-              topic: channelInfo.channel.topic,
-              receiveTime,
-              message: channelInfo.messageDeserializer.toObject(protoMsg, { defaults: true }),
-              sizeInBytes: record.data.byteLength,
-            });
-          } else {
-            messages.push({
-              topic: channelInfo.channel.topic,
-              receiveTime,
-              message: channelInfo.messageDeserializer.readMessage(new Uint8Array(record.data)),
-              sizeInBytes: record.data.byteLength,
-            });
-          }
+          messages.push({
+            topic: channelInfo.channel.topic,
+            receiveTime,
+            message: channelInfo.parsedChannel.deserializer(record.data),
+            sizeInBytes: record.data.byteLength,
+          });
           break;
         }
       }
     }
 
-    const reader = new Mcap0StreamReader({
-      decompressHandlers: {
-        lz4: (buffer, decompressedSize) => decompressLZ4(buffer, Number(decompressedSize)),
-      },
-    });
+    const reader = new Mcap0StreamReader({ decompressHandlers });
     for (let result; (result = await streamReader.read()), !result.done; ) {
       reader.append(result.value);
       for (let record; (record = reader.nextRecord()); ) {
@@ -174,12 +133,14 @@ export default class Mcap0StreamedDataProvider implements RandomAccessDataProvid
 
     const topics: Topic[] = [];
     const connections: Connection[] = [];
-    const datatypes: RosDatatypes = new Map([["TODO", { definitions: [] }]]);
+    const datatypes: RosDatatypes = new Map();
 
-    // FIXME
-    for (const { channel, schema } of channelInfoById.values()) {
-      topics.push({ name: channel.topic, datatype: schema.name });
-      datatypes.set(schema.name, { definitions: [] });
+    for (const { channel, parsedChannel } of channelInfoById.values()) {
+      topics.push({ name: channel.topic, datatype: parsedChannel.fullSchemaName });
+      // Final datatypes is an unholy union of schemas across all channels
+      for (const [name, datatype] of parsedChannel.datatypes) {
+        datatypes.set(name, datatype);
+      }
     }
 
     return {

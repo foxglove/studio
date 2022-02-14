@@ -63,7 +63,7 @@ export type ParsedMessageDefinitions = Readonly<{
   datatypes: RosDatatypes;
   // Note that these might not be "complete" - rely on the parsedMessageDefinitionsByTopic for the
   // complete list of message definitions!
-  messageDefinitionsByTopic: MessageDefinitionsByTopic; // FIXME: can this get the 🔪?
+  messageDefinitionsByTopic: MessageDefinitionsByTopic;
   parsedMessageDefinitionsByTopic: ParsedMessageDefinitionsByTopic;
 }>;
 
