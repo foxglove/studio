@@ -47,7 +47,7 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-export type VisibilityToggleProps = {
+type VisibilityToggleProps = {
   available: boolean;
   checked: boolean;
   dataTest?: string;
