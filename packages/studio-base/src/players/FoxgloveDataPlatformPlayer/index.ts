@@ -174,7 +174,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
       this._end = coverageEnd;
     }
 
-    // During startup, seekPlayback might get called to set the currentTime This might change the
+    // During startup, seekPlayback might get called to set the currentTime. This might change the
     // currentTime from the initial value set in the constructor. So we clamp the currentTime to the
     // new start/end range in the event.
     this._currentTime = clampTime(this._currentTime, this._start, this._end);
