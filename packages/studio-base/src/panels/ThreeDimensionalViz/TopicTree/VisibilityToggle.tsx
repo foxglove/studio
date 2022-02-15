@@ -4,48 +4,46 @@
 
 import BlockIcon from "@mui/icons-material/Block";
 import { IconButton, SvgIcon, Theme } from "@mui/material";
-import { createStyles, makeStyles } from "@mui/styles";
+import { makeStyles } from "@mui/styles";
 import cx from "classnames";
 import { MouseEvent, KeyboardEvent, useCallback } from "react";
 
 import { Color } from "@foxglove/regl-worldview";
 import { defaultedRGBStringFromColorObj } from "@foxglove/studio-base/util/colorUtils";
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    unavailable: {
-      cursor: "not-allowed",
+const useStyles = makeStyles((theme: Theme) => ({
+  unavailable: {
+    cursor: "not-allowed",
+  },
+  button: ({ overrideRGB }: StyleProps) => ({
+    fontSize: `10px !important`,
+    color: `${theme.palette.text.secondary} !important`,
+    position: "relative",
+
+    "&.Mui-focusVisible": {
+      backgroundColor: theme.palette.text.secondary,
+      color: theme.palette.info.main,
     },
-    button: ({ overrideRGB }: StyleProps) => ({
-      fontSize: `10px !important`,
-      color: `${theme.palette.text.secondary} !important`,
-      position: "relative",
+    "&:hover, &.Mui-focusVisible": {
+      backgroundColor: "transparent",
 
-      "&.Mui-focusVisible": {
-        backgroundColor: theme.palette.text.secondary,
-        color: theme.palette.info.main,
+      "& circle": {
+        stroke: overrideRGB ?? theme.palette.info.main,
+        strokeWidth: 5,
       },
-      "&:hover, &.Mui-focusVisible": {
-        backgroundColor: "transparent",
-
-        "& circle": {
-          stroke: overrideRGB ?? theme.palette.info.main,
-          strokeWidth: 5,
-        },
-        "& .MuiTouchRipple-child": {
-          backgroundColor: theme.palette.action.focus,
-        },
+      "& .MuiTouchRipple-child": {
+        backgroundColor: theme.palette.action.focus,
       },
-    }),
-    circle: ({ checked, overrideRGB, visibleInScene }: StyleProps) => ({
-      color: overrideRGB ?? "currentcolor",
-      stroke: "currentcolor",
-      strokeWidth: 2,
-      fill: "currentcolor",
-      fillOpacity: checked ? (visibleInScene ? 1 : theme.palette.action.disabledOpacity) : 0,
-    }),
+    },
   }),
-);
+  circle: ({ checked, overrideRGB, visibleInScene }: StyleProps) => ({
+    color: overrideRGB ?? "currentcolor",
+    stroke: "currentcolor",
+    strokeWidth: 2,
+    fill: "currentcolor",
+    fillOpacity: checked ? (visibleInScene ? 1 : theme.palette.action.disabledOpacity) : 0,
+  }),
+}));
 
 type VisibilityToggleProps = {
   available: boolean;
