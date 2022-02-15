@@ -45,7 +45,7 @@ const LOG_LEVEL_OPTIONS = [
     text: ">= FATAL",
     key: LogLevel.FATAL,
   },
-];
+] as const;
 
 type Filter = {
   minLogLevel: number;
