@@ -24,7 +24,7 @@ import LevelToString from "./LevelToString";
 import { LogMessageEvent, LogLevel } from "./types";
 
 // Create the log level options nodes once since they don't change per render.
-const LOG_LEVEL_OPTIONS = [
+const LOG_LEVEL_OPTIONS: IDropdownOption[] = [
   {
     text: ">= DEBUG",
     key: LogLevel.DEBUG,
@@ -45,7 +45,7 @@ const LOG_LEVEL_OPTIONS = [
     text: ">= FATAL",
     key: LogLevel.FATAL,
   },
-] as const;
+];
 
 type Filter = {
   minLogLevel: number;
