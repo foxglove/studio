@@ -16,9 +16,9 @@ const useStyles = makeStyles((theme: Theme) =>
     unavailable: {
       cursor: "not-allowed",
     },
-    button: ({ overrideRGB, size }: StyleProps) => ({
-      fontSize: size === "small" ? 10 : 12,
-      color: `${overrideRGB ?? theme.palette.action.active} !important`,
+    button: ({ overrideRGB }: StyleProps) => ({
+      fontSize: `10px !important`,
+      color: `${theme.palette.text.secondary} !important`,
       position: "relative",
 
       "&.Mui-focusVisible": {
@@ -57,14 +57,12 @@ export type VisibilityToggleProps = {
   onMouseLeave?: (arg0: React.MouseEvent) => void;
   overrideColor?: Color;
   visibleInScene: boolean;
-  size?: "small" | "normal";
 };
 
 type StyleProps = {
   checked: boolean;
   overrideRGB?: string;
   visibleInScene: boolean;
-  size?: VisibilityToggleProps["size"];
 };
 
 // A toggle component that supports using tab key to focus and using space key to check/uncheck.
@@ -80,13 +78,13 @@ export default function VisibilityToggle(props: VisibilityToggleProps): JSX.Elem
     visibleInScene,
     onMouseEnter,
     onMouseLeave,
-    size = "normal",
   } = props;
+  const overrideRGB = overrideColor ? defaultedRGBStringFromColorObj(overrideColor) : undefined;
+
   const classes = useStyles({
     checked,
-    overrideRGB: overrideColor ? defaultedRGBStringFromColorObj(overrideColor) : undefined,
+    overrideRGB,
     visibleInScene,
-    size,
   });
 
   // Handle shift + click/enter, option + click/enter, and click/enter.

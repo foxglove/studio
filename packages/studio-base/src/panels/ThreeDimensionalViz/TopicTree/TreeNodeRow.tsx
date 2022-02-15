@@ -272,7 +272,6 @@ export default function TreeNodeRow({
             <VisibilityToggle
               available={available}
               dataTest={`visibility-toggle~${key}`}
-              size={node.type === "topic" ? "small" : "normal"}
               overrideColor={derivedCustomSettings?.overrideColor}
               checked={checked}
               onToggle={() => {

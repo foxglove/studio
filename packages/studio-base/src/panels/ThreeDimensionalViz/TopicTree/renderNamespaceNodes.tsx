@@ -158,7 +158,6 @@ function NamespaceNodeRow({
             onAltToggle={() => onAltToggle()}
             onToggle={() => onToggle()}
             overrideColor={overrideColor}
-            size="small"
             visibleInScene={visibleInScene}
             onMouseEnter={() => updateHoveredMarkerMatchers(true)}
             onMouseLeave={onMouseLeave}
