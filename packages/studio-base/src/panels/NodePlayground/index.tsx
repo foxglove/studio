@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { useTheme } from "@fluentui/react";
 import { Link, Spinner, SpinnerSize } from "@fluentui/react";
 import ArrowLeftIcon from "@mdi/svg/svg/arrow-left.svg";
 import PlusIcon from "@mdi/svg/svg/plus.svg";
@@ -151,6 +152,7 @@ function NodePlayground(props: Props) {
   const { config, saveConfig } = props;
   const { autoFormatOnSave = false, selectedNodeId, editorForStorybook } = config;
 
+  const theme = useTheme();
   const [explorer, updateExplorer] = React.useState<Explorer>(undefined);
 
   const userNodes = useCurrentLayoutSelector(userNodeSelector);
@@ -178,11 +180,11 @@ function NodePlayground(props: Props) {
   const inputTitle = currentScript
     ? currentScript.filePath + (currentScript.readOnly ? " (READONLY)" : "")
     : "node name";
+
   const inputStyle = {
     borderRadius: 0,
     margin: 0,
-    backgroundColor: colors.DARK2,
-    color: colors.LIGHT2,
+    backgroundColor: theme.semanticColors.bodyBackground,
     padding: "4px 20px",
     width: `${inputTitle.length + 4}ch`, // Width based on character count of title + padding
   };
@@ -283,7 +285,7 @@ function NodePlayground(props: Props) {
           addNewNode={addNewNode}
         />
         <Stack flexGrow={1} height="100%" overflow="hidden">
-          <Stack direction="row" alignItems="center" bgcolor={colors.DARK1}>
+          <Stack direction="row" alignItems="center" bgcolor={theme.palette.neutralLighterAlt}>
             {scriptBackStack.length > 1 && (
               <Icon
                 size="large"

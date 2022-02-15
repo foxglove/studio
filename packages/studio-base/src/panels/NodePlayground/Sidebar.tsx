@@ -48,10 +48,9 @@ const MenuWrapper = styled.div`
   }
 `;
 
-const ExplorerWrapper = styled.div<{ useThemeColors: boolean; show: boolean }>`
+const ExplorerWrapper = styled.div<{ show: boolean }>`
   display: ${({ show }: { show: boolean }) => (show ? "initial" : "none")};
-  background-color: ${({ useThemeColors, theme }) =>
-    useThemeColors ? theme.palette.neutralLighterAlt : colors.GRAY2};
+  background-color: ${({ theme }) => theme.palette.neutralLighterAlt};
   max-width: 325px;
   min-width: 275px;
   overflow: auto;
@@ -275,7 +274,7 @@ const Sidebar = ({
           <TemplateIcon />
         </Icon>
       </MenuWrapper>
-      <ExplorerWrapper useThemeColors={true} show={explorer != undefined}>
+      <ExplorerWrapper show={explorer != undefined}>
         {explorer != undefined && explorers[explorer]}
       </ExplorerWrapper>
     </>
