@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import BlockIcon from "@mui/icons-material/Block";
-import { IconButton, SvgIcon, Tooltip, Theme } from "@mui/material";
+import { IconButton, SvgIcon, Theme } from "@mui/material";
 import { createStyles, makeStyles } from "@mui/styles";
 import cx from "classnames";
 import { useCallback } from "react";
@@ -104,15 +104,14 @@ export default function VisibilityToggle(props: VisibilityToggleProps): JSX.Elem
 
   if (!available) {
     return (
-      <Tooltip title="Unavailable" placement="top" arrow>
-        <IconButton
-          size="small"
-          className={cx(classes.button, classes.unavailable)}
-          data-test={dataTest}
-        >
-          <BlockIcon fontSize="inherit" color="inherit" />
-        </IconButton>
-      </Tooltip>
+      <IconButton
+        size="small"
+        className={cx(classes.button, classes.unavailable)}
+        data-test={dataTest}
+        title="Unavailable"
+      >
+        <BlockIcon fontSize="inherit" color="inherit" />
+      </IconButton>
     );
   }
 
