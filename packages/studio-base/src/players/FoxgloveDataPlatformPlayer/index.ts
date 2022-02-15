@@ -168,12 +168,13 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     if (isLessThan(this._start, coverageStart)) {
       log.debug("Reduced start time from", this._start, "to", coverageStart);
       this._start = coverageStart;
-      this._currentTime = this._start;
     }
     if (isGreaterThan(this._end, coverageEnd)) {
       log.debug("Reduced end time from", this._end, "to", coverageEnd);
       this._end = coverageEnd;
     }
+
+    this._currentTime = clampTime(this._currentTime, this._start, this._end);
 
     const topics: Topic[] = [];
     const datatypes: RosDatatypes = new Map();
