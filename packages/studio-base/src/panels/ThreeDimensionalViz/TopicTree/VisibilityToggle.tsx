@@ -6,7 +6,7 @@ import BlockIcon from "@mui/icons-material/Block";
 import { IconButton, SvgIcon, Theme } from "@mui/material";
 import { createStyles, makeStyles } from "@mui/styles";
 import cx from "classnames";
-import { useCallback } from "react";
+import { MouseEvent, KeyboardEvent, useCallback } from "react";
 
 import { Color } from "@foxglove/regl-worldview";
 import { defaultedRGBStringFromColorObj } from "@foxglove/studio-base/util/colorUtils";
@@ -90,10 +90,10 @@ export default function VisibilityToggle(props: VisibilityToggleProps): JSX.Elem
 
   // Handle shift + click/enter, option + click/enter, and click/enter.
   const onChange = useCallback(
-    (e: React.MouseEvent | React.KeyboardEvent) => {
-      if (onShiftToggle && e.shiftKey) {
+    (event: MouseEvent | KeyboardEvent) => {
+      if (onShiftToggle && event.shiftKey) {
         onShiftToggle();
-      } else if (onAltToggle && e.altKey) {
+      } else if (onAltToggle && event.altKey) {
         onAltToggle();
       } else {
         onToggle();
@@ -102,37 +102,32 @@ export default function VisibilityToggle(props: VisibilityToggleProps): JSX.Elem
     [onAltToggle, onShiftToggle, onToggle],
   );
 
-  if (!available) {
-    return (
-      <IconButton
-        size="small"
-        className={cx(classes.button, classes.unavailable)}
-        data-test={dataTest}
-        title="Unavailable"
-      >
-        <BlockIcon fontSize="inherit" color="inherit" />
-      </IconButton>
-    );
-  }
-
   return (
     <IconButton
       size="small"
-      className={classes.button}
+      className={cx(classes.button, {
+        [classes.unavailable]: !available,
+      })}
+      disabled={!available}
       data-test={dataTest}
+      title={!available ? "Unavailable" : "Toggle visibility"}
       tabIndex={0}
-      onKeyDown={(e: React.KeyboardEvent) => {
-        if (e.key === "Enter") {
-          onChange(e);
+      onKeyDown={(event: KeyboardEvent) => {
+        if (event.key === "Enter") {
+          onChange(event);
         }
       }}
       onClick={onChange}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <SvgIcon fontSize="inherit">
-        <circle className={classes.circle} cx={12} cy={12} r={10} />
-      </SvgIcon>
+      {available ? (
+        <SvgIcon fontSize="inherit">
+          <circle className={classes.circle} cx={12} cy={12} r={10} />
+        </SvgIcon>
+      ) : (
+        <BlockIcon fontSize="inherit" />
+      )}
     </IconButton>
   );
 }
