@@ -11,9 +11,8 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-// import { makeStyles } from "@fluentui/react";
 import { Theme } from "@mui/material";
-import { makeStyles, createStyles } from "@mui/styles";
+import { makeStyles } from "@mui/styles";
 import { useContext, useRef } from "react";
 
 import { WorldviewReactContext, WorldviewContextType } from "@foxglove/regl-worldview";
@@ -29,31 +28,29 @@ type Stats = {
   getTotalBufferSize(): number;
 };
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    root: {
-      position: "absolute",
-      bottom: theme.spacing(2),
-      right: theme.spacing(2),
-      backgroundColor: theme.palette.background.paper,
-      borderRadius: theme.shape.borderRadius,
-      fontFamily: fonts.MONOSPACE,
-      fontSize: theme.typography.caption.fontSize,
-      padding: theme.spacing(0.5),
-      pointerEvents: "none",
+const useStyles = makeStyles((theme: Theme) => ({
+  root: {
+    position: "absolute",
+    bottom: theme.spacing(2),
+    right: theme.spacing(2),
+    backgroundColor: theme.palette.background.paper,
+    borderRadius: theme.shape.borderRadius,
+    fontFamily: fonts.MONOSPACE,
+    fontSize: theme.typography.caption.fontSize,
+    padding: theme.spacing(0.5),
+    pointerEvents: "none",
 
-      td: {
-        padding: theme.spacing(0.25),
-        textAlign: "right",
-      },
-      th: {
-        padding: theme.spacing(0.25, 0.75),
-        color: theme.palette.text.secondary,
-        textTransform: "uppercase",
-      },
+    td: {
+      padding: theme.spacing(0.25),
+      textAlign: "right",
     },
-  }),
-);
+    th: {
+      padding: theme.spacing(0.25, 0.75),
+      color: theme.palette.text.secondary,
+      textTransform: "uppercase",
+    },
+  },
+}));
 
 // Looks at the regl stats and throws errors if it seems we're going over acceptable (arbitrary) max ranges.
 // The maxes are arbitrarily set to be an order of magnitude higher than the 'steady state' of a pretty loaded

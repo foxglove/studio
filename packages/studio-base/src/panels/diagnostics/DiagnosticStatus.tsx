@@ -17,7 +17,7 @@ import DotsHorizontalIcon from "@mdi/svg/svg/dots-horizontal.svg";
 import ChevronDownIcon from "@mdi/svg/svg/unfold-less-horizontal.svg";
 import ChevronUpIcon from "@mdi/svg/svg/unfold-more-horizontal.svg";
 import { Stack, Theme } from "@mui/material";
-import { createStyles, makeStyles } from "@mui/styles";
+import { makeStyles } from "@mui/styles";
 import cx from "classnames";
 import { clamp } from "lodash";
 import { ReactElement, useCallback, useEffect, useRef, useState } from "react";
@@ -83,97 +83,95 @@ function sanitize(value: string): { __html: string } {
   };
 }
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    table: {
-      tableLayout: "fixed",
-      width: "100%",
+const useStyles = makeStyles((theme: Theme) => ({
+  table: {
+    tableLayout: "fixed",
+    width: "100%",
+    lineHeight: "1.3em",
+    whiteSpace: "pre-line",
+    overflowWrap: "break-word",
+    textAlign: "left",
+    border: "none",
+
+    "& td": {
       lineHeight: "1.3em",
-      whiteSpace: "pre-line",
-      overflowWrap: "break-word",
-      textAlign: "left",
       border: "none",
-
-      "& td": {
-        lineHeight: "1.3em",
-        border: "none",
-        padding: "1px 3px",
-      },
-      "& th": {
-        lineHeight: "1.3em",
-        padding: "1px 3px",
-      },
+      padding: "1px 3px",
     },
-    name: {
-      fontWeight: "bold",
+    "& th": {
+      lineHeight: "1.3em",
+      padding: "1px 3px",
     },
-    sectionHeader: {
-      color: colors.HIGHLIGHT,
-      textAlign: "center",
-      fontSize: "1.2em",
-      padding: 4,
-      cursor: "pointer",
-      border: "none",
+  },
+  name: {
+    fontWeight: "bold",
+  },
+  sectionHeader: {
+    color: colors.HIGHLIGHT,
+    textAlign: "center",
+    fontSize: "1.2em",
+    padding: 4,
+    cursor: "pointer",
+    border: "none",
+  },
+  // // Status classes
+  ok: { color: `${theme.palette.success.main} !important` },
+  warn: { color: `${theme.palette.warning.main} !important` },
+  error: { color: `${theme.palette.error.main} !important` },
+  stale: { color: `${theme.palette.info.main} !important` },
+  unknown: { color: `${theme.palette.error.main} !important` },
+
+  collapsedSection: {
+    textAlign: "center",
+    color: theme.palette.error.main,
+  },
+  interactiveRow: {
+    cursor: "pointer",
+
+    "&:nth-child(odd)": {
+      backgroundColor: theme.palette.grey[50],
     },
-    // // Status classes
-    ok: { color: `${theme.palette.success.main} !important` },
-    warn: { color: `${theme.palette.warning.main} !important` },
-    error: { color: `${theme.palette.error.main} !important` },
-    stale: { color: `${theme.palette.info.main} !important` },
-    unknown: { color: `${theme.palette.error.main} !important` },
+    "&:hover": {
+      backgroundColor: theme.palette.action.hover,
 
-    collapsedSection: {
-      textAlign: "center",
-      color: theme.palette.error.main,
-    },
-    interactiveRow: {
-      cursor: "pointer",
-
-      "&:nth-child(odd)": {
-        backgroundColor: theme.palette.grey[50],
-      },
-      "&:hover": {
-        backgroundColor: theme.palette.action.hover,
-
-        "& .icon": {
-          visibility: "visible",
-        },
+      "& .icon": {
+        visibility: "visible",
       },
     },
-    icon: {
-      color: theme.palette.primary.main,
-      marginLeft: 4,
-      visibility: "hidden",
+  },
+  icon: {
+    color: theme.palette.primary.main,
+    marginLeft: 4,
+    visibility: "hidden",
 
-      "& > svg": {
-        verticalAlign: -2,
+    "& > svg": {
+      verticalAlign: -2,
+    },
+  },
+  resizeHandle: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: 12,
+    marginLeft: -6,
+    cursor: "col-resize",
+
+    "&:hover, &:active, &:focus": {
+      outline: "none",
+
+      "&::after": {
+        content: '""',
+        position: "absolute",
+        top: 0,
+        bottom: 0,
+        left: 6,
+        marginLeft: -2,
+        width: 4,
+        backgroundColor: "rgba(127, 127, 127, 0.4)",
       },
     },
-    resizeHandle: {
-      position: "absolute",
-      top: 0,
-      bottom: 0,
-      width: 12,
-      marginLeft: -6,
-      cursor: "col-resize",
-
-      "&:hover, &:active, &:focus": {
-        outline: "none",
-
-        "&::after": {
-          content: '""',
-          position: "absolute",
-          top: 0,
-          bottom: 0,
-          left: 6,
-          marginLeft: -2,
-          width: 4,
-          backgroundColor: "rgba(127, 127, 127, 0.4)",
-        },
-      },
-    },
-  }),
-);
+  },
+}));
 
 // preliminary check to avoid expensive operations when there is no html
 const HAS_ANY_HTML = new RegExp(`<(${allowedTags.join("|")})`);

@@ -18,7 +18,7 @@ import CloseIcon from "@mdi/svg/svg/close.svg";
 import MenuDownIcon from "@mdi/svg/svg/menu-down.svg";
 import WavesIcon from "@mdi/svg/svg/waves.svg";
 import { Stack, Theme } from "@mui/material";
-import { createStyles, makeStyles } from "@mui/styles";
+import { makeStyles } from "@mui/styles";
 import cx from "classnames";
 import { last, uniq } from "lodash";
 import { useEffect, useState, useMemo, useCallback } from "react";
@@ -84,70 +84,68 @@ type Props = {
   saveConfig: SaveImagePanelConfig;
 };
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    controls: {
-      display: "flex",
-      flexWrap: "wrap",
-      flex: "1 1 auto",
-      alignItems: "center",
-      overflow: "hidden",
+const useStyles = makeStyles((theme: Theme) => ({
+  controls: {
+    display: "flex",
+    flexWrap: "wrap",
+    flex: "1 1 auto",
+    alignItems: "center",
+    overflow: "hidden",
 
-      button: {
-        margin: theme.spacing(0.125, 0.5, 0.125, 0),
-      },
+    button: {
+      margin: theme.spacing(0.125, 0.5, 0.125, 0),
     },
-    bottomBar: {
-      transition: "opacity 0.1s ease-in-out",
-      display: "flex",
-      flex: "0 0 auto",
-      flexDirection: "row",
-      backgroundColor: "transparent",
-      textAlign: "right",
-      position: "absolute",
-      right: 4,
-      paddingRight: 5,
-      bottom: 8,
-      zIndex: 100,
-      opacity: "0",
+  },
+  bottomBar: {
+    transition: "opacity 0.1s ease-in-out",
+    display: "flex",
+    flex: "0 0 auto",
+    flexDirection: "row",
+    backgroundColor: "transparent",
+    textAlign: "right",
+    position: "absolute",
+    right: 4,
+    paddingRight: 5,
+    bottom: 8,
+    zIndex: 100,
+    opacity: "0",
 
-      "&.inScreenshotTests": {
-        opacity: 1,
-      },
-      ".mosaic-window:hover &": {
-        opacity: "1",
-      },
+    "&.inScreenshotTests": {
+      opacity: 1,
     },
-    dropdown: {
-      padding: "4px 8px !important",
+    ".mosaic-window:hover &": {
+      opacity: "1",
     },
-    dropdownTitle: {
-      overflow: "hidden",
-      whiteSpace: "nowrap",
-      textOverflow: "ellipsis",
-      flexShrink: 1,
-      display: "flex",
-      alignItems: "center",
-    },
-    dropdownItem: {
-      position: "relative",
-    },
-    toggleButton: {
-      display: "flex",
-      alignItems: "center",
-    },
-    topicTimestamp: {
-      padding: "0px 15px 0px 0px",
-      fontSize: 10,
-      fontStyle: "italic",
-    },
-    emptyStateContainer: {
-      width: "100%",
-      height: "100%",
-      position: "absolute",
-    },
-  }),
-);
+  },
+  dropdown: {
+    padding: "4px 8px !important",
+  },
+  dropdownTitle: {
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
+    flexShrink: 1,
+    display: "flex",
+    alignItems: "center",
+  },
+  dropdownItem: {
+    position: "relative",
+  },
+  toggleButton: {
+    display: "flex",
+    alignItems: "center",
+  },
+  topicTimestamp: {
+    padding: "0px 15px 0px 0px",
+    fontSize: 10,
+    fontStyle: "italic",
+  },
+  emptyStateContainer: {
+    width: "100%",
+    height: "100%",
+    position: "absolute",
+  },
+}));
 
 const TopicTimestamp = ({
   text,

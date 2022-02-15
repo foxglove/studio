@@ -4,21 +4,19 @@
 
 import { CompoundButton, Checkbox, Text, useTheme, IButtonStyles } from "@fluentui/react";
 import { Stack, Theme } from "@mui/material";
-import { createStyles, makeStyles } from "@mui/styles";
+import { makeStyles } from "@mui/styles";
 import { ReactElement, useState } from "react";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import { useSessionStorageValue } from "@foxglove/studio-base/hooks/useSessionStorageValue";
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    title: {
-      textAlign: "center",
-      marginBottom: theme.spacing(2),
-    },
-  }),
-);
+const useStyles = makeStyles((theme: Theme) => ({
+  title: {
+    textAlign: "center",
+    marginBottom: theme.spacing(2),
+  },
+}));
 
 const buttonStyles = {
   root: { flex: "0 1 100%" },

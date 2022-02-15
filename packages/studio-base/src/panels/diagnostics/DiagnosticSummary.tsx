@@ -20,7 +20,7 @@ import {
 } from "@fluentui/react";
 import PinIcon from "@mdi/svg/svg/pin.svg";
 import { Stack, Theme } from "@mui/material";
-import { createStyles, makeStyles } from "@mui/styles";
+import { makeStyles } from "@mui/styles";
 import cx from "classnames";
 import { compact } from "lodash";
 import { useCallback, useMemo } from "react";
@@ -58,48 +58,46 @@ type NodeRowProps = {
   onClickPin: (info: DiagnosticInfo) => void;
 };
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    ok: { color: theme.palette.success.main },
-    warn: { color: theme.palette.warning.main },
-    error: { color: theme.palette.error.main },
-    stale: { color: theme.palette.text.secondary },
-    pinIcon: {
-      marginRight: 4,
-      marginLeft: 4,
-      verticalAlign: "middle",
-      visibility: "hidden",
+const useStyles = makeStyles((theme: Theme) => ({
+  ok: { color: theme.palette.success.main },
+  warn: { color: theme.palette.warning.main },
+  error: { color: theme.palette.error.main },
+  stale: { color: theme.palette.text.secondary },
+  pinIcon: {
+    marginRight: 4,
+    marginLeft: 4,
+    verticalAlign: "middle",
+    visibility: "hidden",
 
-      "& svg": {
-        fontSize: 16,
-        position: "relative",
-        top: -1,
-      },
+    "& svg": {
+      fontSize: 16,
+      position: "relative",
+      top: -1,
     },
-    pinIconActive: {
+  },
+  pinIconActive: {
+    visibility: "visible",
+  },
+  nodeRow: {
+    textDecoration: "none",
+    cursor: "pointer",
+    userSelect: "none",
+    display: "flex",
+    alignItems: "center",
+    padding: 0,
+    lineHeight: "24px",
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    textOverflow: "ellipsis",
+
+    "&:hover": {
+      backgroundColor: theme.palette.action.hover,
+    },
+    "&:hover .icon": {
       visibility: "visible",
     },
-    nodeRow: {
-      textDecoration: "none",
-      cursor: "pointer",
-      userSelect: "none",
-      display: "flex",
-      alignItems: "center",
-      padding: 0,
-      lineHeight: "24px",
-      overflow: "hidden",
-      whiteSpace: "nowrap",
-      textOverflow: "ellipsis",
-
-      "&:hover": {
-        backgroundColor: theme.palette.action.hover,
-      },
-      "&:hover .icon": {
-        visibility: "visible",
-      },
-    },
-  }),
-);
+  },
+}));
 
 const NodeRow = React.memo(function NodeRow(props: NodeRowProps) {
   const handleClick = useCallback(() => {

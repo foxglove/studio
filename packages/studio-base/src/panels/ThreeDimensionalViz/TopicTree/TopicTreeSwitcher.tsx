@@ -4,7 +4,7 @@
 
 import { IconButton, useTheme } from "@fluentui/react";
 import { Theme } from "@mui/material";
-import { makeStyles, createStyles } from "@mui/styles";
+import { makeStyles } from "@mui/styles";
 import cx from "classnames";
 import { useCallback } from "react";
 
@@ -19,27 +19,25 @@ const BADGE_SIZE = 10;
 const BADGE_RADIUS = BADGE_SIZE / 2;
 const BADGE_OFFSET = 2;
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    root: {
-      position: "relative",
-      pointerEvents: "auto",
+const useStyles = makeStyles((theme: Theme) => ({
+  root: {
+    position: "relative",
+    pointerEvents: "auto",
+  },
+  badge: {
+    ":before": {
+      content: '""',
+      position: "absolute",
+      top: -BADGE_RADIUS + BADGE_OFFSET,
+      right: -BADGE_RADIUS + BADGE_OFFSET,
+      width: BADGE_SIZE,
+      height: BADGE_SIZE,
+      borderRadius: BADGE_RADIUS,
+      backgroundColor: theme.palette.error.main,
+      zIndex: 101,
     },
-    badge: {
-      ":before": {
-        content: '""',
-        position: "absolute",
-        top: -BADGE_RADIUS + BADGE_OFFSET,
-        right: -BADGE_RADIUS + BADGE_OFFSET,
-        width: BADGE_SIZE,
-        height: BADGE_SIZE,
-        borderRadius: BADGE_RADIUS,
-        backgroundColor: theme.palette.error.main,
-        zIndex: 101,
-      },
-    },
-  }),
-);
+  },
+}));
 
 type Props = {
   pinTopics: boolean;

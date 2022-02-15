@@ -23,7 +23,7 @@ import {
   useTheme,
 } from "@fluentui/react";
 import { Stack, Theme } from "@mui/material";
-import { createStyles, makeStyles } from "@mui/styles";
+import { makeStyles } from "@mui/styles";
 import { clamp, groupBy } from "lodash";
 import Tree from "rc-tree";
 import React, { useCallback, useMemo, useRef } from "react";
@@ -67,83 +67,81 @@ const DEFAULT_XS_WIDTH = 240;
 const SEARCH_BAR_HEIGHT = 40;
 const MAX_CONTAINER_WIDTH_RATIO = 0.9;
 
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    wrapper: {
-      position: "absolute",
-      top: CONTAINER_SPACING,
-      left: CONTAINER_SPACING,
-      zIndex: 102,
-      maxEidth: `${MAX_CONTAINER_WIDTH_RATIO * 100}%`,
-      pointerEvents: "none", // Allow clicks right above the TopicTree to close it
+const useStyles = makeStyles((theme: Theme) => ({
+  wrapper: {
+    position: "absolute",
+    top: CONTAINER_SPACING,
+    left: CONTAINER_SPACING,
+    zIndex: 102,
+    maxEidth: `${MAX_CONTAINER_WIDTH_RATIO * 100}%`,
+    pointerEvents: "none", // Allow clicks right above the TopicTree to close it
+  },
+  tree: {
+    position: "relative",
+    color: theme.palette.text.primary,
+    borderRadius: theme.shape.borderRadius,
+    backgroundColor: theme.palette.background.paper,
+    paddingBottom: theme.spacing(1),
+    maxWidth: "100%",
+    overflow: "auto",
+    pointerEvents: "auto",
+  },
+  inner: {
+    "& .rc-tree li ul": {
+      padding: 0,
+      paddingLeft: SWITCHER_WIDTH,
     },
-    tree: {
-      position: "relative",
-      color: theme.palette.text.primary,
-      borderRadius: theme.shape.borderRadius,
-      backgroundColor: theme.palette.background.paper,
-      paddingBottom: theme.spacing(1),
-      maxWidth: "100%",
-      overflow: "auto",
-      pointerEvents: "auto",
+    "& .rc-tree-node-content-wrapper": {
+      cursor: "unset",
     },
-    inner: {
-      "& .rc-tree li ul": {
-        padding: 0,
-        paddingLeft: SWITCHER_WIDTH,
+    /* Make the chevron icon transition nicely between pointing down and right. */
+    "& .rc-tree-switcher": {
+      height: ROW_HEIGHT,
+      transition: "transform 80ms ease-in-out",
+    },
+    "& .rc-tree-switcher_close": {
+      transform: "rotate(-90deg)",
+    },
+    "& .rc-tree-switcher_open": {
+      transform: "rotate(0deg)",
+    },
+    /* Hide the chevron switcher icon when it's not usable. */
+    "& .rc-tree-switcher-noop": {
+      visibility: "hidden",
+    },
+    "& .rc-tree-treenode": {
+      display: "flex",
+      padding: 0,
+
+      "&:hover": {
+        background: theme.palette.action.hover,
       },
+      ".isXSWidth &": {
+        padding: `0 ${TREE_SPACING}px`,
+      },
+    },
+    "& .rc-tree-treenode.rc-tree-treenode-disabled": {
+      color: theme.palette.action.disabled,
+
+      cursor: "unset",
+
       "& .rc-tree-node-content-wrapper": {
         cursor: "unset",
       },
-      /* Make the chevron icon transition nicely between pointing down and right. */
-      "& .rc-tree-switcher": {
-        height: ROW_HEIGHT,
-        transition: "transform 80ms ease-in-out",
-      },
-      "& .rc-tree-switcher_close": {
-        transform: "rotate(-90deg)",
-      },
-      "& .rc-tree-switcher_open": {
-        transform: "rotate(0deg)",
-      },
-      /* Hide the chevron switcher icon when it's not usable. */
-      "& .rc-tree-switcher-noop": {
-        visibility: "hidden",
-      },
-      "& .rc-tree-treenode": {
-        display: "flex",
+    },
+    "& .rc-tree-indent": {
+      width: "100%",
+    },
+    "& .rc-tree-indent-unit": {
+      width: 24,
+    },
+    "& .rc-tree-treenode-switcher-close, .rc-tree-treenode-switcher-open": {
+      "& .rc-tree-node-content-wrapper": {
         padding: 0,
-
-        "&:hover": {
-          background: theme.palette.action.hover,
-        },
-        ".isXSWidth &": {
-          padding: `0 ${TREE_SPACING}px`,
-        },
-      },
-      "& .rc-tree-treenode.rc-tree-treenode-disabled": {
-        color: theme.palette.action.disabled,
-
-        cursor: "unset",
-
-        "& .rc-tree-node-content-wrapper": {
-          cursor: "unset",
-        },
-      },
-      "& .rc-tree-indent": {
-        width: "100%",
-      },
-      "& .rc-tree-indent-unit": {
-        width: 24,
-      },
-      "& .rc-tree-treenode-switcher-close, .rc-tree-treenode-switcher-open": {
-        "& .rc-tree-node-content-wrapper": {
-          padding: 0,
-        },
       },
     },
-  }),
-);
+  },
+}));
 
 const useComponentStyles = (theme: ITheme) =>
   useMemo(
