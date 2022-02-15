@@ -4,9 +4,9 @@ _Node Playground_ scripts are written in [TypeScript](https://www.typescriptlang
 
 When you create a new node, you’ll be presented with some boilerplate to get started. Every node must declare 3 exports:
 
-- `inputs` – an array of topic names
-- `output` – topic for the output messages of your node
-- `node` – function that takes messages from input topics and returns new messages
+- `inputs` – An array of topic names
+- `output` – Topic for your node's output messages
+- `node` – Function that takes your `inputs` and publishes new messages on your `output`
 
 Check out the _templates_ within the editor for sample nodes.
 
