@@ -42,7 +42,7 @@ function Example({
   const renderedRef = useRef(false);
   return (
     <div
-      style={{ marginBottom: 16 }}
+      style={{ display: "flex", marginBottom: 8, gap: 8, alignItems: "center" }}
       ref={(el) => {
         if (!el || renderedRef.current) {
           return;
@@ -58,7 +58,6 @@ function Example({
         renderedRef.current = true;
       }}
     >
-      <p>{title}</p>
       <VisibilityToggle
         available={available}
         checked={checked}
@@ -67,6 +66,7 @@ function Example({
         overrideColor={overrideColor}
         dataTest="myToggle"
       />
+      {title}
     </div>
   );
 }
@@ -74,7 +74,7 @@ function Example({
 storiesOf("panels/ThreeDimensionalViz/TopicTree/VisibilityToggle", module)
   .add("default", () => {
     return (
-      <div>
+      <div style={{ padding: 8 }}>
         <Example available={false} title="available: false" />
         <Example available checked visibleInScene title="checked: true, visibleInScene: true" />
         <Example available visibleInScene title="visibleInScene: true" />
