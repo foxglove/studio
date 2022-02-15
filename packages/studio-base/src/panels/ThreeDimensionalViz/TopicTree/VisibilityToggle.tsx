@@ -22,11 +22,11 @@ const useStyles = makeStyles((theme: Theme) =>
       position: "relative",
 
       "&.Mui-focusVisible": {
-        backgroundColor: theme.palette.action.active,
+        backgroundColor: theme.palette.text.secondary,
         color: theme.palette.info.main,
       },
       "&:hover, &.Mui-focusVisible": {
-        backgroundColor: theme.palette.action.hover,
+        backgroundColor: "transparent",
 
         "& circle": {
           stroke: overrideRGB ?? theme.palette.info.main,
@@ -37,11 +37,12 @@ const useStyles = makeStyles((theme: Theme) =>
         },
       },
     }),
-    circle: ({ checked, visibleInScene }: StyleProps) => ({
-      stroke: "currentColor",
+    circle: ({ checked, overrideRGB, visibleInScene }: StyleProps) => ({
+      color: overrideRGB ?? "currentcolor",
+      stroke: "currentcolor",
       strokeWidth: 2,
-      fill: checked ? "currentColor" : "none",
-      fillOpacity: visibleInScene ? 0.8 : theme.palette.action.disabledOpacity,
+      fill: "currentcolor",
+      fillOpacity: checked ? (visibleInScene ? 1 : theme.palette.action.disabledOpacity) : 0,
     }),
   }),
 );

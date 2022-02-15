@@ -78,11 +78,16 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
     MuiIconButton: {
       defaultProps: {
         centerRipple: false,
+        disableRipple: true,
       },
       styleOverrides: {
         root: {
           borderRadius: theme.shape.borderRadius,
           ...iconHack,
+
+          "&:hover": {
+            backgroundColor: theme.palette.action.hover,
+          },
         },
       },
     },
