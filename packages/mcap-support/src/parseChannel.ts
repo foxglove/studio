@@ -39,6 +39,10 @@ function parsedDefinitionsToDatatypes(
   return datatypes;
 }
 
+/**
+ * Process a channel/schema and extract information that can be used to deserialize messages on the
+ * channel, and schemas in the format expected by Studio's RosDatatypes.
+ */
 export function parseChannel(channel: Channel): ParsedChannel {
   if (channel.messageEncoding === "json") {
     if (channel.schema?.encoding !== "protobuf") {
