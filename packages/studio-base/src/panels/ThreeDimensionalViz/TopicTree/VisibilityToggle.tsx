@@ -30,7 +30,7 @@ const useStyles = makeStyles((theme: Theme) =>
 
         "& circle": {
           stroke: overrideRGB ?? theme.palette.info.main,
-          strokeWidth: 4,
+          strokeWidth: 5,
         },
         "& .MuiTouchRipple-child": {
           backgroundColor: theme.palette.action.focus,
