@@ -42,7 +42,7 @@ const MenuWrapper = styled.div`
   flex-direction: column;
   align-items: center;
   width: 40px;
-  background-color: ${colors.DARK1};
+  background-color: ${({ theme }) => theme.palette.neutralLighterAlt};
   & > * {
     margin: 10px;
   }
@@ -275,7 +275,7 @@ const Sidebar = ({
           <TemplateIcon />
         </Icon>
       </MenuWrapper>
-      <ExplorerWrapper useThemeColors={false} show={explorer != undefined}>
+      <ExplorerWrapper useThemeColors={true} show={explorer != undefined}>
         {explorer != undefined && explorers[explorer]}
       </ExplorerWrapper>
     </>
