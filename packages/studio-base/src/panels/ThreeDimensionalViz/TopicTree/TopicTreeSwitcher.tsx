@@ -25,7 +25,7 @@ const useStyles = makeStyles((theme: Theme) => ({
     pointerEvents: "auto",
   },
   badge: {
-    ":before": {
+    "&:before": {
       content: '""',
       position: "absolute",
       top: -BADGE_RADIUS + BADGE_OFFSET,
