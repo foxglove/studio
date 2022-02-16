@@ -3,10 +3,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import type { MessageEvent } from "@foxglove/studio";
-import type { NormalizedImageMessage } from "@foxglove/studio-base/panels/ImageView/normalizeMessage";
 import type { CameraInfo, ImageMarker } from "@foxglove/studio-base/types/Messages";
 
 import type PinholeCameraModel from "./PinholeCameraModel";
+import type { NormalizedImageMessage } from "./normalizeMessage";
 
 export type PanZoom = { x: number; y: number; scale: number };
 

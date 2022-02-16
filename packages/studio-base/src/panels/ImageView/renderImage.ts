@@ -11,8 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { HitmapRenderContext } from "@foxglove/studio-base/panels/ImageView/HitmapRenderContext";
-import { NormalizedImageMessage } from "@foxglove/studio-base/panels/ImageView/normalizeMessage";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import {
   ImageMarker,
@@ -23,6 +21,7 @@ import {
 } from "@foxglove/studio-base/types/Messages";
 import sendNotification from "@foxglove/studio-base/util/sendNotification";
 
+import { HitmapRenderContext } from "./HitmapRenderContext";
 import PinholeCameraModel from "./PinholeCameraModel";
 import {
   decodeYUV,
@@ -36,6 +35,7 @@ import {
   decodeMono8,
   decodeMono16,
 } from "./decodings";
+import { NormalizedImageMessage } from "./normalizeMessage";
 import type {
   MarkerData,
   PanZoom,

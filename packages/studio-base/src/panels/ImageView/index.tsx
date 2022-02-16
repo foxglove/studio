@@ -34,7 +34,6 @@ import { Item, SubMenu } from "@foxglove/studio-base/components/Menu";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import { Toolbar } from "@foxglove/studio-base/panels/ImageView/Toolbar";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
 import { StampedMessage } from "@foxglove/studio-base/types/Messages";
@@ -47,6 +46,7 @@ import toggle from "@foxglove/studio-base/util/toggle";
 
 import ImageCanvas from "./ImageCanvas";
 import ImageEmptyState from "./ImageEmptyState";
+import { Toolbar } from "./Toolbar";
 import helpContent from "./index.help.md";
 import { NORMALIZABLE_IMAGE_DATATYPES } from "./normalizeMessage";
 import type { PixelData, ZoomMode } from "./types";

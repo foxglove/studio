@@ -15,12 +15,13 @@ import { Story } from "@storybook/react";
 import { range, noop } from "lodash";
 import { useEffect, useMemo, useRef } from "react";
 
-import ImageView, { Config } from "@foxglove/studio-base/panels/ImageView";
-import ImageCanvas from "@foxglove/studio-base/panels/ImageView/ImageCanvas";
-import { renderImage } from "@foxglove/studio-base/panels/ImageView/renderImage";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
 import { CameraInfo, ImageMarker, ImageMarkerType } from "@foxglove/studio-base/types/Messages";
+
+import ImageCanvas from "./ImageCanvas";
+import ImageView, { Config } from "./index";
+import { renderImage } from "./renderImage";
 
 const cameraInfo: CameraInfo = {
   width: 400,

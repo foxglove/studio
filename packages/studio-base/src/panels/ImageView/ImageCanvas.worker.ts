@@ -17,7 +17,8 @@ import Rpc, { Channel } from "@foxglove/studio-base/util/Rpc";
 import { setupWorker } from "@foxglove/studio-base/util/RpcWorkerUtils";
 
 import { renderImage } from "./renderImage";
-import { flattenImageMarkers, idColorToIndex, RenderArgs, RenderDimensions } from "./util";
+import type { RenderArgs, RenderDimensions } from "./types";
+import { flattenImageMarkers, idColorToIndex } from "./util";
 
 type RenderState = {
   canvas: OffscreenCanvas;
