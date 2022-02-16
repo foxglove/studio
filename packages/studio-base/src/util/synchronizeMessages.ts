@@ -42,51 +42,6 @@ function allMessageStampsNewestFirst(
   return stamps.sort((a, b) => -compare(a, b));
 }
 
-// Get a subset of items matching a particular timestamp
-function messagesMatchingStamp(
-  stamp: Time,
-  messagesByTopic: Readonly<MessagesByTopic>,
-  getHeaderStamp?: (itemMessage: MessageEvent<unknown>) => Time | undefined,
-): Readonly<MessagesByTopic> | undefined {
-  const synchronizedMessagesByTopic: MessagesByTopic = {};
-  for (const [topic, messages] of Object.entries(messagesByTopic)) {
-    const synchronizedMessage = messages.find((message) => {
-      const thisStamp = getHeaderStamp
-        ? getHeaderStamp(message)
-        : defaultGetHeaderStamp(message.message);
-      return thisStamp && areEqual(stamp, thisStamp);
-    });
-    if (synchronizedMessage != undefined) {
-      synchronizedMessagesByTopic[topic] = [synchronizedMessage];
-    } else {
-      return undefined;
-    }
-  }
-  return synchronizedMessagesByTopic;
-}
-
-// Return a synchronized subset of the messages in `messagesByTopic` with exactly matching
-// header.stamps.
-// If multiple sets of synchronized messages are included, the one with the later header.stamp is
-// returned.
-// ts-prune-ignore-next
-export default function synchronizeMessages(
-  messagesByTopic: Readonly<MessagesByTopic>,
-  getHeaderStamp?: (itemMessage: MessageEvent<unknown>) => Time | undefined,
-): Readonly<MessagesByTopic> | undefined {
-  for (const stamp of allMessageStampsNewestFirst(messagesByTopic, getHeaderStamp)) {
-    const synchronizedMessagesByTopic = messagesMatchingStamp(
-      stamp,
-      messagesByTopic,
-      getHeaderStamp,
-    );
-    if (synchronizedMessagesByTopic != undefined) {
-      return synchronizedMessagesByTopic;
-    }
-  }
-  return undefined;
-}
-
 function getSynchronizedMessages(
   stamp: Time,
   topics: readonly string[],

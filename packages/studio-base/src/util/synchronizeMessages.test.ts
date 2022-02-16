@@ -13,7 +13,7 @@
 
 import { Time } from "@foxglove/rostime";
 
-import synchronizeMessages, { getSynchronizingReducers } from "./synchronizeMessages";
+import { getSynchronizingReducers } from "./synchronizeMessages";
 
 function message(topic: string, stamp?: Time) {
   return {
@@ -23,79 +23,6 @@ function message(topic: string, stamp?: Time) {
     sizeInBytes: 0,
   };
 }
-
-describe("synchronizeMessages", () => {
-  it("returns nothing for empty frame", () => {
-    expect(synchronizeMessages({})).toEqual(undefined);
-    expect(synchronizeMessages({ "/foo": [] })).toEqual(undefined);
-  });
-
-  it("returns nothing for missing header", () => {
-    expect(
-      synchronizeMessages({
-        "/foo": [message("/foo", undefined)],
-      }),
-    ).toEqual(undefined);
-
-    expect(
-      synchronizeMessages(
-        {
-          "/foo": [message("/foo", { sec: 1, nsec: 2 })],
-        },
-        () => undefined,
-      ),
-    ).toEqual(undefined);
-  });
-
-  it("works with single message", () => {
-    const itemsByPath = {
-      "/foo": [message("/foo", { sec: 1, nsec: 2 })],
-    };
-    expect(synchronizeMessages(itemsByPath)).toEqual(itemsByPath);
-  });
-
-  it("works with multiple messages", () => {
-    const itemsByPath = {
-      "/foo": [message("/foo", { sec: 1, nsec: 0 })],
-      "/bar": [message("/bar", { sec: 1, nsec: 0 })],
-      "/baz": [message("/baz", { sec: 1, nsec: 0 })],
-    };
-    expect(synchronizeMessages(itemsByPath)).toEqual(itemsByPath);
-  });
-
-  it("returns nothing for different stamps and missing messages", () => {
-    expect(
-      synchronizeMessages({
-        "/foo": [message("/foo", { sec: 1, nsec: 0 })],
-        "/bar": [message("/bar", { sec: 2, nsec: 0 })],
-      }),
-    ).toBeNullOrUndefined();
-
-    expect(
-      synchronizeMessages({
-        "/foo": [message("/foo", { sec: 1, nsec: 0 })],
-        "/bar": [message("/bar", { sec: 1, nsec: 0 })],
-        "/baz": [],
-      }),
-    ).toBeNullOrUndefined();
-  });
-
-  it("returns latest of multiple matches regardless of order", () => {
-    expect(
-      synchronizeMessages({
-        "/foo": [message("/foo", { sec: 1, nsec: 0 }), message("/foo", { sec: 2, nsec: 0 })],
-        "/bar": [
-          message("/bar", { sec: 2, nsec: 0 }),
-          message("/bar", { sec: 0, nsec: 0 }),
-          message("/bar", { sec: 1, nsec: 0 }),
-        ],
-      }),
-    ).toEqual({
-      "/foo": [message("/foo", { sec: 2, nsec: 0 })],
-      "/bar": [message("/bar", { sec: 2, nsec: 0 })],
-    });
-  });
-});
 
 describe("getSynchronizingReducers", () => {
   it("restores all existing messages on the requested topics", () => {
