@@ -21,7 +21,7 @@ export interface IMarker {
 export type IRosMarker = IMarker;
 
 /**
- * buildRosMarker build a marker message from an optional set of args.
+ * buildRosMarker builds a complete Marker message from an optional set of args.
  *
  * See https://foxglove.dev/docs/panels/3d for a list of supported Marker types
  *

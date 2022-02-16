@@ -21,6 +21,6 @@ const themes: readonly Theme[] = [
     name: "vs-studio-light",
     theme: vsStudioLightTheme,
   },
-] as const;
+];
 
 export { themes };
