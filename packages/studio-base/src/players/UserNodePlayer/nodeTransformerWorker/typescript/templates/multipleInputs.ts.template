@@ -22,11 +22,9 @@ export default function node(event: InputEvent, globalVars: GlobalVariables): Ou
     case "/input/topic":
       // topic specific input logic
       // Our message fields are specific to our topic message
-      // event.message.
       break;
     case "/input/another":
       // another specific logic
-      // event.message.
       break;
   }
 
