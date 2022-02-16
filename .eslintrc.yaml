@@ -45,6 +45,12 @@ rules:
     - error
     - additionalHooks: "(useAsync(?!AppConfigurationValue))|useCallbackWithToast"
 
+  # The _sx_ property is slow
+  # https://stackoverflow.com/questions/68383046/is-there-a-performance-difference-between-the-sx-prop-and-the-makestyles-functio
+  react/forbid-component-props:
+    - error
+    - forbid: ["sx"]
+
   no-warning-comments:
     - error
     - terms: ["fixme", "xxx"]
