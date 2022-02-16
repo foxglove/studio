@@ -11,7 +11,6 @@ import { CameraInfo } from "@foxglove/studio-base/types/Messages";
 import { getCameraInfoTopic } from "./util";
 
 export function useCameraInfo(cameraTopic: string): CameraInfo | undefined {
-  // move lines below to useCameraInfo
   const cameraInfoTopic = getCameraInfoTopic(cameraTopic);
   return useMessageReducer<CameraInfo | undefined>({
     topics: cameraInfoTopic != undefined ? [cameraInfoTopic] : [],
