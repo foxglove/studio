@@ -51,7 +51,7 @@ export const light: PaletteOptions & CustomPaletteOptions = {
   error: { main: "#db3553" },
   warning: { main: "#eba800" },
   success: { main: "#107c10" },
-  info: { main: "#29bee7" },
+  info: { main: "#1EA7FD" },
   background: {
     default: "#ffffff",
     paper: "#f4f4f5",
