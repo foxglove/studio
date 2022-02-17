@@ -76,7 +76,7 @@ const useStyles = makeStyles((theme: Theme) => {
     },
     appBarBackground: {
       backgroundImage: `linear-gradient(to top, transparent, ${
-        theme.palette.background.paper
+        theme.palette.background.default
       } ${theme.spacing(1)})`,
     },
     toolbar: {
@@ -89,7 +89,7 @@ const useStyles = makeStyles((theme: Theme) => {
       alignItems: "center",
       justifyContent: "center",
       paddingLeft: theme.spacing(1),
-      backgroundColor: theme.palette.background.paper,
+      backgroundColor: theme.palette.background.default,
       borderRadius: theme.shape.borderRadius,
       border: `1px solid ${theme.palette.text.primary}`,
 
