@@ -264,13 +264,11 @@ function ImageView(props: Props) {
     }
   }, [allImageTopics, config, saveConfig]);
 
-  // fixme - these are the available marker topics
   const defaultAvailableMarkerTopics = useMemo(
     () => getMarkerOptions(cameraTopic, topics, allCameraNamespaces, annotationDatatypes),
     [cameraTopic, topics, allCameraNamespaces],
   );
 
-  // fixme - these are the entire set of marker topics
   const availableAndEnabledMarkerTopics = useShallowMemo(
     uniq([
       ...defaultAvailableMarkerTopics,
