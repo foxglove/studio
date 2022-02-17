@@ -49,7 +49,7 @@ import helpContent from "./index.help.md";
 import { NORMALIZABLE_IMAGE_DATATYPES } from "./normalizeMessage";
 import type { PixelData, ZoomMode } from "./types";
 import { useCameraInfo } from "./useCameraInfo";
-import { useImagePanelMessages } from "./useImagePanelMessages";
+import { annotationDatatypes, useImagePanelMessages } from "./useImagePanelMessages";
 import { getCameraNamespace, getRelatedMarkerTopics, getMarkerOptions, groupTopics } from "./util";
 
 type DefaultConfig = {
@@ -266,7 +266,7 @@ function ImageView(props: Props) {
 
   // fixme - these are the available marker topics
   const defaultAvailableMarkerTopics = useMemo(
-    () => getMarkerOptions(cameraTopic, topics, allCameraNamespaces, imageMarkerDatatypes),
+    () => getMarkerOptions(cameraTopic, topics, allCameraNamespaces, annotationDatatypes),
     [cameraTopic, topics, allCameraNamespaces],
   );
 
@@ -448,7 +448,8 @@ function ImageView(props: Props) {
             className={classes.dropdownItem}
           >
             <span style={{ display: "inline-block", marginRight: "15px" }}>{topic}</span>
-            <TopicTimestamp text={renderedMarkerTimestamps[topic] ?? ""} />
+            {/* fixme */}
+            {/* <TopicTimestamp text={renderedMarkerTimestamps[topic] ?? ""} /> */}
             {customMarkerTopicOptions.includes(topic) && (
               <Icon
                 style={{ position: "absolute", right: "10px" }}

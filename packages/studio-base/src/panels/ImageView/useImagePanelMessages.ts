@@ -33,8 +33,7 @@ function useDatatypesByTopic(): Map<string, string> {
   }, [topics]);
 }
 
-/*
-const annotationDatatypes = [
+export const annotationDatatypes = [
   // Single marker
   "visualization_msgs/ImageMarker",
   "visualization_msgs/msg/ImageMarker",
@@ -52,7 +51,6 @@ const annotationDatatypes = [
   // foxglove
   "foxglove.ImageAnnotations",
 ];
-*/
 
 function useImagePanelMessages(): ImagePanelMessages {
   // when not synchronizing, we keep the latest message on each topic

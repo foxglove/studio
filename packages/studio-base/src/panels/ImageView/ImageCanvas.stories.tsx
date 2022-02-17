@@ -15,6 +15,7 @@ import { Story } from "@storybook/react";
 import { range, noop } from "lodash";
 import { useEffect, useMemo, useRef } from "react";
 
+import { normalizeAnnotations } from "@foxglove/studio-base/panels/ImageView/normalizeAnnotations";
 import { NormalizedImageMessage } from "@foxglove/studio-base/panels/ImageView/normalizeMessage";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
@@ -23,6 +24,7 @@ import { CameraInfo, ImageMarker, ImageMarkerType } from "@foxglove/studio-base/
 import ImageCanvas from "./ImageCanvas";
 import ImageView, { Config } from "./index";
 import { renderImage } from "./renderImage";
+import { Annotation } from "./types";
 
 const cameraInfo: CameraInfo = {
   width: 400,
@@ -42,6 +44,47 @@ const cameraInfo: CameraInfo = {
     do_rectify: false,
   },
 };
+
+function useCompressedImage(): NormalizedImageMessage | undefined {
+  const imageFormat = "image/png";
+
+  const [imageData, setImageData] = React.useState<Uint8Array | undefined>();
+  React.useEffect(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 400;
+    canvas.height = 300;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      return;
+    }
+    const gradient = ctx.createLinearGradient(0, 0, 400, 300);
+    gradient.addColorStop(0, "cyan");
+    gradient.addColorStop(1, "green");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 400, 300);
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = "red";
+    ctx.strokeRect(0, 0, 400, 300);
+    canvas.toBlob((blob) => {
+      void blob?.arrayBuffer().then((arrayBuffer) => {
+        setImageData(new Uint8Array(arrayBuffer));
+      });
+    }, imageFormat);
+  }, []);
+
+  return useMemo(() => {
+    if (!imageData) {
+      return;
+    }
+
+    return {
+      type: "compressed",
+      stamp: { sec: 0, nsec: 0 },
+      format: imageFormat,
+      data: imageData,
+    };
+  }, [imageData]);
+}
 
 function useImageMessage() {
   const imageFormat = "image/png";
@@ -98,30 +141,22 @@ function useNormalizedImageMessage(): NormalizedImageMessage | undefined {
   };
 }
 
-function marker(
-  type: ImageMarkerType,
-  props: Partial<ImageMarker> = {},
-): MessageEvent<ImageMarker> {
+function marker(type: ImageMarkerType, props: Partial<ImageMarker> = {}): ImageMarker {
   return {
-    topic: "/foo",
-    receiveTime: { sec: 0, nsec: 0 },
-    message: {
-      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "" },
-      ns: "",
-      id: 0,
-      action: 0,
-      position: { x: 0, y: 0, z: 0 },
-      scale: 0,
-      lifetime: { sec: 0, nsec: 0 },
-      outline_color: { r: 0, g: 0, b: 0, a: 0 },
-      filled: false,
-      fill_color: { r: 0, g: 0, b: 0, a: 0 },
-      points: [],
-      outline_colors: [],
-      ...props,
-      type,
-    },
-    sizeInBytes: 0,
+    header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "" },
+    ns: "",
+    id: 0,
+    action: 0,
+    position: { x: 0, y: 0, z: 0 },
+    scale: 0,
+    lifetime: { sec: 0, nsec: 0 },
+    outline_color: { r: 0, g: 0, b: 0, a: 0 },
+    filled: false,
+    fill_color: { r: 0, g: 0, b: 0, a: 0 },
+    points: [],
+    outline_colors: [],
+    ...props,
+    type,
   };
 }
 
@@ -136,7 +171,7 @@ function makeLines(xOffset: number) {
   ];
 }
 
-const markers = [
+const markers: ImageMarker = [
   // circles
   marker(0, {
     position: { x: 40, y: 20, z: 0 },
@@ -272,6 +307,8 @@ const markers = [
   }),
 ];
 
+const annotations = normalizeAnnotations({ markers }, "foxglove_msgs/ImageMarkerArray") ?? [];
+
 const noMarkersMarkerData = {
   markers: [],
   cameraInfo: undefined,
@@ -384,17 +421,14 @@ function Mono16Story({
     <ImageCanvas
       topic={topics[0]}
       image={{
-        topic: "/foo",
-        receiveTime: { sec: 0, nsec: 0 },
-        message: {
-          header: { stamp: { sec: 0, nsec: 0 } },
-          data,
-          width,
-          height,
-          encoding: "16UC1",
-          is_bigendian: bigEndian ? 1 : 0,
-        },
-        sizeInBytes: 0,
+        type: "raw",
+        stamp: { sec: 0, nsec: 0 },
+        data,
+        width,
+        height,
+        encoding: "16UC1",
+        is_bigendian: bigEndian,
+        step: 0,
       }}
       rawMarkerData={noMarkersMarkerData}
       config={{ ...config, minValue, maxValue }}
@@ -449,16 +483,16 @@ export default {
 };
 
 export const MarkersOriginal: Story = (_args) => {
-  const imageMessage = useImageMessage();
+  const image = useCompressedImage();
   const readySignal = useReadySignal();
 
   return (
     <div style={{ height: "400px" }}>
       <ImageCanvas
         topic={topics[1]}
-        image={imageMessage}
+        image={image}
         rawMarkerData={{
-          markers,
+          markers: annotations,
           cameraInfo: undefined,
           transformMarkers: false,
         }}
@@ -475,6 +509,7 @@ MarkersOriginal.parameters = {
   useReadySignal: true,
 };
 
+// fixme - move to renderImage.stories.ts
 export const MarkersWithHitmap: Story = (_args) => {
   const imageMessage = useNormalizedImageMessage();
   const canvasRef = useRef<HTMLCanvasElement>(ReactNull);
@@ -506,7 +541,7 @@ export const MarkersWithHitmap: Story = (_args) => {
       },
       imageMessage,
       rawMarkerData: {
-        markers,
+        markers: annotations,
         cameraInfo,
         transformMarkers: true,
       },
@@ -521,6 +556,7 @@ export const MarkersWithHitmap: Story = (_args) => {
   );
 };
 
+// fixme - move to renderImage.stories.ts
 export const MarkersWithRotations: Story = (_args) => {
   const width = 300;
   const height = 200;
@@ -561,7 +597,7 @@ export const MarkersWithRotations: Story = (_args) => {
         },
         imageMessage,
         rawMarkerData: {
-          markers,
+          markers: annotations,
           cameraInfo,
           transformMarkers: true,
         },
@@ -583,16 +619,16 @@ export const MarkersWithRotations: Story = (_args) => {
 };
 
 export const MarkersTransformed: Story = (_args) => {
-  const imageMessage = useImageMessage();
+  const image = useCompressedImage();
   const readySignal = useReadySignal();
 
   return (
     <div style={{ height: "400px" }}>
       <ImageCanvas
         topic={topics[1]}
-        image={imageMessage}
+        image={image}
         rawMarkerData={{
-          markers,
+          markers: annotations,
           cameraInfo,
           transformMarkers: true,
         }}
@@ -611,16 +647,16 @@ MarkersTransformed.parameters = {
 
 // markers with different original image size
 export const MarkersImageSize: Story = (_args) => {
-  const imageMessage = useImageMessage();
+  const image = useCompressedImage();
   const readySignal = useReadySignal();
 
   return (
     <div style={{ height: "400px" }}>
       <ImageCanvas
         topic={topics[1]}
-        image={imageMessage}
+        image={image}
         rawMarkerData={{
-          markers,
+          markers: annotations,
           cameraInfo: { ...cameraInfo, width: 200, height: 150 },
           transformMarkers: true,
         }}
@@ -638,16 +674,16 @@ MarkersImageSize.parameters = {
 };
 
 export const MarkersWithFallbackRenderingUsingMainThread = (): JSX.Element => {
-  const imageMessage = useImageMessage();
+  const image = useCompressedImage();
 
   return (
     <div>
       <div>original markers</div>
       <ImageCanvas
         topic={topics[1]}
-        image={imageMessage}
+        image={image}
         rawMarkerData={{
-          markers,
+          markers: annotations,
           cameraInfo: undefined,
           transformMarkers: false,
         }}
@@ -661,9 +697,9 @@ export const MarkersWithFallbackRenderingUsingMainThread = (): JSX.Element => {
       <div>transformed markers</div>
       <ImageCanvas
         topic={topics[1]}
-        image={imageMessage}
+        image={image}
         rawMarkerData={{
-          markers,
+          markers: annotations,
           cameraInfo,
           transformMarkers: true,
         }}
@@ -676,9 +712,9 @@ export const MarkersWithFallbackRenderingUsingMainThread = (): JSX.Element => {
       <div>markers with different original image size</div>
       <ImageCanvas
         topic={topics[1]}
-        image={imageMessage}
+        image={image}
         rawMarkerData={{
-          markers,
+          markers: annotations,
           cameraInfo: { ...cameraInfo, width: 200, height: 150 },
           transformMarkers: true,
         }}
@@ -697,16 +733,14 @@ export const ErrorState = (): JSX.Element => {
     <ImageCanvas
       topic={topics[0]}
       image={{
-        topic: "/foo",
-        receiveTime: { sec: 0, nsec: 0 },
-        message: {
-          header: { stamp: { sec: 0, nsec: 0 } },
-          data: new Uint8Array([]),
-          width: 100,
-          height: 50,
-          encoding: "Foo",
-        },
-        sizeInBytes: 0,
+        type: "raw",
+        stamp: { sec: 0, nsec: 0 },
+        data: new Uint8Array([]),
+        width: 100,
+        height: 50,
+        encoding: "Foo",
+        is_bigendian: false,
+        step: 10,
       }}
       rawMarkerData={noMarkersMarkerData}
       config={config}
@@ -718,16 +752,16 @@ export const ErrorState = (): JSX.Element => {
 };
 
 export const CallsOnRenderFrameWhenRenderingSucceeds = (): JSX.Element => {
-  const imageMessage = useImageMessage();
+  const image = useCompressedImage();
 
   return (
     <ShouldCallOnRenderImage>
       {(onStartRenderImage) => (
         <ImageCanvas
           topic={topics[0]}
-          image={imageMessage}
+          image={image}
           rawMarkerData={{
-            markers,
+            markers: annotations,
             cameraInfo: undefined,
             transformMarkers: false,
           }}
@@ -748,16 +782,14 @@ export const CallsOnRenderFrameWhenRenderingFails = (): JSX.Element => {
         <ImageCanvas
           topic={topics[0]}
           image={{
-            topic: "/foo",
-            receiveTime: { sec: 0, nsec: 0 },
-            message: {
-              header: { stamp: { sec: 0, nsec: 0 } },
-              data: new Uint8Array([]),
-              width: 100,
-              height: 50,
-              encoding: "Foo",
-            },
-            sizeInBytes: 0,
+            type: "raw",
+            stamp: { sec: 0, nsec: 0 },
+            data: new Uint8Array([]),
+            width: 100,
+            height: 50,
+            encoding: "Foo",
+            is_bigendian: false,
+            step: 10,
           }}
           rawMarkerData={noMarkersMarkerData}
           config={config}

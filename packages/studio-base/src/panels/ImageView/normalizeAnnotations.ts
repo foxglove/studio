@@ -2,14 +2,28 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { filterMap } from "@foxglove/studio-base/../../den/collection";
+import { filterMap } from "@foxglove/den/collection";
 import {
   ImageMarker,
   ImageMarkerArray,
   ImageMarkerType,
 } from "@foxglove/studio-base/types/Messages";
 
-import type { FoxgloveImageAnnotationsMessage, Annotation } from "./types";
+import type { FoxgloveImageAnnotationsMessage, Annotation, PointsAnnotation } from "./types";
+
+function foxglovePointTypeToStyle(type: number): PointsAnnotation["style"] | undefined {
+  switch (type) {
+    case 0:
+      return "points";
+    case 1:
+      return "polygon";
+    case 2:
+      return "line_strip";
+    case 3:
+      return "line_list";
+  }
+  return undefined;
+}
 
 function normalizeFoxgloveImageAnnotations(
   message: FoxgloveImageAnnotationsMessage,
@@ -27,11 +41,26 @@ function normalizeFoxgloveImageAnnotations(
   for (const circle of message.circles ?? []) {
     annotations.push({
       type: "circle",
+      fillColor: circle.fill_color,
+      outlineColor: circle.outline_color,
+      radius: circle.diameter / 2.0,
+      thickness: circle.thickness,
+      position: circle.position,
     });
   }
   for (const point of message.points ?? []) {
+    const style = foxglovePointTypeToStyle(point.type);
+    if (!style) {
+      continue;
+    }
     annotations.push({
       type: "points",
+      style,
+      points: point.points,
+      outlineColors: point.outline_colors,
+      outlineColor: point.outline_color,
+      thickness: point.thickness,
+      fillColor: point.fill_color,
     });
   }
 
@@ -42,23 +71,61 @@ function normalizeRosImageMarkerArray(message: ImageMarkerArray): Annotation[] |
   return filterMap(message.markers, (marker) => normalizeRosImageMarker(marker));
 }
 
+function imageMarkerTypeToStyle(
+  type:
+    | ImageMarkerType.LINE_LIST
+    | ImageMarkerType.LINE_STRIP
+    | ImageMarkerType.POINTS
+    | ImageMarkerType.POLYGON,
+): PointsAnnotation["style"] {
+  switch (type) {
+    case ImageMarkerType.LINE_LIST:
+      return "line_list";
+    case ImageMarkerType.LINE_STRIP:
+      return "line_strip";
+    case ImageMarkerType.POINTS:
+      return "points";
+    case ImageMarkerType.POLYGON:
+      return "polygon";
+  }
+}
+
 function normalizeRosImageMarker(message: ImageMarker): Annotation | undefined {
   switch (message.type) {
     case ImageMarkerType.CIRCLE:
       return {
         type: "circle",
+        fillColor: message.filled ? message.fill_color : undefined,
+        outlineColor: message.outline_color,
+        radius: message.scale,
+        thickness: 1.0,
+        position: message.position,
       };
     case ImageMarkerType.TEXT:
       return {
         type: "text",
+        position: message.position,
+        text: message.text?.data ?? "",
+        textColor: message.outline_color,
+        backgroundColor: message.filled ? message.fill_color : undefined,
+        fontSize: message.scale * 12,
+        padding: 4 * message.scale,
       };
     case ImageMarkerType.LINE_LIST:
     case ImageMarkerType.LINE_STRIP:
     case ImageMarkerType.POINTS:
-    case ImageMarkerType.POLYGON:
+    case ImageMarkerType.POLYGON: {
+      const style = imageMarkerTypeToStyle(message.type);
       return {
         type: "points",
+        style,
+        points: message.points,
+        outlineColors: message.outline_colors,
+        outlineColor: message.outline_color,
+        thickness: message.scale,
+        fillColor: message.filled ? message.fill_color : undefined,
       };
+    }
   }
 
   return undefined;

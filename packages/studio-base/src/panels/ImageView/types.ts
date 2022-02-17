@@ -70,8 +70,9 @@ type FoxgloveImageAnnotationCircleAnnotation = {
   action: number;
   position: Point2D;
   diameter: number;
-  filled: boolean;
-  fill_color: Color;
+  thickness: number;
+  fill_color?: Color;
+  outline_color: Color;
   lifetime: bigint;
 };
 
@@ -82,8 +83,9 @@ type FoxgloveImageAnnotationPointsAnnotation = {
   type: number;
   points: Point2D[];
   outline_colors: Color[];
-  filled: boolean;
-  fill_color: Color;
+  outline_color?: Color;
+  fill_color?: Color;
+  thickness: number;
   lifetime: bigint;
 };
 
@@ -104,8 +106,8 @@ export type CircleAnnotation = {
 export type PointsAnnotation = {
   type: "points";
   style: "points" | "polygon" | "line_strip" | "line_list";
-  points: Point2D[];
-  outlineColors: Color[];
+  points: readonly Point2D[];
+  outlineColors: readonly Color[];
   outlineColor?: Color;
   thickness?: number;
   fillColor?: Color;
