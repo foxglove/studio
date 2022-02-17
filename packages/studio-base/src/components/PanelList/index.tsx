@@ -10,10 +10,10 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { makeStyles, useTheme } from "@fluentui/react";
-import MagnifyIcon from "@mdi/svg/svg/magnify.svg";
+
+import SearchIcon from "@mui/icons-material/Search";
+import { AppBar, Theme, Toolbar } from "@mui/material";
 import {
-  Box,
   Card,
   CardActionArea,
   CardContent,
@@ -26,13 +26,14 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { makeStyles } from "@mui/styles";
+import cx from "classnames";
 import fuzzySort from "fuzzysort";
 import { isEmpty } from "lodash";
 import { useCallback, useEffect, useMemo } from "react";
 import { useDrag } from "react-dnd";
 import { MosaicDragType, MosaicPath } from "react-mosaic-component";
 
-import Icon from "@foxglove/studio-base/components/Icon";
 import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import TextHighlight from "@foxglove/studio-base/components/TextHighlight";
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
@@ -49,19 +50,72 @@ import {
 } from "@foxglove/studio-base/types/panels";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 
-const useStyles = makeStyles((theme) => ({
-  searchInput: {
-    backgroundColor: `${theme.semanticColors.inputBackground} !important`,
-    padding: "8px !important",
-    margin: "0 !important",
-    width: "100%",
-    minWidth: 0,
-
-    ":hover, :focus": {
-      backgroundColor: theme.semanticColors.inputBackground,
+const useStyles = makeStyles((theme: Theme) => {
+  return {
+    fullHeight: {
+      height: "100%",
     },
-  },
-}));
+    imagePlaceholder: {
+      paddingBottom: `${(200 / 280) * 100}%`,
+      bgcolor: theme.palette.background.default,
+    },
+    searchInput: {
+      backgroundColor: "transparent !important",
+      padding: `${theme.spacing(1)} !important`,
+      margin: "0 !important",
+      width: "100%",
+      minWidth: 0,
+
+      "&:hover, :focus": {
+        backgroundColor: "transparent",
+      },
+    },
+    appBar: {
+      top: 0,
+      zIndex: 2,
+    },
+    appBarBackground: {
+      backgroundImage: `linear-gradient(to top, transparent, ${
+        theme.palette.background.paper
+      } ${theme.spacing(1)})`,
+    },
+    toolbar: {
+      padding: theme.spacing(2),
+      justifyContent: "stretch",
+    },
+    inputWrapper: {
+      display: "flex",
+      flex: "auto",
+      alignItems: "center",
+      justifyContent: "center",
+      paddingLeft: theme.spacing(1),
+      backgroundColor: theme.palette.background.paper,
+      borderRadius: theme.shape.borderRadius,
+      border: `1px solid ${theme.palette.text.primary}`,
+
+      "&:focus-within": {
+        borderColor: theme.palette.primary.main,
+      },
+    },
+    cardContent: {
+      flex: "auto",
+    },
+    grab: {
+      cursor: "grab",
+    },
+    grid: {
+      display: "grid !important",
+      gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+      gap: theme.spacing(2),
+    },
+    noResults: {
+      alignItems: "center",
+      justifyContent: "center",
+      padding: theme.spacing(2, 1),
+      color: theme.palette.text.secondary,
+    },
+  };
+});
 
 type DropDescription = {
   type: string;
@@ -100,6 +154,7 @@ function DraggablePanelItem({
   highlighted = false,
   mosaicId,
 }: PanelItemProps) {
+  const classes = useStyles();
   const scrollRef = React.useRef<HTMLElement>(ReactNull);
   const [, connectDragSource] = useDrag<unknown, MosaicDropResult, never>({
     type: MosaicDragType.WINDOW,
@@ -172,25 +227,25 @@ function DraggablePanelItem({
   switch (mode) {
     case "grid":
       return (
-        <Card sx={{ height: "100%" }}>
+        <Card className={classes.fullHeight}>
           <CardActionArea
             component={Stack}
             ref={mergedRef}
             onClick={onClick}
-            sx={{ height: "100%" }}
+            className={classes.fullHeight}
           >
             {panel.thumbnail != undefined ? (
               <CardMedia component="img" image={panel.thumbnail} alt={panel.title} />
             ) : (
-              <Box sx={{ paddingBottom: `${(200 / 280) * 100}%`, bgcolor: "background.default" }} />
+              <div className={classes.imagePlaceholder} />
             )}
-            <CardContent sx={{ flex: 1 }}>
+            <CardContent className={classes.cardContent}>
               <Typography variant="subtitle2" gutterBottom>
                 <span data-test={`panel-menu-item ${panel.title}`}>
                   <TextHighlight targetStr={panel.title} searchText={searchQuery} />
                 </span>
               </Typography>
-              <Typography variant="body2" sx={{ color: "text.secondary" }}>
+              <Typography variant="body2" color="text.secondary">
                 {panel.description}
               </Typography>
             </CardContent>
@@ -200,17 +255,13 @@ function DraggablePanelItem({
 
     case "list":
       return (
-        <ListItem disableGutters disablePadding>
+        <ListItem disableGutters disablePadding selected={highlighted}>
           {tooltip}
           <ListItemButton
+            className={classes.grab}
             disabled={checked}
             ref={mergedRef}
             onClick={onClick}
-            sx={{
-              cursor: "grab",
-              backgroundColor: highlighted ? (theme) => theme.palette.action.focus : undefined,
-              paddingY: 0.25,
-            }}
           >
             <ListItemText
               primary={
@@ -264,7 +315,6 @@ function verifyPanels(panels: readonly PanelInfo[]) {
 }
 
 function PanelList(props: Props): JSX.Element {
-  const theme = useTheme();
   const classes = useStyles();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [highlightedPanelIdx, setHighlightedPanelIdx] = React.useState<number | undefined>();
@@ -410,72 +460,39 @@ function PanelList(props: Props): JSX.Element {
   );
 
   return (
-    <Box height="100%">
-      <Box
+    <div className={classes.fullHeight}>
+      <AppBar
+        className={cx(classes.appBar, { [classes.appBarBackground]: !props.backgroundColor })}
         position="sticky"
-        top={0}
-        zIndex={2}
-        padding={2}
-        sx={{
-          backgroundImage: `linear-gradient(to top, transparent, ${
-            props.backgroundColor ?? theme.semanticColors.bodyBackground
-          } ${theme.spacing.s1})`,
-        }}
+        color="transparent"
+        elevation={0}
       >
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="center"
-          sx={{
-            paddingLeft: 1,
-            marginBottom: 1,
-            backgroundColor: theme.semanticColors.inputBackground,
-            borderRadius: "shape.borderRadius",
-            border: `1px solid ${theme.semanticColors.inputBorder}`,
-          }}
-        >
-          <Icon style={{ color: theme.semanticColors.inputIcon }}>
-            <MagnifyIcon />
-          </Icon>
-          <LegacyInput
-            className={classes.searchInput}
-            placeholder="Search panels"
-            value={searchQuery}
-            onChange={handleSearchChange}
-            onKeyDown={onKeyDown}
-            onBlur={() => setHighlightedPanelIdx(undefined)}
-            autoFocus
-          />
-        </Stack>
-      </Box>
+        <Toolbar disableGutters className={classes.toolbar}>
+          <div className={classes.inputWrapper}>
+            <SearchIcon fontSize="small" color="primary" />
+            <LegacyInput
+              className={classes.searchInput}
+              placeholder="Search panels"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              onKeyDown={onKeyDown}
+              onBlur={() => setHighlightedPanelIdx(undefined)}
+              autoFocus
+            />
+          </div>
+        </Toolbar>
+      </AppBar>
       {mode === "grid" ? (
-        <Container maxWidth={false}>
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-              columnGap: { xs: 0, sm: 2 },
-              rowGap: 2,
-            }}
-          >
-            {allFilteredPanels.map(displayPanelListItem)}
-          </Box>
+        <Container className={classes.grid} maxWidth={false}>
+          {allFilteredPanels.map(displayPanelListItem)}
         </Container>
       ) : (
-        <List disablePadding>{allFilteredPanels.map(displayPanelListItem)}</List>
+        <List dense disablePadding>
+          {allFilteredPanels.map(displayPanelListItem)}
+        </List>
       )}
-      {noResults && (
-        <Stack
-          alignItems="center"
-          justifyContent="center"
-          paddingX={1}
-          paddingY={2}
-          color="text.secondary"
-        >
-          No panels match search criteria.
-        </Stack>
-      )}
-    </Box>
+      {noResults && <div className={classes.noResults}>No panels match search criteria.</div>}
+    </div>
   );
 }
 
