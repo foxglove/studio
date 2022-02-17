@@ -17,14 +17,12 @@ import { useEffect, useMemo, useRef } from "react";
 
 import { normalizeAnnotations } from "@foxglove/studio-base/panels/ImageView/normalizeAnnotations";
 import { NormalizedImageMessage } from "@foxglove/studio-base/panels/ImageView/normalizeMessage";
-import { MessageEvent } from "@foxglove/studio-base/players/types";
 import { useReadySignal } from "@foxglove/studio-base/stories/ReadySignalContext";
 import { CameraInfo, ImageMarker, ImageMarkerType } from "@foxglove/studio-base/types/Messages";
 
 import ImageCanvas from "./ImageCanvas";
 import ImageView, { Config } from "./index";
 import { renderImage } from "./renderImage";
-import { Annotation } from "./types";
 
 const cameraInfo: CameraInfo = {
   width: 400,
@@ -171,7 +169,7 @@ function makeLines(xOffset: number) {
   ];
 }
 
-const markers: ImageMarker = [
+const markers: ImageMarker[] = [
   // circles
   marker(0, {
     position: { x: 40, y: 20, z: 0 },
@@ -341,10 +339,14 @@ function RGBStory({ encoding }: { encoding: string }) {
     <ImageCanvas
       topic={topics[0]}
       image={{
-        topic: "/foo",
-        receiveTime: { sec: 0, nsec: 0 },
-        message: { header: { stamp: { sec: 0, nsec: 0 } }, data, width, height, encoding },
-        sizeInBytes: 0,
+        type: "raw",
+        stamp: { sec: 0, nsec: 0 },
+        data,
+        width,
+        height,
+        encoding,
+        is_bigendian: false,
+        step: 1,
       }}
       rawMarkerData={noMarkersMarkerData}
       config={config}
@@ -384,10 +386,14 @@ function BayerStory({ encoding }: { encoding: string }) {
     <ImageCanvas
       topic={topics[0]}
       image={{
-        topic: "/foo",
-        receiveTime: { sec: 0, nsec: 0 },
-        message: { header: { stamp: { sec: 0, nsec: 0 } }, data, width, height, encoding },
-        sizeInBytes: 0,
+        type: "raw",
+        stamp: { sec: 0, nsec: 0 },
+        data,
+        width,
+        height,
+        encoding,
+        is_bigendian: false,
+        step: 1,
       }}
       rawMarkerData={noMarkersMarkerData}
       config={config}

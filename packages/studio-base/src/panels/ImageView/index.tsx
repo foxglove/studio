@@ -292,7 +292,7 @@ function ImageView(props: Props) {
         newCameraTopic,
         topics,
         allCameraNamespaces,
-        imageMarkerDatatypes,
+        annotationDatatypes,
       );
 
       const newEnabledMarkerTopics = getRelatedMarkerTopics(

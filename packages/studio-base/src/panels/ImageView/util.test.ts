@@ -182,13 +182,6 @@ describe("ImageView", () => {
       R: [],
     };
 
-    const marker = {
-      topic: "foo",
-      receiveTime: { sec: 0, nsec: 0 },
-      message: {},
-      sizeInBytes: 0,
-    };
-
     it("returns nothing if markers are empty", () => {
       expect(
         buildMarkerData({
@@ -207,12 +200,12 @@ describe("ImageView", () => {
     it("requires cameraInfo if transformMarkers is true", () => {
       expect(
         buildMarkerData({
-          markers: [marker],
+          markers: [],
           transformMarkers: false,
           cameraInfo: undefined,
         }),
       ).toEqual({
-        markers: [marker],
+        markers: [],
         cameraModel: undefined,
         originalWidth: undefined,
         originalHeight: undefined,
@@ -220,7 +213,7 @@ describe("ImageView", () => {
 
       expect(
         buildMarkerData({
-          markers: [marker],
+          markers: [],
           transformMarkers: true,
           cameraInfo: undefined,
         }),
