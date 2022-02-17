@@ -18,6 +18,8 @@ const useStyles = makeStyles((theme: Theme) => ({
     height: "100%",
   },
   card: {
+    display: "flex",
+    flexDirection: "column",
     gap: theme.spacing(2.5),
     padding: theme.spacing(4),
     marginBottom: theme.spacing(2.5),
