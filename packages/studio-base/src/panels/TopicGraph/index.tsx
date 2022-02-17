@@ -103,7 +103,7 @@ const STYLESHEET: Cytoscape.Stylesheet[] = [
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
     position: "absolute",
-    top: theme.spacing(2.5),
+    top: theme.spacing(4),
     right: theme.spacing(1),
     zIndex: 101,
     gap: theme.spacing(1),
