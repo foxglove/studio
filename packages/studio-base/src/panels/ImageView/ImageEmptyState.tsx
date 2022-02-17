@@ -14,16 +14,11 @@
 import { makeStyles } from "@fluentui/react";
 
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
-import { MessageEvent } from "@foxglove/studio-base/players/types";
-import { formatTimeRaw, getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 type Props = {
   cameraTopic: string;
   markerTopics: string[];
   shouldSynchronize: boolean;
-  messagesByTopic: {
-    [topic: string]: readonly MessageEvent<unknown>[];
-  };
 };
 
 const useStyles = makeStyles((theme) => ({
@@ -39,7 +34,7 @@ const useStyles = makeStyles((theme) => ({
 
 // Group image topics by the first component of their name
 export default function ImageEmptyState(props: Props): JSX.Element {
-  const { cameraTopic, markerTopics, shouldSynchronize, messagesByTopic } = props;
+  const { cameraTopic, markerTopics, shouldSynchronize } = props;
 
   const classes = useStyles();
   if (cameraTopic === "") {
@@ -57,19 +52,24 @@ export default function ImageEmptyState(props: Props): JSX.Element {
           <div>
             <code>{cameraTopic}</code>
           </div>
-          {markerTopics.sort().map((m) => (
-            <div key={m}>
-              <code>{m}</code>
+          {markerTopics.sort().map((topic) => (
+            <div key={topic}>
+              <code>{topic}</code>
             </div>
           ))}
         </div>
         {shouldSynchronize && (
           <>
-            <p>
-              Synchronization is enabled, so all messages with <code>header.stamp</code>s must match
-              exactly.
-            </p>
-            <ul>
+            <p>Synchronization is enabled, so all messages must have the same timestamp.</p>
+            <ul></ul>
+          </>
+        )}
+      </EmptyState>
+    </div>
+  );
+}
+
+/* fixme
               {Object.entries(messagesByTopic).map(([topic, topicMessages]) => (
                 <li key={topic}>
                   <code>{topic}</code>:{" "}
@@ -83,10 +83,4 @@ export default function ImageEmptyState(props: Props): JSX.Element {
                     : "no messages"}
                 </li>
               ))}
-            </ul>
-          </>
-        )}
-      </EmptyState>
-    </div>
-  );
-}
+              */
