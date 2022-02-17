@@ -111,9 +111,18 @@ function normalizeRosImageMarker(message: ImageMarker): Annotation | undefined {
         fontSize: message.scale * 12,
         padding: 4 * message.scale,
       };
+    case ImageMarkerType.POINTS:
+      return {
+        type: "points",
+        style: "points",
+        points: message.points,
+        outlineColors: message.outline_colors,
+        outlineColor: message.outline_color,
+        thickness: message.scale,
+        fillColor: message.fill_color,
+      };
     case ImageMarkerType.LINE_LIST:
     case ImageMarkerType.LINE_STRIP:
-    case ImageMarkerType.POINTS:
     case ImageMarkerType.POLYGON: {
       const style = imageMarkerTypeToStyle(message.type);
       return {

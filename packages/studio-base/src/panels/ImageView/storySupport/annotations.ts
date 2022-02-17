@@ -51,6 +51,7 @@ const markers: ImageMarker[] = [
     fill_color: { r: 1, g: 0, b: 1, a: 1 },
     filled: true,
   }),
+  // line strip
   marker(1, {
     scale: 1,
     points: [
@@ -59,17 +60,19 @@ const markers: ImageMarker[] = [
       { x: 30, y: 30, z: 0 },
     ],
     outline_color: { r: 0, g: 0, b: 1, a: 1 },
-  }), // line strip
+  }),
   marker(1, {
     scale: 2,
     points: makeLines(0),
     outline_color: { r: 1, g: 1, b: 1, a: 1 },
-  }), // line list
+  }),
+  // line list
   marker(2, {
     scale: 2,
     points: makeLines(50),
     outline_color: { r: 0.5, g: 0.5, b: 1, a: 1 },
-  }), // polygon
+  }),
+  // polygon
   marker(3, {
     scale: 2,
     points: makeLines(100),
@@ -115,7 +118,8 @@ const markers: ImageMarker[] = [
     outline_color: { r: 0.5, g: 1, b: 0.5, a: 1 },
     fill_color: { r: 0.5, g: 1, b: 0.5, a: 1 },
     filled: true,
-  }), // points
+  }),
+  // points
   marker(4, {
     scale: 4,
     points: range(50).map((i) => ({ x: 20 + 5 * i, y: 130 + 10 * Math.sin(i / 2), z: 0 })),
@@ -146,7 +150,8 @@ const markers: ImageMarker[] = [
       a: 1,
     })),
     fill_color: { r: 0, g: 0, b: 1, a: 1 },
-  }), // text
+  }),
+  // text
   marker(5, {
     text: { data: "Hello!" },
     position: { x: 30, y: 100, z: 0 },
@@ -161,6 +166,7 @@ const markers: ImageMarker[] = [
     filled: true,
     fill_color: { r: 50 / 255, g: 50 / 255, b: 50 / 255, a: 1 },
   }),
+  // circles again
   marker(0, {
     position: { x: 30, y: 100, z: 0 },
     scale: 2,

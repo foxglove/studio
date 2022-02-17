@@ -390,12 +390,12 @@ function paintPointsAnnotation(
         // not fill_colors, even though points are filled and not outlined. We
         // only fall back to fill_color if both outline_colors[i] and
         // outline_color are fully transparent
-        const fillColor =
-          annotation.outlineColors.length > i
-            ? annotation.outlineColors[i]!
-            : annotation.outlineColor
-            ? annotation.outlineColor
-            : annotation.fillColor;
+        const pointOutlineColor = annotation.outlineColors[i];
+        const fillColor = pointOutlineColor
+          ? pointOutlineColor
+          : annotation.outlineColor && annotation.outlineColor.a > 0
+          ? annotation.outlineColor
+          : annotation.fillColor;
 
         // For points small enough to be visually indistinct at our current zoom level
         // we do a fast render.
@@ -410,55 +410,37 @@ function paintPointsAnnotation(
     }
     case "polygon":
     case "line_strip": {
-      if (annotation.points.length % 2 !== 0) {
-        /* fixme
-        sendNotification(
-          `ImageMarker LINE_LIST has an odd number of points`,
-          `LINE_LIST marker "${marker.ns}$${marker.ns ? ":" : ""}${marker.id}" has ${
-            marker.points.length
-          } point${marker.points.length !== 1 ? "s" : ""}, expected an even number`,
-          "user",
-          "error",
-        );
-        */
+      if (annotation.points.length === 0) {
         break;
       }
-
-      const hasExactColors = annotation.outlineColors.length === annotation.points.length / 2;
-
-      for (let i = 0; i < annotation.points.length; i += 2) {
-        // Support the case where outline_colors is half the length of points,
-        // one color per line, and where outline_colors matches the length of
-        // points (although we only use the first color in this case). Fall back
-        // to marker.outline_color as needed
-        const outlineColor = hasExactColors
-          ? annotation.outlineColors[i / 2]!
-          : annotation.outlineColors.length > i
-          ? annotation.outlineColors[i]!
-          : annotation.outlineColor;
-        paintLine(
-          ctx,
-          annotation.points[i]!,
-          annotation.points[i + 1]!,
-          thickness,
-          outlineColor ?? { r: 0, g: 0, b: 0, a: 1 },
-          cameraModel,
-        );
+      ctx.beginPath();
+      const { x, y } = maybeUnrectifyPoint(cameraModel, annotation.points[0]!);
+      ctx.moveTo(x, y);
+      for (let i = 1; i < annotation.points.length; i++) {
+        const maybeUnrectifiedPoint = maybeUnrectifyPoint(cameraModel, annotation.points[i]!);
+        ctx.lineTo(maybeUnrectifiedPoint.x, maybeUnrectifiedPoint.y);
+      }
+      if (annotation.style === "polygon") {
+        ctx.closePath();
+        if (annotation.fillColor && annotation.fillColor.a > 0) {
+          ctx.fillStyle = toRGBA(annotation.fillColor);
+          ctx.fill();
+        }
+      }
+      if (
+        annotation.outlineColor &&
+        annotation.outlineColor.a > 0 &&
+        annotation.thickness != undefined &&
+        annotation.thickness > 0
+      ) {
+        ctx.strokeStyle = toRGBA(annotation.outlineColor);
+        ctx.lineWidth = annotation.thickness;
+        ctx.stroke();
       }
       break;
     }
     case "line_list": {
       if (annotation.points.length % 2 !== 0) {
-        /* fixme
-        sendNotification(
-          `ImageMarker LINE_LIST has an odd number of points`,
-          `LINE_LIST marker "${marker.ns}$${marker.ns ? ":" : ""}${marker.id}" has ${
-            marker.points.length
-          } point${marker.points.length !== 1 ? "s" : ""}, expected an even number`,
-          "user",
-          "error",
-        );
-        */
         break;
       }
 
