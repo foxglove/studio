@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { filterMap } from "@foxglove/den/collection";
+import { fromNanoSec } from "@foxglove/rostime";
 import {
   ImageMarker,
   ImageMarkerArray,
@@ -39,8 +40,10 @@ function normalizeFoxgloveImageAnnotations(
   const annotations: Annotation[] = [];
 
   for (const circle of message.circles ?? []) {
+    const stamp = fromNanoSec(circle.timestamp);
     annotations.push({
       type: "circle",
+      stamp,
       fillColor: circle.fill_color,
       outlineColor: circle.outline_color,
       radius: circle.diameter / 2.0,
@@ -53,8 +56,10 @@ function normalizeFoxgloveImageAnnotations(
     if (!style) {
       continue;
     }
+    const stamp = fromNanoSec(point.timestamp);
     annotations.push({
       type: "points",
+      stamp,
       style,
       points: point.points,
       outlineColors: point.outline_colors,
@@ -95,6 +100,7 @@ function normalizeRosImageMarker(message: ImageMarker): Annotation | undefined {
     case ImageMarkerType.CIRCLE:
       return {
         type: "circle",
+        stamp: message.header.stamp,
         fillColor: message.filled ? message.fill_color : undefined,
         outlineColor: message.outline_color,
         radius: message.scale,
@@ -104,6 +110,7 @@ function normalizeRosImageMarker(message: ImageMarker): Annotation | undefined {
     case ImageMarkerType.TEXT:
       return {
         type: "text",
+        stamp: message.header.stamp,
         position: message.position,
         text: message.text?.data ?? "",
         textColor: message.outline_color,
@@ -114,6 +121,7 @@ function normalizeRosImageMarker(message: ImageMarker): Annotation | undefined {
     case ImageMarkerType.POINTS:
       return {
         type: "points",
+        stamp: message.header.stamp,
         style: "points",
         points: message.points,
         outlineColors: message.outline_colors,
@@ -127,6 +135,7 @@ function normalizeRosImageMarker(message: ImageMarker): Annotation | undefined {
       const style = imageMarkerTypeToStyle(message.type);
       return {
         type: "points",
+        stamp: message.header.stamp,
         style,
         points: message.points,
         outlineColors: message.outline_colors,

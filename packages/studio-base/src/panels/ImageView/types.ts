@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Time } from "@foxglove/studio";
 import type { CameraInfo, Color, ImageMarker, Point2D } from "@foxglove/studio-base/types/Messages";
 
 import type PinholeCameraModel from "./PinholeCameraModel";
@@ -96,6 +97,7 @@ export type FoxgloveImageAnnotationsMessage = {
 
 export type CircleAnnotation = {
   type: "circle";
+  stamp: Time;
   fillColor?: Color;
   outlineColor?: Color;
   radius: number;
@@ -105,6 +107,7 @@ export type CircleAnnotation = {
 
 export type PointsAnnotation = {
   type: "points";
+  stamp: Time;
   style: "points" | "polygon" | "line_strip" | "line_list";
   points: readonly Point2D[];
   outlineColors: readonly Color[];
@@ -115,6 +118,7 @@ export type PointsAnnotation = {
 
 export type TextAnnotation = {
   type: "text";
+  stamp: Time;
   position: Point2D;
   text: string;
   textColor: Color;

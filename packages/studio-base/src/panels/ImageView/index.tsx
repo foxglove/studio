@@ -384,7 +384,11 @@ function ImageView(props: Props) {
 
   const shouldSynchronize = config.synchronize && enabledMarkerTopics.length > 0;
 
-  const { image, annotations } = useImagePanelMessages();
+  const { image, annotations } = useImagePanelMessages({
+    imageTopic: cameraTopic,
+    annotationTopics: enabledMarkerTopics,
+    synchronize: shouldSynchronize,
+  });
 
   /* fixme
   // Timestamps are displayed for informational purposes in the markers menu
