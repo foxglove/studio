@@ -49,7 +49,7 @@ import helpContent from "./index.help.md";
 import { NORMALIZABLE_IMAGE_DATATYPES } from "./normalizeMessage";
 import type { PixelData, ZoomMode } from "./types";
 import { useCameraInfo } from "./useCameraInfo";
-import { annotationDatatypes, useImagePanelMessages } from "./useImagePanelMessages";
+import { ANNOTATION_DATATYPES, useImagePanelMessages } from "./useImagePanelMessages";
 import { getCameraNamespace, getRelatedMarkerTopics, getMarkerOptions, groupTopics } from "./util";
 
 type DefaultConfig = {
@@ -265,7 +265,7 @@ function ImageView(props: Props) {
   }, [allImageTopics, config, saveConfig]);
 
   const defaultAvailableMarkerTopics = useMemo(
-    () => getMarkerOptions(cameraTopic, topics, allCameraNamespaces, annotationDatatypes),
+    () => getMarkerOptions(cameraTopic, topics, allCameraNamespaces, ANNOTATION_DATATYPES),
     [cameraTopic, topics, allCameraNamespaces],
   );
 
@@ -290,7 +290,7 @@ function ImageView(props: Props) {
         newCameraTopic,
         topics,
         allCameraNamespaces,
-        annotationDatatypes,
+        ANNOTATION_DATATYPES,
       );
 
       const newEnabledMarkerTopics = getRelatedMarkerTopics(

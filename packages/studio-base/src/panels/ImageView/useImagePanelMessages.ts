@@ -33,7 +33,7 @@ function useDatatypesByTopic(): Map<string, string> {
   }, [topics]);
 }
 
-export const annotationDatatypes = [
+export const ANNOTATION_DATATYPES = [
   // Single marker
   "visualization_msgs/ImageMarker",
   "visualization_msgs/msg/ImageMarker",
