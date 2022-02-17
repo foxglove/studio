@@ -12,7 +12,9 @@
 //   You may not use this file except in compliance with the License.
 
 import { IconButton, IButtonStyles, useTheme } from "@fluentui/react";
-import { Paper, Stack } from "@mui/material";
+import { Paper, Stack, Theme } from "@mui/material";
+import { makeStyles } from "@mui/styles";
+import cx from "classnames";
 import Cytoscape from "cytoscape";
 import { useCallback, useMemo, useRef, useState } from "react";
 import textMetrics from "text-metrics";
@@ -98,6 +100,24 @@ const STYLESHEET: Cytoscape.Stylesheet[] = [
   },
 ];
 
+const useStyles = makeStyles((theme: Theme) => ({
+  root: {
+    position: "absolute",
+    top: theme.spacing(2.5),
+    right: theme.spacing(1),
+    zIndex: 101,
+    gap: theme.spacing(1),
+    // allow mouse events to pass through the empty space in this container element
+    pointerEvents: "none",
+  },
+  stack: {
+    flex: "0 0",
+  },
+  pointerEventsAuto: {
+    pointerEvents: "auto",
+  },
+}));
+
 export type TopicVisibility =
   | "all"
   | "none"
@@ -126,6 +146,7 @@ function unionInto<T>(dest: Set<T>, ...iterables: Set<T>[]): void {
 }
 
 function TopicGraph() {
+  const classes = useStyles();
   const theme = useTheme();
   const [selectedTab, setSelectedTab] = useState<"Topics" | undefined>(undefined);
 
@@ -366,19 +387,9 @@ function TopicGraph() {
       {orientationButton.tooltip}
       {servicesButton.tooltip}
       <PanelToolbar floating helpContent={helpContent} />
-      <Stack
-        spacing={1}
-        sx={{
-          position: "absolute",
-          top: theme.spacing.l2,
-          right: theme.spacing.s1,
-          zIndex: 101,
-          // allow mouse events to pass through the empty space in this container element
-          pointerEvents: "none",
-        }}
-      >
-        <Paper square={false} elevation={4} sx={{ pointerEvents: "auto" }}>
-          <Stack flex="0 0" sx={{ pointerEvents: "auto" }}>
+      <Stack className={classes.root}>
+        <Paper square={false} elevation={4} className={classes.pointerEventsAuto}>
+          <Stack className={cx(classes.stack, classes.pointerEventsAuto)}>
             <IconButton
               elementRef={fitToPageButton.ref}
               onClick={onZoomFit}
