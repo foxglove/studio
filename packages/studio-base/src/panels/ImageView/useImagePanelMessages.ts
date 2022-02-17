@@ -15,12 +15,14 @@ import { NormalizedImageMessage, normalizeImageMessage } from "./normalizeMessag
 import { Annotation } from "./types";
 import { useDatatypesByTopic } from "./useDatatypesByTopic";
 
-type ImagePanelMessages = {
+export type ImagePanelMessages = {
   image?: NormalizedImageMessage;
   annotations?: Annotation[];
 };
 
 type ReducerState = {
+  imageTopic?: string;
+
   image?: NormalizedImageMessage;
   annotations?: Annotation[];
 
@@ -52,7 +54,7 @@ type Options = {
   synchronize: boolean;
 };
 
-function syncrhonizedAddMessage(
+export function synchronizedAddMessage(
   state: ReducerState,
   image?: NormalizedImageMessage,
   annotations?: Annotation[],
@@ -94,6 +96,7 @@ function syncrhonizedAddMessage(
     }
 
     return {
+      imageTopic: state.imageTopic,
       image: validEntry[1].image,
       annotations: validEntry[1].annotations,
       tree: state.tree,
@@ -122,16 +125,18 @@ function useImagePanelMessages(options?: Options): ImagePanelMessages {
 
   const datatypesByTopic = useDatatypesByTopic();
 
-  // fixme - when topics change should we clear the state?
-  // its weird to remove the image if the marker topic is toggled on/off
-  // but also weird to not if the image topic changes
-  const restore = useCallback((state?: ReducerState) => {
-    return (
-      state ?? {
-        tree: new AVLTree<Time, ImagePanelMessages>(compareTime),
+  const restore = useCallback(
+    (state?: ReducerState) => {
+      // When changing image topics, clear the image and any annotations
+      if (!state || state.imageTopic !== imageTopic) {
+        return {
+          tree: new AVLTree<Time, ImagePanelMessages>(compareTime),
+        };
       }
-    );
-  }, []);
+      return state;
+    },
+    [imageTopic],
+  );
 
   const addMessage = useCallback(
     (state: ReducerState, event: MessageEvent<unknown>): ReducerState => {
@@ -150,13 +155,14 @@ function useImagePanelMessages(options?: Options): ImagePanelMessages {
 
       if (!synchronize) {
         return {
+          imageTopic: state.imageTopic,
           image: normalizedImage ?? state.image,
           annotations: normalizedAnnotations ?? state.annotations,
           tree: state.tree,
         };
       }
 
-      return syncrhonizedAddMessage(state, normalizedImage, normalizedAnnotations);
+      return synchronizedAddMessage(state, normalizedImage, normalizedAnnotations);
     },
     [datatypesByTopic, synchronize],
   );
