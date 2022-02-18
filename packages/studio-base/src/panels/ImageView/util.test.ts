@@ -11,6 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { CircleAnnotation } from "@foxglove/studio-base/panels/ImageView/types";
 import { Topic } from "@foxglove/studio-base/players/types";
 
 import {
@@ -198,14 +199,22 @@ describe("ImageView", () => {
     });
 
     it("requires cameraInfo if transformMarkers is true", () => {
+      const annotation: CircleAnnotation = {
+        type: "circle",
+        stamp: { sec: 0, nsec: 0 },
+        radius: 1,
+        thickness: 1,
+        position: { x: 0, y: 0 },
+      };
+
       expect(
         buildMarkerData({
-          markers: [],
+          markers: [annotation],
           transformMarkers: false,
           cameraInfo: undefined,
         }),
       ).toEqual({
-        markers: [],
+        markers: [annotation],
         cameraModel: undefined,
         originalWidth: undefined,
         originalHeight: undefined,
@@ -213,7 +222,7 @@ describe("ImageView", () => {
 
       expect(
         buildMarkerData({
-          markers: [],
+          markers: [annotation],
           transformMarkers: true,
           cameraInfo: undefined,
         }),
