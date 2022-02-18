@@ -32,7 +32,6 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-// Group image topics by the first component of their name
 export default function ImageEmptyState(props: Props): JSX.Element {
   const { cameraTopic, markerTopics, shouldSynchronize } = props;
 
@@ -68,19 +67,3 @@ export default function ImageEmptyState(props: Props): JSX.Element {
     </div>
   );
 }
-
-/* fixme
-              {Object.entries(messagesByTopic).map(([topic, topicMessages]) => (
-                <li key={topic}>
-                  <code>{topic}</code>:{" "}
-                  {topicMessages.length > 0
-                    ? topicMessages
-                        .map(({ message }) => {
-                          const stamp = getTimestampForMessage(message);
-                          return stamp != undefined ? formatTimeRaw(stamp) : "[ unknown ]";
-                        })
-                        .join(", ")
-                    : "no messages"}
-                </li>
-              ))}
-              */
