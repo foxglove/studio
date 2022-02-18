@@ -67,31 +67,16 @@ const shortXAxisLabel = (path: PlotXAxisVal): string => {
 
 type StyleProps = {
   legendDisplay: PlotLegendProps["legendDisplay"];
+  showLegend: PlotLegendProps["showLegend"];
   showPlotValuesInLegend?: PlotLegendProps["showPlotValuesInLegend"];
   sidebarDimension: PlotLegendProps["sidebarDimension"];
 };
 
 const useStyles = makeStyles((theme: Theme) => ({
-  floatingWrapper: {
-    overflow: "hidden",
-    display: "flex",
-    flexDirection: "column",
-    height: "100%",
+  addButton: {
+    minWidth: 100,
+    backgroundColor: `${theme.palette.action.hover} !important`,
   },
-  wrapper: ({ legendDisplay }: StyleProps) => ({
-    display: "flex",
-    flexDirection: legendDisplay === "left" ? "row" : "column",
-    width: legendDisplay === "top" ? "100%" : undefined,
-    height: legendDisplay === "left" ? "100%" : undefined,
-  }),
-  wrapperContent: ({ legendDisplay, sidebarDimension }: StyleProps) => ({
-    display: "flex",
-    flexDirection: "column",
-    flexGrow: 1,
-    gap: theme.spacing(0.5),
-    overflow: "auto",
-    [legendDisplay === "left" ? "width" : "height"]: sidebarDimension,
-  }),
   dragHandle: ({ legendDisplay }: StyleProps) => ({
     userSelect: "none",
     border: `0px solid ${theme.palette.action.hover}`,
@@ -113,27 +98,6 @@ const useStyles = makeStyles((theme: Theme) => ({
       borderColor: theme.palette.action.selected,
     },
   }),
-  legendContent: ({ legendDisplay }) => ({
-    display: "flex",
-    flexDirection: "column",
-    backgroundColor: alpha(theme.palette.background.paper, 0.8),
-    overflow: "auto",
-    pointerEvents: "auto",
-    [legendDisplay !== "floating" ? "height" : "maxHeight"]: "100%",
-    position: "relative",
-  }),
-  header: {
-    display: "flex",
-    alignItems: "center",
-    padding: theme.spacing(0.25),
-    height: 26,
-    position: "sticky",
-    top: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: theme.palette.background.paper,
-    zIndex: theme.zIndex.mobileStepper + 1,
-  },
   dropdownWrapper: {
     zIndex: 4,
     height: 20,
@@ -145,6 +109,21 @@ const useStyles = makeStyles((theme: Theme) => ({
   dropdown: {
     backgroundColor: "transparent !important",
     padding: "4px !important",
+  },
+  footer: ({ legendDisplay }: StyleProps) => ({
+    padding: theme.spacing(0.5),
+    gridColumn: "span 4",
+    ...(legendDisplay !== "floating" && {
+      position: "sticky",
+      right: 0,
+      left: 0,
+    }),
+  }),
+  floatingWrapper: {
+    overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
+    height: "100%",
   },
   grid: {
     alignItems: "stretch",
@@ -160,42 +139,28 @@ const useStyles = makeStyles((theme: Theme) => ({
         .filter(Boolean)
         .join(" "),
   },
-  footer: ({ legendDisplay }) => ({
-    padding: theme.spacing(0.5),
-    gridColumn: "span 4",
-    ...(legendDisplay !== "floating" && {
-      position: "sticky",
-      right: 0,
-      left: 0,
-    }),
-  }),
-  addButton: {
-    minWidth: 100,
-    backgroundColor: `${theme.palette.action.hover} !important`,
-  },
-  root: {
+  header: {
     display: "flex",
-    alignItems: "flex-start",
-    flexDirection: ({ legendDisplay }) => (legendDisplay === "top" ? "column" : undefined),
-    position: "relative",
-    color: theme.palette.text.secondary,
+    alignItems: "center",
+    padding: theme.spacing(0.25),
+    height: 26,
+    position: "sticky",
+    top: 0,
+    left: 0,
+    right: 0,
     backgroundColor: theme.palette.background.paper,
-    borderTop: `${theme.palette.background.default} solid 1px`,
+    zIndex: theme.zIndex.mobileStepper + 1,
   },
-  floatingRoot: {
-    cursor: "pointer",
-    position: "absolute",
-    left: theme.spacing(4),
-    top: theme.spacing(1),
-    bottom: theme.spacing(3),
-    maxWidth: `calc(100% - ${theme.spacing(8)})`,
-    backgroundColor: "transparent",
-    borderTop: "none",
-    pointerEvents: "none",
-    zIndex: theme.zIndex.mobileStepper,
-    gap: theme.spacing(0.5),
-  },
-  legendToggle: ({ legendDisplay }: StyleProps) => ({
+  legendContent: ({ legendDisplay }: StyleProps) => ({
+    display: "flex",
+    flexDirection: "column",
+    backgroundColor: alpha(theme.palette.background.paper, 0.8),
+    overflow: "auto",
+    pointerEvents: "auto",
+    [legendDisplay !== "floating" ? "height" : "maxHeight"]: "100%",
+    position: "relative",
+  }),
+  toggleButton: ({ legendDisplay }: StyleProps) => ({
     cursor: "pointer",
     userSelect: "none",
     pointerEvents: "auto",
@@ -209,28 +174,96 @@ const useStyles = makeStyles((theme: Theme) => ({
       backgroundColor: theme.palette.action.focus,
     },
   }),
-  floatingLegendToggle: {
+  toggleButtonFloating: {
     marginRight: theme.spacing(0.25),
-    visibility: "hidden",
     borderRadius: theme.shape.borderRadius,
     backgroundColor: `${theme.palette.action.focus} !important`,
-    // height: "inherit",
+    visibility: ({ showLegend }: StyleProps) => (showLegend ? "visible" : "hidden"),
 
     "&:hover": {
       backgroundColor: theme.palette.background.paper,
     },
-    ".mosaic-window:hover &": { visibility: "initial" },
+    ".mosaic-window:hover &": {
+      visibility: "initial",
+    },
   },
+  root: {
+    display: "flex",
+    alignItems: "flex-start",
+    position: "relative",
+    color: theme.palette.text.secondary,
+    backgroundColor: theme.palette.background.paper,
+    borderTop: `${theme.palette.background.default} solid 1px`,
+    flexDirection: ({ legendDisplay }: StyleProps) =>
+      legendDisplay === "top" ? "column" : undefined,
+  },
+  rootFloating: {
+    cursor: "pointer",
+    position: "absolute",
+    left: theme.spacing(4),
+    top: theme.spacing(1),
+    bottom: theme.spacing(3),
+    maxWidth: `calc(100% - ${theme.spacing(8)})`,
+    backgroundColor: "transparent",
+    borderTop: "none",
+    pointerEvents: "none",
+    zIndex: theme.zIndex.mobileStepper,
+    gap: theme.spacing(0.5),
+  },
+  wrapper: ({ legendDisplay }: StyleProps) => ({
+    display: "flex",
+    flexDirection: legendDisplay === "left" ? "row" : "column",
+    width: legendDisplay === "top" ? "100%" : undefined,
+    height: legendDisplay === "left" ? "100%" : undefined,
+  }),
+  wrapperContent: ({ legendDisplay, sidebarDimension }: StyleProps) => ({
+    display: "flex",
+    flexDirection: "column",
+    flexGrow: 1,
+    gap: theme.spacing(0.5),
+    overflow: "auto",
+    [legendDisplay === "left" ? "width" : "height"]: sidebarDimension,
+  }),
 }));
 
-function SidebarWrapper(props: {
-  legendDisplay: "floating" | "top" | "left";
-  sidebarDimension: number;
-  saveConfig: (arg0: Partial<PlotConfig>) => void;
-  children: JSX.Element | undefined;
-}): JSX.Element | ReactNull {
-  const { legendDisplay, sidebarDimension, saveConfig } = props;
-  const classes = useStyles({ legendDisplay, sidebarDimension });
+export default function PlotLegend(props: PlotLegendProps): JSX.Element {
+  const {
+    paths,
+    datasets,
+    currentTime,
+    saveConfig,
+    showLegend,
+    xAxisVal,
+    xAxisPath,
+    pathsWithMismatchedDataLengths,
+    sidebarDimension,
+    legendDisplay,
+    showPlotValuesInLegend,
+  } = props;
+  const lastPath = last(paths);
+  const classes = useStyles({
+    legendDisplay,
+    sidebarDimension,
+    showLegend,
+    showPlotValuesInLegend,
+  });
+
+  const toggleLegend = useCallback(
+    () => saveConfig({ showLegend: !showLegend }),
+    [showLegend, saveConfig],
+  );
+
+  const legendIcon = useMemo(() => {
+    if (legendDisplay !== "floating") {
+      const iconMap = showLegend
+        ? { left: KeyboardArrowLeftIcon, top: KeyboardArrowUpIcon }
+        : { left: KeyboardArrowRightIcon, top: KeyboardArrowDownIcon };
+      const ArrowIcon = iconMap[legendDisplay];
+      return <ArrowIcon fontSize="inherit" />;
+    }
+    return <MenuIcon fontSize="inherit" />;
+  }, [showLegend, legendDisplay]);
+
   const originalWrapper = useRef<DOMRect | undefined>(undefined);
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
@@ -254,47 +287,6 @@ function SidebarWrapper(props: {
     document.removeEventListener("mouseup", handleMouseUp, true);
     document.removeEventListener("mousemove", handleMouseMove, true);
   };
-
-  return (
-    <div className={classes.wrapper}>
-      <div className={classes.wrapperContent}>{props.children}</div>
-      <div className={classes.dragHandle} onMouseDown={handleMouseDown} />
-    </div>
-  );
-}
-
-export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactNull {
-  const {
-    paths,
-    datasets,
-    currentTime,
-    saveConfig,
-    showLegend,
-    xAxisVal,
-    xAxisPath,
-    pathsWithMismatchedDataLengths,
-    sidebarDimension,
-    legendDisplay,
-    showPlotValuesInLegend,
-  } = props;
-  const lastPath = last(paths);
-  const classes = useStyles({ legendDisplay, sidebarDimension, showPlotValuesInLegend });
-
-  const toggleLegend = useCallback(
-    () => saveConfig({ showLegend: !showLegend }),
-    [showLegend, saveConfig],
-  );
-
-  const legendIcon = useMemo(() => {
-    if (legendDisplay !== "floating") {
-      const iconMap = showLegend
-        ? { left: KeyboardArrowLeftIcon, top: KeyboardArrowUpIcon }
-        : { left: KeyboardArrowRightIcon, top: KeyboardArrowDownIcon };
-      const ArrowIcon = iconMap[legendDisplay];
-      return <ArrowIcon fontSize="inherit" />;
-    }
-    return <MenuIcon fontSize="inherit" />;
-  }, [showLegend, legendDisplay]);
 
   const legendContent = useMemo(
     () => (
@@ -333,23 +325,20 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
           )}
         </header>
         <div className={classes.grid}>
-          {paths.map((path: PlotPath, index: number) => {
-            const hasMismatchedDataLength = pathsWithMismatchedDataLengths.includes(path.value);
-            return (
-              <PlotLegendRow
-                key={index}
-                index={index}
-                xAxisVal={xAxisVal}
-                path={path}
-                paths={paths}
-                hasMismatchedDataLength={hasMismatchedDataLength}
-                datasets={datasets}
-                currentTime={currentTime}
-                saveConfig={saveConfig}
-                showPlotValuesInLegend={showPlotValuesInLegend}
-              />
-            );
-          })}
+          {paths.map((path: PlotPath, index: number) => (
+            <PlotLegendRow
+              key={index}
+              index={index}
+              xAxisVal={xAxisVal}
+              path={path}
+              paths={paths}
+              hasMismatchedDataLength={pathsWithMismatchedDataLengths.includes(path.value)}
+              datasets={datasets}
+              currentTime={currentTime}
+              saveConfig={saveConfig}
+              showPlotValuesInLegend={showPlotValuesInLegend}
+            />
+          ))}
         </div>
         <footer className={classes.footer}>
           <Button
@@ -397,12 +386,12 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
   );
 
   return (
-    <div className={cx(classes.root, { [classes.floatingRoot]: legendDisplay === "floating" })}>
+    <div className={cx(classes.root, { [classes.rootFloating]: legendDisplay === "floating" })}>
       <IconButton
         size="small"
         onClick={toggleLegend}
-        className={cx(classes.legendToggle, {
-          [classes.floatingLegendToggle]: legendDisplay === "floating",
+        className={cx(classes.toggleButton, {
+          [classes.toggleButtonFloating]: legendDisplay === "floating",
         })}
       >
         {legendIcon}
@@ -411,13 +400,10 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element | ReactN
         (legendDisplay === "floating" ? (
           <div className={classes.floatingWrapper}>{legendContent}</div>
         ) : (
-          <SidebarWrapper
-            legendDisplay={legendDisplay}
-            sidebarDimension={sidebarDimension}
-            saveConfig={saveConfig}
-          >
-            {legendContent}
-          </SidebarWrapper>
+          <div className={classes.wrapper}>
+            <div className={classes.wrapperContent}> {legendContent}</div>
+            <div className={classes.dragHandle} onMouseDown={handleMouseDown} />
+          </div>
         ))}
     </div>
   );
