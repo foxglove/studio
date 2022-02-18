@@ -57,7 +57,7 @@ export const ANNOTATION_DATATYPES = [
   "webviz_msgs/ImageMarkerArray",
   // foxglove
   "foxglove.ImageAnnotations",
-];
+] as const;
 
 type Options = {
   imageTopic: string;
@@ -96,14 +96,13 @@ export function synchronizedAddMessage(
   if (annotations) {
     // If we know all the annotations are the same timestamp, we can shortcut
     // and set the annotations by topic directly for the single stamp
-    const sameStamp = annotations.reduce((prev, item) => {
-      // If any annotation stamps are different we return undefined
-      if (!prev || compareTime(item.stamp, prev) !== 0) {
-        return undefined;
+    let sameStamp = annotations[0]?.stamp;
+    for (const annotation of annotations) {
+      if (!sameStamp || compareTime(annotation.stamp, sameStamp) !== 0) {
+        sameStamp = undefined;
+        break;
       }
-
-      return prev;
-    }, annotations[0]?.stamp);
+    }
 
     if (sameStamp) {
       const item = state.tree.get(sameStamp) ?? {
