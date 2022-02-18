@@ -71,7 +71,7 @@ export function getMarkerOptions(
   imageTopic: string,
   topics: readonly Topic[],
   _allCameraNamespaces: string[],
-  imageMarkerDatatypes: string[],
+  imageMarkerDatatypes: readonly string[],
 ): string[] {
   const results = [];
   const cameraNamespace = getCameraNamespace(imageTopic);
