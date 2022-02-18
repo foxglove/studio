@@ -57,7 +57,7 @@ const useStyles = makeStyles((theme: Theme) => {
     },
     imagePlaceholder: {
       paddingBottom: `${(200 / 280) * 100}%`,
-      bgcolor: theme.palette.background.default,
+      backgroundColor: theme.palette.background.default,
     },
     searchInput: {
       backgroundColor: "transparent !important",
