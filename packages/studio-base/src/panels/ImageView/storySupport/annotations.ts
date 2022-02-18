@@ -179,6 +179,7 @@ const markers: ImageMarker[] = [
   }),
 ];
 
+// ts-prune-ignore-next
 const annotations = normalizeAnnotations({ markers }, "foxglove_msgs/ImageMarkerArray") ?? [];
 
 export { annotations };
