@@ -63,7 +63,7 @@ const useStyles = makeStyles((theme: Theme) =>
       backgroundBlendMode: "overlay",
     },
     legendIconButton: {
-      padding: theme.spacing(0.125),
+      padding: `${theme.spacing(0.125)} !important`,
       marginLeft: theme.spacing(0.25),
     },
     legendIcon: ({ enabled, index }: StyleProps) => ({
@@ -81,7 +81,7 @@ const useStyles = makeStyles((theme: Theme) =>
       padding: theme.spacing(0.25),
     }),
     removeButton: {
-      padding: theme.spacing(0.25),
+      padding: `${theme.spacing(0.25)} !important`,
       color: theme.palette.text.secondary,
 
       "&:hover": {
