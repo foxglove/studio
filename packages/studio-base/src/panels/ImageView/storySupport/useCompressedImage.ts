@@ -5,7 +5,6 @@ import { useMemo } from "react";
 
 import { NormalizedImageMessage } from "../types";
 
-// ts-prune-ignore-next
 function useCompressedImage(): NormalizedImageMessage | undefined {
   const imageFormat = "image/png";
 
