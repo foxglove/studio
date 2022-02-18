@@ -6,7 +6,6 @@ import { Time } from "@foxglove/studio";
 import type { CameraInfo, Color, ImageMarker, Point2D } from "@foxglove/studio-base/types/Messages";
 
 import type PinholeCameraModel from "./PinholeCameraModel";
-import type { NormalizedImageMessage } from "./normalizeMessage";
 
 export type PanZoom = { x: number; y: number; scale: number };
 
@@ -67,27 +66,21 @@ export type MarkerData = {
 
 type FoxgloveImageAnnotationCircleAnnotation = {
   timestamp: bigint;
-  id: string;
-  action: number;
   position: Point2D;
   diameter: number;
   thickness: number;
   fill_color?: Color;
   outline_color: Color;
-  lifetime: bigint;
 };
 
 type FoxgloveImageAnnotationPointsAnnotation = {
   timestamp: bigint;
-  id: string;
-  action: number;
   type: number;
   points: Point2D[];
   outline_colors: Color[];
   outline_color?: Color;
   fill_color?: Color;
   thickness: number;
-  lifetime: bigint;
 };
 
 export type FoxgloveImageAnnotationsMessage = {
@@ -128,3 +121,39 @@ export type TextAnnotation = {
 };
 
 export type Annotation = CircleAnnotation | PointsAnnotation | TextAnnotation;
+
+export type RawImageMessage = {
+  type: "raw";
+  stamp: { sec: number; nsec: number };
+  width: number;
+  height: number;
+  is_bigendian: boolean;
+  encoding: string;
+  step: number;
+  data: Uint8Array;
+};
+
+export type CompressedImageMessage = {
+  type: "compressed";
+  stamp: { sec: number; nsec: number };
+  format: string;
+  data: Uint8Array;
+};
+
+export type FoxgloveRawImageMessage = {
+  timestamp: bigint;
+  width: number;
+  height: number;
+  encoding: string;
+  step: number;
+  data: Uint8Array;
+};
+
+export type FoxgloveCompressedImageMessage = {
+  type: "compressed";
+  timestamp: bigint;
+  format: string;
+  data: Uint8Array;
+};
+
+export type NormalizedImageMessage = RawImageMessage | CompressedImageMessage;

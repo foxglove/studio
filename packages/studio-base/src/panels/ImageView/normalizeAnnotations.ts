@@ -149,7 +149,19 @@ function normalizeRosImageMarker(message: ImageMarker): Annotation | undefined {
   return undefined;
 }
 
-function normalizeAnnotations(message: unknown, datatype: string): Annotation[] | undefined {
+function toPOD(message: unknown): unknown {
+  return "toJSON" in (message as object)
+    ? (message as { toJSON: () => unknown }).toJSON()
+    : message;
+}
+
+function normalizeAnnotations(
+  maybeLazyMessage: unknown,
+  datatype: string,
+): Annotation[] | undefined {
+  // The panel may send the annotations to a web worker, for this we need
+  const message = toPOD(maybeLazyMessage);
+
   switch (datatype) {
     // single marker
     case "visualization_msgs/ImageMarker":

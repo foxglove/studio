@@ -28,7 +28,6 @@ import {
   decodeMono8,
   decodeMono16,
 } from "./decodings";
-import { NormalizedImageMessage } from "./normalizeMessage";
 import type {
   MarkerData,
   PanZoom,
@@ -41,6 +40,7 @@ import type {
   CircleAnnotation,
   PointsAnnotation,
   TextAnnotation,
+  NormalizedImageMessage,
 } from "./types";
 import { buildMarkerData, calculateZoomScale } from "./util";
 
