@@ -6,6 +6,7 @@ import { flatten } from "lodash";
 import { useCallback, useMemo } from "react";
 
 import { AVLTree } from "@foxglove/avl";
+import { useShallowMemo } from "@foxglove/hooks";
 import {
   Time,
   compare as compareTime,
@@ -14,7 +15,6 @@ import {
   fromNanoSec,
 } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio";
-import { useShallowMemo } from "@foxglove/studio-base/../../hooks/src";
 import { useMessageReducer } from "@foxglove/studio-base/PanelAPI";
 
 import { normalizeAnnotations } from "./normalizeAnnotations";

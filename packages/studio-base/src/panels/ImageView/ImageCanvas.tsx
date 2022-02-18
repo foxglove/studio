@@ -30,9 +30,15 @@ import WebWorkerManager from "@foxglove/studio-base/util/WebWorkerManager";
 import { downloadFiles } from "@foxglove/studio-base/util/download";
 
 import { Config, SaveImagePanelConfig } from "./index";
-import { NormalizedImageMessage } from "./normalizeMessage";
 import { renderImage } from "./renderImage";
-import type { Dimensions, PixelData, RawMarkerData, RenderableCanvas, RenderArgs } from "./types";
+import type {
+  Dimensions,
+  PixelData,
+  RawMarkerData,
+  RenderableCanvas,
+  RenderArgs,
+  NormalizedImageMessage,
+} from "./types";
 
 type OnFinishRenderImage = () => void;
 

@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 import { useMemo } from "react";
 
-import { NormalizedImageMessage } from "@foxglove/studio-base/panels/ImageView/normalizeMessage";
+import { NormalizedImageMessage } from "../types";
 
 function useCompressedImage(): NormalizedImageMessage | undefined {
   const imageFormat = "image/png";
