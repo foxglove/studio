@@ -2,36 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { fromNanoSec } from "@foxglove/rostime";
 import { CompressedImage, Image } from "@foxglove/studio-base/types/Messages";
 
-type RawImageMessage = {
-  type: "raw";
-  stamp: { sec: number; nsec: number };
-  width: number;
-  height: number;
-  is_bigendian: boolean;
-  encoding: string;
-  step: number;
-  data: Uint8Array;
-};
-
-type CompressedImageMessage = {
-  type: "compressed";
-  stamp: { sec: number; nsec: number };
-  format: string;
-  data: Uint8Array;
-};
-
-type FoxgloveRawImageMessage = {
-  timestamp: bigint;
-  width: number;
-  height: number;
-  encoding: string;
-  step: number;
-  data: Uint8Array;
-};
-
-export type NormalizedImageMessage = RawImageMessage | CompressedImageMessage;
+import {
+  NormalizedImageMessage,
+  FoxgloveRawImageMessage,
+  FoxgloveCompressedImageMessage,
+} from "./types";
 
 // Supported datatypes for normalization
 export const NORMALIZABLE_IMAGE_DATATYPES = [
@@ -42,6 +20,7 @@ export const NORMALIZABLE_IMAGE_DATATYPES = [
   "sensor_msgs/msg/CompressedImage",
   "ros.sensor_msgs.CompressedImage",
   "foxglove.RawImage",
+  "foxglove.CompressedImage",
 ];
 
 /**
@@ -55,11 +34,7 @@ export function normalizeImageMessage(
   switch (datatype) {
     case "foxglove.RawImage": {
       const typedMessage = message as FoxgloveRawImageMessage;
-      const sec = typedMessage.timestamp / 1000000000n;
-      const stamp = {
-        sec: Number(sec),
-        nsec: Number(typedMessage.timestamp - sec * 1000000000n),
-      };
+      const stamp = fromNanoSec(typedMessage.timestamp);
       return {
         type: "raw",
         stamp,
@@ -93,6 +68,16 @@ export function normalizeImageMessage(
       return {
         type: "compressed",
         stamp: typedMessage.header.stamp,
+        format: typedMessage.format,
+        data: typedMessage.data,
+      };
+    }
+    case "foxglove.CompressedImage": {
+      const typedMessage = message as FoxgloveCompressedImageMessage;
+      const stamp = fromNanoSec(typedMessage.timestamp);
+      return {
+        type: "compressed",
+        stamp,
         format: typedMessage.format,
         data: typedMessage.data,
       };
