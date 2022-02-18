@@ -6,7 +6,7 @@ import { useCallback, useMemo } from "react";
 
 import { MessageEvent } from "@foxglove/studio";
 import { useMessageReducer, useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
-import { CameraInfo } from "@foxglove/studio-base/types/Messages";
+import { CameraInfo, DistortionModel } from "@foxglove/studio-base/types/Messages";
 
 import type { FoxgloveCameraCalibration } from "./types";
 import { getCameraInfoTopic } from "./util";
@@ -21,11 +21,14 @@ function normalizeCameraInfo(message: unknown, datatype: string): CameraInfo | u
       return {
         width: typedMessage.width,
         height: typedMessage.height,
-        distortion_model: typedMessage.distortion_model ?? "plumb_bob",
+        distortion_model: (typedMessage.distortion_model ?? "") as DistortionModel,
         D: typedMessage.D ?? [],
         K: typedMessage.K ?? [],
         P: typedMessage.P ?? [],
         R: typedMessage.R ?? [],
+        binning_x: 1,
+        binning_y: 1,
+        roi: { x_offset: 0, y_offset: 0, width: 0, height: 0, do_rectify: false },
       };
     }
   }
