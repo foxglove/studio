@@ -147,7 +147,7 @@ export default class UserNodePlayer implements Player {
     this._typesLibGenerator = new MemoizedLibGenerator(async (args) => {
       const lib = generateTypesLib({
         topics: args.topics,
-        datatypes: new Map(args.datatypes),
+        datatypes: new Map([...basicDatatypes, ...args.datatypes]),
       });
 
       return await getPrettifiedCode(lib);
