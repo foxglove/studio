@@ -45,6 +45,7 @@ import toggle from "@foxglove/studio-base/util/toggle";
 import ImageCanvas from "./ImageCanvas";
 import ImageEmptyState from "./ImageEmptyState";
 import { Toolbar } from "./Toolbar";
+import { TopicTimestamp } from "./TopicTimestamp";
 import helpContent from "./index.help.md";
 import { NORMALIZABLE_IMAGE_DATATYPES } from "./normalizeMessage";
 import type { PixelData, ZoomMode } from "./types";
@@ -132,36 +133,12 @@ const useStyles = makeStyles((theme: Theme) => ({
     display: "flex",
     alignItems: "center",
   },
-  topicTimestamp: {
-    padding: "0px 15px 0px 0px",
-    fontSize: 10,
-    fontStyle: "italic",
-  },
   emptyStateContainer: {
     width: "100%",
     height: "100%",
     position: "absolute",
   },
 }));
-
-const TopicTimestamp = ({
-  text,
-  style: styleObj,
-}: {
-  text: string;
-  style?: {
-    [key: string]: string;
-  };
-}) => {
-  const classes = useStyles();
-  return text === "" ? (
-    ReactNull
-  ) : (
-    <span className={classes.topicTimestamp} style={styleObj}>
-      {text}
-    </span>
-  );
-};
 
 const BottomBar = ({ children }: { children?: React.ReactNode }) => {
   const classes = useStyles();
@@ -390,19 +367,6 @@ function ImageView(props: Props) {
     synchronize: shouldSynchronize,
   });
 
-  /* fixme
-  // Timestamps are displayed for informational purposes in the markers menu
-  const renderedMarkerTimestamps = useMemo(() => {
-    const stamps: Record<string, string> = {};
-    for (const { topic, message } of markersToRender) {
-      // In some cases, a user may have subscribed to a topic that does not include a header stamp.
-      const stamp = getTimestampForMessage(message);
-      stamps[topic] = stamp != undefined ? formatTimeRaw(stamp) : "[ not available ]";
-    }
-    return stamps;
-  }, [markersToRender]);
-  */
-
   const addTopicsMenu = useMemo(
     () => (
       <AddTopic
@@ -450,8 +414,6 @@ function ImageView(props: Props) {
             className={classes.dropdownItem}
           >
             <span style={{ display: "inline-block", marginRight: "15px" }}>{topic}</span>
-            {/* fixme */}
-            {/* <TopicTimestamp text={renderedMarkerTimestamps[topic] ?? ""} /> */}
             {customMarkerTopicOptions.includes(topic) && (
               <Icon
                 style={{ position: "absolute", right: "10px" }}
