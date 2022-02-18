@@ -26,7 +26,7 @@ enum TabName {
   SELECTED_POINT = "Selected Point",
 }
 
-export function ObjectPane({ pixelData }: { pixelData: PixelData | undefined }): ReactElement {
+function ObjectPane({ pixelData }: { pixelData: PixelData | undefined }): ReactElement {
   const jsonTreeTheme = useJsonTreeTheme();
 
   return (

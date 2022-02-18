@@ -8,7 +8,7 @@ import TestUtils from "react-dom/test-utils";
 import SchemaEditor from "@foxglove/studio-base/components/PanelSettings/SchemaEditor";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
-import ImageView from "../index";
+import ImageView from "./index";
 
 export default {
   title: "panels/ImageView",
