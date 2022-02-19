@@ -12,7 +12,8 @@
 //   You may not use this file except in compliance with the License.
 
 import { IconButton, IButtonStyles, useTheme } from "@fluentui/react";
-import { Paper, Stack, Theme } from "@mui/material";
+import TopicIcon from "@mdi/svg/svg/rhombus.svg";
+import { Paper, Theme } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import cx from "classnames";
 import Cytoscape from "cytoscape";
@@ -102,6 +103,9 @@ const STYLESHEET: Cytoscape.Stylesheet[] = [
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-end",
     position: "absolute",
     top: theme.spacing(4),
     right: theme.spacing(1),
@@ -111,6 +115,8 @@ const useStyles = makeStyles((theme: Theme) => ({
     pointerEvents: "none",
   },
   stack: {
+    display: "flex",
+    flexDirection: "column",
     flex: "0 0",
   },
   pointerEventsAuto: {
@@ -387,9 +393,9 @@ function TopicGraph() {
       {orientationButton.tooltip}
       {servicesButton.tooltip}
       <PanelToolbar floating helpContent={helpContent} />
-      <Stack className={classes.root}>
+      <div className={classes.root}>
         <Paper square={false} elevation={4} className={classes.pointerEventsAuto}>
-          <Stack className={cx(classes.stack, classes.pointerEventsAuto)}>
+          <div className={cx(classes.stack, classes.pointerEventsAuto)}>
             <IconButton
               elementRef={fitToPageButton.ref}
               onClick={onZoomFit}
@@ -409,14 +415,14 @@ function TopicGraph() {
               onClick={toggleShowServices}
               styles={iconButtonStyles}
             />
-          </Stack>
+          </div>
         </Paper>
 
         <ExpandingToolbar
           checked={topicVisibility !== "none"}
           dataTest="set-topic-visibility"
           tooltip={topicVisibilityTooltip}
-          iconName="Topic"
+          icon={<TopicIcon />}
           selectedTab={selectedTab}
           onSelectTab={(newSelectedTab) => {
             setSelectedTab(newSelectedTab);
@@ -436,7 +442,7 @@ function TopicGraph() {
             />
           </ToolGroup>
         </ExpandingToolbar>
-      </Stack>
+      </div>
       <Graph
         style={STYLESHEET}
         elements={elements}

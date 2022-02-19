@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import CursorIcon from "@mdi/svg/svg/cursor-default.svg";
 import { Box, Stack, Typography } from "@mui/material";
 import { ReactElement, useEffect, useRef, useState } from "react";
 import Tree from "react-json-tree";
@@ -89,7 +90,7 @@ export function Toolbar({ pixelData }: { pixelData: PixelData | undefined }): JS
     >
       <ExpandingToolbar
         tooltip="Inspect objects"
-        iconName="CursorDefault"
+        icon={<CursorIcon />}
         selectedTab={selectedTab}
         onSelectTab={setSelectedTab}
       >
