@@ -82,10 +82,10 @@ const useStyles = makeStyles((theme: Theme) => ({
   },
   icon: {
     position: "relative",
-    fontSize: "1rem",
+    fontSize: "16px !important",
 
     "& svg:not(.MuiSvgIcon-root)": {
-      fontSize: "1rem",
+      fontSize: "16px !important",
     },
   },
   menu: {
