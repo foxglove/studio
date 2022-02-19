@@ -17,7 +17,7 @@ import { definitions as foxgloveDefs } from "@foxglove/rosmsg-msgs-foxglove";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 // https://foxglove.dev/docs/studio/messages/introduction
-const foxgloveDatatypes: Record<string, RosMsgDefinition> = {
+const foxgloveDatatypesObj: Record<string, RosMsgDefinition> = {
   "foxglove.LocationFix": {
     name: "foxglove.LocationFix",
     definitions: [
@@ -60,6 +60,5 @@ for (const [name, def] of Object.entries(commonDefs)) {
 for (const [name, def] of Object.entries(foxgloveDefs)) {
   basicDatatypes.set(name, def);
 }
-for (const [name, def] of Object.entries(foxgloveDatatypes)) {
-  basicDatatypes.set(name, def);
-}
+
+export const foxgloveDatatypes: RosDatatypes = new Map(Object.entries(foxgloveDatatypesObj));
