@@ -37,6 +37,10 @@ const useStyles = makeStyles((theme: Theme) => ({
     "&.MuiIconButton-root": {
       // doing this because the type will not allow !important
       position: "absolute",
+
+      "&:hover": {
+        backgroundColor: "transparent",
+      },
     },
   },
   toolGroupFixedSizePanel: {
