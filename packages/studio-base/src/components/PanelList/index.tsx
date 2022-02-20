@@ -109,6 +109,8 @@ const useStyles = makeStyles((theme: Theme) => {
       gap: theme.spacing(2),
     },
     noResults: {
+      display: "flex",
+      flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
       padding: theme.spacing(2, 1),
