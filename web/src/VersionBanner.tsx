@@ -4,7 +4,7 @@
 
 import { DefaultButton, Text, Link } from "@fluentui/react";
 import CloseIcon from "@mui/icons-material/Close";
-import { IconButton, Theme } from "@mui/material";
+import { IconButton } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import cx from "classnames";
 import { useState, ReactElement } from "react";
