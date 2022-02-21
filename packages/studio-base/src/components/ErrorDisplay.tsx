@@ -120,9 +120,9 @@ function ErrorDisplay(props: ErrorDisplayProps): JSX.Element {
           </div>
           <div>
             <Link
+              component="button"
               color="secondary"
               onClick={() => setShowErrorDetails(!showErrorDetails)}
-              sx={{ cursor: "pointer" }}
             >
               {showErrorDetails ? "Hide" : "Show"} details
             </Link>

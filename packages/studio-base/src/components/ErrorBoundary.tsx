@@ -52,7 +52,7 @@ export default class ErrorBoundary extends Component<PropsWithChildren<Props>, S
             <p>
               Something went wrong in the app.{" "}
               <Link
-                sx={{ cursor: "pointer" }}
+                component="button"
                 color="inherit"
                 onClick={() => this.setState({ currentError: undefined })}
               >

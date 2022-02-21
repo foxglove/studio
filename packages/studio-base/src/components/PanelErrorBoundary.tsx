@@ -40,7 +40,7 @@ export default class PanelErrorBoundary extends Component<PropsWithChildren<Prop
             <p>
               Something went wrong in the panel.{" "}
               <Link
-                sx={{ cursor: "pointer" }}
+                component="button"
                 color="inherit"
                 onClick={() => this.setState({ currentError: undefined })}
               >
