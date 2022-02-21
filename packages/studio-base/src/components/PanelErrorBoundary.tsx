@@ -52,7 +52,7 @@ export default class PanelErrorBoundary extends Component<PropsWithChildren<Prop
           actions={
             <>
               <Stack direction="row" spacing={1}>
-                <Box sx={{ flexGrow: 1 }} />
+                <Box flexGrow={1} />
                 <Button
                   variant="text"
                   title="remove the panel"
