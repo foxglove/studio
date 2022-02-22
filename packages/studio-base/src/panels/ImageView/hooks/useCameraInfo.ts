@@ -8,8 +8,8 @@ import { MessageEvent } from "@foxglove/studio";
 import { useMessageReducer, useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import { CameraInfo, DistortionModel } from "@foxglove/studio-base/types/Messages";
 
-import type { FoxgloveCameraCalibration } from "./types";
-import { getCameraInfoTopic } from "./util";
+import { getCameraInfoTopic } from "../lib/util";
+import type { FoxgloveCameraCalibration } from "../types";
 
 function normalizeCameraInfo(message: unknown, datatype: string): CameraInfo | undefined {
   switch (datatype) {
