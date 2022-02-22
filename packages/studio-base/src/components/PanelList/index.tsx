@@ -12,8 +12,10 @@
 //   You may not use this file except in compliance with the License.
 
 import SearchIcon from "@mui/icons-material/Search";
-import { AppBar, Theme, Toolbar } from "@mui/material";
 import {
+  AppBar,
+  Theme,
+  Toolbar,
   Card,
   CardActionArea,
   CardContent,
