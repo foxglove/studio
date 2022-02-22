@@ -126,9 +126,12 @@ type StyleProps = {
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
     pointerEvents: "auto",
+  },
+  row: {
     display: "flex",
     flexGrow: 1,
     alignItems: "center",
+    // see also ExpandingToolbar styles
     color: ({ followTf }: StyleProps) => (followTf ? undefined : theme.palette.text.disabled),
     position: "relative",
   },
@@ -219,52 +222,54 @@ const FollowTFControl = memo<Props>(function FollowTFControl(props: Props) {
 
   return (
     <Paper className={classes.root} square={false} elevation={4}>
-      {active && (
-        <Autocomplete
-          ref={autocomplete}
-          items={allNodes}
-          getItemValue={treeNodeToTfId}
-          getItemText={getItemText}
-          selectedItem={selectedItem}
-          placeholder={followTf ?? "(empty)"}
-          onSelect={onSelectFrame}
-          sortWhenFiltering={false}
-          minWidth={0}
-          clearOnFocus
-          autoSize
-          menuStyle={{
-            // bump the menu down to reduce likelihood of it appearing while the mouse is
-            // already over it, which causes onMouseEnter not to be delivered correctly and
-            // breaks selection
-            marginTop: 4,
-          }}
-        />
-      )}
-      {frameListButton.tooltip}
-      {active && (
-        <IconButton
-          elementRef={frameListButton.ref}
-          onClick={openFrameList}
-          iconProps={{ iconName: "MenuDown" }}
-          styles={{
-            ...iconButtonStyles,
-            root: { width: 16 },
-          }}
-        />
-      )}
-      <MuiIconButton
-        className={classes.icon}
-        disabled={!active}
-        title={followButtonTooltipContent}
-        color={followMode !== "no-follow" ? "info" : "inherit"}
-        onClick={toggleFollowMode}
-      >
-        {followMode === "follow-orientation" ? (
-          <NavigationIcon fontSize="inherit" />
-        ) : (
-          <MyLocationIcon fontSize="inherit" />
+      <div className={classes.row}>
+        {active && (
+          <Autocomplete
+            ref={autocomplete}
+            items={allNodes}
+            getItemValue={treeNodeToTfId}
+            getItemText={getItemText}
+            selectedItem={selectedItem}
+            placeholder={followTf ?? "(empty)"}
+            onSelect={onSelectFrame}
+            sortWhenFiltering={false}
+            minWidth={0}
+            clearOnFocus
+            autoSize
+            menuStyle={{
+              // bump the menu down to reduce likelihood of it appearing while the mouse is
+              // already over it, which causes onMouseEnter not to be delivered correctly and
+              // breaks selection
+              marginTop: 4,
+            }}
+          />
         )}
-      </MuiIconButton>
+        {frameListButton.tooltip}
+        {active && (
+          <IconButton
+            elementRef={frameListButton.ref}
+            onClick={openFrameList}
+            iconProps={{ iconName: "MenuDown" }}
+            styles={{
+              ...iconButtonStyles,
+              root: { width: 16 },
+            }}
+          />
+        )}
+        <MuiIconButton
+          className={classes.icon}
+          disabled={!active}
+          title={followButtonTooltipContent}
+          color={followMode !== "no-follow" ? "info" : "inherit"}
+          onClick={toggleFollowMode}
+        >
+          {followMode === "follow-orientation" ? (
+            <NavigationIcon fontSize="inherit" />
+          ) : (
+            <MyLocationIcon fontSize="inherit" />
+          )}
+        </MuiIconButton>
+      </div>
     </Paper>
   );
 }, arePropsEqual);
