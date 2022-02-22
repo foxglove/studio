@@ -18,14 +18,26 @@ function normalizeCameraInfo(message: unknown, datatype: string): CameraInfo | u
       return message as CameraInfo;
     case "foxglove.CameraCalibration": {
       const typedMessage = message as FoxgloveCameraCalibration;
+      // prettier-ignore
+      const mat3Identity = [
+        1, 0, 0,
+        0, 1, 0,
+        0, 0, 1,
+      ];
+      // prettier-ignore
+      const mat4Identity = [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+      ];
       return {
         width: typedMessage.width,
         height: typedMessage.height,
         distortion_model: (typedMessage.distortion_model ?? "") as DistortionModel,
         D: typedMessage.D ?? [],
-        K: typedMessage.K ?? [],
-        P: typedMessage.P ?? [],
-        R: typedMessage.R ?? [],
+        K: typedMessage.K ?? mat3Identity,
+        R: typedMessage.R ?? mat3Identity,
+        P: typedMessage.P ?? mat4Identity,
         binning_x: 1,
         binning_y: 1,
         roi: { x_offset: 0, y_offset: 0, width: 0, height: 0, do_rectify: false },
