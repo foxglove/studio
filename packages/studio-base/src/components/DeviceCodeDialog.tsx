@@ -36,6 +36,8 @@ const useStyles = makeStyles((theme: Theme) => ({
     gap: theme.spacing(2.5),
   },
   contentStack: {
+    display: "flex",
+    flexDirection: "column",
     gap: theme.spacing(1),
     lineHeight: "1.3",
   },
