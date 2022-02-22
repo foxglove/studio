@@ -27,6 +27,7 @@ const useStyles = makeStyles((theme: Theme) => ({
     flexDirection: "column",
     height: "100%",
     justifyContent: "center",
+    position: "relative",
     alignItems: "center",
     padding: `min(5%, ${theme.spacing(1)})`,
   },
@@ -128,16 +129,8 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
     }
 
     const message = {
-      linear: {
-        x: 0,
-        y: 0,
-        z: 0,
-      },
-      angular: {
-        x: 0,
-        y: 0,
-        z: 0,
-      },
+      linear: { x: 0, y: 0, z: 0 },
+      angular: { x: 0, y: 0, z: 0 },
     };
 
     function setFieldValue(field: string, value: number) {
@@ -207,23 +200,24 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
       <div className={classes.root}>
         <DirectionalPad onAction={setCurrentAction} disabled={!enabled} />
       </div>
-      <HoverableIconButton
-        className={classes.settingsIcon}
-        onClick={() => setShowSettings(true)}
-        iconProps={{
-          iconName: "Settings",
-          iconNameActive: "SettingsFilled",
-        }}
-        styles={{
-          root: {
-            backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-            "&:hover": { backgroundColor: theme.semanticColors.buttonBackgroundPressed },
-          },
-          icon: { height: 20 },
-        }}
-      >
-        Panel settings
-      </HoverableIconButton>
+      <div className={classes.settingsIcon}>
+        <HoverableIconButton
+          onClick={() => setShowSettings(true)}
+          iconProps={{
+            iconName: "Settings",
+            iconNameActive: "SettingsFilled",
+          }}
+          styles={{
+            root: {
+              backgroundColor: theme.semanticColors.buttonBackgroundHovered,
+              "&:hover": { backgroundColor: theme.semanticColors.buttonBackgroundPressed },
+            },
+            icon: { height: 20 },
+          }}
+        >
+          Panel settings
+        </HoverableIconButton>
+      </div>
       <Dialog
         dialogContentProps={{ title: "Teleop panel settings", showCloseButton: true }}
         hidden={!showSettings}
