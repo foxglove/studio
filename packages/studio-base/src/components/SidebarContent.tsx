@@ -16,7 +16,6 @@ const useStyles = makeStyles((theme: Theme) => ({
     display: "flex",
     flexDirection: "column",
     flex: "auto",
-    gap: theme.spacing(1),
     height: "100%",
     overflow: "auto",
   },
@@ -103,7 +102,7 @@ export function SidebarContent({
             ))}
           </div>
         )}
-        <Text as="h2" variant="xLarge" styles={{ root: { flexGrow: 1 } }}>
+        <Text as="h2" variant="xLarge" styles={{ root: { flexGrow: 1, margin: 0 } }}>
           {title}
         </Text>
         {trailingItemsWithHelp.length > 0 && (
