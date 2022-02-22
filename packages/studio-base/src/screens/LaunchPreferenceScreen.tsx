@@ -22,7 +22,7 @@ const useStyles = makeStyles((theme: Theme) => ({
     flexDirection: "column",
     gap: theme.spacing(2.5),
     padding: theme.spacing(2.5),
-    marginBottom: theme.spacing(2.5),
+    marginBottom: theme.spacing(4),
     maxWidth: 480,
   },
   title: {
