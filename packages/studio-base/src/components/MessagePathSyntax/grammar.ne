@@ -14,7 +14,7 @@
 #
 # For more examples, please see parseRosPath.test.js
 main -> topicName messagePath:? modifier:?
-  {% (d) => ({ topicName: d[0], messagePath: d[1] || [], modifier: d[2] }) %}
+  {% (d) => ({ topicName: d[0].value, topicNameRepr: d[0].repr, messagePath: d[1] || [], modifier: d[2] }) %}
 
 ## Primitives
 
@@ -41,10 +41,26 @@ value -> integer  {% (d) => d[0] %}
 	   | variable {% (d) => d[0] %}
 
 ## Topic part. Basically an id but with (optional) slashes.
-topicName -> slashID:+     {% (d) => d[0].join("") %}
-           | id slashID:*  {% (d) => d[0] + d[1].join("") %}
+topicName -> slashID:+     {% (d) => ({ value: d[0].join(""), repr: d[0].join("") }) %}
+           | id slashID:*  {% (d) => ({ value: d[0] + d[1].join(""), repr: d[0] + d[1].join("") }) %}
+           | quotedID      {% id %}
 slashID -> "/" id:?
   {% (d) => d.join("") %}
+
+quotedID ->
+  "\""
+  (
+    [^"\\]
+    | "\\\\" {% d => "\\" %}
+    | "\\\"" {% d => `"` %}
+  ):*
+  "\""
+  {%
+    d => ({
+      value: d[1].join(''),
+      repr: `"${d[1].join('').replace(/[\\"]/g, char => `\\${char}`)}"`
+    })
+  %}
 
 ## `messagePath` part.
 

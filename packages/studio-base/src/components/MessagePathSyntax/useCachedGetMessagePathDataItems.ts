@@ -16,8 +16,6 @@ import { useCallback, useMemo, useRef } from "react";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
-import { TypicalFilterNames } from "@foxglove/studio-base/components/MessagePathSyntax/isTypicalFilterName";
-import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import useChangeDetector from "@foxglove/studio-base/hooks/useChangeDetector";
 import useDeepMemo from "@foxglove/studio-base/hooks/useDeepMemo";
 import useGlobalVariables, {
@@ -32,7 +30,9 @@ import {
 } from "@foxglove/studio-base/util/selectors";
 
 import { MessagePathFilter, MessagePathStructureItem, RosPath } from "./constants";
+import { TypicalFilterNames } from "./isTypicalFilterName";
 import { messagePathStructures } from "./messagePathsForDatatype";
+import parseRosPath, { quoteIdentifierIfNeeded } from "./parseRosPath";
 
 export type MessagePathDataItem = {
   value: unknown; // The actual value.
@@ -374,7 +374,7 @@ export function getMessagePathDataItems(
   }
   const structure = structures[topic.datatype];
   if (structure) {
-    traverse(message.message, 0, filledInPath.topicName, structure);
+    traverse(message.message, 0, quoteIdentifierIfNeeded(filledInPath.topicName), structure);
   }
   return queriedData;
 }

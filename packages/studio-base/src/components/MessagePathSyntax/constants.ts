@@ -51,6 +51,7 @@ export type MessagePathPart =
 
 export type RosPath = {
   topicName: string;
+  topicNameRepr: string;
   messagePath: MessagePathPart[];
   modifier?: string;
 };

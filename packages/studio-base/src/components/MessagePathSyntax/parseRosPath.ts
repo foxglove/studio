@@ -21,6 +21,13 @@ import grammar from "./grammar.ne";
 
 const grammarObj = Grammar.fromCompiled(grammar);
 
+export function quoteIdentifierIfNeeded(name: string): string {
+  if (name.match(/^[a-zA-Z0-9_/]+$/)) {
+    return name;
+  }
+  return `"${name.replace(/[\\"]/g, (char) => `\\${char}`)}"`;
+}
+
 const parseRosPath = memoize((path: string): RosPath | undefined => {
   // Need to create a new Parser object for every new string to parse (should be cheap).
   const parser = new Parser(grammarObj);
