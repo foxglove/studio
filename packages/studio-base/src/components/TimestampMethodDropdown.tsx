@@ -43,10 +43,9 @@ type Props = {
 
 const useStyles = makeStyles((theme: Theme) => ({
   iconButton: {
-    padding: 0.375,
-
     "&.MuiIconButton-root": {
       color: theme.palette.text.secondary,
+      padding: theme.spacing(0.375),
 
       "&:hover": {
         color: theme.palette.text.primary,
