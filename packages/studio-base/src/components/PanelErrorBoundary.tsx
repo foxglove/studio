@@ -39,11 +39,7 @@ export default class PanelErrorBoundary extends Component<PropsWithChildren<Prop
           content={
             <p>
               Something went wrong in the panel.{" "}
-              <Link
-                component="button"
-                color="inherit"
-                onClick={() => this.setState({ currentError: undefined })}
-              >
+              <Link color="inherit" onClick={() => this.setState({ currentError: undefined })}>
                 Dismiss this error
               </Link>{" "}
               to continue using the panel. If the issue persists try resetting the panel.

@@ -51,11 +51,7 @@ export default class ErrorBoundary extends Component<PropsWithChildren<Props>, S
           content={
             <p>
               Something went wrong in the app.{" "}
-              <Link
-                component="button"
-                color="inherit"
-                onClick={() => this.setState({ currentError: undefined })}
-              >
+              <Link color="inherit" onClick={() => this.setState({ currentError: undefined })}>
                 Dismiss this error
               </Link>{" "}
               to continue using the app. If the issue persists try restarting the app.
