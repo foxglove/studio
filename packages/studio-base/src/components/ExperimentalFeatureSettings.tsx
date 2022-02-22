@@ -26,13 +26,19 @@ type Feature = {
 
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
+    display: "flex",
+    flexDirection: "column",
     gap: theme.spacing(2),
   },
   item: {
+    display: "flex",
+    flexDirection: "column",
     flexGrow: 1,
     gap: theme.spacing(0.5),
   },
   label: {
+    display: "flex",
+    flexDirection: "column",
     gap: theme.spacing(0.5),
     paddingLeft: theme.spacing(0.5),
   },
