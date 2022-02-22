@@ -14,6 +14,7 @@ import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 const useStyles = makeStyles((theme: Theme) => ({
   root: {
     display: "flex",
+    flexDirection: "column",
     flex: "auto",
     gap: theme.spacing(1),
     height: "100%",
