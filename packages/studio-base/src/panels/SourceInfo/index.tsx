@@ -27,11 +27,13 @@ const useStyles = makeStyles((theme: Theme) => ({
     display: "flex",
     flexDirection: "column",
     borderBottom: `2px solid ${theme.palette.divider}`,
-    backgroundColor: theme.palette.background.paper,
+    backgroundColor: theme.palette.background.default,
     padding: theme.spacing(1.5),
     gap: theme.spacing(1),
   },
   row: {
+    display: "flex",
+    flexDirection: "column",
     gap: theme.spacing(0.5),
   },
 }));
