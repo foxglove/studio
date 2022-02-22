@@ -3,7 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Dialog, DialogFooter, PrimaryButton } from "@fluentui/react";
-import { Stack } from "@mui/material";
+import { Theme } from "@mui/material";
+import { makeStyles } from "@mui/styles";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 
 import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
@@ -20,7 +21,25 @@ type TeleopPanelProps = {
   context: PanelExtensionContext;
 };
 
+const useStyles = makeStyles((theme: Theme) => ({
+  root: {
+    display: "flex",
+    flexDirection: "column",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: `min(5%, ${theme.spacing(1)})`,
+  },
+  settingsIcon: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    margin: theme.spacing(1),
+  },
+}));
+
 function TeleopPanel(props: TeleopPanelProps): JSX.Element {
+  const classes = useStyles();
   const { context } = props;
   const { saveState } = context;
 
@@ -185,32 +204,26 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
 
   return (
     <ThemeProvider isDark={colorScheme === "dark"}>
-      <Stack
-        height="100%"
-        justifyContent="100"
-        alignItems="center"
-        sx={{ padding: `min(5%, ${theme.spacing.s1})` }}
-      >
+      <div className={classes.root}>
         <DirectionalPad onAction={setCurrentAction} disabled={!enabled} />
-      </Stack>
-      <Stack sx={{ position: "absolute", top: 0, left: 0, margin: 1 }}>
-        <HoverableIconButton
-          onClick={() => setShowSettings(true)}
-          iconProps={{
-            iconName: "Settings",
-            iconNameActive: "SettingsFilled",
-          }}
-          styles={{
-            root: {
-              backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-              "&:hover": { backgroundColor: theme.semanticColors.buttonBackgroundPressed },
-            },
-            icon: { height: 20 },
-          }}
-        >
-          Panel settings
-        </HoverableIconButton>
-      </Stack>
+      </div>
+      <HoverableIconButton
+        className={classes.settingsIcon}
+        onClick={() => setShowSettings(true)}
+        iconProps={{
+          iconName: "Settings",
+          iconNameActive: "SettingsFilled",
+        }}
+        styles={{
+          root: {
+            backgroundColor: theme.semanticColors.buttonBackgroundHovered,
+            "&:hover": { backgroundColor: theme.semanticColors.buttonBackgroundPressed },
+          },
+          icon: { height: 20 },
+        }}
+      >
+        Panel settings
+      </HoverableIconButton>
       <Dialog
         dialogContentProps={{ title: "Teleop panel settings", showCloseButton: true }}
         hidden={!showSettings}
