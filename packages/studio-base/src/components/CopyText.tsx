@@ -24,10 +24,10 @@ const useStyles = makeStyles((theme: Theme) => ({
     userSelect: "none",
     cursor: "pointer",
 
-    "& > :last-child": {
+    "& > &:last-child": {
       visibility: "hidden",
     },
-    "&:hover > :last-child": {
+    "&:hover > &:last-child": {
       visibility: "visible",
     },
     "&:active": {

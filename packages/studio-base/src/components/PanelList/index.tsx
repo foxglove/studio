@@ -74,11 +74,11 @@ const useStyles = makeStyles((theme: Theme) => {
       top: 0,
       zIndex: 2,
     },
-    appBarBackground: {
+    appBarBackground: ({ backgroundColor }: { backgroundColor?: string }) => ({
       backgroundImage: `linear-gradient(to top, transparent, ${
-        theme.palette.background.default
-      } ${theme.spacing(1)})`,
-    },
+        backgroundColor ?? theme.palette.background.default
+      } ${theme.spacing(1.5)}) !important`,
+    }),
     toolbar: {
       padding: theme.spacing(2),
       justifyContent: "stretch",
@@ -156,7 +156,7 @@ function DraggablePanelItem({
   highlighted = false,
   mosaicId,
 }: PanelItemProps) {
-  const classes = useStyles();
+  const classes = useStyles({});
   const scrollRef = React.useRef<HTMLElement>(ReactNull);
   const [, connectDragSource] = useDrag<unknown, MosaicDropResult, never>({
     type: MosaicDragType.WINDOW,
@@ -317,10 +317,10 @@ function verifyPanels(panels: readonly PanelInfo[]) {
 }
 
 function PanelList(props: Props): JSX.Element {
-  const classes = useStyles();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [highlightedPanelIdx, setHighlightedPanelIdx] = React.useState<number | undefined>();
-  const { mode, onPanelSelect, selectedPanelTitle } = props;
+  const { mode, onPanelSelect, selectedPanelTitle, backgroundColor } = props;
+  const classes = useStyles({ backgroundColor });
 
   const { dropPanel } = useCurrentLayoutActions();
   const mosaicId = usePanelMosaicId();
@@ -464,7 +464,7 @@ function PanelList(props: Props): JSX.Element {
   return (
     <div className={classes.fullHeight}>
       <AppBar
-        className={cx(classes.appBar, { [classes.appBarBackground]: !props.backgroundColor })}
+        className={cx(classes.appBar, { [classes.appBarBackground]: !backgroundColor })}
         position="sticky"
         color="transparent"
         elevation={0}
