@@ -34,7 +34,7 @@ const useStyles = makeStyles((theme: Theme) => ({
     padding: 0,
   },
   helpContent: {
-    padding: theme.spacing(0, 2, 2),
+    padding: theme.spacing(1, 2, 2),
   },
   items: {
     display: "flex",
