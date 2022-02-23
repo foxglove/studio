@@ -32,7 +32,7 @@ import {
   messagePathsForDatatype,
   validTerminatingStructureItem,
 } from "./messagePathsForDatatype";
-import parseRosPath, { quoteIdentifierIfNeeded } from "./parseRosPath";
+import parseRosPath, { quoteFieldNameIfNeeded, quoteTopicNameIfNeeded } from "./parseRosPath";
 
 // To show an input field with an autocomplete so the user can enter message paths, use:
 //
@@ -61,7 +61,7 @@ function getFieldPaths(
 ): Map<string, RosMsgField> {
   const output = new Map<string, RosMsgField>();
   for (const topic of topics) {
-    addFieldPathsForType(quoteIdentifierIfNeeded(topic.name), topic.datatype, datatypes, output);
+    addFieldPathsForType(quoteTopicNameIfNeeded(topic.name), topic.datatype, datatypes, output);
   }
   return output;
 }
@@ -76,9 +76,10 @@ function addFieldPathsForType(
   if (msgdef) {
     for (const field of msgdef.definitions) {
       if (field.isConstant !== true) {
-        output.set(`${curPath}.${field.name}`, field);
+        const fieldPath = `${curPath}.${quoteFieldNameIfNeeded(field.name)}`;
+        output.set(fieldPath, field);
         if (field.isComplex === true) {
-          addFieldPathsForType(`${curPath}.${field.name}`, field.type, datatypes, output);
+          addFieldPathsForType(fieldPath, field.type, datatypes, output);
         }
       }
     }
@@ -267,7 +268,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
   }, [globalVariables, rosPath, setGlobalVariables]);
 
   const topicNamesAutocompleteItems = useMemo(
-    () => topics.map(({ name }) => quoteIdentifierIfNeeded(name)),
+    () => topics.map(({ name }) => quoteTopicNameIfNeeded(name)),
     [topics],
   );
 

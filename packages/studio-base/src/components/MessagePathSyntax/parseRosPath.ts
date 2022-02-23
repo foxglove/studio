@@ -21,8 +21,19 @@ import grammar from "./grammar.ne";
 
 const grammarObj = Grammar.fromCompiled(grammar);
 
-export function quoteIdentifierIfNeeded(name: string): string {
-  if (name.match(/^[a-zA-Z0-9_/]+$/)) {
+/** Wrap topic name in double quotes if it contains special characters */
+export function quoteTopicNameIfNeeded(name: string): string {
+  // Pattern should match `slashID` in grammar.ne
+  if (name.match(/^[a-zA-Z0-9_/-]+$/)) {
+    return name;
+  }
+  return `"${name.replace(/[\\"]/g, (char) => `\\${char}`)}"`;
+}
+
+/** Wrap field name in double quotes if it contains special characters */
+export function quoteFieldNameIfNeeded(name: string): string {
+  // Pattern should match `id` in grammar.ne
+  if (name.match(/^[a-zA-Z0-9_-]+$/)) {
     return name;
   }
   return `"${name.replace(/[\\"]/g, (char) => `\\${char}`)}"`;
