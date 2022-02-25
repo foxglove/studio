@@ -301,6 +301,8 @@ function Plot(props: Props) {
       const lastEventTime = msgEvents[msgEvents.length - 1]?.receiveTime;
       const isFollowing = followingView?.type === "following";
 
+      // If we don't change any accumulated data, avoid returning a new "accumulated" object so
+      // react hooks remain stable.
       let changed = false;
 
       for (const msgEvent of msgEvents) {
@@ -310,7 +312,8 @@ function Plot(props: Props) {
         }
 
         for (const path of paths) {
-          // skip any paths we already service in plotDataForBlocks
+          // Skip any paths we already service in plotDataForBlocks.
+          // We don't need to accumulate these because the block data takes precedence.
           if (path in plotDataForBlocks) {
             continue;
           }
