@@ -55,7 +55,6 @@ export function TopicDropdown(props: Props): JSX.Element {
         multiple={multiple}
         MenuProps={{
           contentEditable: multiple,
-          disablePortal: true,
           MenuListProps: {
             dense: true,
             subheader: multiple ? <ListSubheader>Select multiple topics</ListSubheader> : undefined,
