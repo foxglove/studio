@@ -161,7 +161,7 @@ function SourceInfo() {
               onRender: (topic) =>
                 topic.numMessages != undefined
                   ? `${(topic.numMessages / toSec(duration)).toFixed(2)} Hz`
-                  : "-",
+                  : "–",
             },
           ]}
         />
