@@ -82,6 +82,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   private _currentTime: Time;
   private _lastSeekTime?: number;
   private _topics: Topic[] = [];
+  private _topicCounts = new Map<string, number>();
   private _datatypes: RosDatatypes = new Map();
   private _metricsCollector: PlayerMetricsCollectorInterface;
   private _presence: PlayerPresence = PlayerPresence.INITIALIZING;
@@ -363,6 +364,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     }
     this._currentPreloadTask?.abort();
     this._currentPreloadTask = undefined;
+    this._topicCounts = new Map();
   }
 
   private _startPreloadTaskIfNeeded() {
@@ -424,6 +426,13 @@ export default class FoxgloveDataPlatformPlayer implements Player {
           fullyLoadedFractionRanges: preloadedMessages.fullyLoadedFractionRanges(),
           messageCache: preloadedMessages.getBlockCache(),
         };
+        for (const message of messages) {
+          this._topicCounts.set(message.topic, (this._topicCounts.get(message.topic) ?? 0) + 1);
+        }
+        this._topics = this._topics.map((t) => ({
+          ...t,
+          numMessages: this._topicCounts.get(t.name),
+        }));
         this._loadedMoreMessages?.resolve();
         this._loadedMoreMessages = undefined;
         this._emitState();
