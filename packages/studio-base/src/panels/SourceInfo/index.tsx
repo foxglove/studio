@@ -152,7 +152,7 @@ function SourceInfo() {
               name: "Message count",
               fieldName: "numMessages",
               minWidth: 0,
-              onRender: (topic) => topic.numMessages?.toLocaleString() ?? "-",
+              onRender: (topic) => topic.numMessages?.toLocaleString() ?? "–",
             },
             {
               key: "frequency",
