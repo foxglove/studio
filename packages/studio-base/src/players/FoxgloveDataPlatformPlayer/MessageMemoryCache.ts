@@ -227,12 +227,14 @@ export default class MessageMemoryCache {
       messages: insertMessages,
     });
 
+    // Create new array to clear later memoizations.
+    this._blockCache.blocks = [...this._blockCache.blocks];
+
     // Build & insert new cache block for this range.
     this._blockCache.blocks.splice(spliceIdx, deleteCount, {
       messagesByTopic: groupBy(insertMessages, (m) => m.topic),
       sizeInBytes: sumBy(insertMessages, (m) => m.sizeInBytes),
     });
-    this._blockCache.blocks = [...this._blockCache.blocks]; // Needed to clear later memoizations.
     this._blockCache.startTime = this.loadedRanges[0]?.range.start ?? { sec: 0, nsec: 0 };
   }
 
