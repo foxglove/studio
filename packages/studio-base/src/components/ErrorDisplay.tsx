@@ -70,13 +70,14 @@ type ErrorDisplayProps = {
   errorInfo?: ErrorInfo;
   content?: JSX.Element;
   actions?: JSX.Element;
+  showErrorDetails?: boolean;
 };
 
 function ErrorDisplay(props: ErrorDisplayProps): JSX.Element {
   const styles = useStyles();
   const { error, errorInfo } = props;
 
-  const [showErrorDetails, setShowErrorDetails] = useState(false);
+  const [showErrorDetails, setShowErrorDetails] = useState(props.showErrorDetails ?? false);
 
   const errorDetails = useMemo(() => {
     if (!showErrorDetails) {
