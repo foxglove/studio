@@ -270,6 +270,7 @@ export default class RandomAccessPlayer implements Player {
         }, SEEK_START_DELAY_MS);
       })
       .catch((error: Error) => {
+        console.error(error);
         this._setError(`Error initializing player: ${error.message}`, error);
       });
   }
