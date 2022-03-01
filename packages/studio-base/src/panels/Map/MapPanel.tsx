@@ -29,10 +29,6 @@ import { darkColor, lightColor, lineColors } from "@foxglove/studio-base/util/pl
 
 import { NavSatFixMsg, NavSatFixStatus, Point } from "./types";
 
-const COLOR_HISTORY = "#6771ef";
-const COLOR_ACTIVE_FIX = "#ec1515";
-const COLOR_ACTIVE_NO_FIX = "#5f0909";
-
 // Persisted panel state
 type Config = {
   zoomLevel?: number;
