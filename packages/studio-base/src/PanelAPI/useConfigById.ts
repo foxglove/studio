@@ -13,26 +13,20 @@ import {
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { maybeCast } from "@foxglove/studio-base/util/maybeCast";
 
+const configSelector = (state: DeepPartial<LayoutState>) => state.selectedLayout?.data?.configById;
+
 /**
  * Like `useConfig`, but for a specific panel id. This generally shouldn't be used by panels
  * directly, but is for use in internal code that's running outside of regular context providers.
  */
+
 export default function useConfigById<Config extends Record<string, unknown>>(
   panelId: string | undefined,
 ): [Config | undefined, SaveConfig<Config>] {
   const { savePanelConfigs } = useCurrentLayoutActions();
 
-  const configSelector = useCallback(
-    (state: DeepPartial<LayoutState>) => {
-      if (panelId == undefined) {
-        return undefined;
-      }
-      return maybeCast<Config>(state.selectedLayout?.data?.configById?.[panelId]);
-    },
-    [panelId],
-  );
-
-  const config = useCurrentLayoutSelector(configSelector);
+  const configsById = useCurrentLayoutSelector(configSelector);
+  const config = panelId && configsById ? maybeCast<Config>(configsById[panelId]) : undefined;
 
   const saveConfig: SaveConfig<Config> = useCallback(
     (newConfig) => {
