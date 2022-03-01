@@ -50,9 +50,10 @@ import {
   Point,
   Header,
   InstancedLineListMarker,
-  LaserScan,
   OccupancyGridMessage,
   PointCloud2,
+  LaserScan,
+  PointField,
 } from "@foxglove/studio-base/types/Messages";
 import { clonePose, emptyPose } from "@foxglove/studio-base/util/Pose";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
@@ -611,6 +612,58 @@ export default class SceneBuilder implements MarkerProvider {
     this.collectors[topic]!.addNonMarker(topic, mappedMessage as unknown as Interactive<unknown>);
   };
 
+  private _consumeLaserScan = (topic: string, msg: MessageEvent<LaserScan>): void => {
+    const scan = msg.message;
+    const hasIntensity = Array.isArray(scan.intensities) && scan.intensities.length > 0;
+    const pointStep = hasIntensity ? 48 : 40;
+
+    const data = new Uint8Array(pointStep * scan.ranges.length);
+    const view = new DataView(data.buffer);
+    let angle = scan.angle_min;
+    for (let i = 0; i < scan.ranges.length; i++) {
+      const offset = i * pointStep;
+      const distance = Math.min(scan.range_max, Math.max(scan.range_min, scan.ranges[i] ?? 0));
+      const intensity = scan.intensities[i] ?? Number.NaN;
+      angle = Math.min(scan.angle_max, angle + scan.angle_increment);
+      const x = distance * Math.cos(angle);
+      const y = distance * Math.sin(angle);
+
+      view.setFloat64(offset + 0, x, true);
+      view.setFloat64(offset + 8, y, true);
+      view.setFloat64(offset + 16, 0, true);
+      view.setFloat64(offset + 24, distance, true);
+      view.setFloat64(offset + 32, angle, true);
+      if (hasIntensity) {
+        view.setFloat64(offset + 40, intensity, true);
+      }
+    }
+
+    const fields: PointField[] = [
+      { name: "x", offset: 0, datatype: 8, count: 1 },
+      { name: "y", offset: 8, datatype: 8, count: 1 },
+      { name: "z", offset: 16, datatype: 8, count: 1 },
+      { name: "distance", offset: 24, datatype: 8, count: 1 },
+      { name: "angle", offset: 32, datatype: 8, count: 1 },
+    ];
+    if (hasIntensity) {
+      fields.push({ name: "intensity", offset: 40, datatype: 8, count: 1 });
+    }
+
+    const pcl: PointCloud2 = {
+      header: scan.header,
+      fields,
+      height: 1,
+      width: scan.ranges.length,
+      is_bigendian: false,
+      point_step: pointStep,
+      row_step: pointStep * scan.ranges.length,
+      data,
+      is_dense: 1,
+      type: 102,
+    };
+    this._consumeNonMarkerMessage(topic, pcl, 102);
+  };
+
   private _consumeColor = (msg: MessageEvent<Color>): void => {
     const color = mightActuallyBePartial(msg.message);
     if (color.r == undefined || color.g == undefined || color.b == undefined) {
@@ -758,7 +811,7 @@ export default class SceneBuilder implements MarkerProvider {
       case "sensor_msgs/LaserScan":
       case "sensor_msgs/msg/LaserScan":
       case "ros.sensor_msgs.LaserScan":
-        this._consumeNonMarkerMessage(topic, message as StampedMessage, 104);
+        this._consumeLaserScan(topic, msg as MessageEvent<LaserScan>);
         break;
       case "std_msgs/ColorRGBA":
       case "std_msgs/msg/ColorRGBA":
@@ -888,7 +941,9 @@ export default class SceneBuilder implements MarkerProvider {
         if (settings) {
           (marker as { settings?: unknown }).settings = settings;
         }
+        const origPose = marker.pose;
         this._addMarkerToCollector(add, topic, marker, pose);
+        (marker as { pose: MutablePose }).pose = origPose;
       }
 
       if (this._missingTfFrameIds.size > 0) {
@@ -915,8 +970,7 @@ export default class SceneBuilder implements MarkerProvider {
       | Marker
       | OccupancyGridMessage
       | PointCloud2
-      | (PoseStamped & { type: 103 })
-      | (LaserScan & { type: 104; pose: MutablePose });
+      | (PoseStamped & { type: 103 });
     switch (marker.type) {
       case 1: // CubeMarker
       case 2: // SphereMarker
@@ -941,7 +995,6 @@ export default class SceneBuilder implements MarkerProvider {
       case 108: // InstanceLineListMarker
       case 110: // ColorMarker
       case 101: // OccupancyGridMessage
-      case 104: // LaserScan
         marker = { ...marker, pose };
         break;
       default:
@@ -1016,8 +1069,6 @@ export default class SceneBuilder implements MarkerProvider {
       }
       case 103:
         return add.poseMarker(marker);
-      case 104:
-        return add.laserScan(marker);
       case 108:
         return add.instancedLineList(marker);
       case 110:
