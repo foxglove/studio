@@ -31,18 +31,16 @@ export default class ErrorBoundary extends Component<PropsWithChildren<Props>, S
   override render(): ReactNode {
     if (this.state.currentError) {
       const actions = this.props.actions ?? (
-        <>
-          <Stack direction="row" spacing={1}>
-            <Box flexGrow={1} />
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={() => this.setState({ currentError: undefined })}
-            >
-              Dismiss
-            </Button>
-          </Stack>
-        </>
+        <Stack direction="row" spacing={1}>
+          <Box flexGrow={1} />
+          <Button
+            variant="outlined"
+            color="secondary"
+            onClick={() => this.setState({ currentError: undefined })}
+          >
+            Dismiss
+          </Button>
+        </Stack>
       );
       return (
         <ErrorDisplay
@@ -50,11 +48,11 @@ export default class ErrorBoundary extends Component<PropsWithChildren<Props>, S
           errorInfo={this.state.currentError.errorInfo}
           content={
             <p>
-              Something went wrong in the app.{" "}
+              Something went wrong.{" "}
               <Link color="inherit" onClick={() => this.setState({ currentError: undefined })}>
                 Dismiss this error
               </Link>{" "}
-              to continue using the app. If the issue persists try restarting the app.
+              to continue using the app. If the issue persists, try restarting the app.
             </p>
           }
           actions={actions}
