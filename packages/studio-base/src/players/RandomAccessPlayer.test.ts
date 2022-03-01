@@ -1226,6 +1226,11 @@ describe("RandomAccessPlayer", () => {
         ],
       }),
     ]);
+
+    expect((console.error as jest.Mock).mock.calls).toEqual([
+      [new Error("fake initialization failure")],
+    ]);
+    (console.error as jest.Mock).mockClear();
   });
 
   it("reports when a provider is reconnecting", (done) => {
