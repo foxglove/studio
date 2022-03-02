@@ -136,9 +136,7 @@ export default function Stack(props: PropsWithChildren<StackProps>): JSX.Element
 }
 
 export type StackProps = {
-  /**
-   * Override or extend the styles applied to the component.
-   */
+  /** Override or extend the styles applied to the component. */
   classes?: {
     root: string;
   };
@@ -160,113 +158,69 @@ export type StackProps = {
    */
   direction?: CSSProperties["flexDirection"];
 
-  /**
-   * Make stack 100% height.
-   */
+  /** Make stack 100% height. */
   fullHeight?: boolean;
 
-  /**
-   * Defines the `flex-wrap` style property.
-   */
+  /** Defines the `flex-wrap` style property. */
   wrap?: CSSProperties["flexWrap"];
 
-  /**
-   * Defines the `justify-content` style property.
-   */
+  /** Defines the `justify-content` style property. */
   justifyContent?: CSSProperties["justifyContent"];
 
-  /**
-   * Defines the `align-items` style property.
-   */
+  /** Defines the `align-items` style property. */
   alignItems?: CSSProperties["alignItems"];
 
-  /**
-   * Defines the `align-content` style property.
-   */
+  /** Defines the `align-content` style property. */
   alignContent?: CSSProperties["alignContent"];
 
-  /**
-   * Defines the `align-self` style property.
-   */
+  /** Defines the `align-self` style property. */
   alignSelf?: CSSProperties["alignSelf"];
 
-  /**
-   * Defines the `gap` style property using theme.spacing increments.
-   */
+  /** Defines the `gap` style property using `theme.spacing` increments. */
   gap?: number;
 
-  /**
-   * Defines the `rowGap` style property using theme.spacing increments.
-   */
+  /** Defines the `rowGap` style property using `theme.spacing` increments. */
   gapX?: number;
 
-  /**
-   * Defines the `columnGap` style property using theme.spacing increments.
-   */
+  /** Defines the `columnGap` style property using `theme.spacing` increments. */
   gapY?: number;
 
-  /**
-   * Defines the `padding` style property using theme.spacing increments.
-   */
+  /** Defines the `padding` style property using `theme.spacing` increments. */
   padding?: number;
 
-  /**
-   * Defines the horizontal `padding` style property using theme.spacing increments.
-   */
+  /** Defines the horizontal `padding` style property using `theme.spacing` increments. */
   paddingX?: number;
 
-  /**
-   * Defines the vertical `padding` style property using theme.spacing increments.
-   */
+  /** Defines the vertical `padding` style property using `theme.spacing` increments. */
   paddingY?: number;
 
-  /**
-   * Defines the vertical `padding-top` style property using theme.spacing increments.
-   */
+  /** Defines the vertical `padding-top` style property using `theme.spacing` increments. */
   paddingTop?: number;
 
-  /**
-   * Defines the vertical `padding-bottom` style property using theme.spacing increments.
-   */
+  /** Defines the vertical `padding-bottom` style property using `theme.spacing` increments. */
   paddingBottom?: number;
 
-  /**
-   * Defines the vertical `padding-left` style property using theme.spacing increments.
-   */
+  /** Defines the vertical `padding-left` style property using `theme.spacing` increments. */
   paddingLeft?: number;
 
-  /**
-   * Defines the vertical `padding-right` style property using theme.spacing increments.
-   */
+  /** Defines the vertical `padding-right` style property using `theme.spacing` increments. */
   paddingRight?: number;
 
-  /**
-   * Defines the `flex` style property.
-   */
+  /** Defines the `flex` style property. */
   flex?: number | string;
 
-  /**
-   * Defines the `flex-grow` style property.
-   */
+  /** Defines the `flex-grow` style property. */
   flexGrow?: number;
 
-  /**
-   * Defines the `flex-shrink` style property.
-   */
+  /** Defines the `flex-shrink` style property. */
   flexShrink?: number;
 
-  /**
-   * Defines the `flex-basis` style property.
-   */
+  /** Defines the `flex-basis` style property. */
   flexBasis?: number | string;
 
-  /**
-   * Defines the `order` property.
-   */
+  /** Defines the `order` property. */
   order?: number;
 
-  /**
-   * CSS styles to apply to the component.
-   */
+  /** CSS styles to apply to the component. */
   style?: React.CSSProperties;
 };
