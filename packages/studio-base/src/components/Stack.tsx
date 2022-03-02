@@ -141,9 +141,7 @@ export type StackProps = {
     root: string;
   };
 
-  /**
-   * @ignore
-   */
+  /** Class name applied to the root element. */
   className?: string;
 
   /**
