@@ -5,7 +5,7 @@
 import { generateUtilityClass, unstable_composeClasses as composeClasses } from "@mui/base";
 import { styled as muiStyled, Theme, useTheme } from "@mui/material";
 import cx from "classnames";
-import { ElementType, PropsWithChildren } from "react";
+import { ElementType, CSSProperties, PropsWithChildren } from "react";
 
 function getStackUtilityClass(slot: string): string {
   return generateUtilityClass("FoxgloveStack", slot);
@@ -158,7 +158,7 @@ export type StackProps = {
    * Defines the `flex-direction` style property.
    * @default 'column'
    */
-  direction?: "column" | "column-reverse" | "row-reverse" | "row";
+  direction?: CSSProperties["flexDirection"];
 
   /**
    * Make stack 100% height.
@@ -168,60 +168,27 @@ export type StackProps = {
   /**
    * Defines the `flex-wrap` style property.
    */
-  wrap?: "nowrap" | "wrap" | "wrap-reverse";
+  wrap?: CSSProperties["flexWrap"];
 
   /**
    * Defines the `justify-content` style property.
    */
-  justifyContent?:
-    | "flex-start"
-    | "flex-end"
-    | "center"
-    | "space-between"
-    | "space-around"
-    | "space-evenly"
-    | "start"
-    | "end"
-    | "left"
-    | "right";
+  justifyContent?: CSSProperties["justifyContent"];
 
   /**
    * Defines the `align-items` style property.
    */
-  alignItems?:
-    | "stretch"
-    | "flex-start"
-    | "flex-end"
-    | "center"
-    | "baseline"
-    | "first baseline"
-    | "last baseline"
-    | "start"
-    | "end"
-    | "self-start"
-    | "self-end";
+  alignItems?: CSSProperties["alignItems"];
 
   /**
    * Defines the `align-content` style property.
    */
-  alignContent?:
-    | "flex-start"
-    | "flex-end"
-    | "center"
-    | "space-between"
-    | "space-around"
-    | "space-evenly"
-    | "stretch"
-    | "start"
-    | "end"
-    | "baseline"
-    | "first baseline"
-    | "last baseline";
+  alignContent?: CSSProperties["alignContent"];
 
   /**
    * Defines the `align-self` style property.
    */
-  alignSelf?: "auto" | "flex-start" | "flex-end" | "center" | "baseline" | "stretch";
+  alignSelf?: CSSProperties["alignSelf"];
 
   /**
    * Defines the `gap` style property using theme.spacing increments.

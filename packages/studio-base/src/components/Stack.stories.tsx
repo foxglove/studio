@@ -36,7 +36,7 @@ function Box({ children }: PropsWithChildren<StackProps>): JSX.Element {
 
 export function Default(): JSX.Element {
   return (
-    <Stack padding={2} gap={2} fullHeight>
+    <Stack data-test padding={2} gap={2} fullHeight>
       <Stack direction="row" gap={2}>
         {ITEMS.map((_, index) => (
           <Stack flex="auto" key={index}>
