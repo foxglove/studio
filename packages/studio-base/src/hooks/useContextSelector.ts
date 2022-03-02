@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useLayoutEffect, useContext, useState } from "react";
+import { useLayoutEffect, useContext, useReducer, useRef } from "react";
 
 import { SelectableContext } from "@foxglove/studio-base/util/createSelectableContext";
 
@@ -31,14 +31,45 @@ export default function useContextSelector<T, U>(
     throw new Error(`useContextSelector was used outside a corresponding <Provider />.`);
   }
 
-  const [selectedValue, setSelectedValue] = useState<U>(() => {
-    return selectWithUnstableIdentityWarning(handle.currentValue(), selector);
+  const [_, forceUpdate] = useReducer((x: number) => x + 1, 0);
+  const state = useRef<
+    Readonly<{ contextValue: T; selectedValue: U; selector: (value: T) => U }> | undefined
+  >();
+  const contextValue = handle.currentValue();
+
+  const shouldUpdate =
+    state.current == undefined ||
+    contextValue !== state.current.contextValue ||
+    selector !== state.current.selector;
+
+  const selectedValue =
+    shouldUpdate || !state.current
+      ? selectWithUnstableIdentityWarning(contextValue, selector)
+      : state.current.selectedValue;
+
+  // Update the state ref in a layout effect to be concurrent mode safe.
+  // It would be "unsafe" to update the ref in the render since the render might not "commit"
+  useLayoutEffect(() => {
+    if (shouldUpdate) {
+      state.current = {
+        contextValue,
+        selectedValue,
+        selector,
+      };
+    }
   });
 
   useLayoutEffect(() => {
     const sub = (newContextValue: T) => {
       const newSelectedValue = selectWithUnstableIdentityWarning(newContextValue, selector);
-      setSelectedValue(() => newSelectedValue);
+      if (newSelectedValue !== state.current?.selectedValue) {
+        forceUpdate();
+      }
+      state.current = {
+        contextValue: newContextValue,
+        selectedValue: newSelectedValue,
+        selector,
+      };
     };
     handle.addSubscriber(sub);
     return () => {
