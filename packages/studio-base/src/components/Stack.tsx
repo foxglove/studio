@@ -220,5 +220,5 @@ export type StackProps = {
   order?: number;
 
   /** CSS styles to apply to the component. */
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 };
