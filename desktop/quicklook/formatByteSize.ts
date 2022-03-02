@@ -10,5 +10,5 @@ export default function formatByteSize(size: number): string {
     value /= 1024;
     suffix++;
   }
-  return `${value.toFixed(suffix === 0 ? 0 : 1)}\xa0${suffixes[suffix]}`;
+  return `${value.toFixed(suffix === 0 ? 0 : 1)} ${suffixes[suffix]}`;
 }

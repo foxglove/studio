@@ -217,7 +217,7 @@ export default function FileInfoDisplay({
                 formatCount(fileInfo.numChunks, "chunk"),
                 formatCount(fileInfo.totalMessages, "message"),
                 formatCount(fileInfo.numAttachments, "attachment"),
-                formatByteSize(fileStats.size),
+                formatByteSize(fileStats.size).replace(/ /g, "\xa0"),
               ]
                 .filter(Boolean)
                 .join(", ")}
