@@ -59,6 +59,7 @@ export default function useContextSelector<T, U>(
     }
   });
 
+  // Subscribe to context updates, and trigger a re-render when the selected value changes.
   useLayoutEffect(() => {
     const sub = (newContextValue: T) => {
       const newSelectedValue = selectWithUnstableIdentityWarning(newContextValue, selector);
