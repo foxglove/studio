@@ -25,13 +25,43 @@ const StackRoot = muiStyled("div", {
   alignItems: ownerState.alignItems,
   alignContent: ownerState.alignContent,
   alignSelf: ownerState.alignSelf,
-  gap: typeof ownerState.gap === "number" ? theme.spacing(ownerState.gap) : ownerState.gap,
-  padding:
-    typeof ownerState.padding === "number" ? theme.spacing(ownerState.padding) : ownerState.padding,
-  flex: typeof ownerState.flex === "number" ? ownerState.flex : ownerState.flex,
+  flex: ownerState.flex,
+  order: ownerState.order,
 
   ...(ownerState.fullHeight === true && {
     height: "100%",
+  }),
+  ...(ownerState.gap != undefined && {
+    gap: theme.spacing(ownerState.gap),
+  }),
+  ...(ownerState.gapX != undefined && {
+    rowGap: theme.spacing(ownerState.gapX),
+  }),
+  ...(ownerState.gapY != undefined && {
+    columnGap: theme.spacing(ownerState.gapY),
+  }),
+  ...(ownerState.padding != undefined && {
+    padding: theme.spacing(ownerState.padding),
+  }),
+  ...(ownerState.paddingX != undefined && {
+    paddingLeft: theme.spacing(ownerState.paddingX),
+    paddingRight: theme.spacing(ownerState.paddingX),
+  }),
+  ...(ownerState.paddingY != undefined && {
+    paddingTop: theme.spacing(ownerState.paddingY),
+    paddingBottom: theme.spacing(ownerState.paddingY),
+  }),
+  ...(ownerState.paddingTop != undefined && {
+    paddingTop: theme.spacing(ownerState.paddingTop),
+  }),
+  ...(ownerState.paddingBottom != undefined && {
+    paddingBottom: theme.spacing(ownerState.paddingBottom),
+  }),
+  ...(ownerState.paddingLeft != undefined && {
+    paddingLeft: theme.spacing(ownerState.paddingLeft),
+  }),
+  ...(ownerState.paddingRight != undefined && {
+    paddingRight: theme.spacing(ownerState.paddingRight),
   }),
 }));
 
@@ -50,8 +80,17 @@ export default function Stack(props: PropsWithChildren<StackProps>): JSX.Element
     flexShrink,
     fullHeight = false,
     gap,
+    gapX,
+    gapY,
     justifyContent,
+    order,
     padding,
+    paddingX,
+    paddingY,
+    paddingTop,
+    paddingBottom,
+    paddingLeft,
+    paddingRight,
     wrap,
     style,
     ...other
@@ -68,8 +107,17 @@ export default function Stack(props: PropsWithChildren<StackProps>): JSX.Element
     flexShrink,
     fullHeight,
     gap,
+    gapX,
+    gapY,
     justifyContent,
+    order,
     padding,
+    paddingX,
+    paddingY,
+    paddingTop,
+    paddingBottom,
+    paddingLeft,
+    paddingRight,
     wrap,
   };
 
@@ -176,14 +224,54 @@ export type StackProps = {
   alignSelf?: "auto" | "flex-start" | "flex-end" | "center" | "baseline" | "stretch";
 
   /**
-   * Defines the `gap` style property.
+   * Defines the `gap` style property using theme.spacing increments.
    */
-  gap?: number | string;
+  gap?: number;
 
   /**
-   * Defines the `padding` style property.
+   * Defines the `rowGap` style property using theme.spacing increments.
    */
-  padding?: number | string;
+  gapX?: number;
+
+  /**
+   * Defines the `columnGap` style property using theme.spacing increments.
+   */
+  gapY?: number;
+
+  /**
+   * Defines the `padding` style property using theme.spacing increments.
+   */
+  padding?: number;
+
+  /**
+   * Defines the horizontal `padding` style property using theme.spacing increments.
+   */
+  paddingX?: number;
+
+  /**
+   * Defines the vertical `padding` style property using theme.spacing increments.
+   */
+  paddingY?: number;
+
+  /**
+   * Defines the vertical `padding-top` style property using theme.spacing increments.
+   */
+  paddingTop?: number;
+
+  /**
+   * Defines the vertical `padding-bottom` style property using theme.spacing increments.
+   */
+  paddingBottom?: number;
+
+  /**
+   * Defines the vertical `padding-left` style property using theme.spacing increments.
+   */
+  paddingLeft?: number;
+
+  /**
+   * Defines the vertical `padding-right` style property using theme.spacing increments.
+   */
+  paddingRight?: number;
 
   /**
    * Defines the `flex` style property.
@@ -204,6 +292,11 @@ export type StackProps = {
    * Defines the `flex-basis` style property.
    */
   flexBasis?: number | string;
+
+  /**
+   * Defines the `order` property.
+   */
+  order?: number;
 
   /**
    * CSS styles to apply to the component.
