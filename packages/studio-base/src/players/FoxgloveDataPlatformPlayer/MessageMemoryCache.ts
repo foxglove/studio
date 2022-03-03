@@ -64,7 +64,7 @@ function getMessagesFromLoadedRange(messages: MessageEvent<unknown>[], requestRa
  * An in-memory cache of preloaded messages over a time range.
  */
 export default class MessageMemoryCache {
-  private _blockCache: { blocks: MemoryCacheBlock[]; startTime: Time } = {
+  private _blockCache: { blocks: (undefined | MemoryCacheBlock)[]; startTime: Time } = {
     blocks: [],
     startTime: { sec: 0, nsec: 0 },
   };
@@ -282,13 +282,13 @@ export default class MessageMemoryCache {
   // Rebuilds block cache, interspersing empty blocks where there are time gaps
   // in our loaded ranges.
   private _rebuildBlockCache() {
-    const newBlocks: MemoryCacheBlock[] = [];
+    const newBlocks: (undefined | MemoryCacheBlock)[] = [];
     for (let i = 0; i < this.loadedRanges.length; i++) {
       if (
         i > 0 &&
         isLessThan(this.loadedRanges[i - 1]!.range.end, this.loadedRanges[i]!.range.start)
       ) {
-        newBlocks.push({ messagesByTopic: {}, sizeInBytes: 0 });
+        newBlocks.push(undefined);
       }
       newBlocks.push(this.loadedRanges[i]!.block);
     }
