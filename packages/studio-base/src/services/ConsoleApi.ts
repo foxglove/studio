@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import * as base64 from "@protobufjs/base64";
+
 type User = {
   id: string;
   email: string;
@@ -51,9 +53,11 @@ type TopicResponse = {
   topic: string;
   encoding: string;
   schemaName: string;
-  schema?: string;
+  schemaEncoding: string;
+  schema?: Uint8Array;
   version: string;
 };
+type RawTopicResponse = Omit<TopicResponse, "schema"> & { schema?: string };
 
 type CoverageResponse = {
   deviceId: string;
@@ -79,6 +83,7 @@ type ApiResponse<T> = { status: number; json: T };
 class ConsoleApi {
   private _baseUrl: string;
   private _authHeader?: string;
+  private _responseObserver: undefined | ((response: Response) => void);
 
   constructor(baseUrl: string) {
     this._baseUrl = baseUrl;
@@ -86,6 +91,10 @@ class ConsoleApi {
 
   setAuthHeader(header: string): void {
     this._authHeader = header;
+  }
+
+  setResponseObserver(observer: undefined | ((response: Response) => void)): void {
+    this._responseObserver = observer;
   }
 
   async orgs(): Promise<Org[]> {
@@ -182,6 +191,7 @@ class ConsoleApi {
     };
 
     const res = await fetch(fullUrl, fullConfig);
+    this._responseObserver?.(res);
     if (res.status !== 200 && !allowedStatuses.includes(res.status)) {
       const json = (await res.json().catch((err) => {
         throw new Error(`Status ${res.status}: ${err.message}`);
@@ -260,14 +270,18 @@ class ConsoleApi {
     includeSchemas?: boolean;
   }): Promise<readonly TopicResponse[]> {
     return (
-      await this.get<TopicResponse[]>("/v1/data/topics", {
+      await this.get<RawTopicResponse[]>("/v1/data/topics", {
         ...params,
         includeSchemas: params.includeSchemas ?? false ? "true" : "false",
       })
-    ).map((topic) => ({
-      ...topic,
-      schema: topic.schema != undefined ? atob(topic.schema) : undefined,
-    }));
+    ).map((topic) => {
+      if (topic.schema == undefined) {
+        return topic as Omit<RawTopicResponse, "schema">;
+      }
+      const decodedSchema = new Uint8Array(base64.length(topic.schema));
+      base64.decode(topic.schema, decodedSchema, 0);
+      return { ...topic, schema: decodedSchema };
+    });
   }
 
   async stream(params: {
@@ -275,6 +289,7 @@ class ConsoleApi {
     start: string;
     end: string;
     topics: readonly string[];
+    outputFormat?: "bag1" | "mcap0";
   }): Promise<{ link: string }> {
     return await this.post<{ link: string }>("/v1/data/stream", params);
   }

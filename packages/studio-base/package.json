@@ -1,6 +1,6 @@
 {
   "name": "@foxglove/studio-base",
-  "version": "1.1.0-dev",
+  "version": "1.2.0-dev",
   "description": "Core components of Foxglove Studio",
   "license": "MPL-2.0",
   "repository": {
@@ -21,7 +21,6 @@
   ],
   "scripts": {
     "prepack": "yarn build:webpack && yarn build:tsc",
-    "storybook:build": "cross-env TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\"}' build-storybook --config-dir src/.storybook",
     "build:tsc": "ttsc --module es2020 --project tsconfig.json",
     "build:webpack": "cross-env TS_NODE_PROJECT=\"tsconfig.cli.json\" webpack --mode production --progress"
   },
@@ -58,13 +57,9 @@
     "@mui/icons-material": "5.4.1",
     "@mui/material": "5.4.1",
     "@mui/styles": "5.4.1",
+    "@protobufjs/base64": "1.1.2",
     "@sentry/core": "6.17.6",
     "@sentry/types": "6.17.6",
-    "@storybook/addon-actions": "6.4.18",
-    "@storybook/addon-essentials": "6.4.18",
-    "@storybook/builder-webpack5": "6.4.18",
-    "@storybook/manager-webpack5": "6.4.18",
-    "@storybook/react": "patch:@storybook/react@6.4.18#../../patches/storybook-react.patch",
     "@testing-library/dom": "8.11.3",
     "@testing-library/react": "12.1.2",
     "@testing-library/react-hooks": "7.0.2",
@@ -76,6 +71,7 @@
     "@types/cytoscape": "^3.19.4",
     "@types/enzyme": "^3.10.11",
     "@types/enzyme-adapter-react-16": "1.0.6",
+    "@types/escape-html": "^1",
     "@types/gl-matrix": "3.2.0",
     "@types/hammerjs": "2.0.41",
     "@types/leaflet": "1.7.9",
@@ -109,7 +105,6 @@
     "@types/uuid": "8.3.4",
     "@types/wicg-file-system-access": "2020.9.4",
     "@types/ws": "8.2.2",
-    "@types/zstd-codec": "workspace:*",
     "@wojtekmaj/enzyme-adapter-react-17": "0.6.6",
     "amplitude-js": "8.16.1",
     "argparse": "2.0.1",
@@ -128,6 +123,7 @@
     "cytoscape-dagre": "2.4.0",
     "enzyme": "3.11.0",
     "esbuild-loader": "2.18.0",
+    "escape-html": "1.0.3",
     "fake-indexeddb": "3.1.7",
     "fetch-mock": "9.11.0",
     "fork-ts-checker-webpack-plugin": "7.2.0",
@@ -205,7 +201,6 @@
     "uuid": "8.3.2",
     "wasm-lz4": "2.0.0",
     "webpack": "5.68.0",
-    "xacro-parser": "0.3.8",
-    "zstd-codec": "0.1.4"
+    "xacro-parser": "0.3.8"
   }
 }

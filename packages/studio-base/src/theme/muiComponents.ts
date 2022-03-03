@@ -138,6 +138,11 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
       defaultProps: {
         color: prefersDarkMode ? "secondary" : "primary",
       },
+      styleOverrides: {
+        root: {
+          cursor: "pointer",
+        },
+      },
     },
     MuiMenu: {
       styleOverrides: {

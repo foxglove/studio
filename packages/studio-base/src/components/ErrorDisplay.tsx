@@ -12,12 +12,12 @@ const useStyles = makeStyles((theme: Theme) => ({
     flexDirection: "column",
     height: "100%",
     padding: theme.spacing(2),
+    overflow: "auto",
   },
   alertContainer: {
     display: "flex",
     flexDirection: "column",
     flexGrow: 1,
-    overflow: "hidden",
   },
   errorDetailHeader: {
     fontWeight: "bold",
@@ -28,8 +28,9 @@ const useStyles = makeStyles((theme: Theme) => ({
     paddingLeft: theme.spacing(2),
   },
   errorDetailContainer: {
-    flexGrow: 2,
     overflowY: "auto",
+    background: theme.palette.background.paper,
+    padding: theme.spacing(1),
   },
   actions: {
     paddingTop: theme.spacing(2),
@@ -37,9 +38,23 @@ const useStyles = makeStyles((theme: Theme) => ({
   },
 }));
 
-function ErrorStacktrace({ stack }: { stack: string }) {
+/**
+ * Remove source locations (which often include file hashes) so storybook screenshots can be
+ * deterministic.
+ */
+function sanitizeStack(stack: string) {
+  return stack.replace(/\s+\(.+\)$/gm, "").replace(/\s+https?:\/\/.+$/gm, "");
+}
+
+function ErrorStacktrace({
+  stack,
+  hideSourceLocations,
+}: {
+  stack: string;
+  hideSourceLocations: boolean;
+}) {
   const styles = useStyles();
-  const lines = stack
+  const lines = (hideSourceLocations ? sanitizeStack(stack) : stack)
     .trim()
     .replace(/^\s*at /gm, "")
     .split("\n")
@@ -69,13 +84,15 @@ type ErrorDisplayProps = {
   errorInfo?: ErrorInfo;
   content?: JSX.Element;
   actions?: JSX.Element;
+  showErrorDetails?: boolean;
+  hideErrorSourceLocations?: boolean;
 };
 
 function ErrorDisplay(props: ErrorDisplayProps): JSX.Element {
   const styles = useStyles();
-  const { error, errorInfo } = props;
+  const { error, errorInfo, hideErrorSourceLocations = false } = props;
 
-  const [showErrorDetails, setShowErrorDetails] = useState(false);
+  const [showErrorDetails, setShowErrorDetails] = useState(props.showErrorDetails ?? false);
 
   const errorDetails = useMemo(() => {
     if (!showErrorDetails) {
@@ -91,16 +108,22 @@ function ErrorDisplay(props: ErrorDisplayProps): JSX.Element {
     return (
       <div>
         <Typography className={styles.errorDetailHeader}>Error stack:</Typography>
-        <ErrorStacktrace stack={stackWithoutMessage} />
+        <ErrorStacktrace
+          stack={stackWithoutMessage}
+          hideSourceLocations={hideErrorSourceLocations}
+        />
         {errorInfo && (
           <>
             <Typography className={styles.errorDetailHeader}>Component stack:</Typography>
-            <ErrorStacktrace stack={errorInfo.componentStack} />
+            <ErrorStacktrace
+              stack={errorInfo.componentStack}
+              hideSourceLocations={hideErrorSourceLocations}
+            />
           </>
         )}
       </div>
     );
-  }, [error, errorInfo, showErrorDetails, styles]);
+  }, [error, errorInfo, hideErrorSourceLocations, showErrorDetails, styles.errorDetailHeader]);
 
   return (
     <div className={styles.root}>
@@ -109,26 +132,18 @@ function ErrorDisplay(props: ErrorDisplayProps): JSX.Element {
           {props.title ?? "The app encountered an unexpected error"}
         </Typography>
         <Stack spacing={2}>
-          <div>
-            <Typography variant="body1" component="div">
-              {props.content}
-            </Typography>
-          </div>
+          <Typography variant="body1" component="div">
+            {props.content}
+          </Typography>
           <Divider />
-          <div>
-            <Typography variant="subtitle2">{error?.message}</Typography>
-          </div>
-          <div>
-            <Link
-              color="secondary"
-              onClick={() => setShowErrorDetails(!showErrorDetails)}
-              sx={{ cursor: "pointer" }}
-            >
-              {showErrorDetails ? "Hide" : "Show"} details
-            </Link>
-          </div>
+          <Typography variant="subtitle2" component="code" fontWeight="bold">
+            {error?.message}
+          </Typography>
+          <Link color="secondary" onClick={() => setShowErrorDetails(!showErrorDetails)}>
+            {showErrorDetails ? "Hide" : "Show"} details
+          </Link>
+          {errorDetails && <div className={styles.errorDetailContainer}>{errorDetails}</div>}
         </Stack>
-        <div className={styles.errorDetailContainer}>{errorDetails}</div>
       </div>
       <div className={styles.actions}>{props.actions}</div>
     </div>

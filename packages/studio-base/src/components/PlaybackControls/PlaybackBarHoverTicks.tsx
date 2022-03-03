@@ -34,7 +34,7 @@ const sharedTickStyles = css`
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
 
-  margin-left: -6px; /* -6px seems to line up better than -5px */
+  margin-left: -5px;
 `;
 
 const TopTick = styled.div`
@@ -90,7 +90,12 @@ export default function PlaybackBarHoverTicks(props: Props): JSX.Element {
   });
 
   const hoverTimeDisplay = useMemo(() => {
-    if (!hoverValue || hoverValue.type !== "PLAYBACK_SECONDS" || !startTime) {
+    if (
+      !hoverValue ||
+      hoverValue.type !== "PLAYBACK_SECONDS" ||
+      !startTime ||
+      hoverValue.value < 0
+    ) {
       return undefined;
     }
     const stamp = add(startTime, fromSec(hoverValue.value));

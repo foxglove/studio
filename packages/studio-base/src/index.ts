@@ -15,6 +15,10 @@ export {
   useConsoleApi,
 } from "@foxglove/studio-base/context/ConsoleApiContext";
 export { default as ConsoleApiRemoteLayoutStorageProvider } from "@foxglove/studio-base/providers/ConsoleApiRemoteLayoutStorageProvider";
+export {
+  default as DialogHostIdContext,
+  useDialogHostId,
+} from "@foxglove/studio-base/context/DialogHostIdContext";
 export { default as App } from "./App";
 export type { NetworkInterface, OsContext } from "./OsContext";
 export { default as ErrorBoundary } from "./components/ErrorBoundary";
@@ -28,6 +32,8 @@ export type {
 export { default as LayoutStorageContext, useLayoutStorage } from "./context/LayoutStorageContext";
 export type { Layout, LayoutID, ISO8601Timestamp, ILayoutStorage } from "./services/ILayoutStorage";
 export { migrateLayout } from "./services/ILayoutStorage";
+export { HoverValueProvider } from "./context/HoverValueContext";
+export { UserNodeStateProvider } from "./context/UserNodeStateContext";
 export { default as NativeAppMenuContext } from "./context/NativeAppMenuContext";
 export type { NativeAppMenu, NativeAppMenuEvent } from "./context/NativeAppMenuContext";
 export { default as NativeWindowContext } from "./context/NativeWindowContext";
@@ -35,6 +41,7 @@ export type { NativeWindow } from "./context/NativeWindowContext";
 export type { IDataSourceFactory } from "./context/PlayerSelectionContext";
 export { default as ThemeProvider } from "./theme/ThemeProvider";
 export { default as installDevtoolsFormatters } from "./util/installDevtoolsFormatters";
+export { makeMockAppConfiguration } from "./util/makeMockAppConfiguration";
 export { default as overwriteFetch } from "./util/overwriteFetch";
 export { default as waitForFonts } from "./util/waitForFonts";
 export { default as UserProfileLocalStorageProvider } from "./providers/UserProfileLocalStorageProvider";
@@ -63,3 +70,4 @@ export { default as UlogLocalDataSourceFactory } from "./dataSources/UlogLocalDa
 export { default as VelodyneDataSourceFactory } from "./dataSources/VelodyneDataSourceFactory";
 export { default as McapLocalDataSourceFactory } from "./dataSources/McapLocalDataSourceFactory";
 export { default as SampleNuscenesDataSourceFactory } from "./dataSources/SampleNuscenesDataSourceFactory";
+export { default as ReadySignalContext, useReadySignal } from "./stories/ReadySignalContext";

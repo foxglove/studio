@@ -2310,9 +2310,10 @@ __metadata:
   dependencies:
     "@foxglove/wasm-bz2": 0.1.0
     "@protobufjs/base64": 1.1.2
+    "@types/zstd-codec": "workspace:*"
     typescript: 4.5.5
     wasm-lz4: 2.0.0
-    zstd-codec: 0.1.4
+    zstd-codec: "patch:zstd-codec@0.1.4#../../patches/zstd-codec.patch"
   languageName: unknown
   linkType: soft
 
@@ -2529,13 +2530,9 @@ __metadata:
     "@mui/icons-material": 5.4.1
     "@mui/material": 5.4.1
     "@mui/styles": 5.4.1
+    "@protobufjs/base64": 1.1.2
     "@sentry/core": 6.17.6
     "@sentry/types": 6.17.6
-    "@storybook/addon-actions": 6.4.18
-    "@storybook/addon-essentials": 6.4.18
-    "@storybook/builder-webpack5": 6.4.18
-    "@storybook/manager-webpack5": 6.4.18
-    "@storybook/react": "patch:@storybook/react@6.4.18#../../patches/storybook-react.patch"
     "@testing-library/dom": 8.11.3
     "@testing-library/react": 12.1.2
     "@testing-library/react-hooks": 7.0.2
@@ -2547,6 +2544,7 @@ __metadata:
     "@types/cytoscape": ^3.19.4
     "@types/enzyme": ^3.10.11
     "@types/enzyme-adapter-react-16": 1.0.6
+    "@types/escape-html": ^1
     "@types/gl-matrix": 3.2.0
     "@types/hammerjs": 2.0.41
     "@types/leaflet": 1.7.9
@@ -2580,7 +2578,6 @@ __metadata:
     "@types/uuid": 8.3.4
     "@types/wicg-file-system-access": 2020.9.4
     "@types/ws": 8.2.2
-    "@types/zstd-codec": "workspace:*"
     "@wojtekmaj/enzyme-adapter-react-17": 0.6.6
     amplitude-js: 8.16.1
     argparse: 2.0.1
@@ -2599,6 +2596,7 @@ __metadata:
     cytoscape-dagre: 2.4.0
     enzyme: 3.11.0
     esbuild-loader: 2.18.0
+    escape-html: 1.0.3
     fake-indexeddb: 3.1.7
     fetch-mock: 9.11.0
     fork-ts-checker-webpack-plugin: 7.2.0
@@ -2677,7 +2675,6 @@ __metadata:
     wasm-lz4: 2.0.0
     webpack: 5.68.0
     xacro-parser: 0.3.8
-    zstd-codec: 0.1.4
   languageName: unknown
   linkType: soft
 
@@ -5048,9 +5045,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@storybook/react@patch:@storybook/react@6.4.18#../../patches/storybook-react.patch::locator=%40foxglove%2Fstudio-base%40workspace%3Apackages%2Fstudio-base":
+"@storybook/react@patch:@storybook/react@6.4.18#./patches/storybook-react.patch::locator=foxglove-studio%40workspace%3A.":
   version: 6.4.18
-  resolution: "@storybook/react@patch:@storybook/react@npm%3A6.4.18#../../patches/storybook-react.patch::version=6.4.18&hash=456cc0&locator=%40foxglove%2Fstudio-base%40workspace%3Apackages%2Fstudio-base"
+  resolution: "@storybook/react@patch:@storybook/react@npm%3A6.4.18#./patches/storybook-react.patch::version=6.4.18&hash=456cc0&locator=foxglove-studio%40workspace%3A."
   dependencies:
     "@babel/preset-flow": ^7.12.1
     "@babel/preset-react": ^7.12.10
@@ -5608,6 +5605,13 @@ __metadata:
     "@types/cheerio": "*"
     "@types/react": "*"
   checksum: 4085899b16e691e715f374345fae2963dc89a002c55a249381e37f94d93c8d016ad7208a8d11cc0f2d8c7cdfa6fa9f5590f0bfae984e51571f5d1e9c2d6ee782
+  languageName: node
+  linkType: hard
+
+"@types/escape-html@npm:^1":
+  version: 1.0.1
+  resolution: "@types/escape-html@npm:1.0.1"
+  checksum: 141d6e44dd514b0bf8a1c5e7730d6b9fa291bb11a52bcc3434d269252b10622f52bd7458553efc2c95ca8341bafab836fe696f8fe72f82c5809204239b8ba791
   languageName: node
   linkType: hard
 
@@ -11717,7 +11721,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"escape-html@npm:~1.0.3":
+"escape-html@npm:1.0.3, escape-html@npm:~1.0.3":
   version: 1.0.3
   resolution: "escape-html@npm:1.0.3"
   checksum: 6213ca9ae00d0ab8bccb6d8d4e0a98e76237b2410302cf7df70aaa6591d509a2a37ce8998008cbecae8fc8ffaadf3fb0229535e6a145f3ce0b211d060decbb24
@@ -12886,6 +12890,11 @@ __metadata:
     "@pmmmwh/react-refresh-webpack-plugin": 0.5.4
     "@sentry/electron": 2.5.4
     "@sentry/webpack-plugin": 1.18.5
+    "@storybook/addon-actions": 6.4.18
+    "@storybook/addon-essentials": 6.4.18
+    "@storybook/builder-webpack5": 6.4.18
+    "@storybook/manager-webpack5": 6.4.18
+    "@storybook/react": "patch:@storybook/react@6.4.18#./patches/storybook-react.patch"
     "@types/babel__core": ^7.1.18
     "@types/babel__preset-env": ^7.9.2
     "@types/case-sensitive-paths-webpack-plugin": 2.1.6
@@ -25469,6 +25478,13 @@ __metadata:
   version: 0.1.4
   resolution: "zstd-codec@npm:0.1.4"
   checksum: 8689bc0defc4f387d1be990b8b8ca8ca56690d17dfc8dd4703db798465b92a21e64e54e886acfaa376147d9d07d879a68627b09fddc34a0c93f0dc5c610a790c
+  languageName: node
+  linkType: hard
+
+"zstd-codec@patch:zstd-codec@0.1.4#../../patches/zstd-codec.patch::locator=%40foxglove%2Fmcap-support%40workspace%3Apackages%2Fmcap-support":
+  version: 0.1.4
+  resolution: "zstd-codec@patch:zstd-codec@npm%3A0.1.4#../../patches/zstd-codec.patch::version=0.1.4&hash=a862de&locator=%40foxglove%2Fmcap-support%40workspace%3Apackages%2Fmcap-support"
+  checksum: 08a5e329950cb926581ea3a0a46131676e05fcbcdc59faebe2d7c66036562694c9a266140183848facb08fa06e5f6db7e55e23dac27f219e7dbb69f124b62554
   languageName: node
   linkType: hard
 

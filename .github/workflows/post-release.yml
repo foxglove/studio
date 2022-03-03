@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: Checkout ${{ github.event.release.target_commitish || github.event.inputs.target_commitish }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: ${{ github.event.release.target_commitish || github.event.inputs.target_commitish }}
           lfs: true
@@ -55,13 +55,13 @@ jobs:
 
     steps:
       - name: Checkout ${{ github.event.release.target_commitish || github.event.inputs.target_commitish }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: ${{ github.event.release.target_commitish || github.event.inputs.target_commitish }}
           token: ${{ secrets.FOXGLOVEBOT_GITHUB_TOKEN }}
           lfs: true
 
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3.0.0
         with:
           node-version: 14.x
           cache: yarn
@@ -114,12 +114,12 @@ jobs:
 
     steps:
       - name: Checkout ${{ github.event.release.tag_name || github.event.inputs.tag_name }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: ${{ github.event.release.tag_name || github.event.inputs.tag_name }}
           lfs: true
 
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3.0.0
         with:
           node-version: 14.x
           registry-url: https://registry.npmjs.org
@@ -145,7 +145,7 @@ jobs:
 
     steps:
       - name: Checkout ${{ github.event.release.tag_name || github.event.inputs.tag_name }}
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: ${{ github.event.release.tag_name || github.event.inputs.tag_name }}
           lfs: true
