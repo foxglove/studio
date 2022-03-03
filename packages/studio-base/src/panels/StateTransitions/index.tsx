@@ -239,11 +239,11 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
     () => (!currentTime || !startTime ? undefined : toSec(subtractTimes(currentTime, startTime))),
     [currentTime, startTime],
   );
-  const itemsByPath = useMessagesByPath(pathStrings);
+  const itemsByPath = useMessagesByPath(pathStrings, undefined, "full");
 
   const decodeMessagePathsForMessagesByTopic = useDecodeMessagePathsForMessagesByTopic(pathStrings);
 
-  const blocks = useBlocksByTopic(subscribeTopics);
+  const blocks = useBlocksByTopic(subscribeTopics, "full");
   const decodedBlocks = useMemo(
     () => blocks.map(decodeMessagePathsForMessagesByTopic),
     [blocks, decodeMessagePathsForMessagesByTopic],

@@ -82,6 +82,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   private _currentTime: Time;
   private _lastSeekTime?: number;
   private _topics: Topic[] = [];
+  private _subscriptions: SubscribePayload[] = [];
   private _datatypes: RosDatatypes = new Map();
   private _metricsCollector: PlayerMetricsCollectorInterface;
   private _presence: PlayerPresence = PlayerPresence.INITIALIZING;
@@ -297,6 +298,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   setSubscriptions(subscriptions: SubscribePayload[]): void {
     log.debug("setSubscriptions", subscriptions);
     this._requestedTopics = Array.from(new Set(subscriptions.map(({ topic }) => topic)));
+    this._subscriptions = subscriptions;
     this._clearPreloadedData();
     this._startPreloadTaskIfNeeded();
     this._emitState();
@@ -372,8 +374,11 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     if (this._currentPreloadTask) {
       return;
     }
+    const allFullTopics = this._subscriptions.every((s) => s.range === "full");
     const preloadedMessages = this._initialized.preloadedMessages;
-    const nextRangeToLoad = preloadedMessages.nextRangeToLoad(this._currentTime);
+    const nextRangeToLoad = preloadedMessages.nextRangeToLoad(
+      allFullTopics ? this._start : this._currentTime,
+    );
     const shouldPreload =
       this._requestedTopics.length > 0 &&
       nextRangeToLoad != undefined &&
@@ -384,7 +389,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
 
     const startTime = nextRangeToLoad.start;
     const endTime = clampTime(
-      add(startTime, fromSec(this._preloadDurationSecs)),
+      allFullTopics ? this._end : add(startTime, fromSec(this._preloadDurationSecs)),
       this._start,
       nextRangeToLoad.end,
     );

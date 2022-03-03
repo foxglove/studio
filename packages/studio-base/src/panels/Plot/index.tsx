@@ -263,7 +263,7 @@ function Plot(props: Props) {
     return out;
   }, [allPaths]);
 
-  const blocks = useBlocksByTopic(subscribeTopics);
+  const blocks = useBlocksByTopic(subscribeTopics, "full");
 
   // This memoization isn't quite ideal: getDatasets is a bit expensive with lots of preloaded data,
   // and when we preload a new block we re-generate the datasets for the whole timeline. We could
@@ -373,6 +373,7 @@ function Plot(props: Props) {
 
   const plotDataByPath = useMessageReducer<PlotDataByPath>({
     topics: subscribeTopics,
+    range: "full",
     restore,
     addMessages,
   });

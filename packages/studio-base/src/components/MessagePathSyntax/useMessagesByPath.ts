@@ -20,18 +20,21 @@ import {
   MessageDataItemsByPath,
   useDecodeMessagePathsForMessagesByTopic,
 } from "@foxglove/studio-base/components/MessagePathSyntax/useCachedGetMessagePathDataItems";
+import { SubscriptionRange } from "@foxglove/studio-base/players/types";
 
 // Given a set of message paths, subscribe to the appropriate topics and return
 // messages with their queried data decoded for each path.
 export default function useMessagesByPath(
   paths: string[],
   historySize: number = Infinity,
+  range?: SubscriptionRange,
 ): MessageDataItemsByPath {
   const memoizedPaths: string[] = useShallowMemo(paths);
   const subscribeTopics = useMemo(() => getTopicsFromPaths(memoizedPaths), [memoizedPaths]);
 
   const messagesByTopic = PanelAPI.useMessagesByTopic({
     topics: subscribeTopics,
+    range,
     historySize,
   });
 

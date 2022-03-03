@@ -27,6 +27,7 @@ import {
   MessageEvent,
   PlayerStateActiveData,
   SubscribePayload,
+  SubscriptionRange,
 } from "@foxglove/studio-base/players/types";
 
 const log = Log.getLogger(__filename);
@@ -36,6 +37,7 @@ type MessagesReducer<T> = (arg0: T, messages: readonly MessageEvent<unknown>[]) 
 
 type Params<T> = {
   topics: readonly string[];
+  range?: SubscriptionRange;
 
   // Functions called when the reducers change and for each newly received message.
   // The object is assumed to be immutable, so in order to trigger a re-render, the reducers must
@@ -92,8 +94,8 @@ export function useMessageReducer<T>(props: Params<T>): T {
     const requester: SubscribePayload["requester"] =
       panelType != undefined ? { type: "panel", name: panelType } : undefined;
 
-    return requestedTopics.map((topic) => ({ requester, topic }));
-  }, [panelType, requestedTopics]);
+    return requestedTopics.map((topic) => ({ requester, topic, range: props.range }));
+  }, [panelType, props.range, requestedTopics]);
 
   const setSubscriptions = useMessagePipeline(selectSetSubscriptions);
   useEffect(() => setSubscriptions(id, subscriptions), [id, setSubscriptions, subscriptions]);

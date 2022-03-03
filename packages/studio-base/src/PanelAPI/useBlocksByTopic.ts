@@ -26,6 +26,7 @@ import {
   SubscribePayload,
   MessageEvent,
   MessageBlock as PlayerMessageBlock,
+  SubscriptionRange,
 } from "@foxglove/studio-base/players/types";
 
 export type MessageBlock = {
@@ -57,7 +58,10 @@ const filterBlockByTopics = memoizeWeak(
   },
 );
 
-const useSubscribeToTopicsForBlocks = (topics: readonly string[]) => {
+const useSubscribeToTopicsForBlocks = (
+  topics: readonly string[],
+  range: SubscriptionRange = "partial",
+) => {
   const [id] = useState(() => uuidv4());
   const { type: panelType = undefined } = useContext(PanelContext) ?? {};
 
@@ -69,9 +73,10 @@ const useSubscribeToTopicsForBlocks = (topics: readonly string[]) => {
     ),
   );
   const subscriptions: SubscribePayload[] = useMemo(() => {
-    const requester = panelType != undefined ? { type: "panel", name: panelType } : undefined;
-    return topics.map((topic) => ({ topic, requester } as SubscribePayload));
-  }, [panelType, topics]);
+    const requester: SubscribePayload["requester"] =
+      panelType != undefined ? { type: "panel", name: panelType } : undefined;
+    return topics.map((topic) => ({ topic, requester, range }));
+  }, [range, panelType, topics]);
   useEffect(() => setSubscriptions(id, subscriptions), [id, setSubscriptions, subscriptions]);
   useCleanup(() => setSubscriptions(id, []));
 };
@@ -89,10 +94,13 @@ const useSubscribeToTopicsForBlocks = (topics: readonly string[]) => {
 //   - Each block represents the same duration of time
 //   - The number of blocks is consistent for the data source
 //   - Blocks are stored in increasing order of time
-export function useBlocksByTopic(topics: readonly string[]): readonly MessageBlock[] {
+export function useBlocksByTopic(
+  topics: readonly string[],
+  range: SubscriptionRange = "partial",
+): readonly MessageBlock[] {
   const requestedTopics = useShallowMemo(topics);
 
-  useSubscribeToTopicsForBlocks(requestedTopics);
+  useSubscribeToTopicsForBlocks(requestedTopics, range);
 
   const allBlocks = useMessagePipeline<readonly (PlayerMessageBlock | undefined)[] | undefined>(
     useCallback((ctx) => ctx.playerState.progress.messageCache?.blocks, []),
