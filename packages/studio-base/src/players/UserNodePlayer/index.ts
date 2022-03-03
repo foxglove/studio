@@ -653,7 +653,7 @@ export default class UserNodePlayer implements Player {
           this._nodeRegistrationCache = [];
         }
 
-        this._lastPlayerStateActiveData = playerState.activeData;
+        this._lastPlayerStateActiveData = activeData;
         if (shouldReset) {
           await this._resetWorkers();
         }
