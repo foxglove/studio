@@ -30,7 +30,7 @@ import {
   InitializationResult,
 } from "@foxglove/studio-base/randomAccessDataProviders/types";
 import delay from "@foxglove/studio-base/util/delay";
-import signal from "@foxglove/studio-base/util/signal";
+import { signal } from "@foxglove/den/async";
 import { getSeekToTime, SEEK_ON_START_NS } from "@foxglove/studio-base/util/time";
 
 import RandomAccessPlayer, {

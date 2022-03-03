@@ -26,7 +26,7 @@ import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { UserNode } from "@foxglove/studio-base/types/panels";
 import { basicDatatypes } from "@foxglove/studio-base/util/datatypes";
 import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
-import signal from "@foxglove/studio-base/util/signal";
+import { signal } from "@foxglove/den/async";
 
 const nodeId = "nodeId";
 
