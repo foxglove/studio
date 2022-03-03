@@ -11,7 +11,7 @@ export default {
   decorators: [StorybookDecorator],
   parameters: {
     chromatic: {
-      viewports: [200, 500],
+      viewports: [320, 500],
     },
   },
 };
