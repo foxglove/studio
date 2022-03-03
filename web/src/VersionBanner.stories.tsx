@@ -12,3 +12,7 @@ export default {
 export function OldChrome(): JSX.Element {
   return <VersionBanner isChrome currentVersion={42} isDismissable />;
 }
+
+export function UnsupportedBrowser(): JSX.Element {
+  return <VersionBanner isChrome={false} currentVersion={42} isDismissable />;
+}

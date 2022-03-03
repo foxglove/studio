@@ -9,8 +9,10 @@ export default {
   title: "quicklook/FileInfoDisplay",
   component: FileInfoDisplay,
   decorators: [StorybookDecorator],
-  chromatic: {
-    viewports: [200, 500],
+  parameters: {
+    chromatic: {
+      viewports: [200, 500],
+    },
   },
 };
 
