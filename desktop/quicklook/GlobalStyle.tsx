@@ -24,7 +24,7 @@ export const GlobalStyle = createGlobalStyle`
   body {
     padding: ${styleConstants.bodyPadding} !important; // important for Storybook
     min-width: 150px;
-    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont;
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, sans-serif;
     @media (prefers-color-scheme: dark) {
       color: #fff;
     }
