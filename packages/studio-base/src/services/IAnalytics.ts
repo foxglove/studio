@@ -73,6 +73,7 @@ export function getEventCategory(event: AppEvent): AppEventCategory {
     case AppEvent.PLAYER_CLOSE:
       return AppEventCategory.PLAYERS;
 
+    case AppEvent.LAYOUT_UPDATE:
     case AppEvent.LAYOUT_CREATE:
     case AppEvent.LAYOUT_DUPLICATE:
     case AppEvent.LAYOUT_RENAME:
@@ -114,6 +115,7 @@ export function getEventBreadcrumbType(event: AppEvent): SentryBreadcrumbType {
     case AppEvent.PLAYER_CLOSE:
       return SentryBreadcrumbType.TRANSACTION;
 
+    case AppEvent.LAYOUT_UPDATE:
     case AppEvent.LAYOUT_CREATE:
     case AppEvent.LAYOUT_DUPLICATE:
     case AppEvent.LAYOUT_RENAME:
