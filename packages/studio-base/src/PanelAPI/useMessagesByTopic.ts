@@ -35,7 +35,7 @@ export function useMessagesByTopic(params: {
   range?: SubscriptionRange;
   historySize: number;
 }): Record<string, readonly MessageEvent<unknown>[]> {
-  const { historySize, range, topics } = params;
+  const { historySize, range = "partial", topics } = params;
   const requestedTopics = useDeepMemo(topics);
 
   const addMessages = useCallback(

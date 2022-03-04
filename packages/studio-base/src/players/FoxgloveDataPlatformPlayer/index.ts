@@ -72,7 +72,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   private _name: string;
   private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState()
   private _totalBytesReceived = 0;
-  private _initialized: undefined | Record<SubscriptionRange, MessageMemoryCache>;
+  private _caches: undefined | Record<SubscriptionRange, MessageMemoryCache>;
   private _closed = false; // Whether the player has been completely closed using close()
   private _isPlaying = false;
   private _speed = 1;
@@ -219,7 +219,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     this._datatypes = datatypes;
 
     this._presence = PlayerPresence.PRESENT;
-    this._initialized = {
+    this._caches = {
       full: new MessageMemoryCache({ start: this._start, end: this._end }),
       partial: new MessageMemoryCache({ start: this._start, end: this._end }),
     };
@@ -311,7 +311,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   }
 
   private _runPlaybackLoop = debouncePromise(async () => {
-    if (!this._initialized) {
+    if (!this._caches) {
       return;
     }
     let lastTickEndTime: number | undefined;
@@ -340,7 +340,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
       this._startPreloadTaskIfNeeded("partial");
       let messages;
       while (
-        !(messages = this._initialized.partial.getMessages({
+        !(messages = this._caches.partial.getMessages({
           start: startTime,
           end: endTime,
         }))
@@ -368,28 +368,34 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     this._currentPreloadTasks.partial?.abort();
     this._currentPreloadTasks = { full: undefined, partial: undefined };
 
-    if (this._initialized) {
-      this._initialized.full.clear();
-      this._initialized.partial.clear();
+    if (this._caches) {
+      this._caches.full.clear();
+      this._caches.partial.clear();
       this._progress = {
-        fullyLoadedFractionRanges: this._initialized.partial.fullyLoadedFractionRanges(),
+        fullyLoadedFractionRanges: this._caches.partial.fullyLoadedFractionRanges(),
       };
     }
   }
 
   private _startPreloadTaskIfNeeded(loadRange: SubscriptionRange) {
-    if (!this._initialized || this._closed) {
+    if (!this._caches || this._closed) {
       return;
     }
+
     if (this._currentPreloadTasks[loadRange]) {
       return;
     }
+
     const topics = chain(this._subscriptions)
       .filter((s) => (loadRange === "full" ? s.range === "full" : s.range !== "full"))
       .map((s) => s.topic)
       .uniq()
       .value();
-    const preloadedMessages = this._initialized[loadRange];
+    if (topics.length === 0) {
+      return;
+    }
+
+    const preloadedMessages = this._caches[loadRange];
     const nextRangeToLoad = preloadedMessages.nextRangeToLoad(
       loadRange === "full" ? this._start : this._currentTime,
     );

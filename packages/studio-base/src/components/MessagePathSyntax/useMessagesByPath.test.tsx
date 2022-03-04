@@ -92,8 +92,14 @@ describe("useMessagesByPath", () => {
     unmount();
 
     expect(setSubscriptions.mock.calls).toEqual([
-      [expect.any(String), [{ topic: "/some/topic" }, { topic: "/some/other/topic" }]],
-      [expect.any(String), [{ topic: "/some/topic" }]],
+      [
+        expect.any(String),
+        [
+          { topic: "/some/topic", range: "partial", requestor: undefined },
+          { topic: "/some/other/topic", range: "partial", requestor: undefined },
+        ],
+      ],
+      [expect.any(String), [{ topic: "/some/topic", range: "partial", requestor: undefined }]],
       [expect.any(String), []],
     ]);
   });
@@ -115,8 +121,14 @@ describe("useMessagesByPath", () => {
     unmount();
 
     expect(setSubscriptions.mock.calls).toEqual([
-      [expect.any(String), [{ topic: "/some/topic" }]],
-      [expect.any(String), [{ topic: "/some/topic" }, { topic: "/some/other/topic" }]],
+      [expect.any(String), [{ topic: "/some/topic", range: "partial", requestor: undefined }]],
+      [
+        expect.any(String),
+        [
+          { topic: "/some/topic", range: "partial", requestor: undefined },
+          { topic: "/some/other/topic", range: "partial", requestor: undefined },
+        ],
+      ],
       [expect.any(String), []],
     ]);
   });

@@ -27,7 +27,7 @@ import { SubscriptionRange } from "@foxglove/studio-base/players/types";
 export default function useMessagesByPath(
   paths: string[],
   historySize: number = Infinity,
-  range?: SubscriptionRange,
+  range: SubscriptionRange = "partial",
 ): MessageDataItemsByPath {
   const memoizedPaths: string[] = useShallowMemo(paths);
   const subscribeTopics = useMemo(() => getTopicsFromPaths(memoizedPaths), [memoizedPaths]);
