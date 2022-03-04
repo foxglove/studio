@@ -15,7 +15,7 @@ import { groupBy } from "lodash";
 import { useCallback } from "react";
 
 import useDeepMemo from "@foxglove/studio-base/hooks/useDeepMemo";
-import { MessageEvent, SubscriptionRange } from "@foxglove/studio-base/players/types";
+import { MessageEvent } from "@foxglove/studio-base/players/types";
 import concatAndTruncate from "@foxglove/studio-base/util/concatAndTruncate";
 
 import { useMessageReducer } from "./useMessageReducer";
@@ -32,10 +32,9 @@ type UnknownMessageEventsByTopic = Record<string, readonly MessageEvent<unknown>
  */
 export function useMessagesByTopic(params: {
   topics: readonly string[];
-  range?: SubscriptionRange;
   historySize: number;
 }): Record<string, readonly MessageEvent<unknown>[]> {
-  const { historySize, range = "partial", topics } = params;
+  const { historySize, topics } = params;
   const requestedTopics = useDeepMemo(topics);
 
   const addMessages = useCallback(
@@ -72,7 +71,6 @@ export function useMessagesByTopic(params: {
 
   return useMessageReducer({
     topics: requestedTopics,
-    range,
     restore,
     addMessages,
   });

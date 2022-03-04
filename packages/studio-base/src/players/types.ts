@@ -255,7 +255,7 @@ export type Progress = Readonly<{
 }>;
 
 export type SubscriptionRange =
-  | "full" // Fetch nessages for the entire content range.
+  | "full" // Fetch messages for the entire content range.
   | "partial"; // Fetch messages as needed.
 
 // Represents a subscription to a single topic, for use in `setSubscriptions`.

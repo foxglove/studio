@@ -263,7 +263,7 @@ function Plot(props: Props) {
     return out;
   }, [allPaths]);
 
-  const blocks = useBlocksByTopic(subscribeTopics, "full");
+  const blocks = useBlocksByTopic(subscribeTopics);
 
   // This memoization isn't quite ideal: getDatasets is a bit expensive with lots of preloaded data,
   // and when we preload a new block we re-generate the datasets for the whole timeline. We could
