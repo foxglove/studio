@@ -58,6 +58,7 @@ function selectSetSubscriptions(ctx: MessagePipelineContext) {
 export function useMessageReducer<T>(props: Params<T>): T {
   const [id] = useState(() => uuidv4());
   const { type: panelType = undefined } = useContext(PanelContext) ?? {};
+  const { restore, addMessage, addMessages, range = "partial" } = props;
 
   // only one of the add message callbacks should be provided
   if ([props.addMessage, props.addMessages].filter(Boolean).length !== 1) {
@@ -94,8 +95,8 @@ export function useMessageReducer<T>(props: Params<T>): T {
     const requester: SubscribePayload["requester"] =
       panelType != undefined ? { type: "panel", name: panelType } : undefined;
 
-    return requestedTopics.map((topic) => ({ requester, topic, range: props.range }));
-  }, [panelType, props.range, requestedTopics]);
+    return requestedTopics.map((topic) => ({ requester, topic, range }));
+  }, [panelType, range, requestedTopics]);
 
   const setSubscriptions = useMessagePipeline(selectSetSubscriptions);
   useEffect(() => setSubscriptions(id, subscriptions), [id, setSubscriptions, subscriptions]);
@@ -105,8 +106,6 @@ export function useMessageReducer<T>(props: Params<T>): T {
 
   // Whenever `subscriptions` change, request a backfill, since we'd like to show fresh data.
   useEffect(() => requestBackfill(), [requestBackfill, subscriptions]);
-
-  const { restore, addMessage, addMessages } = props;
 
   const state = useRef<
     | Readonly<{
