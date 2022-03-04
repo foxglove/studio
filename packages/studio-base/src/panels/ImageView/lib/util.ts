@@ -119,21 +119,6 @@ export function getCameraNamespace(topicName: string): string | undefined {
   return splitTopic.length > 1 ? splitTopic.join("/") : undefined;
 }
 
-// group topics by the first component of their name
-export function groupTopics(topics: Topic[]): Map<string, Topic[]> {
-  const imageTopicsByNamespace: Map<string, Topic[]> = new Map();
-  for (const topic of topics) {
-    const key = getCameraNamespace(topic.name) ?? topic.name;
-    const vals = imageTopicsByNamespace.get(key);
-    if (vals) {
-      vals.push(topic);
-    } else {
-      imageTopicsByNamespace.set(key, [topic]);
-    }
-  }
-  return imageTopicsByNamespace;
-}
-
 export function buildMarkerData(rawMarkerData: RawMarkerData): MarkerData | undefined {
   const { markers, transformMarkers, cameraInfo } = rawMarkerData;
   if (markers.length === 0) {
