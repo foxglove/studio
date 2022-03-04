@@ -24,6 +24,7 @@ type Props = {
   items: TopicDropdownItem[];
   multiple: boolean;
   size?: SelectProps["size"];
+  open?: boolean;
 
   onChange: (activeTopics: string[]) => void;
 };
@@ -53,6 +54,7 @@ export function TopicDropdown(props: Props): JSX.Element {
         size={size}
         onChange={handleChange}
         multiple={multiple}
+        open={props.open}
         MenuProps={{
           contentEditable: multiple,
           MenuListProps: {

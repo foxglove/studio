@@ -16,7 +16,7 @@ export default {
 export const NoTopics: Story = (_args) => {
   return (
     <Box padding={2}>
-      <TopicDropdown multiple={false} title="Title" items={[]} onChange={action("onChange")} />
+      <TopicDropdown open multiple={false} title="Title" items={[]} onChange={action("onChange")} />
     </Box>
   );
 };
@@ -25,6 +25,7 @@ export const OneTopic: Story = (_args) => {
   return (
     <Box padding={2}>
       <TopicDropdown
+        open
         multiple={false}
         title="Title"
         items={[
@@ -42,6 +43,7 @@ export const MultipleTopic: Story = (_args) => {
   return (
     <Box padding={2}>
       <TopicDropdown
+        open
         multiple={true}
         title="Title"
         items={[

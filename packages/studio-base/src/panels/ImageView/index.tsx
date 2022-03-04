@@ -184,7 +184,13 @@ function ImageView(props: Props) {
       }
     }
 
-    return <TopicDropdown multiple={false} title={cameraTopic} items={items} onChange={onChange} />;
+    const title = cameraTopic
+      ? cameraTopic
+      : items.length === 0
+      ? "No camera topics"
+      : "Select a camera topic";
+
+    return <TopicDropdown multiple={false} title={title} items={items} onChange={onChange} />;
   }, [cameraTopic, allImageTopics, onChangeCameraTopic]);
 
   const cameraInfo = useCameraInfo(cameraTopic);
