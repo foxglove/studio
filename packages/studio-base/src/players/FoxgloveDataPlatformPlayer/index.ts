@@ -336,25 +336,29 @@ export default class FoxgloveDataPlatformPlayer implements Player {
       const lastSeekTime = this._lastSeekTime;
       const startTime = this._currentTime;
       const endTime = clampTime(add(startTime, fromMillis(readMs)), this._start, this._end);
-      this._startPreloadTaskIfNeeded("full");
-      this._startPreloadTaskIfNeeded("partial");
-      let messages;
-      while (
-        !(messages = this._caches.partial.getMessages({
-          start: startTime,
-          end: endTime,
-        }))
-      ) {
-        log.debug("Waiting for more messages");
-        // Wait for new messages to be loaded
-        await (this._loadedMoreMessages = signal());
-        if (this._lastSeekTime !== lastSeekTime) {
-          lastTickEndTime = undefined;
-          continue mainLoop;
+      const anyPartialTopics = this._subscriptions.some((t) => t.range !== "full");
+      if (anyPartialTopics) {
+        this._startPreloadTaskIfNeeded("partial");
+        let messages;
+        while (
+          !(messages = this._caches.partial.getMessages({
+            start: startTime,
+            end: endTime,
+          }))
+        ) {
+          log.debug("Waiting for more messages");
+          // Wait for new messages to be loaded
+          await (this._loadedMoreMessages = signal());
+          if (this._lastSeekTime !== lastSeekTime) {
+            lastTickEndTime = undefined;
+            continue mainLoop;
+          }
         }
+        lastTickEndTime = performance.now();
+        this._nextFrame = messages;
+      } else {
+        this._nextFrame = [];
       }
-      lastTickEndTime = performance.now();
-      this._nextFrame = messages;
       this._currentTime = endTime;
       if (areEqual(this._currentTime, this._end)) {
         this._isPlaying = false;
@@ -371,9 +375,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     if (this._caches) {
       this._caches.full.clear();
       this._caches.partial.clear();
-      this._progress = {
-        fullyLoadedFractionRanges: this._caches.partial.fullyLoadedFractionRanges(),
-      };
+      this._updateProgress();
     }
   }
 
@@ -399,9 +401,12 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     const nextRangeToLoad = preloadedMessages.nextRangeToLoad(
       loadRange === "full" ? this._start : this._currentTime,
     );
+    if (nextRangeToLoad == undefined) {
+      return;
+    }
+
     const shouldPreload =
-      topics.length > 0 &&
-      nextRangeToLoad != undefined &&
+      loadRange === "full" ||
       toSec(subtract(nextRangeToLoad.start, this._currentTime)) < this._preloadThresholdSecs;
     if (!shouldPreload) {
       return;
@@ -437,8 +442,6 @@ export default class FoxgloveDataPlatformPlayer implements Player {
         },
       });
 
-      const noFullTopics = this._subscriptions.every((s) => s.range !== "full");
-
       for await (const { messages, range } of collateMessageStream(stream, {
         start: startTime,
         end: endTime,
@@ -448,14 +451,11 @@ export default class FoxgloveDataPlatformPlayer implements Player {
         }
         log.debug("Adding preloaded chunk in", range, "with", messages.length, "messages");
         preloadedMessages.insert(range, messages);
-        if (loadRange === "full" || noFullTopics) {
-          this._progress = {
-            fullyLoadedFractionRanges: preloadedMessages.fullyLoadedFractionRanges(),
-            messageCache: preloadedMessages.getBlockCache(),
-          };
+        this._updateProgress();
+        if (loadRange === "partial") {
+          this._loadedMoreMessages?.resolve();
+          this._loadedMoreMessages = undefined;
         }
-        this._loadedMoreMessages?.resolve();
-        this._loadedMoreMessages = undefined;
         this._emitState();
       }
     })()
@@ -474,6 +474,17 @@ export default class FoxgloveDataPlatformPlayer implements Player {
       });
 
     this._emitState();
+  }
+
+  private _updateProgress() {
+    const noFullTopics = this._subscriptions.every((s) => s.range !== "full");
+    const cache = noFullTopics ? this._caches?.partial : this._caches?.full;
+    if (cache) {
+      this._progress = {
+        fullyLoadedFractionRanges: cache.fullyLoadedFractionRanges(),
+        messageCache: cache.getBlockCache(),
+      };
+    }
   }
 
   setPublishers(publishers: AdvertiseOptions[]): void {
@@ -516,7 +527,6 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     this._currentPreloadTasks.full?.abort();
     this._currentPreloadTasks.partial?.abort();
     this._currentPreloadTasks = { full: undefined, partial: undefined };
-    this._startPreloadTaskIfNeeded("full");
     this._startPreloadTaskIfNeeded("partial");
     this._emitState();
   }
