@@ -51,15 +51,12 @@ describe("ImageView", () => {
       { name: "/camera_rear_medium/marker4", datatype: "vision_msgs/ImageMarker" }, // not included because it's for a different camera
       { name: "/unknown_camera/marker5", datatype: "vision_msgs/ImageMarker" },
     ];
-    const allCameraNamespaces = ["/some_camera_topic", "/camera_rear_medium"];
     it("filters and sorts topics relevant to this camera", () => {
       expect(
-        getMarkerOptions(
-          "/some_camera_topic/image_rect_color",
-          allMarkerTopics,
-          allCameraNamespaces,
-          ["visualization_msgs/ImageMarker", "vision_msgs/ImageMarker"],
-        ),
+        getMarkerOptions("/some_camera_topic/image_rect_color", allMarkerTopics, [
+          "visualization_msgs/ImageMarker",
+          "vision_msgs/ImageMarker",
+        ]),
       ).toEqual(["/some_camera_topic/marker1", "/some_camera_topic/marker2"]);
     });
   });
