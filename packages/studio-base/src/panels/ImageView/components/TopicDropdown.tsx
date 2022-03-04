@@ -2,7 +2,16 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { MenuItem, Select, Checkbox, ListItemText, SelectChangeEvent } from "@mui/material";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import {
+  MenuItem,
+  Select,
+  ListItemText,
+  SelectChangeEvent,
+  Radio,
+  ListSubheader,
+  SelectProps,
+} from "@mui/material";
 import { useMemo } from "react";
 
 type TopicDropdownItem = {
@@ -14,12 +23,13 @@ type Props = {
   title: string;
   items: TopicDropdownItem[];
   multiple: boolean;
+  size?: SelectProps["size"];
 
   onChange: (activeTopics: string[]) => void;
 };
 
 export function TopicDropdown(props: Props): JSX.Element {
-  const { items, onChange, title, multiple } = props;
+  const { items, onChange, multiple, title, size = "small" } = props;
 
   const selectedTopics = useMemo<string[]>(() => {
     return items.filter((item) => item.selected).map((item) => item.name);
@@ -35,25 +45,39 @@ export function TopicDropdown(props: Props): JSX.Element {
   return (
     <>
       <Select
-        multiple={multiple}
         value={selectedTopics}
         disabled={items.length === 0}
-        onChange={handleChange}
         displayEmpty
         renderValue={(_selected) => title}
-        size="small"
-        MenuProps={{ disablePortal: true }}
-        variant="outlined"
+        title={title}
+        size={size}
+        onChange={handleChange}
+        multiple={multiple}
+        MenuProps={{
+          contentEditable: multiple,
+          MenuListProps: {
+            dense: true,
+            subheader: multiple ? <ListSubheader>Select multiple topics</ListSubheader> : undefined,
+          },
+        }}
       >
         {items.length === 0 && (
-          <MenuItem disabled value="" dense>
-            <em>No topics</em>
+          <MenuItem disabled value="">
+            <ListItemText
+              primary="No topics"
+              primaryTypographyProps={{ variant: "inherit", color: "text.secondary" }}
+            />
           </MenuItem>
         )}
         {items.map((item) => (
-          <MenuItem key={item.name} value={item.name} dense>
-            <Checkbox checked={selectedTopics.includes(item.name)} size="small" />
-            <ListItemText primary={item.name} />
+          <MenuItem key={item.name} value={item.name}>
+            <Radio
+              checked={selectedTopics.includes(item.name)}
+              size="small"
+              edge="start"
+              checkedIcon={<CheckCircleIcon />}
+            />
+            <ListItemText primary={item.name} primaryTypographyProps={{ variant: "inherit" }} />
           </MenuItem>
         ))}
       </Select>

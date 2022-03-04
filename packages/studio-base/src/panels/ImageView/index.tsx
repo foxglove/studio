@@ -48,10 +48,7 @@ const useStyles = makeStyles((theme: Theme) => ({
     flex: "1 1 auto",
     alignItems: "center",
     overflow: "hidden",
-
-    button: {
-      margin: theme.spacing(0.125, 0.5, 0.125, 0),
-    },
+    gap: theme.spacing(0.5),
   },
   bottomBar: {
     transition: "opacity 0.1s ease-in-out",
