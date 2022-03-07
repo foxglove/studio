@@ -22,6 +22,7 @@ import {
 import MessageCollector from "@foxglove/studio-base/panels/ThreeDimensionalViz/SceneBuilder/MessageCollector";
 import { MarkerMatcher } from "@foxglove/studio-base/panels/ThreeDimensionalViz/ThreeDimensionalVizContext";
 import VelodyneCloudConverter from "@foxglove/studio-base/panels/ThreeDimensionalViz/VelodyneCloudConverter";
+import { DATATYPE } from "@foxglove/studio-base/panels/ThreeDimensionalViz/commands/PointClouds/types";
 import {
   IImmutableCoordinateFrame,
   IImmutableTransformTree,
@@ -619,12 +620,11 @@ export default class SceneBuilder implements MarkerProvider {
 
     const data = new Uint8Array(pointStep * scan.ranges.length);
     const view = new DataView(data.buffer);
-    let angle = scan.angle_min;
     for (let i = 0; i < scan.ranges.length; i++) {
       const offset = i * pointStep;
       const distance = Math.min(scan.range_max, Math.max(scan.range_min, scan.ranges[i] ?? 0));
       const intensity = scan.intensities[i] ?? Number.NaN;
-      angle = Math.min(scan.angle_max, angle + scan.angle_increment);
+      const angle = Math.min(scan.angle_max, scan.angle_min + i * scan.angle_increment);
       const x = distance * Math.cos(angle);
       const y = distance * Math.sin(angle);
 
@@ -639,14 +639,14 @@ export default class SceneBuilder implements MarkerProvider {
     }
 
     const fields: PointField[] = [
-      { name: "x", offset: 0, datatype: 8, count: 1 },
-      { name: "y", offset: 8, datatype: 8, count: 1 },
-      { name: "z", offset: 16, datatype: 8, count: 1 },
-      { name: "distance", offset: 24, datatype: 8, count: 1 },
-      { name: "angle", offset: 32, datatype: 8, count: 1 },
+      { name: "x", offset: 0, datatype: DATATYPE.FLOAT64, count: 1 },
+      { name: "y", offset: 8, datatype: DATATYPE.FLOAT64, count: 1 },
+      { name: "z", offset: 16, datatype: DATATYPE.FLOAT64, count: 1 },
+      { name: "distance", offset: 24, datatype: DATATYPE.FLOAT64, count: 1 },
+      { name: "angle", offset: 32, datatype: DATATYPE.FLOAT64, count: 1 },
     ];
     if (hasIntensity) {
-      fields.push({ name: "intensity", offset: 40, datatype: 8, count: 1 });
+      fields.push({ name: "intensity", offset: 40, datatype: DATATYPE.FLOAT64, count: 1 });
     }
 
     const pcl: PointCloud2 = {
