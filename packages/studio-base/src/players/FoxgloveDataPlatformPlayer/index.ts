@@ -37,7 +37,7 @@ import {
   Progress,
   PublishPayload,
   SubscribePayload,
-  SubscriptionRange,
+  SubscriptionPreloadType,
   Topic,
 } from "@foxglove/studio-base/players/types";
 import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
@@ -72,7 +72,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   private _name: string;
   private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState()
   private _totalBytesReceived = 0;
-  private _caches: Partial<Record<SubscriptionRange, MessageMemoryCache>> = {
+  private _caches: Partial<Record<SubscriptionPreloadType, MessageMemoryCache>> = {
     full: undefined,
     partial: undefined,
   };
@@ -86,14 +86,14 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   private _currentTime: Time;
   private _lastSeekTime?: number;
   private _topics: Topic[] = [];
-  private _subscriptions: Record<SubscriptionRange, SubscribePayload[]> = {
+  private _subscriptions: Record<SubscriptionPreloadType, SubscribePayload[]> = {
     full: [],
     partial: [],
   };
   private _datatypes: RosDatatypes = new Map();
   private _metricsCollector: PlayerMetricsCollectorInterface;
   private _presence: PlayerPresence = PlayerPresence.INITIALIZING;
-  private _currentPreloadTasks: Record<SubscriptionRange, undefined | AbortController> = {
+  private _currentPreloadTasks: Record<SubscriptionPreloadType, undefined | AbortController> = {
     full: undefined,
     partial: undefined,
   };
@@ -309,7 +309,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     log.debug("setSubscriptions", subscriptions);
     [this._subscriptions.full, this._subscriptions.partial] = partition(
       subscriptions,
-      (s) => s.range === "full",
+      (s) => s.preloadType === "full",
     );
     this._clearPreloadedData();
     this._startPreloadTaskIfNeeded("full");
@@ -383,31 +383,31 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     this._updateProgress();
   }
 
-  private _startPreloadTaskIfNeeded(loadRange: SubscriptionRange) {
-    const preloadedMessages = this._caches[loadRange];
+  private _startPreloadTaskIfNeeded(preloadType: SubscriptionPreloadType) {
+    const preloadedMessages = this._caches[preloadType];
 
     if (!preloadedMessages || this._closed) {
       return;
     }
 
-    if (this._currentPreloadTasks[loadRange]) {
+    if (this._currentPreloadTasks[preloadType]) {
       return;
     }
 
-    const topics = uniq(this._subscriptions[loadRange].map((s) => s.topic));
+    const topics = uniq(this._subscriptions[preloadType].map((s) => s.topic));
     if (topics.length === 0) {
       return;
     }
 
     const nextRangeToLoad = preloadedMessages.nextRangeToLoad(
-      loadRange === "full" ? this._start : this._currentTime,
+      preloadType === "full" ? this._start : this._currentTime,
     );
     if (nextRangeToLoad == undefined) {
       return;
     }
 
     const shouldPreload =
-      loadRange === "full" ||
+      preloadType === "full" ||
       toSec(subtract(nextRangeToLoad.start, this._currentTime)) < this._preloadThresholdSecs;
     if (!shouldPreload) {
       return;
@@ -415,7 +415,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
 
     const startTime = nextRangeToLoad.start;
     const endTime = clampTime(
-      loadRange === "full" ? this._end : add(startTime, fromSec(this._preloadDurationSecs)),
+      preloadType === "full" ? this._end : add(startTime, fromSec(this._preloadDurationSecs)),
       this._start,
       nextRangeToLoad.end,
     );
@@ -427,7 +427,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     thisTask.signal.addEventListener("abort", () => {
       log.debug("Aborting preload task", startTime, endTime);
     });
-    this._currentPreloadTasks[loadRange] = thisTask;
+    this._currentPreloadTasks[preloadType] = thisTask;
     log.debug("Starting preload task", startTime, endTime);
 
     (async () => {
@@ -453,7 +453,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
         log.debug("Adding preloaded chunk in", range, "with", messages.length, "messages");
         preloadedMessages.insert(range, messages);
         this._updateProgress();
-        if (loadRange === "partial") {
+        if (preloadType === "partial") {
           this._loadedMoreMessages?.resolve();
           this._loadedMoreMessages = undefined;
         }
@@ -469,8 +469,8 @@ export default class FoxgloveDataPlatformPlayer implements Player {
         this._addProblem("stream-error", { message: error.message, error, severity: "error" });
       })
       .finally(() => {
-        if (this._currentPreloadTasks[loadRange] === thisTask) {
-          this._currentPreloadTasks[loadRange] = undefined;
+        if (this._currentPreloadTasks[preloadType] === thisTask) {
+          this._currentPreloadTasks[preloadType] = undefined;
         }
       });
 

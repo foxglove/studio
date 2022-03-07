@@ -95,11 +95,14 @@ describe("useMessagesByPath", () => {
       [
         expect.any(String),
         [
-          { topic: "/some/topic", range: "partial", requestor: undefined },
-          { topic: "/some/other/topic", range: "partial", requestor: undefined },
+          { topic: "/some/topic", preloadType: "partial", requestor: undefined },
+          { topic: "/some/other/topic", preloadType: "partial", requestor: undefined },
         ],
       ],
-      [expect.any(String), [{ topic: "/some/topic", range: "partial", requestor: undefined }]],
+      [
+        expect.any(String),
+        [{ topic: "/some/topic", preloadType: "partial", requestor: undefined }],
+      ],
       [expect.any(String), []],
     ]);
   });
@@ -121,12 +124,15 @@ describe("useMessagesByPath", () => {
     unmount();
 
     expect(setSubscriptions.mock.calls).toEqual([
-      [expect.any(String), [{ topic: "/some/topic", range: "partial", requestor: undefined }]],
+      [
+        expect.any(String),
+        [{ topic: "/some/topic", preloadType: "partial", requestor: undefined }],
+      ],
       [
         expect.any(String),
         [
-          { topic: "/some/topic", range: "partial", requestor: undefined },
-          { topic: "/some/other/topic", range: "partial", requestor: undefined },
+          { topic: "/some/topic", preloadType: "partial", requestor: undefined },
+          { topic: "/some/other/topic", preloadType: "partial", requestor: undefined },
         ],
       ],
       [expect.any(String), []],

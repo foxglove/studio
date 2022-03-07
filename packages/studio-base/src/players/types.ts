@@ -254,7 +254,7 @@ export type Progress = Readonly<{
   readonly messageCache?: BlockCache;
 }>;
 
-export type SubscriptionRange =
+export type SubscriptionPreloadType =
   | "full" // Fetch messages for the entire content range.
   | "partial"; // Fetch messages as needed.
 
@@ -265,7 +265,7 @@ export type SubscribePayload = {
   // The topic name to subscribe to.
   topic: string;
 
-  range?: SubscriptionRange;
+  preloadType?: SubscriptionPreloadType;
 
   // Optionally, where the request came from. Used in the "Internals" panel to improve debugging.
   requester?: { type: "panel" | "node" | "other"; name: string };
