@@ -373,7 +373,7 @@ function Plot(props: Props) {
 
   const plotDataByPath = useMessageReducer<PlotDataByPath>({
     topics: subscribeTopics,
-    range: "full",
+    preloadType: "full",
     restore,
     addMessages,
   });
