@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { captureException } from "@sentry/core";
-import { chain, isEqual } from "lodash";
+import { isEqual, partition, uniq } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
 import { signal, Signal } from "@foxglove/den/async";
@@ -72,7 +72,10 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   private _name: string;
   private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState()
   private _totalBytesReceived = 0;
-  private _caches: undefined | Record<SubscriptionRange, MessageMemoryCache>;
+  private _caches: Partial<Record<SubscriptionRange, MessageMemoryCache>> = {
+    full: undefined,
+    partial: undefined,
+  };
   private _closed = false; // Whether the player has been completely closed using close()
   private _isPlaying = false;
   private _speed = 1;
@@ -83,7 +86,10 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   private _currentTime: Time;
   private _lastSeekTime?: number;
   private _topics: Topic[] = [];
-  private _subscriptions: SubscribePayload[] = [];
+  private _subscriptions: Record<SubscriptionRange, SubscribePayload[]> = {
+    full: [],
+    partial: [],
+  };
   private _datatypes: RosDatatypes = new Map();
   private _metricsCollector: PlayerMetricsCollectorInterface;
   private _presence: PlayerPresence = PlayerPresence.INITIALIZING;
@@ -219,10 +225,8 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     this._datatypes = datatypes;
 
     this._presence = PlayerPresence.PRESENT;
-    this._caches = {
-      full: new MessageMemoryCache({ start: this._start, end: this._end }),
-      partial: new MessageMemoryCache({ start: this._start, end: this._end }),
-    };
+    this._caches.full = new MessageMemoryCache({ start: this._start, end: this._end });
+    this._caches.partial = new MessageMemoryCache({ start: this._start, end: this._end });
     this._metricsCollector.initialized();
     this._emitState();
     this._startPreloadTaskIfNeeded("full");
@@ -303,7 +307,10 @@ export default class FoxgloveDataPlatformPlayer implements Player {
 
   setSubscriptions(subscriptions: SubscribePayload[]): void {
     log.debug("setSubscriptions", subscriptions);
-    this._subscriptions = subscriptions;
+    [this._subscriptions.full, this._subscriptions.partial] = partition(
+      subscriptions,
+      (s) => s.range === "full",
+    );
     this._clearPreloadedData();
     this._startPreloadTaskIfNeeded("full");
     this._startPreloadTaskIfNeeded("partial");
@@ -311,7 +318,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   }
 
   private _runPlaybackLoop = debouncePromise(async () => {
-    if (!this._caches) {
+    if (!this._caches.partial) {
       return;
     }
     let lastTickEndTime: number | undefined;
@@ -336,8 +343,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
       const lastSeekTime = this._lastSeekTime;
       const startTime = this._currentTime;
       const endTime = clampTime(add(startTime, fromMillis(readMs)), this._start, this._end);
-      const anyPartialTopics = this._subscriptions.some((t) => t.range !== "full");
-      if (anyPartialTopics) {
+      if (this._subscriptions.partial.length > 0) {
         this._startPreloadTaskIfNeeded("partial");
         let messages;
         while (
@@ -372,15 +378,15 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     this._currentPreloadTasks.partial?.abort();
     this._currentPreloadTasks = { full: undefined, partial: undefined };
 
-    if (this._caches) {
-      this._caches.full.clear();
-      this._caches.partial.clear();
-      this._updateProgress();
-    }
+    this._caches.full?.clear();
+    this._caches.partial?.clear();
+    this._updateProgress();
   }
 
   private _startPreloadTaskIfNeeded(loadRange: SubscriptionRange) {
-    if (!this._caches || this._closed) {
+    const preloadedMessages = this._caches[loadRange];
+
+    if (!preloadedMessages || this._closed) {
       return;
     }
 
@@ -388,16 +394,11 @@ export default class FoxgloveDataPlatformPlayer implements Player {
       return;
     }
 
-    const topics = chain(this._subscriptions)
-      .filter((s) => (loadRange === "full" ? s.range === "full" : s.range !== "full"))
-      .map((s) => s.topic)
-      .uniq()
-      .value();
+    const topics = uniq(this._subscriptions[loadRange].map((s) => s.topic));
     if (topics.length === 0) {
       return;
     }
 
-    const preloadedMessages = this._caches[loadRange];
     const nextRangeToLoad = preloadedMessages.nextRangeToLoad(
       loadRange === "full" ? this._start : this._currentTime,
     );
@@ -477,8 +478,8 @@ export default class FoxgloveDataPlatformPlayer implements Player {
   }
 
   private _updateProgress() {
-    const noFullTopics = this._subscriptions.every((s) => s.range !== "full");
-    const cache = noFullTopics ? this._caches?.partial : this._caches?.full;
+    const noFullTopics = this._subscriptions.full.length === 0;
+    const cache = noFullTopics ? this._caches.partial : this._caches.full;
     if (cache) {
       this._progress = {
         fullyLoadedFractionRanges: cache.fullyLoadedFractionRanges(),
