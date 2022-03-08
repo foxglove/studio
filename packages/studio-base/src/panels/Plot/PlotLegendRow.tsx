@@ -7,7 +7,7 @@ import {
   Close as CloseIcon,
   Error as ErrorIcon,
   Remove as RemoveIcon,
-  Settings as SettingsIcon,
+  MoreVert as MoreVertIcon,
 } from "@mui/icons-material";
 import { IconButton, Theme, Tooltip, Typography, useTheme } from "@mui/material";
 import { createStyles, makeStyles } from "@mui/styles";
@@ -76,7 +76,7 @@ const useStyles = makeStyles((theme: Theme) =>
       alignItems: "center",
       padding: theme.spacing(0.25),
     },
-    removeButton: {
+    actionButton: {
       padding: `${theme.spacing(0.25)} !important`,
       color: theme.palette.text.secondary,
 
@@ -263,8 +263,13 @@ export default function PlotLegendRow({
         </div>
       )}
       <div className={classes.actions}>
-        <IconButton size="small" title="Edit settings" onClick={() => setSettingsModalOpen(true)}>
-          <SettingsIcon fontSize="small" />
+        <IconButton
+          className={classes.actionButton}
+          size="small"
+          title="Edit settings"
+          onClick={() => setSettingsModalOpen(true)}
+        >
+          <MoreVertIcon fontSize="small" />
         </IconButton>
         <TimestampMethodDropdown
           path={path.value}
@@ -274,7 +279,7 @@ export default function PlotLegendRow({
           timestampMethod={xAxisVal === "timestamp" ? timestampMethod : undefined}
         />
         <IconButton
-          className={classes.removeButton}
+          className={classes.actionButton}
           size="small"
           title={`Remove ${path.value}`}
           onClick={() => {
