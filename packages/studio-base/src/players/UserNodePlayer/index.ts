@@ -544,7 +544,10 @@ export default class UserNodePlayer implements Player {
 
     const validNodeRegistrations: NodeRegistration[] = [];
     const playerTopics = new Set(this._lastPlayerStateActiveData.topics.map((topic) => topic.name));
-    const outputTopics = new Set<string>();
+    const allNodeOutputs = new Set(
+      allNodeRegistrations.map(({ nodeData }) => nodeData.outputTopic),
+    );
+    const seenNodeOutputs = new Set<string>();
 
     for (const nodeRegistration of allNodeRegistrations) {
       const { nodeData, nodeId } = nodeRegistration;
@@ -556,7 +559,7 @@ export default class UserNodePlayer implements Player {
       }
 
       // Create diagnostic errors if more than one node outputs to the same topic
-      if (outputTopics.has(nodeData.outputTopic)) {
+      if (seenNodeOutputs.has(nodeData.outputTopic)) {
         this._setUserNodeDiagnostics(nodeId, [
           ...nodeData.diagnostics,
           {
@@ -568,7 +571,7 @@ export default class UserNodePlayer implements Player {
         ]);
         continue;
       }
-      outputTopics.add(nodeData.outputTopic);
+      seenNodeOutputs.add(nodeData.outputTopic);
 
       // Create diagnostic errors if node outputs overlap with real topics
       if (playerTopics.has(nodeData.outputTopic)) {
@@ -582,6 +585,15 @@ export default class UserNodePlayer implements Player {
           },
         ]);
         continue;
+      }
+
+      // Throw if nodes use other nodes' outputs as inputs. We should never get here because we
+      // already prevent outputs from being the same as real topics in the data source, and we
+      // already filter out input topics that aren't present in the data source.
+      for (const input of nodeData.inputTopics) {
+        if (allNodeOutputs.has(input)) {
+          throw new Error(`Input "${input}" cannot equal another node's output`);
+        }
       }
 
       validNodeRegistrations.push(nodeRegistration);

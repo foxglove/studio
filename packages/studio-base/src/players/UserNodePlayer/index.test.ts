@@ -709,7 +709,7 @@ describe("UserNodePlayer", () => {
       ]);
     });
 
-    it("should error if a user nodes outputs to an existing input topic", async () => {
+    it("should error if a user node outputs to an existing input topic", async () => {
       const fakePlayer = new FakePlayer();
       const mockSetNodeDiagnostics = jest.fn();
       const userNodePlayer = new UserNodePlayer(fakePlayer, {
