@@ -59,7 +59,7 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor: "transparent",
 
       "&.hasChildren": {
-        // If the toolbar has children - set the width to 100% to takeup the entire panel width
+        // If the toolbar has children, set the width to 100% to take up the entire panel width.
         // If the toolbar does not have children, then the width should be only the controls
         // so the div does not interfere with other panel elements.
         width: "100%",
