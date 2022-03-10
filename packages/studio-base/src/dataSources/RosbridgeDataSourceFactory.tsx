@@ -15,6 +15,8 @@ class RosbridgeDataSourceFactory implements IDataSourceFactory {
   displayName = "Rosbridge (ROS 1 & 2)";
   iconName: IDataSourceFactory["iconName"] = "Flow";
   docsLink = "/rosbridge";
+  docsIntro =
+    "Connect to a running ROS 1 or ROS 2 system over WebSockets to access your ROS nodes directly.";
 
   formConfig = {
     fields: [{ id: "url", label: "WebSocket URL", defaultValue: "ws://localhost:9090" }],

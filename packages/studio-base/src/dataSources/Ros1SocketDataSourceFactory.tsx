@@ -18,6 +18,8 @@ class Ros1SocketDataSourceFactory implements IDataSourceFactory {
   type: IDataSourceFactory["type"] = "connection";
   displayName = "ROS 1";
   iconName: IDataSourceFactory["iconName"] = "studio.ROS";
+  docsIntro =
+    "Connect to a running ROS 1 system via a native TCP connection that accesses your ROS master and nodes directly.";
   docsLink = "/native";
 
   formConfig = {

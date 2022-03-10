@@ -14,6 +14,7 @@ export default class FoxgloveWebSocketDataSourceFactory implements IDataSourceFa
   type: IDataSourceFactory["type"] = "connection";
   displayName = "Foxglove WebSocket";
   iconName: IDataSourceFactory["iconName"] = "Flow";
+  docsIntro = "Connect live to your non-ROS data via an encoding-agnostic WebSockets connection.";
   docsLink = "/foxglove-websocket";
 
   formConfig = {

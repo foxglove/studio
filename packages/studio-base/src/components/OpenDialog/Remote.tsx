@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { TextField, Link } from "@fluentui/react";
+import { TextField, Link, Text, useTheme } from "@fluentui/react";
 import { Stack } from "@mui/material";
 import path from "path";
 import { useCallback, useState } from "react";
@@ -30,6 +30,7 @@ function maybeParseURL(urlString: string): undefined | URL {
 
 export default function Remote(props: RemoteProps): JSX.Element {
   const { onCancel, onBack, availableSources } = props;
+  const theme = useTheme();
 
   const { selectSource } = usePlayerSelection();
   const [currentUrl, setCurrentUrl] = useState<string | undefined>();
@@ -72,6 +73,15 @@ export default function Remote(props: RemoteProps): JSX.Element {
   return (
     <View onBack={onBack} onCancel={onCancel} onOpen={onOpen}>
       <Stack spacing={2}>
+        {availableSources.map(
+          ({ docsIntro }) =>
+            docsIntro && (
+              <Text key={docsIntro} styles={{ root: { color: theme.semanticColors.bodySubtext } }}>
+                {docsIntro}
+              </Text>
+            ),
+        )}
+
         <TextField
           label="Remote file URL"
           errorMessage={errorMessage}
