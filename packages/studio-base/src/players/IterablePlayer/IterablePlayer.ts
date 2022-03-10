@@ -70,6 +70,9 @@ type IterablePlayerOptions = {
   urlParams?: Record<string, string>;
 
   isSampleDataSource?: boolean;
+
+  // Set to _false_ to disable preloading. (default: true)
+  enablePreload?: boolean;
 };
 
 type IterablePlayerState =
@@ -97,6 +100,7 @@ export class IterablePlayer implements Player {
   private _speed: number = 1.0;
   private _start: Time = { sec: 0, nsec: 0 };
   private _end: Time = { sec: 0, nsec: 0 };
+  private _enablePreload = true;
 
   // next read start time indicates where to start reading for the next tick
   // after a tick read, it is set to 1nsec past the end of the read operation (preparing for the next tick)
@@ -141,13 +145,14 @@ export class IterablePlayer implements Player {
   private _forwardIterator?: IMessageIterator;
 
   constructor(options: IterablePlayerOptions) {
-    const { metricsCollector, urlParams, source, name } = options;
+    const { metricsCollector, urlParams, source, name, enablePreload } = options;
 
     this._iterableSource = source;
     this._name = name;
     this._urlParams = urlParams;
     this._metricsCollector = metricsCollector ?? new NoopMetricsCollector();
     this._metricsCollector.playerConstructed();
+    this._enablePreload = enablePreload ?? true;
   }
 
   private _setError(message: string, error?: Error): void {
@@ -326,7 +331,7 @@ export class IterablePlayer implements Player {
   }
 
   private _setState(newState: IterablePlayerState) {
-    log.debug(`Next state: ${newState}`);
+    log.debug(`Set next state: ${newState}`);
     this._nextState = newState;
     void this._runState();
   }
@@ -574,6 +579,10 @@ export class IterablePlayer implements Player {
   }
 
   private async loadBlocks(time: Time, opt?: { emit: boolean }) {
+    if (!this._enablePreload) {
+      return;
+    }
+
     // During playback, we let the statePlay method emit state
     // When idle, we can emit state
     const shouldEmit = opt?.emit ?? true;

@@ -78,19 +78,6 @@ class PlayerStateStore {
   }
 }
 
-function playerStateGenerator(originalState: PlayerStateWithoutPlayerId) {
-  return function (modified?: Partial<PlayerState>): PlayerStateWithoutPlayerId {
-    if (!modified) {
-      return originalState;
-    }
-
-    return {
-      ...originalState,
-      ...modified,
-    };
-  };
-}
-
 describe("IterablePlayer", () => {
   let mockDateNow: jest.SpyInstance<number, []>;
   beforeEach(() => {
@@ -104,12 +91,13 @@ describe("IterablePlayer", () => {
     const source = new TestSource();
     const player = new IterablePlayer({
       source,
+      enablePreload: false,
     });
-    const store = new PlayerStateStore(5);
+    const store = new PlayerStateStore(4);
     player.setListener(async (state) => await store.add(state));
     const playerStates = await store.done;
 
-    const stateGen = playerStateGenerator({
+    const baseState: PlayerStateWithoutPlayerId = {
       activeData: {
         currentTime: { sec: 0, nsec: 0 },
         startTime: { sec: 0, nsec: 0 },
@@ -132,20 +120,108 @@ describe("IterablePlayer", () => {
       filePath: undefined,
       urlState: undefined,
       name: undefined,
-    });
+    };
 
     expect(playerStates).toEqual([
       // before initialize
-      stateGen(),
+      baseState,
       // start delay
-      stateGen({ presence: PlayerPresence.INITIALIZING }),
+      { ...baseState, presence: PlayerPresence.INITIALIZING },
       // startPlay
-      stateGen({ presence: PlayerPresence.PRESENT }),
+      { ...baseState, presence: PlayerPresence.PRESENT },
       // idle
-      stateGen({ presence: PlayerPresence.PRESENT }),
-      // load blocks
-      stateGen({ presence: PlayerPresence.PRESENT }),
+      { ...baseState, presence: PlayerPresence.PRESENT },
     ]);
+
+    player.close();
+  });
+
+  it("finishes seek backfill before starting another seek backfill", async () => {
+    const source = new TestSource();
+    const player = new IterablePlayer({
+      source,
+      enablePreload: false,
+    });
+    const store = new PlayerStateStore(4);
+    player.setSubscriptions([{ topic: "foo" }]);
+    player.setListener(async (state) => await store.add(state));
+    await store.done;
+
+    store.reset(3);
+
+    // replace the message iterator with our own implementation
+    // This implementation performs a seekPlayback during backfill.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const originalMethod = source.messageIterator;
+    source.messageIterator = (args: MessageIteratorArgs) => {
+      if (args.reverse === true) {
+        player.seekPlayback({ sec: 0, nsec: 0 });
+        source.messageIterator = originalMethod;
+      }
+      return {
+        async *[Symbol.asyncIterator](): AsyncIterator<Readonly<IteratorResult>> {
+          yield {
+            msgEvent: {
+              topic: "foo",
+              receiveTime: { sec: 0, nsec: 0 },
+              message: undefined,
+              sizeInBytes: 0,
+            },
+            problem: undefined,
+            connectionId: 0,
+          };
+        },
+      };
+    };
+
+    // starts a seek backfill
+    player.seekPlayback({ sec: 0, nsec: 0 });
+
+    const playerStates = await store.done;
+
+    const baseState: PlayerStateWithoutPlayerId = {
+      activeData: {
+        currentTime: { sec: 0, nsec: 0 },
+        startTime: { sec: 0, nsec: 0 },
+        endTime: { sec: 0, nsec: 0 },
+        datatypes: new Map(),
+        isPlaying: false,
+        lastSeekTime: 0,
+        messages: [],
+        totalBytesReceived: 0,
+        messageOrder: "receiveTime",
+        speed: 1.0,
+        topics: [],
+        parsedMessageDefinitionsByTopic: {},
+        publishedTopics: new Map<string, Set<string>>(),
+      },
+      problems: [],
+      capabilities: [PlayerCapabilities.setSpeed, PlayerCapabilities.playbackControl],
+      presence: PlayerPresence.PRESENT,
+      progress: {},
+      filePath: undefined,
+      urlState: undefined,
+      name: undefined,
+    };
+
+    const withMessages: PlayerStateWithoutPlayerId = {
+      ...baseState,
+      activeData: {
+        ...baseState.activeData!,
+        messages: [
+          {
+            message: undefined,
+            receiveTime: { sec: 0, nsec: 0 },
+            sizeInBytes: 0,
+            topic: "foo",
+          },
+        ],
+      },
+    };
+
+    // The first seek playback completes and includes the messages
+    // The second seek playback has no messages because we've reset back to the original messageIterator
+    expect(playerStates).toEqual([withMessages, baseState, baseState]);
 
     player.close();
   });
