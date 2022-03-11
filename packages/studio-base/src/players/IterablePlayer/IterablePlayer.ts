@@ -36,7 +36,7 @@ import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import delay from "@foxglove/studio-base/util/delay";
 import { SEEK_ON_START_NS, TimestampMethod } from "@foxglove/studio-base/util/time";
 
-import { IIterableSource, IMessageIterator } from "./IIterableSource";
+import { IIterableSource, IteratorResult } from "./IIterableSource";
 
 const log = Log.getLogger(__filename);
 
@@ -142,7 +142,7 @@ export class IterablePlayer implements Player {
   private _blockDurationNanos: number = 0;
 
   private _iterableSource: IIterableSource;
-  private _forwardIterator?: IMessageIterator;
+  private _forwardIterator?: AsyncIterable<Readonly<IteratorResult>>;
 
   constructor(options: IterablePlayerOptions) {
     const { metricsCollector, urlParams, source, name, enablePreload } = options;
