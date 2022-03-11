@@ -69,10 +69,7 @@ const features: Feature[] = [
     key: AppSetting.EXPERIMENTAL_BAG_PLAYER,
     name: "Experimental bag player",
     description: (
-      <>
-        The experimental bag player uses a new method for backfilling when seeking to fetch previous
-        messages on subscribed topics. It also has a new approach for block preloading and playback.
-      </>
+      <>The experimental bag player uses a new approach to loading messages from bag files.</>
     ),
   },
 ];

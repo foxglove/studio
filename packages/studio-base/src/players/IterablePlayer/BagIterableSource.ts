@@ -19,7 +19,6 @@ import {
   IIterableSource,
   IteratorResult,
   Initalization,
-  IMessageIterator,
   MessageIteratorArgs,
 } from "./IIterableSource";
 
@@ -52,10 +51,6 @@ export class BagIterableSource implements IIterableSource {
 
       // Call open on the remote reader to see if we can access the remote file
       await remoteReader.open();
-
-      if (remoteReader.size() === 0) {
-        throw new Error("Cannot play bag file. File is 0 bytes in size.");
-      }
 
       fileLike = remoteReader;
     } else {
@@ -124,7 +119,7 @@ export class BagIterableSource implements IIterableSource {
     };
   }
 
-  messageIterator(opt: MessageIteratorArgs): IMessageIterator {
+  messageIterator(opt: MessageIteratorArgs): AsyncIterable<Readonly<IteratorResult>> {
     if (!this._bag) {
       throw new Error("Invariant: uninitialized");
     }

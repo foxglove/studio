@@ -82,6 +82,8 @@ class MessageOrderTracker {
           continue;
         }
 
+        // The first emit after a seek occurs from a backfill. This backfill might produce messages
+        // much older than the seek time.
         if (!didSeek) {
           const currentTimeDrift = Math.abs(toSec(subtractTimes(messageTime, currentTime)));
           if (currentTimeDrift > DRIFT_THRESHOLD_SEC) {

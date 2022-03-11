@@ -34,10 +34,6 @@ export type IteratorResult =
       problem: PlayerProblem;
     };
 
-export interface IMessageIterator {
-  [Symbol.asyncIterator](): AsyncIterator<Readonly<IteratorResult>>;
-}
-
 /**
  * IIterableSource specifies an interface initializing and accessing messages.
  */
@@ -53,5 +49,5 @@ export interface IIterableSource {
    * The iterator produces IteratorResults from the source. The IteratorResults should be
    * in log time order.
    */
-  messageIterator(args: MessageIteratorArgs): IMessageIterator;
+  messageIterator(args: MessageIteratorArgs): AsyncIterable<Readonly<IteratorResult>>;
 }

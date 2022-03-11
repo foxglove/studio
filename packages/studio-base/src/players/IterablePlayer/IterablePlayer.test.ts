@@ -11,7 +11,6 @@ import {
 
 import {
   IIterableSource,
-  IMessageIterator,
   Initalization,
   MessageIteratorArgs,
   IteratorResult,
@@ -29,7 +28,7 @@ class TestSource implements IIterableSource {
     };
   }
 
-  messageIterator(_args: MessageIteratorArgs): IMessageIterator {
+  messageIterator(_args: MessageIteratorArgs): AsyncIterable<Readonly<IteratorResult>> {
     return {
       async *[Symbol.asyncIterator](): AsyncIterator<Readonly<IteratorResult>> {},
     };
