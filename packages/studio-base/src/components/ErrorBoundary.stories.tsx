@@ -43,3 +43,13 @@ export const Default: Story = () => {
     </DndProvider>
   );
 };
+
+export const ShowingDetails: Story = () => {
+  return (
+    <DndProvider backend={HTML5Backend}>
+      <ErrorBoundary showErrorDetails hideErrorSourceLocations>
+        <Broken />
+      </ErrorBoundary>
+    </DndProvider>
+  );
+};

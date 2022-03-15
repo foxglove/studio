@@ -373,6 +373,7 @@ function Plot(props: Props) {
 
   const plotDataByPath = useMessageReducer<PlotDataByPath>({
     topics: subscribeTopics,
+    preloadType: "full",
     restore,
     addMessages,
   });
@@ -423,9 +424,10 @@ function Plot(props: Props) {
       if (!seekPlayback || !start || seekSeconds == undefined || xAxisVal !== "timestamp") {
         return;
       }
-      // The player validates and clamps the time.
-      const seekTime = addTimes(start, fromSec(seekSeconds));
-      seekPlayback(seekTime);
+      // Avoid normalizing a negative time if the clicked point had x < 0.
+      if (seekSeconds >= 0) {
+        seekPlayback(addTimes(start, fromSec(seekSeconds)));
+      }
     },
     [messagePipeline, xAxisVal],
   );
@@ -502,11 +504,11 @@ const configSchema: PanelConfigSchema<PlotConfig> = [
   {
     key: "legendDisplay",
     type: "dropdown",
-    title: "Legend display",
+    title: "Legend position",
     options: [
-      { value: "floating", text: "floating" },
-      { value: "left", text: "left" },
-      { value: "top", text: "top" },
+      { value: "floating", text: "Floating" },
+      { value: "left", text: "Left" },
+      { value: "top", text: "Top" },
     ],
   },
   {

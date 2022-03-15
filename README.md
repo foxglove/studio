@@ -69,9 +69,6 @@ $ yarn start        # launch electron
 # To launch the browser app:
 $ yarn web:serve
 
-# To launch the browser app using the dev backend server:
-$ yarn web:serve:dev
-
 # To launch the browser app using a local instance of the backend server:
 $ yarn web:serve:local
 
@@ -81,6 +78,12 @@ $ yarn storybook
 # Advanced usage: running webpack and electron on different computers (or VMs) on the same network
 $ yarn serve --host 192.168.xxx.yyy         # the address where electron can reach the webpack dev server
 $ yarn dlx electron@13.0.0-beta.13 .webpack # launch the version of electron for the current computer's platform
+
+# To launch the desktop app using production API endpoints
+$ yarn serve --env FOXGLOVE_BACKEND=production
+$ yarn start
+
+# NOTE: yarn web:serve does not support connecting to the production endpoints
 ```
 
 A [Dockerfile](/Dockerfile) to self-host the browser app is also available.

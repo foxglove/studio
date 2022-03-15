@@ -6,17 +6,19 @@ import { Story, StoryContext } from "@storybook/react";
 import { useMemo, useRef } from "react";
 import { ToastProvider } from "react-toast-notifications";
 
-import { AppConfigurationContext } from "@foxglove/studio-base";
-import CssBaseline from "@foxglove/studio-base/components/CssBaseline";
-import GlobalCss from "@foxglove/studio-base/components/GlobalCss";
-import MultiProvider from "@foxglove/studio-base/components/MultiProvider";
-import { HoverValueProvider } from "@foxglove/studio-base/context/HoverValueContext";
-import { UserNodeStateProvider } from "@foxglove/studio-base/context/UserNodeStateContext";
-import ReadySignalContext from "@foxglove/studio-base/stories/ReadySignalContext";
-import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
-import { makeConfiguration } from "@foxglove/studio-base/util/makeConfiguration";
-import signal from "@foxglove/studio-base/util/signal";
-import waitForFonts from "@foxglove/studio-base/util/waitForFonts";
+import { signal } from "@foxglove/den/async";
+import {
+  AppConfigurationContext,
+  CssBaseline,
+  GlobalCss,
+  MultiProvider,
+  HoverValueProvider,
+  UserNodeStateProvider,
+  ThemeProvider,
+  waitForFonts,
+  ReadySignalContext,
+  makeMockAppConfiguration,
+} from "@foxglove/studio-base";
 
 import "./styles.css";
 
@@ -50,7 +52,10 @@ function useCombinedReadySignal(
   }, [readySignal]);
 }
 
-function WithContextProviders(Child: Story, ctx: StoryContext): JSX.Element {
+function StudioContextProviders({
+  children,
+  ctx,
+}: React.PropsWithChildren<{ ctx: StoryContext }>): JSX.Element {
   if (ctx.parameters.useReadySignal === true) {
     const sig = signal();
     ctx.parameters.storyReady = sig;
@@ -61,7 +66,7 @@ function WithContextProviders(Child: Story, ctx: StoryContext): JSX.Element {
 
   const readySignal: (() => void) | undefined = ctx.parameters.readySignal;
 
-  const config = makeConfiguration();
+  const appConfiguration = makeMockAppConfiguration();
 
   const colorScheme: "dark" | "light" | "both-row" | "both-column" =
     ctx.parameters.colorScheme ?? "both-row";
@@ -71,7 +76,7 @@ function WithContextProviders(Child: Story, ctx: StoryContext): JSX.Element {
 
   const providers = [
     /* eslint-disable react/jsx-key */
-    <AppConfigurationContext.Provider value={config} />,
+    <AppConfigurationContext.Provider value={appConfiguration} />,
     <ReadySignalContext.Provider value={readySignal} />,
     <ToastProvider>{undefined}</ToastProvider>,
     <HoverValueProvider />,
@@ -98,32 +103,42 @@ function WithContextProviders(Child: Story, ctx: StoryContext): JSX.Element {
       }
 
       {(colorScheme === "light" || colorScheme.startsWith("both")) && (
-        // Set a transform to make this the root for position:fixed elements
-        <div style={{ position: "relative", transform: "scale(1)", flexGrow: 1 }}>
+        <div
+          style={{
+            position: "relative",
+            transform: "scale(1)", // Set a transform to make this the root for position:fixed elements
+            flexGrow: 1,
+            flexBasis: "50%",
+            overflow: "hidden",
+          }}
+        >
           <ReadySignalContext.Provider
             value={needsCombinedReadySignal ? readySignal1 : readySignal}
           >
             <ThemeProvider isDark={false}>
               <CssBaseline>
-                <MultiProvider providers={providers}>
-                  <Child />
-                </MultiProvider>
+                <MultiProvider providers={providers}>{children}</MultiProvider>
               </CssBaseline>
             </ThemeProvider>
           </ReadySignalContext.Provider>
         </div>
       )}
       {(colorScheme === "dark" || colorScheme.startsWith("both")) && (
-        // Set a transform to make this the root for position:fixed elements
-        <div style={{ position: "relative", transform: "scale(1)", flexGrow: 1 }}>
+        <div
+          style={{
+            position: "relative",
+            transform: "scale(1)", // Set a transform to make this the root for position:fixed elements
+            flexGrow: 1,
+            flexBasis: "50%",
+            overflow: "hidden",
+          }}
+        >
           <ReadySignalContext.Provider
             value={needsCombinedReadySignal ? readySignal2 : readySignal}
           >
             <ThemeProvider isDark={true}>
               <CssBaseline>
-                <MultiProvider providers={providers}>
-                  <Child />
-                </MultiProvider>
+                <MultiProvider providers={providers}>{children}</MultiProvider>
               </CssBaseline>
             </ThemeProvider>
           </ReadySignalContext.Provider>
@@ -131,6 +146,17 @@ function WithContextProviders(Child: Story, ctx: StoryContext): JSX.Element {
       )}
     </div>
   );
+}
+
+function WithContextProviders(Child: Story, ctx: StoryContext): JSX.Element {
+  if ((ctx.parameters.fileName as string).startsWith("./packages/studio-base/")) {
+    return (
+      <StudioContextProviders ctx={ctx}>
+        <Child />
+      </StudioContextProviders>
+    );
+  }
+  return <Child />;
 }
 
 export const loaders = [

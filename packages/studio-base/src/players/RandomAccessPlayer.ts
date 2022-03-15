@@ -13,6 +13,7 @@
 import { v4 as uuidv4 } from "uuid";
 
 import { filterMap } from "@foxglove/den/collection";
+import Logger from "@foxglove/log";
 import {
   Time,
   add,
@@ -37,7 +38,6 @@ import {
   PublishPayload,
   SubscribePayload,
   Topic,
-  ParsedMessageDefinitionsByTopic,
   PlayerPresence,
   PlayerProblem,
 } from "@foxglove/studio-base/players/types";
@@ -57,6 +57,8 @@ import {
   SeekToTimeSpec,
   TimestampMethod,
 } from "@foxglove/studio-base/util/time";
+
+const log = Logger.getLogger(__filename);
 
 export const DEFAULT_SEEK_BACK_NANOSECONDS = BigInt(2.5e9);
 
@@ -129,7 +131,6 @@ export default class RandomAccessPlayer implements Player {
   private _closed = false;
   private _seekToTime: SeekToTimeSpec;
   private _lastRangeMillis?: number;
-  private _parsedMessageDefinitionsByTopic: ParsedMessageDefinitionsByTopic = {};
   private _isSampleDataSource: boolean;
 
   // To keep reference equality for downstream user memoization cache the currentTime provided in the last activeData update
@@ -249,8 +250,6 @@ export default class RandomAccessPlayer implements Player {
         if (parameters) {
           this._capabilities.push(PlayerCapabilities.getParameters);
         }
-        this._parsedMessageDefinitionsByTopic =
-          parsedMessageDefinitions.parsedMessageDefinitionsByTopic;
         this._initializing = false;
         problems.forEach((problem, i) => {
           this._problems.set(`initialization-${i}`, problem);
@@ -270,6 +269,7 @@ export default class RandomAccessPlayer implements Player {
         }, SEEK_START_DELAY_MS);
       })
       .catch((error: Error) => {
+        log.error(error);
         this._setError(`Error initializing player: ${error.message}`, error);
       });
   }
@@ -357,7 +357,6 @@ export default class RandomAccessPlayer implements Player {
             datatypes: this._providerDatatypes,
             parameters: this._providerParameters,
             publishedTopics,
-            parsedMessageDefinitionsByTopic: this._parsedMessageDefinitionsByTopic,
           },
       urlState: this._urlParams,
     };

@@ -6,6 +6,7 @@ import { act, renderHook } from "@testing-library/react-hooks";
 import { useEffect } from "react";
 import { ToastProvider } from "react-toast-notifications";
 
+import { signal } from "@foxglove/den/async";
 import {
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
@@ -19,7 +20,6 @@ import {
 import CurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider";
 import { ILayoutManager } from "@foxglove/studio-base/services/ILayoutManager";
 import { LayoutID } from "@foxglove/studio-base/services/ILayoutStorage";
-import signal from "@foxglove/studio-base/util/signal";
 
 const TEST_LAYOUT: PanelsState = {
   layout: "ExamplePanel!1",
@@ -132,6 +132,7 @@ describe("CurrentLayoutProvider", () => {
       { selectedLayout: { loading: true, id: "example", data: undefined } },
       { selectedLayout: { loading: false, id: "example", data: expectedState } },
     ]);
+    (console.warn as jest.Mock).mockClear();
   });
 
   it("saves new layout selection into UserProfile", async () => {
@@ -180,6 +181,7 @@ describe("CurrentLayoutProvider", () => {
       { selectedLayout: { loading: true, id: "example2", data: undefined } },
       { selectedLayout: { loading: false, id: "example2", data: newLayout } },
     ]);
+    (console.warn as jest.Mock).mockClear();
   });
 
   it("saves layout updates into LayoutStorage", async () => {
@@ -225,6 +227,7 @@ describe("CurrentLayoutProvider", () => {
       { selectedLayout: { loading: false, id: "example", data: TEST_LAYOUT } },
       { selectedLayout: { loading: false, id: "example", data: newState } },
     ]);
+    (console.warn as jest.Mock).mockClear();
   });
 
   it("keeps identity of action functions when modifying layout", async () => {
@@ -262,5 +265,6 @@ describe("CurrentLayoutProvider", () => {
     );
     await act(() => layoutStoragePutCalled);
     expect(result.current.actions.savePanelConfigs).toBe(actions.savePanelConfigs);
+    (console.warn as jest.Mock).mockClear();
   });
 });
