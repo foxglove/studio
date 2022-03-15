@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { filterMap } from "@foxglove/den/collection";
 import { isTime, Time, toSec, subtract } from "@foxglove/rostime";
 import { format } from "@foxglove/studio-base/util/formatTime";
-import { darkColor, lightColor, lineColors } from "@foxglove/studio-base/util/plotColors";
+import { darkColor, getLineColor, lightColor } from "@foxglove/studio-base/util/plotColors";
 import { formatTimeRaw, TimestampMethod } from "@foxglove/studio-base/util/time";
 
 import { PlotXAxisVal } from "./index";
@@ -101,6 +101,7 @@ function getDatumsForMessagePathItem(
       });
     }
   }
+
   const hasMismatchedData =
     isCustomScale(xAxisVal) && (!xItem || yItem.queriedData.length !== xItem.queriedData.length);
   return { data, hasMismatchedData };
@@ -187,6 +188,17 @@ function getDatasetsFromMessagePlotPath({
       }
     }
 
+    // Messages are provided in receive time order but header stamps might be out of order
+    // This would create zig-zag lines connecting the wrong points. Sorting the header stamp values (x)
+    // results in the datums being in the correct order for connected lines.
+    //
+    // An example is when messages at the same receive time have different header stamps. The receive
+    // time ordering is undefined (could be different for different data sources), but the header stamps
+    // still need sorting so the plot renders correctly.
+    if (path.timestampMethod === "headerStamp") {
+      rangeData.sort((a, b) => a.x - b.x);
+    }
+
     // NaN points are not displayed, and result in a break in the line.
     // We add NaN points before each range (avoid adding before the very first range)
     if (rangeIdx > 0) {
@@ -203,7 +215,7 @@ function getDatasetsFromMessagePlotPath({
     }
   }
 
-  const borderColor = lineColors[index % lineColors.length] ?? "#DDDDDD";
+  const borderColor = getLineColor(path.color, index);
   const dataset: DataSet = {
     borderColor,
     label: path.value ? path.value : uuidv4(),

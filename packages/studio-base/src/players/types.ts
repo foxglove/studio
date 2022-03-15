@@ -15,7 +15,6 @@ import { RosMsgDefinition } from "@foxglove/rosmsg";
 import { Time } from "@foxglove/rostime";
 import type { MessageEvent, ParameterValue } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import { BlockCache } from "@foxglove/studio-base/randomAccessDataProviders/MemoryCacheDataProvider";
 import {
   AverageThroughput,
   RandomAccessDataProviderStall,
@@ -198,10 +197,6 @@ export type PlayerStateActiveData = {
   // A map of parameter names to parameter values, used to describe remote parameters such as
   // rosparams.
   parameters?: Map<string, ParameterValue>;
-
-  // Used for late-parsing of binary messages. Required to cover any topic for which binary data is
-  // given to panels. (May be empty for players that only provide messages parsed into objects.)
-  parsedMessageDefinitionsByTopic: ParsedMessageDefinitionsByTopic;
 };
 
 // Represents a ROS topic, though the actual data does not need to come from a ROS system.
@@ -231,6 +226,20 @@ export type RosObject = Readonly<{
   [property: string]: RosValue;
 }>;
 
+// For each memory block we store the actual messages (grouped by topic), and a total byte size of
+// the underlying ArrayBuffers.
+export type MessageBlock = {
+  readonly messagesByTopic: {
+    readonly [topic: string]: MessageEvent<unknown>[];
+  };
+  readonly sizeInBytes: number;
+};
+
+export type BlockCache = {
+  blocks: readonly (MessageBlock | undefined)[];
+  startTime: Time;
+};
+
 // Contains different kinds of progress indications
 export type Progress = Readonly<{
   // Indicate which ranges are loaded
@@ -241,12 +250,18 @@ export type Progress = Readonly<{
   readonly messageCache?: BlockCache;
 }>;
 
+export type SubscriptionPreloadType =
+  | "full" // Fetch messages for the entire content range.
+  | "partial"; // Fetch messages as needed.
+
 // Represents a subscription to a single topic, for use in `setSubscriptions`.
 // TODO(JP): Pull this into two types, one for the Player (which does not care about the
 // `requester`) and one for the Internals panel (which does).
 export type SubscribePayload = {
   // The topic name to subscribe to.
   topic: string;
+
+  preloadType?: SubscriptionPreloadType;
 
   // Optionally, where the request came from. Used in the "Internals" panel to improve debugging.
   requester?: { type: "panel" | "node" | "other"; name: string };

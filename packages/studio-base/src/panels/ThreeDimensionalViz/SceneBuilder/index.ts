@@ -14,7 +14,7 @@ import _, { flatten, groupBy, isEqual, keyBy, mapValues, some, xor } from "lodas
 import shallowequal from "shallowequal";
 
 import Log from "@foxglove/log";
-import { Time, add as addTime, fromSec, isGreaterThan, isLessThan, toSec } from "@foxglove/rostime";
+import { Time, fromSec, isGreaterThan } from "@foxglove/rostime";
 import {
   InteractionData,
   Interactive,
@@ -22,6 +22,7 @@ import {
 import MessageCollector from "@foxglove/studio-base/panels/ThreeDimensionalViz/SceneBuilder/MessageCollector";
 import { MarkerMatcher } from "@foxglove/studio-base/panels/ThreeDimensionalViz/ThreeDimensionalVizContext";
 import VelodyneCloudConverter from "@foxglove/studio-base/panels/ThreeDimensionalViz/VelodyneCloudConverter";
+import { DATATYPE } from "@foxglove/studio-base/panels/ThreeDimensionalViz/commands/PointClouds/types";
 import {
   IImmutableCoordinateFrame,
   IImmutableTransformTree,
@@ -50,9 +51,10 @@ import {
   Point,
   Header,
   InstancedLineListMarker,
-  LaserScan,
   OccupancyGridMessage,
   PointCloud2,
+  LaserScan,
+  PointField,
 } from "@foxglove/studio-base/types/Messages";
 import { clonePose, emptyPose } from "@foxglove/studio-base/util/Pose";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
@@ -487,6 +489,16 @@ export default class SceneBuilder implements MarkerProvider {
         return;
     }
 
+    // Check if this marker has a non-zero lifetime and is already expired
+    const currentTime = this._clock;
+    if (currentTime) {
+      if (MessageCollector.markerIsExpired(message.lifetime, message.header.stamp, currentTime)) {
+        const markerId = `${message.ns ? message.ns + ":" : ""}${message.id}`;
+        this._setTopicError(topic, `Received expired marker ${markerId}`);
+        return;
+      }
+    }
+
     const color = message.color ?? { r: 0, g: 0, b: 0, a: 0 };
 
     // Allow topic settings to override marker color (see MarkerSettingsEditor.js)
@@ -609,6 +621,57 @@ export default class SceneBuilder implements MarkerProvider {
       mappedMessage.pose.position.z = this.flattenedZHeightPose.position.z;
     }
     this.collectors[topic]!.addNonMarker(topic, mappedMessage as unknown as Interactive<unknown>);
+  };
+
+  private _consumeLaserScan = (topic: string, msg: MessageEvent<LaserScan>): void => {
+    const scan = msg.message;
+    const hasIntensity = Array.isArray(scan.intensities) && scan.intensities.length > 0;
+    const pointStep = hasIntensity ? 48 : 40;
+
+    const data = new Uint8Array(pointStep * scan.ranges.length);
+    const view = new DataView(data.buffer);
+    for (let i = 0; i < scan.ranges.length; i++) {
+      const offset = i * pointStep;
+      const distance = Math.min(scan.range_max, Math.max(scan.range_min, scan.ranges[i] ?? 0));
+      const intensity = scan.intensities[i] ?? Number.NaN;
+      const angle = Math.min(scan.angle_max, scan.angle_min + i * scan.angle_increment);
+      const x = distance * Math.cos(angle);
+      const y = distance * Math.sin(angle);
+
+      view.setFloat64(offset + 0, x, true);
+      view.setFloat64(offset + 8, y, true);
+      view.setFloat64(offset + 16, 0, true);
+      view.setFloat64(offset + 24, distance, true);
+      view.setFloat64(offset + 32, angle, true);
+      if (hasIntensity) {
+        view.setFloat64(offset + 40, intensity, true);
+      }
+    }
+
+    const fields: PointField[] = [
+      { name: "x", offset: 0, datatype: DATATYPE.FLOAT64, count: 1 },
+      { name: "y", offset: 8, datatype: DATATYPE.FLOAT64, count: 1 },
+      { name: "z", offset: 16, datatype: DATATYPE.FLOAT64, count: 1 },
+      { name: "distance", offset: 24, datatype: DATATYPE.FLOAT64, count: 1 },
+      { name: "angle", offset: 32, datatype: DATATYPE.FLOAT64, count: 1 },
+    ];
+    if (hasIntensity) {
+      fields.push({ name: "intensity", offset: 40, datatype: DATATYPE.FLOAT64, count: 1 });
+    }
+
+    const pcl: PointCloud2 = {
+      header: scan.header,
+      fields,
+      height: 1,
+      width: scan.ranges.length,
+      is_bigendian: false,
+      point_step: pointStep,
+      row_step: pointStep * scan.ranges.length,
+      data,
+      is_dense: 1,
+      type: 102,
+    };
+    this._consumeNonMarkerMessage(topic, pcl, 102);
   };
 
   private _consumeColor = (msg: MessageEvent<Color>): void => {
@@ -758,7 +821,7 @@ export default class SceneBuilder implements MarkerProvider {
       case "sensor_msgs/LaserScan":
       case "sensor_msgs/msg/LaserScan":
       case "ros.sensor_msgs.LaserScan":
-        this._consumeNonMarkerMessage(topic, message as StampedMessage, 104);
+        this._consumeLaserScan(topic, msg as MessageEvent<LaserScan>);
         break;
       case "std_msgs/ColorRGBA":
       case "std_msgs/msg/ColorRGBA":
@@ -858,11 +921,7 @@ export default class SceneBuilder implements MarkerProvider {
           continue;
         }
         // If this marker has an expired lifetime, don't render it
-        if (
-          marker.lifetime &&
-          toSec(marker.lifetime) > 0 &&
-          isLessThan(addTime(marker.header.stamp, marker.lifetime), time)
-        ) {
+        if (MessageCollector.markerIsExpired(marker.lifetime, marker.header.stamp, time)) {
           continue;
         }
 
@@ -888,7 +947,9 @@ export default class SceneBuilder implements MarkerProvider {
         if (settings) {
           (marker as { settings?: unknown }).settings = settings;
         }
+        const origPose = marker.pose;
         this._addMarkerToCollector(add, topic, marker, pose);
+        (marker as { pose: MutablePose }).pose = origPose;
       }
 
       if (this._missingTfFrameIds.size > 0) {
@@ -915,8 +976,7 @@ export default class SceneBuilder implements MarkerProvider {
       | Marker
       | OccupancyGridMessage
       | PointCloud2
-      | (PoseStamped & { type: 103 })
-      | (LaserScan & { type: 104; pose: MutablePose });
+      | (PoseStamped & { type: 103 });
     switch (marker.type) {
       case 1: // CubeMarker
       case 2: // SphereMarker
@@ -941,11 +1001,26 @@ export default class SceneBuilder implements MarkerProvider {
       case 108: // InstanceLineListMarker
       case 110: // ColorMarker
       case 101: // OccupancyGridMessage
-      case 104: // LaserScan
         marker = { ...marker, pose };
         break;
       default:
         break;
+    }
+
+    // If this marker has fewer colors specified than the number of points,
+    // use Marker.color for the remaining points
+    const markerWithPoints = marker as { points?: Point[]; colors?: Color[]; color?: Color };
+    if (
+      markerWithPoints.points &&
+      markerWithPoints.points.length > 0 &&
+      markerWithPoints.colors &&
+      markerWithPoints.colors.length > 0 &&
+      markerWithPoints.colors.length < markerWithPoints.points.length
+    ) {
+      const color = markerWithPoints.color ?? { r: 0, g: 0, b: 0, a: 1 };
+      while (markerWithPoints.colors.length < markerWithPoints.points.length) {
+        markerWithPoints.colors.push(color);
+      }
     }
 
     // allow topic settings to override renderable marker command (see MarkerSettingsEditor.js)
@@ -1016,8 +1091,6 @@ export default class SceneBuilder implements MarkerProvider {
       }
       case 103:
         return add.poseMarker(marker);
-      case 104:
-        return add.laserScan(marker);
       case 108:
         return add.instancedLineList(marker);
       case 110:
