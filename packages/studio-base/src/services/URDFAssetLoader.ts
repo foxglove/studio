@@ -37,8 +37,7 @@ export default class URDFAssetLoader implements AssetLoader {
       if (!parsePackageUrl(path)) {
         throw new Error(`Unable to get file contents for ${path}`);
       }
-      const url = path;
-      return await (await fetch(url)).text();
+      return await (await fetch(path)).text();
     };
 
     const urdf = await xacroParser.parse(text);
