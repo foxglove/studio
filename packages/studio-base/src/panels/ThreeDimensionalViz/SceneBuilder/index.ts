@@ -197,7 +197,9 @@ function computeMarkerPose(
   }
   let srcTime: Time;
   let dstTime: Time;
-  if (marker.frame_locked) {
+
+  const frame_locked = true; //marker.frame_locked;
+  if (frame_locked) {
     srcTime = currentTime;
     dstTime = currentTime;
   } else {
