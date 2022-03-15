@@ -5,6 +5,8 @@ import { DOMParser } from "@xmldom/xmldom";
 import { protocol } from "electron";
 import { promises as fs } from "fs";
 import path from "path";
+import { PNG } from "pngjs";
+import UTIF from "utif";
 
 import Logger from "@foxglove/log";
 import { AppSetting } from "@foxglove/studio-base/src/AppSetting";
@@ -134,24 +136,23 @@ export async function findRosPackageRoot(
 }
 
 // https://source.chromium.org/chromium/chromium/src/+/master:net/base/net_error_list.h
+// The error code for registerFileProtocol must be from the net error list
 const NET_ERROR_FAILED = -2;
 
 /**
  * Register handlers for package: protocol
- * These URLs contain parameters for the ROS package name, the resource name relative to
- * the package root, and a search path (the path to the URDF file itself, when the file was dropped
- * in). We use the given search path and/or `env.ROS_PACKAGE_PATH` to locate the resource files.
  *
- * The -converted-tiff: protocol reads TIFF images and converts them to PNG before sending the
- * response, because Chromium doesn't support TIFFs. The urdf_tutorial examples use .tif textures on
- * their meshes.
+ * The package: protocol handler attempts to load resources using ROS_PACKAGE_PATH lookup semantics.
  */
 export function registerRosPackageProtocolHandlers(): void {
   protocol.registerFileProtocol("package", async (request, callback) => {
     try {
+      // Give preference to the ROS_PACKAGE_PATH app setting over the environment variable
       const rosPackagePath =
         getAppSetting<string>(AppSetting.ROS_PACKAGE_PATH) ?? process.env.ROS_PACKAGE_PATH;
 
+      log.info(`Load: ${request.url}`);
+      log.info(`ROS_PACKAGE_PATH ${rosPackagePath}`);
       if (!rosPackagePath) {
         throw new Error("ROS_PACKAGE_PATH not set");
       }
@@ -171,9 +172,59 @@ export function registerRosPackageProtocolHandlers(): void {
       }
 
       const resolvedResourcePath = path.join(pkgRoot, ...relPath.split("/"));
+      log.info(`Resolved: ${resolvedResourcePath}`);
       callback({ path: resolvedResourcePath });
     } catch (err) {
       log.error(err);
+      callback({ error: NET_ERROR_FAILED });
+    }
+  });
+
+  // The URDFAssetLoader does not support .tiff files (because chrome does not support .tiff files
+  // in <img> tags). As a workaround, the loader modifies `package://` urls ending in `.tiff?` to
+  // x-foxglove-converted-tiff.
+  //
+  // This handler converts the .tiff file into a PNG file which is supported in <img> tags
+  protocol.registerBufferProtocol("x-foxglove-converted-tiff", async (request, callback) => {
+    try {
+      // Give preference to the ROS_PACKAGE_PATH app setting over the environment variable
+      const rosPackagePath =
+        getAppSetting<string>(AppSetting.ROS_PACKAGE_PATH) ?? process.env.ROS_PACKAGE_PATH;
+
+      log.info(`Load converted tiff: ${request.url}`);
+      log.info(`ROS_PACKAGE_PATH ${rosPackagePath}`);
+      if (!rosPackagePath) {
+        throw new Error("ROS_PACKAGE_PATH not set");
+      }
+
+      const url = new URL(request.url);
+      const targetPkg = url.host;
+      const relPath = url.pathname;
+
+      const pkgRoot = await findRosPackageRoot(targetPkg, {
+        rosPackagePath,
+      });
+
+      if (!pkgRoot) {
+        throw new Error(
+          `ROS package ${targetPkg} not found in any ROS_PACKAGE_PATH: ${rosPackagePath}.`,
+        );
+      }
+
+      const resolvedResourcePath = path.join(pkgRoot, ...relPath.split("/"));
+
+      const buf = await fs.readFile(resolvedResourcePath);
+      const [ifd] = UTIF.decode(buf);
+      if (!ifd) {
+        throw new Error("TIFF decoding failed");
+      }
+      UTIF.decodeImage(buf, ifd);
+      const png = new PNG({ width: ifd.width, height: ifd.height });
+      png.data = Buffer.from(UTIF.toRGBA8(ifd));
+      const pngData = PNG.sync.write(png);
+      callback({ mimeType: "image/png", data: pngData });
+    } catch (err) {
+      log.warn("Error loading from ROS package url", request.url, err);
       callback({ error: NET_ERROR_FAILED });
     }
   });

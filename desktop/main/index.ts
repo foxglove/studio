@@ -247,7 +247,7 @@ function main() {
       "style-src": "'self' 'unsafe-inline'",
       "connect-src": "'self' ws: wss: http: https: package:",
       "font-src": "'self' data:",
-      "img-src": "'self' data: https: package:",
+      "img-src": "'self' data: https: package: x-foxglove-converted-tiff:",
     };
 
     // Set default http headers
