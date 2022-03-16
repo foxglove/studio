@@ -88,7 +88,7 @@ export type Polygon = Readonly<{
   points: Points;
 }>;
 
-type FloatArray = ReadonlyArray<number> | Readonly<Float32Array> | Readonly<Float64Array>;
+export type FloatArray = ReadonlyArray<number> | Readonly<Float32Array> | Readonly<Float64Array>;
 
 export type LaserScan = Readonly<{
   header: Header;
