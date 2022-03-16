@@ -4,7 +4,7 @@
 
 import { quat, vec3 } from "gl-matrix";
 
-import { DEFAULT_CAMERA_STATE } from "@foxglove/regl-worldview";
+import { DEFAULT_CAMERA_STATE, Vec4, vec4ToOrientation } from "@foxglove/regl-worldview";
 import { RosMsgDefinition } from "@foxglove/rosmsg";
 import { fromSec, Time } from "@foxglove/rostime";
 import { MessageEvent, Topic } from "@foxglove/studio";
@@ -1516,7 +1516,9 @@ export function GeometryMsgs_PoseArray(): JSX.Element {
       child_frame_id: "sensor",
       transform: {
         translation: { x: 0, y: 0, z: 1 },
-        rotation: QUAT_IDENTITY,
+        rotation: vec4ToOrientation(
+          quat.rotateZ(quat.create(), quat.create(), Math.PI / 2) as Vec4,
+        ),
       },
     },
     sizeInBytes: 0,
@@ -1538,17 +1540,17 @@ export function GeometryMsgs_PoseArray(): JSX.Element {
   const q = (): quat => [0, 0, 0, 1];
   const identity = q();
   const makeOrientation = (i: number) => {
-    const o = quat.rotateZ(q(), identity, Math.PI * 2 * (i / 10));
+    const o = quat.rotateZ(q(), identity, (Math.PI / 2) * (i / 9));
     return { x: o[0], y: o[1], z: o[2], w: o[3] };
   };
 
   const baseLinkPath: MessageEvent<GeometryMsgs$PoseArray> = {
     topic: "/baselink_path",
-    receiveTime: { sec: 10, nsec: 0 },
+    receiveTime: { sec: 3, nsec: 0 },
     message: {
       header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "base_link" },
       poses: [...Array(10)].map((_, i) => ({
-        position: { x: i - 5, y: 0, z: 1 },
+        position: { x: 5, y: i / 4, z: 1 },
         orientation: makeOrientation(i),
       })),
     },
@@ -1557,11 +1559,11 @@ export function GeometryMsgs_PoseArray(): JSX.Element {
 
   const sensorPath: MessageEvent<GeometryMsgs$PoseArray> = {
     topic: "/sensor_path",
-    receiveTime: { sec: 10, nsec: 0 },
+    receiveTime: { sec: 3, nsec: 0 },
     message: {
       header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
       poses: [...Array(10)].map((_, i) => ({
-        position: { x: i - 5, y: 0, z: i % 2 },
+        position: { x: 5, y: i / 4, z: 2 },
         orientation: makeOrientation(i),
       })),
     },
@@ -1602,10 +1604,16 @@ export function GeometryMsgs_PoseArray(): JSX.Element {
             `t:${FOXGLOVE_GRID_TOPIC}`,
           ],
           followTf: "base_link",
+          settingsByKey: {
+            "t:/sensor_path": {
+              overrideColor: { r: 1, g: 0, b: 0, a: 0.2 },
+              size: { shaftWidth: 2, headWidth: 2, headLength: 0.5 },
+            },
+          },
           cameraState: {
-            distance: 15,
+            distance: 25,
             perspective: true,
-            phi: 1,
+            phi: 0.25,
             targetOffset: [0, 2, 0],
             thetaOffset: -0.25,
             fovy: 0.75,

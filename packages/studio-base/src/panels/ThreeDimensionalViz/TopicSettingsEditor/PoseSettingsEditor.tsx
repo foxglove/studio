@@ -43,9 +43,9 @@ export default function PoseSettingsEditor(
     );
   }
 
-  const currentShaftWidth = settings.size?.shaftWidth ?? 2;
-  const currentHeadWidth = settings.size?.headWidth ?? 2;
-  const currentHeadLength = settings.size?.headLength ?? 0.1;
+  const currentShaftWidth = settings.size?.shaftWidth ?? 0.2;
+  const currentHeadWidth = settings.size?.headWidth ?? 1;
+  const currentHeadLength = settings.size?.headLength ?? 1;
 
   return (
     <Stack flex="auto">
