@@ -182,6 +182,8 @@ export class DataPlatformIterableSource implements IIterableSource {
           }
         }
       } finally {
+        // If the player stops our execution early by calling the iterator's `return()` method,
+        // cancel any outstanding request
         controller.abort();
       }
       currentStart = currentEnd;
