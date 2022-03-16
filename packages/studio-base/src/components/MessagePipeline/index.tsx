@@ -292,7 +292,7 @@ function createPlayerListener(args: {
   const messageOrderTracker = new MessageOrderTracker();
   let closed = false;
   let resolveFn: undefined | (() => void);
-  const listener = async (newPlayerState: PlayerState) => {
+  const listener = async (listenerPlayerState: PlayerState) => {
     if (closed) {
       return;
     }
@@ -302,7 +302,7 @@ function createPlayerListener(args: {
     }
 
     // check for any out-of-order or out-of-sync messages
-    messageOrderTracker.update(newPlayerState);
+    const newPlayerState = messageOrderTracker.update(listenerPlayerState);
 
     const promise = new Promise<void>((resolve) => {
       resolveFn = () => {
