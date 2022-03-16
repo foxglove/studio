@@ -44,9 +44,9 @@ class MessageOrderTracker {
 
   private incorrectMessages: MessageEvent<unknown>[] = [];
 
-  update(playerState: PlayerState): PlayerState {
+  update(playerState: PlayerState): PlayerProblem[] {
     if (!playerState.activeData) {
-      return playerState;
+      return [];
     }
 
     const problems: PlayerProblem[] = [];
@@ -142,14 +142,7 @@ class MessageOrderTracker {
       }
     }
 
-    if (problems.length === 0) {
-      return playerState;
-    }
-
-    return {
-      ...playerState,
-      problems: problems.concat(playerState.problems ?? []),
-    };
+    return problems;
   }
 }
 

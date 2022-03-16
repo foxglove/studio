@@ -65,38 +65,17 @@ describe("MessagePipeline/MessageOrderTracker", () => {
   describe("when expecting messages ordered by receive time", () => {
     it("report error when messages are out of order", () => {
       const orderTracker = new MessageOrderTracker();
-      const state = orderTracker.update(
+      const problems = orderTracker.update(
         playerStateWithMessages([message(7, 10), message(8, 9)], "receiveTime"),
       );
 
-      expect(state.problems).toEqual([
+      expect(problems).toEqual([
         {
           error: new Error(
             "Processed a message on /foo at 9.000000001 which is earlier than last processed message on /foo at 10.000000001.",
           ),
           message: "Data went back in time",
           severity: "warn",
-        },
-      ]);
-    });
-
-    it("preserves original problems when reporting new problems", () => {
-      const orderTracker = new MessageOrderTracker();
-      const playerState = playerStateWithMessages([message(7, 10), message(8, 9)], "receiveTime");
-      playerState.problems = [{ severity: "error", message: "Original problem" }];
-      const state = orderTracker.update(playerState);
-
-      expect(state.problems).toEqual([
-        {
-          error: new Error(
-            "Processed a message on /foo at 9.000000001 which is earlier than last processed message on /foo at 10.000000001.",
-          ),
-          message: "Data went back in time",
-          severity: "warn",
-        },
-        {
-          severity: "error",
-          message: "Original problem",
         },
       ]);
     });
@@ -104,16 +83,16 @@ describe("MessagePipeline/MessageOrderTracker", () => {
     it("does not report an error when messages are in order", () => {
       const orderTracker = new MessageOrderTracker();
       const playerState = playerStateWithMessages([message(8, 9), message(7, 10)], "receiveTime");
-      const state = orderTracker.update(playerState);
-      expect(state.problems).toEqual(playerState.problems);
+      const problems = orderTracker.update(playerState);
+      expect(problems).toEqual([]);
     });
 
     it("reports an error when given a message with no receive time", () => {
       const orderTracker = new MessageOrderTracker();
-      const state = orderTracker.update(
+      const problems = orderTracker.update(
         playerStateWithMessages([message(7, undefined)], "receiveTime"),
       );
-      expect(state.problems).toEqual([
+      expect(problems).toEqual([
         {
           error: new Error(
             "Received a message on topic /foo around 1.000000011 with no receiveTime.",
@@ -126,10 +105,10 @@ describe("MessagePipeline/MessageOrderTracker", () => {
 
     it("reports an error when given a message with no timestamps at all", () => {
       const orderTracker = new MessageOrderTracker();
-      const state = orderTracker.update(
+      const problems = orderTracker.update(
         playerStateWithMessages([message(undefined, undefined)], "receiveTime"),
       );
-      expect(state.problems).toEqual([
+      expect(problems).toEqual([
         {
           error: new Error(
             "Received a message on topic /foo around 1.000000011 with no receiveTime.",
@@ -144,10 +123,10 @@ describe("MessagePipeline/MessageOrderTracker", () => {
   describe("when expecting messages ordered by header stamp", () => {
     it("calls report error when messages are out of order", () => {
       const orderTracker = new MessageOrderTracker();
-      const state = orderTracker.update(
+      const problems = orderTracker.update(
         playerStateWithMessages([message(8, 9), message(7, 10)], "headerStamp"),
       );
-      expect(state.problems).toEqual([
+      expect(problems).toEqual([
         {
           error: new Error(
             "Processed a message on /foo at 7.000000001 which is earlier than last processed message on /foo at 8.000000001.",
@@ -161,16 +140,16 @@ describe("MessagePipeline/MessageOrderTracker", () => {
     it("does not report an error when messages are in order", () => {
       const orderTracker = new MessageOrderTracker();
       const playerState = playerStateWithMessages([message(7, 10), message(8, 9)], "headerStamp");
-      const state = orderTracker.update(playerState);
-      expect(state.problems).toEqual(playerState.problems);
+      const problems = orderTracker.update(playerState);
+      expect(problems).toEqual([]);
     });
 
     it("reports an error when given a message with no header stamp", () => {
       const orderTracker = new MessageOrderTracker();
-      const state = orderTracker.update(
+      const problems = orderTracker.update(
         playerStateWithMessages([message(undefined, 10)], "headerStamp"),
       );
-      expect(state.problems).toEqual([
+      expect(problems).toEqual([
         {
           error: new Error(
             "Received a message on topic /foo around 1.000000011 with no headerStamp.",
@@ -183,10 +162,10 @@ describe("MessagePipeline/MessageOrderTracker", () => {
 
     it("reports an error when given a message with no timestamps at all", () => {
       const orderTracker = new MessageOrderTracker();
-      const state = orderTracker.update(
+      const problems = orderTracker.update(
         playerStateWithMessages([message(undefined, undefined)], "headerStamp"),
       );
-      expect(state.problems).toEqual([
+      expect(problems).toEqual([
         {
           error: new Error(
             "Received a message on topic /foo around 1.000000011 with no headerStamp.",
@@ -199,7 +178,7 @@ describe("MessagePipeline/MessageOrderTracker", () => {
 
     it("forgives a timestamp-backtracking after a missing header stamp", () => {
       const orderTracker = new MessageOrderTracker();
-      const state = orderTracker.update(
+      const problems = orderTracker.update(
         playerStateWithMessages(
           [
             message(8, 9),
@@ -209,7 +188,7 @@ describe("MessagePipeline/MessageOrderTracker", () => {
           "headerStamp",
         ),
       );
-      expect(state.problems).toEqual([
+      expect(problems).toEqual([
         {
           error: new Error(
             "Received a message on topic /foo around 1.000000011 with no headerStamp.",
