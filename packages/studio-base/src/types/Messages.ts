@@ -143,6 +143,7 @@ type MultiPointMarker = Readonly<{
 }>;
 
 type ArrowSize = Readonly<{
+  length?: number;
   shaftWidth: number;
   headLength: number;
   headWidth: number;

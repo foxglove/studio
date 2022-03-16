@@ -1607,7 +1607,7 @@ export function GeometryMsgs_PoseArray(): JSX.Element {
           settingsByKey: {
             "t:/sensor_path": {
               overrideColor: { r: 1, g: 0, b: 0, a: 0.2 },
-              size: { shaftWidth: 2, headWidth: 2, headLength: 0.5 },
+              size: { shaftWidth: 1, headWidth: 2, headLength: 0.5, length: 2 },
             },
           },
           cameraState: {

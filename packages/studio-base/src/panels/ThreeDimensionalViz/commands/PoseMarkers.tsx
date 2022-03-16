@@ -35,7 +35,7 @@ type PoseMarker = {
   type?: 103;
 };
 const DEFAULT_COLOR = { r: 124 / 255, g: 107 / 255, b: 255 / 255, a: 0.5 };
-const DEFAULT_SCALE = { x: 0.2, y: 1, z: 1 };
+const DEFAULT_SIZE = { length: 1, shaftWidth: 0.05, headWidth: 0.2, headLength: 0.2 };
 
 type PoseMarkerProps = CommonCommandProps & {
   markers: (PoseMarker | (Omit<PoseMarker, "type"> & GeometryMsgs$PoseArray & { type: 111 }))[];
@@ -49,9 +49,9 @@ function makeArrow(
     ...marker,
     color: marker.settings?.overrideColor ?? DEFAULT_COLOR,
     scale: {
-      x: marker.settings?.size?.shaftWidth ?? DEFAULT_SCALE.x,
-      y: marker.settings?.size?.headWidth ?? DEFAULT_SCALE.y,
-      z: marker.settings?.size?.headLength ?? DEFAULT_SCALE.z,
+      x: marker.settings?.size?.shaftWidth ?? DEFAULT_SIZE.shaftWidth,
+      y: marker.settings?.size?.headWidth ?? DEFAULT_SIZE.headWidth,
+      z: marker.settings?.size?.headLength ?? DEFAULT_SIZE.headLength,
     },
   };
 
@@ -68,13 +68,9 @@ function makeArrow(
     );
     mat4.multiply(transform, transform, instanceTransform);
   }
-  const pos = vec3.transformMat4([0, 0, 0], [0, 0, 0], transform);
-  const dir: vec3 = [0, 0, 0];
-  vec3.transformMat4(dir, [1, 0, 0], transform);
-  vec3.subtract(dir, dir, pos);
-  // the total length of the arrow is 4.7, we move the tail backwards by 0.88 (prev implementation)
-  const tipPoint = vec3.scaleAndAdd([0, 0, 0], pos, dir, 3.82) as Vec3;
-  const tailPoint = vec3.scaleAndAdd([0, 0, 0], pos, dir, -0.88) as Vec3;
+  const length = marker.settings?.size?.length ?? DEFAULT_SIZE.length;
+  const tailPoint = vec3.transformMat4([0, 0, 0], [0, 0, 0], transform) as Vec3;
+  const tipPoint = vec3.transformMat4([0, 0, 0], [length, 0, 0], transform) as Vec3;
   return {
     ...newMarker,
     // Reset the pose since this information is incorporated into the arrow tip and tail

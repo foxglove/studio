@@ -24,6 +24,7 @@ export type PoseSettings = {
   overrideColor?: Color;
   alpha?: number;
   size?: {
+    length?: number;
     headLength?: number;
     headWidth?: number;
     shaftWidth?: number;
@@ -43,6 +44,7 @@ export default function PoseSettingsEditor(
     );
   }
 
+  const currentLength = settings.size?.length ?? 1;
   const currentShaftWidth = settings.size?.shaftWidth ?? 0.2;
   const currentHeadWidth = settings.size?.headWidth ?? 1;
   const currentHeadLength = settings.size?.headLength ?? 1;
@@ -54,6 +56,18 @@ export default function PoseSettingsEditor(
         color={settings.overrideColor}
         onChange={(newColor) => onFieldChange("overrideColor", newColor)}
         alphaType="alpha"
+      />
+      <SLabel>Arrow length</SLabel>
+      <SInput
+        type="number"
+        value={currentLength}
+        placeholder="2"
+        onChange={(e) =>
+          onSettingsChange({
+            ...settings,
+            size: { ...settings.size, length: parseFloat(e.target.value) },
+          })
+        }
       />
       <SLabel>Shaft width</SLabel>
       <SInput
