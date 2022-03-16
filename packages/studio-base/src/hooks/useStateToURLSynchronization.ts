@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useCallback, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
 import {
@@ -26,6 +26,12 @@ const selectUrlState = (ctx: MessagePipelineContext) => ctx.playerState.urlState
 const selectLayoutId = (layoutState: LayoutState) => layoutState.selectedLayout?.id;
 const selectPlayerPresence = (ctx: MessagePipelineContext) => ctx.playerState.presence;
 
+// Write the unsaved app state to the url
+function writeStateToUrl(state: AppURLState) {
+  const url = encodeAppURLState(new URL(window.location.href), state);
+  window.history.replaceState(undefined, "", url.href);
+}
+
 /**
  * Syncs our current player, layout and other state with the URL in the address bar.
  */
@@ -41,29 +47,23 @@ export function useStateToURLSynchronization(): void {
   // This ref tracks the state of our player. Because the selected source and the active player
   // are in different contexts we have to do some extra work to act on the state of both of
   // them correctly.
-  const stablePlayerRef = useRef(false);
-
-  // Write the unsaved app state to the url
-  const updateUrl = useCallback((state: AppURLState) => {
-    const url = encodeAppURLState(new URL(window.location.href), state);
-    window.history.replaceState(undefined, "", url.href);
-  }, []);
+  const playerIsStableRef = useRef(false);
 
   // Debounce url updates to prevent thrashing when currentTime updates tne unsaved state
-  const queueUpdateUrl = useDebouncedCallback(updateUrl, 500, {
+  const queueUpdateUrl = useDebouncedCallback(writeStateToUrl, 500, {
     leading: true,
     maxWait: 500,
   });
 
   // Mark our player state as unstable when a new source is selected.
   useEffect(() => {
-    stablePlayerRef.current = false;
+    playerIsStableRef.current = false;
   }, [selectedSource]);
 
   // Wait until the player is present to switch player state back to stable.
   useEffect(() => {
     if (playerPresence === PlayerPresence.PRESENT) {
-      stablePlayerRef.current = true;
+      playerIsStableRef.current = true;
     }
   }, [playerPresence]);
 
@@ -76,7 +76,7 @@ export function useStateToURLSynchronization(): void {
     }
 
     // Don't update url unless we have a stable player state and a selected source.
-    if (!stablePlayerRef.current || !selectedSource) {
+    if (!playerIsStableRef.current || !selectedSource) {
       return;
     }
 
