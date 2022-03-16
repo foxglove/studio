@@ -16,11 +16,7 @@ import {
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
 import useDeepMemo from "@foxglove/studio-base/hooks/useDeepMemo";
 import { PlayerCapabilities, PlayerPresence } from "@foxglove/studio-base/players/types";
-import {
-  AppURLState,
-  encodeAppURLState,
-  parseAppURLState,
-} from "@foxglove/studio-base/util/appURLState";
+import { AppURLState, encodeAppURLState } from "@foxglove/studio-base/util/appURLState";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 const selectCanSeek = (ctx: MessagePipelineContext) =>
@@ -42,26 +38,14 @@ export function useStateToURLSynchronization(): void {
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const { selectedSource } = usePlayerSelection();
 
+  // This ref tracks the state of our player. Because the selected source and the active player
+  // are in different contexts we have to do some extra work to act on the state of both of
+  // them correctly.
   const stablePlayerRef = useRef(false);
 
-  // unsavedAppStateRef contains the app state that will be saved to the url
-  // It starts out as the current url state values
-  const unusavedAppStateRef = useRef<AppURLState>();
-  function getUnsavedAppState(): AppURLState {
-    return (unusavedAppStateRef.current ??= parseAppURLState(new URL(window.location.href)) ?? {});
-  }
-
   // Write the unsaved app state to the url
-  const updateUrl = useCallback(() => {
-    const unsavedAppState = getUnsavedAppState();
-
-    const url = encodeAppURLState(new URL(window.location.href), {
-      ds: unsavedAppState.ds,
-      layoutId: unsavedAppState.layoutId,
-      time: unsavedAppState.time,
-      dsParams: unsavedAppState.dsParams,
-    });
-
+  const updateUrl = useCallback((state: AppURLState) => {
+    const url = encodeAppURLState(new URL(window.location.href), state);
     window.history.replaceState(undefined, "", url.href);
   }, []);
 
@@ -91,18 +75,17 @@ export function useStateToURLSynchronization(): void {
       return;
     }
 
-    // Don't update url unless we have a stable player state.
-    if (!stablePlayerRef.current) {
+    // Don't update url unless we have a stable player state and a selected source.
+    if (!stablePlayerRef.current || !selectedSource) {
       return;
     }
 
-    const unsavedAppState = getUnsavedAppState();
-    unsavedAppState.layoutId = layoutId;
-    unsavedAppState.ds = selectedSource?.id;
-    unsavedAppState.dsParams = stablePlayerUrlState;
-    unsavedAppState.time = canSeek ? currentTime : undefined;
-
-    queueUpdateUrl();
+    queueUpdateUrl({
+      layoutId,
+      ds: selectedSource.id,
+      dsParams: stablePlayerUrlState,
+      time: canSeek ? currentTime : undefined,
+    });
   }, [
     canSeek,
     currentTime,
