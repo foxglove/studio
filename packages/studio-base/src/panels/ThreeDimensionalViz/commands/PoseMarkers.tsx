@@ -35,7 +35,7 @@ type PoseMarker = {
   type?: 103;
 };
 const DEFAULT_COLOR = { r: 124 / 255, g: 107 / 255, b: 255 / 255, a: 0.5 };
-const DEFAULT_SIZE = { length: 1, shaftWidth: 0.05, headWidth: 0.2, headLength: 0.2 };
+const DEFAULT_SIZE = { shaftLength: 1, shaftWidth: 0.05, headWidth: 0.2, headLength: 0.3 };
 
 type PoseMarkerProps = CommonCommandProps & {
   markers: (PoseMarker | (Omit<PoseMarker, "type"> & GeometryMsgs$PoseArray & { type: 111 }))[];
@@ -45,13 +45,14 @@ function makeArrow(
   marker: PoseMarkerProps["markers"][0],
   instancePose: Pose | undefined,
 ): React.ReactNode {
+  const headLength = marker.settings?.size?.headLength ?? DEFAULT_SIZE.headLength;
   const newMarker = {
     ...marker,
     color: marker.settings?.overrideColor ?? DEFAULT_COLOR,
     scale: {
       x: marker.settings?.size?.shaftWidth ?? DEFAULT_SIZE.shaftWidth,
       y: marker.settings?.size?.headWidth ?? DEFAULT_SIZE.headWidth,
-      z: marker.settings?.size?.headLength ?? DEFAULT_SIZE.headLength,
+      z: headLength,
     },
   };
 
@@ -68,9 +69,13 @@ function makeArrow(
     );
     mat4.multiply(transform, transform, instanceTransform);
   }
-  const length = marker.settings?.size?.length ?? DEFAULT_SIZE.length;
+  const shaftLength = marker.settings?.size?.shaftLength ?? DEFAULT_SIZE.shaftLength;
   const tailPoint = vec3.transformMat4([0, 0, 0], [0, 0, 0], transform) as Vec3;
-  const tipPoint = vec3.transformMat4([0, 0, 0], [length, 0, 0], transform) as Vec3;
+  const tipPoint = vec3.transformMat4(
+    [0, 0, 0],
+    [shaftLength + headLength, 0, 0],
+    transform,
+  ) as Vec3;
   return {
     ...newMarker,
     // Reset the pose since this information is incorporated into the arrow tip and tail

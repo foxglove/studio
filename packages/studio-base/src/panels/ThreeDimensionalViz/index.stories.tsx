@@ -27,6 +27,7 @@ import {
   PointCloud2,
   PointsMarker,
   Pose,
+  PoseStamped,
   SphereListMarker,
   SphereMarker,
   TextMarker,
@@ -1616,6 +1617,119 @@ export function GeometryMsgs_PoseArray(): JSX.Element {
             phi: 0.25,
             targetOffset: [0, 2, 0],
             thetaOffset: -0.25,
+            fovy: 0.75,
+            near: 0.01,
+            far: 5000,
+            target: [0, 0, 0],
+            targetOrientation: [0, 0, 0, 1],
+          },
+        }}
+      />
+    </PanelSetup>
+  );
+}
+GeometryMsgs_PoseStamped.parameters = { colorScheme: "dark" };
+export function GeometryMsgs_PoseStamped(): JSX.Element {
+  const topics: Topic[] = [
+    { name: "/tf", datatype: "geometry_msgs/TransformStamped" },
+    { name: "/pose1", datatype: "geometry_msgs/PoseStamped" },
+    { name: "/pose2", datatype: "geometry_msgs/PoseStamped" },
+  ];
+
+  const tf1: MessageEvent<TF> = {
+    topic: "/tf",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "map" },
+      child_frame_id: "base_link",
+      transform: {
+        translation: { x: 1e7, y: 0, z: 0 },
+        rotation: QUAT_IDENTITY,
+      },
+    },
+    sizeInBytes: 0,
+  };
+  const tf2: MessageEvent<TF> = {
+    topic: "/tf",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "base_link" },
+      child_frame_id: "sensor",
+      transform: {
+        translation: { x: 0, y: -5, z: 0 },
+        rotation: QUAT_IDENTITY,
+      },
+    },
+    sizeInBytes: 0,
+  };
+
+  const pose1: MessageEvent<PoseStamped> = {
+    topic: "/pose1",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "base_link" },
+      pose: {
+        position: { x: 2, y: 0, z: 0 },
+        orientation: QUAT_IDENTITY,
+      },
+    },
+    sizeInBytes: 0,
+  };
+
+  const pose2: MessageEvent<PoseStamped> = {
+    topic: "/pose2",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
+      pose: {
+        position: { x: 0, y: 3, z: 0 },
+        orientation: vec4ToOrientation(
+          quat.rotateZ(quat.create(), quat.create(), Math.PI / 2) as Vec4,
+        ),
+      },
+    },
+    sizeInBytes: 0,
+  };
+
+  const fixture = useDelayedFixture({
+    datatypes,
+    topics,
+    frame: {
+      "/tf": [tf1, tf2],
+      "/pose1": [pose1],
+      "/pose2": [pose2],
+    },
+    capabilities: [],
+    activeData: {
+      currentTime: { sec: 0, nsec: 0 },
+    },
+  });
+
+  return (
+    <PanelSetup fixture={fixture}>
+      <ThreeDimensionalViz
+        overrideConfig={{
+          ...ThreeDimensionalViz.defaultConfig,
+          checkedKeys: ["name:Topics", "t:/pose1", "t:/pose2", "t:/tf", `t:${FOXGLOVE_GRID_TOPIC}`],
+          followTf: "base_link",
+          settingsByKey: {
+            "t:/pose1": {},
+            "t:/pose2": {
+              size: {
+                shaftLength: 2,
+                shaftWidth: 1,
+                headLength: 1,
+                headWidth: 2,
+              },
+              overrideColor: { r: 1, g: 0, b: 0, a: 0.3 },
+            },
+          },
+          cameraState: {
+            distance: 15,
+            perspective: false,
+            phi: 0,
+            targetOffset: [-0.6, 0.5, 0],
+            thetaOffset: 0,
             fovy: 0.75,
             near: 0.01,
             far: 5000,
