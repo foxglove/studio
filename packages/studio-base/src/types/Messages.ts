@@ -93,15 +93,17 @@ export type Polygon = Readonly<{
   points: Points;
 }>;
 
+export type FloatArray = ReadonlyArray<number> | Readonly<Float32Array> | Readonly<Float64Array>;
+
 export type LaserScan = Readonly<{
   header: Header;
   angle_increment: number;
   angle_max: number;
   angle_min: number;
-  intensities: readonly number[];
+  intensities: FloatArray;
   range_max: number;
   range_min: number;
-  ranges: readonly number[];
+  ranges: FloatArray;
   scan_time?: number;
   time_increment?: number;
 }>;
@@ -241,7 +243,7 @@ type NavMsgs$MapMetaData = Readonly<{
 export type NavMsgs$OccupancyGrid = Readonly<{
   header: Header;
   info: NavMsgs$MapMetaData;
-  data: number[] | Int8Array;
+  data: ReadonlyArray<number> | Readonly<Int8Array>;
 }>;
 
 export type NavMsgs$Path = Readonly<{
@@ -256,7 +258,7 @@ export type OccupancyGridMessage = Readonly<{
   alpha?: number;
   info: NavMsgs$MapMetaData;
   pose: MutablePose;
-  data: readonly number[];
+  data: ReadonlyArray<number> | Readonly<Int8Array>;
 }>;
 
 export type TriangleListMarker = Readonly<
@@ -302,19 +304,6 @@ export type Marker =
 export type MarkerArray = Readonly<{
   markers: readonly Marker[];
 }>;
-
-type ChannelFloat = Readonly<{
-  name: string;
-  values: readonly number[];
-}>;
-
-type PointCloud1 = Readonly<
-  StampedMessage & {
-    points: Points;
-    channels: readonly ChannelFloat[];
-    type: "PointCloud1";
-  }
->;
 
 export type PointField = Readonly<{
   name: string;
@@ -373,7 +362,7 @@ export type VelodyneScanDecoded = Readonly<
   }
 >;
 
-export type PointCloud = PointCloud1 | PointCloud2 | VelodyneScanDecoded;
+export type PointCloud = PointCloud2 | VelodyneScanDecoded;
 
 type Transform = Readonly<{
   rotation: Orientation;
@@ -444,16 +433,16 @@ export type CameraInfo = Readonly<{
   binning_y: number;
   roi: Roi;
   distortion_model: DistortionModel;
-  D: readonly number[];
-  K: readonly number[];
-  P: readonly number[];
-  R: readonly number[];
+  D: FloatArray;
+  K: FloatArray;
+  P: FloatArray;
+  R: FloatArray;
 }>;
 
 export type JointState = Readonly<{
   header: Header;
   name: string[];
-  position: number[];
-  velocity: number[];
-  effort: number[];
+  position: FloatArray;
+  velocity: FloatArray;
+  effort: FloatArray;
 }>;
