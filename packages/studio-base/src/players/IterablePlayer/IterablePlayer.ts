@@ -140,7 +140,7 @@ export class IterablePlayer implements Player {
   private _blockDurationNanos: number = 0;
 
   private _iterableSource: IIterableSource;
-  private _forwardIterator?: AsyncIterable<Readonly<IteratorResult>>;
+  private _forwardIterator?: AsyncIterator<Readonly<IteratorResult>>;
 
   constructor(options: IterablePlayerOptions) {
     const { metricsCollector, urlParams, source, name, enablePreload } = options;
@@ -244,6 +244,7 @@ export class IterablePlayer implements Player {
   private async _stateStartPlay() {
     const topics = new Set(this._subscriptions.map((subscription) => subscription.topic));
 
+    console.assert(this._forwardIterator == undefined);
     this._forwardIterator = this._iterableSource.messageIterator({
       topics: Array.from(topics),
     });
@@ -258,7 +259,12 @@ export class IterablePlayer implements Player {
     this._messages = [];
 
     const messageEvents: MessageEvent<unknown>[] = [];
-    for await (const iterResult of this._forwardIterator) {
+    for (;;) {
+      const result = await this._forwardIterator.next();
+      if (result.done === true) {
+        break;
+      }
+      const iterResult = result.value;
       // Bail if a new state is requested while we are loading messages
       // This usually happens when seeking before the initial load is complete
       if (this._nextState) {
@@ -309,17 +315,25 @@ export class IterablePlayer implements Player {
         start: targetTime,
         reverse: true,
       });
-      for await (const iterResult of topicIterator) {
+      for (;;) {
+        const result = await topicIterator.next();
+        if (result.done === true) {
+          await topicIterator.return?.();
+          break;
+        }
         // NOTE: Even if _nextState is set, we finish the backfill
         // This is to support continuous scrubbing. As the user scrubbs, we
         // continue to backfill and emit state so they can see updates as they scrub.
 
-        if (iterResult.problem) {
-          this._problemManager.addProblem(`connid-${iterResult.connectionId}`, iterResult.problem);
+        if (result.value.problem) {
+          this._problemManager.addProblem(
+            `connid-${result.value.connectionId}`,
+            result.value.problem,
+          );
           continue;
         }
 
-        messages.push(iterResult.msgEvent);
+        messages.push(result.value.msgEvent);
         break;
       }
     }
@@ -327,6 +341,7 @@ export class IterablePlayer implements Player {
     // Our reverse iterators loaded the messages inclusive of the seek time, thus the next messages
     // we read should be _after_ the seek time.
     const forwardPosition = add(targetTime, { sec: 0, nsec: 1 });
+    await this._forwardIterator?.return?.();
     this._forwardIterator = this._iterableSource.messageIterator({
       topics: Array.from(topics),
       start: forwardPosition,
@@ -506,7 +521,12 @@ export class IterablePlayer implements Player {
       this._lastMessage = undefined;
     }
 
-    for await (const iterResult of this._forwardIterator) {
+    for (;;) {
+      const result = await this._forwardIterator.next();
+      if (result.done === true) {
+        break;
+      }
+      const iterResult = result.value;
       if (iterResult.problem) {
         this._problemManager.addProblem(`connid-${iterResult.connectionId}`, iterResult.problem);
       }
@@ -566,6 +586,7 @@ export class IterablePlayer implements Player {
           this._lastMessage = undefined;
 
           const topics = new Set(this._subscriptions.map((sub) => sub.topic));
+          await this._forwardIterator?.return?.();
           this._forwardIterator = this._iterableSource.messageIterator({
             topics: Array.from(topics),
             start: this._currentTime,
@@ -853,6 +874,7 @@ export class IterablePlayer implements Player {
     this._isPlaying = false;
     this._closed = true;
     this._metricsCollector.close();
+    this._forwardIterator?.return?.().catch((err) => log.error(err));
   }
 
   setGlobalVariables(): void {

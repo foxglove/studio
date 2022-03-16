@@ -52,5 +52,5 @@ export interface IIterableSource {
    * The iterator produces IteratorResults from the source. The IteratorResults should be
    * in log time order.
    */
-  messageIterator(args: MessageIteratorArgs): AsyncIterable<Readonly<IteratorResult>>;
+  messageIterator(args: MessageIteratorArgs): AsyncIterator<Readonly<IteratorResult>>;
 }

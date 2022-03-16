@@ -58,7 +58,7 @@ function AppWrapper() {
       new FoxgloveWebSocketDataSourceFactory(),
       new UlogLocalDataSourceFactory(),
       new VelodyneUnavailableDataSourceFactory(),
-      new FoxgloveDataPlatformDataSourceFactory(),
+      new FoxgloveDataPlatformDataSourceFactory({ useIterablePlayer }),
       new SampleNuscenesDataSourceFactory({ useIterablePlayer }),
       new McapLocalDataSourceFactory(),
     ];
