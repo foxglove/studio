@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { captureException } from "@sentry/core";
 import { isEqual } from "lodash";
 
 import Logger from "@foxglove/log";
@@ -44,6 +45,9 @@ export default async function* streamMessages({
 
   /**
    * Message readers are initialized out of band so we can parse message definitions only once.
+   *
+   * NOTE: If we encounter a channel/schema pair that is not pre-initialized, we will add it to
+   * parsedChannelsByTopic (thus mutating parsedChannelsByTopic).
    */
   parsedChannelsByTopic: Map<string, ParsedChannelAndEncodings[]>;
 }): AsyncIterable<MessageEvent<unknown>[]> {
@@ -132,12 +136,14 @@ export default async function* streamMessages({
           parsedChannel,
         });
 
-        // This is tragic because we are mutating parsedChannelsByTopic which is an input
-        // To avoid mutating the input the overall flow needs reworking.
         parsedChannelsByTopic.set(record.topic, parsedChannels);
 
         channelInfoById.set(record.id, { channel: record, parsedChannel });
-        log.warn("No pre-initialized reader for", record);
+
+        const err = new Error(
+          `No pre-initialized reader for ${record.topic} (message encoding ${record.messageEncoding}, schema encoding ${schema.encoding}, schema name ${schema.name})`,
+        );
+        captureException(err);
         return;
       }
 
