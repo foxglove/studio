@@ -23,7 +23,7 @@ type GenericSettings = {
 };
 
 export default function OccupancyGridSettingsEditor(
-  props: TopicSettingsEditorProps<Marker | MarkerArray, GenericSettings>
+  props: TopicSettingsEditorProps<Marker | MarkerArray, GenericSettings>,
 ): JSX.Element {
   const { settings = {}, onFieldChange } = props;
   return (
@@ -39,8 +39,8 @@ export default function OccupancyGridSettingsEditor(
       />
       <SDescription>
         When disabled, the grid will be positioned in the 3D scene by transforming it using its
-        <tt>header.stamp</tt> time. When enabled, the grid will be "locked" to the current position
-        of its <tt>header.frame_id</tt> and will move when the frame moves.
+        <code>header.stamp</code> time. When enabled, the grid will be “locked” to the current
+        position of its <code>header.frame_id</code> and will move when the frame moves.
       </SDescription>
     </Stack>
   );

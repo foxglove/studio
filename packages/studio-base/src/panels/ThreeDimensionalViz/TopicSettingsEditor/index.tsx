@@ -18,8 +18,8 @@ import UrdfSettingsEditor from "@foxglove/studio-base/panels/ThreeDimensionalViz
 import { TopicSettingsEditorProps } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor/types";
 import { FOXGLOVE_GRID_DATATYPE, URDF_DATATYPE } from "@foxglove/studio-base/util/globalConstants";
 
-import OccupancyGridSettingsEditor from "./OccupancyGridSettingsEditor";
 import MarkerSettingsEditor from "./MarkerSettingsEditor";
+import OccupancyGridSettingsEditor from "./OccupancyGridSettingsEditor";
 import PointCloudSettingsEditor from "./PointCloudSettingsEditor";
 import PoseSettingsEditor from "./PoseSettingsEditor";
 
