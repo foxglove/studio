@@ -23,7 +23,7 @@ type GenericSettings = {
 };
 
 export default function GenericSettingsEditor(
-  props: TopicSettingsEditorProps<Marker | MarkerArray, GenericSettings>,
+  props: TopicSettingsEditorProps<Marker | MarkerArray, GenericSettings>
 ): JSX.Element {
   const { settings = {}, onFieldChange } = props;
   return (
@@ -38,9 +38,9 @@ export default function GenericSettingsEditor(
         label="Frame lock"
       />
       <SDescription>
-        By default, topics are translated into the 3D scene using their header stamp time. Enabling
-        frame lock switches the translation to use the current playback time when translating the
-        topic into its place within the 3d scene.
+        When disabled, the grid will be positioned in the 3D scene by transforming it using its
+        <tt>header.stamp</tt> time. When enabled, the grid will be "locked" to the current position
+        of its <tt>header.frame_id</tt> and will move when the frame moves.
       </SDescription>
     </Stack>
   );
