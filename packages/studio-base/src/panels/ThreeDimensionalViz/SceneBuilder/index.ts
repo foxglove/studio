@@ -198,8 +198,7 @@ function computeMarkerPose(
   let srcTime: Time;
   let dstTime: Time;
 
-  const frame_locked = true; //marker.frame_locked;
-  if (frame_locked) {
+  if (marker.frame_locked) {
     srcTime = currentTime;
     dstTime = currentTime;
   } else {
@@ -589,6 +588,8 @@ export default class SceneBuilder implements MarkerProvider {
     const type = 101;
     const name = `${topic}/${type}`;
 
+    const { frameLocked } = this._settingsByKey[`t:${topic}`] as { frameLocked?: boolean };
+
     const { header, info, data } = message;
     if (info.width * info.height !== data.length) {
       this._setTopicError(
@@ -614,7 +615,7 @@ export default class SceneBuilder implements MarkerProvider {
       type,
       name,
       pose: clonePose(info.origin),
-      frame_locked: false,
+      frame_locked: frameLocked ?? false,
       interactionData: { topic, originalMessage: message },
     };
 
@@ -637,7 +638,7 @@ export default class SceneBuilder implements MarkerProvider {
     for (let i = 0; i < scan.ranges.length; i++) {
       const offset = i * pointStep;
       const distance = Math.min(scan.range_max, Math.max(scan.range_min, scan.ranges[i] ?? 0));
-      const intensity = (scan.intensities[i] ?? Number.NaN) as number;
+      const intensity = scan.intensities[i] ?? Number.NaN;
       const angle = Math.min(scan.angle_max, scan.angle_min + i * scan.angle_increment);
       const x = distance * Math.cos(angle);
       const y = distance * Math.sin(angle);
