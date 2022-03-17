@@ -18,7 +18,7 @@ import UrdfSettingsEditor from "@foxglove/studio-base/panels/ThreeDimensionalViz
 import { TopicSettingsEditorProps } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor/types";
 import { FOXGLOVE_GRID_DATATYPE, URDF_DATATYPE } from "@foxglove/studio-base/util/globalConstants";
 
-import GenericSettingsEditor from "./GenericSettingsEditor";
+import OccupancyGridSettingsEditor from "./OccupancyGridSettingsEditor";
 import MarkerSettingsEditor from "./MarkerSettingsEditor";
 import PointCloudSettingsEditor from "./PointCloudSettingsEditor";
 import PoseSettingsEditor from "./PoseSettingsEditor";
@@ -54,9 +54,9 @@ export function topicSettingsEditorForDatatype(datatype: string):
     ["nav_msgs/Path", MarkerSettingsEditor],
     ["nav_msgs/msg/Path", MarkerSettingsEditor],
     ["ros.nav_msgs.Path", MarkerSettingsEditor],
-    ["nav_msgs/OccupancyGrid", GenericSettingsEditor],
-    ["nav_msgs/msg/OccupancyGrid", GenericSettingsEditor],
-    ["ros.nav_msgs.OccupancyGrid", GenericSettingsEditor],
+    ["nav_msgs/OccupancyGrid", OccupancyGridSettingsEditor],
+    ["nav_msgs/msg/OccupancyGrid", OccupancyGridSettingsEditor],
+    ["ros.nav_msgs.OccupancyGrid", OccupancyGridSettingsEditor],
   ]);
 
   return editors.get(datatype) as

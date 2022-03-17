@@ -22,7 +22,7 @@ type GenericSettings = {
   frameLocked?: boolean;
 };
 
-export default function GenericSettingsEditor(
+export default function OccupancyGridSettingsEditor(
   props: TopicSettingsEditorProps<Marker | MarkerArray, GenericSettings>
 ): JSX.Element {
   const { settings = {}, onFieldChange } = props;

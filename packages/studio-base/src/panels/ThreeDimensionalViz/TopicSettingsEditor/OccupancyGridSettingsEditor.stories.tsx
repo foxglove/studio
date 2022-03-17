@@ -4,16 +4,16 @@
 
 import { ReactElement } from "react";
 
-import GenericSettingsEditor from "./GenericSettingsEditor";
+import OccupancyGridSettingsEditor from "./OccupancyGridSettingsEditor";
 
 export default {
-  title: "panels/ThreeDimensionalViz/TopicSettingsEditor/GenericSettingsEditor",
-  component: GenericSettingsEditor,
+  title: "panels/ThreeDimensionalViz/TopicSettingsEditor/OccupancyGridSettingsEditor",
+  component: OccupancyGridSettingsEditor,
 };
 
 export function Default(): ReactElement {
   return (
-    <GenericSettingsEditor
+    <OccupancyGridSettingsEditor
       onFieldChange={() => undefined}
       onSettingsChange={() => undefined}
       settings={{}}
