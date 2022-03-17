@@ -2,8 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { simplify } from "intervals-fn";
 import { v4 as uuidv4 } from "uuid";
 
+import { filterMap } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import {
   Time,
@@ -720,7 +722,13 @@ export class IterablePlayer implements Player {
       }
 
       let sizeInBytes = 0;
-      for await (const iterResult of iterator) {
+      for (;;) {
+        const result = await iterator.next();
+        if (result.done === true) {
+          break;
+        }
+        const iterResult = result.value;
+
         // State change requested, bail
         if (this._nextState) {
           return;
@@ -759,6 +767,7 @@ export class IterablePlayer implements Player {
         totalBlockSizeBytes += messageSizeInBytes;
         events.push(iterResult.msgEvent);
       }
+      await iterator.return?.();
 
       const block = {
         messagesByTopic: {
@@ -769,7 +778,31 @@ export class IterablePlayer implements Player {
       };
 
       this._blocks[idx] = block;
+      const fullyLoadedFractionRanges = simplify(
+        filterMap(this._blocks, (thisBlock, blockIndex) => {
+          if (!thisBlock) {
+            return;
+          }
+
+          for (const topic of topics) {
+            if (!thisBlock.messagesByTopic[topic]) {
+              return;
+            }
+          }
+
+          return {
+            start: blockIndex,
+            end: blockIndex + 1,
+          };
+        }),
+      );
+
       this._progress = {
+        fullyLoadedFractionRanges: fullyLoadedFractionRanges.map((range) => ({
+          // Convert block ranges into fractions.
+          start: range.start / this._blocks.length,
+          end: range.end / this._blocks.length,
+        })),
         messageCache: {
           blocks: this._blocks.slice(),
           startTime: this._start,
