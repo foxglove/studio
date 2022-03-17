@@ -132,6 +132,10 @@ export default async function* streamMessages({
           parsedChannel,
         });
 
+        // This is tragic because we are mutating parsedChannelsByTopic which is an input
+        // To avoid mutating the input the overall flow needs reworking.
+        parsedChannelsByTopic.set(record.topic, parsedChannels);
+
         channelInfoById.set(record.id, { channel: record, parsedChannel });
         log.warn("No pre-initialized reader for", record);
         return;
