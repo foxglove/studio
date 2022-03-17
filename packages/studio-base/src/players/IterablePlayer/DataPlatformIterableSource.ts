@@ -9,6 +9,7 @@ import { parseChannel } from "@foxglove/mcap-support";
 import {
   add,
   clampTime,
+  compare,
   fromRFC3339String,
   fromSec,
   isGreaterThan,
@@ -19,7 +20,7 @@ import {
 import streamMessages, {
   ParsedChannelAndEncodings,
 } from "@foxglove/studio-base/players/FoxgloveDataPlatformPlayer/streamMessages";
-import { PlayerProblem, Topic } from "@foxglove/studio-base/players/types";
+import { PlayerProblem, Topic, MessageEvent } from "@foxglove/studio-base/players/types";
 import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { formatTimeRaw } from "@foxglove/studio-base/util/time";
@@ -151,6 +152,97 @@ export class DataPlatformIterableSource implements IIterableSource {
     };
   }
 
+  private _currentStream?: {
+    startTime: Time;
+    endTime: Time;
+    topics: string[];
+    //FIXME
+    lastResult: (MessageEvent<unknown> & { channelId: number })[] | undefined;
+    iterator: AsyncIterator<(MessageEvent<unknown> & { channelId: number })[]>;
+    controller: AbortController;
+  };
+
+  async *messageIterator(args: MessageIteratorArgs): AsyncIterator<Readonly<IteratorResult>> {
+    if (args.reverse === true) {
+      return;
+    }
+    const api = this._consoleApi;
+    const deviceId = this._deviceId;
+    const parsedChannelsByTopic = this._parsedChannelsByTopic;
+
+    let currentStart = args.start ?? this._start;
+
+    // determine whether we can use the existing stream
+    if (isEqual(this._currentStream?.topics, args.topics) && this._currentStream?.lastResult) {
+      const firstTime = this._currentStream.lastResult[0]?.receiveTime;
+      // [0 1 2 2] [2 3 4] + request starttime = 2 FIXME better comment
+      if (
+        firstTime &&
+        compare(currentStart, firstTime) > 0 &&
+        compare(currentStart, this._currentStream.endTime) <= 0
+      ) {
+        for (const message of this._currentStream.lastResult) {
+          if (compare(message.receiveTime, currentStart) < 0) {
+            continue;
+          }
+          yield { connectionId: message.channelId, msgEvent: message, problem: undefined };
+        }
+      } else {
+        this._currentStream.controller.abort();
+        this._currentStream = undefined;
+      }
+    } else {
+      this._currentStream?.controller.abort();
+      this._currentStream = undefined;
+    }
+
+    let currentEnd = clampTime(
+      add(currentStart, fromSec(this._requestDurationSecs)),
+      this._start,
+      this._end,
+    );
+
+    for (;;) {
+      if (!this._currentStream) {
+        const controller = new AbortController();
+        this._currentStream = {
+          startTime: currentStart,
+          endTime: currentEnd,
+          topics: args.topics,
+          lastResult: undefined,
+          controller,
+          iterator: streamMessages({
+            api,
+            signal: controller.signal,
+            parsedChannelsByTopic,
+            params: { deviceId, start: currentStart, end: currentEnd, topics: args.topics },
+          }),
+        };
+      }
+      for (
+        let result;
+        (result = await this._currentStream.iterator.next()), result.done !== true;
+
+      ) {
+        this._currentStream.lastResult = result.value;
+        for (const message of result.value) {
+          yield { connectionId: message.channelId, msgEvent: message, problem: undefined };
+        }
+      }
+      this._currentStream = undefined;
+
+      if (compare(currentEnd, this._end) >= 0) {
+        break;
+      }
+      currentStart = currentEnd;
+      currentEnd = clampTime(
+        add(currentStart, fromSec(this._requestDurationSecs)),
+        this._start,
+        this._end,
+      );
+    }
+  }
+  /*
   async *messageIterator(args: MessageIteratorArgs): AsyncIterator<Readonly<IteratorResult>> {
     if (args.reverse === true) {
       return;
@@ -189,4 +281,5 @@ export class DataPlatformIterableSource implements IIterableSource {
       currentStart = currentEnd;
     }
   }
+  */
 }

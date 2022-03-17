@@ -37,6 +37,7 @@ export default async function* streamMessages({
    * function may return successfully (possibly after yielding any remaining messages), or it may
    * raise an AbortError.
    */
+  //FIXME: delete and use try/finally instead?
   signal: AbortSignal;
 
   /** Parameters indicating the time range to stream. */
@@ -46,7 +47,7 @@ export default async function* streamMessages({
    * Message readers are initialized out of band so we can parse message definitions only once.
    */
   parsedChannelsByTopic: Map<string, ParsedChannelAndEncodings[]>;
-}): AsyncIterable<(MessageEvent<unknown> & { channelId: number })[]> {
+}): AsyncGenerator<(MessageEvent<unknown> & { channelId: number /*FIXME*/ })[]> {
   const decompressHandlers = await loadDecompressHandlers();
 
   log.debug("streamMessages", params);

@@ -320,7 +320,6 @@ export class IterablePlayer implements Player {
       for (;;) {
         const result = await topicIterator.next();
         if (result.done === true) {
-          await topicIterator.return?.();
           break;
         }
         // NOTE: Even if _nextState is set, we finish the backfill
@@ -743,7 +742,11 @@ export class IterablePlayer implements Player {
           break;
         }
 
-        const events = messagesByTopic[iterResult.msgEvent.topic]!;
+        const events = messagesByTopic[iterResult.msgEvent.topic];
+        if (!events) {
+          //FIXME: problem
+          throw new Error(`Unexpected topic ${iterResult.msgEvent.topic}`);
+        }
         const messageSizeInBytes = iterResult.msgEvent.sizeInBytes;
         sizeInBytes += messageSizeInBytes;
 
