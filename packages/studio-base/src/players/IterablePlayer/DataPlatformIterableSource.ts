@@ -46,7 +46,7 @@ export class DataPlatformIterableSource implements IIterableSource {
   private _start: Time;
   private _end: Time;
   private _deviceId: string;
-  private readonly _requestDurationSecs = 15;
+  private readonly _requestDurationSecs = 5;
 
   /**
    * Cached readers for each schema so we don't have to re-parse definitions on each stream request.
@@ -242,44 +242,4 @@ export class DataPlatformIterableSource implements IIterableSource {
       );
     }
   }
-  /*
-  async *messageIterator(args: MessageIteratorArgs): AsyncIterator<Readonly<IteratorResult>> {
-    if (args.reverse === true) {
-      return;
-    }
-
-    const api = this._consoleApi;
-    const deviceId = this._deviceId;
-    const parsedChannelsByTopic = this._parsedChannelsByTopic;
-
-    let currentStart = args.start ?? this._start;
-    while (isLessThan(currentStart, this._end)) {
-      const currentEnd = clampTime(
-        add(currentStart, fromSec(this._requestDurationSecs)),
-        this._start,
-        this._end,
-      );
-
-      const controller = new AbortController();
-      try {
-        const stream = streamMessages({
-          api,
-          signal: controller.signal,
-          parsedChannelsByTopic,
-          params: { deviceId, start: currentStart, end: currentEnd, topics: args.topics },
-        });
-        for await (const messages of stream) {
-          for (const message of messages) {
-            yield { connectionId: message.channelId, msgEvent: message, problem: undefined };
-          }
-        }
-      } finally {
-        // If the player stops our execution early by calling the iterator's `return()` method,
-        // cancel any outstanding request
-        controller.abort();
-      }
-      currentStart = currentEnd;
-    }
-  }
-  */
 }
