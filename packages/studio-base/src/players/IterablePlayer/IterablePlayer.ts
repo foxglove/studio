@@ -5,7 +5,6 @@
 import { simplify } from "intervals-fn";
 import { v4 as uuidv4 } from "uuid";
 
-import { Signal, signal } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
 import Log from "@foxglove/log";
 import {
@@ -85,13 +84,6 @@ type IterablePlayerState =
   | "idle"
   | "seek-backfill"
   | "play";
-
-type TopicBuffer = {
-  topic: string;
-  messages: MessageEvent<unknown>[];
-  start: Time;
-  end: Time;
-};
 
 /**
  * IterablePlayer implements the Player interface for IIterableSource instances.
@@ -186,7 +178,7 @@ export class IterablePlayer implements Player {
     await this._emitState();
 
     try {
-      const { start, end, topics, problems, publishersByTopic, datatypes } =
+      const { start, end, topics, problems, publishersByTopic, datatypes, blockDurationNanos } =
         await this._iterableSource.initialize();
 
       this._start = this._currentTime = start;
@@ -227,7 +219,14 @@ export class IterablePlayer implements Player {
       this._blockDurationNanos = Math.ceil(
         Math.max(MIN_MEM_CACHE_BLOCK_SIZE_NS, totalNs / MAX_BLOCKS),
       );
+
+      if (blockDurationNanos != undefined) {
+        this._blockDurationNanos = blockDurationNanos;
+      }
+
       const blockCount = Math.ceil(totalNs / this._blockDurationNanos);
+
+      log.debug(`Block count: ${blockCount}`);
 
       this._blocks = Array.from({ length: blockCount });
     } catch (error) {
@@ -254,7 +253,6 @@ export class IterablePlayer implements Player {
   private async _stateStartPlay() {
     const topics = new Set(this._subscriptions.map((subscription) => subscription.topic));
 
-    console.assert(this._forwardIterator == undefined);
     this._forwardIterator = this._iterableSource.messageIterator({
       topics: Array.from(topics),
     });
@@ -478,16 +476,13 @@ export class IterablePlayer implements Player {
     return await this._listener(data);
   }
 
-  private topicBuffers: TopicBuffer[] = [];
-  private topicBufferByTopic: Map<string, TopicBuffer> = new Map();
-
-  //private messageBuffer: Readonly<MessageEvent<unknown>>[] = [];
-  private messageBufferSignal: Signal<void> | undefined = undefined;
-  private bufferMore: Signal<void> | undefined = undefined;
-
   private async _tick(): Promise<void> {
     if (!this._isPlaying) {
       return;
+    }
+
+    if (!this._forwardIterator) {
+      throw new Error("Tried to play with no forward iterator");
     }
 
     // compute how long of a time range we want to read by taking into account
@@ -520,8 +515,6 @@ export class IterablePlayer implements Player {
     );
 
     const msgEvents: MessageEvent<unknown>[] = [];
-
-    /*
     if (this._lastMessage) {
       // If the last message we saw is still ahead of the tick time, we don't emit anything
       if (compare(this._lastMessage.receiveTime, end) > 0) {
@@ -534,27 +527,8 @@ export class IterablePlayer implements Player {
       msgEvents.push(this._lastMessage);
       this._lastMessage = undefined;
     }
-    */
 
-    const msgBuffer = this.messageBuffer;
-    while (msgBuffer.length > 0) {
-      const first = msgBuffer[0];
-      // The message is past the end time, we need to save it for next tick
-      if (first && compare(first.receiveTime, end) > 0) {
-        break;
-      }
-
-      const msg = msgBuffer.shift();
-      if (!msg) {
-        break;
-      }
-      msgEvents.push(msg);
-    }
-
-    /*
     for (;;) {
-      msgBuffer;
-
       const result = await this._forwardIterator.next();
       if (result.done === true) {
         break;
@@ -586,11 +560,7 @@ export class IterablePlayer implements Player {
 
       msgEvents.push(iterResult.msgEvent);
     }
-    */
 
-    console.log("resolve buffer more");
-    this.bufferMore?.resolve();
-    this.bufferMore = undefined;
     this._currentTime = end;
     this._messages = msgEvents;
     await this._emitState();
@@ -611,30 +581,14 @@ export class IterablePlayer implements Player {
     }
     const subscriptions = this._subscriptions;
 
-    // start background buffering at the current time
-    const buffering = this.buffer(this._currentTime);
-
-    const msgBuffer = this.messageBuffer;
-
-    // fixme const blockLoading = this.loadBlocks(this._currentTime, { emit: false });
+    const blockLoading = this.loadBlocks(this._currentTime, { emit: false });
     try {
       while (this._isPlaying && !this._hasError && !this._nextState) {
-        if (msgBuffer.length === 0) {
-          this.messageBufferSignal = signal();
-
-          console.log("waiting for messages");
-          await this.messageBufferSignal;
-        }
-
-        console.log("tick");
-
         const start = Date.now();
         await this._tick();
 
         // If subscriptions changed, update to the new subscriptions
         if (this._subscriptions !== subscriptions) {
-          // fixme
-          /*
           // Discard any last message event since the new iterator will repeat it
           this._lastMessage = undefined;
 
@@ -644,7 +598,6 @@ export class IterablePlayer implements Player {
             topics: Array.from(topics),
             start: this._currentTime,
           });
-          */
         }
 
         // Eslint doesn't understand that this._nextState could change
@@ -664,79 +617,7 @@ export class IterablePlayer implements Player {
       this._setError((err as Error).message, err);
       await this._emitState();
     } finally {
-      console.log("waiting for all buffering to finish");
-      this.bufferMore?.resolve();
-      await buffering;
-      console.log("buffering exited");
-      // fixme await blockLoading;
-    }
-  }
-
-  // as messages come in - we direct the message to the appropriate topic buffer
-  // to read messages we iterate the topic buffers
-  // each buffer has a playhead position (index in messages array)
-  // that locations is where the _next_ message to read is
-  // if no message, move to next buffer
-  // if theres a message and its time is > currentTime, move to next buffer
-  // if there's a message, and its time is <= currentTime, use it and move to next message (playhead increment)
-
-  // The fullyLoadedRanges is the maximum start and minimum end time across all topic buffers
-  // when we have a new topic buffer for a new topic, this will reset the ranges
-
-  private async buffer(time: Time) {
-    log.info("Buffer");
-
-    const forwardIterator = this._forwardIterator;
-    if (!forwardIterator) {
-      throw new Error("Invariant: no forward iterator");
-    }
-
-    for (;;) {
-      // Exit buffering when we need a state change
-      if (this._nextState) {
-        break;
-      }
-
-      const result = await forwardIterator.next();
-      if (result.done === true) {
-        break;
-      }
-
-      // Exit buffering when we need a state change
-      // Eslint doesn't understand that nextState could change after the await
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions
-      if (this._nextState) {
-        break;
-      }
-
-      const iterResult = result.value;
-      if (iterResult.problem) {
-        this._problemManager.addProblem(`connid-${iterResult.connectionId}`, iterResult.problem);
-        continue;
-      }
-
-      if (!this._currentTime) {
-        continue;
-      }
-
-      const topic = iterResult.msgEvent.topic;
-      this.topicBufferByTopic.get(topic);
-
-      this.messageBuffer.push(iterResult.msgEvent);
-
-      const plusOneSecond = add(iterResult.msgEvent.receiveTime, { sec: 1, nsec: 0 });
-      if (compare(plusOneSecond, this._currentTime) >= 0) {
-        console.log("done buffering, waiting to release more buffer space");
-        this.bufferMore = signal();
-      }
-
-      // Signal that we have buffer to process
-      this.messageBufferSignal?.resolve();
-
-      // Wiat for buffer space to be available
-      await this.bufferMore;
-
-      console.log(this.messageBuffer.length);
+      await blockLoading;
     }
   }
 
@@ -744,36 +625,6 @@ export class IterablePlayer implements Player {
     if (!this._enablePreload) {
       return;
     }
-
-    return;
-
-    // if the source has a minimumRequestDuration
-    // then our blocks need to align to this minimumRequestDuration
-    // i.e. if the minimumRequestDuration is 5 seconds and we've determined each block is 0.5 seconds in length
-    // we need to have 10 blocks. This is so a block boundary perfectly aligns with request boundaries
-    // WARNING!! the response mightn ot have the same receive time requirements tho!?
-    // just because you make a request for some start time, the first message you get may be 1 second after that start time
-    // the first message you get
-
-    // Several enhacements
-    // Things to avoid
-    // - load tiny bits of data platform through repeated micro requests
-    // - block playback on network requests
-    // Things to enhance
-    // - buffering
-
-    // tiny bits are loaded because we try loading each small block with an iterator
-    // small blocks are used so we can evict data to make room for more data
-    // ideally we want to size blocks by MB rather than by time ?
-    // because MB is what we actually load and evict
-    // when we seek, we want to optimize for loading the data before and after the time we seek to
-    // the reason we optimize for before is to see what occured before our event
-    // the reason for after is to prepare for playing (buffering)
-
-    // using current time
-    // make two iterators
-    // one we will use to go forwards in loadDuration intervals
-    // the other we will use to go backwards in loadDuration intervals
 
     // During playback, we let the statePlay method emit state
     // When idle, we can emit state
@@ -881,9 +732,7 @@ export class IterablePlayer implements Player {
         if (result.done === true) {
           break;
         }
-        const iterResult = result.value;
-
-        // State change requested, bail
+        const iterResult = result.value; // State change requested, bail
         if (this._nextState) {
           return;
         }
@@ -897,11 +746,17 @@ export class IterablePlayer implements Player {
           break;
         }
 
-        const events = messagesByTopic[iterResult.msgEvent.topic];
+        const msgTopic = iterResult.msgEvent.topic;
+        const events = messagesByTopic[msgTopic];
         if (!events) {
-          //FIXME: problem
-          throw new Error(`Unexpected topic ${iterResult.msgEvent.topic}`);
+          this._problemManager.addProblem(`exexpected-topic-${msgTopic}`, {
+            severity: "error",
+            message: `Received a messaged on an unexpected topic: ${msgTopic}.`,
+          });
+          continue;
         }
+        this._problemManager.removeProblem(`exexpected-topic-${msgTopic}`);
+
         const messageSizeInBytes = iterResult.msgEvent.sizeInBytes;
         sizeInBytes += messageSizeInBytes;
 
@@ -925,8 +780,8 @@ export class IterablePlayer implements Player {
         totalBlockSizeBytes += messageSizeInBytes;
         events.push(iterResult.msgEvent);
       }
-      await iterator.return?.();
 
+      await iterator.return?.();
       const block = {
         messagesByTopic: {
           ...existingBlock?.messagesByTopic,
@@ -936,6 +791,7 @@ export class IterablePlayer implements Player {
       };
 
       this._blocks[idx] = block;
+
       const fullyLoadedFractionRanges = simplify(
         filterMap(this._blocks, (thisBlock, blockIndex) => {
           if (!thisBlock) {

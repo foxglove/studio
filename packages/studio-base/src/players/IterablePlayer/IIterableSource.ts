@@ -12,6 +12,7 @@ export type Initalization = {
   end: Time;
   topics: Topic[];
   datatypes: RosDatatypes;
+  blockDurationNanos?: number;
 
   // Publisher names by topic
   publishersByTopic: Map<string, Set<string>>;

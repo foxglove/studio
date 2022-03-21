@@ -50,28 +50,33 @@ const desktopBridge = (global as unknown as { desktopBridge: Desktop }).desktopB
 // AppWrapper is used to make a functional component so we can use the context
 function AppWrapper() {
   const deepLinks = useMemo(() => desktopBridge.getDeepLinks(), []);
-  const [useIterablePlayer = false] = useAppConfigurationValue<boolean>(
+  const [enableExperimentalBagPlayer = false] = useAppConfigurationValue<boolean>(
     AppSetting.EXPERIMENTAL_BAG_PLAYER,
+  );
+  const [enableExperimentalDataPlatformPlayer = false] = useAppConfigurationValue<boolean>(
+    AppSetting.EXPERIMENTAL_DATA_PLATFORM_PLAYER,
   );
 
   const dataSources: IDataSourceFactory[] = useMemo(() => {
     const sources = [
       new Ros1SocketDataSourceFactory(),
-      new Ros1LocalBagDataSourceFactory({ useIterablePlayer }),
-      new Ros1RemoteBagDataSourceFactory({ useIterablePlayer }),
+      new Ros1LocalBagDataSourceFactory({ useIterablePlayer: enableExperimentalBagPlayer }),
+      new Ros1RemoteBagDataSourceFactory({ useIterablePlayer: enableExperimentalBagPlayer }),
       new Ros2SocketDataSourceFactory(),
       new Ros2LocalBagDataSourceFactory(),
       new RosbridgeDataSourceFactory(),
       new FoxgloveWebSocketDataSourceFactory(),
       new UlogLocalDataSourceFactory(),
       new VelodyneDataSourceFactory(),
-      new FoxgloveDataPlatformDataSourceFactory({ useIterablePlayer }),
-      new SampleNuscenesDataSourceFactory({ useIterablePlayer }),
+      new FoxgloveDataPlatformDataSourceFactory({
+        useIterablePlayer: enableExperimentalDataPlatformPlayer,
+      }),
+      new SampleNuscenesDataSourceFactory({ useIterablePlayer: enableExperimentalBagPlayer }),
       new McapLocalDataSourceFactory(),
     ];
 
     return sources;
-  }, [useIterablePlayer]);
+  }, [enableExperimentalBagPlayer, enableExperimentalDataPlatformPlayer]);
 
   return <App deepLinks={deepLinks} availableSources={dataSources} />;
 }
