@@ -37,7 +37,6 @@ export default async function* streamMessages({
    * function may return successfully (possibly after yielding any remaining messages), or it may
    * raise an AbortError.
    */
-  //FIXME: delete and use try/finally instead?
   signal: AbortSignal;
 
   /** Parameters indicating the time range to stream. */
