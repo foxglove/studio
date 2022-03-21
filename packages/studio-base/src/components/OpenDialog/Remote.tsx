@@ -74,10 +74,13 @@ export default function Remote(props: RemoteProps): JSX.Element {
     <View onBack={onBack} onCancel={onCancel} onOpen={onOpen}>
       <Stack spacing={2}>
         {availableSources.map(
-          ({ docsIntro }) =>
-            docsIntro && (
-              <Text key={docsIntro} styles={{ root: { color: theme.semanticColors.bodySubtext } }}>
-                {docsIntro}
+          ({ description }) =>
+            description && (
+              <Text
+                key={description}
+                styles={{ root: { color: theme.semanticColors.bodySubtext } }}
+              >
+                {description}
               </Text>
             ),
         )}
@@ -94,7 +97,7 @@ export default function Remote(props: RemoteProps): JSX.Element {
         {availableSources.map(
           ({ displayName, docsLink }) =>
             docsLink && (
-              <Link key={docsLink} href={`https://foxglove.dev/docs/studio/connection${docsLink}`}>
+              <Link key={docsLink} href={docsLink}>
                 View {displayName} docs.
               </Link>
             ),

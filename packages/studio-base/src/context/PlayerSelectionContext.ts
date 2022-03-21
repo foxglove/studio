@@ -25,7 +25,7 @@ export interface IDataSourceFactory {
   type: DataSourceFactoryType;
   displayName: string;
   iconName?: RegisteredIconNames;
-  docsIntro?: string;
+  description?: string;
   docsLink?: string;
   disabledReason?: string | JSX.Element;
   badgeText?: string;

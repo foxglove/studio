@@ -104,9 +104,9 @@ export default function Connection(props: ConnectionProps): JSX.Element {
           spacing={2}
           sx={{ overflowX: "auto" }}
         >
-          {selectedSource?.docsIntro && (
+          {selectedSource?.description && (
             <Text styles={{ root: { color: theme.semanticColors.bodySubtext } }}>
-              {selectedSource.docsIntro}
+              {selectedSource.description}
             </Text>
           )}
           {selectedSource?.formConfig != undefined && (
