@@ -47,7 +47,7 @@ export default async function* streamMessages({
    * Message readers are initialized out of band so we can parse message definitions only once.
    */
   parsedChannelsByTopic: Map<string, ParsedChannelAndEncodings[]>;
-}): AsyncGenerator<(MessageEvent<unknown> & { channelId: number /*FIXME*/ })[]> {
+}): AsyncGenerator<MessageEvent<unknown>[]> {
   const decompressHandlers = await loadDecompressHandlers();
 
   log.debug("streamMessages", params);
@@ -81,7 +81,7 @@ export default async function* streamMessages({
   >();
 
   let totalMessages = 0;
-  let messages: (MessageEvent<unknown> & { channelId: number })[] = [];
+  let messages: MessageEvent<unknown>[] = [];
 
   function processRecord(record: Mcap0Types.TypedMcapRecord) {
     switch (record.type) {
@@ -140,7 +140,6 @@ export default async function* streamMessages({
         if (isTimeInRangeInclusive(receiveTime, params.start, params.end)) {
           totalMessages++;
           messages.push({
-            channelId: info.channel.id,
             topic: info.channel.topic,
             receiveTime,
             message: info.parsedChannel.deserializer(record.data),

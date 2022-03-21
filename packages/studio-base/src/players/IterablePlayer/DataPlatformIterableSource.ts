@@ -169,7 +169,7 @@ export class DataPlatformIterableSource implements IIterableSource {
       this._end,
     );
 
-    let stream: AsyncIterator<(MessageEvent<unknown> & { channelId: number })[]> | undefined;
+    let stream: AsyncIterator<MessageEvent<unknown>[]> | undefined;
 
     const controller = new AbortController();
 
@@ -185,7 +185,7 @@ export class DataPlatformIterableSource implements IIterableSource {
         }
         for (let result; (result = await stream.next()), result.done !== true; ) {
           for (const message of result.value) {
-            yield { connectionId: message.channelId, msgEvent: message, problem: undefined };
+            yield { connectionId: undefined, msgEvent: message, problem: undefined };
           }
         }
 

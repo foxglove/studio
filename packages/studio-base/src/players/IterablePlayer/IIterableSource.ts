@@ -28,12 +28,12 @@ export type MessageIteratorArgs = {
 
 export type IteratorResult =
   | {
-      connectionId: number;
+      connectionId: number | undefined;
       msgEvent: MessageEvent<unknown>;
       problem: undefined;
     }
   | {
-      connectionId: number;
+      connectionId: number | undefined;
       msgEvent: undefined;
       problem: PlayerProblem;
     };
