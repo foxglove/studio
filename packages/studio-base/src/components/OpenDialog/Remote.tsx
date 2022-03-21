@@ -5,7 +5,7 @@
 import { TextField, Link, Text, useTheme } from "@fluentui/react";
 import { Stack } from "@mui/material";
 import path from "path";
-import { useCallback, useState } from "react";
+import { useCallback, useState, Fragment } from "react";
 
 import {
   IDataSourceFactory,
@@ -73,26 +73,23 @@ export default function Remote(props: RemoteProps): JSX.Element {
   return (
     <View onBack={onBack} onCancel={onCancel} onOpen={onOpen}>
       <Stack spacing={2}>
-        {availableSources.map(
-          ({ description }) =>
-            description && (
+        {availableSources.map(({ description, docsLink, displayName, id }) => (
+          <Fragment key={id}>
+            {description && (
               <Text
                 key={description}
                 styles={{ root: { color: theme.semanticColors.bodySubtext } }}
               >
                 {description}
               </Text>
-            ),
-        )}
-
-        {availableSources.map(
-          ({ displayName, docsLink }) =>
-            docsLink && (
+            )}
+            {docsLink && (
               <Link key={docsLink} href={docsLink}>
                 View {displayName} docs.
               </Link>
-            ),
-        )}
+            )}
+          </Fragment>
+        ))}
 
         <TextField
           label="Remote file URL"
