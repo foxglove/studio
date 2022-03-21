@@ -2,10 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { TextField } from "@fluentui/react";
+import { TextField, Text, useTheme } from "@fluentui/react";
 import { Stack } from "@mui/material";
 import path from "path";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 
 import {
   IDataSourceFactory,
@@ -30,6 +30,7 @@ function maybeParseURL(urlString: string): undefined | URL {
 
 export default function Remote(props: RemoteProps): JSX.Element {
   const { onCancel, onBack, availableSources } = props;
+  const theme = useTheme();
 
   const { selectSource } = usePlayerSelection();
   const [currentUrl, setCurrentUrl] = useState<string | undefined>();
@@ -69,6 +70,16 @@ export default function Remote(props: RemoteProps): JSX.Element {
     });
   }, [availableSources, currentUrl, selectSource]);
 
+  const supportedExtensions = useMemo(
+    () =>
+      new Intl.ListFormat("en-US", { style: "long" }).format(
+        availableSources
+          .filter((source) => source.type === "remote-file")
+          .flatMap((source) => source.supportedFileTypes ?? []),
+      ),
+    [availableSources],
+  );
+
   return (
     <View onBack={onBack} onCancel={onCancel} onOpen={onOpen}>
       <Stack spacing={2}>
@@ -80,6 +91,9 @@ export default function Remote(props: RemoteProps): JSX.Element {
             setCurrentUrl(newValue);
           }}
         />
+        <Text styles={{ root: { color: theme.semanticColors.bodySubtext } }}>
+          {supportedExtensions} files are supported.
+        </Text>
       </Stack>
     </View>
   );

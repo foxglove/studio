@@ -34,6 +34,7 @@ import {
   AppConfigurationContext,
   useAppConfigurationValue,
   AppSetting,
+  McapRemoteDataSourceFactory,
 } from "@foxglove/studio-base";
 
 import { Desktop } from "../common/types";
@@ -73,6 +74,7 @@ function AppWrapper() {
       }),
       new SampleNuscenesDataSourceFactory({ useIterablePlayer: enableExperimentalBagPlayer }),
       new McapLocalDataSourceFactory(),
+      new McapRemoteDataSourceFactory(),
     ];
 
     return sources;

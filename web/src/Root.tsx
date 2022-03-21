@@ -31,6 +31,7 @@ import {
   SampleNuscenesDataSourceFactory,
   AppConfiguration,
   AppConfigurationContext,
+  McapRemoteDataSourceFactory,
 } from "@foxglove/studio-base";
 
 import ConsoleApiCookieUserProvider from "./components/ConsoleApiCookieCurrentUserProvider";
@@ -66,6 +67,7 @@ function AppWrapper() {
       }),
       new SampleNuscenesDataSourceFactory({ useIterablePlayer: enableExperimentalBagPlayer }),
       new McapLocalDataSourceFactory(),
+      new McapRemoteDataSourceFactory(),
     ];
 
     return sources;

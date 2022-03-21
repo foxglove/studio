@@ -23,12 +23,10 @@ import { filterMap } from "@foxglove/den/collection";
 import { useShallowMemo } from "@foxglove/hooks";
 import { Worldview, CameraState, ReglClickInfo, MouseEventObject } from "@foxglove/regl-worldview";
 import { Time } from "@foxglove/rostime";
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { Save3DConfig } from "@foxglove/studio-base/panels/ThreeDimensionalViz";
 import DebugStats from "@foxglove/studio-base/panels/ThreeDimensionalViz/DebugStats";
@@ -169,6 +167,9 @@ const SUPPORTED_MARKER_DATATYPES_SET = new Set([
   "visualization_msgs/MarkerArray",
   "visualization_msgs/msg/MarkerArray",
   "ros.visualization_msgs.MarkerArray",
+  "geometry_msgs/PoseArray",
+  "geometry_msgs/msg/PoseArray",
+  "ros.geometry_msgs.PoseArray",
   "geometry_msgs/PoseStamped",
   "geometry_msgs/msg/PoseStamped",
   "ros.geometry_msgs.PoseStamped",
@@ -464,7 +465,6 @@ export default function Layout({
     }, [] as MarkerMatcher[]);
   }, [colorOverrideByVariable, globalVariables, linkedGlobalVariables]);
 
-  const [rosPackagePath] = useAppConfigurationValue<string>(AppSetting.ROS_PACKAGE_PATH);
   const [robotDescriptionParam] = PanelAPI.useParameter<string>(ROBOT_DESCRIPTION_PARAM);
 
   useMemo(() => {
@@ -475,9 +475,9 @@ export default function Layout({
       sceneBuilder.clear();
     }
 
-    urdfBuilder.setUrdfData(robotDescriptionParam, rosPackagePath);
+    urdfBuilder.setUrdfData(robotDescriptionParam);
     urdfBuilder.setVisible(selectedTopicNames.includes(URDF_TOPIC));
-    urdfBuilder.setSettingsByKey(settingsByKey, rosPackagePath);
+    urdfBuilder.setSettingsByKey(settingsByKey);
 
     // Toggle scene builder topics based on visible topic nodes in the tree
     const topicsByTopicName = getTopicsByTopicName(topics);
@@ -506,7 +506,6 @@ export default function Layout({
     playerId,
     resetFrame,
     robotDescriptionParam,
-    rosPackagePath,
     sceneBuilder,
     selectedNamespacesByTopic,
     selectedTopicNames,
