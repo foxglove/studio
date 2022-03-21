@@ -48,6 +48,7 @@ export default async function* streamMessages({
    */
   parsedChannelsByTopic: Map<string, ParsedChannelAndEncodings[]>;
 }): AsyncGenerator<(MessageEvent<unknown> & { channelId: number /*FIXME*/ })[]> {
+  // fixme - this re-loads the decompress handlers every time!
   const decompressHandlers = await loadDecompressHandlers();
 
   log.debug("streamMessages", params);
