@@ -169,41 +169,34 @@ export class DataPlatformIterableSource implements IIterableSource {
       this._end,
     );
 
-    let stream: AsyncIterator<MessageEvent<unknown>[]> | undefined;
+    let stream: AsyncGenerator<MessageEvent<unknown>[]> | undefined;
 
-    const controller = new AbortController();
-
-    try {
-      for (;;) {
-        if (!stream) {
-          stream = streamMessages({
-            api,
-            signal: controller.signal,
-            parsedChannelsByTopic,
-            params: { deviceId, start: currentStart, end: currentEnd, topics: args.topics },
-          });
-        }
-        for (let result; (result = await stream.next()), result.done !== true; ) {
-          for (const message of result.value) {
-            yield { connectionId: undefined, msgEvent: message, problem: undefined };
-          }
-        }
-
-        stream = undefined;
-        if (compare(currentEnd, this._end) >= 0) {
-          break;
-        }
-
-        // The next stream will start 1 nanosecond after the previous end
-        currentStart = add(currentEnd, { sec: 0, nsec: 1 });
-        currentEnd = clampTime(
-          add(currentStart, fromSec(this._requestDurationSecs)),
-          this._start,
-          this._end,
-        );
+    for (;;) {
+      if (!stream) {
+        stream = streamMessages({
+          api,
+          parsedChannelsByTopic,
+          params: { deviceId, start: currentStart, end: currentEnd, topics: args.topics },
+        });
       }
-    } finally {
-      controller.abort();
+      for await (const messages of stream) {
+        for (const message of messages) {
+          yield { connectionId: undefined, msgEvent: message, problem: undefined };
+        }
+      }
+
+      stream = undefined;
+      if (compare(currentEnd, this._end) >= 0) {
+        break;
+      }
+
+      // The next stream will start 1 nanosecond after the previous end
+      currentStart = add(currentEnd, { sec: 0, nsec: 1 });
+      currentEnd = clampTime(
+        add(currentStart, fromSec(this._requestDurationSecs)),
+        this._start,
+        this._end,
+      );
     }
   }
 }
