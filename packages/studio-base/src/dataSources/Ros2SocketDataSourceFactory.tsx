@@ -19,7 +19,15 @@ class Ros2SocketDataSourceFactory implements IDataSourceFactory {
   docsLink = "https://foxglove.dev/docs/studio/connection/native";
 
   formConfig = {
-    fields: [{ id: "url", label: "ROS_DOMAIN_ID", defaultValue: "0" }],
+    fields: [
+      {
+        id: "url",
+        label: "ROS_DOMAIN_ID",
+        defaultValue: "0",
+        description:
+          "Used by DDS, the default ROS 2 middleware, to compute the UDP ports used for discovery and communication",
+      },
+    ],
   };
 
   initialize(args: DataSourceFactoryInitializeArgs): Player | undefined {

@@ -124,6 +124,7 @@ export default function Connection(props: ConnectionProps): JSX.Element {
                     disabled={selectedSource.disabledReason != undefined}
                     key={field.label}
                     label={field.label}
+                    description={field.description}
                     placeholder={field.placeholder}
                     defaultValue={field.defaultValue}
                     onChange={(_, newValue) => {
