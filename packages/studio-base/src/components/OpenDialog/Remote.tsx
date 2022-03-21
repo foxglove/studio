@@ -85,15 +85,6 @@ export default function Remote(props: RemoteProps): JSX.Element {
             ),
         )}
 
-        <TextField
-          label="Remote file URL"
-          errorMessage={errorMessage}
-          placeholder="https://example.com/file.bag"
-          onChange={(_, newValue) => {
-            setCurrentUrl(newValue);
-          }}
-        />
-
         {availableSources.map(
           ({ displayName, docsLink }) =>
             docsLink && (
@@ -102,6 +93,15 @@ export default function Remote(props: RemoteProps): JSX.Element {
               </Link>
             ),
         )}
+
+        <TextField
+          label="Remote file URL"
+          errorMessage={errorMessage}
+          placeholder="https://example.com/file.bag"
+          onChange={(_, newValue) => {
+            setCurrentUrl(newValue);
+          }}
+        />
       </Stack>
     </View>
   );

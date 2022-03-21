@@ -109,6 +109,13 @@ export default function Connection(props: ConnectionProps): JSX.Element {
               {selectedSource.description}
             </Text>
           )}
+
+          {selectedSource?.docsLink && (
+            <Link href={`https://foxglove.dev/docs/studio/connection${selectedSource.docsLink}`}>
+              View docs.
+            </Link>
+          )}
+
           {selectedSource?.formConfig != undefined && (
             <Stack flexGrow={1} justifyContent="space-between">
               <Stack spacing={2}>
@@ -129,13 +136,6 @@ export default function Connection(props: ConnectionProps): JSX.Element {
                     }}
                   />
                 ))}
-                {selectedSource.docsLink && (
-                  <Link
-                    href={`https://foxglove.dev/docs/studio/connection${selectedSource.docsLink}`}
-                  >
-                    View docs.
-                  </Link>
-                )}
               </Stack>
             </Stack>
           )}
