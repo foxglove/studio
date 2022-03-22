@@ -181,13 +181,15 @@ export default async function* streamMessages({
     }
   }
 
-  try {
+  let normalReturn = false;
+  parseLoop: try {
     const reader = new Mcap0StreamReader({ decompressHandlers });
     for (let result; (result = await streamReader.read()), !result.done; ) {
       reader.append(result.value);
       for (let record; (record = reader.nextRecord()); ) {
         if (record.type === "DataEnd") {
-          break;
+          normalReturn = true;
+          break parseLoop;
         }
         processRecord(record);
       }
@@ -199,9 +201,12 @@ export default async function* streamMessages({
     if (!reader.done()) {
       throw new Error("Incomplete mcap file");
     }
+    normalReturn = true;
   } finally {
-    // If the caller called generator.return() in between body chunks, automatically cancel the request.
-    log.debug("Automatic abort of streamMessages", params);
+    if (!normalReturn) {
+      // If the caller called generator.return() in between body chunks, automatically cancel the request.
+      log.debug("Automatic abort of streamMessages", params);
+    }
     controller.abort();
   }
 
