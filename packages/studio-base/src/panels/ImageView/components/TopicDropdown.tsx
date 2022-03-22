@@ -11,6 +11,7 @@ import {
   Radio,
   ListSubheader,
   SelectProps,
+  MenuProps,
 } from "@mui/material";
 import { useMemo } from "react";
 
@@ -44,6 +45,20 @@ export function TopicDropdown(props: Props): JSX.Element {
     onChange(typeof value === "string" ? [value] : value);
   };
 
+  const menuProps: Partial<MenuProps> = {
+    MenuListProps: {
+      dense: true,
+      subheader: multiple ? <ListSubheader>Select multiple topics</ListSubheader> : undefined,
+    },
+  };
+
+  // We avoid setting the anchorEl property unless it is specified.
+  // The underlying menu component treats the presence of the property (even if undefined or null)
+  // as a value.
+  if ("anchorEl" in props) {
+    menuProps.anchorEl = props.anchorEl;
+  }
+
   return (
     <>
       <Select
@@ -56,13 +71,7 @@ export function TopicDropdown(props: Props): JSX.Element {
         onChange={handleChange}
         multiple={multiple}
         open={props.open}
-        MenuProps={{
-          anchorEl: props.anchorEl,
-          MenuListProps: {
-            dense: true,
-            subheader: multiple ? <ListSubheader>Select multiple topics</ListSubheader> : undefined,
-          },
-        }}
+        MenuProps={menuProps}
       >
         {items.length === 0 && (
           <MenuItem disabled value="">
