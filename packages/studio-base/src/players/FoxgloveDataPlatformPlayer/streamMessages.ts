@@ -186,6 +186,9 @@ export default async function* streamMessages({
     for (let result; (result = await streamReader.read()), !result.done; ) {
       reader.append(result.value);
       for (let record; (record = reader.nextRecord()); ) {
+        if (record.type === "DataEnd") {
+          break;
+        }
         processRecord(record);
       }
       if (messages.length > 0) {
