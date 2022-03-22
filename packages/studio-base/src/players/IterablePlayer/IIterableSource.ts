@@ -37,7 +37,7 @@ export type IteratorResult =
       problem: PlayerProblem;
     };
 
-export type BackfillMessagesArgs = {
+export type GetBackfillMessagesArgs = {
   topics: string[];
   time: Time;
 };
@@ -71,5 +71,5 @@ export interface IIterableSource {
    * Load the most recent messages per topic that occurred before or at the target time, if
    * available.
    */
-  backfillMessages(args: BackfillMessagesArgs): Promise<MessageEvent<unknown>[]>;
+  getBackfillMessages(args: GetBackfillMessagesArgs): Promise<MessageEvent<unknown>[]>;
 }

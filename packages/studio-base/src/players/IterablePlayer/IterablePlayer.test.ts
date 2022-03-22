@@ -15,7 +15,7 @@ import {
   Initalization,
   MessageIteratorArgs,
   IteratorResult,
-  BackfillMessagesArgs,
+  GetBackfillMessagesArgs,
 } from "./IIterableSource";
 import { IterablePlayer } from "./IterablePlayer";
 
@@ -33,7 +33,7 @@ class TestSource implements IIterableSource {
 
   async *messageIterator(_args: MessageIteratorArgs): AsyncIterator<Readonly<IteratorResult>> {}
 
-  async backfillMessages(_args: BackfillMessagesArgs): Promise<MessageEvent<unknown>[]> {
+  async getBackfillMessages(_args: GetBackfillMessagesArgs): Promise<MessageEvent<unknown>[]> {
     return [];
   }
 }
@@ -153,10 +153,10 @@ describe("IterablePlayer", () => {
     // replace the message iterator with our own implementation
     // This implementation performs a seekPlayback during backfill.
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    const originalMethod = source.backfillMessages;
-    source.backfillMessages = async function (_args: BackfillMessagesArgs) {
+    const originalMethod = source.getBackfillMessages;
+    source.getBackfillMessages = async function (_args: GetBackfillMessagesArgs) {
       player.seekPlayback({ sec: 0, nsec: 0 });
-      source.backfillMessages = originalMethod;
+      source.getBackfillMessages = originalMethod;
       return [
         {
           topic: "foo",

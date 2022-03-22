@@ -315,7 +315,7 @@ export class IterablePlayer implements Player {
       new Set(this._subscriptions.map((subscription) => subscription.topic)),
     );
 
-    const messages = await this._iterableSource.backfillMessages({ topics, time: targetTime });
+    const messages = await this._iterableSource.getBackfillMessages({ topics, time: targetTime });
 
     // Our backfill loaded the messages inclusive of the seek time, thus the next messages
     // we read should be _after_ the seek time.

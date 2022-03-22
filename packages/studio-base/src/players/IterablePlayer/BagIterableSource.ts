@@ -22,7 +22,7 @@ import {
   IteratorResult,
   Initalization,
   MessageIteratorArgs,
-  BackfillMessagesArgs,
+  GetBackfillMessagesArgs,
 } from "./IIterableSource";
 
 type BagSource = { type: "file"; file: File } | { type: "remote"; url: string };
@@ -143,8 +143,12 @@ export class BagIterableSource implements IIterableSource {
     };
   }
 
-  async *messageIterator(
-    opt: MessageIteratorArgs & { reverse?: boolean },
+  async *messageIterator(opt: MessageIteratorArgs): AsyncGenerator<Readonly<IteratorResult>> {
+    yield* this._messageIterator({ ...opt, reverse: false });
+  }
+
+  private async *_messageIterator(
+    opt: MessageIteratorArgs & { reverse: boolean },
   ): AsyncGenerator<Readonly<IteratorResult>> {
     if (!this._bag) {
       throw new Error("Invariant: uninitialized");
@@ -187,13 +191,16 @@ export class BagIterableSource implements IIterableSource {
     }
   }
 
-  async backfillMessages({ topics, time }: BackfillMessagesArgs): Promise<MessageEvent<unknown>[]> {
+  async getBackfillMessages({
+    topics,
+    time,
+  }: GetBackfillMessagesArgs): Promise<MessageEvent<unknown>[]> {
     const messages: MessageEvent<unknown>[] = [];
     for (const topic of topics) {
       // NOTE: An iterator is made for each topic to get the latest message on that topic.
       // An single iterator for all the topics could result in iterating through many
       // irrelevant messages to get to an older message on a topic.
-      for await (const result of this.messageIterator({
+      for await (const result of this._messageIterator({
         topics: [topic],
         start: time,
         reverse: true,
