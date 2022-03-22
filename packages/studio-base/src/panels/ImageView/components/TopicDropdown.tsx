@@ -25,6 +25,7 @@ type Props = {
   multiple: boolean;
   size?: SelectProps["size"];
   open?: boolean;
+  anchorEl?: Element | ReactNull;
 
   onChange: (activeTopics: string[]) => void;
 };
@@ -56,7 +57,7 @@ export function TopicDropdown(props: Props): JSX.Element {
         multiple={multiple}
         open={props.open}
         MenuProps={{
-          contentEditable: multiple,
+          anchorEl: props.anchorEl,
           MenuListProps: {
             dense: true,
             subheader: multiple ? <ListSubheader>Select multiple topics</ListSubheader> : undefined,
