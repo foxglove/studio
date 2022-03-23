@@ -33,14 +33,15 @@ export class RenderableSphere extends RenderableMarker {
   }
 
   override dispose(): void {
-    releaseStandardMaterial(this.marker, this._renderer.materialCache);
+    releaseStandardMaterial(this.userData.marker, this._renderer.materialCache);
   }
 
   override update(marker: Marker): void {
+    const prevMarker = this.userData.marker;
     super.update(marker);
 
-    if (!rgbaEqual(marker.color, this.marker.color)) {
-      releaseStandardMaterial(marker, this._renderer.materialCache);
+    if (!rgbaEqual(marker.color, prevMarker.color)) {
+      releaseStandardMaterial(prevMarker, this._renderer.materialCache);
       this.mesh.material = standardMaterial(marker, this._renderer.materialCache);
     }
 

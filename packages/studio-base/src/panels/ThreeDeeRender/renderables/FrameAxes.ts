@@ -16,15 +16,13 @@ const log = Logger.getLogger(__filename);
 type FrameAxisRenderable = THREE.Object3D & {
   userData: {
     frameId?: string;
-    type?: string;
-    selectable?: boolean;
     pose?: Pose;
   };
 };
 
 export class FrameAxes extends THREE.Object3D {
   renderer: Renderer;
-  renderables = new Map<string, FrameAxisRenderable>();
+  axesByFrameId = new Map<string, FrameAxisRenderable>();
 
   constructor(renderer: Renderer) {
     super();
@@ -32,15 +30,15 @@ export class FrameAxes extends THREE.Object3D {
   }
 
   dispose(): void {
-    for (const renderable of this.renderables.values()) {
-      renderable.traverse((obj) => {
+    for (const axisRenderable of this.axesByFrameId.values()) {
+      axisRenderable.traverse((obj) => {
         if (obj instanceof THREE.AxesHelper) {
           obj.dispose();
         }
       });
     }
     this.children.length = 0;
-    this.renderables.clear();
+    this.axesByFrameId.clear();
   }
 
   addTransformMessage(tf: TF): void {
@@ -66,7 +64,7 @@ export class FrameAxes extends THREE.Object3D {
     );
 
     if (frameAdded) {
-      log.info(`Added transform "${tf.header.frame_id}_T_${tf.child_frame_id}"`);
+      log.debug(`Added transform "${tf.header.frame_id}_T_${tf.child_frame_id}"`);
       this.renderer.emit("transformTreeUpdated", this.renderer);
     }
   }
@@ -78,7 +76,7 @@ export class FrameAxes extends THREE.Object3D {
       return;
     }
 
-    for (const [frameId, renderable] of this.renderables.entries()) {
+    for (const [frameId, renderable] of this.axesByFrameId.entries()) {
       updatePose(
         renderable,
         this.renderer.transformTree,
@@ -92,15 +90,13 @@ export class FrameAxes extends THREE.Object3D {
   }
 
   private _addFrameAxis(frameId: string): void {
-    if (this.renderables.has(frameId)) {
+    if (this.axesByFrameId.has(frameId)) {
       return;
     }
 
     const frame = new THREE.Object3D() as FrameAxisRenderable;
     frame.name = frameId;
     frame.userData.frameId = frameId;
-    frame.userData.type = "CoordinateFrame";
-    frame.userData.selectable = true;
     frame.userData.pose = makePose();
 
     const AXIS_DEFAULT_LENGTH = 1; // [m]
@@ -110,6 +106,6 @@ export class FrameAxes extends THREE.Object3D {
     // TODO: <div> floating label
 
     this.add(frame);
-    this.renderables.set(frameId, frame);
+    this.axesByFrameId.set(frameId, frame);
   }
 }

@@ -84,7 +84,7 @@ export class TopicMarkers extends THREE.Object3D {
   startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
     for (const ns of this.namespaces.values()) {
       for (const renderable of ns.values()) {
-        const marker = renderable.marker;
+        const marker = renderable.userData.marker;
         const frameId = marker.header.frame_id;
         const srcTime = marker.frame_locked ? currentTime : renderable.userData.srcTime;
         updatePose(

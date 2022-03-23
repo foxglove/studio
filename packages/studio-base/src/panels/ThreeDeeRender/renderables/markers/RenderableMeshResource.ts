@@ -35,18 +35,19 @@ export class RenderableMeshResource extends RenderableMarker {
   }
 
   override dispose(): void {
-    releaseStandardMaterial(this.marker, this._renderer.materialCache);
+    releaseStandardMaterial(this.userData.marker, this._renderer.materialCache);
   }
 
   override update(marker: Marker): void {
+    const prevMarker = this.userData.marker;
     super.update(marker);
 
-    if (!rgbaEqual(marker.color, this.marker.color)) {
-      releaseStandardMaterial(marker, this._renderer.materialCache);
+    if (!rgbaEqual(marker.color, prevMarker.color)) {
+      releaseStandardMaterial(prevMarker, this._renderer.materialCache);
       this.material = standardMaterial(marker, this._renderer.materialCache);
     }
 
-    if (marker.mesh_resource !== this.marker.mesh_resource) {
+    if (marker.mesh_resource !== prevMarker.mesh_resource) {
       this._loadModel(marker.mesh_resource, {
         useEmbeddedMaterials: marker.mesh_use_embedded_materials,
       }).catch(() => {});
@@ -63,7 +64,7 @@ export class RenderableMeshResource extends RenderableMarker {
 
     const cachedModel = await this._renderer.modelCache.load(url, (err) => {
       this._renderer.topicErrors.add(
-        this.topic,
+        this.userData.topic,
         MESH_FETCH_FAILED,
         `Failed to load mesh resource from "${url}": ${err.message}`,
       );

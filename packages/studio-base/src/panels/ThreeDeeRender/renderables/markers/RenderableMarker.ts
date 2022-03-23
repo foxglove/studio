@@ -12,13 +12,13 @@ const tempColor = new THREE.Color();
 const tempTuple4: THREE.Vector4Tuple = [0, 0, 0, 0];
 
 type MarkerUserData = {
+  topic: string;
+  marker: Marker;
   pose: Pose;
   srcTime: bigint;
 };
 
 export class RenderableMarker extends THREE.Object3D {
-  readonly topic: string;
-  marker: Marker;
   override userData: MarkerUserData;
 
   protected _renderer: Renderer;
@@ -29,9 +29,12 @@ export class RenderableMarker extends THREE.Object3D {
     this._renderer = renderer;
 
     this.name = getMarkerId(topic, marker.ns, marker.id);
-    this.topic = topic;
-    this.marker = marker;
-    this.userData = { pose: marker.pose, srcTime: rosTimeToNanoSec(marker.header.stamp) };
+    this.userData = {
+      topic,
+      marker,
+      pose: marker.pose,
+      srcTime: rosTimeToNanoSec(marker.header.stamp),
+    };
 
     renderer.renderables.set(this.name, this);
   }
@@ -41,7 +44,7 @@ export class RenderableMarker extends THREE.Object3D {
   }
 
   update(marker: Marker): void {
-    this.marker = marker;
+    this.userData.marker = marker;
     this.userData.srcTime = rosTimeToNanoSec(marker.header.stamp);
     this.userData.pose = marker.pose;
   }

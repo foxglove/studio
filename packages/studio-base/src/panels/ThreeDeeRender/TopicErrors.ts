@@ -2,6 +2,10 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import Logger from "@foxglove/log";
+
+const log = Logger.getLogger(__filename);
+
 export class TopicErrors {
   errors = new Map<string, Map<string, string>>(); // topic -> {errorId -> errorMessage}
 
@@ -12,7 +16,7 @@ export class TopicErrors {
       this.errors.set(topic, topicErrors);
     }
     topicErrors.set(errorId, errorMessage);
-    console.warn(`[TopicError][${topic}] ${errorId}: ${errorMessage}`);
+    log.warn(`[${topic}] ${errorId}: ${errorMessage}`);
   }
 
   remove(topic: string, errorId: string): void {

@@ -44,21 +44,22 @@ export class RenderableLineStrip extends RenderableMarker {
   }
 
   override dispose(): void {
-    releaseLinePrepassMaterial(this.marker, this._renderer.materialCache);
-    releaseLineMaterial(this.marker, this._renderer.materialCache);
+    releaseLinePrepassMaterial(this.userData.marker, this._renderer.materialCache);
+    releaseLineMaterial(this.userData.marker, this._renderer.materialCache);
   }
 
   override update(marker: Marker): void {
+    const prevMarker = this.userData.marker;
     super.update(marker);
 
-    const prevLineWidth = this.marker.scale.x;
-    const prevTransparent = markerHasTransparency(this.marker);
+    const prevLineWidth = prevMarker.scale.x;
+    const prevTransparent = markerHasTransparency(prevMarker);
     const lineWidth = marker.scale.x;
     const transparent = markerHasTransparency(marker);
 
     if (!approxEquals(prevLineWidth, lineWidth) || prevTransparent !== transparent) {
-      releaseLinePrepassMaterial(this.marker, this._renderer.materialCache);
-      releaseLineMaterial(this.marker, this._renderer.materialCache);
+      releaseLinePrepassMaterial(prevMarker, this._renderer.materialCache);
+      releaseLineMaterial(prevMarker, this._renderer.materialCache);
       this.linePrepass.material = linePrepassMaterial(marker, this._renderer.materialCache);
       this.line.material = lineMaterial(marker, this._renderer.materialCache);
     }

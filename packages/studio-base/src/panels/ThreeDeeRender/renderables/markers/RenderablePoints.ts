@@ -36,15 +36,16 @@ export class RenderablePoints extends RenderableMarker {
   }
 
   override dispose(): void {
-    releasePointsMaterial(this.marker, this._renderer.materialCache);
+    releasePointsMaterial(this.userData.marker, this._renderer.materialCache);
   }
 
   override update(marker: Marker): void {
+    const prevMarker = this.userData.marker;
     super.update(marker);
 
-    const prevWidth = this.marker.scale.x;
-    const prevHeight = this.marker.scale.y;
-    const prevTransparent = markerHasTransparency(this.marker);
+    const prevWidth = prevMarker.scale.x;
+    const prevHeight = prevMarker.scale.y;
+    const prevTransparent = markerHasTransparency(prevMarker);
     const width = marker.scale.x;
     const height = marker.scale.y;
     const transparent = markerHasTransparency(marker);
@@ -54,7 +55,7 @@ export class RenderablePoints extends RenderableMarker {
       !approxEquals(prevHeight, height) ||
       prevTransparent !== transparent
     ) {
-      releasePointsMaterial(this.marker, this._renderer.materialCache);
+      releasePointsMaterial(prevMarker, this._renderer.materialCache);
       this.points.material = pointsMaterial(marker, this._renderer.materialCache);
     }
 
