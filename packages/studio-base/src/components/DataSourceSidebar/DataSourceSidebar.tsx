@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Add24Regular as AddIcon } from "@fluentui/react-icons";
-import { IconButton, Tab, Tabs, styled as muiStyled } from "@mui/material";
+import { IconButton, Tab, Tabs, styled as muiStyled, Divider } from "@mui/material";
 import { useState, PropsWithChildren } from "react";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
@@ -35,12 +35,19 @@ const StyledTabs = muiStyled(Tabs)({
   minHeight: "auto",
 });
 
-interface TabPanelProps {
-  index: number;
-  value: number;
-}
+const ProblemCount = muiStyled("div")(({ theme }) => ({
+  backgroundColor: theme.palette.error.main,
+  color: theme.palette.error.contrastText,
+  padding: theme.spacing(0.125, 1),
+  borderRadius: 8,
+}));
 
-const TabPanel = (props: PropsWithChildren<TabPanelProps>): JSX.Element => {
+const TabPanel = (
+  props: PropsWithChildren<{
+    index: number;
+    value: number;
+  }>,
+): JSX.Element => {
   const { children, value, index, ...other } = props;
 
   return (
@@ -86,7 +93,7 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
     >
       <Stack fullHeight>
         <DataSourceInfo />
-
+        <Divider />
         {playerPresence !== PlayerPresence.NOT_PRESENT && (
           <Stack flex={1}>
             <StyledTabs
@@ -95,8 +102,20 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
               textColor="inherit"
             >
               <StyledTab disableRipple label="Topics" value={0} />
-              {playerProblems.length > 0 && <StyledTab disableRipple label="Problems" value={1} />}
+              <StyledTab
+                disableRipple
+                label={
+                  <Stack direction="row" alignItems="baseline" gap={1}>
+                    Problems
+                    {playerProblems.length > 0 && (
+                      <ProblemCount>{playerProblems.length}</ProblemCount>
+                    )}
+                  </Stack>
+                }
+                value={1}
+              />
             </StyledTabs>
+            <Divider />
             <TabPanel value={activeTab} index={0}>
               <TopicList />
             </TabPanel>

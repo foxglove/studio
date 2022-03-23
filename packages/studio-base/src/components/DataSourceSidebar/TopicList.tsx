@@ -4,15 +4,12 @@
 
 import CheckIcon from "@mui/icons-material/Check";
 import ClearIcon from "@mui/icons-material/Clear";
-import ContentPasteIcon from "@mui/icons-material/ContentPaste";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
+import CopyAllIcon from "@mui/icons-material/CopyAll";
 import SearchIcon from "@mui/icons-material/Search";
 import {
   AppBar,
   Box,
   IconButton,
-  Menu,
-  MenuItem,
   List,
   ListItem,
   ListItemText,
@@ -22,14 +19,11 @@ import {
   Typography,
   TypographyProps,
 } from "@mui/material";
-import cx from "classnames";
 import { Fzf, FzfResultItem } from "fzf";
 import { useMemo, useState } from "react";
 import { useCopyToClipboard } from "react-use";
 
 import { Topic } from "@foxglove/studio";
-import EyeClosedIcon from "@foxglove/studio-base/components/EyeClosedIcon";
-import EyeOpenIcon from "@foxglove/studio-base/components/EyeOpenIcon";
 import {
   MessagePipelineContext,
   useMessagePipeline,
@@ -75,10 +69,9 @@ const HighlightChars = ({
 };
 
 const StyledAppBar = muiStyled(AppBar)(({ theme }) => ({
-  top: 0,
+  top: -1,
   zIndex: theme.zIndex.appBar - 1,
   borderBottom: `1px solid ${theme.palette.divider}`,
-  boxShadow: `0 -1px 0 ${theme.palette.divider}`,
   display: "flex",
   flexDirection: "row",
   padding: theme.spacing(1),
@@ -87,8 +80,14 @@ const StyledAppBar = muiStyled(AppBar)(({ theme }) => ({
 }));
 
 const StyledListItem = muiStyled(ListItem)(({ theme }) => ({
+  "&.MuiListItem-dense": {
+    ".MuiListItemText-root": {
+      marginTop: theme.spacing(0.5),
+      marginBottom: theme.spacing(0.5),
+    },
+  },
   ".MuiListItemSecondaryAction-root": {
-    marginRight: theme.spacing(-0.75),
+    marginRight: theme.spacing(-1),
   },
   "@media (pointer: fine)": {
     ".MuiListItemSecondaryAction-root": {
@@ -107,23 +106,9 @@ const StyledListItem = muiStyled(ListItem)(({ theme }) => ({
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 
 export function TopicList(): JSX.Element {
-  const [showDatatype, setShowDatatype] = useState<boolean>(true);
   const [filterText, setFilterText] = useState<string>("");
   const [clipboard, copyToClipboard] = useCopyToClipboard();
   const [copied, setCopied] = useState<boolean>(false);
-  const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
-  const [menuTopic, setMenuTopic] = useState<number | undefined>(undefined);
-  const open = Boolean(anchorEl);
-
-  const handleClick = (event: React.MouseEvent<HTMLElement>, value: number) => {
-    setMenuTopic(value);
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setMenuTopic(undefined);
-    setAnchorEl(undefined);
-  };
 
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const topics = useMessagePipeline((ctx) => ctx.playerState.activeData?.topics ?? []);
@@ -166,26 +151,18 @@ export function TopicList(): JSX.Element {
             }}
           />
         </Box>
-        <IconButton
-          disabled={playerPresence !== PlayerPresence.PRESENT}
-          title={`${showDatatype ? "Show" : "Hide"} datatype`}
-          onClick={() => setShowDatatype(!showDatatype)}
-        >
-          {showDatatype ? <EyeOpenIcon /> : <EyeClosedIcon color="disabled" />}
-        </IconButton>
       </StyledAppBar>
       {playerPresence === PlayerPresence.PRESENT ? (
         filteredTopics.length > 0 ? (
-          <List dense={showDatatype} disablePadding>
-            {filteredTopics.map(({ item, positions }, idx) => (
+          <List key="topics" dense disablePadding>
+            {filteredTopics.map(({ item, positions }) => (
               <StyledListItem
-                className={cx({ "Mui-hasMenu": menuTopic === idx })}
-                selected={menuTopic === idx}
                 divider
                 key={item.name}
                 secondaryAction={
                   <Stack direction="row" gap={0.5} alignItems="center">
                     <IconButton
+                      size="small"
                       title={copied ? "Copied!" : "Copy topic name"}
                       color={copied ? "success" : "inherit"}
                       onClick={() => {
@@ -197,38 +174,23 @@ export function TopicList(): JSX.Element {
                         }
                       }}
                     >
-                      {copied ? (
-                        <CheckIcon fontSize="small" />
-                      ) : (
-                        <ContentPasteIcon fontSize="small" />
-                      )}
-                    </IconButton>
-                    <IconButton
-                      id={`${idx}-more-button`}
-                      aria-label="more"
-                      aria-controls={open ? "topic-menu" : undefined}
-                      aria-expanded={open ? "true" : undefined}
-                      aria-haspopup="true"
-                      onClick={(event) => handleClick(event, idx)}
-                    >
-                      <MoreVertIcon fontSize="small" />
+                      {copied ? <CheckIcon fontSize="small" /> : <CopyAllIcon fontSize="small" />}
                     </IconButton>
                   </Stack>
                 }
               >
                 <ListItemText
                   primary={<HighlightChars str={item.name} indices={positions} />}
-                  primaryTypographyProps={{ variant: "body2", noWrap: true, title: item.name }}
+                  primaryTypographyProps={{ noWrap: true, title: item.name }}
                   secondary={
-                    showDatatype && (
-                      <HighlightChars
-                        str={item.datatype}
-                        indices={positions}
-                        offset={item.name.length + 1}
-                      />
-                    )
+                    <HighlightChars
+                      str={item.datatype}
+                      indices={positions}
+                      offset={item.name.length + 1}
+                    />
                   }
                   secondaryTypographyProps={{
+                    variant: "caption",
                     fontFamily: fonts.MONOSPACE,
                     noWrap: true,
                     title: item.datatype,
@@ -243,31 +205,18 @@ export function TopicList(): JSX.Element {
           </Stack>
         )
       ) : (
-        [...new Array(10).fill({})].map((i) => (
-          <ListItem divider key={i}>
-            <ListItemText
-              primary={<Skeleton animation={false} width="20%" />}
-              secondary={<Skeleton animation="wave" width="55%" />}
-            />
-          </ListItem>
-        ))
+        <List key="loading" dense disablePadding>
+          {[...new Array(10).fill({})].map((i) => (
+            <StyledListItem divider key={i}>
+              <ListItemText
+                primary={<Skeleton animation={false} width="20%" />}
+                secondary={<Skeleton animation="wave" width="55%" />}
+                secondaryTypographyProps={{ variant: "caption" }}
+              />
+            </StyledListItem>
+          ))}
+        </List>
       )}
-      <Menu
-        id="topic-menu"
-        MenuListProps={{
-          "aria-labelledby": `${menuTopic}-more-button`,
-        }}
-        anchorEl={anchorEl}
-        open={open}
-        onClose={handleClose}
-        PaperProps={{
-          sx: { minWidth: 180 },
-        }}
-      >
-        <MenuItem onClick={handleClose}>
-          <Box flex="auto">Open in…</Box>
-        </MenuItem>
-      </Menu>
     </>
   );
 }

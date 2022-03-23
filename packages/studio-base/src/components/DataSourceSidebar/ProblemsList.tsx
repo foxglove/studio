@@ -8,6 +8,7 @@ import { List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui
 import { useCallback, useContext } from "react";
 
 import NotificationModal from "@foxglove/studio-base/components/NotificationModal";
+import Stack from "@foxglove/studio-base/components/Stack";
 import ModalContext from "@foxglove/studio-base/context/ModalContext";
 import { PlayerProblem } from "@foxglove/studio-base/players/types";
 
@@ -33,27 +34,33 @@ export function ProblemsList({ problems }: { problems: PlayerProblem[] }): JSX.E
 
   return (
     <>
-      <List disablePadding>
-        {problems.map((problem, idx) => (
-          <ListItem disablePadding key={`${idx}`}>
-            <ListItemButton onClick={() => showProblemModal(problem)}>
-              <ListItemIcon>
-                {problem.severity === "error" ? (
-                  <ErrorIcon color="error" />
-                ) : (
-                  <WarningIcon color="warning" />
-                )}
-              </ListItemIcon>
-              <ListItemText
-                primary={problem.message}
-                primaryTypographyProps={{
-                  color: problem.severity === "error" ? "error.main" : "warning.main",
-                }}
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
+      {problems.length > 0 ? (
+        <List disablePadding>
+          {problems.map((problem, idx) => (
+            <ListItem disablePadding key={`${idx}`}>
+              <ListItemButton onClick={() => showProblemModal(problem)}>
+                <ListItemIcon>
+                  {problem.severity === "error" ? (
+                    <ErrorIcon color="error" />
+                  ) : (
+                    <WarningIcon color="warning" />
+                  )}
+                </ListItemIcon>
+                <ListItemText
+                  primary={problem.message}
+                  primaryTypographyProps={{
+                    color: problem.severity === "error" ? "error.main" : "warning.main",
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      ) : (
+        <Stack flex="auto" padding={2}>
+          Haz no problems
+        </Stack>
+      )}
     </>
   );
 }

@@ -27,9 +27,9 @@ function DataSourceInfo(): JSX.Element {
   const duration = startTime && endTime ? subtractTimes(endTime, startTime) : undefined;
 
   return (
-    <Stack gap={2} paddingX={2} paddingBottom={2}>
+    <Stack gap={1.5} paddingX={2} paddingBottom={2}>
       <Stack direction="row" alignItems="center">
-        <Stack gap={0.25} flexGrow={1} zeroMinWidth>
+        <Stack flexGrow={1} zeroMinWidth>
           <Typography variant="overline" color="text.secondary">
             Current source
           </Typography>
@@ -39,7 +39,7 @@ function DataSourceInfo(): JSX.Element {
         </Stack>
       </Stack>
 
-      <Stack gap={0.25}>
+      <Stack>
         <Typography variant="overline" color="text.secondary">
           Start time
         </Typography>
@@ -50,7 +50,7 @@ function DataSourceInfo(): JSX.Element {
         )}
       </Stack>
 
-      <Stack gap={0.25}>
+      <Stack>
         <Typography variant="overline" color="text.secondary">
           End time
         </Typography>
@@ -61,7 +61,7 @@ function DataSourceInfo(): JSX.Element {
         )}
       </Stack>
 
-      <Stack gap={0.25}>
+      <Stack>
         <Typography variant="overline" color="text.secondary">
           Duration
         </Typography>
