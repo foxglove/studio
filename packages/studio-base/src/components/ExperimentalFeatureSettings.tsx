@@ -85,7 +85,7 @@ const features: Feature[] = [
 ];
 if (process.env.NODE_ENV === "development") {
   features.push({
-    key: AppSetting.ENABLE_NEW_3D_PANEL,
+    key: AppSetting.EXPERIMENTAL_3D_PANEL,
     name: "Experimental 3D panel",
     description: <>Enable the experimental 3D panel.</>,
   });

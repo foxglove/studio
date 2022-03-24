@@ -30,7 +30,7 @@ export default function PanelCatalogProvider(
     AppSetting.ENABLE_LEGACY_PLOT_PANEL,
   );
   const [enableNew3DPanel = false] = useAppConfigurationValue<boolean>(
-    AppSetting.ENABLE_NEW_3D_PANEL,
+    AppSetting.EXPERIMENTAL_3D_PANEL,
   );
 
   const extensionRegistry = useExtensionRegistry();
