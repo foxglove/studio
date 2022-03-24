@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Typography } from "@mui/material";
+import { Skeleton, Typography } from "@mui/material";
 
 import Duration from "@foxglove/studio-base/components/Duration";
 import {
@@ -12,38 +12,53 @@ import {
 import Stack from "@foxglove/studio-base/components/Stack";
 import Timestamp from "@foxglove/studio-base/components/Timestamp";
 import { subtractTimes } from "@foxglove/studio-base/players/UserNodePlayer/nodeTransformerWorker/typescript/userUtils/time";
+import { PlayerPresence } from "@foxglove/studio-base/players/types";
 
 import { MultilineMiddleTruncate } from "../MultilineMiddleTruncate";
 
 const selectStartTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.startTime;
 const selectEndTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.endTime;
 const selectPlayerName = (ctx: MessagePipelineContext) => ctx.playerState.name;
+const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 
 function DataSourceInfo(): JSX.Element {
   const startTime = useMessagePipeline(selectStartTime);
   const endTime = useMessagePipeline(selectEndTime);
   const playerName = useMessagePipeline(selectPlayerName);
+  const playerPresence = useMessagePipeline(selectPlayerPresence);
+
+  const isLoading =
+    playerPresence === PlayerPresence.INITIALIZING ||
+    playerPresence === PlayerPresence.RECONNECTING;
 
   const duration = startTime && endTime ? subtractTimes(endTime, startTime) : undefined;
 
   return (
     <Stack gap={1.5} paddingX={2} paddingBottom={2}>
-      <Stack direction="row" alignItems="center">
-        <Stack flexGrow={1} zeroMinWidth>
-          <Typography variant="overline" color="text.secondary">
-            Current source
+      <Stack>
+        <Typography display="block" variant="overline" color="text.secondary">
+          Current source
+        </Typography>
+        {isLoading ? (
+          <Typography variant="inherit">
+            <Skeleton animation="wave" width="40%" />
           </Typography>
-          <Typography>
-            {playerName ? <MultilineMiddleTruncate text={playerName} /> : <>&mdash;</>}
+        ) : playerName ? (
+          <Typography variant="inherit">
+            <MultilineMiddleTruncate text={playerName} />
           </Typography>
-        </Stack>
+        ) : (
+          <Typography>&mdash;</Typography>
+        )}
       </Stack>
 
       <Stack>
         <Typography variant="overline" color="text.secondary">
           Start time
         </Typography>
-        {startTime ? (
+        {isLoading ? (
+          <Skeleton animation="wave" width="50%" />
+        ) : startTime ? (
           <Timestamp horizontal time={startTime} />
         ) : (
           <Typography color="text.secondary">&mdash;</Typography>
@@ -54,7 +69,9 @@ function DataSourceInfo(): JSX.Element {
         <Typography variant="overline" color="text.secondary">
           End time
         </Typography>
-        {endTime ? (
+        {isLoading ? (
+          <Skeleton animation="wave" width="50%" />
+        ) : endTime ? (
           <Timestamp horizontal time={endTime} />
         ) : (
           <Typography color="text.secondary">&mdash;</Typography>
@@ -65,7 +82,9 @@ function DataSourceInfo(): JSX.Element {
         <Typography variant="overline" color="text.secondary">
           Duration
         </Typography>
-        {duration ? (
+        {isLoading ? (
+          <Skeleton animation="wave" width={100} />
+        ) : duration ? (
           <Duration duration={duration} />
         ) : (
           <Typography color="text.secondary">&mdash;</Typography>

@@ -26,13 +26,17 @@ type Props = {
 };
 
 const StyledTab = muiStyled(Tab)(({ theme }) => ({
-  minWidth: "auto",
   minHeight: "auto",
+  minWidth: theme.spacing(8),
   padding: theme.spacing(1.5, 2),
 }));
 
 const StyledTabs = muiStyled(Tabs)({
   minHeight: "auto",
+
+  ".MuiTabs-indicator": {
+    transform: "scale(0.4)",
+  },
 });
 
 const ProblemCount = muiStyled("div")(({ theme }) => ({
