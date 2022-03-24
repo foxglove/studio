@@ -48,14 +48,6 @@ import diagnosticSummaryThumbnail from "./diagnostics/thumbnails/diagnostic-summ
 
 const builtin: PanelInfo[] = [
   {
-    title: "3D (Experimental)",
-    type: "3D",
-    description: "Experimental 3D scene renderer.",
-    help: ThreeDeeRenderHelp,
-    thumbnail: threeDimensionalVizThumbnail,
-    module: async () => await import("./ThreeDeeRender"),
-  },
-  {
     title: "3D",
     type: "3D Panel",
     description: "Display visualization markers and models in a 3D scene.",
@@ -248,4 +240,15 @@ const legacyPlot: PanelInfo[] = [
   },
 ];
 
-export default { builtin, debug, hidden, legacyPlot };
+const new3DPanel: PanelInfo[] = [
+  {
+    title: "3D (Experimental)",
+    type: "3D",
+    description: "Experimental 3D scene renderer.",
+    help: ThreeDeeRenderHelp,
+    thumbnail: threeDimensionalVizThumbnail,
+    module: async () => await import("./ThreeDeeRender"),
+  },
+];
+
+export default { builtin, debug, hidden, legacyPlot, new3DPanel };

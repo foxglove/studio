@@ -20,6 +20,7 @@ export enum AppSetting {
   // Experimental features
   UNLIMITED_MEMORY_CACHE = "experimental.unlimited-memory-cache",
   SHOW_DEBUG_PANELS = "showDebugPanels",
+  ENABLE_NEW_3D_PANEL = "enableNew3DPanel",
   ENABLE_LEGACY_PLOT_PANEL = "enableLegacyPlotPanel",
   EXPERIMENTAL_BAG_PLAYER = "experimental.bag-player",
   EXPERIMENTAL_DATA_PLATFORM_PLAYER = "experimental.data-platform-player",
