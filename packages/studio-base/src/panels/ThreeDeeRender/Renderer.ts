@@ -17,7 +17,7 @@ import { FrameAxes } from "./renderables/FrameAxes";
 import { Markers } from "./renderables/Markers";
 import { PointClouds } from "./renderables/PointClouds";
 import { Marker, PointCloud2, TF } from "./ros";
-import { TransformTree } from "./transforms";
+import { TransformTree } from "./transforms/TransformTree";
 
 const log = Logger.getLogger(__filename);
 

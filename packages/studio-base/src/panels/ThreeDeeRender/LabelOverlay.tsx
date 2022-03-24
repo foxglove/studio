@@ -18,11 +18,12 @@ type Props = {
   innerRef?: React.Ref<HTMLDivElement>;
 };
 
+// ts-prune-ignore-next
 export function LabelOverlay(props: Props): JSX.Element {
   return (
     <div
       ref={props.innerRef}
-      css={{
+      style={{
         display: props.visible ? "inherit" : "none",
         position: "absolute",
         width: MAX_SIZE,

@@ -27,4 +27,5 @@ export type PointCloudSettings = {
   maxValue?: number;
 };
 
+// ts-prune-ignore-next
 export type StoredPointCloudSettings = Partial<PointCloudSettings>;

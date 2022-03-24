@@ -8,7 +8,8 @@ import Logger from "@foxglove/log";
 
 import { Renderer } from "../Renderer";
 import { Pose, rosTimeToNanoSec, TF } from "../ros";
-import { makePose, Transform } from "../transforms";
+import { Transform } from "../transforms/Transform";
+import { makePose } from "../transforms/geometry";
 import { updatePose } from "../updatePose";
 import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
 

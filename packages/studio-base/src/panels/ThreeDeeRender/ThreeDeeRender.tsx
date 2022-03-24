@@ -118,21 +118,21 @@ function RendererOverlay(props: { colorScheme: "dark" | "light" | undefined }): 
   }, [renderer, labelsMap, colorScheme]);
 
   const labels = (
-    <div id="labels" ref={labelsRef} css={{ position: "absolute", top: 0 }}>
+    <div id="labels" ref={labelsRef} style={{ position: "absolute", top: 0 }}>
       {labelElements}
     </div>
   );
 
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   const stats = SHOW_STATS ? (
-    <div id="stats" css={{ position: "absolute", top: 0 }}>
+    <div id="stats" style={{ position: "absolute", top: 0 }}>
       <Stats />
     </div>
   ) : undefined;
 
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   const debug = SHOW_DEBUG ? (
-    <div id="debug" css={{ position: "absolute", top: 60 }}>
+    <div id="debug" style={{ position: "absolute", top: 60 }}>
       <DebugGui />
     </div>
   ) : undefined;
@@ -299,7 +299,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
   return (
     <React.Fragment>
-      <canvas ref={setCanvas} css={{ position: "absolute", top: 0 }} />
+      <canvas ref={setCanvas} style={{ position: "absolute", top: 0 }} />
       <RendererContext.Provider value={renderer}>
         <RendererOverlay colorScheme={colorScheme} />
       </RendererContext.Provider>

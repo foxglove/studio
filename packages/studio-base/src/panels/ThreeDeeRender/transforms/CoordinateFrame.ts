@@ -30,6 +30,7 @@ const tempMatrix = mat4Identity();
  * hierarchy and transform history allow points to be transformed from one
  * coordinate frame to another while interpolating over time.
  */
+// ts-prune-ignore-next
 export class CoordinateFrame {
   readonly id: string;
   maxStorageTime: Duration;

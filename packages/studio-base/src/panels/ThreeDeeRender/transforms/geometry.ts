@@ -4,12 +4,14 @@
 
 import type { vec3, quat, mat4, ReadonlyMat4 } from "gl-matrix";
 
+// ts-prune-ignore-next
 export type Point = {
   x: number;
   y: number;
   z: number;
 };
 
+// ts-prune-ignore-next
 export type Orientation = {
   x: number;
   y: number;
@@ -22,6 +24,7 @@ export type Pose = {
   orientation: Orientation;
 };
 
+// ts-prune-ignore-next
 export function makePose(): Pose {
   return { position: { x: 0, y: 0, z: 0 }, orientation: { x: 0, y: 0, z: 0, w: 1 } };
 }
@@ -32,7 +35,6 @@ export function makePose(): Pose {
 // precision and are slower (float32 requires upcasting/downcasting to do math
 // in JavaScript).
 
-// ts-prune-ignore-next
 export function vec3Identity(): vec3 {
   return [0, 0, 0];
 }
