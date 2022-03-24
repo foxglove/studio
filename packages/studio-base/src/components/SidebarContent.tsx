@@ -6,7 +6,7 @@ import HelpIcon from "@mui/icons-material/Help";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { IconButton, Theme, styled as muiStyled, Typography } from "@mui/material";
 import { makeStyles } from "@mui/styles";
-import { useState, useMemo } from "react";
+import { useState, useMemo, CSSProperties } from "react";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextContent from "@foxglove/studio-base/components/TextContent";
@@ -36,6 +36,7 @@ export function SidebarContent({
   children,
   helpContent,
   leadingItems,
+  overflow = "auto",
   trailingItems,
 }: React.PropsWithChildren<SidebarContentProps>): JSX.Element {
   const classes = useStyles();
@@ -59,7 +60,7 @@ export function SidebarContent({
   }, [helpContent, trailingItems, showHelp]);
 
   return (
-    <Stack overflow="auto" fullHeight flex="auto" gap={1}>
+    <Stack overflow={overflow} fullHeight flex="auto" gap={1}>
       <Stack
         className={classes.toolbar}
         direction="row"
@@ -102,6 +103,11 @@ type SidebarContentProps = {
 
   /** Buttons/items to display on the leading (left) side of the header */
   leadingItems?: React.ReactNode[];
+
+  /** Overflow style of root element
+   * @default: "auto"
+   */
+  overflow?: CSSProperties["overflow"];
 
   /** Buttons/items to display on the trailing (right) side of the header */
   trailingItems?: React.ReactNode[];

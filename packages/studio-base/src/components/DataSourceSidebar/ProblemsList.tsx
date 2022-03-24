@@ -4,7 +4,7 @@
 
 import ErrorIcon from "@mui/icons-material/ErrorOutline";
 import WarningIcon from "@mui/icons-material/WarningAmber";
-import { List, ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
+import { List, ListItem, ListItemButton, ListItemText, Typography } from "@mui/material";
 import { useCallback, useContext } from "react";
 
 import NotificationModal from "@foxglove/studio-base/components/NotificationModal";
@@ -32,35 +32,37 @@ export function ProblemsList({ problems }: { problems: PlayerProblem[] }): JSX.E
     [modalHost],
   );
 
+  if (problems.length === 0) {
+    return (
+      <Stack flex="auto" padding={2} fullHeight alignItems="center" justifyContent="center">
+        <Typography align="center" color="text.secondary">
+          No problems found
+        </Typography>
+      </Stack>
+    );
+  }
+
   return (
-    <>
-      {problems.length > 0 ? (
-        <List disablePadding>
-          {problems.map((problem, idx) => (
-            <ListItem disablePadding key={`${idx}`}>
-              <ListItemButton onClick={() => showProblemModal(problem)}>
-                <ListItemIcon>
-                  {problem.severity === "error" ? (
-                    <ErrorIcon color="error" />
-                  ) : (
-                    <WarningIcon color="warning" />
-                  )}
-                </ListItemIcon>
-                <ListItemText
-                  primary={problem.message}
-                  primaryTypographyProps={{
-                    color: problem.severity === "error" ? "error.main" : "warning.main",
-                  }}
-                />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-      ) : (
-        <Stack flex="auto" padding={2}>
-          Haz no problems
-        </Stack>
-      )}
-    </>
+    <List dense disablePadding sx={{ minHeight: "100vh" }}>
+      {problems.map((problem, idx) => (
+        <ListItem disablePadding key={`${idx}`}>
+          <ListItemButton onClick={() => showProblemModal(problem)}>
+            <Stack direction="row" gap={1}>
+              {problem.severity === "error" ? (
+                <ErrorIcon color="error" />
+              ) : (
+                <WarningIcon color="warning" />
+              )}
+              <ListItemText
+                primary={problem.message}
+                primaryTypographyProps={{
+                  color: problem.severity === "error" ? "error.main" : "warning.main",
+                }}
+              />
+            </Stack>
+          </ListItemButton>
+        </ListItem>
+      ))}
+    </List>
   );
 }

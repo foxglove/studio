@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { Typography } from "@mui/material";
 import { useMemo } from "react";
 
@@ -45,23 +44,20 @@ export default function Timestamp(props: Props): JSX.Element {
   return (
     <Stack gap={0.5}>
       <Stack
-        gap={0.5}
+        gap={1}
         wrap="wrap"
         direction={horizontal ? "row" : "column"}
         alignItems={horizontal ? "center" : "flex-start"}
         justifyContent={horizontal ? "flex-start" : "center"}
       >
         {!disableDate && (
-          <>
-            <Typography
-              noWrap
-              fontWeight={!horizontal ? 700 : undefined}
-              fontFamily={fonts.MONOSPACE}
-            >
-              {date}
-            </Typography>
-            {horizontal && <ChevronRightIcon color="disabled" />}
-          </>
+          <Typography
+            noWrap
+            fontWeight={!horizontal ? 700 : undefined}
+            fontFamily={fonts.MONOSPACE}
+          >
+            {date}
+          </Typography>
         )}
 
         <Stack direction="row" alignItems="center" flexShrink={0} gap={0.5}>

@@ -9,6 +9,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import {
   AppBar,
   Box,
+  CircularProgress,
   IconButton,
   List,
   ListItem,
@@ -68,7 +69,7 @@ const HighlightChars = ({
   return <>{nodes}</>;
 };
 
-const StyledAppBar = muiStyled(AppBar)(({ theme }) => ({
+const StyledAppBar = muiStyled(AppBar, { skipSx: true })(({ theme }) => ({
   top: -1,
   zIndex: theme.zIndex.appBar - 1,
   borderBottom: `1px solid ${theme.palette.divider}`,
@@ -79,7 +80,11 @@ const StyledAppBar = muiStyled(AppBar)(({ theme }) => ({
   alignItems: "center",
 }));
 
-const StyledListItem = muiStyled(ListItem)(({ theme }) => ({
+const StyledList = muiStyled(List, { skipSx: true })({
+  minHeight: "100vh",
+});
+
+const StyledListItem = muiStyled(ListItem, { skipSx: true })(({ theme }) => ({
   "&.MuiListItem-dense": {
     ".MuiListItemText-root": {
       marginTop: theme.spacing(0.5),
@@ -125,6 +130,49 @@ export function TopicList(): JSX.Element {
     [filterText, topics],
   );
 
+  if (playerPresence === PlayerPresence.ERROR) {
+    return (
+      <Stack flex="auto" padding={2} fullHeight alignItems="center" justifyContent="center">
+        <Typography align="center" color="text.secondary">
+          An error occurred
+        </Typography>
+      </Stack>
+    );
+  }
+
+  if (
+    playerPresence === PlayerPresence.INITIALIZING ||
+    playerPresence === PlayerPresence.RECONNECTING
+  ) {
+    return (
+      <>
+        <StyledAppBar position="sticky" color="default" elevation={0}>
+          <TextField
+            disabled
+            variant="filled"
+            fullWidth
+            placeholder="Filter by topic or datatype"
+            InputProps={{
+              startAdornment: <SearchIcon fontSize="small" />,
+              endAdornment: <CircularProgress size={20} />,
+            }}
+          />
+        </StyledAppBar>
+        <List key="loading" dense disablePadding>
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((i) => (
+            <StyledListItem divider key={i}>
+              <ListItemText
+                primary={<Skeleton animation={false} width="20%" />}
+                secondary={<Skeleton animation="wave" width="55%" />}
+                secondaryTypographyProps={{ variant: "caption" }}
+              />
+            </StyledListItem>
+          ))}
+        </List>
+      </>
+    );
+  }
+
   return (
     <>
       <StyledAppBar position="sticky" color="default" elevation={0}>
@@ -152,70 +200,61 @@ export function TopicList(): JSX.Element {
           />
         </Box>
       </StyledAppBar>
-      {playerPresence === PlayerPresence.PRESENT ? (
-        filteredTopics.length > 0 ? (
-          <List key="topics" dense disablePadding>
-            {filteredTopics.map(({ item, positions }) => (
-              <StyledListItem
-                divider
-                key={item.name}
-                secondaryAction={
-                  <Stack direction="row" gap={0.5} alignItems="center">
-                    <IconButton
-                      size="small"
-                      title={copied ? "Copied!" : "Copy topic name"}
-                      color={copied ? "success" : "inherit"}
-                      onClick={() => {
-                        copyToClipboard(item.name);
 
-                        if (!clipboard.error) {
-                          setCopied(true);
-                          setTimeout(() => setCopied(false), 1000);
-                        }
-                      }}
-                    >
-                      {copied ? <CheckIcon fontSize="small" /> : <CopyAllIcon fontSize="small" />}
-                    </IconButton>
-                  </Stack>
-                }
-              >
-                <ListItemText
-                  primary={<HighlightChars str={item.name} indices={positions} />}
-                  primaryTypographyProps={{ noWrap: true, title: item.name }}
-                  secondary={
-                    <HighlightChars
-                      str={item.datatype}
-                      indices={positions}
-                      offset={item.name.length + 1}
-                    />
-                  }
-                  secondaryTypographyProps={{
-                    variant: "caption",
-                    fontFamily: fonts.MONOSPACE,
-                    noWrap: true,
-                    title: item.datatype,
-                  }}
-                />
-              </StyledListItem>
-            ))}
-          </List>
-        ) : (
-          <Stack flex="auto" padding={2}>
-            Haz empty state
-          </Stack>
-        )
-      ) : (
-        <List key="loading" dense disablePadding>
-          {[...new Array(10).fill({})].map((i) => (
-            <StyledListItem divider key={i}>
+      {filteredTopics.length > 0 ? (
+        <StyledList key="topics" dense disablePadding>
+          {filteredTopics.map(({ item, positions }) => (
+            <StyledListItem
+              divider
+              key={item.name}
+              secondaryAction={
+                <Stack direction="row" gap={0.5} alignItems="center">
+                  <IconButton
+                    size="small"
+                    title={copied ? "Copied!" : "Copy topic name"}
+                    color={copied ? "success" : "inherit"}
+                    onClick={() => {
+                      copyToClipboard(item.name);
+
+                      if (!clipboard.error) {
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 1000);
+                      }
+                    }}
+                  >
+                    {copied ? <CheckIcon fontSize="small" /> : <CopyAllIcon fontSize="small" />}
+                  </IconButton>
+                </Stack>
+              }
+            >
               <ListItemText
-                primary={<Skeleton animation={false} width="20%" />}
-                secondary={<Skeleton animation="wave" width="55%" />}
-                secondaryTypographyProps={{ variant: "caption" }}
+                primary={<HighlightChars str={item.name} indices={positions} />}
+                primaryTypographyProps={{ noWrap: true, title: item.name }}
+                secondary={
+                  <HighlightChars
+                    str={item.datatype}
+                    indices={positions}
+                    offset={item.name.length + 1}
+                  />
+                }
+                secondaryTypographyProps={{
+                  variant: "caption",
+                  fontFamily: fonts.MONOSPACE,
+                  noWrap: true,
+                  title: item.datatype,
+                }}
               />
             </StyledListItem>
           ))}
-        </List>
+        </StyledList>
+      ) : (
+        <Stack flex="auto" padding={2} fullHeight alignItems="center" justifyContent="center">
+          <Typography align="center" color="text.secondary">
+            No topics or datatypes matching
+            <br />
+            {`“${filterText}”`}
+          </Typography>
+        </Stack>
       )}
     </>
   );

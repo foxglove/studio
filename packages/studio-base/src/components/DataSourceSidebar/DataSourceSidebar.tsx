@@ -3,8 +3,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Add24Regular as AddIcon } from "@fluentui/react-icons";
-import { IconButton, Tab, Tabs, styled as muiStyled, Divider } from "@mui/material";
-import { useState, PropsWithChildren } from "react";
+import { IconButton, Tab, Tabs, styled as muiStyled, Divider, Box } from "@mui/material";
+import { useState, PropsWithChildren, useEffect } from "react";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import {
@@ -51,15 +51,16 @@ const TabPanel = (
   const { children, value, index, ...other } = props;
 
   return (
-    <div
+    <Box
       role="tabpanel"
       hidden={value !== index}
       id={`tabpanel-${index}`}
       aria-labelledby={`tab-${index}`}
+      flex="auto"
       {...other}
     >
       {value === index && <>{children}</>}
-    </div>
+    </Box>
   );
 };
 
@@ -73,8 +74,15 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
   const [activeTab, setActiveTab] = useState<number>(0);
 
+  useEffect(() => {
+    if (playerPresence === PlayerPresence.ERROR) {
+      setActiveTab(1);
+    }
+  }, [playerPresence]);
+
   return (
     <SidebarContent
+      overflow="scroll"
       title="Data source"
       helpContent={helpContent}
       disablePadding
@@ -93,36 +101,38 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
     >
       <Stack fullHeight>
         <DataSourceInfo />
-        <Divider />
         {playerPresence !== PlayerPresence.NOT_PRESENT && (
-          <Stack flex={1}>
-            <StyledTabs
-              value={activeTab}
-              onChange={(_ev, newValue: number) => setActiveTab(newValue)}
-              textColor="inherit"
-            >
-              <StyledTab disableRipple label="Topics" value={0} />
-              <StyledTab
-                disableRipple
-                label={
-                  <Stack direction="row" alignItems="baseline" gap={1}>
-                    Problems
-                    {playerProblems.length > 0 && (
-                      <ProblemCount>{playerProblems.length}</ProblemCount>
-                    )}
-                  </Stack>
-                }
-                value={1}
-              />
-            </StyledTabs>
+          <>
             <Divider />
-            <TabPanel value={activeTab} index={0}>
-              <TopicList />
-            </TabPanel>
-            <TabPanel value={activeTab} index={1}>
-              <ProblemsList problems={playerProblems} />
-            </TabPanel>
-          </Stack>
+            <Stack flex={1}>
+              <StyledTabs
+                value={activeTab}
+                onChange={(_ev, newValue: number) => setActiveTab(newValue)}
+                textColor="inherit"
+              >
+                <StyledTab disableRipple label="Topics" value={0} />
+                <StyledTab
+                  disableRipple
+                  label={
+                    <Stack direction="row" alignItems="baseline" gap={1}>
+                      Problems
+                      {playerProblems.length > 0 && (
+                        <ProblemCount>{playerProblems.length}</ProblemCount>
+                      )}
+                    </Stack>
+                  }
+                  value={1}
+                />
+              </StyledTabs>
+              <Divider />
+              <TabPanel value={activeTab} index={0}>
+                <TopicList />
+              </TabPanel>
+              <TabPanel value={activeTab} index={1}>
+                <ProblemsList problems={playerProblems} />
+              </TabPanel>
+            </Stack>
+          </>
         )}
       </Stack>
     </SidebarContent>
