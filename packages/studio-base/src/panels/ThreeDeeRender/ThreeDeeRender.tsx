@@ -21,10 +21,19 @@ import {
   MARKER_ARRAY_DATATYPES,
   TF,
   Marker,
+  PointCloud2,
+  POINTCLOUD_DATATYPES,
 } from "./ros";
 
 const SHOW_STATS = true;
 const SHOW_DEBUG = false;
+
+const SUPPORTED_DATATYPES = new Set<string>();
+mergeSetInto(SUPPORTED_DATATYPES, TRANSFORM_STAMPED_DATATYPES);
+mergeSetInto(SUPPORTED_DATATYPES, TF_DATATYPES);
+mergeSetInto(SUPPORTED_DATATYPES, MARKER_DATATYPES);
+mergeSetInto(SUPPORTED_DATATYPES, MARKER_ARRAY_DATATYPES);
+mergeSetInto(SUPPORTED_DATATYPES, POINTCLOUD_DATATYPES);
 
 const log = Logger.getLogger(__filename);
 
@@ -212,8 +221,8 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         subscriptionList.push(topic.name);
       }
 
-      // TODO: Allow disabling of subscriptions to other topics
-      if (MARKER_DATATYPES.has(topic.datatype) || MARKER_ARRAY_DATATYPES.has(topic.datatype)) {
+      // TODO: Allow disabling of subscriptions to non-TF topics
+      if (SUPPORTED_DATATYPES.has(topic.datatype)) {
         subscriptionList.push(topic.name);
       }
     }
@@ -275,6 +284,10 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         // visualization_msgs/Marker - Ingest this single marker
         const marker = message.message as Marker;
         renderer.addMarkerMessage(message.topic, marker);
+      } else if (POINTCLOUD_DATATYPES.has(datatype)) {
+        // sensor_msgs/PointCloud2 - Ingest this point cloud
+        const pointCloud = message.message as PointCloud2;
+        renderer.addPointCloud2Message(message.topic, pointCloud);
       }
     }
   }, [messages, renderer, topicsToDatatypes]);
@@ -292,4 +305,10 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       </RendererContext.Provider>
     </React.Fragment>
   );
+}
+
+function mergeSetInto(output: Set<string>, input: ReadonlySet<string>) {
+  for (const value of input) {
+    output.add(value);
+  }
 }

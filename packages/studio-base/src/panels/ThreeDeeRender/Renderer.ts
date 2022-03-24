@@ -10,12 +10,13 @@ import Logger from "@foxglove/log";
 
 import { DetailLevel } from "./DetailLevel";
 import { Input } from "./Input";
+import { LayerErrors } from "./LayerErrors";
 import { MaterialCache } from "./MaterialCache";
 import { ModelCache } from "./ModelCache";
-import { TopicErrors } from "./TopicErrors";
 import { FrameAxes } from "./renderables/FrameAxes";
 import { Markers } from "./renderables/Markers";
-import { Marker, TF } from "./ros";
+import { PointClouds } from "./renderables/PointClouds";
+import { Marker, PointCloud2, TF } from "./ros";
 import { TransformTree } from "./transforms";
 
 const log = Logger.getLogger(__filename);
@@ -46,7 +47,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   camera: THREE.PerspectiveCamera;
   controls: OrbitControls;
   materialCache = new MaterialCache();
-  topicErrors = new TopicErrors();
+  layerErrors = new LayerErrors();
   colorScheme: "dark" | "light" | undefined;
   modelCache: ModelCache;
   renderables = new Map<string, THREE.Object3D>();
@@ -56,6 +57,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   renderFrameId: string | undefined;
 
   frameAxes = new FrameAxes(this);
+  pointClouds = new PointClouds(this);
   markers = new Markers(this);
 
   constructor(canvas: HTMLCanvasElement) {
@@ -96,6 +98,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     this.scene = new THREE.Scene();
     this.scene.add(this.frameAxes);
+    this.scene.add(this.pointClouds);
     this.scene.add(this.markers);
 
     this.dirLight = new THREE.DirectionalLight();
@@ -130,6 +133,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   dispose(): void {
     this.frameAxes.dispose();
+    this.pointClouds.dispose();
     this.markers.dispose();
     this.gl.dispose();
     this.gl.forceContextLoss();
@@ -143,6 +147,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   addTransformMessage(tf: TF): void {
     this.frameAxes.addTransformMessage(tf);
+  }
+
+  addPointCloud2Message(topic: string, pointCloud: PointCloud2): void {
+    this.pointClouds.addPointCloud2Message(topic, pointCloud);
   }
 
   addMarkerMessage(topic: string, marker: Marker): void {
@@ -163,10 +171,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
   // Callback handlers
 
   animationFrame = (_wallTime: DOMHighResTimeStamp): void => {
-    requestAnimationFrame(this.animationFrame);
     if (this.currentTime != undefined) {
       this.frameHandler(this.currentTime);
     }
+    requestAnimationFrame(this.animationFrame);
   };
 
   frameHandler = (currentTime: bigint): void => {
@@ -175,12 +183,13 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.controls.update();
 
     // TODO: Remove this hack when the user can set the renderFrameId themselves
-    this.fixedFrameId = "base_link";
+    this.fixedFrameId = "map";
     this.renderFrameId = "base_link";
 
     this.materialCache.update(this.input.canvasSize);
 
     this.frameAxes.startFrame(currentTime);
+    this.pointClouds.startFrame(currentTime);
     this.markers.startFrame(currentTime);
 
     this.gl.clear();

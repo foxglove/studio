@@ -132,6 +132,9 @@ addRosDataType(MARKER_DATATYPES, "visualization_msgs/Marker");
 export const MARKER_ARRAY_DATATYPES = new Set<string>();
 addRosDataType(MARKER_ARRAY_DATATYPES, "visualization_msgs/MarkerArray");
 
+export const POINTCLOUD_DATATYPES = new Set<string>();
+addRosDataType(POINTCLOUD_DATATYPES, "sensor_msgs/PointCloud2");
+
 export function rosTimeToNanoSec(rosTime: { sec: number; nsec: number }): bigint {
   return BigInt(rosTime.sec) * BigInt(1e9) + BigInt(rosTime.nsec);
 }

@@ -4,7 +4,7 @@
 
 import * as THREE from "three";
 
-import { DynamicBufferAttribute } from "../../DynamicBufferAttribute";
+import { DynamicBufferGeometry } from "../../DynamicBufferGeometry";
 import type { Renderer } from "../../Renderer";
 import { approxEquals } from "../../math";
 import { Marker } from "../../ros";
@@ -12,21 +12,15 @@ import { RenderableMarker } from "./RenderableMarker";
 import { markerHasTransparency, pointsMaterial, releasePointsMaterial } from "./materials";
 
 export class RenderablePoints extends RenderableMarker {
-  geometry: THREE.BufferGeometry;
-  positionAttribute: DynamicBufferAttribute<Float32Array, Float32ArrayConstructor>;
-  colorAttribute: DynamicBufferAttribute<Float32Array, Float32ArrayConstructor>;
+  geometry: DynamicBufferGeometry<Float32Array, Float32ArrayConstructor>;
   points: THREE.Points;
 
   constructor(topic: string, marker: Marker, renderer: Renderer) {
     super(topic, marker, renderer);
 
-    this.geometry = new THREE.BufferGeometry();
-
-    this.positionAttribute = new DynamicBufferAttribute(Float32Array, 3);
-    this.colorAttribute = new DynamicBufferAttribute(Float32Array, 4);
-
-    this.geometry.setAttribute("position", this.positionAttribute);
-    this.geometry.setAttribute("color", this.colorAttribute);
+    this.geometry = new DynamicBufferGeometry(Float32Array);
+    this.geometry.createAttribute("position", 3);
+    this.geometry.createAttribute("color", 4);
 
     const material = pointsMaterial(marker, renderer.materialCache);
     this.points = new THREE.Points(this.geometry, material);
@@ -59,34 +53,33 @@ export class RenderablePoints extends RenderableMarker {
       this.points.material = pointsMaterial(marker, this._renderer.materialCache);
     }
 
+    this.geometry.resize(marker.points.length);
     this._setPositions(marker);
     this._setColors(marker);
   }
 
   private _setPositions(marker: Marker): void {
-    this.positionAttribute.resize(marker.points.length);
-
-    const positions = this.positionAttribute.data();
+    const attribute = this.geometry.getAttribute("position") as THREE.BufferAttribute;
+    const positions = attribute.array as Float32Array;
     for (let i = 0; i < marker.points.length; i++) {
       const point = marker.points[i]!;
       positions[i * 3 + 0] = point.x;
       positions[i * 3 + 1] = point.y;
       positions[i * 3 + 2] = point.z;
     }
-    this.positionAttribute.needsUpdate = true;
+    attribute.needsUpdate = true;
   }
 
   private _setColors(marker: Marker): void {
     // Converts color-per-point to a flattened typed array
-    const length = marker.points.length;
-    this.colorAttribute.resize(length);
-    const rgbaData = this.colorAttribute.data();
+    const attribute = this.geometry.getAttribute("color") as THREE.BufferAttribute;
+    const rgbaData = attribute.array as Float32Array;
     this._markerColorsToLinear(marker, (color, i) => {
       rgbaData[4 * i + 0] = color[0];
       rgbaData[4 * i + 1] = color[1];
       rgbaData[4 * i + 2] = color[2];
       rgbaData[4 * i + 3] = color[3];
     });
-    this.colorAttribute.needsUpdate = true;
+    attribute.needsUpdate = true;
   }
 }

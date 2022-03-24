@@ -10,6 +10,7 @@ import { Renderer } from "../Renderer";
 import { Pose, rosTimeToNanoSec, TF } from "../ros";
 import { makePose, Transform } from "../transforms";
 import { updatePose } from "../updatePose";
+import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
 
 const log = Logger.getLogger(__filename);
 
@@ -77,7 +78,7 @@ export class FrameAxes extends THREE.Object3D {
     }
 
     for (const [frameId, renderable] of this.axesByFrameId.entries()) {
-      updatePose(
+      const updated = updatePose(
         renderable,
         this.renderer.transformTree,
         renderFrameId,
@@ -86,6 +87,10 @@ export class FrameAxes extends THREE.Object3D {
         currentTime,
         currentTime,
       );
+      if (!updated) {
+        const message = missingTransformMessage(renderFrameId, fixedFrameId, frameId);
+        this.renderer.layerErrors.addToLayer(`f:${frameId}`, MISSING_TRANSFORM, message);
+      }
     }
   }
 

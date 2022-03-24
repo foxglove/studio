@@ -63,7 +63,7 @@ export class RenderableMeshResource extends RenderableMarker {
     }
 
     const cachedModel = await this._renderer.modelCache.load(url, (err) => {
-      this._renderer.topicErrors.add(
+      this._renderer.layerErrors.addToTopic(
         this.userData.topic,
         MESH_FETCH_FAILED,
         `Failed to load mesh resource from "${url}": ${err.message}`,

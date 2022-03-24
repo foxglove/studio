@@ -14,7 +14,7 @@ export function updatePose(
   srcFrameId: string,
   dstTime: bigint,
   srcTime: bigint,
-): void {
+): boolean {
   const pose = renderable.userData.pose as Pose | undefined;
   if (!pose) {
     throw new Error(`Missing userData.pose for ${renderable.name}`);
@@ -30,4 +30,5 @@ export function updatePose(
     renderable.quaternion.set(q.x, q.y, q.z, q.w);
     renderable.updateMatrix();
   }
+  return poseApplied;
 }
