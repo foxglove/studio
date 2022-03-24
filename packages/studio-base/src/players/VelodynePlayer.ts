@@ -151,9 +151,10 @@ export default class VelodynePlayer implements Player {
     const rawPacket = new RawPacket(data);
 
     const frequency = RPM / 60.0;
-    const rate = rawPacket.returnMode === ReturnMode.DualReturn ?
-      packetRate(rawPacket.inferModel() ?? Model.HDL64E) * 2 :
-      packetRate(rawPacket.inferModel() ?? Model.HDL64E);
+    const rate =
+      rawPacket.returnMode === ReturnMode.DualReturn
+        ? packetRate(rawPacket.inferModel() ?? Model.HDL64E) * 2
+        : packetRate(rawPacket.inferModel() ?? Model.HDL64E);
     const numPackets = Math.ceil(rate / frequency);
 
     this._packets.push(rawPacket);
