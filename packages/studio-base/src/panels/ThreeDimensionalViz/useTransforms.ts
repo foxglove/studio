@@ -13,7 +13,6 @@
 
 import { useMemo, useRef } from "react";
 
-import { fromNanoSec } from "@foxglove/rostime";
 import {
   FOXGLOVE_FRAME_TRANSFORM_DATATYPE,
   TF_DATATYPES,
@@ -21,8 +20,13 @@ import {
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/constants";
 import {
   IImmutableTransformTree,
+  Transform,
   TransformTree,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
+import {
+  quatFromValues,
+  vec3FromValues,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms/geometry";
 import { MessageEvent, Topic } from "@foxglove/studio-base/players/types";
 import { MarkerArray, StampedMessage, TF } from "@foxglove/studio-base/types/Messages";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
@@ -33,12 +37,15 @@ import { Frame } from "./useFrame";
 type TfMessage = { transforms: TF[] };
 
 type FoxgloveFrameTransform = {
-  timestamp: bigint;
+  timestamp: {
+    sec: number;
+    nsec: number;
+  };
   parent_frame_id: string;
   child_frame_id: string;
   transform: {
-    translation: [number, number, number];
-    rotation: [number, number, number, number];
+    translation: { x: number; y: number; z: number };
+    rotation: { x: number; y: number; z: number; w: number };
   };
 };
 
@@ -63,20 +70,17 @@ function consumeFoxgloveFrameTransform(
 ): void {
   for (const { message } of msgEvents) {
     const { translation, rotation } = message.transform;
-    const tf: TF = {
-      header: {
-        seq: 0,
-        frame_id: message.parent_frame_id,
-        stamp: fromNanoSec(message.timestamp),
-      },
-      child_frame_id: message.child_frame_id,
-      transform: {
-        translation: { x: translation[0], y: translation[1], z: translation[2] },
-        rotation: { x: rotation[0], y: rotation[1], z: rotation[2], w: rotation[3] },
-      },
-    };
+    const transform = new Transform(
+      vec3FromValues(translation.x, translation.y, translation.z),
+      quatFromValues(rotation.x, rotation.y, rotation.z, rotation.w),
+    );
 
-    transformTree.addTransformMessage(tf);
+    transformTree.addTransform(
+      message.child_frame_id,
+      message.parent_frame_id,
+      message.timestamp,
+      transform,
+    );
   }
 }
 
