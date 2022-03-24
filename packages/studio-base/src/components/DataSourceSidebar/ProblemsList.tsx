@@ -4,13 +4,24 @@
 
 import ErrorIcon from "@mui/icons-material/ErrorOutline";
 import WarningIcon from "@mui/icons-material/WarningAmber";
-import { List, ListItem, ListItemButton, ListItemText, Typography } from "@mui/material";
+import {
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Typography,
+  styled as muiStyled,
+} from "@mui/material";
 import { useCallback, useContext } from "react";
 
 import NotificationModal from "@foxglove/studio-base/components/NotificationModal";
 import Stack from "@foxglove/studio-base/components/Stack";
 import ModalContext from "@foxglove/studio-base/context/ModalContext";
 import { PlayerProblem } from "@foxglove/studio-base/players/types";
+
+const StyledList = muiStyled(List, { skipSx: true })({
+  minHeight: "100vh",
+});
 
 export function ProblemsList({ problems }: { problems: PlayerProblem[] }): JSX.Element {
   const modalHost = useContext(ModalContext);
@@ -43,7 +54,7 @@ export function ProblemsList({ problems }: { problems: PlayerProblem[] }): JSX.E
   }
 
   return (
-    <List dense disablePadding sx={{ minHeight: "100vh" }}>
+    <StyledList dense disablePadding>
       {problems.map((problem, idx) => (
         <ListItem disablePadding key={`${idx}`}>
           <ListItemButton onClick={() => showProblemModal(problem)}>
@@ -63,6 +74,6 @@ export function ProblemsList({ problems }: { problems: PlayerProblem[] }): JSX.E
           </ListItemButton>
         </ListItem>
       ))}
-    </List>
+    </StyledList>
   );
 }
