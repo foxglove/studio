@@ -65,6 +65,7 @@ export default function PanelCatalogProvider(
 
   const allPanels = useMemo(() => {
     return [
+      ...panels.new3DPanel,
       ...panels.builtin,
       ...panels.debug,
       ...panels.hidden,
