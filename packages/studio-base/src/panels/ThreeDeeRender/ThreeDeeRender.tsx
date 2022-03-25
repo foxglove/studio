@@ -23,6 +23,8 @@ import {
   Marker,
   PointCloud2,
   POINTCLOUD_DATATYPES,
+  OccupancyGrid,
+  OCCUPANCY_GRID_DATATYPES,
 } from "./ros";
 
 const SHOW_STATS = true;
@@ -33,6 +35,7 @@ mergeSetInto(SUPPORTED_DATATYPES, TRANSFORM_STAMPED_DATATYPES);
 mergeSetInto(SUPPORTED_DATATYPES, TF_DATATYPES);
 mergeSetInto(SUPPORTED_DATATYPES, MARKER_DATATYPES);
 mergeSetInto(SUPPORTED_DATATYPES, MARKER_ARRAY_DATATYPES);
+mergeSetInto(SUPPORTED_DATATYPES, OCCUPANCY_GRID_DATATYPES);
 mergeSetInto(SUPPORTED_DATATYPES, POINTCLOUD_DATATYPES);
 
 const log = Logger.getLogger(__filename);
@@ -284,6 +287,10 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         // visualization_msgs/Marker - Ingest this single marker
         const marker = message.message as Marker;
         renderer.addMarkerMessage(message.topic, marker);
+      } else if (OCCUPANCY_GRID_DATATYPES.has(datatype)) {
+        // nav_msgs/OccupancyGrid - Ingest this occupancy grid
+        const occupancyGrid = message.message as OccupancyGrid;
+        renderer.addOccupancyGridMessage(message.topic, occupancyGrid);
       } else if (POINTCLOUD_DATATYPES.has(datatype)) {
         // sensor_msgs/PointCloud2 - Ingest this point cloud
         const pointCloud = message.message as PointCloud2;

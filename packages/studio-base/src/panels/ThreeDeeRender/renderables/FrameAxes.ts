@@ -54,6 +54,7 @@ export class FrameAxes extends THREE.Object3D {
       frameAdded = true;
     }
 
+    // Create a new transform and add it to the renderer's TransformTree
     const stamp = rosTimeToNanoSec(tf.header.stamp);
     const t = tf.transform.translation;
     const q = tf.transform.rotation;

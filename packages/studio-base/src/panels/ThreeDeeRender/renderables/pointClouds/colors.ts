@@ -4,6 +4,8 @@
 
 import * as THREE from "three";
 
+import { SRGBToLinear } from "../../color";
+import { clamp, lerp } from "../../math";
 import { ColorRGBA } from "../../ros";
 import { PointCloudColorMode, PointCloudSettings } from "./settings";
 
@@ -62,10 +64,6 @@ export function getColorConverter(
         turbo(output, t);
       };
   }
-}
-
-export function SRGBToLinear(c: number): number {
-  return c < 0.04045 ? c * 0.0773993808 : Math.pow(c * 0.9478672986 + 0.0521327014, 2.4);
 }
 
 // 0xrrggbb00
@@ -177,12 +175,4 @@ function turbo(output: ColorRGBA, pct: number): void {
   output.g = SRGBToLinear(clamp(v4.dot(kGreenVec4) + v2.dot(kGreenVec2), 0, 1));
   output.b = SRGBToLinear(clamp(v4.dot(kBlueVec4) + v2.dot(kBlueVec2), 0, 1));
   output.a = 1;
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
-}
-
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
 }

@@ -15,8 +15,9 @@ import { MaterialCache } from "./MaterialCache";
 import { ModelCache } from "./ModelCache";
 import { FrameAxes } from "./renderables/FrameAxes";
 import { Markers } from "./renderables/Markers";
+import { OccupancyGrids } from "./renderables/OccupancyGrids";
 import { PointClouds } from "./renderables/PointClouds";
-import { Marker, PointCloud2, TF } from "./ros";
+import { Marker, OccupancyGrid, PointCloud2, TF } from "./ros";
 import { TransformTree } from "./transforms/TransformTree";
 
 const log = Logger.getLogger(__filename);
@@ -57,6 +58,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   renderFrameId: string | undefined;
 
   frameAxes = new FrameAxes(this);
+  occupancyGrids = new OccupancyGrids(this);
   pointClouds = new PointClouds(this);
   markers = new Markers(this);
 
@@ -98,6 +100,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     this.scene = new THREE.Scene();
     this.scene.add(this.frameAxes);
+    this.scene.add(this.occupancyGrids);
     this.scene.add(this.pointClouds);
     this.scene.add(this.markers);
 
@@ -133,6 +136,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   dispose(): void {
     this.frameAxes.dispose();
+    this.occupancyGrids.dispose();
     this.pointClouds.dispose();
     this.markers.dispose();
     this.gl.dispose();
@@ -147,6 +151,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   addTransformMessage(tf: TF): void {
     this.frameAxes.addTransformMessage(tf);
+  }
+
+  addOccupancyGridMessage(topic: string, occupancyGrid: OccupancyGrid): void {
+    this.occupancyGrids.addOccupancyGridMessage(topic, occupancyGrid);
   }
 
   addPointCloud2Message(topic: string, pointCloud: PointCloud2): void {
@@ -189,6 +197,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.materialCache.update(this.input.canvasSize);
 
     this.frameAxes.startFrame(currentTime);
+    this.occupancyGrids.startFrame(currentTime);
     this.pointClouds.startFrame(currentTime);
     this.markers.startFrame(currentTime);
 
