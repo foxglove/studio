@@ -354,7 +354,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     for (const [topic, topicLayer] of topicLayers) {
       topicLayer.allFrames.clearLayers();
 
-      const navMessages = allNavMessages.filter((m) => m.topic === topic);
+      const navMessages = allNavMessages.filter((message) => message.topic === topic);
       const pointLayer = FilteredPointLayer({
         map: currentMap,
         navSatMessageEvents: navMessages,
