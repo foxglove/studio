@@ -19,6 +19,7 @@ export type OccupancyGridSettings = {
   maxColor: ColorRGBA;
   unknownColor: ColorRGBA;
   invalidColor: ColorRGBA;
+  frameLocked: boolean;
 };
 
 // ts-prune-ignore-next
@@ -77,6 +78,7 @@ export class OccupancyGrids extends THREE.Object3D {
         maxColor: DEFAULT_MAX_COLOR,
         unknownColor: DEFAULT_UNKNOWN_COLOR,
         invalidColor: DEFAULT_INVALID_COLOR,
+        frameLocked: true,
       };
 
       renderable.userData.occupancyGrid = occupancyGrid;
@@ -108,7 +110,8 @@ export class OccupancyGrids extends THREE.Object3D {
     }
 
     for (const renderable of this.occupancyGridsByTopic.values()) {
-      const srcTime = renderable.userData.srcTime;
+      const frameLocked = renderable.userData.settings.frameLocked;
+      const srcTime = frameLocked ? currentTime : renderable.userData.srcTime;
       const frameId = renderable.userData.occupancyGrid.header.frame_id;
       const updated = updatePose(
         renderable,
