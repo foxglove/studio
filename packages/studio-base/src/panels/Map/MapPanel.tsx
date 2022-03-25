@@ -15,7 +15,7 @@ import {
   geoJSON,
   Layer,
 } from "leaflet";
-import { groupBy, minBy, partition, toPairs } from "lodash";
+import { minBy, partition } from "lodash";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { useLatest } from "react-use";
@@ -31,7 +31,7 @@ import { Topic } from "@foxglove/studio-base/players/types";
 import { darkColor, lightColor, lineColors } from "@foxglove/studio-base/util/plotColors";
 
 import { hasFix } from "./support";
-import { GeoJSONMessage, MapPanelMessage, NavSatFixMsg, Point } from "./types";
+import { GeoJSONMessage, MapPanelMessage, Point } from "./types";
 
 // Persisted panel state
 type Config = {
@@ -78,7 +78,17 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   // Panel state management to update our set of messages
   // We use state to trigger a render on the panel
   const [allMapMessages, setAllMapMessages] = useState<MapPanelMessage[]>([]);
-  const [mapMessages, setMapMessages] = useState<MapPanelMessage[]>([]);
+  const [currentMapMessages, setCurrentMapMessages] = useState<MapPanelMessage[]>([]);
+
+  const [allGeoMessages, allNavMessages] = useMemo(
+    () => partition(allMapMessages, isGeoJSONMessage),
+    [allMapMessages],
+  );
+
+  const [currentGeoMessages, currentNavMessages] = useMemo(
+    () => partition(currentMapMessages, isGeoJSONMessage),
+    [currentMapMessages],
+  );
 
   // Panel state management to track the list of available topics
   const [topics, setTopics] = useState<readonly Topic[]>([]);
@@ -269,7 +279,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
       // Only update the current frame if we have new messages.
       if (renderState.currentFrame && renderState.currentFrame.length > 0) {
-        setMapMessages(renderState.currentFrame as MapPanelMessage[]);
+        setCurrentMapMessages(renderState.currentFrame as MapPanelMessage[]);
       }
     };
 
@@ -323,40 +333,28 @@ function MapPanel(props: MapPanelProps): JSX.Element {
         return old;
       }
 
-      for (const messages of [mapMessages, allMapMessages]) {
+      for (const messages of [currentNavMessages, allNavMessages]) {
         for (const message of messages) {
-          if (!isGeoJSONMessage(message)) {
-            return {
-              lat: message.message.latitude,
-              lon: message.message.longitude,
-            };
-          }
+          return {
+            lat: message.message.latitude,
+            lon: message.message.longitude,
+          };
         }
       }
 
       return;
     });
-  }, [mapMessages, allMapMessages]);
+  }, [allNavMessages, currentNavMessages]);
 
   useEffect(() => {
     if (!currentMap) {
       return;
     }
 
-    const messagesByTopic = groupBy(allMapMessages, (m) => m.topic);
-
-    for (const [topic, messages] of toPairs(messagesByTopic)) {
-      const topicLayer = topicLayers.get(topic);
-      if (!topicLayer) {
-        // If we get a message for a topic we did not subscribe to - something bad has happened.
-        // We'll pretend like it didn't happen and move along.
-        continue;
-      }
-
-      const [geoMessages, navMessages] = partition(messages, isGeoJSONMessage);
-
+    for (const [topic, topicLayer] of topicLayers) {
       topicLayer.allFrames.clearLayers();
 
+      const navMessages = allNavMessages.filter((m) => m.topic === topic);
       const pointLayer = FilteredPointLayer({
         map: currentMap,
         navSatMessageEvents: navMessages,
@@ -369,6 +367,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
       topicLayer.allFrames.addLayer(pointLayer);
 
+      const geoMessages = allGeoMessages.filter((message) => message.topic === topic);
       for (const geoMessage of geoMessages) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         geoJSON(JSON.parse(geoMessage.message.geojson), {
@@ -378,7 +377,8 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     }
   }, [
     addGeoFeatureEventHandlers,
-    allMapMessages,
+    allGeoMessages,
+    allNavMessages,
     currentMap,
     filterBounds,
     onClick,
@@ -393,20 +393,10 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       return;
     }
 
-    const messagesByTopic = groupBy(mapMessages, (m) => m.topic);
-
-    for (const [topic, messages] of toPairs(messagesByTopic)) {
-      const topicLayer = topicLayers.get(topic);
-      if (!topicLayer) {
-        // If we get a message for a topic we did not subscribe to - something bad has happened.
-        // We'll pretend like it didn't happen and move along.
-        continue;
-      }
-
+    for (const [topic, topicLayer] of topicLayers) {
       topicLayer.currentFrame.clearLayers();
 
-      const [geoMessages, navMessages] = partition(messages, isGeoJSONMessage);
-
+      const navMessages = currentNavMessages.filter((message) => message.topic === topic);
       const [fixEvents, noFixEvents] = partition(navMessages, hasFix);
 
       const pointLayerNoFix = FilteredPointLayer({
@@ -430,6 +420,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       topicLayer.currentFrame.addLayer(pointLayerNoFix);
       topicLayer.currentFrame.addLayer(pointLayerFix);
 
+      const geoMessages = currentGeoMessages.filter((message) => message.topic === topic);
       for (const geoMessage of geoMessages) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         geoJSON(JSON.parse(geoMessage.message.geojson), {
@@ -437,7 +428,14 @@ function MapPanel(props: MapPanelProps): JSX.Element {
         }).addTo(topicLayer.currentFrame);
       }
     }
-  }, [currentMap, filterBounds, mapMessages, addGeoFeatureEventHandlers, topicLayers]);
+  }, [
+    addGeoFeatureEventHandlers,
+    currentGeoMessages,
+    currentMap,
+    currentNavMessages,
+    filterBounds,
+    topicLayers,
+  ]);
 
   // create a marker for the closest gps message to our current preview time
   useEffect(() => {
@@ -446,11 +444,10 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     }
 
     // get the point occuring most recently before preview time but not after preview time
-    const prevNavMessages = allMapMessages.filter(
-      (m): m is MessageEvent<NavSatFixMsg> =>
-        !isGeoJSONMessage(m) && toSec(m.receiveTime) < previewTime,
+    const prevNavMessages = allNavMessages.filter(
+      (message) => toSec(message.receiveTime) < previewTime,
     );
-    const event = minBy(prevNavMessages, (m) => previewTime - toSec(m.receiveTime));
+    const event = minBy(prevNavMessages, (message) => previewTime - toSec(message.receiveTime));
     if (!event) {
       return;
     }
@@ -469,7 +466,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     return () => {
       marker.remove();
     };
-  }, [allMapMessages, currentMap, previewTime, topicLayers]);
+  }, [allNavMessages, currentMap, previewTime, topicLayers]);
 
   // persist panel config on zoom changes
   useEffect(() => {
