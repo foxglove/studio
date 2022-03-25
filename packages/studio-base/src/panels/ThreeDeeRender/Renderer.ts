@@ -25,6 +25,7 @@ const log = Logger.getLogger(__filename);
 export type RendererEvents = {
   startFrame: (currentTime: bigint, renderer: Renderer) => void;
   endFrame: (currentTime: bigint, renderer: Renderer) => void;
+  cameraMove: (renderer: Renderer) => void;
   renderableSelected: (renderable: THREE.Object3D, renderer: Renderer) => void;
   transformTreeUpdated: (renderer: Renderer) => void;
   showLabel: (labelId: string, labelMarker: Marker, renderer: Renderer) => void;
@@ -132,8 +133,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
     this.controls = new OrbitControls(this.camera, this.gl.domElement);
+    this.controls.addEventListener("change", () => this.emit("cameraMove", this));
 
-    this.animationFrame(performance.now());
+    this.animationFrame();
   }
 
   dispose(): void {
@@ -180,11 +182,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   // Callback handlers
 
-  animationFrame = (_wallTime: DOMHighResTimeStamp): void => {
+  animationFrame = (): void => {
     if (this.currentTime != undefined) {
       this.frameHandler(this.currentTime);
     }
-    requestAnimationFrame(this.animationFrame);
   };
 
   frameHandler = (currentTime: bigint): void => {

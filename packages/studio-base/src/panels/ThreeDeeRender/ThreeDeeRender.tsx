@@ -80,18 +80,18 @@ function RendererOverlay(props: { colorScheme: "dark" | "light" | undefined }): 
     setLabelsMap(new Map(labelsMap));
   });
 
-  useRendererEvent("endFrame", () => {
-    if (renderer && labelsRef.current) {
+  useRendererEvent("endFrame", (_, curRenderer) => {
+    if (labelsRef.current) {
       for (const labelId of labelsMap.keys()) {
         const labelEl = document.getElementById(`label-${labelId}`);
         if (labelEl) {
-          const worldPosition = renderer.markerWorldPosition(labelId);
+          const worldPosition = curRenderer.markerWorldPosition(labelId);
           if (worldPosition) {
             setOverlayPosition(
               labelEl.style,
               worldPosition,
-              renderer.input.canvasSize,
-              renderer.camera,
+              curRenderer.input.canvasSize,
+              curRenderer.camera,
             );
           }
         }
@@ -159,6 +159,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   const [topics, setTopics] = useState<ReadonlyArray<Topic> | undefined>();
   const [messages, setMessages] = useState<ReadonlyArray<MessageEvent<unknown>> | undefined>();
   const [currentTime, setCurrentTime] = useState<bigint | undefined>();
+  const [cameraVersion, setCameraVersion] = useState<number>(0);
 
   const [renderDone, setRenderDone] = useState<(() => void) | undefined>();
 
@@ -260,49 +261,62 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     }
   }, [colorScheme, renderer]);
 
-  // Handle messages
+  // Handle camera movements
+  const handleCameraMove = () => setCameraVersion((prev) => prev + 1);
   useEffect(() => {
-    if (!messages || !renderer) {
+    renderer?.addListener("cameraMove", handleCameraMove);
+    return () => void renderer?.removeListener("cameraMove", handleCameraMove);
+  }, [renderer]);
+
+  // Handle messages and render a frame if the camera has moved or new messages
+  // are available
+  useEffect(() => {
+    void cameraVersion;
+    if (!renderer) {
       return;
     }
 
-    for (const message of messages) {
-      const datatype = topicsToDatatypes.get(message.topic);
-      if (!datatype) {
-        continue;
-      }
+    if (messages) {
+      for (const message of messages) {
+        const datatype = topicsToDatatypes.get(message.topic);
+        if (!datatype) {
+          continue;
+        }
 
-      if (TF_DATATYPES.has(datatype)) {
-        // tf2_msgs/TFMessage - Ingest the list of transforms into our TF tree
-        const tfMessage = message.message as { transforms: TF[] };
-        for (const tf of tfMessage.transforms) {
+        if (TF_DATATYPES.has(datatype)) {
+          // tf2_msgs/TFMessage - Ingest the list of transforms into our TF tree
+          const tfMessage = message.message as { transforms: TF[] };
+          for (const tf of tfMessage.transforms) {
+            renderer.addTransformMessage(tf);
+          }
+        } else if (TRANSFORM_STAMPED_DATATYPES.has(datatype)) {
+          // geometry_msgs/TransformStamped - Ingest this single transform into our TF tree
+          const tf = message.message as TF;
           renderer.addTransformMessage(tf);
-        }
-      } else if (TRANSFORM_STAMPED_DATATYPES.has(datatype)) {
-        // geometry_msgs/TransformStamped - Ingest this single transform into our TF tree
-        const tf = message.message as TF;
-        renderer.addTransformMessage(tf);
-      } else if (MARKER_ARRAY_DATATYPES.has(datatype)) {
-        // visualization_msgs/MarkerArray - Ingest the list of markers
-        const markerArray = message.message as { markers: Marker[] };
-        for (const marker of markerArray.markers) {
+        } else if (MARKER_ARRAY_DATATYPES.has(datatype)) {
+          // visualization_msgs/MarkerArray - Ingest the list of markers
+          const markerArray = message.message as { markers: Marker[] };
+          for (const marker of markerArray.markers) {
+            renderer.addMarkerMessage(message.topic, marker);
+          }
+        } else if (MARKER_DATATYPES.has(datatype)) {
+          // visualization_msgs/Marker - Ingest this single marker
+          const marker = message.message as Marker;
           renderer.addMarkerMessage(message.topic, marker);
+        } else if (OCCUPANCY_GRID_DATATYPES.has(datatype)) {
+          // nav_msgs/OccupancyGrid - Ingest this occupancy grid
+          const occupancyGrid = message.message as OccupancyGrid;
+          renderer.addOccupancyGridMessage(message.topic, occupancyGrid);
+        } else if (POINTCLOUD_DATATYPES.has(datatype)) {
+          // sensor_msgs/PointCloud2 - Ingest this point cloud
+          const pointCloud = message.message as PointCloud2;
+          renderer.addPointCloud2Message(message.topic, pointCloud);
         }
-      } else if (MARKER_DATATYPES.has(datatype)) {
-        // visualization_msgs/Marker - Ingest this single marker
-        const marker = message.message as Marker;
-        renderer.addMarkerMessage(message.topic, marker);
-      } else if (OCCUPANCY_GRID_DATATYPES.has(datatype)) {
-        // nav_msgs/OccupancyGrid - Ingest this occupancy grid
-        const occupancyGrid = message.message as OccupancyGrid;
-        renderer.addOccupancyGridMessage(message.topic, occupancyGrid);
-      } else if (POINTCLOUD_DATATYPES.has(datatype)) {
-        // sensor_msgs/PointCloud2 - Ingest this point cloud
-        const pointCloud = message.message as PointCloud2;
-        renderer.addPointCloud2Message(message.topic, pointCloud);
       }
     }
-  }, [messages, renderer, topicsToDatatypes]);
+
+    renderer.animationFrame();
+  }, [cameraVersion, messages, renderer, topicsToDatatypes]);
 
   // Invoke the done callback once the render is complete
   useEffect(() => {
