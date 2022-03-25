@@ -36,6 +36,8 @@ export type RendererEvents = {
 const LIGHT_BACKDROP = new THREE.Color(0xececec);
 const DARK_BACKDROP = new THREE.Color(0x121217);
 
+const TRANSFORM_STORAGE_TIME = 60n * BigInt(1e9);
+
 const tempVec = new THREE.Vector3();
 
 export class Renderer extends EventEmitter<RendererEvents> {
@@ -52,7 +54,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   colorScheme: "dark" | "light" | undefined;
   modelCache: ModelCache;
   renderables = new Map<string, THREE.Object3D>();
-  transformTree = new TransformTree();
+  transformTree = new TransformTree(TRANSFORM_STORAGE_TIME);
   currentTime: bigint | undefined;
   fixedFrameId: string | undefined;
   renderFrameId: string | undefined;
