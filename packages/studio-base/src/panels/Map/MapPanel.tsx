@@ -28,10 +28,11 @@ import FilteredPointLayer, {
   POINT_MARKER_RADIUS,
 } from "@foxglove/studio-base/panels/Map/FilteredPointLayer";
 import { Topic } from "@foxglove/studio-base/players/types";
+import { FoxgloveMessages } from "@foxglove/studio-base/types/FoxgloveMessages";
 import { darkColor, lightColor, lineColors } from "@foxglove/studio-base/util/plotColors";
 
 import { hasFix } from "./support";
-import { GeoJSONMessage, MapPanelMessage, Point } from "./types";
+import { MapPanelMessage, Point } from "./types";
 
 // Persisted panel state
 type Config = {
@@ -43,7 +44,9 @@ type MapPanelProps = {
   context: PanelExtensionContext;
 };
 
-function isGeoJSONMessage(message: MessageEvent<unknown>): message is MessageEvent<GeoJSONMessage> {
+function isGeoJSONMessage(
+  message: MessageEvent<unknown>,
+): message is MessageEvent<FoxgloveMessages["foxglove.GeoJSON"]> {
   return (
     typeof message.message === "object" &&
     message.message != undefined &&
