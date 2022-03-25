@@ -201,6 +201,7 @@ function updateTexture(
   occupancyGrid: OccupancyGrid,
   settings: OccupancyGridSettings,
 ): void {
+  const size = occupancyGrid.info.width * occupancyGrid.info.height;
   const rgba = texture.image.data;
 
   tempUnknownColor.r = SRGBToLinear(settings.unknownColor.r) * 255;
@@ -223,7 +224,9 @@ function updateTexture(
   tempMaxColor.b = SRGBToLinear(settings.maxColor.b) * 255;
   tempMaxColor.a = settings.maxColor.a * 255;
 
-  occupancyGrid.data.forEach((value, i) => {
+  const data = occupancyGrid.data;
+  for (let i = 0; i < size; i++) {
+    const value = data[i]! | 0;
     const offset = i * 4;
     if (value === -1) {
       // Unknown (-1)
@@ -252,7 +255,7 @@ function updateTexture(
       rgba[offset + 2] = tempInvalidColor.b;
       rgba[offset + 3] = tempInvalidColor.a;
     }
-  });
+  }
 
   texture.needsUpdate = true;
 }

@@ -196,6 +196,15 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       setTopics(renderState.topics);
 
       // currentFrame has messages on subscribed topics since the last render call
+      if (renderState.currentFrame) {
+        // Fully parse lazy messages
+        for (const messageEvent of renderState.currentFrame) {
+          const maybeLazy = messageEvent.message as { toJSON?: () => unknown };
+          if ("toJSON" in maybeLazy) {
+            (messageEvent as { message: unknown }).message = maybeLazy.toJSON!();
+          }
+        }
+      }
       setMessages(renderState.currentFrame);
     };
 
