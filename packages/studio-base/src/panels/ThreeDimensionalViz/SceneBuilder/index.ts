@@ -34,6 +34,7 @@ import {
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
 import { Frame } from "@foxglove/studio-base/panels/ThreeDimensionalViz/useFrame";
 import { Topic, MessageEvent, RosObject } from "@foxglove/studio-base/players/types";
+import { FoxgloveMessages } from "@foxglove/studio-base/types/FoxgloveMessages";
 import {
   Color,
   Marker,
@@ -834,6 +835,9 @@ export default class SceneBuilder implements MarkerProvider {
       case "std_msgs/msg/ColorRGBA":
       case "ros.std_msgs.ColorRGBA":
         this._consumeColor(msg as MessageEvent<Color>);
+        break;
+      case "foxglove.Color":
+        this._consumeColor(msg as MessageEvent<FoxgloveMessages[typeof datatype]>);
         break;
       case "geometry_msgs/PolygonStamped":
       case "geometry_msgs/msg/PolygonStamped":
