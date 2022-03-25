@@ -8,6 +8,7 @@ import React, { useRef, useLayoutEffect, useEffect, useState, useMemo } from "re
 import Logger from "@foxglove/log";
 import { toNanoSec } from "@foxglove/rostime";
 import { PanelExtensionContext, RenderState, Topic, MessageEvent } from "@foxglove/studio";
+import useCleanup from "@foxglove/studio-base/hooks/useCleanup";
 
 import { DebugGui } from "./DebugGui";
 import { setOverlayPosition } from "./LabelOverlay";
@@ -160,6 +161,10 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   const [currentTime, setCurrentTime] = useState<bigint | undefined>();
 
   const [renderDone, setRenderDone] = useState<(() => void) | undefined>();
+
+  useCleanup(() => {
+    renderer?.dispose();
+  });
 
   // We use a layout effect to setup render handling for our panel. We also setup some topic subscriptions.
   useLayoutEffect(() => {

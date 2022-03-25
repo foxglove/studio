@@ -140,7 +140,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.pointClouds.dispose();
     this.markers.dispose();
     this.gl.dispose();
-    this.gl.forceContextLoss();
+    // this.gl.forceContextLoss();
   }
 
   setColorScheme(colorScheme: "dark" | "light"): void {
