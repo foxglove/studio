@@ -85,7 +85,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.gl.toneMapping = THREE.NoToneMapping;
     this.gl.autoClear = false;
     this.gl.info.autoReset = false;
-    this.gl.shadowMap.enabled = true;
+    this.gl.shadowMap.enabled = false;
     this.gl.shadowMap.type = THREE.VSMShadowMap;
     this.gl.setPixelRatio(window.devicePixelRatio);
 
