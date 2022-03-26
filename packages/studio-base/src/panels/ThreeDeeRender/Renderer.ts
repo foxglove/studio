@@ -214,11 +214,11 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   resizeHandler = (size: THREE.Vector2): void => {
     log.debug(`Resizing to ${size.width}x${size.height}`);
-    this.camera.aspect = size.width / size.height;
-    this.camera.updateProjectionMatrix();
-
     this.gl.setPixelRatio(window.devicePixelRatio);
     this.gl.setSize(size.width, size.height);
+    this.camera.aspect = size.width / size.height;
+    this.camera.updateProjectionMatrix();
+    this.emit("cameraMove", this);
   };
 
   clickHandler = (_cursorCoords: THREE.Vector2): void => {
