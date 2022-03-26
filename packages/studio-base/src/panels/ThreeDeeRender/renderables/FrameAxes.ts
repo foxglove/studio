@@ -3,6 +3,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import * as THREE from "three";
+import { Line2 } from "three/examples/jsm/lines/Line2";
+import { LineGeometry } from "three/examples/jsm/lines/LineGeometry";
+import { LineMaterial } from "three/examples/jsm/lines/LineMaterial";
 
 import Logger from "@foxglove/log";
 import {
@@ -25,9 +28,16 @@ const SHAFT_DIAMETER = 0.02;
 const HEAD_LENGTH = 0.046;
 const HEAD_DIAMETER = 0.05;
 
+const RED_COLOR = new THREE.Color(0x9c3948).convertSRGBToLinear();
+const GREEN_COLOR = new THREE.Color(0x88dd04).convertSRGBToLinear();
+const BLUE_COLOR = new THREE.Color(0x2b90fb).convertSRGBToLinear();
+const YELLOW_COLOR = new THREE.Color(0xffff00).convertSRGBToLinear();
+
+const PI_2 = Math.PI / 2;
+
 const tempMat4 = new THREE.Matrix4();
 const tempVec = new THREE.Vector3();
-const tempColor = new THREE.Color();
+const tempVecB = new THREE.Vector3();
 
 type FrameAxisRenderable = THREE.Object3D & {
   userData: {
@@ -35,6 +45,7 @@ type FrameAxisRenderable = THREE.Object3D & {
     pose: Pose;
     shaftMesh: THREE.InstancedMesh;
     headMesh: THREE.InstancedMesh;
+    parentLine?: Line2;
   };
 };
 
@@ -43,13 +54,18 @@ export class FrameAxes extends THREE.Object3D {
   private static headLod: DetailLevel | undefined;
   private static shaftGeometry: THREE.CylinderGeometry | undefined;
   private static headGeometry: THREE.ConeGeometry | undefined;
+  private static lineGeometry: LineGeometry | undefined;
 
   renderer: Renderer;
   axesByFrameId = new Map<string, FrameAxisRenderable>();
+  lineMaterial: LineMaterial;
 
   constructor(renderer: Renderer) {
     super();
     this.renderer = renderer;
+
+    this.lineMaterial = new LineMaterial({ worldUnits: false, linewidth: 2 });
+    this.lineMaterial.color = YELLOW_COLOR;
   }
 
   dispose(): void {
@@ -60,18 +76,12 @@ export class FrameAxes extends THREE.Object3D {
     }
     this.children.length = 0;
     this.axesByFrameId.clear();
+    this.lineMaterial.dispose();
   }
 
   addTransformMessage(tf: TF): void {
-    let frameAdded = false;
-    if (!this.renderer.transformTree.hasFrame(tf.header.frame_id)) {
-      this._addFrameAxis(tf.header.frame_id);
-      frameAdded = true;
-    }
-    if (!this.renderer.transformTree.hasFrame(tf.child_frame_id)) {
-      this._addFrameAxis(tf.child_frame_id);
-      frameAdded = true;
-    }
+    const addParent = !this.renderer.transformTree.hasFrame(tf.header.frame_id);
+    const addChild = !this.renderer.transformTree.hasFrame(tf.child_frame_id);
 
     // Create a new transform and add it to the renderer's TransformTree
     const stamp = rosTimeToNanoSec(tf.header.stamp);
@@ -85,19 +95,29 @@ export class FrameAxes extends THREE.Object3D {
       transform,
     );
 
-    if (frameAdded) {
+    if (addParent) {
+      this._addFrameAxis(tf.header.frame_id);
+    }
+    if (addChild) {
+      this._addFrameAxis(tf.child_frame_id);
+    }
+
+    if (addParent || addChild) {
       log.debug(`Added transform "${tf.header.frame_id}_T_${tf.child_frame_id}"`);
       this.renderer.emit("transformTreeUpdated", this.renderer);
     }
   }
 
   startFrame(currentTime: bigint): void {
+    this.lineMaterial.resolution = this.renderer.input.canvasSize;
+
     const renderFrameId = this.renderer.renderFrameId;
     const fixedFrameId = this.renderer.fixedFrameId;
     if (!renderFrameId || !fixedFrameId) {
       return;
     }
 
+    // Update the arrow poses
     for (const [frameId, renderable] of this.axesByFrameId.entries()) {
       const updated = updatePose(
         renderable,
@@ -108,9 +128,31 @@ export class FrameAxes extends THREE.Object3D {
         currentTime,
         currentTime,
       );
+      renderable.visible = updated;
       if (!updated) {
         const message = missingTransformMessage(renderFrameId, fixedFrameId, frameId);
         this.renderer.layerErrors.addToLayer(`f:${frameId}`, MISSING_TRANSFORM, message);
+      }
+    }
+
+    // Update the lines between coordinate frames
+    for (const [_frameId, childRenderable] of this.axesByFrameId.entries()) {
+      const line = childRenderable.userData.parentLine;
+      if (line) {
+        line.visible = false;
+        const childFrame = this.renderer.transformTree.frame(childRenderable.userData.frameId);
+        const parentFrame = childFrame?.parent();
+        if (parentFrame) {
+          const parentRenderable = this.axesByFrameId.get(parentFrame.id);
+          if (parentRenderable?.visible === true) {
+            parentRenderable.getWorldPosition(tempVec);
+            const dist = tempVec.distanceTo(childRenderable.getWorldPosition(tempVecB));
+            line.lookAt(tempVec);
+            line.rotateY(-PI_2);
+            line.scale.set(dist, 1, 1);
+            line.visible = true;
+          }
+        }
       }
     }
   }
@@ -120,88 +162,97 @@ export class FrameAxes extends THREE.Object3D {
       return;
     }
 
+    // Create a scene graph object to hold the three arrows, a text label, and a
+    // line to the parent frame if it exists
     const renderable = new THREE.Object3D() as FrameAxisRenderable;
     renderable.name = frameId;
     renderable.userData.frameId = frameId;
     renderable.userData.pose = makePose();
 
-    const material = standardMaterial(this.renderer.materialCache);
-    const shaftInstances = new THREE.InstancedMesh(
-      FrameAxes.ShaftGeometry(this.renderer.lod),
-      material,
-      3,
-    );
+    // Create three arrow shafts
+    const arrowMaterial = standardMaterial(this.renderer.materialCache);
+    const shaftGeometry = FrameAxes.ShaftGeometry(this.renderer.lod);
+    const shaftInstances = new THREE.InstancedMesh(shaftGeometry, arrowMaterial, 3);
     shaftInstances.castShadow = true;
     shaftInstances.receiveShadow = true;
     renderable.add(shaftInstances);
-    // Set x, y, and z axis arrow directions
+    // Set x, y, and z axis arrow shaft directions
     tempVec.set(SHAFT_LENGTH, SHAFT_DIAMETER, SHAFT_DIAMETER);
     shaftInstances.setMatrixAt(0, tempMat4.identity().scale(tempVec));
-    shaftInstances.setMatrixAt(1, tempMat4.makeRotationZ(Math.PI / 2).scale(tempVec));
-    shaftInstances.setMatrixAt(2, tempMat4.makeRotationY(-Math.PI / 2).scale(tempVec));
-    shaftInstances.setColorAt(0, tempColor.setHex(0x9c3948).convertSRGBToLinear());
-    shaftInstances.setColorAt(1, tempColor.setHex(0x88dd04).convertSRGBToLinear());
-    shaftInstances.setColorAt(2, tempColor.setHex(0x2b90fb).convertSRGBToLinear());
+    shaftInstances.setMatrixAt(1, tempMat4.makeRotationZ(PI_2).scale(tempVec));
+    shaftInstances.setMatrixAt(2, tempMat4.makeRotationY(-PI_2).scale(tempVec));
+    shaftInstances.setColorAt(0, RED_COLOR);
+    shaftInstances.setColorAt(1, GREEN_COLOR);
+    shaftInstances.setColorAt(2, BLUE_COLOR);
 
-    const headInstances = new THREE.InstancedMesh(
-      FrameAxes.HeadGeometry(this.renderer.lod),
-      material,
-      3,
-    );
+    // Create three arrow heads
+    const headGeometry = FrameAxes.HeadGeometry(this.renderer.lod);
+    const headInstances = new THREE.InstancedMesh(headGeometry, arrowMaterial, 3);
     headInstances.castShadow = true;
     headInstances.receiveShadow = true;
     renderable.add(headInstances);
-    // Set x, y, and z axis arrow directions
+    // Set x, y, and z axis arrow head directions
     tempVec.set(HEAD_LENGTH, HEAD_DIAMETER, HEAD_DIAMETER);
-    headInstances.setMatrixAt(
-      0,
-      tempMat4.identity().scale(tempVec).setPosition(SHAFT_LENGTH, 0, 0),
-    );
-    headInstances.setMatrixAt(
-      1,
-      tempMat4
-        .makeRotationZ(Math.PI / 2)
-        .scale(tempVec)
-        .setPosition(0, SHAFT_LENGTH, 0),
-    );
-    headInstances.setMatrixAt(
-      2,
-      tempMat4
-        .makeRotationY(-Math.PI / 2)
-        .scale(tempVec)
-        .setPosition(0, 0, SHAFT_LENGTH),
-    );
-    headInstances.setColorAt(0, tempColor.setHex(0x9c3948).convertSRGBToLinear());
-    headInstances.setColorAt(1, tempColor.setHex(0x88dd04).convertSRGBToLinear());
-    headInstances.setColorAt(2, tempColor.setHex(0x2b90fb).convertSRGBToLinear());
+    tempMat4.identity().scale(tempVec).setPosition(SHAFT_LENGTH, 0, 0);
+    headInstances.setMatrixAt(0, tempMat4);
+    tempMat4.makeRotationZ(PI_2).scale(tempVec).setPosition(0, SHAFT_LENGTH, 0);
+    headInstances.setMatrixAt(1, tempMat4);
+    tempMat4.makeRotationY(-PI_2).scale(tempVec).setPosition(0, 0, SHAFT_LENGTH);
+    headInstances.setMatrixAt(2, tempMat4);
+    headInstances.setColorAt(0, RED_COLOR);
+    headInstances.setColorAt(1, GREEN_COLOR);
+    headInstances.setColorAt(2, BLUE_COLOR);
 
     renderable.userData.shaftMesh = shaftInstances;
     renderable.userData.headMesh = headInstances;
 
-    // this.shaftMesh.scale.set(SHAFT_LENGTH, SHAFT_DIAMETER, SHAFT_DIAMETER);
-    // this.headMesh.scale.set(HEAD_LENGTH, HEAD_DIAMETER, HEAD_DIAMETER);
-    // this.scale.set(marker.scale.x, marker.scale.y, marker.scale.z);
-
-    // const halfShaftLength = SHAFT_LENGTH / 2;
-    // const halfHeadLength = HEAD_LENGTH / 2;
-    // this.shaftMesh.position.set(halfShaftLength, 0, 0);
-    // this.headMesh.position.set(halfShaftLength * 2 + halfHeadLength, 0, 0);
-
-    // const AXIS_DEFAULT_LENGTH = 1; // [m]
-    // const axes = new THREE.AxesHelper(AXIS_DEFAULT_LENGTH);
-    // renderable.add(axes);
-
     // TODO: <div> floating label
+
+    const frame = this.renderer.transformTree.frame(frameId);
+    if (!frame) {
+      throw new Error(`CoordinateFrame "${frameId}" was not created`);
+    }
+
+    // Check if this frame's parent exists
+    const parentFrame = frame.parent();
+    if (parentFrame) {
+      const parentRenderable = this.axesByFrameId.get(parentFrame.id);
+      if (parentRenderable) {
+        this._addChildParentLine(renderable);
+      }
+    }
+
+    // Find all children of this frame
+    for (const curFrame of this.renderer.transformTree.frames().values()) {
+      if (curFrame.parent() === frame) {
+        const curRenderable = this.axesByFrameId.get(curFrame.id);
+        if (curRenderable) {
+          this._addChildParentLine(curRenderable);
+        }
+      }
+    }
 
     this.add(renderable);
     this.axesByFrameId.set(frameId, renderable);
+  }
+
+  private _addChildParentLine(renderable: FrameAxisRenderable): void {
+    if (renderable.userData.parentLine) {
+      renderable.remove(renderable.userData.parentLine);
+    }
+    const line = new Line2(FrameAxes.LineGeometry(), this.lineMaterial);
+    line.castShadow = true;
+    line.receiveShadow = false;
+
+    renderable.add(line);
+    renderable.userData.parentLine = line;
   }
 
   static ShaftGeometry(lod: DetailLevel): THREE.CylinderGeometry {
     if (!FrameAxes.shaftGeometry || lod !== FrameAxes.shaftLod) {
       const subdivs = arrowShaftSubdivisions(lod);
       FrameAxes.shaftGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1, subdivs, 1, false);
-      FrameAxes.shaftGeometry.rotateZ(-Math.PI / 2);
+      FrameAxes.shaftGeometry.rotateZ(-PI_2);
       FrameAxes.shaftGeometry.translate(0.5, 0, 0);
       FrameAxes.shaftGeometry.computeBoundingSphere();
       FrameAxes.shaftLod = lod;
@@ -213,12 +264,20 @@ export class FrameAxes extends THREE.Object3D {
     if (!FrameAxes.headGeometry || lod !== FrameAxes.headLod) {
       const subdivs = arrowHeadSubdivisions(lod);
       FrameAxes.headGeometry = new THREE.ConeGeometry(0.5, 1, subdivs, 1, false);
-      FrameAxes.headGeometry.rotateZ(-Math.PI / 2);
+      FrameAxes.headGeometry.rotateZ(-PI_2);
       FrameAxes.headGeometry.translate(0.5, 0, 0);
       FrameAxes.headGeometry.computeBoundingSphere();
       FrameAxes.headLod = lod;
     }
     return FrameAxes.headGeometry;
+  }
+
+  static LineGeometry(): LineGeometry {
+    if (!FrameAxes.lineGeometry) {
+      FrameAxes.lineGeometry = new LineGeometry();
+      FrameAxes.lineGeometry.setPositions([0, 0, 0, 1, 0, 0]);
+    }
+    return FrameAxes.lineGeometry;
   }
 }
 
