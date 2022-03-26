@@ -46,10 +46,10 @@ type OccupancyGridRenderable = THREE.Object3D & {
 };
 
 export class OccupancyGrids extends THREE.Object3D {
+  private static geometry: THREE.PlaneGeometry | undefined;
+
   renderer: Renderer;
   occupancyGridsByTopic = new Map<string, OccupancyGridRenderable>();
-
-  static Geometry = new THREE.PlaneGeometry(1, 1, 1, 1).translate(0.5, 0.5, 0);
 
   constructor(renderer: Renderer) {
     super();
@@ -87,7 +87,7 @@ export class OccupancyGrids extends THREE.Object3D {
 
       const texture = createTexture(occupancyGrid);
       const material = createMaterial(texture, renderable);
-      const mesh = new THREE.Mesh(OccupancyGrids.Geometry, material);
+      const mesh = new THREE.Mesh(OccupancyGrids.Geometry(), material);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       renderable.userData.texture = texture;
@@ -157,6 +157,15 @@ export class OccupancyGrids extends THREE.Object3D {
     updateTexture(texture, occupancyGrid, renderable.userData.settings);
 
     renderable.scale.set(resolution * width, resolution * height, 1);
+  }
+
+  static Geometry(): THREE.PlaneGeometry {
+    if (!OccupancyGrids.geometry) {
+      OccupancyGrids.geometry = new THREE.PlaneGeometry(1, 1, 1, 1);
+      OccupancyGrids.geometry.translate(0.5, 0.5, 0);
+      OccupancyGrids.geometry.computeBoundingSphere();
+    }
+    return OccupancyGrids.geometry;
   }
 }
 

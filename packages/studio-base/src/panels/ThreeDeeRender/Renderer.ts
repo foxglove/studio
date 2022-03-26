@@ -8,11 +8,11 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 import Logger from "@foxglove/log";
 
-import { DetailLevel } from "./DetailLevel";
 import { Input } from "./Input";
 import { LayerErrors } from "./LayerErrors";
 import { MaterialCache } from "./MaterialCache";
 import { ModelCache } from "./ModelCache";
+import { DetailLevel } from "./lod";
 import { FrameAxes } from "./renderables/FrameAxes";
 import { Markers } from "./renderables/Markers";
 import { OccupancyGrids } from "./renderables/OccupancyGrids";
