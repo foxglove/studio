@@ -61,7 +61,7 @@ export function getColorConverter(
     case PointCloudColorMode.Turbo:
       return (output: ColorRGBA, colorValue: number) => {
         const t = (colorValue - minValue) / valueDelta;
-        turbo(output, t);
+        turboCached(output, t);
       };
   }
 }
@@ -174,5 +174,31 @@ function turbo(output: ColorRGBA, pct: number): void {
   output.r = SRGBToLinear(clamp(v4.dot(kRedVec4) + v2.dot(kRedVec2), 0, 1));
   output.g = SRGBToLinear(clamp(v4.dot(kGreenVec4) + v2.dot(kGreenVec2), 0, 1));
   output.b = SRGBToLinear(clamp(v4.dot(kBlueVec4) + v2.dot(kBlueVec2), 0, 1));
+  output.a = 1;
+}
+
+// A lookup table for the turbo() function
+let TurboLookup: Float32Array | undefined;
+const TURBO_LOOKUP_SIZE = 65535;
+
+// Builds a one-time lookup table for the turbo() function then uses it to
+// convert `pct` to a color
+function turboCached(output: ColorRGBA, pct: number): void {
+  if (!TurboLookup) {
+    TurboLookup = new Float32Array(TURBO_LOOKUP_SIZE * 3);
+    const tempColor = { r: 0, g: 0, b: 0, a: 0 };
+    for (let i = 0; i < TURBO_LOOKUP_SIZE; i++) {
+      turbo(tempColor, i / (TURBO_LOOKUP_SIZE - 1));
+      const offset = i * 3;
+      TurboLookup[offset + 0] = tempColor.r;
+      TurboLookup[offset + 1] = tempColor.g;
+      TurboLookup[offset + 2] = tempColor.b;
+    }
+  }
+
+  const offset = Math.trunc(pct * (TURBO_LOOKUP_SIZE - 1)) * 3;
+  output.r = TurboLookup[offset + 0]!;
+  output.g = TurboLookup[offset + 1]!;
+  output.b = TurboLookup[offset + 2]!;
   output.a = 1;
 }
