@@ -31,8 +31,10 @@ const tempColor = new THREE.Color();
 
 type FrameAxisRenderable = THREE.Object3D & {
   userData: {
-    frameId?: string;
-    pose?: Pose;
+    frameId: string;
+    pose: Pose;
+    shaftMesh: THREE.InstancedMesh;
+    headMesh: THREE.InstancedMesh;
   };
 };
 
@@ -51,12 +53,10 @@ export class FrameAxes extends THREE.Object3D {
   }
 
   dispose(): void {
-    for (const axisRenderable of this.axesByFrameId.values()) {
-      axisRenderable.traverse((obj) => {
-        if (obj instanceof THREE.AxesHelper) {
-          obj.dispose();
-        }
-      });
+    for (const renderable of this.axesByFrameId.values()) {
+      releaseStandardMaterial(this.renderer.materialCache);
+      renderable.userData.shaftMesh.dispose();
+      renderable.userData.headMesh.dispose();
     }
     this.children.length = 0;
     this.axesByFrameId.clear();
@@ -136,12 +136,47 @@ export class FrameAxes extends THREE.Object3D {
     renderable.add(shaftInstances);
     // Set x, y, and z axis arrow directions
     tempVec.set(SHAFT_LENGTH, SHAFT_DIAMETER, SHAFT_DIAMETER);
-    shaftInstances.setMatrixAt(0, tempMat4.makeRotationX(Math.PI / 2).scale(tempVec));
-    shaftInstances.setMatrixAt(1, tempMat4.makeRotationY(Math.PI / 2).scale(tempVec));
-    shaftInstances.setMatrixAt(2, tempMat4.makeRotationZ(Math.PI / 2).scale(tempVec));
+    shaftInstances.setMatrixAt(0, tempMat4.identity().scale(tempVec));
+    shaftInstances.setMatrixAt(1, tempMat4.makeRotationZ(Math.PI / 2).scale(tempVec));
+    shaftInstances.setMatrixAt(2, tempMat4.makeRotationY(-Math.PI / 2).scale(tempVec));
     shaftInstances.setColorAt(0, tempColor.setHex(0x9c3948).convertSRGBToLinear());
     shaftInstances.setColorAt(1, tempColor.setHex(0x88dd04).convertSRGBToLinear());
     shaftInstances.setColorAt(2, tempColor.setHex(0x2b90fb).convertSRGBToLinear());
+
+    const headInstances = new THREE.InstancedMesh(
+      FrameAxes.HeadGeometry(this.renderer.lod),
+      material,
+      3,
+    );
+    headInstances.castShadow = true;
+    headInstances.receiveShadow = true;
+    renderable.add(headInstances);
+    // Set x, y, and z axis arrow directions
+    tempVec.set(HEAD_LENGTH, HEAD_DIAMETER, HEAD_DIAMETER);
+    headInstances.setMatrixAt(
+      0,
+      tempMat4.identity().scale(tempVec).setPosition(SHAFT_LENGTH, 0, 0),
+    );
+    headInstances.setMatrixAt(
+      1,
+      tempMat4
+        .makeRotationZ(Math.PI / 2)
+        .scale(tempVec)
+        .setPosition(0, SHAFT_LENGTH, 0),
+    );
+    headInstances.setMatrixAt(
+      2,
+      tempMat4
+        .makeRotationY(-Math.PI / 2)
+        .scale(tempVec)
+        .setPosition(0, 0, SHAFT_LENGTH),
+    );
+    headInstances.setColorAt(0, tempColor.setHex(0x9c3948).convertSRGBToLinear());
+    headInstances.setColorAt(1, tempColor.setHex(0x88dd04).convertSRGBToLinear());
+    headInstances.setColorAt(2, tempColor.setHex(0x2b90fb).convertSRGBToLinear());
+
+    renderable.userData.shaftMesh = shaftInstances;
+    renderable.userData.headMesh = headInstances;
 
     // this.shaftMesh.scale.set(SHAFT_LENGTH, SHAFT_DIAMETER, SHAFT_DIAMETER);
     // this.headMesh.scale.set(HEAD_LENGTH, HEAD_DIAMETER, HEAD_DIAMETER);
@@ -167,6 +202,7 @@ export class FrameAxes extends THREE.Object3D {
       const subdivs = arrowShaftSubdivisions(lod);
       FrameAxes.shaftGeometry = new THREE.CylinderGeometry(0.5, 0.5, 1, subdivs, 1, false);
       FrameAxes.shaftGeometry.rotateZ(-Math.PI / 2);
+      FrameAxes.shaftGeometry.translate(0.5, 0, 0);
       FrameAxes.shaftGeometry.computeBoundingSphere();
       FrameAxes.shaftLod = lod;
     }
@@ -178,6 +214,7 @@ export class FrameAxes extends THREE.Object3D {
       const subdivs = arrowHeadSubdivisions(lod);
       FrameAxes.headGeometry = new THREE.ConeGeometry(0.5, 1, subdivs, 1, false);
       FrameAxes.headGeometry.rotateZ(-Math.PI / 2);
+      FrameAxes.headGeometry.translate(0.5, 0, 0);
       FrameAxes.headGeometry.computeBoundingSphere();
       FrameAxes.headLod = lod;
     }
