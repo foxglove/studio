@@ -54,7 +54,15 @@ export function Stats(): JSX.Element {
     stats.addPanel(geometriesPanel);
     div.appendChild(stats.dom);
     stats.showPanel(0);
-    return () => stats && void div.removeChild(stats.dom);
+    return () => {
+      if (stats) {
+        try {
+          div.removeChild(stats.dom);
+        } catch (ex) {
+          // ignore
+        }
+      }
+    };
   }, [div]);
 
   return <div ref={setDiv} />;
@@ -118,7 +126,7 @@ class THREEStats {
 
     const time = performance.now();
 
-    this.msPanel.update(time - this.beginTime, 20);
+    this.msPanel.update(time - this.beginTime, 1000 / 30);
 
     if (time >= this.prevTime + 1000) {
       this.fpsPanel.update((this.frames * 1000) / (time - this.prevTime), 100);
