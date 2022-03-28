@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 
 import {
   IDataSourceFactory,
@@ -24,13 +24,6 @@ import {
   ActualApp,
   ConsoleApi,
 } from "@foxglove/studio-base";
-
-// fixme - need some adaptor for this - it shows a dialog
-// I think we could make app handle that - but we do need something for loading initial user
-// import ConsoleApiCurrentUserProvider from "./components/ConsoleApiCurrentUserProvider";
-
-// fixme - need to hook into the color scheme change events
-// import NativeColorSchemeAdapter from "./components/NativeColorSchemeAdapter";
 
 import { Desktop, NativeMenuBridge, Storage } from "../common/types";
 import { DesktopExtensionLoader } from "./services/DesktopExtensionLoader";
@@ -79,6 +72,17 @@ export default function Root({
     throw new Error("storageBridge is missing");
   }
 
+  useEffect(() => {
+    const handler = () => {
+      void desktopBridge.updateNativeColorScheme();
+    };
+
+    appConfiguration.addChangeListener(AppSetting.COLOR_SCHEME, handler);
+    return () => {
+      appConfiguration.removeChangeListener(AppSetting.COLOR_SCHEME, handler);
+    };
+  }, [appConfiguration]);
+
   const layoutStorage = useMemo(() => new NativeStorageLayoutStorage(storageBridge), []);
   const extensionLoader = useMemo(() => new DesktopExtensionLoader(desktopBridge), []);
   const consoleApi = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);
@@ -87,10 +91,10 @@ export default function Root({
 
   return (
     <ActualApp
+      useDialogAuth={true}
       dataSources={dataSources}
       appConfiguration={appConfiguration}
       consoleApi={consoleApi}
-      currentUser={undefined}
       layoutStorage={layoutStorage}
       extensionLoader={extensionLoader}
       nativeAppMenu={nativeAppMenu}

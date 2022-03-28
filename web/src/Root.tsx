@@ -25,7 +25,6 @@ import {
 import Ros1UnavailableDataSourceFactory from "./dataSources/Ros1UnavailableDataSourceFactory";
 import Ros2UnavailableDataSourceFactory from "./dataSources/Ros2UnavailableDataSourceFactory";
 import VelodyneUnavailableDataSourceFactory from "./dataSources/VelodyneUnavailableDataSourceFactory";
-import { useCurrentUser } from "./hooks/useCurrentUser";
 import { LocalStorageLayoutStorage } from "./services/LocalStorageLayoutStorage";
 import { NoopExtensionLoader } from "./services/NoopExtensionLoader";
 
@@ -62,14 +61,11 @@ export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration
   const extensionLoader = useMemo(() => new NoopExtensionLoader(), []);
   const consoleApi = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);
 
-  const currentUser = useCurrentUser(consoleApi);
-
   return (
     <ActualApp
       dataSources={dataSources}
       appConfiguration={appConfiguration}
       layoutStorage={layoutStorage}
-      currentUser={currentUser}
       consoleApi={consoleApi}
       extensionLoader={extensionLoader}
     />

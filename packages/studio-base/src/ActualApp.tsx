@@ -2,65 +2,61 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { useMedia } from "react-use";
+import { ConsoleApiCookieCurrentUserProvider } from "@foxglove/studio-base/providers/ConsoleApiCookieUserProvider";
+import { ConsoleApiDialogCurrentUserProvider } from "@foxglove/studio-base/providers/ConsoleApiDialogCurrentUserProvider";
 
 import App from "./App";
-import { AppSetting } from "./AppSetting";
+import { ColorSchemeThemeProvider } from "./components/ColorSchemeThemeProvider";
 import CssBaseline from "./components/CssBaseline";
 import ErrorBoundary from "./components/ErrorBoundary";
 import GlobalCss from "./components/GlobalCss";
 import MultiProvider from "./components/MultiProvider";
 import StudioToastProvider from "./components/StudioToastProvider";
-import AppConfigurationContext, { AppConfiguration } from "./context/AppConfigurationContext";
+import AppConfigurationContext, { IAppConfiguration } from "./context/AppConfigurationContext";
 import ConsoleApiContext from "./context/ConsoleApiContext";
-import CurrentUserContext, { CurrentUser } from "./context/CurrentUserContext";
 import ExtensionLoaderContext, { ExtensionLoader } from "./context/ExtensionLoaderContext";
 import LayoutStorageContext from "./context/LayoutStorageContext";
 import NativeAppMenuContext, { INativeAppMenu } from "./context/NativeAppMenuContext";
 import NativeWindowContext, { INativeWindow } from "./context/NativeWindowContext";
 import { IDataSourceFactory } from "./context/PlayerSelectionContext";
-import { useAppConfigurationValue } from "./hooks";
 import ConsoleApiRemoteLayoutStorageProvider from "./providers/ConsoleApiRemoteLayoutStorageProvider";
 import UserProfileLocalStorageProvider from "./providers/UserProfileLocalStorageProvider";
 import ConsoleApi from "./services/ConsoleApi";
 import { ILayoutStorage } from "./services/ILayoutStorage";
-import ThemeProvider from "./theme/ThemeProvider";
-
-function ColorSchemeThemeProvider({ children }: React.PropsWithChildren<unknown>): JSX.Element {
-  const [colorScheme = "dark"] = useAppConfigurationValue<string>(AppSetting.COLOR_SCHEME);
-  const systemSetting = useMedia("(prefers-color-scheme: dark)");
-  const isDark = colorScheme === "dark" || (colorScheme === "system" && systemSetting);
-  return <ThemeProvider isDark={isDark}>{children}</ThemeProvider>;
-}
 
 type AppProps = {
-  appConfiguration: AppConfiguration;
+  appConfiguration: IAppConfiguration;
   dataSources: IDataSourceFactory[];
   consoleApi: ConsoleApi;
-  currentUser: CurrentUser;
   layoutStorage: ILayoutStorage;
   extensionLoader: ExtensionLoader;
   nativeAppMenu?: INativeAppMenu;
   nativeWindow?: INativeWindow;
+  useDialogAuth?: boolean;
 };
 
 export function ActualApp(props: AppProps): JSX.Element {
   const {
     appConfiguration,
     dataSources,
-    currentUser,
     layoutStorage,
     consoleApi,
     extensionLoader,
     nativeAppMenu,
     nativeWindow,
+    useDialogAuth,
   } = props;
+
+  const CurrentUserProviderComponent =
+    useDialogAuth === true
+      ? ConsoleApiDialogCurrentUserProvider
+      : ConsoleApiCookieCurrentUserProvider;
 
   const providers = [
     /* eslint-disable react/jsx-key */
     <ConsoleApiContext.Provider value={consoleApi} />,
-    <CurrentUserContext.Provider value={currentUser} />,
     <ConsoleApiRemoteLayoutStorageProvider />,
+    <CurrentUserProviderComponent />,
     <StudioToastProvider />,
     <LayoutStorageContext.Provider value={layoutStorage} />,
     <UserProfileLocalStorageProvider />,

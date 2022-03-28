@@ -7,13 +7,8 @@ import { useAsync, useLocalStorage } from "react-use";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
-import {
-  useConsoleApi,
-  DeviceCodeDialog,
-  CurrentUserContext,
-  User,
-  Session,
-} from "@foxglove/studio-base";
+import { useConsoleApi, DeviceCodeDialog, User, Session } from "@foxglove/studio-base";
+import CurrentUserContext from "@foxglove/studio-base/context/CurrentUserContext";
 
 const log = Logger.getLogger(__filename);
 
@@ -23,7 +18,7 @@ const log = Logger.getLogger(__filename);
  *
  * ConsoleApiCurrentUserProvider provides a CurrentUserContext
  */
-export default function ConsoleApiCurrentUserProvider(
+export function ConsoleApiDialogCurrentUserProvider(
   props: PropsWithChildren<unknown>,
 ): JSX.Element {
   const api = useConsoleApi();
