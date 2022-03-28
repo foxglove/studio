@@ -96,14 +96,20 @@ export type FoxgloveMessages = {
     };
   };
 
-  "foxglove.PoseStamped": {
+  "foxglove.Pose": {
+    position: { x: number; y: number; z: number };
+    orientation: { x: number; y: number; z: number; w: number };
+  };
+
+  "foxglove.PoseInFrame": {
     timestamp: { sec: number; nsec: number };
     frame_id: string;
     pose: FoxgloveMessages["foxglove.Pose"];
   };
 
-  "foxglove.Pose": {
-    position: { x: number; y: number; z: number };
-    orientation: { x: number; y: number; z: number; w: number };
+  "foxglove.PoseListInFrame": {
+    timestamp: { sec: number; nsec: number };
+    frame_id: string;
+    poses: Array<FoxgloveMessages["foxglove.Pose"]>;
   };
 };

@@ -1489,8 +1489,14 @@ export function GeometryMsgs_Polygon(): JSX.Element {
   );
 }
 
+export const GeometryMsgs_PoseArray = (): JSX.Element => <GeometryMsgs_PoseArray_Base />;
 GeometryMsgs_PoseArray.parameters = { colorScheme: "dark" };
-export function GeometryMsgs_PoseArray(): JSX.Element {
+export const GeometryMsgs_PoseArray_Lines = (): JSX.Element => (
+  <GeometryMsgs_PoseArray_Base displayType="lines" />
+);
+GeometryMsgs_PoseArray_Lines.parameters = { colorScheme: "dark" };
+
+function GeometryMsgs_PoseArray_Base({ displayType }: { displayType?: string }): JSX.Element {
   const topics: Topic[] = [
     { name: "/baselink_path", datatype: "geometry_msgs/PoseArray" },
     { name: "/sensor_path", datatype: "geometry_msgs/PoseArray" },
@@ -1609,6 +1615,8 @@ export function GeometryMsgs_PoseArray(): JSX.Element {
             "t:/sensor_path": {
               overrideColor: { r: 1, g: 0, b: 0, a: 0.2 },
               size: { shaftWidth: 1, headWidth: 2, headLength: 0.5, length: 2 },
+              lineThickness: 0.5,
+              displayType,
             },
           },
           cameraState: {
