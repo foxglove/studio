@@ -106,8 +106,6 @@ const StyledListItem = muiStyled(ListItem, { skipSx: true })(({ theme }) => ({
   },
 }));
 
-const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
-
 function CopyButton({ text }: { text: string }): JSX.Element {
   const [clipboard, copyToClipboard] = useCopyToClipboard();
   const [copied, setCopied] = useState<boolean>(false);
@@ -130,6 +128,8 @@ function CopyButton({ text }: { text: string }): JSX.Element {
     </IconButton>
   );
 }
+
+const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 
 export function TopicList(): JSX.Element {
   const [filterText, setFilterText] = useState<string>("");
@@ -165,7 +165,7 @@ export function TopicList(): JSX.Element {
   ) {
     return (
       <>
-        <StyledAppBar position="sticky" color="default" elevation={0}>
+        <StyledAppBar position="sticky" color="inherit" elevation={0}>
           <TextField
             disabled
             variant="filled"
@@ -199,7 +199,7 @@ export function TopicList(): JSX.Element {
 
   return (
     <>
-      <StyledAppBar position="sticky" color="default" elevation={0}>
+      <StyledAppBar position="sticky" color="inherit" elevation={0}>
         <Box flex="auto">
           <TextField
             disabled={playerPresence !== PlayerPresence.PRESENT}

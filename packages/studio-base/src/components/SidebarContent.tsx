@@ -92,7 +92,7 @@ export function SidebarContent({
           <TextContent allowMarkdownHtml={true}>{helpContent}</TextContent>
         </div>
       )}
-      <ContentWrapper {...{ disablePadding }}>{children}</ContentWrapper>
+      <ContentWrapper disablePadding={disablePadding}>{children}</ContentWrapper>
     </Stack>
   );
 }
