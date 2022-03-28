@@ -13,7 +13,7 @@ export {
   default as DialogHostIdContext,
   useDialogHostId,
 } from "@foxglove/studio-base/context/DialogHostIdContext";
-export { ActualApp } from "./ActualApp";
+export { App } from "./App";
 export type { NetworkInterface, OsContext } from "./OsContext";
 export type {
   IAppConfiguration,

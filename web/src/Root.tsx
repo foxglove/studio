@@ -18,7 +18,7 @@ import {
   SampleNuscenesDataSourceFactory,
   IAppConfiguration,
   McapRemoteDataSourceFactory,
-  ActualApp,
+  App,
   ConsoleApi,
 } from "@foxglove/studio-base";
 
@@ -62,7 +62,9 @@ export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration
   const consoleApi = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);
 
   return (
-    <ActualApp
+    <App
+      enableLaunchPreferenceScreen
+      deepLinks={[window.location.href]}
       dataSources={dataSources}
       appConfiguration={appConfiguration}
       layoutStorage={layoutStorage}

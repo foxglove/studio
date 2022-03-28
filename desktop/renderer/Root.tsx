@@ -18,10 +18,10 @@ import {
   UlogLocalDataSourceFactory,
   McapLocalDataSourceFactory,
   SampleNuscenesDataSourceFactory,
+  McapRemoteDataSourceFactory,
   IAppConfiguration,
   AppSetting,
-  McapRemoteDataSourceFactory,
-  ActualApp,
+  App,
   ConsoleApi,
 } from "@foxglove/studio-base";
 
@@ -88,10 +88,12 @@ export default function Root({
   const consoleApi = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);
   const nativeAppMenu = useMemo(() => new NativeAppMenu(menuBridge), []);
   const nativeWindow = useMemo(() => new NativeWindow(desktopBridge), []);
+  const deepLinks = useMemo(() => desktopBridge.getDeepLinks(), []);
 
   return (
-    <ActualApp
-      useDialogAuth={true}
+    <App
+      enableDialogAuth
+      deepLinks={deepLinks}
       dataSources={dataSources}
       appConfiguration={appConfiguration}
       consoleApi={consoleApi}
