@@ -14,6 +14,7 @@ import TextContent from "@foxglove/studio-base/components/TextContent";
 const useStyles = makeStyles((theme: Theme) => ({
   toolbar: {
     minHeight: theme.spacing(7),
+    flexShrink: 0,
   },
   helpContent: {
     padding: theme.spacing(0, 2, 2),

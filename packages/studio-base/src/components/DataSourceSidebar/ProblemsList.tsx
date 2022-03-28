@@ -44,24 +44,27 @@ export function ProblemsList({ problems }: { problems: PlayerProblem[] }): JSX.E
   }
 
   return (
-    <List dense disablePadding>
-      {problems.map((problem, idx) => (
-        <ListItem disablePadding key={`${idx}`}>
-          <ListItemButton onClick={() => showProblemModal(problem)}>
-            <Stack direction="row" gap={1}>
-              {problem.severity === "warn" && <WarningIcon color="warning" />}
-              {problem.severity === "error" && <ErrorIcon color="error" />}
-              {problem.severity === "info" && <InfoIcon color="info" />}
-              <ListItemText
-                primary={problem.message}
-                primaryTypographyProps={{
-                  color: problem.severity === "warn" ? "warning.main" : `${problem.severity}.main`,
-                }}
-              />
-            </Stack>
-          </ListItemButton>
-        </ListItem>
-      ))}
-    </List>
+    <Stack fullHeight flex="auto" overflow="auto">
+      <List dense disablePadding>
+        {problems.map((problem, idx) => (
+          <ListItem disablePadding key={`${idx}`}>
+            <ListItemButton onClick={() => showProblemModal(problem)}>
+              <Stack direction="row" gap={1}>
+                {problem.severity === "warn" && <WarningIcon color="warning" />}
+                {problem.severity === "error" && <ErrorIcon color="error" />}
+                {problem.severity === "info" && <InfoIcon color="info" />}
+                <ListItemText
+                  primary={problem.message}
+                  primaryTypographyProps={{
+                    color:
+                      problem.severity === "warn" ? "warning.main" : `${problem.severity}.main`,
+                  }}
+                />
+              </Stack>
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+    </Stack>
   );
 }

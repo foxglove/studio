@@ -271,6 +271,14 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
     MuiTab: {
       styleOverrides: {
         labelIcon: iconHack,
+        root: {
+          opacity: 0.8,
+
+          "&$selected": {
+            opacity: 1,
+          },
+        },
+        selected: {},
       },
     },
     MuiTableCell: {

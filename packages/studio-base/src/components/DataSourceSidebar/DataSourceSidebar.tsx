@@ -35,14 +35,16 @@ const StyledTabs = muiStyled(Tabs)({
   minHeight: "auto",
 
   ".MuiTabs-indicator": {
-    transform: "scale(0.4)",
+    transform: "scaleX(0.5)",
+    height: 2,
   },
 });
 
 const ProblemCount = muiStyled("div")(({ theme }) => ({
   backgroundColor: theme.palette.error.main,
+  fontSize: theme.typography.caption.fontSize,
   color: theme.palette.error.contrastText,
-  padding: theme.spacing(0.125, 1),
+  padding: theme.spacing(0.125, 0.75),
   borderRadius: 8,
 }));
 
@@ -81,6 +83,8 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
   useEffect(() => {
     if (playerPresence === PlayerPresence.ERROR) {
       setActiveTab(1);
+    } else {
+      setActiveTab(0);
     }
   }, [playerPresence]);
 

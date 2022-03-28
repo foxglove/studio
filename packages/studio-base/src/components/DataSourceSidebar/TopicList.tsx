@@ -80,11 +80,9 @@ const StyledAppBar = muiStyled(AppBar, { skipSx: true })(({ theme }) => ({
   alignItems: "center",
 }));
 
-const StyledList = muiStyled(List, { skipSx: true })({
-  minHeight: "100vh",
-});
-
 const StyledListItem = muiStyled(ListItem, { skipSx: true })(({ theme }) => ({
+  paddingRight: theme.spacing(1),
+
   "&.MuiListItem-dense": {
     ".MuiListItemText-root": {
       marginTop: theme.spacing(0.5),
@@ -98,8 +96,8 @@ const StyledListItem = muiStyled(ListItem, { skipSx: true })(({ theme }) => ({
     ".MuiListItemSecondaryAction-root": {
       visibility: "hidden",
     },
-    "&:hover, &.Mui-hasMenu": {
-      paddingRight: theme.spacing(11),
+    "&:not(.loading):hover": {
+      paddingRight: theme.spacing(6),
 
       ".MuiListItemSecondaryAction-root": {
         visibility: "visible",
@@ -110,10 +108,31 @@ const StyledListItem = muiStyled(ListItem, { skipSx: true })(({ theme }) => ({
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 
-export function TopicList(): JSX.Element {
-  const [filterText, setFilterText] = useState<string>("");
+function CopyButton({ text }: { text: string }): JSX.Element {
   const [clipboard, copyToClipboard] = useCopyToClipboard();
   const [copied, setCopied] = useState<boolean>(false);
+
+  return (
+    <IconButton
+      size="small"
+      title={copied ? "Copied!" : "Copy topic name"}
+      color={copied ? "success" : "inherit"}
+      onClick={() => {
+        copyToClipboard(text);
+
+        if (!clipboard.error) {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1000);
+        }
+      }}
+    >
+      {copied ? <CheckIcon fontSize="small" /> : <CopyAllIcon fontSize="small" />}
+    </IconButton>
+  );
+}
+
+export function TopicList(): JSX.Element {
+  const [filterText, setFilterText] = useState<string>("");
 
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const topics = useMessagePipeline((ctx) => ctx.playerState.activeData?.topics ?? []);
@@ -154,13 +173,18 @@ export function TopicList(): JSX.Element {
             placeholder="Filter by topic or datatype"
             InputProps={{
               startAdornment: <SearchIcon fontSize="small" />,
-              endAdornment: <CircularProgress size={20} />,
+              endAdornment: (
+                <Stack alignItems="center" justifyContent="center">
+                  {/* Wrapper element to prevent animation wobble */}
+                  <CircularProgress size={20} />
+                </Stack>
+              ),
             }}
           />
         </StyledAppBar>
         <List key="loading" dense disablePadding>
           {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((i) => (
-            <StyledListItem divider key={i}>
+            <StyledListItem className="loading" divider key={i}>
               <ListItemText
                 primary={<Skeleton animation={false} width="20%" />}
                 secondary={<Skeleton animation="wave" width="55%" />}
@@ -202,28 +226,14 @@ export function TopicList(): JSX.Element {
       </StyledAppBar>
 
       {filteredTopics.length > 0 ? (
-        <StyledList key="topics" dense disablePadding>
+        <List key="topics" dense disablePadding>
           {filteredTopics.map(({ item, positions }) => (
             <StyledListItem
               divider
               key={item.name}
               secondaryAction={
                 <Stack direction="row" gap={0.5} alignItems="center">
-                  <IconButton
-                    size="small"
-                    title={copied ? "Copied!" : "Copy topic name"}
-                    color={copied ? "success" : "inherit"}
-                    onClick={() => {
-                      copyToClipboard(item.name);
-
-                      if (!clipboard.error) {
-                        setCopied(true);
-                        setTimeout(() => setCopied(false), 1000);
-                      }
-                    }}
-                  >
-                    {copied ? <CheckIcon fontSize="small" /> : <CopyAllIcon fontSize="small" />}
-                  </IconButton>
+                  <CopyButton text={item.name} />
                 </Stack>
               }
             >
@@ -246,7 +256,7 @@ export function TopicList(): JSX.Element {
               />
             </StyledListItem>
           ))}
-        </StyledList>
+        </List>
       ) : (
         <Stack flex="auto" padding={2} fullHeight alignItems="center" justifyContent="center">
           <Typography align="center" color="text.secondary">
