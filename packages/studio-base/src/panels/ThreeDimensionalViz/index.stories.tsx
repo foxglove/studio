@@ -1491,10 +1491,10 @@ export function GeometryMsgs_Polygon(): JSX.Element {
 
 export const GeometryMsgs_PoseArray = (): JSX.Element => <GeometryMsgs_PoseArray_Base />;
 GeometryMsgs_PoseArray.parameters = { colorScheme: "dark" };
-export const GeometryMsgs_PoseArray_Lines = (): JSX.Element => (
-  <GeometryMsgs_PoseArray_Base displayType="lines" />
+export const GeometryMsgs_PoseArray_Line = (): JSX.Element => (
+  <GeometryMsgs_PoseArray_Base displayType="line" />
 );
-GeometryMsgs_PoseArray_Lines.parameters = { colorScheme: "dark" };
+GeometryMsgs_PoseArray_Line.parameters = { colorScheme: "dark" };
 
 function GeometryMsgs_PoseArray_Base({ displayType }: { displayType?: string }): JSX.Element {
   const topics: Topic[] = [
