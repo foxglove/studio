@@ -60,13 +60,7 @@ export function SidebarContent({
 
   return (
     <Stack overflow={overflow} fullHeight flex="auto" gap={1}>
-      <Toolbar
-        flexShrink={0}
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        padding={2}
-      >
+      <Toolbar flexShrink={0} direction="row" alignItems="center" padding={2}>
         {leadingItems && (
           <Stack direction="row" alignItems="center">
             {leadingItems.map((item, i) => (
@@ -74,7 +68,7 @@ export function SidebarContent({
             ))}
           </Stack>
         )}
-        <Typography component="h2" variant="h4" fontWeight={800}>
+        <Typography component="h2" variant="h4" fontWeight={800} flex="auto">
           {title}
         </Typography>
         {trailingItemsWithHelp.length > 0 && (
