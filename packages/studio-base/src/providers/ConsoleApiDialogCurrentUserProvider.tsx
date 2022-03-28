@@ -7,8 +7,10 @@ import { useAsync, useLocalStorage } from "react-use";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import Logger from "@foxglove/log";
-import { useConsoleApi, DeviceCodeDialog, User, Session } from "@foxglove/studio-base";
-import CurrentUserContext from "@foxglove/studio-base/context/CurrentUserContext";
+import DeviceCodeDialog from "@foxglove/studio-base/components/DeviceCodeDialog";
+import { useConsoleApi } from "@foxglove/studio-base/context/ConsoleApiContext";
+import CurrentUserContext, { User } from "@foxglove/studio-base/context/CurrentUserContext";
+import { Session } from "@foxglove/studio-base/services/ConsoleApi";
 
 const log = Logger.getLogger(__filename);
 
