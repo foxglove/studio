@@ -719,14 +719,23 @@ export default class SceneBuilder implements MarkerProvider {
     this._consumeNonMarkerMessage(topic, pcl, 102);
   };
 
-  private _consumeColor = (msg: MessageEvent<Color>): void => {
+  private _consumeColor = (
+    msg: MessageEvent<Color | FoxgloveMessages["foxglove.Color"]>,
+    datatype: string,
+  ): void => {
     const color = mightActuallyBePartial(msg.message);
     if (color.r == undefined || color.g == undefined || color.b == undefined) {
       return;
     }
+    let finalColor: Color;
+    if (datatype === "foxglove.Color") {
+      finalColor = msg.message as FoxgloveMessages["foxglove.Color"];
+    } else {
+      finalColor = { r: color.r / 255, g: color.g / 255, b: color.b / 255, a: color.a ?? 1 };
+    }
     const newMessage: StampedMessage & { color: Color } = {
       header: { frame_id: "", stamp: msg.receiveTime, seq: 0 },
-      color: { r: color.r / 255, g: color.g / 255, b: color.b / 255, a: color.a ?? 1 },
+      color: finalColor,
     };
     this._consumeNonMarkerMessage(msg.topic, newMessage, 110);
   };
@@ -873,10 +882,11 @@ export default class SceneBuilder implements MarkerProvider {
       case "std_msgs/ColorRGBA":
       case "std_msgs/msg/ColorRGBA":
       case "ros.std_msgs.ColorRGBA":
-        this._consumeColor(msg as MessageEvent<Color>);
-        break;
       case "foxglove.Color":
-        this._consumeColor(msg as MessageEvent<FoxgloveMessages[typeof datatype]>);
+        this._consumeColor(
+          msg as MessageEvent<Color | FoxgloveMessages["foxglove.Color"]>,
+          datatype,
+        );
         break;
       case "geometry_msgs/PolygonStamped":
       case "geometry_msgs/msg/PolygonStamped":
@@ -905,7 +915,7 @@ export default class SceneBuilder implements MarkerProvider {
       }
       default: {
         if (datatype.endsWith("/Color") || datatype.endsWith("/ColorRGBA")) {
-          this._consumeColor(msg as MessageEvent<Color>);
+          this._consumeColor(msg as MessageEvent<Color>, datatype);
           break;
         }
       }
