@@ -7,6 +7,7 @@ import {
   AppConfigurationValue,
 } from "@foxglove/studio-base/context/AppConfigurationContext";
 
+// ts-prune-ignore-next
 export function makeMockAppConfiguration(
   entries?: [string, AppConfigurationValue][],
 ): IAppConfiguration {
