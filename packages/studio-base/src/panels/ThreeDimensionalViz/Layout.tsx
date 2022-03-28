@@ -187,6 +187,7 @@ const SUPPORTED_MARKER_DATATYPES_SET = new Set([
   "std_msgs/ColorRGBA",
   "std_msgs/msg/ColorRGBA",
   "ros.std_msgs.ColorRGBA",
+  "foxglove.Color",
   "nav_msgs/OccupancyGrid",
   "nav_msgs/msg/OccupancyGrid",
   "ros.nav_msgs.OccupancyGrid",

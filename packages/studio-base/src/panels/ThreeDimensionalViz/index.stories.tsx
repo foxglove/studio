@@ -1407,7 +1407,7 @@ export function Foxglove_Color(): JSX.Element {
   const topics: Topic[] = [{ name: "/color", datatype: "foxglove.Color" }];
   const color: MessageEvent<FoxgloveMessages["foxglove.Color"]> = {
     topic: "/color",
-    receiveTime: { sec: 10, nsec: 0 },
+    receiveTime: { sec: 0, nsec: 0 },
     message: { r: 1, g: 0.5, b: 0, a: 0.5 },
     sizeInBytes: 0,
   };
@@ -1420,7 +1420,7 @@ export function Foxglove_Color(): JSX.Element {
     },
     capabilities: [],
     activeData: {
-      currentTime: { sec: 0, nsec: 0 },
+      currentTime: { sec: 1, nsec: 0 },
     },
   });
 
