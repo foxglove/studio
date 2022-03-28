@@ -74,7 +74,9 @@ function DataSourceInfo(): JSX.Element {
         ) : endTime ? (
           <Timestamp horizontal time={endTime} />
         ) : (
-          <Typography color="text.secondary">&mdash;</Typography>
+          <Typography variant="inherit" color="text.secondary">
+            &mdash;
+          </Typography>
         )}
       </Stack>
 
@@ -87,7 +89,9 @@ function DataSourceInfo(): JSX.Element {
         ) : duration ? (
           <Duration duration={duration} />
         ) : (
-          <Typography color="text.secondary">&mdash;</Typography>
+          <Typography variant="inherit" color="text.secondary">
+            &mdash;
+          </Typography>
         )}
       </Stack>
     </Stack>

@@ -26,7 +26,9 @@ export default function Duration(props: Props): JSX.Element {
 
   return (
     <Stack direction="row" alignItems="center" flexGrow={0}>
-      <Typography fontFamily={fonts.MONOSPACE}>{durationStr}</Typography>
+      <Typography variant="inherit" fontFamily={fonts.MONOSPACE}>
+        {durationStr}
+      </Typography>
     </Stack>
   );
 }

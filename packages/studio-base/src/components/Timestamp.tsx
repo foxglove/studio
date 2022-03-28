@@ -55,13 +55,16 @@ export default function Timestamp(props: Props): JSX.Element {
             noWrap
             fontWeight={!horizontal ? 700 : undefined}
             fontFamily={fonts.MONOSPACE}
+            variant="inherit"
           >
             {date}
           </Typography>
         )}
 
         <Stack direction="row" alignItems="center" flexShrink={0} gap={0.5}>
-          <Typography fontFamily={fonts.MONOSPACE}>{currentTimeStr}</Typography>
+          <Typography variant="inherit" fontFamily={fonts.MONOSPACE}>
+            {currentTimeStr}
+          </Typography>
         </Stack>
       </Stack>
     </Stack>
