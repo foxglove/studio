@@ -33,7 +33,7 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-const itemToFzfResult = (item: Topic) =>
+const topicToFzfResult = (item: Topic) =>
   ({
     item,
     score: 0,
@@ -106,7 +106,7 @@ const StyledListItem = muiStyled(ListItem, { skipSx: true })(({ theme }) => ({
   },
 }));
 
-function CopyButton({ text }: { text: string }): JSX.Element {
+const CopyButton = ({ text }: { text: string }) => {
   const [clipboard, copyToClipboard] = useCopyToClipboard();
   const [copied, setCopied] = useState<boolean>(false);
 
@@ -114,7 +114,7 @@ function CopyButton({ text }: { text: string }): JSX.Element {
     <IconButton
       size="small"
       title={copied ? "Copied!" : "Copy topic name"}
-      color={copied ? "success" : "inherit"}
+      color={copied ? "success" : "primary"}
       onClick={() => {
         copyToClipboard(text);
 
@@ -127,7 +127,7 @@ function CopyButton({ text }: { text: string }): JSX.Element {
       {copied ? <CheckIcon fontSize="small" /> : <CopyAllIcon fontSize="small" />}
     </IconButton>
   );
-}
+};
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 
@@ -145,7 +145,7 @@ export function TopicList(): JSX.Element {
             sort: true,
             selector: (topic) => `${topic.name}|${topic.datatype}`,
           }).find(filterText)
-        : topics.map((t) => itemToFzfResult(t)),
+        : topics.map((t) => topicToFzfResult(t)),
     [filterText, topics],
   );
 
