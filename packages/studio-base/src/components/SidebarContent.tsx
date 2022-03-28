@@ -4,22 +4,17 @@
 
 import HelpIcon from "@mui/icons-material/Help";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import { IconButton, Theme, styled as muiStyled, Typography } from "@mui/material";
-import { makeStyles } from "@mui/styles";
+import { IconButton, styled as muiStyled, Typography } from "@mui/material";
 import { useState, useMemo, CSSProperties } from "react";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextContent from "@foxglove/studio-base/components/TextContent";
 
-const useStyles = makeStyles((theme: Theme) => ({
-  toolbar: {
-    minHeight: theme.spacing(7),
-    flexShrink: 0,
-  },
-  helpContent: {
-    padding: theme.spacing(0, 2, 2),
-  },
-}));
+export const TOOLBAR_HEIGHT = 56;
+
+const Toolbar = muiStyled(Stack)({
+  minHeight: TOOLBAR_HEIGHT,
+});
 
 const ContentWrapper = muiStyled("div", {
   shouldForwardProp: (prop) => prop !== "disablePadding",
@@ -31,6 +26,10 @@ const ContentWrapper = muiStyled("div", {
   }),
 }));
 
+const HelpContent = muiStyled("div")(({ theme }) => ({
+  padding: theme.spacing(0, 2, 2),
+}));
+
 export function SidebarContent({
   disablePadding = false,
   title,
@@ -40,7 +39,6 @@ export function SidebarContent({
   overflow = "auto",
   trailingItems,
 }: React.PropsWithChildren<SidebarContentProps>): JSX.Element {
-  const classes = useStyles();
   const [showHelp, setShowHelp] = useState<boolean>(false);
 
   const trailingItemsWithHelp = useMemo(() => {
@@ -62,8 +60,8 @@ export function SidebarContent({
 
   return (
     <Stack overflow={overflow} fullHeight flex="auto" gap={1}>
-      <Stack
-        className={classes.toolbar}
+      <Toolbar
+        flexShrink={0}
         direction="row"
         justifyContent="space-between"
         alignItems="center"
@@ -86,11 +84,11 @@ export function SidebarContent({
             ))}
           </Stack>
         )}
-      </Stack>
+      </Toolbar>
       {showHelp && (
-        <div className={classes.helpContent}>
+        <HelpContent>
           <TextContent allowMarkdownHtml={true}>{helpContent}</TextContent>
-        </div>
+        </HelpContent>
       )}
       <ContentWrapper disablePadding={disablePadding}>{children}</ContentWrapper>
     </Stack>
