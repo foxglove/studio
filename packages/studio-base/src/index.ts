@@ -9,12 +9,6 @@
 /// <reference types="./typings" />
 
 export { default as ConsoleApi } from "@foxglove/studio-base/services/ConsoleApi";
-export type { Session } from "@foxglove/studio-base/services/ConsoleApi";
-export {
-  default as ConsoleApiContext,
-  useConsoleApi,
-} from "@foxglove/studio-base/context/ConsoleApiContext";
-export { default as ConsoleApiRemoteLayoutStorageProvider } from "@foxglove/studio-base/providers/ConsoleApiRemoteLayoutStorageProvider";
 export {
   default as DialogHostIdContext,
   useDialogHostId,
@@ -33,15 +27,10 @@ export { default as NativeWindowContext } from "./context/NativeWindowContext";
 export type { INativeWindow } from "./context/NativeWindowContext";
 export type { IDataSourceFactory } from "./context/PlayerSelectionContext";
 export { default as installDevtoolsFormatters } from "./util/installDevtoolsFormatters";
-export { makeMockAppConfiguration } from "./util/makeMockAppConfiguration";
 export { default as overwriteFetch } from "./util/overwriteFetch";
 export { default as waitForFonts } from "./util/waitForFonts";
-export { default as UserProfileLocalStorageProvider } from "./providers/UserProfileLocalStorageProvider";
 export type { ExtensionLoader, ExtensionInfo } from "./context/ExtensionLoaderContext";
-export { default as LayoutManagerContext } from "./context/LayoutManagerContext";
 export { AppSetting } from "./AppSetting";
-export type { User, CurrentUser } from "./context/CurrentUserContext";
-export { default as DeviceCodeDialog } from "./components/DeviceCodeDialog";
 export { default as FoxgloveDataPlatformDataSourceFactory } from "./dataSources/FoxgloveDataPlatformDataSourceFactory";
 export { default as FoxgloveWebSocketDataSourceFactory } from "./dataSources/FoxgloveWebSocketDataSourceFactory";
 export { default as Ros1LocalBagDataSourceFactory } from "./dataSources/Ros1LocalBagDataSourceFactory";
