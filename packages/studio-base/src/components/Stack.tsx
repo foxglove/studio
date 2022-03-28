@@ -19,6 +19,7 @@ const StackRoot = muiStyled("div", {
 })(({ theme, ownerState }: { theme: Theme; ownerState: StackProps }) => ({
   display: "flex",
   flexDirection: ownerState.direction,
+  flexShrink: ownerState.flexShrink,
   flexWrap: ownerState.wrap,
   justifyContent: ownerState.justifyContent,
   alignItems: ownerState.alignItems,
