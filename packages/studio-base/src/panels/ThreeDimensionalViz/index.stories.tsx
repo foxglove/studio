@@ -1618,6 +1618,10 @@ function GeometryMsgs_PoseArray_Base({ displayType }: { displayType?: string }):
               lineThickness: 0.5,
               displayType,
             },
+            "t:/baselink_path": {
+              lineThickness: 0.1,
+              displayType,
+            },
           },
           cameraState: {
             distance: 25,
