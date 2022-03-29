@@ -37,6 +37,9 @@ export type RendererEvents = {
 const LIGHT_BACKDROP = new THREE.Color(0xececec);
 const DARK_BACKDROP = new THREE.Color(0x121217);
 
+const LIGHT_OUTLINE = new THREE.Color(0x000000);
+const DARK_OUTLINE = new THREE.Color(0xffffff);
+
 const TRANSFORM_STORAGE_TIME = 60n * BigInt(1e9);
 
 const tempVec = new THREE.Vector3();
@@ -151,6 +154,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
     log.debug(`Setting color scheme to "${colorScheme}"`);
     this.colorScheme = colorScheme;
     this.gl.setClearColor(colorScheme === "dark" ? DARK_BACKDROP : LIGHT_BACKDROP, 1);
+    this.materialCache.outlineMaterial.color =
+      colorScheme === "dark" ? DARK_OUTLINE : LIGHT_OUTLINE;
+    this.materialCache.outlineMaterial.needsUpdate = true;
   }
 
   addTransformMessage(tf: TF): void {
