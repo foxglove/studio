@@ -3,11 +3,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Topic } from "@foxglove/studio-base/players/types";
-import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
+import { StudioDatatypes } from "@foxglove/studio-base/types/StudioDatatypes";
 
 type Args = {
   topics: Topic[];
-  datatypes: RosDatatypes;
+  datatypes: StudioDatatypes;
 };
 
 // http://wiki.ros.org/msg
@@ -45,7 +45,7 @@ function safeString(str: string): string {
   return JSON.stringify(str) as string;
 }
 
-export const generateTypesInterface = (datatypes: RosDatatypes): string => {
+export const generateTypesInterface = (datatypes: StudioDatatypes): string => {
   const seenDatatypes = new Set();
   let src = `
     /**
@@ -74,22 +74,23 @@ export const generateTypesInterface = (datatypes: RosDatatypes): string => {
       const rosPrimitive = rosPrimitiveToTypescriptTypeMap.get(type);
 
       const fieldName = safeString(field.name);
+      const sigil = field.optional === true ? "?" : "";
 
       if (isConstant === true) {
         src += `\n // ${field.name} = ${field.valueText}`;
       } else if (isArray === true) {
         if (typedArray) {
-          src += `\n${fieldName}: ${typedArray},`;
+          src += `\n${fieldName}${sigil}: ${typedArray},`;
         } else if (rosPrimitive) {
-          src += `\n${fieldName}: ${rosPrimitive}[],`;
+          src += `\n${fieldName}${sigil}: ${rosPrimitive}[],`;
         } else {
-          src += `\n${fieldName}: MessageTypeBySchemaName[${safeString(type)}][],`;
+          src += `\n${fieldName}${sigil}: MessageTypeBySchemaName[${safeString(type)}][],`;
         }
       } else {
         if (rosPrimitive) {
-          src += `\n${fieldName}: ${rosPrimitive},`;
+          src += `\n${fieldName}${sigil}: ${rosPrimitive},`;
         } else {
-          src += `\n${fieldName}: MessageTypeBySchemaName[${safeString(type)}],`;
+          src += `\n${fieldName}${sigil}: MessageTypeBySchemaName[${safeString(type)}],`;
         }
       }
     }

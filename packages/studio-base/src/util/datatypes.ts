@@ -11,13 +11,13 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { RosMsgDefinition } from "@foxglove/rosmsg";
 import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
 import { definitions as foxgloveDefs } from "@foxglove/rosmsg-msgs-foxglove";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
+import { StudioDatatypes, StudioMsgDefinition } from "@foxglove/studio-base/types/StudioDatatypes";
 
 // https://foxglove.dev/docs/studio/messages/introduction
-const foxgloveDatatypesObj: Record<string, RosMsgDefinition> = {
+const foxgloveDatatypesObj: Record<string, StudioMsgDefinition> = {
   "foxglove.GeoJSON": {
     name: "foxglove.GeoJSON",
     definitions: [{ name: "geojson", type: "string" }],
@@ -27,13 +27,14 @@ const foxgloveDatatypesObj: Record<string, RosMsgDefinition> = {
     definitions: [
       { name: "latitude", type: "float64" },
       { name: "longitude", type: "float64" },
-      { name: "altitude", type: "float64" },
+      { name: "altitude", type: "float64", optional: true },
       {
         name: "position_covariance",
         isArray: true,
         type: "float64",
+        optional: true,
       },
-      { name: "position_covariance_type", type: "uint8" },
+      { name: "position_covariance_type", type: "uint8", optional: true },
     ],
   },
   "foxglove.Log": {
@@ -141,4 +142,4 @@ for (const [name, def] of Object.entries(foxgloveDefs)) {
   basicDatatypes.set(name, def);
 }
 
-export const foxgloveDatatypes: RosDatatypes = new Map(Object.entries(foxgloveDatatypesObj));
+export const foxgloveDatatypes: StudioDatatypes = new Map(Object.entries(foxgloveDatatypesObj));
