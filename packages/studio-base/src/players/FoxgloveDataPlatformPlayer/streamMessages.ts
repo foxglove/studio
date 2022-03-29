@@ -80,6 +80,7 @@ export default async function* streamMessages({
     return;
   }
 
+  // Since every request is signed with a new token, there's no benefit to caching.
   const response = await fetch(mcapUrl, { signal: controller.signal, cache: "no-cache" });
   if (response.status === 404) {
     return;

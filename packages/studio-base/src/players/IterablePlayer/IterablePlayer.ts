@@ -324,13 +324,25 @@ export class IterablePlayer implements Player {
 
     const topics = Array.from(this._allTopics);
 
-    this._abort = new AbortController();
-    const messages = await this._iterableSource.getBackfillMessages({
-      topics,
-      time: targetTime,
-      abortSignal: this._abort.signal,
-    });
-    this._abort = undefined;
+    try {
+      this._abort = new AbortController();
+      const messages = await this._iterableSource.getBackfillMessages({
+        topics,
+        time: targetTime,
+        abortSignal: this._abort.signal,
+      });
+      this._messages = messages;
+    } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions
+      if (this._nextState && err instanceof DOMException && err.name === "AbortError") {
+        log.debug("Aborted backfill");
+      } else {
+        throw err;
+      }
+    } finally {
+      this._abort = undefined;
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions
     if (this._nextState) {
       return;
@@ -350,7 +362,6 @@ export class IterablePlayer implements Player {
       start: forwardPosition,
     });
 
-    this._messages = messages;
     this._currentTime = targetTime;
     this._lastSeekEmitTime = Date.now();
     await this._emitState();
@@ -403,12 +414,7 @@ export class IterablePlayer implements Player {
             break;
           case "seek-backfill":
             // We allow aborting requests when moving on to the next state
-            await this._stateSeekBackfill().catch((err) => {
-              if (this._nextState && err instanceof DOMException && err.name === "AbortError") {
-                return;
-              }
-              throw err;
-            });
+            await this._stateSeekBackfill();
             break;
           case "play": {
             await this._statePlay();
