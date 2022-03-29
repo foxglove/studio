@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Box } from "@mui/material";
+
 import { fromDate } from "@foxglove/rostime";
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import ModalHost from "@foxglove/studio-base/context/ModalHost";
@@ -66,7 +68,9 @@ export const PlayerNotPresent = (): JSX.Element => {
   return (
     <ModalHost>
       <MockMessagePipelineProvider noActiveData presence={PlayerPresence.NOT_PRESENT}>
-        <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        <Box height="100%" bgcolor="background.paper">
+          <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        </Box>
       </MockMessagePipelineProvider>
     </ModalHost>
   );
@@ -80,7 +84,34 @@ export const PlayerIntializing = (): JSX.Element => {
         endTime={END_TIME}
         presence={PlayerPresence.INITIALIZING}
       >
-        <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        <Box height="100%" bgcolor="background.paper">
+          <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        </Box>
+      </MockMessagePipelineProvider>
+    </ModalHost>
+  );
+};
+
+export const PlayerReconnecting = (): JSX.Element => {
+  return (
+    <ModalHost>
+      <MockMessagePipelineProvider
+        startTime={START_TIME}
+        endTime={END_TIME}
+        topics={TOPICS}
+        presence={PlayerPresence.RECONNECTING}
+        problems={[
+          {
+            severity: "error",
+            message: "Connection lost",
+            tip: "A tip that we might want to show the user",
+            error: new Error("Original Error"),
+          },
+        ]}
+      >
+        <Box height="100%" bgcolor="background.paper">
+          <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        </Box>
       </MockMessagePipelineProvider>
     </ModalHost>
   );
@@ -95,7 +126,9 @@ export const PlayerPresent = (): JSX.Element => {
         topics={TOPICS}
         presence={PlayerPresence.PRESENT}
       >
-        <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        <Box height="100%" bgcolor="background.paper">
+          <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        </Box>
       </MockMessagePipelineProvider>
     </ModalHost>
   );
@@ -134,7 +167,9 @@ export const PlayerWithError = (): JSX.Element => {
           },
         ]}
       >
-        <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        <Box height="100%" bgcolor="background.paper">
+          <DataSourceSidebar onSelectDataSourceAction={() => {}} />
+        </Box>
       </MockMessagePipelineProvider>
     </ModalHost>
   );

@@ -27,10 +27,6 @@ function DataSourceInfo(): JSX.Element {
   const playerName = useMessagePipeline(selectPlayerName);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
 
-  const isLoading =
-    playerPresence === PlayerPresence.INITIALIZING ||
-    playerPresence === PlayerPresence.RECONNECTING;
-
   const duration = startTime && endTime ? subtractTimes(endTime, startTime) : undefined;
 
   return (
@@ -39,10 +35,12 @@ function DataSourceInfo(): JSX.Element {
         <Typography display="block" variant="overline" color="text.secondary">
           Current source
         </Typography>
-        {isLoading ? (
+        {playerPresence === PlayerPresence.INITIALIZING ? (
           <Typography variant="inherit">
             <Skeleton animation="wave" width="40%" />
           </Typography>
+        ) : playerPresence === PlayerPresence.RECONNECTING ? (
+          <Typography variant="inherit">Waiting for connection…</Typography>
         ) : playerName ? (
           <Typography variant="inherit">
             <MultilineMiddleTruncate text={playerName} />
@@ -56,7 +54,7 @@ function DataSourceInfo(): JSX.Element {
         <Typography variant="overline" color="text.secondary">
           Start time
         </Typography>
-        {isLoading ? (
+        {playerPresence === PlayerPresence.INITIALIZING ? (
           <Skeleton animation="wave" width="50%" />
         ) : startTime ? (
           <Timestamp horizontal time={startTime} />
@@ -69,7 +67,7 @@ function DataSourceInfo(): JSX.Element {
         <Typography variant="overline" color="text.secondary">
           End time
         </Typography>
-        {isLoading ? (
+        {playerPresence === PlayerPresence.INITIALIZING ? (
           <Skeleton animation="wave" width="50%" />
         ) : endTime ? (
           <Timestamp horizontal time={endTime} />
@@ -84,7 +82,7 @@ function DataSourceInfo(): JSX.Element {
         <Typography variant="overline" color="text.secondary">
           Duration
         </Typography>
-        {isLoading ? (
+        {playerPresence === PlayerPresence.INITIALIZING ? (
           <Skeleton animation="wave" width={100} />
         ) : duration ? (
           <Duration duration={duration} />

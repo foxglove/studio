@@ -3,8 +3,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Add24Regular as AddIcon } from "@fluentui/react-icons";
-import { IconButton, Tab, Tabs, styled as muiStyled, Divider, Box } from "@mui/material";
-import { useState, PropsWithChildren, useEffect } from "react";
+import {
+  IconButton,
+  Tab,
+  Tabs,
+  styled as muiStyled,
+  Divider,
+  Box,
+  CircularProgress,
+} from "@mui/material";
+import { useState, PropsWithChildren, useEffect, useMemo } from "react";
 
 import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import {
@@ -80,6 +88,13 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
   const playerProblems = useMessagePipeline(selectPlayerProblems) ?? [];
   const [activeTab, setActiveTab] = useState<number>(0);
 
+  const isLoading = useMemo(
+    () =>
+      playerPresence === PlayerPresence.INITIALIZING ||
+      playerPresence === PlayerPresence.RECONNECTING,
+    [playerPresence],
+  );
+
   useEffect(() => {
     if (playerPresence === PlayerPresence.ERROR) {
       setActiveTab(1);
@@ -95,6 +110,11 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
       helpContent={helpContent}
       disablePadding
       trailingItems={[
+        isLoading && (
+          <Stack alignItems="center" justifyContent="center" padding={1}>
+            <CircularProgress size={20} variant="indeterminate" />
+          </Stack>
+        ),
         enableOpenDialog === true && (
           <IconButton
             key="add-connection"

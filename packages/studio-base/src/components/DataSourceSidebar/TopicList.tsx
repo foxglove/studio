@@ -2,9 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import CheckIcon from "@mui/icons-material/Check";
 import ClearIcon from "@mui/icons-material/Clear";
-import CopyAllIcon from "@mui/icons-material/CopyAll";
 import SearchIcon from "@mui/icons-material/Search";
 import {
   AppBar,
@@ -22,7 +20,6 @@ import {
 } from "@mui/material";
 import { Fzf, FzfResultItem } from "fzf";
 import { useMemo, useState } from "react";
-import { useCopyToClipboard } from "react-use";
 
 import { Topic } from "@foxglove/studio";
 import {
@@ -106,29 +103,6 @@ const StyledListItem = muiStyled(ListItem, { skipSx: true })(({ theme }) => ({
   },
 }));
 
-const CopyButton = ({ text }: { text: string }) => {
-  const [clipboard, copyToClipboard] = useCopyToClipboard();
-  const [copied, setCopied] = useState<boolean>(false);
-
-  return (
-    <IconButton
-      size="small"
-      title={copied ? "Copied!" : "Copy topic name"}
-      color={copied ? "success" : "primary"}
-      onClick={() => {
-        copyToClipboard(text);
-
-        if (!clipboard.error) {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1000);
-        }
-      }}
-    >
-      {copied ? <CheckIcon fontSize="small" /> : <CopyAllIcon fontSize="small" />}
-    </IconButton>
-  );
-};
-
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 
 export function TopicList(): JSX.Element {
@@ -159,10 +133,7 @@ export function TopicList(): JSX.Element {
     );
   }
 
-  if (
-    playerPresence === PlayerPresence.INITIALIZING ||
-    playerPresence === PlayerPresence.RECONNECTING
-  ) {
+  if (playerPresence === PlayerPresence.INITIALIZING) {
     return (
       <>
         <StyledAppBar position="sticky" color="inherit" elevation={0}>
@@ -170,15 +141,9 @@ export function TopicList(): JSX.Element {
             disabled
             variant="filled"
             fullWidth
-            placeholder="Filter by topic or datatype"
+            placeholder="Waiting for data..."
             InputProps={{
               startAdornment: <SearchIcon fontSize="small" />,
-              endAdornment: (
-                <Stack alignItems="center" justifyContent="center">
-                  {/* Wrapper element to prevent animation wobble */}
-                  <CircularProgress size={20} />
-                </Stack>
-              ),
             }}
           />
         </StyledAppBar>
@@ -228,15 +193,7 @@ export function TopicList(): JSX.Element {
       {filteredTopics.length > 0 ? (
         <List key="topics" dense disablePadding>
           {filteredTopics.map(({ item, positions }) => (
-            <StyledListItem
-              divider
-              key={item.name}
-              secondaryAction={
-                <Stack direction="row" gap={0.5} alignItems="center">
-                  <CopyButton text={item.name} />
-                </Stack>
-              }
-            >
+            <StyledListItem divider key={item.name}>
               <ListItemText
                 primary={<HighlightChars str={item.name} indices={positions} />}
                 primaryTypographyProps={{ noWrap: true, title: item.name }}
