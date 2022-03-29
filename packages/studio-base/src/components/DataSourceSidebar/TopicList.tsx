@@ -7,7 +7,6 @@ import SearchIcon from "@mui/icons-material/Search";
 import {
   AppBar,
   Box,
-  CircularProgress,
   IconButton,
   List,
   ListItem,
