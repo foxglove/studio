@@ -43,7 +43,7 @@ export function topicSettingsEditorForDatatype(datatype: string):
     ["geometry_msgs/PoseArray", PoseListSettingsEditor],
     ["geometry_msgs/msg/PoseArray", PoseListSettingsEditor],
     ["ros.geometry_msgs.PoseArray", PoseListSettingsEditor],
-    ["foxglove.PoseListInFrame", PoseListSettingsEditor],
+    ["foxglove.PosesInFrame", PoseListSettingsEditor],
     ["geometry_msgs/PoseStamped", PoseSettingsEditor],
     ["geometry_msgs/msg/PoseStamped", PoseSettingsEditor],
     ["ros.geometry_msgs.PoseStamped", PoseSettingsEditor],

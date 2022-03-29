@@ -822,10 +822,10 @@ export default class SceneBuilder implements MarkerProvider {
       case "geometry_msgs/PoseArray":
       case "geometry_msgs/msg/PoseArray":
       case "ros.geometry_msgs.PoseArray":
-      case "foxglove.PoseListInFrame": {
+      case "foxglove.PosesInFrame": {
         const topicSettings = this._settingsByKey[`t:${topic}`] as PoseListSettings | undefined;
         const normalized = normalizePoseArray(
-          message as GeometryMsgs$PoseArray | FoxgloveMessages["foxglove.PoseListInFrame"],
+          message as GeometryMsgs$PoseArray | FoxgloveMessages["foxglove.PosesInFrame"],
           datatype,
         );
         if (topicSettings?.displayType === "line") {

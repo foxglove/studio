@@ -170,7 +170,7 @@ const SUPPORTED_MARKER_DATATYPES_SET = new Set([
   "geometry_msgs/PoseArray",
   "geometry_msgs/msg/PoseArray",
   "ros.geometry_msgs.PoseArray",
-  "foxglove.PoseListInFrame",
+  "foxglove.PosesInFrame",
   "geometry_msgs/PoseStamped",
   "geometry_msgs/msg/PoseStamped",
   "ros.geometry_msgs.PoseStamped",

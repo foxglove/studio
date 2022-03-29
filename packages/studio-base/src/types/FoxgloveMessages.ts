@@ -107,7 +107,7 @@ export type FoxgloveMessages = {
     pose: FoxgloveMessages["foxglove.Pose"];
   };
 
-  "foxglove.PoseListInFrame": {
+  "foxglove.PosesInFrame": {
     timestamp: { sec: number; nsec: number };
     frame_id: string;
     poses: Array<FoxgloveMessages["foxglove.Pose"]>;

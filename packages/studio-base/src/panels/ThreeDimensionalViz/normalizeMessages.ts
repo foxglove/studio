@@ -26,10 +26,10 @@ export function normalizePose(
 }
 
 export function normalizePoseArray(
-  msg: GeometryMsgs$PoseArray | FoxgloveMessages["foxglove.PoseListInFrame"],
+  msg: GeometryMsgs$PoseArray | FoxgloveMessages["foxglove.PosesInFrame"],
   datatype: string,
 ): NormalizedPoseArray {
-  if (datatype === "foxglove.PoseListInFrame") {
+  if (datatype === "foxglove.PosesInFrame") {
     return {
       header: {
         stamp: (msg as FoxgloveMessages[typeof datatype]).timestamp,
