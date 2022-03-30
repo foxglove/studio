@@ -39,14 +39,19 @@ declare module "@foxglove/studio" {
     /** The topic name this message was received on, i.e. "/some/topic" */
     topic: string;
     /**
-     * The time this message was received. This may be set by the local system
-     * clock or the data source, depending on the data source used and whether
-     * time is simulated via a /clock topic or similar mechanism.
+     * The time in nanoseconds this message was received. This may be set by the
+     * local system clock or the data source, depending on the data source used
+     * and whether time is simulated via a /clock topic or similar mechanism.
+     * The timestamp is often nanoseconds since the UNIX epoch, but may be
+     * relative to another event such as system boot time or simulation start
+     * time depending on the context.
      */
     receiveTime: Time;
     /**
-     * The time this message was originally published. This is only available
-     * for some data sources.
+     * The time in nanoseconds this message was originally published. This is
+     * only available for some data sources. The timestamp is often nanoseconds
+     * since the UNIX epoch, but may be relative to another event such as system
+     * boot time or simulation start time depending on the context.
      */
     publishTime?: Time;
     /** The deserialized message as a JavaScript object. */
