@@ -93,7 +93,7 @@ const StyledListItem = muiStyled(ListItem, { skipSx: true })(({ theme }) => ({
       visibility: "hidden",
     },
     "&:not(.loading):hover": {
-      paddingRight: theme.spacing(6),
+      // paddingRight: theme.spacing(6),
 
       ".MuiListItemSecondaryAction-root": {
         visibility: "visible",
