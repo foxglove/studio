@@ -5,7 +5,7 @@
 import { exec } from "@actions/exec";
 import { log } from "builder-util";
 import type { WindowsSignOptions } from "electron-builder";
-import { rename, mkdtemp } from "fs/promises";
+import { copyFile, mkdtemp } from "fs/promises";
 import * as os from "os";
 import * as path from "path";
 
@@ -53,6 +53,8 @@ exports.default = async function (context: WindowsSignOptions) {
     },
   );
 
-  log.info(`Moving: ${tmpPath} -> ${context.path}`);
-  await rename(tmpPath, context.path);
+  // Copy the file because src and dest might be on different devices
+  // "rename" does not work across devices
+  log.info(`Copy: ${tmpPath} -> ${context.path}`);
+  await copyFile(tmpPath, context.path);
 };
