@@ -68,6 +68,9 @@ export function Stats(): JSX.Element {
   return <div ref={setDiv} />;
 }
 
+// Adapted from <https://github.com/mrdoob/stats.js/>. The frame time panel is
+// modified to use a maximum value of ~33ms instead of the default 200ms and
+// appear first in the list.
 class THREEStats {
   mode = 0;
   container: HTMLDivElement;
@@ -148,6 +151,7 @@ class THREEStats {
   };
 }
 
+// Adapted from <https://github.com/mrdoob/stats.js/>. License: MIT.
 class Panel {
   dom: HTMLCanvasElement;
   context: CanvasRenderingContext2D;

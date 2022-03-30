@@ -40,7 +40,7 @@ const DARK_BACKDROP = new THREE.Color(0x121217);
 const LIGHT_OUTLINE = new THREE.Color(0x000000);
 const DARK_OUTLINE = new THREE.Color(0xffffff);
 
-const TRANSFORM_STORAGE_TIME = 60n * BigInt(1e9);
+const TRANSFORM_STORAGE_TIME_NS = 60n * BigInt(1e9);
 
 const tempVec = new THREE.Vector3();
 
@@ -50,6 +50,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   lod = DetailLevel.High;
   scene: THREE.Scene;
   dirLight: THREE.DirectionalLight;
+  hemiLight: THREE.HemisphereLight;
   input: Input;
   camera: THREE.PerspectiveCamera;
   controls: OrbitControls;
@@ -58,7 +59,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   colorScheme: "dark" | "light" | undefined;
   modelCache: ModelCache;
   renderables = new Map<string, THREE.Object3D>();
-  transformTree = new TransformTree(TRANSFORM_STORAGE_TIME);
+  transformTree = new TransformTree(TRANSFORM_STORAGE_TIME_NS);
   currentTime: bigint | undefined;
   fixedFrameId: string | undefined;
   renderFrameId: string | undefined;
@@ -120,14 +121,16 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.dirLight.shadow.camera.far = 500;
     this.dirLight.shadow.bias = -0.00001;
 
+    this.hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0.5);
+
     this.scene.add(this.dirLight);
-    this.scene.add(new THREE.HemisphereLight(0xffffff, 0xffffff, 0.5));
+    this.scene.add(this.hemiLight);
 
     this.input = new Input(canvas);
     this.input.on("resize", (size) => this.resizeHandler(size));
     this.input.on("click", (cursorCoords) => this.clickHandler(cursorCoords));
 
-    const fov = 50;
+    const fov = 79;
     const near = 0.01; // 1cm
     const far = 10_000; // 10km
     this.camera = new THREE.PerspectiveCamera(fov, width / height, near, far);
@@ -147,7 +150,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.pointClouds.dispose();
     this.markers.dispose();
     this.gl.dispose();
-    // this.gl.forceContextLoss();
   }
 
   setColorScheme(colorScheme: "dark" | "light"): void {
