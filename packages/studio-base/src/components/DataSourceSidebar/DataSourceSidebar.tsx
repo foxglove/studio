@@ -105,7 +105,7 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
 
   return (
     <SidebarContent
-      overflow="scroll"
+      overflow="auto"
       title="Data source"
       helpContent={helpContent}
       disablePadding

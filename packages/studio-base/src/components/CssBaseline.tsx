@@ -24,6 +24,9 @@ const useStyles = makeStyles((theme) => ({
         width: 4,
         height: 4,
       },
+      "::-webkit-scrollbar-corner": {
+        background: "transparent",
+      },
       "::-webkit-scrollbar-track": {
         background: "transparent",
       },
