@@ -215,11 +215,18 @@ export function TopicList(): JSX.Element {
         </List>
       ) : (
         <Stack flex="auto" padding={2} fullHeight alignItems="center" justifyContent="center">
-          <Typography align="center" color="text.secondary">
-            No topics or datatypes matching
-            <br />
-            {`“${filterText}”`}
-          </Typography>
+          {playerPresence === PlayerPresence.PRESENT && (
+            <Typography align="center" color="text.secondary">
+              No topics or datatypes matching
+              <br />
+              {`“${filterText}”`}
+            </Typography>
+          )}
+          {playerPresence === PlayerPresence.RECONNECTING && (
+            <Typography align="center" color="text.secondary">
+              Waiting for connection
+            </Typography>
+          )}
         </Stack>
       )}
     </>
