@@ -24,7 +24,7 @@ export class RenderableSphere extends RenderableMarker {
 
     // Sphere mesh
     const material = standardMaterial(marker, renderer.materialCache);
-    this.mesh = new THREE.Mesh(RenderableSphere.geometry(renderer.lod), material);
+    this.mesh = new THREE.Mesh(RenderableSphere.geometry(renderer.maxLod), material);
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
     this.add(this.mesh);

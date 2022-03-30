@@ -26,14 +26,14 @@ export class RenderableCylinder extends RenderableMarker {
 
     // Cylinder mesh
     const material = standardMaterial(marker, renderer.materialCache);
-    this.mesh = new THREE.Mesh(RenderableCylinder.geometry(renderer.lod), material);
+    this.mesh = new THREE.Mesh(RenderableCylinder.geometry(renderer.maxLod), material);
     this.mesh.castShadow = true;
     this.mesh.receiveShadow = true;
     this.add(this.mesh);
 
     // Cylinder outline
     this.outline = new THREE.LineSegments(
-      RenderableCylinder.edgesGeometry(renderer.lod),
+      RenderableCylinder.edgesGeometry(renderer.maxLod),
       renderer.materialCache.outlineMaterial,
     );
     this.mesh.add(this.outline);

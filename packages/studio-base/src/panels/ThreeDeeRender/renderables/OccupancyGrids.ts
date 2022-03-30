@@ -277,9 +277,6 @@ function createMaterial(
   const material = new THREE.MeshBasicMaterial({
     map: texture,
     side: THREE.DoubleSide,
-    // metalness: 0,
-    // roughness: 1,
-    dithering: true,
   });
   material.name = `${renderable.userData.topic}:Material`;
   material.transparent = transparent;

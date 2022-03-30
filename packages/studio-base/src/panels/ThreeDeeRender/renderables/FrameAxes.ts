@@ -171,7 +171,7 @@ export class FrameAxes extends THREE.Object3D {
 
     // Create three arrow shafts
     const arrowMaterial = standardMaterial(this.renderer.materialCache);
-    const shaftGeometry = FrameAxes.ShaftGeometry(this.renderer.lod);
+    const shaftGeometry = FrameAxes.ShaftGeometry(this.renderer.maxLod);
     const shaftInstances = new THREE.InstancedMesh(shaftGeometry, arrowMaterial, 3);
     shaftInstances.castShadow = true;
     shaftInstances.receiveShadow = true;
@@ -186,7 +186,7 @@ export class FrameAxes extends THREE.Object3D {
     shaftInstances.setColorAt(2, BLUE_COLOR);
 
     // Create three arrow heads
-    const headGeometry = FrameAxes.HeadGeometry(this.renderer.lod);
+    const headGeometry = FrameAxes.HeadGeometry(this.renderer.maxLod);
     const headInstances = new THREE.InstancedMesh(headGeometry, arrowMaterial, 3);
     headInstances.castShadow = true;
     headInstances.receiveShadow = true;

@@ -285,42 +285,45 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       return;
     }
 
-    if (messages) {
-      for (const message of messages) {
-        const datatype = topicsToDatatypes.get(message.topic);
-        if (!datatype) {
-          continue;
-        }
+    if (!messages) {
+      renderer.animationFrame();
+      return;
+    }
 
-        if (TF_DATATYPES.has(datatype)) {
-          // tf2_msgs/TFMessage - Ingest the list of transforms into our TF tree
-          const tfMessage = message.message as { transforms: TF[] };
-          for (const tf of tfMessage.transforms) {
-            renderer.addTransformMessage(tf);
-          }
-        } else if (TRANSFORM_STAMPED_DATATYPES.has(datatype)) {
-          // geometry_msgs/TransformStamped - Ingest this single transform into our TF tree
-          const tf = message.message as TF;
+    for (const message of messages) {
+      const datatype = topicsToDatatypes.get(message.topic);
+      if (!datatype) {
+        continue;
+      }
+
+      if (TF_DATATYPES.has(datatype)) {
+        // tf2_msgs/TFMessage - Ingest the list of transforms into our TF tree
+        const tfMessage = message.message as { transforms: TF[] };
+        for (const tf of tfMessage.transforms) {
           renderer.addTransformMessage(tf);
-        } else if (MARKER_ARRAY_DATATYPES.has(datatype)) {
-          // visualization_msgs/MarkerArray - Ingest the list of markers
-          const markerArray = message.message as { markers: Marker[] };
-          for (const marker of markerArray.markers) {
-            renderer.addMarkerMessage(message.topic, marker);
-          }
-        } else if (MARKER_DATATYPES.has(datatype)) {
-          // visualization_msgs/Marker - Ingest this single marker
-          const marker = message.message as Marker;
-          renderer.addMarkerMessage(message.topic, marker);
-        } else if (OCCUPANCY_GRID_DATATYPES.has(datatype)) {
-          // nav_msgs/OccupancyGrid - Ingest this occupancy grid
-          const occupancyGrid = message.message as OccupancyGrid;
-          renderer.addOccupancyGridMessage(message.topic, occupancyGrid);
-        } else if (POINTCLOUD_DATATYPES.has(datatype)) {
-          // sensor_msgs/PointCloud2 - Ingest this point cloud
-          const pointCloud = message.message as PointCloud2;
-          renderer.addPointCloud2Message(message.topic, pointCloud);
         }
+      } else if (TRANSFORM_STAMPED_DATATYPES.has(datatype)) {
+        // geometry_msgs/TransformStamped - Ingest this single transform into our TF tree
+        const tf = message.message as TF;
+        renderer.addTransformMessage(tf);
+      } else if (MARKER_ARRAY_DATATYPES.has(datatype)) {
+        // visualization_msgs/MarkerArray - Ingest the list of markers
+        const markerArray = message.message as { markers: Marker[] };
+        for (const marker of markerArray.markers) {
+          renderer.addMarkerMessage(message.topic, marker);
+        }
+      } else if (MARKER_DATATYPES.has(datatype)) {
+        // visualization_msgs/Marker - Ingest this single marker
+        const marker = message.message as Marker;
+        renderer.addMarkerMessage(message.topic, marker);
+      } else if (OCCUPANCY_GRID_DATATYPES.has(datatype)) {
+        // nav_msgs/OccupancyGrid - Ingest this occupancy grid
+        const occupancyGrid = message.message as OccupancyGrid;
+        renderer.addOccupancyGridMessage(message.topic, occupancyGrid);
+      } else if (POINTCLOUD_DATATYPES.has(datatype)) {
+        // sensor_msgs/PointCloud2 - Ingest this point cloud
+        const pointCloud = message.message as PointCloud2;
+        renderer.addPointCloud2Message(message.topic, pointCloud);
       }
     }
 

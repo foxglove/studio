@@ -50,27 +50,27 @@ export class RenderableArrow extends RenderableMarker {
 
     // Shaft mesh
     const material = standardMaterial(marker, renderer.materialCache);
-    this.shaftMesh = new THREE.Mesh(RenderableArrow.shaftGeometry(renderer.lod), material);
+    this.shaftMesh = new THREE.Mesh(RenderableArrow.shaftGeometry(renderer.maxLod), material);
     this.shaftMesh.castShadow = true;
     this.shaftMesh.receiveShadow = true;
     this.add(this.shaftMesh);
 
     // Head mesh
-    this.headMesh = new THREE.Mesh(RenderableArrow.headGeometry(renderer.lod), material);
+    this.headMesh = new THREE.Mesh(RenderableArrow.headGeometry(renderer.maxLod), material);
     this.headMesh.castShadow = true;
     this.headMesh.receiveShadow = true;
     this.add(this.headMesh);
 
     // Shaft outline
     this.shaftOutline = new THREE.LineSegments(
-      RenderableArrow.shaftEdgesGeometry(renderer.lod),
+      RenderableArrow.shaftEdgesGeometry(renderer.maxLod),
       renderer.materialCache.outlineMaterial,
     );
     this.shaftMesh.add(this.shaftOutline);
 
     // Head outline
     this.headOutline = new THREE.LineSegments(
-      RenderableArrow.headEdgesGeometry(renderer.lod),
+      RenderableArrow.headEdgesGeometry(renderer.maxLod),
       renderer.materialCache.outlineMaterial,
     );
     this.headMesh.add(this.headOutline);

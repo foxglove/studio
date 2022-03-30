@@ -47,7 +47,7 @@ const tempVec = new THREE.Vector3();
 export class Renderer extends EventEmitter<RendererEvents> {
   canvas: HTMLCanvasElement;
   gl: THREE.WebGLRenderer;
-  lod = DetailLevel.High;
+  maxLod = DetailLevel.High;
   scene: THREE.Scene;
   dirLight: THREE.DirectionalLight;
   hemiLight: THREE.HemisphereLight;
