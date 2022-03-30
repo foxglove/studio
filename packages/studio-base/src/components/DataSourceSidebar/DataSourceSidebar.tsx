@@ -96,7 +96,7 @@ export default function DataSourceSidebar(props: Props): JSX.Element {
   );
 
   useEffect(() => {
-    if (playerPresence === PlayerPresence.ERROR) {
+    if (playerPresence === PlayerPresence.ERROR || playerPresence === PlayerPresence.RECONNECTING) {
       setActiveTab(1);
     } else {
       setActiveTab(0);
