@@ -163,9 +163,9 @@ export default class FoxgloveDataPlatformPlayer implements Player {
 
     // Truncate start/end time to coverage range
     const coverageStart = minBy(coverage, (c) => c.start);
-    const converageEnd = maxBy(coverage, (c) => c.end);
-    const coverageStartTime = fromRFC3339String(coverageStart!.start);
-    const coverageEndTime = fromRFC3339String(converageEnd!.end);
+    const coverageEnd = maxBy(coverage, (c) => c.end);
+    const coverageStartTime = coverageStart ? fromRFC3339String(coverageStart.start) : undefined;
+    const coverageEndTime = coverageEnd ? fromRFC3339String(coverageEnd.end) : undefined;
     if (!coverageStartTime || !coverageEndTime) {
       throw new Error(
         `Invalid coverage response, start: ${coverage[0]!.start}, end: ${
