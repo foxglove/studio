@@ -80,8 +80,8 @@ export function App(props: AppProps): JSX.Element {
   const providers = [
     /* eslint-disable react/jsx-key */
     <ConsoleApiContext.Provider value={consoleApi} />,
-    <ConsoleApiRemoteLayoutStorageProvider />,
     <CurrentUserProviderComponent />,
+    <ConsoleApiRemoteLayoutStorageProvider />,
     <StudioToastProvider />,
     <LayoutStorageContext.Provider value={layoutStorage} />,
     <UserProfileLocalStorageProvider />,
