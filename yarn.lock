@@ -2374,15 +2374,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/ros2@npm:3.1.1":
-  version: 3.1.1
-  resolution: "@foxglove/ros2@npm:3.1.1"
+"@foxglove/ros2@npm:3.2.1":
+  version: 3.2.1
+  resolution: "@foxglove/ros2@npm:3.2.1"
   dependencies:
     "@foxglove/rosmsg": ^2.0.0 || ^3.0.0
     "@foxglove/rosmsg2-serialization": ^1.0.5
     "@foxglove/rtps": ^1.4.1
     eventemitter3: ^4.0.7
-  checksum: 086c4b1f2086d9caaa407c3a0429bb31fca5589fd4f2dfa743c0cf186dcddb40d5a3af6fb41fbbeebb27b8cb849398fc8e7c427255119f5cda5d6442bf973d97
+  checksum: c4ccc0864933ad601c4df42af6ec68ef753621dc93df8f84aa7d41ca5eb446a89f73d043d79f2e9b9da45881e5af6003effe4d3af41c299123843d32a45269c3
   languageName: node
   linkType: hard
 
@@ -2397,15 +2397,15 @@ __metadata:
   linkType: hard
 
 "@foxglove/rosbag2@npm:^4.1.0":
-  version: 4.1.0
-  resolution: "@foxglove/rosbag2@npm:4.1.0"
+  version: 4.1.1
+  resolution: "@foxglove/rosbag2@npm:4.1.1"
   dependencies:
-    "@foxglove/rosmsg-msgs-common": ^1.0.4
+    "@foxglove/rosmsg-msgs-common": ^1.1.0
     "@foxglove/rosmsg-msgs-foxglove": ^2.0.3
     "@foxglove/rosmsg2-serialization": ^1.0.5
     "@foxglove/rostime": ^1.1.1
     js-yaml: ^4.1.0
-  checksum: 9f80aeb4f0784d50963a76dc2de1861cc7a9ce711551056159750ec18cd37f8313f11d00b2a06122ad3b114849f733eeb40a3e920f5ed6f0da2cb1586e03f0f4
+  checksum: b984f215a08cef0446ffb82f8b94a2747f29bd0fc82be0ab4b57ea6d63082024732048db1f008fab44056d66c3b8e8abe41e75fee3b37990893aabc5bb3911f6
   languageName: node
   linkType: hard
 
@@ -2421,12 +2421,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/rosmsg-msgs-common@npm:1.0.4, @foxglove/rosmsg-msgs-common@npm:^1.0.4":
-  version: 1.0.4
-  resolution: "@foxglove/rosmsg-msgs-common@npm:1.0.4"
+"@foxglove/rosmsg-msgs-common@npm:1.1.0, @foxglove/rosmsg-msgs-common@npm:^1.1.0":
+  version: 1.1.0
+  resolution: "@foxglove/rosmsg-msgs-common@npm:1.1.0"
   dependencies:
     "@foxglove/rosmsg": ^2.0.0 || ^3.0.0
-  checksum: efcec07360eada4c06dfcbe7a4f73c979b89278285e0c7d7411ed979de964c7be9fe3a3a19ed19e936c5185bb6cbcbc6d98b000c88c526c01bb873add05df861
+  checksum: 1b5df8387de0afaa4ca9ce6ddae50fe69fcabfbbe2f6032fe0d85708be91fcac803338571201e9a756b263c48f6a467a2c7e8eb96454ee2a4e5a38a6b3e5494a
   languageName: node
   linkType: hard
 
@@ -2512,18 +2512,18 @@ __metadata:
     "@foxglove/mcap-support": "workspace:*"
     "@foxglove/regl-worldview": 2.4.0
     "@foxglove/ros1": 1.4.0
-    "@foxglove/ros2": 3.1.1
+    "@foxglove/ros2": 3.2.1
     "@foxglove/rosbag": 0.2.1
     "@foxglove/rosbag2-web": 4.0.3
     "@foxglove/rosmsg": 3.0.0
-    "@foxglove/rosmsg-msgs-common": 1.0.4
+    "@foxglove/rosmsg-msgs-common": 1.1.0
     "@foxglove/rosmsg-msgs-foxglove": 2.0.3
     "@foxglove/rosmsg-serialization": 1.3.0
     "@foxglove/rosmsg2-serialization": 1.0.5
     "@foxglove/rostime": 1.1.2
     "@foxglove/studio": "workspace:*"
     "@foxglove/ulog": 2.1.2
-    "@foxglove/velodyne-cloud": 1.0.0
+    "@foxglove/velodyne-cloud": 1.0.1
     "@foxglove/wasm-bz2": 0.1.0
     "@foxglove/ws-protocol": 0.0.8
     "@mdi/svg": 6.5.95
@@ -2542,6 +2542,7 @@ __metadata:
     "@types/classnames": 2.3.1
     "@types/css-font-loading-module": 0.0.7
     "@types/cytoscape": ^3.19.4
+    "@types/dat.gui": ^0
     "@types/enzyme": ^3.10.11
     "@types/enzyme-adapter-react-16": 1.0.6
     "@types/escape-html": ^1.0.1
@@ -2594,6 +2595,7 @@ __metadata:
     css-loader: 6.6.0
     cytoscape: 3.21.0
     cytoscape-dagre: 2.4.0
+    dat.gui: 0.7.9
     enzyme: 3.11.0
     esbuild-loader: 2.18.0
     escape-html: 1.0.3
@@ -2660,6 +2662,7 @@ __metadata:
     three: 0.137.5
     tinycolor2: 1.4.2
     ts-essentials: 9.1.2
+    ts-key-enum: 2.0.11
     ts-loader: 9.2.7
     tsconfig-paths: 3.13.0
     ttypescript: 1.5.13
@@ -2698,10 +2701,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@foxglove/velodyne-cloud@npm:1.0.0":
-  version: 1.0.0
-  resolution: "@foxglove/velodyne-cloud@npm:1.0.0"
-  checksum: ee2ae6b5c9a052767d71e0d3afeb5d4074902e26e382bff773ef088c3832618a0330c4e81cc5072daa22adbeef4545dbeacc8dfb133fd7580be1afbedcdf43cc
+"@foxglove/velodyne-cloud@npm:1.0.1":
+  version: 1.0.1
+  resolution: "@foxglove/velodyne-cloud@npm:1.0.1"
+  checksum: 3f461bdc2e36c4f8bcbd295f4337fe600f259465987bedcd21e8a7a03817f409fc3346d3b68ca8b52a6e8c42dfe6e148532cca06224868d50cad1f903e108d70
   languageName: node
   linkType: hard
 
@@ -5570,6 +5573,13 @@ __metadata:
   version: 3.19.4
   resolution: "@types/cytoscape@npm:3.19.4"
   checksum: 2965b4138b333a7fbc12d1fac0453cc403d6ae08af282fa4716e0921f8cbc92dc6061a3fb32f68e05e1746ed44bdd5bd5a75b4d732d350a3ad26bf4af5bddac0
+  languageName: node
+  linkType: hard
+
+"@types/dat.gui@npm:^0":
+  version: 0.7.7
+  resolution: "@types/dat.gui@npm:0.7.7"
+  checksum: 0a20c10013c5d8595593b9d258f48c070a09601382e9cb0a4d03b98821a8373430747b31935f73434bf0c59122c43276c6763ca1e493eaeb05a9d74bf37a7b81
   languageName: node
   linkType: hard
 
@@ -10236,6 +10246,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dat.gui@npm:0.7.9":
+  version: 0.7.9
+  resolution: "dat.gui@npm:0.7.9"
+  checksum: b5b70160657224eacdb8e0a8d76376e6e59adcc654db577531c7bebce854c4f774d1511df6f064e8246a88cf9a3abe489e4d647cf9e53d26a26141a1b5d31e68
+  languageName: node
+  linkType: hard
+
 "data-uri-to-buffer@npm:^3.0.1":
   version: 3.0.1
   resolution: "data-uri-to-buffer@npm:3.0.1"
@@ -10534,7 +10551,7 @@ __metadata:
     "@foxglove/studio-base": "workspace:*"
     "@types/plist": ^3.0.2
     jszip: 3.7.1
-    plist: 3.0.4
+    plist: 3.0.5
     quicklookjs: 0.0.3
   languageName: unknown
   linkType: soft
@@ -10696,8 +10713,8 @@ __metadata:
   linkType: hard
 
 "dmg-license@npm:^1.0.9":
-  version: 1.0.10
-  resolution: "dmg-license@npm:1.0.10"
+  version: 1.0.11
+  resolution: "dmg-license@npm:1.0.11"
   dependencies:
     "@types/plist": ^3.0.1
     "@types/verror": ^1.10.3
@@ -19177,13 +19194,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"plist@npm:3.0.4, plist@npm:^3.0.1, plist@npm:^3.0.4":
-  version: 3.0.4
-  resolution: "plist@npm:3.0.4"
+"plist@npm:3.0.5, plist@npm:^3.0.1, plist@npm:^3.0.4":
+  version: 3.0.5
+  resolution: "plist@npm:3.0.5"
   dependencies:
     base64-js: ^1.5.1
     xmlbuilder: ^9.0.7
-  checksum: cb5883ed1b1aa227ddc5f99003750d312a8ac5cfd6f58d3ce0b24939255b175b54f25ebc6adcbd4266105ffd54f6831acb6cb06f529652bb3344215c10f5601b
+  checksum: f8b82816f66559965a4dabf139bd8dd95cdec7e51f32742bb353af276ea8228b9807113743b860eda3e867f6ed70d2bcbc1e135b3204d92b5c37ac765f68444e
   languageName: node
   linkType: hard
 
@@ -23491,6 +23508,13 @@ __metadata:
   version: 2.0.12
   resolution: "ts-essentials@npm:2.0.12"
   checksum: e46916ef44b4417f0c726faac333c8d2f363a47a5c1994eb9d42045a85d247284a3220cb7f71fb30a9bd2eef43ed7eb3bc1f76f4fedf946200a98cfde7eb3a3f
+  languageName: node
+  linkType: hard
+
+"ts-key-enum@npm:2.0.11":
+  version: 2.0.11
+  resolution: "ts-key-enum@npm:2.0.11"
+  checksum: e2c84dd3d3451b8ef1de87f594b84efc588e765554bc596ef9f220e987e350fe104d0002f87da5a4727399175fb4d41ef028cf32a7ccfa37313ac97e26561401
   languageName: node
   linkType: hard
 
