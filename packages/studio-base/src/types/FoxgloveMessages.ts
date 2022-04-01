@@ -11,6 +11,17 @@ export enum LogLevel {
   FATAL = 5,
 }
 
+export enum NumericType {
+  INT8 = 1,
+  UINT8 = 2,
+  INT16 = 3,
+  UINT16 = 4,
+  INT32 = 5,
+  UINT32 = 6,
+  FLOAT32 = 7,
+  FLOAT64 = 8,
+}
+
 export type FoxgloveMessages = {
   "foxglove.CameraCalibration": {
     timestamp: bigint | { sec: number; nsec: number };
@@ -115,5 +126,47 @@ export type FoxgloveMessages = {
     timestamp: { sec: number; nsec: number };
     frame_id: string;
     poses: Array<FoxgloveMessages["foxglove.Pose"]>;
+  };
+
+  "foxglove.Grid": {
+    timestamp: { sec: number; nsec: number };
+    frame_id: string;
+    origin: FoxgloveMessages["foxglove.Pose"];
+
+    width: number;
+    height: number;
+    cell_size: { x: number; y: number };
+
+    row_stride: number;
+    cell_stride: number;
+    fields: Map<string, { offset: number; type: NumericType }>;
+    compression?: string;
+    data: Uint8Array;
+  };
+
+  "foxglove.PointCloud": {
+    timestamp: { sec: number; nsec: number };
+    frame_id: string;
+    origin: FoxgloveMessages["foxglove.Pose"];
+
+    width: number;
+    height: number;
+
+    row_stride: number;
+    point_stride: number;
+    fields: Map<string, { offset: number; type: NumericType }>;
+    compression?: string;
+    data: Uint8Array;
+  };
+
+  "foxglove.AngularScan": {
+    timestamp: { sec: number; nsec: number };
+    frame_id: string;
+    pose: FoxgloveMessages["foxglove.Pose"];
+
+    start_angle: number;
+    end_angle: number;
+
+    fields: Map<string, number[][]>;
   };
 };
