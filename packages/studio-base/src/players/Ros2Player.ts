@@ -12,7 +12,7 @@ import { RosMsgDefinition } from "@foxglove/rosmsg";
 import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
 import { definitions as foxgloveDefs } from "@foxglove/rosmsg-msgs-foxglove";
 import { Time, fromMillis, toSec } from "@foxglove/rostime";
-import { Reliability } from "@foxglove/rtps";
+import { Durability, Reliability } from "@foxglove/rtps";
 import { ParameterValue } from "@foxglove/studio";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
@@ -389,12 +389,30 @@ export default class Ros2Player implements Player {
         });
       }
 
+      // Pick the best but lowest common denominator QoS profile for this topic
+      const topicEndpoints = publishedTopics.get(topicName) ?? [];
+      const reliableCount = topicEndpoints.reduce(
+        (sum, pub) => sum + (pub.reliability.kind === Reliability.Reliable ? 1 : 0),
+        0,
+      );
+      const transientLocalCount = topicEndpoints.reduce(
+        (sum, pub) => sum + (pub.durability === Durability.TransientLocal ? 1 : 0),
+        0,
+      );
+      const endpointCount = topicEndpoints.length;
+      const durability =
+        transientLocalCount === endpointCount ? Durability.TransientLocal : Durability.Volatile;
+      const reliability = {
+        kind: reliableCount === endpointCount ? Reliability.Reliable : Reliability.BestEffort,
+        maxBlockingTime: rosEndpoint.reliability.maxBlockingTime,
+      };
+
       const subscription = this._rosNode.subscribe({
         topic: topicName,
         dataType,
-        durability: rosEndpoint.durability,
+        durability,
         history: rosEndpoint.history,
-        reliability: rosEndpoint.reliability,
+        reliability,
         msgDefinition,
       });
 
