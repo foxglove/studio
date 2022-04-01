@@ -361,15 +361,13 @@ export default class Ros2Player implements Player {
       }
       const dataType = availableTopic.datatype;
 
-      // Find the first reliable publisher for this topic to mimic its QoS profile
-      const rosEndpoint = publishedTopics
-        .get(topicName)
-        ?.find((pub) => pub.reliability.kind === Reliability.Reliable);
+      // Find the first publisher for this topic to mimic its QoS history settings
+      const rosEndpoint = publishedTopics.get(topicName)?.[0];
       if (!rosEndpoint) {
         this._problems.addProblem(`subscription:${topicName}`, {
           severity: "warn",
-          message: `No reliable publisher for "${topicName}"`,
-          tip: `Best-effort subscriptions are not supported yet`,
+          message: `No publisher for "${topicName}"`,
+          tip: `Publish "${topicName}"`,
         });
         continue;
       } else {
