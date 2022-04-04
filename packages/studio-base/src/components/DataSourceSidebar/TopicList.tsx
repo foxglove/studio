@@ -102,13 +102,15 @@ const StyledListItem = muiStyled(ListItem, { skipSx: true })(({ theme }) => ({
   },
 }));
 
+const EMPTY_TOPICS: Topic[] = [];
+
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 
 export function TopicList(): JSX.Element {
   const [filterText, setFilterText] = useState<string>("");
 
   const playerPresence = useMessagePipeline(selectPlayerPresence);
-  const topics = useMessagePipeline((ctx) => ctx.playerState.activeData?.topics ?? []);
+  const topics = useMessagePipeline((ctx) => ctx.playerState.activeData?.topics ?? EMPTY_TOPICS);
 
   const filteredTopics: FzfResultItem<Topic>[] = useMemo(
     () =>
