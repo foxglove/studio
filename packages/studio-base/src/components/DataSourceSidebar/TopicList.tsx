@@ -106,11 +106,14 @@ const EMPTY_TOPICS: Topic[] = [];
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 
+const selectTopics = (ctx: MessagePipelineContext) =>
+  ctx.playerState.activeData?.topics ?? EMPTY_TOPICS;
+
 export function TopicList(): JSX.Element {
   const [filterText, setFilterText] = useState<string>("");
 
   const playerPresence = useMessagePipeline(selectPlayerPresence);
-  const topics = useMessagePipeline((ctx) => ctx.playerState.activeData?.topics ?? EMPTY_TOPICS);
+  const topics = useMessagePipeline(selectTopics);
 
   const filteredTopics: FzfResultItem<Topic>[] = useMemo(
     () =>
