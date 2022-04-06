@@ -67,6 +67,9 @@ export function foxgloveGridToOccupancyGrid(
     throw new Error("Only grids with exactly one int8 field are currently supported");
   }
   const rowCount = msg.data.byteLength / msg.row_stride;
+  if (msg.column_count === 0 || rowCount === 0) {
+    throw new Error("Empty grids are not currently supported");
+  }
   const data = new Int8Array(rowCount * msg.column_count);
   const view = new DataView(msg.data.buffer, msg.data.byteOffset, msg.data.byteLength);
   let i = 0;
@@ -154,7 +157,7 @@ export function foxgloveLaserScanToLaserScan(
     header: { seq: 0, frame_id: msg.frame_id, stamp: msg.timestamp },
     angle_min: msg.start_angle,
     angle_max: msg.end_angle,
-    angle_increment: (msg.start_angle - msg.end_angle) / msg.ranges.length,
+    angle_increment: (msg.end_angle - msg.start_angle) / (msg.ranges.length - 1),
     time_increment: 0,
     scan_time: 0,
     range_min: -Infinity,

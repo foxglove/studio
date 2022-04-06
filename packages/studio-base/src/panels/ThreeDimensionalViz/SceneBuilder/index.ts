@@ -889,6 +889,7 @@ export default class SceneBuilder implements MarkerProvider {
             topic,
             foxglovePointCloudToPointCloud2(message as FoxgloveMessages[typeof datatype]),
             102,
+            message,
           );
         } catch (err) {
           this._setTopicError(topic, (err as Error).message);
