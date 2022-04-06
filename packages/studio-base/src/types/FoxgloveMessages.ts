@@ -138,7 +138,7 @@ export type FoxgloveMessages = {
 
     row_stride: number;
     cell_stride: number;
-    fields: Array<{ name: number; offset: number; type: NumericType }>;
+    fields: Array<{ name: string; offset: number; type: NumericType }>;
     data: Uint8Array;
   };
 
@@ -147,7 +147,7 @@ export type FoxgloveMessages = {
     frame_id: string;
     pose: FoxgloveMessages["foxglove.Pose"];
     point_stride: number;
-    fields: Array<{ name: number; offset: number; type: NumericType }>;
+    fields: Array<{ name: string; offset: number; type: NumericType }>;
     data: Uint8Array;
   };
 
