@@ -131,35 +131,27 @@ export type FoxgloveMessages = {
   "foxglove.Grid": {
     timestamp: { sec: number; nsec: number };
     frame_id: string;
-    origin: FoxgloveMessages["foxglove.Pose"];
+    pose: FoxgloveMessages["foxglove.Pose"];
 
-    width: number;
-    height: number;
+    column_count: number;
     cell_size: { x: number; y: number };
 
     row_stride: number;
     cell_stride: number;
-    fields: Map<string, { offset: number; type: NumericType }>;
-    compression?: string;
+    fields: Array<{ name: number; offset: number; type: NumericType }>;
     data: Uint8Array;
   };
 
   "foxglove.PointCloud": {
     timestamp: { sec: number; nsec: number };
     frame_id: string;
-    origin: FoxgloveMessages["foxglove.Pose"];
-
-    width: number;
-    height: number;
-
-    row_stride: number;
+    pose: FoxgloveMessages["foxglove.Pose"];
     point_stride: number;
-    fields: Map<string, { offset: number; type: NumericType }>;
-    compression?: string;
+    fields: Array<{ name: number; offset: number; type: NumericType }>;
     data: Uint8Array;
   };
 
-  "foxglove.AngularScan": {
+  "foxglove.LaserScan": {
     timestamp: { sec: number; nsec: number };
     frame_id: string;
     pose: FoxgloveMessages["foxglove.Pose"];
@@ -167,6 +159,7 @@ export type FoxgloveMessages = {
     start_angle: number;
     end_angle: number;
 
-    fields: Map<string, number[][]>;
+    ranges: number[];
+    intensities: number[];
   };
 };
