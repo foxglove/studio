@@ -12,12 +12,12 @@ export enum LogLevel {
 }
 
 export enum NumericType {
-  INT8 = 1,
-  UINT8 = 2,
-  INT16 = 3,
-  UINT16 = 4,
-  INT32 = 5,
-  UINT32 = 6,
+  UINT8 = 1,
+  INT8 = 2,
+  UINT16 = 3,
+  INT16 = 4,
+  UINT32 = 5,
+  INT32 = 6,
   FLOAT32 = 7,
   FLOAT64 = 8,
 }
