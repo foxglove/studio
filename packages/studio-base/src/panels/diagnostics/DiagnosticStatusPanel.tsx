@@ -14,8 +14,7 @@
 import DatabaseIcon from "@mdi/svg/svg/database.svg";
 import { Autocomplete, Menu, MenuItem, TextField } from "@mui/material";
 import { makeStyles } from "@mui/styles";
-import { sortBy } from "lodash";
-import { uniq } from "lodash";
+import { sortBy, uniq } from "lodash";
 import { useCallback, useMemo, useRef, useState, MouseEvent } from "react";
 
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";

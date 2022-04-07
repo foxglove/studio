@@ -23,8 +23,7 @@ import PinIcon from "@mdi/svg/svg/pin.svg";
 import { Stack, Theme, Menu, MenuItem } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import cx from "classnames";
-import { compact } from "lodash";
-import { uniq } from "lodash";
+import { compact, uniq } from "lodash";
 import { useCallback, useMemo, useRef, useState, MouseEvent } from "react";
 import { List, AutoSizer, ListRowProps } from "react-virtualized";
 
