@@ -39,5 +39,12 @@ describe("rosPackageResources", () => {
         process.env.ROS_PACKAGE_PATH = undefined;
       }
     });
+
+    it("should find packages recursively within rosPackagePath", async () => {
+      const packagePath = await findRosPackageRoot("nested-child", {
+        rosPackagePath: PACKAGES_ROOT,
+      });
+      expect(packagePath).toEqual(path.join(PACKAGES_ROOT, "nested", "child"));
+    });
   });
 });
