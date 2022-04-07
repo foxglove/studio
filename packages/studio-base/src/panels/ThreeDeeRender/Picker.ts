@@ -188,7 +188,7 @@ export class Picker {
            }
          `,
         side: THREE.DoubleSide,
-        uniforms: { objectId: { value: [1.0, 1.0, 1.0, 1.0] } },
+        uniforms: { objectId: { value: [NaN, NaN, NaN, NaN] } },
       });
       this.materialCache.set(index, renderMaterial);
     }

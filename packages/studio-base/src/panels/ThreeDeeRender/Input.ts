@@ -39,7 +39,6 @@ export class Input extends EventEmitter<InputEvents> {
     this.resizeObserver = new ResizeObserver(this.onResize);
     this.resizeObserver.observe(parentEl);
 
-    document.addEventListener("keydown", this.onKeyDown);
     canvas.addEventListener("mousedown", this.onMouseDown);
     canvas.addEventListener("mousemove", this.onMouseMove);
     canvas.addEventListener("click", this.onClick);
@@ -47,7 +46,6 @@ export class Input extends EventEmitter<InputEvents> {
     canvas.addEventListener("touchend", this.onTouchEnd, { passive: false });
     canvas.addEventListener("touchmove", this.onTouchMove, { passive: false });
     canvas.addEventListener("touchcancel", this.onTouchCancel, { passive: false });
-    canvas.addEventListener("touchendoutside", this.onTouchEndOutside);
   }
 
   dispose(): void {
@@ -56,7 +54,6 @@ export class Input extends EventEmitter<InputEvents> {
     this.removeAllListeners();
     this.resizeObserver.disconnect();
 
-    document.removeEventListener("keydown", this.onKeyDown);
     canvas.removeEventListener("mousedown", this.onMouseDown);
     canvas.removeEventListener("mousemove", this.onMouseMove);
     canvas.removeEventListener("click", this.onClick);
@@ -64,7 +61,6 @@ export class Input extends EventEmitter<InputEvents> {
     canvas.removeEventListener("touchend", this.onTouchEnd);
     canvas.removeEventListener("touchmove", this.onTouchMove);
     canvas.removeEventListener("touchcancel", this.onTouchCancel);
-    canvas.removeEventListener("touchendoutside", this.onTouchEndOutside);
   }
 
   onResize = (_entries: ResizeObserverEntry[]): void => {
@@ -79,10 +75,6 @@ export class Input extends EventEmitter<InputEvents> {
         this.emit("resize", this.canvasSize);
       }
     }
-  };
-
-  onKeyDown = (event: KeyboardEvent): void => {
-    this.emit("keydown", event.key as Key, event);
   };
 
   onMouseDown = (event: MouseEvent): void => {
@@ -129,10 +121,6 @@ export class Input extends EventEmitter<InputEvents> {
 
   onTouchCancel = (event: TouchEvent): void => {
     event.preventDefault();
-  };
-
-  onTouchEndOutside = (): void => {
-    //
   };
 
   private updateCursorCoords(event: MouseEvent): void {

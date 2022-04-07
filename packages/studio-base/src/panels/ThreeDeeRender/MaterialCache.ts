@@ -220,7 +220,7 @@ export const LineVertexColorPicking = {
       `,
       clipping: true,
       uniforms: {
-        objectId: { value: [1.0, 1.0, 1.0, 1.0] },
+        objectId: { value: [NaN, NaN, NaN, NaN] },
         worldUnits: { value: 0 },
         linewidth: { value: lineWidth },
         resolution: { value: new THREE.Vector2(1, 1) },

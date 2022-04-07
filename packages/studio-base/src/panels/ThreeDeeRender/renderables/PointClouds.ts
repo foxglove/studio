@@ -312,7 +312,7 @@ function createPickingMaterial(settings: PointCloudSettings): THREE.ShaderMateri
       }
     `,
     side: THREE.DoubleSide,
-    uniforms: { pointSize: { value: pointSize }, objectId: { value: [1.0, 1.0, 1.0, 1.0] } },
+    uniforms: { pointSize: { value: pointSize }, objectId: { value: [NaN, NaN, NaN, NaN] } },
   });
 }
 

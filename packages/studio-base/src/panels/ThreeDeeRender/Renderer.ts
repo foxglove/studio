@@ -351,8 +351,8 @@ function selectObject(object: THREE.Object3D) {
 }
 
 function deselectObject(object: THREE.Object3D) {
-  object.layers.set(0);
+  object.layers.set(LAYER_DEFAULT);
   object.traverse((child) => {
-    child.layers.set(0);
+    child.layers.set(LAYER_DEFAULT);
   });
 }

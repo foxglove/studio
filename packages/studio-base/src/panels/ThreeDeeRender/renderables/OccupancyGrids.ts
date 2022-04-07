@@ -310,7 +310,7 @@ function createPickingMaterial(texture: THREE.DataTexture): THREE.ShaderMaterial
       }
     `,
     side: THREE.DoubleSide,
-    uniforms: { map: { value: texture }, objectId: { value: [1.0, 1.0, 1.0, 1.0] } },
+    uniforms: { map: { value: texture }, objectId: { value: [NaN, NaN, NaN, NaN] } },
   });
 }
 
