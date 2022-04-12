@@ -3,7 +3,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { ColorPicker } from "@fluentui/react";
-import { TextField, styled as muiStyled, TextFieldProps } from "@mui/material";
+import {
+  Card,
+  TextField,
+  styled as muiStyled,
+  TextFieldProps,
+  ClickAwayListener,
+} from "@mui/material";
 import { useState } from "react";
 
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -29,6 +35,15 @@ const ColorSwatch = muiStyled("div", {
   border: `1px solid ${theme.palette.getContrastText(color)}`,
 }));
 
+const Root = muiStyled("div")({
+  position: "relative",
+});
+
+const PickerWrapper = muiStyled(Card)(({ theme }) => ({
+  position: "absolute",
+  zIndex: theme.zIndex.modal,
+}));
+
 type ColorPickerInputProps = {
   value: undefined | string;
   onChange: (value: undefined | string) => void;
@@ -45,7 +60,7 @@ export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
   const togglePicker = () => setShowPicker(!showPicker);
 
   return (
-    <div style={{ position: "relative" }}>
+    <Root>
       <StyledTextField
         {...props}
         value={value}
@@ -60,22 +75,24 @@ export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
         }}
       />
       {showPicker && (
-        <div style={{ background: "white", position: "absolute", zIndex: 1000 }}>
-          <ColorPicker
-            color={swatchColor}
-            alphaType={"none"}
-            styles={{
-              tableHexCell: { width: "35%" },
-              input: {
+        <ClickAwayListener onClickAway={() => setShowPicker(false)}>
+          <PickerWrapper variant="elevation">
+            <ColorPicker
+              color={swatchColor}
+              alphaType={"none"}
+              styles={{
+                tableHexCell: { width: "35%" },
                 input: {
-                  fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, 'zero'`,
+                  input: {
+                    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, 'zero'`,
+                  },
                 },
-              },
-            }}
-            onChange={(_event, newValue) => onChange(newValue.str)}
-          />
-        </div>
+              }}
+              onChange={(_event, newValue) => onChange(newValue.str)}
+            />
+          </PickerWrapper>
+        </ClickAwayListener>
       )}
-    </div>
+    </Root>
   );
 }
