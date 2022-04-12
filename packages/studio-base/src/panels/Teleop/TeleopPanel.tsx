@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Button, Stack, Typography } from "@mui/material";
+import { Stack, Typography } from "@mui/material";
 import { set } from "lodash";
 import { ReactNode, useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { DeepPartial } from "ts-essentials";
@@ -13,7 +13,6 @@ import {
   SettingsTreeAction,
   SettingsTreeNode,
 } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
-import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
 
 import DirectionalPad, { DirectionalPadAction } from "./DirectionalPad";
@@ -128,7 +127,6 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
   const { context } = props;
   const { saveState } = context;
 
-  const { openPanelSetting } = useWorkspace;
   const [currentAction, setCurrentAction] = useState<DirectionalPadAction | undefined>();
   const [topics, setTopics] = useState<readonly Topic[]>([]);
 
