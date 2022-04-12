@@ -3,11 +3,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Topic } from "@foxglove/studio-base/players/types";
-import { StudioDatatypes } from "@foxglove/studio-base/types/StudioDatatypes";
+import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 type Args = {
   topics: Topic[];
-  datatypes: StudioDatatypes;
+  datatypes: RosDatatypes;
 };
 
 // http://wiki.ros.org/msg
@@ -45,7 +45,7 @@ function safeString(str: string): string {
   return JSON.stringify(str) as string;
 }
 
-export const generateTypesInterface = (datatypes: StudioDatatypes): string => {
+export const generateTypesInterface = (datatypes: RosDatatypes): string => {
   const seenDatatypes = new Set();
   let src = `
     /**

@@ -13,11 +13,10 @@
 
 import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
 import { definitions as foxgloveDefs } from "@foxglove/rosmsg-msgs-foxglove";
-import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
-import { StudioDatatypes, StudioMsgDefinition } from "@foxglove/studio-base/types/StudioDatatypes";
+import { RosDatatypes, OptionalRosMsgDefinition } from "@foxglove/studio-base/types/RosDatatypes";
 
 // https://foxglove.dev/docs/studio/messages/introduction
-const foxgloveDatatypesObj: Record<string, StudioMsgDefinition> = {
+const foxgloveDatatypesObj: Record<string, OptionalRosMsgDefinition> = {
   "foxglove.GeoJSON": {
     name: "foxglove.GeoJSON",
     definitions: [{ name: "geojson", type: "string" }],
@@ -142,4 +141,4 @@ for (const [name, def] of Object.entries(foxgloveDefs)) {
   basicDatatypes.set(name, def);
 }
 
-export const foxgloveDatatypes: StudioDatatypes = new Map(Object.entries(foxgloveDatatypesObj));
+export const foxgloveDatatypes: RosDatatypes = new Map(Object.entries(foxgloveDatatypesObj));
