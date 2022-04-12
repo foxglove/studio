@@ -296,11 +296,7 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
           <ErrorMessage message="Please connect to a datasource that supports publishing in order to use this panel." />
         )}
         {canPublish && !hasTopic && (
-          <ErrorMessage message="Please select a publish topic in the panel settings">
-            <Button variant="contained" size="large" onClick={openPanelSetting}>
-              Open Panel Settings
-            </Button>
-          </ErrorMessage>
+          <ErrorMessage message="Please select a publish topic in the panel settings" />
         )}
         {enabled && <DirectionalPad onAction={setCurrentAction} disabled={!enabled} />}
       </Stack>
