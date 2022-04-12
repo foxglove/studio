@@ -42,7 +42,6 @@ type Config = {
 function buildSettingsTree(config: Config, topics: readonly Topic[]): SettingsTreeNode {
   return {
     fields: {
-      messagePath: { label: "Message", input: "messagepath", value: "" },
       publishRate: { label: "Publish Rate", input: "number", value: config.publishRate },
       topic: {
         label: "Topic",
@@ -181,7 +180,7 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
   useEffect(() => {
     const tree = buildSettingsTree(config, topics);
     // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-explicit-any
-    (context as unknown as any).__publishPanelSettingsTree({
+    (context as unknown as any).__updatePanelSettingsTree({
       settings: tree,
       actionHandler: settingsActionHandler,
     });
