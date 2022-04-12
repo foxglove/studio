@@ -88,7 +88,7 @@ const LayerOptions = muiStyled("div", {
   gridTemplateColumns: [
     `minmax(0, ${(indent === 3 && theme.spacing(9)) || theme.spacing(6)})`,
     "minmax(128px, 1fr)",
-    "minmax(200px, 1fr)",
+    "minmax(128px, 1fr)",
   ].join(" "),
   // gridAutoRows: 30,
   padding: theme.spacing(0.5, 1.5, 1, 0.5),
