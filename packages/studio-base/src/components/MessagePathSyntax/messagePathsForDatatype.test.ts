@@ -398,17 +398,17 @@ describe("messagePathsForDatatype", () => {
     expect(messagePathsForDatatype("tf/tfMessage", datatypes)).toEqual([
       "",
       ".transforms",
-      ".transforms[:]{child_frame_id==0}",
-      ".transforms[:]{child_frame_id==0}.child_frame_id",
-      ".transforms[:]{child_frame_id==0}.header",
-      ".transforms[:]{child_frame_id==0}.header.frame_id",
-      ".transforms[:]{child_frame_id==0}.header.seq",
-      ".transforms[:]{child_frame_id==0}.header.stamp",
-      ".transforms[:]{child_frame_id==0}.header.stamp.nsec",
-      ".transforms[:]{child_frame_id==0}.header.stamp.sec",
-      ".transforms[:]{child_frame_id==0}.transform",
-      ".transforms[:]{child_frame_id==0}.transform.rotation",
-      ".transforms[:]{child_frame_id==0}.transform.translation",
+      ".transforms[0]",
+      ".transforms[0].child_frame_id",
+      ".transforms[0].header",
+      ".transforms[0].header.frame_id",
+      ".transforms[0].header.seq",
+      ".transforms[0].header.stamp",
+      ".transforms[0].header.stamp.nsec",
+      ".transforms[0].header.stamp.sec",
+      ".transforms[0].transform",
+      ".transforms[0].transform.rotation",
+      ".transforms[0].transform.translation",
     ]);
   });
 
