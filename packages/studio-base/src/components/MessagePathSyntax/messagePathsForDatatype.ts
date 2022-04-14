@@ -199,7 +199,11 @@ export function messagePathsForDatatype(
             );
             traverse(
               structureItem.next,
-              `${builtString}[:]{${typicalFilterName}==${matchingFilterPart.value}}`,
+              `${builtString}[:]{${typicalFilterName}==${
+                typeof matchingFilterPart.value === "object"
+                  ? `$${matchingFilterPart.value.variableName}`
+                  : matchingFilterPart.value
+              }}`,
             );
           } else if (structureItemIsIntegerPrimitive(typicalFilterValue)) {
             traverse(structureItem.next, `${builtString}[:]{${typicalFilterName}==0}`);
