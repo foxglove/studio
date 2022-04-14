@@ -14,6 +14,7 @@
 import { memoize } from "lodash";
 import memoizeWeak from "memoize-weak";
 
+import { MessagePathFilter } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import { isTypicalFilterName } from "@foxglove/studio-base/components/MessagePathSyntax/isTypicalFilterName";
 import { quoteFieldNameIfNeeded } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
@@ -169,7 +170,8 @@ export function messagePathsForDatatype(
         if (typicalFilterName != undefined) {
           // Find matching filter from clonedMessagePath
           const matchingFilterPart = clonedMessagePath.find(
-            (pathPart) => pathPart.type === "filter" && pathPart.path[0] === typicalFilterName,
+            (pathPart): pathPart is MessagePathFilter =>
+              pathPart.type === "filter" && pathPart.path[0] === typicalFilterName,
           );
 
           // Remove the matching filter from clonedMessagePath, for future searches
@@ -178,12 +180,7 @@ export function messagePathsForDatatype(
           );
 
           // Format the displayed filter value
-          const filterVal =
-            matchingFilterPart &&
-            matchingFilterPart.type === "filter" &&
-            matchingFilterPart.value != undefined
-              ? matchingFilterPart.value
-              : 0;
+          const filterVal = matchingFilterPart?.value ?? 0;
           traverse(
             structureItem.next,
             `${builtString}[:]{${typicalFilterName}==${
