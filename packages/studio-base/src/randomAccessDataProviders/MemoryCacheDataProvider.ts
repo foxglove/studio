@@ -441,7 +441,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
       readRequestRange: this._readRequests[0]?.blockRange,
       downloadedRanges: this._getDownloadedBlockRanges(),
       lastResolvedCallbackEnd: this._lastResolvedCallbackEnd,
-      cacheSize: this._readAheadBlocks,
+      maxRequestSize: this._readAheadBlocks,
       fileSize: this._blocks.length,
       continueDownloadingThreshold: 10, // Somewhat arbitrary number to not create new connections all the time.
     });
