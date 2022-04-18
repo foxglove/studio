@@ -109,7 +109,7 @@ export function useMessageDataItem(path: string, options?: Options): ReducedValu
         }
       }
 
-      // Return a new message set if we have new messages or this is a different path
+      // Return a new message set if we have matching messages or this is a different path
       // than the path used to fetch the previous set of messages.
       if (newMatches.length > 0 || path !== prevValue.path) {
         return {
