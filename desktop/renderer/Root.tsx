@@ -88,7 +88,17 @@ export default function Root({
   const consoleApi = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);
   const nativeAppMenu = useMemo(() => new NativeAppMenu(menuBridge), []);
   const nativeWindow = useMemo(() => new NativeWindow(desktopBridge), []);
-  const deepLinks = useMemo(() => desktopBridge.getDeepLinks(), []);
+
+  // App url state in window.location will represent the user's current session state
+  // better than the initial deep link so we prioritize the current window.location
+  // url for startup state. This persists state across user-initiated refreshes.
+  const deepLinks = useMemo(() => {
+    // We treat presence of the `ds` or `layoutId` params as indicative of active state.
+    const windowUrl = new URL(window.location.href);
+    const hasActiveURLState =
+      windowUrl.searchParams.has("ds") || windowUrl.searchParams.has("layoutId");
+    return hasActiveURLState ? [window.location.href] : desktopBridge.getDeepLinks();
+  }, []);
 
   return (
     <App
