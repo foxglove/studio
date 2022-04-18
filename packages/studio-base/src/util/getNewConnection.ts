@@ -54,12 +54,6 @@ function getNewConnectionWithExistingReadRequest({
   fileSize: number;
   continueDownloadingThreshold: number;
 }): Range | undefined {
-  // We have a requested range that we're trying to download.
-  if (readRequestRange.end - readRequestRange.start > cacheSize) {
-    // This should have been caught way earlier, but just as a sanity check.
-    throw new Error("Range exceeds cache size");
-  }
-
   // Get the parts of the requested range that have not been downloaded yet.
   const notDownloadedRanges = missingRanges(readRequestRange, downloadedRanges);
 
