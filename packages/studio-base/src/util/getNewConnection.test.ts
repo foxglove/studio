@@ -20,7 +20,7 @@ describe("getNewConnection", () => {
       readRequestRange: undefined,
       downloadedRanges: [],
       lastResolvedCallbackEnd: undefined,
-      cacheSize: 10,
+      maxRequestSize: 10,
       fileSize: 100,
       continueDownloadingThreshold: 5,
     };
@@ -79,7 +79,7 @@ describe("getNewConnection", () => {
           expect(newConnection).toEqual({
             start: 46,
             end: 56,
-            /* 46 + cacheSize */
+            /* 46 + maxRequestSize */
           });
         });
 
@@ -124,7 +124,7 @@ describe("getNewConnection", () => {
           expect(newConnection).toEqual({
             start: 50,
             end: 58,
-            /* readRequestRange.start + cacheSize */
+            /* readRequestRange.start + maxRequestSize */
           });
         });
 
@@ -177,7 +177,7 @@ describe("getNewConnection", () => {
       readRequestRange: undefined,
       downloadedRanges: [],
       lastResolvedCallbackEnd: undefined,
-      cacheSize: 100, // Same or bigger than `fileSize`.
+      maxRequestSize: 100, // Same or bigger than `fileSize`.
       fileSize: 100,
       continueDownloadingThreshold: 5,
     };
