@@ -57,7 +57,9 @@ function getNewConnectionWithExistingReadRequest({
   // We have a requested range that we're trying to download.
   if (readRequestRange.end - readRequestRange.start > maxRequestSize) {
     // This should have been caught way earlier, but just as a sanity check.
-    throw new Error("Range exceeds cache size");
+    throw new Error(
+      `Range ${readRequestRange.start}-${readRequestRange.end} exceeds cache size (${maxRequestSize})`,
+    );
   }
 
   // Get the parts of the requested range that have not been downloaded yet.
