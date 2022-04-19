@@ -308,7 +308,10 @@ export default class Ros1MemoryCacheDataProvider implements RandomAccessDataProv
     this._memCacheBlockSizeNs = Math.ceil(
       Math.max(MIN_MEM_CACHE_BLOCK_SIZE_NS, this._totalNs / MAX_BLOCKS),
     );
-    this._readAheadBlocks = Math.ceil(READ_AHEAD_NS / this._memCacheBlockSizeNs);
+    // Because read requests from the player may span across a block boundary, this always needs to
+    // be at least 2. 2 should be sufficient as long as the player never requests more than
+    // MIN_MEM_CACHE_BLOCK_SIZE_NS of data at once.
+    this._readAheadBlocks = Math.max(2, Math.ceil(READ_AHEAD_NS / this._memCacheBlockSizeNs));
 
     if (this._totalNs > Number.MAX_SAFE_INTEGER * 0.9) {
       throw new Error("Time range is too long to be supported");
