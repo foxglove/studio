@@ -35,9 +35,9 @@ export function encodeAppURLState(url: URL, urlState: AppURLState): URL {
     newURL.searchParams.set("time", toRFC3339String(urlState.time));
   }
 
-  if (urlState.ds && urlState.dsParams) {
+  if (urlState.ds) {
     newURL.searchParams.set("ds", urlState.ds);
-    Object.entries(urlState.dsParams).forEach(([k, v]) => {
+    Object.entries(urlState.dsParams ?? {}).forEach(([k, v]) => {
       newURL.searchParams.set("ds." + k, v);
     });
   }
