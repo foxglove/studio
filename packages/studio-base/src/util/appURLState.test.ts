@@ -122,10 +122,5 @@ describe("app state encoding", () => {
         )}&layoutId=${layoutId}`,
       );
     });
-
-    it("encodes url state with only a datasource", () => {
-      const encodededURL = encodeAppURLState(baseURL(), { layoutId, ds: "ros1" }).href;
-      expect(encodededURL).toEqual(`http://example.com/?ds=ros1&layoutId=${layoutId}`);
-    });
   });
 });

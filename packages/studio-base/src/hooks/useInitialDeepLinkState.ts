@@ -68,7 +68,7 @@ export function useInitialDeepLinkState(deepLinks: string[]): void {
     }
 
     // Apply any available datasource args
-    if (urlState.ds) {
+    if (urlState.ds && urlState.dsParams) {
       log.debug("Initialising source from url", urlState);
       selectSource(urlState.ds, { type: "connection", params: urlState.dsParams });
       urlState.ds = undefined;
