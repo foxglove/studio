@@ -58,7 +58,7 @@ function getNewConnectionWithExistingReadRequest({
   if (readRequestRange.end - readRequestRange.start > maxRequestSize) {
     // This should have been caught way earlier, but just as a sanity check.
     throw new Error(
-      `Range ${readRequestRange.start}-${readRequestRange.end} exceeds cache size (${maxRequestSize})`,
+      `Range ${readRequestRange.start}-${readRequestRange.end} exceeds max request size ${maxRequestSize} (file size ${fileSize})`,
     );
   }
 

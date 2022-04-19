@@ -32,7 +32,7 @@ describe("getNewConnection", () => {
             ...defaults,
             readRequestRange: { start: 40, end: 60 },
           }),
-        ).toThrow("Range 40-60 exceeds cache size (10)");
+        ).toThrow("Range 40-60 exceeds max request size 10 (file size 100)");
       });
 
       it("throws when the read request range has been fully downloaded already", () => {
