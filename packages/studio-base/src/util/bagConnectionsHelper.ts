@@ -54,7 +54,7 @@ export function bagConnectionsToTopics(connections: readonly Connection[]): Topi
     }
     topics.set(connection.topic, { name: connection.topic, datatype: connection.type });
   }
-  return Object.values(topics);
+  return Array.from(topics.values());
 }
 
 export function bagConnectionsToTopicStats(
