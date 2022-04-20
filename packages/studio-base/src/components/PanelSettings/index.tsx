@@ -157,6 +157,22 @@ export default function PanelSettings({
     <SidebarContent disablePadding={isSettingsTree} title={`${panelInfo.title} panel settings`}>
       {shareModal}
       <Stack gap={2} justifyContent="flex-start">
+        {panelInfo.help != undefined && (
+          <Stack paddingX={isSettingsTree ? 2 : 0}>
+            <Typography color="text.secondary">
+              See docs{" "}
+              <Link
+                onClick={() => {
+                  setHelpInfo({ title: panelInfo.type, content: panelInfo.help });
+                  openHelp();
+                }}
+              >
+                here
+              </Link>
+              .
+            </Typography>
+          </Stack>
+        )}
         <div>
           {settingsTree && <SettingsEditor settings={settingsTree} />}
           {!settingsTree && schema && (
