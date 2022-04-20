@@ -284,10 +284,12 @@ function FieldEditorComponent({
   field: DeepReadonly<SettingsTreeField>;
   path: readonly string[];
 }): JSX.Element {
+  const indent = Math.min(path.length, 4);
+
   return (
     <>
-      <div /> {/* Spacer for left column */}
-      <Stack direction="row" alignItems="center">
+      <div style={{ gridColumn: `span ${indent}` }} />
+      <Stack direction="row" alignItems="center" style={{ gridColumn: `span ${9 - indent}` }}>
         <Typography
           title={field.label}
           variant="subtitle2"
