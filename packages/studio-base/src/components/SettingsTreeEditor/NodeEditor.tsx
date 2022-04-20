@@ -7,7 +7,6 @@ import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import LayerIcon from "@mui/icons-material/Layers";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Collapse, Divider, ListItemProps, styled as muiStyled, Typography } from "@mui/material";
-import { useTheme } from "@mui/material";
 import { ChangeEvent, useMemo, useState } from "react";
 import { DeepReadonly } from "ts-essentials";
 
@@ -35,7 +34,7 @@ const LayerOptions = muiStyled("div", {
   display: "grid",
   gridTemplateColumns: "minmax(0, 1fr)  minmax(0, 1.2fr)",
   padding: theme.spacing(1, 0, 1, 0),
-  columnGap: theme.spacing(0.5),
+  columnGap: theme.spacing(1),
   rowGap: theme.spacing(0.25),
   alignItems: "center",
   opacity: visible ? 1 : 0.6,
@@ -49,6 +48,17 @@ const NodeHeader = muiStyled("div")(({ theme }) => {
       outlineOffset: -1,
     },
     paddingRight: theme.spacing(2.25),
+  };
+});
+
+const NodeHeaderToggle = muiStyled("div")<{ indent: number }>(({ theme, indent }) => {
+  return {
+    display: "flex",
+    alignItems: "center",
+    cursor: "pointer",
+    paddingLeft: theme.spacing(1.25 + 2 * Math.max(0, indent - 1)),
+    userSelect: "none",
+    width: "100%",
   };
 });
 
@@ -88,26 +98,13 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     );
   });
 
-  const theme = useTheme();
-
   const indent = props.path.length;
 
   return (
     <>
       {indent > 0 && (
         <NodeHeader>
-          <div />
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              cursor: "pointer",
-              paddingLeft: theme.spacing(2 * Math.max(0.25, indent - 1)),
-              userSelect: "none",
-              width: "100%",
-            }}
-            onClick={() => setOpen((oldOpen) => !oldOpen)}
-          >
+          <NodeHeaderToggle indent={indent} onClick={() => setOpen(!open)}>
             <div
               style={{
                 display: "inline-flex",
@@ -126,7 +123,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
             >
               {settings.label ?? "Settings"}
             </Typography>
-          </div>
+          </NodeHeaderToggle>
           <VisibilityToggle edge="end" size="small" checked={visible} onChange={handleChange} />
         </NodeHeader>
       )}

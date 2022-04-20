@@ -76,7 +76,10 @@ function buildSettingsTree(config: Config, eligibleTopics: string[]): SettingsTr
         label: "Layer",
         input: "select",
         value: config.layer,
-        options: ["map", "satellite"],
+        options: [
+          { label: "Map", value: "map" },
+          { label: "Satellite", value: "satellite" },
+        ],
       },
     },
     children: {

@@ -262,9 +262,9 @@ function FieldInput({
           }
           MenuProps={{ MenuListProps: { dense: true } }}
         >
-          {field.options.map((opt) => (
-            <MenuItem key={opt} value={opt}>
-              {opt}
+          {field.options.map(({ label, value }) => (
+            <MenuItem key={value} value={value}>
+              {label}
             </MenuItem>
           ))}
         </Select>
@@ -287,14 +287,11 @@ function FieldEditorComponent({
 }): JSX.Element {
   const theme = useTheme();
   const indent = Math.min(path.length, 4);
+  const paddingLeft = theme.spacing(2 + 2 * Math.max(0, indent - 1));
 
   return (
     <>
-      <Stack
-        direction="row"
-        alignItems="center"
-        style={{ paddingLeft: theme.spacing(2 * Math.max(2, indent)) }}
-      >
+      <Stack direction="row" alignItems="center" style={{ paddingLeft }}>
         <Typography
           title={field.label}
           variant="subtitle2"
