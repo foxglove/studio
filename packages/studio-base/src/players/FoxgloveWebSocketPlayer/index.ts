@@ -19,6 +19,7 @@ import {
   PlayerPresence,
   PlayerMetricsCollectorInterface,
   AdvertiseOptions,
+  TopicStats,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
@@ -44,7 +45,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
   private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
   private _closed: boolean = false; // Whether the player has been completely closed using close().
   private _topics?: Topic[]; // Topics as published by the WebSocket.
-  private _topicsMap = new Map<string, Topic>(); // Topic names to _topics entries.
+  private _topicsStats = new Map<string, TopicStats>(); // Topic names to topic statistics.
   private _datatypes?: RosDatatypes; // Datatypes as published by the WebSocket.
   private _start?: Time; // The time at which we started playing.
   private _parsedMessages: MessageEvent<unknown>[] = []; // Queue of messages that we'll send in next _emitState() call.
@@ -261,15 +262,17 @@ export default class FoxgloveWebSocketPlayer implements Player {
         });
 
         // Update the message count for this topic
-        const topicInfo = this._topicsMap.get(topic);
-        if (topicInfo) {
-          topicInfo.numMessages = (topicInfo.numMessages ?? 0) + 1;
-          topicInfo.firstMessageTime ??= receiveTime;
-          if (topicInfo.lastMessageTime == undefined) {
-            topicInfo.lastMessageTime = receiveTime;
-          } else if (isGreaterThan(receiveTime, topicInfo.lastMessageTime)) {
-            topicInfo.lastMessageTime = receiveTime;
-          }
+        let stats = this._topicsStats.get(topic);
+        if (!stats) {
+          stats = { numMessages: 0 };
+          this._topicsStats.set(topic, stats);
+        }
+        stats.numMessages++;
+        stats.firstMessageTime ??= receiveTime;
+        if (stats.lastMessageTime == undefined) {
+          stats.lastMessageTime = receiveTime;
+        } else if (isGreaterThan(receiveTime, stats.lastMessageTime)) {
+          stats.lastMessageTime = receiveTime;
         }
       } catch (error) {
         this._problems.addProblem(`message:${chanInfo.channel.topic}`, {
@@ -289,24 +292,15 @@ export default class FoxgloveWebSocketPlayer implements Player {
       datatype: chanInfo.parsedChannel.fullSchemaName,
     }));
 
-    // Build a new _topicsMap from the new topics array
-    const topicsMap = new Map<string, Topic>();
-    for (const topic of topics) {
-      topicsMap.set(topic.name, topic);
-    }
-    // Preserve the message count for existing topics
-    if (this._topics) {
-      for (const prevTopic of this._topics) {
-        const newTopic = topicsMap.get(prevTopic.name);
-        if (newTopic) {
-          newTopic.firstMessageTime = prevTopic.firstMessageTime;
-          newTopic.lastMessageTime = prevTopic.lastMessageTime;
-          newTopic.numMessages = prevTopic.numMessages;
-        }
+    // Remove stats entries for removed topics
+    const topicsSet = new Set<string>(topics.map((topic) => topic.name));
+    for (const topic of this._topicsStats.keys()) {
+      if (!topicsSet.has(topic)) {
+        this._topicsStats.delete(topic);
       }
     }
+
     this._topics = topics;
-    this._topicsMap = topicsMap;
 
     // Rebuild the _datatypes map
     this._datatypes = new Map();
@@ -361,8 +355,9 @@ export default class FoxgloveWebSocketPlayer implements Player {
         isPlaying: true,
         speed: 1,
         lastSeekTime: this._lastSeekTime,
-        // Always copy the topic array since message counts and timestamps are being updated
-        topics: _topics.slice(0),
+        topics: _topics,
+        // Always copy topic stats since message counts and timestamps are being updated
+        topicStats: new Map(this._topicsStats),
         datatypes: _datatypes,
       },
     });
@@ -402,12 +397,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
         this._recentlyCanceledSubscriptions.add(subId);
 
         // Reset the message count for this topic
-        const topicInfo = this._topicsMap.get(topic);
-        if (topicInfo) {
-          topicInfo.firstMessageTime = undefined;
-          topicInfo.lastMessageTime = undefined;
-          topicInfo.numMessages = undefined;
-        }
+        this._topicsStats.delete(topic);
 
         setTimeout(
           () => this._recentlyCanceledSubscriptions.delete(subId),

@@ -26,18 +26,20 @@ import {
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { PlayerPresence } from "@foxglove/studio-base/players/types";
+import { PlayerPresence, TopicStats } from "@foxglove/studio-base/players/types";
 import { Topic } from "@foxglove/studio-base/src/players/types";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-const topicToFzfResult = (item: Topic) =>
+type TopicWithStats = Topic & Partial<TopicStats>;
+
+const topicToFzfResult = (item: TopicWithStats) =>
   ({
     item,
     score: 0,
     positions: new Set<number>(),
     start: 0,
     end: 0,
-  } as FzfResultItem<Topic>);
+  } as FzfResultItem<TopicWithStats>);
 
 const HighlightChars = ({
   str,
@@ -104,6 +106,7 @@ const StyledListItem = muiStyled(ListItem, { skipSx: true })(({ theme }) => ({
 }));
 
 const EMPTY_TOPICS: Topic[] = [];
+const EMPTY_TOPIC_STATS = new Map<string, TopicStats>();
 
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 const selectStartTime = ({ playerState }: MessagePipelineContext) =>
@@ -113,7 +116,10 @@ const selectEndTime = ({ playerState }: MessagePipelineContext) => playerState.a
 const selectTopics = (ctx: MessagePipelineContext) =>
   ctx.playerState.activeData?.topics ?? EMPTY_TOPICS;
 
-const messageFrequency = (topic: Topic, duration: Time) => {
+const selectTopicStats = (ctx: MessagePipelineContext) =>
+  ctx.playerState.activeData?.topicStats ?? EMPTY_TOPIC_STATS;
+
+const messageFrequency = (topic: TopicWithStats, duration: Time | undefined) => {
   const { numMessages, firstMessageTime, lastMessageTime } = topic;
 
   if (numMessages == undefined) {
@@ -121,8 +127,14 @@ const messageFrequency = (topic: Topic, duration: Time) => {
     return undefined;
   }
   if (firstMessageTime == undefined || lastMessageTime == undefined) {
+    if (duration == undefined) {
+      return undefined;
+    }
+
     // Message count but no timestamps, use the full connection duration
-    return `${(numMessages / toSec(duration)).toFixed(2)} Hz`;
+    const value = numMessages / toSec(duration);
+    const digits = value >= 1000 ? 0 : value >= 100 ? 1 : 2;
+    return `${value.toFixed(digits)} Hz`;
   }
   if (numMessages < 2 || areEqual(firstMessageTime, lastMessageTime)) {
     // Not enough messages or time span to calculate a frequency
@@ -130,7 +142,9 @@ const messageFrequency = (topic: Topic, duration: Time) => {
   }
   const topicDurationSec = toSec(subtractTimes(lastMessageTime, firstMessageTime));
 
-  return `${((numMessages - 1) / topicDurationSec).toFixed(2)} Hz`;
+  const value = (numMessages - 1) / topicDurationSec;
+  const digits = value >= 1000 ? 0 : value >= 100 ? 1 : 2;
+  return `${value.toFixed(digits)} Hz`;
 };
 
 export function TopicList(): JSX.Element {
@@ -140,19 +154,29 @@ export function TopicList(): JSX.Element {
   const startTime = useMessagePipeline(selectStartTime);
   const endTime = useMessagePipeline(selectEndTime);
   const topics = useMessagePipeline(selectTopics);
+  const topicStats = useMessagePipeline(selectTopicStats);
+  const topicsWithStats: TopicWithStats[] = useMemo(
+    () =>
+      topics.map((topic) => {
+        const stats = topicStats.get(topic.name);
+        return { ...topic, ...stats };
+      }),
+    [topics, topicStats],
+  );
 
-  const duration = subtractTimes(endTime, startTime);
+  const duration =
+    endTime != undefined && startTime != undefined ? subtractTimes(endTime, startTime) : undefined;
 
-  const filteredTopics: FzfResultItem<Topic>[] = useMemo(
+  const filteredTopics: FzfResultItem<TopicWithStats>[] = useMemo(
     () =>
       filterText
-        ? new Fzf(topics, {
+        ? new Fzf(topicsWithStats, {
             fuzzy: filterText.length > 2 ? "v2" : false,
             sort: true,
-            selector: (topic) => `${topic.name}|${topic.datatype}`,
+            selector: (t) => `${t.name}|${t.datatype}`,
           }).find(filterText)
-        : topics.map((t) => topicToFzfResult(t)),
-    [filterText, topics],
+        : topicsWithStats.map((t) => topicToFzfResult(t)),
+    [filterText, topicsWithStats],
   );
 
   if (playerPresence === PlayerPresence.ERROR) {
@@ -225,17 +249,21 @@ export function TopicList(): JSX.Element {
       {filteredTopics.length > 0 ? (
         <List key="topics" dense disablePadding>
           {filteredTopics.map(({ item, positions }) => {
-            const messageCount = messageFrequency(item, duration);
+            const messageCount = item.numMessages;
+            const messageHz = messageFrequency(item, duration);
 
             return (
               <StyledListItem
                 divider
                 key={item.name}
                 secondaryAction={
-                  messageCount != undefined && (
-                    <Stack>
+                  (messageCount != undefined || messageHz != undefined) && (
+                    <Stack style={{ textAlign: "right" }}>
                       <Typography variant="caption" color="text.secondary">
-                        {messageCount}
+                        {messageCount ?? "–"}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {messageHz ?? "–"}
                       </Typography>
                     </Stack>
                   )
@@ -257,6 +285,7 @@ export function TopicList(): JSX.Element {
                     noWrap: true,
                     title: item.datatype,
                   }}
+                  style={{ marginRight: "48px" }}
                 />
               </StyledListItem>
             );
@@ -264,11 +293,16 @@ export function TopicList(): JSX.Element {
         </List>
       ) : (
         <Stack flex="auto" padding={2} fullHeight alignItems="center" justifyContent="center">
-          {playerPresence === PlayerPresence.PRESENT && (
+          {playerPresence === PlayerPresence.PRESENT && filterText && (
             <Typography align="center" color="text.secondary">
               No topics or datatypes matching
               <br />
               {`“${filterText}”`}
+            </Typography>
+          )}
+          {playerPresence === PlayerPresence.PRESENT && (
+            <Typography align="center" color="text.secondary">
+              No topics available
             </Typography>
           )}
           {playerPresence === PlayerPresence.RECONNECTING && (

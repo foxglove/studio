@@ -9,7 +9,12 @@ import { BlobReader } from "@foxglove/rosbag/web";
 import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
 import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
 import { compare } from "@foxglove/rostime";
-import { PlayerProblem, MessageEvent, Topic } from "@foxglove/studio-base/players/types";
+import {
+  PlayerProblem,
+  MessageEvent,
+  Topic,
+  TopicStats,
+} from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import BrowserHttpReader from "@foxglove/studio-base/util/BrowserHttpReader";
 import CachedFilelike from "@foxglove/studio-base/util/CachedFilelike";
@@ -97,6 +102,7 @@ export class BagIterableSource implements IIterableSource {
 
     const datatypes: RosDatatypes = new Map();
     const topics = new Map<string, Topic>();
+    const topicStats = new Map<string, TopicStats>();
     const publishersByTopic: Initalization["publishersByTopic"] = new Map();
     for (const [id, connection] of this._bag.connections) {
       const datatype = connection.type;
@@ -120,16 +126,15 @@ export class BagIterableSource implements IIterableSource {
         });
       }
 
-      const numMessages = numMessagesByConnectionIndex[connection.conn] ?? 0;
-      if (existingTopic) {
-        existingTopic.numMessages = (existingTopic.numMessages ?? 0) + numMessages;
-      } else {
-        topics.set(connection.topic, {
-          name: connection.topic,
-          datatype,
-          numMessages,
-        });
+      if (!existingTopic) {
+        topics.set(connection.topic, { name: connection.topic, datatype });
       }
+
+      // Update the message count for this topic
+      const numMessages =
+        (topicStats.get(connection.topic)?.numMessages ?? 0) +
+        (numMessagesByConnectionIndex[connection.conn] ?? 0);
+      topicStats.set(connection.topic, { numMessages });
 
       const parsedDefinition = parseMessageDefinition(connection.messageDefinition);
       const reader = new LazyMessageReader(parsedDefinition);
@@ -148,6 +153,7 @@ export class BagIterableSource implements IIterableSource {
 
     return {
       topics: Array.from(topics.values()),
+      topicStats,
       start: this._bag.startTime ?? { sec: 0, nsec: 0 },
       end: this._bag.endTime ?? { sec: 0, nsec: 0 },
       problems,

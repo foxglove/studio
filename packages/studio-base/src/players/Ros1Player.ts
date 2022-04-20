@@ -25,6 +25,7 @@ import {
   PublishPayload,
   SubscribePayload,
   Topic,
+  TopicStats,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
@@ -65,7 +66,7 @@ export default class Ros1Player implements Player {
   private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
   private _closed: boolean = false; // Whether the player has been completely closed using close().
   private _providerTopics?: Topic[]; // Topics as advertised by rosmaster.
-  private _providerTopicsMap = new Map<string, Topic>(); // topic names to _providerTopics entries.
+  private _providerTopicsStats = new Map<string, TopicStats>(); // topic names to topic statistics.
   private _providerDatatypes: RosDatatypes = new Map(); // All ROS message definitions received from subscriptions and set by publishers.
   private _publishedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of publisher IDs publishing each topic.
   private _subscribedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of subscriber IDs subscribed to each topic.
@@ -185,15 +186,10 @@ export default class Ros1Player implements Player {
   }
 
   private _topicsChanged = (newTopics: Topic[]): boolean => {
-    if (newTopics.length !== this._providerTopicsMap.size) {
+    if (!this._providerTopics || newTopics.length !== this._providerTopics.length) {
       return true;
     }
-    for (const newTopic of newTopics) {
-      if (!this._providerTopicsMap.has(newTopic.name)) {
-        return true;
-      }
-    }
-    return false;
+    return !isEqual(this._providerTopics, newTopics);
   };
 
   private _requestTopics = async (): Promise<void> => {
@@ -216,24 +212,15 @@ export default class Ros1Player implements Player {
       }
 
       if (this._topicsChanged(sortedTopics)) {
-        // Build a new _providerTopicsMap from the new _providerTopics array
-        const providerTopicsMap = new Map<string, Topic>();
-        for (const topic of sortedTopics) {
-          providerTopicsMap.set(topic.name, topic);
-        }
-        // Preserve the message count for existing topics
-        if (this._providerTopics) {
-          for (const prevTopic of this._providerTopics) {
-            const newTopic = providerTopicsMap.get(prevTopic.name);
-            if (newTopic) {
-              newTopic.firstMessageTime = prevTopic.firstMessageTime;
-              newTopic.lastMessageTime = prevTopic.lastMessageTime;
-              newTopic.numMessages = prevTopic.numMessages;
-            }
+        // Remove stats entries for removed topics
+        const topicsSet = new Set<string>(topics.map((topic) => topic.name));
+        for (const topic of this._providerTopicsStats.keys()) {
+          if (!topicsSet.has(topic)) {
+            this._providerTopicsStats.delete(topic);
           }
         }
+
         this._providerTopics = sortedTopics;
-        this._providerTopicsMap = providerTopicsMap;
       }
 
       // Try subscribing again, since we might now be able to subscribe to some new topics.
@@ -340,8 +327,9 @@ export default class Ros1Player implements Player {
         // We don't support seeking, so we need to set this to any fixed value. Just avoid 0 so
         // that we don't accidentally hit falsy checks.
         lastSeekTime: 1,
-        // Always copy the topic array since message counts and timestamps are being updated
-        topics: providerTopics.slice(0),
+        topics: providerTopics,
+        // Always copy topic stats since message counts and timestamps are being updated
+        topicStats: new Map(this._providerTopicsStats),
         datatypes: this._providerDatatypes,
         publishedTopics: this._publishedTopics,
         subscribedTopics: this._subscribedTopics,
@@ -420,12 +408,7 @@ export default class Ros1Player implements Player {
         this._rosNode.unsubscribe(topicName);
 
         // Reset the message count for this topic
-        const topicInfo = this._providerTopicsMap.get(topicName);
-        if (topicInfo) {
-          topicInfo.firstMessageTime = undefined;
-          topicInfo.lastMessageTime = undefined;
-          topicInfo.numMessages = undefined;
-        }
+        this._providerTopicsStats.delete(topicName);
       }
     }
   }
@@ -454,14 +437,18 @@ export default class Ros1Player implements Player {
     this._handleInternalMessage(msg);
 
     // Update the message count for this topic
-    const topicInfo = this._providerTopicsMap.get(topic);
-    if (topicInfo && this._rosNode?.subscriptions.has(topic) === true) {
-      topicInfo.numMessages = (topicInfo.numMessages ?? 0) + 1;
-      topicInfo.firstMessageTime ??= receiveTime;
-      if (topicInfo.lastMessageTime == undefined) {
-        topicInfo.lastMessageTime = receiveTime;
-      } else if (isGreaterThan(receiveTime, topicInfo.lastMessageTime)) {
-        topicInfo.lastMessageTime = receiveTime;
+    let stats = this._providerTopicsStats.get(topic);
+    if (this._rosNode?.subscriptions.has(topic) === true) {
+      if (!stats) {
+        stats = { numMessages: 0 };
+        this._providerTopicsStats.set(topic, stats);
+      }
+      stats.numMessages++;
+      stats.firstMessageTime ??= receiveTime;
+      if (stats.lastMessageTime == undefined) {
+        stats.lastMessageTime = receiveTime;
+      } else if (isGreaterThan(receiveTime, stats.lastMessageTime)) {
+        stats.lastMessageTime = receiveTime;
       }
     }
 

@@ -20,6 +20,7 @@ import {
   PublishPayload,
   SubscribePayload,
   Topic,
+  TopicStats,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
@@ -75,6 +76,8 @@ export default class VelodynePlayer implements Player {
   private _totalBytesReceived = 0;
   private _closed: boolean = false; // Whether the player has been completely closed using close()
   private _topic: Topic = { ...TOPIC }; // The one topic we are "subscribed" to
+  private _topics = [this._topic]; // Stable list of all topics
+  private _topicStats = new Map<string, TopicStats>(); // Message count and timestamps for our single topic
   private _start: Time; // The time at which we started playing
   private _packets: RawPacket[] = []; // Queue of packets that will form the next parsed message
   private _parsedMessages: MessageEvent<unknown>[] = []; // Queue of messages that we'll send in next _emitState() call
@@ -171,9 +174,14 @@ export default class VelodynePlayer implements Player {
       this._packets = [];
 
       // Update the message count
-      this._topic.numMessages = (this._topic.numMessages ?? 0) + 1;
-      this._topic.firstMessageTime ??= receiveTime;
-      this._topic.lastMessageTime = receiveTime;
+      let stats = this._topicStats.get(TOPIC_NAME);
+      if (!stats) {
+        stats = { numMessages: 0 };
+        this._topicStats.set(TOPIC_NAME, stats);
+      }
+      stats.numMessages++;
+      stats.firstMessageTime ??= receiveTime;
+      stats.lastMessageTime = receiveTime;
 
       this._emitState();
     }
@@ -240,7 +248,8 @@ export default class VelodynePlayer implements Player {
         // We don't support seeking, so we need to set this to any fixed value. Just avoid 0 so
         // that we don't accidentally hit falsy checks.
         lastSeekTime: 1,
-        topics: [this._topic],
+        topics: this._topics,
+        topicStats: new Map(this._topicStats),
         datatypes: DATATYPES,
         publishedTopics: undefined,
         subscribedTopics: undefined,

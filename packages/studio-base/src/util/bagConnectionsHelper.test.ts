@@ -69,32 +69,29 @@ describe("bagConnectionsToDatatypes", () => {
 describe("bagConnectionsToTopics", () => {
   it("extracts one big list from multiple connections (even with duplicate topics)", () => {
     expect(
-      bagConnectionsToTopics(
-        [
-          {
-            topic: "/some/topic/with/points",
-            type: "something/points",
-            messageDefinition: "",
-            md5sum: "",
-            callerid: "",
-          },
-          {
-            topic: "/some/topic/with/points",
-            type: "something/points",
-            messageDefinition: "",
-            md5sum: "",
-            callerid: "",
-          },
-          {
-            topic: "/some/topic/with/two_points",
-            type: "something/two_points",
-            messageDefinition: "",
-            md5sum: "",
-            callerid: "",
-          },
-        ],
-        [],
-      ),
+      bagConnectionsToTopics([
+        {
+          topic: "/some/topic/with/points",
+          type: "something/points",
+          messageDefinition: "",
+          md5sum: "",
+          callerid: "",
+        },
+        {
+          topic: "/some/topic/with/points",
+          type: "something/points",
+          messageDefinition: "",
+          md5sum: "",
+          callerid: "",
+        },
+        {
+          topic: "/some/topic/with/two_points",
+          type: "something/two_points",
+          messageDefinition: "",
+          md5sum: "",
+          callerid: "",
+        },
+      ]),
     ).toEqual([
       {
         name: "/some/topic/with/points",
