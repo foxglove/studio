@@ -16,6 +16,7 @@ import WavesIcon from "@mdi/svg/svg/waves.svg";
 import { Stack, Theme } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import cx from "classnames";
+import produce from "immer";
 import { set } from "lodash";
 import { useEffect, useState, useMemo, useCallback, useRef, useContext } from "react";
 
@@ -196,9 +197,15 @@ function ImageView(props: Props) {
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
-      const newConfig = { ...config };
-      set(newConfig, action.payload.path, action.payload.value);
-      saveConfig(newConfig);
+      saveConfig(
+        produce(config, (draft) => {
+          const value =
+            action.payload.path[0] === "rotation"
+              ? Number(action.payload.value)
+              : action.payload.value;
+          set(draft, action.payload.path, value);
+        }),
+      );
     },
     [config, saveConfig],
   );
