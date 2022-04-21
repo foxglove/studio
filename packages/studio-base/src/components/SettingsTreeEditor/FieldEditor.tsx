@@ -17,6 +17,7 @@ import {
   TextField,
   IconButton,
   ListProps,
+  useTheme,
 } from "@mui/material";
 import { DeepReadonly } from "ts-essentials";
 
@@ -284,12 +285,16 @@ function FieldEditorComponent({
   field: DeepReadonly<SettingsTreeField>;
   path: readonly string[];
 }): JSX.Element {
+  const theme = useTheme();
   const indent = Math.min(path.length, 4);
 
   return (
     <>
-      <div style={{ gridColumn: `span ${indent}` }} />
-      <Stack direction="row" alignItems="center" style={{ gridColumn: `span ${9 - indent}` }}>
+      <Stack
+        direction="row"
+        alignItems="center"
+        style={{ paddingLeft: theme.spacing(2 * Math.max(2, indent)) }}
+      >
         <Typography
           title={field.label}
           variant="subtitle2"
@@ -305,7 +310,7 @@ function FieldEditorComponent({
           </IconButton>
         )}
       </Stack>
-      <div>
+      <div style={{ paddingRight: theme.spacing(2) }}>
         <FieldInput actionHandler={actionHandler} field={field} path={path} />
       </div>
     </>

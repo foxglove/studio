@@ -7,6 +7,7 @@ import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import LayerIcon from "@mui/icons-material/Layers";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Collapse, Divider, ListItemProps, styled as muiStyled, Typography } from "@mui/material";
+import { useTheme } from "@mui/material";
 import { ChangeEvent, useMemo, useState } from "react";
 import { DeepReadonly } from "ts-essentials";
 
@@ -26,19 +27,13 @@ export type NodeEditorProps = {
   updateSettings?: (path: readonly string[], value: unknown) => void;
 };
 
-// We use a 20 cell CSS grid to layout elements. The outer two cells create
-// padding and the inner cells are used to indent nodes at various depths
-// in the tree.
 const LayerOptions = muiStyled("div", {
   shouldForwardProp: (prop) => prop !== "visible" && prop !== "indent",
 })<{
   visible: boolean;
-  indent: number;
 }>(({ theme, visible }) => ({
   display: "grid",
-  gridTemplateColumns: `${theme.spacing(
-    1,
-  )} repeat(8, minmax(0, 1fr)) minmax(0, 10fr) ${theme.spacing(1)}`,
+  gridTemplateColumns: "minmax(0, 1fr)  minmax(0, 1.2fr)",
   padding: theme.spacing(1, 0, 1, 0),
   columnGap: theme.spacing(0.5),
   rowGap: theme.spacing(0.25),
@@ -48,13 +43,12 @@ const LayerOptions = muiStyled("div", {
 
 const NodeHeader = muiStyled("div")(({ theme }) => {
   return {
-    display: "grid",
-    gridTemplateColumns: `${theme.spacing(1)} repeat(18, minmax(0, 1fr)) ${theme.spacing(1)}`,
+    display: "flex",
     "&:hover": {
       outline: `1px solid ${theme.palette.primary.main}`,
       outlineOffset: -1,
     },
-    paddingRight: theme.spacing(1.5),
+    paddingRight: theme.spacing(2.25),
   };
 });
 
@@ -94,20 +88,23 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     );
   });
 
+  const theme = useTheme();
+
   const indent = props.path.length;
 
   return (
     <>
       {indent > 0 && (
         <NodeHeader>
-          <div style={{ gridColumn: `span ${indent}` }} />
+          <div />
           <div
             style={{
               display: "flex",
               alignItems: "center",
               cursor: "pointer",
-              gridColumn: `span ${18 - indent}`,
+              paddingLeft: theme.spacing(2 * Math.max(0.25, indent - 1)),
               userSelect: "none",
+              width: "100%",
             }}
             onClick={() => setOpen((oldOpen) => !oldOpen)}
           >
@@ -134,11 +131,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
         </NodeHeader>
       )}
       <Collapse in={open}>
-        {fieldEditors.length > 0 && (
-          <LayerOptions indent={indent} visible={visible}>
-            {fieldEditors}
-          </LayerOptions>
-        )}
+        {fieldEditors.length > 0 && <LayerOptions visible={visible}>{fieldEditors}</LayerOptions>}
         {childNodes}
       </Collapse>
       {indent === 1 && <Divider />}
