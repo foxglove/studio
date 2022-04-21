@@ -130,7 +130,7 @@ function buildSettingsTree(config: Config): SettingsTreeNode {
       rotation: {
         input: "select",
         label: "Rotation",
-        value: String(config.rotation ?? 0),
+        value: config.rotation ?? 0,
         options: [
           { label: "0°", value: 0 },
           { label: "90°", value: 90 },

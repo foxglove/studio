@@ -11,8 +11,13 @@ export type SettingsTreeFieldValue =
   | { input: "number"; value?: number; step?: number }
   | {
       input: "select";
-      value?: string | number;
-      options: Array<{ label: string; value: string | number | undefined }>;
+      value?: number | readonly number[];
+      options: Array<{ label: string; value: undefined | number }>;
+    }
+  | {
+      input: "select";
+      value?: string | readonly string[];
+      options: Array<{ label: string; value: undefined | string }>;
     }
   | { input: "string"; value?: string }
   | { input: "toggle"; value?: string; options: string[] };
