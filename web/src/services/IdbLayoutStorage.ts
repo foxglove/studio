@@ -41,9 +41,10 @@ export class IdbLayoutStorage implements ILayoutStorage {
 
   async list(namespace: string): Promise<readonly Layout[]> {
     const results: Layout[] = [];
-    for (const record of await (
+    const records = await (
       await this._db
-    ).getAllFromIndex(OBJECT_STORE_NAME, "namespace", namespace)) {
+    ).getAllFromIndex(OBJECT_STORE_NAME, "namespace", namespace);
+    for (const record of records) {
       try {
         results.push(migrateLayout(record.layout));
       } catch (err) {
