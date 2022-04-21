@@ -11,8 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Slider } from "@fluentui/react";
-import { useTheme } from "@mui/material";
+import { Slider, Typography, useTheme } from "@mui/material";
 import produce from "immer";
 import { set } from "lodash";
 import { useCallback, useContext, useEffect } from "react";
@@ -24,6 +23,7 @@ import {
   SettingsTreeAction,
   SettingsTreeNode,
 } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import Stack from "@foxglove/studio-base/components/Stack";
 import { PanelSettingsEditorContext } from "@foxglove/studio-base/context/PanelSettingsEditorContext";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 
@@ -100,51 +100,32 @@ function GlobalVariableSliderPanel(props: Props): React.ReactElement {
     });
   }, [actionHandler, panelId, props.config, updatePanelSettingsTree]);
 
-  const sliderOnChange = (value: number) => {
+  const sliderOnChange = (_event: Event, value: number | number[]) => {
     if (value !== globalVariableValue) {
       setGlobalVariables({ [globalVariableName]: value });
     }
   };
 
+  const marks = [
+    { value: sliderProps.min, label: String(sliderProps.min) },
+    { value: sliderProps.max, label: String(sliderProps.max) },
+  ];
+
   return (
-    <div style={{ padding: theme.spacing(2, 0.5) }}>
+    <Stack direction="row" alignItems="center" fullHeight gap={2} paddingY={2} paddingX={3}>
       <PanelToolbar helpContent={helpContent} floating />
       <Slider
         min={sliderProps.min}
         max={sliderProps.max}
         step={sliderProps.step}
-        showValue
-        snapToStep
+        marks={marks}
         value={typeof globalVariableValue === "number" ? globalVariableValue : 0}
         onChange={sliderOnChange}
-        styles={{
-          // render min/max labels under the slider
-          slideBox: {
-            "::after": {
-              position: "absolute",
-              bottom: "-60%",
-              left: 0,
-              paddingLeft: "8px",
-              fontSize: "0.75em",
-              width: "100%",
-              mixBlendMode: "difference",
-              content: `'${sliderProps.min}'`,
-            },
-            "::before": {
-              position: "absolute",
-              bottom: "-60%",
-              left: 0,
-              fontSize: "0.75em",
-              paddingRight: "8px",
-              textAlign: "right",
-              width: "100%",
-              mixBlendMode: "difference",
-              content: `'${sliderProps.max}'`,
-            },
-          },
-        }}
       />
-    </div>
+      <Typography variant="h5" style={{ marginTop: theme.spacing(-2.5) }}>
+        {typeof globalVariableValue === "number" ? globalVariableValue : 0}
+      </Typography>
+    </Stack>
   );
 }
 
