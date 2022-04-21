@@ -132,10 +132,10 @@ function buildSettingsTree(config: Config): SettingsTreeNode {
         label: "Rotation",
         value: String(config.rotation ?? 0),
         options: [
-          { label: "0°", value: "0" },
-          { label: "90°", value: "90" },
-          { label: "180°", value: "180" },
-          { label: "270°", value: "270" },
+          { label: "0°", value: 0 },
+          { label: "90°", value: 90 },
+          { label: "180°", value: 180 },
+          { label: "270°", value: 270 },
         ],
       },
       minValue: {
@@ -199,11 +199,7 @@ function ImageView(props: Props) {
     (action: SettingsTreeAction) => {
       saveConfig(
         produce(config, (draft) => {
-          const value =
-            action.payload.path[0] === "rotation"
-              ? Number(action.payload.value)
-              : action.payload.value;
-          set(draft, action.payload.path, value);
+          set(draft, action.payload.path, action.payload.value);
         }),
       );
     },

@@ -204,7 +204,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
     if (path[0] === "layer" && input === "select") {
       setConfig((oldConfig) => {
-        return { ...oldConfig, layer: value ?? "map" };
+        return { ...oldConfig, layer: String(value) };
       });
     }
   }, []);
