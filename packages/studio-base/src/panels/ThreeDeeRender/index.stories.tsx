@@ -5,23 +5,10 @@
 import { MessageEvent, Topic } from "@foxglove/studio";
 import useDelayedFixture from "@foxglove/studio-base/panels/ThreeDimensionalViz/stories/useDelayedFixture";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
-import {
-  ArrowMarker,
-  CubeListMarker,
-  CubeMarker,
-  CylinderMarker,
-  LineListMarker,
-  LineStripMarker,
-  PointsMarker,
-  SphereListMarker,
-  SphereMarker,
-  TextMarker,
-  TF,
-  TriangleListMarker,
-} from "@foxglove/studio-base/types/Messages";
 import { hexToColorObj } from "@foxglove/studio-base/util/colorUtils";
 
 import ThreeDeeRender from "./index";
+import { Marker, TF } from "./ros";
 
 const QUAT_IDENTITY = { x: 0, y: 0, z: 0, w: 1 };
 
@@ -48,8 +35,8 @@ export function Markers(): JSX.Element {
     topic: "/tf",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
-      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: SENSOR_FRAME_ID },
-      child_frame_id: FIXED_FRAME_ID,
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "map" },
+      child_frame_id: "base_link",
       transform: {
         translation: { x: 1e7, y: 0, z: 0 },
         rotation: QUAT_IDENTITY,
@@ -57,13 +44,26 @@ export function Markers(): JSX.Element {
     },
     sizeInBytes: 0,
   };
+  const tf2: MessageEvent<TF> = {
+    topic: "/tf",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "base_link" },
+      child_frame_id: "sensor",
+      transform: {
+        translation: { x: 0, y: 1, z: 0 },
+        rotation: QUAT_IDENTITY,
+      },
+    },
+    sizeInBytes: 0,
+  };
 
-  const arrow: MessageEvent<ArrowMarker> = {
+  const arrow: MessageEvent<Partial<Marker>> = {
     topic: "/markers",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
-      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: SENSOR_FRAME_ID },
-      id: `arrow`,
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
+      id: 0,
       ns: "",
       type: 0,
       action: 0,
@@ -79,12 +79,12 @@ export function Markers(): JSX.Element {
     sizeInBytes: 0,
   };
 
-  const cube: MessageEvent<CubeMarker> = {
+  const cube: MessageEvent<Partial<Marker>> = {
     topic: "/markers",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
-      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: SENSOR_FRAME_ID },
-      id: `cube`,
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
+      id: 1,
       ns: "",
       type: 1,
       action: 0,
@@ -100,12 +100,12 @@ export function Markers(): JSX.Element {
     sizeInBytes: 0,
   };
 
-  const sphere: MessageEvent<SphereMarker> = {
+  const sphere: MessageEvent<Partial<Marker>> = {
     topic: "/markers",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
-      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: SENSOR_FRAME_ID },
-      id: `sphere`,
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
+      id: 2,
       ns: "",
       type: 2,
       action: 0,
@@ -121,12 +121,12 @@ export function Markers(): JSX.Element {
     sizeInBytes: 0,
   };
 
-  const cylinder: MessageEvent<CylinderMarker> = {
+  const cylinder: MessageEvent<Partial<Marker>> = {
     topic: "/markers",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
-      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: SENSOR_FRAME_ID },
-      id: `cylinder`,
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
+      id: 3,
       ns: "",
       type: 3,
       action: 0,
@@ -142,12 +142,12 @@ export function Markers(): JSX.Element {
     sizeInBytes: 0,
   };
 
-  const lineStrip: MessageEvent<LineStripMarker> = {
+  const lineStrip: MessageEvent<Partial<Marker>> = {
     topic: "/markers",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
-      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: SENSOR_FRAME_ID },
-      id: `lineStrip`,
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
+      id: 4,
       ns: "",
       type: 4,
       action: 0,
@@ -175,12 +175,12 @@ export function Markers(): JSX.Element {
     sizeInBytes: 0,
   };
 
-  const lineList: MessageEvent<LineListMarker> = {
+  const lineList: MessageEvent<Partial<Marker>> = {
     topic: "/markers",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
-      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: SENSOR_FRAME_ID },
-      id: `lineList`,
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
+      id: 5,
       ns: "",
       type: 5,
       action: 0,
@@ -212,12 +212,12 @@ export function Markers(): JSX.Element {
     sizeInBytes: 0,
   };
 
-  const cubeList: MessageEvent<CubeListMarker> = {
+  const cubeList: MessageEvent<Partial<Marker>> = {
     topic: "/markers",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
-      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: SENSOR_FRAME_ID },
-      id: `cubeList`,
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
+      id: 6,
       ns: "",
       type: 6,
       action: 0,
@@ -239,12 +239,12 @@ export function Markers(): JSX.Element {
     sizeInBytes: 0,
   };
 
-  const sphereList: MessageEvent<SphereListMarker> = {
+  const sphereList: MessageEvent<Partial<Marker>> = {
     topic: "/markers",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
-      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: SENSOR_FRAME_ID },
-      id: `sphereList`,
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
+      id: 7,
       ns: "",
       type: 7,
       action: 0,
@@ -266,12 +266,12 @@ export function Markers(): JSX.Element {
     sizeInBytes: 0,
   };
 
-  const points: MessageEvent<PointsMarker> = {
+  const points: MessageEvent<Partial<Marker>> = {
     topic: "/markers",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
-      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: SENSOR_FRAME_ID },
-      id: `points`,
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
+      id: 8,
       ns: "",
       type: 8,
       action: 0,
@@ -294,12 +294,12 @@ export function Markers(): JSX.Element {
     sizeInBytes: 0,
   };
 
-  const text: MessageEvent<TextMarker> = {
+  const text: MessageEvent<Partial<Marker>> = {
     topic: "/markers",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
-      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: SENSOR_FRAME_ID },
-      id: `text`,
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
+      id: 9,
       ns: "",
       type: 9,
       action: 0,
@@ -316,12 +316,35 @@ export function Markers(): JSX.Element {
     sizeInBytes: 0,
   };
 
-  const triangleList: MessageEvent<TriangleListMarker> = {
+  const mesh: MessageEvent<Partial<Marker>> = {
     topic: "/markers",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
-      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: SENSOR_FRAME_ID },
-      id: `triangleList`,
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
+      id: 10,
+      ns: "",
+      type: 10,
+      action: 0,
+      frame_locked: false,
+      pose: {
+        position: { x: 0, y: -1, z: 0 },
+        orientation: { x: 0, y: 0, z: 0, w: 1 },
+      },
+      scale: { x: 0.5, y: 0.5, z: 0.5 },
+      color: makeColor("#8bc34a", 0.5),
+      mesh_resource: "missing",
+      mesh_use_embedded_materials: true,
+      lifetime: { sec: 0, nsec: 0 },
+    },
+    sizeInBytes: 0,
+  };
+
+  const triangleList: MessageEvent<Partial<Marker>> = {
+    topic: "/markers",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
+      id: 11,
       ns: "",
       type: 11,
       action: 0,
@@ -350,7 +373,7 @@ export function Markers(): JSX.Element {
   const fixture = useDelayedFixture({
     topics,
     frame: {
-      "/tf": [tf1],
+      "/tf": [tf1, tf2],
       "/markers": [
         arrow,
         cube,
@@ -362,6 +385,7 @@ export function Markers(): JSX.Element {
         sphereList,
         points,
         text,
+        mesh,
         triangleList,
       ],
     },
@@ -376,6 +400,19 @@ export function Markers(): JSX.Element {
       <ThreeDeeRender
         overrideConfig={{
           ...ThreeDeeRender.defaultConfig,
+          followTf: "base_link",
+          cameraState: {
+            distance: 5.5,
+            perspective: true,
+            phi: 0.5,
+            targetOffset: [-0.5, 0.75, 0],
+            thetaOffset: -0.25,
+            fovy: 0.75,
+            near: 0.01,
+            far: 5000,
+            target: [0, 0, 0],
+            targetOrientation: [0, 0, 0, 1],
+          },
         }}
       />
     </PanelSetup>
@@ -416,12 +453,12 @@ export function ArrowMarkers(): JSX.Element {
     sizeInBytes: 0,
   };
 
-  const arrow1: MessageEvent<ArrowMarker> = {
+  const arrow1: MessageEvent<Partial<Marker>> = {
     topic: "/arrows",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
       header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: SENSOR_FRAME_ID },
-      id: `arrow1`,
+      id: 0,
       ns: "",
       type: 0,
       action: 0,
@@ -437,12 +474,12 @@ export function ArrowMarkers(): JSX.Element {
     sizeInBytes: 0,
   };
 
-  const arrow2: MessageEvent<ArrowMarker> = {
+  const arrow2: MessageEvent<Partial<Marker>> = {
     topic: "/arrows",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
       header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: SENSOR_FRAME_ID },
-      id: `arrow2`,
+      id: 1,
       ns: "",
       type: 0,
       action: 0,
@@ -458,12 +495,12 @@ export function ArrowMarkers(): JSX.Element {
     sizeInBytes: 0,
   };
 
-  const arrow3: MessageEvent<ArrowMarker> = {
+  const arrow3: MessageEvent<Partial<Marker>> = {
     topic: "/arrows",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
       header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: SENSOR_FRAME_ID },
-      id: `arrow3`,
+      id: 2,
       ns: "",
       type: 0,
       action: 0,
@@ -500,6 +537,19 @@ export function ArrowMarkers(): JSX.Element {
       <ThreeDeeRender
         overrideConfig={{
           ...ThreeDeeRender.defaultConfig,
+          followTf: "base_link",
+          cameraState: {
+            distance: 4,
+            perspective: true,
+            phi: 1,
+            targetOffset: [-0.6, 0.5, 0],
+            thetaOffset: -1,
+            fovy: 0.75,
+            near: 0.01,
+            far: 5000,
+            target: [0, 0, 0],
+            targetOrientation: [0, 0, 0, 1],
+          },
         }}
       />
     </PanelSetup>
