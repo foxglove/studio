@@ -5,12 +5,14 @@
 import css from "@emotion/css";
 import React, { useRef, useLayoutEffect, useEffect, useState, useMemo } from "react";
 import { useResizeDetector } from "react-resize-detector";
+import { DeepPartial } from "ts-essentials";
 
 import Logger from "@foxglove/log";
 import { CameraListener, CameraStore, DEFAULT_CAMERA_STATE } from "@foxglove/regl-worldview";
 import { toNanoSec } from "@foxglove/rostime";
 import { PanelExtensionContext, RenderState, Topic, MessageEvent } from "@foxglove/studio";
 import useCleanup from "@foxglove/studio-base/hooks/useCleanup";
+import { normalizeMarker } from "@foxglove/studio-base/panels/ThreeDeeRender/normalizeMessages";
 
 import { DebugGui } from "./DebugGui";
 import { setOverlayPosition } from "./LabelOverlay";
@@ -312,7 +314,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         }
       } else if (MARKER_DATATYPES.has(datatype)) {
         // visualization_msgs/Marker - Ingest this single marker
-        const marker = message.message as Marker;
+        const marker = normalizeMarker(message.message as DeepPartial<Marker>);
         renderer.addMarkerMessage(message.topic, marker);
       } else if (OCCUPANCY_GRID_DATATYPES.has(datatype)) {
         // nav_msgs/OccupancyGrid - Ingest this occupancy grid
