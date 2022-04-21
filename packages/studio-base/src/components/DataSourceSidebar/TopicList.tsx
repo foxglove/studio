@@ -155,7 +155,7 @@ export function TopicList(): JSX.Element {
   const endTime = useMessagePipeline(selectEndTime);
   const topics = useMessagePipeline(selectTopics);
   const topicStats = useMessagePipeline(selectTopicStats);
-  const topicsWithStats: TopicWithStats[] = useMemo(
+  const items: TopicWithStats[] = useMemo(
     () =>
       topics.map((topic) => {
         const stats = topicStats.get(topic.name);
@@ -170,13 +170,13 @@ export function TopicList(): JSX.Element {
   const filteredTopics: FzfResultItem<TopicWithStats>[] = useMemo(
     () =>
       filterText
-        ? new Fzf(topicsWithStats, {
+        ? new Fzf(items, {
             fuzzy: filterText.length > 2 ? "v2" : false,
             sort: true,
-            selector: (t) => `${t.name}|${t.datatype}`,
+            selector: (item) => `${item.name}|${item.datatype}`,
           }).find(filterText)
-        : topicsWithStats.map((t) => topicToFzfResult(t)),
-    [filterText, topicsWithStats],
+        : items.map((item) => topicToFzfResult(item)),
+    [filterText, items],
   );
 
   if (playerPresence === PlayerPresence.ERROR) {
