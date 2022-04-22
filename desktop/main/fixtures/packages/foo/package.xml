@@ -5,5 +5,5 @@
     This package provides foo capability.
   </description>
   <maintainer email="john@example.com">John Doe</maintainer>
-  <license>MOT</license>
+  <license>MIT</license>
 </package>

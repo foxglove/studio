@@ -25,7 +25,7 @@ import {
 import Ros1UnavailableDataSourceFactory from "./dataSources/Ros1UnavailableDataSourceFactory";
 import Ros2UnavailableDataSourceFactory from "./dataSources/Ros2UnavailableDataSourceFactory";
 import VelodyneUnavailableDataSourceFactory from "./dataSources/VelodyneUnavailableDataSourceFactory";
-import { LocalStorageLayoutStorage } from "./services/LocalStorageLayoutStorage";
+import { IdbLayoutStorage } from "./services/IdbLayoutStorage";
 import { NoopExtensionLoader } from "./services/NoopExtensionLoader";
 
 export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration }): JSX.Element {
@@ -63,12 +63,17 @@ export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration
     enableExperimentalMcapPlayer,
   ]);
 
-  const layoutStorage = useMemo(() => new LocalStorageLayoutStorage(), []);
+  const layoutStorage = useMemo(() => new IdbLayoutStorage(), []);
   const extensionLoader = useMemo(() => new NoopExtensionLoader(), []);
   const consoleApi = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);
 
+  // Enable dialog auth in development since using cookie auth does not work between
+  // localhost and the hosted dev deployment due to browser cookie/host security.
+  const enableDialogAuth = process.env.NODE_ENV === "development";
+
   return (
     <App
+      enableDialogAuth={enableDialogAuth}
       enableLaunchPreferenceScreen
       deepLinks={[window.location.href]}
       dataSources={dataSources}

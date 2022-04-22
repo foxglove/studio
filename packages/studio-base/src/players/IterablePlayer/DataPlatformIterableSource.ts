@@ -20,7 +20,12 @@ import {
 import streamMessages, {
   ParsedChannelAndEncodings,
 } from "@foxglove/studio-base/players/FoxgloveDataPlatformPlayer/streamMessages";
-import { PlayerProblem, Topic, MessageEvent } from "@foxglove/studio-base/players/types";
+import {
+  PlayerProblem,
+  Topic,
+  MessageEvent,
+  TopicStats,
+} from "@foxglove/studio-base/players/types";
 import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { formatTimeRaw } from "@foxglove/studio-base/util/time";
@@ -107,6 +112,9 @@ export class DataPlatformIterableSource implements IIterableSource {
     }
 
     const topics: Topic[] = [];
+    // TODO(jhurliman): Fill numMessages into topicStats per topic. Bonus points if we can get
+    // firstMessageTime / lastMessageTime per topic as well
+    const topicStats = new Map<string, TopicStats>();
     const datatypes: RosDatatypes = new Map();
     const problems: PlayerProblem[] = [];
     rawTopics: for (const rawTopic of rawTopics) {
@@ -147,6 +155,7 @@ export class DataPlatformIterableSource implements IIterableSource {
 
     return {
       topics,
+      topicStats,
       datatypes,
       start: this._start,
       end: this._end,
@@ -168,11 +177,12 @@ export class DataPlatformIterableSource implements IIterableSource {
     }
 
     let currentStart = args.start ?? this._start;
+    const end = args.end ?? this._end;
 
     let currentEnd = clampTime(
       add(currentStart, fromSec(this._requestDurationSecs)),
       this._start,
-      this._end,
+      end,
     );
 
     let stream: AsyncGenerator<MessageEvent<unknown>[]> | undefined;
@@ -185,6 +195,7 @@ export class DataPlatformIterableSource implements IIterableSource {
           params: { deviceId, start: currentStart, end: currentEnd, topics: args.topics },
         });
       }
+
       for await (const messages of stream) {
         for (const message of messages) {
           yield { connectionId: undefined, msgEvent: message, problem: undefined };
@@ -192,16 +203,19 @@ export class DataPlatformIterableSource implements IIterableSource {
       }
 
       stream = undefined;
-      if (compare(currentEnd, this._end) >= 0) {
-        break;
-      }
 
       // The next stream will start 1 nanosecond after the previous end
       currentStart = add(currentEnd, { sec: 0, nsec: 1 });
+
+      // If the next stream is after our desired end then we have no more stream
+      if (compare(currentStart, end) >= 0) {
+        break;
+      }
+
       currentEnd = clampTime(
         add(currentStart, fromSec(this._requestDurationSecs)),
         this._start,
-        this._end,
+        end,
       );
     }
   }

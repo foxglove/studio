@@ -25,6 +25,7 @@ class TestSource implements IIterableSource {
       start: { sec: 0, nsec: 0 },
       end: { sec: 0, nsec: 0 },
       topics: [],
+      topicStats: new Map(),
       problems: [],
       datatypes: new Map(),
       publishersByTopic: new Map(),
@@ -112,6 +113,7 @@ describe("IterablePlayer", () => {
         messageOrder: "receiveTime",
         speed: 1.0,
         topics: [],
+        topicStats: new Map(),
         publishedTopics: new Map<string, Set<string>>(),
       },
       problems: [],
@@ -127,7 +129,7 @@ describe("IterablePlayer", () => {
       // before initialize
       baseState,
       // start delay
-      { ...baseState, presence: PlayerPresence.PRESENT },
+      baseState,
       // startPlay
       { ...baseState, presence: PlayerPresence.PRESENT },
       // idle
@@ -189,6 +191,7 @@ describe("IterablePlayer", () => {
         messageOrder: "receiveTime",
         speed: 1.0,
         topics: [],
+        topicStats: new Map(),
         publishedTopics: new Map<string, Set<string>>(),
       },
       problems: [],
