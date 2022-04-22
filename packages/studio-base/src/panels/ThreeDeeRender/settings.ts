@@ -10,6 +10,7 @@ const ONE_DEGREE = Math.PI / 180;
 
 export type ThreeDeeRenderConfig = {
   cameraState: CameraState;
+  enableStats: boolean;
   followTf?: string;
 };
 
@@ -21,17 +22,18 @@ export function buildSettingsTree(
 
   // prettier-ignore
   return {
+    fields: {
+      enableStats: { label: "Enable Stats", input: "boolean", value: config.enableStats },
+    },
     children: {
       cameraState: {
         label: "Camera",
         fields: {
           distance: { label: "Distance", input: "number", value: cameraState.distance, step: 1 },
           perspective: { label: "Perspective", input: "boolean", value: cameraState.perspective },
-          phi: { label: "Phi", input: "number", value: cameraState.phi, step: ONE_DEGREE },
-          // target: {}, // Needs input: "vector3"
-          // targetOffset: {}, // Needs input: "vector3"
-          // targetOrientation: {}, // Needs input: "quaternion"
+          targetOffset: { label: "Target", input: "vec3", labels: ["X", "Y", "Z"], value: cameraState.targetOffset },
           thetaOffset: { label: "Theta", input: "number", value: cameraState.thetaOffset, step: ONE_DEGREE },
+          phi: { label: "Phi", input: "number", value: cameraState.phi, step: ONE_DEGREE },
           fovy: { label: "Y-Axis FOV", input: "number", value: cameraState.fovy, step: ONE_DEGREE },
           near: { label: "Near", input: "number", value: cameraState.near, step: DEFAULT_CAMERA_STATE.near },
           far: { label: "Far", input: "number", value: cameraState.far, step: 1 },

@@ -266,7 +266,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     saveState(config);
   }, [config, context, saveState, settingsActionHandler, topics]);
   // Create a throttled version of updateSettings
-  const throttledUpdateSettingsTree = useThrottle(() => updateSettings, 500);
+  const throttledUpdateSettingsTree = useThrottle(() => updateSettings, 100);
   // Call the throttled variant of updateSettings whenever any of the
   // dependencies of updateSettings changes
   useEffect(() => {
