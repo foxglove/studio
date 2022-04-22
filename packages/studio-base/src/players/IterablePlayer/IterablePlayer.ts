@@ -470,6 +470,7 @@ export class IterablePlayer implements Player {
     this._messages = [];
 
     const messageEvents: MessageEvent<unknown>[] = [];
+
     for (;;) {
       const result = await iterator.next();
       if (result.done === true) {
@@ -480,6 +481,7 @@ export class IterablePlayer implements Player {
       // This usually happens when seeking before the initial load is complete
       if (this._nextState) {
         log.info("Exit startPlay for new state");
+        void iterator.return?.();
         return;
       }
 
@@ -488,13 +490,15 @@ export class IterablePlayer implements Player {
         continue;
       }
 
+      // Just in case the iterator decides it is going to ignore our _end_ param
       if (compare(iterResult.msgEvent.receiveTime, stopTime) > 0) {
-        this._lastMessage = iterResult.msgEvent;
         break;
       }
 
       messageEvents.push(iterResult.msgEvent);
     }
+
+    void iterator.return?.();
 
     this._currentTime = stopTime;
     this._messages = messageEvents;
@@ -712,7 +716,11 @@ export class IterablePlayer implements Player {
 
           log.debug("Initializing forward iterator from", next);
 
-          const iteratorEnd = add(next, fromNanoSec(BigInt(this._iteratorDurationNanos)));
+          const iteratorEnd = clampTime(
+            add(next, fromNanoSec(BigInt(this._iteratorDurationNanos))),
+            next,
+            this._end,
+          );
           this._tickIterator = this._iterableSource.messageIterator({
             topics: Array.from(this._allTopics),
             start: next,
