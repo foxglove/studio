@@ -43,7 +43,7 @@ import {
   OCCUPANCY_GRID_DATATYPES,
 } from "./ros";
 
-const SHOW_DEBUG = false;
+const SHOW_DEBUG: true | false = false;
 
 const SUPPORTED_DATATYPES = new Set<string>();
 mergeSetInto(SUPPORTED_DATATYPES, TRANSFORM_STAMPED_DATATYPES);
@@ -186,14 +186,12 @@ function RendererOverlay(props: {
     </div>
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   const stats = props.enableStats ? (
     <div id="stats" style={{ position: "absolute", top: 0 }}>
       <Stats />
     </div>
   ) : undefined;
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   const debug = SHOW_DEBUG ? (
     <div id="debug" style={{ position: "absolute", top: 60 }}>
       <DebugGui />
