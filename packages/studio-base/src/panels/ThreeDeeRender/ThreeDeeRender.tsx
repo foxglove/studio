@@ -7,8 +7,8 @@ import produce from "immer";
 import { cloneDeep, merge, set } from "lodash";
 import React, { useCallback, useRef, useLayoutEffect, useEffect, useState, useMemo } from "react";
 import { useResizeDetector } from "react-resize-detector";
-import { useThrottle } from "react-use";
 import { DeepPartial } from "ts-essentials";
+import { useDebouncedCallback } from "use-debounce";
 
 import Logger from "@foxglove/log";
 import {
@@ -225,13 +225,14 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   }, [followTf, renderer]);
 
   // Save panel settings whenever they change
-  const savePanelConfig = useCallback(() => saveState(config), [config, saveState]);
-  const throttledSave = useThrottle(() => savePanelConfig, 1000);
-  useEffect(() => throttledSave(), [savePanelConfig, throttledSave]);
+  const throttledSave = useDebouncedCallback(
+    (newConfig: ThreeDeeRenderConfig) => saveState(newConfig),
+    1000,
+  );
+  useEffect(() => throttledSave(config), [config, throttledSave]);
 
-  useCleanup(() => {
-    renderer?.dispose();
-  });
+  // Dispose of the renderer (and associated GPU resources) on teardown
+  useCleanup(() => renderer?.dispose());
 
   // We use a layout effect to setup render handling for our panel. We also setup some topic subscriptions.
   useLayoutEffect(() => {
