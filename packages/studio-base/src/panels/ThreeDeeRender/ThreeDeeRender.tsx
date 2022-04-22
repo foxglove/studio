@@ -97,32 +97,11 @@ function buildSettingsTree(config: Config): SettingsTreeNode {
           fovy: { label: "Fovy", input: "number", value: config.cameraState.fovy },
           near: { label: "Near", input: "number", value: config.cameraState.near },
           far: { label: "Far", input: "number", value: config.cameraState.far },
-        },
-        children: {
-          target: {
-            label: "Target",
-            fields: {
-              0: { label: "X", input: "number", value: config.cameraState.target[0] },
-              1: { label: "Y", input: "number", value: config.cameraState.target[1] },
-              2: { label: "Z", input: "number", value: config.cameraState.target[2] },
-            },
-          },
+          target: { label: "Target", input: "vec3", value: config.cameraState.target },
           targetOffset: {
             label: "Target Offset",
-            fields: {
-              0: { label: "X", input: "number", value: config.cameraState.targetOffset[0] },
-              1: { label: "Y", input: "number", value: config.cameraState.targetOffset[1] },
-              2: { label: "Z", input: "number", value: config.cameraState.targetOffset[2] },
-            },
-          },
-          targetOrientation: {
-            label: "Target Orientation",
-            fields: {
-              0: { label: "X", input: "number", value: config.cameraState.targetOrientation[0] },
-              1: { label: "Y", input: "number", value: config.cameraState.targetOrientation[1] },
-              2: { label: "Z", input: "number", value: config.cameraState.targetOrientation[2] },
-              3: { label: "W", input: "number", value: config.cameraState.targetOrientation[3] },
-            },
+            input: "vec3",
+            value: config.cameraState.targetOffset,
           },
         },
       },
