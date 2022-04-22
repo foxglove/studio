@@ -49,13 +49,3 @@ export function NarrowLayout(): JSX.Element {
     </PanelSetup>
   );
 }
-
-export function Settings(): JSX.Element {
-  return (
-    <SchemaEditor
-      configSchema={GlobalVariableSliderPanel.configSchema!}
-      config={GlobalVariableSliderPanel.defaultConfig}
-      saveConfig={() => {}}
-    />
-  );
-}
