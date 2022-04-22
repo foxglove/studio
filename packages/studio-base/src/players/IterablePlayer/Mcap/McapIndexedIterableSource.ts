@@ -13,7 +13,7 @@ import {
   IteratorResult,
   MessageIteratorArgs,
 } from "@foxglove/studio-base/players/IterablePlayer/IIterableSource";
-import { PlayerProblem } from "@foxglove/studio-base/players/types";
+import { PlayerProblem, TopicStats } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
 export class McapIndexedIterableSource implements IIterableSource {
@@ -41,6 +41,7 @@ export class McapIndexedIterableSource implements IIterableSource {
       }
     }
 
+    const topicStats = new Map<string, TopicStats>();
     const topicsByName = new Map<string, Topic>();
     const datatypes: RosDatatypes = new Map();
     const problems: PlayerProblem[] = [];
@@ -69,6 +70,11 @@ export class McapIndexedIterableSource implements IIterableSource {
       if (!topic) {
         topic = { name: channel.topic, datatype: parsedChannel.fullSchemaName };
         topicsByName.set(channel.topic, topic);
+
+        const numMessages = this.reader.statistics?.channelMessageCounts.get(channel.id);
+        if (numMessages != undefined) {
+          topicStats.set(channel.topic, { numMessages: Number(numMessages) });
+        }
       }
       // Final datatypes is an unholy union of schemas across all channels
       for (const [name, datatype] of parsedChannel.datatypes) {
@@ -86,13 +92,14 @@ export class McapIndexedIterableSource implements IIterableSource {
       datatypes,
       problems,
       publishersByTopic: new Map(),
+      topicStats,
     };
   }
 
   async *messageIterator(args: MessageIteratorArgs): AsyncIterator<Readonly<IteratorResult>> {
     const topics = args.topics;
     const start = args.start ?? this.start;
-    const end = this.end;
+    const end = args.end ?? this.end;
 
     if (topics.length === 0 || !start || !end) {
       return;

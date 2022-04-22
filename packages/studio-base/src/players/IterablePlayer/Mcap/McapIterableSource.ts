@@ -64,6 +64,7 @@ export class McapIterableSource implements IIterableSource {
           },
         ],
         publishersByTopic: new Map(),
+        topicStats: new Map(),
       };
     }
 
