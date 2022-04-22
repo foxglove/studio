@@ -287,6 +287,8 @@ function FieldInput({
 }
 
 function FieldLabel({ field }: { field: DeepReadonly<SettingsTreeField> }): JSX.Element {
+  const theme = useTheme();
+
   if (field.input === "vec3") {
     const labels = field.labels ?? ["X", "Y", "Z"];
     return (
@@ -295,7 +297,7 @@ function FieldLabel({ field }: { field: DeepReadonly<SettingsTreeField> }): JSX.
           style={{
             display: "grid",
             gridTemplateColumns: "1fr auto",
-            columnGap: "0.5rem",
+            columnGap: theme.spacing(0.5),
             height: "100%",
             width: "100%",
             alignItems: "center",
