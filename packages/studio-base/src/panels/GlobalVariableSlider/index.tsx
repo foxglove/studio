@@ -47,7 +47,7 @@ function buildSettingsTree(config: GlobalVariableSliderConfig): SettingsTreeNode
       max: { label: "Max", input: "number", value: config.sliderProps.max },
       step: { label: "Step", input: "number", value: config.sliderProps.step },
       globalVariableName: {
-        label: "Global Variable Name",
+        label: "Variable Slider",
         input: "string",
         value: config.globalVariableName,
       },
