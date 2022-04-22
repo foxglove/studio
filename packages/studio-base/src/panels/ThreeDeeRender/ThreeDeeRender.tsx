@@ -7,6 +7,7 @@ import produce from "immer";
 import { cloneDeep, merge, set } from "lodash";
 import React, { useCallback, useRef, useLayoutEffect, useEffect, useState, useMemo } from "react";
 import { useResizeDetector } from "react-resize-detector";
+import { useThrottle } from "react-use";
 import { DeepPartial } from "ts-essentials";
 
 import Logger from "@foxglove/log";
@@ -224,9 +225,9 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   }, [followTf, renderer]);
 
   // Save panel settings whenever they change
-  useEffect(() => {
-    saveState(config);
-  }, [config, saveState]);
+  const savePanelConfig = useCallback(() => saveState(config), [config, saveState]);
+  const throttledSave = useThrottle(() => savePanelConfig, 1000);
+  useEffect(() => throttledSave(), [savePanelConfig, throttledSave]);
 
   useCleanup(() => {
     renderer?.dispose();
