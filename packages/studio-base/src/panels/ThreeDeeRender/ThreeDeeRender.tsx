@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import css from "@emotion/css";
+import produce from "immer";
 import { cloneDeep, merge, set } from "lodash";
 import React, { useCallback, useRef, useLayoutEffect, useEffect, useState, useMemo } from "react";
 import { useResizeDetector } from "react-resize-detector";
@@ -41,8 +42,7 @@ import {
 } from "./ros";
 import { buildSettingsTree, ThreeDeeRenderConfig } from "./settings";
 
-const SHOW_STATS = true;
-const SHOW_DEBUG = false;
+const SHOW_DEBUG: true | false = false;
 
 const SUPPORTED_DATATYPES = new Set<string>();
 mergeSetInto(SUPPORTED_DATATYPES, TRANSFORM_STAMPED_DATATYPES);
@@ -66,7 +66,10 @@ const labelDark = css`
   background-color: #181818cc;
 `;
 
-function RendererOverlay(props: { colorScheme: "dark" | "light" | undefined }): JSX.Element {
+function RendererOverlay(props: {
+  colorScheme: "dark" | "light" | undefined;
+  enableStats: boolean;
+}): JSX.Element {
   const colorScheme = props.colorScheme;
   const [_selectedRenderable, setSelectedRenderable] = useState<THREE.Object3D | undefined>(
     undefined,
@@ -140,14 +143,12 @@ function RendererOverlay(props: { colorScheme: "dark" | "light" | undefined }): 
     </div>
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  const stats = SHOW_STATS ? (
+  const stats = props.enableStats ? (
     <div id="stats" style={{ position: "absolute", top: 0 }}>
       <Stats />
     </div>
   ) : undefined;
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   const debug = SHOW_DEBUG ? (
     <div id="debug" style={{ position: "absolute", top: 60 }}>
       <DebugGui />
@@ -176,6 +177,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
     return {
       cameraState,
+      enableStats: partialConfig?.enableStats ?? true,
       followTf: partialConfig?.followTf,
     };
   });
@@ -209,6 +211,23 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         setConfig((prevConfig) => ({ ...prevConfig, cameraState: state }));
       }, cameraState),
   );
+
+  const actionHandler = useCallback((action: SettingsTreeAction) => {
+    setConfig((oldConfig) =>
+      produce(oldConfig, (draft) => {
+        set(draft, action.payload.path, action.payload.value);
+      }),
+    );
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-explicit-any
+    (context as unknown as any).__updatePanelSettingsTree({
+      actionHandler,
+      disableFilter: true,
+      settings: buildSettingsTree(config, topics ?? []),
+    });
+  }, [actionHandler, config, context, topics]);
 
   // Config followTf
   useEffect(() => {
@@ -440,7 +459,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         <canvas ref={setCanvas} style={{ position: "absolute", top: 0, left: 0 }} />
       </CameraListener>
       <RendererContext.Provider value={renderer}>
-        <RendererOverlay colorScheme={colorScheme} />
+        <RendererOverlay colorScheme={colorScheme} enableStats={config.enableStats} />
       </RendererContext.Provider>
     </div>
   );
