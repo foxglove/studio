@@ -62,8 +62,9 @@ export default function PanelSettings({
     () => (selectedPanelIds.length === 1 ? selectedPanelIds[0] : undefined),
     [selectedPanelIds],
   );
+
+  // Automatically deselect the panel we were editing when the settings sidebar closes
   useUnmount(() => {
-    // Automatically deselect the panel we were editing when the settings sidebar closes
     if (selectedPanelId != undefined) {
       setSelectedPanelIds([]);
     }
