@@ -17,7 +17,8 @@ import { Stack } from "@mui/material";
 import produce from "immer";
 import { compact, set, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
-import { useEffect, useCallback, useMemo, ComponentProps, useContext } from "react";
+import { useEffect, useCallback, useMemo, ComponentProps, useContext, useState } from "react";
+import { useDebouncedCallback } from "use-debounce";
 
 import { filterMap } from "@foxglove/den/collection";
 import {
@@ -171,7 +172,30 @@ function selectEndTime(ctx: MessagePipelineContext) {
 }
 
 function Plot(props: Props) {
-  const { saveConfig, config } = props;
+  const { saveConfig: persistConfig, config: savedConfig } = props;
+
+  // We make a working copy of our config for real time editing since changing the config
+  // forces the entire component to re-render and results in race conditions from
+  // the async write to layout storage.
+  const [config, setConfig] = useState(savedConfig);
+  const saveConfig = useCallback((newConfig: Partial<PlotConfig>) => {
+    setConfig((oldConfig) => ({ ...oldConfig, ...newConfig }));
+  }, []);
+
+  // Commit our working config to the layout with a debounce to prevent thrashing.
+  const debouncedSaveConfig = useDebouncedCallback(
+    (newConfig: Partial<PlotConfig>) => persistConfig(newConfig),
+    1000,
+  );
+  useEffect(() => {
+    debouncedSaveConfig(config);
+  }, [config, debouncedSaveConfig]);
+
+  // Sync our working config with the external config to support changes from settings etc.
+  useEffect(() => {
+    setConfig(savedConfig);
+  }, [savedConfig]);
+
   const {
     title,
     followingViewWidth,
