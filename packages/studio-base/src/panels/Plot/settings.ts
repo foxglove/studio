@@ -7,22 +7,6 @@ import { SettingsTreeNode } from "@foxglove/studio-base/components/SettingsTreeE
 import { PlotConfig } from "./types";
 
 export function buildSettingsTree(config: PlotConfig): SettingsTreeNode {
-  /*
-    const defaultConfig: PlotConfig = {
-    title: undefined,
-    paths: [{ value: "", enabled: true, timestampMethod: "receiveTime" }],
-    minYValue: "",
-    maxYValue: "",
-    showXAxisLabels: true,
-    showYAxisLabels: true,
-    showLegend: true,
-    legendDisplay: "floating",
-    showPlotValuesInLegend: false,
-    isSynced: true,
-    xAxisVal: "timestamp",
-    sidebarDimension: defaultSidebarDimension,
-  };
-    */
   return {
     fields: {
       title: { label: "Title", input: "string", value: config.title },
