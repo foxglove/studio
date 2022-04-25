@@ -25,7 +25,7 @@ import {
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import { PanelConfig } from "@foxglove/studio-base/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
-import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
+import { getAllPanelIds, getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
 import SchemaEditor from "./SchemaEditor";
 
@@ -37,8 +37,26 @@ export default function PanelSettings({
   selectedPanelIdsForTests?: readonly string[];
 }>): JSX.Element {
   const selectedLayoutId = useCurrentLayoutSelector(selectedLayoutIdSelector);
-  const { selectedPanelIds: originalSelectedPanelIds, setSelectedPanelIds } = useSelectedPanels();
+  const { getCurrentLayoutState } = useCurrentLayoutActions();
+  const savedProps = getCurrentLayoutState().selectedLayout?.data?.configById;
+  const allPanelIds = useMemo(
+    () => (selectedLayoutId && savedProps ? getAllPanelIds(selectedLayoutId, savedProps) : []),
+    [savedProps, selectedLayoutId],
+  );
+  const {
+    selectedPanelIds: originalSelectedPanelIds,
+    setSelectedPanelIds,
+    selectAllPanels,
+  } = useSelectedPanels();
   const selectedPanelIds = selectedPanelIdsForTests ?? originalSelectedPanelIds;
+
+  // If no panel is selected and there is only one panel in the layout, select it
+  useEffect(() => {
+    if (selectedPanelIds.length === 0 && allPanelIds.length === 1) {
+      selectAllPanels();
+    }
+  }, [allPanelIds, selectedPanelIds, selectAllPanels]);
+
   const { openLayoutBrowser } = useWorkspace();
   const selectedPanelId = useMemo(
     () => (selectedPanelIds.length === 1 ? selectedPanelIds[0] : undefined),
