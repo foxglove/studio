@@ -72,19 +72,20 @@ function GlobalVariableSliderPanel(props: Props): React.ReactElement {
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
+      if (action.action !== "update") {
+        return;
+      }
+
+      const { path, input, value } = action.payload;
+
       saveConfig(
         produce(props.config, (draft) => {
-          if (["min", "max"].includes(action.payload.path[0] ?? "")) {
-            set(draft, ["sliderProps", ...action.payload.path], action.payload.value);
-          } else if (
-            action.payload.path[0] === "step" &&
-            action.payload.input === "number" &&
-            action.payload.value != undefined &&
-            action.payload.value > 0
-          ) {
-            set(draft, ["sliderProps", "step"], action.payload.value);
+          if (["min", "max"].includes(path[0] ?? "")) {
+            set(draft, ["sliderProps", ...path], value);
+          } else if (path[0] === "step" && input === "number" && value != undefined && value > 0) {
+            set(draft, ["sliderProps", "step"], value);
           } else {
-            set(draft, action.payload.path, action.payload.value);
+            set(draft, path, value);
           }
         }),
       );

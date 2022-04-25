@@ -197,6 +197,10 @@ function ImageView(props: Props) {
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
+      if (action.action !== "update") {
+        return;
+      }
+
       saveConfig(
         produce(config, (draft) => {
           set(draft, action.payload.path, action.payload.value);

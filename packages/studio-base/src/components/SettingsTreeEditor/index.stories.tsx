@@ -280,6 +280,10 @@ export const Default = (): JSX.Element => {
   const [settingsNode, setSettingsNode] = React.useState({ ...DefaultSettings });
 
   const actionHandler = useCallback((action: SettingsTreeAction) => {
+    if (action.action !== "update") {
+      return;
+    }
+
     setSettingsNode((previous) =>
       updateSettingsTreeNode(previous, action.payload.path, action.payload.value),
     );

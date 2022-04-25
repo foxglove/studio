@@ -38,9 +38,11 @@ export type SettingsTreeFields = Record<string, SettingsTreeField>;
 export type SettingsTreeChildren = Record<string, SettingsTreeNode>;
 
 export type SettingsTreeNode = {
+  allowToggle?: boolean;
   children?: SettingsTreeChildren;
   fields?: SettingsTreeFields;
   label?: string;
+  toggled?: boolean;
 };
 
 /**
@@ -53,13 +55,15 @@ type DistributivePick<T, K extends keyof T> = T extends unknown ? Pick<T, K> : n
  * Represents actions that can be dispatched to source of the SettingsTree to implement
  * edits and updates.
  */
-export type SettingsTreeAction = {
-  action: "update";
-  payload: { path: readonly string[] } & DistributivePick<
-    SettingsTreeFieldValue,
-    "input" | "value"
-  >;
-};
+export type SettingsTreeAction =
+  | { action: "toggle"; payload: { path: readonly string[] } }
+  | {
+      action: "update";
+      payload: { path: readonly string[] } & DistributivePick<
+        SettingsTreeFieldValue,
+        "input" | "value"
+      >;
+    };
 
 /**
  * A settings tree is a tree of panel settings that can be managed by

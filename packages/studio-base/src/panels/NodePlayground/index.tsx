@@ -213,6 +213,10 @@ function NodePlayground(props: Props) {
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
+      if (action.action !== "update") {
+        return;
+      }
+
       const { input, value, path } = action.payload;
       if (input === "boolean" && path[0] === "autoFormatOnSave") {
         saveConfig({ ...config, autoFormatOnSave: value });

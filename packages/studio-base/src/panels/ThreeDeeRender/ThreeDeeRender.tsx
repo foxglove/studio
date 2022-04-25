@@ -201,6 +201,10 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   const [cameraStore] = useState(() => new CameraStore(setCameraState, cameraState));
 
   const actionHandler = useCallback((action: SettingsTreeAction) => {
+    if (action.action !== "update") {
+      return;
+    }
+
     setConfig((oldConfig) =>
       produce(oldConfig, (draft) => {
         set(draft, action.payload.path, action.payload.value);
