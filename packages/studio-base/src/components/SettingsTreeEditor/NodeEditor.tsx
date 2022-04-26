@@ -94,7 +94,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     return (
       <NodeEditor
         actionHandler={actionHandler}
-        disableIcon={props.path.length > 0}
+        disableIcon={true}
         key={key}
         settings={child}
         path={stablePath}
