@@ -48,11 +48,18 @@ export function buildSettingsTree(config: PlotConfig): SettingsTreeNode {
         value: Number(config.maxYValue),
         placeholder: "auto",
       },
-      followingViewWidth: {
-        label: "X range in seconds (for timestamp plots only)",
-        input: "number",
-        placeholder: "auto",
-        value: config.followingViewWidth,
+    },
+    children: {
+      timeSeriesOnly: {
+        label: "Time series only",
+        fields: {
+          followingViewWidth: {
+            label: "X range (seconds)",
+            input: "number",
+            placeholder: "auto",
+            value: config.followingViewWidth,
+          },
+        },
       },
     },
   };

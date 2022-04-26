@@ -438,9 +438,14 @@ function Plot(props: Props) {
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
+      const { path, value } = action.payload;
       saveConfig(
         produce(config, (draft) => {
-          set(draft, action.payload.path, action.payload.value);
+          if (path[0] === "timeSeriesOnly") {
+            set(draft, path.slice(1), value);
+          } else {
+            set(draft, path, value);
+          }
         }),
       );
     },
@@ -449,7 +454,6 @@ function Plot(props: Props) {
   useEffect(() => {
     updatePanelSettingsTree(panelId, {
       actionHandler,
-      disableFilter: true,
       settings: buildSettingsTree(config),
     });
   }, [actionHandler, config, panelId, updatePanelSettingsTree]);
