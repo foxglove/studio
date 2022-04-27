@@ -490,9 +490,13 @@ function coordinateFrameList(renderer: Renderer | ReactNull | undefined): Select
   const output: SelectEntry[] = [];
 
   function addFrame(frame: FrameEntry, depth: number) {
+    const frameName =
+      frame.id === "" || frame.id.startsWith(" ") || frame.id.endsWith(" ")
+        ? `"${frame.id}"`
+        : frame.id;
     output.push({
       value: frame.id,
-      label: `${"\u00A0\u00A0".repeat(depth)}${frame.id}`,
+      label: `${"\u00A0\u00A0".repeat(depth)}${frameName}`,
     });
     frame.children.sort((a, b) => a.id.localeCompare(b.id));
     for (const child of frame.children) {
