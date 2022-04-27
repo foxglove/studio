@@ -12,86 +12,63 @@
 //   You may not use this file except in compliance with the License.
 
 import { renderHook } from "@testing-library/react-hooks";
+import { ReactNode } from "react";
 
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
-import PlayerSelectionContext, {
-  PlayerSelection,
-} from "@foxglove/studio-base/context/PlayerSelectionContext";
+import { useCurrentLayoutSelector } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useStateToURLSynchronization } from "@foxglove/studio-base/hooks/useStateToURLSynchronization";
-import { PlayerPresence } from "@foxglove/studio-base/players/types";
-import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
 
-// useLayoutEffect doesn't work in headless tests.
-jest.mock("react", () => ({
-  ...jest.requireActual("react"),
-  useLayoutEffect: jest.requireActual("react").useEffect,
-}));
+jest.mock("@foxglove/studio-base/context/CurrentLayoutContext");
 
-function makePlayerSelection(options: Partial<PlayerSelection>): PlayerSelection {
-  return {
-    selectSource: () => {},
-    selectRecent: () => {},
-    availableSources: [],
-    recentSources: [],
-    selectedSource: undefined,
-    ...options,
-  };
+function Wrapper({
+  children,
+  sourceId,
+  parameters,
+}: {
+  children?: ReactNode;
+  sourceId?: string;
+  parameters?: Record<string, string>;
+}) {
+  const urlState = sourceId == undefined ? undefined : { sourceId, parameters };
+
+  return <MockMessagePipelineProvider urlState={urlState}>{children}</MockMessagePipelineProvider>;
 }
 
 describe("useStateToURLSynchronization", () => {
   it("updates the url with a stable source & player state", () => {
-    const emptyPlayerSelection = makePlayerSelection({});
-
-    const selectedPlayerSelection = makePlayerSelection({
-      selectedSource: {
-        id: "test1",
-        type: "connection",
-        displayName: "test",
-        initialize: () => undefined,
-      },
-    });
-
+    const location = new URL("http://localhost");
     const replaceState = jest.fn();
 
     // eslint-disable-next-line id-denylist
     (global as unknown as any).window = {
       history: { replaceState },
-      location: new URL("http://localhost"),
+      location,
     };
 
-    const { rerender } = renderHook(useStateToURLSynchronization, {
-      initialProps: { presence: PlayerPresence.NOT_PRESENT, playerSelection: emptyPlayerSelection },
-      wrapper: ({ children, presence, playerSelection }) => {
-        return (
-          <MockMessagePipelineProvider
-            topics={[]}
-            presence={presence}
-            datatypes={new Map()}
-            capabilities={["hello"]}
-            messages={[]}
-            urlState={{ url: "testurl", param: "one" }}
-            startTime={{ sec: 0, nsec: 1 }}
-          >
-            <PlayerSelectionContext.Provider value={playerSelection}>
-              <MockCurrentLayoutProvider>{children}</MockCurrentLayoutProvider>
-            </PlayerSelectionContext.Provider>
-          </MockMessagePipelineProvider>
-        );
-      },
-    });
+    (useCurrentLayoutSelector as jest.Mock).mockReturnValue(undefined);
 
-    expect(replaceState).not.toHaveBeenCalled();
+    const { rerender } = renderHook(useStateToURLSynchronization, { wrapper: Wrapper });
 
-    rerender({ presence: PlayerPresence.NOT_PRESENT, playerSelection: selectedPlayerSelection });
+    expect(replaceState).toHaveBeenCalledWith(undefined, "", "http://localhost/");
 
-    expect(replaceState).not.toHaveBeenCalled();
+    rerender({ sourceId: "test" });
 
-    rerender({ presence: PlayerPresence.PRESENT, playerSelection: selectedPlayerSelection });
+    expect(replaceState).toHaveBeenLastCalledWith(undefined, "", "http://localhost/?ds=test");
 
-    expect(replaceState).toHaveBeenCalledWith(
+    rerender({ sourceId: "test2", parameters: { a: "one", b: "two" } });
+
+    expect(replaceState).toHaveBeenLastCalledWith(
       undefined,
       "",
-      "http://localhost/?ds=test1&ds.param=one&ds.url=testurl&layoutId=mock-layout",
+      "http://localhost/?ds=test2&ds.a=one&ds.b=two",
+    );
+
+    (useCurrentLayoutSelector as jest.Mock).mockReturnValue("test-layout");
+    rerender();
+    expect(replaceState).toHaveBeenLastCalledWith(
+      undefined,
+      "",
+      "http://localhost/?layoutId=test-layout",
     );
   });
 });

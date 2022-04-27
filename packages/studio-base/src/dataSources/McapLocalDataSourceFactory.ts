@@ -51,6 +51,7 @@ class McapLocalDataSourceFactory implements IDataSourceFactory {
       metricsCollector: args.metricsCollector,
       seekToTime: getSeekToTime(),
       name: file.name,
+      sourceId: this.id,
     });
   }
 }

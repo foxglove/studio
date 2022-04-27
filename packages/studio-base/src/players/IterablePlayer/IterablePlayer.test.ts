@@ -95,6 +95,7 @@ describe("IterablePlayer", () => {
     const player = new IterablePlayer({
       source,
       enablePreload: false,
+      sourceId: "test",
     });
     const store = new PlayerStateStore(4);
     player.setListener(async (state) => await store.add(state));
@@ -144,6 +145,7 @@ describe("IterablePlayer", () => {
     const player = new IterablePlayer({
       source,
       enablePreload: false,
+      sourceId: "test",
     });
     const store = new PlayerStateStore(4);
     player.setSubscriptions([{ topic: "foo" }]);
