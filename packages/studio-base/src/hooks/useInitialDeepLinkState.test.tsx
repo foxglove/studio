@@ -40,19 +40,22 @@ function Wrapper({
 }
 
 describe("Initial deep link state", () => {
-  it("doesn't select a source without ds params", () => {
-    const selectSource = jest.fn();
+  const selectSource = jest.fn();
+  const setSelectedLayoutId = jest.fn();
+  const emptyPlayerSelection = {
+    selectSource,
+    selectRecent: () => {},
+    availableSources: [],
+    recentSources: [],
+    selectedSource: undefined,
+  };
 
-    const emptyPlayerSelection: PlayerSelection = {
-      selectSource,
-      selectRecent: () => {},
-      availableSources: [],
-      recentSources: [],
-      selectedSource: undefined,
-    };
-
+  beforeEach(() => {
     (useSessionStorageValue as jest.Mock).mockReturnValue(["web", jest.fn()]);
+    (useCurrentLayoutActions as jest.Mock).mockReturnValue({ setSelectedLayoutId });
+  });
 
+  it("doesn't select a source without ds params", () => {
     renderHook(() => useInitialDeepLinkState(["https://studio.foxglove.dev/?foo=bar"]), {
       initialProps: { playerSelection: emptyPlayerSelection },
       wrapper: Wrapper,
@@ -62,20 +65,6 @@ describe("Initial deep link state", () => {
   });
 
   it("selects the sample datasource from the link", () => {
-    const selectSource = jest.fn();
-    const setSelectedLayoutId = jest.fn();
-
-    const emptyPlayerSelection: PlayerSelection = {
-      selectSource,
-      selectRecent: () => {},
-      availableSources: [],
-      recentSources: [],
-      selectedSource: undefined,
-    };
-
-    (useSessionStorageValue as jest.Mock).mockReturnValue(["web", jest.fn()]);
-    (useCurrentLayoutActions as jest.Mock).mockReturnValue({ setSelectedLayoutId });
-
     renderHook(() => useInitialDeepLinkState(["https://studio.foxglove.dev/?ds=sample-nuscenes"]), {
       initialProps: { playerSelection: emptyPlayerSelection },
       wrapper: Wrapper,
@@ -89,20 +78,6 @@ describe("Initial deep link state", () => {
   });
 
   it("selects a connection datasource from the link", () => {
-    const selectSource = jest.fn();
-    const setSelectedLayoutId = jest.fn();
-
-    const emptyPlayerSelection: PlayerSelection = {
-      selectSource,
-      selectRecent: () => {},
-      availableSources: [],
-      recentSources: [],
-      selectedSource: undefined,
-    };
-
-    (useSessionStorageValue as jest.Mock).mockReturnValue(["web", jest.fn()]);
-    (useCurrentLayoutActions as jest.Mock).mockReturnValue({ setSelectedLayoutId });
-
     renderHook(
       () =>
         useInitialDeepLinkState([
