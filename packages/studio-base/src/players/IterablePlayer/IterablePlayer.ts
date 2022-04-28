@@ -634,12 +634,10 @@ export class IterablePlayer implements Player {
         datatypes: this._providerDatatypes,
         publishedTopics: this._publishedTopics,
       },
-      urlState: this._urlParams
-        ? {
-            sourceId: this._sourceId,
-            parameters: this._urlParams,
-          }
-        : undefined,
+      urlState: {
+        sourceId: this._sourceId,
+        parameters: this._urlParams,
+      },
     };
 
     return await this._listener(data);
