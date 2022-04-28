@@ -40,18 +40,14 @@ import {
   OccupancyGrid,
   OCCUPANCY_GRID_DATATYPES,
 } from "./ros";
-import { buildSettingsTree, SelectEntry, ThreeDeeRenderConfig } from "./settings";
+import {
+  buildSettingsTree,
+  SelectEntry,
+  SUPPORTED_DATATYPES,
+  ThreeDeeRenderConfig,
+} from "./settings";
 
 const SHOW_DEBUG: true | false = false;
-
-const SUPPORTED_DATATYPES = new Set<string>();
-mergeSetInto(SUPPORTED_DATATYPES, TRANSFORM_STAMPED_DATATYPES);
-mergeSetInto(SUPPORTED_DATATYPES, TF_DATATYPES);
-mergeSetInto(SUPPORTED_DATATYPES, MARKER_DATATYPES);
-mergeSetInto(SUPPORTED_DATATYPES, MARKER_ARRAY_DATATYPES);
-mergeSetInto(SUPPORTED_DATATYPES, OCCUPANCY_GRID_DATATYPES);
-mergeSetInto(SUPPORTED_DATATYPES, POINTCLOUD_DATATYPES);
-
 const DEFAULT_FRAME_IDS = ["base_link", "odom", "map", "earth"];
 
 const log = Logger.getLogger(__filename);
@@ -181,6 +177,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       cameraState,
       enableStats: partialConfig?.enableStats ?? true,
       followTf: partialConfig?.followTf,
+      topics: {},
     };
   });
   const { cameraState, followTf: configFollowTf } = config;
@@ -193,6 +190,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   const [topics, setTopics] = useState<ReadonlyArray<Topic> | undefined>();
   const [messages, setMessages] = useState<ReadonlyArray<MessageEvent<unknown>> | undefined>();
   const [currentTime, setCurrentTime] = useState<bigint | undefined>();
+  const [pclFieldsByTopic, setPclFieldsByTopic] = useState(new Map<string, string[]>());
 
   const [renderDone, setRenderDone] = useState<(() => void) | undefined>();
 
@@ -241,9 +239,15 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-explicit-any
     (context as unknown as any).__updatePanelSettingsTree({
       actionHandler,
-      settings: buildSettingsTree(config, coordinateFrames, followTf, topics ?? []),
+      settings: buildSettingsTree({
+        config,
+        coordinateFrames,
+        followTf,
+        topics: topics ?? [],
+        pclFieldsByTopic,
+      }),
     });
-  }, [actionHandler, config, context, coordinateFrames, followTf, topics]);
+  }, [actionHandler, config, context, coordinateFrames, followTf, pclFieldsByTopic, topics]);
 
   // Config followTf
   useEffect(() => {
@@ -412,6 +416,18 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       } else if (POINTCLOUD_DATATYPES.has(datatype)) {
         // sensor_msgs/PointCloud2 - Ingest this point cloud
         const pointCloud = message.message as PointCloud2;
+
+        // Update the mapping of topics to point cloud field names if needed
+        setPclFieldsByTopic((prev) => {
+          let fields = prev.get(message.topic);
+          if (fields && fields.length === pointCloud.fields.length) {
+            return prev;
+          }
+          fields = pointCloud.fields.map((field) => field.name);
+          prev.set(message.topic, fields);
+          return new Map(prev);
+        });
+
         renderer.addPointCloud2Message(message.topic, pointCloud);
       }
     }
@@ -450,12 +466,6 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       </RendererContext.Provider>
     </div>
   );
-}
-
-function mergeSetInto(output: Set<string>, input: ReadonlySet<string>) {
-  for (const value of input) {
-    output.add(value);
-  }
 }
 
 function coordinateFrameList(renderer: Renderer | ReactNull | undefined): SelectEntry[] {
