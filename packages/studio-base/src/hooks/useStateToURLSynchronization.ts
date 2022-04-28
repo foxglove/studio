@@ -15,13 +15,18 @@ import {
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import useDeepMemo from "@foxglove/studio-base/hooks/useDeepMemo";
 import { PlayerCapabilities } from "@foxglove/studio-base/players/types";
-import { updateAppURLState } from "@foxglove/studio-base/util/appURLState";
+import { AppURLState, updateAppURLState } from "@foxglove/studio-base/util/appURLState";
 
 const selectCanSeek = (ctx: MessagePipelineContext) =>
   ctx.playerState.capabilities.includes(PlayerCapabilities.playbackControl);
 const selectCurrentTime = (ctx: MessagePipelineContext) => ctx.playerState.activeData?.currentTime;
 const selectUrlState = (ctx: MessagePipelineContext) => ctx.playerState.urlState;
 const selectLayoutId = (layoutState: LayoutState) => layoutState.selectedLayout?.id;
+
+function updateUrl(newState: AppURLState) {
+  const newStateUrl = updateAppURLState(new URL(window.location.href), newState);
+  window.history.replaceState(undefined, "", newStateUrl.href);
+}
 
 /**
  * Syncs our current player, layout and other state with the URL in the address bar.
@@ -36,34 +41,26 @@ export function useStateToURLSynchronization(): void {
 
   // Sync current time with the url.
   useEffect(() => {
-    const newStateUrl = updateAppURLState(new URL(window.location.href), {
+    updateUrl({
       time: canSeek ? debouncedCurrentTime : undefined,
     });
-    window.history.replaceState(undefined, "", newStateUrl.href);
   }, [canSeek, debouncedCurrentTime]);
 
   // Sync layoutId with the url.
   useEffect(() => {
-    if (!layoutId) {
+    if (layoutId == undefined) {
       return;
     }
 
-    const newStateUrl = updateAppURLState(new URL(window.location.href), {
-      layoutId,
-    });
-    window.history.replaceState(undefined, "", newStateUrl.href);
+    updateUrl({ layoutId });
   }, [layoutId]);
 
   // Sync player state with the url.
   useEffect(() => {
-    if (!stablePlayerUrlState) {
+    if (stablePlayerUrlState == undefined) {
       return;
     }
 
-    const newStateUrl = updateAppURLState(new URL(window.location.href), {
-      ds: stablePlayerUrlState.sourceId,
-      dsParams: stablePlayerUrlState.parameters,
-    });
-    window.history.replaceState(undefined, "", newStateUrl.href);
+    updateUrl({ ds: stablePlayerUrlState.sourceId, dsParams: stablePlayerUrlState.parameters });
   }, [stablePlayerUrlState]);
 }
