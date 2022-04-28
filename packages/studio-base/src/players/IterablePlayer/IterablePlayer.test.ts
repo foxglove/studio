@@ -122,7 +122,10 @@ describe("IterablePlayer", () => {
       presence: PlayerPresence.INITIALIZING,
       progress: {},
       filePath: undefined,
-      urlState: undefined,
+      urlState: {
+        sourceId: "test",
+        parameters: undefined,
+      },
       name: undefined,
     };
 
@@ -201,7 +204,10 @@ describe("IterablePlayer", () => {
       presence: PlayerPresence.PRESENT,
       progress: {},
       filePath: undefined,
-      urlState: undefined,
+      urlState: {
+        sourceId: "test",
+        parameters: undefined,
+      },
       name: undefined,
     };
 
