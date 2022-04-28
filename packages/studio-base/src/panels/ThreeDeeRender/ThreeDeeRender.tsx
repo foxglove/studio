@@ -177,7 +177,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       cameraState,
       enableStats: partialConfig?.enableStats ?? true,
       followTf: partialConfig?.followTf,
-      topics: {},
+      topics: partialConfig?.topics ?? {},
     };
   });
   const { cameraState, followTf: configFollowTf } = config;
