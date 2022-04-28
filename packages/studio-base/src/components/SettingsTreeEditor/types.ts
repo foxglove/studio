@@ -20,7 +20,12 @@ export type SettingsTreeFieldValue =
       options: Array<{ label: string; value: undefined | string }>;
     }
   | { input: "string"; value?: string }
-  | { input: "toggle"; value?: string; options: string[] };
+  | { input: "toggle"; value?: string; options: string[] }
+  | {
+      input: "vec3";
+      value?: readonly [undefined | number, undefined | number, undefined | number];
+      labels?: [string, string, string];
+    };
 
 export type SettingsTreeField = SettingsTreeFieldValue & {
   help?: string;
@@ -67,9 +72,9 @@ export type SettingsTree = {
   actionHandler: (action: SettingsTreeAction) => void;
 
   /**
-   * True if the editor should not show the filter control.
+   * True if the editor should show the filter control.
    */
-  disableFilter?: boolean;
+  enableFilter?: boolean;
 
   /**
    * The actual settings tree. Updates to this will automatically be reflected in the

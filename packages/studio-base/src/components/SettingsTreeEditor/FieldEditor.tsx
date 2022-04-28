@@ -27,7 +27,7 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import { useHelpInfo } from "@foxglove/studio-base/context/HelpInfoContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 
-import { ColorPickerInput, ColorScalePicker, NumberInput } from "./inputs";
+import { ColorPickerInput, ColorScalePicker, NumberInput, Vec3Input } from "./inputs";
 import { SettingsTreeAction, SettingsTreeField } from "./types";
 
 const StyledToggleButtonGroup = muiStyled(ToggleButtonGroup)(({ theme }) => ({
@@ -191,12 +191,14 @@ function FieldInput({
           value={field.value}
           exclusive
           size="small"
-          onChange={(_event, value) =>
-            actionHandler({
-              action: "update",
-              payload: { path, input: "boolean", value },
-            })
-          }
+          onChange={(_event, value) => {
+            if (value != undefined) {
+              actionHandler({
+                action: "update",
+                payload: { path, input: "boolean", value },
+              });
+            }
+          }}
         >
           <ToggleButton value={true}>On</ToggleButton>
           <ToggleButton value={false}>Off</ToggleButton>
@@ -273,6 +275,91 @@ function FieldInput({
     case "gradient": {
       return <ColorScalePicker color="inherit" size="small" />;
     }
+    case "vec3": {
+      return (
+        <Vec3Input
+          value={field.value}
+          onChange={(value) =>
+            actionHandler({ action: "update", payload: { path, input: "vec3", value } })
+          }
+        />
+      );
+    }
+  }
+}
+
+function FieldLabel({ field }: { field: DeepReadonly<SettingsTreeField> }): JSX.Element {
+  const theme = useTheme();
+
+  const { openHelp } = useWorkspace();
+  const { setHelpInfo } = useHelpInfo();
+
+  if (field.input === "vec3") {
+    const labels = field.labels ?? ["X", "Y", "Z"];
+    return (
+      <>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr auto",
+            columnGap: theme.spacing(0.5),
+            height: "100%",
+            width: "100%",
+            alignItems: "center",
+          }}
+        >
+          <Typography
+            title={field.label}
+            variant="subtitle2"
+            color="text.secondary"
+            noWrap
+            flex="auto"
+          >
+            {field.label}
+          </Typography>
+          {labels.map((label, index) => (
+            <Typography
+              key={label}
+              title={field.label}
+              variant="subtitle2"
+              color="text.secondary"
+              noWrap
+              style={{ gridColumn: index === 0 ? "span 1" : "2 / span 1" }}
+              flex="auto"
+            >
+              {label}
+            </Typography>
+          ))}
+        </div>
+      </>
+    );
+  } else {
+    return (
+      <>
+        <Typography
+          title={field.label}
+          variant="subtitle2"
+          color="text.secondary"
+          noWrap
+          flex="auto"
+        >
+          {field.label}
+        </Typography>
+        {field.help && (
+          <IconButton
+            size="small"
+            color="secondary"
+            title={field.help}
+            onClick={() => {
+              setHelpInfo({ title: field.label, content: field.help });
+              openHelp();
+            }}
+          >
+            <HelpOutlineIcon fontSize="inherit" />
+          </IconButton>
+        )}
+      </>
+    );
   }
 }
 
@@ -291,21 +378,8 @@ function FieldEditorComponent({
 
   return (
     <>
-      <Stack direction="row" alignItems="center" style={{ paddingLeft }}>
-        <Typography
-          title={field.label}
-          variant="subtitle2"
-          color="text.secondary"
-          noWrap
-          flex="auto"
-        >
-          {field.label}
-        </Typography>
-        {field.help && (
-          <IconButton size="small" color="secondary" title={field.help}>
-            <HelpOutlineIcon fontSize="inherit" />
-          </IconButton>
-        )}
+      <Stack direction="row" alignItems="center" style={{ paddingLeft }} fullHeight>
+        <FieldLabel field={field} />
       </Stack>
       <div style={{ paddingRight: theme.spacing(2) }}>
         <FieldInput actionHandler={actionHandler} field={field} path={path} />

@@ -3,10 +3,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import css from "@emotion/css";
-import { cloneDeep, merge } from "lodash";
+import produce from "immer";
+import { cloneDeep, merge, set } from "lodash";
 import React, { useCallback, useRef, useLayoutEffect, useEffect, useState, useMemo } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { DeepPartial } from "ts-essentials";
+import { useDebouncedCallback } from "use-debounce";
 
 import Logger from "@foxglove/log";
 import {
@@ -17,6 +19,7 @@ import {
 } from "@foxglove/regl-worldview";
 import { toNanoSec } from "@foxglove/rostime";
 import { PanelExtensionContext, RenderState, Topic, MessageEvent } from "@foxglove/studio";
+import { SettingsTreeAction } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import useCleanup from "@foxglove/studio-base/hooks/useCleanup";
 import { normalizeMarker } from "@foxglove/studio-base/panels/ThreeDeeRender/normalizeMessages";
 
@@ -37,9 +40,9 @@ import {
   OccupancyGrid,
   OCCUPANCY_GRID_DATATYPES,
 } from "./ros";
+import { buildSettingsTree, SelectEntry, ThreeDeeRenderConfig } from "./settings";
 
-const SHOW_STATS = true;
-const SHOW_DEBUG = false;
+const SHOW_DEBUG: true | false = false;
 
 const SUPPORTED_DATATYPES = new Set<string>();
 mergeSetInto(SUPPORTED_DATATYPES, TRANSFORM_STAMPED_DATATYPES);
@@ -49,10 +52,7 @@ mergeSetInto(SUPPORTED_DATATYPES, MARKER_ARRAY_DATATYPES);
 mergeSetInto(SUPPORTED_DATATYPES, OCCUPANCY_GRID_DATATYPES);
 mergeSetInto(SUPPORTED_DATATYPES, POINTCLOUD_DATATYPES);
 
-type Config = {
-  cameraState: CameraState;
-  followTf?: string;
-};
+const DEFAULT_FRAME_IDS = ["base_link", "odom", "map", "earth"];
 
 const log = Logger.getLogger(__filename);
 
@@ -68,7 +68,10 @@ const labelDark = css`
   background-color: #181818cc;
 `;
 
-function RendererOverlay(props: { colorScheme: "dark" | "light" | undefined }): JSX.Element {
+function RendererOverlay(props: {
+  colorScheme: "dark" | "light" | undefined;
+  enableStats: boolean;
+}): JSX.Element {
   const colorScheme = props.colorScheme;
   const [_selectedRenderable, setSelectedRenderable] = useState<THREE.Object3D | undefined>(
     undefined,
@@ -142,14 +145,12 @@ function RendererOverlay(props: { colorScheme: "dark" | "light" | undefined }): 
     </div>
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  const stats = SHOW_STATS ? (
+  const stats = props.enableStats ? (
     <div id="stats" style={{ position: "absolute", top: 0 }}>
       <Stats />
     </div>
   ) : undefined;
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   const debug = SHOW_DEBUG ? (
     <div id="debug" style={{ position: "absolute", top: 60 }}>
       <DebugGui />
@@ -169,8 +170,8 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   const { initialState, saveState } = context;
 
   // Load and save the persisted panel configuration
-  const [config, setConfig] = useState<Config>(() => {
-    const partialConfig = initialState as DeepPartial<Config> | undefined;
+  const [config, setConfig] = useState<ThreeDeeRenderConfig>(() => {
+    const partialConfig = initialState as DeepPartial<ThreeDeeRenderConfig> | undefined;
     const cameraState: CameraState = merge(
       cloneDeep(DEFAULT_CAMERA_STATE),
       partialConfig?.cameraState,
@@ -178,10 +179,11 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
     return {
       cameraState,
+      enableStats: partialConfig?.enableStats ?? true,
       followTf: partialConfig?.followTf,
     };
   });
-  const { cameraState, followTf } = config;
+  const { cameraState, followTf: configFollowTf } = config;
 
   const [canvas, setCanvas] = useState<HTMLCanvasElement | ReactNull>(ReactNull);
   const [renderer, setRenderer] = useState<Renderer | ReactNull>(ReactNull);
@@ -200,21 +202,66 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   }, []);
   const [cameraStore] = useState(() => new CameraStore(setCameraState, cameraState));
 
+  const actionHandler = useCallback((action: SettingsTreeAction) => {
+    setConfig((oldConfig) =>
+      produce(oldConfig, (draft) => {
+        set(draft, action.payload.path, action.payload.value);
+      }),
+    );
+  }, []);
+
+  // Maintain a list of coordinate frames for the settings sidebar
+  const [coordinateFrames, setCoordinateFrames] = useState<SelectEntry[]>(
+    coordinateFrameList(renderer),
+  );
+  const [defaultFrame, setDefaultFrame] = useState<string | undefined>(undefined);
+  const updateCoordinateFrames = useCallback(
+    (curRenderer: Renderer) => {
+      setCoordinateFrames(coordinateFrameList(curRenderer));
+      for (const frameId of DEFAULT_FRAME_IDS) {
+        if (curRenderer.transformTree.hasFrame(frameId)) {
+          setDefaultFrame(frameId);
+          break;
+        }
+      }
+    },
+    [setDefaultFrame],
+  );
+  useEffect(() => {
+    renderer?.addListener("transformTreeUpdated", updateCoordinateFrames);
+    return () => void renderer?.removeListener("transformTreeUpdated", updateCoordinateFrames);
+  }, [renderer, updateCoordinateFrames]);
+
+  const followTf = useMemo(
+    () => (configFollowTf ? configFollowTf : defaultFrame),
+    [configFollowTf, defaultFrame],
+  );
+
+  useEffect(() => {
+    // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-explicit-any
+    (context as unknown as any).__updatePanelSettingsTree({
+      actionHandler,
+      settings: buildSettingsTree(config, coordinateFrames, followTf, topics ?? []),
+    });
+  }, [actionHandler, config, context, coordinateFrames, followTf, topics]);
+
   // Config followTf
   useEffect(() => {
     if (renderer && followTf != undefined) {
       renderer.renderFrameId = followTf;
+      renderer.animationFrame();
     }
   }, [followTf, renderer]);
 
   // Save panel settings whenever they change
-  useEffect(() => {
-    saveState(config);
-  }, [config, saveState]);
+  const throttledSave = useDebouncedCallback(
+    (newConfig: ThreeDeeRenderConfig) => saveState(newConfig),
+    1000,
+  );
+  useEffect(() => throttledSave(config), [config, throttledSave]);
 
-  useCleanup(() => {
-    renderer?.dispose();
-  });
+  // Dispose of the renderer (and associated GPU resources) on teardown
+  useCleanup(() => renderer?.dispose());
 
   // We use a layout effect to setup render handling for our panel. We also setup some topic subscriptions.
   useLayoutEffect(() => {
@@ -399,7 +446,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         <canvas ref={setCanvas} style={{ position: "absolute", top: 0, left: 0 }} />
       </CameraListener>
       <RendererContext.Provider value={renderer}>
-        <RendererOverlay colorScheme={colorScheme} />
+        <RendererOverlay colorScheme={colorScheme} enableStats={config.enableStats} />
       </RendererContext.Provider>
     </div>
   );
@@ -409,4 +456,58 @@ function mergeSetInto(output: Set<string>, input: ReadonlySet<string>) {
   for (const value of input) {
     output.add(value);
   }
+}
+
+function coordinateFrameList(renderer: Renderer | ReactNull | undefined): SelectEntry[] {
+  if (!renderer) {
+    return [];
+  }
+
+  type FrameEntry = { id: string; children: FrameEntry[] };
+
+  const frames = Array.from(renderer.transformTree.frames().values());
+  const frameMap = new Map<string, FrameEntry>(
+    frames.map((frame) => [frame.id, { id: frame.id, children: [] }]),
+  );
+
+  // Create a hierarchy of coordinate frames
+  const rootFrames: FrameEntry[] = [];
+  for (const frame of frames) {
+    const frameEntry = frameMap.get(frame.id)!;
+    const parentId = frame.parent()?.id;
+    if (parentId == undefined) {
+      rootFrames.push(frameEntry);
+    } else {
+      const parent = frameMap.get(parentId);
+      if (parent == undefined) {
+        continue;
+      }
+      parent.children.push(frameEntry);
+    }
+  }
+
+  // Convert the `rootFrames` hierarchy into a flat list of coordinate frames with depth
+  const output: SelectEntry[] = [];
+
+  function addFrame(frame: FrameEntry, depth: number) {
+    const frameName =
+      frame.id === "" || frame.id.startsWith(" ") || frame.id.endsWith(" ")
+        ? `"${frame.id}"`
+        : frame.id;
+    output.push({
+      value: frame.id,
+      label: `${"\u00A0\u00A0".repeat(depth)}${frameName}`,
+    });
+    frame.children.sort((a, b) => a.id.localeCompare(b.id));
+    for (const child of frame.children) {
+      addFrame(child, depth + 1);
+    }
+  }
+
+  rootFrames.sort((a, b) => a.id.localeCompare(b.id));
+  for (const entry of rootFrames) {
+    addFrame(entry, 0);
+  }
+
+  return output;
 }
