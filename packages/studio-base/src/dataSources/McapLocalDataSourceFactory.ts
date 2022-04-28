@@ -39,6 +39,7 @@ class McapLocalDataSourceFactory implements IDataSourceFactory {
         metricsCollector: args.metricsCollector,
         source,
         name: file.name,
+        sourceId: this.id,
       });
     }
 
