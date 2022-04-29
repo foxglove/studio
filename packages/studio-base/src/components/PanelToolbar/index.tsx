@@ -50,7 +50,7 @@ const PanelToolbarRoot = muiStyled("div")<{
   display: !shouldShow ? "none" : "flex",
   minHeight: floating ? PANEL_TOOLBAR_HEIGHT + PANEL_TOOLBAR_SPACING : undefined,
   backgroundColor: floating ? "transparent" : theme.palette.background.paper,
-  gap: theme.spacing(0.5),
+  gap: theme.spacing(0.25),
 
   ...(floating && {
     position: "absolute",
