@@ -184,7 +184,8 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
 }
 
 const selectedLayoutLoadingSelector = (state: LayoutState) => state.selectedLayout?.loading;
-const selectedLayoutExistsSelector = (state: LayoutState) => state.selectedLayout != undefined;
+const selectedLayoutExistsSelector = (state: LayoutState) =>
+  state.selectedLayout?.data != undefined;
 const selectedLayoutMosaicSelector = (state: LayoutState) => state.selectedLayout?.data?.layout;
 
 export default function PanelLayout(): JSX.Element {
