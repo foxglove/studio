@@ -111,7 +111,7 @@ export default function Connection(props: ConnectionProps): JSX.Element {
           )}
 
           {selectedSource?.docsLink && (
-            <Link href={`https://foxglove.dev/docs/studio/connection${selectedSource.docsLink}`}>
+            <Link href={selectedSource.docsLink}>
               View docs.
             </Link>
           )}
