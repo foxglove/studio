@@ -681,14 +681,15 @@ export class IterablePlayer implements Player {
       this._end,
     );
 
-    let lastMessageTime: Time | undefined = this._lastMessage?.receiveTime;
+    // fixme - comment
+    let lastMessageTime: Time = this._currentTime;
 
     const msgEvents: MessageEvent<unknown>[] = [];
 
     // When ending the previous tick, we might have already read a message from the iterator which
     // belongs to our tick. This logic brings that message into our current batch of message events.
     if (this._lastMessage) {
-      // If the last message we saw is still ahead of the tick time, we don't emit anything
+      // If the last message we saw is still ahead of the tick end time, we don't emit anything
       if (compare(this._lastMessage.receiveTime, end) > 0) {
         this._currentTime = end;
         this._messages = msgEvents;
@@ -697,29 +698,36 @@ export class IterablePlayer implements Player {
       }
 
       msgEvents.push(this._lastMessage);
+      lastMessageTime = this._lastMessage.receiveTime;
       this._lastMessage = undefined;
     }
 
-    // If we have no forward iterator then we create one at 1 nanosecond past the current time.
-    // currentTime is assumed to have already been read previously
-    if (!this._tickIterator) {
-      const next = add(this._currentTime, { sec: 0, nsec: 1 });
-      // Next would be past our desired range so we stop
-      if (compare(next, this._end) > 0) {
-        return;
+    for (;;) {
+      // If we have no forward iterator then we create one at 1 nanosecond past the current time.
+      // currentTime is assumed to have already been read previously
+      if (!this._tickIterator) {
+        const next = add(lastMessageTime, { sec: 0, nsec: 1 });
+        // Next would be past our desired range
+        if (compare(next, end) > 0) {
+          break;
+        }
+
+        const iteratorEnd = add(next, fromNanoSec(BigInt(this._iteratorDurationNanos)));
+
+        // fixme - we assume the last message time is the iteratorEnd time if there are no messages
+        // so we start the next iterator after this one
+        // if there are messages, those will override the last time
+        lastMessageTime = iteratorEnd;
+
+        log.debug("Initializing forward iterator from", next, "to", iteratorEnd);
+
+        this._tickIterator = this._iterableSource.messageIterator({
+          topics: Array.from(this._allTopics),
+          start: next,
+          end: iteratorEnd,
+        });
       }
 
-      log.debug("Initializing forward iterator from", next);
-
-      const iteratorEnd = add(next, fromNanoSec(BigInt(this._iteratorDurationNanos)));
-      this._tickIterator = this._iterableSource.messageIterator({
-        topics: Array.from(this._allTopics),
-        start: next,
-        end: iteratorEnd,
-      });
-    }
-
-    for (;;) {
       const result = await this._tickIterator.next();
       if (result.done === true) {
         if (this._nextState) {
@@ -730,27 +738,9 @@ export class IterablePlayer implements Player {
         // Start a new iterator at 1 nanosecond past the last message we've processed. Iterators
         // are always inclusive so when our iterator has ended we know we've seen every message up-to
         // and-at that time.
-        if (lastMessageTime) {
-          const next = add(lastMessageTime, { sec: 0, nsec: 1 });
-
-          // Next would be past our desired range so we stop reading from the iterators
-          if (compare(next, this._end) > 0) {
-            break;
-          }
-
-          log.debug("Initializing forward iterator from", next);
-
-          const iteratorEnd = clampTime(
-            add(next, fromNanoSec(BigInt(this._iteratorDurationNanos))),
-            next,
-            this._end,
-          );
-          this._tickIterator = this._iterableSource.messageIterator({
-            topics: Array.from(this._allTopics),
-            start: next,
-            end: iteratorEnd,
-          });
-
+        if (compare(lastMessageTime, end) <= 0) {
+          // if (lastMessageTime) {
+          this._tickIterator = undefined;
           continue;
         }
 
@@ -766,11 +756,11 @@ export class IterablePlayer implements Player {
         return;
       }
 
+      lastMessageTime = iterResult.msgEvent?.receiveTime ?? lastMessageTime;
+
       if (iterResult.problem) {
         continue;
       }
-
-      lastMessageTime = iterResult.msgEvent.receiveTime;
 
       // The message is past the end time, we need to save it for next tick
       if (compare(iterResult.msgEvent.receiveTime, end) > 0) {
@@ -781,7 +771,6 @@ export class IterablePlayer implements Player {
       msgEvents.push(iterResult.msgEvent);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions
     if (this._nextState) {
       return;
     }
