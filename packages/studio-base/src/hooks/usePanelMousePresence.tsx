@@ -36,7 +36,7 @@ export function usePanelMousePresence(ref: MutableRefObject<HTMLElement | ReactN
       return;
     }
 
-    const parent: HTMLElement | ReactNull = element.closest(PanelRoot);
+    const parent: HTMLElement | ReactNull = element.closest(PanelRoot.selector);
     parent?.addEventListener("mouseenter", listener);
     parent?.addEventListener("mouseleave", listener);
 

@@ -16,6 +16,7 @@ import BorderAllIcon from "@mdi/svg/svg/border-all.svg";
 import ExpandAllOutlineIcon from "@mdi/svg/svg/expand-all-outline.svg";
 import GridLargeIcon from "@mdi/svg/svg/grid-large.svg";
 import TrashCanOutlineIcon from "@mdi/svg/svg/trash-can-outline.svg";
+import { styled as muiStyled } from "@mui/material";
 import { last } from "lodash";
 import React, {
   useState,
@@ -39,7 +40,6 @@ import {
   MosaicNode,
 } from "react-mosaic-component";
 import { useMountedState } from "react-use";
-import styled from "styled-components";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import { useConfigById } from "@foxglove/studio-base/PanelAPI";
@@ -72,7 +72,7 @@ import {
 } from "@foxglove/studio-base/util/layout";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-const ActionsOverlay = styled.div`
+const ActionsOverlay = muiStyled("div")`
   cursor: pointer;
   position: absolute;
   top: 0;
@@ -87,8 +87,8 @@ const ActionsOverlay = styled.div`
   font-size: 14px;
   padding-top: 24px;
 
-  ${PanelRoot}:hover > & {
-    background-color: ${({ theme }) => theme.palette.neutralLight};
+  ${PanelRoot.selector}:hover > & {
+    background-color: ${({ theme }) => theme.palette.background.default};
     display: flex;
     align-items: center;
     align-content: center;
@@ -97,7 +97,7 @@ const ActionsOverlay = styled.div`
   }
   // for screenshot tests
   .hoverForScreenshot {
-    background-color: ${({ theme }) => theme.palette.neutralLight};
+    background-color: ${({ theme }) => theme.palette.background.default};
     display: flex;
     align-items: center;
     justify-content: center;
