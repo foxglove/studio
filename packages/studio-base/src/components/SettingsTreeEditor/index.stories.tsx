@@ -53,6 +53,13 @@ const DefaultSettings: SettingsTreeNode = {
         },
       },
     },
+    defaultCollapsed: {
+      label: "Default Collapsed",
+      defaultExpansionState: "collapsed",
+      fields: {
+        field: { label: "Field", input: "string" },
+      },
+    },
     background: {
       label: "Background",
       fields: {
