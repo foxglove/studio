@@ -273,6 +273,7 @@ function FieldInput({
       return (
         <Select
           size="small"
+          displayEmpty
           fullWidth
           variant="filled"
           value={field.value}

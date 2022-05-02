@@ -42,6 +42,15 @@ const DefaultSettings: SettingsTreeNode = {
           labels: ["U", "V", "W"],
           value: [1, 2, 3],
         },
+        emptySelect: {
+          label: "Empty Select",
+          value: "",
+          input: "select",
+          options: [
+            { label: "Nothing", value: "" },
+            { label: "Something", value: "something" },
+          ],
+        },
       },
     },
     background: {
