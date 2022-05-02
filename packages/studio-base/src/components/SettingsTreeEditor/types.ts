@@ -5,7 +5,8 @@
 export type SettingsTreeFieldValue =
   | { input: "autocomplete"; value?: string; items: string[] }
   | { input: "boolean"; value?: boolean }
-  | { input: "color"; value?: string }
+  | { input: "rgb"; value?: string; placeholder?: string }
+  | { input: "rgba"; value?: string; placeholder?: string }
   | { input: "gradient"; value?: string }
   | { input: "messagepath"; value?: string; validTypes?: string[] }
   | { input: "number"; value?: number; step?: number }

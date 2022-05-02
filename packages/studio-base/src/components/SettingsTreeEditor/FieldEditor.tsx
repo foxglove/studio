@@ -205,17 +205,35 @@ function FieldInput({
         </StyledToggleButtonGroup>
       );
     }
-    case "color": {
+    case "rgb": {
       return (
         <ColorPickerInput
-          value={field.value?.toString()}
+          fullWidth
           size="small"
           variant="filled"
-          fullWidth
+          alphaType="none"
+          value={field.value?.toString()}
           onChange={(value) =>
             actionHandler({
               action: "update",
-              payload: { path, input: "color", value },
+              payload: { path, input: "rgb", value },
+            })
+          }
+        />
+      );
+    }
+    case "rgba": {
+      return (
+        <ColorPickerInput
+          alphaType="alpha"
+          fullWidth
+          size="small"
+          value={field.value?.toString()}
+          variant="filled"
+          onChange={(value) =>
+            actionHandler({
+              action: "update",
+              payload: { path, input: "rgba", value },
             })
           }
         />
