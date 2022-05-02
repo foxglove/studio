@@ -208,11 +208,12 @@ function FieldInput({
     case "rgb": {
       return (
         <ColorPickerInput
-          fullWidth
-          size="small"
-          variant="filled"
           alphaType="none"
+          fullWidth
+          placeholder={field.placeholder}
+          size="small"
           value={field.value?.toString()}
+          variant="filled"
           onChange={(value) =>
             actionHandler({
               action: "update",
@@ -227,6 +228,7 @@ function FieldInput({
         <ColorPickerInput
           alphaType="alpha"
           fullWidth
+          placeholder={field.placeholder}
           size="small"
           value={field.value?.toString()}
           variant="filled"

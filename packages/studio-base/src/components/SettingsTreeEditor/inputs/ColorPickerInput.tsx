@@ -67,6 +67,7 @@ export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
         {...props}
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        placeholder={props.placeholder}
         InputProps={{
           startAdornment: swatchOrientation === "start" && (
             <ColorSwatch color={swatchColor} onClick={togglePicker} />
