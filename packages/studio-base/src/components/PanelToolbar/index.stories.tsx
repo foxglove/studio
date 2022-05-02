@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import DatabaseIcon from "@mdi/svg/svg/database.svg";
+import { Box } from "@mui/material";
 import { storiesOf } from "@storybook/react";
 import { Mosaic, MosaicWindow } from "react-mosaic-component";
 
@@ -41,9 +42,15 @@ class MosaicWrapper extends React.Component<{
             renderPreview={() => undefined as any}
           >
             <HelpInfoProvider>
-              <div style={{ width, height: 300, padding: 30, position: "relative" }}>
+              <Box
+                width={width}
+                height={300}
+                padding={3}
+                position="relative"
+                bgcolor="background.default"
+              >
                 {id === "Sibling" ? "Sibling Panel" : this.props.children}
-              </div>
+              </Box>
             </HelpInfoProvider>
           </MosaicWindow>
         )}

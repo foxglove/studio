@@ -57,7 +57,8 @@ const PanelToolbarRoot = muiStyled("div")<{
     right: 0,
     paddingRight: theme.spacing(1), // leave some room for possible scrollbar
     top: 0,
-    zIndex: 5000,
+    zIndex: theme.zIndex.appBar,
+    minHeight: PANEL_TOOLBAR_HEIGHT + PANEL_TOOLBAR_SPACING,
 
     ...(hasChildren
       ? {
