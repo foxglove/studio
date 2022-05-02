@@ -681,7 +681,9 @@ export class IterablePlayer implements Player {
       this._end,
     );
 
-    // fixme - comment
+    // The last message time tracks the receiveTime of the last message we've emitted.
+    // Iterator bounds are inclusive so when making a new iterator we need to avoid including
+    // a time which we've already emitted.
     let lastMessageTime: Time = this._currentTime;
 
     const msgEvents: MessageEvent<unknown>[] = [];
@@ -714,9 +716,9 @@ export class IterablePlayer implements Player {
 
         const iteratorEnd = add(next, fromNanoSec(BigInt(this._iteratorDurationNanos)));
 
-        // fixme - we assume the last message time is the iteratorEnd time if there are no messages
-        // so we start the next iterator after this one
-        // if there are messages, those will override the last time
+        // Our iterator might not produce any messages, so we set the lastMessageTime to the iterator
+        // end range so if we need to make another iterator in this same tick we don't include time
+        // which we've already iterated over.
         lastMessageTime = iteratorEnd;
 
         log.debug("Initializing forward iterator from", next, "to", iteratorEnd);
@@ -739,7 +741,6 @@ export class IterablePlayer implements Player {
         // are always inclusive so when our iterator has ended we know we've seen every message up-to
         // and-at that time.
         if (compare(lastMessageTime, end) <= 0) {
-          // if (lastMessageTime) {
           this._tickIterator = undefined;
           continue;
         }
