@@ -93,7 +93,7 @@ export function NumberInput(
           <StyledIconButton
             size="small"
             edge="start"
-            onClick={() => value != undefined && updateValue(value - stepAmount)}
+            onClick={() => updateValue((value ?? 0) - stepAmount)}
           >
             {iconDown ?? <ChevronLeftIcon fontSize="small" />}
           </StyledIconButton>
@@ -102,7 +102,7 @@ export function NumberInput(
           <StyledIconButton
             size="small"
             edge="end"
-            onClick={() => value != undefined && updateValue(value + stepAmount)}
+            onClick={() => updateValue((value ?? 0) + stepAmount)}
           >
             {iconUp ?? <ChevronRightIcon fontSize="small" />}
           </StyledIconButton>
