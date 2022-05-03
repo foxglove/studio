@@ -24,7 +24,7 @@ import {
   SettingsTreeNode,
 } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/context/PanelSettingsEditorContext";
+import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 
 import helpContent from "./index.help.md";
