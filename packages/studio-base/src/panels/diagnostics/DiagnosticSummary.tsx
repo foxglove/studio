@@ -25,7 +25,7 @@ import { makeStyles } from "@mui/styles";
 import cx from "classnames";
 import produce from "immer";
 import { compact, uniq } from "lodash";
-import { useCallback, useEffect, useMemo, useRef, useState, MouseEvent, useContext } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, MouseEvent } from "react";
 import { List, AutoSizer, ListRowProps } from "react-virtualized";
 
 import { filterMap } from "@foxglove/den/collection";
@@ -40,7 +40,7 @@ import {
   SettingsTreeAction,
   SettingsTreeNode,
 } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
-import { PanelSettingsEditorContext } from "@foxglove/studio-base/context/PanelSettingsEditorContext";
+import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/context/PanelSettingsEditorContext";
 import { Config as DiagnosticStatusConfig } from "@foxglove/studio-base/panels/diagnostics/DiagnosticStatusPanel";
 import helpContent from "@foxglove/studio-base/panels/diagnostics/DiagnosticSummary.help.md";
 import useDiagnostics from "@foxglove/studio-base/panels/diagnostics/useDiagnostics";
@@ -213,7 +213,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
   const { topics } = useDataSourceInfo();
   const { minLevel, topicToRender, pinnedIds, hardwareIdFilter, sortByLevel = true } = config;
   const { id: panelId, openSiblingPanel } = usePanelContext();
-  const { updatePanelSettingsTree } = useContext(PanelSettingsEditorContext);
+  const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
   const togglePinned = useCallback(
     (info: DiagnosticInfo) => {

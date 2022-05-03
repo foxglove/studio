@@ -13,15 +13,7 @@
 
 import produce from "immer";
 import { uniq, omit, debounce, set, takeRight, round } from "lodash";
-import React, {
-  useCallback,
-  useMemo,
-  useState,
-  useRef,
-  useEffect,
-  useLayoutEffect,
-  useContext,
-} from "react";
+import React, { useCallback, useMemo, useState, useRef, useEffect, useLayoutEffect } from "react";
 import { useLatest } from "react-use";
 
 import { CameraState } from "@foxglove/regl-worldview";
@@ -33,7 +25,7 @@ import {
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelContext, { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import { SettingsTreeAction } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
-import { PanelSettingsEditorContext } from "@foxglove/studio-base/context/PanelSettingsEditorContext";
+import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/context/PanelSettingsEditorContext";
 import useCallbackWithToast from "@foxglove/studio-base/hooks/useCallbackWithToast";
 import Layout from "@foxglove/studio-base/panels/ThreeDimensionalViz/Layout";
 import UrdfBuilder from "@foxglove/studio-base/panels/ThreeDimensionalViz/UrdfBuilder";
@@ -373,7 +365,7 @@ function BaseRenderer(props: Props): JSX.Element {
   }, [urdfBuilder]);
 
   const { id: panelId } = usePanelContext();
-  const { updatePanelSettingsTree } = useContext(PanelSettingsEditorContext);
+  const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
