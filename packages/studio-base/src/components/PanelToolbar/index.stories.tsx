@@ -30,7 +30,6 @@ class MosaicWrapper extends React.Component<{
   width?: number;
 }> {
   override render() {
-    const { width = 300 } = this.props;
     return (
       <Mosaic
         onChange={() => undefined}
@@ -43,8 +42,8 @@ class MosaicWrapper extends React.Component<{
           >
             <HelpInfoProvider>
               <Box
-                width={width}
-                height={300}
+                width="100%"
+                height="100%"
                 padding={3}
                 position="relative"
                 bgcolor="background.default"
