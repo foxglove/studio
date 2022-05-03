@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { styled as muiStyled } from "@mui/material";
+import { styled as muiStyled, alpha } from "@mui/material";
 import cx from "classnames";
 
 const PANEL_ROOT_CLASSNAME = "FoxglovePanel-root";
@@ -11,35 +11,41 @@ const PanelBase = muiStyled("div", {
   name: "FoxglovePanel",
   slot: "Root",
   shouldForwardProp: (prop) => prop !== "fullscreen" && prop !== "selected",
-})<{ fullscreen: boolean; selected: boolean }>`
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  overflow: hidden;
-  z-index: ${({ fullscreen }) => (fullscreen ? 10000 : 1)};
-  background-color: ${({ theme }) => theme.palette.background.default};
-  position: ${({ fullscreen }) => (fullscreen ? "fixed" : "relative")};
-  border: ${({ fullscreen }) => (fullscreen ? "4px solid rgba(110, 81, 238, 0.3)" : "none")};
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: ${({ fullscreen }) => (fullscreen ? 50 : 0)};
+})<{ fullscreen: boolean; selected: boolean }>(({ theme, fullscreen, selected }) => ({
+  display: "flex",
+  flexDirection: "column",
+  flex: "1 1 auto",
+  overflow: "hidden",
+  backgroundColor: theme.palette.background.default,
+  position: "relative",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
 
-  &:after {
-    content: "";
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    opacity: ${({ selected }) => (selected ? 1 : 0)};
-    border: 1px solid ${({ theme }) => theme.palette.info.main};
-    position: absolute;
-    pointer-events: none;
-    transition: ${({ selected }) =>
-      selected ? "opacity 0.125s ease-out" : "opacity 0.05s ease-out"};
-    z-index: 100000;
-  }
-`;
+  ...(fullscreen && {
+    position: "fixed",
+    border: `4px solid ${alpha(
+      theme.palette.primary.main,
+      theme.palette.mode === "dark" ? 0.67 : 0.34,
+    )}`,
+    bottom: 50,
+    zIndex: 100000,
+  }),
+  "&:after": {
+    content: "''",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: selected ? 1 : 0,
+    border: `1px solid ${theme.palette.info.main}`,
+    position: "absolute",
+    pointerEvents: "none",
+    transition: selected ? "opacity 0.125s ease-out" : "opacity 0.05s ease-out",
+    zIndex: 100000,
+  },
+}));
 
 export const PanelRoot = ({
   className,
