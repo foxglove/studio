@@ -9,7 +9,7 @@ import createContext from "zustand/context";
 
 import { SettingsTree } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 
-export type ImmutableSettingsTree = DeepReadonly<SettingsTree>;
+type ImmutableSettingsTree = DeepReadonly<SettingsTree>;
 
 type PanelSettingsEditorStore = {
   settingsTrees: Record<string, ImmutableSettingsTree>;
