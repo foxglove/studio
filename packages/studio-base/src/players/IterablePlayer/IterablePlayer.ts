@@ -538,26 +538,18 @@ export class IterablePlayer implements Player {
     this._lastMessage = undefined;
     this._seekTarget = undefined;
 
+    // If the seekAckTimeout emits a state, _stateSeekBackfill must wait for it to complete.
+    // It would be invalid to allow the _stateSeekBackfill to finish prior to completion
+    let seekAckWait: Promise<void> | undefined;
+
     // If the backfill does not complete within 100 milliseconds, we emit a seek event with no messages.
     // This provides feedback to the user that we've acknowledged their seek request but haven't loaded the data.
-    const seekAckTimeout = setTimeout(async () => {
-      // fixme - we never emit anything now because we constantly keep scrubbing
-      // so do we want to allow some previous state to emit? and then start again?
-      // Why would we emit previous messages?
-      if (this._nextState) {
-        return;
-      }
-
+    const seekAckTimeout = setTimeout(() => {
       this._messages = [];
       this._currentTime = targetTime;
       this._lastSeekEmitTime = Date.now();
 
-      // emit a state message for the seek time, we only do this if we haven't already emitted one
-      await this._emitState();
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions
-      if (this._nextState) {
-        return;
-      }
+      seekAckWait = this._emitState();
     }, 100);
 
     const topics = Array.from(this._allTopics);
@@ -582,6 +574,11 @@ export class IterablePlayer implements Player {
 
     // We've successfully loaded the messages and will emit those, no longer need the ackTimeout
     clearTimeout(seekAckTimeout);
+
+    // timeout may have triggered, so we need to wait for any emit that happened
+    if (seekAckWait) {
+      await seekAckWait;
+    }
 
     if (this._nextState) {
       return;
