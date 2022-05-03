@@ -124,6 +124,8 @@ For ROS users, we also support package:// URLs
           label: "Size",
           value: undefined,
           input: "number",
+          max: 10,
+          min: 1,
         },
         subdivision: {
           label: "Subdivision",

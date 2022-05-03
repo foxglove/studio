@@ -5,6 +5,7 @@
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { IconButton, TextFieldProps, TextField, styled as muiStyled } from "@mui/material";
+import { clamp } from "lodash";
 import { ReactNode, useCallback } from "react";
 import { useKeyPress } from "react-use";
 
@@ -66,15 +67,13 @@ export function NumberInput(
 
   const updateValue = useCallback(
     (newValue: number) => {
-      if (props.max != undefined && newValue > props.max) {
-        return;
-      }
-
-      if (props.min != undefined && newValue < props.min) {
-        return;
-      }
-
-      onChange(newValue);
+      onChange(
+        clamp(
+          newValue,
+          props.min ?? Number.NEGATIVE_INFINITY,
+          props.max ?? Number.POSITIVE_INFINITY,
+        ),
+      );
     },
     [onChange, props.max, props.min],
   );
