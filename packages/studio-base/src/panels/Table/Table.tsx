@@ -97,10 +97,8 @@ const STableRow = muiStyled("tr")(({ theme }) => ({
 
 const STableHeader = muiStyled("th")<{ id: string; isSortedAsc: boolean; isSortedDesc: boolean }>(
   ({ theme, id, isSortedAsc, isSortedDesc }) => ({
-    borderBottom: "3px solid transparent !important",
-    borderTop: "3px solid transparent !important",
-    borderLeft: "none !important",
-    borderRight: "none !important",
+    borderLeftColor: "transparent !important",
+    borderRightColor: "transparent !important",
     padding: `${theme.spacing(0.5)} !important`,
     fontWeight: "bold !important",
     cursor: "pointer",
@@ -108,10 +106,10 @@ const STableHeader = muiStyled("th")<{ id: string; isSortedAsc: boolean; isSorte
     textAlign: "left",
 
     ...(isSortedAsc && {
-      borderBottomColor: `${theme.palette.info.main} !important`,
+      borderBottomColor: `${theme.palette.primary.main} !important`,
     }),
     ...(isSortedDesc && {
-      borderTopColor: `${theme.palette.info.main} !important`,
+      borderTopColor: `${theme.palette.primary.main} !important`,
     }),
     ...(id === "expander" && {
       width: 25,
