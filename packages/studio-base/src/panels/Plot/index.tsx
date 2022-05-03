@@ -298,6 +298,13 @@ function Plot(props: Props) {
     [allPaths],
   );
 
+  // The addMessages function below is passed to useMessageReducer to handle new messages during
+  // playback. If we have messages for a specific path in _blocks_ then we ignore the messages in
+  // the reducer.
+  //
+  // To keep the addMessages function "stable" when loading new blocks we grab only the paths from
+  // the blocks and make addMessages depend on the paths. To keep paths referentially stable when
+  // the paths values haven't changed we use a shallow memo.
   const blockPaths = useMemo(() => Object.keys(plotDataForBlocks), [plotDataForBlocks]);
   const blockPathsMemo = useShallowMemo(Object.keys(blockPaths));
 
