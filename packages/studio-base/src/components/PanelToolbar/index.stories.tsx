@@ -30,6 +30,7 @@ class MosaicWrapper extends React.Component<{
   width?: number;
 }> {
   override render() {
+    const { width } = this.props;
     return (
       <Mosaic
         onChange={() => undefined}
@@ -48,7 +49,7 @@ class MosaicWrapper extends React.Component<{
                 position="relative"
                 bgcolor="background.default"
               >
-                {id === "Sibling" ? "Sibling Panel" : this.props.children}
+                <Box width={width}>{id === "Sibling" ? "Sibling Panel" : this.props.children}</Box>
               </Box>
             </HelpInfoProvider>
           </MosaicWindow>
@@ -112,7 +113,7 @@ storiesOf("components/PanelToolbar", module)
   })
   .add("non-floating (narrow)", () => {
     return (
-      <MosaicWrapper>
+      <MosaicWrapper width={268}>
         <PanelToolbar alwaysVisible helpContent={<div />}>
           <div style={{ width: "100%", lineHeight: "22px", paddingLeft: 5 }}>
             Some controls here
@@ -124,7 +125,7 @@ storiesOf("components/PanelToolbar", module)
   })
   .add("non-floating (wide with panel name)", () => {
     return (
-      <MosaicWrapper width={500}>
+      <MosaicWrapper width={468}>
         <PanelToolbar alwaysVisible helpContent={<div />}>
           <div style={{ width: "100%", lineHeight: "22px", paddingLeft: 5 }}>
             Some controls here
@@ -141,7 +142,7 @@ storiesOf("components/PanelToolbar", module)
       </Icon>
     );
     return (
-      <MosaicWrapper width={500}>
+      <MosaicWrapper width={468}>
         <PanelToolbar helpContent={<div />} additionalIcons={additionalIcons} alwaysVisible>
           <div style={{ width: "100%", lineHeight: "22px", paddingLeft: 5 }}>
             Some controls here
@@ -157,7 +158,7 @@ storiesOf("components/PanelToolbar", module)
       class Story extends React.Component {
         override render() {
           return (
-            <MosaicWrapper>
+            <MosaicWrapper width={268}>
               <PanelToolbarWithOpenMenu />
             </MosaicWrapper>
           );
@@ -173,7 +174,7 @@ storiesOf("components/PanelToolbar", module)
       class Story extends React.Component {
         override render() {
           return (
-            <MosaicWrapper>
+            <MosaicWrapper width={268}>
               <PanelToolbarWithOpenMenu />
             </MosaicWrapper>
           );
@@ -189,7 +190,10 @@ storiesOf("components/PanelToolbar", module)
       class Story extends React.Component {
         override render() {
           return (
-            <MosaicWrapper layout={{ direction: "row", first: "dummy", second: "Sibling" }}>
+            <MosaicWrapper
+              width={268}
+              layout={{ direction: "row", first: "dummy", second: "Sibling" }}
+            >
               <PanelToolbarWithOpenMenu />
             </MosaicWrapper>
           );
@@ -205,7 +209,10 @@ storiesOf("components/PanelToolbar", module)
       class Story extends React.Component {
         override render() {
           return (
-            <MosaicWrapper layout={{ direction: "row", first: "Tab", second: "Sibling" }}>
+            <MosaicWrapper
+              width={268}
+              layout={{ direction: "row", first: "Tab", second: "Sibling" }}
+            >
               <PanelToolbarWithOpenMenu />
             </MosaicWrapper>
           );
@@ -221,7 +228,10 @@ storiesOf("components/PanelToolbar", module)
       class Story extends React.Component {
         override render() {
           return (
-            <MosaicWrapper layout={{ direction: "row", first: "dummy", second: "Sibling" }}>
+            <MosaicWrapper
+              width={268}
+              layout={{ direction: "row", first: "dummy", second: "Sibling" }}
+            >
               <PanelToolbarWithOpenMenu hideToolbars />
             </MosaicWrapper>
           );
