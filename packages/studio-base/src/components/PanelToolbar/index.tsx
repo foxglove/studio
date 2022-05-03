@@ -50,7 +50,6 @@ const PanelToolbarRoot = muiStyled("div")<{
   display: !shouldShow ? "none" : "flex",
   minHeight: floating ? PANEL_TOOLBAR_HEIGHT + PANEL_TOOLBAR_SPACING : undefined,
   backgroundColor: floating ? "transparent" : theme.palette.background.paper,
-  gap: theme.spacing(0.25),
 
   ...(floating && {
     position: "absolute",
@@ -82,7 +81,7 @@ const PanelToolbarRoot = muiStyled("div")<{
 const useStyles = makeStyles((theme: Theme) => ({
   icon: {
     fontSize: 14,
-    margin: theme.spacing(0, 0.25),
+    margin: theme.spacing(0, 0.125),
   },
 }));
 
