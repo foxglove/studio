@@ -33,6 +33,7 @@ import PanelCatalogContext, {
   PanelCatalog,
   PanelInfo,
 } from "@foxglove/studio-base/context/PanelCatalogContext";
+import { PanelSettingsEditorContextProvider } from "@foxglove/studio-base/context/PanelSettingsEditorContext";
 import {
   UserNodeStateProvider,
   useUserNodeState,
@@ -296,9 +297,11 @@ export default function PanelSetup(props: Props): JSX.Element {
     <UserNodeStateProvider>
       <HoverValueProvider>
         <MockCurrentLayoutProvider onAction={props.onLayoutAction}>
-          <HelpInfoProvider>
-            <UnconnectedPanelSetup {...props} />
-          </HelpInfoProvider>
+          <PanelSettingsEditorContextProvider>
+            <HelpInfoProvider>
+              <UnconnectedPanelSetup {...props} />
+            </HelpInfoProvider>
+          </PanelSettingsEditorContextProvider>
         </MockCurrentLayoutProvider>
       </HoverValueProvider>
     </UserNodeStateProvider>

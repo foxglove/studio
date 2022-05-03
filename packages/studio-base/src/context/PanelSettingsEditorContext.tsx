@@ -18,7 +18,7 @@ type PanelSettingsEditorStore = {
 
 const { Provider, useStore } = createContext<StoreApi<PanelSettingsEditorStore>>();
 
-function createSettingsEditorStore(): StoreApi<PanelSettingsEditorStore> {
+export function createSettingsEditorStore(): StoreApi<PanelSettingsEditorStore> {
   return create((set) => {
     return {
       settingsTrees: {},
