@@ -541,12 +541,20 @@ export class IterablePlayer implements Player {
     // If the backfill does not complete within 100 milliseconds, we emit a seek event with no messages.
     // This provides feedback to the user that we've acknowledged their seek request but haven't loaded the data.
     const seekAckTimeout = setTimeout(async () => {
+      // fixme - we never emit anything now because we constantly keep scrubbing
+      // so do we want to allow some previous state to emit? and then start again?
+      // Why would we emit previous messages?
+      if (this._nextState) {
+        return;
+      }
+
       this._messages = [];
       this._currentTime = targetTime;
       this._lastSeekEmitTime = Date.now();
 
       // emit a state message for the seek time, we only do this if we haven't already emitted one
       await this._emitState();
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions
       if (this._nextState) {
         return;
       }
