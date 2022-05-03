@@ -35,9 +35,6 @@ type Props = {
   isUnknownPanel?: boolean;
 };
 
-const PANEL_TOOLBAR_HEIGHT = 26;
-const PANEL_TOOLBAR_SPACING = 4;
-
 const PanelToolbarRoot = muiStyled("div")<{
   shouldShow: boolean;
   floating: boolean;
@@ -46,9 +43,8 @@ const PanelToolbarRoot = muiStyled("div")<{
   transition: "transform 80ms ease-in-out, opacity 80ms ease-in-out",
   flex: "0 0 auto",
   justifyContent: "flex-end",
-  padding: PANEL_TOOLBAR_SPACING,
+  padding: theme.spacing(0.5),
   display: !shouldShow ? "none" : "flex",
-  minHeight: floating ? PANEL_TOOLBAR_HEIGHT + PANEL_TOOLBAR_SPACING : undefined,
   backgroundColor: floating ? "transparent" : theme.palette.background.paper,
 
   ...(floating && {
@@ -57,7 +53,7 @@ const PanelToolbarRoot = muiStyled("div")<{
     paddingRight: theme.spacing(1), // leave some room for possible scrollbar
     top: 0,
     zIndex: theme.zIndex.appBar,
-    minHeight: PANEL_TOOLBAR_HEIGHT + PANEL_TOOLBAR_SPACING,
+    minHeight: 30,
 
     ...(hasChildren
       ? {
