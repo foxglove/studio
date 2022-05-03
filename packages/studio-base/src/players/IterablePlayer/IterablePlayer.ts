@@ -538,13 +538,19 @@ export class IterablePlayer implements Player {
     this._lastMessage = undefined;
     this._seekTarget = undefined;
 
-    this._messages = [];
-    this._currentTime = targetTime;
-    this._lastSeekEmitTime = Date.now();
-    await this._emitState();
-    if (this._nextState) {
-      return;
-    }
+    // If the backfill does not complete within 100 milliseconds, we emit a seek event with no messages.
+    // This provides feedback to the user that we've acknowledged their seek request but haven't loaded the data.
+    const seekAckTimeout = setTimeout(async () => {
+      this._messages = [];
+      this._currentTime = targetTime;
+      this._lastSeekEmitTime = Date.now();
+
+      // emit a state message for the seek time, we only do this if we haven't already emitted one
+      await this._emitState();
+      if (this._nextState) {
+        return;
+      }
+    }, 100);
 
     const topics = Array.from(this._allTopics);
 
@@ -557,7 +563,6 @@ export class IterablePlayer implements Player {
       });
       this._messages = messages;
     } catch (err) {
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions
       if (this._nextState && err instanceof DOMException && err.name === "AbortError") {
         log.debug("Aborted backfill");
       } else {
@@ -567,7 +572,9 @@ export class IterablePlayer implements Player {
       this._abort = undefined;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/strict-boolean-expressions
+    // We've successfully loaded the messages and will emit those, no longer need the ackTimeout
+    clearTimeout(seekAckTimeout);
+
     if (this._nextState) {
       return;
     }
