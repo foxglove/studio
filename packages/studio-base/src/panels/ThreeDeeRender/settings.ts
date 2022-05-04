@@ -97,7 +97,7 @@ function buildTopicNode(
   if (MARKER_DATATYPES.has(datatype) || MARKER_ARRAY_DATATYPES.has(datatype)) {
     const cur = topicConfig as Partial<TopicSettingsMarker> | undefined;
     const color = cur?.color;
-    node.fields.color = { label: "Color", input: "color", value: color };
+    node.fields.color = { label: "Color", input: "rgba", value: color };
   } else if (OCCUPANCY_GRID_DATATYPES.has(datatype)) {
     const cur = topicConfig as Partial<TopicSettingsOccupancyGrid> | undefined;
     const frameLock = cur?.frameLock ?? false;
@@ -142,7 +142,7 @@ function buildTopicNode(
       value: colorBy,
     };
     if (!colorBy || colorBy === "none") {
-      node.fields.flatColor = { label: "Flat color", input: "color", value: flatColor };
+      node.fields.flatColor = { label: "Flat color", input: "rgba", value: flatColor };
     } else {
       node.fields.valueMin = {
         label: "Value min",
