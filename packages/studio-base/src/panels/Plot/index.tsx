@@ -306,7 +306,7 @@ function Plot(props: Props) {
   // the blocks and make addMessages depend on the paths. To keep paths referentially stable when
   // the paths values haven't changed we use a shallow memo.
   const blockPaths = useMemo(() => Object.keys(plotDataForBlocks), [plotDataForBlocks]);
-  const blockPathsMemo = useShallowMemo(Object.keys(blockPaths));
+  const blockPathsMemo = useShallowMemo(blockPaths);
 
   const addMessages = useCallback(
     (accumulated: PlotDataByPath, msgEvents: readonly MessageEvent<unknown>[]) => {
