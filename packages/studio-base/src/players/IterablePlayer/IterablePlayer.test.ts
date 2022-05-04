@@ -153,9 +153,12 @@ describe("IterablePlayer", () => {
     const store = new PlayerStateStore(4);
     player.setSubscriptions([{ topic: "foo" }]);
     player.setListener(async (state) => await store.add(state));
+
+    // Wait for initial setup
     await store.done;
 
-    store.reset(4);
+    // Reset store to get state from the seeks
+    store.reset(2);
 
     // replace the message iterator with our own implementation
     // This implementation performs a seekPlayback during backfill.
@@ -241,7 +244,7 @@ describe("IterablePlayer", () => {
     // 2. a state update with the _new_ seek time to ack the second seek
     // 3. a state update with the messages from the new seek
     // 4. a state update from idle
-    expect(playerStates).toEqual([baseState, newSeekBase, withMessages, newSeekBase]);
+    expect(playerStates).toEqual([newSeekBase, withMessages]);
 
     player.close();
   });
