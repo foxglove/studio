@@ -57,6 +57,16 @@ const useStyles = makeStyles((theme: Theme) => ({
   },
 }));
 
+function defaultInitialSidebarPercentage() {
+  if (window.innerWidth < 1024) {
+    // Use percentage for smaller screens.
+    return 23;
+  } else {
+    // Use fixed width for larger screens.
+    return 100 * (384 / window.innerWidth);
+  }
+}
+
 export default function Sidebar<K extends string>({
   children,
   items,
@@ -84,7 +94,7 @@ export default function Sidebar<K extends string>({
           direction: "row",
           first: "sidebar",
           second: "children",
-          splitPercentage: 23,
+          splitPercentage: defaultInitialSidebarPercentage(),
         });
       }
       prevSelectedKey.current = selectedKey;
