@@ -165,6 +165,7 @@ describe("IterablePlayer", () => {
     // eslint-disable-next-line @typescript-eslint/unbound-method
     const originalMethod = source.getBackfillMessages;
     source.getBackfillMessages = async function () {
+      // Set a new backfill method and initiate another seek
       source.getBackfillMessages = async function () {
         source.getBackfillMessages = originalMethod;
         return [
@@ -188,7 +189,7 @@ describe("IterablePlayer", () => {
 
     const baseState: PlayerStateWithoutPlayerId = {
       activeData: {
-        currentTime: { sec: 0, nsec: 0 },
+        currentTime: { sec: 0, nsec: 1 },
         startTime: { sec: 0, nsec: 0 },
         endTime: { sec: 0, nsec: 0 },
         datatypes: new Map(),
@@ -214,18 +215,10 @@ describe("IterablePlayer", () => {
       name: undefined,
     };
 
-    const newSeekBase = {
+    const withMessages: PlayerStateWithoutPlayerId = {
       ...baseState,
       activeData: {
         ...baseState.activeData!,
-        currentTime: { sec: 0, nsec: 1 },
-      },
-    };
-
-    const withMessages: PlayerStateWithoutPlayerId = {
-      ...newSeekBase,
-      activeData: {
-        ...newSeekBase.activeData,
         currentTime: { sec: 0, nsec: 1 },
         messages: [
           {
@@ -240,11 +233,9 @@ describe("IterablePlayer", () => {
 
     // The first seek is interrupted by the second seek.
     // The state order:
-    // 1. a state update with the currentTime to ack the seek
-    // 2. a state update with the _new_ seek time to ack the second seek
-    // 3. a state update with the messages from the new seek
-    // 4. a state update from idle
-    expect(playerStates).toEqual([newSeekBase, withMessages]);
+    // 1. a state update completing the second seek
+    // 1. a state update for moving to idle
+    expect(playerStates).toEqual([withMessages, baseState]);
 
     player.close();
   });
