@@ -57,14 +57,12 @@ const useStyles = makeStyles((theme: Theme) => ({
   },
 }));
 
+// Determine initial sidebar width, with a cap for larger
+// screens.
 function defaultInitialSidebarPercentage() {
-  if (window.innerWidth < 1024) {
-    // Use percentage for smaller screens.
-    return 23;
-  } else {
-    // Use fixed width for larger screens.
-    return 100 * (384 / window.innerWidth);
-  }
+  const defaultFraction = 0.3;
+  const width = Math.min(384, defaultFraction * window.innerWidth);
+  return (100 * width) / window.innerWidth;
 }
 
 export default function Sidebar<K extends string>({
