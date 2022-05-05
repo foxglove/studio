@@ -37,6 +37,8 @@ const Root = muiStyled("div")({
 const PickerWrapper = muiStyled(Card)(({ theme }) => ({
   position: "absolute",
   zIndex: theme.zIndex.modal,
+  left: "0%",
+  transform: "translateX(-50%)",
 }));
 
 type ColorPickerInputProps = {
@@ -81,6 +83,7 @@ export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
               color={swatchColor}
               alphaType={props.alphaType}
               styles={{
+                root: { minWidth: 216 },
                 tableHexCell: { width: "35%" },
                 input: {
                   input: {
