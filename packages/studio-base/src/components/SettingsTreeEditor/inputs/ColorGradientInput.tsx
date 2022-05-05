@@ -15,15 +15,13 @@ import { ColorSwatch } from "./ColorSwatch";
 const PickerWrapperLeft = muiStyled(Card)(({ theme }) => ({
   position: "absolute",
   zIndex: theme.zIndex.modal,
-  top: 0,
-  marginTop: 28,
+  top: "100%",
 }));
 
 const PickerWrapperRight = muiStyled(Card)(({ theme }) => ({
   position: "absolute",
   zIndex: theme.zIndex.modal,
-  top: 0,
-  marginTop: 28,
+  top: "100%",
   right: 0,
 }));
 
