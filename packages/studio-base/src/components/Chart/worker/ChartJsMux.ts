@@ -84,6 +84,10 @@ Chart.register(
   AnnotationPlugin,
 );
 
+const fixedNumberFormat = new Intl.NumberFormat(undefined, {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 /**
  * Adjust the `ticks` of the chart options to ensure the first/last x labels remain a constant
  * width. See https://github.com/foxglove/studio/issues/2926
@@ -93,15 +97,12 @@ Chart.register(
  */
 function fixTicks(args: RpcUpdateEvent): RpcUpdateEvent {
   const xScale = args.options?.scales?.x;
-  const numberFormat = new Intl.NumberFormat(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+
   if (xScale?.ticks) {
     xScale.ticks.callback = function (value, index, ticks) {
       // use a fixed formatter for the first/last ticks
       if (index === 0 || index === ticks.length - 1) {
-        return numberFormat.format(value as number);
+        return fixedNumberFormat.format(value as number);
       }
       // otherwise use chart.js's default formatter
       return Ticks.formatters.numeric.apply(this, [value as number, index, ticks]);
