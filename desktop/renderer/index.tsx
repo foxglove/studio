@@ -5,7 +5,8 @@
 // Make Electron type definitions available globally, such as extensions to File and other built-ins
 /// <reference types="electron" />
 
-import { init as initSentry } from "@sentry/electron";
+import * as Sentry from "@sentry/electron/renderer";
+import { BrowserTracing } from "@sentry/tracing";
 import { StrictMode } from "react";
 import ReactDOM from "react-dom";
 
@@ -33,18 +34,22 @@ const isCrashReportingEnabled =
 
 if (isCrashReportingEnabled && typeof process.env.SENTRY_DSN === "string") {
   log.info("initializing Sentry in renderer");
-  initSentry({
+  Sentry.init({
     dsn: process.env.SENTRY_DSN,
     autoSessionTracking: true,
     release: `${process.env.SENTRY_PROJECT}@${pkgInfo.version}`,
     // Remove the default breadbrumbs integration - it does not accurately track breadcrumbs and
     // creates more noise than benefit.
     integrations: (integrations) => {
-      return integrations.filter((integration) => {
-        return integration.name !== "Breadcrumbs";
-      });
+      return integrations
+        .filter((integration) => integration.name !== "Breadcrumbs")
+        .concat([
+          new BrowserTracing({
+            startTransactionOnLocationChange: false, // location changes as a result of non-navigation interactions such as seeking
+          }),
+        ]);
     },
-    ignoreErrors: ["ResizeObserver loop limit exceeded"],
+    tracesSampleRate: 0.05,
   });
 }
 
@@ -55,6 +60,8 @@ const rootEl = document.getElementById("root");
 if (!rootEl) {
   throw new Error("missing #root element");
 }
+
+const isDevelopment = process.env.NODE_ENV === "development";
 
 async function main() {
   // Initialize the RPC channel for electron-socket. This method is called first
@@ -67,7 +74,15 @@ async function main() {
 
   const appConfiguration = await NativeStorageAppConfiguration.Initialize(
     (global as { storageBridge?: Storage }).storageBridge!,
-    { defaults: { [AppSetting.OPEN_DIALOG]: true, [AppSetting.ENABLE_REACT_STRICT_MODE]: true } },
+    {
+      defaults: {
+        [AppSetting.OPEN_DIALOG]: true,
+        [AppSetting.ENABLE_REACT_STRICT_MODE]: isDevelopment,
+        [AppSetting.EXPERIMENTAL_BAG_PLAYER]: true,
+        [AppSetting.EXPERIMENTAL_DATA_PLATFORM_PLAYER]: isDevelopment,
+        [AppSetting.EXPERIMENTAL_MCAP_PLAYER]: isDevelopment,
+      },
+    },
   );
 
   const enableStrictMode = appConfiguration.get(AppSetting.ENABLE_REACT_STRICT_MODE) as boolean;

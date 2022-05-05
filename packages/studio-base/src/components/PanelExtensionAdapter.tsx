@@ -6,6 +6,7 @@ import { useTheme } from "@fluentui/react";
 import {
   CSSProperties,
   useCallback,
+  useContext,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -31,12 +32,14 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import { SettingsTree } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import { useAppConfiguration } from "@foxglove/studio-base/context/AppConfigurationContext";
 import {
   useClearHoverValue,
   useHoverValue,
   useSetHoverValue,
 } from "@foxglove/studio-base/context/HoverValueContext";
+import { PanelSettingsEditorContext } from "@foxglove/studio-base/context/PanelSettingsEditorContext";
 import {
   AdvertiseOptions,
   PlayerCapabilities,
@@ -226,6 +229,20 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       prevBlocksRef.current = newBlocks;
     }
 
+    if (watchedFieldsRef.current.has("currentTime")) {
+      const currentTime = playerState?.activeData?.currentTime;
+
+      if (currentTime != undefined && currentTime !== renderState.currentTime) {
+        shouldRender = true;
+        renderState.currentTime = currentTime;
+      } else {
+        if (renderState.currentTime != undefined) {
+          shouldRender = true;
+        }
+        renderState.currentTime = undefined;
+      }
+    }
+
     if (watchedFieldsRef.current.has("previewTime")) {
       const startTime = playerState?.activeData?.startTime;
       const hoverVal = hoverValueRef.current?.value;
@@ -330,6 +347,16 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
   useMessagePipeline(messagePipelineSelector);
 
+  const { updatePanelSettingsTree } = useContext(PanelSettingsEditorContext);
+  const { id: panelLayoutId } = usePanelContext();
+
+  const updateSettings = useCallback(
+    (settings: SettingsTree) => {
+      updatePanelSettingsTree(panelLayoutId, settings);
+    },
+    [panelLayoutId, updatePanelSettingsTree],
+  );
+
   type PartialPanelExtensionContext = Omit<PanelExtensionContext, "panelElement">;
   const partialExtensionContext = useMemo<PartialPanelExtensionContext>(() => {
     const layout: PanelExtensionContext["layout"] = {
@@ -348,6 +375,9 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     };
 
     return {
+      // This is here temporarily until the new panel settings API is ready. Do not use.
+      __updatePanelSettingsTree: updateSettings,
+
       initialState: configRef.current,
 
       saveState: saveConfig,
@@ -458,15 +488,16 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       },
     };
   }, [
-    saveConfig,
     capabilities,
-    openSiblingPanel,
-    seekPlayback,
     clearHoverValue,
+    openSiblingPanel,
+    panelId,
+    updateSettings,
+    requestBackfill,
+    saveConfig,
+    seekPlayback,
     setHoverValue,
     setSubscriptions,
-    panelId,
-    requestBackfill,
   ]);
 
   const panelContainerRef = useRef<HTMLDivElement>(ReactNull);

@@ -9,8 +9,9 @@ import { PNG } from "pngjs";
 import UTIF from "utif";
 
 import Logger from "@foxglove/log";
+import { AppSetting } from "@foxglove/studio-base/src/AppSetting";
 
-import pkgInfo from "../../package.json";
+import { getAppSetting } from "./settings";
 
 const log = Logger.getLogger(__filename);
 
@@ -39,31 +40,39 @@ export async function rosPackageNameAtPath(packagePath: string): Promise<string 
 }
 
 /**
- * Return a map of ROS package names to their absolute paths.
+ * Find ROS package named `pkg` within the `rootPath`
+ *
+ * rootPath is searched recursively
  */
-async function listRosPackages(rootPath: string): Promise<Map<string, string>> {
+export async function findRosPackageInRoot(
+  pkg: string,
+  rootPath: string,
+): Promise<string | undefined> {
   const packagePaths = await fs.readdir(rootPath, { withFileTypes: true });
-  const packagesArray: { name: string | undefined; absolutePath: string }[] = await Promise.all(
-    packagePaths.map(async (packagePath) => {
-      const absolutePath = path.join(rootPath, packagePath.name);
-      try {
-        const name = packagePath.isDirectory()
-          ? await rosPackageNameAtPath(absolutePath)
-          : undefined;
-        return { name, absolutePath };
-      } catch (err) {
-        return { name: undefined, absolutePath };
-      }
-    }),
-  );
+  log.debug(`searching ${rootPath} for packages`);
 
-  const packages = new Map<string, string>();
-  for (const { name, absolutePath } of packagesArray) {
-    if (name != undefined) {
-      packages.set(name, absolutePath);
+  const directories = packagePaths.filter((pkgPath) => pkgPath.isDirectory());
+
+  // Check any of our immediate folders for the package
+  for (const packagePath of directories) {
+    const absolutePath = path.join(rootPath, packagePath.name);
+
+    const packageName = await rosPackageNameAtPath(absolutePath);
+    if (packageName === pkg) {
+      return absolutePath;
     }
   }
-  return packages;
+
+  // Recurse into all directories
+  for (const packagePath of directories) {
+    const absolutePath = path.join(rootPath, packagePath.name);
+    const foundPath = await findRosPackageInRoot(pkg, absolutePath);
+    if (foundPath) {
+      return foundPath;
+    }
+  }
+
+  return;
 }
 
 /**
@@ -71,146 +80,139 @@ async function listRosPackages(rootPath: string): Promise<Map<string, string>> {
  *
  * The search algorithm attempts to find the package in this order. It stops as soon as the package
  * is found:
- * - If options.searchPath is set, this folder and all of its parents are searched for the package
- * - If options.rosPackagePath is set, this folder(s) are searched
- * - If env.ROS_PACKAGE_PATH is available, this folder(s) are searched
+ * - If options.rosPackagePath is set, this folder(s) are searched recursively
+ * - If env.ROS_PACKAGE_PATH is available, this folder(s) are searched recursively
  *
  * https://wiki.ros.org/ROS/EnvironmentVariables#ROS_PACKAGE_PATH
  */
-export async function findRosPackageRoot(
+export async function findRosPackage(
   pkg: string,
-  options?: { rosPackagePath?: string; searchPath?: string },
+  options?: { rosPackagePath?: string },
 ): Promise<string | undefined> {
-  const { searchPath } = options ?? {};
-  // log.debug(`findRosPackageRoot(${pkg}, ${rosPackagePath}, ${searchPath})`);
+  // log.debug(`findRosPackage(${pkg}, ${rosPackagePath}, ${searchPath})`);
 
-  const triedPaths: string[] = [];
-
-  // Search searchPath and all parent paths
-  if (searchPath != undefined) {
-    let currentPath = searchPath;
-    for (;;) {
-      triedPaths.push(currentPath);
-      if ((await rosPackageNameAtPath(currentPath)) === pkg) {
-        // log.debug(`Found ROS package ${pkg} at ${currentPath} (searched relative to ${searchPath})`);
-        return currentPath;
-      }
-      if (path.dirname(currentPath) === currentPath) {
-        break;
-      }
-      currentPath = path.dirname(currentPath);
-    }
-  }
+  const rosPackagePaths: string[] = [];
 
   // Search options.rosPackagePath
   if (options?.rosPackagePath) {
-    const rosPackagePaths = options.rosPackagePath.split(path.delimiter);
-    for (const rosPackagePath of rosPackagePaths) {
-      triedPaths.push(rosPackagePath);
-      const packages = await listRosPackages(rosPackagePath);
-      const packagePath = packages.get(pkg);
-      if (packagePath) {
-        // log.info(`Found ROS package "${pkg}" at "${packagePath}" (in ROS_PACKAGE_PATH "${ROS_PACKAGE_PATH}")`);
-        return packagePath;
-      }
-    }
+    rosPackagePaths.push(...options.rosPackagePath.split(path.delimiter));
   }
 
   // Search env.ROS_PACKAGE_PATH
   if (process.env.ROS_PACKAGE_PATH) {
-    const rosPackagePaths = process.env.ROS_PACKAGE_PATH.split(path.delimiter);
-    for (const rosPackagePath of rosPackagePaths) {
-      triedPaths.push(rosPackagePath);
-      const packages = await listRosPackages(rosPackagePath);
-      const packagePath = packages.get(pkg);
-      if (packagePath) {
-        // log.info(`Found ROS package "${pkg}" at "${packagePath}" (in ROS_PACKAGE_PATH "${ROS_PACKAGE_PATH}")`);
-        return packagePath;
-      }
+    rosPackagePaths.push(...process.env.ROS_PACKAGE_PATH.split(path.delimiter));
+  }
+
+  for (const rosPackagePath of rosPackagePaths) {
+    const packagePath = await findRosPackageInRoot(pkg, rosPackagePath);
+    if (packagePath) {
+      // log.info(`Found ROS package "${pkg}" at "${packagePath}" (in ROS_PACKAGE_PATH "${ROS_PACKAGE_PATH}")`);
+      return packagePath;
     }
   }
 
-  log.warn(`Could not find ROS package "${pkg}" in: ${triedPaths.join(path.delimiter)}`);
+  log.warn(`Could not find ROS package "${pkg}" in: ${rosPackagePaths.join(path.delimiter)}`);
   return undefined;
 }
 
-/** Translate a x-foxglove-ros-package: style URL to the actual resource path on disk. */
-async function findRosPackageResource(urlString: string): Promise<string> {
-  const url = new URL(urlString);
-  const params = new URLSearchParams(url.search);
-  const targetPkg = params.get("targetPkg");
-  const basePath = params.get("basePath");
-  const rosPackagePath = params.get("rosPackagePath");
-  const relPath = params.get("relPath");
-  if (targetPkg == undefined) {
-    throw new Error("ROS package URL missing targetPkg");
-  }
-  if (relPath == undefined) {
-    throw new Error("ROS package URL missing relPath");
-  }
-
-  const resourcePathParts = relPath.split("/");
-  const pkgRoot = await findRosPackageRoot(targetPkg, {
-    rosPackagePath: rosPackagePath ?? undefined,
-    searchPath: basePath ? path.dirname(basePath) : undefined,
-  });
-  if (pkgRoot == undefined) {
-    throw new Error(
-      `ROS package ${targetPkg} not found${
-        basePath != undefined ? ` relative to ${basePath}` : ""
-      }. Set the ROS_PACKAGE_PATH environment variable before launching ${pkgInfo.productName}.`,
-    );
-  }
-  return path.join(pkgRoot, ...resourcePathParts);
-}
+// https://source.chromium.org/chromium/chromium/src/+/master:net/base/net_error_list.h
+// The error code for registerFileProtocol must be from the net error list
+const NET_ERROR_FAILED = -2;
 
 /**
- * Register handlers for x-foxglove-ros-package: and x-foxglove-ros-package-converted-tiff:
- * protocols. These URLs contain parameters for the ROS package name, the resource name relative to
- * the package root, and a search path (the path to the URDF file itself, when the file was dropped
- * in). We use the given search path and/or `env.ROS_PACKAGE_PATH` to locate the resource files.
+ * Register handlers for package: protocol
  *
- * The -converted-tiff: protocol reads TIFF images and converts them to PNG before sending the
- * response, because Chromium doesn't support TIFFs. The urdf_tutorial examples use .tif textures on
- * their meshes.
+ * The package: protocol handler attempts to load resources using ROS_PACKAGE_PATH lookup semantics.
  */
 export function registerRosPackageProtocolHandlers(): void {
-  protocol.registerFileProtocol("x-foxglove-ros-package", async (request, callback) => {
+  protocol.registerFileProtocol("package", async (request, callback) => {
     try {
-      const resPath = await findRosPackageResource(request.url);
-      callback({ path: resPath });
+      // Give preference to the ROS_PACKAGE_PATH app setting over the environment variable
+      const rosPackagePath =
+        getAppSetting<string>(AppSetting.ROS_PACKAGE_PATH) ?? process.env.ROS_PACKAGE_PATH;
+
+      log.info(`Load: ${request.url}`);
+      log.info(`ROS_PACKAGE_PATH ${rosPackagePath}`);
+      if (!rosPackagePath) {
+        throw new Error("ROS_PACKAGE_PATH not set");
+      }
+
+      const url = new URL(request.url);
+      const targetPkg = url.host;
+      const relPath = url.pathname;
+
+      const pkgRoot = await findRosPackage(targetPkg, {
+        rosPackagePath,
+      });
+
+      if (!pkgRoot) {
+        throw new Error(
+          `ROS package ${targetPkg} not found in any ROS_PACKAGE_PATH: ${rosPackagePath}.`,
+        );
+      }
+
+      const resolvedResourcePath = path.join(pkgRoot, ...relPath.split("/"));
+      log.info(`Resolved: ${resolvedResourcePath}`);
+      callback({ path: resolvedResourcePath });
     } catch (err) {
-      log.warn("Error loading from ROS package url", request.url, err);
-      callback({ error: 404 });
+      log.error(err);
+      callback({ error: NET_ERROR_FAILED });
     }
   });
 
-  protocol.registerBufferProtocol(
-    "x-foxglove-ros-package-converted-tiff",
-    async (request, callback) => {
-      try {
-        const resPath = await findRosPackageResource(request.url);
-        const buf = await fs.readFile(resPath);
-        const [ifd] = UTIF.decode(buf);
-        if (!ifd) {
-          throw new Error("TIFF decoding failed");
-        }
-        UTIF.decodeImage(buf, ifd);
-        const png = new PNG({ width: ifd.width, height: ifd.height });
-        png.data = Buffer.from(UTIF.toRGBA8(ifd));
-        const pngData = PNG.sync.write(png);
-        callback({ mimeType: "image/png", data: pngData });
-      } catch (err) {
-        log.warn("Error loading from ROS package url", request.url, err);
-        callback({ error: 404 });
+  // The URDFAssetLoader does not support .tiff files (because chrome does not support .tiff files
+  // in <img> tags). As a workaround, the loader modifies `package://` urls ending in `.tiff?` to
+  // x-foxglove-converted-tiff.
+  //
+  // This handler converts the .tiff file into a PNG file which is supported in <img> tags
+  protocol.registerBufferProtocol("x-foxglove-converted-tiff", async (request, callback) => {
+    try {
+      // Give preference to the ROS_PACKAGE_PATH app setting over the environment variable
+      const rosPackagePath =
+        getAppSetting<string>(AppSetting.ROS_PACKAGE_PATH) ?? process.env.ROS_PACKAGE_PATH;
+
+      log.info(`Load converted tiff: ${request.url}`);
+      log.info(`ROS_PACKAGE_PATH ${rosPackagePath}`);
+      if (!rosPackagePath) {
+        throw new Error("ROS_PACKAGE_PATH not set");
       }
-    },
-  );
+
+      const url = new URL(request.url);
+      const targetPkg = url.host;
+      const relPath = url.pathname;
+
+      const pkgRoot = await findRosPackage(targetPkg, {
+        rosPackagePath,
+      });
+
+      if (!pkgRoot) {
+        throw new Error(
+          `ROS package ${targetPkg} not found in any ROS_PACKAGE_PATH: ${rosPackagePath}.`,
+        );
+      }
+
+      const resolvedResourcePath = path.join(pkgRoot, ...relPath.split("/"));
+
+      const buf = await fs.readFile(resolvedResourcePath);
+      const [ifd] = UTIF.decode(buf);
+      if (!ifd) {
+        throw new Error("TIFF decoding failed");
+      }
+      UTIF.decodeImage(buf, ifd);
+      const png = new PNG({ width: ifd.width, height: ifd.height });
+      png.data = Buffer.from(UTIF.toRGBA8(ifd));
+      const pngData = PNG.sync.write(png);
+      callback({ mimeType: "image/png", data: pngData });
+    } catch (err) {
+      log.warn("Error loading from ROS package url", request.url, err);
+      callback({ error: NET_ERROR_FAILED });
+    }
+  });
 }
 
 /** Enable fetch for custom URL schemes. */
 export function registerRosPackageProtocolSchemes(): void {
   protocol.registerSchemesAsPrivileged([
-    { scheme: "x-foxglove-ros-package", privileges: { supportFetchAPI: true } },
+    { scheme: "package", privileges: { supportFetchAPI: true } },
   ]);
 }

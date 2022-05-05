@@ -16,6 +16,7 @@
 
 import { omit } from "lodash";
 
+import { signal } from "@foxglove/den/async";
 import { Time, add, fromNanoSec } from "@foxglove/rostime";
 import {
   MessageEvent,
@@ -30,7 +31,6 @@ import {
   InitializationResult,
 } from "@foxglove/studio-base/randomAccessDataProviders/types";
 import delay from "@foxglove/studio-base/util/delay";
-import signal from "@foxglove/studio-base/util/signal";
 import { getSeekToTime, SEEK_ON_START_NS } from "@foxglove/studio-base/util/time";
 
 import RandomAccessPlayer, {
@@ -43,6 +43,7 @@ import TestProvider from "./TestProvider";
 const playerOptions: RandomAccessPlayerOptions = {
   metricsCollector: undefined,
   seekToTime: { type: "absolute", time: { sec: 10, nsec: 0 } },
+  sourceId: "test",
 };
 
 type PlayerStateWithoutPlayerId = Omit<PlayerState, "playerId">;
@@ -109,14 +110,15 @@ describe("RandomAccessPlayer", () => {
         capabilities: [],
         presence: PlayerPresence.INITIALIZING,
         progress: {},
+        urlState: { sourceId: "test", parameters: undefined },
       },
       {
         activeData: {
           currentTime: { sec: 10, nsec: 0 },
           datatypes: new Map(
             Object.entries({
-              baz: { definitions: [{ name: "val", type: "number" }] },
               fooBar: { definitions: [{ name: "val", type: "number" }] },
+              baz: { definitions: [{ name: "val", type: "number" }] },
             }),
           ),
           endTime: { sec: 100, nsec: 0 },
@@ -131,12 +133,13 @@ describe("RandomAccessPlayer", () => {
             { datatype: "fooBar", name: "/foo/bar" },
             { datatype: "baz", name: "/baz" },
           ],
-          parsedMessageDefinitionsByTopic: {},
+          topicStats: new Map(),
           publishedTopics: new Map<string, Set<string>>(),
         },
         capabilities: [PlayerCapabilities.setSpeed, PlayerCapabilities.playbackControl],
         presence: PlayerPresence.PRESENT,
         progress: {},
+        urlState: { sourceId: "test", parameters: undefined },
       },
     ]);
 
@@ -1226,6 +1229,11 @@ describe("RandomAccessPlayer", () => {
         ],
       }),
     ]);
+
+    expect((console.error as jest.Mock).mock.calls).toEqual([
+      [expect.any(String), new Error("fake initialization failure")],
+    ]);
+    (console.error as jest.Mock).mockClear();
   });
 
   it("reports when a provider is reconnecting", (done) => {

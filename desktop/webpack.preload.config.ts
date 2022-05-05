@@ -47,7 +47,12 @@ export default (_: unknown, argv: WebpackArgv): Configuration => {
 
     optimization: {
       removeAvailableModules: true,
-      minimizer: [new ESBuildMinifyPlugin({ target: "es2020" })],
+      minimizer: [
+        new ESBuildMinifyPlugin({
+          target: "es2020",
+          minifyIdentifiers: false, // readable error stack traces are helpful for debugging
+        }),
+      ],
     },
 
     plugins: [
@@ -61,9 +66,6 @@ export default (_: unknown, argv: WebpackArgv): Configuration => {
 
     resolve: {
       extensions: [".js", ".ts", ".tsx", ".json"],
-      alias: {
-        "@sentry/electron": "@sentry/electron/esm/renderer",
-      },
     },
   };
 };

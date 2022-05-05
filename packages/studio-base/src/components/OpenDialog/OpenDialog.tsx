@@ -7,6 +7,7 @@ import { Stack } from "@mui/material";
 import { useCallback, useLayoutEffect, useMemo, useState } from "react";
 import { useMountedState } from "react-use";
 
+import { useDialogHostId } from "@foxglove/studio-base/context/DialogHostIdContext";
 import {
   IDataSourceFactory,
   usePlayerSelection,
@@ -33,6 +34,7 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
   const theme = useTheme();
 
   const openFile = useOpenFile(availableSources);
+  const hostId = useDialogHostId();
 
   const firstSampleSource = useMemo(() => {
     return availableSources.find((source) => source.type === "sample");
@@ -63,16 +65,6 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
     }
   }, [activeView, firstSampleSource, isMounted, openFile, selectSource]);
 
-  const allExtensions = useMemo(() => {
-    return availableSources.reduce((all, source) => {
-      if (!source.supportedFileTypes) {
-        return all;
-      }
-
-      return [...all, ...source.supportedFileTypes];
-    }, [] as string[]);
-  }, [availableSources]);
-
   // connectionSources is the list of availableSources supporting "connections"
   const connectionSources = useMemo(() => {
     return availableSources.filter((source) => {
@@ -80,11 +72,21 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
     });
   }, [availableSources]);
 
+  const localFileSources = useMemo(() => {
+    return availableSources.filter((source) => source.type === "file");
+  }, [availableSources]);
+
   const remoteFileSources = useMemo(() => {
     return availableSources.filter((source) => source.type === "remote-file");
   }, [availableSources]);
 
   const view = useMemo(() => {
+    const supportedLocalFileTypes = localFileSources.flatMap(
+      (source) => source.supportedFileTypes ?? [],
+    );
+    const supportedRemoteFileTypes = remoteFileSources.flatMap(
+      (source) => source.supportedFileTypes ?? [],
+    );
     switch (activeView) {
       case "demo": {
         return {
@@ -118,14 +120,20 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
       default:
         return {
           title: "Get started",
-          component: <Start onSelectView={onSelectView} supportedFileExtensions={allExtensions} />,
+          component: (
+            <Start
+              onSelectView={onSelectView}
+              supportedLocalFileExtensions={supportedLocalFileTypes}
+              supportedRemoteFileExtensions={supportedRemoteFileTypes}
+            />
+          ),
         };
     }
   }, [
     activeDataSource,
     activeView,
-    allExtensions,
     connectionSources,
+    localFileSources,
     onDismiss,
     onSelectView,
     remoteFileSources,
@@ -141,6 +149,7 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
           // We enable event bubbling so a user can drag&drop files or folders onto the app even when
           // the dialog is shown.
           eventBubblingEnabled: true,
+          hostId,
         },
         styles: {
           main: {
@@ -161,9 +170,9 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
           content: {
             overflow: "hidden",
             // Keep a consistent height for the dialog so changing views does not change the height
-            height: 520,
             display: "flex",
             flexDirection: "column",
+            minHeight: 520,
             padding: theme.spacing.l1,
 
             "@media (max-height: 552px)": { overflowY: "auto" },

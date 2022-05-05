@@ -83,6 +83,7 @@ type ApiResponse<T> = { status: number; json: T };
 class ConsoleApi {
   private _baseUrl: string;
   private _authHeader?: string;
+  private _responseObserver: undefined | ((response: Response) => void);
 
   constructor(baseUrl: string) {
     this._baseUrl = baseUrl;
@@ -90,6 +91,10 @@ class ConsoleApi {
 
   setAuthHeader(header: string): void {
     this._authHeader = header;
+  }
+
+  setResponseObserver(observer: undefined | ((response: Response) => void)): void {
+    this._responseObserver = observer;
   }
 
   async orgs(): Promise<Org[]> {
@@ -186,13 +191,20 @@ class ConsoleApi {
     };
 
     const res = await fetch(fullUrl, fullConfig);
+    this._responseObserver?.(res);
     if (res.status !== 200 && !allowedStatuses.includes(res.status)) {
+      if (res.status === 401) {
+        throw new Error("Not logged in. Log in to your Foxglove account and try again.");
+      } else if (res.status === 403) {
+        throw new Error(
+          "Unauthorized. Check that you are logged in to the correct Foxglove organization.",
+        );
+      }
       const json = (await res.json().catch((err) => {
         throw new Error(`Status ${res.status}: ${err.message}`);
-      })) as { message?: string };
-      throw new Error(
-        `Status ${res.status}${json.message != undefined ? `: ${json.message}` : ""}`,
-      );
+      })) as { message?: string; error?: string };
+      const message = json.message ?? json.error;
+      throw new Error(`Status ${res.status}${message != undefined ? `: ${message}` : ""}`);
     }
 
     try {
@@ -284,6 +296,8 @@ class ConsoleApi {
     end: string;
     topics: readonly string[];
     outputFormat?: "bag1" | "mcap0";
+    replayPolicy?: "lastPerChannel" | "";
+    replayLookbackSeconds?: number;
   }): Promise<{ link: string }> {
     return await this.post<{ link: string }>("/v1/data/stream", params);
   }

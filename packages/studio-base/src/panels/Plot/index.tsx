@@ -14,11 +14,13 @@
 import { useTheme } from "@fluentui/react";
 import DownloadOutlineIcon from "@mdi/svg/svg/download-outline.svg";
 import { Stack } from "@mui/material";
-import { compact, uniq } from "lodash";
+import produce from "immer";
+import { compact, set, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
-import { useEffect, useCallback, useMemo, ComponentProps } from "react";
+import { useEffect, useCallback, useMemo, ComponentProps, useContext } from "react";
 
 import { filterMap } from "@foxglove/den/collection";
+import { useShallowMemo } from "@foxglove/hooks";
 import {
   Time,
   add as addTimes,
@@ -44,17 +46,16 @@ import {
   useMessagePipelineGetter,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
+import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import { SettingsTreeAction } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import {
   ChartDefaultView,
   TimeBasedChartTooltipData,
 } from "@foxglove/studio-base/components/TimeBasedChart";
+import { PanelSettingsEditorContext } from "@foxglove/studio-base/context/PanelSettingsEditorContext";
 import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/src/components/Chart";
-import {
-  OpenSiblingPanel,
-  PanelConfig,
-  PanelConfigSchema,
-} from "@foxglove/studio-base/types/panels";
+import { OpenSiblingPanel, PanelConfig } from "@foxglove/studio-base/types/panels";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
 
 import PlotChart from "./PlotChart";
@@ -63,6 +64,7 @@ import { downloadCSV } from "./csv";
 import { getDatasets } from "./datasets";
 import helpContent from "./index.help.md";
 import { PlotDataByPath, PlotDataItem } from "./internalTypes";
+import { buildSettingsTree } from "./settings";
 import { PlotConfig } from "./types";
 
 export { plotableRosTypes } from "./types";
@@ -296,6 +298,16 @@ function Plot(props: Props) {
     [allPaths],
   );
 
+  // The addMessages function below is passed to useMessageReducer to handle new messages during
+  // playback. If we have messages for a specific path in _blocks_ then we ignore the messages in
+  // the reducer.
+  //
+  // To keep the addMessages function "stable" when loading new blocks we grab only the paths from
+  // the blocks and make addMessages depend on the paths. To keep paths referentially stable when
+  // the paths values haven't changed we use a shallow memo.
+  const blockPaths = useMemo(() => Object.keys(plotDataForBlocks), [plotDataForBlocks]);
+  const blockPathsMemo = useShallowMemo(blockPaths);
+
   const addMessages = useCallback(
     (accumulated: PlotDataByPath, msgEvents: readonly MessageEvent<unknown>[]) => {
       const lastEventTime = msgEvents[msgEvents.length - 1]?.receiveTime;
@@ -314,7 +326,7 @@ function Plot(props: Props) {
         for (const path of paths) {
           // Skip any paths we already service in plotDataForBlocks.
           // We don't need to accumulate these because the block data takes precedence.
-          if (path in plotDataForBlocks) {
+          if (blockPathsMemo.includes(path)) {
             continue;
           }
 
@@ -363,7 +375,7 @@ function Plot(props: Props) {
       return { ...accumulated };
     },
     [
-      plotDataForBlocks,
+      blockPathsMemo,
       cachedGetMessagePathDataItems,
       followingView,
       showSingleCurrentMessage,
@@ -373,6 +385,7 @@ function Plot(props: Props) {
 
   const plotDataByPath = useMessageReducer<PlotDataByPath>({
     topics: subscribeTopics,
+    preloadType: "full",
     restore,
     addMessages,
   });
@@ -423,12 +436,38 @@ function Plot(props: Props) {
       if (!seekPlayback || !start || seekSeconds == undefined || xAxisVal !== "timestamp") {
         return;
       }
-      // The player validates and clamps the time.
-      const seekTime = addTimes(start, fromSec(seekSeconds));
-      seekPlayback(seekTime);
+      // Avoid normalizing a negative time if the clicked point had x < 0.
+      if (seekSeconds >= 0) {
+        seekPlayback(addTimes(start, fromSec(seekSeconds)));
+      }
     },
     [messagePipeline, xAxisVal],
   );
+
+  const { id: panelId } = usePanelContext();
+  const { updatePanelSettingsTree } = useContext(PanelSettingsEditorContext);
+
+  const actionHandler = useCallback(
+    (action: SettingsTreeAction) => {
+      const { path, value } = action.payload;
+      saveConfig(
+        produce(config, (draft) => {
+          if (path[0] === "timeSeriesOnly") {
+            set(draft, path.slice(1), value);
+          } else {
+            set(draft, path, value);
+          }
+        }),
+      );
+    },
+    [config, saveConfig],
+  );
+  useEffect(() => {
+    updatePanelSettingsTree(panelId, {
+      actionHandler,
+      settings: buildSettingsTree(config),
+    });
+  }, [actionHandler, config, panelId, updatePanelSettingsTree]);
 
   const stackDirection = useMemo(
     () => (legendDisplay === "top" ? "column" : "row"),
@@ -492,50 +531,6 @@ function Plot(props: Props) {
   );
 }
 
-const configSchema: PanelConfigSchema<PlotConfig> = [
-  { key: "title", type: "text", title: "Title", placeholder: "Untitled" },
-  {
-    key: "isSynced",
-    type: "toggle",
-    title: "Sync with other timestamp-based plots",
-  },
-  {
-    key: "legendDisplay",
-    type: "dropdown",
-    title: "Legend display",
-    options: [
-      { value: "floating", text: "floating" },
-      { value: "left", text: "left" },
-      { value: "top", text: "top" },
-    ],
-  },
-  {
-    key: "showPlotValuesInLegend",
-    type: "toggle",
-    title: "Show plot values in legend",
-  },
-  {
-    key: "showXAxisLabels",
-    type: "toggle",
-    title: "Show x-axis label",
-  },
-  {
-    key: "showYAxisLabels",
-    type: "toggle",
-    title: "Show y-axis label",
-  },
-  { key: "maxYValue", type: "number", title: "Y max", placeholder: "auto", allowEmpty: true },
-  { key: "minYValue", type: "number", title: "Y min", placeholder: "auto", allowEmpty: true },
-  {
-    key: "followingViewWidth",
-    type: "number",
-    title: "X range in seconds (for timestamp plots only)",
-    placeholder: "auto",
-    allowEmpty: true,
-    validate: (x) => (x > 0 ? x : undefined),
-  },
-];
-
 const defaultConfig: PlotConfig = {
   title: undefined,
   paths: [{ value: "", enabled: true, timestampMethod: "receiveTime" }],
@@ -555,6 +550,5 @@ export default Panel(
   Object.assign(Plot, {
     panelType: "Plot",
     defaultConfig,
-    configSchema,
   }),
 );

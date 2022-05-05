@@ -6,7 +6,7 @@ import { Time, toRFC3339String } from "@foxglove/rostime";
 import { LayoutID } from "@foxglove/studio-base/index";
 import {
   AppURLState,
-  encodeAppURLState,
+  updateAppURLState,
   parseAppURLState,
 } from "@foxglove/studio-base/util/appURLState";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
@@ -28,6 +28,12 @@ describe("app state url parser", () => {
     beforeEach(() => mockIsDesktop.mockReturnValue(isDesktop));
     it("rejects non data state urls", () => {
       expect(parseAppURLState(urlBuilder())).toBeUndefined();
+    });
+
+    it("parses urls with only a layoutId", () => {
+      const url = urlBuilder();
+      url.searchParams.append("layoutId", "1234");
+      expect(parseAppURLState(url)?.layoutId).toBe("1234");
     });
 
     it("parses rosbag data state urls", () => {
@@ -76,7 +82,7 @@ describe("app state encoding", () => {
 
   it("encodes rosbag urls", () => {
     expect(
-      encodeAppURLState(baseURL(), {
+      updateAppURLState(baseURL(), {
         layoutId: "123" as LayoutID,
         time: undefined,
         ds: "ros1-remote-bagfile",
@@ -109,7 +115,7 @@ describe("app state encoding", () => {
       },
     ])("encodes url state", (state) => {
       const url = state.dsParams?.url;
-      const encodededURL = encodeAppURLState(baseURL(), state).href;
+      const encodededURL = updateAppURLState(baseURL(), state).href;
       expect(encodededURL).toEqual(
         `http://example.com/?ds=${state.ds}&ds.url=${encodeURIComponent(
           url ?? "",

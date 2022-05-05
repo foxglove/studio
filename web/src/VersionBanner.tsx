@@ -18,7 +18,7 @@ const useStyles = makeStyles({
     alignItems: "center",
     justifyContent: "center",
     textAlign: "center",
-    width: "100vw",
+    width: "100%",
     color: "white",
     backgroundColor: "rgba(99, 102, 241, 0.9)",
     zIndex: 100,
@@ -32,13 +32,14 @@ const useStyles = makeStyles({
     height: "100vh",
   },
   inner: {
+    display: "flex",
+    flexDirection: "column",
     padding: 12,
     gap: 8,
     alignItems: "center",
   },
   closeButton: {
-    fill: "white",
-    position: "absolute",
+    position: "absolute !important" as unknown as "absolute",
     margin: 8,
     right: 0,
     top: 0,
@@ -70,14 +71,17 @@ const VersionBanner = function ({
     <div className={cx(classes.root, { [classes.rootPersistant]: !isDismissable })}>
       <div className={classes.inner}>
         {isDismissable && (
-          <IconButton className={classes.closeButton} onClick={() => setShowBanner(false)}>
-            <CloseIcon color="inherit" />
+          <IconButton
+            color="inherit"
+            className={classes.closeButton}
+            onClick={() => setShowBanner(false)}
+          >
+            <CloseIcon />
           </IconButton>
         )}
 
         <Text styles={{ root: { color: "white", fontSize: "1.1em" } }}>
-          {prompt}
-          <br /> Foxglove Studio currently requires Chrome v{MINIMUM_CHROME_VERSION}+.
+          {prompt} Foxglove Studio currently requires Chrome v{MINIMUM_CHROME_VERSION}+.
         </Text>
 
         {!isChrome && (

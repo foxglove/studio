@@ -29,7 +29,6 @@ import { GLTextMarker } from "@foxglove/studio-base/panels/ThreeDimensionalViz/S
 import {
   Cover,
   OccupancyGrids,
-  LaserScans,
   PointClouds,
   PoseMarkers,
   LinedConvexHulls,
@@ -42,6 +41,10 @@ import {
   LAYER_INDEX_TEXT,
   LAYER_INDEX_OCCUPANCY_GRIDS,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/constants";
+import {
+  NormalizedPose,
+  NormalizedPoseArray,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
 import {
   BaseMarker,
   CubeListMarker,
@@ -56,6 +59,7 @@ import {
   ColorMarker,
   MeshMarker,
   GlLineListMarker,
+  Pose,
 } from "@foxglove/studio-base/types/Messages";
 import { ReglColor } from "@foxglove/studio-base/util/colorUtils";
 
@@ -73,14 +77,16 @@ export type InteractiveMarkersByType = {
   glText: Interactive<GLTextMarker>[];
   grid: Interactive<BaseMarker>[];
   instancedLineList: Interactive<BaseMarker>[];
-  laserScan: Interactive<BaseMarker>[];
   linedConvexHull: Interactive<LineListMarker | LineStripMarker>[];
   lineList: Interactive<LineListMarker>[];
   lineStrip: Interactive<LineStripMarker>[];
   mesh: Interactive<MeshMarker>[];
   pointcloud: Interactive<SphereMarker>[];
   points: Interactive<PointsMarker>[];
-  poseMarker: Interactive<BaseMarker>[];
+  poseMarker: (
+    | Interactive<NormalizedPose & { type: 103 }>
+    | Interactive<NormalizedPoseArray & { type: 111; pose: Pose }>
+  )[];
   sphere: Interactive<SphereMarker>[];
   sphereList: Interactive<SphereListMarker>[];
   text: Interactive<TextMarker>[];
@@ -157,7 +163,6 @@ export default function WorldMarkers({
     glText,
     grid,
     instancedLineList,
-    laserScan,
     linedConvexHull,
     lineList,
     lineStrip,
@@ -213,7 +218,6 @@ export default function WorldMarkers({
       <Cylinders layerIndex={layerIndex}>{cylinder}</Cylinders>
       <Cubes layerIndex={layerIndex}>{[...cube, ...cubeList]}</Cubes>
       <PoseMarkers layerIndex={layerIndex} markers={poseMarker} />
-      <LaserScans layerIndex={layerIndex}>{laserScan}</LaserScans>
       {glTextAtlasInfo.status === "LOADED" && (
         <GLText
           layerIndex={(layerIndex as number) + LAYER_INDEX_TEXT}

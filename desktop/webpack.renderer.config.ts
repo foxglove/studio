@@ -74,13 +74,18 @@ export default (env: unknown, argv: WebpackArgv): Configuration => {
 
     optimization: {
       removeAvailableModules: true,
-      minimizer: [new ESBuildMinifyPlugin({ target: "es2020" })],
+      minimizer: [
+        new ESBuildMinifyPlugin({
+          target: "es2020",
+          minifyIdentifiers: false, // readable error stack traces are helpful for debugging
+        }),
+      ],
     },
 
     plugins: [
       ...plugins,
       ...(appWebpackConfig.plugins ?? []),
-      new EnvironmentPlugin(buildEnvironmentDefaults(argv.env?.FOXGLOVE_BACKEND)),
+      new EnvironmentPlugin(buildEnvironmentDefaults(argv.env?.FOXGLOVE_BACKEND ?? argv.mode)),
       new HtmlWebpackPlugin({
         templateContent: `
   <!doctype html>

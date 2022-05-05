@@ -13,6 +13,7 @@
 
 import { debounce, flatten } from "lodash";
 
+import { signal } from "@foxglove/den/async";
 import { useShallowMemo } from "@foxglove/hooks";
 import { Time } from "@foxglove/rostime";
 import { MessageEvent, ParameterValue } from "@foxglove/studio";
@@ -26,6 +27,7 @@ import {
   Player,
   PlayerCapabilities,
   PlayerPresence,
+  PlayerProblem,
   PlayerState,
   PublishPayload,
   SubscribePayload,
@@ -33,7 +35,6 @@ import {
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import createSelectableContext from "@foxglove/studio-base/util/createSelectableContext";
-import signal from "@foxglove/studio-base/util/signal";
 
 import MessageOrderTracker from "./MessageOrderTracker";
 import { pauseFrameForPromises, FramePromise } from "./pauseFrameForPromise";
@@ -257,6 +258,18 @@ export function MessagePipelineProvider({
   );
 }
 
+// Given a PlayerState and a PlayerProblem array, add the problems to any existing player problems
+function concatProblems(origState: PlayerState, problems: PlayerProblem[]): PlayerState {
+  if (problems.length === 0) {
+    return origState;
+  }
+
+  return {
+    ...origState,
+    problems: problems.concat(origState.problems ?? []),
+  };
+}
+
 /**
  * The creation of the player listener is extracted as a separate function to prevent memory leaks.
  * When multiple closures are created inside of an outer function, V8 allocates one "context" object
@@ -292,7 +305,7 @@ function createPlayerListener(args: {
   const messageOrderTracker = new MessageOrderTracker();
   let closed = false;
   let resolveFn: undefined | (() => void);
-  const listener = async (newPlayerState: PlayerState) => {
+  const listener = async (listenerPlayerState: PlayerState) => {
     if (closed) {
       return;
     }
@@ -302,7 +315,8 @@ function createPlayerListener(args: {
     }
 
     // check for any out-of-order or out-of-sync messages
-    messageOrderTracker.update(newPlayerState);
+    const problems = messageOrderTracker.update(listenerPlayerState);
+    const newPlayerState = concatProblems(listenerPlayerState, problems);
 
     const promise = new Promise<void>((resolve) => {
       resolveFn = () => {

@@ -17,6 +17,7 @@ import { Stack } from "@mui/material";
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useLatest, useUnmount } from "react-use";
 
+import { useDialogHostId } from "@foxglove/studio-base/context/DialogHostIdContext";
 import { useLayoutManager } from "@foxglove/studio-base/context/LayoutManagerContext";
 import { Layout } from "@foxglove/studio-base/services/ILayoutStorage";
 
@@ -40,6 +41,7 @@ export function UnsavedChangesPrompt({
   defaultPersonalCopyName?: string;
 }): JSX.Element {
   const theme = useTheme();
+  const hostId = useDialogHostId();
 
   const options = useMemo<
     (IChoiceGroupOption & { key: Exclude<UnsavedChangesResolution["type"], "cancel"> })[]
@@ -109,11 +111,12 @@ export function UnsavedChangesPrompt({
       hidden={false}
       onDismiss={handleCancel}
       dialogContentProps={{ title: `“${layout.name}” has unsaved changes` }}
+      modalProps={{ layerProps: { hostId } }}
       minWidth={320}
       maxWidth={320}
     >
       <form onSubmit={handleSubmit}>
-        <Stack spacing={2} sx={{ minHeight: 180 }}>
+        <Stack spacing={2} style={{ minHeight: 180 }}>
           <ChoiceGroup
             selectedKey={selectedKey}
             options={options}

@@ -17,7 +17,7 @@ import { useLayoutEffect } from "react";
 
 import MockMessagePipelineProvider from "@foxglove/studio-base/components/MessagePipeline/MockMessagePipelineProvider";
 import AppConfigurationContext, {
-  AppConfiguration,
+  IAppConfiguration,
 } from "@foxglove/studio-base/context/AppConfigurationContext";
 import { useSetHoverValue } from "@foxglove/studio-base/context/HoverValueContext";
 import {
@@ -48,15 +48,15 @@ function getPlayerState(): PlayerState {
       speed: 0.2,
       lastSeekTime: 0,
       topics: [{ name: "/empty_topic", datatype: "VoidType" }],
+      topicStats: new Map(),
       datatypes: new Map(Object.entries({ VoidType: { definitions: [] } })),
-      parsedMessageDefinitionsByTopic: {},
       totalBytesReceived: 1234,
     },
   };
   return player;
 }
 
-const mockAppConfiguration: AppConfiguration = {
+const mockAppConfiguration: IAppConfiguration = {
   get: () => undefined,
   set: async () => {},
   addChangeListener: () => {},

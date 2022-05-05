@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import "colors";
-import { init as initSentry } from "@sentry/electron";
+import * as Sentry from "@sentry/electron/main";
 import { app, BrowserWindow, ipcMain, Menu, session, nativeTheme } from "electron";
 import fs from "fs";
 
@@ -107,16 +107,14 @@ function main() {
   const { crashReportingEnabled } = getTelemetrySettings();
   if (crashReportingEnabled && typeof process.env.SENTRY_DSN === "string") {
     log.info("initializing Sentry in main");
-    initSentry({
+    Sentry.init({
       dsn: process.env.SENTRY_DSN,
       autoSessionTracking: true,
       release: `${process.env.SENTRY_PROJECT}@${pkgInfo.version}`,
       // Remove the default breadbrumbs integration - it does not accurately track breadcrumbs and
       // creates more noise than benefit.
       integrations: (integrations) => {
-        return integrations.filter((integration) => {
-          return integration.name !== "Breadcrumbs";
-        });
+        return integrations.filter((integration) => integration.name !== "Breadcrumbs");
       },
     });
   }
@@ -245,11 +243,13 @@ function main() {
       "script-src": `'self' 'unsafe-inline' 'unsafe-eval'`,
       "worker-src": `'self' blob:`,
       "style-src": "'self' 'unsafe-inline'",
-      "connect-src": "'self' ws: wss: http: https: x-foxglove-ros-package:",
+      "connect-src": "'self' ws: wss: http: https: package:",
       "font-src": "'self' data:",
-      "img-src":
-        "'self' data: https: x-foxglove-ros-package: x-foxglove-ros-package-converted-tiff:",
+      "img-src": "'self' data: https: package: x-foxglove-converted-tiff:",
     };
+    const cspHeader = Object.entries(contentSecurityPolicy)
+      .map(([key, val]) => `${key} ${val}`)
+      .join("; ");
 
     // Set default http headers
     session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
@@ -258,11 +258,7 @@ function main() {
 
       // don't set CSP for internal URLs
       if (!["chrome-extension:", "devtools:", "data:"].includes(url.protocol)) {
-        responseHeaders["Content-Security-Policy"] = [
-          Object.entries(contentSecurityPolicy)
-            .map(([key, val]) => `${key} ${val}`)
-            .join("; "),
-        ];
+        responseHeaders["Content-Security-Policy"] = [cspHeader];
       }
 
       callback({ responseHeaders });

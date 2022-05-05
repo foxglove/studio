@@ -11,7 +11,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { Link, Text, useTheme } from "@fluentui/react";
-import { Box, Stack } from "@mui/material";
+import { Box } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { extname } from "path";
 import {
@@ -54,6 +54,7 @@ import Preferences from "@foxglove/studio-base/components/Preferences";
 import RemountOnValueChange from "@foxglove/studio-base/components/RemountOnValueChange";
 import Sidebar, { SidebarItem } from "@foxglove/studio-base/components/Sidebar";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
+import Stack from "@foxglove/studio-base/components/Stack";
 import { URLStateSyncAdapter } from "@foxglove/studio-base/components/URLStateSyncAdapter";
 import { useAssets } from "@foxglove/studio-base/context/AssetsContext";
 import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
@@ -66,6 +67,7 @@ import { useExtensionLoader } from "@foxglove/studio-base/context/ExtensionLoade
 import { useHelpInfo } from "@foxglove/studio-base/context/HelpInfoContext";
 import LinkHandlerContext from "@foxglove/studio-base/context/LinkHandlerContext";
 import { useNativeAppMenu } from "@foxglove/studio-base/context/NativeAppMenuContext";
+import { PanelSettingsEditorContextProvider } from "@foxglove/studio-base/context/PanelSettingsEditorContext";
 import {
   IDataSourceFactory,
   usePlayerSelection,
@@ -118,7 +120,7 @@ function AddPanel() {
 
   return (
     <SidebarContent
-      noPadding={selectedLayoutId != undefined}
+      disablePadding={selectedLayoutId != undefined}
       title="Add panel"
       helpContent={panelsHelpContent}
     >
@@ -549,6 +551,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         /* eslint-disable react/jsx-key */
         <LinkHandlerContext.Provider value={handleInternalLink} />,
         <WorkspaceContext.Provider value={workspaceActions} />,
+        <PanelSettingsEditorContextProvider />,
         /* eslint-enable react/jsx-key */
       ]}
     >

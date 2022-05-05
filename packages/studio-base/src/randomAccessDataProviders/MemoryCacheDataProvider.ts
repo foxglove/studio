@@ -24,7 +24,7 @@ import {
   subtract as subtractTimes,
   toNanoSec,
 } from "@foxglove/rostime";
-import { MessageEvent } from "@foxglove/studio-base/players/types";
+import { MessageBlock } from "@foxglove/studio-base/players/types";
 import {
   RandomAccessDataProvider,
   ExtensionPoint,
@@ -56,21 +56,7 @@ export const MAX_BLOCK_SIZE_BYTES = 50e6; // Number of bytes in a block before w
 // See: https://github.com/foxglove/studio/pull/1733
 const DEFAULT_CACHE_SIZE_BYTES = 1.0e9;
 
-// For each memory block we store the actual messages (grouped by topic), and a total byte size of
-// the underlying ArrayBuffers.
-export type MemoryCacheBlock = {
-  readonly messagesByTopic: {
-    readonly [topic: string]: MessageEvent<unknown>[];
-  };
-  readonly sizeInBytes: number;
-};
-
-export type BlockCache = {
-  blocks: readonly (MemoryCacheBlock | undefined)[];
-  startTime: Time;
-};
-
-const EMPTY_BLOCK: MemoryCacheBlock = {
+const EMPTY_BLOCK: MessageBlock = {
   messagesByTopic: {},
   sizeInBytes: 0,
 };
@@ -240,7 +226,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
   // The actual blocks that contain the messages. Blocks have a set "width" in terms of nanoseconds
   // since the start time of the log. If a block has some messages for a topic, then by definition
   // it has *all* messages for that topic and timespan.
-  private _blocks: (MemoryCacheBlock | undefined)[] = [];
+  private _blocks: (MessageBlock | undefined)[] = [];
 
   // The start time of the log. Used for computing from and to nanoseconds since the start.
   private _startTime: Time = { sec: 0, nsec: 0 };
@@ -306,7 +292,10 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
     this._memCacheBlockSizeNs = Math.ceil(
       Math.max(MIN_MEM_CACHE_BLOCK_SIZE_NS, this._totalNs / MAX_BLOCKS),
     );
-    this._readAheadBlocks = Math.ceil(READ_AHEAD_NS / this._memCacheBlockSizeNs);
+    // Because read requests from the player may span across a block boundary, this always needs to
+    // be at least 2. 2 should be sufficient as long as the player never requests more than
+    // MIN_MEM_CACHE_BLOCK_SIZE_NS of data at once.
+    this._readAheadBlocks = Math.max(2, Math.ceil(READ_AHEAD_NS / this._memCacheBlockSizeNs));
 
     if (this._totalNs > Number.MAX_SAFE_INTEGER * 0.9) {
       throw new Error("Time range is too long to be supported");
@@ -454,7 +443,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
       readRequestRange: this._readRequests[0]?.blockRange,
       downloadedRanges: this._getDownloadedBlockRanges(),
       lastResolvedCallbackEnd: this._lastResolvedCallbackEnd,
-      cacheSize: this._readAheadBlocks,
+      maxRequestSize: this._readAheadBlocks,
       fileSize: this._blocks.length,
       continueDownloadingThreshold: 10, // Somewhat arbitrary number to not create new connections all the time.
     });
@@ -708,7 +697,7 @@ export default class MemoryCacheDataProvider implements RandomAccessDataProvider
 
     // Update our state.
     this._recentBlockRanges = newRecentRanges;
-    const newBlocks: (MemoryCacheBlock | undefined)[] = Array.from({ length: this._blocks.length });
+    const newBlocks: (MessageBlock | undefined)[] = Array.from({ length: this._blocks.length });
 
     for (let blockIndex = 0; blockIndex < this._blocks.length; blockIndex++) {
       if (this._blocks[blockIndex] && blockIndexesToKeep.has(blockIndex)) {

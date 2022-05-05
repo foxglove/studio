@@ -2,12 +2,13 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { captureException } from "@sentry/core";
 import { isEqual } from "lodash";
 
 import Logger from "@foxglove/log";
 import { Mcap0StreamReader, Mcap0Types } from "@foxglove/mcap";
-import { loadDecompressHandlers, ParsedChannel } from "@foxglove/mcap-support";
-import { fromNanoSec, isTimeInRangeInclusive, Time, toRFC3339String } from "@foxglove/rostime";
+import { loadDecompressHandlers, parseChannel, ParsedChannel } from "@foxglove/mcap-support";
+import { fromNanoSec, Time, toRFC3339String } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
 import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 
@@ -37,16 +38,31 @@ export default async function* streamMessages({
    * function may return successfully (possibly after yielding any remaining messages), or it may
    * raise an AbortError.
    */
-  signal: AbortSignal;
+  signal?: AbortSignal;
 
   /** Parameters indicating the time range to stream. */
-  params: { deviceId: string; start: Time; end: Time; topics: readonly string[] };
+  params: {
+    deviceId: string;
+    start: Time;
+    end: Time;
+    topics: readonly string[];
+    replayPolicy?: "lastPerChannel" | "";
+    replayLookbackSeconds?: number;
+  };
 
   /**
    * Message readers are initialized out of band so we can parse message definitions only once.
+   *
+   * NOTE: If we encounter a channel/schema pair that is not pre-initialized, we will add it to
+   * parsedChannelsByTopic (thus mutating parsedChannelsByTopic).
    */
   parsedChannelsByTopic: Map<string, ParsedChannelAndEncodings[]>;
-}): AsyncIterable<MessageEvent<unknown>[]> {
+}): AsyncGenerator<MessageEvent<unknown>[]> {
+  const controller = new AbortController();
+  signal?.addEventListener("abort", () => {
+    log.debug("Manual abort of streamMessages", params);
+    controller.abort();
+  });
   const decompressHandlers = await loadDecompressHandlers();
 
   log.debug("streamMessages", params);
@@ -57,11 +73,15 @@ export default async function* streamMessages({
     end: toRFC3339String(params.end),
     topics: params.topics,
     outputFormat: "mcap0",
+    replayPolicy: params.replayPolicy,
+    replayLookbackSeconds: params.replayLookbackSeconds,
   });
-  if (signal.aborted) {
+  if (controller.signal.aborted) {
     return;
   }
-  const response = await fetch(mcapUrl, { signal });
+
+  // Since every request is signed with a new token, there's no benefit to caching.
+  const response = await fetch(mcapUrl, { signal: controller.signal, cache: "no-cache" });
   if (response.status === 404) {
     return;
   } else if (response.status !== 200) {
@@ -117,17 +137,30 @@ export default async function* streamMessages({
             return;
           }
         }
-        // Throw an error for now, although we could fall back to just-in-time parsing:
-        // https://github.com/foxglove/studio/issues/2303
-        log.error(
-          "No pre-initialized reader for",
-          record,
-          "available readers are:",
-          parsedChannels,
-        );
-        throw new Error(
+
+        // We've not found a previously parsed channel with matching schema
+        // Create one here just-in-time
+        const parsedChannel = parseChannel({
+          messageEncoding: record.messageEncoding,
+          schema,
+        });
+
+        parsedChannels.push({
+          messageEncoding: record.messageEncoding,
+          schemaEncoding: schema.encoding,
+          schema: schema.data,
+          parsedChannel,
+        });
+
+        parsedChannelsByTopic.set(record.topic, parsedChannels);
+
+        channelInfoById.set(record.id, { channel: record, parsedChannel });
+
+        const err = new Error(
           `No pre-initialized reader for ${record.topic} (message encoding ${record.messageEncoding}, schema encoding ${schema.encoding}, schema name ${schema.name})`,
         );
+        captureException(err);
+        return;
       }
 
       case "Message": {
@@ -136,33 +169,49 @@ export default async function* streamMessages({
           throw new Error(`message for channel ${record.channelId} with no prior channel/schema`);
         }
         const receiveTime = fromNanoSec(record.logTime);
-        if (isTimeInRangeInclusive(receiveTime, params.start, params.end)) {
-          totalMessages++;
-          messages.push({
-            topic: info.channel.topic,
-            receiveTime,
-            message: info.parsedChannel.deserializer(record.data),
-            sizeInBytes: record.data.byteLength,
-          });
-        }
+        totalMessages++;
+        messages.push({
+          topic: info.channel.topic,
+          receiveTime,
+          message: info.parsedChannel.deserializer(record.data),
+          sizeInBytes: record.data.byteLength,
+        });
         return;
       }
     }
   }
 
-  const reader = new Mcap0StreamReader({ decompressHandlers });
-  for (let result; (result = await streamReader.read()), !result.done; ) {
-    reader.append(result.value);
-    for (let record; (record = reader.nextRecord()); ) {
-      processRecord(record);
+  let normalReturn = false;
+  parseLoop: try {
+    const reader = new Mcap0StreamReader({ decompressHandlers });
+    for (let result; (result = await streamReader.read()), !result.done; ) {
+      reader.append(result.value);
+      for (let record; (record = reader.nextRecord()); ) {
+        if (record.type === "DataEnd") {
+          normalReturn = true;
+          break;
+        }
+        processRecord(record);
+      }
+      if (messages.length > 0) {
+        yield messages;
+        messages = [];
+      }
+
+      if (normalReturn) {
+        break parseLoop;
+      }
     }
-    if (messages.length > 0) {
-      yield messages;
-      messages = [];
+    if (!reader.done()) {
+      throw new Error("Incomplete mcap file");
     }
-  }
-  if (!reader.done()) {
-    throw new Error("Incomplete mcap file");
+    normalReturn = true;
+  } finally {
+    if (!normalReturn) {
+      // If the caller called generator.return() in between body chunks, automatically cancel the request.
+      log.debug("Automatic abort of streamMessages", params);
+    }
+    controller.abort();
   }
 
   log.debug(

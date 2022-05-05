@@ -27,6 +27,7 @@ import {
   useCurrentLayoutActions,
   useSelectedPanels,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { PanelsActions } from "@foxglove/studio-base/context/CurrentLayoutContext/actions";
 import { HoverValueProvider } from "@foxglove/studio-base/context/HoverValueContext";
 import PanelCatalogContext, {
   PanelCatalog,
@@ -49,7 +50,7 @@ import {
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
 import HelpInfoProvider from "@foxglove/studio-base/providers/HelpInfoProvider";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
-import { PanelConfigSchemaEntry, SavedProps, UserNodes } from "@foxglove/studio-base/types/panels";
+import { SavedProps, UserNodes } from "@foxglove/studio-base/types/panels";
 
 type Frame = {
   [topic: string]: MessageEvent<unknown>[];
@@ -76,7 +77,7 @@ export type Fixture = {
   setSubscriptions?: ComponentProps<typeof MockMessagePipelineProvider>["setSubscriptions"];
 };
 
-type Props = {
+type UnconnectedProps = {
   children: React.ReactNode;
   fixture?: Fixture;
   panelCatalog?: PanelCatalog;
@@ -145,9 +146,6 @@ export const MosaicWrapper = ({ children }: { children: React.ReactNode }): JSX.
 
 // empty catalog if one is not provided via props
 class MockPanelCatalog implements PanelCatalog {
-  async getConfigSchema(_type: string): Promise<PanelConfigSchemaEntry<string>[] | undefined> {
-    return undefined;
-  }
   getPanels(): readonly PanelInfo[] {
     return [];
   }
@@ -156,7 +154,7 @@ class MockPanelCatalog implements PanelCatalog {
   }
 }
 
-function UnconnectedPanelSetup(props: Props): JSX.Element | ReactNull {
+function UnconnectedPanelSetup(props: UnconnectedProps): JSX.Element | ReactNull {
   const [mockPanelCatalog] = useState(() => props.panelCatalog ?? new MockPanelCatalog());
   const [mockAppConfiguration] = useState(() => ({
     get() {
@@ -290,11 +288,14 @@ function UnconnectedPanelSetup(props: Props): JSX.Element | ReactNull {
   return omitDragAndDrop ? inner : <MosaicWrapper>{inner}</MosaicWrapper>;
 }
 
+type Props = UnconnectedProps & {
+  onLayoutAction?: (action: PanelsActions) => void;
+};
 export default function PanelSetup(props: Props): JSX.Element {
   return (
     <UserNodeStateProvider>
       <HoverValueProvider>
-        <MockCurrentLayoutProvider>
+        <MockCurrentLayoutProvider onAction={props.onLayoutAction}>
           <HelpInfoProvider>
             <UnconnectedPanelSetup {...props} />
           </HelpInfoProvider>

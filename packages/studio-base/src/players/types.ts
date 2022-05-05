@@ -11,11 +11,12 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { DeepReadonly } from "ts-essentials";
+
 import { RosMsgDefinition } from "@foxglove/rosmsg";
 import { Time } from "@foxglove/rostime";
 import type { MessageEvent, ParameterValue } from "@foxglove/studio";
 import { GlobalVariables } from "@foxglove/studio-base/hooks/useGlobalVariables";
-import { BlockCache } from "@foxglove/studio-base/randomAccessDataProviders/MemoryCacheDataProvider";
 import {
   AverageThroughput,
   RandomAccessDataProviderStall,
@@ -94,7 +95,10 @@ export type PlayerProblem = {
   tip?: string;
 };
 
-export type PlayerURLState = Record<string, string>;
+export type PlayerURLState = DeepReadonly<{
+  sourceId: string;
+  parameters?: Record<string, string>;
+}>;
 
 export type PlayerState = {
   // Information about the player's presence or connection status, for the UI to show a loading indicator.
@@ -181,6 +185,11 @@ export type PlayerStateActiveData = {
   // present in the `datatypes` field (see below).
   topics: Topic[];
 
+  // A map of topic names to topic statistics, such as message count. This should be treated as a
+  // sparse list that may be missing some or all topics, depending on the active data source and its
+  // current state.
+  topicStats: Map<string, TopicStats>;
+
   // A complete list of ROS datatypes. Allowed to change. But it must always be "complete" (every
   // topic must refer to a datatype that is present in this list, every datatypes that refers to
   // another datatype must refer to a datatype that is present in this list).
@@ -198,10 +207,6 @@ export type PlayerStateActiveData = {
   // A map of parameter names to parameter values, used to describe remote parameters such as
   // rosparams.
   parameters?: Map<string, ParameterValue>;
-
-  // Used for late-parsing of binary messages. Required to cover any topic for which binary data is
-  // given to panels. (May be empty for players that only provide messages parsed into objects.)
-  parsedMessageDefinitionsByTopic: ParsedMessageDefinitionsByTopic;
 };
 
 // Represents a ROS topic, though the actual data does not need to come from a ROS system.
@@ -212,9 +217,15 @@ export type Topic = {
   name: string;
   // Name of the datatype (see `type PlayerStateActiveData` for details).
   datatype: string;
-  // The number of messages present on the topic. Valid only for sources with a fixed number of
-  // messages, such as bags.
-  numMessages?: number;
+};
+
+export type TopicStats = {
+  // The number of messages observed on the topic.
+  numMessages: number;
+  // Timestamp of the first observed message on this topic.
+  firstMessageTime?: Time;
+  // Timestamp of the last observed message on this topic.
+  lastMessageTime?: Time;
 };
 
 type RosSingularField = number | string | boolean | RosObject; // No time -- consider it a message.
@@ -231,6 +242,20 @@ export type RosObject = Readonly<{
   [property: string]: RosValue;
 }>;
 
+// For each memory block we store the actual messages (grouped by topic), and a total byte size of
+// the underlying ArrayBuffers.
+export type MessageBlock = {
+  readonly messagesByTopic: {
+    readonly [topic: string]: MessageEvent<unknown>[];
+  };
+  readonly sizeInBytes: number;
+};
+
+export type BlockCache = {
+  blocks: readonly (MessageBlock | undefined)[];
+  startTime: Time;
+};
+
 // Contains different kinds of progress indications
 export type Progress = Readonly<{
   // Indicate which ranges are loaded
@@ -241,12 +266,18 @@ export type Progress = Readonly<{
   readonly messageCache?: BlockCache;
 }>;
 
+export type SubscriptionPreloadType =
+  | "full" // Fetch messages for the entire content range.
+  | "partial"; // Fetch messages as needed.
+
 // Represents a subscription to a single topic, for use in `setSubscriptions`.
 // TODO(JP): Pull this into two types, one for the Player (which does not care about the
 // `requester`) and one for the Internals panel (which does).
 export type SubscribePayload = {
   // The topic name to subscribe to.
   topic: string;
+
+  preloadType?: SubscriptionPreloadType;
 
   // Optionally, where the request came from. Used in the "Internals" panel to improve debugging.
   requester?: { type: "panel" | "node" | "other"; name: string };

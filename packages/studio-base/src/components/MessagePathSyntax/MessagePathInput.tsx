@@ -46,9 +46,6 @@ import parseRosPath, { quoteFieldNameIfNeeded, quoteTopicNameIfNeeded } from "./
 //
 //  <MessagePathInput types={["uint16", "float64"]} />
 //
-// If you don't use timestamps, you might want to hide the warning icon that we show when selecting
-// a topic that has no header: `<MessagePathInput hideTimestampWarning>`.
-//
 // If you are rendering many input fields, you might want to use `<MessagePathInput index={5}>`,
 // which gets passed down to `<MessagePathInput onChange>` as the second parameter, so you can
 // avoid creating anonymous functions on every render (which will prevent the component from
@@ -156,7 +153,7 @@ type MessagePathInputBaseProps = {
   path: string; // A path of the form `/topic.some_field[:]{id==42}.x`
   index?: number; // Optional index field which gets passed to `onChange` (so you don't have to create anonymous functions)
   onChange: (value: string, index?: number) => void;
-  validTypes?: string[]; // Valid types, like "message", "array", or "primitive", or a ROS primitive like "float64"
+  validTypes?: readonly string[]; // Valid types, like "message", "array", or "primitive", or a ROS primitive like "float64"
   noMultiSlices?: boolean; // Don't suggest slices with multiple values `[:]`, only single values like `[0]`.
   autoSize?: boolean;
   placeholder?: string;

@@ -2,6 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { MessageEvent } from "@foxglove/studio";
+import { FoxgloveMessages } from "@foxglove/studio-base/types/FoxgloveMessages";
+
 export type Point = {
   lat: number;
   lon: number;
@@ -38,7 +41,11 @@ export type NavSatFixMsg = {
   latitude: number;
   longitude: number;
   altitude?: number;
-  status: { status: NavSatFixStatus; service: NavSatFixService };
-  position_covariance: Matrix3x3;
-  position_covariance_type: NavSatFixPositionCovarianceType;
+  status?: { status: NavSatFixStatus; service: NavSatFixService };
+  position_covariance?: Matrix3x3;
+  position_covariance_type?: NavSatFixPositionCovarianceType;
 };
+
+export type MapPanelMessage =
+  | MessageEvent<FoxgloveMessages["foxglove.GeoJSON"]>
+  | MessageEvent<NavSatFixMsg>;

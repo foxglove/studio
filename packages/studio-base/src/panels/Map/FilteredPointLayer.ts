@@ -14,6 +14,7 @@ type Args = {
   map: Map;
   bounds: LatLngBounds;
   color: string;
+  hoverColor: string;
   showAccuracy?: boolean;
   navSatMessageEvents: readonly MessageEvent<NavSatFixMsg>[];
   onHover?: (event: MessageEvent<NavSatFixMsg> | undefined) => void;
@@ -82,7 +83,7 @@ function FilteredPointLayer(args: Args): FeatureGroup {
   if (args.onHover) {
     markersLayer.on("mouseover", (event) => {
       const marker = event.sourceTarget as PointMarker;
-      marker.setStyle({ color: "yellow" });
+      marker.setStyle({ color: args.hoverColor });
       marker.bringToFront();
       args.onHover?.(marker.messageEvent);
     });
@@ -105,17 +106,24 @@ function FilteredPointLayer(args: Args): FeatureGroup {
 }
 
 function getAccuracy(msg: NavSatFixMsg): number | undefined {
+  const covariance = msg.position_covariance;
+  if (!covariance) {
+    return undefined;
+  }
+
   switch (msg.position_covariance_type) {
+    case undefined:
+      return undefined;
     case NavSatFixPositionCovarianceType.COVARIANCE_TYPE_UNKNOWN:
       return undefined;
     case NavSatFixPositionCovarianceType.COVARIANCE_TYPE_DIAGONAL_KNOWN: {
-      const eastVariance = msg.position_covariance[0];
-      const northVariance = msg.position_covariance[4];
+      const eastVariance = covariance[0];
+      const northVariance = covariance[4];
       return Math.sqrt(Math.max(eastVariance, northVariance));
     }
     case NavSatFixPositionCovarianceType.COVARIANCE_TYPE_APPROXIMATED:
     case NavSatFixPositionCovarianceType.COVARIANCE_TYPE_KNOWN: {
-      const K = msg.position_covariance;
+      const K = covariance;
       const Klatlon = [
         [K[0], K[1], K[2]],
         [K[3], K[4], K[5]],

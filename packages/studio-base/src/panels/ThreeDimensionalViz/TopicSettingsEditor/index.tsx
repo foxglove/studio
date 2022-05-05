@@ -18,9 +18,10 @@ import UrdfSettingsEditor from "@foxglove/studio-base/panels/ThreeDimensionalViz
 import { TopicSettingsEditorProps } from "@foxglove/studio-base/panels/ThreeDimensionalViz/TopicSettingsEditor/types";
 import { FOXGLOVE_GRID_DATATYPE, URDF_DATATYPE } from "@foxglove/studio-base/util/globalConstants";
 
-import LaserScanSettingsEditor from "./LaserScanSettingsEditor";
 import MarkerSettingsEditor from "./MarkerSettingsEditor";
+import OccupancyGridSettingsEditor from "./OccupancyGridSettingsEditor";
 import PointCloudSettingsEditor from "./PointCloudSettingsEditor";
+import PoseListSettingsEditor from "./PoseListSettingsEditor";
 import PoseSettingsEditor from "./PoseSettingsEditor";
 
 export type { TopicSettingsEditorProps } from "./types";
@@ -36,15 +37,21 @@ export function topicSettingsEditorForDatatype(datatype: string):
     ["sensor_msgs/PointCloud2", PointCloudSettingsEditor],
     ["sensor_msgs/msg/PointCloud2", PointCloudSettingsEditor],
     ["ros.sensor_msgs.PointCloud2", PointCloudSettingsEditor],
+    ["foxglove.PointCloud", PointCloudSettingsEditor],
     ["velodyne_msgs/VelodyneScan", PointCloudSettingsEditor],
     ["velodyne_msgs/msg/VelodyneScan", PointCloudSettingsEditor],
     ["ros.velodyne_msgs.VelodyneScan", PointCloudSettingsEditor],
+    ["geometry_msgs/PoseArray", PoseListSettingsEditor],
+    ["geometry_msgs/msg/PoseArray", PoseListSettingsEditor],
+    ["ros.geometry_msgs.PoseArray", PoseListSettingsEditor],
+    ["foxglove.PosesInFrame", PoseListSettingsEditor],
     ["geometry_msgs/PoseStamped", PoseSettingsEditor],
     ["geometry_msgs/msg/PoseStamped", PoseSettingsEditor],
     ["ros.geometry_msgs.PoseStamped", PoseSettingsEditor],
-    ["sensor_msgs/LaserScan", LaserScanSettingsEditor],
-    ["sensor_msgs/msg/LaserScan", LaserScanSettingsEditor],
-    ["ros.sensor_msgs.LaserScan", LaserScanSettingsEditor],
+    ["sensor_msgs/LaserScan", PointCloudSettingsEditor],
+    ["sensor_msgs/msg/LaserScan", PointCloudSettingsEditor],
+    ["ros.sensor_msgs.LaserScan", PointCloudSettingsEditor],
+    ["foxglove.LaserScan", PointCloudSettingsEditor],
     ["visualization_msgs/Marker", MarkerSettingsEditor],
     ["visualization_msgs/msg/Marker", MarkerSettingsEditor],
     ["ros.visualization_msgs.Marker", MarkerSettingsEditor],
@@ -54,6 +61,10 @@ export function topicSettingsEditorForDatatype(datatype: string):
     ["nav_msgs/Path", MarkerSettingsEditor],
     ["nav_msgs/msg/Path", MarkerSettingsEditor],
     ["ros.nav_msgs.Path", MarkerSettingsEditor],
+    ["nav_msgs/OccupancyGrid", OccupancyGridSettingsEditor],
+    ["nav_msgs/msg/OccupancyGrid", OccupancyGridSettingsEditor],
+    ["ros.nav_msgs.OccupancyGrid", OccupancyGridSettingsEditor],
+    ["foxglove.Grid", OccupancyGridSettingsEditor],
   ]);
 
   return editors.get(datatype) as

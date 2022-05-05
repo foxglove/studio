@@ -113,7 +113,7 @@ export function makeConfig(
                 // avoid looking at files which are not part of the bundle
                 onlyCompileBundledFiles: true,
                 projectReferences: true,
-                configFile: isDev ? "tsconfig.dev.json" : "tsconfig.json",
+                configFile: path.resolve(__dirname, isDev ? "tsconfig.dev.json" : "tsconfig.json"),
                 getCustomTransformers: () => ({
                   before: [
                     styledComponentsTransformer,
@@ -223,7 +223,12 @@ export function makeConfig(
     },
     optimization: {
       removeAvailableModules: true,
-      minimizer: [new ESBuildMinifyPlugin({ target: "es2020" })],
+      minimizer: [
+        new ESBuildMinifyPlugin({
+          target: "es2020",
+          minifyIdentifiers: false, // readable error stack traces are helpful for debugging
+        }),
+      ],
     },
     plugins: [
       new CircularDependencyPlugin({
@@ -258,6 +263,7 @@ export function makeConfig(
       }),
       new ForkTsCheckerWebpackPlugin({
         typescript: {
+          configFile: path.resolve(__dirname, isDev ? "tsconfig.dev.json" : "tsconfig.json"),
           configOverwrite: {
             compilerOptions: {
               noUnusedLocals: !allowUnusedVariables,

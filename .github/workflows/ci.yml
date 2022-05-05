@@ -44,16 +44,16 @@ jobs:
     name: ${{ matrix.config.name }} (${{ matrix.os }})
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           lfs: true
 
-      - uses: actions/setup-node@v3.0.0
+      - uses: actions/setup-node@v3.1.1
         with:
           node-version: 14.x
 
       - name: Restore cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             .yarn/cache
@@ -70,17 +70,17 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0 # Required for Chromatic
           lfs: true
 
-      - uses: actions/setup-node@v3.0.0
+      - uses: actions/setup-node@v3.1.1
         with:
           node-version: 14.x
 
       - name: Restore cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             .yarn/cache
@@ -98,7 +98,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           projectToken: f50040a29fb8
-          storybookBuildDir: packages/studio-base/storybook-static
+          storybookBuildDir: storybook-static
           autoAcceptChanges: main
           exitOnceUploaded: true
 
@@ -113,16 +113,16 @@ jobs:
     name: integration (${{ matrix.os }})
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           lfs: true
 
-      - uses: actions/setup-node@v3.0.0
+      - uses: actions/setup-node@v3.1.1
         with:
           node-version: 14.x
 
       - name: Restore cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             .yarn/cache

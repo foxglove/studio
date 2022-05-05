@@ -196,16 +196,7 @@ export default class CachedFilelike implements Filelike {
       this._lastResolvedCallbackEnd = range.end;
       const buffer = this._virtualBuffer.slice(range.start, range.end);
 
-      // You can set READ_DELAY=<number> on the command line when testing locally to simulate a slow connection.
-      let delay = 0;
-      if (process.env.READ_DELAY != undefined && process.env.NODE_ENV !== "production") {
-        delay = parseInt(process.env.READ_DELAY);
-        if (isNaN(delay)) {
-          delay = 1000;
-        }
-      }
-      setTimeout(() => resolve(buffer), delay);
-
+      resolve(buffer);
       return false;
     });
 
@@ -219,7 +210,7 @@ export default class CachedFilelike implements Filelike {
       readRequestRange: this._readRequests[0] ? this._readRequests[0].range : undefined,
       downloadedRanges: this._virtualBuffer.getRangesWithData(),
       lastResolvedCallbackEnd: this._lastResolvedCallbackEnd,
-      cacheSize: this._cacheSizeInBytes,
+      maxRequestSize: this._cacheSizeInBytes,
       fileSize: size,
       continueDownloadingThreshold: CLOSE_ENOUGH_BYTES_TO_NOT_START_NEW_CONNECTION,
     });
@@ -242,7 +233,7 @@ export default class CachedFilelike implements Filelike {
     }
 
     // Start the stream, and update the current connection state.
-    const stream = this._fileReader.fetch(range.start, range.end);
+    const stream = this._fileReader.fetch(range.start, range.end - range.start);
     this._currentConnection = { stream, remainingRange: range };
 
     stream.on("error", (error: Error) => {

@@ -4,18 +4,20 @@
 
 import { quat, vec3 } from "gl-matrix";
 
-import { DEFAULT_CAMERA_STATE } from "@foxglove/regl-worldview";
+import { DEFAULT_CAMERA_STATE, Vec4, vec4ToOrientation } from "@foxglove/regl-worldview";
 import { RosMsgDefinition } from "@foxglove/rosmsg";
 import { fromSec, Time } from "@foxglove/rostime";
 import { MessageEvent, Topic } from "@foxglove/studio";
 import useDelayedFixture from "@foxglove/studio-base/panels/ThreeDimensionalViz/stories/useDelayedFixture";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
+import { FoxgloveMessages } from "@foxglove/studio-base/types/FoxgloveMessages";
 import {
   ArrowMarker,
   CubeListMarker,
   CubeMarker,
   CylinderMarker,
   GeometryMsgs$PolygonStamped,
+  GeometryMsgs$PoseArray,
   Header,
   LaserScan,
   LineListMarker,
@@ -26,10 +28,12 @@ import {
   PointCloud2,
   PointsMarker,
   Pose,
+  PoseStamped,
   SphereListMarker,
   SphereMarker,
   TextMarker,
   TF,
+  TriangleListMarker,
 } from "@foxglove/studio-base/types/Messages";
 import { hexToColorObj } from "@foxglove/studio-base/util/colorUtils";
 import { FOXGLOVE_GRID_TOPIC } from "@foxglove/studio-base/util/globalConstants";
@@ -610,6 +614,37 @@ export function Markers(): JSX.Element {
     sizeInBytes: 0,
   };
 
+  const triangleList: MessageEvent<TriangleListMarker> = {
+    topic: "/markers",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
+      id: `triangleList`,
+      ns: "",
+      type: 11,
+      action: 0,
+      frame_locked: false,
+      pose: {
+        position: { x: 1, y: -1, z: 0 },
+        orientation: { x: 0, y: 0, z: 0, w: 1 },
+      },
+      scale: { x: 0.5, y: 0.5, z: 0.5 },
+      color: makeColor("#3f51b5", 0.5),
+      points: [
+        { x: 0, y: 0.25, z: 0 },
+        { x: 0.25, y: -0.25, z: 0 },
+        { x: -0.25, y: -0.25, z: 0 },
+
+        { x: 0.25, y: -0.25, z: 0 },
+        { x: -0.25, y: -0.25, z: 0 },
+        { x: 0, y: -0.5, z: 0 },
+      ],
+      colors: [makeColor("#f44336", 0.5), makeColor("#4caf50", 0.5), makeColor("#2196f3", 0.5)],
+      lifetime: { sec: 0, nsec: 0 },
+    },
+    sizeInBytes: 0,
+  };
+
   const fixture = useDelayedFixture({
     datatypes,
     topics,
@@ -627,6 +662,7 @@ export function Markers(): JSX.Element {
         points,
         text,
         mesh,
+        triangleList,
       ],
     },
     capabilities: [],
@@ -1366,6 +1402,209 @@ export function Marker_PointCloud2_Alignment(): JSX.Element {
   );
 }
 
+Foxglove_Color.parameters = { colorScheme: "dark" };
+export function Foxglove_Color(): JSX.Element {
+  const topics: Topic[] = [{ name: "/color", datatype: "foxglove.Color" }];
+  const color: MessageEvent<FoxgloveMessages["foxglove.Color"]> = {
+    topic: "/color",
+    receiveTime: { sec: 0, nsec: 0 },
+    message: { r: 1, g: 0.5, b: 0, a: 0.5 },
+    sizeInBytes: 0,
+  };
+
+  const fixture = useDelayedFixture({
+    datatypes,
+    topics,
+    frame: {
+      "/color": [color],
+    },
+    capabilities: [],
+    activeData: {
+      currentTime: { sec: 1, nsec: 0 },
+    },
+  });
+
+  return (
+    <PanelSetup fixture={fixture}>
+      <ThreeDimensionalViz
+        overrideConfig={{
+          ...ThreeDimensionalViz.defaultConfig,
+          checkedKeys: ["name:Topics", "t:/color", `t:${FOXGLOVE_GRID_TOPIC}`],
+        }}
+      />
+    </PanelSetup>
+  );
+}
+
+Foxglove_Grid.parameters = { colorScheme: "dark" };
+export function Foxglove_Grid(): JSX.Element {
+  const topics: Topic[] = [{ name: "/grid", datatype: "foxglove.Grid" }];
+  const width = 5;
+  const height = 3;
+  const offset = 2;
+  const row_stride = width + offset;
+  const data = new Uint8Array(row_stride * height);
+  const view = new DataView(data.buffer);
+  for (let r = 0; r < height; r++) {
+    for (let c = 0; c < width; c++) {
+      view.setInt8(r * row_stride + c + offset, (100 * (r * width + c)) / (width * height));
+    }
+  }
+  view.setInt8(offset + 0, -2);
+  view.setInt8(offset + 1, -3);
+  const grid: MessageEvent<FoxgloveMessages["foxglove.Grid"]> = {
+    topic: "/grid",
+    receiveTime: { sec: 0, nsec: 0 },
+    sizeInBytes: 0,
+    message: {
+      frame_id: "",
+      timestamp: { sec: 1, nsec: 0 },
+      pose: {
+        position: { x: 0, y: 0, z: 1 },
+        orientation: { x: 0, y: 0, z: 0, w: 1 },
+      },
+      fields: [{ name: "X", type: 2, offset }],
+      data,
+      cell_size: { x: 1, y: 1 },
+      cell_stride: 1,
+      column_count: width,
+      row_stride,
+    },
+  };
+
+  const fixture = useDelayedFixture({
+    datatypes,
+    topics,
+    frame: { "/grid": [grid] },
+    capabilities: [],
+    activeData: { currentTime: { sec: 1, nsec: 0 } },
+  });
+
+  return (
+    <PanelSetup fixture={fixture}>
+      <ThreeDimensionalViz
+        overrideConfig={{
+          ...ThreeDimensionalViz.defaultConfig,
+          checkedKeys: ["name:Topics", "t:/grid", `t:${FOXGLOVE_GRID_TOPIC}`],
+          cameraState: { ...DEFAULT_CAMERA_STATE, distance: 15 },
+        }}
+      />
+    </PanelSetup>
+  );
+}
+
+Foxglove_PointCloud.parameters = { colorScheme: "dark" };
+export function Foxglove_PointCloud(): JSX.Element {
+  const topics: Topic[] = [{ name: "/pointcloud", datatype: "foxglove.PointCloud" }];
+  const count = 5;
+  const point_stride = 8 + 8 + 8 + 4;
+  const data = new Uint8Array(point_stride * count);
+  const view = new DataView(data.buffer);
+  for (let i = 0; i < count; i++) {
+    const offset = i * point_stride;
+    view.setFloat64(offset, 0, true);
+    view.setFloat64(offset + 8, i, true);
+    view.setFloat64(offset + 16, 0, true);
+    const r = Math.round((i / count) * 0xff);
+    const g = 0xff;
+    const b = Math.round((1 - i / count) * 0xff);
+    const rgb = ((((r << 8) | g) << 8) | b) << 8;
+    view.setUint32(offset + 24, rgb);
+  }
+  const pointcloud: MessageEvent<FoxgloveMessages["foxglove.PointCloud"]> = {
+    topic: "/pointcloud",
+    receiveTime: { sec: 0, nsec: 0 },
+    sizeInBytes: 0,
+    message: {
+      frame_id: "",
+      timestamp: { sec: 1, nsec: 0 },
+      pose: {
+        position: { x: 0, y: 0, z: 0 },
+        orientation: { x: 0, y: 0, z: 0, w: 1 },
+      },
+      fields: [
+        { name: "x", type: 8, offset: 0 },
+        { name: "y", type: 8, offset: 8 },
+        { name: "z", type: 8, offset: 16 },
+        { name: "rgb", type: 6, offset: 24 },
+      ],
+      data,
+      point_stride,
+    },
+  };
+
+  const fixture = useDelayedFixture({
+    datatypes,
+    topics,
+    frame: { "/pointcloud": [pointcloud] },
+    capabilities: [],
+    activeData: { currentTime: { sec: 1, nsec: 0 } },
+  });
+
+  return (
+    <PanelSetup fixture={fixture}>
+      <ThreeDimensionalViz
+        overrideConfig={{
+          ...ThreeDimensionalViz.defaultConfig,
+          checkedKeys: ["name:Topics", "t:/pointcloud", `t:${FOXGLOVE_GRID_TOPIC}`],
+          cameraState: { ...DEFAULT_CAMERA_STATE, distance: 15 },
+          settingsByKey: {
+            "t:/pointcloud": { pointSize: 10 },
+          },
+        }}
+      />
+    </PanelSetup>
+  );
+}
+
+Foxglove_LaserScan.parameters = { colorScheme: "dark" };
+export function Foxglove_LaserScan(): JSX.Element {
+  const topics: Topic[] = [{ name: "/laserscan", datatype: "foxglove.LaserScan" }];
+  const count = 10;
+  const ranges = new Array(count).fill(3);
+  const intensities = ranges.map((_, i) => i);
+  const laserscan: MessageEvent<FoxgloveMessages["foxglove.LaserScan"]> = {
+    topic: "/laserscan",
+    receiveTime: { sec: 0, nsec: 0 },
+    sizeInBytes: 0,
+    message: {
+      frame_id: "",
+      timestamp: { sec: 1, nsec: 0 },
+      pose: {
+        position: { x: 0, y: 0, z: 0 },
+        orientation: { x: 0, y: 0, z: 0, w: 1 },
+      },
+      start_angle: 0,
+      end_angle: Math.PI / 2,
+      ranges,
+      intensities,
+    },
+  };
+
+  const fixture = useDelayedFixture({
+    datatypes,
+    topics,
+    frame: { "/laserscan": [laserscan] },
+    capabilities: [],
+    activeData: { currentTime: { sec: 1, nsec: 0 } },
+  });
+
+  return (
+    <PanelSetup fixture={fixture}>
+      <ThreeDimensionalViz
+        overrideConfig={{
+          ...ThreeDimensionalViz.defaultConfig,
+          checkedKeys: ["name:Topics", "t:/laserscan", `t:${FOXGLOVE_GRID_TOPIC}`],
+          cameraState: { ...DEFAULT_CAMERA_STATE, distance: 15 },
+          settingsByKey: {
+            "t:/laserscan": { pointSize: 10 },
+          },
+        }}
+      />
+    </PanelSetup>
+  );
+}
+
 GeometryMsgs_Polygon.parameters = { colorScheme: "dark" };
 export function GeometryMsgs_Polygon(): JSX.Element {
   const topics: Topic[] = [
@@ -1442,6 +1681,271 @@ export function GeometryMsgs_Polygon(): JSX.Element {
             phi: 1,
             targetOffset: [-0.7, 2.1, 0],
             thetaOffset: -0.25,
+            fovy: 0.75,
+            near: 0.01,
+            far: 5000,
+            target: [0, 0, 0],
+            targetOrientation: [0, 0, 0, 1],
+          },
+        }}
+      />
+    </PanelSetup>
+  );
+}
+
+export const GeometryMsgs_PoseArray = (): JSX.Element => <GeometryMsgs_PoseArray_Base />;
+GeometryMsgs_PoseArray.parameters = { colorScheme: "dark" };
+export const GeometryMsgs_PoseArray_Line = (): JSX.Element => (
+  <GeometryMsgs_PoseArray_Base displayType="line" />
+);
+GeometryMsgs_PoseArray_Line.parameters = { colorScheme: "dark" };
+
+function GeometryMsgs_PoseArray_Base({ displayType }: { displayType?: string }): JSX.Element {
+  const topics: Topic[] = [
+    { name: "/baselink_path", datatype: "geometry_msgs/PoseArray" },
+    { name: "/sensor_path", datatype: "geometry_msgs/PoseArray" },
+    { name: "/tf", datatype: "geometry_msgs/TransformStamped" },
+  ];
+  const tf1: MessageEvent<TF> = {
+    topic: "/tf",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "map" },
+      child_frame_id: "base_link",
+      transform: {
+        translation: { x: 1e7, y: 0, z: 0 },
+        rotation: QUAT_IDENTITY,
+      },
+    },
+    sizeInBytes: 0,
+  };
+  const tf2: MessageEvent<TF> = {
+    topic: "/tf",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "base_link" },
+      child_frame_id: "sensor",
+      transform: {
+        translation: { x: 0, y: 0, z: 1 },
+        rotation: vec4ToOrientation(
+          quat.rotateZ(quat.create(), quat.create(), Math.PI / 2) as Vec4,
+        ),
+      },
+    },
+    sizeInBytes: 0,
+  };
+  const tf3: MessageEvent<TF> = {
+    topic: "/tf",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 10, nsec: 0 }, frame_id: "base_link" },
+      child_frame_id: "sensor",
+      transform: {
+        translation: { x: 0, y: 5, z: 1 },
+        rotation: QUAT_IDENTITY,
+      },
+    },
+    sizeInBytes: 0,
+  };
+
+  const q = (): quat => [0, 0, 0, 1];
+  const identity = q();
+  const makeOrientation = (i: number) => {
+    const o = quat.rotateZ(q(), identity, (Math.PI / 2) * (i / 9));
+    return { x: o[0], y: o[1], z: o[2], w: o[3] };
+  };
+
+  const baseLinkPath: MessageEvent<GeometryMsgs$PoseArray> = {
+    topic: "/baselink_path",
+    receiveTime: { sec: 3, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "base_link" },
+      poses: [...Array(10)].map((_, i) => ({
+        position: { x: 5, y: i / 4, z: 1 },
+        orientation: makeOrientation(i),
+      })),
+    },
+    sizeInBytes: 0,
+  };
+
+  const sensorPath: MessageEvent<GeometryMsgs$PoseArray> = {
+    topic: "/sensor_path",
+    receiveTime: { sec: 3, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
+      poses: [...Array(10)].map((_, i) => ({
+        position: { x: 5, y: i / 4, z: 2 },
+        orientation: makeOrientation(i),
+      })),
+    },
+    sizeInBytes: 0,
+  };
+
+  const fixture = useDelayedFixture({
+    datatypes,
+    topics,
+    frame: {
+      "/baselink_path": [baseLinkPath],
+      "/sensor_path": [sensorPath],
+      "/tf": [tf1, tf2, tf3],
+    },
+    capabilities: [],
+    activeData: {
+      currentTime: { sec: 3, nsec: 0 },
+    },
+  });
+
+  return (
+    <PanelSetup fixture={fixture}>
+      <ThreeDimensionalViz
+        overrideConfig={{
+          ...ThreeDimensionalViz.defaultConfig,
+          checkedKeys: [
+            "name:Topics",
+            "t:/tf",
+            "t:/baselink_path",
+            "t:/sensor_path",
+            `t:${FOXGLOVE_GRID_TOPIC}`,
+          ],
+          expandedKeys: [
+            "name:Topics",
+            "t:/tf",
+            "t:/baselink_path",
+            "t:/sensor_path",
+            `t:${FOXGLOVE_GRID_TOPIC}`,
+          ],
+          followTf: "base_link",
+          settingsByKey: {
+            "t:/sensor_path": {
+              overrideColor: { r: 1, g: 0, b: 0, a: 0.2 },
+              size: { shaftWidth: 1, headWidth: 2, headLength: 0.5, length: 2 },
+              lineThickness: 0.5,
+              displayType,
+            },
+            "t:/baselink_path": {
+              lineThickness: 0.1,
+              displayType,
+            },
+          },
+          cameraState: {
+            distance: 25,
+            perspective: true,
+            phi: 0.25,
+            targetOffset: [0, 2, 0],
+            thetaOffset: -0.25,
+            fovy: 0.75,
+            near: 0.01,
+            far: 5000,
+            target: [0, 0, 0],
+            targetOrientation: [0, 0, 0, 1],
+          },
+        }}
+      />
+    </PanelSetup>
+  );
+}
+GeometryMsgs_PoseStamped.parameters = { colorScheme: "dark" };
+export function GeometryMsgs_PoseStamped(): JSX.Element {
+  const topics: Topic[] = [
+    { name: "/tf", datatype: "geometry_msgs/TransformStamped" },
+    { name: "/pose1", datatype: "geometry_msgs/PoseStamped" },
+    { name: "/pose2", datatype: "geometry_msgs/PoseStamped" },
+  ];
+
+  const tf1: MessageEvent<TF> = {
+    topic: "/tf",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "map" },
+      child_frame_id: "base_link",
+      transform: {
+        translation: { x: 1e7, y: 0, z: 0 },
+        rotation: QUAT_IDENTITY,
+      },
+    },
+    sizeInBytes: 0,
+  };
+  const tf2: MessageEvent<TF> = {
+    topic: "/tf",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "base_link" },
+      child_frame_id: "sensor",
+      transform: {
+        translation: { x: 0, y: -5, z: 0 },
+        rotation: QUAT_IDENTITY,
+      },
+    },
+    sizeInBytes: 0,
+  };
+
+  const pose1: MessageEvent<PoseStamped> = {
+    topic: "/pose1",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "base_link" },
+      pose: {
+        position: { x: 2, y: 0, z: 0 },
+        orientation: QUAT_IDENTITY,
+      },
+    },
+    sizeInBytes: 0,
+  };
+
+  const pose2: MessageEvent<PoseStamped> = {
+    topic: "/pose2",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
+      pose: {
+        position: { x: 0, y: 3, z: 0 },
+        orientation: vec4ToOrientation(
+          quat.rotateZ(quat.create(), quat.create(), Math.PI / 2) as Vec4,
+        ),
+      },
+    },
+    sizeInBytes: 0,
+  };
+
+  const fixture = useDelayedFixture({
+    datatypes,
+    topics,
+    frame: {
+      "/tf": [tf1, tf2],
+      "/pose1": [pose1],
+      "/pose2": [pose2],
+    },
+    capabilities: [],
+    activeData: {
+      currentTime: { sec: 0, nsec: 0 },
+    },
+  });
+
+  return (
+    <PanelSetup fixture={fixture}>
+      <ThreeDimensionalViz
+        overrideConfig={{
+          ...ThreeDimensionalViz.defaultConfig,
+          checkedKeys: ["name:Topics", "t:/pose1", "t:/pose2", "t:/tf", `t:${FOXGLOVE_GRID_TOPIC}`],
+          followTf: "base_link",
+          settingsByKey: {
+            "t:/pose1": {},
+            "t:/pose2": {
+              size: {
+                shaftLength: 2,
+                shaftWidth: 1,
+                headLength: 1,
+                headWidth: 2,
+              },
+              overrideColor: { r: 1, g: 0, b: 0, a: 0.3 },
+            },
+          },
+          cameraState: {
+            distance: 15,
+            perspective: false,
+            phi: 0,
+            targetOffset: [-0.6, 0.5, 0],
+            thetaOffset: 0,
             fovy: 0.75,
             near: 0.01,
             far: 5000,
@@ -1594,6 +2098,7 @@ SensorMsgs_LaserScan.parameters = { colorScheme: "dark" };
 export function SensorMsgs_LaserScan(): JSX.Element {
   const topics: Topic[] = [
     { name: "/laserscan", datatype: "sensor_msgs/LaserScan" },
+    { name: "/laserscan/nointensity", datatype: "sensor_msgs/LaserScan" },
     { name: "/tf", datatype: "geometry_msgs/TransformStamped" },
   ];
   const tf1: MessageEvent<TF> = {
@@ -1641,11 +2146,30 @@ export function SensorMsgs_LaserScan(): JSX.Element {
     sizeInBytes: 0,
   };
 
+  const laserScanNoIntensity: MessageEvent<LaserScan> = {
+    topic: "/laserscan/nointensity",
+    receiveTime: { sec: 10, nsec: 0 },
+    message: {
+      header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
+      angle_min: 0,
+      angle_max: 2 * Math.PI,
+      angle_increment: (1 / 360) * 2 * Math.PI,
+      time_increment: 1 / 360,
+      scan_time: 1,
+      range_min: 0.001,
+      range_max: 10,
+      ranges: [...Array(360)].map((_, i) => 1 + (1 + Math.sin(i / 2)) / 2),
+      intensities: [],
+    },
+    sizeInBytes: 0,
+  };
+
   const fixture = useDelayedFixture({
     datatypes,
     topics,
     frame: {
       "/laserscan": [laserScan],
+      "/laserscan/nointensity": [laserScanNoIntensity],
       "/tf": [tf1, tf2],
     },
     capabilities: [],
@@ -1659,8 +2183,20 @@ export function SensorMsgs_LaserScan(): JSX.Element {
       <ThreeDimensionalViz
         overrideConfig={{
           ...ThreeDimensionalViz.defaultConfig,
-          checkedKeys: ["name:Topics", "t:/tf", "t:/laserscan", `t:${FOXGLOVE_GRID_TOPIC}`],
-          expandedKeys: ["name:Topics", "t:/tf", "t:/laserscan", `t:${FOXGLOVE_GRID_TOPIC}`],
+          checkedKeys: [
+            "name:Topics",
+            "t:/tf",
+            "t:/laserscan",
+            "t:/laserscan/nointensity",
+            `t:${FOXGLOVE_GRID_TOPIC}`,
+          ],
+          expandedKeys: [
+            "name:Topics",
+            "t:/tf",
+            "t:/laserscan",
+            "t:/laserscan/nointensity",
+            `t:${FOXGLOVE_GRID_TOPIC}`,
+          ],
           followTf: "base_link",
           cameraState: {
             distance: 13.5,

@@ -11,11 +11,10 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Box, Stack } from "@mui/material";
+import { Stack } from "@mui/material";
 
 import ColorPicker from "@foxglove/studio-base/components/ColorPicker";
-import { Color, PoseStamped } from "@foxglove/studio-base/types/Messages";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { Color } from "@foxglove/studio-base/types/Messages";
 
 import { TopicSettingsEditorProps } from ".";
 import { SLabel, SInput } from "./common";
@@ -24,6 +23,7 @@ export type PoseSettings = {
   overrideColor?: Color;
   alpha?: number;
   size?: {
+    shaftLength?: number;
     headLength?: number;
     headWidth?: number;
     shaftWidth?: number;
@@ -31,21 +31,14 @@ export type PoseSettings = {
 };
 
 export default function PoseSettingsEditor(
-  props: TopicSettingsEditorProps<PoseStamped, PoseSettings>,
+  props: TopicSettingsEditorProps<unknown, PoseSettings>,
 ): JSX.Element {
-  const { message, settings, onFieldChange, onSettingsChange } = props;
+  const { settings, onFieldChange, onSettingsChange } = props;
 
-  if (!message) {
-    return (
-      <Box color={colors.TEXT_MUTED}>
-        <small>Waiting for messages...</small>
-      </Box>
-    );
-  }
-
-  const currentShaftWidth = settings.size?.shaftWidth ?? 2;
-  const currentHeadWidth = settings.size?.headWidth ?? 2;
-  const currentHeadLength = settings.size?.headLength ?? 0.1;
+  const currentLength = settings.size?.shaftLength ?? 1;
+  const currentShaftWidth = settings.size?.shaftWidth ?? 0.05;
+  const currentHeadWidth = settings.size?.headWidth ?? 0.2;
+  const currentHeadLength = settings.size?.headLength ?? 0.3;
 
   return (
     <Stack flex="auto">
@@ -54,6 +47,18 @@ export default function PoseSettingsEditor(
         color={settings.overrideColor}
         onChange={(newColor) => onFieldChange("overrideColor", newColor)}
         alphaType="alpha"
+      />
+      <SLabel>Shaft length</SLabel>
+      <SInput
+        type="number"
+        value={currentLength}
+        placeholder="2"
+        onChange={(e) =>
+          onSettingsChange({
+            ...settings,
+            size: { ...settings.size, shaftLength: parseFloat(e.target.value) },
+          })
+        }
       />
       <SLabel>Shaft width</SLabel>
       <SInput

@@ -8,9 +8,18 @@ import ForkTsCheckerWebpackPlugin from "fork-ts-checker-webpack-plugin";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import path from "path";
 import ReactRefreshTypescript from "react-refresh-typescript";
+import createStyledComponentsTransformer from "typescript-plugin-styled-components";
 import { Configuration, ProvidePlugin } from "webpack";
+import "webpack-dev-server";
 
 import type { WebpackArgv } from "@foxglove/studio-base/WebpackArgv";
+
+const styledComponentsTransformer = createStyledComponentsTransformer({
+  getDisplayName: (filename, bindingName) => {
+    const sanitizedFilename = path.relative(__dirname, filename).replace(/[^a-zA-Z0-9_-]/g, "_");
+    return bindingName != undefined ? `${bindingName}__${sanitizedFilename}` : sanitizedFilename;
+  },
+});
 
 export default (_env: unknown, argv: WebpackArgv): Configuration => {
   const isDev = argv.mode === "development";
@@ -48,6 +57,7 @@ export default (_env: unknown, argv: WebpackArgv): Configuration => {
               projectReferences: true,
               getCustomTransformers: () => ({
                 before: [
+                  styledComponentsTransformer,
                   // only include refresh plugin when using webpack server
                   ...(isServe ? [ReactRefreshTypescript()] : []),
                 ],
@@ -60,7 +70,12 @@ export default (_env: unknown, argv: WebpackArgv): Configuration => {
 
     optimization: {
       removeAvailableModules: true,
-      minimizer: [new ESBuildMinifyPlugin({ target: "es2020" })],
+      minimizer: [
+        new ESBuildMinifyPlugin({
+          target: "es2020",
+          minifyIdentifiers: false, // readable error stack traces are helpful for debugging
+        }),
+      ],
     },
 
     plugins: [

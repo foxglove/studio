@@ -41,13 +41,6 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
   const prefersDarkMode = theme.palette.mode === "dark";
 
   return {
-    MuiFocusVisible: {
-      styleOverrides: {
-        root: {
-          borderRadius: theme.shape.borderRadius,
-        },
-      },
-    },
     MuiCssBaseline: {
       styleOverrides: {
         "@global": {
@@ -69,25 +62,35 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         },
       },
     },
+    MuiAutocomplete: {
+      styleOverrides: {
+        root: {
+          ".MuiInputBase-root. .MuiAutocomplete-input.MuiInputBase-input": {
+            padding: theme.spacing(1, 1.25),
+          },
+          ".MuiInputBase-root.MuiInputBase-sizeSmall": {
+            paddingBottom: 0,
+
+            ".MuiAutocomplete-input.MuiInputBase-inputSizeSmall": {
+              padding: theme.spacing(0.75, 1),
+            },
+          },
+          ".MuiInputBase-root .MuiAutocomplete-endAdornment": {
+            marginRight: theme.spacing(-0.5),
+          },
+        },
+        endAdornment: {
+          top: `calc(50% - ${theme.spacing(1.5)})`,
+        },
+      },
+    },
     MuiButton: {
       defaultProps: {
         disableElevation: true,
       },
-    },
-    MuiButtonBase: {},
-    MuiIconButton: {
-      defaultProps: {
-        centerRipple: false,
-        disableRipple: true,
-      },
       styleOverrides: {
-        root: {
-          borderRadius: theme.shape.borderRadius,
-          ...iconHack,
-
-          "&:hover": {
-            backgroundColor: theme.palette.action.hover,
-          },
+        colorInherit: {
+          backgroundColor: theme.palette.action.focus,
         },
       },
     },
@@ -125,14 +128,111 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         },
       },
     },
-    MuiPaper: {
+    MuiCheckbox: {
       defaultProps: {
-        elevation: 2,
-        square: true,
+        disableRipple: true,
       },
     },
-    MuiListItemButton: {
-      defaultProps: { disableRipple: true },
+    MuiFilledInput: {
+      defaultProps: {
+        disableUnderline: true,
+      },
+      styleOverrides: {
+        input: {
+          padding: theme.spacing(1, 1.25),
+        },
+        inputSizeSmall: {
+          padding: theme.spacing(0.75, 1),
+        },
+        root: {
+          borderRadius: theme.shape.borderRadius,
+
+          "&.Mui-focused": {
+            backgroundColor: theme.palette.action.focus,
+          },
+          "&.Mui-disabled": {
+            opacity: 0.5,
+          },
+          ".MuiAutocomplete-root &": {
+            paddingTop: 0,
+          },
+        },
+      },
+    },
+    MuiFocusVisible: {
+      styleOverrides: {
+        root: {
+          borderRadius: theme.shape.borderRadius,
+        },
+      },
+    },
+    MuiIconButton: {
+      defaultProps: {
+        centerRipple: false,
+        disableRipple: true,
+      },
+      styleOverrides: {
+        root: {
+          borderRadius: theme.shape.borderRadius,
+          ...iconHack,
+
+          ".root-span": {
+            display: "flex",
+          },
+          "&:hover": {
+            backgroundColor: theme.palette.action.hover,
+          },
+        },
+      },
+    },
+    MuiInput: {
+      styleOverrides: {
+        input: {
+          padding: theme.spacing(1, 1.25),
+        },
+        inputSizeSmall: {
+          padding: theme.spacing(0.75, 1),
+        },
+      },
+    },
+    MuiInputBase: {
+      styleOverrides: {
+        adornedEnd: {
+          "&.MuiInputBase-sizeSmall": {
+            paddingRight: theme.spacing(1),
+
+            "& .MuiSvgIcon-root": {
+              fontSize: "1rem",
+            },
+          },
+        },
+        adornedStart: {
+          "&.MuiInputBase-sizeSmall": {
+            paddingLeft: theme.spacing(1),
+
+            "& .MuiSvgIcon-root": {
+              fontSize: "1rem",
+            },
+            "& .MuiSelect-select": {
+              paddingRight: `${theme.spacing(2)} !important`,
+            },
+          },
+        },
+        inputSizeSmall: {
+          fontSize: theme.typography.body2.fontSize,
+        },
+        root: {
+          "&.MuiInput-root": {
+            marginTop: 0,
+          },
+        },
+      },
+    },
+    MuiInputLabel: {
+      defaultProps: {
+        variant: "standard",
+        sx: { position: "relative" },
+      },
     },
     MuiLink: {
       defaultProps: {
@@ -140,9 +240,38 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
       },
       styleOverrides: {
         root: {
-          cursor: "ppointer",
+          cursor: "pointer",
         },
       },
+    },
+    MuiListSubheader: {
+      styleOverrides: {
+        root: {
+          lineHeight: theme.spacing(4),
+        },
+      },
+    },
+    MuiListItem: {
+      // variants: [
+      //   {
+      //     props: { showSecondaryActionsOnHover: true },
+      //     style: {
+      //       "@media (pointer: fine)": {
+      //         "& .MuiListItemSecondaryAction-root .MuiIconButton-root:last-child": {
+      //           visibility: "hidden",
+      //         },
+      //         "&:hover": {
+      //           "& .MuiListItemSecondaryAction-root .MuiIconButton-root:last-child": {
+      //             visibility: "visible",
+      //           },
+      //         },
+      //       },
+      //     },
+      //   },
+      // ],
+    },
+    MuiListItemButton: {
+      defaultProps: { disableRipple: true },
     },
     MuiMenu: {
       styleOverrides: {
@@ -151,10 +280,68 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         },
       },
     },
-    MuiUseMediaQuery: {},
+    MuiMenuItem: {
+      defaultProps: {
+        disableRipple: true,
+      },
+      styleOverrides: {
+        dense: {
+          minHeight: theme.spacing(3),
+          paddingTop: 0,
+          paddingBottom: 0,
+
+          "& .MuiSvgIcon-root.MuiSvgIcon-fontSizeSmall": {
+            fontSize: "1rem",
+          },
+        },
+      },
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        input: {
+          padding: theme.spacing(1, 1.25),
+        },
+        inputSizeSmall: {
+          padding: theme.spacing(0.75, 1),
+        },
+      },
+    },
+    MuiSelect: {
+      styleOverrides: {
+        select: {
+          "&.MuiInputBase-input": {
+            paddingTop: theme.spacing(1),
+            paddingBottom: theme.spacing(1),
+          },
+          "&.MuiInputBase-inputSizeSmall": {
+            paddingTop: theme.spacing(0.625),
+            paddingBottom: theme.spacing(0.625),
+          },
+        },
+      },
+    },
+    MuiPaper: {
+      defaultProps: {
+        elevation: 2,
+        square: true,
+      },
+    },
+    MuiRadio: {
+      defaultProps: {
+        disableRipple: true,
+      },
+    },
     MuiTab: {
       styleOverrides: {
         labelIcon: iconHack,
+        root: {
+          opacity: 0.8,
+
+          "&$selected": {
+            opacity: 1,
+          },
+        },
+        selected: {},
       },
     },
     MuiTableCell: {
@@ -164,16 +351,26 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         },
       },
     },
-    MuiToolbar: {
-      styleOverrides: {
-        root: {
-          justifyContent: "space-between",
+    MuiTextField: {
+      defaultProps: {
+        InputLabelProps: {
+          shrink: true,
+        },
+        InputProps: {
+          notched: false,
         },
       },
     },
     MuiToggleButton: {
       styleOverrides: {
         label: iconHack,
+      },
+    },
+    MuiToolbar: {
+      styleOverrides: {
+        root: {
+          justifyContent: "space-between",
+        },
       },
     },
   };

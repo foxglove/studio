@@ -14,16 +14,20 @@
 import { useTheme, Link, Spinner, SpinnerSize } from "@fluentui/react";
 import ArrowLeftIcon from "@mdi/svg/svg/arrow-left.svg";
 import PlusIcon from "@mdi/svg/svg/plus.svg";
-import { Box, Stack } from "@mui/material";
-import { Suspense } from "react";
+import { Box, Input, Stack } from "@mui/material";
+import { Suspense, useCallback, useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { v4 as uuidv4 } from "uuid";
 
 import Button from "@foxglove/studio-base/components/Button";
 import Icon from "@foxglove/studio-base/components/Icon";
-import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import Panel from "@foxglove/studio-base/components/Panel";
+import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import {
+  SettingsTreeAction,
+  SettingsTreeNode,
+} from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import TextContent from "@foxglove/studio-base/components/TextContent";
 import {
   LayoutState,
@@ -31,13 +35,13 @@ import {
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useHelpInfo } from "@foxglove/studio-base/context/HelpInfoContext";
+import { PanelSettingsEditorContext } from "@foxglove/studio-base/context/PanelSettingsEditorContext";
 import { useUserNodeState } from "@foxglove/studio-base/context/UserNodeStateContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import BottomBar from "@foxglove/studio-base/panels/NodePlayground/BottomBar";
 import Sidebar from "@foxglove/studio-base/panels/NodePlayground/Sidebar";
 import Playground from "@foxglove/studio-base/panels/NodePlayground/playground-icon.svg";
-import { PanelConfigSchema, UserNodes } from "@foxglove/studio-base/types/panels";
-import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
+import { UserNodes } from "@foxglove/studio-base/types/panels";
 import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import Config from "./Config";
@@ -113,6 +117,18 @@ const SWelcomeScreen = styled.div`
 
 export type Explorer = undefined | "nodes" | "utils" | "templates";
 
+function buildSettingsStree(config: Config): SettingsTreeNode {
+  return {
+    fields: {
+      autoFormatOnSave: {
+        input: "boolean",
+        label: "Auto-format on save",
+        value: config.autoFormatOnSave,
+      },
+    },
+  };
+}
+
 const WelcomeScreen = ({ addNewNode }: { addNewNode: (code?: string) => void }) => {
   const { setHelpInfo } = useHelpInfo();
   const { openHelp } = useWorkspace();
@@ -151,6 +167,8 @@ const userNodeSelector = (state: LayoutState) =>
 function NodePlayground(props: Props) {
   const { config, saveConfig } = props;
   const { autoFormatOnSave = false, selectedNodeId, editorForStorybook } = config;
+  const { id: panelId } = usePanelContext();
+  const { updatePanelSettingsTree } = useContext(PanelSettingsEditorContext);
 
   const theme = useTheme();
   const [explorer, updateExplorer] = React.useState<Explorer>(undefined);
@@ -177,17 +195,38 @@ function NodePlayground(props: Props) {
   const selectedNodeLogs =
     (selectedNodeId != undefined ? userNodeDiagnostics[selectedNodeId]?.logs : undefined) ?? [];
 
-  const inputTitle = currentScript
-    ? currentScript.filePath + (currentScript.readOnly ? " (READONLY)" : "")
-    : "node name";
+  // The current node name is editable via the "tab". The tab uses a controlled input. React requires
+  // that we render the new text on the next render for the controlled input to retain the cursor position.
+  // For this we use setInputTitle within the onChange event of the input control.
+  //
+  // We also update the input title when the script changes using a layout effect below.
+  const [inputTitle, setInputTitle] = useState<string>(() => {
+    return currentScript
+      ? currentScript.filePath + (currentScript.readOnly ? " (READONLY)" : "")
+      : "node name";
+  });
 
   const inputStyle = {
-    borderRadius: 0,
-    margin: 0,
     backgroundColor: theme.semanticColors.bodyBackground,
-    padding: "4px 20px",
-    width: `${inputTitle.length + 4}ch`, // Width based on character count of title + padding
+    width: `${Math.max(inputTitle.length + 4, 10)}ch`, // Width based on character count of title + padding
   };
+
+  const actionHandler = useCallback(
+    (action: SettingsTreeAction) => {
+      const { input, value, path } = action.payload;
+      if (input === "boolean" && path[0] === "autoFormatOnSave") {
+        saveConfig({ ...config, autoFormatOnSave: value });
+      }
+    },
+    [config, saveConfig],
+  );
+
+  useEffect(() => {
+    updatePanelSettingsTree(panelId, {
+      actionHandler,
+      settings: buildSettingsStree(config),
+    });
+  }, [actionHandler, config, panelId, updatePanelSettingsTree]);
 
   React.useLayoutEffect(() => {
     if (selectedNode) {
@@ -199,6 +238,14 @@ function NodePlayground(props: Props) {
     }
   }, [props.config.additionalBackStackItems, selectedNode]);
 
+  React.useLayoutEffect(() => {
+    setInputTitle(() => {
+      return currentScript
+        ? currentScript.filePath + (currentScript.readOnly ? " (READONLY)" : "")
+        : "node name";
+    });
+  }, [currentScript]);
+
   const addNewNode = React.useCallback(
     (code?: string) => {
       const newNodeId = uuidv4();
@@ -206,7 +253,7 @@ function NodePlayground(props: Props) {
       setUserNodes({
         [newNodeId]: {
           sourceCode,
-          name: `${DEFAULT_STUDIO_NODE_PREFIX}${newNodeId.split("-")[0]}`,
+          name: `${newNodeId.split("-")[0]}`,
         },
       });
       saveConfig({ selectedNodeId: newNodeId });
@@ -299,20 +346,21 @@ function NodePlayground(props: Props) {
             )}
             {selectedNodeId != undefined && selectedNode && (
               <div style={{ position: "relative" }}>
-                <LegacyInput
-                  type="text"
+                <Input
+                  size="small"
+                  disableUnderline
                   placeholder="node name"
                   value={inputTitle}
                   disabled={!currentScript || currentScript.readOnly}
-                  style={inputStyle}
-                  spellCheck={false}
-                  onChange={(e) => {
-                    const newNodeName = e.target.value;
+                  onChange={(ev) => {
+                    const newNodeName = ev.target.value;
+                    setInputTitle(newNodeName);
                     setUserNodes({
                       ...userNodes,
                       [selectedNodeId]: { ...selectedNode, name: newNodeName },
                     });
                   }}
+                  inputProps={{ spellCheck: false, style: inputStyle }}
                 />
                 <UnsavedDot isSaved={isNodeSaved} />
               </div>
@@ -382,10 +430,6 @@ function NodePlayground(props: Props) {
   );
 }
 
-const configSchema: PanelConfigSchema<Config> = [
-  { key: "autoFormatOnSave", type: "toggle", title: "Auto-format on save" },
-];
-
 const defaultConfig: Config = {
   selectedNodeId: undefined,
   autoFormatOnSave: true,
@@ -394,6 +438,5 @@ export default Panel(
   Object.assign(NodePlayground, {
     panelType: "NodePlayground",
     defaultConfig,
-    configSchema,
   }),
 );

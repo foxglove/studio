@@ -65,8 +65,37 @@ const features: Feature[] = [
     name: "Legacy Plot panel",
     description: <>Enable the Legacy Plot panel.</>,
   },
+  {
+    key: AppSetting.EXPERIMENTAL_BAG_PLAYER,
+    name: "Experimental bag player",
+    description: (
+      <>The experimental bag player uses a new approach to loading messages from bag files.</>
+    ),
+  },
+  {
+    key: AppSetting.EXPERIMENTAL_DATA_PLATFORM_PLAYER,
+    name: "Experimental data platform player",
+    description: (
+      <>
+        The experimental data platform player uses a new approach to loading messages from Foxglove
+        Data Platform.
+      </>
+    ),
+  },
+  {
+    key: AppSetting.EXPERIMENTAL_MCAP_PLAYER,
+    name: "Experimental mcap player",
+    description: (
+      <>The experimental mcap player uses a new approach to loading messages from mcap files.</>
+    ),
+  },
 ];
 if (process.env.NODE_ENV === "development") {
+  features.push({
+    key: AppSetting.EXPERIMENTAL_3D_PANEL,
+    name: "Experimental 3D panel",
+    description: <>Enable the experimental 3D panel.</>,
+  });
   features.push({
     key: AppSetting.ENABLE_LAYOUT_DEBUGGING,
     name: "Layout debugging",

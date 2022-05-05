@@ -23,12 +23,10 @@ import { filterMap } from "@foxglove/den/collection";
 import { useShallowMemo } from "@foxglove/hooks";
 import { Worldview, CameraState, ReglClickInfo, MouseEventObject } from "@foxglove/regl-worldview";
 import { Time } from "@foxglove/rostime";
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import * as PanelAPI from "@foxglove/studio-base/PanelAPI";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import { Save3DConfig } from "@foxglove/studio-base/panels/ThreeDimensionalViz";
 import DebugStats from "@foxglove/studio-base/panels/ThreeDimensionalViz/DebugStats";
@@ -169,24 +167,33 @@ const SUPPORTED_MARKER_DATATYPES_SET = new Set([
   "visualization_msgs/MarkerArray",
   "visualization_msgs/msg/MarkerArray",
   "ros.visualization_msgs.MarkerArray",
+  "geometry_msgs/PoseArray",
+  "geometry_msgs/msg/PoseArray",
+  "ros.geometry_msgs.PoseArray",
+  "foxglove.PosesInFrame",
   "geometry_msgs/PoseStamped",
   "geometry_msgs/msg/PoseStamped",
   "ros.geometry_msgs.PoseStamped",
+  "foxglove.PoseInFrame",
   "sensor_msgs/PointCloud2",
   "sensor_msgs/msg/PointCloud2",
   "ros.sensor_msgs.PointCloud2",
+  "foxglove.PointCloud",
   "velodyne_msgs/VelodyneScan",
   "velodyne_msgs/msg/VelodyneScan",
   "ros.velodyne_msgs.VelodyneScan",
   "sensor_msgs/LaserScan",
   "sensor_msgs/msg/LaserScan",
   "ros.sensor_msgs.LaserScan",
+  "foxglove.LaserScan",
   "std_msgs/ColorRGBA",
   "std_msgs/msg/ColorRGBA",
   "ros.std_msgs.ColorRGBA",
+  "foxglove.Color",
   "nav_msgs/OccupancyGrid",
   "nav_msgs/msg/OccupancyGrid",
   "ros.nav_msgs.OccupancyGrid",
+  "foxglove.Grid",
   "nav_msgs/Path",
   "nav_msgs/msg/Path",
   "ros.nav_msgs.Path",
@@ -464,7 +471,6 @@ export default function Layout({
     }, [] as MarkerMatcher[]);
   }, [colorOverrideByVariable, globalVariables, linkedGlobalVariables]);
 
-  const [rosPackagePath] = useAppConfigurationValue<string>(AppSetting.ROS_PACKAGE_PATH);
   const [robotDescriptionParam] = PanelAPI.useParameter<string>(ROBOT_DESCRIPTION_PARAM);
 
   useMemo(() => {
@@ -475,9 +481,9 @@ export default function Layout({
       sceneBuilder.clear();
     }
 
-    urdfBuilder.setUrdfData(robotDescriptionParam, rosPackagePath);
+    urdfBuilder.setUrdfData(robotDescriptionParam);
     urdfBuilder.setVisible(selectedTopicNames.includes(URDF_TOPIC));
-    urdfBuilder.setSettingsByKey(settingsByKey, rosPackagePath);
+    urdfBuilder.setSettingsByKey(settingsByKey);
 
     // Toggle scene builder topics based on visible topic nodes in the tree
     const topicsByTopicName = getTopicsByTopicName(topics);
@@ -506,7 +512,6 @@ export default function Layout({
     playerId,
     resetFrame,
     robotDescriptionParam,
-    rosPackagePath,
     sceneBuilder,
     selectedNamespacesByTopic,
     selectedTopicNames,
@@ -755,7 +760,7 @@ export default function Layout({
   );
 
   // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
-  // and existing resize observation.
+  // an existing resize observation.
   // https://github.com/maslianok/react-resize-detector/issues/45
   const {
     width: containerWidth,
