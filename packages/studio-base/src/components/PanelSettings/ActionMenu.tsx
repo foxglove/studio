@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { Button, Menu, MenuItem } from "@mui/material";
+import { IconButton, Menu, MenuItem } from "@mui/material";
 
 export function ActionMenu({
   allowShare,
@@ -25,7 +25,7 @@ export function ActionMenu({
 
   return (
     <div>
-      <Button
+      <IconButton
         id="basic-button"
         aria-controls={open ? "basic-menu" : undefined}
         aria-haspopup="true"
@@ -33,7 +33,7 @@ export function ActionMenu({
         onClick={handleClick}
       >
         <MoreVertIcon />
-      </Button>
+      </IconButton>
       <Menu
         id="basic-menu"
         anchorEl={anchorEl}
