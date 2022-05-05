@@ -35,7 +35,10 @@ type Props = {
   isUnknownPanel?: boolean;
 };
 
-const PanelToolbarRoot = muiStyled("div")<{
+const PanelToolbarRoot = muiStyled("div", {
+  shouldForwardProp: (prop) =>
+    prop !== "shouldShow" && prop !== "floating" && prop !== "hasChildren",
+})<{
   shouldShow: boolean;
   floating: boolean;
   hasChildren: boolean;
