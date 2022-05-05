@@ -16,6 +16,8 @@ const PickerWrapperLeft = muiStyled(Card)(({ theme }) => ({
   position: "absolute",
   zIndex: theme.zIndex.modal,
   top: "100%",
+  left: 0,
+  transform: "translateX(-50%)",
 }));
 
 const PickerWrapperRight = muiStyled(Card)(({ theme }) => ({
@@ -63,6 +65,9 @@ export function ColorGradientInput({
               color={leftColor}
               alphaType="alpha"
               styles={{
+                root: {
+                  minWidth: 216,
+                },
                 tableHexCell: { width: "35%" },
                 input: {
                   input: {
@@ -82,6 +87,9 @@ export function ColorGradientInput({
               color={rightColor}
               alphaType="alpha"
               styles={{
+                root: {
+                  minWidth: 216,
+                },
                 tableHexCell: { width: "35%" },
                 input: {
                   input: {
