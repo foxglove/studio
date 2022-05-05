@@ -43,6 +43,7 @@ type ColorPickerInputProps = {
   swatchOrientation?: "start" | "end";
 } & Omit<TextFieldProps, "onChange">;
 
+// ts-prune-ignore-next
 export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
   const { onChange, swatchOrientation = "start", value } = props;
   const [showPicker, setShowPicker] = useState(false);
