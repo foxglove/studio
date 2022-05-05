@@ -18,10 +18,11 @@ export default {
   component: SettingsTreeEditor,
 };
 
-const DefaultSettings: SettingsTreeNode = {
+const BasicSettings: SettingsTreeNode = {
   fields: {
     firstRootField: { input: "string", label: "First Root Field" },
     secondRootField: { input: "string", label: "Second Root Field" },
+    emptyNumber: { input: "number", label: "Empty Number" },
   },
   children: {
     complex_inputs: {
@@ -42,12 +43,29 @@ const DefaultSettings: SettingsTreeNode = {
           labels: ["U", "V", "W"],
           value: [1, 2, 3],
         },
+        emptySelect: {
+          label: "Empty Select",
+          value: "",
+          input: "select",
+          options: [
+            { label: "Nothing", value: "" },
+            { label: "Something", value: "something" },
+          ],
+        },
+      },
+    },
+    defaultCollapsed: {
+      label: "Default Collapsed",
+      defaultExpansionState: "collapsed",
+      fields: {
+        field: { label: "Field", input: "string" },
       },
     },
     background: {
       label: "Background",
       fields: {
-        color: { label: "Color", value: "#000000", input: "color" },
+        colorRGB: { label: "Color RGB", value: "#000000", input: "rgb" },
+        colorRGBA: { label: "Color RGBA", value: "rgba(0, 128, 255, 0.75)", input: "rgba" },
       },
     },
     threeDimensionalModel: {
@@ -55,7 +73,7 @@ const DefaultSettings: SettingsTreeNode = {
       fields: {
         color: {
           label: "Color",
-          input: "color",
+          input: "rgb",
           value: "#9480ed",
         },
         url: {
@@ -69,6 +87,11 @@ For ROS users, we also support package:// URLs
         },
       },
     },
+  },
+};
+
+const PanelExamplesSettings: SettingsTreeNode = {
+  children: {
     map: {
       label: "Map",
       fields: {
@@ -106,7 +129,7 @@ For ROS users, we also support package:// URLs
         },
         marker_color: {
           label: "Marker color",
-          input: "color",
+          input: "rgb",
           value: "#ff0000",
         },
       },
@@ -117,12 +140,14 @@ For ROS users, we also support package:// URLs
         color: {
           label: "Color",
           value: "#248eff",
-          input: "color",
+          input: "rgb",
         },
         size: {
           label: "Size",
           value: undefined,
           input: "number",
+          max: 10,
+          min: 1,
         },
         subdivision: {
           label: "Subdivision",
@@ -137,11 +162,27 @@ For ROS users, we also support package:// URLs
         },
       },
     },
+    pose: {
+      label: "Pose",
+      fields: {
+        color: { label: "Color", value: "#ffffff", input: "rgb" },
+        shaft_length: { label: "Shaft length", value: 1.5, input: "number" },
+        shaft_width: { label: "Shaft width", value: 1.5, input: "number" },
+        head_length: { label: "Head length", value: 2, input: "number" },
+        head_width: { label: "Head width", value: 2, input: "number" },
+      },
+    },
+  },
+};
+
+const TopicSettings: SettingsTreeNode = {
+  children: {
     topics: {
       label: "Topics",
       children: {
         drivable_area: {
           label: "/drivable_area",
+          visible: true,
           fields: {
             frame_lock: {
               label: "Frame lock",
@@ -168,7 +209,7 @@ For ROS users, we also support package:// URLs
             color: {
               label: "Color",
               value: "#00ff00",
-              input: "color",
+              input: "rgb",
             },
             click_handling: {
               label: "Selection mode",
@@ -191,7 +232,7 @@ For ROS users, we also support package:// URLs
                 color: {
                   label: "Color",
                   value: "#00ff00",
-                  input: "color",
+                  input: "rgb",
                 },
               },
             },
@@ -243,16 +284,6 @@ For ROS users, we also support package:// URLs
         },
       },
     },
-    pose: {
-      label: "Pose",
-      fields: {
-        color: { label: "Color", value: "#ffffff", input: "color" },
-        shaft_length: { label: "Shaft length", value: 1.5, input: "number" },
-        shaft_width: { label: "Shaft width", value: 1.5, input: "number" },
-        head_length: { label: "Head length", value: 2, input: "number" },
-        head_width: { label: "Head width", value: 2, input: "number" },
-      },
-    },
   },
 };
 
@@ -268,16 +299,25 @@ function updateSettingsTreeNode(
       const key = workingPath.shift()!;
       node = node.children?.[key];
     }
+
+    if (!node) {
+      return;
+    }
+
     const key = workingPath.shift()!;
-    const field = node?.fields?.[key];
-    if (field != undefined) {
-      field.value = value as SettingsTreeFieldValue["value"];
+    if (key === "visible") {
+      node.visible = Boolean(value);
+    } else {
+      const field = node.fields?.[key];
+      if (field != undefined) {
+        field.value = value as SettingsTreeFieldValue["value"];
+      }
     }
   });
 }
 
-export const Default = (): JSX.Element => {
-  const [settingsNode, setSettingsNode] = React.useState({ ...DefaultSettings });
+function Wrapper({ settings }: { settings: SettingsTreeNode }): JSX.Element {
+  const [settingsNode, setSettingsNode] = React.useState({ ...settings });
 
   const actionHandler = useCallback((action: SettingsTreeAction) => {
     setSettingsNode((previous) =>
@@ -285,7 +325,7 @@ export const Default = (): JSX.Element => {
     );
   }, []);
 
-  const settings = useMemo(
+  const settingsTree = useMemo(
     () => ({
       actionHandler,
       enableFilter: true,
@@ -304,9 +344,21 @@ export const Default = (): JSX.Element => {
           bgcolor="background.paper"
           overflow="auto"
         >
-          <SettingsTreeEditor settings={settings} />
+          <SettingsTreeEditor settings={settingsTree} />
         </Box>
       </PanelSetup>
     </MockPanelContextProvider>
   );
-};
+}
+
+export function Basics(): JSX.Element {
+  return <Wrapper settings={BasicSettings} />;
+}
+
+export function PanelExamples(): JSX.Element {
+  return <Wrapper settings={PanelExamplesSettings} />;
+}
+
+export function Topics(): JSX.Element {
+  return <Wrapper settings={TopicSettings} />;
+}

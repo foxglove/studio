@@ -60,7 +60,12 @@ type PlayerManagerProps = {
   playerSources: IDataSourceFactory[];
 };
 
-const selectedLayoutSelector = (state: LayoutState) => state.selectedLayout;
+const messageOrderSelector = (state: LayoutState) =>
+  state.selectedLayout?.data?.playbackConfig.messageOrder ?? DEFAULT_MESSAGE_ORDER;
+const userNodesSelector = (state: LayoutState) =>
+  state.selectedLayout?.data?.userNodes ?? EMPTY_USER_NODES;
+const globalVariablesSelector = (state: LayoutState) =>
+  state.selectedLayout?.data?.globalVariables ?? EMPTY_GLOBAL_VARIABLES;
 
 export default function PlayerManager(props: PropsWithChildren<PlayerManagerProps>): JSX.Element {
   const { children, playerSources } = props;
@@ -96,11 +101,9 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
   const [basePlayer, setBasePlayer] = useState<Player | undefined>();
 
-  const selectedLayout = useCurrentLayoutSelector(selectedLayoutSelector);
-
-  const messageOrder = selectedLayout?.data?.playbackConfig.messageOrder ?? DEFAULT_MESSAGE_ORDER;
-  const userNodes = selectedLayout?.data?.userNodes ?? EMPTY_USER_NODES;
-  const globalVariables = selectedLayout?.data?.globalVariables ?? EMPTY_GLOBAL_VARIABLES;
+  const messageOrder = useCurrentLayoutSelector(messageOrderSelector);
+  const userNodes = useCurrentLayoutSelector(userNodesSelector);
+  const globalVariables = useCurrentLayoutSelector(globalVariablesSelector);
 
   const { recents, addRecent } = useIndexedDbRecents();
 
@@ -131,17 +134,9 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
   const { addToast } = useToasts();
 
-  const [selectedSource, setSelectedSource] = useState<IDataSourceFactory | undefined>();
-
   const selectSource = useCallback(
     async (sourceId: string, args?: DataSourceArgs) => {
       log.debug(`Select Source: ${sourceId}`);
-
-      // empty string sourceId
-      if (!sourceId) {
-        setSelectedSource(undefined);
-        return;
-      }
 
       const foundSource = playerSources.find((source) => source.id === sourceId);
       if (!foundSource) {
@@ -152,7 +147,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       }
 
       metricsCollector.setProperty("player", sourceId);
-      setSelectedSource(() => foundSource);
 
       // Sample sources don't need args or prompts to initialize
       if (foundSource.type === "sample") {
@@ -335,7 +329,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   const value: PlayerSelection = {
     selectSource,
     selectRecent,
-    selectedSource,
     availableSources: playerSources,
     recentSources,
   };
