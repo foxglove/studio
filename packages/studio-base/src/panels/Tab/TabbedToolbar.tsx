@@ -11,12 +11,11 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import PlusIcon from "@mdi/svg/svg/plus.svg";
+import AddIcon from "@mui/icons-material/Add";
+import { IconButton, alpha, styled as muiStyled, useTheme } from "@mui/material";
 import { useContext, useEffect } from "react";
 import { DropTargetMonitor, useDrop } from "react-dnd";
-import styled from "styled-components";
 
-import Icon from "@foxglove/studio-base/components/Icon";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { DraggableToolbarTab } from "@foxglove/studio-base/panels/Tab/DraggableToolbarTab";
@@ -29,32 +28,40 @@ import {
 import helpContent from "@foxglove/studio-base/panels/Tab/index.help.md";
 import { TabConfig } from "@foxglove/studio-base/types/layouts";
 
-const STabbedToolbar = styled.div<{ highlight: boolean }>`
-  flex: 0 0;
-  display: flex;
-  position: relative;
-  flex-direction: column;
-  border-bottom: 1px solid ${({ theme }) => theme.semanticColors.bodyDivider};
+const STabbedToolbar = muiStyled("div")<{ highlight: boolean }>(({ highlight, theme }) => ({
+  flex: "0 0",
+  display: "flex",
+  position: "relative",
+  flexDirection: "column",
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  backgroundColor: theme.palette.background.default,
 
-  &:after {
-    border: 2px solid
-      ${({ highlight, theme }) =>
-        highlight ? theme.semanticColors.listItemBackgroundChecked : "transparent"};
-    content: "";
-    height: 100%;
-    left: 0;
-    pointer-events: none;
-    position: absolute;
-    top: 0;
-    width: 100%;
-    z-index: 1;
-  }
-`;
-const STabs = styled.div`
-  flex: 1 1;
-  display: flex;
-  align-items: flex-end;
-`;
+  "&:after": {
+    border: `2px solid ${highlight ? theme.palette.primary.main : "transparent"}`,
+    backgroundColor: highlight
+      ? alpha(theme.palette.primary.main, theme.palette.action.focusOpacity)
+      : undefined,
+    content: "''",
+    height: "100%",
+    left: 0,
+    top: 0,
+    pointerEvents: "none",
+    position: "absolute",
+    width: "100%",
+    zIndex: 1,
+  },
+}));
+
+const STabs = muiStyled("div")({
+  flex: "auto",
+  display: "flex",
+  alignItems: "flex-end",
+});
+
+const StyledIconButton = muiStyled(IconButton)(({ theme }) => ({
+  padding: theme.spacing(0.25),
+  margin: theme.spacing(0, 0.5, -0.25),
+}));
 
 type Props = {
   panelId: string;
@@ -65,6 +72,7 @@ type Props = {
 };
 
 export function TabbedToolbar(props: Props): JSX.Element {
+  const theme = useTheme();
   const { panelId, actions, tabs, activeTabIdx, setDraggingTabState } = props;
   const { moveTab } = useCurrentLayoutActions();
 
@@ -96,7 +104,7 @@ export function TabbedToolbar(props: Props): JSX.Element {
   return (
     <STabbedToolbar highlight={isOver}>
       <PanelToolbar helpContent={helpContent}>
-        <STabs ref={dropRef} data-test="toolbar-droppable">
+        <STabs role="tab" ref={dropRef} data-test="toolbar-droppable">
           {tabs.map((tab, i) => (
             <DraggableToolbarTab
               isActive={activeTabIdx === i}
@@ -109,20 +117,14 @@ export function TabbedToolbar(props: Props): JSX.Element {
               tabTitle={tab.title}
             />
           ))}
-          <Icon
+          <StyledIconButton
             size="small"
-            fade
-            dataTest="add-tab"
-            tooltip="Add tab"
-            style={{
-              flexShrink: 0,
-              margin: "0 8px",
-              transition: "opacity 0.2s",
-            }}
+            data-test="add-tab"
+            title="Add tab"
             onClick={actions.addTab}
           >
-            <PlusIcon onMouseDown={(e) => e.preventDefault()} />
-          </Icon>
+            <AddIcon fontSize="inherit" />
+          </StyledIconButton>
         </STabs>
       </PanelToolbar>
     </STabbedToolbar>
