@@ -21,7 +21,7 @@ import { DeepReadonly } from "ts-essentials";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import Stack from "@foxglove/studio-base/components/Stack";
 
-import { ColorPickerInput, ColorScalePicker, NumberInput, Vec3Input } from "./inputs";
+import { ColorPickerInput, ColorGradientInput, NumberInput, Vec3Input } from "./inputs";
 import { SettingsTreeAction, SettingsTreeField } from "./types";
 
 const StyledToggleButtonGroup = muiStyled(ToggleButtonGroup)(({ theme }) => ({
@@ -151,7 +151,7 @@ function FieldInput({
           ))}
         </StyledToggleButtonGroup>
       );
-    case "string": {
+    case "string":
       return (
         <TextField
           variant="filled"
@@ -167,8 +167,7 @@ function FieldInput({
           }
         />
       );
-    }
-    case "boolean": {
+    case "boolean":
       return (
         <StyledToggleButtonGroup
           fullWidth
@@ -188,8 +187,7 @@ function FieldInput({
           <ToggleButton value={false}>Off</ToggleButton>
         </StyledToggleButtonGroup>
       );
-    }
-    case "rgb": {
+    case "rgb":
       return (
         <ColorPickerInput
           alphaType="none"
@@ -206,8 +204,7 @@ function FieldInput({
           }
         />
       );
-    }
-    case "rgba": {
+    case "rgba":
       return (
         <ColorPickerInput
           alphaType="alpha"
@@ -224,8 +221,7 @@ function FieldInput({
           }
         />
       );
-    }
-    case "messagepath": {
+    case "messagepath":
       return (
         <PsuedoInputWrapper direction="row">
           <MessagePathInput
@@ -240,8 +236,7 @@ function FieldInput({
           />
         </PsuedoInputWrapper>
       );
-    }
-    case "select": {
+    case "select":
       return (
         <Select
           size="small"
@@ -264,11 +259,16 @@ function FieldInput({
           ))}
         </Select>
       );
-    }
-    case "gradient": {
-      return <ColorScalePicker color="inherit" size="small" />;
-    }
-    case "vec3": {
+    case "gradient":
+      return (
+        <ColorGradientInput
+          colors={field.value}
+          onChange={(value) =>
+            actionHandler({ action: "update", payload: { path, input: "gradient", value } })
+          }
+        />
+      );
+    case "vec3":
       return (
         <Vec3Input
           value={field.value}
@@ -277,7 +277,6 @@ function FieldInput({
           }
         />
       );
-    }
   }
 }
 

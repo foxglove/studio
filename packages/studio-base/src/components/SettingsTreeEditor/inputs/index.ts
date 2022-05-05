@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 export * from "./ColorPickerInput";
+export * from "./ColorGradientInput";
 export * from "./ColorScalePicker";
 export * from "./NumberInput";
 export * from "./Vec3Input";
