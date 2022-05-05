@@ -2252,15 +2252,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@foxglove/electron-socket@npm:1.4.1":
-  version: 1.4.1
-  resolution: "@foxglove/electron-socket@npm:1.4.1"
+"@foxglove/electron-socket@npm:2.0.0":
+  version: 2.0.0
+  resolution: "@foxglove/electron-socket@npm:2.0.0"
   dependencies:
     dns-packet: ^5.2.4
     eventemitter3: ^4.0.7
   peerDependencies:
     electron: ">=12"
-  checksum: 509cd88882780086dc12a073008ccdca792bbf46fadae22a172f626e66d4b58dc28e38d02f2f353ad3f46609e2275c8cdb8f3dd61763a9969dd3832f56e36088
+  checksum: aaf47e91847830d5d75cf4e06bf5b1e208a5d122638403ee3a3ad1da3c5347775b200021b63d94f8b34d0b16fb1888422f67cd8f21a2f894699303ded3c6cc2b
   languageName: node
   linkType: hard
 
@@ -2517,7 +2517,7 @@ __metadata:
     "@foxglove/avl": 1.0.0
     "@foxglove/chartjs-plugin-zoom": 2.0.4
     "@foxglove/den": "workspace:*"
-    "@foxglove/electron-socket": 1.4.1
+    "@foxglove/electron-socket": 2.0.0
     "@foxglove/hooks": "workspace:*"
     "@foxglove/mcap": "github:foxglove/mcap#workspace=@foxglove/mcap&commit=e79355a9e99efd5094b15f21bb361a85d9e748bc"
     "@foxglove/mcap-support": "workspace:*"
@@ -2690,6 +2690,7 @@ __metadata:
     wasm-lz4: 2.0.0
     webpack: 5.68.0
     xacro-parser: 0.3.8
+    zustand: 4.0.0-rc.1
   languageName: unknown
   linkType: soft
 
@@ -10557,7 +10558,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "desktop@workspace:desktop"
   dependencies:
-    "@foxglove/electron-socket": 1.4.1
+    "@foxglove/electron-socket": 2.0.0
     "@foxglove/studio-base": "workspace:*"
     "@types/plist": ^3.0.2
     jszip: 3.7.1
@@ -24387,6 +24388,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"use-sync-external-store@npm:1.1.0":
+  version: 1.1.0
+  resolution: "use-sync-external-store@npm:1.1.0"
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0
+  checksum: 8993a0b642f91d7fcdbb02b7b3ac984bd3af4769686f38291fe7fcfe73dfb73d6c64d20dfb7e5e7fbf5a6da8f5392d6f8e5b00c243a04975595946e82c02b883
+  languageName: node
+  linkType: hard
+
 "use@npm:^3.1.0":
   version: 3.1.1
   resolution: "use@npm:3.1.1"
@@ -25528,6 +25538,23 @@ __metadata:
   version: 0.1.4
   resolution: "zstd-codec@patch:zstd-codec@npm%3A0.1.4#../../patches/zstd-codec.patch::version=0.1.4&hash=a862de&locator=%40foxglove%2Fmcap-support%40workspace%3Apackages%2Fmcap-support"
   checksum: 08a5e329950cb926581ea3a0a46131676e05fcbcdc59faebe2d7c66036562694c9a266140183848facb08fa06e5f6db7e55e23dac27f219e7dbb69f124b62554
+  languageName: node
+  linkType: hard
+
+"zustand@npm:4.0.0-rc.1":
+  version: 4.0.0-rc.1
+  resolution: "zustand@npm:4.0.0-rc.1"
+  dependencies:
+    use-sync-external-store: 1.1.0
+  peerDependencies:
+    immer: ">=9.0"
+    react: ">=16.8"
+  peerDependenciesMeta:
+    immer:
+      optional: true
+    react:
+      optional: true
+  checksum: c88ae96286229b3c463cf7989c860fcde8ec9cf885eb50a0e0eaf9642388d407a854e5e07b9f80676454732bf15e1c7645201cff21fd9feacd5df8bbd62fcd46
   languageName: node
   linkType: hard
 
