@@ -4,6 +4,5 @@
 
 export * from "./ColorPickerInput";
 export * from "./ColorGradientInput";
-export * from "./ColorScalePicker";
 export * from "./NumberInput";
 export * from "./Vec3Input";
