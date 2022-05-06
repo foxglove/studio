@@ -5,7 +5,8 @@
 import { styled as muiStyled, alpha } from "@mui/material";
 import cx from "classnames";
 
-const PANEL_ROOT_CLASSNAME = "FoxglovePanel-root";
+export const PANEL_ROOT_CLASSNAME = "FoxglovePanel-root";
+export const PANEL_ROOT_SELECTOR = `.${PANEL_ROOT_CLASSNAME}`;
 
 const PanelBase = muiStyled("div", {
   name: "FoxglovePanel",
@@ -47,11 +48,8 @@ const PanelBase = muiStyled("div", {
   },
 }));
 
-export const PanelRoot = ({
-  className,
-  ...props
-}: React.ComponentProps<typeof PanelBase>): JSX.Element => (
-  <PanelBase className={cx(className, PANEL_ROOT_CLASSNAME)} {...props} />
+export const PanelRoot = React.forwardRef<HTMLDivElement, React.ComponentProps<typeof PanelBase>>(
+  function PanelRoot({ className, ...props }, ref): JSX.Element {
+    return <PanelBase ref={ref} className={cx(className, PANEL_ROOT_CLASSNAME)} {...props} />;
+  },
 );
-
-PanelRoot.selector = `.${PANEL_ROOT_CLASSNAME}`;
