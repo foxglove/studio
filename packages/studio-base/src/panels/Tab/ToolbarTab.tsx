@@ -11,19 +11,15 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
-import { IconButton, styled as muiStyled } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-import cx from "classnames";
+import { IconButton, InputBase, styled as muiStyled } from "@mui/material";
 import React, { Ref as ReactRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import textMetrics from "text-metrics";
 
-import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import { TabActions } from "@foxglove/studio-base/panels/Tab/TabDndContext";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-const MAX_TAB_WIDTH = 100;
+const MAX_TAB_WIDTH = 120;
 const MIN_ACTIVE_TAB_WIDTH = 40;
 const MIN_OTHER_TAB_WIDTH = 14;
 
@@ -50,13 +46,12 @@ const Tab = muiStyled("div")<{
   maxWidth: MAX_TAB_WIDTH,
   top: 5, // Shift the tab down so it's flush with the bottom of the PanelToolbar
   marginTop: -4,
-  minWidth: active
-    ? `calc(max(${MIN_ACTIVE_TAB_WIDTH}px,  min(${Math.ceil(
-        measureText(title) + 30,
-      )}px, ${MAX_TAB_WIDTH}px, 100% - ${MIN_OTHER_TAB_WIDTH * (tabCount - 1)}px)))`
-    : undefined,
+  gap: theme.spacing(0.5),
 
   ...(active && {
+    minWidth: `calc(max(${MIN_ACTIVE_TAB_WIDTH}px,  min(${Math.ceil(
+      measureText(title) + 30,
+    )}px, ${MAX_TAB_WIDTH}px, 100% - ${MIN_OTHER_TAB_WIDTH * (tabCount - 1)}px)))`,
     backgroundColor: theme.palette.background.paper,
     borderColor: theme.palette.divider,
     userSelect: "all",
@@ -77,19 +72,6 @@ const Tab = muiStyled("div")<{
 const StyledIconButton = muiStyled(IconButton)(({ theme }) => ({
   padding: theme.spacing(0.25),
 }));
-
-const useStyles = makeStyles({
-  input: {
-    backgroundColor: "transparent !important",
-    padding: "0px !important",
-    pointerEvents: "none",
-    width: "100%",
-
-    "&.isEditable": {
-      pointerEvents: "all",
-    },
-  },
-});
 
 const fontFamily = fonts.SANS_SERIF;
 const fontSize = "12px";
@@ -127,7 +109,6 @@ export function ToolbarTab(props: Props): JSX.Element {
     highlight,
     hidden,
   } = props;
-  const styles = useStyles();
 
   const inputRef = useRef<HTMLInputElement>(ReactNull);
   const [title, setTitle] = useState<string>(tabTitle);
@@ -216,27 +197,25 @@ export function ToolbarTab(props: Props): JSX.Element {
       title={tabTitle ? tabTitle : "Enter tab name"}
       tabCount={tabCount}
     >
-      <div>
-        <LegacyInput
-          className={cx(styles.input, { isEditable: editingTitle })}
-          readOnly={!editingTitle}
-          placeholder="Enter tab name"
-          value={title}
-          onChange={onChangeTitleInput}
-          onBlur={setTabTitle}
-          onKeyDown={onKeyDown}
-          ref={inputRef}
-        />
-      </div>
+      <InputBase
+        readOnly={!editingTitle}
+        placeholder="Enter tab name"
+        value={title}
+        onChange={onChangeTitleInput}
+        onBlur={setTabTitle}
+        onKeyDown={onKeyDown}
+        inputRef={inputRef}
+        style={{ pointerEvents: editingTitle ? "all" : "none" }}
+      />
       {isActive && (
         <StyledIconButton
           edge="end"
           size="small"
           data-test="tab-icon"
-          title={editingTitle ? "Set new name" : "Remove tab"}
-          onClick={editingTitle ? confirmNewTitle : removeTab}
+          title={"Remove tab"}
+          onClick={removeTab}
         >
-          {editingTitle ? <CheckIcon fontSize="inherit" /> : <CloseIcon fontSize="inherit" />}
+          <CloseIcon fontSize="inherit" />
         </StyledIconButton>
       )}
     </Tab>

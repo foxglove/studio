@@ -37,10 +37,7 @@ const STabbedToolbar = muiStyled("div")<{ highlight: boolean }>(({ highlight, th
   backgroundColor: theme.palette.background.default,
 
   "&:after": {
-    border: `2px solid ${highlight ? theme.palette.primary.main : "transparent"}`,
-    backgroundColor: highlight
-      ? alpha(theme.palette.primary.main, theme.palette.action.focusOpacity)
-      : undefined,
+    border: `2px solid ${highlight ? theme.palette.action.hover : "transparent"}`,
     content: "''",
     height: "100%",
     left: 0,
