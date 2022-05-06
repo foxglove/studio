@@ -26,11 +26,10 @@ const MIN_OTHER_TAB_WIDTH = 14;
 const Tab = muiStyled("div")<{
   active: boolean;
   dragging: boolean;
-  highlighted: boolean;
   hidden: boolean;
   tabCount: number;
   title: string;
-}>(({ active, dragging, highlighted, hidden, tabCount, title, theme }) => ({
+}>(({ active, dragging, hidden, tabCount, title, theme }) => ({
   position: "relative",
   borderTopLeftRadius: theme.shape.borderRadius,
   borderTopRightRadius: theme.shape.borderRadius,
@@ -61,9 +60,6 @@ const Tab = muiStyled("div")<{
     backgroundColor: theme.palette.background.paper,
     borderColor: theme.palette.action.selected,
   }),
-  ...(highlighted && {
-    borderColor: theme.palette.action.focus,
-  }),
   ...(hidden && {
     visibility: "hidden",
   }),
@@ -71,6 +67,19 @@ const Tab = muiStyled("div")<{
 
 const StyledIconButton = muiStyled(IconButton)(({ theme }) => ({
   padding: theme.spacing(0.25),
+}));
+
+const DropIndicator = muiStyled("div")<{ dir: "before" | "after" }>(({ dir }) => ({
+  position: "absolute",
+  top: 0,
+  bottom: 0,
+  width: "2px",
+  height: "100%",
+  backgroundColor: "#f0f",
+  opacity: 0.5,
+  zIndex: 1,
+  left: dir === "before" ? 0 : "auto",
+  right: dir === "before" ? "auto" : 0,
 }));
 
 const fontFamily = fonts.SANS_SERIF;
@@ -87,7 +96,7 @@ function measureText(text: string): number {
 
 type Props = {
   hidden: boolean;
-  highlight: boolean;
+  highlight: "before" | "after" | undefined;
   innerRef?: ReactRef<HTMLDivElement>;
   isActive: boolean;
   isDragging: boolean;
@@ -190,13 +199,13 @@ export function ToolbarTab(props: Props): JSX.Element {
     <Tab
       active={isActive}
       dragging={isDragging}
-      highlighted={highlight}
       hidden={hidden}
       onClick={onClickTab}
       ref={innerRef}
       title={tabTitle ? tabTitle : "Enter tab name"}
       tabCount={tabCount}
     >
+      {highlight != undefined && <DropIndicator dir={highlight} />}
       <InputBase
         readOnly={!editingTitle}
         placeholder="Enter tab name"
@@ -212,7 +221,7 @@ export function ToolbarTab(props: Props): JSX.Element {
           edge="end"
           size="small"
           data-test="tab-icon"
-          title={"Remove tab"}
+          title="Remove tab"
           onClick={removeTab}
         >
           <CloseIcon fontSize="inherit" />
