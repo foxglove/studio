@@ -176,7 +176,6 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
     return {
       cameraState,
-      enableStats: partialConfig?.enableStats ?? true,
       followTf: partialConfig?.followTf,
       scene: partialConfig?.scene ?? {},
       topics: partialConfig?.topics ?? {},
@@ -492,7 +491,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         <canvas ref={setCanvas} style={{ position: "absolute", top: 0, left: 0 }} />
       </CameraListener>
       <RendererContext.Provider value={renderer}>
-        <RendererOverlay colorScheme={colorScheme} enableStats={config.enableStats} />
+        <RendererOverlay colorScheme={colorScheme} enableStats={config.scene.enableStats ?? true} />
       </RendererContext.Provider>
     </div>
   );

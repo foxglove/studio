@@ -23,9 +23,9 @@ import {
 
 export type ThreeDeeRenderConfig = {
   cameraState: CameraState;
-  enableStats: boolean;
   followTf: string | undefined;
   scene: {
+    enableStats?: boolean;
     backgroundColor?: string;
   };
   topics: Record<string, Record<string, unknown> | undefined>;
@@ -112,7 +112,12 @@ function buildTopicNode(
   const topicConfig = typeof topicConfigOrTopicName === "string" ? {} : topicConfigOrTopicName;
   const visible = Boolean(topicConfig["visible"] ?? true);
   const fields = fieldsProvider(topicConfig, topic);
-  const node: SettingsTreeNodeWithFields = { label: topic.name, fields, visible };
+  const node: SettingsTreeNodeWithFields = {
+    label: topic.name,
+    fields,
+    visible,
+    defaultExpansionState: "collapsed",
+  };
   return node;
 }
 
@@ -147,15 +152,16 @@ export function buildSettingsTree(options: SettingsTreeOptions): SettingsTreeNod
   // prettier-ignore
   return {
     fields: {
-      followTf: { label: "Coordinate frame", input: "select", options: coordinateFrames, value: followTf },
-      enableStats: { label: "Enable stats", input: "boolean", value: config.enableStats },
+      followTf: { label: "Frame", input: "select", options: coordinateFrames, value: followTf },
     },
     children: {
       scene: {
         label: "Scene",
         fields: {
+          enableStats: { label: "Render stats", input: "boolean", value: config.scene.enableStats },
           backgroundColor: { label: "Color", input: "rgb", value: backgroundColor },
         },
+        defaultExpansionState: "collapsed",
       },
       cameraState: {
         label: "Camera",
@@ -169,10 +175,12 @@ export function buildSettingsTree(options: SettingsTreeOptions): SettingsTreeNod
           near: { label: "Near", input: "number", value: cameraState.near, step: DEFAULT_CAMERA_STATE.near },
           far: { label: "Far", input: "number", value: cameraState.far, step: 1 },
         },
+        defaultExpansionState: "collapsed",
       },
       topics: {
         label: "Topics",
         children: topicsChildren,
+        defaultExpansionState: "expanded",
       },
     },
   };
