@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import AddIcon from "@mui/icons-material/Add";
-import { IconButton, alpha, styled as muiStyled, useTheme } from "@mui/material";
+import { IconButton, styled as muiStyled, useTheme } from "@mui/material";
 import { useContext, useEffect } from "react";
 import { DropTargetMonitor, useDrop } from "react-dnd";
 
