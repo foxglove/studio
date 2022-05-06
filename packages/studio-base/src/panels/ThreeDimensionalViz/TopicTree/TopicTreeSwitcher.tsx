@@ -21,7 +21,11 @@ const TopicTreeSwitcherRoot = muiStyled("div")({
   pointerEvents: "auto",
 });
 
-const PinIconButton = muiStyled(MuiIconButton)<{ renderTopicTree: boolean }>(
+function shouldForwardProp(prop: string) {
+  return prop !== "renderTopicTree" && prop !== "showErrorBadge";
+}
+
+const PinIconButton = muiStyled(MuiIconButton, { shouldForwardProp })<{ renderTopicTree: boolean }>(
   ({ theme, renderTopicTree }) => ({
     color: theme.palette.common.white,
     backgroundColor: "transparent",
@@ -38,7 +42,7 @@ const PinIconButton = muiStyled(MuiIconButton)<{ renderTopicTree: boolean }>(
   }),
 );
 
-const LayersIconButton = muiStyled(MuiIconButton)<{
+const LayersIconButton = muiStyled(MuiIconButton, { shouldForwardProp })<{
   renderTopicTree: boolean;
   showErrorBadge: boolean;
 }>(({ renderTopicTree, showErrorBadge, theme }) => ({
@@ -106,18 +110,16 @@ export default function TopicTreeSwitcher({
         <PushPinIcon fontSize="small" color={pinTopics ? "info" : "inherit"} />
       </PinIconButton>
 
-      <Tooltip arrow title={<KeyboardShortcut keys={["T"]} />}>
-        <LayersIconButton
-          showErrorBadge={showErrorBadge}
-          renderTopicTree={renderTopicTree}
-          onClick={onClick}
-          title={
-            showErrorBadge ? "Errors found in selected topics/namespaces" : "Open topic switcher"
-          }
-        >
-          <LayersIcon fontSize="small" />
-        </LayersIconButton>
-      </Tooltip>
+      <LayersIconButton
+        showErrorBadge={showErrorBadge}
+        renderTopicTree={renderTopicTree}
+        onClick={onClick}
+        title={
+          showErrorBadge ? "Errors found in selected topics/namespaces" : "Open topic switcher"
+        }
+      >
+        <LayersIcon fontSize="small" />
+      </LayersIconButton>
     </TopicTreeSwitcherRoot>
   );
 }
