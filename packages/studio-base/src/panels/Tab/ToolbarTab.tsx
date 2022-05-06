@@ -69,14 +69,15 @@ const StyledIconButton = muiStyled(IconButton)(({ theme }) => ({
   padding: theme.spacing(0.25),
 }));
 
-const DropIndicator = muiStyled("div")<{ dir: "before" | "after" }>(({ dir }) => ({
+const DropIndicator = muiStyled("div")<{ dir: "before" | "after" }>(({ theme, dir }) => ({
   position: "absolute",
   top: 0,
   bottom: 0,
-  width: "2px",
+  width: 2,
   height: "100%",
-  backgroundColor: "#f0f",
-  opacity: 0.5,
+  backgroundColor: theme.palette.primary.main,
+  opacity: 0.8,
+  borderRadius: theme.shape.borderRadius,
   zIndex: 1,
   left: dir === "before" ? 0 : "auto",
   right: dir === "before" ? "auto" : 0,
