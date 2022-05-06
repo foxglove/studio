@@ -156,6 +156,9 @@ export default function TextContent(
     (linkProps: { href?: string; children: React.ReactNode }) => {
       return (
         <Link
+          color="primary"
+          underline="hover"
+          variant="inherit"
           href={linkProps.href}
           rel="noopener noreferrer"
           onClick={(event) => handleLink(event, linkProps.href ?? "")}
