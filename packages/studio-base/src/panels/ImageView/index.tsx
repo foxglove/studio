@@ -344,7 +344,8 @@ function ImageView(props: Props) {
     return {
       markers: annotations ?? [],
       transformMarkers,
-      cameraInfo,
+      // Convert to plain object before sending to web worker
+      cameraInfo: (cameraInfo as { toJSON?: () => unknown } | undefined)?.toJSON?.() ?? cameraInfo,
     };
   }, [annotations, cameraInfo, transformMarkers]);
 
