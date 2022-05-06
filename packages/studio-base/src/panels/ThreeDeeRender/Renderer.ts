@@ -8,6 +8,10 @@ import * as THREE from "three";
 import Logger from "@foxglove/log";
 import { CameraState } from "@foxglove/regl-worldview";
 import { ScreenOverlay } from "@foxglove/studio-base/panels/ThreeDeeRender/ScreenOverlay";
+import {
+  LayerSettingsPointCloud2,
+  ThreeDeeRenderConfig,
+} from "@foxglove/studio-base/panels/ThreeDeeRender/settings";
 
 import { Input } from "./Input";
 import { LayerErrors } from "./LayerErrors";
@@ -33,6 +37,15 @@ export type RendererEvents = {
   showLabel: (labelId: string, labelMarker: Marker, renderer: Renderer) => void;
   removeLabel: (labelId: string, renderer: Renderer) => void;
 };
+
+export enum LayerType {
+  Transform,
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  Marker,
+  // eslint-disable-next-line @typescript-eslint/no-shadow
+  OccupancyGrid,
+  PointCloud,
+}
 
 const DEBUG_PICKING = false;
 
@@ -66,6 +79,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   // target: THREE.WebGLRenderTarget;
   // composer: EffectComposer;
   // outlinePass: OutlinePass;
+  config: ThreeDeeRenderConfig | undefined;
   scene: THREE.Scene;
   dirLight: THREE.DirectionalLight;
   hemiLight: THREE.HemisphereLight;
@@ -94,9 +108,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     // NOTE: Global side effect
     THREE.Object3D.DefaultUp = new THREE.Vector3(0, 0, 1);
-
-    // TODO: Remove this hack when the user can set the renderFrameId themselves
-    this.renderFrameId = "base_link";
 
     this.canvas = canvas;
     this.gl = new THREE.WebGLRenderer({
@@ -168,7 +179,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     const samples = msaaSamples(this.maxLod, this.gl.capabilities);
     const renderSize = this.gl.getDrawingBufferSize(tempVec2);
-
     log.debug(`Initialized ${renderSize.width}x${renderSize.height} renderer (${samples}x MSAA)`);
 
     this.animationFrame();
@@ -209,6 +219,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   addPointCloud2Message(topic: string, pointCloud: PointCloud2): void {
     this.pointClouds.addPointCloud2Message(topic, pointCloud);
+  }
+
+  setPointCloud2Settings(topic: string, settings: Partial<LayerSettingsPointCloud2>): void {
+    this.pointClouds.setTopicSettings(topic, settings);
   }
 
   addMarkerMessage(topic: string, marker: Marker): void {

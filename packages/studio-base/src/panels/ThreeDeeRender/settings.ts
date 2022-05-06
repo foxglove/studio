@@ -25,29 +25,34 @@ export type ThreeDeeRenderConfig = {
   cameraState: CameraState;
   enableStats: boolean;
   followTf?: string;
-  topics: Record<string, unknown>;
+  topics: Record<string, Record<string, unknown> | undefined>;
 };
 
 export type SelectEntry = { label: string; value: string };
 
-export type TopicSettingsMarker = {
+export type LayerSettingsMarker = {
+  visible: boolean;
   color: string | undefined;
 };
 
-export type TopicSettingsOccupancyGrid = {
+export type LayerSettingsOccupancyGrid = {
+  visible: boolean;
   frameLock: boolean;
 };
 
-export type TopicSettingsPointCloud2 = {
+export type LayerSettingsPointCloud2 = {
+  visible: boolean;
   pointSize: number;
   pointShape: "circle" | "square";
   decayTime: number;
-  colorBy: string | undefined;
-  flatColor: string | undefined;
-  valueMin: number | undefined;
-  valueMax: number | undefined;
-  colorMap: "turbo" | "rainbow" | "gradient";
-  gradient: [string, string] | undefined;
+  colorMode: "flat" | "gradient" | "colormap" | "rgb" | "rgba";
+  flatColor: string;
+  colorField: string | undefined;
+  gradient: [string, string];
+  colorMap: "turbo" | "rainbow";
+  rgbByteOrder: "rgba" | "bgra" | "abgr";
+  minValue: number | undefined;
+  maxValue: number | undefined;
 };
 
 export const SUPPORTED_DATATYPES = new Set<string>();
@@ -77,7 +82,7 @@ export type SettingsTreeOptions = {
 };
 
 function buildTopicNode(
-  topicConfigOrTopicName: unknown,
+  topicConfigOrTopicName: string | Record<string, unknown>,
   topic: Topic,
   pclFieldsByTopic: Map<string, string[]>,
 ): undefined | SettingsTreeNode {
@@ -85,36 +90,39 @@ function buildTopicNode(
   if (
     !SUPPORTED_DATATYPES.has(datatype) ||
     TF_DATATYPES.has(datatype) ||
-    TF_DATATYPES.has(datatype)
+    TRANSFORM_STAMPED_DATATYPES.has(datatype)
   ) {
     return;
   }
 
   type SettingsTreeNodeWithFields = SettingsTreeNode & { fields: SettingsTreeFields };
-  const node: SettingsTreeNodeWithFields = { label: topic.name, fields: {} };
   const topicConfig = typeof topicConfigOrTopicName === "string" ? {} : topicConfigOrTopicName;
+  const visible = Boolean(topicConfig["visible"] ?? true);
+  const node: SettingsTreeNodeWithFields = { label: topic.name, fields: {}, visible };
 
   if (MARKER_DATATYPES.has(datatype) || MARKER_ARRAY_DATATYPES.has(datatype)) {
-    const cur = topicConfig as Partial<TopicSettingsMarker> | undefined;
+    const cur = topicConfig as Partial<LayerSettingsMarker> | undefined;
     const color = cur?.color;
     node.fields.color = { label: "Color", input: "rgba", value: color };
   } else if (OCCUPANCY_GRID_DATATYPES.has(datatype)) {
-    const cur = topicConfig as Partial<TopicSettingsOccupancyGrid> | undefined;
+    const cur = topicConfig as Partial<LayerSettingsOccupancyGrid> | undefined;
     const frameLock = cur?.frameLock ?? false;
     node.fields.frameLock = { label: "Frame lock", input: "boolean", value: frameLock };
   } else if (POINTCLOUD_DATATYPES.has(datatype)) {
-    const cur = topicConfig as Partial<TopicSettingsPointCloud2> | undefined;
+    const cur = topicConfig as Partial<LayerSettingsPointCloud2> | undefined;
     const pclFields = pclFieldsByTopic.get(topic.name) ?? POINTCLOUD_REQUIRED_FIELDS;
     const pointSize = cur?.pointSize;
     const pointShape = cur?.pointShape ?? "circle";
     const decayTime = cur?.decayTime;
-    const colorBy = cur?.colorBy ?? bestColorByField(pclFields);
-    const colorByOptions = pclFields.map((field) => ({ label: field, value: field }));
+    const colorMode = cur?.colorMode ?? "flat";
     const flatColor = cur?.flatColor ?? "#ffffff";
-    const valueMin = cur?.valueMin;
-    const valueMax = cur?.valueMax;
-    const colorMap = cur?.colorMap ?? "turbo";
+    const colorField = cur?.colorField ?? bestColorByField(pclFields);
+    const colorFieldOptions = pclFields.map((field) => ({ label: field, value: field }));
     // const gradient = cur?.gradient;
+    const colorMap = cur?.colorMap ?? "turbo";
+    const rgbByteOrder = cur?.rgbByteOrder ?? "rgba";
+    const minValue = cur?.minValue;
+    const maxValue = cur?.maxValue;
 
     node.fields.pointSize = {
       label: "Point size",
@@ -135,40 +143,82 @@ function buildTopicNode(
       step: 0.5,
       placeholder: "0 seconds",
     };
-    node.fields.colorBy = {
-      label: "Color by",
+    node.fields.colorMode = {
+      label: "Color mode",
       input: "select",
-      options: [{ label: "None", value: "none" }].concat(colorByOptions),
-      value: colorBy,
+      options: [
+        { label: "Flat", value: "flat" },
+        { label: "Color Map", value: "colormap" },
+        { label: "Gradient", value: "gradient" },
+        { label: "RGB", value: "rgb" },
+        { label: "RGBA", value: "rgba" },
+      ],
+      value: colorMode,
     };
-    if (!colorBy || colorBy === "none") {
+    if (colorMode === "flat") {
       node.fields.flatColor = { label: "Flat color", input: "rgba", value: flatColor };
     } else {
-      node.fields.valueMin = {
+      node.fields.colorField = {
+        label: "Color by",
+        input: "select",
+        options: colorFieldOptions,
+        value: colorField,
+      };
+
+      switch (colorMode) {
+        case "gradient":
+          // node.fields.gradient = { label: "Gradient", input: "gradient", value: gradient };
+          break;
+        case "colormap":
+          node.fields.colorMap = {
+            label: "Color map",
+            input: "select",
+            options: [
+              { label: "Turbo", value: "turbo" },
+              { label: "Rainbow", value: "rainbow" },
+              { label: "Gradient", value: "gradient" },
+            ],
+            value: colorMap,
+          };
+          break;
+        case "rgb":
+          node.fields.rgbByteOrder = {
+            label: "RGB byte order",
+            input: "select",
+            options: [
+              { label: "RGB", value: "rgba" },
+              { label: "BGR", value: "bgra" },
+              { label: "XBGR", value: "abgr" },
+            ],
+            value: rgbByteOrder,
+          };
+          break;
+        case "rgba":
+          node.fields.rgbByteOrder = {
+            label: "RGBA byte order",
+            input: "select",
+            options: [
+              { label: "RGBA", value: "rgba" },
+              { label: "BGRA", value: "bgra" },
+              { label: "ABGR", value: "abgr" },
+            ],
+            value: rgbByteOrder,
+          };
+          break;
+      }
+
+      node.fields.minValue = {
         label: "Value min",
         input: "number",
-        value: valueMin,
+        value: minValue,
         placeholder: "auto",
       };
-      node.fields.valueMax = {
+      node.fields.maxValue = {
         label: "Value max",
         input: "number",
-        value: valueMax,
+        value: maxValue,
         placeholder: "auto",
       };
-      node.fields.colorMap = {
-        label: "Color map",
-        input: "select",
-        options: [
-          { label: "Turbo", value: "turbo" },
-          { label: "Rainbow", value: "rainbow" },
-          { label: "Gradient", value: "gradient" },
-        ],
-        value: colorMap,
-      };
-      if (colorMap === "gradient") {
-        // node.fields.gradient = { label: "Gradient", input: "gradient", value: gradient };
-      }
     }
   }
 
@@ -243,5 +293,5 @@ function bestColorByField(pclFields: string[]): string {
       return field;
     }
   }
-  return "none";
+  return "x";
 }

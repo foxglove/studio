@@ -25,7 +25,7 @@ import { normalizeMarker } from "@foxglove/studio-base/panels/ThreeDeeRender/nor
 
 import { DebugGui } from "./DebugGui";
 import { setOverlayPosition } from "./LabelOverlay";
-import { Renderer } from "./Renderer";
+import { LayerType, Renderer } from "./Renderer";
 import { RendererContext, useRenderer, useRendererEvent } from "./RendererContext";
 import { Stats } from "./Stats";
 import {
@@ -200,13 +200,44 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   }, []);
   const [cameraStore] = useState(() => new CameraStore(setCameraState, cameraState));
 
-  const actionHandler = useCallback((action: SettingsTreeAction) => {
-    setConfig((oldConfig) =>
-      produce(oldConfig, (draft) => {
-        set(draft, action.payload.path, action.payload.value);
-      }),
-    );
-  }, []);
+  // Build a map from topic name to datatype
+  const topicsToDatatypes = useMemo(() => {
+    const map = new Map<string, string>();
+    if (!topics) {
+      return map;
+    }
+    for (const topic of topics) {
+      map.set(topic.name, topic.datatype);
+    }
+    return map;
+  }, [topics]);
+
+  // Build a map from (renderable) topic name to LayerType enum
+  const topicsToLayerTypes = useMemo(() => buildTopicsToLayerTypes(topics), [topics]);
+
+  // Handle user changes in the settings sidebar
+  const actionHandler = useCallback(
+    (action: SettingsTreeAction) => {
+      setConfig((oldConfig) => {
+        const newConfig = produce(oldConfig, (draft) => {
+          set(draft, action.payload.path, action.payload.value);
+        });
+
+        // If a topic setting was changed, inform the renderer about it and
+        // draw a new frame
+        if (renderer && action.payload.path[0] === "topics") {
+          const topic = action.payload.path[1]!;
+          const layerType = topicsToLayerTypes.get(topic);
+          if (layerType != undefined) {
+            updateTopicSettings(renderer, topic, layerType, newConfig);
+          }
+        }
+
+        return newConfig;
+      });
+    },
+    [renderer, topicsToLayerTypes],
+  );
 
   // Maintain a list of coordinate frames for the settings sidebar
   const [coordinateFrames, setCoordinateFrames] = useState<SelectEntry[]>(
@@ -256,6 +287,13 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       renderer.animationFrame();
     }
   }, [followTf, renderer]);
+
+  // Update the renderer's reference to `config` when it changes
+  useEffect(() => {
+    if (renderer) {
+      renderer.config = config;
+    }
+  }, [config, renderer]);
 
   // Save panel settings whenever they change
   const throttledSave = useDebouncedCallback(
@@ -313,18 +351,6 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     context.watch("topics");
     context.watch("currentFrame");
   }, [context]);
-
-  // Build a map from topic name to datatype
-  const topicsToDatatypes = useMemo(() => {
-    const map = new Map<string, string>();
-    if (!topics) {
-      return map;
-    }
-    for (const topic of topics) {
-      map.set(topic.name, topic.datatype);
-    }
-    return map;
-  }, [topics]);
 
   // Build a list of topics to subscribe to
   const topicsToSubscribe = useMemo(() => {
@@ -520,4 +546,49 @@ function coordinateFrameList(renderer: Renderer | ReactNull | undefined): Select
   }
 
   return output;
+}
+
+function buildTopicsToLayerTypes(topics: ReadonlyArray<Topic> | undefined): Map<string, LayerType> {
+  const map = new Map<string, LayerType>();
+  if (!topics) {
+    return map;
+  }
+  for (const topic of topics) {
+    const datatype = topic.datatype;
+    if (SUPPORTED_DATATYPES.has(datatype)) {
+      if (TF_DATATYPES.has(datatype) || TRANSFORM_STAMPED_DATATYPES.has(datatype)) {
+        map.set(topic.name, LayerType.Transform);
+      } else if (MARKER_DATATYPES.has(datatype) || MARKER_ARRAY_DATATYPES.has(datatype)) {
+        map.set(topic.name, LayerType.Marker);
+      } else if (OCCUPANCY_GRID_DATATYPES.has(datatype)) {
+        map.set(topic.name, LayerType.OccupancyGrid);
+      } else if (POINTCLOUD_DATATYPES.has(datatype)) {
+        map.set(topic.name, LayerType.PointCloud);
+      }
+    }
+  }
+  return map;
+}
+
+function updateTopicSettings(
+  renderer: Renderer,
+  topic: string,
+  layerType: LayerType,
+  config: ThreeDeeRenderConfig,
+) {
+  const topicConfig = config.topics[topic];
+  if (!topicConfig) {
+    return;
+  }
+
+  switch (layerType) {
+    case LayerType.Transform:
+    case LayerType.Marker:
+    case LayerType.OccupancyGrid:
+      break;
+    case LayerType.PointCloud:
+      renderer.setPointCloud2Settings(topic, topicConfig);
+      break;
+  }
+  renderer.animationFrame();
 }
