@@ -36,23 +36,23 @@ const TextContentRoot = muiStyled("div")(({ theme }) => ({
     },
   },
   h1: {
-    ...theme.typography.h3,
-    marginBottom: theme.spacing(1),
-    fontWeight: 500,
-  },
-  h2: {
     ...theme.typography.h4,
     marginBottom: theme.spacing(1),
     fontWeight: 500,
   },
-  h3: {
+  h2: {
     ...theme.typography.h5,
+    marginBottom: theme.spacing(1),
+    fontWeight: 500,
+  },
+  h3: {
+    ...theme.typography.h6,
     marginBottom: theme.spacing(1),
     color: theme.palette.text.secondary,
     fontWeight: 500,
   },
   h4: {
-    ...theme.typography.h6,
+    ...theme.typography.subtitle1,
     marginBottom: theme.spacing(0.5),
     color: theme.palette.text.secondary,
     fontWeight: 500,
@@ -64,7 +64,7 @@ const TextContentRoot = muiStyled("div")(({ theme }) => ({
     fontWeight: 500,
   },
   "ol, ul": {
-    paddingLeft: theme.spacing(4),
+    paddingLeft: theme.spacing(2.5),
     marginBottom: theme.spacing(2.5),
   },
   li: {
