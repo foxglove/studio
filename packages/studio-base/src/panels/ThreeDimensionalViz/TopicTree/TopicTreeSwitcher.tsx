@@ -4,10 +4,9 @@
 
 import LayersIcon from "@mui/icons-material/Layers";
 import PushPinIcon from "@mui/icons-material/PushPin";
-import { IconButton as MuiIconButton, styled as muiStyled, Tooltip } from "@mui/material";
+import { IconButton as MuiIconButton, styled as muiStyled } from "@mui/material";
 import { useCallback } from "react";
 
-import KeyboardShortcut from "@foxglove/studio-base/components/KeyboardShortcut";
 import { Save3DConfig } from "@foxglove/studio-base/panels/ThreeDimensionalViz";
 
 export const SWITCHER_HEIGHT = 30;
