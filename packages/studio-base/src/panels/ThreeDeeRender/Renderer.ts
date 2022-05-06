@@ -7,23 +7,21 @@ import * as THREE from "three";
 
 import Logger from "@foxglove/log";
 import { CameraState } from "@foxglove/regl-worldview";
-import { ScreenOverlay } from "@foxglove/studio-base/panels/ThreeDeeRender/ScreenOverlay";
-import {
-  LayerSettingsPointCloud2,
-  ThreeDeeRenderConfig,
-} from "@foxglove/studio-base/panels/ThreeDeeRender/settings";
 
 import { Input } from "./Input";
 import { LayerErrors } from "./LayerErrors";
 import { MaterialCache } from "./MaterialCache";
 import { ModelCache } from "./ModelCache";
 import { Picker } from "./Picker";
+import { ScreenOverlay } from "./ScreenOverlay";
+import { stringToRgb } from "./color";
 import { DetailLevel, msaaSamples } from "./lod";
 import { FrameAxes } from "./renderables/FrameAxes";
 import { Markers } from "./renderables/Markers";
 import { OccupancyGrids } from "./renderables/OccupancyGrids";
 import { PointClouds } from "./renderables/PointClouds";
 import { Marker, OccupancyGrid, PointCloud2, TF } from "./ros";
+import { LayerSettingsPointCloud2, ThreeDeeRenderConfig } from "./settings";
 import { TransformTree } from "./transforms/TransformTree";
 
 const log = Logger.getLogger(__filename);
@@ -65,6 +63,7 @@ const TRANSFORM_STORAGE_TIME_NS = 60n * BigInt(1e9);
 const UNIT_X = new THREE.Vector3(1, 0, 0);
 const PI_2 = Math.PI / 2;
 
+const tempColor = new THREE.Color();
 const tempVec = new THREE.Vector3();
 const tempVec2 = new THREE.Vector2();
 const tempSpherical = new THREE.Spherical();
@@ -195,15 +194,17 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.gl.dispose();
   }
 
-  setColorScheme(colorScheme: "dark" | "light"): void {
-    log.debug(`Setting color scheme to "${colorScheme}"`);
+  setColorScheme(colorScheme: "dark" | "light", backgroundColor: string | undefined): void {
     this.colorScheme = colorScheme;
+
+    const bgColor = backgroundColor ? stringToRgb(tempColor, backgroundColor) : undefined;
+
     if (colorScheme === "dark") {
-      this.gl.setClearColor(DARK_BACKDROP);
+      this.gl.setClearColor(bgColor ?? DARK_BACKDROP);
       this.materialCache.outlineMaterial.color.set(DARK_OUTLINE);
       this.materialCache.outlineMaterial.needsUpdate = true;
     } else {
-      this.gl.setClearColor(LIGHT_BACKDROP);
+      this.gl.setClearColor(bgColor ?? LIGHT_BACKDROP);
       this.materialCache.outlineMaterial.color.set(LIGHT_OUTLINE);
       this.materialCache.outlineMaterial.needsUpdate = true;
     }

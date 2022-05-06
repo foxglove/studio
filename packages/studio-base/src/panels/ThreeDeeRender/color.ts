@@ -19,23 +19,23 @@ export function stringToRgba(output: ColorRGBA, colorStr: string): ColorRGBA {
     return output;
   }
   const rgb = color.toRgb();
-  output.r = rgb.r;
-  output.g = rgb.g;
-  output.b = rgb.b;
+  output.r = rgb.r / 255;
+  output.g = rgb.g / 255;
+  output.b = rgb.b / 255;
   output.a = rgb.a;
   return output;
 }
 
-export function stringToRgb(output: ColorRGB, colorStr: string): ColorRGB {
+export function stringToRgb<T extends ColorRGB | THREE.Color>(output: T, colorStr: string): T {
   const color = tinycolor(colorStr);
   if (!color.isValid()) {
     output.r = output.g = output.b = 1;
     return output;
   }
   const rgb = color.toRgb();
-  output.r = rgb.r;
-  output.g = rgb.g;
-  output.b = rgb.b;
+  output.r = rgb.r / 255;
+  output.g = rgb.g / 255;
+  output.b = rgb.b / 255;
   return output;
 }
 

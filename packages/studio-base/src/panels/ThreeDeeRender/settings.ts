@@ -24,7 +24,10 @@ import {
 export type ThreeDeeRenderConfig = {
   cameraState: CameraState;
   enableStats: boolean;
-  followTf?: string;
+  followTf: string | undefined;
+  scene: {
+    backgroundColor?: string;
+  };
   topics: Record<string, Record<string, unknown> | undefined>;
 };
 
@@ -229,7 +232,8 @@ const memoBuildTopicNode = memoize(buildTopicNode);
 
 export function buildSettingsTree(options: SettingsTreeOptions): SettingsTreeNode {
   const { config, coordinateFrames, followTf, topics, pclFieldsByTopic } = options;
-  const { cameraState } = config;
+  const { cameraState, scene } = config;
+  const { backgroundColor } = scene;
 
   const topicsChildren: SettingsTreeChildren = {};
 
@@ -247,10 +251,16 @@ export function buildSettingsTree(options: SettingsTreeOptions): SettingsTreeNod
   // prettier-ignore
   return {
     fields: {
-      followTf: { label: "Coordinate Frame", input: "select", options: coordinateFrames, value: followTf },
-      enableStats: { label: "Enable Stats", input: "boolean", value: config.enableStats },
+      followTf: { label: "Coordinate frame", input: "select", options: coordinateFrames, value: followTf },
+      enableStats: { label: "Enable stats", input: "boolean", value: config.enableStats },
     },
     children: {
+      scene: {
+        label: "Scene",
+        fields: {
+          backgroundColor: { label: "Color", input: "rgb", value: backgroundColor },
+        },
+      },
       cameraState: {
         label: "Camera",
         fields: {

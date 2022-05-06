@@ -177,10 +177,12 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       cameraState,
       enableStats: partialConfig?.enableStats ?? true,
       followTf: partialConfig?.followTf,
+      scene: partialConfig?.scene ?? {},
       topics: partialConfig?.topics ?? {},
     };
   });
   const { cameraState, followTf: configFollowTf } = config;
+  const backgroundColor = config.scene.backgroundColor;
 
   const [canvas, setCanvas] = useState<HTMLCanvasElement | ReactNull>(ReactNull);
   const [renderer, setRenderer] = useState<Renderer | ReactNull>(ReactNull);
@@ -390,11 +392,13 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     }
   }, [currentTime, renderer]);
 
+  // Keep the renderer colorScheme and backgroundColor up to date
   useEffect(() => {
     if (colorScheme && renderer) {
-      renderer.setColorScheme(colorScheme);
+      renderer.setColorScheme(colorScheme, backgroundColor);
+      renderer.animationFrame();
     }
-  }, [colorScheme, renderer]);
+  }, [backgroundColor, colorScheme, renderer]);
 
   // Handle messages and render a frame if the camera has moved or new messages
   // are available
