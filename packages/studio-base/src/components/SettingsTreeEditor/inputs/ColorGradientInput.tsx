@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { ColorPicker } from "@fluentui/react";
-import { Card, ClickAwayListener, TextField, styled as muiStyled } from "@mui/material";
+import { Popover, TextField } from "@mui/material";
 import { useState } from "react";
 import tinycolor from "tinycolor2";
 
@@ -12,21 +12,6 @@ import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { ColorSwatch } from "./ColorSwatch";
 
-const PickerWrapperLeft = muiStyled(Card)(({ theme }) => ({
-  position: "absolute",
-  zIndex: theme.zIndex.modal,
-  top: "100%",
-  left: 0,
-  transform: "translateX(-50%)",
-}));
-
-const PickerWrapperRight = muiStyled(Card)(({ theme }) => ({
-  position: "absolute",
-  zIndex: theme.zIndex.modal,
-  top: "100%",
-  right: 0,
-}));
-
 export function ColorGradientInput({
   colors,
   onChange,
@@ -34,8 +19,24 @@ export function ColorGradientInput({
   colors: undefined | readonly [string, string];
   onChange: (colors: [string, string]) => void;
 }): JSX.Element {
-  const [showLeftPicker, setShowLeftPicker] = useState(false);
-  const [showRightPicker, setShowRightPicker] = useState(false);
+  const [leftAnchor, setLeftAnchor] = useState<undefined | HTMLDivElement>(undefined);
+  const [rightAnchor, setRightAnchor] = useState<undefined | HTMLDivElement>(undefined);
+
+  const handleLeftClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    setLeftAnchor(event.currentTarget);
+    setRightAnchor(undefined);
+  };
+
+  const handleRightClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    setLeftAnchor(undefined);
+    setRightAnchor(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setLeftAnchor(undefined);
+    setRightAnchor(undefined);
+  };
+
   const leftColor = colors?.[0] ?? "#000000";
   const rightColor = colors?.[1] ?? "#FFFFFF";
   const safeLeftColor = tinycolor(leftColor).isValid() ? leftColor : "#000000";
@@ -49,7 +50,7 @@ export function ColorGradientInput({
         backgroundImage: `linear-gradient(to right, ${safeLeftColor}, ${safeRightColor})`,
       }}
     >
-      <ColorSwatch color={safeLeftColor} onClick={() => setShowLeftPicker(true)} />
+      <ColorSwatch color={safeLeftColor} onClick={handleLeftClick} />
       <TextField
         variant="filled"
         size="small"
@@ -57,51 +58,61 @@ export function ColorGradientInput({
         value={`${leftColor} / ${rightColor}`}
         style={{ visibility: "hidden" }}
       />
-      <ColorSwatch color={safeRightColor} onClick={() => setShowRightPicker(true)} />
-      {showLeftPicker && (
-        <ClickAwayListener onClickAway={() => setShowLeftPicker(false)}>
-          <PickerWrapperLeft variant="elevation">
-            <ColorPicker
-              color={leftColor}
-              alphaType="alpha"
-              styles={{
-                root: {
-                  minWidth: 216,
-                },
-                tableHexCell: { width: "35%" },
-                input: {
-                  input: {
-                    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, 'zero'`,
-                  },
-                },
-              }}
-              onChange={(_event, newValue) => onChange([newValue.str, rightColor])}
-            />
-          </PickerWrapperLeft>
-        </ClickAwayListener>
-      )}
-      {showRightPicker && (
-        <ClickAwayListener onClickAway={() => setShowRightPicker(false)}>
-          <PickerWrapperRight variant="elevation">
-            <ColorPicker
-              color={rightColor}
-              alphaType="alpha"
-              styles={{
-                root: {
-                  minWidth: 216,
-                },
-                tableHexCell: { width: "35%" },
-                input: {
-                  input: {
-                    fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, 'zero'`,
-                  },
-                },
-              }}
-              onChange={(_event, newValue) => onChange([leftColor, newValue.str])}
-            />
-          </PickerWrapperRight>
-        </ClickAwayListener>
-      )}
+      <ColorSwatch color={safeRightColor} onClick={handleRightClick} />
+      <Popover
+        open={leftAnchor != undefined}
+        anchorEl={leftAnchor}
+        onClose={handleClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "left",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "center",
+        }}
+      >
+        <ColorPicker
+          color={leftColor}
+          alphaType="alpha"
+          styles={{
+            tableHexCell: { width: "35%" },
+            input: {
+              input: {
+                fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, 'zero'`,
+              },
+            },
+          }}
+          onChange={(_event, newValue) => onChange([newValue.str, rightColor])}
+        />
+      </Popover>
+      <Popover
+        open={rightAnchor != undefined}
+        anchorEl={rightAnchor}
+        onClose={handleClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "left",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "center",
+        }}
+      >
+        <ColorPicker
+          color={rightColor}
+          alphaType="alpha"
+          styles={{
+            tableHexCell: { width: "35%" },
+            input: {
+              input: {
+                fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, 'zero'`,
+              },
+            },
+          }}
+          onChange={(_event, newValue) => onChange([leftColor, newValue.str])}
+        />
+      </Popover>
     </Stack>
   );
 }
