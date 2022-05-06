@@ -4,7 +4,7 @@
 
 import { ColorPicker } from "@fluentui/react";
 import { Popover, TextField } from "@mui/material";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import tinycolor from "tinycolor2";
 
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -22,20 +22,20 @@ export function ColorGradientInput({
   const [leftAnchor, setLeftAnchor] = useState<undefined | HTMLDivElement>(undefined);
   const [rightAnchor, setRightAnchor] = useState<undefined | HTMLDivElement>(undefined);
 
-  const handleLeftClick = (event: React.MouseEvent<HTMLDivElement>) => {
+  const handleLeftClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     setLeftAnchor(event.currentTarget);
     setRightAnchor(undefined);
-  };
+  }, []);
 
-  const handleRightClick = (event: React.MouseEvent<HTMLDivElement>) => {
+  const handleRightClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
     setLeftAnchor(undefined);
     setRightAnchor(event.currentTarget);
-  };
+  }, []);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setLeftAnchor(undefined);
     setRightAnchor(undefined);
-  };
+  }, []);
 
   const leftColor = colors?.[0] ?? "#000000";
   const rightColor = colors?.[1] ?? "#FFFFFF";
