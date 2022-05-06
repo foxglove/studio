@@ -32,6 +32,7 @@ import {
 } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
+import { CameraInfo } from "@foxglove/studio-base/types/Messages";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import { formatTimeRaw } from "@foxglove/studio-base/util/time";
@@ -345,7 +346,8 @@ function ImageView(props: Props) {
       markers: annotations ?? [],
       transformMarkers,
       // Convert to plain object before sending to web worker
-      cameraInfo: (cameraInfo as { toJSON?: () => unknown } | undefined)?.toJSON?.() ?? cameraInfo,
+      cameraInfo:
+        (cameraInfo as { toJSON?: () => CameraInfo } | undefined)?.toJSON?.() ?? cameraInfo,
     };
   }, [annotations, cameraInfo, transformMarkers]);
 
