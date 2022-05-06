@@ -34,8 +34,6 @@ function createHelpInfoStore(): StoreApi<HelpInfoStore> {
   }));
 }
 
-export const HelpInfoStoreProvider = Provider;
-
 export default function HelpInfoProvider({
   children,
 }: React.PropsWithChildren<unknown>): JSX.Element {
