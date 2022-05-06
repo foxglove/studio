@@ -4,7 +4,7 @@
 
 import { ColorPicker } from "@fluentui/react";
 import { TextField, styled as muiStyled, Popover } from "@mui/material";
-import { MouseEvent, useState } from "react";
+import { useCallback, MouseEvent, useState } from "react";
 import tinycolor from "tinycolor2";
 
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -47,13 +47,13 @@ export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
 
   const [anchorElement, setAnchorElement] = useState<undefined | HTMLDivElement>(undefined);
 
-  const handleClick = (event: MouseEvent<HTMLDivElement>) => {
+  const handleClick = useCallback((event: MouseEvent<HTMLDivElement>) => {
     setAnchorElement(event.currentTarget);
-  };
+  }, []);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setAnchorElement(undefined);
-  };
+  }, []);
 
   const open = Boolean(anchorElement);
 
