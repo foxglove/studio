@@ -30,6 +30,7 @@ const Tab = muiStyled("div")<{
   tabCount: number;
   title: string;
 }>(({ active, dragging, hidden, tabCount, title, theme }) => ({
+  fontSize: theme.typography.body2.fontSize,
   position: "relative",
   borderTopLeftRadius: theme.shape.borderRadius,
   borderTopRightRadius: theme.shape.borderRadius,
