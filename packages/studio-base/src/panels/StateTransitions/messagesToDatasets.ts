@@ -51,10 +51,7 @@ export default function messagesToDatasets(args: Args): DatasetInfo {
     }
 
     for (const itemByPath of messages) {
-      const timestamp = getTimestampForMessageEvent(
-        itemByPath.messageEvent,
-        path.timestampMethod
-      );
+      const timestamp = getTimestampForMessageEvent(itemByPath.messageEvent, path.timestampMethod);
       if (!timestamp) {
         continue;
       }
@@ -91,13 +88,9 @@ export default function messagesToDatasets(args: Args): DatasetInfo {
       }
 
       const valueForColor =
-        typeof value === "string"
-          ? stringHash(value)
-          : Math.round(Number(value));
+        typeof value === "string" ? stringHash(value) : Math.round(Number(value));
       const color =
-        baseColors[
-          positiveModulo(valueForColor, Object.values(baseColors).length)
-        ] ?? "grey";
+        baseColors[positiveModulo(valueForColor, Object.values(baseColors).length)] ?? "grey";
 
       const x = toSec(subtractTimes(timestamp, startTime));
 
@@ -119,9 +112,7 @@ export default function messagesToDatasets(args: Args): DatasetInfo {
       // if the value is different from previous value, make a new dataset
       if (value !== prevQueryValue) {
         const label =
-          constantName != undefined
-            ? `${constantName} (${String(value)})`
-            : String(value);
+          constantName != undefined ? `${constantName} (${String(value)})` : String(value);
 
         const elementWithLabel = {
           ...element,
