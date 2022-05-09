@@ -78,7 +78,7 @@ const useStyles = makeStyles((theme: Theme) => {
     },
     appBarBackground: ({ backgroundColor }: { backgroundColor?: string }) => ({
       backgroundImage: `linear-gradient(to top, transparent, ${
-        backgroundColor ?? theme.palette.background.default
+        backgroundColor ?? theme.palette.background.paper
       } ${theme.spacing(1.5)}) !important`,
     }),
     toolbar: {

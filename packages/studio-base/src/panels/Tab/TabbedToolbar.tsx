@@ -12,7 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import AddIcon from "@mui/icons-material/Add";
-import { IconButton, styled as muiStyled } from "@mui/material";
+import { IconButton, styled as muiStyled, useTheme } from "@mui/material";
 import { useEffect } from "react";
 import { useDrop } from "react-dnd";
 
@@ -56,6 +56,7 @@ type Props = {
 
 export function TabbedToolbar(props: Props): JSX.Element {
   const { panelId, actions, tabs, activeTabIdx, setDraggingTabState } = props;
+  const theme = useTheme();
 
   const [{ isOver, item }, dropRef] = useDrop({
     accept: TAB_DRAG_TYPE,
@@ -70,7 +71,7 @@ export function TabbedToolbar(props: Props): JSX.Element {
 
   return (
     <STabbedToolbar>
-      <PanelToolbar helpContent={helpContent}>
+      <PanelToolbar backgroundColor={theme.palette.background.default} helpContent={helpContent}>
         <STabs role="tab" ref={dropRef} data-test="toolbar-droppable">
           {tabs.map((tab, i) => (
             <DraggableToolbarTab
