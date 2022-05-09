@@ -99,18 +99,16 @@ const useStyles = makeStyles((theme: Theme) => {
   };
 });
 
-const StyledAppBar = muiStyled(AppBar)<{ backgroundColor?: string }>(
-  ({ backgroundColor, theme }) => ({
-    top: -0.5, // half a pixel to avoid a gap between the appbar and panel top
-    zIndex: 100,
-    display: "flex",
-    padding: theme.spacing(2),
-    justifyContent: "stretch",
-    backgroundImage: `linear-gradient(to top, transparent, ${
-      backgroundColor ? backgroundColor : theme.palette.background.paper
-    } ${theme.spacing(1.5)}) !important`,
-  }),
-);
+const StyledAppBar = muiStyled(AppBar)(({ theme }) => ({
+  top: -0.5, // half a pixel to avoid a gap between the appbar and panel top
+  zIndex: 100,
+  display: "flex",
+  padding: theme.spacing(2),
+  justifyContent: "stretch",
+  backgroundImage: `linear-gradient(to top, transparent, ${
+    theme.palette.background.paper
+  } ${theme.spacing(1.5)}) !important`,
+}));
 
 type DropDescription = {
   type: string;
@@ -468,12 +466,7 @@ function PanelList(props: Props): JSX.Element {
 
   return (
     <div className={classes.fullHeight}>
-      <StyledAppBar
-        backgroundColor={backgroundColor}
-        position="sticky"
-        color="transparent"
-        elevation={0}
-      >
+      <StyledAppBar position="sticky" color="transparent" elevation={0}>
         <div className={classes.inputWrapper}>
           <SearchIcon fontSize="small" color="primary" />
           <LegacyInput
