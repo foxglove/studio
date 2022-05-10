@@ -13,7 +13,6 @@
 
 import SearchIcon from "@mui/icons-material/Search";
 import {
-  AppBar,
   Theme,
   Card,
   CardActionArea,
@@ -99,8 +98,9 @@ const useStyles = makeStyles((theme: Theme) => {
   };
 });
 
-const StyledAppBar = muiStyled(AppBar)(({ theme }) => ({
-  top: -0.5, // half a pixel to avoid a gap between the appbar and panel top
+const StickyToolbar = muiStyled("div")(({ theme }) => ({
+  position: "sticky",
+  top: -0.5, // yep that's a half pixel to avoid a gap between the appbar and panel top
   zIndex: 100,
   display: "flex",
   padding: theme.spacing(2),
@@ -466,7 +466,7 @@ function PanelList(props: Props): JSX.Element {
 
   return (
     <div className={classes.fullHeight}>
-      <StyledAppBar position="sticky" color="transparent" elevation={0}>
+      <StickyToolbar>
         <div className={classes.inputWrapper}>
           <SearchIcon fontSize="small" color="primary" />
           <LegacyInput
@@ -479,7 +479,7 @@ function PanelList(props: Props): JSX.Element {
             autoFocus
           />
         </div>
-      </StyledAppBar>
+      </StickyToolbar>
       {mode === "grid" ? (
         <Container className={classes.grid} maxWidth={false}>
           {allFilteredPanels.map(displayPanelListItem)}
