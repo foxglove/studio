@@ -491,7 +491,9 @@ function PanelList(props: Props): JSX.Element {
       )}
       {noResults && (
         <Stack alignItems="center" justifyContent="center" paddingX={1} paddingY={2}>
-          <Typography color="text.secondary">No panels match search criteria.</Typography>
+          <Typography variant="body2" color="text.secondary">
+            No panels match search criteria.
+          </Typography>
         </Stack>
       )}
     </div>
