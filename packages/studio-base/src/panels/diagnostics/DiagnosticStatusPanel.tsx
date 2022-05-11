@@ -180,7 +180,7 @@ function DiagnosticStatusPanel(props: Props) {
   return (
     <div className={classes.root}>
       <div ref={menuRef} style={{ position: "absolute" }}></div>
-      <PanelToolbar floating helpContent={helpContent} additionalIcons={topicMenuIcon}>
+      <PanelToolbar helpContent={helpContent} additionalIcons={topicMenuIcon}>
         <Autocomplete
           disablePortal
           blurOnSelect={true}

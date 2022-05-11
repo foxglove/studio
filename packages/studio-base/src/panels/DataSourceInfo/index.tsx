@@ -92,7 +92,7 @@ function SourceInfo() {
   const duration = subtractTimes(endTime, startTime);
   return (
     <>
-      <PanelToolbar helpContent={helpContent} floating />
+      <PanelToolbar helpContent={helpContent} />
       <div className={classes.root}>
         <header className={classes.header}>
           <div className={classes.row}>
