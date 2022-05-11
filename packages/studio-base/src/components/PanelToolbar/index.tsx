@@ -29,7 +29,6 @@ import { PanelToolbarControls } from "./PanelToolbarControls";
 type Props = {
   additionalIcons?: React.ReactNode;
   alwaysVisible?: boolean;
-  backgroundColor?: string;
   children?: React.ReactNode;
   floating?: boolean;
   helpContent?: React.ReactNode;
@@ -37,50 +36,16 @@ type Props = {
   isUnknownPanel?: boolean;
 };
 
-const PanelToolbarRoot = muiStyled("div", {
-  shouldForwardProp: (prop) =>
-    prop !== "backgroundColor" &&
-    prop !== "floating" &&
-    prop !== "hasChildren" &&
-    prop !== "shouldShow",
-})<{
-  backgroundColor?: string;
-  floating: boolean;
-  hasChildren: boolean;
-  shouldShow: boolean;
-}>(({ backgroundColor, floating, hasChildren, shouldShow, theme }) => ({
+const PanelToolbarRoot = muiStyled("div")(({ theme }) => ({
   transition: "transform 80ms ease-in-out, opacity 80ms ease-in-out",
   flex: "0 0 auto",
   justifyContent: "flex-end",
   padding: theme.spacing(0.5),
-  display: !shouldShow ? "none" : "flex",
-  backgroundColor: backgroundColor ?? theme.palette.background.paper,
-
-  ...(floating && {
-    position: "absolute",
-    right: 0,
-    paddingRight: theme.spacing(1), // leave some room for possible scrollbar
-    top: 0,
-    zIndex: theme.zIndex.appBar,
-    minHeight: 32,
-
-    ...(hasChildren
-      ? {
-          // If the toolbar has children, set the width to 100% to take up the entire panel width.
-          // If the toolbar does not have children, then the width should be only the controls
-          // so the div does not interfere with other panel elements.
-          backgroundColor: theme.palette.background.paper,
-          width: "100%",
-          left: 0,
-        }
-      : {
-          "& > *": {
-            backgroundColor: theme.palette.background.paper,
-            borderRadius: theme.shape.borderRadius,
-            boxShadow: theme.shadows[4],
-          },
-        }),
-  }),
+  display: "flex",
+  minHeight: 32,
+  backgroundColor: theme.palette.background.paper,
+  width: "100%",
+  left: 0,
 }));
 
 const useStyles = makeStyles((theme: Theme) => ({
@@ -98,7 +63,6 @@ const selectSetHelpInfo = (store: HelpInfoStore) => store.setHelpInfo;
 export default React.memo<Props>(function PanelToolbar({
   additionalIcons,
   alwaysVisible = false,
-  backgroundColor,
   children,
   floating = false,
   helpContent,
@@ -170,20 +134,13 @@ export default React.memo<Props>(function PanelToolbar({
   const containerRef = useRef<HTMLDivElement>(ReactNull);
 
   const mousePresent = usePanelMousePresence(containerRef);
-  const shouldShow = alwaysVisible || (floating ? showToolbar || mousePresent : true);
 
   if (hideToolbars) {
     return ReactNull;
   }
 
   return (
-    <PanelToolbarRoot
-      backgroundColor={floating ? "transparent" : backgroundColor}
-      floating={floating}
-      hasChildren={Boolean(children)}
-      ref={containerRef}
-      shouldShow={shouldShow}
-    >
+    <PanelToolbarRoot ref={containerRef}>
       {children}
       <PanelToolbarControls
         showControls={showToolbar || alwaysVisible}
