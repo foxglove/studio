@@ -102,7 +102,7 @@ function Parameters(): ReactElement {
   if (!canGetParams) {
     return (
       <>
-        <PanelToolbar floating helpContent={helpContent} />
+        <PanelToolbar helpContent={helpContent} />
         <EmptyState>Connect to a ROS source to view parameters</EmptyState>
       </>
     );
@@ -110,7 +110,7 @@ function Parameters(): ReactElement {
 
   return (
     <ParametersPanel>
-      <PanelToolbar helpContent={helpContent} floating />
+      <PanelToolbar helpContent={helpContent} />
       <Scrollable>
         <ParametersTable>
           <LegacyTable>

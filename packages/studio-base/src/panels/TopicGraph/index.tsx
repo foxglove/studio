@@ -372,7 +372,7 @@ function TopicGraph() {
   if (publishedTopics == undefined) {
     return (
       <>
-        <PanelToolbar floating helpContent={helpContent} />
+        <PanelToolbar helpContent={helpContent} />
         <EmptyState>Waiting for data...</EmptyState>
       </>
     );
@@ -380,7 +380,7 @@ function TopicGraph() {
 
   return (
     <>
-      <PanelToolbar floating helpContent={helpContent} />
+      <PanelToolbar helpContent={helpContent} />
       <div className={classes.root}>
         <Paper square={false} elevation={4} className={classes.pointerEventsAuto}>
           <div className={cx(classes.stack, classes.pointerEventsAuto)}>

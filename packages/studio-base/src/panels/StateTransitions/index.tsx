@@ -371,7 +371,7 @@ const StateTransitions = React.memo(function StateTransitions(props: Props) {
 
   return (
     <SRoot ref={rootRef}>
-      <PanelToolbar floating helpContent={helpContent} />
+      <PanelToolbar helpContent={helpContent} />
       <SAddButton style={{ visibility: mousePresent ? "visible" : "hidden" }}>
         <Button
           onClick={() =>

@@ -11,49 +11,45 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import FullscreenExitIcon from "@mdi/svg/svg/fullscreen-exit.svg";
-import FullscreenIcon from "@mdi/svg/svg/fullscreen.svg";
-import HelpCircleOutlineIcon from "@mdi/svg/svg/help-circle-outline.svg";
-import { styled as muiStyled, Theme } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-import { useContext, useState, useMemo, useRef } from "react";
+import FullscreenIcon from "@mui/icons-material/Fullscreen";
+import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import { styled as muiStyled } from "@mui/material";
+import { useContext, useState, useMemo, useRef, CSSProperties } from "react";
 
-import Icon from "@foxglove/studio-base/components/Icon";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
+import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import { usePanelMousePresence } from "@foxglove/studio-base/hooks/usePanelMousePresence";
 import { HelpInfoStore, useHelpInfo } from "@foxglove/studio-base/providers/HelpInfoProvider";
 
 import { PanelToolbarControls } from "./PanelToolbarControls";
 
+export const PANEL_TOOLBAR_MIN_HEIGHT = 26;
+
 type Props = {
   additionalIcons?: React.ReactNode;
   alwaysVisible?: boolean;
+  backgroundColor?: CSSProperties["backgroundColor"];
   children?: React.ReactNode;
-  floating?: boolean;
   helpContent?: React.ReactNode;
   hideToolbars?: boolean;
   isUnknownPanel?: boolean;
 };
 
-const PanelToolbarRoot = muiStyled("div")(({ theme }) => ({
-  transition: "transform 80ms ease-in-out, opacity 80ms ease-in-out",
-  flex: "0 0 auto",
-  justifyContent: "flex-end",
-  padding: theme.spacing(0.5),
-  display: "flex",
-  minHeight: 32,
-  backgroundColor: theme.palette.background.paper,
-  width: "100%",
-  left: 0,
-}));
-
-const useStyles = makeStyles((theme: Theme) => ({
-  icon: {
-    fontSize: 14,
-    margin: theme.spacing(0, 0.125),
-  },
-}));
+const PanelToolbarRoot = muiStyled("div")<{ backgroundColor?: CSSProperties["backgroundColor"] }>(
+  ({ theme, backgroundColor }) => ({
+    transition: "transform 80ms ease-in-out, opacity 80ms ease-in-out",
+    flex: "0 0 auto",
+    justifyContent: "flex-end",
+    padding: theme.spacing(0.25),
+    display: "flex",
+    minHeight: PANEL_TOOLBAR_MIN_HEIGHT,
+    backgroundColor: backgroundColor ?? theme.palette.background.paper,
+    width: "100%",
+    left: 0,
+  }),
+);
 
 const selectSetHelpInfo = (store: HelpInfoStore) => store.setHelpInfo;
 
@@ -63,13 +59,12 @@ const selectSetHelpInfo = (store: HelpInfoStore) => store.setHelpInfo;
 export default React.memo<Props>(function PanelToolbar({
   additionalIcons,
   alwaysVisible = false,
+  backgroundColor,
   children,
-  floating = false,
   helpContent,
   hideToolbars = false,
   isUnknownPanel = false,
 }: Props) {
-  const styles = useStyles();
   const { isFullscreen, enterFullscreen, exitFullscreen } = useContext(PanelContext) ?? {};
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -85,9 +80,9 @@ export default React.memo<Props>(function PanelToolbar({
       <>
         {additionalIcons}
         {Boolean(helpContent) && (
-          <Icon
-            tooltip="Help"
-            fade
+          <ToolbarIconButton
+            value="help"
+            title="Help"
             onClick={() => {
               if (panelContext?.title != undefined) {
                 setHelpInfo({ title: panelContext.title, content: helpContent });
@@ -95,23 +90,27 @@ export default React.memo<Props>(function PanelToolbar({
               }
             }}
           >
-            <HelpCircleOutlineIcon className={styles.icon} />
-          </Icon>
+            <HelpOutlineIcon />
+          </ToolbarIconButton>
         )}
         {isFullscreen === false && (
-          <Icon
-            fade
-            tooltip="Fullscreen"
-            dataTest="panel-toolbar-fullscreen"
+          <ToolbarIconButton
+            title="Fullscreen"
+            data-test="panel-toolbar-fullscreen"
             onClick={enterFullscreen}
+            value="fullscreen"
           >
             <FullscreenIcon />
-          </Icon>
+          </ToolbarIconButton>
         )}
         {isFullscreen === true && (
-          <Icon fade tooltip="Exit fullscreen" onClick={exitFullscreen}>
+          <ToolbarIconButton
+            value="exit-fullscreen"
+            title="Exit fullscreen"
+            onClick={exitFullscreen}
+          >
             <FullscreenExitIcon />
-          </Icon>
+          </ToolbarIconButton>
         )}
       </>
     );
@@ -121,7 +120,6 @@ export default React.memo<Props>(function PanelToolbar({
     setHelpInfo,
     panelContext?.title,
     helpContent,
-    styles.icon,
     isFullscreen,
     enterFullscreen,
     exitFullscreen,
@@ -140,12 +138,11 @@ export default React.memo<Props>(function PanelToolbar({
   }
 
   return (
-    <PanelToolbarRoot ref={containerRef}>
+    <PanelToolbarRoot backgroundColor={backgroundColor} ref={containerRef}>
       {children}
       <PanelToolbarControls
         showControls={showToolbar || alwaysVisible}
         mousePresent={mousePresent}
-        floating={floating}
         additionalIcons={additionalIconsWithHelp}
         isUnknownPanel={!!isUnknownPanel}
         menuOpen={menuOpen}

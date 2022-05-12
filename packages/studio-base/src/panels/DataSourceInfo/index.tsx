@@ -83,7 +83,7 @@ function SourceInfo() {
   if (!startTime || !endTime) {
     return (
       <>
-        <PanelToolbar helpContent={helpContent} floating />
+        <PanelToolbar helpContent={helpContent} />
         <EmptyState>Waiting for data...</EmptyState>
       </>
     );

@@ -305,7 +305,7 @@ function NodePlayground(props: Props) {
 
   return (
     <Stack height="100%">
-      <PanelToolbar floating helpContent={helpContent} />
+      <PanelToolbar helpContent={helpContent} />
       <Stack direction="row" height="100%">
         <Sidebar
           explorer={explorer}

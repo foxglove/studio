@@ -111,8 +111,8 @@ function VariableSliderPanel(props: Props): React.ReactElement {
   ];
 
   return (
-    <Stack direction="row" alignItems="center" fullHeight gap={2} paddingY={2} paddingX={3}>
-      <PanelToolbar helpContent={helpContent} floating />
+    <Stack alignItems="center" fullHeight gap={2} paddingY={2} paddingX={3}>
+      <PanelToolbar helpContent={helpContent} />
       <Slider
         min={sliderProps.min}
         max={sliderProps.max}
