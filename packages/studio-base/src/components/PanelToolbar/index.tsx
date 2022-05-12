@@ -142,7 +142,7 @@ export default React.memo<Props>(function PanelToolbar({
     <PanelToolbarRoot backgroundColor={backgroundColor} ref={containerRef}>
       {children ??
         (panelContext != undefined && (
-          <Typography variant="body2" color="text.secondary" flex="auto">
+          <Typography noWrap variant="body2" color="text.secondary" flex="auto">
             {panelContext.title}
           </Typography>
         ))}
