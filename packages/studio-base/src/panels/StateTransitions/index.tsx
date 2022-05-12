@@ -71,6 +71,7 @@ const fontWeight = "bold";
 
 const SRoot = styled.div`
   display: flex;
+  flex-direction: column;
   flex-grow: 1;
   z-index: 0; // create new stacking context
   overflow: hidden;
