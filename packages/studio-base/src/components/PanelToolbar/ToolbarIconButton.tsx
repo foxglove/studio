@@ -15,6 +15,10 @@ const StyledIconButton = muiStyled(IconButton)(({ theme }) => ({
   },
 }));
 
-export default function ToolbarIconButton(props: IconButtonProps): React.ReactElement {
-  return <StyledIconButton {...props} />;
+export default function ToolbarIconButton(
+  props: {
+    title: string; // require title for accessibility
+  } & Partial<IconButtonProps>,
+): React.ReactElement {
+  return <StyledIconButton aria-label={props.title} {...props} />;
 }

@@ -66,6 +66,7 @@ import helpContent from "./index.help.md";
 import { PlotDataByPath, PlotDataItem } from "./internalTypes";
 import { buildSettingsTree } from "./settings";
 import { PlotConfig } from "./types";
+import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 
 export { plotableRosTypes } from "./types";
 export type { PlotConfig, PlotXAxisVal } from "./types";
@@ -485,15 +486,13 @@ function Plot(props: Props) {
       <PanelToolbar
         helpContent={helpContent}
         additionalIcons={
-          <Icon
-            fade
+          <ToolbarIconButton
             onClick={() => downloadCSV(datasets, xAxisVal)}
-            tooltip="Download plot data as CSV"
+            title="Download plot data as CSV"
           >
             <DownloadOutlineIcon />
-          </Icon>
+          </ToolbarIconButton>
         }
-        floating
       />
       <Stack direction={stackDirection} flex="auto" width="100%" height="100%">
         <PlotLegend

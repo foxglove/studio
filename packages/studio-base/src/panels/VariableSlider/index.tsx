@@ -111,19 +111,29 @@ function VariableSliderPanel(props: Props): React.ReactElement {
   ];
 
   return (
-    <Stack alignItems="center" fullHeight gap={2} paddingY={2} paddingX={3}>
+    <Stack fullHeight>
       <PanelToolbar helpContent={helpContent} />
-      <Slider
-        min={sliderProps.min}
-        max={sliderProps.max}
-        step={sliderProps.step}
-        marks={marks}
-        value={typeof globalVariableValue === "number" ? globalVariableValue : 0}
-        onChange={sliderOnChange}
-      />
-      <Typography variant="h5" style={{ marginTop: theme.spacing(-2.5) }}>
-        {typeof globalVariableValue === "number" ? globalVariableValue : 0}
-      </Typography>
+      <Stack
+        flex="auto"
+        alignItems="center"
+        justifyContent="center"
+        fullHeight
+        gap={2}
+        paddingY={2}
+        paddingX={3}
+      >
+        <Slider
+          min={sliderProps.min}
+          max={sliderProps.max}
+          step={sliderProps.step}
+          marks={marks}
+          value={typeof globalVariableValue === "number" ? globalVariableValue : 0}
+          onChange={sliderOnChange}
+        />
+        <Typography variant="h5" style={{ marginTop: theme.spacing(-2.5) }}>
+          {typeof globalVariableValue === "number" ? globalVariableValue : 0}
+        </Typography>
+      </Stack>
     </Stack>
   );
 }

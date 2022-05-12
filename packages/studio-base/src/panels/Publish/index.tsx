@@ -205,7 +205,7 @@ function Publish(props: Props) {
 
   return (
     <Stack height="100%" padding={1.5}>
-      <PanelToolbar helpContent={helpContent} floating />
+      <PanelToolbar helpContent={helpContent} />
       {advancedView && (
         <>
           <Stack alignItems="baseline" spacing={1} padding={0.5} direction="row" flexShrink={0}>
