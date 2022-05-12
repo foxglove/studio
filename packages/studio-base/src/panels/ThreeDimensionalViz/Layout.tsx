@@ -145,6 +145,7 @@ export type ColorOverrideByVariable = Record<GlobalVariableName, ColorOverride>;
 const useStyles = makeStyles({
   container: {
     display: "flex",
+    flexDirection: "column",
     flex: "1 1 auto",
     position: "relative",
     width: "100%",

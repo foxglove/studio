@@ -49,6 +49,7 @@ const PanelToolbarRoot = muiStyled("div")<{ backgroundColor?: CSSProperties["bac
     backgroundColor: backgroundColor ?? theme.palette.background.paper,
     width: "100%",
     left: 0,
+    zIndex: theme.zIndex.appBar,
   }),
 );
 
