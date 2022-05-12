@@ -25,7 +25,7 @@ import { HelpInfoStore, useHelpInfo } from "@foxglove/studio-base/providers/Help
 
 import { PanelToolbarControls } from "./PanelToolbarControls";
 
-export const PANEL_TOOLBAR_MIN_HEIGHT = 26;
+export const PANEL_TOOLBAR_MIN_HEIGHT = 30;
 
 type Props = {
   additionalIcons?: React.ReactNode;

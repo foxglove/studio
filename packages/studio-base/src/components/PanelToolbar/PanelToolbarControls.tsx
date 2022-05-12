@@ -30,12 +30,13 @@ type PanelToolbarControlsProps = {
   showControls?: boolean;
 };
 
-const Root = muiStyled("div")<{ shouldShow: boolean }>(({ shouldShow }) => ({
+const Root = muiStyled("div")<{ shouldShow: boolean }>(({ shouldShow, theme }) => ({
   display: "flex",
   visibility: shouldShow ? "visible" : "hidden",
   flex: "0 0 auto",
   alignItems: "center",
   flexDirection: "row",
+  paddingLeft: theme.spacing(1),
 }));
 
 // Keep controls, which don't change often, in a pure component in order to avoid re-rendering the

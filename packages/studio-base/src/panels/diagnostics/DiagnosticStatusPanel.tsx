@@ -13,16 +13,16 @@
 
 import DatabaseIcon from "@mdi/svg/svg/database.svg";
 import { Autocomplete, Menu, MenuItem, TextField } from "@mui/material";
-import { makeStyles } from "@mui/styles";
 import { sortBy, uniq } from "lodash";
 import { useCallback, useMemo, useRef, useState, MouseEvent } from "react";
 
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
-import Icon from "@foxglove/studio-base/components/Icon";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
+import Stack from "@foxglove/studio-base/components/Stack";
 import { DIAGNOSTIC_TOPIC } from "@foxglove/studio-base/util/globalConstants";
 
 import DiagnosticStatus from "./DiagnosticStatus";
@@ -44,21 +44,6 @@ type Props = {
   saveConfig: (arg0: Partial<Config>) => void;
 };
 
-const useStyles = makeStyles({
-  root: {
-    display: "flex",
-    flexDirection: "column",
-    flex: "auto",
-    overflow: "scroll",
-  },
-  content: {
-    display: "flex",
-    flexDirection: "column",
-    flex: "auto",
-    overflowY: "auto",
-  },
-});
-
 const ALLOWED_DATATYPES: string[] = [
   "diagnostic_msgs/DiagnosticArray",
   "diagnostic_msgs/msg/DiagnosticArray",
@@ -67,7 +52,6 @@ const ALLOWED_DATATYPES: string[] = [
 
 // component to display a single diagnostic status from list
 function DiagnosticStatusPanel(props: Props) {
-  const classes = useStyles();
   const { saveConfig, config } = props;
   const { topics } = useDataSourceInfo();
   const { openSiblingPanel } = usePanelContext();
@@ -106,18 +90,6 @@ function DiagnosticStatusPanel(props: Props) {
     menuRef.current!.style.left = `${ev.clientX}px`;
     setTopicMenuOpen((isOpen) => !isOpen);
   }, []);
-
-  const topicMenuIcon = (
-    <Icon
-      fade
-      tooltip={`Supported datatypes: ${ALLOWED_DATATYPES.join(", ")}`}
-      tooltipProps={{ placement: "top" }}
-      dataTest={"topic-set"}
-      onClick={toggleTopicMenuAction}
-    >
-      <DatabaseIcon />
-    </Icon>
-  );
 
   const availableDiagnostics = useAvailableDiagnostics(topicToRender);
 
@@ -178,9 +150,41 @@ function DiagnosticStatusPanel(props: Props) {
     autocompleteOptions.length > 0 ? "No matches" : "Waiting for diagnostics...";
 
   return (
-    <div className={classes.root}>
+    <Stack flex="auto" overflow="scroll">
       <div ref={menuRef} style={{ position: "absolute" }}></div>
-      <PanelToolbar helpContent={helpContent} additionalIcons={topicMenuIcon}>
+      <PanelToolbar
+        helpContent={helpContent}
+        additionalIcons={
+          <>
+            <ToolbarIconButton
+              title={`Supported datatypes: ${ALLOWED_DATATYPES.join(", ")}`}
+              data-test={"topic-set"}
+              onClick={toggleTopicMenuAction}
+              subMenuActive={topicMenuOpen}
+            >
+              <DatabaseIcon />
+            </ToolbarIconButton>
+            <Menu
+              anchorEl={menuRef.current}
+              open={topicMenuOpen}
+              onClose={() => setTopicMenuOpen(false)}
+              MenuListProps={{
+                dense: true,
+              }}
+            >
+              {availableTopics.map((topic) => (
+                <MenuItem
+                  key={topic}
+                  onClick={() => changeTopicToRender(topic)}
+                  selected={topicToRender === topic}
+                >
+                  {topic}
+                </MenuItem>
+              ))}
+            </Menu>
+          </>
+        }
+      >
         <Autocomplete
           disablePortal
           blurOnSelect={true}
@@ -213,24 +217,9 @@ function DiagnosticStatusPanel(props: Props) {
             />
           )}
         />
-        <Menu
-          anchorEl={menuRef.current}
-          open={topicMenuOpen}
-          onClose={() => setTopicMenuOpen(false)}
-        >
-          {availableTopics.map((topic) => (
-            <MenuItem
-              key={topic}
-              onClick={() => changeTopicToRender(topic)}
-              selected={topicToRender === topic}
-            >
-              {topic}
-            </MenuItem>
-          ))}
-        </Menu>
       </PanelToolbar>
       {filteredDiagnostics.length > 0 ? (
-        <div className={classes.content}>
+        <Stack flex="auto" overflow="inherit auto">
           {sortBy(filteredDiagnostics, ({ status }) => status.name.toLowerCase()).map((item) => (
             <DiagnosticStatus
               key={item.id}
@@ -245,7 +234,7 @@ function DiagnosticStatusPanel(props: Props) {
               collapsedSections={collapsedSections}
             />
           ))}
-        </div>
+        </Stack>
       ) : selectedDisplayName ? (
         <EmptyState>
           Waiting for diagnostics from <code>{selectedDisplayName}</code>
@@ -253,7 +242,7 @@ function DiagnosticStatusPanel(props: Props) {
       ) : (
         <EmptyState>No diagnostic node selected</EmptyState>
       )}
-    </div>
+    </Stack>
   );
 }
 

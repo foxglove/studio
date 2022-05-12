@@ -12,8 +12,7 @@
 //   You may not use this file except in compliance with the License.
 
 import { useTheme } from "@fluentui/react";
-import DownloadOutlineIcon from "@mdi/svg/svg/download-outline.svg";
-import { Stack } from "@mui/material";
+import ArrowDownBoldIcon from "@mdi/svg/svg/arrow-down-bold.svg";
 import produce from "immer";
 import { compact, set, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
@@ -31,7 +30,6 @@ import {
 import { MessageEvent } from "@foxglove/studio";
 import { useBlocksByTopic, useMessageReducer } from "@foxglove/studio-base/PanelAPI";
 import { MessageBlock } from "@foxglove/studio-base/PanelAPI/useBlocksByTopic";
-import Icon from "@foxglove/studio-base/components/Icon";
 import parseRosPath, {
   getTopicsFromPaths,
 } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
@@ -47,8 +45,12 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
-import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import PanelToolbar, {
+  PANEL_TOOLBAR_MIN_HEIGHT,
+} from "@foxglove/studio-base/components/PanelToolbar";
+import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import { SettingsTreeAction } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import Stack from "@foxglove/studio-base/components/Stack";
 import {
   ChartDefaultView,
   TimeBasedChartTooltipData,
@@ -66,7 +68,6 @@ import helpContent from "./index.help.md";
 import { PlotDataByPath, PlotDataItem } from "./internalTypes";
 import { buildSettingsTree } from "./settings";
 import { PlotConfig } from "./types";
-import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 
 export { plotableRosTypes } from "./types";
 export type { PlotConfig, PlotXAxisVal } from "./types";
@@ -481,7 +482,7 @@ function Plot(props: Props) {
       alignItems="center"
       justifyContent="center"
       overflow="hidden"
-      position="relative"
+      style={{ position: "relative" }}
     >
       <PanelToolbar
         helpContent={helpContent}
@@ -490,11 +491,16 @@ function Plot(props: Props) {
             onClick={() => downloadCSV(datasets, xAxisVal)}
             title="Download plot data as CSV"
           >
-            <DownloadOutlineIcon />
+            <ArrowDownBoldIcon />
           </ToolbarIconButton>
         }
       />
-      <Stack direction={stackDirection} flex="auto" width="100%" height="100%">
+      <Stack
+        direction={stackDirection}
+        flex="auto"
+        fullWidth
+        style={{ height: `calc(100% - ${PANEL_TOOLBAR_MIN_HEIGHT}px)` }}
+      >
         <PlotLegend
           paths={yAxisPaths}
           datasets={datasets}
