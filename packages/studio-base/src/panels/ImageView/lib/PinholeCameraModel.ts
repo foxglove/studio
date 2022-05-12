@@ -20,20 +20,13 @@ import {
   Point2D,
 } from "@foxglove/studio-base/types/Messages";
 
-const DISTORTION_STATE = {
-  NONE: "NONE",
-  CALIBRATED: "CALIBRATED",
-};
-
-type DistortionState = typeof DISTORTION_STATE[keyof typeof DISTORTION_STATE];
 type Vec8 = [number, number, number, number, number, number, number, number];
 
 // Essentially a copy of ROSPinholeCameraModel
 // but only the relevant methods, i.e.
-// fromCameraInfo() and unrectifyPoint()
+// fromCameraInfo() and unrectifyPixel()
 // http://docs.ros.org/diamondback/api/image_geometry/html/c++/pinhole__camera__model_8cpp_source.html
 export default class PinholeCameraModel {
-  private _distortionState: DistortionState;
   // [k1, k2, p1, p2, k3, ?, ?, ?]
   D: Readonly<Vec8>;
   //     [fx  0 cx]
@@ -43,7 +36,7 @@ export default class PinholeCameraModel {
   //     [fx'  0  cx' Tx]
   // P = [ 0  fy' cy' Ty]
   //     [ 0   0   1   0]
-  P: Readonly<Matrix3x4>;
+  P: Readonly<Matrix3x4> | undefined;
   R: Readonly<Matrix3>;
   readonly width: number;
   readonly height: number;
@@ -51,8 +44,13 @@ export default class PinholeCameraModel {
   // Mostly copied from `fromCameraInfo`
   // http://docs.ros.org/diamondback/api/image_geometry/html/c++/pinhole__camera__model_8cpp_source.html#l00062
   constructor(info: CameraInfo) {
-    const { binning_x, binning_y, roi, distortion_model: model, D, K, P, R } = info;
+    const { binning_x, binning_y, roi, distortion_model: model, D, K, P, R, width, height } = info;
+    const fx = P[0];
+    const fy = P[5];
 
+    if (width <= 0 || height <= 0) {
+      throw new Error(`Invalid image size ${width}x${height}`);
+    }
     if (model.length > 0 && model !== "plumb_bob" && model !== "rational_polynomial") {
       throw new Error(`Unrecognized distortion_model "${model}"`);
     }
@@ -62,23 +60,23 @@ export default class PinholeCameraModel {
     if (P.length !== 0 && P.length !== 12) {
       throw new Error(`P.length=${K.length}, expected 12`);
     }
+    if (R.length !== 0 && R.length !== 9) {
+      throw new Error(`R.length=${R.length}, expected 9`);
+    }
+    if (fx === 0 || fy === 0) {
+      throw new Error(`Invalid focal length (fx=${fx}, fy=${fy})`);
+    }
 
     const D8 = [...D];
     while (D8.length < 8) {
       D8.push(0);
     }
     this.D = D8 as Vec8;
-    this.K = K.length === 9 ? (K as Matrix3) : mat3Identity();
-    this.P = P.length === 12 ? (P as Matrix3x4) : mat34Identity();
-    this.R = R.length === 9 ? (R as Matrix3) : mat3Identity();
-    this.width = info.width;
-    this.height = info.height;
-
-    if (K.length !== 9 || P.length !== 12) {
-      this._distortionState = DISTORTION_STATE.NONE;
-    } else {
-      this._distortionState = DISTORTION_STATE.CALIBRATED;
-    }
+    this.K = K.length === 9 ? (K as Matrix3) : [1, 0, 0, 0, 1, 0, 0, 0, 1];
+    this.P = P.length === 12 ? (P as Matrix3x4) : undefined;
+    this.R = R.length === 9 ? (R as Matrix3) : [1, 0, 0, 0, 1, 0, 0, 0, 1];
+    this.width = width;
+    this.height = height;
 
     // Binning = 0 is considered the same as binning = 1 (no binning).
     const binningX = binning_x !== 0 ? binning_x : 1;
@@ -95,15 +93,21 @@ export default class PinholeCameraModel {
 
     // See comments about Tx = 0, Ty = 0 in
     // http://docs.ros.org/melodic/api/sensor_msgs/html/msg/CameraInfo.html
-    if (this.P[3] !== 0 || this.P[7] !== 0) {
-      throw new Error(
-        "Failed to initialize camera model: projection matrix implies non monocular camera - cannot handle at this time.",
-      );
+    const tx = this.P?.[3] ?? 0;
+    const ty = this.P?.[7] ?? 0;
+    if (tx !== 0 || ty !== 0) {
+      // throw new Error(
+      //   "Failed to initialize camera model: projection matrix implies non monocular camera - cannot handle at this time.",
+      // );
     }
   }
 
-  projectPixelTo3dRay(out: MutablePoint, uv: Point2D): MutablePoint {
+  projectPixelTo3dRay(out: MutablePoint, pixel: Point2D): boolean {
     const P = this.P;
+    if (!P) {
+      return false;
+    }
+
     const fx = P[0];
     const fy = P[5];
     const cx = P[2];
@@ -111,15 +115,17 @@ export default class PinholeCameraModel {
     const tx = P[3];
     const ty = P[7];
 
-    out.x = (uv.x - cx - tx) / fx;
-    out.y = (uv.y - cy - ty) / fy;
+    out.x = (pixel.x - cx - tx) / fx;
+    out.y = (pixel.y - cy - ty) / fy;
     out.z = 1.0;
-    return out;
+    return true;
   }
 
-  rectifyPoint(out: MutablePoint2D, point: Point2D, iterations = 3): MutablePoint2D {
-    if (this._distortionState === DISTORTION_STATE.NONE) {
-      return point;
+  rectifyPixel(out: MutablePoint2D, point: Point2D, iterations = 3): MutablePoint2D {
+    if (!this.P) {
+      out.x = point.x;
+      out.y = point.y;
+      return out;
     }
 
     const { P, D } = this;
@@ -149,9 +155,11 @@ export default class PinholeCameraModel {
     return out;
   }
 
-  unrectifyPoint(out: MutablePoint2D, point: Point2D): MutablePoint2D {
-    if (this._distortionState === DISTORTION_STATE.NONE) {
-      return point;
+  unrectifyPixel(out: MutablePoint2D, point: Point2D): MutablePoint2D {
+    if (!this.P) {
+      out.x = point.x;
+      out.y = point.y;
+      return out;
     }
 
     const { P, R, D, K } = this;
@@ -201,22 +209,4 @@ export default class PinholeCameraModel {
     out.y = ypp * K[4] + K[5];
     return out;
   }
-}
-
-function mat3Identity(): Matrix3 {
-  // prettier-ignore
-  return [
-    1, 0, 0,
-    0, 1, 0,
-    0, 0, 1,
-  ];
-}
-
-function mat34Identity(): Matrix3x4 {
-  // prettier-ignore
-  return [
-    1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-  ];
 }

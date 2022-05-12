@@ -430,7 +430,7 @@ type Roi = Readonly<{
   y_offset: number;
   height: number;
   width: number;
-  do_rectify: false;
+  do_rectify: boolean;
 }>;
 
 // Empty string indicates no distortion model
@@ -442,7 +442,7 @@ export type CameraInfo = Readonly<{
   binning_x: number;
   binning_y: number;
   roi: Roi;
-  distortion_model: DistortionModel;
+  distortion_model: DistortionModel | string;
   D: FloatArray;
   K: FloatArray;
   P: FloatArray;

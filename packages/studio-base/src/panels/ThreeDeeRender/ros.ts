@@ -173,24 +173,26 @@ export type PoseWithCovarianceStamped = {
   pose: PoseWithCovariance;
 };
 
+export type RegionOfInterest = {
+  x_offset: number;
+  y_offset: number;
+  height: number;
+  width: number;
+  do_rectify: boolean;
+};
+
 export type CameraInfo = {
   header: Header;
   height: number;
   width: number;
   distortion_model: string;
   D: number[];
-  K: Matrix3;
-  R: Matrix3;
-  P: Matrix3x4;
+  K: Matrix3 | [];
+  R: Matrix3 | [];
+  P: Matrix3x4 | [];
   binning_x: number;
   binning_y: number;
-  roi: {
-    x_offset: number;
-    y_offset: number;
-    height: number;
-    width: number;
-    do_rectify: boolean;
-  };
+  roi: RegionOfInterest;
 };
 
 export const TRANSFORM_STAMPED_DATATYPES = new Set<string>();

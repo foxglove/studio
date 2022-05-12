@@ -76,6 +76,7 @@ export type LayerSettingsPose = {
 export type LayerSettingsCameraInfo = {
   visible: boolean;
   distance: number;
+  width: number;
   color: string;
 };
 
