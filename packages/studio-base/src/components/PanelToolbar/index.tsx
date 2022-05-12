@@ -41,6 +41,7 @@ const PanelToolbarRoot = muiStyled("div")<{ backgroundColor?: CSSProperties["bac
   ({ theme, backgroundColor }) => ({
     transition: "transform 80ms ease-in-out, opacity 80ms ease-in-out",
     flex: "0 0 auto",
+    alignItems: "center",
     justifyContent: "flex-end",
     padding: theme.spacing(0.25),
     display: "flex",
