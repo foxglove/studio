@@ -14,7 +14,7 @@
 import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import { styled as muiStyled } from "@mui/material";
+import { styled as muiStyled, Typography } from "@mui/material";
 import { useContext, useState, useMemo, useRef, CSSProperties } from "react";
 
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
@@ -43,7 +43,7 @@ const PanelToolbarRoot = muiStyled("div")<{ backgroundColor?: CSSProperties["bac
     flex: "0 0 auto",
     alignItems: "center",
     justifyContent: "flex-end",
-    padding: theme.spacing(0.25),
+    padding: theme.spacing(0.25, 0.5),
     display: "flex",
     minHeight: PANEL_TOOLBAR_MIN_HEIGHT,
     backgroundColor: backgroundColor ?? theme.palette.background.paper,
@@ -140,7 +140,12 @@ export default React.memo<Props>(function PanelToolbar({
 
   return (
     <PanelToolbarRoot backgroundColor={backgroundColor} ref={containerRef}>
-      {children}
+      {children ??
+        (panelContext != undefined && (
+          <Typography variant="body2" color="text.secondary" flex="auto">
+            {panelContext.title}
+          </Typography>
+        ))}
       <PanelToolbarControls
         showControls={showToolbar || alwaysVisible}
         mousePresent={mousePresent}
