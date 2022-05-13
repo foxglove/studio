@@ -31,6 +31,36 @@ export const ROS_COMMON_MSGS: Set<string> = new Set([
   "turtlesim",
 ]);
 
+function isArrayOrTypedArray(obj: unknown) {
+  return Boolean(
+    obj != undefined &&
+      typeof obj === "object" &&
+      (Array.isArray(obj) || (ArrayBuffer.isView(obj) && !(obj instanceof DataView))),
+  );
+}
+
+export function deepMapKeys(obj: object): Set<string> {
+  const keys = new Set<string>();
+  const recurseMapKeys = (path: string[], nestedObj: unknown) => {
+    if (typeof nestedObj !== "object" || nestedObj == undefined) {
+      return;
+    }
+    if (isArrayOrTypedArray(nestedObj)) {
+      return;
+    }
+
+    for (const key of Object.getOwnPropertyNames(nestedObj)) {
+      const newPath = [...path, key];
+      keys.add(newPath.join("~"));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const value = (nestedObj as any)[key];
+      recurseMapKeys(newPath, value as object);
+    }
+  };
+  recurseMapKeys([], obj);
+  return keys;
+}
+
 function getChangeCounts(
   data: DiffObject,
   startingCounts: {
