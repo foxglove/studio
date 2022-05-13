@@ -21,9 +21,10 @@ import { Theme } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 // eslint-disable-next-line no-restricted-imports
 import { first, isEqual, get, last } from "lodash";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import ReactHoverObserver from "react-hover-observer";
 import Tree from "react-json-tree";
+import { useLatest } from "react-use";
 
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
@@ -67,7 +68,7 @@ import {
   getStructureItemForPath,
 } from "./getValueActionForValue";
 import helpContent from "./index.help.md";
-import { DATA_ARRAY_PREVIEW_LIMIT, getItemStringForDiff } from "./utils";
+import { DATA_ARRAY_PREVIEW_LIMIT, generateDeepKeyPaths, getItemStringForDiff } from "./utils";
 
 export const CUSTOM_METHOD = "custom";
 export const PREV_MSG_METHOD = "previous message";
@@ -181,7 +182,9 @@ function RawMessages(props: Props) {
 
   // When expandAll is unset, we'll use expandedFields to get expanded info
   const [expandAll, setExpandAll] = useState<boolean | undefined>(props.defaultExpandAll ?? false);
-  const [expandedFields, setExpandedFields] = useState(() => new Set());
+  const [expandedFields, setExpandedFields] = useState(
+    () => new Set<string>(["header", "stamp~header"]),
+  );
 
   const matchedMessages = useMessageDataItem(topicPath, { historySize: 2 });
   const diffMessages = useMessageDataItem(diffEnabled ? diffTopicPath : "");
@@ -193,6 +196,17 @@ function RawMessages(props: Props) {
   const inTimetickDiffMode = diffEnabled && diffMethod === PREV_MSG_METHOD;
   const baseItem = inTimetickDiffMode ? prevTickObj : currTickObj;
   const diffItem = inTimetickDiffMode ? currTickObj : diffTopicObj;
+
+  const latestExpandedKeys = useLatest(expandedFields);
+
+  useEffect(() => {
+    if (latestExpandedKeys.current.keys.length === 0 && baseItem) {
+      const data = dataWithoutWrappingArray(baseItem.queriedData.map(({ value }) => value));
+      const newExpandedFields = generateDeepKeyPaths(maybeDeepParse(data), 5);
+      setExpandAll(undefined);
+      setExpandedFields(newExpandedFields);
+    }
+  }, [baseItem, latestExpandedKeys]);
 
   const onTopicPathChange = useCallback(
     (newTopicPath: string) => {

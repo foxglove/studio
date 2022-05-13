@@ -10,6 +10,7 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
+
 import { first, last } from "lodash";
 import { ReactNode } from "react";
 
@@ -31,27 +32,43 @@ export const ROS_COMMON_MSGS: Set<string> = new Set([
   "turtlesim",
 ]);
 
-function isArrayOrTypedArray(obj: unknown) {
+function isTypedArray(obj: unknown) {
   return Boolean(
     obj != undefined &&
       typeof obj === "object" &&
-      (Array.isArray(obj) || (ArrayBuffer.isView(obj) && !(obj instanceof DataView))),
+      ArrayBuffer.isView(obj) &&
+      !(obj instanceof DataView),
   );
 }
 
-export function deepMapKeys(obj: object): Set<string> {
+/**
+ * Recursively traverses all keypaths in obj, for use in JSON tree expansion.
+ */
+export function generateDeepKeyPaths(obj: unknown, maxArrayLength: number): Set<string> {
   const keys = new Set<string>();
   const recurseMapKeys = (path: string[], nestedObj: unknown) => {
-    if (typeof nestedObj !== "object" || nestedObj == undefined) {
-      return;
-    }
-    if (isArrayOrTypedArray(nestedObj)) {
+    if (nestedObj == undefined) {
       return;
     }
 
+    if (typeof nestedObj !== "object" && typeof nestedObj !== "function") {
+      return;
+    }
+
+    if (Array.isArray(nestedObj) && nestedObj.length > maxArrayLength) {
+      return;
+    }
+
+    if (isTypedArray(nestedObj)) {
+      return;
+    }
+
+    if (path.length > 0) {
+      keys.add(path.join("~"));
+    }
+
     for (const key of Object.getOwnPropertyNames(nestedObj)) {
-      const newPath = [...path, key];
-      keys.add(newPath.join("~"));
+      const newPath = [key, ...path];
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const value = (nestedObj as any)[key];
       recurseMapKeys(newPath, value as object);
