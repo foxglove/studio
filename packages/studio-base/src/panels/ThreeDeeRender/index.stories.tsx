@@ -795,10 +795,10 @@ export function PoseMarkers(): JSX.Element {
   );
 }
 
-CameraInfo.parameters = { colorScheme: "dark" };
-export function CameraInfo(): JSX.Element {
+CameraInfoRender.parameters = { colorScheme: "dark" };
+export function CameraInfoRender(): JSX.Element {
   const topics: Topic[] = [
-    { name: "/tf", datatype: "sensor_msgs/CameraInfo" },
+    { name: "/tf", datatype: "geometry_msgs/TransformStamped" },
     { name: "/plumb_bob", datatype: "sensor_msgs/CameraInfo" },
     { name: "/none", datatype: "sensor_msgs/CameraInfo" },
     { name: "/empty", datatype: "sensor_msgs/CameraInfo" },
@@ -875,7 +875,7 @@ export function CameraInfo(): JSX.Element {
   };
 
   const cam3: MessageEvent<Partial<CameraInfo>> = {
-    topic: "/none",
+    topic: "/empty",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
       header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
@@ -921,15 +921,15 @@ export function CameraInfo(): JSX.Element {
           topics: {
             "/plumb_bob": {
               color: "rgba(0, 255, 0, 1)",
-              distance: 1,
+              distance: 0.25,
             },
             "/none": {
               color: "rgba(0, 255, 255, 1)",
-              distance: 2,
+              distance: 0.5,
             },
             "/empty": {
               color: "rgba(255, 0, 0, 1)",
-              distance: 3,
+              distance: 0.75,
             },
           },
         }}
