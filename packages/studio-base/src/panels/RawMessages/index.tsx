@@ -86,7 +86,6 @@ export type RawMessagesConfig = {
 };
 
 type Props = {
-  defaultExpandAll?: boolean;
   config: RawMessagesConfig;
   saveConfig: (arg0: Partial<RawMessagesConfig>) => void;
 };
