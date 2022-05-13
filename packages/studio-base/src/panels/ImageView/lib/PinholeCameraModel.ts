@@ -90,16 +90,6 @@ export default class PinholeCameraModel {
         "Failed to initialize camera model: unable to handle adjusted binning and adjusted roi camera models.",
       );
     }
-
-    // See comments about Tx = 0, Ty = 0 in
-    // http://docs.ros.org/melodic/api/sensor_msgs/html/msg/CameraInfo.html
-    const tx = this.P?.[3] ?? 0;
-    const ty = this.P?.[7] ?? 0;
-    if (tx !== 0 || ty !== 0) {
-      // throw new Error(
-      //   "Failed to initialize camera model: projection matrix implies non monocular camera - cannot handle at this time.",
-      // );
-    }
   }
 
   projectPixelTo3dRay(out: MutablePoint, pixel: Point2D): boolean {
