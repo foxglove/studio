@@ -9,9 +9,6 @@ import { ErrorInfo, useMemo, useState } from "react";
 import Stack from "@foxglove/studio-base/components/Stack";
 
 const useStyles = makeStyles((theme: Theme) => ({
-  errorDetailHeader: {
-    fontWeight: "bold",
-  },
   errorDetailStack: {
     fontSize: theme.typography.body2.fontSize,
     lineHeight: "1.3em",
@@ -98,14 +95,14 @@ function ErrorDisplay(props: ErrorDisplayProps): JSX.Element {
 
     return (
       <div>
-        <Typography className={styles.errorDetailHeader}>Error stack:</Typography>
+        <Typography fontWeight="bold">Error stack:</Typography>
         <ErrorStacktrace
           stack={stackWithoutMessage}
           hideSourceLocations={hideErrorSourceLocations}
         />
         {errorInfo && (
           <>
-            <Typography className={styles.errorDetailHeader}>Component stack:</Typography>
+            <Typography fontWeight="bold">Component stack:</Typography>
             <ErrorStacktrace
               stack={errorInfo.componentStack}
               hideSourceLocations={hideErrorSourceLocations}
@@ -114,11 +111,11 @@ function ErrorDisplay(props: ErrorDisplayProps): JSX.Element {
         )}
       </div>
     );
-  }, [error, errorInfo, hideErrorSourceLocations, showErrorDetails, styles.errorDetailHeader]);
+  }, [error, errorInfo, hideErrorSourceLocations, showErrorDetails]);
 
   return (
     <Stack fullHeight padding={2} overflow="auto">
-      <Stack flexGrow={1}>
+      <Stack fullHeight flexGrow={1}>
         <Typography variant="h4" gutterBottom>
           {props.title ?? "The app encountered an unexpected error"}
         </Typography>
