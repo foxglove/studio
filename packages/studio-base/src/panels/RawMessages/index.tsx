@@ -24,7 +24,6 @@ import { first, isEqual, get, last } from "lodash";
 import { useState, useCallback, useMemo, useEffect } from "react";
 import ReactHoverObserver from "react-hover-observer";
 import Tree from "react-json-tree";
-import { useLatest } from "react-use";
 
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
@@ -47,6 +46,7 @@ import { useMessageDataItem } from "@foxglove/studio-base/components/MessagePath
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import { SettingsTreeAction } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import Tooltip from "@foxglove/studio-base/components/Tooltip";
 import getDiff, {
   diffLabels,
@@ -54,6 +54,7 @@ import getDiff, {
   DiffObject,
 } from "@foxglove/studio-base/panels/RawMessages/getDiff";
 import { Topic } from "@foxglove/studio-base/players/types";
+import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import { useJsonTreeTheme } from "@foxglove/studio-base/util/globalConstants";
 import { enumValuesByDatatypeAndField } from "@foxglove/studio-base/util/selectors";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
@@ -68,16 +69,20 @@ import {
   getStructureItemForPath,
 } from "./getValueActionForValue";
 import helpContent from "./index.help.md";
+import { buildSettingsTree } from "./settings";
 import { DATA_ARRAY_PREVIEW_LIMIT, generateDeepKeyPaths, getItemStringForDiff } from "./utils";
 
 export const CUSTOM_METHOD = "custom";
 export const PREV_MSG_METHOD = "previous message";
+
+type FieldExpansionMode = "manual" | "smart" | "all";
 export type RawMessagesConfig = {
-  topicPath: string;
+  diffEnabled: boolean;
   diffMethod: "custom" | "previous message";
   diffTopicPath: string;
-  diffEnabled: boolean;
+  expansionMode?: FieldExpansionMode;
   showFullMessageForDiff: boolean;
+  topicPath: string;
 };
 
 type Props = {
@@ -154,6 +159,7 @@ function RawMessages(props: Props) {
   const { openSiblingPanel } = usePanelContext();
   const { topicPath, diffMethod, diffTopicPath, diffEnabled, showFullMessageForDiff } = config;
   const { topics, datatypes } = useDataSourceInfo();
+  const { id: panelId } = usePanelContext();
 
   const defaultGetItemString = useGetItemStringWithTimezone();
   const getItemString = useMemo(
@@ -181,10 +187,8 @@ function RawMessages(props: Props) {
   }, [datatypes, topic, topicRosPath]);
 
   // When expandAll is unset, we'll use expandedFields to get expanded info
-  const [expandAll, setExpandAll] = useState<boolean | undefined>(props.defaultExpandAll ?? false);
-  const [expandedFields, setExpandedFields] = useState(
-    () => new Set<string>(["header", "stamp~header"]),
-  );
+  const [expandAll, setExpandAll] = useState<boolean | undefined>(config.expansionMode === "all");
+  const [expandedFields, setExpandedFields] = useState(new Set<string>());
 
   const matchedMessages = useMessageDataItem(topicPath, { historySize: 2 });
   const diffMessages = useMessageDataItem(diffEnabled ? diffTopicPath : "");
@@ -197,16 +201,32 @@ function RawMessages(props: Props) {
   const baseItem = inTimetickDiffMode ? prevTickObj : currTickObj;
   const diffItem = inTimetickDiffMode ? currTickObj : diffTopicObj;
 
-  const latestExpandedKeys = useLatest(expandedFields);
-
   useEffect(() => {
-    if (latestExpandedKeys.current.keys.length === 0 && baseItem) {
+    if (expandedFields.keys.length === 0 && baseItem && config.expansionMode === "smart") {
       const data = dataWithoutWrappingArray(baseItem.queriedData.map(({ value }) => value));
       const newExpandedFields = generateDeepKeyPaths(maybeDeepParse(data), 5);
       setExpandAll(undefined);
       setExpandedFields(newExpandedFields);
     }
-  }, [baseItem, latestExpandedKeys]);
+  }, [baseItem, config.expansionMode, expandedFields]);
+
+  const updateSettingsTree = usePanelSettingsTreeUpdate();
+
+  const settingsActionHandler = useCallback(
+    (action: SettingsTreeAction) => {
+      if (action.payload.input === "select") {
+        saveConfig({ expansionMode: action.payload.value as FieldExpansionMode });
+      }
+    },
+    [saveConfig],
+  );
+
+  useEffect(() => {
+    updateSettingsTree(panelId, {
+      actionHandler: settingsActionHandler,
+      settings: buildSettingsTree(config),
+    });
+  }, [config, panelId, settingsActionHandler, updateSettingsTree]);
 
   const onTopicPathChange = useCallback(
     (newTopicPath: string) => {
@@ -665,11 +685,12 @@ function RawMessages(props: Props) {
 }
 
 const defaultConfig: RawMessagesConfig = {
-  topicPath: "",
-  diffTopicPath: "",
-  diffMethod: CUSTOM_METHOD,
   diffEnabled: false,
+  diffMethod: CUSTOM_METHOD,
+  diffTopicPath: "",
+  expansionMode: "manual",
   showFullMessageForDiff: false,
+  topicPath: "",
 };
 
 export default Panel(
