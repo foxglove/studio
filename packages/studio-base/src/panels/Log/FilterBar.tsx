@@ -101,37 +101,36 @@ export default function FilterBar(props: FilterBarProps): JSX.Element {
   }));
   const theme = useTheme();
   const logStyles = useLogStyles();
-  const dropdownStyles = useMemo(
-    () =>
-      ({
-        root: {
-          minWidth: "100px",
-        },
-        caretDownWrapper: {
-          top: 0,
-          lineHeight: 16,
-          height: 16,
-        },
-        title: {
-          backgroundColor: "transparent",
-          fontSize: theme.fonts.small.fontSize,
-          borderColor: theme.semanticColors.bodyDivider,
-          lineHeight: 22,
-          height: 22,
-        },
-        dropdownItemSelected: {
-          fontSize: theme.fonts.small.fontSize,
-          lineHeight: 22,
-          height: 22,
-          minHeight: 22,
-        },
-        dropdownItem: {
-          lineHeight: 22,
-          height: 22,
-          minHeight: 22,
-          fontSize: theme.fonts.small.fontSize,
-        },
-      } as Partial<IDropdownStyles>),
+  const dropdownStyles: Partial<IDropdownStyles> = useMemo(
+    () => ({
+      root: {
+        minWidth: "100px",
+      },
+      caretDownWrapper: {
+        top: 0,
+        lineHeight: 16,
+        height: 16,
+      },
+      title: {
+        backgroundColor: "transparent",
+        fontSize: theme.fonts.small.fontSize,
+        borderColor: theme.semanticColors.bodyDivider,
+        lineHeight: 22,
+        height: 22,
+      },
+      dropdownItemSelected: {
+        fontSize: theme.fonts.small.fontSize,
+        lineHeight: 22,
+        height: 22,
+        minHeight: 22,
+      },
+      dropdownItem: {
+        lineHeight: 22,
+        height: 22,
+        minHeight: 22,
+        fontSize: theme.fonts.small.fontSize,
+      },
+    }),
     [theme],
   );
   return (

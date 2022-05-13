@@ -24,15 +24,12 @@ type PanelToolbarControlsProps = {
   additionalIcons?: React.ReactNode;
   isUnknownPanel: boolean;
   menuOpen: boolean;
-  mousePresent?: boolean;
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   setMenuOpen: (_: boolean) => void;
-  showControls?: boolean;
 };
 
-const Root = muiStyled("div")<{ shouldShow: boolean }>(({ shouldShow, theme }) => ({
+const Root = muiStyled("div")(({ theme }) => ({
   display: "flex",
-  visibility: shouldShow ? "visible" : "hidden",
   flex: "0 0 auto",
   alignItems: "center",
   flexDirection: "row",
@@ -45,14 +42,12 @@ export const PanelToolbarControls = React.memo(function PanelToolbarControls({
   additionalIcons,
   isUnknownPanel,
   menuOpen,
-  mousePresent = false,
   setMenuOpen,
-  showControls = false,
 }: PanelToolbarControlsProps) {
   const panelContext = useContext(PanelContext);
 
   return (
-    <Root shouldShow={showControls ? true : mousePresent}>
+    <Root>
       {additionalIcons}
       <PanelActionsDropdown
         isOpen={menuOpen}

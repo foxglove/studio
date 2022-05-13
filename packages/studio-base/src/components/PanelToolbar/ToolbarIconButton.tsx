@@ -4,21 +4,21 @@
 
 import { IconButton, IconButtonProps, styled as muiStyled } from "@mui/material";
 
-const StyledIconButton = muiStyled(IconButton)<{ subMenuActive: boolean }>(
-  ({ subMenuActive, theme }) => ({
-    fontSize: 14,
-    padding: theme.spacing(0.5),
+const StyledIconButton = muiStyled(IconButton, {
+  shouldForwardProp: (prop) => prop !== "subMenuActive",
+})<{ subMenuActive: boolean }>(({ subMenuActive, theme }) => ({
+  fontSize: 14,
+  padding: theme.spacing(0.5),
 
-    ".MuiSvgIcon-root, svg:not(.MuiSvgIcon-root)": {
-      height: "1em",
-      width: "1em",
-      fontSize: "inherit",
-    },
-    ...(subMenuActive && {
-      visibility: "visible",
-    }),
+  ...(subMenuActive && {
+    visibility: "visible",
   }),
-);
+  ".MuiSvgIcon-root, svg:not(.MuiSvgIcon-root)": {
+    height: "1em",
+    width: "1em",
+    fontSize: "inherit",
+  },
+}));
 
 export default function ToolbarIconButton(
   props: {
