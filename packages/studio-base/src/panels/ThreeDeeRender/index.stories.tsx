@@ -799,7 +799,7 @@ CameraInfoRender.parameters = { colorScheme: "dark" };
 export function CameraInfoRender(): JSX.Element {
   const topics: Topic[] = [
     { name: "/tf", datatype: "geometry_msgs/TransformStamped" },
-    { name: "/plumb_bob", datatype: "sensor_msgs/CameraInfo" },
+    { name: "/rational_polynomial", datatype: "sensor_msgs/CameraInfo" },
     { name: "/none", datatype: "sensor_msgs/CameraInfo" },
     { name: "/empty", datatype: "sensor_msgs/CameraInfo" },
   ];
@@ -832,14 +832,14 @@ export function CameraInfoRender(): JSX.Element {
   };
 
   const cam1: MessageEvent<Partial<CameraInfo>> = {
-    topic: "/plumb_bob",
+    topic: "/rational_polynomial",
     receiveTime: { sec: 10, nsec: 0 },
     message: {
       header: { seq: 0, stamp: { sec: 0, nsec: 0 }, frame_id: "sensor" },
       height: 480,
       width: 640,
-      distortion_model: "plumb_bob",
-      D: [0, 0, 0, 0, 0],
+      distortion_model: "rational_polynomial",
+      D: [0.452407, 0.273748, -0.00011, 0.000152, 0.027904, 0.817958, 0.358389, 0.108657],
       K: [
         381.22076416015625, 0, 318.88323974609375, 0, 381.22076416015625, 233.90321350097656, 0, 0,
         1,
@@ -889,7 +889,7 @@ export function CameraInfoRender(): JSX.Element {
     topics,
     frame: {
       "/tf": [tf1, tf2],
-      "/plumb_bob": [cam1],
+      "/rational_polynomial": [cam1],
       "/none": [cam2],
       "/empty": [cam3],
     },
@@ -904,14 +904,14 @@ export function CameraInfoRender(): JSX.Element {
       <ThreeDeeRender
         overrideConfig={{
           ...ThreeDeeRender.defaultConfig,
-          followTf: "base_link",
+          followTf: "sensor",
           scene: { enableStats: false },
           cameraState: {
-            distance: 4,
+            distance: 1.25,
             perspective: true,
-            phi: 1,
-            targetOffset: [-0.6, 0.5, 0],
-            thetaOffset: -1,
+            phi: 0,
+            targetOffset: [0, 0, 0],
+            thetaOffset: 0,
             fovy: 0.75,
             near: 0.01,
             far: 5000,
@@ -919,7 +919,7 @@ export function CameraInfoRender(): JSX.Element {
             targetOrientation: [0, 0, 0, 1],
           },
           topics: {
-            "/plumb_bob": {
+            "/rational_polynomial": {
               color: "rgba(0, 255, 0, 1)",
               distance: 0.25,
             },
