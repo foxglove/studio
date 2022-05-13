@@ -28,6 +28,7 @@ import {
 } from "./fixture";
 
 const noDiffConfig = {
+  autoExpandMode: "off",
   diffMethod: "custom",
   diffTopicPath: "",
   diffEnabled: false,
