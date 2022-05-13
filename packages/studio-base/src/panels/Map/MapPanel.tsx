@@ -37,6 +37,7 @@ import { MapPanelMessage, Point } from "./types";
 
 // Persisted panel state
 type Config = {
+  customUrl: string;
   disabledTopics: string[];
   layer: string;
   zoomLevel?: number;
@@ -79,7 +80,13 @@ function buildSettingsTree(config: Config, eligibleTopics: string[]): SettingsTr
         options: [
           { label: "Map", value: "map" },
           { label: "Satellite", value: "satellite" },
+          { label: "Custom", value: "custom" },
         ],
+      },
+      customUrl: {
+        label: "Custom map tile URL",
+        input: "string",
+        value: config.customUrl,
       },
     },
     children: {
@@ -117,6 +124,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     const initialConfig = props.context.initialState as Partial<Config>;
     initialConfig.disabledTopics = initialConfig.disabledTopics ?? [];
     initialConfig.layer = initialConfig.layer ?? "map";
+    initialConfig.customUrl = initialConfig.customUrl ?? "";
     return initialConfig as Config;
   });
 
@@ -138,6 +146,14 @@ function MapPanel(props: MapPanelProps): JSX.Element {
         maxZoom: 24,
       },
     ),
+  );
+
+  const [customLayer] = useState(
+    new TileLayer("https://example.com/{z}/{y}/{x}", {
+      attribution: "",
+      maxNativeZoom: 20,
+      maxZoom: 24,
+    }),
   );
 
   // Panel state management to update our set of messages
@@ -207,17 +223,43 @@ function MapPanel(props: MapPanelProps): JSX.Element {
         return { ...oldConfig, layer: String(value) };
       });
     }
+
+    if (path[0] === "customUrl" && input === "string") {
+      setConfig((oldConfig) => {
+        return { ...oldConfig, customUrl: String(value) };
+      });
+    }
   }, []);
 
   useEffect(() => {
     if (config.layer === "map") {
       currentMap?.addLayer(tileLayer);
       currentMap?.removeLayer(satelliteLayer);
-    } else {
+      currentMap?.removeLayer(customLayer);
+    } else if (config.layer === "satellite") {
       currentMap?.addLayer(satelliteLayer);
       currentMap?.removeLayer(tileLayer);
+      currentMap?.removeLayer(customLayer);
+    } else if (config.layer === "custom") {
+      currentMap?.addLayer(customLayer);
+      currentMap?.removeLayer(tileLayer);
+      currentMap?.removeLayer(satelliteLayer);
     }
-  }, [config.layer, currentMap, satelliteLayer, tileLayer]);
+  }, [config.layer, currentMap, customLayer, satelliteLayer, tileLayer]);
+
+  useEffect(() => {
+    if (config.layer === "custom") {
+      // validate URL to avoid leaflet map placeholder variable error
+      const placeholders = config.customUrl.match(/\{.+?\}/g) ?? [];
+      const valid_placeholders = ["{x}", "{y}", "{z}"];
+      for (const placeholder of placeholders) {
+        if (!valid_placeholders.includes(placeholder)) {
+          return;
+        }
+      }
+      customLayer.setUrl(config.customUrl);
+    }
+  }, [config.layer, config.customUrl, customLayer]);
 
   // Subscribe to eligible and enabled topics
   useEffect(() => {
