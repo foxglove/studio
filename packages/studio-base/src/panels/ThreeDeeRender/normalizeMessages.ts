@@ -23,16 +23,6 @@ import {
   RegionOfInterest,
 } from "./ros";
 
-export type ResultError = {
-  error: string;
-};
-
-export type ResultSuccess<T> = {
-  value: T;
-};
-
-export type Result<T> = ResultError | ResultSuccess<T>;
-
 export function normalizeTime(time: Partial<Time> | undefined): Time {
   if (!time) {
     return { sec: 0, nsec: 0 };
