@@ -53,6 +53,28 @@ storiesOf("panels/RawMessages", module)
       </PanelSetup>
     );
   })
+  .add("expanded", () => {
+    return (
+      <PanelSetup fixture={fixture} style={{ width: 380 }}>
+        <RawMessages
+          overrideConfig={
+            { topicPath: "/msgs/big_topic", ...noDiffConfig, expansionMode: "all" } as any
+          }
+        />
+      </PanelSetup>
+    );
+  })
+  .add("smart expanded", () => {
+    return (
+      <PanelSetup fixture={fixture} style={{ width: 380 }}>
+        <RawMessages
+          overrideConfig={
+            { topicPath: "/msgs/big_topic", ...noDiffConfig, expansionMode: "smart" } as any
+          }
+        />
+      </PanelSetup>
+    );
+  })
   .add("with receiveTime", () => {
     return (
       <PanelSetup fixture={fixture} style={{ width: 380 }}>
