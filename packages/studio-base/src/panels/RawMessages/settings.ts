@@ -3,9 +3,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { SettingsTreeNode } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
-import { RawMessagesConfig } from "@foxglove/studio-base/panels/RawMessages";
 
-export function buildSettingsTree(config: RawMessagesConfig): SettingsTreeNode {
+import { RawMessagesPanelConfig } from "./types";
+
+export function buildSettingsTree(config: RawMessagesPanelConfig): SettingsTreeNode {
   return {
     fields: {
       expansionMode: {

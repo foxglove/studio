@@ -19,6 +19,7 @@ import LessIcon from "@mdi/svg/svg/unfold-less-horizontal.svg";
 import MoreIcon from "@mdi/svg/svg/unfold-more-horizontal.svg";
 import { Theme } from "@mui/material";
 import { makeStyles } from "@mui/styles";
+import { Immutable } from "immer";
 // eslint-disable-next-line no-restricted-imports
 import { first, isEqual, get, last } from "lodash";
 import { useState, useCallback, useMemo, useEffect } from "react";
@@ -71,25 +72,15 @@ import {
 } from "./getValueActionForValue";
 import helpContent from "./index.help.md";
 import { buildSettingsTree } from "./settings";
+import { RawMessagesPanelConfig } from "./types";
 import { DATA_ARRAY_PREVIEW_LIMIT, generateDeepKeyPaths, getItemStringForDiff } from "./utils";
 
 export const CUSTOM_METHOD = "custom";
 export const PREV_MSG_METHOD = "previous message";
 
-type AutoExpandMode = "auto" | "off" | "all";
-
-export type RawMessagesConfig = {
-  autoExpandMode?: AutoExpandMode;
-  diffEnabled: boolean;
-  diffMethod: "custom" | "previous message";
-  diffTopicPath: string;
-  showFullMessageForDiff: boolean;
-  topicPath: string;
-};
-
 type Props = {
-  config: RawMessagesConfig;
-  saveConfig: (arg0: Partial<RawMessagesConfig>) => void;
+  config: Immutable<RawMessagesPanelConfig>;
+  saveConfig: (arg0: Partial<RawMessagesPanelConfig>) => void;
 };
 
 const isSingleElemArray = (obj: unknown): obj is unknown[] => {
@@ -225,7 +216,9 @@ function RawMessages(props: Props) {
   const settingsActionHandler = useCallback(
     (action: SettingsTreeAction) => {
       if (action.payload.input === "select") {
-        saveConfig({ autoExpandMode: action.payload.value as AutoExpandMode });
+        saveConfig({
+          autoExpandMode: action.payload.value as RawMessagesPanelConfig["autoExpandMode"],
+        });
       }
     },
     [saveConfig],
@@ -694,7 +687,7 @@ function RawMessages(props: Props) {
   );
 }
 
-const defaultConfig: RawMessagesConfig = {
+const defaultConfig: RawMessagesPanelConfig = {
   autoExpandMode: "auto",
   diffEnabled: false,
   diffMethod: CUSTOM_METHOD,
