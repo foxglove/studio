@@ -58,7 +58,7 @@ storiesOf("panels/RawMessages", module)
       <PanelSetup fixture={fixture} style={{ width: 380 }}>
         <RawMessages
           overrideConfig={
-            { topicPath: "/msgs/big_topic", ...noDiffConfig, expansionMode: "all" } as any
+            { topicPath: "/msgs/big_topic", ...noDiffConfig, autoExpandMode: "all" } as any
           }
         />
       </PanelSetup>
@@ -69,7 +69,7 @@ storiesOf("panels/RawMessages", module)
       <PanelSetup fixture={fixture} style={{ width: 380 }}>
         <RawMessages
           overrideConfig={
-            { topicPath: "/msgs/big_topic", ...noDiffConfig, expansionMode: "smart" } as any
+            { topicPath: "/msgs/big_topic", ...noDiffConfig, autoExpandMode: "smart" } as any
           }
         />
       </PanelSetup>
@@ -192,7 +192,7 @@ storiesOf("panels/RawMessages", module)
       <PanelSetup fixture={topicsToDiffFixture} style={{ width: 500 }}>
         <RawMessages
           overrideConfig={
-            { ...diffConfig, expansionMode: "all", showFullMessageForDiff: false } as any
+            { ...diffConfig, autoExpandMode: "all", showFullMessageForDiff: false } as any
           }
         />
       </PanelSetup>
@@ -203,7 +203,7 @@ storiesOf("panels/RawMessages", module)
       <PanelSetup fixture={topicsToDiffFixture} style={{ width: 500 }}>
         <RawMessages
           overrideConfig={
-            { ...diffConfig, expansionMode: "all", showFullMessageForDiff: true } as any
+            { ...diffConfig, autoExpandMode: "all", showFullMessageForDiff: true } as any
           }
         />
       </PanelSetup>
@@ -215,7 +215,7 @@ storiesOf("panels/RawMessages", module)
       topicPath: "/baz/enum_advanced_array.value",
       diffTopicPath: "/another/baz/enum_advanced_array.value",
       showFullMessageForDiff: false,
-      expansionMode: "all",
+      autoExpandMode: "all",
     };
     return (
       <PanelSetup fixture={topicsWithIdsToDiffFixture} style={{ width: 380 }}>
@@ -255,7 +255,7 @@ storiesOf("panels/RawMessages", module)
             diffTopicPath: "",
             diffEnabled: true,
             showFullMessageForDiff: true,
-            expansionMode: "all",
+            autoExpandMode: "all",
           }}
         />
       </PanelSetup>
@@ -271,7 +271,7 @@ storiesOf("panels/RawMessages", module)
             diffTopicPath: "",
             diffEnabled: true,
             showFullMessageForDiff: true,
-            expansionMode: "all",
+            autoExpandMode: "all",
           }}
         />
       </PanelSetup>
@@ -287,7 +287,7 @@ storiesOf("panels/RawMessages", module)
             diffTopicPath: "",
             diffEnabled: true,
             showFullMessageForDiff: true,
-            expansionMode: "all",
+            autoExpandMode: "all",
           }}
         />
       </PanelSetup>
@@ -303,7 +303,7 @@ storiesOf("panels/RawMessages", module)
             diffTopicPath: "/another/baz/enum_advanced",
             diffEnabled: false,
             showFullMessageForDiff: true,
-            expansionMode: "all",
+            autoExpandMode: "all",
           }}
         />
       </PanelSetup>

@@ -9,12 +9,12 @@ export function buildSettingsTree(config: RawMessagesConfig): SettingsTreeNode {
   return {
     fields: {
       expansionMode: {
-        label: "Expand Fields",
+        label: "Auto Expand",
         input: "select",
-        value: config.expansionMode,
+        value: config.autoExpandMode,
         options: [
-          { label: "Manual", value: "manual" },
-          { label: "Smart", value: "smart" },
+          { label: "Auto", value: "auto" },
+          { label: "Off", value: "off" },
           { label: "All", value: "all" },
         ],
       },

@@ -24,6 +24,7 @@ import { first, isEqual, get, last } from "lodash";
 import { useState, useCallback, useMemo, useEffect } from "react";
 import ReactHoverObserver from "react-hover-observer";
 import Tree from "react-json-tree";
+import { useLatest } from "react-use";
 
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
@@ -75,12 +76,13 @@ import { DATA_ARRAY_PREVIEW_LIMIT, generateDeepKeyPaths, getItemStringForDiff } 
 export const CUSTOM_METHOD = "custom";
 export const PREV_MSG_METHOD = "previous message";
 
-type FieldExpansionMode = "manual" | "smart" | "all";
+type AutoExpandMode = "auto" | "off" | "all";
+
 export type RawMessagesConfig = {
+  autoExpandMode?: AutoExpandMode;
   diffEnabled: boolean;
   diffMethod: "custom" | "previous message";
   diffTopicPath: string;
-  expansionMode?: FieldExpansionMode;
   showFullMessageForDiff: boolean;
   topicPath: string;
 };
@@ -186,7 +188,7 @@ function RawMessages(props: Props) {
   }, [datatypes, topic, topicRosPath]);
 
   // When expandAll is unset, we'll use expandedFields to get expanded info
-  const [expandAll, setExpandAll] = useState<boolean | undefined>(config.expansionMode === "all");
+  const [expandAll, setExpandAll] = useState<boolean | undefined>(config.autoExpandMode === "all");
   const [expandedFields, setExpandedFields] = useState(new Set<string>());
 
   const matchedMessages = useMessageDataItem(topicPath, { historySize: 2 });
@@ -200,21 +202,30 @@ function RawMessages(props: Props) {
   const baseItem = inTimetickDiffMode ? prevTickObj : currTickObj;
   const diffItem = inTimetickDiffMode ? currTickObj : diffTopicObj;
 
+  const latestExpandedFields = useLatest(expandedFields);
+
   useEffect(() => {
-    if (expandedFields.keys.length === 0 && baseItem && config.expansionMode === "smart") {
+    if (
+      latestExpandedFields.current.keys.length === 0 &&
+      baseItem &&
+      config.autoExpandMode === "auto"
+    ) {
       const data = dataWithoutWrappingArray(baseItem.queriedData.map(({ value }) => value));
       const newExpandedFields = generateDeepKeyPaths(maybeDeepParse(data), 5);
-      setExpandAll(undefined);
       setExpandedFields(newExpandedFields);
+      setExpandAll(undefined);
+    } else if (config.autoExpandMode === "all") {
+      setExpandedFields(new Set());
+      setExpandAll(true);
     }
-  }, [baseItem, config.expansionMode, expandedFields]);
+  }, [baseItem, config.autoExpandMode, latestExpandedFields]);
 
   const updateSettingsTree = usePanelSettingsTreeUpdate();
 
   const settingsActionHandler = useCallback(
     (action: SettingsTreeAction) => {
       if (action.payload.input === "select") {
-        saveConfig({ expansionMode: action.payload.value as FieldExpansionMode });
+        saveConfig({ autoExpandMode: action.payload.value as AutoExpandMode });
       }
     },
     [saveConfig],
@@ -684,10 +695,10 @@ function RawMessages(props: Props) {
 }
 
 const defaultConfig: RawMessagesConfig = {
+  autoExpandMode: "auto",
   diffEnabled: false,
   diffMethod: CUSTOM_METHOD,
   diffTopicPath: "",
-  expansionMode: "manual",
   showFullMessageForDiff: false,
   topicPath: "",
 };
