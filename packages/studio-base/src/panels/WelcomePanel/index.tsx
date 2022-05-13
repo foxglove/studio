@@ -64,7 +64,7 @@ function WelcomePanel() {
     !loading;
 
   return (
-    <Stack data-test="welcome-content" padding={2.5} overflow="inherit auto">
+    <Stack data-test="welcome-content" padding={2.5} overflowY="auto">
       <PanelToolbar floating />
       <TextContent>
         <h1>Welcome</h1>

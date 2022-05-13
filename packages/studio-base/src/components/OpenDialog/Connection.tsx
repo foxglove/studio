@@ -98,7 +98,7 @@ export default function Connection(props: ConnectionProps): JSX.Element {
             );
           })}
         </Stack>
-        <Stack key={selectedSource?.id} flexGrow={1} fullHeight gap={2} overflow="auto inherit">
+        <Stack key={selectedSource?.id} flex="auto" fullHeight gap={2} overflowX="auto">
           {selectedSource?.description && (
             <Typography color="text.secondary">{selectedSource.description}</Typography>
           )}
