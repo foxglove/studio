@@ -26,7 +26,7 @@ type HoverValueStore = Readonly<{
 
 const { Provider, useStore } = createContext<StoreApi<HoverValueStore>>();
 
-export function createHoverValueStore(): StoreApi<HoverValueStore> {
+function createHoverValueStore(): StoreApi<HoverValueStore> {
   return create((set) => {
     return {
       value: undefined,
