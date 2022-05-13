@@ -356,9 +356,6 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         InputLabelProps: {
           shrink: true,
         },
-        InputProps: {
-          notched: false,
-        },
       },
     },
     MuiToggleButton: {
