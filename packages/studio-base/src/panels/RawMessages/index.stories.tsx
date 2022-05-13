@@ -64,12 +64,12 @@ storiesOf("panels/RawMessages", module)
       </PanelSetup>
     );
   })
-  .add("smart expanded", () => {
+  .add("auto expanded", () => {
     return (
       <PanelSetup fixture={fixture} style={{ width: 380 }}>
         <RawMessages
           overrideConfig={
-            { topicPath: "/msgs/big_topic", ...noDiffConfig, autoExpandMode: "smart" } as any
+            { topicPath: "/msgs/big_topic", ...noDiffConfig, autoExpandMode: "auto" } as any
           }
         />
       </PanelSetup>
