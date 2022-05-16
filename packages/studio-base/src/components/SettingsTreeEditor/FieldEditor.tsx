@@ -352,7 +352,7 @@ function FieldEditorComponent({
 
   return (
     <>
-      <Stack direction="row" alignItems="center" style={{ ...style, paddingLeft }} fullHeight>
+      <Stack direction="row" alignItems="center" style={style} paddingLeft={paddingLeft} fullHeight>
         <FieldLabel field={field} />
       </Stack>
       <div style={{ paddingRight: theme.spacing(2) }}>
