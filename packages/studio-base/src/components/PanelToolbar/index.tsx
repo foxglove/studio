@@ -34,21 +34,21 @@ type Props = {
   isUnknownPanel?: boolean;
 };
 
-const PanelToolbarRoot = muiStyled("div")<{ backgroundColor?: CSSProperties["backgroundColor"] }>(
-  ({ theme, backgroundColor }) => ({
-    transition: "transform 80ms ease-in-out, opacity 80ms ease-in-out",
-    flex: "0 0 auto",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    padding: theme.spacing(0.25, 0.5),
-    display: "flex",
-    minHeight: PANEL_TOOLBAR_MIN_HEIGHT,
-    backgroundColor: backgroundColor ?? theme.palette.background.paper,
-    width: "100%",
-    left: 0,
-    zIndex: theme.zIndex.appBar,
-  }),
-);
+const PanelToolbarRoot = muiStyled("div", {
+  shouldForwardProp: (prop) => prop !== "backgroundColor",
+})<{ backgroundColor?: CSSProperties["backgroundColor"] }>(({ theme, backgroundColor }) => ({
+  transition: "transform 80ms ease-in-out, opacity 80ms ease-in-out",
+  flex: "0 0 auto",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  padding: theme.spacing(0.25, 0.5),
+  display: "flex",
+  minHeight: PANEL_TOOLBAR_MIN_HEIGHT,
+  backgroundColor: backgroundColor ?? theme.palette.background.paper,
+  width: "100%",
+  left: 0,
+  zIndex: theme.zIndex.appBar,
+}));
 
 const selectSetHelpInfo = (store: HelpInfoStore) => store.setHelpInfo;
 
