@@ -61,6 +61,11 @@ export type RosTime = {
 
 export type RosDuration = RosTime;
 
+export type Vector2 = {
+  x: number;
+  y: number;
+};
+
 export type Vector3 = {
   x: number;
   y: number;
@@ -128,6 +133,10 @@ export type Marker = {
   text: string;
   mesh_resource: string;
   mesh_use_embedded_materials: boolean;
+};
+
+export type MarkerArray = {
+  markers: Marker[];
 };
 
 export type PointField = {
