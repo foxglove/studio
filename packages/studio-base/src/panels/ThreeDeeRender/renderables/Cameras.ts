@@ -11,7 +11,7 @@ import { MutablePoint } from "@foxglove/studio-base/types/Messages";
 
 import { Renderer } from "../Renderer";
 import { makeRgba, rgbaToCssString, stringToRgba } from "../color";
-import { CameraInfo, Pose, rosTimeToNanoSec, Marker, MarkerAction, MarkerType } from "../ros";
+import { CameraInfo, Marker, MarkerAction, MarkerType, Pose, rosTimeToNanoSec } from "../ros";
 import { LayerSettingsCameraInfo, LayerType } from "../settings";
 import { makePose } from "../transforms/geometry";
 import { updatePose } from "../updatePose";
