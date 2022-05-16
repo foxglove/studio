@@ -15,6 +15,8 @@ import { useConfirm } from "@foxglove/studio-base/hooks/useConfirm";
 
 const log = Logger.getLogger(__filename);
 
+export const AVATAR_ICON_SIZE = 42;
+
 export default function AccountInfo(props: { currentUser?: User }): JSX.Element {
   const theme = useTheme();
   const { signOut } = useCurrentUser();
@@ -54,8 +56,8 @@ export default function AccountInfo(props: { currentUser?: User }): JSX.Element 
             styles={{
               root: {
                 color: theme.palette.primary.main,
-                fontSize: 42,
-                height: 42,
+                fontSize: AVATAR_ICON_SIZE,
+                height: AVATAR_ICON_SIZE,
               },
             }}
           />
