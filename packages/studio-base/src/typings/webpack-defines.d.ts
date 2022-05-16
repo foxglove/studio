@@ -7,4 +7,4 @@ declare const ReactNull: ReactNull;
 
 declare const FOXGLOVE_STUDIO_VERSION: string | undefined;
 
-declare const GIT_SHA: string | undefined;
+declare const FOXGLOVE_USER_AGENT: string;

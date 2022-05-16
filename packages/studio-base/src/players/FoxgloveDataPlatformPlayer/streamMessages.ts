@@ -87,7 +87,7 @@ export default async function* streamMessages({
     headers: {
       // Include the version of studio in the request Useful when scraping logs to determine what
       // versions of the app are making requests.
-      "fg-user-agent": `studio/${FOXGLOVE_STUDIO_VERSION ?? "??"} (commit ${GIT_SHA ?? "??"})`,
+      "fg-user-agent": FOXGLOVE_USER_AGENT,
     },
   });
   if (response.status === 404) {
