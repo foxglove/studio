@@ -61,7 +61,7 @@ class MosaicWrapper extends React.Component<{
   }
 }
 
-class PanelToolbarWithOpenMenu extends React.PureComponent<{ hideToolbars?: boolean }> {
+class PanelToolbarWithOpenMenu extends React.PureComponent {
   override render() {
     return (
       <div
@@ -75,7 +75,7 @@ class PanelToolbarWithOpenMenu extends React.PureComponent<{ hideToolbars?: bool
           }
         }}
       >
-        <PanelToolbar hideToolbars={this.props.hideToolbars} helpContent={<div />}>
+        <PanelToolbar helpContent={<div />}>
           <div style={{ width: "100%", lineHeight: "22px", paddingLeft: 5 }}>
             Some controls here
           </div>
@@ -114,7 +114,7 @@ storiesOf("components/PanelToolbar", module)
   .add("non-floating (narrow)", () => {
     return (
       <MosaicWrapper width={268}>
-        <PanelToolbar alwaysVisible helpContent={<div />}>
+        <PanelToolbar helpContent={<div />}>
           <div style={{ width: "100%", lineHeight: "22px", paddingLeft: 5 }}>
             Some controls here
           </div>
@@ -126,7 +126,7 @@ storiesOf("components/PanelToolbar", module)
   .add("non-floating (wide with panel name)", () => {
     return (
       <MosaicWrapper width={468}>
-        <PanelToolbar alwaysVisible helpContent={<div />}>
+        <PanelToolbar helpContent={<div />}>
           <div style={{ width: "100%", lineHeight: "22px", paddingLeft: 5 }}>
             Some controls here
           </div>
@@ -143,7 +143,7 @@ storiesOf("components/PanelToolbar", module)
     );
     return (
       <MosaicWrapper width={468}>
-        <PanelToolbar helpContent={<div />} additionalIcons={additionalIcons} alwaysVisible>
+        <PanelToolbar helpContent={<div />} additionalIcons={additionalIcons}>
           <div style={{ width: "100%", lineHeight: "22px", paddingLeft: 5 }}>
             Some controls here
           </div>
@@ -232,7 +232,7 @@ storiesOf("components/PanelToolbar", module)
               width={268}
               layout={{ direction: "row", first: "dummy", second: "Sibling" }}
             >
-              <PanelToolbarWithOpenMenu hideToolbars />
+              <PanelToolbarWithOpenMenu />
             </MosaicWrapper>
           );
         }

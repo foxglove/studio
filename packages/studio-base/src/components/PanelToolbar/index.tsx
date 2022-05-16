@@ -15,12 +15,11 @@ import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import { styled as muiStyled, Typography } from "@mui/material";
-import { useContext, useState, useMemo, useRef, CSSProperties } from "react";
+import { useContext, useState, useMemo, CSSProperties } from "react";
 
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
-import { usePanelMousePresence } from "@foxglove/studio-base/hooks/usePanelMousePresence";
 import { HelpInfoStore, useHelpInfo } from "@foxglove/studio-base/providers/HelpInfoProvider";
 
 import { PanelToolbarControls } from "./PanelToolbarControls";
@@ -29,11 +28,9 @@ export const PANEL_TOOLBAR_MIN_HEIGHT = 30;
 
 type Props = {
   additionalIcons?: React.ReactNode;
-  alwaysVisible?: boolean;
   backgroundColor?: CSSProperties["backgroundColor"];
   children?: React.ReactNode;
   helpContent?: React.ReactNode;
-  hideToolbars?: boolean;
   isUnknownPanel?: boolean;
 };
 
@@ -60,11 +57,9 @@ const selectSetHelpInfo = (store: HelpInfoStore) => store.setHelpInfo;
 // and has a place to add custom controls via it's children property
 export default React.memo<Props>(function PanelToolbar({
   additionalIcons,
-  alwaysVisible = false,
   backgroundColor,
   children,
   helpContent,
-  hideToolbars = false,
   isUnknownPanel = false,
 }: Props) {
   const { isFullscreen, enterFullscreen, exitFullscreen } = useContext(PanelContext) ?? {};
@@ -127,20 +122,8 @@ export default React.memo<Props>(function PanelToolbar({
     exitFullscreen,
   ]);
 
-  // floating toolbars only show when hovered - but hovering over a context menu would hide the toolbar
-  // showToolbar is used to force-show elements even if not hovered
-  const showToolbar = menuOpen || !!isUnknownPanel;
-
-  const containerRef = useRef<HTMLDivElement>(ReactNull);
-
-  const mousePresent = usePanelMousePresence(containerRef);
-
-  if (hideToolbars) {
-    return ReactNull;
-  }
-
   return (
-    <PanelToolbarRoot backgroundColor={backgroundColor} ref={containerRef}>
+    <PanelToolbarRoot backgroundColor={backgroundColor}>
       {children ??
         (panelContext != undefined && (
           <Typography noWrap variant="body2" color="text.secondary" flex="auto">
@@ -148,8 +131,6 @@ export default React.memo<Props>(function PanelToolbar({
           </Typography>
         ))}
       <PanelToolbarControls
-        showControls={showToolbar || alwaysVisible}
-        mousePresent={mousePresent}
         additionalIcons={additionalIconsWithHelp}
         isUnknownPanel={!!isUnknownPanel}
         menuOpen={menuOpen}
