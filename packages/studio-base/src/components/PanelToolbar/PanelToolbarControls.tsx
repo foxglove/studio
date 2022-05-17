@@ -12,11 +12,11 @@
 //   You may not use this file except in compliance with the License.
 
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import { styled as muiStyled } from "@mui/material";
 import { useContext } from "react";
 
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
+import Stack from "@foxglove/studio-base/components/Stack";
 
 import { PanelActionsDropdown } from "./PanelActionsDropdown";
 
@@ -27,14 +27,6 @@ type PanelToolbarControlsProps = {
   // eslint-disable-next-line @foxglove/no-boolean-parameters
   setMenuOpen: (_: boolean) => void;
 };
-
-const Root = muiStyled("div")(({ theme }) => ({
-  display: "flex",
-  flex: "0 0 auto",
-  alignItems: "center",
-  flexDirection: "row",
-  paddingLeft: theme.spacing(1),
-}));
 
 // Keep controls, which don't change often, in a pure component in order to avoid re-rendering the
 // whole PanelToolbar when only children change.
@@ -47,7 +39,7 @@ export const PanelToolbarControls = React.memo(function PanelToolbarControls({
   const panelContext = useContext(PanelContext);
 
   return (
-    <Root>
+    <Stack direction="row" alignItems="center" paddingLeft={1}>
       {additionalIcons}
       <PanelActionsDropdown
         isOpen={menuOpen}
@@ -61,6 +53,6 @@ export const PanelToolbarControls = React.memo(function PanelToolbarControls({
           </ToolbarIconButton>
         </span>
       )}
-    </Root>
+    </Stack>
   );
 });
