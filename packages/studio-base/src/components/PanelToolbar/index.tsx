@@ -41,7 +41,7 @@ const PanelToolbarRoot = muiStyled("div", {
   flex: "0 0 auto",
   alignItems: "center",
   justifyContent: "flex-end",
-  padding: theme.spacing(0.25, 0.5),
+  padding: theme.spacing(0.25, 0.75),
   display: "flex",
   minHeight: PANEL_TOOLBAR_MIN_HEIGHT,
   backgroundColor: backgroundColor ?? theme.palette.background.paper,
