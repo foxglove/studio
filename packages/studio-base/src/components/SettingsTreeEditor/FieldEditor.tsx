@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import ClearIcon from "@mui/icons-material/Clear";
+import ErrorIcon from "@mui/icons-material/ErrorOutline";
 import {
   Autocomplete,
   ToggleButton,
@@ -12,6 +13,7 @@ import {
   List,
   MenuItem,
   Select,
+  Tooltip,
   TextField,
   ListProps,
   useTheme,
@@ -157,7 +159,7 @@ function FieldInput({
           variant="filled"
           size="small"
           fullWidth
-          value={field.value}
+          value={field.value ?? ""}
           placeholder={field.placeholder}
           onChange={(event) =>
             actionHandler({
@@ -171,7 +173,7 @@ function FieldInput({
       return (
         <StyledToggleButtonGroup
           fullWidth
-          value={field.value}
+          value={field.value ?? false}
           exclusive
           size="small"
           onChange={(_event, value) => {
@@ -237,7 +239,7 @@ function FieldInput({
           displayEmpty
           fullWidth
           variant="filled"
-          value={field.value}
+          value={field.value ?? ""}
           onChange={(event) =>
             actionHandler({
               action: "update",
@@ -345,14 +347,28 @@ function FieldEditorComponent({
 }): JSX.Element {
   const theme = useTheme();
   const indent = Math.min(path.length, 4);
-  const paddingLeft = theme.spacing(2 + 2 * Math.max(0, indent - 1));
+  const paddingLeft = 2 + 2 * Math.max(0, indent - 1);
 
   return (
     <>
-      <Stack direction="row" alignItems="center" style={{ paddingLeft }} fullHeight>
+      <Stack direction="row" alignItems="center" paddingLeft={paddingLeft} fullHeight>
         <FieldLabel field={field} />
+        {field.error && (
+          <Tooltip
+            arrow
+            placement="top"
+            title={<Typography variant="subtitle1">{field.error}</Typography>}
+          >
+            <ErrorIcon color="error" fontSize="small" />
+          </Tooltip>
+        )}
       </Stack>
-      <div style={{ paddingRight: theme.spacing(2) }}>
+      <div
+        style={{
+          border: field.error ? `1px solid ${theme.palette.error.main}` : 0,
+          marginRight: theme.spacing(2),
+        }}
+      >
         <FieldInput actionHandler={actionHandler} field={field} path={path} />
       </div>
     </>
