@@ -17,8 +17,8 @@ import { storiesOf } from "@storybook/react";
 import { Mosaic, MosaicWindow } from "react-mosaic-component";
 
 import ChildToggle from "@foxglove/studio-base/components/ChildToggle";
-import Icon from "@foxglove/studio-base/components/Icon";
 import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
+import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import MockCurrentLayoutProvider from "@foxglove/studio-base/providers/CurrentLayoutProvider/MockCurrentLayoutProvider";
 import HelpInfoProvider from "@foxglove/studio-base/providers/HelpInfoProvider";
 
@@ -137,9 +137,9 @@ storiesOf("components/PanelToolbar", module)
   })
   .add("one additional icon", () => {
     const additionalIcons = (
-      <Icon>
+      <ToolbarIconButton title="database icon">
         <DatabaseIcon />
-      </Icon>
+      </ToolbarIconButton>
     );
     return (
       <MosaicWrapper width={468}>
