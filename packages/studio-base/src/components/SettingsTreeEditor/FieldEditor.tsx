@@ -18,7 +18,6 @@ import {
   ListProps,
   useTheme,
 } from "@mui/material";
-import { CSSProperties } from "react";
 import { DeepReadonly } from "ts-essentials";
 
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";

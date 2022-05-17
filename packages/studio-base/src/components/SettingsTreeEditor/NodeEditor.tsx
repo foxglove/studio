@@ -6,7 +6,7 @@ import ArrowDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import LayerIcon from "@mui/icons-material/Layers";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { Divider, ListItemProps, styled as muiStyled, Typography, useTheme } from "@mui/material";
+import { Divider, ListItemProps, styled as muiStyled, Typography } from "@mui/material";
 import { useMemo, useState } from "react";
 import { DeepReadonly } from "ts-essentials";
 
