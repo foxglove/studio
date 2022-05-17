@@ -9,7 +9,6 @@ const ParametersTable = muiStyled("div")`
   flex-direction: column;
   white-space: nowrap;
   color: ${({ theme }) => theme.palette.text.primary};
-  background: ${({ theme }) => theme.palette.background.default};
   flex: auto;
 
   table {

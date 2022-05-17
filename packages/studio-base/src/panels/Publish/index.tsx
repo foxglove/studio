@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Typography, styled as muiStyled } from "@mui/material";
+import { Typography } from "@mui/material";
 import produce from "immer";
 import { set } from "lodash";
 import { useCallback, useEffect, useMemo, useRef } from "react";
@@ -68,13 +68,6 @@ const STextArea = styled(LegacyTextarea)`
   height: 100%;
   resize: none;
 `;
-
-const Root = muiStyled("div")(({ theme }) => ({
-  display: "flex",
-  flexDirection: "column",
-  backgroundColor: theme.palette.background.default,
-  height: "100%",
-}));
 
 function getTopicName(topic: Topic): string {
   return topic.name;
@@ -204,7 +197,7 @@ function Publish(props: Props) {
   const canPublish = capabilities.includes(PlayerCapabilities.advertise);
 
   return (
-    <Root>
+    <Stack fullHeight>
       <PanelToolbar helpContent={helpContent} />
       {advancedView && (
         <Stack flex="auto" padding={2} gap={1} paddingBottom={0}>
@@ -270,7 +263,7 @@ function Publish(props: Props) {
           {buttonText}
         </Button>
       </Stack>
-    </Root>
+    </Stack>
   );
 }
 
