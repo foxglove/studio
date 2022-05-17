@@ -56,7 +56,7 @@ const builtin: PanelInfo[] = [
     module: async () => await import("./ThreeDimensionalViz"),
   },
   {
-    title: `Diagnostics – Detail`,
+    title: `ROS Diagnostics – Detail`,
     type: "DiagnosticStatusPanel",
     description: "Display ROS DiagnosticArray messages for a specific hardware_id.",
     help: DiagnosticStatusPanelHelp,
@@ -64,7 +64,7 @@ const builtin: PanelInfo[] = [
     module: async () => await import("./diagnostics/DiagnosticStatusPanel"),
   },
   {
-    title: `Diagnostics – Summary`,
+    title: `ROS Diagnostics – Summary`,
     type: "DiagnosticSummary",
     description: "Display a summary of all ROS DiagnosticArray messages.",
     help: DiagnosticSummaryHelp,
