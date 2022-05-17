@@ -11,14 +11,6 @@ import { ColorRGB, ColorRGBA } from "./ros";
 
 export { SRGBToLinear } from "three/src/math/ColorManagement";
 
-export function rgbaToLinear(output: ColorRGBA, color: Readonly<ColorRGBA>): ColorRGBA {
-  output.r = SRGBToLinear(color.r);
-  output.g = SRGBToLinear(color.g);
-  output.b = SRGBToLinear(color.b);
-  output.a = color.a;
-  return output;
-}
-
 export function stringToRgba(output: ColorRGBA, colorStr: string): ColorRGBA {
   const color = tinycolor(colorStr);
   if (!color.isValid()) {
