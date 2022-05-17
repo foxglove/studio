@@ -150,20 +150,21 @@ function DiagnosticStatusPanel(props: Props) {
     autocompleteOptions.length > 0 ? "No matches" : "Waiting for diagnostics...";
 
   return (
-    <Stack flex="auto" overflow="scroll">
-      <div ref={menuRef} style={{ position: "absolute" }}></div>
+    <Stack flex="auto" overflow="hidden">
       <PanelToolbar
         helpContent={helpContent}
         additionalIcons={
           <>
-            <ToolbarIconButton
-              title={`Supported datatypes: ${ALLOWED_DATATYPES.join(", ")}`}
-              data-test={"topic-set"}
-              onClick={toggleTopicMenuAction}
-              subMenuActive={topicMenuOpen}
-            >
-              <DatabaseIcon />
-            </ToolbarIconButton>
+            <div ref={menuRef}>
+              <ToolbarIconButton
+                title={`Supported datatypes: ${ALLOWED_DATATYPES.join(", ")}`}
+                data-test={"topic-set"}
+                onClick={toggleTopicMenuAction}
+                subMenuActive={topicMenuOpen}
+              >
+                <DatabaseIcon />
+              </ToolbarIconButton>
+            </div>
             <Menu
               anchorEl={menuRef.current}
               open={topicMenuOpen}
@@ -219,7 +220,7 @@ function DiagnosticStatusPanel(props: Props) {
         />
       </PanelToolbar>
       {filteredDiagnostics.length > 0 ? (
-        <Stack flex="auto" overflow="inherit auto">
+        <Stack flex="auto" overflowY="auto">
           {sortBy(filteredDiagnostics, ({ status }) => status.name.toLowerCase()).map((item) => (
             <DiagnosticStatus
               key={item.id}

@@ -395,19 +395,20 @@ function DiagnosticSummary(props: Props): JSX.Element {
 
   return (
     <Stack flex="auto">
-      <div ref={menuRef} style={{ position: "absolute" }}></div>
       <PanelToolbar
         helpContent={helpContent}
         additionalIcons={
           <>
-            <ToolbarIconButton
-              title={`Supported datatypes: ${ALLOWED_DATATYPES.join(", ")}`}
-              data-test={"topic-set"}
-              onClick={toggleTopicMenuAction}
-              subMenuActive={topicMenuOpen}
-            >
-              <DatabaseIcon />
-            </ToolbarIconButton>
+            <div ref={menuRef}>
+              <ToolbarIconButton
+                title={`Supported datatypes: ${ALLOWED_DATATYPES.join(", ")}`}
+                data-test={"topic-set"}
+                onClick={toggleTopicMenuAction}
+                subMenuActive={topicMenuOpen}
+              >
+                <DatabaseIcon />
+              </ToolbarIconButton>
+            </div>
             <Menu
               anchorEl={menuRef.current}
               open={topicMenuOpen}
