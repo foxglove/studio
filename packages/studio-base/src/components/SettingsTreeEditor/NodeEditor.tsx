@@ -26,6 +26,11 @@ export type NodeEditorProps = {
   updateSettings?: (path: readonly string[], value: unknown) => void;
 };
 
+const FieldsBottomPad = muiStyled("div", { skipSx: true })(({ theme }) => ({
+  gridColumn: "span 2",
+  height: theme.spacing(0.5),
+}));
+
 const NodeHeader = muiStyled("div")<{
   indent: number;
 }>(({ theme, indent }) => {
@@ -60,7 +65,6 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
   const indent = props.path.length;
   const allowVisibilityToggle = props.settings?.visible != undefined;
   const visible = props.settings?.visible !== false;
-  const theme = useTheme();
 
   const toggleVisibility = () => {
     actionHandler({
@@ -78,18 +82,9 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     [props.path],
   );
 
-  const fieldEditors = Object.entries(fields ?? {}).map(([key, field], index) => {
+  const fieldEditors = Object.entries(fields ?? {}).map(([key, field]) => {
     const stablePath = (stablePaths[key] ??= [...props.path, key]);
-    const isLast = index === Object.keys(fields ?? {}).length - 1;
-    return (
-      <FieldEditor
-        key={key}
-        field={field}
-        path={stablePath}
-        actionHandler={actionHandler}
-        style={{ marginBottom: isLast ? theme.spacing(2) : 0 }}
-      />
-    );
+    return <FieldEditor key={key} field={field} path={stablePath} actionHandler={actionHandler} />;
   });
 
   const childNodes = Object.entries(children ?? {}).map(([key, child]) => {
@@ -140,7 +135,12 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
           />
         </NodeHeader>
       )}
-      {open && fieldEditors.length > 0 && <>{fieldEditors}</>}
+      {open && fieldEditors.length > 0 && (
+        <>
+          {fieldEditors}
+          <FieldsBottomPad />
+        </>
+      )}
       {open && childNodes}
       {indent === 1 && <Divider style={{ gridColumn: "span 2" }} />}
     </>
