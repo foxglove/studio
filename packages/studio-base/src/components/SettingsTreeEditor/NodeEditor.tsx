@@ -87,7 +87,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
         field={field}
         path={stablePath}
         actionHandler={actionHandler}
-        style={{ paddingBottom: isLast ? theme.spacing(2) : 0 }}
+        style={{ marginBottom: isLast ? theme.spacing(2) : 0 }}
       />
     );
   });
