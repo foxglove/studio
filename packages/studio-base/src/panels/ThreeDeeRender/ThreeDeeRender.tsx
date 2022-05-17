@@ -204,6 +204,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   const [messages, setMessages] = useState<ReadonlyArray<MessageEvent<unknown>> | undefined>();
   const [currentTime, setCurrentTime] = useState<bigint | undefined>();
 
+  const renderRef = useRef({ needsRender: false });
   const [renderDone, setRenderDone] = useState<(() => void) | undefined>();
 
   // Config cameraState
@@ -242,6 +243,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
           const layerType = topicsToLayerTypes.get(topic);
           if (layerType != undefined) {
             updateTopicSettings(renderer, topic, layerType, newConfig);
+            renderRef.current.needsRender = true;
           }
         }
 
@@ -435,20 +437,13 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   useEffect(() => {
     if (colorScheme && renderer) {
       renderer.setColorScheme(colorScheme, backgroundColor);
-      renderer.animationFrame();
+      renderRef.current.needsRender = true;
     }
   }, [backgroundColor, colorScheme, renderer]);
 
-  // Handle messages and render a frame if the camera has moved or new messages
-  // are available
+  // Handle messages and render a frame if new messages are available
   useEffect(() => {
-    if (!renderer) {
-      return;
-    }
-    renderer.setCameraState(cameraState);
-
-    if (!messages) {
-      renderer.animationFrame();
+    if (!renderer || !messages) {
       return;
     }
 
@@ -500,8 +495,20 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       }
     }
 
+    renderRef.current.needsRender = true;
+  }, [messages, renderer, topicsToDatatypes]);
+
+  // Update the renderer when the camera moves
+  useEffect(() => {
+    renderer?.setCameraState(cameraState);
+    renderRef.current.needsRender = true;
+  }, [cameraState, renderer]);
+
+  // Render a new frame if requested
+  if (renderer && renderRef.current.needsRender) {
     renderer.animationFrame();
-  }, [cameraState, messages, renderer, topicsToDatatypes]);
+    renderRef.current.needsRender = false;
+  }
 
   // Invoke the done callback once the render is complete
   useEffect(() => {
@@ -649,5 +656,4 @@ function updateTopicSettings(
       renderer.setCameraInfoSettings(topic, topicConfig);
       break;
   }
-  renderer.animationFrame();
 }
