@@ -173,7 +173,7 @@ function FieldInput({
       return (
         <StyledToggleButtonGroup
           fullWidth
-          value={field.value}
+          value={field.value ?? false}
           exclusive
           size="small"
           onChange={(_event, value) => {
@@ -239,7 +239,7 @@ function FieldInput({
           displayEmpty
           fullWidth
           variant="filled"
-          value={field.value}
+          value={field.value ?? ""}
           onChange={(event) =>
             actionHandler({
               action: "update",
