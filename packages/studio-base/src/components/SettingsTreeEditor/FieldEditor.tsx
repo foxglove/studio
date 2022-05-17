@@ -159,7 +159,7 @@ function FieldInput({
           variant="filled"
           size="small"
           fullWidth
-          value={field.value}
+          value={field.value ?? ""}
           placeholder={field.placeholder}
           onChange={(event) =>
             actionHandler({
