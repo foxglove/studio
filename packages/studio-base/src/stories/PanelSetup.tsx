@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { setWarningCallback } from "@fluentui/react";
+import { setWarningCallback, useTheme } from "@fluentui/react";
 import { flatten } from "lodash";
 import { ComponentProps, useLayoutEffect, useRef, useState } from "react";
 import { DndProvider } from "react-dnd";
@@ -305,13 +305,14 @@ type Props = UnconnectedProps & {
   onLayoutAction?: (action: PanelsActions) => void;
 };
 export default function PanelSetup(props: Props): JSX.Element {
+  const theme = useTheme();
   return (
     <UserNodeStateProvider>
       <HoverValueProvider>
         <MockCurrentLayoutProvider onAction={props.onLayoutAction}>
           <PanelSettingsEditorContextProvider>
             <HelpInfoProvider>
-              <ThemeProvider isDark={false}>
+              <ThemeProvider isDark={theme.isInverted}>
                 <UnconnectedPanelSetup {...props} />
               </ThemeProvider>
             </HelpInfoProvider>
