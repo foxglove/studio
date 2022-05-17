@@ -160,7 +160,7 @@ export const PointsVertexColor = {
     const material = new THREE.PointsMaterial({
       vertexColors: true,
       size: scale.x, // TODO: Support scale.y
-      sizeAttenuation: false,
+      sizeAttenuation: true,
     });
     material.name = PointsVertexColor.id(scale, transparent);
     material.transparent = transparent;
