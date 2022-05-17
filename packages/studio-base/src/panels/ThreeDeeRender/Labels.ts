@@ -187,8 +187,9 @@ export class Labels extends THREE.Object3D {
     const borderColor = rgbaToLinear(makeRgba(), label.borderColor ?? fgColor);
     const textAlign = "start";
     const textBaseline = "top";
+    const lines = label.text.split("\n");
     const { width: fontWidth, height: fontHeight } = measureText(
-      label.text,
+      lines,
       fontFamily,
       `${fontSize}px`,
       fontWeight,
@@ -198,7 +199,9 @@ export class Labels extends THREE.Object3D {
     const canvas = document.createElement("canvas");
     const scale = window.devicePixelRatio + extraScale;
     canvas.width = Math.ceil((fontWidth + borderWidth * 2 + Math.ceil(outlineWidth) * 2) * scale);
-    canvas.height = Math.ceil((fontHeight + borderWidth * 2 + Math.ceil(outlineWidth) * 2) * scale);
+    canvas.height = Math.ceil(
+      (fontHeight * lines.length + borderWidth * 2 + Math.ceil(outlineWidth) * 2) * scale,
+    );
     const context = canvas.getContext("2d");
     if (!context) {
       throw new Error("Could not create canvas context for ThreeDeeRender.Labels");
@@ -216,7 +219,7 @@ export class Labels extends THREE.Object3D {
       borderWidth / 2,
       borderWidth / 2,
       fontWidth + borderWidth + Math.ceil(outlineWidth) * 2,
-      fontHeight + borderWidth + Math.ceil(outlineWidth) * 2,
+      fontHeight * lines.length + borderWidth + Math.ceil(outlineWidth) * 2,
       borderRadius,
     );
 
@@ -229,22 +232,25 @@ export class Labels extends THREE.Object3D {
       context.stroke();
     }
 
-    const x = borderWidth;
-    const y = borderWidth;
-
     context.textAlign = textAlign;
     context.textBaseline = textBaseline;
 
-    // Text outline
-    if (outlineWidth > 0) {
-      context.strokeStyle = rgbaToCssString(outlineColor);
-      context.lineWidth = outlineWidth * 2;
-      context.strokeText(label.text, x, y);
-    }
+    const x = borderWidth;
+    let y = borderWidth;
+    for (const line of lines) {
+      // Text outline
+      if (outlineWidth > 0) {
+        context.strokeStyle = rgbaToCssString(outlineColor);
+        context.lineWidth = outlineWidth * 2;
+        context.strokeText(line, x, y);
+      }
 
-    // Text fill
-    context.fillStyle = rgbaToCssString(color);
-    context.fillText(label.text, x, y);
+      // Text fill
+      context.fillStyle = rgbaToCssString(color);
+      context.fillText(line, x, y);
+
+      y += fontHeight;
+    }
 
     return canvas;
   }
@@ -273,7 +279,7 @@ function roundRectPath(
 
 const textMeasures = new Map<string, textMetrics.TextMeasure>();
 function measureText(
-  text: string,
+  lines: string[],
   fontFamily: string,
   fontSize: string,
   fontWeight: number,
@@ -297,13 +303,12 @@ function measureText(
     textMeasures.set(id, textMeasure);
   }
 
-  // Compute the text width
-  const width = textMeasure.width(text, options) + WIDTH_ADJUSTMENT_PX;
+  const line0 = lines[0]!;
 
   // Compute the text height, with a fallback to the font size if our <div> is
   // currently reporting a line-height of 0 which can happen early in the app
   // lifecycle such as during storybook rendering
-  let height = textMeasure.height(text);
+  let height = textMeasure.height(line0);
   if (height <= 0) {
     const fontSizePx = parseFloat(fontSize);
     if (isNaN(fontSizePx)) {
@@ -312,6 +317,16 @@ function measureText(
     height = fontSizePx;
   }
   height += HEIGHT_ADJUSTENT_PX;
+
+  // Compute the widest width of each line
+  let width = 0;
+  for (const line of lines) {
+    const lineWidth = textMeasure.width(line, options);
+    if (lineWidth > width) {
+      width = lineWidth;
+    }
+  }
+  width += WIDTH_ADJUSTMENT_PX;
 
   return { width, height };
 }
