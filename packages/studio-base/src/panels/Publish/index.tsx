@@ -255,7 +255,9 @@ function Publish(props: Props) {
       >
         {error && (
           <Stack flex="auto" padding={0.5} justifyContent="center">
-            <Typography color="error.main">{error}</Typography>
+            <Typography variant="body2" color="error.main">
+              {error}
+            </Typography>
           </Stack>
         )}
         <Button
