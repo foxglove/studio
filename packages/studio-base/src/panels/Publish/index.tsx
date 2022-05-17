@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Typography } from "@mui/material";
+import { Typography, styled as muiStyled } from "@mui/material";
 import produce from "immer";
 import { set } from "lodash";
 import { useCallback, useEffect, useMemo, useRef } from "react";
@@ -69,13 +69,12 @@ const STextArea = styled(LegacyTextarea)`
   resize: none;
 `;
 
-const SErrorText = styled.div`
-  flex: 1 1 auto;
-  display: flex;
-  align-items: center;
-  padding: 4px;
-  color: ${({ theme }) => theme.semanticColors.errorBackground};
-`;
+const Root = muiStyled("div")(({ theme }) => ({
+  display: "flex",
+  flexDirection: "column",
+  backgroundColor: theme.palette.background.default,
+  height: "100%",
+}));
 
 function getTopicName(topic: Topic): string {
   return topic.name;
@@ -205,7 +204,7 @@ function Publish(props: Props) {
   const canPublish = capabilities.includes(PlayerCapabilities.advertise);
 
   return (
-    <Stack fullHeight>
+    <Root>
       <PanelToolbar helpContent={helpContent} />
       {advancedView && (
         <Stack flex="auto" padding={2} gap={1} paddingBottom={0}>
@@ -252,9 +251,13 @@ function Publish(props: Props) {
         flex="0 0 auto"
         alignItems="flex-start"
         justifyContent={advancedView ? "flex-end" : "center"}
-        padding={2}
+        padding={1.5}
       >
-        {error && <SErrorText>{error}</SErrorText>}
+        {error && (
+          <Stack flex="auto" padding={0.5} justifyContent="center">
+            <Typography color="error.main">{error}</Typography>
+          </Stack>
+        )}
         <Button
           style={{ backgroundColor: buttonColor }}
           tooltip={canPublish ? buttonTooltip : "Connect to ROS to publish data"}
@@ -265,7 +268,7 @@ function Publish(props: Props) {
           {buttonText}
         </Button>
       </Stack>
-    </Stack>
+    </Root>
   );
 }
 
