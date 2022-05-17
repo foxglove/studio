@@ -22,7 +22,7 @@ const StyledAppBar = muiStyled(AppBar, { skipSx: true })(({ theme }) => ({
 
 const FieldGrid = muiStyled("div", { skipSx: true })(({ theme }) => ({
   display: "grid",
-  gridTemplateColumns: "minmax(4rem, 1fr) minmax(min-content, 14rem)",
+  gridTemplateColumns: "minmax(4rem, 1fr) minmax(min-content, 12rem)",
   columnGap: theme.spacing(1),
   rowGap: theme.spacing(0.25),
 }));
