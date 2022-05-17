@@ -131,7 +131,7 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
           : () => (
               <Stack flex="auto" alignItems="center" justifyContent="center" data-test={id}>
                 <PanelToolbar isUnknownPanel />
-                Unknown panel type: {type}.
+                <EmptyState>Unknown panel type: {type}.</EmptyState>
               </Stack>
             );
         panelCompoentCache.current.set(type, Panel);
