@@ -213,12 +213,12 @@ export class PointClouds extends THREE.Object3D {
       return;
     } else if (data.length < pointCloud.height * pointCloud.row_step) {
       const message = `PointCloud2 data length ${data.length} is less than height ${pointCloud.height} * row_step ${pointCloud.row_step}`;
-      invalidPointCloudError(this.renderer, renderable, message);
-      return;
+      this.renderer.layerErrors.addToTopic(renderable.userData.topic, INVALID_POINT_CLOUD, message);
+      // Allow this error for now since we currently ignore row_step
     } else if (pointCloud.width * pointCloud.point_step > pointCloud.row_step) {
       const message = `PointCloud2 width ${pointCloud.width} * point_step ${pointCloud.point_step} is greater than row_step ${pointCloud.row_step}`;
-      invalidPointCloudError(this.renderer, renderable, message);
-      return;
+      this.renderer.layerErrors.addToTopic(renderable.userData.topic, INVALID_POINT_CLOUD, message);
+      // Allow this error for now since we currently ignore row_step
     }
 
     // Parse the fields and create typed readers for x/y/z and color
@@ -283,8 +283,8 @@ export class PointClouds extends THREE.Object3D {
 
     const geometry = renderable.userData.geometry;
     geometry.resize(pointCount);
-    const positionAttribute = geometry.getAttribute("position") as THREE.BufferAttribute;
-    const colorAttribute = geometry.getAttribute("color") as THREE.BufferAttribute;
+    const positionAttribute = geometry.attributes.position!;
+    const colorAttribute = geometry.attributes.color!;
 
     const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
 
@@ -583,8 +583,7 @@ function invalidPointCloudError(
   message: string,
 ): void {
   renderer.layerErrors.addToTopic(renderable.userData.topic, INVALID_POINT_CLOUD, message);
-  renderable.userData.positionAttribute.resize(0);
-  renderable.userData.colorAttribute.resize(0);
+  renderable.userData.geometry.resize(0);
 }
 
 function zeroReader(): number {
