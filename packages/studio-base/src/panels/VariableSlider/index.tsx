@@ -21,7 +21,7 @@ import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import {
   SettingsTreeAction,
-  SettingsTreeNode,
+  SettingsTreeRoots,
 } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import Stack from "@foxglove/studio-base/components/Stack";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
@@ -40,16 +40,18 @@ export type VariableSliderConfig = {
   globalVariableName: string;
 };
 
-function buildSettingsTree(config: VariableSliderConfig): SettingsTreeNode {
+function buildSettingsTree(config: VariableSliderConfig): SettingsTreeRoots {
   return {
-    fields: {
-      min: { label: "Min", input: "number", value: config.sliderProps.min },
-      max: { label: "Max", input: "number", value: config.sliderProps.max },
-      step: { label: "Step", input: "number", value: config.sliderProps.step },
-      globalVariableName: {
-        label: "Variable name",
-        input: "string",
-        value: config.globalVariableName,
+    general: {
+      fields: {
+        min: { label: "Min", input: "number", value: config.sliderProps.min },
+        max: { label: "Max", input: "number", value: config.sliderProps.max },
+        step: { label: "Step", input: "number", value: config.sliderProps.step },
+        globalVariableName: {
+          label: "Variable name",
+          input: "string",
+          value: config.globalVariableName,
+        },
       },
     },
   };
@@ -95,7 +97,7 @@ function VariableSliderPanel(props: Props): React.ReactElement {
   useEffect(() => {
     updatePanelSettingsTree(panelId, {
       actionHandler,
-      settings: buildSettingsTree(props.config),
+      roots: buildSettingsTree(props.config),
     });
   }, [actionHandler, panelId, props.config, updatePanelSettingsTree]);
 

@@ -103,36 +103,34 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
 
   return (
     <>
-      {indent > 0 && (
-        <NodeHeader>
-          <NodeHeaderToggle indent={indent} onClick={() => setOpen(!open)}>
-            <div
-              style={{
-                display: "inline-flex",
-                opacity: visible ? 0.6 : 0.3,
-                position: "relative",
-              }}
-            >
-              {hasProperties && <ExpansionArrow expanded={open} />}
-            </div>
-            <Typography
-              noWrap={true}
-              variant="subtitle2"
-              color={visible ? "text.primary" : "text.disabled"}
-            >
-              {settings.label ?? "Settings"}
-            </Typography>
-          </NodeHeaderToggle>
-          <VisibilityToggle
-            edge="end"
-            size="small"
-            checked={visible}
-            onChange={toggleVisibility}
-            style={{ opacity: allowVisibilityToggle ? 1 : 0 }}
-            disabled={!allowVisibilityToggle}
-          />
-        </NodeHeader>
-      )}
+      <NodeHeader>
+        <NodeHeaderToggle indent={indent} onClick={() => setOpen(!open)}>
+          <div
+            style={{
+              display: "inline-flex",
+              opacity: visible ? 0.6 : 0.3,
+              position: "relative",
+            }}
+          >
+            {hasProperties && <ExpansionArrow expanded={open} />}
+          </div>
+          <Typography
+            noWrap={true}
+            variant="subtitle2"
+            color={visible ? "text.primary" : "text.disabled"}
+          >
+            {settings.label ?? "Settings"}
+          </Typography>
+        </NodeHeaderToggle>
+        <VisibilityToggle
+          edge="end"
+          size="small"
+          checked={visible}
+          onChange={toggleVisibility}
+          style={{ opacity: allowVisibilityToggle ? 1 : 0 }}
+          disabled={!allowVisibilityToggle}
+        />
+      </NodeHeader>
       {open && fieldEditors.length > 0 && (
         <>
           {fieldEditors}

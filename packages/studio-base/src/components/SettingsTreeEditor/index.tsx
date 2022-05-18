@@ -26,8 +26,6 @@ const FieldGrid = muiStyled("div", { skipSx: true })(({ theme }) => ({
   columnGap: theme.spacing(1),
 }));
 
-const ROOT_PATH: readonly string[] = [];
-
 export default function SettingsTreeEditor({
   settings,
 }: {
@@ -63,7 +61,9 @@ export default function SettingsTreeEditor({
         </StyledAppBar>
       )}
       <FieldGrid>
-        <NodeEditor path={ROOT_PATH} settings={settings.settings} actionHandler={actionHandler} />
+        {Object.entries(settings.roots).map(([key, root]) => (
+          <NodeEditor key={key} path={[key]} settings={root} actionHandler={actionHandler} />
+        ))}
       </FieldGrid>
     </Stack>
   );

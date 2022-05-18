@@ -23,7 +23,7 @@ import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import {
   SettingsTreeAction,
   SettingsTreeFields,
-  SettingsTreeNode,
+  SettingsTreeRoots,
 } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import FilteredPointLayer, {
   POINT_MARKER_RADIUS,
@@ -57,7 +57,7 @@ function isGeoJSONMessage(
   );
 }
 
-function buildSettingsTree(config: Config, eligibleTopics: string[]): SettingsTreeNode {
+function buildSettingsTree(config: Config, eligibleTopics: string[]): SettingsTreeRoots {
   const topics: SettingsTreeFields = transform(
     eligibleTopics,
     (result, topic) => {
@@ -92,14 +92,14 @@ function buildSettingsTree(config: Config, eligibleTopics: string[]): SettingsTr
     };
   }
 
-  const settings: SettingsTreeNode = {
-    label: "General",
-    fields: generalSettings,
-    children: {
-      topics: {
-        label: "Topics",
-        fields: topics,
-      },
+  const settings: SettingsTreeRoots = {
+    general: {
+      label: "General",
+      fields: generalSettings,
+    },
+    topics: {
+      label: "Topics",
+      fields: topics,
     },
   };
 
@@ -278,7 +278,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-explicit-any
     (context as unknown as any).__updatePanelSettingsTree({
       actionHandler: settingsActionHandler,
-      settings: tree,
+      roots: tree,
     });
 
     return () => {
