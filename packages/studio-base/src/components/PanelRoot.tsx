@@ -27,7 +27,7 @@ export const PanelRoot = styled.div<{ fullscreen: boolean; selected: boolean }>`
     left: 0;
     right: 0;
     bottom: 0;
-    inset: 1px;
+    inset: 0 1px 1px 0;
     opacity: ${({ selected }) => (selected ? 1 : 0)};
     border: 1px solid ${({ theme }) => theme.palette.themePrimary};
     position: absolute;
