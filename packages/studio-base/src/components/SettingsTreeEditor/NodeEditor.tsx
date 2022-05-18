@@ -44,7 +44,7 @@ const NodeHeaderToggle = muiStyled("div")<{ indent: number }>(({ theme, indent }
     display: "flex",
     alignItems: "center",
     cursor: "pointer",
-    paddingLeft: theme.spacing(2 + 2 * indent),
+    paddingLeft: theme.spacing(1.5 + 2 * indent),
     userSelect: "none",
     width: "100%",
   };
@@ -54,7 +54,7 @@ function ExpansionArrow({ expanded }: { expanded: boolean }): JSX.Element {
   const Component = expanded ? ArrowDownIcon : ArrowRightIcon;
   return (
     <Component
-      style={{ position: "absolute", top: 0, left: 0, transform: "translate(-100%, -50%)" }}
+      style={{ position: "absolute", top: 0, left: 0, transform: "translate(-112%, -50%)" }}
     />
   );
 }
