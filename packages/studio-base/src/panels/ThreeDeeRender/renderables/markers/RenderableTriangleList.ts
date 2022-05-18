@@ -55,12 +55,12 @@ export class RenderableTriangleList extends RenderableMarker {
     const prevMarker = this.userData.marker;
     super.update(marker);
 
-    const vertexCount = marker.points.length;
+    let vertexCount = marker.points.length;
     const count = vertexCount * 3;
     if (vertexCount === 0) {
       this._renderer.layerErrors.addToTopic(
         this.userData.topic,
-        NOT_DIVISIBLE_ERR,
+        EMPTY_ERR,
         `TRIANGLE_LIST: points is empty`,
       );
       this.geometry.setAttribute("position", new THREE.BufferAttribute(EMPTY_FLOAT32, 3));
@@ -69,11 +69,10 @@ export class RenderableTriangleList extends RenderableMarker {
     if (vertexCount % 3 !== 0) {
       this._renderer.layerErrors.addToTopic(
         this.userData.topic,
-        EMPTY_ERR,
+        NOT_DIVISIBLE_ERR,
         `TRIANGLE_LIST: points[${vertexCount}] is not divisible by 3`,
       );
-      this.geometry.setAttribute("position", new THREE.BufferAttribute(EMPTY_FLOAT32, 3));
-      return;
+      vertexCount = Math.floor(vertexCount / 3) * 3;
     }
     if (marker.colors.length !== 0 && marker.colors.length !== vertexCount) {
       this._renderer.layerErrors.addToTopic(
@@ -131,8 +130,10 @@ export class RenderableTriangleList extends RenderableMarker {
     if (dataChanged) {
       this.geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
       this.geometry.setAttribute("color", new THREE.BufferAttribute(colors, 4));
+      // Explicitly tell three.js to send position and color buffers to the GPU
       this.geometry.attributes.position!.needsUpdate = true;
       this.geometry.attributes.color!.needsUpdate = true;
+      // Build the vertex normal attribute from the position buffer (averaging face normals)
       this.geometry.computeVertexNormals();
       this.geometry.computeBoundingSphere();
     }
