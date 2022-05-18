@@ -72,6 +72,9 @@ const BasicSettings: SettingsTreeRoots = {
       },
     },
   },
+  emptyNode: {
+    label: "Empty node",
+  },
   defaultCollapsed: {
     label: "Default Collapsed",
     defaultExpansionState: "collapsed",

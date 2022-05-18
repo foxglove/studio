@@ -62,7 +62,13 @@ export default function SettingsTreeEditor({
       )}
       <FieldGrid>
         {Object.entries(settings.roots).map(([key, root]) => (
-          <NodeEditor key={key} path={[key]} settings={root} actionHandler={actionHandler} />
+          <NodeEditor
+            key={key}
+            path={[key]}
+            settings={root}
+            defaultOpen={root.defaultExpansionState === "collapsed" ? false : true}
+            actionHandler={actionHandler}
+          />
         ))}
       </FieldGrid>
     </Stack>
