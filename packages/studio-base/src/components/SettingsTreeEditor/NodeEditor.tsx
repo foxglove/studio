@@ -40,12 +40,16 @@ const NodeHeader = muiStyled("div")(({ theme }) => {
   };
 });
 
-const NodeHeaderToggle = muiStyled("div")<{ indent: number }>(({ theme, indent }) => {
+const NodeHeaderToggle = muiStyled("div", {
+  shouldForwardProp: (prop) => prop !== "indent" && prop !== "visible",
+})<{ indent: number; visible: boolean }>(({ theme, indent, visible }) => {
   return {
     display: "flex",
     alignItems: "center",
     cursor: "pointer",
-    paddingLeft: theme.spacing(1.5 + 2 * indent),
+    marginLeft: theme.spacing(1.5 + 2 * indent),
+    opacity: visible ? 1 : 0.6,
+    position: "relative",
     userSelect: "none",
     width: "100%",
   };
@@ -55,7 +59,7 @@ function ExpansionArrow({ expanded }: { expanded: boolean }): JSX.Element {
   const Component = expanded ? ArrowDownIcon : ArrowRightIcon;
   return (
     <Component
-      style={{ position: "absolute", top: 0, left: 0, transform: "translate(-112%, -50%)" }}
+      style={{ position: "absolute", top: "50%", left: 0, transform: "translate(-112%, -50%)" }}
     />
   );
 }
@@ -108,16 +112,8 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
   return (
     <>
       <NodeHeader>
-        <NodeHeaderToggle indent={indent} onClick={() => setOpen(!open)}>
-          <div
-            style={{
-              display: "inline-flex",
-              opacity: visible ? 0.6 : 0.3,
-              position: "relative",
-            }}
-          >
-            {hasProperties && <ExpansionArrow expanded={open} />}
-          </div>
+        <NodeHeaderToggle indent={indent} onClick={() => setOpen(!open)} visible={visible}>
+          {hasProperties && <ExpansionArrow expanded={open} />}
           {IconComponent && (
             <IconComponent fontSize="small" style={{ marginRight: theme.spacing(0.5) }} />
           )}

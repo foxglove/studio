@@ -27,6 +27,7 @@ const BasicSettings: SettingsTreeRoots = {
   general: {
     label: "General",
     icon: "Settings",
+    visible: true,
     fields: {
       numberWithPrecision: {
         input: "number",
@@ -46,6 +47,7 @@ const BasicSettings: SettingsTreeRoots = {
   complex_inputs: {
     label: "Complex Inputs",
     icon: "Hive",
+    visible: true,
     fields: {
       messagepath: {
         label: "Message Path",
@@ -82,6 +84,7 @@ const BasicSettings: SettingsTreeRoots = {
     label: "Default Collapsed",
     icon: "OpenWith",
     defaultExpansionState: "collapsed",
+    visible: true,
     fields: {
       field: { label: "Field", input: "string" },
     },
@@ -89,6 +92,7 @@ const BasicSettings: SettingsTreeRoots = {
   background: {
     label: "Background",
     icon: "Background",
+    visible: true,
     fields: {
       colorRGB: { label: "Color RGB", value: "#000000", input: "rgb" },
       colorRGBA: { label: "Color RGBA", value: "rgba(0, 128, 255, 0.75)", input: "rgba" },
@@ -97,6 +101,7 @@ const BasicSettings: SettingsTreeRoots = {
   threeDimensionalModel: {
     label: "3D Model",
     icon: "Cube",
+    visible: true,
     fields: {
       color: {
         label: "Color",
@@ -206,6 +211,7 @@ const TopicSettings: SettingsTreeRoots = {
   topics: {
     label: "Topics",
     icon: "Topic",
+    visible: true,
     children: {
       drivable_area: {
         label: "/drivable_area",
