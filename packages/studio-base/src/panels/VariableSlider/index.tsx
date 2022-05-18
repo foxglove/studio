@@ -43,6 +43,7 @@ export type VariableSliderConfig = {
 function buildSettingsTree(config: VariableSliderConfig): SettingsTreeRoots {
   return {
     general: {
+      label: "General",
       fields: {
         min: { label: "Min", input: "number", value: config.sliderProps.min },
         max: { label: "Max", input: "number", value: config.sliderProps.max },
@@ -76,17 +77,18 @@ function VariableSliderPanel(props: Props): React.ReactElement {
     (action: SettingsTreeAction) => {
       saveConfig(
         produce(props.config, (draft) => {
-          if (["min", "max"].includes(action.payload.path[0] ?? "")) {
-            set(draft, ["sliderProps", ...action.payload.path], action.payload.value);
+          const path = action.payload.path.slice(1);
+          if (["min", "max"].includes(path[0] ?? "")) {
+            set(draft, ["sliderProps", ...path], action.payload.value);
           } else if (
-            action.payload.path[0] === "step" &&
+            path[0] === "step" &&
             action.payload.input === "number" &&
             action.payload.value != undefined &&
             action.payload.value > 0
           ) {
             set(draft, ["sliderProps", "step"], action.payload.value);
           } else {
-            set(draft, action.payload.path, action.payload.value);
+            set(draft, path, action.payload.value);
           }
         }),
       );
