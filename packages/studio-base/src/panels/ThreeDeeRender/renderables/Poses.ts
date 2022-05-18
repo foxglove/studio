@@ -75,11 +75,13 @@ export class Poses extends THREE.Object3D {
         const covarianceColor = cur.covarianceColor ?? DEFAULT_COVARIANCE_COLOR_STR;
 
         fields["showCovariance"] = { label: "Covariance", input: "boolean", value: showCovariance };
-        fields["covarianceColor"] = {
-          label: "Covariance Color",
-          input: "rgba",
-          value: covarianceColor,
-        };
+        if (showCovariance) {
+          fields["covarianceColor"] = {
+            label: "Covariance Color",
+            input: "rgba",
+            value: covarianceColor,
+          };
+        }
       }
 
       return fields;
@@ -239,7 +241,7 @@ function createSphereMarker(
 ): Marker | undefined {
   // Covariance is a 6x6 matrix for position and rotation (XYZ, RPY)
   // We currently only visualize position variance so extract the upper-left
-  // 3x3 matrix
+  // 3x1 diagonal
   // [X, -, -, -, -, -]
   // [-, Y, -, -, -, -]
   // [-, -, Z, -, -, -]
