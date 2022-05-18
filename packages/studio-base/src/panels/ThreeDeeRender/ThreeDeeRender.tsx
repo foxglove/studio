@@ -320,6 +320,8 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         }
       }
       setMessages(renderState.currentFrame);
+
+      renderRef.current.needsRender = true;
     };
 
     context.watch("currentTime");
