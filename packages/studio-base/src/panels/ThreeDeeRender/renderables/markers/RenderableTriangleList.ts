@@ -61,7 +61,7 @@ export class RenderableTriangleList extends RenderableMarker {
       this._renderer.layerErrors.addToTopic(
         this.userData.topic,
         NOT_DIVISIBLE_ERR,
-        `TRIANGLE_LIST: points[0] is empty`,
+        `TRIANGLE_LIST: points is empty`,
       );
       this.geometry.setAttribute("position", new THREE.BufferAttribute(EMPTY_FLOAT32, 3));
       return;
