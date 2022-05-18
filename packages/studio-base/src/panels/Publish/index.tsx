@@ -141,7 +141,7 @@ function Publish(props: Props) {
     (action: SettingsTreeAction) => {
       saveConfig(
         produce(props.config, (draft) => {
-          set(draft, action.payload.path, action.payload.value);
+          set(draft, action.payload.path.slice(1), action.payload.value);
         }),
       );
     },
