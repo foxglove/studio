@@ -4,12 +4,13 @@
 
 import ArrowDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
-import { Divider, ListItemProps, styled as muiStyled, Typography } from "@mui/material";
+import { Divider, ListItemProps, styled as muiStyled, Typography, useTheme } from "@mui/material";
 import { useMemo, useState } from "react";
 import { DeepReadonly } from "ts-essentials";
 
 import { FieldEditor } from "./FieldEditor";
 import { VisibilityToggle } from "./VisibilityToggle";
+import icons from "./icons";
 import { SettingsTreeAction, SettingsTreeNode } from "./types";
 
 export type NodeEditorProps = {
@@ -63,6 +64,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
   const { actionHandler, defaultOpen = true, settings = {} } = props;
   const [open, setOpen] = useState(defaultOpen);
 
+  const theme = useTheme();
   const indent = props.path.length;
   const allowVisibilityToggle = props.settings?.visible != undefined;
   const visible = props.settings?.visible !== false;
@@ -101,6 +103,8 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     );
   });
 
+  const IconComponent = settings.icon ? icons[settings.icon] : undefined;
+
   return (
     <>
       <NodeHeader>
@@ -114,6 +118,9 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
           >
             {hasProperties && <ExpansionArrow expanded={open} />}
           </div>
+          {IconComponent && (
+            <IconComponent fontSize="small" style={{ marginRight: theme.spacing(0.5) }} />
+          )}
           <Typography
             noWrap={true}
             variant="subtitle2"

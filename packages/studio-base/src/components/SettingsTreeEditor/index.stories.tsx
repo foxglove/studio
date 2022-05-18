@@ -25,6 +25,8 @@ export default {
 
 const BasicSettings: SettingsTreeRoots = {
   general: {
+    label: "General",
+    icon: "Settings",
     fields: {
       numberWithPrecision: {
         input: "number",
@@ -43,6 +45,7 @@ const BasicSettings: SettingsTreeRoots = {
   },
   complex_inputs: {
     label: "Complex Inputs",
+    icon: "Hive",
     fields: {
       messagepath: {
         label: "Message Path",
@@ -77,6 +80,7 @@ const BasicSettings: SettingsTreeRoots = {
   },
   defaultCollapsed: {
     label: "Default Collapsed",
+    icon: "OpenWith",
     defaultExpansionState: "collapsed",
     fields: {
       field: { label: "Field", input: "string" },
@@ -84,6 +88,7 @@ const BasicSettings: SettingsTreeRoots = {
   },
   background: {
     label: "Background",
+    icon: "Background",
     fields: {
       colorRGB: { label: "Color RGB", value: "#000000", input: "rgb" },
       colorRGBA: { label: "Color RGBA", value: "rgba(0, 128, 255, 0.75)", input: "rgba" },
@@ -91,6 +96,7 @@ const BasicSettings: SettingsTreeRoots = {
   },
   threeDimensionalModel: {
     label: "3D Model",
+    icon: "Cube",
     fields: {
       color: {
         label: "Color",
@@ -113,6 +119,7 @@ For ROS users, we also support package:// URLs
 const PanelExamplesSettings: SettingsTreeRoots = {
   map: {
     label: "Map",
+    icon: "Map",
     fields: {
       message_path: {
         label: "Message path",
@@ -155,6 +162,7 @@ const PanelExamplesSettings: SettingsTreeRoots = {
   },
   grid: {
     label: "Grid",
+    icon: "Grid",
     fields: {
       color: {
         label: "Color",
@@ -183,6 +191,7 @@ const PanelExamplesSettings: SettingsTreeRoots = {
   },
   pose: {
     label: "Pose",
+    icon: "Walk",
     fields: {
       color: { label: "Color", value: "#ffffff", input: "rgb" },
       shaft_length: { label: "Shaft length", value: 1.5, input: "number" },
@@ -196,6 +205,7 @@ const PanelExamplesSettings: SettingsTreeRoots = {
 const TopicSettings: SettingsTreeRoots = {
   topics: {
     label: "Topics",
+    icon: "Topic",
     children: {
       drivable_area: {
         label: "/drivable_area",
