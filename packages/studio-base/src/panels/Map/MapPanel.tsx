@@ -226,13 +226,13 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       }
     }
 
-    if (path[0] === "layer" && input === "select") {
+    if (path[1] === "layer" && input === "select") {
       setConfig((oldConfig) => {
         return { ...oldConfig, layer: String(value) };
       });
     }
 
-    if (path[0] === "customTileUrl" && input === "string") {
+    if (path[1] === "customTileUrl" && input === "string") {
       setConfig((oldConfig) => {
         return { ...oldConfig, customTileUrl: String(value) };
       });
