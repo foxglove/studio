@@ -24,7 +24,6 @@ const FieldGrid = muiStyled("div", { skipSx: true })(({ theme }) => ({
   display: "grid",
   gridTemplateColumns: "minmax(4rem, 1fr) minmax(4rem, 12rem)",
   columnGap: theme.spacing(1),
-  rowGap: theme.spacing(0.25),
 }));
 
 const ROOT_PATH: readonly string[] = [];
