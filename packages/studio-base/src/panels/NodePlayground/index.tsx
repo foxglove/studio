@@ -219,11 +219,11 @@ function NodePlayground(props: Props) {
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
       const { input, value, path } = action.payload;
-      if (input === "boolean" && path[0] === "autoFormatOnSave") {
-        saveConfig({ ...config, autoFormatOnSave: value });
+      if (input === "boolean" && path[1] === "autoFormatOnSave") {
+        saveConfig({ autoFormatOnSave: value });
       }
     },
-    [config, saveConfig],
+    [saveConfig],
   );
 
   useEffect(() => {
