@@ -19,7 +19,7 @@ export function getColorConverter(
   minValue: number,
   maxValue: number,
 ): ColorConverter {
-  const valueDelta = maxValue - minValue;
+  const valueDelta = Math.max(maxValue - minValue, Number.EPSILON);
   switch (settings.colorMode) {
     case "flat": {
       const flatColor = stringToRgba(tempColor1, settings.flatColor);
