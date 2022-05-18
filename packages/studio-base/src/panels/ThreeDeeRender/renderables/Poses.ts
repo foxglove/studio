@@ -60,7 +60,7 @@ export class Poses extends THREE.Object3D {
     super();
     this.renderer = renderer;
 
-    renderer.setSettingsFieldsProvider(LayerType.Pose, (topicConfig, topic) => {
+    renderer.setSettingsNodeProvider(LayerType.Pose, (topicConfig, topic) => {
       const cur = topicConfig as Partial<LayerSettingsPose>;
       const scale = cur.scale ?? DEFAULT_SCALE;
       const color = cur.color ?? DEFAULT_COLOR_STR;
@@ -84,7 +84,7 @@ export class Poses extends THREE.Object3D {
         }
       }
 
-      return fields;
+      return { fields };
     });
   }
 

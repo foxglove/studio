@@ -5,7 +5,10 @@
 import * as THREE from "three";
 
 import { Topic } from "@foxglove/studio";
-import { SettingsTreeFields } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import {
+  SettingsTreeFields,
+  SettingsTreeNode,
+} from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 
 import { DynamicBufferGeometry } from "../DynamicBufferGeometry";
 import { MaterialCache, PointCloudColor } from "../MaterialCache";
@@ -76,7 +79,7 @@ export class PointClouds extends THREE.Object3D {
     super();
     this.renderer = renderer;
 
-    renderer.setSettingsFieldsProvider(LayerType.PointCloud, (topicConfig, topic) =>
+    renderer.setSettingsNodeProvider(LayerType.PointCloud, (topicConfig, topic) =>
       settingsFields(this.pointCloudFieldsByTopic, topicConfig, topic),
     );
   }
@@ -453,7 +456,7 @@ function settingsFields(
   pclFieldsByTopic: Map<string, string[]>,
   topicConfig: Partial<LayerSettings>,
   topic: Topic,
-): SettingsTreeFields {
+): SettingsTreeNode {
   const cur = topicConfig as Partial<LayerSettingsPointCloud2> | undefined;
   const pclFields = pclFieldsByTopic.get(topic.name) ?? POINTCLOUD_REQUIRED_FIELDS;
   const pointSize = cur?.pointSize;
@@ -567,7 +570,7 @@ function settingsFields(
     };
   }
 
-  return fields;
+  return { fields };
 }
 
 function pointFieldTypeName(type: PointFieldType): string {
