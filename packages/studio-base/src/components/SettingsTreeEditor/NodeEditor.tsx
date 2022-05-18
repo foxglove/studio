@@ -119,7 +119,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
             variant="subtitle2"
             color={visible ? "text.primary" : "text.disabled"}
           >
-            {settings.label ?? "Settings"}
+            {settings.label ?? "General"}
           </Typography>
         </NodeHeaderToggle>
         <VisibilityToggle
