@@ -82,7 +82,6 @@ const BasicSettings: SettingsTreeRoots = {
   },
   defaultCollapsed: {
     label: "Default Collapsed",
-    icon: "OpenWith",
     defaultExpansionState: "collapsed",
     visible: true,
     fields: {

@@ -31,12 +31,13 @@ const FieldsBottomPad = muiStyled("div", { skipSx: true })(({ theme }) => ({
 const NodeHeader = muiStyled("div")(({ theme }) => {
   return {
     display: "flex",
+    gridColumn: "span 2",
+    paddingRight: theme.spacing(2),
+
     "&:hover": {
       outline: `1px solid ${theme.palette.primary.main}`,
       outlineOffset: -1,
     },
-    gridColumn: "span 2",
-    paddingRight: theme.spacing(2.25),
   };
 });
 
@@ -55,12 +56,22 @@ const NodeHeaderToggle = muiStyled("div", {
   };
 });
 
+const IconWrapper = muiStyled("div")({
+  position: "absolute",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  top: "50%",
+  left: 0,
+  transform: "translate(-125%, -50%)",
+});
+
 function ExpansionArrow({ expanded }: { expanded: boolean }): JSX.Element {
   const Component = expanded ? ArrowDownIcon : ArrowRightIcon;
   return (
-    <Component
-      style={{ position: "absolute", top: "50%", left: 0, transform: "translate(-112%, -50%)" }}
-    />
+    <IconWrapper>
+      <Component />
+    </IconWrapper>
   );
 }
 
@@ -107,19 +118,30 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     );
   });
 
-  const IconComponent = settings.icon ? icons[settings.icon] : undefined;
+  const IconComponent = settings.icon
+    ? icons[settings.icon]
+    : fieldEditors.length > 0
+    ? open
+      ? icons.FolderOpen
+      : icons.Folder
+    : icons.Note;
 
   return (
     <>
       <NodeHeader>
         <NodeHeaderToggle indent={indent} onClick={() => setOpen(!open)} visible={visible}>
           {hasProperties && <ExpansionArrow expanded={open} />}
-          {IconComponent && (
-            <IconComponent fontSize="small" style={{ marginRight: theme.spacing(0.5) }} />
+          {IconComponent != undefined && (
+            <IconComponent
+              fontSize="small"
+              color="inherit"
+              style={{ marginRight: theme.spacing(0.5), marginLeft: theme.spacing(-1) }}
+            />
           )}
           <Typography
             noWrap={true}
             variant="subtitle2"
+            fontWeight={600}
             color={visible ? "text.primary" : "text.disabled"}
           >
             {settings.label ?? "General"}

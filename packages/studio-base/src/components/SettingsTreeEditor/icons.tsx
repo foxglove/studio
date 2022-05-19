@@ -2,30 +2,36 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import DirectionsWalkIcon from "@mui/icons-material/DirectionsWalk";
+import FolderIcon from "@mui/icons-material/Folder";
+import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import GridOnIcon from "@mui/icons-material/GridOn";
-import HiveIcon from "@mui/icons-material/Hive";
+import HiveOutlinedIcon from "@mui/icons-material/HiveOutlined";
+import LayersIcon from "@mui/icons-material/Layers";
 import MapIcon from "@mui/icons-material/Map";
+import NoteOutlinedIcon from "@mui/icons-material/NoteOutlined";
 import OpenWithIcon from "@mui/icons-material/OpenWith";
-import QueryBuilderIcon from "@mui/icons-material/QueryBuilder";
 import SettingsIcon from "@mui/icons-material/Settings";
 import TopicIcon from "@mui/icons-material/Topic";
 import UnfoldLessIcon from "@mui/icons-material/UnfoldLess";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 import ViewInArIcon from "@mui/icons-material/ViewInAr";
-import WallpaperIcon from "@mui/icons-material/Wallpaper";
 
 export default {
-  Background: WallpaperIcon,
-  Clock: QueryBuilderIcon,
+  Background: LayersIcon,
+  Clock: AccessTimeIcon,
   Collapse: UnfoldLessIcon,
-  Cube: ViewInArIcon,
   Expand: UnfoldMoreIcon,
+  Cube: ViewInArIcon,
   Grid: GridOnIcon,
-  Hive: HiveIcon,
-  OpenWith: OpenWithIcon,
+  Hive: HiveOutlinedIcon,
   Settings: SettingsIcon,
-  Topic: TopicIcon,
   Map: MapIcon,
   Walk: DirectionsWalkIcon,
+  Move: OpenWithIcon,
+  Note: NoteOutlinedIcon,
+  Folder: FolderIcon,
+  FolderOpen: FolderOpenIcon,
+  Topic: TopicIcon,
 };
