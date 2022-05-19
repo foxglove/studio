@@ -14,7 +14,7 @@ const StackRoot = muiStyled("div", {
   display: "flex",
   flexDirection: ownerState.direction,
   flexShrink: ownerState.flexShrink,
-  flexWrap: ownerState.wrap,
+  flexWrap: ownerState.flexWrap,
   justifyContent: ownerState.justifyContent,
   alignItems: ownerState.alignItems,
   alignContent: ownerState.alignContent,
@@ -86,6 +86,7 @@ export default function Stack(props: PropsWithChildren<StackProps>): JSX.Element
     flexBasis,
     flexGrow,
     flexShrink,
+    flexWrap,
     fullHeight = false,
     fullWidth = false,
     gap,
@@ -104,7 +105,6 @@ export default function Stack(props: PropsWithChildren<StackProps>): JSX.Element
     paddingLeft,
     paddingRight,
     position,
-    wrap,
     style,
     zeroMinWidth = false,
     ...other
@@ -119,6 +119,7 @@ export default function Stack(props: PropsWithChildren<StackProps>): JSX.Element
     flexBasis,
     flexGrow,
     flexShrink,
+    flexWrap,
     fullHeight,
     fullWidth,
     gap,
@@ -137,7 +138,6 @@ export default function Stack(props: PropsWithChildren<StackProps>): JSX.Element
     paddingLeft,
     paddingRight,
     position,
-    wrap,
     zeroMinWidth,
   };
 
@@ -179,9 +179,6 @@ export type StackProps = {
 
   /** Make stack 100% height. */
   fullWidth?: boolean;
-
-  /** Defines the `flex-wrap` style property. */
-  wrap?: CSSProperties["flexWrap"];
 
   /** Defines the `justify-content` style property. */
   justifyContent?: CSSProperties["justifyContent"];
@@ -248,6 +245,9 @@ export type StackProps = {
 
   /** Defines the `flex-basis` style property. */
   flexBasis?: CSSProperties["flexBasis"];
+
+  /** Defines the `flex-wrap` style property. */
+  flexWrap?: CSSProperties["flexWrap"];
 
   /** Defines the `order` property. */
   order?: CSSProperties["order"];
