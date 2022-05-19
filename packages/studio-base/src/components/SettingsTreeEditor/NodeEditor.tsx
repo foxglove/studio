@@ -32,7 +32,7 @@ const NodeHeader = muiStyled("div")(({ theme }) => {
   return {
     display: "flex",
     gridColumn: "span 2",
-    paddingRight: theme.spacing(2),
+    paddingRight: theme.spacing(1.5),
 
     "&:hover": {
       outline: `1px solid ${theme.palette.primary.main}`,
