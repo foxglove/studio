@@ -118,26 +118,25 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     );
   });
 
-  const IconComponent = settings.icon
-    ? icons[settings.icon]
-    : fieldEditors.length > 0
-    ? open
-      ? icons.FolderOpen
-      : icons.Folder
-    : icons.Note;
+  const IconComponent =
+    settings.icon != undefined
+      ? icons[settings.icon]
+      : fieldEditors.length > 0
+      ? open
+        ? icons.FolderOpen
+        : icons.Folder
+      : icons.Note;
 
   return (
     <>
       <NodeHeader>
         <NodeHeaderToggle indent={indent} onClick={() => setOpen(!open)} visible={visible}>
           {hasProperties && <ExpansionArrow expanded={open} />}
-          {IconComponent != undefined && (
-            <IconComponent
-              fontSize="small"
-              color="inherit"
-              style={{ marginRight: theme.spacing(0.5), marginLeft: theme.spacing(-1) }}
-            />
-          )}
+          <IconComponent
+            fontSize="small"
+            color="inherit"
+            style={{ marginRight: theme.spacing(0.5), marginLeft: theme.spacing(-1) }}
+          />
           <Typography
             noWrap={true}
             variant="subtitle2"
