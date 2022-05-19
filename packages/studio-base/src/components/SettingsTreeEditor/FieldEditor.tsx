@@ -349,7 +349,7 @@ function FieldEditorComponent({
 }): JSX.Element {
   const theme = useTheme();
   const indent = Math.min(path.length, 4);
-  const paddingLeft = 3 * (indent - 1);
+  const paddingLeft = 1.5 + 2 * (indent - 1);
 
   return (
     <>
