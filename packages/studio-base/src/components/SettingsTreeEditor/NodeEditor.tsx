@@ -137,7 +137,11 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
           <IconComponent
             fontSize="small"
             color="inherit"
-            style={{ marginRight: theme.spacing(0.5), marginLeft: theme.spacing(-0.75) }}
+            style={{
+              marginRight: theme.spacing(0.5),
+              marginLeft: theme.spacing(-0.75),
+              opacity: 0.8,
+            }}
           />
           <Typography
             noWrap={true}
