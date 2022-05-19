@@ -238,19 +238,19 @@ export type StackProps = {
   position?: CSSProperties["position"];
 
   /** Defines the `flex` style property. */
-  flex?: number | string;
+  flex?: CSSProperties["flex"];
 
   /** Defines the `flex-grow` style property. */
-  flexGrow?: number;
+  flexGrow?: CSSProperties["flexGrow"];
 
   /** Defines the `flex-shrink` style property. */
-  flexShrink?: number;
+  flexShrink?: CSSProperties["flexShrink"];
 
   /** Defines the `flex-basis` style property. */
-  flexBasis?: number | string;
+  flexBasis?: CSSProperties["flexBasis"];
 
   /** Defines the `order` property. */
-  order?: number;
+  order?: CSSProperties["order"];
 
   /** Sets the minWidth to zero */
   zeroMinWidth?: boolean;
