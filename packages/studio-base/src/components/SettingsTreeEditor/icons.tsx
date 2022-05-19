@@ -10,6 +10,7 @@ import GridOnIcon from "@mui/icons-material/GridOn";
 import HiveOutlinedIcon from "@mui/icons-material/HiveOutlined";
 import LayersIcon from "@mui/icons-material/Layers";
 import MapIcon from "@mui/icons-material/Map";
+import NoteIcon from "@mui/icons-material/Note";
 import NoteOutlinedIcon from "@mui/icons-material/NoteOutlined";
 import OpenWithIcon from "@mui/icons-material/OpenWith";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -31,6 +32,7 @@ export default {
   Walk: DirectionsWalkIcon,
   Move: OpenWithIcon,
   Note: NoteOutlinedIcon,
+  NoteFilled: NoteIcon,
   Folder: FolderIcon,
   FolderOpen: FolderOpenIcon,
   Topic: TopicIcon,

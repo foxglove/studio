@@ -23,7 +23,7 @@ export type NodeEditorProps = {
   updateSettings?: (path: readonly string[], value: unknown) => void;
 };
 
-const FieldsBottomPad = muiStyled("div", { skipSx: true })(({ theme }) => ({
+const FieldPadding = muiStyled("div", { skipSx: true })(({ theme }) => ({
   gridColumn: "span 2",
   height: theme.spacing(0.5),
 }));
@@ -120,12 +120,14 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
 
   const IconComponent =
     settings.icon != undefined
-      ? icons[settings.icon]
-      : fieldEditors.length > 0
-      ? open
+      ? icons[settings.icon] // if the icon is a custom icon, use it
+      : childNodes.length > 0
+      ? open // if there are children, use the folder icon
         ? icons.FolderOpen
         : icons.Folder
-      : icons.Note;
+      : open // if there are no children, use the note icon
+      ? icons.Note
+      : icons.NoteFilled;
 
   return (
     <>
@@ -135,7 +137,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
           <IconComponent
             fontSize="small"
             color="inherit"
-            style={{ marginRight: theme.spacing(0.5), marginLeft: theme.spacing(-1) }}
+            style={{ marginRight: theme.spacing(0.5), marginLeft: theme.spacing(-0.75) }}
           />
           <Typography
             noWrap={true}
@@ -157,8 +159,9 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
       </NodeHeader>
       {open && fieldEditors.length > 0 && (
         <>
+          <FieldPadding />
           {fieldEditors}
-          <FieldsBottomPad />
+          <FieldPadding />
         </>
       )}
       {open && childNodes}
