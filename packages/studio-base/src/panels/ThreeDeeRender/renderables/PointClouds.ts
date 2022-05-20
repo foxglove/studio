@@ -104,13 +104,21 @@ export class PointClouds extends THREE.Object3D {
       renderable.userData.topic = topic;
 
       // Set the initial settings from default values merged with any user settings
-      this.renderer.config?.topics[topic] as Partial<LayerSettingsPointCloud2> | undefined;
-      const userSettings = this.renderer.config?.topics[topic];
+      const userSettings = this.renderer.config.topics[topic] as
+        | Partial<LayerSettingsPointCloud2>
+        | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
       if (settings.colorField == undefined) {
         autoSelectColorField(settings, pointCloud);
-        // FIXME: Persist the auto-selected field to the config
-        // this.renderer.emit("settingsTreeChange", { path: ["topics", topic] });
+
+        // Update user settings with the newly selected color field
+        const updatedUserSettings = userSettings ?? {};
+        updatedUserSettings.colorField = settings.colorField;
+        updatedUserSettings.colorMode = settings.colorMode;
+        updatedUserSettings.colorMap = settings.colorMap;
+        this.renderer.config.topics[topic] = updatedUserSettings;
+        // Normally we would emit "settingsTreeChange" from Renderer here, but we know the topic to
+        // field name mapping will be updated below and trigger the same event, so skip it here
       }
       renderable.userData.settings = settings;
 
@@ -141,6 +149,7 @@ export class PointClouds extends THREE.Object3D {
     if (!fields || fields.length !== pointCloud.fields.length) {
       fields = pointCloud.fields.map((field) => field.name);
       this.pointCloudFieldsByTopic.set(topic, fields);
+      this.renderer.emit("settingsTreeChange", { path: ["topics", topic] });
     }
 
     this._updatePointCloudRenderable(renderable, pointCloud);
