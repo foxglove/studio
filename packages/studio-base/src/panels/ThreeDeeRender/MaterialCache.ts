@@ -22,19 +22,16 @@ type MaterialCacheEntry = {
 // PointCloud materials to avoid expensive per-point colorspace conversion on
 // the CPU. Source: <https://github.com/mrdoob/three.js/blob/13b67d96/src/renderers/shaders/ShaderChunk/encodings_pars_fragment.glsl.js#L16-L18>
 const FS_SRGB_TO_LINEAR = /* glsl */ `
-vec4 sRGBToLinear(in vec4 value) {
-	return vec4(mix(
-    pow(value.rgb * 0.9478672986 + vec3(0.0521327014), vec3(2.4)),
-    value.rgb * 0.0773993808,
-    vec3(lessThanEqual(value.rgb, vec3(0.04045)))
-  ), value.a);
-}
 vec3 sRGBToLinear(in vec3 value) {
 	return vec3(mix(
     pow(value.rgb * 0.9478672986 + vec3(0.0521327014), vec3(2.4)),
     value.rgb * 0.0773993808,
     vec3(lessThanEqual(value.rgb, vec3(0.04045)))
   ));
+}
+
+vec4 sRGBToLinear(in vec4 value) {
+  return vec4(sRGBToLinear(value.rgb), value.a);
 }
 `;
 
