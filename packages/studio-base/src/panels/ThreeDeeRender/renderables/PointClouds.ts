@@ -353,6 +353,8 @@ function releasePointsMaterial(
 function createPickingMaterial(settings: LayerSettingsPointCloud2): THREE.ShaderMaterial {
   const MIN_PICKING_POINT_SIZE = 8;
 
+  // Use a custom shader for picking that sets a minimum point size to make
+  // individual points easier to click on
   const pointSize = Math.max(settings.pointSize, MIN_PICKING_POINT_SIZE);
   return new THREE.ShaderMaterial({
     vertexShader: /* glsl */ `
@@ -404,18 +406,22 @@ function pointCloudColorEncoding(settings: LayerSettingsPointCloud2): "srgb" | "
 }
 
 function autoSelectColorField(output: LayerSettingsPointCloud2, pointCloud: PointCloud2): void {
+  // Prefer color fields first
   for (const field of pointCloud.fields) {
-    if (COLOR_FIELDS.has(field.name)) {
+    const fieldNameLower = field.name.toLowerCase();
+    if (COLOR_FIELDS.has(fieldNameLower)) {
       output.colorField = field.name;
-      switch (field.name) {
+      switch (fieldNameLower) {
         case "rgb":
           output.colorMode = "rgb";
-          output.rgbByteOrder = "rgba";
+          // PointCloud2 messages follow a convention of obeying `is_bigendian`
+          // for the byte ordering of rgb/rgba fields
+          output.rgbByteOrder = pointCloud.is_bigendian ? "rgba" : "abgr";
           break;
         default:
         case "rgba":
           output.colorMode = "rgba";
-          output.rgbByteOrder = "rgba";
+          output.rgbByteOrder = pointCloud.is_bigendian ? "rgba" : "abgr";
           break;
         case "bgr":
           output.colorMode = "rgb";
@@ -434,6 +440,7 @@ function autoSelectColorField(output: LayerSettingsPointCloud2, pointCloud: Poin
     }
   }
 
+  // Intensity fields are second priority
   for (const field of pointCloud.fields) {
     if (INTENSITY_FIELDS.has(field.name)) {
       output.colorField = field.name;
@@ -443,6 +450,7 @@ function autoSelectColorField(output: LayerSettingsPointCloud2, pointCloud: Poin
     }
   }
 
+  // Fall back to using the first point cloud field
   if (pointCloud.fields.length > 0) {
     const firstField = pointCloud.fields[0]!;
     output.colorField = firstField.name;
