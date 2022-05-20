@@ -109,6 +109,8 @@ export class PointClouds extends THREE.Object3D {
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
       if (settings.colorField == undefined) {
         autoSelectColorField(settings, pointCloud);
+        // FIXME: Persist the auto-selected field to the config
+        // this.renderer.emit("settingsTreeChange", { path: ["topics", topic] });
       }
       renderable.userData.settings = settings;
 
@@ -255,7 +257,17 @@ export class PointClouds extends THREE.Object3D {
       }
 
       if (field.name === settings.colorField) {
-        colorReader = getReader(field, pointCloud.point_step);
+        // If the selected color mode is rgb/rgba and the field only has one channel with at least a
+        // four byte width, force the color data to be interpreted as four individual bytes. This
+        // overcomes a common problem where the color field data type is set to float32 or something
+        // other than uint32
+        const forceType =
+          (settings.colorMode === "rgb" || settings.colorMode === "rgba") &&
+          field.count === 1 &&
+          pointFieldWidth(field.datatype) >= 4
+            ? PointFieldType.UINT32
+            : undefined;
+        colorReader = getReader(field, pointCloud.point_step, forceType);
         if (!colorReader) {
           const typeName = pointFieldTypeName(field.datatype);
           const message = `PointCloud2 field "${field.name}" is invalid. type=${typeName}, offset=${field.offset}, point_step=${pointCloud.point_step}`;
@@ -597,6 +609,25 @@ function settingsFields(
 
 function pointFieldTypeName(type: PointFieldType): string {
   return PointFieldType[type] ?? `${type}`;
+}
+
+function pointFieldWidth(type: PointFieldType): number {
+  switch (type) {
+    case PointFieldType.INT8:
+    case PointFieldType.UINT8:
+      return 1;
+    case PointFieldType.INT16:
+    case PointFieldType.UINT16:
+      return 2;
+    case PointFieldType.INT32:
+    case PointFieldType.UINT32:
+    case PointFieldType.FLOAT32:
+      return 4;
+    case PointFieldType.FLOAT64:
+      return 8;
+    default:
+      return 0;
+  }
 }
 
 function invalidPointCloudError(
