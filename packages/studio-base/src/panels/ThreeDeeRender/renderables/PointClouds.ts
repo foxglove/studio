@@ -331,10 +331,11 @@ function pointsMaterial(
   materialCache: MaterialCache,
 ): THREE.PointsMaterial {
   const transparent = pointCloudHasTransparency(settings);
+  const encoding = pointCloudColorEncoding(settings);
   const scale = settings.pointSize;
   return materialCache.acquire(
-    PointCloudColor.id(scale, transparent),
-    () => PointCloudColor.create(scale, transparent),
+    PointCloudColor.id(settings.pointShape, encoding, scale, transparent),
+    () => PointCloudColor.create(settings.pointShape, encoding, scale, transparent),
     PointCloudColor.dispose,
   );
 }
@@ -344,8 +345,9 @@ function releasePointsMaterial(
   materialCache: MaterialCache,
 ): void {
   const transparent = pointCloudHasTransparency(settings);
+  const encoding = pointCloudColorEncoding(settings);
   const scale = settings.pointSize;
-  materialCache.release(PointCloudColor.id(scale, transparent));
+  materialCache.release(PointCloudColor.id(settings.pointShape, encoding, scale, transparent));
 }
 
 function createPickingMaterial(settings: LayerSettingsPointCloud2): THREE.ShaderMaterial {
@@ -375,17 +377,29 @@ function pointCloudHasTransparency(settings: LayerSettingsPointCloud2): boolean 
   switch (settings.colorMode) {
     case "flat":
       return stringToRgba(tempColor, settings.flatColor).a < 1.0;
-    case "gradient": {
-      if (stringToRgba(tempColor, settings.gradient[0]).a < 1.0) {
-        return true;
-      }
-      return stringToRgba(tempColor, settings.gradient[1]).a < 1.0;
-    }
+    case "gradient":
+      return (
+        stringToRgba(tempColor, settings.gradient[0]).a < 1.0 ||
+        stringToRgba(tempColor, settings.gradient[1]).a < 1.0
+      );
     case "colormap":
     case "rgb":
       return false;
     case "rgba":
+      // It's too expensive to check the alpha value of each color. Just assume it's transparent
       return true;
+  }
+}
+
+function pointCloudColorEncoding(settings: LayerSettingsPointCloud2): "srgb" | "linear" {
+  switch (settings.colorMode) {
+    case "flat":
+    case "colormap":
+    case "gradient":
+      return "linear";
+    case "rgb":
+    case "rgba":
+      return "srgb";
   }
 }
 
