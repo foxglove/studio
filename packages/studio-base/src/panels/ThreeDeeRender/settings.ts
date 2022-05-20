@@ -179,16 +179,15 @@ export function buildSettingsTree(options: SettingsTreeOptions): SettingsTreeRoo
   // Build the settings tree for transforms
   const transformsChildren: SettingsTreeChildren = {};
   const tfSettingsNodeProvider = settingsNodeProviders.get(LayerType.Transform);
-  if (tfSettingsNodeProvider == undefined) {
-    throw new Error(`Missing required settings node provider for LayerType.Transform`);
-  }
-  for (const { value: frameId } of options.coordinateFrames) {
-    // We key our memoized function by the first argument. Since the config
-    // maybe be undefined we use the config or the topic name.
-    const transformConfig = config.transforms[frameId] ?? frameId;
-    const newNode = memoBuildTransformNode(transformConfig, frameId, tfSettingsNodeProvider);
-    if (newNode) {
-      transformsChildren[frameId] = newNode;
+  if (tfSettingsNodeProvider != undefined) {
+    for (const { value: frameId } of options.coordinateFrames) {
+      // We key our memoized function by the first argument. Since the config
+      // may be undefined we use the config or the topic name
+      const transformConfig = config.transforms[frameId] ?? frameId;
+      const newNode = memoBuildTransformNode(transformConfig, frameId, tfSettingsNodeProvider);
+      if (newNode) {
+        transformsChildren[frameId] = newNode;
+      }
     }
   }
 
@@ -205,7 +204,7 @@ export function buildSettingsTree(options: SettingsTreeOptions): SettingsTreeRoo
       continue;
     }
     // We key our memoized function by the first argument. Since the config
-    // maybe be undefined we use the config or the topic name.
+    // may be undefined we use the config or the topic name
     const topicConfig = config.topics[topic.name] ?? topic.name;
     const newNode = memoBuildTopicNode(topicConfig, topic, layerType, settingsNodeProvider);
     if (newNode) {
