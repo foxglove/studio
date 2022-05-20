@@ -116,7 +116,6 @@ export class Labels extends THREE.Object3D {
     if (prevSprite) {
       this.remove(prevSprite);
     }
-    this.add(sprite);
     this.sprites.set(id, sprite);
 
     return sprite;
@@ -125,7 +124,6 @@ export class Labels extends THREE.Object3D {
   removeById(id: string): boolean {
     const sprite = this.sprites.get(id);
     if (sprite) {
-      this.remove(sprite);
       this.sprites.delete(id);
       return true;
     }

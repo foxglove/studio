@@ -40,6 +40,7 @@ import {
   LayerSettingsOccupancyGrid,
   LayerSettingsPointCloud2,
   LayerSettingsPose,
+  LayerSettingsTransform,
   LayerType,
   SettingsNodeProvider,
   ThreeDeeRenderConfig,
@@ -242,8 +243,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.frameAxes.addTransformMessage(tf);
   }
 
-  setTransformSettings(_name: string, _settings: { visible?: boolean }): void {
-    //
+  setTransformSettings(frameId: string, settings: Partial<LayerSettingsTransform>): void {
+    this.frameAxes.setTransformSettings(frameId, settings);
   }
 
   addOccupancyGridMessage(topic: string, occupancyGrid: OccupancyGrid): void {
