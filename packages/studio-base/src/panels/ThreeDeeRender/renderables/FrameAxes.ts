@@ -239,9 +239,8 @@ export class FrameAxes extends THREE.Object3D {
     }
 
     // Text label
-    const position = { x: 0, y: 0, z: 0.4 };
-    const labelOpts = { text: frameId, frameId, position };
-    const label = this.renderer.labels.setLabel(`tf:${frameId}`, labelOpts);
+    const label = this.renderer.labels.setLabel(`tf:${frameId}`, { text: frameId });
+    label.position.set(0, 0, 0.4);
     renderable.add(label);
 
     // Set the initial settings from default values merged with any user settings

@@ -322,7 +322,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this._updateFrames();
     this.materialCache.update(this.input.canvasSize);
 
-    this.labels.startFrame(currentTime);
     this.frameAxes.startFrame(currentTime);
     this.occupancyGrids.startFrame(currentTime);
     this.pointClouds.startFrame(currentTime);
