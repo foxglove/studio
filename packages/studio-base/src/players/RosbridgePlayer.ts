@@ -582,9 +582,36 @@ export default class RosbridgePlayer implements Player {
     publisher.publish(msg);
   }
 
-  async callService(_request: ServiceCall): ServiceCallResult {
-    // TODO: They definitely should be supported
-    throw new Error("Service calls are not supported by this data source");
+  async callService({ service, request }: ServiceCall): ServiceCallResult {
+    if (!this._rosClient) {
+      throw new Error("Not connected");
+    }
+
+    // Query the type name for this service.
+    // TODO: Add memoization so that we are not doing a lookup every time.
+    const serviceType = await new Promise<string>((resolve, reject) => {
+      this._rosClient!.getServiceType(
+        service,
+        (type: string) => resolve(type),
+        (error: Error) => reject(error),
+      );
+    });
+
+    // Create a proxy object for dispatching our service call
+    const proxy = new roslib.Service({
+      ros: this._rosClient,
+      name: service,
+      serviceType,
+    });
+
+    // Send the service request
+    return await new Promise<Record<string, unknown>>((resolve, reject) => {
+      proxy.callService(
+        request,
+        (response: Record<string, unknown>) => resolve(response),
+        (error: Error) => reject(error),
+      );
+    });
   }
 
   // Bunch of unsupported stuff. Just don't do anything for these.
