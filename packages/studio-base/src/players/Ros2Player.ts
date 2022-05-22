@@ -28,6 +28,8 @@ import {
   SubscribePayload,
   Topic,
   TopicStats,
+  ServiceCall,
+  ServiceCallResult,
 } from "@foxglove/studio-base/players/types";
 import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
 import rosDatatypesToMessageDefinition from "@foxglove/studio-base/util/rosDatatypesToMessageDefinition";
@@ -601,6 +603,11 @@ export default class Ros2Player implements Player {
     //     });
     //   }
     // }
+  }
+
+  async callService(_request: ServiceCall): ServiceCallResult {
+    // TODO: They definitely should be supported
+    throw new Error("Service calls are not supported by this data source");
   }
 
   // Bunch of unsupported stuff. Just don't do anything for these.

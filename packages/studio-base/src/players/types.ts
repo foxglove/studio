@@ -59,6 +59,8 @@ export interface Player {
   // If the Player supports publishing (i.e. PlayerState#capabilities contains
   // PlayerCapabilities.advertise), publish a message.
   publish(request: PublishPayload): void;
+  // Make a service call. Available if `capabilities` contains PlayerCapabilities.callServices),
+  callService(request: ServiceCall): ServiceCallResult;
   // Basic playback controls. Available if `capabilities` contains PlayerCapabilities.playbackControl.
   startPlayback?(): void;
   pausePlayback?(): void;
@@ -292,10 +294,19 @@ export type AdvertiseOptions = {
 // The actual message to publish.
 export type PublishPayload = { topic: string; msg: Record<string, unknown> };
 
+// A service call with arguments.
+export type ServiceCall = { service: string; request: Record<string, unknown> };
+
+// FIXME: Maybe use Response instead of Result for consistency?
+export type ServiceCallResult = Promise<Record<string, unknown>>;
+
 // Capabilities that are not shared by all players.
 export const PlayerCapabilities = {
   // Publishing messages. Need to be connected to some sort of live robotics system (e.g. ROS).
   advertise: "advertise",
+
+  // Calling ROS services
+  callServices: "callServices",
 
   // Setting speed to something that is not real time.
   setSpeed: "setSpeed",

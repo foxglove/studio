@@ -35,6 +35,8 @@ import {
   PlayerPresence,
   PlayerMetricsCollectorInterface,
   TopicStats,
+  ServiceCall,
+  ServiceCallResult,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { bagConnectionsToDatatypes } from "@foxglove/studio-base/util/bagConnectionsHelper";
@@ -578,6 +580,11 @@ export default class RosbridgePlayer implements Player {
       );
     }
     publisher.publish(msg);
+  }
+
+  async callService(_request: ServiceCall): ServiceCallResult {
+    // TODO: They definitely should be supported
+    throw new Error("Service calls are not supported by this data source");
   }
 
   // Bunch of unsupported stuff. Just don't do anything for these.

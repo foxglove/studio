@@ -31,6 +31,8 @@ import {
   Topic,
   PlayerURLState,
   TopicStats,
+  ServiceCall,
+  ServiceCallResult,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import naturalSort from "@foxglove/studio-base/util/naturalSort";
@@ -50,6 +52,7 @@ export default function MockMessagePipelineProvider(props: {
   messages?: MessageEvent<unknown>[];
   problems?: PlayerProblem[];
   publish?: (request: PublishPayload) => void;
+  callService?: (request: ServiceCall) => ServiceCallResult;
   setPublishers?: (arg0: string, arg1: AdvertiseOptions[]) => void;
   setSubscriptions?: (arg0: string, arg1: SubscribePayload[]) => void;
   setParameter?: (key: string, value: ParameterValue) => void;
@@ -190,6 +193,7 @@ export default function MockMessagePipelineProvider(props: {
         setPublishers: props.setPublishers ?? noop,
         setParameter: props.setParameter ?? noop,
         publish: props.publish ?? noop,
+        callService: props.callService ?? (async () => await Promise.reject()),
         startPlayback: props.startPlayback ?? noop,
         pausePlayback: props.pausePlayback ?? noop,
         setPlaybackSpeed: noop,

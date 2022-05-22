@@ -35,6 +35,8 @@ import {
   PlayerCapabilities,
   MessageBlock,
   TopicStats,
+  ServiceCall,
+  ServiceCallResult,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import delay from "@foxglove/studio-base/util/delay";
@@ -283,6 +285,10 @@ export class IterablePlayer implements Player {
 
   publish(_payload: PublishPayload): void {
     throw new Error("Publishing is not supported by this data source");
+  }
+
+  async callService(_request: ServiceCall): ServiceCallResult {
+    throw new Error("Service calls are not supported by this data source");
   }
 
   close(): void {

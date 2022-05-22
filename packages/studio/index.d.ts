@@ -223,6 +223,15 @@ declare module "@foxglove/studio" {
     publish?(topic: string, message: unknown): void;
 
     /**
+     * Call a service.
+     *
+     * @param service The name of the service to call
+     * @param request The service request
+     * @returns A promise that will be resolved when the result is available
+     */
+    callService?(service: string, request: unknown): Promise<unknown>;
+
+    /**
      * Process render events for the panel. Each render event receives a render state and a done callback.
      * Render events occur frequently (60hz, 30hz, etc).
      *
