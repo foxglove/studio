@@ -74,6 +74,7 @@ import { useWorkspace, WorkspaceContext } from "@foxglove/studio-base/context/Wo
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import useAddPanel from "@foxglove/studio-base/hooks/useAddPanel";
 import { useCalloutDismissalBlocker } from "@foxglove/studio-base/hooks/useCalloutDismissalBlocker";
+import { useDefaultWebLaunchPreference } from "@foxglove/studio-base/hooks/useDefaultWebLaunchPreference";
 import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFilesToOpen";
 import { useInitialDeepLinkState } from "@foxglove/studio-base/hooks/useInitialDeepLinkState";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
@@ -148,6 +149,8 @@ type WorkspaceProps = {
   deepLinks?: string[];
 };
 
+const DEFAULT_DEEPLINKS = Object.freeze([]);
+
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 const selectRequestBackfill = ({ requestBackfill }: MessagePipelineContext) => requestBackfill;
 const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
@@ -189,7 +192,9 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const { currentUser } = useCurrentUser();
 
-  const { currentUserRequired } = useInitialDeepLinkState(props.deepLinks ?? []);
+  const { currentUserRequired } = useInitialDeepLinkState(props.deepLinks ?? DEFAULT_DEEPLINKS);
+
+  useDefaultWebLaunchPreference();
 
   const [showOpenDialogOnStartup = true] = useAppConfigurationValue<boolean>(
     AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,

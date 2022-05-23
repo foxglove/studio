@@ -5,7 +5,6 @@
 import { useEffect, useMemo, useState } from "react";
 
 import Log from "@foxglove/log";
-import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import {
   MessagePipelineContext,
   useMessagePipeline,
@@ -13,15 +12,11 @@ import {
 import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { usePlayerSelection } from "@foxglove/studio-base/context/PlayerSelectionContext";
-import useDeepMemo from "@foxglove/studio-base/hooks/useDeepMemo";
-import { useSessionStorageValue } from "@foxglove/studio-base/hooks/useSessionStorageValue";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
 import { parseAppURLState } from "@foxglove/studio-base/util/appURLState";
-import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 const selectPlayerPresence = (ctx: MessagePipelineContext) => ctx.playerState.presence;
 const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
-const selectUrlState = (ctx: MessagePipelineContext) => ctx.playerState.urlState;
 
 const log = Log.getLogger(__filename);
 
@@ -31,12 +26,9 @@ const log = Log.getLogger(__filename);
 export function useInitialDeepLinkState(deepLinks: readonly string[]): {
   currentUserRequired: boolean;
 } {
-  const stableUrlState = useDeepMemo(useMessagePipeline(selectUrlState));
   const { selectSource } = usePlayerSelection();
   const { setSelectedLayoutId } = useCurrentLayoutActions();
-  const [launchPreference, setLaunchPreference] = useSessionStorageValue(
-    AppSetting.LAUNCH_PREFERENCE,
-  );
+
   const seekPlayback = useMessagePipeline(selectSeek);
   const playerPresence = useMessagePipeline(selectPlayerPresence);
   const { currentUser } = useCurrentUser();
@@ -54,19 +46,6 @@ export function useInitialDeepLinkState(deepLinks: readonly string[]): {
   const [unappliedUrlState, setUnappliedUrlState] = useState(
     targetUrlState ? { ...targetUrlState } : undefined,
   );
-
-  // Set a sessionStorage preference for web if we have a stable URL state.
-  // This allows us to avoid asking for the preference immediately on
-  // launch of an empty session and makes refreshes do the right thing.
-  useEffect(() => {
-    if (isDesktopApp()) {
-      return;
-    }
-
-    if (stableUrlState && !launchPreference) {
-      setLaunchPreference("web");
-    }
-  }, [launchPreference, setLaunchPreference, stableUrlState]);
 
   // Load data source from URL.
   useEffect(() => {
@@ -96,15 +75,9 @@ export function useInitialDeepLinkState(deepLinks: readonly string[]): {
       return;
     }
 
-    // Wait for current user session if one is required for this source.
-    if (currentUserRequired && !currentUser) {
-      return;
-    }
-
-    // If we have a target DS then wait until the player has loaded until
-    // we try to select the layout. This also handles the case where the
-    // data source requires a logged in user since the player won't start
-    // until we have a current user.
+    // If we have a target datasource then wait until the player has loaded to select the layout.
+    // This also handles the case where the datasource requires a logged in user
+    // since the player won't start until we have a current user.
     if (targetUrlState?.ds && playerPresence !== PlayerPresence.PRESENT) {
       return;
     }
@@ -114,14 +87,7 @@ export function useInitialDeepLinkState(deepLinks: readonly string[]): {
       setSelectedLayoutId(unappliedUrlState.layoutId);
       setUnappliedUrlState((oldState) => ({ ...oldState, layoutId: undefined }));
     }
-  }, [
-    currentUser,
-    currentUserRequired,
-    playerPresence,
-    setSelectedLayoutId,
-    targetUrlState,
-    unappliedUrlState,
-  ]);
+  }, [playerPresence, setSelectedLayoutId, targetUrlState, unappliedUrlState]);
 
   // Seek to time in URL.
   useEffect(() => {

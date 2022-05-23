@@ -106,7 +106,10 @@ describe("Initial deep link state", () => {
   });
 
   it("waits for a current user to select a data platform source", () => {
-    const { result, rerender } = renderHook<WrapperProps, { currentUserRequired: boolean }>(
+    const { result, rerender } = renderHook<
+      WrapperProps,
+      ReturnType<typeof useInitialDeepLinkState>
+    >(
       () =>
         useInitialDeepLinkState([
           "https://studio.foxglove.dev/?ds=foxglove-data-platform&ds.deviceId=dev&layoutId=12345",
