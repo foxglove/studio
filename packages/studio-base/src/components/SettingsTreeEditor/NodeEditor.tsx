@@ -34,16 +34,17 @@ const NodeHeader = muiStyled("div")(({ theme }) => {
     gridColumn: "span 2",
     paddingRight: theme.spacing(1.5),
 
-    ".MuiCheckbox-root": {
-      visibility: "hidden",
-    },
-
-    "&:hover": {
-      outline: `1px solid ${theme.palette.primary.main}`,
-      outlineOffset: -1,
-
+    "@media (pointer: fine)": {
       ".MuiCheckbox-root": {
-        visibility: "visible",
+        visibility: "hidden",
+      },
+      "&:hover": {
+        outline: `1px solid ${theme.palette.primary.main}`,
+        outlineOffset: -1,
+
+        ".MuiCheckbox-root": {
+          visibility: "visible",
+        },
       },
     },
   };
