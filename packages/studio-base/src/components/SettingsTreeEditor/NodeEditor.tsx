@@ -142,31 +142,24 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     );
   });
 
-  const IconComponent =
-    settings.icon != undefined
-      ? icons[settings.icon] // if the icon is a custom icon, use it
-      : childNodes.length > 0
-      ? open // if there are children, use the folder icon
-        ? icons.FolderOpen
-        : icons.Folder
-      : open // if there are no children, use the note icon
-      ? icons.Note
-      : icons.NoteFilled;
+  const IconComponent = icons[settings.icon]; // if the icon is a custom icon, use it
 
   return (
     <>
       <NodeHeader>
         <NodeHeaderToggle indent={indent} onClick={() => setOpen(!open)} visible={visible}>
           {hasProperties && <ExpansionArrow expanded={open} />}
-          <IconComponent
-            fontSize="small"
-            color="inherit"
-            style={{
-              marginRight: theme.spacing(0.5),
-              marginLeft: theme.spacing(-0.75),
-              opacity: 0.8,
-            }}
-          />
+          {settings.icon != undefined && (
+            <IconComponent
+              fontSize="small"
+              color="inherit"
+              style={{
+                marginRight: theme.spacing(0.5),
+                marginLeft: theme.spacing(-0.75),
+                opacity: 0.8,
+              }}
+            />
+          )}
           <Typography
             noWrap={true}
             variant="subtitle2"
@@ -181,7 +174,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
           <IconButton style={{ visibility: "hidden" }}>
             <ArrowDownIcon fontSize="small" color="inherit" />
           </IconButton>
-          {settings.actions && (
+          {settings.actions != undefined && (
             <NodeActionsMenu actions={settings.actions} onSelectAction={handleNodeAction} />
           )}
           {settings.visible != undefined && (
