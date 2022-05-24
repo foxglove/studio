@@ -68,7 +68,7 @@ const NodeHeaderToggle = muiStyled("div", {
     alignItems: "center",
     cursor: "pointer",
     gridTemplateColumns: "auto 1fr auto",
-    marginLeft: theme.spacing(0.5 + 2 * indent),
+    marginLeft: theme.spacing(0.75 + 2 * indent),
     opacity: visible ? 1 : 0.6,
     position: "relative",
     userSelect: "none",
@@ -83,7 +83,7 @@ const IconWrapper = muiStyled("div")({
   justifyContent: "center",
   top: "50%",
   left: 0,
-  transform: "translate(-95%, -50%)",
+  transform: "translate(-97.5%, -50%)",
 });
 
 function ExpansionArrow({ expanded }: { expanded: boolean }): JSX.Element {
