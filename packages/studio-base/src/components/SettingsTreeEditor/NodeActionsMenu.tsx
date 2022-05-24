@@ -31,6 +31,7 @@ export function NodeActionsMenu({
   return (
     <>
       <IconButton
+        title="More actions"
         id="node-actions-button"
         aria-controls={open ? "noce-actions-menu" : undefined}
         aria-haspopup="true"
