@@ -68,7 +68,7 @@ const NodeHeaderToggle = muiStyled("div", {
     alignItems: "center",
     cursor: "pointer",
     gridTemplateColumns: "auto 1fr auto",
-    marginLeft: theme.spacing(1.5 + 2 * indent),
+    marginLeft: theme.spacing(0.5 + 2 * indent),
     opacity: visible ? 1 : 0.6,
     position: "relative",
     userSelect: "none",
@@ -83,7 +83,7 @@ const IconWrapper = muiStyled("div")({
   justifyContent: "center",
   top: "50%",
   left: 0,
-  transform: "translate(-125%, -50%)",
+  transform: "translate(-95%, -50%)",
 });
 
 function ExpansionArrow({ expanded }: { expanded: boolean }): JSX.Element {
@@ -142,20 +142,19 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     );
   });
 
-  const IconComponent = icons[settings.icon]; // if the icon is a custom icon, use it
+  const IconComponent = settings.icon ? icons[settings.icon] : undefined;
 
   return (
     <>
       <NodeHeader>
         <NodeHeaderToggle indent={indent} onClick={() => setOpen(!open)} visible={visible}>
           {hasProperties && <ExpansionArrow expanded={open} />}
-          {settings.icon != undefined && (
+          {IconComponent && (
             <IconComponent
               fontSize="small"
               color="inherit"
               style={{
                 marginRight: theme.spacing(0.5),
-                marginLeft: theme.spacing(-0.75),
                 opacity: 0.8,
               }}
             />
