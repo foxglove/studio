@@ -35,7 +35,7 @@ export type NodeEditorProps = {
   updateSettings?: (path: readonly string[], value: unknown) => void;
 };
 
-export const NODE_HEADER_MIN_HEIGHT = 36;
+export const NODE_HEADER_MIN_HEIGHT = 35;
 
 const FieldPadding = muiStyled("div", { skipSx: true })(({ theme }) => ({
   gridColumn: "span 2",
