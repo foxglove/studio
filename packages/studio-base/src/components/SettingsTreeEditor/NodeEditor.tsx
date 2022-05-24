@@ -35,6 +35,8 @@ export type NodeEditorProps = {
   updateSettings?: (path: readonly string[], value: unknown) => void;
 };
 
+export const NODE_HEADER_MIN_HEIGHT = 36;
+
 const FieldPadding = muiStyled("div", { skipSx: true })(({ theme }) => ({
   gridColumn: "span 2",
   height: theme.spacing(0.5),
@@ -44,7 +46,8 @@ const NodeHeader = muiStyled("div")(({ theme }) => {
   return {
     display: "flex",
     gridColumn: "span 2",
-    paddingRight: theme.spacing(1.5),
+    paddingRight: theme.spacing(0.5),
+    minHeight: NODE_HEADER_MIN_HEIGHT,
 
     "@media (pointer: fine)": {
       ".MuiCheckbox-root": {
@@ -171,13 +174,8 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
           </Typography>
         </NodeHeaderToggle>
         <Stack alignItems="center" direction="row">
-          {/* this is just here to get consistent height */}
-          <IconButton style={{ visibility: "hidden" }}>
-            <ArrowDownIcon fontSize="small" color="inherit" />
-          </IconButton>
           {settings.visible != undefined && (
             <VisibilityToggle
-              edge="end"
               size="small"
               checked={visible}
               onChange={toggleVisibility}
@@ -191,9 +189,11 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
           {props.settings?.error && (
             <Tooltip
               arrow
-              title={<Typography variant="subtitle1">{props.settings.error}</Typography>}
+              title={<Typography variant="subtitle2">{props.settings.error}</Typography>}
             >
-              <ErrorIcon color="error" fontSize="small" />
+              <IconButton size="small" color="error">
+                <ErrorIcon fontSize="small" />
+              </IconButton>
             </Tooltip>
           )}
         </Stack>
