@@ -43,7 +43,6 @@ export default function PanelCatalogProvider(
       const PanelWrapper = (panelProps: PanelProps) => {
         return (
           <>
-            <PanelToolbar />
             <PanelExtensionAdapter
               config={panelProps.config}
               saveConfig={panelProps.saveConfig}
