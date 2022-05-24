@@ -4,11 +4,13 @@
 
 import ArrowDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
+import ErrorIcon from "@mui/icons-material/Error";
 import {
   Divider,
   IconButton,
   ListItemProps,
   styled as muiStyled,
+  Tooltip,
   Typography,
   useTheme,
 } from "@mui/material";
@@ -173,9 +175,6 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
           <IconButton style={{ visibility: "hidden" }}>
             <ArrowDownIcon fontSize="small" color="inherit" />
           </IconButton>
-          {settings.actions != undefined && (
-            <NodeActionsMenu actions={settings.actions} onSelectAction={handleNodeAction} />
-          )}
           {settings.visible != undefined && (
             <VisibilityToggle
               edge="end"
@@ -185,6 +184,17 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
               style={{ opacity: allowVisibilityToggle ? 1 : 0 }}
               disabled={!allowVisibilityToggle}
             />
+          )}
+          {settings.actions && (
+            <NodeActionsMenu actions={settings.actions} onSelectAction={handleNodeAction} />
+          )}
+          {props.settings?.error && (
+            <Tooltip
+              arrow
+              title={<Typography variant="subtitle1">{props.settings.error}</Typography>}
+            >
+              <ErrorIcon color="error" fontSize="small" />
+            </Tooltip>
           )}
         </Stack>
       </NodeHeader>
