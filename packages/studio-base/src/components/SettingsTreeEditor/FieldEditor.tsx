@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import ClearIcon from "@mui/icons-material/Clear";
-import ErrorIcon from "@mui/icons-material/ErrorOutline";
+import ErrorIcon from "@mui/icons-material/Error";
 import {
   Autocomplete,
   ToggleButton,
@@ -359,7 +359,7 @@ function FieldEditorComponent({
           <Tooltip
             arrow
             placement="top"
-            title={<Typography variant="subtitle1">{field.error}</Typography>}
+            title={<Typography variant="subtitle2">{field.error}</Typography>}
           >
             <ErrorIcon color="error" fontSize="small" />
           </Tooltip>
