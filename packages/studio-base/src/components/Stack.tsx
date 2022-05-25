@@ -14,6 +14,7 @@ const StackRoot = muiStyled("div", {
   display: "flex",
   flexDirection: ownerState.direction,
   flex: ownerState.flex,
+  flexBasis: ownerState.flexBasis,
   flexShrink: ownerState.flexShrink,
   flexGrow: ownerState.flexGrow,
   flexWrap: ownerState.flexWrap,
