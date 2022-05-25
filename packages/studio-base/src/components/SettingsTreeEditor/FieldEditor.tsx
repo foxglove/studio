@@ -92,12 +92,13 @@ const MultiLabelWrapper = muiStyled("div")(({ theme }) => ({
 const FieldWrapper = muiStyled("div", {
   shouldForwardProp: (prop) => prop !== "error",
 })<{ error: boolean }>(({ error, theme }) => ({
-  border: "1px solid transparent",
   marginRight: theme.spacing(1.25),
 
   ...(error && {
-    borderColor: theme.palette.error.main,
-    borderRadius: theme.shape.borderRadius,
+    ".MuiInputBase-root": {
+      outline: `1px ${theme.palette.error.main} solid`,
+      outlineOffset: -1,
+    },
   }),
 }));
 
