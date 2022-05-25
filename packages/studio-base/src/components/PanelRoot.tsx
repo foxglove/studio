@@ -7,13 +7,14 @@ import styled, { css } from "styled-components";
 
 import { spacing } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-export const FULLSCREEN_TRANSITION_DURATION_MS = 250;
+export const FULLSCREEN_TRANSITION_DURATION_MS = 200;
 
 // This is in a separate file to prevent circular import issues.
 export const PanelRoot = styled.div<{
   fullscreenState: TransitionStatus;
   selected: boolean;
   sourceRect: DOMRectReadOnly | undefined;
+  hasFullscreenDescendant: boolean;
 }>`
   display: flex;
   flex-direction: column;
@@ -23,7 +24,7 @@ export const PanelRoot = styled.div<{
   border: 0px solid rgba(110, 81, 238, 0.3);
   transition: border-width ${FULLSCREEN_TRANSITION_DURATION_MS}ms;
 
-  ${({ fullscreenState, sourceRect }) => {
+  ${({ fullscreenState, sourceRect, hasFullscreenDescendant }) => {
     switch (fullscreenState) {
       case "entering":
         return css`
@@ -68,6 +69,11 @@ export const PanelRoot = styled.div<{
           left: 0;
           right: 0;
           bottom: 0;
+          // "z-index: 1" makes panel drag & drop work more reliably (see
+          // https://github.com/foxglove/studio/pull/3355), but it also makes fullscreen panels get
+          // overlapped by other parts of the panel layout. So we turn it back to auto when a
+          // descendant is fullscreen.
+          z-index: ${hasFullscreenDescendant ? "auto" : 1};
         `;
       case "unmounted":
         return css``;

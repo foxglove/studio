@@ -251,9 +251,13 @@ export default function Panel<
     const [fullscreenSourceRect, setFullscreenSourceRect] = useState<DOMRect | undefined>(
       undefined,
     );
+    const [hasFullscreenDescendant, _setHasFullscreenDescendant] = useState(false);
     const panelRootRef = useRef<HTMLDivElement>(ReactNull);
     const panelCatalog = usePanelCatalog();
     const isTopLevelPanel = mosaicWindowActions.getPath().length === 0 && tabId == undefined;
+
+    // There may be a parent panel (when a panel is in a tab).
+    const parentPanelContext = useContext(PanelContext);
 
     const type = PanelComponent.panelType;
     const title = useMemo(
@@ -484,13 +488,26 @@ export default function Panel<
         enterFullscreen: () => {
           setFullscreenSourceRect(panelRootRef.current?.getBoundingClientRect());
           setFullscreen(true);
+
+          // When entering fullscreen for a panel within a tab, we need to adjust the ancestor
+          // tab(s)'s z-index to have our panel properly overlay other panels outside the tab.
+          parentPanelContext?.setHasFullscreenDescendant(true);
         },
         exitFullscreen: () => {
-          // don't clear fullscreenSourceRect, it is needed for the exit transition
+          // Don't clear fullscreenSourceRect or hasFullscreenDescendant, they are needed during the exit transition
           setFullscreen(false);
         },
       }),
-      [cmdKeyPressed],
+      [cmdKeyPressed, parentPanelContext],
+    );
+
+    const setHasFullscreenDescendant = useCallback(
+      // eslint-disable-next-line @foxglove/no-boolean-parameters
+      (value: boolean) => {
+        _setHasFullscreenDescendant(value);
+        parentPanelContext?.setHasFullscreenDescendant(value);
+      },
+      [parentPanelContext],
     );
 
     // We use two separate sets of key handlers because the panel context and exitFullScreen
@@ -596,6 +613,7 @@ export default function Panel<
             openSiblingPanel,
             enterFullscreen,
             exitFullscreen,
+            setHasFullscreenDescendant,
             isFullscreen: fullscreen,
             tabId,
             // disallow dragging the root panel in a layout
@@ -607,12 +625,14 @@ export default function Panel<
           <Transition
             in={fullscreen}
             timeout={{ exit: FULLSCREEN_TRANSITION_DURATION_MS }}
+            onExited={() => setHasFullscreenDescendant(false)}
             nodeRef={panelRootRef}
           >
             {(fullscreenState) => (
               <PanelRoot
                 onClick={onPanelRootClick}
                 onMouseMove={onMouseMove}
+                hasFullscreenDescendant={hasFullscreenDescendant}
                 fullscreenState={fullscreenState}
                 sourceRect={fullscreenSourceRect}
                 selected={isSelected}
