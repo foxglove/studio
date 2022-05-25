@@ -36,6 +36,7 @@ import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 import { ImageCanvas, ImageEmptyState, Toolbar, TopicDropdown, TopicTimestamp } from "./components";
 import { useCameraInfo, ANNOTATION_DATATYPES, useImagePanelMessages } from "./hooks";
 import helpContent from "./index.help.md";
+import { downloadImage } from "./lib/downloadImage";
 import { NORMALIZABLE_IMAGE_DATATYPES } from "./lib/normalizeMessage";
 import { getRelatedMarkerTopics, getMarkerOptions } from "./lib/util";
 import { buildSettingsTree } from "./settings";
@@ -282,6 +283,22 @@ function ImageView(props: Props) {
 
     return <BottomBar>{topicTimestamp}</BottomBar>;
   };
+  const wrapperRef = useRef<HTMLDivElement>(ReactNull);
+
+  const onDownloadImage = useCallback(async () => {
+    if (!imageMessageToRender || wrapperRef.current == undefined) {
+      return;
+    }
+
+    const topic = imageTopics.find((top) => top.name === cameraTopic);
+    if (!topic) {
+      return;
+    }
+
+    const rect = wrapperRef.current.getBoundingClientRect();
+
+    await downloadImage(imageMessageToRender, topic, rect.width, rect.height, config);
+  }, [imageTopics, cameraTopic, config, imageMessageToRender]);
 
   const imageTopicDropdown = useMemo(() => {
     const items = imageTopics.map((topic) => {
@@ -318,6 +335,7 @@ function ImageView(props: Props) {
         {/* Always render the ImageCanvas because it's expensive to unmount and start up. */}
         {imageMessageToRender && (
           <ImageCanvas
+            ref={wrapperRef}
             topic={cameraTopicFullObject}
             image={imageMessageToRender}
             rawMarkerData={rawMarkerData}
