@@ -35,28 +35,31 @@ function ExtensionListEntry(props: {
   entry: ExtensionMarketplaceDetail;
   onClick: () => void;
 }): JSX.Element {
-  const { entry } = props;
+  const {
+    entry: { id, description, name, publisher, version },
+    onClick,
+  } = props;
   return (
-    <ListItem disablePadding key={entry.id}>
-      <StyledListItemButton onClick={props.onClick}>
+    <ListItem disablePadding key={id}>
+      <StyledListItemButton onClick={onClick}>
         <ListItemText
           primary={
             <Stack direction="row" alignItems="baseline" gap={0.5}>
               <Typography variant="subtitle2" fontWeight={600}>
-                {entry.name}
+                {name}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {entry.version}
+                {version}
               </Typography>
             </Stack>
           }
           secondary={
             <Stack gap={0.5}>
               <Typography variant="body2" color="text.secondary">
-                {entry.description}
+                {description}
               </Typography>
               <Typography color="text.primary" variant="body2">
-                {entry.publisher}
+                {publisher}
               </Typography>
             </Stack>
           }
@@ -166,20 +169,19 @@ export default function ExtensionsSidebar(): React.ReactElement {
               Installed
             </Typography>
           </Stack>
-          {installedEntries.length > 0
-            ? installedEntries.map((entry) => (
-                <ExtensionListEntry
-                  key={entry.id}
-                  entry={entry}
-                  onClick={() =>
-                    setFocusedExtension({
-                      installed: true,
-                      entry,
-                    })
-                  }
-                />
-              ))
-            : "No installed extensions"}
+          {installedEntries.length > 0 ? (
+            installedEntries.map((entry) => (
+              <ExtensionListEntry
+                key={entry.id}
+                entry={entry}
+                onClick={() => setFocusedExtension({ installed: true, entry })}
+              />
+            ))
+          ) : (
+            <ListItem>
+              <ListItemText primary="No installed extensions" />
+            </ListItem>
+          )}
         </List>
         <List>
           <Stack paddingY={0.25} paddingX={2}>
@@ -191,12 +193,7 @@ export default function ExtensionsSidebar(): React.ReactElement {
             <ExtensionListEntry
               key={entry.id}
               entry={entry}
-              onClick={() =>
-                setFocusedExtension({
-                  installed: false,
-                  entry,
-                })
-              }
+              onClick={() => setFocusedExtension({ installed: false, entry })}
             />
           ))}
         </List>
