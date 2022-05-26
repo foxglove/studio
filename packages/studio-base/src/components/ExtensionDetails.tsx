@@ -37,7 +37,7 @@ type Props = {
 const StyledButton = muiStyled(Button)({ minWidth: 100 });
 
 export function ExtensionDetails({ extension, onClose, installed }: Props): React.ReactElement {
-  const [isInstalled, setIsInstalled] = useState<boolean>(installed);
+  const [isInstalled, setIsInstalled] = useState(installed);
   const [activeTab, setActiveTab] = useState<number>(0);
   const isMounted = useMountedState();
   const extensionLoader = useExtensionLoader();
