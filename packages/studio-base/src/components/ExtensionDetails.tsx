@@ -3,7 +3,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import { IconButton, Button, Link, Tab, Tabs, Typography, Divider } from "@mui/material";
+import {
+  IconButton,
+  Button,
+  Link,
+  Tab,
+  Tabs,
+  Typography,
+  Divider,
+  styled as muiStyled,
+} from "@mui/material";
 import { useCallback, useState } from "react";
 import { useToasts } from "react-toast-notifications";
 import { useAsync, useMountedState } from "react-use";
@@ -24,6 +33,8 @@ type Props = {
   extension: ExtensionMarketplaceDetail;
   onClose: () => void;
 };
+
+const StyledButton = muiStyled(Button)({ minWidth: 100 });
 
 export function ExtensionDetails({ extension, onClose, installed }: Props): React.ReactElement {
   const [isInstalled, setIsInstalled] = useState<boolean>(installed);
@@ -106,7 +117,7 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
           </Typography>
         </Stack>
         {isInstalled ? (
-          <Button
+          <StyledButton
             size="small"
             key="uninstall"
             color="inherit"
@@ -114,19 +125,18 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
             onClick={uninstall}
           >
             Uninstall
-          </Button>
+          </StyledButton>
         ) : (
           canInstall && (
-            <Button
+            <StyledButton
               size="small"
               key="install"
               color="inherit"
               variant="contained"
               onClick={install}
-              style={{ minWidth: "100px" }}
             >
               Install
-            </Button>
+            </StyledButton>
           )
         )}
       </Stack>
