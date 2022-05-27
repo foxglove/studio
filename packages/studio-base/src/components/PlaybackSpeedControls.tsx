@@ -4,11 +4,17 @@
 
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import CheckIcon from "@mui/icons-material/Check";
-import { Button, Menu, MenuItem, styled as muiStyled } from "@mui/material";
+import {
+  Button,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
+  styled as muiStyled,
+} from "@mui/material";
 import { useCallback, useEffect } from "react";
 
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
-import Stack from "@foxglove/studio-base/components/Stack";
 import {
   LayoutState,
   useCurrentLayoutActions,
@@ -85,7 +91,6 @@ export default function PlaybackSpeedControls(): JSX.Element {
         onClose={handleClose}
         MenuListProps={{
           "aria-labelledby": "basic-button",
-          dense: true,
         }}
         anchorOrigin={{
           vertical: "top",
@@ -105,12 +110,17 @@ export default function PlaybackSpeedControls(): JSX.Element {
               handleClose();
             }}
           >
-            {formatSpeed(option)}
             {displayedSpeed === option && (
-              <Stack paddingLeft={1}>
+              <ListItemIcon>
                 <CheckIcon fontSize="small" />
-              </Stack>
+              </ListItemIcon>
             )}
+            <ListItemText
+              inset={displayedSpeed !== option}
+              primaryTypographyProps={{ variant: "inherit", align: "right" }}
+            >
+              {formatSpeed(option)}
+            </ListItemText>
           </MenuItem>
         ))}
       </Menu>
