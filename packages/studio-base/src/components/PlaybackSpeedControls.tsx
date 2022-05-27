@@ -2,13 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import {
-  DefaultButton,
-  DirectionalHint,
-  IContextualMenuItem,
-  IMenuItemStyles,
-  useTheme,
-} from "@fluentui/react";
+import CheckIcon from "@mui/icons-material/Check";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { Button, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
 import { useCallback, useEffect } from "react";
 
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
@@ -20,16 +16,14 @@ import {
 
 const SPEED_OPTIONS = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 0.8, 1, 2, 3, 5];
 
-function formatSpeed(val: number) {
-  return `${val < 0.1 ? val.toFixed(2) : val}×`;
-}
+const formatSpeed = (val: number) => `${val < 0.1 ? val.toFixed(2) : val}×`;
 
 const configSpeedSelector = (state: LayoutState) =>
   state.selectedLayout?.data?.playbackConfig.speed;
 
 export default function PlaybackSpeedControls(): JSX.Element {
-  const theme = useTheme();
-
+  const [anchorEl, setAnchorEl] = React.useState<undefined | HTMLElement>(undefined);
+  const open = Boolean(anchorEl);
   const configSpeed = useCurrentLayoutSelector(configSpeedSelector);
   const speed = useMessagePipeline(
     useCallback(({ playerState }) => playerState.activeData?.speed, []),
@@ -44,6 +38,14 @@ export default function PlaybackSpeedControls(): JSX.Element {
     [setPlaybackConfig, setPlaybackSpeed],
   );
 
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(undefined);
+  };
+
   // Set the speed to the speed that we got from the config whenever we get a new Player.
   useEffect(() => {
     if (configSpeed != undefined) {
@@ -54,54 +56,53 @@ export default function PlaybackSpeedControls(): JSX.Element {
   const displayedSpeed = speed ?? configSpeed;
 
   return (
-    <DefaultButton
-      data-test="PlaybackSpeedControls-Dropdown"
-      disabled={setPlaybackSpeed == undefined}
-      menuProps={{
-        calloutProps: {
-          calloutMaxWidth: 80,
-        },
-        directionalHint: DirectionalHint.topLeftEdge,
-        directionalHintFixed: true,
-        gapSpace: 3,
-        items: SPEED_OPTIONS.map(
-          (option: number): IContextualMenuItem => ({
-            canCheck: true,
-            key: `${option}`,
-            text: formatSpeed(option),
-            isChecked: displayedSpeed === option,
-            onClick: () => setSpeed(option),
-          }),
-        ),
-        styles: {
-          subComponentStyles: {
-            menuItem: {
-              label: { fontSize: theme.fonts.small.fontSize },
-              // Reach into the component styles to remove the effects of global.scss
-              root: { margin: 0, borderRadius: 0 },
-              checkmarkIcon: { "& svg": { marginTop: "-2px" } },
-            } as Partial<IMenuItemStyles>,
-          },
-        },
-      }}
-      styles={{
-        root: {
-          background: theme.semanticColors.buttonBackgroundHovered,
-          border: "none",
-          padding: theme.spacing.s1,
-          margin: 0, // Remove this once global.scss has gone away
-          minWidth: "60px",
-        },
-        rootHovered: {
-          background: theme.semanticColors.buttonBackgroundPressed,
-        },
-        label: theme.fonts.small,
-        menuIcon: {
-          fontSize: theme.fonts.tiny.fontSize,
-        },
-      }}
-    >
-      {displayedSpeed == undefined ? "–" : formatSpeed(displayedSpeed)}
-    </DefaultButton>
+    <>
+      <Button
+        id="playback-speed-button"
+        aria-controls={open ? "playback-speed-menu" : undefined}
+        aria-haspopup="true"
+        aria-expanded={open ? "true" : undefined}
+        onClick={handleClick}
+        data-test="PlaybackSpeedControls-Dropdown"
+        disabled={setPlaybackSpeed == undefined}
+        disableRipple
+        variant="contained"
+        color="inherit"
+        endIcon={<ExpandMoreIcon />}
+      >
+        {displayedSpeed == undefined ? "–" : formatSpeed(displayedSpeed)}
+      </Button>
+      <Menu
+        id="playback-speed-menu"
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        MenuListProps={{
+          "aria-labelledby": "basic-button",
+        }}
+        anchorOrigin={{
+          vertical: "top",
+          horizontal: "left",
+        }}
+      >
+        {SPEED_OPTIONS.map((option) => (
+          <MenuItem
+            selected={displayedSpeed === option}
+            key={option}
+            onClick={() => {
+              setSpeed(option);
+              handleClose();
+            }}
+          >
+            {displayedSpeed === option && (
+              <ListItemIcon>
+                <CheckIcon />
+              </ListItemIcon>
+            )}
+            <ListItemText inset={displayedSpeed !== option}>{formatSpeed(option)}</ListItemText>
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
   );
 }
