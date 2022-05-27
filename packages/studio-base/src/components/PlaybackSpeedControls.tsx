@@ -2,12 +2,13 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import CheckIcon from "@mui/icons-material/Check";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { Button, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
+import { Button, Menu, MenuItem, styled as muiStyled } from "@mui/material";
 import { useCallback, useEffect } from "react";
 
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
+import Stack from "@foxglove/studio-base/components/Stack";
 import {
   LayoutState,
   useCurrentLayoutActions,
@@ -20,6 +21,11 @@ const formatSpeed = (val: number) => `${val < 0.1 ? val.toFixed(2) : val}×`;
 
 const configSpeedSelector = (state: LayoutState) =>
   state.selectedLayout?.data?.playbackConfig.speed;
+
+const StyledButton = muiStyled(Button)(({ theme }) => ({
+  paddingTop: theme.spacing(1),
+  paddingBottom: theme.spacing(1),
+}));
 
 export default function PlaybackSpeedControls(): JSX.Element {
   const [anchorEl, setAnchorEl] = React.useState<undefined | HTMLElement>(undefined);
@@ -57,7 +63,7 @@ export default function PlaybackSpeedControls(): JSX.Element {
 
   return (
     <>
-      <Button
+      <StyledButton
         id="playback-speed-button"
         aria-controls={open ? "playback-speed-menu" : undefined}
         aria-haspopup="true"
@@ -68,10 +74,10 @@ export default function PlaybackSpeedControls(): JSX.Element {
         disableRipple
         variant="contained"
         color="inherit"
-        endIcon={<ExpandMoreIcon />}
+        endIcon={<ArrowDropDownIcon />}
       >
         {displayedSpeed == undefined ? "–" : formatSpeed(displayedSpeed)}
-      </Button>
+      </StyledButton>
       <Menu
         id="playback-speed-menu"
         anchorEl={anchorEl}
@@ -79,9 +85,14 @@ export default function PlaybackSpeedControls(): JSX.Element {
         onClose={handleClose}
         MenuListProps={{
           "aria-labelledby": "basic-button",
+          dense: true,
         }}
         anchorOrigin={{
           vertical: "top",
+          horizontal: "left",
+        }}
+        transformOrigin={{
+          vertical: "bottom",
           horizontal: "left",
         }}
       >
@@ -94,12 +105,12 @@ export default function PlaybackSpeedControls(): JSX.Element {
               handleClose();
             }}
           >
+            {formatSpeed(option)}
             {displayedSpeed === option && (
-              <ListItemIcon>
-                <CheckIcon />
-              </ListItemIcon>
+              <Stack paddingLeft={1}>
+                <CheckIcon fontSize="small" />
+              </Stack>
             )}
-            <ListItemText inset={displayedSpeed !== option}>{formatSpeed(option)}</ListItemText>
           </MenuItem>
         ))}
       </Menu>

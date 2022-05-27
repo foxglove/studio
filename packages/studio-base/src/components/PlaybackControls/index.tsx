@@ -195,8 +195,8 @@ export default function PlaybackControls({
           {enableMessageOrdering && <MessageOrderControls />}
           <PlaybackSpeedControls />
         </Stack>
-        <Stack direction="row" alignItems="center" flex={1} gap={1} paddingX={0.5}>
-          <Stack direction="row" alignItems="center" gap={0.5}>
+        <Stack direction="row" alignItems="center" flex={1} gap={1}>
+          <Stack direction="row" alignItems="center" gap={1}>
             <HoverableIconButton
               title="Loop playback"
               color={repeat ? "primary" : "inherit"}
