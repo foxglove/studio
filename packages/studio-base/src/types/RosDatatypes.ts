@@ -14,9 +14,9 @@
 import { RosMsgDefinition, RosMsgField } from "@foxglove/rosmsg";
 
 /**
- * Extend the standard ROS message definition with an optional flag.
+ * Extend the standard ROS message definition with a required flag.
  */
-type OptionalRosMsgField = RosMsgField & { optional?: boolean };
+type OptionalRosMsgField = RosMsgField & { required?: boolean };
 
 export type OptionalRosMsgDefinition = RosMsgDefinition & {
   definitions: OptionalRosMsgField[];
