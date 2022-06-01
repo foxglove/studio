@@ -17,6 +17,7 @@ import cx from "classnames";
 import produce from "immer";
 import { difference, set, union } from "lodash";
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useUpdateEffect } from "react-use";
 
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
@@ -228,6 +229,10 @@ function ImageView(props: Props) {
   // Keep the last image message, if it exists, to render on the ImageCanvas.
   // Improve perf by hiding the ImageCanvas while seeking, instead of unmounting and remounting it.
   const imageMessageToRender = image ?? lastImageMessageRef.current;
+
+  useUpdateEffect(() => {
+    lastImageMessageRef.current = undefined;
+  }, [cameraTopic]);
 
   const pauseFrame = useMessagePipeline(
     useCallback((messagePipeline) => messagePipeline.pauseFrame, []),
