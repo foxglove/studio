@@ -38,16 +38,19 @@ type PlaybackTimeDisplayMethodProps = {
   isPlaying: boolean;
 };
 
-const StyledTextField = muiStyled(TextField)(({ error, theme }) => ({
+const StyledTextField = muiStyled(TextField)<{ error?: boolean }>(({ error, theme }) => ({
   fontFeatureSettings: `${fonts.SANS_SERIF_FEATURE_SETTINGS}, 'zero'`,
   borderRadius: theme.shape.borderRadius,
 
+  ".MuiInputBase-input": {
+    minWidth: "20ch",
+  },
   ".MuiIconButton-root": {
     borderTopLeftRadius: 0,
     borderBottomLeftRadius: 0,
     borderLeft: `1px solid ${theme.palette.background.paper}`,
   },
-  ...(error != undefined && {
+  ...(error === true && {
     outline: `1px solid ${theme.palette.error.main}`,
   }),
 }));
@@ -151,7 +154,7 @@ export default function PlaybackTimeDisplayMethod({
   );
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [inputText, setInputText] = useState<string | undefined>(currentTimeString ?? undefined);
-  const [hasError, setHasError] = useState<boolean>(true);
+  const [hasError, setHasError] = useState<boolean>(false);
 
   const onSubmit = useCallback(
     (e: React.FormEvent) => {

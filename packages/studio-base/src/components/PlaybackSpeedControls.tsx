@@ -12,7 +12,7 @@ import {
   MenuItem,
   styled as muiStyled,
 } from "@mui/material";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import {
@@ -34,7 +34,7 @@ const StyledButton = muiStyled(Button)(({ theme }) => ({
 }));
 
 export default function PlaybackSpeedControls(): JSX.Element {
-  const [anchorEl, setAnchorEl] = React.useState<undefined | HTMLElement>(undefined);
+  const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const open = Boolean(anchorEl);
   const configSpeed = useCurrentLayoutSelector(configSpeedSelector);
   const speed = useMessagePipeline(
@@ -90,7 +90,7 @@ export default function PlaybackSpeedControls(): JSX.Element {
         open={open}
         onClose={handleClose}
         MenuListProps={{
-          "aria-labelledby": "basic-button",
+          "aria-labelledby": "playback-speed-button",
         }}
         anchorOrigin={{
           vertical: "top",
