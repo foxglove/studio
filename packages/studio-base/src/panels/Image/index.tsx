@@ -285,7 +285,7 @@ function ImageView(props: Props) {
     return <TopicDropdown multiple={false} title={title} items={items} onChange={onChange} />;
   }, [cameraTopic, allImageTopics, onChangeCameraTopic]);
 
-  const showEmptyState = !image;
+  const showEmptyState = !imageMessageToRender;
 
   return (
     <Stack flex="auto" overflow="hidden" position="relative">
