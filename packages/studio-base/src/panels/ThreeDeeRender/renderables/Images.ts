@@ -251,7 +251,7 @@ export class Images extends THREE.Object3D {
               THREE.ClampToEdgeWrapping,
               THREE.NearestFilter,
               THREE.LinearMipmapLinearFilter,
-              THREE.RGBFormat,
+              THREE.RGBAFormat,
               THREE.UnsignedByteType,
             );
             texture.encoding = THREE.sRGBEncoding;
