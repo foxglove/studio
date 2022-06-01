@@ -2,11 +2,18 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { isNumber } from "lodash";
+
 import { SettingsTreeRoots } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 
 import { PlotConfig } from "./types";
 
 export function buildSettingsTree(config: PlotConfig): SettingsTreeRoots {
+  const maxYError =
+    isNumber(config.minYValue) && isNumber(config.maxYValue) && config.minYValue >= config.maxYValue
+      ? "Y max must be greater than Y min."
+      : undefined;
+
   return {
     general: {
       label: "General",
@@ -42,13 +49,14 @@ export function buildSettingsTree(config: PlotConfig): SettingsTreeRoots {
         minYValue: {
           label: "Y min",
           input: "number",
-          value: Number(config.minYValue),
+          value: config.minYValue != undefined ? Number(config.minYValue) : undefined,
           placeholder: "auto",
         },
         maxYValue: {
           label: "Y max",
           input: "number",
-          value: Number(config.maxYValue),
+          error: maxYError,
+          value: config.maxYValue != undefined ? Number(config.maxYValue) : undefined,
           placeholder: "auto",
         },
       },

@@ -104,6 +104,11 @@ export type SettingsTreeNode = {
   defaultExpansionState?: "collapsed" | "expanded";
 
   /**
+   * Optional message indicating any error state for the node.
+   */
+  error?: string;
+
+  /**
    * Field inputs attached directly to this node.
    */
   fields?: SettingsTreeFields;
@@ -171,4 +176,9 @@ export type SettingsTree = {
    * editor UI.
    */
   roots: SettingsTreeRoots;
+};
+
+// To be moved to PanelExtensionContext in index.d.ts when settings API is finalized.
+export type EXPERIMENTAL_PanelExtensionContextWithSettings = {
+  __updatePanelSettingsTree(settings: SettingsTree): void;
 };

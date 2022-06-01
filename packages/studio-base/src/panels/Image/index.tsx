@@ -11,12 +11,13 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Stack, Theme } from "@mui/material";
+import { Theme } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import cx from "classnames";
 import produce from "immer";
 import { difference, set, union } from "lodash";
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useUpdateEffect } from "react-use";
 
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
@@ -24,6 +25,7 @@ import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import { SettingsTreeAction } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import Stack from "@foxglove/studio-base/components/Stack";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
 import { CameraInfo } from "@foxglove/studio-base/types/Messages";
@@ -221,12 +223,21 @@ function ImageView(props: Props) {
   });
 
   const lastImageMessageRef = useRef(image);
-  if (image) {
-    lastImageMessageRef.current = image;
-  }
+
+  useEffect(() => {
+    if (image) {
+      lastImageMessageRef.current = image;
+    }
+  }, [image]);
+
   // Keep the last image message, if it exists, to render on the ImageCanvas.
   // Improve perf by hiding the ImageCanvas while seeking, instead of unmounting and remounting it.
   const imageMessageToRender = image ?? lastImageMessageRef.current;
+
+  // Clear our cached last image when the camera topic changes since it came from the old topic.
+  useUpdateEffect(() => {
+    lastImageMessageRef.current = undefined;
+  }, [cameraTopic]);
 
   const pauseFrame = useMessagePipeline(
     useCallback((messagePipeline) => messagePipeline.pauseFrame, []),
@@ -284,14 +295,14 @@ function ImageView(props: Props) {
     return <TopicDropdown multiple={false} title={title} items={items} onChange={onChange} />;
   }, [cameraTopic, allImageTopics, onChangeCameraTopic]);
 
-  const showEmptyState = !image;
+  const showEmptyState = !imageMessageToRender;
 
   return (
     <Stack flex="auto" overflow="hidden" position="relative">
       <PanelToolbar helpContent={helpContent}>
         <div className={classes.controls}>{imageTopicDropdown}</div>
       </PanelToolbar>
-      <Stack width="100%" height="100%">
+      <Stack fullWidth fullHeight>
         {/* Always render the ImageCanvas because it's expensive to unmount and start up. */}
         {imageMessageToRender && (
           <ImageCanvas

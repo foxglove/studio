@@ -4,11 +4,13 @@
 
 import ArrowDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
+import ErrorIcon from "@mui/icons-material/Error";
 import {
   Divider,
   IconButton,
   ListItemProps,
   styled as muiStyled,
+  Tooltip,
   Typography,
   useTheme,
 } from "@mui/material";
@@ -33,6 +35,8 @@ export type NodeEditorProps = {
   updateSettings?: (path: readonly string[], value: unknown) => void;
 };
 
+export const NODE_HEADER_MIN_HEIGHT = 35;
+
 const FieldPadding = muiStyled("div", { skipSx: true })(({ theme }) => ({
   gridColumn: "span 2",
   height: theme.spacing(0.5),
@@ -42,7 +46,8 @@ const NodeHeader = muiStyled("div")(({ theme }) => {
   return {
     display: "flex",
     gridColumn: "span 2",
-    paddingRight: theme.spacing(1.5),
+    paddingRight: theme.spacing(0.5),
+    minHeight: NODE_HEADER_MIN_HEIGHT,
 
     "@media (pointer: fine)": {
       ".MuiCheckbox-root": {
@@ -68,7 +73,7 @@ const NodeHeaderToggle = muiStyled("div", {
     alignItems: "center",
     cursor: "pointer",
     gridTemplateColumns: "auto 1fr auto",
-    marginLeft: theme.spacing(1.5 + 2 * indent),
+    marginLeft: theme.spacing(0.75 + 2 * indent),
     opacity: visible ? 1 : 0.6,
     position: "relative",
     userSelect: "none",
@@ -83,7 +88,7 @@ const IconWrapper = muiStyled("div")({
   justifyContent: "center",
   top: "50%",
   left: 0,
-  transform: "translate(-125%, -50%)",
+  transform: "translate(-97.5%, -50%)",
 });
 
 function ExpansionArrow({ expanded }: { expanded: boolean }): JSX.Element {
@@ -142,31 +147,23 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     );
   });
 
-  const IconComponent =
-    settings.icon != undefined
-      ? icons[settings.icon] // if the icon is a custom icon, use it
-      : childNodes.length > 0
-      ? open // if there are children, use the folder icon
-        ? icons.FolderOpen
-        : icons.Folder
-      : open // if there are no children, use the note icon
-      ? icons.Note
-      : icons.NoteFilled;
+  const IconComponent = settings.icon ? icons[settings.icon] : undefined;
 
   return (
     <>
       <NodeHeader>
         <NodeHeaderToggle indent={indent} onClick={() => setOpen(!open)} visible={visible}>
           {hasProperties && <ExpansionArrow expanded={open} />}
-          <IconComponent
-            fontSize="small"
-            color="inherit"
-            style={{
-              marginRight: theme.spacing(0.5),
-              marginLeft: theme.spacing(-0.75),
-              opacity: 0.8,
-            }}
-          />
+          {IconComponent && (
+            <IconComponent
+              fontSize="small"
+              color="inherit"
+              style={{
+                marginRight: theme.spacing(0.5),
+                opacity: 0.8,
+              }}
+            />
+          )}
           <Typography
             noWrap={true}
             variant="subtitle2"
@@ -177,22 +174,27 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
           </Typography>
         </NodeHeaderToggle>
         <Stack alignItems="center" direction="row">
-          {/* this is just here to get consistent height */}
-          <IconButton style={{ visibility: "hidden" }}>
-            <ArrowDownIcon fontSize="small" color="inherit" />
-          </IconButton>
-          {settings.actions && (
-            <NodeActionsMenu actions={settings.actions} onSelectAction={handleNodeAction} />
-          )}
           {settings.visible != undefined && (
             <VisibilityToggle
-              edge="end"
               size="small"
               checked={visible}
               onChange={toggleVisibility}
               style={{ opacity: allowVisibilityToggle ? 1 : 0 }}
               disabled={!allowVisibilityToggle}
             />
+          )}
+          {settings.actions && (
+            <NodeActionsMenu actions={settings.actions} onSelectAction={handleNodeAction} />
+          )}
+          {props.settings?.error && (
+            <Tooltip
+              arrow
+              title={<Typography variant="subtitle2">{props.settings.error}</Typography>}
+            >
+              <IconButton size="small" color="error">
+                <ErrorIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
           )}
         </Stack>
       </NodeHeader>

@@ -29,6 +29,7 @@ const BasicSettings: SettingsTreeRoots = {
     label: "General",
     icon: "Settings",
     visible: true,
+    error: "This topic has an error",
     actions: [
       { id: "add-grid", label: "Add new grid", icon: "Grid" },
       { id: "add-background", label: "Add new background", icon: "Background" },
@@ -55,6 +56,7 @@ const BasicSettings: SettingsTreeRoots = {
     label: "Complex Inputs",
     icon: "Hive",
     visible: true,
+    actions: [{ id: "action", label: "Action" }],
     fields: {
       messagepath: {
         label: "Message Path",
@@ -209,6 +211,62 @@ const PanelExamplesSettings: SettingsTreeRoots = {
       shaft_width: { label: "Shaft width", value: 1.5, input: "number" },
       head_length: { label: "Head length", value: 2, input: "number" },
       head_width: { label: "Head width", value: 2, input: "number" },
+    },
+  },
+};
+
+const IconExamplesSettings: SettingsTreeRoots = {
+  noIcon1: {
+    label: "No Icon",
+    fields: {
+      message_path: {
+        label: "Message path",
+        input: "string",
+        value: "/gps/fix",
+      },
+    },
+    children: {
+      child1: {
+        label: "Child 1",
+        fields: {
+          field1: { label: "Field 1", input: "string" },
+        },
+      },
+      child2: {
+        label: "Child 2",
+        icon: "Move",
+        fields: {
+          field1: { label: "Field 1", input: "string" },
+        },
+      },
+    },
+  },
+  grid: {
+    label: "Grid",
+    icon: "Grid",
+    fields: {
+      color: {
+        label: "Color",
+        value: "#248eff",
+        input: "rgb",
+      },
+    },
+  },
+  noIcon2: {
+    label: "No Icon2",
+    fields: {
+      message_path: {
+        label: "Message path",
+        input: "string",
+        value: "/gps/fix",
+      },
+    },
+  },
+  pose: {
+    label: "Pose",
+    icon: "Walk",
+    fields: {
+      color: { label: "Color", value: "#ffffff", input: "rgb" },
     },
   },
 };
@@ -459,6 +517,10 @@ export function Basics(): JSX.Element {
 
 export function PanelExamples(): JSX.Element {
   return <Wrapper roots={PanelExamplesSettings} />;
+}
+
+export function IconExamples(): JSX.Element {
+  return <Wrapper roots={IconExamplesSettings} />;
 }
 
 export function Topics(): JSX.Element {

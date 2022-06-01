@@ -331,7 +331,9 @@ export function ImageCanvas(props: Props): JSX.Element {
       finishRender();
     }
   }, [
-    config,
+    config.flipHorizontal,
+    config.flipVertical,
+    config.rotation,
     devicePixelRatio,
     doRenderImage,
     height,
@@ -495,6 +497,8 @@ export function ImageCanvas(props: Props): JSX.Element {
       .then((r) => {
         if (r?.marker) {
           props.setActivePixelData(r);
+        } else {
+          props.setActivePixelData(undefined);
         }
       });
   }
