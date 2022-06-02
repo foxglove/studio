@@ -99,11 +99,11 @@ function PlaybackTimeMethodMenu({
         }}
         anchorOrigin={{
           vertical: "top",
-          horizontal: "left",
+          horizontal: "right",
         }}
         transformOrigin={{
           vertical: "bottom",
-          horizontal: "left",
+          horizontal: "right",
         }}
       >
         {[
@@ -120,9 +120,11 @@ function PlaybackTimeMethodMenu({
                 <CheckIcon fontSize="small" />
               </ListItemIcon>
             )}
-            <ListItemText inset={timeFormat !== option.key} disableTypography>
-              {option.label}
-            </ListItemText>
+            <ListItemText
+              inset={timeFormat !== option.key}
+              primary={option.label}
+              primaryTypographyProps={{ variant: "body2" }}
+            />
           </MenuItem>
         ))}
       </Menu>

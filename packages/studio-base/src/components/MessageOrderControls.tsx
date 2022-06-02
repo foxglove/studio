@@ -101,9 +101,11 @@ export default function MessageOrderControls(): JSX.Element {
                 <CheckIcon fontSize="small" />
               </ListItemIcon>
             )}
-            <ListItemText inset={messageOrder !== key} disableTypography>
-              {label}
-            </ListItemText>
+            <ListItemText
+              inset={messageOrder !== key}
+              primary={label}
+              primaryTypographyProps={{ variant: "body2" }}
+            />
           </MenuItem>
         ))}
       </Menu>
