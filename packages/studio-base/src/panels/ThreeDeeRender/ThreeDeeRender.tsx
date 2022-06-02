@@ -428,6 +428,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         renderer.transformTree.getOrCreateFrame(frameId);
         log.debug(`Added coordinate frame "${frameId}"`);
         renderer.emit("transformTreeUpdated", renderer);
+        renderer.addCoordinateFrame(frameId);
       }
 
       if (TF_DATATYPES.has(datatype)) {

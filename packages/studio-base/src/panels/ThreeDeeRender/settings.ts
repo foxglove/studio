@@ -151,12 +151,12 @@ export type SettingsTreeOptions = {
 
 function buildTransformNode(
   tfConfigOrFrameId: string | Partial<LayerSettingsTransform>,
-  frameId: string,
+  frameDisplayName: string,
   settingsNodeProvider: SettingsNodeProvider,
 ): undefined | SettingsTreeNode {
   const tfConfig = typeof tfConfigOrFrameId === "string" ? {} : tfConfigOrFrameId;
   const node = settingsNodeProvider(tfConfig, EMPTY_TOPIC);
-  node.label ??= frameId;
+  node.label ??= frameDisplayName;
   node.visible ??= tfConfig.visible ?? true;
   node.defaultExpansionState ??= "collapsed";
   return node;
@@ -193,11 +193,11 @@ export function buildSettingsTree(options: SettingsTreeOptions): SettingsTreeRoo
   const transformsChildren: SettingsTreeChildren = {};
   const tfSettingsNodeProvider = settingsNodeProviders.get(LayerType.Transform);
   if (tfSettingsNodeProvider != undefined) {
-    for (const { value: frameId } of options.coordinateFrames) {
+    for (const { label: frameName, value: frameId } of options.coordinateFrames) {
       // We key our memoized function by the first argument. Since the config
       // may be undefined we use the config or the topic name
       const transformConfig = config.transforms[frameId] ?? frameId;
-      const newNode = memoBuildTransformNode(transformConfig, frameId, tfSettingsNodeProvider);
+      const newNode = memoBuildTransformNode(transformConfig, frameName, tfSettingsNodeProvider);
       if (newNode) {
         transformsChildren[frameId] = newNode;
       }

@@ -249,6 +249,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.frameAxes.addTransformMessage(tf);
   }
 
+  addCoordinateFrame(frameId: string): void {
+    this.frameAxes.addCoordinateFrame(frameId);
+  }
+
   setTransformSettings(frameId: string, settings: Partial<LayerSettingsTransform>): void {
     this.frameAxes.setTransformSettings(frameId, settings);
   }
