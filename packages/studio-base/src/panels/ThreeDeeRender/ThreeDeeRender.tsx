@@ -60,6 +60,7 @@ import {
   TF_DATATYPES,
   TF,
   TRANSFORM_STAMPED_DATATYPES,
+  Header,
 } from "./ros";
 import {
   buildSettingsTree,
@@ -419,6 +420,14 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       const datatype = topicsToDatatypes.get(message.topic);
       if (!datatype) {
         continue;
+      }
+
+      // If this message has a Header, scrape the frame_id from it
+      const frameId = (message.message as Partial<{ header: Header }>).header?.frame_id;
+      if (frameId != undefined && !renderer.transformTree.hasFrame(frameId)) {
+        renderer.transformTree.getOrCreateFrame(frameId);
+        log.debug(`Added coordinate frame "${frameId}"`);
+        renderer.emit("transformTreeUpdated", renderer);
       }
 
       if (TF_DATATYPES.has(datatype)) {
