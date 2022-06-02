@@ -117,7 +117,7 @@ export default function PlaybackSpeedControls(): JSX.Element {
             )}
             <ListItemText
               inset={displayedSpeed !== option}
-              primaryTypographyProps={{ variant: "inherit", align: "right" }}
+              primaryTypographyProps={{ variant: "inherit" }}
             >
               {formatSpeed(option)}
             </ListItemText>
