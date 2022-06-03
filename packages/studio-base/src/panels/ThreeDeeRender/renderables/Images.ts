@@ -7,6 +7,19 @@ import * as THREE from "three";
 import Logger from "@foxglove/log";
 import { SettingsTreeFields } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import PinholeCameraModel from "@foxglove/studio-base/panels/Image/lib/PinholeCameraModel";
+import {
+  decodeYUV,
+  decodeRGB8,
+  decodeRGBA8,
+  decodeBGR8,
+  decodeFloat1c,
+  decodeBayerRGGB8,
+  decodeBayerBGGR8,
+  decodeBayerGBRG8,
+  decodeBayerGRBG8,
+  decodeMono8,
+  decodeMono16,
+} from "@foxglove/studio-base/panels/Image/lib/decodings";
 import { MutablePoint } from "@foxglove/studio-base/types/Messages";
 
 import { Renderer } from "../Renderer";
@@ -42,6 +55,11 @@ type ImageRenderable = THREE.Object3D & {
     geometry: THREE.PlaneGeometry | undefined;
     mesh: THREE.Mesh | undefined;
   };
+};
+
+type RawImageOptions = {
+  minValue?: number;
+  maxValue?: number;
 };
 
 const tempColor = { r: 0, g: 0, b: 0, a: 0 };
@@ -238,11 +256,13 @@ export class Images extends THREE.Object3D {
     // Create or update the bitmap texture
     if ((image as Partial<CompressedImage>).format) {
       const compressed = image as CompressedImage;
-      createBitmap(compressed)
+      const bitmapData = new Blob([image.data], { type: `image/${compressed.format}` });
+      self
+        .createImageBitmap(bitmapData)
         .then((bitmap) => {
           if (renderable.userData.texture == undefined) {
             log.debug(
-              `Creating texture for ${bitmap.width}x${bitmap.height} camera image on "${topic}"`,
+              `Creating texture for ${bitmap.width}x${bitmap.height} "${compressed.format}" camera image on "${topic}"`,
             );
             const texture = new THREE.CanvasTexture(
               bitmap,
@@ -257,7 +277,7 @@ export class Images extends THREE.Object3D {
             texture.encoding = THREE.sRGBEncoding;
             renderable.userData.texture = texture;
             rebuildMaterial(renderable);
-            tryCreateMesh(renderable);
+            tryCreateMesh(renderable, this.renderer);
           } else {
             renderable.userData.texture.image = bitmap;
             renderable.userData.texture.needsUpdate = true;
@@ -274,9 +294,25 @@ export class Images extends THREE.Object3D {
         });
     } else {
       const raw = image as Image;
-      // switch (raw.encoding) {
-      // }
-      throw new Error(`Unhandled ${raw.width}x${raw.height} ${raw.encoding} image`);
+      const { width, height } = raw;
+      const prevTexture = renderable.userData.texture as THREE.DataTexture | undefined;
+      if (
+        prevTexture == undefined ||
+        prevTexture.image.width !== width ||
+        prevTexture.image.height !== height
+      ) {
+        prevTexture?.dispose();
+        log.debug(
+          `Creating data texture for ${width}x${height} "${raw.encoding}" camera image on "${topic}"`,
+        );
+        renderable.userData.texture = createTexture(width, height);
+        rebuildMaterial(renderable);
+        tryCreateMesh(renderable, this.renderer);
+      }
+
+      const texture = renderable.userData.texture as THREE.DataTexture;
+      rawImageToDataTexture(raw, {}, texture);
+      texture.needsUpdate = true;
     }
 
     // Create or update the material if needed
@@ -285,16 +321,17 @@ export class Images extends THREE.Object3D {
     }
 
     // Create/recreate the mesh if needed
-    tryCreateMesh(renderable);
+    tryCreateMesh(renderable, this.renderer);
   }
 }
 
-function tryCreateMesh(renderable: ImageRenderable): void {
+function tryCreateMesh(renderable: ImageRenderable, renderer: Renderer): void {
   const { topic, mesh, geometry, material } = renderable.userData;
   if (!mesh && geometry && material) {
     log.debug(`Building mesh for camera image on "${topic}"`);
     renderable.userData.mesh = new THREE.Mesh(geometry, renderable.userData.material);
     renderable.add(renderable.userData.mesh);
+    renderer.animationFrame();
   }
 }
 
@@ -311,10 +348,23 @@ function rebuildMaterial(renderable: ImageRenderable): void {
   }
 }
 
-async function createBitmap(image: CompressedImage): Promise<ImageBitmap> {
-  const bitmapData = new Blob([image.data], { type: `image/${image.format}` });
-  // eslint-disable-next-line @typescript-eslint/return-await
-  return self.createImageBitmap(bitmapData);
+function createTexture(width: number, height: number): THREE.DataTexture {
+  const size = width * height;
+  const rgba = new Uint8ClampedArray(size * 4);
+  return new THREE.DataTexture(
+    rgba,
+    width,
+    height,
+    THREE.RGBAFormat,
+    THREE.UnsignedByteType,
+    THREE.UVMapping,
+    THREE.ClampToEdgeWrapping,
+    THREE.ClampToEdgeWrapping,
+    THREE.NearestFilter,
+    THREE.LinearMipmapLinearFilter,
+    1,
+    THREE.sRGBEncoding,
+  );
 }
 
 function createMaterial(
@@ -336,23 +386,21 @@ function createMaterial(
 }
 
 function createGeometry(cameraModel: PinholeCameraModel, depth: number): THREE.PlaneGeometry {
+  const WIDTH_SEGMENTS = 10;
+  const HEIGHT_SEGMENTS = 10;
+
   const width = cameraModel.width;
   const height = cameraModel.height;
-  const geometry = new THREE.PlaneGeometry(1, 1, 1, 1);
+  const geometry = new THREE.PlaneGeometry(1, 1, WIDTH_SEGMENTS, HEIGHT_SEGMENTS);
 
-  const widthSegments = 1;
-  const heightSegments = 1;
-
-  const gridX = Math.floor(widthSegments);
-  const gridY = Math.floor(heightSegments);
-
-  const gridX1 = gridX + 1;
-  const gridY1 = gridY + 1;
+  const gridX1 = WIDTH_SEGMENTS + 1;
+  const gridY1 = HEIGHT_SEGMENTS + 1;
   const size = gridX1 * gridY1;
 
-  const segment_width = width / gridX;
-  const segment_height = height / gridY;
+  const segmentWidth = width / WIDTH_SEGMENTS;
+  const segmentHeight = height / HEIGHT_SEGMENTS;
 
+  // Use a slight offset to avoid z-fighting with the CameraInfo wireframe
   const EPS = 1e-3;
 
   // Rebuild the position buffer for the plane by iterating through the grid and
@@ -368,8 +416,8 @@ function createGeometry(cameraModel: PinholeCameraModel, depth: number): THREE.P
       const vOffset = (iy * gridX1 + ix) * 3;
       const uvOffset = (iy * gridX1 + ix) * 2;
 
-      pixel.x = ix * segment_width;
-      pixel.y = iy * segment_height;
+      pixel.x = ix * segmentWidth;
+      pixel.y = iy * segmentHeight;
       cameraModel.projectPixelTo3dRay(p, cameraModel.rectifyPixel(pixel, pixel));
       multiplyScalar(p, depth);
 
@@ -377,8 +425,8 @@ function createGeometry(cameraModel: PinholeCameraModel, depth: number): THREE.P
       vertices[vOffset + 1] = p.y;
       vertices[vOffset + 2] = p.z - EPS;
 
-      uvs[uvOffset + 0] = ix / gridX;
-      uvs[uvOffset + 1] = iy / gridY;
+      uvs[uvOffset + 0] = ix / WIDTH_SEGMENTS;
+      uvs[uvOffset + 1] = iy / HEIGHT_SEGMENTS;
     }
   }
 
@@ -425,6 +473,55 @@ function autoSelectCameraInfoTopic(
   }
   candidates.sort();
   output.cameraInfoTopic = candidates[0];
+}
+
+function rawImageToDataTexture(
+  image: Image,
+  options: RawImageOptions,
+  output: THREE.DataTexture,
+): void {
+  const { encoding, width, height, is_bigendian } = image;
+  const rawData = image.data as Uint8Array;
+  switch (encoding) {
+    case "yuv422":
+      decodeYUV(image.data as Int8Array, width, height, output.image.data);
+      break;
+    case "rgb8":
+      decodeRGB8(rawData, width, height, output.image.data);
+      break;
+    case "rgba8":
+      decodeRGBA8(rawData, width, height, output.image.data);
+      break;
+    case "bgr8":
+    case "8UC3":
+      decodeBGR8(rawData, width, height, output.image.data);
+      break;
+    case "32FC1":
+      decodeFloat1c(rawData, width, height, is_bigendian, output.image.data);
+      break;
+    case "bayer_rggb8":
+      decodeBayerRGGB8(rawData, width, height, output.image.data);
+      break;
+    case "bayer_bggr8":
+      decodeBayerBGGR8(rawData, width, height, output.image.data);
+      break;
+    case "bayer_gbrg8":
+      decodeBayerGBRG8(rawData, width, height, output.image.data);
+      break;
+    case "bayer_grbg8":
+      decodeBayerGRBG8(rawData, width, height, output.image.data);
+      break;
+    case "mono8":
+    case "8UC1":
+      decodeMono8(rawData, width, height, output.image.data);
+      break;
+    case "mono16":
+    case "16UC1":
+      decodeMono16(rawData, width, height, is_bigendian, output.image.data, options);
+      break;
+    default:
+      throw new Error(`Unsupported encoding ${encoding}`);
+  }
 }
 
 // const Float64Type: THREE.TextureDataType = -1;
