@@ -4,8 +4,7 @@
 
 import produce from "immer";
 // eslint-disable-next-line no-restricted-imports
-import { cloneDeep, merge, get, set } from "lodash";
-import { isEqual } from "lodash";
+import { isEqual, cloneDeep, merge, get, set } from "lodash";
 import React, { useCallback, useLayoutEffect, useEffect, useState, useMemo, useRef } from "react";
 import ReactDOM from "react-dom";
 import { useResizeDetector } from "react-resize-detector";
