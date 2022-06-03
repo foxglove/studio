@@ -33,4 +33,8 @@ for (const schema of Object.values(foxgloveMessageSchemas)) {
     name: definition.qualifiedRosName,
     definitions: definition.fields,
   });
+  basicDatatypes.set(`foxglove.${schema.name}`, {
+    name: `foxglove.${schema.name}`,
+    definitions: definition.fields,
+  });
 }
