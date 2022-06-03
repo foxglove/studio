@@ -22,7 +22,7 @@ type Duration = Time;
  */
 export type MessageTypeBySchemaName = {
   \\"std_msgs/ColorRGBA\\": {
-    r?: number;
+    r: number;
   };
 };
 
@@ -47,10 +47,10 @@ exports[`generateTypesLib generateDatatypesInterface should generate basic Datat
  */
 export type MessageTypeBySchemaName = {
   \\"std_msgs.ColorRGBA\\": {
-    r?: number;
-    g?: number;
-    b?: number;
-    a?: number;
+    r: number;
+    g: number;
+    b: number;
+    a: number;
   };
 };
 "
@@ -65,10 +65,10 @@ exports[`generateTypesLib generateDatatypesInterface should generate multiple da
  */
 export type MessageTypeBySchemaName = {
   \\"pkg.foo.Bar\\": {
-    car?: MessageTypeBySchemaName[\\"pkg.baz.Car\\"];
+    car: MessageTypeBySchemaName[\\"pkg.baz.Car\\"];
   };
   \\"pkg.baz.Car\\": {
-    points?: Float32Array;
+    points: Float32Array;
   };
 };
 "
@@ -83,7 +83,7 @@ exports[`generateTypesLib generateDatatypesInterface should generate type with b
  */
 export type MessageTypeBySchemaName = {
   \\"std_msgs\\\\\\\\ColorRGBA\\": {
-    r?: number;
+    r: number;
   };
 };
 "
