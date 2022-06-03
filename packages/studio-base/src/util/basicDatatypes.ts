@@ -29,6 +29,11 @@ for (const [name, def] of Object.entries(commonDefs)) {
 }
 for (const schema of Object.values(foxgloveMessageSchemas)) {
   const definition = generateRosMsgDefinition(schema, { rosVersion: 1 });
+  basicDatatypes.set("foxglove_msgs/ImageMarkerArray", {
+    definitions: [
+      { name: "markers", type: "visualization_msgs/ImageMarker", isComplex: true, isArray: true },
+    ],
+  });
   basicDatatypes.set(definition.qualifiedRosName, {
     name: definition.qualifiedRosName,
     definitions: definition.fields,

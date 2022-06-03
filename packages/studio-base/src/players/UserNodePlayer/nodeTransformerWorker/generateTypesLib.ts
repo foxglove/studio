@@ -74,7 +74,7 @@ export const generateTypesInterface = (datatypes: RosDatatypes): string => {
       const rosPrimitive = rosPrimitiveToTypescriptTypeMap.get(type);
 
       const fieldName = safeString(field.name);
-      const sigil = field.required === true ? "" : "?";
+      const sigil = field.optional === true ? "?" : "";
 
       if (isConstant === true) {
         src += `\n // ${field.name} = ${field.valueText}`;
