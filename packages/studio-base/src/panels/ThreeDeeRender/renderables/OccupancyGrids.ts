@@ -235,9 +235,9 @@ function createTexture(occupancyGrid: OccupancyGrid): THREE.DataTexture {
     THREE.ClampToEdgeWrapping,
     THREE.ClampToEdgeWrapping,
     THREE.NearestFilter,
-    THREE.NearestFilter,
+    THREE.LinearMipmapLinearFilter,
     1,
-    THREE.LinearEncoding,
+    THREE.LinearEncoding, // OccupancyGrid carries linear grayscale values, not sRGB
   );
 }
 
