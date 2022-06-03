@@ -44,22 +44,11 @@ export function normalizeByteArray(byteArray: unknown): Uint8Array {
   }
 }
 
-export function normalizeImageData(
-  data: unknown,
-): Uint8Array | Uint16Array | Uint32Array | Float32Array {
+export function normalizeImageData(data: unknown): Int8Array | Uint8Array {
   if (data == undefined) {
     return new Uint8Array(0);
-  } else if (
-    data instanceof Uint8Array ||
-    data instanceof Uint16Array ||
-    data instanceof Uint32Array ||
-    data instanceof Float32Array
-  ) {
+  } else if (data instanceof Int8Array || data instanceof Uint8Array) {
     return data;
-  } else if (data instanceof ArrayBuffer) {
-    return new Uint8Array(data);
-  } else if (Array.isArray(data)) {
-    return new Float32Array(data);
   } else {
     return new Uint8Array(0);
   }

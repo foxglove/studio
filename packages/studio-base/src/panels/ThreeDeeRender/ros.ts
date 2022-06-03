@@ -206,7 +206,7 @@ export type Image = {
   encoding: string;
   is_bigendian: boolean;
   step: number;
-  data: Uint8Array | Uint16Array | Uint32Array | Float32Array;
+  data: Int8Array | Uint8Array;
 };
 
 export type CompressedImage = {
