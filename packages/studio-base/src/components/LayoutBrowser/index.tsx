@@ -395,7 +395,7 @@ export default function LayoutBrowser({
       helpContent={helpContent}
       disablePadding
       trailingItems={[
-        (layouts.loading || isBusy) && <CircularProgress key="progress-indicator" />,
+        (layouts.loading || isBusy) && <CircularProgress size={18} key="progress-indicator" />,
         !isOnline && (
           <IconButton
             key="offline"
