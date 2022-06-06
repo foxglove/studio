@@ -11,12 +11,11 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { makeStyles } from "@fluentui/react";
-import BorderAllIcon from "@mdi/svg/svg/border-all.svg";
-import ExpandAllOutlineIcon from "@mdi/svg/svg/expand-all-outline.svg";
-import GridLargeIcon from "@mdi/svg/svg/grid-large.svg";
-import TrashCanOutlineIcon from "@mdi/svg/svg/trash-can-outline.svg";
-import { styled as muiStyled } from "@mui/material";
+import CancelPresentationOutlinedIcon from "@mui/icons-material/CancelPresentationOutlined";
+import LibraryAddOutlinedIcon from "@mui/icons-material/LibraryAddOutlined";
+import SplitscreenIcon from "@mui/icons-material/Splitscreen";
+import TabIcon from "@mui/icons-material/Tab";
+import { Button, styled as muiStyled, Grid } from "@mui/material";
 import { last } from "lodash";
 import React, {
   useState,
@@ -44,8 +43,6 @@ import { useMountedState } from "react-use";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import { useConfigById } from "@foxglove/studio-base/PanelAPI";
-import Button from "@foxglove/studio-base/components/Button";
-import Icon from "@foxglove/studio-base/components/Icon";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import PanelErrorBoundary from "@foxglove/studio-base/components/PanelErrorBoundary";
@@ -69,114 +66,56 @@ import {
   getPathFromNode,
   updateTabPanelLayout,
 } from "@foxglove/studio-base/util/layout";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-const ActionsOverlay = muiStyled("div")`
-  cursor: pointer;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 100000; // highest level within panel
-  display: none;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-end;
-  font-size: 14px;
-  padding-top: 24px;
+const ActionsOverlay = muiStyled("div")(({ theme }) => ({
+  cursor: "pointer",
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  zIndex: 100000, // highest level within panel
+  backgroundColor: theme.palette.background.paper,
+  display: "flex",
+  alignItems: "center",
+  alignContent: "center",
+  justifyContent: "center",
+  flexDirection: "column",
+  flexWrap: "wrap",
+  visibility: "hidden",
+  pointerEvents: "none",
 
-  ${PanelRoot.toString()}:hover > & {
-    background-color: ${({ theme }) => theme.palette.background.default};
-    display: flex;
-    align-items: center;
-    align-content: center;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
+  [`${PanelRoot.toString()}:hover > &`]: {
+    visibility: "visible",
+    pointerEvents: "auto",
+  },
   // for screenshot tests
-  .hoverForScreenshot {
-    background-color: ${({ theme }) => theme.palette.background.default};
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  div {
-    width: 100%;
-    padding: 6px 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  svg {
-    margin-right: 4px;
-    width: 24px;
-    height: 24px;
-    fill: white;
-  }
-  p {
-    font-size: 12px;
-    color: ${colors.TEXT_MUTED};
-  }
-`;
-
-const useStyles = makeStyles((theme) => ({
-  perfInfo: {
-    position: "absolute",
-    whiteSpace: "pre-line",
-    bottom: 2,
-    left: 2,
-    fontSize: "9px",
-    opacity: 0.7,
-    userSelect: "none",
-    mixBlendMode: "difference",
+  ".hoverForScreenshot &": {
+    visible: "visible",
+    pointerEvents: "auto",
   },
-  quickActionsOverlayButton: {
-    width: 72,
-    height: 72,
-    margin: 4,
-    flex: "none",
-    fontSize: "14px",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    background: `${theme.semanticColors.primaryButtonBackground} !important`,
-    color: `${theme.semanticColors.primaryButtonText} !important`,
+}));
 
-    svg: {
-      margin: "0 0 6px",
-      fill: theme.semanticColors.primaryButtonText,
-    },
+const PerfInfo = muiStyled("div")({
+  position: "absolute",
+  whiteSpace: "pre-line",
+  bottom: 2,
+  left: 2,
+  fontSize: 9,
+  opacity: 0.7,
+  userSelect: "none",
+  mixBlendMode: "difference",
+});
 
-    ":not(.disabled):hover": {
-      background: `${theme.semanticColors.primaryButtonBackgroundHovered} !important`,
-    },
-  },
-  tabActionsOverlayButton: {
-    margin: "4px !important",
-    flex: "none",
-    fontSize: "14px",
-    alignItems: "center",
-    background: `${colors.BLUE} !important`,
-    color: `${theme.semanticColors.primaryButtonText} !important`,
-    width: 145,
-    height: 40,
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
+const StyledButton = muiStyled(Button)(({ theme }) => ({
+  flexDirection: "column",
+  alignItems: "center",
+  textAlign: "center",
+  whiteSpace: "nowrap",
+  padding: theme.spacing(2, 0),
 
-    svg: {
-      margin: "0 0 6px",
-      fill: theme.semanticColors.primaryButtonText,
-    },
-    ":not(.disabled):hover": {
-      background: `${colors.BLUE1} !important`,
-    },
+  ".MuiButton-startIcon": {
+    margin: 0,
   },
 }));
 
@@ -212,7 +151,6 @@ export default function Panel<
   function ConnectedPanel(props: Props<Config>) {
     const { childId, overrideConfig, tabId, ...otherProps } = props;
 
-    const classes = useStyles();
     const isMounted = useMountedState();
 
     const { mosaicActions } = useContext(MosaicContext);
@@ -648,18 +586,30 @@ export default function Panel<
               >
                 {isSelected && !fullscreen && numSelectedPanelsIfSelected > 1 && (
                   <ActionsOverlay>
-                    <Button className={classes.tabActionsOverlayButton} onClick={groupPanels}>
-                      <Icon size="small" style={{ marginBottom: 5 }}>
-                        <BorderAllIcon />
-                      </Icon>
-                      Group in tab
-                    </Button>
-                    <Button className={classes.tabActionsOverlayButton} onClick={createTabs}>
-                      <Icon size="small" style={{ marginBottom: 5 }}>
-                        <ExpandAllOutlineIcon />
-                      </Icon>
-                      Create {numSelectedPanelsIfSelected} tabs
-                    </Button>
+                    <Grid container spacing={1} padding={2} maxWidth={300}>
+                      <Grid item xs={6}>
+                        <StyledButton
+                          fullWidth
+                          size="large"
+                          variant="contained"
+                          startIcon={<TabIcon fontSize="large" />}
+                          onClick={groupPanels}
+                        >
+                          Group in tab
+                        </StyledButton>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <StyledButton
+                          fullWidth
+                          size="large"
+                          variant="contained"
+                          startIcon={<LibraryAddOutlinedIcon fontSize="large" />}
+                          onClick={createTabs}
+                        >
+                          Create {numSelectedPanelsIfSelected} tabs
+                        </StyledButton>
+                      </Grid>
+                    </Grid>
                   </ActionsOverlay>
                 )}
                 {type !== TAB_PANEL_TYPE && quickActionsKeyPressed && !fullscreen && (
@@ -672,24 +622,36 @@ export default function Panel<
                       }
                     }}
                   >
-                    <div>
-                      <Button className={classes.quickActionsOverlayButton} onClick={removePanel}>
-                        <TrashCanOutlineIcon />
-                        Remove
-                      </Button>
-                      <Button className={classes.quickActionsOverlayButton} onClick={splitPanel}>
-                        <GridLargeIcon />
-                        Split
-                      </Button>
-                    </div>
+                    <Grid container spacing={1} padding={2} maxWidth={300}>
+                      <Grid item xs={6}>
+                        <StyledButton
+                          fullWidth
+                          size="large"
+                          variant="contained"
+                          startIcon={<CancelPresentationOutlinedIcon fontSize="large" />}
+                          onClick={removePanel}
+                        >
+                          Remove
+                        </StyledButton>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <StyledButton
+                          fullWidth
+                          size="large"
+                          variant="contained"
+                          startIcon={<SplitscreenIcon fontSize="large" />}
+                          onClick={splitPanel}
+                        >
+                          Split
+                        </StyledButton>
+                      </Grid>
+                    </Grid>
                   </ActionsOverlay>
                 )}
                 <PanelErrorBoundary onRemovePanel={removePanel} onResetPanel={resetPanel}>
                   <React.StrictMode>{child}</React.StrictMode>
                 </PanelErrorBoundary>
-                {process.env.NODE_ENV !== "production" && (
-                  <div className={classes.perfInfo} ref={perfInfo} />
-                )}
+                {process.env.NODE_ENV !== "production" && <PerfInfo ref={perfInfo} />}
               </PanelRoot>
             )}
           </Transition>
