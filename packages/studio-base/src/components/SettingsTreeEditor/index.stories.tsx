@@ -140,6 +140,86 @@ For ROS users, we also support package:// URLs
   },
 };
 
+const ReadonlySettings: SettingsTreeRoots = {
+  general: {
+    label: "Readonly Fields",
+    icon: "Grid",
+    fields: {
+      autocomplete: {
+        input: "autocomplete",
+        label: "Autocomplete",
+        items: ["one", "two"],
+        value: "one",
+        disabled: true,
+      },
+      boolean: {
+        input: "boolean",
+        label: "Boolean",
+        disabled: true,
+      },
+      gradient: {
+        input: "gradient",
+        label: "Gradient",
+        value: ["#ffffff", "#000000"],
+        disabled: true,
+      },
+      messagePath: {
+        input: "messagepath",
+        label: "Message Path",
+        disabled: true,
+      },
+      number: {
+        input: "number",
+        label: "Number",
+        value: 123,
+        disabled: true,
+      },
+      rgb: {
+        input: "rgb",
+        label: "RGB",
+        value: "#0000ff",
+        disabled: true,
+      },
+      rgba: {
+        input: "rgba",
+        label: "RGBA",
+        value: "#0000ff88",
+        disabled: true,
+      },
+      select: {
+        input: "select",
+        label: "Select",
+        options: [
+          { label: "One", value: "one" },
+          { label: "Two", value: "two" },
+        ],
+        value: "one",
+        disabled: true,
+      },
+      text: {
+        input: "string",
+        label: "Text",
+        value: "text",
+        disabled: true,
+      },
+      toggle: {
+        input: "toggle",
+        label: "Toggle",
+        value: "One",
+        options: ["One", "Two"],
+        disabled: true,
+      },
+      vec3: {
+        input: "vec3",
+        label: "Vec3",
+        value: [1, 2, 3],
+        disabled: true,
+      },
+    },
+    children: {},
+  },
+};
+
 const PanelExamplesSettings: SettingsTreeRoots = {
   map: {
     label: "Map",
@@ -530,6 +610,10 @@ export function Basics(): JSX.Element {
 Basics.play = () => {
   fireEvent.click(document.querySelector("[data-test=node-actions-menu-button]")!);
 };
+
+export function ReadonlyFields(): JSX.Element {
+  return <Wrapper roots={ReadonlySettings} />;
+}
 
 export function PanelExamples(): JSX.Element {
   return <Wrapper roots={PanelExamplesSettings} />;

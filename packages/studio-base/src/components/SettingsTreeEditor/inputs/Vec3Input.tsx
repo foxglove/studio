@@ -9,11 +9,13 @@ import Stack from "@foxglove/studio-base/components/Stack";
 import { NumberInput } from "./NumberInput";
 
 export function Vec3Input({
+  disabled = false,
   onChange,
   precision,
   step,
   value,
 }: {
+  disabled?: boolean;
   onChange: (
     value: undefined | readonly [undefined | number, undefined | number, undefined | number],
   ) => void;
@@ -42,6 +44,7 @@ export function Vec3Input({
         <NumberInput
           key={position}
           size="small"
+          disabled={disabled}
           variant="filled"
           fullWidth
           precision={precision}

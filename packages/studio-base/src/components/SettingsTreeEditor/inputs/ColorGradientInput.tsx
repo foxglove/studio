@@ -14,9 +14,11 @@ import { ColorSwatch } from "./ColorSwatch";
 
 export function ColorGradientInput({
   colors,
+  disabled = false,
   onChange,
 }: {
   colors: undefined | readonly [string, string];
+  disabled?: boolean;
   onChange: (colors: [string, string]) => void;
 }): JSX.Element {
   const [leftAnchor, setLeftAnchor] = useState<undefined | HTMLDivElement>(undefined);
@@ -46,6 +48,8 @@ export function ColorGradientInput({
     <Stack
       direction="row"
       style={{
+        opacity: disabled ? 0.5 : 1,
+        pointerEvents: disabled ? "none" : "auto",
         position: "relative",
         backgroundImage: `linear-gradient(to right, ${safeLeftColor}, ${safeRightColor})`,
       }}

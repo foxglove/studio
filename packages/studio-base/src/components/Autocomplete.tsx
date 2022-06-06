@@ -137,6 +137,7 @@ type AutocompleteProps<T = unknown> = {
   minWidth?: number;
   menuStyle?: CSSProperties;
   inputStyle?: CSSProperties;
+  disabled?: boolean;
   disableAutoSelect?: boolean;
 };
 
@@ -436,6 +437,7 @@ export default React.forwardRef(function Autocomplete<T = unknown>(
         }),
         autoCorrect: "off",
         autoCapitalize: "off",
+        disabled: props.disabled,
         spellCheck: "false",
         placeholder,
         style: {

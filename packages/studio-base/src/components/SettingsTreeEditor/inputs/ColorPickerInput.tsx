@@ -21,12 +21,16 @@ const StyledTextField = muiStyled(TextField)({
   },
 });
 
-const Root = muiStyled("div")({
+const Root = muiStyled("div", { shouldForwardProp: (prop) => prop !== "disabled" })<{
+  disabled: boolean;
+}>(({ disabled }) => ({
   position: "relative",
-});
+  pointerEvents: disabled ? "none" : "auto",
+}));
 
 type ColorPickerInputProps = {
   alphaType: "none" | "alpha";
+  disabled?: boolean;
   value: undefined | string;
   onChange: (value: undefined | string) => void;
   placeholder?: string;
@@ -52,9 +56,10 @@ export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
   const swatchColor = isValidColor ? tinycolor(value).toHex8String() : "#00000044";
 
   return (
-    <Root>
+    <Root disabled={props.disabled === true}>
       <StyledTextField
         fullWidth
+        disabled={props.disabled}
         onChange={(event) => onChange(event.target.value)}
         placeholder={props.placeholder}
         size="small"
