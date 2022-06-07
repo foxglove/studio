@@ -43,6 +43,7 @@ export class RenderableLineStrip extends RenderableMarker {
     const matLine = lineMaterial(marker, renderer.materialCache);
     this.line = new Line2(this.geometry, matLine);
     this.line.renderOrder = 2;
+    this.line.userData.picking = true;
     const pickingLineWidth = Math.max(marker.scale.x, MIN_PICKING_LINE_SIZE);
     this.line.userData.pickingMaterial = linePickingMaterial(
       pickingLineWidth,
