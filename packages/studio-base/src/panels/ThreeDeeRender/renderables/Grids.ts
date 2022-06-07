@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { isEqual } from "lodash";
 import * as THREE from "three";
 
 import { SettingsTreeFields } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
@@ -10,8 +11,8 @@ import { RenderableLineList } from "@foxglove/studio-base/panels/ThreeDeeRender/
 import { Renderer } from "../Renderer";
 import { stringToRgba } from "../color";
 import { Marker, Pose, Vector3 } from "../ros";
-import { LayerSettingsGrid, LayerType, PRECISION_DISTANCE } from "../settings";
-import { makePose } from "../transforms/geometry";
+import { LayerSettingsGrid, LayerType, PRECISION_DEGREES, PRECISION_DISTANCE } from "../settings";
+import { makePose, xyzrpyToPose } from "../transforms/geometry";
 import { updatePose } from "../updatePose";
 import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
 
@@ -30,6 +31,8 @@ const DEFAULT_SETTINGS: LayerSettingsGrid = {
   divisions: DEFAULT_DIVISIONS,
   lineWidth: DEFAULT_LINE_WIDTH,
   color: DEFAULT_COLOR,
+  position: [0, 0, 0],
+  rotation: [0, 0, 0],
 };
 
 type GridRenderable = THREE.Object3D & {
@@ -59,6 +62,8 @@ export class Grids extends THREE.Object3D {
         divisions: { label: "Divisions", input: "number", min: 1, max: MAX_DIVISIONS, step: 1, precision: 0, value: cur.divisions, placeholder: String(DEFAULT_DIVISIONS) },
         lineWidth: { label: "Line Width", input: "number", min: 0, step: 0.01, precision: PRECISION_DISTANCE, value: cur.lineWidth, placeholder: String(DEFAULT_LINE_WIDTH) },
         color: { label: "Color", input: "rgba", value: cur.color ?? DEFAULT_COLOR },
+        position: { label: "Position", input: "vec3", labels: ["X", "Y", "Z"], precision: PRECISION_DISTANCE, value: cur.position ?? [0, 0, 0] },
+        rotation: { label: "Rotation", input: "vec3", labels: ["R", "P", "Y"], precision: PRECISION_DEGREES, value: cur.rotation ?? [0, 0, 0] },
       };
 
       return { icon: "Grid", fields };
@@ -117,6 +122,14 @@ export class Grids extends THREE.Object3D {
     if (!markersEqual) {
       const marker = createMarker(newSettings);
       renderable.userData.lineList.update(marker);
+    }
+
+    // Update the pose if it changed
+    if (
+      !isEqual(newSettings.position, prevSettings.position) ||
+      !isEqual(newSettings.rotation, prevSettings.rotation)
+    ) {
+      renderable.userData.pose = xyzrpyToPose(newSettings.position, newSettings.rotation);
     }
   }
 

@@ -101,6 +101,8 @@ export type LayerSettingsGrid = CustomLayerSettings & {
   divisions: number;
   lineWidth: number;
   color: string;
+  position: [number, number, number];
+  rotation: [number, number, number];
 };
 
 export type LayerSettings =
@@ -153,6 +155,7 @@ mergeSetInto(SUPPORTED_DATATYPES, IMAGE_DATATYPES);
 mergeSetInto(SUPPORTED_DATATYPES, COMPRESSED_IMAGE_DATATYPES);
 
 export const PRECISION_DISTANCE = 3; // [1mm]
+export const PRECISION_DEGREES = 1;
 
 const ONE_DEGREE = Math.PI / 180;
 
