@@ -84,13 +84,15 @@ export class RenderableLineList extends RenderableMarker {
       this.line.material = lineMaterial(marker, this._renderer.materialCache);
     }
 
-    this._updateGeometry(marker);
+    this._setPositions(marker);
+    this._setColors(marker);
+
+    // These both update the same `LineSegmentsGeometry` reference, so no need to call both
+    // this.linePrepass.computeLineDistances();
+    this.line.computeLineDistances();
   }
 
-  private _updateGeometry(marker: Marker): void {
-    this.geometry.dispose();
-    this.geometry = new LineSegmentsGeometry();
-
+  private _setPositions(marker: Marker): void {
     const linePositions = new Float32Array(3 * marker.points.length);
     for (let i = 0; i < marker.points.length; i++) {
       const point = marker.points[i]!;
@@ -100,19 +102,16 @@ export class RenderableLineList extends RenderableMarker {
     }
 
     this.geometry.setPositions(linePositions);
+  }
 
+  private _setColors(marker: Marker): void {
     // Converts color-per-point to a flattened typed array
-    const rgbaData = new Float32Array(8 * marker.points.length);
+    const rgbaData = new Float32Array(4 * marker.points.length);
     this._markerColorsToLinear(marker, (color, i) => {
-      rgbaData[8 * i + 0] = color[0];
-      rgbaData[8 * i + 1] = color[1];
-      rgbaData[8 * i + 2] = color[2];
-      rgbaData[8 * i + 3] = color[3];
-
-      rgbaData[8 * i + 4] = color[0];
-      rgbaData[8 * i + 5] = color[1];
-      rgbaData[8 * i + 6] = color[2];
-      rgbaData[8 * i + 7] = color[3];
+      rgbaData[4 * i + 0] = color[0];
+      rgbaData[4 * i + 1] = color[1];
+      rgbaData[4 * i + 2] = color[2];
+      rgbaData[4 * i + 3] = color[3];
     });
 
     // [rgba, rgba]
@@ -125,12 +124,5 @@ export class RenderableLineList extends RenderableMarker {
       "instanceColorEnd",
       new THREE.InterleavedBufferAttribute(instanceColorBuffer, 4, 4),
     );
-
-    this.linePrepass.geometry = this.geometry;
-    this.line.geometry = this.geometry;
-
-    // These both update the same `LineSegmentsGeometry` reference, so no need to call both
-    // this.linePrepass.computeLineDistances();
-    this.line.computeLineDistances();
   }
 }
