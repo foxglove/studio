@@ -44,6 +44,7 @@ export function TopicDropdown(props: Props): JSX.Element {
         disabled={items.length === 0}
         displayEmpty
         title={title}
+        renderValue={(_selected) => title}
         size="small"
         variant="filled"
         onChange={handleChange}
