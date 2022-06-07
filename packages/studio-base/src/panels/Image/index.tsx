@@ -304,7 +304,7 @@ function ImageView(props: Props) {
       ? "No camera topics"
       : "Select a camera topic";
 
-    return <TopicDropdown multiple={false} title={title} items={items} onChange={onChange} />;
+    return <TopicDropdown title={title} items={items} onChange={onChange} />;
   }, [cameraTopic, imageTopics, onChangeCameraTopic]);
 
   const showEmptyState = !imageMessageToRender;
