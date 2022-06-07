@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { v4 as uuidv4 } from "uuid";
+
 import { CameraState, DEFAULT_CAMERA_STATE } from "@foxglove/regl-worldview";
 import { Topic } from "@foxglove/studio";
 import {
@@ -370,7 +372,7 @@ export function buildSettingsTree(options: SettingsTreeOptions): SettingsTreeRoo
       label: "Custom Layers",
       children: layersChildren,
       defaultExpansionState: "expanded",
-      actions: [{ id: "add-grid", label: "Add Grid", icon: "Grid" }],
+      actions: [{ id: "add-grid " + uuidv4(), label: "Add Grid", icon: "Grid" }],
     },
   };
 }

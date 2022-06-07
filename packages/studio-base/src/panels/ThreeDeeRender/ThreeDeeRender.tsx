@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import produce from "immer";
+import { produce } from "immer";
 // eslint-disable-next-line no-restricted-imports
 import { isEqual, cloneDeep, merge, get, set, unset } from "lodash";
 import React, { useCallback, useLayoutEffect, useEffect, useState, useMemo, useRef } from "react";
@@ -10,7 +10,6 @@ import ReactDOM from "react-dom";
 import { useResizeDetector } from "react-resize-detector";
 import { DeepPartial } from "ts-essentials";
 import { useDebouncedCallback } from "use-debounce";
-import { v4 as uuidv4 } from "uuid";
 
 import Logger from "@foxglove/log";
 import {
@@ -573,26 +572,26 @@ function settingsTreeActionHandler(
         return oldConfig;
       }
 
-      if (action.payload.id === "add-grid") {
-        const layerId = uuidv4();
-        log.debug(`Creating grid layer ${layerId}`);
+      const [actionId, actionLayerId] = action.payload.id.split(" ");
+      if (actionId === "add-grid" && actionLayerId != undefined) {
+        log.debug(`Creating grid layer ${actionLayerId}`);
         const layerConfig = { label: "Grid", type: LayerType.Grid, visible: true };
         const newConfig = produce(oldConfig, (draft) =>
-          set(draft, [...action.payload.path, layerId], layerConfig),
+          set(draft, [...action.payload.path, actionLayerId], layerConfig),
         );
 
-        updateLayerSettings(renderer, layerId, layerConfig.type, layerConfig);
+        updateLayerSettings(renderer, actionLayerId, layerConfig.type, layerConfig);
         renderRef.current.needsRender = true;
         return newConfig;
       } else if (action.payload.id === "delete") {
-        const layerId = action.payload.path[action.payload.path.length - 1]!;
+        const pathLayerId = action.payload.path[action.payload.path.length - 1]!;
         const layerConfig = get(oldConfig, action.payload.path) as
           | Partial<CustomLayerSettings>
           | undefined;
         const newConfig = produce(oldConfig, (draft) => void unset(draft, action.payload.path));
 
         if (layerConfig?.type != undefined) {
-          updateLayerSettings(renderer, layerId, layerConfig.type, undefined);
+          updateLayerSettings(renderer, pathLayerId, layerConfig.type, undefined);
         }
         renderRef.current.needsRender = true;
         return newConfig;
