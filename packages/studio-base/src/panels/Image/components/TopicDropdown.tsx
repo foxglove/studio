@@ -52,7 +52,7 @@ export function TopicDropdown(props: Props): JSX.Element {
       >
         {items.length === 0 && (
           <MenuItem disabled value="">
-            No topics
+            No camera topics
           </MenuItem>
         )}
         {items.map((item) => (
