@@ -99,10 +99,7 @@ export class RenderableLineList extends RenderableMarker {
       linePositions[i * 3 + 2] = point.z;
     }
 
-    const uvs = new Float32Array(2 * marker.points.length);
-
     this.geometry.setPositions(linePositions);
-    this.geometry.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
 
     // Converts color-per-point to a flattened typed array
     const rgbaData = new Float32Array(8 * marker.points.length);
