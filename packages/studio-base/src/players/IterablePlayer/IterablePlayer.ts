@@ -263,7 +263,9 @@ export class IterablePlayer implements Player {
 
     this._allTopics = allTopics;
     this._partialTopics = partialTopics;
+  }
 
+  requestBackfill(): void {
     // Once we are in an active state (i.e. done initializing), we use seeking to indicate
     // that subscriptions have changed so restart our loading
     if (this._state === "idle" || this._state === "seek-backfill" || this._state === "play") {
@@ -271,10 +273,6 @@ export class IterablePlayer implements Player {
         this.seekPlayback(this._currentTime);
       }
     }
-  }
-
-  requestBackfill(): void {
-    // no-op
   }
 
   setPublishers(_publishers: AdvertiseOptions[]): void {

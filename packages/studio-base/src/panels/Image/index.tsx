@@ -36,6 +36,7 @@ import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 import { ImageCanvas, ImageEmptyState, Toolbar, TopicDropdown, TopicTimestamp } from "./components";
 import { useCameraInfo, ANNOTATION_DATATYPES, useImagePanelMessages } from "./hooks";
 import helpContent from "./index.help.md";
+import { downloadImage } from "./lib/downloadImage";
 import { NORMALIZABLE_IMAGE_DATATYPES } from "./lib/normalizeMessage";
 import { getRelatedMarkerTopics, getMarkerOptions } from "./lib/util";
 import { buildSettingsTree } from "./settings";
@@ -127,7 +128,7 @@ function ImageView(props: Props) {
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
   const { id: panelId } = usePanelContext();
 
-  const allImageTopics = useMemo(() => {
+  const imageTopics = useMemo(() => {
     return topics.filter(({ datatype }) => NORMALIZABLE_IMAGE_DATATYPES.includes(datatype));
   }, [topics]);
 
@@ -135,11 +136,11 @@ function ImageView(props: Props) {
   useEffect(() => {
     const maybeCameraTopic = mightActuallyBePartial(config).cameraTopic;
     if (maybeCameraTopic == undefined || maybeCameraTopic === "") {
-      if (allImageTopics[0] && allImageTopics[0].name !== "") {
-        saveConfig({ cameraTopic: allImageTopics[0].name });
+      if (imageTopics[0] && imageTopics[0].name !== "") {
+        saveConfig({ cameraTopic: imageTopics[0].name });
       }
     }
-  }, [allImageTopics, config, saveConfig]);
+  }, [imageTopics, config, saveConfig]);
 
   const onChangeCameraTopic = useCallback(
     (newCameraTopic: string) => {
@@ -160,6 +161,11 @@ function ImageView(props: Props) {
       });
     },
     [enabledMarkerTopics, saveConfig, topics],
+  );
+
+  const relatedMarkerTopics = useMemo(
+    () => getMarkerOptions(config.cameraTopic, topics, ANNOTATION_DATATYPES),
+    [config.cameraTopic, topics],
   );
 
   const actionHandler = useCallback(
@@ -191,7 +197,7 @@ function ImageView(props: Props) {
     [config, onChangeCameraTopic, saveConfig],
   );
 
-  const allAnnotationTopics = useMemo(() => {
+  const markerTopics = useMemo(() => {
     return topics
       .filter((topic) => (ANNOTATION_DATATYPES as readonly string[]).includes(topic.datatype))
       .map((topic) => topic.name);
@@ -200,15 +206,22 @@ function ImageView(props: Props) {
   useEffect(() => {
     updatePanelSettingsTree(panelId, {
       actionHandler,
-      roots: buildSettingsTree(config, allImageTopics, allAnnotationTopics, enabledMarkerTopics),
+      roots: buildSettingsTree({
+        config,
+        imageTopics,
+        markerTopics,
+        enabledMarkerTopics,
+        relatedMarkerTopics,
+      }),
     });
   }, [
     actionHandler,
-    allAnnotationTopics,
-    allImageTopics,
     config,
     enabledMarkerTopics,
+    imageTopics,
+    markerTopics,
     panelId,
+    relatedMarkerTopics,
     updatePanelSettingsTree,
   ]);
 
@@ -271,8 +284,21 @@ function ImageView(props: Props) {
     return <BottomBar>{topicTimestamp}</BottomBar>;
   };
 
+  const onDownloadImage = useCallback(async () => {
+    if (!imageMessageToRender) {
+      return;
+    }
+
+    const topic = imageTopics.find((top) => top.name === cameraTopic);
+    if (!topic) {
+      return;
+    }
+
+    await downloadImage(imageMessageToRender, topic, config);
+  }, [imageTopics, cameraTopic, config, imageMessageToRender]);
+
   const imageTopicDropdown = useMemo(() => {
-    const items = allImageTopics.map((topic) => {
+    const items = imageTopics.map((topic) => {
       return {
         name: topic.name,
         selected: topic.name === cameraTopic,
@@ -292,8 +318,8 @@ function ImageView(props: Props) {
       ? "No camera topics"
       : "Select a camera topic";
 
-    return <TopicDropdown multiple={false} title={title} items={items} onChange={onChange} />;
-  }, [cameraTopic, allImageTopics, onChangeCameraTopic]);
+    return <TopicDropdown title={title} items={items} onChange={onChange} />;
+  }, [cameraTopic, imageTopics, onChangeCameraTopic]);
 
   const showEmptyState = !imageMessageToRender;
 
@@ -311,6 +337,7 @@ function ImageView(props: Props) {
             rawMarkerData={rawMarkerData}
             config={config}
             saveConfig={saveConfig}
+            onDownloadImage={onDownloadImage}
             onStartRenderImage={onStartRenderImage}
             setActivePixelData={setActivePixelData}
           />
