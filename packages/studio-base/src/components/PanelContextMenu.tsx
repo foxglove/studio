@@ -147,9 +147,9 @@ export function PanelContextMenu(props: PanelContextMenuProps): JSX.Element {
         anchorReference="anchorPosition"
         anchorPosition={position ? { top: position.y, left: position.x } : undefined}
       >
-        {completeItems.map((item) => {
+        {completeItems.map((item, index) => {
           if (item.type === "divider") {
-            return <Divider />;
+            return <Divider key={`divider_${index}`} />;
           }
 
           const Icon = item.icon ? CommonIcons[item.icon] : undefined;
