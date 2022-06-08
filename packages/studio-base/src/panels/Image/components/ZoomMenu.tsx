@@ -117,6 +117,7 @@ export default function ZoomMenu({
         onClose={handleClose}
         MenuListProps={{
           "aria-labelledby": "zoom-button",
+          dense: true,
         }}
         anchorOrigin={{
           vertical: "top",
@@ -147,13 +148,13 @@ export default function ZoomMenu({
           </Stack>
         </ListItem>
         <MenuItem divider onClick={onZoom100} data-test={"hundred-zoom"}>
-          <Typography variant="body2">Zoom to 100%</Typography>
+          Zoom to 100%
         </MenuItem>
         <MenuItem divider onClick={onZoomFit} data-test={"fit-zoom"}>
-          <Typography variant="body2">Zoom to fit</Typography>
+          Zoom to fit
         </MenuItem>
         <MenuItem onClick={onZoomFill} data-test={"fill-zoom"}>
-          <Typography variant="body2">Zoom to fill</Typography>
+          Zoom to fill
         </MenuItem>
       </Menu>
     </>
