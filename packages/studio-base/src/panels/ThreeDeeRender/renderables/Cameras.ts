@@ -36,7 +36,7 @@ const DEFAULT_SETTINGS: LayerSettingsCameraInfo = {
   color: DEFAULT_COLOR_STR,
 };
 
-type CameraInfoRenderable = THREE.Object3D & {
+export type CameraInfoRenderable = THREE.Object3D & {
   userData: {
     topic: string;
     settings: LayerSettingsCameraInfo;
@@ -67,7 +67,7 @@ export class Cameras extends THREE.Object3D {
         color: { label: "Color", input: "rgba", value: color },
       };
 
-      return { fields };
+      return { icon: "Camera", fields };
     });
   }
 
@@ -158,6 +158,8 @@ export class Cameras extends THREE.Object3D {
       if (!updated) {
         const message = missingTransformMessage(renderFrameId, fixedFrameId, frameId);
         this.renderer.layerErrors.addToTopic(renderable.userData.topic, MISSING_TRANSFORM, message);
+      } else {
+        this.renderer.layerErrors.removeFromTopic(renderable.userData.topic, MISSING_TRANSFORM);
       }
     }
   }

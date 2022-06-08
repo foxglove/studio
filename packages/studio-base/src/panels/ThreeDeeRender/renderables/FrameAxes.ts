@@ -47,6 +47,7 @@ const tempVecB = new THREE.Vector3();
 type FrameAxisRenderable = THREE.Object3D & {
   userData: {
     frameId: string;
+    path: ReadonlyArray<string>;
     pose: Pose;
     settings: LayerSettingsTransform;
     shaftMesh: THREE.InstancedMesh;
@@ -126,10 +127,18 @@ export class FrameAxes extends THREE.Object3D {
     }
   }
 
+  addCoordinateFrame(frameId: string): void {
+    this._addFrameAxis(frameId);
+  }
+
   setTransformSettings(frameId: string, settings: Partial<LayerSettingsTransform>): void {
     const renderable = this.axesByFrameId.get(frameId);
     if (renderable) {
       renderable.userData.settings = { ...renderable.userData.settings, ...settings };
+      // Clear errors for this frame if visibility is toggled off
+      if (!renderable.userData.settings.visible) {
+        this.renderer.layerErrors.clearPath(renderable.userData.path);
+      }
     }
   }
 
@@ -163,7 +172,9 @@ export class FrameAxes extends THREE.Object3D {
       renderable.visible = updated;
       if (!updated) {
         const message = missingTransformMessage(renderFrameId, fixedFrameId, frameId);
-        this.renderer.layerErrors.addToLayer(`f:${frameId}`, MISSING_TRANSFORM, message);
+        this.renderer.layerErrors.add(renderable.userData.path, MISSING_TRANSFORM, message);
+      } else {
+        this.renderer.layerErrors.remove(renderable.userData.path, MISSING_TRANSFORM);
       }
     }
 
@@ -238,8 +249,13 @@ export class FrameAxes extends THREE.Object3D {
       throw new Error(`CoordinateFrame "${frameId}" was not created`);
     }
 
+    const frameDisplayName =
+      frame.id === "" || frame.id.startsWith(" ") || frame.id.endsWith(" ")
+        ? `"${frame.id}"`
+        : frame.id;
+
     // Text label
-    const label = this.renderer.labels.setLabel(`tf:${frameId}`, { text: frameId });
+    const label = this.renderer.labels.setLabel(`tf:${frameId}`, { text: frameDisplayName });
     label.position.set(0, 0, 0.4);
     renderable.add(label);
 
@@ -251,6 +267,7 @@ export class FrameAxes extends THREE.Object3D {
 
     renderable.userData = {
       frameId,
+      path: ["transforms", frameId],
       pose: makePose(),
       settings,
       shaftMesh: shaftInstances,
