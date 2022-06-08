@@ -341,6 +341,7 @@ function ImageView(props: Props) {
             rawMarkerData={rawMarkerData}
             config={config}
             saveConfig={saveConfig}
+            onDownloadImage={onDownloadImage}
             onStartRenderImage={onStartRenderImage}
             setActivePixelData={setActivePixelData}
           />
