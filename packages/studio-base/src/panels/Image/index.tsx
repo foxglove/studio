@@ -35,6 +35,7 @@ import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 import { ImageCanvas, ImageEmptyState, Toolbar, TopicDropdown } from "./components";
 import { useCameraInfo, ANNOTATION_DATATYPES, useImagePanelMessages } from "./hooks";
 import helpContent from "./index.help.md";
+import { downloadImage } from "./lib/downloadImage";
 import { NORMALIZABLE_IMAGE_DATATYPES } from "./lib/normalizeMessage";
 import { getRelatedMarkerTopics, getMarkerOptions } from "./lib/util";
 import { buildSettingsTree } from "./settings";
@@ -223,6 +224,19 @@ function ImageView(props: Props) {
     };
   }, [annotations, cameraInfo, transformMarkers]);
 
+  const onDownloadImage = useCallback(async () => {
+    if (!imageMessageToRender) {
+      return;
+    }
+
+    const topic = imageTopics.find((top) => top.name === cameraTopic);
+    if (!topic) {
+      return;
+    }
+
+    await downloadImage(imageMessageToRender, topic, config);
+  }, [imageTopics, cameraTopic, config, imageMessageToRender]);
+
   return (
     <Stack flex="auto" overflow="hidden" position="relative">
       <PanelToolbar helpContent={helpContent}>
@@ -243,6 +257,7 @@ function ImageView(props: Props) {
             rawMarkerData={rawMarkerData}
             config={config}
             saveConfig={saveConfig}
+            onDownloadImage={onDownloadImage}
             onStartRenderImage={onStartRenderImage}
             setActivePixelData={setActivePixelData}
           />
