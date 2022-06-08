@@ -11,9 +11,9 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import CancelPresentationOutlinedIcon from "@mui/icons-material/CancelPresentationOutlined";
+import BorderAllIcon from "@mui/icons-material/BorderAll";
+import DeleteForeverOutlinedIcon from "@mui/icons-material/DeleteForeverOutlined";
 import LibraryAddOutlinedIcon from "@mui/icons-material/LibraryAddOutlined";
-import SplitscreenIcon from "@mui/icons-material/Splitscreen";
 import TabIcon from "@mui/icons-material/Tab";
 import { Button, styled as muiStyled, Grid } from "@mui/material";
 import { last } from "lodash";
@@ -628,7 +628,7 @@ export default function Panel<
                           fullWidth
                           size="large"
                           variant="contained"
-                          startIcon={<CancelPresentationOutlinedIcon fontSize="large" />}
+                          startIcon={<DeleteForeverOutlinedIcon fontSize="large" />}
                           onClick={removePanel}
                         >
                           Remove
@@ -639,7 +639,7 @@ export default function Panel<
                           fullWidth
                           size="large"
                           variant="contained"
-                          startIcon={<SplitscreenIcon fontSize="large" />}
+                          startIcon={<BorderAllIcon fontSize="large" />}
                           onClick={splitPanel}
                         >
                           Split
