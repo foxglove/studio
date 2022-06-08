@@ -140,7 +140,7 @@ export function PanelContextMenu(props: PanelContextMenuProps): JSX.Element {
   }, [defaultActionIds, items]);
 
   return (
-    <div ref={rootRef}>
+    <div ref={rootRef} onContextMenu={(event) => event.preventDefault()}>
       <Menu
         open={position != undefined}
         onClose={handleClose}
