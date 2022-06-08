@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Divider, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
+import { Divider, ListItemText, Menu, MenuItem } from "@mui/material";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   MosaicContext,
@@ -13,7 +13,6 @@ import {
 import { DeepReadonly } from "ts-essentials";
 import { v4 as uuid } from "uuid";
 
-import CommonIcons from "@foxglove/studio-base/components/CommonIcons";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import { PanelRoot } from "@foxglove/studio-base/components/PanelRoot";
 import { useCurrentLayoutActions } from "@foxglove/studio-base/context/CurrentLayoutContext";
@@ -29,9 +28,6 @@ export type PanelContextMenuItem =
 
       /** True if the item should be shown but disabled. */
       disabled?: boolean;
-
-      /** Optional name of icon to be shown alongside the item label. */
-      icon?: keyof typeof CommonIcons;
 
       /** Unique string id of this item that will be included in the select callback. */
       id: string;
@@ -135,7 +131,7 @@ export function PanelContextMenu(props: PanelContextMenuProps): JSX.Element {
     return [
       ...(items ?? []),
       { type: "divider" },
-      { type: "item", id: defaultActionIds.removePanel, label: "Remove Panel", icon: "Delete" },
+      { type: "item", id: defaultActionIds.removePanel, label: "Remove panel" },
     ];
   }, [defaultActionIds, items]);
 
@@ -146,20 +142,17 @@ export function PanelContextMenu(props: PanelContextMenuProps): JSX.Element {
         onClose={handleClose}
         anchorReference="anchorPosition"
         anchorPosition={position ? { top: position.y, left: position.x } : undefined}
+        MenuListProps={{
+          dense: true,
+        }}
       >
         {completeItems.map((item, index) => {
           if (item.type === "divider") {
             return <Divider key={`divider_${index}`} />;
           }
 
-          const Icon = item.icon ? CommonIcons[item.icon] : undefined;
           return (
             <MenuItem onClick={() => onSelectItem(item.id)} key={item.id} disabled={item.disabled}>
-              {Icon && (
-                <ListItemIcon>
-                  <Icon fontSize="small" />
-                </ListItemIcon>
-              )}
               <ListItemText>{item.label}</ListItemText>
             </MenuItem>
           );

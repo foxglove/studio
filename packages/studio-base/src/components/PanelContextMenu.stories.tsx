@@ -22,9 +22,9 @@ const DUMMY_CLASS = uuid();
 
 function DummyPanel(): JSX.Element {
   const items: PanelContextMenuItem[] = [
-    { type: "item", label: "Download Image", id: "download-image", icon: "Download" },
-    { type: "item", label: "Flip Horizontal", id: "flip-horizontal", icon: "Flip" },
-    { type: "item", label: "Flip Vertical", id: "flip-vertical", icon: "FlipVertical" },
+    { type: "item", label: "Download Image", id: "download-image" },
+    { type: "item", label: "Flip Horizontal", id: "flip-horizontal" },
+    { type: "item", label: "Flip Vertical", id: "flip-vertical" },
   ];
 
   return (

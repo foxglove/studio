@@ -120,9 +120,10 @@ const BottomBar = ({ children }: { children?: React.ReactNode }) => {
 };
 
 const ContextMenuItems: PanelContextMenuItem[] = [
-  { type: "item", label: "Download Image", id: "download-image", icon: "Download" },
-  { type: "item", label: "Flip Horizontal", id: "flip-horizontal", icon: "Flip" },
-  { type: "item", label: "Flip Vertical", id: "flip-vertical", icon: "FlipVertical" },
+  { type: "item", label: "Download image", id: "download-image" },
+  { type: "item", label: "Flip horizontal", id: "flip-horizontal" },
+  { type: "item", label: "Flip vertical", id: "flip-vertical" },
+  { type: "item", label: "Rotate 90°", id: "rotate-90" },
 ];
 
 function ImageView(props: Props) {
