@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
 import { styled as muiStyled, Typography } from "@mui/material";
 import { useContext, useState, useMemo, CSSProperties } from "react";
@@ -59,7 +58,7 @@ export default React.memo<Props>(function PanelToolbar({
   children,
   isUnknownPanel = false,
 }: Props) {
-  const { isFullscreen, enterFullscreen, exitFullscreen } = useContext(PanelContext) ?? {};
+  const { isFullscreen, exitFullscreen } = useContext(PanelContext) ?? {};
   const [menuOpen, setMenuOpen] = useState(false);
 
   const panelContext = useContext(PanelContext);
@@ -70,16 +69,6 @@ export default React.memo<Props>(function PanelToolbar({
     return (
       <>
         {additionalIcons}
-        {isFullscreen === false && (
-          <ToolbarIconButton
-            title="Fullscreen"
-            data-test="panel-toolbar-fullscreen"
-            onClick={enterFullscreen}
-            value="fullscreen"
-          >
-            <FullscreenIcon />
-          </ToolbarIconButton>
-        )}
         {isFullscreen === true && (
           <ToolbarIconButton
             value="exit-fullscreen"
@@ -91,7 +80,7 @@ export default React.memo<Props>(function PanelToolbar({
         )}
       </>
     );
-  }, [additionalIcons, isFullscreen, enterFullscreen, exitFullscreen]);
+  }, [additionalIcons, isFullscreen, exitFullscreen]);
 
   return (
     <PanelToolbarRoot backgroundColor={backgroundColor}>

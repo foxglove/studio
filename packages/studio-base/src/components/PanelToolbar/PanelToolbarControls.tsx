@@ -12,11 +12,14 @@
 //   You may not use this file except in compliance with the License.
 
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import { useContext } from "react";
+import SettingsIcon from "@mui/icons-material/Settings";
+import { useCallback, useContext } from "react";
 
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import Stack from "@foxglove/studio-base/components/Stack";
+import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 
 import { PanelActionsDropdown } from "./PanelActionsDropdown";
 
@@ -37,10 +40,22 @@ export const PanelToolbarControls = React.memo(function PanelToolbarControls({
   setMenuOpen,
 }: PanelToolbarControlsProps) {
   const panelContext = useContext(PanelContext);
+  const { setSelectedPanelIds } = useSelectedPanels();
+  const { openPanelSettings } = useWorkspace();
+
+  const openSettings = useCallback(() => {
+    if (panelContext?.id != undefined) {
+      setSelectedPanelIds([panelContext.id]);
+      openPanelSettings();
+    }
+  }, [setSelectedPanelIds, openPanelSettings, panelContext?.id]);
 
   return (
     <Stack direction="row" alignItems="center" paddingLeft={1}>
       {additionalIcons}
+      <ToolbarIconButton title="Settings" onClick={openSettings}>
+        <SettingsIcon />
+      </ToolbarIconButton>
       <PanelActionsDropdown
         isOpen={menuOpen}
         setIsOpen={setMenuOpen}
