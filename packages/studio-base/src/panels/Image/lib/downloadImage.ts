@@ -42,18 +42,21 @@ export async function downloadImage(
 
   // context: https://stackoverflow.com/questions/37135417/download-canvas-as-png-in-fabric-js-giving-network-error
   // read the canvas data as an image (png)
-  tempCanvas.toBlob((blob) => {
-    if (!blob) {
-      throw new Error(
-        `Failed to create an image from ${dimensions.width}x${dimensions.height} canvas`,
-      );
-    }
-    // name the image the same name as the topic
-    // note: the / characters in the file name will be replaced with _ by the browser
-    // remove any leading / so the image name doesn't start with _
-    const topicName = topic.name.replace(/^\/+/, "");
-    const stamp = normalizedImageMessage.stamp;
-    const fileName = `${topicName}-${stamp.sec}-${stamp.nsec}`;
-    downloadFiles([{ blob, fileName }]);
-  }, "image/png");
+  return await new Promise((resolve) =>
+    tempCanvas.toBlob((blob) => {
+      if (!blob) {
+        throw new Error(
+          `Failed to create an image from ${dimensions.width}x${dimensions.height} canvas`,
+        );
+      }
+      // name the image the same name as the topic
+      // note: the / characters in the file name will be replaced with _ by the browser
+      // remove any leading / so the image name doesn't start with _
+      const topicName = topic.name.replace(/^\/+/, "");
+      const stamp = normalizedImageMessage.stamp;
+      const fileName = `${topicName}-${stamp.sec}-${stamp.nsec}`;
+      downloadFiles([{ blob, fileName }]);
+      resolve();
+    }, "image/png"),
+  );
 }
