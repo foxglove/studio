@@ -283,10 +283,9 @@ function ImageView(props: Props) {
 
     return <BottomBar>{topicTimestamp}</BottomBar>;
   };
-  const wrapperRef = useRef<HTMLDivElement>(ReactNull);
 
   const onDownloadImage = useCallback(async () => {
-    if (!imageMessageToRender || wrapperRef.current == undefined) {
+    if (!imageMessageToRender) {
       return;
     }
 
@@ -295,9 +294,7 @@ function ImageView(props: Props) {
       return;
     }
 
-    const rect = wrapperRef.current.getBoundingClientRect();
-
-    await downloadImage(imageMessageToRender, topic, rect.width, rect.height, config);
+    await downloadImage(imageMessageToRender, topic, config);
   }, [imageTopics, cameraTopic, config, imageMessageToRender]);
 
   const imageTopicDropdown = useMemo(() => {
@@ -335,7 +332,6 @@ function ImageView(props: Props) {
         {/* Always render the ImageCanvas because it's expensive to unmount and start up. */}
         {imageMessageToRender && (
           <ImageCanvas
-            ref={wrapperRef}
             topic={cameraTopicFullObject}
             image={imageMessageToRender}
             rawMarkerData={rawMarkerData}

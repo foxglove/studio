@@ -11,8 +11,6 @@ import { renderImage } from "./renderImage";
 export async function downloadImage(
   normalizedImageMessage: NormalizedImageMessage,
   topic: Topic,
-  width: number,
-  height: number,
   config: Config,
 ): Promise<void> {
   // re-render the image onto a new canvas to download the original image
@@ -25,7 +23,7 @@ export async function downloadImage(
       flipVertical: config.flipVertical ?? false,
       panZoom: { x: 0, y: 0, scale: 1 },
       rotation: config.rotation ?? 0,
-      viewport: { width, height },
+      viewport: { width: 1, height: 1 }, // We'll just use the intrinsic image dimensions.
       zoomMode: "other",
     },
     imageMessage: normalizedImageMessage,
@@ -46,7 +44,9 @@ export async function downloadImage(
   // read the canvas data as an image (png)
   tempCanvas.toBlob((blob) => {
     if (!blob) {
-      throw new Error(`Failed to create an image from ${width}x${height} canvas`);
+      throw new Error(
+        `Failed to create an image from ${dimensions.width}x${dimensions.height} canvas`,
+      );
     }
     // name the image the same name as the topic
     // note: the / characters in the file name will be replaced with _ by the browser

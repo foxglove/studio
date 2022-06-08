@@ -14,15 +14,7 @@
 import { ContextualMenu, makeStyles } from "@fluentui/react";
 import MagnifyIcon from "@mdi/svg/svg/magnify.svg";
 import cx from "classnames";
-import {
-  useCallback,
-  useLayoutEffect,
-  useRef,
-  MouseEvent,
-  useState,
-  useMemo,
-  forwardRef,
-} from "react";
+import { useCallback, useLayoutEffect, useRef, MouseEvent, useState, useMemo } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { useAsync } from "react-use";
 import usePanZoom from "use-pan-and-zoom";
@@ -158,360 +150,350 @@ type RenderImage = (
 const supportsOffscreenCanvas =
   typeof HTMLCanvasElement.prototype.transferControlToOffscreen === "function";
 
-export const ImageCanvas = forwardRef<HTMLDivElement, Props>(
-  (props: Props, rootRefOrFunctionRef): JSX.Element => {
-    const {
-      rawMarkerData,
-      image: normalizedImageMessage,
-      config,
-      saveConfig,
-      onDownloadImage,
-      onStartRenderImage,
-    } = props;
-    const { mode } = config;
-    const classes = useStyles();
+export function ImageCanvas(props: Props): JSX.Element {
+  const {
+    rawMarkerData,
+    image: normalizedImageMessage,
+    config,
+    saveConfig,
+    onDownloadImage,
+    onStartRenderImage,
+  } = props;
+  const { mode } = config;
+  const classes = useStyles();
 
-    const renderInMainThread = (props.renderInMainThread ?? false) || !supportsOffscreenCanvas;
+  const renderInMainThread = (props.renderInMainThread ?? false) || !supportsOffscreenCanvas;
 
-    // generic errors within the panel
-    const [error, setError] = useState<Error | undefined>();
+  // generic errors within the panel
+  const [error, setError] = useState<Error | undefined>();
 
-    const [zoomMode, setZoomMode] = useState<Config["mode"]>(mode);
+  const [zoomMode, setZoomMode] = useState<Config["mode"]>(mode);
 
-    const canvasRef = useRef<HTMLCanvasElement>(ReactNull);
+  const canvasRef = useRef<HTMLCanvasElement>(ReactNull);
 
-    // Forward ref can be a function or a ref object. We need to handle both cases.
-    const rootRef =
-      rootRefOrFunctionRef != undefined && typeof rootRefOrFunctionRef !== "function"
-        ? rootRefOrFunctionRef
-        : undefined;
+  // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
+  // an existing resize observation.
+  // https://github.com/maslianok/react-resize-detector/issues/45
+  const {
+    width,
+    height,
+    ref: rootRef,
+  } = useResizeDetector({
+    refreshRate: 0,
+    refreshMode: "debounce",
+  });
 
-    // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
-    // an existing resize observation.
-    // https://github.com/maslianok/react-resize-detector/issues/45
-    const { width, height } = useResizeDetector({
-      refreshRate: 0,
-      refreshMode: "debounce",
-      targetRef: rootRef,
-    });
+  // The render function dispatches rendering to the main thread or a worker
+  const [doRenderImage, setDoRenderImage] = useState<RenderImage | undefined>(undefined);
 
-    // The render function dispatches rendering to the main thread or a worker
-    const [doRenderImage, setDoRenderImage] = useState<RenderImage | undefined>(undefined);
+  // the canvas can only be transferred once, so we keep the transfer around
+  const transfferedCanvasRef = useRef<OffscreenCanvas | undefined>(undefined);
 
-    // the canvas can only be transferred once, so we keep the transfer around
-    const transfferedCanvasRef = useRef<OffscreenCanvas | undefined>(undefined);
+  const workerRef = useRef<Rpc | undefined>();
 
-    const workerRef = useRef<Rpc | undefined>();
+  const [workerId] = useState(uuidv4());
 
-    const [workerId] = useState(uuidv4());
+  // setup the render function to render in the main thread or in the worker
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
 
-    // setup the render function to render in the main thread or in the worker
-    useLayoutEffect(() => {
-      const canvas = canvasRef.current;
-      if (!canvas) {
-        return;
-      }
+    const id = workerId;
 
-      const id = workerId;
+    if (renderInMainThread) {
+      // Potentially performance-sensitive; await can be expensive
+      // eslint-disable-next-line @typescript-eslint/promise-function-async
+      const renderInMain: RenderImage = (args) => {
+        const targetWidth = args.geometry.viewport.width;
+        const targetHeight = args.geometry.viewport.height;
 
-      if (renderInMainThread) {
-        // Potentially performance-sensitive; await can be expensive
-        // eslint-disable-next-line @typescript-eslint/promise-function-async
-        const renderInMain: RenderImage = (args) => {
-          const targetWidth = args.geometry.viewport.width;
-          const targetHeight = args.geometry.viewport.height;
-
-          if (targetWidth !== canvas.width) {
-            canvas.width = targetWidth;
-          }
-          if (targetHeight !== canvas.height) {
-            canvas.height = targetHeight;
-          }
-          return renderImage({ ...args, hitmapCanvas: undefined });
-        };
-
-        setDoRenderImage(() => renderInMain);
-      } else {
-        const worker = webWorkerManager.registerWorkerListener(id);
-        workerRef.current = worker;
-
-        // Potentially performance-sensitive; await can be expensive
-        // eslint-disable-next-line @typescript-eslint/promise-function-async
-        const workerRender: RenderImage = (args) => {
-          const { geometry, imageMessage, options, rawMarkerData: rawMarkers } = args;
-
-          return worker.send<Dimensions | undefined, RenderArgs & { id: string }>("renderImage", {
-            geometry,
-            id,
-            imageMessage,
-            options,
-            rawMarkerData: rawMarkers,
-          });
-        };
-
-        transfferedCanvasRef.current ??= canvas.transferControlToOffscreen();
-
-        worker
-          .send<void>("initialize", { id, canvas: transfferedCanvasRef.current }, [
-            transfferedCanvasRef.current,
-          ])
-          .then(() => {
-            setDoRenderImage(() => workerRender);
-          })
-          .catch((err) => {
-            setError(err as Error);
-          });
-      }
-
-      return () => {
-        if (renderInMainThread) {
-          return;
+        if (targetWidth !== canvas.width) {
+          canvas.width = targetWidth;
         }
-
-        webWorkerManager.unregisterWorkerListener(id);
-      };
-    }, [renderInMainThread, workerId]);
-
-    const {
-      setPan,
-      setZoom,
-      // panX/panY need to be split apart because the pan object's identity may change on each render,
-      // and we want to avoid unnecessary updates to useEffects/useMemos below
-      pan: { x: panX, y: panY },
-      zoom: scaleValue,
-      setContainer,
-      panZoomHandlers,
-    } = usePanZoom({
-      minZoom: 0.5,
-      initialPan: config.pan,
-      initialZoom: config.zoom,
-    });
-
-    useLayoutEffect(() => {
-      if (canvasRef.current) {
-        setContainer(canvasRef.current);
-      }
-    }, [setContainer]);
-
-    const renderOptions = useMemo(() => {
-      return {
-        imageSmoothing: config.smooth,
-        minValue: config.minValue,
-        maxValue: config.maxValue,
-      };
-    }, [config.minValue, config.maxValue, config.smooth]);
-
-    const devicePixelRatio = window.devicePixelRatio;
-    const { error: renderError } = useAsync(async () => {
-      if (!canvasRef.current || !doRenderImage) {
-        return;
-      }
-
-      // we haven't detected a width/height yet so avoid rendering
-      if (width == undefined || height == undefined) {
-        return;
-      }
-
-      // can't set width/height of canvas after transferring control to offscreen
-      // so we need to send the width/height to rpc
-      const targetWidth = Math.floor(width * devicePixelRatio);
-      const targetHeight = Math.floor(height * devicePixelRatio);
-
-      const computedViewbox = {
-        x: Math.floor(panX * devicePixelRatio),
-        y: Math.floor(panY * devicePixelRatio),
-        scale: scaleValue,
+        if (targetHeight !== canvas.height) {
+          canvas.height = targetHeight;
+        }
+        return renderImage({ ...args, hitmapCanvas: undefined });
       };
 
-      const finishRender = onStartRenderImage();
-      try {
-        return await doRenderImage({
-          canvas: canvasRef.current,
-          geometry: {
-            flipHorizontal: config.flipHorizontal ?? false,
-            flipVertical: config.flipVertical ?? false,
-            panZoom: computedViewbox,
-            rotation: config.rotation ?? 0,
-            viewport: { width: targetWidth, height: targetHeight },
-            zoomMode: zoomMode ?? "fit",
-          },
-          imageMessage: normalizedImageMessage,
-          rawMarkerData,
-          options: renderOptions,
+      setDoRenderImage(() => renderInMain);
+    } else {
+      const worker = webWorkerManager.registerWorkerListener(id);
+      workerRef.current = worker;
+
+      // Potentially performance-sensitive; await can be expensive
+      // eslint-disable-next-line @typescript-eslint/promise-function-async
+      const workerRender: RenderImage = (args) => {
+        const { geometry, imageMessage, options, rawMarkerData: rawMarkers } = args;
+
+        return worker.send<Dimensions | undefined, RenderArgs & { id: string }>("renderImage", {
+          geometry,
+          id,
+          imageMessage,
+          options,
+          rawMarkerData: rawMarkers,
         });
-      } finally {
-        finishRender();
-      }
-    }, [
-      config.flipHorizontal,
-      config.flipVertical,
-      config.rotation,
-      devicePixelRatio,
-      doRenderImage,
-      height,
-      normalizedImageMessage,
-      onStartRenderImage,
-      panX,
-      panY,
-      rawMarkerData,
-      renderOptions,
-      scaleValue,
-      width,
-      zoomMode,
-    ]);
+      };
 
-    const [openZoomContext, setOpenZoomContext] = useState(false);
+      transfferedCanvasRef.current ??= canvas.transferControlToOffscreen();
 
-    const zoomIn = useCallback(() => {
-      setZoom((oldZoom) => oldZoom * 1.1);
-    }, [setZoom]);
-
-    const zoomOut = useCallback(() => {
-      setZoom((oldZoom) => oldZoom * 0.9);
-    }, [setZoom]);
-
-    const resetPanZoom = useCallback(() => {
-      setPan({ x: 0, y: 0 });
-      setZoom(1);
-    }, [setPan, setZoom]);
-
-    const onZoomFit = useCallback(() => {
-      setZoomMode("fit");
-      resetPanZoom();
-      setOpenZoomContext(false);
-    }, [resetPanZoom]);
-
-    const onZoomFill = useCallback(() => {
-      setZoomMode("fill");
-      resetPanZoom();
-      setOpenZoomContext(false);
-    }, [resetPanZoom]);
-
-    const onZoom100 = useCallback(() => {
-      setZoomMode("other");
-      resetPanZoom();
-      setOpenZoomContext(false);
-    }, [resetPanZoom]);
-
-    useLayoutEffect(() => {
-      saveConfig({
-        pan: { x: panX, y: panY },
-        zoom: scaleValue,
-      });
-    }, [panX, panY, saveConfig, scaleValue]);
-
-    const zoomContextMenu = useMemo(() => {
-      return (
-        <div className={classes.zoomContextMenu}>
-          <div className={cx(classes.menuItem, classes.notInteractive)}>
-            Scroll or use the buttons below to zoom
-          </div>
-          <div className={cx(classes.menuItem, classes.borderBottom)}>
-            <LegacyButton className={classes.round} onClick={zoomOut} data-panel-minus-zoom>
-              -
-            </LegacyButton>
-            <LegacyButton className={classes.round} onClick={zoomIn} data-panel-add-zoom>
-              +
-            </LegacyButton>
-          </div>
-          <Item className={classes.borderBottom} onClick={onZoom100} dataTest={"hundred-zoom"}>
-            Zoom to 100%
-          </Item>
-          <Item className={classes.borderBottom} onClick={onZoomFit} dataTest={"fit-zoom"}>
-            Zoom to fit
-          </Item>
-          <Item onClick={onZoomFill} dataTest={"fill-zoom"}>
-            Zoom to fill
-          </Item>
-        </div>
-      );
-    }, [
-      classes.borderBottom,
-      classes.menuItem,
-      classes.notInteractive,
-      classes.round,
-      classes.zoomContextMenu,
-      onZoom100,
-      onZoomFill,
-      onZoomFit,
-      zoomIn,
-      zoomOut,
-    ]);
-
-    const [contextMenuEvent, setContextMenuEvent] = useState<
-      MouseEvent<HTMLCanvasElement>["nativeEvent"] | undefined
-    >(undefined);
-
-    const onCanvasContextMenu = useCallback((ev: MouseEvent<HTMLCanvasElement>) => {
-      ev.preventDefault();
-      ev.stopPropagation();
-      setContextMenuEvent(ev.nativeEvent);
-    }, []);
-
-    function onCanvasClick(event: MouseEvent<HTMLCanvasElement>) {
-      const boundingRect = event.currentTarget.getBoundingClientRect();
-      const x = event.clientX - boundingRect.x;
-      const y = event.clientY - boundingRect.y;
-      void workerRef.current
-        ?.send<PixelData | undefined>("mouseMove", {
-          id: workerId,
-          x: x * devicePixelRatio,
-          y: y * devicePixelRatio,
+      worker
+        .send<void>("initialize", { id, canvas: transfferedCanvasRef.current }, [
+          transfferedCanvasRef.current,
+        ])
+        .then(() => {
+          setDoRenderImage(() => workerRender);
         })
-        .then((r) => {
-          if (r?.marker) {
-            props.setActivePixelData(r);
-          } else {
-            props.setActivePixelData(undefined);
-          }
+        .catch((err) => {
+          setError(err as Error);
         });
     }
 
-    const zoomRef = useRef<HTMLDivElement>(ReactNull);
+    return () => {
+      if (renderInMainThread) {
+        return;
+      }
 
-    const mousePresent = usePanelMousePresence(zoomRef);
+      webWorkerManager.unregisterWorkerListener(id);
+    };
+  }, [renderInMainThread, workerId]);
 
-    const keyDownHandlers = useMemo(() => {
-      return {
-        "=": zoomIn,
-        "-": zoomOut,
-        "0": onZoom100,
-      };
-    }, [onZoom100, zoomIn, zoomOut]);
+  const {
+    setPan,
+    setZoom,
+    // panX/panY need to be split apart because the pan object's identity may change on each render,
+    // and we want to avoid unnecessary updates to useEffects/useMemos below
+    pan: { x: panX, y: panY },
+    zoom: scaleValue,
+    setContainer,
+    panZoomHandlers,
+  } = usePanZoom({
+    minZoom: 0.5,
+    initialPan: config.pan,
+    initialZoom: config.zoom,
+  });
 
+  useLayoutEffect(() => {
+    if (canvasRef.current) {
+      setContainer(canvasRef.current);
+    }
+  }, [setContainer]);
+
+  const renderOptions = useMemo(() => {
+    return {
+      imageSmoothing: config.smooth,
+      minValue: config.minValue,
+      maxValue: config.maxValue,
+    };
+  }, [config.minValue, config.maxValue, config.smooth]);
+
+  const devicePixelRatio = window.devicePixelRatio;
+  const { error: renderError } = useAsync(async () => {
+    if (!canvasRef.current || !doRenderImage) {
+      return;
+    }
+
+    // we haven't detected a width/height yet so avoid rendering
+    if (width == undefined || height == undefined) {
+      return;
+    }
+
+    // can't set width/height of canvas after transferring control to offscreen
+    // so we need to send the width/height to rpc
+    const targetWidth = Math.floor(width * devicePixelRatio);
+    const targetHeight = Math.floor(height * devicePixelRatio);
+
+    const computedViewbox = {
+      x: Math.floor(panX * devicePixelRatio),
+      y: Math.floor(panY * devicePixelRatio),
+      scale: scaleValue,
+    };
+
+    const finishRender = onStartRenderImage();
+    try {
+      return await doRenderImage({
+        canvas: canvasRef.current,
+        geometry: {
+          flipHorizontal: config.flipHorizontal ?? false,
+          flipVertical: config.flipVertical ?? false,
+          panZoom: computedViewbox,
+          rotation: config.rotation ?? 0,
+          viewport: { width: targetWidth, height: targetHeight },
+          zoomMode: zoomMode ?? "fit",
+        },
+        imageMessage: normalizedImageMessage,
+        rawMarkerData,
+        options: renderOptions,
+      });
+    } finally {
+      finishRender();
+    }
+  }, [
+    config.flipHorizontal,
+    config.flipVertical,
+    config.rotation,
+    devicePixelRatio,
+    doRenderImage,
+    height,
+    normalizedImageMessage,
+    onStartRenderImage,
+    panX,
+    panY,
+    rawMarkerData,
+    renderOptions,
+    scaleValue,
+    width,
+    zoomMode,
+  ]);
+
+  const [openZoomContext, setOpenZoomContext] = useState(false);
+
+  const zoomIn = useCallback(() => {
+    setZoom((oldZoom) => oldZoom * 1.1);
+  }, [setZoom]);
+
+  const zoomOut = useCallback(() => {
+    setZoom((oldZoom) => oldZoom * 0.9);
+  }, [setZoom]);
+
+  const resetPanZoom = useCallback(() => {
+    setPan({ x: 0, y: 0 });
+    setZoom(1);
+  }, [setPan, setZoom]);
+
+  const onZoomFit = useCallback(() => {
+    setZoomMode("fit");
+    resetPanZoom();
+    setOpenZoomContext(false);
+  }, [resetPanZoom]);
+
+  const onZoomFill = useCallback(() => {
+    setZoomMode("fill");
+    resetPanZoom();
+    setOpenZoomContext(false);
+  }, [resetPanZoom]);
+
+  const onZoom100 = useCallback(() => {
+    setZoomMode("other");
+    resetPanZoom();
+    setOpenZoomContext(false);
+  }, [resetPanZoom]);
+
+  useLayoutEffect(() => {
+    saveConfig({
+      pan: { x: panX, y: panY },
+      zoom: scaleValue,
+    });
+  }, [panX, panY, saveConfig, scaleValue]);
+
+  const zoomContextMenu = useMemo(() => {
     return (
-      <div ref={rootRef} className={classes.root}>
-        <KeyListener keyDownHandlers={keyDownHandlers} />
-        {error && <div className={classes.errorMessage}>Error: {error.message}</div>}
-        {renderError && <div className={classes.errorMessage}>Error: {renderError.message}</div>}
-        <canvas
-          onContextMenu={onCanvasContextMenu}
-          {...panZoomHandlers}
-          className={cx(classes.canvas, {
-            [classes.canvasImageRenderingSmooth]: config.smooth === true,
-          })}
-          onClick={onCanvasClick}
-          ref={canvasRef}
-        />
-        {contextMenuEvent && (
-          <ContextualMenu
-            target={contextMenuEvent}
-            onDismiss={() => setContextMenuEvent(undefined)}
-            items={[{ key: "download", text: "Download Image", onClick: onDownloadImage }]}
-          />
-        )}
-        <div ref={zoomRef} style={{ visibility: mousePresent ? "visible" : "hidden" }}>
-          {openZoomContext && zoomContextMenu}
-          <LegacyButton
-            className={classes.magnify}
-            onClick={() => setOpenZoomContext((old) => !old)}
-          >
-            <MagnifyIcon />
+      <div className={classes.zoomContextMenu}>
+        <div className={cx(classes.menuItem, classes.notInteractive)}>
+          Scroll or use the buttons below to zoom
+        </div>
+        <div className={cx(classes.menuItem, classes.borderBottom)}>
+          <LegacyButton className={classes.round} onClick={zoomOut} data-panel-minus-zoom>
+            -
+          </LegacyButton>
+          <LegacyButton className={classes.round} onClick={zoomIn} data-panel-add-zoom>
+            +
           </LegacyButton>
         </div>
+        <Item className={classes.borderBottom} onClick={onZoom100} dataTest={"hundred-zoom"}>
+          Zoom to 100%
+        </Item>
+        <Item className={classes.borderBottom} onClick={onZoomFit} dataTest={"fit-zoom"}>
+          Zoom to fit
+        </Item>
+        <Item onClick={onZoomFill} dataTest={"fill-zoom"}>
+          Zoom to fill
+        </Item>
       </div>
     );
-  },
-);
+  }, [
+    classes.borderBottom,
+    classes.menuItem,
+    classes.notInteractive,
+    classes.round,
+    classes.zoomContextMenu,
+    onZoom100,
+    onZoomFill,
+    onZoomFit,
+    zoomIn,
+    zoomOut,
+  ]);
 
-ImageCanvas.displayName = "Image Canvas";
+  const [contextMenuEvent, setContextMenuEvent] = useState<
+    MouseEvent<HTMLCanvasElement>["nativeEvent"] | undefined
+  >(undefined);
+
+  const onCanvasContextMenu = useCallback((ev: MouseEvent<HTMLCanvasElement>) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    setContextMenuEvent(ev.nativeEvent);
+  }, []);
+
+  function onCanvasClick(event: MouseEvent<HTMLCanvasElement>) {
+    const boundingRect = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - boundingRect.x;
+    const y = event.clientY - boundingRect.y;
+    void workerRef.current
+      ?.send<PixelData | undefined>("mouseMove", {
+        id: workerId,
+        x: x * devicePixelRatio,
+        y: y * devicePixelRatio,
+      })
+      .then((r) => {
+        if (r?.marker) {
+          props.setActivePixelData(r);
+        } else {
+          props.setActivePixelData(undefined);
+        }
+      });
+  }
+
+  const zoomRef = useRef<HTMLDivElement>(ReactNull);
+
+  const mousePresent = usePanelMousePresence(zoomRef);
+
+  const keyDownHandlers = useMemo(() => {
+    return {
+      "=": zoomIn,
+      "-": zoomOut,
+      "0": onZoom100,
+    };
+  }, [onZoom100, zoomIn, zoomOut]);
+
+  return (
+    <div ref={rootRef} className={classes.root}>
+      <KeyListener keyDownHandlers={keyDownHandlers} />
+      {error && <div className={classes.errorMessage}>Error: {error.message}</div>}
+      {renderError && <div className={classes.errorMessage}>Error: {renderError.message}</div>}
+      <canvas
+        onContextMenu={onCanvasContextMenu}
+        {...panZoomHandlers}
+        className={cx(classes.canvas, {
+          [classes.canvasImageRenderingSmooth]: config.smooth === true,
+        })}
+        onClick={onCanvasClick}
+        ref={canvasRef}
+      />
+      {contextMenuEvent && (
+        <ContextualMenu
+          target={contextMenuEvent}
+          onDismiss={() => setContextMenuEvent(undefined)}
+          items={[{ key: "download", text: "Download Image", onClick: onDownloadImage }]}
+        />
+      )}
+      <div ref={zoomRef} style={{ visibility: mousePresent ? "visible" : "hidden" }}>
+        {openZoomContext && zoomContextMenu}
+        <LegacyButton className={classes.magnify} onClick={() => setOpenZoomContext((old) => !old)}>
+          <MagnifyIcon />
+        </LegacyButton>
+      </div>
+    </div>
+  );
+}
