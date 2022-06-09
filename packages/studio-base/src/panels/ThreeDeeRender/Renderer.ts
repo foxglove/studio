@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import EventEmitter from "eventemitter3";
+import { Immutable, produce } from "immer";
 import * as THREE from "three";
 import { DeepPartial } from "ts-essentials";
 
@@ -103,7 +104,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   // target: THREE.WebGLRenderTarget;
   // composer: EffectComposer;
   // outlinePass: OutlinePass;
-  config: ThreeDeeRenderConfig;
+  config: Immutable<ThreeDeeRenderConfig>;
   scene: THREE.Scene;
   dirLight: THREE.DirectionalLight;
   hemiLight: THREE.HemisphereLight;
@@ -240,6 +241,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.pointClouds.dispose();
     this.markers.dispose();
     this.gl.dispose();
+  }
+
+  updateConfig(updateHandler: (draft: ThreeDeeRenderConfig) => void): void {
+    this.config = produce(this.config, updateHandler);
   }
 
   setSettingsNodeProvider(layerType: LayerType, provider: SettingsNodeProvider): void {

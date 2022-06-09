@@ -299,7 +299,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   // Update the renderer's reference to `config` when it changes
   useEffect(() => {
     if (renderer) {
-      renderer.config = structuredClone(config);
+      renderer.config = config;
       renderRef.current.needsRender = true;
     }
   }, [config, renderer]);
