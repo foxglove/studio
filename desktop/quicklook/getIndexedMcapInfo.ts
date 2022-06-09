@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Mcap0IndexedReader, Mcap0Types } from "@mcap/core";
+
 import { fromNanoSec } from "@foxglove/rostime";
 
 import { FileInfo, TopicInfo } from "./types";

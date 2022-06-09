@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Mcap0Types, McapPre0Types } from "@mcap/core";
+
 import { Time, fromNanoSec, isLessThan, isGreaterThan } from "@foxglove/rostime";
 
 import { TopicInfo, FileInfo } from "./types";
