@@ -5,6 +5,7 @@
 import * as THREE from "three";
 
 import Logger from "@foxglove/log";
+import { toNanoSec } from "@foxglove/rostime";
 import { SettingsTreeFields } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import PinholeCameraModel from "@foxglove/studio-base/panels/Image/lib/PinholeCameraModel";
 import {
@@ -24,7 +25,7 @@ import { MutablePoint } from "@foxglove/studio-base/types/Messages";
 
 import { Renderer } from "../Renderer";
 import { stringToRgba } from "../color";
-import { CameraInfo, Pose, Image, CompressedImage, rosTimeToNanoSec } from "../ros";
+import { CameraInfo, Pose, Image, CompressedImage } from "../ros";
 import { LayerSettingsImage, LayerType } from "../settings";
 import { makePose } from "../transforms/geometry";
 import { updatePose } from "../updatePose";
@@ -125,7 +126,7 @@ export class Images extends THREE.Object3D {
         image,
         cameraModel: undefined,
         pose: makePose(),
-        srcTime: rosTimeToNanoSec(image.header.stamp),
+        srcTime: toNanoSec(image.header.stamp),
         texture: undefined,
         material: undefined,
         geometry: undefined,
@@ -227,6 +228,8 @@ export class Images extends THREE.Object3D {
     const materialSettingsEqual = newSettings.color === prevSettings.color;
     const topic = renderable.userData.topic;
 
+    renderable.userData.image = image;
+    renderable.userData.srcTime = toNanoSec(image.header.stamp);
     renderable.userData.settings = newSettings;
 
     // Dispose of the current geometry if the settings have changed
