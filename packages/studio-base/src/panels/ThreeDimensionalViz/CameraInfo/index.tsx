@@ -13,7 +13,7 @@
 
 import { useTheme } from "@fluentui/react";
 import CameraControlIcon from "@mdi/svg/svg/camera-control.svg";
-import { Button, Tooltip } from "@mui/material";
+import { Button, Tooltip, styled as muiStyled } from "@mui/material";
 import { vec3 } from "gl-matrix";
 import { isEqual } from "lodash";
 
@@ -46,6 +46,11 @@ type CameraStateInfoProps = {
   cameraState: Partial<CameraState>;
   onAlignXYAxis: () => void;
 };
+
+const StyledButton = muiStyled(Button)({
+  lineHeight: 1.25,
+  minWidth: 40,
+});
 
 export type CameraInfoPropsWithoutCameraState = {
   followMode: FollowMode;
@@ -82,7 +87,7 @@ function CameraStateInfo({ cameraState, onAlignXYAxis }: CameraStateInfoProps) {
           <Stack key={key} direction="row" alignItems="center" gap={1}>
             <SLabel width={LABEL_WIDTH}>{key}:</SLabel> <SValue>{val}</SValue>
             {key === "thetaOffset" && (
-              <Button
+              <StyledButton
                 color="inherit"
                 variant="text"
                 size="small"
@@ -90,7 +95,7 @@ function CameraStateInfo({ cameraState, onAlignXYAxis }: CameraStateInfoProps) {
                 title="Align XY axis by reseting thetaOffset to 0. Will no longer follow orientation."
               >
                 Reset
-              </Button>
+              </StyledButton>
             )}
           </Stack>
         ))}
@@ -149,7 +154,7 @@ export default function CameraInfo({
       <ToolGroup name={CAMERA_TAB_TYPE}>
         <>
           <Stack direction="row-reverse" gap={0.5} padding={0.5}>
-            <Button
+            <StyledButton
               title="Copy cameraState"
               color="inherit"
               variant="text"
@@ -159,8 +164,8 @@ export default function CameraInfo({
               }}
             >
               Copy
-            </Button>
-            <Button
+            </StyledButton>
+            <StyledButton
               disabled={isPlaying}
               color="inherit"
               variant="text"
@@ -173,8 +178,8 @@ export default function CameraInfo({
               onClick={onEditToggle}
             >
               {edit ? "Done" : "Edit"}
-            </Button>
-            <Button
+            </StyledButton>
+            <StyledButton
               color="inherit"
               variant="text"
               size="small"
@@ -182,7 +187,7 @@ export default function CameraInfo({
               onClick={syncCameraState}
             >
               Sync
-            </Button>
+            </StyledButton>
           </Stack>
           <Stack flex="auto" padding={1} style={{ minWidth: DEFAULT_CAMERA_INFO_WIDTH }}>
             {edit && !isPlaying ? (
