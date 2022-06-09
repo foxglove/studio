@@ -85,6 +85,7 @@ function CameraStateInfo({ cameraState, onAlignXYAxis }: CameraStateInfoProps) {
               <Button
                 color="inherit"
                 variant="text"
+                size="small"
                 onClick={onAlignXYAxis}
                 title="Align XY axis by reseting thetaOffset to 0. Will no longer follow orientation."
               >
@@ -152,6 +153,7 @@ export default function CameraInfo({
               title="Copy cameraState"
               color="inherit"
               variant="text"
+              size="small"
               onClick={() => {
                 void clipboard.copy(JSON.stringify(cameraState, undefined, 2) ?? "");
               }}
@@ -162,6 +164,7 @@ export default function CameraInfo({
               disabled={isPlaying}
               color="inherit"
               variant="text"
+              size="small"
               title={
                 isPlaying
                   ? "Pause player to edit raw camera state object"
@@ -174,6 +177,7 @@ export default function CameraInfo({
             <Button
               color="inherit"
               variant="text"
+              size="small"
               title="Sync camera state across all 3D panels"
               onClick={syncCameraState}
             >
