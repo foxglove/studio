@@ -173,10 +173,6 @@ export class IterablePlayer implements Player {
 
   private readonly _sourceId: string;
 
-  // A player must not emit state until a previous state emit is complete. This promise stores any
-  // in-flight state emit so any new state emit waits for the in-flight emit to finish.
-  private _emittingState: Promise<void> | undefined;
-
   constructor(options: IterablePlayerOptions) {
     const { metricsCollector, urlParams, source, name, enablePreload, sourceId } = options;
 
@@ -226,10 +222,10 @@ export class IterablePlayer implements Player {
     this._speed = speed;
     this._metricsCollector.setSpeed(speed);
 
-    // If we are idling then we emit state to reflect the new speed in the player state.
-    // For other states, we let them emit their own state update
+    // If we are idling then we might not emit any new state so we use a state change to idle state
+    // to trigger an emit so listeners get updated with the new speed setting.
     if (this._state === "idle") {
-      void this._emitState();
+      this._setState("idle");
     }
   }
 
@@ -266,8 +262,16 @@ export class IterablePlayer implements Player {
   }
 
   requestBackfill(): void {
-    // Once we are in an active state (i.e. done initializing), we use seeking to indicate
-    // that subscriptions have changed so restart our loading
+    // The message pipeline invokes requestBackfill after setting subscriptions. It does this so any
+    // new panels that subscribe receive their messages even if the topic was already subscribed.
+    //
+    // Note(Roman): This behavior was designed around RandomAccessPlayer (I think) which does not do
+    // anything in setSubscriptions other than update internal members. While we still have
+    // RandomAccessPlayer we mimick that behavior in this player. Eventually we can update
+    // MessagePipeline to remove requestBackfill.
+    //
+    // We only seek playback if the player is not playing. If the player is playing, the
+    // playing state will detect any subscription changes and emit new messages.
     if (this._state === "idle" || this._state === "seek-backfill" || this._state === "play") {
       if (!this._isPlaying && this._currentTime) {
         this.seekPlayback(this._currentTime);
@@ -602,72 +606,62 @@ export class IterablePlayer implements Player {
 
   /** Emit the player state to the registered listener */
   private async _emitState() {
-    while (this._emittingState) {
-      await this._emittingState;
+    if (!this._listener) {
+      return;
     }
 
-    try {
-      if (!this._listener) {
-        return undefined;
-      }
-
-      if (this._hasError) {
-        this._emittingState = this._listener({
-          name: this._name,
-          filePath: this._filePath,
-          presence: PlayerPresence.ERROR,
-          progress: {},
-          capabilities: this._capabilities,
-          playerId: this._id,
-          activeData: undefined,
-          problems: this._problemManager.problems(),
-          urlState: {
-            sourceId: this._sourceId,
-            parameters: this._urlParams,
-          },
-        });
-        return await this._emittingState;
-      }
-
-      const messages = this._messages;
-      this._messages = [];
-
-      const currentTime = this._currentTime ?? this._start;
-
-      const data: PlayerState = {
+    if (this._hasError) {
+      return await this._listener({
         name: this._name,
         filePath: this._filePath,
-        presence: this._presence,
-        progress: this._progress,
+        presence: PlayerPresence.ERROR,
+        progress: {},
         capabilities: this._capabilities,
         playerId: this._id,
+        activeData: undefined,
         problems: this._problemManager.problems(),
-        activeData: {
-          messages,
-          totalBytesReceived: this._receivedBytes,
-          messageOrder: this._messageOrder,
-          currentTime,
-          startTime: this._start,
-          endTime: this._end,
-          isPlaying: this._isPlaying,
-          speed: this._speed,
-          lastSeekTime: this._lastSeekEmitTime,
-          topics: this._providerTopics,
-          topicStats: this._providerTopicStats,
-          datatypes: this._providerDatatypes,
-          publishedTopics: this._publishedTopics,
-        },
         urlState: {
           sourceId: this._sourceId,
           parameters: this._urlParams,
         },
-      };
-
-      this._emittingState = this._listener(data);
-      return await this._emittingState;
-    } finally {
-      this._emittingState = undefined;
+      });
     }
+
+    const messages = this._messages;
+    this._messages = [];
+
+    const currentTime = this._currentTime ?? this._start;
+
+    const data: PlayerState = {
+      name: this._name,
+      filePath: this._filePath,
+      presence: this._presence,
+      progress: this._progress,
+      capabilities: this._capabilities,
+      playerId: this._id,
+      problems: this._problemManager.problems(),
+      activeData: {
+        messages,
+        totalBytesReceived: this._receivedBytes,
+        messageOrder: this._messageOrder,
+        currentTime,
+        startTime: this._start,
+        endTime: this._end,
+        isPlaying: this._isPlaying,
+        speed: this._speed,
+        lastSeekTime: this._lastSeekEmitTime,
+        topics: this._providerTopics,
+        topicStats: this._providerTopicStats,
+        datatypes: this._providerDatatypes,
+        publishedTopics: this._publishedTopics,
+      },
+      urlState: {
+        sourceId: this._sourceId,
+        parameters: this._urlParams,
+      },
+    };
+
+    return await this._listener(data);
   }
 
   /**
