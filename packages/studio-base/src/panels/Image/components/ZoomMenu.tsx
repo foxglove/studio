@@ -8,13 +8,13 @@ import SearchIcon from "@mui/icons-material/Search";
 import {
   Card,
   IconButton,
-  ListItem,
   Menu,
   MenuItem,
   ToggleButton,
   ToggleButtonGroup,
   Typography,
   styled as muiStyled,
+  Divider,
 } from "@mui/material";
 import { MouseEvent, useCallback, useRef, useState } from "react";
 
@@ -125,6 +125,7 @@ export default function ZoomMenu({
         MenuListProps={{
           "aria-labelledby": "zoom-button",
           dense: true,
+          disablePadding: true,
         }}
         anchorOrigin={{
           vertical: "top",
@@ -135,25 +136,24 @@ export default function ZoomMenu({
           horizontal: "left",
         }}
       >
-        <ListItem dense tabIndex={0} divider>
-          <Stack paddingBottom={1} gap={1}>
-            <Typography variant="body2" color="text.secondary">
-              Scroll or use the <br />
-              buttons below to zoom
-            </Typography>
-            <StyledToggleButtonGroup size="small" style={{ width: "100%" }}>
-              <ToggleButton value="zoom-out" onClick={zoomOut}>
-                <RemoveIcon fontSize="small" />
-              </ToggleButton>
-              <StyledToggleButton disabled value="zoom-value">
-                {`${Math.round(zoom * 100)}%`}
-              </StyledToggleButton>
-              <ToggleButton value="zoom-in" onClick={zoomIn}>
-                <AddIcon fontSize="small" />
-              </ToggleButton>
-            </StyledToggleButtonGroup>
-          </Stack>
-        </ListItem>
+        <Stack padding={2} gap={1}>
+          <Typography variant="body2" color="text.secondary">
+            Scroll or use the <br />
+            buttons below to zoom
+          </Typography>
+          <StyledToggleButtonGroup size="small" style={{ width: "100%" }}>
+            <ToggleButton value="zoom-out" onClick={zoomOut}>
+              <RemoveIcon fontSize="small" />
+            </ToggleButton>
+            <StyledToggleButton disabled value="zoom-value">
+              {`${Math.round(zoom * 100)}%`}
+            </StyledToggleButton>
+            <ToggleButton value="zoom-in" onClick={zoomIn}>
+              <AddIcon fontSize="small" />
+            </ToggleButton>
+          </StyledToggleButtonGroup>
+        </Stack>
+        <Divider />
         <MenuItem divider onClick={onZoom100} data-test={"hundred-zoom"}>
           Zoom to 100%
         </MenuItem>
