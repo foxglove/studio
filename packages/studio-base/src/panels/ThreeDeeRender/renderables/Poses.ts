@@ -84,7 +84,7 @@ export class Poses extends THREE.Object3D {
         }
       }
 
-      return { fields };
+      return { icon: "Flag", fields };
     });
   }
 
@@ -181,6 +181,8 @@ export class Poses extends THREE.Object3D {
       if (!updated) {
         const message = missingTransformMessage(renderFrameId, fixedFrameId, frameId);
         this.renderer.layerErrors.addToTopic(renderable.userData.topic, MISSING_TRANSFORM, message);
+      } else {
+        this.renderer.layerErrors.removeFromTopic(renderable.userData.topic, MISSING_TRANSFORM);
       }
     }
   }

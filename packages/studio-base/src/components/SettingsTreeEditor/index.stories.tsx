@@ -7,6 +7,7 @@ import produce from "immer";
 import { last } from "lodash";
 import { useCallback, useMemo, useState, useEffect } from "react";
 
+import Logger from "@foxglove/log";
 import { MessagePathInputStoryFixture } from "@foxglove/studio-base/components/MessagePathSyntax/fixture";
 import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
 import SettingsTreeEditor from "@foxglove/studio-base/components/SettingsTreeEditor";
@@ -23,6 +24,8 @@ export default {
   title: "components/SettingsTreeEditor",
   component: SettingsTreeEditor,
 };
+
+const log = Logger.getLogger(__filename);
 
 const BasicSettings: SettingsTreeRoots = {
   general: {
@@ -43,7 +46,12 @@ const BasicSettings: SettingsTreeRoots = {
         precision: 4,
       },
       gradient: { input: "gradient", label: "Gradient" },
-      emptyNumber: { input: "number", label: "Empty Number" },
+      numberWithPlaceholder: {
+        input: "number",
+        label: "Number with placeholder",
+        step: 10,
+        placeholder: "3",
+      },
       fieldWithError: {
         input: "string",
         label: "Field With Error",
@@ -77,9 +85,10 @@ const BasicSettings: SettingsTreeRoots = {
       },
       emptySelect: {
         label: "Empty Select",
-        value: "",
+        value: undefined,
         input: "select",
         options: [
+          { label: "Undefined", value: undefined },
           { label: "Nothing", value: "" },
           { label: "Something", value: "something" },
         ],
@@ -443,6 +452,7 @@ function Wrapper({ roots }: { roots: SettingsTreeRoots }): JSX.Element {
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
+      log.info("Handling action", action);
       if (action.action === "perform-node-action") {
         if (action.payload.id === "add-grid") {
           const nodeCount = Object.keys(dynamicNodes).length;

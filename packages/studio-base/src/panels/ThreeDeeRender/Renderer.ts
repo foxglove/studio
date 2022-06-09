@@ -20,12 +20,16 @@ import { stringToRgb } from "./color";
 import { DetailLevel, msaaSamples } from "./lod";
 import { Cameras } from "./renderables/Cameras";
 import { FrameAxes } from "./renderables/FrameAxes";
+import { Grids } from "./renderables/Grids";
+import { Images } from "./renderables/Images";
 import { Markers } from "./renderables/Markers";
 import { OccupancyGrids } from "./renderables/OccupancyGrids";
 import { PointClouds } from "./renderables/PointClouds";
 import { Poses } from "./renderables/Poses";
 import {
   CameraInfo,
+  CompressedImage,
+  Image,
   Marker,
   OccupancyGrid,
   PointCloud2,
@@ -35,6 +39,8 @@ import {
 } from "./ros";
 import {
   LayerSettingsCameraInfo,
+  LayerSettingsGrid,
+  LayerSettingsImage,
   LayerSettingsMarker,
   LayerSettingsMarkerNamespace,
   LayerSettingsOccupancyGrid,
@@ -56,6 +62,12 @@ export type RendererEvents = {
   renderableSelected: (renderable: THREE.Object3D | undefined, renderer: Renderer) => void;
   transformTreeUpdated: (renderer: Renderer) => void;
   settingsTreeChange: (update: { path: string[] }) => void;
+  layerErrorUpdate: (
+    path: ReadonlyArray<string>,
+    errorId: string | undefined,
+    errorMessage: string | undefined,
+    renderer: Renderer,
+  ) => void;
 };
 
 const DEBUG_PICKING: true | false = false;
@@ -118,12 +130,24 @@ export class Renderer extends EventEmitter<RendererEvents> {
   markers = new Markers(this);
   poses = new Poses(this);
   cameras = new Cameras(this);
+  images = new Images(this);
+  grids = new Grids(this);
 
   constructor(canvas: HTMLCanvasElement, config: ThreeDeeRenderConfig) {
     super();
 
     // NOTE: Global side effect
     THREE.Object3D.DefaultUp = new THREE.Vector3(0, 0, 1);
+
+    this.layerErrors.on("update", (path, errorId, errorMessage) =>
+      this.emit("layerErrorUpdate", path, errorId, errorMessage, this),
+    );
+    this.layerErrors.on("remove", (path, errorId) =>
+      this.emit("layerErrorUpdate", path, errorId, undefined, this),
+    );
+    this.layerErrors.on("clear", (path) =>
+      this.emit("layerErrorUpdate", path, undefined, undefined, this),
+    );
 
     this.canvas = canvas;
     this.config = config;
@@ -162,6 +186,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.scene.add(this.markers);
     this.scene.add(this.poses);
     this.scene.add(this.cameras);
+    this.scene.add(this.images);
+    this.scene.add(this.grids);
 
     this.dirLight = new THREE.DirectionalLight();
     this.dirLight.position.set(1, 1, 1);
@@ -243,6 +269,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.frameAxes.addTransformMessage(tf);
   }
 
+  addCoordinateFrame(frameId: string): void {
+    this.frameAxes.addCoordinateFrame(frameId);
+  }
+
   setTransformSettings(frameId: string, settings: Partial<LayerSettingsTransform>): void {
     this.frameAxes.setTransformSettings(frameId, settings);
   }
@@ -291,10 +321,23 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
   addCameraInfoMessage(topic: string, cameraInfo: CameraInfo): void {
     this.cameras.addCameraInfoMessage(topic, cameraInfo);
+    this.images.addCameraInfoMessage(topic, cameraInfo);
   }
 
   setCameraInfoSettings(topic: string, settings: Partial<LayerSettingsCameraInfo>): void {
     this.cameras.setTopicSettings(topic, settings);
+  }
+
+  addImageMessage(topic: string, image: Image | CompressedImage): void {
+    this.images.addImageMessage(topic, image);
+  }
+
+  setImageSettings(topic: string, settings: Partial<LayerSettingsImage>): void {
+    this.images.setTopicSettings(topic, settings);
+  }
+
+  setGridSettings(id: string, settings: Partial<LayerSettingsGrid> | undefined): void {
+    this.grids.setLayerSettings(id, settings);
   }
 
   markerWorldPosition(markerId: string): Readonly<THREE.Vector3> | undefined {
@@ -328,6 +371,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.markers.startFrame(currentTime);
     this.poses.startFrame(currentTime);
     this.cameras.startFrame(currentTime);
+    this.images.startFrame(currentTime);
+    this.grids.startFrame(currentTime);
 
     this.gl.clear();
     this.camera.layers.set(LAYER_DEFAULT);
