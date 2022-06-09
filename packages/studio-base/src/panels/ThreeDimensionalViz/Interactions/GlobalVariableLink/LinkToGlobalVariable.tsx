@@ -111,7 +111,7 @@ export default function LinkToGlobalVariable({
             value={`$${name}`}
             onChange={(e) => setName(e.target.value.replace(/^\$/, ""))}
           />
-          <Stack direction="row" gap={1} paddingTop={1} data-test="action-buttons">
+          <Stack direction="row" gap={1} data-test="action-buttons">
             <Button
               variant="contained"
               color={name.length > 0 ? "primary" : "inherit"}
