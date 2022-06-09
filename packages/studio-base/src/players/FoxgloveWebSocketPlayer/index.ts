@@ -22,7 +22,8 @@ import {
   TopicStats,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
-import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
+import { debouncePromise } from "@foxglove/den/async";
+
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 import { Channel, ChannelId, FoxgloveClient, SubscriptionId } from "@foxglove/ws-protocol";
 

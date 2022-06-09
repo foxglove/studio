@@ -38,7 +38,8 @@ import {
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { bagConnectionsToDatatypes } from "@foxglove/studio-base/util/bagConnectionsHelper";
-import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
+import { debouncePromise } from "@foxglove/den/async";
+
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
 

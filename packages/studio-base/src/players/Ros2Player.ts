@@ -29,7 +29,8 @@ import {
   Topic,
   TopicStats,
 } from "@foxglove/studio-base/players/types";
-import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
+import { debouncePromise } from "@foxglove/den/async";
+
 import rosDatatypesToMessageDefinition from "@foxglove/studio-base/util/rosDatatypesToMessageDefinition";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";

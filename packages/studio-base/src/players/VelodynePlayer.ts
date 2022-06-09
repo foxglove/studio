@@ -23,7 +23,8 @@ import {
   TopicStats,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
-import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
+import { debouncePromise } from "@foxglove/den/async";
+
 import { Model, RawPacket, ReturnMode, packetRate } from "@foxglove/velodyne-cloud";
 
 const log = Logger.getLogger(__filename);

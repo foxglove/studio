@@ -43,7 +43,8 @@ import {
 } from "@foxglove/studio-base/players/types";
 import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
-import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
+import { debouncePromise } from "@foxglove/den/async";
+
 import { formatTimeRaw } from "@foxglove/studio-base/util/time";
 
 import MessageMemoryCache from "./MessageMemoryCache";
