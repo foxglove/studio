@@ -300,7 +300,7 @@ export const PlayerCapabilities = {
   // Publishing messages. Need to be connected to some sort of live robotics system (e.g. ROS).
   advertise: "advertise",
 
-  // Calling ROS services
+  // Calling services
   callServices: "callServices",
 
   // Setting speed to something that is not real time.
