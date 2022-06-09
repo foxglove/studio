@@ -33,11 +33,9 @@ type BottomBarModes = "logs" | "diagnostics" | "closed";
 const TAB_HEIGHT = 36;
 
 const StyledTab = muiStyled(Tab)(({ theme }) => ({
-  minHeight: TAB_HEIGHT,
-  minWidth: "auto",
-  padding: theme.spacing(1.25, 1.5),
-  textTransform: "uppercase",
-  letterSpacing: "0.0125em",
+  minHeight: "auto",
+  minWidth: theme.spacing(8),
+  padding: theme.spacing(1.5, 2),
   color: theme.palette.text.secondary,
 
   "&.Mui-selected": {
