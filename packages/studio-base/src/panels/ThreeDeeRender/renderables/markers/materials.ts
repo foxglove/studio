@@ -13,8 +13,9 @@ import {
   PointsVertexColor,
   StandardColor,
   StandardInstancedColor,
+  StandardVertexColor,
 } from "../../MaterialCache";
-import { Marker, MarkerType } from "../../ros";
+import { ColorRGBA, Marker, MarkerType } from "../../ros";
 
 export function markerHasTransparency(marker: Marker): boolean {
   switch (marker.type) {
@@ -42,18 +43,38 @@ export function markerHasTransparency(marker: Marker): boolean {
 }
 
 export function standardMaterial(
-  marker: Marker,
+  color: ColorRGBA,
   materialCache: MaterialCache,
 ): THREE.MeshStandardMaterial {
   return materialCache.acquire(
-    StandardColor.id(marker.color),
-    () => StandardColor.create(marker.color),
+    StandardColor.id(color),
+    () => StandardColor.create(color),
     StandardColor.dispose,
   );
 }
 
-export function releaseStandardMaterial(marker: Marker, materialCache: MaterialCache): void {
-  materialCache.release(StandardColor.id(marker.color));
+export function releaseStandardMaterial(color: ColorRGBA, materialCache: MaterialCache): void {
+  materialCache.release(StandardColor.id(color));
+}
+
+export function standardVertexColorMaterial(
+  marker: Marker,
+  materialCache: MaterialCache,
+): THREE.MeshStandardMaterial {
+  const transparent = markerHasTransparency(marker);
+  return materialCache.acquire(
+    StandardVertexColor.id(transparent),
+    () => StandardVertexColor.create(transparent),
+    StandardVertexColor.dispose,
+  );
+}
+
+export function releaseStandardVertexColorMaterial(
+  marker: Marker,
+  materialCache: MaterialCache,
+): void {
+  const transparent = markerHasTransparency(marker);
+  materialCache.release(StandardVertexColor.id(transparent));
 }
 
 export function standardInstancedMaterial(
@@ -110,17 +131,24 @@ export function releaseLineMaterial(marker: Marker, materialCache: MaterialCache
 
 export function linePickingMaterial(
   lineWidth: number,
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  worldUnits: boolean,
   materialCache: MaterialCache,
 ): THREE.ShaderMaterial {
   return materialCache.acquire(
-    LineVertexColorPicking.id(lineWidth),
-    () => LineVertexColorPicking.create(lineWidth),
+    LineVertexColorPicking.id(lineWidth, worldUnits),
+    () => LineVertexColorPicking.create(lineWidth, worldUnits),
     LineVertexColorPicking.dispose,
   );
 }
 
-export function releaseLinePickingMaterial(lineWidth: number, materialCache: MaterialCache): void {
-  materialCache.release(LineVertexColorPicking.id(lineWidth));
+export function releaseLinePickingMaterial(
+  lineWidth: number,
+  // eslint-disable-next-line @foxglove/no-boolean-parameters
+  worldUnits: boolean,
+  materialCache: MaterialCache,
+): void {
+  materialCache.release(LineVertexColorPicking.id(lineWidth, worldUnits));
 }
 
 export function pointsMaterial(marker: Marker, materialCache: MaterialCache): THREE.PointsMaterial {

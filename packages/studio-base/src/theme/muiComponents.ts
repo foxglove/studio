@@ -72,7 +72,7 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
             paddingBottom: 0,
 
             ".MuiAutocomplete-input.MuiInputBase-inputSizeSmall": {
-              padding: theme.spacing(0.75, 1),
+              padding: theme.spacing(0.5, 1),
             },
           },
           ".MuiInputBase-root .MuiAutocomplete-endAdornment": {
@@ -92,6 +92,11 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         colorInherit: {
           backgroundColor: theme.palette.action.focus,
         },
+      },
+    },
+    MuiButtonBase: {
+      defaultProps: {
+        disableRipple: true,
       },
     },
     MuiCard: {
@@ -230,6 +235,7 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
     },
     MuiInputLabel: {
       defaultProps: {
+        shrink: true,
         variant: "standard",
         sx: { position: "relative" },
       },
@@ -284,17 +290,6 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
       defaultProps: {
         disableRipple: true,
       },
-      styleOverrides: {
-        dense: {
-          minHeight: theme.spacing(3),
-          paddingTop: 0,
-          paddingBottom: 0,
-
-          "& .MuiSvgIcon-root.MuiSvgIcon-fontSizeSmall": {
-            fontSize: "1rem",
-          },
-        },
-      },
     },
     MuiOutlinedInput: {
       styleOverrides: {
@@ -304,6 +299,9 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         inputSizeSmall: {
           padding: theme.spacing(0.75, 1),
         },
+      },
+      defaultProps: {
+        notched: false,
       },
     },
     MuiSelect: {
@@ -348,16 +346,6 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
       styleOverrides: {
         stickyHeader: {
           backgroundColor: theme.palette.background.paper,
-        },
-      },
-    },
-    MuiTextField: {
-      defaultProps: {
-        InputLabelProps: {
-          shrink: true,
-        },
-        InputProps: {
-          notched: false,
         },
       },
     },

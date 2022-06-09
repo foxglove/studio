@@ -5,14 +5,15 @@
 import { debounce, isEqual, sortBy } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
+import { debouncePromise } from "@foxglove/den/async";
 import { Sockets } from "@foxglove/electron-socket/renderer";
 import Logger from "@foxglove/log";
 import { RosNode } from "@foxglove/ros2";
 import { RosMsgDefinition } from "@foxglove/rosmsg";
 import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
-import { definitions as foxgloveDefs } from "@foxglove/rosmsg-msgs-foxglove";
 import { Time, fromMillis, toSec, isGreaterThan } from "@foxglove/rostime";
 import { Durability, Reliability } from "@foxglove/rtps";
+import { foxgloveMessageSchemas, generateRosMsgDefinition } from "@foxglove/schemas";
 import { ParameterValue } from "@foxglove/studio";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
@@ -29,7 +30,6 @@ import {
   Topic,
   TopicStats,
 } from "@foxglove/studio-base/players/types";
-import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
 import rosDatatypesToMessageDefinition from "@foxglove/studio-base/util/rosDatatypesToMessageDefinition";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
@@ -100,13 +100,22 @@ export default class Ros2Player implements Player {
       this._providerDatatypes.set(dataType, msgDef);
       this._providerDatatypes.set(ros1ToRos2Type(dataType), msgDef);
     }
-    for (const dataType in foxgloveDefs) {
-      const msgDef = (foxgloveDefs as Record<string, RosMsgDefinition>)[dataType]!;
-      if (!this._providerDatatypes.has(dataType)) {
-        this._providerDatatypes.set(dataType, msgDef);
-        this._providerDatatypes.set(ros1ToRos2Type(dataType), msgDef);
-      }
+    for (const schema of Object.values(foxgloveMessageSchemas)) {
+      const { fields, qualifiedRosName } = generateRosMsgDefinition(schema, { rosVersion: 2 });
+      const msgDef: RosMsgDefinition = { name: qualifiedRosName, definitions: fields };
+      this._providerDatatypes.set(qualifiedRosName, msgDef);
+      this._providerDatatypes.set(ros1ToRos2Type(qualifiedRosName), msgDef);
     }
+    this._providerDatatypes.set("foxglove_msgs/ImageMarkerArray", {
+      definitions: [
+        { name: "markers", type: "visualization_msgs/ImageMarker", isComplex: true, isArray: true },
+      ],
+    });
+    this._providerDatatypes.set("foxglove_msgs/msg/ImageMarkerArray", {
+      definitions: [
+        { name: "markers", type: "visualization_msgs/ImageMarker", isComplex: true, isArray: true },
+      ],
+    });
 
     // Fix std_msgs/Header, which changed in ROS 2
     const definitions = [
@@ -440,9 +449,11 @@ export default class Ros2Player implements Player {
         msgDefinition,
       });
 
-      subscription.on("message", (timestamp, message, data, _pub) =>
-        this._handleMessage(topicName, timestamp, message, data.byteLength, true),
-      );
+      subscription.on("message", (timestamp, message, data, _pub) => {
+        this._handleMessage(topicName, timestamp, message, data.byteLength, true);
+        // Clear any existing subscription problems for this topic if we're receiving messages again.
+        this._problems.removeProblem(`subscription:${topicName}`);
+      });
       subscription.on("error", (err) => {
         log.error(`Subscription error for ${topicName}: ${err}`);
         this._problems.addProblem(`subscription:${topicName}`, {
@@ -614,7 +625,6 @@ export default class Ros2Player implements Player {
     if (subscriptions.find((sub) => sub.topic === "/clock") == undefined) {
       subscriptions.unshift({
         topic: "/clock",
-        requester: { type: "other", name: "Ros2Player" },
       });
     }
   }

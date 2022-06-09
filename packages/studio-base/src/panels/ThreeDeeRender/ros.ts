@@ -2,6 +2,25 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+export type Matrix3 = [number, number, number, number, number, number, number, number, number];
+
+// prettier-ignore
+export type Matrix3x4 = [
+  number, number, number, number,
+  number, number, number, number,
+  number, number, number, number
+];
+
+// prettier-ignore
+export type Matrix6 = [
+  number, number, number, number, number, number,
+  number, number, number, number, number, number,
+  number, number, number, number, number, number,
+  number, number, number, number, number, number,
+  number, number, number, number, number, number,
+  number, number, number, number, number, number,
+];
+
 export enum MarkerType {
   ARROW = 0,
   CUBE = 1,
@@ -73,6 +92,11 @@ export type Pose = {
   orientation: Quaternion;
 };
 
+export type PoseWithCovariance = {
+  pose: Pose;
+  covariance: Matrix6;
+};
+
 export type Header = {
   frame_id: string;
   stamp: RosTime;
@@ -104,6 +128,10 @@ export type Marker = {
   text: string;
   mesh_resource: string;
   mesh_use_embedded_materials: boolean;
+};
+
+export type MarkerArray = {
+  markers: Marker[];
 };
 
 export type PointField = {
@@ -139,6 +167,54 @@ export type OccupancyGrid = {
   data: Int8Array | number[];
 };
 
+export type PoseStamped = {
+  header: Header;
+  pose: Pose;
+};
+
+export type PoseWithCovarianceStamped = {
+  header: Header;
+  pose: PoseWithCovariance;
+};
+
+export type RegionOfInterest = {
+  x_offset: number;
+  y_offset: number;
+  height: number;
+  width: number;
+  do_rectify: boolean;
+};
+
+export type CameraInfo = {
+  header: Header;
+  height: number;
+  width: number;
+  distortion_model: string;
+  D: number[];
+  K: Matrix3 | [];
+  R: Matrix3 | [];
+  P: Matrix3x4 | [];
+  binning_x: number;
+  binning_y: number;
+  roi: RegionOfInterest;
+};
+
+export type Image = {
+  header: Header;
+  height: number;
+  width: number;
+  encoding: string;
+  is_bigendian: boolean;
+  step: number;
+  data: Int8Array | Uint8Array;
+};
+
+export type CompressedImage = {
+  header: Header;
+  format: string;
+  data: Uint8Array;
+};
+
 export const TRANSFORM_STAMPED_DATATYPES = new Set<string>();
 addRosDataType(TRANSFORM_STAMPED_DATATYPES, "geometry_msgs/TransformStamped");
 
@@ -157,6 +233,21 @@ addRosDataType(OCCUPANCY_GRID_DATATYPES, "nav_msgs/OccupancyGrid");
 
 export const POINTCLOUD_DATATYPES = new Set<string>();
 addRosDataType(POINTCLOUD_DATATYPES, "sensor_msgs/PointCloud2");
+
+export const POSE_STAMPED_DATATYPES = new Set<string>();
+addRosDataType(POSE_STAMPED_DATATYPES, "geometry_msgs/PoseStamped");
+
+export const POSE_WITH_COVARIANCE_STAMPED_DATATYPES = new Set<string>();
+addRosDataType(POSE_WITH_COVARIANCE_STAMPED_DATATYPES, "geometry_msgs/PoseWithCovarianceStamped");
+
+export const CAMERA_INFO_DATATYPES = new Set<string>();
+addRosDataType(CAMERA_INFO_DATATYPES, "sensor_msgs/CameraInfo");
+
+export const IMAGE_DATATYPES = new Set<string>();
+addRosDataType(IMAGE_DATATYPES, "sensor_msgs/Image");
+
+export const COMPRESSED_IMAGE_DATATYPES = new Set<string>();
+addRosDataType(COMPRESSED_IMAGE_DATATYPES, "sensor_msgs/CompressedImage");
 
 export function rosTimeToNanoSec(rosTime: { sec: number; nsec: number }): bigint {
   return BigInt(rosTime.sec) * BigInt(1e9) + BigInt(rosTime.nsec);

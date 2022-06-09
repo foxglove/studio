@@ -15,9 +15,6 @@ import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
 // use a custom ShaderMaterial with an isampler2D uniform to reimplement the
 // updateTexture() logic in a shader
 
-// ts-prune-ignore-next
-export type StoredOccupancyGridSettings = Partial<LayerSettingsOccupancyGrid>;
-
 const INVALID_OCCUPANCY_GRID = "INVALID_OCCUPANCY_GRID";
 
 const DEFAULT_MIN_COLOR = { r: 1, g: 1, b: 1, a: 0.5 }; // white
@@ -62,7 +59,7 @@ export class OccupancyGrids extends THREE.Object3D {
     super();
     this.renderer = renderer;
 
-    renderer.setSettingsFieldsProvider(LayerType.OccupancyGrid, (topicConfig) => {
+    renderer.setSettingsNodeProvider(LayerType.OccupancyGrid, (topicConfig) => {
       const cur = topicConfig as Partial<LayerSettingsOccupancyGrid>;
       const minColor = cur.minColor ?? DEFAULT_MIN_COLOR_STR;
       const maxColor = cur.maxColor ?? DEFAULT_MAX_COLOR_STR;
@@ -70,11 +67,14 @@ export class OccupancyGrids extends THREE.Object3D {
       const invalidColor = cur.invalidColor ?? DEFAULT_INVALID_COLOR_STR;
       const frameLocked = cur.frameLocked ?? false;
       return {
-        minColor: { label: "Min Color", input: "rgba", value: minColor },
-        maxColor: { label: "Max Color", input: "rgba", value: maxColor },
-        unknownColor: { label: "Unknown Color", input: "rgba", value: unknownColor },
-        invalidColor: { label: "Invalid Color", input: "rgba", value: invalidColor },
-        frameLocked: { label: "Frame lock", input: "boolean", value: frameLocked },
+        icon: "Cells",
+        fields: {
+          minColor: { label: "Min Color", input: "rgba", value: minColor },
+          maxColor: { label: "Max Color", input: "rgba", value: maxColor },
+          unknownColor: { label: "Unknown Color", input: "rgba", value: unknownColor },
+          invalidColor: { label: "Invalid Color", input: "rgba", value: invalidColor },
+          frameLocked: { label: "Frame lock", input: "boolean", value: frameLocked },
+        },
       };
     });
   }
@@ -99,8 +99,9 @@ export class OccupancyGrids extends THREE.Object3D {
       renderable.userData.topic = topic;
 
       // Set the initial settings from default values merged with any user settings
-      this.renderer.config?.topics[topic] as Partial<LayerSettingsOccupancyGrid> | undefined;
-      const userSettings = this.renderer.config?.topics[topic];
+      const userSettings = this.renderer.config.topics[topic] as
+        | Partial<LayerSettingsOccupancyGrid>
+        | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
       renderable.userData.settings = settings;
 
@@ -165,6 +166,8 @@ export class OccupancyGrids extends THREE.Object3D {
       if (!updated) {
         const message = missingTransformMessage(renderFrameId, fixedFrameId, frameId);
         this.renderer.layerErrors.addToTopic(renderable.userData.topic, MISSING_TRANSFORM, message);
+      } else {
+        this.renderer.layerErrors.removeFromTopic(renderable.userData.topic, MISSING_TRANSFORM);
       }
     }
   }
@@ -224,7 +227,7 @@ function createTexture(occupancyGrid: OccupancyGrid): THREE.DataTexture {
   const height = occupancyGrid.info.height;
   const size = width * height;
   const rgba = new Uint8ClampedArray(size * 4);
-  return new THREE.DataTexture(
+  const texture = new THREE.DataTexture(
     rgba,
     width,
     height,
@@ -234,10 +237,12 @@ function createTexture(occupancyGrid: OccupancyGrid): THREE.DataTexture {
     THREE.ClampToEdgeWrapping,
     THREE.ClampToEdgeWrapping,
     THREE.NearestFilter,
-    THREE.NearestFilter,
+    THREE.LinearFilter,
     1,
-    THREE.LinearEncoding,
+    THREE.LinearEncoding, // OccupancyGrid carries linear grayscale values, not sRGB
   );
+  texture.generateMipmaps = false;
+  return texture;
 }
 
 const tempUnknownColor = { r: 0, g: 0, b: 0, a: 0 };

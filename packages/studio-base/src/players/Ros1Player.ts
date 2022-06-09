@@ -5,6 +5,7 @@
 import { isEqual, sortBy } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
+import { debouncePromise } from "@foxglove/den/async";
 import { Sockets } from "@foxglove/electron-socket/renderer";
 import Logger from "@foxglove/log";
 import { RosNode, TcpSocket } from "@foxglove/ros1";
@@ -28,7 +29,6 @@ import {
   TopicStats,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
-import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
 import rosDatatypesToMessageDefinition from "@foxglove/studio-base/util/rosDatatypesToMessageDefinition";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
@@ -393,9 +393,11 @@ export default class Ros1Player implements Player {
         const newDatatypes = this._getRosDatatypes(datatype, msgdef);
         this._providerDatatypes = new Map([...this._providerDatatypes, ...newDatatypes]);
       });
-      subscription.on("message", (message, data, _pub) =>
-        this._handleMessage(topicName, message, data.byteLength, true),
-      );
+      subscription.on("message", (message, data, _pub) => {
+        this._handleMessage(topicName, message, data.byteLength, true);
+        // Clear any existing subscription problems for this topic if we're receiving messages again.
+        this._clearProblem(`subscribe:${topicName}`, { skipEmit: true });
+      });
       subscription.on("error", (error) => {
         this._addProblem(`subscribe:${topicName}`, {
           severity: "warn",
@@ -590,7 +592,6 @@ export default class Ros1Player implements Player {
     if (subscriptions.find((sub) => sub.topic === "/clock") == undefined) {
       subscriptions.unshift({
         topic: "/clock",
-        requester: { type: "other", name: "Ros1Player" },
       });
     }
   }

@@ -4,11 +4,13 @@
 
 import EventEmitter from "eventemitter3";
 import * as THREE from "three";
+import { DeepPartial } from "ts-essentials";
 
 import Logger from "@foxglove/log";
 import { CameraState } from "@foxglove/regl-worldview";
 
 import { Input } from "./Input";
+import { Labels } from "./Labels";
 import { LayerErrors } from "./LayerErrors";
 import { MaterialCache } from "./MaterialCache";
 import { ModelCache } from "./ModelCache";
@@ -16,17 +18,37 @@ import { Picker } from "./Picker";
 import { ScreenOverlay } from "./ScreenOverlay";
 import { stringToRgb } from "./color";
 import { DetailLevel, msaaSamples } from "./lod";
+import { Cameras } from "./renderables/Cameras";
 import { FrameAxes } from "./renderables/FrameAxes";
+import { Grids } from "./renderables/Grids";
+import { Images } from "./renderables/Images";
 import { Markers } from "./renderables/Markers";
 import { OccupancyGrids } from "./renderables/OccupancyGrids";
 import { PointClouds } from "./renderables/PointClouds";
-import { Marker, OccupancyGrid, PointCloud2, TF } from "./ros";
+import { Poses } from "./renderables/Poses";
 import {
-  FieldsProvider,
+  CameraInfo,
+  CompressedImage,
+  Image,
+  Marker,
+  OccupancyGrid,
+  PointCloud2,
+  PoseStamped,
+  PoseWithCovarianceStamped,
+  TF,
+} from "./ros";
+import {
+  LayerSettingsCameraInfo,
+  LayerSettingsGrid,
+  LayerSettingsImage,
   LayerSettingsMarker,
+  LayerSettingsMarkerNamespace,
   LayerSettingsOccupancyGrid,
   LayerSettingsPointCloud2,
+  LayerSettingsPose,
+  LayerSettingsTransform,
   LayerType,
+  SettingsNodeProvider,
   ThreeDeeRenderConfig,
 } from "./settings";
 import { TransformTree } from "./transforms/TransformTree";
@@ -39,11 +61,16 @@ export type RendererEvents = {
   cameraMove: (renderer: Renderer) => void;
   renderableSelected: (renderable: THREE.Object3D | undefined, renderer: Renderer) => void;
   transformTreeUpdated: (renderer: Renderer) => void;
-  showLabel: (labelId: string, labelMarker: Marker, renderer: Renderer) => void;
-  removeLabel: (labelId: string, renderer: Renderer) => void;
+  settingsTreeChange: (update: { path: string[] }) => void;
+  layerErrorUpdate: (
+    path: ReadonlyArray<string>,
+    errorId: string | undefined,
+    errorMessage: string | undefined,
+    renderer: Renderer,
+  ) => void;
 };
 
-const DEBUG_PICKING = false;
+const DEBUG_PICKING: true | false = false;
 
 // NOTE: These do not use .convertSRGBToLinear() since background color is not
 // affected by gamma correction
@@ -76,7 +103,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   // target: THREE.WebGLRenderTarget;
   // composer: EffectComposer;
   // outlinePass: OutlinePass;
-  config: ThreeDeeRenderConfig | undefined;
+  config: ThreeDeeRenderConfig;
   scene: THREE.Scene;
   dirLight: THREE.DirectionalLight;
   hemiLight: THREE.HemisphereLight;
@@ -87,27 +114,43 @@ export class Renderer extends EventEmitter<RendererEvents> {
   selectedObject: THREE.Object3D | undefined;
   materialCache = new MaterialCache();
   layerErrors = new LayerErrors();
-  colorScheme: "dark" | "light" | undefined;
+  colorScheme: "dark" | "light" = "light";
   modelCache: ModelCache;
   renderables = new Map<string, THREE.Object3D>();
   transformTree = new TransformTree(TRANSFORM_STORAGE_TIME_NS);
   currentTime: bigint | undefined;
   fixedFrameId: string | undefined;
   renderFrameId: string | undefined;
-  settingsFieldsProviders = new Map<LayerType, FieldsProvider>();
+  settingsNodeProviders = new Map<LayerType, SettingsNodeProvider>();
 
+  labels = new Labels(this);
   frameAxes = new FrameAxes(this);
   occupancyGrids = new OccupancyGrids(this);
   pointClouds = new PointClouds(this);
   markers = new Markers(this);
+  poses = new Poses(this);
+  cameras = new Cameras(this);
+  images = new Images(this);
+  grids = new Grids(this);
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, config: ThreeDeeRenderConfig) {
     super();
 
     // NOTE: Global side effect
     THREE.Object3D.DefaultUp = new THREE.Vector3(0, 0, 1);
 
+    this.layerErrors.on("update", (path, errorId, errorMessage) =>
+      this.emit("layerErrorUpdate", path, errorId, errorMessage, this),
+    );
+    this.layerErrors.on("remove", (path, errorId) =>
+      this.emit("layerErrorUpdate", path, errorId, undefined, this),
+    );
+    this.layerErrors.on("clear", (path) =>
+      this.emit("layerErrorUpdate", path, undefined, undefined, this),
+    );
+
     this.canvas = canvas;
+    this.config = config;
     this.gl = new THREE.WebGLRenderer({
       canvas,
       alpha: true,
@@ -122,6 +165,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.gl.info.autoReset = false;
     this.gl.shadowMap.enabled = false;
     this.gl.shadowMap.type = THREE.VSMShadowMap;
+    this.gl.sortObjects = false;
     this.gl.setPixelRatio(window.devicePixelRatio);
 
     let width = canvas.width;
@@ -135,10 +179,15 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.modelCache = new ModelCache({ ignoreColladaUpAxis: true });
 
     this.scene = new THREE.Scene();
+    this.scene.add(this.labels);
     this.scene.add(this.frameAxes);
     this.scene.add(this.occupancyGrids);
     this.scene.add(this.pointClouds);
     this.scene.add(this.markers);
+    this.scene.add(this.poses);
+    this.scene.add(this.cameras);
+    this.scene.add(this.images);
+    this.scene.add(this.grids);
 
     this.dirLight = new THREE.DirectionalLight();
     this.dirLight.position.set(1, 1, 1);
@@ -193,15 +242,17 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.gl.dispose();
   }
 
-  setSettingsFieldsProvider(layerType: LayerType, provider: FieldsProvider): void {
-    this.settingsFieldsProviders.set(layerType, provider);
-    this.settingsFieldsProviders = new Map(this.settingsFieldsProviders);
+  setSettingsNodeProvider(layerType: LayerType, provider: SettingsNodeProvider): void {
+    this.settingsNodeProviders.set(layerType, provider);
+    this.settingsNodeProviders = new Map(this.settingsNodeProviders);
   }
 
   setColorScheme(colorScheme: "dark" | "light", backgroundColor: string | undefined): void {
     this.colorScheme = colorScheme;
 
     const bgColor = backgroundColor ? stringToRgb(tempColor, backgroundColor) : undefined;
+
+    this.labels.setColorScheme(colorScheme, bgColor);
 
     if (colorScheme === "dark") {
       this.gl.setClearColor(bgColor ?? DARK_BACKDROP);
@@ -218,8 +269,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.frameAxes.addTransformMessage(tf);
   }
 
-  setTransformSettings(_name: string, _settings: { visible?: boolean }): void {
-    //
+  addCoordinateFrame(frameId: string): void {
+    this.frameAxes.addCoordinateFrame(frameId);
+  }
+
+  setTransformSettings(frameId: string, settings: Partial<LayerSettingsTransform>): void {
+    this.frameAxes.setTransformSettings(frameId, settings);
   }
 
   addOccupancyGridMessage(topic: string, occupancyGrid: OccupancyGrid): void {
@@ -242,8 +297,47 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.markers.addMarkerMessage(topic, marker);
   }
 
-  setMarkerSettings(topic: string, settings: Partial<LayerSettingsMarker>): void {
-    this.markers.setTopicSettings(topic, settings);
+  setMarkerSettings(topic: string, settings: Record<string, unknown>): void {
+    // Convert the { visible, ns:a, ns:b, ... } format to { visible, namespaces: { a, b, ... } }
+    const topicSettings: DeepPartial<LayerSettingsMarker> = { namespaces: {} };
+    topicSettings.visible = settings.visible as boolean | undefined;
+    for (const [key, value] of Object.entries(settings)) {
+      if (key.startsWith("ns:")) {
+        const ns = key.substring(3);
+        topicSettings.namespaces![ns] = value as Partial<LayerSettingsMarkerNamespace>;
+      }
+    }
+
+    this.markers.setTopicSettings(topic, topicSettings);
+  }
+
+  addPoseMessage(topic: string, pose: PoseStamped | PoseWithCovarianceStamped): void {
+    this.poses.addPoseMessage(topic, pose);
+  }
+
+  setPoseSettings(topic: string, settings: Partial<LayerSettingsPose>): void {
+    this.poses.setTopicSettings(topic, settings);
+  }
+
+  addCameraInfoMessage(topic: string, cameraInfo: CameraInfo): void {
+    this.cameras.addCameraInfoMessage(topic, cameraInfo);
+    this.images.addCameraInfoMessage(topic, cameraInfo);
+  }
+
+  setCameraInfoSettings(topic: string, settings: Partial<LayerSettingsCameraInfo>): void {
+    this.cameras.setTopicSettings(topic, settings);
+  }
+
+  addImageMessage(topic: string, image: Image | CompressedImage): void {
+    this.images.addImageMessage(topic, image);
+  }
+
+  setImageSettings(topic: string, settings: Partial<LayerSettingsImage>): void {
+    this.images.setTopicSettings(topic, settings);
+  }
+
+  setGridSettings(id: string, settings: Partial<LayerSettingsGrid> | undefined): void {
+    this.grids.setLayerSettings(id, settings);
   }
 
   markerWorldPosition(markerId: string): Readonly<THREE.Vector3> | undefined {
@@ -275,6 +369,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.occupancyGrids.startFrame(currentTime);
     this.pointClouds.startFrame(currentTime);
     this.markers.startFrame(currentTime);
+    this.poses.startFrame(currentTime);
+    this.cameras.startFrame(currentTime);
+    this.images.startFrame(currentTime);
+    this.grids.startFrame(currentTime);
 
     this.gl.clear();
     this.camera.layers.set(LAYER_DEFAULT);
@@ -329,8 +427,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
   };
 
   clickHandler = (cursorCoords: THREE.Vector2): void => {
-    // Deselect the currently selected object
+    // Deselect the currently selected object, if one is selected
+    let prevSelected: THREE.Object3D | undefined;
     if (this.selectedObject) {
+      prevSelected = this.selectedObject;
       deselectObject(this.selectedObject);
       this.selectedObject = undefined;
     }
@@ -350,12 +450,21 @@ export class Renderer extends EventEmitter<RendererEvents> {
     // Traverse the scene looking for this objectId
     const obj = this.scene.getObjectById(objectId);
 
-    // Find the first ancestor of the clicked object that has a name
-    // TODO: We should probably use a better way to identify the clicked object
+    // Find the first ancestor of the clicked object that has a Pose
     let selectedObj = obj;
-    while (selectedObj && selectedObj.name === "") {
+    while (selectedObj && selectedObj.userData.pose == undefined) {
       selectedObj = selectedObj.parent ?? undefined;
     }
+
+    if (selectedObj === prevSelected) {
+      log.debug(`Deselecting previously selected object ${prevSelected?.id}`);
+      if (!DEBUG_PICKING) {
+        // Re-render with no object selected
+        this.animationFrame();
+      }
+      return;
+    }
+
     this.selectedObject = selectedObj;
 
     if (!selectedObj) {
@@ -369,7 +478,6 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.emit("renderableSelected", selectedObj, this);
     log.debug(`Selected object ${selectedObj.name}`);
 
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!DEBUG_PICKING) {
       // Re-render with the selected object
       this.animationFrame();

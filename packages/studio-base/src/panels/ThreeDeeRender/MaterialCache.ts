@@ -6,6 +6,8 @@
 
 import * as THREE from "three";
 
+import Logger from "@foxglove/log";
+
 import { LineMaterial } from "./LineMaterial";
 import { rgbaToHexString } from "./color";
 import { ColorRGBA } from "./ros";
@@ -18,6 +20,36 @@ type MaterialCacheEntry = {
   disposer: DisposeMaterial;
 };
 
+const log = Logger.getLogger(__filename);
+
+// Fragment shader chunk to convert sRGB to linear RGB. This is used by some
+// PointCloud materials to avoid expensive per-point colorspace conversion on
+// the CPU. Source: <https://github.com/mrdoob/three.js/blob/13b67d96/src/renderers/shaders/ShaderChunk/encodings_pars_fragment.glsl.js#L16-L18>
+const FS_SRGB_TO_LINEAR = /* glsl */ `
+vec3 sRGBToLinear(in vec3 value) {
+	return vec3(mix(
+    pow(value.rgb * 0.9478672986 + vec3(0.0521327014), vec3(2.4)),
+    value.rgb * 0.0773993808,
+    vec3(lessThanEqual(value.rgb, vec3(0.04045)))
+  ));
+}
+
+vec4 sRGBToLinear(in vec4 value) {
+  return vec4(sRGBToLinear(value.rgb), value.a);
+}
+`;
+
+// Fragment shader chunk to convert sRGB to linear RGB
+const FS_POINTCLOUD_SRGB_TO_LINEAR = /* glsl */ `
+outgoingLight = sRGBToLinear(outgoingLight);
+`;
+
+// Fragment shader chunk to render a GL_POINT as a circle
+const FS_POINTCLOUD_CIRCLE = /* glsl */ `
+vec2 cxy = 2.0 * gl_PointCoord - 1.0;
+if (dot(cxy, cxy) > 1.0) { discard; }
+`;
+
 export class MaterialCache {
   materials = new Map<string, MaterialCacheEntry>();
   outlineMaterial = new THREE.LineBasicMaterial({ dithering: true });
@@ -29,6 +61,7 @@ export class MaterialCache {
   ): TMaterial {
     let entry = this.materials.get(id);
     if (!entry) {
+      log.debug(`Creating material ${id}`);
       entry = { material: create(), refCount: 0, disposer: dispose as DisposeMaterial };
       this.materials.set(id, entry);
     }
@@ -43,6 +76,7 @@ export class MaterialCache {
     }
     entry.refCount--;
     if (entry.refCount === 0) {
+      log.debug(`Disposing material ${id}`);
       entry.disposer(entry.material);
       this.materials.delete(id);
     }
@@ -110,6 +144,27 @@ export const StandardColor = {
   dispose: disposeStandardMaterial,
 };
 
+export const StandardVertexColor = {
+  id: (transparent: boolean): string => "StandardVertexColor" + (transparent ? "-t" : ""),
+
+  create: (transparent: boolean): THREE.MeshStandardMaterial => {
+    const material = new THREE.MeshStandardMaterial({
+      metalness: 0,
+      roughness: 1,
+      dithering: true,
+      vertexColors: true,
+      side: THREE.DoubleSide,
+    });
+    material.name = StandardVertexColor.id(transparent);
+    material.opacity = 1;
+    material.transparent = transparent;
+    material.depthWrite = !material.transparent;
+    return material;
+  },
+
+  dispose: disposeStandardMaterial,
+};
+
 export const StandardInstancedColor = {
   id: (transparent: boolean): string => "StandardInstancedColor" + (transparent ? "-t" : ""),
 
@@ -139,7 +194,7 @@ export const PointsVertexColor = {
     const material = new THREE.PointsMaterial({
       vertexColors: true,
       size: scale.x, // TODO: Support scale.y
-      sizeAttenuation: false,
+      sizeAttenuation: true,
     });
     material.name = PointsVertexColor.id(scale, transparent);
     material.transparent = transparent;
@@ -154,9 +209,58 @@ export const PointsVertexColor = {
   },
 };
 
+export const PointCloudColor = {
+  id: (
+    shape: "circle" | "square",
+    encoding: "srgb" | "linear",
+    scale: number,
+    transparent: boolean,
+  ): string => `PointCloudColor-${shape}-${encoding}-${scale}${transparent ? "-t" : ""}`,
+
+  create: (
+    shape: "circle" | "square",
+    encoding: "srgb" | "linear",
+    scale: number,
+    transparent: boolean,
+  ): THREE.PointsMaterial => {
+    const material = new THREE.PointsMaterial({
+      vertexColors: true,
+      size: scale,
+      sizeAttenuation: false,
+    });
+    material.name = PointCloudColor.id(shape, encoding, scale, transparent);
+    material.transparent = transparent;
+    material.depthWrite = !transparent;
+    // Tell three.js to recompile the shader when `shape` or `encoding` change
+    material.customProgramCacheKey = () => `${shape}-${encoding}`;
+    material.onBeforeCompile = (shader) => {
+      const SEARCH = "#include <output_fragment>";
+      if (shape === "circle") {
+        // Patch the fragment shader to render points as circles
+        shader.fragmentShader =
+          FS_SRGB_TO_LINEAR + shader.fragmentShader.replace(SEARCH, FS_POINTCLOUD_CIRCLE + SEARCH);
+      }
+      if (encoding === "srgb") {
+        // Patch the fragment shader to add sRGB->linear color conversion
+        shader.fragmentShader = shader.fragmentShader.replace(
+          SEARCH,
+          FS_POINTCLOUD_SRGB_TO_LINEAR + SEARCH,
+        );
+      }
+    };
+    return material;
+  },
+
+  dispose: (material: THREE.PointsMaterial): void => {
+    material.map?.dispose();
+    material.alphaMap?.dispose();
+    material.dispose();
+  },
+};
+
 export const LineVertexColorPrepass = {
   id: (lineWidth: number, transparent: boolean): string =>
-    `LineVertexColorPrepass-${lineWidth.toFixed(4)}-${transparent ? "-t" : ""}`,
+    `LineVertexColorPrepass-${lineWidth.toFixed(4)}${transparent ? "-t" : ""}`,
 
   create: (lineWidth: number, transparent: boolean): LineMaterial => {
     const material = new LineMaterial({
@@ -181,7 +285,7 @@ export const LineVertexColorPrepass = {
 
 export const LineVertexColor = {
   id: (lineWidth: number, transparent: boolean): string =>
-    `LineVertexColor-${lineWidth.toFixed(4)}-${transparent ? "-t" : ""}`,
+    `LineVertexColor-${lineWidth.toFixed(4)}${transparent ? "-t" : ""}`,
 
   create: (lineWidth: number, transparent: boolean): LineMaterial => {
     const material = new LineMaterial({
@@ -207,11 +311,12 @@ export const LineVertexColor = {
 };
 
 export const LineVertexColorPicking = {
-  id: (lineWidth: number): string => `LineVertexColorPicking-${lineWidth.toFixed(4)}`,
+  id: (lineWidth: number, worldUnits: boolean): string =>
+    `LineVertexColorPicking-${lineWidth.toFixed(4)}${worldUnits ? "-w" : ""}`,
 
-  create: (lineWidth: number): THREE.ShaderMaterial => {
+  create: (lineWidth: number, worldUnits: boolean): THREE.ShaderMaterial => {
     return new THREE.ShaderMaterial({
-      vertexShader: THREE.ShaderLib["line"]!.vertexShader,
+      vertexShader: THREE.ShaderLib["foxglove.line"]!.vertexShader,
       fragmentShader: /* glsl */ `
         uniform vec4 objectId;
         void main() {
@@ -221,7 +326,6 @@ export const LineVertexColorPicking = {
       clipping: true,
       uniforms: {
         objectId: { value: [NaN, NaN, NaN, NaN] },
-        worldUnits: { value: 0 },
         linewidth: { value: lineWidth },
         resolution: { value: new THREE.Vector2(1, 1) },
         dashOffset: { value: 0 },
@@ -229,6 +333,7 @@ export const LineVertexColorPicking = {
         dashSize: { value: 1 },
         gapSize: { value: 1 },
       },
+      defines: worldUnits ? { WORLD_UNITS: "" } : {},
     });
   },
 

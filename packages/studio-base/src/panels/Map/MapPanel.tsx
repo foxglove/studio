@@ -21,9 +21,10 @@ import { toSec } from "@foxglove/rostime";
 import { PanelExtensionContext, MessageEvent } from "@foxglove/studio";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import {
+  EXPERIMENTAL_PanelExtensionContextWithSettings,
   SettingsTreeAction,
   SettingsTreeFields,
-  SettingsTreeNode,
+  SettingsTreeRoots,
 } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import FilteredPointLayer, {
   POINT_MARKER_RADIUS,
@@ -37,6 +38,7 @@ import { MapPanelMessage, Point } from "./types";
 
 // Persisted panel state
 type Config = {
+  customTileUrl: string;
   disabledTopics: string[];
   layer: string;
   zoomLevel?: number;
@@ -56,7 +58,7 @@ function isGeoJSONMessage(
   );
 }
 
-function buildSettingsTree(config: Config, eligibleTopics: string[]): SettingsTreeNode {
+function buildSettingsTree(config: Config, eligibleTopics: string[]): SettingsTreeRoots {
   const topics: SettingsTreeFields = transform(
     eligibleTopics,
     (result, topic) => {
@@ -69,43 +71,59 @@ function buildSettingsTree(config: Config, eligibleTopics: string[]): SettingsTr
     {} as SettingsTreeFields,
   );
 
-  return {
-    label: "General",
-    fields: {
-      layer: {
-        label: "Layer",
-        input: "select",
-        value: config.layer,
-        options: [
-          { label: "Map", value: "map" },
-          { label: "Satellite", value: "satellite" },
-        ],
-      },
-    },
-    children: {
-      topics: {
-        label: "Topics",
-        fields: topics,
-      },
+  const generalSettings: SettingsTreeFields = {
+    layer: {
+      label: "Tile Layer",
+      input: "select",
+      value: config.layer,
+      options: [
+        { label: "Map", value: "map" },
+        { label: "Satellite", value: "satellite" },
+        { label: "Custom", value: "custom" },
+      ],
     },
   };
+
+  // Only show the custom url input when the user selects the custom layer
+  if (config.layer === "custom") {
+    generalSettings.customTileUrl = {
+      label: "Custom map tile URL",
+      input: "string",
+      value: config.customTileUrl,
+    };
+  }
+
+  const settings: SettingsTreeRoots = {
+    general: {
+      label: "General",
+      icon: "Settings",
+      fields: generalSettings,
+    },
+    topics: {
+      label: "Topics",
+      fields: topics,
+    },
+  };
+
+  return settings;
 }
 
 function topicMessageType(topic: Topic) {
-  if (
-    topic.datatype === "sensor_msgs/NavSatFix" ||
-    topic.datatype === "sensor_msgs/msg/NavSatFix" ||
-    topic.datatype === "ros.sensor_msgs.NavSatFix" ||
-    topic.datatype === "foxglove.LocationFix"
-  ) {
-    return "navsat";
+  switch (topic.datatype) {
+    case "sensor_msgs/NavSatFix":
+    case "sensor_msgs/msg/NavSatFix":
+    case "ros.sensor_msgs.NavSatFix":
+    case "foxglove_msgs/LocationFix":
+    case "foxglove_msgs/msg/LocationFix":
+    case "foxglove.LocationFix":
+      return "navsat";
+    case "foxglove_msgs/GeoJSON":
+    case "foxglove_msgs/msg/GeoJSON":
+    case "foxglove.GeoJSON":
+      return "geojson";
+    default:
+      return undefined;
   }
-
-  if (topic.datatype === "foxglove.GeoJSON") {
-    return "geojson";
-  }
-
-  return undefined;
 }
 
 function MapPanel(props: MapPanelProps): JSX.Element {
@@ -117,6 +135,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     const initialConfig = props.context.initialState as Partial<Config>;
     initialConfig.disabledTopics = initialConfig.disabledTopics ?? [];
     initialConfig.layer = initialConfig.layer ?? "map";
+    initialConfig.customTileUrl = initialConfig.customTileUrl ?? "";
     return initialConfig as Config;
   });
 
@@ -138,6 +157,14 @@ function MapPanel(props: MapPanelProps): JSX.Element {
         maxZoom: 24,
       },
     ),
+  );
+
+  const [customLayer] = useState(
+    new TileLayer("https://example.com/{z}/{y}/{x}", {
+      attribution: "",
+      maxNativeZoom: 18,
+      maxZoom: 24,
+    }),
   );
 
   // Panel state management to update our set of messages
@@ -185,6 +212,10 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   }, [topics]);
 
   const settingsActionHandler = useCallback((action: SettingsTreeAction) => {
+    if (action.action !== "update") {
+      return;
+    }
+
     const { path, input, value } = action.payload;
 
     if (path[0] === "topics" && input === "boolean") {
@@ -202,9 +233,15 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       }
     }
 
-    if (path[0] === "layer" && input === "select") {
+    if (path[1] === "layer" && input === "select") {
       setConfig((oldConfig) => {
         return { ...oldConfig, layer: String(value) };
+      });
+    }
+
+    if (path[1] === "customTileUrl" && input === "string") {
+      setConfig((oldConfig) => {
+        return { ...oldConfig, customTileUrl: String(value) };
       });
     }
   }, []);
@@ -213,11 +250,31 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     if (config.layer === "map") {
       currentMap?.addLayer(tileLayer);
       currentMap?.removeLayer(satelliteLayer);
-    } else {
+      currentMap?.removeLayer(customLayer);
+    } else if (config.layer === "satellite") {
       currentMap?.addLayer(satelliteLayer);
       currentMap?.removeLayer(tileLayer);
+      currentMap?.removeLayer(customLayer);
+    } else if (config.layer === "custom") {
+      currentMap?.addLayer(customLayer);
+      currentMap?.removeLayer(tileLayer);
+      currentMap?.removeLayer(satelliteLayer);
     }
-  }, [config.layer, currentMap, satelliteLayer, tileLayer]);
+  }, [config.layer, currentMap, customLayer, satelliteLayer, tileLayer]);
+
+  useEffect(() => {
+    if (config.layer === "custom") {
+      // validate URL to avoid leaflet map placeholder variable error
+      const placeholders = config.customTileUrl.match(/\{.+?\}/g) ?? [];
+      const validPlaceholders = ["{x}", "{y}", "{z}"];
+      for (const placeholder of placeholders) {
+        if (!validPlaceholders.includes(placeholder)) {
+          return;
+        }
+      }
+      customLayer.setUrl(config.customTileUrl);
+    }
+  }, [config.layer, config.customTileUrl, customLayer]);
 
   // Subscribe to eligible and enabled topics
   useEffect(() => {
@@ -225,10 +282,12 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     context.subscribe(eligibleEnabled);
 
     const tree = buildSettingsTree(config, eligibleTopics);
-    // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-explicit-any
-    (context as unknown as any).__updatePanelSettingsTree({
+    // eslint-disable-next-line no-underscore-dangle
+    (
+      context as unknown as EXPERIMENTAL_PanelExtensionContextWithSettings
+    ).__updatePanelSettingsTree({
       actionHandler: settingsActionHandler,
-      settings: tree,
+      roots: tree,
     });
 
     return () => {

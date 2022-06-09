@@ -20,7 +20,7 @@ import {
 } from "@fluentui/react";
 import DatabaseIcon from "@mdi/svg/svg/database.svg";
 import PinIcon from "@mdi/svg/svg/pin.svg";
-import { Stack, Theme, Menu, MenuItem } from "@mui/material";
+import { Theme, Menu, MenuItem } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import cx from "classnames";
 import produce from "immer";
@@ -36,10 +36,12 @@ import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledCompon
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import {
   SettingsTreeAction,
-  SettingsTreeNode,
+  SettingsTreeRoots,
 } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import Stack from "@foxglove/studio-base/components/Stack";
 import { Config as DiagnosticStatusConfig } from "@foxglove/studio-base/panels/diagnostics/DiagnosticStatusPanel";
 import helpContent from "@foxglove/studio-base/panels/diagnostics/DiagnosticSummary.help.md";
 import useDiagnostics from "@foxglove/studio-base/panels/diagnostics/useDiagnostics";
@@ -159,10 +161,14 @@ type Props = {
   saveConfig: (arg0: Partial<Config>) => void;
 };
 
-function buildSettingsTree(config: Config): SettingsTreeNode {
+function buildSettingsTree(config: Config): SettingsTreeRoots {
   return {
-    fields: {
-      sortByLevel: { label: "Sort By Level", input: "boolean", value: config.sortByLevel },
+    general: {
+      label: "General",
+      icon: "Settings",
+      fields: {
+        sortByLevel: { label: "Sort By Level", input: "boolean", value: config.sortByLevel },
+      },
     },
   };
 }
@@ -184,26 +190,26 @@ function DiagnosticSummary(props: Props): JSX.Element {
         },
         caretDownWrapper: {
           top: 0,
-          lineHeight: 18,
-          height: 18,
+          lineHeight: 16,
+          height: 16,
         },
         title: {
           backgroundColor: "transparent",
           fontSize: theme.fonts.small.fontSize,
           borderColor: theme.semanticColors.bodyDivider,
-          lineHeight: 24,
-          height: 24,
+          lineHeight: 22,
+          height: 22,
         },
         dropdownItemSelected: {
           fontSize: theme.fonts.small.fontSize,
-          lineHeight: 24,
-          height: 24,
-          minHeight: 24,
+          lineHeight: 22,
+          height: 22,
+          minHeight: 22,
         },
         dropdownItem: {
-          lineHeight: 24,
-          height: 24,
-          minHeight: 24,
+          lineHeight: 22,
+          height: 22,
+          minHeight: 22,
           fontSize: theme.fonts.small.fontSize,
         },
       } as Partial<IDropdownStyles>),
@@ -224,8 +230,12 @@ function DiagnosticSummary(props: Props): JSX.Element {
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
+      if (action.action !== "update") {
+        return;
+      }
+
       const { input, path, value } = action.payload;
-      if (input === "boolean" && path[0] === "sortByLevel") {
+      if (input === "boolean" && path[1] === "sortByLevel") {
         saveConfig(
           produce(config, (draft) => {
             draft.sortByLevel = value;
@@ -239,7 +249,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
   useEffect(() => {
     updatePanelSettingsTree(panelId, {
       actionHandler,
-      settings: buildSettingsTree(config),
+      roots: buildSettingsTree(config),
     });
   }, [actionHandler, config, panelId, updatePanelSettingsTree]);
 
@@ -321,18 +331,6 @@ function DiagnosticSummary(props: Props): JSX.Element {
     setTopicMenuOpen((isOpen) => !isOpen);
   }, []);
 
-  const topicMenuIcon = (
-    <Icon
-      fade
-      tooltip={`Supported datatypes: ${ALLOWED_DATATYPES.join(", ")}`}
-      tooltipProps={{ placement: "top" }}
-      dataTest={"topic-set"}
-      onClick={toggleTopicMenuAction}
-    >
-      <DatabaseIcon />
-    </Icon>
-  );
-
   const diagnostics = useDiagnostics(topicToRender);
   const summary = useMemo(() => {
     if (diagnostics.size === 0) {
@@ -406,8 +404,41 @@ function DiagnosticSummary(props: Props): JSX.Element {
 
   return (
     <Stack flex="auto">
-      <div ref={menuRef} style={{ position: "absolute" }}></div>
-      <PanelToolbar helpContent={helpContent} additionalIcons={topicMenuIcon}>
+      <PanelToolbar
+        helpContent={helpContent}
+        additionalIcons={
+          <>
+            <div ref={menuRef}>
+              <ToolbarIconButton
+                title={`Supported datatypes: ${ALLOWED_DATATYPES.join(", ")}`}
+                data-test={"topic-set"}
+                onClick={toggleTopicMenuAction}
+                subMenuActive={topicMenuOpen}
+              >
+                <DatabaseIcon />
+              </ToolbarIconButton>
+            </div>
+            <Menu
+              anchorEl={menuRef.current}
+              open={topicMenuOpen}
+              onClose={() => setTopicMenuOpen(false)}
+              MenuListProps={{
+                dense: true,
+              }}
+            >
+              {availableTopics.map((topic) => (
+                <MenuItem
+                  key={topic}
+                  onClick={() => changeTopicToRender(topic)}
+                  selected={topicToRender === topic}
+                >
+                  {topic}
+                </MenuItem>
+              ))}
+            </Menu>
+          </>
+        }
+      >
         <Dropdown
           styles={dropdownStyles}
           onRenderOption={renderOption}
@@ -423,21 +454,6 @@ function DiagnosticSummary(props: Props): JSX.Element {
           selectedKey={minLevel}
         />
         {hardwareFilter}
-        <Menu
-          anchorEl={menuRef.current}
-          open={topicMenuOpen}
-          onClose={() => setTopicMenuOpen(false)}
-        >
-          {availableTopics.map((topic) => (
-            <MenuItem
-              key={topic}
-              onClick={() => changeTopicToRender(topic)}
-              selected={topicToRender === topic}
-            >
-              {topic}
-            </MenuItem>
-          ))}
-        </Menu>
       </PanelToolbar>
       <Stack flex="auto">{summary}</Stack>
     </Stack>

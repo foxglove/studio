@@ -145,6 +145,7 @@ export type ColorOverrideByVariable = Record<GlobalVariableName, ColorOverride>;
 const useStyles = makeStyles({
   container: {
     display: "flex",
+    flexDirection: "column",
     flex: "1 1 auto",
     position: "relative",
     width: "100%",
@@ -170,14 +171,20 @@ const SUPPORTED_MARKER_DATATYPES_SET = new Set([
   "geometry_msgs/PoseArray",
   "geometry_msgs/msg/PoseArray",
   "ros.geometry_msgs.PoseArray",
+  "foxglove_msgs/PosesInFrame",
+  "foxglove_msgs/msg/PosesInFrame",
   "foxglove.PosesInFrame",
   "geometry_msgs/PoseStamped",
   "geometry_msgs/msg/PoseStamped",
   "ros.geometry_msgs.PoseStamped",
+  "foxglove_msgs/PoseInFrame",
+  "foxglove_msgs/msg/PoseInFrame",
   "foxglove.PoseInFrame",
   "sensor_msgs/PointCloud2",
   "sensor_msgs/msg/PointCloud2",
   "ros.sensor_msgs.PointCloud2",
+  "foxglove_msgs/PointCloud",
+  "foxglove_msgs/msg/PointCloud",
   "foxglove.PointCloud",
   "velodyne_msgs/VelodyneScan",
   "velodyne_msgs/msg/VelodyneScan",
@@ -185,14 +192,20 @@ const SUPPORTED_MARKER_DATATYPES_SET = new Set([
   "sensor_msgs/LaserScan",
   "sensor_msgs/msg/LaserScan",
   "ros.sensor_msgs.LaserScan",
+  "foxglove_msgs/LaserScan",
+  "foxglove_msgs/msg/LaserScan",
   "foxglove.LaserScan",
   "std_msgs/ColorRGBA",
   "std_msgs/msg/ColorRGBA",
   "ros.std_msgs.ColorRGBA",
+  "foxglove_msgs/Color",
+  "foxglove_msgs/msg/Color",
   "foxglove.Color",
   "nav_msgs/OccupancyGrid",
   "nav_msgs/msg/OccupancyGrid",
   "ros.nav_msgs.OccupancyGrid",
+  "foxglove_msgs/Grid",
+  "foxglove_msgs/msg/Grid",
   "foxglove.Grid",
   "nav_msgs/Path",
   "nav_msgs/msg/Path",
@@ -792,7 +805,7 @@ export default function Layout({
           data-test="3dviz-layout"
         >
           <KeyListener keyDownHandlers={keyDownHandlers} />
-          <PanelToolbar floating helpContent={helpContent} />
+          <PanelToolbar helpContent={helpContent} />
           <div style={{ position: "absolute", width: "100%", height: "100%" }}>
             <div
               style={{
