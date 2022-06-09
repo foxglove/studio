@@ -20,7 +20,6 @@ import usePanZoom from "use-pan-and-zoom";
 import { v4 as uuidv4 } from "uuid";
 
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
-import ZoomMenu from "@foxglove/studio-base/panels/Image/components/ZoomMenu";
 import { Topic } from "@foxglove/studio-base/players/types";
 import Rpc from "@foxglove/studio-base/util/Rpc";
 import WebWorkerManager from "@foxglove/studio-base/util/WebWorkerManager";
@@ -35,6 +34,7 @@ import type {
   RenderArgs,
   NormalizedImageMessage,
 } from "../types";
+import ZoomMenu from "./ZoomMenu";
 
 type OnFinishRenderImage = () => void;
 

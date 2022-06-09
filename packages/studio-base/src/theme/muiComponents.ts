@@ -290,17 +290,6 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
       defaultProps: {
         disableRipple: true,
       },
-      styleOverrides: {
-        dense: {
-          minHeight: theme.spacing(3),
-          paddingTop: 0,
-          paddingBottom: 0,
-
-          "& .MuiSvgIcon-root.MuiSvgIcon-fontSizeSmall": {
-            fontSize: "1rem",
-          },
-        },
-      },
     },
     MuiOutlinedInput: {
       styleOverrides: {

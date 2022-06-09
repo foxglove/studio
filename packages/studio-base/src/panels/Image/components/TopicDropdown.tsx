@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import { Button, styled as muiStyled, Menu, MenuItem, ListItemText } from "@mui/material";
+import { Button, styled as muiStyled, Menu, MenuItem } from "@mui/material";
 import { MouseEvent, useState, useCallback } from "react";
 
 import { Topic } from "@foxglove/studio";
@@ -91,18 +91,14 @@ export function TopicDropdown(props: TopicDropdownProps): JSX.Element {
           dense: true,
         }}
       >
-        {topics.length === 0 && (
-          <MenuItem disabled>
-            <ListItemText primary="No topics" />
-          </MenuItem>
-        )}
+        {topics.length === 0 && <MenuItem disabled>No topics</MenuItem>}
         {topics.map((topic) => (
           <MenuItem
             key={topic.name}
             selected={topic.name === currentTopic}
             onClick={() => handleMenuClick(topic.name)}
           >
-            <ListItemText primary={topic.name} />
+            {topic.name}
           </MenuItem>
         ))}
       </Menu>

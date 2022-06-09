@@ -46,17 +46,19 @@ export default function ZoomMenu({
   setZoom,
   setZoomMode,
   setPan,
+  open = false,
   ...props
 }: {
   zoom: number;
   setZoom: (zoom: number) => void;
   setZoomMode: (zoomMode: "fit" | "fill" | "other") => void;
   setPan: (pan: { x: number; y: number }) => void;
+  open?: boolean;
 }): JSX.Element {
   const [anchorEl, setAnchorEl] = useState<undefined | HTMLElement>(undefined);
   const ref = useRef<HTMLDivElement>(ReactNull);
   const mousePresent = usePanelMousePresence(ref);
-  const open = Boolean(anchorEl);
+  const menuOpen = Boolean(anchorEl);
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -99,12 +101,17 @@ export default function ZoomMenu({
 
   return (
     <>
-      <StyledCard variant="elevation" ref={ref} visible={mousePresent || open} {...props}>
+      <StyledCard
+        variant="elevation"
+        ref={ref}
+        visible={mousePresent || menuOpen || open}
+        {...props}
+      >
         <IconButton
           id="zoom-button"
-          aria-controls={open ? "zoom-menu" : undefined}
+          aria-controls={menuOpen ? "zoom-menu" : undefined}
           aria-haspopup="true"
-          aria-expanded={open ? "true" : undefined}
+          aria-expanded={menuOpen ? "true" : undefined}
           onClick={handleClick}
         >
           <SearchIcon fontSize="small" />
@@ -113,7 +120,7 @@ export default function ZoomMenu({
       <Menu
         id="zoom-menu"
         anchorEl={anchorEl}
-        open={open}
+        open={menuOpen || open}
         onClose={handleClose}
         MenuListProps={{
           "aria-labelledby": "zoom-button",
@@ -128,7 +135,7 @@ export default function ZoomMenu({
           horizontal: "left",
         }}
       >
-        <ListItem dense tabIndex={-1} divider>
+        <ListItem dense tabIndex={0} divider>
           <Stack paddingBottom={1} gap={1}>
             <Typography variant="body2" color="text.secondary">
               Scroll or use the <br />
