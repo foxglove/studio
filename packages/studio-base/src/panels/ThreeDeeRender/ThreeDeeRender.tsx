@@ -131,7 +131,6 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       }
     }
   }, [canvas]);
-  const rendererRef = useRef(renderer);
 
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
   const [topics, setTopics] = useState<ReadonlyArray<Topic> | undefined>();
@@ -313,28 +312,17 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     context.onRender = (renderState: RenderState, done) => {
       ReactDOM.unstable_batchedUpdates(() => {
         if (renderState.currentTime) {
-          const receiveTime = toNanoSec(renderState.currentTime);
-          setCurrentTime(receiveTime);
-
-          // Immediately update the renderer's current time so the time is correct when ingesting messages
-          const curRenderer = rendererRef.current;
-          if (curRenderer) {
-            curRenderer.currentTime = receiveTime;
-          }
+          setCurrentTime(toNanoSec(renderState.currentTime));
         }
 
-        // render functions receive a _done_ callback. You MUST call this callback to indicate your panel has finished rendering.
-        // Your panel will not receive another render callback until _done_ is called from a prior render. If your panel is not done
-        // rendering before the next render call, studio shows a notification to the user that your panel is delayed.
-        //
         // Set the done callback into a state variable to trigger a re-render
         setRenderDone(done);
 
         // Keep UI elements and the renderer aware of the current color scheme
         setColorScheme(renderState.colorScheme);
 
-        // We may have new topics - since we are also watching for messages in the current frame, topics may not have changed
-        // It is up to you to determine the correct action when state has not changed
+        // We may have new topics - since we are also watching for messages in
+        // the current frame, topics may not have changed
         setTopics(renderState.topics);
 
         // currentFrame has messages on subscribed topics since the last render call
