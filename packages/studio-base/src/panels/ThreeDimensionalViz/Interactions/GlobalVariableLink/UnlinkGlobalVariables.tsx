@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Button, Card, Typography } from "@mui/material";
+import { Button, Card, Typography, styled as muiStyled } from "@mui/material";
 import { isEqual } from "lodash";
 
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -26,6 +26,8 @@ type Props = {
   name: string;
   showList?: boolean;
 };
+
+const StyledButton = muiStyled(Button)({ lineHeight: 1.125 });
 
 export default function UnlinkGlobalVariables({
   name,
@@ -47,11 +49,10 @@ export default function UnlinkGlobalVariables({
       {links.map(({ topic, markerKeyPath, name: linkedGlobalVariableName }, idx) => {
         return (
           <Stack key={idx} gap={1} alignItems="center" direction="row">
-            <Button
+            <StyledButton
               variant="contained"
               color="error"
               size="small"
-              style={{ flexShrink: 0 }}
               onClick={() => {
                 const newLinkedGlobalVariables = linkedGlobalVariables.filter(
                   (linkedGlobalVariable) =>
@@ -65,7 +66,7 @@ export default function UnlinkGlobalVariables({
               }}
             >
               Unlink
-            </Button>
+            </StyledButton>
             <Typography variant="body2" noWrap title={`${topic}.${getPath(markerKeyPath)}`}>
               {topic}.
               <Typography variant="inherit" display="inline" color="text.secondary">
