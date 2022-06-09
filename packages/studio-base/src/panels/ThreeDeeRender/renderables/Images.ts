@@ -44,7 +44,7 @@ const DEFAULT_SETTINGS: LayerSettingsImage = {
   color: "#ffffff",
 };
 
-type ImageRenderable = THREE.Object3D & {
+type ImageRenderable = Omit<THREE.Object3D, "userData"> & {
   userData: {
     topic: string;
     settings: LayerSettingsImage;
@@ -124,7 +124,6 @@ export class Images extends THREE.Object3D {
         topic,
         settings: { ...DEFAULT_SETTINGS, ...userSettings },
         image,
-        cameraModel: undefined,
         pose: makePose(),
         srcTime: toNanoSec(image.header.stamp),
         texture: undefined,

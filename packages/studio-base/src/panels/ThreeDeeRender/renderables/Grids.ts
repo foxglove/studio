@@ -35,7 +35,7 @@ const DEFAULT_SETTINGS: LayerSettingsGrid = {
   rotation: [0, 0, 0],
 };
 
-type GridRenderable = THREE.Object3D & {
+type GridRenderable = Omit<THREE.Object3D, "userData"> & {
   userData: {
     path: ReadonlyArray<string>;
     settings: LayerSettingsGrid;

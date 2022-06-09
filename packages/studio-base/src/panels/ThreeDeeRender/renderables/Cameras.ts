@@ -37,7 +37,7 @@ const DEFAULT_SETTINGS: LayerSettingsCameraInfo = {
   color: DEFAULT_COLOR_STR,
 };
 
-export type CameraInfoRenderable = THREE.Object3D & {
+export type CameraInfoRenderable = Omit<THREE.Object3D, "userData"> & {
   userData: {
     topic: string;
     settings: LayerSettingsCameraInfo;

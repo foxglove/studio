@@ -45,7 +45,7 @@ const tempMat4 = new THREE.Matrix4();
 const tempVec = new THREE.Vector3();
 const tempVecB = new THREE.Vector3();
 
-type FrameAxisRenderable = THREE.Object3D & {
+type FrameAxisRenderable = Omit<THREE.Object3D, "userData"> & {
   userData: {
     frameId: string;
     path: ReadonlyArray<string>;

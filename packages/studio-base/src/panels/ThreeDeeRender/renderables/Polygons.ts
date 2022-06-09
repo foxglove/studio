@@ -27,7 +27,7 @@ const DEFAULT_SETTINGS: LayerSettingsPolygon = {
   color: DEFAULT_COLOR_STR,
 };
 
-export type PolygonRenderable = THREE.Object3D & {
+export type PolygonRenderable = Omit<THREE.Object3D, "userData"> & {
   userData: {
     topic: string;
     settings: LayerSettingsPolygon;

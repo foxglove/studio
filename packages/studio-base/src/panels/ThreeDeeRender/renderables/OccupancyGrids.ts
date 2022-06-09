@@ -38,7 +38,7 @@ const DEFAULT_SETTINGS: LayerSettingsOccupancyGrid = {
   frameLocked: true,
 };
 
-type OccupancyGridRenderable = THREE.Object3D & {
+type OccupancyGridRenderable = Omit<THREE.Object3D, "userData"> & {
   userData: {
     topic: string;
     settings: LayerSettingsOccupancyGrid;
@@ -227,8 +227,6 @@ function invalidOccupancyGridError(
   message: string,
 ): void {
   renderer.layerErrors.addToTopic(renderable.userData.topic, INVALID_OCCUPANCY_GRID, message);
-  renderable.userData.positionAttribute.resize(0);
-  renderable.userData.colorAttribute.resize(0);
 }
 
 function createTexture(occupancyGrid: OccupancyGrid): THREE.DataTexture {
