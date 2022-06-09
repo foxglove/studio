@@ -73,6 +73,7 @@ const Timestamp = muiStyled(Typography, {
 
 const ContextMenuItems: PanelContextMenuItem[] = [
   { type: "item", label: "Download image", id: "download-image" },
+  { type: "divider" },
   { type: "item", label: "Flip horizontal", id: "flip-horizontal" },
   { type: "item", label: "Flip vertical", id: "flip-vertical" },
   { type: "item", label: "Rotate 90°", id: "rotate-90" },
@@ -264,19 +265,6 @@ function ImageView(props: Props) {
         (cameraInfo as { toJSON?: () => CameraInfo } | undefined)?.toJSON?.() ?? cameraInfo,
     };
   }, [annotations, cameraInfo, transformMarkers]);
-
-  const onDownloadImage = useCallback(async () => {
-    if (!imageMessageToRender) {
-      return;
-    }
-
-    const topic = imageTopics.find((top) => top.name === cameraTopic);
-    if (!topic) {
-      return;
-    }
-
-    await downloadImage(imageMessageToRender, topic, config);
-  }, [imageTopics, cameraTopic, config, imageMessageToRender]);
 
   return (
     <Stack flex="auto" overflow="hidden" position="relative">
