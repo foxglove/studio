@@ -593,8 +593,6 @@ export default class RosbridgePlayer implements Player {
       throw new Error("RosbridgePlayer#callService request must be an object");
     }
 
-    // narrow the request to a Record<string, unknown>
-
     // Query the type name for this service.
     const serviceType = await new Promise<string>((resolve, reject) => {
       this._rosClient!.getServiceType(
