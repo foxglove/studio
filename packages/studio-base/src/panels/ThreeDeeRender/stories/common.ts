@@ -10,6 +10,7 @@ import { MessageEvent } from "@foxglove/studio";
 import { stringToRgba } from "../color";
 import { ColorRGBA, Marker, Point, Pose } from "../ros";
 
+// ts-prune-ignore-next
 export type MarkerArgs = {
   id: number;
   stamp: Time;
@@ -24,15 +25,23 @@ export type MarkerArgs = {
   lifetime?: Time;
 };
 
+// ts-prune-ignore-next
 export const SENSOR_FRAME_ID = "sensor";
+// ts-prune-ignore-next
 export const BASE_LINK_FRAME_ID = "base_link";
+// ts-prune-ignore-next
 export const FIXED_FRAME_ID = "map";
 
+// ts-prune-ignore-next
 export const VEC3_ZERO = { x: 0, y: 0, z: 0 };
+// ts-prune-ignore-next
 export const VEC3_HALF = { x: 0.5, y: 0.5, z: 0.5 };
+// ts-prune-ignore-next
 export const VEC3_3_4 = { x: 0.75, y: 0.75, z: 0.75 };
+// ts-prune-ignore-next
 export const QUAT_IDENTITY = { x: 0, y: 0, z: 0, w: 1 };
 
+// ts-prune-ignore-next
 export const TEST_COLORS = {
   MARKER_GREEN1: "#296019",
   MARKER_GREEN2: "#65C83B",
@@ -48,6 +57,7 @@ const PNG_TEST_IMAGE_BASE64 =
 export const PNG_TEST_IMAGE = new Uint8Array(base64.length(PNG_TEST_IMAGE_BASE64));
 base64.decode(PNG_TEST_IMAGE_BASE64, PNG_TEST_IMAGE, 0);
 
+// ts-prune-ignore-next
 export function makeColor(hex: string, alpha?: number): ColorRGBA {
   const color = stringToRgba({ r: 0, g: 0, b: 0, a: 1 }, hex);
   if (alpha != undefined) {
@@ -56,6 +66,7 @@ export function makeColor(hex: string, alpha?: number): ColorRGBA {
   return color;
 }
 
+// ts-prune-ignore-next
 export function makePass({
   id,
   stamp,
@@ -93,6 +104,7 @@ export function makePass({
   };
 }
 
+// ts-prune-ignore-next
 export function makeFail({
   id,
   stamp,
