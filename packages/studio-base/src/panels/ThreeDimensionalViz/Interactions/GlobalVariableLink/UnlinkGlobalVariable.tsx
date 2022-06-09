@@ -38,7 +38,7 @@ export default function UnlinkGlobalVariable({
       data-test="unlink-form"
       style={{ overflowWrap: "break-word", pointerEvents: "auto" }}
     >
-      <Stack padding={1.5} gap={1.5}>
+      <Stack padding={2} gap={1.5}>
         <Typography variant="body2" noWrap>
           Unlink <GlobalVariableName name={name} /> from {topic}.
           <Typography variant="inherit" display="inline" color="text.secondary">

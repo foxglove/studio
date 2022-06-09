@@ -48,7 +48,7 @@ export default function UnlinkGlobalVariables({
 
   // the list UI is shared between 3D panel and Global Variables panel
   const listHtml = (
-    <Stack gap={1} padding={1.5} paddingX={showList ? 0 : undefined}>
+    <Stack gap={1} padding={showList ? 0 : 2}>
       {links.map(({ topic, markerKeyPath, name: linkedGlobalVariableName }, idx) => {
         return (
           <Stack key={idx} gap={1} alignItems="center" direction="row">
@@ -89,7 +89,7 @@ export default function UnlinkGlobalVariables({
   if (showList) {
     return (
       <>
-        <Typography variant="body2">
+        <Typography variant="body2" gutterBottom>
           Some links already exist for this variable. The variable’s value will be taken from the
           most recently clicked linked topic.
         </Typography>

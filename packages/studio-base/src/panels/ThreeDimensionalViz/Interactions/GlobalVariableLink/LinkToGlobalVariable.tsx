@@ -98,7 +98,7 @@ export default function LinkToGlobalVariable({
         onSubmit={addLink}
         data-test="link-form"
       >
-        <Stack padding={1.5} gap={1}>
+        <Stack padding={2} gap={1}>
           <Typography variant="body2">
             When linked, clicking a new object from {topic} will update the global variable&nbsp;
             <GlobalVariableName name={name} />.
