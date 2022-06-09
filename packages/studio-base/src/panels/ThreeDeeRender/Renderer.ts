@@ -293,12 +293,15 @@ export class Renderer extends EventEmitter<RendererEvents> {
     const { topic, message } = messageEvent;
 
     // If this message has a Header, scrape the frame_id from it
-    const frameId = (message as Partial<{ header: Header }>).header?.frame_id;
-    if (frameId != undefined && !this.transformTree.hasFrame(frameId)) {
-      this.transformTree.getOrCreateFrame(frameId);
-      log.debug(`Added coordinate frame "${frameId}"`);
-      this.emit("transformTreeUpdated", this);
-      this.frameAxes.addCoordinateFrame(frameId);
+    const maybeHasHeader = message as Partial<{ header: Partial<Header> }>;
+    if (maybeHasHeader.header) {
+      const frameId = maybeHasHeader.header.frame_id ?? "";
+      if (!this.transformTree.hasFrame(frameId)) {
+        this.transformTree.getOrCreateFrame(frameId);
+        log.debug(`Added coordinate frame "${frameId}"`);
+        this.emit("transformTreeUpdated", this);
+        this.frameAxes.addCoordinateFrame(frameId);
+      }
     }
 
     if (TF_DATATYPES.has(datatype)) {

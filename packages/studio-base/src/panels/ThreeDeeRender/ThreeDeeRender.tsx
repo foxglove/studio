@@ -221,11 +221,9 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       setLayerErrors(curRenderer.layerErrors.errors.clone()),
     [],
   );
-  useEffect(() => {
-    renderer?.addListener("transformTreeUpdated", updateCoordinateFrames);
-    renderer?.addListener("layerErrorUpdate", updateLayerErrors);
-    return () => void renderer?.removeListener("transformTreeUpdated", updateCoordinateFrames);
-  }, [renderer, updateCoordinateFrames, updateLayerErrors]);
+
+  useRendererEvent("transformTreeUpdated", updateCoordinateFrames, renderer);
+  useRendererEvent("layerErrorUpdate", updateLayerErrors, renderer);
 
   // Set the rendering frame (aka followTf) based on the configured frame, falling back to a
   // heuristically chosen best frame for the current scene (defaultFrame)
