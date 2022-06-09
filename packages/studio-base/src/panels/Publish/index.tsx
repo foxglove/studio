@@ -276,6 +276,7 @@ function Publish(props: Props) {
         <StyledButton
           color="primary"
           variant="contained"
+          size="large"
           buttonColor={buttonColor ? buttonColor : undefined}
           title={canPublish ? buttonTooltip : "Connect to ROS to publish data"}
           disabled={!canPublish || parsedObject == undefined}
