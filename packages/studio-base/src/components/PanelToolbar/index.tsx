@@ -37,6 +37,7 @@ const PanelToolbarRoot = muiStyled("div", {
   shouldForwardProp: (prop) => prop !== "backgroundColor",
 })<{ backgroundColor?: CSSProperties["backgroundColor"] }>(({ theme, backgroundColor }) => ({
   transition: "transform 80ms ease-in-out, opacity 80ms ease-in-out",
+  cursor: "grab",
   flex: "0 0 auto",
   alignItems: "center",
   justifyContent: "flex-end",
@@ -83,7 +84,10 @@ export default React.memo<Props>(function PanelToolbar({
   }, [additionalIcons, isFullscreen, exitFullscreen]);
 
   return (
-    <PanelToolbarRoot backgroundColor={backgroundColor}>
+    <PanelToolbarRoot
+      backgroundColor={backgroundColor}
+      ref={panelContext?.connectToolbarDragHandle}
+    >
       {children ??
         (panelContext != undefined && (
           <Typography noWrap variant="body2" color="text.secondary" flex="auto">

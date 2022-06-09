@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useCallback, useContext } from "react";
 
@@ -61,13 +60,6 @@ export const PanelToolbarControls = React.memo(function PanelToolbarControls({
         setIsOpen={setMenuOpen}
         isUnknownPanel={isUnknownPanel}
       />
-      {!isUnknownPanel && panelContext?.connectToolbarDragHandle && (
-        <span ref={panelContext.connectToolbarDragHandle} data-test="mosaic-drag-handle">
-          <ToolbarIconButton title="Move panel (shortcut: ` or ~)" style={{ cursor: "grab" }}>
-            <DragIndicatorIcon color="disabled" />
-          </ToolbarIconButton>
-        </span>
-      )}
     </Stack>
   );
 });
