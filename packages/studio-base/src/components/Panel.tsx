@@ -587,8 +587,8 @@ export default function Panel<
                 {isSelected && !fullscreen && numSelectedPanelsIfSelected > 1 && (
                   <ActionsOverlay>
                     <Grid container spacing={1} padding={2} maxWidth={300}>
-                      <Grid item xs={6}>
-                        <StyledButton
+                      <Grid item xs={12}>
+                        <Button
                           fullWidth
                           size="large"
                           variant="contained"
@@ -596,10 +596,10 @@ export default function Panel<
                           onClick={groupPanels}
                         >
                           Group in tab
-                        </StyledButton>
+                        </Button>
                       </Grid>
-                      <Grid item xs={6}>
-                        <StyledButton
+                      <Grid item xs={12}>
+                        <Button
                           fullWidth
                           size="large"
                           variant="contained"
@@ -607,7 +607,7 @@ export default function Panel<
                           onClick={createTabs}
                         >
                           Create {numSelectedPanelsIfSelected} tabs
-                        </StyledButton>
+                        </Button>
                       </Grid>
                     </Grid>
                   </ActionsOverlay>
