@@ -110,6 +110,7 @@ export default function UnlinkGlobalVariables({
       >
         {() => (
           <Card
+            elevation={4}
             variant="elevation"
             component="form"
             data-test="unlink-form"

@@ -33,6 +33,7 @@ export default function UnlinkGlobalVariable({
   const { linkedGlobalVariables, setLinkedGlobalVariables } = useLinkedGlobalVariables();
   return (
     <Card
+      elevation={4}
       component="form"
       variant="elevation"
       data-test="unlink-form"

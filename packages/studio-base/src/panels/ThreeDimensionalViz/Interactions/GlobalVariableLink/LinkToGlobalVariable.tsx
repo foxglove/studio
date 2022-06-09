@@ -92,6 +92,7 @@ export default function LinkToGlobalVariable({
         <LinkPlusIcon />
       </Icon>
       <Card
+        elevation={4}
         component="form"
         variant="elevation"
         style={{ overflowWrap: "break-word", pointerEvents: "auto", width: 240 }}
