@@ -89,7 +89,16 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         disableElevation: true,
       },
       styleOverrides: {
-        colorInherit: {
+        sizeSmall: {
+          lineHeight: 1.25,
+        },
+        sizeMedium: {
+          lineHeight: 1.5,
+        },
+        textSizeMedium: {
+          minWidth: 40,
+        },
+        containedInherit: {
           backgroundColor: theme.palette.action.focus,
         },
       },

@@ -11,56 +11,16 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { Button, Card, Typography } from "@mui/material";
 import { isEqual } from "lodash";
-import styled from "styled-components";
 
-import Button from "@foxglove/studio-base/components/Button";
+import Stack from "@foxglove/studio-base/components/Stack";
 import GlobalVariableName from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/GlobalVariableName";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
 import { getPath } from "../interactionUtils";
 import useLinkedGlobalVariables, { LinkedGlobalVariable } from "../useLinkedGlobalVariables";
 import SGlobalVariableLink from "./SGlobalVariableLink";
 import UnlinkWrapper from "./UnlinkWrapper";
-
-const SPath = styled.span`
-  opacity: 0.8;
-`;
-
-const SForm = styled.form`
-  background-color: ${colors.DARK3};
-  margin-left: 8px;
-  width: 320px;
-  box-shadow: 0 6px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.25);
-  pointer-events: auto;
-  flex: 0 0 auto;
-  border-radius: 8px;
-  overflow: hidden;
-`;
-
-const SExistingLinks = styled.div`
-  margin-bottom: 8px;
-`;
-
-const SList = styled.div`
-  margin: 12px 6px;
-`;
-
-const SListItem = styled.div`
-  display: flex;
-  align-items: center;
-  margin: 6px;
-  width: 100%;
-  overflow: hidden;
-`;
-
-const STopicWithPath = styled.span`
-  margin-left: 12px;
-  margin-right: 12px;
-  flex: 1 1 0;
-  overflow-wrap: break-word;
-  overflow: hidden;
-`;
 
 type Props = {
   name: string;
@@ -81,17 +41,16 @@ export default function UnlinkGlobalVariables({
     return ReactNull;
   }
 
-  const listStyle = showList ? { marginLeft: 0, marginRight: 0 } : {};
-
   // the list UI is shared between 3D panel and Global Variables panel
   const listHtml = (
-    <SList style={listStyle}>
+    <Stack gap={1} padding={1.5} paddingX={showList ? 0 : undefined}>
       {links.map(({ topic, markerKeyPath, name: linkedGlobalVariableName }, idx) => {
         return (
-          <SListItem key={idx} style={listStyle}>
+          <Stack key={idx} gap={1} alignItems="center" direction="row">
             <Button
-              danger
-              small
+              variant="contained"
+              color="error"
+              size="small"
               style={{ flexShrink: 0 }}
               onClick={() => {
                 const newLinkedGlobalVariables = linkedGlobalVariables.filter(
@@ -107,23 +66,26 @@ export default function UnlinkGlobalVariables({
             >
               Unlink
             </Button>
-            <STopicWithPath>
-              {topic}.<SPath>{getPath(markerKeyPath)}</SPath>
-            </STopicWithPath>
-          </SListItem>
+            <Typography variant="body2" noWrap title={`${topic}.${getPath(markerKeyPath)}`}>
+              {topic}.
+              <Typography variant="inherit" display="inline" color="text.secondary">
+                {getPath(markerKeyPath)}
+              </Typography>
+            </Typography>
+          </Stack>
         );
       })}
-    </SList>
+    </Stack>
   );
   if (showList) {
     return (
-      <SExistingLinks>
-        <p style={{ marginTop: 0, lineHeight: "1.4" }}>
+      <>
+        <Typography variant="body2">
           Some links already exist for this variable. The variable’s value will be taken from the
           most recently clicked linked topic.
-        </p>
+        </Typography>
         {listHtml}
-      </SExistingLinks>
+      </>
     );
   }
 
@@ -137,7 +99,16 @@ export default function UnlinkGlobalVariables({
         }
         linkedGlobalVariable={firstLink}
       >
-        {() => <SForm data-test="unlink-form">{listHtml}</SForm>}
+        {() => (
+          <Card
+            variant="elevation"
+            component="form"
+            data-test="unlink-form"
+            style={{ pointerEvents: "auto", maxWidth: 320 }}
+          >
+            {listHtml}
+          </Card>
+        )}
       </UnlinkWrapper>
     </SGlobalVariableLink>
   );
