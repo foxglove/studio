@@ -5,11 +5,8 @@
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import BlurOnIcon from "@mui/icons-material/BlurOn";
 import CircleIcon from "@mui/icons-material/Circle";
-import DeleteIcon from "@mui/icons-material/Delete";
 import DirectionsWalkIcon from "@mui/icons-material/DirectionsWalk";
-import DownloadIcon from "@mui/icons-material/Download";
 import FlagIcon from "@mui/icons-material/Flag";
-import FlipIcon from "@mui/icons-material/Flip";
 import FolderIcon from "@mui/icons-material/Folder";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import GridOnIcon from "@mui/icons-material/GridOn";
@@ -30,12 +27,6 @@ import ViewComfyIcon from "@mui/icons-material/ViewComfy";
 import ViewInArIcon from "@mui/icons-material/ViewInAr";
 import VrpanoIcon from "@mui/icons-material/Vrpano";
 
-function FlipVertical(): JSX.Element {
-  return (
-    <FlipIcon style={{ transform: "rotate(90deg)", transformOrigin: "center" }} fontSize="small" />
-  );
-}
-
 export default {
   Background: LayersIcon,
   Camera: PhotoCameraIcon,
@@ -44,12 +35,8 @@ export default {
   Clock: AccessTimeIcon,
   Collapse: UnfoldLessIcon,
   Cube: ViewInArIcon,
-  Delete: DeleteIcon,
-  Download: DownloadIcon,
   Expand: UnfoldMoreIcon,
   Flag: FlagIcon,
-  Flip: FlipIcon,
-  FlipVertical,
   Folder: FolderIcon,
   FolderOpen: FolderOpenIcon,
   Grid: GridOnIcon,
