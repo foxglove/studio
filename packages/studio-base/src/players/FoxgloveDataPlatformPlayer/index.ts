@@ -40,8 +40,6 @@ import {
   SubscriptionPreloadType,
   Topic,
   TopicStats,
-  ServiceCall,
-  ServiceCallResult,
 } from "@foxglove/studio-base/players/types";
 import ConsoleApi from "@foxglove/studio-base/services/ConsoleApi";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
@@ -530,7 +528,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
     throw new Error(`Publishing is not supported in ${this.constructor.name}`);
   }
 
-  async callService(_request: ServiceCall): ServiceCallResult {
+  async callService(): Promise<unknown> {
     throw new Error(`Service calls are not supported in ${this.constructor.name}`);
   }
 

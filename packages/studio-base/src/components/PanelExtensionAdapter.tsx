@@ -483,10 +483,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
             if (!ctx) {
               throw new Error("Unable to call service. There is no active connection.");
             }
-            return await ctx.callService({
-              service,
-              request: request as Record<string, unknown>,
-            });
+            return await ctx.callService(service, request);
           }
         : undefined,
 

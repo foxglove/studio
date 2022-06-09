@@ -21,8 +21,6 @@ import {
   SubscribePayload,
   Topic,
   TopicStats,
-  ServiceCall,
-  ServiceCallResult,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
@@ -298,7 +296,7 @@ export default class VelodynePlayer implements Player {
     throw new Error(`Publishing is not supported for VelodynePlayer`);
   }
 
-  async callService(_request: ServiceCall): ServiceCallResult {
+  async callService(): Promise<unknown> {
     throw new Error("Service calls are not supported for VelodynePlayer");
   }
 

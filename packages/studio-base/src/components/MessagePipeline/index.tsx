@@ -32,8 +32,6 @@ import {
   PublishPayload,
   SubscribePayload,
   Topic,
-  ServiceCall,
-  ServiceCallResult,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import createSelectableContext from "@foxglove/studio-base/util/createSelectableContext";
@@ -56,7 +54,7 @@ export type MessagePipelineContext = {
   setPublishers: (id: string, publishersForId: AdvertiseOptions[]) => void;
   setParameter: (key: string, value: ParameterValue) => void;
   publish: (request: PublishPayload) => void;
-  callService: (request: ServiceCall) => ServiceCallResult;
+  callService: (service: string, request: unknown) => Promise<unknown>;
   startPlayback?: () => void;
   pausePlayback?: () => void;
   setPlaybackSpeed?: (speed: number) => void;
@@ -192,7 +190,8 @@ export function MessagePipelineProvider({
     [player],
   );
   const callService = useCallback(
-    async (request: ServiceCall) => await (player ? player.callService(request) : Promise.reject()),
+    async (service: string, request: unknown) =>
+      await (player ? player.callService(service, request) : Promise.reject()),
     [player],
   );
   const startPlayback = useMemo(

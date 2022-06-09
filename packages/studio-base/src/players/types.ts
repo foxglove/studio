@@ -59,8 +59,9 @@ export interface Player {
   // If the Player supports publishing (i.e. PlayerState#capabilities contains
   // PlayerCapabilities.advertise), publish a message.
   publish(request: PublishPayload): void;
-  // Make a service call. Available if `capabilities` contains PlayerCapabilities.callServices),
-  callService(request: ServiceCall): ServiceCallResult;
+  // If the player support service calls (i.e. PlayerState#capabilities contains PlayerCapabilities.callServices)
+  // this will make a service call to the named service with the request payload.
+  callService(service: string, request: unknown): Promise<unknown>;
   // Basic playback controls. Available if `capabilities` contains PlayerCapabilities.playbackControl.
   startPlayback?(): void;
   pausePlayback?(): void;
@@ -293,12 +294,6 @@ export type AdvertiseOptions = {
 
 // The actual message to publish.
 export type PublishPayload = { topic: string; msg: Record<string, unknown> };
-
-// A service call with arguments.
-export type ServiceCall = { service: string; request: Record<string, unknown> };
-
-// FIXME: Maybe use Response instead of Result for consistency?
-export type ServiceCallResult = Promise<Record<string, unknown>>;
 
 // Capabilities that are not shared by all players.
 export const PlayerCapabilities = {

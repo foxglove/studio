@@ -17,7 +17,6 @@ import {
   PlayerStateActiveData,
   PlayerState,
   Player,
-  ServiceCallResult,
   SubscribePayload,
   AdvertiseOptions,
   PlayerPresence,
@@ -67,8 +66,8 @@ export default class FakePlayer implements Player {
   publish = (): void => {
     // no-op
   };
-  callService = async (): ServiceCallResult => {
-    throw new Error("Service calls are not supported by this data source");
+  callService = async (): Promise<void> => {
+    // no-op
   };
   setPublishers = (pubs: AdvertiseOptions[]): void => {
     this.publishers = pubs;

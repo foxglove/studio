@@ -31,8 +31,6 @@ import {
   Topic,
   PlayerURLState,
   TopicStats,
-  ServiceCall,
-  ServiceCallResult,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import naturalSort from "@foxglove/studio-base/util/naturalSort";
@@ -52,7 +50,7 @@ export default function MockMessagePipelineProvider(props: {
   messages?: MessageEvent<unknown>[];
   problems?: PlayerProblem[];
   publish?: (request: PublishPayload) => void;
-  callService?: (request: ServiceCall) => ServiceCallResult;
+  callService?: (service: string, request: unknown) => Promise<unknown>;
   setPublishers?: (arg0: string, arg1: AdvertiseOptions[]) => void;
   setSubscriptions?: (arg0: string, arg1: SubscribePayload[]) => void;
   setParameter?: (key: string, value: ParameterValue) => void;

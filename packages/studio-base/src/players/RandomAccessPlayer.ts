@@ -41,8 +41,6 @@ import {
   PlayerPresence,
   PlayerProblem,
   TopicStats,
-  ServiceCall,
-  ServiceCallResult,
 } from "@foxglove/studio-base/players/types";
 import {
   Connection,
@@ -674,7 +672,7 @@ export default class RandomAccessPlayer implements Player {
     throw new Error("Publishing is not supported by this data source");
   }
 
-  async callService(_request: ServiceCall): ServiceCallResult {
+  async callService(): Promise<unknown> {
     throw new Error("Service calls are not supported by this data source");
   }
 

@@ -20,8 +20,6 @@ import {
   PlayerMetricsCollectorInterface,
   AdvertiseOptions,
   TopicStats,
-  ServiceCall,
-  ServiceCallResult,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
@@ -451,7 +449,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
     throw new Error("Publishing is not supported by the Foxglove WebSocket connection");
   }
 
-  async callService(_request: ServiceCall): ServiceCallResult {
+  async callService(): Promise<unknown> {
     throw new Error("Service calls are not supported by the Foxglove WebSocket connection");
   }
 

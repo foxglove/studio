@@ -35,8 +35,6 @@ import {
   PlayerPresence,
   PlayerMetricsCollectorInterface,
   TopicStats,
-  ServiceCall,
-  ServiceCallResult,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { bagConnectionsToDatatypes } from "@foxglove/studio-base/util/bagConnectionsHelper";
@@ -51,6 +49,10 @@ const CAPABILITIES = [PlayerCapabilities.advertise];
 function isClockMessage(topic: string, msg: unknown): msg is { clock: Time } {
   const maybeClockMsg = msg as { clock?: Time };
   return topic === "/clock" && maybeClockMsg.clock != undefined && !isNaN(maybeClockMsg.clock.sec);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value != undefined;
 }
 
 // Connects to `rosbridge_server` instance using `roslibjs`. Currently doesn't support seeking or
@@ -582,13 +584,18 @@ export default class RosbridgePlayer implements Player {
     publisher.publish(msg);
   }
 
-  async callService({ service, request }: ServiceCall): ServiceCallResult {
+  async callService(service: string, request: unknown): Promise<unknown> {
     if (!this._rosClient) {
       throw new Error("Not connected");
     }
 
+    if (!isRecord(request)) {
+      throw new Error("RosbridgePlayer#callService request must be an object");
+    }
+
+    // narrow the request to a Record<string, unknown>
+
     // Query the type name for this service.
-    // TODO: Add memoization so that we are not doing a lookup every time.
     const serviceType = await new Promise<string>((resolve, reject) => {
       this._rosClient!.getServiceType(
         service,

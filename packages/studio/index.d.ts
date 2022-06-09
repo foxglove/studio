@@ -226,8 +226,8 @@ declare module "@foxglove/studio" {
      * Call a service.
      *
      * @param service The name of the service to call
-     * @param request The service request
-     * @returns A promise that will be resolved when the result is available
+     * @param request The request payload for the service call
+     * @returns A promise that resolves when the result is available or rejected with an error
      */
     callService?(service: string, request: unknown): Promise<unknown>;
 
