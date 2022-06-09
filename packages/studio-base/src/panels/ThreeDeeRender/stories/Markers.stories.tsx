@@ -11,7 +11,7 @@ import { ColorRGBA, Marker, TF } from "../ros";
 import { makeColor, QUAT_IDENTITY, SENSOR_FRAME_ID } from "./common";
 
 export default {
-  title: "panels/ThreeDeeRender/Markers",
+  title: "panels/ThreeDeeRender",
   component: ThreeDeeRender,
 };
 
