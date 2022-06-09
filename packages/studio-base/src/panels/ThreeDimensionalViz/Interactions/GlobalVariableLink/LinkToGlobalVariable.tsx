@@ -12,13 +12,12 @@
 //   You may not use this file except in compliance with the License.
 
 import LinkPlusIcon from "@mdi/svg/svg/link-plus.svg";
-import { Button, Card, Typography } from "@mui/material";
+import { Button, Card, FilledInput, Typography } from "@mui/material";
 import classNames from "classnames";
 import React, { CSSProperties, FormEvent } from "react";
 
 import ChildToggle from "@foxglove/studio-base/components/ChildToggle";
 import Icon from "@foxglove/studio-base/components/Icon";
-import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
 import Stack from "@foxglove/studio-base/components/Stack";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
 import GlobalVariableName from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/GlobalVariableName";
@@ -105,7 +104,8 @@ export default function LinkToGlobalVariable({
             <GlobalVariableName name={name} />.
           </Typography>
           <UnlinkGlobalVariables name={name} showList />
-          <LegacyInput
+          <FilledInput
+            size="small"
             autoFocus
             type="text"
             value={`$${name}`}
