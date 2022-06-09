@@ -127,7 +127,8 @@ const StyledButton = muiStyled(Button)(({ theme }) => ({
   alignItems: "center",
   textAlign: "center",
   whiteSpace: "nowrap",
-  padding: theme.spacing(1, 0),
+  padding: theme.spacing(1, 2),
+  width: "50%",
   flex: "auto",
 
   ".MuiButton-startIcon": {
