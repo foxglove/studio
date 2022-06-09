@@ -86,7 +86,8 @@ export default React.memo<Props>(function PanelToolbar({
   return (
     <PanelToolbarRoot
       backgroundColor={backgroundColor}
-      ref={panelContext?.connectToolbarDragHandle}
+      data-test="mosaic-drag-handle"
+      ref={isUnknownPanel ? undefined : panelContext?.connectToolbarDragHandle}
     >
       {children ??
         (panelContext != undefined && (
