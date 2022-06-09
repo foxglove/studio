@@ -4,7 +4,7 @@
 
 import type { ZstdModule, ZstdStreaming } from "zstd-codec";
 
-import { Mcap0Types } from "@foxglove/mcap";
+import { Mcap0Types } from "@mcap/core";
 
 let handlersPromise: Promise<Mcap0Types.DecompressHandlers> | undefined;
 export async function loadDecompressHandlers(): Promise<Mcap0Types.DecompressHandlers> {

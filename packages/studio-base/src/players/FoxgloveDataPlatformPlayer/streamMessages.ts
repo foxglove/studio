@@ -6,7 +6,7 @@ import { captureException } from "@sentry/core";
 import { isEqual } from "lodash";
 
 import Logger from "@foxglove/log";
-import { Mcap0StreamReader, Mcap0Types } from "@foxglove/mcap";
+import { Mcap0StreamReader, Mcap0Types } from "@mcap/core";
 import { loadDecompressHandlers, parseChannel, ParsedChannel } from "@foxglove/mcap-support";
 import { fromNanoSec, Time, toRFC3339String } from "@foxglove/rostime";
 import { MessageEvent } from "@foxglove/studio-base/players/types";
