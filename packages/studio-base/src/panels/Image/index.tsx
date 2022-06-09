@@ -71,14 +71,6 @@ const Timestamp = muiStyled(Typography, {
   }),
 }));
 
-const ContextMenuItems: PanelContextMenuItem[] = [
-  { type: "item", label: "Download image", id: "download-image" },
-  { type: "divider" },
-  { type: "item", label: "Flip horizontal", id: "flip-horizontal" },
-  { type: "item", label: "Flip vertical", id: "flip-vertical" },
-  { type: "item", label: "Rotate 90°", id: "rotate-90" },
-];
-
 function ImageView(props: Props) {
   const { config, saveConfig } = props;
   const { cameraTopic, enabledMarkerTopics, transformMarkers } = config;
@@ -228,22 +220,28 @@ function ImageView(props: Props) {
     await downloadImage(imageMessageToRender, topic, config);
   }, [imageTopics, cameraTopic, config, imageMessageToRender]);
 
-  const handleContextMenuSelection = useCallback(
-    async (itemId: string) => {
-      if (itemId === "flip-horizontal") {
-        saveConfig({ flipHorizontal: !(config.flipHorizontal ?? false) });
-      }
-      if (itemId === "flip-vertical") {
-        saveConfig({ flipVertical: !(config.flipVertical ?? false) });
-      }
-      if (itemId === "download-image") {
-        await doDownloadImage();
-      }
-    },
-    [config.flipHorizontal, config.flipVertical, doDownloadImage, saveConfig],
+  const contextMenuItemsForClickPosition = useCallback<() => PanelContextMenuItem[]>(
+    () => [
+      { type: "item", label: "Download image", onclick: doDownloadImage },
+      { type: "divider" },
+      {
+        type: "item",
+        label: "Flip horizontal",
+        onclick: () => saveConfig({ flipHorizontal: !(config.flipHorizontal ?? false) }),
+      },
+      {
+        type: "item",
+        label: "Flip vertical",
+        onclick: () => saveConfig({ flipVertical: !(config.flipVertical ?? false) }),
+      },
+      {
+        type: "item",
+        label: "Rotate 90°",
+        onclick: () => saveConfig({ rotation: ((config.rotation ?? 0) + 90) % 360 }),
+      },
+    ],
+    [config.flipHorizontal, config.flipVertical, config.rotation, doDownloadImage, saveConfig],
   );
-
-  const contextMenuItemsForClickPosition = useCallback(() => ContextMenuItems, []);
 
   const pauseFrame = useMessagePipeline(
     useCallback((messagePipeline) => messagePipeline.pauseFrame, []),
@@ -277,10 +275,7 @@ function ImageView(props: Props) {
           />
         </Stack>
       </PanelToolbar>
-      <PanelContextMenu
-        itemsForClickPosition={contextMenuItemsForClickPosition}
-        selectItem={handleContextMenuSelection}
-      />
+      <PanelContextMenu itemsForClickPosition={contextMenuItemsForClickPosition} />
       <Stack fullWidth fullHeight>
         {/* Always render the ImageCanvas because it's expensive to unmount and start up. */}
         {imageMessageToRender && (

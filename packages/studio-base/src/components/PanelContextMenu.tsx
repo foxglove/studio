@@ -11,7 +11,6 @@ import {
   MosaicWindowContext,
 } from "react-mosaic-component";
 import { DeepReadonly } from "ts-essentials";
-import { v4 as uuid } from "uuid";
 
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import { PanelRoot } from "@foxglove/studio-base/components/PanelRoot";
@@ -29,11 +28,11 @@ export type PanelContextMenuItem =
       /** True if the item should be shown but disabled. */
       disabled?: boolean;
 
-      /** Unique string id of this item that will be included in the select callback. */
-      id: string;
-
       /** Label shown for the menu item. */
       label: string;
+
+      /** Callback triggered by clicking the item. */
+      onclick: () => void;
     }
   | {
       /** Type of item dividers. */
@@ -49,11 +48,6 @@ type PanelContextMenuProps = {
     x: number;
     y: number;
   }) => DeepReadonly<PanelContextMenuItem[]>;
-
-  /**
-   * Handler for clicks on menu items.
-   */
-  selectItem: (item: string) => void;
 };
 
 /**
@@ -61,11 +55,9 @@ type PanelContextMenuProps = {
  * must be a child of a Panel component to work.
  */
 export function PanelContextMenu(props: PanelContextMenuProps): JSX.Element {
-  const { itemsForClickPosition, selectItem } = props;
+  const { itemsForClickPosition } = props;
 
   const rootRef = useRef<HTMLDivElement>(ReactNull);
-
-  const [defaultActionIds] = useState({ removePanel: uuid() });
 
   const [position, setPosition] = useState<undefined | { x: number; y: number }>();
 
@@ -100,19 +92,6 @@ export function PanelContextMenu(props: PanelContextMenuProps): JSX.Element {
     });
   }, [closePanel, mosaicActions, mosaicWindowActions, tabId]);
 
-  const onSelectItem = useCallback(
-    (itemId: string) => {
-      handleClose();
-      if (itemId === defaultActionIds.removePanel) {
-        removePanel();
-        return;
-      }
-
-      selectItem(itemId);
-    },
-    [defaultActionIds, handleClose, removePanel, selectItem],
-  );
-
   useEffect(() => {
     const element = rootRef.current;
     if (!element) {
@@ -131,9 +110,13 @@ export function PanelContextMenu(props: PanelContextMenuProps): JSX.Element {
     return [
       ...(items ?? []),
       { type: "divider" },
-      { type: "item", id: defaultActionIds.removePanel, label: "Remove panel" },
+      {
+        type: "item",
+        label: "Remove panel",
+        onclick: removePanel,
+      },
     ];
-  }, [defaultActionIds, items]);
+  }, [items, removePanel]);
 
   return (
     <div ref={rootRef} onContextMenu={(event) => event.preventDefault()}>
@@ -152,7 +135,14 @@ export function PanelContextMenu(props: PanelContextMenuProps): JSX.Element {
           }
 
           return (
-            <MenuItem onClick={() => onSelectItem(item.id)} key={item.id} disabled={item.disabled}>
+            <MenuItem
+              onClick={() => {
+                handleClose();
+                item.onclick();
+              }}
+              key={`item_${index}_${item.label}`}
+              disabled={item.disabled}
+            >
               <ListItemText>{item.label}</ListItemText>
             </MenuItem>
           );
