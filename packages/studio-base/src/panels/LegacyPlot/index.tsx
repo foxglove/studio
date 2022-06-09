@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { styled as muiStyled, useTheme } from "@mui/material";
+import { Button, styled as muiStyled, useTheme } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { flatten, pick, uniq } from "lodash";
 import { ComponentProps, useCallback, useMemo, useState } from "react";
@@ -19,7 +19,6 @@ import { useResizeDetector } from "react-resize-detector";
 
 import type { ZoomOptions } from "@foxglove/chartjs-plugin-zoom/types/options";
 import { filterMap } from "@foxglove/den/collection";
-import Button from "@foxglove/studio-base/components/Button";
 import ChartComponent from "@foxglove/studio-base/components/Chart";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
@@ -27,6 +26,7 @@ import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax
 import { useMessageDataItem } from "@foxglove/studio-base/components/MessagePathSyntax/useMessageDataItem";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import Stack from "@foxglove/studio-base/components/Stack";
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import useDeepChangeDetector from "@foxglove/studio-base/hooks/useDeepChangeDetector";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
@@ -38,13 +38,6 @@ const SResetZoom = muiStyled("div")`
   position: absolute;
   bottom: 15px;
   right: 10px;
-`;
-
-const SContainer = muiStyled("div")`
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  height: 100%;
 `;
 
 const SRoot = muiStyled("div")`
@@ -421,7 +414,7 @@ function TwoDimensionalPlot(props: Props) {
   }, [emptyMessage, message]);
 
   return (
-    <SContainer>
+    <Stack flex="auto" fullHeight>
       <PanelToolbar>
         <MessagePathInput
           path={path.value}
@@ -450,7 +443,12 @@ function TwoDimensionalPlot(props: Props) {
             />
             {hasUserPannedOrZoomed && (
               <SResetZoom>
-                <Button tooltip="(shortcut: double-click)" onClick={onResetZoom}>
+                <Button
+                  variant="contained"
+                  color="inherit"
+                  title="(shortcut: double-click)"
+                  onClick={onResetZoom}
+                >
                   reset view
                 </Button>
               </SResetZoom>
@@ -459,7 +457,7 @@ function TwoDimensionalPlot(props: Props) {
           </>
         )}
       </SRoot>
-    </SContainer>
+    </Stack>
   );
 }
 

@@ -10,7 +10,8 @@
 //   This source code is licensed under the Apache License, Version 2.0,
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
-import { useTheme } from "@fluentui/react";
+
+import { Button, useTheme } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { AnnotationOptions } from "chartjs-plugin-annotation";
 import React, {
@@ -30,7 +31,6 @@ import { v4 as uuidv4 } from "uuid";
 import type { ZoomOptions } from "@foxglove/chartjs-plugin-zoom/types/options";
 import { filterMap } from "@foxglove/den/collection";
 import Logger from "@foxglove/log";
-import Button from "@foxglove/studio-base/components/Button";
 import ChartComponent from "@foxglove/studio-base/components/Chart/index";
 import { RpcElement, RpcScales } from "@foxglove/studio-base/components/Chart/types";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
@@ -514,12 +514,12 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         family: fonts.MONOSPACE,
         size: 10,
       },
-      color: theme.palette.neutralSecondary,
+      color: theme.palette.text.secondary,
       maxRotation: 0,
     };
 
     const scale: ScaleOptions<"linear"> = {
-      grid: { color: theme.palette.neutralLighter },
+      grid: { color: theme.palette.text.disabled },
       ...xAxes,
       min: minX,
       max: maxX,
@@ -531,14 +531,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
     };
 
     return scale;
-  }, [
-    theme.palette.neutralSecondary,
-    showXAxisLabels,
-    theme.palette.neutralLighter,
-    xAxes,
-    minX,
-    maxX,
-  ]);
+  }, [theme.palette, showXAxisLabels, xAxes, minX, maxX]);
 
   const yScale = useMemo<ScaleOptions>(() => {
     const defaultYTicksSettings: ScaleOptions["ticks"] = {
@@ -546,7 +539,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         family: fonts.MONOSPACE,
         size: 10,
       },
-      color: theme.palette.neutralSecondary,
+      color: theme.palette.text.secondary,
       padding: 0,
     };
 
@@ -571,7 +564,7 @@ export default function TimeBasedChart(props: Props): JSX.Element {
         ...yAxes.ticks,
       },
     } as ScaleOptions;
-  }, [datasetBounds.y, yAxes, theme.palette.neutralSecondary]);
+  }, [datasetBounds.y, yAxes, theme.palette]);
 
   const datasetBoundsRef = useRef(datasetBounds);
   datasetBoundsRef.current = datasetBounds;
@@ -860,8 +853,13 @@ export default function TimeBasedChart(props: Props): JSX.Element {
 
           <SResetZoom>
             {showReset && (
-              <Button tooltip="(shortcut: double-click)" onClick={onResetZoom}>
-                reset view
+              <Button
+                variant="contained"
+                color="inherit"
+                title="(shortcut: double-click)"
+                onClick={onResetZoom}
+              >
+                Reset view
               </Button>
             )}
           </SResetZoom>
