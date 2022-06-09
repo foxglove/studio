@@ -51,7 +51,6 @@ import {
   FULLSCREEN_TRANSITION_DURATION_MS,
   PanelRoot,
 } from "@foxglove/studio-base/components/PanelRoot";
-import Stack from "@foxglove/studio-base/components/Stack";
 import {
   useCurrentLayoutActions,
   useSelectedPanels,
