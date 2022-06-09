@@ -27,7 +27,10 @@ type Props = {
   showList?: boolean;
 };
 
-const StyledButton = muiStyled(Button)({ lineHeight: 1.125 });
+const StyledButton = muiStyled(Button)({
+  lineHeight: 1.125,
+  minWidth: "auto",
+});
 
 export default function UnlinkGlobalVariables({
   name,
@@ -67,7 +70,12 @@ export default function UnlinkGlobalVariables({
             >
               Unlink
             </StyledButton>
-            <Typography variant="body2" noWrap title={`${topic}.${getPath(markerKeyPath)}`}>
+            <Typography
+              variant="body2"
+              noWrap
+              flex="auto"
+              title={`${topic}.${getPath(markerKeyPath)}`}
+            >
               {topic}.
               <Typography variant="inherit" display="inline" color="text.secondary">
                 {getPath(markerKeyPath)}

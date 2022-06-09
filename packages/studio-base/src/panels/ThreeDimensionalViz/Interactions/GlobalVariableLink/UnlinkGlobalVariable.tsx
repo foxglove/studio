@@ -36,34 +36,39 @@ export default function UnlinkGlobalVariable({
       component="form"
       variant="elevation"
       data-test="unlink-form"
-      style={{ overflowWrap: "break-word", pointerEvents: "auto", width: 240 }}
+      style={{ overflowWrap: "break-word", pointerEvents: "auto" }}
     >
-      <Stack direction="row" padding={1.5} alignItems="center">
-        <Typography variant="body2">
+      <Stack padding={1.5} gap={1.5}>
+        <Typography variant="body2" noWrap>
           Unlink <GlobalVariableName name={name} /> from {topic}.
-          <Typography display="inline" color="text.secondary">
-            {getPath(markerKeyPath)}
+          <Typography variant="inherit" display="inline" color="text.secondary">
+            {getPath(markerKeyPath)}?
           </Typography>
-          ?
         </Typography>
-        <Button
-          color="warning"
-          onClick={() => {
-            const newLinkedGlobalVariables = linkedGlobalVariables.filter(
-              (linkedGlobalVariable) =>
-                !(
-                  linkedGlobalVariable.topic === topic &&
-                  isEqual(linkedGlobalVariable.markerKeyPath, markerKeyPath) &&
-                  linkedGlobalVariable.name === name
-                ),
-            );
-            setLinkedGlobalVariables(newLinkedGlobalVariables);
-            setIsOpen(false);
-          }}
-        >
-          Unlink
-        </Button>
-        <Button onClick={() => setIsOpen(false)}>Cancel</Button>
+        <Stack direction="row" gap={1}>
+          <Button
+            size="small"
+            color="error"
+            variant="contained"
+            onClick={() => {
+              const newLinkedGlobalVariables = linkedGlobalVariables.filter(
+                (linkedGlobalVariable) =>
+                  !(
+                    linkedGlobalVariable.topic === topic &&
+                    isEqual(linkedGlobalVariable.markerKeyPath, markerKeyPath) &&
+                    linkedGlobalVariable.name === name
+                  ),
+              );
+              setLinkedGlobalVariables(newLinkedGlobalVariables);
+              setIsOpen(false);
+            }}
+          >
+            Unlink
+          </Button>
+          <Button size="small" variant="contained" color="inherit" onClick={() => setIsOpen(false)}>
+            Cancel
+          </Button>
+        </Stack>
       </Stack>
     </Card>
   );
