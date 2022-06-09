@@ -15,7 +15,7 @@ import BorderAllIcon from "@mui/icons-material/BorderAll";
 import DeleteForeverOutlinedIcon from "@mui/icons-material/DeleteForeverOutlined";
 import LibraryAddOutlinedIcon from "@mui/icons-material/LibraryAddOutlined";
 import TabIcon from "@mui/icons-material/Tab";
-import { Button, styled as muiStyled, Grid } from "@mui/material";
+import { Button, styled as muiStyled } from "@mui/material";
 import { last } from "lodash";
 import React, {
   useState,
@@ -28,6 +28,7 @@ import React, {
   MouseEventHandler,
   useLayoutEffect,
   useEffect,
+  CSSProperties,
 } from "react";
 import {
   MosaicContext,
@@ -50,6 +51,7 @@ import {
   FULLSCREEN_TRANSITION_DURATION_MS,
   PanelRoot,
 } from "@foxglove/studio-base/components/PanelRoot";
+import Stack from "@foxglove/studio-base/components/Stack";
 import {
   useCurrentLayoutActions,
   useSelectedPanels,
@@ -107,12 +109,26 @@ const PerfInfo = muiStyled("div")({
   mixBlendMode: "difference",
 });
 
+const Container = muiStyled("div", {
+  shouldForwardProp: (prop) => prop !== "direction",
+})<{
+  direction?: CSSProperties["flexDirection"];
+}>(({ direction = "column", theme }) => ({
+  padding: theme.spacing(2),
+  maxWidth: 300,
+  margin: "auto",
+  display: "flex",
+  flexDirection: direction,
+  gap: theme.spacing(1),
+}));
+
 const StyledButton = muiStyled(Button)(({ theme }) => ({
   flexDirection: "column",
   alignItems: "center",
   textAlign: "center",
   whiteSpace: "nowrap",
-  padding: theme.spacing(2, 0),
+  padding: theme.spacing(1, 0),
+  flex: "auto",
 
   ".MuiButton-startIcon": {
     margin: 0,
@@ -586,30 +602,26 @@ export default function Panel<
               >
                 {isSelected && !fullscreen && numSelectedPanelsIfSelected > 1 && (
                   <ActionsOverlay>
-                    <Grid container spacing={1} padding={2} maxWidth={300}>
-                      <Grid item xs={12}>
-                        <Button
-                          fullWidth
-                          size="large"
-                          variant="contained"
-                          startIcon={<TabIcon fontSize="large" />}
-                          onClick={groupPanels}
-                        >
-                          Group in tab
-                        </Button>
-                      </Grid>
-                      <Grid item xs={12}>
-                        <Button
-                          fullWidth
-                          size="large"
-                          variant="contained"
-                          startIcon={<LibraryAddOutlinedIcon fontSize="large" />}
-                          onClick={createTabs}
-                        >
-                          Create {numSelectedPanelsIfSelected} tabs
-                        </Button>
-                      </Grid>
-                    </Grid>
+                    <Container>
+                      <Button
+                        fullWidth
+                        size="large"
+                        variant="contained"
+                        startIcon={<TabIcon fontSize="large" />}
+                        onClick={groupPanels}
+                      >
+                        Group in tab
+                      </Button>
+                      <Button
+                        fullWidth
+                        size="large"
+                        variant="contained"
+                        startIcon={<LibraryAddOutlinedIcon fontSize="large" />}
+                        onClick={createTabs}
+                      >
+                        Create {numSelectedPanelsIfSelected} tabs
+                      </Button>
+                    </Container>
                   </ActionsOverlay>
                 )}
                 {type !== TAB_PANEL_TYPE && quickActionsKeyPressed && !fullscreen && (
@@ -622,30 +634,24 @@ export default function Panel<
                       }
                     }}
                   >
-                    <Grid container spacing={1} padding={2} maxWidth={300}>
-                      <Grid item xs={6}>
-                        <StyledButton
-                          fullWidth
-                          size="large"
-                          variant="contained"
-                          startIcon={<DeleteForeverOutlinedIcon fontSize="large" />}
-                          onClick={removePanel}
-                        >
-                          Remove
-                        </StyledButton>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <StyledButton
-                          fullWidth
-                          size="large"
-                          variant="contained"
-                          startIcon={<BorderAllIcon fontSize="large" />}
-                          onClick={splitPanel}
-                        >
-                          Split
-                        </StyledButton>
-                      </Grid>
-                    </Grid>
+                    <Container direction="row">
+                      <StyledButton
+                        size="large"
+                        variant="contained"
+                        startIcon={<DeleteForeverOutlinedIcon fontSize="large" />}
+                        onClick={removePanel}
+                      >
+                        Remove
+                      </StyledButton>
+                      <StyledButton
+                        size="large"
+                        variant="contained"
+                        startIcon={<BorderAllIcon fontSize="large" />}
+                        onClick={splitPanel}
+                      >
+                        Split
+                      </StyledButton>
+                    </Container>
                   </ActionsOverlay>
                 )}
                 <PanelErrorBoundary onRemovePanel={removePanel} onResetPanel={resetPanel}>
