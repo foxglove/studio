@@ -13,7 +13,15 @@
 
 import { makeStyles } from "@fluentui/react";
 import cx from "classnames";
-import { useCallback, useLayoutEffect, useRef, MouseEvent, useState, useMemo } from "react";
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  MouseEvent,
+  useState,
+  useMemo,
+  useReducer,
+} from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { useAsync } from "react-use";
 import usePanZoom from "use-pan-and-zoom";
@@ -103,6 +111,8 @@ export function ImageCanvas(props: Props): JSX.Element {
   const classes = useStyles();
 
   const renderInMainThread = (props.renderInMainThread ?? false) || !supportsOffscreenCanvas;
+
+  const [_, forceUpdate] = useReducer((x: number) => x + 1, 0);
 
   // generic errors within the panel
   const [error, setError] = useState<Error | undefined>();
@@ -317,6 +327,7 @@ export function ImageCanvas(props: Props): JSX.Element {
   const resetPanZoom = useCallback(() => {
     setPan({ x: 0, y: 0 });
     setZoom(1);
+    forceUpdate();
   }, [setPan, setZoom]);
 
   const zoomIn = useCallback(() => {
@@ -353,7 +364,13 @@ export function ImageCanvas(props: Props): JSX.Element {
         onClick={onCanvasClick}
         ref={canvasRef}
       />
-      <ZoomMenu zoom={scaleValue} setZoom={setZoom} setPan={setPan} setZoomMode={setZoomMode} />
+      <ZoomMenu
+        zoom={scaleValue}
+        setZoom={setZoom}
+        setPan={setPan}
+        setZoomMode={setZoomMode}
+        resetPanZoom={resetPanZoom}
+      />
     </div>
   );
 }
