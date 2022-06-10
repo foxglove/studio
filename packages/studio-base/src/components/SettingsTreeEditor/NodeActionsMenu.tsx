@@ -2,6 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import CheckIcon from "@mui/icons-material/Check";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { Menu, MenuItem, IconButton, ListItemIcon, ListItemText } from "@mui/material";
 import { useState } from "react";
@@ -28,6 +29,8 @@ export function NodeActionsMenu({
     onSelectAction(id);
     setAnchorEl(undefined);
   };
+
+  const anyItemHasIcon = actions.some((action) => action.icon);
 
   return (
     <>
@@ -58,6 +61,12 @@ export function NodeActionsMenu({
               {Icon && (
                 <ListItemIcon>
                   <Icon fontSize="small" />
+                </ListItemIcon>
+              )}
+              {/* Use hidden icon for consisten padding */}
+              {anyItemHasIcon && !Icon && (
+                <ListItemIcon style={{ visibility: "hidden" }}>
+                  <CheckIcon />
                 </ListItemIcon>
               )}
               <ListItemText>{action.label}</ListItemText>

@@ -37,6 +37,7 @@ const BasicSettings: SettingsTreeRoots = {
     actions: [
       { id: "add-grid", label: "Add new grid", icon: "Grid" },
       { id: "add-background", label: "Add new background", icon: "Background" },
+      { id: "toggle-value", label: "Toggle Value", icon: "Check" },
       { id: "reset-values", label: "Reset values" },
     ],
     fields: {
