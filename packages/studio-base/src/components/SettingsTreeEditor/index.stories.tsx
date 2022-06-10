@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Box } from "@mui/material";
+import { fireEvent } from "@testing-library/dom";
 import produce from "immer";
 import { last } from "lodash";
 import { useCallback, useMemo, useState, useEffect } from "react";
@@ -524,6 +525,10 @@ function Wrapper({ roots }: { roots: SettingsTreeRoots }): JSX.Element {
 export function Basics(): JSX.Element {
   return <Wrapper roots={BasicSettings} />;
 }
+
+Basics.play = () => {
+  fireEvent.click(document.querySelector("[data-test=node-actions-menu-button]")!);
+};
 
 export function PanelExamples(): JSX.Element {
   return <Wrapper roots={PanelExamplesSettings} />;

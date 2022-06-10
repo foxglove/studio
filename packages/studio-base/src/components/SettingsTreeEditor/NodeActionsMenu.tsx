@@ -33,11 +33,11 @@ export function NodeActionsMenu({
     <>
       <IconButton
         title="More actions"
-        id="node-actions-button"
-        aria-controls={open ? "noce-actions-menu" : undefined}
+        aria-controls={open ? "node-actions-menu" : undefined}
         aria-haspopup="true"
         aria-expanded={open ? "true" : undefined}
         onClick={handleClick}
+        data-test="node-actions-menu-button"
         size="small"
       >
         <MoreVertIcon fontSize="small" />
@@ -48,7 +48,7 @@ export function NodeActionsMenu({
         open={open}
         onClose={() => setAnchorEl(undefined)}
         MenuListProps={{
-          "aria-labelledby": "node-actions-button",
+          "aria-label": "node actions button",
         }}
       >
         {actions.map((action) => {
