@@ -66,15 +66,6 @@ export function makeColor(hex: string, alpha?: number): ColorRGBA {
   return color;
 }
 
-export function rgba(r: number, g: number, b: number, a: number): number {
-  return (
-    (Math.trunc(r * 255) << 24) |
-    (Math.trunc(g * 255) << 16) |
-    (Math.trunc(b * 255) << 8) |
-    Math.trunc(a * 255)
-  );
-}
-
 // ts-prune-ignore-next
 export function makePass({
   id,
