@@ -327,6 +327,8 @@ export function ImageCanvas(props: Props): JSX.Element {
   const resetPanZoom = useCallback(() => {
     setPan({ x: 0, y: 0 });
     setZoom(1);
+    // We have to force an update here becase pan & zoom are not state
+    // variables and setting them alone will not trigger a re-render.
     forceUpdate();
   }, [setPan, setZoom]);
 
