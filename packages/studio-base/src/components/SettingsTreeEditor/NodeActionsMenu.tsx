@@ -4,7 +4,7 @@
 
 import CheckIcon from "@mui/icons-material/Check";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { Menu, MenuItem, IconButton, ListItemIcon, ListItemText } from "@mui/material";
+import { Menu, MenuItem, IconButton, ListItemIcon, ListItemText, Divider } from "@mui/material";
 import { useState } from "react";
 
 import CommonIcons from "@foxglove/studio-base/components/CommonIcons";
@@ -54,7 +54,10 @@ export function NodeActionsMenu({
           "aria-label": "node actions button",
         }}
       >
-        {actions.map((action) => {
+        {actions.map((action, index) => {
+          if (action.type === "divider") {
+            return <Divider key={`divider_${index}`} />;
+          }
           const Icon = action.icon ? CommonIcons[action.icon] : undefined;
           return (
             <MenuItem key={action.id} onClick={() => handleClose(action.id)}>
