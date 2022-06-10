@@ -52,7 +52,6 @@ export default function ZoomMenu({
   zoom: number;
   setZoom: (zoom: number) => void;
   setZoomMode: (zoomMode: "fit" | "fill" | "other") => void;
-  setPan: (pan: { x: number; y: number }) => void;
   resetPanZoom: () => void;
   open?: boolean;
 }): JSX.Element {

@@ -367,7 +367,6 @@ export function ImageCanvas(props: Props): JSX.Element {
       <ZoomMenu
         zoom={scaleValue}
         setZoom={setZoom}
-        setPan={setPan}
         setZoomMode={setZoomMode}
         resetPanZoom={resetPanZoom}
       />
