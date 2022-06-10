@@ -63,7 +63,7 @@ export function NodeActionsMenu({
                   <Icon fontSize="small" />
                 </ListItemIcon>
               )}
-              {/* Use hidden icon for consisten padding */}
+              {/* Use hidden icon for consistent padding */}
               {anyItemHasIcon && !Icon && (
                 <ListItemIcon style={{ visibility: "hidden" }}>
                   <CheckIcon />
