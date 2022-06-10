@@ -160,6 +160,7 @@ type MessagePathInputBaseProps = {
   inputStyle?: CSSProperties;
   disabled?: boolean;
   disableAutocomplete?: boolean; // Treat this as a normal input, with no autocomplete.
+  readOnly?: boolean;
   prioritizedDatatype?: string;
 };
 
@@ -440,6 +441,7 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
       <Autocomplete
         items={orderedAutocompleteItems}
         disabled={props.disabled}
+        readOnly={props.readOnly}
         filterText={autocompleteFilterText}
         value={path}
         onChange={onChange}

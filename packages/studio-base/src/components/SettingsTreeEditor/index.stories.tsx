@@ -140,9 +140,9 @@ For ROS users, we also support package:// URLs
   },
 };
 
-const ReadonlySettings: SettingsTreeRoots = {
+const DisabledSettings: SettingsTreeRoots = {
   general: {
-    label: "Readonly Fields",
+    label: "Disabled Fields",
     icon: "Grid",
     fields: {
       autocomplete: {
@@ -214,6 +214,86 @@ const ReadonlySettings: SettingsTreeRoots = {
         label: "Vec3",
         value: [1, 2, 3],
         disabled: true,
+      },
+    },
+    children: {},
+  },
+};
+
+const ReadonlySettings: SettingsTreeRoots = {
+  general: {
+    label: "ReadOnly Fields",
+    icon: "Grid",
+    fields: {
+      autocomplete: {
+        input: "autocomplete",
+        label: "Autocomplete",
+        items: ["one", "two"],
+        value: "one",
+        readOnly: true,
+      },
+      boolean: {
+        input: "boolean",
+        label: "Boolean",
+        readOnly: true,
+      },
+      gradient: {
+        input: "gradient",
+        label: "Gradient",
+        value: ["#ffffff", "#000000"],
+        readOnly: true,
+      },
+      messagePath: {
+        input: "messagepath",
+        label: "Message Path",
+        readOnly: true,
+      },
+      number: {
+        input: "number",
+        label: "Number",
+        value: 123,
+        readOnly: true,
+      },
+      rgb: {
+        input: "rgb",
+        label: "RGB",
+        value: "#0000ff",
+        readOnly: true,
+      },
+      rgba: {
+        input: "rgba",
+        label: "RGBA",
+        value: "#0000ff88",
+        readOnly: true,
+      },
+      select: {
+        input: "select",
+        label: "Select",
+        options: [
+          { label: "One", value: "one" },
+          { label: "Two", value: "two" },
+        ],
+        value: "one",
+        readOnly: true,
+      },
+      text: {
+        input: "string",
+        label: "Text",
+        value: "text",
+        readOnly: true,
+      },
+      toggle: {
+        input: "toggle",
+        label: "Toggle",
+        value: "One",
+        options: ["One", "Two"],
+        readOnly: true,
+      },
+      vec3: {
+        input: "vec3",
+        label: "Vec3",
+        value: [1, 2, 3],
+        readOnly: true,
       },
     },
     children: {},
@@ -610,6 +690,10 @@ export function Basics(): JSX.Element {
 Basics.play = () => {
   fireEvent.click(document.querySelector("[data-test=node-actions-menu-button]")!);
 };
+
+export function DisabledFields(): JSX.Element {
+  return <Wrapper roots={DisabledSettings} />;
+}
 
 export function ReadonlyFields(): JSX.Element {
   return <Wrapper roots={ReadonlySettings} />;

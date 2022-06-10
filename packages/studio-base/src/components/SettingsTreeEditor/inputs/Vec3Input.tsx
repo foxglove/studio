@@ -12,6 +12,7 @@ export function Vec3Input({
   disabled = false,
   onChange,
   precision,
+  readOnly = false,
   step,
   value,
 }: {
@@ -20,6 +21,7 @@ export function Vec3Input({
     value: undefined | readonly [undefined | number, undefined | number, undefined | number],
   ) => void;
   precision?: number;
+  readOnly?: boolean;
   step?: number;
   value: undefined | readonly [undefined | number, undefined | number, undefined | number];
 }): JSX.Element {
@@ -45,6 +47,7 @@ export function Vec3Input({
           key={position}
           size="small"
           disabled={disabled}
+          readOnly={readOnly}
           variant="filled"
           fullWidth
           precision={precision}

@@ -60,12 +60,13 @@ export function NumberInput(
     max?: number;
     min?: number;
     precision?: number;
+    readOnly?: boolean;
     step?: number;
     value?: number;
     onChange: (value: undefined | number) => void;
   } & Omit<TextFieldProps, "onChange">,
 ): JSX.Element {
-  const { value, iconDown, iconUp, step = 1, onChange } = props;
+  const { value, iconDown, iconUp, step = 1, onChange, disabled, readOnly } = props;
 
   const [shiftPressed] = useKeyPress("Shift");
 
@@ -77,7 +78,7 @@ export function NumberInput(
 
   const updateValue = useCallback(
     (newValue: undefined | number) => {
-      if (props.disabled === true) {
+      if (disabled === true || readOnly === true) {
         return;
       }
 
@@ -95,7 +96,7 @@ export function NumberInput(
           : clampedValue;
       onChange(newLimitedValue);
     },
-    [onChange, props.disabled, props.max, props.min, props.precision],
+    [disabled, readOnly, props.min, props.max, props.precision, onChange],
   );
 
   const limitedValue =
@@ -113,6 +114,7 @@ export function NumberInput(
       type="number"
       inputProps={{ max: props.max, min: props.min, step: stepAmount }}
       InputProps={{
+        readOnly,
         startAdornment: (
           <StyledIconButton
             size="small"

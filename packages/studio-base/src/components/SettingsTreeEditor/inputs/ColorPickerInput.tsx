@@ -35,10 +35,11 @@ type ColorPickerInputProps = {
   onChange: (value: undefined | string) => void;
   placeholder?: string;
   swatchOrientation?: "start" | "end";
+  readOnly?: boolean;
 };
 
 export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
-  const { onChange, swatchOrientation = "start", value } = props;
+  const { disabled, onChange, readOnly, swatchOrientation = "start", value } = props;
 
   const [anchorElement, setAnchorElement] = useState<undefined | HTMLDivElement>(undefined);
 
@@ -56,16 +57,17 @@ export function ColorPickerInput(props: ColorPickerInputProps): JSX.Element {
   const swatchColor = isValidColor ? tinycolor(value).toHex8String() : "#00000044";
 
   return (
-    <Root disabled={props.disabled === true}>
+    <Root disabled={disabled === true || readOnly === true}>
       <StyledTextField
         fullWidth
-        disabled={props.disabled}
+        disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
         placeholder={props.placeholder}
         size="small"
         value={value ?? ""}
         variant="filled"
         InputProps={{
+          readOnly,
           startAdornment: swatchOrientation === "start" && (
             <ColorSwatch color={swatchColor} onClick={handleClick} />
           ),

@@ -41,7 +41,7 @@ export type SettingsTreeFieldValue =
 
 export type SettingsTreeField = SettingsTreeFieldValue & {
   /**
-   * True if the field is not editable
+   * True if the field is disabled.
    */
   disabled?: boolean;
 
@@ -60,6 +60,11 @@ export type SettingsTreeField = SettingsTreeFieldValue & {
    * absence of a value.
    */
   placeholder?: string;
+
+  /**
+   * True if the field is readonly.
+   */
+  readOnly?: boolean;
 
   /**
    * Optional message indicating any error state for the field.
