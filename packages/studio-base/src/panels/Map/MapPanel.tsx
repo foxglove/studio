@@ -21,9 +21,10 @@ import { toSec } from "@foxglove/rostime";
 import { PanelExtensionContext, MessageEvent } from "@foxglove/studio";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import {
+  EXPERIMENTAL_PanelExtensionContextWithSettings,
   SettingsTreeAction,
   SettingsTreeFields,
-  SettingsTreeNode,
+  SettingsTreeRoots,
 } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import FilteredPointLayer, {
   POINT_MARKER_RADIUS,
@@ -57,7 +58,7 @@ function isGeoJSONMessage(
   );
 }
 
-function buildSettingsTree(config: Config, eligibleTopics: string[]): SettingsTreeNode {
+function buildSettingsTree(config: Config, eligibleTopics: string[]): SettingsTreeRoots {
   const topics: SettingsTreeFields = transform(
     eligibleTopics,
     (result, topic) => {
@@ -104,14 +105,15 @@ function buildSettingsTree(config: Config, eligibleTopics: string[]): SettingsTr
     };
   }
 
-  const settings: SettingsTreeNode = {
-    label: "General",
-    fields: generalSettings,
-    children: {
-      topics: {
-        label: "Topics",
-        fields: topics,
-      },
+  const settings: SettingsTreeRoots = {
+    general: {
+      label: "General",
+      icon: "Settings",
+      fields: generalSettings,
+    },
+    topics: {
+      label: "Topics",
+      fields: topics,
     },
   };
 
@@ -119,20 +121,21 @@ function buildSettingsTree(config: Config, eligibleTopics: string[]): SettingsTr
 }
 
 function topicMessageType(topic: Topic) {
-  if (
-    topic.datatype === "sensor_msgs/NavSatFix" ||
-    topic.datatype === "sensor_msgs/msg/NavSatFix" ||
-    topic.datatype === "ros.sensor_msgs.NavSatFix" ||
-    topic.datatype === "foxglove.LocationFix"
-  ) {
-    return "navsat";
+  switch (topic.datatype) {
+    case "sensor_msgs/NavSatFix":
+    case "sensor_msgs/msg/NavSatFix":
+    case "ros.sensor_msgs.NavSatFix":
+    case "foxglove_msgs/LocationFix":
+    case "foxglove_msgs/msg/LocationFix":
+    case "foxglove.LocationFix":
+      return "navsat";
+    case "foxglove_msgs/GeoJSON":
+    case "foxglove_msgs/msg/GeoJSON":
+    case "foxglove.GeoJSON":
+      return "geojson";
+    default:
+      return undefined;
   }
-
-  if (topic.datatype === "foxglove.GeoJSON") {
-    return "geojson";
-  }
-
-  return undefined;
 }
 
 function MapPanel(props: MapPanelProps): JSX.Element {
@@ -221,6 +224,10 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   }, [topics]);
 
   const settingsActionHandler = useCallback((action: SettingsTreeAction) => {
+    if (action.action !== "update") {
+      return;
+    }
+
     const { path, input, value } = action.payload;
 
     if (path[0] === "topics" && input === "boolean") {
@@ -238,13 +245,13 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       }
     }
 
-    if (path[0] === "layer" && input === "select") {
+    if (path[1] === "layer" && input === "select") {
       setConfig((oldConfig) => {
         return { ...oldConfig, layer: String(value) };
       });
     }
 
-    if (path[0] === "customTileUrl" && input === "string") {
+    if (path[1] === "customTileUrl" && input === "string") {
       setConfig((oldConfig) => {
         return { ...oldConfig, customTileUrl: String(value) };
       });
@@ -287,10 +294,12 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     context.subscribe(eligibleEnabled);
 
     const tree = buildSettingsTree(config, eligibleTopics);
-    // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-explicit-any
-    (context as unknown as any).__updatePanelSettingsTree({
+    // eslint-disable-next-line no-underscore-dangle
+    (
+      context as unknown as EXPERIMENTAL_PanelExtensionContextWithSettings
+    ).__updatePanelSettingsTree({
       actionHandler: settingsActionHandler,
-      settings: tree,
+      roots: tree,
     });
 
     return () => {

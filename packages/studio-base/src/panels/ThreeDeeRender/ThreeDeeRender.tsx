@@ -2,9 +2,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import produce from "immer";
-import { cloneDeep, merge, set } from "lodash";
-import React, { useCallback, useLayoutEffect, useEffect, useState, useMemo } from "react";
+import { produce } from "immer";
+// eslint-disable-next-line no-restricted-imports
+import { isEqual, cloneDeep, merge, get, set, unset } from "lodash";
+import React, { useCallback, useLayoutEffect, useEffect, useState, useMemo, useRef } from "react";
+import ReactDOM from "react-dom";
 import { useResizeDetector } from "react-resize-detector";
 import { DeepPartial } from "ts-essentials";
 import { useDebouncedCallback } from "use-debounce";
@@ -18,43 +20,39 @@ import {
 } from "@foxglove/regl-worldview";
 import { toNanoSec } from "@foxglove/rostime";
 import { PanelExtensionContext, RenderState, Topic, MessageEvent } from "@foxglove/studio";
-import { SettingsTreeAction } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import {
+  EXPERIMENTAL_PanelExtensionContextWithSettings,
+  SettingsTreeAction,
+} from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import useCleanup from "@foxglove/studio-base/hooks/useCleanup";
 
 import { DebugGui } from "./DebugGui";
-import { Renderer } from "./Renderer";
+import { NodeError } from "./LayerErrors";
+import { SUPPORTED_DATATYPES, Renderer } from "./Renderer";
 import { RendererContext, useRendererEvent } from "./RendererContext";
 import { Stats } from "./Stats";
 import {
-  normalizeCameraInfo,
-  normalizeMarker,
-  normalizePoseStamped,
-  normalizePoseWithCovarianceStamped,
-} from "./normalizeMessages";
-import {
-  TRANSFORM_STAMPED_DATATYPES,
-  TF_DATATYPES,
-  MARKER_DATATYPES,
+  CAMERA_INFO_DATATYPES,
+  COMPRESSED_IMAGE_DATATYPES,
+  IMAGE_DATATYPES,
   MARKER_ARRAY_DATATYPES,
-  TF,
-  Marker,
-  MarkerArray,
-  PointCloud2,
-  POINTCLOUD_DATATYPES,
-  OccupancyGrid,
+  MARKER_DATATYPES,
   OCCUPANCY_GRID_DATATYPES,
+  POINTCLOUD_DATATYPES,
   POSE_STAMPED_DATATYPES,
   POSE_WITH_COVARIANCE_STAMPED_DATATYPES,
-  PoseStamped,
-  PoseWithCovarianceStamped,
-  CameraInfo,
-  CAMERA_INFO_DATATYPES,
+  TF_DATATYPES,
+  TRANSFORM_STAMPED_DATATYPES,
 } from "./ros";
 import {
   buildSettingsTree,
+  CustomLayerSettings,
+  LayerSettings,
+  LayerSettingsGrid,
+  LayerSettingsImage,
   LayerType,
   SelectEntry,
-  SUPPORTED_DATATYPES,
+  SettingsTreeOptions,
   ThreeDeeRenderConfig,
 } from "./settings";
 
@@ -99,25 +97,46 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       partialConfig?.cameraState,
     );
 
+    const layers: Record<string, CustomLayerSettings> = {};
+    for (const [layerId, layer] of Object.entries(partialConfig?.layers ?? {})) {
+      if (layer?.type != undefined) {
+        layers[layerId] = layer as CustomLayerSettings;
+      }
+    }
+
     return {
       cameraState,
       followTf: partialConfig?.followTf,
       scene: partialConfig?.scene ?? {},
+      transforms: {},
       topics: partialConfig?.topics ?? {},
+      layers,
     };
   });
+  const configRef = useRef(config);
   const { cameraState, followTf: configFollowTf } = config;
   const backgroundColor = config.scene.backgroundColor;
 
   const [canvas, setCanvas] = useState<HTMLCanvasElement | ReactNull>(ReactNull);
   const [renderer, setRenderer] = useState<Renderer | ReactNull>(ReactNull);
-  useEffect(() => setRenderer(canvas ? new Renderer(canvas) : ReactNull), [canvas]);
+  useEffect(() => {
+    const curRenderer = canvas ? new Renderer(canvas, configRef.current) : ReactNull;
+    setRenderer(curRenderer);
+
+    if (curRenderer) {
+      // Initialize all custom layers
+      for (const [layerId, layerConfig] of Object.entries(configRef.current.layers)) {
+        updateLayerSettings(curRenderer, layerId, layerConfig.type, layerConfig);
+      }
+    }
+  }, [canvas]);
 
   const [colorScheme, setColorScheme] = useState<"dark" | "light" | undefined>();
   const [topics, setTopics] = useState<ReadonlyArray<Topic> | undefined>();
   const [messages, setMessages] = useState<ReadonlyArray<MessageEvent<unknown>> | undefined>();
   const [currentTime, setCurrentTime] = useState<bigint | undefined>();
 
+  const renderRef = useRef({ needsRender: false });
   const [renderDone, setRenderDone] = useState<(() => void) | undefined>();
 
   // Config cameraState
@@ -143,32 +162,31 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
   // Handle user changes in the settings sidebar
   const actionHandler = useCallback(
-    (action: SettingsTreeAction) => {
-      setConfig((oldConfig) => {
-        const newConfig = produce(oldConfig, (draft) => {
-          set(draft, action.payload.path, action.payload.value);
-        });
-
-        // If a topic setting was changed, inform the renderer about it and
-        // draw a new frame
-        if (renderer && action.payload.path[0] === "topics") {
-          const topic = action.payload.path[1]!;
-          const layerType = topicsToLayerTypes.get(topic);
-          if (layerType != undefined) {
-            updateTopicSettings(renderer, topic, layerType, newConfig);
-          }
-        }
-
-        return newConfig;
-      });
-    },
+    (action: SettingsTreeAction) =>
+      settingsTreeActionHandler(action, renderer, setConfig, renderRef, topicsToLayerTypes),
     [renderer, topicsToLayerTypes],
+  );
+
+  // Handle internal changes to the settings sidebar
+  useRendererEvent(
+    "settingsTreeChange",
+    (update) => {
+      setConfig((oldConfig) =>
+        produce(oldConfig, (draft) => {
+          const entry = get(renderer?.config ?? draft, update.path);
+          set(draft, update.path, { ...entry });
+        }),
+      );
+    },
+    renderer,
   );
 
   // Maintain a list of coordinate frames for the settings sidebar
   const [coordinateFrames, setCoordinateFrames] = useState<SelectEntry[]>(
     coordinateFrameList(renderer),
   );
+  // Maintain a tree of settings node errors
+  const [layerErrors, setLayerErrors] = useState<NodeError>(new NodeError([]));
   const [defaultFrame, setDefaultFrame] = useState<string | undefined>(undefined);
   const updateCoordinateFrames = useCallback(
     (curRenderer: Renderer) => {
@@ -196,10 +214,14 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     },
     [setDefaultFrame],
   );
-  useEffect(() => {
-    renderer?.addListener("transformTreeUpdated", updateCoordinateFrames);
-    return () => void renderer?.removeListener("transformTreeUpdated", updateCoordinateFrames);
-  }, [renderer, updateCoordinateFrames]);
+  const updateLayerErrors = useCallback(
+    (_: unknown, __: unknown, ___: unknown, curRenderer: Renderer) =>
+      setLayerErrors(curRenderer.layerErrors.errors.clone()),
+    [],
+  );
+
+  useRendererEvent("transformTreeUpdated", updateCoordinateFrames, renderer);
+  useRendererEvent("layerErrorUpdate", updateLayerErrors, renderer);
 
   // Set the rendering frame (aka followTf) based on the configured frame, falling back to a
   // heuristically chosen best frame for the current scene (defaultFrame)
@@ -211,28 +233,41 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     [configFollowTf, defaultFrame, renderer],
   );
 
-  const fieldsProviders = renderer?.settingsFieldsProviders;
+  const settingsNodeProviders = renderer?.settingsNodeProviders;
+
+  const throttledUpdatePanelSettingsTree = useDebouncedCallback(
+    (handler: (action: SettingsTreeAction) => void, options: SettingsTreeOptions) => {
+      // eslint-disable-next-line no-underscore-dangle
+      (
+        context as unknown as EXPERIMENTAL_PanelExtensionContextWithSettings
+      ).__updatePanelSettingsTree({
+        actionHandler: handler,
+        roots: buildSettingsTree(options),
+      });
+    },
+    250,
+    { leading: true, trailing: true, maxWait: 250 },
+  );
 
   useEffect(() => {
-    // eslint-disable-next-line no-underscore-dangle, @typescript-eslint/no-explicit-any
-    (context as unknown as any).__updatePanelSettingsTree({
-      actionHandler,
-      settings: buildSettingsTree({
-        config,
-        coordinateFrames,
-        followTf,
-        topics: topics ?? [],
-        topicsToLayerTypes,
-        fieldsProviders: fieldsProviders ?? new Map(),
-      }),
+    throttledUpdatePanelSettingsTree(actionHandler, {
+      config,
+      coordinateFrames,
+      layerErrors,
+      followTf,
+      topics: topics ?? [],
+      topicsToLayerTypes,
+      settingsNodeProviders: settingsNodeProviders ?? new Map(),
     });
   }, [
     actionHandler,
     config,
     context,
     coordinateFrames,
-    fieldsProviders,
     followTf,
+    layerErrors,
+    settingsNodeProviders,
+    throttledUpdatePanelSettingsTree,
     topics,
     topicsToLayerTypes,
   ]);
@@ -241,6 +276,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   useEffect(() => {
     if (renderer) {
       renderer.config = config;
+      renderRef.current.needsRender = true;
     }
   }, [config, renderer]);
 
@@ -248,7 +284,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   useEffect(() => {
     if (renderer?.config && followTf != undefined) {
       renderer.renderFrameId = followTf;
-      renderer.animationFrame();
+      renderRef.current.needsRender = true;
     }
   }, [followTf, renderer]);
 
@@ -256,6 +292,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   const throttledSave = useDebouncedCallback(
     (newConfig: ThreeDeeRenderConfig) => saveState(newConfig),
     1000,
+    { leading: false, trailing: true, maxWait: 1000 },
   );
   useEffect(() => throttledSave(config), [config, throttledSave]);
 
@@ -272,35 +309,33 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     //
     // The render handler could be invoked as often as 60hz during playback if fields are changing often.
     context.onRender = (renderState: RenderState, done) => {
-      if (renderState.currentTime) {
-        setCurrentTime(toNanoSec(renderState.currentTime));
-      }
+      ReactDOM.unstable_batchedUpdates(() => {
+        if (renderState.currentTime) {
+          setCurrentTime(toNanoSec(renderState.currentTime));
+        }
 
-      // render functions receive a _done_ callback. You MUST call this callback to indicate your panel has finished rendering.
-      // Your panel will not receive another render callback until _done_ is called from a prior render. If your panel is not done
-      // rendering before the next render call, studio shows a notification to the user that your panel is delayed.
-      //
-      // Set the done callback into a state variable to trigger a re-render
-      setRenderDone(done);
+        // Set the done callback into a state variable to trigger a re-render
+        setRenderDone(done);
 
-      // Keep UI elements and the renderer aware of the current color scheme
-      setColorScheme(renderState.colorScheme);
+        // Keep UI elements and the renderer aware of the current color scheme
+        setColorScheme(renderState.colorScheme);
 
-      // We may have new topics - since we are also watching for messages in the current frame, topics may not have changed
-      // It is up to you to determine the correct action when state has not changed
-      setTopics(renderState.topics);
+        // We may have new topics - since we are also watching for messages in
+        // the current frame, topics may not have changed
+        setTopics(renderState.topics);
 
-      // currentFrame has messages on subscribed topics since the last render call
-      if (renderState.currentFrame) {
-        // Fully parse lazy messages
-        for (const messageEvent of renderState.currentFrame) {
-          const maybeLazy = messageEvent.message as { toJSON?: () => unknown };
-          if ("toJSON" in maybeLazy) {
-            (messageEvent as { message: unknown }).message = maybeLazy.toJSON!();
+        // currentFrame has messages on subscribed topics since the last render call
+        if (renderState.currentFrame) {
+          // Fully parse lazy messages
+          for (const messageEvent of renderState.currentFrame) {
+            const maybeLazy = messageEvent.message as { toJSON?: () => unknown };
+            if ("toJSON" in maybeLazy) {
+              (messageEvent as { message: unknown }).message = maybeLazy.toJSON!();
+            }
           }
         }
-      }
-      setMessages(renderState.currentFrame);
+        setMessages(renderState.currentFrame);
+      });
     };
 
     context.watch("currentTime");
@@ -310,24 +345,38 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   }, [context]);
 
   // Build a list of topics to subscribe to
-  const topicsToSubscribe = useMemo(() => {
-    const subscriptionList: string[] = [];
+  const [topicsToSubscribe, setTopicsToSubscribe] = useState<string[] | undefined>(undefined);
+  useEffect(() => {
+    const subscriptions = new Set<string>();
     if (!topics) {
-      return undefined;
+      setTopicsToSubscribe(undefined);
+      return;
     }
 
     for (const topic of topics) {
       // Subscribe to all transform topics
       if (TF_DATATYPES.has(topic.datatype) || TRANSFORM_STAMPED_DATATYPES.has(topic.datatype)) {
-        subscriptionList.push(topic.name);
+        subscriptions.add(topic.name);
       } else if (SUPPORTED_DATATYPES.has(topic.datatype)) {
-        // TODO: Allow disabling of subscriptions to non-TF topics
-        subscriptionList.push(topic.name);
+        // Subscribe to known datatypes if the topic has not been toggled off
+        const topicConfig = config.topics[topic.name] as Partial<LayerSettings> | undefined;
+        if (topicConfig?.visible !== false) {
+          subscriptions.add(topic.name);
+        }
       }
     }
 
-    return subscriptionList;
-  }, [topics]);
+    // For camera imge topics, subscribe to their corresponding sensor_msgs/CameraInfo topic
+    for (const configEntry of Object.values(config.topics)) {
+      const topicConfig = configEntry as Partial<LayerSettingsImage> | undefined;
+      if (topicConfig?.visible !== false && topicConfig?.cameraInfoTopic != undefined) {
+        subscriptions.add(topicConfig.cameraInfoTopic);
+      }
+    }
+
+    const newTopics = Array.from(subscriptions.keys()).sort();
+    setTopicsToSubscribe((prevTopics) => (isEqual(prevTopics, newTopics) ? prevTopics : newTopics));
+  }, [topics, config.topics]);
 
   // Notify the extension context when our subscription list changes
   useEffect(() => {
@@ -342,6 +391,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   useEffect(() => {
     if (renderer && currentTime != undefined) {
       renderer.currentTime = currentTime;
+      renderRef.current.needsRender = true;
     }
   }, [currentTime, renderer]);
 
@@ -349,20 +399,13 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   useEffect(() => {
     if (colorScheme && renderer) {
       renderer.setColorScheme(colorScheme, backgroundColor);
-      renderer.animationFrame();
+      renderRef.current.needsRender = true;
     }
   }, [backgroundColor, colorScheme, renderer]);
 
-  // Handle messages and render a frame if the camera has moved or new messages
-  // are available
+  // Handle messages and render a frame if new messages are available
   useEffect(() => {
-    if (!renderer) {
-      return;
-    }
-    renderer.setCameraState(cameraState);
-
-    if (!messages) {
-      renderer.animationFrame();
+    if (!renderer || !messages) {
       return;
     }
 
@@ -372,51 +415,26 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
         continue;
       }
 
-      if (TF_DATATYPES.has(datatype)) {
-        // tf2_msgs/TFMessage - Ingest the list of transforms into our TF tree
-        const tfMessage = message.message as { transforms: TF[] };
-        for (const tf of tfMessage.transforms) {
-          renderer.addTransformMessage(tf);
-        }
-      } else if (TRANSFORM_STAMPED_DATATYPES.has(datatype)) {
-        // geometry_msgs/TransformStamped - Ingest this single transform into our TF tree
-        const tf = message.message as TF;
-        renderer.addTransformMessage(tf);
-      } else if (MARKER_ARRAY_DATATYPES.has(datatype)) {
-        // visualization_msgs/MarkerArray - Ingest the list of markers
-        const markerArray = message.message as DeepPartial<MarkerArray>;
-        for (const markerMsg of markerArray.markers ?? []) {
-          const marker = normalizeMarker(markerMsg);
-          renderer.addMarkerMessage(message.topic, marker);
-        }
-      } else if (MARKER_DATATYPES.has(datatype)) {
-        // visualization_msgs/Marker - Ingest this single marker
-        const marker = normalizeMarker(message.message as DeepPartial<Marker>);
-        renderer.addMarkerMessage(message.topic, marker);
-      } else if (OCCUPANCY_GRID_DATATYPES.has(datatype)) {
-        // nav_msgs/OccupancyGrid - Ingest this occupancy grid
-        const occupancyGrid = message.message as OccupancyGrid;
-        renderer.addOccupancyGridMessage(message.topic, occupancyGrid);
-      } else if (POINTCLOUD_DATATYPES.has(datatype)) {
-        // sensor_msgs/PointCloud2 - Ingest this point cloud
-        const pointCloud = message.message as PointCloud2;
-        renderer.addPointCloud2Message(message.topic, pointCloud);
-      } else if (POSE_STAMPED_DATATYPES.has(datatype)) {
-        const poseMesage = normalizePoseStamped(message.message as DeepPartial<PoseStamped>);
-        renderer.addPoseMessage(message.topic, poseMesage);
-      } else if (POSE_WITH_COVARIANCE_STAMPED_DATATYPES.has(datatype)) {
-        const poseMessage = normalizePoseWithCovarianceStamped(
-          message.message as DeepPartial<PoseWithCovarianceStamped>,
-        );
-        renderer.addPoseMessage(message.topic, poseMessage);
-      } else if (CAMERA_INFO_DATATYPES.has(datatype)) {
-        const cameraInfo = normalizeCameraInfo(message.message as DeepPartial<CameraInfo>);
-        renderer.addCameraInfoMessage(message.topic, cameraInfo);
-      }
+      renderer.addMessageEvent(message, datatype);
     }
 
-    renderer.animationFrame();
-  }, [cameraState, messages, renderer, topicsToDatatypes]);
+    renderRef.current.needsRender = true;
+  }, [messages, renderer, topicsToDatatypes]);
+
+  // Update the renderer when the camera moves
+  useEffect(() => {
+    cameraStore.setCameraState(cameraState);
+    renderer?.setCameraState(cameraState);
+    renderRef.current.needsRender = true;
+  }, [cameraState, cameraStore, renderer]);
+
+  useEffect(() => {
+    // Render a new frame if requested
+    if (renderer && renderRef.current.needsRender) {
+      renderer.animationFrame();
+      renderRef.current.needsRender = false;
+    }
+  });
 
   // Invoke the done callback once the render is complete
   useEffect(() => {
@@ -435,7 +453,10 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     refreshMode: "debounce",
   });
   return (
-    <div style={{ width: "100%", height: "100%", display: "flex" }} ref={resizeRef}>
+    <div
+      style={{ width: "100%", height: "100%", display: "flex", position: "relative" }}
+      ref={resizeRef}
+    >
       <CameraListener cameraStore={cameraStore} shiftKeys={true}>
         <div
           // This element forces CameraListener to fill its container. We need this instead of just
@@ -449,6 +470,89 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
       </RendererContext.Provider>
     </div>
   );
+}
+
+function settingsTreeActionHandler(
+  action: SettingsTreeAction,
+  renderer: Renderer | ReactNull,
+  setConfig: React.Dispatch<React.SetStateAction<ThreeDeeRenderConfig>>,
+  renderRef: React.MutableRefObject<{ needsRender: boolean }>,
+  topicsToLayerTypes: Map<string, LayerType>,
+) {
+  setConfig((oldConfig) => {
+    if (action.action === "perform-node-action") {
+      log.debug(`[${action.action}][${action.payload.id}]`);
+
+      if (!renderer) {
+        return oldConfig;
+      }
+
+      const [actionId, actionLayerId] = action.payload.id.split(" ");
+      if (actionId === "add-grid" && actionLayerId != undefined) {
+        log.debug(`Creating grid layer ${actionLayerId}`);
+        const layerConfig = { label: "Grid", type: LayerType.Grid, visible: true };
+        const newConfig = produce(oldConfig, (draft) =>
+          set(draft, [...action.payload.path, actionLayerId], layerConfig),
+        );
+
+        updateLayerSettings(renderer, actionLayerId, layerConfig.type, layerConfig);
+        renderRef.current.needsRender = true;
+        return newConfig;
+      } else if (action.payload.id === "delete") {
+        const pathLayerId = action.payload.path[action.payload.path.length - 1]!;
+        const layerConfig = get(oldConfig, action.payload.path) as
+          | Partial<CustomLayerSettings>
+          | undefined;
+        const newConfig = produce(oldConfig, (draft) => void unset(draft, action.payload.path));
+
+        if (layerConfig?.type != undefined) {
+          updateLayerSettings(renderer, pathLayerId, layerConfig.type, undefined);
+        }
+        renderRef.current.needsRender = true;
+        return newConfig;
+      } else {
+        return oldConfig;
+      }
+    } else {
+      const newConfig = produce(oldConfig, (draft) =>
+        set(draft, action.payload.path, action.payload.value),
+      );
+
+      if (renderer) {
+        const basePath = action.payload.path[0];
+        if (basePath === "transforms") {
+          // A transform setting was changed, inform the renderer about it and
+          // draw a new frame
+          const frameId = action.payload.path[1]!;
+          const transformConfig = newConfig.transforms[frameId];
+          if (transformConfig) {
+            renderer.setTransformSettings(frameId, transformConfig);
+            renderRef.current.needsRender = true;
+          }
+        } else if (basePath === "topics") {
+          // A topic setting was changed, inform the renderer about it and
+          // draw a new frame
+          const topic = action.payload.path[1]!;
+          const layerType = topicsToLayerTypes.get(topic);
+          if (layerType != undefined) {
+            updateTopicSettings(renderer, topic, layerType, newConfig);
+            renderRef.current.needsRender = true;
+          }
+        } else if (basePath === "layers") {
+          // A custom layer setting was changed, inform the renderer about
+          // it and draw a new frame
+          const layerId = action.payload.path[1]!;
+          const layerConfig = newConfig.layers[layerId];
+          if (layerConfig != undefined) {
+            updateLayerSettings(renderer, layerId, layerConfig.type, layerConfig);
+            renderRef.current.needsRender = true;
+          }
+        }
+      }
+
+      return newConfig;
+    }
+  });
 }
 
 function coordinateFrameList(renderer: Renderer | ReactNull | undefined): SelectEntry[] {
@@ -528,6 +632,8 @@ function buildTopicsToLayerTypes(topics: ReadonlyArray<Topic> | undefined): Map<
         map.set(topic.name, LayerType.Pose);
       } else if (CAMERA_INFO_DATATYPES.has(datatype)) {
         map.set(topic.name, LayerType.CameraInfo);
+      } else if (IMAGE_DATATYPES.has(datatype) || COMPRESSED_IMAGE_DATATYPES.has(datatype)) {
+        map.set(topic.name, LayerType.Image);
       }
     }
   }
@@ -540,14 +646,17 @@ function updateTopicSettings(
   layerType: LayerType,
   config: ThreeDeeRenderConfig,
 ) {
-  const topicConfig = config.topics[topic];
+  const topicConfig = config.topics[topic] as Partial<LayerSettings> | undefined;
   if (!topicConfig) {
     return;
   }
 
+  // If visibility is toggled off for this topic, clear its topic errors
+  if (topicConfig.visible === false) {
+    renderer.layerErrors.clearTopic(topic);
+  }
+
   switch (layerType) {
-    case LayerType.Transform:
-      throw new Error(`Attempted to update topic settings for Transform "${topic}"`);
     case LayerType.Marker:
       renderer.setMarkerSettings(topic, topicConfig);
       break;
@@ -563,6 +672,34 @@ function updateTopicSettings(
     case LayerType.CameraInfo:
       renderer.setCameraInfoSettings(topic, topicConfig);
       break;
+    case LayerType.Image:
+      renderer.setImageSettings(topic, topicConfig);
+      break;
+    case LayerType.Grid:
+    case LayerType.Transform:
+    default:
+      throw new Error(
+        `Attempted to update topic settings for type ${layerType} (topic "${topic}")`,
+      );
   }
-  renderer.animationFrame();
+}
+
+function updateLayerSettings(
+  renderer: Renderer,
+  id: string,
+  layerType: LayerType,
+  layerConfig: Partial<CustomLayerSettings> | undefined,
+) {
+  // If visibility is toggled off for this layer, clear its layer errors
+  if (layerConfig?.visible === false) {
+    renderer.layerErrors.clearPath(["layers", id]);
+  }
+
+  switch (layerType) {
+    case LayerType.Grid:
+      renderer.setGridSettings(id, layerConfig as Partial<LayerSettingsGrid> | undefined);
+      break;
+    default:
+      throw new Error(`Attempted to update layer settings for type ${layerType} (id "${id}")`);
+  }
 }

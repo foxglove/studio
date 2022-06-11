@@ -5,6 +5,7 @@
 import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import { AppBar, IconButton, TextField, styled as muiStyled } from "@mui/material";
+import memoizeWeak from "memoize-weak";
 import { useState } from "react";
 import { DeepReadonly } from "ts-essentials";
 
@@ -24,10 +25,9 @@ const FieldGrid = muiStyled("div", { skipSx: true })(({ theme }) => ({
   display: "grid",
   gridTemplateColumns: "minmax(4rem, 1fr) minmax(4rem, 12rem)",
   columnGap: theme.spacing(1),
-  rowGap: theme.spacing(0.25),
 }));
 
-const ROOT_PATH: readonly string[] = [];
+const makeStablePath = memoizeWeak((key: string) => [key]);
 
 export default function SettingsTreeEditor({
   settings,
@@ -64,7 +64,15 @@ export default function SettingsTreeEditor({
         </StyledAppBar>
       )}
       <FieldGrid>
-        <NodeEditor path={ROOT_PATH} settings={settings.settings} actionHandler={actionHandler} />
+        {Object.entries(settings.roots).map(([key, root]) => (
+          <NodeEditor
+            key={key}
+            path={makeStablePath(key)}
+            settings={root}
+            defaultOpen={root.defaultExpansionState === "collapsed" ? false : true}
+            actionHandler={actionHandler}
+          />
+        ))}
       </FieldGrid>
     </Stack>
   );

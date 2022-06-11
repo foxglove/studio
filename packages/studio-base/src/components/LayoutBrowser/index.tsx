@@ -2,8 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { IconButton, Spinner, useTheme } from "@fluentui/react";
-import { Box, Stack, Button, Switch, FormGroup, FormControlLabel } from "@mui/material";
+import { IconButton, useTheme } from "@fluentui/react";
+import { Button, Switch, FormGroup, FormControlLabel, CircularProgress } from "@mui/material";
 import { partition } from "lodash";
 import moment from "moment";
 import path from "path";
@@ -16,6 +16,7 @@ import { AppSetting } from "@foxglove/studio-base/AppSetting";
 import SignInPrompt from "@foxglove/studio-base/components/LayoutBrowser/SignInPrompt";
 import { useUnsavedChangesPrompt } from "@foxglove/studio-base/components/LayoutBrowser/UnsavedChangesPrompt";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
+import Stack from "@foxglove/studio-base/components/Stack";
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
 import ConsoleApiContext from "@foxglove/studio-base/context/ConsoleApiContext";
@@ -316,8 +317,8 @@ export default function LayoutBrowser({
     if (!(await promptForUnsavedChanges())) {
       return;
     }
-    const [fileHandle] = await showOpenFilePicker({
-      multiple: false,
+    const fileHandles = await showOpenFilePicker({
+      multiple: true,
       excludeAcceptAllOption: false,
       types: [
         {
@@ -328,32 +329,51 @@ export default function LayoutBrowser({
         },
       ],
     });
-    if (!fileHandle) {
+    if (fileHandles.length === 0) {
       return;
     }
 
-    const file = await fileHandle.getFile();
-    const layoutName = path.basename(file.name, path.extname(file.name));
-    const content = await file.text();
-    const parsedState: unknown = JSON.parse(content);
+    const newLayouts = await Promise.all(
+      fileHandles.map(async (fileHandle) => {
+        const file = await fileHandle.getFile();
+        const layoutName = path.basename(file.name, path.extname(file.name));
+        const content = await file.text();
+
+        if (!isMounted()) {
+          return;
+        }
+
+        let parsedState: unknown;
+        try {
+          parsedState = JSON.parse(content);
+        } catch (err) {
+          addToast(`${file.name} is not a valid layout: ${err.message}`, { appearance: "error" });
+          return;
+        }
+
+        if (typeof parsedState !== "object" || !parsedState) {
+          addToast(`${file.name} is not a valid layout`, { appearance: "error" });
+          return;
+        }
+
+        const data = parsedState as PanelsState;
+        const newLayout = await layoutManager.saveNewLayout({
+          name: layoutName,
+          data,
+          permission: "CREATOR_WRITE",
+        });
+        return newLayout;
+      }),
+    );
 
     if (!isMounted()) {
       return;
     }
-
-    if (typeof parsedState !== "object" || !parsedState) {
-      addToast(`${file.name} is not a valid layout`, { appearance: "error" });
-      return;
+    const newLayout = newLayouts.find((layout) => layout != undefined);
+    if (newLayout) {
+      void onSelectLayout(newLayout);
     }
-
-    const data = parsedState as PanelsState;
-    const newLayout = await layoutManager.saveNewLayout({
-      name: layoutName,
-      data,
-      permission: "CREATOR_WRITE",
-    });
-    void onSelectLayout(newLayout);
-    void analytics.logEvent(AppEvent.LAYOUT_IMPORT);
+    void analytics.logEvent(AppEvent.LAYOUT_IMPORT, { numLayouts: fileHandles.length });
   }, [promptForUnsavedChanges, isMounted, layoutManager, onSelectLayout, analytics, addToast]);
 
   const createLayoutTooltip = useTooltip({ contents: "Create new layout" });
@@ -375,7 +395,11 @@ export default function LayoutBrowser({
       helpContent={helpContent}
       disablePadding
       trailingItems={[
-        (layouts.loading || isBusy) && <Spinner key="spinner" />,
+        (layouts.loading || isBusy) && (
+          <Stack key="loading" alignItems="center" justifyContent="center" padding={1}>
+            <CircularProgress size={18} variant="indeterminate" />
+          </Stack>
+        ),
         !isOnline && (
           <IconButton
             key="offline"
@@ -428,7 +452,7 @@ export default function LayoutBrowser({
       ].filter(Boolean)}
     >
       {unsavedChangesPrompt}
-      <Stack height="100%">
+      <Stack fullHeight>
         <div>
           <LayoutSection
             title={layoutManager.supportsSharing ? "Personal" : undefined}
@@ -465,49 +489,47 @@ export default function LayoutBrowser({
             />
           )}
         </div>
-        <div style={{ flexGrow: 1 }} />
+        <Stack flexGrow={1} />
         {showSignInPrompt && <SignInPrompt onDismiss={() => void setHideSignInPrompt(true)} />}
         {layoutDebug && (
           <Stack
-            spacing={0.5}
+            gap={0.5}
+            padding={1}
+            position="sticky"
             style={{
-              position: "sticky",
               bottom: 0,
               left: 0,
               right: 0,
               background: theme.semanticColors.bodyBackground,
-              padding: theme.spacing.s1,
               ...debugBorder,
             }}
           >
-            <Box flexGrow={1} alignSelf="stretch">
-              <Stack direction="row" flexShrink={0} spacing={1}>
-                <Button
-                  onClick={async () => {
-                    await layoutDebug.syncNow();
-                    await reloadLayouts();
-                  }}
-                >
-                  Sync
-                </Button>
+            <Stack direction="row" flex="auto" gap={1}>
+              <Button
+                onClick={async () => {
+                  await layoutDebug.syncNow();
+                  await reloadLayouts();
+                }}
+              >
+                Sync
+              </Button>
 
-                <Box flexGrow={1} />
+              <Stack flex="auto" />
 
-                <FormGroup>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={layoutManager.isOnline}
-                        onChange={(_, checked) => {
-                          layoutDebug.setOnline(checked);
-                        }}
-                      />
-                    }
-                    label={layoutManager.isOnline ? "Online" : "Offline"}
-                  />
-                </FormGroup>
-              </Stack>
-            </Box>
+              <FormGroup>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={layoutManager.isOnline}
+                      onChange={(_, checked) => {
+                        layoutDebug.setOnline(checked);
+                      }}
+                    />
+                  }
+                  label={layoutManager.isOnline ? "Online" : "Offline"}
+                />
+              </FormGroup>
+            </Stack>
           </Stack>
         )}
       </Stack>

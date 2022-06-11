@@ -20,7 +20,7 @@ import {
 } from "@fluentui/react";
 import DatabaseIcon from "@mdi/svg/svg/database.svg";
 import PinIcon from "@mdi/svg/svg/pin.svg";
-import { Stack, Theme, Menu, MenuItem } from "@mui/material";
+import { Theme, Menu, MenuItem } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import cx from "classnames";
 import produce from "immer";
@@ -39,8 +39,9 @@ import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import {
   SettingsTreeAction,
-  SettingsTreeNode,
+  SettingsTreeRoots,
 } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import Stack from "@foxglove/studio-base/components/Stack";
 import { Config as DiagnosticStatusConfig } from "@foxglove/studio-base/panels/diagnostics/DiagnosticStatusPanel";
 import helpContent from "@foxglove/studio-base/panels/diagnostics/DiagnosticSummary.help.md";
 import useDiagnostics from "@foxglove/studio-base/panels/diagnostics/useDiagnostics";
@@ -160,10 +161,14 @@ type Props = {
   saveConfig: (arg0: Partial<Config>) => void;
 };
 
-function buildSettingsTree(config: Config): SettingsTreeNode {
+function buildSettingsTree(config: Config): SettingsTreeRoots {
   return {
-    fields: {
-      sortByLevel: { label: "Sort By Level", input: "boolean", value: config.sortByLevel },
+    general: {
+      label: "General",
+      icon: "Settings",
+      fields: {
+        sortByLevel: { label: "Sort By Level", input: "boolean", value: config.sortByLevel },
+      },
     },
   };
 }
@@ -225,8 +230,12 @@ function DiagnosticSummary(props: Props): JSX.Element {
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
+      if (action.action !== "update") {
+        return;
+      }
+
       const { input, path, value } = action.payload;
-      if (input === "boolean" && path[0] === "sortByLevel") {
+      if (input === "boolean" && path[1] === "sortByLevel") {
         saveConfig(
           produce(config, (draft) => {
             draft.sortByLevel = value;
@@ -240,7 +249,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
   useEffect(() => {
     updatePanelSettingsTree(panelId, {
       actionHandler,
-      settings: buildSettingsTree(config),
+      roots: buildSettingsTree(config),
     });
   }, [actionHandler, config, panelId, updatePanelSettingsTree]);
 

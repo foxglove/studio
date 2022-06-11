@@ -21,7 +21,7 @@ import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import {
   SettingsTreeAction,
-  SettingsTreeNode,
+  SettingsTreeRoots,
 } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import Stack from "@foxglove/studio-base/components/Stack";
 import useGlobalVariables from "@foxglove/studio-base/hooks/useGlobalVariables";
@@ -40,16 +40,20 @@ export type VariableSliderConfig = {
   globalVariableName: string;
 };
 
-function buildSettingsTree(config: VariableSliderConfig): SettingsTreeNode {
+function buildSettingsTree(config: VariableSliderConfig): SettingsTreeRoots {
   return {
-    fields: {
-      min: { label: "Min", input: "number", value: config.sliderProps.min },
-      max: { label: "Max", input: "number", value: config.sliderProps.max },
-      step: { label: "Step", input: "number", value: config.sliderProps.step },
-      globalVariableName: {
-        label: "Variable name",
-        input: "string",
-        value: config.globalVariableName,
+    general: {
+      label: "General",
+      icon: "Settings",
+      fields: {
+        min: { label: "Min", input: "number", value: config.sliderProps.min },
+        max: { label: "Max", input: "number", value: config.sliderProps.max },
+        step: { label: "Step", input: "number", value: config.sliderProps.step },
+        globalVariableName: {
+          label: "Variable name",
+          input: "string",
+          value: config.globalVariableName,
+        },
       },
     },
   };
@@ -72,19 +76,24 @@ function VariableSliderPanel(props: Props): React.ReactElement {
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
+      if (action.action !== "update") {
+        return;
+      }
+
       saveConfig(
         produce(props.config, (draft) => {
-          if (["min", "max"].includes(action.payload.path[0] ?? "")) {
-            set(draft, ["sliderProps", ...action.payload.path], action.payload.value);
+          const path = action.payload.path.slice(1);
+          if (["min", "max"].includes(path[0] ?? "")) {
+            set(draft, ["sliderProps", ...path], action.payload.value);
           } else if (
-            action.payload.path[0] === "step" &&
+            path[0] === "step" &&
             action.payload.input === "number" &&
             action.payload.value != undefined &&
             action.payload.value > 0
           ) {
             set(draft, ["sliderProps", "step"], action.payload.value);
           } else {
-            set(draft, action.payload.path, action.payload.value);
+            set(draft, path, action.payload.value);
           }
         }),
       );
@@ -95,7 +104,7 @@ function VariableSliderPanel(props: Props): React.ReactElement {
   useEffect(() => {
     updatePanelSettingsTree(panelId, {
       actionHandler,
-      settings: buildSettingsTree(props.config),
+      roots: buildSettingsTree(props.config),
     });
   }, [actionHandler, panelId, props.config, updatePanelSettingsTree]);
 

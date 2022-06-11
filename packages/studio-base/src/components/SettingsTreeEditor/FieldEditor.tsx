@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import ClearIcon from "@mui/icons-material/Clear";
-import ErrorIcon from "@mui/icons-material/ErrorOutline";
+import ErrorIcon from "@mui/icons-material/Error";
 import {
   Autocomplete,
   ToggleButton,
@@ -16,15 +16,18 @@ import {
   Tooltip,
   TextField,
   ListProps,
-  useTheme,
 } from "@mui/material";
 import { DeepReadonly } from "ts-essentials";
+import { v4 as uuid } from "uuid";
 
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import Stack from "@foxglove/studio-base/components/Stack";
 
 import { ColorPickerInput, ColorGradientInput, NumberInput, Vec3Input } from "./inputs";
 import { SettingsTreeAction, SettingsTreeField } from "./types";
+
+// Used to both undefined and empty string in select inputs.
+const UNDEFINED_SENTINEL_VALUE = uuid();
 
 const StyledToggleButtonGroup = muiStyled(ToggleButtonGroup)(({ theme }) => ({
   backgroundColor: theme.palette.action.hover,
@@ -81,6 +84,28 @@ const PsuedoInputWrapper = muiStyled(Stack)(({ theme }) => {
   };
 });
 
+const MultiLabelWrapper = muiStyled("div")(({ theme }) => ({
+  display: "grid",
+  gridTemplateColumns: "1fr auto",
+  columnGap: theme.spacing(0.5),
+  height: "100%",
+  width: "100%",
+  alignItems: "center",
+}));
+
+const FieldWrapper = muiStyled("div", {
+  shouldForwardProp: (prop) => prop !== "error",
+})<{ error: boolean }>(({ error, theme }) => ({
+  marginRight: theme.spacing(1.25),
+
+  ...(error && {
+    ".MuiInputBase-root": {
+      outline: `1px ${theme.palette.error.main} solid`,
+      outlineOffset: -1,
+    },
+  }),
+}));
+
 function FieldInput({
   actionHandler,
   field,
@@ -129,6 +154,7 @@ function FieldInput({
           fullWidth
           max={field.max}
           min={field.min}
+          precision={field.precision}
           step={field.step}
           onChange={(value) =>
             actionHandler({ action: "update", payload: { path, input: "number", value } })
@@ -239,16 +265,21 @@ function FieldInput({
           displayEmpty
           fullWidth
           variant="filled"
-          value={field.value ?? ""}
+          value={field.value ?? UNDEFINED_SENTINEL_VALUE}
           onChange={(event) =>
             actionHandler({
               action: "update",
-              payload: { path, input: "select", value: event.target.value },
+              payload: {
+                path,
+                input: "select",
+                value:
+                  event.target.value === UNDEFINED_SENTINEL_VALUE ? undefined : event.target.value,
+              },
             })
           }
           MenuProps={{ MenuListProps: { dense: true } }}
         >
-          {field.options.map(({ label, value }) => (
+          {field.options.map(({ label, value = UNDEFINED_SENTINEL_VALUE }) => (
             <MenuItem key={value} value={value}>
               {label}
             </MenuItem>
@@ -269,6 +300,7 @@ function FieldInput({
         <Vec3Input
           step={field.step}
           value={field.value}
+          precision={field.precision}
           onChange={(value) =>
             actionHandler({ action: "update", payload: { path, input: "vec3", value } })
           }
@@ -278,22 +310,11 @@ function FieldInput({
 }
 
 function FieldLabel({ field }: { field: DeepReadonly<SettingsTreeField> }): JSX.Element {
-  const theme = useTheme();
-
   if (field.input === "vec3") {
     const labels = field.labels ?? ["X", "Y", "Z"];
     return (
       <>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr auto",
-            columnGap: theme.spacing(0.5),
-            height: "100%",
-            width: "100%",
-            alignItems: "center",
-          }}
-        >
+        <MultiLabelWrapper>
           <Typography
             title={field.label}
             variant="subtitle2"
@@ -316,7 +337,7 @@ function FieldLabel({ field }: { field: DeepReadonly<SettingsTreeField> }): JSX.
               {label}
             </Typography>
           ))}
-        </div>
+        </MultiLabelWrapper>
       </>
     );
   } else {
@@ -345,9 +366,8 @@ function FieldEditorComponent({
   field: DeepReadonly<SettingsTreeField>;
   path: readonly string[];
 }): JSX.Element {
-  const theme = useTheme();
   const indent = Math.min(path.length, 4);
-  const paddingLeft = 2 + 2 * Math.max(0, indent - 1);
+  const paddingLeft = 0.75 + 2 * (indent - 1);
 
   return (
     <>
@@ -357,20 +377,16 @@ function FieldEditorComponent({
           <Tooltip
             arrow
             placement="top"
-            title={<Typography variant="subtitle1">{field.error}</Typography>}
+            title={<Typography variant="subtitle2">{field.error}</Typography>}
           >
             <ErrorIcon color="error" fontSize="small" />
           </Tooltip>
         )}
       </Stack>
-      <div
-        style={{
-          border: field.error ? `1px solid ${theme.palette.error.main}` : 0,
-          marginRight: theme.spacing(2),
-        }}
-      >
+      <FieldWrapper error={field.error != undefined}>
         <FieldInput actionHandler={actionHandler} field={field} path={path} />
-      </div>
+      </FieldWrapper>
+      <Stack paddingBottom={0.25} style={{ gridColumn: "span 2" }} />
     </>
   );
 }

@@ -12,7 +12,8 @@
 //   You may not use this file except in compliance with the License.
 
 import { useTheme } from "@fluentui/react";
-import ArrowDownBoldIcon from "@mdi/svg/svg/arrow-down-bold.svg";
+import DownloadIcon from "@mui/icons-material/Download";
+import { Typography } from "@mui/material";
 import produce from "immer";
 import { compact, set, uniq } from "lodash";
 import memoizeWeak from "memoize-weak";
@@ -451,14 +452,14 @@ function Plot(props: Props) {
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
+      if (action.action !== "update") {
+        return;
+      }
+
       const { path, value } = action.payload;
       saveConfig(
         produce(config, (draft) => {
-          if (path[0] === "timeSeriesOnly") {
-            set(draft, path.slice(1), value);
-          } else {
-            set(draft, path, value);
-          }
+          set(draft, path.slice(1), value);
         }),
       );
     },
@@ -467,7 +468,7 @@ function Plot(props: Props) {
   useEffect(() => {
     updatePanelSettingsTree(panelId, {
       actionHandler,
-      settings: buildSettingsTree(config),
+      roots: buildSettingsTree(config),
     });
   }, [actionHandler, config, panelId, updatePanelSettingsTree]);
 
@@ -482,7 +483,7 @@ function Plot(props: Props) {
       alignItems="center"
       justifyContent="center"
       overflow="hidden"
-      style={{ position: "relative" }}
+      position="relative"
     >
       <PanelToolbar
         helpContent={helpContent}
@@ -491,10 +492,14 @@ function Plot(props: Props) {
             onClick={() => downloadCSV(datasets, xAxisVal)}
             title="Download plot data as CSV"
           >
-            <ArrowDownBoldIcon />
+            <DownloadIcon fontSize="small" />
           </ToolbarIconButton>
         }
-      />
+      >
+        <Typography noWrap variant="body2" color="text.secondary" flex="auto">
+          {title}
+        </Typography>
+      </PanelToolbar>
       <Stack
         direction={stackDirection}
         flex="auto"
@@ -515,7 +520,6 @@ function Plot(props: Props) {
           sidebarDimension={sidebarDimension}
         />
         <Stack flex="auto" alignItems="center" justifyContent="center" overflow="hidden">
-          {title && <div>{title}</div>}
           <PlotChart
             isSynced={xAxisVal === "timestamp" && isSynced}
             paths={yAxisPaths}
@@ -537,10 +541,10 @@ function Plot(props: Props) {
 }
 
 const defaultConfig: PlotConfig = {
-  title: undefined,
+  title: "Plot",
   paths: [{ value: "", enabled: true, timestampMethod: "receiveTime" }],
-  minYValue: "",
-  maxYValue: "",
+  minYValue: undefined,
+  maxYValue: undefined,
   showXAxisLabels: true,
   showYAxisLabels: true,
   showLegend: true,

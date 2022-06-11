@@ -13,13 +13,15 @@ const StackRoot = muiStyled("div", {
 })(({ theme, ownerState }: { theme: Theme; ownerState: StackProps }) => ({
   display: "flex",
   flexDirection: ownerState.direction,
+  flex: ownerState.flex,
+  flexBasis: ownerState.flexBasis,
   flexShrink: ownerState.flexShrink,
-  flexWrap: ownerState.wrap,
+  flexGrow: ownerState.flexGrow,
+  flexWrap: ownerState.flexWrap,
   justifyContent: ownerState.justifyContent,
   alignItems: ownerState.alignItems,
   alignContent: ownerState.alignContent,
   alignSelf: ownerState.alignSelf,
-  flex: ownerState.flex,
   order: ownerState.order,
   overflow: ownerState.overflow,
   position: ownerState.position,
@@ -86,6 +88,7 @@ export default function Stack(props: PropsWithChildren<StackProps>): JSX.Element
     flexBasis,
     flexGrow,
     flexShrink,
+    flexWrap,
     fullHeight = false,
     fullWidth = false,
     gap,
@@ -104,7 +107,6 @@ export default function Stack(props: PropsWithChildren<StackProps>): JSX.Element
     paddingLeft,
     paddingRight,
     position,
-    wrap,
     style,
     zeroMinWidth = false,
     ...other
@@ -119,6 +121,7 @@ export default function Stack(props: PropsWithChildren<StackProps>): JSX.Element
     flexBasis,
     flexGrow,
     flexShrink,
+    flexWrap,
     fullHeight,
     fullWidth,
     gap,
@@ -137,7 +140,6 @@ export default function Stack(props: PropsWithChildren<StackProps>): JSX.Element
     paddingLeft,
     paddingRight,
     position,
-    wrap,
     zeroMinWidth,
   };
 
@@ -179,9 +181,6 @@ export type StackProps = {
 
   /** Make stack 100% height. */
   fullWidth?: boolean;
-
-  /** Defines the `flex-wrap` style property. */
-  wrap?: CSSProperties["flexWrap"];
 
   /** Defines the `justify-content` style property. */
   justifyContent?: CSSProperties["justifyContent"];
@@ -238,19 +237,22 @@ export type StackProps = {
   position?: CSSProperties["position"];
 
   /** Defines the `flex` style property. */
-  flex?: number | string;
+  flex?: CSSProperties["flex"];
 
   /** Defines the `flex-grow` style property. */
-  flexGrow?: number;
+  flexGrow?: CSSProperties["flexGrow"];
 
   /** Defines the `flex-shrink` style property. */
-  flexShrink?: number;
+  flexShrink?: CSSProperties["flexShrink"];
 
   /** Defines the `flex-basis` style property. */
-  flexBasis?: number | string;
+  flexBasis?: CSSProperties["flexBasis"];
+
+  /** Defines the `flex-wrap` style property. */
+  flexWrap?: CSSProperties["flexWrap"];
 
   /** Defines the `order` property. */
-  order?: number;
+  order?: CSSProperties["order"];
 
   /** Sets the minWidth to zero */
   zeroMinWidth?: boolean;

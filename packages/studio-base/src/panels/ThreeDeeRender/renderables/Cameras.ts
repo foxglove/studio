@@ -5,13 +5,14 @@
 import * as THREE from "three";
 
 import Logger from "@foxglove/log";
+import { toNanoSec } from "@foxglove/rostime";
 import { SettingsTreeFields } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import PinholeCameraModel from "@foxglove/studio-base/panels/Image/lib/PinholeCameraModel";
 import { MutablePoint } from "@foxglove/studio-base/types/Messages";
 
 import { Renderer } from "../Renderer";
 import { makeRgba, rgbaToCssString, stringToRgba } from "../color";
-import { CameraInfo, Marker, MarkerAction, MarkerType, Pose, rosTimeToNanoSec } from "../ros";
+import { CameraInfo, Marker, MarkerAction, MarkerType, Pose, TIME_ZERO } from "../ros";
 import { LayerSettingsCameraInfo, LayerType } from "../settings";
 import { makePose } from "../transforms/geometry";
 import { updatePose } from "../updatePose";
@@ -36,7 +37,7 @@ const DEFAULT_SETTINGS: LayerSettingsCameraInfo = {
   color: DEFAULT_COLOR_STR,
 };
 
-type CameraInfoRenderable = THREE.Object3D & {
+export type CameraInfoRenderable = Omit<THREE.Object3D, "userData"> & {
   userData: {
     topic: string;
     settings: LayerSettingsCameraInfo;
@@ -56,7 +57,7 @@ export class Cameras extends THREE.Object3D {
     super();
     this.renderer = renderer;
 
-    renderer.setSettingsFieldsProvider(LayerType.CameraInfo, (topicConfig, _topic) => {
+    renderer.setSettingsNodeProvider(LayerType.CameraInfo, (topicConfig, _topic) => {
       const cur = topicConfig as Partial<LayerSettingsCameraInfo>;
       const color = cur.color ?? DEFAULT_COLOR_STR;
 
@@ -67,7 +68,7 @@ export class Cameras extends THREE.Object3D {
         color: { label: "Color", input: "rgba", value: color },
       };
 
-      return fields;
+      return { icon: "Camera", fields };
     });
   }
 
@@ -84,17 +85,23 @@ export class Cameras extends THREE.Object3D {
   addCameraInfoMessage(topic: string, cameraInfo: CameraInfo): void {
     let renderable = this.camerasByTopic.get(topic);
     if (!renderable) {
-      renderable = new THREE.Object3D() as CameraInfoRenderable;
-      renderable.name = topic;
-      renderable.userData.topic = topic;
-
       // Set the initial settings from default values merged with any user settings
-      const userSettings = this.renderer.config?.topics[topic] as
+      const userSettings = this.renderer.config.topics[topic] as
         | Partial<LayerSettingsCameraInfo>
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
-      renderable.userData.settings = settings;
-      renderable.userData.cameraInfo = cameraInfo;
+
+      renderable = new THREE.Object3D() as CameraInfoRenderable;
+      renderable.name = topic;
+      renderable.userData = {
+        topic,
+        settings,
+        cameraInfo,
+        cameraModel: undefined,
+        pose: makePose(),
+        srcTime: toNanoSec(cameraInfo.header.stamp),
+        lines: undefined,
+      };
 
       if (cameraInfo.P.length === 12) {
         try {
@@ -110,9 +117,6 @@ export class Cameras extends THREE.Object3D {
           `P has length ${cameraInfo.P.length}, not a 3x4 matrix`,
         );
       }
-
-      renderable.userData.srcTime = rosTimeToNanoSec(cameraInfo.header.stamp);
-      renderable.userData.pose = makePose();
 
       this.add(renderable);
       this.camerasByTopic.set(topic, renderable);
@@ -158,6 +162,8 @@ export class Cameras extends THREE.Object3D {
       if (!updated) {
         const message = missingTransformMessage(renderFrameId, fixedFrameId, frameId);
         this.renderer.layerErrors.addToTopic(renderable.userData.topic, MISSING_TRANSFORM, message);
+      } else {
+        this.renderer.layerErrors.removeFromTopic(renderable.userData.topic, MISSING_TRANSFORM);
       }
     }
   }
@@ -176,6 +182,7 @@ export class Cameras extends THREE.Object3D {
     const topic = renderable.userData.topic;
 
     renderable.userData.settings = newSettings;
+    renderable.userData.srcTime = toNanoSec(cameraInfo.header.stamp);
 
     // If the CameraInfo message contents changed, rebuild cameraModel
     const dataEqual = cameraInfosEqual(renderable.userData.cameraInfo, cameraInfo);
@@ -219,10 +226,10 @@ export class Cameras extends THREE.Object3D {
         renderable.userData.settings,
       );
       if (!renderable.userData.lines) {
-        renderable.userData.lines = new RenderableLineList(topic, marker, this.renderer);
+        renderable.userData.lines = new RenderableLineList(topic, marker, undefined, this.renderer);
         renderable.add(renderable.userData.lines);
       } else {
-        renderable.userData.lines.update(marker);
+        renderable.userData.lines.update(marker, undefined);
       }
     }
   }
@@ -296,7 +303,7 @@ function createLineListMarker(
     pose: makePose(),
     scale: { x: width, y: width, z: width },
     color: stringToRgba(makeRgba(), settings.color),
-    lifetime: { sec: 0, nsec: 0 },
+    lifetime: TIME_ZERO,
     frame_locked: true,
     points,
     colors: [],
