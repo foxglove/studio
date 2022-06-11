@@ -44,7 +44,7 @@ import { TimestampMethod } from "@foxglove/studio-base/util/time";
 
 const log = Log.getLogger(__dirname);
 
-const CAPABILITIES = [PlayerCapabilities.advertise];
+const CAPABILITIES = [PlayerCapabilities.advertise, PlayerCapabilities.callServices];
 
 function isClockMessage(topic: string, msg: unknown): msg is { clock: Time } {
   const maybeClockMsg = msg as { clock?: Time };
