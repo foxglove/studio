@@ -5,6 +5,7 @@
 import * as THREE from "three";
 
 import Logger from "@foxglove/log";
+import { toNanoSec } from "@foxglove/rostime";
 import { SettingsTreeFields } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import PinholeCameraModel from "@foxglove/studio-base/panels/Image/lib/PinholeCameraModel";
 import {
@@ -24,7 +25,7 @@ import { MutablePoint } from "@foxglove/studio-base/types/Messages";
 
 import { Renderer } from "../Renderer";
 import { stringToRgba } from "../color";
-import { CameraInfo, Pose, Image, CompressedImage, rosTimeToNanoSec } from "../ros";
+import { CameraInfo, Pose, Image, CompressedImage } from "../ros";
 import { LayerSettingsImage, LayerType } from "../settings";
 import { makePose } from "../transforms/geometry";
 import { updatePose } from "../updatePose";
@@ -43,7 +44,7 @@ const DEFAULT_SETTINGS: LayerSettingsImage = {
   color: "#ffffff",
 };
 
-type ImageRenderable = THREE.Object3D & {
+type ImageRenderable = Omit<THREE.Object3D, "userData"> & {
   userData: {
     topic: string;
     settings: LayerSettingsImage;
@@ -123,9 +124,8 @@ export class Images extends THREE.Object3D {
         topic,
         settings: { ...DEFAULT_SETTINGS, ...userSettings },
         image,
-        cameraModel: undefined,
         pose: makePose(),
-        srcTime: rosTimeToNanoSec(image.header.stamp),
+        srcTime: toNanoSec(image.header.stamp),
         texture: undefined,
         material: undefined,
         geometry: undefined,
@@ -143,9 +143,11 @@ export class Images extends THREE.Object3D {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (settings.cameraInfoTopic != undefined) {
         // Update user settings with the newly selected CameraInfo topic
-        const updatedUserSettings = { ...userSettings };
-        updatedUserSettings.cameraInfoTopic = settings.cameraInfoTopic;
-        this.renderer.config.topics[topic] = updatedUserSettings;
+        this.renderer.updateConfig((draft) => {
+          const updatedUserSettings = { ...userSettings };
+          updatedUserSettings.cameraInfoTopic = settings.cameraInfoTopic;
+          draft.topics[topic] = updatedUserSettings;
+        });
 
         this.renderer.emit("settingsTreeChange", { path: ["topics", topic] });
       }
@@ -225,6 +227,8 @@ export class Images extends THREE.Object3D {
     const materialSettingsEqual = newSettings.color === prevSettings.color;
     const topic = renderable.userData.topic;
 
+    renderable.userData.image = image;
+    renderable.userData.srcTime = toNanoSec(image.header.stamp);
     renderable.userData.settings = newSettings;
 
     // Dispose of the current geometry if the settings have changed

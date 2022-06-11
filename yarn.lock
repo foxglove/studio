@@ -2520,7 +2520,7 @@ __metadata:
     "@foxglove/velodyne-cloud": 1.0.1
     "@foxglove/wasm-bz2": 0.1.0
     "@foxglove/ws-protocol": 0.0.8
-    "@mcap/core": 0.2.0
+    "@mcap/core": 0.2.1
     "@mdi/svg": 6.5.95
     "@mui/icons-material": 5.4.1
     "@mui/material": 5.4.1
@@ -2591,6 +2591,7 @@ __metadata:
     cytoscape: 3.21.0
     cytoscape-dagre: 2.4.0
     dat.gui: 0.7.9
+    env-paths: 3.0.0
     enzyme: 3.11.0
     esbuild-loader: 2.18.0
     escape-html: 1.0.3
@@ -3092,14 +3093,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mcap/core@npm:0.2.0":
-  version: 0.2.0
-  resolution: "@mcap/core@npm:0.2.0"
+"@mcap/core@npm:0.2.1":
+  version: 0.2.1
+  resolution: "@mcap/core@npm:0.2.1"
   dependencies:
     "@foxglove/crc": ^0.0.3
     heap-js: ^2.1.6
     tslib: ^2
-  checksum: 07201dbdfd717e25611b715f98db5ced7716ec5c89bdf58fe1d27c89606cb9391c360b2468ff7191637b933b6dab53c54d972064315cef12b10d3ee889e2fa83
+  checksum: cdbacbf1592ccdc6352fa80074d80fd3d0445e1f27cbafc63cce33e41fc3a40a29a1d5419102cdd2731018ad4c46b9728f32362719d8dc997a4853b262927a0e
   languageName: node
   linkType: hard
 
@@ -11350,6 +11351,13 @@ __metadata:
   version: 2.2.0
   resolution: "entities@npm:2.2.0"
   checksum: 19010dacaf0912c895ea262b4f6128574f9ccf8d4b3b65c7e8334ad0079b3706376360e28d8843ff50a78aabcb8f08f0a32dbfacdc77e47ed77ca08b713669b3
+  languageName: node
+  linkType: hard
+
+"env-paths@npm:3.0.0":
+  version: 3.0.0
+  resolution: "env-paths@npm:3.0.0"
+  checksum: b2b0a0d0d9931a13d279c22ed94d78648a1cc5f408f05d47ff3e0c1616f0aa0c38fb33deec5e5be50497225d500607d57f9c8652c4d39c2f2b7608cd45768128
   languageName: node
   linkType: hard
 
