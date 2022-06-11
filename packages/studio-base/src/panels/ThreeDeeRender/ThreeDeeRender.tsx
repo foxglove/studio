@@ -385,9 +385,12 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
     }
     log.debug(`Subscribing to [${topicsToSubscribe.join(", ")}]`);
 
-    // fixme - this subscribes with preloading for all topics, want to subscribe with no preloading
-    // do you want one subscribe list? or separate subscribe calls?
-    context.subscribe(topicsToSubscribe);
+    context.subscribe(
+      topicsToSubscribe.map((topic) => ({
+        topic,
+        preload: false,
+      })),
+    );
   }, [context, topicsToSubscribe]);
 
   // Keep the renderer currentTime up to date
