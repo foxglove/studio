@@ -70,15 +70,15 @@ function addFieldPathsForType(
   seenTypes: string[],
   output: Map<string, RosMsgField>,
 ): void {
-  if (curPath.split(".").length > 10) {
-    return;
-  }
-
   const msgdef = datatypes.get(typeName);
   if (msgdef) {
     for (const field of msgdef.definitions) {
+      if (seenTypes.includes(field.type)) {
+        continue;
+      }
       if (field.isConstant !== true) {
         const fieldPath = `${curPath}.${quoteFieldNameIfNeeded(field.name)}`;
+        output.set(fieldPath, field);
         if (field.isComplex === true) {
           addFieldPathsForType(
             fieldPath,
