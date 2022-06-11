@@ -93,6 +93,7 @@ export default class RosbridgePlayer implements Player {
   private _presence: PlayerPresence = PlayerPresence.NOT_PRESENT;
   private _problems = new PlayerProblemManager();
   private _emitTimer?: ReturnType<typeof setTimeout>;
+  private _serviceTypeCache = new Map<string, Promise<string>>();
   private readonly _sourceId: string;
 
   constructor({
@@ -584,6 +585,27 @@ export default class RosbridgePlayer implements Player {
     publisher.publish(msg);
   }
 
+  // Query the type name for this service. Cache the query to avoid looking it up again.
+  private async getServiceType(service: string): Promise<string> {
+    if (!this._rosClient) {
+      throw new Error("Not connected");
+    }
+
+    const existing = this._serviceTypeCache.get(service);
+    if (existing) {
+      return await existing;
+    }
+
+    const rosClient = this._rosClient;
+    const serviceTypePromise = new Promise<string>((resolve, reject) => {
+      rosClient.getServiceType(service, resolve, reject);
+    });
+
+    this._serviceTypeCache.set(service, serviceTypePromise);
+
+    return await serviceTypePromise;
+  }
+
   async callService(service: string, request: unknown): Promise<unknown> {
     if (!this._rosClient) {
       throw new Error("Not connected");
@@ -593,14 +615,7 @@ export default class RosbridgePlayer implements Player {
       throw new Error("RosbridgePlayer#callService request must be an object");
     }
 
-    // Query the type name for this service.
-    const serviceType = await new Promise<string>((resolve, reject) => {
-      this._rosClient!.getServiceType(
-        service,
-        (type: string) => resolve(type),
-        (error: Error) => reject(error),
-      );
-    });
+    const serviceType = await this.getServiceType(service);
 
     // Create a proxy object for dispatching our service call
     const proxy = new roslib.Service({
