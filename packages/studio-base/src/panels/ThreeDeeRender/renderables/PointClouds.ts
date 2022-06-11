@@ -4,14 +4,18 @@
 
 import * as THREE from "three";
 
+import { toNanoSec } from "@foxglove/rostime";
 import { Topic } from "@foxglove/studio";
-import { SettingsTreeFields } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import {
+  SettingsTreeFields,
+  SettingsTreeNode,
+} from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 
 import { DynamicBufferGeometry } from "../DynamicBufferGeometry";
-import { MaterialCache, PointsVertexColor } from "../MaterialCache";
+import { MaterialCache, PointCloudColor } from "../MaterialCache";
 import { Renderer } from "../Renderer";
 import { rgbaToCssString, stringToRgba } from "../color";
-import { Pose, PointCloud2, PointFieldType, rosTimeToNanoSec } from "../ros";
+import { Pose, PointCloud2, PointFieldType } from "../ros";
 import { LayerSettings, LayerSettingsPointCloud2, LayerType } from "../settings";
 import { makePose } from "../transforms/geometry";
 import { updatePose } from "../updatePose";
@@ -19,7 +23,7 @@ import { getColorConverter } from "./pointClouds/colors";
 import { FieldReader, getReader } from "./pointClouds/fieldReaders";
 import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
 
-type PointCloudRenderable = THREE.Object3D & {
+type PointCloudRenderable = Omit<THREE.Object3D, "userData"> & {
   userData: {
     topic: string;
     settings: LayerSettingsPointCloud2;
@@ -76,8 +80,8 @@ export class PointClouds extends THREE.Object3D {
     super();
     this.renderer = renderer;
 
-    renderer.setSettingsFieldsProvider(LayerType.PointCloud, (topicConfig, topic) =>
-      settingsFields(this.pointCloudFieldsByTopic, topicConfig, topic),
+    renderer.setSettingsNodeProvider(LayerType.PointCloud, (topicConfig, topic) =>
+      settingsNode(this.pointCloudFieldsByTopic, topicConfig, topic),
     );
   }
 
@@ -101,17 +105,30 @@ export class PointClouds extends THREE.Object3D {
       renderable.userData.topic = topic;
 
       // Set the initial settings from default values merged with any user settings
-      this.renderer.config?.topics[topic] as Partial<LayerSettingsPointCloud2> | undefined;
-      const userSettings = this.renderer.config?.topics[topic];
+      const userSettings = this.renderer.config.topics[topic] as
+        | Partial<LayerSettingsPointCloud2>
+        | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
       if (settings.colorField == undefined) {
         autoSelectColorField(settings, pointCloud);
+
+        // Update user settings with the newly selected color field
+        this.renderer.updateConfig((draft) => {
+          const updatedUserSettings = { ...userSettings };
+          updatedUserSettings.colorField = settings.colorField;
+          updatedUserSettings.colorMode = settings.colorMode;
+          updatedUserSettings.colorMap = settings.colorMap;
+          draft.topics[topic] = updatedUserSettings;
+        });
+
+        // Normally we would emit "settingsTreeChange" from Renderer here, but we know the topic to
+        // field name mapping will be updated below and trigger the same event, so skip it here
       }
       renderable.userData.settings = settings;
 
       renderable.userData.pointCloud = pointCloud;
       renderable.userData.pose = makePose();
-      renderable.userData.srcTime = rosTimeToNanoSec(pointCloud.header.stamp);
+      renderable.userData.srcTime = toNanoSec(pointCloud.header.stamp);
 
       const geometry = new DynamicBufferGeometry(Float32Array);
       geometry.name = `${topic}:PointCloud2:geometry`;
@@ -136,6 +153,7 @@ export class PointClouds extends THREE.Object3D {
     if (!fields || fields.length !== pointCloud.fields.length) {
       fields = pointCloud.fields.map((field) => field.name);
       this.pointCloudFieldsByTopic.set(topic, fields);
+      this.renderer.emit("settingsTreeChange", { path: ["topics", topic] });
     }
 
     this._updatePointCloudRenderable(renderable, pointCloud);
@@ -183,13 +201,15 @@ export class PointClouds extends THREE.Object3D {
       if (!updated) {
         const message = missingTransformMessage(renderFrameId, fixedFrameId, frameId);
         this.renderer.layerErrors.addToTopic(renderable.userData.topic, MISSING_TRANSFORM, message);
+      } else {
+        this.renderer.layerErrors.removeFromTopic(renderable.userData.topic, MISSING_TRANSFORM);
       }
     }
   }
 
   _updatePointCloudRenderable(renderable: PointCloudRenderable, pointCloud: PointCloud2): void {
     renderable.userData.pointCloud = pointCloud;
-    renderable.userData.srcTime = rosTimeToNanoSec(pointCloud.header.stamp);
+    renderable.userData.srcTime = toNanoSec(pointCloud.header.stamp);
 
     const settings = renderable.userData.settings;
     const data = pointCloud.data;
@@ -210,13 +230,17 @@ export class PointClouds extends THREE.Object3D {
       return;
     } else if (data.length < pointCloud.height * pointCloud.row_step) {
       const message = `PointCloud2 data length ${data.length} is less than height ${pointCloud.height} * row_step ${pointCloud.row_step}`;
-      invalidPointCloudError(this.renderer, renderable, message);
-      return;
+      this.renderer.layerErrors.addToTopic(renderable.userData.topic, INVALID_POINT_CLOUD, message);
+      // Allow this error for now since we currently ignore row_step
     } else if (pointCloud.width * pointCloud.point_step > pointCloud.row_step) {
       const message = `PointCloud2 width ${pointCloud.width} * point_step ${pointCloud.point_step} is greater than row_step ${pointCloud.row_step}`;
-      invalidPointCloudError(this.renderer, renderable, message);
-      return;
+      this.renderer.layerErrors.addToTopic(renderable.userData.topic, INVALID_POINT_CLOUD, message);
+      // Allow this error for now since we currently ignore row_step
     }
+
+    // Determine the minimum bytes needed per point based on offset/size of each
+    // field, so we can ensure point_step is >= this value
+    let minBytesPerPoint = 0;
 
     // Parse the fields and create typed readers for x/y/z and color
     let xReader: FieldReader | undefined;
@@ -225,6 +249,17 @@ export class PointClouds extends THREE.Object3D {
     let colorReader: FieldReader | undefined;
     for (let i = 0; i < pointCloud.fields.length; i++) {
       const field = pointCloud.fields[i]!;
+
+      if (field.count !== 1) {
+        const message = `PointCloud2 field "${field.name}" has invalid count ${field.count}. Only 1 is supported`;
+        invalidPointCloudError(this.renderer, renderable, message);
+        return;
+      } else if (field.offset < 0) {
+        const message = `PointCloud2 field "${field.name}" has invalid offset ${field.offset}. Must be >= 0`;
+        invalidPointCloudError(this.renderer, renderable, message);
+        return;
+      }
+
       if (field.name === "x") {
         xReader = getReader(field, pointCloud.point_step);
         if (!xReader) {
@@ -251,8 +286,19 @@ export class PointClouds extends THREE.Object3D {
         }
       }
 
+      const byteWidth = pointFieldWidth(field.datatype);
+      minBytesPerPoint = Math.max(minBytesPerPoint, field.offset + byteWidth);
+
       if (field.name === settings.colorField) {
-        colorReader = getReader(field, pointCloud.point_step);
+        // If the selected color mode is rgb/rgba and the field only has one channel with at least a
+        // four byte width, force the color data to be interpreted as four individual bytes. This
+        // overcomes a common problem where the color field data type is set to float32 or something
+        // other than uint32
+        const forceType =
+          (settings.colorMode === "rgb" || settings.colorMode === "rgba") && byteWidth >= 4
+            ? PointFieldType.UINT32
+            : undefined;
+        colorReader = getReader(field, pointCloud.point_step, forceType);
         if (!colorReader) {
           const typeName = pointFieldTypeName(field.datatype);
           const message = `PointCloud2 field "${field.name}" is invalid. type=${typeName}, offset=${field.offset}, point_step=${pointCloud.point_step}`;
@@ -260,10 +306,12 @@ export class PointClouds extends THREE.Object3D {
           return;
         }
       }
+    }
 
-      if (xReader && yReader && zReader && colorReader) {
-        break;
-      }
+    if (minBytesPerPoint > pointCloud.point_step) {
+      const message = `PointCloud2 point_step ${pointCloud.point_step} is less than minimum bytes per point ${minBytesPerPoint}`;
+      invalidPointCloudError(this.renderer, renderable, message);
+      return;
     }
 
     const positionReaderCount = (xReader ? 1 : 0) + (yReader ? 1 : 0) + (zReader ? 1 : 0);
@@ -280,8 +328,8 @@ export class PointClouds extends THREE.Object3D {
 
     const geometry = renderable.userData.geometry;
     geometry.resize(pointCount);
-    const positionAttribute = geometry.getAttribute("position") as THREE.BufferAttribute;
-    const colorAttribute = geometry.getAttribute("color") as THREE.BufferAttribute;
+    const positionAttribute = geometry.attributes.position!;
+    const colorAttribute = geometry.attributes.color!;
 
     const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
 
@@ -328,11 +376,12 @@ function pointsMaterial(
   materialCache: MaterialCache,
 ): THREE.PointsMaterial {
   const transparent = pointCloudHasTransparency(settings);
-  const scale = { x: settings.pointSize, y: settings.pointSize };
+  const encoding = pointCloudColorEncoding(settings);
+  const scale = settings.pointSize;
   return materialCache.acquire(
-    PointsVertexColor.id(scale, transparent),
-    () => PointsVertexColor.create(scale, transparent),
-    PointsVertexColor.dispose,
+    PointCloudColor.id(settings.pointShape, encoding, scale, transparent),
+    () => PointCloudColor.create(settings.pointShape, encoding, scale, transparent),
+    PointCloudColor.dispose,
   );
 }
 
@@ -341,13 +390,16 @@ function releasePointsMaterial(
   materialCache: MaterialCache,
 ): void {
   const transparent = pointCloudHasTransparency(settings);
-  const scale = { x: settings.pointSize, y: settings.pointSize };
-  materialCache.release(PointsVertexColor.id(scale, transparent));
+  const encoding = pointCloudColorEncoding(settings);
+  const scale = settings.pointSize;
+  materialCache.release(PointCloudColor.id(settings.pointShape, encoding, scale, transparent));
 }
 
 function createPickingMaterial(settings: LayerSettingsPointCloud2): THREE.ShaderMaterial {
   const MIN_PICKING_POINT_SIZE = 8;
 
+  // Use a custom shader for picking that sets a minimum point size to make
+  // individual points easier to click on
   const pointSize = Math.max(settings.pointSize, MIN_PICKING_POINT_SIZE);
   return new THREE.ShaderMaterial({
     vertexShader: /* glsl */ `
@@ -372,33 +424,49 @@ function pointCloudHasTransparency(settings: LayerSettingsPointCloud2): boolean 
   switch (settings.colorMode) {
     case "flat":
       return stringToRgba(tempColor, settings.flatColor).a < 1.0;
-    case "gradient": {
-      if (stringToRgba(tempColor, settings.gradient[0]).a < 1.0) {
-        return true;
-      }
-      return stringToRgba(tempColor, settings.gradient[1]).a < 1.0;
-    }
+    case "gradient":
+      return (
+        stringToRgba(tempColor, settings.gradient[0]).a < 1.0 ||
+        stringToRgba(tempColor, settings.gradient[1]).a < 1.0
+      );
     case "colormap":
     case "rgb":
       return false;
     case "rgba":
+      // It's too expensive to check the alpha value of each color. Just assume it's transparent
       return true;
   }
 }
 
+function pointCloudColorEncoding(settings: LayerSettingsPointCloud2): "srgb" | "linear" {
+  switch (settings.colorMode) {
+    case "flat":
+    case "colormap":
+    case "gradient":
+      return "linear";
+    case "rgb":
+    case "rgba":
+      return "srgb";
+  }
+}
+
 function autoSelectColorField(output: LayerSettingsPointCloud2, pointCloud: PointCloud2): void {
+  // Prefer color fields first
   for (const field of pointCloud.fields) {
-    if (COLOR_FIELDS.has(field.name)) {
+    const fieldNameLower = field.name.toLowerCase();
+    if (COLOR_FIELDS.has(fieldNameLower)) {
       output.colorField = field.name;
-      switch (field.name) {
+      switch (fieldNameLower) {
         case "rgb":
           output.colorMode = "rgb";
-          output.rgbByteOrder = "rgba";
+          // PointCloud2 messages follow a convention of obeying `is_bigendian`
+          // for the byte ordering of rgb/rgba fields
+          output.rgbByteOrder = pointCloud.is_bigendian ? "rgba" : "abgr";
           break;
         default:
         case "rgba":
           output.colorMode = "rgba";
-          output.rgbByteOrder = "rgba";
+          output.rgbByteOrder = pointCloud.is_bigendian ? "rgba" : "abgr";
           break;
         case "bgr":
           output.colorMode = "rgb";
@@ -417,6 +485,7 @@ function autoSelectColorField(output: LayerSettingsPointCloud2, pointCloud: Poin
     }
   }
 
+  // Intensity fields are second priority
   for (const field of pointCloud.fields) {
     if (INTENSITY_FIELDS.has(field.name)) {
       output.colorField = field.name;
@@ -426,6 +495,7 @@ function autoSelectColorField(output: LayerSettingsPointCloud2, pointCloud: Poin
     }
   }
 
+  // Fall back to using the first point cloud field
   if (pointCloud.fields.length > 0) {
     const firstField = pointCloud.fields[0]!;
     output.colorField = firstField.name;
@@ -449,11 +519,11 @@ function bestColorByField(pclFields: string[]): string {
   return "x";
 }
 
-function settingsFields(
+function settingsNode(
   pclFieldsByTopic: Map<string, string[]>,
   topicConfig: Partial<LayerSettings>,
   topic: Topic,
-): SettingsTreeFields {
+): SettingsTreeNode {
   const cur = topicConfig as Partial<LayerSettingsPointCloud2> | undefined;
   const pclFields = pclFieldsByTopic.get(topic.name) ?? POINTCLOUD_REQUIRED_FIELDS;
   const pointSize = cur?.pointSize;
@@ -567,11 +637,30 @@ function settingsFields(
     };
   }
 
-  return fields;
+  return { icon: "Points", fields };
 }
 
 function pointFieldTypeName(type: PointFieldType): string {
   return PointFieldType[type] ?? `${type}`;
+}
+
+function pointFieldWidth(type: PointFieldType): number {
+  switch (type) {
+    case PointFieldType.INT8:
+    case PointFieldType.UINT8:
+      return 1;
+    case PointFieldType.INT16:
+    case PointFieldType.UINT16:
+      return 2;
+    case PointFieldType.INT32:
+    case PointFieldType.UINT32:
+    case PointFieldType.FLOAT32:
+      return 4;
+    case PointFieldType.FLOAT64:
+      return 8;
+    default:
+      return 0;
+  }
 }
 
 function invalidPointCloudError(
@@ -580,8 +669,7 @@ function invalidPointCloudError(
   message: string,
 ): void {
   renderer.layerErrors.addToTopic(renderable.userData.topic, INVALID_POINT_CLOUD, message);
-  renderable.userData.positionAttribute.resize(0);
-  renderable.userData.colorAttribute.resize(0);
+  renderable.userData.geometry.resize(0);
 }
 
 function zeroReader(): number {

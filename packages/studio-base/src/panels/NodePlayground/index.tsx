@@ -11,10 +11,10 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useTheme, Link, Spinner, SpinnerSize } from "@fluentui/react";
+import { useTheme } from "@fluentui/react";
 import ArrowLeftIcon from "@mdi/svg/svg/arrow-left.svg";
 import PlusIcon from "@mdi/svg/svg/plus.svg";
-import { Box, Input, Stack } from "@mui/material";
+import { CircularProgress, Divider, Input, Link, Stack } from "@mui/material";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { v4 as uuidv4 } from "uuid";
@@ -26,7 +26,7 @@ import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import {
   SettingsTreeAction,
-  SettingsTreeNode,
+  SettingsTreeRoots,
 } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import TextContent from "@foxglove/studio-base/components/TextContent";
 import {
@@ -117,13 +117,16 @@ const SWelcomeScreen = styled.div`
 
 export type Explorer = undefined | "nodes" | "utils" | "templates";
 
-function buildSettingsStree(config: Config): SettingsTreeNode {
+function buildSettingsTree(config: Config): SettingsTreeRoots {
   return {
-    fields: {
-      autoFormatOnSave: {
-        input: "boolean",
-        label: "Auto-format on save",
-        value: config.autoFormatOnSave,
+    general: {
+      icon: "Settings",
+      fields: {
+        autoFormatOnSave: {
+          input: "boolean",
+          label: "Auto-format on save",
+          value: config.autoFormatOnSave,
+        },
       },
     },
   };
@@ -140,7 +143,8 @@ const WelcomeScreen = ({ addNewNode }: { addNewNode: (code?: string) => void }) 
       <TextContent>
         Welcome to Node Playground! Get started by reading the{" "}
         <Link
-          href=""
+          color="primary"
+          underline="hover"
           onClick={(e) => {
             e.preventDefault();
             setHelpInfo({ title: "NodePlayground", content: helpContent });
@@ -215,18 +219,22 @@ function NodePlayground(props: Props) {
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
+      if (action.action !== "update") {
+        return;
+      }
+
       const { input, value, path } = action.payload;
-      if (input === "boolean" && path[0] === "autoFormatOnSave") {
-        saveConfig({ ...config, autoFormatOnSave: value });
+      if (input === "boolean" && path[1] === "autoFormatOnSave") {
+        saveConfig({ autoFormatOnSave: value });
       }
     },
-    [config, saveConfig],
+    [saveConfig],
   );
 
   useEffect(() => {
     updatePanelSettingsTree(panelId, {
       actionHandler,
-      settings: buildSettingsStree(config),
+      roots: buildSettingsTree(config),
     });
   }, [actionHandler, config, panelId, updatePanelSettingsTree]);
 
@@ -304,7 +312,8 @@ function NodePlayground(props: Props) {
 
   return (
     <Stack height="100%">
-      <PanelToolbar floating helpContent={helpContent} />
+      <PanelToolbar helpContent={helpContent} />
+      <Divider />
       <Stack direction="row" height="100%">
         <Sidebar
           explorer={explorer}
@@ -380,7 +389,7 @@ function NodePlayground(props: Props) {
 
           <Stack flexGrow={1} overflow="hidden ">
             {selectedNodeId == undefined && <WelcomeScreen addNewNode={addNewNode} />}
-            <Box
+            <div
               style={{
                 flexGrow: 1,
                 width: "100%",
@@ -399,7 +408,7 @@ function NodePlayground(props: Props) {
                     width="100%"
                     height="100%"
                   >
-                    <Spinner size={SpinnerSize.large} />
+                    <CircularProgress size={28} />
                   </Stack>
                 }
               >
@@ -415,7 +424,7 @@ function NodePlayground(props: Props) {
                   />
                 )}
               </Suspense>
-            </Box>
+            </div>
             <Stack>
               <BottomBar
                 nodeId={selectedNodeId}

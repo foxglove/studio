@@ -20,15 +20,13 @@ import {
   releaseLinePickingMaterial,
 } from "./materials";
 
-const MIN_PICKING_LINE_SIZE = 6;
-
 export class RenderableLineStrip extends RenderableMarker {
   geometry: LineGeometry;
   linePrepass: Line2;
   line: Line2;
 
-  constructor(topic: string, marker: Marker, renderer: Renderer) {
-    super(topic, marker, renderer);
+  constructor(topic: string, marker: Marker, receiveTime: bigint | undefined, renderer: Renderer) {
+    super(topic, marker, receiveTime, renderer);
 
     this.geometry = new LineGeometry();
 
@@ -43,28 +41,29 @@ export class RenderableLineStrip extends RenderableMarker {
     const matLine = lineMaterial(marker, renderer.materialCache);
     this.line = new Line2(this.geometry, matLine);
     this.line.renderOrder = 2;
-    const pickingLineWidth = Math.max(marker.scale.x, MIN_PICKING_LINE_SIZE);
+    const pickingLineWidth = marker.scale.x * 1.2;
     this.line.userData.pickingMaterial = linePickingMaterial(
       pickingLineWidth,
+      true,
       renderer.materialCache,
     );
     this.add(this.line);
 
-    this.update(marker);
+    this.update(marker, receiveTime);
   }
 
   override dispose(): void {
     releaseLinePrepassMaterial(this.userData.marker, this._renderer.materialCache);
     releaseLineMaterial(this.userData.marker, this._renderer.materialCache);
 
-    const pickingLineWidth = Math.max(this.userData.marker.scale.x, MIN_PICKING_LINE_SIZE);
-    releaseLinePickingMaterial(pickingLineWidth, this._renderer.materialCache);
+    const pickingLineWidth = this.userData.marker.scale.x * 1.2;
+    releaseLinePickingMaterial(pickingLineWidth, true, this._renderer.materialCache);
     this.line.userData.pickingMaterial = undefined;
   }
 
-  override update(marker: Marker): void {
+  override update(marker: Marker, receiveTime: bigint | undefined): void {
     const prevMarker = this.userData.marker;
-    super.update(marker);
+    super.update(marker, receiveTime);
 
     const prevLineWidth = prevMarker.scale.x;
     const prevTransparent = markerHasTransparency(prevMarker);

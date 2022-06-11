@@ -7,20 +7,24 @@ import { DeepPartial } from "ts-essentials";
 import { Time } from "@foxglove/rostime";
 
 import {
+  CameraInfo,
+  ColorRGBA,
+  CompressedImage,
   Header,
+  Image,
   Marker,
   Matrix3,
   Matrix3x4,
-  Pose,
-  Vector3,
-  Quaternion,
-  ColorRGBA,
-  PoseStamped,
-  PoseWithCovarianceStamped,
-  PoseWithCovariance,
   Matrix6,
-  CameraInfo,
+  Polygon,
+  PolygonStamped,
+  Pose,
+  PoseStamped,
+  PoseWithCovariance,
+  PoseWithCovarianceStamped,
+  Quaternion,
   RegionOfInterest,
+  Vector3,
 } from "./ros";
 
 export function normalizeTime(time: Partial<Time> | undefined): Time {
@@ -28,6 +32,28 @@ export function normalizeTime(time: Partial<Time> | undefined): Time {
     return { sec: 0, nsec: 0 };
   }
   return { sec: time.sec ?? 0, nsec: time.nsec ?? 0 };
+}
+
+export function normalizeByteArray(byteArray: unknown): Uint8Array {
+  if (byteArray == undefined) {
+    return new Uint8Array(0);
+  } else if (byteArray instanceof Uint8Array) {
+    return byteArray;
+  } else if (Array.isArray(byteArray) || byteArray instanceof ArrayBuffer) {
+    return new Uint8Array(byteArray);
+  } else {
+    return new Uint8Array(0);
+  }
+}
+
+export function normalizeImageData(data: unknown): Int8Array | Uint8Array {
+  if (data == undefined) {
+    return new Uint8Array(0);
+  } else if (data instanceof Int8Array || data instanceof Uint8Array) {
+    return data;
+  } else {
+    return new Uint8Array(0);
+  }
 }
 
 export function normalizeVector3(vector: Partial<Vector3> | undefined): Vector3 {
@@ -88,6 +114,12 @@ export function normalizePose(pose: DeepPartial<Pose> | undefined): Pose {
   };
 }
 
+export function normalizePolygon(polygon: DeepPartial<Polygon> | undefined): Polygon {
+  return {
+    points: normalizeVector3s(polygon?.points),
+  };
+}
+
 export function normalizePoseWithCovariance(
   pose: DeepPartial<PoseWithCovariance> | undefined,
 ): PoseWithCovariance {
@@ -127,6 +159,13 @@ export function normalizePoseStamped(pose: DeepPartial<PoseStamped>): PoseStampe
   return {
     header: normalizeHeader(pose.header),
     pose: normalizePose(pose.pose),
+  };
+}
+
+export function normalizePolygonStamped(polygon: DeepPartial<PolygonStamped>): PolygonStamped {
+  return {
+    header: normalizeHeader(polygon.header),
+    polygon: normalizePolygon(polygon.polygon),
   };
 }
 
@@ -181,5 +220,25 @@ export function normalizeCameraInfo(
     binning_x: message.binning_x ?? 0,
     binning_y: message.binning_y ?? 0,
     roi: normalizeRegionOfInterest(message.roi),
+  };
+}
+
+export function normalizeImage(message: DeepPartial<Image>): Image {
+  return {
+    header: normalizeHeader(message.header),
+    height: message.height ?? 0,
+    width: message.width ?? 0,
+    encoding: message.encoding ?? "",
+    is_bigendian: message.is_bigendian ?? false,
+    step: message.step ?? 0,
+    data: normalizeImageData(message.data),
+  };
+}
+
+export function normalizeCompressedImage(message: DeepPartial<CompressedImage>): CompressedImage {
+  return {
+    header: normalizeHeader(message.header),
+    format: message.format ?? "",
+    data: normalizeByteArray(message.data),
   };
 }

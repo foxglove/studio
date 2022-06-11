@@ -2,7 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Mcap0IndexedReader, Mcap0Types } from "@foxglove/mcap";
+import { Mcap0IndexedReader, Mcap0Types } from "@mcap/core";
+
 import { ParsedChannel, parseChannel } from "@foxglove/mcap-support";
 import { Time, fromNanoSec, toNanoSec } from "@foxglove/rostime";
 import {
@@ -140,7 +141,8 @@ export default class Mcap0IndexedDataProvider implements RandomAccessDataProvide
       } catch (error) {
         if (!this.reportedChannelsWithInvalidMessages.has(message.channelId)) {
           (problems ??= []).push({
-            message: `Received message on channel ${message.channelId} without prior channel info`,
+            message: `Error decoding message on ${channelInfo.channel.topic}`,
+            error,
             severity: "error",
           });
           this.reportedChannelsWithInvalidMessages.add(message.channelId);

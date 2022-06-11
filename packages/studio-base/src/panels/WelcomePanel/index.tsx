@@ -2,21 +2,14 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import {
-  Checkbox,
-  DefaultButton,
-  Icon,
-  IIconStyles,
-  Text,
-  TextField,
-  useTheme,
-} from "@fluentui/react";
-import { Stack } from "@mui/material";
+import { Checkbox, DefaultButton, Icon, IIconStyles, TextField } from "@fluentui/react";
+import { Typography, useTheme } from "@mui/material";
 import { useMemo, useState } from "react";
 import { useAsyncFn } from "react-use";
 
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import Stack from "@foxglove/studio-base/components/Stack";
 import TextContent from "@foxglove/studio-base/components/TextContent";
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks/useAppConfigurationValue";
 import { useSubscribeContext } from "@foxglove/studio-base/panels/WelcomePanel/SubscribeContext";
@@ -71,84 +64,87 @@ function WelcomePanel() {
     !loading;
 
   return (
-    <Stack data-test="welcome-content" padding={2.5} style={{ overflowY: "auto" }}>
-      <PanelToolbar floating />
-      <TextContent>
-        <h1>Welcome</h1>
-        <p>
-          Foxglove Studio is an integrated visualization and debugging tool for robotics. It allows
-          you to quickly and easily understand what’s happening in real-time, and provides a unique
-          visualization and development experience.
-        </p>
-        <p>
-          The configuration of views and graphs you’re looking at now is called the{" "}
-          <b>
-            <em>layout</em>
-          </b>
-          . Each view is a{" "}
-          <b>
-            <em>panel</em>
-          </b>
-          . You can rearrange panels to your liking: hover over them and drag the{" "}
-          <Icon iconName="Drag" styles={iconStyles} /> icon. Click the{" "}
-          <Icon iconName="PlusCircleOutline" styles={iconStyles} /> icon above and try adding a new
-          panel. Don’t worry if you make a mistake—you can revert your changes from the Layouts
-          sidebar. (This introduction is also a panel! When you’re done reading, hover over it and
-          click the <Icon iconName="Cog" styles={iconStyles} /> icon to remove it.)
-        </p>
-        <p>
-          Want to view data from your own ROS bag file? Double-click a bag file to open it with
-          Foxglove Studio, or just drag &amp; drop it into the app. Click{" "}
-          <Icon iconName="Database" styles={iconStyles} /> in the upper left to select another data
-          source.
-        </p>
-        <Text
-          variant="smallPlus"
-          styles={{
-            root: {
-              display: "block",
-              margin: `${theme.spacing.l1} 0 ${theme.spacing.s1}`,
-              color: theme.semanticColors.bodyText,
-            },
-          }}
-        >
-          <b>To learn more, join our Slack community and subscribe to our newsletter:</b>
-        </Text>
+    <Stack fullHeight data-test="welcome-content">
+      <PanelToolbar />
+      <Stack flex="auto" padding={2.5} overflowY="auto">
+        <TextContent>
+          <h1>Welcome</h1>
+          <p>
+            Foxglove Studio is an integrated visualization and debugging tool for robotics. It
+            allows you to quickly and easily understand what’s happening in real-time, and provides
+            a unique visualization and development experience.
+          </p>
+          <p>
+            The configuration of views and graphs you’re looking at now is called the{" "}
+            <b>
+              <em>layout</em>
+            </b>
+            . Each view is a{" "}
+            <b>
+              <em>panel</em>
+            </b>
+            . You can rearrange panels to your liking: hover over them and drag the{" "}
+            <Icon iconName="Drag" styles={iconStyles} /> icon. Click the{" "}
+            <Icon iconName="PlusCircleOutline" styles={iconStyles} /> icon above and try adding a
+            new panel. Don’t worry if you make a mistake—you can revert your changes from the
+            Layouts sidebar. (This introduction is also a panel! When you’re done reading, hover
+            over it and click the <Icon iconName="Cog" styles={iconStyles} /> icon to remove it.)
+          </p>
+          <p>
+            Want to view data from your own ROS bag file? Double-click a bag file to open it with
+            Foxglove Studio, or just drag &amp; drop it into the app. Click{" "}
+            <Icon iconName="Database" styles={iconStyles} /> in the upper left to select another
+            data source.
+          </p>
+          <Typography
+            variant="body2"
+            fontWeight="bold"
+            style={{
+              margin: theme.spacing(4, 0, 1),
+            }}
+          >
+            To learn more, join our Slack community and subscribe to our newsletter:
+          </Typography>
 
-        <Stack spacing={2}>
-          <TextField
-            placeholder="me@example.com"
-            value={emailValue}
-            onChange={(_event, newValue) => newValue != undefined && setEmailValue(newValue)}
-            errorMessage={emailError}
-          />
-          <Checkbox
-            label="Send me updates about Foxglove Studio"
-            checked={subscribeChecked}
-            onChange={(_event, newValue) => newValue != undefined && setSubscribeChecked(newValue)}
-          />
-          <Checkbox
-            label="Invite me to the Slack community"
-            checked={slackInviteChecked}
-            onChange={(_event, newValue) =>
-              newValue != undefined && setSlackInviteChecked(newValue)
-            }
-          />
-          <Stack alignItems="flex-start">
-            <DefaultButton primary={!subscribed} disabled={!submitEnabled} onClick={submit}>
-              {loading ? "Signing Up..." : "Sign Up"}
-            </DefaultButton>
-            &nbsp;
-            {error ? (
-              <span style={{ color: theme.semanticColors.errorText }}>{error.toString()}</span>
-            ) : subscribed && !submitState.loading ? (
-              <span style={{ color: theme.semanticColors.successIcon }}>
-                Thanks for signing up!
-              </span>
-            ) : undefined}
+          <Stack gap={2}>
+            <TextField
+              placeholder="me@example.com"
+              value={emailValue}
+              onChange={(_event, newValue) => newValue != undefined && setEmailValue(newValue)}
+              errorMessage={emailError}
+            />
+            <Checkbox
+              label="Send me updates about Foxglove Studio"
+              checked={subscribeChecked}
+              onChange={(_event, newValue) =>
+                newValue != undefined && setSubscribeChecked(newValue)
+              }
+            />
+            <Checkbox
+              label="Invite me to the Slack community"
+              checked={slackInviteChecked}
+              onChange={(_event, newValue) =>
+                newValue != undefined && setSlackInviteChecked(newValue)
+              }
+            />
+            <Stack alignItems="flex-start">
+              <DefaultButton primary={!subscribed} disabled={!submitEnabled} onClick={submit}>
+                {loading ? "Signing Up..." : "Sign Up"}
+              </DefaultButton>
+              &nbsp;
+              {error ? (
+                <Typography display="span" color="error.main">
+                  {error.toString()}
+                </Typography>
+              ) : subscribed && !submitState.loading ? (
+                <Typography display="span" color="success.main">
+                  Thanks for signing up!
+                </Typography>
+              ) : undefined}
+            </Stack>
           </Stack>
-        </Stack>
-      </TextContent>
+        </TextContent>
+      </Stack>
     </Stack>
   );
 }

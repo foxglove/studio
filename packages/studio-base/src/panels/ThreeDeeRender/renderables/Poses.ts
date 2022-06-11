@@ -4,20 +4,20 @@
 
 import * as THREE from "three";
 
+import { toNanoSec } from "@foxglove/rostime";
 import { SettingsTreeFields } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 
 import { Renderer } from "../Renderer";
-import { rgbaToCssString, stringToRgba } from "../color";
+import { makeRgba, rgbaToCssString, stringToRgba } from "../color";
 import {
   Pose,
-  rosTimeToNanoSec,
-  ColorRGBA,
   Marker,
   PoseWithCovarianceStamped,
   PoseStamped,
   POSE_WITH_COVARIANCE_STAMPED_DATATYPES,
   MarkerAction,
   MarkerType,
+  TIME_ZERO,
 } from "../ros";
 import { LayerSettingsPose, LayerType } from "../settings";
 import { makePose } from "../transforms/geometry";
@@ -41,7 +41,7 @@ const DEFAULT_SETTINGS: LayerSettingsPose = {
   covarianceColor: DEFAULT_COVARIANCE_COLOR_STR,
 };
 
-type PoseRenderable = THREE.Object3D & {
+type PoseRenderable = Omit<THREE.Object3D, "userData"> & {
   userData: {
     topic: string;
     settings: LayerSettingsPose;
@@ -61,7 +61,7 @@ export class Poses extends THREE.Object3D {
     super();
     this.renderer = renderer;
 
-    renderer.setSettingsFieldsProvider(LayerType.Pose, (topicConfig, topic) => {
+    renderer.setSettingsNodeProvider(LayerType.Pose, (topicConfig, topic) => {
       const cur = topicConfig as Partial<LayerSettingsPose>;
       const scale = cur.scale ?? DEFAULT_SCALE;
       const color = cur.color ?? DEFAULT_COLOR_STR;
@@ -76,14 +76,16 @@ export class Poses extends THREE.Object3D {
         const covarianceColor = cur.covarianceColor ?? DEFAULT_COVARIANCE_COLOR_STR;
 
         fields["showCovariance"] = { label: "Covariance", input: "boolean", value: showCovariance };
-        fields["covarianceColor"] = {
-          label: "Covariance Color",
-          input: "rgba",
-          value: covarianceColor,
-        };
+        if (showCovariance) {
+          fields["covarianceColor"] = {
+            label: "Covariance Color",
+            input: "rgba",
+            value: covarianceColor,
+          };
+        }
       }
 
-      return fields;
+      return { icon: "Flag", fields };
     });
   }
 
@@ -104,31 +106,41 @@ export class Poses extends THREE.Object3D {
       renderable.userData.topic = topic;
 
       // Set the initial settings from default values merged with any user settings
-      const userSettings = this.renderer.config?.topics[topic] as
+      const userSettings = this.renderer.config.topics[topic] as
         | Partial<LayerSettingsPose>
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
-      renderable.userData.settings = settings;
-
-      renderable.userData.poseMessage = poseMessage;
-      renderable.userData.srcTime = rosTimeToNanoSec(poseMessage.header.stamp);
 
       // Synthesize an arrow marker to instantiate a RenderableArrow
       const arrowMarker = createArrowMarker(poseMessage, settings);
-      renderable.userData.arrow = new RenderableArrow(topic, arrowMarker, this.renderer);
-      renderable.add(renderable.userData.arrow);
+      const arrow = new RenderableArrow(topic, arrowMarker, undefined, this.renderer);
+      renderable.add(arrow);
 
-      if ("covariance" in poseMessage.pose) {
-        renderable.userData.pose = poseMessage.pose.pose;
+      const poseWithCovariance = ("covariance" in poseMessage.pose ? poseMessage : undefined) as
+        | PoseWithCovarianceStamped
+        | undefined;
 
-        const poseWithCovariance = poseMessage as PoseWithCovarianceStamped;
+      renderable.userData = {
+        topic,
+        settings,
+        poseMessage,
+        pose: (poseWithCovariance?.pose.pose ?? poseMessage.pose) as Pose,
+        srcTime: toNanoSec(poseMessage.header.stamp),
+        arrow,
+        sphere: undefined,
+      };
+
+      if (poseWithCovariance) {
         const sphereMarker = createSphereMarker(poseWithCovariance, settings);
         if (sphereMarker) {
-          renderable.userData.sphere = new RenderableSphere(topic, sphereMarker, this.renderer);
+          renderable.userData.sphere = new RenderableSphere(
+            topic,
+            sphereMarker,
+            undefined,
+            this.renderer,
+          );
           renderable.add(renderable.userData.sphere);
         }
-      } else {
-        renderable.userData.pose = poseMessage.pose;
       }
 
       this.add(renderable);
@@ -180,6 +192,8 @@ export class Poses extends THREE.Object3D {
       if (!updated) {
         const message = missingTransformMessage(renderFrameId, fixedFrameId, frameId);
         this.renderer.layerErrors.addToTopic(renderable.userData.topic, MISSING_TRANSFORM, message);
+      } else {
+        this.renderer.layerErrors.removeFromTopic(renderable.userData.topic, MISSING_TRANSFORM);
       }
     }
   }
@@ -188,10 +202,15 @@ export class Poses extends THREE.Object3D {
     renderable: PoseRenderable,
     poseMessage: PoseStamped | PoseWithCovarianceStamped,
   ): void {
+    renderable.userData.poseMessage = poseMessage;
+    renderable.userData.srcTime = toNanoSec(poseMessage.header.stamp);
+
     const arrowMarker = createArrowMarker(poseMessage, renderable.userData.settings);
-    renderable.userData.arrow.update(arrowMarker);
+    renderable.userData.arrow.update(arrowMarker, undefined);
 
     if ("covariance" in poseMessage.pose) {
+      renderable.userData.pose = poseMessage.pose.pose;
+
       const poseWithCovariance = poseMessage as PoseWithCovarianceStamped;
       const sphereMarker = createSphereMarker(poseWithCovariance, renderable.userData.settings);
       if (sphereMarker) {
@@ -199,20 +218,19 @@ export class Poses extends THREE.Object3D {
           renderable.userData.sphere = new RenderableSphere(
             renderable.userData.topic,
             sphereMarker,
+            undefined,
             this.renderer,
           );
         }
         renderable.userData.sphere.visible = true;
-        renderable.userData.sphere.update(sphereMarker);
+        renderable.userData.sphere.update(sphereMarker, undefined);
       } else if (renderable.userData.sphere) {
         renderable.userData.sphere.visible = false;
       }
+    } else {
+      renderable.userData.pose = poseMessage.pose;
     }
   }
-}
-
-function makeRgba(): ColorRGBA {
-  return { r: 0, g: 0, b: 0, a: 0 };
 }
 
 function createArrowMarker(
@@ -228,7 +246,7 @@ function createArrowMarker(
     pose: makePose(),
     scale: { x: settings.scale[0], y: settings.scale[1], z: settings.scale[2] },
     color: stringToRgba(makeRgba(), settings.color),
-    lifetime: { sec: 0, nsec: 0 },
+    lifetime: TIME_ZERO,
     frame_locked: true,
     points: [],
     colors: [],
@@ -244,7 +262,7 @@ function createSphereMarker(
 ): Marker | undefined {
   // Covariance is a 6x6 matrix for position and rotation (XYZ, RPY)
   // We currently only visualize position variance so extract the upper-left
-  // 3x3 matrix
+  // 3x1 diagonal
   // [X, -, -, -, -, -]
   // [-, Y, -, -, -, -]
   // [-, -, Z, -, -, -]
@@ -263,7 +281,7 @@ function createSphereMarker(
     pose: makePose(),
     scale,
     color: stringToRgba(makeRgba(), settings.covarianceColor),
-    lifetime: { sec: 0, nsec: 0 },
+    lifetime: TIME_ZERO,
     frame_locked: true,
     points: [],
     colors: [],

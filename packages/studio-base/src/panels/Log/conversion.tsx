@@ -25,12 +25,14 @@ export function getNormalizedMessage(logMessage: LogMessageEvent["message"]): st
   return "";
 }
 
-function getNormalizedLevel(datatype: string, raw: LogMessageEvent["message"]) {
+export function getNormalizedLevel(datatype: string, raw: LogMessageEvent["message"]): number {
   switch (datatype) {
+    case "foxglove_msgs/Log":
+    case "foxglove_msgs/msg/Log":
     case "foxglove.Log":
-      return (raw as FoxgloveMessages[typeof datatype]).level;
+      return (raw as FoxgloveMessages["foxglove.Log"]).level;
     case "rosgraph_msgs/Log":
-    case "rosgraph_msgs/msg/Log":
+    case "rcl_interfaces/msg/Log":
       return rosLevelToLogLevel((raw as Ros1RosgraphMsgs$Log).level);
   }
 
@@ -39,8 +41,10 @@ function getNormalizedLevel(datatype: string, raw: LogMessageEvent["message"]) {
 
 function getNormalizedStamp(datatype: string, raw: LogMessageEvent["message"]): Time {
   switch (datatype) {
+    case "foxglove_msgs/Log":
+    case "foxglove_msgs/msg/Log":
     case "foxglove.Log": {
-      const timestamp = (raw as FoxgloveMessages[typeof datatype]).timestamp;
+      const timestamp = (raw as FoxgloveMessages["foxglove.Log"]).timestamp;
       if (typeof timestamp === "bigint") {
         return fromNanoSec(timestamp);
       }
@@ -48,7 +52,7 @@ function getNormalizedStamp(datatype: string, raw: LogMessageEvent["message"]): 
     }
     case "rosgraph_msgs/Log":
       return (raw as Ros1RosgraphMsgs$Log).header.stamp;
-    case "rosgraph_msgs/msg/Log":
+    case "rcl_interfaces/msg/Log":
       return (raw as Ros2RosgraphMsgs$Log).stamp;
   }
 

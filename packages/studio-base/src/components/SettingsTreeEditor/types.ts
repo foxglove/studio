@@ -2,6 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import CommonIcons from "@foxglove/studio-base/components/CommonIcons";
+
 export type SettingsTreeFieldValue =
   | { input: "autocomplete"; value?: string; items: ReadonlyArray<string> }
   | { input: "boolean"; value?: boolean }
@@ -9,7 +11,14 @@ export type SettingsTreeFieldValue =
   | { input: "rgba"; value?: string }
   | { input: "gradient"; value?: [string, string] }
   | { input: "messagepath"; value?: string; validTypes?: string[] }
-  | { input: "number"; value?: number; step?: number; max?: number; min?: number }
+  | {
+      input: "number";
+      value?: number;
+      step?: number;
+      max?: number;
+      min?: number;
+      precision?: number;
+    }
   | {
       input: "select";
       value?: number | ReadonlyArray<number>;
@@ -26,6 +35,7 @@ export type SettingsTreeFieldValue =
       input: "vec3";
       value?: readonly [undefined | number, undefined | number, undefined | number];
       step?: number;
+      precision?: number;
       labels?: [string, string, string];
     };
 
@@ -45,13 +55,44 @@ export type SettingsTreeField = SettingsTreeFieldValue & {
    * absence of a value.
    */
   placeholder?: string;
+
+  /**
+   * Optional message indicating any error state for the field.
+   */
+  error?: string;
 };
 
 export type SettingsTreeFields = Record<string, SettingsTreeField>;
 
 export type SettingsTreeChildren = Record<string, SettingsTreeNode>;
 
+/**
+ * An action that can be offered to the user to perform at the
+ * level of a settings node.
+ */
+export type SettingsTreeNodeAction = {
+  /**
+   * A unique idenfier for the action.
+   */
+  id: string;
+
+  /**
+   * A descriptive label for the action.
+   */
+  label: string;
+
+  /**
+   * Optional icon to display with the action.
+   */
+  icon?: keyof typeof CommonIcons;
+};
+
 export type SettingsTreeNode = {
+  /**
+   * An array of actions that can be performeed on this node.
+   */
+  actions?: SettingsTreeNodeAction[];
+
   /**
    * Other settings tree nodes nested under this node.
    */
@@ -63,9 +104,19 @@ export type SettingsTreeNode = {
   defaultExpansionState?: "collapsed" | "expanded";
 
   /**
+   * Optional message indicating any error state for the node.
+   */
+  error?: string;
+
+  /**
    * Field inputs attached directly to this node.
    */
   fields?: SettingsTreeFields;
+
+  /**
+   * Optional icon to display next to the node label.
+   */
+  icon?: keyof typeof CommonIcons;
 
   /**
    * An optional label shown at the top of this node.
@@ -90,13 +141,20 @@ type DistributivePick<T, K extends keyof T> = T extends unknown ? Pick<T, K> : n
  * Represents actions that can be dispatched to source of the SettingsTree to implement
  * edits and updates.
  */
-export type SettingsTreeAction = {
-  action: "update";
-  payload: { path: ReadonlyArray<string> } & DistributivePick<
-    SettingsTreeFieldValue,
-    "input" | "value"
-  >;
-};
+export type SettingsTreeAction =
+  | {
+      action: "update";
+      payload: { path: ReadonlyArray<string> } & DistributivePick<
+        SettingsTreeFieldValue,
+        "input" | "value"
+      >;
+    }
+  | {
+      action: "perform-node-action";
+      payload: { id: string; path: readonly string[] };
+    };
+
+export type SettingsTreeRoots = Record<string, SettingsTreeNode>;
 
 /**
  * A settings tree is a tree of panel settings that can be managed by
@@ -114,8 +172,13 @@ export type SettingsTree = {
   enableFilter?: boolean;
 
   /**
-   * The actual settings tree. Updates to this will automatically be reflected in the
+   * The actual settings tree roots. Updates to these will automatically be reflected in the
    * editor UI.
    */
-  settings: SettingsTreeNode;
+  roots: SettingsTreeRoots;
+};
+
+// To be moved to PanelExtensionContext in index.d.ts when settings API is finalized.
+export type EXPERIMENTAL_PanelExtensionContextWithSettings = {
+  __updatePanelSettingsTree(settings: SettingsTree): void;
 };

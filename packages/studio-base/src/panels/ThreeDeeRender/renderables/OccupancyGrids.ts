@@ -4,9 +4,11 @@
 
 import * as THREE from "three";
 
+import { toNanoSec } from "@foxglove/rostime";
+
 import { Renderer } from "../Renderer";
 import { rgbaToCssString, SRGBToLinear, stringToRgba } from "../color";
-import { Pose, rosTimeToNanoSec, ColorRGBA, OccupancyGrid } from "../ros";
+import { Pose, ColorRGBA, OccupancyGrid } from "../ros";
 import { LayerSettingsOccupancyGrid, LayerType } from "../settings";
 import { updatePose } from "../updatePose";
 import { missingTransformMessage, MISSING_TRANSFORM } from "./transforms";
@@ -36,7 +38,7 @@ const DEFAULT_SETTINGS: LayerSettingsOccupancyGrid = {
   frameLocked: true,
 };
 
-type OccupancyGridRenderable = THREE.Object3D & {
+type OccupancyGridRenderable = Omit<THREE.Object3D, "userData"> & {
   userData: {
     topic: string;
     settings: LayerSettingsOccupancyGrid;
@@ -59,7 +61,7 @@ export class OccupancyGrids extends THREE.Object3D {
     super();
     this.renderer = renderer;
 
-    renderer.setSettingsFieldsProvider(LayerType.OccupancyGrid, (topicConfig) => {
+    renderer.setSettingsNodeProvider(LayerType.OccupancyGrid, (topicConfig) => {
       const cur = topicConfig as Partial<LayerSettingsOccupancyGrid>;
       const minColor = cur.minColor ?? DEFAULT_MIN_COLOR_STR;
       const maxColor = cur.maxColor ?? DEFAULT_MAX_COLOR_STR;
@@ -67,11 +69,14 @@ export class OccupancyGrids extends THREE.Object3D {
       const invalidColor = cur.invalidColor ?? DEFAULT_INVALID_COLOR_STR;
       const frameLocked = cur.frameLocked ?? false;
       return {
-        minColor: { label: "Min Color", input: "rgba", value: minColor },
-        maxColor: { label: "Max Color", input: "rgba", value: maxColor },
-        unknownColor: { label: "Unknown Color", input: "rgba", value: unknownColor },
-        invalidColor: { label: "Invalid Color", input: "rgba", value: invalidColor },
-        frameLocked: { label: "Frame lock", input: "boolean", value: frameLocked },
+        icon: "Cells",
+        fields: {
+          minColor: { label: "Min Color", input: "rgba", value: minColor },
+          maxColor: { label: "Max Color", input: "rgba", value: maxColor },
+          unknownColor: { label: "Unknown Color", input: "rgba", value: unknownColor },
+          invalidColor: { label: "Invalid Color", input: "rgba", value: invalidColor },
+          frameLocked: { label: "Frame lock", input: "boolean", value: frameLocked },
+        },
       };
     });
   }
@@ -91,31 +96,34 @@ export class OccupancyGrids extends THREE.Object3D {
   addOccupancyGridMessage(topic: string, occupancyGrid: OccupancyGrid): void {
     let renderable = this.occupancyGridsByTopic.get(topic);
     if (!renderable) {
-      renderable = new THREE.Object3D() as OccupancyGridRenderable;
-      renderable.name = topic;
-      renderable.userData.topic = topic;
-
       // Set the initial settings from default values merged with any user settings
-      const userSettings = this.renderer.config?.topics[topic] as
+      const userSettings = this.renderer.config.topics[topic] as
         | Partial<LayerSettingsOccupancyGrid>
         | undefined;
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
-      renderable.userData.settings = settings;
 
-      renderable.userData.occupancyGrid = occupancyGrid;
-      renderable.userData.pose = occupancyGrid.info.origin;
-      renderable.userData.srcTime = rosTimeToNanoSec(occupancyGrid.header.stamp);
-
+      // Create the texture, material, and mesh
       const texture = createTexture(occupancyGrid);
-      const material = createMaterial(texture, renderable);
+      const material = createMaterial(texture, topic, settings);
       const mesh = new THREE.Mesh(OccupancyGrids.Geometry(), material);
       mesh.userData.pickingMaterial = createPickingMaterial(texture);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
-      renderable.userData.texture = texture;
-      renderable.userData.material = material;
-      renderable.userData.mesh = mesh;
-      renderable.add(renderable.userData.mesh);
+
+      // Create the renderable
+      renderable = new THREE.Object3D() as OccupancyGridRenderable;
+      renderable.name = topic;
+      renderable.userData = {
+        topic,
+        settings,
+        occupancyGrid,
+        pose: occupancyGrid.info.origin,
+        srcTime: toNanoSec(occupancyGrid.header.stamp),
+        mesh,
+        texture,
+        material,
+      };
+      renderable.add(mesh);
 
       this.add(renderable);
       this.occupancyGridsByTopic.set(topic, renderable);
@@ -163,6 +171,8 @@ export class OccupancyGrids extends THREE.Object3D {
       if (!updated) {
         const message = missingTransformMessage(renderFrameId, fixedFrameId, frameId);
         this.renderer.layerErrors.addToTopic(renderable.userData.topic, MISSING_TRANSFORM, message);
+      } else {
+        this.renderer.layerErrors.removeFromTopic(renderable.userData.topic, MISSING_TRANSFORM);
       }
     }
   }
@@ -171,6 +181,10 @@ export class OccupancyGrids extends THREE.Object3D {
     renderable: OccupancyGridRenderable,
     occupancyGrid: OccupancyGrid,
   ): void {
+    renderable.userData.occupancyGrid = occupancyGrid;
+    renderable.userData.pose = occupancyGrid.info.origin;
+    renderable.userData.srcTime = toNanoSec(occupancyGrid.header.stamp);
+
     const size = occupancyGrid.info.width * occupancyGrid.info.height;
     if (occupancyGrid.data.length !== size) {
       const message = `OccupancyGrid data length (${occupancyGrid.data.length}) is not equal to width ${occupancyGrid.info.width} * height ${occupancyGrid.info.height}`;
@@ -213,8 +227,6 @@ function invalidOccupancyGridError(
   message: string,
 ): void {
   renderer.layerErrors.addToTopic(renderable.userData.topic, INVALID_OCCUPANCY_GRID, message);
-  renderable.userData.positionAttribute.resize(0);
-  renderable.userData.colorAttribute.resize(0);
 }
 
 function createTexture(occupancyGrid: OccupancyGrid): THREE.DataTexture {
@@ -222,7 +234,7 @@ function createTexture(occupancyGrid: OccupancyGrid): THREE.DataTexture {
   const height = occupancyGrid.info.height;
   const size = width * height;
   const rgba = new Uint8ClampedArray(size * 4);
-  return new THREE.DataTexture(
+  const texture = new THREE.DataTexture(
     rgba,
     width,
     height,
@@ -232,10 +244,12 @@ function createTexture(occupancyGrid: OccupancyGrid): THREE.DataTexture {
     THREE.ClampToEdgeWrapping,
     THREE.ClampToEdgeWrapping,
     THREE.NearestFilter,
-    THREE.NearestFilter,
+    THREE.LinearFilter,
     1,
-    THREE.LinearEncoding,
+    THREE.LinearEncoding, // OccupancyGrid carries linear grayscale values, not sRGB
   );
+  texture.generateMipmaps = false;
+  return texture;
 }
 
 const tempUnknownColor = { r: 0, g: 0, b: 0, a: 0 };
@@ -298,14 +312,15 @@ function updateTexture(
 
 function createMaterial(
   texture: THREE.DataTexture,
-  renderable: OccupancyGridRenderable,
+  topic: string,
+  settings: LayerSettingsOccupancyGrid,
 ): THREE.MeshStandardMaterial | THREE.MeshBasicMaterial {
-  const transparent = occupancyGridHasTransparency(renderable.userData.settings);
+  const transparent = occupancyGridHasTransparency(settings);
   const material = new THREE.MeshBasicMaterial({
     map: texture,
     side: THREE.DoubleSide,
   });
-  material.name = `${renderable.userData.topic}:Material`;
+  material.name = `${topic}:Material`;
   material.transparent = transparent;
   material.depthWrite = !material.transparent;
   return material;

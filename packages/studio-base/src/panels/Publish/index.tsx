@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Box, Stack, Typography } from "@mui/material";
+import { Typography } from "@mui/material";
 import produce from "immer";
 import { set } from "lodash";
 import { useCallback, useEffect, useMemo, useRef } from "react";
@@ -27,8 +27,9 @@ import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import {
   SettingsTreeAction,
-  SettingsTreeNode,
+  SettingsTreeRoots,
 } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import Stack from "@foxglove/studio-base/components/Stack";
 import usePublisher from "@foxglove/studio-base/hooks/usePublisher";
 import { PlayerCapabilities, Topic } from "@foxglove/studio-base/players/types";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
@@ -51,13 +52,16 @@ type Props = {
   saveConfig: (config: Partial<Config>) => void;
 };
 
-function buildSettingsTree(config: Config): SettingsTreeNode {
+function buildSettingsTree(config: Config): SettingsTreeRoots {
   return {
-    fields: {
-      advancedView: { label: "Editing Mode", input: "boolean", value: config.advancedView },
-      buttonText: { label: "Button Title", input: "string", value: config.buttonText },
-      buttonTooltip: { label: "Button Tooltip", input: "string", value: config.buttonTooltip },
-      buttonColor: { label: "Button Color", input: "rgb", value: config.buttonColor },
+    general: {
+      icon: "Settings",
+      fields: {
+        advancedView: { label: "Editing Mode", input: "boolean", value: config.advancedView },
+        buttonText: { label: "Button Title", input: "string", value: config.buttonText },
+        buttonTooltip: { label: "Button Tooltip", input: "string", value: config.buttonTooltip },
+        buttonColor: { label: "Button Color", input: "rgb", value: config.buttonColor },
+      },
     },
   };
 }
@@ -66,14 +70,6 @@ const STextArea = styled(LegacyTextarea)`
   width: 100%;
   height: 100%;
   resize: none;
-`;
-
-const SErrorText = styled.div`
-  flex: 1 1 auto;
-  display: flex;
-  align-items: center;
-  padding: 4px;
-  color: ${({ theme }) => theme.semanticColors.errorBackground};
 `;
 
 function getTopicName(topic: Topic): string {
@@ -144,9 +140,13 @@ function Publish(props: Props) {
 
   const actionHandler = useCallback(
     (action: SettingsTreeAction) => {
+      if (action.action !== "update") {
+        return;
+      }
+
       saveConfig(
         produce(props.config, (draft) => {
-          set(draft, action.payload.path, action.payload.value);
+          set(draft, action.payload.path.slice(1), action.payload.value);
         }),
       );
     },
@@ -156,7 +156,7 @@ function Publish(props: Props) {
   useEffect(() => {
     updatePanelSettingsTree(panelId, {
       actionHandler,
-      settings: buildSettingsTree(props.config),
+      roots: buildSettingsTree(props.config),
     });
   }, [actionHandler, panelId, props.config, updatePanelSettingsTree]);
 
@@ -204,53 +204,62 @@ function Publish(props: Props) {
   const canPublish = capabilities.includes(PlayerCapabilities.advertise);
 
   return (
-    <Stack height="100%" padding={1.5}>
-      <PanelToolbar helpContent={helpContent} floating />
+    <Stack fullHeight>
+      <PanelToolbar helpContent={helpContent} />
       {advancedView && (
-        <>
-          <Stack alignItems="baseline" spacing={1} padding={0.5} direction="row" flexShrink={0}>
-            <Typography color="text.secondary" variant="body2" component="label">
-              Topic:
-            </Typography>
-            <Autocomplete
-              placeholder="Choose a topic"
-              items={[...topics]}
-              hasError={false}
-              onChange={onChangeTopic}
-              onSelect={onSelectTopic}
-              selectedItem={{ name: topicName, datatype: "" }}
-              getItemText={getTopicName}
-              getItemValue={getTopicName}
-            />
-          </Stack>
-          <Stack alignItems="baseline" spacing={1} padding={0.5} direction="row" flexShrink={0}>
-            <Typography color="text.secondary" variant="body2" component="label">
-              Datatype:
-            </Typography>
-            <Autocomplete
-              clearOnFocus
-              placeholder="Choose a datatype"
-              items={datatypeNames}
-              onSelect={onSelectDatatype}
-              selectedItem={datatype}
-            />
-          </Stack>
-          <Box flexGrow={1} paddingY={1.5}>
+        <Stack flex="auto" padding={2} gap={1} paddingBottom={0}>
+          <div>
+            <Stack alignItems="baseline" gap={1} padding={0.5} direction="row" flexShrink={0}>
+              <Typography color="text.secondary" variant="body2" component="label">
+                Topic:
+              </Typography>
+              <Autocomplete
+                placeholder="Choose a topic"
+                items={[...topics]}
+                hasError={false}
+                onChange={onChangeTopic}
+                onSelect={onSelectTopic}
+                selectedItem={{ name: topicName, datatype: "" }}
+                getItemText={getTopicName}
+                getItemValue={getTopicName}
+              />
+            </Stack>
+            <Stack alignItems="baseline" gap={1} padding={0.5} direction="row" flexShrink={0}>
+              <Typography color="text.secondary" variant="body2" component="label">
+                Datatype:
+              </Typography>
+              <Autocomplete
+                clearOnFocus
+                placeholder="Choose a datatype"
+                items={datatypeNames}
+                onSelect={onSelectDatatype}
+                selectedItem={datatype}
+              />
+            </Stack>
+          </div>
+          <Stack flex="auto">
             <STextArea
               placeholder="Enter message content as JSON"
               value={value}
               onChange={onChange}
             />
-          </Box>
-        </>
+          </Stack>
+        </Stack>
       )}
       <Stack
         direction="row"
         flex="0 0 auto"
         alignItems="flex-start"
         justifyContent={advancedView ? "flex-end" : "center"}
+        padding={1.5}
       >
-        {error && <SErrorText>{error}</SErrorText>}
+        {error && (
+          <Stack flex="auto" padding={0.5} justifyContent="center">
+            <Typography variant="body2" color="error.main">
+              {error}
+            </Typography>
+          </Stack>
+        )}
         <Button
           style={{ backgroundColor: buttonColor }}
           tooltip={canPublish ? buttonTooltip : "Connect to ROS to publish data"}
