@@ -4,6 +4,7 @@
 
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import BlurOnIcon from "@mui/icons-material/BlurOn";
+import CheckIcon from "@mui/icons-material/Check";
 import CircleIcon from "@mui/icons-material/Circle";
 import DirectionsWalkIcon from "@mui/icons-material/DirectionsWalk";
 import FlagIcon from "@mui/icons-material/Flag";
@@ -23,6 +24,7 @@ import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ShareIcon from "@mui/icons-material/Share";
 import SouthEast from "@mui/icons-material/SouthEast";
+import StarOutline from "@mui/icons-material/StarOutline";
 import TopicIcon from "@mui/icons-material/Topic";
 import UnfoldLessIcon from "@mui/icons-material/UnfoldLess";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
@@ -34,6 +36,7 @@ export default {
   Background: LayersIcon,
   Camera: PhotoCameraIcon,
   Cells: ViewComfyIcon,
+  Check: CheckIcon,
   Circle: CircleIcon,
   Clock: AccessTimeIcon,
   Collapse: UnfoldLessIcon,
@@ -55,6 +58,7 @@ export default {
   Shapes: InterestsIcon,
   Share: ShareIcon,
   SouthEast,
+  Star: StarOutline,
   Topic: TopicIcon,
   Walk: DirectionsWalkIcon,
   World: Language,
