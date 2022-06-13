@@ -44,6 +44,7 @@ export function protobufDefinitionsToDatatypes(
   type: protobufjs.Type,
 ): void {
   const definitions: RosMsgField[] = [];
+  // The empty list reference is added to the map so a `.has` lookup below can prevent infinite recursion on cyclical types
   datatypes.set(stripLeadingDot(type.fullName), { definitions });
   for (const field of type.fieldsArray) {
     if (field.resolvedType instanceof protobufjs.Enum) {
