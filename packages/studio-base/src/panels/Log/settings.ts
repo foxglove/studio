@@ -9,10 +9,12 @@ export function buildSettingsTree(
   topicToRender: string,
   availableTopics: Topic[],
 ): SettingsTreeRoots {
-  const topicOptions = availableTopics.map((topic) => ({ value: topic.name, label: topic.name }));
-  if (!availableTopics.some((topic) => topic.name === topicToRender)) {
-    topicOptions.unshift({ value: topicToRender, label: `${topicToRender} (not available)` });
+  const topicOptions = availableTopics.map((topic) => ({ label: topic.name, value: topic.name }));
+  const topicIsAvailable = availableTopics.some((topic) => topic.name === topicToRender);
+  if (!topicIsAvailable) {
+    topicOptions.unshift({ value: topicToRender, label: topicToRender });
   }
+  const topicError = topicIsAvailable ? undefined : `Topic ${topicToRender} is not available`;
 
   return {
     general: {
@@ -20,8 +22,9 @@ export function buildSettingsTree(
       fields: {
         topicToRender: {
           input: "select",
-          label: "Topic to render",
+          label: "Topic",
           value: topicToRender,
+          error: topicError,
           options: topicOptions,
         },
       },
