@@ -46,6 +46,10 @@ const FieldPadding = muiStyled("div", { skipSx: true })(({ theme }) => ({
   height: theme.spacing(0.5),
 }));
 
+const EditButton = muiStyled(IconButton)(({ theme }) => ({
+  padding: theme.spacing(0.25),
+}));
+
 const NodeHeader = muiStyled("div")(({ theme }) => {
   return {
     display: "flex",
@@ -223,7 +227,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
               onKeyDown={onLabelKeyUp}
             />
           )}
-          <Stack direction="row" alignItems="center">
+          <Stack direction="row" alignItems="center" gap={0.5}>
             {!state.editing && (
               <Typography
                 noWrap={true}
@@ -234,16 +238,17 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
                 {settings.label ?? "General"}
               </Typography>
             )}
-            <IconButton
+            <EditButton
               data-node-function="edit-label"
+              color="primary"
               onClick={(event) => {
                 event.stopPropagation();
                 toggleEditing();
               }}
               style={{ opacity: settings.renamable === true ? 1 : 0 }}
             >
-              <EditIcon />
-            </IconButton>
+              <EditIcon fontSize="small" />
+            </EditButton>
           </Stack>
         </NodeHeaderToggle>
         <Stack alignItems="center" direction="row">
