@@ -167,6 +167,7 @@ export class McapIndexedIterableSource implements IIterableSource {
       })) {
         const channelInfo = this.channelInfoById.get(message.channelId);
         if (!channelInfo) {
+          log.error(`Missing channel info for channel: ${message.channelId} on topic: ${topic}`);
           continue;
         }
 
