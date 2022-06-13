@@ -4,10 +4,10 @@
 
 import { SettingsTreeRoots } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 
-import { Config } from "./util";
+import { DiagnosticSummaryConfig } from "./util";
 
-export function buildSettingsTree(
-  config: Config,
+export function buildSummarySettingsTree(
+  config: DiagnosticSummaryConfig,
   topicToRender: string,
   availableTopics: readonly string[],
 ): SettingsTreeRoots {

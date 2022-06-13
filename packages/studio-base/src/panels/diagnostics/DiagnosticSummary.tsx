@@ -44,9 +44,9 @@ import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { DIAGNOSTIC_TOPIC } from "@foxglove/studio-base/util/globalConstants";
 import toggle from "@foxglove/studio-base/util/toggle";
 
-import { buildSettingsTree } from "./settings";
+import { buildSummarySettingsTree } from "./settings";
 import {
-  Config,
+  DiagnosticSummaryConfig,
   DiagnosticInfo,
   DiagnosticStatusConfig,
   getDiagnosticsByLevel,
@@ -146,8 +146,8 @@ const NodeRow = React.memo(function NodeRow(props: NodeRowProps) {
 });
 
 type Props = {
-  config: Config;
-  saveConfig: SaveConfig<Config>;
+  config: DiagnosticSummaryConfig;
+  saveConfig: SaveConfig<DiagnosticSummaryConfig>;
 };
 
 const ALLOWED_DATATYPES: string[] = [
@@ -327,7 +327,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
       }
 
       const { path, value } = action.payload;
-      saveConfig(produce<Config>((draft) => set(draft, path.slice(1), value)));
+      saveConfig(produce<DiagnosticSummaryConfig>((draft) => set(draft, path.slice(1), value)));
     },
     [saveConfig],
   );
@@ -335,7 +335,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
   useEffect(() => {
     updatePanelSettingsTree(panelId, {
       actionHandler,
-      roots: buildSettingsTree(config, topicToRender, availableTopics),
+      roots: buildSummarySettingsTree(config, topicToRender, availableTopics),
     });
   }, [actionHandler, availableTopics, config, panelId, topicToRender, updatePanelSettingsTree]);
 
@@ -379,7 +379,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
   );
 }
 
-const defaultConfig: Config = {
+const defaultConfig: DiagnosticSummaryConfig = {
   minLevel: 0,
   pinnedIds: [],
   hardwareIdFilter: "",

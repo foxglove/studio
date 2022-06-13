@@ -52,7 +52,7 @@ export type DiagnosticStatusConfig = {
   collapsedSections: { name: string; section: string }[];
 };
 
-export type Config = {
+export type DiagnosticSummaryConfig = {
   minLevel: number;
   pinnedIds: DiagnosticId[];
   topicToRender: string;
