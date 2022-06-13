@@ -20,7 +20,7 @@ import {
   IDropdownStyles,
 } from "@fluentui/react";
 import CopyAllIcon from "@mui/icons-material/CopyAll";
-import { Typography } from "@mui/material";
+import { Typography, useTheme as useMuiTheme } from "@mui/material";
 import cx from "classnames";
 import { useMemo } from "react";
 
@@ -100,6 +100,7 @@ export default function FilterBar(props: FilterBarProps): JSX.Element {
     key: term,
   }));
   const theme = useTheme();
+  const muiTheme = useMuiTheme();
   const logStyles = useLogStyles();
   const dropdownStyles: Partial<IDropdownStyles> = useMemo(
     () => ({
@@ -133,8 +134,15 @@ export default function FilterBar(props: FilterBarProps): JSX.Element {
     }),
     [theme],
   );
+
   return (
-    <Stack flex="auto" direction="row" gap={0.5} alignItems="center">
+    <Stack
+      flex="auto"
+      direction="row"
+      gap={0.5}
+      alignItems="center"
+      style={{ marginRight: muiTheme.spacing(-1) }}
+    >
       <Dropdown
         styles={dropdownStyles}
         onRenderOption={(option) => renderOption(option, logStyles)}
