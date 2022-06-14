@@ -14,7 +14,7 @@
 import { Button, Typography, styled as muiStyled, OutlinedInput } from "@mui/material";
 import produce from "immer";
 import { set } from "lodash";
-import { CSSProperties, useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { useRethrow } from "@foxglove/hooks";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
@@ -66,12 +66,23 @@ function buildSettingsTree(config: Config): SettingsTreeRoots {
 
 const StyledButton = muiStyled(Button, {
   shouldForwardProp: (prop) => prop !== "buttonColor",
-})<{ buttonColor?: CSSProperties["backgroundColor"] }>(({ theme, buttonColor }) => ({
-  ...(buttonColor != undefined && {
-    backgroundColor: buttonColor,
-    color: theme.palette.getContrastText(buttonColor),
-  }),
-}));
+})<{ buttonColor?: string }>(({ theme, buttonColor }) => {
+  if (buttonColor == undefined) {
+    return {};
+  }
+  const augmentedButtonColor = theme.palette.augmentColor({
+    color: { main: buttonColor },
+  });
+
+  return {
+    backgroundColor: augmentedButtonColor.main,
+    color: augmentedButtonColor.contrastText,
+
+    "&:hover": {
+      backgroundColor: augmentedButtonColor.dark,
+    },
+  };
+});
 
 const StyledTextarea = muiStyled(OutlinedInput)(({ theme }) => ({
   width: "100%",
@@ -274,7 +285,6 @@ function Publish(props: Props) {
           </Stack>
         )}
         <StyledButton
-          color="primary"
           variant="contained"
           size="large"
           buttonColor={buttonColor ? buttonColor : undefined}
