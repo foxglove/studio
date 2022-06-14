@@ -34,6 +34,7 @@ const BasicSettings: SettingsTreeRoots = {
     icon: "Settings",
     visible: true,
     error: "This topic has an error",
+    renamable: true,
     actions: [
       { type: "action", id: "add-grid", label: "Add new grid", icon: "Grid" },
       { type: "action", id: "add-background", label: "Add new background", icon: "Background" },

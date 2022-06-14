@@ -48,7 +48,7 @@ const FieldPadding = muiStyled("div", { skipSx: true })(({ theme }) => ({
 }));
 
 const EditButton = muiStyled(IconButton)(({ theme }) => ({
-  padding: theme.spacing(0.25),
+  padding: theme.spacing(0.5),
 }));
 
 const NodeHeader = muiStyled("div")(({ theme }) => {
