@@ -182,7 +182,6 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       if (didSeek !== renderState.didSeek) {
         renderState.didSeek = didSeek;
         shouldRender = true;
-        console.log("shouldRender", "didSeek=", didSeek);
       }
       lastSeekTimeRef.current = ctx?.playerState.activeData?.lastSeekTime;
     }
