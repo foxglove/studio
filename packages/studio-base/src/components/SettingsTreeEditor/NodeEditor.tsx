@@ -22,13 +22,14 @@ import { ChangeEvent, useCallback } from "react";
 import { DeepReadonly } from "ts-essentials";
 import { useImmer } from "use-immer";
 
+import { filterMap } from "@foxglove/den/collection";
 import CommonIcons from "@foxglove/studio-base/components/CommonIcons";
 import Stack from "@foxglove/studio-base/components/Stack";
 
 import { FieldEditor } from "./FieldEditor";
 import { NodeActionsMenu } from "./NodeActionsMenu";
 import { VisibilityToggle } from "./VisibilityToggle";
-import { SettingsTreeAction, SettingsTreeField, SettingsTreeNode } from "./types";
+import { SettingsTreeAction, SettingsTreeNode } from "./types";
 
 export type NodeEditorProps = {
   actionHandler: (action: SettingsTreeAction) => void;
@@ -145,29 +146,28 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
   const { fields, children } = settings;
   const hasProperties = fields != undefined || children != undefined;
 
-  const fieldEditors = Object.entries(fields ?? {})
-    .filter((kv): kv is [string, SettingsTreeField] => kv[1] != undefined)
-    .map(([key, field]) => {
-      const stablePath = makeStablePath(props.path, key);
-      return (
-        <FieldEditor key={key} field={field} path={stablePath} actionHandler={actionHandler} />
-      );
-    });
+  const fieldEditors = filterMap(Object.entries(fields ?? {}), ([key, field]) => {
+    return field ? (
+      <FieldEditor
+        key={key}
+        field={field}
+        path={makeStablePath(props.path, key)}
+        actionHandler={actionHandler}
+      />
+    ) : undefined;
+  });
 
-  const childNodes = Object.entries(children ?? {})
-    .filter((kv): kv is [string, SettingsTreeNode] => kv[1] != undefined)
-    .map(([key, child]) => {
-      const stablePath = makeStablePath(props.path, key);
-      return (
-        <NodeEditor
-          actionHandler={actionHandler}
-          defaultOpen={child.defaultExpansionState === "collapsed" ? false : true}
-          key={key}
-          settings={child}
-          path={stablePath}
-        />
-      );
-    });
+  const childNodes = filterMap(Object.entries(children ?? {}), ([key, child]) => {
+    return child ? (
+      <NodeEditor
+        actionHandler={actionHandler}
+        defaultOpen={child.defaultExpansionState === "collapsed" ? false : true}
+        key={key}
+        settings={child}
+        path={makeStablePath(props.path, key)}
+      />
+    ) : undefined;
+  });
 
   const IconComponent = settings.icon ? CommonIcons[settings.icon] : undefined;
 
