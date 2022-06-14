@@ -5,9 +5,9 @@
 import { MessageEvent } from "@foxglove/studio";
 
 import parseRosPath from "./parseRosPath";
-import { simpleGetMessagePathDataItem } from "./simpleGetMessagePathDataItem";
+import { simpleGetMessagePathDataItems } from "./simpleGetMessagePathDataItems";
 
-describe("simpleGetMessagePathDataItem", () => {
+describe("simpleGetMessagePathDataItems", () => {
   it("returns root message if topic matches", () => {
     const message: MessageEvent<unknown> = {
       topic: "/foo",
@@ -15,8 +15,8 @@ describe("simpleGetMessagePathDataItem", () => {
       sizeInBytes: 0,
       message: { foo: 42 },
     };
-    expect(simpleGetMessagePathDataItem(message, parseRosPath("/foo")!)).toEqual({ foo: 42 });
-    expect(simpleGetMessagePathDataItem(message, parseRosPath("/bar")!)).toBeUndefined();
+    expect(simpleGetMessagePathDataItems(message, parseRosPath("/foo")!)).toEqual([{ foo: 42 }]);
+    expect(simpleGetMessagePathDataItems(message, parseRosPath("/bar")!)).toEqual([]);
   });
 
   it("returns correct nested values", () => {
@@ -35,27 +35,34 @@ describe("simpleGetMessagePathDataItem", () => {
       },
     };
 
-    expect(simpleGetMessagePathDataItem(message, parseRosPath("/foo.foo.bars[:]{id==2}")!)).toEqual(
-      { id: 2, name: "bar2" },
-    );
     expect(
-      simpleGetMessagePathDataItem(message, parseRosPath("/foo.foo.bars[:]{id==2}.name")!),
-    ).toEqual("bar2");
+      simpleGetMessagePathDataItems(message, parseRosPath("/foo.foo.bars[:]{id==1}")!),
+    ).toEqual([
+      { id: 1, name: "bar1" },
+      { id: 1, name: "bar1-2" },
+    ]);
+    expect(
+      simpleGetMessagePathDataItems(message, parseRosPath("/foo.foo.bars[:]{id==1}.name")!),
+    ).toEqual(["bar1", "bar1-2"]);
+    expect(
+      simpleGetMessagePathDataItems(message, parseRosPath("/foo.foo.bars[:]{id==2}")!),
+    ).toEqual([{ id: 2, name: "bar2" }]);
+    expect(
+      simpleGetMessagePathDataItems(message, parseRosPath("/foo.foo.bars[:]{id==2}.name")!),
+    ).toEqual(["bar2"]);
   });
 
-  it("returns undefined for missing fields", () => {
+  it("returns nothing for missing fields", () => {
     const message: MessageEvent<unknown> = {
       topic: "/foo",
       receiveTime: { sec: 0, nsec: 0 },
       sizeInBytes: 0,
       message: { foo: 1 },
     };
-    expect(
-      simpleGetMessagePathDataItem(message, parseRosPath("/foo.foo.baz.hello")!),
-    ).toBeUndefined();
+    expect(simpleGetMessagePathDataItems(message, parseRosPath("/foo.foo.baz.hello")!)).toEqual([]);
   });
 
-  it("throws for unsupported paths and results", () => {
+  it("throws for unsupported paths", () => {
     const message: MessageEvent<unknown> = {
       topic: "/foo",
       receiveTime: { sec: 0, nsec: 0 },
@@ -70,12 +77,9 @@ describe("simpleGetMessagePathDataItem", () => {
         },
       },
     };
-    expect(() =>
-      simpleGetMessagePathDataItem(message, parseRosPath("/foo.foo.bars[:]{id==1}")!),
-    ).toThrow("Multi-valued results are not supported");
 
     expect(() =>
-      simpleGetMessagePathDataItem(message, parseRosPath("/foo.foo.bars[:]{id==$id}")!),
+      simpleGetMessagePathDataItems(message, parseRosPath("/foo.foo.bars[:]{id==$id}")!),
     ).toThrow("filterMatches only works on paths where global variables have been filled in");
   });
 });

@@ -7,13 +7,13 @@ import { MessageEvent } from "@foxglove/studio-base/players/types";
 import { RosPath } from "./constants";
 import { filterMatches } from "./filterMatches";
 
-export function simpleGetMessagePathDataItem(
+export function simpleGetMessagePathDataItems(
   message: MessageEvent<unknown>,
   filledInPath: RosPath,
-): unknown | undefined {
+): unknown[] {
   // We don't care about messages that don't match the topic we're looking for.
   if (message.topic !== filledInPath.topicName) {
-    return undefined;
+    return [];
   }
 
   const results: unknown[] = [];
@@ -55,8 +55,5 @@ export function simpleGetMessagePathDataItem(
   }
   traverse(message.message, 0);
 
-  if (results.length > 1) {
-    throw new Error("Multi-valued results are not supported");
-  }
-  return results[0];
+  return results;
 }
