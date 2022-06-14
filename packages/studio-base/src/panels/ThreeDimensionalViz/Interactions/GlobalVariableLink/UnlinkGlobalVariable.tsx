@@ -13,6 +13,7 @@
 
 import { Button, Card, Typography } from "@mui/material";
 import { isEqual } from "lodash";
+import { useCallback } from "react";
 
 import Stack from "@foxglove/studio-base/components/Stack";
 import GlobalVariableName from "@foxglove/studio-base/panels/ThreeDimensionalViz/Interactions/GlobalVariableName";
@@ -31,6 +32,19 @@ export default function UnlinkGlobalVariable({
   setIsOpen,
 }: Props): JSX.Element {
   const { linkedGlobalVariables, setLinkedGlobalVariables } = useLinkedGlobalVariables();
+  const handleClick = useCallback(() => {
+    const newLinkedGlobalVariables = linkedGlobalVariables.filter(
+      (linkedGlobalVariable) =>
+        !(
+          linkedGlobalVariable.topic === topic &&
+          isEqual(linkedGlobalVariable.markerKeyPath, markerKeyPath) &&
+          linkedGlobalVariable.name === name
+        ),
+    );
+    setLinkedGlobalVariables(newLinkedGlobalVariables);
+    setIsOpen(false);
+  }, [linkedGlobalVariables, markerKeyPath, name, setIsOpen, setLinkedGlobalVariables, topic]);
+
   return (
     <Card
       elevation={4}
@@ -47,23 +61,7 @@ export default function UnlinkGlobalVariable({
           </Typography>
         </Typography>
         <Stack direction="row" gap={1}>
-          <Button
-            size="small"
-            color="error"
-            variant="contained"
-            onClick={() => {
-              const newLinkedGlobalVariables = linkedGlobalVariables.filter(
-                (linkedGlobalVariable) =>
-                  !(
-                    linkedGlobalVariable.topic === topic &&
-                    isEqual(linkedGlobalVariable.markerKeyPath, markerKeyPath) &&
-                    linkedGlobalVariable.name === name
-                  ),
-              );
-              setLinkedGlobalVariables(newLinkedGlobalVariables);
-              setIsOpen(false);
-            }}
-          >
+          <Button size="small" color="error" variant="contained" onClick={handleClick}>
             Unlink
           </Button>
           <Button size="small" variant="contained" color="inherit" onClick={() => setIsOpen(false)}>
