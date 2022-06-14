@@ -4,6 +4,7 @@
 
 import ArrowDownIcon from "@mui/icons-material/ArrowDropDown";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
+import CheckIcon from "@mui/icons-material/Check";
 import EditIcon from "@mui/icons-material/Edit";
 import ErrorIcon from "@mui/icons-material/Error";
 import {
@@ -253,7 +254,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
                   toggleEditing();
                 }}
               >
-                <EditIcon fontSize="small" />
+                {state.editing ? <CheckIcon fontSize="small" /> : <EditIcon fontSize="small" />}
               </EditButton>
             )}
           </Stack>
