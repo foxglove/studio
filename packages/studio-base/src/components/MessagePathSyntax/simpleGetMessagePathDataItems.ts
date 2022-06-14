@@ -7,6 +7,7 @@ import { MessageEvent } from "@foxglove/studio-base/players/types";
 import { RosPath } from "./constants";
 import { filterMatches } from "./filterMatches";
 
+// ts-prune-ignore-next
 export function simpleGetMessagePathDataItems(
   message: MessageEvent<unknown>,
   filledInPath: RosPath,
