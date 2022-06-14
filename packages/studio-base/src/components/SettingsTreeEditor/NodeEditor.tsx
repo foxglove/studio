@@ -191,7 +191,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     });
   }, [setState]);
 
-  const onLabelKeyUp = useCallback(
+  const onLabelKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
       if (event.key === "Enter" || event.key === "Escape") {
         toggleEditing();
@@ -222,17 +222,15 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
           )}
           <Stack direction="row" alignItems="center" gap={0.5} flex="auto">
             {state.editing ? (
-              <form onSubmit={toggleEditing} style={{ flex: "auto" }}>
-                <InputBase
-                  autoFocus
-                  fullWidth
-                  onChange={onEditLabel}
-                  value={settings.label}
-                  onKeyDown={onLabelKeyUp}
-                  onFocus={(event) => event.target.select()}
-                  style={{ font: "inherit" }}
-                />
-              </form>
+              <InputBase
+                autoFocus
+                fullWidth
+                onChange={onEditLabel}
+                value={settings.label}
+                onKeyDown={onLabelKeyDown}
+                onFocus={(event) => event.target.select()}
+                style={{ font: "inherit" }}
+              />
             ) : (
               <Typography
                 noWrap={true}
