@@ -228,7 +228,7 @@ const DisabledSettings: SettingsTreeRoots = {
 
 const ReadonlySettings: SettingsTreeRoots = {
   general: {
-    label: "readonly Fields",
+    label: "ReadOnly Fields",
     icon: "Grid",
     fields: {
       autocomplete: {
