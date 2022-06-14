@@ -37,12 +37,14 @@ export function createSettingsEditorStore(): StoreApi<PanelSettingsEditorStore> 
 
 export const usePanelSettingsEditorStore = useStore;
 
+const updateSettingsTreeSelector = (store: PanelSettingsEditorStore) => store.updateSettingsTree;
+
 /**
  * Returns updater function for the current panels settings tree.
  */
 export function usePanelSettingsTreeUpdate(): (newTree: ImmutableSettingsTree) => void {
   const { id } = usePanelContext();
-  const updateStoreTree = useStore((state) => state.updateSettingsTree);
+  const updateStoreTree = useStore(updateSettingsTreeSelector);
 
   const updateSettingsTree = useCallback(
     (newTree: ImmutableSettingsTree) => {
