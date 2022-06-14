@@ -9,9 +9,9 @@ import ErrorIcon from "@mui/icons-material/Error";
 import {
   Divider,
   IconButton,
+  InputBase,
   ListItemProps,
   styled as muiStyled,
-  TextField,
   Tooltip,
   Typography,
   useTheme,
@@ -219,18 +219,23 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
               }}
             />
           )}
-          {state.editing && (
-            <TextField
-              autoFocus
-              onChange={onEditLabel}
-              value={settings.label}
-              onKeyDown={onLabelKeyUp}
-            />
-          )}
-          <Stack direction="row" alignItems="center" gap={0.5}>
-            {!state.editing && (
+          <Stack direction="row" alignItems="center" gap={0.5} flex="auto">
+            {state.editing ? (
+              <form onSubmit={toggleEditing} style={{ flex: "auto" }}>
+                <InputBase
+                  autoFocus
+                  fullWidth
+                  onChange={onEditLabel}
+                  value={settings.label}
+                  onKeyDown={onLabelKeyUp}
+                  onFocus={(event) => event.target.select()}
+                  style={{ font: "inherit" }}
+                />
+              </form>
+            ) : (
               <Typography
                 noWrap={true}
+                flex="auto"
                 variant="subtitle2"
                 fontWeight={indent < 2 ? 600 : 400}
                 color={visible ? "text.primary" : "text.disabled"}
@@ -238,17 +243,19 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
                 {settings.label ?? "General"}
               </Typography>
             )}
-            <EditButton
-              data-node-function="edit-label"
-              color="primary"
-              onClick={(event) => {
-                event.stopPropagation();
-                toggleEditing();
-              }}
-              style={{ opacity: settings.renamable === true ? 1 : 0 }}
-            >
-              <EditIcon fontSize="small" />
-            </EditButton>
+            {settings.renamable === true && (
+              <EditButton
+                title="Rename"
+                data-node-function="edit-label"
+                color="primary"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  toggleEditing();
+                }}
+              >
+                <EditIcon fontSize="small" />
+              </EditButton>
+            )}
           </Stack>
         </NodeHeaderToggle>
         <Stack alignItems="center" direction="row">
