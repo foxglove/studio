@@ -2,7 +2,6 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import CheckIcon from "@mui/icons-material/Check";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { Menu, MenuItem, IconButton, ListItemIcon, ListItemText, Divider } from "@mui/material";
 import { useState } from "react";
@@ -56,7 +55,9 @@ export function NodeActionsMenu({
       >
         {actions.map((action, index) => {
           if (action.type === "divider") {
-            return <Divider key={`divider_${index}`} />;
+            return (
+              <Divider variant={anyItemHasIcon ? "inset" : "fullWidth"} key={`divider_${index}`} />
+            );
           }
           const Icon = action.icon ? CommonIcons[action.icon] : undefined;
           return (
@@ -66,13 +67,7 @@ export function NodeActionsMenu({
                   <Icon fontSize="small" />
                 </ListItemIcon>
               )}
-              {/* Use hidden icon for consistent padding */}
-              {anyItemHasIcon && !Icon && (
-                <ListItemIcon style={{ visibility: "hidden" }}>
-                  <CheckIcon />
-                </ListItemIcon>
-              )}
-              <ListItemText>{action.label}</ListItemText>
+              <ListItemText inset={!Icon && anyItemHasIcon}>{action.label}</ListItemText>
             </MenuItem>
           );
         })}
