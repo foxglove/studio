@@ -6,7 +6,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 import SearchIcon from "@mui/icons-material/Search";
 import { AppBar, IconButton, TextField, styled as muiStyled } from "@mui/material";
 import memoizeWeak from "memoize-weak";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { DeepReadonly } from "ts-essentials";
 
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -37,8 +37,12 @@ export default function SettingsTreeEditor({
   const { actionHandler } = settings;
   const [filterText, setFilterText] = useState<string>("");
 
-  const definedRoots = Object.entries(settings.roots).filter(
-    (kv): kv is [string, SettingsTreeNode] => kv[1] != undefined,
+  const definedRoots = useMemo(
+    () =>
+      Object.entries(settings.roots).filter(
+        (kv): kv is [string, SettingsTreeNode] => kv[1] != undefined,
+      ),
+    [settings.roots],
   );
 
   return (
