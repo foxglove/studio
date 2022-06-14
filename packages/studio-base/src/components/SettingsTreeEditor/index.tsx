@@ -12,7 +12,7 @@ import { DeepReadonly } from "ts-essentials";
 import Stack from "@foxglove/studio-base/components/Stack";
 
 import { NodeEditor } from "./NodeEditor";
-import { SettingsTree } from "./types";
+import { SettingsTree, SettingsTreeNode } from "./types";
 
 const StyledAppBar = muiStyled(AppBar, { skipSx: true })(({ theme }) => ({
   top: -1,
@@ -36,6 +36,10 @@ export default function SettingsTreeEditor({
 }): JSX.Element {
   const { actionHandler } = settings;
   const [filterText, setFilterText] = useState<string>("");
+
+  const definedRoots = Object.entries(settings.roots).filter(
+    (kv): kv is [string, SettingsTreeNode] => kv[1] != undefined,
+  );
 
   return (
     <Stack fullHeight>
@@ -64,7 +68,7 @@ export default function SettingsTreeEditor({
         </StyledAppBar>
       )}
       <FieldGrid>
-        {Object.entries(settings.roots).map(([key, root]) => (
+        {definedRoots.map(([key, root]) => (
           <NodeEditor
             key={key}
             path={makeStablePath(key)}
