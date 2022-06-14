@@ -81,5 +81,8 @@ describe("simpleGetMessagePathDataItems", () => {
     expect(() =>
       simpleGetMessagePathDataItems(message, parseRosPath("/foo.foo.bars[:]{id==$id}")!),
     ).toThrow("filterMatches only works on paths where global variables have been filled in");
+    expect(() =>
+      simpleGetMessagePathDataItems(message, parseRosPath("/foo.foo.bars[$id]")!),
+    ).toThrow("Variables in slices are not supported");
   });
 });
