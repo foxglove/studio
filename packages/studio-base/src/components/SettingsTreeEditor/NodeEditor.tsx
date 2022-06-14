@@ -220,44 +220,42 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
               }}
             />
           )}
-          <Stack direction="row" alignItems="center" gap={0.5} flex="auto">
-            {state.editing ? (
-              <InputBase
-                autoFocus
-                fullWidth
-                onChange={onEditLabel}
-                value={settings.label}
-                onKeyDown={onLabelKeyDown}
-                onFocus={(event) => event.target.select()}
-                style={{ font: "inherit" }}
-              />
-            ) : (
-              <Typography
-                noWrap={true}
-                flex="auto"
-                variant="subtitle2"
-                fontWeight={indent < 2 ? 600 : 400}
-                color={visible ? "text.primary" : "text.disabled"}
-              >
-                {settings.label ?? "General"}
-              </Typography>
-            )}
-            {settings.renamable === true && (
-              <EditButton
-                title="Rename"
-                data-node-function="edit-label"
-                color="primary"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  toggleEditing();
-                }}
-              >
-                {state.editing ? <CheckIcon fontSize="small" /> : <EditIcon fontSize="small" />}
-              </EditButton>
-            )}
-          </Stack>
+          {state.editing ? (
+            <InputBase
+              autoFocus
+              fullWidth
+              onChange={onEditLabel}
+              value={settings.label}
+              onKeyDown={onLabelKeyDown}
+              onFocus={(event) => event.target.select()}
+              style={{ font: "inherit" }}
+            />
+          ) : (
+            <Typography
+              noWrap={true}
+              flex="auto"
+              variant="subtitle2"
+              fontWeight={indent < 2 ? 600 : 400}
+              color={visible ? "text.primary" : "text.disabled"}
+            >
+              {settings.label ?? "General"}
+            </Typography>
+          )}
         </NodeHeaderToggle>
         <Stack alignItems="center" direction="row">
+          {settings.renamable === true && (
+            <EditButton
+              title="Rename"
+              data-node-function="edit-label"
+              color="primary"
+              onClick={(event) => {
+                event.stopPropagation();
+                toggleEditing();
+              }}
+            >
+              {state.editing ? <CheckIcon fontSize="small" /> : <EditIcon fontSize="small" />}
+            </EditButton>
+          )}
           {settings.visible != undefined && (
             <VisibilityToggle
               size="small"
