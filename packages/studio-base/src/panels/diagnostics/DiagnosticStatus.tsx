@@ -140,6 +140,12 @@ const HTMLTableCell = muiStyled(TableCell)(({ theme }) => ({
   },
 }));
 
+const StyledIconButton = muiStyled(IconButton)({
+  "&:hover, &:active, &:focus": {
+    backgroundColor: "transparent",
+  },
+});
+
 // preliminary check to avoid expensive operations when there is no html
 const HAS_ANY_HTML = new RegExp(`<(${allowedTags.join("|")})`);
 
@@ -244,7 +250,7 @@ export default function DiagnosticStatus(props: Props): JSX.Element {
       let openPlotPanelIconElem = undefined;
       if (value.length > 0) {
         openPlotPanelIconElem = !isNaN(Number(value)) ? (
-          <IconButton
+          <StyledIconButton
             title="Open in Plot panel"
             color="inherit"
             size="small"
@@ -252,20 +258,20 @@ export default function DiagnosticStatus(props: Props): JSX.Element {
             onClick={() => openSiblingPlotPanel(openSiblingPanel, valuePath)}
           >
             <ShowChartIcon fontSize="inherit" />
-          </IconButton>
+          </StyledIconButton>
         ) : (
-          <IconButton
+          <StyledIconButton
             title="Open in State Transitions panel"
             color="inherit"
             size="small"
             onClick={() => openSiblingStateTransitionsPanel(openSiblingPanel, valuePath)}
           >
             <PowerInputIcon fontSize="inherit" />
-          </IconButton>
+          </StyledIconButton>
         );
       }
       return (
-        <TableRow key={idx} hover={keyHtml != undefined && valueHtml != undefined}>
+        <TableRow key={idx} hover>
           {renderKeyValueCell(keyHtml, key)}
           {renderKeyValueCell(valueHtml, value, openPlotPanelIconElem)}
         </TableRow>
@@ -340,7 +346,7 @@ export default function DiagnosticStatus(props: Props): JSX.Element {
                   {info.status.message}
                 </Typography>
                 <Stack direction="row" alignItems="center" justifyContent="space-between" gap={1}>
-                  <IconButton
+                  <StyledIconButton
                     title="Open in State Transitions panel"
                     size="small"
                     onClick={() =>
@@ -351,7 +357,7 @@ export default function DiagnosticStatus(props: Props): JSX.Element {
                     }
                   >
                     <PowerInputIcon fontSize="inherit" />
-                  </IconButton>
+                  </StyledIconButton>
                 </Stack>
               </Stack>
             </TableCell>
