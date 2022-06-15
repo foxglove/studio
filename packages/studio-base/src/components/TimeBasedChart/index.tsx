@@ -11,7 +11,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Button, useTheme } from "@mui/material";
+import { Button, useTheme, styled as muiStyled } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { AnnotationOptions } from "chartjs-plugin-annotation";
 import React, {
@@ -24,7 +24,6 @@ import React, {
   MouseEvent,
 } from "react";
 import { useMountedState, useThrottle } from "react-use";
-import styled from "styled-components";
 import { useDebouncedCallback } from "use-debounce";
 import { v4 as uuidv4 } from "uuid";
 
@@ -58,36 +57,40 @@ export type TimeBasedChartTooltipData = {
   constantName?: string;
 };
 
-const SRoot = styled.div`
-  position: relative;
-`;
+const SRoot = muiStyled("div")({
+  position: "relative",
+});
 
-const SResetZoom = styled.div`
-  position: absolute;
-  bottom: 33px;
-  right: 10px;
-`;
+const SResetZoom = muiStyled("div")(({ theme }) => ({
+  position: "absolute",
+  bottom: theme.spacing(4),
+  right: theme.spacing(1),
+}));
 
-const SLegend = styled.div`
-  display: flex;
-  width: 10%;
-  min-width: 90px;
-  overflow-y: auto;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: start;
-  padding: 30px 0px 10px 0px;
-`;
+const SLegend = muiStyled("div")(({ theme }) => ({
+  display: "flex",
+  width: "10%",
+  minWidth: 90,
+  overflowY: "auto",
+  flexDirection: "column",
+  alignItems: "flex-start",
+  justifyContent: "start",
+  padding: theme.spacing(4, 0, 1, 0),
+}));
 
-const SBar = styled.div<{ xAxisIsPlaybackTime: boolean }>`
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  margin-left: -1px;
-  display: block;
-  background-color: ${(props) => (props.xAxisIsPlaybackTime ? "#F7BE00" : "#248EFF")};
-`;
+const SBar = muiStyled("div", {
+  shouldForwardProp: (prop) => prop !== "xAxisIsPlaybackTime",
+})<{
+  xAxisIsPlaybackTime: boolean;
+}>(({ xAxisIsPlaybackTime, theme }) => ({
+  position: "absolute",
+  top: 0,
+  bottom: 0,
+  width: 1,
+  marginLeft: -1,
+  display: "block",
+  backgroundColor: xAxisIsPlaybackTime ? theme.palette.warning.main : theme.palette.info.main,
+}));
 
 type ChartComponentProps = ComponentProps<typeof ChartComponent>;
 
