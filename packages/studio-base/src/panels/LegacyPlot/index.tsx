@@ -41,14 +41,6 @@ const StyledButton = muiStyled(Button)(({ theme }) => ({
   right: 0,
 }));
 
-const SRoot = muiStyled("div")`
-  display: flex;
-  flex: 1 1 auto;
-  width: 100%;
-  overflow: hidden;
-  position: relative;
-`;
-
 const VALID_TYPES = ["message"];
 const keysToPick = [
   "order",
@@ -426,7 +418,14 @@ function TwoDimensionalPlot(props: Props) {
           autoSize
         />
       </PanelToolbar>
-      <SRoot onDoubleClick={onResetZoom} ref={resizeRef}>
+      <Stack
+        ref={resizeRef}
+        direction="row"
+        flex="auto"
+        fullWidth
+        overflow="hidden"
+        position="relative"
+      >
         {emptyStateElement ? (
           emptyStateElement
         ) : (
@@ -444,6 +443,7 @@ function TwoDimensionalPlot(props: Props) {
             />
             {hasUserPannedOrZoomed && (
               <StyledButton
+                data-test="reset-zoom"
                 variant="contained"
                 color="inherit"
                 title="(shortcut: double-click)"
@@ -455,7 +455,7 @@ function TwoDimensionalPlot(props: Props) {
             <KeyListener global keyDownHandlers={keyDownHandlers} keyUpHandlers={keyUphandlers} />
           </>
         )}
-      </SRoot>
+      </Stack>
     </Stack>
   );
 }
