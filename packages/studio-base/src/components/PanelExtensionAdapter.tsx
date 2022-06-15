@@ -419,7 +419,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
         watchedFieldsRef.current.add(field);
       },
 
-      subscribe: (topics: string[] | Subscription[]) => {
+      subscribe: (topics: ReadonlyArray<string | Subscription>) => {
         subscribedTopicsRef.current = [];
 
         // If the player has loaded all the blocks, the blocks reference won't change so our message
