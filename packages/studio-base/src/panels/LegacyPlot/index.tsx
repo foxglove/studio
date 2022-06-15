@@ -34,11 +34,12 @@ import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { TwoDimensionalTooltip } from "./Tooltip";
 import { safeParseFloat } from "./helpers";
 
-const SResetZoom = muiStyled("div")`
-  position: absolute;
-  bottom: 15px;
-  right: 10px;
-`;
+const StyledButton = muiStyled(Button)(({ theme }) => ({
+  position: "absolute",
+  margin: theme.spacing(2, 1),
+  bottom: 0,
+  right: 0,
+}));
 
 const SRoot = muiStyled("div")`
   display: flex;
@@ -442,16 +443,14 @@ function TwoDimensionalPlot(props: Props) {
               onFinishRender={onFinishRender}
             />
             {hasUserPannedOrZoomed && (
-              <SResetZoom>
-                <Button
-                  variant="contained"
-                  color="inherit"
-                  title="(shortcut: double-click)"
-                  onClick={onResetZoom}
-                >
-                  reset view
-                </Button>
-              </SResetZoom>
+              <StyledButton
+                variant="contained"
+                color="inherit"
+                title="(shortcut: double-click)"
+                onClick={onResetZoom}
+              >
+                reset view
+              </StyledButton>
             )}
             <KeyListener global keyDownHandlers={keyDownHandlers} keyUpHandlers={keyUphandlers} />
           </>
