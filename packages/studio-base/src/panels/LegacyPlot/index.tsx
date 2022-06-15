@@ -449,7 +449,7 @@ function TwoDimensionalPlot(props: Props) {
                 title="(shortcut: double-click)"
                 onClick={onResetZoom}
               >
-                reset view
+                Reset view
               </StyledButton>
             )}
             <KeyListener global keyDownHandlers={keyDownHandlers} keyUpHandlers={keyUphandlers} />
