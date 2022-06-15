@@ -11,8 +11,8 @@ export type StoredExtension = {
 };
 
 export interface IExtensionStorage {
-  list(namespace: string): Promise<ExtensionInfo[]>;
-  get(namespace: string, id: string): Promise<undefined | StoredExtension>;
-  put(namespace: string, extension: StoredExtension): Promise<StoredExtension>;
-  delete(namespace: string, id: string): Promise<void>;
+  list(): Promise<ExtensionInfo[]>;
+  get(id: string): Promise<undefined | StoredExtension>;
+  put(extension: StoredExtension): Promise<StoredExtension>;
+  delete(id: string): Promise<void>;
 }

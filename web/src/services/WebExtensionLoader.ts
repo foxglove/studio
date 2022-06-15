@@ -19,13 +19,13 @@ export class WebExtensionLoader implements ExtensionLoader {
   async getExtensions(): Promise<ExtensionInfo[]> {
     log.debug("Listing extensions");
 
-    return await this.#storage.list("local");
+    return await this.#storage.list();
   }
 
   async loadExtension(id: string): Promise<string> {
     log.debug("Loading extension", id);
 
-    const extension = await this.#storage.get("local", id);
+    const extension = await this.#storage.get(id);
     const zip = new JSZip();
 
     if (extension?.content == undefined) {
@@ -61,7 +61,7 @@ export class WebExtensionLoader implements ExtensionLoader {
     }
 
     const pkgInfo: ExtensionInfo = JSON.parse(pkgInfoText);
-    await this.#storage.put("local", {
+    await this.#storage.put({
       id: pkgInfo.name,
       content: foxeFileData,
       info: { ...pkgInfo, id: pkgInfo.name },
@@ -72,7 +72,7 @@ export class WebExtensionLoader implements ExtensionLoader {
   async uninstallExtension(id: string): Promise<boolean> {
     log.debug("Uninstalling extension", id);
 
-    await this.#storage.delete("local", id);
+    await this.#storage.delete(id);
     return true;
   }
 }
