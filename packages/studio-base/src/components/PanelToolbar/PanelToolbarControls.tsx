@@ -11,12 +11,18 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import { useContext } from "react";
+import SettingsIcon from "@mui/icons-material/Settings";
+import { useCallback, useContext } from "react";
 
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import Stack from "@foxglove/studio-base/components/Stack";
+import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
+import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
+import {
+  PanelSettingsEditorStore,
+  usePanelSettingsEditorStore,
+} from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 
 import { PanelActionsDropdown } from "./PanelActionsDropdown";
 
@@ -36,23 +42,38 @@ export const PanelToolbarControls = React.memo(function PanelToolbarControls({
   menuOpen,
   setMenuOpen,
 }: PanelToolbarControlsProps) {
-  const panelContext = useContext(PanelContext);
+  const panelId = useContext(PanelContext)?.id;
+  const { setSelectedPanelIds } = useSelectedPanels();
+  const { openPanelSettings } = useWorkspace();
+
+  const hasSettingsSelector = useCallback(
+    (store: PanelSettingsEditorStore) =>
+      panelId ? store.settingsTrees[panelId] != undefined : false,
+    [panelId],
+  );
+
+  const hasSettings = usePanelSettingsEditorStore(hasSettingsSelector);
+
+  const openSettings = useCallback(() => {
+    if (panelId) {
+      setSelectedPanelIds([panelId]);
+      openPanelSettings();
+    }
+  }, [setSelectedPanelIds, openPanelSettings, panelId]);
 
   return (
     <Stack direction="row" alignItems="center" paddingLeft={1}>
       {additionalIcons}
+      {hasSettings && (
+        <ToolbarIconButton title="Settings" onClick={openSettings}>
+          <SettingsIcon />
+        </ToolbarIconButton>
+      )}
       <PanelActionsDropdown
         isOpen={menuOpen}
         setIsOpen={setMenuOpen}
         isUnknownPanel={isUnknownPanel}
       />
-      {!isUnknownPanel && panelContext?.connectToolbarDragHandle && (
-        <span ref={panelContext.connectToolbarDragHandle} data-test="mosaic-drag-handle">
-          <ToolbarIconButton title="Move panel (shortcut: ` or ~)" style={{ cursor: "grab" }}>
-            <DragIndicatorIcon color="disabled" />
-          </ToolbarIconButton>
-        </span>
-      )}
     </Stack>
   );
 });

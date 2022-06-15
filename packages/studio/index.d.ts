@@ -124,6 +124,13 @@ declare module "@foxglove/studio" {
     currentFrame?: readonly MessageEvent<unknown>[];
 
     /**
+     * True if the data source performed a seek. This indicates that some data may have been skipped
+     * (never appeared in the `currentFrame`), so panels should clear out any stale state to avoid
+     * displaying incorrect data.
+     */
+    didSeek?: boolean;
+
+    /**
      * All available messages. Best-effort list of all available messages.
      */
     allFrames?: readonly MessageEvent<unknown>[];
@@ -252,6 +259,15 @@ declare module "@foxglove/studio" {
      * @param message The message to publish
      */
     publish?(topic: string, message: unknown): void;
+
+    /**
+     * Call a service.
+     *
+     * @param service The name of the service to call
+     * @param request The request payload for the service call
+     * @returns A promise that resolves when the result is available or rejected with an error
+     */
+    callService?(service: string, request: unknown): Promise<unknown>;
 
     /**
      * Process render events for the panel. Each render event receives a render state and a done callback.

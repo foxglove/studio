@@ -11,7 +11,6 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import FullscreenIcon from "@mui/icons-material/Fullscreen";
 import FullscreenExitIcon from "@mui/icons-material/FullscreenExit";
 import { styled as muiStyled, Typography } from "@mui/material";
 import { useContext, useState, useMemo, CSSProperties } from "react";
@@ -35,20 +34,23 @@ type Props = {
 };
 
 const PanelToolbarRoot = muiStyled("div", {
-  shouldForwardProp: (prop) => prop !== "backgroundColor",
-})<{ backgroundColor?: CSSProperties["backgroundColor"] }>(({ theme, backgroundColor }) => ({
-  transition: "transform 80ms ease-in-out, opacity 80ms ease-in-out",
-  flex: "0 0 auto",
-  alignItems: "center",
-  justifyContent: "flex-end",
-  padding: theme.spacing(0.25, 0.75),
-  display: "flex",
-  minHeight: PANEL_TOOLBAR_MIN_HEIGHT,
-  backgroundColor: backgroundColor ?? theme.palette.background.paper,
-  width: "100%",
-  left: 0,
-  zIndex: theme.zIndex.appBar,
-}));
+  shouldForwardProp: (prop) => prop !== "backgroundColor" && prop !== "enableDrag",
+})<{ backgroundColor?: CSSProperties["backgroundColor"]; enableDrag: boolean }>(
+  ({ theme, backgroundColor, enableDrag }) => ({
+    transition: "transform 80ms ease-in-out, opacity 80ms ease-in-out",
+    cursor: enableDrag ? "grab" : "auto",
+    flex: "0 0 auto",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    padding: theme.spacing(0.25, 0.75),
+    display: "flex",
+    minHeight: PANEL_TOOLBAR_MIN_HEIGHT,
+    backgroundColor: backgroundColor ?? theme.palette.background.paper,
+    width: "100%",
+    left: 0,
+    zIndex: theme.zIndex.appBar,
+  }),
+);
 
 // Panel toolbar should be added to any panel that's part of the
 // react-mosaic layout.  It adds a drag handle, remove/replace controls
@@ -59,7 +61,7 @@ export default React.memo<Props>(function PanelToolbar({
   children,
   isUnknownPanel = false,
 }: Props) {
-  const { isFullscreen, enterFullscreen, exitFullscreen } = useContext(PanelContext) ?? {};
+  const { isFullscreen, exitFullscreen } = useContext(PanelContext) ?? {};
   const [menuOpen, setMenuOpen] = useState(false);
 
   const panelContext = useContext(PanelContext);
@@ -70,16 +72,6 @@ export default React.memo<Props>(function PanelToolbar({
     return (
       <>
         {additionalIcons}
-        {isFullscreen === false && (
-          <ToolbarIconButton
-            title="Fullscreen"
-            data-test="panel-toolbar-fullscreen"
-            onClick={enterFullscreen}
-            value="fullscreen"
-          >
-            <FullscreenIcon />
-          </ToolbarIconButton>
-        )}
         {isFullscreen === true && (
           <ToolbarIconButton
             value="exit-fullscreen"
@@ -91,10 +83,15 @@ export default React.memo<Props>(function PanelToolbar({
         )}
       </>
     );
-  }, [additionalIcons, isFullscreen, enterFullscreen, exitFullscreen]);
+  }, [additionalIcons, isFullscreen, exitFullscreen]);
 
   return (
-    <PanelToolbarRoot backgroundColor={backgroundColor}>
+    <PanelToolbarRoot
+      backgroundColor={backgroundColor}
+      data-test="mosaic-drag-handle"
+      enableDrag={panelContext?.connectToolbarDragHandle != undefined}
+      ref={isUnknownPanel ? undefined : panelContext?.connectToolbarDragHandle}
+    >
       {children ??
         (panelContext != undefined && (
           <Typography noWrap variant="body2" color="text.secondary" flex="auto">

@@ -3,6 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Box } from "@mui/material";
+import { fireEvent } from "@testing-library/dom";
 import produce from "immer";
 import { last } from "lodash";
 import { useCallback, useMemo, useState, useEffect } from "react";
@@ -33,12 +34,16 @@ const BasicSettings: SettingsTreeRoots = {
     icon: "Settings",
     visible: true,
     error: "This topic has an error",
+    renamable: true,
     actions: [
-      { id: "add-grid", label: "Add new grid", icon: "Grid" },
-      { id: "add-background", label: "Add new background", icon: "Background" },
-      { id: "reset-values", label: "Reset values" },
+      { type: "action", id: "add-grid", label: "Add new grid", icon: "Grid" },
+      { type: "action", id: "add-background", label: "Add new background", icon: "Background" },
+      { type: "action", id: "toggle-value", label: "Toggle Value", icon: "Check" },
+      { type: "divider" },
+      { type: "action", id: "reset-values", label: "Reset values" },
     ],
     fields: {
+      emptyField: undefined,
       numberWithPrecision: {
         input: "number",
         label: "Number with precision",
@@ -58,13 +63,15 @@ const BasicSettings: SettingsTreeRoots = {
         error: "This field has an error message that should be displayed to the user",
       },
     },
-    children: {},
+    children: {
+      emptyChild: undefined,
+    },
   },
   complex_inputs: {
     label: "Complex Inputs",
     icon: "Hive",
     visible: true,
-    actions: [{ id: "action", label: "Action" }],
+    actions: [{ type: "action", id: "action", label: "Action" }],
     fields: {
       messagepath: {
         label: "Message Path",
@@ -136,12 +143,174 @@ For ROS users, we also support package:// URLs
       },
     },
   },
+  empty: undefined,
+};
+
+const DisabledSettings: SettingsTreeRoots = {
+  general: {
+    label: "Disabled Fields",
+    icon: "Grid",
+    fields: {
+      autocomplete: {
+        input: "autocomplete",
+        label: "Autocomplete",
+        items: ["one", "two"],
+        value: "one",
+        disabled: true,
+      },
+      boolean: {
+        input: "boolean",
+        label: "Boolean",
+        disabled: true,
+      },
+      gradient: {
+        input: "gradient",
+        label: "Gradient",
+        value: ["#ffffff", "#000000"],
+        disabled: true,
+      },
+      messagePath: {
+        input: "messagepath",
+        label: "Message Path",
+        disabled: true,
+      },
+      number: {
+        input: "number",
+        label: "Number",
+        value: 123,
+        disabled: true,
+      },
+      rgb: {
+        input: "rgb",
+        label: "RGB",
+        value: "#0000ff",
+        disabled: true,
+      },
+      rgba: {
+        input: "rgba",
+        label: "RGBA",
+        value: "#0000ff88",
+        disabled: true,
+      },
+      select: {
+        input: "select",
+        label: "Select",
+        options: [
+          { label: "One", value: "one" },
+          { label: "Two", value: "two" },
+        ],
+        value: "one",
+        disabled: true,
+      },
+      text: {
+        input: "string",
+        label: "Text",
+        value: "text",
+        disabled: true,
+      },
+      toggle: {
+        input: "toggle",
+        label: "Toggle",
+        value: "One",
+        options: ["One", "Two"],
+        disabled: true,
+      },
+      vec3: {
+        input: "vec3",
+        label: "Vec3",
+        value: [1, 2, 3],
+        disabled: true,
+      },
+    },
+    children: {},
+  },
+};
+
+const ReadonlySettings: SettingsTreeRoots = {
+  general: {
+    label: "ReadOnly Fields",
+    icon: "Grid",
+    fields: {
+      autocomplete: {
+        input: "autocomplete",
+        label: "Autocomplete",
+        items: ["one", "two"],
+        value: "one",
+        readonly: true,
+      },
+      boolean: {
+        input: "boolean",
+        label: "Boolean",
+        readonly: true,
+      },
+      gradient: {
+        input: "gradient",
+        label: "Gradient",
+        value: ["#ffffff", "#000000"],
+        readonly: true,
+      },
+      messagePath: {
+        input: "messagepath",
+        label: "Message Path",
+        readonly: true,
+      },
+      number: {
+        input: "number",
+        label: "Number",
+        value: 123,
+        readonly: true,
+      },
+      rgb: {
+        input: "rgb",
+        label: "RGB",
+        value: "#0000ff",
+        readonly: true,
+      },
+      rgba: {
+        input: "rgba",
+        label: "RGBA",
+        value: "#0000ff88",
+        readonly: true,
+      },
+      select: {
+        input: "select",
+        label: "Select",
+        options: [
+          { label: "One", value: "one" },
+          { label: "Two", value: "two" },
+        ],
+        value: "one",
+        readonly: true,
+      },
+      text: {
+        input: "string",
+        label: "Text",
+        value: "text",
+        readonly: true,
+      },
+      toggle: {
+        input: "toggle",
+        label: "Toggle",
+        value: "One",
+        options: ["One", "Two"],
+        readonly: true,
+      },
+      vec3: {
+        input: "vec3",
+        label: "Vec3",
+        value: [1, 2, 3],
+        readonly: true,
+      },
+    },
+    children: {},
+  },
 };
 
 const PanelExamplesSettings: SettingsTreeRoots = {
   map: {
     label: "Map",
     icon: "Map",
+    renamable: true,
     fields: {
       message_path: {
         label: "Message path",
@@ -185,6 +354,7 @@ const PanelExamplesSettings: SettingsTreeRoots = {
   grid: {
     label: "Grid",
     icon: "Grid",
+    renamable: true,
     fields: {
       color: {
         label: "Color",
@@ -214,6 +384,7 @@ const PanelExamplesSettings: SettingsTreeRoots = {
   pose: {
     label: "Pose",
     icon: "Walk",
+    renamable: true,
     fields: {
       color: { label: "Color", value: "#ffffff", input: "rgb" },
       shaft_length: { label: "Shaft length", value: 1.5, input: "number" },
@@ -414,6 +585,8 @@ function updateSettingsTreeRoots(
     const key = workingPath.shift()!;
     if (key === "visible") {
       node.visible = Boolean(value);
+    } else if (key === "label") {
+      node.label = String(value);
     } else {
       const field = node.fields?.[key];
       if (field != undefined) {
@@ -430,7 +603,7 @@ function makeBackgroundNode(index: number): SettingsTreeNode {
     fields: {
       url: { label: "URL", input: "string", value: "http://example.com/img.jpg" },
     },
-    actions: [{ id: "remove-background", label: "Remove Background" }],
+    actions: [{ type: "action", id: "remove-background", label: "Remove Background" }],
   };
 }
 
@@ -442,7 +615,7 @@ function makeGridNode(index: number): SettingsTreeNode {
       xsize: { label: "X Size", input: "number", value: 1 },
       ysize: { label: "Y Size", input: "number", value: 2 },
     },
-    actions: [{ id: "remove-grid", label: "Remove Grid" }],
+    actions: [{ type: "action", id: "remove-grid", label: "Remove Grid" }],
   };
 }
 
@@ -525,9 +698,33 @@ export function Basics(): JSX.Element {
   return <Wrapper roots={BasicSettings} />;
 }
 
+Basics.play = () => {
+  Array.from(document.querySelectorAll("[data-test=node-actions-menu-button]"))
+    .slice(0, 1)
+    .forEach((node) => fireEvent.click(node));
+};
+
+export function DisabledFields(): JSX.Element {
+  return <Wrapper roots={DisabledSettings} />;
+}
+
+export function ReadonlyFields(): JSX.Element {
+  return <Wrapper roots={ReadonlySettings} />;
+}
+
 export function PanelExamples(): JSX.Element {
   return <Wrapper roots={PanelExamplesSettings} />;
 }
+
+PanelExamples.play = () => {
+  Array.from(document.querySelectorAll("[data-node-function=edit-label]"))
+    .slice(0, 1)
+    .forEach((node) => {
+      fireEvent.click(node);
+      fireEvent.change(document.activeElement!, { target: { value: "Renamed Node" } });
+      fireEvent.keyDown(document.activeElement!, { key: "Enter" });
+    });
+};
 
 export function IconExamples(): JSX.Element {
   return <Wrapper roots={IconExamplesSettings} />;

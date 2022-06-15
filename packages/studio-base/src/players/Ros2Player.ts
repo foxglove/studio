@@ -101,10 +101,13 @@ export default class Ros2Player implements Player {
       this._providerDatatypes.set(ros1ToRos2Type(dataType), msgDef);
     }
     for (const schema of Object.values(foxgloveMessageSchemas)) {
-      const { fields, qualifiedRosName } = generateRosMsgDefinition(schema, { rosVersion: 2 });
-      const msgDef: RosMsgDefinition = { name: qualifiedRosName, definitions: fields };
-      this._providerDatatypes.set(qualifiedRosName, msgDef);
-      this._providerDatatypes.set(ros1ToRos2Type(qualifiedRosName), msgDef);
+      const { fields, rosMsgInterfaceName, rosFullInterfaceName } = generateRosMsgDefinition(
+        schema,
+        { rosVersion: 2 },
+      );
+      const msgDef: RosMsgDefinition = { name: rosMsgInterfaceName, definitions: fields };
+      this._providerDatatypes.set(rosMsgInterfaceName, msgDef);
+      this._providerDatatypes.set(rosFullInterfaceName, msgDef);
     }
     this._providerDatatypes.set("foxglove_msgs/ImageMarkerArray", {
       definitions: [
@@ -610,6 +613,10 @@ export default class Ros2Player implements Player {
     //     });
     //   }
     // }
+  }
+
+  async callService(): Promise<unknown> {
+    throw new Error("Service calls are not supported by this data source");
   }
 
   // Bunch of unsupported stuff. Just don't do anything for these.

@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { Menu, MenuItem, IconButton, ListItemIcon, ListItemText } from "@mui/material";
+import { Menu, MenuItem, IconButton, ListItemIcon, ListItemText, Divider } from "@mui/material";
 import { useState } from "react";
 
 import CommonIcons from "@foxglove/studio-base/components/CommonIcons";
@@ -29,15 +29,17 @@ export function NodeActionsMenu({
     setAnchorEl(undefined);
   };
 
+  const anyItemHasIcon = actions.some((action) => action.type === "action" && action.icon);
+
   return (
     <>
       <IconButton
         title="More actions"
-        id="node-actions-button"
-        aria-controls={open ? "noce-actions-menu" : undefined}
+        aria-controls={open ? "node-actions-menu" : undefined}
         aria-haspopup="true"
         aria-expanded={open ? "true" : undefined}
         onClick={handleClick}
+        data-test="node-actions-menu-button"
         size="small"
       >
         <MoreVertIcon fontSize="small" />
@@ -48,10 +50,15 @@ export function NodeActionsMenu({
         open={open}
         onClose={() => setAnchorEl(undefined)}
         MenuListProps={{
-          "aria-labelledby": "node-actions-button",
+          "aria-label": "node actions button",
         }}
       >
-        {actions.map((action) => {
+        {actions.map((action, index) => {
+          if (action.type === "divider") {
+            return (
+              <Divider variant={anyItemHasIcon ? "inset" : "fullWidth"} key={`divider_${index}`} />
+            );
+          }
           const Icon = action.icon ? CommonIcons[action.icon] : undefined;
           return (
             <MenuItem key={action.id} onClick={() => handleClose(action.id)}>
@@ -60,7 +67,7 @@ export function NodeActionsMenu({
                   <Icon fontSize="small" />
                 </ListItemIcon>
               )}
-              <ListItemText>{action.label}</ListItemText>
+              <ListItemText inset={!Icon && anyItemHasIcon}>{action.label}</ListItemText>
             </MenuItem>
           );
         })}

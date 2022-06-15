@@ -14,6 +14,7 @@
 import { storiesOf } from "@storybook/react";
 import TestUtils from "react-dom/test-utils";
 
+import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import { PanelCatalog, PanelInfo } from "@foxglove/studio-base/context/PanelCatalogContext";
@@ -366,7 +367,7 @@ storiesOf("panels/Tab", module)
         onMount={() => {
           setTimeout(async () => {
             await tick();
-            const tabs = document.querySelectorAll("[draggable=true]");
+            const tabs = document.querySelectorAll("[data-test=toolbar-tab]");
             const toolbar = document.querySelectorAll('[data-test="toolbar-droppable"]')[1];
 
             // Drag and drop the first tab onto the toolbar of the second tab panel
@@ -479,7 +480,9 @@ storiesOf("panels/Tab", module)
           }, DEFAULT_TIMEOUT);
         }}
       >
-        <PanelLayout />
+        <MockPanelContextProvider>
+          <PanelLayout />
+        </MockPanelContextProvider>
       </PanelSetup>
     );
   });

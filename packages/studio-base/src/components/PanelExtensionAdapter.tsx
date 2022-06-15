@@ -148,6 +148,8 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   const hoverValueRef = useRef<typeof hoverValue>();
   hoverValueRef.current = hoverValue;
 
+  const lastSeekTimeRef = useRef<number | undefined>();
+
   const colorScheme = useTheme().isInverted ? "dark" : "light";
 
   const appConfiguration = useAppConfiguration();
@@ -179,6 +181,15 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
     // The render state stats with the previous render state and changes are applied as detected
     const renderState: RenderState = prevRenderState.current;
+
+    if (watchedFieldsRef.current.has("didSeek")) {
+      const didSeek = lastSeekTimeRef.current !== ctx?.playerState.activeData?.lastSeekTime;
+      if (didSeek !== renderState.didSeek) {
+        renderState.didSeek = didSeek;
+        shouldRender = true;
+      }
+      lastSeekTimeRef.current = ctx?.playerState.activeData?.lastSeekTime;
+    }
 
     if (watchedFieldsRef.current.has("currentFrame")) {
       const currentFrame = ctx?.messageEventsBySubscriberId.get(panelId);
@@ -352,13 +363,12 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   useMessagePipeline(messagePipelineSelector);
 
   const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
-  const { id: panelLayoutId } = usePanelContext();
 
   const updateSettings = useCallback(
     (settings: SettingsTree) => {
-      updatePanelSettingsTree(panelLayoutId, settings);
+      updatePanelSettingsTree(settings);
     },
-    [panelLayoutId, updatePanelSettingsTree],
+    [updatePanelSettingsTree],
   );
 
   type PartialPanelExtensionContext = Omit<PanelExtensionContext, "panelElement">;
@@ -489,6 +499,16 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
               topic,
               msg: message as Record<string, unknown>,
             });
+          }
+        : undefined,
+
+      callService: capabilities.includes(PlayerCapabilities.callServices)
+        ? async (service, request): Promise<unknown> => {
+            const ctx = latestPipelineContextRef.current;
+            if (!ctx) {
+              throw new Error("Unable to call service. There is no active connection.");
+            }
+            return await ctx.callService(service, request);
           }
         : undefined,
 

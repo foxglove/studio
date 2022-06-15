@@ -101,6 +101,13 @@ function main() {
     for (const file of files) {
       app.emit("open-file", { preventDefault() {} }, file);
     }
+
+    // When being asked to open a second instance with no files or deep links then open a blank new
+    // window.
+    if (files.length === 0 && deepLinks.length === 0) {
+      log.debug("second-instance: No files or deeplinks. Opening a new window.");
+      new StudioWindow().load();
+    }
   });
 
   // Load opt-out settings for crash reporting and telemetry
@@ -245,7 +252,8 @@ function main() {
       "style-src": "'self' 'unsafe-inline'",
       "connect-src": "'self' ws: wss: http: https: package:",
       "font-src": "'self' data:",
-      "img-src": "'self' data: https: package: x-foxglove-converted-tiff:",
+      // Include http in the CSP to allow loading images (i.e. map tiles) from http endpoints like localhost
+      "img-src": "'self' data: https: package: x-foxglove-converted-tiff: http:",
     };
     const cspHeader = Object.entries(contentSecurityPolicy)
       .map(([key, val]) => `${key} ${val}`)

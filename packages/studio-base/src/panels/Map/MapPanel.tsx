@@ -12,7 +12,7 @@ import {
   geoJSON,
   Layer,
 } from "leaflet";
-import { difference, minBy, partition, transform, union } from "lodash";
+import { difference, minBy, partition, union } from "lodash";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
 import { useDebouncedCallback } from "use-debounce";
@@ -23,8 +23,6 @@ import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import {
   EXPERIMENTAL_PanelExtensionContextWithSettings,
   SettingsTreeAction,
-  SettingsTreeFields,
-  SettingsTreeRoots,
 } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import FilteredPointLayer, {
   POINT_MARKER_RADIUS,
@@ -33,16 +31,9 @@ import { Topic } from "@foxglove/studio-base/players/types";
 import { FoxgloveMessages } from "@foxglove/studio-base/types/FoxgloveMessages";
 import { darkColor, lightColor, lineColors } from "@foxglove/studio-base/util/plotColors";
 
+import { Config, validateCustomUrl, buildSettingsTree } from "./config";
 import { hasFix } from "./support";
 import { MapPanelMessage, Point } from "./types";
-
-// Persisted panel state
-type Config = {
-  customTileUrl: string;
-  disabledTopics: string[];
-  layer: string;
-  zoomLevel?: number;
-};
 
 type MapPanelProps = {
   context: PanelExtensionContext;
@@ -56,56 +47,6 @@ function isGeoJSONMessage(
     message.message != undefined &&
     "geojson" in message.message
   );
-}
-
-function buildSettingsTree(config: Config, eligibleTopics: string[]): SettingsTreeRoots {
-  const topics: SettingsTreeFields = transform(
-    eligibleTopics,
-    (result, topic) => {
-      result[topic] = {
-        label: topic,
-        input: "boolean",
-        value: !config.disabledTopics.includes(topic),
-      };
-    },
-    {} as SettingsTreeFields,
-  );
-
-  const generalSettings: SettingsTreeFields = {
-    layer: {
-      label: "Tile Layer",
-      input: "select",
-      value: config.layer,
-      options: [
-        { label: "Map", value: "map" },
-        { label: "Satellite", value: "satellite" },
-        { label: "Custom", value: "custom" },
-      ],
-    },
-  };
-
-  // Only show the custom url input when the user selects the custom layer
-  if (config.layer === "custom") {
-    generalSettings.customTileUrl = {
-      label: "Custom map tile URL",
-      input: "string",
-      value: config.customTileUrl,
-    };
-  }
-
-  const settings: SettingsTreeRoots = {
-    general: {
-      label: "General",
-      icon: "Settings",
-      fields: generalSettings,
-    },
-    topics: {
-      label: "Topics",
-      fields: topics,
-    },
-  };
-
-  return settings;
 }
 
 function topicMessageType(topic: Topic) {
@@ -133,10 +74,12 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
   const [config, setConfig] = useState<Config>(() => {
     const initialConfig = props.context.initialState as Partial<Config>;
-    initialConfig.disabledTopics = initialConfig.disabledTopics ?? [];
-    initialConfig.layer = initialConfig.layer ?? "map";
-    initialConfig.customTileUrl = initialConfig.customTileUrl ?? "";
-    return initialConfig as Config;
+    return {
+      disabledTopics: initialConfig.disabledTopics ?? [],
+      layer: initialConfig.layer ?? "map",
+      customTileUrl: initialConfig.customTileUrl ?? "",
+      followTopic: initialConfig.followTopic ?? "",
+    };
   });
 
   const [tileLayer] = useState(
@@ -244,6 +187,12 @@ function MapPanel(props: MapPanelProps): JSX.Element {
         return { ...oldConfig, customTileUrl: String(value) };
       });
     }
+
+    if (path[1] === "followTopic" && input === "select") {
+      setConfig((oldConfig) => {
+        return { ...oldConfig, followTopic: String(value) };
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -265,13 +214,11 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   useEffect(() => {
     if (config.layer === "custom") {
       // validate URL to avoid leaflet map placeholder variable error
-      const placeholders = config.customTileUrl.match(/\{.+?\}/g) ?? [];
-      const validPlaceholders = ["{x}", "{y}", "{z}"];
-      for (const placeholder of placeholders) {
-        if (!validPlaceholders.includes(placeholder)) {
-          return;
-        }
+      // Ignore urls with an error - the settings tree will inform the user that their valid is invalid
+      if (validateCustomUrl(config.customTileUrl)) {
+        return;
       }
+
       customLayer.setUrl(config.customTileUrl);
     }
   }, [config.layer, config.customTileUrl, customLayer]);
@@ -428,13 +375,21 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   // calculate center point from blocks if we don't have a center point
   useEffect(() => {
     setCenter((old) => {
-      // set center only once
-      if (old) {
-        return old;
+      if (!config.followTopic) {
+        // When not following a topic center the map from the first message at startup
+        if (old) {
+          return old;
+        }
       }
 
       for (const messages of [currentNavMessages, allNavMessages]) {
         for (const message of messages) {
+          // When re-centering to follow topic, only use the messages of the matching topic
+          if (config.followTopic && old) {
+            if (message.topic !== config.followTopic) {
+              continue;
+            }
+          }
           return {
             lat: message.message.latitude,
             lon: message.message.longitude,
@@ -444,7 +399,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
       return;
     });
-  }, [allNavMessages, currentNavMessages]);
+  }, [allNavMessages, currentNavMessages, config]);
 
   useEffect(() => {
     if (!currentMap) {
@@ -616,13 +571,18 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     };
   }, [currentMap, moveHandler]);
 
-  // Update the map view when centerpoint changes
+  // Update the map view to focus on the centerpoint when it changes
+  // Zoom is reset only once
+  const didResetZoomRef = useRef(false);
   useEffect(() => {
     if (!center) {
       return;
     }
 
-    currentMap?.setView([center.lat, center.lon], config.zoomLevel ?? 10);
+    // If center updates when following a topic we don't want to keep resetting the zoom.
+    const zoom = didResetZoomRef.current ? currentMap?.getZoom() : config.zoomLevel ?? 10;
+    currentMap?.setView([center.lat, center.lon], zoom);
+    didResetZoomRef.current = true;
   }, [center, config.zoomLevel, currentMap]);
 
   // Indicate render is complete - the effect runs after the dom is updated

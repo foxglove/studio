@@ -89,7 +89,7 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
         disableElevation: true,
       },
       styleOverrides: {
-        colorInherit: {
+        containedInherit: {
           backgroundColor: theme.palette.action.focus,
         },
       },
@@ -289,6 +289,11 @@ export default function muiComponents(theme: Theme): ThemeOptions["components"] 
     MuiMenuItem: {
       defaultProps: {
         disableRipple: true,
+      },
+      styleOverrides: {
+        root: {
+          minHeight: 32,
+        },
       },
     },
     MuiOutlinedInput: {
