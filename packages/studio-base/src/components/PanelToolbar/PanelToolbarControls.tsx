@@ -14,7 +14,7 @@
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useCallback, useContext } from "react";
 
-import PanelContext, { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
+import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { useSelectedPanels } from "@foxglove/studio-base/context/CurrentLayoutContext";
