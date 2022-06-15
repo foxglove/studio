@@ -67,6 +67,7 @@ export class IdbExtensionStorage implements IExtensionStorage {
     await Promise.all([
       transaction.db.put(METADATA_STORE_NAME, { metadata: extension.info }),
       transaction.db.put(EXTENSION_STORE_NAME, { extension }),
+      transaction.done,
     ]);
 
     return extension;
@@ -82,6 +83,7 @@ export class IdbExtensionStorage implements IExtensionStorage {
     await Promise.all([
       transaction.db.delete(METADATA_STORE_NAME, id),
       transaction.db.delete(EXTENSION_STORE_NAME, id),
+      transaction.done,
     ]);
   }
 }
