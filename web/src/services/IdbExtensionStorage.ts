@@ -5,14 +5,25 @@
 import * as IDB from "idb/with-async-ittr";
 
 import Log from "@foxglove/log";
-import { StoredExtension, IExtensionStorage } from "@foxglove/studio-base";
+import { StoredExtension, IExtensionStorage, ExtensionInfo } from "@foxglove/studio-base";
 
 const log = Log.getLogger(__filename);
 
 const DATABASE_NAME = "foxglove-extensions";
-const OBJECT_STORE_NAME = "extensions";
+const METADATA_STORE_NAME = "metadata";
+const EXTENSION_STORE_NAME = "extensions";
 
 interface ExtensionsDB extends IDB.DBSchema {
+  metadata: {
+    key: [namespace: string, id: string];
+    value: {
+      namespace: string;
+      metadata: ExtensionInfo;
+    };
+    indexes: {
+      namespace: string;
+    };
+  };
   extensions: {
     key: [namespace: string, id: string];
     value: {
@@ -28,37 +39,61 @@ interface ExtensionsDB extends IDB.DBSchema {
 export class IdbExtensionStorage implements IExtensionStorage {
   #db = IDB.openDB<ExtensionsDB>(DATABASE_NAME, 1, {
     upgrade(db) {
-      log.debug("Creating extension db", { storeName: OBJECT_STORE_NAME });
-      const store = db.createObjectStore(OBJECT_STORE_NAME, {
+      log.debug("Creating extension metadata db", { storeName: METADATA_STORE_NAME });
+
+      const metadataStore = db.createObjectStore(METADATA_STORE_NAME, {
+        keyPath: ["namespace", "metadata.id"],
+      });
+      metadataStore.createIndex("namespace", "namespace");
+
+      const extensionStoree = db.createObjectStore(EXTENSION_STORE_NAME, {
         keyPath: ["namespace", "extension.id"],
       });
-      store.createIndex("namespace", "namespace");
+      extensionStoree.createIndex("namespace", "namespace");
     },
   });
 
-  async list(namespace: string): Promise<StoredExtension[]> {
+  async list(namespace: string): Promise<ExtensionInfo[]> {
     const records = await (
       await this.#db
-    ).getAllFromIndex(OBJECT_STORE_NAME, "namespace", namespace);
+    ).getAllFromIndex(METADATA_STORE_NAME, "namespace", namespace);
 
-    log.debug("Listing extensions", { namespace, count: records.length });
-    return records.map((record) => record.extension);
+    log.debug("Listing extensions", { namespace, records });
+
+    return records.map((record) => record.metadata);
   }
 
   async get(namespace: string, id: string): Promise<undefined | StoredExtension> {
-    const record = await (await this.#db).get(OBJECT_STORE_NAME, [namespace, id]);
+    const record = await (await this.#db).get(EXTENSION_STORE_NAME, [namespace, id]);
     log.debug("Getting extension", { namespace, id, record });
     return record?.extension;
   }
 
   async put(namespace: string, extension: StoredExtension): Promise<StoredExtension> {
     log.debug("Storing extension", { namespace, extension });
-    await (await this.#db).put(OBJECT_STORE_NAME, { namespace, extension });
+
+    const transaction = (await this.#db).transaction(
+      [METADATA_STORE_NAME, EXTENSION_STORE_NAME],
+      "readwrite",
+    );
+    await Promise.all([
+      transaction.db.put(METADATA_STORE_NAME, { namespace, metadata: extension.info }),
+      transaction.db.put(EXTENSION_STORE_NAME, { namespace, extension }),
+    ]);
+
     return extension;
   }
 
   async delete(namespace: string, id: string): Promise<void> {
     log.debug("Deleting extension", { namespace, id });
-    await (await this.#db).delete(OBJECT_STORE_NAME, [namespace, id]);
+
+    const transaction = (await this.#db).transaction(
+      [METADATA_STORE_NAME, EXTENSION_STORE_NAME],
+      "readwrite",
+    );
+    await Promise.all([
+      transaction.db.delete(METADATA_STORE_NAME, [namespace, id]),
+      transaction.db.delete(EXTENSION_STORE_NAME, [namespace, id]),
+    ]);
   }
 }

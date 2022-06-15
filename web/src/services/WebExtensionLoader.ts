@@ -19,9 +19,7 @@ export class WebExtensionLoader implements ExtensionLoader {
   async getExtensions(): Promise<ExtensionInfo[]> {
     log.debug("Listing extensions");
 
-    return await this.#storage
-      .list("local")
-      .then((extensions) => extensions.map((extension) => extension.info));
+    return await this.#storage.list("local");
   }
 
   async loadExtension(id: string): Promise<string> {
