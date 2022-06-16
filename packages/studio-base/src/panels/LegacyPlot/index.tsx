@@ -36,7 +36,8 @@ import { safeParseFloat } from "./helpers";
 
 const StyledButton = muiStyled(Button)(({ theme }) => ({
   position: "absolute",
-  margin: theme.spacing(2, 1),
+  marginRight: theme.spacing(2.5),
+  marginBottom: theme.spacing(7),
   bottom: 0,
   right: 0,
 }));
