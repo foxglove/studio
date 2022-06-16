@@ -40,7 +40,7 @@ const StyledTabs = muiStyled(Tabs)({
 
 const Content = muiStyled("div")(({ theme }) => ({
   position: "relative",
-  backgroundColor: theme.palette.background.paper,
+  backgroundColor: theme.palette.background.default,
   width: 280,
 }));
 
