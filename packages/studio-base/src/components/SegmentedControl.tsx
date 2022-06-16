@@ -28,7 +28,11 @@ const SSegmentedControl = muiStyled("div")(({ theme }) => ({
   },
 }));
 
-const SOption = muiStyled("div")<{ isSelected: boolean }>(({ theme, isSelected }) => ({
+const SOption = muiStyled("div", {
+  shouldForwardProp: (prop) => prop !== "isSelected",
+})<{
+  isSelected: boolean;
+}>(({ theme, isSelected }) => ({
   flex: "none",
   cursor: "pointer",
   transition: "all 80ms ease-in-out",
