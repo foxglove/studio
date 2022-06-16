@@ -21,14 +21,15 @@ import Dropdown from "@foxglove/studio-base/components/Dropdown/index";
 import GradientPicker from "@foxglove/studio-base/components/GradientPicker";
 import SegmentedControl from "@foxglove/studio-base/components/SegmentedControl";
 import {
+  ColorMode,
+  DEFAULT_FLAT_COLOR,
   DEFAULT_MAX_COLOR,
   DEFAULT_MIN_COLOR,
   DEFAULT_RGB_BYTE_ORDER,
   getDefaultColorMode,
-  ColorMode,
   isMappedColorMode,
-  DEFAULT_FLAT_COLOR,
   isRgbColorMode,
+  isValidRgbByteOrder,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/utils/pointCloudColors";
 import { PointCloud2 } from "@foxglove/studio-base/types/Messages";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
@@ -166,11 +167,11 @@ export default function PointCloudSettingsEditor(
         <RadioGroup
           defaultValue={colorMode.rgbByteOrder ?? DEFAULT_RGB_BYTE_ORDER}
           name="rgb-color-mode-radio-buttons-group"
-          onChange={(_event: React.ChangeEvent<HTMLInputElement>, value: string) => {
+          onChange={(_event, value: string) => {
             onColorModeChange((prevColorMode) => {
-              if (isRgbColorMode(prevColorMode)) {
+              if (isRgbColorMode(prevColorMode) && isValidRgbByteOrder(value)) {
                 const { mode } = prevColorMode;
-                return { rgbByteOrder: value as ColorMode["rgbByteOrder"], mode };
+                return { rgbByteOrder: value, mode };
               }
               return prevColorMode;
             });
