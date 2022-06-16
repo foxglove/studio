@@ -13,34 +13,34 @@
 
 import { styled as muiStyled } from "@mui/material";
 
-const Outer = muiStyled("div")`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: ${({ theme }) => theme.palette.action.hover};
-  z-index: 100000;
-  pointer-events: none;
-`;
+const Outer = muiStyled("div")(({ theme }) => ({
+  position: "fixed",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  display: "flex",
+  flexDirection: "column",
+  background: theme.palette.action.hover,
+  zIndex: theme.zIndex.tooltip,
+  pointerEvents: "none",
+  padding: theme.spacing(5),
+}));
 
-const Inner = muiStyled("div")`
-  position: absolute;
-  top: 40px;
-  left: 40px;
-  right: 40px;
-  bottom: 40px;
-  border-radius: 28px;
-  border: 2px dashed ${({ theme }) => theme.palette.action.selected};
-  display: flex;
-  flex-direction: column;
-  text-align: center;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  padding: 40px;
-  line-height: normal;
-`;
+const Inner = muiStyled("div")(({ theme }) => ({
+  borderRadius: 16,
+  height: "100%",
+  border: `2px dashed ${theme.palette.text.primary}`,
+  display: "flex",
+  flexDirection: "column",
+  textAlign: "center",
+  alignItems: "center",
+  justifyContent: "center",
+  color: theme.palette.text.primary,
+  fontWeight: 800,
+  padding: theme.spacing(5),
+  lineHeight: "normal",
+}));
 
 function DropOverlay({ children }: { children: React.ReactNode }): JSX.Element {
   return (
