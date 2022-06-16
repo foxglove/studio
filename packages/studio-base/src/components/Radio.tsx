@@ -12,11 +12,10 @@
 //   You may not use this file except in compliance with the License.
 import RadioButtonUncheckedIcon from "@mdi/svg/svg/radiobox-blank.svg";
 import RadioButtonCheckedIcon from "@mdi/svg/svg/radiobox-marked.svg";
-import { styled as muiStyled } from "@mui/material";
+import { alpha, styled as muiStyled } from "@mui/material";
 import { ReactElement } from "react";
 
 import Icon from "./Icon";
-import { colorToAlpha } from "./SegmentedControl";
 
 export type RadioOption<Key extends string> = {
   id: Key;
@@ -48,7 +47,7 @@ const SOption = muiStyled("div")(({ theme }) => ({
   },
   "&:focus-within, &:focus, &:active": {
     "> .icon svg": {
-      boxShadow: `0 0 0 2px ${colorToAlpha(theme.palette.common.white, 0.2)}`,
+      boxShadow: `0 0 0 2px ${alpha(theme.palette.common.white, 0.2)}`,
     },
   },
 }));
