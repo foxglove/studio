@@ -42,11 +42,8 @@ export class WebExtensionLoader implements ExtensionLoader {
     return srcText;
   }
 
-  async downloadExtension(url: string): Promise<Uint8Array> {
-    log.debug("Downloading extension", url);
-
-    const res = await fetch(url);
-    return new Uint8Array(await res.arrayBuffer());
+  async downloadExtension(_url: string): Promise<Uint8Array> {
+    throw new Error("Download the desktop app to use extensions.");
   }
 
   async installExtension(foxeFileData: Uint8Array): Promise<ExtensionInfo> {
