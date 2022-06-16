@@ -182,6 +182,10 @@ export default function PlotLegendRow({
 
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
+  const messagePathInputStyle = useMemo(() => {
+    return { textDecoration: !path.enabled ? "line-through" : undefined };
+  }, [path.enabled]);
+
   return (
     <div className={classes.root}>
       <div style={{ position: "absolute" }}>
@@ -224,7 +228,7 @@ export default function PlotLegendRow({
           index={index}
           autoSize
           disableAutocomplete={isReferenceLinePlotPath}
-          inputStyle={{ textDecoration: !path.enabled ? "line-through" : undefined }}
+          inputStyle={messagePathInputStyle}
         />
         {hasMismatchedDataLength && (
           <Tooltip

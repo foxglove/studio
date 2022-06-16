@@ -23,7 +23,8 @@ import { Button, IconButton, Theme, alpha } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import cx from "classnames";
 import { last } from "lodash";
-import { ComponentProps, useCallback, useMemo, useRef } from "react";
+import { ComponentProps, useCallback, useMemo, useRef, useState } from "react";
+import { useDebouncedCallback } from "use-debounce";
 
 import Dropdown from "@foxglove/studio-base/components/Dropdown";
 import DropdownItem from "@foxglove/studio-base/components/Dropdown/DropdownItem";
@@ -31,6 +32,7 @@ import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax
 import { PANEL_TOOLBAR_MIN_HEIGHT } from "@foxglove/studio-base/components/PanelToolbar";
 import TimeBasedChart from "@foxglove/studio-base/components/TimeBasedChart";
 import PlotLegendRow from "@foxglove/studio-base/panels/Plot/PlotLegendRow";
+import { PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import { PlotPath, BasePlotPath, isReferenceLinePlotPathType } from "./internalTypes";
 import { plotableRosTypes, PlotConfig, PlotXAxisVal } from "./types";
@@ -42,7 +44,7 @@ type PlotLegendProps = {
   paths: PlotPath[];
   datasets: ComponentProps<typeof TimeBasedChart>["data"]["datasets"];
   currentTime?: number;
-  saveConfig: (arg0: Partial<PlotConfig>) => void;
+  saveConfig: SaveConfig<PlotConfig>;
   showLegend: boolean;
   xAxisVal: PlotXAxisVal;
   xAxisPath?: BasePlotPath;
@@ -228,25 +230,41 @@ const useStyles = makeStyles((theme: Theme) => ({
 
 export default function PlotLegend(props: PlotLegendProps): JSX.Element {
   const {
-    paths,
-    datasets,
     currentTime,
-    saveConfig,
-    showLegend,
-    xAxisVal,
-    xAxisPath,
-    pathsWithMismatchedDataLengths,
-    sidebarDimension,
+    datasets,
     legendDisplay,
+    pathsWithMismatchedDataLengths,
+    showLegend,
     showPlotValuesInLegend,
+    sidebarDimension,
+    xAxisPath,
+    xAxisVal,
   } = props;
-  const lastPath = last(paths);
   const classes = useStyles({
     legendDisplay,
     sidebarDimension,
     showLegend,
     showPlotValuesInLegend,
   });
+
+  // We keep and update a local copy of paths and periodically flush to config
+  // because changing paths forces the whole plot to rerender and results in
+  // bad interactive performance on the path input.
+  const [localConfig, setlocalConfig] = useState({ paths: props.paths });
+
+  const debouncedSaveConfig = useDebouncedCallback((newConfig: Partial<PanelConfig>) => {
+    props.saveConfig(newConfig);
+  }, 500);
+
+  const saveConfig = useCallback(
+    (newConfig: Partial<PlotConfig>) => {
+      setlocalConfig((prevConfig) => ({ ...prevConfig, ...newConfig }));
+      debouncedSaveConfig(newConfig);
+    },
+    [debouncedSaveConfig],
+  );
+
+  const lastPath = last(localConfig.paths);
 
   const toggleLegend = useCallback(
     () => saveConfig({ showLegend: !showLegend }),
@@ -265,6 +283,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element {
   }, [showLegend, legendDisplay]);
 
   const originalWrapper = useRef<DOMRect | undefined>(undefined);
+
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
       const offset = originalWrapper.current?.[legendDisplay as "top" | "left"] ?? 0;
@@ -325,13 +344,13 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element {
           )}
         </header>
         <div className={classes.grid}>
-          {paths.map((path: PlotPath, index: number) => (
+          {localConfig.paths.map((path: PlotPath, index: number) => (
             <PlotLegendRow
               key={index}
               index={index}
               xAxisVal={xAxisVal}
               path={path}
-              paths={paths}
+              paths={localConfig.paths}
               hasMismatchedDataLength={pathsWithMismatchedDataLengths.includes(path.value)}
               datasets={datasets}
               currentTime={currentTime}
@@ -349,7 +368,7 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element {
             onClick={() =>
               saveConfig({
                 paths: [
-                  ...paths,
+                  ...localConfig.paths,
                   {
                     value: "",
                     enabled: true,
@@ -366,22 +385,22 @@ export default function PlotLegend(props: PlotLegendProps): JSX.Element {
       </div>
     ),
     [
-      classes.legendContent,
-      classes.header,
-      classes.dropdownWrapper,
-      classes.dropdown,
-      classes.grid,
-      classes.footer,
       classes.addButton,
-      xAxisVal,
-      xAxisPath,
-      paths,
-      saveConfig,
-      pathsWithMismatchedDataLengths,
-      datasets,
+      classes.dropdown,
+      classes.dropdownWrapper,
+      classes.footer,
+      classes.grid,
+      classes.header,
+      classes.legendContent,
       currentTime,
-      showPlotValuesInLegend,
+      datasets,
       lastPath,
+      localConfig.paths,
+      pathsWithMismatchedDataLengths,
+      saveConfig,
+      showPlotValuesInLegend,
+      xAxisPath,
+      xAxisVal,
     ],
   );
 
