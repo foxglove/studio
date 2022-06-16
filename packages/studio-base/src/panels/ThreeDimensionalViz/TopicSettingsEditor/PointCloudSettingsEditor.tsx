@@ -170,7 +170,7 @@ export default function PointCloudSettingsEditor(
             onColorModeChange((prevColorMode) => {
               if (isRgbColorMode(prevColorMode)) {
                 const { mode } = prevColorMode;
-                return { rgbByteOrder: value, mode };
+                return { rgbByteOrder: value as ColorMode["rgbByteOrder"], mode };
               }
               return prevColorMode;
             });
