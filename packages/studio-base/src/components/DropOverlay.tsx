@@ -11,27 +11,27 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import styled from "styled-components";
+import { styled as muiStyled } from "@mui/material";
 
-const Outer = styled.div`
+const Outer = muiStyled("div")`
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: ${({ theme }) => theme.palette.blackTranslucent40};
+  background: ${({ theme }) => theme.palette.action.hover};
   z-index: 100000;
   pointer-events: none;
 `;
 
-const Inner = styled.div`
+const Inner = muiStyled("div")`
   position: absolute;
   top: 40px;
   left: 40px;
   right: 40px;
   bottom: 40px;
   border-radius: 28px;
-  border: 2px dashed ${({ theme }) => theme.palette.black};
+  border: 2px dashed ${({ theme }) => theme.palette.action.selected};
   display: flex;
   flex-direction: column;
   text-align: center;
