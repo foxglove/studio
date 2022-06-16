@@ -112,25 +112,6 @@ export const spacing = {
   PLAYBACK_CONTROL_HEIGHT: "50px",
 };
 
-export const textSize = {
-  SMALL: "12px",
-  NORMAL: "14px",
-  LARGE: "16px",
-  H5: "20px",
-  H4: "24px",
-  H3: "32px",
-  H2: "48px",
-  H1: "64px",
-};
-
-export const rounded = {
-  SMALL: "2px",
-  NORMAL: "4px",
-  LARGE: "8px",
-  PILL: "999px",
-  CIRCLE: "50%",
-};
-
 export const fonts = {
   // We explicitly avoid fallback fonts (such as 'monospace') here to work around a bug in
   // Chrome/Chromium on Windows that causes crashes when multiple Workers try to access fonts that
