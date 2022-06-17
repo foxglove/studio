@@ -153,7 +153,8 @@ export function UnconnectedPanelLayout(props: Props): React.ReactElement {
               </EmptyState>
             }
           >
-            <Panel childId={id} tabId={tabId} />
+            {/* We put the path length in the key here to force an update when the panel moves from root to non-root. */}
+            <Panel childId={id} tabId={tabId} key={`${id}${tabId}${path.length}`} />
           </Suspense>
         </MosaicWindow>
       );
