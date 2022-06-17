@@ -9,6 +9,17 @@ import { ExtensionInfo, ExtensionLoader, IExtensionStorage } from "@foxglove/stu
 
 const log = Log.getLogger(__filename);
 
+function validatePackageInfo(info: Partial<ExtensionInfo>): ExtensionInfo {
+  if (info.publisher == undefined || info.publisher.length === 0) {
+    throw new Error("Invalid extension: missing publisher");
+  }
+  if (info.name == undefined || info.name.length === 0) {
+    throw new Error("Invalid extension: missing name");
+  }
+
+  return info as ExtensionInfo;
+}
+
 export class WebExtensionLoader implements ExtensionLoader {
   readonly #storage: IExtensionStorage;
 
@@ -57,13 +68,14 @@ export class WebExtensionLoader implements ExtensionLoader {
       throw new Error("Invalid extension: missing package.json");
     }
 
-    const pkgInfo: ExtensionInfo = JSON.parse(pkgInfoText);
+    const info = validatePackageInfo(JSON.parse(pkgInfoText) as Partial<ExtensionInfo>);
+    const id = `local.${info.publisher}.${info.name}`;
     await this.#storage.put({
-      id: pkgInfo.name,
       content: foxeFileData,
-      info: { ...pkgInfo, id: pkgInfo.name },
+      info: { ...info, id },
     });
-    return { ...pkgInfo, id: pkgInfo.name };
+
+    return info;
   }
 
   async uninstallExtension(id: string): Promise<boolean> {

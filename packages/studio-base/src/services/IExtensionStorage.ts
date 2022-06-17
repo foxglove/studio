@@ -5,7 +5,6 @@
 import { ExtensionInfo } from "@foxglove/studio-base/context/ExtensionLoaderContext";
 
 export type StoredExtension = {
-  id: string;
   info: ExtensionInfo;
   content: Uint8Array;
 };

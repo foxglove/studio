@@ -16,29 +16,25 @@ const EXTENSION_STORE_NAME = "extensions";
 interface ExtensionsDB extends IDB.DBSchema {
   metadata: {
     key: string;
-    value: {
-      metadata: ExtensionInfo;
-    };
+    value: ExtensionInfo;
   };
   extensions: {
     key: string;
-    value: {
-      extension: StoredExtension;
-    };
+    value: StoredExtension;
   };
 }
 
 export class IdbExtensionStorage implements IExtensionStorage {
   #db = IDB.openDB<ExtensionsDB>(DATABASE_NAME, 1, {
     upgrade: (db) => {
-      log.debug("Creating extension metadata db", { storeName: METADATA_STORE_NAME });
+      log.debug("Creating extension databases");
 
       db.createObjectStore(METADATA_STORE_NAME, {
-        keyPath: "metadata.id",
+        keyPath: "id",
       });
 
       db.createObjectStore(EXTENSION_STORE_NAME, {
-        keyPath: "extension.id",
+        keyPath: "info.id",
       });
     },
   });
@@ -46,15 +42,15 @@ export class IdbExtensionStorage implements IExtensionStorage {
   async list(): Promise<ExtensionInfo[]> {
     const records = await (await this.#db).getAll(METADATA_STORE_NAME);
 
-    log.debug("Listing extensions", { records });
+    log.debug(`Found ${records.length} extensions`);
 
-    return records.map((record) => record.metadata);
+    return records;
   }
 
   async get(id: string): Promise<undefined | StoredExtension> {
-    const record = await (await this.#db).get(EXTENSION_STORE_NAME, id);
-    log.debug("Getting extension", { id, record });
-    return record?.extension;
+    log.debug("Getting extension", id);
+
+    return await (await this.#db).get(EXTENSION_STORE_NAME, id);
   }
 
   async put(extension: StoredExtension): Promise<StoredExtension> {
@@ -65,8 +61,8 @@ export class IdbExtensionStorage implements IExtensionStorage {
       "readwrite",
     );
     await Promise.all([
-      transaction.db.put(METADATA_STORE_NAME, { metadata: extension.info }),
-      transaction.db.put(EXTENSION_STORE_NAME, { extension }),
+      transaction.db.put(METADATA_STORE_NAME, extension.info),
+      transaction.db.put(EXTENSION_STORE_NAME, extension),
       transaction.done,
     ]);
 
@@ -74,7 +70,7 @@ export class IdbExtensionStorage implements IExtensionStorage {
   }
 
   async delete(id: string): Promise<void> {
-    log.debug("Deleting extension", { id });
+    log.debug("Deleting extension", id);
 
     const transaction = (await this.#db).transaction(
       [METADATA_STORE_NAME, EXTENSION_STORE_NAME],

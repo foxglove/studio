@@ -228,6 +228,8 @@ export default function CurrentLayoutProvider({
     return () => layoutManager.off("change", listener);
   }, [layoutManager, setLayoutState]);
 
+  console.log(layoutStateRef.current);
+
   // Make sure our layout still exists after changes. If not deselect it.
   useEffect(() => {
     const listener: LayoutManagerEventTypes["change"] = async (event) => {
