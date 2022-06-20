@@ -239,6 +239,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.selectionBackdrop.visible = false;
     this.scene.add(this.selectionBackdrop);
 
+    this.renderFrameId = config.followTf;
+
     const samples = msaaSamples(this.maxLod, this.gl.capabilities);
     const renderSize = this.gl.getDrawingBufferSize(tempVec2);
     log.debug(`Initialized ${renderSize.width}x${renderSize.height} renderer (${samples}x MSAA)`);
