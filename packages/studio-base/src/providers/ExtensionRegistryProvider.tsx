@@ -46,9 +46,9 @@ export default function ExtensionRegistryProvider(props: PropsWithChildren<unkno
         mode: extensionMode,
 
         registerPanel(params) {
-          log.debug(`Extension ${extension.name} registering panel: ${params.name}`);
+          log.debug(`Extension ${extension.qualifiedName} registering panel: ${params.name}`);
 
-          const fullId = `${extension.name}.${params.name}`;
+          const fullId = `${extension.qualifiedName}.${params.name}`;
           if (registeredPanels.has(fullId)) {
             log.warn(`Panel ${fullId} is already registered`);
             return;

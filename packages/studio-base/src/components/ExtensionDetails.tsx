@@ -71,7 +71,7 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
         throw new Error(`Cannot install extension ${extension.id}, "foxe" URL is missing`);
       }
       const data = await extensionLoader.downloadExtension(url);
-      await extensionLoader.installExtension(data);
+      await extensionLoader.installExtension("local", data);
       if (isMounted()) {
         setIsInstalled(true);
         void analytics.logEvent(AppEvent.EXTENSION_INSTALL, { type: extension.id });

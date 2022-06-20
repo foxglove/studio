@@ -9,7 +9,7 @@ import { StoredExtension, IExtensionStorage, ExtensionInfo } from "@foxglove/stu
 
 const log = Log.getLogger(__filename);
 
-const DATABASE_NAME_ROOT = "foxglove-extensions";
+const DATABASE_BASE_NAME = "foxglove-extensions";
 const METADATA_STORE_NAME = "metadata";
 const EXTENSION_STORE_NAME = "extensions";
 
@@ -30,9 +30,9 @@ export class IdbExtensionStorage implements IExtensionStorage {
 
   constructor(namespace: string) {
     this.namespace = namespace;
-    this.#db = IDB.openDB<ExtensionsDB>([DATABASE_NAME_ROOT, namespace].join("-"), 1, {
+    this.#db = IDB.openDB<ExtensionsDB>([DATABASE_BASE_NAME, namespace].join("-"), 1, {
       upgrade: (db) => {
-        log.debug("Creating extension databases");
+        log.debug("Creating extension object stores");
 
         db.createObjectStore(METADATA_STORE_NAME, {
           keyPath: "id",

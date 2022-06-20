@@ -26,7 +26,6 @@ import Ros1UnavailableDataSourceFactory from "./dataSources/Ros1UnavailableDataS
 import Ros2UnavailableDataSourceFactory from "./dataSources/Ros2UnavailableDataSourceFactory";
 import VelodyneUnavailableDataSourceFactory from "./dataSources/VelodyneUnavailableDataSourceFactory";
 import { IdbExtensionLoader } from "./services/IdbExtensionLoader";
-import { IdbExtensionStorage } from "./services/IdbExtensionStorage";
 import { IdbLayoutStorage } from "./services/IdbLayoutStorage";
 
 export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration }): JSX.Element {
@@ -65,9 +64,7 @@ export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration
   ]);
 
   const layoutStorage = useMemo(() => new IdbLayoutStorage(), []);
-  const [extensionLoaders] = useState(() => [
-    new IdbExtensionLoader(new IdbExtensionStorage("local")),
-  ]);
+  const [extensionLoaders] = useState(() => [new IdbExtensionLoader("local")]);
   const consoleApi = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);
 
   // Enable dialog auth in development since using cookie auth does not work between

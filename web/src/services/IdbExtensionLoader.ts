@@ -6,6 +6,9 @@ import JSZip from "jszip";
 
 import Log from "@foxglove/log";
 import { ExtensionInfo, ExtensionLoader, IExtensionStorage } from "@foxglove/studio-base";
+import { ExtensionNamespace } from "@foxglove/studio-base/context/ExtensionLoaderContext";
+
+import { IdbExtensionStorage } from "./IdbExtensionStorage";
 
 const log = Log.getLogger(__filename);
 
@@ -22,9 +25,11 @@ function validatePackageInfo(info: Partial<ExtensionInfo>): ExtensionInfo {
 
 export class IdbExtensionLoader implements ExtensionLoader {
   readonly #storage: IExtensionStorage;
+  readonly namespace: ExtensionNamespace;
 
-  constructor(storage: IExtensionStorage) {
-    this.#storage = storage;
+  constructor(namespace: ExtensionNamespace) {
+    this.namespace = namespace;
+    this.#storage = new IdbExtensionStorage(namespace);
   }
 
   async getExtensions(): Promise<ExtensionInfo[]> {
@@ -53,10 +58,6 @@ export class IdbExtensionLoader implements ExtensionLoader {
     return srcText;
   }
 
-  async downloadExtension(_url: string): Promise<Uint8Array> {
-    throw new Error("Download the desktop app to use extensions.");
-  }
-
   async installExtension(foxeFileData: Uint8Array): Promise<ExtensionInfo> {
     log.debug("Installing extension");
 
@@ -73,6 +74,7 @@ export class IdbExtensionLoader implements ExtensionLoader {
     const info: ExtensionInfo = {
       ...rawInfo,
       id: `${normalizedPublisher}.${rawInfo.name}`,
+      namespace: this.#storage.namespace,
       qualifiedName: [this.#storage.namespace, normalizedPublisher, rawInfo.name].join("/"),
     };
     await this.#storage.put({

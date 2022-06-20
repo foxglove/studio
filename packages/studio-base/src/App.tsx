@@ -49,7 +49,7 @@ type AppProps = {
   dataSources: IDataSourceFactory[];
   consoleApi: ConsoleApi;
   layoutStorage: ILayoutStorage;
-  extensionLoaders: ExtensionLoader[];
+  extensionLoaders: readonly ExtensionLoader[];
   nativeAppMenu?: INativeAppMenu;
   nativeWindow?: INativeWindow;
   enableDialogAuth?: boolean;

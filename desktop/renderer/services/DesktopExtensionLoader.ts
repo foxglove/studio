@@ -4,6 +4,7 @@
 
 import Logger from "@foxglove/log";
 import { ExtensionInfo, ExtensionLoader } from "@foxglove/studio-base";
+import { ExtensionNamespace } from "@foxglove/studio-base/src/context/ExtensionLoaderContext";
 
 import { Desktop } from "../../common/types";
 
@@ -11,6 +12,7 @@ const log = Logger.getLogger(__filename);
 
 export class DesktopExtensionLoader implements ExtensionLoader {
   private bridge?: Desktop;
+  readonly namespace: ExtensionNamespace = "local";
 
   constructor(bridge: Desktop) {
     this.bridge = bridge;
@@ -25,6 +27,7 @@ export class DesktopExtensionLoader implements ExtensionLoader {
       return {
         id: item.id,
         name: pkgInfo.displayName,
+        namespace: this.namespace,
         qualifiedName: pkgInfo.name,
         displayName: pkgInfo.displayName,
         description: pkgInfo.description,
@@ -43,11 +46,6 @@ export class DesktopExtensionLoader implements ExtensionLoader {
     return (await this.bridge?.loadExtension(id)) ?? "";
   }
 
-  async downloadExtension(url: string): Promise<Uint8Array> {
-    const res = await fetch(url);
-    return new Uint8Array(await res.arrayBuffer());
-  }
-
   async installExtension(foxeFileData: Uint8Array): Promise<ExtensionInfo> {
     if (this.bridge == undefined) {
       throw new Error(`Cannot install extension without a desktopBridge`);
@@ -64,6 +62,7 @@ export class DesktopExtensionLoader implements ExtensionLoader {
     return {
       id: detail.id,
       name: pkgInfo.displayName,
+      namespace: this.namespace,
       qualifiedName: pkgInfo.name,
       displayName: pkgInfo.displayName,
       description: pkgInfo.description,
