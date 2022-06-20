@@ -55,7 +55,7 @@ export default function ExtensionRegistryProvider(props: PropsWithChildren<unkno
           }
 
           registeredPanels.set(fullId, {
-            extensionName: extension.name,
+            extensionName: extension.qualifiedName,
             registration: params,
           });
         },

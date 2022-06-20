@@ -25,9 +25,9 @@ import {
 import Ros1UnavailableDataSourceFactory from "./dataSources/Ros1UnavailableDataSourceFactory";
 import Ros2UnavailableDataSourceFactory from "./dataSources/Ros2UnavailableDataSourceFactory";
 import VelodyneUnavailableDataSourceFactory from "./dataSources/VelodyneUnavailableDataSourceFactory";
+import { IdbExtensionLoader } from "./services/IdbExtensionLoader";
 import { IdbExtensionStorage } from "./services/IdbExtensionStorage";
 import { IdbLayoutStorage } from "./services/IdbLayoutStorage";
-import { WebExtensionLoader } from "./services/WebExtensionLoader";
 
 export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration }): JSX.Element {
   const enableExperimentalBagPlayer: boolean =
@@ -65,8 +65,9 @@ export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration
   ]);
 
   const layoutStorage = useMemo(() => new IdbLayoutStorage(), []);
-  const [extensionStorage] = useState(new IdbExtensionStorage());
-  const [extensionLoaders] = useState([new WebExtensionLoader(extensionStorage)]);
+  const [extensionLoaders] = useState(() => [
+    new IdbExtensionLoader(new IdbExtensionStorage("local")),
+  ]);
   const consoleApi = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);
 
   // Enable dialog auth in development since using cookie auth does not work between

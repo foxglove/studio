@@ -10,6 +10,7 @@ export type StoredExtension = {
 };
 
 export interface IExtensionStorage {
+  readonly namespace: string;
   list(): Promise<ExtensionInfo[]>;
   get(id: string): Promise<undefined | StoredExtension>;
   put(extension: StoredExtension): Promise<StoredExtension>;

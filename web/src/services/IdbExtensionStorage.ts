@@ -9,7 +9,7 @@ import { StoredExtension, IExtensionStorage, ExtensionInfo } from "@foxglove/stu
 
 const log = Log.getLogger(__filename);
 
-const DATABASE_NAME = "foxglove-extensions";
+const DATABASE_NAME_ROOT = "foxglove-extensions";
 const METADATA_STORE_NAME = "metadata";
 const EXTENSION_STORE_NAME = "extensions";
 
@@ -25,19 +25,25 @@ interface ExtensionsDB extends IDB.DBSchema {
 }
 
 export class IdbExtensionStorage implements IExtensionStorage {
-  #db = IDB.openDB<ExtensionsDB>(DATABASE_NAME, 1, {
-    upgrade: (db) => {
-      log.debug("Creating extension databases");
+  #db: Promise<IDB.IDBPDatabase<ExtensionsDB>>;
+  namespace: string;
 
-      db.createObjectStore(METADATA_STORE_NAME, {
-        keyPath: "id",
-      });
+  constructor(namespace: string) {
+    this.namespace = namespace;
+    this.#db = IDB.openDB<ExtensionsDB>([DATABASE_NAME_ROOT, namespace].join("-"), 1, {
+      upgrade: (db) => {
+        log.debug("Creating extension databases");
 
-      db.createObjectStore(EXTENSION_STORE_NAME, {
-        keyPath: "info.id",
-      });
-    },
-  });
+        db.createObjectStore(METADATA_STORE_NAME, {
+          keyPath: "id",
+        });
+
+        db.createObjectStore(EXTENSION_STORE_NAME, {
+          keyPath: "info.id",
+        });
+      },
+    });
+  }
 
   async list(): Promise<ExtensionInfo[]> {
     const records = await (await this.#db).getAll(METADATA_STORE_NAME);

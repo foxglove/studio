@@ -25,6 +25,7 @@ export class DesktopExtensionLoader implements ExtensionLoader {
       return {
         id: item.id,
         name: pkgInfo.displayName,
+        qualifiedName: pkgInfo.name,
         displayName: pkgInfo.displayName,
         description: pkgInfo.description,
         publisher: pkgInfo.publisher,
@@ -63,6 +64,7 @@ export class DesktopExtensionLoader implements ExtensionLoader {
     return {
       id: detail.id,
       name: pkgInfo.displayName,
+      qualifiedName: pkgInfo.name,
       displayName: pkgInfo.displayName,
       description: pkgInfo.description,
       publisher: pkgInfo.publisher,

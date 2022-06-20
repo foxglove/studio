@@ -20,7 +20,7 @@ function validatePackageInfo(info: Partial<ExtensionInfo>): ExtensionInfo {
   return info as ExtensionInfo;
 }
 
-export class WebExtensionLoader implements ExtensionLoader {
+export class IdbExtensionLoader implements ExtensionLoader {
   readonly #storage: IExtensionStorage;
 
   constructor(storage: IExtensionStorage) {
@@ -68,11 +68,16 @@ export class WebExtensionLoader implements ExtensionLoader {
       throw new Error("Invalid extension: missing package.json");
     }
 
-    const info = validatePackageInfo(JSON.parse(pkgInfoText) as Partial<ExtensionInfo>);
-    const id = `local.${info.publisher}.${info.name}`;
+    const rawInfo = validatePackageInfo(JSON.parse(pkgInfoText) as Partial<ExtensionInfo>);
+    const normalizedPublisher = rawInfo.publisher.toLowerCase().replace(/[\W_]+/g, "_");
+    const info: ExtensionInfo = {
+      ...rawInfo,
+      id: `${normalizedPublisher}.${rawInfo.name}`,
+      qualifiedName: [this.#storage.namespace, normalizedPublisher, rawInfo.name].join("/"),
+    };
     await this.#storage.put({
       content: foxeFileData,
-      info: { ...info, id },
+      info,
     });
 
     return info;

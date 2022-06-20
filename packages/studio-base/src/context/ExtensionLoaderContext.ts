@@ -9,6 +9,7 @@ import Logger from "@foxglove/log";
 export type ExtensionInfo = {
   id: string;
   name: string;
+  qualifiedName: string;
   displayName: string;
   description: string;
   publisher: string;
@@ -42,6 +43,9 @@ const log = Logger.getLogger(__filename);
 const ExtensionLoaderContext = createContext<ExtensionLoader[] | undefined>(undefined);
 ExtensionLoaderContext.displayName = "ExtensionLoaderContext";
 
+/**
+ * Presents a unified interface for all enabled extension loaders.
+ */
 export function useExtensionLoader(): ExtensionLoader {
   const extensionLoaders = useContext(ExtensionLoaderContext);
   if (extensionLoaders == undefined) {

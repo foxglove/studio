@@ -187,7 +187,7 @@ export default function ExtensionsSidebar(): React.ReactElement {
         <List>
           <Stack paddingY={0.25} paddingX={2}>
             <Typography component="li" variant="overline" color="text.secondary">
-              Avaiable
+              Available
             </Typography>
           </Stack>
           {filteredMarketplaceEntries.map((entry) => (

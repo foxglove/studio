@@ -33,6 +33,7 @@ const installedExtensions: ExtensionInfo[] = [
   {
     id: "publisher.storyextension",
     name: "storyextension",
+    qualifiedName: "storyextension",
     displayName: "Extension Name",
     description: "Extension sample description",
     publisher: "Publisher",
@@ -47,6 +48,7 @@ const marketplaceExtensions: ExtensionInfo[] = [
   {
     id: "publisher.storyextension",
     name: "storyextension",
+    qualifiedName: "storyextension",
     displayName: "Extension Name",
     description: "Extension sample description",
     publisher: "Publisher",
