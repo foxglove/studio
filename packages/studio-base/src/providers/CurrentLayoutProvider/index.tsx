@@ -309,7 +309,7 @@ export default function CurrentLayoutProvider({
       splitPanel: (payload: SplitPanelPayload) => performAction({ type: "SPLIT_PANEL", payload }),
       swapPanel: (payload: SwapPanelPayload) => {
         // Select the new panel. We don't know what the new panel id will be so we diff
-        // the panelIds of the old and new layout.
+        // the panelIds of the old and new layout so we can select the new panel.
         const beforePanelIds = Object.keys(
           layoutStateRef.current.selectedLayout?.data?.configById ?? {},
         );
