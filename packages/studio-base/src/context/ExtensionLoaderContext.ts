@@ -2,7 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { createContext, useContext } from "react";
+import { createContext, useCallback, useContext, useMemo } from "react";
+
+import Logger from "@foxglove/log";
 
 export type ExtensionInfo = {
   id: string;
@@ -35,15 +37,103 @@ export interface ExtensionLoader {
   uninstallExtension(id: string): Promise<boolean>;
 }
 
-const ExtensionLoaderContext = createContext<ExtensionLoader | undefined>(undefined);
+const log = Logger.getLogger(__filename);
+
+const ExtensionLoaderContext = createContext<ExtensionLoader[] | undefined>(undefined);
 ExtensionLoaderContext.displayName = "ExtensionLoaderContext";
 
 export function useExtensionLoader(): ExtensionLoader {
-  const extensionLoader = useContext(ExtensionLoaderContext);
-  if (extensionLoader == undefined) {
+  const extensionLoaders = useContext(ExtensionLoaderContext);
+  if (extensionLoaders == undefined) {
     throw new Error("An ExtensionLoaderContext provider is required to useExtensionLoader");
   }
-  return extensionLoader;
+
+  const getExtensions = useCallback(
+    async () =>
+      (await Promise.all(extensionLoaders.map(async (loader) => await loader.getExtensions())))
+        .flat()
+        .sort(),
+    [extensionLoaders],
+  );
+
+  const loadExtension = useCallback(
+    async (id: string) => {
+      for (const loader of extensionLoaders) {
+        try {
+          const extension = await loader.loadExtension(id);
+          return extension;
+        } catch (error) {
+          log.debug(error);
+        }
+      }
+
+      throw new Error(`Extension ${id} not found`);
+    },
+    [extensionLoaders],
+  );
+
+  const downloadExtension = useCallback(
+    async (url: string) => {
+      for (const loader of extensionLoaders) {
+        try {
+          const data = await loader.downloadExtension(url);
+          return data;
+        } catch (e) {
+          log.debug(e);
+        }
+      }
+
+      throw new Error(`Error downloading extension from ${url}`);
+    },
+    [extensionLoaders],
+  );
+
+  const installExtension = useCallback(
+    async (foxeFileData: Uint8Array) => {
+      for (const loader of extensionLoaders) {
+        try {
+          const extension = await loader.installExtension(foxeFileData);
+          return extension;
+        } catch (error) {
+          log.debug(error);
+        }
+      }
+
+      throw new Error("Error installing extension");
+    },
+    [extensionLoaders],
+  );
+
+  const uninstallExtension = useCallback(
+    async (id: string) => {
+      for (const loader of extensionLoaders) {
+        try {
+          const extension = await loader.uninstallExtension(id);
+          if (extension) {
+            return extension;
+          }
+        } catch (error) {
+          log.debug(error);
+        }
+      }
+
+      throw new Error(`Extension ${id} not found`);
+    },
+    [extensionLoaders],
+  );
+
+  const value = useMemo(
+    () => ({
+      downloadExtension,
+      getExtensions,
+      installExtension,
+      loadExtension,
+      uninstallExtension,
+    }),
+    [downloadExtension, getExtensions, installExtension, loadExtension, uninstallExtension],
+  );
+
+  return value;
 }
 
 export default ExtensionLoaderContext;

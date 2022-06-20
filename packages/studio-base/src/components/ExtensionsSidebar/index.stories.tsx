@@ -78,7 +78,7 @@ export function Sidebar(): JSX.Element {
 
   return (
     <AppConfigurationContext.Provider value={config}>
-      <ExtensionLoaderContext.Provider value={MockExtensionLoader}>
+      <ExtensionLoaderContext.Provider value={[MockExtensionLoader]}>
         <ExtensionMarketplaceContext.Provider value={MockExtensionMarketplace}>
           <ExtensionsSidebar />
         </ExtensionMarketplaceContext.Provider>

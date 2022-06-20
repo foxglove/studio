@@ -71,7 +71,7 @@ export function Details(): JSX.Element {
 
   return (
     <AppConfigurationContext.Provider value={config}>
-      <ExtensionLoaderContext.Provider value={MockExtensionLoader}>
+      <ExtensionLoaderContext.Provider value={[MockExtensionLoader]}>
         <ExtensionMarketplaceContext.Provider value={MockExtensionMarketplace}>
           <ExtensionDetails extension={extension} onClose={() => {}} installed={false} />
         </ExtensionMarketplaceContext.Provider>

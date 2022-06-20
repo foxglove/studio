@@ -64,7 +64,7 @@ export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration
   ]);
 
   const layoutStorage = useMemo(() => new IdbLayoutStorage(), []);
-  const extensionLoader = useMemo(() => new NoopExtensionLoader(), []);
+  const extensionLoaders = useMemo(() => [new NoopExtensionLoader()], []);
   const consoleApi = useMemo(() => new ConsoleApi(process.env.FOXGLOVE_API_URL!), []);
 
   // Enable dialog auth in development since using cookie auth does not work between
@@ -80,7 +80,7 @@ export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration
       appConfiguration={appConfiguration}
       layoutStorage={layoutStorage}
       consoleApi={consoleApi}
-      extensionLoader={extensionLoader}
+      extensionLoaders={extensionLoaders}
     />
   );
 }
