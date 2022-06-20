@@ -12,7 +12,7 @@ import Logger from "@foxglove/log";
 import { CameraState } from "@foxglove/regl-worldview";
 import { toNanoSec } from "@foxglove/rostime";
 import { MessageEvent, Topic } from "@foxglove/studio";
-import CommonIcons from "@foxglove/studio-base/components/CommonIcons";
+import type * as CommonIcons from "@foxglove/studio-base/components/CommonIcons";
 import {
   SettingsTreeAction,
   SettingsTreeNodeActionItem,
