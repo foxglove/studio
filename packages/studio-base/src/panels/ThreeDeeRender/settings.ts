@@ -4,14 +4,26 @@
 
 export type SelectEntry = { label: string; value: string };
 
+/**
+ * Common settings for all persisted SceneExtension settings.
+ */
 export type BaseSettings = {
+  /** Visibility for any associated scene renderables and settings tree nodes. */
   visible: boolean;
+  /** If true, always use `currentTime` for pose updates. This means objects in a coordinate frame
+   * will move as the coordinate frame moves. */
   frameLocked?: boolean;
 };
 
+/**
+ * Settings for a "Custom Layer", a user-added collection of one or more renderables such as a Grid.
+ */
 export type CustomLayerSettings = BaseSettings & {
+  /** An identifier for a unique instance of a layer. */
   instanceId: string;
+  /** An identifier for a type of layer, such as `"foxglove.Grid"`. */
   layerId: string;
+  /** The label to use for this layer in the settings tree, under "Custom Layers". */
   label: string;
 };
 
