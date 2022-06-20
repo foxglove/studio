@@ -12,7 +12,7 @@ import {
 
 import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";
-import { RawMessage, RawMessageEvent, SceneExtension } from "../SceneExtension";
+import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
 import { rgbaToCssString, SRGBToLinear, stringToRgba } from "../color";
 import {
@@ -140,7 +140,7 @@ export class OccupancyGrids extends SceneExtension<OccupancyGridRenderable> {
     }
   };
 
-  handleOccupancyGrid = (messageEvent: RawMessageEvent<OccupancyGrid>): void => {
+  handleOccupancyGrid = (messageEvent: PartialMessageEvent<OccupancyGrid>): void => {
     const topic = messageEvent.topic;
     const occupancyGrid = normalizeOccupancyGrid(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
@@ -382,7 +382,7 @@ function srgbToLinearUint8(color: ColorRGBA): void {
   color.a = Math.trunc(color.a * 255);
 }
 
-function normalizeOccupancyGrid(message: RawMessage<OccupancyGrid>): OccupancyGrid {
+function normalizeOccupancyGrid(message: PartialMessage<OccupancyGrid>): OccupancyGrid {
   const info = message.info ?? {};
 
   return {

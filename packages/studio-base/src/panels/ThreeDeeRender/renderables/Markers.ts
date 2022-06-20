@@ -8,7 +8,7 @@ import { toNanoSec } from "@foxglove/rostime";
 import { SettingsTreeAction } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 
 import { Renderer } from "../Renderer";
-import { RawMessage, RawMessageEvent, SceneExtension } from "../SceneExtension";
+import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry, SettingsTreeNodeWithActionHandler } from "../SettingsManager";
 import {
   normalizeColorRGBA,
@@ -146,7 +146,7 @@ export class Markers extends SceneExtension<TopicMarkers> {
     this.updateSettingsTree();
   };
 
-  handleMarkerArray = (messageEvent: RawMessageEvent<MarkerArray>): void => {
+  handleMarkerArray = (messageEvent: PartialMessageEvent<MarkerArray>): void => {
     const topic = messageEvent.topic;
     const markerArray = messageEvent.message;
     const receiveTime = toNanoSec(messageEvent.receiveTime);
@@ -157,7 +157,7 @@ export class Markers extends SceneExtension<TopicMarkers> {
     }
   };
 
-  handleMarker = (messageEvent: RawMessageEvent<Marker>): void => {
+  handleMarker = (messageEvent: PartialMessageEvent<Marker>): void => {
     const topic = messageEvent.topic;
     const marker = normalizeMarker(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
@@ -195,7 +195,7 @@ export class Markers extends SceneExtension<TopicMarkers> {
   }
 }
 
-function normalizeMarker(marker: RawMessage<Marker>): Marker {
+function normalizeMarker(marker: PartialMessage<Marker>): Marker {
   return {
     header: normalizeHeader(marker.header),
     ns: marker.ns ?? "",

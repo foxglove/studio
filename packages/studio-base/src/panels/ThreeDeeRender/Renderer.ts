@@ -615,7 +615,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
       throw new Error(`No custom layer action found for "${layerId}"`);
     }
 
-    // Regenerate the action menu entry with a new instanceId
+    // Regenerate the action menu entry with a new instanceId. The unique instanceId is generated
+    // here so we can deduplicate multiple callbacks for the same menu click event
     const { label, icon } = entry.action;
     this.addCustomLayerAction({ layerId, label, icon, handler: entry.handler });
 

@@ -15,15 +15,40 @@ import type { SettingsTreeEntry } from "./SettingsManager";
 import { missingTransformMessage, MISSING_TRANSFORM } from "./renderables/transforms";
 import { updatePose } from "./updatePose";
 
-export type RawMessage<T> = DeepPartial<T>;
+export type PartialMessage<T> = DeepPartial<T>;
 
-export type RawMessageEvent<T> = MessageEvent<DeepPartial<T>>;
+export type PartialMessageEvent<T> = MessageEvent<DeepPartial<T>>;
 
+/**
+ * SceneExtension is a base class for extending the 3D scene. It extends THREE.Object3D and is a
+ * child of the THREE.Scene with an identity position and orientation (origin is the render frame
+ * origin). The `startFrame()` method will automatically call `updatePose()` for each Renderable in
+ * the `renderables` map, placing it at the correct pose given the current renderer TransformTree.
+ *
+ * A minimum implementation can simply add THREE.Object3D instances using `this.add()`. If these
+ * instances are Renderables and also added to this.renderables, their pose will be kept
+ * up-to-date in `startFrame()`.
+ *
+ * - Override `dispose()` to dispose of any unmanaged resources such as GPU buffers. Don't forget
+ *   to call `super.dispose()`.
+ * - Override `startFrame()` to execute code at the start of each frame. Call `super.startFrame()`
+ *   to run `updatePose()` on each entry in `this.renderables`.
+ * - Override `settingsNodes()` to add entries to the settings sidebar.
+ * - Message subscriptions are added with `renderer.addDatatypeSubscriptions()`.
+ * - Custom layer actions are added with `renderer.addCustomLayerAction()`.
+ */
 export class SceneExtension<
   TRenderable extends Renderable<BaseUserData> = Renderable<BaseUserData>,
 > extends THREE.Object3D {
+  /** A unique identifier for this SceneExtension, such as `foxglove.Markers`. */
   readonly extensionId: string;
+  /** A reference to the parent `Renderer` instance. */
   readonly renderer: Renderer;
+  /**
+   * A map of string identifiers to Renderable instances. SceneExtensions are free to use any IDs
+   * they choose, although topic names are a common choice for extensions display up to one
+   * renderable per topic.
+   */
   readonly renderables = new Map<string, TRenderable>();
 
   private _settingsUpdateDebounced = debounce(
@@ -112,16 +137,4 @@ export class SceneExtension<
       }
     }
   }
-
-  // register message handlers for datatypes (creates subscription(s) upstream)
-
-  // create settings nodes at arbitrary paths (or just under topics / layers?)
-
-  // handle user input at or beneath the registered settings node paths
-
-  // [x] startFrame, make it easy to update poses for all renderables
-
-  // [x] how do we track all renderables? traverse children?
-
-  // picking: enable/disable, provide custom shader(s), handle picking subcomponents
 }

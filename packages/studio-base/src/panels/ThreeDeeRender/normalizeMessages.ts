@@ -4,7 +4,7 @@
 
 import type { Time } from "@foxglove/rostime";
 
-import type { RawMessage } from "./SceneExtension";
+import type { PartialMessage } from "./SceneExtension";
 import type {
   ColorRGBA,
   Header,
@@ -99,14 +99,14 @@ export function normalizeColorRGBAs(colors: Partial<ColorRGBA>[] | undefined): C
   return colors.map(normalizeColorRGBA);
 }
 
-export function normalizePose(pose: RawMessage<Pose> | undefined): Pose {
+export function normalizePose(pose: PartialMessage<Pose> | undefined): Pose {
   return {
     position: normalizeVector3(pose?.position),
     orientation: normalizeQuaternion(pose?.orientation),
   };
 }
 
-export function normalizeHeader(header: RawMessage<Header> | undefined): Header {
+export function normalizeHeader(header: PartialMessage<Header> | undefined): Header {
   return {
     frame_id: header?.frame_id ?? "",
     stamp: normalizeTime(header?.stamp),
@@ -114,7 +114,7 @@ export function normalizeHeader(header: RawMessage<Header> | undefined): Header 
   };
 }
 
-export function normalizeTransform(transform: RawMessage<Transform> | undefined): Transform {
+export function normalizeTransform(transform: PartialMessage<Transform> | undefined): Transform {
   return {
     translation: normalizeVector3(transform?.translation),
     rotation: normalizeQuaternion(transform?.rotation),
@@ -122,7 +122,7 @@ export function normalizeTransform(transform: RawMessage<Transform> | undefined)
 }
 
 export function normalizeTransformStamped(
-  transform: RawMessage<TransformStamped> | undefined,
+  transform: PartialMessage<TransformStamped> | undefined,
 ): TransformStamped {
   return {
     header: normalizeHeader(transform?.header),
@@ -131,7 +131,7 @@ export function normalizeTransformStamped(
   };
 }
 
-export function normalizeTFMessage(tfMessage: RawMessage<TFMessage> | undefined): TFMessage {
+export function normalizeTFMessage(tfMessage: PartialMessage<TFMessage> | undefined): TFMessage {
   return {
     transforms: (tfMessage?.transforms ?? []).map(normalizeTransformStamped),
   };

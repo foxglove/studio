@@ -77,7 +77,8 @@ export function rgbaEqual(a: ColorRGBA, b: ColorRGBA): boolean {
 
 /**
  * Computes a gradient step from colors `a` to `b` using pre-multiplied alpha to
- * match CSS linear gradients.
+ * match CSS linear gradients. The inputs are assumed to not have pre-multiplied
+ * alpha, and the output will have pre-multiplied alpha.
  */
 export function rgbaGradient(output: ColorRGBA, a: ColorRGBA, b: ColorRGBA, t: number): void {
   const aR = a.r * a.a;

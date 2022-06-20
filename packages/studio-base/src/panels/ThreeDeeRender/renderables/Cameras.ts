@@ -13,7 +13,7 @@ import { MutablePoint } from "@foxglove/studio-base/types/Messages";
 
 import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";
-import { RawMessage, RawMessageEvent, SceneExtension } from "../SceneExtension";
+import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
 import { makeRgba, rgbaToCssString, stringToRgba } from "../color";
 import { normalizeHeader } from "../normalizeMessages";
@@ -126,7 +126,7 @@ export class Cameras extends SceneExtension<CameraInfoRenderable> {
     }
   };
 
-  handleCameraInfo = (messageEvent: RawMessageEvent<IncomingCameraInfo>): void => {
+  handleCameraInfo = (messageEvent: PartialMessageEvent<IncomingCameraInfo>): void => {
     const topic = messageEvent.topic;
     const cameraInfo = normalizeCameraInfo(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
@@ -167,7 +167,7 @@ export class Cameras extends SceneExtension<CameraInfoRenderable> {
     );
   };
 
-  protected _updateCameraInfoRenderable(
+  private _updateCameraInfoRenderable(
     renderable: CameraInfoRenderable,
     cameraInfo: CameraInfo,
     receiveTime: bigint,
@@ -408,7 +408,7 @@ function multiplyScalar(vec: MutablePoint, scalar: number): void {
 }
 
 function normalizeRegionOfInterest(
-  roi: RawMessage<RegionOfInterest> | undefined,
+  roi: PartialMessage<RegionOfInterest> | undefined,
 ): RegionOfInterest {
   if (!roi) {
     return { x_offset: 0, y_offset: 0, height: 0, width: 0, do_rectify: false };
@@ -422,7 +422,7 @@ function normalizeRegionOfInterest(
   };
 }
 
-function normalizeCameraInfo(message: RawMessage<IncomingCameraInfo>): CameraInfo {
+function normalizeCameraInfo(message: PartialMessage<IncomingCameraInfo>): CameraInfo {
   // Handle lowercase field names as well (ROS2 compatibility)
   const D = message.D ?? message.d;
   const K = message.K ?? message.k;

@@ -28,7 +28,7 @@ import { MutablePoint } from "@foxglove/studio-base/types/Messages";
 
 import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";
-import { RawMessage, RawMessageEvent, SceneExtension } from "../SceneExtension";
+import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
 import { stringToRgba } from "../color";
 import { normalizeByteArray, normalizeHeader } from "../normalizeMessages";
@@ -147,16 +147,16 @@ export class Images extends SceneExtension<ImageRenderable> {
     }
   };
 
-  handleRawImage = (messageEvent: RawMessageEvent<Image>): void => {
+  handleRawImage = (messageEvent: PartialMessageEvent<Image>): void => {
     this.handleImage(messageEvent, normalizeImage(messageEvent.message));
   };
 
-  handleCompressedImage = (messageEvent: RawMessageEvent<CompressedImage>): void => {
+  handleCompressedImage = (messageEvent: PartialMessageEvent<CompressedImage>): void => {
     this.handleImage(messageEvent, normalizeCompressedImage(messageEvent.message));
   };
 
   handleImage = (
-    messageEvent: RawMessageEvent<Image | CompressedImage>,
+    messageEvent: PartialMessageEvent<Image | CompressedImage>,
     image: Image | CompressedImage,
   ): void => {
     const topic = messageEvent.topic;
@@ -207,7 +207,7 @@ export class Images extends SceneExtension<ImageRenderable> {
     this._updateImageRenderable(renderable, image, receiveTime, renderable.userData.settings);
   };
 
-  handleCameraInfo = (messageEvent: RawMessageEvent<CameraInfo>): void => {
+  handleCameraInfo = (messageEvent: PartialMessageEvent<CameraInfo>): void => {
     const topic = messageEvent.topic;
     const updated = !this.cameraInfoTopics.has(topic);
     this.cameraInfoTopics.add(topic);
@@ -570,7 +570,7 @@ function normalizeImageData(data: unknown): Int8Array | Uint8Array {
   }
 }
 
-function normalizeImage(message: RawMessage<Image>): Image {
+function normalizeImage(message: PartialMessage<Image>): Image {
   return {
     header: normalizeHeader(message.header),
     height: message.height ?? 0,
@@ -582,7 +582,7 @@ function normalizeImage(message: RawMessage<Image>): Image {
   };
 }
 
-function normalizeCompressedImage(message: RawMessage<CompressedImage>): CompressedImage {
+function normalizeCompressedImage(message: PartialMessage<CompressedImage>): CompressedImage {
   return {
     header: normalizeHeader(message.header),
     format: message.format ?? "",

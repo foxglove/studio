@@ -10,7 +10,7 @@ import {
 
 import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";
-import { RawMessage, RawMessageEvent, SceneExtension } from "../SceneExtension";
+import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
 import { makeRgba, rgbaToCssString, stringToRgba } from "../color";
 import { normalizeHeader, normalizeVector3s } from "../normalizeMessages";
@@ -117,7 +117,7 @@ export class Polygons extends SceneExtension<PolygonRenderable> {
     }
   };
 
-  handlePolygon = (messageEvent: RawMessageEvent<PolygonStamped>): void => {
+  handlePolygon = (messageEvent: PartialMessageEvent<PolygonStamped>): void => {
     const topic = messageEvent.topic;
     const polygonStamped = normalizePolygonStamped(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
@@ -207,13 +207,13 @@ function createLineStripMarker(
   return linesMarker;
 }
 
-function normalizePolygon(polygon: RawMessage<Polygon> | undefined): Polygon {
+function normalizePolygon(polygon: PartialMessage<Polygon> | undefined): Polygon {
   return {
     points: normalizeVector3s(polygon?.points),
   };
 }
 
-function normalizePolygonStamped(polygon: RawMessage<PolygonStamped>): PolygonStamped {
+function normalizePolygonStamped(polygon: PartialMessage<PolygonStamped>): PolygonStamped {
   return {
     header: normalizeHeader(polygon.header),
     polygon: normalizePolygon(polygon.polygon),

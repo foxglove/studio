@@ -16,7 +16,7 @@ import { DynamicBufferGeometry } from "../DynamicBufferGeometry";
 import { MaterialCache, PointCloudColor } from "../MaterialCache";
 import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";
-import { RawMessage, RawMessageEvent, SceneExtension } from "../SceneExtension";
+import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry, SettingsTreeNodeWithActionHandler } from "../SettingsManager";
 import { rgbaToCssString, stringToRgba } from "../color";
 import { normalizeByteArray, normalizeHeader } from "../normalizeMessages";
@@ -151,7 +151,7 @@ export class PointClouds extends SceneExtension<PointCloudRenderable> {
     }
   };
 
-  handlePointCloud = (messageEvent: RawMessageEvent<PointCloud2>): void => {
+  handlePointCloud = (messageEvent: PartialMessageEvent<PointCloud2>): void => {
     const topic = messageEvent.topic;
     const pointCloud = normalizePointCloud2(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
@@ -708,7 +708,7 @@ function zeroReader(): number {
   return 0;
 }
 
-function normalizePointField(field: RawMessage<PointField> | undefined): PointField {
+function normalizePointField(field: PartialMessage<PointField> | undefined): PointField {
   if (!field) {
     return { name: "", offset: 0, datatype: PointFieldType.UNKNOWN, count: 0 };
   }
@@ -720,7 +720,7 @@ function normalizePointField(field: RawMessage<PointField> | undefined): PointFi
   };
 }
 
-function normalizePointCloud2(message: RawMessage<PointCloud2>): PointCloud2 {
+function normalizePointCloud2(message: PartialMessage<PointCloud2>): PointCloud2 {
   return {
     header: normalizeHeader(message.header),
     height: message.height ?? 0,

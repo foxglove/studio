@@ -12,7 +12,7 @@ import {
 
 import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";
-import { RawMessage, RawMessageEvent, SceneExtension } from "../SceneExtension";
+import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
 import { makeRgba, rgbaToCssString, stringToRgba } from "../color";
 import { normalizeHeader, normalizeMatrix6, normalizePose } from "../normalizeMessages";
@@ -156,13 +156,15 @@ export class Poses extends SceneExtension<PoseRenderable> {
     }
   };
 
-  handlePoseStamped = (messageEvent: RawMessageEvent<PoseStamped>): void => {
+  handlePoseStamped = (messageEvent: PartialMessageEvent<PoseStamped>): void => {
     const poseMessage = normalizePoseStamped(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
     this.addPose(messageEvent.topic, poseMessage, receiveTime);
   };
 
-  handlePoseWithCovariance = (messageEvent: RawMessageEvent<PoseWithCovarianceStamped>): void => {
+  handlePoseWithCovariance = (
+    messageEvent: PartialMessageEvent<PoseWithCovarianceStamped>,
+  ): void => {
     const poseMessage = normalizePoseWithCovarianceStamped(messageEvent.message);
     const receiveTime = toNanoSec(messageEvent.receiveTime);
     this.addPose(messageEvent.topic, poseMessage, receiveTime);
@@ -319,7 +321,7 @@ function createSphereMarker(
   };
 }
 
-function normalizePoseStamped(pose: RawMessage<PoseStamped>): PoseStamped {
+function normalizePoseStamped(pose: PartialMessage<PoseStamped>): PoseStamped {
   return {
     header: normalizeHeader(pose.header),
     pose: normalizePose(pose.pose),
@@ -327,14 +329,14 @@ function normalizePoseStamped(pose: RawMessage<PoseStamped>): PoseStamped {
 }
 
 function normalizePoseWithCovariance(
-  pose: RawMessage<PoseWithCovariance> | undefined,
+  pose: PartialMessage<PoseWithCovariance> | undefined,
 ): PoseWithCovariance {
   const covariance = normalizeMatrix6(pose?.covariance as number[] | undefined);
   return { pose: normalizePose(pose?.pose), covariance };
 }
 
 function normalizePoseWithCovarianceStamped(
-  message: RawMessage<PoseWithCovarianceStamped>,
+  message: PartialMessage<PoseWithCovarianceStamped>,
 ): PoseWithCovarianceStamped {
   return {
     header: normalizeHeader(message.header),
