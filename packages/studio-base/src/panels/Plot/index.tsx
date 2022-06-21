@@ -49,7 +49,6 @@ import PanelToolbar, {
   PANEL_TOOLBAR_MIN_HEIGHT,
 } from "@foxglove/studio-base/components/PanelToolbar";
 import ToolbarIconButton from "@foxglove/studio-base/components/PanelToolbar/ToolbarIconButton";
-import { SettingsTreeAction } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import Stack from "@foxglove/studio-base/components/Stack";
 import {
   ChartDefaultView,
@@ -59,6 +58,7 @@ import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/Pane
 import { OnClickArg as OnChartClickArgs } from "@foxglove/studio-base/src/components/Chart";
 import { OpenSiblingPanel, PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { getTimestampForMessage } from "@foxglove/studio-base/util/time";
+import { SettingsTreeAction } from "@foxglove/studio/settings";
 
 import PlotChart from "./PlotChart";
 import PlotLegend from "./PlotLegend";

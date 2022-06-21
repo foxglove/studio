@@ -12,12 +12,12 @@ import Logger from "@foxglove/log";
 import { CameraState } from "@foxglove/regl-worldview";
 import { toNanoSec } from "@foxglove/rostime";
 import { MessageEvent, Topic } from "@foxglove/studio";
-import type * as CommonIcons from "@foxglove/studio-base/components/CommonIcons";
 import {
+  SettingsIcon,
   SettingsTreeAction,
   SettingsTreeNodeActionItem,
   SettingsTreeRoots,
-} from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+} from "@foxglove/studio/settings";
 
 import { Input } from "./Input";
 import { Labels } from "./Labels";
@@ -318,7 +318,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   addCustomLayerAction(options: {
     layerId: string;
     label: string;
-    icon?: keyof typeof CommonIcons;
+    icon?: SettingsIcon;
     handler: (instanceId: string) => void;
   }): void {
     const handler = options.handler;

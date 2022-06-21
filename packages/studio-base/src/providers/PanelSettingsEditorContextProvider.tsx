@@ -8,7 +8,7 @@ import create, { StoreApi } from "zustand";
 import createContext from "zustand/context";
 
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
-import { SettingsTree } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import { SettingsTree } from "@foxglove/studio/settings";
 
 type ImmutableSettingsTree = DeepReadonly<SettingsTree>;
 

@@ -13,13 +13,12 @@ import { MessagePathInputStoryFixture } from "@foxglove/studio-base/components/M
 import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
 import SettingsTreeEditor from "@foxglove/studio-base/components/SettingsTreeEditor";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
-
 import {
   SettingsTreeNode,
   SettingsTreeRoots,
   SettingsTreeFieldValue,
   SettingsTreeAction,
-} from "./types";
+} from "@foxglove/studio/settings";
 
 export default {
   title: "components/SettingsTreeEditor",

@@ -4,7 +4,7 @@
 
 import { isNumber } from "lodash";
 
-import { SettingsTreeRoots } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import { SettingsTreeRoots } from "@foxglove/studio/settings";
 
 import { PlotConfig } from "./types";
 

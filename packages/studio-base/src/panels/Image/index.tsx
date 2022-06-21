@@ -25,7 +25,6 @@ import {
   PanelContextMenuItem,
 } from "@foxglove/studio-base/components/PanelContextMenu";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import { SettingsTreeAction } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import inScreenshotTests from "@foxglove/studio-base/stories/inScreenshotTests";
@@ -34,6 +33,7 @@ import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActually
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { formatTimeRaw } from "@foxglove/studio-base/util/time";
+import { SettingsTreeAction } from "@foxglove/studio/settings";
 
 import { ImageCanvas, ImageEmptyState, Toolbar, TopicDropdown } from "./components";
 import { useCameraInfo, ANNOTATION_DATATYPES, useImagePanelMessages } from "./hooks";

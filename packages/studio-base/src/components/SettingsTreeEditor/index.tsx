@@ -10,9 +10,9 @@ import { useMemo, useState } from "react";
 import { DeepReadonly } from "ts-essentials";
 
 import Stack from "@foxglove/studio-base/components/Stack";
+import { SettingsTree } from "@foxglove/studio/settings";
 
 import { NodeEditor } from "./NodeEditor";
-import { SettingsTree } from "./types";
 import { prepareSettingsRoots } from "./utils";
 
 const StyledAppBar = muiStyled(AppBar, { skipSx: true })(({ theme }) => ({

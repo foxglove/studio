@@ -7,10 +7,7 @@ import { chain } from "lodash";
 import memoizeWeak from "memoize-weak";
 
 import { Topic } from "@foxglove/studio";
-import {
-  SettingsTreeNode,
-  SettingsTreeRoots,
-} from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import { SettingsTreeNode, SettingsTreeRoots } from "@foxglove/studio/settings";
 
 import { Config } from "./types";
 

@@ -5,10 +5,7 @@
 import { transform } from "lodash";
 
 import { filterMap } from "@foxglove/den/collection";
-import {
-  SettingsTreeFields,
-  SettingsTreeRoots,
-} from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import { SettingsTreeFields, SettingsTreeRoots } from "@foxglove/studio/settings";
 
 // Persisted panel state
 export type Config = {

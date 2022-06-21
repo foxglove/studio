@@ -4,12 +4,9 @@
 
 import Logger from "@foxglove/log";
 import { toNanoSec } from "@foxglove/rostime";
-import {
-  SettingsTreeAction,
-  SettingsTreeFields,
-} from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import PinholeCameraModel from "@foxglove/studio-base/panels/Image/lib/PinholeCameraModel";
 import { MutablePoint } from "@foxglove/studio-base/types/Messages";
+import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio/settings";
 
 import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";

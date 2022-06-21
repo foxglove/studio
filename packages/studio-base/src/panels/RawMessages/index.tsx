@@ -46,7 +46,6 @@ import { useMessageDataItem } from "@foxglove/studio-base/components/MessagePath
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import { SettingsTreeAction } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import getDiff, {
   diffLabels,
   diffLabelsByLabelText,
@@ -58,6 +57,7 @@ import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { useJsonTreeTheme } from "@foxglove/studio-base/util/globalConstants";
 import { enumValuesByDatatypeAndField } from "@foxglove/studio-base/util/selectors";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { SettingsTreeAction } from "@foxglove/studio/settings";
 
 import DiffSpan from "./DiffSpan";
 import MaybeCollapsedValue from "./MaybeCollapsedValue";

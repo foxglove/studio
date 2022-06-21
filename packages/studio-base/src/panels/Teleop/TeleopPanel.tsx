@@ -9,14 +9,9 @@ import { DeepPartial } from "ts-essentials";
 import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
 import { PanelExtensionContext, Topic } from "@foxglove/studio";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
-import {
-  EXPERIMENTAL_PanelExtensionContextWithSettings,
-  SettingsTreeAction,
-  SettingsTreeNode,
-  SettingsTreeRoots,
-} from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import Stack from "@foxglove/studio-base/components/Stack";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
+import { SettingsTreeAction, SettingsTreeNode, SettingsTreeRoots } from "@foxglove/studio/settings";
 
 import DirectionalPad, { DirectionalPadAction } from "./DirectionalPad";
 
@@ -169,10 +164,7 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
 
   useEffect(() => {
     const tree = buildSettingsTree(config, topics);
-    // eslint-disable-next-line no-underscore-dangle
-    (
-      context as unknown as EXPERIMENTAL_PanelExtensionContextWithSettings
-    ).__updatePanelSettingsTree({
+    context.updatePanelSettingsTree({
       actionHandler: settingsActionHandler,
       roots: tree,
     });

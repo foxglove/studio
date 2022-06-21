@@ -19,10 +19,6 @@ import { useDebouncedCallback } from "use-debounce";
 
 import { toSec } from "@foxglove/rostime";
 import { PanelExtensionContext, MessageEvent } from "@foxglove/studio";
-import {
-  EXPERIMENTAL_PanelExtensionContextWithSettings,
-  SettingsTreeAction,
-} from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import Stack from "@foxglove/studio-base/components/Stack";
 import FilteredPointLayer, {
   POINT_MARKER_RADIUS,
@@ -30,6 +26,7 @@ import FilteredPointLayer, {
 import { Topic } from "@foxglove/studio-base/players/types";
 import { FoxgloveMessages } from "@foxglove/studio-base/types/FoxgloveMessages";
 import { darkColor, lightColor, lineColors } from "@foxglove/studio-base/util/plotColors";
+import { SettingsTreeAction } from "@foxglove/studio/settings";
 
 import { Config, validateCustomUrl, buildSettingsTree } from "./config";
 import { hasFix } from "./support";
@@ -229,10 +226,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     context.subscribe(eligibleEnabled);
 
     const tree = buildSettingsTree(config, eligibleTopics);
-    // eslint-disable-next-line no-underscore-dangle
-    (
-      context as unknown as EXPERIMENTAL_PanelExtensionContextWithSettings
-    ).__updatePanelSettingsTree({
+    context.updatePanelSettingsTree({
       actionHandler: settingsActionHandler,
       roots: tree,
     });

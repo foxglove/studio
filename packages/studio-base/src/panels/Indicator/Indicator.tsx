@@ -10,11 +10,8 @@ import { MessageEvent, PanelExtensionContext } from "@foxglove/studio";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
-import {
-  EXPERIMENTAL_PanelExtensionContextWithSettings,
-  SettingsTreeAction,
-} from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { SettingsTreeAction } from "@foxglove/studio/settings";
 
 import { getMatchingRule } from "./getMatchingRule";
 import { settingsActionReducer, useSettingsTree } from "./settings";
@@ -185,10 +182,7 @@ export function Indicator({ context }: Props): JSX.Element {
 
   const settingsTree = useSettingsTree(config, state.pathParseError, state.error?.message);
   useEffect(() => {
-    // eslint-disable-next-line no-underscore-dangle
-    (
-      context as unknown as EXPERIMENTAL_PanelExtensionContextWithSettings
-    ).__updatePanelSettingsTree({
+    context.updatePanelSettingsTree({
       actionHandler: settingsActionHandler,
       roots: settingsTree,
     });

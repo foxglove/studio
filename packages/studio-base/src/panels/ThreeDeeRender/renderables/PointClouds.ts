@@ -10,7 +10,7 @@ import {
   SettingsTreeAction,
   SettingsTreeFields,
   SettingsTreeNode,
-} from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+} from "@foxglove/studio/settings";
 
 import { DynamicBufferGeometry } from "../DynamicBufferGeometry";
 import { MaterialCache, PointCloudColor } from "../MaterialCache";

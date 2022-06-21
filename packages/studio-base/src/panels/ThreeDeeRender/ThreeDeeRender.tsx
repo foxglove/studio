@@ -18,17 +18,14 @@ import {
 } from "@foxglove/regl-worldview";
 import { toNanoSec } from "@foxglove/rostime";
 import {
+  LayoutActions,
+  MessageEvent,
   PanelExtensionContext,
   RenderState,
-  Topic,
-  MessageEvent,
-  LayoutActions,
-} from "@foxglove/studio";
-import {
-  EXPERIMENTAL_PanelExtensionContextWithSettings,
   SettingsTreeAction,
   SettingsTreeRoots,
-} from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+  Topic,
+} from "@foxglove/studio";
 import useCleanup from "@foxglove/studio-base/hooks/useCleanup";
 
 import { DebugGui } from "./DebugGui";
@@ -225,10 +222,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
   // Rebuild the settings sidebar tree as needed
   useEffect(() => {
-    // eslint-disable-next-line no-underscore-dangle
-    (
-      context as unknown as EXPERIMENTAL_PanelExtensionContextWithSettings
-    ).__updatePanelSettingsTree({
+    context.updatePanelSettingsTree({
       actionHandler,
       roots: settingsTree ?? {},
     });

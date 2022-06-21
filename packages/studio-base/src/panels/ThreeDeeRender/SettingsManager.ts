@@ -5,11 +5,7 @@
 import EventEmitter from "eventemitter3";
 import { produce } from "immer";
 
-import {
-  SettingsTreeAction,
-  SettingsTreeNode,
-  SettingsTreeRoots,
-} from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import { SettingsTreeAction, SettingsTreeNode, SettingsTreeRoots } from "@foxglove/studio/settings";
 
 import { LayerErrors, Path } from "./LayerErrors";
 

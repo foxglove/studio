@@ -2,7 +2,261 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+declare module "@foxglove/studio/settings" {
+  export type SettingsIcon =
+    | "Add"
+    | "Background"
+    | "Camera"
+    | "Cells"
+    | "Check"
+    | "Circle"
+    | "Clock"
+    | "Collapse"
+    | "Cube"
+    | "Delete"
+    | "Expand"
+    | "Flag"
+    | "Folder"
+    | "FolderOpen"
+    | "Grid"
+    | "Hive"
+    | "ImageProjection"
+    | "Map"
+    | "Move"
+    | "MoveDown"
+    | "MoveUp"
+    | "NorthWest"
+    | "Note"
+    | "NoteFilled"
+    | "Points"
+    | "Settings"
+    | "Shapes"
+    | "Share"
+    | "Star"
+    | "SouthEast"
+    | "Topic"
+    | "Walk"
+    | "World";
+
+  /**
+   * A settings tree field specifies the input type and the value of a field
+   * in the settings editor.
+   */
+  export type SettingsTreeFieldValue =
+    | { input: "autocomplete"; value?: string; items: string[] }
+    | { input: "boolean"; value?: boolean }
+    | { input: "rgb"; value?: string }
+    | { input: "rgba"; value?: string }
+    | { input: "gradient"; value?: [string, string] }
+    | { input: "messagepath"; value?: string; validTypes?: string[] }
+    | {
+        input: "number";
+        value?: number;
+        step?: number;
+        max?: number;
+        min?: number;
+        precision?: number;
+      }
+    | {
+        input: "select";
+        value?: number | number[];
+        options: Array<{ label: string; value: undefined | number }>;
+      }
+    | {
+        input: "select";
+        value?: string | string[];
+        options: Array<{ label: string; value: undefined | string }>;
+      }
+    | { input: "string"; value?: string }
+    | { input: "toggle"; value?: string; options: string[] }
+    | {
+        input: "vec3";
+        value?: [undefined | number, undefined | number, undefined | number];
+        step?: number;
+        precision?: number;
+        labels?: [string, string, string];
+      }
+    | {
+        input: "vec2";
+        value?: [undefined | number, undefined | number];
+        step?: number;
+        precision?: number;
+        labels?: [string, string];
+      };
+
+  export type SettingsTreeField = SettingsTreeFieldValue & {
+    /**
+     * True if the field is disabled.
+     */
+    disabled?: boolean;
+
+    /**
+     * Optional help text to explain the purpose of the field.
+     */
+    help?: string;
+
+    /**
+     * The label displayed alongside the field.
+     */
+    label: string;
+
+    /**
+     * Optional placeholder text displayed in the field input in the
+     * absence of a value.
+     */
+    placeholder?: string;
+
+    /**
+     * True if the field is readonly.
+     */
+    readonly?: boolean;
+
+    /**
+     * Optional message indicating any error state for the field.
+     */
+    error?: string;
+  };
+
+  export type SettingsTreeFields = Record<string, undefined | SettingsTreeField>;
+
+  export type SettingsTreeChildren = Record<string, undefined | SettingsTreeNode>;
+
+  export type SettingsTreeNodeActionItem = {
+    type: "action";
+
+    /**
+     * A unique idenfier for the action.
+     */
+    id: string;
+
+    /**
+     * A descriptive label for the action.
+     */
+    label: string;
+
+    /**
+     * Optional icon to display with the action.
+     */
+    icon?: SettingsIcon;
+  };
+
+  export type SettingsTreeNodeActionDivider = { type: "divider" };
+
+  /**
+   * An action that can be offered to the user to perform at the
+   * level of a settings node.
+   */
+  export type SettingsTreeNodeAction = SettingsTreeNodeActionItem | SettingsTreeNodeActionDivider;
+
+  export type SettingsTreeNode = {
+    /**
+     * An array of actions that can be performed on this node.
+     */
+    actions?: SettingsTreeNodeAction[];
+
+    /**
+     * Other settings tree nodes nested under this node.
+     */
+    children?: SettingsTreeChildren;
+
+    /**
+     * Set to collapsed if the node should be initially collapsed.
+     */
+    defaultExpansionState?: "collapsed" | "expanded";
+
+    /**
+     * Optional message indicating any error state for the node.
+     */
+    error?: string;
+
+    /**
+     * Field inputs attached directly to this node.
+     */
+    fields?: SettingsTreeFields;
+
+    /**
+     * Optional icon to display next to the node label.
+     */
+    icon?: SettingsIcon;
+
+    /**
+     * An optional label shown at the top of this node.
+     */
+    label?: string;
+
+    /**
+     * True if the node label can be edited by the user.
+     */
+    renamable?: boolean;
+
+    /**
+     * Optional sort order to override natural object ordering. All nodes
+     * with a sort order will be rendered before nodes all with no sort order.
+     *
+     * Nodes without an explicit order will be ordered according to ES2015
+     * object ordering rules.
+     */
+    order?: number;
+
+    /**
+     * An optional visibility status. If this is not undefined, the node
+     * editor will display a visiblity toggle button and send update actions
+     * to the action handler.
+     **/
+    visible?: boolean;
+  };
+
+  /**
+   * Distributes Pick<T, K> across all members of a union, used for extracting structured
+   * subtypes.
+   */
+  type DistributivePick<T, K extends keyof T> = T extends unknown ? Pick<T, K> : never;
+
+  /**
+   * Represents actions that can be dispatched to source of the SettingsTree to implement
+   * edits and updates.
+   */
+  export type SettingsTreeAction =
+    | {
+        action: "update";
+        payload: { path: readonly string[] } & DistributivePick<
+          SettingsTreeFieldValue,
+          "input" | "value"
+        >;
+      }
+    | {
+        action: "perform-node-action";
+        payload: { id: string; path: readonly string[] };
+      };
+
+  export type SettingsTreeRoots = Record<string, undefined | SettingsTreeNode>;
+
+  /**
+   * A settings tree is a tree of panel settings that can be managed by
+   * a default user interface in Studio.
+   */
+  export type SettingsTree = {
+    /**
+     * Handler to process all actions on the settings tree initiated by the UI.
+     */
+    actionHandler: (action: SettingsTreeAction) => void;
+
+    /**
+     * True if the editor should show the filter control.
+     */
+    enableFilter?: boolean;
+
+    /**
+     * The actual settings tree roots. Updates to these will automatically be reflected in the
+     * editor UI.
+     */
+    roots: SettingsTreeRoots;
+  };
+}
+
 declare module "@foxglove/studio" {
+  import { SettingsTree } from "@foxglove/studio/settings";
+
   // Valid types for parameter data (such as rosparams)
   export type ParameterValue =
     | undefined
@@ -276,6 +530,12 @@ declare module "@foxglove/studio" {
      * The done callback should be called once the panel has rendered the render state.
      */
     onRender?: (renderState: Readonly<RenderState>, done: () => void) => void;
+
+    /**
+     * Updates the panel's settings tree for the panel settings editor. Call this every
+     * time you want to update the representation of the panel settings in the editor.
+     */
+    updatePanelSettingsTree(settings: Readonly<SettingsTree>): void;
   };
 
   export type ExtensionPanelRegistration = {

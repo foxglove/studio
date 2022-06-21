@@ -32,7 +32,6 @@ import {
 } from "@foxglove/studio-base/components/MessagePipeline";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import { SettingsTree } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import { useAppConfiguration } from "@foxglove/studio-base/context/AppConfigurationContext";
 import {
   useClearHoverValue,
@@ -48,6 +47,7 @@ import {
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import { PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { assertNever } from "@foxglove/studio-base/util/assertNever";
+import { SettingsTree } from "@foxglove/studio/settings";
 
 const log = Logger.getLogger(__filename);
 
@@ -389,9 +389,6 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
     };
 
     return {
-      // This is here temporarily until the new panel settings API is ready. Do not use.
-      __updatePanelSettingsTree: updateSettings,
-
       initialState: configRef.current,
 
       saveState: saveConfig,
@@ -520,6 +517,8 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       subscribeAppSettings: (settings: string[]) => {
         setSubscribedAppSettings(settings);
       },
+
+      updatePanelSettingsTree: updateSettings,
     };
   }, [
     capabilities,

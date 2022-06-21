@@ -31,10 +31,6 @@ import { v4 as uuidv4 } from "uuid";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import {
-  SettingsTreeAction,
-  SettingsTreeRoots,
-} from "@foxglove/studio-base/components/SettingsTreeEditor/types";
 import Stack from "@foxglove/studio-base/components/Stack";
 import {
   LayoutState,
@@ -49,6 +45,7 @@ import PlaygroundIcon from "@foxglove/studio-base/panels/NodePlayground/playgrou
 import { HelpInfoStore, useHelpInfo } from "@foxglove/studio-base/providers/HelpInfoProvider";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import { SaveConfig, UserNodes } from "@foxglove/studio-base/types/panels";
+import { SettingsTreeAction, SettingsTreeRoots } from "@foxglove/studio/settings";
 
 import Config from "./Config";
 import helpContent from "./index.help.md";

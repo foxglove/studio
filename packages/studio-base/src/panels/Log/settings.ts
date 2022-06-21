@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { Topic } from "@foxglove/studio";
-import { SettingsTreeRoots } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import { SettingsTreeRoots } from "@foxglove/studio/settings";
 
 export function buildSettingsTree(
   topicToRender: string,

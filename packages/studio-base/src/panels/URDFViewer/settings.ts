@@ -5,7 +5,7 @@
 import { isEmpty } from "lodash";
 
 import { Topic } from "@foxglove/studio";
-import { SettingsTreeRoots } from "@foxglove/studio-base/components/SettingsTreeEditor/types";
+import { SettingsTreeRoots } from "@foxglove/studio/settings";
 
 import { Config } from "./types";
 
