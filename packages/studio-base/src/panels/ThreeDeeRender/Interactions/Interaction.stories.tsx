@@ -247,24 +247,6 @@ storiesOf("panels/ThreeDeeRender/Interactions/Interaction", module)
   })
   .add("default", DefaultStory, { colorScheme: "dark" })
   .add("default light", DefaultStory, { colorScheme: "light" })
-  .add("instanced interactionData", () => {
-    return (
-      <SWrapper>
-        <PanelSetupWithData title="With instanced interactionData">
-          <Interactions
-            {...(sharedProps as any)}
-            interactionsTabType={OBJECT_TAB_TYPE}
-            selectedObject={{
-              object: {
-                metadataByIndex: [{ ...markerObject, interactionData: { topic: "/foo/bar" } }],
-              },
-              instanceIndex: 0,
-            }}
-          />
-        </PanelSetupWithData>
-      </SWrapper>
-    );
-  })
   .add("PointCloud", () => {
     const cloud1 = { ...selectedObject.object, ...decodeMarker(POINT_CLOUD_MESSAGE) };
     const cloud2 = {
