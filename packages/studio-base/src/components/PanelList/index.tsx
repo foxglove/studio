@@ -230,7 +230,7 @@ function DraggablePanelItem({
       return (
         <Card className={classes.fullHeight}>
           <CardActionArea ref={mergedRef} onClick={onClick} className={classes.fullHeight}>
-            <Stack>
+            <Stack fullHeight>
               {panel.thumbnail != undefined ? (
                 <CardMedia component="img" image={panel.thumbnail} alt={panel.title} />
               ) : (
