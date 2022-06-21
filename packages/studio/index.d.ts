@@ -193,8 +193,10 @@ declare module "@foxglove/studio/settings" {
      * Optional sort order to override natural object ordering. All nodes
      * with a sort order will be rendered before nodes all with no sort order.
      *
-     * Nodes without an explicit order will be ordered according to ES2015
+     * Nodes without an explicit order will be ordered according to ECMA
      * object ordering rules.
+     *
+     * https://262.ecma-international.org/6.0/#sec-ordinary-object-internal-methods-and-internal-slots-ownpropertykeys
      */
     order?: number;
 
