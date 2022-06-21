@@ -605,7 +605,13 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       <Stack
         position="absolute"
         ref={mapContainerRef}
-        style={{ top: 0, right: 0, bottom: 0, left: 0, visibility: center ? "visible" : "hidden" }}
+        style={{
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0,
+          visibility: center ? "visible" : "hidden",
+        }}
       />
     </Stack>
   );
