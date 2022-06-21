@@ -15,7 +15,6 @@ import ExportVariantIcon from "@mdi/svg/svg/export-variant.svg";
 import { useMemo, useState, useCallback } from "react";
 import styled from "styled-components";
 
-import { MouseEventObject } from "@foxglove/regl-worldview";
 import ChildToggle from "@foxglove/studio-base/components/ChildToggle";
 import Icon from "@foxglove/studio-base/components/Icon";
 import Menu from "@foxglove/studio-base/components/Menu";
@@ -30,6 +29,7 @@ import clipboard from "@foxglove/studio-base/util/clipboard";
 import { downloadFiles } from "@foxglove/studio-base/util/download";
 import { maybeCast } from "@foxglove/studio-base/util/maybeCast";
 
+import type { SelectionObject } from "./Interactions";
 import { SValue, SLabel } from "./styling";
 
 const SRow = styled.div`
@@ -40,7 +40,7 @@ const SRow = styled.div`
   margin: 4px 0;
 `;
 type Props = {
-  selectedObject: MouseEventObject;
+  selectedObject: SelectionObject;
 };
 
 export default function PointCloudDetails({

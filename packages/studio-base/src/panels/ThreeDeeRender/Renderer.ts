@@ -562,7 +562,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     // Traverse the scene looking for this objectId
     const pickedObject = this.scene.getObjectById(objectId);
 
-    // Find the first ancestor of thes clicked object that is a Renderable
+    // Find the first ancestor of the picked object that is a Renderable
     let maybeRenderable = pickedObject as Partial<Renderable> | undefined;
     while (maybeRenderable && maybeRenderable.isRenderable !== true) {
       maybeRenderable = (maybeRenderable.parent ?? undefined) as Partial<Renderable> | undefined;
@@ -571,7 +571,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     const selectedRenderable = maybeRenderable as Renderable | undefined;
     if (selectedRenderable === prevSelected) {
       log.debug(
-        `Deselecting previously selected object ${prevSelected?.id} (${prevSelected?.name})`,
+        `Deselecting previously selected Renderable ${prevSelected?.id} (${prevSelected?.name})`,
       );
       if (!DEBUG_PICKING) {
         // Re-render with no object selected
@@ -583,7 +583,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.selectedObject = selectedRenderable;
 
     if (!selectedRenderable) {
-      log.warn(`No renderable found for object ${objectId}`);
+      log.warn(`No Renderable found for objectId ${objectId}`);
       this.emit("renderableSelected", undefined, this);
       return;
     }
@@ -591,7 +591,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     // Select the newly selected object
     selectObject(selectedRenderable);
     this.emit("renderableSelected", selectedRenderable, this);
-    log.debug(`Selected renderable ${selectedRenderable.id} (${selectedRenderable.name})`);
+    log.debug(`Selected Renderable ${selectedRenderable.id} (${selectedRenderable.name})`);
 
     if (!DEBUG_PICKING) {
       // Re-render with the selected object

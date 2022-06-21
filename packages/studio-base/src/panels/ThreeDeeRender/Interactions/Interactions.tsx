@@ -13,34 +13,41 @@
 
 import CursorIcon from "@mdi/svg/svg/cursor-default.svg";
 
-import { MouseEventObject } from "@foxglove/regl-worldview";
 import type { LayoutActions } from "@foxglove/studio";
 import ExpandingToolbar, {
   ToolGroup,
   ToolGroupFixedSizePane,
 } from "@foxglove/studio-base/components/ExpandingToolbar";
 import { decodeAdditionalFields } from "@foxglove/studio-base/panels/ThreeDimensionalViz/commands/PointClouds/selection";
-import { getInteractionData } from "@foxglove/studio-base/panels/ThreeDimensionalViz/threeDimensionalVizUtils";
 import { PointCloud2 } from "@foxglove/studio-base/types/Messages";
 import { maybeCast } from "@foxglove/studio-base/util/maybeCast";
 
+import { Pose } from "../transforms";
 import LinkedGlobalVariableList from "./LinkedGlobalVariableList";
 import ObjectDetails from "./ObjectDetails";
 import PointCloudDetails from "./PointCloudDetails";
 import TopicLink from "./TopicLink";
 import { SEmptyState, SRow, SValue } from "./styling";
-import { SelectedObject } from "./types";
+import { InteractionData } from "./types";
 import useLinkedGlobalVariables from "./useLinkedGlobalVariables";
 
 export const OBJECT_TAB_TYPE = "Selected object";
 export const LINKED_VARIABLES_TAB_TYPE = "Linked variables";
 export type TabType = typeof OBJECT_TAB_TYPE | typeof LINKED_VARIABLES_TAB_TYPE;
 
+export type SelectionObject = {
+  object: {
+    pose: Pose;
+    interactionData?: InteractionData;
+  };
+  instanceIndex: number | undefined;
+};
+
 type Props = {
   interactionsTabType?: TabType;
   setInteractionsTabType: (arg0?: TabType) => void;
   addPanel: LayoutActions["addPanel"];
-  selectedObject?: MouseEventObject;
+  selectedObject?: SelectionObject;
 };
 
 const InteractionsBaseComponent = React.memo<Props>(function InteractionsBaseComponent({
@@ -50,7 +57,7 @@ const InteractionsBaseComponent = React.memo<Props>(function InteractionsBaseCom
   setInteractionsTabType,
 }: Props) {
   const { object } = selectedObject ?? {};
-  const selectedInteractionData = getInteractionData(selectedObject);
+  const selectedInteractionData = selectedObject?.object.interactionData;
 
   const { originalMessage } = selectedInteractionData ?? {};
 
@@ -83,9 +90,7 @@ const InteractionsBaseComponent = React.memo<Props>(function InteractionsBaseCom
                   </SValue>
                 </SRow>
               )}
-              {isPointCloud && (
-                <PointCloudDetails selectedObject={selectedObject as SelectedObject} />
-              )}
+              {isPointCloud && <PointCloudDetails selectedObject={selectedObject!} />}
               <ObjectDetails
                 selectedObject={maybeFullyDecodedObject}
                 interactionData={selectedInteractionData}

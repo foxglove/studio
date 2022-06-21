@@ -32,27 +32,20 @@ import {
 import useCleanup from "@foxglove/studio-base/hooks/useCleanup";
 
 import { DebugGui } from "./DebugGui";
-import Interactions, { InteractionContextMenu, OBJECT_TAB_TYPE, TabType } from "./Interactions";
-import type { InteractionData } from "./Interactions/types";
+import Interactions, {
+  InteractionContextMenu,
+  OBJECT_TAB_TYPE,
+  SelectionObject,
+  TabType,
+} from "./Interactions";
 import type { Renderable } from "./Renderable";
 import { Renderer, RendererConfig } from "./Renderer";
 import { RendererContext, useRendererEvent } from "./RendererContext";
 import { Stats } from "./Stats";
 import type { MarkerUserData } from "./renderables/markers/RenderableMarker";
 import { TF_DATATYPES, TRANSFORM_STAMPED_DATATYPES } from "./ros";
-import type { Pose } from "./transforms";
 
 const log = Logger.getLogger(__filename);
-
-type SelectionObject = {
-  object: {
-    pose: Pose;
-    scale: [number, number, number];
-    color: [number, number, number, number];
-    interactionData?: InteractionData;
-  };
-  instanceIndex: number | undefined;
-};
 
 const SHOW_DEBUG: true | false = false;
 const PANEL_STYLE: React.CSSProperties = {
@@ -104,8 +97,6 @@ function RendererOverlay(props: {
     return {
       object: {
         pose: selectedRenderable.userData.pose,
-        scale: [1, 1, 1],
-        color: [0, 0, 0, 1],
         interactionData: {
           topic,
           highlighted: true,
