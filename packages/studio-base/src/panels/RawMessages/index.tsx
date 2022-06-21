@@ -27,6 +27,7 @@ import ReactHoverObserver from "react-hover-observer";
 import Tree from "react-json-tree";
 import { useLatest } from "react-use";
 
+import { SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import Icon from "@foxglove/studio-base/components/Icon";
@@ -57,7 +58,6 @@ import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { useJsonTreeTheme } from "@foxglove/studio-base/util/globalConstants";
 import { enumValuesByDatatypeAndField } from "@foxglove/studio-base/util/selectors";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
-import { SettingsTreeAction } from "@foxglove/studio/settings";
 
 import DiffSpan from "./DiffSpan";
 import MaybeCollapsedValue from "./MaybeCollapsedValue";

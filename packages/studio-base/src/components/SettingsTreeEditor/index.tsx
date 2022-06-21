@@ -9,8 +9,8 @@ import memoizeWeak from "memoize-weak";
 import { useMemo, useState } from "react";
 import { DeepReadonly } from "ts-essentials";
 
+import { SettingsTree } from "@foxglove/studio";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { SettingsTree } from "@foxglove/studio/settings";
 
 import { NodeEditor } from "./NodeEditor";
 import { prepareSettingsRoots } from "./utils";

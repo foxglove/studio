@@ -6,8 +6,7 @@ import { Immutable } from "immer";
 import { chain } from "lodash";
 import memoizeWeak from "memoize-weak";
 
-import { Topic } from "@foxglove/studio";
-import { SettingsTreeNode, SettingsTreeRoots } from "@foxglove/studio/settings";
+import { SettingsTreeNode, SettingsTreeRoots, Topic } from "@foxglove/studio";
 
 import { Config } from "./types";
 

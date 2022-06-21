@@ -17,6 +17,7 @@ import { useCallback, useMemo, useState, useRef, useEffect, useLayoutEffect } fr
 import { useLatest } from "react-use";
 
 import { CameraState } from "@foxglove/regl-worldview";
+import { SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import {
   MessagePipelineContext,
@@ -45,7 +46,6 @@ import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/Pane
 import { MutablePose } from "@foxglove/studio-base/types/Messages";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
-import { SettingsTreeAction } from "@foxglove/studio/settings";
 
 import { buildSettingsTree } from "./settings";
 import useFrame from "./useFrame";

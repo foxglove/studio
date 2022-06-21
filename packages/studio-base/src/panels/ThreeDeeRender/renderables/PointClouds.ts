@@ -5,12 +5,7 @@
 import * as THREE from "three";
 
 import { toNanoSec } from "@foxglove/rostime";
-import { Topic } from "@foxglove/studio";
-import {
-  SettingsTreeAction,
-  SettingsTreeFields,
-  SettingsTreeNode,
-} from "@foxglove/studio/settings";
+import { SettingsTreeAction, SettingsTreeFields, SettingsTreeNode, Topic } from "@foxglove/studio";
 
 import { DynamicBufferGeometry } from "../DynamicBufferGeometry";
 import { MaterialCache, PointCloudColor } from "../MaterialCache";

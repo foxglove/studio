@@ -17,6 +17,7 @@ import { difference, set, union } from "lodash";
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useUpdateEffect } from "react-use";
 
+import { SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
@@ -33,7 +34,6 @@ import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActually
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { formatTimeRaw } from "@foxglove/studio-base/util/time";
-import { SettingsTreeAction } from "@foxglove/studio/settings";
 
 import { ImageCanvas, ImageEmptyState, Toolbar, TopicDropdown } from "./components";
 import { useCameraInfo, ANNOTATION_DATATYPES, useImagePanelMessages } from "./hooks";

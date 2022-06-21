@@ -13,7 +13,7 @@ import {
   SettingsTreeNode,
   SettingsTreeNodeAction,
   SettingsTreeRoots,
-} from "@foxglove/studio/settings";
+} from "@foxglove/studio";
 
 import { Config, Rule } from "./types";
 

@@ -11,13 +11,14 @@ import { v4 as uuidv4 } from "uuid";
 import Logger from "@foxglove/log";
 import { CameraState } from "@foxglove/regl-worldview";
 import { toNanoSec } from "@foxglove/rostime";
-import { MessageEvent, Topic } from "@foxglove/studio";
 import {
+  MessageEvent,
   SettingsIcon,
   SettingsTreeAction,
   SettingsTreeNodeActionItem,
   SettingsTreeRoots,
-} from "@foxglove/studio/settings";
+  Topic,
+} from "@foxglove/studio";
 
 import { Input } from "./Input";
 import { Labels } from "./Labels";

@@ -7,11 +7,16 @@ import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { DeepPartial } from "ts-essentials";
 
 import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
-import { PanelExtensionContext, Topic } from "@foxglove/studio";
+import {
+  PanelExtensionContext,
+  SettingsTreeAction,
+  SettingsTreeNode,
+  SettingsTreeRoots,
+  Topic,
+} from "@foxglove/studio";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import Stack from "@foxglove/studio-base/components/Stack";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
-import { SettingsTreeAction, SettingsTreeNode, SettingsTreeRoots } from "@foxglove/studio/settings";
 
 import DirectionalPad, { DirectionalPadAction } from "./DirectionalPad";
 

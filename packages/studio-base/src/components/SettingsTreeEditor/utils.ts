@@ -5,7 +5,7 @@
 import { sortBy } from "lodash";
 import { DeepReadonly } from "ts-essentials";
 
-import { SettingsTreeNode, SettingsTreeRoots } from "@foxglove/studio/settings";
+import { SettingsTreeNode, SettingsTreeRoots } from "@foxglove/studio";
 
 /**
  * Filters and sorts roots to prepare them for rendering.

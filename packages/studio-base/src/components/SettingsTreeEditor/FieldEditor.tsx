@@ -20,9 +20,9 @@ import {
 import { DeepReadonly } from "ts-essentials";
 import { v4 as uuid } from "uuid";
 
+import { SettingsTreeAction, SettingsTreeField } from "@foxglove/studio";
 import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax/MessagePathInput";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { SettingsTreeAction, SettingsTreeField } from "@foxglove/studio/settings";
 
 import { ColorPickerInput, ColorGradientInput, NumberInput, Vec3Input, Vec2Input } from "./inputs";
 

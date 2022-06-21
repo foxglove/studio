@@ -3,7 +3,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { toNanoSec } from "@foxglove/rostime";
-import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio/settings";
+import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
 
 import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";

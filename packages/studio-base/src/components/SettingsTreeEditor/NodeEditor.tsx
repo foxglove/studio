@@ -23,9 +23,9 @@ import { DeepReadonly } from "ts-essentials";
 import { useImmer } from "use-immer";
 
 import { filterMap } from "@foxglove/den/collection";
+import { SettingsTreeAction, SettingsTreeNode } from "@foxglove/studio";
 import { prepareSettingsRoots } from "@foxglove/studio-base/components/SettingsTreeEditor/utils";
 import Stack from "@foxglove/studio-base/components/Stack";
-import { SettingsTreeAction, SettingsTreeNode } from "@foxglove/studio/settings";
 
 import { FieldEditor } from "./FieldEditor";
 import { NodeActionsMenu } from "./NodeActionsMenu";

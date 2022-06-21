@@ -23,6 +23,7 @@ import {
   PanelExtensionContext,
   ParameterValue,
   RenderState,
+  SettingsTree,
   Subscription,
   Topic,
 } from "@foxglove/studio";
@@ -47,7 +48,6 @@ import {
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import { PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { assertNever } from "@foxglove/studio-base/util/assertNever";
-import { SettingsTree } from "@foxglove/studio/settings";
 
 const log = Logger.getLogger(__filename);
 

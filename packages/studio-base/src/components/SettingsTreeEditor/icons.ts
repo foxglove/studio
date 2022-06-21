@@ -36,7 +36,7 @@ import Cells from "@mui/icons-material/ViewComfy";
 import Cube from "@mui/icons-material/ViewInAr";
 import ImageProjection from "@mui/icons-material/Vrpano";
 
-import { SettingsIcon } from "@foxglove/studio/settings";
+import { SettingsIcon } from "@foxglove/studio";
 
 const icons: Record<SettingsIcon, typeof Add> = {
   Add,

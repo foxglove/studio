@@ -6,12 +6,11 @@ import { getColorFromString, hsv2hsl, Stack, useTheme } from "@fluentui/react";
 import { last } from "lodash";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useReducer, useState } from "react";
 
-import { MessageEvent, PanelExtensionContext } from "@foxglove/studio";
+import { MessageEvent, PanelExtensionContext, SettingsTreeAction } from "@foxglove/studio";
 import { RosPath } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import parseRosPath from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { simpleGetMessagePathDataItems } from "@foxglove/studio-base/components/MessagePathSyntax/simpleGetMessagePathDataItems";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
-import { SettingsTreeAction } from "@foxglove/studio/settings";
 
 import { getMatchingRule } from "./getMatchingRule";
 import { settingsActionReducer, useSettingsTree } from "./settings";

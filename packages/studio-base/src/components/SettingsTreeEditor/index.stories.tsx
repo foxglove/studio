@@ -9,16 +9,16 @@ import { last } from "lodash";
 import { useCallback, useMemo, useState, useEffect } from "react";
 
 import Logger from "@foxglove/log";
-import { MessagePathInputStoryFixture } from "@foxglove/studio-base/components/MessagePathSyntax/fixture";
-import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
-import SettingsTreeEditor from "@foxglove/studio-base/components/SettingsTreeEditor";
-import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import {
   SettingsTreeNode,
   SettingsTreeRoots,
   SettingsTreeFieldValue,
   SettingsTreeAction,
-} from "@foxglove/studio/settings";
+} from "@foxglove/studio";
+import { MessagePathInputStoryFixture } from "@foxglove/studio-base/components/MessagePathSyntax/fixture";
+import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
+import SettingsTreeEditor from "@foxglove/studio-base/components/SettingsTreeEditor";
+import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 
 export default {
   title: "components/SettingsTreeEditor",

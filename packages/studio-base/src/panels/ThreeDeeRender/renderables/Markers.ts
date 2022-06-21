@@ -5,7 +5,7 @@
 import { set } from "lodash";
 
 import { toNanoSec } from "@foxglove/rostime";
-import { SettingsTreeAction } from "@foxglove/studio/settings";
+import { SettingsTreeAction } from "@foxglove/studio";
 
 import { Renderer } from "../Renderer";
 import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";

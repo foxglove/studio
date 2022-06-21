@@ -5,7 +5,7 @@
 import * as THREE from "three";
 
 import { toNanoSec } from "@foxglove/rostime";
-import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio/settings";
+import { SettingsTreeAction, SettingsTreeFields } from "@foxglove/studio";
 
 import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";

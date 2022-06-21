@@ -18,7 +18,7 @@ import { useResizeDetector } from "react-resize-detector";
 import { useDebouncedCallback } from "use-debounce";
 
 import { toSec } from "@foxglove/rostime";
-import { PanelExtensionContext, MessageEvent } from "@foxglove/studio";
+import { PanelExtensionContext, MessageEvent, SettingsTreeAction } from "@foxglove/studio";
 import Stack from "@foxglove/studio-base/components/Stack";
 import FilteredPointLayer, {
   POINT_MARKER_RADIUS,
@@ -26,7 +26,6 @@ import FilteredPointLayer, {
 import { Topic } from "@foxglove/studio-base/players/types";
 import { FoxgloveMessages } from "@foxglove/studio-base/types/FoxgloveMessages";
 import { darkColor, lightColor, lineColors } from "@foxglove/studio-base/util/plotColors";
-import { SettingsTreeAction } from "@foxglove/studio/settings";
 
 import { Config, validateCustomUrl, buildSettingsTree } from "./config";
 import { hasFix } from "./support";

@@ -17,6 +17,7 @@ import { set } from "lodash";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import { useRethrow } from "@foxglove/hooks";
+import { SettingsTreeAction, SettingsTreeRoots } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import Autocomplete, { IAutocomplete } from "@foxglove/studio-base/components/Autocomplete";
 import Panel from "@foxglove/studio-base/components/Panel";
@@ -27,7 +28,6 @@ import { PlayerCapabilities, Topic } from "@foxglove/studio-base/players/types";
 import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
-import { SettingsTreeAction, SettingsTreeRoots } from "@foxglove/studio/settings";
 
 import buildSampleMessage from "./buildSampleMessage";
 import helpContent from "./index.help.md";
