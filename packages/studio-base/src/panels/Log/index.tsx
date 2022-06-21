@@ -118,7 +118,7 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
   useEffect(() => {
     updatePanelSettingsTree({
       actionHandler,
-      roots: buildSettingsTree(topicToRender, availableTopics),
+      nodes: buildSettingsTree(topicToRender, availableTopics),
     });
   }, [actionHandler, availableTopics, topicToRender, updatePanelSettingsTree]);
 

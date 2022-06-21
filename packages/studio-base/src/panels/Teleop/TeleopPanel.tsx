@@ -11,7 +11,7 @@ import {
   PanelExtensionContext,
   SettingsTreeAction,
   SettingsTreeNode,
-  SettingsTreeRoots,
+  SettingsTreeNodes,
   Topic,
 } from "@foxglove/studio";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
@@ -42,7 +42,7 @@ type Config = {
   rightButton: { field: string; value: number };
 };
 
-function buildSettingsTree(config: Config, topics: readonly Topic[]): SettingsTreeRoots {
+function buildSettingsTree(config: Config, topics: readonly Topic[]): SettingsTreeNodes {
   const general: SettingsTreeNode = {
     label: "General",
     fields: {
@@ -171,7 +171,7 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
     const tree = buildSettingsTree(config, topics);
     context.updatePanelSettingsTree({
       actionHandler: settingsActionHandler,
-      roots: tree,
+      nodes: tree,
     });
     saveState(config);
   }, [config, context, saveState, settingsActionHandler, topics]);

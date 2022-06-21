@@ -253,7 +253,7 @@ function URDFViewer({ config, saveConfig }: Props) {
   useEffect(() => {
     updatePanelSettingsTree({
       actionHandler,
-      roots: buildSettingsTree(config, availableTopics),
+      nodes: buildSettingsTree(config, availableTopics),
     });
   }, [actionHandler, availableTopics, config, updatePanelSettingsTree]);
 

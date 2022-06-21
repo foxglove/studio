@@ -16,7 +16,7 @@ import produce from "immer";
 import { set } from "lodash";
 import { useCallback, useEffect } from "react";
 
-import { SettingsTreeAction, SettingsTreeRoots } from "@foxglove/studio";
+import { SettingsTreeAction, SettingsTreeNodes } from "@foxglove/studio";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
@@ -37,7 +37,7 @@ export type VariableSliderConfig = {
   globalVariableName: string;
 };
 
-function buildSettingsTree(config: VariableSliderConfig): SettingsTreeRoots {
+function buildSettingsTree(config: VariableSliderConfig): SettingsTreeNodes {
   return {
     general: {
       label: "General",
@@ -101,7 +101,7 @@ function VariableSliderPanel(props: Props): React.ReactElement {
   useEffect(() => {
     updatePanelSettingsTree({
       actionHandler,
-      roots: buildSettingsTree(props.config),
+      nodes: buildSettingsTree(props.config),
     });
   }, [actionHandler, props.config, updatePanelSettingsTree]);
 

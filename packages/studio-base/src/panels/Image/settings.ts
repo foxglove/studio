@@ -6,7 +6,7 @@ import { Immutable } from "immer";
 import { chain } from "lodash";
 import memoizeWeak from "memoize-weak";
 
-import { SettingsTreeNode, SettingsTreeRoots, Topic } from "@foxglove/studio";
+import { SettingsTreeNode, SettingsTreeNodes, Topic } from "@foxglove/studio";
 
 import { Config } from "./types";
 
@@ -43,7 +43,7 @@ export function buildSettingsTree({
   markerTopics: readonly string[];
   enabledMarkerTopics: readonly string[];
   relatedMarkerTopics: readonly string[];
-}): SettingsTreeRoots {
+}): SettingsTreeNodes {
   return {
     general: {
       label: "General",

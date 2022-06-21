@@ -183,7 +183,7 @@ export function Indicator({ context }: Props): JSX.Element {
   useEffect(() => {
     context.updatePanelSettingsTree({
       actionHandler: settingsActionHandler,
-      roots: settingsTree,
+      nodes: settingsTree,
     });
   }, [context, settingsActionHandler, settingsTree]);
 

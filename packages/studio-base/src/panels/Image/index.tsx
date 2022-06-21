@@ -159,7 +159,7 @@ function ImageView(props: Props) {
   useEffect(() => {
     updatePanelSettingsTree({
       actionHandler,
-      roots: buildSettingsTree({
+      nodes: buildSettingsTree({
         config,
         imageTopics,
         markerTopics,

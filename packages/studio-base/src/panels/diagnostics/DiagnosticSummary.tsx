@@ -335,7 +335,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
   useEffect(() => {
     updatePanelSettingsTree({
       actionHandler,
-      roots: buildSummarySettingsTree(config, topicToRender, availableTopics),
+      nodes: buildSummarySettingsTree(config, topicToRender, availableTopics),
     });
   }, [actionHandler, availableTopics, config, topicToRender, updatePanelSettingsTree]);
 

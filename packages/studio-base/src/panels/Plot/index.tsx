@@ -465,7 +465,7 @@ function Plot(props: Props) {
   useEffect(() => {
     updatePanelSettingsTree({
       actionHandler,
-      roots: buildSettingsTree(config),
+      nodes: buildSettingsTree(config),
     });
   }, [actionHandler, config, updatePanelSettingsTree]);
 

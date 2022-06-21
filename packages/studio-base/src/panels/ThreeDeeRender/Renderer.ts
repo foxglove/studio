@@ -16,7 +16,7 @@ import {
   SettingsIcon,
   SettingsTreeAction,
   SettingsTreeNodeActionItem,
-  SettingsTreeRoots,
+  SettingsTreeNodes,
   Topic,
 } from "@foxglove/studio";
 
@@ -712,7 +712,7 @@ function deselectObject(object: THREE.Object3D) {
 }
 
 // Creates a skeleton settings tree. The tree contents are filled in by scene extensions
-function baseSettingsTree(): SettingsTreeRoots {
+function baseSettingsTree(): SettingsTreeNodes {
   return {
     general: {},
     scene: {},

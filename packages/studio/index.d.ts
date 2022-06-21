@@ -541,7 +541,7 @@ declare module "@foxglove/studio" {
         payload: { id: string; path: readonly string[] };
       };
 
-  export type SettingsTreeRoots = Record<string, undefined | SettingsTreeNode>;
+  export type SettingsTreeNodes = Record<string, undefined | SettingsTreeNode>;
 
   /**
    * A settings tree is a tree of panel settings that can be managed by
@@ -559,9 +559,9 @@ declare module "@foxglove/studio" {
     enableFilter?: boolean;
 
     /**
-     * The actual settings tree roots. Updates to these will automatically be reflected in the
+     * The settings tree root nodes. Updates to these will automatically be reflected in the
      * editor UI.
      */
-    roots: SettingsTreeRoots;
+    nodes: SettingsTreeNodes;
   };
 }

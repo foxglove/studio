@@ -227,7 +227,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     const tree = buildSettingsTree(config, eligibleTopics);
     context.updatePanelSettingsTree({
       actionHandler: settingsActionHandler,
-      roots: tree,
+      nodes: tree,
     });
 
     return () => {

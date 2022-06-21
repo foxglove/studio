@@ -25,6 +25,7 @@ import {
   SettingsTreeAction,
   SettingsTreeRoots,
   Topic,
+  SettingsTreeNodes,
 } from "@foxglove/studio";
 import useCleanup from "@foxglove/studio-base/hooks/useCleanup";
 
@@ -209,7 +210,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   );
 
   // Maintain the settings tree
-  const [settingsTree, setSettingsTree] = useState<SettingsTreeRoots | undefined>(undefined);
+  const [settingsTree, setSettingsTree] = useState<SettingsTreeNodes | undefined>(undefined);
   const updateSettingsTree = useCallback(
     (curRenderer: Renderer) => setSettingsTree(curRenderer.settings.tree()),
     [],
@@ -224,7 +225,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   useEffect(() => {
     context.updatePanelSettingsTree({
       actionHandler,
-      roots: settingsTree ?? {},
+      nodes: settingsTree ?? {},
     });
   }, [actionHandler, context, settingsTree]);
 

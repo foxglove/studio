@@ -387,7 +387,7 @@ function BaseRenderer(props: Props): JSX.Element {
   useEffect(() => {
     updatePanelSettingsTree({
       actionHandler,
-      roots: buildSettingsTree(config),
+      nodes: buildSettingsTree(config),
     });
   }, [actionHandler, config, updatePanelSettingsTree]);
 

@@ -137,7 +137,7 @@ function DiagnosticStatusPanel(props: Props) {
   useEffect(() => {
     updatePanelSettingsTree({
       actionHandler,
-      roots: buildStatusPanelSettingsTree(topicToRender, availableTopics),
+      nodes: buildStatusPanelSettingsTree(topicToRender, availableTopics),
     });
   }, [actionHandler, availableTopics, topicToRender, updatePanelSettingsTree]);
 

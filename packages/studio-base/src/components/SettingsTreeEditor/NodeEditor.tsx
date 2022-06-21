@@ -24,13 +24,13 @@ import { useImmer } from "use-immer";
 
 import { filterMap } from "@foxglove/den/collection";
 import { SettingsTreeAction, SettingsTreeNode } from "@foxglove/studio";
-import { prepareSettingsRoots } from "@foxglove/studio-base/components/SettingsTreeEditor/utils";
 import Stack from "@foxglove/studio-base/components/Stack";
 
 import { FieldEditor } from "./FieldEditor";
 import { NodeActionsMenu } from "./NodeActionsMenu";
 import { VisibilityToggle } from "./VisibilityToggle";
 import { icons } from "./icons";
+import { prepareSettingsNodes } from "./utils";
 
 export type NodeEditorProps = {
   actionHandler: (action: SettingsTreeAction) => void;
@@ -158,7 +158,7 @@ function NodeEditorComponent(props: NodeEditorProps): JSX.Element {
     ) : undefined;
   });
 
-  const childNodes = prepareSettingsRoots(children ?? {}).map(([key, child]) => {
+  const childNodes = prepareSettingsNodes(children ?? {}).map(([key, child]) => {
     return (
       <NodeEditor
         actionHandler={actionHandler}
