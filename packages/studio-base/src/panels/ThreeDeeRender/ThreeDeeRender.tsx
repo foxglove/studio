@@ -32,7 +32,7 @@ import {
 import useCleanup from "@foxglove/studio-base/hooks/useCleanup";
 
 import { DebugGui } from "./DebugGui";
-import Interactions, { OBJECT_TAB_TYPE, TabType } from "./Interactions";
+import Interactions, { InteractionContextMenu, OBJECT_TAB_TYPE, TabType } from "./Interactions";
 import type { InteractionData } from "./Interactions/types";
 import type { Renderable } from "./Renderable";
 import { Renderer, RendererConfig } from "./Renderer";
@@ -116,6 +116,10 @@ function RendererOverlay(props: {
     };
   }, [selectedRenderable]);
 
+  const clickedObjects = useMemo<SelectionObject[]>(() => {
+    return [];
+  }, []);
+
   return (
     <React.Fragment>
       <div
@@ -132,6 +136,13 @@ function RendererOverlay(props: {
           setInteractionsTabType={setInteractionsTabType}
         />
       </div>
+      {clickedObjects.length > 1 && !selectedObject && (
+        <InteractionContextMenu
+          clickedPosition={{ clientX: 0, clientY: 0 }}
+          clickedObjects={[]}
+          selectObject={() => {}}
+        />
+      )}
       {stats}
       {debug}
     </React.Fragment>
