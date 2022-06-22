@@ -352,7 +352,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   // Flush the renderer's state when the seek count changes
   useEffect(() => {
     if (renderer && didSeek) {
-      renderer.flushState();
+      renderer.clear();
       setDidSeek(false);
     }
   }, [renderer, didSeek]);
