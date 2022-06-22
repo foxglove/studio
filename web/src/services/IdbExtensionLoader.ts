@@ -74,8 +74,8 @@ export class IdbExtensionLoader implements ExtensionLoader {
     const info: ExtensionInfo = {
       ...rawInfo,
       id: `${normalizedPublisher}.${rawInfo.name}`,
-      namespace: this.#storage.namespace,
-      qualifiedName: [this.#storage.namespace, normalizedPublisher, rawInfo.name].join("/"),
+      namespace: this.namespace,
+      qualifiedName: [this.namespace, normalizedPublisher, rawInfo.name].join("/"),
     };
     await this.#storage.put({
       content: foxeFileData,
