@@ -17,6 +17,7 @@ import {
   McapLocalDataSourceFactory,
   SampleNuscenesDataSourceFactory,
   IAppConfiguration,
+  IdbExtensionLoader,
   McapRemoteDataSourceFactory,
   App,
   ConsoleApi,
@@ -25,7 +26,6 @@ import {
 import Ros1UnavailableDataSourceFactory from "./dataSources/Ros1UnavailableDataSourceFactory";
 import Ros2UnavailableDataSourceFactory from "./dataSources/Ros2UnavailableDataSourceFactory";
 import VelodyneUnavailableDataSourceFactory from "./dataSources/VelodyneUnavailableDataSourceFactory";
-import { IdbExtensionLoader } from "./services/IdbExtensionLoader";
 import { IdbLayoutStorage } from "./services/IdbLayoutStorage";
 
 export function Root({ appConfiguration }: { appConfiguration: IAppConfiguration }): JSX.Element {
