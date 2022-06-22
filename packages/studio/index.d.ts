@@ -553,7 +553,7 @@ declare module "@foxglove/studio" {
     actionHandler: (action: SettingsTreeAction) => void;
 
     /**
-     * True if the editor should show the filter control.
+     * True if the settings editor should show the filter control.
      */
     enableFilter?: boolean;
 
