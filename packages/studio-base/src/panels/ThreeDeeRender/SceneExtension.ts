@@ -86,7 +86,7 @@ export class SceneExtension<
    * Called when seeking or a new data source is loaded. The base class implementation removes all
    * `renderables` and calls `updateSettingsTree()`.
    */
-  flushState(): void {
+  removeAllRenderables(): void {
     for (const renderable of this.renderables.values()) {
       this.remove(renderable);
     }

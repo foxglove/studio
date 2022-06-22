@@ -275,13 +275,13 @@ export class Renderer extends EventEmitter<RendererEvents> {
   }
 
   /**
-   * Resets internal state such as the TransformTree and removes Renderables from SceneExtensions.
+   * Clears internal state such as the TransformTree and removes Renderables from SceneExtensions.
    * This is useful when seeking to a new playback position or when a new data source is loaded.
    */
-  flushState(): void {
+  clear(): void {
     this.transformTree.clear();
     for (const extension of this.sceneExtensions.values()) {
-      extension.flushState();
+      extension.removeAllRenderables();
     }
   }
 
