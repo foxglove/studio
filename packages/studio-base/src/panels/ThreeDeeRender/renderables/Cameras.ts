@@ -52,7 +52,7 @@ const DEFAULT_COLOR_STR = rgbaToCssString(DEFAULT_COLOR);
 const CAMERA_MODEL = "CameraModel";
 
 const DEFAULT_SETTINGS: LayerSettingsCameraInfo = {
-  visible: true,
+  visible: false,
   frameLocked: true,
   distance: DEFAULT_DISTANCE,
   width: DEFAULT_WIDTH,
@@ -68,6 +68,10 @@ export type CameraInfoUserData = BaseUserData & {
 };
 
 export class CameraInfoRenderable extends Renderable<CameraInfoUserData> {
+  constructor(name: string, renderer: Renderer, userData: CameraInfoUserData) {
+    super(name, renderer, userData);
+    this.visible = userData.settings.visible;
+  }
   override dispose(): void {
     this.userData.lines?.dispose();
     super.dispose();
@@ -98,7 +102,12 @@ export class Cameras extends SceneExtension<CameraInfoRenderable> {
 
         entries.push({
           path: ["topics", topic.name],
-          node: { icon: "Camera", fields, visible: config.visible ?? true, handler },
+          node: {
+            icon: "Camera",
+            fields,
+            visible: config.visible ?? DEFAULT_SETTINGS.visible,
+            handler,
+          },
         });
       }
     }
@@ -141,6 +150,7 @@ export class Cameras extends SceneExtension<CameraInfoRenderable> {
       const userSettings = this.renderer.config.topics[topic] as
         | Partial<LayerSettingsCameraInfo>
         | undefined;
+
       const settings = { ...DEFAULT_SETTINGS, ...userSettings };
 
       renderable = new CameraInfoRenderable(topic, this.renderer, {

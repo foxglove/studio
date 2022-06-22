@@ -59,7 +59,7 @@ const DEFAULT_IMAGE_WIDTH = 512;
 const DEFAULT_DISTANCE = 1;
 
 const DEFAULT_SETTINGS: LayerSettingsImage = {
-  visible: true,
+  visible: false,
   frameLocked: true,
   cameraInfoTopic: undefined,
   distance: DEFAULT_DISTANCE,
@@ -77,6 +77,10 @@ export type ImageUserData = BaseUserData & {
 };
 
 export class ImageRenderable extends Renderable<ImageUserData> {
+  constructor(name: string, renderer: Renderer, userData: ImageUserData) {
+    super(name, renderer, userData);
+    this.visible = userData.settings.visible;
+  }
   override dispose(): void {
     this.userData.texture?.dispose();
     this.userData.material?.dispose();
@@ -121,7 +125,12 @@ export class Images extends SceneExtension<ImageRenderable> {
 
         entries.push({
           path: ["topics", topic.name],
-          node: { icon: "ImageProjection", fields, visible: config.visible ?? true, handler },
+          node: {
+            icon: "ImageProjection",
+            fields,
+            visible: config.visible ?? DEFAULT_SETTINGS.visible,
+            handler,
+          },
         });
       }
     }
