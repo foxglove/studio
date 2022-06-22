@@ -7,7 +7,9 @@ import { openDB } from "idb/with-async-ittr";
 
 import { IdbExtensionLoader } from "./IdbExtensionLoader";
 
-jest.mock("idb/with-async-ittr");
+jest.mock("idb/with-async-ittr", () => ({
+  openDB: jest.fn(),
+}));
 
 describe("IdbExtensionLoader", () => {
   it("Installs extensions", async () => {
