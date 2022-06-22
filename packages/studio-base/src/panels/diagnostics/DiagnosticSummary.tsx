@@ -14,13 +14,13 @@
 import PushPinIcon from "@mui/icons-material/PushPin";
 import {
   ListItem,
-  ListItemIcon,
   ListItemText,
   styled as muiStyled,
   ListItemButton,
   MenuItem,
   Select,
   InputBase,
+  IconButton,
 } from "@mui/material";
 import produce from "immer";
 import { compact, set, uniq } from "lodash";
@@ -72,17 +72,20 @@ const StyledListItemButton = muiStyled(ListItemButton, {
 })<{
   isPinned: boolean;
 }>(({ isPinned, theme }) => ({
-  gap: theme.spacing(1),
+  padding: 0,
 
-  ".MuiListItemIcon-root": {
+  ".MuiIconButton-root": {
     visibility: isPinned ? "visibile" : "hidden",
-    minWidth: "auto",
+
+    "&:hover": {
+      backgroundColor: "transparent",
+    },
   },
   ".MuiListItemText-root": {
     gap: theme.spacing(1),
     display: "flex",
   },
-  "&:hover .MuiListItemIcon-root": {
+  "&:hover .MuiIconButton-root": {
     visibility: "visible",
   },
 }));
@@ -114,15 +117,15 @@ const NodeRow = React.memo(function NodeRow(props: NodeRowProps) {
 
   return (
     <ListItem dense disablePadding data-test-diagnostic-row>
-      <StyledListItemButton isPinned={isPinned} onClick={handleClick}>
-        <ListItemIcon
+      <StyledListItemButton disableGutters isPinned={isPinned} onClick={handleClick}>
+        <IconButton
           onClick={(event) => {
             handleClickPin();
             event.stopPropagation();
           }}
         >
           <PushPinIcon fontSize="small" color={isPinned ? "inherit" : "disabled"} />
-        </ListItemIcon>
+        </IconButton>
         <ListItemText
           primary={info.displayName}
           secondary={info.status.message}
@@ -249,7 +252,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
             width={width}
             height={height}
             style={{ outline: "none" }}
-            rowHeight={38}
+            rowHeight={34}
             rowRenderer={(rowProps) => renderRow({ ...rowProps, item: nodes[rowProps.index]! })}
             rowCount={nodes.length}
             overscanRowCount={10}
