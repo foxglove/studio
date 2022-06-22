@@ -453,8 +453,7 @@ declare module "@foxglove/studio" {
   export type SettingsTreeNodeActionDivider = { type: "divider" };
 
   /**
-   * An action that can be offered to the user to perform at the
-   * level of a settings node.
+   * An action included in the action menu for a settings node.
    */
   export type SettingsTreeNodeAction = SettingsTreeNodeActionItem | SettingsTreeNodeActionDivider;
 
@@ -544,8 +543,8 @@ declare module "@foxglove/studio" {
   export type SettingsTreeNodes = Record<string, undefined | SettingsTreeNode>;
 
   /**
-   * A settings tree is a tree of panel settings that can be managed by
-   * a default user interface in Studio.
+   * A settings tree is a tree of panel settings that can be displayed and edited in
+   * the panel settings sidebar.
    */
   export type SettingsTree = {
     /**
