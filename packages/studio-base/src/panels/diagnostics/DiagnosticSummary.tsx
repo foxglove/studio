@@ -119,6 +119,7 @@ const NodeRow = React.memo(function NodeRow(props: NodeRowProps) {
     <ListItem dense disablePadding data-test-diagnostic-row>
       <StyledListItemButton disableGutters isPinned={isPinned} onClick={handleClick}>
         <IconButton
+          size="small"
           onClick={(event) => {
             handleClickPin();
             event.stopPropagation();
@@ -252,7 +253,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
             width={width}
             height={height}
             style={{ outline: "none" }}
-            rowHeight={34}
+            rowHeight={30}
             rowRenderer={(rowProps) => renderRow({ ...rowProps, item: nodes[rowProps.index]! })}
             rowCount={nodes.length}
             overscanRowCount={10}
