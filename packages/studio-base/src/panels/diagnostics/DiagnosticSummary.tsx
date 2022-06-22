@@ -293,7 +293,7 @@ function DiagnosticSummary(props: Props): JSX.Element {
             {KNOWN_LEVELS.map((level) => (
               <MenuItem key={level} value={level}>
                 <ListItemText
-                  primary={LEVEL_NAMES[level].toUpperCase()}
+                  primary={LEVEL_NAMES[level]?.toUpperCase()}
                   primaryTypographyProps={{
                     variant: "inherit",
                     color: MESSAGE_COLORS[LEVEL_NAMES[level] ?? "stale"],
