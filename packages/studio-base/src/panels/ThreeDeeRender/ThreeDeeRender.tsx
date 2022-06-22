@@ -23,9 +23,8 @@ import {
   PanelExtensionContext,
   RenderState,
   SettingsTreeAction,
-  SettingsTreeRoots,
-  Topic,
   SettingsTreeNodes,
+  Topic,
 } from "@foxglove/studio";
 import useCleanup from "@foxglove/studio-base/hooks/useCleanup";
 
@@ -223,7 +222,7 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
 
   // Rebuild the settings sidebar tree as needed
   useEffect(() => {
-    context.updatePanelSettingsTree({
+    context.updatePanelSettingsEditor({
       actionHandler,
       nodes: settingsTree ?? {},
     });

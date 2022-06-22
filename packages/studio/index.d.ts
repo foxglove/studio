@@ -278,10 +278,10 @@ declare module "@foxglove/studio" {
     onRender?: (renderState: Readonly<RenderState>, done: () => void) => void;
 
     /**
-     * Updates the panel's settings tree for the panel settings editor. Call this every
-     * time you want to update the representation of the panel settings in the editor.
+     * Updates the panel's settings editor. Call this every time you want to update
+     * the representation of the panel settings in the editor.
      */
-    updatePanelSettingsTree(settings: Readonly<SettingsTree>): void;
+    updatePanelSettingsEditor(settings: Readonly<SettingsTree>): void;
   };
 
   export type ExtensionPanelRegistration = {

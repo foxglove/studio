@@ -181,7 +181,7 @@ export function Indicator({ context }: Props): JSX.Element {
 
   const settingsTree = useSettingsTree(config, state.pathParseError, state.error?.message);
   useEffect(() => {
-    context.updatePanelSettingsTree({
+    context.updatePanelSettingsEditor({
       actionHandler: settingsActionHandler,
       nodes: settingsTree,
     });

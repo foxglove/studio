@@ -518,7 +518,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
         setSubscribedAppSettings(settings);
       },
 
-      updatePanelSettingsTree: updateSettings,
+      updatePanelSettingsEditor: updateSettings,
     };
   }, [
     capabilities,

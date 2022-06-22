@@ -225,7 +225,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     context.subscribe(eligibleEnabled);
 
     const tree = buildSettingsTree(config, eligibleTopics);
-    context.updatePanelSettingsTree({
+    context.updatePanelSettingsEditor({
       actionHandler: settingsActionHandler,
       nodes: tree,
     });

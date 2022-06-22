@@ -169,7 +169,7 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
 
   useEffect(() => {
     const tree = buildSettingsTree(config, topics);
-    context.updatePanelSettingsTree({
+    context.updatePanelSettingsEditor({
       actionHandler: settingsActionHandler,
       nodes: tree,
     });
