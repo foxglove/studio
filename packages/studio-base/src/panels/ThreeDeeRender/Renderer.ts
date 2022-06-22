@@ -273,6 +273,17 @@ export class Renderer extends EventEmitter<RendererEvents> {
     this.gl.dispose();
   }
 
+  /**
+   * Resets internal state such as the TransformTree and removes Renderables from SceneExtensions.
+   * This is useful when seeking to a new playback position or when a new data source is loaded.
+   */
+  flushState(): void {
+    this.transformTree.clear();
+    for (const extension of this.sceneExtensions.values()) {
+      extension.flushState();
+    }
+  }
+
   addSceneExtension(extension: SceneExtension): void {
     if (this.sceneExtensions.has(extension.extensionId)) {
       throw new Error(`Attempted to add duplicate extensionId "${extension.extensionId}"`);
@@ -452,7 +463,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
     if (!this.transformTree.hasFrame(frameId)) {
       this.transformTree.getOrCreateFrame(frameId);
       this.coordinateFrameList = this.transformTree.frameList();
-      log.debug(`Added coordinate frame "${frameId}"`);
+      // log.debug(`Added coordinate frame "${frameId}"`);
       this.emit("transformTreeUpdated", this);
     }
   }
@@ -475,11 +486,11 @@ export class Renderer extends EventEmitter<RendererEvents> {
 
     if (addParent || addChild) {
       this.coordinateFrameList = this.transformTree.frameList();
-      log.debug(`Added transform "${tf.header.frame_id}_T_${tf.child_frame_id}"`);
+      // log.debug(`Added transform "${tf.header.frame_id}_T_${tf.child_frame_id}"`);
       this.emit("transformTreeUpdated", this);
     } else if (updated) {
       this.coordinateFrameList = this.transformTree.frameList();
-      log.debug(`Updated transform "${tf.header.frame_id}_T_${tf.child_frame_id}"`);
+      // log.debug(`Updated transform "${tf.header.frame_id}_T_${tf.child_frame_id}"`);
       this.emit("transformTreeUpdated", this);
     }
   }
