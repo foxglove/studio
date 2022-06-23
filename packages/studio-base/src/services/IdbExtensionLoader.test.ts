@@ -59,7 +59,7 @@ describe("IdbExtensionLoader", () => {
       const expectedInfo = {
         ...pkgInfo,
         namespace: "local",
-        qualifiedName: "foxglove.studio-extension-turtlesim",
+        qualifiedName: "turtlesim",
       };
 
       mockDBGetAll.mockReturnValue([expectedInfo]);

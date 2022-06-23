@@ -28,7 +28,8 @@ export class DesktopExtensionLoader implements ExtensionLoader {
         id: item.id,
         name: pkgInfo.displayName,
         namespace: this.namespace,
-        qualifiedName: pkgInfo.name,
+        // Qualified name is display name for backwards compatibility with existing layouts.
+        qualifiedName: pkgInfo.displayName,
         displayName: pkgInfo.displayName,
         description: pkgInfo.description,
         publisher: pkgInfo.publisher,
@@ -63,7 +64,8 @@ export class DesktopExtensionLoader implements ExtensionLoader {
       id: detail.id,
       name: pkgInfo.displayName,
       namespace: this.namespace,
-      qualifiedName: pkgInfo.name,
+      // Qualified name is display name for backwards compatibility with existing layouts.
+      qualifiedName: pkgInfo.displayName,
       displayName: pkgInfo.displayName,
       description: pkgInfo.description,
       publisher: pkgInfo.publisher,

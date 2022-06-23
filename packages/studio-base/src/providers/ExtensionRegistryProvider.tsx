@@ -28,7 +28,7 @@ export default function ExtensionRegistryProvider(props: PropsWithChildren<unkno
     const registeredPanels = new Map<string, RegisteredPanel>();
 
     for (const extension of extensionList) {
-      log.debug(`Activating extension ${extension.name}`);
+      log.debug(`Activating extension ${extension.qualifiedName}`);
 
       const module = { exports: {} };
       const require = (name: string) => {

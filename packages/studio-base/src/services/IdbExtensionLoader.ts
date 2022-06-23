@@ -12,15 +12,15 @@ import { IdbExtensionStorage } from "./IdbExtensionStorage";
 
 const log = Log.getLogger(__filename);
 
-function qualifiedName(namespace: ExtensionNamespace, publisher: string, name: string): string {
+function qualifiedName(namespace: ExtensionNamespace, info: ExtensionInfo): string {
   switch (namespace) {
     case "local":
-      // For local namespace we follow the legacy naming convention of publisher.name
+      // For local namespace we follow the legacy naming convention of using displayName
       // in order to stay compatible with existing layouts.
-      return [publisher, name].join(".");
+      return info.displayName;
     case "private":
-      // For private registry we don't need the publisher.
-      return [namespace, name].join(":");
+      // For private registry we use namespace and package name.
+      return [namespace, info.name].join(":");
   }
 }
 
@@ -87,7 +87,7 @@ export class IdbExtensionLoader implements ExtensionLoader {
       ...rawInfo,
       id: `${normalizedPublisher}.${rawInfo.name}`,
       namespace: this.namespace,
-      qualifiedName: qualifiedName(this.namespace, normalizedPublisher, rawInfo.name),
+      qualifiedName: qualifiedName(this.namespace, rawInfo),
     };
     await this.#storage.put({
       content: foxeFileData,

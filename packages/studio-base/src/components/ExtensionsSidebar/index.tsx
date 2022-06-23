@@ -119,7 +119,7 @@ export default function ExtensionsSidebar(): React.ReactElement {
         return {
           id: entry.id,
           installed: true,
-          name: entry.name,
+          name: entry.displayName,
           description: entry.description,
           publisher: entry.publisher,
           homepage: entry.homepage,
