@@ -49,7 +49,7 @@ const DEFAULT_COLOR_STR = rgbaToCssString(DEFAULT_COLOR);
 const CAMERA_MODEL = "CameraModel";
 
 const DEFAULT_SETTINGS: LayerSettingsCameraInfo = {
-  visible: false,
+  visible: true,
   frameLocked: true,
   distance: DEFAULT_DISTANCE,
   width: DEFAULT_WIDTH,
