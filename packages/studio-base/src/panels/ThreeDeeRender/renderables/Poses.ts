@@ -46,6 +46,7 @@ const DEFAULT_TYPE: DisplayType = "axis";
 const DEFAULT_AXIS_SCALE = 2;
 const DEFAULT_ARROW_SCALE: THREE.Vector3Tuple = [1, 0.15, 0.15];
 const DEFAULT_COLOR = { r: 124 / 255, g: 107 / 255, b: 1, a: 1 };
+const DEFAULT_SHOW_COVARIANCE = true;
 const DEFAULT_COVARIANCE_COLOR = { r: 198 / 255, g: 107 / 255, b: 1, a: 0.25 };
 
 const DEFAULT_COLOR_STR = rgbaToCssString(DEFAULT_COLOR);
@@ -57,7 +58,7 @@ const DEFAULT_SETTINGS: LayerSettingsPose = {
   axisScale: DEFAULT_AXIS_SCALE,
   arrowScale: DEFAULT_ARROW_SCALE,
   color: DEFAULT_COLOR_STR,
-  showCovariance: true,
+  showCovariance: DEFAULT_SHOW_COVARIANCE,
   covarianceColor: DEFAULT_COVARIANCE_COLOR_STR,
 };
 
@@ -136,7 +137,7 @@ export class Poses extends SceneExtension<PoseRenderable> {
         }
 
         if (isPoseWithCovarianceStamped) {
-          const showCovariance = config.showCovariance ?? true;
+          const showCovariance = config.showCovariance ?? DEFAULT_SHOW_COVARIANCE;
           const covarianceColor = config.covarianceColor ?? DEFAULT_COVARIANCE_COLOR_STR;
 
           fields["showCovariance"] = {
@@ -324,6 +325,7 @@ export class Poses extends SceneExtension<PoseRenderable> {
             undefined,
             this.renderer,
           );
+          renderable.add(renderable.userData.sphere);
         }
         renderable.userData.sphere.visible = renderable.userData.settings.showCovariance;
         renderable.userData.sphere.update(sphereMarker, undefined);
