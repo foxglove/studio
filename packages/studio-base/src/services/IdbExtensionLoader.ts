@@ -12,6 +12,18 @@ import { IdbExtensionStorage } from "./IdbExtensionStorage";
 
 const log = Log.getLogger(__filename);
 
+function qualifiedName(namespace: ExtensionNamespace, publisher: string, name: string): string {
+  switch (namespace) {
+    case "local":
+      // For local namespace we follow the legacy naming convention of publisher.name
+      // in order to stay compatible with existing layouts.
+      return [publisher, name].join(".");
+    case "private":
+      // For private registry we don't need the publisher.
+      return [namespace, name].join(":");
+  }
+}
+
 function validatePackageInfo(info: Partial<ExtensionInfo>): ExtensionInfo {
   if (info.publisher == undefined || info.publisher.length === 0) {
     throw new Error("Invalid extension: missing publisher");
@@ -75,7 +87,7 @@ export class IdbExtensionLoader implements ExtensionLoader {
       ...rawInfo,
       id: `${normalizedPublisher}.${rawInfo.name}`,
       namespace: this.namespace,
-      qualifiedName: [this.namespace, normalizedPublisher, rawInfo.name].join("|"),
+      qualifiedName: qualifiedName(this.namespace, normalizedPublisher, rawInfo.name),
     };
     await this.#storage.put({
       content: foxeFileData,
