@@ -24,7 +24,6 @@ export default function ActionList(props: IActionListProps): JSX.Element {
         root: {
           padding: 0,
           color: theme.palette.themePrimary,
-          // minWidth: 320,
           height: 24,
         },
         flexContainer: {
