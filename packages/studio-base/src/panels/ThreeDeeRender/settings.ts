@@ -25,7 +25,7 @@ export type CustomLayerSettings = BaseSettings & {
   layerId: string;
   /** The label to use for this layer in the settings tree, under "Custom Layers". */
   label: string;
-  /** Optional id specifying order in the custom layer list */
+  /** Optional value specifying order in the custom layer list */
   order?: number;
 };
 
