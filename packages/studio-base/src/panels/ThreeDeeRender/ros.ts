@@ -180,6 +180,11 @@ export type PoseStamped = {
   pose: Pose;
 };
 
+export type PoseArray = Readonly<{
+  header: Header;
+  poses: Pose[];
+}>;
+
 export type PolygonStamped = {
   header: Header;
   polygon: Polygon;
