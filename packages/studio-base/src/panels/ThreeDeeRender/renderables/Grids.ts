@@ -187,7 +187,7 @@ export class Grids extends SceneExtension<GridRenderable> {
 
     // Add this instance to the config
     this.renderer.updateConfig((draft) => {
-      const maxOrderLayer = maxBy(Object.values(draft.layers), (entry) => entry?.order);
+      const maxOrderLayer = maxBy(Object.values(draft.layers), (layer) => layer?.order);
       const order = 1 + (maxOrderLayer?.order ?? 0);
       draft.layers[instanceId] = { ...config, order };
     });
