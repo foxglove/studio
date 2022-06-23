@@ -60,12 +60,10 @@ export class FrameAxes extends SceneExtension<AxisRenderable> {
   }
 
   override settingsNodes(): SettingsTreeEntry[] {
-    // Clear the transforms children so we can re-add them in the correct order
-    this.renderer.settings.clearChildren(["transforms"]);
-
     const configTransforms = this.renderer.config.transforms;
     const handler = this.handleSettingsAction;
     const entries: SettingsTreeEntry[] = [];
+    let i = 0;
     for (const { label, value: frameId } of this.renderer.coordinateFrameList) {
       const config = (configTransforms[frameId] ?? {}) as Partial<LayerSettingsTransform>;
       // TODO(jhurliman): readonly fields and icons for root vs non-root frames
@@ -77,7 +75,7 @@ export class FrameAxes extends SceneExtension<AxisRenderable> {
 
       entries.push({
         path: ["transforms", frameId],
-        node: { label, visible: config.visible ?? true, handler },
+        node: { label, visible: config.visible ?? true, order: i++, handler },
       });
     }
     return entries;
