@@ -57,6 +57,15 @@ const builtin: PanelInfo[] = [
     module: async () => await import("./ThreeDimensionalViz"),
   },
   {
+    title: "3D (Beta)",
+    type: "3D",
+    description:
+      "Display visualization markers and models in a 3D scene using a new rendering engine.",
+    help: ThreeDeeRenderHelp,
+    thumbnail: threeDimensionalVizThumbnail,
+    module: async () => await import("./ThreeDeeRender"),
+  },
+  {
     title: `Diagnostics – Detail (ROS)`,
     type: "DiagnosticStatusPanel",
     description: "Display ROS DiagnosticArray messages for a specific hardware_id.",
@@ -234,15 +243,4 @@ const legacyPlot: PanelInfo[] = [
   },
 ];
 
-const new3DPanel: PanelInfo[] = [
-  {
-    title: "3D (Experimental)",
-    type: "3D",
-    description: "Experimental 3D scene renderer.",
-    help: ThreeDeeRenderHelp,
-    thumbnail: threeDimensionalVizThumbnail,
-    module: async () => await import("./ThreeDeeRender"),
-  },
-];
-
-export default { builtin, debug, legacyPlot, new3DPanel };
+export default { builtin, debug, legacyPlot };
