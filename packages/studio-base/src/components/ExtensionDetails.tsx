@@ -16,6 +16,7 @@ import {
 import { useCallback, useState } from "react";
 import { useToasts } from "react-toast-notifications";
 import { useAsync, useMountedState } from "react-use";
+import { DeepReadonly } from "ts-essentials";
 
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
 import Stack from "@foxglove/studio-base/components/Stack";
@@ -26,12 +27,13 @@ import {
   ExtensionMarketplaceDetail,
   useExtensionMarketplace,
 } from "@foxglove/studio-base/context/ExtensionMarketplaceContext";
+import { useExtensionRegistry } from "@foxglove/studio-base/context/ExtensionRegistryContext";
 import { AppEvent } from "@foxglove/studio-base/services/IAnalytics";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 type Props = {
   installed: boolean;
-  extension: ExtensionMarketplaceDetail;
+  extension: DeepReadonly<ExtensionMarketplaceDetail>;
   onClose: () => void;
 };
 
@@ -47,6 +49,8 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
   const readmeUrl = extension.readme;
   const changelogUrl = extension.changelog;
   const canInstall = extension.foxe != undefined;
+
+  const refreshExtensions = useExtensionRegistry().refreshExtensions;
 
   const { value: readmeContent } = useAsync(
     async () => (readmeUrl != undefined ? await marketplace.getMarkdown(readmeUrl) : ""),
@@ -74,6 +78,7 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
       await extensionLoader.installExtension("local", data);
       if (isMounted()) {
         setIsInstalled(true);
+        await refreshExtensions();
         void analytics.logEvent(AppEvent.EXTENSION_INSTALL, { type: extension.id });
       }
     } catch (err) {
@@ -81,15 +86,24 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
         appearance: "error",
       });
     }
-  }, [analytics, extension.id, extension.foxe, extensionLoader, isMounted, addToast]);
+  }, [
+    extension.foxe,
+    extension.id,
+    addToast,
+    extensionLoader,
+    isMounted,
+    refreshExtensions,
+    analytics,
+  ]);
 
   const uninstall = useCallback(async () => {
     await extensionLoader.uninstallExtension(extension.id);
     if (isMounted()) {
       setIsInstalled(false);
+      await refreshExtensions();
       void analytics.logEvent(AppEvent.EXTENSION_UNINSTALL, { type: extension.id });
     }
-  }, [analytics, extension.id, extensionLoader, isMounted]);
+  }, [analytics, extension.id, extensionLoader, isMounted, refreshExtensions]);
 
   return (
     <SidebarContent

@@ -64,6 +64,7 @@ import {
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { useExtensionLoader } from "@foxglove/studio-base/context/ExtensionLoaderContext";
+import { useExtensionRegistry } from "@foxglove/studio-base/context/ExtensionRegistryContext";
 import LinkHandlerContext from "@foxglove/studio-base/context/LinkHandlerContext";
 import { useNativeAppMenu } from "@foxglove/studio-base/context/NativeAppMenuContext";
 import {
@@ -349,6 +350,8 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const extensionLoader = useExtensionLoader();
 
+  const refreshExtensions = useExtensionRegistry().refreshExtensions;
+
   const openHandle = useCallback(
     async (handle: FileSystemFileHandle) => {
       log.debug("open handle", handle);
@@ -363,6 +366,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           const data = new Uint8Array(arrayBuffer);
           const extension = await extensionLoader.installExtension("local", data);
           addToast(`Installed extension ${extension.id}`, { appearance: "success" });
+          await refreshExtensions();
         } catch (err) {
           log.error(err);
           addToast(`Failed to install extension ${file.name}: ${err.message}`, {
@@ -391,7 +395,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         selectSource(matchedSource.id, { type: "file", handle });
       }
     },
-    [addToast, availableSources, extensionLoader, loadFromFile, selectSource],
+    [addToast, availableSources, extensionLoader, loadFromFile, refreshExtensions, selectSource],
   );
 
   const openFiles = useCallback(
@@ -410,6 +414,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
             const data = new Uint8Array(arrayBuffer);
             const extension = await extensionLoader.installExtension("local", data);
             addToast(`Installed extension ${extension.id}`, { appearance: "success" });
+            await refreshExtensions();
           } catch (err) {
             log.error(err);
             addToast(`Failed to install extension ${file.name}: ${err.message}`, {
@@ -446,7 +451,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         }
       }
     },
-    [addToast, availableSources, extensionLoader, loadFromFile, selectSource],
+    [addToast, availableSources, extensionLoader, loadFromFile, refreshExtensions, selectSource],
   );
 
   // files the main thread told us to open
