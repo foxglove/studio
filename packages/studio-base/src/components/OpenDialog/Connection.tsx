@@ -2,15 +2,17 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { ActionButton, TextField, useTheme } from "@fluentui/react";
-import { Stack } from "@mui/material";
+import { ActionButton, useTheme } from "@fluentui/react";
+import { Link, Typography } from "@mui/material";
 import { useState, useMemo, useCallback, useLayoutEffect } from "react";
 
+import Stack from "@foxglove/studio-base/components/Stack";
 import {
   IDataSourceFactory,
   usePlayerSelection,
 } from "@foxglove/studio-base/context/PlayerSelectionContext";
 
+import { FormField } from "./FormField";
 import View from "./View";
 
 type ConnectionProps = {
@@ -42,6 +44,7 @@ export default function Connection(props: ConnectionProps): JSX.Element {
     [enabledSourcesFirst, selectedConnectionIdx],
   );
 
+  const [fieldErrors, setFieldErrors] = useState(new Map<string, string>());
   const [fieldValues, setFieldValues] = useState<Record<string, string | undefined>>({});
 
   useLayoutEffect(() => {
@@ -69,14 +72,12 @@ export default function Connection(props: ConnectionProps): JSX.Element {
     selectSource(selectedSource.id, { type: "connection", params: fieldValues });
   }, [selectedSource, fieldValues, selectSource]);
 
+  const disableOpen = selectedSource?.disabledReason != undefined || fieldErrors.size > 0;
+
   return (
-    <View
-      onBack={onBack}
-      onCancel={onCancel}
-      onOpen={selectedSource?.disabledReason == undefined ? onOpen : undefined}
-    >
-      <Stack direction="row" flexGrow={1} height="100%" spacing={4}>
-        <Stack height="100%">
+    <View onBack={onBack} onCancel={onCancel} onOpen={disableOpen ? undefined : onOpen}>
+      <Stack direction="row" flexGrow={1} flexWrap="wrap" fullHeight gap={4}>
+        <Stack flex="0 0 240px">
           {enabledSourcesFirst.map((source, idx) => {
             const { id, iconName, displayName } = source;
             return (
@@ -86,7 +87,6 @@ export default function Connection(props: ConnectionProps): JSX.Element {
                 iconProps={{ iconName }}
                 onClick={() => setSelectedConnectionIdx(idx)}
                 styles={{
-                  root: { minWidth: 240 },
                   rootChecked: { backgroundColor: theme.semanticColors.bodyBackgroundHovered },
                   icon: { "> span": { display: "flex" } },
                   iconChecked: { color: theme.palette.themePrimary },
@@ -97,28 +97,34 @@ export default function Connection(props: ConnectionProps): JSX.Element {
             );
           })}
         </Stack>
-        <Stack
-          key={selectedSource?.id}
-          flexGrow={1}
-          height="100%"
-          spacing={2}
-          sx={{ overflowX: "auto" }}
-        >
+        <Stack key={selectedSource?.id} flex="1 0 240px" gap={2}>
+          {selectedSource?.description && (
+            <Typography color="text.secondary">{selectedSource.description}</Typography>
+          )}
+
           {selectedSource?.formConfig != undefined && (
             <Stack flexGrow={1} justifyContent="space-between">
-              <Stack spacing={2}>
+              <Stack gap={2}>
                 {selectedSource.formConfig.fields.map((field) => (
-                  <TextField
+                  <FormField
+                    key={field.id}
+                    field={field}
                     disabled={selectedSource.disabledReason != undefined}
-                    key={field.label}
-                    label={field.label}
-                    placeholder={field.placeholder}
-                    defaultValue={field.defaultValue}
-                    onChange={(_, newValue) => {
+                    onError={(err) => {
+                      setFieldErrors((existing) => {
+                        existing.set(field.id, err);
+                        return new Map(existing);
+                      });
+                    }}
+                    onChange={(newValue) => {
+                      setFieldErrors((existing) => {
+                        existing.delete(field.id);
+                        return new Map(existing);
+                      });
                       setFieldValues((existing) => {
                         return {
                           ...existing,
-                          [field.id]: newValue ?? field.defaultValue,
+                          [field.id]: newValue,
                         };
                       });
                     }}
@@ -128,6 +134,8 @@ export default function Connection(props: ConnectionProps): JSX.Element {
             </Stack>
           )}
           {selectedSource?.disabledReason}
+
+          {selectedSource?.docsLink && <Link href={selectedSource.docsLink}>View docs.</Link>}
         </Stack>
       </Stack>
     </View>

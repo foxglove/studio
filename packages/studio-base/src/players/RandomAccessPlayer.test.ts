@@ -43,6 +43,7 @@ import TestProvider from "./TestProvider";
 const playerOptions: RandomAccessPlayerOptions = {
   metricsCollector: undefined,
   seekToTime: { type: "absolute", time: { sec: 10, nsec: 0 } },
+  sourceId: "test",
 };
 
 type PlayerStateWithoutPlayerId = Omit<PlayerState, "playerId">;
@@ -109,14 +110,15 @@ describe("RandomAccessPlayer", () => {
         capabilities: [],
         presence: PlayerPresence.INITIALIZING,
         progress: {},
+        urlState: { sourceId: "test", parameters: undefined },
       },
       {
         activeData: {
           currentTime: { sec: 10, nsec: 0 },
           datatypes: new Map(
             Object.entries({
-              baz: { definitions: [{ name: "val", type: "number" }] },
               fooBar: { definitions: [{ name: "val", type: "number" }] },
+              baz: { definitions: [{ name: "val", type: "number" }] },
             }),
           ),
           endTime: { sec: 100, nsec: 0 },
@@ -131,12 +133,13 @@ describe("RandomAccessPlayer", () => {
             { datatype: "fooBar", name: "/foo/bar" },
             { datatype: "baz", name: "/baz" },
           ],
-          parsedMessageDefinitionsByTopic: {},
+          topicStats: new Map(),
           publishedTopics: new Map<string, Set<string>>(),
         },
         capabilities: [PlayerCapabilities.setSpeed, PlayerCapabilities.playbackControl],
         presence: PlayerPresence.PRESENT,
         progress: {},
+        urlState: { sourceId: "test", parameters: undefined },
       },
     ]);
 

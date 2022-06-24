@@ -2,9 +2,9 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { Mcap0StreamReader, Mcap0Types } from "@mcap/core";
 import { isEqual } from "lodash";
 
-import { Mcap0StreamReader, Mcap0Types } from "@foxglove/mcap";
 import { loadDecompressHandlers, parseChannel, ParsedChannel } from "@foxglove/mcap-support";
 import {
   Time,
@@ -14,7 +14,7 @@ import {
   isTimeInRangeInclusive,
   fromNanoSec,
 } from "@foxglove/rostime";
-import { MessageEvent, Topic } from "@foxglove/studio-base/players/types";
+import { MessageEvent, Topic, TopicStats } from "@foxglove/studio-base/players/types";
 import {
   RandomAccessDataProvider,
   ExtensionPoint,
@@ -25,7 +25,7 @@ import {
 } from "@foxglove/studio-base/randomAccessDataProviders/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
-type Options = { file: File };
+type Options = { size: number; stream: ReadableStream<Uint8Array> };
 
 export default class Mcap0StreamedDataProvider implements RandomAccessDataProvider {
   private options: Options;
@@ -36,15 +36,14 @@ export default class Mcap0StreamedDataProvider implements RandomAccessDataProvid
   }
 
   async initialize(_extensionPoint: ExtensionPoint): Promise<InitializationResult> {
-    const { file } = this.options;
-    if (file.size > 1024 * 1024 * 1024) {
+    if (this.options.size > 1024 * 1024 * 1024) {
       // This provider uses a simple approach of loading everything into memory up front, so we
       // can't handle large files
       throw new Error("Unable to stream MCAP file; too large");
     }
     const decompressHandlers = await loadDecompressHandlers();
 
-    const streamReader = (file.stream() as ReadableStream<Uint8Array>).getReader();
+    const streamReader = this.options.stream.getReader();
 
     const messagesByChannel = new Map<number, MessageEvent<unknown>[]>();
     const schemasById = new Map<number, Mcap0Types.TypedMcapRecords["Schema"]>();
@@ -115,6 +114,7 @@ export default class Mcap0StreamedDataProvider implements RandomAccessDataProvid
           messages.push({
             topic: channelInfo.channel.topic,
             receiveTime,
+            publishTime: fromNanoSec(record.publishTime),
             message: channelInfo.parsedChannel.deserializer(record.data),
             sizeInBytes: record.data.byteLength,
           });
@@ -134,11 +134,16 @@ export default class Mcap0StreamedDataProvider implements RandomAccessDataProvid
     this.messagesByChannel = messagesByChannel;
 
     const topics: Topic[] = [];
+    const topicStats = new Map<string, TopicStats>();
     const connections: Connection[] = [];
     const datatypes: RosDatatypes = new Map();
 
     for (const { channel, parsedChannel } of channelInfoById.values()) {
       topics.push({ name: channel.topic, datatype: parsedChannel.fullSchemaName });
+      const numMessages = messagesByChannel.get(channel.id)?.length;
+      if (numMessages != undefined) {
+        topicStats.set(channel.topic, { numMessages });
+      }
       // Final datatypes is an unholy union of schemas across all channels
       for (const [name, datatype] of parsedChannel.datatypes) {
         datatypes.set(name, datatype);
@@ -149,6 +154,7 @@ export default class Mcap0StreamedDataProvider implements RandomAccessDataProvid
       start: startTime ?? { sec: 0, nsec: 0 },
       end: endTime ?? { sec: 0, nsec: 0 },
       topics,
+      topicStats,
       connections,
       providesParsedMessages: true,
       messageDefinitions: {

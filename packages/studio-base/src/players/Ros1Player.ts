@@ -5,11 +5,12 @@
 import { isEqual, sortBy } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
+import { debouncePromise } from "@foxglove/den/async";
 import { Sockets } from "@foxglove/electron-socket/renderer";
 import Logger from "@foxglove/log";
 import { RosNode, TcpSocket } from "@foxglove/ros1";
 import { RosMsgDefinition } from "@foxglove/rosmsg";
-import { Time, fromMillis, toSec } from "@foxglove/rostime";
+import { Time, fromMillis, isGreaterThan, toSec } from "@foxglove/rostime";
 import { ParameterValue } from "@foxglove/studio";
 import OsContextSingleton from "@foxglove/studio-base/OsContextSingleton";
 import PlayerProblemManager from "@foxglove/studio-base/players/PlayerProblemManager";
@@ -25,9 +26,9 @@ import {
   PublishPayload,
   SubscribePayload,
   Topic,
+  TopicStats,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
-import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
 import rosDatatypesToMessageDefinition from "@foxglove/studio-base/util/rosDatatypesToMessageDefinition";
 import { getTopicsByTopicName } from "@foxglove/studio-base/util/selectors";
 import { TimestampMethod } from "@foxglove/studio-base/util/time";
@@ -54,6 +55,7 @@ type Ros1PlayerOpts = {
   url: string;
   hostname?: string;
   metricsCollector: PlayerMetricsCollectorInterface;
+  sourceId: string;
 };
 
 // Connects to `rosmaster` instance using `@foxglove/ros1`
@@ -65,6 +67,7 @@ export default class Ros1Player implements Player {
   private _listener?: (arg0: PlayerState) => Promise<void>; // Listener for _emitState().
   private _closed: boolean = false; // Whether the player has been completely closed using close().
   private _providerTopics?: Topic[]; // Topics as advertised by rosmaster.
+  private _providerTopicsStats = new Map<string, TopicStats>(); // topic names to topic statistics.
   private _providerDatatypes: RosDatatypes = new Map(); // All ROS message definitions received from subscriptions and set by publishers.
   private _publishedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of publisher IDs publishing each topic.
   private _subscribedTopics = new Map<string, Set<string>>(); // A map of topic names to the set of subscriber IDs subscribed to each topic.
@@ -82,14 +85,16 @@ export default class Ros1Player implements Player {
   private _presence: PlayerPresence = PlayerPresence.INITIALIZING;
   private _problems = new PlayerProblemManager();
   private _emitTimer?: ReturnType<typeof setTimeout>;
+  private readonly _sourceId: string;
 
-  constructor({ url, hostname, metricsCollector }: Ros1PlayerOpts) {
+  constructor({ url, hostname, metricsCollector, sourceId }: Ros1PlayerOpts) {
     log.info(`initializing Ros1Player (url=${url}, hostname=${hostname})`);
     this._metricsCollector = metricsCollector;
     this._url = url;
     this._hostname = hostname;
-    this._start = fromMillis(Date.now());
+    this._start = this._getCurrentTime();
     this._metricsCollector.playerConstructed();
+    this._sourceId = sourceId;
     void this._open();
   }
 
@@ -183,6 +188,13 @@ export default class Ros1Player implements Player {
     }
   }
 
+  private _topicsChanged = (newTopics: Topic[]): boolean => {
+    if (!this._providerTopics || newTopics.length !== this._providerTopics.length) {
+      return true;
+    }
+    return !isEqual(this._providerTopics, newTopics);
+  };
+
   private _requestTopics = async (): Promise<void> => {
     if (this._requestTopicsTimeout) {
       clearTimeout(this._requestTopicsTimeout);
@@ -194,15 +206,23 @@ export default class Ros1Player implements Player {
 
     try {
       const topicArrays = await rosNode.getPublishedTopics();
-      const topics = topicArrays.map(([name, datatype]) => ({ name, datatype }));
+      const topics: Topic[] = topicArrays.map(([name, datatype]) => ({ name, datatype }));
       // Sort them for easy comparison
-      const sortedTopics: Topic[] = sortBy(topics, "name");
+      const sortedTopics = sortBy(topics, "name");
 
       if (this._providerTopics == undefined) {
         this._metricsCollector.initialized();
       }
 
-      if (!isEqual(sortedTopics, this._providerTopics)) {
+      if (this._topicsChanged(sortedTopics)) {
+        // Remove stats entries for removed topics
+        const topicsSet = new Set<string>(topics.map((topic) => topic.name));
+        for (const topic of this._providerTopicsStats.keys()) {
+          if (!topicsSet.has(topic)) {
+            this._providerTopicsStats.delete(topic);
+          }
+        }
+
         this._providerTopics = sortedTopics;
       }
 
@@ -294,6 +314,10 @@ export default class Ros1Player implements Player {
       capabilities: CAPABILITIES,
       playerId: this._id,
       problems: this._problems.problems(),
+      urlState: {
+        sourceId: this._sourceId,
+        parameters: { url: this._url },
+      },
 
       activeData: {
         messages,
@@ -308,12 +332,13 @@ export default class Ros1Player implements Player {
         // that we don't accidentally hit falsy checks.
         lastSeekTime: 1,
         topics: providerTopics,
+        // Always copy topic stats since message counts and timestamps are being updated
+        topicStats: new Map(this._providerTopicsStats),
         datatypes: this._providerDatatypes,
         publishedTopics: this._publishedTopics,
         subscribedTopics: this._subscribedTopics,
         services: this._services,
         parameters: this._parameters,
-        parsedMessageDefinitionsByTopic: {},
       },
     });
   });
@@ -368,9 +393,11 @@ export default class Ros1Player implements Player {
         const newDatatypes = this._getRosDatatypes(datatype, msgdef);
         this._providerDatatypes = new Map([...this._providerDatatypes, ...newDatatypes]);
       });
-      subscription.on("message", (message, data, _pub) =>
-        this._handleMessage(topicName, message, data.byteLength, true),
-      );
+      subscription.on("message", (message, data, _pub) => {
+        this._handleMessage(topicName, message, data.byteLength, true);
+        // Clear any existing subscription problems for this topic if we're receiving messages again.
+        this._clearProblem(`subscribe:${topicName}`, { skipEmit: true });
+      });
       subscription.on("error", (error) => {
         this._addProblem(`subscribe:${topicName}`, {
           severity: "warn",
@@ -384,9 +411,10 @@ export default class Ros1Player implements Player {
     // Unsubscribe from topics that we are subscribed to but shouldn't be.
     for (const topicName of this._rosNode.subscriptions.keys()) {
       if (!topicNames.includes(topicName)) {
-        {
-          this._rosNode.unsubscribe(topicName);
-        }
+        this._rosNode.unsubscribe(topicName);
+
+        // Reset the message count for this topic
+        this._providerTopicsStats.delete(topicName);
       }
     }
   }
@@ -413,6 +441,22 @@ export default class Ros1Player implements Player {
     const msg: MessageEvent<unknown> = { topic, receiveTime, message, sizeInBytes };
     this._parsedMessages.push(msg);
     this._handleInternalMessage(msg);
+
+    // Update the message count for this topic
+    let stats = this._providerTopicsStats.get(topic);
+    if (this._rosNode?.subscriptions.has(topic) === true) {
+      if (!stats) {
+        stats = { numMessages: 0 };
+        this._providerTopicsStats.set(topic, stats);
+      }
+      stats.numMessages++;
+      stats.firstMessageTime ??= receiveTime;
+      if (stats.lastMessageTime == undefined) {
+        stats.lastMessageTime = receiveTime;
+      } else if (isGreaterThan(receiveTime, stats.lastMessageTime)) {
+        stats.lastMessageTime = receiveTime;
+      }
+    }
 
     this._emitState();
   };
@@ -519,6 +563,10 @@ export default class Ros1Player implements Player {
     }
   }
 
+  async callService(): Promise<unknown> {
+    throw new Error("Service calls are not supported by this data source");
+  }
+
   // Bunch of unsupported stuff. Just don't do anything for these.
   requestBackfill(): void {
     // no-op
@@ -548,7 +596,6 @@ export default class Ros1Player implements Player {
     if (subscriptions.find((sub) => sub.topic === "/clock") == undefined) {
       subscriptions.unshift({
         topic: "/clock",
-        requester: { type: "other", name: "Ros1Player" },
       });
     }
   }

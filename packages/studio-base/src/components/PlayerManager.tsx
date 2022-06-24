@@ -60,7 +60,12 @@ type PlayerManagerProps = {
   playerSources: IDataSourceFactory[];
 };
 
-const selectedLayoutSelector = (state: LayoutState) => state.selectedLayout;
+const messageOrderSelector = (state: LayoutState) =>
+  state.selectedLayout?.data?.playbackConfig.messageOrder ?? DEFAULT_MESSAGE_ORDER;
+const userNodesSelector = (state: LayoutState) =>
+  state.selectedLayout?.data?.userNodes ?? EMPTY_USER_NODES;
+const globalVariablesSelector = (state: LayoutState) =>
+  state.selectedLayout?.data?.globalVariables ?? EMPTY_GLOBAL_VARIABLES;
 
 export default function PlayerManager(props: PropsWithChildren<PlayerManagerProps>): JSX.Element {
   const { children, playerSources } = props;
@@ -88,6 +93,11 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
     AppSetting.UNLIMITED_MEMORY_CACHE,
   );
 
+  // Use the default message ordering unless this experimental flag is enabled
+  const [enableMessageOrdering = false] = useAppConfigurationValue<boolean>(
+    AppSetting.EXPERIMENTAL_MESSAGE_ORDER,
+  );
+
   // When we implement per-data-connector UI settings we will move this into the foxglove data platform source.
   const consoleApi = useContext(ConsoleApiContext);
 
@@ -96,11 +106,13 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
   const [basePlayer, setBasePlayer] = useState<Player | undefined>();
 
-  const selectedLayout = useCurrentLayoutSelector(selectedLayoutSelector);
-
-  const messageOrder = selectedLayout?.data?.playbackConfig.messageOrder ?? DEFAULT_MESSAGE_ORDER;
-  const userNodes = selectedLayout?.data?.userNodes ?? EMPTY_USER_NODES;
-  const globalVariables = selectedLayout?.data?.globalVariables ?? EMPTY_GLOBAL_VARIABLES;
+  const configuredMessageOrder = useCurrentLayoutSelector(messageOrderSelector);
+  const messageOrder = useMemo(
+    () => (enableMessageOrdering ? configuredMessageOrder : DEFAULT_MESSAGE_ORDER),
+    [configuredMessageOrder, enableMessageOrdering],
+  );
+  const userNodes = useCurrentLayoutSelector(userNodesSelector);
+  const globalVariables = useCurrentLayoutSelector(globalVariablesSelector);
 
   const { recents, addRecent } = useIndexedDbRecents();
 
@@ -131,17 +143,9 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
 
   const { addToast } = useToasts();
 
-  const [selectedSource, setSelectedSource] = useState<IDataSourceFactory | undefined>();
-
   const selectSource = useCallback(
     async (sourceId: string, args?: DataSourceArgs) => {
       log.debug(`Select Source: ${sourceId}`);
-
-      // empty string sourceId
-      if (!sourceId) {
-        setSelectedSource(undefined);
-        return;
-      }
 
       const foundSource = playerSources.find((source) => source.id === sourceId);
       if (!foundSource) {
@@ -152,7 +156,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
       }
 
       metricsCollector.setProperty("player", sourceId);
-      setSelectedSource(() => foundSource);
 
       // Sample sources don't need args or prompts to initialize
       if (foundSource.type === "sample") {
@@ -165,21 +168,23 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
         setBasePlayer(newPlayer);
 
         if (foundSource.sampleLayout) {
-          layoutStorage
-            .saveNewLayout({
-              name: foundSource.displayName,
-              data: foundSource.sampleLayout,
-              permission: "CREATOR_WRITE",
-            })
-            .then((newLayout) => {
-              if (!isMounted()) {
-                return;
-              }
-              setSelectedLayoutId(newLayout.id);
-            })
-            .catch((err) => {
-              addToast((err as Error).message, { appearance: "error" });
-            });
+          try {
+            const layouts = await layoutStorage.getLayouts();
+            let sourceLayout = layouts.find((layout) => layout.name === foundSource.displayName);
+            if (sourceLayout == undefined) {
+              sourceLayout = await layoutStorage.saveNewLayout({
+                name: foundSource.displayName,
+                data: foundSource.sampleLayout,
+                permission: "CREATOR_WRITE",
+              });
+            }
+
+            if (isMounted()) {
+              setSelectedLayoutId(sourceLayout.id);
+            }
+          } catch (err) {
+            addToast((err as Error).message, { appearance: "error" });
+          }
         }
 
         return;
@@ -335,7 +340,6 @@ export default function PlayerManager(props: PropsWithChildren<PlayerManagerProp
   const value: PlayerSelection = {
     selectSource,
     selectRecent,
-    selectedSource,
     availableSources: playerSources,
     recentSources,
   };

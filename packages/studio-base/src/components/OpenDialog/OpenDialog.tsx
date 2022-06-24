@@ -65,16 +65,6 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
     }
   }, [activeView, firstSampleSource, isMounted, openFile, selectSource]);
 
-  const allExtensions = useMemo(() => {
-    return availableSources.reduce((all, source) => {
-      if (!source.supportedFileTypes) {
-        return all;
-      }
-
-      return [...all, ...source.supportedFileTypes];
-    }, [] as string[]);
-  }, [availableSources]);
-
   // connectionSources is the list of availableSources supporting "connections"
   const connectionSources = useMemo(() => {
     return availableSources.filter((source) => {
@@ -82,11 +72,21 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
     });
   }, [availableSources]);
 
+  const localFileSources = useMemo(() => {
+    return availableSources.filter((source) => source.type === "file");
+  }, [availableSources]);
+
   const remoteFileSources = useMemo(() => {
     return availableSources.filter((source) => source.type === "remote-file");
   }, [availableSources]);
 
   const view = useMemo(() => {
+    const supportedLocalFileTypes = localFileSources.flatMap(
+      (source) => source.supportedFileTypes ?? [],
+    );
+    const supportedRemoteFileTypes = remoteFileSources.flatMap(
+      (source) => source.supportedFileTypes ?? [],
+    );
     switch (activeView) {
       case "demo": {
         return {
@@ -120,14 +120,20 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
       default:
         return {
           title: "Get started",
-          component: <Start onSelectView={onSelectView} supportedFileExtensions={allExtensions} />,
+          component: (
+            <Start
+              onSelectView={onSelectView}
+              supportedLocalFileExtensions={supportedLocalFileTypes}
+              supportedRemoteFileExtensions={supportedRemoteFileTypes}
+            />
+          ),
         };
     }
   }, [
     activeDataSource,
     activeView,
-    allExtensions,
     connectionSources,
+    localFileSources,
     onDismiss,
     onSelectView,
     remoteFileSources,
@@ -136,8 +142,7 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
   return (
     <Dialog
       hidden={false}
-      maxWidth={800}
-      minWidth={800}
+      maxWidth="calc(min(800px, 100% - 32px))"
       modalProps={{
         layerProps: {
           // We enable event bubbling so a user can drag&drop files or folders onto the app even when
@@ -162,29 +167,24 @@ export default function OpenDialog(props: OpenDialogProps): JSX.Element {
         title: view.title,
         styles: {
           content: {
-            overflow: "hidden",
-            // Keep a consistent height for the dialog so changing views does not change the height
-            height: 520,
+            overflow: "visible",
             display: "flex",
             flexDirection: "column",
+            // Keep a consistent height for the dialog so changing views does not change the height
+            flexBasis: 520,
+            maxHeight: 520,
             padding: theme.spacing.l1,
-
-            "@media (max-height: 552px)": { overflowY: "auto" },
           },
           inner: {
             flex: 1,
             display: "flex",
             flexDirection: "column",
-
-            "@media (min-height: 552px)": { overflow: "hidden" },
           },
           innerContent: {
             height: "100%",
             display: "flex",
             flexDirection: "column",
             flex: 1,
-
-            "@media (min-height: 552px)": { overflow: "hidden" },
           },
         },
       }}

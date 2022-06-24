@@ -14,6 +14,7 @@
 import { storiesOf } from "@storybook/react";
 import TestUtils from "react-dom/test-utils";
 
+import MockPanelContextProvider from "@foxglove/studio-base/components/MockPanelContextProvider";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelLayout from "@foxglove/studio-base/components/PanelLayout";
 import { PanelCatalog, PanelInfo } from "@foxglove/studio-base/context/PanelCatalogContext";
@@ -24,7 +25,6 @@ import {
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
 import { SExpectedResult } from "@foxglove/studio-base/stories/storyHelpers";
 import { dragAndDrop } from "@foxglove/studio-base/test/dragAndDropHelper";
-import { PanelConfigSchemaEntry } from "@foxglove/studio-base/types/panels";
 import tick from "@foxglove/studio-base/util/tick";
 
 import Tab from "./index";
@@ -51,14 +51,6 @@ const allPanels: readonly PanelInfo[] = [
 ];
 
 class MockPanelCatalog implements PanelCatalog {
-  async getConfigSchema(type: string): Promise<PanelConfigSchemaEntry<string>[] | undefined> {
-    const info = this.getPanelByType(type);
-    if (!info) {
-      return undefined;
-    }
-    const module = await info.module();
-    return module.default.configSchema;
-  }
   getPanels(): readonly PanelInfo[] {
     return allPanels;
   }
@@ -375,7 +367,7 @@ storiesOf("panels/Tab", module)
         onMount={() => {
           setTimeout(async () => {
             await tick();
-            const tabs = document.querySelectorAll("[draggable=true]");
+            const tabs = document.querySelectorAll("[data-test=toolbar-tab]");
             const toolbar = document.querySelectorAll('[data-test="toolbar-droppable"]')[1];
 
             // Drag and drop the first tab onto the toolbar of the second tab panel
@@ -488,7 +480,9 @@ storiesOf("panels/Tab", module)
           }, DEFAULT_TIMEOUT);
         }}
       >
-        <PanelLayout />
+        <MockPanelContextProvider>
+          <PanelLayout />
+        </MockPanelContextProvider>
       </PanelSetup>
     );
   });

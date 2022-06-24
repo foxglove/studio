@@ -12,33 +12,34 @@
 //   You may not use this file except in compliance with the License.
 
 import { IconButton, IList, List } from "@fluentui/react";
-import { Box, Stack } from "@mui/material";
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Box } from "@mui/material";
+import { makeStyles } from "@mui/styles";
+import produce from "immer";
+import { set } from "lodash";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
+import { SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo, useMessagesByTopic } from "@foxglove/studio-base/PanelAPI";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import TopicToRenderMenu from "@foxglove/studio-base/components/TopicToRenderMenu";
+import Stack from "@foxglove/studio-base/components/Stack";
 import { useAppTimeFormat } from "@foxglove/studio-base/hooks";
+import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
+import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import FilterBar, { FilterBarProps } from "./FilterBar";
 import LogMessage from "./LogMessage";
 import { normalizedLogMessage } from "./conversion";
 import filterMessages from "./filterMessages";
 import helpContent from "./index.help.md";
-import { LogMessageEvent } from "./types";
+import { buildSettingsTree } from "./settings";
+import { Config, LogMessageEvent } from "./types";
 
 type ArrayElementType<T extends readonly unknown[]> = T extends readonly (infer E)[] ? E : never;
 
-type Config = {
-  searchTerms: string[];
-  minLogLevel: number;
-  topicToRender?: string;
-};
-
 type Props = {
   config: Config;
-  saveConfig: (arg0: Config) => void;
+  saveConfig: SaveConfig<Config>;
 };
 
 const SUPPORTED_DATATYPES = [
@@ -46,19 +47,40 @@ const SUPPORTED_DATATYPES = [
   "rcl_interfaces/msg/Log",
   "ros.rosgraph_msgs.Log",
   "ros.rcl_interfaces.Log",
+  "foxglove_msgs/Log",
+  "foxglove_msgs/msg/Log",
   "foxglove.Log",
 ];
 
+const useStyles = makeStyles({
+  scrollArea: {
+    height: "100%",
+    overflow: "auto",
+    display: "flex",
+    flexDirection: "column-reverse",
+  },
+});
+
 const LogPanel = React.memo(({ config, saveConfig }: Props) => {
+  const classes = useStyles();
   const { topics } = useDataSourceInfo();
   const { minLogLevel, searchTerms } = config;
   const { timeFormat, timeZone } = useAppTimeFormat();
 
+  const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
+
   const onFilterChange = useCallback<FilterBarProps["onFilterChange"]>(
     (filter) => {
-      saveConfig({ ...config, minLogLevel: filter.minLogLevel, searchTerms: filter.searchTerms });
+      saveConfig({ minLogLevel: filter.minLogLevel, searchTerms: filter.searchTerms });
     },
-    [config, saveConfig],
+    [saveConfig],
+  );
+
+  // Get the topics that have our supported datatypes
+  // Users can select any of these topics for display in the panel
+  const availableTopics = useMemo(
+    () => topics.filter((topic) => SUPPORTED_DATATYPES.includes(topic.datatype)),
+    [topics],
   );
 
   const datatypeByTopic = useMemo(() => {
@@ -70,13 +92,6 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
     return out;
   }, [topics]);
 
-  // Get the topics that have our supported datatypes
-  // Users can select any of these topics for display in the panel
-  const availableTopics = useMemo(
-    () => topics.filter((topic) => SUPPORTED_DATATYPES.includes(topic.datatype)),
-    [topics],
-  );
-
   // Pick the first available topic, if there are not available topics, then we inform the user
   // nothing is publishing log messages
   const defaultTopicToRender = useMemo(() => availableTopics[0]?.name, [availableTopics]);
@@ -87,6 +102,25 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
     topics: [topicToRender],
     historySize: 100000,
   }) as { [key: string]: LogMessageEvent[] };
+
+  const actionHandler = useCallback(
+    (action: SettingsTreeAction) => {
+      if (action.action !== "update") {
+        return;
+      }
+
+      const { path, value } = action.payload;
+      saveConfig(produce<Config>((draft) => set(draft, path.slice(1), value)));
+    },
+    [saveConfig],
+  );
+
+  useEffect(() => {
+    updatePanelSettingsTree({
+      actionHandler,
+      nodes: buildSettingsTree(topicToRender, availableTopics),
+    });
+  }, [actionHandler, availableTopics, topicToRender, updatePanelSettingsTree]);
 
   // avoid making new sets for node names
   // the filter bar uses the node names during on-demand filtering
@@ -105,42 +139,32 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
 
   const searchTermsSet = useMemo(() => new Set(searchTerms), [searchTerms]);
 
+  const topicDatatype = useMemo(
+    () => availableTopics.find((topic) => topic.name === topicToRender)?.datatype,
+    [availableTopics, topicToRender],
+  );
+
   const filteredMessages = useMemo(
-    () => filterMessages(msgEvents, { minLogLevel, searchTerms }),
-    [msgEvents, minLogLevel, searchTerms],
+    () =>
+      topicDatatype ? filterMessages(msgEvents, { minLogLevel, searchTerms, topicDatatype }) : [],
+    [msgEvents, minLogLevel, searchTerms, topicDatatype],
   );
 
   const listRef = useRef<IList>(ReactNull);
 
-  const topicToRenderMenu = (
-    <TopicToRenderMenu
-      topicToRender={topicToRender}
-      onChange={(newTopicToRender) => saveConfig({ ...config, topicToRender: newTopicToRender })}
-      allowedDatatypes={SUPPORTED_DATATYPES}
-      topics={topics}
-      defaultTopicToRender={topicToRender}
-    />
-  );
-
   const [hasUserScrolled, setHasUserScrolled] = useState(false);
-  const scrollByUpdate = useRef<boolean>(false);
-
   const divRef = useRef<HTMLDivElement>(ReactNull);
 
-  function scrollToBottom() {
+  const scrollToBottomAction = useCallback(() => {
     const div = divRef.current;
     if (!div) {
       return;
     }
 
-    div.scrollTop = div.scrollHeight;
-  }
-
-  function scrollToBottomAction() {
     setHasUserScrolled(false);
-    scrollByUpdate.current = true;
-    scrollToBottom();
-  }
+    // With column-reverse flex direction, 0 scroll top is the bottom (latest) message
+    div.scrollTop = 0;
+  }, []);
 
   useLayoutEffect(() => {
     const div = divRef.current;
@@ -149,10 +173,7 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
     }
 
     const listener = () => {
-      if (!scrollByUpdate.current) {
-        setHasUserScrolled(true);
-      }
-      scrollByUpdate.current = false;
+      setHasUserScrolled(div.scrollTop !== 0);
     };
 
     div.addEventListener("scroll", listener);
@@ -162,8 +183,8 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
   }, []);
 
   return (
-    <Stack height="100%">
-      <PanelToolbar helpContent={helpContent} additionalIcons={topicToRenderMenu}>
+    <Stack fullHeight>
+      <PanelToolbar helpContent={helpContent}>
         <FilterBar
           searchTerms={searchTermsSet}
           minLogLevel={minLogLevel}
@@ -173,18 +194,11 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
         />
       </PanelToolbar>
       <Stack flexGrow={1} overflow="hidden">
-        <Box ref={divRef} height="100%" overflow="auto">
+        <div ref={divRef} className={classes.scrollArea}>
           {/* items property wants a mutable array but filteredMessages is readonly */}
           <List
             componentRef={listRef}
             items={filteredMessages as ArrayElementType<typeof filteredMessages>[]}
-            onPagesUpdated={() => {
-              // If the user has scrolled manually then we avoid automatic scrolling
-              if (!hasUserScrolled) {
-                scrollByUpdate.current = true;
-                scrollToBottom();
-              }
-            }}
             onRenderCell={(item) => {
               if (!item) {
                 return;
@@ -205,7 +219,7 @@ const LogPanel = React.memo(({ config, saveConfig }: Props) => {
               );
             }}
           />
-        </Box>
+        </div>
       </Stack>
       {hasUserScrolled && (
         <Box position="absolute" bottom={10} right={10}>

@@ -11,18 +11,20 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { uniq, omit, debounce } from "lodash";
-import React, { useCallback, useMemo, useState, useRef, useEffect, useLayoutEffect } from "react";
+import produce from "immer";
+import { uniq, omit, debounce, set, takeRight, round } from "lodash";
+import { useCallback, useMemo, useState, useRef, useEffect, useLayoutEffect } from "react";
 import { useLatest } from "react-use";
 
 import { CameraState } from "@foxglove/regl-worldview";
+import { SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import {
   MessagePipelineContext,
   useMessagePipeline,
 } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
-import PanelContext from "@foxglove/studio-base/components/PanelContext";
+import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import useCallbackWithToast from "@foxglove/studio-base/hooks/useCallbackWithToast";
 import Layout from "@foxglove/studio-base/panels/ThreeDimensionalViz/Layout";
 import UrdfBuilder from "@foxglove/studio-base/panels/ThreeDimensionalViz/UrdfBuilder";
@@ -40,10 +42,12 @@ import {
   ThreeDimensionalVizConfig,
   TransformLink,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/types";
+import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import { MutablePose } from "@foxglove/studio-base/types/Messages";
-import { PanelConfigSchema, SaveConfig } from "@foxglove/studio-base/types/panels";
+import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { emptyPose } from "@foxglove/studio-base/util/Pose";
 
+import { buildSettingsTree } from "./settings";
 import useFrame from "./useFrame";
 import useTransforms from "./useTransforms";
 
@@ -112,7 +116,7 @@ function BaseRenderer(props: Props): JSX.Element {
 
   const { autoSyncCameraState = false, followMode = "follow", followTf } = config;
 
-  const { updatePanelConfigs } = React.useContext(PanelContext) ?? {};
+  const { updatePanelConfigs } = usePanelContext();
 
   const { topics } = useDataSourceInfo();
 
@@ -337,7 +341,7 @@ function BaseRenderer(props: Props): JSX.Element {
 
       // If autoSyncCameraState is enabled, we can't wait for the debounce and need to call updatePanelConfig right away
       if (autoSyncCameraState) {
-        updatePanelConfigs?.("3D Panel", (oldConfig) => ({
+        updatePanelConfigs("3D Panel", (oldConfig) => ({
           ...oldConfig,
           cameraState: newCurrentCameraState,
         }));
@@ -359,6 +363,33 @@ function BaseRenderer(props: Props): JSX.Element {
       urdfBuilder.off("transforms", handle);
     };
   }, [urdfBuilder]);
+
+  const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
+
+  const actionHandler = useCallback(
+    (action: SettingsTreeAction) => {
+      if (action.action !== "update") {
+        return;
+      }
+
+      const { path, value } = action.payload;
+      saveConfig(
+        produce(config, (draft) => {
+          // The settings tree is structured so that the last path element
+          // maps directly to config.
+          set(draft, takeRight(path), value);
+        }),
+      );
+    },
+    [config, saveConfig],
+  );
+
+  useEffect(() => {
+    updatePanelSettingsTree({
+      actionHandler,
+      nodes: buildSettingsTree(config),
+    });
+  }, [actionHandler, config, updatePanelSettingsTree]);
 
   return (
     <Layout
@@ -385,48 +416,6 @@ function BaseRenderer(props: Props): JSX.Element {
   );
 }
 
-const configSchema: PanelConfigSchema<ThreeDimensionalVizConfig> = [
-  {
-    key: "flattenMarkers",
-    type: "toggle",
-    title: "Flatten markers with a z-value of 0 to be located at the base frame's z value",
-  },
-  {
-    key: "autoTextBackgroundColor",
-    type: "toggle",
-    title: "Automatically apply dark/light background color to text",
-  },
-  {
-    key: "useThemeBackgroundColor",
-    type: "toggle",
-    title: "Automatically determine background color based on the color scheme",
-  },
-  { key: "customBackgroundColor", type: "color", title: "Background color" },
-  {
-    key: "ignoreColladaUpAxis",
-    type: "toggle",
-    title: "Ignore <up_axis> in COLLADA meshes",
-  },
-  { key: "clickToPublishPoseEstimateTopic", type: "text", title: "Pose estimate topic" },
-  { key: "clickToPublishPoseTopic", type: "text", title: "Pose topic" },
-  { key: "clickToPublishPointTopic", type: "text", title: "Point topic" },
-  {
-    key: "clickToPublishPoseEstimateXDeviation",
-    type: "number",
-    title: "Pose estimate X std deviation",
-  },
-  {
-    key: "clickToPublishPoseEstimateYDeviation",
-    type: "number",
-    title: "Pose estimate Y std deviation",
-  },
-  {
-    key: "clickToPublishPoseEstimateThetaDeviation",
-    type: "number",
-    title: "Pose estimate Theta std deviation",
-  },
-];
-
 BaseRenderer.displayName = "ThreeDimensionalViz";
 BaseRenderer.panelType = "3D Panel";
 BaseRenderer.defaultConfig = {
@@ -439,7 +428,7 @@ BaseRenderer.defaultConfig = {
   clickToPublishPoseEstimateTopic: "/initialpose",
   clickToPublishPoseEstimateXDeviation: 0.5,
   clickToPublishPoseEstimateYDeviation: 0.5,
-  clickToPublishPoseEstimateThetaDeviation: Math.PI / 12,
+  clickToPublishPoseEstimateThetaDeviation: round(Math.PI / 12, 8),
   customBackgroundColor: "#000000",
   diffModeEnabled: true,
   expandedKeys: ["name:Topics"],
@@ -450,6 +439,5 @@ BaseRenderer.defaultConfig = {
   settingsByKey: {},
   useThemeBackgroundColor: true,
 } as ThreeDimensionalVizConfig;
-BaseRenderer.configSchema = configSchema;
 
 export default Panel(BaseRenderer);

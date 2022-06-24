@@ -4,12 +4,13 @@
 import { PanelInfo } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
 
-import GlobalVariableSliderHelp from "./GlobalVariableSlider/index.help.md";
-import globalVariableSliderThumbnail from "./GlobalVariableSlider/thumbnail.png";
-import ImageViewHelp from "./ImageView/index.help.md";
-import imageViewThumbnail from "./ImageView/thumbnail.png";
+import DataSourceInfoHelp from "./DataSourceInfo/index.help.md";
+import dataSourceInfoThumbnail from "./DataSourceInfo/thumbnail.png";
+import ImageViewHelp from "./Image/index.help.md";
+import imageViewThumbnail from "./Image/thumbnail.png";
+import IndicatorHelp from "./Indicator/index.help.md";
+import indicatorThumbnail from "./Indicator/thumbnail.png";
 import InternalLogsHelp from "./InternalLogs/index.help.md";
-import InternalsHelp from "./Internals/index.help.md";
 import LogHelp from "./Log/index.help.md";
 import logThumbnail from "./Log/thumbnail.png";
 import MapHelp from "./Map/index.help.md";
@@ -24,8 +25,6 @@ import PublishHelp from "./Publish/index.help.md";
 import publishThumbnail from "./Publish/thumbnail.png";
 import RawMessagesHelp from "./RawMessages/index.help.md";
 import rawMessagesThumbnail from "./RawMessages/thumbnail.png";
-import SourceInfoHelp from "./SourceInfo/index.help.md";
-import sourceInfoThumbnail from "./SourceInfo/thumbnail.png";
 import StateTransitionsHelp from "./StateTransitions/index.help.md";
 import stateTransitionsThumbnail from "./StateTransitions/thumbnail.png";
 import TabHelp from "./Tab/index.help.md";
@@ -34,12 +33,15 @@ import TableHelp from "./Table/index.help.md";
 import tableThumbnail from "./Table/thumbnail.png";
 import TeleopHelp from "./Teleop/index.help.md";
 import teleopThumbnail from "./Teleop/thumbnail.png";
+import ThreeDeeRenderHelp from "./ThreeDeeRender/index.help.md";
 import ThreeDimensionalVizHelp from "./ThreeDimensionalViz/index.help.md";
 import threeDimensionalVizThumbnail from "./ThreeDimensionalViz/thumbnail.png";
 import TopicGraphHelp from "./TopicGraph/index.help.md";
 import topicGraphThumbnail from "./TopicGraph/thumbnail.png";
 import URDFViewerHelp from "./URDFViewer/index.help.md";
 import URDFViewerThumbnail from "./URDFViewer/thumbnail.png";
+import VariableSliderHelp from "./VariableSlider/index.help.md";
+import variableSliderThumbnail from "./VariableSlider/thumbnail.png";
 import DiagnosticStatusPanelHelp from "./diagnostics/DiagnosticStatusPanel.help.md";
 import DiagnosticSummaryHelp from "./diagnostics/DiagnosticSummary.help.md";
 import diagnosticStatusThumbnail from "./diagnostics/thumbnails/diagnostic-status.png";
@@ -55,7 +57,7 @@ const builtin: PanelInfo[] = [
     module: async () => await import("./ThreeDimensionalViz"),
   },
   {
-    title: `Diagnostics – Detail`,
+    title: `Diagnostics – Detail (ROS)`,
     type: "DiagnosticStatusPanel",
     description: "Display ROS DiagnosticArray messages for a specific hardware_id.",
     help: DiagnosticStatusPanelHelp,
@@ -63,7 +65,7 @@ const builtin: PanelInfo[] = [
     module: async () => await import("./diagnostics/DiagnosticStatusPanel"),
   },
   {
-    title: `Diagnostics – Summary`,
+    title: `Diagnostics – Summary (ROS)`,
     type: "DiagnosticSummary",
     description: "Display a summary of all ROS DiagnosticArray messages.",
     help: DiagnosticSummaryHelp,
@@ -76,7 +78,15 @@ const builtin: PanelInfo[] = [
     description: "Display annotated images.",
     help: ImageViewHelp,
     thumbnail: imageViewThumbnail,
-    module: async () => await import("./ImageView"),
+    module: async () => await import("./Image"),
+  },
+  {
+    title: "Indicator",
+    type: "Indicator",
+    description: "Display a colored and/or textual indicator based on a threshold value.",
+    help: IndicatorHelp,
+    thumbnail: indicatorThumbnail,
+    module: async () => await import("./Indicator"),
   },
   {
     title: "Teleop",
@@ -169,17 +179,17 @@ const builtin: PanelInfo[] = [
     title: "Data Source Info",
     type: "SourceInfo",
     description: "View details like topics and timestamps for the current data source.",
-    help: SourceInfoHelp,
-    thumbnail: sourceInfoThumbnail,
-    module: async () => await import("./SourceInfo"),
+    help: DataSourceInfoHelp,
+    thumbnail: dataSourceInfoThumbnail,
+    module: async () => await import("./DataSourceInfo"),
   },
   {
     title: "Variable Slider",
     type: "GlobalVariableSliderPanel",
     description: "Update numerical variable values for a layout.",
-    help: GlobalVariableSliderHelp,
-    thumbnail: globalVariableSliderThumbnail,
-    module: async () => await import("./GlobalVariableSlider"),
+    help: VariableSliderHelp,
+    thumbnail: variableSliderThumbnail,
+    module: async () => await import("./VariableSlider"),
   },
   {
     title: "Node Playground",
@@ -208,26 +218,11 @@ const debug: PanelInfo[] = [
     module: async () => await import("./PlaybackPerformance"),
   },
   {
-    title: "Studio - Internals",
-    type: "Internals",
-    description: "View data publishers and subscribers, and record data for testing.",
-    help: InternalsHelp,
-    module: async () => await import("./Internals"),
-  },
-  {
     title: "Studio - Logs",
     type: "InternalLogs",
     description: "Specify the channels of internal logs to display for debugging.",
     help: InternalLogsHelp,
     module: async () => await import("./InternalLogs"),
-  },
-];
-
-const hidden: PanelInfo[] = [
-  {
-    title: "Welcome",
-    type: "onboarding.welcome",
-    module: async () => await import("./WelcomePanel"),
   },
 ];
 
@@ -239,4 +234,15 @@ const legacyPlot: PanelInfo[] = [
   },
 ];
 
-export default { builtin, debug, hidden, legacyPlot };
+const new3DPanel: PanelInfo[] = [
+  {
+    title: "3D (Experimental)",
+    type: "3D",
+    description: "Experimental 3D scene renderer.",
+    help: ThreeDeeRenderHelp,
+    thumbnail: threeDimensionalVizThumbnail,
+    module: async () => await import("./ThreeDeeRender"),
+  },
+];
+
+export default { builtin, debug, legacyPlot, new3DPanel };

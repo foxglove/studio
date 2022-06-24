@@ -11,9 +11,9 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Link, Text, TextField } from "@fluentui/react";
-import { Stack } from "@mui/material";
+import { Link, TextField, Typography } from "@mui/material";
 
+import Stack from "@foxglove/studio-base/components/Stack";
 import isDesktopApp from "@foxglove/studio-base/util/isDesktopApp";
 
 import { TopicSettingsEditorProps } from ".";
@@ -36,22 +36,27 @@ export default function UrdfSettingsEditor(
     : "http(s) URL pointing to a Unified Robot Description Format (URDF) XML file";
 
   return (
-    <Stack flex="auto">
+    <Stack flex="auto" gap={1}>
       <TextField
+        variant="filled"
         label={descriptionString}
         value={settings.urdfUrl ?? ""}
-        onChange={(_, newValue) => {
-          onFieldChange("urdfUrl", newValue);
-        }}
+        onChange={(event) => onFieldChange("urdfUrl", event.target.value)}
       />
       {!supportsPackageUrl && (
-        <Text block as="p">
+        <Typography>
           For ROS users, we also support package:// URLs (loaded from the local filesystem) in our{" "}
-          <Link href="https://foxglove.dev/download" target="_blank" rel="noreferrer">
+          <Link
+            href="https://foxglove.dev/download"
+            color="primary"
+            target="_blank"
+            underline="hover"
+            rel="noreferrer"
+          >
             desktop app
           </Link>
           .
-        </Text>
+        </Typography>
       )}
     </Stack>
   );

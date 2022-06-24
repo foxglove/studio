@@ -11,16 +11,14 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useTheme } from "@fluentui/react";
+import { Button, styled as muiStyled, useTheme } from "@mui/material";
 import { ChartOptions, ScaleOptions } from "chart.js";
 import { flatten, pick, uniq } from "lodash";
 import { ComponentProps, useCallback, useMemo, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
-import styled from "styled-components";
 
 import type { ZoomOptions } from "@foxglove/chartjs-plugin-zoom/types/options";
 import { filterMap } from "@foxglove/den/collection";
-import Button from "@foxglove/studio-base/components/Button";
 import ChartComponent from "@foxglove/studio-base/components/Chart";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
@@ -28,33 +26,21 @@ import MessagePathInput from "@foxglove/studio-base/components/MessagePathSyntax
 import { useMessageDataItem } from "@foxglove/studio-base/components/MessagePathSyntax/useMessageDataItem";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
+import Stack from "@foxglove/studio-base/components/Stack";
 import { useTooltip } from "@foxglove/studio-base/components/Tooltip";
 import useDeepChangeDetector from "@foxglove/studio-base/hooks/useDeepChangeDetector";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
+import { SaveConfig } from "@foxglove/studio-base/types/panels";
 
 import { TwoDimensionalTooltip } from "./Tooltip";
 import { safeParseFloat } from "./helpers";
 
-const SResetZoom = styled.div`
-  position: absolute;
-  bottom: 15px;
-  right: 10px;
-`;
-
-const SContainer = styled.div`
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  height: 100%;
-`;
-
-const SRoot = styled.div`
-  display: flex;
-  flex: 1 1 auto;
-  width: 100%;
-  overflow: hidden;
-  position: relative;
-`;
+const StyledButton = muiStyled(Button)(({ theme }) => ({
+  position: "absolute",
+  marginRight: theme.spacing(2.5),
+  marginBottom: theme.spacing(7),
+  bottom: 0,
+  right: 0,
+}));
 
 const VALID_TYPES = ["message"];
 const keysToPick = [
@@ -86,7 +72,7 @@ type Config = {
 };
 type Props = {
   config: Config;
-  saveConfig: (arg0: Partial<Config>) => void;
+  saveConfig: SaveConfig<Config>;
   onFinishRender?: () => void;
 };
 export type Line = {
@@ -138,12 +124,7 @@ function TwoDimensionalPlot(props: Props) {
   const matchedMessages = useMessageDataItem(path.value);
   const message = matchedMessages[0]?.queriedData[0]?.value as PlotMessage | undefined;
 
-  const {
-    title,
-    yAxisLabel,
-    xAxisLabel,
-    gridColor = theme.palette.neutralLighterAlt,
-  } = message ?? {};
+  const { title, yAxisLabel, xAxisLabel, gridColor = theme.palette.divider } = message ?? {};
 
   const datasets = useMemo<Data["datasets"]>(() => {
     if (!message) {
@@ -278,10 +259,14 @@ function TwoDimensionalPlot(props: Props) {
         y: yScale,
         x: xScale,
       },
-      color: colors.GRAY,
+      color: theme.palette.text.secondary,
       animation: { duration: 0 },
       plugins: {
-        title: { display: title != undefined, text: title, color: theme.palette.black },
+        title: {
+          display: title != undefined,
+          text: title,
+          color: theme.palette.text.primary,
+        },
         tooltip: {
           intersect: false,
           mode: "nearest",
@@ -334,7 +319,7 @@ function TwoDimensionalPlot(props: Props) {
   });
 
   // Use a debounce and 0 refresh rate to avoid triggering a resize observation while handling
-  // and existing resize observation.
+  // an existing resize observation.
   // https://github.com/maslianok/react-resize-detector/issues/45
   const {
     width = 0,
@@ -423,7 +408,7 @@ function TwoDimensionalPlot(props: Props) {
   }, [emptyMessage, message]);
 
   return (
-    <SContainer>
+    <Stack flex="auto" fullHeight>
       <PanelToolbar>
         <MessagePathInput
           path={path.value}
@@ -434,7 +419,14 @@ function TwoDimensionalPlot(props: Props) {
           autoSize
         />
       </PanelToolbar>
-      <SRoot onDoubleClick={onResetZoom} ref={resizeRef}>
+      <Stack
+        ref={resizeRef}
+        direction="row"
+        flex="auto"
+        fullWidth
+        overflow="hidden"
+        position="relative"
+      >
         {emptyStateElement ? (
           emptyStateElement
         ) : (
@@ -451,17 +443,21 @@ function TwoDimensionalPlot(props: Props) {
               onFinishRender={onFinishRender}
             />
             {hasUserPannedOrZoomed && (
-              <SResetZoom>
-                <Button tooltip="(shortcut: double-click)" onClick={onResetZoom}>
-                  reset view
-                </Button>
-              </SResetZoom>
+              <StyledButton
+                data-test="reset-zoom"
+                variant="contained"
+                color="inherit"
+                title="(shortcut: double-click)"
+                onClick={onResetZoom}
+              >
+                Reset view
+              </StyledButton>
             )}
             <KeyListener global keyDownHandlers={keyDownHandlers} keyUpHandlers={keyUphandlers} />
           </>
         )}
-      </SRoot>
-    </SContainer>
+      </Stack>
+    </Stack>
   );
 }
 

@@ -135,6 +135,7 @@ describe("RosbridgePlayer", () => {
     player = new RosbridgePlayer({
       url: "ws://some-url",
       metricsCollector: new NoopMetricsCollector(),
+      sourceId: "rosbridge-websocket",
     });
   });
 
@@ -145,7 +146,7 @@ describe("RosbridgePlayer", () => {
   it("subscribes to topics without errors", (done) => {
     workerInstance.setup({
       topics: ["/topic/A"],
-      types: ["/std_msgs/Header"],
+      types: ["/std_msgs/Header", "rosgraph_msgs/Log"],
       typedefs: [
         `std_msgs/Header header
 
@@ -173,7 +174,7 @@ describe("RosbridgePlayer", () => {
     beforeEach(() => {
       workerInstance.setup({
         topics: ["/topic/A", "/topic/B"],
-        types: ["/std_msgs/Header", "text"],
+        types: ["/std_msgs/Header", "text", "rosgraph_msgs/Log"],
         typedefs: [
           `std_msgs/Header header
 

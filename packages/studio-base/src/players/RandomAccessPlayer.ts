@@ -12,6 +12,7 @@
 //   You may not use this file except in compliance with the License.
 import { v4 as uuidv4 } from "uuid";
 
+import { debouncePromise } from "@foxglove/den/async";
 import { filterMap } from "@foxglove/den/collection";
 import Logger from "@foxglove/log";
 import {
@@ -38,9 +39,9 @@ import {
   PublishPayload,
   SubscribePayload,
   Topic,
-  ParsedMessageDefinitionsByTopic,
   PlayerPresence,
   PlayerProblem,
+  TopicStats,
 } from "@foxglove/studio-base/players/types";
 import {
   Connection,
@@ -48,7 +49,6 @@ import {
   RandomAccessDataProviderMetadata,
 } from "@foxglove/studio-base/randomAccessDataProviders/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
-import debouncePromise from "@foxglove/studio-base/util/debouncePromise";
 import delay from "@foxglove/studio-base/util/delay";
 import { isRangeCoveredByRanges } from "@foxglove/studio-base/util/ranges";
 import { getSanitizedTopics } from "@foxglove/studio-base/util/selectors";
@@ -85,6 +85,9 @@ export type RandomAccessPlayerOptions = {
   // Optional set of key/values to store with url handling
   urlParams?: Record<string, string>;
 
+  // Source identifier used to construct state urls.
+  sourceId: string;
+
   isSampleDataSource?: boolean;
 };
 
@@ -115,6 +118,7 @@ export default class RandomAccessPlayer implements Player {
   private _cancelSeekBackfill: boolean = false;
   private _parsedSubscribedTopics: Set<string> = new Set();
   private _providerTopics: Topic[] = [];
+  private _providerTopicStats = new Map<string, TopicStats>();
   private _providerConnections: Connection[] = [];
   private _providerDatatypes: RosDatatypes = new Map();
   private _providerParameters: Map<string, ParameterValue> | undefined;
@@ -132,8 +136,8 @@ export default class RandomAccessPlayer implements Player {
   private _closed = false;
   private _seekToTime: SeekToTimeSpec;
   private _lastRangeMillis?: number;
-  private _parsedMessageDefinitionsByTopic: ParsedMessageDefinitionsByTopic = {};
   private _isSampleDataSource: boolean;
+  private readonly _sourceId: string;
 
   // To keep reference equality for downstream user memoization cache the currentTime provided in the last activeData update
   // See additional comments below where _currentTime is set
@@ -145,7 +149,7 @@ export default class RandomAccessPlayer implements Player {
   private _problems = new Map<string, PlayerProblem>();
 
   constructor(provider: RandomAccessDataProvider, options: RandomAccessPlayerOptions) {
-    const { metricsCollector, seekToTime, urlParams, name } = options;
+    const { metricsCollector, seekToTime, urlParams, name, sourceId } = options;
     const seekBackNs = options.seekBackNs ?? DEFAULT_SEEK_BACK_NANOSECONDS;
 
     if (SEEK_ON_START_NS >= seekBackNs) {
@@ -159,6 +163,7 @@ export default class RandomAccessPlayer implements Player {
     this._seekToTime = seekToTime;
     this._seekBackNs = seekBackNs;
     this._metricsCollector.playerConstructed();
+    this._sourceId = sourceId;
     this._isSampleDataSource = options.isSampleDataSource ?? false;
   }
 
@@ -224,6 +229,7 @@ export default class RandomAccessPlayer implements Player {
           start,
           end,
           topics,
+          topicStats,
           connections,
           parameters,
           messageDefinitions,
@@ -246,6 +252,7 @@ export default class RandomAccessPlayer implements Player {
         this._nextReadStartTime = initialTime;
         this._end = end;
         this._providerTopics = topics;
+        this._providerTopicStats = topicStats;
         this._providerConnections = connections;
         this._providerDatatypes = parsedMessageDefinitions.datatypes;
         this._providerParameters = parameters;
@@ -253,8 +260,6 @@ export default class RandomAccessPlayer implements Player {
         if (parameters) {
           this._capabilities.push(PlayerCapabilities.getParameters);
         }
-        this._parsedMessageDefinitionsByTopic =
-          parsedMessageDefinitions.parsedMessageDefinitionsByTopic;
         this._initializing = false;
         problems.forEach((problem, i) => {
           this._problems.set(`initialization-${i}`, problem);
@@ -359,12 +364,15 @@ export default class RandomAccessPlayer implements Player {
             speed: this._speed,
             lastSeekTime: this._lastSeekEmitTime,
             topics: this._providerTopics,
+            topicStats: this._providerTopicStats,
             datatypes: this._providerDatatypes,
             parameters: this._providerParameters,
             publishedTopics,
-            parsedMessageDefinitionsByTopic: this._parsedMessageDefinitionsByTopic,
           },
-      urlState: this._urlParams,
+      urlState: {
+        sourceId: this._sourceId,
+        parameters: this._urlParams,
+      },
     };
 
     return this._listener(data);
@@ -663,6 +671,10 @@ export default class RandomAccessPlayer implements Player {
 
   publish(_payload: PublishPayload): void {
     throw new Error("Publishing is not supported by this data source");
+  }
+
+  async callService(): Promise<unknown> {
+    throw new Error("Service calls are not supported by this data source");
   }
 
   close(): void {

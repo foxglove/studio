@@ -27,12 +27,11 @@ import {
   TriangleListMarker,
   OccupancyGridMessage,
   PointCloud,
-  LaserScan,
   InstancedLineListMarker,
   ColorMarker,
-  PoseStamped,
   MeshMarker,
   GlLineListMarker,
+  Pose,
 } from "@foxglove/studio-base/types/Messages";
 
 import { ColorOverrideByVariable, ColorOverride } from "./Layout";
@@ -50,6 +49,16 @@ type PreviousThreeDimensionalVizConfig = {
   colorOverrideBySourceIdxByVariable?: ColorOverrideBySourceIdxByVariable;
 };
 
+export type NormalizedPose = {
+  header: { stamp: Time; frame_id: string };
+  pose: Pose;
+};
+
+export type NormalizedPoseArray = {
+  header: { stamp: Time; frame_id: string };
+  poses: Pose[];
+};
+
 export interface MarkerCollector {
   arrow(arg0: ArrowMarker): void;
   color(arg0: ColorMarker): void;
@@ -58,7 +67,9 @@ export interface MarkerCollector {
   sphere(arg0: SphereMarker): void;
   sphereList(arg0: SphereListMarker): void;
   cylinder(arg0: CylinderMarker): void;
-  poseMarker(arg0: PoseStamped): void;
+  poseMarker(
+    arg0: (NormalizedPose & { type: 103 }) | (NormalizedPoseArray & { type: 111; pose: Pose }),
+  ): void;
   lineStrip(arg0: LineStripMarker): void;
   lineList(arg0: LineListMarker): void;
   points(arg0: PointsMarker): void;
@@ -67,7 +78,6 @@ export interface MarkerCollector {
   triangleList(arg0: TriangleListMarker): void;
   grid(arg0: OccupancyGridMessage): void;
   pointcloud(arg0: PointCloud): void;
-  laserScan(arg0: LaserScan): void;
   linedConvexHull(arg0: LineListMarker | LineStripMarker): void;
   instancedLineList(arg0: InstancedLineListMarker): void;
   glLineList(arg0: GlLineListMarker): void;

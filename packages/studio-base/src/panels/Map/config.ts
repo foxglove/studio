@@ -1,0 +1,95 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/
+
+import { transform } from "lodash";
+
+import { filterMap } from "@foxglove/den/collection";
+import { SettingsTreeFields, SettingsTreeNodes } from "@foxglove/studio";
+
+// Persisted panel state
+export type Config = {
+  customTileUrl: string;
+  disabledTopics: string[];
+  layer: string;
+  zoomLevel?: number;
+  followTopic: string;
+};
+
+export function validateCustomUrl(url: string): Error | undefined {
+  const placeholders = url.match(/\{.+?\}/g) ?? [];
+  const validPlaceholders = ["{x}", "{y}", "{z}"];
+  for (const placeholder of placeholders) {
+    if (!validPlaceholders.includes(placeholder)) {
+      return new Error(`Invalid placeholder ${placeholder}`);
+    }
+  }
+
+  return undefined;
+}
+
+export function buildSettingsTree(config: Config, eligibleTopics: string[]): SettingsTreeNodes {
+  const topics: SettingsTreeFields = transform(
+    eligibleTopics,
+    (result, topic) => {
+      result[topic] = {
+        label: topic,
+        input: "boolean",
+        value: !config.disabledTopics.includes(topic),
+      };
+    },
+    {} as SettingsTreeFields,
+  );
+
+  const eligibleFollowTopicOptions = filterMap(eligibleTopics, (topic) =>
+    config.disabledTopics.includes(topic) ? undefined : { label: topic, value: topic },
+  );
+  const followTopicOptions = [{ label: "Off", value: "" }, ...eligibleFollowTopicOptions];
+  const generalSettings: SettingsTreeFields = {
+    layer: {
+      label: "Tile Layer",
+      input: "select",
+      value: config.layer,
+      options: [
+        { label: "Map", value: "map" },
+        { label: "Satellite", value: "satellite" },
+        { label: "Custom", value: "custom" },
+      ],
+    },
+    followTopic: {
+      label: "Follow topic",
+      input: "select",
+      value: config.followTopic,
+      options: followTopicOptions,
+    },
+  };
+
+  // Only show the custom url input when the user selects the custom layer
+  if (config.layer === "custom") {
+    let error: string | undefined;
+    if (config.customTileUrl.length > 0) {
+      error = validateCustomUrl(config.customTileUrl)?.message;
+    }
+
+    generalSettings.customTileUrl = {
+      label: "Custom map tile URL",
+      input: "string",
+      value: config.customTileUrl,
+      error,
+    };
+  }
+
+  const settings: SettingsTreeNodes = {
+    general: {
+      label: "General",
+      icon: "Settings",
+      fields: generalSettings,
+    },
+    topics: {
+      label: "Topics",
+      fields: topics,
+    },
+  };
+
+  return settings;
+}

@@ -2,34 +2,44 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { generateUtilityClass, unstable_composeClasses as composeClasses } from "@mui/base";
 import { styled as muiStyled, Theme, useTheme } from "@mui/material";
 import cx from "classnames";
-import { ElementType, CSSProperties, PropsWithChildren } from "react";
-
-function getStackUtilityClass(slot: string): string {
-  return generateUtilityClass("FoxgloveStack", slot);
-}
+import { ElementType, CSSProperties, PropsWithChildren, forwardRef } from "react";
 
 const StackRoot = muiStyled("div", {
   name: "FoxgloveStack",
   slot: "Root",
-  overridesResolver: (_props, styles) => {
-    return [styles.root];
-  },
+  skipSx: true,
 })(({ theme, ownerState }: { theme: Theme; ownerState: StackProps }) => ({
   display: "flex",
   flexDirection: ownerState.direction,
-  flexWrap: ownerState.wrap,
+  flex: ownerState.flex,
+  flexBasis: ownerState.flexBasis,
+  flexShrink: ownerState.flexShrink,
+  flexGrow: ownerState.flexGrow,
+  flexWrap: ownerState.flexWrap,
   justifyContent: ownerState.justifyContent,
   alignItems: ownerState.alignItems,
   alignContent: ownerState.alignContent,
   alignSelf: ownerState.alignSelf,
-  flex: ownerState.flex,
   order: ownerState.order,
+  overflow: ownerState.overflow,
+  position: ownerState.position,
 
+  ...(ownerState.overflowX != undefined && {
+    overflowX: ownerState.overflowX,
+  }),
+  ...(ownerState.overflowY != undefined && {
+    overflowY: ownerState.overflowY,
+  }),
+  ...(ownerState.zeroMinWidth === true && {
+    minWidth: 0,
+  }),
   ...(ownerState.fullHeight === true && {
     height: "100%",
+  }),
+  ...(ownerState.fullWidth === true && {
+    width: "100%",
   }),
   ...(ownerState.gap != undefined && {
     gap: theme.spacing(ownerState.gap),
@@ -65,7 +75,10 @@ const StackRoot = muiStyled("div", {
   }),
 }));
 
-export default function Stack(props: PropsWithChildren<StackProps>): JSX.Element {
+export default forwardRef<HTMLDivElement, PropsWithChildren<StackProps>>(function Stack(
+  props,
+  ref,
+): JSX.Element {
   const theme = useTheme();
 
   const {
@@ -78,12 +91,17 @@ export default function Stack(props: PropsWithChildren<StackProps>): JSX.Element
     flexBasis,
     flexGrow,
     flexShrink,
+    flexWrap,
     fullHeight = false,
+    fullWidth = false,
     gap,
     gapX,
     gapY,
     justifyContent,
     order,
+    overflow,
+    overflowX,
+    overflowY,
     padding,
     paddingX,
     paddingY,
@@ -91,8 +109,9 @@ export default function Stack(props: PropsWithChildren<StackProps>): JSX.Element
     paddingBottom,
     paddingLeft,
     paddingRight,
-    wrap,
+    position,
     style,
+    zeroMinWidth = false,
     ...other
   } = props;
 
@@ -105,12 +124,17 @@ export default function Stack(props: PropsWithChildren<StackProps>): JSX.Element
     flexBasis,
     flexGrow,
     flexShrink,
+    flexWrap,
     fullHeight,
+    fullWidth,
     gap,
     gapX,
     gapY,
     justifyContent,
     order,
+    overflow,
+    overflowX,
+    overflowY,
     padding,
     paddingX,
     paddingY,
@@ -118,22 +142,22 @@ export default function Stack(props: PropsWithChildren<StackProps>): JSX.Element
     paddingBottom,
     paddingLeft,
     paddingRight,
-    wrap,
+    position,
+    zeroMinWidth,
   };
-
-  const classes = composeClasses({ root: ["root"] }, getStackUtilityClass, ownerState.classes);
 
   return (
     <StackRoot
       as={component}
-      className={cx(classes.root, className)}
+      ref={ref}
+      className={cx("FoxgloveStack-root", className)} // add className for ergonimic styling purposes
       ownerState={ownerState}
       theme={theme}
       style={style}
       {...other}
     />
   );
-}
+});
 
 export type StackProps = {
   /** Override or extend the styles applied to the component. */
@@ -159,8 +183,8 @@ export type StackProps = {
   /** Make stack 100% height. */
   fullHeight?: boolean;
 
-  /** Defines the `flex-wrap` style property. */
-  wrap?: CSSProperties["flexWrap"];
+  /** Make stack 100% height. */
+  fullWidth?: boolean;
 
   /** Defines the `justify-content` style property. */
   justifyContent?: CSSProperties["justifyContent"];
@@ -183,6 +207,15 @@ export type StackProps = {
   /** Defines the `columnGap` style property using `theme.spacing` increments. */
   gapY?: number;
 
+  /** Defines the `overflow` style property. */
+  overflow?: CSSProperties["overflow"];
+
+  /** Defines the `overflow-x` style property. */
+  overflowX?: CSSProperties["overflowX"];
+
+  /** Defines the `overflow-y` style property. */
+  overflowY?: CSSProperties["overflowY"];
+
   /** Defines the `padding` style property using `theme.spacing` increments. */
   padding?: number;
 
@@ -204,20 +237,29 @@ export type StackProps = {
   /** Defines the vertical `padding-right` style property using `theme.spacing` increments. */
   paddingRight?: number;
 
+  /** Defines the `position` style property. */
+  position?: CSSProperties["position"];
+
   /** Defines the `flex` style property. */
-  flex?: number | string;
+  flex?: CSSProperties["flex"];
 
   /** Defines the `flex-grow` style property. */
-  flexGrow?: number;
+  flexGrow?: CSSProperties["flexGrow"];
 
   /** Defines the `flex-shrink` style property. */
-  flexShrink?: number;
+  flexShrink?: CSSProperties["flexShrink"];
 
   /** Defines the `flex-basis` style property. */
-  flexBasis?: number | string;
+  flexBasis?: CSSProperties["flexBasis"];
+
+  /** Defines the `flex-wrap` style property. */
+  flexWrap?: CSSProperties["flexWrap"];
 
   /** Defines the `order` property. */
-  order?: number;
+  order?: CSSProperties["order"];
+
+  /** Sets the minWidth to zero */
+  zeroMinWidth?: boolean;
 
   /** CSS styles to apply to the component. */
   style?: CSSProperties;

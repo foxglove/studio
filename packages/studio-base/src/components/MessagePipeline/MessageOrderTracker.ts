@@ -13,8 +13,7 @@
 
 import Logger from "@foxglove/log";
 import { Time, isLessThan, subtract as subtractTimes, toSec } from "@foxglove/rostime";
-import { PlayerState, MessageEvent } from "@foxglove/studio-base/players/types";
-import sendNotification from "@foxglove/studio-base/util/sendNotification";
+import { PlayerState, MessageEvent, PlayerProblem } from "@foxglove/studio-base/players/types";
 import { formatFrame, getTimestampForMessageEvent } from "@foxglove/studio-base/util/time";
 
 const DRIFT_THRESHOLD_SEC = 1; // Maximum amount of drift allowed.
@@ -45,11 +44,16 @@ class MessageOrderTracker {
 
   private incorrectMessages: MessageEvent<unknown>[] = [];
 
-  update(playerState: PlayerState): void {
+  update(playerState: PlayerState): PlayerProblem[] {
     if (!playerState.activeData) {
-      return;
+      return [];
     }
+
+    const problems: PlayerProblem[] = [];
+
     const { messages, messageOrder, currentTime, lastSeekTime } = playerState.activeData;
+    let didSeek = false;
+
     if (this.lastLastSeekTime !== lastSeekTime) {
       this.lastLastSeekTime = lastSeekTime;
       if (this.warningTimeout) {
@@ -59,6 +63,7 @@ class MessageOrderTracker {
       }
       this.warningTimeout = this.lastMessageTime = this.lastCurrentTime = undefined;
       this.lastMessages = [];
+      didSeek = true;
     }
     if (this.lastMessages !== messages || this.lastCurrentTime !== currentTime) {
       this.lastMessages = messages;
@@ -66,46 +71,52 @@ class MessageOrderTracker {
       for (const message of messages) {
         const messageTime = getTimestampForMessageEvent(message, messageOrder);
         if (!messageTime) {
-          sendNotification(
-            `Message has no ${messageOrder}`,
-            `Received a message on topic ${message.topic} around ${formatFrame(
-              currentTime,
-            )} with ` + `no ${messageOrder} when sorting by that method.`,
-            "app",
-            "warn",
-          );
+          const formattedTime = formatFrame(currentTime);
+          const msg =
+            `Received a message on topic ${message.topic} around ${formattedTime} with ` +
+            `no ${messageOrder}.`;
+          problems.push({
+            severity: "warn",
+            error: new Error(msg),
+            message: "Unsortable message",
+          });
+
           this.lastMessageTopic = message.topic;
           this.lastMessageTime = undefined;
           continue;
         }
-        const currentTimeDrift = Math.abs(toSec(subtractTimes(messageTime, currentTime)));
 
-        if (currentTimeDrift > DRIFT_THRESHOLD_SEC) {
-          if (this.trackIncorrectMessages) {
-            this.incorrectMessages.push(message);
-          }
-          if (!this.warningTimeout) {
-            this.warningTimeout = setTimeout(() => {
-              // timeout has fired, we need to clear so a new timeout registers if there are more messages
-              this.warningTimeout = undefined;
-              // reset incorrect message queue before posting warning so we never keep
-              // incorrectMessages around. The browser console will keep messages in memory when
-              // logged, so disable logging of messages unless explicitly enabled.
-              const info = {
-                currentTime,
-                lastSeekTime,
-                messageOrder,
-                messageTime,
-                incorrectMessages: this.trackIncorrectMessages
-                  ? this.incorrectMessages
-                  : "not being tracked",
-              };
-              this.incorrectMessages = [];
-              log.warn(
-                `${messageOrder} very different from player.currentTime; without updating lastSeekTime`,
-                info,
-              );
-            }, WAIT_FOR_SEEK_SEC * 1000);
+        // The first emit after a seek occurs from a backfill. This backfill might produce messages
+        // much older than the seek time.
+        if (!didSeek) {
+          const currentTimeDrift = Math.abs(toSec(subtractTimes(messageTime, currentTime)));
+          if (currentTimeDrift > DRIFT_THRESHOLD_SEC) {
+            if (this.trackIncorrectMessages) {
+              this.incorrectMessages.push(message);
+            }
+            if (!this.warningTimeout) {
+              this.warningTimeout = setTimeout(() => {
+                // timeout has fired, we need to clear so a new timeout registers if there are more messages
+                this.warningTimeout = undefined;
+                // reset incorrect message queue before posting warning so we never keep
+                // incorrectMessages around. The browser console will keep messages in memory when
+                // logged, so disable logging of messages unless explicitly enabled.
+                const info = {
+                  currentTime,
+                  lastSeekTime,
+                  messageOrder,
+                  messageTime,
+                  incorrectMessages: this.trackIncorrectMessages
+                    ? this.incorrectMessages
+                    : "not being tracked",
+                };
+                this.incorrectMessages = [];
+                log.warn(
+                  `${messageOrder} very different from player.currentTime; without updating lastSeekTime`,
+                  info,
+                );
+              }, WAIT_FOR_SEEK_SEC * 1000);
+            }
           }
         }
 
@@ -114,23 +125,24 @@ class MessageOrderTracker {
           this.lastMessageTopic != undefined &&
           isLessThan(messageTime, this.lastMessageTime)
         ) {
-          sendNotification(
-            "Data went back in time",
-            `Processed a message on ${message.topic} at ${formatFrame(
-              messageTime,
-            )} which is earlier than ` +
-              `last processed message on ${this.lastMessageTopic} at ${formatFrame(
-                this.lastMessageTime,
-              )}. ` +
-              `Data source may be corrupted on these or other topics.`,
-            "user",
-            "warn",
-          );
+          const formattedTime = formatFrame(messageTime);
+          const lastMessageTime = formatFrame(this.lastMessageTime);
+          const errorMessage =
+            `Processed a message on ${message.topic} at ${formattedTime} which is earlier than ` +
+            `last processed message on ${this.lastMessageTopic} at ${lastMessageTime}.`;
+
+          problems.push({
+            severity: "warn",
+            message: "Data went back in time",
+            error: new Error(errorMessage),
+          });
         }
         this.lastMessageTopic = message.topic;
         this.lastMessageTime = messageTime;
       }
     }
+
+    return problems;
   }
 }
 

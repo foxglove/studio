@@ -11,34 +11,41 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { useTheme, Link, Spinner, SpinnerSize } from "@fluentui/react";
-import ArrowLeftIcon from "@mdi/svg/svg/arrow-left.svg";
-import PlusIcon from "@mdi/svg/svg/plus.svg";
-import { Box, Stack } from "@mui/material";
-import { Suspense } from "react";
-import styled from "styled-components";
+import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import {
+  Button,
+  CircularProgress,
+  Container,
+  Divider,
+  IconButton,
+  Input,
+  Link,
+  Typography,
+  useTheme,
+  styled as muiStyled,
+} from "@mui/material";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import Button from "@foxglove/studio-base/components/Button";
-import Icon from "@foxglove/studio-base/components/Icon";
-import { LegacyInput } from "@foxglove/studio-base/components/LegacyStyledComponents";
+import { SettingsTreeAction, SettingsTreeNodes } from "@foxglove/studio";
+import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import TextContent from "@foxglove/studio-base/components/TextContent";
+import Stack from "@foxglove/studio-base/components/Stack";
 import {
   LayoutState,
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import { useHelpInfo } from "@foxglove/studio-base/context/HelpInfoContext";
 import { useUserNodeState } from "@foxglove/studio-base/context/UserNodeStateContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import BottomBar from "@foxglove/studio-base/panels/NodePlayground/BottomBar";
 import Sidebar from "@foxglove/studio-base/panels/NodePlayground/Sidebar";
-import Playground from "@foxglove/studio-base/panels/NodePlayground/playground-icon.svg";
-import { PanelConfigSchema, UserNodes } from "@foxglove/studio-base/types/panels";
-import { DEFAULT_STUDIO_NODE_PREFIX } from "@foxglove/studio-base/util/globalConstants";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
+import PlaygroundIcon from "@foxglove/studio-base/panels/NodePlayground/playground-icon.svg";
+import { HelpInfoStore, useHelpInfo } from "@foxglove/studio-base/providers/HelpInfoProvider";
+import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
+import { SaveConfig, UserNodes } from "@foxglove/studio-base/types/panels";
 
 import Config from "./Config";
 import helpContent from "./index.help.md";
@@ -83,63 +90,86 @@ export default function node(event: Input<"/input/topic">): Output {
 
 type Props = {
   config: Config;
-  saveConfig: (config: Partial<Config>) => void;
+  saveConfig: SaveConfig<Config>;
 };
 
-const UnsavedDot = styled.div`
-  display: ${({ isSaved }: { isSaved: boolean }) => (isSaved ? "none" : "initial")};
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: ${colors.DARK9};
-`;
+const UnsavedDot = muiStyled("div", {
+  shouldForwardProp: (prop) => prop !== "isSaved",
+})<{
+  isSaved: boolean;
+}>(({ isSaved, theme }) => ({
+  display: isSaved ? "none" : "initial",
+  width: 6,
+  height: 6,
+  borderRadius: "50%",
+  top: "50%",
+  position: "absolute",
+  right: theme.spacing(1),
+  transform: "translateY(-50%)",
+  backgroundColor: theme.palette.text.secondary,
+}));
 
-const SWelcomeScreen = styled.div`
-  display: flex;
-  text-align: center;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 25%;
-  height: 100%;
-  > * {
-    margin: 4px 0;
-  }
-`;
+const StyledInput = muiStyled(Input)(({ theme }) => ({
+  ".MuiInput-input": {
+    padding: theme.spacing(1),
+  },
+}));
 
 export type Explorer = undefined | "nodes" | "utils" | "templates";
 
+function buildSettingsTree(config: Config): SettingsTreeNodes {
+  return {
+    general: {
+      icon: "Settings",
+      fields: {
+        autoFormatOnSave: {
+          input: "boolean",
+          label: "Auto-format on save",
+          value: config.autoFormatOnSave,
+        },
+      },
+    },
+  };
+}
+
+const selectSetHelpInfo = (store: HelpInfoStore) => store.setHelpInfo;
+
 const WelcomeScreen = ({ addNewNode }: { addNewNode: (code?: string) => void }) => {
-  const { setHelpInfo } = useHelpInfo();
+  const setHelpInfo = useHelpInfo(selectSetHelpInfo);
   const { openHelp } = useWorkspace();
   return (
-    <SWelcomeScreen>
-      <Playground />
-      <TextContent>
-        Welcome to Node Playground! Get started by reading the{" "}
-        <Link
-          href=""
-          onClick={(e) => {
-            e.preventDefault();
-            setHelpInfo({ title: "NodePlayground", content: helpContent });
-            openHelp();
-          }}
-        >
-          docs
-        </Link>
-        , or just create a new node.
-      </TextContent>
-      <Button style={{ marginTop: "8px" }} onClick={() => addNewNode()}>
-        <Icon size="medium">
-          <PlusIcon />
-        </Icon>{" "}
-        New node
-      </Button>
-    </SWelcomeScreen>
+    <EmptyState>
+      <Container maxWidth="xs">
+        <Stack justifyContent="center" alignItems="center" gap={1} fullHeight>
+          <PlaygroundIcon />
+          <Typography variant="inherit" gutterBottom>
+            Welcome to Node Playground!
+            <br />
+            Get started by reading the{" "}
+            <Link
+              color="primary"
+              underline="hover"
+              onClick={(e) => {
+                e.preventDefault();
+                setHelpInfo({ title: "NodePlayground", content: helpContent });
+                openHelp();
+              }}
+            >
+              docs
+            </Link>
+            , or just create a new node.
+          </Typography>
+          <Button
+            color="inherit"
+            variant="contained"
+            onClick={() => addNewNode()}
+            startIcon={<AddIcon />}
+          >
+            New node
+          </Button>
+        </Stack>
+      </Container>
+    </EmptyState>
   );
 };
 
@@ -151,6 +181,7 @@ const userNodeSelector = (state: LayoutState) =>
 function NodePlayground(props: Props) {
   const { config, saveConfig } = props;
   const { autoFormatOnSave = false, selectedNodeId, editorForStorybook } = config;
+  const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
 
   const theme = useTheme();
   const [explorer, updateExplorer] = React.useState<Explorer>(undefined);
@@ -177,17 +208,44 @@ function NodePlayground(props: Props) {
   const selectedNodeLogs =
     (selectedNodeId != undefined ? userNodeDiagnostics[selectedNodeId]?.logs : undefined) ?? [];
 
-  const inputTitle = currentScript
-    ? currentScript.filePath + (currentScript.readOnly ? " (READONLY)" : "")
-    : "node name";
+  // The current node name is editable via the "tab". The tab uses a controlled input. React requires
+  // that we render the new text on the next render for the controlled input to retain the cursor position.
+  // For this we use setInputTitle within the onChange event of the input control.
+  //
+  // We also update the input title when the script changes using a layout effect below.
+  const [inputTitle, setInputTitle] = useState<string>(() => {
+    return currentScript
+      ? currentScript.filePath + (currentScript.readOnly ? " (READONLY)" : "")
+      : "node name";
+  });
+
+  const prefersDarkMode = theme.palette.mode === "dark";
 
   const inputStyle = {
-    borderRadius: 0,
-    margin: 0,
-    backgroundColor: theme.semanticColors.bodyBackground,
-    padding: "4px 20px",
-    width: `${inputTitle.length + 4}ch`, // Width based on character count of title + padding
+    backgroundColor: theme.palette.background[prefersDarkMode ? "default" : "paper"],
+    width: `${Math.max(inputTitle.length + 4, 10)}ch`, // Width based on character count of title + padding
   };
+
+  const actionHandler = useCallback(
+    (action: SettingsTreeAction) => {
+      if (action.action !== "update") {
+        return;
+      }
+
+      const { input, value, path } = action.payload;
+      if (input === "boolean" && path[1] === "autoFormatOnSave") {
+        saveConfig({ autoFormatOnSave: value });
+      }
+    },
+    [saveConfig],
+  );
+
+  useEffect(() => {
+    updatePanelSettingsTree({
+      actionHandler,
+      nodes: buildSettingsTree(config),
+    });
+  }, [actionHandler, config, updatePanelSettingsTree]);
 
   React.useLayoutEffect(() => {
     if (selectedNode) {
@@ -199,6 +257,14 @@ function NodePlayground(props: Props) {
     }
   }, [props.config.additionalBackStackItems, selectedNode]);
 
+  React.useLayoutEffect(() => {
+    setInputTitle(() => {
+      return currentScript
+        ? currentScript.filePath + (currentScript.readOnly ? " (READONLY)" : "")
+        : "node name";
+    });
+  }, [currentScript]);
+
   const addNewNode = React.useCallback(
     (code?: string) => {
       const newNodeId = uuidv4();
@@ -206,7 +272,7 @@ function NodePlayground(props: Props) {
       setUserNodes({
         [newNodeId]: {
           sourceCode,
-          name: `${DEFAULT_STUDIO_NODE_PREFIX}${newNodeId.split("-")[0]}`,
+          name: `${newNodeId.split("-")[0]}`,
         },
       });
       saveConfig({ selectedNodeId: newNodeId });
@@ -254,9 +320,10 @@ function NodePlayground(props: Props) {
   );
 
   return (
-    <Stack height="100%">
-      <PanelToolbar floating helpContent={helpContent} />
-      <Stack direction="row" height="100%">
+    <Stack fullHeight>
+      <PanelToolbar helpContent={helpContent} />
+      <Divider />
+      <Stack direction="row" fullHeight>
         <Sidebar
           explorer={explorer}
           updateExplorer={updateExplorer}
@@ -284,58 +351,59 @@ function NodePlayground(props: Props) {
           setScriptOverride={setScriptOverride}
           addNewNode={addNewNode}
         />
-        <Stack flexGrow={1} height="100%" overflow="hidden">
-          <Stack direction="row" alignItems="center" bgcolor={theme.palette.neutralLighterAlt}>
+        <Stack
+          flexGrow={1}
+          fullHeight
+          overflow="hidden"
+          style={{
+            backgroundColor: theme.palette.background[prefersDarkMode ? "paper" : "default"],
+          }}
+        >
+          <Stack direction="row" alignItems="center">
             {scriptBackStack.length > 1 && (
-              <Icon
-                size="large"
-                tooltip="Go back"
-                dataTest="go-back"
-                style={{ color: colors.DARK9 }}
-                onClick={goBack}
-              >
-                <ArrowLeftIcon />
-              </Icon>
+              <IconButton title="Go back" data-test="go-back" size="small" onClick={goBack}>
+                <ArrowBackIcon />
+              </IconButton>
             )}
             {selectedNodeId != undefined && selectedNode && (
               <div style={{ position: "relative" }}>
-                <LegacyInput
-                  type="text"
+                <StyledInput
+                  size="small"
+                  disableUnderline
                   placeholder="node name"
                   value={inputTitle}
                   disabled={!currentScript || currentScript.readOnly}
-                  style={inputStyle}
-                  spellCheck={false}
-                  onChange={(e) => {
-                    const newNodeName = e.target.value;
+                  onChange={(ev) => {
+                    const newNodeName = ev.target.value;
+                    setInputTitle(newNodeName);
                     setUserNodes({
                       ...userNodes,
                       [selectedNodeId]: { ...selectedNode, name: newNodeName },
                     });
                   }}
+                  inputProps={{ spellCheck: false, style: inputStyle }}
                 />
                 <UnsavedDot isSaved={isNodeSaved} />
               </div>
             )}
-            <Icon
-              size="large"
-              tooltip="new node"
-              dataTest="new-node"
-              style={{ color: colors.DARK9, padding: "0 5px" }}
+            <IconButton
+              title="New node"
+              data-test="new-node"
+              size="small"
               onClick={() => addNewNode()}
             >
-              <PlusIcon />
-            </Icon>
+              <AddIcon />
+            </IconButton>
           </Stack>
 
           <Stack flexGrow={1} overflow="hidden ">
             {selectedNodeId == undefined && <WelcomeScreen addNewNode={addNewNode} />}
-            <Box
+            <Stack
+              flexGrow={1}
+              fullWidth
+              overflow="hidden"
               style={{
-                flexGrow: 1,
-                width: "100%",
-                overflow: "hidden",
-                display: selectedNodeId != undefined ? "initial" : "none",
+                display: selectedNodeId != undefined ? "flex" : "none",
                 /* Ensures the monaco-editor starts loading before the user opens it */
               }}
             >
@@ -346,10 +414,14 @@ function NodePlayground(props: Props) {
                     flex="auto"
                     alignItems="center"
                     justifyContent="center"
-                    width="100%"
-                    height="100%"
+                    fullHeight
+                    fullWidth
+                    style={{
+                      backgroundColor:
+                        theme.palette.background[prefersDarkMode ? "default" : "paper"],
+                    }}
                   >
-                    <Spinner size={SpinnerSize.large} />
+                    <CircularProgress size={28} />
                   </Stack>
                 }
               >
@@ -365,7 +437,7 @@ function NodePlayground(props: Props) {
                   />
                 )}
               </Suspense>
-            </Box>
+            </Stack>
             <Stack>
               <BottomBar
                 nodeId={selectedNodeId}
@@ -382,10 +454,6 @@ function NodePlayground(props: Props) {
   );
 }
 
-const configSchema: PanelConfigSchema<Config> = [
-  { key: "autoFormatOnSave", type: "toggle", title: "Auto-format on save" },
-];
-
 const defaultConfig: Config = {
   selectedNodeId: undefined,
   autoFormatOnSave: true,
@@ -394,6 +462,5 @@ export default Panel(
   Object.assign(NodePlayground, {
     panelType: "NodePlayground",
     defaultConfig,
-    configSchema,
   }),
 );

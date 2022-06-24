@@ -2,43 +2,111 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Dialog, DialogFooter, PrimaryButton } from "@fluentui/react";
-import { Stack, Typography } from "@mui/material";
-import { ReactNode, useCallback, useLayoutEffect, useMemo, useState } from "react";
+import { set } from "lodash";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
+import { DeepPartial } from "ts-essentials";
 
 import { definitions as commonDefs } from "@foxglove/rosmsg-msgs-common";
-import { PanelExtensionContext, Topic } from "@foxglove/studio";
-import HoverableIconButton from "@foxglove/studio-base/components/HoverableIconButton";
-import { useDialogHostId } from "@foxglove/studio-base/context/DialogHostIdContext";
+import {
+  PanelExtensionContext,
+  SettingsTreeAction,
+  SettingsTreeNode,
+  SettingsTreeNodes,
+  Topic,
+} from "@foxglove/studio";
+import EmptyState from "@foxglove/studio-base/components/EmptyState";
+import Stack from "@foxglove/studio-base/components/Stack";
 import ThemeProvider from "@foxglove/studio-base/theme/ThemeProvider";
-import { darkFluentTheme, lightFluentTheme } from "@foxglove/studio-base/theme/createFluentTheme";
 
 import DirectionalPad, { DirectionalPadAction } from "./DirectionalPad";
-import Settings from "./Settings";
-import { Config, DeepPartial } from "./types";
 
 type TeleopPanelProps = {
   context: PanelExtensionContext;
 };
 
-function ErrorMessage({
-  children,
-  message,
-}: {
-  children?: ReactNode;
-  message: string;
-}): JSX.Element {
-  return (
-    <Stack
-      alignItems="center"
-      direction="column"
-      spacing={3}
-      style={{ maxWidth: "60ch", textAlign: "center" }}
-    >
-      <Typography variant="h4">{message}</Typography>
-      {children}
-    </Stack>
-  );
+const geometryMsgOptions = [
+  { label: "linear-x", value: "linear-x" },
+  { label: "linear-y", value: "linear-y" },
+  { label: "linear-z", value: "linear-z" },
+  { label: "angular-x", value: "angular-x" },
+  { label: "angular-y", value: "angular-y" },
+  { label: "angular-z", value: "angular-z" },
+];
+
+type Config = {
+  topic: undefined | string;
+  publishRate: number;
+  upButton: { field: string; value: number };
+  downButton: { field: string; value: number };
+  leftButton: { field: string; value: number };
+  rightButton: { field: string; value: number };
+};
+
+function buildSettingsTree(config: Config, topics: readonly Topic[]): SettingsTreeNodes {
+  const general: SettingsTreeNode = {
+    label: "General",
+    fields: {
+      publishRate: { label: "Publish Rate", input: "number", value: config.publishRate },
+      topic: {
+        label: "Topic",
+        input: "autocomplete",
+        value: config.topic,
+        items: topics.map((t) => t.name),
+      },
+    },
+    children: {
+      upButton: {
+        label: "Up Button",
+        fields: {
+          field: {
+            label: "Field",
+            input: "select",
+            value: config.upButton.field,
+            options: geometryMsgOptions,
+          },
+          value: { label: "Value", input: "number", value: config.upButton.value },
+        },
+      },
+      downButton: {
+        label: "Down Button",
+        fields: {
+          field: {
+            label: "Field",
+            input: "select",
+            value: config.upButton.field,
+            options: geometryMsgOptions,
+          },
+          value: { label: "Value", input: "number", value: config.downButton.value },
+        },
+      },
+      leftButton: {
+        label: "Left Button",
+        fields: {
+          field: {
+            label: "Field",
+            input: "select",
+            value: config.upButton.field,
+            options: geometryMsgOptions,
+          },
+          value: { label: "Value", input: "number", value: config.leftButton.value },
+        },
+      },
+      rightButton: {
+        label: "Right Button",
+        fields: {
+          field: {
+            label: "Field",
+            input: "select",
+            value: config.upButton.field,
+            options: geometryMsgOptions,
+          },
+          value: { label: "Value", input: "number", value: config.rightButton.value },
+        },
+      },
+    },
+  };
+
+  return { general };
 }
 
 function TeleopPanel(props: TeleopPanelProps): JSX.Element {
@@ -46,6 +114,7 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
   const { saveState } = context;
 
   const [currentAction, setCurrentAction] = useState<DirectionalPadAction | undefined>();
+  const [topics, setTopics] = useState<readonly Topic[]>([]);
 
   // resolve an initial config which may have some missing fields into a full config
   const [config, setConfig] = useState<Config>(() => {
@@ -70,17 +139,17 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
     };
   });
 
-  const [topics, setTopics] = useState<readonly Topic[] | undefined>();
-  const [showSettings, setShowSettings] = useState<boolean>(false);
-  const hostId = useDialogHostId();
+  const settingsActionHandler = useCallback((action: SettingsTreeAction) => {
+    if (action.action !== "update") {
+      return;
+    }
 
-  const onChangeConfig = useCallback(
-    (newConfig: Config) => {
-      setConfig(newConfig);
-      saveState(newConfig);
-    },
-    [saveState],
-  );
+    setConfig((previous) => {
+      const newConfig = { ...previous };
+      set(newConfig, action.payload.path.slice(1), action.payload.value);
+      return newConfig;
+    });
+  }, []);
 
   // setup context render handler and render done handling
   const [renderDone, setRenderDone] = useState<() => void>(() => () => {});
@@ -90,13 +159,22 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
     context.watch("colorScheme");
 
     context.onRender = (renderState, done) => {
+      setTopics(renderState.topics ?? []);
       setRenderDone(() => done);
-      setTopics(renderState.topics);
       if (renderState.colorScheme) {
         setColorScheme(renderState.colorScheme);
       }
     };
   }, [context]);
+
+  useEffect(() => {
+    const tree = buildSettingsTree(config, topics);
+    context.updatePanelSettingsEditor({
+      actionHandler: settingsActionHandler,
+      nodes: tree,
+    });
+    saveState(config);
+  }, [config, context, saveState, settingsActionHandler, topics]);
 
   // advertise topic
   const { topic: currentTopic } = config;
@@ -116,14 +194,6 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
       context.unadvertise?.(currentTopic);
     };
   }, [context, currentTopic]);
-
-  const topicNames = useMemo(() => {
-    if (!topics) {
-      return [];
-    }
-
-    return topics.map((topic) => topic.name);
-  }, [topics]);
 
   useLayoutEffect(() => {
     if (currentAction == undefined || !currentTopic) {
@@ -205,52 +275,25 @@ function TeleopPanel(props: TeleopPanelProps): JSX.Element {
   const canPublish = context.publish != undefined && config.publishRate > 0;
   const hasTopic = Boolean(currentTopic);
   const enabled = canPublish && hasTopic;
-  const theme = colorScheme === "dark" ? darkFluentTheme : lightFluentTheme;
 
   return (
     <ThemeProvider isDark={colorScheme === "dark"}>
-      <Stack height="100%" justifyContent="center" alignItems="center" padding="min(5%, 8px)">
+      <Stack
+        fullHeight
+        justifyContent="center"
+        alignItems="center"
+        style={{ padding: "min(5%, 8px)", textAlign: "center" }}
+      >
         {!canPublish && (
-          <ErrorMessage message="Please connect to a datasource that supports publishing in order to use this panel." />
+          <EmptyState>
+            Please connect to a datasource that supports publishing in order to use this panel
+          </EmptyState>
         )}
         {canPublish && !hasTopic && (
-          <ErrorMessage message="Please select a topic in the panel settings in order to use this panel.">
-            <PrimaryButton onClick={() => setShowSettings(true)}>Open Panel Settings</PrimaryButton>
-          </ErrorMessage>
+          <EmptyState>Please select a publish topic in the panel settings</EmptyState>
         )}
         {enabled && <DirectionalPad onAction={setCurrentAction} disabled={!enabled} />}
       </Stack>
-      <Stack position="absolute" top={0} left={0} margin={1}>
-        <HoverableIconButton
-          onClick={() => setShowSettings(true)}
-          iconProps={{
-            iconName: "Settings",
-            iconNameActive: "SettingsFilled",
-          }}
-          styles={{
-            root: {
-              backgroundColor: theme.semanticColors.buttonBackgroundHovered,
-              "&:hover": { backgroundColor: theme.semanticColors.buttonBackgroundPressed },
-            },
-            icon: { height: 20 },
-          }}
-        >
-          Panel settings
-        </HoverableIconButton>
-      </Stack>
-      <Dialog
-        dialogContentProps={{ title: "Teleop panel settings", showCloseButton: true }}
-        modalProps={{ layerProps: { hostId } }}
-        hidden={!showSettings}
-        onDismiss={() => setShowSettings(false)}
-        maxWidth={480}
-        minWidth={480}
-      >
-        <Settings config={config} onConfigChange={onChangeConfig} topics={topicNames} />
-        <DialogFooter>
-          <PrimaryButton onClick={() => setShowSettings(false)}>Done</PrimaryButton>
-        </DialogFooter>
-      </Dialog>
     </ThemeProvider>
   );
 }

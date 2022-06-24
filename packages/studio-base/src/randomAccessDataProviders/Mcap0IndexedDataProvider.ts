@@ -2,10 +2,16 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { Mcap0IndexedReader, Mcap0Types } from "@foxglove/mcap";
+import { Mcap0IndexedReader, Mcap0Types } from "@mcap/core";
+
 import { ParsedChannel, parseChannel } from "@foxglove/mcap-support";
 import { Time, fromNanoSec, toNanoSec } from "@foxglove/rostime";
-import { Topic, MessageEvent, PlayerProblem } from "@foxglove/studio-base/players/types";
+import {
+  Topic,
+  MessageEvent,
+  PlayerProblem,
+  TopicStats,
+} from "@foxglove/studio-base/players/types";
 import {
   Connection,
   ExtensionPoint,
@@ -40,6 +46,7 @@ export default class Mcap0IndexedDataProvider implements RandomAccessDataProvide
     }
 
     const topicsByName = new Map<string, Topic>();
+    const topicStats = new Map<string, TopicStats>();
     const connections: Connection[] = [];
     const datatypes: RosDatatypes = new Map();
     const problems: RandomAccessDataProviderProblem[] = [];
@@ -68,11 +75,12 @@ export default class Mcap0IndexedDataProvider implements RandomAccessDataProvide
       if (!topic) {
         topic = { name: channel.topic, datatype: parsedChannel.fullSchemaName };
         topicsByName.set(channel.topic, topic);
+        const numMessages = this.reader.statistics?.channelMessageCounts.get(channel.id);
+        if (numMessages != undefined) {
+          topicStats.set(channel.topic, { numMessages: Number(numMessages) });
+        }
       }
-      const messageCount = this.reader.statistics?.channelMessageCounts.get(channel.id);
-      if (messageCount != undefined) {
-        topic.numMessages = (topic.numMessages ?? 0) + Number(messageCount);
-      }
+
       // Final datatypes is an unholy union of schemas across all channels
       for (const [name, datatype] of parsedChannel.datatypes) {
         datatypes.set(name, datatype);
@@ -83,6 +91,7 @@ export default class Mcap0IndexedDataProvider implements RandomAccessDataProvide
       start: fromNanoSec(startTime ?? 0n),
       end: fromNanoSec(endTime ?? startTime ?? 0n),
       topics: [...topicsByName.values()],
+      topicStats,
       connections,
       providesParsedMessages: true,
       messageDefinitions: {
@@ -125,13 +134,15 @@ export default class Mcap0IndexedDataProvider implements RandomAccessDataProvide
         parsedMessages.push({
           topic: channelInfo.channel.topic,
           receiveTime: fromNanoSec(message.logTime),
+          publishTime: fromNanoSec(message.publishTime),
           message: channelInfo.parsedChannel.deserializer(message.data),
           sizeInBytes: message.data.byteLength,
         });
       } catch (error) {
         if (!this.reportedChannelsWithInvalidMessages.has(message.channelId)) {
           (problems ??= []).push({
-            message: `Received message on channel ${message.channelId} without prior channel info`,
+            message: `Error decoding message on ${channelInfo.channel.topic}`,
+            error,
             severity: "error",
           });
           this.reportedChannelsWithInvalidMessages.add(message.channelId);

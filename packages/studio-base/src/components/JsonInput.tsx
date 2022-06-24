@@ -11,28 +11,45 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
+import { OutlinedInput, styled as muiStyled, Typography } from "@mui/material";
 import { isEqual } from "lodash";
-import styled from "styled-components";
 
-import { LegacyTextarea } from "@foxglove/studio-base/components/LegacyStyledComponents";
+import { fonts } from "@foxglove/studio-base/util/sharedStyleConstants";
 import { validationErrorToString, ValidationResult } from "@foxglove/studio-base/util/validators";
 
 const { useState, useCallback, useRef, useLayoutEffect, useEffect } = React;
 
-const SEditBox = styled.div`
+const SEditBox = muiStyled("div")`
   display: flex;
   flex-direction: column;
   min-height: 200px;
   max-height: 800px;
 `;
-const StyledTextarea = styled(LegacyTextarea)`
-  flex: 1 1 auto;
-  resize: none;
-`;
-const SError = styled.div`
-  color: ${({ theme }) => theme.semanticColors.errorText};
-  padding: 8px 4px;
-`;
+
+const StyledTextarea = muiStyled(OutlinedInput)(({ theme }) => ({
+  width: "100%",
+  height: "100%",
+  maxHeight: 200,
+  textAlign: "left",
+  backgroundColor: theme.palette.background.paper,
+  overflow: "hidden",
+  padding: theme.spacing(1, 0.5),
+  flex: "auto",
+  display: "flex",
+  flexDirection: "column",
+  resize: "none",
+
+  ".MuiInputBase-input": {
+    flex: "auto",
+    // height: "100% !important",
+    font: "inherit",
+    lineHeight: 1.4,
+    fontFamily: fonts.MONOSPACE,
+    fontSize: theme.typography.body2.fontSize,
+    overflow: "auto !important",
+    resize: "none",
+  },
+}));
 
 type Value = unknown;
 type OnChange = (obj: unknown) => void;
@@ -42,9 +59,6 @@ type ParseAndStringifyFn = {
 };
 export type BaseProps = {
   dataValidator?: (data: unknown) => ValidationResult | undefined;
-  inputStyle?: {
-    [attr: string]: string | number;
-  };
   onChange?: OnChange;
   onError?: (err: string) => void;
   value: Value;
@@ -57,7 +71,6 @@ export type BaseProps = {
  */
 export function ValidatedInputBase({
   dataValidator = () => undefined,
-  inputStyle = {},
   onChange,
   onError,
   parse,
@@ -162,12 +175,17 @@ export function ValidatedInputBase({
     <>
       <StyledTextarea
         data-test="validated-input"
-        style={inputStyle}
         ref={inputRef}
         value={inputStr}
         onChange={handleChange}
+        multiline
+        error={error.length > 0}
       />
-      {error.length > 0 && <SError>{error}</SError>}
+      {error.length > 0 && (
+        <Typography variant="caption" color="error.main" paddingX={0.5} paddingY={1}>
+          {error}
+        </Typography>
+      )}
     </>
   );
 }

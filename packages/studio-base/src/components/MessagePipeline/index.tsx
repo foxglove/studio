@@ -27,6 +27,7 @@ import {
   Player,
   PlayerCapabilities,
   PlayerPresence,
+  PlayerProblem,
   PlayerState,
   PublishPayload,
   SubscribePayload,
@@ -53,6 +54,7 @@ export type MessagePipelineContext = {
   setPublishers: (id: string, publishersForId: AdvertiseOptions[]) => void;
   setParameter: (key: string, value: ParameterValue) => void;
   publish: (request: PublishPayload) => void;
+  callService: (service: string, request: unknown) => Promise<unknown>;
   startPlayback?: () => void;
   pausePlayback?: () => void;
   setPlaybackSpeed?: (speed: number) => void;
@@ -187,6 +189,11 @@ export function MessagePipelineProvider({
     (request: PublishPayload) => (player ? player.publish(request) : undefined),
     [player],
   );
+  const callService = useCallback(
+    async (service: string, request: unknown) =>
+      await (player ? player.callService(service, request) : Promise.reject()),
+    [player],
+  );
   const startPlayback = useMemo(
     () =>
       capabilities.includes(PlayerCapabilities.playbackControl)
@@ -244,6 +251,7 @@ export function MessagePipelineProvider({
         setPublishers,
         setParameter,
         publish,
+        callService,
         startPlayback,
         pausePlayback,
         setPlaybackSpeed,
@@ -255,6 +263,18 @@ export function MessagePipelineProvider({
       {children}
     </ContextInternal.Provider>
   );
+}
+
+// Given a PlayerState and a PlayerProblem array, add the problems to any existing player problems
+function concatProblems(origState: PlayerState, problems: PlayerProblem[]): PlayerState {
+  if (problems.length === 0) {
+    return origState;
+  }
+
+  return {
+    ...origState,
+    problems: problems.concat(origState.problems ?? []),
+  };
 }
 
 /**
@@ -292,7 +312,7 @@ function createPlayerListener(args: {
   const messageOrderTracker = new MessageOrderTracker();
   let closed = false;
   let resolveFn: undefined | (() => void);
-  const listener = async (newPlayerState: PlayerState) => {
+  const listener = async (listenerPlayerState: PlayerState) => {
     if (closed) {
       return;
     }
@@ -302,7 +322,8 @@ function createPlayerListener(args: {
     }
 
     // check for any out-of-order or out-of-sync messages
-    messageOrderTracker.update(newPlayerState);
+    const problems = messageOrderTracker.update(listenerPlayerState);
+    const newPlayerState = concatProblems(listenerPlayerState, problems);
 
     const promise = new Promise<void>((resolve) => {
       resolveFn = () => {

@@ -46,9 +46,6 @@ import parseRosPath, { quoteFieldNameIfNeeded, quoteTopicNameIfNeeded } from "./
 //
 //  <MessagePathInput types={["uint16", "float64"]} />
 //
-// If you don't use timestamps, you might want to hide the warning icon that we show when selecting
-// a topic that has no header: `<MessagePathInput hideTimestampWarning>`.
-//
 // If you are rendering many input fields, you might want to use `<MessagePathInput index={5}>`,
 // which gets passed down to `<MessagePathInput onChange>` as the second parameter, so you can
 // avoid creating anonymous functions on every render (which will prevent the component from
@@ -61,7 +58,7 @@ function getFieldPaths(
 ): Map<string, RosMsgField> {
   const output = new Map<string, RosMsgField>();
   for (const topic of topics) {
-    addFieldPathsForType(quoteTopicNameIfNeeded(topic.name), topic.datatype, datatypes, output);
+    addFieldPathsForType(quoteTopicNameIfNeeded(topic.name), topic.datatype, datatypes, [], output);
   }
   return output;
 }
@@ -70,16 +67,26 @@ function addFieldPathsForType(
   curPath: string,
   typeName: string,
   datatypes: RosDatatypes,
+  seenTypes: string[],
   output: Map<string, RosMsgField>,
 ): void {
   const msgdef = datatypes.get(typeName);
   if (msgdef) {
     for (const field of msgdef.definitions) {
+      if (seenTypes.includes(field.type)) {
+        continue;
+      }
       if (field.isConstant !== true) {
         const fieldPath = `${curPath}.${quoteFieldNameIfNeeded(field.name)}`;
         output.set(fieldPath, field);
         if (field.isComplex === true) {
-          addFieldPathsForType(fieldPath, field.type, datatypes, output);
+          addFieldPathsForType(
+            fieldPath,
+            field.type,
+            datatypes,
+            [...seenTypes, field.type],
+            output,
+          );
         }
       }
     }
@@ -156,12 +163,14 @@ type MessagePathInputBaseProps = {
   path: string; // A path of the form `/topic.some_field[:]{id==42}.x`
   index?: number; // Optional index field which gets passed to `onChange` (so you don't have to create anonymous functions)
   onChange: (value: string, index?: number) => void;
-  validTypes?: string[]; // Valid types, like "message", "array", or "primitive", or a ROS primitive like "float64"
+  validTypes?: readonly string[]; // Valid types, like "message", "array", or "primitive", or a ROS primitive like "float64"
   noMultiSlices?: boolean; // Don't suggest slices with multiple values `[:]`, only single values like `[0]`.
   autoSize?: boolean;
   placeholder?: string;
   inputStyle?: CSSProperties;
+  disabled?: boolean;
   disableAutocomplete?: boolean; // Treat this as a normal input, with no autocomplete.
+  readOnly?: boolean;
   prioritizedDatatype?: string;
 };
 
@@ -252,13 +261,18 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     return topics.find(({ name }) => name === topicName);
   }, [rosPath, topics]);
 
+  const messagePathStructuresForDataype = useMemo(
+    () => messagePathStructures(datatypes),
+    [datatypes],
+  );
+
   const structureTraversalResult = useMemo(() => {
     if (!topic || !rosPath?.messagePath) {
       return undefined;
     }
 
-    return traverseStructure(messagePathStructures(datatypes)[topic.datatype], rosPath.messagePath);
-  }, [datatypes, rosPath?.messagePath, topic]);
+    return traverseStructure(messagePathStructuresForDataype[topic.datatype], rosPath.messagePath);
+  }, [messagePathStructuresForDataype, rosPath?.messagePath, topic]);
 
   const invalidGlobalVariablesVariable = useMemo(() => {
     if (!rosPath) {
@@ -441,6 +455,8 @@ export default React.memo<MessagePathInputBaseProps>(function MessagePathInput(
     >
       <Autocomplete
         items={orderedAutocompleteItems}
+        disabled={props.disabled}
+        readOnly={props.readOnly}
         filterText={autocompleteFilterText}
         value={path}
         onChange={onChange}

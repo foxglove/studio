@@ -13,8 +13,20 @@
 
 /// <reference types="./react-table-config" />
 
-import MinusIcon from "@mdi/svg/svg/minus-box-outline.svg";
-import PlusIcon from "@mdi/svg/svg/plus-box-outline.svg";
+import PlusIcon from "@mui/icons-material/AddBoxOutlined";
+import MinusIcon from "@mui/icons-material/IndeterminateCheckBoxOutlined";
+import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
+import KeyboardDoubleArrowLeftIcon from "@mui/icons-material/KeyboardDoubleArrowLeft";
+import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
+import {
+  Container,
+  IconButton,
+  MenuItem,
+  Select,
+  styled as muiStyled,
+  Typography,
+} from "@mui/material";
 import { noop } from "lodash";
 import {
   useTable,
@@ -24,19 +36,58 @@ import {
   Column,
   ColumnWithLooseAccessor,
 } from "react-table";
-import styled from "styled-components";
 
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
-import Icon from "@foxglove/studio-base/components/Icon";
-import {
-  LegacyButton,
-  LegacyTable,
-  LegacySelect,
-} from "@foxglove/studio-base/components/LegacyStyledComponents";
-import { toolsColorScheme } from "@foxglove/studio-base/util/toolsColorScheme";
+import { LegacyTable } from "@foxglove/studio-base/components/LegacyStyledComponents";
+import Stack from "@foxglove/studio-base/components/Stack";
 
 import TableCell from "./TableCell";
 import { sanitizeAccessorPath } from "./sanitizeAccessorPath";
+
+const SIconButton = muiStyled(IconButton)({
+  "&:hover": {
+    backgroundColor: "transparent",
+  },
+});
+
+const STableRow = muiStyled("tr")(({ theme }) => ({
+  "&:nth-child(even)": {
+    backgroundColor: theme.palette.action.hover,
+  },
+  "&:hover": {
+    backgroundColor: theme.palette.action.selected,
+  },
+}));
+
+const STableHeader = muiStyled("th", {
+  shouldForwardProp: (prop) => prop !== "isSortedAsc" && prop !== "isSortedDesc" && prop !== "id",
+})<{ id: string; isSortedAsc: boolean; isSortedDesc: boolean }>(
+  ({ theme, id, isSortedAsc, isSortedDesc }) => ({
+    borderLeftColor: "transparent !important",
+    borderRightColor: "transparent !important",
+    padding: `${theme.spacing(0.5)} !important`,
+    fontWeight: "bold !important",
+    cursor: "pointer",
+    width: "auto",
+    textAlign: "left",
+
+    ...(isSortedAsc && {
+      borderBottomColor: `${theme.palette.primary.main} !important`,
+    }),
+    ...(isSortedDesc && {
+      borderTopColor: `${theme.palette.primary.main} !important`,
+    }),
+    ...(id === "expander" && {
+      width: 25,
+    }),
+  }),
+);
+
+const STableData = muiStyled("td")(({ theme }) => ({
+  padding: `${theme.spacing(0.5)} !important`,
+  whiteSpace: "nowrap",
+  textOverflow: "ellipsis",
+}));
 
 function getColumnsFromObject(
   val: { toJSON?: () => Record<string, unknown> },
@@ -72,9 +123,14 @@ function getColumnsFromObject(
   ];
 
   const Cell: ColumnWithLooseAccessor["Cell"] = ({ row }) => (
-    <Icon size="medium" {...row.getToggleRowExpandedProps()} dataTest={`expand-row-${row.index}`}>
-      {row.isExpanded ? <MinusIcon /> : <PlusIcon />}
-    </Icon>
+    <SIconButton
+      {...row.getToggleRowExpandedProps()}
+      size="small"
+      data-test={`expand-row-${row.index}`}
+      style={{ margin: -4 }}
+    >
+      {row.isExpanded ? <MinusIcon fontSize="small" /> : <PlusIcon fontSize="small" />}
+    </SIconButton>
   );
 
   if (accessorPath.length === 0) {
@@ -86,40 +142,6 @@ function getColumnsFromObject(
 
   return columns;
 }
-
-const STableRow = styled.tr<{ index: number }>`
-  background-color: ${({ index, theme }) =>
-    index % 2 === 0 ? "inherit" : theme.palette.neutralLighterAlt};
-  &:hover {
-    background-color: ${({ theme }) => theme.palette.neutralLighterAlt};
-  }
-`;
-
-type STableHeaderProps = {
-  id: string;
-  isSortedAsc: boolean;
-  isSortedDesc: boolean;
-};
-
-const STableHeader = styled.th<STableHeaderProps>`
-  border-bottom: ${({ isSortedAsc }: STableHeaderProps) =>
-    isSortedAsc ? `solid 3px ${toolsColorScheme.blue.medium}` : "none"} !important;
-  border-top: ${({ isSortedDesc }: STableHeaderProps) =>
-    isSortedDesc ? `solid 3px ${toolsColorScheme.blue.medium}` : "none"} !important;
-  border-left: none !important;
-  border-right: none !important;
-  padding: 4px !important;
-  font-weight: bold !important;
-  cursor: pointer;
-  width: ${({ id }: STableHeaderProps) => (id === "expander" ? "25px" : "auto")};
-  text-align: left;
-`;
-
-const STableData = styled.td`
-  padding: 4px !important;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-`;
 
 export default function Table({
   value,
@@ -153,6 +175,7 @@ export default function Table({
     {
       columns,
       data,
+      autoResetExpanded: false,
       initialState: { pageSize: 30 },
     },
     useSortBy,
@@ -197,14 +220,7 @@ export default function Table({
         <thead>
           {headerGroups.map((headerGroup, i) => {
             return (
-              <STableRow
-                index={
-                  0
-                  /* For properly coloring background */
-                }
-                {...headerGroup.getHeaderGroupProps()}
-                key={i}
-              >
+              <STableRow {...headerGroup.getHeaderGroupProps()} key={i}>
                 {headerGroup.headers.map((column) => {
                   return (
                     <STableHeader
@@ -227,7 +243,7 @@ export default function Table({
           {(!isNested ? page : rows).map((row) => {
             prepareRow(row);
             return (
-              <STableRow {...row.getRowProps()} key={row.index} index={row.index}>
+              <STableRow {...row.getRowProps()} key={row.index}>
                 {row.cells.map((cell, i) => {
                   return (
                     <STableData {...cell.getCellProps()} key={i}>
@@ -241,38 +257,45 @@ export default function Table({
         </tbody>
       </LegacyTable>
       {!isNested && (
-        <div style={{ margin: "4px auto 0" }}>
-          <LegacyButton onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
-            {"<<"}
-          </LegacyButton>{" "}
-          <LegacyButton onClick={() => previousPage()} disabled={!canPreviousPage}>
-            {"<"}
-          </LegacyButton>{" "}
-          <span>
-            Page{" "}
-            <strong>
-              {pageIndex + 1} of {pageOptions.length}
-            </strong>{" "}
-          </span>
-          <LegacyButton onClick={() => nextPage()} disabled={!canNextPage}>
-            {">"}
-          </LegacyButton>{" "}
-          <LegacyButton onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
-            {">>"}
-          </LegacyButton>{" "}
-          <LegacySelect
-            value={pageSize}
-            onChange={(e) => {
-              setPageSize(Number(e.target.value));
-            }}
+        <Container maxWidth="xs" disableGutters>
+          <Stack
+            direction="row"
+            flexWrap="wrap"
+            gap={1}
+            paddingX={0.5}
+            paddingTop={0.5}
+            alignItems="center"
           >
-            {[10, 20, 30, 40, 50].map((size) => (
-              <option key={size} value={size}>
-                Show {size}
-              </option>
-            ))}
-          </LegacySelect>
-        </div>
+            <IconButton onClick={() => gotoPage(0)} disabled={!canPreviousPage}>
+              <KeyboardDoubleArrowLeftIcon fontSize="small" />
+            </IconButton>
+            <IconButton onClick={() => previousPage()} disabled={!canPreviousPage}>
+              <KeyboardArrowLeftIcon fontSize="small" />
+            </IconButton>
+            <Typography flex="auto" variant="inherit" align="center" noWrap>
+              Page{" "}
+              <strong>
+                {pageIndex + 1} of {pageOptions.length}
+              </strong>
+            </Typography>
+            <IconButton onClick={() => nextPage()} disabled={!canNextPage}>
+              <KeyboardArrowRightIcon fontSize="small" />
+            </IconButton>
+            <IconButton onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
+              <KeyboardDoubleArrowRightIcon fontSize="small" />
+            </IconButton>
+            <Select
+              value={pageSize}
+              size="small"
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              MenuProps={{ MenuListProps: { dense: true } }}
+            >
+              {[10, 20, 30, 40, 50].map((size) => (
+                <MenuItem key={size} value={size}>{`Show ${size}`}</MenuItem>
+              ))}
+            </Select>
+          </Stack>
+        </Container>
       )}
     </>
   );

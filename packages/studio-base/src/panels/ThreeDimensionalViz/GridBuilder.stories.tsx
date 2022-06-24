@@ -29,7 +29,6 @@ import {
   CylinderMarker,
   GlLineListMarker,
   InstancedLineListMarker,
-  LaserScan,
   LineListMarker,
   LineStripMarker,
   MeshMarker,
@@ -67,7 +66,7 @@ class MockMarkerCollector implements MarkerCollector {
   sphere(_arg0: SphereMarker): void {}
   sphereList(_arg0: SphereListMarker): void {}
   cylinder(_arg0: CylinderMarker): void {}
-  poseMarker(_arg0: ArrowMarker): void {}
+  poseMarker(): void {}
   lineStrip(_arg0: LineStripMarker): void {}
   lineList(_arg0: LineListMarker): void {}
   points(_arg0: PointsMarker): void {}
@@ -76,7 +75,6 @@ class MockMarkerCollector implements MarkerCollector {
   triangleList(_arg0: TriangleListMarker): void {}
   grid(_arg0: OccupancyGridMessage): void {}
   pointcloud(_arg0: PointCloud): void {}
-  laserScan(_arg0: LaserScan): void {}
   linedConvexHull(_arg0: LineListMarker | LineStripMarker): void {}
   instancedLineList(_arg0: InstancedLineListMarker): void {}
   glLineList(arg0: Readonly<{ color: Float32Array; points: Float32Array }>): void {

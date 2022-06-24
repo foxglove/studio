@@ -21,25 +21,16 @@ const DEFAULT_MOCK_PANEL_CONTEXT: PanelContextType<PanelConfig> = {
   id: "bar",
   title: "Foo Panel",
   config: {},
-  saveConfig: () => {
-    // no-op
-  },
-  updatePanelConfigs: () => {
-    // no-op
-  },
-  openSiblingPanel: () => {
-    // no-op
-  },
-  enterFullscreen: () => {
-    // no-op
-  },
-  exitFullscreen: () => {
-    // no-op
-  },
+  saveConfig: () => {},
+  updatePanelConfigs: () => {},
+  openSiblingPanel: () => {},
+  enterFullscreen: () => {},
+  exitFullscreen: () => {},
+  setHasFullscreenDescendant: () => {},
   isFullscreen: false,
-  hasSettings: false,
   connectToolbarDragHandle: () => {},
 };
+
 function MockPanelContextProvider({
   children,
   ...rest

@@ -19,7 +19,6 @@ import Panel from "@foxglove/studio-base/components/Panel";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
 import { PanelCatalog, PanelInfo } from "@foxglove/studio-base/context/PanelCatalogContext";
 import PanelSetup from "@foxglove/studio-base/stories/PanelSetup";
-import { PanelConfigSchemaEntry } from "@foxglove/studio-base/types/panels";
 
 import PanelLayout from "./PanelLayout";
 
@@ -51,7 +50,7 @@ const allPanels: readonly PanelInfo[] = [
             function OkayPanel({ config: { x } }: { config: { x: number } }) {
               return (
                 <>
-                  <PanelToolbar floating />
+                  <PanelToolbar />
                   Hi {x}
                 </>
               );
@@ -65,14 +64,6 @@ const allPanels: readonly PanelInfo[] = [
 ];
 
 class MockPanelCatalog implements PanelCatalog {
-  async getConfigSchema(type: string): Promise<PanelConfigSchemaEntry<string>[] | undefined> {
-    const info = this.getPanelByType(type);
-    if (!info) {
-      return undefined;
-    }
-    const module = await info.module();
-    return module.default.configSchema;
-  }
   getPanels(): readonly PanelInfo[] {
     return allPanels;
   }
@@ -99,7 +90,9 @@ export const PanelNotFound = (): JSX.Element => {
         fixture={{ topics: [], datatypes: new Map(), frame: {}, layout: "UnknownPanel!4co6n9d" }}
         omitDragAndDrop
       >
-        <PanelLayout />
+        <MockPanelContextProvider>
+          <PanelLayout />
+        </MockPanelContextProvider>
       </PanelSetup>
     </DndProvider>
   );
@@ -117,7 +110,9 @@ export const PanelWithError = (): JSX.Element => {
         fixture={{ topics: [], datatypes: new Map(), frame: {}, layout: "Sample2!4co6n9d" }}
         omitDragAndDrop
       >
-        <PanelLayout />
+        <MockPanelContextProvider>
+          <PanelLayout />
+        </MockPanelContextProvider>
       </PanelSetup>
     </DndProvider>
   );
@@ -178,7 +173,10 @@ export const FullScreen = (): JSX.Element => {
         omitDragAndDrop
         onMount={() => {
           setTimeout(() => {
-            (document.querySelectorAll("[data-test=panel-toolbar-fullscreen]")[0] as any).click();
+            (document.querySelectorAll("[data-test=panel-menu]")[0] as any).click();
+          }, DEFAULT_CLICK_DELAY);
+          setTimeout(() => {
+            (document.querySelectorAll("[data-test=panel-menu-fullscreen]")[0] as any).click();
           }, DEFAULT_CLICK_DELAY);
         }}
       >

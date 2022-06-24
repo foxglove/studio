@@ -2,11 +2,11 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
+import { McapPre0Reader as McapReader, McapPre0Types } from "@mcap/core";
 import { isEqual } from "lodash";
 import protobufjs from "protobufjs";
 import descriptor from "protobufjs/ext/descriptor";
 
-import { McapPre0Reader as McapReader, McapPre0Types } from "@foxglove/mcap";
 import { loadDecompressHandlers } from "@foxglove/mcap-support";
 import { parse as parseMessageDefinition } from "@foxglove/rosmsg";
 import { LazyMessageReader } from "@foxglove/rosmsg-serialization";
@@ -18,7 +18,7 @@ import {
   isGreaterThan,
   isTimeInRangeInclusive,
 } from "@foxglove/rostime";
-import { MessageEvent, Topic } from "@foxglove/studio-base/players/types";
+import { MessageEvent, Topic, TopicStats } from "@foxglove/studio-base/players/types";
 import {
   RandomAccessDataProvider,
   ExtensionPoint,
@@ -29,7 +29,7 @@ import {
 } from "@foxglove/studio-base/randomAccessDataProviders/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 
-type Options = { file: File };
+type Options = { stream: ReadableStream<Uint8Array> };
 
 export default class McapPre0DataProvider implements RandomAccessDataProvider {
   private options: Options;
@@ -40,10 +40,9 @@ export default class McapPre0DataProvider implements RandomAccessDataProvider {
   }
 
   async initialize(_extensionPoint: ExtensionPoint): Promise<InitializationResult> {
-    const { file } = this.options;
     const decompressHandlers = await loadDecompressHandlers();
 
-    const streamReader = (file.stream() as ReadableStream<Uint8Array>).getReader();
+    const streamReader = this.options.stream.getReader();
 
     const messagesByChannel = new Map<number, MessageEvent<unknown>[]>();
     const channelInfoById = new Map<
@@ -163,6 +162,7 @@ export default class McapPre0DataProvider implements RandomAccessDataProvider {
       start: startTime ?? { sec: 0, nsec: 0 },
       end: endTime ?? { sec: 0, nsec: 0 },
       topics,
+      topicStats: new Map<string, TopicStats>(),
       connections,
       providesParsedMessages: true,
       messageDefinitions: {

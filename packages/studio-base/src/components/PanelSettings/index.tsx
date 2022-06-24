@@ -2,30 +2,35 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { DefaultButton, Link, Text, useTheme } from "@fluentui/react";
-import { Stack } from "@mui/material";
-import { StrictMode, useMemo, useState } from "react";
-import { useAsync, useUnmount } from "react-use";
+import { Link, Typography } from "@mui/material";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useUnmount } from "react-use";
 
 import { useConfigById } from "@foxglove/studio-base/PanelAPI";
+import { ActionMenu } from "@foxglove/studio-base/components/PanelSettings/ActionMenu";
+import SettingsEditor from "@foxglove/studio-base/components/SettingsTreeEditor";
 import ShareJsonModal from "@foxglove/studio-base/components/ShareJsonModal";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
+import Stack from "@foxglove/studio-base/components/Stack";
 import {
   LayoutState,
   useCurrentLayoutActions,
   useCurrentLayoutSelector,
   useSelectedPanels,
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
-import { useHelpInfo } from "@foxglove/studio-base/context/HelpInfoContext";
 import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogContext";
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
+import { usePanelSettingsEditorStore } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import { PanelConfig } from "@foxglove/studio-base/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
 import { getPanelTypeFromId } from "@foxglove/studio-base/util/layout";
 
-import SchemaEditor from "./SchemaEditor";
-
 const selectedLayoutIdSelector = (state: LayoutState) => state.selectedLayout?.id;
+
+const singlePanelIdSelector = (state: LayoutState) =>
+  typeof state.selectedLayout?.data?.layout === "string"
+    ? state.selectedLayout.data.layout
+    : undefined;
 
 export default function PanelSettings({
   selectedPanelIdsForTests,
@@ -33,21 +38,34 @@ export default function PanelSettings({
   selectedPanelIdsForTests?: readonly string[];
 }>): JSX.Element {
   const selectedLayoutId = useCurrentLayoutSelector(selectedLayoutIdSelector);
-  const { selectedPanelIds: originalSelectedPanelIds, setSelectedPanelIds } = useSelectedPanels();
+  const singlePanelId = useCurrentLayoutSelector(singlePanelIdSelector);
+  const {
+    selectedPanelIds: originalSelectedPanelIds,
+    setSelectedPanelIds,
+    selectAllPanels,
+  } = useSelectedPanels();
   const selectedPanelIds = selectedPanelIdsForTests ?? originalSelectedPanelIds;
-  const { openLayoutBrowser, openHelp } = useWorkspace();
+
+  // If no panel is selected and there is only one panel in the layout, select it
+  useEffect(() => {
+    if (selectedPanelIds.length === 0 && singlePanelId != undefined) {
+      selectAllPanels();
+    }
+  }, [selectAllPanels, selectedPanelIds, singlePanelId]);
+
+  const { openLayoutBrowser } = useWorkspace();
   const selectedPanelId = useMemo(
     () => (selectedPanelIds.length === 1 ? selectedPanelIds[0] : undefined),
     [selectedPanelIds],
   );
+
+  // Automatically deselect the panel we were editing when the settings sidebar closes
   useUnmount(() => {
-    // Automatically deselect the panel we were editing when the settings sidebar closes
     if (selectedPanelId != undefined) {
       setSelectedPanelIds([]);
     }
   });
 
-  const theme = useTheme();
   const panelCatalog = usePanelCatalog();
   const { getCurrentLayoutState: getCurrentLayout, savePanelConfigs } = useCurrentLayoutActions();
   const panelType = useMemo(
@@ -58,7 +76,6 @@ export default function PanelSettings({
     () => (panelType != undefined ? panelCatalog.getPanelByType(panelType) : undefined),
     [panelCatalog, panelType],
   );
-  const { setHelpInfo } = useHelpInfo();
 
   const [showShareModal, setShowShareModal] = useState(false);
   const shareModal = useMemo(() => {
@@ -81,42 +98,38 @@ export default function PanelSettings({
     );
   }, [selectedPanelId, showShareModal, getCurrentLayout, savePanelConfigs]);
 
-  const [config, saveConfig] = useConfigById<Record<string, unknown>>(selectedPanelId);
+  const [config] = useConfigById(selectedPanelId);
 
-  const { value: schema, error } = useAsync(async () => {
-    if (panelInfo?.type == undefined) {
-      return undefined;
+  const settingsTree = usePanelSettingsEditorStore((state) =>
+    selectedPanelId ? state.settingsTrees[selectedPanelId] : undefined,
+  );
+
+  const resetToDefaults = useCallback(() => {
+    if (selectedPanelId) {
+      savePanelConfigs({
+        configs: [{ id: selectedPanelId, config: {}, override: true }],
+      });
     }
-
-    return await panelCatalog.getConfigSchema(panelInfo.type);
-  }, [panelCatalog, panelInfo?.type]);
-
-  if (error) {
-    return (
-      <SidebarContent title="Panel settings">
-        <Text styles={{ root: { color: theme.semanticColors.errorText } }}>{error.message}</Text>
-      </SidebarContent>
-    );
-  }
+  }, [savePanelConfigs, selectedPanelId]);
 
   if (selectedLayoutId == undefined) {
     return (
       <SidebarContent title="Panel settings">
-        <Text styles={{ root: { color: theme.palette.neutralTertiary } }}>
+        <Typography color="text.secondary">
           <Link onClick={openLayoutBrowser}>Select a layout</Link> to get started!
-        </Text>
+        </Typography>
       </SidebarContent>
     );
   }
+
   if (selectedPanelId == undefined) {
     return (
       <SidebarContent title="Panel settings">
-        <Text styles={{ root: { color: theme.palette.neutralTertiary } }}>
-          Select a panel to edit its settings.
-        </Text>
+        <Typography color="text.secondary">Select a panel to edit its settings.</Typography>
       </SidebarContent>
     );
   }
+
   if (!panelInfo) {
     throw new Error(
       `Attempt to render settings but no panel component could be found for panel id ${selectedPanelId}`,
@@ -126,71 +139,33 @@ export default function PanelSettings({
   if (!config) {
     return (
       <SidebarContent title="Panel settings">
-        <Text styles={{ root: { color: theme.palette.neutralTertiary } }}>
-          Loading panel settings...
-        </Text>
+        <Typography color="text.secondary">Loading panel settings...</Typography>
       </SidebarContent>
     );
   }
 
+  const isSettingsTree = settingsTree != undefined;
+
   return (
-    <SidebarContent title={`${panelInfo.title} panel settings`}>
+    <SidebarContent
+      disablePadding={isSettingsTree}
+      title={`${panelInfo.title} panel settings`}
+      trailingItems={[
+        <ActionMenu
+          key={1}
+          allowShare={panelType !== TAB_PANEL_TYPE}
+          onReset={resetToDefaults}
+          onShare={() => setShowShareModal(true)}
+        />,
+      ]}
+    >
       {shareModal}
-      <Stack spacing={2} alignItems="flex-start">
-        {panelInfo.help != undefined && (
-          <div>
-            <Text styles={{ root: { color: theme.palette.neutralTertiary } }}>
-              See docs{" "}
-              <Link
-                onClick={() => {
-                  setHelpInfo({ title: panelInfo.type, content: panelInfo.help });
-                  openHelp();
-                }}
-              >
-                here
-              </Link>
-              .
-            </Text>
-          </div>
-        )}
+      <Stack gap={2} justifyContent="flex-start">
         <div>
-          {schema ? (
-            <StrictMode>
-              <SchemaEditor configSchema={schema} config={config} saveConfig={saveConfig} />
-            </StrictMode>
-          ) : (
-            <Text styles={{ root: { color: theme.palette.neutralTertiary } }}>
-              No additional settings available.
-            </Text>
+          {settingsTree && <SettingsEditor key={selectedPanelId} settings={settingsTree} />}
+          {!settingsTree && (
+            <Typography color="text.secondary">No additional settings available.</Typography>
           )}
-        </div>
-        <div style={{ height: theme.spacing.m }} />
-        <div>
-          <DefaultButton
-            text="Import/export settings…"
-            styles={{ label: { fontWeight: "normal" } }}
-            iconProps={{
-              iconName: "CodeEdit",
-              styles: { root: { "& span": { verticalAlign: "baseline" } } },
-            }}
-            onClick={() => setShowShareModal(true)}
-            disabled={panelType === TAB_PANEL_TYPE}
-          />
-        </div>
-        <div>
-          <DefaultButton
-            text="Reset to defaults"
-            styles={{ label: { fontWeight: "normal" } }}
-            iconProps={{
-              iconName: "ClearSelection",
-              styles: { root: { "& span": { verticalAlign: "baseline" } } },
-            }}
-            onClick={() =>
-              savePanelConfigs({
-                configs: [{ id: selectedPanelId, config: {}, override: true }],
-              })
-            }
-          />
         </div>
       </Stack>
     </SidebarContent>

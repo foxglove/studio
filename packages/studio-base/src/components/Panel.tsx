@@ -11,11 +11,11 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { makeStyles } from "@fluentui/react";
-import BorderAllIcon from "@mdi/svg/svg/border-all.svg";
-import ExpandAllOutlineIcon from "@mdi/svg/svg/expand-all-outline.svg";
-import GridLargeIcon from "@mdi/svg/svg/grid-large.svg";
-import TrashCanOutlineIcon from "@mdi/svg/svg/trash-can-outline.svg";
+import BorderAllIcon from "@mui/icons-material/BorderAll";
+import DeleteForeverOutlinedIcon from "@mui/icons-material/DeleteForeverOutlined";
+import LibraryAddOutlinedIcon from "@mui/icons-material/LibraryAddOutlined";
+import TabIcon from "@mui/icons-material/Tab";
+import { Button, styled as muiStyled } from "@mui/material";
 import { last } from "lodash";
 import React, {
   useState,
@@ -28,6 +28,7 @@ import React, {
   MouseEventHandler,
   useLayoutEffect,
   useEffect,
+  CSSProperties,
 } from "react";
 import {
   MosaicContext,
@@ -38,17 +39,18 @@ import {
   updateTree,
   MosaicNode,
 } from "react-mosaic-component";
+import { Transition } from "react-transition-group";
 import { useMountedState } from "react-use";
-import styled from "styled-components";
 
 import { useShallowMemo } from "@foxglove/hooks";
 import { useConfigById } from "@foxglove/studio-base/PanelAPI";
-import Button from "@foxglove/studio-base/components/Button";
-import Icon from "@foxglove/studio-base/components/Icon";
 import KeyListener from "@foxglove/studio-base/components/KeyListener";
 import PanelContext from "@foxglove/studio-base/components/PanelContext";
 import PanelErrorBoundary from "@foxglove/studio-base/components/PanelErrorBoundary";
-import { PanelRoot } from "@foxglove/studio-base/components/PanelRoot";
+import {
+  FULLSCREEN_TRANSITION_DURATION_MS,
+  PanelRoot,
+} from "@foxglove/studio-base/components/PanelRoot";
 import {
   useCurrentLayoutActions,
   useSelectedPanels,
@@ -57,12 +59,7 @@ import { usePanelCatalog } from "@foxglove/studio-base/context/PanelCatalogConte
 import { useWorkspace } from "@foxglove/studio-base/context/WorkspaceContext";
 import usePanelDrag from "@foxglove/studio-base/hooks/usePanelDrag";
 import { TabPanelConfig } from "@foxglove/studio-base/types/layouts";
-import {
-  PanelConfig,
-  SaveConfig,
-  PanelConfigSchema,
-  OpenSiblingPanel,
-} from "@foxglove/studio-base/types/panels";
+import { PanelConfig, SaveConfig, OpenSiblingPanel } from "@foxglove/studio-base/types/panels";
 import { TAB_PANEL_TYPE } from "@foxglove/studio-base/util/globalConstants";
 import {
   getPanelIdForType,
@@ -70,114 +67,71 @@ import {
   getPathFromNode,
   updateTabPanelLayout,
 } from "@foxglove/studio-base/util/layout";
-import { colors } from "@foxglove/studio-base/util/sharedStyleConstants";
 
-const ActionsOverlay = styled.div`
-  cursor: pointer;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 100000; // highest level within panel
-  display: none;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-end;
-  font-size: 14px;
-  padding-top: 24px;
+const ActionsOverlay = muiStyled("div")(({ theme }) => ({
+  cursor: "pointer",
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  zIndex: 100000, // highest level within panel
+  backgroundColor: theme.palette.background.paper,
+  display: "flex",
+  alignItems: "center",
+  alignContent: "center",
+  justifyContent: "center",
+  flexDirection: "column",
+  flexWrap: "wrap",
+  visibility: "hidden",
+  pointerEvents: "none",
 
-  ${PanelRoot}:hover > & {
-    background-color: ${({ theme }) => theme.palette.neutralLight};
-    display: flex;
-    align-items: center;
-    align-content: center;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
+  [`${PanelRoot.toString()}:hover > &`]: {
+    visibility: "visible",
+    pointerEvents: "auto",
+  },
   // for screenshot tests
-  .hoverForScreenshot {
-    background-color: ${({ theme }) => theme.palette.neutralLight};
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  div {
-    width: 100%;
-    padding: 6px 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  svg {
-    margin-right: 4px;
-    width: 24px;
-    height: 24px;
-    fill: white;
-  }
-  p {
-    font-size: 12px;
-    color: ${colors.TEXT_MUTED};
-  }
-`;
-
-const useStyles = makeStyles((theme) => ({
-  perfInfo: {
-    position: "absolute",
-    whiteSpace: "pre-line",
-    bottom: 2,
-    left: 2,
-    fontSize: "9px",
-    opacity: 0.7,
-    userSelect: "none",
-    mixBlendMode: "difference",
+  ".hoverForScreenshot &": {
+    visible: "visible",
+    pointerEvents: "auto",
   },
-  quickActionsOverlayButton: {
-    width: 72,
-    height: 72,
-    margin: 4,
-    flex: "none",
-    fontSize: "14px",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    background: `${theme.semanticColors.primaryButtonBackground} !important`,
-    color: `${theme.semanticColors.primaryButtonText} !important`,
+}));
 
-    svg: {
-      margin: "0 0 6px",
-      fill: theme.semanticColors.primaryButtonText,
-    },
+const PerfInfo = muiStyled("div")({
+  position: "absolute",
+  whiteSpace: "pre-line",
+  bottom: 2,
+  left: 2,
+  fontSize: 9,
+  opacity: 0.7,
+  userSelect: "none",
+  mixBlendMode: "difference",
+});
 
-    ":not(.disabled):hover": {
-      background: `${theme.semanticColors.primaryButtonBackgroundHovered} !important`,
-    },
-  },
-  tabActionsOverlayButton: {
-    margin: "4px !important",
-    flex: "none",
-    fontSize: "14px",
-    alignItems: "center",
-    background: `${colors.BLUE} !important`,
-    color: `${theme.semanticColors.primaryButtonText} !important`,
-    width: 145,
-    height: 40,
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
+const Container = muiStyled("div", {
+  shouldForwardProp: (prop) => prop !== "direction",
+})<{
+  direction?: CSSProperties["flexDirection"];
+}>(({ direction = "column", theme }) => ({
+  padding: theme.spacing(2),
+  maxWidth: 300,
+  margin: "auto",
+  display: "flex",
+  flexDirection: direction,
+  gap: theme.spacing(1),
+}));
 
-    svg: {
-      margin: "0 0 6px",
-      fill: theme.semanticColors.primaryButtonText,
-    },
-    ":not(.disabled):hover": {
-      background: `${colors.BLUE1} !important`,
-    },
+const StyledButton = muiStyled(Button)(({ theme }) => ({
+  flexDirection: "column",
+  alignItems: "center",
+  textAlign: "center",
+  whiteSpace: "nowrap",
+  padding: theme.spacing(1, 2),
+  width: "50%",
+  flex: "auto",
+
+  ".MuiButton-startIcon": {
+    margin: 0,
   },
 }));
 
@@ -190,7 +144,6 @@ type Props<Config> = {
 export interface PanelStatics<Config> {
   panelType: string;
   defaultConfig: Config;
-  configSchema?: PanelConfigSchema<Config>;
 }
 
 // Like React.ComponentType<P>, but without restrictions on the constructor return type.
@@ -198,25 +151,6 @@ type ComponentConstructorType<P> = { displayName?: string } & (
   | { new (props: P): React.Component<unknown, unknown> }
   | { (props: P): React.ReactElement<unknown> | ReactNull }
 );
-
-const areConfigKeysEqual = (
-  firstConfig: Record<string, unknown>,
-  secondConfig: Record<string, unknown>,
-): boolean => {
-  const firstConfigKeys = Object.keys(firstConfig).sort();
-  const secondConfigKeys = Object.keys(secondConfig).sort();
-
-  if (firstConfigKeys.length !== secondConfigKeys.length) {
-    return false;
-  }
-
-  for (let i = 0; i < firstConfigKeys.length; i++) {
-    if (firstConfigKeys[i] !== secondConfigKeys[i]) {
-      return false;
-    }
-  }
-  return true;
-};
 
 // HOC that wraps panel in an error boundary and flex box.
 // Gives panel a `config` and `saveConfig`.
@@ -233,7 +167,6 @@ export default function Panel<
   function ConnectedPanel(props: Props<Config>) {
     const { childId, overrideConfig, tabId, ...otherProps } = props;
 
-    const classes = useStyles();
     const isMounted = useMountedState();
 
     const { mosaicActions } = useContext(MosaicContext);
@@ -266,9 +199,12 @@ export default function Panel<
     } = useCurrentLayoutActions();
 
     const [quickActionsKeyPressed, setQuickActionsKeyPressed] = useState(false);
-    const [shiftKeyPressed, setShiftKeyPressed] = useState(false);
-    const [cmdKeyPressed, setCmdKeyPressed] = useState(false);
-    const [fullScreen, setFullscreen] = useState(false);
+    const [fullscreen, setFullscreen] = useState(false);
+    const [fullscreenSourceRect, setFullscreenSourceRect] = useState<DOMRect | undefined>(
+      undefined,
+    );
+    const [hasFullscreenDescendant, _setHasFullscreenDescendant] = useState(false);
+    const panelRootRef = useRef<HTMLDivElement>(ReactNull);
     const panelCatalog = usePanelCatalog();
     const isTopLevelPanel = mosaicWindowActions.getPath().length === 0 && tabId == undefined;
 
@@ -288,19 +224,28 @@ export default function Panel<
       saveConfig(defaultConfig);
     }, [defaultConfig, saveConfig]);
 
-    // PanelSettings needs useConfigById to return a config
-    // If there is no saved config (or it is an empty object), we save the default config provided
-    // by the panel. This typically happens when a new panel is added and the layout does not yet
-    // have a config. Even if this effect gets run more than once, we only need to save the default
-    // config once.
+    // PanelSettings needs useConfigById to return a complete config. If there is no saved config
+    // (or it is an empty object), or if keys have been added to the default config since it was
+    // previously saved, we save the default config provided by the panel. This typically happens
+    // when a new panel is added and the layout does not yet have a config. Even if this effect gets
+    // run more than once, we only need to save the default config once.
     //
     // An empty object can occur when swapping a panel
     const savedDefaultConfig = useRef(false);
     useLayoutEffect(() => {
-      if ((!savedConfig || Object.keys(savedConfig).length === 0) && !savedDefaultConfig.current) {
+      if (savedDefaultConfig.current) {
+        return;
+      }
+
+      if (!savedConfig || Object.keys(savedConfig).length === 0) {
         savedDefaultConfig.current = true;
         saveConfig(defaultConfig);
-      } else if (savedConfig && !areConfigKeysEqual(savedConfig, defaultConfig)) {
+      } else if (
+        Object.entries(defaultConfig).some(
+          ([key, value]) => value != undefined && !(key in savedConfig),
+        )
+      ) {
+        savedDefaultConfig.current = true;
         saveConfig({ ...defaultConfig, ...savedConfig });
       }
     }, [defaultConfig, saveConfig, savedConfig]);
@@ -397,20 +342,12 @@ export default function Panel<
           // Allow clicking with no modifiers to select a panel (and deselect others) when panel settings are open
           e.stopPropagation(); // select the deepest clicked panel, not parent tab panels
           setSelectedPanelIds([childId]);
-        } else if (e.metaKey || shiftKeyPressed || isSelected) {
+        } else if (e.metaKey || e.shiftKey || isSelected) {
           e.stopPropagation(); // select the deepest clicked panel, not parent tab panels
           togglePanelSelected(childId, tabId);
         }
       },
-      [
-        childId,
-        tabId,
-        togglePanelSelected,
-        shiftKeyPressed,
-        isSelected,
-        setSelectedPanelIds,
-        panelSettingsOpen,
-      ],
+      [childId, tabId, togglePanelSelected, isSelected, setSelectedPanelIds, panelSettingsOpen],
     );
 
     const groupPanels = useCallback(() => {
@@ -485,26 +422,31 @@ export default function Panel<
       tabId,
     ]);
 
-    const { onMouseMove, enterFullscreen, exitFullscreen } = useMemo(
+    const { enterFullscreen, exitFullscreen } = useMemo(
       () => ({
-        onMouseMove: ((e) => {
-          if (e.metaKey !== cmdKeyPressed) {
-            setCmdKeyPressed(e.metaKey);
-          }
-        }) as MouseEventHandler<HTMLDivElement>,
         enterFullscreen: () => {
+          setFullscreenSourceRect(panelRootRef.current?.getBoundingClientRect());
           setFullscreen(true);
 
-          // When entering fullscreen for a panel within a tab we need to put the tab into fullscreen mode
-          // to have our panel properly overlay other panels outside the tab.
-          parentPanelContext?.enterFullscreen();
+          // When entering fullscreen for a panel within a tab, we need to adjust the ancestor
+          // tab(s)'s z-index to have our panel properly overlay other panels outside the tab.
+          parentPanelContext?.setHasFullscreenDescendant(true);
         },
         exitFullscreen: () => {
+          // Don't clear fullscreenSourceRect or hasFullscreenDescendant, they are needed during the exit transition
           setFullscreen(false);
-          parentPanelContext?.exitFullscreen();
         },
       }),
-      [cmdKeyPressed, parentPanelContext],
+      [parentPanelContext],
+    );
+
+    const setHasFullscreenDescendant = useCallback(
+      // eslint-disable-next-line @foxglove/no-boolean-parameters
+      (value: boolean) => {
+        _setHasFullscreenDescendant(value);
+        parentPanelContext?.setHasFullscreenDescendant(value);
+      },
+      [parentPanelContext],
     );
 
     // We use two separate sets of key handlers because the panel context and exitFullScreen
@@ -514,23 +456,19 @@ export default function Panel<
         keyUpHandlers: {
           "`": () => setQuickActionsKeyPressed(false),
           "~": () => setQuickActionsKeyPressed(false),
-          Shift: () => setShiftKeyPressed(false),
-          Meta: () => setCmdKeyPressed(false),
         },
         keyDownHandlers: {
           a: (e: KeyboardEvent) => {
             e.preventDefault();
-            if (cmdKeyPressed) {
+            if (e.metaKey) {
               selectAllPanels();
             }
           },
           "`": () => setQuickActionsKeyPressed(true),
           "~": () => setQuickActionsKeyPressed(true),
-          Shift: () => setShiftKeyPressed(true),
-          Meta: () => setCmdKeyPressed(true),
         },
       }),
-      [selectAllPanels, cmdKeyPressed],
+      [selectAllPanels],
     );
 
     const fullScreenKeyHandlers = useMemo(
@@ -544,8 +482,6 @@ export default function Panel<
     useEffect(() => {
       const listener = () => {
         exitFullscreen();
-        setCmdKeyPressed(false);
-        setShiftKeyPressed(false);
         setQuickActionsKeyPressed(false);
       };
       window.addEventListener("blur", listener);
@@ -610,74 +546,99 @@ export default function Panel<
             openSiblingPanel,
             enterFullscreen,
             exitFullscreen,
-            isFullscreen: fullScreen,
-            hasSettings: PanelComponent.configSchema != undefined,
+            setHasFullscreenDescendant,
+            isFullscreen: fullscreen,
             tabId,
             // disallow dragging the root panel in a layout
             connectToolbarDragHandle: isTopLevelPanel ? undefined : connectToolbarDragHandle,
           }}
         >
           <KeyListener global keyUpHandlers={keyUpHandlers} keyDownHandlers={keyDownHandlers} />
-          <KeyListener global keyDownHandlers={fullScreenKeyHandlers} />
-          <PanelRoot
-            onClick={onPanelRootClick}
-            onMouseMove={onMouseMove}
-            fullscreen={fullScreen}
-            selected={isSelected}
-            data-test={`panel-mouseenter-container ${childId ?? ""}`}
-            ref={(el) => {
-              // disallow dragging the root panel in a layout
-              if (!isTopLevelPanel) {
-                connectOverlayDragPreview(el);
-                connectToolbarDragPreview(el);
-              }
-            }}
+          {fullscreen && <KeyListener global keyDownHandlers={fullScreenKeyHandlers} />}
+          <Transition
+            in={fullscreen}
+            timeout={{ exit: FULLSCREEN_TRANSITION_DURATION_MS }}
+            onExited={() => setHasFullscreenDescendant(false)}
+            nodeRef={panelRootRef}
           >
-            {isSelected && !fullScreen && numSelectedPanelsIfSelected > 1 && (
-              <ActionsOverlay>
-                <Button className={classes.tabActionsOverlayButton} onClick={groupPanels}>
-                  <Icon size="small" style={{ marginBottom: 5 }}>
-                    <BorderAllIcon />
-                  </Icon>
-                  Group in tab
-                </Button>
-                <Button className={classes.tabActionsOverlayButton} onClick={createTabs}>
-                  <Icon size="small" style={{ marginBottom: 5 }}>
-                    <ExpandAllOutlineIcon />
-                  </Icon>
-                  Create {numSelectedPanelsIfSelected} tabs
-                </Button>
-              </ActionsOverlay>
-            )}
-            {type !== TAB_PANEL_TYPE && quickActionsKeyPressed && !fullScreen && (
-              <ActionsOverlay
+            {(fullscreenState) => (
+              <PanelRoot
+                onClick={onPanelRootClick}
+                hasFullscreenDescendant={hasFullscreenDescendant}
+                fullscreenState={fullscreenState}
+                sourceRect={fullscreenSourceRect}
+                selected={isSelected}
+                data-test={`panel-mouseenter-container ${childId ?? ""}`}
                 ref={(el) => {
-                  quickActionsOverlayRef.current = el;
+                  panelRootRef.current = el;
                   // disallow dragging the root panel in a layout
                   if (!isTopLevelPanel) {
-                    connectOverlayDragSource(el);
+                    connectOverlayDragPreview(el);
+                    connectToolbarDragPreview(el);
                   }
                 }}
               >
-                <div>
-                  <Button className={classes.quickActionsOverlayButton} onClick={removePanel}>
-                    <TrashCanOutlineIcon />
-                    Remove
-                  </Button>
-                  <Button className={classes.quickActionsOverlayButton} onClick={splitPanel}>
-                    <GridLargeIcon />
-                    Split
-                  </Button>
-                </div>
-              </ActionsOverlay>
+                {isSelected && !fullscreen && numSelectedPanelsIfSelected > 1 && (
+                  <ActionsOverlay>
+                    <Container>
+                      <Button
+                        fullWidth
+                        size="large"
+                        variant="contained"
+                        startIcon={<TabIcon fontSize="large" />}
+                        onClick={groupPanels}
+                      >
+                        Group in tab
+                      </Button>
+                      <Button
+                        fullWidth
+                        size="large"
+                        variant="contained"
+                        startIcon={<LibraryAddOutlinedIcon fontSize="large" />}
+                        onClick={createTabs}
+                      >
+                        Create {numSelectedPanelsIfSelected} tabs
+                      </Button>
+                    </Container>
+                  </ActionsOverlay>
+                )}
+                {type !== TAB_PANEL_TYPE && quickActionsKeyPressed && !fullscreen && (
+                  <ActionsOverlay
+                    ref={(el) => {
+                      quickActionsOverlayRef.current = el;
+                      // disallow dragging the root panel in a layout
+                      if (!isTopLevelPanel) {
+                        connectOverlayDragSource(el);
+                      }
+                    }}
+                  >
+                    <Container direction="row">
+                      <StyledButton
+                        size="large"
+                        variant="contained"
+                        startIcon={<DeleteForeverOutlinedIcon fontSize="large" />}
+                        onClick={removePanel}
+                      >
+                        Remove
+                      </StyledButton>
+                      <StyledButton
+                        size="large"
+                        variant="contained"
+                        startIcon={<BorderAllIcon fontSize="large" />}
+                        onClick={splitPanel}
+                      >
+                        Split
+                      </StyledButton>
+                    </Container>
+                  </ActionsOverlay>
+                )}
+                <PanelErrorBoundary onRemovePanel={removePanel} onResetPanel={resetPanel}>
+                  <React.StrictMode>{child}</React.StrictMode>
+                </PanelErrorBoundary>
+                {process.env.NODE_ENV !== "production" && <PerfInfo ref={perfInfo} />}
+              </PanelRoot>
             )}
-            <PanelErrorBoundary onRemovePanel={removePanel} onResetPanel={resetPanel}>
-              <React.StrictMode>{child}</React.StrictMode>
-            </PanelErrorBoundary>
-            {process.env.NODE_ENV !== "production" && (
-              <div className={classes.perfInfo} ref={perfInfo} />
-            )}
-          </PanelRoot>
+          </Transition>
         </PanelContext.Provider>
       </Profiler>
     );
@@ -687,6 +648,5 @@ export default function Panel<
     defaultConfig: PanelComponent.defaultConfig,
     panelType: PanelComponent.panelType,
     displayName: `Panel(${PanelComponent.displayName ?? PanelComponent.name})`,
-    configSchema: PanelComponent.configSchema,
   });
 }

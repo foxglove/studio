@@ -10,8 +10,7 @@
 //   found at http://www.apache.org/licenses/LICENSE-2.0
 //   You may not use this file except in compliance with the License.
 
-import { Link, Text, useTheme } from "@fluentui/react";
-import { Box } from "@mui/material";
+import { Box, Link, Typography, useTheme } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import { extname } from "path";
 import {
@@ -54,6 +53,7 @@ import Preferences from "@foxglove/studio-base/components/Preferences";
 import RemountOnValueChange from "@foxglove/studio-base/components/RemountOnValueChange";
 import Sidebar, { SidebarItem } from "@foxglove/studio-base/components/Sidebar";
 import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent";
+import { SignInFormModal } from "@foxglove/studio-base/components/SignInFormModal";
 import Stack from "@foxglove/studio-base/components/Stack";
 import { URLStateSyncAdapter } from "@foxglove/studio-base/components/URLStateSyncAdapter";
 import { useAssets } from "@foxglove/studio-base/context/AssetsContext";
@@ -64,7 +64,6 @@ import {
 } from "@foxglove/studio-base/context/CurrentLayoutContext";
 import { useCurrentUser } from "@foxglove/studio-base/context/CurrentUserContext";
 import { useExtensionLoader } from "@foxglove/studio-base/context/ExtensionLoaderContext";
-import { useHelpInfo } from "@foxglove/studio-base/context/HelpInfoContext";
 import LinkHandlerContext from "@foxglove/studio-base/context/LinkHandlerContext";
 import { useNativeAppMenu } from "@foxglove/studio-base/context/NativeAppMenuContext";
 import {
@@ -75,9 +74,13 @@ import { useWorkspace, WorkspaceContext } from "@foxglove/studio-base/context/Wo
 import { useAppConfigurationValue } from "@foxglove/studio-base/hooks";
 import useAddPanel from "@foxglove/studio-base/hooks/useAddPanel";
 import { useCalloutDismissalBlocker } from "@foxglove/studio-base/hooks/useCalloutDismissalBlocker";
+import { useDefaultWebLaunchPreference } from "@foxglove/studio-base/hooks/useDefaultWebLaunchPreference";
 import useElectronFilesToOpen from "@foxglove/studio-base/hooks/useElectronFilesToOpen";
+import { useInitialDeepLinkState } from "@foxglove/studio-base/hooks/useInitialDeepLinkState";
 import useNativeAppMenuEvent from "@foxglove/studio-base/hooks/useNativeAppMenuEvent";
 import { PlayerPresence } from "@foxglove/studio-base/players/types";
+import { HelpInfoStore, useHelpInfo } from "@foxglove/studio-base/providers/HelpInfoProvider";
+import { PanelSettingsEditorContextProvider } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 
 const log = Logger.getLogger(__filename);
 
@@ -119,16 +122,16 @@ function AddPanel() {
 
   return (
     <SidebarContent
-      noPadding={selectedLayoutId != undefined}
+      disablePadding={selectedLayoutId != undefined}
       title="Add panel"
       helpContent={panelsHelpContent}
     >
       {selectedLayoutId == undefined ? (
-        <Text styles={{ root: { color: theme.palette.neutralTertiary } }}>
+        <Typography color="text.secondary">
           <Link onClick={openLayoutBrowser}>Select a layout</Link> to get started!
-        </Text>
+        </Typography>
       ) : (
-        <PanelList onPanelSelect={addPanel} backgroundColor={theme.palette.neutralLighterAlt} />
+        <PanelList onPanelSelect={addPanel} backgroundColor={theme.palette.background.default} />
       )}
     </SidebarContent>
   );
@@ -146,6 +149,8 @@ type WorkspaceProps = {
   deepLinks?: string[];
 };
 
+const DEFAULT_DEEPLINKS = Object.freeze([]);
+
 const selectPlayerPresence = ({ playerState }: MessagePipelineContext) => playerState.presence;
 const selectRequestBackfill = ({ requestBackfill }: MessagePipelineContext) => requestBackfill;
 const selectPlayerProblems = ({ playerState }: MessagePipelineContext) => playerState.problems;
@@ -154,6 +159,8 @@ const selectIsPlaying = (ctx: MessagePipelineContext) =>
 const selectPause = (ctx: MessagePipelineContext) => ctx.pausePlayback;
 const selectPlay = (ctx: MessagePipelineContext) => ctx.startPlayback;
 const selectSeek = (ctx: MessagePipelineContext) => ctx.seekPlayback;
+
+const selectSetHelpInfo = (store: HelpInfoStore) => store.setHelpInfo;
 
 export default function Workspace(props: WorkspaceProps): JSX.Element {
   const classes = useStyles();
@@ -181,25 +188,25 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
 
   const isPlayerPresent = playerPresence !== PlayerPresence.NOT_PRESENT;
 
-  const [enableOpenDialog] = useAppConfigurationValue(AppSetting.OPEN_DIALOG);
+  const { currentUser } = useCurrentUser();
+
+  const { currentUserRequired } = useInitialDeepLinkState(props.deepLinks ?? DEFAULT_DEEPLINKS);
+
+  useDefaultWebLaunchPreference();
 
   const [showOpenDialogOnStartup = true] = useAppConfigurationValue<boolean>(
     AppSetting.SHOW_OPEN_DIALOG_ON_STARTUP,
   );
 
+  const showSignInForm = currentUserRequired && currentUser == undefined;
+
   const [showOpenDialog, setShowOpenDialog] = useState<
     { view: OpenDialogViews; activeDataSource?: IDataSourceFactory } | undefined
-  >(isPlayerPresent || !showOpenDialogOnStartup ? undefined : { view: "start" });
+  >(isPlayerPresent || !showOpenDialogOnStartup || showSignInForm ? undefined : { view: "start" });
 
-  const [selectedSidebarItem, setSelectedSidebarItem] = useState<SidebarItemKey | undefined>(() => {
-    // When using the open dialog ui - we always start with the connection sidebar open.
-    // This is to help the user find where to select a connection should they dismiss the open dialog
-    if (enableOpenDialog === true) {
-      return "connection";
-    }
-    // Start with the sidebar open if no connection has been made
-    return isPlayerPresent ? undefined : "connection";
-  });
+  const [selectedSidebarItem, setSelectedSidebarItem] = useState<SidebarItemKey | undefined>(
+    "connection",
+  );
 
   // When a player is present we hide the connection sidebar. To prevent hiding the connection sidebar
   // when the user wants to select a new connection we track whether the sidebar item opened
@@ -220,7 +227,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     }
   }, [playerPresence]);
 
-  const { setHelpInfo } = useHelpInfo();
+  const setHelpInfo = useHelpInfo(selectSetHelpInfo);
 
   const handleInternalLink = useCallback(
     (event: React.MouseEvent, href: string) => {
@@ -354,7 +361,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         try {
           const arrayBuffer = await file.arrayBuffer();
           const data = new Uint8Array(arrayBuffer);
-          const extension = await extensionLoader.installExtension(data);
+          const extension = await extensionLoader.installExtension("local", data);
           addToast(`Installed extension ${extension.id}`, { appearance: "success" });
         } catch (err) {
           log.error(err);
@@ -401,7 +408,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           try {
             const arrayBuffer = await file.arrayBuffer();
             const data = new Uint8Array(arrayBuffer);
-            const extension = await extensionLoader.installExtension(data);
+            const extension = await extensionLoader.installExtension("local", data);
             addToast(`Installed extension ${extension.id}`, { appearance: "success" });
           } catch (err) {
             log.error(err);
@@ -476,8 +483,6 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
     [selectedSidebarItem, supportsAccountSettings],
   );
 
-  const { currentUser } = useCurrentUser();
-
   // Since the _component_ field of a sidebar item entry is a component and accepts no additional
   // props we need to wrap our DataSourceSidebar component to connect the open data source action to
   // open the data source dialog.
@@ -550,10 +555,12 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
         /* eslint-disable react/jsx-key */
         <LinkHandlerContext.Provider value={handleInternalLink} />,
         <WorkspaceContext.Provider value={workspaceActions} />,
+        <PanelSettingsEditorContextProvider />,
         /* eslint-enable react/jsx-key */
       ]}
     >
-      {enableOpenDialog === true && showOpenDialog != undefined && (
+      {showSignInForm && <SignInFormModal />}
+      {showOpenDialog != undefined && (
         <OpenDialog
           activeView={showOpenDialog.view}
           activeDataSource={showOpenDialog.activeDataSource}
@@ -565,7 +572,7 @@ export default function Workspace(props: WorkspaceProps): JSX.Element {
           <div className={classes.dropzone}>Drop a file here</div>
         </DropOverlay>
       </DocumentDropListener>
-      <URLStateSyncAdapter deepLinks={props.deepLinks ?? []} />
+      <URLStateSyncAdapter />
       <div className={classes.container} ref={containerRef} tabIndex={0}>
         <Sidebar
           items={sidebarItems}

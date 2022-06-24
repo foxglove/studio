@@ -14,14 +14,21 @@
 import { useMemo, useRef } from "react";
 
 import {
-  TF_DATATYPES,
+  ROS_TF_DATATYPES,
+  FOXGLOVE_TF_DATATYPES,
   TRANSFORM_STAMPED_DATATYPES,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/constants";
 import {
   IImmutableTransformTree,
+  Transform,
   TransformTree,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms";
+import {
+  quatFromValues,
+  vec3FromValues,
+} from "@foxglove/studio-base/panels/ThreeDimensionalViz/transforms/geometry";
 import { MessageEvent, Topic } from "@foxglove/studio-base/players/types";
+import { FoxgloveMessages } from "@foxglove/studio-base/types/FoxgloveMessages";
 import { MarkerArray, StampedMessage, TF } from "@foxglove/studio-base/types/Messages";
 import { mightActuallyBePartial } from "@foxglove/studio-base/util/mightActuallyBePartial";
 
@@ -42,6 +49,26 @@ function consumeTfs(tfs: MessageEvent<TfMessage>[], transforms: TransformTree): 
 function consumeSingleTfs(tfs: MessageEvent<TF>[], transforms: TransformTree): void {
   for (const { message } of tfs) {
     transforms.addTransformMessage(message);
+  }
+}
+
+function consumeFoxgloveFrameTransform(
+  msgEvents: MessageEvent<FoxgloveMessages["foxglove.FrameTransform"]>[],
+  transformTree: TransformTree,
+): void {
+  for (const { message } of msgEvents) {
+    const { translation, rotation } = message.transform;
+    const transform = new Transform(
+      vec3FromValues(translation.x, translation.y, translation.z),
+      quatFromValues(rotation.x, rotation.y, rotation.z, rotation.w),
+    );
+
+    transformTree.addTransform(
+      message.child_frame_id,
+      message.parent_frame_id,
+      message.timestamp,
+      transform,
+    );
   }
 }
 
@@ -101,6 +128,15 @@ function useTransforms(args: Args): IImmutableTransformTree {
             continue;
           }
         }
+        // Handle Foxglove schemas which have frame_id and timestamp at the root instead of nested in header
+        if ("frame_id" in (msg.message as { frame_id?: string })) {
+          const frameId = (msg.message as { frame_id?: string }).frame_id;
+          if (frameId != undefined) {
+            transforms.getOrCreateFrame(frameId);
+            updated = true;
+            continue;
+          }
+        }
         // A hack specific to MarkerArray messages, which don't themselves have headers, but individual markers do.
         if ("markers" in (msg.message as Partial<MarkerArray>)) {
           const markers = (msg.message as MarkerArray).markers;
@@ -115,11 +151,17 @@ function useTransforms(args: Args): IImmutableTransformTree {
       }
 
       // Process all TF topics (ex: /tf and /tf_static)
-      if (TF_DATATYPES.includes(datatype)) {
+      if (ROS_TF_DATATYPES.includes(datatype)) {
         consumeTfs(msgs as MessageEvent<TfMessage>[], transforms);
         updated = true;
       } else if (TRANSFORM_STAMPED_DATATYPES.includes(datatype)) {
         consumeSingleTfs(msgs as MessageEvent<TF>[], transforms);
+        updated = true;
+      } else if (FOXGLOVE_TF_DATATYPES.includes(datatype)) {
+        consumeFoxgloveFrameTransform(
+          msgs as MessageEvent<FoxgloveMessages["foxglove.FrameTransform"]>[],
+          transforms,
+        );
         updated = true;
       }
     }

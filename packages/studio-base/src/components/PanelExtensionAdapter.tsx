@@ -23,6 +23,8 @@ import {
   PanelExtensionContext,
   ParameterValue,
   RenderState,
+  SettingsTree,
+  Subscription,
   Topic,
 } from "@foxglove/studio";
 import {
@@ -41,7 +43,9 @@ import {
   AdvertiseOptions,
   PlayerCapabilities,
   PlayerState,
+  SubscribePayload,
 } from "@foxglove/studio-base/players/types";
+import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
 import { PanelConfig, SaveConfig } from "@foxglove/studio-base/types/panels";
 import { assertNever } from "@foxglove/studio-base/util/assertNever";
 
@@ -101,7 +105,10 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
   const [error, setError] = useState<Error | undefined>();
   const watchedFieldsRef = useRef(new Set<keyof RenderState>());
-  const subscribedTopicsRef = useRef(new Set<string>());
+  // When subscribing to preloaded topics we use this array to filter the raw blocks to include only
+  // the topics we subscribed to in the allFrames render state. Otherwise the panel would receive
+  // messages in allFrames for topics the panel did not subscribe to.
+  const subscribedTopicsRef = useRef<string[]>([]);
   const currentAppSettingsRef = useRef(new Map<string, AppSettingValue>());
   const [subscribedAppSettings, setSubscribedAppSettings] = useState<string[]>([]);
   const previousPlayerStateRef = useRef<PlayerState | undefined>(undefined);
@@ -141,6 +148,8 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   const hoverValueRef = useRef<typeof hoverValue>();
   hoverValueRef.current = hoverValue;
 
+  const lastSeekTimeRef = useRef<number | undefined>();
+
   const colorScheme = useTheme().isInverted ? "dark" : "light";
 
   const appConfiguration = useAppConfiguration();
@@ -172,6 +181,15 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
     // The render state stats with the previous render state and changes are applied as detected
     const renderState: RenderState = prevRenderState.current;
+
+    if (watchedFieldsRef.current.has("didSeek")) {
+      const didSeek = lastSeekTimeRef.current !== ctx?.playerState.activeData?.lastSeekTime;
+      if (didSeek !== renderState.didSeek) {
+        renderState.didSeek = didSeek;
+        shouldRender = true;
+      }
+      lastSeekTimeRef.current = ctx?.playerState.activeData?.lastSeekTime;
+    }
 
     if (watchedFieldsRef.current.has("currentFrame")) {
       const currentFrame = ctx?.messageEventsBySubscriberId.get(panelId);
@@ -215,7 +233,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
           for (const messageEvents of Object.values(block.messagesByTopic)) {
             for (const messageEvent of messageEvents) {
-              if (!subscribedTopicsRef.current.has(messageEvent.topic)) {
+              if (!subscribedTopicsRef.current.includes(messageEvent.topic)) {
                 continue;
               }
               frames.push(messageEvent);
@@ -224,6 +242,20 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
         }
       }
       prevBlocksRef.current = newBlocks;
+    }
+
+    if (watchedFieldsRef.current.has("currentTime")) {
+      const currentTime = playerState?.activeData?.currentTime;
+
+      if (currentTime != undefined && currentTime !== renderState.currentTime) {
+        shouldRender = true;
+        renderState.currentTime = currentTime;
+      } else {
+        if (renderState.currentTime != undefined) {
+          shouldRender = true;
+        }
+        renderState.currentTime = undefined;
+      }
     }
 
     if (watchedFieldsRef.current.has("previewTime")) {
@@ -330,6 +362,15 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
   useMessagePipeline(messagePipelineSelector);
 
+  const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
+
+  const updateSettings = useCallback(
+    (settings: SettingsTree) => {
+      updatePanelSettingsTree(settings);
+    },
+    [updatePanelSettingsTree],
+  );
+
   type PartialPanelExtensionContext = Omit<PanelExtensionContext, "panelElement">;
   const partialExtensionContext = useMemo<PartialPanelExtensionContext>(() => {
     const layout: PanelExtensionContext["layout"] = {
@@ -385,8 +426,8 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
         watchedFieldsRef.current.add(field);
       },
 
-      subscribe: (topics: string[]) => {
-        subscribedTopicsRef.current.clear();
+      subscribe: (topics: ReadonlyArray<string | Subscription>) => {
+        subscribedTopicsRef.current = [];
 
         // If the player has loaded all the blocks, the blocks reference won't change so our message
         // pipeline handler for allFrames won't create a new set of all frames for the newly
@@ -394,11 +435,21 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
         // created, we unset the blocks ref which will force re-creating allFrames.
         prevBlocksRef.current = undefined;
 
-        const subscribePayloads = topics.map((topic) => ({ topic }));
+        const subscribePayloads = topics.map<SubscribePayload>((item) => {
+          if (typeof item === "string") {
+            subscribedTopicsRef.current.push(item);
+            // For backwards compatability with the topic-string-array api `subscribe(["/topic"])`
+            // results in a topic subscription with full preloading
+            return { topic: item, preloadType: "full" };
+          }
+
+          subscribedTopicsRef.current.push(item.topic);
+          return {
+            topic: item.topic,
+            preloadType: item.preload === true ? "full" : "partial",
+          };
+        });
         setSubscriptions(panelId, subscribePayloads);
-        for (const topic of topics) {
-          subscribedTopicsRef.current.add(topic);
-        }
 
         if (topics.length > 0) {
           requestBackfill();
@@ -448,25 +499,38 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
           }
         : undefined,
 
+      callService: capabilities.includes(PlayerCapabilities.callServices)
+        ? async (service, request): Promise<unknown> => {
+            const ctx = latestPipelineContextRef.current;
+            if (!ctx) {
+              throw new Error("Unable to call service. There is no active connection.");
+            }
+            return await ctx.callService(service, request);
+          }
+        : undefined,
+
       unsubscribeAll: () => {
-        subscribedTopicsRef.current.clear();
+        subscribedTopicsRef.current = [];
         setSubscriptions(panelId, []);
       },
 
       subscribeAppSettings: (settings: string[]) => {
         setSubscribedAppSettings(settings);
       },
+
+      updatePanelSettingsEditor: updateSettings,
     };
   }, [
-    saveConfig,
     capabilities,
-    openSiblingPanel,
-    seekPlayback,
     clearHoverValue,
+    openSiblingPanel,
+    panelId,
+    updateSettings,
+    requestBackfill,
+    saveConfig,
+    seekPlayback,
     setHoverValue,
     setSubscriptions,
-    panelId,
-    requestBackfill,
   ]);
 
   const panelContainerRef = useRef<HTMLDivElement>(ReactNull);
@@ -527,9 +591,20 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   }
 
   return (
-    <div style={{ width: "100%", height: "100%", overflow: "hidden", zIndex: 0, ...style }}>
-      <PanelToolbar floating helpContent={props.help} />
-      <div style={{ width: "100%", height: "100%", overflow: "hidden" }} ref={panelContainerRef} />
+    <div
+      style={{
+        alignItems: "stretch",
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        overflow: "hidden",
+        width: "100%",
+        zIndex: 0,
+        ...style,
+      }}
+    >
+      <PanelToolbar helpContent={props.help} />
+      <div style={{ flex: 1, overflow: "hidden" }} ref={panelContainerRef} />
     </div>
   );
 }

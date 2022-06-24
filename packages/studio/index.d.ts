@@ -24,21 +24,64 @@ declare module "@foxglove/studio" {
     nsec: number;
   }
 
-  // A topic is a namespace for specific types of messages
+  /**
+   * A topic is a namespace for specific types of messages
+   */
   export type Topic = {
-    // topic name i.e. "/some/topic"
+    /**
+     * topic name i.e. "/some/topic"
+     */
     name: string;
-    // topic datatype
+    /**
+     * The datatype is an identifier for the types of messages on this topic. Typically this is the
+     * fully-qualified name of the message type. The fully-qualified name depends on the data source
+     * and data loaded by the data source.
+     *
+     * i.e. package.Message in protobuf-like serialization or pkg/Msg in ROS systems.
+     */
     datatype: string;
+  };
+
+  export type Subscription = {
+    topic: string;
+
+    /**
+     * Setting preload to _true_ hints to the data source that it should attempt to load all available
+     * messages for the topic. The default behavior is to only load messages for the current frame.
+     *
+     * **Only** topics with `preload: true` are available in the `allFrames` render state.
+     */
+    preload?: boolean;
   };
 
   /**
    * A message event frames message data with the topic and receive time
    */
   export type MessageEvent<T> = Readonly<{
+    /** The topic name this message was received on, i.e. "/some/topic" */
     topic: string;
+    /**
+     * The time in nanoseconds this message was received. This may be set by the
+     * local system clock or the data source, depending on the data source used
+     * and whether time is simulated via a /clock topic or similar mechanism.
+     * The timestamp is often nanoseconds since the UNIX epoch, but may be
+     * relative to another event such as system boot time or simulation start
+     * time depending on the context.
+     */
     receiveTime: Time;
+    /**
+     * The time in nanoseconds this message was originally published. This is
+     * only available for some data sources. The timestamp is often nanoseconds
+     * since the UNIX epoch, but may be relative to another event such as system
+     * boot time or simulation start time depending on the context.
+     */
+    publishTime?: Time;
+    /** The deserialized message as a JavaScript object. */
     message: T;
+    /**
+     * The approximate size of this message in its serialized form. This can be
+     * useful for statistics tracking and cache eviction.
+     */
     sizeInBytes: number;
   }>;
 
@@ -81,6 +124,13 @@ declare module "@foxglove/studio" {
     currentFrame?: readonly MessageEvent<unknown>[];
 
     /**
+     * True if the data source performed a seek. This indicates that some data may have been skipped
+     * (never appeared in the `currentFrame`), so panels should clear out any stale state to avoid
+     * displaying incorrect data.
+     */
+    didSeek?: boolean;
+
+    /**
      * All available messages. Best-effort list of all available messages.
      */
     allFrames?: readonly MessageEvent<unknown>[];
@@ -94,6 +144,11 @@ declare module "@foxglove/studio" {
      * List of available topics. This list includes subscribed and unsubscribed topics.
      */
     topics?: readonly Topic[];
+
+    /**
+     * A timestamp value indicating the current playback time.
+     */
+    currentTime?: Time;
 
     /**
      * A seconds value indicating a preview time. The preview time is set when a user hovers
@@ -163,11 +218,20 @@ declare module "@foxglove/studio" {
      *
      * Subscribe will update the current subscriptions to the list of topic names. Passing an empty
      * array will unsubscribe from all topics.
+     *
+     * Calling subscribe with an empty array of topics is analagous to unsubscribeAll.
      */
     subscribe(topics: string[]): void;
 
     /**
+     * Subscribe to an array of topics with additional options for each subscription.
+     */
+    subscribe(subscriptions: Subscription[]): void;
+
+    /**
      * Unsubscribe from all topics.
+     *
+     * Note: This is analagous to calling subscribe([]) with an empty array of topics.
      */
     unsubscribeAll(): void;
 
@@ -197,12 +261,27 @@ declare module "@foxglove/studio" {
     publish?(topic: string, message: unknown): void;
 
     /**
+     * Call a service.
+     *
+     * @param service The name of the service to call
+     * @param request The request payload for the service call
+     * @returns A promise that resolves when the result is available or rejected with an error
+     */
+    callService?(service: string, request: unknown): Promise<unknown>;
+
+    /**
      * Process render events for the panel. Each render event receives a render state and a done callback.
      * Render events occur frequently (60hz, 30hz, etc).
      *
      * The done callback should be called once the panel has rendered the render state.
      */
     onRender?: (renderState: Readonly<RenderState>, done: () => void) => void;
+
+    /**
+     * Updates the panel's settings editor. Call this every time you want to update
+     * the representation of the panel settings in the editor.
+     */
+    updatePanelSettingsEditor(settings: Readonly<SettingsTree>): void;
   };
 
   export type ExtensionPanelRegistration = {
@@ -233,4 +312,255 @@ declare module "@foxglove/studio" {
   export interface ExtensionModule {
     activate: ExtensionActivate;
   }
+
+  export type SettingsIcon =
+    | "Add"
+    | "Background"
+    | "Camera"
+    | "Cells"
+    | "Check"
+    | "Circle"
+    | "Clock"
+    | "Collapse"
+    | "Cube"
+    | "Delete"
+    | "Expand"
+    | "Flag"
+    | "Folder"
+    | "FolderOpen"
+    | "Grid"
+    | "Hive"
+    | "ImageProjection"
+    | "Map"
+    | "Move"
+    | "MoveDown"
+    | "MoveUp"
+    | "NorthWest"
+    | "Note"
+    | "NoteFilled"
+    | "Points"
+    | "Settings"
+    | "Shapes"
+    | "Share"
+    | "Star"
+    | "SouthEast"
+    | "Topic"
+    | "Walk"
+    | "World";
+
+  /**
+   * A settings tree field specifies the input type and the value of a field
+   * in the settings editor.
+   */
+  export type SettingsTreeFieldValue =
+    | { input: "autocomplete"; value?: string; items: string[] }
+    | { input: "boolean"; value?: boolean }
+    | { input: "rgb"; value?: string }
+    | { input: "rgba"; value?: string }
+    | { input: "gradient"; value?: [string, string] }
+    | { input: "messagepath"; value?: string; validTypes?: string[] }
+    | {
+        input: "number";
+        value?: number;
+        step?: number;
+        max?: number;
+        min?: number;
+        precision?: number;
+      }
+    | {
+        input: "select";
+        value?: number | number[];
+        options: Array<{ label: string; value: undefined | number }>;
+      }
+    | {
+        input: "select";
+        value?: string | string[];
+        options: Array<{ label: string; value: undefined | string }>;
+      }
+    | { input: "string"; value?: string }
+    | { input: "toggle"; value?: string; options: string[] }
+    | {
+        input: "vec3";
+        value?: [undefined | number, undefined | number, undefined | number];
+        step?: number;
+        precision?: number;
+        labels?: [string, string, string];
+      }
+    | {
+        input: "vec2";
+        value?: [undefined | number, undefined | number];
+        step?: number;
+        precision?: number;
+        labels?: [string, string];
+      };
+
+  export type SettingsTreeField = SettingsTreeFieldValue & {
+    /**
+     * True if the field is disabled.
+     */
+    disabled?: boolean;
+
+    /**
+     * Optional help text to explain the purpose of the field.
+     */
+    help?: string;
+
+    /**
+     * The label displayed alongside the field.
+     */
+    label: string;
+
+    /**
+     * Optional placeholder text displayed in the field input in the
+     * absence of a value.
+     */
+    placeholder?: string;
+
+    /**
+     * True if the field is readonly.
+     */
+    readonly?: boolean;
+
+    /**
+     * Optional message indicating any error state for the field.
+     */
+    error?: string;
+  };
+
+  export type SettingsTreeFields = Record<string, undefined | SettingsTreeField>;
+
+  export type SettingsTreeChildren = Record<string, undefined | SettingsTreeNode>;
+
+  export type SettingsTreeNodeActionItem = {
+    type: "action";
+
+    /**
+     * A unique idenfier for the action.
+     */
+    id: string;
+
+    /**
+     * A descriptive label for the action.
+     */
+    label: string;
+
+    /**
+     * Optional icon to display with the action.
+     */
+    icon?: SettingsIcon;
+  };
+
+  export type SettingsTreeNodeActionDivider = { type: "divider" };
+
+  /**
+   * An action included in the action menu for a settings node.
+   */
+  export type SettingsTreeNodeAction = SettingsTreeNodeActionItem | SettingsTreeNodeActionDivider;
+
+  export type SettingsTreeNode = {
+    /**
+     * An array of actions that can be performed on this node.
+     */
+    actions?: SettingsTreeNodeAction[];
+
+    /**
+     * Other settings tree nodes nested under this node.
+     */
+    children?: SettingsTreeChildren;
+
+    /**
+     * Set to collapsed if the node should be initially collapsed.
+     */
+    defaultExpansionState?: "collapsed" | "expanded";
+
+    /**
+     * Optional message indicating any error state for the node.
+     */
+    error?: string;
+
+    /**
+     * Field inputs attached directly to this node.
+     */
+    fields?: SettingsTreeFields;
+
+    /**
+     * Optional icon to display next to the node label.
+     */
+    icon?: SettingsIcon;
+
+    /**
+     * An optional label shown at the top of this node.
+     */
+    label?: string;
+
+    /**
+     * True if the node label can be edited by the user.
+     */
+    renamable?: boolean;
+
+    /**
+     * Optional sort order to override natural object ordering. All nodes
+     * with a sort order will be rendered before nodes all with no sort order.
+     *
+     * Nodes without an explicit order will be ordered according to ECMA
+     * object ordering rules.
+     *
+     * https://262.ecma-international.org/6.0/#sec-ordinary-object-internal-methods-and-internal-slots-ownpropertykeys
+     */
+    order?: number | string;
+
+    /**
+     * An optional visibility status. If this is not undefined, the node
+     * editor will display a visiblity toggle button and send update actions
+     * to the action handler.
+     **/
+    visible?: boolean;
+  };
+
+  /**
+   * Distributes Pick<T, K> across all members of a union, used for extracting structured
+   * subtypes.
+   */
+  type DistributivePick<T, K extends keyof T> = T extends unknown ? Pick<T, K> : never;
+
+  /**
+   * Represents actions that can be dispatched to source of the SettingsTree to implement
+   * edits and updates.
+   */
+  export type SettingsTreeAction =
+    | {
+        action: "update";
+        payload: { path: readonly string[] } & DistributivePick<
+          SettingsTreeFieldValue,
+          "input" | "value"
+        >;
+      }
+    | {
+        action: "perform-node-action";
+        payload: { id: string; path: readonly string[] };
+      };
+
+  export type SettingsTreeNodes = Record<string, undefined | SettingsTreeNode>;
+
+  /**
+   * A settings tree is a tree of panel settings that can be displayed and edited in
+   * the panel settings sidebar.
+   */
+  export type SettingsTree = {
+    /**
+     * Handler to process all actions on the settings tree initiated by the UI.
+     */
+    actionHandler: (action: SettingsTreeAction) => void;
+
+    /**
+     * True if the settings editor should show the filter control.
+     */
+    enableFilter?: boolean;
+
+    /**
+     * The settings tree root nodes. Updates to these will automatically be reflected in the
+     * editor UI.
+     */
+    nodes: SettingsTreeNodes;
+  };
 }

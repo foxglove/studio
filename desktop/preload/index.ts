@@ -2,7 +2,8 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { init as initSentry } from "@sentry/electron";
+import "@sentry/electron/preload";
+import * as Sentry from "@sentry/electron/renderer";
 import { contextBridge, ipcRenderer } from "electron";
 import os from "os";
 import { join as pathJoin } from "path";
@@ -30,16 +31,14 @@ window.onerror = (ev) => {
 const [allowCrashReporting] = getTelemetrySettings();
 if (allowCrashReporting && typeof process.env.SENTRY_DSN === "string") {
   log.debug("initializing Sentry in preload");
-  initSentry({
+  Sentry.init({
     dsn: process.env.SENTRY_DSN,
     autoSessionTracking: true,
     release: `${process.env.SENTRY_PROJECT}@${pkgInfo.version}`,
     // Remove the default breadbrumbs integration - it does not accurately track breadcrumbs and
     // creates more noise than benefit.
     integrations: (integrations) => {
-      return integrations.filter((integration) => {
-        return integration.name !== "Breadcrumbs";
-      });
+      return integrations.filter((integration) => integration.name !== "Breadcrumbs");
     },
   });
 }

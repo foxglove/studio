@@ -7,7 +7,7 @@ import { URDFRobot } from "urdf-loader";
 
 import { CameraState } from "@foxglove/regl-worldview";
 
-import { EventTypes } from "./index";
+import { EventTypes } from "./types";
 
 // https://github.com/gkjohnson/urdf-loaders/issues/205
 function cloneModel(robot: URDFRobot): URDFRobot {
@@ -86,14 +86,16 @@ export class Renderer extends EventEmitter<EventTypes> {
       if (obj instanceof THREE.Mesh) {
         if (Array.isArray(obj.material)) {
           for (const material of obj.material) {
+            const transparent = opacity < 1;
             material.opacity = opacity;
-            material.transparent = opacity < 1;
-            material.depthWrite = !(material.transparent as boolean);
+            material.transparent = transparent;
+            material.depthWrite = !transparent;
           }
         } else if (obj.material != undefined) {
+          const transparent = opacity < 1;
           obj.material.opacity = opacity;
-          obj.material.transparent = opacity < 1;
-          obj.material.depthWrite = !(obj.material.transparent as boolean);
+          obj.material.transparent = transparent;
+          obj.material.depthWrite = !transparent;
         }
       }
     });

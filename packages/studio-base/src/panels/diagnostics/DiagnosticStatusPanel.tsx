@@ -12,79 +12,57 @@
 //   You may not use this file except in compliance with the License.
 
 import { Autocomplete, TextField } from "@mui/material";
-import { makeStyles } from "@mui/styles";
-import { sortBy } from "lodash";
-import { useMemo } from "react";
+import produce from "immer";
+import { set, sortBy, uniq } from "lodash";
+import { useCallback, useMemo, useEffect } from "react";
 
+import { SettingsTreeAction } from "@foxglove/studio";
 import { useDataSourceInfo } from "@foxglove/studio-base/PanelAPI";
 import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import Panel from "@foxglove/studio-base/components/Panel";
 import { usePanelContext } from "@foxglove/studio-base/components/PanelContext";
 import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import TopicToRenderMenu from "@foxglove/studio-base/components/TopicToRenderMenu";
+import Stack from "@foxglove/studio-base/components/Stack";
+import { usePanelSettingsTreeUpdate } from "@foxglove/studio-base/providers/PanelSettingsEditorContextProvider";
+import { SaveConfig } from "@foxglove/studio-base/types/panels";
 import { DIAGNOSTIC_TOPIC } from "@foxglove/studio-base/util/globalConstants";
 
 import DiagnosticStatus from "./DiagnosticStatus";
 import helpContent from "./DiagnosticStatusPanel.help.md";
+import { buildStatusPanelSettingsTree } from "./settings";
 import useAvailableDiagnostics from "./useAvailableDiagnostics";
 import useDiagnostics from "./useDiagnostics";
-import { getDisplayName } from "./util";
-
-export type Config = {
-  selectedHardwareId?: string;
-  selectedName?: string;
-  splitFraction?: number;
-  topicToRender: string;
-  collapsedSections: { name: string; section: string }[];
-};
+import { DiagnosticStatusConfig as Config, getDisplayName } from "./util";
 
 type Props = {
   config: Config;
-  saveConfig: (arg0: Partial<Config>) => void;
+  saveConfig: SaveConfig<Config>;
 };
 
-const useStyles = makeStyles({
-  root: {
-    display: "flex",
-    flexDirection: "column",
-    flex: "auto",
-    overflow: "scroll",
-  },
-  content: {
-    display: "flex",
-    flexDirection: "column",
-    flex: "auto",
-    overflowY: "auto",
-  },
-});
+const ALLOWED_DATATYPES: string[] = [
+  "diagnostic_msgs/DiagnosticArray",
+  "diagnostic_msgs/msg/DiagnosticArray",
+  "ros.diagnostic_msgs.DiagnosticArray",
+];
 
 // component to display a single diagnostic status from list
 function DiagnosticStatusPanel(props: Props) {
-  const classes = useStyles();
   const { saveConfig, config } = props;
   const { topics } = useDataSourceInfo();
   const { openSiblingPanel } = usePanelContext();
-  const {
-    selectedHardwareId,
-    selectedName,
-    splitFraction,
-    topicToRender,
-    collapsedSections = [],
-  } = config;
+  const { selectedHardwareId, selectedName, splitFraction, topicToRender } = config;
 
-  const topicToRenderMenu = (
-    <TopicToRenderMenu
-      topicToRender={topicToRender}
-      onChange={(newTopicToRender) => saveConfig({ topicToRender: newTopicToRender })}
-      topics={topics}
-      allowedDatatypes={[
-        "diagnostic_msgs/DiagnosticArray",
-        "diagnostic_msgs/msg/DiagnosticArray",
-        "ros.diagnostic_msgs.DiagnosticArray",
-      ]}
-      defaultTopicToRender={DIAGNOSTIC_TOPIC}
-    />
-  );
+  const updatePanelSettingsTree = usePanelSettingsTreeUpdate();
+
+  // Filter down all topics to those that conform to our supported datatypes
+  const availableTopics = useMemo(() => {
+    const filtered = topics
+      .filter((topic) => ALLOWED_DATATYPES.includes(topic.datatype))
+      .map((topic) => topic.name);
+
+    // Keeps only the first occurrence of each topic.
+    return uniq([DIAGNOSTIC_TOPIC, ...filtered, topicToRender]);
+  }, [topics, topicToRender]);
 
   const availableDiagnostics = useAvailableDiagnostics(topicToRender);
 
@@ -144,9 +122,28 @@ function DiagnosticStatusPanel(props: Props) {
   const noOptionsText =
     autocompleteOptions.length > 0 ? "No matches" : "Waiting for diagnostics...";
 
+  const actionHandler = useCallback(
+    (action: SettingsTreeAction) => {
+      if (action.action !== "update") {
+        return;
+      }
+
+      const { path, value } = action.payload;
+      saveConfig(produce((draft) => set(draft, path.slice(1), value)));
+    },
+    [saveConfig],
+  );
+
+  useEffect(() => {
+    updatePanelSettingsTree({
+      actionHandler,
+      nodes: buildStatusPanelSettingsTree(topicToRender, availableTopics),
+    });
+  }, [actionHandler, availableTopics, topicToRender, updatePanelSettingsTree]);
+
   return (
-    <div className={classes.root}>
-      <PanelToolbar floating helpContent={helpContent} additionalIcons={topicToRenderMenu}>
+    <Stack flex="auto" overflow="hidden">
+      <PanelToolbar helpContent={helpContent}>
         <Autocomplete
           disablePortal
           blurOnSelect={true}
@@ -175,13 +172,13 @@ function DiagnosticStatusPanel(props: Props) {
               variant="standard"
               {...params}
               InputProps={{ ...params.InputProps, disableUnderline: true }}
-              placeholder={selectedDisplayName}
+              placeholder={selectedDisplayName ?? "Filter"}
             />
           )}
         />
       </PanelToolbar>
       {filteredDiagnostics.length > 0 ? (
-        <div className={classes.content}>
+        <Stack flex="auto" overflowY="auto">
           {sortBy(filteredDiagnostics, ({ status }) => status.name.toLowerCase()).map((item) => (
             <DiagnosticStatus
               key={item.id}
@@ -192,11 +189,9 @@ function DiagnosticStatusPanel(props: Props) {
               }
               topicToRender={topicToRender}
               openSiblingPanel={openSiblingPanel}
-              saveConfig={saveConfig}
-              collapsedSections={collapsedSections}
             />
           ))}
-        </div>
+        </Stack>
       ) : selectedDisplayName ? (
         <EmptyState>
           Waiting for diagnostics from <code>{selectedDisplayName}</code>
@@ -204,11 +199,11 @@ function DiagnosticStatusPanel(props: Props) {
       ) : (
         <EmptyState>No diagnostic node selected</EmptyState>
       )}
-    </div>
+    </Stack>
   );
 }
 
-const defaultConfig: Config = { topicToRender: DIAGNOSTIC_TOPIC, collapsedSections: [] };
+const defaultConfig: Config = { topicToRender: DIAGNOSTIC_TOPIC };
 
 export default Panel(
   Object.assign(DiagnosticStatusPanel, {

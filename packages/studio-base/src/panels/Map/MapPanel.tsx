@@ -2,64 +2,127 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import escapeHTML from "escape-html";
 import {
   Map as LeafMap,
   TileLayer,
-  Control,
   LatLngBounds,
   CircleMarker,
   FeatureGroup,
-  LayersControlEvent,
   LayerGroup,
+  geoJSON,
+  Layer,
 } from "leaflet";
+import { difference, minBy, partition, union } from "lodash";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useResizeDetector } from "react-resize-detector";
-import { useLatest } from "react-use";
 import { useDebouncedCallback } from "use-debounce";
 
 import { toSec } from "@foxglove/rostime";
-import { PanelExtensionContext, MessageEvent } from "@foxglove/studio";
-import EmptyState from "@foxglove/studio-base/components/EmptyState";
+import { PanelExtensionContext, MessageEvent, SettingsTreeAction } from "@foxglove/studio";
+import Stack from "@foxglove/studio-base/components/Stack";
 import FilteredPointLayer, {
   POINT_MARKER_RADIUS,
 } from "@foxglove/studio-base/panels/Map/FilteredPointLayer";
 import { Topic } from "@foxglove/studio-base/players/types";
+import { FoxgloveMessages } from "@foxglove/studio-base/types/FoxgloveMessages";
 import { darkColor, lightColor, lineColors } from "@foxglove/studio-base/util/plotColors";
 
+import { Config, validateCustomUrl, buildSettingsTree } from "./config";
 import { hasFix } from "./support";
-import { NavSatFixMsg, Point } from "./types";
-
-// Persisted panel state
-type Config = {
-  zoomLevel?: number;
-  disabledTopics?: [];
-};
+import { MapPanelMessage, Point } from "./types";
 
 type MapPanelProps = {
   context: PanelExtensionContext;
 };
+
+function isGeoJSONMessage(
+  message: MessageEvent<unknown>,
+): message is MessageEvent<FoxgloveMessages["foxglove.GeoJSON"]> {
+  return (
+    typeof message.message === "object" &&
+    message.message != undefined &&
+    "geojson" in message.message
+  );
+}
+
+function topicMessageType(topic: Topic) {
+  switch (topic.datatype) {
+    case "sensor_msgs/NavSatFix":
+    case "sensor_msgs/msg/NavSatFix":
+    case "ros.sensor_msgs.NavSatFix":
+    case "foxglove_msgs/LocationFix":
+    case "foxglove_msgs/msg/LocationFix":
+    case "foxglove.LocationFix":
+      return "navsat";
+    case "foxglove_msgs/GeoJSON":
+    case "foxglove_msgs/msg/GeoJSON":
+    case "foxglove.GeoJSON":
+      return "geojson";
+    default:
+      return undefined;
+  }
+}
 
 function MapPanel(props: MapPanelProps): JSX.Element {
   const { context } = props;
 
   const mapContainerRef = useRef<HTMLDivElement>(ReactNull);
 
-  const [config] = useState<Config>(props.context.initialState as Config);
+  const [config, setConfig] = useState<Config>(() => {
+    const initialConfig = props.context.initialState as Partial<Config>;
+    return {
+      disabledTopics: initialConfig.disabledTopics ?? [],
+      layer: initialConfig.layer ?? "map",
+      customTileUrl: initialConfig.customTileUrl ?? "",
+      followTopic: initialConfig.followTopic ?? "",
+    };
+  });
+
+  const [tileLayer] = useState(
+    new TileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+      maxNativeZoom: 18,
+      maxZoom: 24,
+    }),
+  );
+
+  const [satelliteLayer] = useState(
+    new TileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      {
+        attribution:
+          "&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+        maxNativeZoom: 18,
+        maxZoom: 24,
+      },
+    ),
+  );
+
+  const [customLayer] = useState(
+    new TileLayer("https://example.com/{z}/{y}/{x}", {
+      attribution: "",
+      maxNativeZoom: 18,
+      maxZoom: 24,
+    }),
+  );
 
   // Panel state management to update our set of messages
   // We use state to trigger a render on the panel
-  const [navMessages, setNavMessages] = useState<readonly MessageEvent<NavSatFixMsg>[]>([]);
-  const [allNavMessages, setAllNavMessages] = useState<readonly MessageEvent<NavSatFixMsg>[]>([]);
+  const [allMapMessages, setAllMapMessages] = useState<MapPanelMessage[]>([]);
+  const [currentMapMessages, setCurrentMapMessages] = useState<MapPanelMessage[]>([]);
+
+  const [allGeoMessages, allNavMessages] = useMemo(
+    () => partition(allMapMessages, isGeoJSONMessage),
+    [allMapMessages],
+  );
+
+  const [currentGeoMessages, currentNavMessages] = useMemo(
+    () => partition(currentMapMessages, isGeoJSONMessage),
+    [currentMapMessages],
+  );
 
   // Panel state management to track the list of available topics
   const [topics, setTopics] = useState<readonly Topic[]>([]);
-
-  // Disabled topics is the set of topics the user has unchecked in the layer control
-  // Track disabled topics rather than enabled so any new topics display by default
-  const [disabledTopics, setDisabledTopics] = useState(
-    () => new Set<string>(config.disabledTopics),
-  );
 
   // Panel state management to track the current preview time
   const [previewTime, setPreviewTime] = useState<number | undefined>();
@@ -84,25 +147,93 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   const [renderDone, setRenderDone] = useState<() => void>(() => () => {});
 
   const eligibleTopics = useMemo(() => {
-    return topics
-      .filter(
-        (topic) =>
-          topic.datatype === "sensor_msgs/NavSatFix" ||
-          topic.datatype === "sensor_msgs/msg/NavSatFix" ||
-          topic.datatype === "ros.sensor_msgs.NavSatFix" ||
-          topic.datatype === "foxglove.LocationFix",
-      )
-      .map((topic) => topic.name);
+    return topics.filter(topicMessageType).map((topic) => topic.name);
   }, [topics]);
+
+  const settingsActionHandler = useCallback((action: SettingsTreeAction) => {
+    if (action.action !== "update") {
+      return;
+    }
+
+    const { path, input, value } = action.payload;
+
+    if (path[0] === "topics" && input === "boolean") {
+      const topic = path[1];
+      if (topic) {
+        setConfig((oldConfig) => {
+          return {
+            ...oldConfig,
+            disabledTopics:
+              value === true
+                ? difference(oldConfig.disabledTopics, [topic])
+                : union(oldConfig.disabledTopics, [topic]),
+          };
+        });
+      }
+    }
+
+    if (path[1] === "layer" && input === "select") {
+      setConfig((oldConfig) => {
+        return { ...oldConfig, layer: String(value) };
+      });
+    }
+
+    if (path[1] === "customTileUrl" && input === "string") {
+      setConfig((oldConfig) => {
+        return { ...oldConfig, customTileUrl: String(value) };
+      });
+    }
+
+    if (path[1] === "followTopic" && input === "select") {
+      setConfig((oldConfig) => {
+        return { ...oldConfig, followTopic: String(value) };
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (config.layer === "map") {
+      currentMap?.addLayer(tileLayer);
+      currentMap?.removeLayer(satelliteLayer);
+      currentMap?.removeLayer(customLayer);
+    } else if (config.layer === "satellite") {
+      currentMap?.addLayer(satelliteLayer);
+      currentMap?.removeLayer(tileLayer);
+      currentMap?.removeLayer(customLayer);
+    } else if (config.layer === "custom") {
+      currentMap?.addLayer(customLayer);
+      currentMap?.removeLayer(tileLayer);
+      currentMap?.removeLayer(satelliteLayer);
+    }
+  }, [config.layer, currentMap, customLayer, satelliteLayer, tileLayer]);
+
+  useEffect(() => {
+    if (config.layer === "custom") {
+      // validate URL to avoid leaflet map placeholder variable error
+      // Ignore urls with an error - the settings tree will inform the user that their valid is invalid
+      if (validateCustomUrl(config.customTileUrl)) {
+        return;
+      }
+
+      customLayer.setUrl(config.customTileUrl);
+    }
+  }, [config.layer, config.customTileUrl, customLayer]);
 
   // Subscribe to eligible and enabled topics
   useEffect(() => {
-    const eligibleEnabled = eligibleTopics.filter((topic) => !disabledTopics.has(topic));
+    const eligibleEnabled = difference(eligibleTopics, config.disabledTopics);
     context.subscribe(eligibleEnabled);
+
+    const tree = buildSettingsTree(config, eligibleTopics);
+    context.updatePanelSettingsEditor({
+      actionHandler: settingsActionHandler,
+      nodes: tree,
+    });
+
     return () => {
       context.unsubscribeAll();
     };
-  }, [context, disabledTopics, eligibleTopics]);
+  }, [config, context, eligibleTopics, settingsActionHandler]);
 
   type TopicGroups = {
     baseColor: string;
@@ -131,12 +262,6 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     return topicLayerMap;
   }, [eligibleTopics]);
 
-  // layer controls for user selection between map, satellite and topics
-  const layerControl = useMemo(() => new Control.Layers(), []);
-
-  // toggling layers changes the disabledTopics list, but we don't want to re-run this effect
-  // because the layer controls have already updated the map with active/inactive layers
-  const disabledTopicsLatest = useLatest(disabledTopics);
   useLayoutEffect(() => {
     if (!currentMap) {
       return;
@@ -144,26 +269,18 @@ function MapPanel(props: MapPanelProps): JSX.Element {
 
     const topicLayerEntries = [...topicLayers.entries()];
     for (const [topic, featureGroups] of topicLayerEntries) {
-      layerControl.addOverlay(
-        featureGroups.topicGroup,
-        `<span style="color: ${featureGroups.baseColor}">${escapeHTML(topic)}</span>`,
-      );
-
       // if the topic does not appear in the disabled topics list, add to map so it displays
-      if (!disabledTopicsLatest.current.has(topic)) {
+      if (!config.disabledTopics.includes(topic)) {
         currentMap.addLayer(featureGroups.topicGroup);
       }
     }
 
     return () => {
-      for (const entry of topicLayerEntries) {
-        const featureGroups = entry[1];
-
-        layerControl.removeLayer(featureGroups.topicGroup);
+      for (const [_topic, featureGroups] of topicLayerEntries) {
         currentMap.removeLayer(featureGroups.topicGroup);
       }
     };
-  }, [currentMap, disabledTopicsLatest, layerControl, topicLayers]);
+  }, [config.disabledTopics, currentMap, topicLayers]);
 
   // During the initial mount we setup our context render handler
   useLayoutEffect(() => {
@@ -171,35 +288,10 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       return;
     }
 
-    const tileLayer = new TileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-      maxNativeZoom: 18,
-      maxZoom: 24,
-    });
-
-    const satelliteLayer = new TileLayer(
-      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-      {
-        attribution:
-          "&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
-        maxNativeZoom: 18,
-        maxZoom: 24,
-      },
-    );
-
-    const map = new LeafMap(mapContainerRef.current, {
-      // sets the tile layer as the default
-      layers: [tileLayer],
-    });
+    const map = new LeafMap(mapContainerRef.current);
 
     // the map must be initialized with some view before other features work
     map.setView([0, 0], 10);
-
-    // layer controls for user selection between satellite and map
-    layerControl.addBaseLayer(tileLayer, "map");
-    layerControl.addBaseLayer(satelliteLayer, "satellite");
-    layerControl.setPosition("topleft");
-    layerControl.addTo(map);
 
     setCurrentMap(map);
 
@@ -208,30 +300,6 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     context.watch("currentFrame");
     context.watch("allFrames");
     context.watch("previewTime");
-
-    // layer is added (checked) - remove from disabled list
-    map.on("overlayadd", (ev: LayersControlEvent) => {
-      const topic = ev.name;
-      setDisabledTopics((prevDisabled) => {
-        if (!prevDisabled.has(topic)) {
-          return prevDisabled;
-        }
-        prevDisabled.delete(topic);
-        return new Set(prevDisabled);
-      });
-    });
-
-    // layer is removed (unckecked) - add to disabled topics list
-    map.on("overlayremove", (ev: LayersControlEvent) => {
-      const topic = ev.name;
-      setDisabledTopics((prevDisabled) => {
-        if (prevDisabled.has(topic)) {
-          return prevDisabled;
-        }
-        prevDisabled.add(topic);
-        return new Set(prevDisabled);
-      });
-    });
 
     // The render event handler updates the state for our messages an triggers a component render
     //
@@ -245,13 +313,13 @@ function MapPanel(props: MapPanelProps): JSX.Element {
         setTopics(renderState.topics);
       }
 
-      // if there is no current frame, we keep the last frame we've seen
-      if (renderState.currentFrame && renderState.currentFrame.length > 0) {
-        setNavMessages(renderState.currentFrame as readonly MessageEvent<NavSatFixMsg>[]);
+      if (renderState.allFrames) {
+        setAllMapMessages(renderState.allFrames as MapPanelMessage[]);
       }
 
-      if (renderState.allFrames) {
-        setAllNavMessages(renderState.allFrames as readonly MessageEvent<NavSatFixMsg>[]);
+      // Only update the current frame if we have new messages.
+      if (renderState.currentFrame && renderState.currentFrame.length > 0) {
+        setCurrentMapMessages(renderState.currentFrame as MapPanelMessage[]);
       }
     };
 
@@ -259,10 +327,10 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       map.remove();
       context.onRender = undefined;
     };
-  }, [context, layerControl]);
+  }, [context]);
 
   const onHover = useCallback(
-    (messageEvent?: MessageEvent<NavSatFixMsg>) => {
+    (messageEvent?: MessageEvent<unknown>) => {
       context.setPreviewTime(
         messageEvent == undefined ? undefined : toSec(messageEvent.receiveTime),
       );
@@ -271,10 +339,25 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   );
 
   const onClick = useCallback(
-    (messageEvent: MessageEvent<NavSatFixMsg>) => {
+    (messageEvent: MessageEvent<unknown>) => {
       context.seekPlayback?.(toSec(messageEvent.receiveTime));
     },
     [context],
+  );
+
+  const addGeoFeatureEventHandlers = useCallback(
+    (message: MessageEvent<unknown>, layer: Layer) => {
+      layer.on("mouseover", () => {
+        onHover(message);
+      });
+      layer.on("mouseout", () => {
+        onHover(undefined);
+      });
+      layer.on("click", () => {
+        onClick(message);
+      });
+    },
+    [onClick, onHover],
   );
 
   /// --- the remaining code is unrelated to the extension api ----- ///
@@ -285,59 +368,44 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   // calculate center point from blocks if we don't have a center point
   useEffect(() => {
     setCenter((old) => {
-      // set center only once
-      if (old) {
-        return old;
+      if (!config.followTopic) {
+        // When not following a topic center the map from the first message at startup
+        if (old) {
+          return old;
+        }
       }
 
-      for (const messageEvent of allNavMessages) {
-        const lat = messageEvent.message.latitude;
-        const lon = messageEvent.message.longitude;
-        const point: Point = {
-          lat,
-          lon,
-        };
-
-        return point;
-      }
-
-      for (const messageEvent of navMessages) {
-        const point: Point = {
-          lat: messageEvent.message.latitude,
-          lon: messageEvent.message.longitude,
-        };
-
-        return point;
+      for (const messages of [currentNavMessages, allNavMessages]) {
+        for (const message of messages) {
+          // When re-centering to follow topic, only use the messages of the matching topic
+          if (config.followTopic && old) {
+            if (message.topic !== config.followTopic) {
+              continue;
+            }
+          }
+          return {
+            lat: message.message.latitude,
+            lon: message.message.longitude,
+          };
+        }
       }
 
       return;
     });
-  }, [allNavMessages, navMessages]);
+  }, [allNavMessages, currentNavMessages, config]);
 
   useEffect(() => {
     if (!currentMap) {
       return;
     }
 
-    // Group messages by topic to render into layers by topic
-    const messageEventsByTopic = new Map<string, MessageEvent<NavSatFixMsg>[]>();
-    for (const msgEvent of allNavMessages) {
-      const msgEvents = messageEventsByTopic.get(msgEvent.topic) ?? [];
-      msgEvents.push(msgEvent);
-      messageEventsByTopic.set(msgEvent.topic, msgEvents);
-    }
+    for (const [topic, topicLayer] of topicLayers) {
+      topicLayer.allFrames.clearLayers();
 
-    for (const [topic, events] of messageEventsByTopic) {
-      const topicLayer = topicLayers.get(topic);
-      if (!topicLayer) {
-        // If we get a message for a topic we did not subscribe to - something bad has happened.
-        // We'll pretend like it didn't happen and move along.
-        continue;
-      }
-
+      const navMessages = allNavMessages.filter((message) => message.topic === topic);
       const pointLayer = FilteredPointLayer({
         map: currentMap,
-        navSatMessageEvents: events,
+        navSatMessageEvents: navMessages,
         bounds: filterBounds ?? currentMap.getBounds(),
         color: lightColor(topicLayer.baseColor),
         hoverColor: darkColor(topicLayer.baseColor),
@@ -345,10 +413,26 @@ function MapPanel(props: MapPanelProps): JSX.Element {
         onClick,
       });
 
-      topicLayer.allFrames.clearLayers();
       topicLayer.allFrames.addLayer(pointLayer);
+
+      const geoMessages = allGeoMessages.filter((message) => message.topic === topic);
+      for (const geoMessage of geoMessages) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        geoJSON(JSON.parse(geoMessage.message.geojson), {
+          onEachFeature: (_feature, layer) => addGeoFeatureEventHandlers(geoMessage, layer),
+        }).addTo(topicLayer.allFrames);
+      }
     }
-  }, [allNavMessages, currentMap, filterBounds, onClick, onHover, topicLayers]);
+  }, [
+    addGeoFeatureEventHandlers,
+    allGeoMessages,
+    allNavMessages,
+    currentMap,
+    filterBounds,
+    onClick,
+    onHover,
+    topicLayers,
+  ]);
 
   // create a filtered marker layer for the current nav messages
   // this effect is added after the allNavMessages so the layer appears above
@@ -357,24 +441,11 @@ function MapPanel(props: MapPanelProps): JSX.Element {
       return;
     }
 
-    // Group messages by topic to render into layers by topic
-    const byTopic = new Map<string, MessageEvent<NavSatFixMsg>[]>();
-    for (const msgEvent of navMessages) {
-      const msgEvents = byTopic.get(msgEvent.topic) ?? [];
-      msgEvents.push(msgEvent);
-      byTopic.set(msgEvent.topic, msgEvents);
-    }
+    for (const [topic, topicLayer] of topicLayers) {
+      topicLayer.currentFrame.clearLayers();
 
-    for (const [topic, events] of byTopic) {
-      const topicLayer = topicLayers.get(topic);
-      if (!topicLayer) {
-        // If we get a message for a topic we did not subscribe to - something bad has happened.
-        // We'll pretend like it didn't happen and move along.
-        continue;
-      }
-
-      const noFixEvents = events.filter((ev) => !hasFix(ev));
-      const fixEvents = events.filter(hasFix);
+      const navMessages = currentNavMessages.filter((message) => message.topic === topic);
+      const [fixEvents, noFixEvents] = partition(navMessages, hasFix);
 
       const pointLayerNoFix = FilteredPointLayer({
         map: currentMap,
@@ -384,6 +455,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
         hoverColor: darkColor(topicLayer.baseColor),
         showAccuracy: true,
       });
+
       const pointLayerFix = FilteredPointLayer({
         map: currentMap,
         navSatMessageEvents: fixEvents,
@@ -393,12 +465,25 @@ function MapPanel(props: MapPanelProps): JSX.Element {
         showAccuracy: true,
       });
 
-      // clear any previous layers to only display the current frame
-      topicLayer.currentFrame.clearLayers();
       topicLayer.currentFrame.addLayer(pointLayerNoFix);
       topicLayer.currentFrame.addLayer(pointLayerFix);
+
+      const geoMessages = currentGeoMessages.filter((message) => message.topic === topic);
+      for (const geoMessage of geoMessages) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        geoJSON(JSON.parse(geoMessage.message.geojson), {
+          onEachFeature: (_feature, layer) => addGeoFeatureEventHandlers(geoMessage, layer),
+        }).addTo(topicLayer.currentFrame);
+      }
     }
-  }, [currentMap, filterBounds, navMessages, topicLayers]);
+  }, [
+    addGeoFeatureEventHandlers,
+    currentGeoMessages,
+    currentMap,
+    currentNavMessages,
+    filterBounds,
+    topicLayers,
+  ]);
 
   // create a marker for the closest gps message to our current preview time
   useEffect(() => {
@@ -407,19 +492,14 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     }
 
     // get the point occuring most recently before preview time but not after preview time
-    let event: MessageEvent<NavSatFixMsg> | undefined;
-    let stampDelta = Number.MAX_VALUE;
-    for (const msgEvent of allNavMessages) {
-      const stamp = toSec(msgEvent.receiveTime);
-      const delta = previewTime - stamp;
-      if (delta < stampDelta && delta >= 0) {
-        stampDelta = delta;
-        event = msgEvent;
-      }
-    }
+    const prevNavMessages = allNavMessages.filter(
+      (message) => toSec(message.receiveTime) < previewTime,
+    );
+    const event = minBy(prevNavMessages, (message) => previewTime - toSec(message.receiveTime));
     if (!event) {
       return;
     }
+
     const topicLayer = topicLayers.get(event.topic);
 
     const marker = new CircleMarker([event.message.latitude, event.message.longitude], {
@@ -434,7 +514,7 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     return () => {
       marker.remove();
     };
-  }, [allNavMessages, currentMap, filterBounds, previewTime, topicLayers]);
+  }, [allNavMessages, currentMap, previewTime, topicLayers]);
 
   // persist panel config on zoom changes
   useEffect(() => {
@@ -455,10 +535,8 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   }, [context, currentMap]);
 
   useEffect(() => {
-    context.saveState({
-      disabledTopics: Array.from(disabledTopics),
-    });
-  }, [context, disabledTopics]);
+    context.saveState(config);
+  }, [context, config]);
 
   // we don't want to invoke filtering on every user map move so we rate limit to 100ms
   const moveHandler = useDebouncedCallback(
@@ -486,13 +564,18 @@ function MapPanel(props: MapPanelProps): JSX.Element {
     };
   }, [currentMap, moveHandler]);
 
-  // Update the map view when centerpoint changes
+  // Update the map view to focus on the centerpoint when it changes
+  // Zoom is reset only once
+  const didResetZoomRef = useRef(false);
   useEffect(() => {
     if (!center) {
       return;
     }
 
-    currentMap?.setView([center.lat, center.lon], config.zoomLevel ?? 10);
+    // If center updates when following a topic we don't want to keep resetting the zoom.
+    const zoom = didResetZoomRef.current ? currentMap?.getZoom() : config.zoomLevel ?? 10;
+    currentMap?.setView([center.lat, center.lon], zoom);
+    didResetZoomRef.current = true;
   }, [center, config.zoomLevel, currentMap]);
 
   // Indicate render is complete - the effect runs after the dom is updated
@@ -501,13 +584,29 @@ function MapPanel(props: MapPanelProps): JSX.Element {
   }, [renderDone]);
 
   return (
-    <div ref={sizeRef} style={{ width: "100%", height: "100%" }}>
-      {!center && <EmptyState>Waiting for first GPS point...</EmptyState>}
-      <div
+    <Stack ref={sizeRef} fullHeight fullWidth position="relative">
+      {!center && (
+        <Stack
+          alignItems="center"
+          justifyContent="center"
+          position="absolute"
+          style={{ top: 0, right: 0, bottom: 0, left: 0 }}
+        >
+          Waiting for first GPS point...
+        </Stack>
+      )}
+      <Stack
+        position="absolute"
         ref={mapContainerRef}
-        style={{ width: "100%", height: "100%", visibility: center ? "visible" : "hidden" }}
+        style={{
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0,
+          visibility: center ? "visible" : "hidden",
+        }}
       />
-    </div>
+    </Stack>
   );
 }
 

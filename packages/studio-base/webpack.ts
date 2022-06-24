@@ -54,6 +54,8 @@ export function makeConfig(
   const isDev = argv.mode === "development";
   const isServe = argv.env?.WEBPACK_SERVE ?? false;
 
+  const commitHash = process.env.GITHUB_SHA ?? process.env.VERCEL_GIT_COMMIT_SHA;
+
   const { allowUnusedVariables = isDev && isServe } = options ?? {};
 
   return {
@@ -223,7 +225,12 @@ export function makeConfig(
     },
     optimization: {
       removeAvailableModules: true,
-      minimizer: [new ESBuildMinifyPlugin({ target: "es2020" })],
+      minimizer: [
+        new ESBuildMinifyPlugin({
+          target: "es2020",
+          minifyIdentifiers: false, // readable error stack traces are helpful for debugging
+        }),
+      ],
     },
     plugins: [
       new CircularDependencyPlugin({
@@ -242,6 +249,9 @@ export function makeConfig(
         // Should match webpack-defines.d.ts
         ReactNull: null, // eslint-disable-line no-restricted-syntax
         FOXGLOVE_STUDIO_VERSION: JSON.stringify(packageJson.version),
+        FOXGLOVE_USER_AGENT: JSON.stringify(
+          `studio/${packageJson.version} (commit ${commitHash ?? "??"})`,
+        ),
       }),
       // https://webpack.js.org/plugins/ignore-plugin/#example-of-ignoring-moment-locales
       new webpack.IgnorePlugin({

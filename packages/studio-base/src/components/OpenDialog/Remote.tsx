@@ -3,10 +3,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 import { TextField } from "@fluentui/react";
-import { Stack } from "@mui/material";
+import { Typography } from "@mui/material";
 import path from "path";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useMemo } from "react";
 
+import Stack from "@foxglove/studio-base/components/Stack";
 import {
   IDataSourceFactory,
   usePlayerSelection,
@@ -69,9 +70,19 @@ export default function Remote(props: RemoteProps): JSX.Element {
     });
   }, [availableSources, currentUrl, selectSource]);
 
+  const supportedExtensions = useMemo(
+    () =>
+      new Intl.ListFormat("en-US", { style: "long" }).format(
+        availableSources
+          .filter((source) => source.type === "remote-file")
+          .flatMap((source) => source.supportedFileTypes ?? []),
+      ),
+    [availableSources],
+  );
+
   return (
     <View onBack={onBack} onCancel={onCancel} onOpen={onOpen}>
-      <Stack spacing={2}>
+      <Stack gap={2}>
         <TextField
           label="Remote file URL"
           errorMessage={errorMessage}
@@ -80,6 +91,9 @@ export default function Remote(props: RemoteProps): JSX.Element {
             setCurrentUrl(newValue);
           }}
         />
+        <Typography color="text.secondary">
+          {`${supportedExtensions} files are supported.`}
+        </Typography>
       </Stack>
     </View>
   );

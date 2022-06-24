@@ -16,6 +16,7 @@ import { makeStyles } from "@mui/styles";
 
 import { MouseEventObject } from "@foxglove/regl-worldview";
 import { Time } from "@foxglove/rostime";
+import { PANEL_TOOLBAR_MIN_HEIGHT } from "@foxglove/studio-base/components/PanelToolbar";
 import CameraInfo from "@foxglove/studio-base/panels/ThreeDimensionalViz/CameraInfo";
 import Crosshair from "@foxglove/studio-base/panels/ThreeDimensionalViz/Crosshair";
 import FollowTFControl from "@foxglove/studio-base/panels/ThreeDimensionalViz/FollowTFControl";
@@ -32,7 +33,7 @@ import { MeasuringTool } from "@foxglove/studio-base/panels/ThreeDimensionalViz/
 import { PublishClickTool } from "@foxglove/studio-base/panels/ThreeDimensionalViz/PublishClickTool";
 import { PublishMarker } from "@foxglove/studio-base/panels/ThreeDimensionalViz/PublishMarker";
 import SearchText, {
-  SearchTextProps,
+  SearchTextParams,
 } from "@foxglove/studio-base/panels/ThreeDimensionalViz/SearchText";
 import {
   MouseEventHandlerProps,
@@ -41,7 +42,7 @@ import {
 
 type Props = LayoutToolbarSharedProps &
   MouseEventHandlerProps &
-  SearchTextProps & {
+  SearchTextParams & {
     autoSyncCameraState: boolean;
     config: ThreeDimensionalVizConfig;
     currentTime: Time;
@@ -61,8 +62,8 @@ type Props = LayoutToolbarSharedProps &
 const useStyles = makeStyles((theme: Theme) => ({
   controls: {
     position: "absolute",
-    top: theme.spacing(5),
-    right: theme.spacing(2),
+    top: `calc(${PANEL_TOOLBAR_MIN_HEIGHT}px + ${theme.spacing(1.5)})`,
+    right: theme.spacing(1),
     zIndex: 101,
     display: "flex",
     flexDirection: "column",

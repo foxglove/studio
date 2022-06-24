@@ -16,7 +16,7 @@ import ArrowUpDownIcon from "@mdi/svg/svg/arrow-up-down.svg";
 import FitToPageIcon from "@mdi/svg/svg/fit-to-page-outline.svg";
 import ServiceIcon from "@mdi/svg/svg/rectangle-outline.svg";
 import TopicIcon from "@mdi/svg/svg/rhombus.svg";
-import { IconButton, Paper, Theme } from "@mui/material";
+import { FormControlLabel, IconButton, Paper, Radio, RadioGroup, Theme } from "@mui/material";
 import { makeStyles } from "@mui/styles";
 import cx from "classnames";
 import Cytoscape from "cytoscape";
@@ -27,8 +27,10 @@ import EmptyState from "@foxglove/studio-base/components/EmptyState";
 import ExpandingToolbar, { ToolGroup } from "@foxglove/studio-base/components/ExpandingToolbar";
 import { useMessagePipeline } from "@foxglove/studio-base/components/MessagePipeline";
 import Panel from "@foxglove/studio-base/components/Panel";
-import PanelToolbar from "@foxglove/studio-base/components/PanelToolbar";
-import Radio from "@foxglove/studio-base/components/Radio";
+import PanelToolbar, {
+  PANEL_TOOLBAR_MIN_HEIGHT,
+} from "@foxglove/studio-base/components/PanelToolbar";
+import Stack from "@foxglove/studio-base/components/Stack";
 
 import Graph, { GraphMutation } from "./Graph";
 import helpContent from "./index.help.md";
@@ -108,7 +110,7 @@ const useStyles = makeStyles((theme: Theme) => ({
     flexDirection: "column",
     alignItems: "flex-end",
     position: "absolute",
-    top: theme.spacing(4),
+    top: `calc(${PANEL_TOOLBAR_MIN_HEIGHT}px + ${theme.spacing(1)})`,
     right: theme.spacing(1),
     zIndex: 101,
     gap: theme.spacing(1),
@@ -116,10 +118,6 @@ const useStyles = makeStyles((theme: Theme) => ({
     pointerEvents: "none",
   },
   stack: {
-    display: "flex",
-    flexDirection: "column",
-    flex: "0 0",
-
     "& > .MuiIconButton-root": {
       "&:not(:first-child)": {
         borderTopRightRadius: 0,
@@ -372,7 +370,7 @@ function TopicGraph() {
   if (publishedTopics == undefined) {
     return (
       <>
-        <PanelToolbar floating helpContent={helpContent} />
+        <PanelToolbar helpContent={helpContent} />
         <EmptyState>Waiting for data...</EmptyState>
       </>
     );
@@ -380,10 +378,10 @@ function TopicGraph() {
 
   return (
     <>
-      <PanelToolbar floating helpContent={helpContent} />
+      <PanelToolbar helpContent={helpContent} />
       <div className={classes.root}>
         <Paper square={false} elevation={4} className={classes.pointerEventsAuto}>
-          <div className={cx(classes.stack, classes.pointerEventsAuto)}>
+          <Stack flex="0 0" className={cx(classes.stack, classes.pointerEventsAuto)}>
             <IconButton title="Zoom fit" onClick={onZoomFit} className={classes.icon}>
               <FitToPageIcon />
             </IconButton>
@@ -398,7 +396,7 @@ function TopicGraph() {
             >
               <ServiceIcon />
             </IconButton>
-          </div>
+          </Stack>
         </Paper>
 
         <ExpandingToolbar
@@ -413,17 +411,17 @@ function TopicGraph() {
         >
           <ToolGroup name="Topics">
             <div className={classes.toolbarContent}>
-              <Radio
-                selectedId={topicVisibility}
-                onChange={(id) => {
+              <RadioGroup
+                defaultValue={topicVisibility}
+                onChange={(_event, value) => {
                   graph.current?.resetUserPanZoom();
-                  setTopicVisibility(id as TopicVisibility);
+                  setTopicVisibility(value as TopicVisibility);
                 }}
-                options={Object.entries(topicVisibilityToLabelMap).map(([id, label]) => ({
-                  id,
-                  label,
-                }))}
-              />
+              >
+                {Object.entries(topicVisibilityToLabelMap).map(([id, label]) => (
+                  <FormControlLabel key={id} value={id} control={<Radio />} label={label} />
+                ))}
+              </RadioGroup>
             </div>
           </ToolGroup>
         </ExpandingToolbar>

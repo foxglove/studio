@@ -14,6 +14,7 @@
 import { memoize } from "lodash";
 import memoizeWeak from "memoize-weak";
 
+import { MessagePathFilter } from "@foxglove/studio-base/components/MessagePathSyntax/constants";
 import { isTypicalFilterName } from "@foxglove/studio-base/components/MessagePathSyntax/isTypicalFilterName";
 import { quoteFieldNameIfNeeded } from "@foxglove/studio-base/components/MessagePathSyntax/parseRosPath";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
@@ -28,8 +29,25 @@ import {
   MessagePathStructureItemMessage,
 } from "./constants";
 
+const STRUCTURE_ITEM_INTEGER_TYPES = [
+  "int8",
+  "uint8",
+  "int16",
+  "uint16",
+  "int32",
+  "uint32",
+  "int64",
+  "uint64",
+];
+
 function isRosPrimitive(type: string): type is RosPrimitive {
   return rosPrimitives.includes(type as RosPrimitive);
+}
+
+function structureItemIsIntegerPrimitive(item: MessagePathStructureItem) {
+  return (
+    item.structureType === "primitive" && STRUCTURE_ITEM_INTEGER_TYPES.includes(item.primitiveType)
+  );
 }
 
 // Generate an easily navigable flat structure given some `datatypes`. We cache
@@ -64,56 +82,62 @@ export function messagePathStructures(
   }
 
   lastDatatypes = undefined;
-  const structureFor = memoize((datatype: string): MessagePathStructureItemMessage => {
-    if (datatype === "time" || datatype === "duration") {
-      return {
-        structureType: "message",
-        nextByName: {
-          sec: {
-            structureType: "primitive",
-            primitiveType: "uint32",
-            datatype: "",
+  const structureFor = memoize(
+    (datatype: string, seenDatatypes: string[]): MessagePathStructureItemMessage => {
+      if (datatype === "time" || datatype === "duration") {
+        return {
+          structureType: "message",
+          nextByName: {
+            sec: {
+              structureType: "primitive",
+              primitiveType: "uint32",
+              datatype: "",
+            },
+            nsec: {
+              structureType: "primitive",
+              primitiveType: "uint32",
+              datatype: "",
+            },
           },
-          nsec: {
-            structureType: "primitive",
-            primitiveType: "uint32",
-            datatype: "",
-          },
-        },
-        datatype,
-      };
-    }
-
-    const nextByName: Record<string, MessagePathStructureItem> = {};
-    const rosDatatype = datatypes.get(datatype);
-    if (!rosDatatype) {
-      throw new Error(`datatype not found: "${datatype}"`);
-    }
-    rosDatatype.definitions.forEach((msgField) => {
-      if (msgField.isConstant === true) {
-        return;
+          datatype,
+        };
       }
 
-      const next: MessagePathStructureItem = isRosPrimitive(msgField.type)
-        ? {
-            structureType: "primitive",
-            primitiveType: msgField.type,
-            datatype,
-          }
-        : structureFor(msgField.type);
-
-      if (msgField.isArray === true) {
-        nextByName[msgField.name] = { structureType: "array", next, datatype };
-      } else {
-        nextByName[msgField.name] = next;
+      const nextByName: Record<string, MessagePathStructureItem> = {};
+      const rosDatatype = datatypes.get(datatype);
+      if (!rosDatatype) {
+        throw new Error(`datatype not found: "${datatype}"`);
       }
-    });
-    return { structureType: "message", nextByName, datatype };
-  });
+      rosDatatype.definitions.forEach((msgField) => {
+        if (msgField.isConstant === true) {
+          return;
+        }
+
+        if (seenDatatypes.includes(msgField.type)) {
+          return;
+        }
+
+        const next: MessagePathStructureItem = isRosPrimitive(msgField.type)
+          ? {
+              structureType: "primitive",
+              primitiveType: msgField.type,
+              datatype,
+            }
+          : structureFor(msgField.type, [...seenDatatypes, msgField.type]);
+
+        if (msgField.isArray === true) {
+          nextByName[msgField.name] = { structureType: "array", next, datatype };
+        } else {
+          nextByName[msgField.name] = next;
+        }
+      });
+      return { structureType: "message", nextByName, datatype };
+    },
+  );
 
   lastStructures = {};
   for (const [datatype] of datatypes) {
-    lastStructures[datatype] = structureFor(datatype);
+    lastStructures[datatype] = structureFor(datatype, []);
   }
   lastDatatypes = datatypes; // Set at the very end, in case there's an error earlier.
   return lastStructures;
@@ -121,7 +145,7 @@ export function messagePathStructures(
 
 export function validTerminatingStructureItem(
   structureItem?: MessagePathStructureItem,
-  validTypes?: string[],
+  validTypes?: readonly string[],
 ): boolean {
   return (
     !!structureItem &&
@@ -143,7 +167,7 @@ export function messagePathsForDatatype(
     noMultiSlices,
     messagePath = [],
   }: {
-    validTypes?: string[];
+    validTypes?: readonly string[];
     noMultiSlices?: boolean;
     messagePath?: MessagePathPart[];
   } = {},
@@ -163,33 +187,37 @@ export function messagePathsForDatatype(
         // When we have an array of messages, you probably want to filter on
         // some field, like `/topic.object{some_id=123}`. If we can't find a
         // typical filter name, fall back to `/topic.object[0]`.
-        const typicalFilterName = Object.keys(structureItem.next.nextByName).find((key) =>
-          isTypicalFilterName(key),
+        const typicalFilterItem = Object.entries(structureItem.next.nextByName).find(([name]) =>
+          isTypicalFilterName(name),
         );
-        if (typicalFilterName != undefined) {
+        if (typicalFilterItem) {
+          const [typicalFilterName, typicalFilterValue] = typicalFilterItem;
+
           // Find matching filter from clonedMessagePath
           const matchingFilterPart = clonedMessagePath.find(
-            (pathPart) => pathPart.type === "filter" && pathPart.path[0] === typicalFilterName,
-          );
-
-          // Remove the matching filter from clonedMessagePath, for future searches
-          clonedMessagePath = clonedMessagePath.filter(
-            (pathPart) => pathPart !== matchingFilterPart,
+            (pathPart): pathPart is MessagePathFilter =>
+              pathPart.type === "filter" && pathPart.path[0] === typicalFilterName,
           );
 
           // Format the displayed filter value
-          const filterVal =
-            matchingFilterPart &&
-            matchingFilterPart.type === "filter" &&
-            matchingFilterPart.value != undefined
-              ? matchingFilterPart.value
-              : 0;
-          traverse(
-            structureItem.next,
-            `${builtString}[:]{${typicalFilterName}==${
-              typeof filterVal === "object" ? `$${filterVal.variableName}` : filterVal
-            }}`,
-          );
+          if (matchingFilterPart) {
+            // Remove the matching filter from clonedMessagePath, for future searches
+            clonedMessagePath = clonedMessagePath.filter(
+              (pathPart) => pathPart !== matchingFilterPart,
+            );
+            traverse(
+              structureItem.next,
+              `${builtString}[:]{${typicalFilterName}==${
+                typeof matchingFilterPart.value === "object"
+                  ? `$${matchingFilterPart.value.variableName}`
+                  : matchingFilterPart.value
+              }}`,
+            );
+          } else if (structureItemIsIntegerPrimitive(typicalFilterValue)) {
+            traverse(structureItem.next, `${builtString}[:]{${typicalFilterName}==0}`);
+          } else {
+            traverse(structureItem.next, `${builtString}[0]`);
+          }
         } else {
           traverse(structureItem.next, `${builtString}[0]`);
         }
