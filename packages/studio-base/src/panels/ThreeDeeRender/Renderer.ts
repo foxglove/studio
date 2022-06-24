@@ -211,7 +211,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.gl.setSize(width, height);
     }
 
-    this.modelCache = new ModelCache({ ignoreColladaUpAxis: true });
+    this.modelCache = new ModelCache({
+      ignoreColladaUpAxis: true,
+      edgeMaterial: this.materialCache.outlineMaterial,
+    });
 
     this.scene = new THREE.Scene();
     this.scene.add(this.labels);
