@@ -30,6 +30,7 @@ import Settings from "@mui/icons-material/Settings";
 import Share from "@mui/icons-material/Share";
 import SouthEast from "@mui/icons-material/SouthEast";
 import Star from "@mui/icons-material/StarOutline";
+import Timeline from "@mui/icons-material/Timeline";
 import Topic from "@mui/icons-material/Topic";
 import Collapse from "@mui/icons-material/UnfoldLess";
 import Expand from "@mui/icons-material/UnfoldMore";
@@ -71,6 +72,7 @@ const icons: Record<SettingsIcon, typeof Add> = {
   Share,
   Star,
   SouthEast,
+  Timeline,
   Topic,
   Walk,
   World,

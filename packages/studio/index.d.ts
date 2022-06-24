@@ -345,6 +345,7 @@ declare module "@foxglove/studio" {
     | "Share"
     | "Star"
     | "SouthEast"
+    | "Timeline"
     | "Topic"
     | "Walk"
     | "World";
