@@ -258,6 +258,79 @@ export const PointCloudColor = {
   },
 };
 
+export const LaserScanPoints = {
+  id: (
+    shape: "circle" | "square",
+    encoding: "srgb" | "linear",
+    scale: number,
+    transparent: boolean,
+  ): string => `LaserScan-${shape}-${encoding}-${scale}${transparent ? "-t" : ""}`,
+
+  create: (
+    shape: "circle" | "square",
+    encoding: "srgb" | "linear",
+    scale: number,
+    transparent: boolean,
+  ): THREE.ShaderMaterial => {
+    const material = new THREE.RawShaderMaterial({
+      vertexShader: `#version 300 es
+        precision highp float;
+        precision highp int;
+        uniform mat4 projectionMatrix, modelViewMatrix;
+
+        uniform float pointSize;
+        uniform float angleMin;
+        uniform float angleIncrement;
+        in float position;
+        in mediump vec4 color;
+        out mediump vec4 vColor;
+        void main() {
+          vColor = color;
+          float angle = angleMin + angleIncrement * float(gl_VertexID);
+          vec4 pos = vec4(position * cos(angle), position * sin(angle), 0, 1.0);
+          gl_Position = projectionMatrix * modelViewMatrix * pos;
+          gl_PointSize = pointSize;
+          gl_Position = vec4(0, 0, 100.0, 1.0);
+          gl_PointSize = 5.0;
+        }
+      `,
+      fragmentShader: `#version 300 es
+        in mediump vec4 vColor;
+        out mediump vec4 outColor;
+        void main() {
+          outColor = vColor;
+          outColor = vec4(1.0, 0.0, 0.0, 1.0);
+        }
+      `,
+    });
+    material.name = LaserScanPoints.id(shape, encoding, scale, transparent);
+    material.transparent = transparent;
+    material.depthWrite = !transparent;
+    // Tell three.js to recompile the shader when `shape` or `encoding` change
+    material.customProgramCacheKey = () => `${shape}-${encoding}`;
+    material.onBeforeCompile = (shader) => {
+      const SEARCH = "#include <output_fragment>";
+      if (shape === "circle") {
+        // Patch the fragment shader to render points as circles
+        shader.fragmentShader =
+          FS_SRGB_TO_LINEAR + shader.fragmentShader.replace(SEARCH, FS_POINTCLOUD_CIRCLE + SEARCH);
+      }
+      if (encoding === "srgb") {
+        // Patch the fragment shader to add sRGB->linear color conversion
+        shader.fragmentShader = shader.fragmentShader.replace(
+          SEARCH,
+          FS_POINTCLOUD_SRGB_TO_LINEAR + SEARCH,
+        );
+      }
+    };
+    return material;
+  },
+
+  dispose: (material: THREE.ShaderMaterial): void => {
+    material.dispose();
+  },
+};
+
 export const LineVertexColorPrepass = {
   id: (lineWidth: number, transparent: boolean): string =>
     `LineVertexColorPrepass-${lineWidth.toFixed(4)}${transparent ? "-t" : ""}`,
