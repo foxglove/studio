@@ -13,7 +13,7 @@ import { Renderer } from "../Renderer";
 import { SceneExtension } from "../SceneExtension";
 import { SettingsTreeEntry } from "../SettingsManager";
 import { BaseSettings } from "../settings";
-import { Duration, Transform, makePose, CoordinateFrame, INFINITE_DURATION } from "../transforms";
+import { Duration, Transform, makePose, CoordinateFrame, MAX_DURATION } from "../transforms";
 import { AxisRenderable } from "./AxisRenderable";
 import { linePickingMaterial, releaseLinePickingMaterial } from "./markers/materials";
 
@@ -207,7 +207,7 @@ function buildSettingsFields(
   }
 
   if (currentTime != undefined && frame) {
-    if (frame.findClosestTransforms(tempLower, tempUpper, currentTime, INFINITE_DURATION)) {
+    if (frame.findClosestTransforms(tempLower, tempUpper, currentTime, MAX_DURATION)) {
       const [transformTime, transform] = tempUpper;
       ageValue =
         transformTime < currentTime ? formatShortDuration(currentTime - transformTime) : "0 ns";
