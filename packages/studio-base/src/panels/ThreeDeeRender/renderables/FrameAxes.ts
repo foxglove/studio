@@ -203,7 +203,7 @@ function buildSettingsFields(
   const parentFrameId = frame?.parent()?.id;
 
   if (parentFrameId == undefined) {
-    return { parent: { label: "Parent", input: "string", value: "<root>" } };
+    return { parent: { label: "Parent", input: "string", readonly: true, value: "<root>" } };
   }
 
   if (currentTime != undefined && frame) {
@@ -228,25 +228,30 @@ function buildSettingsFields(
     parent: {
       label: "Parent",
       input: "string",
+      readonly: true,
       value: parentFrameId,
     },
     age: {
       label: "Age",
       input: "string",
+      readonly: true,
       value: ageValue,
     },
     xyz: {
       label: "Translation",
       input: "vec3",
-      value: xyzValue,
       precision: 3,
       labels: ["X", "Y", "Z"],
+      readonly: true,
+      value: xyzValue,
     },
     rpy: {
       label: "Rotation",
       input: "vec3",
-      value: rpyValue,
+      precision: 3,
       labels: ["R", "P", "Y"],
+      readonly: true,
+      value: rpyValue,
     },
   };
 }
