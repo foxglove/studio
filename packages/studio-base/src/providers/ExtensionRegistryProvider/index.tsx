@@ -8,6 +8,7 @@ import { useAsyncFn } from "react-use";
 import Logger from "@foxglove/log";
 import ExtensionRegistryContext from "@foxglove/studio-base/context/ExtensionRegistryContext";
 import {
+  ExtensionInfo,
   ExtensionLoader,
   ExtensionNamespace,
 } from "@foxglove/studio-base/services/ExtensionLoader";
@@ -16,6 +17,8 @@ import { useExtensionLoaders } from "./loaders";
 import { useExtensionPanels } from "./panels";
 
 const log = Logger.getLogger(__filename);
+
+const NO_EXTENSIONS: ExtensionInfo[] = [];
 
 export default function ExtensionRegistryProvider(
   props: PropsWithChildren<{ loaders: readonly ExtensionLoader[] }>,
@@ -28,7 +31,10 @@ export default function ExtensionRegistryProvider(
     return extensionList;
   }, [extensionLoaders]);
 
-  const registeredPanels = useExtensionPanels(registeredExtensions.value ?? [], extensionLoaders);
+  const registeredPanels = useExtensionPanels(
+    registeredExtensions.value ?? NO_EXTENSIONS,
+    extensionLoaders,
+  );
 
   useEffect(() => {
     refreshExtensions().catch((error) => log.error(error));
@@ -46,7 +52,7 @@ export default function ExtensionRegistryProvider(
       refreshExtensions: async () => {
         await refreshExtensions();
       },
-      registeredExtensions: registeredExtensions.value ?? [],
+      registeredExtensions: registeredExtensions.value ?? NO_EXTENSIONS,
       registeredPanels: registeredPanels.value ?? {},
       uninstallExtension: async (id: string) => {
         const result = await extensionLoaders.uninstallExtension(id);
