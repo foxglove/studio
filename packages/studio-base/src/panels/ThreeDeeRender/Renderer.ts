@@ -39,7 +39,7 @@ import { Grids } from "./renderables/Grids";
 import { Images } from "./renderables/Images";
 import { Markers } from "./renderables/Markers";
 import { OccupancyGrids } from "./renderables/OccupancyGrids";
-import { PointCloudsAndLaserScans } from "./renderables/PointClouds";
+import { PointCloudsAndLaserScans } from "./renderables/PointCloudsAndLaserScans";
 import { Polygons } from "./renderables/Polygons";
 import { PoseArrays } from "./renderables/PoseArrays";
 import { Poses } from "./renderables/Poses";

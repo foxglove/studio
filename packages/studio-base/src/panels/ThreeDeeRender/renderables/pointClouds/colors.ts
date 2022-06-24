@@ -7,7 +7,7 @@ import * as THREE from "three";
 import { rgbaGradient, rgbaToLinear, SRGBToLinear, stringToRgba } from "../../color";
 import { clamp } from "../../math";
 import type { ColorRGBA } from "../../ros";
-import type { LayerSettingsPointCloudAndLaserScan } from "../PointClouds";
+import type { LayerSettingsPointCloudAndLaserScan } from "../PointCloudsAndLaserScans";
 
 export type ColorConverter = (output: ColorRGBA, colorValue: number) => void;
 
