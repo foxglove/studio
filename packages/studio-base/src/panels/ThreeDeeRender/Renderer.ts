@@ -117,6 +117,10 @@ const PI_2 = Math.PI / 2;
 // Coordinate frames named in [REP-105](https://www.ros.org/reps/rep-0105.html)
 const DEFAULT_FRAME_IDS = ["base_link", "odom", "map", "earth"];
 
+const FOLLOW_TF_PATH = ["general", "followTf"];
+const NO_FRAME_SELECTED = "NO_FRAME_SELECTED";
+const FRAME_NOT_FOUND = "FRAME_NOT_FOUND";
+
 // An extensionId for injecting the "Custom Layers" node and its menu actions
 const CUSTOM_LAYERS_ID = "foxglove.CustomLayers";
 
@@ -678,6 +682,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
       this.renderFrameId = this.defaultFrameId();
 
       if (this.renderFrameId == undefined) {
+        this.settings.errors.add(FOLLOW_TF_PATH, NO_FRAME_SELECTED, `No frame selected`);
         this.fixedFrameId = undefined;
         return;
       } else {
@@ -688,6 +693,11 @@ export class Renderer extends EventEmitter<RendererEvents> {
     const frame = this.transformTree.frame(this.renderFrameId);
     if (!frame) {
       this.fixedFrameId = undefined;
+      this.settings.errors.add(
+        FOLLOW_TF_PATH,
+        FRAME_NOT_FOUND,
+        `Frame "${this.renderFrameId}" not found`,
+      );
       return;
     }
 
@@ -700,6 +710,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
       }
       this.fixedFrameId = rootFrameId;
     }
+
+    this.settings.errors.clearPath(FOLLOW_TF_PATH);
   }
 }
 
