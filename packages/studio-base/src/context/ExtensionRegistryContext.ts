@@ -6,7 +6,7 @@ import { createContext, useContext } from "react";
 import { DeepReadonly } from "ts-essentials";
 
 import { ExtensionPanelRegistration } from "@foxglove/studio";
-import { ExtensionInfo } from "@foxglove/studio-base/context/ExtensionLoaderContext";
+import { ExtensionInfo } from "@foxglove/studio-base/services/ExtensionLoader";
 
 export type RegisteredPanel = {
   extensionName: string;

@@ -5,39 +5,11 @@
 import { createContext, useCallback, useContext, useMemo } from "react";
 
 import Logger from "@foxglove/log";
-
-export type ExtensionInfo = {
-  id: string;
-  description: string;
-  displayName: string;
-  homepage: string;
-  keywords: string[];
-  license: string;
-  name: string;
-  namespace?: string;
-  publisher: string;
-  qualifiedName: string;
-  version: string;
-};
-
-export type ExtensionNamespace = "local" | "private";
-
-export interface ExtensionLoader {
-  readonly namespace: ExtensionNamespace;
-
-  // get a list of installed extensions
-  getExtensions(): Promise<ExtensionInfo[]>;
-
-  // load the source code for a specific extension
-  loadExtension(id: string): Promise<string>;
-
-  // install extension contained within the file data
-  installExtension(foxeFileData: Uint8Array): Promise<ExtensionInfo>;
-
-  // uninstall extension with id
-  // return true if the extension was found and uninstalled, false if not found
-  uninstallExtension(id: string): Promise<boolean>;
-}
+import {
+  ExtensionInfo,
+  ExtensionLoader,
+  ExtensionNamespace,
+} from "@foxglove/studio-base/services/ExtensionLoader";
 
 const log = Logger.getLogger(__filename);
 
