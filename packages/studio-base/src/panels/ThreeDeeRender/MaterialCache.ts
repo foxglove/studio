@@ -273,33 +273,39 @@ export const LaserScanPoints = {
     transparent: boolean,
   ): THREE.ShaderMaterial => {
     const material = new THREE.RawShaderMaterial({
-      vertexShader: `#version 300 es
+      vertexShader: `\
+        #version 300 es
         precision highp float;
         precision highp int;
         uniform mat4 projectionMatrix, modelViewMatrix;
 
         uniform float pointSize;
-        uniform float angleMin;
-        uniform float angleIncrement;
-        in float position;
+        uniform float angleMin, angleIncrement;
+        uniform float rangeMin, rangeMax;
+        in float position; // range, but must be named position in order for three.js to render anything
         in mediump vec4 color;
         out mediump vec4 vColor;
         void main() {
+          if (position < rangeMin || position > rangeMax) {
+            gl_Position = vec4(0.0/0.0);
+            gl_PointSize = 0.0;
+            return;
+          }
           vColor = color;
           float angle = angleMin + angleIncrement * float(gl_VertexID);
           vec4 pos = vec4(position * cos(angle), position * sin(angle), 0, 1.0);
           gl_Position = projectionMatrix * modelViewMatrix * pos;
           gl_PointSize = pointSize;
-          gl_Position = vec4(0, 0, 100.0, 1.0);
-          gl_PointSize = 5.0;
         }
       `,
-      fragmentShader: `#version 300 es
-        in mediump vec4 vColor;
-        out mediump vec4 outColor;
+      fragmentShader: `\
+        #version 300 es
+        precision mediump float;
+        in vec4 vColor;
+        out vec4 outColor;
         void main() {
+          ${shape === "circle" ? FS_POINTCLOUD_CIRCLE : ""}
           outColor = vColor;
-          outColor = vec4(1.0, 0.0, 0.0, 1.0);
         }
       `,
     });
@@ -308,21 +314,21 @@ export const LaserScanPoints = {
     material.depthWrite = !transparent;
     // Tell three.js to recompile the shader when `shape` or `encoding` change
     material.customProgramCacheKey = () => `${shape}-${encoding}`;
-    material.onBeforeCompile = (shader) => {
-      const SEARCH = "#include <output_fragment>";
-      if (shape === "circle") {
-        // Patch the fragment shader to render points as circles
-        shader.fragmentShader =
-          FS_SRGB_TO_LINEAR + shader.fragmentShader.replace(SEARCH, FS_POINTCLOUD_CIRCLE + SEARCH);
-      }
-      if (encoding === "srgb") {
-        // Patch the fragment shader to add sRGB->linear color conversion
-        shader.fragmentShader = shader.fragmentShader.replace(
-          SEARCH,
-          FS_POINTCLOUD_SRGB_TO_LINEAR + SEARCH,
-        );
-      }
-    };
+    // material.onBeforeCompile = (shader) => {
+    //   const SEARCH = "#include <output_fragment>";
+    //   if (shape === "circle") {
+    //     // Patch the fragment shader to render points as circles
+    //     shader.fragmentShader =
+    //       FS_SRGB_TO_LINEAR + shader.fragmentShader.replace(SEARCH, FS_POINTCLOUD_CIRCLE + SEARCH);
+    //   }
+    //   if (encoding === "srgb") {
+    //     // Patch the fragment shader to add sRGB->linear color conversion
+    //     shader.fragmentShader = shader.fragmentShader.replace(
+    //       SEARCH,
+    //       FS_POINTCLOUD_SRGB_TO_LINEAR + SEARCH,
+    //     );
+    //   }
+    // };
     return material;
   },
 

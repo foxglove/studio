@@ -493,7 +493,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     renderable.userData.laserScan = laserScan;
 
     const settings = renderable.userData.settings;
-    const { colorField } = settings;
+    const { colorField, pointSize } = settings;
     const { intensities, ranges } = laserScan;
 
     // Invalid laser scan checks
@@ -520,7 +520,16 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     (renderable.userData.points.material as THREE.ShaderMaterial).uniforms.angleIncrement = {
       value: laserScan.angle_increment,
     };
+    (renderable.userData.points.material as THREE.ShaderMaterial).uniforms.rangeMin = {
+      value: laserScan.range_min,
+    };
+    (renderable.userData.points.material as THREE.ShaderMaterial).uniforms.rangeMax = {
+      value: laserScan.range_max,
+    };
     (renderable.userData.points.material as THREE.ShaderMaterial).uniformsNeedUpdate = true;
+    (renderable.userData.points.material as THREE.ShaderMaterial).uniforms.pointSize = {
+      value: pointSize,
+    };
 
     // Determine min/max color values (if needed)
     let minColorValue = settings.minValue ?? Number.POSITIVE_INFINITY;
@@ -895,7 +904,12 @@ function settingsNode(
     };
   }
 
-  return { icon: "Points", fields, order: topic.name.toLocaleLowerCase() };
+  return {
+    icon: kind === "pointcloud" ? "Points" : "Radar",
+    fields,
+    order: topic.name.toLocaleLowerCase(),
+    visible: config.visible ?? true,
+  };
 }
 
 function pointFieldTypeName(type: PointFieldType): string {
