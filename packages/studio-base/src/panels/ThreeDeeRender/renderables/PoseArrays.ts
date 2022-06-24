@@ -174,7 +174,7 @@ export class PoseArrays extends SceneExtension<PoseArrayRenderable> {
           path: ["topics", topic.name],
           node: {
             label: topic.name,
-            icon: "Flag",
+            icon: NAV_PATH_DATATYPES.has(topic.datatype) ? "Timeline" : "Flag",
             fields,
             visible: config.visible ?? true,
             handler,
