@@ -2,21 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-export type ExtensionInfo = {
-  id: string;
-  description: string;
-  displayName: string;
-  homepage: string;
-  keywords: string[];
-  license: string;
-  name: string;
-  namespace?: string;
-  publisher: string;
-  qualifiedName: string;
-  version: string;
-};
-
-export type ExtensionNamespace = "local" | "private";
+import { ExtensionInfo, ExtensionNamespace } from "@foxglove/studio-base/types/Extensions";
 
 export interface ExtensionLoader {
   readonly namespace: ExtensionNamespace;

@@ -9,7 +9,8 @@ import { AsyncState } from "react-use/lib/useAsyncFn";
 import Logger from "@foxglove/log";
 import { ExtensionContext, ExtensionModule } from "@foxglove/studio";
 import { RegisteredPanel } from "@foxglove/studio-base/context/ExtensionRegistryContext";
-import { ExtensionInfo, ExtensionLoader } from "@foxglove/studio-base/services/ExtensionLoader";
+import { ExtensionLoader } from "@foxglove/studio-base/services/ExtensionLoader";
+import { ExtensionInfo } from "@foxglove/studio-base/types/Extensions";
 
 const log = Logger.getLogger(__filename);
 

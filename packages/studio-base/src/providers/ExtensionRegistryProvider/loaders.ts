@@ -5,11 +5,8 @@
 import { useCallback, useMemo } from "react";
 
 import Logger from "@foxglove/log";
-import {
-  ExtensionInfo,
-  ExtensionLoader,
-  ExtensionNamespace,
-} from "@foxglove/studio-base/services/ExtensionLoader";
+import { ExtensionLoader } from "@foxglove/studio-base/services/ExtensionLoader";
+import { ExtensionInfo, ExtensionNamespace } from "@foxglove/studio-base/types/Extensions";
 
 type AggregateExtensionLoader = Omit<ExtensionLoader, "namespace" | "installExtension"> & {
   downloadExtension(url: string): Promise<Uint8Array>;

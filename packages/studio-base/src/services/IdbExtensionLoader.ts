@@ -5,12 +5,9 @@
 import JSZip from "jszip";
 
 import Log from "@foxglove/log";
-import {
-  ExtensionInfo,
-  ExtensionLoader,
-  ExtensionNamespace,
-} from "@foxglove/studio-base/services/ExtensionLoader";
+import { ExtensionLoader } from "@foxglove/studio-base/services/ExtensionLoader";
 import { IExtensionStorage } from "@foxglove/studio-base/services/IExtensionStorage";
+import { ExtensionInfo, ExtensionNamespace } from "@foxglove/studio-base/types/Extensions";
 
 import { IdbExtensionStorage } from "./IdbExtensionStorage";
 

@@ -13,13 +13,13 @@
 
 import { useState } from "react";
 
+import { ExtensionInfo, ExtensionLoader } from "@foxglove/studio-base";
 import ExtensionsSidebar from "@foxglove/studio-base/components/ExtensionsSidebar";
 import AppConfigurationContext from "@foxglove/studio-base/context/AppConfigurationContext";
 import ExtensionMarketplaceContext, {
   ExtensionMarketplace,
 } from "@foxglove/studio-base/context/ExtensionMarketplaceContext";
 import ExtensionRegistryProvider from "@foxglove/studio-base/providers/ExtensionRegistryProvider";
-import { ExtensionInfo, ExtensionLoader } from "@foxglove/studio-base/services/ExtensionLoader";
 import { makeMockAppConfiguration } from "@foxglove/studio-base/util/makeMockAppConfiguration";
 
 export default {

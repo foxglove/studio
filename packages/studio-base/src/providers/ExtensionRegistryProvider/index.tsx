@@ -7,11 +7,8 @@ import { useAsyncFn } from "react-use";
 
 import Logger from "@foxglove/log";
 import ExtensionRegistryContext from "@foxglove/studio-base/context/ExtensionRegistryContext";
-import {
-  ExtensionInfo,
-  ExtensionLoader,
-  ExtensionNamespace,
-} from "@foxglove/studio-base/services/ExtensionLoader";
+import { ExtensionLoader } from "@foxglove/studio-base/services/ExtensionLoader";
+import { ExtensionInfo, ExtensionNamespace } from "@foxglove/studio-base/types/Extensions";
 
 import { useExtensionLoaders } from "./loaders";
 import { useExtensionPanels } from "./panels";
