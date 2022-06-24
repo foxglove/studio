@@ -289,7 +289,6 @@ export const LaserScanPoints = {
         out mediump vec4 vColor;
         void main() {
           if (position < rangeMin || position > rangeMax) {
-            gl_Position = vec4(0.0/0.0);
             gl_PointSize = 0.0;
             return;
           }

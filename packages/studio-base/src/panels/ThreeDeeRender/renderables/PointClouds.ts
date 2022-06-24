@@ -86,6 +86,8 @@ export type PointCloudAndLaserScanUserData = BaseUserData & {
   laserScan?: LaserScan;
   geometry: DynamicBufferGeometry<Float32Array, Float32ArrayConstructor>;
   points: THREE.Points;
+  pointCloudMaterial?: THREE.PointsMaterial;
+  laserScanMaterial?: THREE.ShaderMaterial;
   pickingMaterial: THREE.ShaderMaterial;
 };
 
@@ -151,20 +153,18 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
         | undefined;
       renderable.userData.settings = { ...renderable.userData.settings, ...settings };
       if (renderable.userData.pointCloud) {
-        renderable.userData.points.material = pointCloudMaterial(
-          renderable.userData.settings,
-          this.renderer.materialCache,
-        );
+        renderable.userData.laserScanMaterial = undefined;
+        renderable.userData.points.material = renderable.userData.pointCloudMaterial =
+          pointCloudMaterial(renderable.userData.settings, this.renderer.materialCache);
         this._updatePointCloudRenderable(
           renderable,
           renderable.userData.pointCloud,
           renderable.userData.receiveTime,
         );
       } else if (renderable.userData.laserScan) {
-        renderable.userData.points.material = laserScanMaterial(
-          renderable.userData.settings,
-          this.renderer.materialCache,
-        );
+        renderable.userData.pointCloudMaterial = undefined;
+        renderable.userData.points.material = renderable.userData.laserScanMaterial =
+          laserScanMaterial(renderable.userData.settings, this.renderer.materialCache);
         this._updateLaserScanRenderable(
           renderable,
           renderable.userData.laserScan,
@@ -222,6 +222,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
         pointCloud,
         geometry,
         points,
+        pointCloudMaterial: material,
         pickingMaterial,
       });
       renderable.add(points);
@@ -470,6 +471,8 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
         laserScan,
         geometry,
         points,
+        pointCloudMaterial: undefined,
+        laserScanMaterial: material,
         pickingMaterial,
       });
       renderable.add(points);
@@ -514,22 +517,14 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     const colorAttribute = geometry.attributes.color!;
     rangeAttribute.set(ranges);
 
-    (renderable.userData.points.material as THREE.ShaderMaterial).uniforms.angleMin = {
-      value: laserScan.angle_min,
-    };
-    (renderable.userData.points.material as THREE.ShaderMaterial).uniforms.angleIncrement = {
-      value: laserScan.angle_increment,
-    };
-    (renderable.userData.points.material as THREE.ShaderMaterial).uniforms.rangeMin = {
-      value: laserScan.range_min,
-    };
-    (renderable.userData.points.material as THREE.ShaderMaterial).uniforms.rangeMax = {
-      value: laserScan.range_max,
-    };
-    (renderable.userData.points.material as THREE.ShaderMaterial).uniformsNeedUpdate = true;
-    (renderable.userData.points.material as THREE.ShaderMaterial).uniforms.pointSize = {
-      value: pointSize,
-    };
+    const material = renderable.userData.laserScanMaterial!;
+    for (const mat of [material, renderable.userData.pickingMaterial]) {
+      mat.uniforms.angleMin = { value: laserScan.angle_min };
+      mat.uniforms.angleIncrement = { value: laserScan.angle_increment };
+      mat.uniforms.rangeMin = { value: laserScan.range_min };
+      mat.uniforms.rangeMax = { value: laserScan.range_max };
+      mat.uniforms.pointSize = { value: pointSize };
+    }
 
     // Determine min/max color values (if needed)
     let minColorValue = settings.minValue ?? Number.POSITIVE_INFINITY;
@@ -649,18 +644,36 @@ function createLaserScanPickingMaterial(
   // Use a custom shader for picking that sets a minimum point size to make
   // individual points easier to click on
   const pointSize = Math.max(settings.pointSize, MIN_PICKING_POINT_SIZE);
-  return new THREE.ShaderMaterial({
-    vertexShader: /* glsl */ `
+  return new THREE.RawShaderMaterial({
+    vertexShader: /* glsl */ `\
+      #version 300 es
+      precision highp float;
+      precision highp int;
+      uniform mat4 projectionMatrix, modelViewMatrix;
+
       uniform float pointSize;
+      uniform float angleMin, angleIncrement;
+      uniform float rangeMin, rangeMax;
+      in float position; // range, but must be named position in order for three.js to render anything
+      in mediump vec4 color;
       void main() {
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        if (position < rangeMin || position > rangeMax) {
+          gl_PointSize = 0.0;
+          return;
+        }
+        float angle = angleMin + angleIncrement * float(gl_VertexID);
+        vec4 pos = vec4(position * cos(angle), position * sin(angle), 0, 1.0);
+        gl_Position = projectionMatrix * modelViewMatrix * pos;
         gl_PointSize = pointSize;
       }
     `,
-    fragmentShader: /* glsl */ `
+    fragmentShader: /* glsl */ `\
+      #version 300 es
+      precision highp float;
       uniform vec4 objectId;
+      out vec4 outColor;
       void main() {
-        gl_FragColor = objectId;
+        outColor = objectId;
       }
     `,
     side: THREE.DoubleSide,
@@ -986,8 +999,8 @@ function normalizeLaserScan(message: PartialMessage<LaserScan>): LaserScan {
     angle_increment: message.angle_increment ?? 0,
     time_increment: message.time_increment ?? 0,
     scan_time: message.scan_time ?? 0,
-    range_min: message.range_min ?? 0,
-    range_max: message.range_max ?? 0,
+    range_min: message.range_min ?? -Infinity,
+    range_max: message.range_max ?? Infinity,
     ranges: normalizeFloat32Array(message.ranges),
     intensities: normalizeFloat32Array(message.intensities),
   };
