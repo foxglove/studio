@@ -137,6 +137,7 @@ export class Renderer extends EventEmitter<RendererEvents> {
   config: Immutable<RendererConfig>;
   settings: SettingsManager;
   topics: ReadonlyArray<Topic> | undefined;
+  topicsByName: ReadonlyMap<string, Topic> | undefined;
   // extensionId -> SceneExtension
   sceneExtensions = new Map<string, SceneExtension>();
   // datatype -> handler[]
@@ -401,6 +402,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
     const changed = this.topics !== topics;
     this.topics = topics;
     if (changed) {
+      // Rebuild topicsByName
+      this.topicsByName = topics ? new Map(topics.map((topic) => [topic.name, topic])) : undefined;
+
       // Rebuild the settings nodes for all scene extensions
       for (const extension of this.sceneExtensions.values()) {
         this.settings.setNodesForKey(extension.extensionId, extension.settingsNodes());

@@ -230,7 +230,7 @@ export const PointCloudColor = {
     });
     material.name = PointCloudColor.id(shape, encoding, scale, transparent);
     material.transparent = transparent;
-    material.depthWrite = !transparent;
+    material.depthWrite = true;
     // Tell three.js to recompile the shader when `shape` or `encoding` change
     material.customProgramCacheKey = () => `${shape}-${encoding}`;
     material.onBeforeCompile = (shader) => {
