@@ -22,7 +22,6 @@ import { SidebarContent } from "@foxglove/studio-base/components/SidebarContent"
 import Stack from "@foxglove/studio-base/components/Stack";
 import TextContent from "@foxglove/studio-base/components/TextContent";
 import { useAnalytics } from "@foxglove/studio-base/context/AnalyticsContext";
-import { useExtensionLoader } from "@foxglove/studio-base/context/ExtensionLoaderContext";
 import {
   ExtensionMarketplaceDetail,
   useExtensionMarketplace,
@@ -43,14 +42,12 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
   const [isInstalled, setIsInstalled] = useState(installed);
   const [activeTab, setActiveTab] = useState<number>(0);
   const isMounted = useMountedState();
-  const extensionLoader = useExtensionLoader();
+  const extensionRegistry = useExtensionRegistry();
   const marketplace = useExtensionMarketplace();
   const { addToast } = useToasts();
   const readmeUrl = extension.readme;
   const changelogUrl = extension.changelog;
   const canInstall = extension.foxe != undefined;
-
-  const refreshExtensions = useExtensionRegistry().refreshExtensions;
 
   const { value: readmeContent } = useAsync(
     async () => (readmeUrl != undefined ? await marketplace.getMarkdown(readmeUrl) : ""),
@@ -74,11 +71,10 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
       if (url == undefined) {
         throw new Error(`Cannot install extension ${extension.id}, "foxe" URL is missing`);
       }
-      const data = await extensionLoader.downloadExtension(url);
-      await extensionLoader.installExtension("local", data);
+      const data = await extensionRegistry.downloadExtension(url);
+      await extensionRegistry.installExtension("local", data);
       if (isMounted()) {
         setIsInstalled(true);
-        await refreshExtensions();
         void analytics.logEvent(AppEvent.EXTENSION_INSTALL, { type: extension.id });
       }
     } catch (err) {
@@ -86,24 +82,15 @@ export function ExtensionDetails({ extension, onClose, installed }: Props): Reac
         appearance: "error",
       });
     }
-  }, [
-    extension.foxe,
-    extension.id,
-    addToast,
-    extensionLoader,
-    isMounted,
-    refreshExtensions,
-    analytics,
-  ]);
+  }, [addToast, analytics, extension.foxe, extension.id, extensionRegistry, isMounted]);
 
   const uninstall = useCallback(async () => {
-    await extensionLoader.uninstallExtension(extension.id);
+    await extensionRegistry.uninstallExtension(extension.id);
     if (isMounted()) {
       setIsInstalled(false);
-      await refreshExtensions();
       void analytics.logEvent(AppEvent.EXTENSION_UNINSTALL, { type: extension.id });
     }
-  }, [analytics, extension.id, extensionLoader, isMounted, refreshExtensions]);
+  }, [analytics, extension.id, extensionRegistry, isMounted]);
 
   return (
     <SidebarContent

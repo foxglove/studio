@@ -30,6 +30,11 @@ export { default as installDevtoolsFormatters } from "./util/installDevtoolsForm
 export { default as overwriteFetch } from "./util/overwriteFetch";
 export { default as waitForFonts } from "./util/waitForFonts";
 export { IdbExtensionLoader } from "./services/IdbExtensionLoader";
+export type {
+  ExtensionInfo,
+  ExtensionLoader,
+  ExtensionNamespace,
+} from "./services/ExtensionLoader";
 export { AppSetting } from "./AppSetting";
 export { default as FoxgloveDataPlatformDataSourceFactory } from "./dataSources/FoxgloveDataPlatformDataSourceFactory";
 export { default as FoxgloveWebSocketDataSourceFactory } from "./dataSources/FoxgloveWebSocketDataSourceFactory";

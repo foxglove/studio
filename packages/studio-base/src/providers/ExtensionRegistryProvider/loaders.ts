@@ -2,7 +2,7 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { createContext, useCallback, useContext, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 import Logger from "@foxglove/log";
 import {
@@ -11,15 +11,12 @@ import {
   ExtensionNamespace,
 } from "@foxglove/studio-base/services/ExtensionLoader";
 
-const log = Logger.getLogger(__filename);
-
-const ExtensionLoaderContext = createContext<readonly ExtensionLoader[]>([]);
-ExtensionLoaderContext.displayName = "ExtensionLoaderContext";
-
 type AggregateExtensionLoader = Omit<ExtensionLoader, "namespace" | "installExtension"> & {
   downloadExtension(url: string): Promise<Uint8Array>;
   installExtension(namespace: ExtensionNamespace, foxeFileData: Uint8Array): Promise<ExtensionInfo>;
 };
+
+const log = Logger.getLogger(__filename);
 
 /**
  * Presents a unified interface for all enabled extension loaders, wrapping the
@@ -29,9 +26,7 @@ type AggregateExtensionLoader = Omit<ExtensionLoader, "namespace" | "installExte
  * unique in order to be referenced in panel layouts so this hook provides a partial
  * wrapper over a set of loaders.
  */
-export function useExtensionLoader(): AggregateExtensionLoader {
-  const loaders = useContext(ExtensionLoaderContext);
-
+export function useExtensionLoaders(loaders: readonly ExtensionLoader[]): AggregateExtensionLoader {
   const getExtensions = useCallback(
     async () =>
       (await Promise.all(loaders.map(async (loader) => await loader.getExtensions())))
@@ -99,5 +94,3 @@ export function useExtensionLoader(): AggregateExtensionLoader {
 
   return value;
 }
-
-export default ExtensionLoaderContext;

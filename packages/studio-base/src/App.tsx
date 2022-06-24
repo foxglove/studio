@@ -20,7 +20,6 @@ import AnalyticsProvider from "./context/AnalyticsProvider";
 import AppConfigurationContext, { IAppConfiguration } from "./context/AppConfigurationContext";
 import { AssetsProvider } from "./context/AssetsContext";
 import ConsoleApiContext from "./context/ConsoleApiContext";
-import ExtensionLoaderContext from "./context/ExtensionLoaderContext";
 import { HoverValueProvider } from "./context/HoverValueContext";
 import LayoutStorageContext from "./context/LayoutStorageContext";
 import ModalHost from "./context/ModalHost";
@@ -86,7 +85,6 @@ export function App(props: AppProps): JSX.Element {
     <StudioToastProvider />,
     <LayoutStorageContext.Provider value={layoutStorage} />,
     <UserProfileLocalStorageProvider />,
-    <ExtensionLoaderContext.Provider value={extensionLoaders} />,
     <AnalyticsProvider amplitudeApiKey={process.env.AMPLITUDE_API_KEY} />,
     <LayoutManagerProvider />,
     <ModalHost />, // render modal elements inside the ThemeProvider
@@ -96,7 +94,7 @@ export function App(props: AppProps): JSX.Element {
     <UserNodeStateProvider />,
     <CurrentLayoutProvider />,
     <ExtensionMarketplaceProvider />,
-    <ExtensionRegistryProvider />,
+    <ExtensionRegistryProvider loaders={extensionLoaders} />,
     <PlayerManager playerSources={dataSources} />,
     /* eslint-enable react/jsx-key */
   ];

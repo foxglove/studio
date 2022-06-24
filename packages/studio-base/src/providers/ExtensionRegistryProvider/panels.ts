@@ -2,34 +2,27 @@
 // License, v2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-import { PropsWithChildren, useEffect, useMemo } from "react";
 import ReactDOM from "react-dom";
-import { useAsync, useAsyncFn } from "react-use";
+import { useAsync } from "react-use";
+import { AsyncState } from "react-use/lib/useAsyncFn";
 
 import Logger from "@foxglove/log";
 import { ExtensionContext, ExtensionModule } from "@foxglove/studio";
-import { useExtensionLoader } from "@foxglove/studio-base/context/ExtensionLoaderContext";
-import ExtensionRegistryContext, {
-  RegisteredPanel,
-} from "@foxglove/studio-base/context/ExtensionRegistryContext";
+import { RegisteredPanel } from "@foxglove/studio-base/context/ExtensionRegistryContext";
+import { ExtensionInfo, ExtensionLoader } from "@foxglove/studio-base/services/ExtensionLoader";
 
 const log = Logger.getLogger(__filename);
 
-export default function ExtensionRegistryProvider(props: PropsWithChildren<unknown>): JSX.Element {
-  const extensionLoader = useExtensionLoader();
-
-  const [registeredExtensions, refreshExtensions] = useAsyncFn(async () => {
-    const extensionList = await extensionLoader.getExtensions();
-    log.debug(`Found ${extensionList.length} extension(s)`);
-    return extensionList;
-  });
-
+export function useExtensionPanels(
+  extensions: ExtensionInfo[],
+  extensionLoaders: Pick<ExtensionLoader, "loadExtension">,
+): AsyncState<Record<string, RegisteredPanel>> {
   const registeredPanels = useAsync(async () => {
     // registered panels stored by their fully qualified id
     // the fully qualified id is the extension name + panel name
     const panels: Record<string, RegisteredPanel> = {};
 
-    for (const extension of registeredExtensions.value ?? []) {
+    for (const extension of extensions) {
       log.debug(`Activating extension ${extension.qualifiedName}`);
 
       const module = { exports: {} };
@@ -64,7 +57,7 @@ export default function ExtensionRegistryProvider(props: PropsWithChildren<unkno
       };
 
       try {
-        const unwrappedExtensionSource = await extensionLoader.loadExtension(extension.id);
+        const unwrappedExtensionSource = await extensionLoaders.loadExtension(extension.id);
 
         // eslint-disable-next-line no-new-func
         const fn = new Function("module", "require", unwrappedExtensionSource);
@@ -80,34 +73,7 @@ export default function ExtensionRegistryProvider(props: PropsWithChildren<unkno
     }
 
     return panels;
-  }, [extensionLoader, registeredExtensions.value]);
+  }, [extensionLoaders, extensions]);
 
-  useEffect(() => {
-    refreshExtensions().catch((error) => log.error(error));
-  }, [refreshExtensions]);
-
-  const value = useMemo(
-    () => ({
-      refreshExtensions: async () => {
-        await refreshExtensions();
-      },
-      registeredExtensions: registeredExtensions.value ?? [],
-      registeredPanels: registeredPanels.value ?? {},
-    }),
-    [refreshExtensions, registeredExtensions.value, registeredPanels.value],
-  );
-
-  if (registeredExtensions.error) {
-    throw registeredExtensions.error;
-  }
-
-  if (!registeredExtensions.value) {
-    return <></>;
-  }
-
-  return (
-    <ExtensionRegistryContext.Provider value={value}>
-      {props.children}
-    </ExtensionRegistryContext.Provider>
-  );
+  return registeredPanels;
 }

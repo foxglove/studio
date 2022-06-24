@@ -6,7 +6,7 @@ import { createContext, useContext } from "react";
 import { DeepReadonly } from "ts-essentials";
 
 import { ExtensionPanelRegistration } from "@foxglove/studio";
-import { ExtensionInfo } from "@foxglove/studio-base/services/ExtensionLoader";
+import { ExtensionInfo, ExtensionNamespace } from "@foxglove/studio-base/services/ExtensionLoader";
 
 export type RegisteredPanel = {
   extensionName: string;
@@ -15,9 +15,16 @@ export type RegisteredPanel = {
 };
 
 export type ExtensionRegistry = {
+  downloadExtension: (url: string) => Promise<Uint8Array>;
+  installExtension: (
+    namespace: ExtensionNamespace,
+    foxeFileData: Uint8Array,
+  ) => Promise<ExtensionInfo>;
+  loadExtension(id: string): Promise<string>;
   refreshExtensions: () => Promise<void>;
   registeredExtensions: ExtensionInfo[];
   registeredPanels: Record<string, RegisteredPanel>;
+  uninstallExtension(id: string): Promise<boolean>;
 };
 
 const ExtensionRegistryContext = createContext<DeepReadonly<ExtensionRegistry> | undefined>(
