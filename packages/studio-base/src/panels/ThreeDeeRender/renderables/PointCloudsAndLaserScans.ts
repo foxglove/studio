@@ -8,7 +8,7 @@ import { toNanoSec } from "@foxglove/rostime";
 import { SettingsTreeAction, SettingsTreeFields, SettingsTreeNode, Topic } from "@foxglove/studio";
 
 import { DynamicBufferGeometry } from "../DynamicBufferGeometry";
-import { MaterialCache, PointCloudColor, LaserScanPoints } from "../MaterialCache";
+import { MaterialCache, PointCloudColor } from "../MaterialCache";
 import { BaseUserData, Renderable } from "../Renderable";
 import { Renderer } from "../Renderer";
 import { PartialMessage, PartialMessageEvent, SceneExtension } from "../SceneExtension";
@@ -87,16 +87,16 @@ export type PointCloudAndLaserScanUserData = BaseUserData & {
   geometry: DynamicBufferGeometry<Float32Array, Float32ArrayConstructor>;
   points: THREE.Points;
   pointCloudMaterial?: THREE.PointsMaterial;
-  laserScanMaterial?: THREE.ShaderMaterial;
-  pickingMaterial: THREE.ShaderMaterial;
+  laserScanMaterial?: LaserScanMaterial;
+  pickingMaterial: THREE.ShaderMaterial | LaserScanMaterial;
 };
 
 export class PointCloudAndLaserScanRenderable extends Renderable<PointCloudAndLaserScanUserData> {
   override dispose(): void {
     releasePointCloudMaterial(this.userData.settings, this.renderer.materialCache);
-    releaseLaserScanMaterial(this.userData.settings, this.renderer.materialCache);
     this.userData.geometry.dispose();
     this.userData.pickingMaterial.dispose();
+    this.userData.laserScanMaterial?.dispose();
     super.dispose();
   }
 }
@@ -147,7 +147,6 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     const renderable = this.renderables.get(topicName);
     if (renderable) {
       releasePointCloudMaterial(renderable.userData.settings, this.renderer.materialCache);
-      releaseLaserScanMaterial(renderable.userData.settings, this.renderer.materialCache);
       const settings = this.renderer.config.topics[topicName] as
         | Partial<LayerSettingsPointCloudAndLaserScan>
         | undefined;
@@ -162,9 +161,6 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
           renderable.userData.receiveTime,
         );
       } else if (renderable.userData.laserScan) {
-        renderable.userData.pointCloudMaterial = undefined;
-        renderable.userData.points.material = renderable.userData.laserScanMaterial =
-          laserScanMaterial(renderable.userData.settings, this.renderer.materialCache);
         this._updateLaserScanRenderable(
           renderable,
           renderable.userData.laserScan,
@@ -453,12 +449,15 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       geometry.createAttribute("position", 1);
       geometry.createAttribute("color", 4);
 
-      const material = laserScanMaterial(settings, this.renderer.materialCache);
-      const pickingMaterial = createLaserScanPickingMaterial(settings);
+      const material = new LaserScanMaterial();
+      const pickingMaterial = new LaserScanMaterial({ picking: true });
       const points = new THREE.Points(geometry, material);
       points.frustumCulled = false;
       points.name = `${topic}:LaserScan:points`;
       points.userData.pickingMaterial = pickingMaterial;
+
+      material.update(settings, laserScan);
+      pickingMaterial.update(settings, laserScan);
 
       renderable = new PointCloudAndLaserScanRenderable(topic, this.renderer, {
         receiveTime,
@@ -496,7 +495,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     renderable.userData.laserScan = laserScan;
 
     const settings = renderable.userData.settings;
-    const { colorField, pointSize } = settings;
+    const { colorField } = settings;
     const { intensities, ranges } = laserScan;
 
     // Invalid laser scan checks
@@ -517,13 +516,10 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     const colorAttribute = geometry.attributes.color!;
     rangeAttribute.set(ranges);
 
-    const material = renderable.userData.laserScanMaterial!;
-    for (const mat of [material, renderable.userData.pickingMaterial]) {
-      mat.uniforms.angleMin = { value: laserScan.angle_min };
-      mat.uniforms.angleIncrement = { value: laserScan.angle_increment };
-      mat.uniforms.rangeMin = { value: laserScan.range_min };
-      mat.uniforms.rangeMax = { value: laserScan.range_max };
-      mat.uniforms.pointSize = { value: pointSize };
+    // Update material uniforms
+    renderable.userData.laserScanMaterial?.update(settings, laserScan);
+    if (renderable.userData.pickingMaterial instanceof LaserScanMaterial) {
+      renderable.userData.pickingMaterial.update(settings, laserScan);
     }
 
     // Determine min/max color values (if needed)
@@ -585,28 +581,82 @@ function releasePointCloudMaterial(
   materialCache.release(PointCloudColor.id(settings.pointShape, encoding, scale, transparent));
 }
 
-function laserScanMaterial(
-  settings: LayerSettingsPointCloudAndLaserScan,
-  materialCache: MaterialCache,
-): THREE.ShaderMaterial {
-  const transparent = pointCloudHasTransparency(settings);
-  const encoding = pointCloudColorEncoding(settings);
-  const scale = settings.pointSize;
-  return materialCache.acquire(
-    LaserScanPoints.id(settings.pointShape, encoding, scale, transparent),
-    () => LaserScanPoints.create(settings.pointShape, encoding, scale, transparent),
-    LaserScanPoints.dispose,
-  );
-}
+class LaserScanMaterial extends THREE.RawShaderMaterial {
+  static MIN_PICKING_POINT_SIZE = 8;
 
-function releaseLaserScanMaterial(
-  settings: LayerSettingsPointCloudAndLaserScan,
-  materialCache: MaterialCache,
-): void {
-  const transparent = pointCloudHasTransparency(settings);
-  const encoding = pointCloudColorEncoding(settings);
-  const scale = settings.pointSize;
-  materialCache.release(LaserScanPoints.id(settings.pointShape, encoding, scale, transparent));
+  constructor({ picking = false }: { picking?: boolean } = {}) {
+    super({
+      vertexShader: `\
+        #version 300 es
+        precision highp float;
+        precision highp int;
+        uniform mat4 projectionMatrix, modelViewMatrix;
+
+        uniform float pointSize;
+        uniform float angleMin, angleIncrement;
+        uniform float rangeMin, rangeMax;
+        in float position; // range, but must be named position in order for three.js to render anything
+        in mediump vec4 color;
+        out mediump vec4 vColor;
+        void main() {
+          if (position < rangeMin || position > rangeMax) {
+            gl_PointSize = 0.0;
+            return;
+          }
+          vColor = color;
+          float angle = angleMin + angleIncrement * float(gl_VertexID);
+          vec4 pos = vec4(position * cos(angle), position * sin(angle), 0, 1.0);
+          gl_Position = projectionMatrix * modelViewMatrix * pos;
+          ${
+            picking
+              ? `gl_PointSize = max(pointSize, ${LaserScanMaterial.MIN_PICKING_POINT_SIZE.toFixed(
+                  1,
+                )});`
+              : "gl_PointSize = pointSize;"
+          }
+
+        }
+      `,
+      fragmentShader: `\
+        #version 300 es
+        #ifdef GL_FRAGMENT_PRECISION_HIGH
+          precision highp float;
+        #else
+          precision mediump float;
+        #endif
+        uniform bool isCircle;
+        ${picking ? "uniform vec4 objectId;" : "in mediump vec4 vColor;"}
+        out vec4 outColor;
+        void main() {
+          if (isCircle) {
+            vec2 cxy = 2.0 * gl_PointCoord - 1.0;
+            if (dot(cxy, cxy) > 1.0) { discard; }
+          }
+          ${picking ? "outColor = objectId;" : "outColor = vColor;"}
+        }
+      `,
+    });
+    this.uniforms = {
+      isCircle: { value: false },
+      pointSize: { value: 1 },
+      angleMin: { value: NaN },
+      angleIncrement: { value: NaN },
+      rangeMin: { value: NaN },
+      rangeMax: { value: NaN },
+    };
+    if (picking) {
+      this.uniforms.objectId = { value: [NaN, NaN, NaN, NaN] };
+    }
+  }
+
+  update(settings: LayerSettingsPointCloudAndLaserScan, laserScan: LaserScan): void {
+    this.uniforms.isCircle!.value = settings.pointShape === "circle";
+    this.uniforms.pointSize!.value = settings.pointSize;
+    this.uniforms.angleMin!.value = laserScan.angle_min;
+    this.uniforms.angleIncrement!.value = laserScan.angle_increment;
+    this.uniforms.rangeMin!.value = laserScan.range_min;
+    this.uniforms.rangeMax!.value = laserScan.range_max;
+  }
 }
 
 function createPickingMaterial(
@@ -629,51 +679,6 @@ function createPickingMaterial(
       uniform vec4 objectId;
       void main() {
         gl_FragColor = objectId;
-      }
-    `,
-    side: THREE.DoubleSide,
-    uniforms: { pointSize: { value: pointSize }, objectId: { value: [NaN, NaN, NaN, NaN] } },
-  });
-}
-
-function createLaserScanPickingMaterial(
-  settings: LayerSettingsPointCloudAndLaserScan,
-): THREE.ShaderMaterial {
-  const MIN_PICKING_POINT_SIZE = 8;
-
-  // Use a custom shader for picking that sets a minimum point size to make
-  // individual points easier to click on
-  const pointSize = Math.max(settings.pointSize, MIN_PICKING_POINT_SIZE);
-  return new THREE.RawShaderMaterial({
-    vertexShader: /* glsl */ `\
-      #version 300 es
-      precision highp float;
-      precision highp int;
-      uniform mat4 projectionMatrix, modelViewMatrix;
-
-      uniform float pointSize;
-      uniform float angleMin, angleIncrement;
-      uniform float rangeMin, rangeMax;
-      in float position; // range, but must be named position in order for three.js to render anything
-      in mediump vec4 color;
-      void main() {
-        if (position < rangeMin || position > rangeMax) {
-          gl_PointSize = 0.0;
-          return;
-        }
-        float angle = angleMin + angleIncrement * float(gl_VertexID);
-        vec4 pos = vec4(position * cos(angle), position * sin(angle), 0, 1.0);
-        gl_Position = projectionMatrix * modelViewMatrix * pos;
-        gl_PointSize = pointSize;
-      }
-    `,
-    fragmentShader: /* glsl */ `\
-      #version 300 es
-      precision highp float;
-      uniform vec4 objectId;
-      out vec4 outColor;
-      void main() {
-        outColor = objectId;
       }
     `,
     side: THREE.DoubleSide,
