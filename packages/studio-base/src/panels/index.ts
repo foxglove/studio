@@ -60,7 +60,7 @@ const builtin: PanelInfo[] = [
     title: "3D (Beta)",
     type: "3D",
     description:
-      "Display visualization markers and models in a 3D scene using a new rendering engine.",
+      "Test our next-generation 3D panel, using a new rendering engine.",
     help: ThreeDeeRenderHelp,
     thumbnail: threeDimensionalVizThumbnail,
     module: async () => await import("./ThreeDeeRender"),
