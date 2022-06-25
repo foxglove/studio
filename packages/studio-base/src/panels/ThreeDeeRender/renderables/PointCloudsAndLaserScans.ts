@@ -561,7 +561,7 @@ function pointCloudMaterial(
   settings: LayerSettingsPointCloudAndLaserScan,
   materialCache: MaterialCache,
 ): THREE.PointsMaterial {
-  const transparent = pointCloudHasTransparency(settings);
+  const transparent = colorHasTransparency(settings);
   const encoding = pointCloudColorEncoding(settings);
   const scale = settings.pointSize;
   return materialCache.acquire(
@@ -575,7 +575,7 @@ function releasePointCloudMaterial(
   settings: LayerSettingsPointCloudAndLaserScan,
   materialCache: MaterialCache,
 ): void {
-  const transparent = pointCloudHasTransparency(settings);
+  const transparent = colorHasTransparency(settings);
   const encoding = pointCloudColorEncoding(settings);
   const scale = settings.pointSize;
   materialCache.release(PointCloudColor.id(settings.pointShape, encoding, scale, transparent));
@@ -650,6 +650,8 @@ class LaserScanMaterial extends THREE.RawShaderMaterial {
   }
 
   update(settings: LayerSettingsPointCloudAndLaserScan, laserScan: LaserScan): void {
+    this.transparent = colorHasTransparency(settings);
+    this.depthWrite = !this.transparent;
     this.uniforms.isCircle!.value = settings.pointShape === "circle";
     this.uniforms.pointSize!.value = settings.pointSize;
     this.uniforms.angleMin!.value = laserScan.angle_min;
@@ -686,7 +688,7 @@ function createPickingMaterial(
   });
 }
 
-function pointCloudHasTransparency(settings: LayerSettingsPointCloudAndLaserScan): boolean {
+function colorHasTransparency(settings: LayerSettingsPointCloudAndLaserScan): boolean {
   switch (settings.colorMode) {
     case "flat":
       return stringToRgba(tempColor, settings.flatColor).a < 1.0;
