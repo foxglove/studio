@@ -42,6 +42,15 @@ export function stringToRgb<T extends ColorRGB | THREE.Color>(output: T, colorSt
   return output;
 }
 
+// eslint-disable-next-line @foxglove/no-boolean-parameters
+export function rgbToThreeColor(output: THREE.Color, rgb: ColorRGB, convert = true): THREE.Color {
+  output.setRGB(rgb.r, rgb.g, rgb.b);
+  if (convert) {
+    output.convertSRGBToLinear();
+  }
+  return output;
+}
+
 export function rgbaToHexString(color: ColorRGBA): string {
   const rgba =
     (clamp(color.r * 255, 0, 255) << 24) ^

@@ -75,6 +75,21 @@ export type RendererConfig = {
     enableStats?: boolean;
     /** Background color override for the scene, sent to `glClearColor()` */
     backgroundColor?: string;
+    /**
+     * Controls the size of labels by setting the pixel density per unit of
+     * world space (usually meters)
+     */
+    labelPixelsPerUnit?: number;
+    transforms?: {
+      /** Toggles visibility of frame axis labels */
+      showLabel?: boolean;
+      /** Size of coordinate frame axes */
+      axisScale?: number;
+      /** Width of the connecting line between child and parent frames */
+      lineWidth?: number;
+      /** Color of the connecting line between child and parent frames */
+      lineColor?: string;
+    };
   };
   /** frameId -> settings */
   transforms: Record<string, Partial<LayerSettingsTransform> | undefined>;
