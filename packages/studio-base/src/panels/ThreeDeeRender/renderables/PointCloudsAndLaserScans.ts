@@ -117,7 +117,7 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     const entries: SettingsTreeEntry[] = [];
     for (const topic of this.renderer.topics ?? []) {
       const isPointCloud = POINTCLOUD_DATATYPES.has(topic.datatype);
-      const isLaserScan = LASERSCAN_DATATYPES.has(topic.datatype);
+      const isLaserScan = !isPointCloud && LASERSCAN_DATATYPES.has(topic.datatype);
       if (isPointCloud || isLaserScan) {
         const config = (configTopics[topic.name] ??
           {}) as Partial<LayerSettingsPointCloudAndLaserScan>;
