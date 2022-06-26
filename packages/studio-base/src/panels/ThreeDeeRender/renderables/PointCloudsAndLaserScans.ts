@@ -79,13 +79,17 @@ const INVALID_POINTCLOUD_OR_LASERSCAN = "INVALID_POINTCLOUD_OR_LASERSCAN";
 
 const tempColor = { r: 0, g: 0, b: 0, a: 0 };
 
+type DynamicFloatBufferGeometry = DynamicBufferGeometry<Float32Array, Float32ArrayConstructor>;
+type DecayEntry = { receiveTime: bigint; buffer: THREE.BufferGeometry; points: THREE.Points };
+
 export type PointCloudAndLaserScanUserData = BaseUserData & {
   settings: LayerSettingsPointCloudAndLaserScan;
   topic: string;
   pointCloud?: PointCloud2;
   laserScan?: LaserScan;
-  geometry: DynamicBufferGeometry<Float32Array, Float32ArrayConstructor>;
-  points: THREE.Points;
+  geometry?: DynamicFloatBufferGeometry;
+  points?: THREE.Points;
+  decay?: DecayEntry[];
   pointCloudMaterial?: THREE.PointsMaterial;
   laserScanMaterial?: LaserScanMaterial;
   pickingMaterial: THREE.ShaderMaterial | LaserScanMaterial;
@@ -94,7 +98,12 @@ export type PointCloudAndLaserScanUserData = BaseUserData & {
 export class PointCloudAndLaserScanRenderable extends Renderable<PointCloudAndLaserScanUserData> {
   override dispose(): void {
     releasePointCloudMaterial(this.userData.settings, this.renderer.materialCache);
-    this.userData.geometry.dispose();
+    this.userData.geometry?.dispose();
+    if (this.userData.decay) {
+      for (const entry of this.userData.decay) {
+        entry.buffer.dispose();
+      }
+    }
     this.userData.pickingMaterial.dispose();
     this.userData.laserScanMaterial?.dispose();
     super.dispose();
@@ -195,10 +204,10 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
         });
       }
 
-      const geometry = new DynamicBufferGeometry(Float32Array);
-      geometry.name = `${topic}:PointCloud2:geometry`;
-      geometry.createAttribute("position", 3);
-      geometry.createAttribute("color", 4);
+      const isDecay = settings.decayTime > 0;
+      const geometry = isDecay
+        ? this._createStaticGeometry(topic)
+        : this._createDynamicGeometry(topic);
 
       const material = pointCloudMaterial(settings, this.renderer.materialCache);
       const pickingMaterial = createPickingMaterial(settings);
@@ -216,7 +225,8 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
         settings,
         topic,
         pointCloud,
-        geometry,
+        geometry: isDecay ? undefined : (geometry as DynamicFloatBufferGeometry),
+        decay: isDecay ? ([geometry] as THREE.BufferGeometry[]) : undefined,
         points,
         pointCloudMaterial: material,
         pickingMaterial,
@@ -237,6 +247,22 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
 
     this._updatePointCloudRenderable(renderable, pointCloud, receiveTime);
   };
+
+  _createStaticGeometry(topic: string): THREE.BufferGeometry {
+    const geometry = new THREE.BufferGeometry();
+    geometry.name = `${topic}:PointCloud2:geometry`;
+    geometry.setAttribute("position", new THREE.Float32BufferAttribute(0, 3));
+    geometry.setAttribute("color", new THREE.Float32BufferAttribute(0, 4));
+    return geometry;
+  }
+
+  _createDynamicGeometry(topic: string): DynamicFloatBufferGeometry {
+    const geometry = new DynamicBufferGeometry(Float32Array);
+    geometry.name = `${topic}:PointCloud2:geometry`;
+    geometry.createAttribute("position", 3);
+    geometry.createAttribute("color", 4);
+    return geometry;
+  }
 
   _updatePointCloudRenderable(
     renderable: PointCloudAndLaserScanRenderable,
@@ -510,11 +536,16 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
       return;
     }
 
-    const geometry = renderable.userData.geometry;
-    geometry.resize(ranges.length);
-    const rangeAttribute = geometry.attributes.position!;
-    const colorAttribute = geometry.attributes.color!;
-    rangeAttribute.set(ranges);
+    const decay = renderable.userData.decay;
+    if (decay) {
+      //
+    } else {
+      const geometry = renderable.userData.geometry!;
+      geometry.resize(ranges.length);
+      const rangeAttribute = geometry.attributes.position!;
+      const colorAttribute = geometry.attributes.color!;
+      rangeAttribute.set(ranges);
+    }
 
     // Update material uniforms
     renderable.userData.laserScanMaterial?.update(settings, laserScan);
@@ -965,7 +996,15 @@ function invalidPointCloudOrLaserScanError(
     INVALID_POINTCLOUD_OR_LASERSCAN,
     message,
   );
-  renderable.userData.geometry.resize(0);
+  const decay = renderable.userData.decay;
+  if (decay) {
+    const lastEntry = decay[decay.length - 1];
+    if (lastEntry) {
+      lastEntry.buffer.setDrawRange(0, 0);
+    }
+  } else if (renderable.userData.geometry) {
+    renderable.userData.geometry.resize(0);
+  }
 }
 
 function zeroReader(): number {
