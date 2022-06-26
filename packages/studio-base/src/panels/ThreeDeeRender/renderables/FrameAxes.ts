@@ -76,6 +76,8 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
 
     renderer.on("transformTreeUpdated", this.handleTransformTreeUpdated);
     renderer.on("startFrame", () => this.updateSettingsTree());
+
+    this.visible = renderer.config.scene.transforms?.visible ?? true;
   }
 
   override dispose(): void {
@@ -88,7 +90,17 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
   override settingsNodes(): SettingsTreeEntry[] {
     const configTransforms = this.renderer.config.transforms;
     const handler = this.handleSettingsAction;
-    const entries: SettingsTreeEntry[] = [];
+    const entries: SettingsTreeEntry[] = [
+      {
+        path: ["transforms"],
+        node: {
+          label: "Transforms",
+          visible: this.renderer.config.scene.transforms?.visible ?? true,
+          defaultExpansionState: "expanded",
+          handler,
+        },
+      },
+    ];
     let i = 0;
     for (const { label, value: frameId } of this.renderer.coordinateFrameList) {
       const config = (configTransforms[frameId] ?? {}) as Partial<LayerSettingsTransform>;
@@ -153,7 +165,22 @@ export class FrameAxes extends SceneExtension<FrameAxisRenderable> {
 
   handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
-    if (action.action !== "update" || path.length !== 3) {
+    if (action.action !== "update") {
+      return;
+    }
+
+    if (path.length === 2 && path[0] === "transforms") {
+      const visible = action.payload.value as boolean | undefined;
+      this.saveSetting(["scene", "transforms", "visible"], visible);
+
+      if (path[1] === "visible") {
+        this.visible = visible ?? true;
+      }
+
+      return;
+    }
+
+    if (path.length !== 3) {
       return;
     }
 

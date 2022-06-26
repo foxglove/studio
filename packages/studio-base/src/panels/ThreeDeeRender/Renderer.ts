@@ -81,6 +81,8 @@ export type RendererConfig = {
      */
     labelPixelsPerUnit?: number;
     transforms?: {
+      /** Toggles visibility of all transforms */
+      visible?: boolean;
       /** Toggles visibility of frame axis labels */
       showLabel?: boolean;
       /** Size of coordinate frame axes */
@@ -753,10 +755,7 @@ function baseSettingsTree(): SettingsTreeNodes {
     general: {},
     scene: {},
     cameraState: {},
-    transforms: {
-      label: "Transforms",
-      defaultExpansionState: "expanded",
-    },
+    transforms: {},
     topics: {
       label: "Topics",
       defaultExpansionState: "expanded",
