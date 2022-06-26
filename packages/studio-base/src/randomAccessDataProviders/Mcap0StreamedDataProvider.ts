@@ -54,10 +54,16 @@ export default class Mcap0StreamedDataProvider implements RandomAccessDataProvid
 
     let startTime: Time | undefined;
     let endTime: Time | undefined;
+    let ros: boolean | undefined;
     function processRecord(record: Mcap0Types.TypedMcapRecord) {
       switch (record.type) {
         default:
           break;
+
+        case "Header": {
+          ros = record.profile === "ros1" || record.profile === "ros2";
+          break;
+        }
 
         case "Schema": {
           const existingSchema = schemasById.get(record.id);
@@ -157,6 +163,7 @@ export default class Mcap0StreamedDataProvider implements RandomAccessDataProvid
       topicStats,
       connections,
       providesParsedMessages: true,
+      ros: ros ?? false,
       messageDefinitions: {
         type: "parsed",
         datatypes,

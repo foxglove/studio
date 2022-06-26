@@ -519,6 +519,8 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
       },
 
       updatePanelSettingsEditor: updateSettings,
+
+      ros: capabilities.includes(PlayerCapabilities.ros),
     };
   }, [
     capabilities,

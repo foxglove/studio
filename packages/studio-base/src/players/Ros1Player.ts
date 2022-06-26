@@ -41,6 +41,7 @@ const CAPABILITIES = [
   PlayerCapabilities.advertise,
   PlayerCapabilities.getParameters,
   PlayerCapabilities.setParameters,
+  PlayerCapabilities.ros,
 ];
 
 enum Problem {

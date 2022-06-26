@@ -231,6 +231,7 @@ export default class RandomAccessPlayer implements Player {
           topicStats,
           connections,
           parameters,
+          ros,
           messageDefinitions,
           providesParsedMessages,
           problems,
@@ -258,6 +259,9 @@ export default class RandomAccessPlayer implements Player {
         this._capabilities = [PlayerCapabilities.setSpeed, PlayerCapabilities.playbackControl];
         if (parameters) {
           this._capabilities.push(PlayerCapabilities.getParameters);
+        }
+        if (ros) {
+          this._capabilities.push(PlayerCapabilities.ros);
         }
         this._initializing = false;
         problems.forEach((problem, i) => {

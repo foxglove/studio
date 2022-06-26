@@ -314,6 +314,10 @@ export const PlayerCapabilities = {
 
   // Set values for configuration key/value pairs
   setParameters: "setParameters",
+
+  // Follows the semantics of Robot Operating System (ROS), such as prefixing coordinate
+  // frames with "/"
+  ros: "ros",
 };
 
 // A metrics collector is an interface passed into a `Player`, which will get called when certain

@@ -21,10 +21,11 @@ import {
   AdvertiseOptions,
   MessageEvent,
   Player,
+  PlayerCapabilities,
   PlayerMetricsCollectorInterface,
   PlayerPresence,
-  PlayerState,
   PlayerProblem,
+  PlayerState,
   PublishPayload,
   SubscribePayload,
   Topic,
@@ -37,7 +38,7 @@ import { TimestampMethod } from "@foxglove/studio-base/util/time";
 const log = Logger.getLogger(__filename);
 const rosLog = Logger.getLogger("ROS2");
 
-const CAPABILITIES: string[] = [];
+const CAPABILITIES: string[] = [PlayerCapabilities.ros];
 
 enum Problem {
   Connection = "Connection",

@@ -104,6 +104,7 @@ export type InitializationResult = {
   topicStats: Map<string, TopicStats>;
   connections: Connection[];
   parameters?: Map<string, ParameterValue>;
+  ros: boolean;
 
   // Signals whether the messages returned from calls to getMessages are parsed into Javascript
   // objects or are returned in ROS binary format.

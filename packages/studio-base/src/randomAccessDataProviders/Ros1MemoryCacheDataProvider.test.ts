@@ -84,6 +84,7 @@ function getProvider(
     messages: { parsedMessages: undefined, encodedMessages: messages },
     topicStats: new Map(),
     providesParsedMessages: false,
+    ros: true,
     parsedMessageDefinitionsByTopic: {
       "/foo": [{ definitions: [] }],
       "/bar": [{ definitions: [] }],

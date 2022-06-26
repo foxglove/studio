@@ -157,6 +157,9 @@ export class Renderer extends EventEmitter<RendererEvents> {
   orthographicCamera: THREE.OrthographicCamera;
   aspect: number;
 
+  // Are we connected to a ROS data source? Normalize coordinate frames if so
+  ros = false;
+
   picker: Picker;
   selectionBackdrop: ScreenOverlay;
   selectedObject: Renderable | undefined;
@@ -501,18 +504,28 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
+  normalizeFrameId(frameId: string): string {
+    if (!this.ros || !frameId || frameId.startsWith("/")) {
+      return frameId;
+    }
+    return "/" + frameId;
+  }
+
   addCoordinateFrame(frameId: string): void {
-    if (!this.transformTree.hasFrame(frameId)) {
-      this.transformTree.getOrCreateFrame(frameId);
+    const normalizedFrameId = this.normalizeFrameId(frameId);
+    if (!this.transformTree.hasFrame(normalizedFrameId)) {
+      this.transformTree.getOrCreateFrame(normalizedFrameId);
       this.coordinateFrameList = this.transformTree.frameList();
-      // log.debug(`Added coordinate frame "${frameId}"`);
+      // log.debug(`Added coordinate frame "${normalizedFrameId}"`);
       this.emit("transformTreeUpdated", this);
     }
   }
 
   addTransformMessage(tf: TransformStamped): void {
-    const addParent = !this.transformTree.hasFrame(tf.header.frame_id);
-    const addChild = !this.transformTree.hasFrame(tf.child_frame_id);
+    const normalizedParentId = this.normalizeFrameId(tf.header.frame_id);
+    const normalizedChildId = this.normalizeFrameId(tf.child_frame_id);
+    const addParent = !this.transformTree.hasFrame(normalizedParentId);
+    const addChild = !this.transformTree.hasFrame(normalizedChildId);
 
     // Create a new transform and add it to the renderer's TransformTree
     const stamp = toNanoSec(tf.header.stamp);
@@ -520,19 +533,19 @@ export class Renderer extends EventEmitter<RendererEvents> {
     const q = tf.transform.rotation;
     const transform = new Transform([t.x, t.y, t.z], [q.x, q.y, q.z, q.w]);
     const updated = this.transformTree.addTransform(
-      tf.child_frame_id,
-      tf.header.frame_id,
+      normalizedChildId,
+      normalizedParentId,
       stamp,
       transform,
     );
 
     if (addParent || addChild) {
       this.coordinateFrameList = this.transformTree.frameList();
-      // log.debug(`Added transform "${tf.header.frame_id}_T_${tf.child_frame_id}"`);
+      // log.debug(`Added transform "${normalizedParentId}_T_${normalizedChildId}"`);
       this.emit("transformTreeUpdated", this);
     } else if (updated) {
       this.coordinateFrameList = this.transformTree.frameList();
-      // log.debug(`Updated transform "${tf.header.frame_id}_T_${tf.child_frame_id}"`);
+      // log.debug(`Updated transform "${normalizedParentId}_T_${normalizedChildId}"`);
       this.emit("transformTreeUpdated", this);
     }
   }
