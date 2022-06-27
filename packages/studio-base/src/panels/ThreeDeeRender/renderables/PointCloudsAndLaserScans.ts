@@ -134,7 +134,8 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     return entries;
   }
 
-  override startFrame(_currentTime: bigint, _renderFrameId: string, _fixedFrameId: string): void {
+  override startFrame(currentTime: bigint, renderFrameId: string, fixedFrameId: string): void {
+    super.startFrame(currentTime, renderFrameId, fixedFrameId);
     for (const renderable of this.renderables.values()) {
       const laserScanMaterial = renderable.userData.laserScanMaterial;
       if (laserScanMaterial) {
