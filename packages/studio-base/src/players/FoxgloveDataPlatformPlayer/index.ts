@@ -272,7 +272,7 @@ export default class FoxgloveDataPlatformPlayer implements Player {
       presence: this._presence,
       progress: this._progress,
       capabilities: CAPABILITIES,
-      profile: "",
+      profile: undefined,
       playerId: this._id,
       problems: this._problems,
       urlState: {

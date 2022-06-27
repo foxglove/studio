@@ -330,7 +330,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
         presence: this._presence,
         progress: {},
         capabilities: CAPABILITIES,
-        profile: "",
+        profile: undefined,
         playerId: this._id,
         activeData: undefined,
         problems: this._problems.problems(),
@@ -344,7 +344,7 @@ export default class FoxgloveWebSocketPlayer implements Player {
       presence: this._presence,
       progress: {},
       capabilities: CAPABILITIES,
-      profile: "",
+      profile: undefined,
       playerId: this._id,
       problems: this._problems.problems(),
       urlState: {

@@ -349,7 +349,7 @@ export default class RosbridgePlayer implements Player {
         presence: this._presence,
         progress: {},
         capabilities: CAPABILITIES,
-        profile: "",
+        profile: undefined,
         playerId: this._id,
         activeData: undefined,
         problems: this._problems.problems(),

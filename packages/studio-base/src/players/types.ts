@@ -122,7 +122,7 @@ export type PlayerState = {
    * identifier for a robotics framework such as "ros1", "ros2", or "ulog". See the MCAP profiles
    * concept at <https://github.com/foxglove/mcap/blob/main/docs/specification/appendix.md#well-known-profiles>.
    */
-  profile: string;
+  profile: string | undefined;
 
   // A unique id for this player (typically a UUID generated on construction). This is used to clear
   // out any data when switching to a new player.

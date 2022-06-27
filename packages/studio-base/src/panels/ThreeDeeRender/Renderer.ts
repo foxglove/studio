@@ -157,7 +157,8 @@ export class Renderer extends EventEmitter<RendererEvents> {
   orthographicCamera: THREE.OrthographicCamera;
   aspect: number;
 
-  // Are we connected to a ROS data source? Normalize coordinate frames if so
+  // Are we connected to a ROS data source? Normalize coordinate frames if so by
+  // stripping any leading "/" prefix. See `normalizeFrameId()` for details.
   ros = false;
 
   picker: Picker;

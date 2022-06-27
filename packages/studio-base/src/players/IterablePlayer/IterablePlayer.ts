@@ -129,7 +129,7 @@ export class IterablePlayer implements Player {
     PlayerCapabilities.setSpeed,
     PlayerCapabilities.playbackControl,
   ];
-  private _profile = "";
+  private _profile: string | undefined;
   private _metricsCollector: PlayerMetricsCollectorInterface;
   private _subscriptions: SubscribePayload[] = [];
   private _allTopics: Set<string> = new Set();
