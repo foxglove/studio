@@ -646,8 +646,7 @@ class LaserScanMaterial extends THREE.RawShaderMaterial {
             vec2 cxy = 2.0 * gl_PointCoord - 1.0;
             if (dot(cxy, cxy) > 1.0) { discard; }
           }
-          ${picking ? "outColor = objectId;" : "outColor = vColor;"}
-          outColor = LinearTosRGB(outColor);
+          ${picking ? "outColor = objectId;" : "outColor = LinearTosRGB(vColor);"}
         }
       `,
     });
