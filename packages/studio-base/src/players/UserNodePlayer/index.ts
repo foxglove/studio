@@ -46,6 +46,7 @@ import {
   Topic,
   MessageEvent,
   PlayerProblem,
+  MessageBlock,
 } from "@foxglove/studio-base/players/types";
 import { RosDatatypes } from "@foxglove/studio-base/types/RosDatatypes";
 import { UserNode, UserNodes } from "@foxglove/studio-base/types/panels";
@@ -245,6 +246,72 @@ export default class UserNodePlayer implements Player {
     this._lastGetMessagesInput = { parsedMessages, globalVariables, nodeRegistrations };
     this._lastGetMessagesResult = result;
     return result;
+  }
+
+  private async _getBlocks(
+    blocks: readonly (MessageBlock | undefined)[],
+    globalVariables: GlobalVariables,
+    nodeRegistrations: readonly NodeRegistration[],
+  ): Promise<readonly (MessageBlock | undefined)[]> {
+    // fixme - if blocks haven't changed
+    /*
+    if (
+      shallowequal(this._lastGetMessagesInput, {
+        parsedMessages,
+        globalVariables,
+        nodeRegistrations,
+      })
+    ) {
+      return this._lastGetMessagesResult;
+    }
+    */
+
+    const outputBlocks: (MessageBlock | undefined)[] = [];
+
+    for (const block of blocks) {
+      if (!block) {
+        outputBlocks.push(block);
+        continue;
+      }
+
+      const messagesByTopic = { ...block.messagesByTopic };
+
+      // for each node registration, iterate the input topics
+      // for each input topic process the messagesByTopic
+      for (const nodeRegistration of nodeRegistrations) {
+        if (!this._nodeSubscriptions.has(nodeRegistration.output.name)) {
+          continue;
+        }
+
+        const outputMessages: MessageEvent<unknown>[] = [];
+        for (const inputTopic of nodeRegistration.inputs) {
+          const inputMessages = block.messagesByTopic[inputTopic];
+          if (!inputMessages) {
+            continue;
+          }
+
+          for (const inputMessage of inputMessages) {
+            const outputMessage = await nodeRegistration.processMessage(
+              inputMessage,
+              globalVariables,
+            );
+            if (!outputMessage) {
+              continue;
+            }
+            outputMessages.push(outputMessage);
+          }
+        }
+
+        messagesByTopic[nodeRegistration.output.name] = outputMessages;
+      }
+
+      outputBlocks.push({
+        messagesByTopic,
+        sizeInBytes: block.sizeInBytes,
+      });
+    }
+
+    return outputBlocks;
   }
 
   setGlobalVariables(globalVariables: GlobalVariables): void {
@@ -716,8 +783,26 @@ export default class UserNodePlayer implements Player {
         this._nodeRegistrations,
       );
 
+      const playerProgress = {
+        ...playerState.progress,
+      };
+
+      if (playerProgress.messageCache) {
+        const newBlocks = await this._getBlocks(
+          playerProgress.messageCache.blocks,
+          globalVariables,
+          this._nodeRegistrations,
+        );
+
+        playerProgress.messageCache = {
+          startTime: playerProgress.messageCache.startTime,
+          blocks: newBlocks,
+        };
+      }
+
       const newPlayerState = {
         ...playerState,
+        progress: playerProgress,
         activeData: {
           ...activeData,
           messages: parsedMessages,
