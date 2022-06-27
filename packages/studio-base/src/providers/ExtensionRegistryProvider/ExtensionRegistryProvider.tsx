@@ -10,8 +10,8 @@ import ExtensionRegistryContext from "@foxglove/studio-base/context/ExtensionReg
 import { ExtensionLoader } from "@foxglove/studio-base/services/ExtensionLoader";
 import { ExtensionInfo, ExtensionNamespace } from "@foxglove/studio-base/types/Extensions";
 
-import { useExtensionLoaders } from "./loaders";
-import { useExtensionPanels } from "./panels";
+import { useExtensionLoaders } from "./useExtensionLoaders";
+import { useExtensionPanels } from "./useExtensionPanels";
 
 const log = Logger.getLogger(__filename);
 
