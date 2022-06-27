@@ -102,7 +102,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   const setSubscriptions = useMessagePipeline(selectSetSubscriptions);
   const requestBackfill = useMessagePipeline(selectRequestBackfill);
   const capabilities = useMessagePipeline(selectCapabilities);
-  const profile = useMessagePipeline(selectProfile);
+  const dataSourceProfile = useMessagePipeline(selectProfile);
   const seekPlayback = useMessagePipeline(selectSeekPlayback);
   const { openSiblingPanel } = usePanelContext();
 
@@ -402,7 +402,7 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
 
       seekPlayback: seekPlayback ? (stamp: number) => seekPlayback(fromSec(stamp)) : undefined,
 
-      profile,
+      dataSourceProfile,
 
       setParameter: (name: string, value: ParameterValue) => {
         const ctx = latestPipelineContextRef.current;
@@ -530,9 +530,9 @@ function PanelExtensionAdapter(props: PanelExtensionAdapterProps): JSX.Element {
   }, [
     capabilities,
     clearHoverValue,
+    dataSourceProfile,
     openSiblingPanel,
     panelId,
-    profile,
     requestBackfill,
     saveConfig,
     seekPlayback,
