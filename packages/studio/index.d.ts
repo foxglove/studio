@@ -187,7 +187,7 @@ declare module "@foxglove/studio" {
      * shorthand identifier for a robotics framework such as "ros1", "ros2", or "ulog". See the MCAP
      * profiles concept at <https://github.com/foxglove/mcap/blob/main/docs/specification/appendix.md#well-known-profiles>.
      */
-    readonly profile?: string;
+    readonly dataSourceProfile?: string;
 
     /**
      * Subscribe to updates on this field within the render state. Render will only be invoked when
