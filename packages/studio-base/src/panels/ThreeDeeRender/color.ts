@@ -42,13 +42,9 @@ export function stringToRgb<T extends ColorRGB | THREE.Color>(output: T, colorSt
   return output;
 }
 
-// eslint-disable-next-line @foxglove/no-boolean-parameters
-export function rgbToThreeColor(output: THREE.Color, rgb: ColorRGB, convert = true): THREE.Color {
-  output.setRGB(rgb.r, rgb.g, rgb.b);
-  if (convert) {
-    output.convertSRGBToLinear();
-  }
-  return output;
+/** Converts a ColorRGB to THREE.Color and converts from sRGB to linear RGB. */
+export function rgbToThreeColor(output: THREE.Color, rgb: ColorRGB): THREE.Color {
+  return output.setRGB(rgb.r, rgb.g, rgb.b).convertSRGBToLinear();
 }
 
 export function rgbaToHexString(color: ColorRGBA): string {
