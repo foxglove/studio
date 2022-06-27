@@ -505,10 +505,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
   }
 
   normalizeFrameId(frameId: string): string {
-    if (!this.ros || !frameId || frameId.startsWith("/")) {
+    if (!this.ros || !frameId.startsWith("/")) {
       return frameId;
     }
-    return "/" + frameId;
+    return frameId.slice(1);
   }
 
   addCoordinateFrame(frameId: string): void {
