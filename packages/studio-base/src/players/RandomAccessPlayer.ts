@@ -123,6 +123,7 @@ export default class RandomAccessPlayer implements Player {
   private _providerDatatypes: RosDatatypes = new Map();
   private _providerParameters: Map<string, ParameterValue> | undefined;
   private _capabilities: string[] = [];
+  private _profile: string | undefined;
   private _metricsCollector: PlayerMetricsCollectorInterface;
   private _initializing: boolean = true;
   private _initialized: boolean = false;
@@ -231,7 +232,7 @@ export default class RandomAccessPlayer implements Player {
           topicStats,
           connections,
           parameters,
-          ros,
+          profile,
           messageDefinitions,
           providesParsedMessages,
           problems,
@@ -260,9 +261,7 @@ export default class RandomAccessPlayer implements Player {
         if (parameters) {
           this._capabilities.push(PlayerCapabilities.getParameters);
         }
-        if (ros) {
-          this._capabilities.push(PlayerCapabilities.ros);
-        }
+        this._profile = profile;
         this._initializing = false;
         problems.forEach((problem, i) => {
           this._problems.set(`initialization-${i}`, problem);
@@ -301,6 +300,7 @@ export default class RandomAccessPlayer implements Player {
         presence: PlayerPresence.ERROR,
         progress: {},
         capabilities: this._capabilities,
+        profile: this._profile ?? "",
         playerId: this._id,
         activeData: undefined,
         problems: Array.from(this._problems.values()),
@@ -352,6 +352,7 @@ export default class RandomAccessPlayer implements Player {
         : PlayerPresence.PRESENT,
       progress: this._progress,
       capabilities: this._capabilities,
+      profile: this._profile ?? "",
       playerId: this._id,
       problems: this._problems.size > 0 ? Array.from(this._problems.values()) : undefined,
       activeData: this._initializing

@@ -87,8 +87,6 @@ export default class Mcap0IndexedDataProvider implements RandomAccessDataProvide
       }
     }
 
-    const ros = this.reader.header.profile === "ros1" || this.reader.header.profile === "ros2";
-
     return {
       start: fromNanoSec(startTime ?? 0n),
       end: fromNanoSec(endTime ?? startTime ?? 0n),
@@ -96,7 +94,7 @@ export default class Mcap0IndexedDataProvider implements RandomAccessDataProvide
       topicStats,
       connections,
       providesParsedMessages: true,
-      ros,
+      profile: this.reader.header.profile,
       messageDefinitions: {
         type: "parsed",
         datatypes,

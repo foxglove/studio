@@ -124,7 +124,7 @@ export default class UlogDataProvider implements RandomAccessDataProvider {
       connections,
       parameters,
       providesParsedMessages: true,
-      ros: false,
+      profile: "ulog",
       messageDefinitions: {
         type: "parsed",
         datatypes,

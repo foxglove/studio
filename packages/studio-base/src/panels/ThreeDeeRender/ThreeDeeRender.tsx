@@ -247,9 +247,9 @@ export function ThreeDeeRender({ context }: { context: PanelExtensionContext }):
   // Tell the renderer if we are connected to a ROS data source
   useEffect(() => {
     if (renderer) {
-      renderer.ros = context.ros;
+      renderer.ros = context.profile === "ros1" || context.profile === "ros2";
     }
-  }, [context.ros, renderer]);
+  }, [context.profile, renderer]);
 
   // Save panel settings whenever they change
   const throttledSave = useDebouncedCallback(

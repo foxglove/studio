@@ -116,6 +116,14 @@ export type PlayerState = {
   // See `const PlayerCapabilities` for more details.
   capabilities: typeof PlayerCapabilities[keyof typeof PlayerCapabilities][];
 
+  /**
+   * Identifies the semantics of the data being played back, such as which topics or parameters are
+   * semantically meaningful or normalization conventions to use. This typically maps to a shorthand
+   * identifier for a robotics framework such as "ros1", "ros2", or "ulog". See the MCAP profiles
+   * concept at <https://github.com/foxglove/mcap/blob/main/docs/specification/appendix.md#well-known-profiles>.
+   */
+  profile: string;
+
   // A unique id for this player (typically a UUID generated on construction). This is used to clear
   // out any data when switching to a new player.
   playerId: string;
@@ -314,10 +322,6 @@ export const PlayerCapabilities = {
 
   // Set values for configuration key/value pairs
   setParameters: "setParameters",
-
-  // Follows the semantics of Robot Operating System (ROS), such as prefixing coordinate
-  // frames with "/"
-  ros: "ros",
 };
 
 // A metrics collector is an interface passed into a `Player`, which will get called when certain

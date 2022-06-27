@@ -114,7 +114,7 @@ export default class Rosbag2DataProvider implements RandomAccessDataProvider {
       topicStats,
       connections,
       providesParsedMessages: true,
-      ros: true,
+      profile: "ros2",
       messageDefinitions: {
         type: "parsed",
         datatypes,

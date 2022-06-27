@@ -21,7 +21,6 @@ import {
   AdvertiseOptions,
   MessageEvent,
   Player,
-  PlayerCapabilities,
   PlayerMetricsCollectorInterface,
   PlayerPresence,
   PlayerProblem,
@@ -38,7 +37,7 @@ import { TimestampMethod } from "@foxglove/studio-base/util/time";
 const log = Logger.getLogger(__filename);
 const rosLog = Logger.getLogger("ROS2");
 
-const CAPABILITIES: string[] = [PlayerCapabilities.ros];
+const CAPABILITIES: string[] = [];
 
 enum Problem {
   Connection = "Connection",
@@ -319,6 +318,7 @@ export default class Ros2Player implements Player {
         presence: this._presence,
         progress: {},
         capabilities: CAPABILITIES,
+        profile: "ros2",
         playerId: this._id,
         problems: this._problems.problems(),
         activeData: undefined,
@@ -341,6 +341,7 @@ export default class Ros2Player implements Player {
       presence: this._presence,
       progress: {},
       capabilities: CAPABILITIES,
+      profile: "ros2",
       name: "ROS2",
       playerId: this._id,
       problems: this._problems.problems(),

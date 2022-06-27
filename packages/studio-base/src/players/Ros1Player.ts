@@ -41,7 +41,6 @@ const CAPABILITIES = [
   PlayerCapabilities.advertise,
   PlayerCapabilities.getParameters,
   PlayerCapabilities.setParameters,
-  PlayerCapabilities.ros,
 ];
 
 enum Problem {
@@ -290,6 +289,7 @@ export default class Ros1Player implements Player {
         presence: this._presence,
         progress: {},
         capabilities: CAPABILITIES,
+        profile: "ros1",
         playerId: this._id,
         problems: this._problems.problems(),
         activeData: undefined,
@@ -313,6 +313,7 @@ export default class Ros1Player implements Player {
       presence: this._presence,
       progress: {},
       capabilities: CAPABILITIES,
+      profile: "ros1",
       playerId: this._id,
       problems: this._problems.problems(),
       urlState: {
