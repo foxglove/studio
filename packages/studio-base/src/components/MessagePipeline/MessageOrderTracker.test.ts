@@ -26,7 +26,7 @@ const playerStateWithMessages = (messages: any, messageOrder: any): PlayerState 
   progress: {},
   capabilities: [],
   playerId: "test",
-  profile: "",
+  profile: undefined,
   activeData: {
     topics: [
       { name: "/foo", datatype: "visualization_msgs/Marker" },

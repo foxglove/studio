@@ -119,7 +119,7 @@ export default function MockMessagePipelineProvider(props: {
       playerId: props.playerId ?? "1",
       progress: props.progress ?? {},
       capabilities,
-      profile: props.profile ?? "",
+      profile: props.profile,
       problems: props.problems,
       urlState: props.urlState,
       activeData:

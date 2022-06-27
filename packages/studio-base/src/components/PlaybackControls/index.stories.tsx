@@ -37,7 +37,7 @@ function getPlayerState(): PlayerState {
     presence: PlayerPresence.PRESENT,
     progress: {},
     capabilities: [PlayerCapabilities.setSpeed, PlayerCapabilities.playbackControl],
-    profile: "",
+    profile: undefined,
     playerId: "1",
     activeData: {
       messages: [],

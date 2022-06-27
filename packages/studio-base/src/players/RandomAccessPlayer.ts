@@ -300,7 +300,7 @@ export default class RandomAccessPlayer implements Player {
         presence: PlayerPresence.ERROR,
         progress: {},
         capabilities: this._capabilities,
-        profile: this._profile ?? "",
+        profile: this._profile,
         playerId: this._id,
         activeData: undefined,
         problems: Array.from(this._problems.values()),
@@ -352,7 +352,7 @@ export default class RandomAccessPlayer implements Player {
         : PlayerPresence.PRESENT,
       progress: this._progress,
       capabilities: this._capabilities,
-      profile: this._profile ?? "",
+      profile: this._profile,
       playerId: this._id,
       problems: this._problems.size > 0 ? Array.from(this._problems.values()) : undefined,
       activeData: this._initializing

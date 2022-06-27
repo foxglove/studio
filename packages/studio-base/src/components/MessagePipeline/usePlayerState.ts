@@ -181,9 +181,9 @@ const initialInternalState: InternalState = {
   messagesBySubscriberId: new Map(),
   playerState: {
     presence: PlayerPresence.NOT_PRESENT,
-    profile: "",
     progress: {},
     capabilities: [],
+    profile: undefined,
     playerId: "",
     activeData: undefined,
   },

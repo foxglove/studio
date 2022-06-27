@@ -163,7 +163,7 @@ export default class Mcap0StreamedDataProvider implements RandomAccessDataProvid
       topicStats,
       connections,
       providesParsedMessages: true,
-      profile: profile ?? "",
+      profile,
       messageDefinitions: {
         type: "parsed",
         datatypes,

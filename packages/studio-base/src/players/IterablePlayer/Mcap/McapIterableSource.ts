@@ -58,7 +58,7 @@ export class McapIterableSource implements IIterableSource {
         end: { sec: 0, nsec: 0 },
         topics: [],
         datatypes: new Map(),
-        profile: "",
+        profile: undefined,
         problems: [
           {
             severity: "error",
