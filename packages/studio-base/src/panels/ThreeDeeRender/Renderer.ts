@@ -504,6 +504,12 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
+  /** Match the behavior of `tf::Transformer` by stripping leading slashes from
+   * frame_ids. This preserves compatibility with earlier versions of ROS while
+   * not breaking any current versions where:
+   * > tf2 does not accept frame_ids starting with "/"
+   * Source: <http://wiki.ros.org/tf2/Migration#tf_prefix_backwards_compatibility>
+   */
   normalizeFrameId(frameId: string): string {
     if (!this.ros || !frameId.startsWith("/")) {
       return frameId;
