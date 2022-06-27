@@ -134,6 +134,15 @@ export class PointCloudsAndLaserScans extends SceneExtension<PointCloudAndLaserS
     return entries;
   }
 
+  override startFrame(_currentTime: bigint, _renderFrameId: string, _fixedFrameId: string): void {
+    for (const renderable of this.renderables.values()) {
+      const laserScanMaterial = renderable.userData.laserScanMaterial;
+      if (laserScanMaterial) {
+        laserScanMaterial.uniforms.pixelRatio!.value = this.renderer.getPixelRatio();
+      }
+    }
+  }
+
   handleSettingsAction = (action: SettingsTreeAction): void => {
     const path = action.payload.path;
     if (action.action !== "update" || path.length !== 3) {
@@ -593,6 +602,7 @@ class LaserScanMaterial extends THREE.RawShaderMaterial {
         uniform mat4 projectionMatrix, modelViewMatrix;
 
         uniform float pointSize;
+        uniform float pixelRatio;
         uniform float angleMin, angleIncrement;
         uniform float rangeMin, rangeMax;
         in float position; // range, but must be named position in order for three.js to render anything
@@ -609,10 +619,10 @@ class LaserScanMaterial extends THREE.RawShaderMaterial {
           gl_Position = projectionMatrix * modelViewMatrix * pos;
           ${
             picking
-              ? `gl_PointSize = max(pointSize, ${LaserScanMaterial.MIN_PICKING_POINT_SIZE.toFixed(
+              ? `gl_PointSize = pixelRatio * max(pointSize, ${LaserScanMaterial.MIN_PICKING_POINT_SIZE.toFixed(
                   1,
                 )});`
-              : "gl_PointSize = pointSize;"
+              : "gl_PointSize = pixelRatio * pointSize;"
           }
 
         }
@@ -639,6 +649,7 @@ class LaserScanMaterial extends THREE.RawShaderMaterial {
     this.uniforms = {
       isCircle: { value: false },
       pointSize: { value: 1 },
+      pixelRatio: { value: 1 },
       angleMin: { value: NaN },
       angleIncrement: { value: NaN },
       rangeMin: { value: NaN },
