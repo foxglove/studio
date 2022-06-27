@@ -75,6 +75,23 @@ export type RendererConfig = {
     enableStats?: boolean;
     /** Background color override for the scene, sent to `glClearColor()` */
     backgroundColor?: string;
+    /**
+     * Controls the size of labels by setting the pixel density per unit of
+     * world space (usually meters)
+     */
+    labelPixelsPerUnit?: number;
+    transforms?: {
+      /** Toggles visibility of all transforms */
+      visible?: boolean;
+      /** Toggles visibility of frame axis labels */
+      showLabel?: boolean;
+      /** Size of coordinate frame axes */
+      axisScale?: number;
+      /** Width of the connecting line between child and parent frames */
+      lineWidth?: number;
+      /** Color of the connecting line between child and parent frames */
+      lineColor?: string;
+    };
   };
   /** frameId -> settings */
   transforms: Record<string, Partial<LayerSettingsTransform> | undefined>;
@@ -156,6 +173,10 @@ export class Renderer extends EventEmitter<RendererEvents> {
   perspectiveCamera: THREE.PerspectiveCamera;
   orthographicCamera: THREE.OrthographicCamera;
   aspect: number;
+
+  // Are we connected to a ROS data source? Normalize coordinate frames if so by
+  // stripping any leading "/" prefix. See `normalizeFrameId()` for details.
+  ros = false;
 
   picker: Picker;
   selectionBackdrop: ScreenOverlay;
@@ -501,18 +522,34 @@ export class Renderer extends EventEmitter<RendererEvents> {
     }
   }
 
+  /** Match the behavior of `tf::Transformer` by stripping leading slashes from
+   * frame_ids. This preserves compatibility with earlier versions of ROS while
+   * not breaking any current versions where:
+   * > tf2 does not accept frame_ids starting with "/"
+   * Source: <http://wiki.ros.org/tf2/Migration#tf_prefix_backwards_compatibility>
+   */
+  normalizeFrameId(frameId: string): string {
+    if (!this.ros || !frameId.startsWith("/")) {
+      return frameId;
+    }
+    return frameId.slice(1);
+  }
+
   addCoordinateFrame(frameId: string): void {
-    if (!this.transformTree.hasFrame(frameId)) {
-      this.transformTree.getOrCreateFrame(frameId);
+    const normalizedFrameId = this.normalizeFrameId(frameId);
+    if (!this.transformTree.hasFrame(normalizedFrameId)) {
+      this.transformTree.getOrCreateFrame(normalizedFrameId);
       this.coordinateFrameList = this.transformTree.frameList();
-      // log.debug(`Added coordinate frame "${frameId}"`);
+      // log.debug(`Added coordinate frame "${normalizedFrameId}"`);
       this.emit("transformTreeUpdated", this);
     }
   }
 
   addTransformMessage(tf: TransformStamped): void {
-    const addParent = !this.transformTree.hasFrame(tf.header.frame_id);
-    const addChild = !this.transformTree.hasFrame(tf.child_frame_id);
+    const normalizedParentId = this.normalizeFrameId(tf.header.frame_id);
+    const normalizedChildId = this.normalizeFrameId(tf.child_frame_id);
+    const addParent = !this.transformTree.hasFrame(normalizedParentId);
+    const addChild = !this.transformTree.hasFrame(normalizedChildId);
 
     // Create a new transform and add it to the renderer's TransformTree
     const stamp = toNanoSec(tf.header.stamp);
@@ -520,19 +557,19 @@ export class Renderer extends EventEmitter<RendererEvents> {
     const q = tf.transform.rotation;
     const transform = new Transform([t.x, t.y, t.z], [q.x, q.y, q.z, q.w]);
     const updated = this.transformTree.addTransform(
-      tf.child_frame_id,
-      tf.header.frame_id,
+      normalizedChildId,
+      normalizedParentId,
       stamp,
       transform,
     );
 
     if (addParent || addChild) {
       this.coordinateFrameList = this.transformTree.frameList();
-      // log.debug(`Added transform "${tf.header.frame_id}_T_${tf.child_frame_id}"`);
+      // log.debug(`Added transform "${normalizedParentId}_T_${normalizedChildId}"`);
       this.emit("transformTreeUpdated", this);
     } else if (updated) {
       this.coordinateFrameList = this.transformTree.frameList();
-      // log.debug(`Updated transform "${tf.header.frame_id}_T_${tf.child_frame_id}"`);
+      // log.debug(`Updated transform "${normalizedParentId}_T_${normalizedChildId}"`);
       this.emit("transformTreeUpdated", this);
     }
   }
@@ -738,10 +775,7 @@ function baseSettingsTree(): SettingsTreeNodes {
     general: {},
     scene: {},
     cameraState: {},
-    transforms: {
-      label: "Transforms",
-      defaultExpansionState: "expanded",
-    },
+    transforms: {},
     topics: {
       label: "Topics",
       defaultExpansionState: "expanded",
